@@ -44,7 +44,10 @@ while [[ $# -gt 0 ]]; do
 done
 
 NUGET_DIR="${NUGET_PACKAGES:-$HOME/.nuget/packages}"
-[[ -d "$NUGET_DIR" ]] || { echo "Nuget cache not found at $NUGET_DIR" >&2; exit 1; }
+# Don't hard-fail on a cold cache: the `dotnet restore` below populates it.
+# CI keys the actions/cache on hashFiles('**/*.csproj'), so any version bump
+# misses the cache and the dir may not exist yet — that's fine, restore fills it.
+mkdir -p "$NUGET_DIR"
 
 OUT="$ROOT/PdfEditor/Assets/third-party-licenses.json"
 SCANCODE_DIR="$ROOT/artifacts/scancode"
