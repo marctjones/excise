@@ -171,6 +171,38 @@ Multiple areas across multiple pages can be marked and applied as a single batch
 3. Drag a rect on the page — the new field appears immediately and is editable.
 4. **🪄 Auto-detect** scans the current document for likely field positions — long horizontal strokes (text-field underlines) and small square outlines (checkboxes) — and creates them in one click.
 
+### Authoring PDFs from scratch (high-level)
+
+`Pdfe.Core.Authoring.PdfDocumentBuilder` is a friendly, flow-layout writer that
+handles word-wrap, pagination, and field placement so you never touch raw
+coordinates. It sits on top of the low-level `PdfGraphics` / `AcroFormAuthoring`
+API (drop down to those any time via `.Custom(...)` or `.Build()`).
+
+```csharp
+using Pdfe.Core.Authoring;
+
+byte[] pdf = PdfDocumentBuilder.Create()           // US Letter, 1-inch margins
+    .Heading("Membership Application")
+    .Paragraph("Please complete all required fields.")
+    .HorizontalRule()
+    .KeyValue("Date", "2026-06-05")
+    .TextField("Full name", "fullName", required: true)
+    .CheckBox("I agree to the terms", "agree")
+    .Dropdown("Tier", new[] { "Basic", "Standard", "Premium" }, "tier", "Standard")
+    .TextField("Comments", "comments", multiline: true, lines: 4)
+    .Table(new[]
+    {
+        new[] { "Item", "Qty", "Price" },
+        new[] { "Widget", "3", "$9.00" },
+    }, columnWeights: new[] { 2.0, 1.0, 1.0 }, headerRow: true)
+    .SaveToBytes();                                 // or .Save("form.pdf")
+```
+
+The result is a real, fillable AcroForm PDF: text is extractable, content
+flows onto new pages automatically, and the form fields are live in any viewer.
+Styling is via the immutable `TextStyle` record (family/size/bold/italic/color/
+alignment); page size/margins via `PageSize` and `PageMargins`. See issue #383.
+
 ### Reveal Hidden Text
 
 `Tools → Reveal Hidden Text` finds text that's been visually hidden by overlays:

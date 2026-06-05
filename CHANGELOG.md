@@ -4,6 +4,41 @@ All notable changes to pdfe are documented here. Format roughly follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 semantic versioning.
 
+## [2.4.0] — 2026-06-05
+
+Adds a friendly, high-level **PDF authoring** API so third-party .NET apps can
+generate PDFs from structured content without touching coordinates — the
+writer-side facade tracked by #383 (PromptResponse writer epic #382).
+
+### Added
+- **`Pdfe.Core.Authoring.PdfDocumentBuilder` — high-level writer facade (#383).**
+  A fluent, flow-layout builder over the existing `PdfGraphics` /
+  `AcroFormAuthoring` API. Content flows top-to-bottom inside the page's content
+  area with automatic word-wrap and pagination, so callers never compute
+  coordinates or manage the PDF's bottom-left Y axis.
+  - Content blocks: `Heading(level)`, `Paragraph` (word-wrap + hard-break
+    aware), `Spacer`, `HorizontalRule`, `KeyValue`, `Table` (column weights,
+    optional header row + grid lines), `PageBreak`.
+  - Fillable AcroForm fields, flow-positioned with drawn labels and borders:
+    `TextField` (multiline/required), `CheckBox`, `Dropdown` (combo). Auto-names
+    fields when none is supplied.
+  - `Custom(Action<PdfGraphics, LayoutContext>)` escape hatch to the low-level
+    API; `Build()` returns the `PdfDocument` for further manipulation;
+    `SaveToBytes()` / `Save(path)` / `Save(Stream)` output.
+- **Authoring value types.** `PageSize` (Letter/Legal/A4/A3/A5 +
+  `Landscape()`/`Portrait()`), `PageMargins` (`All`/`Symmetric`/`Default`),
+  immutable `TextStyle` record (family/size/bold/italic/color/alignment/
+  line-spacing/space-after with `With…` helpers), `FontFamily`, `LayoutContext`.
+- README: a copy-paste "Authoring PDFs from scratch (high-level)" sample.
+
+### Notes
+- Targets the base-14 fonts and Latin text available today; Unicode / embedded
+  TrueType-OpenType fonts (#378), richer text layout (#379), more AcroForm
+  field options (#380), and document metadata setters (#381) extend the facade.
+- Verified against external readers: generated forms pass `qpdf --check`,
+  `pdfinfo` reports a live `AcroForm`, content auto-paginates, and `pdftotext`
+  extracts all text. 17 new tests; full `Pdfe.Core` suite green (2744 passing).
+
 ## [2.3.1] — 2026-06-04
 
 ### Fixed
