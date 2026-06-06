@@ -22,6 +22,7 @@ internal sealed class PdfTrueTypeFont : PdfFont
 {
     private readonly TrueTypeFontFile _ttf;
     private readonly double _scale;   // font units -> text space at 1 pt
+    private readonly HashSet<int> _usedGids = new() { 0 };   // accumulated as text is drawn (#393)
 
     internal override bool PreferIndirectFontDictionary => true;
 
@@ -53,6 +54,7 @@ internal sealed class PdfTrueTypeFont : PdfFont
         foreach (var cp in Codepoints(text))
         {
             int gid = _ttf.GidForCodepoint(cp) & 0xFFFF;
+            _usedGids.Add(gid);
             sb.Append(gid.ToString("X4", CultureInfo.InvariantCulture));
         }
         sb.Append('>');
@@ -64,13 +66,16 @@ internal sealed class PdfTrueTypeFont : PdfFont
         double toGlyphSpace = 1000.0 / _ttf.UnitsPerEm;   // PDF glyph space = 1000/em
         int Scale(int fontUnits) => (int)Math.Round(fontUnits * toGlyphSpace);
 
-        // 1. FontFile2 — the embedded TTF, FlateDecode-compressed.
+        // 1. FontFile2 — the embedded TTF, FlateDecode-compressed. Built with the
+        // full font now; a pre-save action (registered below) replaces it with a
+        // subset once every drawn glyph is known.
         byte[] compressed = Deflate(_ttf.Data);
         var ff2Dict = new PdfDictionary();
         ff2Dict.SetInt("Length1", _ttf.Data.Length);
         ff2Dict.SetName("Filter", "FlateDecode");
         ff2Dict.SetInt("Length", compressed.Length);
-        var ff2Ref = document.AddIndirectObject(new PdfStream(ff2Dict, compressed));
+        var ff2 = new PdfStream(ff2Dict, compressed);
+        var ff2Ref = document.AddIndirectObject(ff2);
 
         // 2. FontDescriptor.
         var fd = new PdfDictionary();
@@ -112,11 +117,10 @@ internal sealed class PdfTrueTypeFont : PdfFont
         cid["W"] = wArr;
         var cidRef = document.AddIndirectObject(cid);
 
-        // 5. ToUnicode CMap so extraction recovers the original text.
-        byte[] toUni = Encoding.ASCII.GetBytes(BuildToUnicodeCMap());
-        var tuDict = new PdfDictionary();
-        tuDict.SetInt("Length", toUni.Length);
-        var tuRef = document.AddIndirectObject(new PdfStream(tuDict, toUni));
+        // 5. ToUnicode CMap (placeholder; filled with only the used glyphs,
+        //    compressed, by the pre-save action).
+        var tu = new PdfStream(new PdfDictionary(), Array.Empty<byte>());
+        var tuRef = document.AddIndirectObject(tu);
 
         // 6. Type0 root (returned; AddFont stores it inline in /Font).
         var type0 = new PdfDictionary();
@@ -128,17 +132,76 @@ internal sealed class PdfTrueTypeFont : PdfFont
         descendants.Add((PdfObject)cidRef);
         type0["DescendantFonts"] = descendants;
         type0["ToUnicode"] = tuRef;
+
+        // Defer subsetting to save time (when _usedGids is complete).
+        document.RegisterPreSaveAction(() => FinalizeSubset(ff2, fd, cid, type0, tu, toGlyphSpace));
         return type0;
     }
 
-    /// <summary>Build a ToUnicode CMap mapping each glyph id back to a codepoint.</summary>
+    /// <summary>
+    /// At save time: replace FontFile2 with a glyph subset, fill the ToUnicode
+    /// CMap for the used glyphs (compressed), trim /W to used glyphs, and apply a
+    /// 6-letter subset tag to the font names. Idempotent.
+    /// </summary>
+    private void FinalizeSubset(PdfStream fontFile2, PdfDictionary fd, PdfDictionary cid,
+        PdfDictionary type0, PdfStream toUnicode, double toGlyphSpace)
+    {
+        byte[] subset = TrueTypeSubsetter.Subset(_ttf.Data, _usedGids);
+        byte[] comp = Deflate(subset);
+        fontFile2.SetEncodedData(comp);
+        fontFile2.SetInt("Length1", subset.Length);
+        fontFile2.SetInt("Length", comp.Length);
+
+        // ToUnicode for just the used glyphs, FlateDecode-compressed.
+        byte[] cmap = Deflate(Encoding.ASCII.GetBytes(BuildToUnicodeCMap()));
+        toUnicode.SetEncodedData(cmap);
+        toUnicode.SetName("Filter", "FlateDecode");
+        toUnicode.SetInt("Length", cmap.Length);
+
+        // Subset tag: 6 uppercase letters derived from the used-gid set.
+        string tagged = SubsetTag() + "+" + BaseFont;
+        fd.SetName("FontName", tagged);
+        cid.SetName("BaseFont", tagged);
+        type0.SetName("BaseFont", tagged);
+
+        // Trim /W to only used glyphs: [ gid [w] gid2 [w2] … ].
+        int Scale(int fu) => (int)Math.Round(fu * toGlyphSpace);
+        var w = new PdfArray();
+        foreach (int g in _usedGids.Where(g => g > 0).OrderBy(g => g))
+        {
+            w.Add(g);
+            var one = new PdfArray();
+            one.Add(Scale(_ttf.AdvanceWidth(g)));
+            w.Add((PdfObject)one);
+        }
+        cid["W"] = w;
+    }
+
+    /// <summary>Deterministic 6-uppercase-letter subset tag from the used glyphs.</summary>
+    private string SubsetTag()
+    {
+        unchecked
+        {
+            uint h = 2166136261;
+            foreach (int g in _usedGids.OrderBy(x => x)) { h = (h ^ (uint)g) * 16777619; }
+            var c = new char[6];
+            for (int i = 0; i < 6; i++) { c[i] = (char)('A' + (int)(h % 26)); h /= 26; }
+            return new string(c);
+        }
+    }
+
+    /// <summary>Build a ToUnicode CMap mapping each <em>used</em> glyph id to a codepoint.</summary>
     private string BuildToUnicodeCMap()
     {
-        // gid -> first codepoint that maps to it.
-        var gidToCp = new SortedDictionary<int, int>();
+        // Reverse the cmap (cp -> gid) once, then map only the glyphs we drew.
+        var reverse = new Dictionary<int, int>();
         foreach (var (cp, gid) in _ttf.Cmap)
-            if (gid <= 0xFFFF && !gidToCp.ContainsKey(gid))
-                gidToCp[gid] = cp;
+            if (gid <= 0xFFFF && !reverse.ContainsKey(gid))
+                reverse[gid] = cp;
+        var gidToCp = new SortedDictionary<int, int>();
+        foreach (int g in _usedGids)
+            if (g > 0 && g <= 0xFFFF && reverse.TryGetValue(g, out var cp))
+                gidToCp[g] = cp;
 
         var sb = new StringBuilder();
         sb.Append("/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n");
