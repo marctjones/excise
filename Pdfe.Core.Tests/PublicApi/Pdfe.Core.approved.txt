@@ -1,0 +1,1392 @@
+namespace Pdfe.Core.Authoring
+{
+    public enum FontFamily
+    {
+        SansSerif = 0,
+        Serif = 1,
+        Monospace = 2,
+    }
+    public readonly struct LayoutContext : System.IEquatable<Pdfe.Core.Authoring.LayoutContext>
+    {
+        public LayoutContext(double Left, double Top, double Width, double RemainingHeight, int PageNumber) { }
+        public double Left { get; init; }
+        public int PageNumber { get; init; }
+        public double RemainingHeight { get; init; }
+        public double Top { get; init; }
+        public double Width { get; init; }
+    }
+    public readonly struct PageMargins : System.IEquatable<Pdfe.Core.Authoring.PageMargins>
+    {
+        public PageMargins(double Left, double Top, double Right, double Bottom) { }
+        public double Bottom { get; init; }
+        public double Left { get; init; }
+        public double Right { get; init; }
+        public double Top { get; init; }
+        public static Pdfe.Core.Authoring.PageMargins Default { get; }
+        public static Pdfe.Core.Authoring.PageMargins All(double points) { }
+        public static Pdfe.Core.Authoring.PageMargins Symmetric(double horizontal, double vertical) { }
+    }
+    public readonly struct PageSize : System.IEquatable<Pdfe.Core.Authoring.PageSize>
+    {
+        public PageSize(double Width, double Height) { }
+        public double Height { get; init; }
+        public double Width { get; init; }
+        public static Pdfe.Core.Authoring.PageSize A3 { get; }
+        public static Pdfe.Core.Authoring.PageSize A4 { get; }
+        public static Pdfe.Core.Authoring.PageSize A5 { get; }
+        public static Pdfe.Core.Authoring.PageSize Legal { get; }
+        public static Pdfe.Core.Authoring.PageSize Letter { get; }
+        public Pdfe.Core.Authoring.PageSize Landscape() { }
+        public Pdfe.Core.Authoring.PageSize Portrait() { }
+    }
+    public sealed class PdfDocumentBuilder
+    {
+        public double ContentLeft { get; }
+        public double ContentWidth { get; }
+        public int PageCount { get; }
+        public Pdfe.Core.Document.PdfDocument Build() { }
+        public Pdfe.Core.Authoring.PdfDocumentBuilder CheckBox(string label, string? fieldName = null, bool checkedByDefault = false) { }
+        public Pdfe.Core.Authoring.PdfDocumentBuilder Custom(System.Action<Pdfe.Core.Graphics.PdfGraphics, Pdfe.Core.Authoring.LayoutContext> draw) { }
+        public Pdfe.Core.Authoring.PdfDocumentBuilder Dropdown(string label, System.Collections.Generic.IEnumerable<string> options, string? fieldName = null, string? defaultValue = null) { }
+        public Pdfe.Core.Authoring.PdfDocumentBuilder Heading(string text, int level = 1, Pdfe.Core.Authoring.TextStyle? style = null) { }
+        public Pdfe.Core.Authoring.PdfDocumentBuilder HorizontalRule(double thickness = 0.5, Pdfe.Core.Graphics.PdfColor? color = default) { }
+        public Pdfe.Core.Authoring.PdfDocumentBuilder KeyValue(string label, string value, double labelWidth = 0.3) { }
+        public Pdfe.Core.Authoring.PdfDocumentBuilder PageBreak() { }
+        public Pdfe.Core.Authoring.PdfDocumentBuilder Paragraph(string text, Pdfe.Core.Authoring.TextStyle? style = null) { }
+        public void Save(System.IO.Stream stream) { }
+        public void Save(string path) { }
+        public byte[] SaveToBytes() { }
+        public Pdfe.Core.Authoring.PdfDocumentBuilder Spacer(double points) { }
+        public Pdfe.Core.Authoring.PdfDocumentBuilder Table(System.Collections.Generic.IEnumerable<System.Collections.Generic.IReadOnlyList<string>> rows, double[]? columnWeights = null, bool headerRow = false, bool gridLines = true) { }
+        public Pdfe.Core.Authoring.PdfDocumentBuilder TextField(string label, string? fieldName = null, bool multiline = false, bool required = false, int lines = 1, string? defaultValue = null) { }
+        public static Pdfe.Core.Authoring.PdfDocumentBuilder Create(Pdfe.Core.Authoring.PageSize? pageSize = default, Pdfe.Core.Authoring.PageMargins? margins = default) { }
+    }
+    public sealed class TextStyle : System.IEquatable<Pdfe.Core.Authoring.TextStyle>
+    {
+        public TextStyle() { }
+        public Pdfe.Core.Graphics.TextAlignment Alignment { get; init; }
+        public bool Bold { get; init; }
+        public Pdfe.Core.Graphics.PdfColor Color { get; init; }
+        public Pdfe.Core.Authoring.FontFamily Family { get; init; }
+        public bool Italic { get; init; }
+        public double LineHeight { get; }
+        public double LineSpacing { get; init; }
+        public double Size { get; init; }
+        public double SpaceAfter { get; init; }
+        public static Pdfe.Core.Authoring.TextStyle Body { get; }
+        public Pdfe.Core.Authoring.TextStyle AsBold() { }
+        public Pdfe.Core.Authoring.TextStyle AsItalic() { }
+        public Pdfe.Core.Graphics.PdfBrush ResolveBrush() { }
+        public Pdfe.Core.Graphics.PdfFont ResolveFont() { }
+        public Pdfe.Core.Authoring.TextStyle WithAlignment(Pdfe.Core.Graphics.TextAlignment alignment) { }
+        public Pdfe.Core.Authoring.TextStyle WithColor(Pdfe.Core.Graphics.PdfColor color) { }
+        public Pdfe.Core.Authoring.TextStyle WithSize(double size) { }
+        public Pdfe.Core.Authoring.TextStyle WithSpaceAfter(double points) { }
+    }
+}
+namespace Pdfe.Core.ColorSpaces
+{
+    public sealed class PdfColorSpace
+    {
+        public static readonly Pdfe.Core.ColorSpaces.PdfColorSpace DeviceCMYK;
+        public static readonly Pdfe.Core.ColorSpaces.PdfColorSpace DeviceGray;
+        public static readonly Pdfe.Core.ColorSpaces.PdfColorSpace DeviceRGB;
+        public int Components { get; }
+        public Pdfe.Core.ColorSpaces.PdfColorSpaceType Type { get; }
+        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "R",
+                "G",
+                "B"})]
+        public System.ValueTuple<double, double, double> LookupIndexed(int index) { }
+        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "R",
+                "G",
+                "B"})]
+        public System.ValueTuple<double, double, double> ToRgb(double[] values) { }
+        public static Pdfe.Core.ColorSpaces.PdfColorSpace FromName(string name) { }
+        public static Pdfe.Core.ColorSpaces.PdfColorSpace Parse(Pdfe.Core.Primitives.PdfObject csObj, Pdfe.Core.Document.PdfDocument doc) { }
+    }
+    public enum PdfColorSpaceType
+    {
+        DeviceGray = 0,
+        DeviceRGB = 1,
+        DeviceCMYK = 2,
+        CalGray = 3,
+        CalRGB = 4,
+        Lab = 5,
+        ICCBased = 6,
+        Indexed = 7,
+        Separation = 8,
+        DeviceN = 9,
+        Pattern = 10,
+        Unknown = 11,
+    }
+}
+namespace Pdfe.Core.Content
+{
+    public class ContentOperator
+    {
+        public ContentOperator(string name) { }
+        public ContentOperator(string name, System.Collections.Generic.IReadOnlyList<Pdfe.Core.Primitives.PdfObject> operands) { }
+        public Pdfe.Core.Document.PdfRectangle? BoundingBox { get; }
+        public Pdfe.Core.Content.OperatorCategory Category { get; }
+        public byte[]? InlineImageData { get; }
+        public string Name { get; }
+        public System.Collections.Generic.IReadOnlyList<Pdfe.Core.Primitives.PdfObject> Operands { get; }
+        public string? TextContent { get; }
+        public Pdfe.Core.Primitives.PdfArray? GetArray(int index) { }
+        public string GetName(int index) { }
+        public double GetNumber(int index) { }
+        public string GetString(int index) { }
+        public bool IntersectsWith(Pdfe.Core.Document.PdfRectangle rect) { }
+        public bool IsContainedIn(Pdfe.Core.Document.PdfRectangle rect) { }
+        public override string ToString() { }
+        public static Pdfe.Core.Content.ContentOperator BeginText() { }
+        public static Pdfe.Core.Content.ContentOperator CloseAndStroke() { }
+        public static Pdfe.Core.Content.ContentOperator ClosePath() { }
+        public static Pdfe.Core.Content.ContentOperator CurveTo(double x1, double y1, double x2, double y2, double x3, double y3) { }
+        public static Pdfe.Core.Content.ContentOperator EndPath() { }
+        public static Pdfe.Core.Content.ContentOperator EndText() { }
+        public static Pdfe.Core.Content.ContentOperator Fill() { }
+        public static Pdfe.Core.Content.ContentOperator FillAndStroke() { }
+        public static Pdfe.Core.Content.ContentOperator FillEvenOdd() { }
+        public static Pdfe.Core.Content.ContentOperator InvokeXObject(string name) { }
+        public static Pdfe.Core.Content.ContentOperator LineTo(double x, double y) { }
+        public static Pdfe.Core.Content.ContentOperator MoveTo(double x, double y) { }
+        public static Pdfe.Core.Content.ContentOperator Rectangle(Pdfe.Core.Document.PdfRectangle rect) { }
+        public static Pdfe.Core.Content.ContentOperator Rectangle(double x, double y, double width, double height) { }
+        public static Pdfe.Core.Content.ContentOperator RestoreState() { }
+        public static Pdfe.Core.Content.ContentOperator SaveState() { }
+        public static Pdfe.Core.Content.ContentOperator SetFillBlack() { }
+        public static Pdfe.Core.Content.ContentOperator SetFillGray(double gray) { }
+        public static Pdfe.Core.Content.ContentOperator SetFillRgb(double r, double g, double b) { }
+        public static Pdfe.Core.Content.ContentOperator SetFillWhite() { }
+        public static Pdfe.Core.Content.ContentOperator SetFont(string fontName, double size) { }
+        public static Pdfe.Core.Content.ContentOperator SetLineWidth(double width) { }
+        public static Pdfe.Core.Content.ContentOperator SetStrokeGray(double gray) { }
+        public static Pdfe.Core.Content.ContentOperator SetStrokeRgb(double r, double g, double b) { }
+        public static Pdfe.Core.Content.ContentOperator ShowText(string text) { }
+        public static Pdfe.Core.Content.ContentOperator Stroke() { }
+        public static Pdfe.Core.Content.ContentOperator TextMatrix(double a, double b, double c, double d, double e, double f) { }
+        public static Pdfe.Core.Content.ContentOperator TextPosition(double tx, double ty) { }
+        public static Pdfe.Core.Content.ContentOperator Transform(double a, double b, double c, double d, double e, double f) { }
+    }
+    public class ContentStream
+    {
+        public ContentStream() { }
+        public ContentStream(System.Collections.Generic.IEnumerable<Pdfe.Core.Content.ContentOperator> operators) { }
+        public int Count { get; }
+        public Pdfe.Core.Content.ContentOperator this[int index] { get; }
+        public System.Collections.Generic.IReadOnlyList<Pdfe.Core.Content.ContentOperator> Operators { get; }
+        public System.Collections.Generic.IEnumerable<Pdfe.Core.Content.ContentOperator> PathOperators { get; }
+        public System.Collections.Generic.IEnumerable<Pdfe.Core.Content.ContentOperator> TextOperators { get; }
+        public System.Collections.Generic.IEnumerable<Pdfe.Core.Content.ContentOperator> XObjectOperators { get; }
+        public Pdfe.Core.Content.ContentStream Append(Pdfe.Core.Content.ContentOperator op) { }
+        public Pdfe.Core.Content.ContentStream Append(System.Collections.Generic.IEnumerable<Pdfe.Core.Content.ContentOperator> ops) { }
+        public Pdfe.Core.Content.ContentStream Concat(Pdfe.Core.Content.ContentStream other) { }
+        public Pdfe.Core.Content.ContentStream Filter(System.Func<Pdfe.Core.Content.ContentOperator, bool> predicate) { }
+        public System.Collections.Generic.IEnumerable<Pdfe.Core.Content.ContentOperator> FindText(string searchText, System.StringComparison comparison = 4) { }
+        public System.Collections.Generic.IEnumerator<Pdfe.Core.Content.ContentOperator> GetEnumerator() { }
+        public Pdfe.Core.Content.ContentStream Insert(int index, Pdfe.Core.Content.ContentOperator op) { }
+        public System.Collections.Generic.IEnumerable<Pdfe.Core.Content.ContentOperator> OfCategory(Pdfe.Core.Content.OperatorCategory category) { }
+        public Pdfe.Core.Content.ContentStream Prepend(Pdfe.Core.Content.ContentOperator op) { }
+        public Pdfe.Core.Content.ContentStream Prepend(System.Collections.Generic.IEnumerable<Pdfe.Core.Content.ContentOperator> ops) { }
+        public Pdfe.Core.Content.ContentStream Redact(Pdfe.Core.Document.PdfRectangle area, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "R",
+                "G",
+                "B"})] System.ValueTuple<double, double, double>? markerColor = default) { }
+        public Pdfe.Core.Content.ContentStream RedactWithBlackMarker(Pdfe.Core.Document.PdfRectangle area) { }
+        public Pdfe.Core.Content.ContentStream RemoveCategory(Pdfe.Core.Content.OperatorCategory category) { }
+        public Pdfe.Core.Content.ContentStream RemoveContainedIn(Pdfe.Core.Document.PdfRectangle area) { }
+        public Pdfe.Core.Content.ContentStream RemoveIntersecting(Pdfe.Core.Document.PdfRectangle area) { }
+        public Pdfe.Core.Content.ContentStream Replace(int index, Pdfe.Core.Content.ContentOperator op) { }
+        public override string ToString() { }
+        public Pdfe.Core.Content.ContentStream Transform(System.Func<Pdfe.Core.Content.ContentOperator, Pdfe.Core.Content.ContentOperator> transformer) { }
+        public Pdfe.Core.Content.ContentStream Where(System.Func<Pdfe.Core.Content.ContentOperator, bool> predicate) { }
+    }
+    public class ContentStreamParser
+    {
+        public ContentStreamParser(byte[] content, Pdfe.Core.Document.PdfPage? page = null) { }
+        public int MaxNestingDepth { get; set; }
+        public Pdfe.Core.Content.ContentStream Parse(System.Threading.CancellationToken cancellationToken = default) { }
+    }
+    public class ContentStreamWriter
+    {
+        public ContentStreamWriter() { }
+        public byte[] Write(Pdfe.Core.Content.ContentStream content) { }
+    }
+    public enum OperatorCategory
+    {
+        Unknown = 0,
+        GraphicsState = 1,
+        PathConstruction = 2,
+        PathPainting = 3,
+        Clipping = 4,
+        TextState = 5,
+        TextPositioning = 6,
+        TextShowing = 7,
+        TextObject = 8,
+        Color = 9,
+        Shading = 10,
+        XObject = 11,
+        MarkedContent = 12,
+        Compatibility = 13,
+    }
+}
+namespace Pdfe.Core.Document
+{
+    public static class AcroFormAuthoring
+    {
+        public static Pdfe.Core.Document.PdfField AddCheckBox(this Pdfe.Core.Document.PdfDocument document, int pageNumber, Pdfe.Core.Document.PdfRectangle rect, string fieldName, bool defaultChecked = false, bool readOnly = false) { }
+        public static Pdfe.Core.Document.PdfField AddChoiceField(this Pdfe.Core.Document.PdfDocument document, int pageNumber, Pdfe.Core.Document.PdfRectangle rect, string fieldName, System.Collections.Generic.IEnumerable<string> options, string? defaultValue = null, bool readOnly = false) { }
+        public static Pdfe.Core.Document.PdfField AddSignatureField(this Pdfe.Core.Document.PdfDocument document, int pageNumber, Pdfe.Core.Document.PdfRectangle rect, string fieldName) { }
+        public static Pdfe.Core.Document.PdfField AddTextField(this Pdfe.Core.Document.PdfDocument document, int pageNumber, Pdfe.Core.Document.PdfRectangle rect, string fieldName, string? defaultValue = null, bool multiline = false, bool readOnly = false, bool required = false) { }
+    }
+    public sealed class NamedDestination : System.IEquatable<Pdfe.Core.Document.NamedDestination>
+    {
+        public NamedDestination(string Name, int? PageNumber, double? X = default, double? Y = default, double? Zoom = default, string FitMode = "XYZ") { }
+        public string FitMode { get; init; }
+        public string Name { get; init; }
+        public int? PageNumber { get; init; }
+        public double? X { get; init; }
+        public double? Y { get; init; }
+        public double? Zoom { get; init; }
+    }
+    public class PageCollection : System.Collections.Generic.IEnumerable<Pdfe.Core.Document.PdfPage>, System.Collections.Generic.IReadOnlyCollection<Pdfe.Core.Document.PdfPage>, System.Collections.Generic.IReadOnlyList<Pdfe.Core.Document.PdfPage>, System.Collections.IEnumerable
+    {
+        public int Count { get; }
+        public Pdfe.Core.Document.PdfPage this[int index] { get; }
+        public void Add(Pdfe.Core.Document.PdfPage page) { }
+        public Pdfe.Core.Document.PdfPage AddBlank(double widthPoints = 612, double heightPoints = 792) { }
+        public System.Collections.Generic.IEnumerator<Pdfe.Core.Document.PdfPage> GetEnumerator() { }
+        public void Insert(int index, Pdfe.Core.Document.PdfPage page) { }
+        public void Move(int fromIndex, int toIndex) { }
+        public void RemoveAt(int index) { }
+    }
+    public sealed class PdfAcroForm
+    {
+        public PdfAcroForm(System.Collections.Generic.IReadOnlyList<Pdfe.Core.Document.PdfField> fields, bool needsAppearances) { }
+        public System.Collections.Generic.IReadOnlyList<Pdfe.Core.Document.PdfField> Fields { get; }
+        public bool NeedsAppearances { get; }
+        public Pdfe.Core.Document.PdfField? FindField(string fullName) { }
+        public System.Collections.Generic.IEnumerable<Pdfe.Core.Document.PdfField> GetButtonFields() { }
+        public System.Collections.Generic.IEnumerable<Pdfe.Core.Document.PdfField> GetChoiceFields() { }
+        public System.Collections.Generic.IEnumerable<Pdfe.Core.Document.PdfField> GetFields(Pdfe.Core.Document.PdfFieldType type) { }
+        public System.Collections.Generic.IEnumerable<Pdfe.Core.Document.PdfField> GetSignatureFields() { }
+        public System.Collections.Generic.IEnumerable<Pdfe.Core.Document.PdfField> GetTextFields() { }
+    }
+    public sealed class PdfAnnotation
+    {
+        public byte[]? AttachmentBytes { get; }
+        public string? AttachmentFileName { get; }
+        public string? AttachmentMimeType { get; }
+        public string? Author { get; }
+        public System.Collections.Generic.IReadOnlyList<double>? BorderDashPattern { get; }
+        public string? BorderStyle { get; }
+        public double? BorderWidth { get; }
+        [System.Runtime.CompilerServices.TupleElementNames(new string?[]?[] {
+                "R",
+                "G",
+                "B"})]
+        public System.ValueTuple<double, double, double>? Color { get; }
+        public string? Contents { get; }
+        public System.DateTimeOffset? CreationDate { get; }
+        public int? DestinationPage { get; }
+        public Pdfe.Core.Document.PdfAnnotationFlags Flags { get; }
+        public bool HasAppearance { get; }
+        public string? IconName { get; }
+        [System.Runtime.CompilerServices.TupleElementNames(new string?[]?[] {
+                "X",
+                "Y"})]
+        public System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<System.ValueTuple<double, double>>>? InkStrokes { get; }
+        public bool IsOpen { get; }
+        public bool IsTextMarkup { get; }
+        [System.Runtime.CompilerServices.TupleElementNames(new string?[]?[] {
+                "X1",
+                "Y1",
+                "X2",
+                "Y2"})]
+        public System.ValueTuple<double, double, double, double>? LineEndpoints { get; }
+        public System.DateTimeOffset? ModDate { get; }
+        public string? Name { get; }
+        public System.Collections.Generic.IReadOnlyList<Pdfe.Core.Document.PdfRectangle>? QuadPoints { get; }
+        public Pdfe.Core.Primitives.PdfDictionary RawDictionary { get; }
+        public Pdfe.Core.Document.PdfRectangle Rect { get; }
+        public Pdfe.Core.Document.PdfAnnotationSubtype Subtype { get; }
+        public string? Uri { get; }
+        [System.Runtime.CompilerServices.TupleElementNames(new string?[]?[] {
+                "X",
+                "Y"})]
+        public System.Collections.Generic.IReadOnlyList<System.ValueTuple<double, double>>? Vertices { get; }
+        public override string ToString() { }
+    }
+    [System.Flags]
+    public enum PdfAnnotationFlags
+    {
+        None = 0,
+        Invisible = 1,
+        Hidden = 2,
+        Print = 4,
+        NoZoom = 8,
+        NoRotate = 16,
+        NoView = 32,
+        ReadOnly = 64,
+        Locked = 128,
+        ToggleNoView = 256,
+        LockedContents = 512,
+    }
+    public enum PdfAnnotationSubtype
+    {
+        Unknown = 0,
+        Text = 1,
+        Link = 2,
+        FreeText = 3,
+        Line = 4,
+        Square = 5,
+        Circle = 6,
+        Polygon = 7,
+        PolyLine = 8,
+        Highlight = 9,
+        Underline = 10,
+        Squiggly = 11,
+        StrikeOut = 12,
+        Stamp = 13,
+        Caret = 14,
+        Ink = 15,
+        Popup = 16,
+        FileAttachment = 17,
+        Sound = 18,
+        Movie = 19,
+        Widget = 20,
+        Screen = 21,
+        Watermark = 22,
+        Redact = 23,
+    }
+    public class PdfDocument : System.IDisposable
+    {
+        public string? Author { get; }
+        public Pdfe.Core.Primitives.PdfDictionary Catalog { get; }
+        public string? Creator { get; }
+        public bool HasEmbeddedFiles { get; }
+        public Pdfe.Core.Primitives.PdfDictionary? Info { get; }
+        public bool IsDecrypting { get; }
+        public bool IsEncrypted { get; }
+        public bool IsTaggedPdf { get; }
+        public string? Keywords { get; }
+        public int PageCount { get; }
+        public Pdfe.Core.Document.PageCollection Pages { get; }
+        public string? Producer { get; }
+        public string? Subject { get; }
+        public string? Title { get; }
+        public Pdfe.Core.Primitives.PdfDictionary Trailer { get; }
+        public string Version { get; }
+        public void Dispose() { }
+        public void FlattenAcroForm() { }
+        public Pdfe.Core.Document.PdfAcroForm? GetAcroForm() { }
+        public System.Collections.Generic.IReadOnlyList<Pdfe.Core.Document.PdfEmbeddedFile> GetEmbeddedFiles() { }
+        public System.Collections.Generic.IReadOnlyDictionary<string, Pdfe.Core.Document.NamedDestination> GetNamedDestinations() { }
+        public Pdfe.Core.Primitives.PdfObject GetObject(Pdfe.Core.Primitives.PdfReference reference) { }
+        public Pdfe.Core.Primitives.PdfObject GetObject(int objectNumber) { }
+        public Pdfe.Core.Document.PdfOcgConfig GetOptionalContentGroupConfig() { }
+        public System.Collections.Generic.IReadOnlyList<Pdfe.Core.Document.PdfOcg> GetOptionalContentGroups() { }
+        public Pdfe.Core.Document.PdfPage GetPage(int pageNumber) { }
+        public string? GetPageLabel(int pageNumber) { }
+        public System.Collections.Generic.IEnumerable<Pdfe.Core.Document.PdfPage> GetPages() { }
+        public Pdfe.Core.Document.PdfStructElement? GetStructureTree() { }
+        public byte[]? GetXmpMetadata() { }
+        public Pdfe.Core.Primitives.PdfObject Resolve(Pdfe.Core.Primitives.PdfObject obj) { }
+        public void Save(System.IO.Stream outputStream) { }
+        public void Save(string path) { }
+        public byte[] SaveToBytes() { }
+        public void ScrubEmbeddedFiles() { }
+        public void ScrubInfoKeys(params string[] keys) { }
+        public void ScrubMetadata(bool scrubAttachments = true) { }
+        public void SetAcroFormNeedAppearances() { }
+        public static Pdfe.Core.Document.PdfDocument CreateNew(string version = "1.7") { }
+        public static Pdfe.Core.Document.PdfDocument Open(byte[] data, bool allowEncrypted = false) { }
+        public static Pdfe.Core.Document.PdfDocument Open(string path, bool allowEncrypted = false) { }
+        public static Pdfe.Core.Document.PdfDocument Open(System.IO.Stream stream, bool ownsStream = false, bool allowEncrypted = false) { }
+    }
+    public sealed class PdfEmbeddedFile : System.IEquatable<Pdfe.Core.Document.PdfEmbeddedFile>
+    {
+        public PdfEmbeddedFile(string name, string? fileName, string? description, byte[]? bytes, string? mimeType, System.DateTimeOffset? creationDate, System.DateTimeOffset? modDate, Pdfe.Core.Primitives.PdfDictionary rawDictionary) { }
+        public byte[]? Bytes { get; init; }
+        public System.DateTimeOffset? CreationDate { get; init; }
+        public string? Description { get; init; }
+        public string? FileName { get; init; }
+        public string? MimeType { get; init; }
+        public System.DateTimeOffset? ModDate { get; init; }
+        public string Name { get; init; }
+        public Pdfe.Core.Primitives.PdfDictionary RawDictionary { get; init; }
+    }
+    public sealed class PdfField
+    {
+        public PdfField(Pdfe.Core.Document.PdfDocument document, string fullName, string partialName, Pdfe.Core.Document.PdfFieldType fieldType, System.Collections.Generic.IReadOnlyList<string>? options, Pdfe.Core.Document.PdfRectangle? rect, int? pageNumber, bool isReadOnly, bool isRequired, bool isMultiline, Pdfe.Core.Primitives.PdfDictionary rawDictionary, System.Collections.Generic.IReadOnlyList<Pdfe.Core.Primitives.PdfDictionary> widgetDictionaries) { }
+        public string? DefaultValue { get; }
+        public Pdfe.Core.Document.PdfFieldType FieldType { get; }
+        public string FullName { get; }
+        public bool IsMultiline { get; }
+        public bool IsReadOnly { get; }
+        public bool IsRequired { get; }
+        public System.Collections.Generic.IReadOnlyList<string>? Options { get; }
+        public int? PageNumber { get; }
+        public string PartialName { get; }
+        public Pdfe.Core.Primitives.PdfDictionary RawDictionary { get; }
+        public Pdfe.Core.Document.PdfRectangle? Rect { get; }
+        public string? Value { get; }
+        public void SetValue(string? value) { }
+        public override string ToString() { }
+    }
+    public enum PdfFieldType
+    {
+        Unknown = 0,
+        Button = 1,
+        Text = 2,
+        Choice = 3,
+        Signature = 4,
+    }
+    public static class PdfFormAutoDetector
+    {
+        public static int Apply(Pdfe.Core.Document.PdfDocument document, System.Collections.Generic.IEnumerable<Pdfe.Core.Document.SuggestedField> suggestions) { }
+        public static System.Collections.Generic.IReadOnlyList<Pdfe.Core.Document.SuggestedField> Scan(Pdfe.Core.Document.PdfDocument doc) { }
+        public static System.Collections.Generic.IReadOnlyList<Pdfe.Core.Document.SuggestedField> ScanPage(Pdfe.Core.Document.PdfPage page, int pageNumber = 1) { }
+    }
+    public sealed class PdfLink
+    {
+        public PdfLink(Pdfe.Core.Document.PdfRectangle rect, int destinationPage) { }
+        public int DestinationPage { get; }
+        public Pdfe.Core.Document.PdfRectangle Rect { get; }
+    }
+    public static class PdfLinkParser
+    {
+        public static System.Collections.Generic.IReadOnlyList<Pdfe.Core.Document.PdfLink> Parse(Pdfe.Core.Document.PdfDocument doc, Pdfe.Core.Primitives.PdfDictionary pageDict, System.Collections.Generic.Dictionary<System.ValueTuple<int, int>, int> pageRefToNumber, System.Collections.Generic.Dictionary<string, Pdfe.Core.Primitives.PdfObject>? namedDests) { }
+    }
+    public sealed class PdfOcg : System.IEquatable<Pdfe.Core.Document.PdfOcg>
+    {
+        public PdfOcg(string Name, bool IsVisibleByDefault, Pdfe.Core.Primitives.PdfDictionary RawDictionary) { }
+        public bool IsVisibleByDefault { get; init; }
+        public string Name { get; init; }
+        public Pdfe.Core.Primitives.PdfDictionary RawDictionary { get; init; }
+    }
+    public sealed class PdfOcgConfig
+    {
+        public PdfOcgConfig(System.Collections.Generic.IReadOnlyList<Pdfe.Core.Document.PdfOcg> allOcgs, System.Collections.Generic.IReadOnlySet<string> offByDefault, string intent = "View", string baseState = "ON", Pdfe.Core.Primitives.PdfObject? layerOrder = null) { }
+        public System.Collections.Generic.IReadOnlyList<Pdfe.Core.Document.PdfOcg> AllOcgs { get; }
+        public string BaseState { get; }
+        public string Intent { get; }
+        public Pdfe.Core.Primitives.PdfObject? LayerOrder { get; }
+        public System.Collections.Generic.IReadOnlySet<string> OffByDefault { get; }
+        public bool IsVisibleByDefault(string ocgName) { }
+    }
+    public sealed class PdfOutlineItem
+    {
+        public PdfOutlineItem(string title, int? pageNumber, System.Collections.Generic.IReadOnlyList<Pdfe.Core.Document.PdfOutlineItem> children) { }
+        public System.Collections.Generic.IReadOnlyList<Pdfe.Core.Document.PdfOutlineItem> Children { get; }
+        public int? PageNumber { get; }
+        public string Title { get; }
+    }
+    public static class PdfOutlineParser
+    {
+        public static System.Collections.Generic.Dictionary<string, Pdfe.Core.Primitives.PdfObject>? BuildNamedDestinations(Pdfe.Core.Document.PdfDocument doc) { }
+        public static System.Collections.Generic.Dictionary<System.ValueTuple<int, int>, int> BuildPageRefMap(Pdfe.Core.Document.PdfDocument doc) { }
+        public static System.Collections.Generic.IReadOnlyList<Pdfe.Core.Document.PdfOutlineItem> Parse(Pdfe.Core.Document.PdfDocument doc) { }
+    }
+    public class PdfPage
+    {
+        public Pdfe.Core.Document.PdfRectangle ArtBox { get; }
+        public Pdfe.Core.Document.PdfRectangle BleedBox { get; }
+        public Pdfe.Core.Document.PdfRectangle CropBox { get; }
+        public Pdfe.Core.Primitives.PdfDictionary Dictionary { get; }
+        public Pdfe.Core.Document.PdfDocument Document { get; }
+        public double Height { get; }
+        public System.Collections.Generic.IReadOnlyList<Pdfe.Core.Text.Letter> Letters { get; }
+        public Pdfe.Core.Document.PdfRectangle MediaBox { get; }
+        public int PageNumber { get; }
+        public Pdfe.Core.Primitives.PdfDictionary? Resources { get; }
+        public int Rotation { get; set; }
+        public string Text { get; }
+        public Pdfe.Core.Document.PdfRectangle TrimBox { get; }
+        public double VisualHeight { get; }
+        public double VisualWidth { get; }
+        public double Width { get; }
+        public string AddFont(Pdfe.Core.Graphics.PdfFont font) { }
+        public System.Collections.Generic.IReadOnlyList<Pdfe.Core.Document.PdfAnnotation> GetAnnotations() { }
+        public Pdfe.Core.Primitives.PdfObject? GetColorSpaceObject(string name) { }
+        public Pdfe.Core.Content.ContentStream GetContentStream() { }
+        public byte[] GetContentStreamBytes() { }
+        public Pdfe.Core.Primitives.PdfDictionary? GetExtGState(string name) { }
+        public Pdfe.Core.Primitives.PdfDictionary? GetFont(string fontName) { }
+        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "Name",
+                "Font"})]
+        public System.Collections.Generic.IEnumerable<System.ValueTuple<string, Pdfe.Core.Primitives.PdfDictionary>> GetFonts() { }
+        public System.Collections.Generic.IReadOnlyList<Pdfe.Core.Document.PdfField> GetFormFields() { }
+        public Pdfe.Core.Graphics.PdfGraphics GetGraphics() { }
+        public System.Collections.Generic.IReadOnlyList<Pdfe.Core.Document.PdfLink> GetLinks() { }
+        public Pdfe.Core.Primitives.PdfDictionary? GetShading(string name) { }
+        public System.Collections.Generic.IReadOnlyList<Pdfe.Core.Text.Word> GetWords() { }
+        public Pdfe.Core.Primitives.PdfObject? GetXObject(string name) { }
+        public void SetContentStream(Pdfe.Core.Content.ContentStream content) { }
+        public void SetContentStreamBytes(byte[] data) { }
+        public Pdfe.Core.Document.PdfRectangle ToContentStreamCoordinates(Pdfe.Core.Document.PdfRectangle visualRect) { }
+        public override string ToString() { }
+    }
+    public sealed class PdfPageLabel : System.IEquatable<Pdfe.Core.Document.PdfPageLabel>
+    {
+        public PdfPageLabel(string? Prefix = null, Pdfe.Core.Document.PdfPageLabelStyle Style = 5, int StartNumber = 1) { }
+        public string? Prefix { get; init; }
+        public int StartNumber { get; init; }
+        public Pdfe.Core.Document.PdfPageLabelStyle Style { get; init; }
+        public string Format(int pageOffset) { }
+    }
+    public enum PdfPageLabelStyle
+    {
+        Decimal = 0,
+        UppercaseRoman = 1,
+        LowercaseRoman = 2,
+        UppercaseLetters = 3,
+        LowercaseLetters = 4,
+        None = 5,
+    }
+    public readonly struct PdfPoint : System.IEquatable<Pdfe.Core.Document.PdfPoint>
+    {
+        public PdfPoint(double X, double Y) { }
+        public double X { get; init; }
+        public double Y { get; init; }
+        public override string ToString() { }
+    }
+    public readonly struct PdfRectangle : System.IEquatable<Pdfe.Core.Document.PdfRectangle>
+    {
+        public PdfRectangle(double Left, double Bottom, double Right, double Top) { }
+        public double Bottom { get; init; }
+        public double Height { get; }
+        public double Left { get; init; }
+        public double Right { get; init; }
+        public double Top { get; init; }
+        public double Width { get; }
+        public bool Contains(double x, double y) { }
+        public bool IntersectsWith(Pdfe.Core.Document.PdfRectangle other) { }
+        public Pdfe.Core.Document.PdfRectangle Normalize() { }
+        public override string ToString() { }
+        public static Pdfe.Core.Document.PdfRectangle FromArray(Pdfe.Core.Primitives.PdfArray arr) { }
+    }
+    public sealed class PdfStructElement
+    {
+        public PdfStructElement(string type, string? altText = null, string? actualText = null, string? language = null, int? pageNumber = default, System.Collections.Generic.IReadOnlyList<Pdfe.Core.Document.PdfStructElement>? children = null, System.Collections.Generic.IReadOnlyList<int>? markedContentIds = null, Pdfe.Core.Primitives.PdfDictionary? rawDictionary = null) { }
+        public string? ActualText { get; }
+        public string? AltText { get; }
+        public System.Collections.Generic.IReadOnlyList<Pdfe.Core.Document.PdfStructElement> Children { get; }
+        public string? Language { get; }
+        public System.Collections.Generic.IReadOnlyList<int> MarkedContentIds { get; }
+        public int? PageNumber { get; }
+        public Pdfe.Core.Primitives.PdfDictionary RawDictionary { get; }
+        public string Type { get; }
+        public override string ToString() { }
+    }
+    public sealed class SuggestedField : System.IEquatable<Pdfe.Core.Document.SuggestedField>
+    {
+        public SuggestedField(Pdfe.Core.Document.PdfFieldType FieldType, Pdfe.Core.Document.PdfRectangle Rect, int PageNumber, string SuggestedName, string Reason) { }
+        public Pdfe.Core.Document.PdfFieldType FieldType { get; init; }
+        public int PageNumber { get; init; }
+        public string Reason { get; init; }
+        public Pdfe.Core.Document.PdfRectangle Rect { get; init; }
+        public string SuggestedName { get; init; }
+    }
+}
+namespace Pdfe.Core.Fonts
+{
+    public static class CffSubsetter
+    {
+        public static byte[] Subset(byte[] originalCff, System.Collections.Generic.IReadOnlySet<int> usedGlyphIds) { }
+    }
+}
+namespace Pdfe.Core.Graphics
+{
+    public class PdfBrush
+    {
+        public static readonly Pdfe.Core.Graphics.PdfBrush Black;
+        public static readonly Pdfe.Core.Graphics.PdfBrush Blue;
+        public static readonly Pdfe.Core.Graphics.PdfBrush Green;
+        public static readonly Pdfe.Core.Graphics.PdfBrush Red;
+        public static readonly Pdfe.Core.Graphics.PdfBrush White;
+        public PdfBrush(Pdfe.Core.Graphics.PdfColor color) { }
+        public Pdfe.Core.Graphics.PdfColor Color { get; }
+    }
+    public readonly struct PdfColor : System.IEquatable<Pdfe.Core.Graphics.PdfColor>
+    {
+        public static readonly Pdfe.Core.Graphics.PdfColor Black;
+        public static readonly Pdfe.Core.Graphics.PdfColor Blue;
+        public static readonly Pdfe.Core.Graphics.PdfColor Cyan;
+        public static readonly Pdfe.Core.Graphics.PdfColor Green;
+        public static readonly Pdfe.Core.Graphics.PdfColor Magenta;
+        public static readonly Pdfe.Core.Graphics.PdfColor Red;
+        public static readonly Pdfe.Core.Graphics.PdfColor White;
+        public static readonly Pdfe.Core.Graphics.PdfColor Yellow;
+        public PdfColor(double r, double g, double b) { }
+        public double B { get; }
+        public double G { get; }
+        public bool IsGrayscale { get; }
+        public double R { get; }
+        public bool Equals(Pdfe.Core.Graphics.PdfColor other) { }
+        public override bool Equals(object? obj) { }
+        public override int GetHashCode() { }
+        public override string ToString() { }
+        public static Pdfe.Core.Graphics.PdfColor FromGray(double gray) { }
+        public static Pdfe.Core.Graphics.PdfColor FromRgb(byte r, byte g, byte b) { }
+        public static bool operator !=(Pdfe.Core.Graphics.PdfColor left, Pdfe.Core.Graphics.PdfColor right) { }
+        public static bool operator ==(Pdfe.Core.Graphics.PdfColor left, Pdfe.Core.Graphics.PdfColor right) { }
+    }
+    public class PdfFont
+    {
+        public PdfFont(string name, string baseFont, double size) { }
+        public double Ascender { get; }
+        public string BaseFont { get; }
+        public double Descender { get; }
+        public bool IsStandard14 { get; }
+        public double LineHeight { get; }
+        public string Name { get; }
+        public double Size { get; }
+        public Pdfe.Core.Primitives.PdfDictionary CreateFontDictionary() { }
+        public string EncodeString(string text) { }
+        public double MeasureWidth(string text) { }
+        public override string ToString() { }
+        public Pdfe.Core.Graphics.PdfFont WithName(string name) { }
+        public Pdfe.Core.Graphics.PdfFont WithSize(double size) { }
+        public static Pdfe.Core.Graphics.PdfFont Courier(double size) { }
+        public static Pdfe.Core.Graphics.PdfFont CourierBold(double size) { }
+        public static Pdfe.Core.Graphics.PdfFont CourierOblique(double size) { }
+        public static Pdfe.Core.Graphics.PdfFont Helvetica(double size) { }
+        public static Pdfe.Core.Graphics.PdfFont HelveticaBold(double size) { }
+        public static Pdfe.Core.Graphics.PdfFont HelveticaOblique(double size) { }
+        public static Pdfe.Core.Graphics.PdfFont TimesBold(double size) { }
+        public static Pdfe.Core.Graphics.PdfFont TimesItalic(double size) { }
+        public static Pdfe.Core.Graphics.PdfFont TimesRoman(double size) { }
+        public static class StandardFonts
+        {
+            public const string Courier = "Courier";
+            public const string CourierBold = "Courier-Bold";
+            public const string CourierBoldOblique = "Courier-BoldOblique";
+            public const string CourierOblique = "Courier-Oblique";
+            public const string Helvetica = "Helvetica";
+            public const string HelveticaBold = "Helvetica-Bold";
+            public const string HelveticaBoldOblique = "Helvetica-BoldOblique";
+            public const string HelveticaOblique = "Helvetica-Oblique";
+            public const string Symbol = "Symbol";
+            public const string TimesBold = "Times-Bold";
+            public const string TimesBoldItalic = "Times-BoldItalic";
+            public const string TimesItalic = "Times-Italic";
+            public const string TimesRoman = "Times-Roman";
+            public const string ZapfDingbats = "ZapfDingbats";
+        }
+    }
+    public class PdfGraphics : System.IDisposable
+    {
+        public void BeginPath() { }
+        public void ClosePath() { }
+        public void CurveTo(double x1, double y1, double x2, double y2, double x3, double y3) { }
+        public void Dispose() { }
+        public void DrawLine(double x1, double y1, double x2, double y2, Pdfe.Core.Graphics.PdfPen pen) { }
+        public void DrawRectangle(double x, double y, double width, double height, Pdfe.Core.Graphics.PdfBrush fill) { }
+        public void DrawRectangle(double x, double y, double width, double height, Pdfe.Core.Graphics.PdfBrush? fill, Pdfe.Core.Graphics.PdfPen? stroke) { }
+        public void DrawString(string text, Pdfe.Core.Graphics.PdfFont font, Pdfe.Core.Graphics.PdfBrush brush, double x, double y) { }
+        public void DrawString(string text, Pdfe.Core.Graphics.PdfFont font, Pdfe.Core.Graphics.PdfBrush brush, double x, double y, Pdfe.Core.Graphics.TextAlignment alignment) { }
+        public void Fill(Pdfe.Core.Graphics.PdfBrush brush) { }
+        public void FillAndStroke(Pdfe.Core.Graphics.PdfBrush brush, Pdfe.Core.Graphics.PdfPen pen) { }
+        public void Flush() { }
+        public string GetOperators() { }
+        public void LineTo(double x, double y) { }
+        public void MoveTo(double x, double y) { }
+        public void RestoreState() { }
+        public void Rotate(double degrees) { }
+        public void SaveState() { }
+        public void Scale(double sx, double sy) { }
+        public void Stroke(Pdfe.Core.Graphics.PdfPen pen) { }
+        public void Transform(double a, double b, double c, double d, double e, double f) { }
+        public void Translate(double tx, double ty) { }
+        public static Pdfe.Core.Graphics.PdfSize MeasureString(string text, Pdfe.Core.Graphics.PdfFont font) { }
+    }
+    public class PdfPen
+    {
+        public static readonly Pdfe.Core.Graphics.PdfPen Black;
+        public static readonly Pdfe.Core.Graphics.PdfPen Red;
+        public static readonly Pdfe.Core.Graphics.PdfPen White;
+        public PdfPen(Pdfe.Core.Graphics.PdfColor color, double width = 1) { }
+        public Pdfe.Core.Graphics.PdfColor Color { get; }
+        public double Width { get; }
+    }
+    public readonly struct PdfSize : System.IEquatable<Pdfe.Core.Graphics.PdfSize>
+    {
+        public static readonly Pdfe.Core.Graphics.PdfSize Empty;
+        public PdfSize(double Width, double Height) { }
+        public double Height { get; init; }
+        public double Width { get; init; }
+        public override string ToString() { }
+    }
+    public enum TextAlignment
+    {
+        Left = 0,
+        Center = 1,
+        Right = 2,
+    }
+}
+namespace Pdfe.Core.Operations
+{
+    public class PdfRedaction
+    {
+        public Pdfe.Core.Operations.PdfRedaction AllText() { }
+        public Pdfe.Core.Operations.RedactionResult Apply() { }
+        public Pdfe.Core.Operations.PdfRedaction Area(Pdfe.Core.Document.PdfRectangle rect) { }
+        public Pdfe.Core.Operations.PdfRedaction Area(double left, double bottom, double right, double top) { }
+        public Pdfe.Core.Operations.PdfRedaction BlackMarkers() { }
+        public Pdfe.Core.Operations.PdfRedaction Category(Pdfe.Core.Content.OperatorCategory category) { }
+        public Pdfe.Core.Operations.PdfRedaction Letters(System.Func<Pdfe.Core.Text.Letter, bool> predicate) { }
+        public Pdfe.Core.Operations.PdfRedaction MarkerColor(double r, double g, double b) { }
+        public Pdfe.Core.Operations.PdfRedaction Text(string searchText) { }
+        public Pdfe.Core.Operations.PdfRedaction WhiteMarkers() { }
+        public Pdfe.Core.Operations.PdfRedaction WithMarkers(bool draw = true) { }
+        public static Pdfe.Core.Operations.PdfRedaction OnPage(Pdfe.Core.Document.PdfPage page) { }
+    }
+    public class RedactionResult
+    {
+        public RedactionResult() { }
+        public bool AllTextRemoved { get; set; }
+        public int AreasRedacted { get; set; }
+        public int CategoriesRemoved { get; set; }
+        public int LettersRedacted { get; set; }
+        public int OperatorsRemoved { get; set; }
+        public int TextOccurrencesRedacted { get; set; }
+        public bool WasRedacted { get; }
+        public override string ToString() { }
+    }
+    public class TextRedactor
+    {
+        public TextRedactor() { }
+        public void RedactArea(Pdfe.Core.Document.PdfPage page, Pdfe.Core.Document.PdfRectangle area, bool drawMarker = true, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "R",
+                "G",
+                "B"})] System.ValueTuple<double, double, double>? markerColor = default) { }
+        public int RedactLetters(Pdfe.Core.Document.PdfPage page, System.Func<Pdfe.Core.Text.Letter, bool> letterPredicate, bool drawMarker = true, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "R",
+                "G",
+                "B"})] System.ValueTuple<double, double, double>? markerColor = default) { }
+        public int RedactText(Pdfe.Core.Document.PdfPage page, string searchText, bool drawMarker = true, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "R",
+                "G",
+                "B"})] System.ValueTuple<double, double, double>? markerColor = default) { }
+    }
+}
+namespace Pdfe.Core.Parsing
+{
+    public class PdfEncryptionNotSupportedException : System.Exception
+    {
+        public PdfEncryptionNotSupportedException() { }
+        public PdfEncryptionNotSupportedException(string message) { }
+    }
+    public class PdfLexer : System.IDisposable
+    {
+        public PdfLexer(byte[] data) { }
+        public PdfLexer(System.IO.Stream stream, bool ownsStream = false) { }
+        public long Position { get; }
+        public void Dispose() { }
+        public Pdfe.Core.Parsing.PdfToken NextToken() { }
+        public Pdfe.Core.Parsing.PdfToken PeekToken() { }
+        public byte[] ReadStreamData(int length) { }
+        public void Seek(long position) { }
+    }
+    public class PdfParseException : System.Exception
+    {
+        public PdfParseException(string message) { }
+        public PdfParseException(string message, System.Exception inner) { }
+    }
+    public class PdfParser : System.IDisposable
+    {
+        public PdfParser(System.IO.Stream stream) { }
+        public PdfParser(byte[] data) { }
+        public PdfParser(Pdfe.Core.Parsing.PdfLexer lexer, bool ownsLexer = false) { }
+        public System.Threading.CancellationToken CancellationToken { get; set; }
+        public System.Func<int, Pdfe.Core.Primitives.PdfObject?>? IndirectObjectResolver { get; set; }
+        public Pdfe.Core.Parsing.PdfLexer Lexer { get; }
+        public int MaxNestingDepth { get; set; }
+        public long Position { get; }
+        public void Dispose() { }
+        public Pdfe.Core.Primitives.PdfIndirectObject ParseIndirectObject() { }
+        public Pdfe.Core.Primitives.PdfObject ParseObject() { }
+        public void Seek(long position) { }
+        public Pdfe.Core.Primitives.PdfIndirectObject? TryParseIndirectObject() { }
+    }
+    public readonly struct PdfToken
+    {
+        public PdfToken(Pdfe.Core.Parsing.PdfTokenType type, string value, long position) { }
+        public bool IsEof { get; }
+        public bool IsNumber { get; }
+        public long Position { get; }
+        public Pdfe.Core.Parsing.PdfTokenType Type { get; }
+        public string Value { get; }
+        public bool IsKeyword(string keyword) { }
+        public override string ToString() { }
+    }
+    public enum PdfTokenType
+    {
+        Eof = 0,
+        Integer = 1,
+        Real = 2,
+        LiteralString = 3,
+        HexString = 4,
+        Name = 5,
+        Keyword = 6,
+        ArrayStart = 7,
+        ArrayEnd = 8,
+        DictionaryStart = 9,
+        DictionaryEnd = 10,
+        Comment = 11,
+    }
+    public class StreamDecompressor
+    {
+        public StreamDecompressor() { }
+        public byte[] ApplyFilter(string filterName, byte[] data, Pdfe.Core.Primitives.PdfDictionary? parms) { }
+        public void Decompress(Pdfe.Core.Primitives.PdfStream stream) { }
+    }
+    public class XRefEntry
+    {
+        public XRefEntry() { }
+        public int Generation { get; init; }
+        public bool InUse { get; init; }
+        public int? IndexInStream { get; init; }
+        public bool IsCompressed { get; }
+        public int? ObjectStreamNumber { get; init; }
+        public long Offset { get; init; }
+        public override string ToString() { }
+    }
+    public class XRefParser
+    {
+        public XRefParser(System.IO.Stream stream) { }
+        public long FindStartXRef() { }
+        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "Trailer",
+                "XRef"})]
+        public System.ValueTuple<Pdfe.Core.Primitives.PdfDictionary, System.Collections.Generic.Dictionary<int, Pdfe.Core.Parsing.XRefEntry>> ParseXRef(long position) { }
+    }
+}
+namespace Pdfe.Core.Primitives
+{
+    public sealed class PdfArray : Pdfe.Core.Primitives.PdfObject, System.Collections.Generic.ICollection<Pdfe.Core.Primitives.PdfObject>, System.Collections.Generic.IEnumerable<Pdfe.Core.Primitives.PdfObject>, System.Collections.Generic.IList<Pdfe.Core.Primitives.PdfObject>, System.Collections.IEnumerable
+    {
+        public PdfArray() { }
+        public PdfArray(params Pdfe.Core.Primitives.PdfObject[] items) { }
+        public PdfArray(System.Collections.Generic.IEnumerable<Pdfe.Core.Primitives.PdfObject> items) { }
+        public int Count { get; }
+        public bool IsReadOnly { get; }
+        public Pdfe.Core.Primitives.PdfObject this[int index] { get; set; }
+        public override Pdfe.Core.Primitives.PdfObjectType ObjectType { get; }
+        public void Add(Pdfe.Core.Primitives.PdfObject item) { }
+        public void Add(double value) { }
+        public void Add(int value) { }
+        public void Add(string value) { }
+        public void Clear() { }
+        public bool Contains(Pdfe.Core.Primitives.PdfObject item) { }
+        public void CopyTo(Pdfe.Core.Primitives.PdfObject[] array, int arrayIndex) { }
+        public T Get<T>(int index)
+            where T : Pdfe.Core.Primitives.PdfObject { }
+        public System.Collections.Generic.IEnumerator<Pdfe.Core.Primitives.PdfObject> GetEnumerator() { }
+        public int GetInt(int index) { }
+        public string GetName(int index) { }
+        public double GetNumber(int index) { }
+        public string GetString(int index) { }
+        public int IndexOf(Pdfe.Core.Primitives.PdfObject item) { }
+        public void Insert(int index, Pdfe.Core.Primitives.PdfObject item) { }
+        public bool Remove(Pdfe.Core.Primitives.PdfObject item) { }
+        public void RemoveAt(int index) { }
+        public double[] ToDoubleArray() { }
+        public int[] ToIntArray() { }
+        public override string ToString() { }
+        public T? TryGet<T>(int index)
+            where T : Pdfe.Core.Primitives.PdfObject { }
+        public static Pdfe.Core.Primitives.PdfArray FromMatrix(double a, double b, double c, double d, double e, double f) { }
+        public static Pdfe.Core.Primitives.PdfArray FromRectangle(double left, double bottom, double right, double top) { }
+    }
+    public sealed class PdfBoolean : Pdfe.Core.Primitives.PdfObject
+    {
+        public static readonly Pdfe.Core.Primitives.PdfBoolean False;
+        public static readonly Pdfe.Core.Primitives.PdfBoolean True;
+        public override Pdfe.Core.Primitives.PdfObjectType ObjectType { get; }
+        public bool Value { get; }
+        public override string ToString() { }
+        public static Pdfe.Core.Primitives.PdfBoolean Get(bool value) { }
+        public static bool op_Implicit(Pdfe.Core.Primitives.PdfBoolean b) { }
+        public static Pdfe.Core.Primitives.PdfBoolean op_Implicit(bool b) { }
+    }
+    public class PdfDictionary : Pdfe.Core.Primitives.PdfObject, System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<Pdfe.Core.Primitives.PdfName, Pdfe.Core.Primitives.PdfObject>>, System.Collections.Generic.IDictionary<Pdfe.Core.Primitives.PdfName, Pdfe.Core.Primitives.PdfObject>, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<Pdfe.Core.Primitives.PdfName, Pdfe.Core.Primitives.PdfObject>>, System.Collections.IEnumerable
+    {
+        public PdfDictionary() { }
+        public PdfDictionary(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<Pdfe.Core.Primitives.PdfName, Pdfe.Core.Primitives.PdfObject>> entries) { }
+        public int Count { get; }
+        public bool IsReadOnly { get; }
+        public Pdfe.Core.Primitives.PdfObject this[Pdfe.Core.Primitives.PdfName key] { get; set; }
+        public Pdfe.Core.Primitives.PdfObject this[string key] { get; set; }
+        public System.Collections.Generic.ICollection<Pdfe.Core.Primitives.PdfName> Keys { get; }
+        public override Pdfe.Core.Primitives.PdfObjectType ObjectType { get; }
+        public System.Collections.Generic.ICollection<Pdfe.Core.Primitives.PdfObject> Values { get; }
+        public void Add(Pdfe.Core.Primitives.PdfName key, Pdfe.Core.Primitives.PdfObject value) { }
+        public void Add(string key, Pdfe.Core.Primitives.PdfObject value) { }
+        public void Clear() { }
+        public Pdfe.Core.Primitives.PdfDictionary Clone() { }
+        public bool ContainsKey(Pdfe.Core.Primitives.PdfName key) { }
+        public bool ContainsKey(string key) { }
+        public T Get<T>(string key)
+            where T : Pdfe.Core.Primitives.PdfObject { }
+        public Pdfe.Core.Primitives.PdfArray GetArray(string key) { }
+        public Pdfe.Core.Primitives.PdfArray? GetArrayOrNull(string key) { }
+        public bool GetBool(string key, bool defaultValue = false) { }
+        public Pdfe.Core.Primitives.PdfDictionary GetDictionary(string key) { }
+        public Pdfe.Core.Primitives.PdfDictionary? GetDictionaryOrNull(string key) { }
+        public System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<Pdfe.Core.Primitives.PdfName, Pdfe.Core.Primitives.PdfObject>> GetEnumerator() { }
+        public int GetInt(string key) { }
+        public int GetInt(string key, int defaultValue) { }
+        public string GetName(string key) { }
+        public string? GetNameOrNull(string key) { }
+        public double GetNumber(string key) { }
+        public double GetNumber(string key, double defaultValue) { }
+        public Pdfe.Core.Primitives.PdfObject? GetOptional(string key) { }
+        public Pdfe.Core.Primitives.PdfReference GetReference(string key) { }
+        public Pdfe.Core.Primitives.PdfReference? GetReferenceOrNull(string key) { }
+        public string GetString(string key) { }
+        public string? GetStringOrNull(string key) { }
+        public bool Remove(Pdfe.Core.Primitives.PdfName key) { }
+        public bool Remove(string key) { }
+        public void Set(string key, Pdfe.Core.Primitives.PdfObject value) { }
+        public void SetBool(string key, bool value) { }
+        public void SetInt(string key, int value) { }
+        public void SetName(string key, string value) { }
+        public void SetNumber(string key, double value) { }
+        public void SetString(string key, string value) { }
+        public override string ToString() { }
+        public T? TryGet<T>(string key)
+            where T : Pdfe.Core.Primitives.PdfObject { }
+        public bool TryGetValue(Pdfe.Core.Primitives.PdfName key, out Pdfe.Core.Primitives.PdfObject value) { }
+        public bool TryGetValue(string key, out Pdfe.Core.Primitives.PdfObject value) { }
+    }
+    public sealed class PdfIndirectObject
+    {
+        public PdfIndirectObject(int objectNumber, int generation, Pdfe.Core.Primitives.PdfObject value) { }
+        public int Generation { get; }
+        public int ObjectNumber { get; }
+        public Pdfe.Core.Primitives.PdfReference Reference { get; }
+        public Pdfe.Core.Primitives.PdfObject Value { get; }
+        public override string ToString() { }
+    }
+    public sealed class PdfInteger : Pdfe.Core.Primitives.PdfObject
+    {
+        public PdfInteger(long value) { }
+        public override Pdfe.Core.Primitives.PdfObjectType ObjectType { get; }
+        public long Value { get; }
+        public override bool Equals(object? obj) { }
+        public override int GetHashCode() { }
+        public override string ToString() { }
+        public static long op_Implicit(Pdfe.Core.Primitives.PdfInteger i) { }
+        public static int op_Implicit(Pdfe.Core.Primitives.PdfInteger i) { }
+        public static double op_Implicit(Pdfe.Core.Primitives.PdfInteger i) { }
+        public static Pdfe.Core.Primitives.PdfInteger op_Implicit(int i) { }
+        public static Pdfe.Core.Primitives.PdfInteger op_Implicit(long l) { }
+    }
+    public sealed class PdfName : Pdfe.Core.Primitives.PdfObject, System.IEquatable<Pdfe.Core.Primitives.PdfName>
+    {
+        public static readonly Pdfe.Core.Primitives.PdfName AIS;
+        public static readonly Pdfe.Core.Primitives.PdfName ASCII85Decode;
+        public static readonly Pdfe.Core.Primitives.PdfName ASCIIHexDecode;
+        public static readonly Pdfe.Core.Primitives.PdfName ArtBox;
+        public static readonly Pdfe.Core.Primitives.PdfName Author;
+        public static readonly Pdfe.Core.Primitives.PdfName BM;
+        public static readonly Pdfe.Core.Primitives.PdfName BaseFont;
+        public static readonly Pdfe.Core.Primitives.PdfName BitsPerComponent;
+        public static readonly Pdfe.Core.Primitives.PdfName BleedBox;
+        public static readonly Pdfe.Core.Primitives.PdfName CA;
+        public static readonly Pdfe.Core.Primitives.PdfName CCITTFaxDecode;
+        public static readonly Pdfe.Core.Primitives.PdfName CF;
+        public static readonly Pdfe.Core.Primitives.PdfName CIDFontType0;
+        public static readonly Pdfe.Core.Primitives.PdfName CIDFontType2;
+        public static readonly Pdfe.Core.Primitives.PdfName CIDSystemInfo;
+        public static readonly Pdfe.Core.Primitives.PdfName CalGray;
+        public static readonly Pdfe.Core.Primitives.PdfName CalRGB;
+        public static readonly Pdfe.Core.Primitives.PdfName Catalog;
+        public static readonly Pdfe.Core.Primitives.PdfName ColorSpace;
+        public static readonly Pdfe.Core.Primitives.PdfName Contents;
+        public static readonly Pdfe.Core.Primitives.PdfName Count;
+        public static readonly Pdfe.Core.Primitives.PdfName CreationDate;
+        public static readonly Pdfe.Core.Primitives.PdfName Creator;
+        public static readonly Pdfe.Core.Primitives.PdfName CropBox;
+        public static readonly Pdfe.Core.Primitives.PdfName Crypt;
+        public static readonly Pdfe.Core.Primitives.PdfName DCTDecode;
+        public static readonly Pdfe.Core.Primitives.PdfName DW;
+        public static readonly Pdfe.Core.Primitives.PdfName DecodeArray;
+        public static readonly Pdfe.Core.Primitives.PdfName DecodeParms;
+        public static readonly Pdfe.Core.Primitives.PdfName DescendantFonts;
+        public static readonly Pdfe.Core.Primitives.PdfName DeviceCMYK;
+        public static readonly Pdfe.Core.Primitives.PdfName DeviceGray;
+        public static readonly Pdfe.Core.Primitives.PdfName DeviceN;
+        public static readonly Pdfe.Core.Primitives.PdfName DeviceRGB;
+        public static readonly Pdfe.Core.Primitives.PdfName Encoding;
+        public static readonly Pdfe.Core.Primitives.PdfName Encrypt;
+        public static readonly Pdfe.Core.Primitives.PdfName ExtGState;
+        public static readonly Pdfe.Core.Primitives.PdfName Filter;
+        public static readonly Pdfe.Core.Primitives.PdfName FirstChar;
+        public static readonly Pdfe.Core.Primitives.PdfName FlateDecode;
+        public static readonly Pdfe.Core.Primitives.PdfName Font;
+        public static readonly Pdfe.Core.Primitives.PdfName FontDescriptor;
+        public static readonly Pdfe.Core.Primitives.PdfName Form;
+        public static readonly Pdfe.Core.Primitives.PdfName Height;
+        public static readonly Pdfe.Core.Primitives.PdfName ICCBased;
+        public static readonly Pdfe.Core.Primitives.PdfName ID;
+        public static readonly Pdfe.Core.Primitives.PdfName Image;
+        public static readonly Pdfe.Core.Primitives.PdfName ImageMask;
+        public static readonly Pdfe.Core.Primitives.PdfName Index;
+        public static readonly Pdfe.Core.Primitives.PdfName Indexed;
+        public static readonly Pdfe.Core.Primitives.PdfName Info;
+        public static readonly Pdfe.Core.Primitives.PdfName Interpolate;
+        public static readonly Pdfe.Core.Primitives.PdfName JBIG2Decode;
+        public static readonly Pdfe.Core.Primitives.PdfName JPXDecode;
+        public static readonly Pdfe.Core.Primitives.PdfName Keywords;
+        public static readonly Pdfe.Core.Primitives.PdfName Kids;
+        public static readonly Pdfe.Core.Primitives.PdfName LZWDecode;
+        public static readonly Pdfe.Core.Primitives.PdfName Lab;
+        public static readonly Pdfe.Core.Primitives.PdfName LastChar;
+        public static readonly Pdfe.Core.Primitives.PdfName Length;
+        public static readonly Pdfe.Core.Primitives.PdfName Mask;
+        public static readonly Pdfe.Core.Primitives.PdfName MediaBox;
+        public static readonly Pdfe.Core.Primitives.PdfName Metadata;
+        public static readonly Pdfe.Core.Primitives.PdfName ModDate;
+        public static readonly Pdfe.Core.Primitives.PdfName O;
+        public static readonly Pdfe.Core.Primitives.PdfName P;
+        public static readonly Pdfe.Core.Primitives.PdfName Page;
+        public static readonly Pdfe.Core.Primitives.PdfName Pages;
+        public static readonly Pdfe.Core.Primitives.PdfName Parent;
+        public static readonly Pdfe.Core.Primitives.PdfName Pattern;
+        public static readonly Pdfe.Core.Primitives.PdfName Prev;
+        public static readonly Pdfe.Core.Primitives.PdfName ProcSet;
+        public static readonly Pdfe.Core.Primitives.PdfName Producer;
+        public static readonly Pdfe.Core.Primitives.PdfName Properties;
+        public static readonly Pdfe.Core.Primitives.PdfName R;
+        public static readonly Pdfe.Core.Primitives.PdfName Resources;
+        public static readonly Pdfe.Core.Primitives.PdfName Root;
+        public static readonly Pdfe.Core.Primitives.PdfName Rotate;
+        public static readonly Pdfe.Core.Primitives.PdfName RunLengthDecode;
+        public static readonly Pdfe.Core.Primitives.PdfName SMask;
+        public static readonly Pdfe.Core.Primitives.PdfName Separation;
+        public static readonly Pdfe.Core.Primitives.PdfName Shading;
+        public static readonly Pdfe.Core.Primitives.PdfName Size;
+        public static readonly Pdfe.Core.Primitives.PdfName StmF;
+        public static readonly Pdfe.Core.Primitives.PdfName StrF;
+        public static readonly Pdfe.Core.Primitives.PdfName Subject;
+        public static readonly Pdfe.Core.Primitives.PdfName Subtype;
+        public static readonly Pdfe.Core.Primitives.PdfName TK;
+        public static readonly Pdfe.Core.Primitives.PdfName Title;
+        public static readonly Pdfe.Core.Primitives.PdfName ToUnicode;
+        public static readonly Pdfe.Core.Primitives.PdfName TrimBox;
+        public static readonly Pdfe.Core.Primitives.PdfName TrueType;
+        public static readonly Pdfe.Core.Primitives.PdfName Type;
+        public static readonly Pdfe.Core.Primitives.PdfName Type0;
+        public static readonly Pdfe.Core.Primitives.PdfName Type1;
+        public static readonly Pdfe.Core.Primitives.PdfName U;
+        public static readonly Pdfe.Core.Primitives.PdfName V;
+        public static readonly Pdfe.Core.Primitives.PdfName W;
+        public static readonly Pdfe.Core.Primitives.PdfName Width;
+        public static readonly Pdfe.Core.Primitives.PdfName Widths;
+        public static readonly Pdfe.Core.Primitives.PdfName XObject;
+        public static readonly Pdfe.Core.Primitives.PdfName XRef;
+        public static readonly Pdfe.Core.Primitives.PdfName ca;
+        public PdfName(string value) { }
+        public override Pdfe.Core.Primitives.PdfObjectType ObjectType { get; }
+        public string Value { get; }
+        public bool Equals(Pdfe.Core.Primitives.PdfName? other) { }
+        public override bool Equals(object? obj) { }
+        public override int GetHashCode() { }
+        public string ToEncodedString() { }
+        public override string ToString() { }
+        public static string Decode(string encoded) { }
+        public static string op_Implicit(Pdfe.Core.Primitives.PdfName n) { }
+        public static Pdfe.Core.Primitives.PdfName op_Implicit(string s) { }
+        public static bool operator !=(Pdfe.Core.Primitives.PdfName? left, Pdfe.Core.Primitives.PdfName? right) { }
+        public static bool operator ==(Pdfe.Core.Primitives.PdfName? left, Pdfe.Core.Primitives.PdfName? right) { }
+    }
+    public sealed class PdfNull : Pdfe.Core.Primitives.PdfObject
+    {
+        public static readonly Pdfe.Core.Primitives.PdfNull Instance;
+        public override Pdfe.Core.Primitives.PdfObjectType ObjectType { get; }
+        public override string ToString() { }
+    }
+    public static class PdfNumberExtensions
+    {
+        public static int GetInt(this Pdfe.Core.Primitives.PdfObject obj) { }
+        public static long GetLong(this Pdfe.Core.Primitives.PdfObject obj) { }
+        public static double GetNumber(this Pdfe.Core.Primitives.PdfObject obj) { }
+        public static bool TryGetNumber(this Pdfe.Core.Primitives.PdfObject? obj, out double value) { }
+    }
+    public abstract class PdfObject
+    {
+        protected PdfObject() { }
+        public int? GenerationNumber { get; set; }
+        public bool IsIndirect { get; }
+        public int? ObjectNumber { get; set; }
+        public abstract Pdfe.Core.Primitives.PdfObjectType ObjectType { get; }
+        public T? As<T>()
+            where T : Pdfe.Core.Primitives.PdfObject { }
+        public T Expect<T>()
+            where T : Pdfe.Core.Primitives.PdfObject { }
+    }
+    public enum PdfObjectType
+    {
+        Null = 0,
+        Boolean = 1,
+        Integer = 2,
+        Real = 3,
+        String = 4,
+        Name = 5,
+        Array = 6,
+        Dictionary = 7,
+        Stream = 8,
+        Reference = 9,
+    }
+    public sealed class PdfReal : Pdfe.Core.Primitives.PdfObject
+    {
+        public PdfReal(double value) { }
+        public override Pdfe.Core.Primitives.PdfObjectType ObjectType { get; }
+        public double Value { get; }
+        public override bool Equals(object? obj) { }
+        public override int GetHashCode() { }
+        public override string ToString() { }
+        public static double op_Implicit(Pdfe.Core.Primitives.PdfReal r) { }
+        public static Pdfe.Core.Primitives.PdfReal op_Implicit(double d) { }
+    }
+    public sealed class PdfReference : Pdfe.Core.Primitives.PdfObject, System.IEquatable<Pdfe.Core.Primitives.PdfReference>
+    {
+        public PdfReference(int objectNum, int generation = 0) { }
+        public int Generation { get; }
+        public int ObjectNum { get; }
+        public override Pdfe.Core.Primitives.PdfObjectType ObjectType { get; }
+        public bool Equals(Pdfe.Core.Primitives.PdfReference? other) { }
+        public override bool Equals(object? obj) { }
+        public override int GetHashCode() { }
+        public override string ToString() { }
+        public static Pdfe.Core.Primitives.PdfReference Parse(string s) { }
+        public static bool operator !=(Pdfe.Core.Primitives.PdfReference? left, Pdfe.Core.Primitives.PdfReference? right) { }
+        public static bool operator ==(Pdfe.Core.Primitives.PdfReference? left, Pdfe.Core.Primitives.PdfReference? right) { }
+    }
+    public class PdfStream : Pdfe.Core.Primitives.PdfDictionary
+    {
+        public PdfStream() { }
+        public PdfStream(byte[] data) { }
+        public PdfStream(Pdfe.Core.Primitives.PdfDictionary dictionary, byte[] encodedData) { }
+        public System.Collections.Generic.IReadOnlyList<Pdfe.Core.Primitives.PdfDictionary?> DecodeParams { get; }
+        public byte[] DecodedData { get; set; }
+        public byte[] EncodedData { get; }
+        public System.Collections.Generic.IReadOnlyList<string> Filters { get; }
+        public bool IsDecoded { get; }
+        public bool IsFiltered { get; }
+        public int Length { get; }
+        public override Pdfe.Core.Primitives.PdfObjectType ObjectType { get; }
+        public string GetDecodedString() { }
+        public string GetDecodedString(System.Text.Encoding encoding) { }
+        public override string ToString() { }
+    }
+    public sealed class PdfString : Pdfe.Core.Primitives.PdfObject, System.IEquatable<Pdfe.Core.Primitives.PdfString>
+    {
+        public PdfString(byte[] bytes, bool isHex = false) { }
+        public PdfString(string text, bool isHex = false) { }
+        public byte[] Bytes { get; }
+        public bool IsHex { get; }
+        public override Pdfe.Core.Primitives.PdfObjectType ObjectType { get; }
+        public string Value { get; }
+        public bool Equals(Pdfe.Core.Primitives.PdfString? other) { }
+        public override bool Equals(object? obj) { }
+        public override int GetHashCode() { }
+        public string ToHexString() { }
+        public string ToLiteralString() { }
+        public override string ToString() { }
+        public static Pdfe.Core.Primitives.PdfString FromHex(string hex) { }
+        public static Pdfe.Core.Primitives.PdfString FromText(string text) { }
+        public static string op_Implicit(Pdfe.Core.Primitives.PdfString s) { }
+        public static Pdfe.Core.Primitives.PdfString op_Implicit(string s) { }
+    }
+}
+namespace Pdfe.Core.Security
+{
+    public sealed class PdfStandardSecurityHandler
+    {
+        public int KeyLengthBytes { get; }
+        public int R { get; }
+        public bool UsesAes { get; }
+        public int V { get; }
+        public byte[] DecryptStream(int objNum, int gen, byte[] cipherBytes) { }
+        public byte[] DecryptString(int objNum, int gen, byte[] cipherBytes) { }
+        public static Pdfe.Core.Security.PdfStandardSecurityHandler Build(Pdfe.Core.Primitives.PdfDictionary encryptDict, byte[] firstId, byte[] userPassword) { }
+    }
+}
+namespace Pdfe.Core.Text
+{
+    public class Letter
+    {
+        public Letter(string value, Pdfe.Core.Document.PdfRectangle glyphRectangle, double fontSize, string fontName, double startX, double startY, double width, int characterCode, int codeByteLength = 1) { }
+        public int CharacterCode { get; }
+        public int CodeByteLength { get; }
+        public Pdfe.Core.Document.PdfPoint EndBaseLine { get; }
+        public string FontName { get; }
+        public double FontSize { get; }
+        public Pdfe.Core.Document.PdfRectangle GlyphRectangle { get; }
+        public bool IsInHiddenOptionalContent { get; set; }
+        public Pdfe.Core.Document.PdfPoint StartBaseLine { get; }
+        public double StartX { get; }
+        public double StartY { get; }
+        public string Value { get; }
+        public double Width { get; }
+        public override string ToString() { }
+    }
+    public class TextExtractor
+    {
+        public TextExtractor(Pdfe.Core.Document.PdfPage page) { }
+        public bool IncludeFormFieldValues { get; set; }
+        public System.Collections.Generic.IReadOnlyList<Pdfe.Core.Text.Letter> ExtractLetters() { }
+        public string ExtractText() { }
+        public System.Collections.Generic.IReadOnlyList<Pdfe.Core.Text.Word> ExtractWords() { }
+    }
+    public class ToUnicodeCMapParser
+    {
+        public ToUnicodeCMapParser() { }
+        public System.Collections.Generic.IReadOnlyList<Pdfe.Core.Text.ToUnicodeCMapParser.CodespaceRange> CodespaceRanges { get; }
+        public System.Collections.Generic.IReadOnlyDictionary<int, string> Mapping { get; }
+        public int MaxCodeBytes { get; }
+        public static System.Collections.Generic.Dictionary<int, string> Parse(byte[] cmapData) { }
+        public static System.Collections.Generic.Dictionary<int, string> Parse(string cmapContent) { }
+        public static Pdfe.Core.Text.ToUnicodeCMapParser ParseDetailed(byte[] cmapData) { }
+        public readonly struct CodespaceRange : System.IEquatable<Pdfe.Core.Text.ToUnicodeCMapParser.CodespaceRange>
+        {
+            public CodespaceRange(int Low, int High, int Bytes) { }
+            public int Bytes { get; init; }
+            public int High { get; init; }
+            public int Low { get; init; }
+        }
+    }
+    public class Word
+    {
+        public Word(System.Collections.Generic.IReadOnlyList<Pdfe.Core.Text.Letter> letters) { }
+        public Pdfe.Core.Document.PdfRectangle BoundingBox { get; }
+        public System.Collections.Generic.IReadOnlyList<Pdfe.Core.Text.Letter> Letters { get; }
+        public string Text { get; }
+        public override string ToString() { }
+    }
+}
+namespace Pdfe.Core.Text.Segmentation
+{
+    public enum GlyphOverlapType
+    {
+        None = 0,
+        Full = 1,
+        Partial = 2,
+    }
+    public enum GlyphRemovalStrategy
+    {
+        AnyOverlap = 0,
+        FullyContained = 1,
+        CenterPoint = 2,
+    }
+    public class GlyphRemover
+    {
+        public GlyphRemover() { }
+        public GlyphRemover(Pdfe.Core.Text.Segmentation.LetterFinder letterFinder, Pdfe.Core.Text.Segmentation.TextSegmenter textSegmenter, Pdfe.Core.Text.Segmentation.OperationReconstructor reconstructor) { }
+        public System.Collections.Generic.List<Pdfe.Core.Content.ContentOperator> ProcessOperations(System.Collections.Generic.IReadOnlyList<Pdfe.Core.Content.ContentOperator> operations, System.Collections.Generic.IReadOnlyList<Pdfe.Core.Text.Letter> letters, Pdfe.Core.Document.PdfRectangle redactionArea, Pdfe.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0) { }
+    }
+    public static class HiddenTextDetector
+    {
+        public static System.Collections.Generic.IReadOnlyList<Pdfe.Core.Text.Segmentation.HiddenTextRecord> Scan(Pdfe.Core.Document.PdfDocument document) { }
+        public static System.Collections.Generic.IReadOnlyList<Pdfe.Core.Text.Segmentation.HiddenTextRecord> ScanPage(Pdfe.Core.Document.PdfPage page, int pageNumber = 1) { }
+    }
+    public sealed class HiddenTextRecord : System.IEquatable<Pdfe.Core.Text.Segmentation.HiddenTextRecord>
+    {
+        public HiddenTextRecord(int PageNumber, string Text, Pdfe.Core.Document.PdfRectangle BoundingBox, string HiddenBy) { }
+        public Pdfe.Core.Document.PdfRectangle BoundingBox { get; init; }
+        public string HiddenBy { get; init; }
+        public int PageNumber { get; init; }
+        public string Text { get; init; }
+    }
+    public class LetterFinder
+    {
+        public LetterFinder() { }
+        public System.Collections.Generic.List<Pdfe.Core.Text.Segmentation.LetterMatch> FindOperationLetters(string operationText, System.Collections.Generic.IReadOnlyList<Pdfe.Core.Text.Letter> allLetters) { }
+    }
+    public class LetterMatch
+    {
+        public LetterMatch() { }
+        public required int CharacterIndex { get; init; }
+        public required Pdfe.Core.Text.Letter Letter { get; init; }
+        public byte[]? RawBytes { get; set; }
+        public object? SourceOperation { get; set; }
+    }
+    public static class ObstructionStripper
+    {
+        public static void StripObstructions(Pdfe.Core.Document.PdfPage page) { }
+    }
+    public class OperationReconstructor
+    {
+        public OperationReconstructor() { }
+        public System.Collections.Generic.List<Pdfe.Core.Content.ContentOperator> ReconstructWithPositioning(System.Collections.Generic.List<Pdfe.Core.Text.Segmentation.TextSegment> segments, Pdfe.Core.Text.Segmentation.OperationReconstructor.Context context) { }
+        public sealed class Context
+        {
+            public Context() { }
+            public double CharacterSpacing { get; init; }
+            public required string FontName { get; init; }
+            public required double FontSize { get; init; }
+            public double HorizontalScaling { get; init; }
+            public double TextLeading { get; init; }
+            public int TextRenderingMode { get; init; }
+            public double TextRise { get; init; }
+            public double WordSpacing { get; init; }
+        }
+    }
+    public static class PdfDocumentRedactionExtensions
+    {
+        public static int RedactText(this Pdfe.Core.Document.PdfDocument document, string text, bool caseSensitive = false, Pdfe.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool drawBlackRect = true, bool includeHiddenLayers = true) { }
+    }
+    public static class PdfPageRedactionExtensions
+    {
+        public static void RedactArea(this Pdfe.Core.Document.PdfPage page, Pdfe.Core.Document.PdfRectangle area, Pdfe.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0) { }
+        public static void RedactAreas(this Pdfe.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Pdfe.Core.Document.PdfRectangle> areas, Pdfe.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0) { }
+    }
+    public class TextSegment
+    {
+        public TextSegment() { }
+        public Pdfe.Core.Document.PdfRectangle BoundingBox { get; }
+        public int EndIndex { get; set; }
+        public bool HasToUnicode { get; set; }
+        public required double Height { get; set; }
+        public bool IsCidFont { get; set; }
+        public bool IsPartialOverlap { get; }
+        public required bool Keep { get; init; }
+        public System.Collections.Generic.List<Pdfe.Core.Text.Segmentation.LetterMatch> LetterMatches { get; set; }
+        public required string OriginalText { get; init; }
+        public Pdfe.Core.Text.Segmentation.GlyphOverlapType OverlapType { get; set; }
+        public required int StartIndex { get; init; }
+        public required double StartX { get; init; }
+        public required double StartY { get; init; }
+        public string Text { get; }
+        public bool WasHexString { get; set; }
+        public double Width { get; set; }
+        public byte[] GetRawBytes() { }
+    }
+    public class TextSegmenter
+    {
+        public TextSegmenter() { }
+        public System.Collections.Generic.List<Pdfe.Core.Text.Segmentation.TextSegment> BuildSegments(string text, Pdfe.Core.Document.PdfRectangle operationBounds, System.Collections.Generic.List<Pdfe.Core.Text.Segmentation.LetterMatch> letterMatches, Pdfe.Core.Document.PdfRectangle redactionArea, Pdfe.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0) { }
+    }
+}
+namespace Pdfe.Core.Writing
+{
+    public class PdfDocumentWriter
+    {
+        public PdfDocumentWriter(Pdfe.Core.Document.PdfDocument document) { }
+        public void Write(System.IO.Stream stream) { }
+    }
+    public static class PdfObjectWriter
+    {
+        public static string Serialize(Pdfe.Core.Primitives.PdfObject obj) { }
+        public static void SerializeObject(Pdfe.Core.Primitives.PdfObject obj, System.Text.StringBuilder sb) { }
+        public static void SerializeStreamDictionary(Pdfe.Core.Primitives.PdfStream stream, System.Text.StringBuilder sb) { }
+    }
+}

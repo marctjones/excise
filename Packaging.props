@@ -1,0 +1,28 @@
+<Project>
+  <!--
+    Shared packaging settings for the publishable Pdfe libraries
+    (Pdfe.Core, Pdfe.Rendering, Pdfe.Avalonia). Imported explicitly by each
+    packable .csproj — NOT a Directory.Build.props, so it never touches the
+    app/test/CLI projects.
+
+    SourceLink for GitHub is built into the .NET SDK (8.0+), so we enable it
+    via properties only — adding the Microsoft.SourceLink.GitHub package
+    explicitly would raise NU1510 and break the zero-warning build.
+
+    Distribution note: these produce clean .nupkg + .snupkg for consumption
+    via a local/private feed or project reference. We deliberately do NOT
+    publish to nuget.org (see issues #383 / #384).
+  -->
+  <PropertyGroup>
+    <!-- Embed repo + commit so debuggers can fetch exact sources (SourceLink). -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <!-- Ship a portable symbol package alongside the .nupkg for step-into debugging. -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <DebugType>portable</DebugType>
+    <!-- Deterministic, path-normalized builds on CI. -->
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+</Project>

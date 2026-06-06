@@ -391,6 +391,22 @@ git push origin v2.1.0           # workflow runs, attaches installers
 # Or via the GitHub UI: Releases → Draft a new release → choose tag
 ```
 
+## Versioning & API stability
+
+The publishable libraries — **`Pdfe.Core`**, **`Pdfe.Rendering`**, **`Pdfe.Avalonia`** — follow [Semantic Versioning](https://semver.org/) on their **public** API:
+
+- **MAJOR** — a breaking change to a public type/member.
+- **MINOR** — backward-compatible additions (new types/members/overloads).
+- **PATCH** — backward-compatible fixes with no public-API change.
+
+What counts as the supported public contract:
+
+- Public types and members of the three libraries are the contract. Anything marked `internal` (or excluded from the public surface) may change in any release.
+- The high-level authoring surface — `Pdfe.Core.Authoring.*` (`PdfDocumentBuilder`, `TextStyle`, `PageSize`, `PageMargins`, `FontFamily`, `LayoutContext`) — is the recommended, stable entry point for *writing* PDFs. The low-level `PdfGraphics` / `AcroFormAuthoring` API remains available as an escape hatch.
+- The public API is **gated in CI**: `PublicApiApprovalTests` snapshots the full public surface of `Pdfe.Core` against a committed baseline (`Pdfe.Core.Tests/PublicApi/Pdfe.Core.approved.txt`). Any addition, removal, or signature change fails the build until the baseline is intentionally regenerated (`APPROVE_PUBLIC_API=1`) and committed — so every public-API change is a deliberate, reviewable SemVer decision.
+
+**Distribution:** packages ship as `.nupkg` + `.snupkg` (symbols) with [SourceLink](https://github.com/dotnet/sourcelink) for step-into debugging, attached to each [GitHub Release](https://github.com/marctjones/pdfe/releases). They are **not published to nuget.org** — consume them via a local/private feed or a project reference. See issues #383 (writer DX) and #384 (viewer/render DX).
+
 ## Documentation
 
 - **[CHANGELOG.md](CHANGELOG.md)** — release notes
