@@ -4,6 +4,45 @@ All notable changes to pdfe are documented here. Format roughly follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 semantic versioning.
 
+## [2.5.0] — 2026-06-06
+
+Completes the **PromptResponse writer epic (#382)** — pdfe can now author
+accessible, fillable, Unicode PDFs from structured content. All additive; the
+public-API gate confirms no breaking changes.
+
+### Added
+- **Unicode text + embedded fonts (#378).** `PdfFont.FromFile(path, size)` /
+  `FromTrueType(bytes|Stream, size)` embed a TrueType font as a Type0 /
+  Identity-H composite font with a ToUnicode CMap, so arbitrary Unicode (CJK,
+  Arabic, accented Latin, Greek, Cyrillic, …) both renders and stays
+  extractable. Backed by a new dependency-free sfnt reader
+  (`Pdfe.Core.Fonts.TrueTypeFontFile`). Full-font embedding; subsetting and CFF
+  ('OTTO') are tracked in #393.
+- **High-level text layout (#379).** `PdfGraphics.DrawText(text, font, brush,
+  PdfRectangle, …)` word-wraps into a box and returns a `TextLayoutResult`
+  (used height + overflow) for flowing across boxes/pages; `MeasureText(...)`
+  returns wrapped size.
+- **AcroForm field options (#380).** `/TU` tooltip (accessible name) on all
+  field types; `/MaxLen` + comb for text fields; `AddDateField` (Acrobat
+  `AFDate` format/keystroke actions); `SetTabOrder` (page `/Tabs`).
+- **Document metadata (#381).** `PdfDocument.SetTitle/SetAuthor/SetSubject/
+  SetKeywords/SetCreator/SetProducer` (creates the `/Info` dict on demand) and a
+  read/write `Language` property (catalog `/Lang`, required by PDF/UA).
+- **`PdfDocumentBuilder`** gains `Title/Author/Subject/Keywords/Language`,
+  `DateField`, and `tooltip`/`maxLength`/`comb` passthrough on fields (with
+  `/TU` defaulting to the visible label for screen readers).
+
+### Changed
+- `PdfFont` text-encoding/measurement/metrics members are now `virtual` so
+  embedded fonts can override them; standard-font behavior is unchanged.
+- Dependencies: bumped `FluentAvaloniaUI` to the latest preview (#340; full
+  de-preview is blocked on an upstream FluentAvalonia 3.x stable for Avalonia 12).
+
+### Tests / CI
+- Raised `Pdfe.Core` CI line coverage to ~93% and ratcheted the gate to 92.5%
+  (#351); CI installs `fonts-dejavu-core` so the embedding tests run
+  deterministically. The macOS `.app` is now built and attached by CI.
+
 ## [2.4.1] — 2026-06-06
 
 Packaging, API-stability, and CI hardening on top of v2.4.0. No public-API
