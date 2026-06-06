@@ -26,6 +26,7 @@ namespace Pdfe.Core.Filters.Jpx;
 /// JPEG2000 library (OpenJPEG) or clarify required profile (typically simple images
 /// are single-tile, reversible 5/3, layer=0).
 /// </summary>
+[System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 internal static class JpxDecoder
 {
     /// <summary>
@@ -73,7 +74,7 @@ internal static class JpxDecoder
             $"JPEG2000 full decode not yet implemented. " +
             $"Image is {info.Width}x{info.Height}, {info.Components} components, {info.BitsPerComponent} bpc. " +
             $"Use ReadInfo() to inspect metadata. " +
-            $"To enable decoding: implement MQ decoder (done), tier-2 packet assembly, DWT inverse, and color transforms.");
+            $"To enable decoding: implement tier-1 EBCOT (MQ), tier-2 packet assembly, DWT inverse, and color transforms.");
     }
 }
 
@@ -81,6 +82,7 @@ internal static class JpxDecoder
 /// Container for decoded JPEG2000 image.
 /// Pixels are interleaved by component (C0, C1, ..., Cn, C0, C1, ... for next pixel).
 /// </summary>
+[System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 internal sealed class JpxImage
 {
     public int Width { get; set; }

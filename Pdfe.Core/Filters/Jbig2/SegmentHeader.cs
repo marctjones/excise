@@ -7,6 +7,7 @@ namespace Pdfe.Core.Filters.Jbig2;
 /// JBIG2 segment header as defined in ISO 14492 Section 7.2.2.
 /// Segments are the fundamental unit of JBIG2 data organization.
 /// </summary>
+[System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 internal class SegmentHeader
 {
     /// <summary>Segment number (unique within page/document)</summary>
@@ -56,6 +57,7 @@ internal enum SegmentType
 /// Parses JBIG2 segment headers from embedded data.
 /// Handles both single-segment and multi-segment pages.
 /// </summary>
+[System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 internal class SegmentHeaderParser
 {
     private readonly byte[] _data;

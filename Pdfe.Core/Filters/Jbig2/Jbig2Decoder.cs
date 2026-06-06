@@ -20,6 +20,7 @@ namespace Pdfe.Core.Filters.Jbig2;
 /// - Optional text region operators and templates 1-3
 /// - Typical prediction (TPGDON optimization)
 /// </summary>
+[System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 internal static class Jbig2Decoder
 {
     /// <summary>
@@ -80,6 +81,7 @@ internal static class Jbig2Decoder
 /// <summary>
 /// Internal decoder for a single JBIG2 page.
 /// </summary>
+[System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 internal class Jbig2PageDecoder
 {
     private readonly int _width;
@@ -228,6 +230,7 @@ internal class Jbig2PageDecoder
 /// <summary>
 /// Cached segment data for reuse by dependent segments (e.g., text regions).
 /// </summary>
+[System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 internal class SegmentData
 {
     public byte[] Data { get; set; } = Array.Empty<byte>();

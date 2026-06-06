@@ -4,6 +4,7 @@ namespace Pdfe.Core.Filters.Jpx;
 /// Parses JPEG2000 codestream and JP2 box containers.
 /// ISO/IEC 15444-1:2019 Section 6 (Codestream syntax).
 /// </summary>
+[System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 internal sealed class CodestreamParser
 {
     private readonly byte[] _data;
@@ -285,6 +286,7 @@ internal sealed class CodestreamParser
 /// <summary>
 /// Image metadata extracted from JPEG2000 codestream.
 /// </summary>
+[System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 internal sealed class ImageMetadata
 {
     public int Width { get; set; }

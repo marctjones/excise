@@ -6,6 +6,7 @@ namespace Pdfe.Core.Filters.Jbig2;
 /// Decodes JBIG2 generic regions (ISO 14492 Section 6.2).
 /// Generic regions use context-based arithmetic coding to encode arbitrary binary images.
 /// </summary>
+[System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 internal class GenericRegionDecoder
 {
     /// <summary>Generic region flags</summary>

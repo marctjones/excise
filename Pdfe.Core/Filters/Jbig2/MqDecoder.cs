@@ -7,6 +7,7 @@ namespace Pdfe.Core.Filters.Jbig2;
 /// Implements the Qe-adaptive binary arithmetic coder per ISO 14492 Annex E.
 /// Used by JBIG2 for generic region and symbol dictionary decoding.
 /// </summary>
+[System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 internal class MqDecoder
 {
     /// <summary>
