@@ -526,53 +526,10 @@ public sealed class PdfDocumentBuilder
 
     /// <summary>
     /// Greedy word-wrap to <paramref name="maxWidth"/> points using the font's
-    /// own metrics. Hard line breaks (\n, \r\n) in the input are preserved; a
-    /// single word longer than the column is emitted on its own (over)long line.
+    /// own metrics (delegates to the shared <see cref="TextWrapper"/>).
     /// </summary>
     internal static IEnumerable<string> WrapText(string text, PdfFont font, double maxWidth)
-    {
-        if (string.IsNullOrEmpty(text))
-        {
-            yield return string.Empty;
-            yield break;
-        }
-
-        var hardLines = text.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
-        foreach (var hardLine in hardLines)
-        {
-            if (hardLine.Length == 0)
-            {
-                yield return string.Empty;
-                continue;
-            }
-
-            var words = hardLine.Split(' ');
-            var current = new System.Text.StringBuilder();
-            foreach (var word in words)
-            {
-                if (current.Length == 0)
-                {
-                    current.Append(word);
-                    continue;
-                }
-
-                var candidate = current.ToString() + " " + word;
-                if (maxWidth > 0 && font.MeasureWidth(candidate) > maxWidth)
-                {
-                    yield return current.ToString();
-                    current.Clear();
-                    current.Append(word);
-                }
-                else
-                {
-                    current.Append(' ').Append(word);
-                }
-            }
-
-            if (current.Length > 0)
-                yield return current.ToString();
-        }
-    }
+        => TextWrapper.Wrap(text, font, maxWidth);
 }
 
 /// <summary>
