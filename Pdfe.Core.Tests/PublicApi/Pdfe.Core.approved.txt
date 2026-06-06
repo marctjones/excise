@@ -714,6 +714,7 @@ namespace Pdfe.Core.Graphics
         public void DrawRectangle(double x, double y, double width, double height, Pdfe.Core.Graphics.PdfBrush? fill, Pdfe.Core.Graphics.PdfPen? stroke) { }
         public void DrawString(string text, Pdfe.Core.Graphics.PdfFont font, Pdfe.Core.Graphics.PdfBrush brush, double x, double y) { }
         public void DrawString(string text, Pdfe.Core.Graphics.PdfFont font, Pdfe.Core.Graphics.PdfBrush brush, double x, double y, Pdfe.Core.Graphics.TextAlignment alignment) { }
+        public Pdfe.Core.Graphics.TextLayoutResult DrawText(string text, Pdfe.Core.Graphics.PdfFont font, Pdfe.Core.Graphics.PdfBrush brush, Pdfe.Core.Document.PdfRectangle bounds, Pdfe.Core.Graphics.TextAlignment alignment = 0, double lineSpacing = 1.2) { }
         public void Fill(Pdfe.Core.Graphics.PdfBrush brush) { }
         public void FillAndStroke(Pdfe.Core.Graphics.PdfBrush brush, Pdfe.Core.Graphics.PdfPen pen) { }
         public void Flush() { }
@@ -728,6 +729,7 @@ namespace Pdfe.Core.Graphics
         public void Transform(double a, double b, double c, double d, double e, double f) { }
         public void Translate(double tx, double ty) { }
         public static Pdfe.Core.Graphics.PdfSize MeasureString(string text, Pdfe.Core.Graphics.PdfFont font) { }
+        public static Pdfe.Core.Graphics.PdfSize MeasureText(string text, Pdfe.Core.Graphics.PdfFont font, double maxWidth, double lineSpacing = 1.2) { }
     }
     public class PdfPen
     {
@@ -751,6 +753,13 @@ namespace Pdfe.Core.Graphics
         Left = 0,
         Center = 1,
         Right = 2,
+    }
+    public readonly struct TextLayoutResult : System.IEquatable<Pdfe.Core.Graphics.TextLayoutResult>
+    {
+        public TextLayoutResult(double UsedHeight, string? Overflow) { }
+        public bool HasOverflow { get; }
+        public string? Overflow { get; init; }
+        public double UsedHeight { get; init; }
     }
 }
 namespace Pdfe.Core.Operations
