@@ -455,8 +455,12 @@ public class PdfPage
             fontName = $"F{counter++}";
         }
 
-        // Add the font dictionary
-        fontDict[fontName] = font.CreateFontDictionary();
+        // Add the font dictionary (embedded fonts register their own indirect
+        // stream objects in the document and return a Type0 dictionary).
+        var builtFont = font.BuildFontDictionary(_document);
+        fontDict[fontName] = font.PreferIndirectFontDictionary
+            ? _document.AddIndirectObject(builtFont)
+            : builtFont;
 
         return fontName;
     }
