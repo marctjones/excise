@@ -95,6 +95,21 @@ public class TaggedPdfTests
     }
 
     [Fact]
+    public void Tagged_FormFields_AppearInStructureTreeAsForm()
+    {
+        var pdf = PdfDocumentBuilder.Create().Tagged()
+            .TextField("Name", "name")
+            .CheckBox("Agree", "agree")
+            .SaveToBytes();
+
+        using var doc = PdfDocument.Open(pdf);
+        StructTypes(doc).Should().Contain("Form", "form widgets must be in the structure tree (PDF/UA)");
+        // The widget annotation gets a /StructParent linking it into the ParentTree.
+        var field = doc.GetAcroForm()!.FindField("name")!;
+        field.RawDictionary.GetOptional("StructParent").Should().NotBeNull();
+    }
+
+    [Fact]
     public void NotTagged_HasNoStructTree()
     {
         var pdf = PdfDocumentBuilder.Create().Paragraph("hello").SaveToBytes();

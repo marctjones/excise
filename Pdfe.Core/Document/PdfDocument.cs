@@ -1010,6 +1010,19 @@ public class PdfDocument : IDisposable
     internal void RegisterPreSaveAction(Action action) => _preSaveActions.Add(action);
 
     /// <summary>
+    /// Find the indirect reference of a cached object instance (by identity), or
+    /// null if it isn't a top-level indirect object. Used by tagged-PDF authoring
+    /// to reference a widget annotation from the structure tree (/OBJR).
+    /// </summary>
+    internal PdfReference? GetReferenceTo(PdfObject obj)
+    {
+        foreach (var (num, cached) in _objectCache)
+            if (ReferenceEquals(cached, obj))
+                return new PdfReference(num, 0);
+        return null;
+    }
+
+    /// <summary>
     /// Save the document to a stream.
     /// </summary>
     public void Save(Stream outputStream)
