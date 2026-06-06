@@ -417,6 +417,148 @@ public sealed class PdfDocumentBuilder
     }
 
     /// <summary>
+    /// Adds a table whose body cells are interactive AcroForm fields — a fillable
+    /// grid. The first column is a non-editable row header; each remaining column
+    /// holds a text input, checkbox, or dropdown (per <see cref="FillableTableCell.Kind"/>).
+    /// Mirrors <see cref="Table"/>'s layout (column weights, gridlines, pagination)
+    /// but places live fields instead of static text.
+    /// </summary>
+    /// <param name="columnHeaders">The data-column headers (excludes the row-label column).</param>
+    /// <param name="rows">The body rows.</param>
+    /// <param name="columnWeights">
+    /// Relative widths for the data columns; null distributes evenly. The row-label
+    /// column uses <paramref name="labelColumnWeight"/>.
+    /// </param>
+    /// <param name="labelColumnWeight">Relative width of the leading row-label column.</param>
+    public PdfDocumentBuilder FillableTable(
+        IReadOnlyList<string> columnHeaders,
+        IReadOnlyList<FillableTableRow> rows,
+        double[]? columnWeights = null,
+        double labelColumnWeight = 1.0)
+    {
+        ArgumentNullException.ThrowIfNull(columnHeaders);
+        ArgumentNullException.ThrowIfNull(rows);
+        EnsurePage();
+
+        int dataCols = columnHeaders.Count;
+        int cols = dataCols + 1; // leading row-label column
+
+        var rawWeights = new double[cols];
+        rawWeights[0] = labelColumnWeight <= 0 ? 1.0 : labelColumnWeight;
+        for (int c = 0; c < dataCols; c++)
+            rawWeights[c + 1] = (columnWeights != null && c < columnWeights.Length) ? columnWeights[c] : 1.0;
+        var weights = NormalizeWeights(rawWeights, cols);
+
+        var tableElem = _tagging?.AddElement("Table");
+
+        // Header row (static text): empty corner + the column headers.
+        var headerCells = new (string, TextStyle)[cols];
+        var headerStyle = TextStyle.Body.AsBold().WithSpaceAfter(0);
+        headerCells[0] = (string.Empty, headerStyle);
+        for (int c = 0; c < dataCols; c++)
+            headerCells[c + 1] = (columnHeaders[c] ?? string.Empty, headerStyle);
+        var headerTr = _tagging?.AddElement("TR", tableElem);
+        Row(headerCells, weights, cellPadding: 4, spaceAfter: 0, gridLines: true, rowParent: headerTr, cellStructType: "TH");
+
+        foreach (var row in rows)
+            FillableRow(row, weights, tableElem);
+
+        _cursorY -= TextStyle.Body.SpaceAfter;
+        return this;
+    }
+
+    /// <summary>Renders one body row of a <see cref="FillableTable"/>: a text row
+    /// header followed by an interactive field per data column.</summary>
+    private void FillableRow(
+        FillableTableRow row,
+        double[] weights,
+        Tagging.StructureTreeBuilder.StructElem? tableElem)
+    {
+        EnsurePage();
+
+        int cols = weights.Length;
+        var colWidths = new double[cols];
+        for (int c = 0; c < cols; c++) colWidths[c] = weights[c] * ContentWidth;
+
+        const double cellPadding = 4;
+        var labelFont = TextStyle.Body.AsBold().ResolveFont();
+        var fieldFont = TextStyle.Body.ResolveFont();
+        double fieldHeight = fieldFont.LineHeight + 6;
+        double rowHeight = fieldHeight + 2 * cellPadding;
+        EnsureSpace(rowHeight);
+
+        double top = _cursorY;
+        var gridPen = new PdfPen(PdfColor.FromGray(0.7), 0.5);
+        var trElem = _tagging?.AddElement("TR", tableElem);
+
+        // Column 0: the row header (static text, tagged TH).
+        double x = ContentLeft;
+        bool tagCell = _tagging != null && trElem != null;
+        if (tagCell)
+        {
+            var th = _tagging!.AddElement("TH", trElem);
+            int mcid = _tagging.AllocateMcid(th, _currentPageNumber);
+            _graphics!.BeginMarkedContent("TH", mcid);
+        }
+        double baseline = top - cellPadding - labelFont.Ascender;
+        _graphics!.DrawString(row.Label ?? string.Empty, labelFont, PdfBrush.Black, x + cellPadding, baseline);
+        if (tagCell) _graphics!.EndMarkedContent();
+        DrawCellBorder(x, top, colWidths[0], rowHeight, gridPen);
+        x += colWidths[0];
+
+        // Data columns: a live field per cell.
+        var cells = row.Cells;
+        for (int c = 0; c < cols - 1; c++)
+        {
+            double cw = colWidths[c + 1];
+            DrawCellBorder(x, top, cw, rowHeight, gridPen);
+
+            if (cells != null && c < cells.Count)
+            {
+                var cell = cells[c];
+                double fLeft = x + cellPadding;
+                double fRight = x + cw - cellPadding;
+                double fTop = top - cellPadding;
+                double fBottom = fTop - fieldHeight;
+
+                switch (cell.Kind)
+                {
+                    case FillableCellKind.CheckBox:
+                        double boxSize = fieldFont.Size;
+                        var boxRect = new PdfRectangle(fLeft, fTop - boxSize, fLeft + boxSize, fTop);
+                        TagFormField(_document.AddCheckBox(_currentPageNumber, boxRect, cell.FieldName,
+                            defaultChecked: IsCheckboxChecked(cell.Value), tooltip: cell.Tooltip));
+                        break;
+
+                    case FillableCellKind.Choice:
+                        var choiceRect = new PdfRectangle(fLeft, fBottom, fRight, fTop);
+                        TagFormField(_document.AddChoiceField(_currentPageNumber, choiceRect, cell.FieldName,
+                            cell.Options ?? Array.Empty<string>(), defaultValue: cell.Value, tooltip: cell.Tooltip));
+                        break;
+
+                    default:
+                        var textRect = new PdfRectangle(fLeft, fBottom, fRight, fTop);
+                        TagFormField(_document.AddTextField(_currentPageNumber, textRect, cell.FieldName,
+                            defaultValue: cell.Value, tooltip: cell.Tooltip));
+                        break;
+                }
+            }
+            x += cw;
+        }
+
+        _cursorY = top - rowHeight;
+    }
+
+    private void DrawCellBorder(double left, double top, double width, double height, PdfPen pen) =>
+        DrawArtifact(() => _graphics!.DrawRectangle(left, top - height, width, height, fill: null, stroke: pen));
+
+    private static readonly HashSet<string> CheckboxTruthy =
+        new(StringComparer.OrdinalIgnoreCase) { "true", "yes", "y", "1", "x", "checked", "on" };
+
+    private static bool IsCheckboxChecked(string? value) =>
+        value != null && CheckboxTruthy.Contains(value.Trim());
+
+    /// <summary>
     /// Escape hatch: draw directly with <see cref="PdfGraphics"/>. The callback
     /// receives the current page's graphics and a layout snapshot (content
     /// box + cursor). Advance the cursor yourself via the returned height by

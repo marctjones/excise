@@ -4,6 +4,18 @@ All notable changes to pdfe are documented here. Format roughly follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 semantic versioning.
 
+## [2.7.0] — 2026-06-06
+
+Fillable-table authoring. Additive; no breaking changes.
+
+### Added
+- **`PdfDocumentBuilder.FillableTable(...)`.** Renders a table whose body cells
+  are interactive AcroForm fields (text input, checkbox, or dropdown per cell) —
+  a fillable grid. Mirrors `Table`'s layout (column weights, gridlines, automatic
+  pagination) but places live fields instead of static text. The first column is a
+  static row-header; each cell's `/TU` accessible name comes from its tooltip.
+  New supporting types: `FillableTableRow`, `FillableTableCell`, `FillableCellKind`.
+
 ## [2.6.0] — 2026-06-06
 
 Font, accessibility, and image-filter additions. All additive; the public-API
