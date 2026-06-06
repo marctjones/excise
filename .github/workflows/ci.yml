@@ -21,6 +21,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Detect whether GUI-relevant code changed. The headless PdfEditor.Tests
+      # suite is slow and Avalonia-dispatcher-sensitive; there's no need to run
+      # it for library-only changes (e.g. a Pdfe.Core-only PR). It still always
+      # runs on pushes to main as a post-merge integration safety net.
+      - name: Detect changed areas
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            gui:
+              - 'PdfEditor/**'
+              - 'PdfEditor.Tests/**'
+
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
@@ -82,6 +95,7 @@ jobs:
           ~/verapdf/verapdf --version || true
 
       - name: Install xvfb for headless UI tests
+        if: steps.changes.outputs.gui == 'true' || github.ref == 'refs/heads/main'
         run: sudo apt-get install -y xvfb
 
       - name: Restore packages
@@ -159,6 +173,10 @@ jobs:
             --logger "console;verbosity=normal" || true
 
       - name: Run PdfEditor.Tests (headless with xvfb)
+        # Skipped for library-only changes (see "Detect changed areas"); always
+        # runs on main. Library changes that affect the GUI are caught by the
+        # main run before any release is cut.
+        if: steps.changes.outputs.gui == 'true' || github.ref == 'refs/heads/main'
         run: |
           xvfb-run -a dotnet test PdfEditor.Tests --no-build -c Debug \
             --logger "console;verbosity=normal" \
