@@ -660,22 +660,25 @@ namespace Pdfe.Core.Graphics
     public class PdfFont
     {
         public PdfFont(string name, string baseFont, double size) { }
-        public double Ascender { get; }
+        public virtual double Ascender { get; }
         public string BaseFont { get; }
-        public double Descender { get; }
+        public virtual double Descender { get; }
         public bool IsStandard14 { get; }
-        public double LineHeight { get; }
+        public virtual double LineHeight { get; }
         public string Name { get; }
         public double Size { get; }
         public Pdfe.Core.Primitives.PdfDictionary CreateFontDictionary() { }
-        public string EncodeString(string text) { }
-        public double MeasureWidth(string text) { }
+        public virtual string EncodeString(string text) { }
+        public virtual double MeasureWidth(string text) { }
         public override string ToString() { }
         public Pdfe.Core.Graphics.PdfFont WithName(string name) { }
         public Pdfe.Core.Graphics.PdfFont WithSize(double size) { }
         public static Pdfe.Core.Graphics.PdfFont Courier(double size) { }
         public static Pdfe.Core.Graphics.PdfFont CourierBold(double size) { }
         public static Pdfe.Core.Graphics.PdfFont CourierOblique(double size) { }
+        public static Pdfe.Core.Graphics.PdfFont FromFile(string path, double size) { }
+        public static Pdfe.Core.Graphics.PdfFont FromTrueType(System.IO.Stream fontStream, double size) { }
+        public static Pdfe.Core.Graphics.PdfFont FromTrueType(byte[] fontData, double size) { }
         public static Pdfe.Core.Graphics.PdfFont Helvetica(double size) { }
         public static Pdfe.Core.Graphics.PdfFont HelveticaBold(double size) { }
         public static Pdfe.Core.Graphics.PdfFont HelveticaOblique(double size) { }
