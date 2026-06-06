@@ -3,14 +3,14 @@ using System.Text;
 namespace Pdfe.Core.Fonts;
 
 /// <summary>
-/// Minimal read-only parser for a TrueType-outline (<c>glyf</c>-based) sfnt font,
-/// exposing exactly what's needed to <em>embed</em> the font and lay out Unicode
-/// text: units-per-em, glyph count, per-glyph advance widths, a Unicode→glyph
-/// (cmap) map, the font bounding box, and vertical metrics.
+/// Minimal read-only parser for a TrueType-outline (<c>glyf</c>-based) or CFF-outline
+/// OpenType sfnt font, exposing exactly what's needed to <em>embed</em> the font and
+/// lay out Unicode text: units-per-em, glyph count, per-glyph advance widths, a
+/// Unicode→glyph (cmap) map, the font bounding box, and vertical metrics.
 ///
-/// <para>Supports the common desktop TrueType files (sfnt version 0x00010000 or
-/// 'true'). CFF-based OpenType ('OTTO') is not handled here — that needs a
-/// CIDFontType0/CFF embedding path (tracked separately).</para>
+/// <para>Supports TrueType files (sfnt version 0x00010000 or 'true') and CFF-based
+/// OpenType ('OTTO'). Both use the same sfnt wrapper with cmap/hmtx/head/hhea/maxp
+/// tables; the only difference is the outline format (glyf vs CFF).</para>
 /// </summary>
 internal sealed class TrueTypeFontFile
 {
@@ -26,17 +26,18 @@ internal sealed class TrueTypeFontFile
     public short Descent { get; }
     public bool IsBold { get; }
     public bool IsItalic { get; }
+    public bool IsCff { get; }
 
     private readonly ushort[] _advanceWidths;          // per glyph id, font units
     private readonly Dictionary<int, int> _cmap;       // unicode codepoint -> gid
 
     private TrueTypeFontFile(byte[] data, ushort unitsPerEm, int glyphCount, string psName,
         short xMin, short yMin, short xMax, short yMax, short ascent, short descent,
-        bool bold, bool italic, ushort[] advanceWidths, Dictionary<int, int> cmap)
+        bool bold, bool italic, bool isCff, ushort[] advanceWidths, Dictionary<int, int> cmap)
     {
         Data = data; UnitsPerEm = unitsPerEm; GlyphCount = glyphCount; PostScriptName = psName;
         XMin = xMin; YMin = yMin; XMax = xMax; YMax = yMax; Ascent = ascent; Descent = descent;
-        IsBold = bold; IsItalic = italic; _advanceWidths = advanceWidths; _cmap = cmap;
+        IsBold = bold; IsItalic = italic; IsCff = isCff; _advanceWidths = advanceWidths; _cmap = cmap;
     }
 
     /// <summary>Glyph id for a Unicode codepoint, or 0 (.notdef) if unmapped.</summary>
@@ -57,9 +58,12 @@ internal sealed class TrueTypeFontFile
         ArgumentNullException.ThrowIfNull(data);
         var r = new BE(data);
         uint sfnt = r.U32(0);
-        if (sfnt != 0x00010000 && sfnt != 0x74727565 /*'true'*/)
+        bool isCff = sfnt == 0x4F54544F; // 'OTTO'
+        bool isTrueType = sfnt == 0x00010000 || sfnt == 0x74727565; // 0x00010000 or 'true'
+
+        if (!isCff && !isTrueType)
             throw new NotSupportedException(
-                "Only TrueType-outline fonts are supported for embedding (not CFF/'OTTO').");
+                "Only TrueType-outline (sfnt 0x00010000 or 'true') and CFF-based OpenType ('OTTO') fonts are supported for embedding.");
 
         ushort numTables = r.U16(4);
         var tables = new Dictionary<string, (int off, int len)>();
@@ -104,7 +108,7 @@ internal sealed class TrueTypeFontFile
 
         return new TrueTypeFontFile(data, unitsPerEm, numGlyphs, psName,
             xMin, yMin, xMax, yMax, ascent, descent,
-            (macStyle & 0x1) != 0, (macStyle & 0x2) != 0, adv, cmap);
+            (macStyle & 0x1) != 0, (macStyle & 0x2) != 0, isCff, adv, cmap);
     }
 
     private static Dictionary<int, int> ParseCmap(BE r, int cmapOff)
