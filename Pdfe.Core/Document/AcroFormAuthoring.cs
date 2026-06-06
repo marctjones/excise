@@ -43,7 +43,10 @@ public static class AcroFormAuthoring
         string? defaultValue = null,
         bool multiline = false,
         bool readOnly = false,
-        bool required = false)
+        bool required = false,
+        string? tooltip = null,
+        int? maxLength = null,
+        bool comb = false)
     {
         ValidateName(fieldName);
 
@@ -52,16 +55,72 @@ public static class AcroFormAuthoring
         widget.SetString("T", fieldName);
         if (defaultValue != null)
             widget.SetString("V", defaultValue);
+        SetTooltip(widget, tooltip);
+
+        // /MaxLen caps the input length; required for a comb field.
+        if (maxLength.HasValue)
+            widget.SetInt("MaxLen", maxLength.Value);
 
         int flags = 0;
-        if (readOnly)  flags |= 0x1;
-        if (required)  flags |= 0x2;
-        if (multiline) flags |= 0x1000;
+        if (readOnly)  flags |= 0x1;        // ReadOnly
+        if (required)  flags |= 0x2;        // Required
+        if (multiline) flags |= 0x1000;     // Multiline (bit 13)
+        // Comb (bit 25) lays text into /MaxLen equal cells. Spec §12.7.4.3:
+        // valid only with /MaxLen and not combined with Multiline/Password/
+        // FileSelect — ignore the request if those preconditions aren't met.
+        if (comb && maxLength.HasValue && !multiline)
+            flags |= 0x1000000;
         if (flags != 0) widget.SetInt("Ff", flags);
 
         // Default appearance: 10-point Helvetica, black. /Helv resolves
         // through the AcroForm /DR resources we set up on first add.
         widget.SetString("DA", "/Helv 10 Tf 0 g");
+
+        return AttachWidget(document, pageNumber, widget, fieldName);
+    }
+
+    /// <summary>
+    /// Add a date text field — a text field carrying Acrobat date format/keystroke
+    /// JavaScript actions so conforming viewers validate and format input, plus an
+    /// optional <paramref name="tooltip"/> (<c>/TU</c>) accessible name.
+    /// <paramref name="format"/> is an Acrobat date mask, e.g. <c>"mm/dd/yyyy"</c>
+    /// or <c>"yyyy-mm-dd"</c>.
+    /// </summary>
+    public static PdfField AddDateField(
+        this PdfDocument document,
+        int pageNumber,
+        PdfRectangle rect,
+        string fieldName,
+        string format = "yyyy-mm-dd",
+        string? defaultValue = null,
+        bool required = false,
+        string? tooltip = null)
+    {
+        ValidateName(fieldName);
+
+        var widget = NewWidgetDict(rect);
+        widget.SetName("FT", "Tx");
+        widget.SetString("T", fieldName);
+        if (defaultValue != null)
+            widget.SetString("V", defaultValue);
+        SetTooltip(widget, tooltip);
+
+        int flags = 0;
+        if (required) flags |= 0x2;
+        if (flags != 0) widget.SetInt("Ff", flags);
+        widget.SetString("DA", "/Helv 10 Tf 0 g");
+
+        // /AA additional-actions: format (F) on display, keystroke (K) on input.
+        var format1 = new PdfDictionary();
+        format1.SetName("S", "JavaScript");
+        format1.SetString("JS", $"AFDate_FormatEx(\"{format}\");");
+        var keystroke = new PdfDictionary();
+        keystroke.SetName("S", "JavaScript");
+        keystroke.SetString("JS", $"AFDate_KeystrokeEx(\"{format}\");");
+        var aa = new PdfDictionary();
+        aa["F"] = format1;
+        aa["K"] = keystroke;
+        widget["AA"] = aa;
 
         return AttachWidget(document, pageNumber, widget, fieldName);
     }
@@ -75,7 +134,8 @@ public static class AcroFormAuthoring
         PdfRectangle rect,
         string fieldName,
         bool defaultChecked = false,
-        bool readOnly = false)
+        bool readOnly = false,
+        string? tooltip = null)
     {
         ValidateName(fieldName);
 
@@ -84,6 +144,7 @@ public static class AcroFormAuthoring
         widget.SetString("T", fieldName);
         widget.SetName("V", defaultChecked ? "Yes" : "Off");
         widget.SetName("AS", defaultChecked ? "Yes" : "Off");
+        SetTooltip(widget, tooltip);
         if (readOnly) widget.SetInt("Ff", 0x1);
 
         return AttachWidget(document, pageNumber, widget, fieldName);
@@ -100,7 +161,8 @@ public static class AcroFormAuthoring
         string fieldName,
         IEnumerable<string> options,
         string? defaultValue = null,
-        bool readOnly = false)
+        bool readOnly = false,
+        string? tooltip = null)
     {
         ValidateName(fieldName);
         var optList = options?.ToList() ?? new List<string>();
@@ -110,6 +172,7 @@ public static class AcroFormAuthoring
         var widget = NewWidgetDict(rect);
         widget.SetName("FT", "Ch");
         widget.SetString("T", fieldName);
+        SetTooltip(widget, tooltip);
 
         var optArr = new PdfArray();
         foreach (var opt in optList)
@@ -143,16 +206,55 @@ public static class AcroFormAuthoring
         this PdfDocument document,
         int pageNumber,
         PdfRectangle rect,
-        string fieldName)
+        string fieldName,
+        string? tooltip = null)
     {
         ValidateName(fieldName);
         var widget = NewWidgetDict(rect);
         widget.SetName("FT", "Sig");
         widget.SetString("T", fieldName);
+        SetTooltip(widget, tooltip);
         return AttachWidget(document, pageNumber, widget, fieldName);
     }
 
+    /// <summary>
+    /// Widget/annotation tab-traversal order for a page (<c>/Tabs</c>, §12.5).
+    /// </summary>
+    public enum TabOrder
+    {
+        /// <summary>Rows, left-to-right then top-to-bottom (<c>/R</c>).</summary>
+        Row,
+        /// <summary>Columns, top-to-bottom then left-to-right (<c>/C</c>).</summary>
+        Column,
+        /// <summary>Document logical-structure order (<c>/S</c>) — recommended for accessibility.</summary>
+        Structure
+    }
+
+    /// <summary>
+    /// Set the tab-traversal order of a page's annotations/fields by writing the
+    /// page <c>/Tabs</c> entry. <see cref="TabOrder.Structure"/> follows the
+    /// document's logical structure tree and is the accessible choice.
+    /// </summary>
+    public static void SetTabOrder(this PdfDocument document, int pageNumber, TabOrder order)
+    {
+        var page = document.GetPage(pageNumber);
+        var name = order switch
+        {
+            TabOrder.Row => "R",
+            TabOrder.Column => "C",
+            _ => "S"
+        };
+        page.Dictionary.SetName("Tabs", name);
+    }
+
     // ── plumbing ────────────────────────────────────────────────────────────
+
+    /// <summary>Set the field's <c>/TU</c> (tooltip / accessible name) when provided.</summary>
+    private static void SetTooltip(PdfDictionary widget, string? tooltip)
+    {
+        if (!string.IsNullOrEmpty(tooltip))
+            widget.SetString("TU", tooltip);
+    }
 
     private static PdfDictionary NewWidgetDict(PdfRectangle rect)
     {

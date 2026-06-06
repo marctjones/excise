@@ -137,9 +137,10 @@ public class PdfDocument : IDisposable
     public bool IsEncrypted => Trailer.ContainsKey("Encrypt");
 
     /// <summary>
-    /// Information dictionary (metadata).
+    /// Information dictionary (metadata). Publicly read-only; created on demand
+    /// by the metadata setters (<see cref="SetTitle"/> etc.) when absent.
     /// </summary>
-    public PdfDictionary? Info { get; }
+    public PdfDictionary? Info { get; private set; }
 
     /// <summary>
     /// Collection of pages in the document.
@@ -720,6 +721,56 @@ public class PdfDocument : IDisposable
     /// Get document metadata producer.
     /// </summary>
     public string? Producer => Info?.GetStringOrNull("Producer");
+
+    // ── Metadata / catalog authoring (#381) ──────────────────────────────────
+
+    /// <summary>
+    /// The document's natural language as a BCP 47 tag (catalog <c>/Lang</c>,
+    /// e.g. <c>"en-US"</c>). Required by PDF/UA for accessible documents so
+    /// screen readers pronounce content correctly. Setting <c>null</c> removes
+    /// the entry. PDF spec §14.9.2.
+    /// </summary>
+    public string? Language
+    {
+        get => Catalog.GetStringOrNull("Lang");
+        set
+        {
+            if (value == null) Catalog.Remove("Lang");
+            else Catalog.SetString("Lang", value);
+        }
+    }
+
+    /// <summary>Set the document title (Info <c>/Title</c>).</summary>
+    public void SetTitle(string title) => EnsureInfo().SetString("Title", title ?? string.Empty);
+
+    /// <summary>Set the document author (Info <c>/Author</c>).</summary>
+    public void SetAuthor(string author) => EnsureInfo().SetString("Author", author ?? string.Empty);
+
+    /// <summary>Set the document subject (Info <c>/Subject</c>).</summary>
+    public void SetSubject(string subject) => EnsureInfo().SetString("Subject", subject ?? string.Empty);
+
+    /// <summary>Set the document keywords (Info <c>/Keywords</c>).</summary>
+    public void SetKeywords(string keywords) => EnsureInfo().SetString("Keywords", keywords ?? string.Empty);
+
+    /// <summary>Set the creating application (Info <c>/Creator</c>).</summary>
+    public void SetCreator(string creator) => EnsureInfo().SetString("Creator", creator ?? string.Empty);
+
+    /// <summary>Set the producer (Info <c>/Producer</c>).</summary>
+    public void SetProducer(string producer) => EnsureInfo().SetString("Producer", producer ?? string.Empty);
+
+    /// <summary>
+    /// Return the Info dictionary, creating and wiring it into the trailer
+    /// (<c>/Info</c>) on first use. Newly created documents have no Info dict.
+    /// </summary>
+    private PdfDictionary EnsureInfo()
+    {
+        if (Info != null) return Info;
+        var info = new PdfDictionary();
+        var reference = AddIndirectObject(info);
+        Trailer["Info"] = reference;
+        Info = info;   // keep the read-side properties (Title/Author/…) in sync
+        return info;
+    }
 
     /// <summary>
     /// Get the document's interactive form (AcroForm), if present.
