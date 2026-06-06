@@ -68,6 +68,26 @@ public sealed class PdfDocumentBuilder
     /// <summary>The number of pages added so far.</summary>
     public int PageCount => _document.PageCount;
 
+    // ── document metadata (#381) ─────────────────────────────────────────────
+
+    /// <summary>Sets the document title (Info <c>/Title</c>).</summary>
+    public PdfDocumentBuilder Title(string title) { _document.SetTitle(title); return this; }
+
+    /// <summary>Sets the document author (Info <c>/Author</c>).</summary>
+    public PdfDocumentBuilder Author(string author) { _document.SetAuthor(author); return this; }
+
+    /// <summary>Sets the document subject (Info <c>/Subject</c>).</summary>
+    public PdfDocumentBuilder Subject(string subject) { _document.SetSubject(subject); return this; }
+
+    /// <summary>Sets the document keywords (Info <c>/Keywords</c>).</summary>
+    public PdfDocumentBuilder Keywords(string keywords) { _document.SetKeywords(keywords); return this; }
+
+    /// <summary>
+    /// Sets the document language as a BCP 47 tag (catalog <c>/Lang</c>, e.g.
+    /// <c>"en-US"</c>) — required by PDF/UA for accessible documents.
+    /// </summary>
+    public PdfDocumentBuilder Language(string bcp47) { _document.Language = bcp47; return this; }
+
     // ── content blocks ──────────────────────────────────────────────────────
 
     /// <summary>
@@ -198,7 +218,10 @@ public sealed class PdfDocumentBuilder
         bool multiline = false,
         bool required = false,
         int lines = 1,
-        string? defaultValue = null)
+        string? defaultValue = null,
+        string? tooltip = null,
+        int? maxLength = null,
+        bool comb = false)
     {
         EnsurePage();
         fieldName ??= NextFieldName("text");
@@ -211,8 +234,39 @@ public sealed class PdfDocumentBuilder
 
         var rect = ReserveBox(boxHeight);
         DrawBoxBorder(rect);
+        // Default the accessible name (/TU) to the visible label so screen
+        // readers announce the field even when no explicit tooltip is given.
         _document.AddTextField(_currentPageNumber, rect, fieldName,
-            defaultValue: defaultValue, multiline: multiline, required: required);
+            defaultValue: defaultValue, multiline: multiline, required: required,
+            tooltip: tooltip ?? label, maxLength: maxLength, comb: comb);
+
+        _cursorY -= TextStyle.Body.SpaceAfter;
+        return this;
+    }
+
+    /// <summary>
+    /// Adds a labelled date field — a text field with viewer-side date
+    /// formatting (Acrobat <c>AFDate</c> actions). <paramref name="format"/>
+    /// is an Acrobat date mask, e.g. <c>"yyyy-mm-dd"</c>.
+    /// </summary>
+    public PdfDocumentBuilder DateField(
+        string label,
+        string? fieldName = null,
+        string format = "yyyy-mm-dd",
+        bool required = false,
+        string? tooltip = null)
+    {
+        EnsurePage();
+        fieldName ??= NextFieldName("date");
+
+        DrawFieldLabel(label, required);
+
+        var bodyFont = TextStyle.Body.ResolveFont();
+        double boxHeight = bodyFont.LineHeight + 6;
+        var rect = ReserveBox(boxHeight);
+        DrawBoxBorder(rect);
+        _document.AddDateField(_currentPageNumber, rect, fieldName,
+            format: format, required: required, tooltip: tooltip ?? $"{label} ({format})");
 
         _cursorY -= TextStyle.Body.SpaceAfter;
         return this;
@@ -224,7 +278,8 @@ public sealed class PdfDocumentBuilder
     public PdfDocumentBuilder CheckBox(
         string label,
         string? fieldName = null,
-        bool checkedByDefault = false)
+        bool checkedByDefault = false,
+        string? tooltip = null)
     {
         EnsurePage();
         fieldName ??= NextFieldName("check");
@@ -238,7 +293,8 @@ public sealed class PdfDocumentBuilder
         double bottom = top - box;
         var rect = new PdfRectangle(ContentLeft, bottom, ContentLeft + box, top);
         DrawBoxBorder(rect);
-        _document.AddCheckBox(_currentPageNumber, rect, fieldName, defaultChecked: checkedByDefault);
+        _document.AddCheckBox(_currentPageNumber, rect, fieldName,
+            defaultChecked: checkedByDefault, tooltip: tooltip ?? label);
 
         // Label baseline aligned to the checkbox.
         double baseline = top - font.Ascender;
@@ -256,7 +312,8 @@ public sealed class PdfDocumentBuilder
         string label,
         IEnumerable<string> options,
         string? fieldName = null,
-        string? defaultValue = null)
+        string? defaultValue = null,
+        string? tooltip = null)
     {
         ArgumentNullException.ThrowIfNull(options);
         EnsurePage();
@@ -268,7 +325,8 @@ public sealed class PdfDocumentBuilder
         double boxHeight = bodyFont.LineHeight + 6;
         var rect = ReserveBox(boxHeight);
         DrawBoxBorder(rect);
-        _document.AddChoiceField(_currentPageNumber, rect, fieldName, options, defaultValue: defaultValue);
+        _document.AddChoiceField(_currentPageNumber, rect, fieldName, options,
+            defaultValue: defaultValue, tooltip: tooltip ?? label);
 
         _cursorY -= TextStyle.Body.SpaceAfter;
         return this;

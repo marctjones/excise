@@ -44,21 +44,27 @@ namespace Pdfe.Core.Authoring
         public double ContentLeft { get; }
         public double ContentWidth { get; }
         public int PageCount { get; }
+        public Pdfe.Core.Authoring.PdfDocumentBuilder Author(string author) { }
         public Pdfe.Core.Document.PdfDocument Build() { }
-        public Pdfe.Core.Authoring.PdfDocumentBuilder CheckBox(string label, string? fieldName = null, bool checkedByDefault = false) { }
+        public Pdfe.Core.Authoring.PdfDocumentBuilder CheckBox(string label, string? fieldName = null, bool checkedByDefault = false, string? tooltip = null) { }
         public Pdfe.Core.Authoring.PdfDocumentBuilder Custom(System.Action<Pdfe.Core.Graphics.PdfGraphics, Pdfe.Core.Authoring.LayoutContext> draw) { }
-        public Pdfe.Core.Authoring.PdfDocumentBuilder Dropdown(string label, System.Collections.Generic.IEnumerable<string> options, string? fieldName = null, string? defaultValue = null) { }
+        public Pdfe.Core.Authoring.PdfDocumentBuilder DateField(string label, string? fieldName = null, string format = "yyyy-mm-dd", bool required = false, string? tooltip = null) { }
+        public Pdfe.Core.Authoring.PdfDocumentBuilder Dropdown(string label, System.Collections.Generic.IEnumerable<string> options, string? fieldName = null, string? defaultValue = null, string? tooltip = null) { }
         public Pdfe.Core.Authoring.PdfDocumentBuilder Heading(string text, int level = 1, Pdfe.Core.Authoring.TextStyle? style = null) { }
         public Pdfe.Core.Authoring.PdfDocumentBuilder HorizontalRule(double thickness = 0.5, Pdfe.Core.Graphics.PdfColor? color = default) { }
         public Pdfe.Core.Authoring.PdfDocumentBuilder KeyValue(string label, string value, double labelWidth = 0.3) { }
+        public Pdfe.Core.Authoring.PdfDocumentBuilder Keywords(string keywords) { }
+        public Pdfe.Core.Authoring.PdfDocumentBuilder Language(string bcp47) { }
         public Pdfe.Core.Authoring.PdfDocumentBuilder PageBreak() { }
         public Pdfe.Core.Authoring.PdfDocumentBuilder Paragraph(string text, Pdfe.Core.Authoring.TextStyle? style = null) { }
         public void Save(System.IO.Stream stream) { }
         public void Save(string path) { }
         public byte[] SaveToBytes() { }
         public Pdfe.Core.Authoring.PdfDocumentBuilder Spacer(double points) { }
+        public Pdfe.Core.Authoring.PdfDocumentBuilder Subject(string subject) { }
         public Pdfe.Core.Authoring.PdfDocumentBuilder Table(System.Collections.Generic.IEnumerable<System.Collections.Generic.IReadOnlyList<string>> rows, double[]? columnWeights = null, bool headerRow = false, bool gridLines = true) { }
-        public Pdfe.Core.Authoring.PdfDocumentBuilder TextField(string label, string? fieldName = null, bool multiline = false, bool required = false, int lines = 1, string? defaultValue = null) { }
+        public Pdfe.Core.Authoring.PdfDocumentBuilder TextField(string label, string? fieldName = null, bool multiline = false, bool required = false, int lines = 1, string? defaultValue = null, string? tooltip = null, int? maxLength = default, bool comb = false) { }
+        public Pdfe.Core.Authoring.PdfDocumentBuilder Title(string title) { }
         public static Pdfe.Core.Authoring.PdfDocumentBuilder Create(Pdfe.Core.Authoring.PageSize? pageSize = default, Pdfe.Core.Authoring.PageMargins? margins = default) { }
     }
     public sealed class TextStyle : System.IEquatable<Pdfe.Core.Authoring.TextStyle>
@@ -237,10 +243,18 @@ namespace Pdfe.Core.Document
 {
     public static class AcroFormAuthoring
     {
-        public static Pdfe.Core.Document.PdfField AddCheckBox(this Pdfe.Core.Document.PdfDocument document, int pageNumber, Pdfe.Core.Document.PdfRectangle rect, string fieldName, bool defaultChecked = false, bool readOnly = false) { }
-        public static Pdfe.Core.Document.PdfField AddChoiceField(this Pdfe.Core.Document.PdfDocument document, int pageNumber, Pdfe.Core.Document.PdfRectangle rect, string fieldName, System.Collections.Generic.IEnumerable<string> options, string? defaultValue = null, bool readOnly = false) { }
-        public static Pdfe.Core.Document.PdfField AddSignatureField(this Pdfe.Core.Document.PdfDocument document, int pageNumber, Pdfe.Core.Document.PdfRectangle rect, string fieldName) { }
-        public static Pdfe.Core.Document.PdfField AddTextField(this Pdfe.Core.Document.PdfDocument document, int pageNumber, Pdfe.Core.Document.PdfRectangle rect, string fieldName, string? defaultValue = null, bool multiline = false, bool readOnly = false, bool required = false) { }
+        public static Pdfe.Core.Document.PdfField AddCheckBox(this Pdfe.Core.Document.PdfDocument document, int pageNumber, Pdfe.Core.Document.PdfRectangle rect, string fieldName, bool defaultChecked = false, bool readOnly = false, string? tooltip = null) { }
+        public static Pdfe.Core.Document.PdfField AddChoiceField(this Pdfe.Core.Document.PdfDocument document, int pageNumber, Pdfe.Core.Document.PdfRectangle rect, string fieldName, System.Collections.Generic.IEnumerable<string> options, string? defaultValue = null, bool readOnly = false, string? tooltip = null) { }
+        public static Pdfe.Core.Document.PdfField AddDateField(this Pdfe.Core.Document.PdfDocument document, int pageNumber, Pdfe.Core.Document.PdfRectangle rect, string fieldName, string format = "yyyy-mm-dd", string? defaultValue = null, bool required = false, string? tooltip = null) { }
+        public static Pdfe.Core.Document.PdfField AddSignatureField(this Pdfe.Core.Document.PdfDocument document, int pageNumber, Pdfe.Core.Document.PdfRectangle rect, string fieldName, string? tooltip = null) { }
+        public static Pdfe.Core.Document.PdfField AddTextField(this Pdfe.Core.Document.PdfDocument document, int pageNumber, Pdfe.Core.Document.PdfRectangle rect, string fieldName, string? defaultValue = null, bool multiline = false, bool readOnly = false, bool required = false, string? tooltip = null, int? maxLength = default, bool comb = false) { }
+        public static void SetTabOrder(this Pdfe.Core.Document.PdfDocument document, int pageNumber, Pdfe.Core.Document.AcroFormAuthoring.TabOrder order) { }
+        public enum TabOrder
+        {
+            Row = 0,
+            Column = 1,
+            Structure = 2,
+        }
     }
     public sealed class NamedDestination : System.IEquatable<Pdfe.Core.Document.NamedDestination>
     {
@@ -373,6 +387,7 @@ namespace Pdfe.Core.Document
         public bool IsEncrypted { get; }
         public bool IsTaggedPdf { get; }
         public string? Keywords { get; }
+        public string? Language { get; set; }
         public int PageCount { get; }
         public Pdfe.Core.Document.PageCollection Pages { get; }
         public string? Producer { get; }
@@ -402,6 +417,12 @@ namespace Pdfe.Core.Document
         public void ScrubInfoKeys(params string[] keys) { }
         public void ScrubMetadata(bool scrubAttachments = true) { }
         public void SetAcroFormNeedAppearances() { }
+        public void SetAuthor(string author) { }
+        public void SetCreator(string creator) { }
+        public void SetKeywords(string keywords) { }
+        public void SetProducer(string producer) { }
+        public void SetSubject(string subject) { }
+        public void SetTitle(string title) { }
         public static Pdfe.Core.Document.PdfDocument CreateNew(string version = "1.7") { }
         public static Pdfe.Core.Document.PdfDocument Open(byte[] data, bool allowEncrypted = false) { }
         public static Pdfe.Core.Document.PdfDocument Open(string path, bool allowEncrypted = false) { }
