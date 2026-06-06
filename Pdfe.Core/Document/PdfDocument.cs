@@ -964,11 +964,23 @@ public class PdfDocument : IDisposable
 
     #region Save Methods
 
+    // Actions run just before serialization — used by embedded fonts to finalize
+    // their FontFile2 subset once every glyph that will be drawn is known (#393).
+    private readonly List<Action> _preSaveActions = new();
+
+    /// <summary>
+    /// Register an action to run immediately before the document is serialized.
+    /// Idempotent actions only — it may run on each Save.
+    /// </summary>
+    internal void RegisterPreSaveAction(Action action) => _preSaveActions.Add(action);
+
     /// <summary>
     /// Save the document to a stream.
     /// </summary>
     public void Save(Stream outputStream)
     {
+        foreach (var action in _preSaveActions)
+            action();
         var writer = new PdfDocumentWriter(this);
         writer.Write(outputStream);
     }
