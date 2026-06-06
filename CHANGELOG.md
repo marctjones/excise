@@ -4,6 +4,39 @@ All notable changes to pdfe are documented here. Format roughly follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 semantic versioning.
 
+## [2.6.0] — 2026-06-06
+
+Font, accessibility, and image-filter additions. All additive; the public-API
+gate confirms no breaking changes.
+
+### Added
+- **Font subsetting + CFF/OpenType embedding (#393).** Embedded TrueType fonts
+  are now subsetted to the glyphs actually drawn (retain-GID `glyf`/`loca`,
+  composite-glyph closure, subset tag) — e.g. DejaVu drawing a short string went
+  from ~759 KB to ~14 KB embedded. CFF-outline OpenType (`'OTTO'`) fonts can now
+  be embedded too (`/CIDFontType0` + `/FontFile3 /Subtype /OpenType`).
+- **Embedded fonts in the high-level builder (#398).** `TextStyle.WithFont(...)`
+  and `PdfDocumentBuilder.DefaultFont(...)` let the friendly facade render
+  arbitrary Unicode (not just base-14); the same typeface across sizes/weights
+  embeds as one subset. `PdfFont.WithSize` is now `virtual`.
+- **Tagged-PDF authoring / PDF-UA (#275).** `PdfDocumentBuilder.Tagged()` emits a
+  logical structure tree (StructTreeRoot + Document→H1-H4/P/Table), marked
+  content (`BDC`/`EMC` + MCID, `/MCR` with `/Pg`, `/ParentTree`), and catalog
+  `/MarkInfo`, `/ViewerPreferences /DisplayDocTitle`. Plus
+  `PdfGraphics.BeginMarkedContent`/`EndMarkedContent`. Combined with embedded
+  fonts + `/Lang`, the builder now produces genuinely accessible documents
+  (`pdfinfo` reports `Tagged: yes`).
+- **Image filters: JBIG2 + JPEG2000 (#325).** Pure-managed JBIG2 decoder
+  (MQ arithmetic + generic region, template 0) wired into the stream
+  decompressor with strict decode-or-passthrough fallback (no silently-wrong
+  images). JPEG2000 (`JPXDecode`) codestream/marker parsing (full pixel decode
+  deferred). JPEG/PNG remain delegated to the SkiaSharp renderer.
+
+### Notes
+- Remaining tracked follow-ups: full PDF/UA conformance (artifacts, TR/TD,
+  form-field tagging), CFF glyph subsetting, JBIG2 symbol/text regions, full
+  JPEG2000 decode.
+
 ## [2.5.0] — 2026-06-06
 
 Completes the **PromptResponse writer epic (#382)** — pdfe can now author
