@@ -98,6 +98,12 @@ jobs:
         if: steps.changes.outputs.gui == 'true' || github.ref == 'refs/heads/main'
         run: sudo apt-get install -y xvfb
 
+      - name: Install test fonts
+        # DejaVuSans is the font the embedding tests (#378) load by path; without
+        # it those tests skip and Pdfe.Core coverage drops below the gate. Always
+        # install so coverage is deterministic.
+        run: sudo apt-get install -y fonts-dejavu-core
+
       - name: Restore packages
         run: dotnet restore
 
@@ -125,17 +131,18 @@ jobs:
             -targetdir:coverage/report \
             -reporttypes:Cobertura
 
-      - name: Coverage Gate (Pdfe.Core >= 92%)
-        # Enforce the coverage the suite actually achieves in CI today (~92.8%).
-        # The 94% target was aspirational and had never been enforced — the job
-        # always died at the veraPDF step first, and a path bug (below) meant the
-        # gate never read the report even when reached. Raising to 94% is tracked
-        # in #351; note that several % of local coverage comes from corpus tests
-        # (test-pdfs/) that skip in CI, so close that with in-memory tests.
+      - name: Coverage Gate (Pdfe.Core >= 92.5%)
+        # Ratcheted 92% -> 92.5% (#351) after adding in-memory authoring/font/
+        # graphics tests (CI now measures ~93.0%, up from ~92.8%). CI installs
+        # fonts-dejavu-core above so the embedding tests run deterministically.
+        # The full 94% target needs corpus-independent operator/decoder tests
+        # (corpus tests inflate LOCAL coverage to ~94.1% but skip in CI) — that
+        # remaining work is tracked in #350. Kept a ~0.5% margin so a small
+        # coverage dip doesn't block unrelated PRs.
         #
         # reportgenerator's Cobertura output is named Cobertura.xml (not
         # coverage.cobertura.xml — that's coverlet's raw collector name).
-        run: scripts/check-coverage.sh coverage/report/Cobertura.xml 0.92 Pdfe.Core
+        run: scripts/check-coverage.sh coverage/report/Cobertura.xml 0.925 Pdfe.Core
 
       - name: Run Pdfe.Cli.Tests
         run: |
