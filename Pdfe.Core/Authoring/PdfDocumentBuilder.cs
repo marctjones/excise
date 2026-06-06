@@ -121,6 +121,18 @@ public sealed class PdfDocumentBuilder
     }
 
     /// <summary>
+    /// When tagging, add a Form structure element referencing the field's widget
+    /// annotation (/OBJR) so the control appears in the accessibility tree (#407).
+    /// </summary>
+    private void TagFormField(Document.PdfField field)
+    {
+        if (_tagging == null) return;
+        var widgetRef = _document.GetReferenceTo(field.RawDictionary);
+        if (widgetRef != null)
+            _tagging.AddObjectElement("Form", _currentPageNumber, widgetRef, field.RawDictionary);
+    }
+
+    /// <summary>
     /// Use an embedded font (e.g. <see cref="PdfFont.FromFile"/>) for all text
     /// blocks that don't specify their own — lets the builder render Unicode
     /// beyond the base-14 fonts (#398). The style's point size is applied to it.
@@ -305,9 +317,9 @@ public sealed class PdfDocumentBuilder
         DrawBoxBorder(rect);
         // Default the accessible name (/TU) to the visible label so screen
         // readers announce the field even when no explicit tooltip is given.
-        _document.AddTextField(_currentPageNumber, rect, fieldName,
+        TagFormField(_document.AddTextField(_currentPageNumber, rect, fieldName,
             defaultValue: defaultValue, multiline: multiline, required: required,
-            tooltip: tooltip ?? label, maxLength: maxLength, comb: comb);
+            tooltip: tooltip ?? label, maxLength: maxLength, comb: comb));
 
         _cursorY -= TextStyle.Body.SpaceAfter;
         return this;
@@ -334,8 +346,8 @@ public sealed class PdfDocumentBuilder
         double boxHeight = bodyFont.LineHeight + 6;
         var rect = ReserveBox(boxHeight);
         DrawBoxBorder(rect);
-        _document.AddDateField(_currentPageNumber, rect, fieldName,
-            format: format, required: required, tooltip: tooltip ?? $"{label} ({format})");
+        TagFormField(_document.AddDateField(_currentPageNumber, rect, fieldName,
+            format: format, required: required, tooltip: tooltip ?? $"{label} ({format})"));
 
         _cursorY -= TextStyle.Body.SpaceAfter;
         return this;
@@ -362,8 +374,8 @@ public sealed class PdfDocumentBuilder
         double bottom = top - box;
         var rect = new PdfRectangle(ContentLeft, bottom, ContentLeft + box, top);
         DrawBoxBorder(rect);
-        _document.AddCheckBox(_currentPageNumber, rect, fieldName,
-            defaultChecked: checkedByDefault, tooltip: tooltip ?? label);
+        TagFormField(_document.AddCheckBox(_currentPageNumber, rect, fieldName,
+            defaultChecked: checkedByDefault, tooltip: tooltip ?? label));
 
         // Label baseline aligned to the checkbox.
         double baseline = top - font.Ascender;
@@ -394,8 +406,8 @@ public sealed class PdfDocumentBuilder
         double boxHeight = bodyFont.LineHeight + 6;
         var rect = ReserveBox(boxHeight);
         DrawBoxBorder(rect);
-        _document.AddChoiceField(_currentPageNumber, rect, fieldName, options,
-            defaultValue: defaultValue, tooltip: tooltip ?? label);
+        TagFormField(_document.AddChoiceField(_currentPageNumber, rect, fieldName, options,
+            defaultValue: defaultValue, tooltip: tooltip ?? label));
 
         _cursorY -= TextStyle.Body.SpaceAfter;
         return this;
