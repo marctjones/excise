@@ -22,17 +22,31 @@ namespace Pdfe.Core.Graphics;
 internal sealed class PdfTrueTypeFont : PdfFont
 {
     private readonly TrueTypeFontFile _ttf;
-    private readonly double _scale;   // font units -> text space at 1 pt
-    private readonly HashSet<int> _usedGids = new() { 0 };   // accumulated as text is drawn (#393)
+    private readonly double _scale;            // font units -> text space at 1 pt
+    private readonly HashSet<int> _usedGids;   // accumulated as text is drawn (#393)
 
     internal override bool PreferIndirectFontDictionary => true;
 
     public PdfTrueTypeFont(byte[] fontData, double size)
-        : base("F1", SafeBaseName(TrueTypeFontFile.Parse(fontData).PostScriptName), size)
+        : this(TrueTypeFontFile.Parse(fontData), new HashSet<int> { 0 }, size)
     {
-        _ttf = TrueTypeFontFile.Parse(fontData);
+    }
+
+    // Shares the parsed font + used-glyph set so the same typeface at different
+    // sizes (via WithSize) embeds/subsets as ONE font with one glyph set (#398).
+    private PdfTrueTypeFont(TrueTypeFontFile ttf, HashSet<int> usedGids, double size)
+        : base("F1", SafeBaseName(ttf.PostScriptName), size)
+    {
+        _ttf = ttf;
+        _usedGids = usedGids;
         _scale = 1.0 / _ttf.UnitsPerEm;
     }
+
+    /// <summary>
+    /// The same embedded typeface at a different point size — shares the parsed
+    /// font and accumulated glyph set so all sizes embed as one subsetted font.
+    /// </summary>
+    public override PdfFont WithSize(double size) => new PdfTrueTypeFont(_ttf, _usedGids, size);
 
     public override double MeasureWidth(string text)
     {
