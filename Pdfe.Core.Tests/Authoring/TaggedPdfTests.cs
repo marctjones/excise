@@ -81,6 +81,21 @@ public class TaggedPdfTests
     }
 
     [Fact]
+    public void Tagged_TableNestsTableTrTdTh()
+    {
+        var pdf = PdfDocumentBuilder.Create().Tagged()
+            .Table(new[] { new[] { "H1", "H2" }, new[] { "a", "b" } }, headerRow: true)
+            .SaveToBytes();
+
+        using var doc = PdfDocument.Open(pdf);
+        var types = StructTypes(doc);
+        types.Should().Contain("Table");
+        types.Should().Contain("TR");
+        types.Should().Contain("TH", "header cells should be TH");
+        types.Should().Contain("TD", "body cells should be TD");
+    }
+
+    [Fact]
     public void Tagged_DecorativeContentIsMarkedAsArtifact()
     {
         var pdf = PdfDocumentBuilder.Create().Tagged()
