@@ -10,7 +10,7 @@
 
   <PropertyGroup>
     <PackageId>Pdfe.Rendering</PackageId>
-    <Version>2.4.0</Version>
+    <Version>2.4.1</Version>
     <Authors>Marc Jones</Authors>
     <Description>Pure-managed, SkiaSharp-based PDF render API for .NET. Render pages to SKBitmap or PNG with DPI/clip/rotation support and cancellable rendering. Framework-neutral engine behind Pdfe.Avalonia; no native PDFium. Cross-platform, trim/AOT-friendlier.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

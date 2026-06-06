@@ -19,6 +19,11 @@ on:
 
 env:
   DOTNET_VERSION: '10.0.x'
+  # ReactiveUI/Splat's author signing certificate was revoked upstream, so a
+  # cold `dotnet restore` fails with NU3012 (revoked cert). ci.yml already sets
+  # this; release.yml didn't, so a version-bump cache miss surfaced it as a
+  # silent restore failure in the license-manifest step (#387). Match ci.yml.
+  DOTNET_NUGET_SIGNATURE_VERIFICATION: false
 
 # Lets the release job push installers as release assets.
 permissions:
