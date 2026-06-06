@@ -55,7 +55,9 @@ mkdir -p "$(dirname "$OUT")"
 [[ "$RUN_SCANCODE" == "1" ]] && mkdir -p "$SCANCODE_DIR"
 
 echo "▶ Restoring $PROJECT"
-dotnet restore "$ROOT/$PROJECT" >/dev/null
+# Don't suppress output: a hidden `>/dev/null` masked an NU3012 cold-restore
+# failure during the v2.4.0 release (#387). Let restore errors be visible.
+dotnet restore "$ROOT/$PROJECT"
 
 echo "▶ Resolving deps"
 PKG_LIST="$(dotnet list "$ROOT/$PROJECT" package --include-transitive --format json 2>/dev/null \

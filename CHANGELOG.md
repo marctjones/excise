@@ -4,6 +4,41 @@ All notable changes to pdfe are documented here. Format roughly follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 semantic versioning.
 
+## [2.4.1] — 2026-06-06
+
+Packaging, API-stability, and CI hardening on top of v2.4.0. No public-API
+changes (enforced by the new gate) — a pure patch.
+
+### Added
+- **Public-API gate (#383).** `PublicApiApprovalTests` snapshots the full
+  `Pdfe.Core` public surface against a committed baseline
+  (`Pdfe.Core.Tests/PublicApi/Pdfe.Core.approved.txt`); any public-API change
+  fails CI until intentionally re-approved (`APPROVE_PUBLIC_API=1`). Makes every
+  API change a deliberate SemVer decision.
+- **SourceLink + symbols.** The three publishable libraries (`Pdfe.Core`,
+  `Pdfe.Rendering`, `Pdfe.Avalonia`) now ship portable `.snupkg` symbol packages
+  with SourceLink and deterministic CI builds (shared `Packaging.props`), so
+  consumers can step into the source while debugging.
+- README "Versioning & API stability" section documenting the SemVer policy,
+  the `Pdfe.Core.Authoring.*` stable writer surface, and local-feed (not
+  nuget.org) distribution.
+
+### Fixed
+- **Release pipeline cold-cache restore (#387).** `release.yml` now sets
+  `DOTNET_NUGET_SIGNATURE_VERIFICATION=false` (matching `ci.yml`) so a
+  version-bump cache miss no longer fails the license-manifest step with NU3012
+  (revoked ReactiveUI/Splat signing cert). The v2.4.0 Windows/Debian/macOS
+  installers — absent from that release due to this bug — are restored here.
+- `generate-license-manifest.sh` no longer hard-fails on a cold NuGet cache and
+  no longer suppresses restore output.
+
+### CI / dev
+- Headless GUI tests (`PdfEditor.Tests`) now run only when GUI-relevant paths
+  change (or on `main`), so library-only PRs aren't gated on the slow GUI suite.
+- Quarantined the flaky `KeyboardShortcutTests.CtrlS_SavesFile` on headless CI
+  (#363) — it intermittently deadlocked the Avalonia dispatcher and crashed the
+  test host. Still runs locally; the save path stays covered elsewhere.
+
 ## [2.4.0] — 2026-06-05
 
 Adds a friendly, high-level **PDF authoring** API so third-party .NET apps can
