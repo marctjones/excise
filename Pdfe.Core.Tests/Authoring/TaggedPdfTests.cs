@@ -81,6 +81,20 @@ public class TaggedPdfTests
     }
 
     [Fact]
+    public void Tagged_DecorativeContentIsMarkedAsArtifact()
+    {
+        var pdf = PdfDocumentBuilder.Create().Tagged()
+            .Paragraph("text")
+            .HorizontalRule()
+            .TextField("Name", "name")   // draws a box border
+            .SaveToBytes();
+
+        using var doc = PdfDocument.Open(pdf);
+        var content = Encoding.Latin1.GetString(doc.GetPage(1).GetContentStreamBytes());
+        content.Should().Contain("/Artifact BDC", "rules/borders must be artifacts under PDF/UA");
+    }
+
+    [Fact]
     public void NotTagged_HasNoStructTree()
     {
         var pdf = PdfDocumentBuilder.Create().Paragraph("hello").SaveToBytes();

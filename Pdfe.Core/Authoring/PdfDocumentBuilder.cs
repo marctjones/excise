@@ -203,7 +203,8 @@ public sealed class PdfDocumentBuilder
         EnsureSpace(thickness + 6);
         _cursorY -= 3;
         var pen = new PdfPen(color ?? PdfColor.FromGray(0.6), thickness);
-        _graphics!.DrawLine(ContentLeft, _cursorY, ContentLeft + ContentWidth, _cursorY, pen);
+        double ruleY = _cursorY;
+        DrawArtifact(() => _graphics!.DrawLine(ContentLeft, ruleY, ContentLeft + ContentWidth, ruleY, pen));
         _cursorY -= 3;
         return this;
     }
@@ -497,7 +498,18 @@ public sealed class PdfDocumentBuilder
     private void DrawBoxBorder(PdfRectangle rect)
     {
         var pen = new PdfPen(PdfColor.FromGray(0.5), 0.75);
-        _graphics!.DrawRectangle(rect.Left, rect.Bottom, rect.Width, rect.Height, fill: null, stroke: pen);
+        DrawArtifact(() => _graphics!.DrawRectangle(rect.Left, rect.Bottom, rect.Width, rect.Height, fill: null, stroke: pen));
+    }
+
+    /// <summary>
+    /// Draw decorative (non-content) graphics, wrapped as a PDF artifact when
+    /// tagging is on so it stays out of the structure tree (PDF/UA).
+    /// </summary>
+    private void DrawArtifact(Action draw)
+    {
+        if (_tagging != null) _graphics!.BeginArtifact();
+        draw();
+        if (_tagging != null) _graphics!.EndMarkedContent();
     }
 
     /// <summary>
