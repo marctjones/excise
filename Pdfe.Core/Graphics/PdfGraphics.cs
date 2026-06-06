@@ -96,6 +96,18 @@ public class PdfGraphics : IDisposable
         _operators.AppendLine($"/{tag} <</MCID {mcid}>> BDC");
     }
 
+    /// <summary>
+    /// Open an artifact marked-content sequence (<c>/Artifact BDC</c>) for purely
+    /// decorative content that is excluded from the structure tree — required by
+    /// PDF/UA so every piece of content is either tagged or an artifact. Pair
+    /// with <see cref="EndMarkedContent"/>.
+    /// </summary>
+    public void BeginArtifact()
+    {
+        ThrowIfDisposed();
+        _operators.AppendLine("/Artifact BDC");
+    }
+
     /// <summary>Close the most recent marked-content sequence (<c>EMC</c>).</summary>
     public void EndMarkedContent()
     {

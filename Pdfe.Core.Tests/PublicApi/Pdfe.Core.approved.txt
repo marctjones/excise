@@ -709,6 +709,7 @@ namespace Pdfe.Core.Graphics
     }
     public class PdfGraphics : System.IDisposable
     {
+        public void BeginArtifact() { }
         public void BeginMarkedContent(string tag, int mcid) { }
         public void BeginPath() { }
         public void ClosePath() { }
