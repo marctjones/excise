@@ -24,7 +24,15 @@ public class StreamDecompressor
             var filter = filters[i];
             var filterParms = i < parms.Count ? parms[i] : null;
 
-            data = ApplyFilter(filter, data, filterParms);
+            // JBIG2/JPX need the image's pixel dimensions (from the stream dict,
+            // not the filter parms), so they're handled here where the dict is
+            // in scope rather than in the generic ApplyFilter.
+            data = filter switch
+            {
+                "JBIG2Decode" => DecodeJBIG2(data, stream),
+                "JPXDecode" => DecodeJPX(data),
+                _ => ApplyFilter(filter, data, filterParms)
+            };
         }
 
         stream.SetDecodedData(data);
@@ -42,14 +50,55 @@ public class StreamDecompressor
             "ASCII85Decode" or "A85" => DecodeASCII85(data),
             "LZWDecode" or "LZW" => DecodeLZW(data, parms),
             "RunLengthDecode" or "RL" => DecodeRunLength(data),
-            "DCTDecode" or "DCT" => data, // JPEG - pass through
-            "JPXDecode" => data, // JPEG2000 - pass through
+            "DCTDecode" or "DCT" => data, // JPEG — decoded by the renderer (SkiaSharp)
+            "JPXDecode" => DecodeJPX(data),
             "CCITTFaxDecode" or "CCF" => DecodeCCITTFax(data, parms),
-            "JBIG2Decode" => data, // JBIG2 - pass through for now
+            "JBIG2Decode" => data, // handled in Decompress (needs image /Width /Height)
             "BrotliDecode" => DecodeBrotli(data),
             "Crypt" => data, // Encryption handled separately
             _ => throw new NotSupportedException($"Unknown filter: {filterName}")
         };
+    }
+
+    /// <summary>
+    /// Decode a /JBIG2Decode image to a 1-bpp bitmap. Width/Height come from the
+    /// image stream dict. /JBIG2Globals (shared symbol dictionaries) isn't
+    /// resolved here — it's only needed by the symbol/text-region path, which the
+    /// decoder doesn't yet support; generic-region images decode without it.
+    /// Any unsupported feature or malformed data falls back to the encoded bytes
+    /// (so a renderer can skip the image rather than crash). #325.
+    /// </summary>
+    private byte[] DecodeJBIG2(byte[] data, PdfStream stream)
+    {
+        int width = stream.GetInt("Width", 0);
+        int height = stream.GetInt("Height", 0);
+        if (width <= 0 || height <= 0) return data;
+        try
+        {
+            return Pdfe.Core.Filters.Jbig2.Jbig2Decoder.Decode(data, null, width, height);
+        }
+        catch
+        {
+            return data;
+        }
+    }
+
+    /// <summary>
+    /// Decode a /JPXDecode (JPEG2000) image. Full entropy/wavelet decode is not
+    /// implemented (a large, rare codec Skia can't help with either), so this
+    /// currently falls back to the raw codestream; the parser/metadata exist for
+    /// callers via <see cref="Pdfe.Core.Filters.Jpx.JpxDecoder.ReadInfo"/>. #325.
+    /// </summary>
+    private byte[] DecodeJPX(byte[] data)
+    {
+        try
+        {
+            return Pdfe.Core.Filters.Jpx.JpxDecoder.Decode(data).Pixels;
+        }
+        catch
+        {
+            return data;
+        }
     }
 
     /// <summary>
