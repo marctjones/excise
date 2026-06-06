@@ -223,6 +223,10 @@ jobs:
           echo "version=$v" >> "$GITHUB_OUTPUT"
           echo "▶ version: $v"
 
+      - name: Install librsvg (for the .icns icon; best-effort)
+        continue-on-error: true
+        run: brew install librsvg
+
       - name: Build macOS .app (arm64)
         run: ./scripts/build-macos-app.sh --version "${{ steps.ver.outputs.version }}" --rid osx-arm64 --output dist
 

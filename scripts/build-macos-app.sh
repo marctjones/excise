@@ -48,29 +48,42 @@ cp -R "$PUBLISH_DIR/." "$BUNDLE/Contents/MacOS/"
 chmod +x "$BUNDLE/Contents/MacOS/PdfEditor" || true
 
 # ── Icon (best-effort): SVG -> 1024 PNG -> .iconset -> .icns ────────────────
+# Render the master PNG with rsvg-convert (librsvg) if present — it's the most
+# reliable SVG rasterizer on macOS — else ImageMagick. The job installs librsvg;
+# if neither is available the bundle just ships without a custom icon.
 ICON_SVG="$ROOT/PdfEditor/Assets/pdfe_logo.svg"
 ICON_PLIST=""
-MAGICK="$(command -v magick || command -v convert || true)"
-if [[ -n "$MAGICK" && -f "$ICON_SVG" ]]; then
-    ICON_SET="$PUBLISH_DIR/pdfe.iconset"
-    mkdir -p "$ICON_SET"
-    if "$MAGICK" -background none -density 512 "$ICON_SVG" -resize 1024x1024 "$PUBLISH_DIR/icon_1024.png"; then
-        sips -z 16 16     "$PUBLISH_DIR/icon_1024.png" --out "$ICON_SET/icon_16x16.png"      >/dev/null 2>&1 || true
-        sips -z 32 32     "$PUBLISH_DIR/icon_1024.png" --out "$ICON_SET/icon_16x16@2x.png"   >/dev/null 2>&1 || true
-        sips -z 32 32     "$PUBLISH_DIR/icon_1024.png" --out "$ICON_SET/icon_32x32.png"      >/dev/null 2>&1 || true
-        sips -z 64 64     "$PUBLISH_DIR/icon_1024.png" --out "$ICON_SET/icon_32x32@2x.png"   >/dev/null 2>&1 || true
-        sips -z 128 128   "$PUBLISH_DIR/icon_1024.png" --out "$ICON_SET/icon_128x128.png"    >/dev/null 2>&1 || true
-        sips -z 256 256   "$PUBLISH_DIR/icon_1024.png" --out "$ICON_SET/icon_128x128@2x.png" >/dev/null 2>&1 || true
-        sips -z 256 256   "$PUBLISH_DIR/icon_1024.png" --out "$ICON_SET/icon_256x256.png"    >/dev/null 2>&1 || true
-        sips -z 512 512   "$PUBLISH_DIR/icon_1024.png" --out "$ICON_SET/icon_256x256@2x.png" >/dev/null 2>&1 || true
-        sips -z 512 512   "$PUBLISH_DIR/icon_1024.png" --out "$ICON_SET/icon_512x512.png"    >/dev/null 2>&1 || true
-        cp "$PUBLISH_DIR/icon_1024.png" "$ICON_SET/icon_512x512@2x.png" 2>/dev/null || true
-        if iconutil -c icns "$ICON_SET" -o "$BUNDLE/Contents/Resources/pdfe.icns"; then
-            ICON_PLIST=$'    <key>CFBundleIconFile</key>\n    <string>pdfe</string>'
+MASTER_PNG="$PUBLISH_DIR/icon_1024.png"
+rendered=0
+if [[ -f "$ICON_SVG" ]]; then
+    if command -v rsvg-convert >/dev/null 2>&1; then
+        rsvg-convert -w 1024 -h 1024 "$ICON_SVG" -o "$MASTER_PNG" && rendered=1 || true
+    fi
+    if [[ "$rendered" == "0" ]]; then
+        MAGICK="$(command -v magick || command -v convert || true)"
+        if [[ -n "$MAGICK" ]]; then
+            "$MAGICK" -background none -density 512 "$ICON_SVG" -resize 1024x1024 "$MASTER_PNG" && rendered=1 || true
         fi
     fi
+fi
+if [[ "$rendered" == "1" && -f "$MASTER_PNG" ]]; then
+    ICON_SET="$PUBLISH_DIR/pdfe.iconset"
+    mkdir -p "$ICON_SET"
+    sips -z 16 16     "$MASTER_PNG" --out "$ICON_SET/icon_16x16.png"      >/dev/null 2>&1 || true
+    sips -z 32 32     "$MASTER_PNG" --out "$ICON_SET/icon_16x16@2x.png"   >/dev/null 2>&1 || true
+    sips -z 32 32     "$MASTER_PNG" --out "$ICON_SET/icon_32x32.png"      >/dev/null 2>&1 || true
+    sips -z 64 64     "$MASTER_PNG" --out "$ICON_SET/icon_32x32@2x.png"   >/dev/null 2>&1 || true
+    sips -z 128 128   "$MASTER_PNG" --out "$ICON_SET/icon_128x128.png"    >/dev/null 2>&1 || true
+    sips -z 256 256   "$MASTER_PNG" --out "$ICON_SET/icon_128x128@2x.png" >/dev/null 2>&1 || true
+    sips -z 256 256   "$MASTER_PNG" --out "$ICON_SET/icon_256x256.png"    >/dev/null 2>&1 || true
+    sips -z 512 512   "$MASTER_PNG" --out "$ICON_SET/icon_256x256@2x.png" >/dev/null 2>&1 || true
+    sips -z 512 512   "$MASTER_PNG" --out "$ICON_SET/icon_512x512.png"    >/dev/null 2>&1 || true
+    cp "$MASTER_PNG" "$ICON_SET/icon_512x512@2x.png" 2>/dev/null || true
+    if iconutil -c icns "$ICON_SET" -o "$BUNDLE/Contents/Resources/pdfe.icns"; then
+        ICON_PLIST=$'    <key>CFBundleIconFile</key>\n    <string>pdfe</string>'
+    fi
 else
-    echo "::warning::ImageMagick not found (or icon missing); building .app without a custom icon"
+    echo "::warning::no SVG rasterizer (rsvg-convert/ImageMagick) — building .app without a custom icon"
 fi
 
 echo "▶ Writing Info.plist"
