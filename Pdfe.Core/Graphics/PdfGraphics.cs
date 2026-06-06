@@ -83,6 +83,28 @@ public class PdfGraphics : IDisposable
 
     #endregion
 
+    #region Marked Content (tagged PDF)
+
+    /// <summary>
+    /// Open a marked-content sequence tagged for the structure tree:
+    /// <c>/Tag &lt;&lt;/MCID n&gt;&gt; BDC</c> (PDF §14.6 / §14.8). Pair with
+    /// <see cref="EndMarkedContent"/>.
+    /// </summary>
+    public void BeginMarkedContent(string tag, int mcid)
+    {
+        ThrowIfDisposed();
+        _operators.AppendLine($"/{tag} <</MCID {mcid}>> BDC");
+    }
+
+    /// <summary>Close the most recent marked-content sequence (<c>EMC</c>).</summary>
+    public void EndMarkedContent()
+    {
+        ThrowIfDisposed();
+        _operators.AppendLine("EMC");
+    }
+
+    #endregion
+
     #region Transformations
 
     /// <summary>

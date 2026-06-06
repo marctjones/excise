@@ -64,6 +64,7 @@ namespace Pdfe.Core.Authoring
         public Pdfe.Core.Authoring.PdfDocumentBuilder Spacer(double points) { }
         public Pdfe.Core.Authoring.PdfDocumentBuilder Subject(string subject) { }
         public Pdfe.Core.Authoring.PdfDocumentBuilder Table(System.Collections.Generic.IEnumerable<System.Collections.Generic.IReadOnlyList<string>> rows, double[]? columnWeights = null, bool headerRow = false, bool gridLines = true) { }
+        public Pdfe.Core.Authoring.PdfDocumentBuilder Tagged() { }
         public Pdfe.Core.Authoring.PdfDocumentBuilder TextField(string label, string? fieldName = null, bool multiline = false, bool required = false, int lines = 1, string? defaultValue = null, string? tooltip = null, int? maxLength = default, bool comb = false) { }
         public Pdfe.Core.Authoring.PdfDocumentBuilder Title(string title) { }
         public static Pdfe.Core.Authoring.PdfDocumentBuilder Create(Pdfe.Core.Authoring.PageSize? pageSize = default, Pdfe.Core.Authoring.PageMargins? margins = default) { }
@@ -708,6 +709,7 @@ namespace Pdfe.Core.Graphics
     }
     public class PdfGraphics : System.IDisposable
     {
+        public void BeginMarkedContent(string tag, int mcid) { }
         public void BeginPath() { }
         public void ClosePath() { }
         public void CurveTo(double x1, double y1, double x2, double y2, double x3, double y3) { }
@@ -718,6 +720,7 @@ namespace Pdfe.Core.Graphics
         public void DrawString(string text, Pdfe.Core.Graphics.PdfFont font, Pdfe.Core.Graphics.PdfBrush brush, double x, double y) { }
         public void DrawString(string text, Pdfe.Core.Graphics.PdfFont font, Pdfe.Core.Graphics.PdfBrush brush, double x, double y, Pdfe.Core.Graphics.TextAlignment alignment) { }
         public Pdfe.Core.Graphics.TextLayoutResult DrawText(string text, Pdfe.Core.Graphics.PdfFont font, Pdfe.Core.Graphics.PdfBrush brush, Pdfe.Core.Document.PdfRectangle bounds, Pdfe.Core.Graphics.TextAlignment alignment = 0, double lineSpacing = 1.2) { }
+        public void EndMarkedContent() { }
         public void Fill(Pdfe.Core.Graphics.PdfBrush brush) { }
         public void FillAndStroke(Pdfe.Core.Graphics.PdfBrush brush, Pdfe.Core.Graphics.PdfPen pen) { }
         public void Flush() { }

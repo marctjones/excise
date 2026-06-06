@@ -46,6 +46,9 @@ public sealed class PdfDocumentBuilder
     private double _cursorY;          // PDF coords (bottom-left origin), top of next block
     private int _autoFieldSeq;
     private PdfFont? _defaultFont;    // embedded font applied to text blocks (#398)
+    private Tagging.StructureTreeBuilder? _tagging;                  // tagged-PDF tree (#275)
+    private Tagging.StructureTreeBuilder.StructElem? _openElem;      // currently-open tagged block
+    private string? _openTag;
 
     private PdfDocumentBuilder(PageSize pageSize, PageMargins margins)
     {
@@ -70,6 +73,52 @@ public sealed class PdfDocumentBuilder
     public int PageCount => _document.PageCount;
 
     // ── document metadata (#381) ─────────────────────────────────────────────
+
+    /// <summary>
+    /// Enable tagged-PDF output (a logical structure tree for accessibility /
+    /// PDF/UA, ISO 32000-2 §14.8): headings become H1-H4, paragraphs/key-values
+    /// become P, tables become Table, each wrapped in marked content. Combine
+    /// with <see cref="DefaultFont"/> (embedded fonts) and
+    /// <see cref="Language"/> for an accessible document. Call before adding
+    /// content.
+    /// </summary>
+    public PdfDocumentBuilder Tagged()
+    {
+        if (_tagging == null)
+        {
+            _tagging = new Tagging.StructureTreeBuilder(_document);
+            _document.RegisterPreSaveAction(() => _tagging!.Write());
+        }
+        return this;
+    }
+
+    private static string HeadingTag(int level) => level switch
+    {
+        <= 1 => "H1", 2 => "H2", 3 => "H3", _ => "H4"
+    };
+
+    private void BeginTag(string structType)
+    {
+        if (_tagging == null) return;
+        _openTag = structType;
+        _openElem = _tagging.AddElement(structType);
+        OpenMarkedContent();
+    }
+
+    private void OpenMarkedContent()
+    {
+        if (_tagging == null || _openElem == null) return;
+        int mcid = _tagging.AllocateMcid(_openElem, _currentPageNumber);
+        _graphics!.BeginMarkedContent(_openTag!, mcid);
+    }
+
+    private void EndTag()
+    {
+        if (_tagging == null || _openElem == null) return;
+        _graphics!.EndMarkedContent();
+        _openElem = null;
+        _openTag = null;
+    }
 
     /// <summary>
     /// Use an embedded font (e.g. <see cref="PdfFont.FromFile"/>) for all text
@@ -107,19 +156,19 @@ public sealed class PdfDocumentBuilder
     /// override the look entirely by passing a <paramref name="style"/>.
     /// </summary>
     public PdfDocumentBuilder Heading(string text, int level = 1, TextStyle? style = null)
-    {
-        style ??= HeadingStyle(level);
-        return Paragraph(text, style);
-    }
+        => ParagraphCore(text, WithDefaultFont(style ?? HeadingStyle(level)), HeadingTag(level));
 
     /// <summary>
     /// Adds a paragraph of text, word-wrapped to the content column and
     /// flowed across pages as needed. Honors hard line breaks in the input.
     /// </summary>
     public PdfDocumentBuilder Paragraph(string text, TextStyle? style = null)
+        => ParagraphCore(text, WithDefaultFont(style ?? TextStyle.Body), "P");
+
+    private PdfDocumentBuilder ParagraphCore(string text, TextStyle style, string structType)
     {
-        style = WithDefaultFont(style ?? TextStyle.Body);
         EnsurePage();
+        BeginTag(structType);
 
         var font = style.ResolveFont();
         var brush = style.ResolveBrush();
@@ -134,6 +183,7 @@ public sealed class PdfDocumentBuilder
             _cursorY -= lineHeight;
         }
 
+        EndTag();
         _cursorY -= style.SpaceAfter;
         return this;
     }
@@ -168,11 +218,15 @@ public sealed class PdfDocumentBuilder
         labelWidth = Math.Clamp(labelWidth, 0.1, 0.9);
         var labelStyle = TextStyle.Body.AsBold().WithSpaceAfter(0);
         var valueStyle = TextStyle.Body.WithSpaceAfter(0);
-        return Row(
+        EnsurePage();
+        BeginTag("P");
+        Row(
             new[] { (label ?? string.Empty, labelStyle), (value ?? string.Empty, valueStyle) },
             new[] { labelWidth, 1 - labelWidth },
             cellPadding: 2,
             spaceAfter: 4);
+        EndTag();
+        return this;
     }
 
     /// <summary>
@@ -196,6 +250,7 @@ public sealed class PdfDocumentBuilder
         int cols = rowList.Max(r => r.Count);
         double[] weights = NormalizeWeights(columnWeights, cols);
 
+        BeginTag("Table");
         for (int i = 0; i < rowList.Count; i++)
         {
             var style = (headerRow && i == 0) ? TextStyle.Body.AsBold().WithSpaceAfter(0)
@@ -206,6 +261,7 @@ public sealed class PdfDocumentBuilder
 
             Row(cells, weights, cellPadding: 4, spaceAfter: 0, gridLines: gridLines);
         }
+        EndTag();
 
         _cursorY -= TextStyle.Body.SpaceAfter;
         return this;
@@ -389,11 +445,18 @@ public sealed class PdfDocumentBuilder
 
     private void NewPage()
     {
+        // A marked-content sequence can't span pages: close it on the outgoing
+        // page and reopen a fresh MCID for the same element on the new page.
+        bool reopen = _tagging != null && _openElem != null && _graphics != null;
+        if (reopen) _graphics!.EndMarkedContent();
+
         _graphics?.Flush();
         _currentPage = _document.Pages.AddBlank(_pageSize.Width, _pageSize.Height);
         _currentPageNumber = _document.PageCount;
         _graphics = _currentPage.GetGraphics();
         _cursorY = _pageSize.Height - _margins.Top;
+
+        if (reopen) OpenMarkedContent();
     }
 
     /// <summary>Ensure at least <paramref name="height"/> remains; else paginate.</summary>
