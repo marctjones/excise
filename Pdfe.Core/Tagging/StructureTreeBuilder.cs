@@ -25,19 +25,24 @@ internal sealed class StructureTreeBuilder
 
     public StructureTreeBuilder(PdfDocument doc) => _doc = doc;
 
-    /// <summary>A structure element (e.g. H1, P, Table, Form) and its content.</summary>
+    /// <summary>A structure element (e.g. H1, P, Table, TR, TD, Form) and its content.</summary>
     internal sealed class StructElem
     {
         public string Type = "P";
+        public readonly List<StructElem> Children = new();                             // nested elems
         public readonly List<(int Page, int Mcid)> Content = new();                    // /MCR runs
         public readonly List<(int Page, PdfReference Obj, PdfDictionary Dict)> Objects = new(); // /OBJR widgets
     }
 
-    /// <summary>Register a new structure element of the given type (child of Document).</summary>
-    public StructElem AddElement(string structType)
+    /// <summary>
+    /// Register a new structure element. With no <paramref name="parent"/> it's a
+    /// child of Document; otherwise it nests under the parent (e.g. Table→TR→TD).
+    /// </summary>
+    public StructElem AddElement(string structType, StructElem? parent = null)
     {
         var e = new StructElem { Type = structType };
-        _elements.Add(e);
+        if (parent != null) parent.Children.Add(e);
+        else _elements.Add(e);
         return e;
     }
 
@@ -61,7 +66,51 @@ internal sealed class StructureTreeBuilder
         _elements.Add(e);
     }
 
-    public bool HasContent => _elements.Any(e => e.Content.Count > 0 || e.Objects.Count > 0);
+    private static bool ElemHasContent(StructElem e) =>
+        e.Content.Count > 0 || e.Objects.Count > 0 || e.Children.Any(ElemHasContent);
+
+    public bool HasContent => _elements.Any(ElemHasContent);
+
+    /// <summary>Recursively serialize an element (and its children); returns its ref.</summary>
+    private PdfReference WriteElem(StructElem e, PdfReference parentRef)
+    {
+        var se = new PdfDictionary();
+        se.SetName("Type", "StructElem");
+        se.SetName("S", e.Type);
+        se["P"] = parentRef;
+        var seRef = _doc.AddIndirectObject(se);
+
+        var kids = new PdfArray();
+        foreach (var child in e.Children.Where(ElemHasContent))
+            kids.Add((PdfObject)WriteElem(child, seRef));
+        foreach (var (page, mcid) in e.Content)
+        {
+            var pgRef = _doc.GetPageReference(page);
+            var mcr = new PdfDictionary();
+            mcr.SetName("Type", "MCR");
+            if (pgRef != null) mcr["Pg"] = pgRef;
+            mcr.SetInt("MCID", mcid);
+            kids.Add((PdfObject)mcr);
+            if (!_perPage.TryGetValue(page, out var map)) _perPage[page] = map = new();
+            map[mcid] = seRef;
+        }
+        foreach (var (page, obj, dict) in e.Objects)
+        {
+            var pgRef = _doc.GetPageReference(page);
+            var objr = new PdfDictionary();
+            objr.SetName("Type", "OBJR");
+            if (pgRef != null) objr["Pg"] = pgRef;
+            objr["Obj"] = obj;
+            kids.Add((PdfObject)objr);
+            _objectOwners.Add((dict, seRef));
+        }
+        se["K"] = kids.Count == 1 ? kids[0] : kids;
+        return seRef;
+    }
+
+    // Populated during Write() recursion.
+    private readonly Dictionary<int, Dictionary<int, PdfReference>> _perPage = new();
+    private readonly List<(PdfDictionary Dict, PdfReference Elem)> _objectOwners = new();
 
     /// <summary>Serialize the structure tree into the document. Idempotent.</summary>
     public void Write()
@@ -82,46 +131,13 @@ internal sealed class StructureTreeBuilder
         rootKids.Add((PdfObject)docRef);
         root["K"] = rootKids;
 
-        // pageNumber -> (mcid -> owning struct elem ref) for the ParentTree;
-        // and a flat list of (widgetDict -> owning struct elem ref) for objects.
-        var perPage = new Dictionary<int, Dictionary<int, PdfReference>>();
-        var objectOwners = new List<(PdfDictionary Dict, PdfReference Elem)>();
+        // Build the element tree recursively (populates _perPage + _objectOwners).
         var docKids = new PdfArray();
-
-        foreach (var e in _elements.Where(x => x.Content.Count > 0 || x.Objects.Count > 0))
-        {
-            var se = new PdfDictionary();
-            se.SetName("Type", "StructElem");
-            se.SetName("S", e.Type);
-            se["P"] = docRef;
-            var seRef = _doc.AddIndirectObject(se);
-
-            var kids = new PdfArray();
-            foreach (var (page, mcid) in e.Content)
-            {
-                var pgRef = _doc.GetPageReference(page);
-                var mcr = new PdfDictionary();
-                mcr.SetName("Type", "MCR");
-                if (pgRef != null) mcr["Pg"] = pgRef;
-                mcr.SetInt("MCID", mcid);
-                kids.Add((PdfObject)mcr);
-                if (!perPage.TryGetValue(page, out var map)) perPage[page] = map = new();
-                map[mcid] = seRef;
-            }
-            foreach (var (page, obj, dict) in e.Objects)
-            {
-                var pgRef = _doc.GetPageReference(page);
-                var objr = new PdfDictionary();
-                objr.SetName("Type", "OBJR");
-                if (pgRef != null) objr["Pg"] = pgRef;
-                objr["Obj"] = obj;
-                kids.Add((PdfObject)objr);
-                objectOwners.Add((dict, seRef));
-            }
-            se["K"] = kids.Count == 1 ? kids[0] : kids;
-            docKids.Add((PdfObject)seRef);
-        }
+        foreach (var e in _elements.Where(ElemHasContent))
+            docKids.Add((PdfObject)WriteElem(e, docRef));
         docElem["K"] = docKids;
+        var perPage = _perPage;
+        var objectOwners = _objectOwners;
 
         // ParentTree: one number-tree key per page (StructParents -> array by MCID)
         // and per widget (StructParent -> the owning element ref).

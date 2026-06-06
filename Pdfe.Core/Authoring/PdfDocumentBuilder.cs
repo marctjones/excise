@@ -263,7 +263,8 @@ public sealed class PdfDocumentBuilder
         int cols = rowList.Max(r => r.Count);
         double[] weights = NormalizeWeights(columnWeights, cols);
 
-        BeginTag("Table");
+        // Tagging: Table → TR (per row) → TD (per cell, with its own marked content).
+        var tableElem = _tagging?.AddElement("Table");
         for (int i = 0; i < rowList.Count; i++)
         {
             var style = (headerRow && i == 0) ? TextStyle.Body.AsBold().WithSpaceAfter(0)
@@ -272,9 +273,11 @@ public sealed class PdfDocumentBuilder
             for (int c = 0; c < cols; c++)
                 cells[c] = (c < rowList[i].Count ? rowList[i][c] ?? string.Empty : string.Empty, style);
 
-            Row(cells, weights, cellPadding: 4, spaceAfter: 0, gridLines: gridLines);
+            var trElem = _tagging?.AddElement("TR", tableElem);
+            // Header cells are TH, body cells TD.
+            Row(cells, weights, cellPadding: 4, spaceAfter: 0, gridLines: gridLines,
+                rowParent: trElem, cellStructType: headerRow && i == 0 ? "TH" : "TD");
         }
-        EndTag();
 
         _cursorY -= TextStyle.Body.SpaceAfter;
         return this;
@@ -533,7 +536,9 @@ public sealed class PdfDocumentBuilder
         double[] weights,
         double cellPadding,
         double spaceAfter,
-        bool gridLines = false)
+        bool gridLines = false,
+        Tagging.StructureTreeBuilder.StructElem? rowParent = null,
+        string cellStructType = "TD")
     {
         EnsurePage();
 
@@ -567,18 +572,29 @@ public sealed class PdfDocumentBuilder
             var style = styles[c];
             var font = style.ResolveFont();
             var brush = style.ResolveBrush();
+
+            // Per-cell marked content tied to a TD/TH element (tables only).
+            bool tagCell = _tagging != null && rowParent != null;
+            if (tagCell)
+            {
+                var td = _tagging!.AddElement(cellStructType, rowParent);
+                int mcid = _tagging.AllocateMcid(td, _currentPageNumber);
+                _graphics!.BeginMarkedContent(cellStructType, mcid);
+            }
+
             double textTop = top - cellPadding;
             for (int li = 0; li < wrapped[c].Count; li++)
             {
                 double baseline = textTop - font.Ascender - li * lineHeight;
                 _graphics!.DrawString(wrapped[c][li], font, brush, x + cellPadding, baseline);
             }
+            if (tagCell) _graphics!.EndMarkedContent();
 
             if (gridLines)
             {
                 var rect = new PdfRectangle(x, top - rowHeight, x + colWidths[c], top);
                 var pen = new PdfPen(PdfColor.FromGray(0.7), 0.5);
-                _graphics!.DrawRectangle(rect.Left, rect.Bottom, rect.Width, rect.Height, fill: null, stroke: pen);
+                DrawArtifact(() => _graphics!.DrawRectangle(rect.Left, rect.Bottom, rect.Width, rect.Height, fill: null, stroke: pen));
             }
 
             x += colWidths[c];
