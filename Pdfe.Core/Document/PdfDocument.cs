@@ -478,6 +478,41 @@ public class PdfDocument : IDisposable
     }
 
     /// <summary>
+    /// Find the indirect reference of a page (1-based) by walking the /Pages
+    /// tree. Returns null if pages are inline rather than indirect (rare).
+    /// Used by tagged-PDF authoring (/Pg) and form authoring.
+    /// </summary>
+    internal PdfReference? GetPageReference(int pageNumber)
+    {
+        var pagesObj = Catalog.GetOptional("Pages");
+        if (pagesObj == null || Resolve(pagesObj) is not PdfDictionary pages) return null;
+        int target = pageNumber - 1, counter = 0;
+        return WalkPageKids(pages, ref counter, target);
+    }
+
+    private PdfReference? WalkPageKids(PdfDictionary node, ref int counter, int target)
+    {
+        var kidsObj = node.GetOptional("Kids");
+        if (kidsObj == null || Resolve(kidsObj) is not PdfArray kids) return null;
+        foreach (var kidObj in kids)
+        {
+            var kid = Resolve(kidObj) as PdfDictionary;
+            if (kid == null) continue;
+            if (kid.GetNameOrNull("Type") == "Pages")
+            {
+                var found = WalkPageKids(kid, ref counter, target);
+                if (found != null) return found;
+            }
+            else
+            {
+                if (counter == target) return kidObj as PdfReference;
+                counter++;
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
     /// Get all pages.
     /// </summary>
     public IEnumerable<PdfPage> GetPages()
