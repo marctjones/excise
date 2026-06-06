@@ -40,6 +40,11 @@ public class KeyboardShortcutTests
     private string CreateTestPdf(string nameHint = "test.pdf")
         => Path.Combine(_tempDir, nameHint);
 
+    /// <summary>True when running on a CI runner (GitHub Actions sets both).</summary>
+    private static bool IsHeadlessCi =>
+        Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true" ||
+        Environment.GetEnvironmentVariable("CI") == "true";
+
     #region File Operations
 
     /// <summary>
@@ -69,6 +74,18 @@ public class KeyboardShortcutTests
     [FixedAvaloniaFact(Timeout = 15000)]
     public async Task CtrlS_SavesFile()
     {
+        // Quarantined on headless CI (#363). This test uniquely drives a
+        // save -> success-toast whose auto-dismiss dispatcher activity can
+        // deadlock the Avalonia headless dispatcher under CI load. When that
+        // happens the dispatcher thread is starved, so neither the per-test
+        // Timeout nor FlushDispatcherAsync can recover — the blame-hang
+        // collector kills the entire test host (not just this test), failing
+        // unrelated changes. It's flaky, not a real product failure, and the
+        // Ctrl+S/save path is covered by RedactionServiceTests + the
+        // automation-script tests. Runs locally where it doesn't hang.
+        Assert.SkipWhen(IsHeadlessCi,
+            "Flaky dispatcher deadlock under headless CI; covered elsewhere (#363).");
+
         // Arrange
         var pdfPath = CreateTestPdf("save_test.pdf");
         TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 2);
