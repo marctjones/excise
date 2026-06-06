@@ -115,7 +115,7 @@ public class PdfFont
     /// <summary>
     /// Create a new font with a different size.
     /// </summary>
-    public PdfFont WithSize(double size) => new(Name, BaseFont, size);
+    public virtual PdfFont WithSize(double size) => new(Name, BaseFont, size);
 
     /// <summary>
     /// Create a new font with a different resource name.

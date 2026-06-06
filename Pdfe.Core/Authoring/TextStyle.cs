@@ -47,6 +47,14 @@ public sealed record TextStyle
     /// <summary>Vertical gap left after the block, in points. Default 6.</summary>
     public double SpaceAfter { get; init; } = 6;
 
+    /// <summary>
+    /// An explicit font (e.g. an embedded Unicode font from
+    /// <see cref="PdfFont.FromFile"/>). When set it overrides
+    /// <see cref="Family"/>/<see cref="Bold"/>/<see cref="Italic"/>, and the
+    /// style's <see cref="Size"/> is applied to it. Null = the base-14 family.
+    /// </summary>
+    public PdfFont? Font { get; init; }
+
     /// <summary>The default body style (11-pt Helvetica, left, black).</summary>
     public static TextStyle Body => new();
 
@@ -68,8 +76,14 @@ public sealed record TextStyle
     /// <summary>Returns a copy with the given trailing gap (points).</summary>
     public TextStyle WithSpaceAfter(double points) => this with { SpaceAfter = points };
 
+    /// <summary>
+    /// Returns a copy that draws with <paramref name="font"/> (e.g. an embedded
+    /// Unicode font from <see cref="PdfFont.FromFile"/>) instead of a base-14 family.
+    /// </summary>
+    public TextStyle WithFont(PdfFont font) => this with { Font = font };
+
     /// <summary>Resolves this style to a concrete <see cref="PdfFont"/> at its size.</summary>
-    public PdfFont ResolveFont() => new("F1", ResolveBaseFont(), Size);
+    public PdfFont ResolveFont() => Font is not null ? Font.WithSize(Size) : new("F1", ResolveBaseFont(), Size);
 
     /// <summary>The brush matching this style's color.</summary>
     public PdfBrush ResolveBrush() => new(Color);

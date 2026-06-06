@@ -45,6 +45,7 @@ public sealed class PdfDocumentBuilder
     private int _currentPageNumber;   // 1-based
     private double _cursorY;          // PDF coords (bottom-left origin), top of next block
     private int _autoFieldSeq;
+    private PdfFont? _defaultFont;    // embedded font applied to text blocks (#398)
 
     private PdfDocumentBuilder(PageSize pageSize, PageMargins margins)
     {
@@ -69,6 +70,17 @@ public sealed class PdfDocumentBuilder
     public int PageCount => _document.PageCount;
 
     // ── document metadata (#381) ─────────────────────────────────────────────
+
+    /// <summary>
+    /// Use an embedded font (e.g. <see cref="PdfFont.FromFile"/>) for all text
+    /// blocks that don't specify their own — lets the builder render Unicode
+    /// beyond the base-14 fonts (#398). The style's point size is applied to it.
+    /// </summary>
+    public PdfDocumentBuilder DefaultFont(PdfFont font) { _defaultFont = font; return this; }
+
+    /// <summary>Apply the builder's default font to a style that has none.</summary>
+    private TextStyle WithDefaultFont(TextStyle s) =>
+        _defaultFont != null && s.Font == null ? s.WithFont(_defaultFont) : s;
 
     /// <summary>Sets the document title (Info <c>/Title</c>).</summary>
     public PdfDocumentBuilder Title(string title) { _document.SetTitle(title); return this; }
@@ -106,7 +118,7 @@ public sealed class PdfDocumentBuilder
     /// </summary>
     public PdfDocumentBuilder Paragraph(string text, TextStyle? style = null)
     {
-        style ??= TextStyle.Body;
+        style = WithDefaultFont(style ?? TextStyle.Body);
         EnsurePage();
 
         var font = style.ResolveFont();
@@ -440,20 +452,24 @@ public sealed class PdfDocumentBuilder
 
         int cols = cells.Count;
         var colWidths = new double[cols];
+        var styles = new TextStyle[cols];
         for (int c = 0; c < cols; c++)
+        {
             colWidths[c] = weights[c] * ContentWidth;
+            styles[c] = WithDefaultFont(cells[c].Style);
+        }
 
         // Wrap each cell and find the tallest.
         var wrapped = new List<string>[cols];
         double maxLines = 1;
         for (int c = 0; c < cols; c++)
         {
-            var font = cells[c].Style.ResolveFont();
+            var font = styles[c].ResolveFont();
             wrapped[c] = WrapText(cells[c].Text ?? string.Empty, font, colWidths[c] - 2 * cellPadding).ToList();
             maxLines = Math.Max(maxLines, wrapped[c].Count);
         }
 
-        double lineHeight = cells.Count > 0 ? cells[0].Style.LineHeight : TextStyle.Body.LineHeight;
+        double lineHeight = cols > 0 ? styles[0].LineHeight : TextStyle.Body.LineHeight;
         double rowHeight = maxLines * lineHeight + 2 * cellPadding;
         EnsureSpace(rowHeight);
 
@@ -461,7 +477,7 @@ public sealed class PdfDocumentBuilder
         double x = ContentLeft;
         for (int c = 0; c < cols; c++)
         {
-            var style = cells[c].Style;
+            var style = styles[c];
             var font = style.ResolveFont();
             var brush = style.ResolveBrush();
             double textTop = top - cellPadding;
