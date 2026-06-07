@@ -67,6 +67,7 @@ namespace Pdfe.Core.Authoring
         public int PageCount { get; }
         public Pdfe.Core.Authoring.PdfDocumentBuilder Author(string author) { }
         public Pdfe.Core.Document.PdfDocument Build() { }
+        public Pdfe.Core.Authoring.PdfDocumentBuilder BulletList(System.Collections.Generic.IEnumerable<string> items, string bullet = "•", Pdfe.Core.Authoring.TextStyle? style = null) { }
         public Pdfe.Core.Authoring.PdfDocumentBuilder CheckBox(string label, string? fieldName = null, bool checkedByDefault = false, string? tooltip = null) { }
         public Pdfe.Core.Authoring.PdfDocumentBuilder Custom(System.Action<Pdfe.Core.Graphics.PdfGraphics, Pdfe.Core.Authoring.LayoutContext> draw) { }
         public Pdfe.Core.Authoring.PdfDocumentBuilder DateField(string label, string? fieldName = null, string format = "yyyy-mm-dd", bool required = false, string? tooltip = null) { }
@@ -78,6 +79,7 @@ namespace Pdfe.Core.Authoring
         public Pdfe.Core.Authoring.PdfDocumentBuilder KeyValue(string label, string value, double labelWidth = 0.3) { }
         public Pdfe.Core.Authoring.PdfDocumentBuilder Keywords(string keywords) { }
         public Pdfe.Core.Authoring.PdfDocumentBuilder Language(string bcp47) { }
+        public Pdfe.Core.Authoring.PdfDocumentBuilder NumberedList(System.Collections.Generic.IEnumerable<string> items, Pdfe.Core.Authoring.TextStyle? style = null) { }
         public Pdfe.Core.Authoring.PdfDocumentBuilder PageBreak() { }
         public Pdfe.Core.Authoring.PdfDocumentBuilder Paragraph(string text, Pdfe.Core.Authoring.TextStyle? style = null) { }
         public void Save(System.IO.Stream stream) { }
