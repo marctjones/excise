@@ -1,5 +1,26 @@
 namespace Pdfe.Core.Authoring
 {
+    public enum FillableCellKind
+    {
+        Text = 0,
+        CheckBox = 1,
+        Choice = 2,
+    }
+    public sealed class FillableTableCell : System.IEquatable<Pdfe.Core.Authoring.FillableTableCell>
+    {
+        public FillableTableCell(string FieldName, Pdfe.Core.Authoring.FillableCellKind Kind = 0, string? Value = null, System.Collections.Generic.IReadOnlyList<string>? Options = null, string? Tooltip = null) { }
+        public string FieldName { get; init; }
+        public Pdfe.Core.Authoring.FillableCellKind Kind { get; init; }
+        public System.Collections.Generic.IReadOnlyList<string>? Options { get; init; }
+        public string? Tooltip { get; init; }
+        public string? Value { get; init; }
+    }
+    public sealed class FillableTableRow : System.IEquatable<Pdfe.Core.Authoring.FillableTableRow>
+    {
+        public FillableTableRow(string Label, System.Collections.Generic.IReadOnlyList<Pdfe.Core.Authoring.FillableTableCell> Cells) { }
+        public System.Collections.Generic.IReadOnlyList<Pdfe.Core.Authoring.FillableTableCell> Cells { get; init; }
+        public string Label { get; init; }
+    }
     public enum FontFamily
     {
         SansSerif = 0,
@@ -51,6 +72,7 @@ namespace Pdfe.Core.Authoring
         public Pdfe.Core.Authoring.PdfDocumentBuilder DateField(string label, string? fieldName = null, string format = "yyyy-mm-dd", bool required = false, string? tooltip = null) { }
         public Pdfe.Core.Authoring.PdfDocumentBuilder DefaultFont(Pdfe.Core.Graphics.PdfFont font) { }
         public Pdfe.Core.Authoring.PdfDocumentBuilder Dropdown(string label, System.Collections.Generic.IEnumerable<string> options, string? fieldName = null, string? defaultValue = null, string? tooltip = null) { }
+        public Pdfe.Core.Authoring.PdfDocumentBuilder FillableTable(System.Collections.Generic.IReadOnlyList<string> columnHeaders, System.Collections.Generic.IReadOnlyList<Pdfe.Core.Authoring.FillableTableRow> rows, double[]? columnWeights = null, double labelColumnWeight = 1) { }
         public Pdfe.Core.Authoring.PdfDocumentBuilder Heading(string text, int level = 1, Pdfe.Core.Authoring.TextStyle? style = null) { }
         public Pdfe.Core.Authoring.PdfDocumentBuilder HorizontalRule(double thickness = 0.5, Pdfe.Core.Graphics.PdfColor? color = default) { }
         public Pdfe.Core.Authoring.PdfDocumentBuilder KeyValue(string label, string value, double labelWidth = 0.3) { }

@@ -4,6 +4,28 @@ All notable changes to pdfe are documented here. Format roughly follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 semantic versioning.
 
+## [2.7.0] — 2026-06-06
+
+Fillable-table authoring + PDF/UA accessibility hardening. Additive; no breaking
+changes (public-API gate confirmed).
+
+### Added
+- **`PdfDocumentBuilder.FillableTable(...)`.** Renders a table whose body cells
+  are interactive AcroForm fields (text input, checkbox, or dropdown per cell) —
+  a fillable grid. Mirrors `Table`'s layout (column weights, gridlines, automatic
+  pagination) but places live fields instead of static text. The first column is a
+  static row-header; each cell's `/TU` accessible name comes from its tooltip.
+  New supporting types: `FillableTableRow`, `FillableTableCell`, `FillableCellKind`.
+- **PDF/UA hardening for tagged output (#407).**
+  - Decorative content (horizontal rules, form-field borders, table grid lines)
+    is wrapped in `/Artifact` so every piece of page content is tagged or an
+    artifact. New `PdfGraphics.BeginArtifact()`.
+  - Form-field widgets are added to the structure tree as `Form` elements via
+    `/OBJR`, with each widget carrying a `/StructParent` into the ParentTree.
+  - Tagged tables now nest `Table → TR → TD/TH` (header cells `TH`), each cell in
+    its own marked content, instead of one flat `Table` element;
+    `StructureTreeBuilder` models a general nested element tree.
+
 ## [2.6.0] — 2026-06-06
 
 Font, accessibility, and image-filter additions. All additive; the public-API
