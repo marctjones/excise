@@ -19,6 +19,11 @@ on:
 
 env:
   DOTNET_VERSION: '10.0.x'
+  # ReactiveUI/Splat's author signing certificate was revoked upstream, so a
+  # cold `dotnet restore` fails with NU3012 (revoked cert). ci.yml already sets
+  # this; release.yml didn't, so a version-bump cache miss surfaced it as a
+  # silent restore failure in the license-manifest step (#387). Match ci.yml.
+  DOTNET_NUGET_SIGNATURE_VERIFICATION: false
 
 # Lets the release job push installers as release assets.
 permissions:
@@ -182,10 +187,61 @@ jobs:
             dist/*.zip.sha256
           if-no-files-found: error
 
-  # ── 3. Attach installers to the GitHub release ──────────────────────
+  # ── 3. Build the macOS .app bundle (arm64) ──────────────────────────
+  macos-app:
+    name: macOS .app (arm64)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # so `git describe --tags` works
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache nuget
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-macos-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-macos-
+
+      - name: Resolve version
+        id: ver
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            v="${{ github.event.inputs.version }}"
+          elif [[ "${{ github.event_name }}" == "release" ]]; then
+            v="${GITHUB_REF#refs/tags/}"; v="${v#v}"
+          elif [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            v="${GITHUB_REF#refs/tags/}"; v="${v#v}"
+          else
+            v="$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || echo 0.0.0)"
+          fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "▶ version: $v"
+
+      - name: Install librsvg (for the .icns icon; best-effort)
+        continue-on-error: true
+        run: brew install librsvg
+
+      - name: Build macOS .app (arm64)
+        run: ./scripts/build-macos-app.sh --version "${{ steps.ver.outputs.version }}" --rid osx-arm64 --output dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-app
+          path: |
+            dist/*.zip
+            dist/*.zip.sha256
+          if-no-files-found: error
+
+  # ── 4. Attach installers to the GitHub release ──────────────────────
   publish:
     name: Attach to GitHub release
-    needs: [linux-deb, windows-exe]
+    needs: [linux-deb, windows-exe, macos-app]
     runs-on: ubuntu-latest
     # Only auto-create a release when the trigger was a tag push or a
     # release event. workflow_dispatch reruns just produce artifacts you
@@ -227,6 +283,7 @@ jobs:
           files: |
             artifacts/linux-installer/*
             artifacts/windows-installer/*
+            artifacts/macos-app/*
           body: |
             ## Installers
 
@@ -234,6 +291,7 @@ jobs:
             |-----------------|------------------------------------------------|
             | Ubuntu / Debian | `pdfe_<version>_amd64.deb`                     |
             | Windows 10/11   | `pdfe-<version>-win-x64-setup.exe`             |
+            | macOS (Apple Silicon) | `pdfe-<version>-macos-arm64.zip`         |
 
             Portable archives (`*.tar.gz`, `*.zip`) are also attached
             for users who prefer to extract and run the binary directly.
@@ -251,6 +309,14 @@ jobs:
             or silently:
             ```powershell
             pdfe-<version>-win-x64-setup.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
+            ```
+
+            **macOS (Apple Silicon)**
+            Unzip and move `pdfe.app` to `/Applications`. The bundle is
+            **unsigned**, so Gatekeeper quarantines it — open it the first
+            time via right-click → Open, or clear the quarantine flag:
+            ```bash
+            xattr -dr com.apple.quarantine /Applications/pdfe.app
             ```
 
             ### Verification

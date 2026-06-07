@@ -44,7 +44,10 @@ while [[ $# -gt 0 ]]; do
 done
 
 NUGET_DIR="${NUGET_PACKAGES:-$HOME/.nuget/packages}"
-[[ -d "$NUGET_DIR" ]] || { echo "Nuget cache not found at $NUGET_DIR" >&2; exit 1; }
+# Don't hard-fail on a cold cache: the `dotnet restore` below populates it.
+# CI keys the actions/cache on hashFiles('**/*.csproj'), so any version bump
+# misses the cache and the dir may not exist yet — that's fine, restore fills it.
+mkdir -p "$NUGET_DIR"
 
 OUT="$ROOT/PdfEditor/Assets/third-party-licenses.json"
 SCANCODE_DIR="$ROOT/artifacts/scancode"
@@ -52,7 +55,9 @@ mkdir -p "$(dirname "$OUT")"
 [[ "$RUN_SCANCODE" == "1" ]] && mkdir -p "$SCANCODE_DIR"
 
 echo "▶ Restoring $PROJECT"
-dotnet restore "$ROOT/$PROJECT" >/dev/null
+# Don't suppress output: a hidden `>/dev/null` masked an NU3012 cold-restore
+# failure during the v2.4.0 release (#387). Let restore errors be visible.
+dotnet restore "$ROOT/$PROJECT"
 
 echo "▶ Resolving deps"
 PKG_LIST="$(dotnet list "$ROOT/$PROJECT" package --include-transitive --format json 2>/dev/null \

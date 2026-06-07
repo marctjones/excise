@@ -97,8 +97,10 @@ Root: HKCU; Subkey: "Environment"; ValueType: expandsz; ValueName: "Path"; Value
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#MyAppName}}"; Flags: nowait postinstall skipifsilent
 
 [Code]
-{ Avoid double-appending the install dir to PATH if the user re-runs
-  the installer. Returns False when {app} is already a token in PATH. }
+// Avoid double-appending the install dir to PATH if the user re-runs the
+// installer. Returns False when the app dir is already a token in PATH.
+// (Use // line comments, not { } — a brace comment containing {app} would be
+//  closed early by that constant's own '}' and break compilation.)
 function NeedsAddPath(Param: string): Boolean;
 var
   OrigPath: string;

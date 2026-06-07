@@ -171,6 +171,38 @@ Multiple areas across multiple pages can be marked and applied as a single batch
 3. Drag a rect on the page — the new field appears immediately and is editable.
 4. **🪄 Auto-detect** scans the current document for likely field positions — long horizontal strokes (text-field underlines) and small square outlines (checkboxes) — and creates them in one click.
 
+### Authoring PDFs from scratch (high-level)
+
+`Pdfe.Core.Authoring.PdfDocumentBuilder` is a friendly, flow-layout writer that
+handles word-wrap, pagination, and field placement so you never touch raw
+coordinates. It sits on top of the low-level `PdfGraphics` / `AcroFormAuthoring`
+API (drop down to those any time via `.Custom(...)` or `.Build()`).
+
+```csharp
+using Pdfe.Core.Authoring;
+
+byte[] pdf = PdfDocumentBuilder.Create()           // US Letter, 1-inch margins
+    .Heading("Membership Application")
+    .Paragraph("Please complete all required fields.")
+    .HorizontalRule()
+    .KeyValue("Date", "2026-06-05")
+    .TextField("Full name", "fullName", required: true)
+    .CheckBox("I agree to the terms", "agree")
+    .Dropdown("Tier", new[] { "Basic", "Standard", "Premium" }, "tier", "Standard")
+    .TextField("Comments", "comments", multiline: true, lines: 4)
+    .Table(new[]
+    {
+        new[] { "Item", "Qty", "Price" },
+        new[] { "Widget", "3", "$9.00" },
+    }, columnWeights: new[] { 2.0, 1.0, 1.0 }, headerRow: true)
+    .SaveToBytes();                                 // or .Save("form.pdf")
+```
+
+The result is a real, fillable AcroForm PDF: text is extractable, content
+flows onto new pages automatically, and the form fields are live in any viewer.
+Styling is via the immutable `TextStyle` record (family/size/bold/italic/color/
+alignment); page size/margins via `PageSize` and `PageMargins`. See issue #383.
+
 ### Reveal Hidden Text
 
 `Tools → Reveal Hidden Text` finds text that's been visually hidden by overlays:
@@ -358,6 +390,22 @@ git tag v2.1.0
 git push origin v2.1.0           # workflow runs, attaches installers
 # Or via the GitHub UI: Releases → Draft a new release → choose tag
 ```
+
+## Versioning & API stability
+
+The publishable libraries — **`Pdfe.Core`**, **`Pdfe.Rendering`**, **`Pdfe.Avalonia`** — follow [Semantic Versioning](https://semver.org/) on their **public** API:
+
+- **MAJOR** — a breaking change to a public type/member.
+- **MINOR** — backward-compatible additions (new types/members/overloads).
+- **PATCH** — backward-compatible fixes with no public-API change.
+
+What counts as the supported public contract:
+
+- Public types and members of the three libraries are the contract. Anything marked `internal` (or excluded from the public surface) may change in any release.
+- The high-level authoring surface — `Pdfe.Core.Authoring.*` (`PdfDocumentBuilder`, `TextStyle`, `PageSize`, `PageMargins`, `FontFamily`, `LayoutContext`) — is the recommended, stable entry point for *writing* PDFs. The low-level `PdfGraphics` / `AcroFormAuthoring` API remains available as an escape hatch.
+- The public API is **gated in CI**: `PublicApiApprovalTests` snapshots the full public surface of `Pdfe.Core` against a committed baseline (`Pdfe.Core.Tests/PublicApi/Pdfe.Core.approved.txt`). Any addition, removal, or signature change fails the build until the baseline is intentionally regenerated (`APPROVE_PUBLIC_API=1`) and committed — so every public-API change is a deliberate, reviewable SemVer decision.
+
+**Distribution:** packages ship as `.nupkg` + `.snupkg` (symbols) with [SourceLink](https://github.com/dotnet/sourcelink) for step-into debugging, attached to each [GitHub Release](https://github.com/marctjones/pdfe/releases). They are **not published to nuget.org** — consume them via a local/private feed or a project reference. See issues #383 (writer DX) and #384 (viewer/render DX).
 
 ## Documentation
 

@@ -4,6 +4,170 @@ All notable changes to pdfe are documented here. Format roughly follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 semantic versioning.
 
+## [2.7.0] — 2026-06-06
+
+Fillable-table authoring + PDF/UA accessibility hardening. Additive; no breaking
+changes (public-API gate confirmed).
+
+### Added
+- **`PdfDocumentBuilder.FillableTable(...)`.** Renders a table whose body cells
+  are interactive AcroForm fields (text input, checkbox, or dropdown per cell) —
+  a fillable grid. Mirrors `Table`'s layout (column weights, gridlines, automatic
+  pagination) but places live fields instead of static text. The first column is a
+  static row-header; each cell's `/TU` accessible name comes from its tooltip.
+  New supporting types: `FillableTableRow`, `FillableTableCell`, `FillableCellKind`.
+- **PDF/UA hardening for tagged output (#407).**
+  - Decorative content (horizontal rules, form-field borders, table grid lines)
+    is wrapped in `/Artifact` so every piece of page content is tagged or an
+    artifact. New `PdfGraphics.BeginArtifact()`.
+  - Form-field widgets are added to the structure tree as `Form` elements via
+    `/OBJR`, with each widget carrying a `/StructParent` into the ParentTree.
+  - Tagged tables now nest `Table → TR → TD/TH` (header cells `TH`), each cell in
+    its own marked content, instead of one flat `Table` element;
+    `StructureTreeBuilder` models a general nested element tree.
+
+## [2.6.0] — 2026-06-06
+
+Font, accessibility, and image-filter additions. All additive; the public-API
+gate confirms no breaking changes.
+
+### Added
+- **Font subsetting + CFF/OpenType embedding (#393).** Embedded TrueType fonts
+  are now subsetted to the glyphs actually drawn (retain-GID `glyf`/`loca`,
+  composite-glyph closure, subset tag) — e.g. DejaVu drawing a short string went
+  from ~759 KB to ~14 KB embedded. CFF-outline OpenType (`'OTTO'`) fonts can now
+  be embedded too (`/CIDFontType0` + `/FontFile3 /Subtype /OpenType`).
+- **Embedded fonts in the high-level builder (#398).** `TextStyle.WithFont(...)`
+  and `PdfDocumentBuilder.DefaultFont(...)` let the friendly facade render
+  arbitrary Unicode (not just base-14); the same typeface across sizes/weights
+  embeds as one subset. `PdfFont.WithSize` is now `virtual`.
+- **Tagged-PDF authoring / PDF-UA (#275).** `PdfDocumentBuilder.Tagged()` emits a
+  logical structure tree (StructTreeRoot + Document→H1-H4/P/Table), marked
+  content (`BDC`/`EMC` + MCID, `/MCR` with `/Pg`, `/ParentTree`), and catalog
+  `/MarkInfo`, `/ViewerPreferences /DisplayDocTitle`. Plus
+  `PdfGraphics.BeginMarkedContent`/`EndMarkedContent`. Combined with embedded
+  fonts + `/Lang`, the builder now produces genuinely accessible documents
+  (`pdfinfo` reports `Tagged: yes`).
+- **Image filters: JBIG2 + JPEG2000 (#325).** Pure-managed JBIG2 decoder
+  (MQ arithmetic + generic region, template 0) wired into the stream
+  decompressor with strict decode-or-passthrough fallback (no silently-wrong
+  images). JPEG2000 (`JPXDecode`) codestream/marker parsing (full pixel decode
+  deferred). JPEG/PNG remain delegated to the SkiaSharp renderer.
+
+### Notes
+- Remaining tracked follow-ups: full PDF/UA conformance (artifacts, TR/TD,
+  form-field tagging), CFF glyph subsetting, JBIG2 symbol/text regions, full
+  JPEG2000 decode.
+
+## [2.5.0] — 2026-06-06
+
+Completes the **PromptResponse writer epic (#382)** — pdfe can now author
+accessible, fillable, Unicode PDFs from structured content. All additive; the
+public-API gate confirms no breaking changes.
+
+### Added
+- **Unicode text + embedded fonts (#378).** `PdfFont.FromFile(path, size)` /
+  `FromTrueType(bytes|Stream, size)` embed a TrueType font as a Type0 /
+  Identity-H composite font with a ToUnicode CMap, so arbitrary Unicode (CJK,
+  Arabic, accented Latin, Greek, Cyrillic, …) both renders and stays
+  extractable. Backed by a new dependency-free sfnt reader
+  (`Pdfe.Core.Fonts.TrueTypeFontFile`). Full-font embedding; subsetting and CFF
+  ('OTTO') are tracked in #393.
+- **High-level text layout (#379).** `PdfGraphics.DrawText(text, font, brush,
+  PdfRectangle, …)` word-wraps into a box and returns a `TextLayoutResult`
+  (used height + overflow) for flowing across boxes/pages; `MeasureText(...)`
+  returns wrapped size.
+- **AcroForm field options (#380).** `/TU` tooltip (accessible name) on all
+  field types; `/MaxLen` + comb for text fields; `AddDateField` (Acrobat
+  `AFDate` format/keystroke actions); `SetTabOrder` (page `/Tabs`).
+- **Document metadata (#381).** `PdfDocument.SetTitle/SetAuthor/SetSubject/
+  SetKeywords/SetCreator/SetProducer` (creates the `/Info` dict on demand) and a
+  read/write `Language` property (catalog `/Lang`, required by PDF/UA).
+- **`PdfDocumentBuilder`** gains `Title/Author/Subject/Keywords/Language`,
+  `DateField`, and `tooltip`/`maxLength`/`comb` passthrough on fields (with
+  `/TU` defaulting to the visible label for screen readers).
+
+### Changed
+- `PdfFont` text-encoding/measurement/metrics members are now `virtual` so
+  embedded fonts can override them; standard-font behavior is unchanged.
+- Dependencies: bumped `FluentAvaloniaUI` to the latest preview (#340; full
+  de-preview is blocked on an upstream FluentAvalonia 3.x stable for Avalonia 12).
+
+### Tests / CI
+- Raised `Pdfe.Core` CI line coverage to ~93% and ratcheted the gate to 92.5%
+  (#351); CI installs `fonts-dejavu-core` so the embedding tests run
+  deterministically. The macOS `.app` is now built and attached by CI.
+
+## [2.4.1] — 2026-06-06
+
+Packaging, API-stability, and CI hardening on top of v2.4.0. No public-API
+changes (enforced by the new gate) — a pure patch.
+
+### Added
+- **Public-API gate (#383).** `PublicApiApprovalTests` snapshots the full
+  `Pdfe.Core` public surface against a committed baseline
+  (`Pdfe.Core.Tests/PublicApi/Pdfe.Core.approved.txt`); any public-API change
+  fails CI until intentionally re-approved (`APPROVE_PUBLIC_API=1`). Makes every
+  API change a deliberate SemVer decision.
+- **SourceLink + symbols.** The three publishable libraries (`Pdfe.Core`,
+  `Pdfe.Rendering`, `Pdfe.Avalonia`) now ship portable `.snupkg` symbol packages
+  with SourceLink and deterministic CI builds (shared `Packaging.props`), so
+  consumers can step into the source while debugging.
+- README "Versioning & API stability" section documenting the SemVer policy,
+  the `Pdfe.Core.Authoring.*` stable writer surface, and local-feed (not
+  nuget.org) distribution.
+
+### Fixed
+- **Release pipeline cold-cache restore (#387).** `release.yml` now sets
+  `DOTNET_NUGET_SIGNATURE_VERIFICATION=false` (matching `ci.yml`) so a
+  version-bump cache miss no longer fails the license-manifest step with NU3012
+  (revoked ReactiveUI/Splat signing cert). The v2.4.0 Windows/Debian/macOS
+  installers — absent from that release due to this bug — are restored here.
+- `generate-license-manifest.sh` no longer hard-fails on a cold NuGet cache and
+  no longer suppresses restore output.
+
+### CI / dev
+- Headless GUI tests (`PdfEditor.Tests`) now run only when GUI-relevant paths
+  change (or on `main`), so library-only PRs aren't gated on the slow GUI suite.
+- Quarantined the flaky `KeyboardShortcutTests.CtrlS_SavesFile` on headless CI
+  (#363) — it intermittently deadlocked the Avalonia dispatcher and crashed the
+  test host. Still runs locally; the save path stays covered elsewhere.
+
+## [2.4.0] — 2026-06-05
+
+Adds a friendly, high-level **PDF authoring** API so third-party .NET apps can
+generate PDFs from structured content without touching coordinates — the
+writer-side facade tracked by #383 (PromptResponse writer epic #382).
+
+### Added
+- **`Pdfe.Core.Authoring.PdfDocumentBuilder` — high-level writer facade (#383).**
+  A fluent, flow-layout builder over the existing `PdfGraphics` /
+  `AcroFormAuthoring` API. Content flows top-to-bottom inside the page's content
+  area with automatic word-wrap and pagination, so callers never compute
+  coordinates or manage the PDF's bottom-left Y axis.
+  - Content blocks: `Heading(level)`, `Paragraph` (word-wrap + hard-break
+    aware), `Spacer`, `HorizontalRule`, `KeyValue`, `Table` (column weights,
+    optional header row + grid lines), `PageBreak`.
+  - Fillable AcroForm fields, flow-positioned with drawn labels and borders:
+    `TextField` (multiline/required), `CheckBox`, `Dropdown` (combo). Auto-names
+    fields when none is supplied.
+  - `Custom(Action<PdfGraphics, LayoutContext>)` escape hatch to the low-level
+    API; `Build()` returns the `PdfDocument` for further manipulation;
+    `SaveToBytes()` / `Save(path)` / `Save(Stream)` output.
+- **Authoring value types.** `PageSize` (Letter/Legal/A4/A3/A5 +
+  `Landscape()`/`Portrait()`), `PageMargins` (`All`/`Symmetric`/`Default`),
+  immutable `TextStyle` record (family/size/bold/italic/color/alignment/
+  line-spacing/space-after with `With…` helpers), `FontFamily`, `LayoutContext`.
+- README: a copy-paste "Authoring PDFs from scratch (high-level)" sample.
+
+### Notes
+- Targets the base-14 fonts and Latin text available today; Unicode / embedded
+  TrueType-OpenType fonts (#378), richer text layout (#379), more AcroForm
+  field options (#380), and document metadata setters (#381) extend the facade.
+- Verified against external readers: generated forms pass `qpdf --check`,
+  `pdfinfo` reports a live `AcroForm`, content auto-paginates, and `pdftotext`
+  extracts all text. 17 new tests; full `Pdfe.Core` suite green (2744 passing).
+
 ## [2.3.1] — 2026-06-04
 
 ### Fixed

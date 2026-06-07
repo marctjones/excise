@@ -115,7 +115,7 @@ public class PdfFont
     /// <summary>
     /// Create a new font with a different size.
     /// </summary>
-    public PdfFont WithSize(double size) => new(Name, BaseFont, size);
+    public virtual PdfFont WithSize(double size) => new(Name, BaseFont, size);
 
     /// <summary>
     /// Create a new font with a different resource name.
@@ -123,9 +123,37 @@ public class PdfFont
     public PdfFont WithName(string name) => new(name, BaseFont, Size);
 
     /// <summary>
+    /// Create an embedded font from a TrueType/OpenType file on disk. The font
+    /// is embedded (and the text encoded) so arbitrary Unicode renders and stays
+    /// extractable. See <see cref="FromTrueType(byte[], double)"/>.
+    /// </summary>
+    public static PdfFont FromFile(string path, double size) =>
+        FromTrueType(File.ReadAllBytes(path), size);
+
+    /// <summary>
+    /// Create an embedded font from TrueType/OpenType font bytes. Produces a
+    /// Type0/Identity-H font with a ToUnicode CMap; <see cref="EncodeString"/>
+    /// emits glyph ids and the whole font is embedded on first use.
+    /// (Subsetting is a future optimization — see #378.)
+    /// </summary>
+    public static PdfFont FromTrueType(byte[] fontData, double size) =>
+        new PdfTrueTypeFont(fontData, size);
+
+    /// <summary>
+    /// Create an embedded font from a TrueType/OpenType stream.
+    /// </summary>
+    public static PdfFont FromTrueType(Stream fontStream, double size)
+    {
+        ArgumentNullException.ThrowIfNull(fontStream);
+        using var ms = new MemoryStream();
+        fontStream.CopyTo(ms);
+        return FromTrueType(ms.ToArray(), size);
+    }
+
+    /// <summary>
     /// Measures the width of a string in points.
     /// </summary>
-    public double MeasureWidth(string text)
+    public virtual double MeasureWidth(string text)
     {
         if (string.IsNullOrEmpty(text))
             return 0;
@@ -143,17 +171,32 @@ public class PdfFont
     /// <summary>
     /// Gets the approximate line height (ascender + descender).
     /// </summary>
-    public double LineHeight => Size * 1.2; // Typical line height is ~1.2x font size
+    public virtual double LineHeight => Size * 1.2; // Typical line height is ~1.2x font size
 
     /// <summary>
     /// Gets the ascender height (distance from baseline to top).
     /// </summary>
-    public double Ascender => Size * 0.8; // Typical ascender is ~0.8x font size
+    public virtual double Ascender => Size * 0.8; // Typical ascender is ~0.8x font size
 
     /// <summary>
     /// Gets the descender depth (distance from baseline to bottom).
     /// </summary>
-    public double Descender => Size * 0.2; // Typical descender is ~0.2x font size
+    public virtual double Descender => Size * 0.2; // Typical descender is ~0.2x font size
+
+    /// <summary>
+    /// Build the font dictionary, registering any required indirect objects in
+    /// <paramref name="document"/> (embedded fonts add stream objects). The base
+    /// implementation returns the inline standard-font dictionary.
+    /// </summary>
+    internal virtual PdfDictionary BuildFontDictionary(PdfDocument document) => CreateFontDictionary();
+
+    /// <summary>
+    /// Whether the font dictionary should be stored as an indirect object in the
+    /// page resources rather than inline. Embedded composite fonts set this so
+    /// the font dict has its own object id (better tool compatibility); standard
+    /// fonts stay inline.
+    /// </summary>
+    internal virtual bool PreferIndirectFontDictionary => false;
 
     /// <summary>
     /// Creates a PDF font dictionary for embedding in resources.
@@ -177,7 +220,7 @@ public class PdfFont
     /// <summary>
     /// Encodes a string for use in PDF text operators.
     /// </summary>
-    public string EncodeString(string text)
+    public virtual string EncodeString(string text)
     {
         if (string.IsNullOrEmpty(text))
             return "()";

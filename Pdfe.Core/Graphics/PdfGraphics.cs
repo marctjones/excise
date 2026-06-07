@@ -31,6 +31,18 @@ public readonly record struct PdfSize(double Width, double Height)
 }
 
 /// <summary>
+/// Result of <see cref="PdfGraphics.DrawText"/>: how much vertical space the
+/// drawn text consumed, and any text that did not fit the box.
+/// </summary>
+/// <param name="UsedHeight">Vertical space consumed, in points.</param>
+/// <param name="Overflow">Text that didn't fit (newline-joined), or <c>null</c> if all fit.</param>
+public readonly record struct TextLayoutResult(double UsedHeight, string? Overflow)
+{
+    /// <summary>True when some text didn't fit the box.</summary>
+    public bool HasOverflow => Overflow != null;
+}
+
+/// <summary>
 /// Provides graphics drawing operations for a PDF page.
 /// Generates PDF content stream operators for drawing shapes, text, and images.
 /// </summary>
@@ -67,6 +79,40 @@ public class PdfGraphics : IDisposable
     {
         ThrowIfDisposed();
         _operators.AppendLine("Q");
+    }
+
+    #endregion
+
+    #region Marked Content (tagged PDF)
+
+    /// <summary>
+    /// Open a marked-content sequence tagged for the structure tree:
+    /// <c>/Tag &lt;&lt;/MCID n&gt;&gt; BDC</c> (PDF §14.6 / §14.8). Pair with
+    /// <see cref="EndMarkedContent"/>.
+    /// </summary>
+    public void BeginMarkedContent(string tag, int mcid)
+    {
+        ThrowIfDisposed();
+        _operators.AppendLine($"/{tag} <</MCID {mcid}>> BDC");
+    }
+
+    /// <summary>
+    /// Open an artifact marked-content sequence (<c>/Artifact BDC</c>) for purely
+    /// decorative content that is excluded from the structure tree — required by
+    /// PDF/UA so every piece of content is either tagged or an artifact. Pair
+    /// with <see cref="EndMarkedContent"/>.
+    /// </summary>
+    public void BeginArtifact()
+    {
+        ThrowIfDisposed();
+        _operators.AppendLine("/Artifact BDC");
+    }
+
+    /// <summary>Close the most recent marked-content sequence (<c>EMC</c>).</summary>
+    public void EndMarkedContent()
+    {
+        ThrowIfDisposed();
+        _operators.AppendLine("EMC");
     }
 
     #endregion
@@ -342,6 +388,74 @@ public class PdfGraphics : IDisposable
             return new PdfSize(0, 0);
 
         return new PdfSize(font.MeasureWidth(text), font.LineHeight);
+    }
+
+    /// <summary>
+    /// Measures <paramref name="text"/> when word-wrapped to <paramref name="maxWidth"/>
+    /// points: width is the widest resulting line (≤ maxWidth), height is the total
+    /// stacked line height. <paramref name="lineSpacing"/> is a multiple of the font
+    /// size (default 1.2).
+    /// </summary>
+    public static PdfSize MeasureText(string text, PdfFont font, double maxWidth, double lineSpacing = 1.2)
+    {
+        ArgumentNullException.ThrowIfNull(font);
+        var lines = TextWrapper.Wrap(text ?? string.Empty, font, maxWidth).ToList();
+        double w = 0;
+        foreach (var line in lines)
+            w = Math.Max(w, font.MeasureWidth(line));
+        return new PdfSize(w, lines.Count * font.Size * lineSpacing);
+    }
+
+    /// <summary>
+    /// Draws word-wrapped, multi-line text inside <paramref name="bounds"/> (PDF
+    /// coordinates, bottom-left origin). Lines flow from the top of the box; any
+    /// that don't fit vertically are returned as overflow so a caller can
+    /// continue on the next page. Honors hard line breaks and embedded fonts.
+    /// </summary>
+    /// <returns>
+    /// The height actually used and the overflow text that didn't fit
+    /// (<c>null</c> when everything fit).
+    /// </returns>
+    public TextLayoutResult DrawText(
+        string text,
+        PdfFont font,
+        PdfBrush brush,
+        PdfRectangle bounds,
+        TextAlignment alignment = TextAlignment.Left,
+        double lineSpacing = 1.2)
+    {
+        ThrowIfDisposed();
+        ArgumentNullException.ThrowIfNull(font);
+        ArgumentNullException.ThrowIfNull(brush);
+
+        double lineHeight = font.Size * lineSpacing;
+        var lines = TextWrapper.Wrap(text ?? string.Empty, font, bounds.Width).ToList();
+
+        double x = alignment switch
+        {
+            TextAlignment.Center => bounds.Left + bounds.Width / 2,
+            TextAlignment.Right => bounds.Left + bounds.Width,
+            _ => bounds.Left
+        };
+
+        double y = bounds.Top;            // top of the text box (PDF coords)
+        double used = 0;
+        int drawn = 0;
+        foreach (var line in lines)
+        {
+            if (y - lineHeight < bounds.Bottom)
+                break;                    // no vertical room for another line
+            double baseline = y - font.Ascender;
+            DrawString(line, font, brush, x, baseline, alignment);
+            y -= lineHeight;
+            used += lineHeight;
+            drawn++;
+        }
+
+        string? overflow = drawn < lines.Count
+            ? string.Join("\n", lines.Skip(drawn))
+            : null;
+        return new TextLayoutResult(used, overflow);
     }
 
     #endregion
