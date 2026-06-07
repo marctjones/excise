@@ -131,7 +131,7 @@ jobs:
             -targetdir:coverage/report \
             -reporttypes:Cobertura
 
-      - name: Coverage Gate (Pdfe.Core >= 92.5%)
+      - name: Coverage Gate (Pdfe.Core >= 93%)
         # Ratcheted 92% -> 92.5% (#351) after adding in-memory authoring/font/
         # graphics tests (CI now measures ~93.0%, up from ~92.8%). CI installs
         # fonts-dejavu-core above so the embedding tests run deterministically.
@@ -142,7 +142,7 @@ jobs:
         #
         # reportgenerator's Cobertura output is named Cobertura.xml (not
         # coverage.cobertura.xml — that's coverlet's raw collector name).
-        run: scripts/check-coverage.sh coverage/report/Cobertura.xml 0.925 Pdfe.Core
+        run: scripts/check-coverage.sh coverage/report/Cobertura.xml 0.93 Pdfe.Core
 
       - name: Run Pdfe.Cli.Tests
         run: |
