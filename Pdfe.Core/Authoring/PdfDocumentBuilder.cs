@@ -97,11 +97,11 @@ public sealed class PdfDocumentBuilder
         <= 1 => "H1", 2 => "H2", 3 => "H3", _ => "H4"
     };
 
-    private void BeginTag(string structType)
+    private void BeginTag(string structType, Tagging.StructureTreeBuilder.StructElem? parent = null)
     {
         if (_tagging == null) return;
         _openTag = structType;
-        _openElem = _tagging.AddElement(structType);
+        _openElem = _tagging.AddElement(structType, parent);
         OpenMarkedContent();
     }
 
@@ -280,6 +280,61 @@ public sealed class PdfDocumentBuilder
         }
 
         _cursorY -= TextStyle.Body.SpaceAfter;
+        return this;
+    }
+
+    /// <summary>Adds a bulleted list (one item per line, word-wrapped).</summary>
+    public PdfDocumentBuilder BulletList(IEnumerable<string> items, string bullet = "•", TextStyle? style = null)
+    {
+        ArgumentNullException.ThrowIfNull(items);
+        return ListCore(items, _ => bullet, style);
+    }
+
+    /// <summary>Adds a numbered list (1., 2., 3., …).</summary>
+    public PdfDocumentBuilder NumberedList(IEnumerable<string> items, TextStyle? style = null)
+    {
+        ArgumentNullException.ThrowIfNull(items);
+        return ListCore(items, i => $"{i + 1}.", style);
+    }
+
+    /// <summary>
+    /// Renders a list. Each item gets a marker (drawn at the left) and word-wrapped
+    /// body text indented past it. When tagging, emits L → LI per item.
+    /// </summary>
+    private PdfDocumentBuilder ListCore(IEnumerable<string> items, Func<int, string> marker, TextStyle? style)
+    {
+        var st = WithDefaultFont(style ?? TextStyle.Body);
+        var font = st.ResolveFont();
+        var brush = st.ResolveBrush();
+        double lineHeight = st.LineHeight;
+        const double indent = 18;
+
+        EnsurePage();
+        var listElem = _tagging?.AddElement("L");
+
+        int i = 0;
+        foreach (var item in items)
+        {
+            BeginTag("LI", listElem);          // opens marked content for this item
+            EnsureSpace(lineHeight);
+            double baseline = _cursorY - font.Ascender;
+            _graphics!.DrawString(marker(i), font, brush, ContentLeft, baseline);
+
+            var lines = WrapText(item ?? string.Empty, font, ContentWidth - indent).ToList();
+            bool firstLine = true;
+            foreach (var line in lines)
+            {
+                if (!firstLine) EnsureSpace(lineHeight);
+                double lineBaseline = _cursorY - font.Ascender;
+                _graphics!.DrawString(line, font, brush, ContentLeft + indent, lineBaseline);
+                _cursorY -= lineHeight;
+                firstLine = false;
+            }
+            EndTag();
+            i++;
+        }
+
+        _cursorY -= st.SpaceAfter;
         return this;
     }
 
