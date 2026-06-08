@@ -477,6 +477,7 @@ namespace Pdfe.Core.Document
     public sealed class PdfField
     {
         public PdfField(Pdfe.Core.Document.PdfDocument document, string fullName, string partialName, Pdfe.Core.Document.PdfFieldType fieldType, System.Collections.Generic.IReadOnlyList<string>? options, Pdfe.Core.Document.PdfRectangle? rect, int? pageNumber, bool isReadOnly, bool isRequired, bool isMultiline, Pdfe.Core.Primitives.PdfDictionary rawDictionary, System.Collections.Generic.IReadOnlyList<Pdfe.Core.Primitives.PdfDictionary> widgetDictionaries) { }
+        public System.Collections.Generic.IReadOnlyList<string> ButtonExportValues { get; }
         public string? DefaultValue { get; }
         public Pdfe.Core.Document.PdfFieldType FieldType { get; }
         public string FullName { get; }

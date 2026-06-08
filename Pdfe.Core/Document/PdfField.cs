@@ -54,6 +54,43 @@ public sealed class PdfField
     public IReadOnlyList<string>? Options { get; }
 
     /// <summary>
+    /// For a <see cref="PdfFieldType.Button"/> field, the selectable "on" export
+    /// values — the appearance-state names from each widget's <c>/AP /N</c>
+    /// dictionary other than <c>Off</c>, in widget order, de-duplicated. A radio
+    /// group exposes one value per option (its widgets); a single checkbox
+    /// typically exposes one. Empty for non-Button fields (and for buttons with
+    /// no on-state appearances). Lets consumers map a radio group to a
+    /// choice/dropdown rather than a generic boolean (#424).
+    /// </summary>
+    public IReadOnlyList<string> ButtonExportValues
+    {
+        get
+        {
+            if (FieldType != PdfFieldType.Button)
+                return Array.Empty<string>();
+
+            var values = new List<string>();
+            foreach (var widget in WidgetDictionaries)
+                foreach (var state in GetWidgetOnStates(widget))
+                    if (!values.Contains(state))
+                        values.Add(state);
+            return values;
+        }
+    }
+
+    /// <summary>The non-<c>Off</c> appearance-state names under a widget's <c>/AP /N</c>.</summary>
+    private IEnumerable<string> GetWidgetOnStates(PdfDictionary widget)
+    {
+        if (_document.Resolve(widget.GetOptional("AP")) is not PdfDictionary ap)
+            yield break;
+        if (_document.Resolve(ap.GetOptional("N")) is not PdfDictionary normal)
+            yield break;
+        foreach (var key in normal.Keys)
+            if (key.Value != "Off")
+                yield return key.Value;
+    }
+
+    /// <summary>
     /// The field's bounding rectangle on the page (from /Rect in the
     /// associated Widget annotation), or null if the field has no visual
     /// representation or the rectangle could not be parsed.

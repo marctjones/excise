@@ -161,7 +161,93 @@ public class PdfAcroFormTests
         return Encoding.Latin1.GetBytes(sb.ToString());
     }
 
+    /// <summary>
+    /// A radio-button group: a Btn field with two Widget kids, each with an
+    /// /AP /N holding a distinct on-state ("Male" / "Female") plus "Off".
+    /// </summary>
+    private static byte[] MakePdfWithRadioGroup()
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("%PDF-1.7");
+
+        long catalogPos = sb.Length;
+        sb.AppendLine("1 0 obj");
+        sb.AppendLine("<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [5 0 R] >> >>");
+        sb.AppendLine("endobj");
+
+        long pagesPos = sb.Length;
+        sb.AppendLine("2 0 obj");
+        sb.AppendLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+        sb.AppendLine("endobj");
+
+        long pagePos = sb.Length;
+        sb.AppendLine("3 0 obj");
+        sb.AppendLine("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Annots [6 0 R 7 0 R] >>");
+        sb.AppendLine("endobj");
+
+        long contentPos = sb.Length;
+        sb.AppendLine("4 0 obj");
+        sb.AppendLine("<< /Length 0 >>\nstream\nendstream\nendobj");
+
+        // Obj 5 — radio group parent (Btn, Radio flag 0x10000) with two widget kids.
+        long radioPos = sb.Length;
+        sb.AppendLine("5 0 obj");
+        sb.AppendLine("<< /FT /Btn /Ff 49152 /T (Gender) /V /Male /Kids [6 0 R 7 0 R] >>");
+        sb.AppendLine("endobj");
+
+        // Obj 6 — "Male" widget.
+        long w1Pos = sb.Length;
+        sb.AppendLine("6 0 obj");
+        sb.AppendLine("<< /Type /Annot /Subtype /Widget /Parent 5 0 R /Rect [72 700 90 718] " +
+                      "/AS /Male /AP << /N << /Male << >> /Off << >> >> >> /P 3 0 R >>");
+        sb.AppendLine("endobj");
+
+        // Obj 7 — "Female" widget.
+        long w2Pos = sb.Length;
+        sb.AppendLine("7 0 obj");
+        sb.AppendLine("<< /Type /Annot /Subtype /Widget /Parent 5 0 R /Rect [72 680 90 698] " +
+                      "/AS /Off /AP << /N << /Female << >> /Off << >> >> >> /P 3 0 R >>");
+        sb.AppendLine("endobj");
+
+        long xrefPos = sb.Length;
+        sb.AppendLine("xref");
+        sb.AppendLine("0 8");
+        sb.AppendLine("0000000000 65535 f ");
+        foreach (var p in new[] { catalogPos, pagesPos, pagePos, contentPos, radioPos, w1Pos, w2Pos })
+            sb.AppendLine($"{p:D10} 00000 n ");
+        sb.AppendLine("trailer");
+        sb.AppendLine("<< /Size 8 /Root 1 0 R >>");
+        sb.AppendLine("startxref");
+        sb.AppendLine(xrefPos.ToString());
+        sb.AppendLine("%%EOF");
+
+        return Encoding.Latin1.GetBytes(sb.ToString());
+    }
+
     // ─── basic parsing ─────────────────────────────────────────────────────
+
+    [Fact]
+    public void ButtonExportValues_RadioGroup_ReturnsPerWidgetOnStates()
+    {
+        // #424: a consumer importing a radio group needs its selectable export
+        // values (the widget /AP /N on-states), not a generic boolean.
+        byte[] pdf = MakePdfWithRadioGroup();
+        using var doc = PdfDocument.Open(new MemoryStream(pdf), ownsStream: false);
+
+        var field = doc.GetAcroForm()!.Fields.Single(f => f.PartialName == "Gender");
+        field.FieldType.Should().Be(PdfFieldType.Button);
+        field.ButtonExportValues.Should().Equal("Male", "Female");
+    }
+
+    [Fact]
+    public void ButtonExportValues_NonButtonField_IsEmpty()
+    {
+        byte[] pdf = MakePdfWithComplexAcroForm();
+        using var doc = PdfDocument.Open(new MemoryStream(pdf), ownsStream: false);
+
+        var text = doc.GetAcroForm()!.Fields.First(f => f.FieldType == PdfFieldType.Text);
+        text.ButtonExportValues.Should().BeEmpty();
+    }
 
     [Fact]
     public void GetAcroForm_NullDocument_ReturnsNull()
