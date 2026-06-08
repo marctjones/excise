@@ -4,6 +4,27 @@ All notable changes to pdfe are documented here. Format roughly follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 semantic versioning.
 
+## [2.11.0] — 2026-06-08
+
+Archival conformance + viewer-quality release. Additive; no breaking changes.
+
+### Added
+- **PDF/A-1b conformance (#425).** Embedded subset CID fonts now emit a `/CIDSet`
+  in the FontDescriptor (covering all glyph slots of the retain-gid subset, as
+  PDF/A-2 §6.2.11.4.2 requires it be complete). `PdfDocumentBuilder.PdfA(PdfA1B)`
+  and `PdfA(PdfA2B)` output now both validate as conformant under veraPDF 1.30.2.
+  A veraPDF conformance gate test covers both flavours.
+- **Sharp high-zoom in the continuous reading view (#371 pt1).** Continuous mode
+  now renders each page at a zoom-aware DPI (scaling with zoom, capped to bound
+  memory) and caches by `(page, dpi)`, so zoomed reading stays crisp instead of
+  upscaling a fixed-DPI bitmap. (Full visible-region tiling remains a future
+  refinement.)
+
+### Developer tooling
+- **`Pdfe.Benchmarks` (#344).** A BenchmarkDotNet project measuring parse /
+  render / text-extract (replacing the orphaned `run-benchmarks.sh` target);
+  kept out of the shippable graph.
+
 ## [2.10.0] — 2026-06-08
 
 Library DX + authoring-correctness release. Additive; no breaking changes

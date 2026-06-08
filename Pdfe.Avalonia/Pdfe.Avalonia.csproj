@@ -21,7 +21,7 @@
   <!-- NuGet package metadata (packed explicitly via `dotnet pack`, not on build). -->
   <PropertyGroup>
     <PackageId>Pdfe.Avalonia</PackageId>
-    <Version>2.10.0</Version>
+    <Version>2.11.0</Version>
     <Authors>Marc Jones</Authors>
     <Description>A reusable, pure-managed PDF viewer control for Avalonia. Renders with SkiaSharp (no native PDFium), supports zoom/pan, page navigation, text selection, search highlights, annotations, links, and form-field overlays. Built on Pdfe.Core + Pdfe.Rendering.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
