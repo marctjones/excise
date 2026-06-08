@@ -11,6 +11,13 @@
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
 
+  <!-- Expose internals to the non-GUI viewer-lib test project so pure helpers
+       (e.g. the zoom-aware DPI selection) can be unit-tested without enlarging
+       the public API. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="Pdfe.Avalonia.Tests" />
+  </ItemGroup>
+
   <!-- NuGet package metadata (packed explicitly via `dotnet pack`, not on build). -->
   <PropertyGroup>
     <PackageId>Pdfe.Avalonia</PackageId>

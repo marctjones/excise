@@ -31,11 +31,23 @@ public partial class PdfViewerControl
     // may still be bound to a realized (visible) Image, and disposing it would
     // crash the render. Dropping the reference lets the GC reclaim it once no
     // slot/Image holds it. Full disposal happens only on document change.
-    private readonly LinkedList<(int Page, WriteableBitmap Bmp)> _continuousCache = new();
+    private readonly LinkedList<(int Page, int Dpi, WriteableBitmap Bmp)> _continuousCache = new();
     private readonly Dictionary<int, CancellationTokenSource> _continuousRenderCts = new();
-    private const int ContinuousCacheCapacity = 16;
+    private const int ContinuousCacheCapacity = 10;
     internal const double PointsToDip = 96.0 / 72.0;
     private const double PageGapDip = 12.0;   // matches the DataTemplate Border bottom margin
+
+    // Sharp high-zoom (#371 pt1): render each continuous page at a DPI that scales
+    // with zoom so it stays crisp instead of upscaling a fixed-DPI bitmap, capped
+    // so a deep zoom can't blow up memory (a full-page bitmap at the cap is the
+    // bound; true visible-region tiling is a future refinement).
+    internal const int MaxContinuousDpi = 240;
+    private int ContinuousRenderDpi =>
+        (int)Math.Clamp(Math.Round(DefaultRenderDpi * ZoomLevel), DefaultRenderDpi, MaxContinuousDpi);
+
+    /// <summary>The render DPI chosen for a given zoom (pure; unit-tested).</summary>
+    internal static int EffectiveContinuousDpi(int baseDpi, double zoom, int maxDpi) =>
+        (int)Math.Clamp(Math.Round(baseDpi * zoom), baseDpi, maxDpi);
 
     // Guards the scroll -> CurrentPage -> scroll feedback loop.
     private bool _syncingPageFromScroll;
@@ -109,11 +121,20 @@ public partial class PdfViewerControl
         _continuousCache.Clear();
     }
 
-    /// <summary>Resize every slot to the new zoom (bindings re-layout the borders).</summary>
+    /// <summary>
+    /// Resize every slot to the new zoom (bindings re-layout the borders) and
+    /// re-render the currently-realized pages at the new zoom-aware DPI so they
+    /// stay sharp. Off-screen pages re-render lazily when realized.
+    /// </summary>
     private void ApplyContinuousZoom()
     {
         if (_continuousSlots == null) return;
         foreach (var slot in _continuousSlots) slot.ApplyZoom(ZoomLevel);
+
+        if (_continuousItems == null) return;
+        foreach (var container in _continuousItems.GetRealizedContainers())
+            if (container.DataContext is PdfPageSlot slot)
+                _ = RenderContinuousAsync(slot);
     }
 
     // ---- Scroll <-> CurrentPage sync -----------------------------------
@@ -186,7 +207,8 @@ public partial class PdfViewerControl
         var doc = Document;
         if (doc == null || slot.PageNumber < 1 || slot.PageNumber > doc.PageCount) return;
 
-        if (TryGetContinuousCached(slot.PageNumber, out var cached))
+        int dpi = ContinuousRenderDpi;
+        if (TryGetContinuousCached(slot.PageNumber, dpi, out var cached))
         {
             slot.Bitmap = cached;
             return;
@@ -210,7 +232,7 @@ public partial class PdfViewerControl
                 // instance state and is not reentrant, and continuous mode may
                 // render several pages around the viewport concurrently.
                 var renderer = new SkiaRenderer();
-                return renderer.RenderPage(page, new RenderOptions { Dpi = DefaultRenderDpi });
+                return renderer.RenderPage(page, new RenderOptions { Dpi = dpi });
             }, token);
 
             try
@@ -219,7 +241,7 @@ public partial class PdfViewerControl
                 var bitmap = Imaging.SkiaInterop.ToAvaloniaBitmap(skBitmap);
                 if (bitmap != null)
                 {
-                    AddToContinuousCache(pageNumber, bitmap);
+                    AddToContinuousCache(pageNumber, dpi, bitmap);
                     slot.Bitmap = bitmap;
                 }
             }
@@ -243,11 +265,11 @@ public partial class PdfViewerControl
         }
     }
 
-    private bool TryGetContinuousCached(int page, out WriteableBitmap? bmp)
+    private bool TryGetContinuousCached(int page, int dpi, out WriteableBitmap? bmp)
     {
         for (var node = _continuousCache.First; node != null; node = node.Next)
         {
-            if (node.Value.Page == page)
+            if (node.Value.Page == page && node.Value.Dpi == dpi)
             {
                 _continuousCache.Remove(node);
                 _continuousCache.AddFirst(node);
@@ -259,13 +281,13 @@ public partial class PdfViewerControl
         return false;
     }
 
-    private void AddToContinuousCache(int page, WriteableBitmap bmp)
+    private void AddToContinuousCache(int page, int dpi, WriteableBitmap bmp)
     {
         for (var node = _continuousCache.First; node != null; node = node.Next)
         {
-            if (node.Value.Page == page) { _continuousCache.Remove(node); break; }
+            if (node.Value.Page == page && node.Value.Dpi == dpi) { _continuousCache.Remove(node); break; }
         }
-        _continuousCache.AddFirst((page, bmp));
+        _continuousCache.AddFirst((page, dpi, bmp));
         // Drop (don't dispose) the LRU tail — see field comment on why.
         while (_continuousCache.Count > ContinuousCacheCapacity)
             _continuousCache.RemoveLast();
