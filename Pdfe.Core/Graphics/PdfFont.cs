@@ -252,14 +252,26 @@ public class PdfFont
                     sb.Append("\\t");
                     break;
                 default:
-                    if (c < 32 || c > 126)
+                    if (c >= 32 && c <= 126)
                     {
-                        // Use octal for non-printable characters
-                        sb.Append($"\\{(int)c:000}");
+                        sb.Append(c);   // printable ASCII — identical in WinAnsi
+                    }
+                    else if (TryMapToWinAnsi(c, out byte b))
+                    {
+                        // Emit the WinAnsi byte as a 3-digit OCTAL escape. (The old
+                        // code formatted the Unicode code point in *decimal* — PDF
+                        // reads \ddd as octal, so "é"/"—"/"·" came out as garbage,
+                        // and code points > 255 like "—" (U+2014) were never mapped
+                        // to their WinAnsi byte at all. #426.)
+                        sb.Append('\\').Append(Convert.ToString(b, 8).PadLeft(3, '0'));
                     }
                     else
                     {
-                        sb.Append(c);
+                        // Not representable in the base-14 WinAnsi encoding (e.g.
+                        // CJK, U+0100+ Latin). Fall back to '?' instead of emitting
+                        // an invalid escape that renders as mojibake. To keep such
+                        // text intact, embed a font via DefaultFont (#398/#378).
+                        sb.Append('?');
                     }
                     break;
             }
@@ -267,6 +279,28 @@ public class PdfFont
 
         sb.Append(')');
         return sb.ToString();
+    }
+
+    // Unicode -> WinAnsi (CP1252) byte for the 0x80–0x9F range, whose code points
+    // differ from Latin-1. Outside this range, ASCII (0x20–0x7E) and Latin-1
+    // (0xA0–0xFF) map to their own code point.
+    private static readonly Dictionary<char, byte> WinAnsiHighMap = new()
+    {
+        ['€'] = 0x80, ['‚'] = 0x82, ['ƒ'] = 0x83, ['„'] = 0x84,
+        ['…'] = 0x85, ['†'] = 0x86, ['‡'] = 0x87, ['ˆ'] = 0x88,
+        ['‰'] = 0x89, ['Š'] = 0x8A, ['‹'] = 0x8B, ['Œ'] = 0x8C,
+        ['Ž'] = 0x8E, ['‘'] = 0x91, ['’'] = 0x92, ['“'] = 0x93,
+        ['”'] = 0x94, ['•'] = 0x95, ['–'] = 0x96, ['—'] = 0x97,
+        ['˜'] = 0x98, ['™'] = 0x99, ['š'] = 0x9A, ['›'] = 0x9B,
+        ['œ'] = 0x9C, ['ž'] = 0x9E, ['Ÿ'] = 0x9F,
+    };
+
+    /// <summary>Map a char to its WinAnsi (CP1252) byte, if representable.</summary>
+    private static bool TryMapToWinAnsi(char c, out byte b)
+    {
+        if (c >= 0x20 && c <= 0x7E) { b = (byte)c; return true; }   // ASCII
+        if (c >= 0xA0 && c <= 0xFF) { b = (byte)c; return true; }   // Latin-1 high == WinAnsi
+        return WinAnsiHighMap.TryGetValue(c, out b);               // CP1252 specials
     }
 
     private int GetCharWidth(char c)
