@@ -2,6 +2,8 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
+using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PdfEditor.Services;
@@ -51,22 +53,63 @@ public partial class App : Application
 
             logger.LogInformation("Main window created successfully");
 
-            // If a PDF path was passed on the command line, open it once the
-            // window is shown. Supports file-manager "Open With" integrations
-            // and quick demos without clicking through File > Open.
+            // Open a PDF that was passed on the command line once the window is
+            // shown (Windows/Linux "Open With", `pdfe file.pdf`, demos). On macOS
+            // a double-clicked file does NOT arrive as a command-line arg — it
+            // comes through the activation event wired up below.
             var args = desktop.Args;
             if (args != null && args.Length > 0 && System.IO.File.Exists(args[0]))
             {
                 var path = args[0];
-                desktop.MainWindow.Opened += async (_, _) =>
-                {
-                    try { await vm.LoadDocumentAsync(path); }
-                    catch (Exception ex) { logger.LogError(ex, "Failed to auto-open {Path}", path); }
-                };
+                desktop.MainWindow.Opened += (_, _) => OpenPathOnUiThread(vm, path, logger);
             }
         }
 
+        // macOS (and other platforms) deliver "open this document" as an
+        // activation event, not a command-line arg — Finder double-click, the
+        // Dock, or `open -a pdfe file.pdf` against an already-running instance all
+        // come through here. Requires /CFBundleDocumentTypes in the .app's
+        // Info.plist so the OS routes PDFs to us. (#420)
+        if (ApplicationLifetime is IActivatableLifetime activatable
+            && _serviceProvider != null)
+        {
+            activatable.Activated += (_, e) =>
+            {
+                if (e is not FileActivatedEventArgs fileArgs)
+                    return;
+
+                // Resolve the VM lazily: on a warm activation the main window's
+                // VM is the live one; fall back to a fresh resolve if needed.
+                var vm = (ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)
+                             ?.MainWindow?.DataContext as MainWindowViewModel
+                         ?? _serviceProvider.GetRequiredService<MainWindowViewModel>();
+
+                foreach (var file in fileArgs.Files)
+                {
+                    var path = file.TryGetLocalPath();
+                    if (!string.IsNullOrEmpty(path) && System.IO.File.Exists(path))
+                    {
+                        OpenPathOnUiThread(vm, path, logger);
+                        break;   // single-window app: open the first document
+                    }
+                }
+            };
+        }
+
         base.OnFrameworkInitializationCompleted();
+    }
+
+    /// <summary>
+    /// Load a PDF on the UI thread, logging (not throwing) on failure. Shared by
+    /// the command-line and OS file-activation open paths.
+    /// </summary>
+    private static void OpenPathOnUiThread(MainWindowViewModel vm, string path, ILogger logger)
+    {
+        Dispatcher.UIThread.Post(async () =>
+        {
+            try { await vm.LoadDocumentAsync(path); }
+            catch (Exception ex) { logger.LogError(ex, "Failed to open {Path}", path); }
+        });
     }
 
     private void ConfigureServices(IServiceCollection services)

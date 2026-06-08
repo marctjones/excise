@@ -372,7 +372,30 @@ scripts/build-deb.sh --version 2.1.0-rc8      # explicit version
 
 # Windows .exe (requires Inno Setup 6: choco install innosetup)
 pwsh scripts/build-windows-installer.ps1      # → dist/pdfe-<version>-win-x64-setup.exe
+
+# macOS .app bundle (Apple Silicon by default; Intel via --rid osx-x64)
+scripts/build-macos-app.sh --version <version>            # → dist/pdfe-<version>-macos-arm64.zip
+scripts/build-macos-app.sh --version <version> --rid osx-x64
 ```
+
+### Using pdfe as a PDF reader on macOS
+
+The `.app` bundle declares itself a handler for PDF files (`CFBundleDocumentTypes`)
+and opens documents passed by Finder, the Dock, or `open -a` — so it can be used
+as a regular reader, not just launched empty.
+
+```bash
+# First launch: the build is not notarized, so clear the Gatekeeper quarantine
+# (one time, see issue #421 for signing/notarization tracking):
+xattr -dr com.apple.quarantine /Applications/pdfe.app
+
+# Open a PDF in pdfe:
+open -a pdfe ~/Documents/example.pdf
+```
+
+To make pdfe the **default** PDF app: select any `.pdf` in Finder → **⌘I** (Get
+Info) → **Open with** → choose *pdfe* → **Change All…**. Double-clicking PDFs
+then opens them in pdfe.
 
 ### Release automation
 

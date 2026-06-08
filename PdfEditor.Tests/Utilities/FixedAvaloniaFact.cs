@@ -18,11 +18,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using Avalonia.Headless;
+using Avalonia.Reactive;
 using Avalonia.Threading;
 using Xunit;
 using Xunit.Sdk;
@@ -208,12 +211,21 @@ internal sealed class FixedAvaloniaTestRunner
             test, messageBus, explicitOption, aggregator,
             cancellationTokenSource, beforeAfterAttributes,
             constructorArguments, session);
+        HeadlessWindowTracker.Ensure();
         await using (ctxt)
         {
             await ctxt.InitializeAsync();
             return await DispatchWithExecutionContext(session, async () =>
             {
                 var summary = await Run(ctxt);
+                // Close any windows the test opened. The headless test app has no
+                // desktop lifetime, so windows shown with Show() and never closed
+                // pile up on the shared dispatcher (90+ Show() / 2 Close() across
+                // the suite) until a frame stalls and the blame-hang collector
+                // kills the whole host — the residual #363 flakiness left after
+                // the *_MatchesBaseline exclusion. Closing per-test keeps the
+                // dispatcher's live-window set bounded.
+                HeadlessWindowTracker.CloseAll();
                 Dispatcher.UIThread.RunJobs(null);
                 return summary;
             }, ctxt.CancellationTokenSource.Token);
@@ -246,4 +258,50 @@ internal sealed class FixedAvaloniaTestRunnerContext(
         cancellationTokenSource, beforeAfterTestAttributes, constructorArguments)
 {
     public HeadlessUnitTestSession Session { get; } = session;
+}
+
+/// <summary>
+/// Tracks every <see cref="Window"/> opened during the headless test run and lets
+/// the test runner close them after each test. The headless test application uses
+/// <c>SetupWithoutStarting</c> with no desktop lifetime, so Avalonia keeps no
+/// global window list and windows shown with <c>Show()</c> are never disposed —
+/// they accumulate on the single shared dispatcher (the suite does 90+ Show() and
+/// only 2 Close()) until a dispatcher frame stalls and the blame-hang collector
+/// kills the entire test host. That is the residual #363 host-crash flakiness that
+/// survived excluding the heavy *_MatchesBaseline render tests. We subscribe once
+/// to the global <see cref="RoutedEvent"/> <c>Raised</c> streams for window
+/// open/close (no per-test-file changes needed) and close the live set between
+/// tests so the dispatcher never carries more than one test's windows.
+/// </summary>
+internal static class HeadlessWindowTracker
+{
+    private static readonly HashSet<Window> _open = new();
+    private static readonly object _lock = new();
+    private static int _initialized;
+
+    public static void Ensure()
+    {
+        if (Interlocked.Exchange(ref _initialized, 1) != 0) return;
+
+        Window.WindowOpenedEvent.Raised.Subscribe(new AnonymousObserver<(object, Avalonia.Interactivity.RoutedEventArgs)>(t =>
+        {
+            if (t.Item1 is Window w) { lock (_lock) _open.Add(w); }
+        }));
+        Window.WindowClosedEvent.Raised.Subscribe(new AnonymousObserver<(object, Avalonia.Interactivity.RoutedEventArgs)>(t =>
+        {
+            if (t.Item1 is Window w) { lock (_lock) _open.Remove(w); }
+        }));
+    }
+
+    /// <summary>Close all currently-open tracked windows (call on the UI thread).</summary>
+    public static void CloseAll()
+    {
+        Window[] snapshot;
+        lock (_lock) { snapshot = _open.ToArray(); _open.Clear(); }
+        foreach (var w in snapshot)
+        {
+            try { w.Close(); }
+            catch { /* a test may have left the window in an odd state; ignore */ }
+        }
+    }
 }
