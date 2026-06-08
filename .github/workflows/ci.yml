@@ -152,6 +152,15 @@ jobs:
           dotnet test Pdfe.Cli.Tests --no-build -c Debug \
             --logger "console;verbosity=normal"
 
+      - name: Run Pdfe.Avalonia.Tests
+        # Lightweight, non-GUI tests for the viewer libraries (API gates, pure
+        # logic). Deliberately separate from the heavy, flaky headless
+        # PdfEditor.Tests suite so viewer-library changes get reliable coverage
+        # on every PR. (#363, #384)
+        run: |
+          dotnet test Pdfe.Avalonia.Tests --no-build -c Debug \
+            --logger "console;verbosity=normal"
+
       - name: Run Pdfe.Rendering.Tests (deterministic only)
         run: |
           # The PR gate runs only environment-independent rendering tests

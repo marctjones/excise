@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pdfe.Avalonia", "Pdfe.Avalo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pdfe.Avalonia.Sample", "Pdfe.Avalonia.Sample\Pdfe.Avalonia.Sample.csproj", "{0080D695-9AE4-4A3F-B0A8-7A643148A9E4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pdfe.Avalonia.Tests", "Pdfe.Avalonia.Tests\Pdfe.Avalonia.Tests.csproj", "{58448B0F-9E30-4BB5-9B89-921F095A43A6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -195,6 +197,18 @@ Global
 		{0080D695-9AE4-4A3F-B0A8-7A643148A9E4}.Release|x64.Build.0 = Release|Any CPU
 		{0080D695-9AE4-4A3F-B0A8-7A643148A9E4}.Release|x86.ActiveCfg = Release|Any CPU
 		{0080D695-9AE4-4A3F-B0A8-7A643148A9E4}.Release|x86.Build.0 = Release|Any CPU
+		{58448B0F-9E30-4BB5-9B89-921F095A43A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{58448B0F-9E30-4BB5-9B89-921F095A43A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{58448B0F-9E30-4BB5-9B89-921F095A43A6}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{58448B0F-9E30-4BB5-9B89-921F095A43A6}.Debug|x64.Build.0 = Debug|Any CPU
+		{58448B0F-9E30-4BB5-9B89-921F095A43A6}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{58448B0F-9E30-4BB5-9B89-921F095A43A6}.Debug|x86.Build.0 = Debug|Any CPU
+		{58448B0F-9E30-4BB5-9B89-921F095A43A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{58448B0F-9E30-4BB5-9B89-921F095A43A6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{58448B0F-9E30-4BB5-9B89-921F095A43A6}.Release|x64.ActiveCfg = Release|Any CPU
+		{58448B0F-9E30-4BB5-9B89-921F095A43A6}.Release|x64.Build.0 = Release|Any CPU
+		{58448B0F-9E30-4BB5-9B89-921F095A43A6}.Release|x86.ActiveCfg = Release|Any CPU
+		{58448B0F-9E30-4BB5-9B89-921F095A43A6}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

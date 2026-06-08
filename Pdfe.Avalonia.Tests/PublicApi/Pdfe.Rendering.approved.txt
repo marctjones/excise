@@ -1,0 +1,61 @@
+namespace Pdfe.Rendering.Differential
+{
+    public static class DifferentialMetrics
+    {
+        public static SkiaSharp.SKBitmap BuildDiffOverlay(SkiaSharp.SKBitmap a, SkiaSharp.SKBitmap b) { }
+        public static Pdfe.Rendering.Differential.DifferentialReport Compare(SkiaSharp.SKBitmap a, SkiaSharp.SKBitmap b) { }
+        public static SkiaSharp.SKBitmap ResizeMatch(SkiaSharp.SKBitmap src, int targetW, int targetH) { }
+        public static void SaveTriptych(string path, SkiaSharp.SKBitmap pdfe, SkiaSharp.SKBitmap mutool, SkiaSharp.SKBitmap? diff = null) { }
+    }
+    public sealed class DifferentialReport : System.IEquatable<Pdfe.Rendering.Differential.DifferentialReport>
+    {
+        public DifferentialReport(int Width, int Height, int PixelCount, int DifferingPixels, double DifferingPixelFraction, double MeanAbsoluteError, double MaxAbsoluteError) { }
+        public double DifferingPixelFraction { get; init; }
+        public int DifferingPixels { get; init; }
+        public int Height { get; init; }
+        public double MaxAbsoluteError { get; init; }
+        public double MeanAbsoluteError { get; init; }
+        public int PixelCount { get; init; }
+        public int Width { get; init; }
+        public override string ToString() { }
+    }
+    public static class MutoolReferenceRenderer
+    {
+        public static bool IsAvailable { get; }
+        public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
+    }
+    public static class PdftocairoReferenceRenderer
+    {
+        public static bool IsAvailable { get; }
+        public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
+    }
+}
+namespace Pdfe.Rendering
+{
+    public class RenderOptions : System.IEquatable<Pdfe.Rendering.RenderOptions>
+    {
+        public RenderOptions() { }
+        public bool AntiAlias { get; init; }
+        public SkiaSharp.SKColor BackgroundColor { get; init; }
+        public SkiaSharp.SKRect? ClipRect { get; init; }
+        public int Dpi { get; init; }
+    }
+    public class SKBitmapPool : System.IDisposable
+    {
+        public SKBitmapPool() { }
+        public long CurrentMemoryUsage { get; }
+        public void Dispose() { }
+        public int GetPoolCountForSize(int width, int height) { }
+        public int GetTotalPoolCount() { }
+        public SkiaSharp.SKBitmap Rent(int width, int height) { }
+        public void Return(SkiaSharp.SKBitmap bitmap) { }
+    }
+    public class SkiaRenderer
+    {
+        public SkiaRenderer() { }
+        public SkiaSharp.SKBitmap RenderPage(Pdfe.Core.Document.PdfPage page) { }
+        public SkiaSharp.SKBitmap RenderPage(Pdfe.Core.Document.PdfPage page, Pdfe.Rendering.RenderOptions options) { }
+        public SkiaSharp.SKBitmap RenderPage(Pdfe.Core.Document.PdfPage page, Pdfe.Rendering.RenderOptions options, System.Threading.CancellationToken cancellationToken) { }
+        public void RenderPageToPng(Pdfe.Core.Document.PdfPage page, System.IO.Stream destination, Pdfe.Rendering.RenderOptions? options = null, System.Threading.CancellationToken cancellationToken = default) { }
+    }
+}
