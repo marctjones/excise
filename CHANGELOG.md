@@ -4,11 +4,26 @@ All notable changes to pdfe are documented here. Format roughly follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 semantic versioning.
 
-## [2.8.0] — 2026-06-08
+## [2.9.0] — 2026-06-08
 
-Operator render-coverage release (#350). Additive; no breaking changes.
+Viewer + macOS-reader + archival release. Additive; no breaking changes
+(public-API gate confirmed for `Pdfe.Core`).
 
 ### Added
+- **Continuous (reading) view mode for `Pdfe.Avalonia` (#371).** New
+  `PdfViewerControl.ViewMode` (`PdfViewMode.SinglePage` default | `Continuous`).
+  Continuous shows every page in a vertically-scrolling, **render-virtualized**
+  list — only pages near the viewport render, bitmaps are bounded by an LRU
+  cache, and off-screen renders are cancelled. It is **read-only by design**:
+  entering an editing interaction (Redaction / TextSelection / FormAuthoring)
+  auto-switches back to single-page, so the editing/redaction overlays only ever
+  run against a single rendered page. Scroll ⇄ current-page stay in sync and zoom
+  resizes pages live. New public types `PdfViewMode`, `PdfPageSlot`.
+- **macOS: open PDFs from Finder / be a default reader (#420).** The app handles
+  the macOS file-activation event (Finder double-click, Dock, `open -a`), and the
+  generated `.app` `Info.plist` declares `CFBundleDocumentTypes` for
+  `com.adobe.pdf` so pdfe registers as a PDF handler. README documents setting it
+  as the default reader and the one-time Gatekeeper unquarantine.
 - **PDF/A archival output.** `PdfDocumentBuilder.PdfA(PdfAConformance.PdfA2B)`
   adds the document structures PDF/A requires at save time — an XMP metadata
   packet with the `pdfaid` identifier and an sRGB OutputIntent (embedded ICC
@@ -18,6 +33,20 @@ Operator render-coverage release (#350). Additive; no breaking changes.
 - **Trailer `/ID`.** Newly authored documents now always get a file-identifier
   array in the trailer (ISO 32000-1 §14.4) — required by PDF/A and recommended
   generally; an existing `/ID` is preserved.
+
+### Fixed
+- **Chronic headless GUI test host-crash (#363), part 2.** The headless test
+  runner now closes each test's windows afterward (tracked via Avalonia's global
+  routed-event streams), bounding the shared dispatcher's live-window set, and the
+  heavy `*_MatchesBaseline` visual-regression tests are excluded from the PR gate
+  (owned by the nightly job). Reduces — but does not yet fully eliminate — the
+  residual native host crash; full resolution is in progress.
+
+## [2.8.0] — 2026-06-08
+
+Operator render-coverage release (#350). Additive; no breaking changes.
+
+### Added
 - **Dash pattern (`d`) rendering.** The dash operator was parsed but ignored by
   the renderer, so dashed strokes drew solid. `SkiaRenderer` now honors it via
   `SKPathEffect.CreateDash` on both stroke paths; odd-length PDF dash arrays are
