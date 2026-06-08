@@ -4,6 +4,33 @@ All notable changes to pdfe are documented here. Format roughly follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 semantic versioning.
 
+## [2.10.0] — 2026-06-08
+
+Library DX + authoring-correctness release. Additive; no breaking changes
+(public-API gates confirmed).
+
+### Added
+- **Public-API gate for the viewer libraries (#384).** A new lightweight,
+  non-GUI `Pdfe.Avalonia.Tests` project snapshots the public surface of
+  `Pdfe.Avalonia` and `Pdfe.Rendering` against committed baselines (same
+  treatment `Pdfe.Core` got in #383) — any API change now fails CI until the
+  baseline is intentionally regenerated. It is deliberately separate from the
+  heavy headless GUI suite, so viewer-library changes get reliable per-PR
+  coverage.
+- **`PdfField.ButtonExportValues` (#424).** For a Button field (e.g. a radio
+  group), the selectable "on" export values — the appearance-state names from
+  each widget's `/AP /N` other than `Off`. Lets a form importer map a radio
+  group to a choice/dropdown instead of a generic boolean.
+
+### Fixed
+- **Base-14 text encoding mojibake (#426).** `PdfFont.EncodeString` formatted the
+  Unicode code point in decimal as a `\ddd` escape, but PDF reads `\ddd` as
+  octal — so `é`, `—`, `·`, curly quotes etc. came out as garbage (and code
+  points above 255 were never mapped to their WinAnsi byte). The encoder now maps
+  Unicode → WinAnsi (CP1252) and emits correct octal, falling back to `?` for
+  characters genuinely unrepresentable in base-14 (embed a font via `DefaultFont`
+  to keep those). No public-API change.
+
 ## [2.9.0] — 2026-06-08
 
 Viewer + macOS-reader + archival release. Additive; no breaking changes
