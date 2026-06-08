@@ -106,7 +106,7 @@ public class TaggedPdfTests
 
         using var doc = PdfDocument.Open(pdf);
         var content = Encoding.Latin1.GetString(doc.GetPage(1).GetContentStreamBytes());
-        content.Should().Contain("/Artifact BDC", "rules/borders must be artifacts under PDF/UA");
+        content.Should().Contain("/Artifact BMC", "rules/borders must be artifacts under PDF/UA");
     }
 
     [Fact]

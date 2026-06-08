@@ -78,6 +78,15 @@ internal sealed class StructureTreeBuilder
         se.SetName("Type", "StructElem");
         se.SetName("S", e.Type);
         se["P"] = parentRef;
+        // PDF/UA 7.5: header cells need a Scope so cell associations are
+        // determinable. Header-row cells are column headers.
+        if (e.Type == "TH")
+        {
+            var attr = new PdfDictionary();
+            attr.SetName("O", "Table");
+            attr.SetName("Scope", "Column");
+            se["A"] = attr;
+        }
         var seRef = _doc.AddIndirectObject(se);
 
         var kids = new PdfArray();
@@ -183,5 +192,40 @@ internal sealed class StructureTreeBuilder
             vp.SetBool("DisplayDocTitle", true);
             _doc.Catalog["ViewerPreferences"] = vp;
         }
+
+        WriteXmpMetadata();
     }
+
+    /// <summary>
+    /// Write an XMP metadata stream into the catalog (PDF/UA 7.1: required, with
+    /// the pdfuaid identifier; mirrors dc:title / dc:language from the document).
+    /// </summary>
+    private void WriteXmpMetadata()
+    {
+        if (_doc.Catalog.ContainsKey("Metadata")) return;
+        string title = XmlEscape(_doc.Title ?? string.Empty);
+        string lang = XmlEscape(_doc.Language ?? "en-US");
+        string xmp =
+            "<?xpacket begin=\"﻿\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>\n" +
+            "<x:xmpmeta xmlns:x=\"adobe:ns:meta/\">\n" +
+            " <rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">\n" +
+            "  <rdf:Description rdf:about=\"\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" " +
+            "xmlns:pdfuaid=\"http://www.aiim.org/pdfua/ns/id/\">\n" +
+            (title.Length > 0
+                ? $"   <dc:title><rdf:Alt><rdf:li xml:lang=\"x-default\">{title}</rdf:li></rdf:Alt></dc:title>\n"
+                : "") +
+            $"   <dc:language><rdf:Bag><rdf:li>{lang}</rdf:li></rdf:Bag></dc:language>\n" +
+            "   <pdfuaid:part>1</pdfuaid:part>\n" +
+            "  </rdf:Description>\n </rdf:RDF>\n</x:xmpmeta>\n<?xpacket end=\"w\"?>";
+
+        var bytes = System.Text.Encoding.UTF8.GetBytes(xmp);
+        var dict = new PdfDictionary();
+        dict.SetName("Type", "Metadata");
+        dict.SetName("Subtype", "XML");
+        dict.SetInt("Length", bytes.Length);   // unfiltered plaintext, per spec
+        _doc.Catalog["Metadata"] = _doc.AddIndirectObject(new PdfStream(dict, bytes));
+    }
+
+    private static string XmlEscape(string s) =>
+        s.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;");
 }

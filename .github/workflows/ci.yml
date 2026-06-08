@@ -45,24 +45,27 @@ jobs:
           java-version: '17'
 
       - name: Install veraPDF
-        # The veraPDF binary is only exercised by the Corpus conformance tests,
-        # which the gate excludes ("...!~Corpus") and which skip gracefully when
-        # absent. A download/installer outage (the 1.28.1 artifact has 404'd)
-        # must therefore not fail the whole job. Keep the install best-effort.
+        # veraPDF drives the PDF/UA-1 conformance gate (PdfUaConformanceTests,
+        # #413) and the corpus tests. The UA test skips gracefully if veraPDF is
+        # absent, so a download/installer outage must not fail the whole job —
+        # keep the install best-effort. (The old pinned 1.28.1 URL 404'd; use the
+        # versionless latest installer.)
         continue-on-error: true
         run: |
           set -uo pipefail
           # Download veraPDF. curl -f fails on HTTP errors (so we never unzip an
           # error page), with retries for transient flakiness.
           curl -fSL --retry 3 --connect-timeout 30 \
-            https://software.verapdf.org/releases/1.28/verapdf-greenfield-1.28.1-installer.zip \
+            https://software.verapdf.org/releases/verapdf-installer.zip \
             -o /tmp/verapdf.zip \
             || { echo "::warning::veraPDF download failed; skipping veraPDF setup"; exit 0; }
           unzip -q /tmp/verapdf.zip -d /tmp/verapdf-installer \
             || { echo "::warning::veraPDF archive invalid; skipping veraPDF setup"; exit 0; }
 
-          # Create installation response file for silent install
-          cat > /tmp/auto-install.xml << 'EOF'
+          # Create installation response file for silent install.
+          # Unquoted heredoc so $HOME expands (izpack doesn't expand env vars; a
+          # quoted heredoc would create a literal "$HOME/verapdf" directory).
+          cat > /tmp/auto-install.xml << EOF
           <?xml version="1.0" encoding="UTF-8" standalone="no"?>
           <AutomatedInstallation langpack="eng">
               <com.izforge.izpack.panels.htmlhello.HTMLHelloPanel id="welcome"/>
@@ -83,7 +86,7 @@ jobs:
 
           # Find and run installer
           cd /tmp/verapdf-installer
-          INSTALLER=$(find . -name "verapdf-greenfield-*.jar" | head -1)
+          INSTALLER=$(find . \( -name "verapdf-izpack-installer-*.jar" -o -name "verapdf-greenfield-*.jar" -o -name "verapdf-*installer*.jar" \) | head -1)
           if [ -z "$INSTALLER" ]; then
             echo "::warning::veraPDF installer jar not found; skipping veraPDF setup"
             exit 0

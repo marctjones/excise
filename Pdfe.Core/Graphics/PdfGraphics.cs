@@ -105,7 +105,8 @@ public class PdfGraphics : IDisposable
     public void BeginArtifact()
     {
         ThrowIfDisposed();
-        _operators.AppendLine("/Artifact BDC");
+        // BMC (not BDC) — a property-less artifact takes no properties operand.
+        _operators.AppendLine("/Artifact BMC");
     }
 
     /// <summary>Close the most recent marked-content sequence (<c>EMC</c>).</summary>

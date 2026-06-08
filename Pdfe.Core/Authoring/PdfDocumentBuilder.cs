@@ -127,6 +127,8 @@ public sealed class PdfDocumentBuilder
     private void TagFormField(Document.PdfField field)
     {
         if (_tagging == null) return;
+        // PDF/UA 7.18.3: a page with annotations must declare /Tabs = /S.
+        _currentPage!.Dictionary.SetName("Tabs", "S");
         var widgetRef = _document.GetReferenceTo(field.RawDictionary);
         if (widgetRef != null)
             _tagging.AddObjectElement("Form", _currentPageNumber, widgetRef, field.RawDictionary);
@@ -423,7 +425,8 @@ public sealed class PdfDocumentBuilder
         EnsurePage();
         fieldName ??= NextFieldName("check");
 
-        var font = TextStyle.Body.ResolveFont();
+        // Use the builder's default (embedded) font so the label is embedded too.
+        var font = WithDefaultFont(TextStyle.Body).ResolveFont();
         double box = font.Size;                 // square checkbox sized to the text
         double rowHeight = Math.Max(box, font.LineHeight) + 4;
         EnsureSpace(rowHeight);
@@ -435,9 +438,11 @@ public sealed class PdfDocumentBuilder
         TagFormField(_document.AddCheckBox(_currentPageNumber, rect, fieldName,
             defaultChecked: checkedByDefault, tooltip: tooltip ?? label));
 
-        // Label baseline aligned to the checkbox.
+        // Label baseline aligned to the checkbox; tagged as content (PDF/UA).
         double baseline = top - font.Ascender;
+        BeginTag("P");
         _graphics!.DrawString(label ?? string.Empty, font, PdfBrush.Black, ContentLeft + box + 6, baseline);
+        EndTag();
 
         _cursorY -= rowHeight;
         return this;

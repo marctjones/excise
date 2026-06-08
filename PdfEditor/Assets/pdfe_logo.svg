@@ -1,1 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><polygon points="160,160 352,160 352,352 160,352" fill="none" stroke="#1c1c1c" stroke-width="20"/><line x1="180" y1="200" x2="332" y2="200" stroke="#1c1c1c" stroke-width="16"/><line x1="180" y1="240" x2="332" y2="240" stroke="#1c1c1c" stroke-width="16"/><rect x="190" y="270" width="132" height="30" fill="#1c1c1c" transform="translate(15,-15)" stroke="#f8f8f6" stroke-width="4"/><line x1="180" y1="320" x2="332" y2="320" stroke="#1c1c1c" stroke-width="16"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <path d="M28 16 H58 L74 32 V86 H28 Z" fill="none" stroke="#808078" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M58 16 V32 H74" fill="none" stroke="#808078" stroke-width="4" stroke-linejoin="round"/>
+  <line x1="37" y1="46" x2="65" y2="46" stroke="#808078" stroke-width="3.5" stroke-linecap="round" opacity="0.5"/>
+  <rect x="35" y="56" width="40" height="9" rx="1" fill="#808078"/>
+  <line x1="37" y1="75" x2="58" y2="75" stroke="#808078" stroke-width="3.5" stroke-linecap="round" opacity="0.5"/>
+</svg>
