@@ -183,9 +183,21 @@ jobs:
         # Skipped for library-only changes (see "Detect changed areas"); always
         # runs on main. Library changes that affect the GUI are caught by the
         # main run before any release is cut.
+        #
+        # Excludes the *_MatchesBaseline visual-regression tests: they render a
+        # heavy real-world PDF through the real Skia backend (UseHeadlessDrawing
+        # =false) and, after the rest of the suite's accumulated dispatcher load,
+        # reliably crash the headless test host — the root cause of the chronic
+        # #363 "host process exited unexpectedly" failures (the blame collector
+        # named whichever test happened to be on the dispatcher, e.g.
+        # CtrlS_SavesFile, which is why it looked random). They are
+        # environment-sensitive pixel-baseline tests, the same category excluded
+        # from the Pdfe.Rendering PR gate, and are owned by the nightly
+        # visual-regression job (visual-regression-nightly.yml), not this gate.
         if: steps.changes.outputs.gui == 'true' || github.ref == 'refs/heads/main'
         run: |
           xvfb-run -a dotnet test PdfEditor.Tests --no-build -c Debug \
+            --filter "FullyQualifiedName!~MatchesBaseline" \
             --logger "console;verbosity=normal" \
             --blame-hang-timeout 120000
 

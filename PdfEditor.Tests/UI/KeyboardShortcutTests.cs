@@ -75,20 +75,16 @@ public class KeyboardShortcutTests
     /// <summary>
     /// Ctrl+S: Save file (only works when document is loaded).
     /// </summary>
-    // Quarantined on headless CI (#363) via framework-level SkipWhen, which is
-    // evaluated BEFORE the body runs (an in-body Assert.SkipWhen was too late —
-    // the test had already started on the dispatcher). This test uniquely drives
-    // a save -> success-toast whose auto-dismiss dispatcher activity can deadlock
-    // the Avalonia headless dispatcher under CI load; when it does, the dispatcher
-    // thread is starved so neither the per-test Timeout nor FlushDispatcherAsync
-    // can recover and the blame-hang collector kills the entire test host,
-    // failing unrelated changes. Flaky, not a real product failure; the
-    // Ctrl+S/save path is covered by RedactionServiceTests + automation-script
-    // tests. Still runs locally where it doesn't hang.
-    [FixedAvaloniaFact(Timeout = 15000,
-        Skip = "Flaky dispatcher deadlock under headless CI; covered by RedactionServiceTests + automation tests (#363).",
-        SkipWhen = nameof(IsHeadlessCi),
-        SkipType = typeof(KeyboardShortcutTests))]
+    // Previously quarantined on headless CI (#363): this test uniquely drives a
+    // save -> success-toast, and the toast's auto-dismiss used a wall-clock
+    // System.Timers.Timer whose Elapsed callback (on a ThreadPool thread, 5s
+    // later — often after the test had finished) marshaled a Dispatcher.InvokeAsync
+    // continuation into the headless dispatcher, deadlocking it under
+    // --blame-hang-timeout. Root-caused and fixed in MainWindow.OnToastRequested:
+    // the auto-dismiss now uses a single reusable UI-thread DispatcherTimer that
+    // cannot leak work past the dispatcher's lifetime, so this test is no longer
+    // flaky and runs on CI again.
+    [FixedAvaloniaFact(Timeout = 15000)]
     public async Task CtrlS_SavesFile()
     {
         // Arrange

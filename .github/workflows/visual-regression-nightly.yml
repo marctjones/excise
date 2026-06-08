@@ -66,10 +66,17 @@ jobs:
             --filter "FullyQualifiedName~Visual" \
             --logger "console;verbosity=normal" || true
 
-      - name: Run PdfEditor AvaloniaFact Baseline Tests (headless)
+      - name: Run PdfEditor visual-regression baseline tests (headless)
+        # These pixel-baseline render tests (PdfViewerHeadlessRenderTests.*_
+        # MatchesBaseline) are excluded from the PR gate in ci.yml because they
+        # crash the headless host under the full suite's accumulated load (#363);
+        # this nightly job is their owner. NOTE: the filter matches the test
+        # name, not the [FixedAvaloniaFact] attribute — the old
+        # "FullyQualifiedName~AvaloniaFact" filter matched zero tests, so these
+        # had silently not been running at all.
         run: |
           xvfb-run -a dotnet test PdfEditor.Tests --no-build -c Release \
-            --filter "FullyQualifiedName~AvaloniaFact" \
+            --filter "FullyQualifiedName~MatchesBaseline" \
             --logger "console;verbosity=normal" \
             --blame-hang-timeout 180000 || true
 

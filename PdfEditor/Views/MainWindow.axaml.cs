@@ -20,6 +20,16 @@ public partial class MainWindow : Window
     private PdfViewerControl? _pdfViewerControl;
     private readonly WindowSettings _windowSettings;
 
+    // Single reusable UI-thread timer for toast auto-dismiss. A DispatcherTimer
+    // (vs System.Timers.Timer) ticks on the dispatcher itself, so it stops when
+    // the dispatcher stops and never marshals a callback (Dispatcher.InvokeAsync)
+    // into a torn-down/foreign dispatcher. The old per-toast wall-clock timer
+    // posted its dismiss continuation 5s later from a ThreadPool thread — often
+    // after the owning test had finished — which deadlocked the headless
+    // dispatcher under --blame-hang-timeout and made GUI tests (e.g.
+    // CtrlS_SavesFile) flaky. See the KeyboardShortcutTests quarantine.
+    private DispatcherTimer? _toastTimer;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -33,6 +43,9 @@ public partial class MainWindow : Window
         {
             _windowSettings.CaptureFrom(this);
             _windowSettings.Save();
+            // Cancel any pending toast auto-dismiss so nothing is left queued on
+            // the dispatcher when the window/test tears down.
+            _toastTimer?.Stop();
         };
 
         // Add keyboard handler for Ctrl+C
@@ -572,24 +585,35 @@ public partial class MainWindow : Window
             // Show the InfoBar
             infoBar.IsOpen = true;
 
-            // Auto-dismiss after 5 seconds
-            var timer = new System.Timers.Timer(5000)
-            {
-                AutoReset = false
-            };
-            timer.Elapsed += (s, args) =>
-            {
-                Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    infoBar.IsOpen = false;
-                    timer.Dispose();
-                });
-            };
-            timer.Start();
+            // Auto-dismiss after 5 seconds using a single reusable UI-thread
+            // timer. Restarting an existing timer (rather than spawning a new
+            // System.Timers.Timer per toast) means at most one pending dismiss
+            // exists, it runs on the dispatcher, and it cannot leak a callback
+            // past the dispatcher's lifetime — which is what made headless GUI
+            // tests flaky.
+            _toastTimer ??= CreateToastTimer(infoBar);
+            _toastTimer.Stop();
+            _toastTimer.Start();
         }
         catch (Exception ex)
         {
             System.Console.WriteLine($"Error displaying toast: {ex.Message}");
         }
+    }
+
+    /// <summary>
+    /// Build the reusable toast auto-dismiss timer. Ticks once (Stop() in the
+    /// handler), on the UI thread, so it is inherently bound to the dispatcher's
+    /// lifetime — no cross-thread marshaling, nothing left to drain at teardown.
+    /// </summary>
+    private DispatcherTimer CreateToastTimer(FluentAvalonia.UI.Controls.FAInfoBar infoBar)
+    {
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
+        timer.Tick += (s, args) =>
+        {
+            timer.Stop();
+            infoBar.IsOpen = false;
+        };
+        return timer;
     }
 }
