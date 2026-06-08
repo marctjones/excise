@@ -336,7 +336,11 @@ internal class RenderContext
                     _state.MiterLimit = (float)ParseNumber(operands[0]);
                 break;
             case "d":
-                // Dash pattern - for now just ignore (implement later if needed)
+                // Dash pattern: `[ dashArray ] dashPhase d`. The array tokenizes
+                // as separate "[", numbers..., "]" operands followed by the phase,
+                // e.g. [3 2] 0 d -> ["[","3","2","]","0"]. An empty array [] is a
+                // solid line. ISO 32000-1 §8.4.3.6.
+                SetDashPattern(operands);
                 break;
             case "ri":
                 // Rendering intent - no effect on rendering for now
@@ -751,6 +755,67 @@ internal class RenderContext
 
     #region Path Painting
 
+    /// <summary>
+    /// Parse a PDF dash specification (`[ dashArray ] dashPhase d`) into graphics
+    /// state. The array tokenizes as separate "[" numbers… "]" operands followed
+    /// by the phase. An empty array (or all-zero intervals) means a solid line.
+    /// ISO 32000-1 §8.4.3.6.
+    /// </summary>
+    private void SetDashPattern(List<string> operands)
+    {
+        var intervals = new List<float>();
+        int closeIdx = -1;
+        bool inArray = false;
+        for (int i = 0; i < operands.Count; i++)
+        {
+            var t = operands[i];
+            if (t == "[") { inArray = true; continue; }
+            if (t == "]") { inArray = false; closeIdx = i; continue; }
+            if (inArray &&
+                float.TryParse(t, NumberStyles.Float, CultureInfo.InvariantCulture, out var v) && v >= 0)
+                intervals.Add(v);
+        }
+
+        // The phase is the operand immediately after the closing ']'.
+        float phase = (closeIdx >= 0 && closeIdx + 1 < operands.Count)
+            ? (float)ParseNumber(operands[closeIdx + 1])
+            : 0f;
+
+        if (intervals.Count == 0 || intervals.All(v => v <= 0))
+        {
+            _state.DashArray = null;   // solid line
+            _state.DashPhase = 0f;
+        }
+        else
+        {
+            _state.DashArray = intervals.ToArray();
+            _state.DashPhase = phase;
+        }
+    }
+
+    /// <summary>
+    /// Build the Skia dash <see cref="SKPathEffect"/> for the current state, or
+    /// null for a solid line. Skia requires an even number of positive intervals;
+    /// PDF allows an odd-length array (it repeats), so we double it.
+    /// </summary>
+    private SKPathEffect? CreateDashEffect()
+    {
+        var arr = _state.DashArray;
+        if (arr == null || arr.Length == 0) return null;
+
+        var intervals = arr;
+        if (intervals.Length % 2 != 0)
+        {
+            intervals = new float[arr.Length * 2];
+            Array.Copy(arr, 0, intervals, 0, arr.Length);
+            Array.Copy(arr, 0, intervals, arr.Length, arr.Length);
+        }
+        if (intervals.All(v => v <= 0)) return null;
+
+        try { return SKPathEffect.CreateDash(intervals, _state.DashPhase); }
+        catch { return null; }   // never let a degenerate dash array abort rendering
+    }
+
     private void StrokePath()
     {
         if (_currentPath == null) return;
@@ -776,6 +841,9 @@ internal class RenderContext
             BlendMode = _state.BlendMode,
             IsAntialias = _options.AntiAlias
         };
+
+        using var dash = CreateDashEffect();
+        if (dash != null) paint.PathEffect = dash;
 
         _canvas.DrawPath(_currentPath, paint);
         _currentPath.Dispose();
@@ -841,7 +909,9 @@ internal class RenderContext
             BlendMode = _state.BlendMode,
             IsAntialias = _options.AntiAlias
         })
+        using (var dash = CreateDashEffect())
         {
+            if (dash != null) strokePaint.PathEffect = dash;
             _canvas.DrawPath(_currentPath, strokePaint);
         }
 
@@ -3742,6 +3812,10 @@ internal class GraphicsState
     public string FillColorSpace { get; set; } = "DeviceGray";
     public string StrokeColorSpace { get; set; } = "DeviceGray";
     public SKBlendMode BlendMode { get; set; } = SKBlendMode.SrcOver;
+    // Dash pattern (PDF `d` operator): intervals in user-space units and a phase
+    // offset. Null/empty means a solid line. ISO 32000-1 §8.4.3.6.
+    public float[]? DashArray { get; set; }
+    public float DashPhase { get; set; }
 
     public GraphicsState Clone()
     {
@@ -3757,7 +3831,9 @@ internal class GraphicsState
             MiterLimit = MiterLimit,
             FillColorSpace = FillColorSpace,
             StrokeColorSpace = StrokeColorSpace,
-            BlendMode = BlendMode
+            BlendMode = BlendMode,
+            DashArray = DashArray,            // replaced wholesale by `d`, never mutated in place → safe to share
+            DashPhase = DashPhase
         };
     }
 }
