@@ -4,6 +4,29 @@ All notable changes to pdfe are documented here. Format roughly follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 semantic versioning.
 
+## [2.8.0] — 2026-06-08
+
+Operator render-coverage release (#350). Additive; no breaking changes.
+
+### Added
+- **Dash pattern (`d`) rendering.** The dash operator was parsed but ignored by
+  the renderer, so dashed strokes drew solid. `SkiaRenderer` now honors it via
+  `SKPathEffect.CreateDash` on both stroke paths; odd-length PDF dash arrays are
+  doubled (Skia needs even on/off pairs) and empty/degenerate arrays fall back to
+  a solid line.
+- **Authoritative operator inventory test.** One stream exercising every standard
+  content-stream operator, each asserted to parse **and** survive a
+  parse→write→parse round-trip through `ContentStreamWriter`.
+
+### Tests
+- **Shading (`sh`) render output is now actually verified.** Earlier shading
+  tests referenced a `/Shading` resource the test PDFs never contained, so the
+  axial/radial gradient code path ran as a no-op. New `OperatorRenderCoverageTests`
+  build PDFs with real Type 2 (axial) and Type 3 (radial) shadings and assert
+  gradient pixels, clip restriction, and graceful handling of a missing resource.
+- Dash render tests assert real behavior (a dash leaves measurable gaps vs. a
+  solid control; an empty array resets to solid).
+
 ## [2.7.0] — 2026-06-06
 
 Fillable-table authoring + PDF/UA accessibility hardening. Additive; no breaking
