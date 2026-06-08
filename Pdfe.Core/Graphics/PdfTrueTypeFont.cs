@@ -129,6 +129,19 @@ internal sealed class PdfTrueTypeFont : PdfFont
             fd["FontFile2"] = fontFileRef;
         var fdRef = document.AddIndirectObject(fd);
 
+        // CIDSet — PDF/A-1b §6.3.5 requires it for an embedded subset CID font (a
+        // bitmap of which CIDs are present). Only for TrueType (glyf): that is the
+        // path PDF/A-1 permits and that we genuinely subset. For CFF we embed the
+        // full font, and CIDSet is optional in PDF/A-2; emitting an incomplete one
+        // would FAIL PDF/A-2 §6.2.11.4.2, so we omit it. Placeholder now; the
+        // pre-save action fills it once the used-CID set is final.
+        PdfStream? cidSetStream = null;
+        if (!_ttf.IsCff)
+        {
+            cidSetStream = new PdfStream(new PdfDictionary(), Array.Empty<byte>());
+            fd["CIDSet"] = document.AddIndirectObject(cidSetStream);
+        }
+
         // 3. /W advance widths for every glyph: [0 [w0 w1 w2 …]].
         var widths = new PdfArray();
         for (int g = 0; g < _ttf.GlyphCount; g++)
@@ -171,7 +184,7 @@ internal sealed class PdfTrueTypeFont : PdfFont
         // Defer subsetting to save time (when _usedGids is complete).
         // For CFF, TrueTypeSubsetter will return the original unchanged, which is fine
         // (full OTTO embedded). For TrueType, it subsets to used glyphs.
-        document.RegisterPreSaveAction(() => FinalizeSubset(fontFileStream, fd, cid, type0, tu, toGlyphSpace));
+        document.RegisterPreSaveAction(() => FinalizeSubset(fontFileStream, fd, cid, type0, tu, cidSetStream, toGlyphSpace));
         return type0;
     }
 
@@ -182,7 +195,7 @@ internal sealed class PdfTrueTypeFont : PdfFont
     /// Idempotent.
     /// </summary>
     private void FinalizeSubset(PdfStream fontFileStream, PdfDictionary fd, PdfDictionary cid,
-        PdfDictionary type0, PdfStream toUnicode, double toGlyphSpace)
+        PdfDictionary type0, PdfStream toUnicode, PdfStream? cidSet, double toGlyphSpace)
     {
         // For TrueType, subset to used glyphs. For CFF, TrueTypeSubsetter returns original.
         byte[] subset = TrueTypeSubsetter.Subset(_ttf.Data, _usedGids);
@@ -217,6 +230,25 @@ internal sealed class PdfTrueTypeFont : PdfFont
             w.Add((PdfObject)one);
         }
         cid["W"] = w;
+
+        // CIDSet bitmap: bit i (MSB-first) set when CID i is present. We subset
+        // "retain-gid" (CIDToGIDMap Identity, numGlyphs unchanged), so every glyph
+        // index 0..numGlyphs-1 is still an addressable slot in the embedded
+        // program — non-retained ones are valid empty glyphs. PDF/A-2 §6.2.11.4.2
+        // requires the CIDSet to list ALL glyphs present in the program, so we set
+        // every bit up to numGlyphs (an incomplete CIDSet from just the used set
+        // is rejected).
+        if (cidSet != null)
+        {
+            int n = _ttf.GlyphCount;
+            var bits = new byte[(n + 7) / 8];
+            for (int i = 0; i < n; i++)
+                bits[i / 8] |= (byte)(0x80 >> (i % 8));
+            byte[] cidSetComp = Deflate(bits);
+            cidSet.SetEncodedData(cidSetComp);
+            cidSet.SetName("Filter", "FlateDecode");
+            cidSet.SetInt("Length", cidSetComp.Length);
+        }
     }
 
     /// <summary>Deterministic 6-uppercase-letter subset tag from the used glyphs.</summary>

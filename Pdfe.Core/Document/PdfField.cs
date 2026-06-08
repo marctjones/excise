@@ -81,9 +81,11 @@ public sealed class PdfField
     /// <summary>The non-<c>Off</c> appearance-state names under a widget's <c>/AP /N</c>.</summary>
     private IEnumerable<string> GetWidgetOnStates(PdfDictionary widget)
     {
-        if (_document.Resolve(widget.GetOptional("AP")) is not PdfDictionary ap)
+        var apObj = widget.GetOptional("AP");
+        if (apObj == null || _document.Resolve(apObj) is not PdfDictionary ap)
             yield break;
-        if (_document.Resolve(ap.GetOptional("N")) is not PdfDictionary normal)
+        var nObj = ap.GetOptional("N");
+        if (nObj == null || _document.Resolve(nObj) is not PdfDictionary normal)
             yield break;
         foreach (var key in normal.Keys)
             if (key.Value != "Off")
