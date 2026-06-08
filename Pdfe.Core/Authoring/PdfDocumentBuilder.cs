@@ -92,6 +92,20 @@ public sealed class PdfDocumentBuilder
         return this;
     }
 
+    /// <summary>
+    /// Produce a PDF/A archival file: adds the required XMP metadata (with the
+    /// <c>pdfaid</c> identifier) and an sRGB OutputIntent at save time. The caller
+    /// must embed all fonts via <see cref="DefaultFont"/> — PDF/A forbids the
+    /// non-embedded base-14 fonts. Best for flat (non-interactive) output.
+    /// </summary>
+    public PdfDocumentBuilder PdfA(PdfAConformance conformance = PdfAConformance.PdfA2B)
+    {
+        // PDF/A requires the XMP pdf:Producer to match the Info dictionary.
+        _document.SetProducer("pdfe");
+        _document.RegisterPreSaveAction(() => PdfAWriter.Apply(_document, conformance));
+        return this;
+    }
+
     private static string HeadingTag(int level) => level switch
     {
         <= 1 => "H1", 2 => "H2", 3 => "H3", _ => "H4"

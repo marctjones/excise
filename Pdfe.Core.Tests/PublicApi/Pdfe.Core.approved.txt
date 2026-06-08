@@ -60,6 +60,11 @@ namespace Pdfe.Core.Authoring
         public Pdfe.Core.Authoring.PageSize Landscape() { }
         public Pdfe.Core.Authoring.PageSize Portrait() { }
     }
+    public enum PdfAConformance
+    {
+        PdfA2B = 0,
+        PdfA1B = 1,
+    }
     public sealed class PdfDocumentBuilder
     {
         public double ContentLeft { get; }
@@ -82,6 +87,7 @@ namespace Pdfe.Core.Authoring
         public Pdfe.Core.Authoring.PdfDocumentBuilder NumberedList(System.Collections.Generic.IEnumerable<string> items, Pdfe.Core.Authoring.TextStyle? style = null) { }
         public Pdfe.Core.Authoring.PdfDocumentBuilder PageBreak() { }
         public Pdfe.Core.Authoring.PdfDocumentBuilder Paragraph(string text, Pdfe.Core.Authoring.TextStyle? style = null) { }
+        public Pdfe.Core.Authoring.PdfDocumentBuilder PdfA(Pdfe.Core.Authoring.PdfAConformance conformance = 0) { }
         public void Save(System.IO.Stream stream) { }
         public void Save(string path) { }
         public byte[] SaveToBytes() { }

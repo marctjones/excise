@@ -9,6 +9,15 @@ semantic versioning.
 Operator render-coverage release (#350). Additive; no breaking changes.
 
 ### Added
+- **PDF/A archival output.** `PdfDocumentBuilder.PdfA(PdfAConformance.PdfA2B)`
+  adds the document structures PDF/A requires at save time — an XMP metadata
+  packet with the `pdfaid` identifier and an sRGB OutputIntent (embedded ICC
+  profile). With an embedded font (`DefaultFont`), the output validates as
+  **PDF/A-2b under veraPDF 1.30.2 (144/144 rules)**. New `PdfAConformance` enum.
+  (PDF/A-1b is stricter and not yet fully met — tracked in #425.)
+- **Trailer `/ID`.** Newly authored documents now always get a file-identifier
+  array in the trailer (ISO 32000-1 §14.4) — required by PDF/A and recommended
+  generally; an existing `/ID` is preserved.
 - **Dash pattern (`d`) rendering.** The dash operator was parsed but ignored by
   the renderer, so dashed strokes drew solid. `SkiaRenderer` now honors it via
   `SKPathEffect.CreateDash` on both stroke paths; odd-length PDF dash arrays are

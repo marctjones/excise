@@ -169,6 +169,20 @@ public class PdfDocumentWriter
             trailer["Info"] = infoRef;
         }
 
+        // /ID — a file identifier array of two byte strings (ISO 32000-1 §14.4).
+        // Required by PDF/A and recommended for every file. Preserve an existing
+        // one; otherwise generate a fresh pair.
+        var existingId = _document.Trailer.ContainsKey("ID") ? _document.Trailer.GetArray("ID") : null;
+        if (existingId is { Count: > 0 })
+        {
+            trailer["ID"] = existingId;
+        }
+        else
+        {
+            var id = new PdfString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(16), isHex: true);
+            trailer["ID"] = new PdfArray(id, id);
+        }
+
         // Write trailer
         writer.Write(Encoding.ASCII.GetBytes("trailer\n"));
         var trailerStr = PdfObjectWriter.Serialize(trailer);
