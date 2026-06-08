@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:Pdfe.Avalonia.Controls"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
              x:Class="Pdfe.Avalonia.Controls.PdfViewerControl">
 
@@ -47,6 +48,44 @@
                     </Canvas>
                 </Grid>
             </LayoutTransformControl>
+        </ScrollViewer>
+
+        <!-- Continuous (reading) view: a vertically-scrolling, render-virtualized
+             stack of all pages. Shown only when ViewMode=Continuous; hidden (and
+             not measured) otherwise so the single-page ScrollViewer above owns
+             the viewport. No editing overlays here by design — editing always
+             happens in single-page mode (#371). -->
+        <ScrollViewer Name="ContinuousScrollViewer"
+                      IsVisible="False"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalContentAlignment="Center">
+            <ItemsControl Name="ContinuousItems">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel Orientation="Vertical" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="controls:PdfPageSlot">
+                        <!-- Border is sized to the (zoomed) page via bindings on
+                             the PageSlot VM; the Image stretches the rendered
+                             bitmap to fill it. Rendering is kicked on container
+                             realization (code-behind) and flows back through the
+                             Bitmap binding, so virtualization only renders the
+                             pages near the viewport. -->
+                        <Border Width="{Binding DisplayWidth}"
+                                Height="{Binding DisplayHeight}"
+                                Background="White"
+                                Margin="0,0,0,12"
+                                HorizontalAlignment="Center"
+                                BorderBrush="#40000000"
+                                BorderThickness="1">
+                            <Image Source="{Binding Bitmap}" Stretch="Fill" />
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
         </ScrollViewer>
 
         <!-- Thin indeterminate progress bar pinned to the top edge of the

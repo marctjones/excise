@@ -488,4 +488,80 @@ public class PdfViewerControlTests
     }
 
     #endregion
+
+    #region Continuous View Mode (#371)
+
+    [FixedAvaloniaFact]
+    public void ViewMode_DefaultsToSinglePage()
+    {
+        new PdfViewerControl().ViewMode.Should().Be(PdfViewMode.SinglePage);
+    }
+
+    [FixedAvaloniaFact]
+    public void ViewMode_TogglesScrollViewerVisibility()
+    {
+        var control = new PdfViewerControl();
+        var single = control.FindControl<ScrollViewer>("PdfScrollViewer")!;
+        var continuous = control.FindControl<ScrollViewer>("ContinuousScrollViewer")!;
+
+        single.IsVisible.Should().BeTrue("single-page is the default view");
+        continuous.IsVisible.Should().BeFalse();
+
+        control.ViewMode = PdfViewMode.Continuous;
+
+        single.IsVisible.Should().BeFalse();
+        continuous.IsVisible.Should().BeTrue();
+    }
+
+    [FixedAvaloniaFact]
+    public void EnteringEditingMode_InContinuous_AutoSwitchesToSinglePage()
+    {
+        foreach (var editing in new[] { InteractionMode.Redaction, InteractionMode.TextSelection, InteractionMode.FormAuthoring })
+        {
+            var control = new PdfViewerControl { ViewMode = PdfViewMode.Continuous };
+            control.ViewMode.Should().Be(PdfViewMode.Continuous);
+
+            control.InteractionMode = editing;
+
+            control.ViewMode.Should().Be(PdfViewMode.SinglePage,
+                $"{editing} is an editing interaction and must force single-page");
+        }
+    }
+
+    [FixedAvaloniaFact]
+    public void ContinuousMode_BuildsOneSlotPerPage()
+    {
+        var path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"pdfe_cont_{Guid.NewGuid():N}.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 3);
+        try
+        {
+            var control = new PdfViewerControl { Document = PdfCoreDocument.Open(path) };
+            control.ViewMode = PdfViewMode.Continuous;
+
+            var items = control.FindControl<ItemsControl>("ContinuousItems")!;
+            items.ItemsSource.Should().NotBeNull();
+            items.ItemsSource!.Cast<PdfPageSlot>().Select(s => s.PageNumber)
+                .Should().Equal(1, 2, 3);
+        }
+        finally { System.IO.File.Delete(path); }
+    }
+
+    [FixedAvaloniaFact]
+    public void ContinuousSlot_DisplayWidthScalesWithZoom()
+    {
+        var control = new PdfViewerControl { Document = PdfCoreDocument.Open(TestPdfGenerator.CreateSimplePdf("zoom")) };
+        control.ViewMode = PdfViewMode.Continuous;
+
+        var slot = control.FindControl<ItemsControl>("ContinuousItems")!
+            .ItemsSource!.Cast<PdfPageSlot>().First();
+        var widthAt1x = slot.DisplayWidth;
+        widthAt1x.Should().BeGreaterThan(0);
+
+        control.ZoomLevel = 2.0;
+
+        slot.DisplayWidth.Should().BeApproximately(widthAt1x * 2.0, 0.5,
+            "page slots resize with zoom so the reading view scales");
+    }
+
+    #endregion
 }

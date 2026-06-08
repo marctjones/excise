@@ -77,6 +77,24 @@ public partial class PdfViewerControl : UserControl
     }
 
     /// <summary>
+    /// View mode: <see cref="PdfViewMode.SinglePage"/> (the default — one page at
+    /// a time, with all editing/redaction/selection interactions) or
+    /// <see cref="PdfViewMode.Continuous"/> (a scrollable reading view of all
+    /// pages, render-virtualized, with NO editing). Entering an editing
+    /// interaction mode auto-switches back to SinglePage so the editing overlays
+    /// (which are single-page by design, incl. security-critical redaction) are
+    /// never driven against a continuous layout.
+    /// </summary>
+    public static readonly StyledProperty<PdfViewMode> ViewModeProperty =
+        AvaloniaProperty.Register<PdfViewerControl, PdfViewMode>(nameof(ViewMode), defaultValue: PdfViewMode.SinglePage);
+
+    public PdfViewMode ViewMode
+    {
+        get => GetValue(ViewModeProperty);
+        set => SetValue(ViewModeProperty, value);
+    }
+
+    /// <summary>
     /// Is page currently loading?
     /// </summary>
     public static readonly StyledProperty<bool> IsLoadingProperty =
@@ -272,7 +290,25 @@ public partial class PdfViewerControl : UserControl
             control.OnHiddenTextHighlightsChanged(
                 e.OldValue as System.Collections.Generic.IEnumerable<HiddenTextHighlight>,
                 e.NewValue as System.Collections.Generic.IEnumerable<HiddenTextHighlight>));
+        ViewModeProperty.Changed.AddClassHandler<PdfViewerControl>((control, _) =>
+            control.OnViewModeChanged());
+        // Editing interactions are single-page only. If the host turns on an
+        // editing mode while we're in the continuous reading view, switch back
+        // to single-page (at the current page) so the editing overlays line up
+        // with a single rendered page — never a continuous stack.
+        InteractionModeProperty.Changed.AddClassHandler<PdfViewerControl>((control, e) =>
+        {
+            if (control.ViewMode == PdfViewMode.Continuous
+                && e.NewValue is InteractionMode m && IsEditingMode(m))
+            {
+                control.ViewMode = PdfViewMode.SinglePage;
+            }
+        });
     }
+
+    /// <summary>An interaction mode that draws/edits and therefore needs single-page layout.</summary>
+    private static bool IsEditingMode(InteractionMode m) =>
+        m is InteractionMode.Redaction or InteractionMode.TextSelection or InteractionMode.FormAuthoring;
 
     private System.Collections.Specialized.INotifyCollectionChanged? _watchedHighlights;
 
@@ -585,6 +621,8 @@ public partial class PdfViewerControl : UserControl
                 .GetObservable(ScrollViewer.ViewportProperty)
                 .Subscribe(new AnonymousObserver<Size>(OnScrollViewerViewportChanged));
         }
+
+        InitializeContinuous();
     }
 
     /// <summary>
@@ -624,6 +662,8 @@ public partial class PdfViewerControl : UserControl
             _zoomScaleTransform.ScaleX = ZoomLevel;
             _zoomScaleTransform.ScaleY = ZoomLevel;
         }
+        if (ViewMode == PdfViewMode.Continuous)
+            ApplyContinuousZoom();
     }
 
     private void OnLoadingStateChanged()
@@ -681,15 +721,19 @@ public partial class PdfViewerControl : UserControl
         _linksPageNumber = -1;
         ClearSelectionHighlight();
 
+        InvalidateContinuousCache();
         if (Document != null)
         {
             RefreshPageAnnotations();
+            if (ViewMode == PdfViewMode.Continuous)
+                RebuildContinuous();
             await RenderCurrentPageAsync();
         }
         else
         {
             Annotations = null;
             ClearDisplay();
+            ClearContinuous();
         }
     }
 
@@ -714,6 +758,12 @@ public partial class PdfViewerControl : UserControl
 
             await RenderCurrentPageAsync();
             PageChanged?.Invoke(this, new PageChangedEventArgs(CurrentPage));
+
+            // In continuous mode, a CurrentPage change that did NOT originate
+            // from the user scrolling (e.g. a "go to page" command or a clicked
+            // link) should scroll the reading view to that page.
+            if (ViewMode == PdfViewMode.Continuous && !_syncingPageFromScroll)
+                ScrollToPageContinuous(CurrentPage);
         }
     }
 
@@ -1485,6 +1535,20 @@ public class PageChangedEventArgs : EventArgs
 /// <summary>
 /// Interaction modes for the PDF viewer.
 /// </summary>
+/// <summary>
+/// How the viewer lays out pages. <see cref="SinglePage"/> shows one page with
+/// full editing; <see cref="Continuous"/> is a render-virtualized scrolling
+/// reading view of all pages with no editing.
+/// </summary>
+public enum PdfViewMode
+{
+    /// <summary>One page at a time, with all editing interactions (the default).</summary>
+    SinglePage,
+
+    /// <summary>Scrollable all-pages reading view, render-virtualized, no editing.</summary>
+    Continuous,
+}
+
 public enum InteractionMode
 {
     /// <summary>
