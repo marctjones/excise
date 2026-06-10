@@ -29,7 +29,7 @@ namespace Pdfe.Core.Tests.Document;
 public class ConcurrentAccessTests
 {
     [Fact]
-    public void GetPage_And_GetObject_AreSafeUnderConcurrentAccess()
+    public async Task GetPage_And_GetObject_AreSafeUnderConcurrentAccess()
     {
         // Many objects so the *uncached* window (where concurrent seeks collide)
         // is large — with too few objects every thread hits the cache after the
@@ -66,7 +66,7 @@ public class ConcurrentAccessTests
             catch (Exception ex) { errors.Enqueue(ex); }
         })).ToArray();
 
-        Task.WaitAll(tasks);
+        await Task.WhenAll(tasks);
 
         errors.Should().BeEmpty(
             "concurrent object resolution must not corrupt the shared lexer (#376); " +

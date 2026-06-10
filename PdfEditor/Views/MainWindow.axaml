@@ -134,6 +134,12 @@
                 <MenuItem Header="Fit _Width" Command="{Binding ZoomFitWidthCommand}" InputGesture="Ctrl+1"/>
                 <MenuItem Header="Fit _Page" Command="{Binding ZoomFitPageCommand}" InputGesture="Ctrl+2"/>
                 <Separator/>
+                <MenuItem Header="_Continuous Scroll"
+                          Command="{Binding ToggleContinuousViewCommand}"
+                          ToggleType="CheckBox"
+                          InputGesture="Ctrl+Shift+C"
+                          IsChecked="{Binding IsContinuousView}"/>
+                <Separator/>
                 <MenuItem Header="Show _Outline"
                           ToggleType="CheckBox"
                           InputGesture="Ctrl+Shift+O"
@@ -204,6 +210,13 @@
                             ToolTip.Tip="Show/hide Page Previews (Ctrl+Shift+T)"
                             AutomationProperties.Name="Toggle Thumbnails Sidebar"
                             AutomationProperties.HelpText="Show or hide the page thumbnails / previews panel"/>
+                    <Button Content="📜" Command="{Binding ToggleContinuousViewCommand}"
+                            Classes="modern-button toggle"
+                            Classes.active="{Binding IsContinuousView}"
+                            Padding="10,6"
+                            ToolTip.Tip="Continuous scroll view (Ctrl+Shift+C)"
+                            AutomationProperties.Name="Continuous Scroll View"
+                            AutomationProperties.HelpText="Toggle between single-page editing view and continuous reading view"/>
 
                     <Border Width="1" Height="24" Margin="6,0"
                             Background="{DynamicResource DividerBrush}"/>
@@ -628,6 +641,7 @@
                                                IsVisible="{Binding IsDocumentLoaded}"
                                                Document="{Binding PdfCoreDocument}"
                                                CurrentPage="{Binding CurrentPage}"
+                                               ViewMode="{Binding ViewMode, Mode=TwoWay}"
                                                ZoomLevel="{Binding ZoomLevel}"
                                                InteractionMode="{Binding InteractionMode}"
                                                HiddenTextHighlights="{Binding HiddenTextHighlights}"

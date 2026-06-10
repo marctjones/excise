@@ -1,5 +1,14 @@
 using AwesomeAssertions;
 using Microsoft.Extensions.Logging;
+using Org.BouncyCastle.Cms;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Generators;
+using Org.BouncyCastle.Crypto.Operators;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Math;
+using Org.BouncyCastle.Security;
+using Org.BouncyCastle.X509;
+using Org.BouncyCastle.Asn1.X509;
 using PdfEditor.Services;
 using System;
 using System.IO;
@@ -14,6 +23,10 @@ namespace PdfEditor.Tests.Unit;
 /// </summary>
 public class SignatureVerificationServiceTests
 {
+    private const int SignaturePlaceholderByteCount = 8192;
+    private const int SignaturePlaceholderHexLength = SignaturePlaceholderByteCount * 2;
+    private static readonly string SignaturePlaceholderHex = new('F', SignaturePlaceholderHexLength);
+
     private readonly SignatureVerificationService _service;
     private readonly ILogger<SignatureVerificationService> _logger;
 
@@ -67,6 +80,14 @@ public class SignatureVerificationServiceTests
     {
         var result = new SignatureVerificationResult();
         result.CoversWholeDocument.Should().BeFalse();
+    }
+
+    [Fact]
+    public void SignatureVerificationResult_DefaultByteRangeIntegrityState_IsUnchecked()
+    {
+        var result = new SignatureVerificationResult();
+        result.ByteRangeIntegrityChecked.Should().BeFalse();
+        result.ByteRangeIntegrityValid.Should().BeFalse();
     }
 
     [Fact]
@@ -477,6 +498,85 @@ public class SignatureVerificationServiceTests
             results.Should().HaveCount(1);
             results[0].IsValid.Should().BeFalse();
             results[0].SignatureName.Should().Be("TestSig");
+            results[0].ByteRangeIntegrityChecked.Should().BeFalse();
+            results[0].ByteRangeIntegrityValid.Should().BeFalse();
+            results[0].StatusMessage.Should().Contain("BouncyCastle verification failed");
+        }
+        finally
+        {
+            File.Delete(pdfPath);
+        }
+    }
+
+    [Fact]
+    public void VerifySignatures_PdfWithValidDetachedCmsAndByteRange_ReturnsValidResult()
+    {
+        var pdfBytes = MakePdfWithValidDetachedCmsSignature();
+        var pdfPath = WriteTempPdf(pdfBytes);
+
+        try
+        {
+            var results = _service.VerifySignatures(pdfPath);
+
+            results.Should().NotBeNull();
+            results.Should().HaveCount(1);
+            results[0].IsValid.Should().BeTrue();
+            results[0].SignatureName.Should().Be("TestSig");
+            results[0].SignedBy.Should().Contain("PDFe Test Signer");
+            results[0].ByteRangeIntegrityChecked.Should().BeTrue();
+            results[0].ByteRangeIntegrityValid.Should().BeTrue();
+            results[0].CoversWholeDocument.Should().BeTrue();
+            results[0].StatusMessage.Should().Contain("ByteRange digest matches");
+        }
+        finally
+        {
+            File.Delete(pdfPath);
+        }
+    }
+
+    [Fact]
+    public void VerifySignatures_PdfWithTamperedSignedBytes_ReturnsDigestMismatch()
+    {
+        var pdfBytes = MakePdfWithValidDetachedCmsSignature();
+        ReplaceAsciiMarker(pdfBytes, "ORIGINAL", "TAMPERED");
+        var pdfPath = WriteTempPdf(pdfBytes);
+
+        try
+        {
+            var results = _service.VerifySignatures(pdfPath);
+
+            results.Should().NotBeNull();
+            results.Should().HaveCount(1);
+            results[0].IsValid.Should().BeFalse();
+            results[0].SignatureName.Should().Be("TestSig");
+            results[0].ByteRangeIntegrityChecked.Should().BeTrue();
+            results[0].ByteRangeIntegrityValid.Should().BeFalse();
+            results[0].CoversWholeDocument.Should().BeTrue();
+            results[0].StatusMessage.Should().Contain("ByteRange digest mismatch");
+        }
+        finally
+        {
+            File.Delete(pdfPath);
+        }
+    }
+
+    [Fact]
+    public void VerifySignatures_ByteRangeGapWithExtraUnsignedByte_ReturnsInvalidByteRange()
+    {
+        var pdfText = MakePdfWithInvalidByteRangeGap();
+        var pdfPath = WriteTempPdf(Encoding.Latin1.GetBytes(pdfText));
+
+        try
+        {
+            var results = _service.VerifySignatures(pdfPath);
+
+            results.Should().NotBeNull();
+            results.Should().HaveCount(1);
+            results[0].IsValid.Should().BeFalse();
+            results[0].SignatureName.Should().Be("TestSig");
+            results[0].ByteRangeIntegrityChecked.Should().BeFalse();
+            results[0].ByteRangeIntegrityValid.Should().BeFalse();
+            results[0].StatusMessage.Should().Contain("Contents value does not exactly match");
         }
         finally
         {
@@ -711,7 +811,7 @@ public class SignatureVerificationServiceTests
 
         obj6Pos = sb.Length;
         sb.AppendLine("6 0 obj");
-        sb.AppendLine("<< /ByteRange [0 100 200] /Contents <AABBCCDD> >>");
+        sb.AppendLine("<< /ByteRange [0 100 200 50] /Contents <AABBCCDD> >>");
         sb.AppendLine("endobj");
 
         long xrefPos = sb.Length;
@@ -823,7 +923,7 @@ public class SignatureVerificationServiceTests
 
         obj6Pos = sb.Length;
         sb.AppendLine("6 0 obj");
-        sb.AppendLine("<< /ByteRange [0 100 200 50] /Contents <DEADBEEFCAFEBABE0102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F> >>");
+        sb.AppendLine("<< /ByteRange [0 AAAAAAAAAA BBBBBBBBBB CCCCCCCCCC] /Contents <DEADBEEFCAFEBABE0102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F> >>");
         sb.AppendLine("endobj");
 
         long xrefPos = sb.Length;
@@ -842,6 +942,174 @@ public class SignatureVerificationServiceTests
         sb.AppendLine(xrefPos.ToString());
         sb.AppendLine("%%EOF");
 
-        return Encoding.Latin1.GetBytes(sb.ToString());
+        return Encoding.Latin1.GetBytes(FillByteRange(sb.ToString()));
+    }
+
+    private static byte[] MakePdfWithValidDetachedCmsSignature()
+    {
+        var pdfWithByteRange = FillByteRange(MakePdfWithSignaturePlaceholder());
+        var signedContent = ExtractSignedContent(Encoding.Latin1.GetBytes(pdfWithByteRange));
+        var cmsSignature = CreateDetachedCmsSignature(signedContent);
+        var signatureHex = Convert.ToHexString(cmsSignature);
+        signatureHex.Length.Should().BeLessThan(SignaturePlaceholderHexLength);
+
+        var paddedSignatureHex = signatureHex.PadRight(SignaturePlaceholderHexLength, '0');
+        return Encoding.Latin1.GetBytes(
+            pdfWithByteRange.Replace(SignaturePlaceholderHex, paddedSignatureHex, StringComparison.Ordinal));
+    }
+
+    private static void ReplaceAsciiMarker(byte[] bytes, string marker, string replacement)
+    {
+        marker.Length.Should().Be(replacement.Length);
+
+        var markerBytes = Encoding.ASCII.GetBytes(marker);
+        var replacementBytes = Encoding.ASCII.GetBytes(replacement);
+        var index = bytes.AsSpan().IndexOf(markerBytes);
+        index.Should().BeGreaterThanOrEqualTo(0);
+        replacementBytes.CopyTo(bytes.AsSpan(index, replacementBytes.Length));
+    }
+
+    private static string MakePdfWithSignaturePlaceholder()
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("%PDF-1.7");
+
+        long obj1Pos, obj2Pos, obj3Pos, obj4Pos, obj5Pos, obj6Pos;
+
+        obj1Pos = sb.Length;
+        sb.AppendLine("1 0 obj");
+        sb.AppendLine("<< /Type /Catalog /Pages 2 0 R /AcroForm 4 0 R /PdfeTestMarker (ORIGINAL) >>");
+        sb.AppendLine("endobj");
+
+        obj2Pos = sb.Length;
+        sb.AppendLine("2 0 obj");
+        sb.AppendLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+        sb.AppendLine("endobj");
+
+        obj3Pos = sb.Length;
+        sb.AppendLine("3 0 obj");
+        sb.AppendLine("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>");
+        sb.AppendLine("endobj");
+
+        obj4Pos = sb.Length;
+        sb.AppendLine("4 0 obj");
+        sb.AppendLine("<< /Fields [5 0 R] >>");
+        sb.AppendLine("endobj");
+
+        obj5Pos = sb.Length;
+        sb.AppendLine("5 0 obj");
+        sb.AppendLine("<< /FT /Sig /T (TestSig) /V 6 0 R >>");
+        sb.AppendLine("endobj");
+
+        obj6Pos = sb.Length;
+        sb.AppendLine("6 0 obj");
+        sb.AppendLine($"<< /Type /Sig /Filter /Adobe.PPKLite /SubFilter /adbe.pkcs7.detached /ByteRange [0 AAAAAAAAAA BBBBBBBBBB CCCCCCCCCC] /Contents <{SignaturePlaceholderHex}> >>");
+        sb.AppendLine("endobj");
+
+        long xrefPos = sb.Length;
+        sb.AppendLine("xref");
+        sb.AppendLine("0 7");
+        sb.AppendLine("0000000000 65535 f ");
+        sb.AppendLine($"{obj1Pos:D10} 00000 n ");
+        sb.AppendLine($"{obj2Pos:D10} 00000 n ");
+        sb.AppendLine($"{obj3Pos:D10} 00000 n ");
+        sb.AppendLine($"{obj4Pos:D10} 00000 n ");
+        sb.AppendLine($"{obj5Pos:D10} 00000 n ");
+        sb.AppendLine($"{obj6Pos:D10} 00000 n ");
+        sb.AppendLine("trailer");
+        sb.AppendLine("<< /Size 7 /Root 1 0 R >>");
+        sb.AppendLine("startxref");
+        sb.AppendLine(xrefPos.ToString());
+        sb.AppendLine("%%EOF");
+
+        return sb.ToString();
+    }
+
+    private static string MakePdfWithInvalidByteRangeGap()
+    {
+        var pdf = FillByteRange(MakePdfWithSignaturePlaceholder());
+        var contentsStart = pdf.IndexOf('<', pdf.IndexOf("/Contents", StringComparison.Ordinal));
+        var contentsEnd = pdf.IndexOf('>', contentsStart);
+        contentsStart.Should().BeGreaterThanOrEqualTo(0);
+        contentsEnd.Should().BeGreaterThan(contentsStart);
+
+        var extraUnsignedGapStart = contentsStart - 1;
+        var secondRangeStart = contentsEnd + 1;
+        var secondRangeLength = pdf.Length - secondRangeStart;
+
+        return MakePdfWithSignaturePlaceholder()
+            .Replace("AAAAAAAAAA", extraUnsignedGapStart.ToString("D10"), StringComparison.Ordinal)
+            .Replace("BBBBBBBBBB", secondRangeStart.ToString("D10"), StringComparison.Ordinal)
+            .Replace("CCCCCCCCCC", secondRangeLength.ToString("D10"), StringComparison.Ordinal);
+    }
+
+    private static byte[] ExtractSignedContent(byte[] pdfBytes)
+    {
+        var pdf = Encoding.Latin1.GetString(pdfBytes);
+        var contentsStart = pdf.IndexOf('<', pdf.IndexOf("/Contents", StringComparison.Ordinal));
+        var contentsEnd = pdf.IndexOf('>', contentsStart);
+        contentsStart.Should().BeGreaterThanOrEqualTo(0);
+        contentsEnd.Should().BeGreaterThan(contentsStart);
+
+        var secondRangeStart = contentsEnd + 1;
+        var signedContent = new byte[contentsStart + pdfBytes.Length - secondRangeStart];
+        Buffer.BlockCopy(pdfBytes, 0, signedContent, 0, contentsStart);
+        Buffer.BlockCopy(pdfBytes, secondRangeStart, signedContent, contentsStart, pdfBytes.Length - secondRangeStart);
+        return signedContent;
+    }
+
+    private static byte[] CreateDetachedCmsSignature(byte[] signedContent)
+    {
+        var random = new SecureRandom();
+        var keyPair = GenerateKeyPair(random);
+        var certificate = GenerateSelfSignedCertificate(keyPair, random);
+
+        var signerInfoGenerator = new SignerInfoGeneratorBuilder()
+            .Build(new Asn1SignatureFactory("SHA256WITHRSA", keyPair.Private, random), certificate);
+
+        var generator = new CmsSignedDataGenerator();
+        generator.AddSignerInfoGenerator(signerInfoGenerator);
+        generator.AddCertificate(certificate);
+
+        var cms = generator.Generate(new CmsProcessableByteArray(signedContent), encapsulate: false);
+        return cms.GetEncoded();
+    }
+
+    private static AsymmetricCipherKeyPair GenerateKeyPair(SecureRandom random)
+    {
+        var keyGenerator = new RsaKeyPairGenerator();
+        keyGenerator.Init(new KeyGenerationParameters(random, 2048));
+        return keyGenerator.GenerateKeyPair();
+    }
+
+    private static X509Certificate GenerateSelfSignedCertificate(AsymmetricCipherKeyPair keyPair, SecureRandom random)
+    {
+        var certificateGenerator = new X509V3CertificateGenerator();
+        var subject = new X509Name("CN=PDFe Test Signer");
+        certificateGenerator.SetSerialNumber(BigInteger.ProbablePrime(128, random));
+        certificateGenerator.SetIssuerDN(subject);
+        certificateGenerator.SetSubjectDN(subject);
+        certificateGenerator.SetNotBefore(DateTime.UtcNow.AddDays(-1));
+        certificateGenerator.SetNotAfter(DateTime.UtcNow.AddDays(1));
+        certificateGenerator.SetPublicKey(keyPair.Public);
+
+        return certificateGenerator.Generate(
+            new Asn1SignatureFactory("SHA256WITHRSA", keyPair.Private, random));
+    }
+
+    private static string FillByteRange(string pdf)
+    {
+        var contentsStart = pdf.IndexOf('<', pdf.IndexOf("/Contents", StringComparison.Ordinal));
+        var contentsEnd = pdf.IndexOf('>', contentsStart);
+        contentsStart.Should().BeGreaterThanOrEqualTo(0);
+        contentsEnd.Should().BeGreaterThan(contentsStart);
+
+        var secondRangeStart = contentsEnd + 1;
+        var secondRangeLength = pdf.Length - secondRangeStart;
+
+        return pdf
+            .Replace("AAAAAAAAAA", contentsStart.ToString("D10"), StringComparison.Ordinal)
+            .Replace("BBBBBBBBBB", secondRangeStart.ToString("D10"), StringComparison.Ordinal)
+            .Replace("CCCCCCCCCC", secondRangeLength.ToString("D10"), StringComparison.Ordinal);
     }
 }

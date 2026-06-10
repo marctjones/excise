@@ -36,6 +36,7 @@ public class PdfATests
     [Fact]
     public void PdfA2B_EmitsXmpPdfaId_OutputIntent_AndTrailerId()
     {
+        Assert.SkipUnless(File.Exists(Dejavu), "DejaVuSans (embedding font) not installed");
         var latin1 = Encoding.Latin1.GetString(BuildPdfA(PdfAConformance.PdfA2B));
 
         Assert.Contains("pdfaid:part>2", latin1);

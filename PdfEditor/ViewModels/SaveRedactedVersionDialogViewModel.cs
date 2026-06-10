@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Reactive;
-using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using ReactiveUI;
 
 namespace PdfEditor.ViewModels;
@@ -15,13 +15,22 @@ public class SaveRedactedVersionDialogViewModel : ReactiveObject
     private string _saveFilePath;
     private int _pendingCount;
 
+    // Drives SaveCommand's canExecute. Updated from the SaveFilePath setter
+    // instead of ReactiveUI's WhenAnyValue, whose Expression-based member
+    // chain is evaluated via reflection (IL2026/IL3050 — not trim/AOT-safe).
+    private readonly BehaviorSubject<bool> _canSave;
+
     /// <summary>
     /// The path where the redacted PDF will be saved
     /// </summary>
     public string SaveFilePath
     {
         get => _saveFilePath;
-        set => this.RaiseAndSetIfChanged(ref _saveFilePath, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _saveFilePath, value);
+            _canSave?.OnNext(IsSavePathValid(value));
+        }
     }
 
     /// <summary>
@@ -30,7 +39,11 @@ public class SaveRedactedVersionDialogViewModel : ReactiveObject
     public int PendingCount
     {
         get => _pendingCount;
-        set => this.RaiseAndSetIfChanged(ref _pendingCount, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _pendingCount, value);
+            this.RaisePropertyChanged(nameof(PendingCountText));
+        }
     }
 
     /// <summary>
@@ -63,16 +76,17 @@ public class SaveRedactedVersionDialogViewModel : ReactiveObject
         // Browse command - will be handled by view to open file picker
         BrowseCommand = ReactiveCommand.Create<string?>(() => null);
 
-        // Save command - enabled only when path is valid
-        var canSave = this.WhenAnyValue(
-            x => x.SaveFilePath,
-            path => !string.IsNullOrWhiteSpace(path) && IsValidPath(path));
-
-        SaveCommand = ReactiveCommand.Create<string?>(() => SaveFilePath, canSave);
+        // Save command - enabled only when path is valid. Seed the subject with
+        // the initial path's validity so the button reflects state immediately.
+        _canSave = new BehaviorSubject<bool>(IsSavePathValid(_saveFilePath));
+        SaveCommand = ReactiveCommand.Create<string?>(() => SaveFilePath, _canSave);
 
         // Cancel command - always enabled
         CancelCommand = ReactiveCommand.Create<string?>(() => null);
     }
+
+    private bool IsSavePathValid(string? path)
+        => !string.IsNullOrWhiteSpace(path) && IsValidPath(path);
 
     private bool IsValidPath(string path)
     {

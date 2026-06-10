@@ -72,10 +72,10 @@ public sealed class ThumbnailCacheService : IDisposable
     /// disposal (this was the cause of the "app ended unexpectedly while
     /// scrolling thumbnails" crash).
     /// </summary>
-    public Task<SKBitmap?> GetThumbnailAsync(int pageIndex,
+    public async Task<SKBitmap?> GetThumbnailAsync(int pageIndex,
         CancellationToken cancellationToken = default)
     {
-        if (_disposed) return Task.FromResult<SKBitmap?>(null);
+        if (_disposed) return null;
 
         Task<SKBitmap?> master;
         lock (_lock)
@@ -85,20 +85,41 @@ public sealed class ThumbnailCacheService : IDisposable
                 master = Task.Run(() => LoadOrRender(pageIndex, cancellationToken),
                     cancellationToken);
                 _inFlight[pageIndex] = master;
+                _ = master.ContinueWith(
+                    _ =>
+                    {
+                        lock (_lock)
+                        {
+                            if (_inFlight.TryGetValue(pageIndex, out var current) &&
+                                ReferenceEquals(current, master))
+                            {
+                                _inFlight.Remove(pageIndex);
+                            }
+                        }
+                    },
+                    CancellationToken.None,
+                    TaskContinuationOptions.ExecuteSynchronously,
+                    TaskScheduler.Default);
             }
         }
 
         // Hand each caller a freshly-copied SKBitmap so disposes don't
         // alias. The master result will be GC'd / finalised once the
         // last reference (this Task chain) is dropped.
-        return master.ContinueWith(t =>
+        try
         {
-            if (t.Status != TaskStatus.RanToCompletion) return null;
-            var src = t.Result;
+            var src = await master.WaitAsync(cancellationToken).ConfigureAwait(false);
             return src?.Copy();
-        }, cancellationToken,
-        TaskContinuationOptions.ExecuteSynchronously,
-        TaskScheduler.Default);
+        }
+        catch (OperationCanceledException)
+        {
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Thumbnail task failed for page {Page}", pageIndex);
+            return null;
+        }
     }
 
     private SKBitmap? LoadOrRender(int pageIndex, CancellationToken ct)

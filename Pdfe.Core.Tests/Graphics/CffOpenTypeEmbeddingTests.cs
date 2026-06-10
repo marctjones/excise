@@ -93,7 +93,9 @@ public class CffOpenTypeEmbeddingTests
         var (_, fontDict) = page.GetFonts().First();
         var descendants = doc.Resolve(fontDict.GetOptional("DescendantFonts")!) as PdfArray;
         var cid = doc.Resolve(descendants![0]) as PdfDictionary;
-        var fd = doc.Resolve(cid.GetOptional("FontDescriptor")!) as PdfDictionary;
+        cid.Should().NotBeNull("CID font dictionary should be present");
+        var fd = doc.Resolve(cid!.GetOptional("FontDescriptor")!) as PdfDictionary;
+        fd.Should().NotBeNull("CFF font descriptor should be present");
         var ff3Stream = doc.Resolve(fd!.GetOptional("FontFile3")!) as PdfStream;
 
         // PdfStream is a PdfDictionary, so we can call GetNameOrNull directly on it.

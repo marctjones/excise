@@ -1,6 +1,7 @@
 using Xunit;
 using AwesomeAssertions;
 using PdfEditor.Services;
+using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -198,5 +199,54 @@ public class RecentFilesPinTests
 
         // Should return a valid collection (possibly empty if file doesn't exist)
         result.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void SaveLoad_RoundTripsPinnedEntriesWithGeneratedJsonContext()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "pdfe-recent-files-" + Guid.NewGuid().ToString("N"));
+        var existingFile = Path.Combine(root, "existing.pdf");
+        var missingFile = Path.Combine(root, "missing.pdf");
+
+        try
+        {
+            AppPaths.OverrideForTests(root);
+            Directory.CreateDirectory(root);
+            File.WriteAllText(existingFile, "%PDF test");
+
+            var service = new RecentFilesService(NullLogger<RecentFilesService>.Instance);
+            var entries = new ObservableCollection<RecentFilesService.RecentFileEntry>
+            {
+                new()
+                {
+                    Path = existingFile,
+                    IsPinned = true,
+                    LastAccessedUtc = new DateTime(2026, 1, 2, 3, 4, 5, DateTimeKind.Utc)
+                },
+                new()
+                {
+                    Path = missingFile,
+                    IsPinned = false,
+                    LastAccessedUtc = new DateTime(2026, 1, 1, 3, 4, 5, DateTimeKind.Utc)
+                }
+            };
+
+            service.Save(entries);
+
+            var reloaded = service.Load();
+
+            reloaded.Should().ContainSingle();
+            reloaded[0].Path.Should().Be(existingFile);
+            reloaded[0].IsPinned.Should().BeTrue();
+            reloaded[0].LastAccessedUtc.Should().Be(new DateTime(2026, 1, 2, 3, 4, 5, DateTimeKind.Utc));
+        }
+        finally
+        {
+            AppPaths.Reset();
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
     }
 }

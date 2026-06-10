@@ -70,18 +70,40 @@ public sealed class IsartorRoundTripTests
     private static IEnumerable<object[]> Discover()
     {
         var root = LocateRepoRoot();
-        if (root == null) yield break;
+        if (root == null)
+        {
+            yield return new object[] { SentinelNoCorpus };
+            yield break;
+        }
+
         var corpus = Path.Combine(root, "test-pdfs", "isartor");
-        if (!Directory.Exists(corpus)) yield break;
+        if (!Directory.Exists(corpus))
+        {
+            yield return new object[] { SentinelNoCorpus };
+            yield break;
+        }
+
+        var foundAny = false;
         foreach (var pdf in Directory.EnumerateFiles(corpus, "*.pdf", SearchOption.AllDirectories)
                                      .OrderBy(p => p))
+        {
+            foundAny = true;
             yield return new object[] { Path.GetRelativePath(root, pdf) };
+        }
+
+        if (!foundAny)
+        {
+            yield return new object[] { SentinelNoCorpus };
+        }
     }
 
     [Theory]
     [MemberData(nameof(IsartorPdfs))]
     public void RoundTripsThroughWriter(string relativePath)
     {
+        Assert.SkipWhen(relativePath == SentinelNoCorpus,
+            "No Isartor corpus found at test-pdfs/isartor/. Run scripts/download-test-pdfs.sh to populate it.");
+
         var root = LocateRepoRoot()
             ?? throw new InvalidOperationException("Could not find repo root");
         var pdfPath = Path.Combine(root, relativePath);
@@ -201,4 +223,6 @@ public sealed class IsartorRoundTripTests
         }
         return null;
     }
+
+    private const string SentinelNoCorpus = "<no-corpus-downloaded>";
 }

@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using PdfEditor.Services;
 
 namespace PdfEditor.ViewModels;
 
@@ -53,12 +54,11 @@ public sealed class AboutWindowViewModel
         if (stream == null) return null;
         using var reader = new StreamReader(stream);
         var json = reader.ReadToEnd();
-        var opts = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        };
-        return JsonSerializer.Deserialize<LicenseManifest>(json, opts);
+        // The manifest's property names are mapped explicitly with
+        // [JsonPropertyName], so the source-generated context matches them
+        // without the reflection-based case-insensitive fallback. (The old
+        // WhenWritingNull option only affected writes; this path is read-only.)
+        return JsonSerializer.Deserialize(json, PdfeJsonContext.Default.LicenseManifest);
     }
 }
 

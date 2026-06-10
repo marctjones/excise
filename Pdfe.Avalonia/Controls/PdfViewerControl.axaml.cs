@@ -12,6 +12,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Pdfe.Core.Document;
 using Pdfe.Core.Text;
 using Pdfe.Rendering;
@@ -268,6 +269,7 @@ public partial class PdfViewerControl : UserControl
     {
         InitializeComponent();
         _renderer = new SkiaRenderer();
+        DetachedFromVisualTree += OnDetachedFromVisualTreeHandler;
 
         // Subscribe to property changes
         DocumentProperty.Changed.AddClassHandler<PdfViewerControl>((control, e) =>
@@ -304,6 +306,22 @@ public partial class PdfViewerControl : UserControl
                 control.ViewMode = PdfViewMode.SinglePage;
             }
         });
+    }
+
+    private void OnDetachedFromVisualTreeHandler(object? sender, VisualTreeAttachmentEventArgs e)
+    {
+        _viewportSubscription?.Dispose();
+        _viewportSubscription = null;
+        _continuousOffsetSubscription?.Dispose();
+        _continuousOffsetSubscription = null;
+        _continuousViewportSubscription?.Dispose();
+        _continuousViewportSubscription = null;
+
+        if (_continuousItems != null)
+        {
+            _continuousItems.ContainerPrepared -= OnContinuousContainerPrepared;
+            _continuousItems.ContainerClearing -= OnContinuousContainerClearing;
+        }
     }
 
     /// <summary>An interaction mode that draws/edits and therefore needs single-page layout.</summary>
@@ -632,6 +650,12 @@ public partial class PdfViewerControl : UserControl
     /// </summary>
     public Size GetVisibleViewportSize()
     {
+        if (ViewMode == PdfViewMode.Continuous && _continuousScrollViewer != null)
+        {
+            var cv = _continuousScrollViewer.Viewport;
+            if (cv.Width > 0 && cv.Height > 0) return cv;
+        }
+
         if (_scrollViewer != null)
         {
             var v = _scrollViewer.Viewport;
@@ -645,6 +669,8 @@ public partial class PdfViewerControl : UserControl
 
     private Size _lastReportedViewport;
     private IDisposable? _viewportSubscription;
+    private IDisposable? _continuousOffsetSubscription;
+    private IDisposable? _continuousViewportSubscription;
 
     private void OnScrollViewerViewportChanged(Size newViewport)
     {
@@ -653,6 +679,15 @@ public partial class PdfViewerControl : UserControl
             Math.Abs(newViewport.Height - _lastReportedViewport.Height) < 0.5) return;
         _lastReportedViewport = newViewport;
         VisibleViewportChanged?.Invoke(this, newViewport);
+    }
+
+    private void ReportActiveViewport()
+    {
+        var viewport = GetVisibleViewportSize();
+        if (viewport.Width > 0 && viewport.Height > 0)
+        {
+            OnScrollViewerViewportChanged(viewport);
+        }
     }
 
     private void OnZoomLevelChanged()
@@ -741,6 +776,17 @@ public partial class PdfViewerControl : UserControl
     {
         if (Document != null && CurrentPage >= 1 && CurrentPage <= Document.PageCount)
         {
+            if (ViewMode == PdfViewMode.Continuous)
+            {
+                if (!_syncingPageFromScroll)
+                {
+                    ScrollToPageContinuous(CurrentPage);
+                }
+
+                PageChanged?.Invoke(this, new PageChangedEventArgs(CurrentPage));
+                return;
+            }
+
             // Drop selection state from the previous page — the cached
             // letters won't match the new page's geometry and we'd
             // otherwise hit-test against stale glyphs.

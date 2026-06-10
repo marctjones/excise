@@ -64,9 +64,12 @@ public partial class PdfViewerControl
         }
         if (_continuousScrollViewer != null)
         {
-            _continuousScrollViewer
+            _continuousOffsetSubscription = _continuousScrollViewer
                 .GetObservable(ScrollViewer.OffsetProperty)
                 .Subscribe(new AnonymousObserver<Vector>(_ => OnContinuousScrolled()));
+            _continuousViewportSubscription = _continuousScrollViewer
+                .GetObservable(ScrollViewer.ViewportProperty)
+                .Subscribe(new AnonymousObserver<Size>(OnScrollViewerViewportChanged));
         }
     }
 
@@ -79,12 +82,14 @@ public partial class PdfViewerControl
         if (continuous)
         {
             RebuildContinuous();
+            ReportActiveViewport();
             // Defer the scroll-to until the items panel has measured the slots.
             int target = CurrentPage;
             Dispatcher.UIThread.Post(() => ScrollToPageContinuous(target), DispatcherPriority.Background);
         }
         else
         {
+            ReportActiveViewport();
             // Back to single-page: make sure the current page is rendered.
             _ = RenderCurrentPageAsync();
         }

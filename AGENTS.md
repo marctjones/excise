@@ -1,6 +1,6 @@
 # Agent Instructions
 
-This is a cross-platform PDF editor (C# / .NET 8 / Avalonia, MVVM). Full guidance
+This is a cross-platform PDF editor (C# / .NET 10 / Avalonia, MVVM). Full guidance
 for AI assistants lives in [`CLAUDE.md`](CLAUDE.md); read it first.
 
 ## Task tracking

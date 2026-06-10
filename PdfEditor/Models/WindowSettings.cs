@@ -55,7 +55,7 @@ public class WindowSettings
             if (File.Exists(SettingsPath))
             {
                 var json = File.ReadAllText(SettingsPath);
-                var settings = JsonSerializer.Deserialize<WindowSettings>(json);
+                var settings = JsonSerializer.Deserialize(json, PdfeJsonContext.Default.WindowSettings);
                 if (settings != null)
                 {
                     // Drop document states whose file is gone. A stale entry
@@ -88,9 +88,9 @@ public class WindowSettings
     {
         try
         {
-            // AppPaths.ConfigDir ensures directory exists
-            var options = new JsonSerializerOptions { WriteIndented = true };
-            var json = JsonSerializer.Serialize(this, options);
+            // AppPaths.ConfigDir ensures directory exists. WriteIndented comes
+            // from PdfeJsonContext's [JsonSourceGenerationOptions].
+            var json = JsonSerializer.Serialize(this, PdfeJsonContext.Default.WindowSettings);
             File.WriteAllText(SettingsPath, json);
         }
         catch

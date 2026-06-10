@@ -18,9 +18,9 @@ Pdfe is a complete, native .NET PDF solution designed from first principles base
 ```
 Pdfe.Core           - PDF parsing, document model, modification, writing
 Pdfe.Rendering      - Page rendering to images (SkiaSharp)
-Pdfe.Operations     - High-level operations (redaction, merge, split, etc.)
+Pdfe.Core/Operations - High-level operations that are implemented in this repo
 Pdfe.Cli            - Command-line tools
-Pdfe.Gui            - Desktop application (Avalonia)
+PdfEditor           - Desktop application (Avalonia)
 ```
 
 ---
@@ -220,34 +220,35 @@ ShadingRenderer     - Renders shading patterns
 
 ---
 
-## Pdfe.Operations Architecture
+## Operations Architecture
 
-High-level operations built on Pdfe.Core:
+High-level operations are currently implemented inside `Pdfe.Core`, not as a
+separate `Pdfe.Operations` assembly:
 
 ```
-Pdfe.Operations.Redaction
-├── TextRedactor    - Redact text by content or area
-├── ImageRedactor   - Redact images
-├── AreaRedactor    - Redact arbitrary areas
-└── RedactionResult - Detailed results
+Pdfe.Core/Operations
+├── PdfRedaction    - High-level redaction operation builder
+├── TextRedactor    - Text redaction helper
+└── RedactionResult - Detailed redaction results
 
-Pdfe.Operations.Manipulation
-├── PageMerger      - Merge pages from multiple documents
-├── PageSplitter    - Split document into pages
-├── PageRotator     - Rotate pages
-└── PageExtractor   - Extract page ranges
+Pdfe.Core/Text/Segmentation
+├── GlyphRemover          - Glyph-level content removal orchestrator
+├── LetterFinder          - Maps extracted letters back to content operations
+├── OperationReconstructor - Rebuilds text operations after removal
+├── ImageRedactor         - Removes intersecting image operations
+└── PdfPage/PdfDocument redaction extension methods
 
-Pdfe.Operations.Security
-├── Encryptor       - Add encryption
-├── Decryptor       - Remove encryption
-├── Signer          - Digital signatures
-└── Sanitizer       - Remove metadata/history
-
-Pdfe.Operations.Validation
-├── PdfAValidator   - PDF/A compliance checking
-├── StructureValidator - Document structure validation
-└── ContentValidator   - Content stream validation
+PdfEditor/Services
+├── RedactionService                   - GUI redaction orchestration
+├── SignatureVerificationService       - ByteRange/CMS signature inspection using BouncyCastle
+├── SignatureVerificationWorkflowService - Dialog-oriented signature workflow orchestration
+├── SignatureVerificationSummaryFormatter - User-facing signature result text
+└── IUserDialogService                 - UI/test boundary for message dialogs
 ```
+
+PDF encryption reading is implemented in `Pdfe.Core/Security`. Encryption
+authoring, PDF/A validation, and PDF signing are not implemented in the current
+codebase.
 
 ---
 
@@ -426,26 +427,13 @@ bitmap.Encode(stream, SKEncodedImageFormat.Png, 100);
 
 ---
 
-## Migration Path
+## Migration Status
 
-### Phase 1: Content Stream Infrastructure
-1. Extract content stream parsing from TextExtractor
-2. Create ContentOperator and ContentStream types
-3. Create ContentStreamWriter
-
-### Phase 2: Document Modification
-1. Enhance PdfPage.SetContentStream to work with ContentStream
-2. Add support for adding/removing page resources
-3. Add support for modifying annotations
-
-### Phase 3: Operations
-1. Implement Pdfe.Operations.Redaction using Pdfe.Core
-2. Implement Pdfe.Operations.Manipulation
-
-### Phase 4: Cleanup
-1. Remove PdfEditor.Redaction (old library)
-2. Remove PdfPig, PDFsharp dependencies
-3. Migrate GUI to use Pdfe.Operations
+The v2.0 pure-.NET migration is complete for the current application stack:
+redaction, rendering, text extraction, form handling, and CLI flows use the
+pdfe-owned libraries in this repository. Legacy PdfPig/PDFsharp/PDFtoImage
+dependencies have been removed. Remaining gaps should be tracked as GitHub
+Issues rather than described here as a planned migration path.
 
 ---
 

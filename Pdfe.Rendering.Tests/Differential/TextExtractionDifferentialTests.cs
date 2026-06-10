@@ -83,6 +83,10 @@ public sealed class TextExtractionDifferentialTests
             "pdfe extracts only the page title and skips form-field labels + body text. " +
             "Form fields' /V values aren't routed through the text extractor for this " +
             "AcroForm, even though IncludeFormFieldValues defaults to true.",
+        ["test-pdfs/smoke/state-ds11-passport.pdf"] =
+            "Issue #445: pdfe text extraction diverges from mutool on the DS-11 " +
+            "passport form, starting with USCIS registration content instead of the " +
+            "visible Department of State application title.",
     };
 
     public static IEnumerable<object[]> CorpusPdfs() => Discover();
@@ -90,13 +94,27 @@ public sealed class TextExtractionDifferentialTests
     internal static IEnumerable<object[]> Discover()
     {
         var root = LocateRepoRoot();
-        if (root == null) yield break;
+        if (root == null)
+        {
+            yield return new object[] { SentinelNoCorpus };
+            yield break;
+        }
+
+        var foundAny = false;
         foreach (var sub in GatingCorpusDirectories)
         {
             var dir = Path.Combine(root, sub);
             if (!Directory.Exists(dir)) continue;
             foreach (var pdf in Directory.EnumerateFiles(dir, "*.pdf").OrderBy(p => p))
+            {
+                foundAny = true;
                 yield return new object[] { Path.GetRelativePath(root, pdf) };
+            }
+        }
+
+        if (!foundAny)
+        {
+            yield return new object[] { SentinelNoCorpus };
         }
     }
 
@@ -104,6 +122,9 @@ public sealed class TextExtractionDifferentialTests
     [MemberData(nameof(CorpusPdfs))]
     public void TextMatchesMutool(string relativePath)
     {
+        Assert.SkipWhen(relativePath == SentinelNoCorpus,
+            "No smoke corpus found at test-pdfs/smoke/. Run scripts/download-smoke-corpus.sh to populate it.");
+
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable,
             "mutool not on PATH — install mupdf-tools");
 
@@ -212,4 +233,6 @@ public sealed class TextExtractionDifferentialTests
         }
         return null;
     }
+
+    private const string SentinelNoCorpus = "<no-corpus-downloaded>";
 }

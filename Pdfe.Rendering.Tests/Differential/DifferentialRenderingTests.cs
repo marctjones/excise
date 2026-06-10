@@ -105,6 +105,10 @@ public sealed class DifferentialRenderingTests
             "Image XObject not rendered: page 1's American-flag illustration is missing.",
         ["test-pdfs/smoke/state-ds82-passport-renewal.pdf"] =
             "Sub-pixel AA + form-field hinting drift on small body text exceeds gate.",
+        ["test-pdfs/smoke/state-ds11-passport.pdf#1"] =
+            "Issue #442: DS-11 form color/fill fidelity diverges from MuPDF; pdfe renders some tan/blue bands as dark fills.",
+        ["test-pdfs/smoke/state-ds11-passport.pdf#5"] =
+            "Issue #442: DS-11 form color/fill fidelity diverges from MuPDF; pdfe renders some tan/blue bands as dark fills.",
         ["test-pdfs/smoke/irs-w9.pdf#2"] =
             "Multi-page rendering bug — page 1 agrees with mutool but page 2 (the W-9 instructions) " +
             "diverges materially. Single-page diffs missed this; caught by Layer 5 (multi-page).",
@@ -115,8 +119,13 @@ public sealed class DifferentialRenderingTests
     internal static IEnumerable<object[]> DiscoverPdfs()
     {
         var root = LocateRepoRoot();
-        if (root == null) yield break;
+        if (root == null)
+        {
+            yield return new object[] { SentinelNoCorpus, 1 };
+            yield break;
+        }
 
+        var foundAny = false;
         foreach (var sub in GatingCorpusDirectories)
         {
             var dir = Path.Combine(root, sub);
@@ -124,15 +133,18 @@ public sealed class DifferentialRenderingTests
             foreach (var pdf in Directory.EnumerateFiles(dir, "*.pdf").OrderBy(p => p))
             {
                 var rel = Path.GetRelativePath(root, pdf);
-                // For each PDF, sample multiple pages so multi-page
-                // bugs (the kind page-1-only diff misses) get caught.
-                // Discovering page count for [MemberData] is more
-                // expensive than we want; we hard-emit pages 1/2/5/20
-                // and the test method skips with MISSING_PAGE when the
-                // doc doesn't have them.
-                foreach (var pageNumber in new[] { 1, 2, 5, 20 })
+                var pageCount = TryGetPageCount(pdf);
+                foreach (var pageNumber in SamplePages(pageCount))
+                {
+                    foundAny = true;
                     yield return new object[] { rel, pageNumber };
+                }
             }
+        }
+
+        if (!foundAny)
+        {
+            yield return new object[] { SentinelNoCorpus, 1 };
         }
     }
 
@@ -140,6 +152,9 @@ public sealed class DifferentialRenderingTests
     [MemberData(nameof(CorpusPdfs))]
     public void RendersSimilarlyToMutool(string relativePath, int pageNumber)
     {
+        Assert.SkipWhen(relativePath == SentinelNoCorpus,
+            "No smoke corpus found at test-pdfs/smoke/. Run scripts/download-smoke-corpus.sh to populate it.");
+
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable,
             "mutool not on PATH — install mupdf-tools to run the differential corpus");
 
@@ -243,6 +258,36 @@ public sealed class DifferentialRenderingTests
         }
     }
 
+    private static int? TryGetPageCount(string pdfPath)
+    {
+        try
+        {
+            using var doc = PdfDocument.Open(pdfPath);
+            return doc.PageCount;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static IEnumerable<int> SamplePages(int? pageCount)
+    {
+        if (pageCount is null)
+        {
+            yield return 1;
+            yield break;
+        }
+
+        foreach (var pageNumber in new[] { 1, 2, 5, 20 })
+        {
+            if (pageNumber <= pageCount.Value)
+            {
+                yield return pageNumber;
+            }
+        }
+    }
+
     /// <summary>
     /// Walk up from the test assembly's directory to the project root
     /// (where pdfe.sln lives). Tests are otherwise unaware of where on
@@ -259,4 +304,6 @@ public sealed class DifferentialRenderingTests
         }
         return null;
     }
+
+    private const string SentinelNoCorpus = "<no-corpus-downloaded>";
 }

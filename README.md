@@ -55,7 +55,7 @@ Build the packages locally with `dotnet pack -c Release` (they are also attached
 - **AcroForm editing** — click any text/checkbox/dropdown widget and edit inline; save to keep the values interactive or flatten to bake them in
 - **AcroForm authoring** — drag-rect on a page to create new fields (Text / Checkbox / Choice / Signature); auto-detect underline placeholders and empty squares as fields
 - Reveal Hidden Text — yellow highlights for structural detections (text covered by rectangles), orange for differential-OCR recoveries (text inside rasterized images)
-- Digital signature verification
+- Digital signature inspection — verifies embedded CMS signature bytes against the PDF ByteRange digest and clearly reports current OS trust-chain validation limitations
 - Bates numbering
 - Roslyn-based GUI scripting for automation
 
@@ -266,7 +266,7 @@ pdfe ocr scan.pdf
 ### Permissive third-party deps
 - **SkiaSharp 2.88.x** (MIT) — 2D graphics
 - **Clipper2** (BSL 1.0) — Polygon clipping for redaction geometry
-- **Portable.BouncyCastle** (MIT) — Cryptography for signature verification
+- **BouncyCastle.Cryptography** (MIT) — CMS cryptography for digital-signature inspection
 - **Microsoft.CodeAnalysis.CSharp.Scripting** (MIT) — Roslyn scripting for GUI automation
 
 No copyleft obligations. No PDFium / PDFsharp / PdfPig / Tesseract.NET — all dropped in v2.0.
@@ -301,15 +301,16 @@ pdfe/
 ├── PdfEditor/                       # Desktop GUI
 │   ├── Controls/PdfViewerControl    # Reusable Avalonia PDF viewer (annotations, links, form-field overlay)
 │   ├── Models/                      # HiddenTextHighlight, etc.
-│   ├── Services/                    # 7 services on Pdfe.Core / Pdfe.Rendering
+│   ├── Services/                    # App services on Pdfe.Core / Pdfe.Rendering
 │   ├── ViewModels/
 │   └── Views/
 │
-├── Pdfe.Core.Tests/                 # ~2500 tests
-├── Pdfe.Rendering.Tests/            # ~265 tests, including visual baselines + corpus
+├── Pdfe.Core.Tests/                 # ~2880 tests
+├── Pdfe.Rendering.Tests/            # ~287 tests, including visual baselines + corpus
+├── Pdfe.Avalonia.Tests/             # public API and viewer utility tests
 ├── Pdfe.Cli.Tests/                  # 22 tests
 ├── Pdfe.Ocr.Tests/                  # 41 tests (some require tesseract)
-├── PdfEditor.Tests/                 # ~745 tests, including headless GUI
+├── PdfEditor.Tests/                 # ~775 tests, including headless GUI
 └── test-pdfs/                       # Smoke corpus + sample PDFs
 ```
 
@@ -328,13 +329,14 @@ dotnet test --logger "console;verbosity=detailed"
 ```
 
 **Test counts (v2.1):**
-- Pdfe.Core.Tests: ~2500 passing, 2 skipped
-- Pdfe.Rendering.Tests: ~265 passing
+- Pdfe.Core.Tests: 2,881 passing, 42 skipped
+- Pdfe.Rendering.Tests: 287 passing, 5 skipped
+- Pdfe.Avalonia.Tests: 7 passing
 - Pdfe.Cli.Tests: 22 passing
-- Pdfe.Ocr.Tests: ~41 passing (some require `tesseract`)
-- PdfEditor.Tests: ~745 passing, 14 skipped (Avalonia headless harness limits)
+- Pdfe.Ocr.Tests: 41 passing, 5 skipped (some require `tesseract`)
+- PdfEditor.Tests: 775 passing, 6 skipped (Avalonia headless harness limits)
 
-**Total: ~3,500+ tests, 0 failing.** `Pdfe.Core` line coverage is at 94.3% with a 94% CI gate.
+**Total: 4,013 passing, 58 skipped, 0 failing.** `Pdfe.Core` line coverage is at 94.3% with a 94% CI gate.
 
 Test categories:
 - Unit tests — primitives, parser, content streams, segmentation, coordinate math

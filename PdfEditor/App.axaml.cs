@@ -133,9 +133,6 @@ public partial class App : Application
         // Explicitly register ILoggerFactory as singleton (required by RedactionService)
         services.AddSingleton<ILoggerFactory, LoggerFactory>();
 
-        // Simple brush converter for status indicators
-        services.AddSingleton<IBrushConverter, SimpleBooleanToBrushConverter>();
-
         // Register services
         services.AddSingleton<PdfDocumentService>();
         services.AddSingleton<PdfRenderService>();
@@ -143,7 +140,10 @@ public partial class App : Application
         services.AddSingleton<PdfTextExtractionService>();
         services.AddSingleton<PdfSearchService>();
         services.AddSingleton<SignatureVerificationService>();
+        services.AddSingleton<SignatureVerificationSummaryFormatter>();
+        services.AddSingleton<SignatureVerificationWorkflowService>();
         services.AddSingleton<FilenameSuggestionService>();
+        services.AddSingleton<IUserDialogService, AvaloniaUserDialogService>();
 
         // Register ViewModels
         services.AddTransient<MainWindowViewModel>();
@@ -151,28 +151,9 @@ public partial class App : Application
         var tempProvider = services.BuildServiceProvider();
         var logger = tempProvider.GetRequiredService<ILogger<App>>();
         logger.LogInformation("Dependency injection container configured");
-        logger.LogInformation("Services registered: PdfDocumentService, PdfRenderService, RedactionService, PdfTextExtractionService");
+        logger.LogInformation(
+            "Services registered: PdfDocumentService, PdfRenderService, RedactionService, PdfTextExtractionService, PdfSearchService, SignatureVerificationService");
         logger.LogInformation("Logging level set to: INFO");
-    }
-}
-
-public interface IBrushConverter
-{
-    IBrush Convert(bool value, string parameters);
-}
-
-public class SimpleBooleanToBrushConverter : IBrushConverter
-{
-    public IBrush Convert(bool value, string parameters)
-    {
-        if (string.IsNullOrWhiteSpace(parameters))
-            return value ? Brushes.Green : Brushes.Transparent;
-
-        var parts = parameters.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        var falseBrush = parts.Length > 0 ? parts[0] : "Transparent";
-        var trueBrush = parts.Length > 1 ? parts[1] : "Green";
-
-        return value ? Brush.Parse(trueBrush) : Brush.Parse(falseBrush);
     }
 }
 
@@ -197,6 +178,6 @@ public class BooleanToBrushConverter : Avalonia.Data.Converters.IValueConverter
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture)
     {
-        throw new NotImplementedException();
+        return AvaloniaProperty.UnsetValue;
     }
 }

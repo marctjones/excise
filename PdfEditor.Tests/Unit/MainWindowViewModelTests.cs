@@ -2,6 +2,7 @@ using Avalonia;
 using AwesomeAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Pdfe.Avalonia.Controls;
 using PdfEditor.Services;
 using PdfEditor.ViewModels;
 using System;
@@ -752,6 +753,84 @@ public class MainWindowViewModelTests
     public void VerifySignaturesCommand_IsNotNull()
     {
         _viewModel.VerifySignaturesCommand.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void ToggleContinuousViewCommand_TogglesViewMode()
+    {
+        _viewModel.ViewMode.Should().Be(PdfViewMode.SinglePage);
+        _viewModel.IsContinuousView.Should().BeFalse();
+
+        _viewModel.ToggleContinuousViewCommand.Execute().Subscribe();
+
+        _viewModel.ViewMode.Should().Be(PdfViewMode.Continuous);
+        _viewModel.IsContinuousView.Should().BeTrue();
+
+        _viewModel.ToggleContinuousViewCommand.Execute().Subscribe();
+
+        _viewModel.ViewMode.Should().Be(PdfViewMode.SinglePage);
+        _viewModel.IsContinuousView.Should().BeFalse();
+    }
+
+    [Fact]
+    public void EnteringEditingMode_LeavesContinuousView()
+    {
+        _viewModel.ViewMode = PdfViewMode.Continuous;
+
+        _viewModel.IsRedactionMode = true;
+
+        _viewModel.ViewMode.Should().Be(PdfViewMode.SinglePage);
+        _viewModel.IsContinuousView.Should().BeFalse();
+    }
+
+    [Fact]
+    public void SignatureVerificationSummaryFormatter_IncludesCurrentVerificationScope()
+    {
+        var results = new List<SignatureVerificationResult>
+        {
+            new()
+            {
+                SignatureName = "Approval",
+                IsValid = true,
+                SignedBy = "CN=Jane Doe",
+                ByteRangeIntegrityChecked = true,
+                ByteRangeIntegrityValid = true,
+                CoversWholeDocument = true,
+                StatusMessage = "Signature is cryptographically valid and ByteRange digest matches"
+            }
+        };
+
+        var summary = new SignatureVerificationSummaryFormatter().Format(results);
+
+        summary.Should().Contain("Signature: Approval");
+        summary.Should().Contain("CMS signature check: passed");
+        summary.Should().Contain("Signer: CN=Jane Doe");
+        summary.Should().Contain("Signing time: not extracted");
+        summary.Should().Contain("Document byte-range integrity: passed");
+        summary.Should().Contain("Covers whole document: yes");
+        summary.Should().Contain("Certificate trust chain: not evaluated by the OS trust store.");
+    }
+
+    [Fact]
+    public void SignatureVerificationSummaryFormatter_UsesUnknownForMissingSignatureMetadata()
+    {
+        var results = new List<SignatureVerificationResult>
+        {
+            new()
+            {
+                IsValid = false,
+                StatusMessage = "Invalid or missing ByteRange"
+            }
+        };
+
+        var summary = new SignatureVerificationSummaryFormatter().Format(results);
+
+        summary.Should().Contain("Signature: unknown");
+        summary.Should().Contain("CMS signature check: failed");
+        summary.Should().Contain("Signer: unknown");
+        summary.Should().Contain("Details: Invalid or missing ByteRange");
+        summary.Should().Contain("Document byte-range integrity: not checked");
+        summary.Should().Contain("Covers whole document: no");
     }
 
     [Fact]

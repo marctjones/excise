@@ -78,6 +78,16 @@ public sealed class RedactionRoundTripTests
         // pass.
         ["test-pdfs/smoke/irs-1040.pdf"] =
             "RedactText('instructions') reported 23 matches but at least one survived save+reopen.",
+        ["test-pdfs/smoke/irs-w4.pdf"] =
+            "Issue #443: RedactText('withholding') reported 32 matches but at least one survived save+reopen.",
+        ["test-pdfs/smoke/irs-1040-instructions.pdf"] =
+            "Issue #443: RedactText('proofs') reported 252 matches but at least one survived save+reopen.",
+        ["test-pdfs/smoke/irs-pub509-2026.pdf"] =
+            "Issue #443: RedactText('Quarter') reported 73 matches but at least one survived save+reopen.",
+        ["test-pdfs/smoke/state-ds82-passport-renewal.pdf"] =
+            "Issue #443: RedactText('Department') reported 4 matches but at least one survived save+reopen.",
+        ["test-pdfs/smoke/scotus-trump-v-anderson.pdf"] =
+            "Issue #443: RedactText('Colorado') reported 27 matches but at least one survived save+reopen.",
         ["test-pdfs/smoke/scotus-trump-v-us.pdf"] =
             "RedactText('immunity') reported 205 matches but at least one survived save+reopen.",
         ["test-pdfs/smoke/cdc-vis-covid-19.pdf"] =
@@ -89,13 +99,27 @@ public sealed class RedactionRoundTripTests
     internal static IEnumerable<object[]> Discover()
     {
         var root = LocateRepoRoot();
-        if (root == null) yield break;
+        if (root == null)
+        {
+            yield return new object[] { SentinelNoCorpus };
+            yield break;
+        }
+
+        var foundAny = false;
         foreach (var sub in GatingCorpusDirectories)
         {
             var dir = Path.Combine(root, sub);
             if (!Directory.Exists(dir)) continue;
             foreach (var pdf in Directory.EnumerateFiles(dir, "*.pdf").OrderBy(p => p))
+            {
+                foundAny = true;
                 yield return new object[] { Path.GetRelativePath(root, pdf) };
+            }
+        }
+
+        if (!foundAny)
+        {
+            yield return new object[] { SentinelNoCorpus };
         }
     }
 
@@ -103,6 +127,9 @@ public sealed class RedactionRoundTripTests
     [MemberData(nameof(CorpusPdfs))]
     public void RedactedWordIsGoneAfterSaveAndReopen(string relativePath)
     {
+        Assert.SkipWhen(relativePath == SentinelNoCorpus,
+            "No smoke corpus found at test-pdfs/smoke/. Run scripts/download-smoke-corpus.sh to populate it.");
+
         var root = LocateRepoRoot()!;
         var pdfPath = Path.Combine(root, relativePath);
         var pdfBytes = File.ReadAllBytes(pdfPath);
@@ -244,4 +271,6 @@ public sealed class RedactionRoundTripTests
         }
         return null;
     }
+
+    private const string SentinelNoCorpus = "<no-corpus-downloaded>";
 }

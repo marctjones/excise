@@ -188,8 +188,8 @@ public class StatePersistenceTests
         settings.UpdateDocumentState("/tmp/doc2.pdf", 2.0, 20);
 
         // Act
-        var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
-        var restored = JsonSerializer.Deserialize<WindowSettings>(json);
+        var json = JsonSerializer.Serialize(settings, PdfeJsonContext.Default.WindowSettings);
+        var restored = JsonSerializer.Deserialize(json, PdfeJsonContext.Default.WindowSettings);
 
         // Assert
         restored.Should().NotBeNull();

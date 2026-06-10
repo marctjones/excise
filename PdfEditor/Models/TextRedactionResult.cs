@@ -5,10 +5,9 @@ namespace PdfEditor.Models;
 /// </summary>
 /// <remarks>
 /// Returned by <see cref="Services.RedactionService"/>'s text-search
-/// redaction API. The area-click path on the GUI side uses the richer
-/// <see cref="RedactionResult"/> instead — that one tracks per-operation
-/// counts, this one is just pass/fail plus a match count for the
-/// scripting surface.
+/// redaction API. Area-click redaction mutates the in-memory document and
+/// records removed terms on the service; this file-to-file result is just
+/// pass/fail plus a match count for the scripting surface.
 /// </remarks>
 public sealed record TextRedactionResult(
     bool Success,

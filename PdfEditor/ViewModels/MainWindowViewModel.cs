@@ -32,9 +32,10 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly PdfRenderService _renderService;
     private readonly RedactionService _redactionService;
     private readonly PdfTextExtractionService _textExtractionService;
-    private readonly SignatureVerificationService _signatureService;
+    private readonly SignatureVerificationWorkflowService _signatureWorkflowService;
     private readonly FilenameSuggestionService _filenameSuggestionService;
     private readonly ToastService _toastService;
+    private readonly IUserDialogService _dialogService;
 
     // State managers
     public DocumentStateManager FileState { get; }
@@ -49,6 +50,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private Bitmap? _currentPageImage;
     private PdfCoreDocument? _pdfCoreDocument;
     private int _currentPageIndex;
+    private PdfViewMode _viewMode = PdfViewMode.SinglePage;
     private double _zoomLevel = 1.0;
     private bool _skipZoomSave; // Flag to skip zoom save during auto-reset
     private bool _isRedactionMode;
@@ -99,9 +101,14 @@ public partial class MainWindowViewModel : ViewModelBase
         _redactionService = new RedactionService(Microsoft.Extensions.Logging.Abstractions.NullLogger<RedactionService>.Instance, nullLoggerFactory);
         _textExtractionService = new PdfTextExtractionService(Microsoft.Extensions.Logging.Abstractions.NullLogger<PdfTextExtractionService>.Instance);
         _searchService = new PdfSearchService(Microsoft.Extensions.Logging.Abstractions.NullLogger<PdfSearchService>.Instance);
-        _signatureService = new SignatureVerificationService(Microsoft.Extensions.Logging.Abstractions.NullLogger<SignatureVerificationService>.Instance);
         _filenameSuggestionService = new FilenameSuggestionService();
         _toastService = new ToastService();
+        _dialogService = new NullUserDialogService();
+        _signatureWorkflowService = new SignatureVerificationWorkflowService(
+            new SignatureVerificationService(Microsoft.Extensions.Logging.Abstractions.NullLogger<SignatureVerificationService>.Instance),
+            new SignatureVerificationSummaryFormatter(),
+            _dialogService,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<SignatureVerificationWorkflowService>.Instance);
 
         // Initialize state managers
         FileState = new DocumentStateManager();
@@ -112,58 +119,7 @@ public partial class MainWindowViewModel : ViewModelBase
         PageThumbnails = new ObservableCollection<PageThumbnail>();
         ClipboardHistory = new ObservableCollection<ClipboardEntry>();
 
-        // Commands
-        _logger.LogDebug("Setting up ReactiveUI commands");
-        OpenFileCommand = ReactiveCommand.CreateFromTask(OpenFileAsync);
-        SaveFileCommand = ReactiveCommand.CreateFromTask(SaveFileAsync);
-        RemoveCurrentPageCommand = ReactiveCommand.CreateFromTask(RemoveCurrentPageAsync);
-        AddPagesCommand = ReactiveCommand.CreateFromTask(AddPagesAsync);
-        ToggleRedactionModeCommand = ReactiveCommand.Create(ToggleRedactionMode);
-        ApplyRedactionCommand = ReactiveCommand.CreateFromTask(ApplyRedactionAsync);
-        RemovePendingRedactionCommand = ReactiveCommand.Create<Guid>(RemovePendingRedaction);
-        ClearAllRedactionsCommand = ReactiveCommand.Create(ClearAllRedactions);
-        ApplyAllRedactionsCommand = ReactiveCommand.CreateFromTask(ApplyAllRedactionsAsync);
-
-        ApplyRedactionCommand.ThrownExceptions.Subscribe(ex =>
-            _logger.LogError(ex, "ApplyRedactionCommand threw exception"));
-
-        ToggleTextSelectionModeCommand = ReactiveCommand.Create(ToggleTextSelectionMode);
-        ToggleFormAuthoringModeCommand = ReactiveCommand.Create(() => { IsFormAuthoringMode = !IsFormAuthoringMode; });
-        ToggleOutlineCommand = ReactiveCommand.Create(ToggleOutlineSidebar);
-        ToggleThumbnailsCommand = ReactiveCommand.Create(ToggleThumbnailsSidebar);
-        AutoDetectFieldsCommand = ReactiveCommand.Create(() => AutoDetectAndApplyFormFields());
-        CopyTextCommand = ReactiveCommand.CreateFromTask(CopyTextAsync);
-        ZoomInCommand = ReactiveCommand.Create(ZoomIn);
-        ZoomOutCommand = ReactiveCommand.Create(ZoomOut);
-        NextPageCommand = ReactiveCommand.CreateFromTask(NextPageAsync);
-        PreviousPageCommand = ReactiveCommand.CreateFromTask(PreviousPageAsync);
-        GoToPageCommand = ReactiveCommand.CreateFromTask<int>(GoToPageAsync);
-
-        RotatePageLeftCommand = ReactiveCommand.CreateFromTask(RotatePageLeftAsync);
-        RotatePageRightCommand = ReactiveCommand.CreateFromTask(RotatePageRightAsync);
-        RotatePage180Command = ReactiveCommand.CreateFromTask(RotatePage180Async);
-
-        ZoomActualSizeCommand = ReactiveCommand.Create(ZoomActualSize);
-        ZoomFitWidthCommand = ReactiveCommand.Create(ZoomFitWidth);
-        ZoomFitPageCommand = ReactiveCommand.Create(ZoomFitPage);
-
-        SaveAsCommand = ReactiveCommand.CreateFromTask(SaveAsAsync);
-        CloseDocumentCommand = ReactiveCommand.Create(CloseDocument);
-        ExitCommand = ReactiveCommand.Create(Exit);
-        LoadRecentFileCommand = ReactiveCommand.CreateFromTask<string>(LoadRecentFileAsync);
-
-        ExportCurrentPageCommand = ReactiveCommand.CreateFromTask(ExportCurrentPageAsync);
-        ExportPagesCommand = ReactiveCommand.CreateFromTask(ExportPagesAsync);
-        PrintCommand = ReactiveCommand.CreateFromTask(PrintAsync);
-
-        AboutCommand = ReactiveCommand.Create(ShowAbout);
-        ShowShortcutsCommand = ReactiveCommand.Create(ShowKeyboardShortcuts);
-        ShowDocumentationCommand = ReactiveCommand.Create(ShowDocumentation);
-        VerifySignaturesCommand = ReactiveCommand.CreateFromTask(VerifySignaturesAsync);
-        ShowPreferencesCommand = ReactiveCommand.Create(ShowPreferences);
-
-        InitializeSearchCommands();
-        InitializeScriptingCommands();
+        InitializeCommands();
 
         LoadRecentFiles();
         LoadZoomPreference(); // Issue #32: Persist zoom level
@@ -181,7 +137,10 @@ public partial class MainWindowViewModel : ViewModelBase
         PdfSearchService searchService,
         SignatureVerificationService signatureService,
         FilenameSuggestionService filenameSuggestionService,
-        ToastService toastService)
+        ToastService toastService,
+        SignatureVerificationSummaryFormatter? signatureSummaryFormatter = null,
+        IUserDialogService? dialogService = null,
+        SignatureVerificationWorkflowService? signatureWorkflowService = null)
     {
         _logger = logger;
         _loggerFactory = loggerFactory;
@@ -190,9 +149,15 @@ public partial class MainWindowViewModel : ViewModelBase
         _redactionService = redactionService;
         _textExtractionService = textExtractionService;
         _searchService = searchService;
-        _signatureService = signatureService;
         _filenameSuggestionService = filenameSuggestionService;
         _toastService = toastService;
+        _dialogService = dialogService ?? new NullUserDialogService();
+        _signatureWorkflowService = signatureWorkflowService ?? new SignatureVerificationWorkflowService(
+            signatureService,
+            signatureSummaryFormatter ?? new SignatureVerificationSummaryFormatter(),
+            _dialogService,
+            loggerFactory.CreateLogger<SignatureVerificationWorkflowService>()
+                ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<SignatureVerificationWorkflowService>.Instance);
 
         // Initialize state managers
         FileState = new DocumentStateManager();
@@ -203,8 +168,19 @@ public partial class MainWindowViewModel : ViewModelBase
         PageThumbnails = new ObservableCollection<PageThumbnail>();
         ClipboardHistory = new ObservableCollection<ClipboardEntry>();
 
-        // Commands
+        InitializeCommands();
+
+        // Load recent files and preferences
+        LoadRecentFiles();
+        LoadZoomPreference(); // Issue #32: Persist zoom level
+
+        _logger.LogDebug("MainWindowViewModel initialization complete");
+    }
+
+    private void InitializeCommands()
+    {
         _logger.LogDebug("Setting up ReactiveUI commands");
+
         OpenFileCommand = ReactiveCommand.CreateFromTask(OpenFileAsync);
         SaveFileCommand = ReactiveCommand.CreateFromTask(SaveFileAsync);
         RemoveCurrentPageCommand = ReactiveCommand.CreateFromTask(RemoveCurrentPageAsync);
@@ -215,7 +191,6 @@ public partial class MainWindowViewModel : ViewModelBase
         ClearAllRedactionsCommand = ReactiveCommand.Create(ClearAllRedactions);
         ApplyAllRedactionsCommand = ReactiveCommand.CreateFromTask(ApplyAllRedactionsAsync);
 
-        // Subscribe to ThrownExceptions to prevent command from getting stuck
         ApplyRedactionCommand.ThrownExceptions.Subscribe(ex =>
             _logger.LogError(ex, "ApplyRedactionCommand threw exception"));
 
@@ -223,6 +198,7 @@ public partial class MainWindowViewModel : ViewModelBase
         ToggleFormAuthoringModeCommand = ReactiveCommand.Create(() => { IsFormAuthoringMode = !IsFormAuthoringMode; });
         ToggleOutlineCommand = ReactiveCommand.Create(ToggleOutlineSidebar);
         ToggleThumbnailsCommand = ReactiveCommand.Create(ToggleThumbnailsSidebar);
+        ToggleContinuousViewCommand = ReactiveCommand.Create(ToggleContinuousView);
         AutoDetectFieldsCommand = ReactiveCommand.Create(() => AutoDetectAndApplyFormFields());
         CopyTextCommand = ReactiveCommand.CreateFromTask(CopyTextAsync);
         ZoomInCommand = ReactiveCommand.Create(ZoomIn);
@@ -231,47 +207,31 @@ public partial class MainWindowViewModel : ViewModelBase
         PreviousPageCommand = ReactiveCommand.CreateFromTask(PreviousPageAsync);
         GoToPageCommand = ReactiveCommand.CreateFromTask<int>(GoToPageAsync);
 
-        // Rotation commands
         RotatePageLeftCommand = ReactiveCommand.CreateFromTask(RotatePageLeftAsync);
         RotatePageRightCommand = ReactiveCommand.CreateFromTask(RotatePageRightAsync);
         RotatePage180Command = ReactiveCommand.CreateFromTask(RotatePage180Async);
 
-        // Zoom preset commands
         ZoomActualSizeCommand = ReactiveCommand.Create(ZoomActualSize);
         ZoomFitWidthCommand = ReactiveCommand.Create(ZoomFitWidth);
         ZoomFitPageCommand = ReactiveCommand.Create(ZoomFitPage);
 
-        // File menu commands
         SaveAsCommand = ReactiveCommand.CreateFromTask(SaveAsAsync);
         CloseDocumentCommand = ReactiveCommand.Create(CloseDocument);
         ExitCommand = ReactiveCommand.Create(Exit);
         LoadRecentFileCommand = ReactiveCommand.CreateFromTask<string>(LoadRecentFileAsync);
 
-        // Tools menu commands
         ExportCurrentPageCommand = ReactiveCommand.CreateFromTask(ExportCurrentPageAsync);
         ExportPagesCommand = ReactiveCommand.CreateFromTask(ExportPagesAsync);
         PrintCommand = ReactiveCommand.CreateFromTask(PrintAsync);
+        VerifySignaturesCommand = ReactiveCommand.CreateFromTask(VerifySignaturesAsync);
+        ShowPreferencesCommand = ReactiveCommand.Create(ShowPreferences);
 
-        // Help menu commands
         AboutCommand = ReactiveCommand.Create(ShowAbout);
         ShowShortcutsCommand = ReactiveCommand.Create(ShowKeyboardShortcuts);
         ShowDocumentationCommand = ReactiveCommand.Create(ShowDocumentation);
 
-        // Tools menu commands
-        VerifySignaturesCommand = ReactiveCommand.CreateFromTask(VerifySignaturesAsync);
-        ShowPreferencesCommand = ReactiveCommand.Create(ShowPreferences);
-
-        // Initialize search commands
         InitializeSearchCommands();
-
-        // Initialize scripting commands (for Roslyn automation)
         InitializeScriptingCommands();
-
-        // Load recent files and preferences
-        LoadRecentFiles();
-        LoadZoomPreference(); // Issue #32: Persist zoom level
-
-        _logger.LogDebug("MainWindowViewModel initialization complete");
     }
 
     // Properties
@@ -329,6 +289,31 @@ public partial class MainWindowViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _pdfCoreDocument, value);
     }
 
+    public PdfViewMode ViewMode
+    {
+        get => _viewMode;
+        set
+        {
+            if (_viewMode == value)
+            {
+                return;
+            }
+
+            this.RaiseAndSetIfChanged(ref _viewMode, value);
+            if (value == PdfViewMode.Continuous)
+            {
+                if (_isRedactionMode) IsRedactionMode = false;
+                if (_isTextSelectionMode) IsTextSelectionMode = false;
+                if (_isFormAuthoringMode) IsFormAuthoringMode = false;
+            }
+
+            this.RaisePropertyChanged(nameof(IsContinuousView));
+            this.RaisePropertyChanged(nameof(CurrentModeText));
+        }
+    }
+
+    public bool IsContinuousView => ViewMode == PdfViewMode.Continuous;
+
     public InteractionMode InteractionMode
     {
         get
@@ -354,6 +339,7 @@ public partial class MainWindowViewModel : ViewModelBase
             // Mutually exclusive with redaction / text-selection modes.
             if (value)
             {
+                ViewMode = PdfViewMode.SinglePage;
                 if (_isRedactionMode) IsRedactionMode = false;
                 if (_isTextSelectionMode) IsTextSelectionMode = false;
             }
@@ -780,6 +766,10 @@ public partial class MainWindowViewModel : ViewModelBase
         set
         {
             this.RaiseAndSetIfChanged(ref _isRedactionMode, value);
+            if (value)
+            {
+                ViewMode = PdfViewMode.SinglePage;
+            }
             this.RaisePropertyChanged(nameof(CurrentModeText));
             this.RaisePropertyChanged(nameof(InteractionMode));
             // The right sidebar's panel selector depends on this flag.
@@ -800,6 +790,10 @@ public partial class MainWindowViewModel : ViewModelBase
         set
         {
             this.RaiseAndSetIfChanged(ref _isTextSelectionMode, value);
+            if (value)
+            {
+                ViewMode = PdfViewMode.SinglePage;
+            }
             // Turn off redaction mode when entering text selection mode
             if (value && _isRedactionMode)
                 IsRedactionMode = false;
@@ -955,62 +949,64 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             if (IsRedactionMode) return "🔴 Redaction Mode";
             if (IsTextSelectionMode) return "📝 Text Selection Mode";
+            if (IsContinuousView) return "📜 Continuous Scroll";
             return "👆 View Mode";
         }
     }
 
     // Commands
-    public ReactiveCommand<Unit, Unit> OpenFileCommand { get; }
-    public ReactiveCommand<Unit, Unit> SaveFileCommand { get; }
-    public ReactiveCommand<Unit, Unit> RemoveCurrentPageCommand { get; }
-    public ReactiveCommand<Unit, Unit> AddPagesCommand { get; }
-    public ReactiveCommand<Unit, Unit> ToggleRedactionModeCommand { get; }
-    public ReactiveCommand<Unit, Unit> ApplyRedactionCommand { get; }
-    public ReactiveCommand<Guid, Unit> RemovePendingRedactionCommand { get; }
-    public ReactiveCommand<Unit, Unit> ClearAllRedactionsCommand { get; }
-    public ReactiveCommand<Unit, Unit> ApplyAllRedactionsCommand { get; }
-    public ReactiveCommand<Unit, Unit> ToggleTextSelectionModeCommand { get; }
-    public ReactiveCommand<Unit, Unit> ToggleFormAuthoringModeCommand { get; }
-    public ReactiveCommand<Unit, Unit> ToggleOutlineCommand { get; }
-    public ReactiveCommand<Unit, Unit> ToggleThumbnailsCommand { get; }
-    public ReactiveCommand<Unit, int> AutoDetectFieldsCommand { get; }
-    public ReactiveCommand<Unit, Unit> CopyTextCommand { get; }
-    public ReactiveCommand<Unit, Unit> ZoomInCommand { get; }
-    public ReactiveCommand<Unit, Unit> ZoomOutCommand { get; }
-    public ReactiveCommand<Unit, Unit> NextPageCommand { get; }
-    public ReactiveCommand<Unit, Unit> PreviousPageCommand { get; }
-    public ReactiveCommand<int, Unit> GoToPageCommand { get; }
+    public ReactiveCommand<Unit, Unit> OpenFileCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> SaveFileCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> RemoveCurrentPageCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> AddPagesCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ToggleRedactionModeCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ApplyRedactionCommand { get; private set; } = null!;
+    public ReactiveCommand<Guid, Unit> RemovePendingRedactionCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ClearAllRedactionsCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ApplyAllRedactionsCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ToggleTextSelectionModeCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ToggleFormAuthoringModeCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ToggleOutlineCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ToggleThumbnailsCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ToggleContinuousViewCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, int> AutoDetectFieldsCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> CopyTextCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ZoomInCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ZoomOutCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> NextPageCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> PreviousPageCommand { get; private set; } = null!;
+    public ReactiveCommand<int, Unit> GoToPageCommand { get; private set; } = null!;
     public ReactiveCommand<Models.OutlineNode, Unit> JumpToOutlineCommand =>
         _jumpToOutline ??= ReactiveCommand.Create<Models.OutlineNode>(JumpToOutline);
     private ReactiveCommand<Models.OutlineNode, Unit>? _jumpToOutline;
 
     // Rotation Commands
-    public ReactiveCommand<Unit, Unit> RotatePageLeftCommand { get; }
-    public ReactiveCommand<Unit, Unit> RotatePageRightCommand { get; }
-    public ReactiveCommand<Unit, Unit> RotatePage180Command { get; }
+    public ReactiveCommand<Unit, Unit> RotatePageLeftCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> RotatePageRightCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> RotatePage180Command { get; private set; } = null!;
 
     // Zoom Preset Commands
-    public ReactiveCommand<Unit, Unit> ZoomActualSizeCommand { get; }
-    public ReactiveCommand<Unit, Unit> ZoomFitWidthCommand { get; }
-    public ReactiveCommand<Unit, Unit> ZoomFitPageCommand { get; }
+    public ReactiveCommand<Unit, Unit> ZoomActualSizeCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ZoomFitWidthCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ZoomFitPageCommand { get; private set; } = null!;
 
     // File Menu Commands
-    public ReactiveCommand<Unit, Unit> SaveAsCommand { get; }
-    public ReactiveCommand<Unit, Unit> CloseDocumentCommand { get; }
-    public ReactiveCommand<Unit, Unit> ExitCommand { get; }
-    public ReactiveCommand<string, Unit> LoadRecentFileCommand { get; } = null!;
+    public ReactiveCommand<Unit, Unit> SaveAsCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> CloseDocumentCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ExitCommand { get; private set; } = null!;
+    public ReactiveCommand<string, Unit> LoadRecentFileCommand { get; private set; } = null!;
 
     // Tools Menu Commands
-    public ReactiveCommand<Unit, Unit> ExportCurrentPageCommand { get; }
-    public ReactiveCommand<Unit, Unit> ExportPagesCommand { get; }
-    public ReactiveCommand<Unit, Unit> PrintCommand { get; }
-    public ReactiveCommand<Unit, Unit> VerifySignaturesCommand { get; }
-    public ReactiveCommand<Unit, Unit> ShowPreferencesCommand { get; }
+    public ReactiveCommand<Unit, Unit> ExportCurrentPageCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ExportPagesCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> PrintCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> VerifySignaturesCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ShowPreferencesCommand { get; private set; } = null!;
 
     // Help Menu Commands
-    public ReactiveCommand<Unit, Unit> AboutCommand { get; }
-    public ReactiveCommand<Unit, Unit> ShowShortcutsCommand { get; }
-    public ReactiveCommand<Unit, Unit> ShowDocumentationCommand { get; }
+    public ReactiveCommand<Unit, Unit> AboutCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ShowShortcutsCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ShowDocumentationCommand { get; private set; } = null!;
 
     // Document status property
     public bool IsDocumentLoaded => _documentService.IsDocumentLoaded;
@@ -1456,6 +1452,11 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    private void ToggleContinuousView()
+    {
+        ViewMode = IsContinuousView ? PdfViewMode.SinglePage : PdfViewMode.Continuous;
+    }
+
     private async Task CopyTextAsync()
     {
         _logger.LogInformation("Copy text command triggered");
@@ -1638,14 +1639,14 @@ public partial class MainWindowViewModel : ViewModelBase
         if (RedactionWorkflow.PendingCount == 0)
         {
             _logger.LogWarning("No pending redactions to apply");
-            await ShowMessageDialog("No Redactions", "There are no pending redactions to apply.");
+            await _dialogService.ShowMessageAsync("No Redactions", "There are no pending redactions to apply.");
             return;
         }
 
         if (string.IsNullOrEmpty(_currentFilePath))
         {
             _logger.LogWarning("No document loaded");
-            await ShowMessageDialog("No Document", "Please open a PDF document first.");
+            await _dialogService.ShowMessageAsync("No Document", "Please open a PDF document first.");
             return;
         }
 
@@ -1720,12 +1721,12 @@ public partial class MainWindowViewModel : ViewModelBase
             _logger.LogInformation("Reloading saved document: {Path}", saveFilePath);
             await LoadDocumentAsync(saveFilePath);
 
-            await ShowMessageDialog("Success", $"Redacted PDF saved to:\n{saveFilePath}\n\nOriginal file preserved. Document reloaded.");
+            await _dialogService.ShowMessageAsync("Success", $"Redacted PDF saved to:\n{saveFilePath}\n\nOriginal file preserved. Document reloaded.");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error applying all redactions");
-            await ShowMessageDialog("Error", $"Failed to apply redactions: {ex.Message}");
+            await _dialogService.ShowMessageAsync("Error", $"Failed to apply redactions: {ex.Message}");
         }
     }
 
@@ -2681,13 +2682,13 @@ public partial class MainWindowViewModel : ViewModelBase
         if (!_documentService.IsDocumentLoaded)
         {
             _logger.LogWarning("Cannot print: No document loaded");
+            await _dialogService.ShowMessageAsync("Print", "Open a PDF before printing.");
             return;
         }
 
-        // This would show print dialog
-        // For now, placeholder
-        _logger.LogInformation("Print functionality not yet implemented");
-        await Task.CompletedTask;
+        const string message = "Printing is not available in this build. Use Export Current Page or Export All Pages as Images from the Document menu.";
+        _logger.LogInformation("Print command unavailable: {Message}", message);
+        await _dialogService.ShowMessageAsync("Print", message);
     }
 
     // Help Menu Commands
@@ -2975,40 +2976,7 @@ public partial class MainWindowViewModel : ViewModelBase
     // Signature Verification Command
     private async Task VerifySignaturesAsync()
     {
-        if (!_documentService.IsDocumentLoaded || string.IsNullOrEmpty(_currentFilePath))
-        {
-            _logger.LogWarning("No document loaded for signature verification");
-            return;
-        }
-
-        try
-        {
-            _logger.LogInformation("Verifying digital signatures");
-
-            var results = _signatureService.VerifySignatures(_currentFilePath);
-
-            if (results == null || results.Count == 0)
-            {
-                _logger.LogInformation("No digital signatures found in document");
-                // TODO: Show dialog: "No digital signatures found"
-                return;
-            }
-
-            _logger.LogInformation("Found {SignatureCount} signatures", results.Count);
-
-            // TODO: Show signature verification results dialog
-            foreach (var result in results)
-            {
-                _logger.LogInformation("Signature: Valid={IsValid}, Signer={Signer}, Time={SigningTime}",
-                    result.IsValid, result.SignedBy, result.SigningTime);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error verifying signatures");
-        }
-
-        await Task.CompletedTask;
+        await _signatureWorkflowService.VerifyAsync(_documentService.IsDocumentLoaded, _currentFilePath);
     }
 
     // Preferences Command
@@ -3040,56 +3008,6 @@ public partial class MainWindowViewModel : ViewModelBase
         else
         {
             _logger.LogWarning("Could not find main window to show preferences dialog");
-        }
-    }
-
-    private async Task ShowMessageDialog(string title, string message)
-    {
-        var mainWindow = GetMainWindow();
-        if (mainWindow != null)
-        {
-            // Create a simple dialog window
-            var dialog = new Window
-            {
-                Title = title,
-                Width = 450,
-                Height = 200,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                CanResize = false
-            };
-
-            var panel = new StackPanel
-            {
-                Margin = new Thickness(20),
-                Spacing = 15
-            };
-
-            var messageText = new TextBlock
-            {
-                Text = message,
-                TextWrapping = TextWrapping.Wrap,
-                MaxWidth = 400
-            };
-
-            var okButton = new Button
-            {
-                Content = "OK",
-                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
-                Padding = new Thickness(30, 5),
-                Margin = new Thickness(0, 10, 0, 0)
-            };
-
-            okButton.Click += (s, e) => dialog.Close();
-
-            panel.Children.Add(messageText);
-            panel.Children.Add(okButton);
-            dialog.Content = panel;
-
-            await dialog.ShowDialog(mainWindow);
-        }
-        else
-        {
-            _logger.LogWarning("Could not show message dialog: Main window not found. Message was: {Message}", message);
         }
     }
 

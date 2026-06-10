@@ -35,9 +35,10 @@ public class RecentFilesService
     }
 
     /// <summary>
-    /// JSON wrapper for serialization
+    /// JSON wrapper for serialization. Internal (not private) so the
+    /// source-generated <see cref="PdfeJsonContext"/> can reference it.
     /// </summary>
-    private class RecentFilesData
+    internal sealed class RecentFilesData
     {
         [JsonPropertyName("version")]
         public int Version { get; set; } = 1;
@@ -70,7 +71,7 @@ public class RecentFilesService
             }
 
             var json = File.ReadAllText(_recentFilesPath);
-            var data = JsonSerializer.Deserialize<RecentFilesData>(json);
+            var data = JsonSerializer.Deserialize(json, PdfeJsonContext.Default.RecentFilesData);
 
             if (data?.Entries == null || data.Entries.Count == 0)
             {
@@ -123,10 +124,7 @@ public class RecentFilesService
                 Entries = entries.ToList()
             };
 
-            var json = JsonSerializer.Serialize(data, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
+            var json = JsonSerializer.Serialize(data, PdfeJsonContext.Default.RecentFilesData);
 
             File.WriteAllText(_recentFilesPath, json);
             _logger.LogInformation("Saved {Count} recent files", entries.Count());
