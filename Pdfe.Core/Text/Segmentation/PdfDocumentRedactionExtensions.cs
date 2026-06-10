@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Pdfe.Core.Content;
 using Pdfe.Core.Document;
+using Pdfe.Core.Primitives;
 
 namespace Pdfe.Core.Text.Segmentation;
 
@@ -65,27 +66,58 @@ public static class PdfDocumentRedactionExtensions
         for (int pageNum = 1; pageNum <= document.PageCount; pageNum++)
         {
             var page = document.GetPage(pageNum);
-            var letters = page.Letters;
-            if (letters.Count == 0) continue;
+            string? previousSearchText = null;
+            var usedConservativeFallback = false;
 
-            // Filter letters based on includeHiddenLayers setting
-            var searchLetters = includeHiddenLayers
-                ? letters
-                : letters.Where(l => !l.IsInHiddenOptionalContent).ToList();
-
-            if (searchLetters.Count == 0) continue;
-
-            var matches = FindTextMatches(searchLetters, text, caseSensitive);
-            if (matches.Count == 0) continue;
-
-            foreach (var matchLetters in matches)
+            for (var pass = 0; pass < 10; pass++)
             {
-                var bbox = BoundingBoxOf(matchLetters);
-                page.RedactArea(bbox, strategy);
-                if (drawBlackRect) AppendBlackRectangle(page, bbox);
+                var letters = page.Letters;
+                if (letters.Count == 0) break;
+
+                // Filter letters based on includeHiddenLayers setting
+                var searchLetters = includeHiddenLayers
+                    ? letters
+                    : letters.Where(l => !l.IsInHiddenOptionalContent).ToList();
+
+                if (searchLetters.Count == 0) break;
+
+                var searchTextSnapshot = string.Concat(searchLetters.Select(l => l.Value));
+                var matches = FindTextMatches(searchLetters, text, caseSensitive);
+                if (matches.Count == 0) break;
+
+                var stalled = searchTextSnapshot == previousSearchText;
+                previousSearchText = searchTextSnapshot;
+                if (stalled && usedConservativeFallback)
+                    break;
+
+                foreach (var matchLetters in matches)
+                {
+                    var bbox = BoundingBoxOf(matchLetters);
+                    if (stalled)
+                    {
+                        RemoveIntersectingOperators(page, bbox);
+                    }
+                    else if (IsAcroFormMatch(matchLetters))
+                    {
+                        RedactFormFieldsInArea(page, bbox, text, caseSensitive);
+                    }
+                    else
+                    {
+                        page.RedactArea(bbox, strategy);
+                    }
+
+                    if (drawBlackRect) AppendBlackRectangle(page, bbox);
+                }
+
+                totalMatches += matches.Count;
+                if (stalled)
+                {
+                    usedConservativeFallback = true;
+                }
             }
 
-            totalMatches += matches.Count;
+            totalMatches += RemoveTextShowingOperatorsContaining(page, text, caseSensitive);
+            totalMatches += RemoveTextLinesStillContaining(page, text, caseSensitive, includeHiddenLayers);
         }
 
         return totalMatches;
@@ -101,6 +133,157 @@ public static class PdfDocumentRedactionExtensions
             letters.Min(l => l.GlyphRectangle.Bottom),
             letters.Max(l => l.GlyphRectangle.Right),
             letters.Max(l => l.GlyphRectangle.Top));
+    }
+
+    private static bool IsAcroFormMatch(IReadOnlyList<Letter> letters) =>
+        letters.Count > 0 &&
+        letters.All(l => l.FontName.StartsWith("AcroForm:", StringComparison.Ordinal));
+
+    private static void RemoveIntersectingOperators(PdfPage page, PdfRectangle bounds)
+    {
+        var content = page.GetContentStream();
+        page.SetContentStream(content.RemoveIntersecting(bounds));
+    }
+
+    private static int RemoveTextShowingOperatorsContaining(
+        PdfPage page,
+        string searchText,
+        bool caseSensitive)
+    {
+        var content = page.GetContentStream();
+        var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+        var removed = 0;
+        var kept = new List<ContentOperator>(content.Operators.Count);
+
+        foreach (var op in content.Operators)
+        {
+            if (op.Category == OperatorCategory.TextShowing &&
+                (op.TextContent ?? string.Empty).IndexOf(searchText, comparison) >= 0)
+            {
+                removed++;
+                continue;
+            }
+
+            kept.Add(op);
+        }
+
+        if (removed > 0)
+            page.SetContentStream(new ContentStream(kept));
+
+        return removed;
+    }
+
+    private static int RemoveTextLinesStillContaining(
+        PdfPage page,
+        string searchText,
+        bool caseSensitive,
+        bool includeHiddenLayers)
+    {
+        var letters = page.Letters;
+        var searchLetters = includeHiddenLayers
+            ? letters
+            : letters.Where(l => !l.IsInHiddenOptionalContent).ToList();
+        var matches = FindTextMatches(searchLetters, searchText, caseSensitive);
+        if (matches.Count == 0)
+            return 0;
+
+        var lineBands = matches.Select(match =>
+        {
+            var bottom = match.Min(l => l.GlyphRectangle.Bottom) - 1.0;
+            var top = match.Max(l => l.GlyphRectangle.Top) + 1.0;
+            return (Bottom: bottom, Top: top);
+        }).ToList();
+
+        var content = page.GetContentStream();
+        var kept = new List<ContentOperator>(content.Operators.Count);
+        foreach (var op in content.Operators)
+        {
+            if (op.Category == OperatorCategory.TextShowing &&
+                op.BoundingBox is { } bounds &&
+                lineBands.Any(b => bounds.Top > b.Bottom && bounds.Bottom < b.Top))
+            {
+                continue;
+            }
+
+            kept.Add(op);
+        }
+
+        page.SetContentStream(new ContentStream(kept));
+        return matches.Count;
+    }
+
+    private static void RedactFormFieldsInArea(
+        PdfPage page,
+        PdfRectangle matchBounds,
+        string searchText,
+        bool caseSensitive)
+    {
+        IReadOnlyList<PdfField> fields;
+        try { fields = page.GetFormFields(); }
+        catch (Exception ex) when (ex is not OutOfMemoryException) { return; }
+
+        foreach (var field in fields)
+        {
+            if (field.Rect is not { } rect || !rect.IntersectsWith(matchBounds))
+                continue;
+
+            if (field.FieldType is PdfFieldType.Button or PdfFieldType.Signature)
+                continue;
+
+            RedactFieldEntry(field.RawDictionary, "V", searchText, caseSensitive);
+            RedactFieldEntry(field.RawDictionary, "DV", searchText, caseSensitive);
+
+            // Appearance streams can contain the old value even after /V is
+            // updated. Remove them so readers regenerate from the redacted
+            // value instead of preserving recoverable stale text.
+            field.RawDictionary.Remove("AP");
+            foreach (var widget in field.WidgetDictionaries)
+                widget.Remove("AP");
+        }
+    }
+
+    private static void RedactFieldEntry(
+        PdfDictionary fieldDictionary,
+        string key,
+        string searchText,
+        bool caseSensitive)
+    {
+        if (fieldDictionary.GetOptional(key) is not PdfString value)
+            return;
+
+        var redacted = RemoveOccurrences(value.Value, searchText, caseSensitive);
+        if (redacted == value.Value)
+            return;
+
+        if (string.IsNullOrEmpty(redacted))
+            fieldDictionary.Remove(key);
+        else
+            fieldDictionary.Set(key, new PdfString(redacted));
+    }
+
+    private static string RemoveOccurrences(string value, string searchText, bool caseSensitive)
+    {
+        if (string.IsNullOrEmpty(value) || string.IsNullOrEmpty(searchText))
+            return value;
+
+        var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+        var result = new StringBuilder(value.Length);
+        var start = 0;
+
+        while (start < value.Length)
+        {
+            var index = value.IndexOf(searchText, start, comparison);
+            if (index < 0)
+            {
+                result.Append(value, start, value.Length - start);
+                break;
+            }
+
+            result.Append(value, start, index - start);
+            start = index + searchText.Length;
+        }
+
+        return result.ToString();
     }
 
     /// <summary>

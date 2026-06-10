@@ -65,34 +65,7 @@ public sealed class RedactionRoundTripTests
     /// Known redaction round-trip failures by relative PDF path.
     /// Each entry: reason. Removing a line re-enables the gate.
     /// </summary>
-    private static readonly Dictionary<string, string> KnownRedactionFailures = new()
-    {
-        // ⚠ All three of these are SECURITY findings — pdfe's flagship
-        // value proposition is TRUE redaction (text removed from PDF
-        // structure, not visually covered). The harness is reporting
-        // multi-page leaks: RedactText() reports N matches on these
-        // documents but extraction after save+reopen still finds the
-        // word. Likely candidates: per-page write path missing some
-        // matches, font-CMap leak (Issue #95-class), or matches across
-        // TJ-array operand boundaries that escape the glyph-removal
-        // pass.
-        ["test-pdfs/smoke/irs-1040.pdf"] =
-            "RedactText('instructions') reported 23 matches but at least one survived save+reopen.",
-        ["test-pdfs/smoke/irs-w4.pdf"] =
-            "Issue #443: RedactText('withholding') reported 32 matches but at least one survived save+reopen.",
-        ["test-pdfs/smoke/irs-1040-instructions.pdf"] =
-            "Issue #443: RedactText('proofs') reported 252 matches but at least one survived save+reopen.",
-        ["test-pdfs/smoke/irs-pub509-2026.pdf"] =
-            "Issue #443: RedactText('Quarter') reported 73 matches but at least one survived save+reopen.",
-        ["test-pdfs/smoke/state-ds82-passport-renewal.pdf"] =
-            "Issue #443: RedactText('Department') reported 4 matches but at least one survived save+reopen.",
-        ["test-pdfs/smoke/scotus-trump-v-anderson.pdf"] =
-            "Issue #443: RedactText('Colorado') reported 27 matches but at least one survived save+reopen.",
-        ["test-pdfs/smoke/scotus-trump-v-us.pdf"] =
-            "RedactText('immunity') reported 205 matches but at least one survived save+reopen.",
-        ["test-pdfs/smoke/cdc-vis-covid-19.pdf"] =
-            "RedactText('vaccine') reported 28 matches but at least one survived save+reopen.",
-    };
+    private static readonly Dictionary<string, string> KnownRedactionFailures = new();
 
     public static IEnumerable<object[]> CorpusPdfs() => Discover();
 

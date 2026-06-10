@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using AwesomeAssertions;
 using Pdfe.Core.Document;
+using Pdfe.Core.Text.Segmentation;
 using Xunit;
 
 namespace Pdfe.Core.Tests.Document;
@@ -155,6 +156,36 @@ public class AcroFormReadOnlyTests
         var page = doc.GetPage(1);
         var text = string.Concat(page.Letters.Select(l => l.Value));
         text.Should().Contain("SECRET-12345");
+    }
+
+    [Fact]
+    public void RedactText_RemovesAcroFormValueAfterSaveAndReopen()
+    {
+        var pdf = BuildFormPdf(textValue: "SECRET-12345");
+        using var doc = PdfDocument.Open(pdf);
+
+        var matches = doc.RedactText("SECRET", caseSensitive: false);
+        var bytes = doc.SaveToBytes();
+
+        matches.Should().Be(1);
+        using var reopened = PdfDocument.Open(bytes);
+        reopened.GetPage(1).Text.Should().NotContain("SECRET");
+        reopened.GetAcroForm()!.FindField("field1")!.Value.Should().Be("-12345");
+    }
+
+    [Fact]
+    public void RedactText_RemovesAcroFormDefaultValueAfterSaveAndReopen()
+    {
+        var pdf = BuildFormPdf(textValue: null, defaultValue: "Fallback SECRET");
+        using var doc = PdfDocument.Open(pdf);
+
+        var matches = doc.RedactText("SECRET", caseSensitive: false);
+        var bytes = doc.SaveToBytes();
+
+        matches.Should().Be(1);
+        using var reopened = PdfDocument.Open(bytes);
+        reopened.GetPage(1).Text.Should().NotContain("SECRET");
+        reopened.GetAcroForm()!.FindField("field1")!.DefaultValue.Should().Be("Fallback ");
     }
 
     // ─── PDF builder ─────────────────────────────────────────────────────────
