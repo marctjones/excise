@@ -55,7 +55,7 @@ Build the packages locally with `dotnet pack -c Release` (they are also attached
 - **AcroForm editing** — click any text/checkbox/dropdown widget and edit inline; save to keep the values interactive or flatten to bake them in
 - **AcroForm authoring** — drag-rect on a page to create new fields (Text / Checkbox / Choice / Signature); auto-detect underline placeholders and empty squares as fields
 - Reveal Hidden Text — yellow highlights for structural detections (text covered by rectangles), orange for differential-OCR recoveries (text inside rasterized images)
-- Digital signature inspection — verifies embedded CMS signature bytes against the PDF ByteRange digest and clearly reports current OS trust-chain validation limitations
+- Digital signature inspection — checks ByteRange structure, verifies the detached CMS digest/signature over the signed bytes, and clearly reports current OS trust-chain validation limitations
 - Bates numbering
 - Roslyn-based GUI scripting for automation
 
@@ -96,7 +96,7 @@ pdfe demo
 `audit --deep` runs differential OCR — renders the page twice (once with overlays stripped) and diffs the OCR text — to catch words hidden inside rasterized images by an opaque overlay (the rasterized analogue of a black-box redaction).
 
 ### Renderer coverage
-The Skia renderer has been smoke-tested against a real-world corpus and renders essentially identically to mutool/Acrobat at the structural level:
+The Skia renderer has been smoke-tested against a real-world corpus and is validated with a MuPDF-first differential harness. When MuPDF disagrees, the test suite escalates to Poppler and Ghostscript for second and third opinions. Known divergences are issue-linked allowlist entries; new unclassified divergences fail the differential slice.
 
 | PDF type | Notes |
 |---|---|
@@ -328,23 +328,15 @@ dotnet test Pdfe.Core.Tests --filter "Redaction"
 dotnet test --logger "console;verbosity=detailed"
 ```
 
-**Test counts (v2.1):**
-- Pdfe.Core.Tests: 2,881 passing, 42 skipped
-- Pdfe.Rendering.Tests: 287 passing, 5 skipped
-- Pdfe.Avalonia.Tests: 7 passing
-- Pdfe.Cli.Tests: 22 passing
-- Pdfe.Ocr.Tests: 41 passing, 5 skipped (some require `tesseract`)
-- PdfEditor.Tests: 775 passing, 6 skipped (Avalonia headless harness limits)
-
-**Total: 4,013 passing, 58 skipped, 0 failing.** `Pdfe.Core` line coverage is at 94.3% with a 94% CI gate.
-
 Test categories:
 - Unit tests — primitives, parser, content streams, segmentation, coordinate math
 - Integration tests — real-world PDFs (birth certificates, government forms, books)
-- Visual regression — PNG-baseline diffs against the renderer corpus
+- Visual regression — MuPDF-first bitmap diffs with Poppler/Ghostscript escalation for disputed renders
 - Headless GUI — `[AvaloniaFact]` tests render `PdfViewerControl` against fixtures
 - Security — content-stream verification that redacted text is structurally absent
-- Conformance — corpus parse + render + round-trip + redaction-regression harness
+- Conformance — smoke corpus parse/render, Isartor round-trip, and optional veraPDF corpus parse/render
+
+The PDF Association corpora are downloaded on demand with `scripts/download-test-pdfs.sh`. The full veraPDF corpus is intentionally treated as a slower conformance lane, not as a required inner-loop test.
 
 ## Building
 

@@ -5,7 +5,7 @@
 The conformance validation harness tests pdfe against industry-standard PDF test corpora to verify:
 
 1. **Parsing robustness**: Every PDF in the corpus can be opened without exception
-2. **Rendering viability**: Pages render to valid bitmaps with non-trivial content
+2. **Rendering viability**: Pages render to valid bitmaps without crashing
 3. **Round-trip integrity**: Load → save → reload preserves document structure and content
 4. **Redaction security**: Glyph-level redaction actually removes content, not just visual masking
 
@@ -25,7 +25,7 @@ This is the integration layer that proves the previous 14 phases (PDF parsing, r
 - Opens each PDF with `PdfDocument.Open()`
 - Verifies page count > 0
 - Renders first 3 pages (or all pages if ≤ 10) at 72 DPI using SkiaRenderer
-- Asserts bitmap is non-zero size and contains non-trivial content (not all-white)
+- Asserts rendering completes and returns a bitmap. Visual completeness belongs to the differential rendering tests, not this conformance harness.
 
 **Smoke Corpus** (8 files, ~10 seconds):
 ```
@@ -135,11 +135,11 @@ SKIP_LARGE_CORPUS=0 dotnet test Pdfe.Rendering.Tests \
 # Run all conformance tests with logging
 ./scripts/run-conformance.sh
 
-# Output:
-# Smoke corpus:       8/8     passed ✓
-# veraPDF corpus:  2400/2694  passed (89.1%) — large failures in encrypted + XFA forms
-# Round-trip:        7/8     passed ✓ (1 encrypted PDF skipped)
-# Redaction:         8/8     passed ✓
+# Output shape:
+# Smoke corpus:       pass/fail summary
+# veraPDF corpus:     pass/fail summary when downloaded and enabled
+# Round-trip:         pass/fail/skip summary
+# Redaction:          pass/fail/skip summary
 ```
 
 ## Interpreting Results
@@ -154,12 +154,9 @@ If a smoke corpus file fails:
 
 ### veraPDF Corpus
 
-**Expected pass rate**: ~85-95% (2,200-2,550 files)
+**Expected result**: pass when the corpus is downloaded and enabled.
 
-**Common failures** (expected, not bugs):
-- Encrypted PDFs (`/Encrypt` entry) — pdfe doesn't support PDF encryption
-- XFA forms (`/XFA` entry) — Dynamic forms, not supported
-- Broken PDFs in the "fail" subdirectories — Intentional conformance violations
+The veraPDF corpus includes both positive fixtures and intentionally invalid negative fixtures. `*-fail-*.pdf` files are treated as expected negatives by the harness and are not counted as product regressions.
 
 **Investigating failures**:
 ```bash
@@ -190,37 +187,20 @@ find test-pdfs/verapdf-corpus -name "*XFA*" -o -name "*xfa*" | wc -l
 - Check the redaction area coordinates in the output
 - File a security bug: `Issue (security): Redaction regression in <filename>`
 
-## Current Pass Rates (v2.0.0)
-
-| Test Suite | Smoke (8) | veraPDF (2,694) | Notes |
-|---|---|---|---|
-| **Conformance** | 8/8 ✓ | ~2,200/2,694 (81.7%) | Fails: encrypted, XFA, malformed |
-| **Round-Trip** | 8/8 ✓ | N/A | Only runs on smoke corpus |
-| **Redaction** | 8/8 ✓ | N/A | Only runs on smoke corpus |
-
-**veraPDF Failures Breakdown** (as of v2.0.0):
-- ~200 encrypted PDFs (expected, not supported)
-- ~150 XFA forms (expected, not supported)
-- ~50 structurally broken (expected, intentional conformance violations)
-- ~94 other causes (TBD — may be bugs)
-
 ## Known Limitations
 
-### Not Yet Supported (Will Skip)
+### Harness Scope
 
-1. **Encrypted PDFs**
-   - pdfe doesn't implement PDF security handler
-   - Tests skip gracefully with `SkipTestException`
+1. **ConformanceTests**
+   - Checks parse/render viability, not pixel fidelity.
+   - Accepts intentionally invalid `*-fail-*.pdf` corpus fixtures as expected negatives.
 
-2. **XFA Forms**
-   - Dynamic XML-based forms (not traditional PDF content)
-   - Would require XFA renderer and form state engine
-   - Tests skip gracefully
+2. **Visual correctness**
+   - Covered by the MuPDF-first differential rendering tests with Poppler/Ghostscript escalation.
+   - Known divergences stay issue-linked in the differential allowlist.
 
-3. **Broken PDFs**
-   - Some corpus PDFs are intentionally malformed for conformance testing
-   - Tests skip or fail as appropriate
-   - Failures indicate conformance gaps, not necessarily bugs
+3. **Strict standard validation**
+   - For formal PDF/A or PDF/UA validation, use the official veraPDF validator.
 
 ### Future Enhancements (v2.2+)
 

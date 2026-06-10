@@ -29,6 +29,11 @@
         <Setter Property="Background" Value="{DynamicResource PressedBrush}"/>
     </Style>
 
+    <Style Selector="Button.modern-button:disabled">
+        <Setter Property="Opacity" Value="0.45"/>
+        <Setter Property="Cursor" Value="Arrow"/>
+    </Style>
+
     <!-- Toggle Button Active State -->
     <Style Selector="Button.modern-button.toggle.active">
         <Setter Property="Background" Value="#E3F2FD"/>
@@ -65,23 +70,6 @@
         <Setter Property="BorderBrush" Value="#BDBDBD"/>
         <Setter Property="Foreground" Value="#757575"/>
         <Setter Property="Opacity" Value="0.6"/>
-    </Style>
-
-    <!-- Legacy Toolbar Button Styles -->
-    <Style Selector="Button.toolbar-button">
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="Padding" Value="8"/>
-        <Setter Property="Margin" Value="2"/>
-        <Setter Property="Cursor" Value="Hand"/>
-    </Style>
-
-    <Style Selector="Button.toolbar-button:pointerover">
-        <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
-    </Style>
-
-    <Style Selector="Button.toolbar-button:pressed">
-        <Setter Property="Background" Value="{DynamicResource PressedBrush}"/>
     </Style>
 
     <!-- TextBlock Styles -->

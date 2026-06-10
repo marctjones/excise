@@ -86,6 +86,9 @@ public class SignatureVerificationServiceTests
     public void SignatureVerificationResult_DefaultByteRangeIntegrityState_IsUnchecked()
     {
         var result = new SignatureVerificationResult();
+        result.ByteRangeStructureChecked.Should().BeFalse();
+        result.ByteRangeStructureValid.Should().BeFalse();
+        result.ByteRangeStructureMessage.Should().BeEmpty();
         result.ByteRangeIntegrityChecked.Should().BeFalse();
         result.ByteRangeIntegrityValid.Should().BeFalse();
     }
@@ -101,7 +104,12 @@ public class SignatureVerificationServiceTests
             SignedBy = "CN=John Doe",
             SigningTime = signingTime,
             StatusMessage = "Signature is valid",
-            CoversWholeDocument = true
+            CoversWholeDocument = true,
+            ByteRangeStructureChecked = true,
+            ByteRangeStructureValid = true,
+            ByteRangeStructureMessage = "ByteRange ok",
+            ByteRangeIntegrityChecked = true,
+            ByteRangeIntegrityValid = true
         };
 
         result.SignatureName.Should().Be("Signature1");
@@ -110,6 +118,11 @@ public class SignatureVerificationServiceTests
         result.SigningTime.Should().Be(signingTime);
         result.StatusMessage.Should().Be("Signature is valid");
         result.CoversWholeDocument.Should().BeTrue();
+        result.ByteRangeStructureChecked.Should().BeTrue();
+        result.ByteRangeStructureValid.Should().BeTrue();
+        result.ByteRangeStructureMessage.Should().Be("ByteRange ok");
+        result.ByteRangeIntegrityChecked.Should().BeTrue();
+        result.ByteRangeIntegrityValid.Should().BeTrue();
     }
 
     // ========================================================================
@@ -455,6 +468,10 @@ public class SignatureVerificationServiceTests
             results[0].IsValid.Should().BeFalse();
             results[0].StatusMessage.Should().Contain("ByteRange");
             results[0].SignatureName.Should().Be("TestSig");
+            results[0].ByteRangeStructureChecked.Should().BeTrue();
+            results[0].ByteRangeStructureValid.Should().BeFalse();
+            results[0].ByteRangeIntegrityChecked.Should().BeFalse();
+            results[0].ByteRangeIntegrityValid.Should().BeFalse();
         }
         finally
         {
@@ -498,6 +515,8 @@ public class SignatureVerificationServiceTests
             results.Should().HaveCount(1);
             results[0].IsValid.Should().BeFalse();
             results[0].SignatureName.Should().Be("TestSig");
+            results[0].ByteRangeStructureChecked.Should().BeTrue();
+            results[0].ByteRangeStructureValid.Should().BeTrue();
             results[0].ByteRangeIntegrityChecked.Should().BeFalse();
             results[0].ByteRangeIntegrityValid.Should().BeFalse();
             results[0].StatusMessage.Should().Contain("BouncyCastle verification failed");
@@ -523,6 +542,8 @@ public class SignatureVerificationServiceTests
             results[0].IsValid.Should().BeTrue();
             results[0].SignatureName.Should().Be("TestSig");
             results[0].SignedBy.Should().Contain("PDFe Test Signer");
+            results[0].ByteRangeStructureChecked.Should().BeTrue();
+            results[0].ByteRangeStructureValid.Should().BeTrue();
             results[0].ByteRangeIntegrityChecked.Should().BeTrue();
             results[0].ByteRangeIntegrityValid.Should().BeTrue();
             results[0].CoversWholeDocument.Should().BeTrue();
@@ -549,6 +570,8 @@ public class SignatureVerificationServiceTests
             results.Should().HaveCount(1);
             results[0].IsValid.Should().BeFalse();
             results[0].SignatureName.Should().Be("TestSig");
+            results[0].ByteRangeStructureChecked.Should().BeTrue();
+            results[0].ByteRangeStructureValid.Should().BeTrue();
             results[0].ByteRangeIntegrityChecked.Should().BeTrue();
             results[0].ByteRangeIntegrityValid.Should().BeFalse();
             results[0].CoversWholeDocument.Should().BeTrue();
@@ -574,6 +597,8 @@ public class SignatureVerificationServiceTests
             results.Should().HaveCount(1);
             results[0].IsValid.Should().BeFalse();
             results[0].SignatureName.Should().Be("TestSig");
+            results[0].ByteRangeStructureChecked.Should().BeTrue();
+            results[0].ByteRangeStructureValid.Should().BeFalse();
             results[0].ByteRangeIntegrityChecked.Should().BeFalse();
             results[0].ByteRangeIntegrityValid.Should().BeFalse();
             results[0].StatusMessage.Should().Contain("Contents value does not exactly match");

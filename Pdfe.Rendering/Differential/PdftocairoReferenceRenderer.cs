@@ -7,14 +7,13 @@ namespace Pdfe.Rendering.Differential;
 
 /// <summary>
 /// Shells out to <c>pdftocairo</c> (Poppler) to render a page,
-/// providing a second reference rendering alongside <c>mutool draw</c>.
+/// providing the first escalation reference alongside <c>mutool draw</c>.
 ///
-/// Why two oracles: when pdfe disagrees with mutool, we can't tell
-/// whether pdfe is wrong or mutool is wrong. With a second independent
-/// engine (Poppler/Cairo, which is what pdf.js's own test suite uses
-/// for reference renders), we get consensus voting: pdfe is treated
-/// as correct if it matches *either* mutool or pdftocairo. A
-/// disagreement with both is a real bug.
+/// Why Poppler first: when pdfe disagrees with mutool, we can't tell
+/// whether pdfe is wrong or mutool is wrong. Poppler/Cairo is the first
+/// independent engine we ask for a second opinion. If that still does
+/// not settle the page, the harness escalates to Ghostscript for a third
+/// vote before calling the page a real bug.
 ///
 /// Mutool is GPL/AGPL; Poppler is GPL. Both are CLI subprocesses, so
 /// the licensing stays out of pdfe's binary — same model as mutool.

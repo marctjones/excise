@@ -38,8 +38,8 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly IUserDialogService _dialogService;
 
     // State managers
-    public DocumentStateManager FileState { get; }
-    public RedactionWorkflowManager RedactionWorkflow { get; }
+    public DocumentStateManager FileState { get; } = new();
+    public RedactionWorkflowManager RedactionWorkflow { get; } = new();
 
     /// <summary>
     /// Toast notification service for displaying error/info messages.
@@ -62,11 +62,6 @@ public partial class MainWindowViewModel : ViewModelBase
     private double _viewportWidth = 800;
     private double _viewportHeight = 600;
     private ObservableCollection<Rect> _currentPageSearchHighlights = new();
-#if DEBUG
-    private bool _debugVerifyRedaction = true; // Debug mode: enabled in DEBUG builds, disabled in RELEASE
-#else
-    private bool _debugVerifyRedaction = false; // Debug mode: disabled in RELEASE builds
-#endif
     private int _renderCacheMax = 20;
     private string _operationStatus = string.Empty;
     private bool _hasInMemoryModifications; // Tracks if document has been modified in-memory (e.g., redactions applied)
@@ -92,38 +87,25 @@ public partial class MainWindowViewModel : ViewModelBase
     public MainWindowViewModel()
     {
         var nullLoggerFactory = Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory.Instance;
-        var renderService = new PdfRenderService(Microsoft.Extensions.Logging.Abstractions.NullLogger<PdfRenderService>.Instance);
-
-        _logger = Microsoft.Extensions.Logging.Abstractions.NullLogger<MainWindowViewModel>.Instance;
+        var nullLogger = Microsoft.Extensions.Logging.Abstractions.NullLogger<MainWindowViewModel>.Instance;
+        _logger = nullLogger;
         _loggerFactory = nullLoggerFactory;
         _documentService = new PdfDocumentService(Microsoft.Extensions.Logging.Abstractions.NullLogger<PdfDocumentService>.Instance);
-        _renderService = renderService;
+        _renderService = new PdfRenderService(Microsoft.Extensions.Logging.Abstractions.NullLogger<PdfRenderService>.Instance);
         _redactionService = new RedactionService(Microsoft.Extensions.Logging.Abstractions.NullLogger<RedactionService>.Instance, nullLoggerFactory);
         _textExtractionService = new PdfTextExtractionService(Microsoft.Extensions.Logging.Abstractions.NullLogger<PdfTextExtractionService>.Instance);
         _searchService = new PdfSearchService(Microsoft.Extensions.Logging.Abstractions.NullLogger<PdfSearchService>.Instance);
         _filenameSuggestionService = new FilenameSuggestionService();
         _toastService = new ToastService();
         _dialogService = new NullUserDialogService();
-        _signatureWorkflowService = new SignatureVerificationWorkflowService(
+        _signatureWorkflowService = CreateSignatureWorkflowService(
             new SignatureVerificationService(Microsoft.Extensions.Logging.Abstractions.NullLogger<SignatureVerificationService>.Instance),
-            new SignatureVerificationSummaryFormatter(),
             _dialogService,
             Microsoft.Extensions.Logging.Abstractions.NullLogger<SignatureVerificationWorkflowService>.Instance);
 
-        // Initialize state managers
-        FileState = new DocumentStateManager();
-        RedactionWorkflow = new RedactionWorkflowManager();
-
-        _logger.LogInformation("MainWindowViewModel initialized (test mode)");
-
-        PageThumbnails = new ObservableCollection<PageThumbnail>();
-        ClipboardHistory = new ObservableCollection<ClipboardEntry>();
-
         InitializeCommands();
-
-        LoadRecentFiles();
-        LoadZoomPreference(); // Issue #32: Persist zoom level
-
+        _logger.LogInformation("MainWindowViewModel initialized (test mode)");
+        InitializeSessionState();
         _logger.LogDebug("MainWindowViewModel initialization complete (test mode)");
     }
 
@@ -159,23 +141,23 @@ public partial class MainWindowViewModel : ViewModelBase
             loggerFactory.CreateLogger<SignatureVerificationWorkflowService>()
                 ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<SignatureVerificationWorkflowService>.Instance);
 
-        // Initialize state managers
-        FileState = new DocumentStateManager();
-        RedactionWorkflow = new RedactionWorkflowManager();
-
-        _logger.LogInformation("MainWindowViewModel initialized");
-
-        PageThumbnails = new ObservableCollection<PageThumbnail>();
-        ClipboardHistory = new ObservableCollection<ClipboardEntry>();
-
         InitializeCommands();
-
-        // Load recent files and preferences
-        LoadRecentFiles();
-        LoadZoomPreference(); // Issue #32: Persist zoom level
-
+        _logger.LogInformation("MainWindowViewModel initialized");
+        InitializeSessionState();
         _logger.LogDebug("MainWindowViewModel initialization complete");
     }
+
+    private void InitializeSessionState()
+    {
+        LoadRecentFiles();
+        LoadZoomPreference(); // Issue #32: Persist zoom level
+    }
+
+    private static SignatureVerificationWorkflowService CreateSignatureWorkflowService(
+        SignatureVerificationService signatureService,
+        IUserDialogService dialogService,
+        ILogger<SignatureVerificationWorkflowService> logger) =>
+        new(signatureService, new SignatureVerificationSummaryFormatter(), dialogService, logger);
 
     private void InitializeCommands()
     {
@@ -235,7 +217,7 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     // Properties
-    public ObservableCollection<PageThumbnail> PageThumbnails { get; }
+    public ObservableCollection<PageThumbnail> PageThumbnails { get; } = new();
 
     /// <summary>
     /// Top-level outline nodes (PDF table of contents). Empty when the
@@ -275,7 +257,7 @@ public partial class MainWindowViewModel : ViewModelBase
             if (value != null) JumpToOutline(value);
         }
     }
-    public ObservableCollection<ClipboardEntry> ClipboardHistory { get; }
+    public ObservableCollection<ClipboardEntry> ClipboardHistory { get; } = new();
 
     public Bitmap? CurrentPageImage
     {
@@ -747,8 +729,6 @@ public partial class MainWindowViewModel : ViewModelBase
 
             try
             {
-                // Use the current page from the Pdfe.Core document to extract text
-                var page = _pdfCoreDocument.GetPage(_currentPageIndex + 1);
                 var text = _textExtractionService.ExtractTextFromPage(_currentFilePath, _currentPageIndex);
                 return text ?? string.Empty;
             }
@@ -826,12 +806,6 @@ public partial class MainWindowViewModel : ViewModelBase
         if (string.IsNullOrEmpty(text)) return;
         SelectedText = text;
         await PublishToClipboardAndHistoryAsync(text);
-    }
-
-    public bool DebugVerifyRedaction
-    {
-        get => _debugVerifyRedaction;
-        set => this.RaiseAndSetIfChanged(ref _debugVerifyRedaction, value);
     }
 
     public int RenderCacheMax
@@ -1816,17 +1790,6 @@ public partial class MainWindowViewModel : ViewModelBase
                 _logger.LogInformation("Added redacted text to clipboard history: '{Text}'", redactedText);
             }
 
-            // ===== DEBUG MODE: Verify redaction immediately =====
-            // TEMPORARILY DISABLED: document.Save() in verification makes document read-only
-            /*
-            if (DebugVerifyRedaction)
-            {
-                _logger.LogInformation("━━━━━ DEBUG MODE: Verifying redaction immediately ━━━━━");
-                await DebugVerifyRedactionAsync(areaToRedact, redactedText);
-                _logger.LogInformation("━━━━━ DEBUG MODE: Verification complete ━━━━━");
-            }
-            */
-
             _logger.LogInformation("Redaction applied to in-memory document, now re-rendering page...");
 
             // Render the page from the in-memory document to show the redaction
@@ -1877,105 +1840,6 @@ public partial class MainWindowViewModel : ViewModelBase
             CurrentRedactionArea = new Rect();
             _logger.LogInformation("<<< ApplyRedactionAsync END. Selection cleared, ready for next redaction.");
         }
-    }
-
-    /// <summary>
-    /// Debug mode: Verify that redaction actually removed text from the in-memory PDF.
-    /// This saves the in-memory document to a temporary location and extracts text to verify removal.
-    /// </summary>
-    private Task DebugVerifyRedactionAsync(Rect redactedArea, string expectedRedactedText)
-    {
-        return Task.Run(() =>
-        {
-            try
-            {
-                _logger.LogInformation("DEBUG: Starting verification of redacted area ({X:F2},{Y:F2},{W:F2}x{H:F2})",
-                    redactedArea.X, redactedArea.Y, redactedArea.Width, redactedArea.Height);
-
-                // Save in-memory document to temporary file for verification
-                var tempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"debug_redaction_verify_{Guid.NewGuid()}.pdf");
-
-                var document = _documentService.GetCurrentDocument();
-                if (document == null)
-                {
-                    _logger.LogWarning("DEBUG: Cannot verify - document is null");
-                    return;
-                }
-
-                _logger.LogInformation("DEBUG: Saving in-memory document to temporary file: {TempPath}", tempPath);
-                document.Save(tempPath);
-
-            // Extract text from the redacted area using the same extraction service
-            _logger.LogInformation("DEBUG: Extracting text from redacted area in saved document...");
-            var extractedText = _textExtractionService.ExtractTextFromArea(
-                tempPath,
-                CurrentPageIndex,
-                redactedArea,
-                CoordinateConverter.DefaultRenderDpi);
-
-            _logger.LogInformation("DEBUG: Text extraction complete. Length: {Length} characters", extractedText.Length);
-            _logger.LogInformation("DEBUG: Extracted text: '{ExtractedText}'", extractedText);
-
-            // Check if any of the expected redacted text still exists
-            bool verificationPassed = true;
-            if (!string.IsNullOrWhiteSpace(expectedRedactedText))
-            {
-                if (extractedText.Contains(expectedRedactedText, StringComparison.OrdinalIgnoreCase))
-                {
-                    _logger.LogError("DEBUG: ❌ VERIFICATION FAILED! Redacted text '{ExpectedText}' was found in extracted text!",
-                        expectedRedactedText);
-                    _logger.LogError("DEBUG: This means the redaction did NOT remove the text from the PDF structure!");
-                    verificationPassed = false;
-                }
-                else
-                {
-                    _logger.LogInformation("DEBUG: ✓ Verification passed: Expected redacted text '{ExpectedText}' was NOT found",
-                        expectedRedactedText);
-                }
-            }
-
-            // Check if ANY text was extracted from the redacted area
-            if (!string.IsNullOrWhiteSpace(extractedText))
-            {
-                _logger.LogWarning("DEBUG: ⚠ Found text in redacted area: '{Text}'", extractedText);
-                _logger.LogWarning("DEBUG: This may indicate incomplete redaction or text outside the selection");
-                verificationPassed = false;
-            }
-            else
-            {
-                _logger.LogInformation("DEBUG: ✓ No text found in redacted area - redaction appears successful");
-            }
-
-            // Summary
-            if (verificationPassed)
-            {
-                _logger.LogInformation("DEBUG: ═══ VERIFICATION PASSED ═══");
-                _logger.LogInformation("DEBUG: The redacted text was successfully removed from the PDF structure");
-            }
-            else
-            {
-                _logger.LogError("DEBUG: ═══ VERIFICATION FAILED ═══");
-                _logger.LogError("DEBUG: Text extraction found content in the redacted area!");
-                _logger.LogError("DEBUG: Expected to redact: '{Expected}'", expectedRedactedText);
-                _logger.LogError("DEBUG: Actually found: '{Actual}'", extractedText);
-            }
-
-                // Cleanup temp file
-                try
-                {
-                    System.IO.File.Delete(tempPath);
-                    _logger.LogDebug("DEBUG: Deleted temporary verification file");
-                }
-                catch
-                {
-                    // Ignore cleanup errors
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "DEBUG: Error during redaction verification");
-            }
-        });
     }
 
     private void ZoomIn()

@@ -18,7 +18,7 @@ public sealed class SignatureVerificationSummaryFormatter
             }
 
             summary.AppendLine($"Signature: {ValueOrUnknown(result.SignatureName)}");
-            summary.AppendLine($"CMS signature check: {(result.IsValid ? "passed" : "failed")}");
+            summary.AppendLine($"CMS signature check: {(result.IsValid ? "passed" : "failed")} (CMS bytes and ByteRange digest only)");
             summary.AppendLine($"Signer: {ValueOrUnknown(result.SignedBy)}");
             summary.AppendLine(result.SigningTime == default
                 ? "Signing time: not extracted"
@@ -29,7 +29,8 @@ public sealed class SignatureVerificationSummaryFormatter
                 summary.AppendLine($"Details: {result.StatusMessage}");
             }
 
-            summary.AppendLine($"Document byte-range integrity: {FormatByteRangeStatus(result)}");
+            summary.AppendLine($"ByteRange structure: {FormatByteRangeStructureStatus(result)}");
+            summary.AppendLine($"Signed byte-range digest: {FormatByteRangeDigestStatus(result)}");
             summary.AppendLine($"Covers whole document: {(result.CoversWholeDocument ? "yes" : "no")}");
         }
 
@@ -45,7 +46,17 @@ public sealed class SignatureVerificationSummaryFormatter
     private static string ValueOrUnknown(string value) =>
         string.IsNullOrWhiteSpace(value) ? "unknown" : value;
 
-    private static string FormatByteRangeStatus(SignatureVerificationResult result)
+    private static string FormatByteRangeStructureStatus(SignatureVerificationResult result)
+    {
+        if (!result.ByteRangeStructureChecked)
+        {
+            return "not checked";
+        }
+
+        return result.ByteRangeStructureValid ? "passed" : "failed";
+    }
+
+    private static string FormatByteRangeDigestStatus(SignatureVerificationResult result)
     {
         if (!result.ByteRangeIntegrityChecked)
         {

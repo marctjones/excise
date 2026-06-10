@@ -3281,9 +3281,22 @@ internal class RenderContext
         if (cs.Type != PdfColorSpaceType.Unknown)
             return cs;
 
-        var csObj = _page.GetColorSpaceObject(name);
-        if (csObj != null)
+        foreach (var resources in _resourcesStack)
+        {
+            if (resources == null) continue;
+            var colorSpacesObj = resources.GetOptional("ColorSpace");
+            if (colorSpacesObj == null) continue;
+            if (_page.Document.Resolve(colorSpacesObj) is not Pdfe.Core.Primitives.PdfDictionary colorSpaces)
+                continue;
+
+            var csObj = colorSpaces.GetOptional(name);
+            if (csObj == null) continue;
             return PdfColorSpace.Parse(csObj, _page.Document);
+        }
+
+        var pageCsObj = _page.GetColorSpaceObject(name);
+        if (pageCsObj != null)
+            return PdfColorSpace.Parse(pageCsObj, _page.Document);
 
         return null;
     }

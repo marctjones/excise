@@ -66,48 +66,6 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Redaction Settings Section -->
-                <Border Background="{DynamicResource CardBrush}"
-                        BorderBrush="{DynamicResource BorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Padding="20">
-                    <StackPanel Spacing="15">
-                        <TextBlock Text="Redaction"
-                                   FontSize="14"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
-
-                        <TextBlock Text="Configure redaction verification"
-                                   FontSize="11"
-                                   Foreground="{DynamicResource TextSecondaryBrush}"
-                                   TextWrapping="Wrap"/>
-
-                        <Separator/>
-
-                        <CheckBox Content="Debug Mode: Verify redactions immediately (logs to console)"
-                                  IsChecked="{Binding DebugVerifyRedaction}">
-                            <ToolTip.Tip>
-                                <TextBlock TextWrapping="Wrap" MaxWidth="300">
-                                    <Run Text="DEBUG MODE: Immediately verify each redaction by extracting text from the redacted area."/>
-                                    <LineBreak/>
-                                    <LineBreak/>
-                                    <Run Text="Detailed logs will appear in the terminal/console showing:"/>
-                                    <LineBreak/>
-                                    <Run Text="• Whether text was actually removed from PDF structure"/>
-                                    <LineBreak/>
-                                    <Run Text="• What text (if any) is still extractable"/>
-                                    <LineBreak/>
-                                    <Run Text="• Pass/fail verification status"/>
-                                    <LineBreak/>
-                                    <LineBreak/>
-                                    <Run Text="⚠ This verifies the in-memory document before saving."/>
-                                </TextBlock>
-                            </ToolTip.Tip>
-                        </CheckBox>
-                    </StackPanel>
-                </Border>
-
             </StackPanel>
         </ScrollViewer>
 

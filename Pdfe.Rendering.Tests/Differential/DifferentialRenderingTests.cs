@@ -12,15 +12,17 @@ using Pdfe.Rendering.Differential;
 namespace Pdfe.Rendering.Tests.Differential;
 
 /// <summary>
-/// For every PDF in a configured corpus directory, render page 1 with both
-/// pdfe's <see cref="SkiaRenderer"/> and <c>mutool draw</c>, and assert the
-/// outputs are visually similar.
+/// For every PDF in a configured corpus directory, render page 1 with
+/// pdfe's <see cref="SkiaRenderer"/> and <c>mutool draw</c> first. If
+/// MuPDF disagrees, escalate to Poppler/pdftocairo and then Ghostscript
+/// as needed before deciding whether the page is a real pdfe regression
+/// or a reference-renderer outlier.
 ///
 /// This is the "oracle" test layer — instead of pinning each PDF to a
 /// hand-curated PNG baseline (which only catches changes against ourselves),
-/// we treat MuPDF's output as a known-good reference. Disagreements are
-/// informative: either we render incorrectly, or mutool does (the former
-/// is far more likely).
+/// we use MuPDF as the fast primary oracle and only pay for Poppler and
+/// Ghostscript when MuPDF disagrees. That keeps the common case cheap
+/// while still giving us a second and third opinion on suspicious pages.
 ///
 /// On environments without <c>mutool</c> on PATH the entire suite is
 /// skipped (each test individually flagged). To run locally:
@@ -192,71 +194,164 @@ public sealed class DifferentialRenderingTests
         pdfeBitmap.Should().NotBeNull($"pdfe must successfully render page {pageNumber}");
 
         // mutool render.
-        var mutoolBitmap = MutoolReferenceRenderer.RenderPage(pdfPath, pageNumber, RenderDpi);
+        SKBitmap? mutoolBitmap = MutoolReferenceRenderer.RenderPage(pdfPath, pageNumber, RenderDpi);
         Assert.SkipWhen(mutoolBitmap == null,
             $"mutool refused to render {relativePath} p.{pageNumber} — skipping rather than asserting against a missing reference");
 
-        // Normalize dimensions if they drift (rounding can cause ±1 px).
-        if (pdfeBitmap.Width != mutoolBitmap!.Width || pdfeBitmap.Height != mutoolBitmap.Height)
-        {
-            _output.WriteLine($"  resize: pdfe {pdfeBitmap.Width}x{pdfeBitmap.Height} → " +
-                              $"mutool {mutoolBitmap.Width}x{mutoolBitmap.Height}");
-            using var resized = DifferentialMetrics.ResizeMatch(
-                pdfeBitmap, mutoolBitmap.Width, mutoolBitmap.Height);
-            pdfeBitmap.Dispose();
-            pdfeBitmap = resized.Copy();
-        }
-
-        var report = DifferentialMetrics.Compare(pdfeBitmap, mutoolBitmap);
+        using var mutoolAlignedPdfe = DifferentialMetrics.ResizeMatch(
+            pdfeBitmap, mutoolBitmap.Width, mutoolBitmap.Height);
+        var report = DifferentialMetrics.Compare(mutoolAlignedPdfe, mutoolBitmap);
         _output.WriteLine($"  {relativePath}");
         _output.WriteLine($"  {report}");
 
-        var failed = report.DifferingPixelFraction > MaxDifferingPixelFraction
-                  || report.MeanAbsoluteError      > MaxMeanAbsoluteError;
-
-        if (failed)
-        {
-            // Write the triptych so a developer can eyeball the divergence
-            // without re-running the whole pipeline.
-            var outDir = Path.Combine(AppContext.BaseDirectory, "differential-failures");
-            Directory.CreateDirectory(outDir);
-            var name = Path.GetFileNameWithoutExtension(relativePath).Replace(' ', '-');
-            var triptychPath = Path.Combine(outDir, $"{name}-p{pageNumber}-triptych.png");
-            DifferentialMetrics.SaveTriptych(triptychPath, pdfeBitmap, mutoolBitmap);
-            _output.WriteLine($"  ⚠ triptych written to {triptychPath}");
-        }
-
+        SKBitmap? popplerBitmap = null;
+        SKBitmap? ghostBitmap = null;
         try
         {
-            // Known failures: loud, not fatal. Metrics still print so
-            // improvements are visible; the build stays green.
-            // KnownDifferentialFailures keys may be either the bare
-            // path (applies to all pages) or "path#pageNumber" (specific
-            // page). Per-page entries override path-level entries.
+            var failedAgainstMutool = IsFailed(report);
+
+            if (!failedAgainstMutool)
+                return;
+
+            // Known failures stay visible in the output, but they do not
+            // gate the build while the underlying issue is tracked.
             string? knownReason = null;
             if (KnownDifferentialFailures.TryGetValue($"{relativePath}#{pageNumber}", out var perPage))
                 knownReason = perPage;
             else if (KnownDifferentialFailures.TryGetValue(relativePath, out var perPath))
                 knownReason = perPath;
 
-            if (failed && knownReason != null)
+            if (knownReason != null)
             {
-                _output.WriteLine($"  ⚑ KNOWN FAILURE — not gating: {knownReason}");
+                _output.WriteLine($"  KNOWN FAILURE - not gating: {knownReason}");
+                var knownOutDir = Path.Combine(AppContext.BaseDirectory, "differential-failures");
+                Directory.CreateDirectory(knownOutDir);
+                var knownName = Path.GetFileNameWithoutExtension(relativePath).Replace(' ', '-');
+                var knownTriptychPath = Path.Combine(knownOutDir, $"{knownName}-p{pageNumber}-triptych.png");
+                using var knownTriptychPdfe = DifferentialMetrics.ResizeMatch(pdfeBitmap, mutoolBitmap!.Width, mutoolBitmap.Height);
+                DifferentialMetrics.SaveTriptych(knownTriptychPath, knownTriptychPdfe, mutoolBitmap);
+                _output.WriteLine($"  triptych written to {knownTriptychPath}");
                 Assert.SkipWhen(true,
                     $"Known differential failure for {relativePath} p.{pageNumber}: {knownReason}. " +
                     "Remove the entry from KnownDifferentialFailures once fixed.");
             }
 
-            failed.Should().BeFalse(
-                $"{relativePath} p.{pageNumber}: pdfe diverged from mutool reference. {report}. " +
+            _output.WriteLine("  mutool disagrees with pdfe; escalating to Poppler for a second opinion");
+
+            var popplerAvailable = PdftocairoReferenceRenderer.IsAvailable;
+            var ghostscriptAvailable = GhostscriptReferenceRenderer.IsAvailable;
+
+            if (!popplerAvailable && !ghostscriptAvailable)
+            {
+                Assert.Fail(
+                    $"{relativePath} p.{pageNumber}: pdfe diverged from mutool reference. {report}. " +
+                    "Neither Poppler/pdftocairo nor Ghostscript is available for second-opinion escalation, so this cannot be auto-triaged.");
+            }
+
+            DifferentialReport? popplerReport = null;
+            DifferentialReport? ghostscriptReport = null;
+
+            if (popplerAvailable)
+            {
+                popplerBitmap = PdftocairoReferenceRenderer.RenderPage(pdfPath, pageNumber, RenderDpi);
+                Assert.SkipWhen(popplerBitmap == null,
+                    $"Poppler refused to render {relativePath} p.{pageNumber} — skipping rather than asserting against a missing second-opinion renderer");
+
+                using var popplerAlignedPdfe = DifferentialMetrics.ResizeMatch(
+                    pdfeBitmap, popplerBitmap.Width, popplerBitmap.Height);
+                popplerReport = DifferentialMetrics.Compare(popplerAlignedPdfe, popplerBitmap);
+                _output.WriteLine($"  poppler: {popplerReport}");
+
+                var popplerMatchesPdfe = !IsFailed(popplerReport);
+                using var mutoolAlignedPoppler = DifferentialMetrics.ResizeMatch(
+                    mutoolBitmap!, popplerBitmap.Width, popplerBitmap.Height);
+                var popplerMatchesMutool = !IsFailed(DifferentialMetrics.Compare(mutoolAlignedPoppler, popplerBitmap));
+
+                if (popplerMatchesMutool && !popplerMatchesPdfe)
+                {
+                    Assert.Fail(
+                        $"{relativePath} p.{pageNumber}: MuPDF and Poppler agree, but pdfe differs. " +
+                        $"MuPDF: {report}; Poppler: {popplerReport}. This is a real pdfe regression.");
+                }
+
+                if (popplerMatchesPdfe)
+                {
+                    _output.WriteLine("  Poppler agrees with pdfe; accepting as a valid alternate rendering.");
+                    return;
+                }
+
+                if (popplerMatchesMutool)
+                {
+                    _output.WriteLine("  Poppler agrees with MuPDF; pdfe is the outlier for this page.");
+                    Assert.Fail(
+                        $"{relativePath} p.{pageNumber}: pdfe diverged from mutool and Poppler agreed with mutool. {report}.");
+                }
+
+                _output.WriteLine("  Poppler did not settle the split; escalating to Ghostscript.");
+            }
+
+            if (!ghostscriptAvailable)
+            {
+                Assert.Fail(
+                    $"{relativePath} p.{pageNumber}: pdfe diverged from MuPDF and Poppler did not settle the split. " +
+                    "Ghostscript is not available to provide a third opinion.");
+            }
+
+            ghostBitmap = GhostscriptReferenceRenderer.RenderPage(pdfPath, pageNumber, RenderDpi);
+            Assert.SkipWhen(ghostBitmap == null,
+                $"Ghostscript refused to render {relativePath} p.{pageNumber} — skipping rather than asserting against a missing third opinion renderer");
+
+            using var ghostAlignedPdfe = DifferentialMetrics.ResizeMatch(
+                pdfeBitmap, ghostBitmap.Width, ghostBitmap.Height);
+            ghostscriptReport = DifferentialMetrics.Compare(ghostAlignedPdfe, ghostBitmap);
+            _output.WriteLine($"  ghostscript: {ghostscriptReport}");
+
+            var ghostscriptMatchesPdfe = !IsFailed(ghostscriptReport);
+            using var mutoolAlignedGhostscript = DifferentialMetrics.ResizeMatch(
+                mutoolBitmap!, ghostBitmap.Width, ghostBitmap.Height);
+            var ghostscriptMatchesMutool = !IsFailed(DifferentialMetrics.Compare(mutoolAlignedGhostscript, ghostBitmap));
+
+            if (ghostscriptMatchesPdfe)
+            {
+                _output.WriteLine("  Ghostscript agrees with pdfe; accepting as a valid alternate rendering.");
+                return;
+            }
+
+            if (ghostscriptMatchesMutool)
+            {
+                Assert.Fail(
+                    $"{relativePath} p.{pageNumber}: MuPDF and Ghostscript agree, but pdfe differs. " +
+                    $"MuPDF: {report}; Ghostscript: {ghostscriptReport}. This is a real pdfe regression.");
+            }
+
+            // Write the triptych so a developer can eyeball the divergence
+            // without re-running the whole pipeline.
+            var outDir = Path.Combine(AppContext.BaseDirectory, "differential-failures");
+            Directory.CreateDirectory(outDir);
+            var name = Path.GetFileNameWithoutExtension(relativePath).Replace(' ', '-');
+            var triptychPath = Path.Combine(outDir, $"{name}-p{pageNumber}-triptych.png");
+            using var triptychPdfe = DifferentialMetrics.ResizeMatch(pdfeBitmap, mutoolBitmap!.Width, mutoolBitmap.Height);
+            DifferentialMetrics.SaveTriptych(triptychPath, triptychPdfe, mutoolBitmap);
+            _output.WriteLine($"  triptych written to {triptychPath}");
+
+            Assert.Fail(
+                $"{relativePath} p.{pageNumber}: pdfe diverged from reference renderers. " +
+                $"MuPDF: {report}; Poppler: {(popplerReport?.ToString() ?? "<unavailable>")}; " +
+                $"Ghostscript: {(ghostscriptReport?.ToString() ?? "<unavailable>")}. " +
                 $"Triptych dumped under bin/.../differential-failures/.");
         }
         finally
         {
             pdfeBitmap.Dispose();
-            mutoolBitmap.Dispose();
+            mutoolBitmap?.Dispose();
+            popplerBitmap?.Dispose();
+            ghostBitmap?.Dispose();
         }
     }
+
+    private static bool IsFailed(DifferentialReport report) =>
+        report.DifferingPixelFraction > MaxDifferingPixelFraction ||
+        report.MeanAbsoluteError > MaxMeanAbsoluteError;
 
     private static int? TryGetPageCount(string pdfPath)
     {

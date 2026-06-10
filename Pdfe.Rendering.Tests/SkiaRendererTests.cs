@@ -545,6 +545,27 @@ public class SkiaRendererTests
     }
 
     [Fact]
+    public void RenderPage_ColorSpace_Separation_UsesTintTransform()
+    {
+        // Arrange - a Separation color space with an exponential tint
+        // transform that maps tint 1 to red.
+        var pdfData = CreatePdfWithSeparationRectangle();
+        using var doc = PdfDocument.Open(pdfData);
+        var renderer = new SkiaRenderer();
+
+        // Act
+        using var bitmap = renderer.RenderPage(doc.GetPage(1));
+
+        // Assert - sample inside the painted rectangle should be red
+        var pixelX = (int)(150 * 150 / 72);
+        var pixelY = bitmap.Height - (int)(150 * 150 / 72);
+        var pixel = bitmap.GetPixel(pixelX, pixelY);
+        pixel.Red.Should().BeGreaterThan(180);
+        pixel.Green.Should().BeLessThan(80);
+        pixel.Blue.Should().BeLessThan(80);
+    }
+
+    [Fact]
     public void RenderPage_ColorSpace_DeviceCMYK_SetsCMYKColor()
     {
         // Arrange - CMYK color space with sc operator
@@ -613,6 +634,35 @@ public class SkiaRendererTests
         // Assert - blue fill, green stroke
         bitmap.Should().NotBeNull();
         bitmap.Width.Should().BeGreaterThan(0);
+    }
+
+    [Fact]
+    public void RenderPage_FormXObject_UsesFormColorSpaceResources()
+    {
+        // Arrange - the form defines its own /ColorSpace resource and uses it
+        // inside the form content. The renderer must resolve the color space
+        // from the active resource stack, not just the page dictionary.
+        var pdfData = CreatePdfWithFormXObjectAndContent(
+            content: "q 1 0 0 1 100 400 cm /Fm1 Do Q",
+            formContent: @"
+                /CS1 cs
+                1 0 0 sc
+                10 10 80 80 re f
+            ",
+            formResources: "<< /ColorSpace << /CS1 /DeviceRGB >> >>");
+        using var doc = PdfDocument.Open(pdfData);
+        var renderer = new SkiaRenderer();
+
+        // Act
+        using var bitmap = renderer.RenderPage(doc.GetPage(1));
+
+        // Assert - sample inside the form rectangle should be red
+        var pixelX = (int)(150 * 150 / 72);
+        var pixelY = bitmap.Height - (int)(450 * 150 / 72);
+        var pixel = bitmap.GetPixel(pixelX, pixelY);
+        pixel.Red.Should().BeGreaterThan(180);
+        pixel.Green.Should().BeLessThan(80);
+        pixel.Blue.Should().BeLessThan(80);
     }
 
     #endregion
@@ -2792,6 +2842,72 @@ public class SkiaRendererTests
         return CreatePdfWithContent(content);
     }
 
+    private static byte[] CreatePdfWithSeparationRectangle()
+    {
+        using var ms = new MemoryStream();
+        using var writer = new StreamWriter(ms, System.Text.Encoding.ASCII, leaveOpen: true);
+        writer.NewLine = "\n";
+
+        writer.WriteLine("%PDF-1.4");
+        writer.Flush();
+
+        var offsets = new long[6];
+
+        offsets[1] = ms.Position;
+        writer.WriteLine("1 0 obj");
+        writer.WriteLine("<< /Type /Catalog /Pages 2 0 R >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[2] = ms.Position;
+        writer.WriteLine("2 0 obj");
+        writer.WriteLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[3] = ms.Position;
+        writer.WriteLine("3 0 obj");
+        writer.WriteLine("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792]");
+        writer.WriteLine("   /Contents 4 0 R");
+        writer.WriteLine("   /Resources << /ColorSpace << /CS1 [ /Separation /Spot /DeviceRGB 5 0 R ] >> >> >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[4] = ms.Position;
+        var content = "q /CS1 cs 1 scn 100 100 200 200 re f Q";
+        writer.WriteLine("4 0 obj");
+        writer.WriteLine($"<< /Length {content.Length} >>");
+        writer.WriteLine("stream");
+        writer.Write(content);
+        writer.WriteLine();
+        writer.WriteLine("endstream");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[5] = ms.Position;
+        writer.WriteLine("5 0 obj");
+        writer.WriteLine("<< /FunctionType 2 /Domain [0 1] /Range [0 1 0 1 0 1] /N 1 /C0 [1 1 1] /C1 [1 0 0] >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        var xrefPos = ms.Position;
+        writer.WriteLine("xref");
+        writer.WriteLine("0 6");
+        writer.WriteLine("0000000000 65535 f ");
+        for (int i = 1; i <= 5; i++)
+            writer.WriteLine($"{offsets[i]:D10} 00000 n ");
+        writer.Flush();
+
+        writer.WriteLine("trailer");
+        writer.WriteLine("<< /Root 1 0 R /Size 6 >>");
+        writer.WriteLine("startxref");
+        writer.WriteLine(xrefPos.ToString());
+        writer.WriteLine("%%EOF");
+        writer.Flush();
+
+        return ms.ToArray();
+    }
+
     private static byte[] CreatePdfWithGrayscaleRectangle(int x, int y, int w, int h, double gray)
     {
         var content = $"{gray} g {x} {y} {w} {h} re f";
@@ -2943,7 +3059,10 @@ public class SkiaRendererTests
         return ms.ToArray();
     }
 
-    private static byte[] CreatePdfWithFormXObjectAndContent(string content, string formContent)
+    private static byte[] CreatePdfWithFormXObjectAndContent(
+        string content,
+        string formContent,
+        string? formResources = null)
     {
         using var ms = new MemoryStream();
         using var writer = new StreamWriter(ms, System.Text.Encoding.ASCII, leaveOpen: true);
@@ -2999,6 +3118,10 @@ public class SkiaRendererTests
         offsets[6] = ms.Position;
         writer.WriteLine("6 0 obj");
         writer.WriteLine($"<< /Type /XObject /Subtype /Form /BBox [0 0 100 100]");
+        if (!string.IsNullOrWhiteSpace(formResources))
+        {
+            writer.WriteLine($"   /Resources {formResources}");
+        }
         writer.WriteLine($"   /Matrix [1 0 0 1 0 0] /Length {formContent.Length} >>");
         writer.WriteLine("stream");
         writer.Write(formContent);

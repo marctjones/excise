@@ -180,16 +180,6 @@ public class MainWindowViewModelTests
     }
 
     [Fact]
-    public void DebugVerifyRedaction_CanBeSetAndRead()
-    {
-        _viewModel.DebugVerifyRedaction = true;
-        _viewModel.DebugVerifyRedaction.Should().BeTrue();
-
-        _viewModel.DebugVerifyRedaction = false;
-        _viewModel.DebugVerifyRedaction.Should().BeFalse();
-    }
-
-    [Fact]
     public void RenderCacheMax_DefaultValueIsPositive()
     {
         _viewModel.RenderCacheMax.Should().BeGreaterThan(0);
@@ -793,6 +783,8 @@ public class MainWindowViewModelTests
                 SignatureName = "Approval",
                 IsValid = true,
                 SignedBy = "CN=Jane Doe",
+                ByteRangeStructureChecked = true,
+                ByteRangeStructureValid = true,
                 ByteRangeIntegrityChecked = true,
                 ByteRangeIntegrityValid = true,
                 CoversWholeDocument = true,
@@ -803,10 +795,11 @@ public class MainWindowViewModelTests
         var summary = new SignatureVerificationSummaryFormatter().Format(results);
 
         summary.Should().Contain("Signature: Approval");
-        summary.Should().Contain("CMS signature check: passed");
+        summary.Should().Contain("CMS signature check: passed (CMS bytes and ByteRange digest only)");
         summary.Should().Contain("Signer: CN=Jane Doe");
         summary.Should().Contain("Signing time: not extracted");
-        summary.Should().Contain("Document byte-range integrity: passed");
+        summary.Should().Contain("ByteRange structure: passed");
+        summary.Should().Contain("Signed byte-range digest: passed");
         summary.Should().Contain("Covers whole document: yes");
         summary.Should().Contain("Certificate trust chain: not evaluated by the OS trust store.");
     }
@@ -826,10 +819,11 @@ public class MainWindowViewModelTests
         var summary = new SignatureVerificationSummaryFormatter().Format(results);
 
         summary.Should().Contain("Signature: unknown");
-        summary.Should().Contain("CMS signature check: failed");
+        summary.Should().Contain("CMS signature check: failed (CMS bytes and ByteRange digest only)");
         summary.Should().Contain("Signer: unknown");
         summary.Should().Contain("Details: Invalid or missing ByteRange");
-        summary.Should().Contain("Document byte-range integrity: not checked");
+        summary.Should().Contain("ByteRange structure: not checked");
+        summary.Should().Contain("Signed byte-range digest: not checked");
         summary.Should().Contain("Covers whole document: no");
     }
 
@@ -1280,14 +1274,6 @@ public class MainWindowViewModelTests
     #endregion
 
     #region Debug and Configuration Tests
-
-    [Fact]
-    public void DebugVerifyRedaction_DefaultState()
-    {
-        // Default state depends on DEBUG/RELEASE build
-        var debugState = _viewModel.DebugVerifyRedaction;
-        (debugState == true || debugState == false).Should().BeTrue();
-    }
 
     [Fact]
     public void RenderCacheMax_HasValidDefault()

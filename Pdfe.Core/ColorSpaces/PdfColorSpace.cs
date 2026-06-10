@@ -14,14 +14,19 @@ public sealed class PdfColorSpace
 
     private readonly PdfColorSpace? _indexedBase;
     private readonly byte[]? _indexedLookup;
+    private readonly PdfColorSpace? _alternateSpace;
+    private readonly PdfObject? _tintTransform;
 
     private PdfColorSpace(PdfColorSpaceType type, int components,
-        PdfColorSpace? indexedBase = null, byte[]? indexedLookup = null)
+        PdfColorSpace? indexedBase = null, byte[]? indexedLookup = null,
+        PdfColorSpace? alternateSpace = null, PdfObject? tintTransform = null)
     {
         Type = type;
         Components = components;
         _indexedBase = indexedBase;
         _indexedLookup = indexedLookup;
+        _alternateSpace = alternateSpace;
+        _tintTransform = tintTransform;
     }
 
     public static readonly PdfColorSpace DeviceGray = new(PdfColorSpaceType.DeviceGray, 1);
@@ -59,8 +64,8 @@ public sealed class PdfColorSpace
                 "CalGray" => new PdfColorSpace(PdfColorSpaceType.CalGray, 1),
                 "CalRGB" => new PdfColorSpace(PdfColorSpaceType.CalRGB, 3),
                 "Lab" => new PdfColorSpace(PdfColorSpaceType.Lab, 3),
-                "Separation" => new PdfColorSpace(PdfColorSpaceType.Separation, 1),
-                "DeviceN" => ParseDeviceN(arr),
+                "Separation" => ParseSeparation(arr, doc),
+                "DeviceN" => ParseDeviceN(arr, doc),
                 "Pattern" => new PdfColorSpace(PdfColorSpaceType.Pattern, 0),
                 "DeviceGray" => DeviceGray,
                 "DeviceRGB" => DeviceRGB,
@@ -106,12 +111,28 @@ public sealed class PdfColorSpace
         return new PdfColorSpace(PdfColorSpaceType.Indexed, 1, baseCs, lookup);
     }
 
-    private static PdfColorSpace ParseDeviceN(PdfArray arr)
+    private static PdfColorSpace ParseSeparation(PdfArray arr, PdfDocument doc)
+    {
+        if (arr.Count < 4)
+            return new PdfColorSpace(PdfColorSpaceType.Separation, 1);
+
+        var alternateSpace = Parse(arr[2], doc);
+        var tintTransform = doc.Resolve(arr[3]);
+        return new PdfColorSpace(PdfColorSpaceType.Separation, 1, alternateSpace: alternateSpace, tintTransform: tintTransform);
+    }
+
+    private static PdfColorSpace ParseDeviceN(PdfArray arr, PdfDocument doc)
     {
         int n = 1;
         if (arr.Count >= 2 && arr[1] is PdfArray names)
             n = names.Count;
-        return new PdfColorSpace(PdfColorSpaceType.DeviceN, n);
+
+        PdfColorSpace? alternateSpace = null;
+        if (arr.Count >= 3)
+            alternateSpace = Parse(arr[2], doc);
+
+        PdfObject? tintTransform = arr.Count >= 4 ? doc.Resolve(arr[3]) : null;
+        return new PdfColorSpace(PdfColorSpaceType.DeviceN, n, alternateSpace: alternateSpace, tintTransform: tintTransform);
     }
 
     /// <summary>
@@ -142,7 +163,10 @@ public sealed class PdfColorSpace
                 (values.Length >= 3) ? (values[0], values[1], values[2]) : (0, 0, 0),
 
             PdfColorSpaceType.Separation =>
-                (values.Length >= 1) ? (1 - values[0], 1 - values[0], 1 - values[0]) : (0, 0, 0),
+                ResolveTintedColor(values),
+
+            PdfColorSpaceType.DeviceN =>
+                ResolveTintedColor(values),
 
             PdfColorSpaceType.Indexed =>
                 (values.Length >= 1) ? LookupIndexed((int)Math.Round(values[0])) : (0, 0, 0),
@@ -168,6 +192,27 @@ public sealed class PdfColorSpace
             baseValues[i] = _indexedLookup[offset + i] / 255.0;
 
         return _indexedBase.ToRgb(baseValues);
+    }
+
+    private (double R, double G, double B) ResolveTintedColor(double[] values)
+    {
+        if (_alternateSpace == null)
+            return (values.Length >= 1) ? (1 - values[0], 1 - values[0], 1 - values[0]) : (0, 0, 0);
+
+        var t = values.Length > 0 ? values[0] : 0;
+        var evaluated = PdfFunctionEvaluator.Evaluate(_tintTransform, t);
+        if (evaluated == null || evaluated.Length == 0)
+        {
+            if (_alternateSpace.Components == values.Length && values.Length > 0)
+                return _alternateSpace.ToRgb(values);
+
+            if (_alternateSpace.Components == 1 && values.Length > 0)
+                return _alternateSpace.ToRgb(new[] { values[0] });
+
+            return _alternateSpace.ToRgb(new[] { t });
+        }
+
+        return _alternateSpace.ToRgb(evaluated);
     }
 
     private static (double, double, double) CmykToRgb(double c, double m, double y, double k)

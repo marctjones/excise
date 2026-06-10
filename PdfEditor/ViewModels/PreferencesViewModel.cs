@@ -14,12 +14,6 @@ public class PreferencesViewModel : ViewModelBase
     private bool _ocrBinarize = true;
     private double _ocrDenoiseRadius = 0.8;
     private int _renderCacheMax = 20;
-    private bool _runVerifyAfterSave = true; // Enabled by default for security
-#if DEBUG
-    private bool _debugVerifyRedaction = true; // Debug mode: enabled in DEBUG builds
-#else
-    private bool _debugVerifyRedaction = false; // Debug mode: disabled in RELEASE builds
-#endif
 
     public PreferencesViewModel()
     {
@@ -78,19 +72,6 @@ public class PreferencesViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _renderCacheMax, value);
     }
 
-    // Redaction Properties
-    public bool RunVerifyAfterSave
-    {
-        get => _runVerifyAfterSave;
-        set => this.RaiseAndSetIfChanged(ref _runVerifyAfterSave, value);
-    }
-
-    public bool DebugVerifyRedaction
-    {
-        get => _debugVerifyRedaction;
-        set => this.RaiseAndSetIfChanged(ref _debugVerifyRedaction, value);
-    }
-
     // Commands
     public ReactiveCommand<Unit, Unit> SaveCommand { get; }
     public ReactiveCommand<Unit, Unit> CancelCommand { get; }
@@ -120,12 +101,6 @@ public class PreferencesViewModel : ViewModelBase
         OcrBinarize = true;
         OcrDenoiseRadius = 0.8;
         RenderCacheMax = 20;
-        RunVerifyAfterSave = true; // Enabled by default for security
-#if DEBUG
-        DebugVerifyRedaction = true; // Debug mode enabled in DEBUG builds
-#else
-        DebugVerifyRedaction = false; // Debug mode disabled in RELEASE builds
-#endif
     }
 
     private void CloseWindow()
@@ -136,12 +111,10 @@ public class PreferencesViewModel : ViewModelBase
     public void LoadFromMainViewModel(MainWindowViewModel mainViewModel)
     {
         RenderCacheMax = mainViewModel.RenderCacheMax;
-        DebugVerifyRedaction = mainViewModel.DebugVerifyRedaction;
     }
 
     public void SaveToMainViewModel(MainWindowViewModel mainViewModel)
     {
         mainViewModel.RenderCacheMax = RenderCacheMax;
-        mainViewModel.DebugVerifyRedaction = DebugVerifyRedaction;
     }
 }

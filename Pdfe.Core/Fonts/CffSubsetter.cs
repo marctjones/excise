@@ -159,7 +159,7 @@ public static class CffSubsetter
             output.Write(newCharsetBytes, 0, newCharsetBytes.Length);
             output.Write(newCharStringsBytes, 0, newCharStringsBytes.Length);
 
-            // TODO: Private DICT and Local Subrs (skipped for MVP — would require parsing)
+            // Private DICT and Local Subrs are not emitted by this simplified subsetter.
 
             return output.ToArray();
         }

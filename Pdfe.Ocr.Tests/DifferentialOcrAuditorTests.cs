@@ -57,7 +57,8 @@ public class DifferentialOcrAuditorTests
                 g.Flush();
             }
             using var scan = new SkiaRenderer().RenderPage(srcPage,
-                new RenderOptions { Dpi = 150 });
+                new RenderOptions { Dpi = 150 },
+                TestContext.Current.CancellationToken);
             imgW = scan.Width;
             imgH = scan.Height;
             rgbBytes = ToDeviceRgb(scan);

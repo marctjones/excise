@@ -12,8 +12,8 @@ namespace Pdfe.Rendering.Tests;
 /// Memory baseline tests for the Skia render pipeline.
 ///
 /// These tests fail when memory usage regresses significantly, catching systemic
-/// allocation creep that timing tests miss. Thresholds are intentionally loose
-/// (2-3× regression) to avoid CI flakiness, but tight enough to surface problems.
+/// allocation creep that timing tests miss. Current-thread allocation counters
+/// keep the checks stable when test assemblies run in parallel.
 ///
 /// All baselines were calibrated against an Ubuntu 26.04 / .NET 10 / Skia 2.88.9
 /// reference machine. Adjust thresholds if the test agent runs on significantly
@@ -91,14 +91,14 @@ public class MemoryBenchmarkTests
         GC.Collect();
 
         // Measure allocation across a single render.
-        long allocBefore = GC.GetTotalAllocatedBytes(precise: true);
+        long allocBefore = GC.GetAllocatedBytesForCurrentThread();
         using (var doc = PdfDocument.Open(path))
         {
             var renderer = new SkiaRenderer();
             using var bitmap = renderer.RenderPage(doc.GetPage(pageIndex),
                 new RenderOptions { Dpi = 150 });
         }
-        long allocAfter = GC.GetTotalAllocatedBytes(precise: true);
+        long allocAfter = GC.GetAllocatedBytesForCurrentThread();
 
         long allocDelta = allocAfter - allocBefore;
         // Convert to MB for reporting.
@@ -214,12 +214,12 @@ public class MemoryBenchmarkTests
         GC.Collect();
 
         // Measure allocation across 100 cache-hit calls.
-        long allocBefore = GC.GetTotalAllocatedBytes(precise: true);
+        long allocBefore = GC.GetAllocatedBytesForCurrentThread();
         for (int i = 0; i < 100; i++)
         {
             _ = page.Letters;
         }
-        long allocAfter = GC.GetTotalAllocatedBytes(precise: true);
+        long allocAfter = GC.GetAllocatedBytesForCurrentThread();
 
         long allocDelta = allocAfter - allocBefore;
         double allocDeltaKb = allocDelta / 1024.0;
@@ -266,10 +266,10 @@ public class MemoryBenchmarkTests
 
         for (int i = 0; i < 10; i++)
         {
-            long before = GC.GetTotalAllocatedBytes(precise: true);
+            long before = GC.GetAllocatedBytesForCurrentThread();
             using var bitmap = renderer.RenderPage(doc.GetPage(1),
                 new RenderOptions { Dpi = 150 });
-            long after = GC.GetTotalAllocatedBytes(precise: true);
+            long after = GC.GetAllocatedBytesForCurrentThread();
             allocations[i] = after - before;
         }
 
@@ -319,16 +319,16 @@ public class MemoryBenchmarkTests
         GC.WaitForPendingFinalizers();
         GC.Collect();
 
-        long allocStart = GC.GetTotalAllocatedBytes(precise: true);
+        long allocStart = GC.GetAllocatedBytesForCurrentThread();
         long peakAlloc = allocStart;
 
         var renderer = new SkiaRenderer();
         for (int i = 1; i <= Math.Min(doc.PageCount, 5); i++)
         {
-            long before = GC.GetTotalAllocatedBytes(precise: true);
+            long before = GC.GetAllocatedBytesForCurrentThread();
             using var bitmap = renderer.RenderPage(doc.GetPage(i),
                 new RenderOptions { Dpi = 150 });
-            long after = GC.GetTotalAllocatedBytes(precise: true);
+            long after = GC.GetAllocatedBytesForCurrentThread();
 
             if (after > peakAlloc)
                 peakAlloc = after;

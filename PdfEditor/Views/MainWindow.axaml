@@ -229,6 +229,7 @@
                             AutomationProperties.HelpText="Opens a file dialog to select a PDF document"/>
                     <Button Content="{Binding SaveButtonText, StringFormat='💾 {0}'}" Command="{Binding SaveFileCommand}"
                             Classes="modern-button" Padding="12,6"
+                            IsEnabled="{Binding IsDocumentLoaded}"
                             ToolTip.Tip="Save (Ctrl+S)"
                             AutomationProperties.Name="Save Document"
                             AutomationProperties.HelpText="Saves the current PDF document"/>
@@ -241,6 +242,7 @@
                             Classes="modern-button toggle"
                             Classes.active="{Binding IsTextSelectionMode}"
                             Padding="12,6"
+                            IsEnabled="{Binding IsDocumentLoaded}"
                             ToolTip.Tip="Text Selection Mode (T)"
                             AutomationProperties.Name="Text Selection Mode"
                             AutomationProperties.HelpText="Toggle text selection mode to select and copy text"/>
@@ -249,6 +251,7 @@
                             Classes="modern-button toggle"
                             Classes.active="{Binding IsRedactionMode}"
                             Padding="12,6"
+                            IsEnabled="{Binding IsDocumentLoaded}"
                             ToolTip.Tip="Redaction Mode (R)"
                             AutomationProperties.Name="Redaction Mode"
                             AutomationProperties.HelpText="Toggle redaction mode to mark areas for removal"/>
@@ -270,11 +273,13 @@
                             Classes="modern-button toggle"
                             Classes.active="{Binding IsFormAuthoringMode}"
                             Padding="12,6"
+                            IsEnabled="{Binding IsDocumentLoaded}"
                             ToolTip.Tip="Form Authoring Mode — drag to define a new field"
                             AutomationProperties.Name="Form Authoring Mode"/>
 
                     <ComboBox SelectedIndex="0"
                               IsVisible="{Binding IsFormAuthoringMode}"
+                              IsEnabled="{Binding IsDocumentLoaded}"
                               SelectionChanged="OnFormFieldTypeChanged"
                               ToolTip.Tip="Field type for the next drag"
                               MinWidth="100" Margin="4,0">
@@ -287,6 +292,7 @@
                     <Button Content="🪄 Auto-detect" Command="{Binding AutoDetectFieldsCommand}"
                             Classes="modern-button"
                             Padding="12,6"
+                            IsEnabled="{Binding IsDocumentLoaded}"
                             ToolTip.Tip="Heuristically add form fields where the page has underline placeholders or empty squares"
                             AutomationProperties.Name="Auto-detect Form Fields"/>
 
@@ -296,23 +302,23 @@
                     <!-- Tools Group -->
                     <Button Content="🔍 Find" Command="{Binding ToggleSearchCommand}"
                             Classes="modern-button" Padding="12,6"
+                            IsEnabled="{Binding IsDocumentLoaded}"
                             ToolTip.Tip="Find Text (Ctrl+F)"
                             AutomationProperties.Name="Find Text"
                             AutomationProperties.HelpText="Opens the search bar to find text in the document"/>
-
-
-
                     <Border Width="1" Height="24" Margin="6,0"
                             Background="{DynamicResource DividerBrush}"/>
 
                     <!-- Page Rotation -->
                     <Button Content="↺" Command="{Binding RotatePageLeftCommand}"
                             Classes="modern-button" Padding="10,6" FontSize="16"
+                            IsEnabled="{Binding IsDocumentLoaded}"
                             ToolTip.Tip="Rotate Left (Ctrl+L)"
                             AutomationProperties.Name="Rotate Page Left"
                             AutomationProperties.HelpText="Rotate the current page 90 degrees counter-clockwise"/>
                     <Button Content="↻" Command="{Binding RotatePageRightCommand}"
                             Classes="modern-button" Padding="10,6" FontSize="16"
+                            IsEnabled="{Binding IsDocumentLoaded}"
                             ToolTip.Tip="Rotate Right (Ctrl+R)"
                             AutomationProperties.Name="Rotate Page Right"
                             AutomationProperties.HelpText="Rotate the current page 90 degrees clockwise"/>
@@ -322,6 +328,7 @@
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
                     <Button Content="−" Command="{Binding ZoomOutCommand}"
                             Classes="modern-button" Padding="10,6" FontWeight="Bold"
+                            IsEnabled="{Binding IsDocumentLoaded}"
                             ToolTip.Tip="Zoom Out (Ctrl+-)"
                             AutomationProperties.Name="Zoom Out"
                             AutomationProperties.HelpText="Decrease zoom level"/>
@@ -333,11 +340,13 @@
                                AutomationProperties.Name="Zoom Level"/>
                     <Button Content="+" Command="{Binding ZoomInCommand}"
                             Classes="modern-button" Padding="10,6" FontWeight="Bold"
+                            IsEnabled="{Binding IsDocumentLoaded}"
                             ToolTip.Tip="Zoom In (Ctrl++)"
                             AutomationProperties.Name="Zoom In"
                             AutomationProperties.HelpText="Increase zoom level"/>
                     <Button Content="Fit" Command="{Binding ZoomFitWidthCommand}"
                             Classes="modern-button" Padding="10,6" FontSize="11"
+                            IsEnabled="{Binding IsDocumentLoaded}"
                             ToolTip.Tip="Fit Width (Ctrl+1)"
                             AutomationProperties.Name="Fit to Width"
                             AutomationProperties.HelpText="Fit page to window width"/>
