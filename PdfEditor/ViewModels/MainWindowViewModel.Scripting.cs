@@ -3,6 +3,7 @@ using Pdfe.Core.Document;
 using PdfEditor.Services;
 using ReactiveUI;
 using System;
+using System.Linq;
 using System.Reactive;
 using System.Threading;
 using System.Threading.Tasks;
@@ -227,7 +228,12 @@ public partial class MainWindowViewModel
         {
             var document = _documentService.GetCurrentDocument()
                 ?? throw new InvalidOperationException("Document is null");
-            ApplyPendingAreaRedactions(document);
+            var requestedRedactions = RedactionWorkflow.PendingRedactions.ToList();
+            var skippedRedactionCount = ApplyPendingAreaRedactions(document);
+            var report = _redactedCopySafetyService.PrepareRedactedCopy(
+                document,
+                requestedRedactions,
+                skippedRedactionCount);
 
             RedactionWorkflow.MoveToApplied();
             FileState.PendingRedactionsCount = 0;
@@ -235,7 +241,9 @@ public partial class MainWindowViewModel
             this.RaisePropertyChanged(nameof(SaveButtonText));
             this.RaisePropertyChanged(nameof(StatusBarText));
 
-            _logger.LogInformation("[SCRIPT] ApplyRedactionsCommand completed - coordinate redactions applied in memory");
+            _logger.LogInformation(
+                "[SCRIPT] ApplyRedactionsCommand completed - coordinate redactions applied in memory; safety report warnings: {HasWarnings}",
+                report.HasWarnings);
             await Task.CompletedTask;
             return;
         }
@@ -287,6 +295,21 @@ public partial class MainWindowViewModel
                 _logger.LogInformation("[SCRIPT] Applying {Count} text redactions using file-based API",
                     _pendingTextRedactions.Count);
 
+                var requestedRedactions = RedactionWorkflow.PendingRedactions
+                    .Concat(RedactionWorkflow.AppliedRedactions)
+                    .ToList();
+                if (requestedRedactions.Count == 0)
+                {
+                    requestedRedactions = _pendingTextRedactions
+                        .Select(text => new PdfEditor.Models.PendingRedaction
+                        {
+                            PageNumber = 1,
+                            PageArea = PdfPageRect.FromContentPoints(1, new PdfRectangle(0, 0, 1, 1)),
+                            PreviewText = text
+                        })
+                        .ToList();
+                }
+
                 // Use sequential file-based redaction (like CLI)
                 var currentInput = _currentFilePath;
                 var tempDir = System.IO.Path.GetTempPath();
@@ -320,6 +343,18 @@ public partial class MainWindowViewModel
                     currentInput = currentOutput;
                 }
 
+                using (var redactedDocument = Pdfe.Core.Document.PdfDocument.Open(System.IO.File.ReadAllBytes(filePath)))
+                {
+                    var report = _redactedCopySafetyService.PrepareRedactedCopy(
+                        redactedDocument,
+                        requestedRedactions);
+                    redactedDocument.Save(filePath);
+
+                    _logger.LogInformation(
+                        "[SCRIPT] Safe-share scrub and verification completed for text redaction output; warnings: {HasWarnings}",
+                        report.HasWarnings);
+                }
+
                 // Clear pending text redactions
                 _pendingTextRedactions.Clear();
 
@@ -339,10 +374,19 @@ public partial class MainWindowViewModel
 
                 if (RedactionWorkflow.PendingCount > 0)
                 {
-                    ApplyPendingAreaRedactions(document);
+                    var requestedRedactions = RedactionWorkflow.PendingRedactions.ToList();
+                    var skippedRedactionCount = ApplyPendingAreaRedactions(document);
+                    var report = _redactedCopySafetyService.PrepareRedactedCopy(
+                        document,
+                        requestedRedactions,
+                        skippedRedactionCount);
                     RedactionWorkflow.MoveToApplied();
                     FileState.PendingRedactionsCount = 0;
                     _hasInMemoryModifications = true;
+
+                    _logger.LogInformation(
+                        "[SCRIPT] Safe-share scrub and verification completed for coordinate redaction output; warnings: {HasWarnings}",
+                        report.HasWarnings);
                 }
 
                 _logger.LogInformation("[SCRIPT] Saving PDF to: {Path}", filePath);

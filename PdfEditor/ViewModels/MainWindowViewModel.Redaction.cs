@@ -147,8 +147,13 @@ public partial class MainWindowViewModel
                 return;
             }
 
-            ApplyPendingAreaRedactions(document);
+            var requestedRedactions = RedactionWorkflow.PendingRedactions.ToList();
+            var skippedRedactionCount = ApplyPendingAreaRedactions(document);
             ApplyPendingTypewriterText(document);
+            var report = _redactedCopySafetyService.PrepareRedactedCopy(
+                document,
+                requestedRedactions,
+                skippedRedactionCount);
 
             _logger.LogInformation("Saving redacted PDF to: {Path}", saveFilePath);
             document.Save(saveFilePath);
@@ -170,7 +175,7 @@ public partial class MainWindowViewModel
             _logger.LogInformation("Reloading saved document: {Path}", saveFilePath);
             await LoadDocumentAsync(saveFilePath);
 
-            await _dialogService.ShowMessageAsync("Success", $"Redacted PDF saved to:\n{saveFilePath}\n\nOriginal file preserved. Document reloaded.");
+            await _dialogService.ShowMessageAsync("Success", _redactedCopySafetyService.FormatForDialog(saveFilePath, report));
         }
         catch (Exception ex)
         {
@@ -304,8 +309,10 @@ public partial class MainWindowViewModel
         }
     }
 
-    private void ApplyPendingAreaRedactions(Pdfe.Core.Document.PdfDocument document)
+    private int ApplyPendingAreaRedactions(Pdfe.Core.Document.PdfDocument document)
     {
+        var skippedCount = 0;
+
         foreach (var pending in RedactionWorkflow.PendingRedactions.ToList())
         {
             if (pending.PageNumber < 1 || pending.PageNumber > document.PageCount)
@@ -314,6 +321,7 @@ public partial class MainWindowViewModel
                     "Skipping pending redaction for invalid page {Page}. Document has {PageCount} pages.",
                     pending.PageNumber,
                     document.PageCount);
+                skippedCount++;
                 continue;
             }
 
@@ -325,6 +333,8 @@ public partial class MainWindowViewModel
             var page = document.Pages[pending.PageNumber - 1];
             _redactionService.RedactArea(page, pending.PageArea);
         }
+
+        return skippedCount;
     }
 
     private bool TryGetCurrentRedactionPageArea(out PdfPageRect pageArea)

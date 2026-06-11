@@ -69,6 +69,8 @@ Build the packages locally with `dotnet pack -c Release` (they are also attached
 - External tools (`pdftotext`, mutool, Acrobat copy-paste) cannot recover redacted content
 - Mark-then-apply workflow with red dashed previews and a Clipboard History sidebar showing what was removed
 - Original protection — defaults the save dialog to `filename_REDACTED.pdf`
+- Safe-to-share save path — `RedactedCopySafetyService` scrubs Info metadata, XMP metadata, and embedded files/attachments by default, then reports content-removal, metadata, attachment, and hidden-text audit status without repeating removed text
+- `PdfDocument.ScrubMetadata(scrubAttachments: true)` strips Info dict, XMP, and embedded files in one call — important when redacted documents may carry the data they were redacted of in attachments (ZUGFeRD, Factur-X)
 - OCG-aware — `RedactText` defaults to `includeHiddenLayers=true` so hidden optional content groups don't slip past
 - Verified against real-world fixtures (CT birth certificate, government forms) at the pixel and content-stream level
 
@@ -78,7 +80,6 @@ Build the packages locally with `dotnet pack -c Release` (they are also attached
 - `PdfDocument.FlattenAcroForm()` bakes values into static page content, clips/wraps text to widget bounds, draws only the selected radio widget, and strips widget annotations
 - `AcroFormAuthoring` extension methods: `AddTextField`, `AddCheckBox`, `AddChoiceField`, `AddSignatureField` — auto-create the AcroForm dict and `/DR/Font/Helv` on first call
 - `PdfFormAutoDetector` heuristically suggests fields where the page has horizontal underlines or empty checkbox-sized outlines (Acrobat-style "Prepare Form")
-- `PdfDocument.ScrubMetadata(scrubAttachments: true)` strips Info dict, XMP, and embedded files in one call — important when redacted documents may carry the data they were redacted of in attachments (ZUGFeRD, Factur-X)
 
 ### Page and annotation authoring
 - Page organization is supported in the desktop app and service layer: append/insert pages from another PDF, extract the current page or selected pages, remove current or selected pages, move current or selected pages earlier/later, and rotate pages. Page-owned streams/resources/annotations are cloned into copied pages; the app warns when document-level structures such as outlines, named destinations, or AcroForm metadata may need review.

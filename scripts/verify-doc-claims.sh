@@ -39,6 +39,11 @@ require_code_text PdfEditor/ViewModels/MainWindowViewModel.Commands.cs "AddHighl
 require_code_text PdfEditor/ViewModels/MainWindowViewModel.Commands.cs "AddStickyNoteAnnotationCommand"
 require_code_text PdfEditor/Views/MainWindow.axaml "Add _Highlight From Selection"
 
+require_file_text README.md "Safe-to-share save path"
+require_code_text PdfEditor/Services/RedactedCopySafetyService.cs "ScrubMetadata(scrubAttachments: options.ScrubAttachments)"
+require_file_text README.md "without repeating removed text"
+require_code_text PdfEditor/Services/RedactedCopySafetyService.cs "Removed text is not repeated"
+
 require_file_text README.md "OS trust-chain validation limitations"
 require_code_text PdfEditor/Services/SignatureVerificationSummaryFormatter.cs "trust"
 

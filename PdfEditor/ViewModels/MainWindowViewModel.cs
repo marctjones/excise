@@ -33,6 +33,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly PdfDocumentService _documentService;
     private readonly PdfRenderService _renderService;
     private readonly RedactionService _redactionService;
+    private readonly RedactedCopySafetyService _redactedCopySafetyService;
     private readonly PdfTextExtractionService _textExtractionService;
     private readonly SignatureVerificationWorkflowService _signatureWorkflowService;
     private readonly PageOrganizationWorkflowService _pageOrganizationWorkflow;
@@ -100,6 +101,8 @@ public partial class MainWindowViewModel : ViewModelBase
         _documentService = new PdfDocumentService(Microsoft.Extensions.Logging.Abstractions.NullLogger<PdfDocumentService>.Instance);
         _renderService = new PdfRenderService(Microsoft.Extensions.Logging.Abstractions.NullLogger<PdfRenderService>.Instance);
         _redactionService = new RedactionService(Microsoft.Extensions.Logging.Abstractions.NullLogger<RedactionService>.Instance, nullLoggerFactory);
+        _redactedCopySafetyService = new RedactedCopySafetyService(
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<RedactedCopySafetyService>.Instance);
         _textExtractionService = new PdfTextExtractionService(Microsoft.Extensions.Logging.Abstractions.NullLogger<PdfTextExtractionService>.Instance);
         _searchService = new PdfSearchService(Microsoft.Extensions.Logging.Abstractions.NullLogger<PdfSearchService>.Instance);
         _filenameSuggestionService = new FilenameSuggestionService();
@@ -138,13 +141,17 @@ public partial class MainWindowViewModel : ViewModelBase
         IUserDialogService? dialogService = null,
         SignatureVerificationWorkflowService? signatureWorkflowService = null,
         PageOrganizationWorkflowService? pageOrganizationWorkflow = null,
-        AnnotationWorkflowService? annotationWorkflow = null)
+        AnnotationWorkflowService? annotationWorkflow = null,
+        RedactedCopySafetyService? redactedCopySafetyService = null)
     {
         _logger = logger;
         _loggerFactory = loggerFactory;
         _documentService = documentService;
         _renderService = renderService;
         _redactionService = redactionService;
+        _redactedCopySafetyService = redactedCopySafetyService ?? new RedactedCopySafetyService(
+            loggerFactory.CreateLogger<RedactedCopySafetyService>()
+                ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<RedactedCopySafetyService>.Instance);
         _textExtractionService = textExtractionService;
         _searchService = searchService;
         _filenameSuggestionService = filenameSuggestionService;

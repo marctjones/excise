@@ -17,6 +17,8 @@ public class DocumentationClaimTests
     [InlineData("README.md", "highlight selected text", "PdfEditor/ViewModels/MainWindowViewModel.Commands.cs", "AddHighlightAnnotationFromSelectionCommand")]
     [InlineData("README.md", "sticky notes", "PdfEditor/ViewModels/MainWindowViewModel.Commands.cs", "AddStickyNoteAnnotationCommand")]
     [InlineData("README.md", "Annotation review tools", "PdfEditor/Views/MainWindow.axaml", "Add _Highlight From Selection")]
+    [InlineData("README.md", "Safe-to-share save path", "PdfEditor/Services/RedactedCopySafetyService.cs", "ScrubMetadata(scrubAttachments: options.ScrubAttachments)")]
+    [InlineData("README.md", "without repeating removed text", "PdfEditor/Services/RedactedCopySafetyService.cs", "Removed text is not repeated")]
     [InlineData("README.md", "OS trust-chain validation limitations", "PdfEditor/Services/SignatureVerificationSummaryFormatter.cs", "trust")]
     [InlineData("README.md", "PublicApiApprovalTests", "Pdfe.Core.Tests/Authoring/PublicApiApprovalTests.cs", "APPROVE_PUBLIC_API")]
     public void DocumentedFeatureClaims_MapToImplementation(

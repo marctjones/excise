@@ -137,6 +137,7 @@ public partial class App : Application
         services.AddSingleton<PdfDocumentService>();
         services.AddSingleton<PdfRenderService>();
         services.AddSingleton<RedactionService>();
+        services.AddSingleton<RedactedCopySafetyService>();
         services.AddSingleton<PdfTextExtractionService>();
         services.AddSingleton<PdfSearchService>();
         services.AddSingleton<SignatureVerificationService>();
@@ -154,7 +155,7 @@ public partial class App : Application
         var logger = tempProvider.GetRequiredService<ILogger<App>>();
         logger.LogInformation("Dependency injection container configured");
         logger.LogInformation(
-            "Services registered: PdfDocumentService, PdfRenderService, RedactionService, PdfTextExtractionService, PdfSearchService, SignatureVerificationService, PageOrganizationWorkflowService, AnnotationWorkflowService");
+            "Services registered: PdfDocumentService, PdfRenderService, RedactionService, RedactedCopySafetyService, PdfTextExtractionService, PdfSearchService, SignatureVerificationService, PageOrganizationWorkflowService, AnnotationWorkflowService");
         logger.LogInformation("Logging level set to: INFO");
     }
 }
