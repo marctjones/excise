@@ -415,6 +415,11 @@ published manually):
 2. `windows-exe` job (windows-latest) → `pdfe-<version>-win-x64-setup.exe` + portable `.zip`
 3. `publish` job uploads all artifacts with `.sha256` files; tags containing `-rc`/`-beta`/`-alpha` are flagged as pre-releases.
 
+Before tagging, run the release checklist in
+[`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md), including
+`scripts/verify-doc-claims.sh`, so documentation claims are checked against
+the implemented commands and APIs.
+
 ```bash
 # Cut a new release
 git tag v2.1.0

@@ -139,6 +139,13 @@ Published executables are in `bin/Release/net10.0/{runtime}/publish/`
 ./build.bat         # Windows
 ```
 
+### Release Documentation Gate
+
+Before tagging or describing a release, run `scripts/verify-doc-claims.sh` and
+follow `docs/RELEASE_CHECKLIST.md`. Feature, security, and workflow changes
+must keep implementation, tests, UI text, release notes, GitHub issues, and
+user-facing docs in sync in the same pass.
+
 ## Architecture
 
 ### MVVM Pattern
