@@ -4,7 +4,7 @@
 
 # pdfe
 
-A cross-platform PDF editor and pure-.NET PDF framework, built with **C# + .NET 10 + Avalonia UI** and shipped with **true content-level redaction**, **page organization**, **flat typewriter text editing**, **AcroForm editing/authoring**, basic annotation authoring, and **PDF 2.0 conformance**.
+A cross-platform PDF editor and pure-.NET PDF framework, built with **C# + .NET 10 + Avalonia UI** and shipped with **true content-level redaction**, **page organization**, **flat typewriter text editing**, **AcroForm editing/authoring**, highlight/sticky-note annotation authoring, and **PDF 2.0 conformance**.
 
 [![Release](https://img.shields.io/github/v/release/marctjones/pdfe)](https://github.com/marctjones/pdfe/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -55,6 +55,7 @@ Build the packages locally with `dotnet pack -c Release` (they are also attached
 - **Typewriter text** — place editable text boxes on flat PDFs, then save them as normal page content instead of annotations
 - **AcroForm editing** — click text, checkbox, radio, or dropdown widgets and edit inline; save filled forms as interactive copies or create a flattened form copy
 - **AcroForm authoring** — drag-rect on a page to create new fields (Text / Checkbox / Choice / Signature); auto-detect underline placeholders and empty squares as fields
+- **Annotation review tools** — highlight selected text and add sticky notes as real PDF annotations
 - Reveal Hidden Text — yellow highlights for structural detections (text covered by rectangles), orange for differential-OCR recoveries (text inside rasterized images)
 - Digital signature inspection — checks ByteRange structure, verifies the detached CMS digest/signature over the signed bytes, and clearly reports current OS trust-chain validation limitations
 - Bates numbering
@@ -81,7 +82,7 @@ Build the packages locally with `dotnet pack -c Release` (they are also attached
 
 ### Page and annotation authoring
 - Page organization is supported in the desktop app and service layer: append/insert pages from another PDF, extract the current page or selected pages, remove current or selected pages, move current or selected pages earlier/later, and rotate pages. Page-owned streams/resources/annotations are cloned into copied pages; the app warns when document-level structures such as outlines, named destinations, or AcroForm metadata may need review.
-- `PdfAnnotationAuthoring` extension methods create real PDF annotations for common review workflows: `AddTextAnnotation` for sticky notes and `AddHighlightAnnotation` for text markup highlights.
+- The desktop app can highlight selected text and add sticky notes as real PDF annotations. `PdfAnnotationAuthoring` extension methods expose the same common review workflows in code: `AddTextAnnotation` for sticky notes and `AddHighlightAnnotation` for text markup highlights.
 
 ### CLI (`pdfe`)
 ```bash

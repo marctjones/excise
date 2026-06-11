@@ -25,6 +25,7 @@ internal static class MacNativeMenuBuilder
         private readonly List<NativeMenuItem> _selectedPageMoveEarlierItems = new();
         private readonly List<NativeMenuItem> _selectedPageMoveLaterItems = new();
         private readonly List<NativeMenuItem> _textSelectionItems = new();
+        private readonly List<NativeMenuItem> _annotationSelectionItems = new();
         private readonly List<NativeMenuItem> _redactionItems = new();
         private readonly NativeMenuItem _saveItem;
         private readonly NativeMenuItem _recentFilesItem;
@@ -94,6 +95,11 @@ internal static class MacNativeMenuBuilder
                     TrackDocumentItem(_selectTextItem),
                     TrackDocumentItem(_typewriterItem),
                     TrackTextSelectionItem(CommandItem("Copy Selected Text", _viewModel.CopyTextCommand, Key.C))));
+
+            Add(menu,
+                Submenu("Annotate",
+                    TrackAnnotationSelectionItem(CommandItem("Add Highlight From Selection", _viewModel.AddHighlightAnnotationFromSelectionCommand)),
+                    TrackDocumentItem(CommandItem("Add Sticky Note...", _viewModel.AddStickyNoteAnnotationCommand))));
 
             Add(menu,
                 Submenu("View",
@@ -175,6 +181,8 @@ internal static class MacNativeMenuBuilder
                 item.IsEnabled = isDocumentLoaded && _viewModel.CanMoveSelectedPagesLater;
             foreach (var item in _textSelectionItems)
                 item.IsEnabled = isDocumentLoaded && _viewModel.IsTextSelectionMode;
+            foreach (var item in _annotationSelectionItems)
+                item.IsEnabled = isDocumentLoaded && _viewModel.HasTextSelection;
             foreach (var item in _redactionItems)
                 item.IsEnabled = isDocumentLoaded && _viewModel.IsRedactionMode;
             _selectTextItem.ToggleType = MenuItemToggleType.CheckBox;
@@ -250,6 +258,12 @@ internal static class MacNativeMenuBuilder
         private NativeMenuItem TrackTextSelectionItem(NativeMenuItem item)
         {
             _textSelectionItems.Add(item);
+            return item;
+        }
+
+        private NativeMenuItem TrackAnnotationSelectionItem(NativeMenuItem item)
+        {
+            _annotationSelectionItems.Add(item);
             return item;
         }
 

@@ -50,6 +50,43 @@ public class PageOrganizationWorkflowTests : IDisposable
     }
 
     [Fact]
+    public async Task MovePageAsync_ReordersNonCurrentPageAndPreservesCurrentPageIdentity()
+    {
+        var filePath = Path.Combine(_tempDir, "source.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(filePath, pageCount: 3);
+
+        var documentService = new PdfDocumentService(NullLogger<PdfDocumentService>.Instance);
+        documentService.LoadDocument(filePath);
+        var loggerFactory = NullLoggerFactory.Instance;
+        var vm = new MainWindowViewModel(
+            NullLogger<MainWindowViewModel>.Instance,
+            loggerFactory,
+            documentService,
+            new PdfRenderService(NullLogger<PdfRenderService>.Instance),
+            new RedactionService(NullLogger<RedactionService>.Instance, loggerFactory),
+            new PdfTextExtractionService(NullLogger<PdfTextExtractionService>.Instance),
+            new PdfSearchService(NullLogger<PdfSearchService>.Instance),
+            new SignatureVerificationService(NullLogger<SignatureVerificationService>.Instance),
+            new FilenameSuggestionService(),
+            new ToastService(),
+            dialogService: new NullUserDialogService());
+        vm.FileState.SetDocument(filePath);
+        vm.CurrentPageIndex = 2;
+
+        await vm.MovePageAsync(fromIndex: 0, toIndex: 2);
+
+        vm.CurrentPageIndex.Should().Be(1, "the same page stays current after another page moves after it");
+        vm.FileState.HasUnsavedChanges.Should().BeTrue();
+
+        var outputPath = Path.Combine(_tempDir, "drag-reordered.pdf");
+        documentService.SaveDocument(outputPath);
+        using var reopened = PdfDocument.Open(File.ReadAllBytes(outputPath));
+        new TextExtractor(reopened.GetPage(1)).ExtractText().Should().Contain("Page 2 Content");
+        new TextExtractor(reopened.GetPage(2)).ExtractText().Should().Contain("Page 3 Content");
+        new TextExtractor(reopened.GetPage(3)).ExtractText().Should().Contain("Page 1 Content");
+    }
+
+    [Fact]
     public void PageOrganizationCommands_AreAvailableForMenuAndKeyboardCoverage()
     {
         var vm = new MainWindowViewModel();

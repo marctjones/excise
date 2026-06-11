@@ -502,6 +502,18 @@ public class MainWindowViewModelTests
         _viewModel.CurrentTextSelectionArea.Should().Be(testRect);
     }
 
+    [Fact]
+    public void CurrentTextSelectionPageArea_CanBeSetAndDrivesHasTextSelection()
+    {
+        var pageArea = PdfPageRect.ViewerDips(1, 50, 100, 200, 75, 120);
+
+        _viewModel.CurrentTextSelectionPageArea = pageArea;
+        _viewModel.SelectedText = "Selected content";
+
+        _viewModel.CurrentTextSelectionPageArea.Should().Be(pageArea);
+        _viewModel.HasTextSelection.Should().BeTrue();
+    }
+
     #endregion
 
     #region Sidebar Visibility Tests

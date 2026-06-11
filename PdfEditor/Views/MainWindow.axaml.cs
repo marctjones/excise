@@ -7,6 +7,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Pdfe.Avalonia.Controls;
+using Pdfe.Core.Document;
 using PdfEditor.Models;
 using PdfEditor.ViewModels;
 using System;
@@ -20,6 +21,7 @@ public partial class MainWindow : Window
     private PdfViewerControl? _pdfViewerControl;
     private readonly WindowSettings _windowSettings;
     private object? _nativeMenuDataContext;
+    private int? _draggedThumbnailPageIndex;
 
     // Single reusable UI-thread timer for toast auto-dismiss. A DispatcherTimer
     // (vs System.Timers.Timer) ticks on the dispatcher itself, so it stops when
@@ -80,6 +82,7 @@ public partial class MainWindow : Window
             // Subscribe to redaction collection changes
             viewModel.RedactionWorkflow.PendingRedactions.CollectionChanged += OnRedactionsChanged;
             viewModel.RedactionWorkflow.AppliedRedactions.CollectionChanged += OnRedactionsChanged;
+            viewModel.AnnotationsChanged += OnAnnotationsChanged;
 
             // Subscribe to page changes to update redaction overlays
             viewModel.PropertyChanged += (s, args) =>
@@ -168,6 +171,38 @@ public partial class MainWindow : Window
         _ = vm.EnsureThumbnailLoadedAsync(pageIndex);
     }
 
+    private void OnThumbnailPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (e.Source is CheckBox)
+            return;
+        if (sender is not Control { DataContext: PageThumbnail thumbnail })
+            return;
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+            return;
+
+        _draggedThumbnailPageIndex = thumbnail.PageIndex;
+    }
+
+    private void OnThumbnailPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (_draggedThumbnailPageIndex is not int fromIndex)
+            return;
+
+        _draggedThumbnailPageIndex = null;
+
+        if (sender is not Control { DataContext: PageThumbnail thumbnail })
+            return;
+        if (DataContext is not MainWindowViewModel vm)
+            return;
+
+        var toIndex = thumbnail.PageIndex;
+        if (fromIndex == toIndex)
+            return;
+
+        e.Handled = true;
+        _ = vm.MovePageAsync(fromIndex, toIndex);
+    }
+
     /// <summary>
     /// Enter inside the search box triggers an immediate search (skips
     /// the debounce). Escape closes the search bar.
@@ -207,6 +242,23 @@ public partial class MainWindow : Window
     private void OnRedactionsChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         UpdateRedactionOverlays();
+    }
+
+    private void OnAnnotationsChanged(object? sender, EventArgs e)
+    {
+        _pdfViewerControl ??= this.FindControl<PdfViewerControl>("PdfViewerControl");
+        if (_pdfViewerControl?.Document == null ||
+            _pdfViewerControl.CurrentPage < 1 ||
+            _pdfViewerControl.CurrentPage > _pdfViewerControl.Document.PageCount)
+        {
+            if (_pdfViewerControl != null)
+                _pdfViewerControl.Annotations = null;
+            return;
+        }
+
+        _pdfViewerControl.Annotations = _pdfViewerControl.Document
+            .GetPage(_pdfViewerControl.CurrentPage)
+            .GetAnnotations();
     }
 
     private void UpdateRedactionOverlays()
@@ -523,9 +575,23 @@ public partial class MainWindow : Window
         // letter hit-testing, so the event already carries the joined
         // string — feed it directly.
         viewModel.CurrentTextSelectionArea = e.Area;
+        viewModel.CurrentTextSelectionPageArea =
+            e.Area.Width > 0 && e.Area.Height > 0
+                ? PdfPageRect.ViewerDips(
+                    viewModel.CurrentPage,
+                    e.Area.X,
+                    e.Area.Y,
+                    e.Area.Width,
+                    e.Area.Height,
+                    MainWindowViewModel.DefaultViewerRenderDpi)
+                : null;
         if (!string.IsNullOrEmpty(e.Text))
         {
             _ = viewModel.SetSelectedTextAndCopyAsync(e.Text);
+        }
+        else
+        {
+            viewModel.SelectedText = string.Empty;
         }
     }
 

@@ -63,6 +63,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private PdfPageRect? _currentRedactionPageArea;
     private bool _isTextSelectionMode;
     private Rect _currentTextSelectionArea;
+    private PdfPageRect? _currentTextSelectionPageArea;
     private string _selectedText = string.Empty;
     private ObservableCollection<string> _recentFiles = new();
     private double _viewportWidth = 800;
@@ -292,6 +293,7 @@ public partial class MainWindowViewModel : ViewModelBase
             UpdateThumbnailSelection();
             UpdateSearchHighlights(); // Update highlights when page changes (fixes #310)
             RefreshHiddenTextHighlights();
+            ClearCurrentTextSelection();
         }
     }
 
@@ -320,6 +322,8 @@ public partial class MainWindowViewModel : ViewModelBase
                 return $"{FileState.TypewriterEditsCount} typewriter edit(s) pending";
             if (FileState.FormFieldEditsCount > 0)
                 return $"{FileState.FormFieldEditsCount} form edit(s) pending";
+            if (FileState.AnnotationEditsCount > 0)
+                return $"{FileState.AnnotationEditsCount} annotation edit(s) pending";
             if (FileState.IsOriginalFile)
                 return "Ready";
             return FileState.FileType;
@@ -590,11 +594,29 @@ public partial class MainWindowViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _currentTextSelectionArea, value);
     }
 
+    public PdfPageRect? CurrentTextSelectionPageArea
+    {
+        get => _currentTextSelectionPageArea;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _currentTextSelectionPageArea, value);
+            this.RaisePropertyChanged(nameof(HasTextSelection));
+        }
+    }
+
     public string SelectedText
     {
         get => _selectedText;
-        set => this.RaiseAndSetIfChanged(ref _selectedText, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _selectedText, value);
+            this.RaisePropertyChanged(nameof(HasTextSelection));
+        }
     }
+
+    public bool HasTextSelection =>
+        CurrentTextSelectionPageArea is { Width: > 0, Height: > 0 } &&
+        !string.IsNullOrWhiteSpace(SelectedText);
 
     /// <summary>
     /// Called by the View when the user finishes a text-line selection
@@ -783,7 +805,7 @@ public partial class MainWindowViewModel : ViewModelBase
             _logger.LogInformation(">>> STEP 2: Clearing previous document state");
             // Clear ALL state from previous document before loading new one
             CurrentRedactionArea = new Rect();
-            CurrentTextSelectionArea = new Rect();
+            ClearCurrentTextSelection();
             RedactionWorkflow.Reset();
             ClearPendingTypewriterText();
             ClipboardHistory.Clear();
@@ -1338,18 +1360,23 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     public async Task MoveCurrentPageAsync(int toIndex)
+        => await MovePageAsync(CurrentPageIndex, toIndex);
+
+    public async Task MovePageAsync(int fromIndex, int toIndex)
     {
         if (!_documentService.IsDocumentLoaded)
+            return;
+        if (fromIndex < 0 || fromIndex >= TotalPages || toIndex < 0 || toIndex >= TotalPages || fromIndex == toIndex)
             return;
 
         try
         {
-            var from = CurrentPageIndex;
-            var result = await _pageOrganizationWorkflow.MovePageAsync(from, toIndex);
+            var newCurrentPageIndex = RemapCurrentPageAfterSingleMove(CurrentPageIndex, fromIndex, toIndex);
+            var result = await _pageOrganizationWorkflow.MovePageAsync(fromIndex, toIndex);
             if (!result.DidChange)
                 return;
 
-            CurrentPageIndex = result.CurrentPageIndex ?? toIndex;
+            CurrentPageIndex = newCurrentPageIndex;
             MarkPageOrganizationChanged();
             await RefreshAfterDocumentMutationAsync();
         }
@@ -1358,6 +1385,17 @@ public partial class MainWindowViewModel : ViewModelBase
             _logger.LogError(ex, "Error moving page");
             _toastService.ShowError("Failed to move page", ex.Message);
         }
+    }
+
+    private static int RemapCurrentPageAfterSingleMove(int currentPageIndex, int fromIndex, int toIndex)
+    {
+        if (currentPageIndex == fromIndex)
+            return toIndex;
+        if (fromIndex < toIndex && currentPageIndex > fromIndex && currentPageIndex <= toIndex)
+            return currentPageIndex - 1;
+        if (fromIndex > toIndex && currentPageIndex >= toIndex && currentPageIndex < fromIndex)
+            return currentPageIndex + 1;
+        return currentPageIndex;
     }
 
     public async Task MoveSelectedPagesAsync(int delta)
@@ -1440,8 +1478,7 @@ public partial class MainWindowViewModel : ViewModelBase
         if (!IsTextSelectionMode)
         {
             // Clear selection when exiting mode
-            CurrentTextSelectionArea = new Rect();
-            SelectedText = string.Empty;
+            ClearCurrentTextSelection();
         }
     }
 
@@ -2068,7 +2105,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
             // Clear redaction state (FIX: These were persisting!)
             CurrentRedactionArea = new Rect();
-            CurrentTextSelectionArea = new Rect();
+            ClearCurrentTextSelection();
             RedactionWorkflow.Reset();
             ClearPendingTypewriterText();
             ClipboardHistory.Clear();
@@ -2106,6 +2143,7 @@ public partial class MainWindowViewModel : ViewModelBase
             this.RaisePropertyChanged(nameof(IsDocumentLoaded));
             this.RaisePropertyChanged(nameof(CurrentRedactionArea));
             this.RaisePropertyChanged(nameof(CurrentTextSelectionArea));
+            this.RaisePropertyChanged(nameof(CurrentTextSelectionPageArea));
             this.RaisePropertyChanged(nameof(IsRedactionMode));
             this.RaisePropertyChanged(nameof(IsTypewriterMode));
             this.RaisePropertyChanged(nameof(SaveButtonText));

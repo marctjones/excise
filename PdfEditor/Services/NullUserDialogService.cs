@@ -5,4 +5,7 @@ namespace PdfEditor.Services;
 public sealed class NullUserDialogService : IUserDialogService
 {
     public Task ShowMessageAsync(string title, string message) => Task.CompletedTask;
+
+    public Task<string?> PromptTextAsync(string title, string message, string? defaultValue = null) =>
+        Task.FromResult<string?>(defaultValue);
 }

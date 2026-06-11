@@ -73,6 +73,14 @@
                           IsEnabled="{Binding IsTextSelectionMode}"/>
             </MenuItem>
 
+            <!-- ANNOTATE MENU -->
+            <MenuItem Header="_Annotate">
+                <MenuItem Header="Add _Highlight From Selection" Command="{Binding AddHighlightAnnotationFromSelectionCommand}"
+                          IsEnabled="{Binding HasTextSelection}"/>
+                <MenuItem Header="Add _Sticky Note..." Command="{Binding AddStickyNoteAnnotationCommand}"
+                          IsEnabled="{Binding IsDocumentLoaded}"/>
+            </MenuItem>
+
             <!-- DOCUMENT MENU -->
             <MenuItem Header="_Document">
                 <MenuItem Header="_Add Pages..." Command="{Binding AddPagesCommand}">
@@ -290,6 +298,22 @@
                             ToolTip.Tip="Typewriter Mode"
                             AutomationProperties.Name="Typewriter Mode"
                             AutomationProperties.HelpText="Place editable text that saves as flat PDF page content"/>
+
+                    <Button Content="🖍 Highlight" Command="{Binding AddHighlightAnnotationFromSelectionCommand}"
+                            Classes="modern-button"
+                            Padding="12,6"
+                            IsEnabled="{Binding HasTextSelection}"
+                            ToolTip.Tip="Add highlight from selected text"
+                            AutomationProperties.Name="Add Highlight From Selection"
+                            AutomationProperties.HelpText="Creates a real PDF highlight annotation from the current text selection"/>
+
+                    <Button Content="🗒 Note" Command="{Binding AddStickyNoteAnnotationCommand}"
+                            Classes="modern-button"
+                            Padding="12,6"
+                            IsEnabled="{Binding IsDocumentLoaded}"
+                            ToolTip.Tip="Add sticky note"
+                            AutomationProperties.Name="Add Sticky Note"
+                            AutomationProperties.HelpText="Creates a real PDF sticky-note annotation on the current page or text selection"/>
 
                     <Button Content="⬛ Redact" Command="{Binding ToggleRedactionModeCommand}"
                             Classes="modern-button toggle"
@@ -652,6 +676,8 @@
                                         BorderThickness="0"
                                         Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).GoToPageCommand}"
                                         CommandParameter="{Binding PageIndex}"
+                                        PointerPressed="OnThumbnailPointerPressed"
+                                        PointerReleased="OnThumbnailPointerReleased"
                                         Cursor="Hand"
                                         Classes.selected="{Binding IsSelected}">
                                     <Border Padding="6"

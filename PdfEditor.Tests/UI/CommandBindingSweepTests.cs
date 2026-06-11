@@ -165,6 +165,8 @@ public class CommandBindingSweepTests
             "Remove Current Page",
             "Remove Selected Pages",
             "Clear Page Selection",
+            "Add Highlight From Selection",
+            "Add Sticky Note...",
             "Redaction Mode",
             "Apply Redaction",
             "Verify Digital Signatures..."

@@ -14,6 +14,9 @@ public class DocumentationClaimTests
     [InlineData("README.md", "selected pages", "PdfEditor/ViewModels/MainWindowViewModel.Commands.cs", "MoveSelectedPagesLaterCommand")]
     [InlineData("README.md", "AddTextAnnotation", "Pdfe.Core/Document/PdfAnnotationAuthoring.cs", "AddTextAnnotation")]
     [InlineData("Pdfe.Core/README.md", "AddHighlightAnnotation", "Pdfe.Core/Document/PdfAnnotationAuthoring.cs", "AddHighlightAnnotation")]
+    [InlineData("README.md", "highlight selected text", "PdfEditor/ViewModels/MainWindowViewModel.Commands.cs", "AddHighlightAnnotationFromSelectionCommand")]
+    [InlineData("README.md", "sticky notes", "PdfEditor/ViewModels/MainWindowViewModel.Commands.cs", "AddStickyNoteAnnotationCommand")]
+    [InlineData("README.md", "Annotation review tools", "PdfEditor/Views/MainWindow.axaml", "Add _Highlight From Selection")]
     [InlineData("README.md", "OS trust-chain validation limitations", "PdfEditor/Services/SignatureVerificationSummaryFormatter.cs", "trust")]
     [InlineData("README.md", "PublicApiApprovalTests", "Pdfe.Core.Tests/Authoring/PublicApiApprovalTests.cs", "APPROVE_PUBLIC_API")]
     public void DocumentedFeatureClaims_MapToImplementation(

@@ -50,7 +50,7 @@ public class GuiWorkflowCoverageMatrixTests
         new("Outline tree navigation", nameof(OutlineTreeNavigationTests)),
         new("Page organization workflows", nameof(PageOrganizationWorkflowTests)),
         new("Page viewer render smoke and visual baseline", nameof(PdfViewerHeadlessRenderTests)),
-        new("Basic annotation authoring persistence", nameof(AnnotationAuthoringWorkflowTests)),
+        new("Annotation review UI commands and persistence", nameof(AnnotationAuthoringWorkflowTests)),
         new("Form field overlays and field editing", nameof(FormFieldsOverlayTests)),
         new("Form authoring mouse workflow", nameof(FormAuthoringTests)),
         new("Form fill and flatten workflow", nameof(FormWorkflowTests)),

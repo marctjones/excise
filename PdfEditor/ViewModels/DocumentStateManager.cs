@@ -17,6 +17,7 @@ public class DocumentStateManager : ReactiveObject
     private int _pageEditsCount;
     private int _formFieldEditsCount;
     private int _typewriterEditsCount;
+    private int _annotationEditsCount;
 
     /// <summary>
     /// Path to the currently open file
@@ -82,6 +83,15 @@ public class DocumentStateManager : ReactiveObject
     }
 
     /// <summary>
+    /// Number of sticky-note/highlight annotation edits not yet saved.
+    /// </summary>
+    public int AnnotationEditsCount
+    {
+        get => _annotationEditsCount;
+        set => this.RaiseAndSetIfChanged(ref _annotationEditsCount, value);
+    }
+
+    /// <summary>
     /// True if current file is the same as original (not saved as different file)
     /// </summary>
     public bool IsOriginalFile
@@ -123,7 +133,8 @@ public class DocumentStateManager : ReactiveObject
         || RemovedPagesCount > 0
         || PageEditsCount > 0
         || FormFieldEditsCount > 0
-        || TypewriterEditsCount > 0;
+        || TypewriterEditsCount > 0
+        || AnnotationEditsCount > 0;
 
     /// <summary>
     /// User-friendly description of file type
@@ -163,6 +174,7 @@ public class DocumentStateManager : ReactiveObject
         PageEditsCount = 0;
         FormFieldEditsCount = 0;
         TypewriterEditsCount = 0;
+        AnnotationEditsCount = 0;
     }
 
     /// <summary>
@@ -198,6 +210,7 @@ public class DocumentStateManager : ReactiveObject
         PageEditsCount = 0;
         FormFieldEditsCount = 0;
         TypewriterEditsCount = 0;
+        AnnotationEditsCount = 0;
     }
 
     /// <summary>
@@ -213,6 +226,9 @@ public class DocumentStateManager : ReactiveObject
 
         if (IsOriginalFile && FormFieldEditsCount > 0)
             return "Save Filled Copy";
+
+        if (IsOriginalFile && AnnotationEditsCount > 0)
+            return "Save Annotated Copy";
 
         if (IsOriginalFile)
             return "Save a Copy";
