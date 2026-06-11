@@ -55,6 +55,50 @@ public sealed class PageOrganizationWorkflowServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RemovePagesAsync_RemovesSelectedPagesAndRemapsCurrentPage()
+    {
+        var sourcePath = Path.Combine(_tempDir, "source.pdf");
+        var outputPath = Path.Combine(_tempDir, "removed-selected.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(sourcePath, pageCount: 4);
+        var documentService = CreateLoadedDocumentService(sourcePath);
+        var workflow = CreateWorkflow(documentService, new RecordingDialogService());
+
+        var result = await workflow.RemovePagesAsync(new[] { 1, 2 }, currentPageIndex: 3);
+
+        result.DidChange.Should().BeTrue();
+        result.CurrentPageIndex.Should().Be(1);
+        documentService.PageCount.Should().Be(2);
+
+        documentService.SaveDocument(outputPath);
+        using var reopened = PdfDocument.Open(File.ReadAllBytes(outputPath));
+        new TextExtractor(reopened.GetPage(1)).ExtractText().Should().Contain("Page 1 Content");
+        new TextExtractor(reopened.GetPage(2)).ExtractText().Should().Contain("Page 4 Content");
+    }
+
+    [Fact]
+    public async Task MovePagesAsync_MovesSelectedPagesEarlierAsAGroup()
+    {
+        var sourcePath = Path.Combine(_tempDir, "source.pdf");
+        var outputPath = Path.Combine(_tempDir, "moved-selected.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(sourcePath, pageCount: 4);
+        var documentService = CreateLoadedDocumentService(sourcePath);
+        var workflow = CreateWorkflow(documentService, new RecordingDialogService());
+
+        var result = await workflow.MovePagesAsync(new[] { 1, 2 }, delta: -1, currentPageIndex: 2);
+
+        result.DidChange.Should().BeTrue();
+        result.CurrentPageIndex.Should().Be(1);
+        result.SelectedPageIndices.Should().Equal(0, 1);
+
+        documentService.SaveDocument(outputPath);
+        using var reopened = PdfDocument.Open(File.ReadAllBytes(outputPath));
+        new TextExtractor(reopened.GetPage(1)).ExtractText().Should().Contain("Page 2 Content");
+        new TextExtractor(reopened.GetPage(2)).ExtractText().Should().Contain("Page 3 Content");
+        new TextExtractor(reopened.GetPage(3)).ExtractText().Should().Contain("Page 1 Content");
+        new TextExtractor(reopened.GetPage(4)).ExtractText().Should().Contain("Page 4 Content");
+    }
+
+    [Fact]
     public async Task InsertPagesFromFileAsync_ShowsPreservationWarningForAcroFormDocument()
     {
         var targetPath = Path.Combine(_tempDir, "target.pdf");

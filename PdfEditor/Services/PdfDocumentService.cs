@@ -120,6 +120,47 @@ public class PdfDocumentService
         _logger.LogInformation("Moved page from {FromIndex} to {ToIndex}", fromIndex, toIndex);
     }
 
+    /// <summary>Move selected pages one position earlier or later while preserving their relative order.</summary>
+    public IReadOnlyList<int> MovePages(IEnumerable<int> pageIndices, int delta)
+    {
+        if (_currentDocument == null)
+            throw new InvalidOperationException("No document loaded");
+        if (delta is not (-1 or 1))
+            throw new ArgumentOutOfRangeException(nameof(delta), "Delta must be -1 or 1.");
+
+        var selected = pageIndices
+            .Where(i => i >= 0 && i < PageCount)
+            .Distinct()
+            .OrderBy(i => i)
+            .ToList();
+
+        if (selected.Count == 0)
+            return Array.Empty<int>();
+
+        var selectedPositions = selected.ToHashSet();
+        var traversal = delta < 0
+            ? selected
+            : selected.OrderByDescending(i => i).ToList();
+
+        foreach (var index in traversal)
+        {
+            if (!selectedPositions.Contains(index))
+                continue;
+
+            var target = index + delta;
+            if (target < 0 || target >= PageCount || selectedPositions.Contains(target))
+                continue;
+
+            _currentDocument.Pages.Move(index, target);
+            selectedPositions.Remove(index);
+            selectedPositions.Add(target);
+        }
+
+        var newPositions = selectedPositions.OrderBy(i => i).ToList();
+        _logger.LogInformation("Moved {Count} selected page(s) by delta {Delta}", newPositions.Count, delta);
+        return newPositions;
+    }
+
     /// <summary>
     /// Append pages from another PDF file to the end of the current
     /// document. If <paramref name="pageIndices"/> is null, all pages

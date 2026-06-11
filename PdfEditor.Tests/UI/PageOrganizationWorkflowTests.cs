@@ -57,6 +57,11 @@ public class PageOrganizationWorkflowTests : IDisposable
         vm.InsertPagesBeforeCurrentCommand.Should().NotBeNull();
         vm.InsertPagesAfterCurrentCommand.Should().NotBeNull();
         vm.ExtractCurrentPageCommand.Should().NotBeNull();
+        vm.ExtractSelectedPagesCommand.Should().NotBeNull();
+        vm.RemoveSelectedPagesCommand.Should().NotBeNull();
+        vm.MoveSelectedPagesEarlierCommand.Should().NotBeNull();
+        vm.MoveSelectedPagesLaterCommand.Should().NotBeNull();
+        vm.ClearSelectedPagesCommand.Should().NotBeNull();
         vm.MoveCurrentPageEarlierCommand.Should().NotBeNull();
         vm.MoveCurrentPageLaterCommand.Should().NotBeNull();
     }

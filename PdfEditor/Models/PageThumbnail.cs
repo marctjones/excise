@@ -7,6 +7,7 @@ public class PageThumbnail : ReactiveObject
 {
     private Bitmap? _thumbnailImage;
     private bool _isSelected;
+    private bool _isMarkedForPageOperation;
 
     public int PageNumber { get; set; }
     public int PageIndex { get; set; }
@@ -21,5 +22,11 @@ public class PageThumbnail : ReactiveObject
     {
         get => _isSelected;
         set => this.RaiseAndSetIfChanged(ref _isSelected, value);
+    }
+
+    public bool IsMarkedForPageOperation
+    {
+        get => _isMarkedForPageOperation;
+        set => this.RaiseAndSetIfChanged(ref _isMarkedForPageOperation, value);
     }
 }

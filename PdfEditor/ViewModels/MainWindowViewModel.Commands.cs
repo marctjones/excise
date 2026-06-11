@@ -27,6 +27,11 @@ public partial class MainWindowViewModel
     public ReactiveCommand<Unit, Unit> InsertPagesBeforeCurrentCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> InsertPagesAfterCurrentCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ExtractCurrentPageCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ExtractSelectedPagesCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> RemoveSelectedPagesCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> MoveSelectedPagesEarlierCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> MoveSelectedPagesLaterCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ClearSelectedPagesCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> MoveCurrentPageEarlierCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> MoveCurrentPageLaterCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleRedactionModeCommand { get; private set; } = null!;
@@ -86,6 +91,11 @@ public partial class MainWindowViewModel
         InsertPagesBeforeCurrentCommand = ReactiveCommand.CreateFromTask(InsertPagesBeforeCurrentAsync);
         InsertPagesAfterCurrentCommand = ReactiveCommand.CreateFromTask(InsertPagesAfterCurrentAsync);
         ExtractCurrentPageCommand = ReactiveCommand.CreateFromTask(ExtractCurrentPageAsync);
+        ExtractSelectedPagesCommand = ReactiveCommand.CreateFromTask(ExtractSelectedPagesAsync);
+        RemoveSelectedPagesCommand = ReactiveCommand.CreateFromTask(RemoveSelectedPagesAsync);
+        MoveSelectedPagesEarlierCommand = ReactiveCommand.CreateFromTask(() => MoveSelectedPagesAsync(-1));
+        MoveSelectedPagesLaterCommand = ReactiveCommand.CreateFromTask(() => MoveSelectedPagesAsync(1));
+        ClearSelectedPagesCommand = ReactiveCommand.Create(ClearSelectedPages);
         MoveCurrentPageEarlierCommand = ReactiveCommand.CreateFromTask(MoveCurrentPageEarlierAsync);
         MoveCurrentPageLaterCommand = ReactiveCommand.CreateFromTask(MoveCurrentPageLaterAsync);
         ToggleRedactionModeCommand = ReactiveCommand.Create(ToggleRedactionMode);

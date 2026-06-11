@@ -26,6 +26,9 @@ require_code_text PdfEditor/Views/MainWindow.axaml "Insert Pages _Before Current
 require_code_text PdfEditor/Views/MainWindow.axaml "Move Page _Later"
 require_code_text PdfEditor/ViewModels/MainWindowViewModel.Commands.cs "InsertPagesBeforeCurrentCommand"
 require_code_text PdfEditor/ViewModels/MainWindowViewModel.Commands.cs "MoveCurrentPageLaterCommand"
+require_file_text README.md "selected pages"
+require_code_text PdfEditor/ViewModels/MainWindowViewModel.Commands.cs "ExtractSelectedPagesCommand"
+require_code_text PdfEditor/ViewModels/MainWindowViewModel.Commands.cs "MoveSelectedPagesLaterCommand"
 
 require_file_text README.md "AddTextAnnotation"
 require_file_text Pdfe.Core/README.md "AddHighlightAnnotation"

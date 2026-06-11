@@ -186,6 +186,16 @@ public partial class MainWindowViewModel : ViewModelBase
     // Properties
     public ObservableCollection<PageThumbnail> PageThumbnails { get; } = new();
 
+    public int SelectedPageCount => GetSelectedPageIndices().Count;
+    public bool HasSelectedPages => SelectedPageCount > 0;
+    public bool CanRemoveSelectedPages => HasSelectedPages && SelectedPageCount < TotalPages;
+    public bool CanMoveSelectedPagesEarlier => GetSelectedPageIndices().Any(i => i > 0);
+    public bool CanMoveSelectedPagesLater => GetSelectedPageIndices().Any(i => i < TotalPages - 1);
+    public string PageSelectionSummary =>
+        SelectedPageCount == 0
+            ? "No pages selected"
+            : $"{SelectedPageCount} selected";
+
     /// <summary>
     /// Top-level outline nodes (PDF table of contents). Empty when the
     /// document has no /Outlines entry. Each node carries its own children
@@ -1245,6 +1255,72 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    private async Task ExtractSelectedPagesAsync()
+    {
+        var selected = GetSelectedPageIndices();
+        if (!_documentService.IsDocumentLoaded || selected.Count == 0)
+            return;
+
+        var storageProvider = GetStorageProvider();
+        if (storageProvider == null)
+        {
+            _logger.LogWarning("Storage provider unavailable, cannot show Extract Selected Pages dialog");
+            return;
+        }
+
+        var suggestedName = string.IsNullOrWhiteSpace(DocumentName)
+            ? "selected-pages.pdf"
+            : $"{Path.GetFileNameWithoutExtension(DocumentName)}_selected_pages.pdf";
+
+        var file = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "Extract Selected Pages",
+            DefaultExtension = "pdf",
+            SuggestedFileName = suggestedName,
+            FileTypeChoices = new[]
+            {
+                new FilePickerFileType("PDF Files")
+                {
+                    Patterns = new[] { "*.pdf" }
+                }
+            }
+        });
+
+        if (file == null)
+            return;
+
+        var path = file.Path.LocalPath;
+        if (!string.IsNullOrWhiteSpace(path))
+            await ExtractPagesToFileAsync(path, selected);
+    }
+
+    private async Task RemoveSelectedPagesAsync()
+    {
+        var selected = GetSelectedPageIndices();
+        if (!_documentService.IsDocumentLoaded || selected.Count == 0 || selected.Count >= TotalPages)
+            return;
+
+        try
+        {
+            var result = await _pageOrganizationWorkflow.RemovePagesAsync(selected, CurrentPageIndex);
+            if (!result.DidChange)
+                return;
+
+            MarkPageOrganizationChanged(removedPage: true, removedPageCount: selected.Count);
+
+            if (result.CurrentPageIndex.HasValue)
+                CurrentPageIndex = result.CurrentPageIndex.Value;
+
+            await RefreshAfterDocumentMutationAsync();
+            _toastService.ShowSuccess($"{selected.Count} page(s) removed");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error removing selected pages");
+            _toastService.ShowError("Failed to remove selected pages", ex.Message);
+        }
+    }
+
     private async Task MoveCurrentPageEarlierAsync()
     {
         if (CurrentPageIndex <= 0)
@@ -1284,6 +1360,32 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    public async Task MoveSelectedPagesAsync(int delta)
+    {
+        var selected = GetSelectedPageIndices();
+        if (!_documentService.IsDocumentLoaded || selected.Count == 0)
+            return;
+
+        try
+        {
+            var result = await _pageOrganizationWorkflow.MovePagesAsync(selected, delta, CurrentPageIndex);
+            if (!result.DidChange)
+                return;
+
+            if (result.CurrentPageIndex.HasValue)
+                CurrentPageIndex = result.CurrentPageIndex.Value;
+
+            MarkPageOrganizationChanged();
+            await RefreshAfterDocumentMutationAsync();
+            RestoreSelectedPages(result.SelectedPageIndices);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error moving selected pages");
+            _toastService.ShowError("Failed to move selected pages", ex.Message);
+        }
+    }
+
     private async Task<string?> PickPdfForPageInsertionAsync(string title)
     {
         var storageProvider = GetStorageProvider();
@@ -1309,10 +1411,10 @@ public partial class MainWindowViewModel : ViewModelBase
         return files.Count == 0 ? null : files[0].Path.LocalPath;
     }
 
-    private void MarkPageOrganizationChanged(bool removedPage = false)
+    private void MarkPageOrganizationChanged(bool removedPage = false, int removedPageCount = 1)
     {
         if (removedPage)
-            FileState.RemovedPagesCount++;
+            FileState.RemovedPagesCount += Math.Max(1, removedPageCount);
         else
             FileState.PageEditsCount++;
 
@@ -1739,6 +1841,57 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    public void MarkPageForOperation(int pageIndex, bool isSelected)
+    {
+        if (pageIndex < 0 || pageIndex >= PageThumbnails.Count)
+            return;
+
+        PageThumbnails[pageIndex].IsMarkedForPageOperation = isSelected;
+    }
+
+    private IReadOnlyList<int> GetSelectedPageIndices() =>
+        PageThumbnails
+            .Where(t => t.IsMarkedForPageOperation)
+            .Select(t => t.PageIndex)
+            .OrderBy(i => i)
+            .ToList();
+
+    private void ClearSelectedPages()
+    {
+        foreach (var thumbnail in PageThumbnails)
+            thumbnail.IsMarkedForPageOperation = false;
+
+        RaiseSelectedPagePropertiesChanged();
+    }
+
+    private void RestoreSelectedPages(IEnumerable<int> pageIndices)
+    {
+        var selected = pageIndices.ToHashSet();
+        foreach (var thumbnail in PageThumbnails)
+            thumbnail.IsMarkedForPageOperation = selected.Contains(thumbnail.PageIndex);
+
+        RaiseSelectedPagePropertiesChanged();
+    }
+
+    private void AttachPageSelectionTracking(PageThumbnail thumbnail)
+    {
+        thumbnail.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(PageThumbnail.IsMarkedForPageOperation))
+                RaiseSelectedPagePropertiesChanged();
+        };
+    }
+
+    private void RaiseSelectedPagePropertiesChanged()
+    {
+        this.RaisePropertyChanged(nameof(SelectedPageCount));
+        this.RaisePropertyChanged(nameof(HasSelectedPages));
+        this.RaisePropertyChanged(nameof(CanRemoveSelectedPages));
+        this.RaisePropertyChanged(nameof(CanMoveSelectedPagesEarlier));
+        this.RaisePropertyChanged(nameof(CanMoveSelectedPagesLater));
+        this.RaisePropertyChanged(nameof(PageSelectionSummary));
+    }
+
     /// <summary>
     /// Lazy thumbnail strategy: create one PageThumbnail placeholder per
     /// page (so the sidebar shows the right number of slots immediately)
@@ -1756,7 +1909,13 @@ public partial class MainWindowViewModel : ViewModelBase
             PageThumbnails.Clear();
             var total = TotalPages;
             for (int i = 0; i < total; i++)
-                PageThumbnails.Add(new PageThumbnail { PageNumber = i + 1, PageIndex = i });
+            {
+                var thumbnail = new PageThumbnail { PageNumber = i + 1, PageIndex = i };
+                AttachPageSelectionTracking(thumbnail);
+                PageThumbnails.Add(thumbnail);
+            }
+            UpdateThumbnailSelection();
+            RaiseSelectedPagePropertiesChanged();
             _logger.LogInformation(
                 ">>> LoadPageThumbnailsAsync: created {Count} placeholders; loads happen on demand",
                 total);

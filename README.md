@@ -47,7 +47,7 @@ Build the packages locally with `dotnet pack -c Release` (they are also attached
 
 ### Desktop app
 - Open, view, navigate PDFs with smooth Skia rendering
-- Page organization (add/insert, extract, remove, reorder, rotate; 90°/180°/270°)
+- Page organization (add/insert, extract, remove, reorder, rotate; current page or selected pages; 90°/180°/270°)
 - Text selection and copy with letter-level positions
 - Find with highlights and navigation
 - Zoom modes: fit width, fit page, actual size, free zoom
@@ -80,7 +80,7 @@ Build the packages locally with `dotnet pack -c Release` (they are also attached
 - `PdfDocument.ScrubMetadata(scrubAttachments: true)` strips Info dict, XMP, and embedded files in one call — important when redacted documents may carry the data they were redacted of in attachments (ZUGFeRD, Factur-X)
 
 ### Page and annotation authoring
-- Page organization is supported in the desktop app and service layer: append/insert pages from another PDF, extract the current page from the app or selected page indices through the service, remove pages, move pages earlier/later, and rotate pages. Page-owned streams/resources/annotations are cloned into copied pages; the app warns when document-level structures such as outlines, named destinations, or AcroForm metadata may need review.
+- Page organization is supported in the desktop app and service layer: append/insert pages from another PDF, extract the current page or selected pages, remove current or selected pages, move current or selected pages earlier/later, and rotate pages. Page-owned streams/resources/annotations are cloned into copied pages; the app warns when document-level structures such as outlines, named destinations, or AcroForm metadata may need review.
 - `PdfAnnotationAuthoring` extension methods create real PDF annotations for common review workflows: `AddTextAnnotation` for sticky notes and `AddHighlightAnnotation` for text markup highlights.
 
 ### CLI (`pdfe`)

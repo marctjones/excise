@@ -9,7 +9,9 @@ public class DocumentationClaimTests
 
     [Theory]
     [InlineData("README.md", "page organization", "PdfEditor/Views/MainWindow.axaml", "Insert Pages _Before Current")]
-    [InlineData("README.md", "move pages earlier/later", "PdfEditor/ViewModels/MainWindowViewModel.Commands.cs", "MoveCurrentPageLaterCommand")]
+    [InlineData("README.md", "move current or selected pages earlier/later", "PdfEditor/ViewModels/MainWindowViewModel.Commands.cs", "MoveCurrentPageLaterCommand")]
+    [InlineData("README.md", "selected pages", "PdfEditor/ViewModels/MainWindowViewModel.Commands.cs", "ExtractSelectedPagesCommand")]
+    [InlineData("README.md", "selected pages", "PdfEditor/ViewModels/MainWindowViewModel.Commands.cs", "MoveSelectedPagesLaterCommand")]
     [InlineData("README.md", "AddTextAnnotation", "Pdfe.Core/Document/PdfAnnotationAuthoring.cs", "AddTextAnnotation")]
     [InlineData("Pdfe.Core/README.md", "AddHighlightAnnotation", "Pdfe.Core/Document/PdfAnnotationAuthoring.cs", "AddHighlightAnnotation")]
     [InlineData("README.md", "OS trust-chain validation limitations", "PdfEditor/Services/SignatureVerificationSummaryFormatter.cs", "trust")]

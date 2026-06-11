@@ -40,6 +40,25 @@ public sealed class PageOrganizationWorkflowService
         return PageOrganizationResult.Changed(newPageIndex);
     }
 
+    public async Task<PageOrganizationResult> RemovePagesAsync(IEnumerable<int> pageIndices, int currentPageIndex)
+    {
+        if (!_documentService.IsDocumentLoaded)
+            return PageOrganizationResult.NoChange(currentPageIndex);
+
+        var indices = ValidPageIndices(pageIndices).ToArray();
+        if (indices.Length == 0 || indices.Length >= _documentService.PageCount)
+            return PageOrganizationResult.NoChange(currentPageIndex);
+
+        await ShowOperationWarningsAsync(indices);
+
+        var newPageIndex = RemapCurrentPageAfterRemoval(currentPageIndex, indices, _documentService.PageCount);
+        _documentService.RemovePages(indices);
+        newPageIndex = Math.Min(newPageIndex, Math.Max(0, _documentService.PageCount - 1));
+
+        _logger.LogInformation("Removed {Count} selected page(s)", indices.Length);
+        return PageOrganizationResult.Changed(newPageIndex);
+    }
+
     public async Task<PageOrganizationResult> InsertPagesFromFileAsync(string sourcePdfPath, int insertAtIndex)
     {
         if (!_documentService.IsDocumentLoaded)
@@ -76,6 +95,33 @@ public sealed class PageOrganizationWorkflowService
         return PageOrganizationResult.Changed(toIndex);
     }
 
+    public async Task<PageOrganizationResult> MovePagesAsync(
+        IEnumerable<int> pageIndices,
+        int delta,
+        int currentPageIndex)
+    {
+        if (!_documentService.IsDocumentLoaded)
+            return PageOrganizationResult.NoChange(currentPageIndex);
+
+        var indices = ValidPageIndices(pageIndices).ToArray();
+        if (indices.Length == 0)
+            return PageOrganizationResult.NoChange(currentPageIndex);
+
+        var movable = delta < 0
+            ? indices.Any(i => i > 0 && !indices.Contains(i - 1))
+            : indices.Any(i => i < _documentService.PageCount - 1 && !indices.Contains(i + 1));
+        if (!movable)
+            return PageOrganizationResult.NoChange(currentPageIndex, indices);
+
+        await ShowOperationWarningsAsync(indices);
+
+        var newCurrentPageIndex = RemapCurrentPageAfterMove(currentPageIndex, indices, delta, _documentService.PageCount);
+        var newSelectedPageIndices = _documentService.MovePages(indices, delta);
+
+        _logger.LogInformation("Moved {Count} selected page(s) by delta {Delta}", indices.Length, delta);
+        return PageOrganizationResult.Changed(newCurrentPageIndex, newSelectedPageIndices);
+    }
+
     private async Task ShowOperationWarningsAsync(IEnumerable<int>? pageIndices = null)
     {
         var diagnostics = _documentService.AnalyzePageOperationPreservation(pageIndices);
@@ -87,11 +133,71 @@ public sealed class PageOrganizationWorkflowService
             "This operation may require manual review after saving:\n\n" +
             string.Join("\n", diagnostics.Warnings.Select(w => $"- {w}")));
     }
+
+    private IEnumerable<int> ValidPageIndices(IEnumerable<int> pageIndices) =>
+        pageIndices
+            .Where(i => i >= 0 && i < _documentService.PageCount)
+            .Distinct()
+            .OrderBy(i => i);
+
+    private static int RemapCurrentPageAfterRemoval(
+        int currentPageIndex,
+        IReadOnlyCollection<int> removedIndices,
+        int originalPageCount)
+    {
+        if (removedIndices.Contains(currentPageIndex))
+            return Math.Min(removedIndices.Min(), originalPageCount - removedIndices.Count - 1);
+
+        var removedBeforeCurrent = removedIndices.Count(i => i < currentPageIndex);
+        return currentPageIndex - removedBeforeCurrent;
+    }
+
+    private static int RemapCurrentPageAfterMove(
+        int currentPageIndex,
+        IEnumerable<int> pageIndices,
+        int delta,
+        int pageCount)
+    {
+        var current = currentPageIndex;
+        var selected = pageIndices.OrderBy(i => i).ToHashSet();
+        var traversal = delta < 0
+            ? selected.OrderBy(i => i).ToArray()
+            : selected.OrderByDescending(i => i).ToArray();
+
+        foreach (var index in traversal)
+        {
+            if (!selected.Contains(index))
+                continue;
+
+            var target = index + delta;
+            if (target < 0 || target >= pageCount || selected.Contains(target))
+                continue;
+
+            if (current == index)
+                current = target;
+            else if (current == target)
+                current = index;
+
+            selected.Remove(index);
+            selected.Add(target);
+        }
+
+        return current;
+    }
 }
 
-public sealed record PageOrganizationResult(bool DidChange, int? CurrentPageIndex)
+public sealed record PageOrganizationResult(
+    bool DidChange,
+    int? CurrentPageIndex,
+    IReadOnlyList<int> SelectedPageIndices)
 {
-    public static PageOrganizationResult Changed(int? currentPageIndex = null) => new(true, currentPageIndex);
+    public static PageOrganizationResult Changed(
+        int? currentPageIndex = null,
+        IReadOnlyList<int>? selectedPageIndices = null) =>
+        new(true, currentPageIndex, selectedPageIndices ?? Array.Empty<int>());
 
-    public static PageOrganizationResult NoChange(int? currentPageIndex = null) => new(false, currentPageIndex);
+    public static PageOrganizationResult NoChange(
+        int? currentPageIndex = null,
+        IReadOnlyList<int>? selectedPageIndices = null) =>
+        new(false, currentPageIndex, selectedPageIndices ?? Array.Empty<int>());
 }

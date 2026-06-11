@@ -20,6 +20,10 @@ internal static class MacNativeMenuBuilder
     {
         private readonly MainWindowViewModel _viewModel;
         private readonly List<NativeMenuItem> _documentItems = new();
+        private readonly List<NativeMenuItem> _selectedPageItems = new();
+        private readonly List<NativeMenuItem> _selectedPageRemoveItems = new();
+        private readonly List<NativeMenuItem> _selectedPageMoveEarlierItems = new();
+        private readonly List<NativeMenuItem> _selectedPageMoveLaterItems = new();
         private readonly List<NativeMenuItem> _textSelectionItems = new();
         private readonly List<NativeMenuItem> _redactionItems = new();
         private readonly NativeMenuItem _saveItem;
@@ -112,11 +116,16 @@ internal static class MacNativeMenuBuilder
                     TrackDocumentItem(CommandItem("Insert Pages Before Current...", _viewModel.InsertPagesBeforeCurrentCommand)),
                     TrackDocumentItem(CommandItem("Insert Pages After Current...", _viewModel.InsertPagesAfterCurrentCommand)),
                     TrackDocumentItem(CommandItem("Extract Current Page...", _viewModel.ExtractCurrentPageCommand)),
+                    TrackSelectedPageItem(CommandItem("Extract Selected Pages...", _viewModel.ExtractSelectedPagesCommand)),
                     Separator(),
                     TrackDocumentItem(CommandItem("Move Page Earlier", _viewModel.MoveCurrentPageEarlierCommand)),
                     TrackDocumentItem(CommandItem("Move Page Later", _viewModel.MoveCurrentPageLaterCommand)),
+                    TrackSelectedPageMoveEarlierItem(CommandItem("Move Selected Pages Earlier", _viewModel.MoveSelectedPagesEarlierCommand)),
+                    TrackSelectedPageMoveLaterItem(CommandItem("Move Selected Pages Later", _viewModel.MoveSelectedPagesLaterCommand)),
                     Separator(),
                     TrackDocumentItem(CommandItem("Remove Current Page", _viewModel.RemoveCurrentPageCommand)),
+                    TrackSelectedPageRemoveItem(CommandItem("Remove Selected Pages", _viewModel.RemoveSelectedPagesCommand)),
+                    TrackSelectedPageItem(CommandItem("Clear Page Selection", _viewModel.ClearSelectedPagesCommand)),
                     Separator(),
                     TrackDocumentItem(CommandItem("Rotate Left 90 degrees", _viewModel.RotatePageLeftCommand, Key.L)),
                     TrackDocumentItem(CommandItem("Rotate Right 90 degrees", _viewModel.RotatePageRightCommand, Key.R)),
@@ -156,6 +165,14 @@ internal static class MacNativeMenuBuilder
             var isDocumentLoaded = _viewModel.IsDocumentLoaded;
             foreach (var item in _documentItems)
                 item.IsEnabled = isDocumentLoaded;
+            foreach (var item in _selectedPageItems)
+                item.IsEnabled = isDocumentLoaded && _viewModel.HasSelectedPages;
+            foreach (var item in _selectedPageRemoveItems)
+                item.IsEnabled = isDocumentLoaded && _viewModel.CanRemoveSelectedPages;
+            foreach (var item in _selectedPageMoveEarlierItems)
+                item.IsEnabled = isDocumentLoaded && _viewModel.CanMoveSelectedPagesEarlier;
+            foreach (var item in _selectedPageMoveLaterItems)
+                item.IsEnabled = isDocumentLoaded && _viewModel.CanMoveSelectedPagesLater;
             foreach (var item in _textSelectionItems)
                 item.IsEnabled = isDocumentLoaded && _viewModel.IsTextSelectionMode;
             foreach (var item in _redactionItems)
@@ -203,6 +220,30 @@ internal static class MacNativeMenuBuilder
         private NativeMenuItem TrackDocumentItem(NativeMenuItem item)
         {
             _documentItems.Add(item);
+            return item;
+        }
+
+        private NativeMenuItem TrackSelectedPageItem(NativeMenuItem item)
+        {
+            _selectedPageItems.Add(item);
+            return item;
+        }
+
+        private NativeMenuItem TrackSelectedPageRemoveItem(NativeMenuItem item)
+        {
+            _selectedPageRemoveItems.Add(item);
+            return item;
+        }
+
+        private NativeMenuItem TrackSelectedPageMoveEarlierItem(NativeMenuItem item)
+        {
+            _selectedPageMoveEarlierItems.Add(item);
+            return item;
+        }
+
+        private NativeMenuItem TrackSelectedPageMoveLaterItem(NativeMenuItem item)
+        {
+            _selectedPageMoveLaterItems.Add(item);
             return item;
         }
 

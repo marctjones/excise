@@ -81,14 +81,24 @@
                 <MenuItem Header="Insert Pages _Before Current..." Command="{Binding InsertPagesBeforeCurrentCommand}"/>
                 <MenuItem Header="Insert Pages _After Current..." Command="{Binding InsertPagesAfterCurrentCommand}"/>
                 <MenuItem Header="_Extract Current Page..." Command="{Binding ExtractCurrentPageCommand}"/>
+                <MenuItem Header="Extract _Selected Pages..." Command="{Binding ExtractSelectedPagesCommand}"
+                          IsEnabled="{Binding HasSelectedPages}"/>
                 <Separator/>
                 <MenuItem Header="Move Page _Earlier" Command="{Binding MoveCurrentPageEarlierCommand}"/>
                 <MenuItem Header="Move Page _Later" Command="{Binding MoveCurrentPageLaterCommand}"/>
+                <MenuItem Header="Move Selected Pages E_arlier" Command="{Binding MoveSelectedPagesEarlierCommand}"
+                          IsEnabled="{Binding CanMoveSelectedPagesEarlier}"/>
+                <MenuItem Header="Move Selected Pages L_ater" Command="{Binding MoveSelectedPagesLaterCommand}"
+                          IsEnabled="{Binding CanMoveSelectedPagesLater}"/>
                 <Separator/>
                 <MenuItem Header="_Remove Current Page" Command="{Binding RemoveCurrentPageCommand}"
                           IsEnabled="{Binding IsDocumentLoaded}">
                     <MenuItem.Icon><TextBlock Text="🗑"/></MenuItem.Icon>
                 </MenuItem>
+                <MenuItem Header="Remove Selected Pages" Command="{Binding RemoveSelectedPagesCommand}"
+                          IsEnabled="{Binding CanRemoveSelectedPages}"/>
+                <MenuItem Header="Clear Page Selection" Command="{Binding ClearSelectedPagesCommand}"
+                          IsEnabled="{Binding HasSelectedPages}"/>
                 <Separator/>
                 <MenuItem Header="Rotate _Left 90°" Command="{Binding RotatePageLeftCommand}" InputGesture="Ctrl+L"/>
                 <MenuItem Header="Rotate _Right 90°" Command="{Binding RotatePageRightCommand}" InputGesture="Ctrl+R"/>
@@ -590,9 +600,49 @@
                             BorderBrush="{DynamicResource BorderBrush}"
                             BorderThickness="0,0,0,1"
                             Padding="10,6">
-                        <TextBlock Text="Thumbnails"
-                                   FontWeight="SemiBold" FontSize="12"
-                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <Grid RowDefinitions="Auto,Auto" RowSpacing="6">
+                            <DockPanel Grid.Row="0">
+                                <TextBlock Text="Thumbnails"
+                                           FontWeight="SemiBold" FontSize="12"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                <TextBlock Text="{Binding PageSelectionSummary}"
+                                           HorizontalAlignment="Right"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </DockPanel>
+                            <WrapPanel Grid.Row="1" Orientation="Horizontal">
+                                <Button Content="↑" Command="{Binding MoveSelectedPagesEarlierCommand}"
+                                        Classes="modern-button"
+                                        Margin="0,0,4,4"
+                                        IsEnabled="{Binding CanMoveSelectedPagesEarlier}"
+                                        ToolTip.Tip="Move selected pages earlier"
+                                        AutomationProperties.Name="Move Selected Pages Earlier"/>
+                                <Button Content="↓" Command="{Binding MoveSelectedPagesLaterCommand}"
+                                        Classes="modern-button"
+                                        Margin="0,0,4,4"
+                                        IsEnabled="{Binding CanMoveSelectedPagesLater}"
+                                        ToolTip.Tip="Move selected pages later"
+                                        AutomationProperties.Name="Move Selected Pages Later"/>
+                                <Button Content="Extract" Command="{Binding ExtractSelectedPagesCommand}"
+                                        Classes="modern-button"
+                                        Margin="0,0,4,4"
+                                        IsEnabled="{Binding HasSelectedPages}"
+                                        ToolTip.Tip="Extract selected pages"
+                                        AutomationProperties.Name="Extract Selected Pages"/>
+                                <Button Content="Remove" Command="{Binding RemoveSelectedPagesCommand}"
+                                        Classes="modern-button"
+                                        Margin="0,0,4,4"
+                                        IsEnabled="{Binding CanRemoveSelectedPages}"
+                                        ToolTip.Tip="Remove selected pages"
+                                        AutomationProperties.Name="Remove Selected Pages"/>
+                                <Button Content="Clear" Command="{Binding ClearSelectedPagesCommand}"
+                                        Classes="modern-button"
+                                        Margin="0,0,4,4"
+                                        IsEnabled="{Binding HasSelectedPages}"
+                                        ToolTip.Tip="Clear page selection"
+                                        AutomationProperties.Name="Clear Page Selection"/>
+                            </WrapPanel>
+                        </Grid>
                     </Border>
                     <ScrollViewer Grid.Row="1">
                     <ItemsControl ItemsSource="{Binding PageThumbnails}">
@@ -611,11 +661,18 @@
                                             CornerRadius="6"
                                             Name="ThumbnailBorder">
                                         <StackPanel Spacing="6">
-                                            <TextBlock Text="{Binding PageNumber, StringFormat='Page {0}'}"
-                                                       HorizontalAlignment="Center"
-                                                       FontSize="11"
-                                                       FontWeight="Medium"
-                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <Grid ColumnDefinitions="Auto,*">
+                                                <CheckBox IsChecked="{Binding IsMarkedForPageOperation, Mode=TwoWay}"
+                                                          VerticalAlignment="Center"
+                                                          ToolTip.Tip="Select page for batch operations"
+                                                          AutomationProperties.Name="{Binding PageNumber, StringFormat='Select Page {0}'}"/>
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding PageNumber, StringFormat='Page {0}'}"
+                                                           HorizontalAlignment="Center"
+                                                           FontSize="11"
+                                                           FontWeight="Medium"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            </Grid>
                                             <!-- EffectiveViewportChanged fires whenever this Image's
                                                  visible area changes. We use it to lazy-load the
                                                  thumbnail bitmap only for pages the user actually
