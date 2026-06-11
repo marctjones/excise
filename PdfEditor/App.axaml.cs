@@ -142,6 +142,8 @@ public partial class App : Application
         services.AddSingleton<SignatureVerificationService>();
         services.AddSingleton<SignatureVerificationSummaryFormatter>();
         services.AddSingleton<SignatureVerificationWorkflowService>();
+        services.AddSingleton<PageOrganizationWorkflowService>();
+        services.AddSingleton<AnnotationWorkflowService>();
         services.AddSingleton<FilenameSuggestionService>();
         services.AddSingleton<IUserDialogService, AvaloniaUserDialogService>();
 
@@ -152,7 +154,7 @@ public partial class App : Application
         var logger = tempProvider.GetRequiredService<ILogger<App>>();
         logger.LogInformation("Dependency injection container configured");
         logger.LogInformation(
-            "Services registered: PdfDocumentService, PdfRenderService, RedactionService, PdfTextExtractionService, PdfSearchService, SignatureVerificationService");
+            "Services registered: PdfDocumentService, PdfRenderService, RedactionService, PdfTextExtractionService, PdfSearchService, SignatureVerificationService, PageOrganizationWorkflowService, AnnotationWorkflowService");
         logger.LogInformation("Logging level set to: INFO");
     }
 }

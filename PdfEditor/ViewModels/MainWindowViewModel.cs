@@ -35,6 +35,8 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly RedactionService _redactionService;
     private readonly PdfTextExtractionService _textExtractionService;
     private readonly SignatureVerificationWorkflowService _signatureWorkflowService;
+    private readonly PageOrganizationWorkflowService _pageOrganizationWorkflow;
+    private readonly AnnotationWorkflowService _annotationWorkflow;
     private readonly FilenameSuggestionService _filenameSuggestionService;
     private readonly ToastService _toastService;
     private readonly IUserDialogService _dialogService;
@@ -106,6 +108,13 @@ public partial class MainWindowViewModel : ViewModelBase
             new SignatureVerificationService(Microsoft.Extensions.Logging.Abstractions.NullLogger<SignatureVerificationService>.Instance),
             _dialogService,
             Microsoft.Extensions.Logging.Abstractions.NullLogger<SignatureVerificationWorkflowService>.Instance);
+        _pageOrganizationWorkflow = new PageOrganizationWorkflowService(
+            _documentService,
+            _dialogService,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<PageOrganizationWorkflowService>.Instance);
+        _annotationWorkflow = new AnnotationWorkflowService(
+            _documentService,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<AnnotationWorkflowService>.Instance);
 
         InitializeCommands();
         _logger.LogInformation("MainWindowViewModel initialized (test mode)");
@@ -126,7 +135,9 @@ public partial class MainWindowViewModel : ViewModelBase
         ToastService toastService,
         SignatureVerificationSummaryFormatter? signatureSummaryFormatter = null,
         IUserDialogService? dialogService = null,
-        SignatureVerificationWorkflowService? signatureWorkflowService = null)
+        SignatureVerificationWorkflowService? signatureWorkflowService = null,
+        PageOrganizationWorkflowService? pageOrganizationWorkflow = null,
+        AnnotationWorkflowService? annotationWorkflow = null)
     {
         _logger = logger;
         _loggerFactory = loggerFactory;
@@ -144,6 +155,15 @@ public partial class MainWindowViewModel : ViewModelBase
             _dialogService,
             loggerFactory.CreateLogger<SignatureVerificationWorkflowService>()
                 ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<SignatureVerificationWorkflowService>.Instance);
+        _pageOrganizationWorkflow = pageOrganizationWorkflow ?? new PageOrganizationWorkflowService(
+            documentService,
+            _dialogService,
+            loggerFactory.CreateLogger<PageOrganizationWorkflowService>()
+                ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<PageOrganizationWorkflowService>.Instance);
+        _annotationWorkflow = annotationWorkflow ?? new AnnotationWorkflowService(
+            documentService,
+            loggerFactory.CreateLogger<AnnotationWorkflowService>()
+                ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<AnnotationWorkflowService>.Instance);
 
         InitializeCommands();
         _logger.LogInformation("MainWindowViewModel initialized");
@@ -1054,13 +1074,15 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            _documentService.RemovePage(CurrentPageIndex);
+            var result = await _pageOrganizationWorkflow.RemovePageAsync(CurrentPageIndex);
+            if (!result.DidChange)
+                return;
+
             MarkPageOrganizationChanged(removedPage: true);
 
-            // Adjust current page if needed
-            if (CurrentPageIndex >= TotalPages)
+            if (result.CurrentPageIndex.HasValue)
             {
-                CurrentPageIndex = TotalPages - 1;
+                CurrentPageIndex = result.CurrentPageIndex.Value;
                 _logger.LogDebug("Adjusted current page index to {PageIndex}", CurrentPageIndex);
             }
 
@@ -1155,8 +1177,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            await ShowPageOperationWarningsAsync();
-            _documentService.InsertPagesFromPdf(sourcePdfPath, insertAtIndex);
+            var result = await _pageOrganizationWorkflow.InsertPagesFromFileAsync(sourcePdfPath, insertAtIndex);
+            if (!result.DidChange)
+                return;
+
             MarkPageOrganizationChanged();
             await RefreshAfterDocumentMutationAsync();
         }
@@ -1211,8 +1235,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            await ShowPageOperationWarningsAsync(pageIndices);
-            _documentService.ExtractPagesToPdf(outputPath, pageIndices);
+            await _pageOrganizationWorkflow.ExtractPagesToFileAsync(outputPath, pageIndices);
             _toastService.ShowSuccess("Page extracted");
         }
         catch (Exception ex)
@@ -1245,10 +1268,12 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            await ShowPageOperationWarningsAsync(new[] { CurrentPageIndex, toIndex });
             var from = CurrentPageIndex;
-            _documentService.MovePage(from, toIndex);
-            CurrentPageIndex = toIndex;
+            var result = await _pageOrganizationWorkflow.MovePageAsync(from, toIndex);
+            if (!result.DidChange)
+                return;
+
+            CurrentPageIndex = result.CurrentPageIndex ?? toIndex;
             MarkPageOrganizationChanged();
             await RefreshAfterDocumentMutationAsync();
         }
@@ -1303,17 +1328,6 @@ public partial class MainWindowViewModel : ViewModelBase
         this.RaisePropertyChanged(nameof(TotalPages));
         this.RaisePropertyChanged(nameof(StatusText));
         this.RaisePropertyChanged(nameof(StatusBarText));
-    }
-
-    private async Task ShowPageOperationWarningsAsync(IEnumerable<int>? pageIndices = null)
-    {
-        var diagnostics = _documentService.AnalyzePageOperationPreservation(pageIndices);
-        if (!diagnostics.HasWarnings)
-            return;
-
-        await _dialogService.ShowMessageAsync(
-            "Page Organization",
-            string.Join(Environment.NewLine + Environment.NewLine, diagnostics.Warnings));
     }
 
     private void ToggleTextSelectionMode()
