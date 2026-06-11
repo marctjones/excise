@@ -4,6 +4,23 @@ All notable changes to pdfe are documented here. Format roughly follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 semantic versioning.
 
+## [2.12.2] - 2026-06-10
+
+macOS integration checkpoint release. No PDF behavior changes.
+
+### Fixed
+- **macOS native menu integration (#447).** The desktop app now installs a
+  native macOS menu bar and hides the in-window menu on macOS, while keeping the
+  in-window menu visible on Windows and Linux.
+- **macOS titlebar spacing (#447).** The custom title label is shifted away from
+  the traffic-light window controls on macOS so the title text no longer
+  overlaps the close/minimize/zoom buttons.
+
+### Tests
+- Build remains warning-free.
+- Focused GUI/viewmodel slice passed: 176 passed, 3 skipped.
+- Full built test suite passed locally: 7001 passed, 53 skipped.
+
 ## [2.11.0] — 2026-06-08
 
 Archival conformance + viewer-quality release. Additive; no breaking changes.

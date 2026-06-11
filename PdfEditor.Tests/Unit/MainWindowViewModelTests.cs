@@ -968,7 +968,7 @@ public class MainWindowViewModelTests
         _viewModel.PropertyChanged += (s, e) => changedProperties.Add(e.PropertyName!);
 
         // Act
-        _viewModel.ZoomLevel = 1.5;
+        _viewModel.ZoomLevel = _viewModel.ZoomLevel == 1.5 ? 2.0 : 1.5;
 
         // Assert
         changedProperties.Should().Contain("ZoomLevel");

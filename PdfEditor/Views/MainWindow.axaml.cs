@@ -19,6 +19,7 @@ public partial class MainWindow : Window
 {
     private PdfViewerControl? _pdfViewerControl;
     private readonly WindowSettings _windowSettings;
+    private object? _nativeMenuDataContext;
 
     // Single reusable UI-thread timer for toast auto-dismiss. A DispatcherTimer
     // (vs System.Timers.Timer) ticks on the dispatcher itself, so it stops when
@@ -33,6 +34,12 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+
+        if (OperatingSystem.IsMacOS())
+        {
+            MainMenuBar.IsVisible = false;
+            TitleBarAppLabel.Margin = new Thickness(86, 0, 10, 0);
+        }
 
         // Load and apply window settings (Issue #23)
         _windowSettings = WindowSettings.Load();
@@ -62,6 +69,8 @@ public partial class MainWindow : Window
 
         if (DataContext is MainWindowViewModel viewModel)
         {
+            ConfigurePlatformMenu(viewModel);
+
             // Subscribe to toast notifications
             viewModel.ToastService.ToastRequested += OnToastRequested;
 
@@ -100,6 +109,17 @@ public partial class MainWindow : Window
                 };
             }
         }
+    }
+
+    private void ConfigurePlatformMenu(MainWindowViewModel viewModel)
+    {
+        if (!OperatingSystem.IsMacOS() || ReferenceEquals(_nativeMenuDataContext, viewModel))
+        {
+            return;
+        }
+
+        NativeMenu.SetMenu(this, MacNativeMenuBuilder.Create(viewModel));
+        _nativeMenuDataContext = viewModel;
     }
 
     private void OnSearchHighlightsChanged(object? sender, NotifyCollectionChangedEventArgs e)
