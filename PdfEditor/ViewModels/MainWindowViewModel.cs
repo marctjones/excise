@@ -1019,6 +1019,7 @@ public partial class MainWindowViewModel : ViewModelBase
             var flattenedTypewriter = document != null && ApplyPendingTypewriterText(document);
 
             _documentService.SaveDocument();
+            _hasInMemoryModifications = false;
             if (flattenedTypewriter)
             {
                 ClearPendingTypewriterText();
@@ -1054,6 +1055,7 @@ public partial class MainWindowViewModel : ViewModelBase
         try
         {
             _documentService.RemovePage(CurrentPageIndex);
+            MarkPageOrganizationChanged(removedPage: true);
 
             // Adjust current page if needed
             if (CurrentPageIndex >= TotalPages)
@@ -1124,21 +1126,194 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     public async Task AddPagesFromFileAsync(string sourcePdfPath)
+        => await InsertPagesFromFileAsync(sourcePdfPath, TotalPages);
+
+    private async Task InsertPagesBeforeCurrentAsync()
+    {
+        if (!_documentService.IsDocumentLoaded)
+            return;
+
+        var path = await PickPdfForPageInsertionAsync("Select PDF to Insert Before Current Page");
+        if (!string.IsNullOrWhiteSpace(path))
+            await InsertPagesFromFileAsync(path, CurrentPageIndex);
+    }
+
+    private async Task InsertPagesAfterCurrentAsync()
+    {
+        if (!_documentService.IsDocumentLoaded)
+            return;
+
+        var path = await PickPdfForPageInsertionAsync("Select PDF to Insert After Current Page");
+        if (!string.IsNullOrWhiteSpace(path))
+            await InsertPagesFromFileAsync(path, CurrentPageIndex + 1);
+    }
+
+    public async Task InsertPagesFromFileAsync(string sourcePdfPath, int insertAtIndex)
     {
         if (!_documentService.IsDocumentLoaded)
             return;
 
         try
         {
-            _documentService.AddPagesFromPdf(sourcePdfPath);
-            await LoadPageThumbnailsAsync();
-            this.RaisePropertyChanged(nameof(TotalPages));
-            this.RaisePropertyChanged(nameof(StatusText));
+            await ShowPageOperationWarningsAsync();
+            _documentService.InsertPagesFromPdf(sourcePdfPath, insertAtIndex);
+            MarkPageOrganizationChanged();
+            await RefreshAfterDocumentMutationAsync();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error adding pages");
+            _logger.LogError(ex, "Error inserting pages");
         }
+    }
+
+    private async Task ExtractCurrentPageAsync()
+    {
+        if (!_documentService.IsDocumentLoaded)
+            return;
+
+        var storageProvider = GetStorageProvider();
+        if (storageProvider == null)
+        {
+            _logger.LogWarning("Storage provider unavailable, cannot show Extract Page dialog");
+            return;
+        }
+
+        var suggestedName = string.IsNullOrWhiteSpace(DocumentName)
+            ? $"page-{DisplayPageNumber}.pdf"
+            : $"{Path.GetFileNameWithoutExtension(DocumentName)}_page{DisplayPageNumber}.pdf";
+
+        var file = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "Extract Current Page",
+            DefaultExtension = "pdf",
+            SuggestedFileName = suggestedName,
+            FileTypeChoices = new[]
+            {
+                new FilePickerFileType("PDF Files")
+                {
+                    Patterns = new[] { "*.pdf" }
+                }
+            }
+        });
+
+        if (file == null)
+            return;
+
+        var path = file.Path.LocalPath;
+        if (!string.IsNullOrWhiteSpace(path))
+            await ExtractPagesToFileAsync(path, new[] { CurrentPageIndex });
+    }
+
+    public async Task ExtractPagesToFileAsync(string outputPath, IEnumerable<int> pageIndices)
+    {
+        if (!_documentService.IsDocumentLoaded)
+            return;
+
+        try
+        {
+            await ShowPageOperationWarningsAsync(pageIndices);
+            _documentService.ExtractPagesToPdf(outputPath, pageIndices);
+            _toastService.ShowSuccess("Page extracted");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error extracting pages");
+            _toastService.ShowError("Failed to extract pages", ex.Message);
+        }
+    }
+
+    private async Task MoveCurrentPageEarlierAsync()
+    {
+        if (CurrentPageIndex <= 0)
+            return;
+
+        await MoveCurrentPageAsync(CurrentPageIndex - 1);
+    }
+
+    private async Task MoveCurrentPageLaterAsync()
+    {
+        if (CurrentPageIndex >= TotalPages - 1)
+            return;
+
+        await MoveCurrentPageAsync(CurrentPageIndex + 1);
+    }
+
+    public async Task MoveCurrentPageAsync(int toIndex)
+    {
+        if (!_documentService.IsDocumentLoaded)
+            return;
+
+        try
+        {
+            await ShowPageOperationWarningsAsync(new[] { CurrentPageIndex, toIndex });
+            var from = CurrentPageIndex;
+            _documentService.MovePage(from, toIndex);
+            CurrentPageIndex = toIndex;
+            MarkPageOrganizationChanged();
+            await RefreshAfterDocumentMutationAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error moving page");
+            _toastService.ShowError("Failed to move page", ex.Message);
+        }
+    }
+
+    private async Task<string?> PickPdfForPageInsertionAsync(string title)
+    {
+        var storageProvider = GetStorageProvider();
+        if (storageProvider == null)
+        {
+            _logger.LogWarning("Storage provider unavailable, cannot show page insertion dialog");
+            return null;
+        }
+
+        var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = title,
+            AllowMultiple = false,
+            FileTypeFilter = new[]
+            {
+                new FilePickerFileType("PDF Files")
+                {
+                    Patterns = new[] { "*.pdf" }
+                }
+            }
+        });
+
+        return files.Count == 0 ? null : files[0].Path.LocalPath;
+    }
+
+    private void MarkPageOrganizationChanged(bool removedPage = false)
+    {
+        if (removedPage)
+            FileState.RemovedPagesCount++;
+        else
+            FileState.PageEditsCount++;
+
+        _hasInMemoryModifications = true;
+        this.RaisePropertyChanged(nameof(SaveButtonText));
+        this.RaisePropertyChanged(nameof(StatusBarText));
+    }
+
+    private async Task RefreshAfterDocumentMutationAsync()
+    {
+        await LoadPageThumbnailsAsync();
+        await RenderCurrentPageAsync();
+        this.RaisePropertyChanged(nameof(TotalPages));
+        this.RaisePropertyChanged(nameof(StatusText));
+        this.RaisePropertyChanged(nameof(StatusBarText));
+    }
+
+    private async Task ShowPageOperationWarningsAsync(IEnumerable<int>? pageIndices = null)
+    {
+        var diagnostics = _documentService.AnalyzePageOperationPreservation(pageIndices);
+        if (!diagnostics.HasWarnings)
+            return;
+
+        await _dialogService.ShowMessageAsync(
+            "Page Organization",
+            string.Join(Environment.NewLine + Environment.NewLine, diagnostics.Warnings));
     }
 
     private void ToggleTextSelectionMode()
@@ -1400,6 +1575,7 @@ public partial class MainWindowViewModel : ViewModelBase
         try
         {
             _documentService.RotatePageLeft(CurrentPageIndex);
+            MarkPageOrganizationChanged();
             _logger.LogInformation("Page {PageIndex} rotated left successfully", CurrentPageIndex);
 
             // Re-render the page to show the rotation
@@ -1424,6 +1600,7 @@ public partial class MainWindowViewModel : ViewModelBase
         try
         {
             _documentService.RotatePageRight(CurrentPageIndex);
+            MarkPageOrganizationChanged();
             _logger.LogInformation("Page {PageIndex} rotated right successfully", CurrentPageIndex);
 
             // Re-render the page to show the rotation
@@ -1448,6 +1625,7 @@ public partial class MainWindowViewModel : ViewModelBase
         try
         {
             _documentService.RotatePage180(CurrentPageIndex);
+            MarkPageOrganizationChanged();
             _logger.LogInformation("Page {PageIndex} rotated 180 degrees successfully", CurrentPageIndex);
 
             // Re-render the page to show the rotation
@@ -1668,6 +1846,7 @@ public partial class MainWindowViewModel : ViewModelBase
             var flattenedTypewriter = document != null && ApplyPendingTypewriterText(document);
 
             _documentService.SaveDocument(filePath);
+            _hasInMemoryModifications = false;
             _currentFilePath = filePath;
             FileState.UpdateCurrentPath(filePath);
             if (flattenedTypewriter)

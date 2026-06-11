@@ -106,6 +106,20 @@ public class PdfDocumentService
             RemovePage(index);
     }
 
+    /// <summary>Move a page from one 0-based position to another.</summary>
+    public void MovePage(int fromIndex, int toIndex)
+    {
+        if (_currentDocument == null)
+            throw new InvalidOperationException("No document loaded");
+        if (fromIndex < 0 || fromIndex >= PageCount)
+            throw new ArgumentOutOfRangeException(nameof(fromIndex));
+        if (toIndex < 0 || toIndex >= PageCount)
+            throw new ArgumentOutOfRangeException(nameof(toIndex));
+
+        _currentDocument.Pages.Move(fromIndex, toIndex);
+        _logger.LogInformation("Moved page from {FromIndex} to {ToIndex}", fromIndex, toIndex);
+    }
+
     /// <summary>
     /// Append pages from another PDF file to the end of the current
     /// document. If <paramref name="pageIndices"/> is null, all pages
@@ -133,6 +147,8 @@ public class PdfDocumentService
     {
         if (_currentDocument == null)
             throw new InvalidOperationException("No document loaded");
+        if (insertAtIndex < 0 || insertAtIndex > PageCount)
+            throw new ArgumentOutOfRangeException(nameof(insertAtIndex));
 
         using var sourceDocument = PdfDocument.Open(File.ReadAllBytes(sourcePdfPath));
         var indices = pageIndices?.ToList() ?? Enumerable.Range(0, sourceDocument.PageCount).ToList();
@@ -144,6 +160,73 @@ public class PdfDocumentService
             _currentDocument.Pages.Insert(cursor, sourceDocument.GetPage(index + 1));
             cursor++;
         }
+
+        _logger.LogInformation(
+            "Inserted {Count} source page(s) at {Index}; total now: {Total}",
+            indices.Count, insertAtIndex, PageCount);
+    }
+
+    /// <summary>
+    /// Save selected pages to a new PDF. Page indices are 0-based and emitted
+    /// in the caller-provided order.
+    /// </summary>
+    public void ExtractPagesToPdf(string outputPath, IEnumerable<int> pageIndices)
+    {
+        if (_currentDocument == null)
+            throw new InvalidOperationException("No document loaded");
+        if (string.IsNullOrWhiteSpace(outputPath))
+            throw new ArgumentException("Output path is required", nameof(outputPath));
+
+        var indices = pageIndices
+            .Distinct()
+            .Where(i => i >= 0 && i < PageCount)
+            .ToList();
+
+        if (indices.Count == 0)
+            throw new ArgumentException("At least one valid page index is required", nameof(pageIndices));
+
+        using var extracted = PdfDocument.CreateNew(_currentDocument.Version);
+        foreach (var index in indices)
+            extracted.Pages.Add(_currentDocument.GetPage(index + 1));
+
+        extracted.Save(outputPath);
+        _logger.LogInformation(
+            "Extracted {Count} page(s) to {OutputPath}", indices.Count, outputPath);
+    }
+
+    /// <summary>
+    /// Report document structures that page operations may not preserve perfectly
+    /// with the current page-copy implementation.
+    /// </summary>
+    public PageOperationDiagnostics AnalyzePageOperationPreservation(IEnumerable<int>? pageIndices = null)
+    {
+        if (_currentDocument == null)
+            throw new InvalidOperationException("No document loaded");
+
+        var indices = pageIndices?.Distinct().ToList()
+            ?? Enumerable.Range(0, PageCount).ToList();
+        var warnings = new List<string>();
+
+        if (_currentDocument.Catalog.GetOptional("Outlines") != null)
+            warnings.Add("Document outlines/bookmarks may still point to their original page destinations after page organization changes.");
+
+        if (_currentDocument.Catalog.GetOptional("AcroForm") != null)
+            warnings.Add("AcroForm field order and document-level form metadata may not be fully preserved by page insert/extract operations.");
+
+        if (_currentDocument.Catalog.GetOptional("Names") != null)
+            warnings.Add("Named destinations or embedded-file name trees may not be fully remapped during page organization changes.");
+
+        foreach (var index in indices.Where(i => i >= 0 && i < PageCount))
+        {
+            var page = _currentDocument.GetPage(index + 1);
+            if (page.GetAnnotations().Any(a => a.Subtype is PdfAnnotationSubtype.Link or PdfAnnotationSubtype.Widget))
+            {
+                warnings.Add("Links and form widgets on affected pages are copied at page level, but related document-level destinations or field metadata may need review.");
+                break;
+            }
+        }
+
+        return new PageOperationDiagnostics(warnings.Distinct().ToList());
     }
 
     /// <summary>Get the current document for advanced operations. Null when unloaded.</summary>
@@ -190,4 +273,9 @@ public class PdfDocumentService
         _currentDocument = null;
         _currentFilePath = null;
     }
+}
+
+public sealed record PageOperationDiagnostics(IReadOnlyList<string> Warnings)
+{
+    public bool HasWarnings => Warnings.Count > 0;
 }

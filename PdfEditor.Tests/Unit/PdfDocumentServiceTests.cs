@@ -5,6 +5,8 @@ using AwesomeAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using PdfEditor.Services;
 using PdfEditor.Tests.Utilities;
+using Pdfe.Core.Document;
+using Pdfe.Core.Text;
 using Xunit;
 
 namespace PdfEditor.Tests.Unit;
@@ -610,6 +612,82 @@ public class PdfDocumentServiceTests : IDisposable
         // Assert
         _service.PageCount.Should().Be(3);
     }
+
+    #endregion
+
+    #region Page Organization Tests
+
+    [Fact]
+    public void MovePage_ChangesPersistedPageOrder()
+    {
+        // Arrange
+        var filePath = CreateTestFile("move.pdf", path =>
+            TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 3));
+        var savedPath = Path.Combine(_tempDir, "moved.pdf");
+        _service.LoadDocument(filePath);
+
+        // Act
+        _service.MovePage(0, 2);
+        _service.SaveDocument(savedPath);
+
+        // Assert
+        using var reopened = PdfDocument.Open(File.ReadAllBytes(savedPath));
+        ExtractPageText(reopened, 1).Should().Contain("Page 2 Content");
+        ExtractPageText(reopened, 2).Should().Contain("Page 3 Content");
+        ExtractPageText(reopened, 3).Should().Contain("Page 1 Content");
+    }
+
+    [Fact]
+    public void MovePage_WithInvalidTarget_ThrowsArgumentOutOfRange()
+    {
+        var filePath = CreateTestFile("move-invalid.pdf", path =>
+            TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 2));
+        _service.LoadDocument(filePath);
+
+        var action = () => _service.MovePage(0, 2);
+
+        action.Should().Throw<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
+    public void ExtractPagesToPdf_WritesSelectedPagesInCallerOrder()
+    {
+        // Arrange
+        var filePath = CreateTestFile("extract-source.pdf", path =>
+            TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 4));
+        var outputPath = Path.Combine(_tempDir, "extracted.pdf");
+        _service.LoadDocument(filePath);
+
+        // Act
+        _service.ExtractPagesToPdf(outputPath, new[] { 2, 0 });
+
+        // Assert
+        using var extracted = PdfDocument.Open(File.ReadAllBytes(outputPath));
+        extracted.PageCount.Should().Be(2);
+        ExtractPageText(extracted, 1).Should().Contain("Page 3 Content");
+        ExtractPageText(extracted, 2).Should().Contain("Page 1 Content");
+    }
+
+    [Fact]
+    public void AnalyzePageOperationPreservation_ReportsDocumentLevelStructures()
+    {
+        var filePath = CreateTestFile("warnings.pdf", path =>
+        {
+            using var doc = PdfDocument.CreateNew();
+            doc.Pages.AddBlank();
+            doc.Catalog["Outlines"] = new Pdfe.Core.Primitives.PdfDictionary();
+            doc.Save(path);
+        });
+        _service.LoadDocument(filePath);
+
+        var diagnostics = _service.AnalyzePageOperationPreservation();
+
+        diagnostics.HasWarnings.Should().BeTrue();
+        diagnostics.Warnings.Should().Contain(w => w.Contains("outlines", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string ExtractPageText(PdfDocument document, int pageNumber)
+        => new TextExtractor(document.GetPage(pageNumber)).ExtractText();
 
     #endregion
 

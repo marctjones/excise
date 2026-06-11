@@ -24,6 +24,11 @@ public partial class MainWindowViewModel
     public ReactiveCommand<Unit, Unit> SaveFileCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> RemoveCurrentPageCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> AddPagesCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> InsertPagesBeforeCurrentCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> InsertPagesAfterCurrentCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ExtractCurrentPageCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> MoveCurrentPageEarlierCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> MoveCurrentPageLaterCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleRedactionModeCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ApplyRedactionCommand { get; private set; } = null!;
     public ReactiveCommand<Guid, Unit> RemovePendingRedactionCommand { get; private set; } = null!;
@@ -78,6 +83,11 @@ public partial class MainWindowViewModel
         SaveFileCommand = ReactiveCommand.CreateFromTask(SaveFileAsync);
         RemoveCurrentPageCommand = ReactiveCommand.CreateFromTask(RemoveCurrentPageAsync);
         AddPagesCommand = ReactiveCommand.CreateFromTask(AddPagesAsync);
+        InsertPagesBeforeCurrentCommand = ReactiveCommand.CreateFromTask(InsertPagesBeforeCurrentAsync);
+        InsertPagesAfterCurrentCommand = ReactiveCommand.CreateFromTask(InsertPagesAfterCurrentAsync);
+        ExtractCurrentPageCommand = ReactiveCommand.CreateFromTask(ExtractCurrentPageAsync);
+        MoveCurrentPageEarlierCommand = ReactiveCommand.CreateFromTask(MoveCurrentPageEarlierAsync);
+        MoveCurrentPageLaterCommand = ReactiveCommand.CreateFromTask(MoveCurrentPageLaterAsync);
         ToggleRedactionModeCommand = ReactiveCommand.Create(ToggleRedactionMode);
         ApplyRedactionCommand = ReactiveCommand.CreateFromTask(ApplyRedactionAsync);
         RemovePendingRedactionCommand = ReactiveCommand.Create<Guid>(RemovePendingRedaction);

@@ -184,7 +184,10 @@ public class PageCollection : IReadOnlyList<PdfPage>
         if (index < 0 || index > _pages.Count)
             throw new ArgumentOutOfRangeException(nameof(index), $"Insert index must be between 0 and {_pages.Count}");
 
-        // Clone the page dictionary
+        // Clone the page dictionary and any indirect objects the page owns
+        // (content streams, resources, annotations). Without this, copying a
+        // page between documents can leave dangling references to source-doc
+        // object numbers that do not exist in the target.
         var newPageDict = ClonePageDictionary(page);
 
         // Set the parent to our Pages dictionary
@@ -265,6 +268,7 @@ public class PageCollection : IReadOnlyList<PdfPage>
     {
         var sourceDict = sourcePage.Dictionary;
         var newDict = new PdfDictionary();
+        var clonedRefs = new Dictionary<(int ObjectNumber, int GenerationNumber), PdfReference>();
 
         // Copy all entries except Parent (we'll set our own)
         foreach (var kvp in sourceDict)
@@ -272,15 +276,124 @@ public class PageCollection : IReadOnlyList<PdfPage>
             if (kvp.Key.Value == "Parent")
                 continue;
 
-            // For now, do a shallow copy
-            // A full implementation would deep-copy objects from other documents
-            newDict[kvp.Key.Value] = kvp.Value;
+            newDict[kvp.Key.Value] = CloneObject(sourcePage.Document, kvp.Value, clonedRefs);
         }
 
         // Ensure required entries
         newDict.SetName("Type", "Page");
 
         return newDict;
+    }
+
+    private PdfObject CloneObject(
+        PdfDocument sourceDocument,
+        PdfObject obj,
+        Dictionary<(int ObjectNumber, int GenerationNumber), PdfReference> clonedRefs)
+    {
+        if (obj is PdfReference reference)
+            return CloneReference(sourceDocument, reference, clonedRefs);
+
+        if (obj is PdfStream stream)
+            return CloneStream(sourceDocument, stream, clonedRefs);
+
+        if (obj is PdfDictionary dictionary)
+            return CloneDictionary(sourceDocument, dictionary, clonedRefs);
+
+        if (obj is PdfArray array)
+            return CloneArray(sourceDocument, array, clonedRefs);
+
+        if (obj is PdfName name)
+            return new PdfName(name.Value);
+
+        if (obj is PdfString str)
+            return new PdfString(str.Bytes.ToArray());
+
+        if (obj is PdfInteger integer)
+            return new PdfInteger(integer.Value);
+
+        if (obj is PdfReal real)
+            return new PdfReal(real.Value);
+
+        if (obj is PdfBoolean boolean)
+            return PdfBoolean.Get(boolean.Value);
+
+        return obj;
+    }
+
+    private PdfObject CloneReference(
+        PdfDocument sourceDocument,
+        PdfReference reference,
+        Dictionary<(int ObjectNumber, int GenerationNumber), PdfReference> clonedRefs)
+    {
+        var key = (reference.ObjectNum, reference.Generation);
+        if (clonedRefs.TryGetValue(key, out var existing))
+            return existing;
+
+        var resolved = sourceDocument.Resolve(reference);
+        if (resolved is PdfDictionary dict)
+        {
+            var type = dict.GetNameOrNull("Type");
+            if (type is "Page" or "Pages")
+                return PdfNull.Instance;
+        }
+
+        var clonedObject = CloneObject(sourceDocument, resolved, clonedRefs);
+        var clonedRef = _document.AddIndirectObject(clonedObject);
+        clonedRefs[key] = clonedRef;
+        return clonedRef;
+    }
+
+    private PdfDictionary CloneDictionary(
+        PdfDocument sourceDocument,
+        PdfDictionary source,
+        Dictionary<(int ObjectNumber, int GenerationNumber), PdfReference> clonedRefs)
+    {
+        var clone = new PdfDictionary();
+        var isAnnotation = source.GetNameOrNull("Type") == "Annot";
+
+        foreach (var kvp in source)
+        {
+            var key = kvp.Key.Value;
+            if (key == "Parent")
+                continue;
+
+            if (isAnnotation && key == "P")
+                continue;
+
+            var cloned = CloneObject(sourceDocument, kvp.Value, clonedRefs);
+            if (cloned is not PdfNull)
+                clone[key] = cloned;
+        }
+
+        return clone;
+    }
+
+    private PdfArray CloneArray(
+        PdfDocument sourceDocument,
+        PdfArray source,
+        Dictionary<(int ObjectNumber, int GenerationNumber), PdfReference> clonedRefs)
+    {
+        var clone = new PdfArray();
+        foreach (var item in source)
+        {
+            var cloned = CloneObject(sourceDocument, item, clonedRefs);
+            clone.Add(cloned);
+        }
+
+        return clone;
+    }
+
+    private PdfStream CloneStream(
+        PdfDocument sourceDocument,
+        PdfStream source,
+        Dictionary<(int ObjectNumber, int GenerationNumber), PdfReference> clonedRefs)
+    {
+        var dict = CloneDictionary(sourceDocument, source, clonedRefs);
+        var clone = new PdfStream(dict, source.EncodedData.ToArray());
+        if (source.IsDecoded)
+            clone.SetDecodedData(source.DecodedData.ToArray());
+
+        return clone;
     }
 
     /// <summary>

@@ -78,6 +78,13 @@
                 <MenuItem Header="_Add Pages..." Command="{Binding AddPagesCommand}">
                     <MenuItem.Icon><TextBlock Text="➕"/></MenuItem.Icon>
                 </MenuItem>
+                <MenuItem Header="Insert Pages _Before Current..." Command="{Binding InsertPagesBeforeCurrentCommand}"/>
+                <MenuItem Header="Insert Pages _After Current..." Command="{Binding InsertPagesAfterCurrentCommand}"/>
+                <MenuItem Header="_Extract Current Page..." Command="{Binding ExtractCurrentPageCommand}"/>
+                <Separator/>
+                <MenuItem Header="Move Page _Earlier" Command="{Binding MoveCurrentPageEarlierCommand}"/>
+                <MenuItem Header="Move Page _Later" Command="{Binding MoveCurrentPageLaterCommand}"/>
+                <Separator/>
                 <MenuItem Header="_Remove Current Page" Command="{Binding RemoveCurrentPageCommand}"
                           IsEnabled="{Binding IsDocumentLoaded}">
                     <MenuItem.Icon><TextBlock Text="🗑"/></MenuItem.Icon>

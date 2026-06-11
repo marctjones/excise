@@ -14,6 +14,7 @@ public class DocumentStateManager : ReactiveObject
     private string _originalFilePath = string.Empty;
     private int _pendingRedactionsCount;
     private int _removedPagesCount;
+    private int _pageEditsCount;
     private int _formFieldEditsCount;
     private int _typewriterEditsCount;
 
@@ -51,6 +52,15 @@ public class DocumentStateManager : ReactiveObject
     {
         get => _removedPagesCount;
         set => this.RaiseAndSetIfChanged(ref _removedPagesCount, value);
+    }
+
+    /// <summary>
+    /// Number of non-removal page organization edits not yet saved.
+    /// </summary>
+    public int PageEditsCount
+    {
+        get => _pageEditsCount;
+        set => this.RaiseAndSetIfChanged(ref _pageEditsCount, value);
     }
 
     /// <summary>
@@ -111,6 +121,7 @@ public class DocumentStateManager : ReactiveObject
     public bool HasUnsavedChanges =>
         PendingRedactionsCount > 0
         || RemovedPagesCount > 0
+        || PageEditsCount > 0
         || FormFieldEditsCount > 0
         || TypewriterEditsCount > 0;
 
@@ -149,6 +160,7 @@ public class DocumentStateManager : ReactiveObject
         OriginalFilePath = filePath;
         PendingRedactionsCount = 0;
         RemovedPagesCount = 0;
+        PageEditsCount = 0;
         FormFieldEditsCount = 0;
         TypewriterEditsCount = 0;
     }
@@ -183,6 +195,7 @@ public class DocumentStateManager : ReactiveObject
     {
         PendingRedactionsCount = 0;
         RemovedPagesCount = 0;
+        PageEditsCount = 0;
         FormFieldEditsCount = 0;
         TypewriterEditsCount = 0;
     }

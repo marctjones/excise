@@ -368,6 +368,11 @@ namespace Pdfe.Core.Document
         public System.Collections.Generic.IReadOnlyList<System.ValueTuple<double, double>>? Vertices { get; }
         public override string ToString() { }
     }
+    public static class PdfAnnotationAuthoring
+    {
+        public static Pdfe.Core.Document.PdfAnnotation AddHighlightAnnotation(this Pdfe.Core.Document.PdfDocument document, int pageNumber, Pdfe.Core.Document.PdfRectangle rect, string? contents = null, string? author = null, double red = 1, double green = 1, double blue = 0) { }
+        public static Pdfe.Core.Document.PdfAnnotation AddTextAnnotation(this Pdfe.Core.Document.PdfDocument document, int pageNumber, Pdfe.Core.Document.PdfRectangle rect, string contents, string? author = null, bool open = false, string iconName = "Note") { }
+    }
     [System.Flags]
     public enum PdfAnnotationFlags
     {
