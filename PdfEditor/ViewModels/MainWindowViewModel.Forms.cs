@@ -4,7 +4,10 @@ using Pdfe.Core.Document;
 using ReactiveUI;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
+using Avalonia.Platform.Storage;
 
 namespace PdfEditor.ViewModels;
 
@@ -91,7 +94,9 @@ public partial class MainWindowViewModel
     public void OnFormFieldEdited(string fieldName, string? newValue)
     {
         if (_pdfCoreDocument == null) return;
+        SyncFormFieldValueToServiceDocument(fieldName, newValue);
         FileState.FormFieldEditsCount++;
+        NotifyFormDirtyStateChanged();
         _logger.LogInformation("Form field '{Field}' set to '{Value}'", fieldName, newValue);
     }
 
@@ -107,31 +112,13 @@ public partial class MainWindowViewModel
         try
         {
             var name = NextUniqueFieldName(_pdfCoreDocument, FormAuthoringFieldType);
-            switch (FormAuthoringFieldType)
-            {
-                case PdfFieldType.Text:
-                    _pdfCoreDocument.AddTextField(pageNumber, rect, name);
-                    break;
-                case PdfFieldType.Button:
-                    _pdfCoreDocument.AddCheckBox(pageNumber, rect, name);
-                    break;
-                case PdfFieldType.Signature:
-                    _pdfCoreDocument.AddSignatureField(pageNumber, rect, name);
-                    break;
-                case PdfFieldType.Choice:
-                    // Choice fields need /Opt; default to two placeholder
-                    // options so the field is at least addressable from
-                    // the GUI. The user is expected to edit /Opt later
-                    // through the field properties dialog.
-                    _pdfCoreDocument.AddChoiceField(pageNumber, rect, name,
-                        new[] { "Option 1", "Option 2" });
-                    break;
-                default:
-                    return;
-            }
+            AddFormFieldToDocument(_pdfCoreDocument, FormAuthoringFieldType, pageNumber, rect, name);
+            if (_documentService.GetCurrentDocument() is { } serviceDocument)
+                AddFormFieldToDocument(serviceDocument, FormAuthoringFieldType, pageNumber, rect, name);
 
             FileState.FormFieldEditsCount++;
             this.RaisePropertyChanged(nameof(CurrentPageFormFields));
+            NotifyFormDirtyStateChanged();
             _logger.LogInformation("Added {Type} field '{Name}' to page {Page}",
                 FormAuthoringFieldType, name, pageNumber);
         }
@@ -151,14 +138,146 @@ public partial class MainWindowViewModel
         if (suggestions.Count == 0) return 0;
 
         var count = PdfFormAutoDetector.Apply(_pdfCoreDocument, suggestions);
+        if (count > 0 && _documentService.GetCurrentDocument() is { } serviceDocument)
+            PdfFormAutoDetector.Apply(serviceDocument, suggestions);
         if (count > 0)
         {
             FileState.FormFieldEditsCount += count;
             this.RaisePropertyChanged(nameof(CurrentPageFormFields));
+            NotifyFormDirtyStateChanged();
             _logger.LogInformation("Auto-detected and added {Count} form field(s)", count);
         }
 
         return count;
+    }
+
+    private static void AddFormFieldToDocument(
+        PdfDocument document,
+        PdfFieldType type,
+        int pageNumber,
+        PdfRectangle rect,
+        string name)
+    {
+        switch (type)
+        {
+            case PdfFieldType.Text:
+                document.AddTextField(pageNumber, rect, name);
+                break;
+            case PdfFieldType.Button:
+                document.AddCheckBox(pageNumber, rect, name);
+                break;
+            case PdfFieldType.Signature:
+                document.AddSignatureField(pageNumber, rect, name);
+                break;
+            case PdfFieldType.Choice:
+                // Choice fields need /Opt; default to two placeholder options
+                // so the field is addressable from the GUI.
+                document.AddChoiceField(pageNumber, rect, name, new[] { "Option 1", "Option 2" });
+                break;
+            default:
+                throw new NotSupportedException($"Unsupported form field type: {type}");
+        }
+    }
+
+    private void NotifyFormDirtyStateChanged()
+    {
+        this.RaisePropertyChanged(nameof(SaveButtonText));
+        this.RaisePropertyChanged(nameof(StatusBarText));
+    }
+
+    private void SyncFormFieldValueToServiceDocument(string fieldName, string? value)
+    {
+        var serviceForm = _documentService.GetCurrentDocument()?.GetAcroForm();
+        var serviceField = serviceForm?.FindField(fieldName);
+        if (serviceField == null) return;
+
+        try
+        {
+            if (!string.Equals(serviceField.Value, value, StringComparison.Ordinal))
+                serviceField.SetValue(value);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            _logger.LogWarning(ex, "Failed to synchronize form field '{Field}' to save document", fieldName);
+        }
+    }
+
+    private void SyncAllFormFieldValuesToServiceDocument()
+    {
+        var sourceForm = _pdfCoreDocument?.GetAcroForm();
+        var serviceForm = _documentService.GetCurrentDocument()?.GetAcroForm();
+        if (sourceForm == null || serviceForm == null) return;
+
+        foreach (var sourceField in sourceForm.Fields)
+            SyncFormFieldValueToServiceDocument(sourceField.FullName, sourceField.Value);
+    }
+
+    private async Task SaveFlattenedFormCopyAsync()
+    {
+        if (!_documentService.IsDocumentLoaded)
+            return;
+
+        if (_documentService.GetCurrentDocument()?.GetAcroForm() == null)
+        {
+            await _dialogService.ShowMessageAsync("No Form Fields", "This PDF does not contain interactive form fields to flatten.");
+            return;
+        }
+
+        var storageProvider = GetStorageProvider();
+        if (storageProvider == null)
+            return;
+
+        var file = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "Save Flattened Form Copy",
+            DefaultExtension = "pdf",
+            SuggestedFileName = SuggestFlattenedFormFilename(_currentFilePath),
+            FileTypeChoices = new[]
+            {
+                new FilePickerFileType("PDF Files")
+                {
+                    Patterns = new[] { "*.pdf" }
+                }
+            }
+        });
+
+        if (file?.Path.LocalPath is not { Length: > 0 } filePath)
+            return;
+
+        await SaveFlattenedFormCopyAsAsync(filePath);
+    }
+
+    public async Task SaveFlattenedFormCopyAsAsync(string filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+            throw new ArgumentException("File path cannot be empty", nameof(filePath));
+
+        var document = _documentService.GetCurrentDocument();
+        if (document == null)
+            return;
+
+        SyncAllFormFieldValuesToServiceDocument();
+        using var flattenedCopy = PdfDocument.Open(document.SaveToBytes());
+        ApplyPendingTypewriterText(flattenedCopy);
+        flattenedCopy.FlattenAcroForm();
+        flattenedCopy.Save(filePath);
+        ClearPendingTypewriterText();
+        FileState.MarkSaved();
+
+        await LoadDocumentAsync(filePath);
+        _toastService.ShowSuccess("Flattened form copy saved");
+    }
+
+    private static string SuggestFlattenedFormFilename(string currentFilePath)
+    {
+        if (string.IsNullOrWhiteSpace(currentFilePath))
+            return "document_flattened.pdf";
+
+        var directory = Path.GetDirectoryName(currentFilePath);
+        var name = Path.GetFileNameWithoutExtension(currentFilePath);
+        var extension = Path.GetExtension(currentFilePath);
+        var fileName = $"{name}_flattened{(string.IsNullOrEmpty(extension) ? ".pdf" : extension)}";
+        return string.IsNullOrWhiteSpace(directory) ? fileName : Path.Combine(directory, fileName);
     }
 
     private static string NextUniqueFieldName(PdfDocument doc, PdfFieldType type)

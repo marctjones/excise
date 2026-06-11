@@ -78,6 +78,24 @@ public sealed class PdfField
         }
     }
 
+    /// <summary>
+    /// The effective field flags (<c>/Ff</c>) after inheriting from ancestor
+    /// fields. See PDF §12.7.4.2.
+    /// </summary>
+    public int Flags { get; }
+
+    /// <summary>
+    /// True when this button field represents a radio group rather than a
+    /// single checkbox.
+    /// </summary>
+    public bool IsRadioButton => FieldType == PdfFieldType.Button && (Flags & 0x8000) != 0;
+
+    /// <summary>True when this button field is a push button.</summary>
+    public bool IsPushButton => FieldType == PdfFieldType.Button && (Flags & 0x10000) != 0;
+
+    /// <summary>True when this choice field is a combo box.</summary>
+    public bool IsComboBox => FieldType == PdfFieldType.Choice && (Flags & 0x20000) != 0;
+
     /// <summary>The non-<c>Off</c> appearance-state names under a widget's <c>/AP /N</c>.</summary>
     private IEnumerable<string> GetWidgetOnStates(PdfDictionary widget)
     {
@@ -137,6 +155,12 @@ public sealed class PdfField
     /// </summary>
     internal IReadOnlyList<PdfDictionary> WidgetDictionaries { get; }
 
+    /// <summary>
+    /// Widget annotations associated with this field, including per-widget
+    /// rectangles and export values when available.
+    /// </summary>
+    public IReadOnlyList<PdfFieldWidget> Widgets { get; }
+
     public PdfField(
         PdfDocument document,
         string fullName,
@@ -150,11 +174,45 @@ public sealed class PdfField
         bool isMultiline,
         PdfDictionary rawDictionary,
         IReadOnlyList<PdfDictionary> widgetDictionaries)
+        : this(
+            document,
+            fullName,
+            partialName,
+            fieldType,
+            options,
+            rect,
+            pageNumber,
+            isReadOnly,
+            isRequired,
+            isMultiline,
+            rawDictionary,
+            widgetDictionaries,
+            flags: 0,
+            widgets: Array.Empty<PdfFieldWidget>())
+    {
+    }
+
+    public PdfField(
+        PdfDocument document,
+        string fullName,
+        string partialName,
+        PdfFieldType fieldType,
+        IReadOnlyList<string>? options,
+        PdfRectangle? rect,
+        int? pageNumber,
+        bool isReadOnly,
+        bool isRequired,
+        bool isMultiline,
+        PdfDictionary rawDictionary,
+        IReadOnlyList<PdfDictionary> widgetDictionaries,
+        int flags,
+        IReadOnlyList<PdfFieldWidget> widgets)
     {
         _document = document;
         FullName = fullName;
         PartialName = partialName;
         FieldType = fieldType;
+        Flags = flags;
         Options = options;
         Rect = rect;
         PageNumber = pageNumber;
@@ -163,6 +221,7 @@ public sealed class PdfField
         IsMultiline = isMultiline;
         RawDictionary = rawDictionary;
         WidgetDictionaries = widgetDictionaries;
+        Widgets = widgets;
     }
 
     /// <summary>

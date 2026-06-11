@@ -8,7 +8,7 @@ A cross-platform PDF editor and pure-.NET PDF framework, built with **C# + .NET 
 
 [![Release](https://img.shields.io/github/v/release/marctjones/pdfe)](https://github.com/marctjones/pdfe/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-3500%2B%20passing-brightgreen)](Pdfe.Core.Tests)
+[![Tests](https://img.shields.io/badge/tests-7000%2B%20passing-brightgreen)](Pdfe.Core.Tests)
 [![Build](https://img.shields.io/badge/build-0%20warnings-brightgreen)](Pdfe.Core)
 
 > **v2.1** completed all 15 PDF 2.0 conformance phases (CID fonts, AcroForms, color spaces, optional content groups, structure tree, embedded files, page labels, named destinations) and added **AcroForm editing and authoring** — fill, flatten, click-to-create, and heuristic auto-detect. The PDF stack is pdfe-owned end-to-end — `Pdfe.Core` (parser/writer), `Pdfe.Rendering` (Skia), and `Pdfe.Ocr` (system tesseract shell) — with no third-party PDF dependencies. See [CHANGELOG.md](CHANGELOG.md) for full release notes.
@@ -53,7 +53,7 @@ Build the packages locally with `dotnet pack -c Release` (they are also attached
 - Zoom modes: fit width, fit page, actual size, free zoom
 - Page thumbnails sidebar
 - **Typewriter text** — place editable text boxes on flat PDFs, then save them as normal page content instead of annotations
-- **AcroForm editing** — click any text/checkbox/dropdown widget and edit inline; save to keep the values interactive or flatten to bake them in
+- **AcroForm editing** — click text, checkbox, radio, or dropdown widgets and edit inline; save filled forms as interactive copies or create a flattened form copy
 - **AcroForm authoring** — drag-rect on a page to create new fields (Text / Checkbox / Choice / Signature); auto-detect underline placeholders and empty squares as fields
 - Reveal Hidden Text — yellow highlights for structural detections (text covered by rectangles), orange for differential-OCR recoveries (text inside rasterized images)
 - Digital signature inspection — checks ByteRange structure, verifies the detached CMS digest/signature over the signed bytes, and clearly reports current OS trust-chain validation limitations
@@ -72,8 +72,9 @@ Build the packages locally with `dotnet pack -c Release` (they are also attached
 - Verified against real-world fixtures (CT birth certificate, government forms) at the pixel and content-stream level
 
 ### AcroForm editing & authoring
-- `PdfField.SetValue(string?)` mutates `/V`, sets `/NeedAppearances`, updates `/AS` for buttons; throws on read-only and signature fields
-- `PdfDocument.FlattenAcroForm()` bakes values into static page content and strips widget annotations
+- `PdfField.SetValue(string?)` mutates `/V`, sets `/NeedAppearances`, updates `/AS` for buttons, and throws on read-only and signature fields
+- `PdfField` exposes effective `/Ff` flags plus widget metadata/export values so callers can distinguish checkboxes, radio groups, combo boxes, and push buttons
+- `PdfDocument.FlattenAcroForm()` bakes values into static page content, clips/wraps text to widget bounds, draws only the selected radio widget, and strips widget annotations
 - `AcroFormAuthoring` extension methods: `AddTextField`, `AddCheckBox`, `AddChoiceField`, `AddSignatureField` — auto-create the AcroForm dict and `/DR/Font/Helv` on first call
 - `PdfFormAutoDetector` heuristically suggests fields where the page has horizontal underlines or empty checkbox-sized outlines (Acrobat-style "Prepare Form")
 - `PdfDocument.ScrubMetadata(scrubAttachments: true)` strips Info dict, XMP, and embedded files in one call — important when redacted documents may carry the data they were redacted of in attachments (ZUGFeRD, Factur-X)
@@ -168,9 +169,10 @@ Multiple areas across multiple pages can be marked and applied as a single batch
 
 ### Form fill (existing AcroForm)
 
-1. Open a PDF with form fields. Each field becomes an inline editor on the page (TextBox / ComboBox / CheckBox).
-2. Edit a value — commits on Enter or focus loss; the document is marked dirty.
-3. Save to keep the form interactive, or use `PdfDocument.FlattenAcroForm` (or `pdfe fill-form … --flatten`) to bake the values into static page content.
+1. Open a PDF with form fields. Each field becomes an inline editor on the page: text fields use text boxes, choice/radio fields use selectors, and checkboxes use checkboxes.
+2. Edit a value. Single-line text commits on Enter or focus loss; multiline text commits on Ctrl+Enter or focus loss; Escape restores the last committed value.
+3. Use **Save Filled Copy** / **Save As** to preserve interactive form fields and values.
+4. Use **Flatten Form** to create a copy where form values are baked into static page content and widget annotations are removed.
 
 ### Form authoring (create new fields)
 

@@ -507,8 +507,16 @@ public partial class PdfViewerControl : UserControl
         double pageHeight = page.Height;
         double scale = AnnotationRenderDpi / 72.0;
 
-        foreach (var field in fields)
+        var orderedFields = fields
+            .Where(field => field.Rect.HasValue)
+            .OrderByDescending(field => field.Rect!.Value.Top)
+            .ThenBy(field => field.Rect!.Value.Left)
+            .ThenBy(field => field.FullName, StringComparer.Ordinal)
+            .ToList();
+
+        for (var tabIndex = 0; tabIndex < orderedFields.Count; tabIndex++)
         {
+            var field = orderedFields[tabIndex];
             if (field.Rect is not Pdfe.Core.Document.PdfRectangle r) continue;
 
             // Y-flip: PDF bottom-left → DIP top-left
@@ -528,6 +536,7 @@ public partial class PdfViewerControl : UserControl
 
             input.Width = dipW;
             input.Height = dipH;
+            ApplyFormFieldChrome(input, field, tabIndex);
             Canvas.SetLeft(input, dipX);
             Canvas.SetTop(input, dipY);
             layer.Children.Add(input);
@@ -546,15 +555,28 @@ public partial class PdfViewerControl : UserControl
             BorderThickness = new Thickness(1),
             Padding = new Thickness(2),
             FontSize = Math.Max(10, h * 0.6),
-            VerticalContentAlignment = global::Avalonia.Layout.VerticalAlignment.Center,
+            VerticalContentAlignment = field.IsMultiline
+                ? global::Avalonia.Layout.VerticalAlignment.Top
+                : global::Avalonia.Layout.VerticalAlignment.Center,
         };
 
-        // Commit on Enter (single-line) or focus loss.
+        // Commit on Enter (single-line), Ctrl+Enter (multiline), or focus loss.
+        // Escape restores the last committed value.
         box.KeyDown += (_, e) =>
         {
             if (e.Key == Key.Enter && !field.IsMultiline)
             {
                 CommitFieldEdit(field, box.Text);
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Enter && field.IsMultiline && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+            {
+                CommitFieldEdit(field, box.Text);
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Escape)
+            {
+                box.Text = field.Value ?? string.Empty;
                 e.Handled = true;
             }
         };
@@ -577,11 +599,38 @@ public partial class PdfViewerControl : UserControl
             if (combo.SelectedItem is string s)
                 CommitFieldEdit(field, s);
         };
+        combo.KeyDown += (_, e) =>
+        {
+            if (e.Key == Key.Escape)
+            {
+                combo.SelectedItem = field.Value;
+                e.Handled = true;
+            }
+        };
         return combo;
     }
 
     private Control CreateButtonFieldInput(Pdfe.Core.Document.PdfField field, double w, double h)
     {
+        if (field.ButtonExportValues.Count > 1)
+        {
+            var options = field.ButtonExportValues;
+            var combo = new ComboBox
+            {
+                ItemsSource = options,
+                SelectedItem = options.Contains(field.Value ?? string.Empty) ? field.Value : null,
+                IsEnabled = !field.IsReadOnly,
+                Background = new SolidColorBrush(Color.FromArgb(0x20, 0x00, 0xAA, 0x44)),
+                BorderBrush = new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0x88, 0x33)),
+            };
+            combo.SelectionChanged += (_, _) =>
+            {
+                if (combo.SelectedItem is string s)
+                    CommitFieldEdit(field, s);
+            };
+            return combo;
+        }
+
         // Treat any value other than "Off"/null as checked for the MVP.
         // Acrobat stores radio-button states as the option's name (e.g.
         // "/Choice1"), so this works for both checkbox and the simplest
@@ -599,6 +648,40 @@ public partial class PdfViewerControl : UserControl
             CommitFieldEdit(field, newValue);
         };
         return checkBox;
+    }
+
+    private static void ApplyFormFieldChrome(Control input, Pdfe.Core.Document.PdfField field, int tabIndex)
+    {
+        input.TabIndex = tabIndex;
+        input.IsEnabled = input.IsEnabled && !field.IsReadOnly;
+        ToolTip.SetTip(input, field.FullName);
+
+        input.GotFocus += (_, _) => SetFormFieldFocusChrome(input, focused: true);
+        input.LostFocus += (_, _) => SetFormFieldFocusChrome(input, focused: false);
+    }
+
+    private static void SetFormFieldFocusChrome(Control input, bool focused)
+    {
+        var brush = new SolidColorBrush(focused
+            ? Color.FromArgb(0xFF, 0x00, 0x5F, 0xCC)
+            : Color.FromArgb(0xFF, 0x88, 0x88, 0x88));
+        var thickness = new Thickness(focused ? 2 : 1);
+
+        switch (input)
+        {
+            case TextBox textBox:
+                textBox.BorderBrush = brush;
+                textBox.BorderThickness = thickness;
+                break;
+            case ComboBox comboBox:
+                comboBox.BorderBrush = brush;
+                comboBox.BorderThickness = thickness;
+                break;
+            case CheckBox checkBox:
+                checkBox.BorderBrush = brush;
+                checkBox.BorderThickness = thickness;
+                break;
+        }
     }
 
     private void CommitFieldEdit(Pdfe.Core.Document.PdfField field, string? newValue)

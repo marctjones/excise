@@ -477,11 +477,16 @@ namespace Pdfe.Core.Document
     public sealed class PdfField
     {
         public PdfField(Pdfe.Core.Document.PdfDocument document, string fullName, string partialName, Pdfe.Core.Document.PdfFieldType fieldType, System.Collections.Generic.IReadOnlyList<string>? options, Pdfe.Core.Document.PdfRectangle? rect, int? pageNumber, bool isReadOnly, bool isRequired, bool isMultiline, Pdfe.Core.Primitives.PdfDictionary rawDictionary, System.Collections.Generic.IReadOnlyList<Pdfe.Core.Primitives.PdfDictionary> widgetDictionaries) { }
+        public PdfField(Pdfe.Core.Document.PdfDocument document, string fullName, string partialName, Pdfe.Core.Document.PdfFieldType fieldType, System.Collections.Generic.IReadOnlyList<string>? options, Pdfe.Core.Document.PdfRectangle? rect, int? pageNumber, bool isReadOnly, bool isRequired, bool isMultiline, Pdfe.Core.Primitives.PdfDictionary rawDictionary, System.Collections.Generic.IReadOnlyList<Pdfe.Core.Primitives.PdfDictionary> widgetDictionaries, int flags, System.Collections.Generic.IReadOnlyList<Pdfe.Core.Document.PdfFieldWidget> widgets) { }
         public System.Collections.Generic.IReadOnlyList<string> ButtonExportValues { get; }
         public string? DefaultValue { get; }
         public Pdfe.Core.Document.PdfFieldType FieldType { get; }
+        public int Flags { get; }
         public string FullName { get; }
+        public bool IsComboBox { get; }
         public bool IsMultiline { get; }
+        public bool IsPushButton { get; }
+        public bool IsRadioButton { get; }
         public bool IsReadOnly { get; }
         public bool IsRequired { get; }
         public System.Collections.Generic.IReadOnlyList<string>? Options { get; }
@@ -490,6 +495,7 @@ namespace Pdfe.Core.Document
         public Pdfe.Core.Primitives.PdfDictionary RawDictionary { get; }
         public Pdfe.Core.Document.PdfRectangle? Rect { get; }
         public string? Value { get; }
+        public System.Collections.Generic.IReadOnlyList<Pdfe.Core.Document.PdfFieldWidget> Widgets { get; }
         public void SetValue(string? value) { }
         public override string ToString() { }
     }
@@ -500,6 +506,13 @@ namespace Pdfe.Core.Document
         Text = 2,
         Choice = 3,
         Signature = 4,
+    }
+    public sealed class PdfFieldWidget
+    {
+        public PdfFieldWidget(Pdfe.Core.Document.PdfRectangle rect, int? pageNumber, string? exportValue) { }
+        public string? ExportValue { get; }
+        public int? PageNumber { get; }
+        public Pdfe.Core.Document.PdfRectangle Rect { get; }
     }
     public static class PdfFormAutoDetector
     {

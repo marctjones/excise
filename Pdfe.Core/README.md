@@ -34,10 +34,11 @@ page.RedactArea(new PdfRectangle(/* … */));
 doc.Save("redacted.pdf");
 ```
 
-Capabilities include encryption (RC4 / AES-128/256), AcroForms (read/edit/author),
-Type0/CID (CJK) fonts with ToUnicode, optional content groups, XMP metadata, embedded-file
-extraction, and a broad content-stream operator set. Hostile input fails with typed
-`PdfParseException`s rather than CLR crashes (fuzz-tested), with recursion-depth and
-cancellation guards.
+Capabilities include encryption (RC4 / AES-128/256), AcroForms
+(read/edit/author/flatten, including widget metadata for checkbox/radio/choice
+workflows), Type0/CID (CJK) fonts with ToUnicode, optional content groups, XMP
+metadata, embedded-file extraction, and a broad content-stream operator set.
+Hostile input fails with typed `PdfParseException`s rather than CLR crashes
+(fuzz-tested), with recursion-depth and cancellation guards.
 
 MIT licensed. Part of the [pdfe](https://github.com/marctjones/pdfe) project.

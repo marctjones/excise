@@ -4,6 +4,43 @@ All notable changes to pdfe are documented here. Format roughly follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 semantic versioning.
 
+## [2.15.0] - 2026-06-11
+
+Form workflow hardening release. Additive; no breaking changes.
+
+### Added
+- **Explicit flattened form copy workflow (#457, #459, #460).** The desktop
+  app now exposes **Flatten Form** / **Save Flattened Form Copy...** so users can
+  choose between preserving interactive form fields and baking values into
+  static page content.
+- **Form widget metadata API (#459).** `PdfField` now exposes effective `/Ff`
+  flags, checkbox/radio/choice helpers, and `PdfFieldWidget` metadata so
+  consumers can distinguish checkboxes, radio groups, combo boxes, push buttons,
+  and per-widget export values.
+
+### Changed
+- **Filled-form saves now persist the edited values (#460).** The desktop form
+  overlay synchronizes edits and authored fields into the service-owned document
+  before save, so interactive filled forms round-trip correctly through Save As.
+- **Form field keyboard workflow is more deterministic (#458).** Fields are
+  ordered top-to-bottom/left-to-right for tab traversal, focus styling is
+  clearer, single-line fields commit on Enter, multiline fields commit on
+  Ctrl+Enter, focus loss commits, and Escape restores the last committed value.
+- **Flattened form appearances are stronger (#459).** Text is clipped/wrapped
+  within widget bounds, radio groups draw only the selected widget, and
+  `/NeedAppearances` is parsed using the spec key while remaining compatible
+  with older pluralized fixtures.
+- **Save labeling is clearer for original documents (#460).** Original PDFs with
+  form edits now advertise **Save Filled Copy** rather than the generic
+  **Save a Copy** label.
+
+### Tests
+- Build remains warning-free.
+- Focused core AcroForm/public-API tests passed: 44 passed.
+- Focused desktop form/viewmodel workflow tests passed: 157 passed.
+- Required redaction filter passed after touching shared save workflow code.
+- Full built test suite passed locally: 7034 passed, 53 skipped.
+
 ## [2.14.0] - 2026-06-11
 
 Flat-PDF typewriter editing release. Additive; no breaking changes.

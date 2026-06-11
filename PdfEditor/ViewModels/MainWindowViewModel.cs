@@ -284,6 +284,8 @@ public partial class MainWindowViewModel : ViewModelBase
                 return $"{RedactionWorkflow.PendingRedactions.Count} areas marked";
             if (FileState.TypewriterEditsCount > 0)
                 return $"{FileState.TypewriterEditsCount} typewriter edit(s) pending";
+            if (FileState.FormFieldEditsCount > 0)
+                return $"{FileState.FormFieldEditsCount} form edit(s) pending";
             if (FileState.IsOriginalFile)
                 return "Ready";
             return FileState.FileType;
@@ -907,6 +909,7 @@ public partial class MainWindowViewModel : ViewModelBase
         // Safe to save directly - either redacted version or no changes
         try
         {
+            SyncAllFormFieldValuesToServiceDocument();
             var document = _documentService.GetCurrentDocument();
             var flattenedTypewriter = document != null && ApplyPendingTypewriterText(document);
 
@@ -917,6 +920,9 @@ public partial class MainWindowViewModel : ViewModelBase
                 if (!string.IsNullOrWhiteSpace(_currentFilePath))
                     await ReloadPdfCoreDocumentAfterSaveAsync(_currentFilePath);
             }
+            FileState.MarkSaved();
+            this.RaisePropertyChanged(nameof(SaveButtonText));
+            this.RaisePropertyChanged(nameof(StatusBarText));
 
             _logger.LogInformation("Document saved successfully");
             _toastService.ShowSuccess("Document saved");
@@ -1549,6 +1555,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
+            SyncAllFormFieldValuesToServiceDocument();
             var document = _documentService.GetCurrentDocument();
             var flattenedTypewriter = document != null && ApplyPendingTypewriterText(document);
 
@@ -1557,6 +1564,7 @@ public partial class MainWindowViewModel : ViewModelBase
             FileState.UpdateCurrentPath(filePath);
             if (flattenedTypewriter)
                 ClearPendingTypewriterText();
+            FileState.MarkSaved();
             this.RaisePropertyChanged(nameof(DocumentName));
             this.RaisePropertyChanged(nameof(SaveButtonText));
             this.RaisePropertyChanged(nameof(StatusBarText));

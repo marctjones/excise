@@ -54,7 +54,7 @@ public class PdfAcroFormEditingTests
         long o5 = sb.Length;
         sb.AppendLine("5 0 obj");
         sb.AppendLine(@"<< /Type /Annot /Subtype /Widget /FT /Tx /T (Name)
-            /V (Alice) /DV (Anon) /Ff 0 /Rect [72 700 300 720] /P 3 0 R >>");
+            /V (Alice) /DV (Anon) /Ff 0 /Rect [72 720 300 760] /P 3 0 R >>");
         sb.AppendLine("endobj");
 
         // 6 — button field
@@ -99,6 +99,67 @@ public class PdfAcroFormEditingTests
         return Encoding.Latin1.GetBytes(sb.ToString());
     }
 
+    private static byte[] MakePdfWithRadioForm()
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("%PDF-1.7");
+
+        long catalogPos = sb.Length;
+        sb.AppendLine("1 0 obj");
+        sb.AppendLine("<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [5 0 R] >> >>");
+        sb.AppendLine("endobj");
+
+        long pagesPos = sb.Length;
+        sb.AppendLine("2 0 obj");
+        sb.AppendLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+        sb.AppendLine("endobj");
+
+        long pagePos = sb.Length;
+        sb.AppendLine("3 0 obj");
+        sb.AppendLine("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Annots [6 0 R 7 0 R] >>");
+        sb.AppendLine("endobj");
+
+        long contentPos = sb.Length;
+        sb.AppendLine("4 0 obj");
+        sb.AppendLine("<< /Length 0 >>");
+        sb.AppendLine("stream");
+        sb.AppendLine("endstream");
+        sb.AppendLine("endobj");
+
+        long fieldPos = sb.Length;
+        sb.AppendLine("5 0 obj");
+        sb.AppendLine("<< /FT /Btn /Ff 32768 /T (Choice) /V /Choice2 /Kids [6 0 R 7 0 R] >>");
+        sb.AppendLine("endobj");
+
+        long widget1Pos = sb.Length;
+        sb.AppendLine("6 0 obj");
+        sb.AppendLine("<< /Type /Annot /Subtype /Widget /Parent 5 0 R /Rect [72 700 92 720] /P 3 0 R /AS /Off /AP << /N << /Choice1 <<>> /Off <<>> >> >> >>");
+        sb.AppendLine("endobj");
+
+        long widget2Pos = sb.Length;
+        sb.AppendLine("7 0 obj");
+        sb.AppendLine("<< /Type /Annot /Subtype /Widget /Parent 5 0 R /Rect [72 660 92 680] /P 3 0 R /AS /Choice2 /AP << /N << /Choice2 <<>> /Off <<>> >> >> >>");
+        sb.AppendLine("endobj");
+
+        long xrefPos = sb.Length;
+        sb.AppendLine("xref");
+        sb.AppendLine("0 8");
+        sb.AppendLine("0000000000 65535 f ");
+        sb.AppendLine($"{catalogPos:D10} 00000 n ");
+        sb.AppendLine($"{pagesPos:D10} 00000 n ");
+        sb.AppendLine($"{pagePos:D10} 00000 n ");
+        sb.AppendLine($"{contentPos:D10} 00000 n ");
+        sb.AppendLine($"{fieldPos:D10} 00000 n ");
+        sb.AppendLine($"{widget1Pos:D10} 00000 n ");
+        sb.AppendLine($"{widget2Pos:D10} 00000 n ");
+        sb.AppendLine("trailer << /Size 8 /Root 1 0 R >>");
+        sb.AppendLine("startxref");
+        sb.AppendLine(xrefPos.ToString());
+        sb.AppendLine("%%EOF");
+
+        return Encoding.Latin1.GetBytes(sb.ToString());
+    }
+
     // ─── PdfField.SetValue ──────────────────────────────────────────────────
 
     [Fact]
@@ -127,6 +188,17 @@ public class PdfAcroFormEditingTests
 
         acroFormDict.GetBool("NeedAppearances").Should().BeTrue(
             "PDF readers need this flag to regenerate the visual appearance after /V changes");
+    }
+
+    [Fact]
+    public void SetValue_TextField_RoundTripReportsNeedAppearances()
+    {
+        using var doc = PdfDocument.Open(MakePdfWithEditableForm());
+        doc.GetAcroForm()!.FindField("Name")!.SetValue("Bob");
+
+        using var reopened = PdfDocument.Open(doc.SaveToBytes());
+
+        reopened.GetAcroForm()!.NeedsAppearances.Should().BeTrue();
     }
 
     [Fact]
@@ -185,6 +257,19 @@ public class PdfAcroFormEditingTests
         var act = () => country.SetValue("CN");
         act.Should().Throw<ArgumentException>()
             .WithMessage("*not one of the choice field options*");
+    }
+
+    [Fact]
+    public void Parse_RadioButton_CapturesFlagsAndWidgetExportValues()
+    {
+        using var doc = PdfDocument.Open(MakePdfWithRadioForm());
+
+        var choice = doc.GetAcroForm()!.FindField("Choice")!;
+
+        choice.IsRadioButton.Should().BeTrue();
+        choice.ButtonExportValues.Should().ContainInOrder("Choice1", "Choice2");
+        choice.Widgets.Should().HaveCount(2);
+        choice.Widgets.Select(w => w.ExportValue).Should().ContainInOrder("Choice1", "Choice2");
     }
 
     // ─── PdfDocument.FlattenAcroForm ────────────────────────────────────────
@@ -255,6 +340,34 @@ public class PdfAcroFormEditingTests
         var content = Encoding.Latin1.GetString(doc.GetPage(1).GetContentStreamBytes());
         content.Should().Contain(@"(A \(B\) C) Tj",
             "literal parentheses must be backslash-escaped or the PDF parser sees an unbalanced group");
+    }
+
+    [Fact]
+    public void FlattenAcroForm_LongText_ClipsAndWrapsInsideFieldBounds()
+    {
+        using var doc = PdfDocument.Open(MakePdfWithEditableForm());
+        doc.GetAcroForm()!.FindField("Name")!.SetValue(
+            "This is a deliberately long field value that should wrap before it leaves the field rectangle.");
+
+        doc.FlattenAcroForm();
+
+        var content = Encoding.Latin1.GetString(doc.GetPage(1).GetContentStreamBytes());
+        content.Should().Contain(" re W n", "flattened field text should be clipped to the widget rectangle");
+        content.Should().Contain("0 -12 Td", "wrapped flattened field text should move to a second line");
+    }
+
+    [Fact]
+    public void FlattenAcroForm_RadioButton_DrawsOnlySelectedWidget()
+    {
+        using var doc = PdfDocument.Open(MakePdfWithRadioForm());
+
+        doc.FlattenAcroForm();
+
+        var content = Encoding.Latin1.GetString(doc.GetPage(1).GetContentStreamBytes());
+        content.Split("(X) Tj").Length.Should().Be(2,
+            "a radio group should draw a mark only for the selected widget");
+        doc.GetPage(1).GetAnnotations().Should().BeEmpty();
+        doc.GetAcroForm().Should().BeNull();
     }
 
     [Fact]

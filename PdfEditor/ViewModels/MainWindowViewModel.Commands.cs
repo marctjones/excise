@@ -36,6 +36,7 @@ public partial class MainWindowViewModel
     public ReactiveCommand<Unit, Unit> ToggleThumbnailsCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleContinuousViewCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, int> AutoDetectFieldsCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> SaveFlattenedFormCopyCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> CopyTextCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ZoomInCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ZoomOutCommand { get; private set; } = null!;
@@ -93,6 +94,7 @@ public partial class MainWindowViewModel
         ToggleThumbnailsCommand = ReactiveCommand.Create(ToggleThumbnailsSidebar);
         ToggleContinuousViewCommand = ReactiveCommand.Create(ToggleContinuousView);
         AutoDetectFieldsCommand = ReactiveCommand.Create(() => AutoDetectAndApplyFormFields());
+        SaveFlattenedFormCopyCommand = ReactiveCommand.CreateFromTask(SaveFlattenedFormCopyAsync);
         CopyTextCommand = ReactiveCommand.CreateFromTask(CopyTextAsync);
         ZoomInCommand = ReactiveCommand.Create(ZoomIn);
         ZoomOutCommand = ReactiveCommand.Create(ZoomOut);

@@ -77,6 +77,7 @@ internal static class MacNativeMenuBuilder
                     Separator(),
                     TrackDocumentItem(_saveItem),
                     TrackDocumentItem(CommandItem("Save As...", _viewModel.SaveAsCommand, Key.S, KeyModifiers.Meta | KeyModifiers.Shift)),
+                    TrackDocumentItem(CommandItem("Save Flattened Form Copy...", _viewModel.SaveFlattenedFormCopyCommand)),
                     Separator(),
                     TrackDocumentItem(CommandItem("Close Document", _viewModel.CloseDocumentCommand, Key.W))));
 

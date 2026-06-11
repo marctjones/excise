@@ -172,6 +172,15 @@ public class DocumentStateManager : ReactiveObject
     {
         CurrentFilePath = string.Empty;
         OriginalFilePath = string.Empty;
+        MarkSaved();
+    }
+
+    /// <summary>
+    /// Clear dirty counters after the current document state has been
+    /// persisted.
+    /// </summary>
+    public void MarkSaved()
+    {
         PendingRedactionsCount = 0;
         RemovedPagesCount = 0;
         FormFieldEditsCount = 0;
@@ -188,6 +197,9 @@ public class DocumentStateManager : ReactiveObject
 
         if (IsOriginalFile && PendingRedactionsCount > 0)
             return "Save Redacted Version";
+
+        if (IsOriginalFile && FormFieldEditsCount > 0)
+            return "Save Filled Copy";
 
         if (IsOriginalFile)
             return "Save a Copy";

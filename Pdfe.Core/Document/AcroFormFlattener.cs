@@ -30,32 +30,53 @@ namespace Pdfe.Core.Document;
 /// </summary>
 internal static class AcroFormFlattener
 {
+    private sealed record FieldDrawTarget(PdfField Field, PdfRectangle Rect, string? ExportValue);
+
     public static void Flatten(PdfDocument document, PdfAcroForm form)
     {
         // Group fields by host page so we append once per page rather than
         // rewriting the same content stream many times.
-        var byPage = new Dictionary<int, List<PdfField>>();
+        var byPage = new Dictionary<int, List<FieldDrawTarget>>();
         foreach (var field in form.Fields)
         {
             if (field.FieldType == PdfFieldType.Signature) continue;
-            if (field.PageNumber is not int pn) continue;
-            if (!byPage.TryGetValue(pn, out var list))
-                byPage[pn] = list = new List<PdfField>();
-            list.Add(field);
+
+            if (field.FieldType == PdfFieldType.Button && field.Widgets.Count > 0)
+            {
+                foreach (var widget in field.Widgets)
+                {
+                    if (widget.PageNumber is not int widgetPageNumber) continue;
+                    AddTarget(byPage, widgetPageNumber, new FieldDrawTarget(field, widget.Rect, widget.ExportValue));
+                }
+                continue;
+            }
+
+            if (field.PageNumber is int pageNumber && field.Rect is PdfRectangle rect)
+                AddTarget(byPage, pageNumber, new FieldDrawTarget(field, rect, ExportValue: null));
         }
 
-        foreach (var (pageNumber, fields) in byPage)
+        foreach (var (pageNumber, targets) in byPage)
         {
             var page = document.GetPage(pageNumber);
-            AppendFieldDrawing(page, fields);
-            RemoveWidgetAnnotations(document, page, fields);
+            AppendFieldDrawing(page, targets);
+            RemoveWidgetAnnotations(document, page, targets.Select(t => t.Field));
         }
 
         // Drop catalog-level orphaned widgets that may not have been on any
         // page (defensive — most PDFs don't do this).
     }
 
-    private static void AppendFieldDrawing(PdfPage page, List<PdfField> fields)
+    private static void AddTarget(
+        Dictionary<int, List<FieldDrawTarget>> byPage,
+        int pageNumber,
+        FieldDrawTarget target)
+    {
+        if (!byPage.TryGetValue(pageNumber, out var list))
+            byPage[pageNumber] = list = new List<FieldDrawTarget>();
+        list.Add(target);
+    }
+
+    private static void AppendFieldDrawing(PdfPage page, List<FieldDrawTarget> targets)
     {
         // We need a Helvetica entry in the page's font resources to draw the
         // field text. Reuse if present; add a fresh /F-Flat entry otherwise.
@@ -72,8 +93,8 @@ internal static class AcroFormFlattener
         if (existing.Length > 0 && existing[^1] != (byte)'\n') sb.Append('\n');
         sb.Append("Q\n");
 
-        foreach (var field in fields)
-            DrawField(sb, field, fontResourceName);
+        foreach (var target in targets)
+            DrawField(sb, target, fontResourceName);
 
         var bytes = Encoding.Latin1.GetBytes(sb.ToString());
         page.SetContentStreamBytes(bytes);
@@ -86,16 +107,17 @@ internal static class AcroFormFlattener
         return page.AddFont(PdfFont.Helvetica(10));
     }
 
-    private static void DrawField(StringBuilder sb, PdfField field, string fontResourceName)
+    private static void DrawField(StringBuilder sb, FieldDrawTarget target, string fontResourceName)
     {
-        if (field.Rect is not PdfRectangle rect) return;
+        var field = target.Field;
+        var rect = target.Rect;
         var value = field.Value;
         if (string.IsNullOrEmpty(value)) return;
 
         switch (field.FieldType)
         {
             case PdfFieldType.Button:
-                if (!string.Equals(value, "Off", StringComparison.OrdinalIgnoreCase))
+                if (ShouldDrawButtonMark(field, target, value))
                     DrawCheckmark(sb, rect, fontResourceName);
                 break;
 
@@ -107,11 +129,22 @@ internal static class AcroFormFlattener
         }
     }
 
+    private static bool ShouldDrawButtonMark(PdfField field, FieldDrawTarget target, string value)
+    {
+        if (string.Equals(value, "Off", StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        if (field.ButtonExportValues.Count <= 1)
+            return true;
+
+        return string.Equals(target.ExportValue, value, StringComparison.Ordinal);
+    }
+
     private static void DrawText(StringBuilder sb, PdfRectangle rect, string value, string fontResourceName, double fontSize)
     {
         // Split on newline so multiline text fields get one line per row,
         // top-down. PDF y grows upward, so the first line sits highest.
-        var lines = value.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+        var lines = WrapLines(value.Replace("\r\n", "\n").Replace('\r', '\n'), rect, fontSize).ToList();
         var leading = fontSize * 1.2;
 
         var x = rect.Left + 2.0;
@@ -120,6 +153,11 @@ internal static class AcroFormFlattener
             firstY = rect.Bottom + 2.0;       // single-line: sit just above the bottom edge
 
         sb.Append("q\n");
+        sb.Append(rect.Left.ToString("0.###", CultureInfo.InvariantCulture)).Append(' ')
+          .Append(rect.Bottom.ToString("0.###", CultureInfo.InvariantCulture)).Append(' ')
+          .Append(rect.Width.ToString("0.###", CultureInfo.InvariantCulture)).Append(' ')
+          .Append(rect.Height.ToString("0.###", CultureInfo.InvariantCulture))
+          .Append(" re W n\n");
         sb.Append("BT\n");
         sb.Append('/').Append(fontResourceName).Append(' ')
           .Append(fontSize.ToString("0.###", CultureInfo.InvariantCulture))
@@ -129,7 +167,8 @@ internal static class AcroFormFlattener
           .Append(firstY.ToString("0.###", CultureInfo.InvariantCulture))
           .Append(" Td\n");
 
-        for (int i = 0; i < lines.Length; i++)
+        var maxLines = Math.Max(1, (int)Math.Floor(Math.Max(1, rect.Height - 4) / leading));
+        for (int i = 0; i < Math.Min(lines.Count, maxLines); i++)
         {
             if (i > 0)
             {
@@ -140,6 +179,30 @@ internal static class AcroFormFlattener
 
         sb.Append("ET\n");
         sb.Append("Q\n");
+    }
+
+    private static IEnumerable<string> WrapLines(string value, PdfRectangle rect, double fontSize)
+    {
+        var maxChars = Math.Max(1, (int)Math.Floor(Math.Max(1, rect.Width - 4) / Math.Max(1, fontSize * 0.5)));
+        foreach (var rawLine in value.Split('\n'))
+        {
+            if (rawLine.Length <= maxChars)
+            {
+                yield return rawLine;
+                continue;
+            }
+
+            var line = rawLine;
+            while (line.Length > maxChars)
+            {
+                var breakAt = line.LastIndexOf(' ', Math.Min(maxChars, line.Length - 1));
+                if (breakAt <= 0) breakAt = maxChars;
+                yield return line[..breakAt].TrimEnd();
+                line = line[breakAt..].TrimStart();
+            }
+
+            yield return line;
+        }
     }
 
     private static void DrawCheckmark(StringBuilder sb, PdfRectangle rect, string fontResourceName)
@@ -209,7 +272,7 @@ internal static class AcroFormFlattener
         return sb.ToString();
     }
 
-    private static void RemoveWidgetAnnotations(PdfDocument document, PdfPage page, List<PdfField> fields)
+    private static void RemoveWidgetAnnotations(PdfDocument document, PdfPage page, IEnumerable<PdfField> fields)
     {
         var annotsObj = page.Dictionary.GetOptional("Annots");
         if (annotsObj == null) return;

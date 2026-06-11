@@ -209,11 +209,35 @@ public class DocumentStateManagerTests
         manager.TypewriterEditsCount = 1;
         manager.GetSaveButtonText().Should().Be("Save a Copy");
 
+        // Original with form changes
+        manager.TypewriterEditsCount = 0;
+        manager.FormFieldEditsCount = 1;
+        manager.GetSaveButtonText().Should().Be("Save Filled Copy");
+
         // Redacted version with changes
-        manager.TypewriterEditsCount = 0; // Reset first
+        manager.FormFieldEditsCount = 0; // Reset first
         manager.UpdateCurrentPath("/test/document_REDACTED.pdf");
         manager.PendingRedactionsCount = 1; // Now add changes
         manager.GetSaveButtonText().Should().Be("Save");
+    }
+
+    [Fact]
+    public void MarkSaved_ClearsDirtyCounters()
+    {
+        var manager = new DocumentStateManager();
+        manager.SetDocument("/test/document.pdf");
+        manager.PendingRedactionsCount = 1;
+        manager.RemovedPagesCount = 1;
+        manager.FormFieldEditsCount = 1;
+        manager.TypewriterEditsCount = 1;
+
+        manager.MarkSaved();
+
+        manager.PendingRedactionsCount.Should().Be(0);
+        manager.RemovedPagesCount.Should().Be(0);
+        manager.FormFieldEditsCount.Should().Be(0);
+        manager.TypewriterEditsCount.Should().Be(0);
+        manager.HasUnsavedChanges.Should().BeFalse();
     }
 
     [Fact]

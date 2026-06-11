@@ -14,8 +14,11 @@ internal static class PdfAcroFormParser
     /// </summary>
     public static PdfAcroForm Parse(PdfDocument doc, PdfDictionary acroFormDict)
     {
-        // Read NeedsAppearances flag (default false)
-        bool needsAppearances = acroFormDict.GetBool("NeedsAppearances", defaultValue: false);
+        // Read NeedAppearances flag (default false). Some old fixtures used
+        // the pluralized key; accept both, but prefer the spec key.
+        bool needsAppearances = acroFormDict.GetBool(
+            "NeedAppearances",
+            defaultValue: acroFormDict.GetBool("NeedsAppearances", defaultValue: false));
 
         // Build a page-ref → page-number map for fast lookup
         var pageRefToNumber = PdfOutlineParser.BuildPageRefMap(doc);
@@ -124,7 +127,7 @@ internal static class PdfAcroFormParser
         }
 
         // Get flags (/Ff) — bit flags for field properties
-        int flags = fieldDict.GetInt("Ff", defaultValue: 0);
+        int flags = ResolveInheritedInt(doc, fieldDict, "Ff", defaultValue: 0);
         bool isReadOnly = (flags & 0x1) != 0;     // Bit 0
         bool isRequired = (flags & 0x2) != 0;     // Bit 1
         bool isMultiline = (flags & 0x1000) != 0; // Bit 12
@@ -134,6 +137,7 @@ internal static class PdfAcroFormParser
         PdfRectangle? rect = null;
         int? pageNumber = null;
         var widgetDicts = new List<PdfDictionary>();
+        var widgets = new List<PdfFieldWidget>();
 
         // Check if the field itself is a widget annotation
         var subtype = fieldDict.GetNameOrNull("Subtype");
@@ -141,16 +145,26 @@ internal static class PdfAcroFormParser
         {
             widgetDicts.Add(fieldDict);
             (rect, pageNumber) = ExtractWidgetInfo(doc, fieldDict, pageRefToNumber);
+            if (rect != null)
+                widgets.Add(new PdfFieldWidget(rect.Value, pageNumber, ExtractWidgetExportValue(doc, fieldDict)));
         }
         else
         {
             // Otherwise, look for widget kids
             var widgetKids = FindWidgetKids(doc, fieldDict);
             widgetDicts.AddRange(widgetKids);
-            if (widgetKids.Count > 0)
+            foreach (var widget in widgetKids)
+            {
+                var (widgetRect, widgetPageNumber) = ExtractWidgetInfo(doc, widget, pageRefToNumber);
+                if (widgetRect != null)
+                    widgets.Add(new PdfFieldWidget(widgetRect.Value, widgetPageNumber, ExtractWidgetExportValue(doc, widget)));
+            }
+
+            if (widgets.Count > 0)
             {
                 // Use the first Widget annotation
-                (rect, pageNumber) = ExtractWidgetInfo(doc, widgetKids[0], pageRefToNumber);
+                rect = widgets[0].Rect;
+                pageNumber = widgets[0].PageNumber;
             }
         }
 
@@ -166,7 +180,9 @@ internal static class PdfAcroFormParser
             isRequired: isRequired,
             isMultiline: isMultiline,
             rawDictionary: fieldDict,
-            widgetDictionaries: widgetDicts.AsReadOnly());
+            widgetDictionaries: widgetDicts.AsReadOnly(),
+            flags: flags,
+            widgets: widgets.AsReadOnly());
     }
 
     /// <summary>
@@ -246,6 +262,38 @@ internal static class PdfAcroFormParser
             if (parent == null) return null;
             current = doc.Resolve(parent) as PdfDictionary;
         }
+        return null;
+    }
+
+    private static int ResolveInheritedInt(PdfDocument doc, PdfDictionary fieldDict, string key, int defaultValue)
+    {
+        var current = fieldDict;
+        for (int depth = 0; depth < 16 && current != null; depth++)
+        {
+            if (current.ContainsKey(key))
+                return current.GetInt(key, defaultValue);
+
+            var parent = current.GetOptional("Parent");
+            if (parent == null) return defaultValue;
+            current = doc.Resolve(parent) as PdfDictionary;
+        }
+        return defaultValue;
+    }
+
+    private static string? ExtractWidgetExportValue(PdfDocument doc, PdfDictionary widgetDict)
+    {
+        var apObj = widgetDict.GetOptional("AP");
+        if (apObj == null || doc.Resolve(apObj) is not PdfDictionary ap)
+            return null;
+
+        var nObj = ap.GetOptional("N");
+        if (nObj == null || doc.Resolve(nObj) is not PdfDictionary normal)
+            return null;
+
+        foreach (var key in normal.Keys)
+            if (key.Value != "Off")
+                return key.Value;
+
         return null;
     }
 
