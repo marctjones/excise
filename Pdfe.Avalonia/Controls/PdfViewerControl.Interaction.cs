@@ -19,6 +19,9 @@ public partial class PdfViewerControl
 
     private void OnInteractionLayerPointerPressed(object? sender, PointerPressedEventArgs e)
     {
+        if (IsTypewriterOverlayEvent(e))
+            return;
+
         // First chance: internal-link click in any mode (including None).
         // Links are treated as ambient affordances — like a browser, not
         // a drawing tool — so the redaction/text-selection mode shouldn't
@@ -64,6 +67,9 @@ public partial class PdfViewerControl
 
     private void OnInteractionLayerPointerMoved(object? sender, PointerEventArgs e)
     {
+        if (IsTypewriterOverlayEvent(e))
+            return;
+
         if (!_isDragging || InteractionMode == InteractionMode.None)
             return;
 
@@ -73,6 +79,10 @@ public partial class PdfViewerControl
             InteractionMode == InteractionMode.FormAuthoring)
         {
             DrawTemporaryRedactionRectangle(_dragStart, currentPoint);
+        }
+        else if (InteractionMode == InteractionMode.Typewriter)
+        {
+            DrawTemporaryTypewriterRectangle(_dragStart, currentPoint);
         }
         else if (InteractionMode == InteractionMode.TextSelection)
         {
@@ -93,6 +103,9 @@ public partial class PdfViewerControl
 
     private void OnInteractionLayerPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
+        if (IsTypewriterOverlayEvent(e))
+            return;
+
         if (!_isDragging)
             return;
 
@@ -129,6 +142,19 @@ public partial class PdfViewerControl
                     Math.Max(pdfBottom, pdfTop));
                 FormFieldRectDrawn?.Invoke(this,
                     new FormFieldRectDrawnEventArgs(pdfRect, CurrentPage));
+            }
+        }
+        else if (InteractionMode == InteractionMode.Typewriter)
+        {
+            var endPoint = GetPressPoint(e);
+            var dipRect = NormalizeTypewriterDipRect(CreateRect(_dragStart, endPoint));
+            ClearTemporaryDrawings();
+
+            if (Document != null && dipRect.Width > 4 && dipRect.Height > 4)
+            {
+                var pdfRect = ViewerDipsToPdfRect(dipRect, CurrentPage);
+                TypewriterTextCreated?.Invoke(this,
+                    new TypewriterTextCreatedEventArgs(pdfRect, CurrentPage));
             }
         }
         else if (InteractionMode == InteractionMode.TextSelection &&
@@ -372,6 +398,11 @@ public partial class PdfViewerControl
         if (_tempSelectionRect != null)
         {
             _tempSelectionRect.IsVisible = false;
+        }
+
+        if (_tempTypewriterRect != null)
+        {
+            _tempTypewriterRect.IsVisible = false;
         }
     }
 

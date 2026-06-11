@@ -14,6 +14,7 @@ public partial class MainWindowViewModel
         {
             if (IsRedactionMode) return "🔴 Redaction Mode";
             if (IsTextSelectionMode) return "📝 Text Selection Mode";
+            if (IsTypewriterMode) return "✎ Typewriter Mode";
             if (IsContinuousView) return "📜 Continuous Scroll";
             return "👆 View Mode";
         }
@@ -30,6 +31,7 @@ public partial class MainWindowViewModel
     public ReactiveCommand<Unit, Unit> ApplyAllRedactionsCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleTextSelectionModeCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleFormAuthoringModeCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ToggleTypewriterModeCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleOutlineCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleThumbnailsCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleContinuousViewCommand { get; private set; } = null!;
@@ -86,6 +88,7 @@ public partial class MainWindowViewModel
 
         ToggleTextSelectionModeCommand = ReactiveCommand.Create(ToggleTextSelectionMode);
         ToggleFormAuthoringModeCommand = ReactiveCommand.Create(() => { IsFormAuthoringMode = !IsFormAuthoringMode; });
+        ToggleTypewriterModeCommand = ReactiveCommand.Create(ToggleTypewriterMode);
         ToggleOutlineCommand = ReactiveCommand.Create(ToggleOutlineSidebar);
         ToggleThumbnailsCommand = ReactiveCommand.Create(ToggleThumbnailsSidebar);
         ToggleContinuousViewCommand = ReactiveCommand.Create(ToggleContinuousView);

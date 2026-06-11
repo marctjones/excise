@@ -46,6 +46,23 @@ public class PdfEditOperationTests
     }
 
     [Fact]
+    public void WithBounds_ReturnsUpdatedImmutableOperationWithSameIdentity()
+    {
+        var operation = PdfEditOperation.Create(
+            PdfEditOperationKind.TypewriterText,
+            1,
+            new PdfRectangle(0, 0, 50, 20));
+        var newBounds = new PdfRectangle(10, 20, 110, 50);
+
+        var moved = operation.WithBounds(newBounds);
+
+        moved.Id.Should().Be(operation.Id);
+        moved.PageNumber.Should().Be(operation.PageNumber);
+        moved.Bounds.Should().Be(newBounds);
+        operation.Bounds.Should().Be(new PdfRectangle(0, 0, 50, 20));
+    }
+
+    [Fact]
     public void Create_RejectsInvalidPageNumber()
     {
         var action = () => PdfEditOperation.Create(

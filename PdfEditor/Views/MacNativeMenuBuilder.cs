@@ -25,6 +25,7 @@ internal static class MacNativeMenuBuilder
         private readonly NativeMenuItem _saveItem;
         private readonly NativeMenuItem _recentFilesItem;
         private readonly NativeMenuItem _selectTextItem;
+        private readonly NativeMenuItem _typewriterItem;
         private readonly NativeMenuItem _redactionModeItem;
         private readonly NativeMenuItem _viewClipboardItem;
         private readonly NativeMenuItem _redactionClipboardItem;
@@ -40,6 +41,7 @@ internal static class MacNativeMenuBuilder
             _saveItem = CommandItem("Save", _viewModel.SaveFileCommand, Key.S);
             _recentFilesItem = Submenu("Open Recent");
             _selectTextItem = CommandItem("Select Text Mode", _viewModel.ToggleTextSelectionModeCommand, Key.T);
+            _typewriterItem = CommandItem("Typewriter Mode", _viewModel.ToggleTypewriterModeCommand);
             _redactionModeItem = CommandItem("Redaction Mode", _viewModel.ToggleRedactionModeCommand, Key.R, modifiers: KeyModifiers.None);
             _viewClipboardItem = ToggleItem("Show Clipboard History", () =>
                 _viewModel.IsClipboardSidebarVisible = !_viewModel.IsClipboardSidebarVisible);
@@ -85,6 +87,7 @@ internal static class MacNativeMenuBuilder
                     TrackDocumentItem(CommandItem("Find Previous", _viewModel.FindPreviousCommand, Key.F3, KeyModifiers.Shift)),
                     Separator(),
                     TrackDocumentItem(_selectTextItem),
+                    TrackDocumentItem(_typewriterItem),
                     TrackTextSelectionItem(CommandItem("Copy Selected Text", _viewModel.CopyTextCommand, Key.C))));
 
             Add(menu,
@@ -151,6 +154,8 @@ internal static class MacNativeMenuBuilder
                 item.IsEnabled = isDocumentLoaded && _viewModel.IsRedactionMode;
             _selectTextItem.ToggleType = MenuItemToggleType.CheckBox;
             _selectTextItem.IsChecked = _viewModel.IsTextSelectionMode;
+            _typewriterItem.ToggleType = MenuItemToggleType.CheckBox;
+            _typewriterItem.IsChecked = _viewModel.IsTypewriterMode;
             _redactionModeItem.ToggleType = MenuItemToggleType.CheckBox;
             _redactionModeItem.IsChecked = _viewModel.IsRedactionMode;
             _continuousScrollItem.ToggleType = MenuItemToggleType.CheckBox;

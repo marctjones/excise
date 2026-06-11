@@ -45,6 +45,7 @@
                         <Canvas Name="HiddenTextRevealLayer" />
                         <Canvas Name="FormFieldsLayer" />
                         <Canvas Name="InteractionLayer" Background="Transparent" />
+                        <Canvas Name="TypewriterLayer" />
                     </Canvas>
                 </Grid>
             </LayoutTransformControl>

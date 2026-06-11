@@ -4,6 +4,38 @@ All notable changes to pdfe are documented here. Format roughly follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 semantic versioning.
 
+## [2.14.0] - 2026-06-11
+
+Flat-PDF typewriter editing release. Additive; no breaking changes.
+
+### Added
+- **Typewriter flat text editing (#453, #454, #455, #456).** The desktop app
+  now has a Typewriter mode for placing, editing, moving, resizing, and deleting
+  pending text boxes on ordinary PDF pages. Saving flattens non-empty typewriter
+  text into the page content stream instead of creating annotations, so output
+  remains interoperable with basic PDF readers.
+- **Core typewriter operation model.** `PdfTypewriterTextOperation`,
+  `PdfTypewriterTextStyle`, and `PdfTypewriterTextApplier` provide a small
+  immutable operation model and flattening service on top of `PdfGraphics`.
+- **Viewer typewriter overlay API.** `PdfViewerControl` exposes
+  `TypewriterTextOperations` plus created/edited/bounds/deleted events so hosts
+  can keep pending flat-text edits in their own view models.
+
+### Changed
+- **Save state distinguishes redaction from ordinary edits.** Original files
+  with pending redactions still use the redacted-copy workflow; original files
+  with typewriter/form/page edits now advertise **Save a Copy** instead of the
+  redaction-specific save label.
+- The macOS native menu and in-window Edit menu now include Typewriter Mode.
+
+### Tests
+- Build remains warning-free.
+- Core typewriter/edit/public-API tests passed: 11 passed.
+- Avalonia public-API tests passed: 2 passed.
+- Focused desktop viewmodel/viewer/typewriter workflow tests passed: 172 passed.
+- Required redaction filter passed after touching the redaction save path.
+- Full built test suite passed locally: 7025 passed, 53 skipped.
+
 ## [2.13.0] - 2026-06-10
 
 Architecture hardening checkpoint release. No intended PDF behavior changes.

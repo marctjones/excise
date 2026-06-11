@@ -14,6 +14,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Pdfe.Core.Document;
+using Pdfe.Core.Editing;
 using Pdfe.Core.Text;
 using Pdfe.Rendering;
 using Pdfe.Avalonia.Imaging;
@@ -173,6 +174,15 @@ public partial class PdfViewerControl : UserControl
         set => SetValue(HiddenTextHighlightsProperty, value);
     }
 
+    public static readonly StyledProperty<System.Collections.Generic.IEnumerable<PdfTypewriterTextOperation>?> TypewriterTextOperationsProperty =
+        AvaloniaProperty.Register<PdfViewerControl, System.Collections.Generic.IEnumerable<PdfTypewriterTextOperation>?>(nameof(TypewriterTextOperations));
+
+    public System.Collections.Generic.IEnumerable<PdfTypewriterTextOperation>? TypewriterTextOperations
+    {
+        get => GetValue(TypewriterTextOperationsProperty);
+        set => SetValue(TypewriterTextOperationsProperty, value);
+    }
+
     #endregion
 
     #region Events
@@ -213,6 +223,11 @@ public partial class PdfViewerControl : UserControl
     /// </summary>
     public event EventHandler<FormFieldRectDrawnEventArgs>? FormFieldRectDrawn;
 
+    public event EventHandler<TypewriterTextCreatedEventArgs>? TypewriterTextCreated;
+    public event EventHandler<TypewriterTextEditedEventArgs>? TypewriterTextEdited;
+    public event EventHandler<TypewriterTextBoundsChangedEventArgs>? TypewriterTextBoundsChanged;
+    public event EventHandler<TypewriterTextDeletedEventArgs>? TypewriterTextDeleted;
+
     #endregion
 
     #region Fields
@@ -221,6 +236,7 @@ public partial class PdfViewerControl : UserControl
     private Image? _pdfImage;
     private Canvas? _overlayCanvas;
     private Canvas? _interactionLayer;
+    private Canvas? _typewriterLayer;
     private LayoutTransformControl? _zoomHost;
     private ScaleTransform? _zoomScaleTransform;
     private ScrollViewer? _scrollViewer;
@@ -292,6 +308,10 @@ public partial class PdfViewerControl : UserControl
             control.OnHiddenTextHighlightsChanged(
                 e.OldValue as System.Collections.Generic.IEnumerable<HiddenTextHighlight>,
                 e.NewValue as System.Collections.Generic.IEnumerable<HiddenTextHighlight>));
+        TypewriterTextOperationsProperty.Changed.AddClassHandler<PdfViewerControl>((control, e) =>
+            control.OnTypewriterTextOperationsChanged(
+                e.OldValue as System.Collections.Generic.IEnumerable<PdfTypewriterTextOperation>,
+                e.NewValue as System.Collections.Generic.IEnumerable<PdfTypewriterTextOperation>));
         ViewModeProperty.Changed.AddClassHandler<PdfViewerControl>((control, _) =>
             control.OnViewModeChanged());
         // Editing interactions are single-page only. If the host turns on an
@@ -305,6 +325,8 @@ public partial class PdfViewerControl : UserControl
             {
                 control.ViewMode = PdfViewMode.SinglePage;
             }
+
+            control.RedrawTypewriterLayer();
         });
     }
 
@@ -326,9 +348,10 @@ public partial class PdfViewerControl : UserControl
 
     /// <summary>An interaction mode that draws/edits and therefore needs single-page layout.</summary>
     private static bool IsEditingMode(InteractionMode m) =>
-        m is InteractionMode.Redaction or InteractionMode.TextSelection or InteractionMode.FormAuthoring;
+        m is InteractionMode.Redaction or InteractionMode.TextSelection or InteractionMode.FormAuthoring or InteractionMode.Typewriter;
 
     private System.Collections.Specialized.INotifyCollectionChanged? _watchedHighlights;
+    private System.Collections.Specialized.INotifyCollectionChanged? _watchedTypewriterTextOperations;
 
     private void OnHiddenTextHighlightsChanged(
         System.Collections.Generic.IEnumerable<HiddenTextHighlight>? oldValue,
@@ -351,6 +374,37 @@ public partial class PdfViewerControl : UserControl
 
     private void OnHighlightsCollectionChanged(object? s, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         => RedrawHiddenTextOverlays();
+
+    private void OnTypewriterTextOperationsChanged(
+        System.Collections.Generic.IEnumerable<PdfTypewriterTextOperation>? oldValue,
+        System.Collections.Generic.IEnumerable<PdfTypewriterTextOperation>? newValue)
+    {
+        if (_watchedTypewriterTextOperations != null)
+        {
+            _watchedTypewriterTextOperations.CollectionChanged -= OnTypewriterTextOperationsCollectionChanged;
+            _watchedTypewriterTextOperations = null;
+        }
+
+        if (newValue is System.Collections.Specialized.INotifyCollectionChanged notify)
+        {
+            _watchedTypewriterTextOperations = notify;
+            notify.CollectionChanged += OnTypewriterTextOperationsCollectionChanged;
+        }
+
+        RedrawTypewriterLayer();
+    }
+
+    private void OnTypewriterTextOperationsCollectionChanged(
+        object? sender,
+        System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        if (e.Action is System.Collections.Specialized.NotifyCollectionChangedAction.Add
+            or System.Collections.Specialized.NotifyCollectionChangedAction.Remove
+            or System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
+        {
+            RedrawTypewriterLayer();
+        }
+    }
 
     private void RedrawHiddenTextOverlays()
     {
@@ -585,6 +639,7 @@ public partial class PdfViewerControl : UserControl
         _pdfImage = this.FindControl<Image>("PdfImage");
         _overlayCanvas = this.FindControl<Canvas>("OverlayCanvas");
         _interactionLayer = this.FindControl<Canvas>("InteractionLayer");
+        _typewriterLayer = this.FindControl<Canvas>("TypewriterLayer");
         _zoomHost = this.FindControl<LayoutTransformControl>("ZoomHost");
         _scrollViewer = this.FindControl<ScrollViewer>("PdfScrollViewer");
         _loadingOverlay = this.FindControl<Grid>("LoadingOverlay");
@@ -760,6 +815,7 @@ public partial class PdfViewerControl : UserControl
         if (Document != null)
         {
             RefreshPageAnnotations();
+            RedrawTypewriterLayer();
             if (ViewMode == PdfViewMode.Continuous)
                 RebuildContinuous();
             await RenderCurrentPageAsync();
@@ -767,6 +823,7 @@ public partial class PdfViewerControl : UserControl
         else
         {
             Annotations = null;
+            RedrawTypewriterLayer();
             ClearDisplay();
             ClearContinuous();
         }
@@ -801,6 +858,7 @@ public partial class PdfViewerControl : UserControl
 
             // Load annotations for the new page and refresh the overlay.
             RefreshPageAnnotations();
+            RedrawTypewriterLayer();
 
             await RenderCurrentPageAsync();
             PageChanged?.Invoke(this, new PageChangedEventArgs(CurrentPage));

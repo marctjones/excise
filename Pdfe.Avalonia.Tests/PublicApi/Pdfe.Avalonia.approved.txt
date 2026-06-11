@@ -33,6 +33,7 @@ namespace Pdfe.Avalonia.Controls
         TextSelection = 2,
         Pan = 3,
         FormAuthoring = 4,
+        Typewriter = 5,
     }
     public class LinkClickedEventArgs : System.EventArgs
     {
@@ -70,6 +71,7 @@ namespace Pdfe.Avalonia.Controls
         public static readonly Avalonia.StyledProperty<System.Collections.Generic.IEnumerable<Pdfe.Avalonia.Controls.HiddenTextHighlight>?> HiddenTextHighlightsProperty;
         public static readonly Avalonia.StyledProperty<Pdfe.Avalonia.Controls.InteractionMode> InteractionModeProperty;
         public static readonly Avalonia.StyledProperty<bool> IsLoadingProperty;
+        public static readonly Avalonia.StyledProperty<System.Collections.Generic.IEnumerable<Pdfe.Core.Editing.PdfTypewriterTextOperation>?> TypewriterTextOperationsProperty;
         public static readonly Avalonia.StyledProperty<Pdfe.Avalonia.Controls.PdfViewMode> ViewModeProperty;
         public static readonly Avalonia.StyledProperty<double> ZoomLevelProperty;
         public PdfViewerControl() { }
@@ -82,6 +84,7 @@ namespace Pdfe.Avalonia.Controls
         public System.Collections.Generic.IEnumerable<Pdfe.Avalonia.Controls.HiddenTextHighlight>? HiddenTextHighlights { get; set; }
         public Pdfe.Avalonia.Controls.InteractionMode InteractionMode { get; set; }
         public bool IsLoading { get; }
+        public System.Collections.Generic.IEnumerable<Pdfe.Core.Editing.PdfTypewriterTextOperation>? TypewriterTextOperations { get; set; }
         public Pdfe.Avalonia.Controls.PdfViewMode ViewMode { get; set; }
         public double ZoomLevel { get; set; }
         public event System.EventHandler<Pdfe.Avalonia.Controls.FormFieldEditedEventArgs>? FormFieldEdited;
@@ -90,6 +93,10 @@ namespace Pdfe.Avalonia.Controls
         public event System.EventHandler<Pdfe.Avalonia.Controls.PageChangedEventArgs>? PageChanged;
         public event System.EventHandler<Pdfe.Avalonia.Controls.RedactionDrawnEventArgs>? RedactionDrawn;
         public event System.EventHandler<Pdfe.Avalonia.Controls.TextSelectedEventArgs>? TextSelected;
+        public event System.EventHandler<Pdfe.Avalonia.Controls.TypewriterTextBoundsChangedEventArgs>? TypewriterTextBoundsChanged;
+        public event System.EventHandler<Pdfe.Avalonia.Controls.TypewriterTextCreatedEventArgs>? TypewriterTextCreated;
+        public event System.EventHandler<Pdfe.Avalonia.Controls.TypewriterTextDeletedEventArgs>? TypewriterTextDeleted;
+        public event System.EventHandler<Pdfe.Avalonia.Controls.TypewriterTextEditedEventArgs>? TypewriterTextEdited;
         public event System.EventHandler<Avalonia.Size>? VisibleViewportChanged;
         public void AddAppliedRedaction(Avalonia.Rect area) { }
         public void AddPendingRedaction(Avalonia.Rect area) { }
@@ -120,6 +127,32 @@ namespace Pdfe.Avalonia.Controls
         public TextSelectedEventArgs(Avalonia.Rect area, string text, System.Collections.Generic.IReadOnlyList<Avalonia.Rect> letterBoundsDips) { }
         public Avalonia.Rect Area { get; }
         public System.Collections.Generic.IReadOnlyList<Avalonia.Rect> LetterBoundsDips { get; }
+        public string Text { get; }
+    }
+    public class TypewriterTextBoundsChangedEventArgs : System.EventArgs
+    {
+        public TypewriterTextBoundsChangedEventArgs(System.Guid operationId, Pdfe.Core.Document.PdfRectangle rect, int pageNumber) { }
+        public System.Guid OperationId { get; }
+        public int PageNumber { get; }
+        public Pdfe.Core.Document.PdfRectangle Rect { get; }
+    }
+    public class TypewriterTextCreatedEventArgs : System.EventArgs
+    {
+        public TypewriterTextCreatedEventArgs(Pdfe.Core.Document.PdfRectangle rect, int pageNumber) { }
+        public int PageNumber { get; }
+        public Pdfe.Core.Document.PdfRectangle Rect { get; }
+    }
+    public class TypewriterTextDeletedEventArgs : System.EventArgs
+    {
+        public TypewriterTextDeletedEventArgs(System.Guid operationId, int pageNumber) { }
+        public System.Guid OperationId { get; }
+        public int PageNumber { get; }
+    }
+    public class TypewriterTextEditedEventArgs : System.EventArgs
+    {
+        public TypewriterTextEditedEventArgs(System.Guid operationId, string text, int pageNumber) { }
+        public System.Guid OperationId { get; }
+        public int PageNumber { get; }
         public string Text { get; }
     }
 }

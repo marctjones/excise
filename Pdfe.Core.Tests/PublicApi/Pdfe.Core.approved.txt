@@ -661,6 +661,8 @@ namespace Pdfe.Core.Editing
         public Pdfe.Core.Editing.PdfEditOperationKind Kind { get; }
         public int PageNumber { get; }
         public Pdfe.Core.Editing.PdfEditOperationStatus Status { get; }
+        public Pdfe.Core.Editing.PdfEditOperation WithBounds(Pdfe.Core.Document.PdfRectangle bounds) { }
+        public Pdfe.Core.Editing.PdfEditOperation WithPageAndBounds(int pageNumber, Pdfe.Core.Document.PdfRectangle bounds) { }
         public Pdfe.Core.Editing.PdfEditOperation WithStatus(Pdfe.Core.Editing.PdfEditOperationStatus status) { }
         public static Pdfe.Core.Editing.PdfEditOperation Create(Pdfe.Core.Editing.PdfEditOperationKind kind, int pageNumber, Pdfe.Core.Document.PdfRectangle bounds, bool canFlatten = true, string? description = null) { }
     }
@@ -678,6 +680,39 @@ namespace Pdfe.Core.Editing
         Pending = 0,
         Applied = 1,
         Discarded = 2,
+    }
+    public static class PdfTypewriterTextApplier
+    {
+        public static Pdfe.Core.Editing.PdfTypewriterTextOperation Apply(Pdfe.Core.Document.PdfDocument document, Pdfe.Core.Editing.PdfTypewriterTextOperation operation) { }
+        public static System.Collections.Generic.IReadOnlyList<Pdfe.Core.Editing.PdfTypewriterTextOperation> Apply(Pdfe.Core.Document.PdfDocument document, System.Collections.Generic.IEnumerable<Pdfe.Core.Editing.PdfTypewriterTextOperation> operations) { }
+    }
+    public sealed class PdfTypewriterTextOperation : System.IEquatable<Pdfe.Core.Editing.PdfTypewriterTextOperation>
+    {
+        public Pdfe.Core.Document.PdfRectangle Bounds { get; }
+        public Pdfe.Core.Editing.PdfEditOperation EditOperation { get; }
+        public bool HasText { get; }
+        public System.Guid Id { get; }
+        public bool IsPending { get; }
+        public int PageNumber { get; }
+        public Pdfe.Core.Editing.PdfEditOperationStatus Status { get; }
+        public Pdfe.Core.Editing.PdfTypewriterTextStyle Style { get; }
+        public string Text { get; }
+        public Pdfe.Core.Editing.PdfTypewriterTextOperation WithBounds(Pdfe.Core.Document.PdfRectangle bounds) { }
+        public Pdfe.Core.Editing.PdfTypewriterTextOperation WithPageAndBounds(int pageNumber, Pdfe.Core.Document.PdfRectangle bounds) { }
+        public Pdfe.Core.Editing.PdfTypewriterTextOperation WithStatus(Pdfe.Core.Editing.PdfEditOperationStatus status) { }
+        public Pdfe.Core.Editing.PdfTypewriterTextOperation WithStyle(Pdfe.Core.Editing.PdfTypewriterTextStyle style) { }
+        public Pdfe.Core.Editing.PdfTypewriterTextOperation WithText(string text) { }
+        public static Pdfe.Core.Editing.PdfTypewriterTextOperation Create(int pageNumber, Pdfe.Core.Document.PdfRectangle bounds, string text, Pdfe.Core.Editing.PdfTypewriterTextStyle? style = null) { }
+    }
+    public sealed class PdfTypewriterTextStyle : System.IEquatable<Pdfe.Core.Editing.PdfTypewriterTextStyle>
+    {
+        public PdfTypewriterTextStyle(string fontName = "Helvetica", double fontSize = 12, Pdfe.Core.Graphics.PdfColor? color = default, Pdfe.Core.Graphics.TextAlignment alignment = 0, double lineSpacing = 1.2) { }
+        public Pdfe.Core.Graphics.TextAlignment Alignment { get; }
+        public Pdfe.Core.Graphics.PdfColor Color { get; }
+        public string FontName { get; }
+        public double FontSize { get; }
+        public double LineSpacing { get; }
+        public static Pdfe.Core.Editing.PdfTypewriterTextStyle Default { get; }
     }
 }
 namespace Pdfe.Core.Fonts

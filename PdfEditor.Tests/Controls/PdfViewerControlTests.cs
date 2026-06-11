@@ -8,6 +8,8 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
 using AwesomeAssertions;
 using Pdfe.Avalonia.Controls;
+using Pdfe.Core.Document;
+using Pdfe.Core.Editing;
 using PdfEditor.Tests.Utilities;
 using Xunit;
 using PdfCoreDocument = Pdfe.Core.Document.PdfDocument;
@@ -263,6 +265,43 @@ public class PdfViewerControlTests
 
         // Assert
         control.InteractionMode.Should().Be(InteractionMode.TextSelection);
+    }
+
+    [FixedAvaloniaFact]
+    public async Task PdfViewerControl_TypewriterOperations_ShowEditorForCurrentPage()
+    {
+        var control = new PdfViewerControl();
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            var doc = PdfCoreDocument.CreateNew();
+            doc.Pages.AddBlank(300, 400);
+            doc.Pages.AddBlank(300, 400);
+            control.Document = doc;
+            control.CurrentPage = 1;
+            control.InteractionMode = InteractionMode.Typewriter;
+            control.TypewriterTextOperations = new[]
+            {
+                PdfTypewriterTextOperation.Create(
+                    1,
+                    new PdfRectangle(40, 250, 240, 290),
+                    "Visible note"),
+                PdfTypewriterTextOperation.Create(
+                    2,
+                    new PdfRectangle(40, 250, 240, 290),
+                    "Other page note"),
+            };
+        });
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            var layer = control.FindControl<Canvas>("TypewriterLayer");
+
+            layer.Should().NotBeNull();
+            layer!.Children.Should().HaveCount(1);
+        });
+
+        control.Document?.Dispose();
     }
 
     #endregion

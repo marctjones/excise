@@ -4,7 +4,7 @@
 
 # pdfe
 
-A cross-platform PDF editor and pure-.NET PDF framework, built with **C# + .NET 10 + Avalonia UI** and shipped with **true content-level redaction**, **AcroForm editing/authoring**, and **PDF 2.0 conformance**.
+A cross-platform PDF editor and pure-.NET PDF framework, built with **C# + .NET 10 + Avalonia UI** and shipped with **true content-level redaction**, **flat typewriter text editing**, **AcroForm editing/authoring**, and **PDF 2.0 conformance**.
 
 [![Release](https://img.shields.io/github/v/release/marctjones/pdfe)](https://github.com/marctjones/pdfe/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -52,6 +52,7 @@ Build the packages locally with `dotnet pack -c Release` (they are also attached
 - Find with highlights and navigation
 - Zoom modes: fit width, fit page, actual size, free zoom
 - Page thumbnails sidebar
+- **Typewriter text** — place editable text boxes on flat PDFs, then save them as normal page content instead of annotations
 - **AcroForm editing** — click any text/checkbox/dropdown widget and edit inline; save to keep the values interactive or flatten to bake them in
 - **AcroForm authoring** — drag-rect on a page to create new fields (Text / Checkbox / Choice / Signature); auto-detect underline placeholders and empty squares as fields
 - Reveal Hidden Text — yellow highlights for structural detections (text covered by rectangles), orange for differential-OCR recoveries (text inside rasterized images)
@@ -158,6 +159,13 @@ dotnet run --project PdfEditor
 
 Multiple areas across multiple pages can be marked and applied as a single batch.
 
+### Typewriter text on flat PDFs
+
+1. Click **✎ Type** in the toolbar.
+2. Click or drag on the page to place a text box.
+3. Type, move, resize, or delete the pending box before saving.
+4. Save to flatten the text into the PDF page content. When the open file is still the original, pdfe routes the save through **Save a Copy** so the original is preserved.
+
 ### Form fill (existing AcroForm)
 
 1. Open a PDF with form fields. Each field becomes an inline editor on the page (TextBox / ComboBox / CheckBox).
@@ -255,7 +263,7 @@ pdfe ocr scan.pdf
 
 ### Framework & UI
 - **.NET 10.0** — Cross-platform runtime
-- **Avalonia UI 11.x** (MIT) — Cross-platform XAML UI
+- **Avalonia UI 12.x** (MIT) — Cross-platform XAML UI
 - **ReactiveUI** (MIT) — MVVM framework
 
 ### Pdfe libraries (this repo)
@@ -299,7 +307,7 @@ pdfe/
 │   └── Program.cs                   # 12 subcommands
 │
 ├── PdfEditor/                       # Desktop GUI
-│   ├── Controls/PdfViewerControl    # Reusable Avalonia PDF viewer (annotations, links, form-field overlay)
+│   ├── Controls/PdfViewerControl    # Reusable Avalonia PDF viewer (annotations, links, form/typewriter overlays)
 │   ├── Models/                      # HiddenTextHighlight, etc.
 │   ├── Services/                    # App services on Pdfe.Core / Pdfe.Rendering
 │   ├── ViewModels/

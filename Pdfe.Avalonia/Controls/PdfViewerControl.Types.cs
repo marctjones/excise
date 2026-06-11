@@ -84,6 +84,58 @@ public class FormFieldEditedEventArgs : EventArgs
     }
 }
 
+public class TypewriterTextCreatedEventArgs : EventArgs
+{
+    public PdfRectangle Rect { get; }
+    public int PageNumber { get; }
+
+    public TypewriterTextCreatedEventArgs(PdfRectangle rect, int pageNumber)
+    {
+        Rect = rect;
+        PageNumber = pageNumber;
+    }
+}
+
+public class TypewriterTextEditedEventArgs : EventArgs
+{
+    public Guid OperationId { get; }
+    public string Text { get; }
+    public int PageNumber { get; }
+
+    public TypewriterTextEditedEventArgs(Guid operationId, string text, int pageNumber)
+    {
+        OperationId = operationId;
+        Text = text;
+        PageNumber = pageNumber;
+    }
+}
+
+public class TypewriterTextBoundsChangedEventArgs : EventArgs
+{
+    public Guid OperationId { get; }
+    public PdfRectangle Rect { get; }
+    public int PageNumber { get; }
+
+    public TypewriterTextBoundsChangedEventArgs(Guid operationId, PdfRectangle rect, int pageNumber)
+    {
+        OperationId = operationId;
+        Rect = rect;
+        PageNumber = pageNumber;
+    }
+}
+
+public class TypewriterTextDeletedEventArgs : EventArgs
+{
+    public Guid OperationId { get; }
+    public int PageNumber { get; }
+
+    public TypewriterTextDeletedEventArgs(Guid operationId, int pageNumber)
+    {
+        OperationId = operationId;
+        PageNumber = pageNumber;
+    }
+}
+
 /// <summary>
 /// Event arguments for page changed event.
 /// </summary>
@@ -142,4 +194,10 @@ public enum InteractionMode
     /// a field of the user-selected type.
     /// </summary>
     FormAuthoring,
+
+    /// <summary>
+    /// Click or drag to place editable text that can be flattened into page
+    /// content.
+    /// </summary>
+    Typewriter,
 }

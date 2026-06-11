@@ -15,6 +15,7 @@ public class DocumentStateManager : ReactiveObject
     private int _pendingRedactionsCount;
     private int _removedPagesCount;
     private int _formFieldEditsCount;
+    private int _typewriterEditsCount;
 
     /// <summary>
     /// Path to the currently open file
@@ -62,6 +63,15 @@ public class DocumentStateManager : ReactiveObject
     }
 
     /// <summary>
+    /// Number of flat typewriter text edits not yet saved.
+    /// </summary>
+    public int TypewriterEditsCount
+    {
+        get => _typewriterEditsCount;
+        set => this.RaiseAndSetIfChanged(ref _typewriterEditsCount, value);
+    }
+
+    /// <summary>
     /// True if current file is the same as original (not saved as different file)
     /// </summary>
     public bool IsOriginalFile
@@ -99,7 +109,10 @@ public class DocumentStateManager : ReactiveObject
     /// True if there are any unsaved changes (redactions or page modifications)
     /// </summary>
     public bool HasUnsavedChanges =>
-        PendingRedactionsCount > 0 || RemovedPagesCount > 0 || FormFieldEditsCount > 0;
+        PendingRedactionsCount > 0
+        || RemovedPagesCount > 0
+        || FormFieldEditsCount > 0
+        || TypewriterEditsCount > 0;
 
     /// <summary>
     /// User-friendly description of file type
@@ -137,6 +150,7 @@ public class DocumentStateManager : ReactiveObject
         PendingRedactionsCount = 0;
         RemovedPagesCount = 0;
         FormFieldEditsCount = 0;
+        TypewriterEditsCount = 0;
     }
 
     /// <summary>
@@ -161,6 +175,7 @@ public class DocumentStateManager : ReactiveObject
         PendingRedactionsCount = 0;
         RemovedPagesCount = 0;
         FormFieldEditsCount = 0;
+        TypewriterEditsCount = 0;
     }
 
     /// <summary>
@@ -171,8 +186,11 @@ public class DocumentStateManager : ReactiveObject
         if (!HasUnsavedChanges)
             return "Save"; // Will be disabled
 
-        if (IsOriginalFile)
+        if (IsOriginalFile && PendingRedactionsCount > 0)
             return "Save Redacted Version";
+
+        if (IsOriginalFile)
+            return "Save a Copy";
 
         return "Save";
     }

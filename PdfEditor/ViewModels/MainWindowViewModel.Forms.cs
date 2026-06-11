@@ -17,6 +17,7 @@ public partial class MainWindowViewModel
             if (IsRedactionMode) return InteractionMode.Redaction;
             if (IsTextSelectionMode) return InteractionMode.TextSelection;
             if (IsFormAuthoringMode) return InteractionMode.FormAuthoring;
+            if (IsTypewriterMode) return InteractionMode.Typewriter;
             return InteractionMode.None;
         }
     }
@@ -38,6 +39,7 @@ public partial class MainWindowViewModel
                 ViewMode = PdfViewMode.SinglePage;
                 if (_isRedactionMode) IsRedactionMode = false;
                 if (_isTextSelectionMode) IsTextSelectionMode = false;
+                if (_isTypewriterMode) IsTypewriterMode = false;
             }
 
             this.RaisePropertyChanged(nameof(InteractionMode));

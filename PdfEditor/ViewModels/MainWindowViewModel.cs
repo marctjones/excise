@@ -230,6 +230,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 if (_isRedactionMode) IsRedactionMode = false;
                 if (_isTextSelectionMode) IsTextSelectionMode = false;
                 if (_isFormAuthoringMode) IsFormAuthoringMode = false;
+                if (_isTypewriterMode) IsTypewriterMode = false;
             }
 
             this.RaisePropertyChanged(nameof(IsContinuousView));
@@ -281,6 +282,8 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             if (RedactionWorkflow.PendingRedactions.Count > 0)
                 return $"{RedactionWorkflow.PendingRedactions.Count} areas marked";
+            if (FileState.TypewriterEditsCount > 0)
+                return $"{FileState.TypewriterEditsCount} typewriter edit(s) pending";
             if (FileState.IsOriginalFile)
                 return "Ready";
             return FileState.FileType;
@@ -405,6 +408,9 @@ public partial class MainWindowViewModel : ViewModelBase
             if (value)
             {
                 ViewMode = PdfViewMode.SinglePage;
+                if (_isTextSelectionMode) IsTextSelectionMode = false;
+                if (_isFormAuthoringMode) IsFormAuthoringMode = false;
+                if (_isTypewriterMode) IsTypewriterMode = false;
             }
             this.RaisePropertyChanged(nameof(CurrentModeText));
             this.RaisePropertyChanged(nameof(InteractionMode));
@@ -433,6 +439,10 @@ public partial class MainWindowViewModel : ViewModelBase
             // Turn off redaction mode when entering text selection mode
             if (value && _isRedactionMode)
                 IsRedactionMode = false;
+            if (value && _isFormAuthoringMode)
+                IsFormAuthoringMode = false;
+            if (value && _isTypewriterMode)
+                IsTypewriterMode = false;
             this.RaisePropertyChanged(nameof(CurrentModeText));
             this.RaisePropertyChanged(nameof(InteractionMode));
         }
@@ -638,6 +648,7 @@ public partial class MainWindowViewModel : ViewModelBase
             CurrentRedactionArea = new Rect();
             CurrentTextSelectionArea = new Rect();
             RedactionWorkflow.Reset();
+            ClearPendingTypewriterText();
             ClipboardHistory.Clear();
             PageThumbnails.Clear();
             _renderService.ClearCache();
@@ -647,6 +658,10 @@ public partial class MainWindowViewModel : ViewModelBase
             if (IsRedactionMode)
             {
                 IsRedactionMode = false;
+            }
+            if (IsTypewriterMode)
+            {
+                IsTypewriterMode = false;
             }
 
             _logger.LogInformation(">>> STEP 3: Setting _currentFilePath and FileState");
@@ -870,19 +885,39 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        // CRITICAL: If working on original file with unsaved changes, FORCE "Save As" workflow
-        // This prevents accidental overwriting of original files
+        // CRITICAL: If working on the original with pending redactions, force
+        // the redacted-copy workflow. Other edits still preserve the original,
+        // but they use the normal Save As picker instead of the redaction dialog.
         if (FileState.IsOriginalFile && FileState.HasUnsavedChanges)
         {
-            _logger.LogInformation("Original file with changes detected - triggering Save As workflow");
-            await ApplyAllRedactionsAsync();
+            if (FileState.PendingRedactionsCount > 0)
+            {
+                _logger.LogInformation("Original file with pending redactions detected - triggering redacted-copy workflow");
+                await ApplyAllRedactionsAsync();
+            }
+            else
+            {
+                _logger.LogInformation("Original file with non-redaction edits detected - triggering Save As workflow");
+                await SaveAsAsync();
+            }
+
             return;
         }
 
         // Safe to save directly - either redacted version or no changes
         try
         {
+            var document = _documentService.GetCurrentDocument();
+            var flattenedTypewriter = document != null && ApplyPendingTypewriterText(document);
+
             _documentService.SaveDocument();
+            if (flattenedTypewriter)
+            {
+                ClearPendingTypewriterText();
+                if (!string.IsNullOrWhiteSpace(_currentFilePath))
+                    await ReloadPdfCoreDocumentAfterSaveAsync(_currentFilePath);
+            }
+
             _logger.LogInformation("Document saved successfully");
             _toastService.ShowSuccess("Document saved");
         }
@@ -1514,9 +1549,18 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
+            var document = _documentService.GetCurrentDocument();
+            var flattenedTypewriter = document != null && ApplyPendingTypewriterText(document);
+
             _documentService.SaveDocument(filePath);
             _currentFilePath = filePath;
+            FileState.UpdateCurrentPath(filePath);
+            if (flattenedTypewriter)
+                ClearPendingTypewriterText();
             this.RaisePropertyChanged(nameof(DocumentName));
+            this.RaisePropertyChanged(nameof(SaveButtonText));
+            this.RaisePropertyChanged(nameof(StatusBarText));
+            await ReloadPdfCoreDocumentAfterSaveAsync(filePath);
             _logger.LogInformation("Document saved successfully to: {FilePath}", filePath);
         }
         catch (Exception ex)
@@ -1558,6 +1602,7 @@ public partial class MainWindowViewModel : ViewModelBase
             CurrentRedactionArea = new Rect();
             CurrentTextSelectionArea = new Rect();
             RedactionWorkflow.Reset();
+            ClearPendingTypewriterText();
             ClipboardHistory.Clear();
             _hasInMemoryModifications = false;
 
@@ -1571,6 +1616,10 @@ public partial class MainWindowViewModel : ViewModelBase
             if (IsRedactionMode)
             {
                 IsRedactionMode = false;
+            }
+            if (IsTypewriterMode)
+            {
+                IsTypewriterMode = false;
             }
 
             // Reset navigation state
@@ -1590,6 +1639,7 @@ public partial class MainWindowViewModel : ViewModelBase
             this.RaisePropertyChanged(nameof(CurrentRedactionArea));
             this.RaisePropertyChanged(nameof(CurrentTextSelectionArea));
             this.RaisePropertyChanged(nameof(IsRedactionMode));
+            this.RaisePropertyChanged(nameof(IsTypewriterMode));
             this.RaisePropertyChanged(nameof(SaveButtonText));
 
             _logger.LogInformation("Document closed successfully - all state cleared");

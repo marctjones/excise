@@ -3,11 +3,13 @@ using AwesomeAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Pdfe.Avalonia.Controls;
+using Pdfe.Core.Document;
 using PdfEditor.Services;
 using PdfEditor.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -113,6 +115,12 @@ public class MainWindowViewModelTests
     }
 
     [Fact]
+    public void IsTypewriterMode_InitiallyFalse()
+    {
+        _viewModel.IsTypewriterMode.Should().BeFalse();
+    }
+
+    [Fact]
     public void SelectedText_InitiallyEmpty()
     {
         _viewModel.SelectedText.Should().BeEmpty();
@@ -159,6 +167,18 @@ public class MainWindowViewModelTests
 
         // Assert
         modeText.Should().Contain("Redaction");
+    }
+
+    [Fact]
+    public void IsTypewriterMode_WhenEnabled_UsesTypewriterInteractionModeAndDisablesOtherModes()
+    {
+        _viewModel.IsRedactionMode = true;
+        _viewModel.IsTypewriterMode = true;
+
+        _viewModel.IsTypewriterMode.Should().BeTrue();
+        _viewModel.IsRedactionMode.Should().BeFalse();
+        _viewModel.InteractionMode.Should().Be(InteractionMode.Typewriter);
+        _viewModel.CurrentModeText.Should().Contain("Typewriter");
     }
 
     [Fact]
@@ -290,6 +310,51 @@ public class MainWindowViewModelTests
     public void CurrentPageSearchHighlights_InitiallyEmpty()
     {
         _viewModel.CurrentPageSearchHighlights.Count.Should().Be(0);
+    }
+
+    [Fact]
+    public void TypewriterTextOperations_InitiallyEmpty()
+    {
+        _viewModel.TypewriterTextOperations.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void OnTypewriterTextEdited_TracksOnlyNonEmptyPendingEdits()
+    {
+        using var doc = PdfDocument.CreateNew();
+        doc.Pages.AddBlank(300, 400);
+        _viewModel.PdfCoreDocument = doc;
+        _viewModel.FileState.SetDocument("/test/file.pdf");
+
+        _viewModel.OnTypewriterTextCreated(new PdfRectangle(40, 250, 240, 290), 1);
+        var operationId = _viewModel.TypewriterTextOperations.Single().Id;
+
+        _viewModel.FileState.TypewriterEditsCount.Should().Be(0);
+
+        _viewModel.OnTypewriterTextEdited(operationId, "Office note", 1);
+
+        _viewModel.TypewriterTextOperations.Single().Text.Should().Be("Office note");
+        _viewModel.FileState.TypewriterEditsCount.Should().Be(1);
+        _viewModel.SaveButtonText.Should().Be("Save a Copy");
+
+        _viewModel.OnTypewriterTextEdited(operationId, string.Empty, 1);
+
+        _viewModel.FileState.TypewriterEditsCount.Should().Be(0);
+    }
+
+    [Fact]
+    public void OnTypewriterTextDeleted_RemovesPendingOperation()
+    {
+        using var doc = PdfDocument.CreateNew();
+        doc.Pages.AddBlank(300, 400);
+        _viewModel.PdfCoreDocument = doc;
+
+        _viewModel.OnTypewriterTextCreated(new PdfRectangle(40, 250, 240, 290), 1);
+        var operationId = _viewModel.TypewriterTextOperations.Single().Id;
+
+        _viewModel.OnTypewriterTextDeleted(operationId);
+
+        _viewModel.TypewriterTextOperations.Should().BeEmpty();
     }
 
     #endregion

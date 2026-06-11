@@ -63,6 +63,11 @@
                         <TextBlock Text="✓" IsVisible="{Binding IsTextSelectionMode}"/>
                     </MenuItem.Icon>
                 </MenuItem>
+                <MenuItem Header="_Typewriter Mode" Command="{Binding ToggleTypewriterModeCommand}">
+                    <MenuItem.Icon>
+                        <TextBlock Text="✓" IsVisible="{Binding IsTypewriterMode}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
                 <MenuItem Header="_Copy Selected Text" Command="{Binding CopyTextCommand}" InputGesture="Ctrl+C"
                           IsEnabled="{Binding IsTextSelectionMode}"/>
             </MenuItem>
@@ -252,6 +257,15 @@
                             ToolTip.Tip="Text Selection Mode (T)"
                             AutomationProperties.Name="Text Selection Mode"
                             AutomationProperties.HelpText="Toggle text selection mode to select and copy text"/>
+
+                    <Button Content="✎ Type" Command="{Binding ToggleTypewriterModeCommand}"
+                            Classes="modern-button toggle"
+                            Classes.active="{Binding IsTypewriterMode}"
+                            Padding="12,6"
+                            IsEnabled="{Binding IsDocumentLoaded}"
+                            ToolTip.Tip="Typewriter Mode"
+                            AutomationProperties.Name="Typewriter Mode"
+                            AutomationProperties.HelpText="Place editable text that saves as flat PDF page content"/>
 
                     <Button Content="⬛ Redact" Command="{Binding ToggleRedactionModeCommand}"
                             Classes="modern-button toggle"
@@ -661,11 +675,16 @@
                                                InteractionMode="{Binding InteractionMode}"
                                                HiddenTextHighlights="{Binding HiddenTextHighlights}"
                                                FormFields="{Binding CurrentPageFormFields}"
+                                               TypewriterTextOperations="{Binding TypewriterTextOperations}"
                                                RedactionDrawn="OnRedactionDrawn"
                                                TextSelected="OnTextSelected"
                                                LinkClicked="OnLinkClicked"
                                                FormFieldEdited="OnFormFieldEdited"
                                                FormFieldRectDrawn="OnFormFieldRectDrawn"
+                                               TypewriterTextCreated="OnTypewriterTextCreated"
+                                               TypewriterTextEdited="OnTypewriterTextEdited"
+                                               TypewriterTextBoundsChanged="OnTypewriterTextBoundsChanged"
+                                               TypewriterTextDeleted="OnTypewriterTextDeleted"
                                                PageChanged="OnPageChanged" />
                 </Grid>
             </Border>

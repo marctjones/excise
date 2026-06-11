@@ -19,6 +19,8 @@ public class DocumentStateManagerTests
         manager.OriginalFilePath.Should().BeEmpty();
         manager.PendingRedactionsCount.Should().Be(0);
         manager.RemovedPagesCount.Should().Be(0);
+        manager.FormFieldEditsCount.Should().Be(0);
+        manager.TypewriterEditsCount.Should().Be(0);
         manager.HasUnsavedChanges.Should().BeFalse();
     }
 
@@ -155,6 +157,17 @@ public class DocumentStateManagerTests
     }
 
     [Fact]
+    public void HasUnsavedChanges_WhenTypewriterEdits_ReturnsTrue()
+    {
+        var manager = new DocumentStateManager();
+        manager.SetDocument("/test/document.pdf");
+
+        manager.TypewriterEditsCount = 1;
+
+        manager.HasUnsavedChanges.Should().BeTrue();
+    }
+
+    [Fact]
     public void FileType_ReturnsCorrectDescription()
     {
         // Arrange
@@ -191,8 +204,13 @@ public class DocumentStateManagerTests
         manager.PendingRedactionsCount = 1;
         manager.GetSaveButtonText().Should().Be("Save Redacted Version");
 
+        // Original with non-redaction changes
+        manager.PendingRedactionsCount = 0;
+        manager.TypewriterEditsCount = 1;
+        manager.GetSaveButtonText().Should().Be("Save a Copy");
+
         // Redacted version with changes
-        manager.PendingRedactionsCount = 0; // Reset first
+        manager.TypewriterEditsCount = 0; // Reset first
         manager.UpdateCurrentPath("/test/document_REDACTED.pdf");
         manager.PendingRedactionsCount = 1; // Now add changes
         manager.GetSaveButtonText().Should().Be("Save");
@@ -206,6 +224,8 @@ public class DocumentStateManagerTests
         manager.SetDocument("/test/document.pdf");
         manager.PendingRedactionsCount = 3;
         manager.RemovedPagesCount = 2;
+        manager.FormFieldEditsCount = 1;
+        manager.TypewriterEditsCount = 1;
 
         // Act
         manager.Reset();
@@ -215,6 +235,8 @@ public class DocumentStateManagerTests
         manager.OriginalFilePath.Should().BeEmpty();
         manager.PendingRedactionsCount.Should().Be(0);
         manager.RemovedPagesCount.Should().Be(0);
+        manager.FormFieldEditsCount.Should().Be(0);
+        manager.TypewriterEditsCount.Should().Be(0);
         manager.HasUnsavedChanges.Should().BeFalse();
     }
 }

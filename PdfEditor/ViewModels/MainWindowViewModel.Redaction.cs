@@ -153,12 +153,15 @@ public partial class MainWindowViewModel
                 _redactionService.RedactArea(page, pending.Area, renderDpi: 150);
             }
 
+            ApplyPendingTypewriterText(document);
+
             _logger.LogInformation("Saving redacted PDF to: {Path}", saveFilePath);
             document.Save(saveFilePath);
             _hasInMemoryModifications = false;
 
             RedactionWorkflow.MoveToApplied();
             FileState.PendingRedactionsCount = 0;
+            ClearPendingTypewriterText();
             this.RaisePropertyChanged(nameof(SaveButtonText));
             this.RaisePropertyChanged(nameof(StatusBarText));
 

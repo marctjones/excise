@@ -86,4 +86,10 @@ public sealed record PdfEditOperation
 
     public PdfEditOperation WithStatus(PdfEditOperationStatus status) =>
         new(Id, Kind, PageNumber, Bounds, status, CanFlatten, Description);
+
+    public PdfEditOperation WithBounds(PdfRectangle bounds) =>
+        new(Id, Kind, PageNumber, bounds, Status, CanFlatten, Description);
+
+    public PdfEditOperation WithPageAndBounds(int pageNumber, PdfRectangle bounds) =>
+        new(Id, Kind, pageNumber, bounds, Status, CanFlatten, Description);
 }

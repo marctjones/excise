@@ -559,6 +559,30 @@ public partial class MainWindow : Window
         viewModel.OnFormFieldRectDrawn(e.Rect, e.PageNumber);
     }
 
+    private void OnTypewriterTextCreated(object? sender, TypewriterTextCreatedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel viewModel) return;
+        viewModel.OnTypewriterTextCreated(e.Rect, e.PageNumber);
+    }
+
+    private void OnTypewriterTextEdited(object? sender, TypewriterTextEditedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel viewModel) return;
+        viewModel.OnTypewriterTextEdited(e.OperationId, e.Text, e.PageNumber);
+    }
+
+    private void OnTypewriterTextBoundsChanged(object? sender, TypewriterTextBoundsChangedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel viewModel) return;
+        viewModel.OnTypewriterTextBoundsChanged(e.OperationId, e.Rect, e.PageNumber);
+    }
+
+    private void OnTypewriterTextDeleted(object? sender, TypewriterTextDeletedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel viewModel) return;
+        viewModel.OnTypewriterTextDeleted(e.OperationId);
+    }
+
     /// <summary>
     /// Toolbar combo selection — translate the selected ComboBoxItem to the
     /// corresponding PdfFieldType for the next drag.
