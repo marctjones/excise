@@ -71,14 +71,12 @@ public partial class MainWindowViewModel
             if (CurrentPageIndex < 0 || CurrentPageIndex >= doc.PageCount) return;
 
             var page = doc.GetPage(CurrentPageIndex + 1);
-            double pageHeight = page.Height;
-            double scale = CoordinateConverter.DefaultRenderDpi / (double)CoordinateConverter.PdfPointsPerInch;
 
             // Pass 1: structural — fast, exact characters, never wrong.
             foreach (var h in Pdfe.Core.Text.Segmentation.HiddenTextDetector.ScanPage(
                 page, CurrentPageIndex + 1))
             {
-                AddHighlight(h.Text, h.BoundingBox, h.HiddenBy, scale, pageHeight,
+                AddHighlight(h.Text, h.BoundingBox, h.HiddenBy, CurrentPageIndex + 1,
                     HiddenTextSource.Structural);
             }
 
@@ -94,7 +92,7 @@ public partial class MainWindowViewModel
                     foreach (var h in auditor.ScanPage(bytes, CurrentPageIndex + 1))
                     {
                         AddHighlight(h.Text, h.BoundingBox,
-                            $"raster (OCR conf {h.Confidence:F2})", scale, pageHeight,
+                            $"raster (OCR conf {h.Confidence:F2})", CurrentPageIndex + 1,
                             HiddenTextSource.DifferentialOcr);
                     }
                 }
@@ -119,17 +117,13 @@ public partial class MainWindowViewModel
         string text,
         PdfRectangle bbox,
         string source,
-        double scale,
-        double pageHeight,
+        int pageNumber,
         HiddenTextSource severity)
     {
-        // PDF points (bottom-left origin) -> rendered-image pixels
-        // (top-left origin) at the render DPI.
-        double left = bbox.Left * scale;
-        double top = (pageHeight - bbox.Top) * scale;
-        double width = (bbox.Right - bbox.Left) * scale;
-        double height = (bbox.Top - bbox.Bottom) * scale;
         HiddenTextHighlights.Add(new HiddenTextHighlight(
-            text, new Rect(left, top, width, height), source, severity));
+            text,
+            PdfPageRect.FromContentPoints(pageNumber, bbox),
+            source,
+            severity));
     }
 }

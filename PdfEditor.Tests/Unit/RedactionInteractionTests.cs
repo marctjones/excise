@@ -2,6 +2,7 @@ using Xunit;
 using AwesomeAssertions;
 using PdfEditor.ViewModels;
 using Avalonia;
+using Pdfe.Core.Document;
 using System.Threading.Tasks;
 
 namespace PdfEditor.Tests.Unit;
@@ -45,6 +46,9 @@ public class RedactionInteractionTests
         vm.CurrentRedactionArea.Y.Should().Be(20);
         vm.CurrentRedactionArea.Width.Should().Be(100);
         vm.CurrentRedactionArea.Height.Should().Be(50);
+        vm.CurrentRedactionPageArea.Should().NotBeNull();
+        vm.CurrentRedactionPageArea!.Value.Space.Should().Be(PdfCoordinateSpace.ViewerDips);
+        vm.CurrentRedactionPageArea.Value.PageNumber.Should().Be(1);
     }
 
     [Fact]

@@ -26,6 +26,8 @@ namespace PdfEditor.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
+    internal const int DefaultViewerRenderDpi = 120;
+
     private readonly ILogger<MainWindowViewModel> _logger;
     private readonly ILoggerFactory _loggerFactory;
     private readonly PdfDocumentService _documentService;
@@ -55,13 +57,15 @@ public partial class MainWindowViewModel : ViewModelBase
     private bool _skipZoomSave; // Flag to skip zoom save during auto-reset
     private bool _isRedactionMode;
     private Rect _currentRedactionArea;
+    private int _currentRedactionRenderDpi = DefaultViewerRenderDpi;
+    private PdfPageRect? _currentRedactionPageArea;
     private bool _isTextSelectionMode;
     private Rect _currentTextSelectionArea;
     private string _selectedText = string.Empty;
     private ObservableCollection<string> _recentFiles = new();
     private double _viewportWidth = 800;
     private double _viewportHeight = 600;
-    private ObservableCollection<Rect> _currentPageSearchHighlights = new();
+    private ObservableCollection<PdfPageRect> _currentPageSearchHighlights = new();
     private int _renderCacheMax = 20;
     private string _operationStatus = string.Empty;
     private bool _hasInMemoryModifications; // Tracks if document has been modified in-memory (e.g., redactions applied)
@@ -425,7 +429,107 @@ public partial class MainWindowViewModel : ViewModelBase
     public Rect CurrentRedactionArea
     {
         get => _currentRedactionArea;
-        set => this.RaiseAndSetIfChanged(ref _currentRedactionArea, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _currentRedactionArea, value);
+            SetCurrentRedactionPageAreaFromLegacyRect(value);
+        }
+    }
+
+    public int CurrentRedactionRenderDpi
+    {
+        get => _currentRedactionRenderDpi;
+        set
+        {
+            if (value <= 0)
+                throw new ArgumentOutOfRangeException(nameof(value), "Render DPI must be positive.");
+
+            this.RaiseAndSetIfChanged(ref _currentRedactionRenderDpi, value);
+
+            if (_currentRedactionPageArea is { Space: PdfCoordinateSpace.ViewerDips } area)
+            {
+                SetCurrentRedactionPageArea(
+                    PdfPageRect.ViewerDips(
+                        area.PageNumber,
+                        area.X,
+                        area.Y,
+                        area.Width,
+                        area.Height,
+                        value),
+                    updateLegacyFields: false);
+            }
+        }
+    }
+
+    public PdfPageRect? CurrentRedactionPageArea
+    {
+        get => _currentRedactionPageArea;
+        set => SetCurrentRedactionPageArea(value, updateLegacyFields: true);
+    }
+
+    private void SetCurrentRedactionPageAreaFromLegacyRect(Rect area)
+    {
+        if (area.Width <= 0 || area.Height <= 0)
+        {
+            SetCurrentRedactionPageArea(null, updateLegacyFields: false);
+            return;
+        }
+
+        SetCurrentRedactionPageArea(
+            PdfPageRect.ViewerDips(
+                Math.Max(CurrentPageIndex + 1, 1),
+                area.X,
+                area.Y,
+                area.Width,
+                area.Height,
+                CurrentRedactionRenderDpi),
+            updateLegacyFields: false);
+    }
+
+    private void SetCurrentRedactionPageArea(PdfPageRect? area, bool updateLegacyFields)
+    {
+        this.RaiseAndSetIfChanged(ref _currentRedactionPageArea, area);
+
+        if (!updateLegacyFields)
+            return;
+
+        if (area is not { } pageArea)
+        {
+            this.RaiseAndSetIfChanged(ref _currentRedactionArea, default, nameof(CurrentRedactionArea));
+            this.RaiseAndSetIfChanged(ref _currentRedactionRenderDpi, DefaultViewerRenderDpi, nameof(CurrentRedactionRenderDpi));
+            return;
+        }
+
+        var legacyArea = ToViewerRedactionArea(pageArea);
+        this.RaiseAndSetIfChanged(
+            ref _currentRedactionArea,
+            new Rect(legacyArea.X, legacyArea.Y, legacyArea.Width, legacyArea.Height),
+            nameof(CurrentRedactionArea));
+        this.RaiseAndSetIfChanged(
+            ref _currentRedactionRenderDpi,
+            (int)Math.Round(legacyArea.Dpi),
+            nameof(CurrentRedactionRenderDpi));
+    }
+
+    private PdfPageRect ToViewerRedactionArea(PdfPageRect area)
+    {
+        if (area.Space == PdfCoordinateSpace.ViewerDips &&
+            Math.Abs(area.Dpi - DefaultViewerRenderDpi) < 0.000001)
+        {
+            return area;
+        }
+
+        if (_pdfCoreDocument == null ||
+            area.PageNumber < 1 ||
+            area.PageNumber > _pdfCoreDocument.PageCount)
+        {
+            return area;
+        }
+
+        return PdfCoordinateMapper.ToViewerDips(
+            _pdfCoreDocument.GetPage(area.PageNumber),
+            area,
+            DefaultViewerRenderDpi);
     }
 
     public bool IsTextSelectionMode
@@ -577,8 +681,9 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    // Search highlight rectangles for current page (in screen coordinates)
-    public ObservableCollection<Rect> CurrentPageSearchHighlights
+    // Search highlight rectangles for current page. Stored in PDF content coordinates;
+    // PdfViewerControl converts them to viewer DIPs when drawing overlays.
+    public ObservableCollection<PdfPageRect> CurrentPageSearchHighlights
     {
         get => _currentPageSearchHighlights;
         set => this.RaiseAndSetIfChanged(ref _currentPageSearchHighlights, value);
@@ -1244,9 +1349,12 @@ public partial class MainWindowViewModel : ViewModelBase
         var pageNumber = CurrentPageIndex + 1;
         if (pageNumber < 1 || pageNumber > doc.PageCount) return false;
         var page = doc.GetPage(pageNumber);
-        const double renderDpi = 120.0; // matches PdfViewerControl.DefaultRenderDpi
-        widthDip  = page.Width  * (renderDpi / 72.0);
-        heightDip = page.Height * (renderDpi / 72.0);
+        var viewerRect = PdfCoordinateMapper.ToViewerDips(
+            page,
+            PdfPageRect.VisualPoints(pageNumber, 0, 0, page.VisualWidth, page.VisualHeight),
+            DefaultViewerRenderDpi);
+        widthDip = viewerRect.Width;
+        heightDip = viewerRect.Height;
         return widthDip > 0 && heightDip > 0;
     }
 

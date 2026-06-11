@@ -445,6 +445,27 @@ public class RedactionServiceTests : IDisposable
     }
 
     [Fact]
+    public void RedactWithOptions_WithTypedPageAreas_DoesNotRequireLegacyRectConversion()
+    {
+        var filePath = CreateTestFile("typed-redact.pdf", path =>
+            TestPdfGenerator.CreateSimpleTextPdf(path, "Content"));
+
+        using var doc = PdfDocument.Open(File.ReadAllBytes(filePath));
+        var page = doc.GetPage(1);
+        var options = new RedactionOptions { SanitizeMetadata = true };
+        var areas = new[]
+        {
+            PdfPageRect.FromContentPoints(
+                page.PageNumber,
+                new PdfRectangle(0, 0, page.Width, page.Height))
+        };
+
+        var action = () => _service.RedactWithOptions(doc, page, areas, options);
+
+        action.Should().NotThrow();
+    }
+
+    [Fact]
     public void RedactWithOptions_ClearsRedactedTermsFirst()
     {
         // Arrange

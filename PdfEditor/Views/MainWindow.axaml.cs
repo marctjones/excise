@@ -225,13 +225,13 @@ public partial class MainWindow : Window
         // Draw pending redactions (red dashed border)
         foreach (var pending in viewModel.RedactionWorkflow.GetPendingForPage(currentPage))
         {
-            _pdfViewerControl.AddPendingRedaction(pending.Area);
+            _pdfViewerControl.AddPendingRedaction(pending.PageArea);
         }
 
         // Draw applied redactions (black solid rectangle)
         foreach (var applied in viewModel.RedactionWorkflow.GetAppliedForPage(currentPage))
         {
-            _pdfViewerControl.AddAppliedRedaction(applied.Area);
+            _pdfViewerControl.AddAppliedRedaction(applied.PageArea);
         }
     }
 
@@ -489,11 +489,12 @@ public partial class MainWindow : Window
         if (DataContext is not MainWindowViewModel viewModel)
             return;
 
-        // The PdfViewerControl provides the area in image pixel coordinates
-        viewModel.CurrentRedactionArea = e.Area;
+        // The PdfViewerControl provides a page-scoped, tagged rectangle.
+        // The view model backfills legacy Rect/DPI properties from this value.
+        viewModel.CurrentRedactionPageArea = e.PageArea;
 
         // Automatically apply the redaction when selection is completed
-        if (e.Area.Width > 5 && e.Area.Height > 5)
+        if (e.PageArea.Width > 5 && e.PageArea.Height > 5)
         {
             viewModel.ApplyRedactionCommand.Execute().Subscribe();
         }

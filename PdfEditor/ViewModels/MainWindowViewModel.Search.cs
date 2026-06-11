@@ -1,5 +1,5 @@
-using Avalonia;
 using Microsoft.Extensions.Logging;
+using Pdfe.Core.Document;
 using PdfEditor.Services;
 using ReactiveUI;
 using System;
@@ -436,7 +436,7 @@ public partial class MainWindowViewModel
 
     /// <summary>
     /// Update search highlight rectangles for the current page.
-    /// Converts PDF coordinates to screen coordinates.
+    /// Updates current-page search highlights in PDF content coordinates.
     /// </summary>
     public void UpdateSearchHighlights()
     {
@@ -453,36 +453,15 @@ public partial class MainWindowViewModel
             if (pageMatches.Count == 0)
                 return;
 
-            // Get page height for coordinate conversion (PDF uses bottom-left origin)
-            var pageHeight = _documentService.GetPageHeight(CurrentPageIndex);
-
-            // Convert each match to screen coordinates.
-            // SearchMatch is in PDF points (bottom-left origin). Flip Y to
-            // Avalonia (top-left), then scale to bitmap DIPs.
-            //
-            // The DPI here MUST match what PdfViewerControl actually renders
-            // at — otherwise highlights drift relative to the page text.
-            // Pre-fix this was hardcoded to 150 (the old PdfRenderService
-            // default) but the viewer now uses 120, which made highlights
-            // appear ~25% too far right and 25% too big — often clipped
-            // off the page entirely, so search "looked broken".
-            const double viewerRenderDpi = 120.0;
-            var dpiScale = viewerRenderDpi / 72.0;
-
             foreach (var match in pageMatches)
             {
-                // Convert Y from PDF (bottom-left) to Avalonia (top-left)
-                var avaloniaY = pageHeight - match.Y - match.Height;
-
-                // Scale to screen coordinates (150 DPI render)
-                var screenRect = new Rect(
-                    match.X * dpiScale,
-                    avaloniaY * dpiScale,
-                    match.Width * dpiScale,
-                    match.Height * dpiScale
-                );
-
-                CurrentPageSearchHighlights.Add(screenRect);
+                var contentRect = new PdfRectangle(
+                    match.X,
+                    match.Y,
+                    match.X + match.Width,
+                    match.Y + match.Height);
+                CurrentPageSearchHighlights.Add(
+                    PdfPageRect.FromContentPoints(CurrentPageIndex + 1, contentRect));
             }
 
             _logger.LogDebug("Updated {Count} search highlights for page {Page}",

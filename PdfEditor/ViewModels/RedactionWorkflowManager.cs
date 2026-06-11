@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using Avalonia;
 using PdfEditor.Models;
+using Pdfe.Core.Document;
 using ReactiveUI;
 
 namespace PdfEditor.ViewModels;
@@ -49,12 +50,26 @@ public class RedactionWorkflowManager : ReactiveObject
     /// <summary>
     /// Mark an area for redaction (adds to pending list)
     /// </summary>
-    public void MarkArea(int pageNumber, Rect area, string previewText)
+    public void MarkArea(
+        int pageNumber,
+        Rect area,
+        string previewText,
+        int renderDpi = MainWindowViewModel.DefaultViewerRenderDpi)
+    {
+        MarkArea(
+            PdfPageRect.ViewerDips(pageNumber, area.X, area.Y, area.Width, area.Height, renderDpi),
+            previewText);
+    }
+
+    /// <summary>
+    /// Mark a page-scoped area for redaction.
+    /// </summary>
+    public void MarkArea(PdfPageRect area, string previewText)
     {
         var pending = new PendingRedaction
         {
-            PageNumber = pageNumber,
-            Area = area,
+            PageNumber = area.PageNumber,
+            PageArea = area,
             PreviewText = previewText,
             MarkedTime = DateTime.Now
         };

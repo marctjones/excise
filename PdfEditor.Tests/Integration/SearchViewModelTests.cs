@@ -88,6 +88,8 @@ public class SearchViewModelTests
         // overlay control draws nothing visible.
         foreach (var r in vm.CurrentPageSearchHighlights)
         {
+            r.Space.Should().Be(Pdfe.Core.Document.PdfCoordinateSpace.ContentPoints,
+                "search results should stay in PDF content coordinates until the viewer draws them");
             r.Width.Should().BeGreaterThan(0);
             r.Height.Should().BeGreaterThan(0);
         }
@@ -173,20 +175,16 @@ public class SearchViewModelTests
         await Task.Delay(800);
 
         var page = vm.PdfCoreDocument!.GetPage(vm.CurrentPageIndex + 1);
-        // Bitmap dimensions at 120 DPI:
-        const double renderDpi = 120.0;
-        var maxX = page.Width * renderDpi / 72.0;
-        var maxY = page.Height * renderDpi / 72.0;
-
         vm.CurrentPageSearchHighlights.Should().NotBeEmpty(
             "Brasseur appears on multiple pages of the book");
         foreach (var r in vm.CurrentPageSearchHighlights)
         {
-            r.X.Should().BeInRange(0, maxX,
-                $"highlight X must fit inside the {maxX:F0}-DIP bitmap; " +
+            r.Space.Should().Be(Pdfe.Core.Document.PdfCoordinateSpace.ContentPoints);
+            r.X.Should().BeInRange(0, page.Width,
+                $"highlight X must fit inside the {page.Width:F0}-point page; " +
                 $"got X={r.X:F1}, W={r.Width:F1}");
-            r.Y.Should().BeInRange(0, maxY,
-                $"highlight Y must fit inside the {maxY:F0}-DIP bitmap; " +
+            r.Y.Should().BeInRange(0, page.Height,
+                $"highlight Y must fit inside the {page.Height:F0}-point page; " +
                 $"got Y={r.Y:F1}, H={r.Height:F1}");
         }
     }

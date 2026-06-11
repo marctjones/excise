@@ -57,8 +57,8 @@ namespace PdfEditor.Services;
 public static class CoordinateConverter
 {
     /// <summary>
-    /// Default render DPI used when rendering PDF pages to images.
-    /// This should match the DPI used in PdfRenderService.
+    /// Default render DPI used by legacy editor service paths.
+    /// Viewer interactions should pass the actual rendered-page DPI instead of relying on this fallback.
     /// </summary>
     public const int DefaultRenderDpi = 150;
 

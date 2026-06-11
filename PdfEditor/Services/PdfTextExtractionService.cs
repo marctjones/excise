@@ -114,14 +114,13 @@ public class PdfTextExtractionService
     /// </summary>
     /// <param name="pdfStream">PDF document stream (can be file stream or memory stream)</param>
     /// <param name="pageIndex">Zero-based page index</param>
-    /// <param name="area">Selection area in screen coordinates</param>
-    /// <param name="renderDpi">The DPI at which the page was rendered (default 150). Used to scale screen coordinates to PDF points (72 DPI)</param>
+    /// <param name="area">Selection area with an explicit coordinate space.</param>
     /// <param name="sourceName">Optional name for logging (e.g., filename)</param>
-    public string ExtractTextFromArea(Stream pdfStream, int pageIndex, Rect area, int renderDpi = 150, string sourceName = "PDF")
+    public string ExtractTextFromArea(Stream pdfStream, int pageIndex, PdfPageRect area, string sourceName = "PDF")
     {
         _logger.LogInformation(
-            "Extracting text from screen area ({X:F2},{Y:F2},{W:F2}x{H:F2}) on page {PageIndex} of {FileName} (rendered at {Dpi} DPI)",
-            area.X, area.Y, area.Width, area.Height, pageIndex + 1, sourceName, renderDpi);
+            "Extracting text from {Space} area ({X:F2},{Y:F2},{W:F2}x{H:F2}) on page {PageIndex} of {FileName}",
+            area.Space, area.X, area.Y, area.Width, area.Height, pageIndex + 1, sourceName);
 
         try
         {
@@ -140,18 +139,13 @@ public class PdfTextExtractionService
             var words = page.GetWords();
             var extractedText = new StringBuilder();
 
-            // Use centralized CoordinateConverter for all coordinate transformations
-            // This converts from image pixels (top-left origin) to PDF coordinates (bottom-left origin)
-            var pageHeight = page.Height;
-            var (left, bottom, right, top) = CoordinateConverter.ImageSelectionToPdfCoords(
-                area, pageHeight, renderDpi);
-
-            var pdfRect = new PdfRectangle(left, bottom, right, top);
+            var pdfRect = PdfCoordinateMapper.ToContentPoints(page, area).ToPdfRectangle().Normalize();
 
             _logger.LogInformation(
-                "Coordinate conversion via CoordinateConverter.ImageSelectionToPdfCoords: " +
-                "({X:F2},{Y:F2},{W:F2}x{H:F2}) → PDF ({Left:F2},{Bottom:F2}) to ({Right:F2},{Top:F2})",
+                "Coordinate conversion via PdfCoordinateMapper: " +
+                "({X:F2},{Y:F2},{W:F2}x{H:F2}) {Space} → PDF content ({Left:F2},{Bottom:F2}) to ({Right:F2},{Top:F2})",
                 area.X, area.Y, area.Width, area.Height,
+                area.Space,
                 pdfRect.Left, pdfRect.Bottom, pdfRect.Right, pdfRect.Top);
 
             // CHARACTER-LEVEL SELECTION: Find individual letters whose center point is inside the selection
@@ -272,6 +266,15 @@ public class PdfTextExtractionService
         }
     }
 
+    public string ExtractTextFromArea(Stream pdfStream, int pageIndex, Rect area, int renderDpi = 150, string sourceName = "PDF")
+    {
+        return ExtractTextFromArea(
+            pdfStream,
+            pageIndex,
+            PdfPageRect.ViewerDips(pageIndex + 1, area.X, area.Y, area.Width, area.Height, renderDpi),
+            sourceName);
+    }
+
     /// <summary>
     /// Check if two rectangles intersect (kept for potential future use)
     /// </summary>
@@ -286,12 +289,21 @@ public class PdfTextExtractionService
     /// </summary>
     /// <param name="pdfPath">Path to PDF file</param>
     /// <param name="pageIndex">Zero-based page index</param>
-    /// <param name="area">Selection area in screen coordinates</param>
+    /// <param name="area">Selection area in rendered-page pixels/DIPs</param>
     /// <param name="renderDpi">The DPI at which the page was rendered (default 150)</param>
     public string ExtractTextFromArea(string pdfPath, int pageIndex, Rect area, int renderDpi = 150)
     {
         using var stream = File.OpenRead(pdfPath);
         return ExtractTextFromArea(stream, pageIndex, area, renderDpi, Path.GetFileName(pdfPath));
+    }
+
+    /// <summary>
+    /// Extract text from a specific page-scoped area.
+    /// </summary>
+    public string ExtractTextFromArea(string pdfPath, int pageIndex, PdfPageRect area)
+    {
+        using var stream = File.OpenRead(pdfPath);
+        return ExtractTextFromArea(stream, pageIndex, area, Path.GetFileName(pdfPath));
     }
 
     /// <summary>

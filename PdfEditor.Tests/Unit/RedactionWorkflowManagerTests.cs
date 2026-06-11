@@ -52,8 +52,35 @@ public class RedactionWorkflowManagerTests
         pending.PageNumber.Should().Be(2);
         pending.Area.Should().Be(area);
         pending.PreviewText.Should().Be(previewText);
+        pending.RenderDpi.Should().Be(120);
         pending.Id.Should().NotBe(Guid.Empty);
         pending.MarkedTime.Should().BeCloseTo(DateTime.Now, TimeSpan.FromSeconds(1));
+    }
+
+    [Fact]
+    public void MarkArea_StoresExplicitRenderDpi()
+    {
+        var area = new Rect(100, 100, 200, 50);
+
+        _manager.MarkArea(2, area, "Secret data", renderDpi: 120);
+
+        _manager.PendingRedactions.Single().RenderDpi.Should().Be(120);
+        _manager.PendingRedactions.Single().PageArea.Space.Should().Be(Pdfe.Core.Document.PdfCoordinateSpace.ViewerDips);
+    }
+
+    [Fact]
+    public void MarkArea_WithPageRect_PreservesCoordinateSpace()
+    {
+        var area = Pdfe.Core.Document.PdfPageRect.FromContentPoints(
+            2,
+            new Pdfe.Core.Document.PdfRectangle(100, 700, 200, 720));
+
+        _manager.MarkArea(area, "Secret data");
+
+        var pending = _manager.PendingRedactions.Single();
+        pending.PageNumber.Should().Be(2);
+        pending.PageArea.Should().Be(area);
+        pending.PageArea.Space.Should().Be(Pdfe.Core.Document.PdfCoordinateSpace.ContentPoints);
     }
 
     [Fact]
@@ -469,13 +496,12 @@ public class RedactionWorkflowManagerTests
     }
 
     [Fact]
-    public void MarkArea_PageZero_StillAdded()
+    public void MarkArea_PageZero_Throws()
     {
-        // Act (page 0 is unusual but should not crash)
-        _manager.MarkArea(0, new Rect(0, 0, 100, 50), "Page 0");
+        var act = () => _manager.MarkArea(0, new Rect(0, 0, 100, 50), "Page 0");
 
-        // Assert
-        _manager.PendingCount.Should().Be(1);
+        act.Should().Throw<ArgumentOutOfRangeException>()
+            .WithMessage("*Page number is 1-based*");
     }
 
     #endregion

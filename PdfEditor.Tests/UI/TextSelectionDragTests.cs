@@ -106,9 +106,8 @@ public class TextSelectionDragTests
         // (it lives inside the ScaleTransform wrapper) — same control the
         // production code asks PointerEventArgs.GetPosition() against.
         var overlay = FindNamedDescendant<Canvas>(viewer, "OverlayCanvas")!;
-        const double s = RenderDpi / 72.0;
-        var anchorWindow = ToWindowPoint(anchor, page.Height, s, overlay, window);
-        var focusWindow = ToWindowPoint(focus, page.Height, s, overlay, window);
+        var anchorWindow = ToWindowPoint(anchor, page, overlay, window);
+        var focusWindow = ToWindowPoint(focus, page, overlay, window);
         _out.WriteLine($"anchor='{anchor.Value}' window={anchorWindow}, focus='{focus.Value}' window={focusWindow}");
 
         // Subscribe to TextSelected at the viewer to capture exactly what
@@ -219,9 +218,8 @@ public class TextSelectionDragTests
             "must be at non-default zoom to exercise post-zoom coord conversion");
 
         var overlay = FindNamedDescendant<Canvas>(viewer, "OverlayCanvas")!;
-        const double s = RenderDpi / 72.0;
-        var anchorWindow = ToWindowPoint(anchor, page.Height, s, overlay, window);
-        var focusWindow = ToWindowPoint(focus, page.Height, s, overlay, window);
+        var anchorWindow = ToWindowPoint(anchor, page, overlay, window);
+        var focusWindow = ToWindowPoint(focus, page, overlay, window);
         _out.WriteLine($"@{viewer.ZoomLevel:F2}x: anchor='{anchor.Value}' window={anchorWindow}, focus='{focus.Value}' window={focusWindow}");
 
         string? viewerReportedText = null;
@@ -293,9 +291,8 @@ public class TextSelectionDragTests
 
         var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
         var overlay = FindNamedDescendant<Canvas>(viewer!, "OverlayCanvas")!;
-        const double s = RenderDpi / 72.0;
-        var anchorWindow = ToWindowPoint(anchor, page.Height, s, overlay, window);
-        var focusWindow = ToWindowPoint(focus, page.Height, s, overlay, window);
+        var anchorWindow = ToWindowPoint(anchor, page, overlay, window);
+        var focusWindow = ToWindowPoint(focus, page, overlay, window);
 
         string? viewerReportedText = null;
         viewer!.TextSelected += (_, e) => viewerReportedText = e.Text;
@@ -360,8 +357,7 @@ public class TextSelectionDragTests
 
         var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
         var overlay = FindNamedDescendant<Canvas>(viewer!, "OverlayCanvas")!;
-        const double s = RenderDpi / 72.0;
-        var hWindow = ToWindowPoint(hLetter, page.Height, s, overlay, window);
+        var hWindow = ToWindowPoint(hLetter, page, overlay, window);
 
         string? viewerReportedText = null;
         viewer!.TextSelected += (_, e) => viewerReportedText = e.Text;
@@ -432,9 +428,8 @@ public class TextSelectionDragTests
 
         var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
         var overlay = FindNamedDescendant<Canvas>(viewer!, "OverlayCanvas")!;
-        const double s = RenderDpi / 72.0;
-        var startWindow = ToWindowPoint(firstLetter, page.Height, s, overlay, window);
-        var endWindow = ToWindowPoint(lastLetter, page.Height, s, overlay, window);
+        var startWindow = ToWindowPoint(firstLetter, page, overlay, window);
+        var endWindow = ToWindowPoint(lastLetter, page, overlay, window);
 
         string? viewerReportedText = null;
         viewer!.TextSelected += (_, e) => viewerReportedText = e.Text;
@@ -492,9 +487,8 @@ public class TextSelectionDragTests
 
         var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
         var overlay = FindNamedDescendant<Canvas>(viewer!, "OverlayCanvas")!;
-        const double s = RenderDpi / 72.0;
-        var startWindow = ToWindowPoint(anchor, page.Height, s, overlay, window);
-        var endWindow = ToWindowPoint(focus, page.Height, s, overlay, window);
+        var startWindow = ToWindowPoint(anchor, page, overlay, window);
+        var endWindow = ToWindowPoint(focus, page, overlay, window);
 
         await Dispatcher.UIThread.InvokeAsync(() =>
             window.MouseDown(startWindow, MouseButton.Left));
@@ -566,9 +560,8 @@ public class TextSelectionDragTests
 
         var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
         var overlay = FindNamedDescendant<Canvas>(viewer!, "OverlayCanvas")!;
-        const double s = RenderDpi / 72.0;
-        var startWindow = ToWindowPoint(ordered[startIdx], page.Height, s, overlay, window);
-        var endWindow = ToWindowPoint(ordered[startIdx + targetPhrase.Length - 1], page.Height, s, overlay, window);
+        var startWindow = ToWindowPoint(ordered[startIdx], page, overlay, window);
+        var endWindow = ToWindowPoint(ordered[startIdx + targetPhrase.Length - 1], page, overlay, window);
 
         await Dispatcher.UIThread.InvokeAsync(() =>
             window.MouseDown(startWindow, MouseButton.Left));
@@ -616,12 +609,20 @@ public class TextSelectionDragTests
     private static double GlyphCenterY(Letter l)
         => (l.GlyphRectangle.Bottom + l.GlyphRectangle.Top) * 0.5;
 
-    private static Point ToWindowPoint(Letter l, double pageHeight, double s, Canvas overlay, Window window)
+    private static Point ToWindowPoint(Letter l, PdfPage page, Canvas overlay, Window window)
     {
         var r = l.GlyphRectangle;
-        var dipX = (r.Left + r.Right) * 0.5 * s;
-        var dipY = (pageHeight - (r.Top + r.Bottom) * 0.5) * s;
-        return overlay.TranslatePoint(new Point(dipX, dipY), window) ?? default;
+        var center = PdfCoordinateMapper.ToViewerDips(
+            page,
+            PdfPageRect.FromContentPoints(
+                page.PageNumber,
+                new PdfRectangle(
+                    (r.Left + r.Right) * 0.5,
+                    (r.Bottom + r.Top) * 0.5,
+                    (r.Left + r.Right) * 0.5,
+                    (r.Bottom + r.Top) * 0.5)),
+            RenderDpi);
+        return overlay.TranslatePoint(new Point(center.X, center.Y), window) ?? default;
     }
 
     private static T? FindNamedDescendant<T>(Control root, string name) where T : Control

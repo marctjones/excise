@@ -11,11 +11,20 @@ namespace Pdfe.Avalonia.Controls;
 public class RedactionDrawnEventArgs : EventArgs
 {
     public Rect Area { get; }
+    public int RenderDpi { get; }
+    public PdfPageRect PageArea { get; }
 
-    public RedactionDrawnEventArgs(Rect area)
+    public RedactionDrawnEventArgs(PdfPageRect pageArea)
     {
-        Area = area;
+        PageArea = pageArea;
+        Area = new Rect(pageArea.X, pageArea.Y, pageArea.Width, pageArea.Height);
+        RenderDpi = (int)Math.Round(pageArea.Dpi);
     }
+
+    public RedactionDrawnEventArgs(Rect area, int renderDpi)
+        : this(PdfPageRect.ViewerDips(1, area.X, area.Y, area.Width, area.Height, renderDpi)) { }
+
+    public RedactionDrawnEventArgs(Rect area) : this(area, 150) { }
 }
 
 /// <summary>

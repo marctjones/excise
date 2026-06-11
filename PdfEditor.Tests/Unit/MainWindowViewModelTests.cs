@@ -448,12 +448,37 @@ public class MainWindowViewModelTests
         var testRect = new Rect(10, 20, 100, 50);
 
         // Act
-        var field = typeof(MainWindowViewModel).GetField("_currentRedactionArea",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        field?.SetValue(_viewModel, testRect);
+        _viewModel.CurrentRedactionArea = testRect;
 
         // Assert
         _viewModel.CurrentRedactionArea.Should().Be(testRect);
+        _viewModel.CurrentRedactionPageArea.Should().NotBeNull();
+        _viewModel.CurrentRedactionPageArea!.Value.Space.Should().Be(PdfCoordinateSpace.ViewerDips);
+        _viewModel.CurrentRedactionPageArea.Value.PageNumber.Should().Be(1);
+        _viewModel.CurrentRedactionPageArea.Value.Dpi.Should().Be(120);
+    }
+
+    [Fact]
+    public void CurrentRedactionPageArea_BackfillsLegacyRedactionArea()
+    {
+        var pageArea = PdfPageRect.ViewerDips(1, 12, 24, 120, 48, 120);
+
+        _viewModel.CurrentRedactionPageArea = pageArea;
+
+        _viewModel.CurrentRedactionArea.Should().Be(new Rect(12, 24, 120, 48));
+        _viewModel.CurrentRedactionRenderDpi.Should().Be(120);
+    }
+
+    [Fact]
+    public void CurrentRedactionRenderDpi_UpdatesTaggedViewerAreaScale()
+    {
+        _viewModel.CurrentRedactionArea = new Rect(10, 20, 100, 50);
+
+        _viewModel.CurrentRedactionRenderDpi = 144;
+
+        _viewModel.CurrentRedactionPageArea.Should().NotBeNull();
+        _viewModel.CurrentRedactionPageArea!.Value.Space.Should().Be(PdfCoordinateSpace.ViewerDips);
+        _viewModel.CurrentRedactionPageArea.Value.Dpi.Should().Be(144);
     }
 
     [Fact]

@@ -148,12 +148,10 @@ public class MouseInputTests
         viewer.Should().NotBeNull();
 
         var page = vm.PdfCoreDocument!.GetPage(linkPage);
-        const double s = RenderDpi / 72.0;
-        var dipX = targetLink.Rect.Left * s + (targetLink.Rect.Right - targetLink.Rect.Left) * s * 0.5;
-        var dipY = (page.Height - (targetLink.Rect.Top + targetLink.Rect.Bottom) / 2.0) * s;
-
         var interaction = FindNamedDescendant<Canvas>(viewer!, "InteractionLayer");
-        var pointInWindow = interaction?.TranslatePoint(new Point(dipX, dipY), window) ?? default;
+        var pointInWindow = interaction is null
+            ? default
+            : ToWindowPoint(targetLink.Rect, page, interaction, window);
 
         bool linkFired = false;
         viewer!.LinkClicked += (_, args) => { linkFired = true; };
@@ -286,10 +284,8 @@ public class MouseInputTests
 
         var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
         var overlay = FindNamedDescendant<Canvas>(viewer!, "OverlayCanvas")!;
-        const double s = RenderDpi / 72.0;
-
-        var anchorWindow = ToWindowPoint(anchor, page.Height, s, overlay, window);
-        var focusWindow = ToWindowPoint(focus, page.Height, s, overlay, window);
+        var anchorWindow = ToWindowPoint(anchor, page, overlay, window);
+        var focusWindow = ToWindowPoint(focus, page, overlay, window);
 
         string? selectedText = null;
         viewer!.TextSelected += (_, e) => { selectedText = e.Text; };
@@ -394,11 +390,9 @@ public class MouseInputTests
 
         var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
         var overlay = FindNamedDescendant<Canvas>(viewer!, "OverlayCanvas")!;
-        const double s = RenderDpi / 72.0;
-
-        var anchorWindow = ToWindowPoint(anchor, page.Height, s, overlay, window);
-        var midWindow = ToWindowPoint(mid, page.Height, s, overlay, window);
-        var focusWindow = ToWindowPoint(focus, page.Height, s, overlay, window);
+        var anchorWindow = ToWindowPoint(anchor, page, overlay, window);
+        var midWindow = ToWindowPoint(mid, page, overlay, window);
+        var focusWindow = ToWindowPoint(focus, page, overlay, window);
 
         var selectedTexts = new List<string>();
         viewer!.TextSelected += (_, e) =>
@@ -466,8 +460,7 @@ public class MouseInputTests
 
         var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
         var overlay = FindNamedDescendant<Canvas>(viewer!, "OverlayCanvas")!;
-        const double s = RenderDpi / 72.0;
-        var letterWindow = ToWindowPoint(singleLetter, page.Height, s, overlay, window);
+        var letterWindow = ToWindowPoint(singleLetter, page, overlay, window);
 
         string? selectedText = null;
         viewer!.TextSelected += (_, e) => { selectedText = e.Text; };
@@ -518,8 +511,7 @@ public class MouseInputTests
 
         var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
         var overlay = FindNamedDescendant<Canvas>(viewer!, "OverlayCanvas")!;
-        const double s = RenderDpi / 72.0;
-        var letterWindow = ToWindowPoint(clickLetter, page.Height, s, overlay, window);
+        var letterWindow = ToWindowPoint(clickLetter, page, overlay, window);
 
         string? selectedText = null;
         viewer!.TextSelected += (_, e) => { selectedText = e.Text; };
@@ -589,13 +581,10 @@ public class MouseInputTests
         var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
         viewer.Should().NotBeNull();
         var page = vm.PdfCoreDocument!.GetPage(linkPage);
-        const double s = RenderDpi / 72.0;
-
-        var dipX = targetLink.Rect.Left * s + (targetLink.Rect.Right - targetLink.Rect.Left) * s * 0.5;
-        var dipY = (page.Height - (targetLink.Rect.Top + targetLink.Rect.Bottom) / 2.0) * s;
-
         var interaction = FindNamedDescendant<Canvas>(viewer!, "InteractionLayer");
-        var hoverPoint = interaction?.TranslatePoint(new Point(dipX, dipY), window) ?? default;
+        var hoverPoint = interaction is null
+            ? default
+            : ToWindowPoint(targetLink.Rect, page, interaction, window);
 
         // Simulate hover (MouseMove without click).
         await Dispatcher.UIThread.InvokeAsync(() =>
@@ -672,9 +661,8 @@ public class MouseInputTests
         var expectedText = string.Concat(ordered.Take(5).Select(l => l.Value));
 
         var overlay = FindNamedDescendant<Canvas>(viewer!, "OverlayCanvas")!;
-        const double s = RenderDpi / 72.0;
-        var anchorWindow = ToWindowPoint(anchor, page.Height, s, overlay, window);
-        var focusWindow = ToWindowPoint(focus, page.Height, s, overlay, window);
+        var anchorWindow = ToWindowPoint(anchor, page, overlay, window);
+        var focusWindow = ToWindowPoint(focus, page, overlay, window);
 
         await Dispatcher.UIThread.InvokeAsync(() =>
             window.MouseDown(anchorWindow, MouseButton.Left));
@@ -699,12 +687,27 @@ public class MouseInputTests
 
     #region Helpers
 
-    private static Point ToWindowPoint(Letter l, double pageHeight, double s, Canvas overlay, Window window)
+    private static Point ToWindowPoint(Letter l, PdfPage page, Canvas overlay, Window window)
     {
         var r = l.GlyphRectangle;
-        var dipX = (r.Left + r.Right) * 0.5 * s;
-        var dipY = (pageHeight - (r.Top + r.Bottom) * 0.5) * s;
-        return overlay.TranslatePoint(new Point(dipX, dipY), window) ?? default;
+        return ToWindowPoint(
+            new PdfRectangle(
+                (r.Left + r.Right) * 0.5,
+                (r.Bottom + r.Top) * 0.5,
+                (r.Left + r.Right) * 0.5,
+                (r.Bottom + r.Top) * 0.5),
+            page,
+            overlay,
+            window);
+    }
+
+    private static Point ToWindowPoint(PdfRectangle contentRect, PdfPage page, Canvas overlay, Window window)
+    {
+        var viewerPoint = PdfCoordinateMapper.ToViewerDips(
+            page,
+            PdfPageRect.FromContentPoints(page.PageNumber, contentRect),
+            RenderDpi);
+        return overlay.TranslatePoint(new Point(viewerPoint.X, viewerPoint.Y), window) ?? default;
     }
 
     private static T? FindNamedDescendant<T>(Control root, string name) where T : Control

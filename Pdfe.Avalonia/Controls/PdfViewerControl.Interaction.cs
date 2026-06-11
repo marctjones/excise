@@ -115,10 +115,11 @@ public partial class PdfViewerControl
         {
             var endPoint = GetPressPoint(e);
             var rect = CreateRect(_dragStart, endPoint);
-            var adjustedRect = new Rect(
-                rect.X / ZoomLevel, rect.Y / ZoomLevel,
-                rect.Width / ZoomLevel, rect.Height / ZoomLevel);
-            RedactionDrawn?.Invoke(this, new RedactionDrawnEventArgs(adjustedRect));
+            // GetPressPoint returns coordinates in the rendered page's
+            // pre-zoom DIP/pixel space. Do not divide by ZoomLevel here;
+            // doing so shifts the selected area before redaction conversion.
+            // See issue #472.
+            RedactionDrawn?.Invoke(this, new RedactionDrawnEventArgs(ViewerDipsRect(rect, CurrentPage)));
             ClearTemporaryDrawings();
         }
         else if (InteractionMode == InteractionMode.FormAuthoring)
@@ -130,16 +131,10 @@ public partial class PdfViewerControl
             if (Document != null && dipRect.Width > 4 && dipRect.Height > 4)
             {
                 var page = Document.GetPage(CurrentPage);
-                double scale = AnnotationRenderDpi / 72.0;
-                double pdfLeft = dipRect.X / scale;
-                double pdfRight = (dipRect.X + dipRect.Width) / scale;
-                double pdfTop = page.Height - dipRect.Y / scale;
-                double pdfBottom = page.Height - (dipRect.Y + dipRect.Height) / scale;
-                var pdfRect = new PdfRectangle(
-                    Math.Min(pdfLeft, pdfRight),
-                    Math.Min(pdfBottom, pdfTop),
-                    Math.Max(pdfLeft, pdfRight),
-                    Math.Max(pdfBottom, pdfTop));
+                var pdfRect = PdfCoordinateMapper
+                    .ToContentPoints(page, ViewerDipsRect(dipRect, CurrentPage))
+                    .ToPdfRectangle()
+                    .Normalize();
                 FormFieldRectDrawn?.Invoke(this,
                     new FormFieldRectDrawnEventArgs(pdfRect, CurrentPage));
             }
@@ -244,8 +239,11 @@ public partial class PdfViewerControl
         if (_currentPageLinks == null || _currentPageLinks.Count == 0) return null;
         if (Document == null) return null;
         var page = Document.GetPage(CurrentPage);
-        var pdfX = dipPoint.X * 72.0 / TextSelectionRenderDpi;
-        var pdfY = page.Height - (dipPoint.Y * 72.0 / TextSelectionRenderDpi);
+        var contentPoint = PdfCoordinateMapper.ToContentPoints(
+            page,
+            PdfPageRect.ViewerDips(CurrentPage, dipPoint.X, dipPoint.Y, 0, 0, DefaultRenderDpi));
+        var pdfX = contentPoint.X;
+        var pdfY = contentPoint.Y;
         foreach (var link in _currentPageLinks)
         {
             var r = link.Rect;
@@ -261,12 +259,14 @@ public partial class PdfViewerControl
         if (_currentPageLetters == null || _currentPageLetters.Count == 0) return null;
         if (Document == null) return null;
         var page = Document.GetPage(CurrentPage);
-        // Pointer coords are in pre-zoom DIPs of the InteractionLayer
-        // (which sits inside the LayoutTransformControl wrapper, so the
-        // wrapper's zoom doesn't apply here — we get the natural DIPs of
-        // the rendered bitmap). Convert to PDF points and flip Y.
-        var pdfX = dipPoint.X * 72.0 / TextSelectionRenderDpi;
-        var pdfY = page.Height - (dipPoint.Y * 72.0 / TextSelectionRenderDpi);
+        // Pointer coords are in pre-zoom DIPs of the InteractionLayer.
+        // Route through the tagged mapper so scale, Y direction, and page
+        // rotation stay consistent with overlays and redaction.
+        var contentPoint = PdfCoordinateMapper.ToContentPoints(
+            page,
+            PdfPageRect.ViewerDips(CurrentPage, dipPoint.X, dipPoint.Y, 0, 0, DefaultRenderDpi));
+        var pdfX = contentPoint.X;
+        var pdfY = contentPoint.Y;
         return TextSelectionEngine.HitTest(_currentPageLetters, pdfX, pdfY);
     }
 
@@ -274,13 +274,7 @@ public partial class PdfViewerControl
     {
         if (Document == null) return default;
         var page = Document.GetPage(CurrentPage);
-        const double s = TextSelectionRenderDpi / 72.0;
-        // PDF Y-up → DIP Y-down: dipTop = (page.Height - pdfTop) * s.
-        var dipX = r.Left * s;
-        var dipY = (page.Height - r.Top) * s;
-        var dipW = (r.Right - r.Left) * s;
-        var dipH = (r.Top - r.Bottom) * s;
-        return new Rect(dipX, dipY, dipW, dipH);
+        return ToAvaloniaRect(ToViewerDips(PdfPageRect.FromContentPoints(page.PageNumber, r)));
     }
 
     private static Rect UnionRects(IReadOnlyList<Rect> rects)

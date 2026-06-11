@@ -60,8 +60,11 @@ public class RevealHiddenTextTests : IDisposable
         var h = vm.HiddenTextHighlights[0];
         h.Text.Should().Be("SECRET INFO 12345");
         h.HiddenBy.Should().Contain("filled rectangle");
-        h.ScreenBounds.Width.Should().BeGreaterThan(0);
-        h.ScreenBounds.Height.Should().BeGreaterThan(0);
+        h.Bounds.Space.Should().Be(PdfCoordinateSpace.ContentPoints,
+            "hidden-text detection reports PDF content bounds; the viewer converts to screen coordinates");
+        h.Bounds.UnitsPerPoint.Should().Be(1);
+        h.Bounds.Width.Should().BeGreaterThan(0);
+        h.Bounds.Height.Should().BeGreaterThan(0);
 
         // Severity classifier — structural, not OCR.
         h.Source.Should().Be(HiddenTextSource.Structural);

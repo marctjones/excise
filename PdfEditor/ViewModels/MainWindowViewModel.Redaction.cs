@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
+using Pdfe.Core.Document;
 using PdfEditor.Models;
 using PdfEditor.Services;
 using ReactiveUI;
@@ -28,7 +29,7 @@ public partial class MainWindowViewModel
         _logger.LogInformation(">>> MarkRedactionArea START. Area=({X:F2},{Y:F2},{W:F2}x{H:F2})",
             CurrentRedactionArea.X, CurrentRedactionArea.Y, CurrentRedactionArea.Width, CurrentRedactionArea.Height);
 
-        if (!IsRedactionMode || CurrentRedactionArea.Width <= 0 || CurrentRedactionArea.Height <= 0)
+        if (!IsRedactionMode || !TryGetCurrentRedactionPageArea(out var pageArea))
         {
             _logger.LogWarning("MarkRedactionArea returning early: IsRedactionMode={Mode}, Width={W}, Height={H}",
                 IsRedactionMode, CurrentRedactionArea.Width, CurrentRedactionArea.Height);
@@ -41,7 +42,9 @@ public partial class MainWindowViewModel
             try
             {
                 previewText = _textExtractionService.ExtractTextFromArea(
-                    _currentFilePath, CurrentPageIndex, CurrentRedactionArea);
+                    _currentFilePath,
+                    CurrentPageIndex,
+                    pageArea);
                 _logger.LogInformation("Preview text extracted: '{Text}'", previewText);
             }
             catch (Exception ex)
@@ -50,7 +53,7 @@ public partial class MainWindowViewModel
             }
         }
 
-        RedactionWorkflow.MarkArea(CurrentPageIndex + 1, CurrentRedactionArea, previewText);
+        RedactionWorkflow.MarkArea(pageArea, previewText);
         FileState.PendingRedactionsCount = RedactionWorkflow.PendingCount;
         this.RaisePropertyChanged(nameof(SaveButtonText));
         this.RaisePropertyChanged(nameof(StatusBarText));
@@ -58,7 +61,7 @@ public partial class MainWindowViewModel
         _logger.LogInformation("Redaction marked. Total pending: {Count}", RedactionWorkflow.PendingCount);
         _logger.LogInformation("DEBUG: RedactionWorkflow.PendingRedactions.Count = {Count}", RedactionWorkflow.PendingRedactions.Count);
 
-        CurrentRedactionArea = default;
+        CurrentRedactionPageArea = null;
     }
 
     /// <summary>
@@ -144,15 +147,7 @@ public partial class MainWindowViewModel
                 return;
             }
 
-            foreach (var pending in RedactionWorkflow.PendingRedactions.ToList())
-            {
-                _logger.LogInformation("Applying redaction on page {Page}", pending.PageNumber);
-
-                var pageIndex = pending.PageNumber - 1;
-                var page = document.Pages[pageIndex];
-                _redactionService.RedactArea(page, pending.Area, renderDpi: 150);
-            }
-
+            ApplyPendingAreaRedactions(document);
             ApplyPendingTypewriterText(document);
 
             _logger.LogInformation("Saving redacted PDF to: {Path}", saveFilePath);
@@ -193,20 +188,18 @@ public partial class MainWindowViewModel
         _logger.LogInformation(">>> ApplyRedactionAsync START. IsRedactionMode={Mode}, Area=({X:F2},{Y:F2},{W:F2}x{H:F2})",
             IsRedactionMode, CurrentRedactionArea.X, CurrentRedactionArea.Y, CurrentRedactionArea.Width, CurrentRedactionArea.Height);
 
-        if (IsRedactionMode && CurrentRedactionArea.Width > 0 && CurrentRedactionArea.Height > 0)
+        if (IsRedactionMode && TryGetCurrentRedactionPageArea(out _))
         {
             MarkRedactionArea();
             return;
         }
 
-        if (!IsRedactionMode || CurrentRedactionArea.Width <= 0 || CurrentRedactionArea.Height <= 0)
+        if (!IsRedactionMode || !TryGetCurrentRedactionPageArea(out var areaToRedact))
         {
             _logger.LogWarning("ApplyRedactionAsync returning early: IsRedactionMode={Mode}, Width={W}, Height={H}",
                 IsRedactionMode, CurrentRedactionArea.Width, CurrentRedactionArea.Height);
             return;
         }
-
-        var areaToRedact = CurrentRedactionArea;
 
         try
         {
@@ -223,7 +216,9 @@ public partial class MainWindowViewModel
                 try
                 {
                     redactedText = _textExtractionService.ExtractTextFromArea(
-                        _currentFilePath, CurrentPageIndex, areaToRedact);
+                        _currentFilePath,
+                        CurrentPageIndex,
+                        areaToRedact);
                     _logger.LogInformation("Text to be redacted: '{Text}'", redactedText);
                 }
                 catch (Exception textEx)
@@ -236,7 +231,7 @@ public partial class MainWindowViewModel
                 areaToRedact.X, areaToRedact.Y, areaToRedact.Width, areaToRedact.Height);
 
             var page = document.Pages[CurrentPageIndex];
-            _redactionService.RedactArea(page, areaToRedact, CoordinateConverter.DefaultRenderDpi);
+            _redactionService.RedactArea(page, areaToRedact);
             _hasInMemoryModifications = true;
 
             if (!string.IsNullOrWhiteSpace(redactedText))
@@ -304,8 +299,55 @@ public partial class MainWindowViewModel
         }
         finally
         {
-            CurrentRedactionArea = new Rect();
+            CurrentRedactionPageArea = null;
             _logger.LogInformation("<<< ApplyRedactionAsync END. Selection cleared, ready for next redaction.");
         }
+    }
+
+    private void ApplyPendingAreaRedactions(Pdfe.Core.Document.PdfDocument document)
+    {
+        foreach (var pending in RedactionWorkflow.PendingRedactions.ToList())
+        {
+            if (pending.PageNumber < 1 || pending.PageNumber > document.PageCount)
+            {
+                _logger.LogWarning(
+                    "Skipping pending redaction for invalid page {Page}. Document has {PageCount} pages.",
+                    pending.PageNumber,
+                    document.PageCount);
+                continue;
+            }
+
+            _logger.LogInformation(
+                "Applying redaction on page {Page} from {Space}",
+                pending.PageNumber,
+                pending.PageArea.Space);
+
+            var page = document.Pages[pending.PageNumber - 1];
+            _redactionService.RedactArea(page, pending.PageArea);
+        }
+    }
+
+    private bool TryGetCurrentRedactionPageArea(out PdfPageRect pageArea)
+    {
+        if (CurrentRedactionPageArea is { Width: > 0, Height: > 0 } current)
+        {
+            pageArea = current;
+            return true;
+        }
+
+        if (CurrentRedactionArea.Width <= 0 || CurrentRedactionArea.Height <= 0)
+        {
+            pageArea = default;
+            return false;
+        }
+
+        pageArea = PdfPageRect.ViewerDips(
+            CurrentPageIndex + 1,
+            CurrentRedactionArea.X,
+            CurrentRedactionArea.Y,
+            CurrentRedactionArea.Width,
+            CurrentRedactionArea.Height,
+            CurrentRedactionRenderDpi);
+        return true;
     }
 }

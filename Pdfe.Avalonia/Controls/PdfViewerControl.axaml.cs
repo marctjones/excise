@@ -262,10 +262,9 @@ public partial class PdfViewerControl : UserControl
     // Tracks the in-flight render so rapid paging cancels stale work.
     private CancellationTokenSource? _renderCts;
 
-    // Text-selection state. Cached letters are in PDF points (Y-up) for
-    // the page currently displayed; we look them up at the same DPI the
-    // viewer renders at to map screen-DIP pointer coords into PDF coords.
-    private const double TextSelectionRenderDpi = 120.0;
+    // Text-selection state. Cached letters are in PDF content points (Y-up)
+    // for the page currently displayed; hit-testing routes through
+    // PdfCoordinateMapper so the render scale and page rotation stay aligned.
     private int _lettersPageNumber = -1;
     private List<Letter>? _currentPageLetters; // raw glyph order
     private List<Letter>? _readingOrderedLetters; // for range slicing
@@ -417,6 +416,7 @@ public partial class PdfViewerControl : UserControl
 
         foreach (var h in highlights)
         {
+            var bounds = ToAvaloniaRect(ToViewerDips(h.Bounds));
             // Color code by source: yellow for structural (we have the
             // exact characters), orange for differential-OCR (recovered
             // from raster — confidence is OCR-typical, less certain).
@@ -430,14 +430,14 @@ public partial class PdfViewerControl : UserControl
 
             var bg = new Rectangle
             {
-                Width = Math.Max(h.ScreenBounds.Width, 8),
-                Height = Math.Max(h.ScreenBounds.Height, 8),
+                Width = Math.Max(bounds.Width, 8),
+                Height = Math.Max(bounds.Height, 8),
                 Fill = new SolidColorBrush(fill),
                 Stroke = new SolidColorBrush(stroke),
                 StrokeThickness = 2,
             };
-            Canvas.SetLeft(bg, h.ScreenBounds.X);
-            Canvas.SetTop(bg, h.ScreenBounds.Y);
+            Canvas.SetLeft(bg, bounds.X);
+            Canvas.SetTop(bg, bounds.Y);
             layer.Children.Add(bg);
 
             var label = new TextBlock
@@ -445,17 +445,41 @@ public partial class PdfViewerControl : UserControl
                 Text = h.Text,
                 Foreground = new SolidColorBrush(ink),
                 FontWeight = FontWeight.Bold,
-                FontSize = Math.Max(10, h.ScreenBounds.Height * 0.75),
+                FontSize = Math.Max(10, bounds.Height * 0.75),
                 TextWrapping = TextWrapping.NoWrap,
             };
-            Canvas.SetLeft(label, h.ScreenBounds.X + 2);
-            Canvas.SetTop(label, h.ScreenBounds.Y);
+            Canvas.SetLeft(label, bounds.X + 2);
+            Canvas.SetTop(label, bounds.Y);
             layer.Children.Add(label);
         }
     }
 
-    // DPI used for annotation-rect scaling (must match DefaultRenderDpi).
+    // DPI used for single-page viewer overlay scaling (must match DefaultRenderDpi).
     private const double AnnotationRenderDpi = DefaultRenderDpi;
+    private static double ViewerUnitsPerPoint => DefaultRenderDpi / PdfPageRect.PdfPointsPerInch;
+
+    private static Rect ToAvaloniaRect(PdfPageRect rect) =>
+        new(rect.X, rect.Y, rect.Width, rect.Height);
+
+    private PdfPageRect ToViewerDips(PdfPageRect rect)
+    {
+        if (rect.Space == PdfCoordinateSpace.ViewerDips &&
+            Math.Abs(rect.UnitsPerPoint - ViewerUnitsPerPoint) < 0.000001)
+        {
+            return rect;
+        }
+
+        if (Document == null || rect.PageNumber < 1 || rect.PageNumber > Document.PageCount)
+            return rect;
+
+        return PdfCoordinateMapper.ToViewerDips(Document.GetPage(rect.PageNumber), rect, DefaultRenderDpi);
+    }
+
+    private PdfPageRect ViewerDipsRect(Rect rect, int pageNumber) =>
+        PdfPageRect.ViewerDips(pageNumber, rect.X, rect.Y, rect.Width, rect.Height, DefaultRenderDpi);
+
+    private PdfPageRect ContentRect(PdfRectangle rect, int pageNumber) =>
+        PdfPageRect.FromPdfRectangle(pageNumber, rect, PdfCoordinateSpace.ContentPoints);
 
     private void RedrawAnnotationsLayer()
     {
@@ -466,19 +490,12 @@ public partial class PdfViewerControl : UserControl
         var annots = Annotations;
         if (annots == null || Document == null) return;
 
-        var page = Document.GetPage(CurrentPage);
-        double pageHeight = page.Height;
-        double scale = AnnotationRenderDpi / 72.0;
-
         foreach (var a in annots)
         {
             var (fillColor, strokeColor) = AnnotationColors(a);
-            var r = a.Rect;
-            // Y-flip: PDF bottom-left → DIP top-left
-            double dipX = r.Left  * scale;
-            double dipY = (pageHeight - r.Top) * scale;
-            double dipW = Math.Max((r.Right  - r.Left) * scale, 4);
-            double dipH = Math.Max((r.Top - r.Bottom)  * scale, 4);
+            var r = ToAvaloniaRect(ToViewerDips(ContentRect(a.Rect, CurrentPage)));
+            double dipW = Math.Max(r.Width, 4);
+            double dipH = Math.Max(r.Height, 4);
 
             var rect = new Rectangle
             {
@@ -488,8 +505,8 @@ public partial class PdfViewerControl : UserControl
                 Stroke = new SolidColorBrush(strokeColor),
                 StrokeThickness = 1.5,
             };
-            Canvas.SetLeft(rect, dipX);
-            Canvas.SetTop(rect, dipY);
+            Canvas.SetLeft(rect, r.X);
+            Canvas.SetTop(rect, r.Y);
             layer.Children.Add(rect);
         }
     }
@@ -503,10 +520,6 @@ public partial class PdfViewerControl : UserControl
         var fields = FormFields;
         if (fields == null || Document == null || fields.Count == 0) return;
 
-        var page = Document.GetPage(CurrentPage);
-        double pageHeight = page.Height;
-        double scale = AnnotationRenderDpi / 72.0;
-
         var orderedFields = fields
             .Where(field => field.Rect.HasValue)
             .OrderByDescending(field => field.Rect!.Value.Top)
@@ -519,11 +532,9 @@ public partial class PdfViewerControl : UserControl
             var field = orderedFields[tabIndex];
             if (field.Rect is not Pdfe.Core.Document.PdfRectangle r) continue;
 
-            // Y-flip: PDF bottom-left → DIP top-left
-            double dipX = r.Left * scale;
-            double dipY = (pageHeight - r.Top) * scale;
-            double dipW = Math.Max((r.Right - r.Left) * scale, 12);
-            double dipH = Math.Max((r.Top - r.Bottom) * scale, 12);
+            var viewerRect = ToAvaloniaRect(ToViewerDips(ContentRect(r, CurrentPage)));
+            double dipW = Math.Max(viewerRect.Width, 12);
+            double dipH = Math.Max(viewerRect.Height, 12);
 
             Control? input = field.FieldType switch
             {
@@ -537,8 +548,8 @@ public partial class PdfViewerControl : UserControl
             input.Width = dipW;
             input.Height = dipH;
             ApplyFormFieldChrome(input, field, tabIndex);
-            Canvas.SetLeft(input, dipX);
-            Canvas.SetTop(input, dipY);
+            Canvas.SetLeft(input, viewerRect.X);
+            Canvas.SetTop(input, viewerRect.Y);
             layer.Children.Add(input);
         }
     }
@@ -1155,24 +1166,32 @@ public partial class PdfViewerControl : UserControl
     /// <summary>
     /// Add a search highlight rectangle at the specified coordinates.
     /// </summary>
-    public void AddSearchHighlight(Rect area)
+    public void AddSearchHighlight(PdfPageRect area)
     {
         var searchLayer = this.FindControl<Canvas>("SearchHighlightsLayer");
         if (searchLayer == null) return;
 
+        var viewerArea = ToAvaloniaRect(ToViewerDips(area));
         var highlight = new Rectangle
         {
             Fill = new SolidColorBrush(Color.FromArgb(0x60, 0xFF, 0xFF, 0x00)), // Semi-transparent yellow
             Stroke = new SolidColorBrush(Color.FromArgb(0xFF, 0xFF, 0x98, 0x00)), // Orange border
             StrokeThickness = 1,
-            Width = area.Width,
-            Height = area.Height
+            Width = viewerArea.Width,
+            Height = viewerArea.Height
         };
 
-        Canvas.SetLeft(highlight, area.X);
-        Canvas.SetTop(highlight, area.Y);
+        Canvas.SetLeft(highlight, viewerArea.X);
+        Canvas.SetTop(highlight, viewerArea.Y);
         searchLayer.Children.Add(highlight);
     }
+
+    /// <summary>
+    /// Add a search highlight rectangle already expressed in viewer DIPs.
+    /// Prefer <see cref="AddSearchHighlight(PdfPageRect)"/> for new code.
+    /// </summary>
+    public void AddSearchHighlight(Rect area) =>
+        AddSearchHighlight(ViewerDipsRect(area, CurrentPage));
 
     /// <summary>
     /// Clear all search highlights.
@@ -1186,25 +1205,33 @@ public partial class PdfViewerControl : UserControl
     /// <summary>
     /// Add a pending redaction overlay at the specified coordinates.
     /// </summary>
-    public void AddPendingRedaction(Rect area)
+    public void AddPendingRedaction(PdfPageRect area)
     {
         var redactionLayer = this.FindControl<Canvas>("PendingRedactionsLayer");
         if (redactionLayer == null) return;
 
+        var viewerArea = ToAvaloniaRect(ToViewerDips(area));
         var rect = new Rectangle
         {
             Fill = Brushes.Transparent,
             Stroke = Brushes.Red,
             StrokeThickness = 2,
             StrokeDashArray = new AvaloniaList<double> { 5, 3 },
-            Width = area.Width,
-            Height = area.Height
+            Width = viewerArea.Width,
+            Height = viewerArea.Height
         };
 
-        Canvas.SetLeft(rect, area.X);
-        Canvas.SetTop(rect, area.Y);
+        Canvas.SetLeft(rect, viewerArea.X);
+        Canvas.SetTop(rect, viewerArea.Y);
         redactionLayer.Children.Add(rect);
     }
+
+    /// <summary>
+    /// Add a pending redaction overlay already expressed in viewer DIPs.
+    /// Prefer <see cref="AddPendingRedaction(PdfPageRect)"/> for new code.
+    /// </summary>
+    public void AddPendingRedaction(Rect area) =>
+        AddPendingRedaction(ViewerDipsRect(area, CurrentPage));
 
     /// <summary>
     /// Clear all pending redaction overlays.
@@ -1218,24 +1245,32 @@ public partial class PdfViewerControl : UserControl
     /// <summary>
     /// Add an applied redaction overlay (black rectangle) at the specified coordinates.
     /// </summary>
-    public void AddAppliedRedaction(Rect area)
+    public void AddAppliedRedaction(PdfPageRect area)
     {
         var appliedLayer = this.FindControl<Canvas>("AppliedRedactionsLayer");
         if (appliedLayer == null) return;
 
+        var viewerArea = ToAvaloniaRect(ToViewerDips(area));
         var rect = new Rectangle
         {
             Fill = Brushes.Black,
             Stroke = Brushes.Black,
             StrokeThickness = 1,
-            Width = area.Width,
-            Height = area.Height
+            Width = viewerArea.Width,
+            Height = viewerArea.Height
         };
 
-        Canvas.SetLeft(rect, area.X);
-        Canvas.SetTop(rect, area.Y);
+        Canvas.SetLeft(rect, viewerArea.X);
+        Canvas.SetTop(rect, viewerArea.Y);
         appliedLayer.Children.Add(rect);
     }
+
+    /// <summary>
+    /// Add an applied redaction overlay already expressed in viewer DIPs.
+    /// Prefer <see cref="AddAppliedRedaction(PdfPageRect)"/> for new code.
+    /// </summary>
+    public void AddAppliedRedaction(Rect area) =>
+        AddAppliedRedaction(ViewerDipsRect(area, CurrentPage));
 
     /// <summary>
     /// Clear all applied redaction overlays.

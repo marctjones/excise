@@ -15,9 +15,10 @@ namespace Pdfe.Avalonia.Controls
     }
     public sealed class HiddenTextHighlight : System.IEquatable<Pdfe.Avalonia.Controls.HiddenTextHighlight>
     {
-        public HiddenTextHighlight(string Text, Avalonia.Rect ScreenBounds, string HiddenBy, Pdfe.Avalonia.Controls.HiddenTextSource Source = 0) { }
+        public HiddenTextHighlight(string Text, Pdfe.Core.Document.PdfPageRect Bounds, string HiddenBy, Pdfe.Avalonia.Controls.HiddenTextSource Source = 0) { }
+        public Pdfe.Core.Document.PdfPageRect Bounds { get; init; }
         public string HiddenBy { get; init; }
-        public Avalonia.Rect ScreenBounds { get; init; }
+        public Avalonia.Rect ScreenBounds { get; }
         public Pdfe.Avalonia.Controls.HiddenTextSource Source { get; init; }
         public string Text { get; init; }
     }
@@ -99,8 +100,11 @@ namespace Pdfe.Avalonia.Controls
         public event System.EventHandler<Pdfe.Avalonia.Controls.TypewriterTextEditedEventArgs>? TypewriterTextEdited;
         public event System.EventHandler<Avalonia.Size>? VisibleViewportChanged;
         public void AddAppliedRedaction(Avalonia.Rect area) { }
+        public void AddAppliedRedaction(Pdfe.Core.Document.PdfPageRect area) { }
         public void AddPendingRedaction(Avalonia.Rect area) { }
+        public void AddPendingRedaction(Pdfe.Core.Document.PdfPageRect area) { }
         public void AddSearchHighlight(Avalonia.Rect area) { }
+        public void AddSearchHighlight(Pdfe.Core.Document.PdfPageRect area) { }
         public void ClearAllOverlays() { }
         public void ClearAppliedRedactions() { }
         public void ClearPendingRedactions() { }
@@ -119,7 +123,11 @@ namespace Pdfe.Avalonia.Controls
     public class RedactionDrawnEventArgs : System.EventArgs
     {
         public RedactionDrawnEventArgs(Avalonia.Rect area) { }
+        public RedactionDrawnEventArgs(Pdfe.Core.Document.PdfPageRect pageArea) { }
+        public RedactionDrawnEventArgs(Avalonia.Rect area, int renderDpi) { }
         public Avalonia.Rect Area { get; }
+        public Pdfe.Core.Document.PdfPageRect PageArea { get; }
+        public int RenderDpi { get; }
     }
     public class TextSelectedEventArgs : System.EventArgs
     {

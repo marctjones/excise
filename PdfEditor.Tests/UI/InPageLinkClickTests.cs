@@ -78,12 +78,19 @@ public class InPageLinkClickTests
         var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
         viewer.Should().NotBeNull();
 
-        // Convert the link's PDF-points rect to viewer DIPs (matches the
-        // PdfViewerControl's own conversion: 120 DPI bitmap, Y-flip).
+        // Convert the link's PDF-points rect to viewer DIPs through the same
+        // mapper used by PdfViewerControl hit testing.
         var page = vm.PdfCoreDocument!.GetPage(linkPage);
-        const double s = RenderDpi / 72.0;
-        var dipX = targetLink.Rect.Left * s + (targetLink.Rect.Right - targetLink.Rect.Left) * s * 0.5;
-        var dipY = (page.Height - (targetLink.Rect.Top + targetLink.Rect.Bottom) / 2.0) * s;
+        var center = PdfCoordinateMapper.ToViewerDips(
+            page,
+            PdfPageRect.FromContentPoints(
+                page.PageNumber,
+                new PdfRectangle(
+                    (targetLink.Rect.Left + targetLink.Rect.Right) * 0.5,
+                    (targetLink.Rect.Bottom + targetLink.Rect.Top) * 0.5,
+                    (targetLink.Rect.Left + targetLink.Rect.Right) * 0.5,
+                    (targetLink.Rect.Bottom + targetLink.Rect.Top) * 0.5)),
+            RenderDpi);
 
         // Find the InteractionLayer Canvas to translate to window coords.
         var interaction = FindNamedDescendant<Canvas>(viewer!, "InteractionLayer");
@@ -91,8 +98,8 @@ public class InPageLinkClickTests
         _out.WriteLine($"InteractionLayer Bounds={interaction!.Bounds} (zero size = no clicks)");
 
         // Sanity: hit-test the click point against the actual visual tree.
-        var pointInWindow = interaction.TranslatePoint(new Point(dipX, dipY), window) ?? default;
-        _out.WriteLine($"Click target dip=({dipX:F1},{dipY:F1}) → window=({pointInWindow.X:F1},{pointInWindow.Y:F1})");
+        var pointInWindow = interaction.TranslatePoint(new Point(center.X, center.Y), window) ?? default;
+        _out.WriteLine($"Click target dip=({center.X:F1},{center.Y:F1}) → window=({pointInWindow.X:F1},{pointInWindow.Y:F1})");
         var hit = window.InputHitTest(pointInWindow) as Control;
         _out.WriteLine($"Hit at click point: {hit?.GetType().Name} Name='{hit?.Name}'");
         // Walk up to see what would receive the click event.

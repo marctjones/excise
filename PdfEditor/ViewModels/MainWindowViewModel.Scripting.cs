@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Pdfe.Core.Document;
 using PdfEditor.Services;
 using ReactiveUI;
 using System;
@@ -182,9 +183,12 @@ public partial class MainWindowViewModel
         // These will be applied via TextRedactor.RedactText() API when ApplyRedactions is called
         _pendingTextRedactions.Add(text);
 
-        // Also add a placeholder to PendingRedactions for tracking/display purposes
-        // This uses a dummy area since we're using text-based redaction now
-        RedactionWorkflow.MarkArea(1, new Avalonia.Rect(0, 0, 1, 1), text);
+        // Also add a placeholder to PendingRedactions for tracking/display purposes.
+        // This is a dummy content-space area because text redaction itself uses
+        // the file-based text pipeline, not a viewer-coordinate rectangle.
+        RedactionWorkflow.MarkArea(
+            PdfPageRect.FromContentPoints(1, new PdfRectangle(0, 0, 1, 1)),
+            text);
 
         FileState.PendingRedactionsCount = RedactionWorkflow.PendingCount;
         this.RaisePropertyChanged(nameof(SaveButtonText));
@@ -219,19 +223,34 @@ public partial class MainWindowViewModel
             return;
         }
 
-        // Issue #190 FIX: For scripting, we use file-based TextRedactor API
-        // This bypasses coordinate conversion issues entirely
-        // The actual redaction happens in SaveDocumentViaScriptAsync
+        if (_pendingTextRedactions.Count == 0)
+        {
+            var document = _documentService.GetCurrentDocument()
+                ?? throw new InvalidOperationException("Document is null");
+            ApplyPendingAreaRedactions(document);
+
+            RedactionWorkflow.MoveToApplied();
+            FileState.PendingRedactionsCount = 0;
+            _hasInMemoryModifications = true;
+            this.RaisePropertyChanged(nameof(SaveButtonText));
+            this.RaisePropertyChanged(nameof(StatusBarText));
+
+            _logger.LogInformation("[SCRIPT] ApplyRedactionsCommand completed - coordinate redactions applied in memory");
+            await Task.CompletedTask;
+            return;
+        }
+
+        // Issue #190 FIX: Text redactions use file-based TextRedactor API.
+        // The actual text redaction happens in SaveDocumentViaScriptAsync.
         _logger.LogInformation("[SCRIPT] ApplyRedactionsCommand: {Count} text redactions queued, will be applied on save",
             _pendingTextRedactions.Count);
 
-        // Mark as applied for tracking
         RedactionWorkflow.MoveToApplied();
         FileState.PendingRedactionsCount = 0;
         this.RaisePropertyChanged(nameof(SaveButtonText));
         this.RaisePropertyChanged(nameof(StatusBarText));
 
-        _logger.LogInformation("[SCRIPT] ApplyRedactionsCommand completed - redactions will be applied on save");
+        _logger.LogInformation("[SCRIPT] ApplyRedactionsCommand completed - text redactions will be applied on save");
 
         await Task.CompletedTask;
     }
@@ -316,6 +335,14 @@ public partial class MainWindowViewModel
                 {
                     _logger.LogError("[SCRIPT] SaveDocumentCommand: Document is null");
                     throw new InvalidOperationException("Document is null");
+                }
+
+                if (RedactionWorkflow.PendingCount > 0)
+                {
+                    ApplyPendingAreaRedactions(document);
+                    RedactionWorkflow.MoveToApplied();
+                    FileState.PendingRedactionsCount = 0;
+                    _hasInMemoryModifications = true;
                 }
 
                 _logger.LogInformation("[SCRIPT] Saving PDF to: {Path}", filePath);

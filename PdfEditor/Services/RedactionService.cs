@@ -53,35 +53,19 @@ public class RedactionService
     public void ClearRedactedTerms() => _redactedTerms.Clear();
 
     /// <summary>
-    /// Redact a rectangular area on <paramref name="page"/>. Coordinates
-    /// are rendered-image pixels with top-left origin (Avalonia convention);
-    /// we convert to PDF points (bottom-left) for the Pdfe.Core call.
+    /// Redact a rectangular area on <paramref name="page"/>.
     /// </summary>
-    public void RedactArea(PdfPage page, Rect area, int renderDpi = CoordinateConverter.PdfPointsPerInch)
+    public void RedactArea(PdfPage page, PdfPageRect area)
     {
-        // Image-pixels (top-left) → PDF points (top-left).
-        var scaledArea = CoordinateConverter.ImageSelectionToPdfPointsTopLeft(area, renderDpi);
-
-        var rotation = page.Rotation;
-        var (effectiveWidth, effectiveHeight) =
-            CoordinateConverter.GetRotatedPageDimensions(page.Width, page.Height, rotation);
-        if (!CoordinateConverter.IsValidForPage(scaledArea, effectiveWidth, effectiveHeight))
+        var visualArea = PdfCoordinateMapper.ToVisualPoints(page, area);
+        if (!IntersectsVisualPage(visualArea, page.VisualWidth, page.VisualHeight))
         {
             _logger.LogWarning(
                 "Selection area may be outside page bounds. Page: ({W}x{H}), Selection: ({X},{Y},{SW}x{SH})",
-                page.Width, page.Height, scaledArea.X, scaledArea.Y, scaledArea.Width, scaledArea.Height);
+                page.VisualWidth, page.VisualHeight, visualArea.X, visualArea.Y, visualArea.Width, visualArea.Height);
         }
 
-        // Visual PDF points (top-left origin, rotated dimensions) → content-stream
-        // space (bottom-left origin), accounting for the page /Rotate. PdfPage owns
-        // this mapping (#356); a manual Y-flip here is only correct at 0° rotation
-        // and silently redacts the wrong region on rotated pages.
-        var visualRect = new PdfRectangle(
-            scaledArea.X,
-            scaledArea.Y,
-            scaledArea.X + scaledArea.Width,
-            scaledArea.Y + scaledArea.Height);
-        var coreRect = page.ToContentStreamCoordinates(visualRect);
+        var coreRect = PdfCoordinateMapper.ToContentPoints(page, area).ToPdfRectangle().Normalize();
 
         // Snapshot the words about to be removed — after RedactArea
         // rewrites the content stream, extraction reports zero.
@@ -102,11 +86,41 @@ public class RedactionService
         _logger.LogInformation("Redacted {Count} characters on page", removed.Count);
     }
 
+    /// <summary>
+    /// Redact a rectangular area expressed in rendered-page pixels/DIPs.
+    /// Prefer <see cref="RedactArea(PdfPage, PdfPageRect)"/> for new code.
+    /// </summary>
+    public void RedactArea(PdfPage page, Rect area, int renderDpi = 72)
+    {
+        RedactArea(
+            page,
+            PdfPageRect.ViewerDips(page.PageNumber, area.X, area.Y, area.Width, area.Height, renderDpi));
+    }
+
     /// <summary>Redact multiple rectangles on the same page.</summary>
+    public void RedactAreas(PdfPage page, IEnumerable<PdfPageRect> areas)
+    {
+        foreach (var area in areas)
+            RedactArea(page, area);
+    }
+
+    /// <summary>Redact multiple rendered-page rectangles on the same page.</summary>
     public void RedactAreas(PdfPage page, IEnumerable<Rect> areas, int renderDpi = 150)
     {
         foreach (var area in areas)
             RedactArea(page, area, renderDpi);
+    }
+
+    private static bool IntersectsVisualPage(PdfPageRect visualArea, double visualPageWidth, double visualPageHeight)
+    {
+        const double tolerance = 50;
+        return visualArea.Space == PdfCoordinateSpace.VisualPoints &&
+               visualArea.Width > 0 &&
+               visualArea.Height > 0 &&
+               visualArea.X >= -tolerance &&
+               visualArea.Y >= -tolerance &&
+               visualArea.Right <= visualPageWidth + tolerance &&
+               visualArea.Y2 <= visualPageHeight + tolerance;
     }
 
     /// <summary>
@@ -148,6 +162,24 @@ public class RedactionService
 
         foreach (var area in areas)
             RedactArea(page, area, renderDpi);
+
+        if (options.RemoveAllMetadata)
+            StripAllMetadata(document);
+        else if (options.SanitizeMetadata)
+            SanitizeMetadata(document, _redactedTerms);
+    }
+
+    /// <summary>
+    /// Full workflow: redact multiple typed areas on <paramref name="page"/>,
+    /// optionally sanitize/strip metadata on <paramref name="document"/>.
+    /// </summary>
+    public void RedactWithOptions(PdfDocument document, PdfPage page, IEnumerable<PdfPageRect> areas,
+        RedactionOptions options)
+    {
+        ClearRedactedTerms();
+
+        foreach (var area in areas)
+            RedactArea(page, area);
 
         if (options.RemoveAllMetadata)
             StripAllMetadata(document);

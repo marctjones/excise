@@ -410,6 +410,20 @@ namespace Pdfe.Core.Document
         Watermark = 22,
         Redact = 23,
     }
+    public static class PdfCoordinateMapper
+    {
+        public static Pdfe.Core.Document.PdfPageRect ToContentPoints(Pdfe.Core.Document.PdfPage page, Pdfe.Core.Document.PdfPageRect rect) { }
+        public static Pdfe.Core.Document.PdfPageRect ToContinuousDips(Pdfe.Core.Document.PdfPage page, Pdfe.Core.Document.PdfPageRect rect, double unitsPerPoint) { }
+        public static Pdfe.Core.Document.PdfPageRect ToViewerDips(Pdfe.Core.Document.PdfPage page, Pdfe.Core.Document.PdfPageRect rect, double renderDpi) { }
+        public static Pdfe.Core.Document.PdfPageRect ToVisualPoints(Pdfe.Core.Document.PdfPage page, Pdfe.Core.Document.PdfPageRect rect) { }
+    }
+    public enum PdfCoordinateSpace
+    {
+        ContentPoints = 0,
+        VisualPoints = 1,
+        ViewerDips = 2,
+        ContinuousDips = 3,
+    }
     public class PdfDocument : System.IDisposable
     {
         public string? Author { get; }
@@ -616,6 +630,28 @@ namespace Pdfe.Core.Document
         UppercaseLetters = 3,
         LowercaseLetters = 4,
         None = 5,
+    }
+    public readonly struct PdfPageRect : System.IEquatable<Pdfe.Core.Document.PdfPageRect>
+    {
+        public const double PdfPointsPerInch = 72D;
+        public PdfPageRect(int pageNumber, double x, double y, double width, double height, Pdfe.Core.Document.PdfCoordinateSpace space, double unitsPerPoint = 1) { }
+        public double Dpi { get; }
+        public double Height { get; }
+        public int PageNumber { get; }
+        public double Right { get; }
+        public Pdfe.Core.Document.PdfCoordinateSpace Space { get; }
+        public double UnitsPerPoint { get; }
+        public double Width { get; }
+        public double X { get; }
+        public double Y { get; }
+        public double Y2 { get; }
+        public Pdfe.Core.Document.PdfRectangle ToPdfRectangle() { }
+        public override string ToString() { }
+        public Pdfe.Core.Document.PdfPageRect WithSpace(Pdfe.Core.Document.PdfCoordinateSpace space, double unitsPerPoint = 1) { }
+        public static Pdfe.Core.Document.PdfPageRect FromContentPoints(int pageNumber, Pdfe.Core.Document.PdfRectangle rect) { }
+        public static Pdfe.Core.Document.PdfPageRect FromPdfRectangle(int pageNumber, Pdfe.Core.Document.PdfRectangle rect, Pdfe.Core.Document.PdfCoordinateSpace space, double unitsPerPoint = 1) { }
+        public static Pdfe.Core.Document.PdfPageRect ViewerDips(int pageNumber, double x, double y, double width, double height, double renderDpi) { }
+        public static Pdfe.Core.Document.PdfPageRect VisualPoints(int pageNumber, double x, double y, double width, double height) { }
     }
     public readonly struct PdfPoint : System.IEquatable<Pdfe.Core.Document.PdfPoint>
     {

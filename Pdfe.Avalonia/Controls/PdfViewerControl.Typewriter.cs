@@ -91,7 +91,7 @@ public partial class PdfViewerControl
             BorderBrush = Brushes.Transparent,
             BorderThickness = new Thickness(0),
             Padding = new Thickness(4, 1, 4, 3),
-            FontSize = Math.Max(8, operation.Style.FontSize * AnnotationRenderDpi / 72.0),
+            FontSize = Math.Max(8, operation.Style.FontSize * ViewerUnitsPerPoint),
             Foreground = ToAvaloniaBrush(operation.Style.Color),
             TextAlignment = ToAvaloniaTextAlignment(operation.Style.Alignment),
             VerticalContentAlignment = VerticalAlignment.Top,
@@ -327,9 +327,8 @@ public partial class PdfViewerControl
         }
 
         var page = Document.GetPage(CurrentPage);
-        var scale = AnnotationRenderDpi / 72.0;
-        var pageWidth = page.Width * scale;
-        var pageHeight = page.Height * scale;
+        var pageWidth = page.VisualWidth * ViewerUnitsPerPoint;
+        var pageHeight = page.VisualHeight * ViewerUnitsPerPoint;
 
         var width = rect.Width < 4 ? DefaultTypewriterWidthDips : rect.Width;
         var height = rect.Height < 4 ? DefaultTypewriterHeightDips : rect.Height;
@@ -349,16 +348,10 @@ public partial class PdfViewerControl
             return new PdfRectangle(0, 0, 0, 0);
 
         var page = Document.GetPage(pageNumber);
-        var scale = AnnotationRenderDpi / 72.0;
-        var pdfLeft = dipRect.Left / scale;
-        var pdfRight = dipRect.Right / scale;
-        var pdfTop = page.Height - dipRect.Top / scale;
-        var pdfBottom = page.Height - dipRect.Bottom / scale;
-        return new PdfRectangle(
-            Math.Min(pdfLeft, pdfRight),
-            Math.Min(pdfBottom, pdfTop),
-            Math.Max(pdfLeft, pdfRight),
-            Math.Max(pdfBottom, pdfTop));
+        return PdfCoordinateMapper
+            .ToContentPoints(page, ViewerDipsRect(dipRect, pageNumber))
+            .ToPdfRectangle()
+            .Normalize();
     }
 
     private Rect PdfRectToViewerDips(PdfRectangle pdfRect, int pageNumber)
@@ -367,12 +360,11 @@ public partial class PdfViewerControl
             return default;
 
         var page = Document.GetPage(pageNumber);
-        var scale = AnnotationRenderDpi / 72.0;
-        var x = pdfRect.Left * scale;
-        var y = (page.Height - pdfRect.Top) * scale;
-        var width = (pdfRect.Right - pdfRect.Left) * scale;
-        var height = (pdfRect.Top - pdfRect.Bottom) * scale;
-        return NormalizeTypewriterDipRect(new Rect(x, y, width, height));
+        var viewerRect = PdfCoordinateMapper.ToViewerDips(
+            page,
+            PdfPageRect.FromContentPoints(pageNumber, pdfRect),
+            DefaultRenderDpi);
+        return NormalizeTypewriterDipRect(ToAvaloniaRect(viewerRect));
     }
 
     private static SolidColorBrush ToAvaloniaBrush(Pdfe.Core.Graphics.PdfColor color)

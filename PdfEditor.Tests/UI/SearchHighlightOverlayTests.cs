@@ -8,6 +8,7 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
 using AwesomeAssertions;
 using Pdfe.Avalonia.Controls;
+using Pdfe.Core.Document;
 using PdfEditor.ViewModels;
 using PdfEditor.Views;
 using Xunit;
@@ -89,8 +90,12 @@ public class SearchHighlightOverlayTests
         // bitmap area — pre-fix (DPI 150) the highlights were ~25%
         // outside the bitmap on the right.
         var page = vm.PdfCoreDocument!.GetPage(vm.CurrentPageIndex + 1);
-        var maxX = page.Width * 120.0 / 72.0;
-        var maxY = page.Height * 120.0 / 72.0;
+        var viewerPage = PdfCoordinateMapper.ToViewerDips(
+            page,
+            PdfPageRect.VisualPoints(page.PageNumber, 0, 0, page.VisualWidth, page.VisualHeight),
+            120);
+        var maxX = viewerPage.Width;
+        var maxY = viewerPage.Height;
         foreach (var r in rectangleChildren.Take(3))
         {
             double left = Canvas.GetLeft(r);

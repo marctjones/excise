@@ -1,4 +1,5 @@
 using Avalonia;
+using Pdfe.Core.Document;
 
 namespace Pdfe.Avalonia.Controls;
 
@@ -17,12 +18,19 @@ public enum HiddenTextSource
 
 /// <summary>
 /// One piece of text found on the current page that is present in the
-/// PDF content stream but visually hidden by an overlay. Coordinates
-/// are in rendered-image pixels (top-left origin, Avalonia convention)
-/// — the control can drop them straight into an overlay canvas.
+/// PDF content stream but visually hidden by an overlay. Bounds carry their
+/// coordinate space so the viewer can convert them into its current overlay
+/// coordinate system.
 /// </summary>
 public sealed record HiddenTextHighlight(
     string Text,
-    Rect ScreenBounds,
+    PdfPageRect Bounds,
     string HiddenBy,
-    HiddenTextSource Source = HiddenTextSource.Structural);
+    HiddenTextSource Source = HiddenTextSource.Structural)
+{
+    /// <summary>
+    /// Legacy convenience for callers that still provide viewer-space bounds.
+    /// Prefer <see cref="Bounds"/> and <see cref="PdfCoordinateMapper"/>.
+    /// </summary>
+    public Rect ScreenBounds => new(Bounds.X, Bounds.Y, Bounds.Width, Bounds.Height);
+}
