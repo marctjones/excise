@@ -112,6 +112,60 @@ public class CommandBindingSweepTests
             "every command's CanExecute must respond without throwing");
     }
 
+    [FixedAvaloniaFact]
+    public void MacNativeMenuCommandItems_ResolveToNonNullCommands()
+    {
+        var vm = new MainWindowViewModel();
+        var menu = MacNativeMenuBuilder.Create(vm);
+        var commandLeaves = CollectNativeMenuLeaves(menu).ToList();
+
+        commandLeaves.Should().NotBeEmpty("the macOS native menu should expose command-backed leaf items");
+
+        var nullCommands = new List<string>();
+        var brokenCanExecute = new List<string>();
+        foreach (var item in commandLeaves)
+        {
+            if (item.Command == null)
+            {
+                nullCommands.Add(item.Header?.ToString() ?? "<null>");
+                continue;
+            }
+
+            try
+            {
+                _ = item.Command.CanExecute(item.CommandParameter);
+            }
+            catch (Exception ex)
+            {
+                brokenCanExecute.Add($"{item.Header}: CanExecute threw {ex.GetType().Name}: {ex.Message}");
+            }
+        }
+
+        nullCommands.Should().BeEmpty("native menu command leaves should bind to live ViewModel commands");
+        brokenCanExecute.Should().BeEmpty("native menu commands should answer CanExecute without throwing");
+
+        var headers = commandLeaves
+            .Select(item => item.Header?.ToString() ?? string.Empty)
+            .ToHashSet(StringComparer.Ordinal);
+
+        headers.Should().Contain(new[]
+        {
+            "Open...",
+            "Save As...",
+            "Find...",
+            "Add Pages...",
+            "Insert Pages Before Current...",
+            "Insert Pages After Current...",
+            "Extract Current Page...",
+            "Move Page Earlier",
+            "Move Page Later",
+            "Remove Current Page",
+            "Redaction Mode",
+            "Apply Redaction",
+            "Verify Digital Signatures..."
+        });
+    }
+
     /// <summary>
     /// Walk the logical tree (not visual — MenuItems in a not-yet-opened
     /// top-level Menu aren't realised in the visual tree) and yield each
@@ -135,6 +189,33 @@ public class CommandBindingSweepTests
             }
             foreach (var child in node.LogicalChildren)
                 stack.Push(child);
+        }
+    }
+
+    private static IEnumerable<NativeMenuItem> CollectNativeMenuLeaves(NativeMenu menu)
+    {
+        foreach (var itemBase in menu.Items)
+        {
+            if (itemBase is NativeMenuItemSeparator)
+                continue;
+
+            if (itemBase is not NativeMenuItem item)
+                continue;
+
+            if (item.Menu is { Items.Count: > 0 })
+            {
+                foreach (var child in CollectNativeMenuLeaves(item.Menu))
+                    yield return child;
+                continue;
+            }
+
+            if (item.Header?.ToString() is "No Recent Files" or "-")
+                continue;
+
+            if (item.Command == null && item.ToggleType != MenuItemToggleType.None)
+                continue;
+
+            yield return item;
         }
     }
 

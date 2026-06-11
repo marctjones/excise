@@ -145,17 +145,31 @@ public class ContentStreamParser
     /// </summary>
     private void ExecuteOperator(string name, List<PdfObject> operands, ContentOperator op)
     {
+        if (ExecuteGraphicsStateOperator(name, operands)) return;
+        if (ExecutePathConstructionOperator(name, operands)) return;
+        if (ExecutePathPaintingOperator(name, op)) return;
+        if (ExecuteTextObjectOperator(name)) return;
+        if (ExecuteTextStateOperator(name, operands)) return;
+        if (ExecuteTextPositioningOperator(name, operands)) return;
+        if (ExecuteTextShowingOperator(name, operands, op)) return;
+        if (ExecuteClippingOperator(name)) return;
+        if (ExecuteType3GlyphOperator(name, operands, op)) return;
+        if (ExecuteColorOperator(name, operands)) return;
+        ExecuteAcceptedNoOpOperator(name);
+    }
+
+    private bool ExecuteGraphicsStateOperator(string name, List<PdfObject> operands)
+    {
         switch (name)
         {
-            // Graphics state
             case "q":
                 _stateStack.Push(_state.Clone());
-                break;
+                return true;
 
             case "Q":
                 if (_stateStack.Count > 0)
                     _state = _stateStack.Pop();
-                break;
+                return true;
 
             case "cm":
                 if (operands.Count >= 6)
@@ -168,42 +182,42 @@ public class ContentStreamParser
                     var f = GetNumber(operands[5]);
                     _state.MultiplyCtm(a, b, c, d, e, f);
                 }
-                break;
+                return true;
 
-            // Line state operators (§8.4.3 table 57)
             case "w":
                 if (operands.Count >= 1)
                     _state.LineWidth = GetNumber(operands[0]);
-                break;
+                return true;
 
             case "J":
                 if (operands.Count >= 1)
                     _state.LineCap = (int)GetNumber(operands[0]);
-                break;
+                return true;
 
             case "j":
                 if (operands.Count >= 1)
                     _state.LineJoin = (int)GetNumber(operands[0]);
-                break;
+                return true;
 
             case "M":
                 if (operands.Count >= 1)
                     _state.MiterLimit = GetNumber(operands[0]);
-                break;
-
-            case "d":
-            case "ri":
-            case "i":
-                // Dash pattern, rendering intent, flatness — stored in operands, no bounds effect
-                break;
+                return true;
 
             case "gs":
-                // Apply named ExtGState dictionary
                 if (operands.Count >= 1 && operands[0] is PdfName gsName && _page != null)
                     ApplyExtGState(gsName.Value);
-                break;
+                return true;
 
-            // Path construction
+            default:
+                return false;
+        }
+    }
+
+    private bool ExecutePathConstructionOperator(string name, List<PdfObject> operands)
+    {
+        switch (name)
+        {
             case "m":
                 if (operands.Count >= 2)
                 {
@@ -211,7 +225,7 @@ public class ContentStreamParser
                     var y = GetNumber(operands[1]);
                     StartPath(x, y);
                 }
-                break;
+                return true;
 
             case "l":
                 if (operands.Count >= 2)
@@ -220,7 +234,7 @@ public class ContentStreamParser
                     var y = GetNumber(operands[1]);
                     ExtendPath(x, y);
                 }
-                break;
+                return true;
 
             case "c":
                 if (operands.Count >= 6)
@@ -229,23 +243,16 @@ public class ContentStreamParser
                     ExtendPath(GetNumber(operands[2]), GetNumber(operands[3]));
                     ExtendPath(GetNumber(operands[4]), GetNumber(operands[5]));
                 }
-                break;
+                return true;
 
             case "v":
-                if (operands.Count >= 4)
-                {
-                    ExtendPath(GetNumber(operands[0]), GetNumber(operands[1]));
-                    ExtendPath(GetNumber(operands[2]), GetNumber(operands[3]));
-                }
-                break;
-
             case "y":
                 if (operands.Count >= 4)
                 {
                     ExtendPath(GetNumber(operands[0]), GetNumber(operands[1]));
                     ExtendPath(GetNumber(operands[2]), GetNumber(operands[3]));
                 }
-                break;
+                return true;
 
             case "re":
                 if (operands.Count >= 4)
@@ -259,13 +266,20 @@ public class ContentStreamParser
                     ExtendPath(x + w, y + h);
                     ExtendPath(x, y + h);
                 }
-                break;
+                return true;
 
             case "h":
-                // Close path - no bounds change
-                break;
+                return true;
 
-            // Path painting - assign bounds to operator
+            default:
+                return false;
+        }
+    }
+
+    private bool ExecutePathPaintingOperator(string name, ContentOperator op)
+    {
+        switch (name)
+        {
             case "S":
             case "s":
             case "f":
@@ -276,29 +290,43 @@ public class ContentStreamParser
             case "b":
             case "b*":
                 if (_pathStarted)
-                {
                     op.BoundingBox = TransformBounds(_pathMinX, _pathMinY, _pathMaxX, _pathMaxY);
-                }
-                _state.PendingClip = null; // §8.5.4: clip applied at painting op, then consumed
+
+                _state.PendingClip = null;
                 EndPath();
-                break;
+                return true;
 
             case "n":
                 _state.PendingClip = null;
                 EndPath();
-                break;
+                return true;
 
-            // Text object
+            default:
+                return false;
+        }
+    }
+
+    private bool ExecuteTextObjectOperator(string name)
+    {
+        switch (name)
+        {
             case "BT":
                 _tm_a = 1; _tm_b = 0; _tm_c = 0; _tm_d = 1; _tm_e = 0; _tm_f = 0;
                 _tlm_e = 0; _tlm_f = 0;
-                break;
+                return true;
 
             case "ET":
-                // Text block ended - no state to reset
-                break;
+                return true;
 
-            // Text state
+            default:
+                return false;
+        }
+    }
+
+    private bool ExecuteTextStateOperator(string name, List<PdfObject> operands)
+    {
+        switch (name)
+        {
             case "Tf":
                 if (operands.Count >= 2)
                 {
@@ -306,63 +334,54 @@ public class ContentStreamParser
                     _fontSize = GetNumber(operands[1]);
                     LoadFont();
                 }
-                break;
+                return true;
 
             case "TL":
                 if (operands.Count >= 1)
                     _textLeading = GetNumber(operands[0]);
-                break;
+                return true;
 
             case "Tc":
                 if (operands.Count >= 1)
                     _charSpacing = GetNumber(operands[0]);
-                break;
+                return true;
 
             case "Tw":
                 if (operands.Count >= 1)
                     _wordSpacing = GetNumber(operands[0]);
-                break;
+                return true;
 
             case "Tz":
                 if (operands.Count >= 1)
                     _horizontalScaling = GetNumber(operands[0]);
-                break;
+                return true;
 
             case "Tr":
                 if (operands.Count >= 1)
                     _textRenderMode = (int)GetNumber(operands[0]);
-                break;
+                return true;
 
             case "Ts":
                 if (operands.Count >= 1)
                     _textRise = GetNumber(operands[0]);
-                break;
+                return true;
 
-            // Text positioning
+            default:
+                return false;
+        }
+    }
+
+    private bool ExecuteTextPositioningOperator(string name, List<PdfObject> operands)
+    {
+        switch (name)
+        {
             case "Td":
-                if (operands.Count >= 2)
-                {
-                    var tx = GetNumber(operands[0]);
-                    var ty = GetNumber(operands[1]);
-                    _tlm_e += tx;
-                    _tlm_f += ty;
-                    _tm_e = _tlm_e;
-                    _tm_f = _tlm_f;
-                }
-                break;
+                MoveTextPosition(operands, setLeading: false);
+                return true;
 
             case "TD":
-                if (operands.Count >= 2)
-                {
-                    var tx = GetNumber(operands[0]);
-                    var ty = GetNumber(operands[1]);
-                    _textLeading = -ty;
-                    _tlm_e += tx;
-                    _tlm_f += ty;
-                    _tm_e = _tlm_e;
-                    _tm_f = _tlm_f;
-                }
-                break;
+                MoveTextPosition(operands, setLeading: true);
+                return true;
 
             case "Tm":
                 if (operands.Count >= 6)
@@ -376,23 +395,25 @@ public class ContentStreamParser
                     _tlm_e = _tm_e;
                     _tlm_f = _tm_f;
                 }
-                break;
+                return true;
 
             case "T*":
-                _tlm_f -= _textLeading;
-                _tm_e = _tlm_e;
-                _tm_f = _tlm_f;
-                break;
+                MoveToNextTextLine();
+                return true;
 
-            // Text showing
+            default:
+                return false;
+        }
+    }
+
+    private bool ExecuteTextShowingOperator(string name, List<PdfObject> operands, ContentOperator op)
+    {
+        switch (name)
+        {
             case "Tj":
                 if (operands.Count >= 1)
-                {
-                    var (text, bounds) = ProcessTextString(operands[0]);
-                    op.TextContent = text;
-                    op.BoundingBox = bounds;
-                }
-                break;
+                    SetTextOperatorResult(operands[0], op);
+                return true;
 
             case "TJ":
                 if (operands.Count >= 1 && operands[0] is PdfArray arr)
@@ -401,59 +422,54 @@ public class ContentStreamParser
                     op.TextContent = text;
                     op.BoundingBox = bounds;
                 }
-                break;
+                return true;
 
             case "'":
-                _tlm_f -= _textLeading;
-                _tm_e = _tlm_e;
-                _tm_f = _tlm_f;
+                MoveToNextTextLine();
                 if (operands.Count >= 1)
-                {
-                    var (text, bounds) = ProcessTextString(operands[0]);
-                    op.TextContent = text;
-                    op.BoundingBox = bounds;
-                }
-                break;
+                    SetTextOperatorResult(operands[0], op);
+                return true;
 
             case "\"":
                 if (operands.Count >= 3)
                 {
                     _wordSpacing = GetNumber(operands[0]);
                     _charSpacing = GetNumber(operands[1]);
-                    _tlm_f -= _textLeading;
-                    _tm_e = _tlm_e;
-                    _tm_f = _tlm_f;
-                    var (text, bounds) = ProcessTextString(operands[2]);
-                    op.TextContent = text;
-                    op.BoundingBox = bounds;
+                    MoveToNextTextLine();
+                    SetTextOperatorResult(operands[2], op);
                 }
-                break;
+                return true;
 
-            // XObject
-            case "Do":
-                // XObject bounds depend on the object type and CTM
-                // For now, we don't calculate bounds for XObjects
-                break;
+            default:
+                return false;
+        }
+    }
 
-            // Clipping (§8.5.4) — applies to the current path, takes effect at the next painting op.
+    private bool ExecuteClippingOperator(string name)
+    {
+        switch (name)
+        {
             case "W":
                 _state.PendingClip = "W";
-                break;
+                return true;
+
             case "W*":
                 _state.PendingClip = "W*";
-                break;
+                return true;
 
-            // Shading (§8.7.4)
-            case "sh":
-                // No bounds tracked; the shading dictionary controls the painted region.
-                break;
+            default:
+                return false;
+        }
+    }
 
-            // Type 3 font glyph metrics (§9.6.5)
+    private bool ExecuteType3GlyphOperator(string name, List<PdfObject> operands, ContentOperator op)
+    {
+        switch (name)
+        {
             case "d0":
-                // Width-only: wx wy d0 (wy is always 0 per spec)
-                break;
+                return true;
+
             case "d1":
-                // Width + bounding box: wx wy llx lly urx ury d1
                 if (operands.Count >= 6)
                 {
                     op.BoundingBox = new PdfRectangle(
@@ -462,52 +478,99 @@ public class ContentStreamParser
                         GetNumber(operands[4]),
                         GetNumber(operands[5]));
                 }
-                break;
+                return true;
 
-            // Color space selection (§8.6.5)
+            default:
+                return false;
+        }
+    }
+
+    private bool ExecuteColorOperator(string name, List<PdfObject> operands)
+    {
+        switch (name)
+        {
             case "CS":
                 if (operands.Count >= 1 && operands[0] is PdfName csNameStroke)
                     _state.StrokeColorSpace = csNameStroke.Value;
-                break;
+                return true;
+
             case "cs":
                 if (operands.Count >= 1 && operands[0] is PdfName csNameFill)
                     _state.FillColorSpace = csNameFill.Value;
-                break;
+                return true;
 
-            // Color operators — track only nominal space for now; values are operand-only.
             case "G":
-                _state.StrokeColorSpace = "DeviceGray"; break;
+                _state.StrokeColorSpace = "DeviceGray";
+                return true;
+
             case "g":
-                _state.FillColorSpace = "DeviceGray"; break;
+                _state.FillColorSpace = "DeviceGray";
+                return true;
+
             case "RG":
-                _state.StrokeColorSpace = "DeviceRGB"; break;
+                _state.StrokeColorSpace = "DeviceRGB";
+                return true;
+
             case "rg":
-                _state.FillColorSpace = "DeviceRGB"; break;
+                _state.FillColorSpace = "DeviceRGB";
+                return true;
+
             case "K":
-                _state.StrokeColorSpace = "DeviceCMYK"; break;
+                _state.StrokeColorSpace = "DeviceCMYK";
+                return true;
+
             case "k":
-                _state.FillColorSpace = "DeviceCMYK"; break;
+                _state.FillColorSpace = "DeviceCMYK";
+                return true;
+
             case "SC":
             case "SCN":
             case "sc":
             case "scn":
-                // Operands carry the color values; no state change beyond what CS/cs already set.
-                break;
+                return true;
 
-            // Marked content (§14.6) — informational, no state effects on geometry.
-            case "MP":
-            case "DP":
-            case "BMC":
-            case "BDC":
-            case "EMC":
-                break;
-
-            // Compatibility operators (BX/EX) — accepted as no-ops so the
-            // parser consumes them without flagging them as unknown.
-            case "BX":
-            case "EX":
-                break;
+            default:
+                return false;
         }
+    }
+
+    private bool ExecuteAcceptedNoOpOperator(string name)
+    {
+        return name is
+            "d" or "ri" or "i" or
+            "Do" or "sh" or
+            "MP" or "DP" or "BMC" or "BDC" or "EMC" or
+            "BX" or "EX";
+    }
+
+    private void MoveTextPosition(List<PdfObject> operands, bool setLeading)
+    {
+        if (operands.Count < 2)
+            return;
+
+        var tx = GetNumber(operands[0]);
+        var ty = GetNumber(operands[1]);
+        if (setLeading)
+            _textLeading = -ty;
+
+        _tlm_e += tx;
+        _tlm_f += ty;
+        _tm_e = _tlm_e;
+        _tm_f = _tlm_f;
+    }
+
+    private void MoveToNextTextLine()
+    {
+        _tlm_f -= _textLeading;
+        _tm_e = _tlm_e;
+        _tm_f = _tlm_f;
+    }
+
+    private void SetTextOperatorResult(PdfObject textObject, ContentOperator op)
+    {
+        var (text, bounds) = ProcessTextString(textObject);
+        op.TextContent = text;
+        op.BoundingBox = bounds;
     }
 
     #region Text Processing
