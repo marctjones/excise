@@ -4,6 +4,37 @@ All notable changes to pdfe are documented here. Format roughly follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 semantic versioning.
 
+## [2.13.0] - 2026-06-10
+
+Architecture hardening checkpoint release. No intended PDF behavior changes.
+
+### Changed
+- **MainWindowViewModel workflow split (#449).** Command initialization,
+  form-authoring, hidden-text reveal, and redaction workflow code now live in
+  focused partial modules, reducing the size and review risk of the main desktop
+  view model while keeping the existing command and binding surface intact.
+- **Renderer component split (#450).** `SkiaRenderer` path rendering and
+  rendering state types were moved into focused renderer files without changing
+  the public rendering API.
+- **Viewer-control type split (#451).** `PdfViewerControl` event argument types
+  and view/interaction enums now live in a separate partial file, keeping the
+  control implementation more focused while preserving API compatibility.
+- **Edit-operation foundation (#452).** Added a small immutable
+  `PdfEditOperation` model for future typewriter, form, page-organization,
+  redaction, and annotation workflows without enabling new editing behavior yet.
+- **Dictionary optional-read helpers (#427).** `PdfDictionary` now exposes
+  explicit `TryGetString` and `TryGetArray` helpers, and the document writer uses
+  `TryGetArray` when preserving trailer `/ID` values.
+
+### Tests
+- Build remains warning-free.
+- Focused core public API/edit/dictionary tests passed: 87 passed.
+- Avalonia public API tests passed: 7 passed.
+- Focused desktop viewmodel/keyboard/redaction tests passed: 238 passed, 4
+  skipped.
+- Focused rendering/operator/differential tests passed: 222 passed, 2 skipped.
+- Full built test suite passed locally: 7011 passed, 53 skipped.
+
 ## [2.12.2] - 2026-06-10
 
 macOS integration checkpoint release. No PDF behavior changes.

@@ -355,6 +355,41 @@ public class PdfDictionaryTests
     }
 
     [Fact]
+    public void TryGetString_WithStringValue_ReturnsTrueAndValue()
+    {
+        var dict = new PdfDictionary();
+        dict["Title"] = new PdfString("Hello");
+
+        var result = dict.TryGetString("Title", out var value);
+
+        result.Should().BeTrue();
+        value.Should().Be("Hello");
+    }
+
+    [Fact]
+    public void TryGetString_WithMissingKey_ReturnsFalse()
+    {
+        var dict = new PdfDictionary();
+
+        var result = dict.TryGetString("Missing", out var value);
+
+        result.Should().BeFalse();
+        value.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void TryGetString_WithWrongType_ReturnsFalse()
+    {
+        var dict = new PdfDictionary();
+        dict["Title"] = new PdfName("NotAString");
+
+        var result = dict.TryGetString("Title", out var value);
+
+        result.Should().BeFalse();
+        value.Should().BeEmpty();
+    }
+
+    [Fact]
     public void GetName_WithNameValue_ReturnsNameString()
     {
         var dict = new PdfDictionary();
@@ -459,6 +494,42 @@ public class PdfDictionaryTests
         var result = dict.GetArrayOrNull("Missing");
 
         result.Should().BeNull();
+    }
+
+    [Fact]
+    public void TryGetArray_WithArrayValue_ReturnsTrueAndValue()
+    {
+        var dict = new PdfDictionary();
+        var array = new PdfArray(new PdfInteger(1), new PdfInteger(2));
+        dict["Values"] = array;
+
+        var result = dict.TryGetArray("Values", out var value);
+
+        result.Should().BeTrue();
+        value.Should().BeSameAs(array);
+    }
+
+    [Fact]
+    public void TryGetArray_WithMissingKey_ReturnsFalse()
+    {
+        var dict = new PdfDictionary();
+
+        var result = dict.TryGetArray("Missing", out var value);
+
+        result.Should().BeFalse();
+        value.Should().BeNull();
+    }
+
+    [Fact]
+    public void TryGetArray_WithWrongType_ReturnsFalse()
+    {
+        var dict = new PdfDictionary();
+        dict["Values"] = new PdfString("NotAnArray");
+
+        var result = dict.TryGetArray("Values", out var value);
+
+        result.Should().BeFalse();
+        value.Should().BeNull();
     }
 
     [Fact]

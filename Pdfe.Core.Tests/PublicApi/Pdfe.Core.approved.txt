@@ -649,6 +649,37 @@ namespace Pdfe.Core.Document
         public string SuggestedName { get; init; }
     }
 }
+namespace Pdfe.Core.Editing
+{
+    public sealed class PdfEditOperation : System.IEquatable<Pdfe.Core.Editing.PdfEditOperation>
+    {
+        public Pdfe.Core.Document.PdfRectangle Bounds { get; }
+        public bool CanFlatten { get; }
+        public string? Description { get; }
+        public System.Guid Id { get; }
+        public bool IsPending { get; }
+        public Pdfe.Core.Editing.PdfEditOperationKind Kind { get; }
+        public int PageNumber { get; }
+        public Pdfe.Core.Editing.PdfEditOperationStatus Status { get; }
+        public Pdfe.Core.Editing.PdfEditOperation WithStatus(Pdfe.Core.Editing.PdfEditOperationStatus status) { }
+        public static Pdfe.Core.Editing.PdfEditOperation Create(Pdfe.Core.Editing.PdfEditOperationKind kind, int pageNumber, Pdfe.Core.Document.PdfRectangle bounds, bool canFlatten = true, string? description = null) { }
+    }
+    public enum PdfEditOperationKind
+    {
+        Unknown = 0,
+        FormFill = 1,
+        TypewriterText = 2,
+        PageOrganization = 3,
+        Redaction = 4,
+        Annotation = 5,
+    }
+    public enum PdfEditOperationStatus
+    {
+        Pending = 0,
+        Applied = 1,
+        Discarded = 2,
+    }
+}
 namespace Pdfe.Core.Fonts
 {
     public static class CffSubsetter
@@ -1033,6 +1064,8 @@ namespace Pdfe.Core.Primitives
         public override string ToString() { }
         public T? TryGet<T>(string key)
             where T : Pdfe.Core.Primitives.PdfObject { }
+        public bool TryGetArray(string key, out Pdfe.Core.Primitives.PdfArray value) { }
+        public bool TryGetString(string key, out string value) { }
         public bool TryGetValue(Pdfe.Core.Primitives.PdfName key, out Pdfe.Core.Primitives.PdfObject value) { }
         public bool TryGetValue(string key, out Pdfe.Core.Primitives.PdfObject value) { }
     }

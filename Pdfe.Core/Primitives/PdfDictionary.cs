@@ -167,6 +167,21 @@ public class PdfDictionary : PdfObject, IDictionary<PdfName, PdfObject>
         _items.TryGetValue(key, out var value) && value is PdfString s ? s.Value : null;
 
     /// <summary>
+    /// Try to get a string value.
+    /// </summary>
+    public bool TryGetString(string key, out string value)
+    {
+        if (_items.TryGetValue(key, out var obj) && obj is PdfString s)
+        {
+            value = s.Value;
+            return true;
+        }
+
+        value = string.Empty;
+        return false;
+    }
+
+    /// <summary>
     /// Get a name value (without leading /).
     /// </summary>
     public string GetName(string key) =>
@@ -201,6 +216,21 @@ public class PdfDictionary : PdfObject, IDictionary<PdfName, PdfObject>
     /// </summary>
     public PdfArray? GetArrayOrNull(string key) =>
         _items.TryGetValue(key, out var value) && value is PdfArray a ? a : null;
+
+    /// <summary>
+    /// Try to get an array value.
+    /// </summary>
+    public bool TryGetArray(string key, out PdfArray value)
+    {
+        if (_items.TryGetValue(key, out var obj) && obj is PdfArray a)
+        {
+            value = a;
+            return true;
+        }
+
+        value = null!;
+        return false;
+    }
 
     /// <summary>
     /// Get a dictionary value.
