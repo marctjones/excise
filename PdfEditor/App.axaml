@@ -3,6 +3,7 @@
              xmlns:sty="using:FluentAvalonia.Styling"
              xmlns:local="using:PdfEditor"
              x:Class="PdfEditor.App"
+             Name="pdfe"
              RequestedThemeVariant="Light">
 
     <!-- Application Resources -->

@@ -4,7 +4,9 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Platform;
 using Avalonia.Controls.Primitives;
 using Avalonia.Headless.XUnit;
 using Avalonia.LogicalTree;
@@ -117,7 +119,10 @@ public class CommandBindingSweepTests
     {
         var vm = new MainWindowViewModel();
         var menu = MacNativeMenuBuilder.Create(vm);
+        var applicationMenu = MacNativeMenuBuilder.CreateApplicationMenu(vm);
         var commandLeaves = CollectNativeMenuLeaves(menu).ToList();
+        var applicationCommandLeaves = CollectNativeMenuLeaves(applicationMenu).ToList();
+        commandLeaves.AddRange(applicationCommandLeaves);
 
         commandLeaves.Should().NotBeEmpty("the macOS native menu should expose command-backed leaf items");
 
@@ -150,6 +155,8 @@ public class CommandBindingSweepTests
 
         headers.Should().Contain(new[]
         {
+            "About pdfe",
+            "Preferences...",
             "Open...",
             "Save As...",
             "Find...",
@@ -171,6 +178,34 @@ public class CommandBindingSweepTests
             "Apply Redaction",
             "Verify Digital Signatures..."
         });
+
+        var topLevelHeaders = menu.Items
+            .OfType<NativeMenuItem>()
+            .Select(item => item.Header?.ToString() ?? string.Empty)
+            .ToList();
+
+        topLevelHeaders.Should().NotContain("PDF Editor",
+            "macOS owns the application menu; the exported window menu should start with File/Edit/etc.");
+    }
+
+    [FixedAvaloniaFact]
+    public async Task MacNativeMenu_IsAttachedToWindowOnMacOS()
+    {
+        if (!OperatingSystem.IsMacOS())
+            return;
+
+        var vm = new MainWindowViewModel();
+        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+        window.Show();
+        window.UpdateLayout();
+        await KeyboardTestHelpers.FlushDispatcherAsync();
+        window.UpdateLayout();
+
+        if (window.PlatformImpl?.TryGetFeature<ITopLevelNativeMenuExporter>() is null)
+            return;
+
+        NativeMenu.GetMenu(window).Should().NotBeNull(
+            "macOS exports the window-level native menu bar, so PDFE must attach its full menu to the window after it opens");
     }
 
     /// <summary>

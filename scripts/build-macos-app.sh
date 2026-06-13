@@ -47,11 +47,13 @@ mkdir -p "$BUNDLE/Contents/MacOS" "$BUNDLE/Contents/Resources"
 cp -R "$PUBLISH_DIR/." "$BUNDLE/Contents/MacOS/"
 chmod +x "$BUNDLE/Contents/MacOS/PdfEditor" || true
 
-# ── Icon (best-effort): SVG -> 1024 PNG -> .iconset -> .icns ────────────────
+# ── Icon (best-effort): SVG/PNG -> 1024 PNG -> .iconset/.icns ───────────────
 # Render the master PNG with rsvg-convert (librsvg) if present — it's the most
-# reliable SVG rasterizer on macOS — else ImageMagick. The job installs librsvg;
-# if neither is available the bundle just ships without a custom icon.
+# reliable SVG rasterizer on macOS — else ImageMagick. If no SVG rasterizer is
+# available, upscale the checked-in PNG fallback so local builds still produce a
+# normal macOS Dock icon.
 ICON_SVG="$ROOT/PdfEditor/Assets/pdfe_logo.svg"
+ICON_PNG="$ROOT/PdfEditor/Assets/pdfe_logo_256.png"
 ICON_PLIST=""
 MASTER_PNG="$PUBLISH_DIR/icon_1024.png"
 rendered=0
@@ -65,6 +67,9 @@ if [[ -f "$ICON_SVG" ]]; then
             "$MAGICK" -background none -density 512 "$ICON_SVG" -resize 1024x1024 "$MASTER_PNG" && rendered=1 || true
         fi
     fi
+fi
+if [[ "$rendered" == "0" && -f "$ICON_PNG" ]]; then
+    sips -z 1024 1024 "$ICON_PNG" --out "$MASTER_PNG" >/dev/null 2>&1 && rendered=1 || true
 fi
 if [[ "$rendered" == "1" && -f "$MASTER_PNG" ]]; then
     ICON_SET="$PUBLISH_DIR/pdfe.iconset"
@@ -81,9 +86,15 @@ if [[ "$rendered" == "1" && -f "$MASTER_PNG" ]]; then
     cp "$MASTER_PNG" "$ICON_SET/icon_512x512@2x.png" 2>/dev/null || true
     if iconutil -c icns "$ICON_SET" -o "$BUNDLE/Contents/Resources/pdfe.icns"; then
         ICON_PLIST=$'    <key>CFBundleIconFile</key>\n    <string>pdfe</string>'
+    elif command -v tiff2icns >/dev/null 2>&1; then
+        ICON_TIFF="$PUBLISH_DIR/pdfe-icon.tiff"
+        if sips -z 1024 1024 -s format tiff "$MASTER_PNG" --out "$ICON_TIFF" >/dev/null 2>&1 \
+            && tiff2icns "$ICON_TIFF" "$BUNDLE/Contents/Resources/pdfe.icns"; then
+            ICON_PLIST=$'    <key>CFBundleIconFile</key>\n    <string>pdfe</string>'
+        fi
     fi
 else
-    echo "::warning::no SVG rasterizer (rsvg-convert/ImageMagick) — building .app without a custom icon"
+    echo "::warning::no SVG rasterizer (rsvg-convert/ImageMagick) or PNG fallback — building .app without a custom icon"
 fi
 
 echo "▶ Writing Info.plist"

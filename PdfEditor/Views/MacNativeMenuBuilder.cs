@@ -3,6 +3,7 @@ using Avalonia.Input;
 using PdfEditor.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace PdfEditor.Views;
 
@@ -14,6 +15,25 @@ internal static class MacNativeMenuBuilder
 
         var state = new MenuState(viewModel);
         return state.Create();
+    }
+
+    public static NativeMenu CreateApplicationMenu(MainWindowViewModel viewModel)
+    {
+        ArgumentNullException.ThrowIfNull(viewModel);
+
+        var menu = new NativeMenu();
+        menu.Add(new NativeMenuItem("About pdfe")
+        {
+            Command = viewModel.AboutCommand
+        });
+        menu.Add(new NativeMenuItemSeparator());
+        menu.Add(new NativeMenuItem("Preferences...")
+        {
+            Command = viewModel.ShowPreferencesCommand,
+            Gesture = new KeyGesture(Key.OemComma, KeyModifiers.Meta)
+        });
+
+        return menu;
     }
 
     private sealed class MenuState
@@ -39,6 +59,7 @@ internal static class MacNativeMenuBuilder
         private readonly NativeMenuItem _thumbnailsItem;
         private readonly NativeMenuItem _revealHiddenTextItem;
         private readonly NativeMenuItem _revealRasterizedHiddenItem;
+        private IReadOnlyList<string>? _recentFilesSnapshot;
 
         public MenuState(MainWindowViewModel viewModel)
         {
@@ -66,14 +87,6 @@ internal static class MacNativeMenuBuilder
         public NativeMenu Create()
         {
             var menu = new NativeMenu();
-
-            Add(menu,
-                Submenu("PDF Editor",
-                    CommandItem("About PDF Editor", _viewModel.AboutCommand),
-                    Separator(),
-                    CommandItem("Preferences...", _viewModel.ShowPreferencesCommand, Key.OemComma),
-                    Separator(),
-                    CommandItem("Quit PDF Editor", _viewModel.ExitCommand, Key.Q)));
 
             Add(menu,
                 Submenu("File",
@@ -206,15 +219,24 @@ internal static class MacNativeMenuBuilder
         private void RefreshRecentFiles()
         {
             var recentMenu = _recentFilesItem.Menu ??= new NativeMenu();
-            recentMenu.Items.Clear();
+            var snapshot = _viewModel.RecentFiles.ToArray();
+            if (_recentFilesSnapshot != null
+                && snapshot.SequenceEqual(_recentFilesSnapshot)
+                && recentMenu.Items.Count > 0)
+            {
+                return;
+            }
 
-            if (_viewModel.RecentFiles.Count == 0)
+            recentMenu.Items.Clear();
+            _recentFilesSnapshot = snapshot;
+
+            if (snapshot.Length == 0)
             {
                 Add(recentMenu, new NativeMenuItem("No Recent Files") { IsEnabled = false });
                 return;
             }
 
-            foreach (var path in _viewModel.RecentFiles)
+            foreach (var path in snapshot)
             {
                 Add(recentMenu, new NativeMenuItem(System.IO.Path.GetFileName(path))
                 {

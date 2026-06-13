@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Collections;
 using Avalonia.Controls;
+using Avalonia.Controls.Platform;
 using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Layout;
@@ -21,7 +22,14 @@ public partial class MainWindow : Window
     private PdfViewerControl? _pdfViewerControl;
     private readonly WindowSettings _windowSettings;
     private object? _nativeMenuDataContext;
+    private NativeMenu? _nativeMenu;
+    private NativeMenu? _nativeApplicationMenu;
+    private bool _isNativeWindowOpened;
+    private bool _nativeMenuAttachScheduled;
+    private int _nativeMenuAttachAttempts;
     private int? _draggedThumbnailPageIndex;
+    private const int MaxNativeMenuAttachAttempts = 40;
+    private static readonly TimeSpan NativeMenuAttachRetryDelay = TimeSpan.FromMilliseconds(50);
 
     // Single reusable UI-thread timer for toast auto-dismiss. A DispatcherTimer
     // (vs System.Timers.Timer) ticks on the dispatcher itself, so it stops when
@@ -62,6 +70,11 @@ public partial class MainWindow : Window
 
         // Subscribe to search highlights changes
         this.DataContextChanged += OnDataContextChanged;
+        this.Opened += (_, _) =>
+        {
+            _isNativeWindowOpened = true;
+            SchedulePlatformMenuConfigure();
+        };
     }
 
     private void OnDataContextChanged(object? sender, EventArgs e)
@@ -71,7 +84,7 @@ public partial class MainWindow : Window
 
         if (DataContext is MainWindowViewModel viewModel)
         {
-            ConfigurePlatformMenu(viewModel);
+            SchedulePlatformMenuConfigure();
 
             // Subscribe to toast notifications
             viewModel.ToastService.ToastRequested += OnToastRequested;
@@ -116,13 +129,54 @@ public partial class MainWindow : Window
 
     private void ConfigurePlatformMenu(MainWindowViewModel viewModel)
     {
-        if (!OperatingSystem.IsMacOS() || ReferenceEquals(_nativeMenuDataContext, viewModel))
+        // NativeMenu caches the platform exporter lookup. Attaching before the
+        // native window/exporter exists can cache a null exporter and leave
+        // macOS with only its default app menu, so wait until the exporter is
+        // actually available before setting the attached menu property.
+        if (!OperatingSystem.IsMacOS() || !_isNativeWindowOpened)
         {
             return;
         }
 
-        NativeMenu.SetMenu(this, MacNativeMenuBuilder.Create(viewModel));
-        _nativeMenuDataContext = viewModel;
+        if (PlatformImpl?.TryGetFeature<ITopLevelNativeMenuExporter>() is null)
+        {
+            if (_nativeMenuAttachAttempts++ < MaxNativeMenuAttachAttempts)
+                SchedulePlatformMenuConfigure(NativeMenuAttachRetryDelay);
+            return;
+        }
+
+        _nativeMenuAttachAttempts = 0;
+        if (!ReferenceEquals(_nativeMenuDataContext, viewModel) || _nativeMenu is null)
+        {
+            _nativeMenu = MacNativeMenuBuilder.Create(viewModel);
+            _nativeApplicationMenu = MacNativeMenuBuilder.CreateApplicationMenu(viewModel);
+            _nativeMenuDataContext = viewModel;
+        }
+
+        if (_nativeApplicationMenu is not null && Application.Current is { } application)
+            NativeMenu.SetMenu(application, _nativeApplicationMenu);
+
+        NativeMenu.SetMenu(this, _nativeMenu);
+    }
+
+    private void SchedulePlatformMenuConfigure(TimeSpan? delay = null)
+    {
+        if (!OperatingSystem.IsMacOS() || _nativeMenuAttachScheduled)
+            return;
+
+        _nativeMenuAttachScheduled = true;
+
+        void Configure()
+        {
+            _nativeMenuAttachScheduled = false;
+            if (DataContext is MainWindowViewModel viewModel)
+                ConfigurePlatformMenu(viewModel);
+        }
+
+        if (delay is { } retryDelay)
+            DispatcherTimer.RunOnce(Configure, retryDelay, DispatcherPriority.Background);
+        else
+            Dispatcher.UIThread.Post(Configure, DispatcherPriority.ApplicationIdle);
     }
 
     private void OnSearchHighlightsChanged(object? sender, NotifyCollectionChangedEventArgs e)
