@@ -4,6 +4,12 @@ Branch: `investigate/native-aot`
 Date: 2026-06-08
 Host: macOS 15 (Darwin 25.5.0), Apple Silicon (arm64), .NET SDK 10.0.300
 
+Update: 2026-06-13 — Release builds now default `EnableScripting=false`, so
+`PdfEditor` excludes `Services/ScriptingService.cs` and the
+`Microsoft.CodeAnalysis.CSharp.Scripting` package unless a builder explicitly
+opts back in with `-p:EnableScripting=true`. Debug/test builds continue to keep
+the scripting surface enabled.
+
 > **Status: lab notes / investigation.** Per the project's knowledge-management
 > tiering this content belongs in a GitHub Discussion; it lives here as a
 > branch deliverable and should be copied into a Discussion (the CLI can't
@@ -64,8 +70,13 @@ Powers a `.csx` C# scripting/automation surface (`ScriptingService.cs`,
 exercised by tests (3 test files + 10 automation scripts driving end-to-end
 redaction). Because it's unreachable from the GUI entry point, the trimmer
 already removes it. It cannot be AOT-compiled (its job is compiling C# at
-runtime), so the path forward is **remove it from the shipped app** and re-home
-the automation onto `Pdfe.Core` / `Pdfe.Cli`.
+runtime), so the first path forward was to **remove it from the shipped app by
+default** while keeping the developer/test automation surface opt-in. That step
+is now implemented with the `EnableScripting` MSBuild property:
+
+- Debug/test builds default to `EnableScripting=true`.
+- Release builds default to `EnableScripting=false`.
+- Release builders can opt in with `-p:EnableScripting=true`.
 
 ### ReactiveUI
 
@@ -102,11 +113,14 @@ All 22 warnings reduce to **three small buckets**:
    about dialog, datagrid views) is required. This is where the actual risk and
    testing effort live — not in our own code.
 
-## Suggested staged path (not yet done)
+## Suggested staged path
 
 1. **Trim-only first** (`PublishTrimmed`, no AOT): 206→87 MB, drops Roslyn,
    lowest risk. Fix the 4 JSON sites with source-gen. Validate full app.
-2. **Drop Roslyn scripting** from the shipped app; move automation to Pdfe.Cli.
+2. **Drop Roslyn scripting** from the shipped app by default. **Done for default
+   Release builds** via `EnableScripting=false`; remaining work is to migrate
+   any long-term automation that should survive in product releases to
+   `Pdfe.Core` / `Pdfe.Cli`.
 3. **ReactiveUI → CommunityToolkit.Mvvm** (or just remove the one `WhenAnyValue`).
 4. **Flip `PublishAot`**, run full functional QA focused on FluentAvalonia +
    DataGrid paths. Keep the JIT/R2R build as the fallback if a preview-control

@@ -59,7 +59,7 @@ Build the packages locally with `dotnet pack -c Release` (they are also attached
 - Reveal Hidden Text — yellow highlights for structural detections (text covered by rectangles), orange for differential-OCR recoveries (text inside rasterized images)
 - Digital signature inspection — checks ByteRange structure, verifies the detached CMS digest/signature over the signed bytes, and clearly reports current OS trust-chain validation limitations
 - Bates numbering
-- Roslyn-based GUI scripting for automation
+- Roslyn-based GUI scripting for developer/test automation in Debug builds; Release builds exclude it by default unless `-p:EnableScripting=true` is set
 
 ### Glyph-level redaction
 **Text is removed from the PDF structure, not just visually covered.**
@@ -280,10 +280,10 @@ pdfe ocr scan.pdf
 - **Pdfe.Ocr** — Wrapper around the system `tesseract` CLI + a differential-OCR auditor
 
 ### Permissive third-party deps
-- **SkiaSharp 2.88.x** (MIT) — 2D graphics
+- **SkiaSharp 3.119.x** (MIT) — 2D graphics
 - **Clipper2** (BSL 1.0) — Polygon clipping for redaction geometry
 - **BouncyCastle.Cryptography** (MIT) — CMS cryptography for digital-signature inspection
-- **Microsoft.CodeAnalysis.CSharp.Scripting** (MIT) — Roslyn scripting for GUI automation
+- **Microsoft.CodeAnalysis.CSharp.Scripting** (MIT) — optional Roslyn scripting for GUI automation; enabled in Debug/test builds and opt-in for Release builds with `-p:EnableScripting=true`
 
 No copyleft obligations. No PDFium / PDFsharp / PdfPig / Tesseract.NET — all dropped in v2.0.
 
@@ -371,6 +371,11 @@ dotnet publish PdfEditor -c Release -r osx-arm64  --self-contained true -p:Publi
 ```
 
 Published binaries land in `bin/Release/net10.0/<runtime>/publish/`.
+
+Release builds exclude the Roslyn scripting engine by default to keep shipped
+packages lean and AOT/trim-friendlier. To produce a developer build with the
+GUI scripting service included, add `-p:EnableScripting=true` to the publish
+command.
 
 ### Installers
 

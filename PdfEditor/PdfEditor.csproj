@@ -18,12 +18,24 @@
     <ApplicationIcon>Assets\pdfe_logo.ico</ApplicationIcon>
   </PropertyGroup>
 
+  <!-- Roslyn scripting is a developer/test automation surface, not required
+       for normal viewing/editing. Keep it on for Debug and tests, but exclude
+       it from Release builds by default so shipped binaries do not carry the
+       runtime C# compiler. Builders can opt in with -p:EnableScripting=true.
+       Tracked in #341 / #342. -->
+  <PropertyGroup>
+    <EnableScripting Condition="'$(EnableScripting)' == '' and '$(Configuration)' == 'Release'">false</EnableScripting>
+    <EnableScripting Condition="'$(EnableScripting)' == ''">true</EnableScripting>
+    <DefineConstants Condition="'$(EnableScripting)' == 'true'">$(DefineConstants);PDFE_SCRIPTING</DefineConstants>
+  </PropertyGroup>
+
   <!-- Release startup/responsiveness tuning (#339). These only take effect for
        Release builds; PublishReadyToRun additionally only activates on a
        `dotnet publish -r <rid>`, so a plain `dotnet build` is unaffected.
-       NativeAOT and full trimming are deliberately NOT enabled here — they are
-       blocked by the Roslyn scripting engine and ReactiveUI's reflection (see
-       the feasibility investigations in #342 / #343). Workstation (not Server)
+       NativeAOT and full trimming are deliberately NOT enabled here; Roslyn
+       scripting is no longer a default Release blocker, but ReactiveUI and
+       preview UI controls still need dedicated AOT validation (#342 / #343).
+       Workstation (not Server)
        GC with concurrent collection is the right tradeoff for a desktop UI:
        it minimises pause times so the window never hitches. -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
@@ -58,7 +70,6 @@
          not the FluentIcons component library. Removing unblocks
          eventual Avalonia 12 (FluentIcons.Avalonia.Fluent has no
          Avalonia 12 release). -->
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="5.3.0" />
 
     <!-- Supporting libraries. BouncyCastle.Cryptography is the official
          continuation of the C# port — Portable.BouncyCastle has been
@@ -89,6 +100,14 @@
          (< 0.92.0). 0.93.0 dropped the Tmds.DBus.Protocol.Connection
          type that Avalonia.X11 reflects on, so over-pinning crashes
          startup with a TypeLoadException. -->
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(EnableScripting)' == 'true'">
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="5.3.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(EnableScripting)' != 'true'">
+    <Compile Remove="Services\ScriptingService.cs" />
   </ItemGroup>
 
   <ItemGroup>
