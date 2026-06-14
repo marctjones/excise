@@ -1,5 +1,8 @@
 using AwesomeAssertions;
 using Pdfe.Core.Document;
+using Pdfe.Core.Primitives;
+using System.Collections;
+using System.Text;
 using Xunit;
 
 namespace Pdfe.Core.Tests.Document;
@@ -190,6 +193,139 @@ public class PageCollectionTests
     }
 
     [Fact]
+    public void Add_FromAnotherDocument_ClonesIndirectPageObjects()
+    {
+        // Arrange
+        using var source = PdfDocument.CreateNew();
+        var sourcePage = source.Pages.AddBlank(321, 654);
+        var sourcePageRef = source.Pages.PagesDictionary.Get<PdfArray>("Kids").Get<PdfReference>(0);
+
+        // Move source-owned references away from the object numbers used by a
+        // brand-new target document so a dangling reference cannot pass by chance.
+        for (var i = 0; i < 5; i++)
+            source.AddIndirectObject(new PdfString($"padding-{i}"));
+
+        var contentBytes = Encoding.ASCII.GetBytes("BT /F1 12 Tf (Copied page) Tj ET");
+        var contentRef = source.AddIndirectObject(new PdfStream(contentBytes));
+
+        var fontDict = new PdfDictionary
+        {
+            ["Type"] = new PdfName("Font"),
+            ["Subtype"] = new PdfName("Type1"),
+            ["BaseFont"] = new PdfName("Helvetica"),
+            ["Encoding"] = new PdfName("WinAnsiEncoding"),
+            ["Embedded"] = PdfBoolean.Get(false)
+        };
+        var fontRef = source.AddIndirectObject(fontDict);
+
+        var imageStream = new PdfStream(
+            new PdfDictionary
+            {
+                ["Type"] = new PdfName("XObject"),
+                ["Subtype"] = new PdfName("Image"),
+                ["Width"] = new PdfInteger(1),
+                ["Height"] = new PdfInteger(1),
+                ["BitsPerComponent"] = new PdfInteger(8),
+                ["ColorSpace"] = new PdfName("DeviceGray")
+            },
+            new byte[] { 0x42 });
+        var imageRef = source.AddIndirectObject(imageStream);
+
+        var metadataRef = source.AddIndirectObject(new PdfDictionary
+        {
+            ["Title"] = new PdfString("Copy metadata"),
+            ["Ratio"] = new PdfReal(1.25),
+            ["Visible"] = PdfBoolean.Get(true)
+        });
+
+        var annotation = new PdfDictionary
+        {
+            ["Type"] = new PdfName("Annot"),
+            ["Subtype"] = new PdfName("Text"),
+            ["Rect"] = new PdfArray(new PdfInteger(1), new PdfInteger(2), new PdfInteger(3), new PdfInteger(4)),
+            ["Contents"] = new PdfString("Annotation text"),
+            ["P"] = sourcePageRef
+        };
+        var annotationRef = source.AddIndirectObject(annotation);
+
+        sourcePage.Dictionary["Contents"] = contentRef;
+        sourcePage.Dictionary["Resources"] = new PdfDictionary
+        {
+            ["Font"] = new PdfDictionary
+            {
+                ["F1"] = fontRef,
+                ["F2"] = fontRef
+            },
+            ["XObject"] = new PdfDictionary
+            {
+                ["Im1"] = imageRef
+            },
+            ["Properties"] = new PdfDictionary
+            {
+                ["Meta"] = metadataRef
+            },
+            ["ProcSet"] = new PdfArray(new PdfName("PDF"), new PdfName("Text")),
+            ["Custom"] = new PdfArray(new PdfInteger(7), new PdfReal(3.5), new PdfString("nested"), PdfBoolean.Get(true))
+        };
+        sourcePage.Dictionary["Annots"] = new PdfArray(annotationRef);
+        sourcePage.Dictionary["SourcePageRef"] = sourcePageRef;
+
+        using var target = PdfDocument.CreateNew();
+
+        // Act
+        target.Pages.Add(sourcePage);
+
+        // Assert
+        target.PageCount.Should().Be(1);
+        var copiedPage = target.Pages[0];
+        copiedPage.Width.Should().Be(321);
+        copiedPage.Height.Should().Be(654);
+        copiedPage.Dictionary.ContainsKey("SourcePageRef").Should().BeFalse("source page references should not survive copy");
+        copiedPage.GetContentStreamBytes().Should().Equal(contentBytes);
+
+        var copiedContentRef = copiedPage.Dictionary.Get<PdfReference>("Contents");
+        copiedContentRef.Should().NotBe(contentRef);
+        var copiedContent = target.Resolve(copiedContentRef).Should().BeOfType<PdfStream>().Subject;
+        copiedContent.EncodedData.Should().Equal(contentBytes);
+
+        copiedPage.Resources.Should().NotBeNull();
+        var resources = copiedPage.Resources!;
+        var fonts = resources.Get<PdfDictionary>("Font");
+        var copiedF1 = fonts.Get<PdfReference>("F1");
+        var copiedF2 = fonts.Get<PdfReference>("F2");
+        copiedF1.Should().Be(copiedF2, "reused source references should be cloned once");
+        copiedF1.Should().NotBe(fontRef);
+        var copiedFont = target.Resolve(copiedF1).Should().BeOfType<PdfDictionary>().Subject;
+        copiedFont.GetName("BaseFont").Should().Be("Helvetica");
+        copiedFont.GetBool("Embedded").Should().BeFalse();
+
+        var xObjects = resources.Get<PdfDictionary>("XObject");
+        var copiedImageRef = xObjects.Get<PdfReference>("Im1");
+        copiedImageRef.Should().NotBe(imageRef);
+        target.Resolve(copiedImageRef).Should().BeOfType<PdfStream>()
+            .Which.EncodedData.Should().Equal(new byte[] { 0x42 });
+
+        var properties = resources.Get<PdfDictionary>("Properties");
+        var copiedMetadataRef = properties.Get<PdfReference>("Meta");
+        copiedMetadataRef.Should().NotBe(metadataRef);
+        var copiedMetadata = target.Resolve(copiedMetadataRef).Should().BeOfType<PdfDictionary>().Subject;
+        copiedMetadata.GetString("Title").Should().Be("Copy metadata");
+        copiedMetadata.GetNumber("Ratio").Should().BeApproximately(1.25, 0.0001);
+        copiedMetadata.GetBool("Visible").Should().BeTrue();
+
+        var annotationRefInTarget = copiedPage.Dictionary.Get<PdfArray>("Annots").Get<PdfReference>(0);
+        annotationRefInTarget.Should().NotBe(annotationRef);
+        var copiedAnnotation = target.Resolve(annotationRefInTarget).Should().BeOfType<PdfDictionary>().Subject;
+        copiedAnnotation.GetName("Subtype").Should().Be("Text");
+        copiedAnnotation.GetString("Contents").Should().Be("Annotation text");
+        copiedAnnotation.ContainsKey("P").Should().BeFalse("copied annotations must not point at the source page");
+
+        using var reopened = PdfDocument.Open(target.SaveToBytes());
+        reopened.PageCount.Should().Be(1);
+        reopened.Pages[0].GetContentStreamBytes().Should().Equal(contentBytes);
+    }
+
+    [Fact]
     public void Insert_AtValidIndex_InsertsPageAtCorrectPosition()
     {
         // Arrange
@@ -362,6 +498,22 @@ public class PageCollectionTests
         {
             page.Should().NotBeNull();
         }
+    }
+
+    [Fact]
+    public void NonGenericEnumerator_IteratesAllPages()
+    {
+        // Arrange
+        using var doc = PdfDocument.CreateNew();
+        doc.Pages.AddBlank(100, 100);
+        doc.Pages.AddBlank(200, 200);
+
+        // Act
+        var pages = ((IEnumerable)doc.Pages).Cast<PdfPage>().ToList();
+
+        // Assert
+        pages.Select(p => p.Width).Should().Equal(100, 200);
+        doc.Pages.PagesDictionary.GetInt("Count").Should().Be(2);
     }
 
     [Fact]
