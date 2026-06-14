@@ -19,9 +19,10 @@ echo "🔍 Verifying TRUE content-level redaction implementation..."
 
 # --- Files that make up the TRUE-redaction pipeline ---
 REDACTION_SERVICE="PdfEditor/Services/RedactionService.cs"     # GUI orchestrator
-REDACTION_RESULT="PdfEditor/Models/RedactionResult.cs"         # result model
+CORE_API="Pdfe.Core/Operations/PdfRedaction.cs"                # public redaction API/result
 CORE_EXT="Pdfe.Core/Text/Segmentation/PdfPageRedactionExtensions.cs"  # page.RedactArea entry
 CORE_GLYPH="Pdfe.Core/Text/Segmentation/GlyphRemover.cs"       # glyph-level removal
+CORE_IMAGE="Pdfe.Core/Text/Segmentation/ImageRedactor.cs"      # image removal
 CORE_RECON="Pdfe.Core/Text/Segmentation/OperationReconstructor.cs"  # rebuild BT/Tf/Tj
 CORE_PARSER="Pdfe.Core/Content/ContentStreamParser.cs"         # parse operators
 CORE_WRITER="Pdfe.Core/Content/ContentStreamWriter.cs"         # serialize operators
@@ -55,10 +56,10 @@ require_grep() {
     fi
 }
 
-# Check 1+2: result model / mode enum still present (used by the GUI).
-require_file "RedactionResult model exists" "$REDACTION_RESULT"
-require_grep "RedactionMode enum present" "enum RedactionMode" "$REDACTION_RESULT" \
-    "SECURITY: RedactionMode enum is missing from $REDACTION_RESULT."
+# Check 1: the public redaction API/result still live in Pdfe.Core.
+require_file "Core redaction API exists" "$CORE_API"
+require_grep "Core RedactionResult model present" "class RedactionResult" "$CORE_API" \
+    "SECURITY: RedactionResult is missing from $CORE_API."
 
 # Check 3: the GUI must delegate to the glyph-level engine (page.RedactArea),
 # NOT draw a black box only.
@@ -69,6 +70,7 @@ require_grep "GUI delegates to glyph-level page.RedactArea" \
 
 # Check 4: the core glyph-removal + reconstruction stages must exist.
 require_file "GlyphRemover (glyph-level removal) exists" "$CORE_GLYPH"
+require_file "ImageRedactor (image removal) exists" "$CORE_IMAGE"
 require_file "OperationReconstructor (rebuild text blocks) exists" "$CORE_RECON"
 
 # Check 5: the parse → rebuild content-stream pipeline must exist.
