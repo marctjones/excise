@@ -26,6 +26,7 @@
   <PropertyGroup>
     <EnableScripting Condition="'$(EnableScripting)' == '' and '$(Configuration)' == 'Release'">false</EnableScripting>
     <EnableScripting Condition="'$(EnableScripting)' == ''">true</EnableScripting>
+    <IncludeTessdataInApp Condition="'$(IncludeTessdataInApp)' == ''">false</IncludeTessdataInApp>
     <DefineConstants Condition="'$(EnableScripting)' == 'true'">$(DefineConstants);PDFE_SCRIPTING</DefineConstants>
   </PropertyGroup>
 
@@ -123,8 +124,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Include tessdata files in output if they exist -->
-    <None Include="..\tessdata\*.traineddata" Condition="Exists('..\tessdata')">
+    <!-- Tesseract language data is large and not needed for normal viewing.
+         The app shells out to system `tesseract`; bundle repo-local tessdata
+         only for explicit developer/offline builds. -->
+    <None Include="..\tessdata\*.traineddata" Condition="'$(IncludeTessdataInApp)' == 'true' and Exists('..\tessdata')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>tessdata\%(Filename)%(Extension)</Link>
     </None>

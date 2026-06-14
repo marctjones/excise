@@ -7,6 +7,7 @@ using ReactiveUI;
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace PdfEditor.ViewModels;
 
@@ -84,24 +85,7 @@ public partial class MainWindowViewModel
             // hidden inside rasters. Only runs when the user explicitly
             // asks for it AND the tesseract CLI is reachable.
             if (_revealRasterizedHidden)
-            {
-                var ocr = new Pdfe.Ocr.PdfOcrService();
-                if (ocr.IsAvailable())
-                {
-                    var auditor = new Pdfe.Ocr.DifferentialOcrAuditor(ocr);
-                    foreach (var h in auditor.ScanPage(bytes, CurrentPageIndex + 1))
-                    {
-                        AddHighlight(h.Text, h.BoundingBox,
-                            $"raster (OCR conf {h.Confidence:F2})", CurrentPageIndex + 1,
-                            HiddenTextSource.DifferentialOcr);
-                    }
-                }
-                else
-                {
-                    _logger.LogWarning(
-                        "RevealRasterizedHidden requested but `tesseract` CLI is not available; skipping differential-OCR pass.");
-                }
-            }
+                AddRasterizedHiddenTextHighlights(bytes, CurrentPageIndex + 1);
 
             _logger.LogInformation(
                 "Reveal-hidden-text: {Count} leak(s) on page {Page}",
@@ -110,6 +94,27 @@ public partial class MainWindowViewModel
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Hidden-text scan failed for page {Page}", CurrentPageIndex + 1);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void AddRasterizedHiddenTextHighlights(byte[] pdfBytes, int pageNumber)
+    {
+        var ocr = new Pdfe.Ocr.PdfOcrService();
+        if (ocr.IsAvailable())
+        {
+            var auditor = new Pdfe.Ocr.DifferentialOcrAuditor(ocr);
+            foreach (var h in auditor.ScanPage(pdfBytes, pageNumber))
+            {
+                AddHighlight(h.Text, h.BoundingBox,
+                    $"raster (OCR conf {h.Confidence:F2})", pageNumber,
+                    HiddenTextSource.DifferentialOcr);
+            }
+        }
+        else
+        {
+            _logger.LogWarning(
+                "RevealRasterizedHidden requested but `tesseract` CLI is not available; skipping differential-OCR pass.");
         }
     }
 

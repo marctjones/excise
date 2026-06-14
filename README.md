@@ -377,6 +377,11 @@ packages lean and AOT/trim-friendlier. To produce a developer build with the
 GUI scripting service included, add `-p:EnableScripting=true` to the publish
 command.
 
+Repo-local `tessdata/*.traineddata` files are also excluded from app packages by
+default; pdfe uses the system `tesseract` installation when differential OCR is
+requested. To bundle local language data for an offline/developer package, add
+`-p:IncludeTessdataInApp=true`.
+
 ### Installers
 
 ```bash

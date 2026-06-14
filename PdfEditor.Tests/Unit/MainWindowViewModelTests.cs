@@ -121,6 +121,19 @@ public class MainWindowViewModelTests
     }
 
     [Fact]
+    public void HiddenTextToggles_DoNotLoadOcrAssemblyBeforeRasterizedScan()
+    {
+        Assert.SkipWhen(IsAssemblyLoaded("Pdfe.Ocr"),
+            "Pdfe.Ocr was already loaded by an earlier test in this process");
+
+        _viewModel.RevealHiddenText = true;
+        _viewModel.RevealRasterizedHidden = false;
+
+        IsAssemblyLoaded("Pdfe.Ocr").Should().BeFalse(
+            "ordinary hidden-text reveal should stay structural-only until rasterized OCR is explicitly requested");
+    }
+
+    [Fact]
     public void SelectedText_InitiallyEmpty()
     {
         _viewModel.SelectedText.Should().BeEmpty();
@@ -1395,4 +1408,8 @@ public class MainWindowViewModelTests
     }
 
     #endregion
+
+    private static bool IsAssemblyLoaded(string assemblyName) =>
+        AppDomain.CurrentDomain.GetAssemblies()
+            .Any(a => string.Equals(a.GetName().Name, assemblyName, StringComparison.Ordinal));
 }
