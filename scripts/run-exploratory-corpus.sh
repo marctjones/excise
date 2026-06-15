@@ -15,11 +15,12 @@
 # a single exploratory-report.json at the end.
 #
 # Usage:
-#   scripts/run-exploratory-corpus.sh                 # default: 14 chunks
-#   scripts/run-exploratory-corpus.sh --chunks 7      # custom chunk count
-#   scripts/run-exploratory-corpus.sh --chunks 14 --tiny  # 10-PDF smoke run
+#   scripts/run-exploratory-corpus.sh                         # page 1, 14 chunks
+#   scripts/run-exploratory-corpus.sh --page-mode sample       # pages 1,2,5,20
+#   scripts/run-exploratory-corpus.sh --page-mode all          # every page
+#   scripts/run-exploratory-corpus.sh --chunks 14 --tiny       # 10-PDF smoke run
 #
-# Output: Pdfe.Rendering.Tests/bin/Debug/net10.0/exploratory-report.json
+# Output: Pdfe.Rendering.Tests/bin/Debug/net10.0/exploratory-report-<mode>.json
 
 set -euo pipefail
 
@@ -33,6 +34,7 @@ TINY=0
 PER_CHUNK_PARALLEL="0"        # 0 = pdfe auto-picks (ProcessorCount/2)
 PDF_TIMEOUT_MS="15000"        # mutool per-page timeout
 CHUNK_PARALLEL="4"            # how many chunks to run concurrently
+PAGE_MODE="first"             # first | sample | all
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -42,6 +44,7 @@ while [[ $# -gt 0 ]]; do
         --per-chunk-parallel) PER_CHUNK_PARALLEL="$2"; shift 2 ;;
         --pdf-timeout-ms)    PDF_TIMEOUT_MS="$2"; shift 2 ;;
         --chunk-parallel)    CHUNK_PARALLEL="$2"; shift 2 ;;
+        --page-mode)         PAGE_MODE="$2"; shift 2 ;;
         --help|-h)
             sed -n '2,18p' "$0"; exit 0 ;;
         *)
@@ -61,11 +64,21 @@ fi
 # corpus. We point the dotnet test at the temp dir via env var.
 TINY_DIR=""
 if [[ "$TINY" == "1" ]]; then
+    TINY_LOCK="$ROOT/test-pdfs/.pdfjs-tiny.lock"
+    if ! mkdir "$TINY_LOCK" 2>/dev/null; then
+        echo "✗ tiny mode is already running; refusing to swap test-pdfs/pdfjs concurrently" >&2
+        exit 1
+    fi
     TINY_DIR="$(mktemp -d /tmp/pdfe-tiny-pdfjs.XXXXXX)"
-    trap 'rm -rf "$TINY_DIR"' EXIT
-    ls "$CORPUS"/*.pdf 2>/dev/null | head -10 | while read -r pdf; do
-        cp "$pdf" "$TINY_DIR/$(basename "$pdf")"
-    done
+    trap 'rm -rf "$TINY_DIR"; rmdir "$TINY_LOCK" 2>/dev/null || true' EXIT
+    python3 - "$CORPUS" "$TINY_DIR" <<'PY'
+import shutil, sys
+from pathlib import Path
+corpus = Path(sys.argv[1])
+tiny = Path(sys.argv[2])
+for pdf in sorted(corpus.glob("*.pdf"))[:10]:
+    shutil.copy2(pdf, tiny / pdf.name)
+PY
     # Hijack the corpus path the test uses by overlaying a symlink.
     # The .NET test reads `test-pdfs/pdfjs` relative to repo root; a
     # symlink keeps the real corpus untouched at its real path.
@@ -77,9 +90,10 @@ if [[ "$TINY" == "1" ]]; then
     mv "$REAL_CORPUS_BACKUP" "$REAL_CORPUS_BACKUP.swapped-$$"
     mv "$SYMLINKED_CORPUS" "$REAL_CORPUS_BACKUP"
     # Atomic restore that survives any crash mid-run.
-    trap 'rm -f "$REAL_CORPUS_BACKUP";
+    trap '[[ -L "$REAL_CORPUS_BACKUP" ]] && rm -f "$REAL_CORPUS_BACKUP";
           [[ -d "$REAL_CORPUS_BACKUP.swapped-$$" ]] && mv "$REAL_CORPUS_BACKUP.swapped-$$" "$REAL_CORPUS_BACKUP";
-          rm -rf "$TINY_DIR"' EXIT
+          rm -rf "$TINY_DIR";
+          rmdir "$TINY_LOCK" 2>/dev/null || true' EXIT
     echo "▶ tiny mode: corpus symlinked to $TINY_DIR ($(ls "$TINY_DIR" | wc -l) PDFs)"
 fi
 
@@ -98,9 +112,10 @@ fi
 # the merge step finds them.
 BIN_DIR="$ROOT/Pdfe.Rendering.Tests/bin/$CONFIG/net10.0"
 mkdir -p "$BIN_DIR"
-rm -f "$BIN_DIR"/exploratory-chunk-*.json "$BIN_DIR"/exploratory-report.json
+REPORT_NAME="exploratory-report-${PAGE_MODE}.json"
+rm -f "$BIN_DIR"/exploratory-chunk-*.json "$BIN_DIR"/exploratory-report*.json
 
-echo "▶ Running $CHUNKS chunks ($CHUNK_PARALLEL chunks concurrent, each $PER_CHUNK_PARALLEL-way internally parallel)"
+echo "▶ Running $CHUNKS chunks ($CHUNK_PARALLEL chunks concurrent, each $PER_CHUNK_PARALLEL-way internally parallel, page-mode=$PAGE_MODE)"
 chunk_failures=0
 chunk_start=$(date +%s)
 
@@ -122,6 +137,7 @@ run_one_chunk() {
         --total "$CHUNKS" \
         --parallel "$PER_CHUNK_PARALLEL" \
         --pdf-timeout-ms "$PDF_TIMEOUT_MS" \
+        --page-mode "$PAGE_MODE" \
         > "/tmp/exploratory-chunk-$i.log" 2>&1
     local rc=$?
     if [[ "$rc" == "0" && -f "$slice_path" ]]; then
@@ -129,7 +145,7 @@ run_one_chunk() {
         stats=$(python3 -c "
 import json
 d=json.load(open('$slice_path'))
-print(f'{d[\"total\"]} pdfs, peak {d[\"peakRssBytes\"]//1024//1024} MB')
+print(f'{d[\"total\"]} page results, peak {d[\"peakRssBytes\"]//1024//1024} MB')
 " 2>/dev/null || echo "ok")
         printf '  ✓ chunk %d/%d  %s\n' "$((i + 1))" "$CHUNKS" "$stats"
         return 0
@@ -139,7 +155,7 @@ print(f'{d[\"total\"]} pdfs, peak {d[\"peakRssBytes\"]//1024//1024} MB')
     fi
 }
 export -f run_one_chunk
-export PDFE_BIN CORPUS BIN_DIR CHUNKS PER_CHUNK_PARALLEL PDF_TIMEOUT_MS
+export PDFE_BIN CORPUS BIN_DIR CHUNKS PER_CHUNK_PARALLEL PDF_TIMEOUT_MS PAGE_MODE
 
 # xargs -P runs CHUNK_PARALLEL chunks concurrently. -I {} substitutes
 # the chunk index. The bash -c wrapper is needed because run_one_chunk
@@ -158,16 +174,17 @@ chunk_elapsed=$(( $(date +%s) - chunk_start ))
 echo "  total chunk runtime: ${chunk_elapsed}s"
 
 echo
-echo "▶ Merging $CHUNKS chunk reports → exploratory-report.json"
-python3 - "$BIN_DIR" "$CHUNKS" <<'PY'
+echo "▶ Merging $CHUNKS chunk reports → $REPORT_NAME"
+python3 - "$BIN_DIR" "$CHUNKS" "$PAGE_MODE" "$REPORT_NAME" <<'PY'
 import json, os, sys, glob
-bin_dir, expected = sys.argv[1], int(sys.argv[2])
+bin_dir, expected, page_mode, report_name = sys.argv[1], int(sys.argv[2]), sys.argv[3], sys.argv[4]
 slices = sorted(glob.glob(os.path.join(bin_dir, "exploratory-chunk-*.json")))
 print(f"  found {len(slices)} slice file(s) (expected {expected})")
 
 merged_entries = []
 counts = {}
 peak = 0
+pdfs = 0
 generated_utcs = []
 for path in slices:
     with open(path) as f:
@@ -176,29 +193,39 @@ for path in slices:
     for k, v in d.get("counts", {}).items():
         counts[k] = counts.get(k, 0) + v
     peak = max(peak, d.get("peakRssBytes", 0))
+    pdfs += d.get("pdfs", 0)
     if d.get("generatedUtc"):
         generated_utcs.append(d["generatedUtc"])
 
 out = {
     "generatedUtc": max(generated_utcs) if generated_utcs else None,
     "corpus": "test-pdfs/pdfjs",
+    "pageMode": page_mode,
     "chunksMerged": len(slices),
     "expectedChunks": expected,
     "counts": counts,
     "total": len(merged_entries),
+    "pdfs": pdfs,
     "perChunkPeakRssBytes": peak,
     # JSON keys come through as PascalCase from the .NET serializer
     # (Path, Status, …); use case-insensitive lookup defensively.
     "entries": sorted(merged_entries, key=lambda e: e.get("path", e.get("Path", ""))),
 }
-out_path = os.path.join(bin_dir, "exploratory-report.json")
+out_path = os.path.join(bin_dir, report_name)
 with open(out_path, "w") as f:
     json.dump(out, f, indent=2)
 
 print(f"  wrote {out_path}")
-print(f"  total: {out['total']}")
+print(f"  total page results: {out['total']}")
+print(f"  pdfs scanned: {out['pdfs']}")
 for k in sorted(counts, key=counts.get, reverse=True):
     print(f"    {counts[k]:4d}  {k}")
+
+if page_mode == "first":
+    compat_path = os.path.join(bin_dir, "exploratory-report.json")
+    with open(compat_path, "w") as f:
+        json.dump(out, f, indent=2)
+    print(f"  wrote compatibility copy {compat_path}")
 PY
 
 if (( chunk_failures > 0 )); then

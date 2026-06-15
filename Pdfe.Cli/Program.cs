@@ -1180,9 +1180,9 @@ class Program
     /// (~3 min startup × 14 chunks = 40+ min wasted) with a published
     /// pdfe binary call (~500 ms startup × 14 = 7 sec).
     ///
-    /// Renders page 1 of each PDF in the corpus's chunk-slice with
-    /// pdfe's SkiaRenderer and with `mutool draw`, computes diff
-    /// metrics, and writes a per-chunk JSON. The shell driver
+    /// Renders selected pages from each PDF in the corpus's chunk-slice
+    /// with pdfe's SkiaRenderer and with reference renderers, computes
+    /// diff metrics, and writes a per-chunk JSON. The shell driver
     /// scripts/run-exploratory-corpus.sh merges the slices.
     ///
     /// Memory budget: chunk index `i` mod total `M` selects the
@@ -1232,12 +1232,17 @@ class Program
             Description = "Mutool timeout per PDF render. Lower = skip slow PDFs faster.",
             DefaultValueFactory = _ => 15_000,
         };
+        var pageModeOption = new Option<string>("--page-mode")
+        {
+            Description = "Pages to compare: first, sample, or all.",
+            DefaultValueFactory = _ => "first",
+        };
 
         var command = new Command("corpus-scan",
-            "Render each PDF with pdfe + mutool, compute pixel-diff, write JSON report")
+            "Render corpus PDFs with pdfe + reference oracles, compute pixel-diff, write JSON report")
         {
             corpusArg, outputOption, chunkOption, totalOption,
-            dpiOption, diffPctOption, maxMaeOption, parallelOption, perPdfTimeoutOption,
+            dpiOption, diffPctOption, maxMaeOption, parallelOption, perPdfTimeoutOption, pageModeOption,
         };
 
         command.SetAction(parseResult =>
@@ -1251,8 +1256,14 @@ class Program
             var maxMae = parseResult.GetValue(maxMaeOption);
             var parallel = parseResult.GetValue(parallelOption);
             var pdfTimeoutMs = parseResult.GetValue(perPdfTimeoutOption);
+            var pageModeRaw = parseResult.GetValue(pageModeOption) ?? "first";
 
             if (parallel <= 0) parallel = Math.Max(1, Environment.ProcessorCount / 2);
+            if (!TryParseCorpusPageMode(pageModeRaw, out var pageMode))
+            {
+                Console.Error.WriteLine($"Bad --page-mode '{pageModeRaw}'. Use first, sample, or all.");
+                Environment.ExitCode = 1; return;
+            }
 
             if (!corpus.Exists)
             {
@@ -1273,7 +1284,7 @@ class Program
             try
             {
                 var ok = RunCorpusScan(corpus.FullName, output.FullName,
-                    chunk, total, dpi, diffPct, maxMae, parallel, pdfTimeoutMs);
+                    chunk, total, dpi, diffPct, maxMae, parallel, pdfTimeoutMs, pageMode);
                 Environment.ExitCode = ok ? 0 : 1;
             }
             catch (Exception ex)
@@ -1296,7 +1307,7 @@ class Program
         string corpusDir, string outputPath,
         int chunkIndex, int chunkTotal,
         int dpi, double maxDiffFraction, double maxMae,
-        int parallel, int pdfTimeoutMs)
+        int parallel, int pdfTimeoutMs, CorpusPageMode pageMode = CorpusPageMode.First)
     {
         var pdfs = Directory.EnumerateFiles(corpusDir, "*.pdf")
             .OrderBy(p => p)
@@ -1307,7 +1318,7 @@ class Program
 
         Console.Out.WriteLine(
             $"chunk {chunkIndex + 1}/{chunkTotal}: scanning {pdfs.Count} PDFs in {corpusDir} " +
-            $"({parallel}-way parallel, {pdfTimeoutMs}ms mutool timeout)");
+            $"({parallel}-way parallel, {pdfTimeoutMs}ms oracle timeout, page-mode={PageModeName(pageMode)})");
 
         // Use a thread-safe collector. Order in the final JSON is
         // restored by sort-on-write since Parallel.ForEach completion
@@ -1327,27 +1338,32 @@ class Program
             // Budget is 2× the mutool timeout — generous for normal
             // PDFs, hard cap on the bad ones.
             var wallBudgetMs = pdfTimeoutMs * 2;
-            CorpusScanEntry entry;
-            var task = Task.Run(() => ScanOne(rel, pdf, dpi, maxDiffFraction, maxMae, pdfTimeoutMs));
+            IReadOnlyList<CorpusScanEntry> pdfEntries;
+            var task = Task.Run(() => ScanOnePdf(rel, pdf, dpi, maxDiffFraction, maxMae, pdfTimeoutMs, pageMode));
             if (task.Wait(wallBudgetMs))
             {
-                entry = task.Result;
+                pdfEntries = task.Result;
             }
             else
             {
-                entry = new CorpusScanEntry
+                pdfEntries = new[]
                 {
-                    path = rel,
-                    status = "TIMEOUT",
-                    errorType = "WallClockTimeout",
-                    errorMessage = $"Per-PDF budget {wallBudgetMs}ms exceeded — pdfe or mutool got stuck.",
+                    new CorpusScanEntry
+                    {
+                        path = rel,
+                        pageNumber = 0,
+                        status = "TIMEOUT",
+                        errorType = "WallClockTimeout",
+                        errorMessage = $"Per-PDF budget {wallBudgetMs}ms exceeded — pdfe or reference renderer got stuck.",
+                    },
                 };
                 // Note: the underlying ScanOne task may keep running
                 // until the process exits. That's acceptable here:
                 // we're not sharing state, and process exit at chunk
                 // end reaps the orphan.
             }
-            entries.Add(entry);
+            foreach (var entry in pdfEntries)
+                entries.Add(entry);
             int n = System.Threading.Interlocked.Increment(ref processed);
 
             // Cheap RSS sample.
@@ -1390,8 +1406,10 @@ class Program
             corpus = corpusDir,
             chunkIndex,
             chunkTotal,
+            pageMode = PageModeName(pageMode),
             counts,
             total = entries.Count,
+            pdfs = pdfs.Count,
             peakRssBytes = peakBytes,
             entries = sortedEntries,
         };
@@ -1403,11 +1421,70 @@ class Program
         return true;
     }
 
-    private static CorpusScanEntry ScanOne(
+    private static IReadOnlyList<CorpusScanEntry> ScanOnePdf(
         string relPath, string pdfPath, int dpi,
-        double maxDiffFraction, double maxMae, int oracleTimeoutMs = 30_000)
+        double maxDiffFraction, double maxMae, int oracleTimeoutMs,
+        CorpusPageMode pageMode)
     {
-        var entry = new CorpusScanEntry { path = relPath };
+        PdfDocument? doc = null;
+        int pageCount;
+        try
+        {
+            doc = PdfDocument.Open(pdfPath);
+            pageCount = doc.PageCount;
+            if (pageCount == 0)
+            {
+                return new[]
+                {
+                    new CorpusScanEntry
+                    {
+                        path = relPath,
+                        pageNumber = 0,
+                        pageCount = 0,
+                        status = "EMPTY_DOC",
+                    },
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            return new[]
+            {
+                new CorpusScanEntry
+                {
+                    path = relPath,
+                    pageNumber = 0,
+                    status = "PARSE_ERROR",
+                    errorType = ex.GetType().Name,
+                    errorMessage = Trunc(ex.Message, 200),
+                },
+            };
+        }
+
+        using (doc)
+        {
+            var renderer = new SkiaRenderer();
+            var entries = new List<CorpusScanEntry>();
+            foreach (var pageNumber in SelectCorpusPages(pageCount, pageMode))
+            {
+                entries.Add(ScanOnePage(relPath, pdfPath, doc, renderer, pageNumber, dpi,
+                    maxDiffFraction, maxMae, oracleTimeoutMs));
+            }
+            return entries;
+        }
+    }
+
+    private static CorpusScanEntry ScanOnePage(
+        string relPath, string pdfPath, PdfDocument doc, SkiaRenderer renderer,
+        int pageNumber, int dpi,
+        double maxDiffFraction, double maxMae, int oracleTimeoutMs)
+    {
+        var entry = new CorpusScanEntry
+        {
+            path = relPath,
+            pageNumber = pageNumber,
+            pageCount = doc.PageCount,
+        };
 
         SkiaSharp.SKBitmap? pdfeBmp = null;
         SkiaSharp.SKBitmap? mutoolBmp = null;
@@ -1416,15 +1493,11 @@ class Program
         {
             try
             {
-                using var doc = PdfDocument.Open(pdfPath);
-                entry.pageCount = doc.PageCount;
-                if (doc.PageCount == 0) { entry.status = "EMPTY_DOC"; return entry; }
-                var renderer = new SkiaRenderer();
-                pdfeBmp = renderer.RenderPage(doc.GetPage(1), new RenderOptions { Dpi = dpi });
+                pdfeBmp = renderer.RenderPage(doc.GetPage(pageNumber), new RenderOptions { Dpi = dpi });
             }
             catch (Exception ex)
             {
-                entry.status = "PARSE_ERROR";
+                entry.status = "RENDER_ERROR";
                 entry.errorType = ex.GetType().Name;
                 entry.errorMessage = Trunc(ex.Message, 200);
                 return entry;
@@ -1437,9 +1510,9 @@ class Program
             // with both is a real bug; a disagreement with one but not
             // the other is more likely a viewer-specific quirk.
             mutoolBmp = Pdfe.Rendering.Differential.MutoolReferenceRenderer.RenderPage(
-                pdfPath, 1, dpi, oracleTimeoutMs);
+                pdfPath, pageNumber, dpi, oracleTimeoutMs);
             cairoBmp = Pdfe.Rendering.Differential.PdftocairoReferenceRenderer.RenderPage(
-                pdfPath, 1, dpi, oracleTimeoutMs);
+                pdfPath, pageNumber, dpi, oracleTimeoutMs);
 
             if (mutoolBmp == null && cairoBmp == null)
             {
@@ -1501,6 +1574,69 @@ class Program
         return entry;
     }
 
+    internal enum CorpusPageMode
+    {
+        First,
+        Sample,
+        All,
+    }
+
+    private static bool TryParseCorpusPageMode(string value, out CorpusPageMode mode)
+    {
+        switch (value.Trim().ToLowerInvariant())
+        {
+            case "first":
+            case "page1":
+            case "page-1":
+                mode = CorpusPageMode.First;
+                return true;
+            case "sample":
+            case "sampled":
+                mode = CorpusPageMode.Sample;
+                return true;
+            case "all":
+            case "all-pages":
+                mode = CorpusPageMode.All;
+                return true;
+            default:
+                mode = CorpusPageMode.First;
+                return false;
+        }
+    }
+
+    private static string PageModeName(CorpusPageMode mode) => mode switch
+    {
+        CorpusPageMode.First => "first",
+        CorpusPageMode.Sample => "sample",
+        CorpusPageMode.All => "all",
+        _ => "first",
+    };
+
+    private static IEnumerable<int> SelectCorpusPages(int pageCount, CorpusPageMode pageMode)
+    {
+        if (pageCount <= 0)
+            yield break;
+
+        if (pageMode == CorpusPageMode.All)
+        {
+            for (var page = 1; page <= pageCount; page++)
+                yield return page;
+            yield break;
+        }
+
+        if (pageMode == CorpusPageMode.Sample)
+        {
+            foreach (var page in new[] { 1, 2, 5, 20 })
+            {
+                if (page <= pageCount)
+                    yield return page;
+            }
+            yield break;
+        }
+
+        yield return 1;
+    }
+
     /// <summary>
     /// Resize the first bitmap to match the second (if dimensions
     /// disagree) and compute the diff metrics. Returns
@@ -1534,6 +1670,7 @@ class Program
     internal sealed class CorpusScanEntry
     {
         public string path { get; set; } = "";
+        public int pageNumber { get; set; } = 1;
         public string status { get; set; } = "UNKNOWN";
         public int pageCount { get; set; }
         // Best-of-two oracle metrics (pdfe vs whichever oracle pdfe
