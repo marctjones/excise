@@ -16,6 +16,7 @@ Use this checklist before tagging any `v*` release.
 - Run `dotnet test --no-build --filter "FullyQualifiedName~Redaction"` after any redaction-adjacent change.
 - Run the focused tests for the changed area.
 - Run `dotnet test pdfe.sln --no-build --logger "console;verbosity=minimal"` before tagging.
+- Run `scripts/run-visual-regression-local.sh --release` before tagging a release candidate.
 - Run `git diff --check`.
 
 ## Issue Hygiene

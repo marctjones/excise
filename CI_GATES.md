@@ -9,7 +9,7 @@ Every push to `main` or `develop` and every pull request is subject to automated
 1. **Build Gate** - All projects must build with zero errors (warnings are tolerated)
 2. **Test Gates** - All unit and integration tests must pass
 3. **Coverage Gate** - Pdfe.Core must maintain ≥94% line coverage (v2.1.0-rc baseline)
-4. **Performance Gate** - Performance benchmarks must stay within declared thresholds
+4. **Performance Signal** - Performance benchmarks run for visibility; release candidates use local long-running gates
 
 ## CI Workflows
 
@@ -34,28 +34,33 @@ Every push to `main` or `develop` and every pull request is subject to automated
 12. **Coverage gate**: Parse coverage XML and verify Pdfe.Core line-rate ≥ 0.94
 13. Run Pdfe.Cli.Tests
 14. Run Pdfe.Rendering.Tests (excluding slow Corpus tests)
-15. Run PerformanceBenchmarkTests and MemoryBenchmarkTests (enforces internal thresholds)
+15. Run PerformanceBenchmarkTests and MemoryBenchmarkTests (informational)
 16. Run Pdfe.Ocr.Tests (non-blocking)
 17. Run PdfEditor.Tests with xvfb (GUI tests)
 18. Upload coverage report as artifact
 19. Upload test results on failure
 
-### Visual Regression Nightly: `.github/workflows/visual-regression-nightly.yml`
+### Local Visual Regression Runner: `scripts/run-visual-regression-local.sh`
 
-**Trigger**: Daily at 2 AM UTC (9 PM ET), or manual dispatch via workflow_dispatch
+**Trigger**: Manual, before release candidates or while investigating rendering changes
 
-**Duration**: ~10-15 minutes
+**Duration**: Environment-dependent
 
-**Purpose**: Detect visual regressions in rendering and UI baseline tests without blocking PRs
+**Purpose**: Detect environment-sensitive rendering and UI baseline regressions without spending paid GitHub-hosted runner time or making PR checks flaky
 
 **Steps**:
-1. Same setup as main CI
-2. Build in Release mode (more representative of production)
-3. Run Pdfe.Rendering.Tests with filter "FullyQualifiedName~Visual"
-4. Run PdfEditor.Tests AvaloniaFact baseline tests
-5. Collect visual regression artifacts (*-actual.png, *-diff.png)
-6. Upload artifacts if tests fail
-7. Adds summary to GitHub Actions (informational only, non-blocking)
+1. Build locally in Debug by default, or Release with `--release`
+2. Run Pdfe.Rendering.Tests with filter `FullyQualifiedName~Visual`
+3. Run differential smoke tests when `mutool` and `test-pdfs/smoke` are present
+4. Run PdfEditor.Tests baseline tests with filter `FullyQualifiedName~MatchesBaseline`
+5. Collect PNG artifacts (`*-actual.png`, `*-diff.png`, `*-triptych.png`)
+6. Write logs and copied artifacts under `logs/visual-regression_<timestamp>/`
+
+```bash
+scripts/run-visual-regression-local.sh
+scripts/run-visual-regression-local.sh --release
+scripts/run-visual-regression-local.sh --only=render-visual-baselines,gui-headless-baselines
+```
 
 ## Local Testing
 
@@ -183,9 +188,9 @@ dotnet test PdfEditor.Tests --no-build -c Debug
 - Check test output for "X11 connection refused" or "cannot open display"
 - Try running locally with: `xvfb-run -a dotnet test PdfEditor.Tests --no-build -c Debug`
 
-### Visual regression nightly fails
+### Local visual regression fails
 - A rendering output changed (possible regression)
-- Check uploaded artifact: `visual-regression-diffs` in Actions
+- Check `logs/visual-regression_latest/`
 - Review PNG diff files to see what changed
 - If intentional, update baseline images and commit
 
@@ -195,9 +200,12 @@ On each CI run, the following artifacts are uploaded:
 
 - **coverage-report/** - HTML and Cobertura coverage report (30-day retention)
 - **test-results/** - .trx files if tests fail (7-day retention)
-- **visual-regression-diffs/** - PNG actual/diff images from nightly (30-day retention)
 
 These can be downloaded from the GitHub Actions Run summary page.
+
+Local visual-regression runs store logs and copied PNG artifacts under
+`logs/visual-regression_<timestamp>/` and refresh the
+`logs/visual-regression_latest` symlink when supported by the filesystem.
 
 ## Scripts Reference
 
@@ -239,6 +247,6 @@ Output:
 ## Next Steps / Future Work
 
 - [ ] **Windows/Mac CI matrices** (v2.2 work) - Add `windows-latest` and `macos-latest` to CI matrix once platform-specific issues are resolved
-- [ ] **Corpus testing in nightly** - Run full veraPDF Corpus suite in a separate nightly workflow (too slow for every PR)
+- [ ] **Corpus testing outside PR gates** - Keep full corpus runs in local or dedicated infrastructure because they are too slow for every PR
 - [ ] **Sonarqube integration** - Optional: code quality scanning
 - [ ] **Flaky test detection** - Track test failure patterns across runs

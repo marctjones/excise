@@ -165,8 +165,9 @@ jobs:
         run: |
           # The PR gate runs only environment-independent rendering tests
           # (root SkiaRenderer "renders without error", string-escape, Fonts
-          # table parsing). The following are environment-sensitive and owned
-          # by the nightly visual-regression job, not a deterministic PR gate:
+          # table parsing). The following are environment-sensitive and should
+          # be run locally with scripts/run-visual-regression-local.sh before a
+          # release candidate, not on paid GitHub-hosted runners:
           # - Corpus: too slow.
           # - Differential: compares against the external `mutool` binary +
           #   sample PDFs absent in CI → empty [Theory] → "No data found".
@@ -180,7 +181,8 @@ jobs:
 
       - name: Run Performance Benchmark Tests (informational)
         # Allocation/timing thresholds are environment-sensitive; run them for
-        # visibility but don't fail the gate on them (the nightly job owns perf).
+        # visibility but don't fail the gate. Release candidates should run the
+        # local long/visual suites on a known developer machine.
         run: |
           dotnet test Pdfe.Rendering.Tests --no-build -c Debug \
             --filter "FullyQualifiedName~PerformanceBenchmark|FullyQualifiedName~MemoryBenchmark" \

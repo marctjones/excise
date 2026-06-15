@@ -39,6 +39,22 @@ RAW="https://raw.githubusercontent.com/$REPO/$REF/test/pdfs"
 FORCE=0
 [[ "${1:-}" == "--force" ]] && FORCE=1
 
+file_sha256() {
+    if command -v sha256sum >/dev/null 2>&1; then
+        sha256sum "$1" | awk '{print $1}'
+    else
+        shasum -a 256 "$1" | awk '{print $1}'
+    fi
+}
+
+file_size() {
+    if stat -f '%z' "$1" >/dev/null 2>&1; then
+        stat -f '%z' "$1"
+    else
+        stat -c '%s' "$1"
+    fi
+}
+
 echo "▶ Listing pdf.js test corpus (ref=$REF)"
 LIST_TMP="$(mktemp)"
 trap 'rm -f "$LIST_TMP"' EXIT
@@ -50,7 +66,11 @@ auth_args=()
 if [[ -n "${GITHUB_TOKEN:-}" ]]; then
     auth_args=(-H "Authorization: Bearer $GITHUB_TOKEN")
 fi
-curl -fsSL "${auth_args[@]}" "$API" -o "$LIST_TMP"
+if (( ${#auth_args[@]} )); then
+    curl -fsSL "${auth_args[@]}" "$API" -o "$LIST_TMP"
+else
+    curl -fsSL "$API" -o "$LIST_TMP"
+fi
 
 # Extract just the .pdf entries.
 mapfile -t PDFS < <(python3 - "$LIST_TMP" <<'PY'
@@ -84,9 +104,9 @@ for name in "${PDFS[@]}"; do
     # If the local file already matches its manifest sha, just re-emit
     # the manifest line and move on.
     if [[ "$FORCE" == "0" && -f "$dest" ]]; then
-        cur_sha="$(sha256sum "$dest" | cut -d' ' -f1)"
+        cur_sha="$(file_sha256 "$dest")"
         if [[ "${KNOWN_SHA[$name]:-}" == "$cur_sha" ]]; then
-            size=$(stat -c '%s' "$dest")
+            size=$(file_size "$dest")
             printf '%s\t%s\t%s\n' "$cur_sha" "$name" "$size" >> "$NEW_MANIFEST"
             skipped=$((skipped+1))
             continue
@@ -98,8 +118,8 @@ for name in "${PDFS[@]}"; do
     enc_name="$(python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1]))' "$name")"
     if curl -fsSL --max-time 60 -o "$dest.tmp" "$RAW/$enc_name" 2>/dev/null; then
         mv "$dest.tmp" "$dest"
-        sha="$(sha256sum "$dest" | cut -d' ' -f1)"
-        size=$(stat -c '%s' "$dest")
+        sha="$(file_sha256 "$dest")"
+        size=$(file_size "$dest")
         printf '%s\t%s\t%s\n' "$sha" "$name" "$size" >> "$NEW_MANIFEST"
         ok=$((ok+1))
         # Quietly progress — full output for ~684 files is noisy.
