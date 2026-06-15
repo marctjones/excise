@@ -312,13 +312,6 @@ internal partial class RenderContext
     // resource name but different physical fonts don't collide.
     private readonly Dictionary<Pdfe.Core.Primitives.PdfDictionary, Dictionary<int, int>?> _embeddedCffCidToGlyph = new();
 
-    // Side-table for inline images. The tokenizer captures the dict
-    // header text and the raw data bytes between BI/ID/EI as we scan
-    // (where the bytes can be binary and not safe to round-trip through
-    // a token string), and emits a numeric operand pointing into this
-    // list. RenderInlineImage looks up the entry and rasterizes.
-    private readonly List<(string HeaderText, byte[] DataBytes)> _inlineImages = new();
-
     private readonly CancellationToken _cancellationToken;
 
     public RenderContext(SKCanvas canvas, PdfPage page, RenderOptions options,
@@ -350,11 +343,7 @@ internal partial class RenderContext
 
             var contentBytes = _page.GetContentStreamBytes();
             if (contentBytes.Length > 0)
-            {
-                var content = new ContentStreamParser(contentBytes, _page)
-                    .Parse(_cancellationToken);
-                ExecuteContentOperators(content.Operators);
-            }
+                ExecuteContentBytes(contentBytes);
 
             // Annotations render on top of page content — sticky notes,
             // FreeText callouts, Widget appearances, etc. live in the
@@ -564,22 +553,6 @@ internal partial class RenderContext
                 SetClippingPath(true);
                 break;
 
-            // Inline image operator. The tokenizer captured the dict
-            // header text and binary data into _inlineImages and emitted
-            // the side-table index as our operand; we pull the entry,
-            // build a synthetic stream, and reuse the existing image
-            // renderer.
-            case "BI":
-                if (operands.Count >= 1 &&
-                    int.TryParse(operands[0], NumberStyles.Integer,
-                        CultureInfo.InvariantCulture, out var inlineIdx) &&
-                    inlineIdx >= 0 && inlineIdx < _inlineImages.Count)
-                {
-                    var entry = _inlineImages[inlineIdx];
-                    RenderInlineImage(entry.HeaderText, entry.DataBytes);
-                }
-                break;
-
             // Marked content operators (#298)
             case "BMC":
                 // Begin marked content - no visual effect
@@ -732,6 +705,13 @@ internal partial class RenderContext
             _cancellationToken.ThrowIfCancellationRequested();
             ExecuteContentOperator(op);
         }
+    }
+
+    private void ExecuteContentBytes(byte[] contentBytes)
+    {
+        var content = new ContentStreamParser(contentBytes, _page)
+            .Parse(_cancellationToken);
+        ExecuteContentOperators(content.Operators);
     }
 
     private void ExecuteContentOperator(ContentOperator op)
@@ -2878,18 +2858,7 @@ internal partial class RenderContext
                 _textState = new TextState();
 
                 // Run /DA — sets _textState.FontName/FontSize, fill colour, etc.
-                var tokens = Tokenize(da!);
-                var operands = new List<string>();
-                foreach (var token in tokens)
-                {
-                    if (IsOperator(token))
-                    {
-                        _cancellationToken.ThrowIfCancellationRequested();
-                        ExecuteOperator(token, operands);
-                        operands.Clear();
-                    }
-                    else operands.Add(token);
-                }
+                ExecuteContentBytes(Encoding.Latin1.GetBytes(da!));
 
                 float fontSize = _textState.FontSize > 0.001f
                     ? _textState.FontSize : autoSize;
@@ -3062,24 +3031,11 @@ internal partial class RenderContext
                 _canvas.Concat(in matrix);
             }
 
-            // Parse and render the form's content stream
-            var content = Encoding.Latin1.GetString(formContent);
-            var tokens = Tokenize(content);
-            var operands = new List<string>();
-
-            foreach (var token in tokens)
-            {
-                if (IsOperator(token))
-                {
-                    _cancellationToken.ThrowIfCancellationRequested();
-                    ExecuteOperator(token, operands);
-                    operands.Clear();
-                }
-                else
-                {
-                    operands.Add(token);
-                }
-            }
+            // Parse and render the form's content stream through the same
+            // typed operator path as normal page content. Resource resolution
+            // stays on the renderer's stack, so local form resources still
+            // override inherited page resources during execution.
+            ExecuteContentBytes(formContent);
         }
         finally
         {
@@ -3723,24 +3679,6 @@ internal partial class RenderContext
 
     #region Inline Images (BI, ID, EI operators) - Issue #297
 
-    /// <summary>
-    /// Rasterize an inline image (§8.9.7) from the dict header text the
-    /// tokenizer captured between BI and ID, and the raw data bytes
-    /// captured between ID and EI. The dict uses abbreviated keys per
-    /// Table 91 (W/H/CS/F/BPC/D/DP/IM/I/L) and abbreviated filter /
-    /// colorspace values per Tables 92 and 90; we resolve them all to
-    /// their full forms and dispatch through a synthetic
-    /// <see cref="Pdfe.Core.Primitives.PdfStream"/> so the existing
-    /// image-XObject rasterizer does the actual decoding and drawing.
-    /// </summary>
-    private void RenderInlineImage(string headerText, byte[] dataBytes)
-    {
-        var dict = ParseInlineImageDict(headerText);
-        if (dict == null) return;
-
-        RenderInlineImage(dict, dataBytes);
-    }
-
     private void RenderInlineImage(PdfDictionary imageParams, byte[] dataBytes)
     {
         var dict = NormalizeInlineImageDictionary(imageParams);
@@ -3815,114 +3753,6 @@ internal partial class RenderContext
     }
 
     /// <summary>
-    /// Parse the dict-header text between BI and ID into a
-    /// <see cref="Pdfe.Core.Primitives.PdfDictionary"/> with abbreviated
-    /// keys/values normalized to their full forms (Table 91, Table 92,
-    /// Table 90). Returns null when the header is empty or unparseable.
-    /// </summary>
-    private static Pdfe.Core.Primitives.PdfDictionary? ParseInlineImageDict(string header)
-    {
-        var dict = new Pdfe.Core.Primitives.PdfDictionary();
-
-        // Tokenize the header just like the rest of the content stream.
-        // The dict body is just key/value pairs (`/Key value /Key value`)
-        // with no surrounding `<<` `>>`.
-        var toks = new List<string>();
-        int i = 0, len = header.Length;
-        while (i < len)
-        {
-            while (i < len && char.IsWhiteSpace(header[i])) i++;
-            if (i >= len) break;
-            char c = header[i];
-            if (c == '/' || c == '(' || c == '<' || c == '[')
-            {
-                // Use the same delimiter logic as the main tokenizer
-                // for names / strings / hex strings / arrays.
-                int start = i;
-                if (c == '/')
-                {
-                    i++;
-                    while (i < len && !IsDelimiterOrWhitespace(header[i])) i++;
-                    toks.Add(header[start..i]);
-                }
-                else if (c == '[')
-                {
-                    int depth = 1; i++;
-                    while (i < len && depth > 0)
-                    {
-                        if (header[i] == '[') depth++;
-                        else if (header[i] == ']') depth--;
-                        i++;
-                    }
-                    toks.Add(header[start..i]);
-                }
-                else if (c == '<')
-                {
-                    if (i + 1 < len && header[i + 1] == '<')
-                    {
-                        // Inline images don't normally contain nested dicts,
-                        // but be defensive — match >> to swallow and skip.
-                        int depth = 1; i += 2;
-                        while (i < len - 1 && depth > 0)
-                        {
-                            if (header[i] == '<' && header[i + 1] == '<') { depth++; i += 2; }
-                            else if (header[i] == '>' && header[i + 1] == '>') { depth--; i += 2; }
-                            else i++;
-                        }
-                        toks.Add(header[start..i]);
-                    }
-                    else
-                    {
-                        // Hex string </…>
-                        i++;
-                        while (i < len && header[i] != '>') i++;
-                        if (i < len) i++;
-                        toks.Add(header[start..i]);
-                    }
-                }
-                else if (c == '(')
-                {
-                    int depth = 1; i++;
-                    while (i < len && depth > 0)
-                    {
-                        if (header[i] == '\\' && i + 1 < len) i += 2;
-                        else if (header[i] == '(') { depth++; i++; }
-                        else if (header[i] == ')') { depth--; i++; }
-                        else i++;
-                    }
-                    toks.Add(header[start..i]);
-                }
-            }
-            else
-            {
-                int start = i;
-                while (i < len && !IsDelimiterOrWhitespace(header[i])) i++;
-                if (i > start) toks.Add(header[start..i]);
-            }
-        }
-
-        // Walk pairs (/Name value). Map abbreviated keys/values to their
-        // full forms before storing.
-        for (int p = 0; p < toks.Count - 1; p++)
-        {
-            var nameTok = toks[p];
-            if (!nameTok.StartsWith("/")) continue;
-            string key = NormalizeInlineKey(nameTok.Substring(1));
-            string valueTok = toks[p + 1];
-            p++; // consumed the value
-
-            var value = ParseInlineImageValue(key, valueTok);
-            if (value != null)
-                dict[new Pdfe.Core.Primitives.PdfName(key)] = value;
-        }
-
-        // Reject if no Width / Height — RenderImageXObject would early-out anyway.
-        if (!dict.ContainsKey("Width") || !dict.ContainsKey("Height"))
-            return null;
-        return dict;
-    }
-
-    /// <summary>
     /// Per Table 91, inline image dicts may use one-or-two-letter
     /// abbreviations in place of the full names — normalize to full so
     /// downstream code (which expects /Width, /Filter, etc.) works.
@@ -3941,33 +3771,6 @@ internal partial class RenderContext
         "L"   => "Length",
         _     => abbr,
     };
-
-    /// <summary>
-    /// Convert an inline-image dict value token into the corresponding
-    /// PdfObject. For /Filter and /ColorSpace we additionally expand
-    /// abbreviated single-token values per Tables 92 and 90 so
-    /// StreamDecompressor / PdfColorSpace see /FlateDecode rather than
-    /// /Fl, /DeviceRGB rather than /RGB.
-    /// </summary>
-    private static Pdfe.Core.Primitives.PdfObject? ParseInlineImageValue(string key, string token)
-    {
-        if (token.StartsWith("/"))
-        {
-            string name = token.Substring(1);
-            if (key == "Filter")        name = ExpandInlineFilter(name);
-            else if (key == "ColorSpace") name = ExpandInlineColorSpace(name);
-            return new Pdfe.Core.Primitives.PdfName(name);
-        }
-        if (token == "true")  return Pdfe.Core.Primitives.PdfBoolean.True;
-        if (token == "false") return Pdfe.Core.Primitives.PdfBoolean.False;
-        if (int.TryParse(token, NumberStyles.Integer, CultureInfo.InvariantCulture, out var iv))
-            return new Pdfe.Core.Primitives.PdfInteger(iv);
-        if (double.TryParse(token, NumberStyles.Float, CultureInfo.InvariantCulture, out var dv))
-            return new Pdfe.Core.Primitives.PdfReal(dv);
-        // Arrays, strings, etc. fall through unhandled — rare in inline
-        // image dicts (most use simple name/integer/bool values).
-        return null;
-    }
 
     private static string ExpandInlineFilter(string abbr) => abbr switch
     {
@@ -3993,239 +3796,6 @@ internal partial class RenderContext
 
     #endregion
 
-    #region Tokenizer
-
-    private List<string> Tokenize(string content)
-    {
-        var tokens = new List<string>();
-        var i = 0;
-        var len = content.Length;
-
-        while (i < len)
-        {
-            // Skip whitespace
-            while (i < len && char.IsWhiteSpace(content[i]))
-                i++;
-
-            if (i >= len)
-                break;
-
-            var c = content[i];
-
-            // Skip comments
-            if (c == '%')
-            {
-                while (i < len && content[i] != '\n' && content[i] != '\r')
-                    i++;
-                continue;
-            }
-
-            // String literal
-            if (c == '(')
-            {
-                var start = i;
-                var depth = 1;
-                i++;
-                while (i < len && depth > 0)
-                {
-                    if (content[i] == '\\' && i + 1 < len)
-                    {
-                        i += 2; // Skip escape
-                        continue;
-                    }
-                    if (content[i] == '(') depth++;
-                    else if (content[i] == ')') depth--;
-                    i++;
-                }
-                tokens.Add(content[start..i]);
-                continue;
-            }
-
-            // Hex string
-            if (c == '<' && i + 1 < len && content[i + 1] != '<')
-            {
-                var start = i;
-                i++;
-                while (i < len && content[i] != '>')
-                    i++;
-                i++; // Skip '>'
-                tokens.Add(content[start..i]);
-                continue;
-            }
-
-            // Dictionary start/end
-            if (c == '<' && i + 1 < len && content[i + 1] == '<')
-            {
-                tokens.Add("<<");
-                i += 2;
-                continue;
-            }
-            if (c == '>' && i + 1 < len && content[i + 1] == '>')
-            {
-                tokens.Add(">>");
-                i += 2;
-                continue;
-            }
-
-            // Array delimiters
-            if (c == '[' || c == ']')
-            {
-                tokens.Add(c.ToString());
-                i++;
-                continue;
-            }
-
-            // Name
-            if (c == '/')
-            {
-                var start = i;
-                i++;
-                while (i < len && !IsDelimiterOrWhitespace(content[i]))
-                    i++;
-                tokens.Add(content[start..i]);
-                continue;
-            }
-
-            // Number or operator
-            var tokenStart = i;
-            while (i < len && !IsDelimiterOrWhitespace(content[i]))
-                i++;
-
-            if (i > tokenStart)
-            {
-                var tok = content[tokenStart..i];
-                tokens.Add(tok);
-
-                // Inline image fast-skip: when we see the BI operator,
-                // scan forward to the matching EI marker (after the ID
-                // separator) and discard the binary image bytes between
-                // them. Without this, the tokenizer turns the raw image
-                // data into thousands of garbage tokens that the
-                // dispatcher then iterates over — visible as a
-                // multi-minute hang on PDFs with large inline images
-                // (e.g. SafeDocs issue14256.pdf, which has eight 20×10
-                // hex-encoded images totaling 13 KB of "operators"
-                // that aren't actually operators).
-                //
-                // Capture the inline image dict header (between BI and
-                // ID) and the binary image data (between ID and EI) into
-                // _inlineImages, then re-emit as a numeric operand
-                // pointing into that side-table followed by the BI
-                // operator. RenderInlineImage looks the entry up. We
-                // can't pass binary bytes through the token list
-                // safely (Latin1 round-trip works, but binary 0x00 etc.
-                // bytes inside operand strings break later parsing).
-                if (tok == "BI")
-                {
-                    // Find the ID marker (single token "ID" followed
-                    // by exactly one whitespace per spec).
-                    int idIdx = content.IndexOf("\nID", i);
-                    if (idIdx < 0) idIdx = content.IndexOf(" ID", i);
-                    if (idIdx < 0) idIdx = content.IndexOf("\rID", i);
-                    if (idIdx >= 0)
-                    {
-                        // Header text spans from end of "BI " to start of "ID"
-                        // (excluding the BI/ID markers themselves).
-                        int headerStart = i; // i is just past "BI"
-                        int headerEnd = idIdx; // before the surrounding whitespace + "ID"
-                        string header = content.Substring(headerStart, headerEnd - headerStart);
-
-                        // Skip over the dict entries up to and including
-                        // ID + the one separator byte.
-                        int after = idIdx + 3;
-                        if (after < len && (content[after] == '\n' || content[after] == '\r' || content[after] == ' '))
-                            after++;
-                        // Now scan for "EI" at a word boundary.
-                        int eiIdx = -1;
-                        for (int j = after; j + 1 < len; j++)
-                        {
-                            if (content[j] == 'E' && content[j + 1] == 'I')
-                            {
-                                bool leftBoundary = j == 0 || char.IsWhiteSpace(content[j - 1]);
-                                bool rightBoundary = j + 2 >= len ||
-                                    char.IsWhiteSpace(content[j + 2]) ||
-                                    content[j + 2] == '/' || content[j + 2] == '<';
-                                if (leftBoundary && rightBoundary)
-                                {
-                                    eiIdx = j + 2;
-                                    break;
-                                }
-                            }
-                        }
-                        if (eiIdx > 0)
-                        {
-                            // Data bytes are content[after..(eiIdx-2)]
-                            // (eiIdx-2 = start of "EI"). Trim a single
-                            // trailing whitespace separator before EI
-                            // if present, per spec.
-                            int dataEnd = eiIdx - 2;
-                            if (dataEnd > after && (content[dataEnd - 1] == '\n' || content[dataEnd - 1] == '\r' || content[dataEnd - 1] == ' '))
-                                dataEnd--;
-                            // The renderer received content as a Latin1
-                            // string of original bytes; reverse the
-                            // mapping char-by-char to get the raw bytes
-                            // back without re-encoding.
-                            int dataLen = Math.Max(0, dataEnd - after);
-                            var dataBytes = new byte[dataLen];
-                            for (int k = 0; k < dataLen; k++)
-                                dataBytes[k] = (byte)content[after + k];
-
-                            int idx = _inlineImages.Count;
-                            _inlineImages.Add((header, dataBytes));
-                            // The "BI" was already pushed at line 2776;
-                            // insert the side-table index *before* it so
-                            // the dispatcher sees it as an operand of
-                            // BI when the BI token fires.
-                            tokens.Insert(tokens.Count - 1, idx.ToString(CultureInfo.InvariantCulture));
-                            i = eiIdx;
-                            continue;
-                        }
-                    }
-                    // Couldn't parse — leave BI alone (no operand) so the
-                    // dispatcher treats it as a no-op.
-                }
-            }
-        }
-
-        return tokens;
-    }
-
-    private static bool IsDelimiterOrWhitespace(char c)
-    {
-        return char.IsWhiteSpace(c) ||
-               c == '(' || c == ')' ||
-               c == '<' || c == '>' ||
-               c == '[' || c == ']' ||
-               c == '/' || c == '%';
-    }
-
-    private static bool IsOperator(string token)
-    {
-        if (string.IsNullOrEmpty(token))
-            return false;
-
-        // If it starts with a digit, minus, or period, it's likely a number
-        var c = token[0];
-        if (char.IsDigit(c) || c == '-' || c == '+' || c == '.')
-            return false;
-
-        // Names start with /
-        if (c == '/')
-            return false;
-
-        // Strings
-        if (c == '(' || c == '<')
-            return false;
-
-        // Arrays/dicts
-        if (c == '[' || c == ']')
-            return false;
-        if (token == "<<" || token == ">>")
-            return false;
-
-        return true;
-    }
-
     private static double ParseNumber(string s)
     {
         if (double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out var result))
@@ -4233,5 +3803,4 @@ internal partial class RenderContext
         return 0;
     }
 
-    #endregion
 }
