@@ -156,15 +156,24 @@ public static class PdfOutlineParser
         var pagesRoot = doc.Catalog.GetOptional("Pages");
         if (pagesRoot != null && doc.Resolve(pagesRoot) is PdfDictionary rootDict)
         {
+            var visited = new HashSet<(int, int)>();
+            if (pagesRoot is PdfReference rootRef)
+            {
+                visited.Add((rootRef.ObjectNum, rootRef.Generation));
+            }
+
             int counter = 0;
-            WalkPages(doc, rootDict, map, ref counter);
+            WalkPages(doc, rootDict, map, ref counter, visited, depth: 0);
         }
         return map;
     }
 
     private static void WalkPages(PdfDocument doc, PdfDictionary node,
-        Dictionary<(int, int), int> map, ref int counter)
+        Dictionary<(int, int), int> map, ref int counter,
+        HashSet<(int, int)> visited, int depth)
     {
+        if (depth > MaxDepth) return;
+
         var kids = node.GetOptional("Kids");
         if (kids != null && doc.Resolve(kids) is PdfArray kidsArr)
         {
@@ -181,7 +190,10 @@ public static class PdfOutlineParser
                     }
                     else if (kidType == "Pages")
                     {
-                        WalkPages(doc, kidDict, map, ref counter);
+                        if (!visited.Add((kidRef.ObjectNum, kidRef.Generation)))
+                            continue;
+
+                        WalkPages(doc, kidDict, map, ref counter, visited, depth + 1);
                     }
                 }
             }

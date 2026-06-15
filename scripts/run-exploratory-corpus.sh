@@ -109,7 +109,14 @@ run_one_chunk() {
     local i="$1"
     local slice_path
     slice_path=$(printf '%s/exploratory-chunk-%03d-of-%03d.json' "$BIN_DIR" "$i" "$CHUNKS")
-    timeout 600 "$PDFE_BIN" corpus-scan "$CORPUS" \
+    local runner=()
+    if command -v timeout >/dev/null 2>&1; then
+        runner=(timeout 600)
+    elif command -v gtimeout >/dev/null 2>&1; then
+        runner=(gtimeout 600)
+    fi
+
+    "${runner[@]}" "$PDFE_BIN" corpus-scan "$CORPUS" \
         --output "$slice_path" \
         --chunk "$i" \
         --total "$CHUNKS" \

@@ -72,8 +72,12 @@ else
     curl -fsSL "$API" -o "$LIST_TMP"
 fi
 
-# Extract just the .pdf entries.
-mapfile -t PDFS < <(python3 - "$LIST_TMP" <<'PY'
+# Extract just the .pdf entries. Use a read loop instead of mapfile so the
+# script works with macOS's system Bash 3.x.
+PDFS=()
+while IFS= read -r pdf_name; do
+    PDFS+=("$pdf_name")
+done < <(python3 - "$LIST_TMP" <<'PY'
 import json, sys
 data = json.load(open(sys.argv[1]))
 for d in data:
@@ -86,13 +90,13 @@ echo "  ${#PDFS[@]} PDFs in upstream corpus"
 # Load existing manifest as known-sha lookup so we can short-circuit
 # unchanged files.
 MANIFEST="$OUT/.manifest.tsv"
-declare -A KNOWN_SHA
-if [[ -f "$MANIFEST" && "$FORCE" == "0" ]]; then
-    while IFS=$'\t' read -r sha name _size; do
-        [[ -z "$sha" || -z "$name" ]] && continue
-        KNOWN_SHA["$name"]="$sha"
-    done < "$MANIFEST"
-fi
+known_sha_for() {
+    local wanted="$1"
+    if [[ ! -f "$MANIFEST" || "$FORCE" != "0" ]]; then
+        return 0
+    fi
+    awk -F '\t' -v wanted="$wanted" '$2 == wanted { print $1; exit }' "$MANIFEST"
+}
 
 NEW_MANIFEST="$(mktemp)"
 trap 'rm -f "$LIST_TMP" "$NEW_MANIFEST"' EXIT
@@ -105,7 +109,7 @@ for name in "${PDFS[@]}"; do
     # the manifest line and move on.
     if [[ "$FORCE" == "0" && -f "$dest" ]]; then
         cur_sha="$(file_sha256 "$dest")"
-        if [[ "${KNOWN_SHA[$name]:-}" == "$cur_sha" ]]; then
+        if [[ "$(known_sha_for "$name")" == "$cur_sha" ]]; then
             size=$(file_size "$dest")
             printf '%s\t%s\t%s\n' "$cur_sha" "$name" "$size" >> "$NEW_MANIFEST"
             skipped=$((skipped+1))

@@ -1,5 +1,6 @@
 using System.IO;
 using System.Linq;
+using System.Text;
 using AwesomeAssertions;
 using Pdfe.Core.Document;
 using Xunit;
@@ -17,6 +18,35 @@ public class PdfOutlineParserTests
 
     private const string PragmaticBook =
         "/home/marc/Downloads/business-success-with-open-source_P1.0.pdf";
+
+    [Fact]
+    public void BuildPageRefMap_CyclicPagesTree_DoesNotRecurseForever()
+    {
+        var pdf = Encoding.ASCII.GetBytes("""
+            %PDF-1.7
+            1 0 obj
+            << /Type /Catalog /Pages 2 0 R >>
+            endobj
+            2 0 obj
+            << /Type /Pages /Kids [2 0 R] /Count 1 >>
+            endobj
+            xref
+            0 3
+            0000000000 65535 f
+            0000000009 00000 n
+            0000000058 00000 n
+            trailer
+            << /Size 3 /Root 1 0 R >>
+            startxref
+            115
+            %%EOF
+            """);
+
+        using var doc = PdfDocument.Open(pdf);
+
+        PdfOutlineParser.BuildPageRefMap(doc).Should().BeEmpty(
+            "malformed /Pages cycles should be ignored instead of overflowing the stack");
+    }
 
     [Fact]
     public void PragmaticBook_OutlineHasMultiLevelStructure()

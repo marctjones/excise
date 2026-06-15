@@ -25,47 +25,50 @@ for one PDF, plus the per-oracle diff metrics. Statuses:
 ## Latest snapshot
 
 See `exploratory-report.json` for the full data; below is the headline
-breakdown from the 2026-05-02 run against pdf.js master.
+breakdown from the 2026-06-15 run against the current pdf.js corpus
+download.
 
-| Status | Count | % of 684 |
+| Status | Count | % of 682 |
 |---|---|---|
-| PASS | 448 | 65.5% |
-| DIFF | 149 | 21.8% |
+| PASS | 454 | 66.6% |
+| DIFF | 146 | 21.4% |
 | PASS_ONE | 45 | 6.6% |
-| PARSE_ERROR | 40 | 5.8% |
-| TIMEOUT | 1 | 0.1% |
+| PARSE_ERROR | 34 | 5.0% |
+| TIMEOUT | 2 | 0.3% |
 | COMPARE_ERROR | 1 | 0.1% |
 
-**Top failure clusters in `DIFF` (149):**
+**Top failure clusters in `DIFF` (146):**
 
 * **76 (51%) — `bitmap-*` JBIG2 fixtures.** pdfe doesn't have a JBIG2
   decoder yet, so these all render blank or near-blank. One missing
   feature → half the rendering gap. Implementing JBIG2 would close
   this entire cluster.
-* **42 — `issue*` repros.** Assorted from pdf.js's GitHub issue
+* **39 — `issue*` repros.** Assorted from pdf.js's GitHub issue
   tracker. Many are font/encoding edge cases, transparency
   combinations, or color-space ambiguities.
-* **12 — `bug*` Mozilla Bugzilla repros.** Same shape as `issue*`.
-* **~16 other** — annotations, shading, masks, miscellaneous.
+* **11 — `bug*` Mozilla Bugzilla repros.** Same shape as `issue*`.
+* **20 other** — annotations, shading, masks, miscellaneous.
 
-**`PARSE_ERROR` (40):**
+**`PARSE_ERROR` (34):**
 
-* 23 `PdfParseException` — diverse: xref recovery, stream `/Length`
+* 25 `PdfParseException` — diverse: xref recovery, stream `/Length`
   resolution failures, generation-number parsing, etc.
-* 8 `ArgumentNullException` — null-handling holes
-* 2 `PdfEncryptionNotSupportedException` — encryption variants
+* 3 `PdfEncryptionNotSupportedException` — encryption variants
   beyond AESV5/R6
 * 2 `OverflowException` — Int32 overflow on malformed size fields
-* 1 `Unknown filter: BrotliDecode` — Brotli filter not implemented
-* others (`InvalidDataException`, `IndexOutOfRangeException`,
-  `NotSupportedException`)
+* 2 `InvalidDataException` — unsupported compressed archive method
+* 2 others (`IndexOutOfRangeException`, bitmap allocation failure)
+
+**`TIMEOUT` (2):**
+
+* `bomb_giant.pdf`
+* `issue14256.pdf`
 
 **`PASS_ONE` (45) — pdfe sides with:**
 
-* 29 with mutool (Poppler renders differently)
-* 16 with poppler (mutool renders differently)
-* These are **not** pdfe bugs — they're cases where the two reference
-  engines disagree among themselves and pdfe agrees with one of them.
+These are **not clear pdfe bugs** — they're cases where the two
+reference engines disagree among themselves, or one reference renderer
+refuses while pdfe can still be compared against the other.
 
 ## Re-running
 
