@@ -512,6 +512,71 @@ public class SkiaRendererCoverageTests
         bitmap.Should().NotBeNull();
     }
 
+    [Fact]
+    public void RenderPage_ClippingPathThenNestedFilledPaths_RendersAllFills()
+    {
+        var content = @"
+            q
+            1 0 0 -1 0 792 cm
+            q
+            0.001 0 0 0.001 0 0 cm
+            0 0 m
+            612000 0 l
+            612000 792000 l
+            0 792000 l
+            h
+            W
+            n
+            q q
+            1 0 0 rg
+            0 0 m
+            204000 0 l
+            204000 264000 l
+            0 264000 l
+            h
+            f*
+            Q Q
+            q q
+            0 1 0 rg
+            204000 0 m
+            408000 0 l
+            408000 264000 l
+            204000 264000 l
+            h
+            f*
+            Q Q
+            q q
+            0 0 1 rg
+            408000 0 m
+            612000 0 l
+            612000 264000 l
+            408000 264000 l
+            h
+            f*
+            Q Q
+            Q
+            Q
+        ";
+        var pdfData = CreatePdfWithContent(content);
+        using var doc = PdfDocument.Open(pdfData);
+        var renderer = new SkiaRenderer();
+
+        using var bitmap = renderer.RenderPage(doc.GetPage(1), new RenderOptions { Dpi = 72 });
+
+        var red = bitmap.GetPixel(102, 132);
+        var green = bitmap.GetPixel(306, 132);
+        var blue = bitmap.GetPixel(510, 132);
+        red.Red.Should().BeGreaterThan(200);
+        red.Green.Should().BeLessThan(80);
+        red.Blue.Should().BeLessThan(80);
+        green.Red.Should().BeLessThan(80);
+        green.Green.Should().BeGreaterThan(200);
+        green.Blue.Should().BeLessThan(80);
+        blue.Red.Should().BeLessThan(80);
+        blue.Green.Should().BeLessThan(80);
+        blue.Blue.Should().BeGreaterThan(200);
+    }
+
     #endregion
 
     #region Text Rendering Tests

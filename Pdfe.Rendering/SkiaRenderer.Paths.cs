@@ -7,31 +7,29 @@ internal partial class RenderContext
 {
     #region Path Construction
 
-    // Path coordinates are subject to the same PDF 32000-2 §6.1.12
-    // implementation-limit as matrix components. Conformance fixtures
-    // (A019-pdfa2-pass-*) put ±FLT_MAX in `l` to verify the reader
-    // doesn't crash or freeze; clamping keeps the path representable
-    // in Skia's float matrix without overflowing. Real PDFs always
-    // stay within page bounds (typically <5000 pt).
+    // Path coordinates can be large in producer coordinate systems that
+    // immediately scale down through the CTM. Keep a finite guard for hostile
+    // ±FLT_MAX conformance probes, but do not use the stricter matrix-component
+    // limit here or valid scaled content collapses into a corner.
     private void MoveTo(double x, double y)
     {
         _currentPath ??= new SKPath();
-        _currentPath.MoveTo(ClampMatrix(x), ClampMatrix(y));
+        _currentPath.MoveTo(ClampPathCoordinate(x), ClampPathCoordinate(y));
     }
 
     private void LineTo(double x, double y)
     {
         _currentPath ??= new SKPath();
-        _currentPath.LineTo(ClampMatrix(x), ClampMatrix(y));
+        _currentPath.LineTo(ClampPathCoordinate(x), ClampPathCoordinate(y));
     }
 
     private void CurveTo(double x1, double y1, double x2, double y2, double x3, double y3)
     {
         _currentPath ??= new SKPath();
         _currentPath.CubicTo(
-            ClampMatrix(x1), ClampMatrix(y1),
-            ClampMatrix(x2), ClampMatrix(y2),
-            ClampMatrix(x3), ClampMatrix(y3));
+            ClampPathCoordinate(x1), ClampPathCoordinate(y1),
+            ClampPathCoordinate(x2), ClampPathCoordinate(y2),
+            ClampPathCoordinate(x3), ClampPathCoordinate(y3));
     }
 
     private void CurveToV(double x2, double y2, double x3, double y3)
@@ -39,14 +37,22 @@ internal partial class RenderContext
         // v operator: current point replicated as first control point
         if (_currentPath == null) return;
         var last = _currentPath.LastPoint;
-        _currentPath.CubicTo(last.X, last.Y, (float)x2, (float)y2, (float)x3, (float)y3);
+        _currentPath.CubicTo(
+            last.X,
+            last.Y,
+            ClampPathCoordinate(x2),
+            ClampPathCoordinate(y2),
+            ClampPathCoordinate(x3),
+            ClampPathCoordinate(y3));
     }
 
     private void CurveToY(double x1, double y1, double x3, double y3)
     {
         // y operator: endpoint replicated as second control point
         _currentPath ??= new SKPath();
-        _currentPath.CubicTo((float)x1, (float)y1, (float)x3, (float)y3, (float)x3, (float)y3);
+        var endX = ClampPathCoordinate(x3);
+        var endY = ClampPathCoordinate(y3);
+        _currentPath.CubicTo(ClampPathCoordinate(x1), ClampPathCoordinate(y1), endX, endY, endX, endY);
     }
 
     private void ClosePath()
@@ -57,7 +63,21 @@ internal partial class RenderContext
     private void Rectangle(double x, double y, double w, double h)
     {
         _currentPath ??= new SKPath();
-        _currentPath.AddRect(new SKRect((float)x, (float)y, (float)(x + w), (float)(y + h)));
+        _currentPath.AddRect(new SKRect(
+            ClampPathCoordinate(x),
+            ClampPathCoordinate(y),
+            ClampPathCoordinate(x + w),
+            ClampPathCoordinate(y + h)));
+    }
+
+    private const float PathCoordinateMax = 10_000_000f;
+
+    private static float ClampPathCoordinate(double v)
+    {
+        if (double.IsNaN(v) || double.IsInfinity(v)) return 0f;
+        if (v > PathCoordinateMax) return PathCoordinateMax;
+        if (v < -PathCoordinateMax) return -PathCoordinateMax;
+        return (float)v;
     }
 
     #endregion
