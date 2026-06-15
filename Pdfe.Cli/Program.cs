@@ -1763,8 +1763,25 @@ class Program
 
     internal static string ClassifyCorpusFailure(Exception ex, CorpusFailurePhase phase)
     {
+        if (ex is Pdfe.Rendering.InvalidPageGeometryException)
+            return "INVALID_PAGE_GEOMETRY";
+
+        if (ex is Pdfe.Rendering.RenderResourceLimitException)
+            return "RESOURCE_LIMIT";
+
         if (phase == CorpusFailurePhase.Open)
+        {
+            if (ex is PdfEncryptionNotSupportedException)
+                return "UNSUPPORTED_ENCRYPTED";
+
+            if (ex is InvalidDataException)
+                return "UNSUPPORTED_COMPRESSION";
+
+            if (ex is PdfParseException or OverflowException or FormatException)
+                return "MALFORMED_PDF";
+
             return "PARSE_ERROR";
+        }
 
         if (IsDecodeFailure(ex))
             return "DECODE_ERROR";

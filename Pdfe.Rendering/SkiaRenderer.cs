@@ -46,6 +46,15 @@ public class SkiaRenderer
         bool quarter = rot is 90 or 270;
         var width = (int)Math.Round((quarter ? page.Height : page.Width) * scale);
         var height = (int)Math.Round((quarter ? page.Width : page.Height) * scale);
+        if (width <= 0 || height <= 0)
+            throw new InvalidPageGeometryException(
+                $"Page resolves to an invalid bitmap size: {width} x {height} pixels.");
+
+        var pixelCount = (long)width * height;
+        if (pixelCount > options.MaxPixelCount)
+            throw new RenderResourceLimitException(
+                $"Page render would allocate {width} x {height} pixels ({pixelCount:N0}), " +
+                $"exceeding the configured limit of {options.MaxPixelCount:N0} pixels.");
 
         // Create bitmap
         var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
@@ -90,6 +99,26 @@ public class SkiaRenderer
         using var image = SKImage.FromBitmap(bitmap);
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);
         data.SaveTo(destination);
+    }
+}
+
+/// <summary>
+/// Thrown when a page's box and rotation resolve to a non-positive output size.
+/// </summary>
+public sealed class InvalidPageGeometryException : InvalidOperationException
+{
+    public InvalidPageGeometryException(string message) : base(message)
+    {
+    }
+}
+
+/// <summary>
+/// Thrown when a render request exceeds the configured bitmap resource limit.
+/// </summary>
+public sealed class RenderResourceLimitException : InvalidOperationException
+{
+    public RenderResourceLimitException(string message) : base(message)
+    {
     }
 }
 

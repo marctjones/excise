@@ -42,6 +42,30 @@ public class SkiaRendererTests
     }
 
     [Fact]
+    public void RenderPage_ZeroSizedPage_ThrowsInvalidPageGeometry()
+    {
+        var pdfData = CreatePdfWithContentAndPageSize("", width: 0, height: 0);
+        using var doc = PdfDocument.Open(pdfData);
+
+        var act = () => new SkiaRenderer().RenderPage(doc.GetPage(1), new RenderOptions { Dpi = 72 });
+
+        act.Should().Throw<InvalidPageGeometryException>();
+    }
+
+    [Fact]
+    public void RenderPage_ExceedsPixelLimit_ThrowsResourceLimit()
+    {
+        var pdfData = CreatePdfWithContentAndPageSize("", width: 100, height: 100);
+        using var doc = PdfDocument.Open(pdfData);
+
+        var act = () => new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, MaxPixelCount = 100 });
+
+        act.Should().Throw<RenderResourceLimitException>();
+    }
+
+    [Fact]
     public void RenderPageToPng_WritesValidPngBytes()
     {
         var pdfData = CreateSimplePdf("Hello World");
@@ -3237,6 +3261,9 @@ public class SkiaRendererTests
     }
 
     private static byte[] CreatePdfWithContent(string content)
+        => CreatePdfWithContentAndPageSize(content, width: 612, height: 792);
+
+    private static byte[] CreatePdfWithContentAndPageSize(string content, int width, int height)
     {
         using var ms = new MemoryStream();
         using var writer = new StreamWriter(ms, System.Text.Encoding.ASCII, leaveOpen: true);
@@ -3261,7 +3288,7 @@ public class SkiaRendererTests
 
         offsets[3] = ms.Position;
         writer.WriteLine("3 0 obj");
-        writer.WriteLine("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>");
+        writer.WriteLine($"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {width} {height}] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>");
         writer.WriteLine("endobj");
         writer.Flush();
 

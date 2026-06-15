@@ -4,6 +4,24 @@ All notable changes to pdfe are documented here. Format roughly follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 semantic versioning.
 
+## [Unreleased]
+
+Rendering quality hardening checkpoint. No intended API break.
+
+### Changed
+- **Real-world corpus failure taxonomy (#491, #492).** The exploratory corpus
+  scanner now distinguishes malformed PDFs, unsupported encrypted files,
+  unsupported compression, decode failures, invalid page geometry, render
+  resource limits, and timeouts instead of collapsing them into generic
+  parse/render errors.
+- **Render resource guardrails.** `Pdfe.Rendering` now rejects zero-sized page
+  output and page renders that would exceed the configured bitmap pixel budget
+  before allocating native Skia bitmaps.
+
+### Tests
+- Focused renderer guard tests passed: 2 passed.
+- `Pdfe.Cli` Debug build passed locally.
+
 ## [2.15.0] - 2026-06-11
 
 Form workflow hardening release. Additive; no breaking changes.

@@ -106,6 +106,14 @@ pdfe demo
 ### Renderer coverage
 The Skia renderer has been smoke-tested against a real-world corpus and is validated with a MuPDF-first differential harness. When MuPDF disagrees, the test suite escalates to Poppler and Ghostscript for second and third opinions. Known divergences are issue-linked allowlist entries; new unclassified divergences fail the differential slice.
 
+For release-quality rendering work, pdfe also has an exploratory all-pages
+corpus scanner for the pdf.js corpus. The report separates visual fidelity
+results (`PASS`, `PASS_ONE`, `DIFF`) from bounded non-fidelity classifications
+such as malformed PDFs, unsupported encryption/compression, decode failures,
+invalid page geometry, render resource limits, oracle refusal, and timeouts.
+This keeps quick-win rendering work focused on shared root causes rather than
+per-file exceptions.
+
 | PDF type | Notes |
 |---|---|
 | State-issued government forms (CT birth-cert, DS-82) | TJ kerning, Tw column alignment, raster backgrounds |
