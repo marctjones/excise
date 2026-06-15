@@ -186,7 +186,7 @@ public sealed class PdfColorSpace
                 (values[0], values[0], values[0]),
 
             PdfColorSpaceType.CalGray =>
-                CalGrayToRgb(values[0]),
+                HasCalGrayCalibration ? CalGrayToRgb(values[0]) : (values[0], values[0], values[0]),
 
             PdfColorSpaceType.DeviceRGB =>
                 (values.Length >= 3) ? (values[0], values[1], values[2]) : (values[0], values[0], values[0]),
@@ -222,6 +222,8 @@ public sealed class PdfColorSpace
     }
 
     private bool HasCalRgbCalibration => _whitePoint != null || _calGamma != null || _calMatrix != null;
+
+    private bool HasCalGrayCalibration => _whitePoint != null || _calGamma != null;
 
     /// <summary>Convert an Indexed color index to RGB using the lookup table.</summary>
     public (double R, double G, double B) LookupIndexed(int index)
@@ -269,7 +271,8 @@ public sealed class PdfColorSpace
     {
         var gamma = _calGamma is { Length: > 0 } ? _calGamma[0] : 1.0;
         var y = Math.Pow(Math.Clamp(a, 0, 1), gamma);
-        return (y, y, y);
+        var encoded = EncodeSrgb(y);
+        return (encoded, encoded, encoded);
     }
 
     private (double R, double G, double B) CalRgbToRgb(double a, double b, double c)

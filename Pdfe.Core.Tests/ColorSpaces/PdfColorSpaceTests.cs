@@ -179,9 +179,9 @@ public class PdfColorSpaceTests
         var cs = PdfColorSpace.Parse(arr, doc);
         var (r, g, b) = cs.ToRgb(new[] { 0.5 });
 
-        r.Should().BeApproximately(0.25, 0.0001);
-        g.Should().BeApproximately(0.25, 0.0001);
-        b.Should().BeApproximately(0.25, 0.0001);
+        r.Should().BeApproximately(0.5371, 0.0001);
+        g.Should().BeApproximately(0.5371, 0.0001);
+        b.Should().BeApproximately(0.5371, 0.0001);
     }
 
     [Fact]
