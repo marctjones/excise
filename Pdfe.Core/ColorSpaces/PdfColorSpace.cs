@@ -183,9 +183,12 @@ public sealed class PdfColorSpace
             return (0, 0, 0);
 
         int baseComps = _indexedBase.Components;
-        int offset = index * baseComps;
-        if (offset + baseComps > _indexedLookup.Length)
+        if (baseComps <= 0 || _indexedLookup.Length < baseComps)
             return (0, 0, 0);
+
+        int maxIndex = (_indexedLookup.Length / baseComps) - 1;
+        index = Math.Clamp(index, 0, maxIndex);
+        int offset = index * baseComps;
 
         var baseValues = new double[baseComps];
         for (int i = 0; i < baseComps; i++)

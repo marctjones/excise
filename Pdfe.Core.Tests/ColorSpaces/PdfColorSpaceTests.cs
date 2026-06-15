@@ -387,22 +387,31 @@ public class PdfColorSpaceTests
     }
 
     [Fact]
-    public void Indexed_OutOfBounds_ReturnsBlack()
+    public void Indexed_OutOfBounds_ClampsToAvailableLookupRange()
     {
         using var doc = CreateMinimalPdf();
-        byte[] lookupData = new byte[] { 0x00, 0x00, 0xFF };
+        byte[] lookupData = new byte[]
+        {
+            0x00, 0x00, 0xFF,
+            0xFF, 0x00, 0x00,
+        };
         var lookupString = new PdfString(System.Text.Encoding.Latin1.GetString(lookupData));
 
         var arr = new PdfArray(
             new PdfName("Indexed"),
             new PdfName("DeviceRGB"),
-            new PdfInteger(0),
+            new PdfInteger(1),
             lookupString
         );
 
         var cs = PdfColorSpace.Parse(arr, doc);
-        var (r, g, b) = cs.LookupIndexed(999);
+        var (r, g, b) = cs.LookupIndexed(-17);
         r.Should().Be(0.0);
+        g.Should().Be(0.0);
+        b.Should().BeApproximately(1.0, 0.01);
+
+        (r, g, b) = cs.LookupIndexed(999);
+        r.Should().BeApproximately(1.0, 0.01);
         g.Should().Be(0.0);
         b.Should().Be(0.0);
     }

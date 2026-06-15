@@ -205,6 +205,23 @@ public class SkiaRendererCoverageTests
         bitmap.Should().NotBeNull();
     }
 
+    [Fact]
+    public void RenderPage_ImageXObject_ResolvesNamedIndexedColorSpaceResource()
+    {
+        var pdfData = CreatePdfWithNamedIndexedImageColorSpace();
+        using var doc = PdfDocument.Open(pdfData);
+        var renderer = new SkiaRenderer();
+
+        using var bitmap = renderer.RenderPage(doc.GetPage(1));
+
+        var pixelX = (int)(150 * 150 / 72);
+        var pixelY = bitmap.Height - (int)(150 * 150 / 72);
+        var pixel = bitmap.GetPixel(pixelX, pixelY);
+        pixel.Red.Should().BeGreaterThan(180);
+        pixel.Green.Should().BeLessThan(80);
+        pixel.Blue.Should().BeLessThan(80);
+    }
+
     #endregion
 
     #region Path Operator Tests (fill rules, no-op)
@@ -739,6 +756,67 @@ public class SkiaRendererCoverageTests
         writer.Flush();
 
         return ms.ToArray();
+    }
+
+    private static byte[] CreatePdfWithNamedIndexedImageColorSpace()
+    {
+        const string content = "q\n100 0 0 100 100 100 cm\n/Im1 Do\nQ\n";
+        const string imageData = "\x01";
+        var sb = new StringBuilder();
+        sb.AppendLine("%PDF-1.4");
+        var offsets = new long[6];
+
+        offsets[1] = sb.Length;
+        sb.AppendLine("1 0 obj");
+        sb.AppendLine("<< /Type /Catalog /Pages 2 0 R >>");
+        sb.AppendLine("endobj");
+
+        offsets[2] = sb.Length;
+        sb.AppendLine("2 0 obj");
+        sb.AppendLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+        sb.AppendLine("endobj");
+
+        offsets[3] = sb.Length;
+        sb.AppendLine("3 0 obj");
+        sb.AppendLine("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R");
+        sb.AppendLine("   /Resources <<");
+        sb.AppendLine("     /ColorSpace << /CS1 [/Indexed /DeviceRGB 1 <0000FFFF0000>] >>");
+        sb.AppendLine("     /XObject << /Im1 5 0 R >>");
+        sb.AppendLine("   >>");
+        sb.AppendLine(">>");
+        sb.AppendLine("endobj");
+
+        offsets[4] = sb.Length;
+        sb.AppendLine("4 0 obj");
+        sb.AppendLine($"<< /Length {content.Length} >>");
+        sb.AppendLine("stream");
+        sb.Append(content);
+        sb.AppendLine("endstream");
+        sb.AppendLine("endobj");
+
+        offsets[5] = sb.Length;
+        sb.AppendLine("5 0 obj");
+        sb.AppendLine("<< /Type /XObject /Subtype /Image /Width 1 /Height 1");
+        sb.AppendLine("   /BitsPerComponent 8 /ColorSpace /CS1 /Length 1 >>");
+        sb.AppendLine("stream");
+        sb.Append(imageData);
+        sb.AppendLine();
+        sb.AppendLine("endstream");
+        sb.AppendLine("endobj");
+
+        var xrefPos = sb.Length;
+        sb.AppendLine("xref");
+        sb.AppendLine("0 6");
+        sb.AppendLine("0000000000 65535 f ");
+        for (int i = 1; i <= 5; i++)
+            sb.AppendLine($"{offsets[i]:D10} 00000 n ");
+        sb.AppendLine("trailer");
+        sb.AppendLine("<< /Root 1 0 R /Size 6 >>");
+        sb.AppendLine("startxref");
+        sb.AppendLine(xrefPos.ToString());
+        sb.AppendLine("%%EOF");
+
+        return Encoding.Latin1.GetBytes(sb.ToString());
     }
 
     private static byte[] CreatePdfWithCustomPageSize(double width, double height)

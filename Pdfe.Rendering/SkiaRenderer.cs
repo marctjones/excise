@@ -1996,7 +1996,7 @@ internal partial class RenderContext
         var csObj = stream.GetOptional("ColorSpace");
         if (csObj != null)
         {
-            pdfColorSpace = PdfColorSpace.Parse(csObj, _page.Document);
+            pdfColorSpace = ResolveImageColorSpace(csObj);
             componentsPerPixel = pdfColorSpace.Components;
         }
         else
@@ -2028,7 +2028,9 @@ internal partial class RenderContext
                         if (srcIndex + componentsPerPixel <= data.Length)
                         {
                             for (int i = 0; i < componentsPerPixel; i++)
-                                pixelValues[i] = data[srcIndex + i] / 255.0;
+                                pixelValues[i] = pdfColorSpace.Type == PdfColorSpaceType.Indexed
+                                    ? data[srcIndex + i]
+                                    : data[srcIndex + i] / 255.0;
                             srcIndex += componentsPerPixel;
 
                             var (rd, gd, bd) = pdfColorSpace.ToRgb(pixelValues);
@@ -2082,6 +2084,14 @@ internal partial class RenderContext
         }
 
         return bitmap;
+    }
+
+    private PdfColorSpace ResolveImageColorSpace(Pdfe.Core.Primitives.PdfObject colorSpaceObject)
+    {
+        if (colorSpaceObject is Pdfe.Core.Primitives.PdfName name)
+            return ResolveColorSpace(name.Value) ?? PdfColorSpace.Parse(colorSpaceObject, _page.Document);
+
+        return PdfColorSpace.Parse(colorSpaceObject, _page.Document);
     }
 
     /// <summary>
