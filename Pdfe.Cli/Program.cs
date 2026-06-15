@@ -1,4 +1,5 @@
 using System.CommandLine;
+using System.Diagnostics;
 using Pdfe.Core.Document;
 using Pdfe.Core.Graphics;
 using Pdfe.Core.Parsing;
@@ -1340,23 +1341,30 @@ class Program
             // PDFs, hard cap on the bad ones.
             var wallBudgetMs = pdfTimeoutMs * 2;
             IReadOnlyList<CorpusScanEntry> pdfEntries;
-            var task = Task.Run(() => ScanOnePdf(rel, pdf, dpi, maxDiffFraction, maxMae, pdfTimeoutMs, pageMode));
+            var pdfStopwatch = Stopwatch.StartNew();
+            var progress = new CorpusScanProgress(rel);
+            var task = Task.Run(() => ScanOnePdf(rel, pdf, dpi, maxDiffFraction, maxMae, pdfTimeoutMs, pageMode, progress));
             if (task.Wait(wallBudgetMs))
             {
                 pdfEntries = task.Result;
             }
             else
             {
+                pdfStopwatch.Stop();
+                var snapshot = progress.Snapshot();
                 pdfEntries = new[]
                 {
                     new CorpusScanEntry
                     {
                         path = rel,
-                        pageNumber = 0,
+                        pageNumber = snapshot.PageNumber,
                         status = "TIMEOUT",
-                        errorPhase = "scan",
+                        errorPhase = snapshot.Phase,
                         errorType = "WallClockTimeout",
-                        errorMessage = $"Per-PDF budget {wallBudgetMs}ms exceeded — pdfe or reference renderer got stuck.",
+                        elapsedMs = pdfStopwatch.ElapsedMilliseconds,
+                        timeoutMs = wallBudgetMs,
+                        diagnostic = snapshot.Detail,
+                        errorMessage = $"Per-PDF budget {wallBudgetMs}ms exceeded during {snapshot.Phase}: {snapshot.Detail}",
                     },
                 };
                 // Note: the underlying ScanOne task may keep running
@@ -1426,16 +1434,20 @@ class Program
     private static IReadOnlyList<CorpusScanEntry> ScanOnePdf(
         string relPath, string pdfPath, int dpi,
         double maxDiffFraction, double maxMae, int oracleTimeoutMs,
-        CorpusPageMode pageMode)
+        CorpusPageMode pageMode,
+        CorpusScanProgress? progress = null)
     {
         PdfDocument? doc = null;
         int pageCount;
+        var pdfStopwatch = Stopwatch.StartNew();
         try
         {
+            progress?.Update("open", 0, "PdfDocument.Open");
             doc = PdfDocument.Open(pdfPath);
             pageCount = doc.PageCount;
             if (pageCount == 0)
             {
+                pdfStopwatch.Stop();
                 return new[]
                 {
                     new CorpusScanEntry
@@ -1444,6 +1456,7 @@ class Program
                         pageNumber = 0,
                         pageCount = 0,
                         status = "EMPTY_DOC",
+                        elapsedMs = pdfStopwatch.ElapsedMilliseconds,
                     },
                 };
             }
@@ -1460,6 +1473,7 @@ class Program
                     errorPhase = "open",
                     errorType = ex.GetType().Name,
                     errorMessage = Trunc(ex.Message, 200),
+                    elapsedMs = pdfStopwatch.ElapsedMilliseconds,
                 },
             };
         }
@@ -1470,9 +1484,13 @@ class Program
             var entries = new List<CorpusScanEntry>();
             foreach (var pageNumber in SelectCorpusPages(pageCount, pageMode))
             {
+                progress?.Update("page", pageNumber, $"page {pageNumber}/{pageCount}");
                 entries.Add(ScanOnePage(relPath, pdfPath, doc, renderer, pageNumber, dpi,
-                    maxDiffFraction, maxMae, oracleTimeoutMs));
+                    maxDiffFraction, maxMae, oracleTimeoutMs, progress));
             }
+            pdfStopwatch.Stop();
+            foreach (var entry in entries)
+                entry.pdfElapsedMs = pdfStopwatch.ElapsedMilliseconds;
             return entries;
         }
     }
@@ -1480,8 +1498,10 @@ class Program
     private static CorpusScanEntry ScanOnePage(
         string relPath, string pdfPath, PdfDocument doc, SkiaRenderer renderer,
         int pageNumber, int dpi,
-        double maxDiffFraction, double maxMae, int oracleTimeoutMs)
+        double maxDiffFraction, double maxMae, int oracleTimeoutMs,
+        CorpusScanProgress? progress = null)
     {
+        var pageStopwatch = Stopwatch.StartNew();
         var entry = new CorpusScanEntry
         {
             path = relPath,
@@ -1496,31 +1516,54 @@ class Program
         {
             try
             {
+                progress?.Update("render", pageNumber, $"pdfe render page {pageNumber}/{doc.PageCount}");
+                var renderStopwatch = Stopwatch.StartNew();
                 pdfeBmp = renderer.RenderPage(doc.GetPage(pageNumber), new RenderOptions { Dpi = dpi });
+                renderStopwatch.Stop();
+                entry.renderMs = renderStopwatch.ElapsedMilliseconds;
             }
             catch (Exception ex)
             {
+                pageStopwatch.Stop();
                 entry.status = ClassifyCorpusFailure(ex, CorpusFailurePhase.Render);
                 entry.errorPhase = "render";
                 entry.errorType = ex.GetType().Name;
                 entry.errorMessage = Trunc(ex.Message, 200);
+                entry.elapsedMs = pageStopwatch.ElapsedMilliseconds;
                 return entry;
             }
 
-            if (pdfeBmp == null) { entry.status = "RENDER_NULL"; return entry; }
+            if (pdfeBmp == null)
+            {
+                pageStopwatch.Stop();
+                entry.status = "RENDER_NULL";
+                entry.elapsedMs = pageStopwatch.ElapsedMilliseconds;
+                return entry;
+            }
 
             // Two oracles: mutool (MuPDF) and pdftocairo (Poppler). pdfe
             // is judged correct if it agrees with EITHER. A disagreement
             // with both is a real bug; a disagreement with one but not
             // the other is more likely a viewer-specific quirk.
+            progress?.Update("mutool", pageNumber, $"mutool render page {pageNumber}/{doc.PageCount}");
+            var mutoolStopwatch = Stopwatch.StartNew();
             mutoolBmp = Pdfe.Rendering.Differential.MutoolReferenceRenderer.RenderPage(
                 pdfPath, pageNumber, dpi, oracleTimeoutMs);
+            mutoolStopwatch.Stop();
+            entry.mutoolMs = mutoolStopwatch.ElapsedMilliseconds;
+
+            progress?.Update("pdftocairo", pageNumber, $"pdftocairo render page {pageNumber}/{doc.PageCount}");
+            var cairoStopwatch = Stopwatch.StartNew();
             cairoBmp = Pdfe.Rendering.Differential.PdftocairoReferenceRenderer.RenderPage(
                 pdfPath, pageNumber, dpi, oracleTimeoutMs);
+            cairoStopwatch.Stop();
+            entry.cairoMs = cairoStopwatch.ElapsedMilliseconds;
 
             if (mutoolBmp == null && cairoBmp == null)
             {
+                pageStopwatch.Stop();
                 entry.status = "ALL_ORACLES_REFUSED";
+                entry.elapsedMs = pageStopwatch.ElapsedMilliseconds;
                 return entry;
             }
 
@@ -1532,6 +1575,7 @@ class Program
 
             if (mutoolBmp != null)
             {
+                progress?.Update("compare", pageNumber, $"compare pdfe vs mutool page {pageNumber}/{doc.PageCount}");
                 var (a, b) = MatchAndCompare(pdfeBmp, mutoolBmp);
                 mutoolMetrics = (a, b);
                 entry.diffFractionMutool = a;
@@ -1539,6 +1583,7 @@ class Program
             }
             if (cairoBmp != null)
             {
+                progress?.Update("compare", pageNumber, $"compare pdfe vs pdftocairo page {pageNumber}/{doc.PageCount}");
                 var (a, b) = MatchAndCompare(pdfeBmp, cairoBmp);
                 cairoMetrics = (a, b);
                 entry.diffFractionCairo = a;
@@ -1562,13 +1607,17 @@ class Program
             if (passMutool && passCairo)        entry.status = "PASS";
             else if (passMutool || passCairo)   entry.status = "PASS_ONE";  // partial agreement
             else                                entry.status = "DIFF";
+            pageStopwatch.Stop();
+            entry.elapsedMs = pageStopwatch.ElapsedMilliseconds;
         }
         catch (Exception ex)
         {
+            pageStopwatch.Stop();
             entry.status = "COMPARE_ERROR";
             entry.errorPhase = "compare";
             entry.errorType = ex.GetType().Name;
             entry.errorMessage = Trunc(ex.Message, 200);
+            entry.elapsedMs = pageStopwatch.ElapsedMilliseconds;
         }
         finally
         {
@@ -1678,6 +1727,40 @@ class Program
         Render,
     }
 
+    private sealed class CorpusScanProgress
+    {
+        private readonly object _gate = new();
+        private readonly string _path;
+        private string _phase = "queued";
+        private string _detail = "waiting to start";
+        private int _pageNumber;
+
+        public CorpusScanProgress(string path)
+        {
+            _path = path;
+        }
+
+        public void Update(string phase, int pageNumber, string detail)
+        {
+            lock (_gate)
+            {
+                _phase = phase;
+                _pageNumber = pageNumber;
+                _detail = detail;
+            }
+        }
+
+        public ProgressSnapshot Snapshot()
+        {
+            lock (_gate)
+            {
+                return new ProgressSnapshot(_phase, _pageNumber, $"{_path}: {_detail}");
+            }
+        }
+
+        public readonly record struct ProgressSnapshot(string Phase, int PageNumber, string Detail);
+    }
+
     internal static string ClassifyCorpusFailure(Exception ex, CorpusFailurePhase phase)
     {
         if (phase == CorpusFailurePhase.Open)
@@ -1723,6 +1806,13 @@ class Program
         public double? maeMutool { get; set; }
         public double? diffFractionCairo { get; set; }
         public double? maeCairo { get; set; }
+        public long? elapsedMs { get; set; }
+        public long? pdfElapsedMs { get; set; }
+        public long? renderMs { get; set; }
+        public long? mutoolMs { get; set; }
+        public long? cairoMs { get; set; }
+        public long? timeoutMs { get; set; }
+        public string? diagnostic { get; set; }
         public string? errorPhase { get; set; }
         public string? errorType { get; set; }
         public string? errorMessage { get; set; }

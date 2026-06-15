@@ -12,6 +12,13 @@ Each entry records pdfe's render result for one page, plus the
 per-oracle diff metrics. Page-1 reports therefore have one entry per PDF;
 sampled and exhaustive reports have multiple entries per PDF.
 
+Entries also include timing diagnostics when produced by current tooling:
+`elapsedMs` for the page, `pdfElapsedMs` for the whole PDF, and per-phase
+`renderMs`, `mutoolMs`, and `cairoMs`. Failures include `errorPhase`
+(`open`, `render`, `mutool`, `pdftocairo`, `compare`, or `scan`) and may
+include a `diagnostic` snapshot for wall-clock timeouts. The merge script
+prints the slowest pages and failure diagnostics into the run log.
+
 | Status | Meaning |
 |---|---|
 | `PASS` | pdfe matches both mutool and pdftocairo within thresholds |

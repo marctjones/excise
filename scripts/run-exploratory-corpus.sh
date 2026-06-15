@@ -229,6 +229,54 @@ print(f"  pdfs scanned: {out['pdfs']}")
 for k in sorted(counts, key=counts.get, reverse=True):
     print(f"    {counts[k]:4d}  {k}")
 
+def get(e, key, default=None):
+    return e.get(key, e.get(key[:1].upper() + key[1:], default))
+
+def elapsed(e):
+    v = get(e, "elapsedMs")
+    try:
+        return int(v or 0)
+    except Exception:
+        return 0
+
+slow = [e for e in merged_entries if elapsed(e) > 0]
+slow.sort(key=elapsed, reverse=True)
+if slow:
+    print("  slowest page entries:")
+    for e in slow[:10]:
+        print(
+            "    "
+            f"{elapsed(e):7d}ms  "
+            f"{get(e, 'status', 'UNKNOWN'):18s} "
+            f"{get(e, 'path', '')}#p{get(e, 'pageNumber', 0)} "
+            f"render={get(e, 'renderMs', '-') or '-'}ms "
+            f"mutool={get(e, 'mutoolMs', '-') or '-'}ms "
+            f"cairo={get(e, 'cairoMs', '-') or '-'}ms"
+        )
+
+failures = [
+    e for e in merged_entries
+    if get(e, "status") in {
+        "TIMEOUT", "PARSE_ERROR", "DECODE_ERROR", "RENDER_ERROR",
+        "COMPARE_ERROR", "ALL_ORACLES_REFUSED"
+    }
+]
+if failures:
+    print("  failure diagnostics:")
+    for e in failures[:20]:
+        phase = get(e, "errorPhase", "-") or "-"
+        etype = get(e, "errorType", "-") or "-"
+        msg = get(e, "diagnostic") or get(e, "errorMessage") or ""
+        if len(msg) > 140:
+            msg = msg[:137] + "..."
+        print(
+            "    "
+            f"{get(e, 'status', 'UNKNOWN'):18s} "
+            f"phase={phase:10s} "
+            f"{get(e, 'path', '')}#p{get(e, 'pageNumber', 0)} "
+            f"{etype}: {msg}"
+        )
+
 if page_mode == "first":
     compat_path = os.path.join(bin_dir, "exploratory-report.json")
     with open(compat_path, "w") as f:

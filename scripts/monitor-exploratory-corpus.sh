@@ -65,6 +65,47 @@ while true; do
         tail -20
     echo
 
+    report=""
+    for candidate in \
+        Pdfe.Rendering.Tests/bin/Debug/net10.0/exploratory-report-all.json \
+        Pdfe.Rendering.Tests/bin/Debug/net10.0/exploratory-report-sample.json \
+        Pdfe.Rendering.Tests/bin/Debug/net10.0/exploratory-report-first.json \
+        Pdfe.Rendering.Tests/bin/Debug/net10.0/exploratory-report.json
+    do
+        if [[ -f "$candidate" ]]; then
+            report="$candidate"
+            break
+        fi
+    done
+    if [[ -n "$report" ]]; then
+        echo "merged report diagnostics: $report"
+        python3 - "$report" <<'PY' 2>/dev/null || true
+import json, sys
+d = json.load(open(sys.argv[1]))
+entries = d.get("entries", [])
+def get(e, key, default=None):
+    return e.get(key, e.get(key[:1].upper() + key[1:], default))
+def elapsed(e):
+    try: return int(get(e, "elapsedMs") or 0)
+    except Exception: return 0
+slow = [e for e in entries if elapsed(e) > 0]
+slow.sort(key=elapsed, reverse=True)
+for e in slow[:5]:
+    print(f"  slow {elapsed(e):7d}ms {get(e,'status','UNKNOWN'):18s} {get(e,'path','')}#p{get(e,'pageNumber',0)}")
+fail_status = {"TIMEOUT","PARSE_ERROR","DECODE_ERROR","RENDER_ERROR","COMPARE_ERROR","ALL_ORACLES_REFUSED"}
+shown = 0
+for e in entries:
+    if get(e, "status") in fail_status:
+        msg = get(e, "diagnostic") or get(e, "errorMessage") or ""
+        if len(msg) > 100: msg = msg[:97] + "..."
+        print(f"  fail {get(e,'status','UNKNOWN'):18s} phase={get(e,'errorPhase','-') or '-':10s} {get(e,'path','')}#p{get(e,'pageNumber',0)} {msg}")
+        shown += 1
+        if shown >= 8:
+            break
+PY
+        echo
+    fi
+
     [[ -f "$LOG_DIR/done" ]] && break
     sleep "$interval"
 done
