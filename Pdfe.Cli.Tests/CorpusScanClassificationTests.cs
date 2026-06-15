@@ -12,7 +12,16 @@ public class CorpusScanClassificationTests
         Program.ClassifyCorpusFailure(
                 new InvalidDataException("bad xref"),
                 Program.CorpusFailurePhase.Open)
-            .Should().Be("PARSE_ERROR");
+            .Should().Be("MALFORMED_PDF");
+    }
+
+    [Fact]
+    public void ClassifyCorpusFailure_OpenPhaseCompression_ReturnsUnsupportedCompression()
+    {
+        Program.ClassifyCorpusFailure(
+                new InvalidDataException("unsupported deflate compression method"),
+                Program.CorpusFailurePhase.Open)
+            .Should().Be("UNSUPPORTED_COMPRESSION");
     }
 
     [Fact]
@@ -40,5 +49,20 @@ public class CorpusScanClassificationTests
                 new InvalidOperationException("renderer state failed"),
                 Program.CorpusFailurePhase.Render)
             .Should().Be("RENDER_ERROR");
+    }
+
+    [Fact]
+    public void BuildOracleDiagnostic_IncludesBothOracleStatuses()
+    {
+        var entry = new Program.CorpusScanEntry
+        {
+            mutoolStatus = "TIMEOUT",
+            mutoolError = "mutool exceeded 15000ms",
+            cairoStatus = "EXIT_CODE",
+            cairoError = "pdftocairo exited 1",
+        };
+
+        Program.BuildOracleDiagnostic(entry)
+            .Should().Be("mutool=TIMEOUT (mutool exceeded 15000ms); pdftocairo=EXIT_CODE (pdftocairo exited 1)");
     }
 }

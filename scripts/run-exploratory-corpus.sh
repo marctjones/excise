@@ -250,15 +250,17 @@ if slow:
             f"{get(e, 'status', 'UNKNOWN'):18s} "
             f"{get(e, 'path', '')}#p{get(e, 'pageNumber', 0)} "
             f"render={get(e, 'renderMs', '-') or '-'}ms "
-            f"mutool={get(e, 'mutoolMs', '-') or '-'}ms "
-            f"cairo={get(e, 'cairoMs', '-') or '-'}ms"
+            f"mutool={get(e, 'mutoolMs', '-') or '-'}ms/{get(e, 'mutoolStatus', '-') or '-'} "
+            f"cairo={get(e, 'cairoMs', '-') or '-'}ms/{get(e, 'cairoStatus', '-') or '-'}"
         )
 
 failures = [
     e for e in merged_entries
     if get(e, "status") in {
-        "TIMEOUT", "PARSE_ERROR", "DECODE_ERROR", "RENDER_ERROR",
-        "COMPARE_ERROR", "ALL_ORACLES_REFUSED"
+        "TIMEOUT", "MALFORMED_PDF", "UNSUPPORTED_ENCRYPTED",
+        "UNSUPPORTED_COMPRESSION", "DECODE_ERROR", "RESOURCE_LIMIT",
+        "INVALID_PAGE_GEOMETRY", "PARSE_ERROR", "RENDER_ERROR",
+        "COMPARE_ERROR", "ALL_ORACLES_REFUSED", "EMPTY_DOC", "RENDER_NULL"
     }
 ]
 if failures:
@@ -267,6 +269,13 @@ if failures:
         phase = get(e, "errorPhase", "-") or "-"
         etype = get(e, "errorType", "-") or "-"
         msg = get(e, "diagnostic") or get(e, "errorMessage") or ""
+        if not msg and get(e, "status") == "ALL_ORACLES_REFUSED":
+            msg = (
+                f"mutool={get(e, 'mutoolStatus', '-') or '-'}"
+                f" ({get(e, 'mutoolError', '') or ''}); "
+                f"pdftocairo={get(e, 'cairoStatus', '-') or '-'}"
+                f" ({get(e, 'cairoError', '') or ''})"
+            )
         if len(msg) > 140:
             msg = msg[:137] + "..."
         print(

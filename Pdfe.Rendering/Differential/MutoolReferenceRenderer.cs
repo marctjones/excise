@@ -21,6 +21,12 @@ namespace Pdfe.Rendering.Differential;
 /// </summary>
 public static class MutoolReferenceRenderer
 {
+    public sealed record ReferenceRenderResult(
+        SKBitmap? Bitmap,
+        string Status,
+        string? ErrorMessage,
+        long ElapsedMs);
+
     private static readonly Lazy<bool> _available = new(() =>
     {
         // mutool is one of those CLIs that exits non-zero when invoked
@@ -57,8 +63,13 @@ public static class MutoolReferenceRenderer
     /// any failure (timeout, non-zero exit, missing output, decode failure).
     /// </summary>
     public static SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30_000)
+        => TryRenderPage(pdfPath, pageNumber, dpi, timeoutMs).Bitmap;
+
+    public static ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30_000)
     {
-        if (!IsAvailable) return null;
+        var sw = Stopwatch.StartNew();
+        if (!IsAvailable)
+            return new ReferenceRenderResult(null, "TOOL_UNAVAILABLE", "mutool is not on PATH", sw.ElapsedMilliseconds);
 
         var outPath = Path.Combine(Path.GetTempPath(),
             $"pdfe-mutool-ref-{Guid.NewGuid():N}.png");
@@ -74,24 +85,37 @@ public static class MutoolReferenceRenderer
                 CreateNoWindow = true,
             };
             using var p = Process.Start(psi);
-            if (p == null) return null;
+            if (p == null)
+                return new ReferenceRenderResult(null, "START_FAILED", "Process.Start returned null", sw.ElapsedMilliseconds);
             if (!p.WaitForExit(timeoutMs))
             {
                 try { p.Kill(entireProcessTree: true); } catch { }
-                return null;
+                return new ReferenceRenderResult(null, "TIMEOUT", $"mutool exceeded {timeoutMs}ms", sw.ElapsedMilliseconds);
             }
-            if (p.ExitCode != 0) return null;
-            if (!File.Exists(outPath)) return null;
+            if (p.ExitCode != 0)
+            {
+                var stderr = p.StandardError.ReadToEnd();
+                return new ReferenceRenderResult(null, "EXIT_CODE",
+                    $"mutool exited {p.ExitCode}: {Trunc(stderr.Trim(), 200)}", sw.ElapsedMilliseconds);
+            }
+            if (!File.Exists(outPath))
+                return new ReferenceRenderResult(null, "MISSING_OUTPUT", "mutool did not write an output PNG", sw.ElapsedMilliseconds);
 
-            return SKBitmap.Decode(outPath);
+            var bitmap = SKBitmap.Decode(outPath);
+            return bitmap == null
+                ? new ReferenceRenderResult(null, "DECODE_ERROR", "mutool output PNG could not be decoded", sw.ElapsedMilliseconds)
+                : new ReferenceRenderResult(bitmap, "OK", null, sw.ElapsedMilliseconds);
         }
-        catch
+        catch (Exception ex)
         {
-            return null;
+            return new ReferenceRenderResult(null, "ERROR", ex.Message, sw.ElapsedMilliseconds);
         }
         finally
         {
             try { File.Delete(outPath); } catch { }
         }
     }
+
+    private static string Trunc(string value, int length)
+        => value.Length <= length ? value : value.Substring(0, length) + "…";
 }

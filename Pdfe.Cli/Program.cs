@@ -1546,23 +1546,28 @@ class Program
             // with both is a real bug; a disagreement with one but not
             // the other is more likely a viewer-specific quirk.
             progress?.Update("mutool", pageNumber, $"mutool render page {pageNumber}/{doc.PageCount}");
-            var mutoolStopwatch = Stopwatch.StartNew();
-            mutoolBmp = Pdfe.Rendering.Differential.MutoolReferenceRenderer.RenderPage(
+            var mutoolResult = Pdfe.Rendering.Differential.MutoolReferenceRenderer.TryRenderPage(
                 pdfPath, pageNumber, dpi, oracleTimeoutMs);
-            mutoolStopwatch.Stop();
-            entry.mutoolMs = mutoolStopwatch.ElapsedMilliseconds;
+            mutoolBmp = mutoolResult.Bitmap;
+            entry.mutoolMs = mutoolResult.ElapsedMs;
+            entry.mutoolStatus = mutoolResult.Status;
+            entry.mutoolError = TruncNullable(mutoolResult.ErrorMessage, 200);
 
             progress?.Update("pdftocairo", pageNumber, $"pdftocairo render page {pageNumber}/{doc.PageCount}");
-            var cairoStopwatch = Stopwatch.StartNew();
-            cairoBmp = Pdfe.Rendering.Differential.PdftocairoReferenceRenderer.RenderPage(
+            var cairoResult = Pdfe.Rendering.Differential.PdftocairoReferenceRenderer.TryRenderPage(
                 pdfPath, pageNumber, dpi, oracleTimeoutMs);
-            cairoStopwatch.Stop();
-            entry.cairoMs = cairoStopwatch.ElapsedMilliseconds;
+            cairoBmp = cairoResult.Bitmap;
+            entry.cairoMs = cairoResult.ElapsedMs;
+            entry.cairoStatus = cairoResult.Status;
+            entry.cairoError = TruncNullable(cairoResult.ErrorMessage, 200);
 
             if (mutoolBmp == null && cairoBmp == null)
             {
                 pageStopwatch.Stop();
                 entry.status = "ALL_ORACLES_REFUSED";
+                entry.errorPhase = "oracle";
+                entry.errorType = "AllOraclesRefused";
+                entry.diagnostic = BuildOracleDiagnostic(entry);
                 entry.elapsedMs = pageStopwatch.ElapsedMilliseconds;
                 return entry;
             }
@@ -1721,6 +1726,18 @@ class Program
     private static string Trunc(string s, int n) =>
         s.Length <= n ? s : s.Substring(0, n) + "…";
 
+    private static string? TruncNullable(string? value, int length)
+        => string.IsNullOrEmpty(value) ? value : Trunc(value, length);
+
+    internal static string BuildOracleDiagnostic(CorpusScanEntry entry)
+        => $"mutool={entry.mutoolStatus ?? "UNKNOWN"}"
+           + FormatOracleError(entry.mutoolError)
+           + $"; pdftocairo={entry.cairoStatus ?? "UNKNOWN"}"
+           + FormatOracleError(entry.cairoError);
+
+    private static string FormatOracleError(string? error)
+        => string.IsNullOrWhiteSpace(error) ? "" : $" ({error})";
+
     internal enum CorpusFailurePhase
     {
         Open,
@@ -1774,10 +1791,10 @@ class Program
             if (ex is PdfEncryptionNotSupportedException)
                 return "UNSUPPORTED_ENCRYPTED";
 
-            if (ex is InvalidDataException)
+            if (ex is InvalidDataException && IsCompressionFailure(ex))
                 return "UNSUPPORTED_COMPRESSION";
 
-            if (ex is PdfParseException or OverflowException or FormatException)
+            if (ex is PdfParseException or InvalidDataException or OverflowException or FormatException)
                 return "MALFORMED_PDF";
 
             return "PARSE_ERROR";
@@ -1806,6 +1823,25 @@ class Program
             || stack.Contains(".Filters.", StringComparison.Ordinal);
     }
 
+    private static bool IsCompressionFailure(Exception ex)
+    {
+        for (Exception? current = ex; current != null; current = current.InnerException)
+        {
+            var message = current.Message;
+            if (message.Contains("compression", StringComparison.OrdinalIgnoreCase)
+                || message.Contains("compressed", StringComparison.OrdinalIgnoreCase)
+                || message.Contains("deflate", StringComparison.OrdinalIgnoreCase)
+                || message.Contains("zlib", StringComparison.OrdinalIgnoreCase)
+                || message.Contains("unsupported filter", StringComparison.OrdinalIgnoreCase)
+                || message.Contains("unsupported stream", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     internal sealed class CorpusScanEntry
     {
         public string path { get; set; } = "";
@@ -1828,6 +1864,10 @@ class Program
         public long? renderMs { get; set; }
         public long? mutoolMs { get; set; }
         public long? cairoMs { get; set; }
+        public string? mutoolStatus { get; set; }
+        public string? cairoStatus { get; set; }
+        public string? mutoolError { get; set; }
+        public string? cairoError { get; set; }
         public long? timeoutMs { get; set; }
         public string? diagnostic { get; set; }
         public string? errorPhase { get; set; }

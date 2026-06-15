@@ -91,12 +91,29 @@ def elapsed(e):
 slow = [e for e in entries if elapsed(e) > 0]
 slow.sort(key=elapsed, reverse=True)
 for e in slow[:5]:
-    print(f"  slow {elapsed(e):7d}ms {get(e,'status','UNKNOWN'):18s} {get(e,'path','')}#p{get(e,'pageNumber',0)}")
-fail_status = {"TIMEOUT","PARSE_ERROR","DECODE_ERROR","RENDER_ERROR","COMPARE_ERROR","ALL_ORACLES_REFUSED"}
+    print(
+        f"  slow {elapsed(e):7d}ms {get(e,'status','UNKNOWN'):18s} "
+        f"{get(e,'path','')}#p{get(e,'pageNumber',0)} "
+        f"mutool={get(e,'mutoolStatus','-') or '-'} "
+        f"cairo={get(e,'cairoStatus','-') or '-'}"
+    )
+fail_status = {
+    "TIMEOUT", "MALFORMED_PDF", "UNSUPPORTED_ENCRYPTED",
+    "UNSUPPORTED_COMPRESSION", "DECODE_ERROR", "RESOURCE_LIMIT",
+    "INVALID_PAGE_GEOMETRY", "PARSE_ERROR", "RENDER_ERROR",
+    "COMPARE_ERROR", "ALL_ORACLES_REFUSED", "EMPTY_DOC", "RENDER_NULL"
+}
 shown = 0
 for e in entries:
     if get(e, "status") in fail_status:
         msg = get(e, "diagnostic") or get(e, "errorMessage") or ""
+        if not msg and get(e, "status") == "ALL_ORACLES_REFUSED":
+            msg = (
+                f"mutool={get(e, 'mutoolStatus', '-') or '-'}"
+                f" ({get(e, 'mutoolError', '') or ''}); "
+                f"pdftocairo={get(e, 'cairoStatus', '-') or '-'}"
+                f" ({get(e, 'cairoError', '') or ''})"
+            )
         if len(msg) > 100: msg = msg[:97] + "..."
         print(f"  fail {get(e,'status','UNKNOWN'):18s} phase={get(e,'errorPhase','-') or '-':10s} {get(e,'path','')}#p{get(e,'pageNumber',0)} {msg}")
         shown += 1
