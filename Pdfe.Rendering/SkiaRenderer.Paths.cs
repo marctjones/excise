@@ -1,4 +1,4 @@
-using System.Globalization;
+using Pdfe.Core.Primitives;
 using SkiaSharp;
 
 namespace Pdfe.Rendering;
@@ -86,29 +86,21 @@ internal partial class RenderContext
 
     /// <summary>
     /// Parse a PDF dash specification (`[ dashArray ] dashPhase d`) into graphics
-    /// state. The array tokenizes as separate "[" numbers… "]" operands followed
-    /// by the phase. An empty array (or all-zero intervals) means a solid line.
+    /// state. An empty array (or all-zero intervals) means a solid line.
     /// ISO 32000-1 §8.4.3.6.
     /// </summary>
-    private void SetDashPattern(List<string> operands)
+    private void SetDashPattern(PdfArray? dashArray, double phase)
     {
         var intervals = new List<float>();
-        int closeIdx = -1;
-        bool inArray = false;
-        for (int i = 0; i < operands.Count; i++)
+        if (dashArray != null)
         {
-            var t = operands[i];
-            if (t == "[") { inArray = true; continue; }
-            if (t == "]") { inArray = false; closeIdx = i; continue; }
-            if (inArray &&
-                float.TryParse(t, NumberStyles.Float, CultureInfo.InvariantCulture, out var v) && v >= 0)
-                intervals.Add(v);
+            foreach (var item in dashArray)
+            {
+                var v = (float)item.GetNumber();
+                if (v >= 0)
+                    intervals.Add(v);
+            }
         }
-
-        // The phase is the operand immediately after the closing ']'.
-        float phase = (closeIdx >= 0 && closeIdx + 1 < operands.Count)
-            ? (float)ParseNumber(operands[closeIdx + 1])
-            : 0f;
 
         if (intervals.Count == 0 || intervals.All(v => v <= 0))
         {
@@ -118,7 +110,7 @@ internal partial class RenderContext
         else
         {
             _state.DashArray = intervals.ToArray();
-            _state.DashPhase = phase;
+            _state.DashPhase = (float)phase;
         }
     }
 

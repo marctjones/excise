@@ -363,9 +363,10 @@ internal partial class RenderContext
         }
     }
 
-    private void ExecuteOperator(string op, List<string> operands)
+    private void ExecuteContentOperator(ContentOperator op)
     {
-        switch (op)
+        var operands = op.Operands;
+        switch (op.Name)
         {
             // Graphics state
             case "q":
@@ -376,30 +377,26 @@ internal partial class RenderContext
                 break;
             case "cm":
                 if (operands.Count >= 6)
-                    ApplyTransform(operands);
+                    ApplyTransform(op);
                 break;
             case "w":
                 if (operands.Count >= 1)
-                    _state.LineWidth = ParseNumber(operands[0]);
+                    _state.LineWidth = Number(operands, 0);
                 break;
             case "J":
                 if (operands.Count >= 1)
-                    _state.LineCap = (int)ParseNumber(operands[0]);
+                    _state.LineCap = (int)Number(operands, 0);
                 break;
             case "j":
                 if (operands.Count >= 1)
-                    _state.LineJoin = (int)ParseNumber(operands[0]);
+                    _state.LineJoin = (int)Number(operands, 0);
                 break;
             case "M":
                 if (operands.Count >= 1)
-                    _state.MiterLimit = (float)ParseNumber(operands[0]);
+                    _state.MiterLimit = (float)Number(operands, 0);
                 break;
             case "d":
-                // Dash pattern: `[ dashArray ] dashPhase d`. The array tokenizes
-                // as separate "[", numbers..., "]" operands followed by the phase,
-                // e.g. [3 2] 0 d -> ["[","3","2","]","0"]. An empty array [] is a
-                // solid line. ISO 32000-1 §8.4.3.6.
-                SetDashPattern(operands);
+                SetDashPattern(operands.Count > 0 ? operands[0] as PdfArray : null, Number(operands, 1));
                 break;
             case "ri":
                 // Rendering intent - no effect on rendering for now
@@ -412,13 +409,13 @@ internal partial class RenderContext
             case "g":
                 if (operands.Count >= 1)
                 {
-                    _state.FillColor = GrayToColor(ParseNumber(operands[0]));
+                    _state.FillColor = GrayToColor(Number(operands, 0));
                     _state.FillPatternName = null;
                 }
                 break;
             case "G":
                 if (operands.Count >= 1)
-                    _state.StrokeColor = GrayToColor(ParseNumber(operands[0]));
+                    _state.StrokeColor = GrayToColor(Number(operands, 0));
                 break;
 
             // Color (RGB)
@@ -426,18 +423,18 @@ internal partial class RenderContext
                 if (operands.Count >= 3)
                 {
                     _state.FillColor = RgbToColor(
-                        ParseNumber(operands[0]),
-                        ParseNumber(operands[1]),
-                        ParseNumber(operands[2]));
+                        Number(operands, 0),
+                        Number(operands, 1),
+                        Number(operands, 2));
                     _state.FillPatternName = null;
                 }
                 break;
             case "RG":
                 if (operands.Count >= 3)
                     _state.StrokeColor = RgbToColor(
-                        ParseNumber(operands[0]),
-                        ParseNumber(operands[1]),
-                        ParseNumber(operands[2]));
+                        Number(operands, 0),
+                        Number(operands, 1),
+                        Number(operands, 2));
                 break;
 
             // Color (CMYK)
@@ -445,61 +442,61 @@ internal partial class RenderContext
                 if (operands.Count >= 4)
                 {
                     _state.FillColor = CmykToColor(
-                        ParseNumber(operands[0]),
-                        ParseNumber(operands[1]),
-                        ParseNumber(operands[2]),
-                        ParseNumber(operands[3]));
+                        Number(operands, 0),
+                        Number(operands, 1),
+                        Number(operands, 2),
+                        Number(operands, 3));
                     _state.FillPatternName = null;
                 }
                 break;
             case "K":
                 if (operands.Count >= 4)
                     _state.StrokeColor = CmykToColor(
-                        ParseNumber(operands[0]),
-                        ParseNumber(operands[1]),
-                        ParseNumber(operands[2]),
-                        ParseNumber(operands[3]));
+                        Number(operands, 0),
+                        Number(operands, 1),
+                        Number(operands, 2),
+                        Number(operands, 3));
                 break;
 
             // Extended graphics state
             case "gs":
                 if (operands.Count >= 1)
-                    ApplyExtGState(operands[0]);
+                    ApplyExtGState(Name(operands, 0));
                 break;
 
             // XObject rendering (images and forms)
             case "Do":
                 if (operands.Count >= 1)
-                    RenderXObject(operands[0]);
+                    RenderXObject(Name(operands, 0));
                 break;
 
             // Path construction
             case "m":
                 if (operands.Count >= 2)
-                    MoveTo(ParseNumber(operands[0]), ParseNumber(operands[1]));
+                    MoveTo(Number(operands, 0), Number(operands, 1));
                 break;
             case "l":
                 if (operands.Count >= 2)
-                    LineTo(ParseNumber(operands[0]), ParseNumber(operands[1]));
+                    LineTo(Number(operands, 0), Number(operands, 1));
                 break;
             case "c":
                 if (operands.Count >= 6)
                     CurveTo(
-                        ParseNumber(operands[0]), ParseNumber(operands[1]),
-                        ParseNumber(operands[2]), ParseNumber(operands[3]),
-                        ParseNumber(operands[4]), ParseNumber(operands[5]));
+                        Number(operands, 0), Number(operands, 1),
+                        Number(operands, 2), Number(operands, 3),
+                        Number(operands, 4), Number(operands, 5));
                 break;
             case "v":
                 if (operands.Count >= 4)
                     CurveToV(
-                        ParseNumber(operands[0]), ParseNumber(operands[1]),
-                        ParseNumber(operands[2]), ParseNumber(operands[3]));
+                        Number(operands, 0), Number(operands, 1),
+                        Number(operands, 2), Number(operands, 3));
                 break;
             case "y":
                 if (operands.Count >= 4)
                     CurveToY(
-                        ParseNumber(operands[0]), ParseNumber(operands[1]),
-                        ParseNumber(operands[2]), ParseNumber(operands[3]));
+                        Number(operands, 0), Number(operands, 1),
+                        Number(operands, 2), Number(operands, 3));
                 break;
             case "h":
                 ClosePath();
@@ -507,8 +504,8 @@ internal partial class RenderContext
             case "re":
                 if (operands.Count >= 4)
                     Rectangle(
-                        ParseNumber(operands[0]), ParseNumber(operands[1]),
-                        ParseNumber(operands[2]), ParseNumber(operands[3]));
+                        Number(operands, 0), Number(operands, 1),
+                        Number(operands, 2), Number(operands, 3));
                 break;
 
             // Path painting
@@ -574,7 +571,7 @@ internal partial class RenderContext
             // Shading operator (#300)
             case "sh":
                 if (operands.Count >= 1)
-                    RenderShading(operands[0]);
+                    RenderShading(Name(operands, 0));
                 break;
 
             // Type 3 font operators (#301)
@@ -589,12 +586,12 @@ internal partial class RenderContext
             case "CS":
                 // Set stroking color space - store for later use with SC/SCN
                 if (operands.Count >= 1)
-                    _state.StrokeColorSpace = operands[0].TrimStart('/');
+                    _state.StrokeColorSpace = Name(operands, 0);
                 break;
             case "cs":
                 // Set non-stroking color space
                 if (operands.Count >= 1)
-                    _state.FillColorSpace = operands[0].TrimStart('/');
+                    _state.FillColorSpace = Name(operands, 0);
                 break;
             case "SC":
             case "SCN":
@@ -616,74 +613,74 @@ internal partial class RenderContext
                 break;
             case "Tf":
                 if (operands.Count >= 2)
-                    SetFont(operands[0], ParseNumber(operands[1]));
+                    SetFont(Name(operands, 0), Number(operands, 1));
                 break;
             case "Td":
                 if (operands.Count >= 2)
-                    TextMove(ParseNumber(operands[0]), ParseNumber(operands[1]));
+                    TextMove(Number(operands, 0), Number(operands, 1));
                 break;
             case "TD":
                 if (operands.Count >= 2)
                 {
-                    _textState.TextLeading = -(float)ParseNumber(operands[1]);
-                    TextMove(ParseNumber(operands[0]), ParseNumber(operands[1]));
+                    _textState.TextLeading = -(float)Number(operands, 1);
+                    TextMove(Number(operands, 0), Number(operands, 1));
                 }
                 break;
             case "Tm":
                 if (operands.Count >= 6)
                     SetTextMatrix(
-                        ParseNumber(operands[0]), ParseNumber(operands[1]),
-                        ParseNumber(operands[2]), ParseNumber(operands[3]),
-                        ParseNumber(operands[4]), ParseNumber(operands[5]));
+                        Number(operands, 0), Number(operands, 1),
+                        Number(operands, 2), Number(operands, 3),
+                        Number(operands, 4), Number(operands, 5));
                 break;
             case "T*":
                 TextNewLine();
                 break;
             case "Tc":
                 if (operands.Count >= 1)
-                    _textState.CharSpacing = (float)ParseNumber(operands[0]);
+                    _textState.CharSpacing = (float)Number(operands, 0);
                 break;
             case "Tw":
                 if (operands.Count >= 1)
-                    _textState.WordSpacing = (float)ParseNumber(operands[0]);
+                    _textState.WordSpacing = (float)Number(operands, 0);
                 break;
             case "Tz":
                 if (operands.Count >= 1)
-                    _textState.HorizontalScale = (float)ParseNumber(operands[0]);
+                    _textState.HorizontalScale = (float)Number(operands, 0);
                 break;
             case "TL":
                 if (operands.Count >= 1)
-                    _textState.TextLeading = (float)ParseNumber(operands[0]);
+                    _textState.TextLeading = (float)Number(operands, 0);
                 break;
             case "Tr":
                 if (operands.Count >= 1)
-                    _textState.RenderMode = (int)ParseNumber(operands[0]);
+                    _textState.RenderMode = (int)Number(operands, 0);
                 break;
             case "Ts":
                 if (operands.Count >= 1)
-                    _textState.TextRise = (float)ParseNumber(operands[0]);
+                    _textState.TextRise = (float)Number(operands, 0);
                 break;
 
             // Text showing operators
             case "Tj":
                 if (operands.Count >= 1)
-                    ShowText(operands[0]);
+                    ShowText(operands[0] as PdfString);
                 break;
             case "TJ":
-                ShowTextArray(operands);
+                ShowTextArray(operands.Count > 0 ? operands[0] as PdfArray : null);
                 break;
             case "'":
                 TextNewLine();
                 if (operands.Count >= 1)
-                    ShowText(operands[0]);
+                    ShowText(operands[0] as PdfString);
                 break;
             case "\"":
                 if (operands.Count >= 3)
                 {
-                    _textState.WordSpacing = (float)ParseNumber(operands[0]);
-                    _textState.CharSpacing = (float)ParseNumber(operands[1]);
+                    _textState.WordSpacing = (float)Number(operands, 0);
+                    _textState.CharSpacing = (float)Number(operands, 1);
                     TextNewLine();
-                    ShowText(operands[2]);
+                    ShowText(operands[2] as PdfString);
                 }
                 break;
 
@@ -715,80 +712,13 @@ internal partial class RenderContext
         ExecuteContentOperators(content.Operators);
     }
 
-    private void ExecuteContentOperator(ContentOperator op)
-    {
-        if (op.Name == "BI")
-        {
-            if (op.Operands.Count >= 1 &&
-                op.Operands[0] is PdfDictionary imageParams &&
-                op.InlineImageData is { } imageData)
-            {
-                RenderInlineImage(imageParams, imageData);
-            }
-            return;
-        }
+    private static double Number(IReadOnlyList<PdfObject> operands, int index)
+        => index >= 0 && index < operands.Count ? operands[index].GetNumber() : 0;
 
-        ExecuteOperator(op.Name, FlattenContentOperands(op.Operands));
-    }
-
-    private static List<string> FlattenContentOperands(IEnumerable<PdfObject> operands)
-    {
-        var tokens = new List<string>();
-        foreach (var operand in operands)
-            AppendContentOperand(tokens, operand);
-        return tokens;
-    }
-
-    private static void AppendContentOperand(List<string> tokens, PdfObject operand)
-    {
-        switch (operand)
-        {
-            case PdfInteger i:
-                tokens.Add(i.Value.ToString(CultureInfo.InvariantCulture));
-                break;
-            case PdfReal r:
-                tokens.Add(r.Value.ToString("R", CultureInfo.InvariantCulture));
-                break;
-            case PdfName n:
-                tokens.Add(n.ToEncodedString());
-                break;
-            case PdfString s:
-                tokens.Add(FormatPdfStringAsHex(s.Bytes));
-                break;
-            case PdfBoolean b:
-                tokens.Add(b.Value ? "true" : "false");
-                break;
-            case PdfArray a:
-                tokens.Add("[");
-                foreach (var item in a)
-                    AppendContentOperand(tokens, item);
-                tokens.Add("]");
-                break;
-            case PdfDictionary:
-                // Marked-content property dictionaries have no visual effect
-                // in the current dispatcher. Keep a token placeholder so
-                // operand ordering remains intact for ignored operators.
-                tokens.Add("<<");
-                tokens.Add(">>");
-                break;
-            case PdfNull:
-                tokens.Add("null");
-                break;
-            default:
-                tokens.Add(operand.ToString() ?? string.Empty);
-                break;
-        }
-    }
-
-    private static string FormatPdfStringAsHex(byte[] bytes)
-    {
-        var sb = new StringBuilder(bytes.Length * 2 + 2);
-        sb.Append('<');
-        foreach (var b in bytes)
-            sb.Append(b.ToString("X2", CultureInfo.InvariantCulture));
-        sb.Append('>');
-        return sb.ToString();
-    }
+    private static string Name(IReadOnlyList<PdfObject> operands, int index)
+        => index >= 0 && index < operands.Count && operands[index] is PdfName name
+            ? name.Value
+            : string.Empty;
 
     #region State Management
 
@@ -807,7 +737,7 @@ internal partial class RenderContext
         }
     }
 
-    private void ApplyTransform(List<string> operands)
+    private void ApplyTransform(ContentOperator op)
     {
         // Clamp matrix components to PDF 32000-2 §6.1.12's
         // "implementation limit" range. Values larger than ±32767 are
@@ -817,12 +747,12 @@ internal partial class RenderContext
         // off-page. Real PDFs never have values this big; conformance
         // tests like A019-pdfa2-pass-* use ±FLT_MAX to verify the
         // reader degrades gracefully. Clamping matches mutool's policy.
-        var a = ClampMatrix(ParseNumber(operands[0]));
-        var b = ClampMatrix(ParseNumber(operands[1]));
-        var c = ClampMatrix(ParseNumber(operands[2]));
-        var d = ClampMatrix(ParseNumber(operands[3]));
-        var e = ClampMatrix(ParseNumber(operands[4]));
-        var f = ClampMatrix(ParseNumber(operands[5]));
+        var a = ClampMatrix(op.GetNumber(0));
+        var b = ClampMatrix(op.GetNumber(1));
+        var c = ClampMatrix(op.GetNumber(2));
+        var d = ClampMatrix(op.GetNumber(3));
+        var e = ClampMatrix(op.GetNumber(4));
+        var f = ClampMatrix(op.GetNumber(5));
 
         var matrix = new SKMatrix(a, c, e, b, d, f, 0, 0, 1);
         _canvas.Concat(in matrix);
@@ -1466,41 +1396,41 @@ internal partial class RenderContext
         TextMove(0, -_textState.TextLeading);
     }
 
-    private void ShowText(string textOperand)
+    private void ShowText(PdfString? text)
     {
-        var bytes = ParsePdfStringBytes(textOperand);
-        if (bytes.Length == 0) return;
+        if (text == null || text.Bytes.Length == 0) return;
+        ShowTextBytes(text.Bytes);
+    }
 
+    private void ShowTextBytes(byte[] bytes)
+    {
+        if (bytes.Length == 0) return;
         if (_currentFontIsType0)
             RenderCidBytes(bytes);
         else
             RenderText(DecodeTextBytes(bytes), bytes);
     }
 
-    private void ShowTextArray(List<string> operands)
+    private void ShowTextArray(PdfArray? array)
     {
         // TJ operator: array of strings and position adjustments.
-        foreach (var operand in operands)
-        {
-            if (operand == "[" || operand == "]")
-                continue;
+        if (array == null)
+            return;
 
-            if (operand.StartsWith("(") || operand.StartsWith("<"))
+        foreach (var operand in array)
+        {
+            if (operand is PdfString text)
             {
-                var bytes = ParsePdfStringBytes(operand);
-                if (bytes.Length == 0) continue;
-                if (_currentFontIsType0)
-                    RenderCidBytes(bytes);
-                else
-                    RenderText(DecodeTextBytes(bytes), bytes);
+                ShowText(text);
             }
-            else if (double.TryParse(operand, NumberStyles.Float, CultureInfo.InvariantCulture, out var adjustment))
+            else if (operand is PdfInteger or PdfReal)
             {
                 // TJ position adjustment is in thousandths of text-space units,
                 // which map to device-space X via the text matrix's X-scale
                 // (not Y-scale). For non-uniform Tm (e.g. SCOTUS "SUPREME COURT"
                 // with 14.2001/15 ratio), using yScale instead of xScale
                 // compounds a ~6% per-glyph error into visible mid-word gaps.
+                var adjustment = operand.GetNumber();
                 var effectiveSize = GetEffectiveFontSize();
                 var xyRatio = GetTextMatrixXYRatio();
                 var xOffset = (float)(-adjustment * effectiveSize / 1000.0) * xyRatio;
@@ -3537,20 +3467,19 @@ internal partial class RenderContext
 
     #region Color Space Operators (SC, SCN, sc, scn)
 
-    private void SetStrokingColor(List<string> operands)
+    private void SetStrokingColor(IReadOnlyList<PdfObject> operands)
     {
         var color = ParseColorFromOperands(operands, _state.StrokeColorSpace);
         if (color.HasValue)
             _state.StrokeColor = color.Value;
     }
 
-    private void SetNonStrokingColor(List<string> operands)
+    private void SetNonStrokingColor(IReadOnlyList<PdfObject> operands)
     {
         var fillColorSpace = ResolveColorSpace(_state.FillColorSpace);
         if (fillColorSpace?.Type == PdfColorSpaceType.Pattern)
         {
-            var patternOperand = operands.FirstOrDefault(o => o.StartsWith("/"));
-            _state.FillPatternName = patternOperand?.TrimStart('/');
+            _state.FillPatternName = operands.OfType<PdfName>().FirstOrDefault()?.Value;
             return;
         }
 
@@ -3562,27 +3491,26 @@ internal partial class RenderContext
         }
     }
 
-    private SKColor? ParseColorFromOperands(List<string> operands, string colorSpace)
+    private SKColor? ParseColorFromOperands(IReadOnlyList<PdfObject> operands, string colorSpace)
     {
-        var values = operands.Where(o => !o.StartsWith("/")).ToList();
+        var values = operands
+            .Where(o => o is not PdfName)
+            .Select(o => o.GetNumber())
+            .ToArray();
 
-        if (values.Count == 0)
+        if (values.Length == 0)
             return null;
-
-        var doubleValues = new double[values.Count];
-        for (int i = 0; i < values.Count; i++)
-            doubleValues[i] = ParseNumber(values[i]);
 
         var cs = ResolveColorSpace(colorSpace);
         if (cs != null && cs.Type != PdfColorSpaceType.Pattern)
         {
-            var (r, g, b) = cs.ToRgb(doubleValues);
+            var (r, g, b) = cs.ToRgb(values);
             return RgbToColor(r, g, b);
         }
 
         return colorSpace switch
         {
-            "Pattern" when operands.Any(o => o.StartsWith("/")) =>
+            "Pattern" when operands.Any(o => o is PdfName) =>
                 null,
 
             _ => null
