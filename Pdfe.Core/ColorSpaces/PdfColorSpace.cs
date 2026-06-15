@@ -16,10 +16,14 @@ public sealed class PdfColorSpace
     private readonly byte[]? _indexedLookup;
     private readonly PdfColorSpace? _alternateSpace;
     private readonly PdfObject? _tintTransform;
+    private readonly double[]? _whitePoint;
+    private readonly double[]? _calGamma;
+    private readonly double[]? _calMatrix;
 
     private PdfColorSpace(PdfColorSpaceType type, int components,
         PdfColorSpace? indexedBase = null, byte[]? indexedLookup = null,
-        PdfColorSpace? alternateSpace = null, PdfObject? tintTransform = null)
+        PdfColorSpace? alternateSpace = null, PdfObject? tintTransform = null,
+        double[]? whitePoint = null, double[]? calGamma = null, double[]? calMatrix = null)
     {
         Type = type;
         Components = components;
@@ -27,6 +31,9 @@ public sealed class PdfColorSpace
         _indexedLookup = indexedLookup;
         _alternateSpace = alternateSpace;
         _tintTransform = tintTransform;
+        _whitePoint = whitePoint;
+        _calGamma = calGamma;
+        _calMatrix = calMatrix;
     }
 
     public static readonly PdfColorSpace DeviceGray = new(PdfColorSpaceType.DeviceGray, 1);
@@ -61,8 +68,8 @@ public sealed class PdfColorSpace
             {
                 "ICCBased" => ParseICCBased(arr, doc),
                 "Indexed" => ParseIndexed(arr, doc),
-                "CalGray" => new PdfColorSpace(PdfColorSpaceType.CalGray, 1),
-                "CalRGB" => new PdfColorSpace(PdfColorSpaceType.CalRGB, 3),
+                "CalGray" => ParseCalGray(arr),
+                "CalRGB" => ParseCalRgb(arr),
                 "Lab" => new PdfColorSpace(PdfColorSpaceType.Lab, 3),
                 "Separation" => ParseSeparation(arr, doc),
                 "DeviceN" => ParseDeviceN(arr, doc),
@@ -111,6 +118,36 @@ public sealed class PdfColorSpace
         return new PdfColorSpace(PdfColorSpaceType.Indexed, 1, baseCs, lookup);
     }
 
+    private static PdfColorSpace ParseCalGray(PdfArray arr)
+    {
+        var dict = arr.Count >= 2 ? arr[1] as PdfDictionary : null;
+        if (dict == null)
+            return new PdfColorSpace(PdfColorSpaceType.CalGray, 1);
+
+        var whitePoint = GetNumberArray(dict, "WhitePoint", new[] { 1.0, 1.0, 1.0 }, expected: 3);
+        var gamma = dict?.GetNumber("Gamma", 1.0) ?? 1.0;
+        return new PdfColorSpace(PdfColorSpaceType.CalGray, 1,
+            whitePoint: whitePoint,
+            calGamma: new[] { gamma });
+    }
+
+    private static PdfColorSpace ParseCalRgb(PdfArray arr)
+    {
+        var dict = arr.Count >= 2 ? arr[1] as PdfDictionary : null;
+        if (dict == null)
+            return new PdfColorSpace(PdfColorSpaceType.CalRGB, 3);
+
+        var whitePoint = GetNumberArray(dict, "WhitePoint", new[] { 1.0, 1.0, 1.0 }, expected: 3);
+        var gamma = GetNumberArray(dict, "Gamma", new[] { 1.0, 1.0, 1.0 }, expected: 3);
+        var matrix = GetNumberArray(dict, "Matrix",
+            new[] { 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 },
+            expected: 9);
+        return new PdfColorSpace(PdfColorSpaceType.CalRGB, 3,
+            whitePoint: whitePoint,
+            calGamma: gamma,
+            calMatrix: matrix);
+    }
+
     private static PdfColorSpace ParseSeparation(PdfArray arr, PdfDocument doc)
     {
         if (arr.Count < 4)
@@ -145,11 +182,19 @@ public sealed class PdfColorSpace
 
         return Type switch
         {
-            PdfColorSpaceType.DeviceGray or PdfColorSpaceType.CalGray =>
+            PdfColorSpaceType.DeviceGray =>
                 (values[0], values[0], values[0]),
 
-            PdfColorSpaceType.DeviceRGB or PdfColorSpaceType.CalRGB =>
+            PdfColorSpaceType.CalGray =>
+                CalGrayToRgb(values[0]),
+
+            PdfColorSpaceType.DeviceRGB =>
                 (values.Length >= 3) ? (values[0], values[1], values[2]) : (values[0], values[0], values[0]),
+
+            PdfColorSpaceType.CalRGB =>
+                values.Length >= 3
+                    ? (HasCalRgbCalibration ? CalRgbToRgb(values[0], values[1], values[2]) : (values[0], values[1], values[2]))
+                    : (values[0], values[0], values[0]),
 
             PdfColorSpaceType.DeviceCMYK =>
                 (values.Length >= 4) ? CmykToRgb(values[0], values[1], values[2], values[3]) : (0, 0, 0),
@@ -175,6 +220,8 @@ public sealed class PdfColorSpace
                  (values.Length >= 1) ? (values[0], values[0], values[0]) : (0, 0, 0)
         };
     }
+
+    private bool HasCalRgbCalibration => _whitePoint != null || _calGamma != null || _calMatrix != null;
 
     /// <summary>Convert an Indexed color index to RGB using the lookup table.</summary>
     public (double R, double G, double B) LookupIndexed(int index)
@@ -218,9 +265,49 @@ public sealed class PdfColorSpace
         return _alternateSpace.ToRgb(evaluated);
     }
 
+    private (double R, double G, double B) CalGrayToRgb(double a)
+    {
+        var gamma = _calGamma is { Length: > 0 } ? _calGamma[0] : 1.0;
+        var y = Math.Pow(Math.Clamp(a, 0, 1), gamma);
+        return (y, y, y);
+    }
+
+    private (double R, double G, double B) CalRgbToRgb(double a, double b, double c)
+    {
+        var gamma = _calGamma ?? new[] { 1.0, 1.0, 1.0 };
+        var matrix = _calMatrix ?? new[] { 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 };
+        var wp = _whitePoint ?? new[] { 1.0, 1.0, 1.0 };
+
+        double ag = Math.Pow(Math.Clamp(a, 0, 1), gamma[0]);
+        double bg = Math.Pow(Math.Clamp(b, 0, 1), gamma[1]);
+        double cg = Math.Pow(Math.Clamp(c, 0, 1), gamma[2]);
+
+        double x = matrix[0] * ag + matrix[3] * bg + matrix[6] * cg;
+        double y = matrix[1] * ag + matrix[4] * bg + matrix[7] * cg;
+        double z = matrix[2] * ag + matrix[5] * bg + matrix[8] * cg;
+
+        return XyzToRgb(wp[0] * x, wp[1] * y, wp[2] * z);
+    }
+
     private static (double, double, double) CmykToRgb(double c, double m, double y, double k)
     {
         return ((1 - c) * (1 - k), (1 - m) * (1 - k), (1 - y) * (1 - k));
+    }
+
+    private static (double R, double G, double B) XyzToRgb(double x, double y, double z)
+    {
+        double r =  3.2406 * x - 1.5372 * y - 0.4986 * z;
+        double g = -0.9689 * x + 1.8758 * y + 0.0415 * z;
+        double b =  0.0557 * x - 0.2040 * y + 1.0570 * z;
+        return (EncodeSrgb(r), EncodeSrgb(g), EncodeSrgb(b));
+    }
+
+    private static double EncodeSrgb(double value)
+    {
+        value = Math.Clamp(value, 0, 1);
+        return value <= 0.0031308
+            ? 12.92 * value
+            : 1.055 * Math.Pow(value, 1.0 / 2.4) - 0.055;
     }
 
     private static (double, double, double) LabToRgb(double L, double a, double b)
@@ -238,4 +325,19 @@ public sealed class PdfColorSpace
     }
 
     private static double Fcube(double t) => t > 0.206897 ? t * t * t : (t - 16.0 / 116) / 7.787;
+
+    private static double[] GetNumberArray(
+        PdfDictionary? dict,
+        string key,
+        double[] fallback,
+        int expected)
+    {
+        if (dict?.GetOptional(key) is not PdfArray arr || arr.Count < expected)
+            return fallback;
+
+        var values = new double[expected];
+        for (int i = 0; i < expected; i++)
+            values[i] = arr.GetNumber(i);
+        return values;
+    }
 }

@@ -165,6 +165,26 @@ public class PdfColorSpaceTests
     }
 
     [Fact]
+    public void CalGray_ParseArray_AppliesGamma()
+    {
+        using var doc = CreateMinimalPdf();
+        var arr = new PdfArray(
+            new PdfName("CalGray"),
+            new PdfDictionary
+            {
+                ["WhitePoint"] = new PdfArray(new PdfReal(1), new PdfReal(1), new PdfReal(1)),
+                ["Gamma"] = new PdfReal(2.0)
+            });
+
+        var cs = PdfColorSpace.Parse(arr, doc);
+        var (r, g, b) = cs.ToRgb(new[] { 0.5 });
+
+        r.Should().BeApproximately(0.25, 0.0001);
+        g.Should().BeApproximately(0.25, 0.0001);
+        b.Should().BeApproximately(0.25, 0.0001);
+    }
+
+    [Fact]
     public void FromName_Separation_ReturnsSeparationColorSpace()
     {
         var cs = PdfColorSpace.FromName("Separation");
@@ -866,6 +886,46 @@ public class PdfColorSpaceTests
         var cs = PdfColorSpace.Parse(arr, doc);
         cs.Type.Should().Be(PdfColorSpaceType.CalRGB);
         cs.Components.Should().Be(3);
+
+        var (r, g, b) = cs.ToRgb(new[] { 0.5, 0.25, 0.75 });
+        r.Should().Be(0.5);
+        g.Should().Be(0.25);
+        b.Should().Be(0.75);
+    }
+
+    [Fact]
+    public void CalRGB_ParseArray_AppliesGammaAndMatrix()
+    {
+        using var doc = CreateMinimalPdf();
+        var gamma1 = new PdfArray(
+            new PdfName("CalRGB"),
+            new PdfDictionary
+            {
+                ["WhitePoint"] = new PdfArray(new PdfReal(1), new PdfReal(1), new PdfReal(1)),
+                ["Gamma"] = new PdfArray(new PdfReal(1), new PdfReal(1), new PdfReal(1)),
+                ["Matrix"] = new PdfArray(
+                    new PdfReal(1), new PdfReal(0), new PdfReal(0),
+                    new PdfReal(0), new PdfReal(1), new PdfReal(0),
+                    new PdfReal(0), new PdfReal(0), new PdfReal(1))
+            });
+        var gamma2 = new PdfArray(
+            new PdfName("CalRGB"),
+            new PdfDictionary
+            {
+                ["WhitePoint"] = new PdfArray(new PdfReal(1), new PdfReal(1), new PdfReal(1)),
+                ["Gamma"] = new PdfArray(new PdfReal(2), new PdfReal(1), new PdfReal(1)),
+                ["Matrix"] = new PdfArray(
+                    new PdfReal(1), new PdfReal(0), new PdfReal(0),
+                    new PdfReal(0), new PdfReal(1), new PdfReal(0),
+                    new PdfReal(0), new PdfReal(0), new PdfReal(1))
+            });
+
+        var gamma1Cs = PdfColorSpace.Parse(gamma1, doc);
+        var gamma2Cs = PdfColorSpace.Parse(gamma2, doc);
+        var (gamma1R, _, _) = gamma1Cs.ToRgb(new[] { 0.5, 0.0, 0.0 });
+        var (gamma2R, _, _) = gamma2Cs.ToRgb(new[] { 0.5, 0.0, 0.0 });
+
+        gamma2R.Should().BeLessThan(gamma1R, "gamma 2 darkens the first component before XYZ-to-sRGB conversion");
     }
 
     [Fact]
