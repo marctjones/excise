@@ -41,6 +41,23 @@ public class SkiaRendererTests
         act.Should().Throw<System.OperationCanceledException>();
     }
 
+    [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsIssue14256_InlineImagesDoNotTokenizeData()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "issue14256.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js issue14256 fixture found at test-pdfs/pdfjs/issue14256.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72 });
+
+        bitmap.Width.Should().Be(900);
+        bitmap.Height.Should().Be(900);
+    }
+
     [Fact]
     public void RenderPage_ZeroSizedPage_ThrowsInvalidPageGeometry()
     {
@@ -3262,6 +3279,20 @@ public class SkiaRendererTests
 
     private static byte[] CreatePdfWithContent(string content)
         => CreatePdfWithContentAndPageSize(content, width: 612, height: 792);
+
+    private static string? FindRepoFile(params string[] segments)
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null)
+        {
+            var candidate = Path.Combine(new[] { dir.FullName }.Concat(segments).ToArray());
+            if (File.Exists(candidate))
+                return candidate;
+            dir = dir.Parent;
+        }
+
+        return null;
+    }
 
     private static byte[] CreatePdfWithContentAndPageSize(string content, int width, int height)
     {

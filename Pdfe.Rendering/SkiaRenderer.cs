@@ -2,7 +2,9 @@ using System.Globalization;
 using System.Text;
 using System.Threading;
 using Pdfe.Core.ColorSpaces;
+using Pdfe.Core.Content;
 using Pdfe.Core.Document;
+using Pdfe.Core.Primitives;
 using Pdfe.Rendering.Fonts;
 using SkiaSharp;
 
@@ -349,23 +351,9 @@ internal partial class RenderContext
             var contentBytes = _page.GetContentStreamBytes();
             if (contentBytes.Length > 0)
             {
-                var content = Encoding.Latin1.GetString(contentBytes);
-                var tokens = Tokenize(content);
-                var operands = new List<string>();
-
-                foreach (var token in tokens)
-                {
-                    if (IsOperator(token))
-                    {
-                        _cancellationToken.ThrowIfCancellationRequested();
-                        ExecuteOperator(token, operands);
-                        operands.Clear();
-                    }
-                    else
-                    {
-                        operands.Add(token);
-                    }
-                }
+                var content = new ContentStreamParser(contentBytes, _page)
+                    .Parse(_cancellationToken);
+                ExecuteContentOperators(content.Operators);
             }
 
             // Annotations render on top of page content — sticky notes,
@@ -735,6 +723,90 @@ internal partial class RenderContext
             default:
                 break;
         }
+    }
+
+    private void ExecuteContentOperators(IEnumerable<ContentOperator> operators)
+    {
+        foreach (var op in operators)
+        {
+            _cancellationToken.ThrowIfCancellationRequested();
+            ExecuteContentOperator(op);
+        }
+    }
+
+    private void ExecuteContentOperator(ContentOperator op)
+    {
+        if (op.Name == "BI")
+        {
+            if (op.Operands.Count >= 1 &&
+                op.Operands[0] is PdfDictionary imageParams &&
+                op.InlineImageData is { } imageData)
+            {
+                RenderInlineImage(imageParams, imageData);
+            }
+            return;
+        }
+
+        ExecuteOperator(op.Name, FlattenContentOperands(op.Operands));
+    }
+
+    private static List<string> FlattenContentOperands(IEnumerable<PdfObject> operands)
+    {
+        var tokens = new List<string>();
+        foreach (var operand in operands)
+            AppendContentOperand(tokens, operand);
+        return tokens;
+    }
+
+    private static void AppendContentOperand(List<string> tokens, PdfObject operand)
+    {
+        switch (operand)
+        {
+            case PdfInteger i:
+                tokens.Add(i.Value.ToString(CultureInfo.InvariantCulture));
+                break;
+            case PdfReal r:
+                tokens.Add(r.Value.ToString("R", CultureInfo.InvariantCulture));
+                break;
+            case PdfName n:
+                tokens.Add(n.ToEncodedString());
+                break;
+            case PdfString s:
+                tokens.Add(FormatPdfStringAsHex(s.Bytes));
+                break;
+            case PdfBoolean b:
+                tokens.Add(b.Value ? "true" : "false");
+                break;
+            case PdfArray a:
+                tokens.Add("[");
+                foreach (var item in a)
+                    AppendContentOperand(tokens, item);
+                tokens.Add("]");
+                break;
+            case PdfDictionary:
+                // Marked-content property dictionaries have no visual effect
+                // in the current dispatcher. Keep a token placeholder so
+                // operand ordering remains intact for ignored operators.
+                tokens.Add("<<");
+                tokens.Add(">>");
+                break;
+            case PdfNull:
+                tokens.Add("null");
+                break;
+            default:
+                tokens.Add(operand.ToString() ?? string.Empty);
+                break;
+        }
+    }
+
+    private static string FormatPdfStringAsHex(byte[] bytes)
+    {
+        var sb = new StringBuilder(bytes.Length * 2 + 2);
+        sb.Append('<');
+        foreach (var b in bytes)
+            sb.Append(b.ToString("X2", CultureInfo.InvariantCulture));
+        sb.Append('>');
+        return sb.ToString();
     }
 
     #region State Management
@@ -3666,12 +3738,21 @@ internal partial class RenderContext
         var dict = ParseInlineImageDict(headerText);
         if (dict == null) return;
 
+        RenderInlineImage(dict, dataBytes);
+    }
+
+    private void RenderInlineImage(PdfDictionary imageParams, byte[] dataBytes)
+    {
+        var dict = NormalizeInlineImageDictionary(imageParams);
+        if (!dict.ContainsKey("Width") || !dict.ContainsKey("Height"))
+            return;
+
         // Inline image data may be filter-encoded the same way an
         // image XObject's stream is (FlateDecode for raw RGB, DCTDecode
         // for JPEG, etc.). Build a synthetic PdfStream so the existing
         // RenderImageXObject pipeline handles colour-space resolution
         // and rasterization uniformly.
-        var stream = new Pdfe.Core.Primitives.PdfStream(dict, dataBytes);
+        var stream = new PdfStream(dict, dataBytes);
         try
         {
             // PdfStream constructed in-process has no cached decoded
@@ -3688,6 +3769,49 @@ internal partial class RenderContext
         {
             // Single bad inline image shouldn't kill the page.
         }
+    }
+
+    private static PdfDictionary NormalizeInlineImageDictionary(PdfDictionary imageParams)
+    {
+        var dict = new PdfDictionary();
+        foreach (var (keyObj, value) in imageParams)
+        {
+            var key = NormalizeInlineKey(keyObj.Value);
+            dict[key] = NormalizeInlineImageValue(key, value);
+        }
+        return dict;
+    }
+
+    private static PdfObject NormalizeInlineImageValue(string key, PdfObject value)
+    {
+        if (value is PdfName name)
+        {
+            var expanded = key switch
+            {
+                "Filter" => ExpandInlineFilter(name.Value),
+                "ColorSpace" => ExpandInlineColorSpace(name.Value),
+                _ => name.Value,
+            };
+            return new PdfName(expanded);
+        }
+
+        if (value is PdfArray array)
+        {
+            var normalized = new PdfArray();
+            foreach (var item in array)
+                normalized.Add(NormalizeInlineImageValue(key, item));
+            return normalized;
+        }
+
+        if (value is PdfDictionary dict)
+        {
+            var normalized = new PdfDictionary();
+            foreach (var (childKey, childValue) in dict)
+                normalized[childKey] = NormalizeInlineImageValue(childKey.Value, childValue);
+            return normalized;
+        }
+
+        return value;
     }
 
     /// <summary>
@@ -3848,6 +3972,7 @@ internal partial class RenderContext
     private static string ExpandInlineFilter(string abbr) => abbr switch
     {
         "A"   => "ASCIIHexDecode",
+        "AHx" => "ASCIIHexDecode",
         "A85" => "ASCII85Decode",
         "LZW" => "LZWDecode",
         "Fl"  => "FlateDecode",
