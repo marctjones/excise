@@ -195,6 +195,41 @@ public class PdfFunctionEvaluatorTests
             .Should().BeApproximately(5.0, 0.0001);
     }
 
+    [Fact]
+    public void Evaluate_CalculatorFunction_ExecutesStackMathAndProcedureIf()
+    {
+        var program = "{ pop exch 360 mul sin 2 add 4 div sub abs .1 exch sub dup 0 lt { pop 0 } if 10 mul sqrt 1 exch sub dup dup }";
+        var function = new PdfStream(System.Text.Encoding.Latin1.GetBytes(program))
+        {
+            ["FunctionType"] = new PdfInteger(4),
+            ["Domain"] = Numbers(0, 1, 0, 1, 0, 1),
+            ["Range"] = Numbers(0, 1, 0, 1, 0, 1)
+        };
+
+        var result = PdfFunctionEvaluator.Evaluate(function, new[] { 0.0, 0.5, 0.0 });
+
+        result.Should().NotBeNull();
+        result!.Should().HaveCount(3);
+        result.Should().OnlyContain(v => v >= 0.0 && v <= 1.0);
+    }
+
+    [Fact]
+    public void Evaluate_CalculatorFunction_SupportsAtanDegrees()
+    {
+        var program = "{ pop exch 360 mul dup sin exch cos atan 360 div sub abs .1 exch sub dup 0 lt { pop 0 } if 10 mul sqrt 1 exch sub dup dup }";
+        var function = new PdfStream(System.Text.Encoding.Latin1.GetBytes(program))
+        {
+            ["FunctionType"] = new PdfInteger(4),
+            ["Domain"] = Numbers(0, 1, 0, 1, 0, 1),
+            ["Range"] = Numbers(0, 1, 0, 1, 0, 1)
+        };
+
+        var result = PdfFunctionEvaluator.Evaluate(function, new[] { 0.0, 0.25, 0.0 });
+
+        result.Should().NotBeNull();
+        result!.Should().OnlyContain(v => v >= 0.0 && v <= 1.0);
+    }
+
     private static PdfDictionary ExponentialFunction(double[] c0, double[] c1, double n)
     {
         return new PdfDictionary

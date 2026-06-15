@@ -203,7 +203,7 @@ public sealed class PdfColorSpace
             return (values.Length >= 1) ? (1 - values[0], 1 - values[0], 1 - values[0]) : (0, 0, 0);
 
         var t = values.Length > 0 ? values[0] : 0;
-        var evaluated = PdfFunctionEvaluator.Evaluate(_tintTransform, t);
+        var evaluated = PdfFunctionEvaluator.Evaluate(_tintTransform, values);
         if (evaluated == null || evaluated.Length == 0)
         {
             if (_alternateSpace.Components == values.Length && values.Length > 0)

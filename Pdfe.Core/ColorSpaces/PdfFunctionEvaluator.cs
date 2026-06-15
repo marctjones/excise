@@ -5,6 +5,9 @@ namespace Pdfe.Core.ColorSpaces;
 internal static class PdfFunctionEvaluator
 {
     public static double[]? Evaluate(PdfObject? funcObj, double t)
+        => Evaluate(funcObj, new[] { t });
+
+    public static double[]? Evaluate(PdfObject? funcObj, double[] inputs)
     {
         if (funcObj == null)
             return null;
@@ -14,7 +17,7 @@ internal static class PdfFunctionEvaluator
             var results = new List<double>();
             foreach (var item in arr)
             {
-                var r = Evaluate(item, t);
+                var r = Evaluate(item, inputs);
                 if (r != null)
                     results.AddRange(r);
             }
@@ -28,9 +31,10 @@ internal static class PdfFunctionEvaluator
         var funcType = func.GetInt("FunctionType", -1);
         return funcType switch
         {
-            0 => EvaluateSampled(func, t),
-            2 => EvaluateExponential(func, t),
-            3 => EvaluateStitching(func, t),
+            0 => EvaluateSampled(func, inputs.Length > 0 ? inputs[0] : 0),
+            2 => EvaluateExponential(func, inputs.Length > 0 ? inputs[0] : 0),
+            3 => EvaluateStitching(func, inputs.Length > 0 ? inputs[0] : 0),
+            4 => EvaluateCalculator(func, inputs),
             _ => null
         };
     }
@@ -163,6 +167,183 @@ internal static class PdfFunctionEvaluator
         }
 
         return samples;
+    }
+
+    private static double[]? EvaluateCalculator(PdfDictionary func, double[] inputs)
+    {
+        if (func is not PdfStream stream)
+            return null;
+
+        var data = stream.DecodedData ?? stream.EncodedData;
+        var program = System.Text.Encoding.Latin1.GetString(data);
+        program = program.Trim();
+        if (program.StartsWith("{", StringComparison.Ordinal) &&
+            program.EndsWith("}", StringComparison.Ordinal))
+            program = program.Substring(1, program.Length - 2);
+        var tokens = TokenizeCalculator(program);
+        var stack = new Stack<double>();
+
+        for (int i = 0; i < inputs.Length; i++)
+            stack.Push(inputs[i]);
+
+        if (!ExecuteCalculatorTokens(tokens, stack))
+            return null;
+
+        var range = GetNumberArray(func, "Range");
+        int outComps = range is { Length: > 0 } ? range.Length / 2 : stack.Count;
+        if (outComps <= 0 || stack.Count == 0)
+            return null;
+
+        var values = stack.Reverse().TakeLast(outComps).ToArray();
+        if (range != null)
+        {
+            for (int i = 0; i < values.Length && i * 2 + 1 < range.Length; i++)
+                values[i] = Math.Clamp(values[i], range[i * 2], range[i * 2 + 1]);
+        }
+
+        return values;
+    }
+
+    private static bool ExecuteCalculatorTokens(IReadOnlyList<string> tokens, Stack<double> stack)
+    {
+        for (int i = 0; i < tokens.Count; i++)
+        {
+            var token = tokens[i];
+            if (token == "{" || token == "}")
+                continue;
+
+            if (double.TryParse(token, System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out var number))
+            {
+                stack.Push(number);
+                continue;
+            }
+
+            switch (token)
+            {
+                case "pop":
+                    if (stack.Count < 1) return false;
+                    stack.Pop();
+                    break;
+                case "dup":
+                    if (stack.Count < 1) return false;
+                    stack.Push(stack.Peek());
+                    break;
+                case "exch":
+                    if (stack.Count < 2) return false;
+                    var a = stack.Pop();
+                    var b = stack.Pop();
+                    stack.Push(a);
+                    stack.Push(b);
+                    break;
+                case "add":
+                    if (!Binary(stack, (x, y) => x + y)) return false;
+                    break;
+                case "sub":
+                    if (!Binary(stack, (x, y) => x - y)) return false;
+                    break;
+                case "mul":
+                    if (!Binary(stack, (x, y) => x * y)) return false;
+                    break;
+                case "div":
+                    if (!Binary(stack, (x, y) => y == 0 ? 0 : x / y)) return false;
+                    break;
+                case "abs":
+                    if (!Unary(stack, Math.Abs)) return false;
+                    break;
+                case "sqrt":
+                    if (!Unary(stack, x => Math.Sqrt(Math.Max(0, x)))) return false;
+                    break;
+                case "sin":
+                    if (!Unary(stack, x => Math.Sin(x * Math.PI / 180.0))) return false;
+                    break;
+                case "cos":
+                    if (!Unary(stack, x => Math.Cos(x * Math.PI / 180.0))) return false;
+                    break;
+                case "atan":
+                    if (stack.Count < 2) return false;
+                    var denominator = stack.Pop();
+                    var numerator = stack.Pop();
+                    var degrees = Math.Atan2(numerator, denominator) * 180.0 / Math.PI;
+                    if (degrees < 0) degrees += 360.0;
+                    stack.Push(degrees);
+                    break;
+                case "lt":
+                    if (!Binary(stack, (x, y) => x < y ? 1 : 0)) return false;
+                    break;
+                case "if":
+                    if (stack.Count < 1 || i < 1) return false;
+                    var condition = stack.Pop();
+                    var proc = tokens[i - 1];
+                    if (!proc.StartsWith("{", StringComparison.Ordinal) ||
+                        !proc.EndsWith("}", StringComparison.Ordinal))
+                        return false;
+                    if (Math.Abs(condition) > double.Epsilon)
+                    {
+                        var inner = TokenizeCalculator(proc.Substring(1, proc.Length - 2));
+                        if (!ExecuteCalculatorTokens(inner, stack)) return false;
+                    }
+                    break;
+                default:
+                    if (token.StartsWith("{", StringComparison.Ordinal) &&
+                        token.EndsWith("}", StringComparison.Ordinal))
+                        break;
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool Unary(Stack<double> stack, Func<double, double> op)
+    {
+        if (stack.Count < 1) return false;
+        stack.Push(op(stack.Pop()));
+        return true;
+    }
+
+    private static bool Binary(Stack<double> stack, Func<double, double, double> op)
+    {
+        if (stack.Count < 2) return false;
+        var b = stack.Pop();
+        var a = stack.Pop();
+        stack.Push(op(a, b));
+        return true;
+    }
+
+    private static List<string> TokenizeCalculator(string program)
+    {
+        var tokens = new List<string>();
+        for (int i = 0; i < program.Length;)
+        {
+            if (char.IsWhiteSpace(program[i]))
+            {
+                i++;
+                continue;
+            }
+
+            if (program[i] == '{')
+            {
+                int depth = 1;
+                int start = i++;
+                while (i < program.Length && depth > 0)
+                {
+                    if (program[i] == '{') depth++;
+                    else if (program[i] == '}') depth--;
+                    i++;
+                }
+                tokens.Add(program.Substring(start, i - start));
+                continue;
+            }
+
+            int tokenStart = i;
+            while (i < program.Length && !char.IsWhiteSpace(program[i]) &&
+                   program[i] != '{' && program[i] != '}')
+                i++;
+            tokens.Add(program.Substring(tokenStart, i - tokenStart));
+        }
+
+        return tokens;
     }
 
     private static double[]? GetNumberArray(PdfDictionary dict, string key)
