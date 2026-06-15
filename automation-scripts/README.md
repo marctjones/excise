@@ -68,7 +68,7 @@ Tests redaction of the real-world birth certificate request form PDF.
 - Redacts multiple sensitive terms: TORRINGTON, CERTIFICATE, BIRTH, CITY CLERK
 - Applies all redactions to PDF structure
 - Saves redacted output
-- Verifies text removal with external tool (pdfer)
+- Verifies text removal with `pdftotext` when available
 - Accepts ≥50% success rate (due to substring limitation #87)
 
 **Usage:**
@@ -387,11 +387,11 @@ error CS0103: The name 'LoadDocumentCommand' does not exist
 ```
 → GUI integration (#59) not complete yet, commands not implemented
 
-**pdfer verification fails:**
+**External verification is skipped:**
 ```
-⚠️ WARNING: pdfer not found
+⚠️ WARNING: pdftotext unavailable or failed
 ```
-→ Build the CLI tool: `dotnet build PdfEditor.Redaction.Cli -c Release`
+→ Install Poppler so `pdftotext` is available on PATH.
 
 ## Related
 

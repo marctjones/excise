@@ -59,8 +59,6 @@ public partial class MainWindowViewModel : ViewModelBase
     private double _zoomLevel = 1.0;
     private bool _skipZoomSave; // Flag to skip zoom save during auto-reset
     private bool _isRedactionMode;
-    private Rect _currentRedactionArea;
-    private int _currentRedactionRenderDpi = DefaultViewerRenderDpi;
     private PdfPageRect? _currentRedactionPageArea;
     private bool _isTextSelectionMode;
     private Rect _currentTextSelectionArea;
@@ -469,23 +467,29 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public Rect CurrentRedactionArea
     {
-        get => _currentRedactionArea;
-        set
-        {
-            this.RaiseAndSetIfChanged(ref _currentRedactionArea, value);
-            SetCurrentRedactionPageAreaFromLegacyRect(value);
-        }
+        get => CurrentRedactionPageArea is { } area
+            ? ToAvaloniaRect(ToViewerRedactionArea(area))
+            : default;
+        set => CurrentRedactionPageArea = value.Width > 0 && value.Height > 0
+            ? PdfPageRect.ViewerDips(
+                Math.Max(CurrentPageIndex + 1, 1),
+                value.X,
+                value.Y,
+                value.Width,
+                value.Height,
+                CurrentRedactionRenderDpi)
+            : null;
     }
 
     public int CurrentRedactionRenderDpi
     {
-        get => _currentRedactionRenderDpi;
+        get => CurrentRedactionPageArea is { Space: PdfCoordinateSpace.ViewerDips } area
+            ? (int)Math.Round(area.Dpi)
+            : DefaultViewerRenderDpi;
         set
         {
             if (value <= 0)
                 throw new ArgumentOutOfRangeException(nameof(value), "Render DPI must be positive.");
-
-            this.RaiseAndSetIfChanged(ref _currentRedactionRenderDpi, value);
 
             if (_currentRedactionPageArea is { Space: PdfCoordinateSpace.ViewerDips } area)
             {
@@ -497,7 +501,7 @@ public partial class MainWindowViewModel : ViewModelBase
                         area.Width,
                         area.Height,
                         value),
-                    updateLegacyFields: false);
+                    notifyCompatibilityProperties: true);
             }
         }
     }
@@ -505,51 +509,18 @@ public partial class MainWindowViewModel : ViewModelBase
     public PdfPageRect? CurrentRedactionPageArea
     {
         get => _currentRedactionPageArea;
-        set => SetCurrentRedactionPageArea(value, updateLegacyFields: true);
+        set => SetCurrentRedactionPageArea(value, notifyCompatibilityProperties: true);
     }
 
-    private void SetCurrentRedactionPageAreaFromLegacyRect(Rect area)
-    {
-        if (area.Width <= 0 || area.Height <= 0)
-        {
-            SetCurrentRedactionPageArea(null, updateLegacyFields: false);
-            return;
-        }
-
-        SetCurrentRedactionPageArea(
-            PdfPageRect.ViewerDips(
-                Math.Max(CurrentPageIndex + 1, 1),
-                area.X,
-                area.Y,
-                area.Width,
-                area.Height,
-                CurrentRedactionRenderDpi),
-            updateLegacyFields: false);
-    }
-
-    private void SetCurrentRedactionPageArea(PdfPageRect? area, bool updateLegacyFields)
+    private void SetCurrentRedactionPageArea(PdfPageRect? area, bool notifyCompatibilityProperties)
     {
         this.RaiseAndSetIfChanged(ref _currentRedactionPageArea, area);
 
-        if (!updateLegacyFields)
+        if (!notifyCompatibilityProperties)
             return;
 
-        if (area is not { } pageArea)
-        {
-            this.RaiseAndSetIfChanged(ref _currentRedactionArea, default, nameof(CurrentRedactionArea));
-            this.RaiseAndSetIfChanged(ref _currentRedactionRenderDpi, DefaultViewerRenderDpi, nameof(CurrentRedactionRenderDpi));
-            return;
-        }
-
-        var legacyArea = ToViewerRedactionArea(pageArea);
-        this.RaiseAndSetIfChanged(
-            ref _currentRedactionArea,
-            new Rect(legacyArea.X, legacyArea.Y, legacyArea.Width, legacyArea.Height),
-            nameof(CurrentRedactionArea));
-        this.RaiseAndSetIfChanged(
-            ref _currentRedactionRenderDpi,
-            (int)Math.Round(legacyArea.Dpi),
-            nameof(CurrentRedactionRenderDpi));
+        this.RaisePropertyChanged(nameof(CurrentRedactionArea));
+        this.RaisePropertyChanged(nameof(CurrentRedactionRenderDpi));
     }
 
     private PdfPageRect ToViewerRedactionArea(PdfPageRect area)
@@ -572,6 +543,9 @@ public partial class MainWindowViewModel : ViewModelBase
             area,
             DefaultViewerRenderDpi);
     }
+
+    private static Rect ToAvaloniaRect(PdfPageRect area) =>
+        new(area.X, area.Y, area.Width, area.Height);
 
     public bool IsTextSelectionMode
     {

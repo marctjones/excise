@@ -275,7 +275,7 @@ main() {
     log "Next steps:"
     log "  1. Build the project:    ./scripts/build.sh"
     log "  2. Run tests:            ./scripts/test.sh"
-    log "  3. Run demo:             ./scripts/demo.sh"
+    log "  3. Run CLI demo:         ./scripts/demo-pdfe-cli.sh"
     log "  4. Launch GUI:           ./scripts/gui.sh"
     log ""
 }

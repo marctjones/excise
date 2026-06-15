@@ -46,7 +46,7 @@ echo "To view live output, run:"
 echo "  tail -f $LOG_FILE"
 echo ""
 
-cd "$PROJECT_ROOT/PdfEditor.Redaction.Cli.Tests"
+cd "$PROJECT_ROOT"
 
 # Run tests with Corpus category, capturing all output
 {
@@ -55,10 +55,10 @@ cd "$PROJECT_ROOT/PdfEditor.Redaction.Cli.Tests"
     echo "=========================================="
     echo ""
     echo "PDF Count: $PDF_COUNT"
-    echo "Test Project: PdfEditor.Redaction.Cli.Tests"
+    echo "Test Project: Pdfe.Rendering.Tests"
     echo ""
 
-    dotnet test --filter "Category=Corpus" --logger "console;verbosity=detailed" 2>&1
+    dotnet test Pdfe.Rendering.Tests --filter "FullyQualifiedName~Corpus" --logger "console;verbosity=detailed" 2>&1
 
     echo ""
     echo "=========================================="

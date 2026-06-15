@@ -1,5 +1,6 @@
 using AwesomeAssertions;
 using Pdfe.Core.Document;
+using Pdfe.Core.Fonts;
 using Pdfe.Rendering.Fonts;
 using SkiaSharp;
 using System.Collections.Generic;

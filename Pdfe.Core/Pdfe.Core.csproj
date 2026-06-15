@@ -28,6 +28,7 @@
   <ItemGroup>
     <InternalsVisibleTo Include="Pdfe.Core.Tests" />
     <InternalsVisibleTo Include="Pdfe.Rendering" />
+    <InternalsVisibleTo Include="Pdfe.Rendering.Tests" />
   </ItemGroup>
 
 </Project>

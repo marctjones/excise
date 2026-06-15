@@ -102,7 +102,7 @@ These are the CRITICAL tests - TRUE content removal must be verified.
 
 ### Current Verification Methods
 
-1. **Text extraction after redaction** - PdfPig extracts text, redacted content must be absent
+1. **Text extraction after redaction** - independent text extraction must not find redacted content
 2. **External tool verification** - pdftotext, mutool draw confirm removal
 3. **Content stream inspection** - Verify glyphs removed from PDF structure
 4. **Byte-level search** - Confirm text not present anywhere in file
@@ -158,8 +158,8 @@ Gradually expand PDF format support:
 # Run only redaction verification tests
 dotnet test --filter "FullyQualifiedName~Redaction"
 
-# Run pdfer CLI tests
-dotnet test PdfEditor.Redaction.Cli.Tests
+# Run current redaction verification tests
+dotnet test PdfEditor.Tests --filter "FullyQualifiedName~Redaction"
 ```
 
 ## Next Steps

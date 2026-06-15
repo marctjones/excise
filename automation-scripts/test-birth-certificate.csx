@@ -139,70 +139,67 @@ try
     Console.WriteLine($"  Output: {outputPdf}");
     Console.WriteLine($"  Size: {outputSize / 1024} KB");
 
-    // Step 5: Verify redactions with external tool
-    Console.WriteLine($"\n[Step 5/5] Verifying redactions with pdfer");
+    // Step 5: Verify redactions with an independent text extractor.
+    Console.WriteLine($"\n[Step 5/5] Verifying redactions with pdftotext");
 
-    var pdferPath = "/home/marc/pdfe/PdfEditor.Redaction.Cli/bin/Release/net8.0/pdfer";
-
-    if (!File.Exists(pdferPath))
+    var extractedTextPath = Path.Combine(Path.GetTempPath(), $"pdfe-birth-cert-{Guid.NewGuid():N}.txt");
+    int verificationsPassed = 0;
+    int verificationsFailed = 0;
+    try
     {
-        // Try debug build
-        pdferPath = "/home/marc/pdfe/PdfEditor.Redaction.Cli/bin/Debug/net8.0/pdfer";
-    }
-
-    if (!File.Exists(pdferPath))
-    {
-        Console.WriteLine($"⚠️  WARNING: pdfer tool not found, skipping verification");
-        Console.WriteLine($"  Run: dotnet build PdfEditor.Redaction.Cli -c Release");
-    }
-    else
-    {
-        int verificationsPassed = 0;
-        int verificationsFailed = 0;
-
-        foreach (var term in termsToRedact)
+        var verifyProcess = Process.Start(new ProcessStartInfo
         {
-            var verifyProcess = new Process
+            FileName = "pdftotext",
+            ArgumentList = { outputPdf, extractedTextPath },
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        });
+        if (verifyProcess == null)
+            throw new InvalidOperationException("Could not start pdftotext");
+
+        await verifyProcess.WaitForExitAsync();
+        if (verifyProcess.ExitCode != 0 || !File.Exists(extractedTextPath))
+        {
+            Console.WriteLine($"⚠️  WARNING: pdftotext unavailable or failed; skipping external verification");
+        }
+        else
+        {
+            var extracted = await File.ReadAllTextAsync(extractedTextPath);
+            foreach (var term in termsToRedact)
             {
-                StartInfo = new ProcessStartInfo
+                if (!extracted.Contains(term, StringComparison.OrdinalIgnoreCase))
                 {
-                    FileName = pdferPath,
-                    Arguments = $"verify \"{outputPdf}\" \"{term}\"",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false
+                    Console.WriteLine($"  ✅ '{term}' - not found (successfully redacted)");
+                    verificationsPassed++;
                 }
-            };
-
-            verifyProcess.Start();
-            await verifyProcess.WaitForExitAsync();
-
-            if (verifyProcess.ExitCode == 0)
-            {
-                Console.WriteLine($"  ✅ '{term}' - not found (successfully redacted)");
-                verificationsPassed++;
+                else
+                {
+                    Console.WriteLine($"  ⚠️  '{term}' - still present (may be substring limitation #87)");
+                    verificationsFailed++;
+                }
             }
-            else
+
+            Console.WriteLine($"\nVerification results: {verificationsPassed}/{termsToRedact.Length} passed");
+
+            // We accept some failures due to substring limitation (#87)
+            // Require at least 50% success rate
+            var successRate = (double)verificationsPassed / termsToRedact.Length;
+
+            if (successRate < 0.5)
             {
-                Console.WriteLine($"  ⚠️  '{term}' - still present (may be substring limitation #87)");
-                verificationsFailed++;
+                Console.WriteLine($"❌ FAIL: Success rate too low ({successRate:P0})");
+                Console.WriteLine($"  Expected: >= 50%");
+                return 1;
             }
+
+            Console.WriteLine($"✅ Success rate: {successRate:P0} (acceptable)");
         }
-
-        Console.WriteLine($"\nVerification results: {verificationsPassed}/{termsToRedact.Length} passed");
-
-        // We accept some failures due to substring limitation (#87)
-        // Require at least 50% success rate
-        var successRate = (double)verificationsPassed / termsToRedact.Length;
-
-        if (successRate < 0.5)
-        {
-            Console.WriteLine($"❌ FAIL: Success rate too low ({successRate:P0})");
-            Console.WriteLine($"  Expected: >= 50%");
-            return 1;
-        }
-
-        Console.WriteLine($"✅ Success rate: {successRate:P0} (acceptable)");
+    }
+    finally
+    {
+        if (File.Exists(extractedTextPath))
+            File.Delete(extractedTextPath);
     }
 
     // Final summary

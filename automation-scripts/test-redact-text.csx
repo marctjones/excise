@@ -92,44 +92,43 @@ try
     }
     Console.WriteLine($"✅ Document saved ({new FileInfo(outputPdf).Length} bytes)");
 
-    // Step 5: Verify redaction using external tool (pdfer)
-    Console.WriteLine($"\n[5/5] Verifying redaction with pdfer");
-    var pdferPath = "/home/marc/pdfe/PdfEditor.Redaction.Cli/bin/Release/net8.0/pdfer";
-
-    if (!File.Exists(pdferPath))
+    // Step 5: Verify redaction using an independent text extractor.
+    Console.WriteLine($"\n[5/5] Verifying redaction with pdftotext");
+    var extractedTextPath = Path.Combine(Path.GetTempPath(), $"pdfe-redact-text-{Guid.NewGuid():N}.txt");
+    try
     {
-        Console.WriteLine($"⚠️  WARNING: pdfer not found at {pdferPath}, skipping verification");
-    }
-    else
-    {
-        var verifyProcess = new Process
+        var verifyProcess = Process.Start(new ProcessStartInfo
         {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = pdferPath,
-                Arguments = $"verify \"{outputPdf}\" \"{textToRedact}\"",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false
-            }
-        };
+            FileName = "pdftotext",
+            ArgumentList = { outputPdf, extractedTextPath },
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        });
+        if (verifyProcess == null)
+            throw new InvalidOperationException("Could not start pdftotext");
 
-        verifyProcess.Start();
-        var output = await verifyProcess.StandardOutput.ReadToEndAsync();
-        var error = await verifyProcess.StandardError.ReadToEndAsync();
         await verifyProcess.WaitForExitAsync();
-
-        if (verifyProcess.ExitCode == 0)
+        if (verifyProcess.ExitCode == 0 && File.Exists(extractedTextPath))
         {
-            Console.WriteLine($"✅ Verification PASS: '{textToRedact}' not found in PDF");
+            var extracted = await File.ReadAllTextAsync(extractedTextPath);
+            if (extracted.Contains(textToRedact, StringComparison.OrdinalIgnoreCase))
+            {
+                Console.WriteLine($"❌ FAIL: Text still found in redacted PDF");
+                return 1;
+            }
+
+            Console.WriteLine($"✅ Verification PASS: '{textToRedact}' not found by pdftotext");
         }
         else
         {
-            Console.WriteLine($"❌ FAIL: Verification failed (exit code: {verifyProcess.ExitCode})");
-            Console.WriteLine($"  Output: {output}");
-            Console.WriteLine($"  Error: {error}");
-            return 1;
+            Console.WriteLine($"⚠️  WARNING: pdftotext unavailable or failed; skipping external verification");
         }
+    }
+    finally
+    {
+        if (File.Exists(extractedTextPath))
+            File.Delete(extractedTextPath);
     }
 
     // All checks passed

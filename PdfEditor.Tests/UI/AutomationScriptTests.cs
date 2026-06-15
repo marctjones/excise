@@ -280,12 +280,6 @@ public class AutomationScriptTests
         var viewModel = new MainWindowViewModel();
         var scriptingService = new ScriptingService(viewModel);
 
-        // Scripts that use external dependencies not available in test context
-        var scriptsToSkip = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "test-gui-fix.csx" // Uses Avalonia.Headless and references outdated ViewModel API
-        };
-
         var scriptFiles = Directory.GetFiles(_scriptsDir, "*.csx");
 
         _output.WriteLine($"Found {scriptFiles.Length} automation script(s) to validate");
@@ -294,12 +288,6 @@ public class AutomationScriptTests
         {
             var scriptName = Path.GetFileName(scriptPath);
             _output.WriteLine($"\nValidating: {scriptName}");
-
-            if (scriptsToSkip.Contains(scriptName))
-            {
-                _output.WriteLine($"  ⏭️ Skipped (uses external dependencies)");
-                continue;
-            }
 
             var scriptCode = await File.ReadAllTextAsync(scriptPath);
             var errors = scriptingService.ValidateScript(scriptCode);

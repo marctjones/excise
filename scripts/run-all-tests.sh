@@ -30,8 +30,8 @@ echo "==============="
 if [[ -z "$NO_BUILD_ARG" ]]; then
     printf "Building... "
     dotnet build PdfEditor.Tests --nologo -v quiet >/dev/null 2>&1
-    dotnet build PdfEditor.Redaction.Tests --nologo -v quiet >/dev/null 2>&1
-    dotnet build PdfEditor.Redaction.Cli.Tests --nologo -v quiet >/dev/null 2>&1
+    dotnet build Pdfe.Core.Tests --nologo -v quiet >/dev/null 2>&1
+    dotnet build Pdfe.Rendering.Tests --nologo -v quiet >/dev/null 2>&1
     echo "done"
     NO_BUILD_ARG="--no-build"
 fi
@@ -149,8 +149,8 @@ run_tests() {
 }
 
 run_tests "PdfEditor.Tests" "PdfEditor.Tests"
-run_tests "PdfEditor.Redaction.Tests" "PdfEditor.Redaction.Tests"
-run_tests "PdfEditor.Redaction.Cli.Tests" "PdfEditor.Redaction.Cli.Tests"
+run_tests "Pdfe.Core.Tests" "Pdfe.Core.Tests"
+run_tests "Pdfe.Rendering.Tests" "Pdfe.Rendering.Tests"
 
 echo ""
 echo "═══════════════════════════════"

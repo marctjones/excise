@@ -7,6 +7,7 @@ using Pdfe.Core.Document;
 using Pdfe.Core.Primitives;
 using Pdfe.Rendering.Fonts;
 using SkiaSharp;
+using CoreCffParser = Pdfe.Core.Fonts.CffParser;
 
 namespace Pdfe.Rendering;
 
@@ -1203,7 +1204,7 @@ internal partial class RenderContext
         out Dictionary<int, int>? cffCidToGlyph)
     {
         cffCidToGlyph = null;
-        var cffInfo = Fonts.CffParser.Parse(cff);
+        var cffInfo = CoreCffParser.Parse(cff);
         if (cffInfo == null) return null;
 
         var unicodeToGlyph = new Dictionary<char, int>(256);
