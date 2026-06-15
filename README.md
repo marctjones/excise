@@ -430,11 +430,20 @@ published manually):
 Before tagging, run the release checklist in
 [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md), including
 `scripts/verify-doc-claims.sh`, so documentation claims are checked against
-the implemented commands and APIs.
+the implemented commands and APIs. The repeatable local gate is:
+
+```bash
+scripts/release-smoke.sh --visual --package --version 2.1.0
+```
+
+The release-smoke script does not create tags or upload artifacts. It runs the
+documentation, build, redaction, signature-verification, UI workflow, full-test,
+local visual-regression, packaging, and diff-cleanliness gates and writes logs
+under `logs/release-smoke_*`.
 
 ```bash
 # Cut a new release
-git tag v2.1.0
+git tag -a v2.1.0 -m "pdfe v2.1.0"
 git push origin v2.1.0           # workflow runs, attaches installers
 # Or via the GitHub UI: Releases → Draft a new release → choose tag
 ```

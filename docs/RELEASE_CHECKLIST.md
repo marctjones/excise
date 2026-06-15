@@ -12,12 +12,22 @@ Use this checklist before tagging any `v*` release.
 
 ## Validation
 
+- Run `scripts/release-smoke.sh --visual --package --version <version>` before tagging a release candidate.
 - Run `dotnet build pdfe.sln --no-restore`.
 - Run `dotnet test --no-build --filter "FullyQualifiedName~Redaction"` after any redaction-adjacent change.
+- Run the signature verification and UI workflow gates in `scripts/release-smoke.sh`.
 - Run the focused tests for the changed area.
 - Run `dotnet test pdfe.sln --no-build --logger "console;verbosity=minimal"` before tagging.
 - Run `scripts/run-visual-regression-local.sh --release` before tagging a release candidate.
 - Run `git diff --check`.
+
+`scripts/release-smoke.sh` is the repeatable wrapper for these gates. It does
+not tag, push, create a GitHub Release, or upload artifacts. Its build gate
+restores packages so it is reliable after configuration-changing package
+builds. Its build and test gates use the same Debug configuration as CI because
+Release excludes the developer scripting surface by default; `--package` is the
+Release artifact check. Use `--quick` for a short documentation/build/redaction
+check, and use `--visual --package` for the full local release-candidate pass.
 
 ## Issue Hygiene
 
@@ -32,3 +42,4 @@ Use this checklist before tagging any `v*` release.
 - Push the commit to `origin/main`.
 - Push the tag.
 - Create or verify the GitHub Release.
+- Verify `.sha256` files are present for each release artifact.
