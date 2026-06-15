@@ -19,6 +19,7 @@
 #   scripts/run-exploratory-corpus.sh --page-mode sample       # pages 1,2,5,20
 #   scripts/run-exploratory-corpus.sh --page-mode all          # every page
 #   scripts/run-exploratory-corpus.sh --chunks 14 --tiny       # 10-PDF smoke run
+#   scripts/run-exploratory-corpus.sh --log-dir logs/run       # keep chunk logs
 #
 # Output: Pdfe.Rendering.Tests/bin/Debug/net10.0/exploratory-report-<mode>.json
 
@@ -35,6 +36,7 @@ PER_CHUNK_PARALLEL="0"        # 0 = pdfe auto-picks (ProcessorCount/2)
 PDF_TIMEOUT_MS="15000"        # mutool per-page timeout
 CHUNK_PARALLEL="4"            # how many chunks to run concurrently
 PAGE_MODE="first"             # first | sample | all
+CHUNK_LOG_DIR="/tmp"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -45,6 +47,7 @@ while [[ $# -gt 0 ]]; do
         --pdf-timeout-ms)    PDF_TIMEOUT_MS="$2"; shift 2 ;;
         --chunk-parallel)    CHUNK_PARALLEL="$2"; shift 2 ;;
         --page-mode)         PAGE_MODE="$2"; shift 2 ;;
+        --log-dir)           CHUNK_LOG_DIR="$2"; shift 2 ;;
         --help|-h)
             sed -n '2,18p' "$0"; exit 0 ;;
         *)
@@ -112,10 +115,15 @@ fi
 # the merge step finds them.
 BIN_DIR="$ROOT/Pdfe.Rendering.Tests/bin/$CONFIG/net10.0"
 mkdir -p "$BIN_DIR"
+mkdir -p "$CHUNK_LOG_DIR"
 REPORT_NAME="exploratory-report-${PAGE_MODE}.json"
-rm -f "$BIN_DIR"/exploratory-chunk-*.json "$BIN_DIR"/exploratory-report*.json
+rm -f "$BIN_DIR"/exploratory-chunk-*.json "$BIN_DIR/$REPORT_NAME"
+if [[ "$PAGE_MODE" == "first" ]]; then
+    rm -f "$BIN_DIR/exploratory-report.json"
+fi
 
 echo "▶ Running $CHUNKS chunks ($CHUNK_PARALLEL chunks concurrent, each $PER_CHUNK_PARALLEL-way internally parallel, page-mode=$PAGE_MODE)"
+echo "  chunk logs: $CHUNK_LOG_DIR/exploratory-chunk-N.log"
 chunk_failures=0
 chunk_start=$(date +%s)
 
@@ -138,7 +146,7 @@ run_one_chunk() {
         --parallel "$PER_CHUNK_PARALLEL" \
         --pdf-timeout-ms "$PDF_TIMEOUT_MS" \
         --page-mode "$PAGE_MODE" \
-        > "/tmp/exploratory-chunk-$i.log" 2>&1
+        > "$CHUNK_LOG_DIR/exploratory-chunk-$i.log" 2>&1
     local rc=$?
     if [[ "$rc" == "0" && -f "$slice_path" ]]; then
         local stats
@@ -150,12 +158,12 @@ print(f'{d[\"total\"]} page results, peak {d[\"peakRssBytes\"]//1024//1024} MB')
         printf '  ✓ chunk %d/%d  %s\n' "$((i + 1))" "$CHUNKS" "$stats"
         return 0
     else
-        printf '  ✗ chunk %d/%d failed (rc=%d) — see /tmp/exploratory-chunk-%d.log\n' "$((i + 1))" "$CHUNKS" "$rc" "$i"
+        printf '  ✗ chunk %d/%d failed (rc=%d) — see %s/exploratory-chunk-%d.log\n' "$((i + 1))" "$CHUNKS" "$rc" "$CHUNK_LOG_DIR" "$i"
         return 1
     fi
 }
 export -f run_one_chunk
-export PDFE_BIN CORPUS BIN_DIR CHUNKS PER_CHUNK_PARALLEL PDF_TIMEOUT_MS PAGE_MODE
+export PDFE_BIN CORPUS BIN_DIR CHUNKS PER_CHUNK_PARALLEL PDF_TIMEOUT_MS PAGE_MODE CHUNK_LOG_DIR
 
 # xargs -P runs CHUNK_PARALLEL chunks concurrently. -I {} substitutes
 # the chunk index. The bash -c wrapper is needed because run_one_chunk
