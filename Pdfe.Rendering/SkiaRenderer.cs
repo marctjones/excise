@@ -2317,6 +2317,12 @@ internal partial class RenderContext
             case Pdfe.Core.Document.PdfAnnotationSubtype.Circle:
                 RenderShapeDefault(annot, rect, isEllipse: true);
                 break;
+            case Pdfe.Core.Document.PdfAnnotationSubtype.Highlight:
+            case Pdfe.Core.Document.PdfAnnotationSubtype.Underline:
+            case Pdfe.Core.Document.PdfAnnotationSubtype.Squiggly:
+            case Pdfe.Core.Document.PdfAnnotationSubtype.StrikeOut:
+                RenderTextMarkupDefault(annot, rect);
+                break;
         }
     }
 
@@ -2473,6 +2479,126 @@ internal partial class RenderContext
         if (isEllipse) _canvas.DrawOval(rect, paint);
         else _canvas.DrawRect(rect, paint);
     }
+
+    /// <summary>
+    /// Render a text-markup annotation when the PDF omits /AP /N.
+    /// This intentionally stays simple: exact quad geometry is already
+    /// reduced to per-quad boxes by PdfAnnotationParser, which is enough
+    /// for the common no-appearance highlight/comment fixtures.
+    /// </summary>
+    private void RenderTextMarkupDefault(
+        Pdfe.Core.Document.PdfAnnotation annot, SKRect fallbackRect)
+    {
+        var boxes = annot.QuadPoints is { Count: > 0 }
+            ? annot.QuadPoints.Select(NormalizeAnnotationRect)
+            : new[] { fallbackRect };
+
+        var baseColor = AnnotationMarkupColor(annot);
+        using var paint = new SKPaint
+        {
+            IsAntialias = _options.AntiAlias,
+            StrokeCap = SKStrokeCap.Round,
+            StrokeJoin = SKStrokeJoin.Round,
+        };
+
+        _canvas.Save();
+        try
+        {
+            foreach (var box in boxes)
+            {
+                if (box.Width < 0.5f || box.Height < 0.5f)
+                    continue;
+
+                switch (annot.Subtype)
+                {
+                    case Pdfe.Core.Document.PdfAnnotationSubtype.Highlight:
+                        paint.Style = SKPaintStyle.Fill;
+                        paint.BlendMode = SKBlendMode.Multiply;
+                        paint.Color = WithAlpha(baseColor, 96);
+                        _canvas.DrawRect(box, paint);
+                        paint.BlendMode = SKBlendMode.SrcOver;
+                        break;
+
+                    case Pdfe.Core.Document.PdfAnnotationSubtype.Underline:
+                        DrawMarkupLine(box, baseColor, box.Top + box.Height * 0.12f, paint);
+                        break;
+
+                    case Pdfe.Core.Document.PdfAnnotationSubtype.StrikeOut:
+                        DrawMarkupLine(box, baseColor, box.MidY, paint);
+                        break;
+
+                    case Pdfe.Core.Document.PdfAnnotationSubtype.Squiggly:
+                        DrawMarkupSquiggly(box, baseColor, paint);
+                        break;
+                }
+            }
+        }
+        finally
+        {
+            _canvas.Restore();
+        }
+    }
+
+    private static SKRect NormalizeAnnotationRect(Pdfe.Core.Document.PdfRectangle rect)
+    {
+        float rx1 = (float)Math.Min(rect.Left, rect.Right);
+        float ry1 = (float)Math.Min(rect.Bottom, rect.Top);
+        float rx2 = (float)Math.Max(rect.Left, rect.Right);
+        float ry2 = (float)Math.Max(rect.Bottom, rect.Top);
+        return new SKRect(rx1, ry1, rx2, ry2);
+    }
+
+    private void DrawMarkupLine(SKRect box, SKColor color, float y, SKPaint paint)
+    {
+        paint.Style = SKPaintStyle.Stroke;
+        paint.BlendMode = SKBlendMode.SrcOver;
+        paint.Color = WithAlpha(color, 230);
+        paint.StrokeWidth = Math.Clamp(box.Height * 0.08f, 1.0f, 3.0f);
+        paint.StrokeCap = SKStrokeCap.Round;
+        paint.StrokeJoin = SKStrokeJoin.Round;
+        _canvas.DrawLine(box.Left, y, box.Right, y, paint);
+    }
+
+    private void DrawMarkupSquiggly(SKRect box, SKColor color, SKPaint paint)
+    {
+        paint.Style = SKPaintStyle.Stroke;
+        paint.BlendMode = SKBlendMode.SrcOver;
+        paint.Color = WithAlpha(color, 230);
+        paint.StrokeWidth = Math.Clamp(box.Height * 0.06f, 1.0f, 2.5f);
+        paint.StrokeCap = SKStrokeCap.Round;
+        paint.StrokeJoin = SKStrokeJoin.Round;
+
+        float amplitude = Math.Clamp(box.Height * 0.08f, 1.0f, 3.0f);
+        float step = Math.Max(2.0f, amplitude * 2.0f);
+        float baseline = box.Top + box.Height * 0.16f;
+        using var path = new SKPath();
+        path.MoveTo(box.Left, baseline);
+
+        bool up = true;
+        for (float x = box.Left + step; x <= box.Right; x += step)
+        {
+            path.LineTo(x, baseline + (up ? amplitude : -amplitude));
+            up = !up;
+        }
+        path.LineTo(box.Right, baseline);
+        _canvas.DrawPath(path, paint);
+    }
+
+    private static SKColor AnnotationMarkupColor(Pdfe.Core.Document.PdfAnnotation annot)
+    {
+        if (annot.Color is { } color)
+        {
+            var (r, g, b) = color;
+            return RgbToColor(r, g, b);
+        }
+
+        return annot.Subtype == Pdfe.Core.Document.PdfAnnotationSubtype.Highlight
+            ? new SKColor(255, 255, 0)
+            : SKColors.Black;
+    }
+
+    private static SKColor WithAlpha(SKColor color, byte alpha) =>
+        new(color.Red, color.Green, color.Blue, alpha);
 
     /// <summary>
     /// Parse a PDF color array (1, 3, or 4 components — gray / RGB /

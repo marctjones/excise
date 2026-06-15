@@ -1,4 +1,5 @@
 using System.IO.Compression;
+using Pdfe.Core.Filters;
 using Pdfe.Core.Primitives;
 
 namespace Pdfe.Core.Parsing;
@@ -46,15 +47,15 @@ public class StreamDecompressor
         return filterName switch
         {
             "FlateDecode" or "Fl" => DecodeFlateDecode(data, parms),
-            "ASCIIHexDecode" or "AHx" => DecodeASCIIHex(data),
-            "ASCII85Decode" or "A85" => DecodeASCII85(data),
+            "ASCIIHexDecode" or "AHx" => BasicStreamFilters.DecodeAsciiHex(data),
+            "ASCII85Decode" or "A85" => BasicStreamFilters.DecodeAscii85(data),
             "LZWDecode" or "LZW" => DecodeLZW(data, parms),
-            "RunLengthDecode" or "RL" => DecodeRunLength(data),
+            "RunLengthDecode" or "RL" => BasicStreamFilters.DecodeRunLength(data),
             "DCTDecode" or "DCT" => data, // JPEG — decoded by the renderer (SkiaSharp)
             "JPXDecode" => DecodeJPX(data),
             "CCITTFaxDecode" or "CCF" => DecodeCCITTFax(data, parms),
             "JBIG2Decode" => data, // handled in Decompress (needs image /Width /Height)
-            "BrotliDecode" => DecodeBrotli(data),
+            "BrotliDecode" => BasicStreamFilters.DecodeBrotli(data),
             "Crypt" => data, // Encryption handled separately
             _ => throw new NotSupportedException($"Unknown filter: {filterName}")
         };
@@ -99,22 +100,6 @@ public class StreamDecompressor
         {
             return data;
         }
-    }
-
-    /// <summary>
-    /// Decompress a Brotli-encoded stream. PDF 2.0 added /BrotliDecode
-    /// as an experimental filter; pdf.js's <c>Brotli-Prototype-FileA.pdf</c>
-    /// fixture exercises this path. .NET's BrotliStream gives us the
-    /// decoder for free — same shape as DecodeFlateDecode.
-    /// </summary>
-    private static byte[] DecodeBrotli(byte[] data)
-    {
-        using var input = new MemoryStream(data);
-        using var brotli = new System.IO.Compression.BrotliStream(
-            input, System.IO.Compression.CompressionMode.Decompress, leaveOpen: false);
-        using var output = new MemoryStream();
-        brotli.CopyTo(output);
-        return output.ToArray();
     }
 
     /// <summary>
@@ -291,122 +276,6 @@ public class StreamDecompressor
     }
 
     /// <summary>
-    /// Decode ASCIIHexDecode (hex encoding).
-    /// </summary>
-    private byte[] DecodeASCIIHex(byte[] data)
-    {
-        var output = new List<byte>();
-        int highNibble = -1;
-
-        foreach (byte b in data)
-        {
-            if (b == '>') // End of data
-                break;
-
-            if (char.IsWhiteSpace((char)b))
-                continue;
-
-            int nibble = HexValue((char)b);
-            if (nibble < 0)
-                throw new PdfParseException($"Invalid hex digit in ASCIIHexDecode: {(char)b}");
-
-            if (highNibble < 0)
-            {
-                highNibble = nibble;
-            }
-            else
-            {
-                output.Add((byte)((highNibble << 4) | nibble));
-                highNibble = -1;
-            }
-        }
-
-        // Handle odd number of digits
-        if (highNibble >= 0)
-        {
-            output.Add((byte)(highNibble << 4));
-        }
-
-        return output.ToArray();
-    }
-
-    /// <summary>
-    /// Decode ASCII85Decode (base-85 encoding).
-    /// </summary>
-    private byte[] DecodeASCII85(byte[] data)
-    {
-        var output = new List<byte>();
-        var group = new List<int>();
-
-        for (int i = 0; i < data.Length; i++)
-        {
-            byte b = data[i];
-
-            // Skip whitespace
-            if (char.IsWhiteSpace((char)b))
-                continue;
-
-            // End of data
-            if (b == '~' && i + 1 < data.Length && data[i + 1] == '>')
-                break;
-
-            // Special case: 'z' represents four zero bytes
-            if (b == 'z')
-            {
-                if (group.Count > 0)
-                    throw new PdfParseException("Invalid 'z' in ASCII85 group");
-
-                output.AddRange(new byte[4]);
-                continue;
-            }
-
-            if (b < 33 || b > 117)
-                throw new PdfParseException($"Invalid character in ASCII85: {(char)b}");
-
-            group.Add(b - 33);
-
-            if (group.Count == 5)
-            {
-                DecodeASCII85Group(group, output, 4);
-                group.Clear();
-            }
-        }
-
-        // Handle partial group at end
-        if (group.Count > 0)
-        {
-            int originalCount = group.Count;
-            while (group.Count < 5)
-                group.Add(84); // Pad with 'u' (highest value)
-
-            int outBytes = originalCount - 1; // Partial group produces n-1 bytes
-            if (outBytes > 0)
-                DecodeASCII85Group(group, output, outBytes);
-        }
-
-        return output.ToArray();
-    }
-
-    private void DecodeASCII85Group(List<int> group, List<byte> output, int numBytes)
-    {
-        long value = 0;
-        for (int i = 0; i < 5; i++)
-        {
-            value = value * 85 + group[i];
-        }
-
-        // Extract bytes (big-endian)
-        var bytes = new byte[4];
-        for (int i = 3; i >= 0; i--)
-        {
-            bytes[i] = (byte)(value & 0xFF);
-            value >>= 8;
-        }
-
-        output.AddRange(bytes.Take(numBytes));
-    }
-
-    /// <summary>
     /// Decode LZWDecode compression.
     /// </summary>
     private byte[] DecodeLZW(byte[] data, PdfDictionary? parms)
@@ -520,56 +389,6 @@ public class StreamDecompressor
             }
         }
         return result;
-    }
-
-    /// <summary>
-    /// Decode RunLengthDecode compression.
-    /// </summary>
-    private byte[] DecodeRunLength(byte[] data)
-    {
-        var output = new List<byte>();
-        int i = 0;
-
-        while (i < data.Length)
-        {
-            int length = data[i++];
-
-            if (length == 128) // EOD
-                break;
-
-            if (length < 128)
-            {
-                // Copy next (length + 1) bytes literally
-                int count = length + 1;
-                for (int j = 0; j < count && i < data.Length; j++)
-                {
-                    output.Add(data[i++]);
-                }
-            }
-            else
-            {
-                // Repeat next byte (257 - length) times
-                int count = 257 - length;
-                if (i < data.Length)
-                {
-                    byte b = data[i++];
-                    for (int j = 0; j < count; j++)
-                    {
-                        output.Add(b);
-                    }
-                }
-            }
-        }
-
-        return output.ToArray();
-    }
-
-    private static int HexValue(char c)
-    {
-        if (c >= '0' && c <= '9') return c - '0';
-        if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-        if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-        return -1;
     }
 
     /// <summary>

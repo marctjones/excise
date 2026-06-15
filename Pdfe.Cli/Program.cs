@@ -1,6 +1,7 @@
 using System.CommandLine;
 using Pdfe.Core.Document;
 using Pdfe.Core.Graphics;
+using Pdfe.Core.Parsing;
 using Pdfe.Core.Text.Segmentation;
 using Pdfe.Ocr;
 using Pdfe.Rendering;
@@ -1353,6 +1354,7 @@ class Program
                         path = rel,
                         pageNumber = 0,
                         status = "TIMEOUT",
+                        errorPhase = "scan",
                         errorType = "WallClockTimeout",
                         errorMessage = $"Per-PDF budget {wallBudgetMs}ms exceeded — pdfe or reference renderer got stuck.",
                     },
@@ -1454,7 +1456,8 @@ class Program
                 {
                     path = relPath,
                     pageNumber = 0,
-                    status = "PARSE_ERROR",
+                    status = ClassifyCorpusFailure(ex, CorpusFailurePhase.Open),
+                    errorPhase = "open",
                     errorType = ex.GetType().Name,
                     errorMessage = Trunc(ex.Message, 200),
                 },
@@ -1497,7 +1500,8 @@ class Program
             }
             catch (Exception ex)
             {
-                entry.status = "RENDER_ERROR";
+                entry.status = ClassifyCorpusFailure(ex, CorpusFailurePhase.Render);
+                entry.errorPhase = "render";
                 entry.errorType = ex.GetType().Name;
                 entry.errorMessage = Trunc(ex.Message, 200);
                 return entry;
@@ -1562,6 +1566,7 @@ class Program
         catch (Exception ex)
         {
             entry.status = "COMPARE_ERROR";
+            entry.errorPhase = "compare";
             entry.errorType = ex.GetType().Name;
             entry.errorMessage = Trunc(ex.Message, 200);
         }
@@ -1667,6 +1672,40 @@ class Program
     private static string Trunc(string s, int n) =>
         s.Length <= n ? s : s.Substring(0, n) + "…";
 
+    internal enum CorpusFailurePhase
+    {
+        Open,
+        Render,
+    }
+
+    internal static string ClassifyCorpusFailure(Exception ex, CorpusFailurePhase phase)
+    {
+        if (phase == CorpusFailurePhase.Open)
+            return "PARSE_ERROR";
+
+        if (IsDecodeFailure(ex))
+            return "DECODE_ERROR";
+
+        return "RENDER_ERROR";
+    }
+
+    private static bool IsDecodeFailure(Exception ex)
+    {
+        for (Exception? current = ex; current != null; current = current.InnerException)
+        {
+            if (current is PdfParseException or InvalidDataException)
+                return true;
+
+            if (current is NotSupportedException &&
+                current.Message.Contains("filter", StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        var stack = ex.StackTrace ?? string.Empty;
+        return stack.Contains("StreamDecompressor", StringComparison.Ordinal)
+            || stack.Contains(".Filters.", StringComparison.Ordinal);
+    }
+
     internal sealed class CorpusScanEntry
     {
         public string path { get; set; } = "";
@@ -1684,6 +1723,7 @@ class Program
         public double? maeMutool { get; set; }
         public double? diffFractionCairo { get; set; }
         public double? maeCairo { get; set; }
+        public string? errorPhase { get; set; }
         public string? errorType { get; set; }
         public string? errorMessage { get; set; }
     }

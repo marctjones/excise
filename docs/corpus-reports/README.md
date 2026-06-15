@@ -18,6 +18,7 @@ sampled and exhaustive reports have multiple entries per PDF.
 | `PASS_ONE` | pdfe matches one oracle but the oracles disagree with each other (engine-specific quirk, not a clear pdfe bug) |
 | `DIFF` | pdfe disagrees with both oracles (real rendering bug) |
 | `PARSE_ERROR` | pdfe can't open the PDF (parser limitation) |
+| `DECODE_ERROR` | pdfe opened the PDF but a stream, image, or content decode path failed during rendering |
 | `TIMEOUT` | per-PDF wall-clock budget exceeded |
 | `MUTOOL_REFUSED` / `ALL_ORACLES_REFUSED` | reference engines can't render either |
 | `EMPTY_DOC` | 0 pages |
