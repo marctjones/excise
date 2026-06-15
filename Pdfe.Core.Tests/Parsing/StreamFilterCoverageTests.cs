@@ -116,4 +116,35 @@ public class StreamFilterCoverageTests
         new StreamDecompressor().Decompress(s);
         s.DecodedData.Should().Equal(Encoding.ASCII.GetBytes("chained"));
     }
+
+    [Fact]
+    public void MultipleFilters_UsesDecodeParmsForMatchingFilter()
+    {
+        // ASCIIHexDecode has no params; FlateDecode must receive the second
+        // DecodeParms entry so its PNG predictor strips the per-row filter byte.
+        var pngPredicted = new byte[] { 0, (byte)'O', (byte)'K' };
+        var inner = Zlib(pngPredicted);
+        var hex = new StringBuilder();
+        foreach (var b in inner) hex.Append(b.ToString("X2"));
+        hex.Append('>');
+
+        var dict = new PdfDictionary();
+        var filters = new PdfArray();
+        filters.Add((PdfObject)new PdfName("ASCIIHexDecode"));
+        filters.Add((PdfObject)new PdfName("FlateDecode"));
+        dict["Filter"] = filters;
+
+        var decodeParms = new PdfArray();
+        decodeParms.Add((PdfObject)PdfNull.Instance);
+        var flateParms = new PdfDictionary();
+        flateParms.SetInt("Predictor", 10);
+        flateParms.SetInt("Columns", 2);
+        decodeParms.Add((PdfObject)flateParms);
+        dict["DecodeParms"] = decodeParms;
+
+        var stream = new PdfStream(dict, Encoding.ASCII.GetBytes(hex.ToString()));
+        new StreamDecompressor().Decompress(stream);
+
+        stream.DecodedData.Should().Equal(Encoding.ASCII.GetBytes("OK"));
+    }
 }
