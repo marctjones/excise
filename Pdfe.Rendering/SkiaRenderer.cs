@@ -137,6 +137,58 @@ internal partial class RenderContext
     // catches genuine self-reference loops independently.
     private const int MaxFormXObjectDepth = 64;
 
+    private sealed class MeshBitReader
+    {
+        private readonly byte[] _data;
+        private int _bitOffset;
+
+        public MeshBitReader(byte[] data)
+        {
+            _data = data;
+        }
+
+        public int RemainingBits => (_data.Length * 8) - _bitOffset;
+
+        public uint Read(int bitCount)
+        {
+            uint value = 0;
+            for (var i = 0; i < bitCount; i++)
+            {
+                if (_bitOffset >= _data.Length * 8)
+                    throw new InvalidOperationException("Mesh stream ended mid-field.");
+
+                var b = _data[_bitOffset / 8];
+                var shift = 7 - (_bitOffset % 8);
+                value = (value << 1) | (uint)((b >> shift) & 1);
+                _bitOffset++;
+            }
+
+            return value;
+        }
+    }
+
+    private sealed class MeshPatch
+    {
+        private MeshPatch(IReadOnlyList<SKPoint> points, SKColor[] colors)
+        {
+            Points = points;
+            Colors = colors;
+            MinX = points.Min(p => p.X);
+            MaxX = points.Max(p => p.X);
+            MinY = points.Min(p => p.Y);
+            MaxY = points.Max(p => p.Y);
+        }
+
+        public IReadOnlyList<SKPoint> Points { get; }
+        public SKColor[] Colors { get; }
+        public double MinX { get; }
+        public double MaxX { get; }
+        public double MinY { get; }
+        public double MaxY { get; }
+
+        public static MeshPatch From(IReadOnlyList<SKPoint> points, SKColor[] colors) => new(points, colors);
+    }
+
     // Glyph widths parsed from the current font dictionary's /Widths array.
     // Null when unavailable (e.g. standard 14 fonts that omit /Widths), in which
     // case we fall back to Skia's MeasureText on the system typeface.
@@ -352,7 +404,10 @@ internal partial class RenderContext
             // Color (grayscale)
             case "g":
                 if (operands.Count >= 1)
+                {
                     _state.FillColor = GrayToColor(ParseNumber(operands[0]));
+                    _state.FillPatternName = null;
+                }
                 break;
             case "G":
                 if (operands.Count >= 1)
@@ -362,10 +417,13 @@ internal partial class RenderContext
             // Color (RGB)
             case "rg":
                 if (operands.Count >= 3)
+                {
                     _state.FillColor = RgbToColor(
                         ParseNumber(operands[0]),
                         ParseNumber(operands[1]),
                         ParseNumber(operands[2]));
+                    _state.FillPatternName = null;
+                }
                 break;
             case "RG":
                 if (operands.Count >= 3)
@@ -378,11 +436,14 @@ internal partial class RenderContext
             // Color (CMYK)
             case "k":
                 if (operands.Count >= 4)
+                {
                     _state.FillColor = CmykToColor(
                         ParseNumber(operands[0]),
                         ParseNumber(operands[1]),
                         ParseNumber(operands[2]),
                         ParseNumber(operands[3]));
+                    _state.FillPatternName = null;
+                }
                 break;
             case "K":
                 if (operands.Count >= 4)
@@ -683,6 +744,21 @@ internal partial class RenderContext
 
         var matrix = new SKMatrix(a, c, e, b, d, f, 0, 0, 1);
         _canvas.Concat(in matrix);
+        _state.CurrentTransform = Concat(_state.CurrentTransform, matrix);
+    }
+
+    private static SKMatrix Concat(SKMatrix first, SKMatrix second)
+    {
+        return new SKMatrix(
+            first.ScaleX * second.ScaleX + first.SkewX * second.SkewY,
+            first.ScaleX * second.SkewX + first.SkewX * second.ScaleY,
+            first.ScaleX * second.TransX + first.SkewX * second.TransY + first.TransX,
+            first.SkewY * second.ScaleX + first.ScaleY * second.SkewY,
+            first.SkewY * second.SkewX + first.ScaleY * second.ScaleY,
+            first.SkewY * second.TransX + first.ScaleY * second.TransY + first.TransY,
+            0,
+            0,
+            1);
     }
 
     private const float MatrixComponentMax = 32767f;
@@ -2932,6 +3008,264 @@ internal partial class RenderContext
 
     #region Shading (sh operator) - Issue #300
 
+    private bool RenderFillPattern(SKPath path)
+    {
+        if (_state.FillPatternName == null)
+            return false;
+
+        var pattern = ResolvePatternFromActiveResources(_state.FillPatternName);
+        if (pattern == null || pattern.GetInt("PatternType", 0) != 2)
+            return false;
+
+        var shadingObj = pattern.GetOptional("Shading");
+        if (shadingObj == null)
+            return false;
+        var shading = _page.Document.Resolve(shadingObj) as Pdfe.Core.Primitives.PdfDictionary;
+        if (shading == null)
+            return false;
+
+        if (shading.GetInt("ShadingType", 0) != 6)
+            return false;
+
+        return RenderType6MeshPattern(path, pattern, shading);
+    }
+
+    private bool RenderType6MeshPattern(
+        SKPath clipPath,
+        Pdfe.Core.Primitives.PdfDictionary pattern,
+        Pdfe.Core.Primitives.PdfDictionary shading)
+    {
+        if (shading is not Pdfe.Core.Primitives.PdfStream stream)
+            return false;
+
+        var patches = DecodeType6MeshPatches(stream);
+        if (patches.Count == 0)
+            return false;
+
+        var minX = patches.Min(p => p.MinX);
+        var minY = patches.Min(p => p.MinY);
+        var maxX = patches.Max(p => p.MaxX);
+        var maxY = patches.Max(p => p.MaxY);
+        if (maxX <= minX || maxY <= minY)
+            return false;
+
+        var width = Math.Clamp((int)Math.Ceiling(maxX - minX) * 2, 16, 768);
+        var height = Math.Clamp((int)Math.Ceiling(maxY - minY) * 2, 16, 768);
+        using var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
+        bitmap.Erase(SKColors.Transparent);
+
+        foreach (var patch in patches)
+            RasterizeMeshPatch(bitmap, patch, minX, minY, maxX, maxY);
+
+        using var image = SKImage.FromBitmap(bitmap);
+        using var shader = SKShader.CreateImage(
+            image,
+            SKShaderTileMode.Clamp,
+            SKShaderTileMode.Clamp,
+            SKMatrix.CreateScale(
+                (float)((maxX - minX) / width),
+                (float)((maxY - minY) / height)));
+
+        using var paint = new SKPaint
+        {
+            Shader = shader,
+            BlendMode = _state.BlendMode,
+            IsAntialias = _options.AntiAlias
+        };
+
+        _canvas.Save();
+        try
+        {
+            _canvas.ClipPath(clipPath, SKClipOperation.Intersect, _options.AntiAlias);
+
+            var inverseCtm = InvertAffine(_state.CurrentTransform);
+            if (inverseCtm.HasValue)
+            {
+                var inv = inverseCtm.Value;
+                _canvas.Concat(in inv);
+            }
+
+            var patternMatrix = GetMatrix(pattern.GetOptional("Matrix") as Pdfe.Core.Primitives.PdfArray);
+            _canvas.Concat(in patternMatrix);
+            _canvas.Translate((float)minX, (float)minY);
+            _canvas.DrawRect(
+                new SKRect(0, 0, (float)(maxX - minX), (float)(maxY - minY)),
+                paint);
+        }
+        finally
+        {
+            _canvas.Restore();
+        }
+
+        return true;
+    }
+
+    private List<MeshPatch> DecodeType6MeshPatches(Pdfe.Core.Primitives.PdfStream stream)
+    {
+        var decode = stream.GetOptional("Decode") as Pdfe.Core.Primitives.PdfArray;
+        var xMin = decode?.Count >= 2 ? decode.GetNumber(0) : 0;
+        var xMax = decode?.Count >= 2 ? decode.GetNumber(1) : 1;
+        var yMin = decode?.Count >= 4 ? decode.GetNumber(2) : 0;
+        var yMax = decode?.Count >= 4 ? decode.GetNumber(3) : 1;
+        var cMin = decode?.Count >= 6 ? decode.GetNumber(4) : 0;
+        var cMax = decode?.Count >= 6 ? decode.GetNumber(5) : 1;
+        var bitsPerCoordinate = stream.GetInt("BitsPerCoordinate", 16);
+        var bitsPerComponent = stream.GetInt("BitsPerComponent", 8);
+        var bitsPerFlag = stream.GetInt("BitsPerFlag", 2);
+        var functionObj = stream.GetOptional("Function");
+        var function = functionObj != null ? _page.Document.Resolve(functionObj) : null;
+        var colorSpace = stream.GetNameOrNull("ColorSpace") ?? "DeviceRGB";
+
+        var reader = new MeshBitReader(stream.DecodedData);
+        var patches = new List<MeshPatch>();
+        MeshPatch? previous = null;
+
+        while (reader.RemainingBits >= bitsPerFlag + (8 * bitsPerCoordinate))
+        {
+            int flag;
+            try
+            {
+                flag = (int)reader.Read(bitsPerFlag);
+            }
+            catch
+            {
+                break;
+            }
+
+            var coordinateCount = flag == 0 ? 12 : 8;
+            var componentCount = flag == 0 ? 4 : 2;
+            var points = new List<SKPoint>(coordinateCount);
+            var components = new List<double>(componentCount);
+
+            try
+            {
+                for (int i = 0; i < coordinateCount; i++)
+                {
+                    var x = Decode(reader.Read(bitsPerCoordinate), bitsPerCoordinate, xMin, xMax);
+                    var y = Decode(reader.Read(bitsPerCoordinate), bitsPerCoordinate, yMin, yMax);
+                    points.Add(new SKPoint((float)x, (float)y));
+                }
+
+                for (int i = 0; i < componentCount; i++)
+                    components.Add(Decode(reader.Read(bitsPerComponent), bitsPerComponent, cMin, cMax));
+            }
+            catch
+            {
+                break;
+            }
+
+            var colors = ResolveMeshColors(components, previous, flag, function, colorSpace);
+            var patch = MeshPatch.From(points, colors);
+            patches.Add(patch);
+            previous = patch;
+        }
+
+        return patches;
+    }
+
+    private static double Decode(uint encoded, int bits, double min, double max)
+    {
+        var denominator = Math.Pow(2, bits) - 1;
+        return min + encoded * ((max - min) / denominator);
+    }
+
+    private static SKColor[] ResolveMeshColors(
+        List<double> components,
+        MeshPatch? previous,
+        int flag,
+        Pdfe.Core.Primitives.PdfObject? function,
+        string colorSpace)
+    {
+        var newColors = components
+            .Select(c => ComponentsToSkColor(PdfFunctionEvaluator.Evaluate(function, c) ?? new[] { c }, colorSpace))
+            .ToArray();
+
+        if (newColors.Length >= 4)
+            return newColors.Take(4).ToArray();
+
+        if (previous == null)
+            return new[] { newColors[0], newColors[0], newColors[^1], newColors[^1] };
+
+        return flag switch
+        {
+            1 => new[] { previous.Colors[1], newColors[0], newColors[^1], previous.Colors[2] },
+            2 => new[] { previous.Colors[2], previous.Colors[3], newColors[0], newColors[^1] },
+            3 => new[] { previous.Colors[3], previous.Colors[0], newColors[0], newColors[^1] },
+            _ => new[] { newColors[0], newColors[0], newColors[^1], newColors[^1] }
+        };
+    }
+
+    private static void RasterizeMeshPatch(SKBitmap bitmap, MeshPatch patch, double minX, double minY, double maxX, double maxY)
+    {
+        var startX = Math.Clamp((int)Math.Floor((patch.MinX - minX) / (maxX - minX) * bitmap.Width), 0, bitmap.Width - 1);
+        var endX = Math.Clamp((int)Math.Ceiling((patch.MaxX - minX) / (maxX - minX) * bitmap.Width), 0, bitmap.Width - 1);
+        var startY = Math.Clamp((int)Math.Floor((patch.MinY - minY) / (maxY - minY) * bitmap.Height), 0, bitmap.Height - 1);
+        var endY = Math.Clamp((int)Math.Ceiling((patch.MaxY - minY) / (maxY - minY) * bitmap.Height), 0, bitmap.Height - 1);
+
+        for (var y = startY; y <= endY; y++)
+        {
+            var py = minY + ((y + 0.5) / bitmap.Height) * (maxY - minY);
+            var v = patch.MaxY > patch.MinY ? (py - patch.MinY) / (patch.MaxY - patch.MinY) : 0;
+            v = Math.Clamp(v, 0, 1);
+
+            for (var x = startX; x <= endX; x++)
+            {
+                var px = minX + ((x + 0.5) / bitmap.Width) * (maxX - minX);
+                var u = patch.MaxX > patch.MinX ? (px - patch.MinX) / (patch.MaxX - patch.MinX) : 0;
+                u = Math.Clamp(u, 0, 1);
+                bitmap.SetPixel(x, bitmap.Height - 1 - y, Bilinear(patch.Colors, u, v));
+            }
+        }
+    }
+
+    private static SKColor Bilinear(SKColor[] colors, double u, double v)
+    {
+        static double Lerp(double a, double b, double t) => a + (b - a) * t;
+        var r0 = Lerp(colors[0].Red, colors[1].Red, u);
+        var r1 = Lerp(colors[3].Red, colors[2].Red, u);
+        var g0 = Lerp(colors[0].Green, colors[1].Green, u);
+        var g1 = Lerp(colors[3].Green, colors[2].Green, u);
+        var b0 = Lerp(colors[0].Blue, colors[1].Blue, u);
+        var b1 = Lerp(colors[3].Blue, colors[2].Blue, u);
+        return new SKColor(
+            (byte)Math.Clamp(Lerp(r0, r1, v), 0, 255),
+            (byte)Math.Clamp(Lerp(g0, g1, v), 0, 255),
+            (byte)Math.Clamp(Lerp(b0, b1, v), 0, 255),
+            255);
+    }
+
+    private static SKMatrix GetMatrix(Pdfe.Core.Primitives.PdfArray? arr)
+    {
+        if (arr == null || arr.Count < 6)
+            return new SKMatrix(1, 0, 0, 0, 1, 0, 0, 0, 1);
+
+        return new SKMatrix(
+            (float)arr.GetNumber(0),
+            (float)arr.GetNumber(2),
+            (float)arr.GetNumber(4),
+            (float)arr.GetNumber(1),
+            (float)arr.GetNumber(3),
+            (float)arr.GetNumber(5),
+            0,
+            0,
+            1);
+    }
+
+    private static SKMatrix? InvertAffine(SKMatrix matrix)
+    {
+        var det = matrix.ScaleX * matrix.ScaleY - matrix.SkewX * matrix.SkewY;
+        if (Math.Abs(det) < 1e-9)
+            return null;
+
+        var invA = matrix.ScaleY / det;
+        var invB = -matrix.SkewY / det;
+        var invC = -matrix.SkewX / det;
+        var invD = matrix.ScaleX / det;
+        var invE = -(invA * matrix.TransX + invC * matrix.TransY);
+        var invF = -(invB * matrix.TransX + invD * matrix.TransY);
+        return new SKMatrix(invA, invC, invE, invB, invD, invF, 0, 0, 1);
+    }
+
     private void RenderShading(string nameOperand)
     {
         // Remove leading / if present
@@ -3154,9 +3488,20 @@ internal partial class RenderContext
 
     private void SetNonStrokingColor(List<string> operands)
     {
+        var fillColorSpace = ResolveColorSpace(_state.FillColorSpace);
+        if (fillColorSpace?.Type == PdfColorSpaceType.Pattern)
+        {
+            var patternOperand = operands.FirstOrDefault(o => o.StartsWith("/"));
+            _state.FillPatternName = patternOperand?.TrimStart('/');
+            return;
+        }
+
         var color = ParseColorFromOperands(operands, _state.FillColorSpace);
         if (color.HasValue)
+        {
             _state.FillColor = color.Value;
+            _state.FillPatternName = null;
+        }
     }
 
     private SKColor? ParseColorFromOperands(List<string> operands, string colorSpace)
@@ -3253,6 +3598,23 @@ internal partial class RenderContext
             if (x == null) continue;
             return _page.Document.Resolve(x);
         }
+        return null;
+    }
+
+    private Pdfe.Core.Primitives.PdfDictionary? ResolvePatternFromActiveResources(string name)
+    {
+        foreach (var resources in _resourcesStack)
+        {
+            if (resources == null) continue;
+            var patternsObj = resources.GetOptional("Pattern");
+            if (patternsObj == null) continue;
+            if (_page.Document.Resolve(patternsObj) is not Pdfe.Core.Primitives.PdfDictionary patterns)
+                continue;
+            var pattern = patterns.GetOptional(name);
+            if (pattern == null) continue;
+            return _page.Document.Resolve(pattern) as Pdfe.Core.Primitives.PdfDictionary;
+        }
+
         return null;
     }
 

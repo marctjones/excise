@@ -185,6 +185,13 @@ internal partial class RenderContext
 
         _currentPath.FillType = evenOdd ? SKPathFillType.EvenOdd : SKPathFillType.Winding;
 
+        if (_state.FillPatternName != null && RenderFillPattern(_currentPath))
+        {
+            _currentPath.Dispose();
+            _currentPath = null;
+            return;
+        }
+
         using var paint = new SKPaint
         {
             Style = SKPaintStyle.Fill,

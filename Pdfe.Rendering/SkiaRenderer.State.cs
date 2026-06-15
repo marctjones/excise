@@ -17,7 +17,9 @@ internal class GraphicsState
     public float MiterLimit { get; set; } = 10.0f;
     public string FillColorSpace { get; set; } = "DeviceGray";
     public string StrokeColorSpace { get; set; } = "DeviceGray";
+    public string? FillPatternName { get; set; }
     public SKBlendMode BlendMode { get; set; } = SKBlendMode.SrcOver;
+    public SKMatrix CurrentTransform { get; set; } = new(1, 0, 0, 0, 1, 0, 0, 0, 1);
     // Dash pattern (PDF `d` operator): intervals in user-space units and a phase
     // offset. Null/empty means a solid line. ISO 32000-1 §8.4.3.6.
     public float[]? DashArray { get; set; }
@@ -37,7 +39,9 @@ internal class GraphicsState
             MiterLimit = MiterLimit,
             FillColorSpace = FillColorSpace,
             StrokeColorSpace = StrokeColorSpace,
+            FillPatternName = FillPatternName,
             BlendMode = BlendMode,
+            CurrentTransform = CurrentTransform,
             DashArray = DashArray,            // replaced wholesale by `d`, never mutated in place -> safe to share
             DashPhase = DashPhase
         };

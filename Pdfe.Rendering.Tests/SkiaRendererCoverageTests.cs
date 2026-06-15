@@ -756,9 +756,45 @@ public class SkiaRendererCoverageTests
         bitmap.Height.Should().Be(expectedHeight);
     }
 
+    [Fact]
+    public void RenderPage_PatternType6CoonsMesh_RendersMeshArea()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "coons-allflags-withfunction.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js Coons mesh fixture found at test-pdfs/pdfjs/coons-allflags-withfunction.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+        var renderer = new SkiaRenderer();
+
+        using var bitmap = renderer.RenderPage(doc.GetPage(1), new RenderOptions { Dpi = 72 });
+
+        var inside = bitmap.GetPixel(300, 400);
+        var outside = bitmap.GetPixel(100, 100);
+        outside.Red.Should().BeGreaterThan(245);
+        outside.Green.Should().BeGreaterThan(245);
+        outside.Blue.Should().BeGreaterThan(245);
+        inside.Green.Should().BeGreaterThan(80);
+        inside.Blue.Should().BeGreaterThan(40);
+        inside.Red.Should().BeLessThan(80);
+    }
+
     #endregion
 
     #region Helper Methods
+
+    private static string? FindRepoFile(params string[] parts)
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null)
+        {
+            var candidate = Path.Combine(new[] { dir.FullName }.Concat(parts).ToArray());
+            if (File.Exists(candidate))
+                return candidate;
+            dir = dir.Parent;
+        }
+
+        return null;
+    }
 
     private static byte[] CreatePdfWithContent(string content)
     {
