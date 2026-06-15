@@ -929,6 +929,30 @@ public class PdfColorSpaceTests
     }
 
     [Fact]
+    public void CalRGB_ParseArray_AdaptsSourceWhitePointToDisplayWhite()
+    {
+        using var doc = CreateMinimalPdf();
+        var arr = new PdfArray(
+            new PdfName("CalRGB"),
+            new PdfDictionary
+            {
+                ["WhitePoint"] = new PdfArray(new PdfReal(0.2), new PdfReal(1), new PdfReal(0.2)),
+                ["Gamma"] = new PdfArray(new PdfReal(1), new PdfReal(1), new PdfReal(1)),
+                ["Matrix"] = new PdfArray(
+                    new PdfReal(1), new PdfReal(0), new PdfReal(0),
+                    new PdfReal(0), new PdfReal(1), new PdfReal(0),
+                    new PdfReal(0), new PdfReal(0), new PdfReal(1))
+            });
+
+        var cs = PdfColorSpace.Parse(arr, doc);
+        var (r, g, b) = cs.ToRgb(new[] { 1.0, 1.0, 1.0 });
+
+        r.Should().BeApproximately(1.0, 0.0001);
+        g.Should().BeApproximately(1.0, 0.0001);
+        b.Should().BeApproximately(1.0, 0.0001);
+    }
+
+    [Fact]
     public void Lab_FromArray_ThreeComponents()
     {
         using var doc = CreateMinimalPdf();

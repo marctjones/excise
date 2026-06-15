@@ -289,7 +289,12 @@ public sealed class PdfColorSpace
         double y = matrix[1] * ag + matrix[4] * bg + matrix[7] * cg;
         double z = matrix[2] * ag + matrix[5] * bg + matrix[8] * cg;
 
-        return XyzToRgb(wp[0] * x, wp[1] * y, wp[2] * z);
+        var (adaptedX, adaptedY, adaptedZ) = AdaptXyzToD65(
+            wp[0] * x,
+            wp[1] * y,
+            wp[2] * z,
+            wp);
+        return XyzToRgb(adaptedX, adaptedY, adaptedZ);
     }
 
     private static (double, double, double) CmykToRgb(double c, double m, double y, double k)
@@ -304,6 +309,46 @@ public sealed class PdfColorSpace
         double b =  0.0557 * x - 0.2040 * y + 1.0570 * z;
         return (EncodeSrgb(r), EncodeSrgb(g), EncodeSrgb(b));
     }
+
+    private static (double X, double Y, double Z) AdaptXyzToD65(double x, double y, double z, double[] sourceWhite)
+    {
+        if (sourceWhite.Length < 3)
+            return (x, y, z);
+
+        const double d65X = 0.95047;
+        const double d65Y = 1.0;
+        const double d65Z = 1.08883;
+
+        if (NearlyEqual(sourceWhite[0], d65X) &&
+            NearlyEqual(sourceWhite[1], d65Y) &&
+            NearlyEqual(sourceWhite[2], d65Z))
+            return (x, y, z);
+
+        var srcL = 0.8951 * sourceWhite[0] + 0.2664 * sourceWhite[1] - 0.1614 * sourceWhite[2];
+        var srcM = -0.7502 * sourceWhite[0] + 1.7135 * sourceWhite[1] + 0.0367 * sourceWhite[2];
+        var srcS = 0.0389 * sourceWhite[0] - 0.0685 * sourceWhite[1] + 1.0296 * sourceWhite[2];
+        if (Math.Abs(srcL) < 1e-9 || Math.Abs(srcM) < 1e-9 || Math.Abs(srcS) < 1e-9)
+            return (x, y, z);
+
+        var dstL = 0.8951 * d65X + 0.2664 * d65Y - 0.1614 * d65Z;
+        var dstM = -0.7502 * d65X + 1.7135 * d65Y + 0.0367 * d65Z;
+        var dstS = 0.0389 * d65X - 0.0685 * d65Y + 1.0296 * d65Z;
+
+        var l = 0.8951 * x + 0.2664 * y - 0.1614 * z;
+        var m = -0.7502 * x + 1.7135 * y + 0.0367 * z;
+        var s = 0.0389 * x - 0.0685 * y + 1.0296 * z;
+
+        l *= dstL / srcL;
+        m *= dstM / srcM;
+        s *= dstS / srcS;
+
+        return (
+            0.9869929 * l - 0.1470543 * m + 0.1599627 * s,
+            0.4323053 * l + 0.5183603 * m + 0.0492912 * s,
+            -0.0085287 * l + 0.0400428 * m + 0.9684867 * s);
+    }
+
+    private static bool NearlyEqual(double a, double b) => Math.Abs(a - b) < 1e-5;
 
     private static double EncodeSrgb(double value)
     {
