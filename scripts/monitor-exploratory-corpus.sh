@@ -34,9 +34,13 @@ while true; do
     echo
 
     echo "active render/reference processes:"
-    ps -axo pid,ppid,%cpu,rss,etime,command |
-        awk 'NR == 1 || /Pdfe\.Cli|\/pdfe( |$)|mutool|pdftocairo|dotnet build/ { print }' |
-        head -30
+    if ps_output=$(ps -axo pid,ppid,%cpu,rss,etime,command 2>&1); then
+        printf '%s\n' "$ps_output" |
+            awk 'NR == 1 || /Pdfe\.Cli|\/pdfe( |$)|mutool|pdftocairo|dotnet build/ { print }' |
+            head -30
+    else
+        echo "  unavailable: $ps_output"
+    fi
     echo
 
     echo "chunk log freshness:"
