@@ -254,6 +254,9 @@ internal static class PdfFunctionEvaluator
                 case "sqrt":
                     if (!Unary(stack, x => Math.Sqrt(Math.Max(0, x)))) return false;
                     break;
+                case "floor":
+                    if (!Unary(stack, Math.Floor)) return false;
+                    break;
                 case "sin":
                     if (!Unary(stack, x => Math.Sin(x * Math.PI / 180.0))) return false;
                     break;
@@ -270,6 +273,15 @@ internal static class PdfFunctionEvaluator
                     break;
                 case "lt":
                     if (!Binary(stack, (x, y) => x < y ? 1 : 0)) return false;
+                    break;
+                case "mod":
+                    if (!Binary(stack, (x, y) => Math.Abs(y) < double.Epsilon ? 0 : x % y)) return false;
+                    break;
+                case "copy":
+                    if (!Copy(stack)) return false;
+                    break;
+                case "roll":
+                    if (!Roll(stack)) return false;
                     break;
                 case "if":
                     if (stack.Count < 1 || i < 1) return false;
@@ -291,6 +303,64 @@ internal static class PdfFunctionEvaluator
                     return false;
             }
         }
+
+        return true;
+    }
+
+    private static bool Copy(Stack<double> stack)
+    {
+        if (stack.Count < 1)
+            return false;
+
+        var countValue = stack.Pop();
+        if (countValue < 0 || Math.Abs(countValue - Math.Round(countValue)) > double.Epsilon)
+            return false;
+
+        var count = (int)Math.Round(countValue);
+        if (stack.Count < count)
+            return false;
+
+        var values = stack.Take(count).Reverse().ToArray();
+        foreach (var value in values)
+            stack.Push(value);
+
+        return true;
+    }
+
+    private static bool Roll(Stack<double> stack)
+    {
+        if (stack.Count < 2)
+            return false;
+
+        var shiftValue = stack.Pop();
+        var countValue = stack.Pop();
+        if (countValue < 0 ||
+            Math.Abs(countValue - Math.Round(countValue)) > double.Epsilon ||
+            Math.Abs(shiftValue - Math.Round(shiftValue)) > double.Epsilon)
+            return false;
+
+        var count = (int)Math.Round(countValue);
+        var shift = (int)Math.Round(shiftValue);
+        if (count == 0)
+            return true;
+        if (stack.Count < count)
+            return false;
+
+        var values = stack.Take(count).Reverse().ToList();
+        for (var i = 0; i < count; i++)
+            stack.Pop();
+
+        shift %= count;
+        if (shift < 0)
+            shift += count;
+        if (shift != 0)
+        {
+            var split = count - shift;
+            values = values.Skip(split).Concat(values.Take(split)).ToList();
+        }
+
+        foreach (var value in values)
+            stack.Push(value);
 
         return true;
     }

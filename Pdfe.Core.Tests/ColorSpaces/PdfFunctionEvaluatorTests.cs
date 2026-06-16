@@ -230,6 +230,44 @@ public class PdfFunctionEvaluatorTests
         result!.Should().OnlyContain(v => v >= 0.0 && v <= 1.0);
     }
 
+    [Fact]
+    public void Evaluate_CalculatorFunction_SupportsFloorAndMod()
+    {
+        var function = new PdfStream(System.Text.Encoding.Latin1.GetBytes("{ 4 mul floor exch 4 mul floor add 2 mod }"))
+        {
+            ["FunctionType"] = new PdfInteger(4),
+            ["Domain"] = Numbers(0, 1, 0, 1),
+            ["Range"] = Numbers(0, 1)
+        };
+
+        PdfFunctionEvaluator.Evaluate(function, new[] { 0.60, 0.10 })![0]
+            .Should().BeApproximately(0.0, 0.0001);
+        PdfFunctionEvaluator.Evaluate(function, new[] { 0.60, 0.40 })![0]
+            .Should().BeApproximately(1.0, 0.0001);
+    }
+
+    [Fact]
+    public void Evaluate_CalculatorFunction_SupportsCopyAndRoll()
+    {
+        var copyFunction = new PdfStream(System.Text.Encoding.Latin1.GetBytes("{ 2 copy mul }"))
+        {
+            ["FunctionType"] = new PdfInteger(4),
+            ["Domain"] = Numbers(0, 1, 0, 1),
+            ["Range"] = Numbers(0, 1, 0, 1, 0, 1)
+        };
+        PdfFunctionEvaluator.Evaluate(copyFunction, new[] { 0.25, 0.50 })!
+            .Should().Equal(0.25, 0.50, 0.125);
+
+        var rollFunction = new PdfStream(System.Text.Encoding.Latin1.GetBytes("{ 3 1 roll }"))
+        {
+            ["FunctionType"] = new PdfInteger(4),
+            ["Domain"] = Numbers(0, 1, 0, 1, 0, 1),
+            ["Range"] = Numbers(0, 1, 0, 1, 0, 1)
+        };
+        PdfFunctionEvaluator.Evaluate(rollFunction, new[] { 0.1, 0.2, 0.3 })!
+            .Should().Equal(0.3, 0.1, 0.2);
+    }
+
     private static PdfDictionary ExponentialFunction(double[] c0, double[] c1, double n)
     {
         return new PdfDictionary
