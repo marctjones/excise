@@ -87,3 +87,66 @@ internal readonly record struct Jbig2RegionSegmentInformation(
             Jbig2CombinationOperatorParser.FromCode(data[16] & 0x07));
     }
 }
+
+internal readonly record struct Jbig2AdaptiveTemplatePixel(sbyte X, sbyte Y);
+
+internal readonly record struct Jbig2GenericRegionSegment(
+    Jbig2RegionSegmentInformation Region,
+    bool UsesExtendedTemplates,
+    bool TypicalPredictionGenericDecodingOn,
+    int Template,
+    bool IsMmrEncoded,
+    Jbig2AdaptiveTemplatePixel[] AdaptiveTemplatePixels,
+    int BitmapDataOffset,
+    int BitmapDataLength)
+{
+    public const int FlagsOffset = Jbig2RegionSegmentInformation.ByteLength;
+    public const int MinimumByteLength = FlagsOffset + 1;
+
+    public static Jbig2GenericRegionSegment Parse(ReadOnlySpan<byte> data)
+    {
+        if (data.Length < MinimumByteLength)
+            throw new InvalidOperationException("Truncated JBIG2 generic region segment");
+
+        var region = Jbig2RegionSegmentInformation.Parse(data);
+        byte flags = data[FlagsOffset];
+        bool usesExtendedTemplates = (flags & 0x10) != 0;
+        bool typicalPredictionGenericDecodingOn = (flags & 0x08) != 0;
+        int template = (flags >> 1) & 0x03;
+        bool isMmrEncoded = (flags & 0x01) != 0;
+
+        int adaptiveTemplatePixelCount = GetAdaptiveTemplatePixelCount(template, usesExtendedTemplates, isMmrEncoded);
+        int bitmapDataOffset = MinimumByteLength + (adaptiveTemplatePixelCount * 2);
+        if (data.Length < bitmapDataOffset)
+            throw new InvalidOperationException("Truncated JBIG2 generic region adaptive template pixels");
+
+        var adaptiveTemplatePixels = new Jbig2AdaptiveTemplatePixel[adaptiveTemplatePixelCount];
+        for (int i = 0; i < adaptiveTemplatePixels.Length; i++)
+        {
+            int offset = MinimumByteLength + (i * 2);
+            adaptiveTemplatePixels[i] = new Jbig2AdaptiveTemplatePixel(
+                unchecked((sbyte)data[offset]),
+                unchecked((sbyte)data[offset + 1]));
+        }
+
+        return new Jbig2GenericRegionSegment(
+            region,
+            usesExtendedTemplates,
+            typicalPredictionGenericDecodingOn,
+            template,
+            isMmrEncoded,
+            adaptiveTemplatePixels,
+            bitmapDataOffset,
+            data.Length - bitmapDataOffset);
+    }
+
+    private static int GetAdaptiveTemplatePixelCount(int template, bool usesExtendedTemplates, bool isMmrEncoded)
+    {
+        if (isMmrEncoded)
+            return 0;
+
+        return template == 0
+            ? usesExtendedTemplates ? 12 : 4
+            : 1;
+    }
+}

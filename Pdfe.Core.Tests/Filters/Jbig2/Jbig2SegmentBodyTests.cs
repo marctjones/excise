@@ -6,6 +6,25 @@ namespace Pdfe.Core.Tests.Filters.Jbig2;
 
 public class Jbig2SegmentBodyTests
 {
+    private static byte[] BuildRegionSegmentPrefix(uint width = 12, uint height = 34, uint x = 56, uint y = 78, byte flags = 0)
+    {
+        byte[] data = new byte[Jbig2RegionSegmentInformation.ByteLength];
+        WriteUInt32(data, 0, width);
+        WriteUInt32(data, 4, height);
+        WriteUInt32(data, 8, x);
+        WriteUInt32(data, 12, y);
+        data[16] = flags;
+        return data;
+    }
+
+    private static void WriteUInt32(byte[] data, int offset, uint value)
+    {
+        data[offset] = (byte)(value >> 24);
+        data[offset + 1] = (byte)(value >> 16);
+        data[offset + 2] = (byte)(value >> 8);
+        data[offset + 3] = (byte)value;
+    }
+
     [Fact]
     public void PageInformation_Parse_ReadsDimensionsResolutionFlagsAndStriping()
     {
@@ -106,5 +125,121 @@ public class Jbig2SegmentBodyTests
 
         act.Should().Throw<InvalidOperationException>()
             .WithMessage("*region segment information*");
+    }
+
+    [Fact]
+    public void GenericRegionSegment_Parse_Template0ReadsFourAdaptiveTemplatePixels()
+    {
+        var data = new List<byte>();
+        data.AddRange(BuildRegionSegmentPrefix());
+        data.Add(0x00);
+        data.AddRange(new byte[]
+        {
+            0x03, 0xFF,
+            0xFD, 0xFF,
+            0x02, 0xFE,
+            0xFE, 0xFE,
+            0xAA, 0xBB, 0xCC,
+        });
+
+        var segment = Jbig2GenericRegionSegment.Parse(data.ToArray());
+
+        segment.Region.BitmapWidth.Should().Be(12u);
+        segment.Region.BitmapHeight.Should().Be(34u);
+        segment.Region.XLocation.Should().Be(56u);
+        segment.Region.YLocation.Should().Be(78u);
+        segment.Template.Should().Be(0);
+        segment.UsesExtendedTemplates.Should().BeFalse();
+        segment.TypicalPredictionGenericDecodingOn.Should().BeFalse();
+        segment.IsMmrEncoded.Should().BeFalse();
+        segment.AdaptiveTemplatePixels.Should().Equal(
+            new Jbig2AdaptiveTemplatePixel(3, -1),
+            new Jbig2AdaptiveTemplatePixel(-3, -1),
+            new Jbig2AdaptiveTemplatePixel(2, -2),
+            new Jbig2AdaptiveTemplatePixel(-2, -2));
+        segment.BitmapDataOffset.Should().Be(26);
+        segment.BitmapDataLength.Should().Be(3);
+    }
+
+    [Fact]
+    public void GenericRegionSegment_Parse_Template0ExtendedTemplatesReadsTwelveAdaptiveTemplatePixels()
+    {
+        var data = new List<byte>();
+        data.AddRange(BuildRegionSegmentPrefix());
+        data.Add(0x10);
+        for (int i = 0; i < 12; i++)
+        {
+            data.Add((byte)i);
+            data.Add(unchecked((byte)-i));
+        }
+        data.Add(0xAA);
+
+        var segment = Jbig2GenericRegionSegment.Parse(data.ToArray());
+
+        segment.Template.Should().Be(0);
+        segment.UsesExtendedTemplates.Should().BeTrue();
+        segment.AdaptiveTemplatePixels.Should().HaveCount(12);
+        segment.AdaptiveTemplatePixels[11].Should().Be(new Jbig2AdaptiveTemplatePixel(11, -11));
+        segment.BitmapDataOffset.Should().Be(42);
+        segment.BitmapDataLength.Should().Be(1);
+    }
+
+    [Fact]
+    public void GenericRegionSegment_Parse_NonZeroTemplateReadsOneAdaptiveTemplatePixel()
+    {
+        var data = new List<byte>();
+        data.AddRange(BuildRegionSegmentPrefix());
+        data.Add(0x0A); // Template 1 with typical prediction enabled.
+        data.AddRange(new byte[] { 0x02, 0xFF, 0xAA });
+
+        var segment = Jbig2GenericRegionSegment.Parse(data.ToArray());
+
+        segment.Template.Should().Be(1);
+        segment.TypicalPredictionGenericDecodingOn.Should().BeTrue();
+        segment.AdaptiveTemplatePixels.Should().Equal(new Jbig2AdaptiveTemplatePixel(2, -1));
+        segment.BitmapDataOffset.Should().Be(20);
+        segment.BitmapDataLength.Should().Be(1);
+    }
+
+    [Fact]
+    public void GenericRegionSegment_Parse_MmrEncodedDataHasNoAdaptiveTemplatePixels()
+    {
+        var data = new List<byte>();
+        data.AddRange(BuildRegionSegmentPrefix(flags: 0x02));
+        data.Add(0x13); // Template 1 + MMR + extended-template bit, but MMR has no AT pixels.
+        data.AddRange(new byte[] { 0xAA, 0xBB });
+
+        var segment = Jbig2GenericRegionSegment.Parse(data.ToArray());
+
+        segment.Region.CombinationOperator.Should().Be(Jbig2CombinationOperator.Xor);
+        segment.Template.Should().Be(1);
+        segment.UsesExtendedTemplates.Should().BeTrue();
+        segment.IsMmrEncoded.Should().BeTrue();
+        segment.AdaptiveTemplatePixels.Should().BeEmpty();
+        segment.BitmapDataOffset.Should().Be(18);
+        segment.BitmapDataLength.Should().Be(2);
+    }
+
+    [Fact]
+    public void GenericRegionSegment_Parse_WithTruncatedFlags_Throws()
+    {
+        var act = () => Jbig2GenericRegionSegment.Parse(new byte[Jbig2GenericRegionSegment.MinimumByteLength - 1]);
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*generic region segment*");
+    }
+
+    [Fact]
+    public void GenericRegionSegment_Parse_WithTruncatedAdaptiveTemplatePixels_Throws()
+    {
+        var data = new List<byte>();
+        data.AddRange(BuildRegionSegmentPrefix());
+        data.Add(0x00);
+        data.AddRange(new byte[7]);
+
+        var act = () => Jbig2GenericRegionSegment.Parse(data.ToArray());
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*adaptive template*");
     }
 }

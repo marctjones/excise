@@ -25,7 +25,7 @@ public class GenericRegionDecoderTests
 
     /// <summary>
     /// Test template selection from flags.
-    /// Bits 7-6 select template (0-3).
+    /// Bits 2-1 select template (0-3).
     /// </summary>
     [Fact]
     public void ParseFlags_TemplateSelectionFromBits()
@@ -36,19 +36,19 @@ public class GenericRegionDecoderTests
         decoder.ParseFlags(0x00);
 
         // Template 1
-        decoder.ParseFlags(0x40);
+        decoder.ParseFlags(0x02);
 
         // Template 2
-        decoder.ParseFlags(0x80);
+        decoder.ParseFlags(0x04);
 
         // Template 3
-        decoder.ParseFlags(0xC0);
+        decoder.ParseFlags(0x06);
 
         // All should complete without error
     }
 
     /// <summary>
-    /// Test typical prediction flag (bit 0).
+    /// Test typical prediction flag (bit 3).
     /// </summary>
     [Fact]
     public void ParseFlags_TypicalPredictionFlag()
@@ -59,7 +59,23 @@ public class GenericRegionDecoderTests
         decoder.ParseFlags(0x00);
 
         // With typical prediction
-        decoder.ParseFlags(0x01);
+        decoder.ParseFlags(0x08);
+    }
+
+    [Theory]
+    [InlineData(0x01, "MMR-encoded")]
+    [InlineData(0x02, "template 1")]
+    [InlineData(0x08, "typical prediction")]
+    [InlineData(0x10, "adaptive template")]
+    public void DecodeGenericRegion_WithUnsupportedMode_ThrowsNotSupported(byte flags, string expectedMessage)
+    {
+        var decoder = new GenericRegionDecoder();
+        decoder.ParseFlags(flags);
+
+        var act = () => decoder.DecodeGenericRegion(new byte[] { 0x00 }, 1, 1, 0, 0);
+
+        act.Should().Throw<NotSupportedException>()
+            .WithMessage($"*{expectedMessage}*");
     }
 
     /// <summary>

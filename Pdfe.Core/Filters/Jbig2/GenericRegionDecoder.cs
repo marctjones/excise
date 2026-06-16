@@ -9,14 +9,14 @@ namespace Pdfe.Core.Filters.Jbig2;
 [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 internal class GenericRegionDecoder
 {
-    /// <summary>Generic region flags</summary>
-    private byte _flags;
-
     /// <summary>Template used for context computation (0-3)</summary>
     private int _template;
 
     /// <summary>Is typical prediction optimization enabled?</summary>
     private bool _typicalPredictionGenericDecodingOn;
+
+    private bool _isMmrEncoded;
+    private Jbig2AdaptiveTemplatePixel[] _adaptiveTemplatePixels = DefaultTemplate0AdaptivePixels();
 
     /// <summary>
     /// Decode a generic region.
@@ -26,6 +26,14 @@ internal class GenericRegionDecoder
     {
         if (width <= 0 || height <= 0)
             throw new ArgumentException("Invalid region dimensions");
+        if (_isMmrEncoded)
+            throw new NotSupportedException("MMR-encoded JBIG2 generic regions are not yet supported");
+        if (_template != 0)
+            throw new NotSupportedException($"JBIG2 generic region template {_template} is not yet supported");
+        if (_typicalPredictionGenericDecodingOn)
+            throw new NotSupportedException("JBIG2 generic-region typical prediction is not yet supported");
+        if (!UsesDefaultTemplate0AdaptivePixels())
+            throw new NotSupportedException("Custom JBIG2 generic-region adaptive template pixels are not yet supported");
 
         // Allocate output: 1 bit per pixel, packed MSB-first, row-padded to byte boundary
         int bytesPerRow = (width + 7) / 8;
@@ -139,8 +147,52 @@ internal class GenericRegionDecoder
     /// </summary>
     public void ParseFlags(byte flags)
     {
-        _flags = flags;
-        _template = (flags >> 6) & 0x03;
-        _typicalPredictionGenericDecodingOn = (flags & 0x01) != 0;
+        _isMmrEncoded = (flags & 0x01) != 0;
+        _template = (flags >> 1) & 0x03;
+        _typicalPredictionGenericDecodingOn = (flags & 0x08) != 0;
+        bool usesExtendedTemplates = (flags & 0x10) != 0;
+        _adaptiveTemplatePixels = GetDefaultAdaptiveTemplatePixels(_template, usesExtendedTemplates, _isMmrEncoded);
     }
+
+    public void Configure(Jbig2GenericRegionSegment segment)
+    {
+        _isMmrEncoded = segment.IsMmrEncoded;
+        _template = segment.Template;
+        _typicalPredictionGenericDecodingOn = segment.TypicalPredictionGenericDecodingOn;
+        _adaptiveTemplatePixels = segment.AdaptiveTemplatePixels;
+    }
+
+    private bool UsesDefaultTemplate0AdaptivePixels()
+    {
+        var defaults = DefaultTemplate0AdaptivePixels();
+        if (_adaptiveTemplatePixels.Length != defaults.Length)
+            return false;
+
+        for (int i = 0; i < defaults.Length; i++)
+        {
+            if (_adaptiveTemplatePixels[i] != defaults[i])
+                return false;
+        }
+
+        return true;
+    }
+
+    private static Jbig2AdaptiveTemplatePixel[] GetDefaultAdaptiveTemplatePixels(int template, bool usesExtendedTemplates, bool isMmrEncoded)
+    {
+        if (isMmrEncoded)
+            return Array.Empty<Jbig2AdaptiveTemplatePixel>();
+        if (template != 0 || usesExtendedTemplates)
+            return Array.Empty<Jbig2AdaptiveTemplatePixel>();
+
+        return DefaultTemplate0AdaptivePixels();
+    }
+
+    private static Jbig2AdaptiveTemplatePixel[] DefaultTemplate0AdaptivePixels()
+        =>
+        [
+            new(3, -1),
+            new(-3, -1),
+            new(2, -2),
+            new(-2, -2),
+        ];
 }

@@ -30,6 +30,42 @@ public class Jbig2JpxFilterIntegrationTests
         };
     }
 
+    private static byte[] BuildJbig2Segment(uint segmentNumber, byte segmentType, byte[] segmentData, uint pageNumber = 1)
+    {
+        byte[] header = BuildJbig2Segment(segmentNumber, segmentType, pageNumber, (uint)segmentData.Length);
+        byte[] result = new byte[header.Length + segmentData.Length];
+        Array.Copy(header, 0, result, 0, header.Length);
+        Array.Copy(segmentData, 0, result, header.Length, segmentData.Length);
+        return result;
+    }
+
+    private static byte[] BuildGenericRegionBody(uint width, uint height, byte regionFlags, byte genericRegionFlags, params byte[] bitmapData)
+    {
+        var body = new List<byte>
+        {
+            (byte)(width >> 24),
+            (byte)(width >> 16),
+            (byte)(width >> 8),
+            (byte)width,
+            (byte)(height >> 24),
+            (byte)(height >> 16),
+            (byte)(height >> 8),
+            (byte)height,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            regionFlags,
+            genericRegionFlags,
+        };
+        body.AddRange(bitmapData);
+        return body.ToArray();
+    }
+
     private static PdfStream MakeImage(string filter, byte[] data, int width, int height)
     {
         var dict = new PdfDictionary();
@@ -107,5 +143,17 @@ public class Jbig2JpxFilterIntegrationTests
         new StreamDecompressor().Decompress(stream);
 
         stream.DecodedData.Should().Equal(raw, "unsupported global JBIG2 segments should pass through the original image bytes");
+    }
+
+    [Fact]
+    public void Jbig2_UnsupportedGenericRegionMode_FallsBackToRawBytes()
+    {
+        byte[] segmentData = BuildGenericRegionBody(width: 1, height: 1, regionFlags: 0, genericRegionFlags: 0x01, 0x00);
+        byte[] raw = BuildJbig2Segment(1, 38, segmentData);
+        var stream = MakeImage("JBIG2Decode", raw, 1, 1);
+
+        new StreamDecompressor().Decompress(stream);
+
+        stream.DecodedData.Should().Equal(raw, "unsupported MMR generic regions must pass through unchanged");
     }
 }

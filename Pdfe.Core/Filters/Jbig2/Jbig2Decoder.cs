@@ -242,24 +242,34 @@ internal class Jbig2PageDecoder
     /// </summary>
     private void DecodeGenericRegion(byte[] segmentData, byte[] pageImage)
     {
-        if (segmentData.Length < 1)
-            throw new InvalidOperationException("Generic region data too short");
+        var segment = Jbig2GenericRegionSegment.Parse(segmentData);
+        if (segment.Region.BitmapWidth > int.MaxValue || segment.Region.BitmapHeight > int.MaxValue)
+            throw new InvalidOperationException("JBIG2 generic region dimensions exceed supported limits");
+        if (segment.Region.XLocation > int.MaxValue || segment.Region.YLocation > int.MaxValue)
+            throw new InvalidOperationException("JBIG2 generic region coordinates exceed supported limits");
 
         var regionDecoder = new GenericRegionDecoder();
-
-        // Parse region flags (first byte)
-        byte flags = segmentData[0];
-        regionDecoder.ParseFlags(flags);
+        regionDecoder.Configure(segment);
 
         // Decode the region image
-        byte[] regionImage = regionDecoder.DecodeGenericRegion(segmentData, _width, _height, 0, 0);
+        byte[] bitmapData = segmentData.AsSpan(segment.BitmapDataOffset, segment.BitmapDataLength).ToArray();
+        byte[] regionImage = regionDecoder.DecodeGenericRegion(
+            bitmapData,
+            (int)segment.Region.BitmapWidth,
+            (int)segment.Region.BitmapHeight,
+            (int)segment.Region.XLocation,
+            (int)segment.Region.YLocation);
 
-        // Composite: OR the region onto the page (or use CombinationOperator from flags)
-        int bytesPerRow = (_width + 7) / 8;
-        for (int i = 0; i < regionImage.Length && i < pageImage.Length; i++)
-        {
-            pageImage[i] |= regionImage[i];
-        }
+        Jbig2BitmapCompositor.Composite(
+            pageImage,
+            _width,
+            _height,
+            regionImage,
+            (int)segment.Region.BitmapWidth,
+            (int)segment.Region.BitmapHeight,
+            (int)segment.Region.XLocation,
+            (int)segment.Region.YLocation,
+            segment.Region.CombinationOperator);
     }
 
     /// <summary>
