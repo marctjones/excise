@@ -45,6 +45,39 @@ The default remains `first` so local iteration stays fast. Release
 validation should use `sample` while investigating and `all` before
 declaring rendering quality final.
 
+## Corpus Tiers
+
+| Corpus | Downloader | Default path | Purpose |
+|---|---|---|---|
+| Smoke government corpus | `scripts/download-smoke-corpus.sh` | `test-pdfs/smoke` | Small gating set used by unit/differential tests. Keep this stable so normal test runs do not gain surprise fixtures. |
+| Federal everyday corpus | `scripts/download-federal-corpus.sh` | `test-pdfs/federal` | Manifest-driven release-quality corpus with source URL, category, agency, license basis, page count, and SHA-256 for each official `.gov` PDF. |
+| pdf.js corpus | `scripts/download-pdfjs-corpus.sh` | `test-pdfs/pdfjs` | Broad bug-reproduction corpus for exploratory fidelity scans. |
+
+The federal everyday corpus manifest lives at
+`test-pdfs/manifests/federal-everyday-corpus.json`. It currently includes IRS
+tax forms/publications, State Department passport forms, USCIS I-9, CMS-40B,
+CDC public-health material, and SCOTUS opinions. The legal basis is recorded per
+entry as official U.S. federal government work under 17 USC 105.
+
+Download or refresh it with:
+
+```bash
+./scripts/download-federal-corpus.sh
+```
+
+For release-candidate rendering checks against this tier, run the CLI scanner
+directly so the output path and timeout are explicit:
+
+```bash
+dotnet run --project Pdfe.Cli/Pdfe.Cli.csproj -c Debug -- \
+    corpus-scan test-pdfs/federal \
+    --output logs/federal-corpus-report.json \
+    --page-mode sample \
+    --dpi 72 \
+    --parallel 2 \
+    --pdf-timeout-ms 30000
+```
+
 ## Latest snapshot
 
 See `exploratory-report.json` for the full data; below is the headline

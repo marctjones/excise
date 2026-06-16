@@ -49,6 +49,9 @@ gha-creds-*.json
 
 # Test PDFs (downloaded on demand, not committed)
 test-pdfs/*
+# But do commit corpus manifests
+!test-pdfs/manifests/
+!test-pdfs/manifests/**
 # But do commit our sample PDFs
 !test-pdfs/sample-pdfs/
 !test-pdfs/sample-pdfs/**

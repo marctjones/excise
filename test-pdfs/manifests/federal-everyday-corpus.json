@@ -1,0 +1,116 @@
+{
+  "name": "federal-everyday-corpus",
+  "description": "Curated official U.S. government PDFs for everyday rendering and workflow confidence.",
+  "defaultTarget": "test-pdfs/federal",
+  "licenseBasis": "Official U.S. federal government works; public domain under 17 USC 105.",
+  "documents": [
+    {
+      "filename": "irs-w4.pdf",
+      "url": "https://www.irs.gov/pub/irs-pdf/fw4.pdf",
+      "category": "tax-form",
+      "agency": "Internal Revenue Service",
+      "licenseBasis": "Official U.S. federal government work; public domain under 17 USC 105.",
+      "pageCount": 5,
+      "sha256": "92444d8856ce55d9e25dca8b6d1420634fc68b11e1ab1f760916ea29ddd312b2"
+    },
+    {
+      "filename": "irs-w9.pdf",
+      "url": "https://www.irs.gov/pub/irs-pdf/fw9.pdf",
+      "category": "tax-form",
+      "agency": "Internal Revenue Service",
+      "licenseBasis": "Official U.S. federal government work; public domain under 17 USC 105.",
+      "pageCount": 6,
+      "sha256": "2d420cbb4123dcf1fb82595b2359cfbb5d81f00b9df9d359fcc7af361d093f53"
+    },
+    {
+      "filename": "irs-1040.pdf",
+      "url": "https://www.irs.gov/pub/irs-pdf/f1040.pdf",
+      "category": "tax-form",
+      "agency": "Internal Revenue Service",
+      "licenseBasis": "Official U.S. federal government work; public domain under 17 USC 105.",
+      "pageCount": 2,
+      "sha256": "3d31c226df0d189ced80e039d01cf0f8820c1019681a0f0ca6264de277b7e982"
+    },
+    {
+      "filename": "irs-1040-instructions.pdf",
+      "url": "https://www.irs.gov/pub/irs-pdf/i1040gi.pdf",
+      "category": "tax-instructions",
+      "agency": "Internal Revenue Service",
+      "licenseBasis": "Official U.S. federal government work; public domain under 17 USC 105.",
+      "pageCount": 126,
+      "sha256": "482e9c487c608f1bbeaceef35bc3c0933e8b35443cfff447e4279d590468364a"
+    },
+    {
+      "filename": "irs-pub509-2026.pdf",
+      "url": "https://www.irs.gov/pub/irs-pdf/p509.pdf",
+      "category": "tax-publication",
+      "agency": "Internal Revenue Service",
+      "licenseBasis": "Official U.S. federal government work; public domain under 17 USC 105.",
+      "pageCount": 14,
+      "sha256": "d7d7e3f816bb3e08782d4628efeee1505ae9740fa0a4633aa8746f02f3f4a0cb"
+    },
+    {
+      "filename": "state-ds11-passport.pdf",
+      "url": "https://eforms.state.gov/Forms/ds11_pdf.PDF",
+      "category": "passport-form",
+      "agency": "U.S. Department of State",
+      "licenseBasis": "Official U.S. federal government work; public domain under 17 USC 105.",
+      "pageCount": 6,
+      "sha256": "6b30860f0b54cba9df1a54d4eb007dc93a6c785b5253516604530b1c1898e2f6"
+    },
+    {
+      "filename": "state-ds82-passport-renewal.pdf",
+      "url": "https://eforms.state.gov/Forms/ds82_pdf.PDF",
+      "category": "passport-form",
+      "agency": "U.S. Department of State",
+      "licenseBasis": "Official U.S. federal government work; public domain under 17 USC 105.",
+      "pageCount": 6,
+      "sha256": "ac3331a0c71a8c9280c82271618ceb3ba950a085d760812d3f4f5229f62849bb"
+    },
+    {
+      "filename": "uscis-i-9.pdf",
+      "url": "https://www.uscis.gov/sites/default/files/document/forms/i-9.pdf",
+      "category": "employment-eligibility-form",
+      "agency": "U.S. Citizenship and Immigration Services",
+      "licenseBasis": "Official U.S. federal government work; public domain under 17 USC 105.",
+      "pageCount": 4,
+      "sha256": "780f348c34df694bb0b4dbbfaf9f22b99b9757b80d16a37ba89aadf069597281"
+    },
+    {
+      "filename": "cms-40b-medicare-part-b.pdf",
+      "url": "https://www.cms.gov/medicare/cms-forms/cms-forms/downloads/cms40b-e.pdf",
+      "category": "healthcare-form",
+      "agency": "Centers for Medicare and Medicaid Services",
+      "licenseBasis": "Official U.S. federal government work; public domain under 17 USC 105.",
+      "pageCount": 3,
+      "sha256": "c991595989dafd5bff332bef16bc8f18bf2263db0799b738bdb9c528d51cf470"
+    },
+    {
+      "filename": "cdc-vis-covid-19.pdf",
+      "url": "https://www.cdc.gov/vaccines/hcp/current-vis/downloads/covid-19.pdf",
+      "category": "public-health-fact-sheet",
+      "agency": "Centers for Disease Control and Prevention",
+      "licenseBasis": "Official U.S. federal government work; public domain under 17 USC 105.",
+      "pageCount": 2,
+      "sha256": "908952ae744418c227903ec556ee1ca1893c24ddb482991222259fb8dfaf667b"
+    },
+    {
+      "filename": "scotus-trump-v-anderson.pdf",
+      "url": "https://www.supremecourt.gov/opinions/23pdf/23-719_19m2.pdf",
+      "category": "court-opinion",
+      "agency": "Supreme Court of the United States",
+      "licenseBasis": "Official U.S. federal government work; public domain under 17 USC 105.",
+      "pageCount": 20,
+      "sha256": "f3015ab4890996a0cb1f1cb3e943cf27d2d6a58ced20f8dbdc3d06e79c15d07a"
+    },
+    {
+      "filename": "scotus-trump-v-us.pdf",
+      "url": "https://www.supremecourt.gov/opinions/23pdf/23-939_e2pg.pdf",
+      "category": "court-opinion",
+      "agency": "Supreme Court of the United States",
+      "licenseBasis": "Official U.S. federal government work; public domain under 17 USC 105.",
+      "pageCount": 119,
+      "sha256": "4cbb9bd0c0f023cd0273826e9481f16edd2ca942e5b378123d2478b66ef31746"
+    }
+  ]
+}
