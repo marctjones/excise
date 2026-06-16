@@ -47,24 +47,11 @@ public class SkiaRenderer
         // The output bitmap is in *visual* dimensions (W/H swap for 90/270).
         int rot = ((page.Rotation % 360) + 360) % 360;
         bool quarter = rot is 90 or 270;
-        var width = (int)Math.Round((quarter ? page.Height : page.Width) * scale);
-        var height = (int)Math.Round((quarter ? page.Width : page.Height) * scale);
-        if (width <= 0 || height <= 0)
+        var fullWidth = (int)Math.Round((quarter ? page.Height : page.Width) * scale);
+        var fullHeight = (int)Math.Round((quarter ? page.Width : page.Height) * scale);
+        if (fullWidth <= 0 || fullHeight <= 0)
             throw new InvalidPageGeometryException(
-                $"Page resolves to an invalid bitmap size: {width} x {height} pixels.");
-
-        var pixelCount = (long)width * height;
-        if (pixelCount > options.MaxPixelCount)
-            throw new RenderResourceLimitException(
-                $"Page render would allocate {width} x {height} pixels ({pixelCount:N0}), " +
-                $"exceeding the configured limit of {options.MaxPixelCount:N0} pixels.");
-
-        // Create bitmap
-        var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
-        using var canvas = new SKCanvas(bitmap);
-
-        // Fill background
-        canvas.Clear(options.BackgroundColor);
+                $"Page resolves to an invalid bitmap size: {fullWidth} x {fullHeight} pixels.");
 
         // Map content space (PDF: bottom-left origin, Y up) to device pixels
         // (top-left origin, Y down) of the visual bitmap, applying /Rotate.
@@ -79,13 +66,59 @@ public class SkiaRenderer
             270 => new SKMatrix(0, -s, s * H,   -s, 0, s * W,  0, 0, 1),
             _   => new SKMatrix(s, 0, 0,   0, -s, s * H,   0, 0, 1),
         };
+
+        var deviceBounds = options.ClipRect.HasValue
+            ? TransformBounds(m, options.ClipRect.Value)
+            : new SKRect(0, 0, fullWidth, fullHeight);
+        deviceBounds.Intersect(new SKRect(0, 0, fullWidth, fullHeight));
+
+        var width = (int)Math.Ceiling(deviceBounds.Width);
+        var height = (int)Math.Ceiling(deviceBounds.Height);
+        if (width <= 0 || height <= 0)
+            throw new InvalidPageGeometryException(
+                $"Page clip resolves to an invalid bitmap size: {width} x {height} pixels.");
+
+        var pixelCount = (long)width * height;
+        if (pixelCount > options.MaxPixelCount)
+            throw new RenderResourceLimitException(
+                $"Page render would allocate {width} x {height} pixels ({pixelCount:N0}), " +
+                $"exceeding the configured limit of {options.MaxPixelCount:N0} pixels.");
+
+        // Create bitmap
+        var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
+        using var canvas = new SKCanvas(bitmap);
+
+        // Fill background
+        canvas.Clear(options.BackgroundColor);
+
+        if (options.ClipRect.HasValue)
+        {
+            m.TransX -= deviceBounds.Left;
+            m.TransY -= deviceBounds.Top;
+        }
         canvas.SetMatrix(m);
+        if (options.ClipRect.HasValue)
+            canvas.ClipRect(options.ClipRect.Value, SKClipOperation.Intersect, options.AntiAlias);
 
         // Render content
         var context = new RenderContext(canvas, page, options, cancellationToken);
         context.Render();
 
         return bitmap;
+    }
+
+    private static SKRect TransformBounds(SKMatrix matrix, SKRect rect)
+    {
+        var p1 = matrix.MapPoint(new SKPoint(rect.Left, rect.Top));
+        var p2 = matrix.MapPoint(new SKPoint(rect.Right, rect.Top));
+        var p3 = matrix.MapPoint(new SKPoint(rect.Right, rect.Bottom));
+        var p4 = matrix.MapPoint(new SKPoint(rect.Left, rect.Bottom));
+
+        var left = MathF.Min(MathF.Min(p1.X, p2.X), MathF.Min(p3.X, p4.X));
+        var top = MathF.Min(MathF.Min(p1.Y, p2.Y), MathF.Min(p3.Y, p4.Y));
+        var right = MathF.Max(MathF.Max(p1.X, p2.X), MathF.Max(p3.X, p4.X));
+        var bottom = MathF.Max(MathF.Max(p1.Y, p2.Y), MathF.Max(p3.Y, p4.Y));
+        return new SKRect(left, top, right, bottom);
     }
 
     /// <summary>

@@ -83,6 +83,51 @@ public class SkiaRendererTests
     }
 
     [Fact]
+    public void RenderPage_WithClipRect_ReturnsOnlyClippedBitmap()
+    {
+        var pdfData = CreatePdfWithContentAndPageSize(
+            "0 g 10 10 20 20 re f 0.5 g 70 70 20 20 re f",
+            width: 100,
+            height: 100);
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var full = new SkiaRenderer().RenderPage(doc.GetPage(1), new RenderOptions { Dpi = 72 });
+        using var clipped = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, ClipRect = new SKRect(10, 10, 30, 30) });
+
+        clipped.Width.Should().Be(20);
+        clipped.Height.Should().Be(20);
+        clipped.GetPixel(10, 10).Should().Be(full.GetPixel(20, 80),
+            "the clipped bitmap should be translated from the same visual page region");
+        clipped.GetPixel(10, 10).Should().NotBe(SKColors.White);
+    }
+
+    [Fact]
+    public void RenderPage_WithClipRect_AppliesResourceLimitToTileSize()
+    {
+        var pdfData = CreatePdfWithContentAndPageSize("0 g 0 0 100 100 re f", width: 100, height: 100);
+        using var doc = PdfDocument.Open(pdfData);
+        var page = doc.GetPage(1);
+        var renderer = new SkiaRenderer();
+
+        var full = () => renderer.RenderPage(page, new RenderOptions { Dpi = 72, MaxPixelCount = 400 });
+        full.Should().Throw<RenderResourceLimitException>();
+
+        using var clipped = renderer.RenderPage(
+            page,
+            new RenderOptions
+            {
+                Dpi = 72,
+                ClipRect = new SKRect(0, 0, 10, 10),
+                MaxPixelCount = 400
+            });
+
+        clipped.Width.Should().Be(10);
+        clipped.Height.Should().Be(10);
+    }
+
+    [Fact]
     public void RenderPageToPng_WritesValidPngBytes()
     {
         var pdfData = CreateSimplePdf("Hello World");
