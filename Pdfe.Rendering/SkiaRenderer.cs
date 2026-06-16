@@ -3651,7 +3651,8 @@ internal partial class RenderContext
                 if (sourceX < xMin || sourceX > xMax || sourceY < yMin || sourceY > yMax)
                     continue;
 
-                var comps = PdfFunctionEvaluator.Evaluate(funcObj, new[] { (double)sourceX, (double)sourceY });
+                var functionY = yMin + yMax - sourceY;
+                var comps = PdfFunctionEvaluator.Evaluate(funcObj, new[] { (double)sourceX, (double)functionY });
                 if (comps == null)
                     continue;
 

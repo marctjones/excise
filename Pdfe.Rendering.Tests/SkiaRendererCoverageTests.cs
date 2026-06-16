@@ -812,6 +812,23 @@ public class SkiaRendererCoverageTests
             "Type 1 shading should evaluate the function at each domain coordinate");
     }
 
+    [Fact]
+    public void RenderPage_FunctionBasedShading_MapsVerticalDomainUpwards()
+    {
+        var pdfData = CreatePdfWithFunctionBasedShading("{ exch pop }\n");
+        using var doc = PdfDocument.Open(pdfData);
+        var renderer = new SkiaRenderer();
+
+        using var bitmap = renderer.RenderPage(doc.GetPage(1));
+
+        var x = (int)(200 * 150 / 72);
+        var top = bitmap.GetPixel(x, bitmap.Height - (int)(175 * 150 / 72));
+        var bottom = bitmap.GetPixel(x, bitmap.Height - (int)(125 * 150 / 72));
+
+        ((int)top.Red).Should().BeGreaterThan((int)bottom.Red + 80,
+            "PDF function-shading domain y should increase upward in page space");
+    }
+
     #endregion
 
     #region Helper Methods
@@ -948,10 +965,9 @@ public class SkiaRendererCoverageTests
         return Encoding.ASCII.GetBytes(sb.ToString());
     }
 
-    private static byte[] CreatePdfWithFunctionBasedShading()
+    private static byte[] CreatePdfWithFunctionBasedShading(string functionProgram = "{ pop }\n")
     {
         const string content = "q\n100 100 200 100 re W n\n/SH1 sh\nQ\n";
-        const string functionProgram = "{ pop }\n";
         var sb = new StringBuilder();
         sb.AppendLine("%PDF-1.4");
         var offsets = new long[7];
