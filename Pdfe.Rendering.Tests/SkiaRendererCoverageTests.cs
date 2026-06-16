@@ -795,6 +795,23 @@ public class SkiaRendererCoverageTests
         right.Blue.Should().BeGreaterThan(right.Red, "right side of the axial shading should be blue-dominant");
     }
 
+    [Fact]
+    public void RenderPage_FunctionBasedShading_EvaluatesAcrossDomain()
+    {
+        var pdfData = CreatePdfWithFunctionBasedShading();
+        using var doc = PdfDocument.Open(pdfData);
+        var renderer = new SkiaRenderer();
+
+        using var bitmap = renderer.RenderPage(doc.GetPage(1));
+
+        var y = bitmap.Height - (int)(150 * 150 / 72);
+        var left = bitmap.GetPixel((int)(125 * 150 / 72), y);
+        var right = bitmap.GetPixel((int)(275 * 150 / 72), y);
+
+        ((int)right.Red).Should().BeGreaterThan((int)left.Red + 80,
+            "Type 1 shading should evaluate the function at each domain coordinate");
+    }
+
     #endregion
 
     #region Helper Methods
@@ -924,6 +941,70 @@ public class SkiaRendererCoverageTests
             sb.AppendLine($"{offsets[i]:D10} 00000 n ");
         sb.AppendLine("trailer");
         sb.AppendLine("<< /Root 1 0 R /Size 5 >>");
+        sb.AppendLine("startxref");
+        sb.AppendLine(xrefPos.ToString());
+        sb.AppendLine("%%EOF");
+
+        return Encoding.ASCII.GetBytes(sb.ToString());
+    }
+
+    private static byte[] CreatePdfWithFunctionBasedShading()
+    {
+        const string content = "q\n100 100 200 100 re W n\n/SH1 sh\nQ\n";
+        const string functionProgram = "{ pop }\n";
+        var sb = new StringBuilder();
+        sb.AppendLine("%PDF-1.4");
+        var offsets = new long[7];
+
+        offsets[1] = sb.Length;
+        sb.AppendLine("1 0 obj");
+        sb.AppendLine("<< /Type /Catalog /Pages 2 0 R >>");
+        sb.AppendLine("endobj");
+
+        offsets[2] = sb.Length;
+        sb.AppendLine("2 0 obj");
+        sb.AppendLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+        sb.AppendLine("endobj");
+
+        offsets[3] = sb.Length;
+        sb.AppendLine("3 0 obj");
+        sb.AppendLine("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R");
+        sb.AppendLine("   /Resources << /Shading << /SH1 5 0 R >> >>");
+        sb.AppendLine(">>");
+        sb.AppendLine("endobj");
+
+        offsets[4] = sb.Length;
+        sb.AppendLine("4 0 obj");
+        sb.AppendLine($"<< /Length {content.Length} >>");
+        sb.AppendLine("stream");
+        sb.Append(content);
+        sb.AppendLine("endstream");
+        sb.AppendLine("endobj");
+
+        offsets[5] = sb.Length;
+        sb.AppendLine("5 0 obj");
+        sb.AppendLine("<< /ShadingType 1 /ColorSpace /DeviceGray /Domain [0 1 0 1]");
+        sb.AppendLine("   /Matrix [200 0 0 100 100 100]");
+        sb.AppendLine("   /Function 6 0 R");
+        sb.AppendLine(">>");
+        sb.AppendLine("endobj");
+
+        offsets[6] = sb.Length;
+        sb.AppendLine("6 0 obj");
+        sb.AppendLine($"<< /FunctionType 4 /Domain [0 1 0 1] /Range [0 1] /Length {functionProgram.Length} >>");
+        sb.AppendLine("stream");
+        sb.Append(functionProgram);
+        sb.AppendLine("endstream");
+        sb.AppendLine("endobj");
+
+        var xrefPos = sb.Length;
+        sb.AppendLine("xref");
+        sb.AppendLine("0 7");
+        sb.AppendLine("0000000000 65535 f ");
+        for (int i = 1; i <= 6; i++)
+            sb.AppendLine($"{offsets[i]:D10} 00000 n ");
+        sb.AppendLine("trailer");
+        sb.AppendLine("<< /Root 1 0 R /Size 7 >>");
         sb.AppendLine("startxref");
         sb.AppendLine(xrefPos.ToString());
         sb.AppendLine("%%EOF");

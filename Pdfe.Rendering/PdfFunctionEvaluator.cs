@@ -7,4 +7,7 @@ internal static class PdfFunctionEvaluator
 {
     public static double[]? Evaluate(PdfObject? funcObj, double t) =>
         CorePdfFunctionEvaluator.Evaluate(funcObj, t);
+
+    public static double[]? Evaluate(PdfObject? funcObj, double[] inputs) =>
+        CorePdfFunctionEvaluator.Evaluate(funcObj, inputs);
 }

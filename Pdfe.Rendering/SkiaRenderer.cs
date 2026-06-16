@@ -3598,27 +3598,94 @@ internal partial class RenderContext
 
     private void RenderFunctionShading(Pdfe.Core.Primitives.PdfDictionary shading)
     {
-        var funcObj = shading.GetOptional("Function");
+        var funcRef = shading.GetOptional("Function");
+        var funcObj = funcRef != null ? _page.Document.Resolve(funcRef) : null;
         var colorSpaceName = shading.GetNameOrNull("ColorSpace") ?? "DeviceGray";
-        var comps = PdfFunctionEvaluator.Evaluate(funcObj, 0.5) ?? new[] { 0.0 };
-        var color = ComponentsToSkColor(comps, colorSpaceName);
+        var domain = GetNumberArray(shading.GetOptional("Domain") as Pdfe.Core.Primitives.PdfArray)
+                     ?? new[] { 0.0, 1.0, 0.0, 1.0 };
+        if (domain.Length < 4)
+            return;
 
+        var matrix = GetMatrix(shading.GetOptional("Matrix") as Pdfe.Core.Primitives.PdfArray);
+        var inverseMatrix = InvertAffine(matrix);
+        if (!inverseMatrix.HasValue)
+            return;
+
+        var bounds = _canvas.LocalClipBounds;
+        var bbox = GetNumberArray(shading.GetOptional("BBox") as Pdfe.Core.Primitives.PdfArray);
+        if (bbox is { Length: >= 4 })
+        {
+            var bboxRect = new SKRect(
+                (float)Math.Min(bbox[0], bbox[2]),
+                (float)Math.Min(bbox[1], bbox[3]),
+                (float)Math.Max(bbox[0], bbox[2]),
+                (float)Math.Max(bbox[1], bbox[3]));
+            bounds.Intersect(bboxRect);
+            if (bounds.Width <= 0 || bounds.Height <= 0)
+                return;
+        }
+
+        if (bounds.Width <= 0 || bounds.Height <= 0)
+            return;
+
+        var width = Math.Clamp((int)Math.Ceiling(bounds.Width), 1, 1024);
+        var height = Math.Clamp((int)Math.Ceiling(bounds.Height), 1, 1024);
+        using var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
+        bitmap.Erase(SKColors.Transparent);
+
+        var inv = inverseMatrix.Value;
+        var xMin = Math.Min(domain[0], domain[1]);
+        var xMax = Math.Max(domain[0], domain[1]);
+        var yMin = Math.Min(domain[2], domain[3]);
+        var yMax = Math.Max(domain[2], domain[3]);
+        var alpha = (byte)Math.Clamp(_state.FillAlpha * 255, 0, 255);
+
+        for (var y = 0; y < height; y++)
+        {
+            var targetY = bounds.Top + ((y + 0.5f) / height) * bounds.Height;
+            for (var x = 0; x < width; x++)
+            {
+                var targetX = bounds.Left + ((x + 0.5f) / width) * bounds.Width;
+                var sourceX = inv.ScaleX * targetX + inv.SkewX * targetY + inv.TransX;
+                var sourceY = inv.SkewY * targetX + inv.ScaleY * targetY + inv.TransY;
+                if (sourceX < xMin || sourceX > xMax || sourceY < yMin || sourceY > yMax)
+                    continue;
+
+                var comps = PdfFunctionEvaluator.Evaluate(funcObj, new[] { (double)sourceX, (double)sourceY });
+                if (comps == null)
+                    continue;
+
+                var color = ComponentsToSkColor(comps, colorSpaceName);
+                bitmap.SetPixel(x, height - 1 - y, color.WithAlpha(alpha));
+            }
+        }
+
+        using var image = SKImage.FromBitmap(bitmap);
         using var paint = new SKPaint
         {
-            Color = color,
             BlendMode = _state.BlendMode,
             IsAntialias = _options.AntiAlias
         };
+        _canvas.DrawImage(image, bounds, paint);
+    }
 
-        var clipBounds = _canvas.LocalClipBounds;
-        _canvas.DrawRect(clipBounds, paint);
+    private static double[]? GetNumberArray(Pdfe.Core.Primitives.PdfArray? arr)
+    {
+        if (arr == null)
+            return null;
+
+        var values = new double[arr.Count];
+        for (var i = 0; i < arr.Count; i++)
+            values[i] = arr.GetNumber(i);
+        return values;
     }
 
     private (SKColor start, SKColor end, SKColor[]? stops, float[]? positions) ResolveGradientColors(
         Pdfe.Core.Primitives.PdfDictionary shading)
     {
         var colorSpaceName = shading.GetNameOrNull("ColorSpace") ?? "DeviceGray";
-        var funcObj = shading.GetOptional("Function");
+        var funcRef = shading.GetOptional("Function");
+        var funcObj = funcRef != null ? _page.Document.Resolve(funcRef) : null;
 
         var c0 = PdfFunctionEvaluator.Evaluate(funcObj, 0.0) ?? new[] { 0.0 };
         var c1 = PdfFunctionEvaluator.Evaluate(funcObj, 1.0) ?? new[] { 1.0 };
