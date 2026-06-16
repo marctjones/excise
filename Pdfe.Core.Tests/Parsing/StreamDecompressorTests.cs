@@ -1549,6 +1549,43 @@ public class StreamDecompressorTests
     }
 
     [Fact]
+    public void ApplyFilter_CCITTFax_Group3_1D_WithPartialRow_PadsUnusedBitsWithWhite()
+    {
+        var decompressor = new StreamDecompressor();
+
+        // One black pixel: white run 0, black run 1.
+        var data = new byte[] { 0x35, 0x40 };
+
+        var parms = new PdfDictionary();
+        parms.SetInt("K", 0);
+        parms.SetInt("Columns", 1);
+        parms.SetInt("Rows", 1);
+
+        var result = decompressor.ApplyFilter("CCITTFaxDecode", data, parms);
+
+        result.Should().Equal(new byte[] { 0x7F });
+    }
+
+    [Fact]
+    public void ApplyFilter_CCITTFax_Group3_1D_WithPartialRowAndBlackIs1_PadsUnusedBitsWithWhite()
+    {
+        var decompressor = new StreamDecompressor();
+
+        // One black pixel: white run 0, black run 1.
+        var data = new byte[] { 0x35, 0x40 };
+
+        var parms = new PdfDictionary();
+        parms.SetInt("K", 0);
+        parms.SetInt("Columns", 1);
+        parms.SetInt("Rows", 1);
+        parms.SetBool("BlackIs1", true);
+
+        var result = decompressor.ApplyFilter("CCITTFaxDecode", data, parms);
+
+        result.Should().Equal(new byte[] { 0x80 });
+    }
+
+    [Fact]
     public void ApplyFilter_CCITTFax_Group3_1D_NonEmptyBits()
     {
         var decompressor = new StreamDecompressor();

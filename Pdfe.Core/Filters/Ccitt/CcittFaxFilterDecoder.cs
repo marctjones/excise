@@ -544,7 +544,7 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
     {
         for (int i = 0; i < bytesPerRow; i++)
         {
-            byte b = 0;
+            byte b = blackIs1 ? (byte)0 : (byte)0xFF;
             for (int j = 0; j < 8 && i * 8 + j < row.Length; j++)
             {
                 bool bit = row[i * 8 + j];
@@ -552,9 +552,14 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
                 {
                     bit = !bit;
                 }
+                byte mask = (byte)(0x80 >> j);
                 if (bit)
                 {
-                    b |= (byte)(0x80 >> j);
+                    b |= mask;
+                }
+                else
+                {
+                    b &= (byte)~mask;
                 }
             }
             output.Add(b);
