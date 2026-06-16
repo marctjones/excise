@@ -1,0 +1,8 @@
+<Project>
+  <!--
+    Avalonia.BuildServices runs anonymous build-time telemetry from its
+    AvaloniaStats target. Keep pdfe builds offline/private by replacing that
+    package target with an intentional no-op after NuGet imports are loaded.
+  -->
+  <Target Name="AvaloniaStats" />
+</Project>
