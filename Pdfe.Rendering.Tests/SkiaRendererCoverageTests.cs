@@ -222,6 +222,42 @@ public class SkiaRendererCoverageTests
         pixel.Blue.Should().BeLessThan(80);
     }
 
+    [Fact]
+    public void RenderPage_ImageMaskXObject_UsesCurrentFillColorAndTransparency()
+    {
+        var pdfData = CreatePdfWithImageMaskXObject();
+        using var doc = PdfDocument.Open(pdfData);
+        var renderer = new SkiaRenderer();
+
+        using var bitmap = renderer.RenderPage(doc.GetPage(1), new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var painted = bitmap.GetPixel(105, bitmap.Height - 120);
+        var transparent = bitmap.GetPixel(155, bitmap.Height - 120);
+        painted.Blue.Should().BeGreaterThan(200);
+        painted.Red.Should().BeLessThan(80);
+        painted.Green.Should().BeLessThan(80);
+        transparent.Should().Be(SKColors.White);
+    }
+
+    [Fact]
+    public void RenderPage_OneBitImage_UsesDecodeArrayPolarity()
+    {
+        var pdfData = CreatePdfWithOneBitDecodeImage();
+        using var doc = PdfDocument.Open(pdfData);
+        var renderer = new SkiaRenderer();
+
+        using var bitmap = renderer.RenderPage(doc.GetPage(1), new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var firstBit = bitmap.GetPixel(105, bitmap.Height - 120);
+        var secondBit = bitmap.GetPixel(115, bitmap.Height - 120);
+        firstBit.Red.Should().BeGreaterThan(240, "Decode [1 0] maps a zero bit to white");
+        firstBit.Green.Should().BeGreaterThan(240);
+        firstBit.Blue.Should().BeGreaterThan(240);
+        secondBit.Red.Should().BeLessThan(20, "Decode [1 0] maps a one bit to black");
+        secondBit.Green.Should().BeLessThan(20);
+        secondBit.Blue.Should().BeLessThan(20);
+    }
+
     #endregion
 
     #region Path Operator Tests (fill rules, no-op)
@@ -1138,6 +1174,122 @@ public class SkiaRendererCoverageTests
         sb.AppendLine("5 0 obj");
         sb.AppendLine("<< /Type /XObject /Subtype /Image /Width 1 /Height 1");
         sb.AppendLine("   /BitsPerComponent 8 /ColorSpace /CS1 /Length 1 >>");
+        sb.AppendLine("stream");
+        sb.Append(imageData);
+        sb.AppendLine();
+        sb.AppendLine("endstream");
+        sb.AppendLine("endobj");
+
+        var xrefPos = sb.Length;
+        sb.AppendLine("xref");
+        sb.AppendLine("0 6");
+        sb.AppendLine("0000000000 65535 f ");
+        for (int i = 1; i <= 5; i++)
+            sb.AppendLine($"{offsets[i]:D10} 00000 n ");
+        sb.AppendLine("trailer");
+        sb.AppendLine("<< /Root 1 0 R /Size 6 >>");
+        sb.AppendLine("startxref");
+        sb.AppendLine(xrefPos.ToString());
+        sb.AppendLine("%%EOF");
+
+        return Encoding.Latin1.GetBytes(sb.ToString());
+    }
+
+    private static byte[] CreatePdfWithImageMaskXObject()
+    {
+        const string content = "0 0 1 rg\nq\n80 0 0 40 100 100 cm\n/Im1 Do\nQ\n";
+        const string imageData = "\xF0";
+        var sb = new StringBuilder();
+        sb.AppendLine("%PDF-1.4");
+        var offsets = new long[6];
+
+        offsets[1] = sb.Length;
+        sb.AppendLine("1 0 obj");
+        sb.AppendLine("<< /Type /Catalog /Pages 2 0 R >>");
+        sb.AppendLine("endobj");
+
+        offsets[2] = sb.Length;
+        sb.AppendLine("2 0 obj");
+        sb.AppendLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+        sb.AppendLine("endobj");
+
+        offsets[3] = sb.Length;
+        sb.AppendLine("3 0 obj");
+        sb.AppendLine("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R");
+        sb.AppendLine("   /Resources << /XObject << /Im1 5 0 R >> >>");
+        sb.AppendLine(">>");
+        sb.AppendLine("endobj");
+
+        offsets[4] = sb.Length;
+        sb.AppendLine("4 0 obj");
+        sb.AppendLine($"<< /Length {content.Length} >>");
+        sb.AppendLine("stream");
+        sb.Append(content);
+        sb.AppendLine("endstream");
+        sb.AppendLine("endobj");
+
+        offsets[5] = sb.Length;
+        sb.AppendLine("5 0 obj");
+        sb.AppendLine("<< /Type /XObject /Subtype /Image /Width 8 /Height 1");
+        sb.AppendLine($"   /ImageMask true /BitsPerComponent 1 /Length {imageData.Length} >>");
+        sb.AppendLine("stream");
+        sb.Append(imageData);
+        sb.AppendLine();
+        sb.AppendLine("endstream");
+        sb.AppendLine("endobj");
+
+        var xrefPos = sb.Length;
+        sb.AppendLine("xref");
+        sb.AppendLine("0 6");
+        sb.AppendLine("0000000000 65535 f ");
+        for (int i = 1; i <= 5; i++)
+            sb.AppendLine($"{offsets[i]:D10} 00000 n ");
+        sb.AppendLine("trailer");
+        sb.AppendLine("<< /Root 1 0 R /Size 6 >>");
+        sb.AppendLine("startxref");
+        sb.AppendLine(xrefPos.ToString());
+        sb.AppendLine("%%EOF");
+
+        return Encoding.Latin1.GetBytes(sb.ToString());
+    }
+
+    private static byte[] CreatePdfWithOneBitDecodeImage()
+    {
+        const string content = "q\n80 0 0 40 100 100 cm\n/Im1 Do\nQ\n";
+        const string imageData = "\x7F";
+        var sb = new StringBuilder();
+        sb.AppendLine("%PDF-1.4");
+        var offsets = new long[6];
+
+        offsets[1] = sb.Length;
+        sb.AppendLine("1 0 obj");
+        sb.AppendLine("<< /Type /Catalog /Pages 2 0 R >>");
+        sb.AppendLine("endobj");
+
+        offsets[2] = sb.Length;
+        sb.AppendLine("2 0 obj");
+        sb.AppendLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+        sb.AppendLine("endobj");
+
+        offsets[3] = sb.Length;
+        sb.AppendLine("3 0 obj");
+        sb.AppendLine("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R");
+        sb.AppendLine("   /Resources << /XObject << /Im1 5 0 R >> >>");
+        sb.AppendLine(">>");
+        sb.AppendLine("endobj");
+
+        offsets[4] = sb.Length;
+        sb.AppendLine("4 0 obj");
+        sb.AppendLine($"<< /Length {content.Length} >>");
+        sb.AppendLine("stream");
+        sb.Append(content);
+        sb.AppendLine("endstream");
+        sb.AppendLine("endobj");
+
+        offsets[5] = sb.Length;
+        sb.AppendLine("5 0 obj");
+        sb.AppendLine("<< /Type /XObject /Subtype /Image /Width 8 /Height 1");
+        sb.AppendLine($"   /ColorSpace /DeviceGray /BitsPerComponent 1 /Decode [1 0] /Length {imageData.Length} >>");
         sb.AppendLine("stream");
         sb.Append(imageData);
         sb.AppendLine();

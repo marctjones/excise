@@ -2247,16 +2247,17 @@ internal partial class RenderContext
 
     private SKBitmap? CreateBitmapFromRawData(byte[] data, int width, int height, int bitsPerComponent, string colorSpace, Pdfe.Core.Primitives.PdfStream stream)
     {
+        var isImageMask = stream.GetBool("ImageMask");
         PdfColorSpace? pdfColorSpace = null;
         int componentsPerPixel = 3;
 
-        var csObj = stream.GetOptional("ColorSpace");
+        var csObj = isImageMask ? null : stream.GetOptional("ColorSpace");
         if (csObj != null)
         {
             pdfColorSpace = ResolveImageColorSpace(csObj);
             componentsPerPixel = pdfColorSpace.Components;
         }
-        else
+        else if (!isImageMask)
         {
             pdfColorSpace = PdfColorSpace.FromName(colorSpace);
             componentsPerPixel = pdfColorSpace.Components;
@@ -2301,10 +2302,27 @@ internal partial class RenderContext
                         // 1-bit monochrome
                         int byteIndex = srcIndex / 8;
                         int bitIndex = 7 - (srcIndex % 8);
+                        int bit = 0;
                         if (byteIndex < data.Length)
                         {
-                            int bit = (data[byteIndex] >> bitIndex) & 1;
-                            r = g = b = (byte)(bit == 0 ? 0 : 255);
+                            bit = (data[byteIndex] >> bitIndex) & 1;
+                        }
+
+                        if (isImageMask)
+                        {
+                            var paintBit = DecodeImageMaskBit(stream, bit);
+                            r = _state.FillColor.Red;
+                            g = _state.FillColor.Green;
+                            b = _state.FillColor.Blue;
+                            a = paintBit ? (byte)Math.Clamp(_state.FillAlpha * 255, 0, 255) : (byte)0;
+                        }
+                        else if (pdfColorSpace != null)
+                        {
+                            var sample = DecodeOneBitImageSample(stream, bit);
+                            var (rd, gd, bd) = pdfColorSpace.ToRgb(new[] { sample });
+                            r = (byte)Math.Clamp(rd * 255, 0, 255);
+                            g = (byte)Math.Clamp(gd * 255, 0, 255);
+                            b = (byte)Math.Clamp(bd * 255, 0, 255);
                         }
                         srcIndex++;
                     }
@@ -2341,6 +2359,22 @@ internal partial class RenderContext
         }
 
         return bitmap;
+    }
+
+    private static double DecodeOneBitImageSample(Pdfe.Core.Primitives.PdfStream stream, int bit)
+    {
+        var decode = stream.GetOptional("Decode") as Pdfe.Core.Primitives.PdfArray;
+        var d0 = decode?.Count >= 2 ? decode.GetNumber(0) : 0.0;
+        var d1 = decode?.Count >= 2 ? decode.GetNumber(1) : 1.0;
+        return bit == 0 ? d0 : d1;
+    }
+
+    private static bool DecodeImageMaskBit(Pdfe.Core.Primitives.PdfStream stream, int bit)
+    {
+        var decode = stream.GetOptional("Decode") as Pdfe.Core.Primitives.PdfArray;
+        var d0 = decode?.Count >= 2 ? decode.GetNumber(0) : 0.0;
+        var d1 = decode?.Count >= 2 ? decode.GetNumber(1) : 1.0;
+        return (bit == 0 ? d0 : d1) > 0.5;
     }
 
     private PdfColorSpace ResolveImageColorSpace(Pdfe.Core.Primitives.PdfObject colorSpaceObject)
