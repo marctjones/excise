@@ -30,6 +30,7 @@ prints the slowest pages and failure diagnostics into the run log.
 | `MUTOOL_REFUSED` / `ALL_ORACLES_REFUSED` | reference engines can't render either |
 | `EMPTY_DOC` | 0 pages |
 | `COMPARE_ERROR` | bitmap-comparison crashed |
+| `SCANNER_CRASH` | a one-PDF recovery subprocess exited before writing a report |
 
 ## Test layers
 
@@ -87,41 +88,46 @@ page result per PDF.
 
 | Status | Count | % of 682 |
 |---|---|---|
-| PASS | 454 | 66.6% |
-| DIFF | 146 | 21.4% |
-| PASS_ONE | 45 | 6.6% |
-| PARSE_ERROR | 34 | 5.0% |
-| TIMEOUT | 2 | 0.3% |
-| COMPARE_ERROR | 1 | 0.1% |
+| PASS | 468 | 68.6% |
+| DIFF | 130 | 19.1% |
+| PASS_ONE | 48 | 7.0% |
+| MALFORMED_PDF | 21 | 3.1% |
+| DECODE_ERROR | 6 | 0.9% |
+| UNSUPPORTED_ENCRYPTED | 3 | 0.4% |
+| UNSUPPORTED_COMPRESSION | 2 | 0.3% |
+| TIMEOUT | 1 | 0.1% |
+| INVALID_PAGE_GEOMETRY | 1 | 0.1% |
+| ALL_ORACLES_REFUSED | 1 | 0.1% |
+| RESOURCE_LIMIT | 1 | 0.1% |
 
-**Top failure clusters in `DIFF` (146):**
+**Top failure clusters in `DIFF` (130):**
 
-* **76 (51%) — `bitmap-*` JBIG2 fixtures.** pdfe doesn't have a JBIG2
+* **76 (58%) — `bitmap-*` JBIG2 fixtures.** pdfe doesn't have a JBIG2
   decoder yet, so these all render blank or near-blank. One missing
   feature → half the rendering gap. Implementing JBIG2 would close
   this entire cluster.
-* **39 — `issue*` repros.** Assorted from pdf.js's GitHub issue
+* **36 — `issue*` repros.** Assorted from pdf.js's GitHub issue
   tracker. Many are font/encoding edge cases, transparency
   combinations, or color-space ambiguities.
-* **11 — `bug*` Mozilla Bugzilla repros.** Same shape as `issue*`.
-* **20 other** — annotations, shading, masks, miscellaneous.
+* **8 — `bug*` Mozilla Bugzilla repros.** Same shape as `issue*`.
+* **7 other** — mixed forms/text/vector cases that need fixture-level triage.
+* **2 shading/gradient** and **1 mask/image** — narrow remaining rendering
+  clusters after the JPX/Lab fixes.
 
-**`PARSE_ERROR` (34):**
+**Non-visual failures (36):**
 
-* 25 `PdfParseException` — diverse: xref recovery, stream `/Length`
-  resolution failures, generation-number parsing, etc.
-* 3 `PdfEncryptionNotSupportedException` — encryption variants
-  beyond AESV5/R6
-* 2 `OverflowException` — Int32 overflow on malformed size fields
-* 2 `InvalidDataException` — unsupported compressed archive method
-* 2 others (`IndexOutOfRangeException`, bitmap allocation failure)
+* 21 `MALFORMED_PDF` — malformed headers/xrefs, invalid seek offsets,
+  generation-number parsing, overflow, and fuzzed stream syntax.
+* 6 `DECODE_ERROR` — render-time parser/decode limitations such as unresolved
+  stream `/Length` references and malformed content streams.
+* 3 `UNSUPPORTED_ENCRYPTED` — password-protected files or encryption variants
+  outside current unattended rendering support.
+* 2 `UNSUPPORTED_COMPRESSION` — compressed archive methods outside the current
+  input reader.
+* 1 each: `TIMEOUT` (`bomb_giant.pdf`, pdftocairo oracle), `RESOURCE_LIMIT`,
+  `INVALID_PAGE_GEOMETRY`, and `ALL_ORACLES_REFUSED`.
 
-**`TIMEOUT` (2):**
-
-* `bomb_giant.pdf`
-* `issue14256.pdf`
-
-**`PASS_ONE` (45) — pdfe sides with:**
+**`PASS_ONE` (48) — pdfe sides with:**
 
 These are **not clear pdfe bugs** — they're cases where the two
 reference engines disagree among themselves, or one reference renderer
@@ -139,6 +145,12 @@ parallelism on a 30 GB / 8-core machine:
     --per-chunk-parallel 4 \
     --pdf-timeout-ms 15000
 ```
+
+If a high-parallelism chunk exits before writing its slice JSON, the driver
+retries the missing chunk serially. If the chunk still cannot complete, it
+falls back to isolated one-PDF subprocesses and records deterministic per-PDF
+process exits as `SCANNER_CRASH` entries instead of silently dropping the
+slice.
 
 The merge step at the end produces a fresh
 `Pdfe.Rendering.Tests/bin/Debug/net10.0/exploratory-report-<mode>.json`.

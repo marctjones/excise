@@ -139,14 +139,25 @@ run_one_chunk() {
         runner=(gtimeout 600)
     fi
 
-    "${runner[@]}" "$PDFE_BIN" corpus-scan "$CORPUS" \
-        --output "$slice_path" \
-        --chunk "$i" \
-        --total "$CHUNKS" \
-        --parallel "$PER_CHUNK_PARALLEL" \
-        --pdf-timeout-ms "$PDF_TIMEOUT_MS" \
-        --page-mode "$PAGE_MODE" \
-        > "$CHUNK_LOG_DIR/exploratory-chunk-$i.log" 2>&1
+    if (( ${#runner[@]} > 0 )); then
+        "${runner[@]}" "$PDFE_BIN" corpus-scan "$CORPUS" \
+            --output "$slice_path" \
+            --chunk "$i" \
+            --total "$CHUNKS" \
+            --parallel "$PER_CHUNK_PARALLEL" \
+            --pdf-timeout-ms "$PDF_TIMEOUT_MS" \
+            --page-mode "$PAGE_MODE" \
+            > "$CHUNK_LOG_DIR/exploratory-chunk-$i.log" 2>&1
+    else
+        "$PDFE_BIN" corpus-scan "$CORPUS" \
+            --output "$slice_path" \
+            --chunk "$i" \
+            --total "$CHUNKS" \
+            --parallel "$PER_CHUNK_PARALLEL" \
+            --pdf-timeout-ms "$PDF_TIMEOUT_MS" \
+            --page-mode "$PAGE_MODE" \
+            > "$CHUNK_LOG_DIR/exploratory-chunk-$i.log" 2>&1
+    fi
     local rc=$?
     if [[ "$rc" == "0" && -f "$slice_path" ]]; then
         local stats
@@ -165,12 +176,157 @@ print(f'{d[\"total\"]} page results, peak {d[\"peakRssBytes\"]//1024//1024} MB')
 export -f run_one_chunk
 export PDFE_BIN CORPUS BIN_DIR CHUNKS PER_CHUNK_PARALLEL PDF_TIMEOUT_MS PAGE_MODE CHUNK_LOG_DIR
 
+recover_one_chunk_isolated() {
+    local i="$1"
+    local slice_path
+    slice_path=$(printf '%s/exploratory-chunk-%03d-of-%03d.json' "$BIN_DIR" "$i" "$CHUNKS")
+    local recovery_dir
+    recovery_dir=$(printf '%s/exploratory-recovery-chunk-%03d-of-%03d' "$BIN_DIR" "$i" "$CHUNKS")
+    mkdir -p "$recovery_dir"
+    rm -f "$recovery_dir"/single-*.json "$recovery_dir"/single-*.log "$recovery_dir"/files.txt
+
+    python3 - "$CORPUS" "$i" "$CHUNKS" "$recovery_dir/files.txt" <<'PY'
+import os, sys
+corpus, chunk, total, out_path = sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4]
+pdfs = sorted(
+    os.path.join(corpus, name)
+    for name in os.listdir(corpus)
+    if name.lower().endswith(".pdf")
+)
+with open(out_path, "w", encoding="utf-8") as f:
+    for idx, path in enumerate(pdfs):
+        if idx % total == chunk:
+            f.write(path + "\n")
+PY
+
+    local n=0
+    while IFS= read -r pdf; do
+        local rel item_dir single_json single_log
+        rel=$(basename "$pdf")
+        item_dir=$(printf '%s/pdf-%03d' "$recovery_dir" "$n")
+        single_json=$(printf '%s/single-%03d.json' "$recovery_dir" "$n")
+        single_log=$(printf '%s/single-%03d.log' "$recovery_dir" "$n")
+        mkdir -p "$item_dir"
+        ln -sf "$pdf" "$item_dir/$rel"
+
+        local rc=0
+        if "$PDFE_BIN" corpus-scan "$item_dir" \
+            --output "$single_json" \
+            --chunk 0 \
+            --total 1 \
+            --parallel 1 \
+            --pdf-timeout-ms "$PDF_TIMEOUT_MS" \
+            --page-mode "$PAGE_MODE" \
+            > "$single_log" 2>&1; then
+            rc=0
+        else
+            rc=$?
+        fi
+        if [[ "$rc" != "0" || ! -f "$single_json" ]]; then
+            python3 - "$single_json" "$rel" "$rc" "$PAGE_MODE" <<'PY'
+import json, sys, datetime
+out, rel, rc, page_mode = sys.argv[1], sys.argv[2], int(sys.argv[3]), sys.argv[4]
+entry = {
+    "path": rel,
+    "pageNumber": 0,
+    "status": "SCANNER_CRASH",
+    "errorPhase": "scan",
+    "errorType": "ProcessExit",
+    "errorMessage": f"pdfe corpus-scan exited {rc} before writing a single-PDF report",
+}
+report = {
+    "generatedUtc": datetime.datetime.utcnow().isoformat() + "Z",
+    "corpus": rel,
+    "chunkIndex": 0,
+    "chunkTotal": 1,
+    "pageMode": page_mode,
+    "counts": {"SCANNER_CRASH": 1},
+    "total": 1,
+    "pdfs": 1,
+    "peakRssBytes": 0,
+    "entries": [entry],
+}
+with open(out, "w", encoding="utf-8") as f:
+    json.dump(report, f, indent=2)
+PY
+        fi
+        n=$((n + 1))
+    done < "$recovery_dir/files.txt"
+
+    python3 - "$recovery_dir" "$slice_path" "$i" "$CHUNKS" "$PAGE_MODE" <<'PY'
+import glob, json, os, sys, datetime
+recovery_dir, out_path, chunk, total, page_mode = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4]), sys.argv[5]
+entries = []
+counts = {}
+pdfs = 0
+peak = 0
+generated = []
+for path in sorted(glob.glob(os.path.join(recovery_dir, "single-*.json"))):
+    with open(path, encoding="utf-8") as f:
+        d = json.load(f)
+    entries.extend(d.get("entries", []))
+    for k, v in d.get("counts", {}).items():
+        counts[k] = counts.get(k, 0) + v
+    pdfs += d.get("pdfs", 0)
+    peak = max(peak, d.get("peakRssBytes", 0))
+    if d.get("generatedUtc"):
+        generated.append(d["generatedUtc"])
+report = {
+    "generatedUtc": max(generated) if generated else datetime.datetime.utcnow().isoformat() + "Z",
+    "corpus": "test-pdfs/pdfjs",
+    "chunkIndex": chunk,
+    "chunkTotal": total,
+    "pageMode": page_mode,
+    "counts": counts,
+    "total": len(entries),
+    "pdfs": pdfs,
+    "peakRssBytes": peak,
+    "entries": sorted(entries, key=lambda e: e.get("path", e.get("Path", ""))),
+}
+with open(out_path, "w", encoding="utf-8") as f:
+    json.dump(report, f, indent=2)
+print(f"  isolated recovery wrote {out_path} ({len(entries)} page results)")
+PY
+}
+
 # xargs -P runs CHUNK_PARALLEL chunks concurrently. -I {} substitutes
 # the chunk index. The bash -c wrapper is needed because run_one_chunk
 # is a bash function (which we exported) — xargs can't call it directly.
-seq 0 $((CHUNKS - 1)) | xargs -n1 -P"$CHUNK_PARALLEL" -I{} bash -c 'run_one_chunk "$@"' _ {}
+seq 0 $((CHUNKS - 1)) | xargs -n1 -P"$CHUNK_PARALLEL" -I{} bash -c 'run_one_chunk "$@"' _ {} || true
 
-# Count chunks where the slice JSON wasn't produced — that's the
+# Native image codecs and reference-renderer subprocesses can occasionally
+# destabilize a high-parallelism chunk before it writes JSON. Retry only the
+# missing slices serially so release scans still produce a complete baseline
+# without hiding a deterministic per-PDF failure inside the JSON report.
+missing_chunks=()
+for ((i=0; i<CHUNKS; i++)); do
+    sp=$(printf '%s/exploratory-chunk-%03d-of-%03d.json' "$BIN_DIR" "$i" "$CHUNKS")
+    [[ -f "$sp" ]] || missing_chunks+=("$i")
+done
+if (( ${#missing_chunks[@]} > 0 )); then
+    echo "  retrying ${#missing_chunks[@]} missing chunk(s) serially with per-chunk parallelism=1"
+    original_per_chunk_parallel="$PER_CHUNK_PARALLEL"
+    PER_CHUNK_PARALLEL=1
+    for i in "${missing_chunks[@]}"; do
+        recovered=0
+        for attempt in 1 2 3; do
+            if (( attempt > 1 )); then
+                printf '  retrying chunk %d/%d again (serial attempt %d/3)\n' "$((i + 1))" "$CHUNKS" "$attempt"
+            fi
+            if run_one_chunk "$i"; then
+                recovered=1
+                break
+            fi
+        done
+        if (( recovered == 0 )); then
+            printf '  chunk %d/%d still missing after serial recovery attempts\n' "$((i + 1))" "$CHUNKS"
+            recover_one_chunk_isolated "$i"
+        fi
+    done
+    PER_CHUNK_PARALLEL="$original_per_chunk_parallel"
+fi
+
+# Count chunks where the slice JSON wasn't produced after recovery — that's the
 # real failure signal (a chunk could log "✓" then segfault later).
 chunk_failures=0
 for ((i=0; i<CHUNKS; i++)); do
@@ -260,7 +416,8 @@ failures = [
         "TIMEOUT", "MALFORMED_PDF", "UNSUPPORTED_ENCRYPTED",
         "UNSUPPORTED_COMPRESSION", "DECODE_ERROR", "RESOURCE_LIMIT",
         "INVALID_PAGE_GEOMETRY", "PARSE_ERROR", "RENDER_ERROR",
-        "COMPARE_ERROR", "ALL_ORACLES_REFUSED", "EMPTY_DOC", "RENDER_NULL"
+        "COMPARE_ERROR", "ALL_ORACLES_REFUSED", "EMPTY_DOC", "RENDER_NULL",
+        "SCANNER_CRASH"
     }
 ]
 if failures:
