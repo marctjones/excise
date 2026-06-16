@@ -27,7 +27,7 @@ internal class GenericRegionDecoder
         if (width <= 0 || height <= 0)
             throw new ArgumentException("Invalid region dimensions");
         if (_isMmrEncoded)
-            throw new NotSupportedException("MMR-encoded JBIG2 generic regions are not yet supported");
+            return DecodeMmrGenericRegion(regionData, width, height);
         if (_template != 0)
             throw new NotSupportedException($"JBIG2 generic region template {_template} is not yet supported");
         if (_typicalPredictionGenericDecodingOn)
@@ -43,6 +43,11 @@ internal class GenericRegionDecoder
         DecodeWithTemplate0(regionData, width, height, output);
 
         return output;
+    }
+
+    private static byte[] DecodeMmrGenericRegion(byte[] regionData, int width, int height)
+    {
+        return Jbig2MmrDecoder.Decode(regionData, width, height);
     }
 
     /// <summary>

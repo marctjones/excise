@@ -63,7 +63,6 @@ public class GenericRegionDecoderTests
     }
 
     [Theory]
-    [InlineData(0x01, "MMR-encoded")]
     [InlineData(0x02, "template 1")]
     [InlineData(0x08, "typical prediction")]
     [InlineData(0x10, "adaptive template")]
@@ -76,6 +75,17 @@ public class GenericRegionDecoderTests
 
         act.Should().Throw<NotSupportedException>()
             .WithMessage($"*{expectedMessage}*");
+    }
+
+    [Fact]
+    public void DecodeGenericRegion_WithMmrEncodedData_UsesGroup4Rows()
+    {
+        var decoder = new GenericRegionDecoder();
+        decoder.ParseFlags(0x01);
+
+        byte[] result = decoder.DecodeGenericRegion(new byte[] { 0b00110110, 0b11000000 }, 8, 1, 0, 0);
+
+        result.Should().Equal(0x0F);
     }
 
     /// <summary>

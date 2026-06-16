@@ -9,16 +9,19 @@ namespace Pdfe.Core.Filters.Jbig2;
 /// ISO 32000-2:2020 Section 8.3.6 covers PDF JBIG2 integration.
 ///
 /// Supported features:
-/// - Generic region decoding (template 0)
-/// - MQ arithmetic decoder with Qe-adaptive probability estimation
+/// - Generic region decoding (template 0 arithmetic and MMR)
+/// - Huffman symbol dictionaries without refinement/aggregation
+/// - Huffman text regions without refinement
+/// - Standard and referenced user Huffman tables for supported symbol/text paths
 /// - Segment header parsing for embedded organization (Annex D.3)
+/// - Typed metadata parsing for page, region, symbol dictionary, and text region bodies
 ///
 /// Not yet implemented:
-/// - Symbol dictionary decoding (segment type 0)
-/// - Text region decoding (segment types 4-7)
+/// - Arithmetic-coded symbol dictionaries and text regions
+/// - Symbol/text refinement and aggregate coding
 /// - Refinement regions (segment type 37)
-/// - Optional text region operators and templates 1-3
-/// - Typical prediction (TPGDON optimization)
+/// - Halftone regions
+/// - Optional generic-region templates 1-3, custom AT pixels, and TPGDON
 /// </summary>
 [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 internal static class Jbig2Decoder
@@ -70,7 +73,19 @@ internal static class Jbig2Decoder
         var decoder = new Jbig2PageDecoder(width, height);
         byte[] pageImage = decoder.DecodePage(allData);
 
+        InvertForPdfImageSamples(pageImage);
         return pageImage;
+    }
+
+    private static void InvertForPdfImageSamples(byte[] pageImage)
+    {
+        // JBIG2 coding procedures model 1 bits as black pixels. Once the
+        // /JBIG2Decode filter has produced image samples for a PDF image
+        // XObject, DeviceGray's default Decode array maps 0 to black and
+        // 1 to white. Keep the internal JBIG2 convention during composition
+        // and invert only at the filter boundary.
+        for (int i = 0; i < pageImage.Length; i++)
+            pageImage[i] = (byte)~pageImage[i];
     }
 
     /// <summary>
@@ -206,22 +221,30 @@ internal class Jbig2PageDecoder
             case SegmentType.ImmediateLosslessGenericRefinementRegion:
                 // A refinement region is NOT a generic region — decoding it as
                 // one would silently corrupt the image. Not yet supported.
+                Jbig2GenericRefinementRegionSegment.Parse(data);
                 throw new NotSupportedException("Generic refinement region segments are not yet supported");
 
             case SegmentType.SymbolDictionary:
-                // Symbol dictionaries are referenced by text regions; store but don't render directly
-                _segments[header.SegmentNumber] = new SegmentData { Data = data, Type = (SegmentType)header.SegmentType };
-                throw new NotSupportedException("Symbol dictionary segments are not yet supported");
+                CacheSymbolDictionary(header, data);
+                break;
 
             case SegmentType.TextRegion:
+                CacheTextRegion(header, data);
+                break;
+
             case SegmentType.ImmediateTextRegion:
             case SegmentType.ImmediateLosslessTextRegion:
-                throw new NotSupportedException("Text region segments are not yet supported");
+                DecodeTextRegion(header, data, pageImage);
+                break;
 
             case SegmentType.PatternDictionary:
+                CachePatternDictionary(header, data);
+                break;
+
             case SegmentType.HalftoneRegion:
             case SegmentType.ImmediateHalftoneRegion:
             case SegmentType.ImmediateLosslessHalftoneRegion:
+                Jbig2HalftoneRegionSegment.Parse(data);
                 throw new NotSupportedException($"Segment type {header.SegmentType} is not supported");
 
             case SegmentType.PageInformation:
@@ -234,8 +257,11 @@ internal class Jbig2PageDecoder
             case SegmentType.EndOfStripe:
             case SegmentType.EndOfFile:
             case SegmentType.ProfileSegment:
-            case SegmentType.Table:
                 // These are metadata/control segments; skip
+                break;
+
+            case SegmentType.Table:
+                CacheHuffmanTable(header, data);
                 break;
 
             default:
@@ -282,6 +308,129 @@ internal class Jbig2PageDecoder
             combinationOperator);
     }
 
+    private void CacheSymbolDictionary(SegmentHeader header, byte[] data)
+    {
+        var segment = Jbig2SymbolDictionarySegment.Parse(data);
+        var decoded = Jbig2SymbolDictionaryDecoder.Decode(
+            segment,
+            data.AsSpan(segment.PayloadDataOffset, segment.PayloadDataLength),
+            ResolveImportedSymbols(header),
+            ResolveUserHuffmanTables(header));
+
+        _segments[header.SegmentNumber] = new SegmentData
+        {
+            Data = data,
+            Type = (SegmentType)header.SegmentType,
+            SymbolDictionary = segment,
+            DecodedSymbolDictionary = decoded,
+        };
+    }
+
+    private IReadOnlyList<Jbig2Bitmap> ResolveImportedSymbols(SegmentHeader header)
+    {
+        if (header.ReferredSegments.Count == 0)
+            return Array.Empty<Jbig2Bitmap>();
+
+        var symbols = new List<Jbig2Bitmap>();
+        foreach (uint segmentNumber in header.ReferredSegments)
+        {
+            if (!_segments.TryGetValue(segmentNumber, out var segment)
+                || segment.DecodedSymbolDictionary == null)
+                continue;
+
+            symbols.AddRange(segment.DecodedSymbolDictionary.ExportedSymbols);
+        }
+
+        return symbols;
+    }
+
+    private IReadOnlyList<Jbig2HuffmanTable> ResolveUserHuffmanTables(SegmentHeader header)
+    {
+        if (header.ReferredSegments.Count == 0)
+            return Array.Empty<Jbig2HuffmanTable>();
+
+        var tables = new List<Jbig2HuffmanTable>();
+        foreach (uint segmentNumber in header.ReferredSegments)
+        {
+            if (!_segments.TryGetValue(segmentNumber, out var segment)
+                || segment.DecodedHuffmanTable == null)
+                continue;
+
+            tables.Add(segment.DecodedHuffmanTable);
+        }
+
+        return tables;
+    }
+
+    private void CacheTextRegion(SegmentHeader header, byte[] data)
+    {
+        var segment = Jbig2TextRegionSegment.Parse(data);
+        var bitmap = Jbig2TextRegionDecoder.Decode(
+            segment,
+            data.AsSpan(segment.PayloadDataOffset, segment.PayloadDataLength),
+            ResolveImportedSymbols(header),
+            ResolveUserHuffmanTables(header));
+
+        _segments[header.SegmentNumber] = new SegmentData
+        {
+            Data = data,
+            Type = (SegmentType)header.SegmentType,
+            TextRegion = segment,
+            TextRegionBitmap = bitmap,
+        };
+    }
+
+    private void DecodeTextRegion(SegmentHeader header, byte[] data, byte[] pageImage)
+    {
+        var segment = Jbig2TextRegionSegment.Parse(data);
+        var bitmap = Jbig2TextRegionDecoder.Decode(
+            segment,
+            data.AsSpan(segment.PayloadDataOffset, segment.PayloadDataLength),
+            ResolveImportedSymbols(header),
+            ResolveUserHuffmanTables(header));
+
+        if (segment.Region.XLocation > int.MaxValue || segment.Region.YLocation > int.MaxValue)
+            throw new InvalidOperationException("JBIG2 text region coordinates exceed supported limits");
+
+        var combinationOperator = segment.Region.CombinationOperator;
+        if (_pageInformation is { CombinationOperatorOverrideAllowed: false } pageInformation)
+            combinationOperator = pageInformation.CombinationOperator;
+
+        Jbig2BitmapCompositor.Composite(
+            new Jbig2Bitmap(_width, _height, pageImage),
+            bitmap,
+            (int)segment.Region.XLocation,
+            (int)segment.Region.YLocation,
+            combinationOperator);
+    }
+
+    private void CacheHuffmanTable(SegmentHeader header, byte[] data)
+    {
+        var segment = Jbig2HuffmanTableSegment.Parse(data);
+        var decoded = Jbig2UserHuffmanTableBuilder.Build(
+            segment,
+            data.AsSpan(segment.PayloadDataOffset, segment.PayloadDataLength));
+
+        _segments[header.SegmentNumber] = new SegmentData
+        {
+            Data = data,
+            Type = (SegmentType)header.SegmentType,
+            HuffmanTable = segment,
+            DecodedHuffmanTable = decoded,
+        };
+    }
+
+    private void CachePatternDictionary(SegmentHeader header, byte[] data)
+    {
+        var segment = Jbig2PatternDictionarySegment.Parse(data);
+        _segments[header.SegmentNumber] = new SegmentData
+        {
+            Data = data,
+            Type = (SegmentType)header.SegmentType,
+            PatternDictionary = segment,
+        };
+    }
+
     /// <summary>
     /// Extract segment data from the combined buffer.
     /// </summary>
@@ -315,4 +464,11 @@ internal class SegmentData
 {
     public byte[] Data { get; set; } = Array.Empty<byte>();
     public SegmentType Type { get; set; }
+    public Jbig2SymbolDictionarySegment? SymbolDictionary { get; set; }
+    public Jbig2DecodedSymbolDictionary? DecodedSymbolDictionary { get; set; }
+    public Jbig2TextRegionSegment? TextRegion { get; set; }
+    public Jbig2Bitmap? TextRegionBitmap { get; set; }
+    public Jbig2HuffmanTableSegment? HuffmanTable { get; set; }
+    public Jbig2HuffmanTable? DecodedHuffmanTable { get; set; }
+    public Jbig2PatternDictionarySegment? PatternDictionary { get; set; }
 }

@@ -66,6 +66,16 @@ public class Jbig2JpxFilterIntegrationTests
         return body.ToArray();
     }
 
+    private static byte[] BuildUnsupportedRefinementSymbolDictionaryBody()
+        =>
+        [
+            0x00, 0x03, // Huffman encoded + refinement aggregation.
+            0x00, 0x00,
+            0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, // exported symbols
+            0x00, 0x00, 0x00, 0x00, // new symbols
+        ];
+
     private static PdfStream MakeImage(string filter, byte[] data, int width, int height)
     {
         var dict = new PdfDictionary();
@@ -81,8 +91,9 @@ public class Jbig2JpxFilterIntegrationTests
     [Fact]
     public void Jbig2_UnsupportedSegment_FallsBackToRawBytes()
     {
-        // Crafted bytes that parse as a symbol-dictionary segment (unsupported).
-        byte[] raw = BuildJbig2Segment(1, 0);
+        // Crafted bytes that parse as a valid Huffman symbol dictionary with refinement aggregation (unsupported).
+        byte[] symbolDictionary = BuildUnsupportedRefinementSymbolDictionaryBody();
+        byte[] raw = BuildJbig2Segment(1, 0, symbolDictionary);
         var stream = MakeImage("JBIG2Decode", raw, 8, 8);
 
         new StreamDecompressor().Decompress(stream);
@@ -148,12 +159,12 @@ public class Jbig2JpxFilterIntegrationTests
     [Fact]
     public void Jbig2_UnsupportedGenericRegionMode_FallsBackToRawBytes()
     {
-        byte[] segmentData = BuildGenericRegionBody(width: 1, height: 1, regionFlags: 0, genericRegionFlags: 0x01, 0x00);
+        byte[] segmentData = BuildGenericRegionBody(width: 1, height: 1, regionFlags: 0, genericRegionFlags: 0x02, 0x00);
         byte[] raw = BuildJbig2Segment(1, 38, segmentData);
         var stream = MakeImage("JBIG2Decode", raw, 1, 1);
 
         new StreamDecompressor().Decompress(stream);
 
-        stream.DecodedData.Should().Equal(raw, "unsupported MMR generic regions must pass through unchanged");
+        stream.DecodedData.Should().Equal(raw, "unsupported arithmetic template modes must pass through unchanged");
     }
 }

@@ -8,7 +8,7 @@ namespace Pdfe.Core.Filters.Jbig2;
 /// Used by JBIG2 for generic region and symbol dictionary decoding.
 /// </summary>
 [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-internal class MqDecoder
+internal class MqDecoder : IJbig2ArithmeticDecoder
 {
     /// <summary>
     /// Qe probability estimates (ISO 14492 Table D.1).

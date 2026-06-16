@@ -7,6 +7,30 @@ namespace Pdfe.Core.Tests.Filters.Jbig2;
 public class Jbig2BitmapCompositorTests
 {
     [Fact]
+    public void Bitmap_SetAndGetPixel_UsesMsbFirstPacking()
+    {
+        var bitmap = new Jbig2Bitmap(9, 2);
+
+        bitmap.SetPixel(0, 0, true);
+        bitmap.SetPixel(8, 1, true);
+
+        bitmap.Data.Should().Equal(0x80, 0x00, 0x00, 0x80);
+        bitmap.GetPixel(0, 0).Should().BeTrue();
+        bitmap.GetPixel(8, 1).Should().BeTrue();
+        bitmap.GetPixel(-1, 0).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Bitmap_Fill_SetsAllocatedRows()
+    {
+        var bitmap = new Jbig2Bitmap(3, 2);
+
+        bitmap.Fill(true);
+
+        bitmap.Data.Should().Equal(0xFF, 0xFF);
+    }
+
+    [Fact]
     public void Composite_WithReplace_PlacesSourceAtCoordinates()
     {
         byte[] destination = { 0x00, 0x00, 0x00 };
@@ -69,5 +93,21 @@ public class Jbig2BitmapCompositorTests
             Jbig2CombinationOperator.Replace);
 
         destination[0].Should().Be(0xC0);
+    }
+
+    [Fact]
+    public void Composite_WithBitmapObjects_MutatesDestination()
+    {
+        var destination = new Jbig2Bitmap(8, 1, [0x80]);
+        var source = new Jbig2Bitmap(2, 1, [0xC0]);
+
+        Jbig2BitmapCompositor.Composite(
+            destination,
+            source,
+            x: 0,
+            y: 0,
+            Jbig2CombinationOperator.Xor);
+
+        destination.Data[0].Should().Be(0x40);
     }
 }

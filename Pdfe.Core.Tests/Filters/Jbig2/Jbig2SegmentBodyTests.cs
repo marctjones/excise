@@ -25,6 +25,28 @@ public class Jbig2SegmentBodyTests
         data[offset + 3] = (byte)value;
     }
 
+    private static void WriteUInt16(List<byte> data, ushort value)
+    {
+        data.Add((byte)(value >> 8));
+        data.Add((byte)value);
+    }
+
+    private static void WriteUInt32(List<byte> data, uint value)
+    {
+        data.Add((byte)(value >> 24));
+        data.Add((byte)(value >> 16));
+        data.Add((byte)(value >> 8));
+        data.Add((byte)value);
+    }
+
+    private static void WriteInt32(List<byte> data, int value)
+    {
+        data.Add((byte)(value >> 24));
+        data.Add((byte)(value >> 16));
+        data.Add((byte)(value >> 8));
+        data.Add((byte)value);
+    }
+
     [Fact]
     public void PageInformation_Parse_ReadsDimensionsResolutionFlagsAndStriping()
     {
@@ -241,5 +263,292 @@ public class Jbig2SegmentBodyTests
 
         act.Should().Throw<InvalidOperationException>()
             .WithMessage("*adaptive template*");
+    }
+
+    [Fact]
+    public void SymbolDictionarySegment_Parse_ArithmeticTemplate0ReadsAtPixelsRefinementPixelsAndCounts()
+    {
+        var data = new List<byte>();
+        WriteUInt16(data, 0x03EE);
+        data.AddRange(new byte[]
+        {
+            0x03, 0xFF,
+            0xFD, 0xFF,
+            0x02, 0xFE,
+            0xFE, 0xFE,
+            0x01, 0xFF,
+            0xFF, 0x01,
+        });
+        WriteUInt32(data, 5);
+        WriteUInt32(data, 7);
+        data.AddRange(new byte[] { 0xAA, 0xBB });
+
+        var segment = Jbig2SymbolDictionarySegment.Parse(data.ToArray());
+
+        segment.IsHuffmanEncoded.Should().BeFalse();
+        segment.UseRefinementAggregation.Should().BeTrue();
+        segment.SdHuffDecodeHeightSelection.Should().Be(3);
+        segment.SdHuffDecodeWidthSelection.Should().Be(2);
+        segment.SdHuffBmSizeSelection.Should().Be(1);
+        segment.SdHuffAggInstanceSelection.Should().Be(1);
+        segment.IsCodingContextUsed.Should().BeTrue();
+        segment.IsCodingContextRetained.Should().BeTrue();
+        segment.SdTemplate.Should().Be(0);
+        segment.SdrTemplate.Should().Be(0);
+        segment.AdaptiveTemplatePixels.Should().Equal(
+            new Jbig2AdaptiveTemplatePixel(3, -1),
+            new Jbig2AdaptiveTemplatePixel(-3, -1),
+            new Jbig2AdaptiveTemplatePixel(2, -2),
+            new Jbig2AdaptiveTemplatePixel(-2, -2));
+        segment.RefinementAdaptiveTemplatePixels.Should().Equal(
+            new Jbig2AdaptiveTemplatePixel(1, -1),
+            new Jbig2AdaptiveTemplatePixel(-1, 1));
+        segment.ExportedSymbolCount.Should().Be(5);
+        segment.NewSymbolCount.Should().Be(7);
+        segment.PayloadDataOffset.Should().Be(22);
+        segment.PayloadDataLength.Should().Be(2);
+    }
+
+    [Fact]
+    public void SymbolDictionarySegment_Parse_HuffmanEncodedSegmentSkipsAtPixels()
+    {
+        var data = new List<byte>();
+        WriteUInt16(data, 0x1841);
+        WriteUInt32(data, 1);
+        WriteUInt32(data, 2);
+
+        var segment = Jbig2SymbolDictionarySegment.Parse(data.ToArray());
+
+        segment.IsHuffmanEncoded.Should().BeTrue();
+        segment.UseRefinementAggregation.Should().BeFalse();
+        segment.SdHuffBmSizeSelection.Should().Be(1);
+        segment.SdTemplate.Should().Be(2);
+        segment.SdrTemplate.Should().Be(1);
+        segment.AdaptiveTemplatePixels.Should().BeEmpty();
+        segment.RefinementAdaptiveTemplatePixels.Should().BeEmpty();
+        segment.ExportedSymbolCount.Should().Be(1);
+        segment.NewSymbolCount.Should().Be(2);
+        segment.PayloadDataOffset.Should().Be(10);
+        segment.PayloadDataLength.Should().Be(0);
+    }
+
+    [Fact]
+    public void SymbolDictionarySegment_Parse_WithTruncatedCounts_Throws()
+    {
+        var data = new List<byte>();
+        WriteUInt16(data, 0x0001);
+        data.AddRange(new byte[7]);
+
+        var act = () => Jbig2SymbolDictionarySegment.Parse(data.ToArray());
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*symbol dictionary symbol counts*");
+    }
+
+    [Fact]
+    public void TextRegionSegment_Parse_ArithmeticRegionReadsFlagsRefinementPixelsAndCount()
+    {
+        var data = new List<byte>();
+        data.AddRange(BuildRegionSegmentPrefix(width: 12, height: 34, x: 56, y: 78, flags: 0x02));
+        WriteUInt16(data, 0x7B7A);
+        data.AddRange(new byte[] { 0x01, 0xFF, 0xFF, 0x01 });
+        WriteUInt32(data, 10);
+        data.Add(0xAA);
+
+        var segment = Jbig2TextRegionSegment.Parse(data.ToArray());
+
+        segment.Region.BitmapWidth.Should().Be(12u);
+        segment.Region.BitmapHeight.Should().Be(34u);
+        segment.Region.CombinationOperator.Should().Be(Jbig2CombinationOperator.Xor);
+        segment.IsHuffmanEncoded.Should().BeFalse();
+        segment.UseRefinement.Should().BeTrue();
+        segment.LogSbStrips.Should().Be(2);
+        segment.ReferenceCorner.Should().Be(3);
+        segment.IsTransposed.Should().BeTrue();
+        segment.CombinationOperator.Should().Be(Jbig2CombinationOperator.Xor);
+        segment.DefaultPixel.Should().Be(1);
+        segment.SbDsOffset.Should().Be(-2);
+        segment.SbrTemplate.Should().Be(0);
+        segment.HuffmanFlags.Should().BeNull();
+        segment.RefinementAdaptiveTemplatePixels.Should().Equal(
+            new Jbig2AdaptiveTemplatePixel(1, -1),
+            new Jbig2AdaptiveTemplatePixel(-1, 1));
+        segment.DeclaredSymbolInstanceCount.Should().Be(10);
+        segment.SymbolInstanceCount.Should().Be(10);
+        segment.PayloadDataOffset.Should().Be(27);
+        segment.PayloadDataLength.Should().Be(1);
+    }
+
+    [Fact]
+    public void TextRegionSegment_Parse_HuffmanFlagsReadsAllSelections()
+    {
+        var data = new List<byte>();
+        data.AddRange(BuildRegionSegmentPrefix(width: 8, height: 8));
+        WriteUInt16(data, 0x8401);
+        WriteUInt16(data, 0x6DB6);
+        WriteUInt32(data, 3);
+
+        var segment = Jbig2TextRegionSegment.Parse(data.ToArray());
+
+        segment.IsHuffmanEncoded.Should().BeTrue();
+        segment.SbrTemplate.Should().Be(1);
+        segment.SbDsOffset.Should().Be(1);
+        segment.HuffmanFlags.Should().NotBeNull();
+        segment.HuffmanFlags!.Value.SbHuffRSize.Should().Be(1);
+        segment.HuffmanFlags!.Value.SbHuffRdy.Should().Be(2);
+        segment.HuffmanFlags!.Value.SbHuffRdx.Should().Be(3);
+        segment.HuffmanFlags!.Value.SbHuffRdHeight.Should().Be(1);
+        segment.HuffmanFlags!.Value.SbHuffRdWidth.Should().Be(2);
+        segment.HuffmanFlags!.Value.SbHuffDt.Should().Be(3);
+        segment.HuffmanFlags!.Value.SbHuffDs.Should().Be(1);
+        segment.HuffmanFlags!.Value.SbHuffFs.Should().Be(2);
+        segment.PayloadDataOffset.Should().Be(25);
+        segment.PayloadDataLength.Should().Be(0);
+    }
+
+    [Fact]
+    public void TextRegionSegment_Parse_CapsSymbolInstancesToRegionPixels()
+    {
+        var data = new List<byte>();
+        data.AddRange(BuildRegionSegmentPrefix(width: 2, height: 3));
+        WriteUInt16(data, 0x0000);
+        WriteUInt32(data, 100);
+
+        var segment = Jbig2TextRegionSegment.Parse(data.ToArray());
+
+        segment.DeclaredSymbolInstanceCount.Should().Be(100);
+        segment.SymbolInstanceCount.Should().Be(6);
+    }
+
+    [Fact]
+    public void TextRegionSegment_Parse_WithTruncatedRefinementPixels_Throws()
+    {
+        var data = new List<byte>();
+        data.AddRange(BuildRegionSegmentPrefix());
+        WriteUInt16(data, 0x0002);
+        data.AddRange(new byte[3]);
+
+        var act = () => Jbig2TextRegionSegment.Parse(data.ToArray());
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*text region refinement adaptive template pixels*");
+    }
+
+    [Fact]
+    public void HuffmanTableSegment_Parse_ReadsFlagsBoundsAndPayload()
+    {
+        byte[] data =
+        {
+            0x15,
+            0xFF, 0xFF, 0xFF, 0xFE,
+            0x00, 0x00, 0x00, 0x0A,
+            0xAA, 0xBB,
+        };
+
+        var segment = Jbig2HuffmanTableSegment.Parse(data);
+
+        segment.HasOutOfBand.Should().BeTrue();
+        segment.PrefixSizeBits.Should().Be(3);
+        segment.RangeSizeBits.Should().Be(2);
+        segment.LowValue.Should().Be(-2);
+        segment.HighValue.Should().Be(10);
+        segment.PayloadDataOffset.Should().Be(9);
+        segment.PayloadDataLength.Should().Be(2);
+    }
+
+    [Fact]
+    public void HuffmanTableSegment_Parse_WithReservedFlagBit_Throws()
+    {
+        byte[] data = new byte[Jbig2HuffmanTableSegment.ByteLength];
+        data[0] = 0x80;
+
+        var act = () => Jbig2HuffmanTableSegment.Parse(data);
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*reserved bit 7*");
+    }
+
+    [Fact]
+    public void GenericRefinementRegionSegment_Parse_ReadsFlagsAtPixelsAndPayloadOffset()
+    {
+        var data = new List<byte>();
+        data.AddRange(BuildRegionSegmentPrefix(width: 9, height: 10, x: 11, y: 12, flags: 0x04));
+        data.Add(0x02);
+        data.AddRange(new byte[] { 0x01, 0xFF, 0xFE, 0x02, 0xAA });
+
+        var segment = Jbig2GenericRefinementRegionSegment.Parse(data.ToArray());
+
+        segment.Region.BitmapWidth.Should().Be(9);
+        segment.Region.BitmapHeight.Should().Be(10);
+        segment.Region.CombinationOperator.Should().Be(Jbig2CombinationOperator.Replace);
+        segment.TypicalPredictionGenericRefinementOn.Should().BeTrue();
+        segment.Template.Should().Be(0);
+        segment.AdaptiveTemplatePixels.Should().Equal(
+            new Jbig2AdaptiveTemplatePixel(1, -1),
+            new Jbig2AdaptiveTemplatePixel(-2, 2));
+        segment.BitmapDataOffset.Should().Be(22);
+        segment.BitmapDataLength.Should().Be(1);
+    }
+
+    [Fact]
+    public void PatternDictionarySegment_Parse_ReadsFlagsDimensionsAndPayloadOffset()
+    {
+        var data = new List<byte> { 0x05, 0x03, 0x04 };
+        WriteUInt32(data, 6);
+        data.AddRange(new byte[] { 0xAA, 0xBB });
+
+        var segment = Jbig2PatternDictionarySegment.Parse(data.ToArray());
+
+        segment.IsMmrEncoded.Should().BeTrue();
+        segment.Template.Should().Be(2);
+        segment.PatternWidth.Should().Be(3);
+        segment.PatternHeight.Should().Be(4);
+        segment.GrayMax.Should().Be(6);
+        segment.BitmapDataOffset.Should().Be(7);
+        segment.BitmapDataLength.Should().Be(2);
+    }
+
+    [Fact]
+    public void PatternDictionarySegment_Parse_WithZeroDimensions_Throws()
+    {
+        var data = new byte[Jbig2PatternDictionarySegment.ByteLength];
+
+        var act = () => Jbig2PatternDictionarySegment.Parse(data);
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*pattern dictionary dimensions*");
+    }
+
+    [Fact]
+    public void HalftoneRegionSegment_Parse_ReadsRegionGridVectorAndPayloadOffset()
+    {
+        var data = new List<byte>();
+        data.AddRange(BuildRegionSegmentPrefix(width: 20, height: 21, x: 22, y: 23));
+        data.Add(0xAF);
+        WriteUInt32(data, 3);
+        WriteUInt32(data, 4);
+        WriteInt32(data, -5);
+        WriteInt32(data, 6);
+        WriteUInt16(data, 7);
+        WriteUInt16(data, 8);
+        data.Add(0xAA);
+
+        var segment = Jbig2HalftoneRegionSegment.Parse(data.ToArray());
+
+        segment.Region.BitmapWidth.Should().Be(20);
+        segment.Region.BitmapHeight.Should().Be(21);
+        segment.DefaultPixel.Should().Be(1);
+        segment.CombinationOperator.Should().Be(Jbig2CombinationOperator.Xor);
+        segment.SkipEnabled.Should().BeTrue();
+        segment.Template.Should().Be(3);
+        segment.IsMmrEncoded.Should().BeTrue();
+        segment.GridWidth.Should().Be(3);
+        segment.GridHeight.Should().Be(4);
+        segment.GridX.Should().Be(-5);
+        segment.GridY.Should().Be(6);
+        segment.RegionX.Should().Be(7);
+        segment.RegionY.Should().Be(8);
+        segment.BitmapDataOffset.Should().Be(38);
+        segment.BitmapDataLength.Should().Be(1);
     }
 }

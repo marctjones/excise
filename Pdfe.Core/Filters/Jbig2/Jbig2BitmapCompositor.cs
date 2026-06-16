@@ -25,21 +25,41 @@ internal static class Jbig2BitmapCompositor
         if (source.Length < sourceStride * sourceHeight)
             throw new ArgumentException("Source bitmap is shorter than its dimensions require", nameof(source));
 
-        for (int sourceY = 0; sourceY < sourceHeight; sourceY++)
+        Composite(
+            new Jbig2Bitmap(destinationWidth, destinationHeight, destination),
+            new Jbig2Bitmap(sourceWidth, sourceHeight, source),
+            x,
+            y,
+            combinationOperator);
+    }
+
+    public static void Composite(
+        Jbig2Bitmap destination,
+        Jbig2Bitmap source,
+        int x,
+        int y,
+        Jbig2CombinationOperator combinationOperator)
+    {
+        if (destination == null)
+            throw new ArgumentNullException(nameof(destination));
+        if (source == null)
+            throw new ArgumentNullException(nameof(source));
+
+        for (int sourceY = 0; sourceY < source.Height; sourceY++)
         {
             int destinationY = y + sourceY;
-            if (destinationY < 0 || destinationY >= destinationHeight)
+            if (destinationY < 0 || destinationY >= destination.Height)
                 continue;
 
-            for (int sourceX = 0; sourceX < sourceWidth; sourceX++)
+            for (int sourceX = 0; sourceX < source.Width; sourceX++)
             {
                 int destinationX = x + sourceX;
-                if (destinationX < 0 || destinationX >= destinationWidth)
+                if (destinationX < 0 || destinationX >= destination.Width)
                     continue;
 
-                bool sourcePixel = GetBit(source, sourceStride, sourceX, sourceY);
-                bool destinationPixel = GetBit(destination, destinationStride, destinationX, destinationY);
-                SetBit(destination, destinationStride, destinationX, destinationY,
+                bool sourcePixel = source.GetPixel(sourceX, sourceY);
+                bool destinationPixel = destination.GetPixel(destinationX, destinationY);
+                destination.SetPixel(destinationX, destinationY,
                     Combine(destinationPixel, sourcePixel, combinationOperator));
             }
         }
@@ -55,23 +75,4 @@ internal static class Jbig2BitmapCompositor
             Jbig2CombinationOperator.Replace => source,
             _ => source,
         };
-
-    private static bool GetBit(byte[] data, int stride, int x, int y)
-    {
-        int byteIndex = (y * stride) + (x / 8);
-        int bitIndex = 7 - (x % 8);
-        return (data[byteIndex] & (1 << bitIndex)) != 0;
-    }
-
-    private static void SetBit(byte[] data, int stride, int x, int y, bool value)
-    {
-        int byteIndex = (y * stride) + (x / 8);
-        int bitIndex = 7 - (x % 8);
-        byte mask = (byte)(1 << bitIndex);
-
-        if (value)
-            data[byteIndex] |= mask;
-        else
-            data[byteIndex] &= (byte)~mask;
-    }
 }
