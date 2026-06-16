@@ -485,7 +485,7 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
             for (int j = 0; j < 8 && i * 8 + j < row.Length; j++)
             {
                 bool bit = row[i * 8 + j];
-                if (blackIs1)
+                if (!blackIs1)
                 {
                     bit = !bit;
                 }

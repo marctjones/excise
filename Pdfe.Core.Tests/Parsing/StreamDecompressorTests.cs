@@ -1572,7 +1572,8 @@ public class StreamDecompressorTests
     {
         var decompressor = new StreamDecompressor();
 
-        // T.6 horizontal mode followed by a white run of 4 and black run of 4:
+        // T.6 horizontal mode followed by a white run of 4 and black run of 4.
+        // With /BlackIs1 false (the PDF default), decoded black samples are 0.
         // 001 | 1011 | 011, padded to the next byte boundary.
         var data = new byte[] { 0b00110110, 0b11000000 };
 
@@ -1580,6 +1581,26 @@ public class StreamDecompressorTests
         parms.SetInt("K", -1);
         parms.SetInt("Columns", 8);
         parms.SetInt("Rows", 1);
+
+        var result = decompressor.ApplyFilter("CCITTFaxDecode", data, parms);
+
+        result.Should().Equal(new byte[] { 0xF0 });
+    }
+
+    [Fact]
+    public void ApplyFilter_CCITTFax_Group4_HorizontalMode_BlackIs1True_UsesOneForBlack()
+    {
+        var decompressor = new StreamDecompressor();
+
+        // Same row as ApplyFilter_CCITTFax_Group4_HorizontalMode_ReadsTwoRunLengths:
+        // white run of 4, then black run of 4.
+        var data = new byte[] { 0b00110110, 0b11000000 };
+
+        var parms = new PdfDictionary();
+        parms.SetInt("K", -1);
+        parms.SetInt("Columns", 8);
+        parms.SetInt("Rows", 1);
+        parms.SetBool("BlackIs1", true);
 
         var result = decompressor.ApplyFilter("CCITTFaxDecode", data, parms);
 
