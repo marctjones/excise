@@ -1356,11 +1356,17 @@ internal partial class RenderContext
         // family-named subsets ("ZapfDingbatsStd", "MyriadPro-Semibold", etc.)
         // route to the right system substitute.
         string family;
-        if (Starts(bareName, "Helvetica") || Starts(bareName, "Arial"))
+        if (Starts(bareName, "Helvetica")
+            || Starts(bareName, "Arial")
+            || Starts(bareName, "NimbusSanL"))
             family = "Helvetica";
-        else if (Starts(bareName, "Times") || Starts(bareName, "Bookman"))
+        else if (Starts(bareName, "Times")
+                 || Starts(bareName, "NimbusRomNo9L")
+                 || Starts(bareName, "Bookman"))
             family = "Times New Roman";
-        else if (Starts(bareName, "Courier"))
+        else if (Starts(bareName, "Courier")
+                 || Starts(bareName, "NimbusMonL")
+                 || Starts(bareName, "CMTT"))
             family = "Courier New";
         else if (Starts(bareName, "Symbol"))
             family = "Symbol";
@@ -1372,11 +1378,12 @@ internal partial class RenderContext
             family = "Sans-Serif";
 
         var style = SKFontStyle.Normal;
-        if (bareName.Contains("Bold") && (bareName.Contains("Italic") || bareName.Contains("Oblique")))
+        if ((bareName.Contains("Bold") || bareName.Contains("Medi"))
+            && (bareName.Contains("Italic") || bareName.Contains("Oblique") || bareName.Contains("Ital")))
             style = SKFontStyle.BoldItalic;
-        else if (bareName.Contains("Bold") || bareName.Contains("Semibold") || bareName.Contains("Medium"))
+        else if (bareName.Contains("Bold") || bareName.Contains("Semibold") || bareName.Contains("Medium") || bareName.Contains("Medi"))
             style = SKFontStyle.Bold;
-        else if (bareName.Contains("Italic") || bareName.Contains("Oblique"))
+        else if (bareName.Contains("Italic") || bareName.Contains("Oblique") || bareName.Contains("Ital"))
             style = SKFontStyle.Italic;
 
         lock (_typefaceLoadLock)
