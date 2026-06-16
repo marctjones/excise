@@ -54,6 +54,33 @@ public class Jbig2CapabilityClassifierTests
         return body.ToArray();
     }
 
+    private static byte[] BuildTextRegionBody(bool huffmanEncoded, bool useRefinement)
+    {
+        ushort flags = (ushort)((huffmanEncoded ? 0x0001 : 0) | (useRefinement ? 0x0002 : 0));
+        var body = new List<byte>
+        {
+            0, 0, 0, 1, // region width
+            0, 0, 0, 1, // region height
+            0, 0, 0, 0, // x
+            0, 0, 0, 0, // y
+            0x04,       // region combination operator: Replace
+            (byte)(flags >> 8),
+            (byte)flags,
+        };
+        if (huffmanEncoded)
+            body.AddRange([0x00, 0x00]);
+        if (useRefinement)
+        {
+            body.AddRange([
+                0xFF, 0xFF, // default text refinement AT pixel 0: disabled
+                0xFF, 0xFF, // default text refinement AT pixel 1: disabled
+            ]);
+        }
+
+        body.AddRange([0, 0, 0, 1]); // one symbol instance
+        return body.ToArray();
+    }
+
     [Fact]
     public void Analyze_ClassifiesArithmeticSymbolAndTextRegionsAsSupportedBuckets()
     {
@@ -159,6 +186,32 @@ public class Jbig2CapabilityClassifierTests
         report.Features.Should().Contain("generic-refinement-region.typical-prediction");
         report.UnsupportedFeatures.Should().Contain("generic-refinement-region.typical-prediction");
         report.UnsupportedFeatures.Should().NotContain("generic-refinement-region");
+    }
+
+    [Fact]
+    public void Analyze_ClassifiesArithmeticTextRefinementAsSupported()
+    {
+        var report = Jbig2CapabilityClassifier.Analyze(BuildSegment(
+            1,
+            SegmentType.ImmediateTextRegion,
+            BuildTextRegionBody(huffmanEncoded: false, useRefinement: true)));
+
+        report.Features.Should().Contain("text-region.refinement");
+        report.UnsupportedFeatures.Should().NotContain("text-region.refinement");
+        report.UnsupportedFeatures.Should().NotContain("text-region.refinement.huffman");
+    }
+
+    [Fact]
+    public void Analyze_ClassifiesHuffmanTextRefinementAsSpecificUnsupportedBucket()
+    {
+        var report = Jbig2CapabilityClassifier.Analyze(BuildSegment(
+            1,
+            SegmentType.ImmediateTextRegion,
+            BuildTextRegionBody(huffmanEncoded: true, useRefinement: true)));
+
+        report.Features.Should().Contain("text-region.refinement");
+        report.UnsupportedFeatures.Should().Contain("text-region.refinement.huffman");
+        report.UnsupportedFeatures.Should().NotContain("text-region.refinement");
     }
 
     [Fact]

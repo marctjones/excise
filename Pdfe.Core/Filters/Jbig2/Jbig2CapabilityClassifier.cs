@@ -265,7 +265,8 @@ internal static class Jbig2CapabilityClassifier
         if (segment.UseRefinement)
         {
             features.Add("text-region.refinement");
-            unsupported.Add("text-region.refinement");
+            if (segment.IsHuffmanEncoded)
+                unsupported.Add("text-region.refinement.huffman");
         }
         if (segment.IsTransposed)
             features.Add("text-region.transposed");

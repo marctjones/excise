@@ -87,6 +87,81 @@ public class Jbig2ArithmeticRegionTests
     }
 
     [Fact]
+    public void TextRegion_ArithmeticRefinement_RefinesReferencedSymbolBeforePlacement()
+    {
+        var symbol = new Jbig2Bitmap(1, 1);
+        symbol.SetPixel(0, 0, true);
+        var segment = new Jbig2TextRegionSegment(
+            Region: new Jbig2RegionSegmentInformation(1, 1, 0, 0, Jbig2CombinationOperator.Replace),
+            IsHuffmanEncoded: false,
+            UseRefinement: true,
+            LogSbStrips: 0,
+            ReferenceCorner: 0,
+            IsTransposed: false,
+            CombinationOperator: Jbig2CombinationOperator.Replace,
+            DefaultPixel: 0,
+            SbDsOffset: 0,
+            SbrTemplate: 1,
+            HuffmanFlags: null,
+            RefinementAdaptiveTemplatePixels: Array.Empty<Jbig2AdaptiveTemplatePixel>(),
+            DeclaredSymbolInstanceCount: 1,
+            SymbolInstanceCount: 1,
+            PayloadDataOffset: 0,
+            PayloadDataLength: 0);
+
+        var decoder = new ScriptedArithmeticDecoder(
+            false, false, false, false, // IADT initial strip T: 0
+            false, false, false, false, // IADT delta T: 0
+            false, false, false, false, // IAFS first S: 0
+            false, false, false, true,  // IARI: refine this symbol
+            false, false, false, false, // IARDW: 0
+            false, false, false, false, // IARDH: 0
+            false, false, false, false, // IARDX: 0
+            false, false, false, false, // IARDY: 0
+            false);                     // refined bitmap pixel
+
+        var bitmap = Jbig2TextRegionDecoder.DecodeArithmeticForTest(
+            segment,
+            decoder,
+            new[] { symbol });
+
+        bitmap.Width.Should().Be(1);
+        bitmap.Height.Should().Be(1);
+        bitmap.GetPixel(0, 0).Should().BeFalse();
+    }
+
+    [Fact]
+    public void TextRegion_HuffmanRefinement_ThrowsUntilRefinementBitmapByteScopingIsCorrect()
+    {
+        var symbol = new Jbig2Bitmap(1, 1);
+        var segment = new Jbig2TextRegionSegment(
+            Region: new Jbig2RegionSegmentInformation(1, 1, 0, 0, Jbig2CombinationOperator.Replace),
+            IsHuffmanEncoded: true,
+            UseRefinement: true,
+            LogSbStrips: 0,
+            ReferenceCorner: 0,
+            IsTransposed: false,
+            CombinationOperator: Jbig2CombinationOperator.Replace,
+            DefaultPixel: 0,
+            SbDsOffset: 0,
+            SbrTemplate: 1,
+            HuffmanFlags: new Jbig2TextRegionHuffmanFlags(0, 0, 0, 0, 0, 0, 0, 0),
+            RefinementAdaptiveTemplatePixels: Array.Empty<Jbig2AdaptiveTemplatePixel>(),
+            DeclaredSymbolInstanceCount: 1,
+            SymbolInstanceCount: 1,
+            PayloadDataOffset: 0,
+            PayloadDataLength: 0);
+
+        var act = () => Jbig2TextRegionDecoder.Decode(
+            segment,
+            ReadOnlySpan<byte>.Empty,
+            new[] { symbol });
+
+        act.Should().Throw<NotSupportedException>()
+            .WithMessage("*Huffman refinement*");
+    }
+
+    [Fact]
     public void GenericRegion_Template0_UsesFullBitmapArithmeticContext()
     {
         var decoder = new ScriptedArithmeticDecoder(
