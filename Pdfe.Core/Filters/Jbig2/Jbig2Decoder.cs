@@ -114,7 +114,9 @@ internal class Jbig2PageDecoder
             try
             {
                 // Extract segment data
-                int dataLen = header.DataLength > 0 ? (int)header.DataLength : EstimateRemainingLength(data, parser.Position);
+                int dataLen = header.DataLength is > 0 and <= int.MaxValue
+                    ? (int)header.DataLength
+                    : EstimateRemainingLength(data, parser.Position);
                 byte[] segmentData = ExtractSegmentData(data, header.DataOffset, dataLen);
 
                 // Process the segment
@@ -144,10 +146,14 @@ internal class Jbig2PageDecoder
         switch ((SegmentType)header.SegmentType)
         {
             case SegmentType.GenericRegion:
+            case SegmentType.ImmediateGenericRegion:
+            case SegmentType.ImmediateLosslessGenericRegion:
                 DecodeGenericRegion(data, pageImage);
                 break;
 
             case SegmentType.GenericRefinementRegion:
+            case SegmentType.ImmediateGenericRefinementRegion:
+            case SegmentType.ImmediateLosslessGenericRefinementRegion:
                 // A refinement region is NOT a generic region — decoding it as
                 // one would silently corrupt the image. Not yet supported.
                 throw new NotSupportedException("Generic refinement region segments are not yet supported");
@@ -158,10 +164,14 @@ internal class Jbig2PageDecoder
                 throw new NotSupportedException("Symbol dictionary segments are not yet supported");
 
             case SegmentType.TextRegion:
+            case SegmentType.ImmediateTextRegion:
+            case SegmentType.ImmediateLosslessTextRegion:
                 throw new NotSupportedException("Text region segments are not yet supported");
 
             case SegmentType.PatternDictionary:
             case SegmentType.HalftoneRegion:
+            case SegmentType.ImmediateHalftoneRegion:
+            case SegmentType.ImmediateLosslessHalftoneRegion:
                 throw new NotSupportedException($"Segment type {header.SegmentType} is not supported");
 
             case SegmentType.PageInformation:
@@ -169,6 +179,7 @@ internal class Jbig2PageDecoder
             case SegmentType.EndOfStripe:
             case SegmentType.EndOfFile:
             case SegmentType.ProfileSegment:
+            case SegmentType.Table:
                 // These are metadata/control segments; skip
                 break;
 

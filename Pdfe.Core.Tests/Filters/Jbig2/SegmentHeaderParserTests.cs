@@ -12,7 +12,8 @@ public class SegmentHeaderParserTests
 {
     /// <summary>
     /// Build a minimal valid JBIG2 segment header for testing.
-    /// Segment number (4 bytes) + Flags (1 byte) + Referred count (1 byte) + Page number (1 byte).
+    /// Segment number (4 bytes) + flags (1 byte) + referred count/retain bits
+    /// (1 byte) + page association + segment data length (4 bytes).
     /// This is the minimal header with short page number and no referred-to segments.
     /// </summary>
     private static byte[] BuildMinimalSegmentHeader(uint segmentNum, byte flags, uint pageNum)
@@ -25,14 +26,11 @@ public class SegmentHeaderParserTests
         buffer.Add((byte)((segmentNum >> 8) & 0xFF));
         buffer.Add((byte)(segmentNum & 0xFF));
 
-        // Flags (1 byte)
-        // Bit 7: reserved
-        // Bit 6: deferred non-lossless / page number type (0=short, 1=long)
-        // Bits 5-0: referred-to segment count continuation flag and count
         buffer.Add(flags);
 
-        // Referred-to segment count (1 byte)
-        buffer.Add(0); // No referred-to segments for simplicity
+        // Short-form referred-to segment count: top 3 bits are count, lower 5
+        // are retain flags for count <= 4.
+        buffer.Add(0);
 
         // Page number (1 byte for short form)
         if ((flags & 0x40) == 0)
@@ -49,25 +47,23 @@ public class SegmentHeaderParserTests
             buffer.Add((byte)(pageNum & 0xFF));
         }
 
+        // Segment data length.
+        buffer.Add(0);
+        buffer.Add(0);
+        buffer.Add(0);
+        buffer.Add(0);
+
         return buffer.ToArray();
     }
 
     /// <summary>
     /// Test parsing a minimal generic region segment header.
-    /// Generic region is type 36 (bits 7-6 = 10 in binary = type 36 >> 6 + offset).
-    /// Actually, segment type is encoded in bits 5-0 of flags (6 bits = 0-63),
-    /// not bits 7-6. Let me correct this.
     /// </summary>
     [Fact]
     public void ParseSegmentHeader_WithMinimalValidHeader_ParsesCorrectly()
     {
         uint segmentNum = 1;
-        byte flags = 0x24; // Type 36 (generic region) in bits 5-0: 36 << 2 = 0x90 (bits 7-2), but format is flags byte directly
-        // Let me re-read the format: Bit 7=reserved, bits 6-1=type (6 bits for type 0-63), bit 0=length present flag
-        // So for generic region (type 36 = 0x24): flags = (36 << 1) | 0 = 0x48 if bit 0 is length flag
-        // Actually per ISO 14492, byte 7 has: bit 7 reserved, bits 6-1 segment type, bit 0 page association type flag.
-        // Let's just use a simple value that won't crash.
-        flags = 0x24; // Some valid value
+        byte flags = 0x24; // Type 36 (generic region) in bits 5-0.
         uint pageNum = 1;
 
         byte[] headerData = BuildMinimalSegmentHeader(segmentNum, flags, pageNum);
@@ -77,7 +73,9 @@ public class SegmentHeaderParserTests
 
         header.Should().NotBeNull();
         header!.SegmentNumber.Should().Be(segmentNum);
+        header.SegmentType.Should().Be((int)SegmentType.GenericRegion);
         header.PageNumber.Should().Be(pageNum);
+        header.DataLength.Should().Be(0);
     }
 
     /// <summary>
@@ -243,6 +241,27 @@ public class SegmentHeaderParserTests
         parsed.Should().NotBeNull();
         // DataOffset should point to where the segment data begins (after header)
         // For a minimal header with short page number, this is at the end of the header bytes
-        parsed!.DataOffset.Should().BeGreaterThan(0);
+        parsed!.DataOffset.Should().Be(11);
+    }
+
+    [Fact]
+    public void ParseSegmentHeader_WithShortReferredSegments_ParsesAbsoluteSegmentNumbers()
+    {
+        var data = new System.Collections.Generic.List<byte>();
+        data.AddRange(new byte[] { 0, 0, 1, 1 }); // Segment number 257 => 2-byte referred numbers.
+        data.Add(0x04); // Text region.
+        data.Add(0x40); // Short count 2 in top three bits, retain flags clear.
+        data.AddRange(new byte[] { 0, 1, 0, 2 });
+        data.Add(1); // Short page association.
+        data.AddRange(new byte[] { 0, 0, 0, 0 });
+
+        var parser = new SegmentHeaderParser(data.ToArray());
+
+        var header = parser.ParseSegmentHeader();
+
+        header.Should().NotBeNull();
+        header!.ReferredSegmentCount.Should().Be(2);
+        header.ReferredSegments.Should().Equal(1u, 2u);
+        header.SegmentType.Should().Be((int)SegmentType.TextRegion);
     }
 }

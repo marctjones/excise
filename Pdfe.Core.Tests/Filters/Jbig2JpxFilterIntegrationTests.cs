@@ -12,6 +12,24 @@ namespace Pdfe.Core.Tests.Filters;
 /// </summary>
 public class Jbig2JpxFilterIntegrationTests
 {
+    private static byte[] BuildJbig2Segment(uint segmentNumber, byte segmentType, uint pageNumber = 1, uint dataLength = 0)
+    {
+        return new[]
+        {
+            (byte)(segmentNumber >> 24),
+            (byte)(segmentNumber >> 16),
+            (byte)(segmentNumber >> 8),
+            (byte)segmentNumber,
+            segmentType,
+            (byte)0,
+            (byte)pageNumber,
+            (byte)(dataLength >> 24),
+            (byte)(dataLength >> 16),
+            (byte)(dataLength >> 8),
+            (byte)dataLength,
+        };
+    }
+
     private static PdfStream MakeImage(string filter, byte[] data, int width, int height)
     {
         var dict = new PdfDictionary();
@@ -28,7 +46,7 @@ public class Jbig2JpxFilterIntegrationTests
     public void Jbig2_UnsupportedSegment_FallsBackToRawBytes()
     {
         // Crafted bytes that parse as a symbol-dictionary segment (unsupported).
-        byte[] raw = { 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+        byte[] raw = BuildJbig2Segment(1, 0);
         var stream = MakeImage("JBIG2Decode", raw, 8, 8);
 
         new StreamDecompressor().Decompress(stream);
@@ -79,7 +97,7 @@ public class Jbig2JpxFilterIntegrationTests
     [Fact]
     public void Jbig2_UsesDirectDecodeParmsGlobalsForFallbackDecision()
     {
-        byte[] globals = { 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+        byte[] globals = BuildJbig2Segment(1, 0, pageNumber: 0);
         byte[] raw = Array.Empty<byte>();
         var stream = MakeImage("JBIG2Decode", raw, 8, 8);
         var parms = new PdfDictionary();

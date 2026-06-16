@@ -42,15 +42,24 @@ internal enum SegmentType
 {
     SymbolDictionary = 0,
     TextRegion = 4,
+    ImmediateTextRegion = 6,
+    ImmediateLosslessTextRegion = 7,
     PatternDictionary = 16,
     HalftoneRegion = 20,
+    ImmediateHalftoneRegion = 22,
+    ImmediateLosslessHalftoneRegion = 23,
     GenericRegion = 36,
-    GenericRefinementRegion = 37,
+    ImmediateGenericRegion = 38,
+    ImmediateLosslessGenericRegion = 39,
+    GenericRefinementRegion = 40,
+    ImmediateGenericRefinementRegion = 42,
+    ImmediateLosslessGenericRefinementRegion = 43,
     PageInformation = 48,
     EndOfPage = 49,
     EndOfStripe = 50,
     EndOfFile = 51,
     ProfileSegment = 52,
+    Table = 53,
 }
 
 /// <summary>
@@ -75,7 +84,7 @@ internal class SegmentHeaderParser
     /// </summary>
     public SegmentHeader? ParseSegmentHeader()
     {
-        if (_pos + 7 > _data.Length)
+        if (_pos + 11 > _data.Length)
             return null;
 
         var header = new SegmentHeader
@@ -89,42 +98,21 @@ internal class SegmentHeaderParser
         // Segment flags (1 byte)
         header.Flags = ReadByte();
 
-        // Extract type from flags (upper 6 bits for type)
-        header.SegmentType = (header.Flags >> 6) & 0x3F;
+        // Bits 5-0 contain the segment type. Bit 6 controls page-association
+        // field size; bit 7 is the retain flag.
+        header.SegmentType = header.Flags & 0x3F;
 
-        // If immediate lossless (bit 5 = 0), skip page association
-        bool immediatelyLossless = (header.Flags & 0x40) == 0;
-
-        // Count of referred-to segments (1 byte)
-        header.ReferredSegmentCount = ReadByte();
+        header.ReferredSegmentCount = ReadReferredSegmentCount();
 
         // Parse referred-to segment list
-        if (header.ReferredSegmentCount > 0 && header.ReferredSegmentCount <= 128)
+        if (header.ReferredSegmentCount > 0)
         {
-            int countLongForm = header.ReferredSegmentCount & 0x1F;
-            bool longForm = (header.ReferredSegmentCount & 0x20) != 0;
-
-            if (longForm)
+            int referredSegmentNumberSize = header.SegmentNumber > 65536
+                ? 4
+                : header.SegmentNumber > 256 ? 2 : 1;
+            for (int i = 0; i < header.ReferredSegmentCount; i++)
             {
-                // Long form: segment numbers are 4 bytes each
-                for (int i = 0; i < countLongForm; i++)
-                {
-                    if (_pos + 4 > _data.Length)
-                        throw new InvalidOperationException("Truncated segment header: not enough data for referred-to segments");
-                    header.ReferredSegments.Add(ReadUInt32());
-                }
-            }
-            else
-            {
-                // Short form: segment numbers are 2 bytes each (relative to current segment)
-                for (int i = 0; i < countLongForm; i++)
-                {
-                    if (_pos + 2 > _data.Length)
-                        throw new InvalidOperationException("Truncated segment header: not enough data for referred-to segments");
-                    ushort relativeNum = ReadUInt16();
-                    uint referredNum = header.SegmentNumber - relativeNum;
-                    header.ReferredSegments.Add(referredNum);
-                }
+                header.ReferredSegments.Add(ReadSegmentNumber(referredSegmentNumberSize));
             }
         }
 
@@ -139,24 +127,14 @@ internal class SegmentHeaderParser
         else
         {
             // Short page number (1 byte)
-            if (_pos > _data.Length)
+            if (_pos >= _data.Length)
                 throw new InvalidOperationException("Truncated segment header: not enough data for page number");
             header.PageNumber = ReadByte();
         }
 
-        // Data length
-        if ((header.Flags & 0x01) != 0)
-        {
-            // Data length present (4 bytes)
-            if (_pos + 4 > _data.Length)
-                throw new InvalidOperationException("Truncated segment header: not enough data for length field");
-            header.DataLength = ReadUInt32();
-        }
-        else
-        {
-            // No data length (stream until next segment or end)
-            header.DataLength = 0;
-        }
+        if (_pos + 4 > _data.Length)
+            throw new InvalidOperationException("Truncated segment header: not enough data for length field");
+        header.DataLength = ReadUInt32();
 
         header.DataOffset = _pos;
         return header;
@@ -215,4 +193,29 @@ internal class SegmentHeaderParser
         _pos += 4;
         return value;
     }
+
+    private int ReadReferredSegmentCount()
+    {
+        byte first = ReadByte();
+        int shortCount = first >> 5;
+        if (shortCount < 7)
+            return shortCount;
+
+        if (_pos + 3 > _data.Length)
+            throw new InvalidOperationException("Truncated segment header: not enough data for referred-to segment count");
+
+        return ((first & 0x1F) << 24)
+             | (_data[_pos++] << 16)
+             | (_data[_pos++] << 8)
+             | _data[_pos++];
+    }
+
+    private uint ReadSegmentNumber(int byteCount)
+        => byteCount switch
+        {
+            1 => ReadByte(),
+            2 => ReadUInt16(),
+            4 => ReadUInt32(),
+            _ => throw new ArgumentOutOfRangeException(nameof(byteCount), byteCount, "Unsupported JBIG2 segment number width"),
+        };
 }

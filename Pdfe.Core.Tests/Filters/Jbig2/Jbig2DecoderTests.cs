@@ -10,6 +10,24 @@ namespace Pdfe.Core.Tests.Filters.Jbig2;
 /// </summary>
 public class Jbig2DecoderTests
 {
+    private static byte[] BuildSegment(uint segmentNumber, SegmentType type, uint pageNumber = 1, uint dataLength = 0)
+    {
+        return new[]
+        {
+            (byte)(segmentNumber >> 24),
+            (byte)(segmentNumber >> 16),
+            (byte)(segmentNumber >> 8),
+            (byte)segmentNumber,
+            (byte)type,
+            (byte)0,
+            (byte)pageNumber,
+            (byte)(dataLength >> 24),
+            (byte)(dataLength >> 16),
+            (byte)(dataLength >> 8),
+            (byte)dataLength,
+        };
+    }
+
     /// <summary>
     /// Test that decoder throws on null data.
     /// </summary>
@@ -96,8 +114,8 @@ public class Jbig2DecoderTests
     [Fact]
     public void Decode_WithUnsupportedSegment_ThrowsRatherThanBlank()
     {
-        byte[] globals = new byte[] { 0x00, 0x01, 0x00, 0x00 };
-        byte[] pageData = new byte[] { 0x00, 0x00, 0x00, 0x00 };
+        byte[] globals = BuildSegment(1, SegmentType.SymbolDictionary, pageNumber: 0);
+        byte[] pageData = Array.Empty<byte>();
 
         var act = () => Jbig2Decoder.Decode(pageData, globals, 8, 8);
 
