@@ -14,19 +14,21 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
     }
 
     public override byte[] Decode(byte[] data, PdfFilterDecodeContext context)
-        => DecodeCCITTFax(data, context.DecodeParms);
+        => DecodeCCITTFax(data, context.DecodeParms, context.Stream);
 
     /// <summary>
     /// Decode CCITTFaxDecode (Group 3 and Group 4 fax encoding).
     /// ISO 32000-2:2020 Section 8.3.5.
     /// </summary>
-    private byte[] DecodeCCITTFax(byte[] data, PdfDictionary? parms)
+    private byte[] DecodeCCITTFax(byte[] data, PdfDictionary? parms, PdfStream? stream)
     {
         try
         {
             int K = parms?.GetInt("K", 0) ?? 0;
             int columns = parms?.GetInt("Columns", 1728) ?? 1728;
             int rows = parms?.GetInt("Rows", 0) ?? 0;
+            if (rows <= 0)
+                rows = stream?.GetInt("Height", 0) ?? 0;
             bool blackIs1 = parms?.GetBool("BlackIs1", false) ?? false;
 
             if (K < 0)
@@ -55,6 +57,9 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
     {
         try
         {
+            if (rows <= 0)
+                return Array.Empty<byte>();
+
             var reader = new CcittBitReader(data);
             var output = new List<byte>();
             var bytesPerRow = (columns + 7) / 8;
@@ -97,38 +102,35 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
 
         while (a0 < columns - 1 && reader.HasBits)
         {
-            int code = reader.PeekBits(6);
-
-            if (code == 0b000001)
-            {
-                reader.ReadBits(6);
+            var mode = ReadTwoDimensionalMode(reader);
+            if (mode.Kind == Ccitt2DModeKind.Invalid || mode.Kind == Ccitt2DModeKind.Eofb)
                 break;
-            }
 
-            if ((code & 0b111100) == 0b0001)
+            if (mode.Kind == Ccitt2DModeKind.Pass)
             {
-                reader.ReadBits(4);
                 int b1 = FindNextRun(refRow, a0 + 1, !color);
                 int b2 = FindNextRun(refRow, b1 + 1, color);
                 a0 = b2;
             }
-            else if ((code & 0b111) == 0b001)
+            else if (mode.Kind == Ccitt2DModeKind.Horizontal)
             {
-                reader.ReadBits(3);
-                int a1 = FindNextRun(row, a0 + 1, color);
-                int a2 = FindNextRun(row, a1 + 1, !color);
-                FillRun(row, a0 + 1, a1, color);
-                a0 = a2;
-                color = !color;
+                int len1 = DecodeHuffmanRun(reader, color, CcittTables.WhiteTerminating);
+                int len2 = DecodeHuffmanRun(reader, !color, CcittTables.WhiteTerminating);
+                if (len1 < 0 || len2 < 0)
+                    break;
+
+                int firstEnd = Math.Min(a0 + 1 + len1, columns);
+                int secondEnd = Math.Min(firstEnd + len2, columns);
+                FillRun(row, a0 + 1, firstEnd, color);
+                FillRun(row, firstEnd, secondEnd, !color);
+                a0 = secondEnd;
             }
             else
             {
-                int len = DecodeHuffmanRun(reader, color, CcittTables.Group4Vertical);
-                if (len < 0)
-                    break;
-
-                FillRun(row, a0 + 1, a0 + 1 + len, color);
-                a0 = a0 + len;
+                int b1 = FindNextRun(refRow, a0 + 1, !color);
+                int a1 = Math.Clamp(b1 + mode.VerticalOffset, a0 + 1, columns);
+                FillRun(row, a0 + 1, a1, color);
+                a0 = a1;
                 color = !color;
             }
         }
@@ -143,6 +145,9 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
     {
         try
         {
+            if (rows <= 0)
+                return Array.Empty<byte>();
+
             var reader = new CcittBitReader(data);
             var output = new List<byte>();
             var bytesPerRow = (columns + 7) / 8;
@@ -177,6 +182,9 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
     {
         try
         {
+            if (rows <= 0)
+                return Array.Empty<byte>();
+
             var reader = new CcittBitReader(data);
             var output = new List<byte>();
             var bytesPerRow = (columns + 7) / 8;
@@ -244,56 +252,115 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
             if (!reader.HasBits)
                 break;
 
-            int code = reader.PeekBits(6);
+            var mode = ReadTwoDimensionalMode(reader);
+            if (mode.Kind == Ccitt2DModeKind.Invalid || mode.Kind == Ccitt2DModeKind.Eofb)
+                break;
 
-            if ((code & 0b111) == 0b001)
+            if (mode.Kind == Ccitt2DModeKind.Pass)
             {
-                reader.ReadBits(3);
-                int a1 = FindNextRun(row, a0 + 1, color);
-                int a2 = FindNextRun(row, a1 + 1, !color);
-                FillRun(row, a0 + 1, a1, color);
-                a0 = a2;
-                color = !color;
+                int b1 = FindNextRun(refRow, a0 + 1, !color);
+                int b2 = FindNextRun(refRow, b1 + 1, color);
+                a0 = b2;
+            }
+            else if (mode.Kind == Ccitt2DModeKind.Horizontal)
+            {
+                int len1 = DecodeHuffmanRun(reader, color, CcittTables.WhiteTerminating);
+                int len2 = DecodeHuffmanRun(reader, !color, CcittTables.WhiteTerminating);
+                if (len1 < 0 || len2 < 0)
+                    break;
+
+                int firstEnd = Math.Min(a0 + 1 + len1, columns);
+                int secondEnd = Math.Min(firstEnd + len2, columns);
+                FillRun(row, a0 + 1, firstEnd, color);
+                FillRun(row, firstEnd, secondEnd, !color);
+                a0 = secondEnd;
             }
             else
             {
                 int b1 = FindNextRun(refRow, a0 + 1, !color);
-                if (b1 >= columns)
-                {
-                    a0 = columns;
-                    break;
-                }
-
-                int diff = b1 - a0 - 1;
-                if (diff == 0)
-                {
-                    reader.ReadBits(1);
-                    a0 = b1;
-                }
-                else if (diff > 0 && diff <= 3)
-                {
-                    int v = reader.ReadBits(3);
-                    a0 = b1 + (v - 1);
-                }
-                else if (diff < 0 && diff >= -3)
-                {
-                    int v = reader.ReadBits(3);
-                    a0 = b1 - (v - 1);
-                }
-                else
-                {
-                    int len = DecodeHuffmanRun(reader, color, CcittTables.WhiteTerminating);
-                    if (len < 0)
-                        break;
-
-                    FillRun(row, a0 + 1, a0 + 1 + len, color);
-                    a0 = a0 + len;
-                    color = !color;
-                }
+                int a1 = Math.Clamp(b1 + mode.VerticalOffset, a0 + 1, columns);
+                FillRun(row, a0 + 1, a1, color);
+                a0 = a1;
+                color = !color;
             }
         }
 
         return row;
+    }
+
+    private static Ccitt2DMode ReadTwoDimensionalMode(CcittBitReader reader)
+    {
+        if (reader.PeekBits(1) == 0b1)
+        {
+            reader.ReadBits(1);
+            return new Ccitt2DMode(Ccitt2DModeKind.Vertical, 0);
+        }
+
+        int threeBits = reader.PeekBits(3);
+        if (threeBits == 0b011)
+        {
+            reader.ReadBits(3);
+            return new Ccitt2DMode(Ccitt2DModeKind.Vertical, 1);
+        }
+        if (threeBits == 0b010)
+        {
+            reader.ReadBits(3);
+            return new Ccitt2DMode(Ccitt2DModeKind.Vertical, -1);
+        }
+        if (threeBits == 0b001)
+        {
+            reader.ReadBits(3);
+            return new Ccitt2DMode(Ccitt2DModeKind.Horizontal, 0);
+        }
+
+        if (reader.PeekBits(4) == 0b0001)
+        {
+            reader.ReadBits(4);
+            return new Ccitt2DMode(Ccitt2DModeKind.Pass, 0);
+        }
+
+        int sixBits = reader.PeekBits(6);
+        if (sixBits == 0b000011)
+        {
+            reader.ReadBits(6);
+            return new Ccitt2DMode(Ccitt2DModeKind.Vertical, 2);
+        }
+        if (sixBits == 0b000010)
+        {
+            reader.ReadBits(6);
+            return new Ccitt2DMode(Ccitt2DModeKind.Vertical, -2);
+        }
+
+        int sevenBits = reader.PeekBits(7);
+        if (sevenBits == 0b0000011)
+        {
+            reader.ReadBits(7);
+            return new Ccitt2DMode(Ccitt2DModeKind.Vertical, 3);
+        }
+        if (sevenBits == 0b0000010)
+        {
+            reader.ReadBits(7);
+            return new Ccitt2DMode(Ccitt2DModeKind.Vertical, -3);
+        }
+
+        if (reader.PeekBits(12) == 0b000000000001)
+        {
+            reader.ReadBits(12);
+            return new Ccitt2DMode(Ccitt2DModeKind.Eofb, 0);
+        }
+
+        return new Ccitt2DMode(Ccitt2DModeKind.Invalid, 0);
+    }
+
+    private readonly record struct Ccitt2DMode(Ccitt2DModeKind Kind, int VerticalOffset);
+
+    private enum Ccitt2DModeKind
+    {
+        Invalid,
+        Eofb,
+        Pass,
+        Horizontal,
+        Vertical
     }
 
     /// <summary>
@@ -329,23 +396,21 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
 
         while (true)
         {
-            int code = reader.PeekBits(12);
-            if (code < 0)
-                return -1;
-
             bool found = false;
 
-            for (int bits = 2; bits <= 12; bits++)
+            for (int bits = 2; bits <= 13; bits++)
             {
-                int masked = (code >> (12 - bits)) & ((1 << bits) - 1);
+                int masked = reader.PeekBits(bits);
+                if (masked < 0)
+                    break;
 
-                if (bits <= 9)
+                var table = color ? CcittTables.BlackTerminating : CcittTables.WhiteTerminating;
+                for (int runLength = 0; runLength < table.Length; runLength++)
                 {
-                    var table = color ? CcittTables.BlackTerminating : CcittTables.WhiteTerminating;
-                    if (masked < table.Length && table[masked].bits == bits)
+                    if (table[runLength].bits == bits && table[runLength].code == masked)
                     {
                         reader.ReadBits(bits);
-                        totalLen += masked;
+                        totalLen += runLength;
                         return totalLen;
                     }
                 }

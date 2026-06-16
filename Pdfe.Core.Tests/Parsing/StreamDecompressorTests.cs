@@ -1568,6 +1568,25 @@ public class StreamDecompressorTests
     }
 
     [Fact]
+    public void ApplyFilter_CCITTFax_Group4_HorizontalMode_ReadsTwoRunLengths()
+    {
+        var decompressor = new StreamDecompressor();
+
+        // T.6 horizontal mode followed by a white run of 4 and black run of 4:
+        // 001 | 1011 | 011, padded to the next byte boundary.
+        var data = new byte[] { 0b00110110, 0b11000000 };
+
+        var parms = new PdfDictionary();
+        parms.SetInt("K", -1);
+        parms.SetInt("Columns", 8);
+        parms.SetInt("Rows", 1);
+
+        var result = decompressor.ApplyFilter("CCITTFaxDecode", data, parms);
+
+        result.Should().Equal(new byte[] { 0x0F });
+    }
+
+    [Fact]
     public void ApplyFilter_CCITTFax_Group4_EntersDecodeLoop()
     {
         var decompressor = new StreamDecompressor();
