@@ -220,7 +220,7 @@ internal static class Jbig2CapabilityClassifier
         features.Add($"symbol-dictionary.refinement-template-{segment.SdrTemplate}");
 
         if (!segment.IsHuffmanEncoded && !UsesDefaultTemplate0AdaptivePixels(segment.AdaptiveTemplatePixels))
-            unsupported.Add("symbol-dictionary.arithmetic.custom-at");
+            features.Add("symbol-dictionary.arithmetic.custom-at");
         if (segment.UseRefinementAggregation)
         {
             features.Add("symbol-dictionary.refinement-aggregation");
@@ -306,23 +306,12 @@ internal static class Jbig2CapabilityClassifier
         features.Add(segment.IsMmrEncoded ? "generic-region.mmr" : "generic-region.arithmetic");
         features.Add($"generic-region.template-{segment.Template}");
 
-        if (!segment.IsMmrEncoded && segment.Template != 0)
-            unsupported.Add($"generic-region.template-{segment.Template}");
         if (segment.UsesExtendedTemplates)
-        {
             features.Add("generic-region.extended-templates");
-            unsupported.Add("generic-region.extended-templates");
-        }
         if (segment.TypicalPredictionGenericDecodingOn)
-        {
             features.Add("generic-region.typical-prediction");
-            unsupported.Add("generic-region.typical-prediction");
-        }
         if (!segment.IsMmrEncoded && UsesCustomGenericAdaptiveTemplatePixels(segment))
-        {
             features.Add("generic-region.custom-at");
-            unsupported.Add("generic-region.custom-at");
-        }
     }
 
     private static bool UsesCustomGenericAdaptiveTemplatePixels(Jbig2GenericRegionSegment segment)

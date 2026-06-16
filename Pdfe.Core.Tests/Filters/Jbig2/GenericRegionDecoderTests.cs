@@ -63,18 +63,19 @@ public class GenericRegionDecoderTests
     }
 
     [Theory]
-    [InlineData(0x02, "template 1")]
-    [InlineData(0x08, "typical prediction")]
-    [InlineData(0x10, "adaptive template")]
-    public void DecodeGenericRegion_WithUnsupportedMode_ThrowsNotSupported(byte flags, string expectedMessage)
+    [InlineData(0x02)]
+    [InlineData(0x04)]
+    [InlineData(0x06)]
+    [InlineData(0x08)]
+    [InlineData(0x10)]
+    public void DecodeGenericRegion_WithSupportedArithmeticVariant_ReturnsData(byte flags)
     {
         var decoder = new GenericRegionDecoder();
         decoder.ParseFlags(flags);
 
-        var act = () => decoder.DecodeGenericRegion(new byte[] { 0x00 }, 1, 1, 0, 0);
+        byte[] result = decoder.DecodeGenericRegion(new byte[] { 0x00 }, 1, 1, 0, 0);
 
-        act.Should().Throw<NotSupportedException>()
-            .WithMessage($"*{expectedMessage}*");
+        result.Should().HaveCount(1);
     }
 
     [Fact]

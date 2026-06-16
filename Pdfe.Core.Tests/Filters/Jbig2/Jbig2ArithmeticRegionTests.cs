@@ -106,6 +106,72 @@ public class Jbig2ArithmeticRegionTests
         decoder.Contexts.Should().OnlyContain(context => context < Jbig2ArithmeticGenericRegionDecoder.ContextCount);
     }
 
+    [Theory]
+    [InlineData(1, 3, -1)]
+    [InlineData(2, 2, -1)]
+    [InlineData(3, 2, -1)]
+    public void GenericRegion_Templates1To3_DecodePixels(int template, sbyte atX, sbyte atY)
+    {
+        var decoder = new ScriptedArithmeticDecoder(
+            true, true, true, true,
+            true, true, true, true,
+            true, true, true, true);
+
+        var bitmap = Jbig2ArithmeticGenericRegionDecoder.Decode(
+            decoder,
+            width: 4,
+            height: 3,
+            template,
+            [new Jbig2AdaptiveTemplatePixel(atX, atY)]);
+
+        bitmap.GetPixel(3, 2).Should().BeTrue();
+        decoder.Contexts.Should().HaveCount(12);
+        decoder.Contexts.Should().OnlyContain(context => context < Jbig2ArithmeticGenericRegionDecoder.ContextCount);
+    }
+
+    [Fact]
+    public void GenericRegion_CustomAdaptiveTemplatePixel_OverridesContext()
+    {
+        var decoder = new ScriptedArithmeticDecoder(true, false);
+
+        var bitmap = Jbig2ArithmeticGenericRegionDecoder.Decode(
+            decoder,
+            width: 2,
+            height: 1,
+            template: 1,
+            [new Jbig2AdaptiveTemplatePixel(-1, 0)]);
+
+        bitmap.GetPixel(0, 0).Should().BeTrue();
+        bitmap.GetPixel(1, 0).Should().BeFalse();
+        decoder.Contexts.Should().Equal(0, 9);
+    }
+
+    [Fact]
+    public void GenericRegion_TypicalPrediction_CopiesPreviousLine()
+    {
+        var decoder = new ScriptedArithmeticDecoder(
+            false, // line 0 SLTP: decode line
+            true,
+            false,
+            true); // line 1 SLTP: copy line above
+
+        var bitmap = Jbig2ArithmeticGenericRegionDecoder.Decode(
+            decoder,
+            width: 2,
+            height: 2,
+            template: 3,
+            [new Jbig2AdaptiveTemplatePixel(2, -1)],
+            typicalPredictionGenericDecodingOn: true);
+
+        bitmap.GetPixel(0, 0).Should().BeTrue();
+        bitmap.GetPixel(1, 0).Should().BeFalse();
+        bitmap.GetPixel(0, 1).Should().BeTrue();
+        bitmap.GetPixel(1, 1).Should().BeFalse();
+        decoder.Contexts.Should().HaveCount(4);
+        decoder.Contexts[0].Should().Be(0x195);
+        decoder.Contexts[3].Should().Be(0x195);
+    }
+
     private static Jbig2AdaptiveTemplatePixel[] DefaultTemplate0AdaptivePixels()
         =>
         [

@@ -28,12 +28,6 @@ internal class GenericRegionDecoder
             throw new ArgumentException("Invalid region dimensions");
         if (_isMmrEncoded)
             return DecodeMmrGenericRegion(regionData, width, height);
-        if (_template != 0)
-            throw new NotSupportedException($"JBIG2 generic region template {_template} is not yet supported");
-        if (_typicalPredictionGenericDecodingOn)
-            throw new NotSupportedException("JBIG2 generic-region typical prediction is not yet supported");
-        if (!UsesDefaultTemplate0AdaptivePixels())
-            throw new NotSupportedException("Custom JBIG2 generic-region adaptive template pixels are not yet supported");
 
         var decoder = new Jbig2MqArithmeticDecoder(
             regionData,
@@ -43,7 +37,8 @@ internal class GenericRegionDecoder
             width,
             height,
             _template,
-            _adaptiveTemplatePixels).Data;
+            _adaptiveTemplatePixels,
+            typicalPredictionGenericDecodingOn: _typicalPredictionGenericDecodingOn).Data;
     }
 
     private static byte[] DecodeMmrGenericRegion(byte[] regionData, int width, int height)
@@ -72,27 +67,30 @@ internal class GenericRegionDecoder
         _adaptiveTemplatePixels = segment.AdaptiveTemplatePixels;
     }
 
-    private bool UsesDefaultTemplate0AdaptivePixels()
-    {
-        var defaults = DefaultTemplate0AdaptivePixels();
-        if (_adaptiveTemplatePixels.Length != defaults.Length)
-            return false;
-
-        for (int i = 0; i < defaults.Length; i++)
-        {
-            if (_adaptiveTemplatePixels[i] != defaults[i])
-                return false;
-        }
-
-        return true;
-    }
-
     private static Jbig2AdaptiveTemplatePixel[] GetDefaultAdaptiveTemplatePixels(int template, bool usesExtendedTemplates, bool isMmrEncoded)
     {
         if (isMmrEncoded)
             return Array.Empty<Jbig2AdaptiveTemplatePixel>();
-        if (template != 0 || usesExtendedTemplates)
-            return Array.Empty<Jbig2AdaptiveTemplatePixel>();
+        if (template == 0 && usesExtendedTemplates)
+            return
+            [
+                new(-2, 0),
+                new(0, -2),
+                new(-2, -1),
+                new(-1, -2),
+                new(1, -2),
+                new(2, -1),
+                new(-3, 0),
+                new(-4, 0),
+                new(2, -2),
+                new(3, -1),
+                new(-2, -2),
+                new(-3, -1),
+            ];
+        if (template == 1)
+            return [new(3, -1)];
+        if (template is 2 or 3)
+            return [new(2, -1)];
 
         return DefaultTemplate0AdaptivePixels();
     }
