@@ -4,6 +4,7 @@ using System.Threading;
 using Pdfe.Core.ColorSpaces;
 using Pdfe.Core.Content;
 using Pdfe.Core.Document;
+using Pdfe.Core.Filters.Jpx;
 using Pdfe.Core.Primitives;
 using Pdfe.Rendering.Fonts;
 using SkiaSharp;
@@ -2072,11 +2073,8 @@ internal partial class RenderContext
             }
             else if (filters.Contains("JPXDecode"))
             {
-                // JPEG 2000 data — SkiaSharp's stock build has no JPX
-                // codec on Linux, so SKBitmap.Decode returns null or
-                // throws ArgumentNullException with codec=null. Either
-                // way we fall back to the placeholder.
-                bitmap = SafeDecode(imageStream.EncodedData);
+                bitmap = DecodeJpxImage(imageStream);
+                bitmap ??= SafeDecode(imageStream.EncodedData);
                 if (bitmap == null && width > 0 && height > 0)
                     bitmap = CreatePlaceholderBitmap(width, height);
             }
@@ -2088,6 +2086,8 @@ internal partial class RenderContext
 
             if (bitmap == null)
                 return;
+
+            ApplySoftMask(bitmap, imageStream);
 
             // Draw the image at unit square (0,0)-(1,1), the CTM handles positioning
             _canvas.Save();
@@ -2114,6 +2114,135 @@ internal partial class RenderContext
         {
             bitmap?.Dispose();
         }
+    }
+
+    private SKBitmap? DecodeJpxImage(Pdfe.Core.Primitives.PdfStream imageStream)
+    {
+        try
+        {
+            var image = JpxDecoder.TryDecodeManaged(imageStream.EncodedData);
+            var width = imageStream.GetInt("Width", 0);
+            var height = imageStream.GetInt("Height", 0);
+            if (image == null || width <= 0 || height <= 0 || image.Components <= 0)
+                return null;
+
+            var colorSpaceObject = imageStream.GetOptional("ColorSpace");
+            var colorSpace = colorSpaceObject != null
+                ? ResolveImageColorSpace(colorSpaceObject)
+                : PdfColorSpace.DeviceRGB;
+
+            var components = image.ComponentData;
+
+            var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
+            var pixelCount = width * height;
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    var idx = y * width + x;
+                    if (idx >= pixelCount)
+                        continue;
+
+                    var values = new double[Math.Max(1, colorSpace.Components)];
+                    if (colorSpace.Type == PdfColorSpaceType.Indexed)
+                    {
+                        values[0] = idx < components[0].Length ? components[0][idx] : 0;
+                    }
+                    else
+                    {
+                        for (int c = 0; c < values.Length; c++)
+                        {
+                            var sample = c < components.Length && idx < components[c].Length
+                                ? components[c][idx]
+                                : 0;
+                            values[c] = Math.Clamp(sample / 255.0, 0, 1);
+                        }
+                    }
+
+                    var (rd, gd, bd) = colorSpace.ToRgb(values);
+                    bitmap.SetPixel(x, y, new SKColor(
+                        (byte)Math.Clamp(rd * 255, 0, 255),
+                        (byte)Math.Clamp(gd * 255, 0, 255),
+                        (byte)Math.Clamp(bd * 255, 0, 255),
+                        255));
+                }
+            }
+
+            return bitmap;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private void ApplySoftMask(SKBitmap bitmap, Pdfe.Core.Primitives.PdfStream imageStream)
+    {
+        var maskObj = imageStream.GetOptional("SMask");
+        if (maskObj == null)
+            return;
+
+        var resolved = _page.Document.Resolve(maskObj);
+        if (resolved is not Pdfe.Core.Primitives.PdfStream maskStream)
+            return;
+
+        var maskWidth = maskStream.GetInt("Width", 0);
+        var maskHeight = maskStream.GetInt("Height", 0);
+        if (maskWidth <= 0 || maskHeight <= 0)
+            return;
+
+        var maskData = DecodeSoftMaskData(maskStream, maskWidth, maskHeight);
+        if (maskData == null || maskData.Length == 0)
+            return;
+
+        for (int y = 0; y < bitmap.Height; y++)
+        {
+            var maskY = Math.Clamp((int)((long)y * maskHeight / bitmap.Height), 0, maskHeight - 1);
+            for (int x = 0; x < bitmap.Width; x++)
+            {
+                var maskX = Math.Clamp((int)((long)x * maskWidth / bitmap.Width), 0, maskWidth - 1);
+                var alphaIndex = maskY * maskWidth + maskX;
+                if (alphaIndex >= maskData.Length)
+                    continue;
+
+                var color = bitmap.GetPixel(x, y);
+                bitmap.SetPixel(x, y, color.WithAlpha(maskData[alphaIndex]));
+            }
+        }
+    }
+
+    private static byte[]? DecodeSoftMaskData(Pdfe.Core.Primitives.PdfStream maskStream, int width, int height)
+    {
+        var bitsPerComponent = maskStream.GetInt("BitsPerComponent", 8);
+        if (bitsPerComponent == 8)
+        {
+            var data = maskStream.DecodedData;
+            return data.Length >= width * height ? data : null;
+        }
+
+        if (bitsPerComponent == 1)
+        {
+            var data = maskStream.DecodedData;
+            var alpha = new byte[width * height];
+            var srcBit = 0;
+            var dst = 0;
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    var byteIndex = srcBit / 8;
+                    var bitIndex = 7 - (srcBit % 8);
+                    alpha[dst++] = byteIndex < data.Length && ((data[byteIndex] >> bitIndex) & 1) != 0
+                        ? (byte)255
+                        : (byte)0;
+                    srcBit++;
+                }
+                srcBit = ((srcBit + 7) / 8) * 8;
+            }
+            return alpha;
+        }
+
+        return null;
     }
 
     private SKBitmap? CreateBitmapFromRawData(byte[] data, int width, int height, int bitsPerComponent, string colorSpace, Pdfe.Core.Primitives.PdfStream stream)

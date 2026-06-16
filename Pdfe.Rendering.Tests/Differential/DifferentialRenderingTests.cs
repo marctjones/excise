@@ -107,10 +107,6 @@ public sealed class DifferentialRenderingTests
             "Image XObject not rendered: page 1's American-flag illustration is missing.",
         ["test-pdfs/smoke/state-ds82-passport-renewal.pdf"] =
             "Sub-pixel AA + form-field hinting drift on small body text exceeds gate.",
-        ["test-pdfs/smoke/state-ds11-passport.pdf#1"] =
-            "Issue #442: DS-11 form color/fill fidelity diverges from MuPDF; pdfe renders some tan/blue bands as dark fills.",
-        ["test-pdfs/smoke/state-ds11-passport.pdf#5"] =
-            "Issue #442: DS-11 form color/fill fidelity diverges from MuPDF; pdfe renders some tan/blue bands as dark fills.",
         ["test-pdfs/smoke/irs-w9.pdf#2"] =
             "Multi-page rendering bug — page 1 agrees with mutool but page 2 (the W-9 instructions) " +
             "diverges materially. Single-page diffs missed this; caught by Layer 5 (multi-page).",

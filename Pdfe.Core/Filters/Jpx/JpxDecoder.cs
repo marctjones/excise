@@ -1,5 +1,8 @@
 namespace Pdfe.Core.Filters.Jpx;
 
+using CSJ2K;
+using CSJ2K.j2k.util;
+
 /// <summary>
 /// JPEG2000 (JPXDecode) decoder for PDF streams.
 /// Implements ISO/IEC 15444-1:2019 (JPEG2000 Part 1 - Core coding system).
@@ -29,6 +32,8 @@ namespace Pdfe.Core.Filters.Jpx;
 [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 internal static class JpxDecoder
 {
+    private static readonly object ManagedCodecLock = new();
+
     /// <summary>
     /// Read image metadata from JPEG2000 codestream without decoding pixels.
     /// Works for JP2 box containers and raw J2K codestreams.
@@ -76,6 +81,73 @@ internal static class JpxDecoder
             $"Use ReadInfo() to inspect metadata. " +
             $"To enable decoding: implement tier-1 EBCOT (MQ), tier-2 packet assembly, DWT inverse, and color transforms.");
     }
+
+    /// <summary>
+    /// Decode JPEG2000 data through the managed CSJ2K codec.
+    /// This is intentionally separate from <see cref="Decode"/> so the stream
+    /// decompressor can keep its historical safe-fallback behavior for JPXDecode
+    /// filters while renderers can opt into pixel decoding for image XObjects.
+    /// </summary>
+    public static JpxImage? TryDecodeManaged(byte[] jpxData)
+    {
+        if (jpxData == null || jpxData.Length == 0)
+            return null;
+
+        try
+        {
+            var image = DecodeWithSuppressedCodecOutput(jpxData);
+            if (image.NumberOfComponents <= 0)
+                return null;
+
+            var components = new int[image.NumberOfComponents][];
+            for (int i = 0; i < components.Length; i++)
+                components[i] = image.GetComponent(i);
+
+            return new JpxImage
+            {
+                Components = image.NumberOfComponents,
+                ComponentData = components,
+            };
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static CSJ2K.Util.PortableImage DecodeWithSuppressedCodecOutput(byte[] jpxData)
+    {
+        lock (ManagedCodecLock)
+        {
+            var oldLogger = FacilityManager.getMsgLogger();
+            try
+            {
+                FacilityManager.DefaultMsgLogger = NullMsgLogger.Instance;
+                return J2kImage.FromBytes(jpxData);
+            }
+            finally
+            {
+                FacilityManager.DefaultMsgLogger = oldLogger;
+            }
+        }
+    }
+
+    private sealed class NullMsgLogger : IMsgLogger
+    {
+        public static readonly NullMsgLogger Instance = new();
+
+        public void printmsg(int sev, string msg)
+        {
+        }
+
+        public void println(string str, int flind, int ind)
+        {
+        }
+
+        public void flush()
+        {
+        }
+    }
 }
 
 /// <summary>
@@ -90,4 +162,5 @@ internal sealed class JpxImage
     public int Components { get; set; }
     public int BitsPerComponent { get; set; }
     public byte[] Pixels { get; set; } = Array.Empty<byte>();
+    public int[][] ComponentData { get; set; } = Array.Empty<int[]>();
 }

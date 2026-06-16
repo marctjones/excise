@@ -60,7 +60,7 @@ returned `SKBitmap`.
 
 ## Known engine gaps
 
-Tracked in the [pdfe](https://github.com/marctjones/pdfe) issue tracker: JBIG2/JPXDecode
+Tracked in the [pdfe](https://github.com/marctjones/pdfe) issue tracker: JBIG2
 image filters, some CJK/Type3 edge cases, and large-file performance. Contributions welcome.
 
 MIT licensed. Part of the [pdfe](https://github.com/marctjones/pdfe) project.

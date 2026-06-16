@@ -284,11 +284,12 @@ pdfe ocr scan.pdf
 
 ### Pdfe libraries (this repo)
 - **Pdfe.Core** — Pure-.NET PDF parser, writer, content streams, glyph-level redaction, text extraction with letter positions, hidden-text detection, AcroForm read/fill/flatten/author, OCG + structure tree (read-only), embedded files (read + scrub), page labels, named destinations, document authoring
-- **Pdfe.Rendering** — SkiaSharp renderer with embedded TrueType + raw-CFF/Type1C support, Type0/CID composite fonts, /Differences-aware encoding, image XObjects (DCT/Flate/CCITTFax), inline images, transparency, clipping paths, color spaces (DeviceRGB/CMYK/Gray, ICCBased, Indexed, CalRGB)
+- **Pdfe.Rendering** — SkiaSharp renderer with embedded TrueType + raw-CFF/Type1C support, Type0/CID composite fonts, /Differences-aware encoding, image XObjects (DCT/Flate/JPX/CCITTFax), inline images, transparency, clipping paths, color spaces (DeviceRGB/CMYK/Gray, ICCBased, Indexed, CalRGB, Lab)
 - **Pdfe.Ocr** — Wrapper around the system `tesseract` CLI + a differential-OCR auditor
 
 ### Permissive third-party deps
 - **SkiaSharp 3.119.x** (MIT) — 2D graphics
+- **CSJ2K 3.x** (BSD) — managed JPEG 2000 / JPX image decoding
 - **Clipper2** (BSL 1.0) — Polygon clipping for redaction geometry
 - **BouncyCastle.Cryptography** (MIT) — CMS cryptography for digital-signature inspection
 - **Microsoft.CodeAnalysis.CSharp.Scripting** (MIT) — optional Roslyn scripting for GUI automation; enabled in Debug/test builds and opt-in for Release builds with `-p:EnableScripting=true`

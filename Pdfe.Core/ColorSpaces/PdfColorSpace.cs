@@ -363,13 +363,12 @@ public sealed class PdfColorSpace
         double fy = (L + 16) / 116.0;
         double fx = a / 500.0 + fy;
         double fz = fy - b / 200.0;
-        double x = 0.96422 * Fcube(fx);
-        double y = 1.00000 * Fcube(fy);
-        double z = 0.82521 * Fcube(fz);
-        double r = 3.1338561 * x - 1.6168667 * y - 0.4906146 * z;
-        double g = -0.9787684 * x + 1.9161415 * y + 0.0334540 * z;
-        double bv = 0.0719453 * x - 0.2289914 * y + 1.4052427 * z;
-        return (Math.Clamp(r, 0, 1), Math.Clamp(g, 0, 1), Math.Clamp(bv, 0, 1));
+        var d50 = new[] { 0.96422, 1.00000, 0.82521 };
+        double x = d50[0] * Fcube(fx);
+        double y = d50[1] * Fcube(fy);
+        double z = d50[2] * Fcube(fz);
+        var (adaptedX, adaptedY, adaptedZ) = AdaptXyzToD65(x, y, z, d50);
+        return XyzToRgb(adaptedX, adaptedY, adaptedZ);
     }
 
     private static double Fcube(double t) => t > 0.206897 ? t * t * t : (t - 16.0 / 116) / 7.787;
