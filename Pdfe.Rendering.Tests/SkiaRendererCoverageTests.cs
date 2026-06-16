@@ -796,6 +796,20 @@ public class SkiaRendererCoverageTests
     }
 
     [Fact]
+    public void RenderPage_PatternType1TilingFill_UsesDirectPatternColorSpace()
+    {
+        var pdfData = CreatePdfWithTilingPatternFill();
+        using var doc = PdfDocument.Open(pdfData);
+        var renderer = new SkiaRenderer();
+
+        using var bitmap = renderer.RenderPage(doc.GetPage(1));
+
+        var pixel = bitmap.GetPixel((int)(150 * 150 / 72), bitmap.Height - (int)(150 * 150 / 72));
+        pixel.Blue.Should().BeGreaterThan(180, "the Type 1 pattern cell should paint through direct /Pattern cs");
+        pixel.Red.Should().BeLessThan(80);
+    }
+
+    [Fact]
     public void RenderPage_FunctionBasedShading_EvaluatesAcrossDomain()
     {
         var pdfData = CreatePdfWithFunctionBasedShading();
@@ -958,6 +972,62 @@ public class SkiaRendererCoverageTests
             sb.AppendLine($"{offsets[i]:D10} 00000 n ");
         sb.AppendLine("trailer");
         sb.AppendLine("<< /Root 1 0 R /Size 5 >>");
+        sb.AppendLine("startxref");
+        sb.AppendLine(xrefPos.ToString());
+        sb.AppendLine("%%EOF");
+
+        return Encoding.ASCII.GetBytes(sb.ToString());
+    }
+
+    private static byte[] CreatePdfWithTilingPatternFill()
+    {
+        const string content = "/Pattern cs\n/P1 scn\n100 100 200 100 re f\n";
+        const string patternContent = "0 0 1 rg\n0 0 20 20 re f\n";
+        var sb = new StringBuilder();
+        sb.AppendLine("%PDF-1.4");
+        var offsets = new long[6];
+
+        offsets[1] = sb.Length;
+        sb.AppendLine("1 0 obj");
+        sb.AppendLine("<< /Type /Catalog /Pages 2 0 R >>");
+        sb.AppendLine("endobj");
+
+        offsets[2] = sb.Length;
+        sb.AppendLine("2 0 obj");
+        sb.AppendLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+        sb.AppendLine("endobj");
+
+        offsets[3] = sb.Length;
+        sb.AppendLine("3 0 obj");
+        sb.AppendLine("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R");
+        sb.AppendLine("   /Resources << /Pattern << /P1 5 0 R >> >>");
+        sb.AppendLine(">>");
+        sb.AppendLine("endobj");
+
+        offsets[4] = sb.Length;
+        sb.AppendLine("4 0 obj");
+        sb.AppendLine($"<< /Length {content.Length} >>");
+        sb.AppendLine("stream");
+        sb.Append(content);
+        sb.AppendLine("endstream");
+        sb.AppendLine("endobj");
+
+        offsets[5] = sb.Length;
+        sb.AppendLine("5 0 obj");
+        sb.AppendLine($"<< /PatternType 1 /PaintType 1 /TilingType 1 /BBox [0 0 20 20] /XStep 20 /YStep 20 /Length {patternContent.Length} >>");
+        sb.AppendLine("stream");
+        sb.Append(patternContent);
+        sb.AppendLine("endstream");
+        sb.AppendLine("endobj");
+
+        var xrefPos = sb.Length;
+        sb.AppendLine("xref");
+        sb.AppendLine("0 6");
+        sb.AppendLine("0000000000 65535 f ");
+        for (int i = 1; i <= 5; i++)
+            sb.AppendLine($"{offsets[i]:D10} 00000 n ");
+        sb.AppendLine("trailer");
+        sb.AppendLine("<< /Root 1 0 R /Size 6 >>");
         sb.AppendLine("startxref");
         sb.AppendLine(xrefPos.ToString());
         sb.AppendLine("%%EOF");

@@ -3185,7 +3185,13 @@ internal partial class RenderContext
             return false;
 
         var pattern = ResolvePatternFromActiveResources(_state.FillPatternName);
-        if (pattern == null || pattern.GetInt("PatternType", 0) != 2)
+        if (pattern == null)
+            return false;
+
+        if (pattern.GetInt("PatternType", 0) == 1)
+            return RenderTilingPattern(path, pattern);
+
+        if (pattern.GetInt("PatternType", 0) != 2)
             return false;
 
         var shadingObj = pattern.GetOptional("Shading");
@@ -3201,6 +3207,96 @@ internal partial class RenderContext
             6 => RenderType6MeshPattern(path, pattern, shading),
             _ => false
         };
+    }
+
+    private bool RenderTilingPattern(SKPath clipPath, Pdfe.Core.Primitives.PdfDictionary pattern)
+    {
+        if (pattern is not Pdfe.Core.Primitives.PdfStream stream)
+            return false;
+
+        var content = stream.DecodedData;
+        if (content.Length == 0)
+            return false;
+
+        var bboxArray = pattern.GetOptional("BBox") as Pdfe.Core.Primitives.PdfArray;
+        if (bboxArray == null || bboxArray.Count < 4)
+            return false;
+
+        var bbox = new SKRect(
+            (float)Math.Min(bboxArray.GetNumber(0), bboxArray.GetNumber(2)),
+            (float)Math.Min(bboxArray.GetNumber(1), bboxArray.GetNumber(3)),
+            (float)Math.Max(bboxArray.GetNumber(0), bboxArray.GetNumber(2)),
+            (float)Math.Max(bboxArray.GetNumber(1), bboxArray.GetNumber(3)));
+        if (bbox.Width <= 0 || bbox.Height <= 0)
+            return false;
+
+        var xStep = (float)pattern.GetNumber("XStep", bbox.Width);
+        var yStep = (float)pattern.GetNumber("YStep", bbox.Height);
+        if (Math.Abs(xStep) < 0.001f || Math.Abs(yStep) < 0.001f)
+            return false;
+
+        var patternResources = pattern.GetOptional("Resources") is { } resObj
+            ? _page.Document.Resolve(resObj) as Pdfe.Core.Primitives.PdfDictionary
+            : null;
+        var patternMatrix = GetMatrix(pattern.GetOptional("Matrix") as Pdfe.Core.Primitives.PdfArray);
+        var inverseCtm = InvertAffine(_state.CurrentTransform);
+        if (!inverseCtm.HasValue)
+            return false;
+
+        _canvas.Save();
+        _resourcesStack.Push(patternResources);
+        var savedState = _state.Clone();
+        try
+        {
+            _canvas.ClipPath(clipPath, SKClipOperation.Intersect, _options.AntiAlias);
+
+            var inv = inverseCtm.Value;
+            _canvas.Concat(in inv);
+            _canvas.Concat(in patternMatrix);
+
+            var clip = _canvas.LocalClipBounds;
+            if (clip.Width <= 0 || clip.Height <= 0)
+                return false;
+
+            var tileMinX = (float)Math.Floor((clip.Left - bbox.Right) / xStep) * xStep;
+            var tileMaxX = (float)Math.Ceiling((clip.Right - bbox.Left) / xStep) * xStep;
+            var tileMinY = (float)Math.Floor((clip.Top - bbox.Bottom) / yStep) * yStep;
+            var tileMaxY = (float)Math.Ceiling((clip.Bottom - bbox.Top) / yStep) * yStep;
+
+            const int maxTiles = 4096;
+            var tileCount = 0;
+            for (var ty = tileMinY; ty <= tileMaxY; ty += Math.Abs(yStep))
+            {
+                for (var tx = tileMinX; tx <= tileMaxX; tx += Math.Abs(xStep))
+                {
+                    if (++tileCount > maxTiles)
+                        return false;
+
+                    _canvas.Save();
+                    var savedPath = _currentPath;
+                    _currentPath = null;
+                    try
+                    {
+                        _canvas.Translate(tx, ty);
+                        ExecuteContentBytes(content);
+                    }
+                    finally
+                    {
+                        _currentPath?.Dispose();
+                        _currentPath = savedPath;
+                        _canvas.Restore();
+                    }
+                }
+            }
+
+            return true;
+        }
+        finally
+        {
+            _state = savedState;
+            _resourcesStack.Pop();
+            _canvas.Restore();
+        }
     }
 
     private bool RenderShadingPattern(

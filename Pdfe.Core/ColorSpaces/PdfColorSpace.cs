@@ -49,6 +49,7 @@ public sealed class PdfColorSpace
         "CalRGB" => new PdfColorSpace(PdfColorSpaceType.CalRGB, 3),
         "Lab" => new PdfColorSpace(PdfColorSpaceType.Lab, 3),
         "Separation" => new PdfColorSpace(PdfColorSpaceType.Separation, 1),
+        "Pattern" => new PdfColorSpace(PdfColorSpaceType.Pattern, 0),
         _ => new PdfColorSpace(PdfColorSpaceType.Unknown, 1)
     };
 

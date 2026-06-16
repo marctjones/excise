@@ -260,6 +260,14 @@ public class PdfColorSpaceTests
     }
 
     [Fact]
+    public void Pattern_FromName_ZeroComponents()
+    {
+        var pattern = PdfColorSpace.FromName("Pattern");
+        pattern.Type.Should().Be(PdfColorSpaceType.Pattern);
+        pattern.Components.Should().Be(0);
+    }
+
+    [Fact]
     public void Lab_ToRgb_Mid_GrayValue()
     {
         var lab = PdfColorSpace.FromName("Lab");
