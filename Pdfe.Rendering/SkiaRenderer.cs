@@ -3195,10 +3195,53 @@ internal partial class RenderContext
         if (shading == null)
             return false;
 
-        if (shading.GetInt("ShadingType", 0) != 6)
-            return false;
+        return shading.GetInt("ShadingType", 0) switch
+        {
+            1 or 2 or 3 => RenderShadingPattern(path, pattern, shading),
+            6 => RenderType6MeshPattern(path, pattern, shading),
+            _ => false
+        };
+    }
 
-        return RenderType6MeshPattern(path, pattern, shading);
+    private bool RenderShadingPattern(
+        SKPath clipPath,
+        Pdfe.Core.Primitives.PdfDictionary pattern,
+        Pdfe.Core.Primitives.PdfDictionary shading)
+    {
+        _canvas.Save();
+        try
+        {
+            _canvas.ClipPath(clipPath, SKClipOperation.Intersect, _options.AntiAlias);
+
+            var inverseCtm = InvertAffine(_state.CurrentTransform);
+            if (inverseCtm.HasValue)
+            {
+                var inv = inverseCtm.Value;
+                _canvas.Concat(in inv);
+            }
+
+            var patternMatrix = GetMatrix(pattern.GetOptional("Matrix") as Pdfe.Core.Primitives.PdfArray);
+            _canvas.Concat(in patternMatrix);
+
+            switch (shading.GetInt("ShadingType", 0))
+            {
+                case 1:
+                    RenderFunctionShading(shading);
+                    return true;
+                case 2:
+                    RenderAxialShading(shading);
+                    return true;
+                case 3:
+                    RenderRadialShading(shading);
+                    return true;
+                default:
+                    return false;
+            }
+        }
+        finally
+        {
+            _canvas.Restore();
+        }
     }
 
     private bool RenderType6MeshPattern(

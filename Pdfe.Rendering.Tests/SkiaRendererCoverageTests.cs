@@ -778,6 +778,23 @@ public class SkiaRendererCoverageTests
         inside.Red.Should().BeLessThan(80);
     }
 
+    [Fact]
+    public void RenderPage_PatternType2AxialShadingFill_UsesPatternResource()
+    {
+        var pdfData = CreatePdfWithAxialShadingPatternFill();
+        using var doc = PdfDocument.Open(pdfData);
+        var renderer = new SkiaRenderer();
+
+        using var bitmap = renderer.RenderPage(doc.GetPage(1));
+
+        var y = bitmap.Height - (int)(150 * 150 / 72);
+        var left = bitmap.GetPixel((int)(125 * 150 / 72), y);
+        var right = bitmap.GetPixel((int)(275 * 150 / 72), y);
+
+        left.Red.Should().BeGreaterThan(left.Blue, "left side of the axial shading should be red-dominant");
+        right.Blue.Should().BeGreaterThan(right.Red, "right side of the axial shading should be blue-dominant");
+    }
+
     #endregion
 
     #region Helper Methods
@@ -857,6 +874,61 @@ public class SkiaRendererCoverageTests
         writer.Flush();
 
         return ms.ToArray();
+    }
+
+    private static byte[] CreatePdfWithAxialShadingPatternFill()
+    {
+        const string content = "/CS1 cs\n/P1 scn\n100 100 200 100 re f\n";
+        var sb = new StringBuilder();
+        sb.AppendLine("%PDF-1.4");
+        var offsets = new long[5];
+
+        offsets[1] = sb.Length;
+        sb.AppendLine("1 0 obj");
+        sb.AppendLine("<< /Type /Catalog /Pages 2 0 R >>");
+        sb.AppendLine("endobj");
+
+        offsets[2] = sb.Length;
+        sb.AppendLine("2 0 obj");
+        sb.AppendLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+        sb.AppendLine("endobj");
+
+        offsets[3] = sb.Length;
+        sb.AppendLine("3 0 obj");
+        sb.AppendLine("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R");
+        sb.AppendLine("   /Resources <<");
+        sb.AppendLine("     /ColorSpace << /CS1 [/Pattern] >>");
+        sb.AppendLine("     /Pattern << /P1 << /PatternType 2 /Matrix [1 0 0 1 0 0]");
+        sb.AppendLine("       /Shading << /ShadingType 2 /ColorSpace /DeviceRGB /Coords [100 100 300 100]");
+        sb.AppendLine("         /Function << /FunctionType 2 /Domain [0 1] /C0 [1 0 0] /C1 [0 0 1] /N 1 >>");
+        sb.AppendLine("         /Extend [true true]");
+        sb.AppendLine("       >>");
+        sb.AppendLine("     >> >>");
+        sb.AppendLine("   >>");
+        sb.AppendLine(">>");
+        sb.AppendLine("endobj");
+
+        offsets[4] = sb.Length;
+        sb.AppendLine("4 0 obj");
+        sb.AppendLine($"<< /Length {content.Length} >>");
+        sb.AppendLine("stream");
+        sb.Append(content);
+        sb.AppendLine("endstream");
+        sb.AppendLine("endobj");
+
+        var xrefPos = sb.Length;
+        sb.AppendLine("xref");
+        sb.AppendLine("0 5");
+        sb.AppendLine("0000000000 65535 f ");
+        for (int i = 1; i <= 4; i++)
+            sb.AppendLine($"{offsets[i]:D10} 00000 n ");
+        sb.AppendLine("trailer");
+        sb.AppendLine("<< /Root 1 0 R /Size 5 >>");
+        sb.AppendLine("startxref");
+        sb.AppendLine(xrefPos.ToString());
+        sb.AppendLine("%%EOF");
+
+        return Encoding.ASCII.GetBytes(sb.ToString());
     }
 
     private static byte[] CreatePdfWithNamedIndexedImageColorSpace()

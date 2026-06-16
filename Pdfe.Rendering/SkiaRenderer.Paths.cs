@@ -204,14 +204,15 @@ internal partial class RenderContext
         _currentPath.FillType = evenOdd ? SKPathFillType.EvenOdd : SKPathFillType.Winding;
 
         // Fill first
-        using (var fillPaint = new SKPaint
+        if (!(_state.FillPatternName != null && RenderFillPattern(_currentPath)))
         {
-            Style = SKPaintStyle.Fill,
-            Color = _state.FillColor.WithAlpha((byte)(_state.FillAlpha * 255)),
-            BlendMode = _state.BlendMode,
-            IsAntialias = _options.AntiAlias
-        })
-        {
+            using var fillPaint = new SKPaint
+            {
+                Style = SKPaintStyle.Fill,
+                Color = _state.FillColor.WithAlpha((byte)(_state.FillAlpha * 255)),
+                BlendMode = _state.BlendMode,
+                IsAntialias = _options.AntiAlias
+            };
             _canvas.DrawPath(_currentPath, fillPaint);
         }
 
