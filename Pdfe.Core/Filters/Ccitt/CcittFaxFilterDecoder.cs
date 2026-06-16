@@ -8,6 +8,9 @@ namespace Pdfe.Core.Filters.Ccitt;
 /// </summary>
 internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
 {
+    private const int EolCode = 0b000000000001;
+    private const int EolBitCount = 12;
+
     public CcittFaxFilterDecoder()
         : base("CCITTFaxDecode", "CCF")
     {
@@ -164,7 +167,7 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
 
                 AppendRowToOutput(output, row, bytesPerRow, blackIs1);
                 rowsDecoded++;
-                SkipEOL(reader);
+                TrySkipEOL(reader, maxFillBits: 7);
             }
 
             return output.ToArray();
@@ -218,7 +221,7 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
                     rowsDecoded++;
                     if (!hasTaggedLineMode)
                     {
-                        SkipEOL(reader);
+                        SkipExpectedEOL(reader);
                         rowsInGroup++;
                     }
                     else
@@ -239,7 +242,7 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
                     rowsDecoded++;
                     if (!hasTaggedLineMode)
                     {
-                        SkipEOL(reader);
+                        SkipExpectedEOL(reader);
                         rowsInGroup++;
                     }
                     else
@@ -263,10 +266,10 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
 
     private static CcittGroup3LineMode ReadGroup3LineMode(CcittBitReader reader)
     {
-        if (reader.PeekBits(12) != 0b000000000001)
+        if (reader.PeekBits(EolBitCount) != EolCode)
             return CcittGroup3LineMode.Untagged;
 
-        reader.ReadBits(12);
+        reader.ReadBits(EolBitCount);
         if (!reader.HasBits)
             return CcittGroup3LineMode.EndOfData;
 
@@ -503,16 +506,31 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
         }
     }
 
-    private void SkipEOL(CcittBitReader reader)
+    private static bool TrySkipEOL(CcittBitReader reader, int maxFillBits)
     {
-        for (int i = 0; i < 12; i++)
+        for (int fillBits = 0; fillBits <= maxFillBits; fillBits++)
+        {
+            int bitsToRead = fillBits + EolBitCount;
+            if (reader.PeekBits(bitsToRead) != EolCode)
+                continue;
+
+            reader.ReadBits(bitsToRead);
+            return true;
+        }
+
+        return false;
+    }
+
+    private static void SkipExpectedEOL(CcittBitReader reader)
+    {
+        for (int i = 0; i < EolBitCount; i++)
         {
             if (!reader.HasBits)
                 break;
-            int b = reader.ReadBits(1);
-            if (b != 0)
+            int bit = reader.ReadBits(1);
+            if (bit != 0)
             {
-                for (int j = i + 1; j < 12; j++)
+                for (int j = i + 1; j < EolBitCount; j++)
                 {
                     if (reader.HasBits)
                         reader.ReadBits(1);

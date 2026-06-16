@@ -1531,6 +1531,24 @@ public class StreamDecompressorTests
     }
 
     [Fact]
+    public void ApplyFilter_CCITTFax_Group3_1D_WithRowsWithoutEol_DoesNotConsumeNextRowBits()
+    {
+        var decompressor = new StreamDecompressor();
+
+        // Two concatenated rows, each encoded as a white run of 8.
+        var data = new byte[] { 0x9C, 0xC0 };
+
+        var parms = new PdfDictionary();
+        parms.SetInt("K", 0);
+        parms.SetInt("Columns", 8);
+        parms.SetInt("Rows", 2);
+
+        var result = decompressor.ApplyFilter("CCITTFaxDecode", data, parms);
+
+        result.Should().Equal(new byte[] { 0xFF, 0xFF });
+    }
+
+    [Fact]
     public void ApplyFilter_CCITTFax_Group3_1D_NonEmptyBits()
     {
         var decompressor = new StreamDecompressor();
