@@ -58,10 +58,36 @@ public class Jbig2JpxFilterIntegrationTests
     }
 
     [Fact]
+    public void Jpx_MalformedData_FallsBackToRawBytes()
+    {
+        byte[] raw = { 0x6E, 0x6F, 0x74, 0x6A, 0x70, 0x78 };
+        var stream = MakeImage("JPXDecode", raw, 16, 16);
+
+        new StreamDecompressor().Decompress(stream);
+
+        stream.DecodedData.Should().Equal(raw, "malformed JPX data is a known codec fallback, not a dispatcher failure");
+    }
+
+    [Fact]
     public void Jbig2_DoesNotThrowFromDecompress()
     {
         var stream = MakeImage("JBIG2Decode", new byte[] { 0xFF, 0xAC, 0x01 }, 4, 4);
         var act = () => new StreamDecompressor().Decompress(stream);
         act.Should().NotThrow();
+    }
+
+    [Fact]
+    public void Jbig2_UsesDirectDecodeParmsGlobalsForFallbackDecision()
+    {
+        byte[] globals = { 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+        byte[] raw = Array.Empty<byte>();
+        var stream = MakeImage("JBIG2Decode", raw, 8, 8);
+        var parms = new PdfDictionary();
+        parms["JBIG2Globals"] = new PdfStream(globals);
+        stream["DecodeParms"] = parms;
+
+        new StreamDecompressor().Decompress(stream);
+
+        stream.DecodedData.Should().Equal(raw, "unsupported global JBIG2 segments should pass through the original image bytes");
     }
 }

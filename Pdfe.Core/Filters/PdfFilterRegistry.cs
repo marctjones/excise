@@ -1,4 +1,6 @@
+using System.IO;
 using Pdfe.Core.Filters.Ccitt;
+using Pdfe.Core.Primitives;
 
 namespace Pdfe.Core.Filters;
 
@@ -120,11 +122,16 @@ internal sealed class JpxFilterDecoder : AliasedFilterDecoder
         {
             return Jpx.JpxDecoder.Decode(data).Pixels;
         }
-        catch
+        catch (Exception ex) when (IsExpectedCodecFallback(ex))
         {
             return data;
         }
     }
+
+    private static bool IsExpectedCodecFallback(Exception ex)
+        => ex is NotSupportedException
+            or ArgumentException
+            or InvalidDataException;
 }
 
 internal sealed class Jbig2FilterDecoder : AliasedFilterDecoder
@@ -147,11 +154,22 @@ internal sealed class Jbig2FilterDecoder : AliasedFilterDecoder
 
         try
         {
-            return Jbig2.Jbig2Decoder.Decode(data, null, width, height);
+            return Jbig2.Jbig2Decoder.Decode(data, TryGetGlobals(context.DecodeParms), width, height);
         }
-        catch
+        catch (Exception ex) when (IsExpectedCodecFallback(ex))
         {
             return data;
         }
     }
+
+    private static byte[]? TryGetGlobals(PdfDictionary? decodeParms)
+        => decodeParms?.GetOptional("JBIG2Globals") is PdfStream globals
+            ? globals.EncodedData
+            : null;
+
+    private static bool IsExpectedCodecFallback(Exception ex)
+        => ex is NotSupportedException
+            or ArgumentException
+            or InvalidOperationException
+            or InvalidDataException;
 }
