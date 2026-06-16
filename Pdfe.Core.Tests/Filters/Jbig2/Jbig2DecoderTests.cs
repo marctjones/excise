@@ -33,6 +33,15 @@ public class Jbig2DecoderTests
         };
     }
 
+    private static byte[] BuildSegment(uint segmentNumber, SegmentType type, byte[] segmentData, uint pageNumber = 1)
+    {
+        byte[] header = BuildSegment(segmentNumber, type, pageNumber, (uint)segmentData.Length);
+        byte[] result = new byte[header.Length + segmentData.Length];
+        Array.Copy(header, 0, result, 0, header.Length);
+        Array.Copy(segmentData, 0, result, header.Length, segmentData.Length);
+        return result;
+    }
+
     private static byte[] BuildFileHeader(byte flags, uint? pageCount = null)
     {
         var bytes = new List<byte>(FileHeaderId);
@@ -125,6 +134,18 @@ public class Jbig2DecoderTests
         byte[] result = Jbig2Decoder.Decode(data, null, 8, 2);
 
         result.Should().Equal(new byte[] { 0x00, 0x00 });
+    }
+
+    [Fact]
+    public void Decode_WithPageInformationDefaultPixelOne_FillsPage()
+    {
+        byte[] pageInformation = new byte[Jbig2PageInformation.ByteLength];
+        pageInformation[16] = 0x04;
+        byte[] data = BuildSegment(1, SegmentType.PageInformation, pageInformation);
+
+        byte[] result = Jbig2Decoder.Decode(data, null, 8, 2);
+
+        result.Should().Equal(0xFF, 0xFF);
     }
 
     [Fact]

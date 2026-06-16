@@ -136,6 +136,7 @@ internal class Jbig2PageDecoder
     private readonly int _width;
     private readonly int _height;
     private readonly Dictionary<uint, SegmentData> _segments = new();
+    private Jbig2PageInformation? _pageInformation;
 
     public Jbig2PageDecoder(int width, int height)
     {
@@ -224,6 +225,11 @@ internal class Jbig2PageDecoder
                 throw new NotSupportedException($"Segment type {header.SegmentType} is not supported");
 
             case SegmentType.PageInformation:
+                _pageInformation = Jbig2PageInformation.Parse(data);
+                if (_pageInformation.Value.DefaultPixelValue != 0)
+                    Array.Fill(pageImage, (byte)0xFF);
+                break;
+
             case SegmentType.EndOfPage:
             case SegmentType.EndOfStripe:
             case SegmentType.EndOfFile:
@@ -260,6 +266,10 @@ internal class Jbig2PageDecoder
             (int)segment.Region.XLocation,
             (int)segment.Region.YLocation);
 
+        var combinationOperator = segment.Region.CombinationOperator;
+        if (_pageInformation is { CombinationOperatorOverrideAllowed: false } pageInformation)
+            combinationOperator = pageInformation.CombinationOperator;
+
         Jbig2BitmapCompositor.Composite(
             pageImage,
             _width,
@@ -269,7 +279,7 @@ internal class Jbig2PageDecoder
             (int)segment.Region.BitmapHeight,
             (int)segment.Region.XLocation,
             (int)segment.Region.YLocation,
-            segment.Region.CombinationOperator);
+            combinationOperator);
     }
 
     /// <summary>
