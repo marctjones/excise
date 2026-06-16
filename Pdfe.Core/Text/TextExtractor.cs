@@ -36,6 +36,10 @@ public class TextExtractor
     // Graphics state stack
     private readonly Stack<GraphicsState> _stateStack = new();
     private double _ctm_a = 1, _ctm_b = 0, _ctm_c = 0, _ctm_d = 1, _ctm_e = 0, _ctm_f = 0;
+    private readonly Stack<PdfDictionary> _resourcesStack = new();
+    private readonly HashSet<PdfStream> _formXObjectStack = new();
+    private int _formXObjectDepth;
+    private const int MaxFormXObjectDepth = 64;
 
     private readonly List<Letter> _letters = new();
 
@@ -43,6 +47,8 @@ public class TextExtractor
     {
         _page = page;
         _contentStream = page.GetContentStreamBytes();
+        if (page.Resources != null)
+            _resourcesStack.Push(page.Resources);
     }
 
     /// <summary>
@@ -221,7 +227,12 @@ public class TextExtractor
 
     private void ParseContentStream()
     {
-        var content = Encoding.Latin1.GetString(_contentStream);
+        ParseContentBytes(_contentStream);
+    }
+
+    private void ParseContentBytes(byte[] contentBytes)
+    {
+        var content = Encoding.Latin1.GetString(contentBytes);
         var pos = 0;
         var operands = new List<object>();
 
@@ -580,7 +591,7 @@ public class TextExtractor
                 {
                     _fontName = operands[0] is string name ? name.TrimStart('/') : "";
                     _fontSize = ToDouble(operands[1]);
-                    _currentFont = _page.GetFont(_fontName);
+                    _currentFont = ResolveFontFromActiveResources(_fontName);
                     _toUnicodeMap = LoadToUnicodeMap(_currentFont);
                     LoadFontGeometry();
                 }
@@ -727,26 +738,170 @@ public class TextExtractor
             case "cm": // Modify current transformation matrix
                 if (operands.Count >= 6)
                 {
-                    var a = ToDouble(operands[0]);
-                    var b = ToDouble(operands[1]);
-                    var c = ToDouble(operands[2]);
-                    var d = ToDouble(operands[3]);
-                    var e = ToDouble(operands[4]);
-                    var f = ToDouble(operands[5]);
-
-                    // Multiply: CTM = new_matrix * CTM
-                    var na = a * _ctm_a + b * _ctm_c;
-                    var nb = a * _ctm_b + b * _ctm_d;
-                    var nc = c * _ctm_a + d * _ctm_c;
-                    var nd = c * _ctm_b + d * _ctm_d;
-                    var ne = e * _ctm_a + f * _ctm_c + _ctm_e;
-                    var nf = e * _ctm_b + f * _ctm_d + _ctm_f;
-
-                    _ctm_a = na; _ctm_b = nb; _ctm_c = nc;
-                    _ctm_d = nd; _ctm_e = ne; _ctm_f = nf;
+                    ConcatenateCtm(
+                        ToDouble(operands[0]),
+                        ToDouble(operands[1]),
+                        ToDouble(operands[2]),
+                        ToDouble(operands[3]),
+                        ToDouble(operands[4]),
+                        ToDouble(operands[5]));
                 }
                 break;
+
+            case "Do":
+                if (operands.Count >= 1 && operands[0] is string xObjectName)
+                    ExtractFormXObjectText(xObjectName.TrimStart('/'));
+                break;
         }
+    }
+
+    private void ConcatenateCtm(double a, double b, double c, double d, double e, double f)
+    {
+        // Multiply: CTM = new_matrix * CTM
+        var na = a * _ctm_a + b * _ctm_c;
+        var nb = a * _ctm_b + b * _ctm_d;
+        var nc = c * _ctm_a + d * _ctm_c;
+        var nd = c * _ctm_b + d * _ctm_d;
+        var ne = e * _ctm_a + f * _ctm_c + _ctm_e;
+        var nf = e * _ctm_b + f * _ctm_d + _ctm_f;
+
+        _ctm_a = na; _ctm_b = nb; _ctm_c = nc;
+        _ctm_d = nd; _ctm_e = ne; _ctm_f = nf;
+    }
+
+    private void ExtractFormXObjectText(string name)
+    {
+        if (_formXObjectDepth >= MaxFormXObjectDepth)
+            return;
+
+        var xObject = ResolveXObjectFromActiveResources(name);
+        if (xObject is not PdfStream stream || stream.GetNameOrNull("Subtype") != "Form")
+            return;
+
+        if (!_formXObjectStack.Add(stream))
+            return;
+
+        _formXObjectDepth++;
+        var savedCtm = (_ctm_a, _ctm_b, _ctm_c, _ctm_d, _ctm_e, _ctm_f);
+        var savedTextState = (
+            _fontSize,
+            _fontName,
+            _currentFont,
+            _toUnicodeMap,
+            _textLeading,
+            _charSpacing,
+            _wordSpacing,
+            _horizontalScaling,
+            _is2ByteFont,
+            _isVerticalWriting,
+            _cidWidths,
+            _cidDefaultWidth,
+            _tm_a,
+            _tm_b,
+            _tm_c,
+            _tm_d,
+            _tm_e,
+            _tm_f,
+            _tlm_e,
+            _tlm_f);
+        var pushedResources = false;
+
+        try
+        {
+            if (TryReadMatrix(stream.GetOptional("Matrix"), out var matrix))
+                ConcatenateCtm(matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f);
+
+            var resourcesObj = stream.GetOptional("Resources");
+            if (resourcesObj != null &&
+                _page.Document.Resolve(resourcesObj) is PdfDictionary resources)
+            {
+                _resourcesStack.Push(resources);
+                pushedResources = true;
+            }
+
+            ParseContentBytes(stream.DecodedData);
+        }
+        finally
+        {
+            if (pushedResources)
+                _resourcesStack.Pop();
+            (_ctm_a, _ctm_b, _ctm_c, _ctm_d, _ctm_e, _ctm_f) = savedCtm;
+            (
+                _fontSize,
+                _fontName,
+                _currentFont,
+                _toUnicodeMap,
+                _textLeading,
+                _charSpacing,
+                _wordSpacing,
+                _horizontalScaling,
+                _is2ByteFont,
+                _isVerticalWriting,
+                _cidWidths,
+                _cidDefaultWidth,
+                _tm_a,
+                _tm_b,
+                _tm_c,
+                _tm_d,
+                _tm_e,
+                _tm_f,
+                _tlm_e,
+                _tlm_f) = savedTextState;
+            _formXObjectDepth--;
+            _formXObjectStack.Remove(stream);
+        }
+    }
+
+    private PdfDictionary? ResolveFontFromActiveResources(string fontName)
+    {
+        foreach (var resources in _resourcesStack)
+        {
+            var fontsObj = resources.GetOptional("Font");
+            if (fontsObj == null) continue;
+            if (_page.Document.Resolve(fontsObj) is not PdfDictionary fonts)
+                continue;
+            var fontObj = fonts.GetOptional(fontName);
+            if (fontObj == null) continue;
+            return _page.Document.Resolve(fontObj) as PdfDictionary;
+        }
+
+        return _page.GetFont(fontName);
+    }
+
+    private PdfObject? ResolveXObjectFromActiveResources(string name)
+    {
+        foreach (var resources in _resourcesStack)
+        {
+            var xObjectsObj = resources.GetOptional("XObject");
+            if (xObjectsObj == null) continue;
+            if (_page.Document.Resolve(xObjectsObj) is not PdfDictionary xObjects)
+                continue;
+            var xObject = xObjects.GetOptional(name);
+            if (xObject == null) continue;
+            return _page.Document.Resolve(xObject);
+        }
+
+        return _page.GetXObject(name);
+    }
+
+    private static bool TryReadMatrix(PdfObject? matrixObj, out (double a, double b, double c, double d, double e, double f) matrix)
+    {
+        matrix = (1, 0, 0, 1, 0, 0);
+        if (matrixObj is not PdfArray array || array.Count < 6)
+            return false;
+
+        if (!TryNumber(array[0], out var a) ||
+            !TryNumber(array[1], out var b) ||
+            !TryNumber(array[2], out var c) ||
+            !TryNumber(array[3], out var d) ||
+            !TryNumber(array[4], out var e) ||
+            !TryNumber(array[5], out var f))
+        {
+            return false;
+        }
+
+        matrix = (a, b, c, d, e, f);
+        return true;
     }
 
     private void ShowText(string text)

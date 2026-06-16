@@ -79,14 +79,6 @@ public sealed class TextExtractionDifferentialTests
             "visible page content. Marked-content boundaries (BMC/BDC/EMC) aren't being " +
             "honored — we're emitting hidden /Subtype /Artifact text that mutool correctly " +
             "filters out.",
-        ["test-pdfs/smoke/state-ds82-passport-renewal.pdf"] =
-            "pdfe extracts only the page title and skips form-field labels + body text. " +
-            "Form fields' /V values aren't routed through the text extractor for this " +
-            "AcroForm, even though IncludeFormFieldValues defaults to true.",
-        ["test-pdfs/smoke/state-ds11-passport.pdf"] =
-            "Issue #445: pdfe text extraction diverges from mutool on the DS-11 " +
-            "passport form, starting with USCIS registration content instead of the " +
-            "visible Department of State application title.",
     };
 
     public static IEnumerable<object[]> CorpusPdfs() => Discover();
