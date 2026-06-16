@@ -348,9 +348,11 @@ internal static class Jbig2CapabilityClassifier
         var segment = Jbig2GenericRefinementRegionSegment.Parse(data);
         features.Add("generic-refinement-region");
         features.Add($"generic-refinement-region.template-{segment.Template}");
-        unsupported.Add("generic-refinement-region");
         if (segment.TypicalPredictionGenericRefinementOn)
+        {
             features.Add("generic-refinement-region.typical-prediction");
+            unsupported.Add("generic-refinement-region.typical-prediction");
+        }
         if (segment.AdaptiveTemplatePixels.Length > 0)
             features.Add("generic-refinement-region.adaptive-template-pixels");
     }

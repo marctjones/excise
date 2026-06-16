@@ -172,6 +172,76 @@ public class Jbig2ArithmeticRegionTests
         decoder.Contexts[3].Should().Be(0x195);
     }
 
+    [Fact]
+    public void GenericRefinement_Template0_DecodesWithReferenceContext()
+    {
+        var referenceBitmap = new Jbig2Bitmap(2, 1);
+        referenceBitmap.SetPixel(0, 0, true);
+        var decoder = new ScriptedArithmeticDecoder(true, false);
+
+        var bitmap = Jbig2GenericRefinementRegionDecoder.Decode(
+            decoder,
+            width: 2,
+            height: 1,
+            template: 0,
+            typicalPredictionGenericRefinementOn: false,
+            referenceBitmap,
+            referenceDx: 0,
+            referenceDy: 0,
+            [
+                new Jbig2AdaptiveTemplatePixel(-1, -1),
+                new Jbig2AdaptiveTemplatePixel(-1, -1),
+            ]);
+
+        bitmap.GetPixel(0, 0).Should().BeTrue();
+        bitmap.GetPixel(1, 0).Should().BeFalse();
+        decoder.Contexts.Should().Equal(256, 513);
+        decoder.Contexts.Should().OnlyContain(context => context < Jbig2GenericRefinementRegionDecoder.ContextCount);
+    }
+
+    [Fact]
+    public void GenericRefinement_Template1_DecodesWithReferenceContext()
+    {
+        var referenceBitmap = new Jbig2Bitmap(2, 2);
+        referenceBitmap.SetPixel(0, 0, true);
+        var decoder = new ScriptedArithmeticDecoder(true);
+
+        var bitmap = Jbig2GenericRefinementRegionDecoder.Decode(
+            decoder,
+            width: 1,
+            height: 1,
+            template: 1,
+            typicalPredictionGenericRefinementOn: false,
+            referenceBitmap,
+            referenceDx: 0,
+            referenceDy: 0,
+            Array.Empty<Jbig2AdaptiveTemplatePixel>());
+
+        bitmap.GetPixel(0, 0).Should().BeTrue();
+        decoder.Contexts.Should().Equal(8);
+    }
+
+    [Fact]
+    public void GenericRefinement_Tpgron_ThrowsUntilTypicalPredictionIsSupported()
+    {
+        var decoder = new ScriptedArithmeticDecoder();
+        var referenceBitmap = new Jbig2Bitmap(1, 1);
+
+        var act = () => Jbig2GenericRefinementRegionDecoder.Decode(
+            decoder,
+            width: 1,
+            height: 1,
+            template: 1,
+            typicalPredictionGenericRefinementOn: true,
+            referenceBitmap,
+            referenceDx: 0,
+            referenceDy: 0,
+            Array.Empty<Jbig2AdaptiveTemplatePixel>());
+
+        act.Should().Throw<NotSupportedException>()
+            .WithMessage("*TPGRON*");
+    }
+
     private static Jbig2AdaptiveTemplatePixel[] DefaultTemplate0AdaptivePixels()
         =>
         [

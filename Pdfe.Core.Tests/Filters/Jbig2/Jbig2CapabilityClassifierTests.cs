@@ -37,6 +37,23 @@ public class Jbig2CapabilityClassifierTests
     private static byte[] BuildSegment(uint segmentNumber, SegmentType type, uint pageNumber = 1)
         => BuildSegment(segmentNumber, type, Array.Empty<byte>(), pageNumber);
 
+    private static byte[] BuildGenericRefinementRegionBody(bool typicalPrediction)
+    {
+        var body = new List<byte>
+        {
+            0, 0, 0, 1, // region width
+            0, 0, 0, 1, // region height
+            0, 0, 0, 0, // x
+            0, 0, 0, 0, // y
+            0x04,       // region combination operator: Replace
+            (byte)(typicalPrediction ? 0x02 : 0x00), // template 0, optional TPGRON
+            0xFF, 0xFF, // default generic refinement AT pixel 0: disabled
+            0xFF, 0xFF, // default generic refinement AT pixel 1: disabled
+        };
+
+        return body.ToArray();
+    }
+
     [Fact]
     public void Analyze_ClassifiesArithmeticSymbolAndTextRegionsAsSupportedBuckets()
     {
@@ -115,6 +132,33 @@ public class Jbig2CapabilityClassifierTests
         report.Features.Should().Contain("symbol-dictionary.huffman.user-dw");
         report.Features.Should().Contain("symbol-dictionary.huffman.user-bmsize");
         report.UnsupportedFeatures.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Analyze_ClassifiesGenericRefinementWithoutTpgronAsSupported()
+    {
+        var report = Jbig2CapabilityClassifier.Analyze(BuildSegment(
+            1,
+            SegmentType.ImmediateGenericRefinementRegion,
+            BuildGenericRefinementRegionBody(typicalPrediction: false)));
+
+        report.Features.Should().Contain("generic-refinement-region");
+        report.Features.Should().Contain("generic-refinement-region.template-0");
+        report.Features.Should().Contain("generic-refinement-region.adaptive-template-pixels");
+        report.UnsupportedFeatures.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Analyze_ClassifiesGenericRefinementTpgronAsSpecificUnsupportedBucket()
+    {
+        var report = Jbig2CapabilityClassifier.Analyze(BuildSegment(
+            1,
+            SegmentType.ImmediateGenericRefinementRegion,
+            BuildGenericRefinementRegionBody(typicalPrediction: true)));
+
+        report.Features.Should().Contain("generic-refinement-region.typical-prediction");
+        report.UnsupportedFeatures.Should().Contain("generic-refinement-region.typical-prediction");
+        report.UnsupportedFeatures.Should().NotContain("generic-refinement-region");
     }
 
     [Fact]

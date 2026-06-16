@@ -192,6 +192,23 @@ public class Jbig2DecoderTests
         return BuildUserHuffmanTableBody(value, value + 1, payloadBits, hasOutOfBand);
     }
 
+    private static byte[] BuildGenericRefinementRegionBody(bool typicalPrediction)
+    {
+        var body = new List<byte>
+        {
+            0, 0, 0, 1, // region width
+            0, 0, 0, 1, // region height
+            0, 0, 0, 0, // x
+            0, 0, 0, 0, // y
+            0x04,       // region combination operator: Replace
+            (byte)(typicalPrediction ? 0x02 : 0x00), // template 0, optional TPGRON
+            0xFF, 0xFF, // default generic refinement AT pixel 0: disabled
+            0xFF, 0xFF, // default generic refinement AT pixel 1: disabled
+        };
+
+        return body.ToArray();
+    }
+
     private static byte[] BuildUnsupportedRefinementSymbolDictionaryBody()
         =>
         [
@@ -343,6 +360,20 @@ public class Jbig2DecoderTests
 
         act.Should().Throw<NotSupportedException>()
             .WithMessage("*Random-access JBIG2 file organization*");
+    }
+
+    [Fact]
+    public void Decode_WithGenericRefinementTpgron_ThrowsNotSupported()
+    {
+        byte[] data = BuildSegment(
+            1,
+            SegmentType.ImmediateGenericRefinementRegion,
+            BuildGenericRefinementRegionBody(typicalPrediction: true));
+
+        var act = () => Jbig2Decoder.Decode(data, null, 1, 1);
+
+        act.Should().Throw<NotSupportedException>()
+            .WithMessage("*TPGRON*");
     }
 
     /// <summary>

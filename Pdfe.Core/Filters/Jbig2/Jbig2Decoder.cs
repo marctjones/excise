@@ -9,7 +9,8 @@ namespace Pdfe.Core.Filters.Jbig2;
 /// ISO 32000-2:2020 Section 8.3.6 covers PDF JBIG2 integration.
 ///
 /// Supported features:
-/// - Generic region decoding (template 0 arithmetic with default AT pixels, and MMR)
+/// - Generic region decoding (arithmetic templates 0-3 with AT pixels and TPGDON, and MMR)
+/// - Generic refinement regions without TPGRON
 /// - Huffman symbol dictionaries without refinement/aggregation
 /// - Huffman text regions without refinement
 /// - Arithmetic symbol dictionaries without refinement/aggregation, retained contexts, or custom AT pixels
@@ -21,9 +22,8 @@ namespace Pdfe.Core.Filters.Jbig2;
 /// Not yet implemented:
 /// - Symbol/text refinement and aggregate coding
 /// - Retained symbol-dictionary bitmap coding contexts
-/// - Refinement regions (segment type 37)
+/// - Generic refinement TPGRON
 /// - Halftone regions
-/// - Optional generic-region templates 1-3, custom AT pixels, and TPGDON
 /// </summary>
 [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 internal static class Jbig2Decoder
@@ -158,16 +158,14 @@ internal class Jbig2PageDecoder
             case SegmentType.GenericRegion:
             case SegmentType.ImmediateGenericRegion:
             case SegmentType.ImmediateLosslessGenericRegion:
-                DecodeGenericRegion(data, pageImage);
+                DecodeGenericRegion(header, data, pageImage);
                 break;
 
             case SegmentType.GenericRefinementRegion:
             case SegmentType.ImmediateGenericRefinementRegion:
             case SegmentType.ImmediateLosslessGenericRefinementRegion:
-                // A refinement region is NOT a generic region — decoding it as
-                // one would silently corrupt the image. Not yet supported.
-                Jbig2GenericRefinementRegionSegment.Parse(data);
-                throw new NotSupportedException("Generic refinement region segments are not yet supported");
+                DecodeGenericRefinementRegion(header, data, pageImage);
+                break;
 
             case SegmentType.SymbolDictionary:
                 CacheSymbolDictionary(header, data);
@@ -217,7 +215,7 @@ internal class Jbig2PageDecoder
     /// <summary>
     /// Decode a generic region segment and composite it onto the page.
     /// </summary>
-    private void DecodeGenericRegion(byte[] segmentData, byte[] pageImage)
+    private void DecodeGenericRegion(SegmentHeader header, byte[] segmentData, byte[] pageImage)
     {
         var segment = Jbig2GenericRegionSegment.Parse(segmentData);
         if (segment.Region.BitmapWidth > int.MaxValue || segment.Region.BitmapHeight > int.MaxValue)
@@ -236,21 +234,106 @@ internal class Jbig2PageDecoder
             (int)segment.Region.BitmapHeight,
             (int)segment.Region.XLocation,
             (int)segment.Region.YLocation);
+        var bitmap = new Jbig2Bitmap((int)segment.Region.BitmapWidth, (int)segment.Region.BitmapHeight, regionImage);
+
+        _segments[header.SegmentNumber] = new SegmentData
+        {
+            Data = segmentData,
+            Type = (SegmentType)header.SegmentType,
+            GenericRegion = segment,
+            RegionBitmap = bitmap,
+        };
+
+        if ((SegmentType)header.SegmentType == SegmentType.GenericRegion)
+            return;
 
         var combinationOperator = segment.Region.CombinationOperator;
         if (_pageInformation is { CombinationOperatorOverrideAllowed: false } pageInformation)
             combinationOperator = pageInformation.CombinationOperator;
 
         Jbig2BitmapCompositor.Composite(
-            pageImage,
-            _width,
-            _height,
-            regionImage,
-            (int)segment.Region.BitmapWidth,
-            (int)segment.Region.BitmapHeight,
+            new Jbig2Bitmap(_width, _height, pageImage),
+            bitmap,
             (int)segment.Region.XLocation,
             (int)segment.Region.YLocation,
             combinationOperator);
+    }
+
+    private void DecodeGenericRefinementRegion(SegmentHeader header, byte[] segmentData, byte[] pageImage)
+    {
+        var segment = Jbig2GenericRefinementRegionSegment.Parse(segmentData);
+        if (segment.Region.BitmapWidth > int.MaxValue || segment.Region.BitmapHeight > int.MaxValue)
+            throw new InvalidOperationException("JBIG2 generic refinement region dimensions exceed supported limits");
+        if (segment.Region.XLocation > int.MaxValue || segment.Region.YLocation > int.MaxValue)
+            throw new InvalidOperationException("JBIG2 generic refinement region coordinates exceed supported limits");
+        if (segment.TypicalPredictionGenericRefinementOn)
+            throw new NotSupportedException("JBIG2 generic refinement TPGRON is not yet supported");
+
+        var referenceBitmap = ResolveRegionReferenceBitmap(header, segment.Region, pageImage);
+        byte[] bitmapData = segmentData.AsSpan(segment.BitmapDataOffset, segment.BitmapDataLength).ToArray();
+        var arithmeticDecoder = new Jbig2MqArithmeticDecoder(bitmapData, Jbig2GenericRefinementRegionDecoder.ContextCount);
+        var bitmap = Jbig2GenericRefinementRegionDecoder.Decode(
+            arithmeticDecoder,
+            (int)segment.Region.BitmapWidth,
+            (int)segment.Region.BitmapHeight,
+            segment.Template,
+            segment.TypicalPredictionGenericRefinementOn,
+            referenceBitmap,
+            referenceDx: 0,
+            referenceDy: 0,
+            segment.AdaptiveTemplatePixels);
+
+        _segments[header.SegmentNumber] = new SegmentData
+        {
+            Data = segmentData,
+            Type = (SegmentType)header.SegmentType,
+            GenericRefinementRegion = segment,
+            RegionBitmap = bitmap,
+        };
+
+        if ((SegmentType)header.SegmentType == SegmentType.GenericRefinementRegion)
+            return;
+
+        var combinationOperator = segment.Region.CombinationOperator;
+        if (_pageInformation is { CombinationOperatorOverrideAllowed: false } pageInformation)
+            combinationOperator = pageInformation.CombinationOperator;
+
+        Jbig2BitmapCompositor.Composite(
+            new Jbig2Bitmap(_width, _height, pageImage),
+            bitmap,
+            (int)segment.Region.XLocation,
+            (int)segment.Region.YLocation,
+            combinationOperator);
+    }
+
+    private Jbig2Bitmap ResolveRegionReferenceBitmap(
+        SegmentHeader header,
+        Jbig2RegionSegmentInformation region,
+        byte[] pageImage)
+    {
+        foreach (uint segmentNumber in header.ReferredSegments)
+        {
+            if (_segments.TryGetValue(segmentNumber, out var segment)
+                && (segment.RegionBitmap ?? segment.TextRegionBitmap) is { } bitmap)
+                return bitmap;
+        }
+
+        return ExtractPageBitmap(pageImage, region);
+    }
+
+    private Jbig2Bitmap ExtractPageBitmap(byte[] pageImage, Jbig2RegionSegmentInformation region)
+    {
+        var page = new Jbig2Bitmap(_width, _height, pageImage);
+        var bitmap = new Jbig2Bitmap((int)region.BitmapWidth, (int)region.BitmapHeight);
+        int xOffset = (int)region.XLocation;
+        int yOffset = (int)region.YLocation;
+        for (int y = 0; y < bitmap.Height; y++)
+        {
+            for (int x = 0; x < bitmap.Width; x++)
+                bitmap.SetPixel(x, y, page.GetPixel(xOffset + x, yOffset + y));
+        }
+
+        return bitmap;
     }
 
     private void CacheSymbolDictionary(SegmentHeader header, byte[] data)
@@ -411,6 +494,9 @@ internal class SegmentData
     public SegmentType Type { get; set; }
     public Jbig2SymbolDictionarySegment? SymbolDictionary { get; set; }
     public Jbig2DecodedSymbolDictionary? DecodedSymbolDictionary { get; set; }
+    public Jbig2GenericRegionSegment? GenericRegion { get; set; }
+    public Jbig2GenericRefinementRegionSegment? GenericRefinementRegion { get; set; }
+    public Jbig2Bitmap? RegionBitmap { get; set; }
     public Jbig2TextRegionSegment? TextRegion { get; set; }
     public Jbig2Bitmap? TextRegionBitmap { get; set; }
     public Jbig2HuffmanTableSegment? HuffmanTable { get; set; }
