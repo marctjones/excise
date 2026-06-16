@@ -11,8 +11,8 @@ internal interface IJbig2ArithmeticDecoder
 
 /// <summary>
 /// Context-state MQ arithmetic decoder following the JBIG2 arithmetic coding model.
-/// This is intentionally separate from the legacy MqDecoder used by the current
-/// generic-region renderer until targeted image fixtures prove the switch.
+/// This is the shared arithmetic engine for generic regions, symbol dictionaries,
+/// text regions, and arithmetic integer procedures.
 /// </summary>
 [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 internal sealed class Jbig2MqArithmeticDecoder : IJbig2ArithmeticDecoder
@@ -273,9 +273,11 @@ internal sealed class Jbig2ArithmeticIntegerDecoder
 
     private int DecodeBit(ref int previous)
     {
-        int context = _contextBase + previous;
+        int context = _contextBase + (previous & 0x1FF);
         int bit = _decoder.Decode(ref context) ? 1 : 0;
-        previous = (previous << 1) | bit;
+        previous = previous < 256
+            ? ((previous << 1) | bit) & 0x1FF
+            : (int)((((uint)previous << 1) | (uint)bit) & 0x1FFu) | 0x100;
         return bit;
     }
 }
@@ -300,15 +302,16 @@ internal sealed class Jbig2IaidDecoder
         if (codeLength is <= 0 or > 31)
             throw new ArgumentOutOfRangeException(nameof(codeLength), codeLength, "IAID code length must be between 1 and 31 bits.");
 
-        int previous = 1;
+        long previous = 1;
+        long contextMask = (1L << codeLength) - 1;
         for (int i = 0; i < codeLength; i++)
         {
-            int context = _contextBase + previous;
+            int context = checked(_contextBase + (int)(previous & contextMask));
             int bit = _decoder.Decode(ref context) ? 1 : 0;
-            previous = (previous << 1) | bit;
+            previous = (previous << 1) | (long)bit;
         }
 
-        return (uint)(previous - (1 << codeLength));
+        return checked((uint)(previous - (1L << codeLength)));
     }
 }
 

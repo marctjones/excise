@@ -4,28 +4,51 @@ using System.Collections.Generic;
 namespace Pdfe.Core.Filters.Jbig2;
 
 /// <summary>
-/// Decodes JBIG2 text region segments for the non-refinement Huffman path.
+/// Decodes JBIG2 text region segments for non-refinement Huffman and arithmetic paths.
 /// Text regions place symbols from referenced dictionaries onto a region bitmap.
 /// Standard and referenced user Huffman tables are supported for FS/DS/DT;
-/// arithmetic and refinement procedures stay gated until implemented separately.
+/// arithmetic FS/DS/DT/IT/ID procedures are supported without refinement.
 /// </summary>
 [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 internal static class Jbig2TextRegionDecoder
 {
+    private const int IadtContextBase = 0;
+    private const int IafsContextBase = IadtContextBase + 512;
+    private const int IadsContextBase = IafsContextBase + 512;
+    private const int IaitContextBase = IadsContextBase + 512;
+    private const int IaidContextBase = IaitContextBase + 512;
+    private const int MaxIaidContextBits = 20;
+
     public static Jbig2Bitmap Decode(
         Jbig2TextRegionSegment segment,
         ReadOnlySpan<byte> payload,
         IReadOnlyList<Jbig2Bitmap> symbols,
         IReadOnlyList<Jbig2HuffmanTable>? userTables = null)
     {
-        if (!segment.IsHuffmanEncoded)
-            throw new NotSupportedException("Arithmetic-coded JBIG2 text regions are not yet supported");
         if (segment.UseRefinement)
             throw new NotSupportedException("Refinement JBIG2 text regions are not yet supported");
         if (symbols == null || symbols.Count == 0)
             throw new InvalidOperationException("JBIG2 text region has no referenced symbols");
         if (segment.Region.BitmapWidth > int.MaxValue || segment.Region.BitmapHeight > int.MaxValue)
             throw new InvalidOperationException("JBIG2 text region dimensions exceed supported limits");
+
+        return segment.IsHuffmanEncoded
+            ? DecodeHuffman(segment, payload, symbols, userTables)
+            : DecodeArithmetic(segment, payload, symbols);
+    }
+
+    internal static Jbig2Bitmap DecodeArithmeticForTest(
+        Jbig2TextRegionSegment segment,
+        IJbig2ArithmeticDecoder decoder,
+        IReadOnlyList<Jbig2Bitmap> symbols)
+        => DecodeArithmetic(segment, decoder, symbols);
+
+    private static Jbig2Bitmap DecodeHuffman(
+        Jbig2TextRegionSegment segment,
+        ReadOnlySpan<byte> payload,
+        IReadOnlyList<Jbig2Bitmap> symbols,
+        IReadOnlyList<Jbig2HuffmanTable>? userTables)
+    {
         if (segment.HuffmanFlags == null)
             throw new InvalidOperationException("JBIG2 Huffman text region is missing Huffman flags");
 
@@ -50,6 +73,31 @@ internal static class Jbig2TextRegionDecoder
             firstSTable,
             deltaSTable,
             deltaTTable);
+        return region;
+    }
+
+    private static Jbig2Bitmap DecodeArithmetic(
+        Jbig2TextRegionSegment segment,
+        ReadOnlySpan<byte> payload,
+        IReadOnlyList<Jbig2Bitmap> symbols)
+    {
+        int symbolCodeLength = GetSymbolCodeLength(symbols.Count);
+        int contextCount = IaidContextBase + GetIaidContextCount(symbolCodeLength);
+        var decoder = new Jbig2MqArithmeticDecoder(payload.ToArray(), contextCount);
+        return DecodeArithmetic(segment, decoder, symbols);
+    }
+
+    private static Jbig2Bitmap DecodeArithmetic(
+        Jbig2TextRegionSegment segment,
+        IJbig2ArithmeticDecoder decoder,
+        IReadOnlyList<Jbig2Bitmap> symbols)
+    {
+        var region = new Jbig2Bitmap((int)segment.Region.BitmapWidth, (int)segment.Region.BitmapHeight);
+        if (segment.DefaultPixel != 0)
+            region.Fill(true);
+
+        var arithmetic = new ArithmeticTextDecoders(decoder, GetSymbolCodeLength(symbols.Count));
+        DecodeArithmeticSymbolInstances(segment, arithmetic, symbols, region);
         return region;
     }
 
@@ -170,6 +218,56 @@ internal static class Jbig2TextRegionDecoder
         }
     }
 
+    private static void DecodeArithmeticSymbolInstances(
+        Jbig2TextRegionSegment segment,
+        ArithmeticTextDecoders decoders,
+        IReadOnlyList<Jbig2Bitmap> symbols,
+        Jbig2Bitmap region)
+    {
+        int sbStrips = 1 << segment.LogSbStrips;
+        long stripT = -DecodeRequired(decoders.Iadt, "text-region initial T") * sbStrips;
+        long firstS = 0;
+        long instanceCounter = 0;
+
+        while (instanceCounter < segment.SymbolInstanceCount)
+        {
+            stripT += DecodeRequired(decoders.Iadt, "text-region T delta") * sbStrips;
+            bool first = true;
+            long currentS = 0;
+
+            while (instanceCounter < segment.SymbolInstanceCount)
+            {
+                if (first)
+                {
+                    firstS += DecodeRequired(decoders.Iafs, "text-region first S");
+                    currentS = firstS;
+                    first = false;
+                }
+                else
+                {
+                    long? idS = decoders.Iads.Decode();
+                    if (!idS.HasValue)
+                        break;
+                    currentS += idS.Value + segment.SbDsOffset;
+                }
+
+                long currentT = segment.LogSbStrips == 0
+                    ? 0
+                    : DecodeRequired(decoders.Iait, "text-region current T");
+                if (currentT < 0 || currentT >= sbStrips)
+                    throw new InvalidOperationException("JBIG2 text-region current T is outside the strip");
+
+                long t = stripT + currentT;
+                long id = decoders.DecodeSymbolId();
+                if ((uint)id >= (uint)symbols.Count)
+                    throw new InvalidOperationException("JBIG2 text-region symbol id is outside the referenced symbol set");
+
+                Blit(symbols[(int)id], region, ref currentS, t, segment);
+                instanceCounter++;
+            }
+        }
+    }
+
     private static Jbig2HuffmanTable ResolveFirstSTable(
         Jbig2TextRegionHuffmanFlags flags,
         UserHuffmanTableCursor userTables)
@@ -227,6 +325,35 @@ internal static class Jbig2TextRegionDecoder
     private static long DecodeRequired(Jbig2HuffmanTable table, Jbig2BitReader reader, string fieldName)
         => table.Decode(reader) ?? throw new InvalidOperationException($"JBIG2 {fieldName} decoded as OOB");
 
+    private static long DecodeRequired(Jbig2ArithmeticIntegerDecoder decoder, string fieldName)
+        => decoder.Decode() ?? throw new InvalidOperationException($"JBIG2 {fieldName} decoded as OOB");
+
+    private static int GetSymbolCodeLength(int symbolCount)
+    {
+        if (symbolCount <= 1)
+            return 0;
+
+        int length = 0;
+        int value = 1;
+        while (value < symbolCount)
+        {
+            length++;
+            value <<= 1;
+        }
+
+        return length;
+    }
+
+    private static int GetIaidContextCount(int symbolCodeLength)
+    {
+        if (symbolCodeLength == 0)
+            return 1;
+        if (symbolCodeLength > MaxIaidContextBits)
+            throw new InvalidOperationException("JBIG2 arithmetic text-region symbol-code length exceeds supported limits");
+
+        return 1 << symbolCodeLength;
+    }
+
     private static void Blit(Jbig2Bitmap symbol, Jbig2Bitmap region, ref long currentS, long tValue, Jbig2TextRegionSegment segment)
     {
         long t = tValue;
@@ -281,5 +408,31 @@ internal static class Jbig2TextRegionDecoder
 
             return _tables[_position++];
         }
+    }
+
+    private sealed class ArithmeticTextDecoders
+    {
+        private readonly Jbig2IaidDecoder? _iaid;
+        private readonly int _symbolCodeLength;
+
+        public ArithmeticTextDecoders(IJbig2ArithmeticDecoder decoder, int symbolCodeLength)
+        {
+            Iadt = new Jbig2ArithmeticIntegerDecoder(decoder, IadtContextBase);
+            Iafs = new Jbig2ArithmeticIntegerDecoder(decoder, IafsContextBase);
+            Iads = new Jbig2ArithmeticIntegerDecoder(decoder, IadsContextBase);
+            Iait = new Jbig2ArithmeticIntegerDecoder(decoder, IaitContextBase);
+            _symbolCodeLength = symbolCodeLength;
+            _iaid = symbolCodeLength == 0
+                ? null
+                : new Jbig2IaidDecoder(decoder, IaidContextBase);
+        }
+
+        public Jbig2ArithmeticIntegerDecoder Iadt { get; }
+        public Jbig2ArithmeticIntegerDecoder Iafs { get; }
+        public Jbig2ArithmeticIntegerDecoder Iads { get; }
+        public Jbig2ArithmeticIntegerDecoder Iait { get; }
+
+        public uint DecodeSymbolId()
+            => _iaid == null ? 0 : _iaid.Decode(_symbolCodeLength);
     }
 }

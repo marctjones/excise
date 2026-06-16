@@ -1,8 +1,10 @@
 using System.CommandLine;
 using System.Diagnostics;
 using Pdfe.Core.Document;
+using Pdfe.Core.Filters.Jbig2;
 using Pdfe.Core.Graphics;
 using Pdfe.Core.Parsing;
+using Pdfe.Core.Primitives;
 using Pdfe.Core.Text.Segmentation;
 using Pdfe.Ocr;
 using Pdfe.Rendering;
@@ -37,6 +39,7 @@ class Program
             CreateAuditCommand(),
             CreateOcrCommand(),
             CreateDemoCommand(),
+            CreateJbig2ClassifyCommand(),
             CreateCorpusScanCommand(),
         };
 
@@ -1173,6 +1176,351 @@ class Program
     }
 
     /// <summary>
+    /// pdfe jbig2-classify &lt;file-or-dir&gt; --output out.json
+    ///
+    /// Diagnostic helper for rendering-roadmap work: walks PDFs, finds
+    /// JBIG2 image XObjects, and reports the JBIG2 feature buckets required
+    /// by their segment metadata. It does not judge visual correctness; pair
+    /// this with corpus-scan/differential output to correlate required codec
+    /// features with rendered failures.
+    /// </summary>
+    static Command CreateJbig2ClassifyCommand()
+    {
+        var inputArg = new Argument<string>("input") { Description = "PDF file or directory of PDFs to classify" };
+        var outputOption = new Option<FileInfo>("--output")
+        {
+            Description = "Output JSON path",
+            Required = true,
+        };
+
+        var command = new Command("jbig2-classify", "Classify JBIG2Decode feature buckets in PDFs")
+        {
+            inputArg,
+            outputOption,
+        };
+
+        command.SetAction(parseResult =>
+        {
+            var input = parseResult.GetValue(inputArg)!;
+            var output = parseResult.GetValue(outputOption)!;
+
+            try
+            {
+                var ok = RunJbig2CapabilityScan(input, output.FullName);
+                Environment.ExitCode = ok ? 0 : 1;
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error: {ex.Message}");
+                Environment.ExitCode = 1;
+            }
+        });
+
+        return command;
+    }
+
+    internal static bool RunJbig2CapabilityScan(string inputPath, string outputPath)
+    {
+        var pdfs = ResolvePdfInputs(inputPath).ToList();
+        if (pdfs.Count == 0)
+        {
+            Console.Error.WriteLine($"No PDFs found: {inputPath}");
+            return false;
+        }
+
+        var rootDir = Directory.Exists(inputPath) ? Path.GetFullPath(inputPath) : null;
+        var entries = new List<Jbig2ClassifyEntry>();
+        int scanned = 0;
+
+        foreach (var pdf in pdfs)
+        {
+            scanned++;
+            var rel = rootDir != null
+                ? Path.GetRelativePath(rootDir, pdf)
+                : Path.GetFileName(pdf);
+
+            Console.Out.WriteLine($"[{scanned}/{pdfs.Count}] {rel}");
+            entries.AddRange(ClassifyJbig2StreamsInPdf(rel, pdf));
+        }
+
+        var featureCounts = CountFeatures(entries.SelectMany(e => e.features));
+        var unsupportedFeatureCounts = CountFeatures(entries.SelectMany(e => e.unsupportedFeatures));
+        var segmentTypeCounts = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var entry in entries)
+        {
+            foreach (var kvp in entry.segmentTypeCounts)
+            {
+                segmentTypeCounts.TryGetValue(kvp.Key, out var count);
+                segmentTypeCounts[kvp.Key] = count + kvp.Value;
+            }
+        }
+
+        var counts = entries
+            .GroupBy(e => e.status, StringComparer.Ordinal)
+            .OrderByDescending(g => g.Count())
+            .ToDictionary(g => g.Key, g => g.Count(), StringComparer.Ordinal);
+
+        var report = new Jbig2ClassifyReport
+        {
+            generatedUtc = DateTime.UtcNow.ToString("o"),
+            input = Path.GetFullPath(inputPath),
+            pdfs = pdfs.Count,
+            streams = entries.Count(e => e.status == "OK"),
+            entries = entries
+                .OrderBy(e => e.path, StringComparer.Ordinal)
+                .ThenBy(e => e.pageNumber)
+                .ThenBy(e => e.resourcePath, StringComparer.Ordinal)
+                .ToList(),
+            counts = counts,
+            featureCounts = featureCounts,
+            unsupportedFeatureCounts = unsupportedFeatureCounts,
+            segmentTypeCounts = segmentTypeCounts
+                .OrderBy(kvp => kvp.Key, StringComparer.Ordinal)
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.Ordinal),
+        };
+
+        var json = System.Text.Json.JsonSerializer.Serialize(report,
+            new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+        File.WriteAllText(outputPath, json);
+
+        Console.Out.WriteLine();
+        foreach (var kv in counts)
+            Console.Out.WriteLine($"  {kv.Value,4}  {kv.Key}");
+        Console.Out.WriteLine($"  JBIG2 streams: {report.streams}");
+        Console.Out.WriteLine($"  wrote {outputPath}");
+        return true;
+    }
+
+    private static IEnumerable<string> ResolvePdfInputs(string inputPath)
+    {
+        if (File.Exists(inputPath))
+        {
+            if (inputPath.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+                yield return Path.GetFullPath(inputPath);
+            yield break;
+        }
+
+        if (Directory.Exists(inputPath))
+        {
+            foreach (var pdf in Directory.EnumerateFiles(inputPath, "*.pdf", SearchOption.AllDirectories)
+                         .OrderBy(p => p, StringComparer.Ordinal))
+            {
+                yield return Path.GetFullPath(pdf);
+            }
+        }
+    }
+
+    private static IReadOnlyList<Jbig2ClassifyEntry> ClassifyJbig2StreamsInPdf(string relPath, string pdfPath)
+    {
+        try
+        {
+            using var doc = PdfDocument.Open(pdfPath);
+            var entries = new List<Jbig2ClassifyEntry>();
+            int streamIndex = 0;
+            for (int pageNumber = 1; pageNumber <= doc.PageCount; pageNumber++)
+            {
+                var page = doc.GetPage(pageNumber);
+                ClassifyJbig2StreamsInResources(
+                    doc,
+                    page.Resources,
+                    relPath,
+                    pageNumber,
+                    "page",
+                    entries,
+                    ref streamIndex,
+                    new HashSet<PdfStream>(),
+                    depth: 0);
+            }
+
+            return entries;
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            return new[]
+            {
+                new Jbig2ClassifyEntry
+                {
+                    path = relPath,
+                    pageNumber = 0,
+                    resourcePath = "",
+                    status = "PDF_ERROR",
+                    errorType = ex.GetType().Name,
+                    errorMessage = Trunc(ex.Message, 240),
+                },
+            };
+        }
+    }
+
+    private static void ClassifyJbig2StreamsInResources(
+        PdfDocument doc,
+        PdfDictionary? resources,
+        string relPath,
+        int pageNumber,
+        string resourcePath,
+        List<Jbig2ClassifyEntry> entries,
+        ref int streamIndex,
+        HashSet<PdfStream> visitedForms,
+        int depth)
+    {
+        if (resources == null || depth > 64)
+            return;
+
+        var xobjectsObj = resources.GetOptional("XObject");
+        if (xobjectsObj == null || doc.Resolve(xobjectsObj) is not PdfDictionary xobjects)
+            return;
+
+        foreach (var kvp in xobjects.OrderBy(k => k.Key.Value, StringComparer.Ordinal))
+        {
+            var name = kvp.Key.Value;
+            var resolved = doc.Resolve(kvp.Value);
+            if (resolved is not PdfStream stream)
+                continue;
+
+            var subtype = stream.GetNameOrNull("Subtype");
+            var childPath = $"{resourcePath}/{name}";
+            if (subtype == "Image" && TryGetJbig2FilterIndex(stream, out var filterIndex))
+            {
+                streamIndex++;
+                entries.Add(ClassifyJbig2ImageStream(doc, stream, relPath, pageNumber, childPath, streamIndex, filterIndex));
+            }
+            else if (subtype == "Form" && visitedForms.Add(stream))
+            {
+                var formResourcesObj = stream.GetOptional("Resources");
+                var formResources = formResourcesObj != null ? doc.Resolve(formResourcesObj) as PdfDictionary : null;
+                ClassifyJbig2StreamsInResources(
+                    doc,
+                    formResources,
+                    relPath,
+                    pageNumber,
+                    childPath,
+                    entries,
+                    ref streamIndex,
+                    visitedForms,
+                    depth + 1);
+            }
+        }
+    }
+
+    private static Jbig2ClassifyEntry ClassifyJbig2ImageStream(
+        PdfDocument doc,
+        PdfStream stream,
+        string relPath,
+        int pageNumber,
+        string resourcePath,
+        int streamIndex,
+        int filterIndex)
+    {
+        var filters = stream.Filters.ToArray();
+        var parms = GetResolvedDecodeParams(doc, stream);
+        var entry = new Jbig2ClassifyEntry
+        {
+            path = relPath,
+            pageNumber = pageNumber,
+            resourcePath = resourcePath,
+            streamIndex = streamIndex,
+            width = stream.GetInt("Width", 0),
+            height = stream.GetInt("Height", 0),
+            filters = filters,
+        };
+
+        try
+        {
+            byte[] data = ExtractInputForFilter(stream, filters, parms, filterIndex);
+            byte[]? globals = TryGetJbig2Globals(doc, filterIndex < parms.Count ? parms[filterIndex] : null);
+            var report = Jbig2CapabilityClassifier.Analyze(data, globals);
+            entry.status = report.Diagnostics.Count == 0 ? "OK" : "PARSE_WARNING";
+            entry.features = report.Features.ToArray();
+            entry.unsupportedFeatures = report.UnsupportedFeatures.ToArray();
+            entry.segmentTypeCounts = report.SegmentTypeCounts
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.Ordinal);
+            entry.diagnostics = report.Diagnostics.ToArray();
+            entry.segments = report.Segments.ToArray();
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            entry.status = "CLASSIFY_ERROR";
+            entry.errorType = ex.GetType().Name;
+            entry.errorMessage = Trunc(ex.Message, 240);
+        }
+
+        return entry;
+    }
+
+    private static byte[] ExtractInputForFilter(
+        PdfStream stream,
+        IReadOnlyList<string> filters,
+        IReadOnlyList<PdfDictionary?> parms,
+        int filterIndex)
+    {
+        var data = stream.EncodedData;
+        if (filterIndex == 0)
+            return data;
+
+        var decompressor = new StreamDecompressor();
+        for (int i = 0; i < filterIndex; i++)
+        {
+            var filterParms = i < parms.Count ? parms[i] : null;
+            data = decompressor.ApplyFilter(filters[i], data, filterParms);
+        }
+
+        return data;
+    }
+
+    private static bool TryGetJbig2FilterIndex(PdfStream stream, out int index)
+    {
+        var filters = stream.Filters;
+        for (int i = 0; i < filters.Count; i++)
+        {
+            if (filters[i] is "JBIG2Decode" or "JBIG2")
+            {
+                index = i;
+                return true;
+            }
+        }
+
+        index = -1;
+        return false;
+    }
+
+    private static IReadOnlyList<PdfDictionary?> GetResolvedDecodeParams(PdfDocument doc, PdfStream stream)
+    {
+        var parms = stream.GetOptional("DecodeParms") ?? stream.GetOptional("DP");
+        return parms switch
+        {
+            PdfDictionary d => new[] { d },
+            PdfReference r when doc.Resolve(r) is PdfDictionary d => new[] { d },
+            PdfArray a => a.Select(item => doc.Resolve(item) as PdfDictionary).ToArray(),
+            _ => Array.Empty<PdfDictionary?>(),
+        };
+    }
+
+    private static byte[]? TryGetJbig2Globals(PdfDocument doc, PdfDictionary? decodeParms)
+    {
+        var globalsObj = decodeParms?.GetOptional("JBIG2Globals");
+        if (globalsObj == null)
+            return null;
+
+        return doc.Resolve(globalsObj) is PdfStream globals
+            ? globals.EncodedData
+            : null;
+    }
+
+    private static Dictionary<string, int> CountFeatures(IEnumerable<string> features)
+    {
+        var counts = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var feature in features)
+        {
+            counts.TryGetValue(feature, out var count);
+            counts[feature] = count + 1;
+        }
+
+        return counts
+            .OrderBy(kvp => kvp.Key, StringComparer.Ordinal)
+            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.Ordinal);
+    }
+
+    /// <summary>
     /// pdfe corpus-scan &lt;corpus-dir&gt; --output out.json
     ///                  [--chunk N] [--total M] [--dpi 150]
     ///
@@ -1840,6 +2188,38 @@ class Program
         }
 
         return false;
+    }
+
+    internal sealed class Jbig2ClassifyReport
+    {
+        public string generatedUtc { get; set; } = "";
+        public string input { get; set; } = "";
+        public int pdfs { get; set; }
+        public int streams { get; set; }
+        public Dictionary<string, int> counts { get; set; } = new(StringComparer.Ordinal);
+        public Dictionary<string, int> featureCounts { get; set; } = new(StringComparer.Ordinal);
+        public Dictionary<string, int> unsupportedFeatureCounts { get; set; } = new(StringComparer.Ordinal);
+        public Dictionary<string, int> segmentTypeCounts { get; set; } = new(StringComparer.Ordinal);
+        public IReadOnlyList<Jbig2ClassifyEntry> entries { get; set; } = Array.Empty<Jbig2ClassifyEntry>();
+    }
+
+    internal sealed class Jbig2ClassifyEntry
+    {
+        public string path { get; set; } = "";
+        public int pageNumber { get; set; }
+        public string resourcePath { get; set; } = "";
+        public int streamIndex { get; set; }
+        public string status { get; set; } = "UNKNOWN";
+        public int width { get; set; }
+        public int height { get; set; }
+        public IReadOnlyList<string> filters { get; set; } = Array.Empty<string>();
+        public IReadOnlyList<string> features { get; set; } = Array.Empty<string>();
+        public IReadOnlyList<string> unsupportedFeatures { get; set; } = Array.Empty<string>();
+        public Dictionary<string, int> segmentTypeCounts { get; set; } = new(StringComparer.Ordinal);
+        public IReadOnlyList<string> diagnostics { get; set; } = Array.Empty<string>();
+        public IReadOnlyList<Jbig2CapabilitySegment> segments { get; set; } = Array.Empty<Jbig2CapabilitySegment>();
+        public string? errorType { get; set; }
+        public string? errorMessage { get; set; }
     }
 
     internal sealed class CorpusScanEntry

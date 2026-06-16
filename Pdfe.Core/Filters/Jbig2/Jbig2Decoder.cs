@@ -9,16 +9,18 @@ namespace Pdfe.Core.Filters.Jbig2;
 /// ISO 32000-2:2020 Section 8.3.6 covers PDF JBIG2 integration.
 ///
 /// Supported features:
-/// - Generic region decoding (template 0 arithmetic and MMR)
+/// - Generic region decoding (template 0 arithmetic with default AT pixels, and MMR)
 /// - Huffman symbol dictionaries without refinement/aggregation
 /// - Huffman text regions without refinement
+/// - Arithmetic symbol dictionaries without refinement/aggregation, retained contexts, or custom AT pixels
+/// - Arithmetic text regions without refinement
 /// - Standard and referenced user Huffman tables for supported symbol/text paths
 /// - Segment header parsing for embedded organization (Annex D.3)
 /// - Typed metadata parsing for page, region, symbol dictionary, and text region bodies
 ///
 /// Not yet implemented:
-/// - Arithmetic-coded symbol dictionaries and text regions
 /// - Symbol/text refinement and aggregate coding
+/// - Retained symbol-dictionary bitmap coding contexts
 /// - Refinement regions (segment type 37)
 /// - Halftone regions
 /// - Optional generic-region templates 1-3, custom AT pixels, and TPGDON
@@ -26,11 +28,6 @@ namespace Pdfe.Core.Filters.Jbig2;
 [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 internal static class Jbig2Decoder
 {
-    private static readonly byte[] FileHeaderId =
-    {
-        0x97, 0x4A, 0x42, 0x32, 0x0D, 0x0A, 0x1A, 0x0A
-    };
-
     /// <summary>
     /// Decode JBIG2-encoded image data.
     /// </summary>
@@ -65,9 +62,9 @@ internal static class Jbig2Decoder
         // header. Match PDFBox's boundary by accepting sequential headers and
         // rejecting random-access organization until segment data offsets are
         // modeled explicitly.
-        byte[] allData = CombineGlobalsAndData(
-            globals != null ? NormalizeFileHeader(globals) : null,
-            NormalizeFileHeader(data));
+        byte[] allData = Jbig2StreamNormalizer.CombineGlobalsAndData(
+            globals != null ? Jbig2StreamNormalizer.NormalizeFileHeader(globals) : null,
+            Jbig2StreamNormalizer.NormalizeFileHeader(data));
 
         // Parse segments and extract page-level generic regions
         var decoder = new Jbig2PageDecoder(width, height);
@@ -88,58 +85,6 @@ internal static class Jbig2Decoder
             pageImage[i] = (byte)~pageImage[i];
     }
 
-    /// <summary>
-    /// Combine global and page-specific JBIG2 data into a single stream for parsing.
-    /// Per ISO 14492 Annex D.3 (embedded page organization):
-    /// globals contain global segments, data contains page/end-of-page segments.
-    /// </summary>
-    private static byte[] CombineGlobalsAndData(byte[]? globals, byte[] data)
-    {
-        if (globals == null || globals.Length == 0)
-            return data;
-
-        byte[] combined = new byte[globals.Length + data.Length];
-        Array.Copy(globals, 0, combined, 0, globals.Length);
-        Array.Copy(data, 0, combined, globals.Length, data.Length);
-        return combined;
-    }
-
-    private static byte[] NormalizeFileHeader(byte[] data)
-    {
-        if (!HasFileHeader(data))
-            return data;
-
-        if (data.Length < 9)
-            throw new InvalidOperationException("Truncated JBIG2 file header");
-
-        var headerFlags = data[8];
-        var isSequential = (headerFlags & 0x01) != 0;
-        if (!isSequential)
-            throw new NotSupportedException("Random-access JBIG2 file organization is not supported");
-
-        var amountOfPagesUnknown = (headerFlags & 0x02) != 0;
-        var headerLength = amountOfPagesUnknown ? 9 : 13;
-        if (data.Length < headerLength)
-            throw new InvalidOperationException("Truncated JBIG2 page-count field");
-
-        var normalized = new byte[data.Length - headerLength];
-        Array.Copy(data, headerLength, normalized, 0, normalized.Length);
-        return normalized;
-    }
-
-    private static bool HasFileHeader(byte[] data)
-    {
-        if (data.Length < FileHeaderId.Length)
-            return false;
-
-        for (var i = 0; i < FileHeaderId.Length; i++)
-        {
-            if (data[i] != FileHeaderId[i])
-                return false;
-        }
-
-        return true;
-    }
 }
 
 /// <summary>

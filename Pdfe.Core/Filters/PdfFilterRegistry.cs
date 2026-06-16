@@ -170,6 +170,7 @@ internal sealed class Jbig2FilterDecoder : AliasedFilterDecoder
     private static bool IsExpectedCodecFallback(Exception ex)
         => ex is NotSupportedException
             or ArgumentException
+            or OverflowException
             or InvalidOperationException
             or InvalidDataException;
 }

@@ -17,28 +17,51 @@ internal sealed class Jbig2DecodedSymbolDictionary
 }
 
 /// <summary>
-/// Decodes JBIG2 symbol dictionary segments for the Huffman no-refinement path.
-/// Standard tables, referenced user tables, raw collective bitmaps, MMR
-/// collective bitmaps, and imported symbols are handled here; arithmetic and
-/// refinement/aggregate procedures stay gated until implemented separately.
+/// Decodes JBIG2 symbol dictionary segments for the no-refinement paths.
+/// Standard Huffman tables, referenced user tables, raw collective bitmaps,
+/// MMR collective bitmaps, imported symbols, and direct arithmetic-coded
+/// symbols with default template-0 AT pixels are handled here; refinement,
+/// aggregate coding, retained arithmetic contexts, and custom arithmetic AT
+/// pixels stay explicitly gated.
 /// </summary>
 [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 internal static class Jbig2SymbolDictionaryDecoder
 {
+    private const int GenericRegionContextBase = 0;
+    private const int IadhContextBase = GenericRegionContextBase + Jbig2ArithmeticGenericRegionDecoder.ContextCount;
+    private const int IadwContextBase = IadhContextBase + 512;
+    private const int IaexContextBase = IadwContextBase + 512;
+    private const int ArithmeticContextCount = IaexContextBase + 512;
+
     public static Jbig2DecodedSymbolDictionary Decode(
         Jbig2SymbolDictionarySegment segment,
         ReadOnlySpan<byte> payload,
         IReadOnlyList<Jbig2Bitmap> importedSymbols,
         IReadOnlyList<Jbig2HuffmanTable>? userTables = null)
     {
-        if (!segment.IsHuffmanEncoded)
-            throw new NotSupportedException("Arithmetic-coded JBIG2 symbol dictionaries are not yet supported");
         if (segment.UseRefinementAggregation)
             throw new NotSupportedException("Refinement/aggregate JBIG2 symbol dictionaries are not yet supported");
         if (segment.NewSymbolCount > int.MaxValue || segment.ExportedSymbolCount > int.MaxValue)
             throw new InvalidOperationException("JBIG2 symbol dictionary count exceeds supported limits");
 
         importedSymbols ??= Array.Empty<Jbig2Bitmap>();
+        return segment.IsHuffmanEncoded
+            ? DecodeHuffman(segment, payload, importedSymbols, userTables)
+            : DecodeArithmetic(segment, payload, importedSymbols);
+    }
+
+    internal static Jbig2DecodedSymbolDictionary DecodeArithmeticForTest(
+        Jbig2SymbolDictionarySegment segment,
+        IJbig2ArithmeticDecoder decoder,
+        IReadOnlyList<Jbig2Bitmap> importedSymbols)
+        => DecodeArithmetic(segment, decoder, importedSymbols);
+
+    private static Jbig2DecodedSymbolDictionary DecodeHuffman(
+        Jbig2SymbolDictionarySegment segment,
+        ReadOnlySpan<byte> payload,
+        IReadOnlyList<Jbig2Bitmap> importedSymbols,
+        IReadOnlyList<Jbig2HuffmanTable>? userTables)
+    {
         var tableCursor = new UserHuffmanTableCursor(userTables);
         Jbig2HuffmanTable heightTable = ResolveDecodeHeightTable(segment, tableCursor);
         Jbig2HuffmanTable widthTable = ResolveDecodeWidthTable(segment, tableCursor);
@@ -59,7 +82,16 @@ internal static class Jbig2SymbolDictionaryDecoder
             if (!deltaHeight.HasValue)
                 throw new InvalidOperationException("JBIG2 symbol dictionary height class delta decoded as OOB");
 
-            checked { heightClassHeight += (int)deltaHeight.Value; }
+            if (deltaHeight.Value < int.MinValue || deltaHeight.Value > int.MaxValue)
+                throw new InvalidOperationException("JBIG2 symbol dictionary height delta exceeds supported limits");
+            try
+            {
+                checked { heightClassHeight += (int)deltaHeight.Value; }
+            }
+            catch (OverflowException ex)
+            {
+                throw new InvalidOperationException("JBIG2 symbol dictionary height class exceeds supported limits", ex);
+            }
             if (heightClassHeight <= 0)
                 throw new InvalidOperationException("Invalid JBIG2 symbol dictionary height class");
 
@@ -74,7 +106,16 @@ internal static class Jbig2SymbolDictionaryDecoder
                 if (!deltaWidth.HasValue || decodedSymbols >= newSymbolCount)
                     break;
 
-                checked { symbolWidth += (int)deltaWidth.Value; }
+                if (deltaWidth.Value < int.MinValue || deltaWidth.Value > int.MaxValue)
+                    throw new InvalidOperationException("JBIG2 symbol dictionary width delta exceeds supported limits");
+                try
+                {
+                    checked { symbolWidth += (int)deltaWidth.Value; }
+                }
+                catch (OverflowException ex)
+                {
+                    throw new InvalidOperationException("JBIG2 symbol dictionary symbol width exceeds supported limits", ex);
+                }
                 if (symbolWidth <= 0)
                     throw new InvalidOperationException("Invalid JBIG2 symbol dictionary symbol width");
 
@@ -114,6 +155,108 @@ internal static class Jbig2SymbolDictionaryDecoder
             throw new InvalidOperationException("JBIG2 symbol dictionary exported-symbol count did not match export flags");
 
         return new Jbig2DecodedSymbolDictionary(exportedSymbols, newSymbols);
+    }
+
+    private static Jbig2DecodedSymbolDictionary DecodeArithmetic(
+        Jbig2SymbolDictionarySegment segment,
+        ReadOnlySpan<byte> payload,
+        IReadOnlyList<Jbig2Bitmap> importedSymbols)
+    {
+        var decoder = new Jbig2MqArithmeticDecoder(payload.ToArray(), ArithmeticContextCount);
+        return DecodeArithmetic(segment, decoder, importedSymbols);
+    }
+
+    private static Jbig2DecodedSymbolDictionary DecodeArithmetic(
+        Jbig2SymbolDictionarySegment segment,
+        IJbig2ArithmeticDecoder decoder,
+        IReadOnlyList<Jbig2Bitmap> importedSymbols)
+    {
+        if (segment.IsCodingContextUsed || segment.IsCodingContextRetained)
+            throw new NotSupportedException("JBIG2 symbol-dictionary arithmetic context retention is not yet supported");
+
+        int newSymbolCount = checked((int)segment.NewSymbolCount);
+        var newSymbols = new Jbig2Bitmap[newSymbolCount];
+        var allSymbols = new List<Jbig2Bitmap>(importedSymbols.Count + newSymbolCount);
+        allSymbols.AddRange(importedSymbols);
+
+        var heightDecoder = new Jbig2ArithmeticIntegerDecoder(decoder, IadhContextBase);
+        var widthDecoder = new Jbig2ArithmeticIntegerDecoder(decoder, IadwContextBase);
+        int decodedSymbols = 0;
+        int heightClassHeight = 0;
+
+        while (decodedSymbols < newSymbolCount)
+        {
+            long? deltaHeight = heightDecoder.Decode();
+            if (!deltaHeight.HasValue)
+                throw new InvalidOperationException("JBIG2 symbol dictionary height class delta decoded as OOB");
+
+            checked { heightClassHeight += (int)deltaHeight.Value; }
+            if (heightClassHeight <= 0)
+                throw new InvalidOperationException("Invalid JBIG2 symbol dictionary height class");
+
+            int symbolWidth = 0;
+            while (true)
+            {
+                long? deltaWidth = widthDecoder.Decode();
+                if (!deltaWidth.HasValue || decodedSymbols >= newSymbolCount)
+                    break;
+
+                checked { symbolWidth += (int)deltaWidth.Value; }
+                if (symbolWidth <= 0)
+                    throw new InvalidOperationException("Invalid JBIG2 symbol dictionary symbol width");
+
+                var symbol = Jbig2ArithmeticGenericRegionDecoder.Decode(
+                    decoder,
+                    symbolWidth,
+                    heightClassHeight,
+                    segment.SdTemplate,
+                    segment.AdaptiveTemplatePixels,
+                    GenericRegionContextBase);
+
+                newSymbols[decodedSymbols] = symbol;
+                allSymbols.Add(symbol);
+                decodedSymbols++;
+            }
+        }
+
+        var exportFlags = DecodeArithmeticExportFlags(decoder, allSymbols.Count);
+        var exportedSymbols = new List<Jbig2Bitmap>(checked((int)segment.ExportedSymbolCount));
+        for (int i = 0; i < exportFlags.Length; i++)
+        {
+            if (exportFlags[i])
+                exportedSymbols.Add(allSymbols[i]);
+        }
+
+        if (exportedSymbols.Count != segment.ExportedSymbolCount)
+            throw new InvalidOperationException("JBIG2 symbol dictionary exported-symbol count did not match export flags");
+
+        return new Jbig2DecodedSymbolDictionary(exportedSymbols, newSymbols);
+    }
+
+    private static bool[] DecodeArithmeticExportFlags(IJbig2ArithmeticDecoder decoder, int totalSymbols)
+    {
+        var runLengthDecoder = new Jbig2ArithmeticIntegerDecoder(decoder, IaexContextBase);
+        var flags = new bool[totalSymbols];
+        int index = 0;
+        bool currentFlag = false;
+
+        while (index < totalSymbols)
+        {
+            long? runLengthValue = runLengthDecoder.Decode();
+            if (!runLengthValue.HasValue)
+                throw new InvalidOperationException("JBIG2 symbol dictionary export run length decoded as OOB");
+            if (runLengthValue.Value < 0 || runLengthValue.Value > totalSymbols - index)
+                throw new InvalidOperationException("Invalid JBIG2 symbol dictionary export run length");
+
+            int runLength = (int)runLengthValue.Value;
+            for (int i = 0; i < runLength; i++)
+                flags[index + i] = currentFlag;
+
+            index += runLength;
+            currentFlag = !currentFlag;
+        }
+
+        return flags;
     }
 
     private static Jbig2HuffmanTable ResolveDecodeHeightTable(
