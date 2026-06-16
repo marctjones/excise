@@ -14,6 +14,11 @@ Rendering quality hardening checkpoint. No intended API break.
   unsupported compression, decode failures, invalid page geometry, render
   resource limits, and timeouts instead of collapsing them into generic
   parse/render errors.
+- **Default-open packaging polish (#470).** The Windows installer now registers
+  pdfe with `RegisteredApplications`/Capabilities metadata so it appears in
+  Default apps / Open With flows for `.pdf`, while preserving user choice about
+  whether pdfe becomes the default PDF handler. README now documents Windows
+  installer and portable `.zip` setup alongside the existing macOS instructions.
 - **Render resource guardrails.** `Pdfe.Rendering` now rejects zero-sized page
   output and page renders that would exceed the configured bitmap pixel budget
   before allocating native Skia bitmaps.

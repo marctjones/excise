@@ -42,6 +42,33 @@ public class DocumentationClaimTests
         checklist.Should().Contain("git diff --check");
     }
 
+    [Fact]
+    public void FileAssociationDocs_MapToPackagingAndStartupHandlers()
+    {
+        var readme = Read("README.md");
+        var macosBundleScript = Read("scripts/build-macos-app.sh");
+        var windowsInstaller = Read("packaging/windows/pdfe.iss");
+        var appStartup = Read("PdfEditor/App.axaml.cs");
+
+        readme.Should().Contain("Using pdfe as a PDF reader on macOS");
+        readme.Should().Contain("Using pdfe as a PDF reader on Windows");
+        readme.Should().Contain("Associate pdfe with .pdf files");
+        readme.Should().Contain("Default apps");
+
+        macosBundleScript.Should().Contain("CFBundleDocumentTypes");
+        macosBundleScript.Should().Contain("LSItemContentTypes");
+        macosBundleScript.Should().Contain("com.adobe.pdf");
+
+        windowsInstaller.Should().Contain("ChangesAssociations=yes");
+        windowsInstaller.Should().Contain("Software\\RegisteredApplications");
+        windowsInstaller.Should().Contain("Capabilities\\FileAssociations");
+        windowsInstaller.Should().Contain("\"\"\"{app}\\{#MyAppExeName}\"\" \"\"%1\"\"\"");
+
+        appStartup.Should().Contain("desktop.Args");
+        appStartup.Should().Contain("FileActivatedEventArgs");
+        appStartup.Should().Contain("LoadDocumentAsync(path)");
+    }
+
     private static string Read(string relativePath)
     {
         var fullPath = Path.Combine(RepoRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));

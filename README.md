@@ -425,6 +425,18 @@ To make pdfe the **default** PDF app: select any `.pdf` in Finder → **⌘I** (
 Info) → **Open with** → choose *pdfe* → **Change All…**. Double-clicking PDFs
 then opens them in pdfe.
 
+### Using pdfe as a PDF reader on Windows
+
+The Windows installer registers pdfe as a PDF-capable app in the per-user
+`Default apps` / `Open with` registry metadata. During install, select
+**Associate pdfe with .pdf files** to add the `pdfe.pdf` ProgID. Windows 10/11
+still require the user to choose the default handler: Settings → Apps →
+Default apps → choose defaults by file type → `.pdf` → **pdfe**.
+
+The portable `.zip` does not write registry entries. For portable installs, use
+Explorer → right-click a PDF → **Open with** → **Choose another app** → browse to
+`PdfEditor.exe`; selected PDFs are passed to pdfe and opened on launch.
+
 ### Release automation
 
 `.github/workflows/release.yml` builds both installers and attaches

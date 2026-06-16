@@ -82,7 +82,17 @@ Name: "{group}\Uninstall {#MyAppName}";  Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#MyAppName}";  Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Registry]
-; .pdf file association (only if user opted in via the task).
+; Register pdfe as a PDF-capable app without stealing the user's default.
+; Windows 10/11 protect default handlers behind UserChoice, so the installer
+; exposes pdfe in Open With / Default apps and the user can opt in below.
+Root: HKCU; Subkey: "Software\RegisteredApplications"; ValueType: string; ValueName: "{#MyAppName}"; ValueData: "Software\Classes\Applications\{#MyAppExeName}\Capabilities"; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\Applications\{#MyAppExeName}\Capabilities"; ValueType: string; ValueName: "ApplicationName"; ValueData: "{#MyAppName}"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\Applications\{#MyAppExeName}\Capabilities"; ValueType: string; ValueName: "ApplicationDescription"; ValueData: "Open, inspect, edit, redact, and save PDF documents."
+Root: HKCU; Subkey: "Software\Classes\Applications\{#MyAppExeName}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".pdf"; ValueData: "pdfe.pdf"
+Root: HKCU; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".pdf"; ValueData: ""
+Root: HKCU; Subkey: "Software\Classes\Applications\{#MyAppExeName}\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""
+
+; .pdf file association ProgID (only if user opted in via the task).
 Root: HKCU; Subkey: "Software\Classes\.pdf\OpenWithProgids"; ValueType: string; ValueName: "pdfe.pdf"; ValueData: ""; Tasks: associatepdf; Flags: uninsdeletevalue
 Root: HKCU; Subkey: "Software\Classes\pdfe.pdf"; ValueType: string; ValueName: ""; ValueData: "PDF Document"; Tasks: associatepdf; Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\Classes\pdfe.pdf\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#MyAppExeName},0"; Tasks: associatepdf
