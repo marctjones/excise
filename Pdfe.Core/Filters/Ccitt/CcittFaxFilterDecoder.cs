@@ -196,7 +196,16 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
             while (reader.HasBits && (rows == 0 || rowsDecoded < rows))
             {
                 int bitsBefore = reader.Position;
-                if (rowsInGroup == 0)
+                var lineMode = ReadGroup3LineMode(reader);
+                if (lineMode == CcittGroup3LineMode.EndOfData)
+                    break;
+
+                bool hasTaggedLineMode = lineMode != CcittGroup3LineMode.Untagged;
+                bool decodeOneDimensional =
+                    lineMode == CcittGroup3LineMode.OneDimensional ||
+                    (!hasTaggedLineMode && rowsInGroup == 0);
+
+                if (decodeOneDimensional)
                 {
                     var row = Decode1DRow(reader, columns, false);
                     if (row == null)
@@ -207,10 +216,17 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
                     AppendRowToOutput(output, row, bytesPerRow, blackIs1);
                     refRow = row;
                     rowsDecoded++;
-                    SkipEOL(reader);
-                    rowsInGroup++;
+                    if (!hasTaggedLineMode)
+                    {
+                        SkipEOL(reader);
+                        rowsInGroup++;
+                    }
+                    else
+                    {
+                        rowsInGroup = 1;
+                    }
                 }
-                else if (rowsInGroup < K)
+                else if (hasTaggedLineMode || rowsInGroup < K)
                 {
                     var row = DecodeGroup3_2DRow(reader, refRow, columns);
                     if (row == null)
@@ -221,8 +237,15 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
                     AppendRowToOutput(output, row, bytesPerRow, blackIs1);
                     refRow = row;
                     rowsDecoded++;
-                    SkipEOL(reader);
-                    rowsInGroup++;
+                    if (!hasTaggedLineMode)
+                    {
+                        SkipEOL(reader);
+                        rowsInGroup++;
+                    }
+                    else
+                    {
+                        rowsInGroup++;
+                    }
                 }
                 else
                 {
@@ -236,6 +259,20 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
         {
             return new byte[0];
         }
+    }
+
+    private static CcittGroup3LineMode ReadGroup3LineMode(CcittBitReader reader)
+    {
+        if (reader.PeekBits(12) != 0b000000000001)
+            return CcittGroup3LineMode.Untagged;
+
+        reader.ReadBits(12);
+        if (!reader.HasBits)
+            return CcittGroup3LineMode.EndOfData;
+
+        return reader.ReadBits(1) == 1
+            ? CcittGroup3LineMode.OneDimensional
+            : CcittGroup3LineMode.TwoDimensional;
     }
 
     /// <summary>
@@ -361,6 +398,14 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
         Pass,
         Horizontal,
         Vertical
+    }
+
+    private enum CcittGroup3LineMode
+    {
+        Untagged,
+        OneDimensional,
+        TwoDimensional,
+        EndOfData
     }
 
     /// <summary>

@@ -1648,6 +1648,44 @@ public class StreamDecompressorTests
     }
 
     [Fact]
+    public void ApplyFilter_CCITTFax_Group3_2D_WithEolAndOneDimensionalTag_DecodesTagged1DLine()
+    {
+        var decompressor = new StreamDecompressor();
+
+        // EOL (000000000001), 1D tag (1), white run 0 (00110101),
+        // black run 8 (000101), padded to byte boundary.
+        var data = new byte[] { 0x00, 0x19, 0xA8, 0xA0 };
+
+        var parms = new PdfDictionary();
+        parms.SetInt("K", 1);
+        parms.SetInt("Columns", 8);
+        parms.SetInt("Rows", 1);
+
+        var result = decompressor.ApplyFilter("CCITTFaxDecode", data, parms);
+
+        result.Should().Equal(new byte[] { 0x00 });
+    }
+
+    [Fact]
+    public void ApplyFilter_CCITTFax_Group3_2D_WithEolAndTwoDimensionalTag_DecodesTagged2DLine()
+    {
+        var decompressor = new StreamDecompressor();
+
+        // Row 1: EOL, 1D tag, white run 8.
+        // Row 2: EOL, 2D tag, vertical-0 relative to the all-white reference row.
+        var data = new byte[] { 0x00, 0x1C, 0xC0, 0x05 };
+
+        var parms = new PdfDictionary();
+        parms.SetInt("K", 1);
+        parms.SetInt("Columns", 8);
+        parms.SetInt("Rows", 2);
+
+        var result = decompressor.ApplyFilter("CCITTFaxDecode", data, parms);
+
+        result.Should().Equal(new byte[] { 0xFF, 0xFF });
+    }
+
+    [Fact]
     public void ApplyFilter_LZW_ExtendedDictionary()
     {
         var decompressor = new StreamDecompressor();
