@@ -88,7 +88,7 @@ internal readonly record struct Jbig2RegionSegmentInformation(
     }
 }
 
-internal readonly record struct Jbig2AdaptiveTemplatePixel(sbyte X, sbyte Y);
+internal readonly record struct Jbig2AdaptiveTemplatePixel(int X, int Y);
 
 internal readonly record struct Jbig2GenericRegionSegment(
     Jbig2RegionSegmentInformation Region,

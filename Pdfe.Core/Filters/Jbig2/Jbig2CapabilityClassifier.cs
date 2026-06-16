@@ -364,7 +364,6 @@ internal static class Jbig2CapabilityClassifier
         features.Add("pattern-dictionary");
         features.Add(segment.IsMmrEncoded ? "pattern-dictionary.mmr" : "pattern-dictionary.arithmetic");
         features.Add($"pattern-dictionary.template-{segment.Template}");
-        unsupported.Add("pattern-dictionary");
     }
 
     private static void ClassifyHalftoneRegion(byte[] data, ISet<string> features, ISet<string> unsupported)
@@ -373,7 +372,8 @@ internal static class Jbig2CapabilityClassifier
         features.Add("halftone-region");
         features.Add(segment.IsMmrEncoded ? "halftone-region.mmr" : "halftone-region.arithmetic");
         features.Add($"halftone-region.template-{segment.Template}");
-        unsupported.Add("halftone-region");
+        if (segment.IsMmrEncoded)
+            unsupported.Add("halftone-region.mmr");
         if (segment.SkipEnabled)
             features.Add("halftone-region.skip");
         if (segment.DefaultPixel != 0)

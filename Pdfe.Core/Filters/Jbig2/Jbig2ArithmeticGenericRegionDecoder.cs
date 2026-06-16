@@ -15,7 +15,8 @@ internal static class Jbig2ArithmeticGenericRegionDecoder
         int template,
         IReadOnlyList<Jbig2AdaptiveTemplatePixel> adaptiveTemplatePixels,
         int contextBase = 0,
-        bool typicalPredictionGenericDecodingOn = false)
+        bool typicalPredictionGenericDecodingOn = false,
+        Jbig2Bitmap? skipBitmap = null)
     {
         if (decoder == null)
             throw new ArgumentNullException(nameof(decoder));
@@ -53,7 +54,8 @@ internal static class Jbig2ArithmeticGenericRegionDecoder
                 adaptiveTemplatePixels,
                 overrideFlags,
                 hasOverrides,
-                contextBase);
+                contextBase,
+                skipBitmap);
         }
 
         return bitmap;
@@ -84,7 +86,8 @@ internal static class Jbig2ArithmeticGenericRegionDecoder
         IReadOnlyList<Jbig2AdaptiveTemplatePixel> adaptiveTemplatePixels,
         bool[] overrideFlags,
         bool hasOverrides,
-        int contextBase)
+        int contextBase,
+        Jbig2Bitmap? skipBitmap)
     {
         int byteIndex = line * bitmap.Stride;
         int previousLineIndex = byteIndex - bitmap.Stride;
@@ -92,16 +95,16 @@ internal static class Jbig2ArithmeticGenericRegionDecoder
         switch (template)
         {
             case 0:
-                DecodeTemplate0Line(decoder, bitmap, line, paddedWidth, byteIndex, previousLineIndex, adaptiveTemplatePixels, overrideFlags, hasOverrides, contextBase);
+                DecodeTemplate0Line(decoder, bitmap, line, paddedWidth, byteIndex, previousLineIndex, adaptiveTemplatePixels, overrideFlags, hasOverrides, contextBase, skipBitmap);
                 break;
             case 1:
-                DecodeTemplate1Line(decoder, bitmap, line, paddedWidth, byteIndex, previousLineIndex, adaptiveTemplatePixels, hasOverrides, contextBase);
+                DecodeTemplate1Line(decoder, bitmap, line, paddedWidth, byteIndex, previousLineIndex, adaptiveTemplatePixels, hasOverrides, contextBase, skipBitmap);
                 break;
             case 2:
-                DecodeTemplate2Line(decoder, bitmap, line, paddedWidth, byteIndex, previousLineIndex, adaptiveTemplatePixels, hasOverrides, contextBase);
+                DecodeTemplate2Line(decoder, bitmap, line, paddedWidth, byteIndex, previousLineIndex, adaptiveTemplatePixels, hasOverrides, contextBase, skipBitmap);
                 break;
             case 3:
-                DecodeTemplate3Line(decoder, bitmap, line, paddedWidth, byteIndex, previousLineIndex, adaptiveTemplatePixels, hasOverrides, contextBase);
+                DecodeTemplate3Line(decoder, bitmap, line, paddedWidth, byteIndex, previousLineIndex, adaptiveTemplatePixels, hasOverrides, contextBase, skipBitmap);
                 break;
         }
     }
@@ -116,7 +119,8 @@ internal static class Jbig2ArithmeticGenericRegionDecoder
         IReadOnlyList<Jbig2AdaptiveTemplatePixel> adaptiveTemplatePixels,
         bool[] overrideFlags,
         bool hasOverrides,
-        int contextBase)
+        int contextBase,
+        Jbig2Bitmap? skipBitmap)
     {
         int line1 = line >= 1 ? bitmap.Data[previousLineIndex] : 0;
         int line2 = line >= 2 ? bitmap.Data[previousLineIndex - bitmap.Stride] << 6 : 0;
@@ -147,8 +151,9 @@ internal static class Jbig2ArithmeticGenericRegionDecoder
                 int activeContext = hasOverrides
                     ? ApplyTemplate0Overrides(bitmap, context, x + minorX, line, result, minorX, shift, adaptiveTemplatePixels, overrideFlags, extendedTemplate)
                     : context;
-                int decodeContext = contextBase + activeContext;
-                int bit = decoder.Decode(ref decodeContext) ? 1 : 0;
+                int bit = ShouldSkipPixel(skipBitmap, x + minorX, line)
+                    ? 0
+                    : DecodeBit(decoder, contextBase + activeContext);
                 result |= (byte)(bit << shift);
                 context = ((context & 0x7BF7) << 1)
                     | bit
@@ -170,7 +175,8 @@ internal static class Jbig2ArithmeticGenericRegionDecoder
         int previousLineIndex,
         IReadOnlyList<Jbig2AdaptiveTemplatePixel> adaptiveTemplatePixels,
         bool hasOverrides,
-        int contextBase)
+        int contextBase,
+        Jbig2Bitmap? skipBitmap)
     {
         int line1 = line >= 1 ? bitmap.Data[previousLineIndex] : 0;
         int line2 = line >= 2 ? bitmap.Data[previousLineIndex - bitmap.Stride] << 5 : 0;
@@ -199,8 +205,9 @@ internal static class Jbig2ArithmeticGenericRegionDecoder
                 int activeContext = hasOverrides
                     ? ApplySingleAdaptivePixelOverride(bitmap, context & 0x1FF7, x + minorX, line, result, minorX, adaptiveTemplatePixels[0], 3)
                     : context;
-                int decodeContext = contextBase + activeContext;
-                int bit = decoder.Decode(ref decodeContext) ? 1 : 0;
+                int bit = ShouldSkipPixel(skipBitmap, x + minorX, line)
+                    ? 0
+                    : DecodeBit(decoder, contextBase + activeContext);
                 result |= (byte)(bit << (7 - minorX));
 
                 int shift = 8 - minorX;
@@ -224,7 +231,8 @@ internal static class Jbig2ArithmeticGenericRegionDecoder
         int previousLineIndex,
         IReadOnlyList<Jbig2AdaptiveTemplatePixel> adaptiveTemplatePixels,
         bool hasOverrides,
-        int contextBase)
+        int contextBase,
+        Jbig2Bitmap? skipBitmap)
     {
         int line1 = line >= 1 ? bitmap.Data[previousLineIndex] : 0;
         int line2 = line >= 2 ? bitmap.Data[previousLineIndex - bitmap.Stride] << 4 : 0;
@@ -253,8 +261,9 @@ internal static class Jbig2ArithmeticGenericRegionDecoder
                 int activeContext = hasOverrides
                     ? ApplySingleAdaptivePixelOverride(bitmap, context & 0x3FB, x + minorX, line, result, minorX, adaptiveTemplatePixels[0], 2)
                     : context;
-                int decodeContext = contextBase + activeContext;
-                int bit = decoder.Decode(ref decodeContext) ? 1 : 0;
+                int bit = ShouldSkipPixel(skipBitmap, x + minorX, line)
+                    ? 0
+                    : DecodeBit(decoder, contextBase + activeContext);
                 result |= (byte)(bit << (7 - minorX));
 
                 int shift = 10 - minorX;
@@ -278,7 +287,8 @@ internal static class Jbig2ArithmeticGenericRegionDecoder
         int previousLineIndex,
         IReadOnlyList<Jbig2AdaptiveTemplatePixel> adaptiveTemplatePixels,
         bool hasOverrides,
-        int contextBase)
+        int contextBase,
+        Jbig2Bitmap? skipBitmap)
     {
         int line1 = line >= 1 ? bitmap.Data[previousLineIndex] : 0;
         int context = (line1 >> 1) & 0x70;
@@ -300,8 +310,9 @@ internal static class Jbig2ArithmeticGenericRegionDecoder
                 int activeContext = hasOverrides
                     ? ApplySingleAdaptivePixelOverride(bitmap, context & 0x3EF, x + minorX, line, result, minorX, adaptiveTemplatePixels[0], 4)
                     : context;
-                int decodeContext = contextBase + activeContext;
-                int bit = decoder.Decode(ref decodeContext) ? 1 : 0;
+                int bit = ShouldSkipPixel(skipBitmap, x + minorX, line)
+                    ? 0
+                    : DecodeBit(decoder, contextBase + activeContext);
                 result |= (byte)(bit << (7 - minorX));
                 context = ((context & 0x1F7) << 1)
                     | bit
@@ -312,6 +323,12 @@ internal static class Jbig2ArithmeticGenericRegionDecoder
             previousLineIndex++;
         }
     }
+
+    private static bool ShouldSkipPixel(Jbig2Bitmap? skipBitmap, int x, int y)
+        => skipBitmap?.GetPixel(x, y) == true;
+
+    private static int DecodeBit(IJbig2ArithmeticDecoder decoder, int context)
+        => decoder.Decode(ref context) ? 1 : 0;
 
     private static int ApplyTemplate0Overrides(
         Jbig2Bitmap bitmap,

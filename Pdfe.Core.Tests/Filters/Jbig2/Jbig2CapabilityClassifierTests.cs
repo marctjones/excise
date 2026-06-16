@@ -189,6 +189,39 @@ public class Jbig2CapabilityClassifierTests
     }
 
     [Fact]
+    public void Analyze_ClassifiesPatternDictionaryAsSupported()
+    {
+        byte[] patternDictionary =
+        [
+            0x00,       // arithmetic, template 0
+            0x01,       // pattern width
+            0x01,       // pattern height
+            0, 0, 0, 0, // gray max
+        ];
+
+        var report = Jbig2CapabilityClassifier.Analyze(
+            BuildSegment(1, SegmentType.PatternDictionary, patternDictionary));
+
+        report.Features.Should().Contain("pattern-dictionary");
+        report.UnsupportedFeatures.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Analyze_ClassifiesOnlyMmrHalftoneAsUnsupported()
+    {
+        var arithmeticReport = Jbig2CapabilityClassifier.Analyze(
+            BuildSegment(1, SegmentType.ImmediateHalftoneRegion, BuildHalftoneRegionBody(flags: 0x00)));
+        var mmrReport = Jbig2CapabilityClassifier.Analyze(
+            BuildSegment(1, SegmentType.ImmediateHalftoneRegion, BuildHalftoneRegionBody(flags: 0x01)));
+
+        arithmeticReport.Features.Should().Contain("halftone-region.arithmetic");
+        arithmeticReport.UnsupportedFeatures.Should().BeEmpty();
+        mmrReport.Features.Should().Contain("halftone-region.mmr");
+        mmrReport.UnsupportedFeatures.Should().Contain("halftone-region.mmr");
+        mmrReport.UnsupportedFeatures.Should().NotContain("halftone-region");
+    }
+
+    [Fact]
     public void Analyze_ClassifiesArithmeticTextRefinementAsSupported()
     {
         var report = Jbig2CapabilityClassifier.Analyze(BuildSegment(
@@ -225,4 +258,21 @@ public class Jbig2CapabilityClassifierTests
         report.Features.Should().Contain("end-of-file");
         report.Diagnostics.Should().BeEmpty();
     }
+
+    private static byte[] BuildHalftoneRegionBody(byte flags)
+        =>
+        [
+            0, 0, 0, 1, // region width
+            0, 0, 0, 1, // region height
+            0, 0, 0, 0, // x
+            0, 0, 0, 0, // y
+            0x04,       // region combination operator: Replace
+            flags,
+            0, 0, 0, 1, // grid width
+            0, 0, 0, 1, // grid height
+            0, 0, 0, 0, // grid x
+            0, 0, 0, 0, // grid y
+            0x01, 0x00, // region x vector: 256
+            0x00, 0x00, // region y vector: 0
+        ];
 }

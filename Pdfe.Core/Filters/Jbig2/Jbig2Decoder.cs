@@ -15,6 +15,7 @@ namespace Pdfe.Core.Filters.Jbig2;
 /// - Huffman text regions without refinement
 /// - Arithmetic symbol dictionaries without refinement/aggregation, retained contexts, or custom AT pixels
 /// - Arithmetic text regions without refinement
+/// - Pattern dictionaries and arithmetic halftone regions
 /// - Standard and referenced user Huffman tables for supported symbol/text paths
 /// - Segment header parsing for embedded organization (Annex D.3)
 /// - Typed metadata parsing for page, region, symbol dictionary, and text region bodies
@@ -23,7 +24,7 @@ namespace Pdfe.Core.Filters.Jbig2;
 /// - Symbol/text refinement and aggregate coding
 /// - Retained symbol-dictionary bitmap coding contexts
 /// - Generic refinement TPGRON
-/// - Halftone regions
+/// - MMR halftone regions
 /// </summary>
 [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 internal static class Jbig2Decoder
@@ -187,8 +188,8 @@ internal class Jbig2PageDecoder
             case SegmentType.HalftoneRegion:
             case SegmentType.ImmediateHalftoneRegion:
             case SegmentType.ImmediateLosslessHalftoneRegion:
-                Jbig2HalftoneRegionSegment.Parse(data);
-                throw new NotSupportedException($"Segment type {header.SegmentType} is not supported");
+                DecodeHalftoneRegion(header, data, pageImage);
+                break;
 
             case SegmentType.PageInformation:
                 _pageInformation = Jbig2PageInformation.Parse(data);
@@ -451,12 +452,72 @@ internal class Jbig2PageDecoder
     private void CachePatternDictionary(SegmentHeader header, byte[] data)
     {
         var segment = Jbig2PatternDictionarySegment.Parse(data);
+        var patterns = Jbig2PatternDictionaryDecoder.Decode(
+            segment,
+            data.AsSpan(segment.BitmapDataOffset, segment.BitmapDataLength));
+
         _segments[header.SegmentNumber] = new SegmentData
         {
             Data = data,
             Type = (SegmentType)header.SegmentType,
             PatternDictionary = segment,
+            DecodedPatternDictionary = patterns,
         };
+    }
+
+    private void DecodeHalftoneRegion(SegmentHeader header, byte[] data, byte[] pageImage)
+    {
+        var segment = Jbig2HalftoneRegionSegment.Parse(data);
+        var bitmap = Jbig2HalftoneRegionDecoder.Decode(
+            segment,
+            data.AsSpan(segment.BitmapDataOffset, segment.BitmapDataLength),
+            ResolvePatternDictionary(header));
+
+        _segments[header.SegmentNumber] = new SegmentData
+        {
+            Data = data,
+            Type = (SegmentType)header.SegmentType,
+            HalftoneRegion = segment,
+            RegionBitmap = bitmap,
+        };
+
+        if ((SegmentType)header.SegmentType == SegmentType.HalftoneRegion)
+            return;
+
+        if (segment.Region.XLocation > int.MaxValue || segment.Region.YLocation > int.MaxValue)
+            throw new InvalidOperationException("JBIG2 halftone region coordinates exceed supported limits");
+
+        var combinationOperator = segment.Region.CombinationOperator;
+        if (_pageInformation is { CombinationOperatorOverrideAllowed: false } pageInformation)
+            combinationOperator = pageInformation.CombinationOperator;
+
+        Jbig2BitmapCompositor.Composite(
+            new Jbig2Bitmap(_width, _height, pageImage),
+            bitmap,
+            (int)segment.Region.XLocation,
+            (int)segment.Region.YLocation,
+            combinationOperator);
+    }
+
+    private IReadOnlyList<Jbig2Bitmap> ResolvePatternDictionary(SegmentHeader header)
+    {
+        if (header.ReferredSegments.Count == 0)
+            throw new InvalidOperationException("JBIG2 halftone region does not reference a pattern dictionary");
+
+        var patterns = new List<Jbig2Bitmap>();
+        foreach (uint segmentNumber in header.ReferredSegments)
+        {
+            if (!_segments.TryGetValue(segmentNumber, out var segment)
+                || segment.DecodedPatternDictionary == null)
+                continue;
+
+            patterns.AddRange(segment.DecodedPatternDictionary);
+        }
+
+        if (patterns.Count == 0)
+            throw new InvalidOperationException("JBIG2 halftone region does not reference a decoded pattern dictionary");
+
+        return patterns;
     }
 
     /// <summary>
@@ -502,4 +563,6 @@ internal class SegmentData
     public Jbig2HuffmanTableSegment? HuffmanTable { get; set; }
     public Jbig2HuffmanTable? DecodedHuffmanTable { get; set; }
     public Jbig2PatternDictionarySegment? PatternDictionary { get; set; }
+    public IReadOnlyList<Jbig2Bitmap>? DecodedPatternDictionary { get; set; }
+    public Jbig2HalftoneRegionSegment? HalftoneRegion { get; set; }
 }
