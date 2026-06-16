@@ -49,6 +49,52 @@ public class Jbig2ArithmeticRegionTests
     }
 
     [Fact]
+    public void SymbolDictionary_ArithmeticSingleRefinement_RefinesImportedSymbolAndExportsNewSymbol()
+    {
+        var importedSymbol = new Jbig2Bitmap(1, 1);
+        importedSymbol.SetPixel(0, 0, true);
+        var segment = new Jbig2SymbolDictionarySegment(
+            IsHuffmanEncoded: false,
+            UseRefinementAggregation: true,
+            SdHuffDecodeHeightSelection: 0,
+            SdHuffDecodeWidthSelection: 0,
+            SdHuffBmSizeSelection: 0,
+            SdHuffAggInstanceSelection: 0,
+            IsCodingContextUsed: false,
+            IsCodingContextRetained: false,
+            SdTemplate: 0,
+            SdrTemplate: 1,
+            AdaptiveTemplatePixels: DefaultTemplate0AdaptivePixels(),
+            RefinementAdaptiveTemplatePixels: Array.Empty<Jbig2AdaptiveTemplatePixel>(),
+            ExportedSymbolCount: 1,
+            NewSymbolCount: 1,
+            PayloadDataOffset: 0,
+            PayloadDataLength: 0);
+
+        var decoder = new ScriptedArithmeticDecoder(
+            false, false, false, true,  // IADH: 1
+            false, false, false, true,  // IADW: 1
+            false, false, false, true,  // IAAI: one refinement instance
+            false,                      // IAID: imported symbol 0
+            false, false, false, false, // IARDX: 0
+            false, false, false, false, // IARDY: 0
+            false,                      // refined bitmap pixel
+            true, false, false, false,  // IADW: OOB ends height class
+            false, false, false, true,  // IAEX: one false flag for imported symbol
+            false, false, false, true); // IAEX: one true flag for new symbol
+
+        var decoded = Jbig2SymbolDictionaryDecoder.DecodeArithmeticForTest(
+            segment,
+            decoder,
+            new[] { importedSymbol });
+
+        decoded.NewSymbols.Should().HaveCount(1);
+        decoded.ExportedSymbols.Should().HaveCount(1);
+        decoded.NewSymbols[0].GetPixel(0, 0).Should().BeFalse();
+        decoded.ExportedSymbols[0].Should().BeSameAs(decoded.NewSymbols[0]);
+    }
+
+    [Fact]
     public void TextRegion_ArithmeticNoRefinement_PlacesSingleReferencedSymbol()
     {
         var symbol = new Jbig2Bitmap(1, 1);

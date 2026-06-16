@@ -20,9 +20,10 @@ internal sealed class Jbig2DecodedSymbolDictionary
 /// Decodes JBIG2 symbol dictionary segments for the no-refinement paths.
 /// Standard Huffman tables, referenced user tables, raw collective bitmaps,
 /// MMR collective bitmaps, imported symbols, and direct arithmetic-coded
-/// symbols with default template-0 AT pixels are handled here; refinement,
-/// aggregate coding, retained arithmetic contexts, and custom arithmetic AT
-/// pixels stay explicitly gated.
+/// symbols with default template-0 AT pixels are handled here; arithmetic
+/// single-symbol refinement is supported, while aggregate text-region coding,
+/// retained arithmetic contexts, and custom arithmetic AT pixels stay explicitly
+/// gated.
 /// </summary>
 [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 internal static class Jbig2SymbolDictionaryDecoder
@@ -31,7 +32,14 @@ internal static class Jbig2SymbolDictionaryDecoder
     private const int IadhContextBase = GenericRegionContextBase + Jbig2ArithmeticGenericRegionDecoder.ContextCount;
     private const int IadwContextBase = IadhContextBase + 512;
     private const int IaexContextBase = IadwContextBase + 512;
-    private const int ArithmeticContextCount = IaexContextBase + 512;
+    private const int ArithmeticDirectContextCount = IaexContextBase + 512;
+    private const int IaaiContextBase = ArithmeticDirectContextCount;
+    private const int IaidContextBase = IaaiContextBase + 512;
+    private const int MaxIaidContextBits = 20;
+    private const int IardxContextBase = IaidContextBase + (1 << MaxIaidContextBits);
+    private const int IardyContextBase = IardxContextBase + 512;
+    private const int GenericRefinementContextBase = IardyContextBase + 512;
+    private const int ArithmeticRefinementContextCount = GenericRefinementContextBase + Jbig2GenericRefinementRegionDecoder.ContextCount;
 
     public static Jbig2DecodedSymbolDictionary Decode(
         Jbig2SymbolDictionarySegment segment,
@@ -39,8 +47,8 @@ internal static class Jbig2SymbolDictionaryDecoder
         IReadOnlyList<Jbig2Bitmap> importedSymbols,
         IReadOnlyList<Jbig2HuffmanTable>? userTables = null)
     {
-        if (segment.UseRefinementAggregation)
-            throw new NotSupportedException("Refinement/aggregate JBIG2 symbol dictionaries are not yet supported");
+        if (segment.UseRefinementAggregation && segment.IsHuffmanEncoded)
+            throw new NotSupportedException("Huffman refinement/aggregate JBIG2 symbol dictionaries are not yet supported");
         if (segment.NewSymbolCount > int.MaxValue || segment.ExportedSymbolCount > int.MaxValue)
             throw new InvalidOperationException("JBIG2 symbol dictionary count exceeds supported limits");
 
@@ -162,7 +170,10 @@ internal static class Jbig2SymbolDictionaryDecoder
         ReadOnlySpan<byte> payload,
         IReadOnlyList<Jbig2Bitmap> importedSymbols)
     {
-        var decoder = new Jbig2MqArithmeticDecoder(payload.ToArray(), ArithmeticContextCount);
+        int contextCount = segment.UseRefinementAggregation
+            ? ArithmeticRefinementContextCount
+            : ArithmeticDirectContextCount;
+        var decoder = new Jbig2MqArithmeticDecoder(payload.ToArray(), contextCount);
         return DecodeArithmetic(segment, decoder, importedSymbols);
     }
 
@@ -181,6 +192,9 @@ internal static class Jbig2SymbolDictionaryDecoder
 
         var heightDecoder = new Jbig2ArithmeticIntegerDecoder(decoder, IadhContextBase);
         var widthDecoder = new Jbig2ArithmeticIntegerDecoder(decoder, IadwContextBase);
+        ArithmeticSymbolRefinementDecoders? refinementDecoders = null;
+        if (segment.UseRefinementAggregation)
+            refinementDecoders = new ArithmeticSymbolRefinementDecoders(decoder, GetSymbolCodeLength(importedSymbols.Count + newSymbolCount));
         int decodedSymbols = 0;
         int heightClassHeight = 0;
 
@@ -205,13 +219,15 @@ internal static class Jbig2SymbolDictionaryDecoder
                 if (symbolWidth <= 0)
                     throw new InvalidOperationException("Invalid JBIG2 symbol dictionary symbol width");
 
-                var symbol = Jbig2ArithmeticGenericRegionDecoder.Decode(
-                    decoder,
-                    symbolWidth,
-                    heightClassHeight,
-                    segment.SdTemplate,
-                    segment.AdaptiveTemplatePixels,
-                    GenericRegionContextBase);
+                var symbol = segment.UseRefinementAggregation
+                    ? DecodeArithmeticRefinedSymbol(segment, refinementDecoders!, allSymbols, symbolWidth, heightClassHeight)
+                    : Jbig2ArithmeticGenericRegionDecoder.Decode(
+                        decoder,
+                        symbolWidth,
+                        heightClassHeight,
+                        segment.SdTemplate,
+                        segment.AdaptiveTemplatePixels,
+                        GenericRegionContextBase);
 
                 newSymbols[decodedSymbols] = symbol;
                 allSymbols.Add(symbol);
@@ -231,6 +247,41 @@ internal static class Jbig2SymbolDictionaryDecoder
             throw new InvalidOperationException("JBIG2 symbol dictionary exported-symbol count did not match export flags");
 
         return new Jbig2DecodedSymbolDictionary(exportedSymbols, newSymbols);
+    }
+
+    private static Jbig2Bitmap DecodeArithmeticRefinedSymbol(
+        Jbig2SymbolDictionarySegment segment,
+        ArithmeticSymbolRefinementDecoders decoders,
+        IReadOnlyList<Jbig2Bitmap> symbols,
+        int symbolWidth,
+        int symbolHeight)
+    {
+        long instanceCount = DecodeRequired(decoders.AggregationInstanceCount, "symbol-dictionary refinement aggregate instance count");
+        if (instanceCount != 1)
+            throw new NotSupportedException("JBIG2 symbol-dictionary multi-instance refinement aggregation is not yet supported");
+        if (symbols.Count == 0)
+            throw new InvalidOperationException("JBIG2 symbol-dictionary refinement has no referenced symbols");
+
+        uint symbolId = decoders.DecodeSymbolId();
+        if (symbolId >= symbols.Count)
+            throw new InvalidOperationException("JBIG2 symbol-dictionary refinement symbol id is outside the referenced symbol set");
+
+        long rdx = DecodeRequired(decoders.ReferenceDeltaX, "symbol-dictionary refinement x delta");
+        long rdy = DecodeRequired(decoders.ReferenceDeltaY, "symbol-dictionary refinement y delta");
+        if (rdx < int.MinValue || rdx > int.MaxValue || rdy < int.MinValue || rdy > int.MaxValue)
+            throw new InvalidOperationException("JBIG2 symbol-dictionary refinement reference offset exceeds supported limits");
+
+        return Jbig2GenericRefinementRegionDecoder.Decode(
+            decoders.Decoder,
+            symbolWidth,
+            symbolHeight,
+            segment.SdrTemplate,
+            typicalPredictionGenericRefinementOn: false,
+            symbols[(int)symbolId],
+            (int)rdx,
+            (int)rdy,
+            segment.RefinementAdaptiveTemplatePixels,
+            GenericRefinementContextBase);
     }
 
     private static bool[] DecodeArithmeticExportFlags(IJbig2ArithmeticDecoder decoder, int totalSymbols)
@@ -257,6 +308,28 @@ internal static class Jbig2SymbolDictionaryDecoder
         }
 
         return flags;
+    }
+
+    private static long DecodeRequired(Jbig2ArithmeticIntegerDecoder decoder, string fieldName)
+        => decoder.Decode() ?? throw new InvalidOperationException($"JBIG2 {fieldName} decoded as OOB");
+
+    private static int GetSymbolCodeLength(int symbolCount)
+    {
+        if (symbolCount <= 1)
+            return 1;
+
+        int length = 0;
+        int value = 1;
+        while (value < symbolCount)
+        {
+            length++;
+            value <<= 1;
+        }
+
+        if (length > MaxIaidContextBits)
+            throw new InvalidOperationException("JBIG2 symbol-dictionary symbol-code length exceeds supported limits");
+
+        return length;
     }
 
     private static Jbig2HuffmanTable ResolveDecodeHeightTable(
@@ -375,5 +448,29 @@ internal static class Jbig2SymbolDictionaryDecoder
 
             return _tables[_position++];
         }
+    }
+
+    private sealed class ArithmeticSymbolRefinementDecoders
+    {
+        private readonly Jbig2IaidDecoder _iaid;
+        private readonly int _symbolCodeLength;
+
+        public ArithmeticSymbolRefinementDecoders(IJbig2ArithmeticDecoder decoder, int symbolCodeLength)
+        {
+            Decoder = decoder;
+            AggregationInstanceCount = new Jbig2ArithmeticIntegerDecoder(decoder, IaaiContextBase);
+            _iaid = new Jbig2IaidDecoder(decoder, IaidContextBase);
+            _symbolCodeLength = symbolCodeLength;
+            ReferenceDeltaX = new Jbig2ArithmeticIntegerDecoder(decoder, IardxContextBase);
+            ReferenceDeltaY = new Jbig2ArithmeticIntegerDecoder(decoder, IardyContextBase);
+        }
+
+        public IJbig2ArithmeticDecoder Decoder { get; }
+        public Jbig2ArithmeticIntegerDecoder AggregationInstanceCount { get; }
+        public Jbig2ArithmeticIntegerDecoder ReferenceDeltaX { get; }
+        public Jbig2ArithmeticIntegerDecoder ReferenceDeltaY { get; }
+
+        public uint DecodeSymbolId()
+            => _iaid.Decode(_symbolCodeLength);
     }
 }
