@@ -21,25 +21,37 @@ namespace Pdfe.Rendering.Tests;
 /// </summary>
 public class MemoryBenchmarkTests
 {
-    private const long SingleRenderBudgetBytes = 30L * 1024 * 1024;
+    private const long DefaultSingleRenderBudgetBytes = 30L * 1024 * 1024;
     private const long MultiPageRenderBudgetBytes = 50L * 1024 * 1024;
 
-    private static readonly Dictionary<string, string> KnownSingleRenderAllocationFailures = new(StringComparer.Ordinal)
-    {
-        ["irs-w9.pdf"] = "Issue #444: smoke corpus render currently exceeds the 30 MB single-page allocation budget.",
-        ["irs-1040.pdf"] = "Issue #444: smoke corpus render currently exceeds the 30 MB single-page allocation budget.",
-        ["scotus-trump-v-us.pdf"] = "Issue #444: smoke corpus render currently exceeds the 30 MB single-page allocation budget.",
-        ["state-ds82-passport-renewal.pdf"] = "Issue #444: smoke corpus render currently exceeds the 30 MB single-page allocation budget.",
-        ["cdc-vis-covid-19.pdf"] = "Issue #444: smoke corpus render currently exceeds the 30 MB single-page allocation budget.",
-    };
+    private sealed record AllocationBudget(long Bytes, string Reason);
 
-    private const string KnownMultiPageAllocationFailure =
-        "Issue #444: smoke corpus multi-page render currently exceeds the 50 MB peak allocation budget.";
+    private static readonly AllocationBudget DefaultSingleRenderBudget = new(
+        DefaultSingleRenderBudgetBytes,
+        "default single-page smoke-corpus render budget");
+
+    private static readonly Dictionary<string, AllocationBudget> SingleRenderBudgets = new(StringComparer.Ordinal)
+    {
+        // DS-82 is a dense, form-heavy smoke fixture. Current profiling on the
+        // reference test path measures about 31 MB for page 1; keep a narrow
+        // fixture baseline so it remains gated without turning the whole smoke
+        // corpus budget into a 40 MB default.
+        ["state-ds82-passport-renewal.pdf"] = new(
+            40L * 1024 * 1024,
+            "DS-82 page 1 calibrated fixture budget; measured about 31 MB in issue #444 profiling"),
+    };
 
     private readonly ITestOutputHelper _out;
     public MemoryBenchmarkTests(ITestOutputHelper o) { _out = o; }
 
     private static readonly string CorpusDir = ResolveCorpusDir();
+
+    private static AllocationBudget GetSingleRenderBudget(string fileName)
+    {
+        return SingleRenderBudgets.TryGetValue(fileName, out var budget)
+            ? budget
+            : DefaultSingleRenderBudget;
+    }
 
     private static string ResolveCorpusDir()
     {
@@ -67,7 +79,7 @@ public class MemoryBenchmarkTests
     [InlineData("scotus-trump-v-us.pdf", 1)]
     [InlineData("state-ds82-passport-renewal.pdf", 1)]
     [InlineData("cdc-vis-covid-19.pdf", 1)]
-    public void RenderAllocationPerPage_StaysBelow_30MB(string fileName, int pageIndex)
+    public void RenderAllocationPerPage_StaysBelowBudget(string fileName, int pageIndex)
     {
         var path = Path.Combine(CorpusDir, fileName);
         if (!File.Exists(path))
@@ -103,22 +115,19 @@ public class MemoryBenchmarkTests
         long allocDelta = allocAfter - allocBefore;
         // Convert to MB for reporting.
         double allocDeltaMb = allocDelta / (1024.0 * 1024.0);
+        var budget = GetSingleRenderBudget(fileName);
+        double budgetMb = budget.Bytes / (1024.0 * 1024.0);
 
         _out.WriteLine(
             $"{fileName,-45} allocated {allocDeltaMb:F2} MB " +
-            $"(before={allocBefore / (1024.0 * 1024.0):F1} MB, after={allocAfter / (1024.0 * 1024.0):F1} MB)");
+            $"(budget={budgetMb:F2} MB, before={allocBefore / (1024.0 * 1024.0):F1} MB, " +
+            $"after={allocAfter / (1024.0 * 1024.0):F1} MB, reason={budget.Reason})");
 
-        // Threshold: 30 MB per render. A 2-3× regression would be 60-90 MB,
-        // which this should catch. Loose threshold for CI stability.
-        if (allocDelta >= SingleRenderBudgetBytes &&
-            KnownSingleRenderAllocationFailures.TryGetValue(fileName, out var knownReason))
-        {
-            _out.WriteLine($"KNOWN FAILURE - not gating: {knownReason}");
-            Assert.SkipWhen(true, $"Known memory benchmark failure for {fileName}: {knownReason}");
-        }
-
-        allocDelta.Should().BeLessThan(SingleRenderBudgetBytes,
-            $"{fileName} single render should allocate < 30 MB (delta: {allocDeltaMb:F2} MB)");
+        // Default threshold: 30 MB per render. Fixture-specific budgets are
+        // documented above and still fail if their calibrated ceiling regresses.
+        allocDelta.Should().BeLessThan(budget.Bytes,
+            $"{fileName} single render should allocate < {budgetMb:F2} MB " +
+            $"(delta: {allocDeltaMb:F2} MB; {budget.Reason})");
     }
 
     /// <summary>
@@ -340,14 +349,9 @@ public class MemoryBenchmarkTests
         _out.WriteLine(
             $"Multi-page render (up to 5 pages): peak allocation delta = {peakDeltaMb:F2} MB");
 
-        // Threshold: 50 MB peak. A single page shouldn't exceed 30-35 MB, so peak
-        // across 5 should still be well under 50 MB unless there's a pooling bug.
-        if (peakDelta >= MultiPageRenderBudgetBytes)
-        {
-            _out.WriteLine($"KNOWN FAILURE - not gating: {KnownMultiPageAllocationFailure}");
-            Assert.SkipWhen(true, $"Known memory benchmark failure: {KnownMultiPageAllocationFailure}");
-        }
-
+        // Threshold: 50 MB peak. Current profiling for issue #444 measured
+        // about 13 MB here after renderer improvements, so this remains a
+        // broad regression guard without a fixture exception.
         peakDelta.Should().BeLessThan(MultiPageRenderBudgetBytes,
             $"Peak allocation across multi-page render should be < 50 MB; got {peakDeltaMb:F2} MB");
     }
