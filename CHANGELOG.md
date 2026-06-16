@@ -9,11 +9,19 @@ semantic versioning.
 Rendering quality hardening checkpoint. No intended API break.
 
 ### Changed
+- **Everyday PDF workbench release-candidate matrix (#490).** The release
+  checklist now maps common open, navigation, search/copy, form, typewriter,
+  annotation, page organization, redaction, hidden-text, and signature
+  workflows to automated gates plus named packaged-app smoke fixtures.
 - **Real-world corpus failure taxonomy (#491, #492).** The exploratory corpus
   scanner now distinguishes malformed PDFs, unsupported encrypted files,
   unsupported compression, decode failures, invalid page geometry, render
   resource limits, and timeouts instead of collapsing them into generic
   parse/render errors.
+- **Form XObject text extraction (#445).** `TextExtractor` now traverses Form
+  XObjects invoked with `Do`, honoring nested resources so government forms like
+  DS-11/DS-82 extract the visible page text instead of starting from later
+  overlay content.
 - **Default-open packaging polish (#470).** The Windows installer now registers
   pdfe with `RegisteredApplications`/Capabilities metadata so it appears in
   Default apps / Open With flows for `.pdf`, while preserving user choice about
@@ -24,6 +32,10 @@ Rendering quality hardening checkpoint. No intended API break.
   before allocating native Skia bitmaps.
 
 ### Tests
+- Release-candidate workflow matrix gate passed: 112 passed, 1 known headless
+  keyboard-search skip.
+- Smoke text differential passed for DS-11 and DS-82 after Form XObject text
+  extraction; current gate is 9 passed, 1 known IRS marked-content skip.
 - Focused renderer guard tests passed: 2 passed.
 - `Pdfe.Cli` Debug build passed locally.
 

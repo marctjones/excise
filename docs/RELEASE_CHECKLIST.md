@@ -29,6 +29,33 @@ Release excludes the developer scripting surface by default; `--package` is the
 Release artifact check. Use `--quick` for a short documentation/build/redaction
 check, and use `--visual --package` for the full local release-candidate pass.
 
+## Everyday PDF Workbench RC Matrix
+
+This matrix is the final-release gate for issue #490. Every row needs at least
+one automated gate, scripted smoke, or explicit manual packaged-app step with a
+named fixture. If a row fails during release-candidate testing, create or link a
+GitHub issue and either fix it or list it in final release notes as an accepted
+limitation before tagging.
+
+| Workflow | Automated or scripted gate | Fixture/manual RC step |
+| --- | --- | --- |
+| Open PDFs from Finder/Explorer/open-with and from the app | `GoldenPathTests.GoldenPath_OpenSearchNavigateClose`; `GuiWorkflowCoverageMatrixTests`; packaging file-association doc claim tests | Packaged app: open `test-pdfs/smoke/irs-w9.pdf` by app picker/open-with and from File > Open. On Windows, verify the installer registers pdfe in Default Apps without stealing the default unless selected. |
+| Navigate long PDFs, thumbnails, page labels, zoom, fit width/page | `PdfViewerControlTests`; `ThumbnailCacheTests`; `OutlineTreeNavigationTests`; `PdfPageLabelTests` | Packaged app: open `test-pdfs/smoke/irs-1040-instructions.pdf`, jump first/middle/last pages, toggle thumbnails/outline, verify page labels, Fit Width, Fit Page, zoom in/out. |
+| Search, select text, copy text | `GoldenPathTests.GoldenPath_OpenSearchNavigateClose`; `TextSelectionDragTests`; `PdfSearchServiceTests`; `SearchHighlightOverlayTests`; `RealWorldSearchTests` | Packaged app: open `test-pdfs/smoke/scotus-trump-v-us.pdf`, search `syllabus`, select a sentence, copy, and paste into a plain-text editor. |
+| Fill common forms, save filled copy, reopen, verify values persisted | `FormWorkflowTests`; `FormFieldsOverlayTests`; `PdfDocumentServiceTests` save/load coverage | Packaged app: open `test-pdfs/smoke/irs-w9.pdf`, fill text fields and a checkbox/radio where available, Save Filled Copy, reopen in pdfe, verify field values remain editable. |
+| Flatten form copy, reopen, verify static output | `FormWorkflowTests`; `Pdfe.Core.Tests.Document.AcroFormReadOnlyTests`; form flattening core tests | Packaged app: use `test-pdfs/smoke/irs-w9.pdf`, Flatten Form, reopen in pdfe, verify values are visible static page content and no inline field editor appears for flattened values. |
+| Add typewriter text to flat PDF, save copy, reopen | `TypewriterWorkflowTests`; typewriter service tests; `GoldenPathTests` save workflow coverage | Packaged app: open `test-pdfs/smoke/scotus-trump-v-anderson.pdf`, add typewriter text on page 1, Save Copy, reopen, verify text is visible and extractable. |
+| Highlight selected text and add sticky notes, save, reopen | `AnnotationAuthoringWorkflowTests`; `AnnotationWorkflowServiceTests`; annotation default-appearance rendering tests | Packaged app: open `test-pdfs/smoke/scotus-trump-v-us.pdf`, select text and highlight it, add a sticky note, Save Copy, reopen, verify highlight and note persist. |
+| Reorder, rotate, extract, remove, and combine pages | `PageOrganizationWorkflowTests`; `PageOrganizationWorkflowServiceTests`; `PdfDocumentServiceTests` page operations | Packaged app: use `test-pdfs/smoke/scotus-trump-v-us.pdf` plus `test-pdfs/smoke/irs-w4.pdf`, rotate page 1, reorder pages, extract a page, remove a page, combine another PDF, save and reopen. |
+| Redact text/area, save redacted copy, verify text removal plus metadata/attachment scrub status | `RedactionMouseWorkflowTests`; `RedactionServiceTests`; `RedactedCopySafetyServiceTests`; `dotnet test --filter "FullyQualifiedName~Redaction"` | Packaged app: open `test-pdfs/smoke/irs-w9.pdf`, redact a visible phrase and an area, save redacted copy, reopen, verify copied/extracted text no longer contains the phrase and safety summary reports metadata/attachment scrub status. |
+| Audit hidden text and signatures with clear user-facing states | `RevealHiddenTextTests`; `HiddenTextDetectorTests`; `SignatureVerificationServiceTests`; `SignatureVerificationWorkflowServiceTests` | Packaged app: run hidden-text reveal on a generated black-box-redaction fixture; open a signed fixture when available or a generated invalid-signature fixture, verify the signature panel clearly distinguishes valid/invalid/unsupported trust states. |
+
+The repeatable automated gate for this table is:
+
+```bash
+dotnet test PdfEditor.Tests --filter "FullyQualifiedName~GuiWorkflowCoverageMatrix|FullyQualifiedName~GoldenPath|FullyQualifiedName~Workflow|FullyQualifiedName~RevealHiddenText|FullyQualifiedName~SignatureVerification" --logger "console;verbosity=normal"
+```
+
 ## Issue Hygiene
 
 - Every shipped issue has a completion comment with validation evidence.
