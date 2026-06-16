@@ -1931,7 +1931,7 @@ internal partial class RenderContext
     {
         // Remove leading / if present
         var name = nameOperand.TrimStart('/');
-        var extGState = _page.GetExtGState(name);
+        var extGState = ResolveExtGStateFromActiveResources(name);
         if (extGState == null)
             return;
 
@@ -2990,6 +2990,7 @@ internal partial class RenderContext
             ? _page.Document.Resolve(resObj) as Pdfe.Core.Primitives.PdfDictionary
             : null;
         _resourcesStack.Push(formResources);
+        var savedState = _state.Clone();
 
         try
         {
@@ -3015,6 +3016,7 @@ internal partial class RenderContext
         }
         finally
         {
+            _state = savedState;
             _resourcesStack.Pop();
             _canvas.Restore();
         }
@@ -3629,6 +3631,23 @@ internal partial class RenderContext
             if (x == null) continue;
             return _page.Document.Resolve(x);
         }
+        return null;
+    }
+
+    private Pdfe.Core.Primitives.PdfDictionary? ResolveExtGStateFromActiveResources(string name)
+    {
+        foreach (var resources in _resourcesStack)
+        {
+            if (resources == null) continue;
+            var extGStatesObj = resources.GetOptional("ExtGState");
+            if (extGStatesObj == null) continue;
+            if (_page.Document.Resolve(extGStatesObj) is not Pdfe.Core.Primitives.PdfDictionary extGStates)
+                continue;
+            var extGState = extGStates.GetOptional(name);
+            if (extGState == null) continue;
+            return _page.Document.Resolve(extGState) as Pdfe.Core.Primitives.PdfDictionary;
+        }
+
         return null;
     }
 

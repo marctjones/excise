@@ -2090,6 +2090,27 @@ public class SkiaRendererTests
         bitmap.Should().NotBeNull();
     }
 
+    [Fact]
+    public void RenderPage_FormXObjectExtGState_AppliesLocallyAndDoesNotLeak()
+    {
+        var pdfData = CreatePdfWithFormLocalExtGState();
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, AntiAlias = false });
+
+        var transparentFormPixel = bitmap.GetPixel(25, 75);
+        transparentFormPixel.Red.Should().BeGreaterThan(245);
+        transparentFormPixel.Green.Should().BeGreaterThan(245);
+        transparentFormPixel.Blue.Should().BeGreaterThan(245);
+
+        var postFormPagePixel = bitmap.GetPixel(75, 75);
+        postFormPagePixel.Blue.Should().BeGreaterThan(200);
+        postFormPagePixel.Red.Should().BeLessThan(40);
+        postFormPagePixel.Green.Should().BeLessThan(40);
+    }
+
     #endregion
 
     #region Additional Graphics State Operators (i, ri)
@@ -3068,7 +3089,7 @@ public class SkiaRendererTests
         writer.WriteLine("%PDF-1.4");
         writer.Flush();
 
-        var offsets = new long[8];
+        var offsets = new long[7];
 
         // Catalog
         offsets[1] = ms.Position;
@@ -3314,6 +3335,82 @@ public class SkiaRendererTests
 
         writer.WriteLine("trailer");
         writer.WriteLine("<< /Root 1 0 R /Size 7 >>");
+        writer.WriteLine("startxref");
+        writer.WriteLine(xrefPos.ToString());
+        writer.WriteLine("%%EOF");
+        writer.Flush();
+
+        return ms.ToArray();
+    }
+
+    private static byte[] CreatePdfWithFormLocalExtGState()
+    {
+        const string pageContent = "/Fm1 Do\n0 0 1 rg\n60 10 30 30 re\nf\n";
+        const string formContent = "/GS1 gs\n1 0 0 rg\n10 10 30 30 re\nf\n";
+
+        using var ms = new MemoryStream();
+        using var writer = new StreamWriter(ms, System.Text.Encoding.ASCII, leaveOpen: true);
+        writer.NewLine = "\n";
+
+        writer.WriteLine("%PDF-1.4");
+        writer.Flush();
+
+        var offsets = new long[8];
+
+        offsets[1] = ms.Position;
+        writer.WriteLine("1 0 obj");
+        writer.WriteLine("<< /Type /Catalog /Pages 2 0 R >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[2] = ms.Position;
+        writer.WriteLine("2 0 obj");
+        writer.WriteLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[3] = ms.Position;
+        writer.WriteLine("3 0 obj");
+        writer.WriteLine(
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 100 100] " +
+            "/Contents 4 0 R /Resources << /XObject << /Fm1 5 0 R >> >> >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[4] = ms.Position;
+        writer.WriteLine("4 0 obj");
+        writer.WriteLine($"<< /Length {pageContent.Length} >>");
+        writer.WriteLine("stream");
+        writer.Write(pageContent);
+        writer.WriteLine("endstream");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[5] = ms.Position;
+        writer.WriteLine("5 0 obj");
+        writer.WriteLine(
+            $"<< /Type /XObject /Subtype /Form /FormType 1 /BBox [0 0 100 100] " +
+            $"/Resources << /ExtGState << /GS1 6 0 R >> >> /Length {formContent.Length} >>");
+        writer.WriteLine("stream");
+        writer.Write(formContent);
+        writer.WriteLine("endstream");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[6] = ms.Position;
+        writer.WriteLine("6 0 obj");
+        writer.WriteLine("<< /Type /ExtGState /ca 0 >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        var xrefPos = ms.Position;
+        writer.WriteLine("xref");
+        writer.WriteLine("0 7");
+        writer.WriteLine("0000000000 65535 f ");
+        for (int i = 1; i <= 6; i++)
+            writer.WriteLine($"{offsets[i]:D10} 00000 n ");
+        writer.WriteLine("trailer");
+        writer.WriteLine("<< /Size 7 /Root 1 0 R >>");
         writer.WriteLine("startxref");
         writer.WriteLine(xrefPos.ToString());
         writer.WriteLine("%%EOF");
