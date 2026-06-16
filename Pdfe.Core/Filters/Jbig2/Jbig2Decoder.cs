@@ -23,6 +23,11 @@ namespace Pdfe.Core.Filters.Jbig2;
 [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 internal static class Jbig2Decoder
 {
+    private static readonly byte[] FileHeaderId =
+    {
+        0x97, 0x4A, 0x42, 0x32, 0x0D, 0x0A, 0x1A, 0x0A
+    };
+
     /// <summary>
     /// Decode JBIG2-encoded image data.
     /// </summary>
@@ -51,8 +56,15 @@ internal static class Jbig2Decoder
         if (width <= 0 || height <= 0)
             throw new ArgumentException("Width and height must be positive");
 
-        // Combine globals and page-specific data for segment parsing
-        byte[] allData = CombineGlobalsAndData(globals, data);
+        // Combine globals and page-specific data for segment parsing. PDF
+        // JBIG2 streams normally use embedded organization without the JBIG2
+        // file header, but standalone JBIG2 payloads can include the Annex D
+        // header. Match PDFBox's boundary by accepting sequential headers and
+        // rejecting random-access organization until segment data offsets are
+        // modeled explicitly.
+        byte[] allData = CombineGlobalsAndData(
+            globals != null ? NormalizeFileHeader(globals) : null,
+            NormalizeFileHeader(data));
 
         // Parse segments and extract page-level generic regions
         var decoder = new Jbig2PageDecoder(width, height);
@@ -75,6 +87,43 @@ internal static class Jbig2Decoder
         Array.Copy(globals, 0, combined, 0, globals.Length);
         Array.Copy(data, 0, combined, globals.Length, data.Length);
         return combined;
+    }
+
+    private static byte[] NormalizeFileHeader(byte[] data)
+    {
+        if (!HasFileHeader(data))
+            return data;
+
+        if (data.Length < 9)
+            throw new InvalidOperationException("Truncated JBIG2 file header");
+
+        var headerFlags = data[8];
+        var isSequential = (headerFlags & 0x01) != 0;
+        if (!isSequential)
+            throw new NotSupportedException("Random-access JBIG2 file organization is not supported");
+
+        var amountOfPagesUnknown = (headerFlags & 0x02) != 0;
+        var headerLength = amountOfPagesUnknown ? 9 : 13;
+        if (data.Length < headerLength)
+            throw new InvalidOperationException("Truncated JBIG2 page-count field");
+
+        var normalized = new byte[data.Length - headerLength];
+        Array.Copy(data, headerLength, normalized, 0, normalized.Length);
+        return normalized;
+    }
+
+    private static bool HasFileHeader(byte[] data)
+    {
+        if (data.Length < FileHeaderId.Length)
+            return false;
+
+        for (var i = 0; i < FileHeaderId.Length; i++)
+        {
+            if (data[i] != FileHeaderId[i])
+                return false;
+        }
+
+        return true;
     }
 }
 

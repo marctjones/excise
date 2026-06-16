@@ -10,6 +10,11 @@ namespace Pdfe.Core.Tests.Filters.Jbig2;
 /// </summary>
 public class Jbig2DecoderTests
 {
+    private static readonly byte[] FileHeaderId =
+    {
+        0x97, 0x4A, 0x42, 0x32, 0x0D, 0x0A, 0x1A, 0x0A
+    };
+
     private static byte[] BuildSegment(uint segmentNumber, SegmentType type, uint pageNumber = 1, uint dataLength = 0)
     {
         return new[]
@@ -26,6 +31,20 @@ public class Jbig2DecoderTests
             (byte)(dataLength >> 8),
             (byte)dataLength,
         };
+    }
+
+    private static byte[] BuildFileHeader(byte flags, uint? pageCount = null)
+    {
+        var bytes = new List<byte>(FileHeaderId);
+        bytes.Add(flags);
+        if (pageCount.HasValue)
+        {
+            bytes.Add((byte)(pageCount.Value >> 24));
+            bytes.Add((byte)(pageCount.Value >> 16));
+            bytes.Add((byte)(pageCount.Value >> 8));
+            bytes.Add((byte)pageCount.Value);
+        }
+        return bytes.ToArray();
     }
 
     /// <summary>
@@ -86,6 +105,37 @@ public class Jbig2DecoderTests
 
         // All white (0x00) since no segments were processed
         result.Should().Equal(new byte[expectedBytes]);
+    }
+
+    [Fact]
+    public void Decode_WithSequentialFileHeaderUnknownPageCount_SkipsHeader()
+    {
+        byte[] data = BuildFileHeader(0x03); // amount unknown + sequential organization
+
+        byte[] result = Jbig2Decoder.Decode(data, null, 8, 2);
+
+        result.Should().Equal(new byte[] { 0x00, 0x00 });
+    }
+
+    [Fact]
+    public void Decode_WithSequentialFileHeaderKnownPageCount_SkipsPageCountField()
+    {
+        byte[] data = BuildFileHeader(0x01, pageCount: 1); // known page count + sequential organization
+
+        byte[] result = Jbig2Decoder.Decode(data, null, 8, 2);
+
+        result.Should().Equal(new byte[] { 0x00, 0x00 });
+    }
+
+    [Fact]
+    public void Decode_WithRandomAccessFileHeader_ThrowsNotSupported()
+    {
+        byte[] data = BuildFileHeader(0x02); // amount unknown + random-access organization
+
+        var act = () => Jbig2Decoder.Decode(data, null, 8, 2);
+
+        act.Should().Throw<NotSupportedException>()
+            .WithMessage("*Random-access JBIG2 file organization*");
     }
 
     /// <summary>
