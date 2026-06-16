@@ -64,7 +64,7 @@
     <PackageReference Include="Avalonia.Desktop" Version="12.0.4" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.4" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.4" />
-    <PackageReference Include="ReactiveUI.Avalonia" Version="12.0.1" />
+    <PackageReference Include="ReactiveUI.Avalonia" Version="12.0.3" />
     <PackageReference Include="FluentAvaloniaUI" Version="3.0.0-preview4" />
     <!-- FluentIcons.Avalonia.Fluent dropped: not referenced anywhere
          in source/axaml. Page icons use emoji TextBlocks (📁💾🔍 etc.)
@@ -80,8 +80,8 @@
     <PackageReference Include="SkiaSharp" Version="3.119.4" /> <!-- MIT License -->
 
     <!-- MVVM and Utilities. ReactiveUI on the 23.2.x line, compatible with
-         the ReactiveUI.Avalonia 12.0.1 integration glue above. -->
-    <PackageReference Include="ReactiveUI" Version="23.2.27" />
+         the ReactiveUI.Avalonia 12.0.x integration glue above. -->
+    <PackageReference Include="ReactiveUI" Version="23.2.28" />
     <!-- ReactiveUI.Fody dropped: no [Reactive] attribute or
          `using ReactiveUI.Fody;` anywhere — viewmodels expose
          properties through plain RaiseAndSetIfChanged or aren't
@@ -91,10 +91,10 @@
          is ReactiveUI.SourceGenerators (Roslyn-based, no Fody). -->
 
     <!-- Logging Infrastructure (paired with .NET 10 BCL). -->
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.8" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.8" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.8" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.9" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.9" />
 
     <!-- Tmds.DBus.Protocol pin removed: Avalonia 12 already brings 0.92.0
          transitively, which is past the GHSA-xrw6-gwf8-vvr9 cutoff
