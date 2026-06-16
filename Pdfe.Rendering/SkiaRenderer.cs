@@ -2612,8 +2612,11 @@ internal partial class RenderContext
                     case Pdfe.Core.Document.PdfAnnotationSubtype.Highlight:
                         paint.Style = SKPaintStyle.Fill;
                         paint.BlendMode = SKBlendMode.Multiply;
-                        paint.Color = WithAlpha(baseColor, 96);
-                        _canvas.DrawRect(box, paint);
+                        paint.Color = WithAlpha(baseColor, AnnotationOpacityAlpha(annot));
+                        var radius = Math.Min(box.Height * 0.5f, box.Width * 0.5f);
+                        var highlightBox = box;
+                        highlightBox.Inflate(radius, 0);
+                        _canvas.DrawRoundRect(highlightBox, radius, radius, paint);
                         paint.BlendMode = SKBlendMode.SrcOver;
                         break;
 
@@ -2697,6 +2700,15 @@ internal partial class RenderContext
 
     private static SKColor WithAlpha(SKColor color, byte alpha) =>
         new(color.Red, color.Green, color.Blue, alpha);
+
+    private static byte AnnotationOpacityAlpha(Pdfe.Core.Document.PdfAnnotation annot)
+    {
+        var opacity = annot.RawDictionary.GetNumber("CA", 1.0);
+        if (double.IsNaN(opacity) || double.IsInfinity(opacity))
+            opacity = 1.0;
+        opacity = Math.Clamp(opacity, 0.0, 1.0);
+        return (byte)Math.Round(opacity * 255.0);
+    }
 
     /// <summary>
     /// Parse a PDF color array (1, 3, or 4 components — gray / RGB /

@@ -13,7 +13,7 @@ public class AnnotationDefaultAppearanceTests
     {
         var pdf = CreatePdfWithAnnotation(
             "<< /Type /Annot /Subtype /Highlight /Rect [40 90 160 110] " +
-            "/QuadPoints [40 110 160 110 40 90 160 90] /C [1 1 0] >>");
+            "/QuadPoints [40 110 160 110 40 90 160 90] /C [1 1 0] /CA 1 >>");
 
         using var doc = PdfDocument.Open(pdf);
         doc.GetPage(1).GetAnnotations()
@@ -24,6 +24,8 @@ public class AnnotationDefaultAppearanceTests
 
         CountYellowishPixels(bitmap).Should().BeGreaterThan(50,
             "a no-/AP highlight annotation should synthesize a visible default appearance");
+        CountStrongYellowPixels(bitmap).Should().BeGreaterThan(50,
+            "highlight opacity should honor /CA rather than always using a pale fallback alpha");
     }
 
     private static int CountYellowishPixels(SKBitmap bitmap)
@@ -35,6 +37,21 @@ public class AnnotationDefaultAppearanceTests
             {
                 var pixel = bitmap.GetPixel(x, y);
                 if (pixel.Red > 180 && pixel.Green > 180 && pixel.Blue < 240)
+                    count++;
+            }
+        }
+        return count;
+    }
+
+    private static int CountStrongYellowPixels(SKBitmap bitmap)
+    {
+        var count = 0;
+        for (int y = 0; y < bitmap.Height; y++)
+        {
+            for (int x = 0; x < bitmap.Width; x++)
+            {
+                var pixel = bitmap.GetPixel(x, y);
+                if (pixel.Red > 240 && pixel.Green > 240 && pixel.Blue < 40)
                     count++;
             }
         }
