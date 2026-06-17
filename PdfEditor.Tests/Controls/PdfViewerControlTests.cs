@@ -2,9 +2,12 @@ using System;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Headless.XUnit;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Threading;
 using AwesomeAssertions;
 using Pdfe.Avalonia.Controls;
@@ -49,6 +52,16 @@ public class PdfViewerControlTests
         control.CurrentPage.Should().Be(1);
         control.InteractionMode.Should().Be(InteractionMode.None);
         control.Document.Should().BeNull();
+    }
+
+    [FixedAvaloniaFact]
+    public void PdfViewerControl_IsKeyboardFocusable_AndExposesAutomationName()
+    {
+        var control = new PdfViewerControl();
+
+        control.Focusable.Should().BeTrue();
+        AutomationProperties.GetName(control).Should().Be("PDF viewer, no document loaded");
+        AutomationProperties.GetHelpText(control).Should().Contain("Use Page Up and Page Down");
     }
 
     #endregion
@@ -110,6 +123,28 @@ public class PdfViewerControlTests
         control.Document?.Dispose();
     }
 
+    [FixedAvaloniaFact]
+    public async Task PdfViewerControl_DocumentAutomationHelpText_IncludesPageTextPreview()
+    {
+        var pdfPath = TestPdfGenerator.CreateSimpleTextPdf("PdfViewerControlTests_AutomationPreview", "Accessible Preview Text");
+        var control = new PdfViewerControl();
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            control.Document = PdfCoreDocument.Open(pdfPath);
+        });
+
+        await Task.Delay(500);
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            AutomationProperties.GetName(control).Should().Be("PDF viewer, page 1 of 1");
+            AutomationProperties.GetHelpText(control).Should().Contain("Accessible Preview Text");
+        });
+
+        control.Document?.Dispose();
+    }
+
     #endregion
 
     #region Zoom Tests
@@ -162,6 +197,21 @@ public class PdfViewerControlTests
 
         // Assert
         control.ZoomLevel.Should().Be(1.5);
+    }
+
+    [FixedAvaloniaFact]
+    public void PdfViewerControl_KeyboardZoomShortcuts_UpdateZoom()
+    {
+        var control = new PdfViewerControl();
+
+        RaiseViewerKey(control, Key.OemPlus, KeyModifiers.Control);
+
+        control.ZoomLevel.Should().Be(1.25);
+        AutomationProperties.GetItemStatus(control).Should().Contain("zoom 125");
+
+        RaiseViewerKey(control, Key.D0, KeyModifiers.Control);
+
+        control.ZoomLevel.Should().Be(1.0);
     }
 
     #endregion
@@ -230,7 +280,46 @@ public class PdfViewerControlTests
         control.Document?.Dispose();
     }
 
+    [FixedAvaloniaFact]
+    public async Task PdfViewerControl_KeyboardPageShortcuts_UpdateCurrentPage()
+    {
+        var pdfPath = TestPdfGenerator.CreateMultiPagePdf("PdfViewerControlTests_AccessibleKeyboard", pageCount: 3);
+        var control = new PdfViewerControl();
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            control.Document = PdfCoreDocument.Open(pdfPath);
+
+            RaiseViewerKey(control, Key.PageDown);
+            control.CurrentPage.Should().Be(2);
+
+            RaiseViewerKey(control, Key.End);
+            control.CurrentPage.Should().Be(3);
+
+            RaiseViewerKey(control, Key.PageUp);
+            control.CurrentPage.Should().Be(2);
+
+            RaiseViewerKey(control, Key.Home);
+            control.CurrentPage.Should().Be(1);
+        });
+
+        control.Document?.Dispose();
+    }
+
     #endregion
+
+    private static void RaiseViewerKey(PdfViewerControl control, Key key, KeyModifiers modifiers = KeyModifiers.None)
+    {
+        var args = new KeyEventArgs
+        {
+            RoutedEvent = InputElement.KeyDownEvent,
+            Route = RoutingStrategies.Tunnel | RoutingStrategies.Bubble,
+            Key = key,
+            KeyModifiers = modifiers,
+        };
+        control.RaiseEvent(args);
+        args.Handled.Should().BeTrue();
+    }
 
     #region Interaction Mode Tests
 

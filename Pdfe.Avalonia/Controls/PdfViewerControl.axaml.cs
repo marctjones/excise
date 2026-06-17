@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Collections;
 using Avalonia.Reactive;
 using Avalonia.Controls;
@@ -284,6 +285,8 @@ public partial class PdfViewerControl : UserControl
     {
         InitializeComponent();
         _renderer = new SkiaRenderer();
+        Focusable = true;
+        UpdateViewerAutomationProperties();
         DetachedFromVisualTree += OnDetachedFromVisualTreeHandler;
 
         // Subscribe to property changes
@@ -767,6 +770,9 @@ public partial class PdfViewerControl : UserControl
         AddHandler(PointerReleasedEvent, OnInteractionLayerPointerReleased,
             global::Avalonia.Interactivity.RoutingStrategies.Tunnel | global::Avalonia.Interactivity.RoutingStrategies.Bubble,
             handledEventsToo: true);
+        AddHandler(KeyDownEvent, OnViewerKeyDown,
+            global::Avalonia.Interactivity.RoutingStrategies.Tunnel | global::Avalonia.Interactivity.RoutingStrategies.Bubble,
+            handledEventsToo: false);
 
         // Surface viewport changes (scrollbars appearing/disappearing,
         // sidebars toggling, window resizes). Subscribe directly to the
@@ -839,6 +845,124 @@ public partial class PdfViewerControl : UserControl
         }
     }
 
+    private void OnViewerKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (IsKeyboardEditingSource(e.Source))
+            return;
+
+        bool handled = false;
+        bool control = e.KeyModifiers.HasFlag(KeyModifiers.Control) ||
+                       e.KeyModifiers.HasFlag(KeyModifiers.Meta);
+
+        if (control)
+        {
+            switch (e.Key)
+            {
+                case Key.Add:
+                case Key.OemPlus:
+                    ZoomIn();
+                    handled = true;
+                    break;
+                case Key.Subtract:
+                case Key.OemMinus:
+                    ZoomOut();
+                    handled = true;
+                    break;
+                case Key.D0:
+                case Key.NumPad0:
+                    ZoomToActualSize();
+                    handled = true;
+                    break;
+            }
+        }
+        else
+        {
+            switch (e.Key)
+            {
+                case Key.PageDown:
+                case Key.Right:
+                    NextPage();
+                    handled = true;
+                    break;
+                case Key.PageUp:
+                case Key.Left:
+                    PreviousPage();
+                    handled = true;
+                    break;
+                case Key.Home:
+                    if (Document != null)
+                    {
+                        CurrentPage = 1;
+                        handled = true;
+                    }
+                    break;
+                case Key.End:
+                    if (Document != null)
+                    {
+                        CurrentPage = Document.PageCount;
+                        handled = true;
+                    }
+                    break;
+            }
+        }
+
+        if (handled)
+            e.Handled = true;
+    }
+
+    private static bool IsKeyboardEditingSource(object? source) =>
+        source is TextBox or ComboBox;
+
+    private void UpdateViewerAutomationProperties()
+    {
+        string name = Document == null
+            ? "PDF viewer, no document loaded"
+            : $"PDF viewer, page {CurrentPage} of {Document.PageCount}";
+        AutomationProperties.SetName(this, name);
+
+        string status = Document == null
+            ? $"No document loaded; zoom {ZoomLevel:P0}; {ViewModeDescription(ViewMode)}"
+            : $"Page {CurrentPage} of {Document.PageCount}; zoom {ZoomLevel:P0}; {ViewModeDescription(ViewMode)}";
+        AutomationProperties.SetItemStatus(this, status);
+
+        AutomationProperties.SetHelpText(this, BuildViewerAutomationHelpText());
+    }
+
+    private string BuildViewerAutomationHelpText()
+    {
+        const string keys = "Use Page Up and Page Down to change pages. Use Control plus Plus, Minus, or 0 to change zoom.";
+        if (Document == null || CurrentPage < 1 || CurrentPage > Document.PageCount)
+            return keys;
+
+        string preview = ExtractCurrentPageTextPreview(maxLength: 500);
+        return string.IsNullOrWhiteSpace(preview)
+            ? $"{ViewModeDescription(ViewMode)}. {keys}"
+            : $"{ViewModeDescription(ViewMode)}. Current page text preview: {preview}. {keys}";
+    }
+
+    private string ExtractCurrentPageTextPreview(int maxLength)
+    {
+        try
+        {
+            if (Document == null || CurrentPage < 1 || CurrentPage > Document.PageCount)
+                return string.Empty;
+
+            string text = Document.GetPage(CurrentPage).Text ?? string.Empty;
+            text = string.Join(" ", text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+            if (text.Length <= maxLength)
+                return text;
+
+            return text[..maxLength] + "...";
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
+    private static string ViewModeDescription(PdfViewMode mode) =>
+        mode == PdfViewMode.Continuous ? "continuous reading view" : "single-page editing view";
+
     private void OnZoomLevelChanged()
     {
         if (_zoomScaleTransform != null)
@@ -848,6 +972,7 @@ public partial class PdfViewerControl : UserControl
         }
         if (ViewMode == PdfViewMode.Continuous)
             ApplyContinuousZoom();
+        UpdateViewerAutomationProperties();
     }
 
     private void OnLoadingStateChanged()
@@ -921,6 +1046,8 @@ public partial class PdfViewerControl : UserControl
             ClearDisplay();
             ClearContinuous();
         }
+
+        UpdateViewerAutomationProperties();
     }
 
     private async void OnCurrentPageChanged()
@@ -935,6 +1062,7 @@ public partial class PdfViewerControl : UserControl
                 }
 
                 PageChanged?.Invoke(this, new PageChangedEventArgs(CurrentPage));
+                UpdateViewerAutomationProperties();
                 return;
             }
 
@@ -956,6 +1084,7 @@ public partial class PdfViewerControl : UserControl
 
             await RenderCurrentPageAsync();
             PageChanged?.Invoke(this, new PageChangedEventArgs(CurrentPage));
+            UpdateViewerAutomationProperties();
 
             // In continuous mode, a CurrentPage change that did NOT originate
             // from the user scrolling (e.g. a "go to page" command or a clicked
@@ -1145,6 +1274,7 @@ public partial class PdfViewerControl : UserControl
     public void ZoomIn()
     {
         ZoomLevel = Math.Min(ZoomLevel * 1.25, 5.0);
+        UpdateViewerAutomationProperties();
     }
 
     /// <summary>
@@ -1153,6 +1283,7 @@ public partial class PdfViewerControl : UserControl
     public void ZoomOut()
     {
         ZoomLevel = Math.Max(ZoomLevel / 1.25, 0.1);
+        UpdateViewerAutomationProperties();
     }
 
     /// <summary>
@@ -1161,6 +1292,7 @@ public partial class PdfViewerControl : UserControl
     public void ZoomToActualSize()
     {
         ZoomLevel = 1.0;
+        UpdateViewerAutomationProperties();
     }
 
     /// <summary>

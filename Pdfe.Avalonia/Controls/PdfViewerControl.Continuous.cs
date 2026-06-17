@@ -100,6 +100,8 @@ public partial class PdfViewerControl
             // Back to single-page: make sure the current page is rendered.
             _ = RenderCurrentPageAsync();
         }
+
+        UpdateViewerAutomationProperties();
     }
 
     /// <summary>(Re)build the per-page slots from the current document.</summary>
