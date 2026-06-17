@@ -1663,6 +1663,26 @@ public class StreamDecompressorTests
     }
 
     [Fact]
+    public void ApplyFilter_CCITTFax_Group4_VerticalModes_UseChangingElementCoordinates()
+    {
+        var decompressor = new StreamDecompressor();
+
+        // Row 1: horizontal mode, white run 2, black run 4, then vertical-0 to finish white.
+        // Row 2: three vertical-0 modes against row 1. The second row should preserve
+        // the black run starting at the changing element, not one sample after it.
+        var data = new byte[] { 0b00101110, 0b11111100 };
+
+        var parms = new PdfDictionary();
+        parms.SetInt("K", -1);
+        parms.SetInt("Columns", 8);
+        parms.SetInt("Rows", 2);
+
+        var result = decompressor.ApplyFilter("CCITTFaxDecode", data, parms);
+
+        result.Should().Equal(new byte[] { 0xC3, 0xC3 });
+    }
+
+    [Fact]
     public void ApplyFilter_CCITTFax_Group4_EntersDecodeLoop()
     {
         var decompressor = new StreamDecompressor();

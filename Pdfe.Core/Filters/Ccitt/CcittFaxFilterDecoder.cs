@@ -98,12 +98,24 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
     /// Decode a single Group 4 row using 2D MMR encoding.
     /// </summary>
     private bool[] DecodeGroup4Row(CcittBitReader reader, bool[] refRow, int columns)
+        => DecodeTwoDimensionalRow(reader, refRow, columns);
+
+    /// <summary>
+    /// Decode a single Group 3 2D row.
+    /// </summary>
+    private bool[] DecodeGroup3_2DRow(CcittBitReader reader, bool[] refRow, int columns)
+        => DecodeTwoDimensionalRow(reader, refRow, columns);
+
+    /// <summary>
+    /// Decode one T.4/T.6 two-dimensional row using changing-element coordinates.
+    /// </summary>
+    private bool[] DecodeTwoDimensionalRow(CcittBitReader reader, bool[] refRow, int columns)
     {
         var row = new bool[columns];
-        int a0 = -1;
+        int a0 = 0;
         bool color = false;
 
-        while (a0 < columns - 1 && reader.HasBits)
+        while (a0 < columns && reader.HasBits)
         {
             var mode = ReadTwoDimensionalMode(reader);
             if (mode.Kind == Ccitt2DModeKind.Invalid)
@@ -113,8 +125,9 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
 
             if (mode.Kind == Ccitt2DModeKind.Pass)
             {
-                int b1 = FindNextRun(refRow, a0 + 1, !color);
-                int b2 = FindNextRun(refRow, b1 + 1, color);
+                int b1 = FindChangingElement(refRow, a0, color);
+                int b2 = FindChangingElement(refRow, b1, !color);
+                FillRun(row, a0, b2, color);
                 a0 = b2;
             }
             else if (mode.Kind == Ccitt2DModeKind.Horizontal)
@@ -124,17 +137,17 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
                 if (len1 < 0 || len2 < 0)
                     break;
 
-                int firstEnd = Math.Min(a0 + 1 + len1, columns);
+                int firstEnd = Math.Min(a0 + len1, columns);
                 int secondEnd = Math.Min(firstEnd + len2, columns);
-                FillRun(row, a0 + 1, firstEnd, color);
+                FillRun(row, a0, firstEnd, color);
                 FillRun(row, firstEnd, secondEnd, !color);
                 a0 = secondEnd;
             }
             else
             {
-                int b1 = FindNextRun(refRow, a0 + 1, !color);
-                int a1 = Math.Clamp(b1 + mode.VerticalOffset, a0 + 1, columns);
-                FillRun(row, a0 + 1, a1, color);
+                int b1 = FindChangingElement(refRow, a0, color);
+                int a1 = Math.Clamp(b1 + mode.VerticalOffset, a0, columns);
+                FillRun(row, a0, a1, color);
                 a0 = a1;
                 color = !color;
             }
@@ -278,58 +291,6 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
         return reader.ReadBits(1) == 1
             ? CcittGroup3LineMode.OneDimensional
             : CcittGroup3LineMode.TwoDimensional;
-    }
-
-    /// <summary>
-    /// Decode a single Group 3 2D row.
-    /// </summary>
-    private bool[] DecodeGroup3_2DRow(CcittBitReader reader, bool[] refRow, int columns)
-    {
-        var row = new bool[columns];
-        int a0 = -1;
-        bool color = false;
-
-        while (a0 < columns - 1)
-        {
-            if (!reader.HasBits)
-                break;
-
-            var mode = ReadTwoDimensionalMode(reader);
-            if (mode.Kind == Ccitt2DModeKind.Invalid)
-                mode = TryReadByteAlignedModeAfterFill(reader);
-            if (mode.Kind == Ccitt2DModeKind.Invalid || mode.Kind == Ccitt2DModeKind.Eofb)
-                break;
-
-            if (mode.Kind == Ccitt2DModeKind.Pass)
-            {
-                int b1 = FindNextRun(refRow, a0 + 1, !color);
-                int b2 = FindNextRun(refRow, b1 + 1, color);
-                a0 = b2;
-            }
-            else if (mode.Kind == Ccitt2DModeKind.Horizontal)
-            {
-                int len1 = DecodeHuffmanRun(reader, color, CcittTables.WhiteTerminating);
-                int len2 = DecodeHuffmanRun(reader, !color, CcittTables.WhiteTerminating);
-                if (len1 < 0 || len2 < 0)
-                    break;
-
-                int firstEnd = Math.Min(a0 + 1 + len1, columns);
-                int secondEnd = Math.Min(firstEnd + len2, columns);
-                FillRun(row, a0 + 1, firstEnd, color);
-                FillRun(row, firstEnd, secondEnd, !color);
-                a0 = secondEnd;
-            }
-            else
-            {
-                int b1 = FindNextRun(refRow, a0 + 1, !color);
-                int a1 = Math.Clamp(b1 + mode.VerticalOffset, a0 + 1, columns);
-                FillRun(row, a0 + 1, a1, color);
-                a0 = a1;
-                color = !color;
-            }
-        }
-
-        return row;
     }
 
     private static Ccitt2DMode ReadTwoDimensionalMode(CcittBitReader reader)
@@ -507,13 +468,14 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
         }
     }
 
-    private int FindNextRun(bool[] row, int startIdx, bool color)
+    private int FindChangingElement(bool[] row, int startIdx, bool currentColor)
     {
-        for (int i = startIdx; i < row.Length; i++)
+        for (int i = Math.Max(0, startIdx); i < row.Length; i++)
         {
-            if (row[i] == color)
+            if (row[i] != currentColor)
                 return i;
         }
+
         return row.Length;
     }
 
