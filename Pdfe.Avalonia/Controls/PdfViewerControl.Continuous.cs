@@ -10,6 +10,7 @@ using global::Avalonia.Media.Imaging;
 using global::Avalonia.Reactive;
 using global::Avalonia.Threading;
 using Pdfe.Rendering;
+using SkiaSharp;
 
 namespace Pdfe.Avalonia.Controls;
 
@@ -31,16 +32,16 @@ public partial class PdfViewerControl
     // may still be bound to a realized (visible) Image, and disposing it would
     // crash the render. Dropping the reference lets the GC reclaim it once no
     // slot/Image holds it. Full disposal happens only on document change.
-    private readonly LinkedList<(int Page, int Dpi, WriteableBitmap Bmp)> _continuousCache = new();
+    private readonly LinkedList<(ContinuousTileKey Key, WriteableBitmap Bitmap)> _continuousCache = new();
     private readonly Dictionary<int, CancellationTokenSource> _continuousRenderCts = new();
     private const int ContinuousCacheCapacity = 10;
     internal const double PointsToDip = 96.0 / 72.0;
     private const double PageGapDip = 12.0;   // matches the DataTemplate Border bottom margin
 
-    // Sharp high-zoom (#371 pt1): render each continuous page at a DPI that scales
+    // Sharp high-zoom (#371): render each continuous page at a DPI that scales
     // with zoom so it stays crisp instead of upscaling a fixed-DPI bitmap, capped
-    // so a deep zoom can't blow up memory (a full-page bitmap at the cap is the
-    // bound; true visible-region tiling is a future refinement).
+    // so deep zoom stays bounded. Realized pages render only the visible region
+    // through RenderOptions.ClipRect rather than allocating a full-page bitmap.
     internal const int MaxContinuousDpi = 240;
     private int ContinuousRenderDpi =>
         (int)Math.Clamp(Math.Round(DefaultRenderDpi * ZoomLevel), DefaultRenderDpi, MaxContinuousDpi);
@@ -69,8 +70,14 @@ public partial class PdfViewerControl
                 .Subscribe(new AnonymousObserver<Vector>(_ => OnContinuousScrolled()));
             _continuousViewportSubscription = _continuousScrollViewer
                 .GetObservable(ScrollViewer.ViewportProperty)
-                .Subscribe(new AnonymousObserver<Size>(OnScrollViewerViewportChanged));
+                .Subscribe(new AnonymousObserver<Size>(OnContinuousViewportChanged));
         }
+    }
+
+    private void OnContinuousViewportChanged(Size viewport)
+    {
+        OnScrollViewerViewportChanged(viewport);
+        RenderVisibleContinuousTiles();
     }
 
     private void OnViewModeChanged()
@@ -122,7 +129,7 @@ public partial class PdfViewerControl
     {
         foreach (var cts in _continuousRenderCts.Values) cts.Cancel();
         _continuousRenderCts.Clear();
-        foreach (var entry in _continuousCache) entry.Bmp.Dispose();
+        foreach (var entry in _continuousCache) entry.Bitmap.Dispose();
         _continuousCache.Clear();
     }
 
@@ -136,10 +143,7 @@ public partial class PdfViewerControl
         if (_continuousSlots == null) return;
         foreach (var slot in _continuousSlots) slot.ApplyZoom(ZoomLevel);
 
-        if (_continuousItems == null) return;
-        foreach (var container in _continuousItems.GetRealizedContainers())
-            if (container.DataContext is PdfPageSlot slot)
-                _ = RenderContinuousAsync(slot);
+        RenderVisibleContinuousTiles();
     }
 
     // ---- Scroll <-> CurrentPage sync -----------------------------------
@@ -183,6 +187,8 @@ public partial class PdfViewerControl
             try { CurrentPage = top; }
             finally { _syncingPageFromScroll = false; }
         }
+
+        RenderVisibleContinuousTiles();
     }
 
     // ---- Container realization -> on-demand render ---------------------
@@ -190,7 +196,7 @@ public partial class PdfViewerControl
     private void OnContinuousContainerPrepared(object? sender, ContainerPreparedEventArgs e)
     {
         if (e.Container.DataContext is PdfPageSlot slot)
-            _ = RenderContinuousAsync(slot);
+            _ = RenderContinuousTileAsync(slot);
     }
 
     private void OnContinuousContainerClearing(object? sender, ContainerClearingEventArgs e)
@@ -207,14 +213,33 @@ public partial class PdfViewerControl
         }
     }
 
-    private async Task RenderContinuousAsync(PdfPageSlot slot)
+    private void RenderVisibleContinuousTiles()
+    {
+        if (_continuousItems == null) return;
+
+        foreach (var container in _continuousItems.GetRealizedContainers())
+        {
+            if (container.DataContext is PdfPageSlot slot)
+                _ = RenderContinuousTileAsync(slot);
+        }
+    }
+
+    private async Task RenderContinuousTileAsync(PdfPageSlot slot)
     {
         var doc = Document;
         if (doc == null || slot.PageNumber < 1 || slot.PageNumber > doc.PageCount) return;
 
+        if (!TryCreateVisibleTileRequest(slot, out var request))
+            return;
+
         int dpi = ContinuousRenderDpi;
-        if (TryGetContinuousCached(slot.PageNumber, dpi, out var cached))
+        var key = new ContinuousTileKey(slot.PageNumber, dpi, request.XDip, request.YDip, request.WidthDip, request.HeightDip);
+        if (slot.CurrentTileKey.Equals(key) && slot.Bitmap != null)
+            return;
+
+        if (TryGetContinuousCached(key, out var cached))
         {
+            slot.ApplyTile(request, key);
             slot.Bitmap = cached;
             return;
         }
@@ -237,7 +262,11 @@ public partial class PdfViewerControl
                 // instance state and is not reentrant, and continuous mode may
                 // render several pages around the viewport concurrently.
                 var renderer = new SkiaRenderer();
-                return renderer.RenderPage(page, new RenderOptions { Dpi = dpi });
+                return renderer.RenderPage(page, new RenderOptions
+                {
+                    Dpi = dpi,
+                    ClipRect = request.ClipRect
+                });
             }, token);
 
             try
@@ -246,7 +275,8 @@ public partial class PdfViewerControl
                 var bitmap = Imaging.SkiaInterop.ToAvaloniaBitmap(skBitmap);
                 if (bitmap != null)
                 {
-                    AddToContinuousCache(pageNumber, dpi, bitmap);
+                    AddToContinuousCache(key, bitmap);
+                    slot.ApplyTile(request, key);
                     slot.Bitmap = bitmap;
                 }
             }
@@ -270,15 +300,79 @@ public partial class PdfViewerControl
         }
     }
 
-    private bool TryGetContinuousCached(int page, int dpi, out WriteableBitmap? bmp)
+    private bool TryCreateVisibleTileRequest(PdfPageSlot slot, out ContinuousTileRequest request)
+    {
+        request = default;
+        if (_continuousScrollViewer == null || _continuousSlots == null)
+            return false;
+
+        var viewport = _continuousScrollViewer.Viewport;
+        if (viewport.Width <= 0 || viewport.Height <= 0 || ZoomLevel <= 0)
+            return false;
+
+        double pageTop = 0;
+        for (int i = 0; i < slot.PageNumber - 1 && i < _continuousSlots.Count; i++)
+            pageTop += _continuousSlots[i].DisplayHeight + PageGapDip;
+
+        return TryCreateContinuousTileRequest(
+            slot,
+            _continuousScrollViewer.Offset,
+            viewport,
+            pageTop,
+            ZoomLevel,
+            out request);
+    }
+
+    internal static bool TryCreateContinuousTileRequest(
+        PdfPageSlot slot,
+        Vector viewportOffset,
+        Size viewport,
+        double pageTop,
+        double zoom,
+        out ContinuousTileRequest request)
+    {
+        request = default;
+        if (viewport.Width <= 0 || viewport.Height <= 0 || zoom <= 0)
+            return false;
+
+        double visibleLeft = Math.Clamp(viewportOffset.X, 0, slot.DisplayWidth);
+        double visibleTop = Math.Clamp(viewportOffset.Y - pageTop, 0, slot.DisplayHeight);
+        double visibleRight = Math.Clamp(viewportOffset.X + viewport.Width, 0, slot.DisplayWidth);
+        double visibleBottom = Math.Clamp(viewportOffset.Y + viewport.Height - pageTop, 0, slot.DisplayHeight);
+
+        if (visibleRight <= visibleLeft || visibleBottom <= visibleTop)
+            return false;
+
+        double dipPerPoint = PointsToDip * zoom;
+        double leftPt = visibleLeft / dipPerPoint;
+        double rightPt = visibleRight / dipPerPoint;
+        double contentTopPt = slot.HeightPt - (visibleTop / dipPerPoint);
+        double contentBottomPt = slot.HeightPt - (visibleBottom / dipPerPoint);
+
+        var clip = new SKRect(
+            (float)leftPt,
+            (float)Math.Max(0, contentBottomPt),
+            (float)Math.Min(slot.WidthPt, rightPt),
+            (float)Math.Min(slot.HeightPt, contentTopPt));
+
+        request = new ContinuousTileRequest(
+            clip,
+            (int)Math.Floor(visibleLeft),
+            (int)Math.Floor(visibleTop),
+            Math.Max(1, (int)Math.Ceiling(visibleRight - visibleLeft)),
+            Math.Max(1, (int)Math.Ceiling(visibleBottom - visibleTop)));
+        return true;
+    }
+
+    private bool TryGetContinuousCached(ContinuousTileKey key, out WriteableBitmap? bmp)
     {
         for (var node = _continuousCache.First; node != null; node = node.Next)
         {
-            if (node.Value.Page == page && node.Value.Dpi == dpi)
+            if (node.Value.Key.Equals(key))
             {
                 _continuousCache.Remove(node);
                 _continuousCache.AddFirst(node);
-                bmp = node.Value.Bmp;
+                bmp = node.Value.Bitmap;
                 return true;
             }
         }
@@ -286,17 +380,26 @@ public partial class PdfViewerControl
         return false;
     }
 
-    private void AddToContinuousCache(int page, int dpi, WriteableBitmap bmp)
+    private void AddToContinuousCache(ContinuousTileKey key, WriteableBitmap bmp)
     {
         for (var node = _continuousCache.First; node != null; node = node.Next)
         {
-            if (node.Value.Page == page && node.Value.Dpi == dpi) { _continuousCache.Remove(node); break; }
+            if (node.Value.Key.Equals(key)) { _continuousCache.Remove(node); break; }
         }
-        _continuousCache.AddFirst((page, dpi, bmp));
+        _continuousCache.AddFirst((key, bmp));
         // Drop (don't dispose) the LRU tail — see field comment on why.
         while (_continuousCache.Count > ContinuousCacheCapacity)
             _continuousCache.RemoveLast();
     }
+
+    internal readonly record struct ContinuousTileKey(int Page, int Dpi, int XDip, int YDip, int WidthDip, int HeightDip);
+
+    internal readonly record struct ContinuousTileRequest(
+        SKRect ClipRect,
+        int XDip,
+        int YDip,
+        int WidthDip,
+        int HeightDip);
 }
 
 /// <summary>
@@ -307,6 +410,10 @@ public sealed class PdfPageSlot : INotifyPropertyChanged
 {
     private double _displayWidth;
     private double _displayHeight;
+    private double _tileDisplayX;
+    private double _tileDisplayY;
+    private double _tileDisplayWidth;
+    private double _tileDisplayHeight;
     private WriteableBitmap? _bitmap;
 
     internal PdfPageSlot(int pageNumber, double widthPt, double heightPt, double zoom)
@@ -323,12 +430,26 @@ public sealed class PdfPageSlot : INotifyPropertyChanged
 
     public double DisplayWidth { get => _displayWidth; private set => Set(ref _displayWidth, value); }
     public double DisplayHeight { get => _displayHeight; private set => Set(ref _displayHeight, value); }
+    public double TileDisplayX { get => _tileDisplayX; private set => Set(ref _tileDisplayX, value); }
+    public double TileDisplayY { get => _tileDisplayY; private set => Set(ref _tileDisplayY, value); }
+    public double TileDisplayWidth { get => _tileDisplayWidth; private set => Set(ref _tileDisplayWidth, value); }
+    public double TileDisplayHeight { get => _tileDisplayHeight; private set => Set(ref _tileDisplayHeight, value); }
     public WriteableBitmap? Bitmap { get => _bitmap; set => Set(ref _bitmap, value); }
+    internal PdfViewerControl.ContinuousTileKey CurrentTileKey { get; private set; }
 
     internal void ApplyZoom(double zoom)
     {
         DisplayWidth = WidthPt * PdfViewerControl.PointsToDip * zoom;
         DisplayHeight = HeightPt * PdfViewerControl.PointsToDip * zoom;
+    }
+
+    internal void ApplyTile(PdfViewerControl.ContinuousTileRequest request, PdfViewerControl.ContinuousTileKey key)
+    {
+        TileDisplayX = request.XDip;
+        TileDisplayY = request.YDip;
+        TileDisplayWidth = request.WidthDip;
+        TileDisplayHeight = request.HeightDip;
+        CurrentTileKey = key;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

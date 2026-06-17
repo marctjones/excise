@@ -53,6 +53,10 @@ namespace Pdfe.Avalonia.Controls
         public double DisplayWidth { get; }
         public double HeightPt { get; }
         public int PageNumber { get; }
+        public double TileDisplayHeight { get; }
+        public double TileDisplayWidth { get; }
+        public double TileDisplayX { get; }
+        public double TileDisplayY { get; }
         public double WidthPt { get; }
         public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
     }

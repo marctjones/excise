@@ -70,11 +70,9 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="controls:PdfPageSlot">
                         <!-- Border is sized to the (zoomed) page via bindings on
-                             the PageSlot VM; the Image stretches the rendered
-                             bitmap to fill it. Rendering is kicked on container
-                             realization (code-behind) and flows back through the
-                             Bitmap binding, so virtualization only renders the
-                             pages near the viewport. -->
+                             the PageSlot VM. The child Canvas is full page size,
+                             while the Image is positioned over the currently
+                             visible tile rendered via RenderOptions.ClipRect. -->
                         <Border Width="{Binding DisplayWidth}"
                                 Height="{Binding DisplayHeight}"
                                 Background="White"
@@ -82,7 +80,16 @@
                                 HorizontalAlignment="Center"
                                 BorderBrush="#40000000"
                                 BorderThickness="1">
-                            <Image Source="{Binding Bitmap}" Stretch="Fill" />
+                            <Canvas Width="{Binding DisplayWidth}"
+                                    Height="{Binding DisplayHeight}"
+                                    ClipToBounds="True">
+                                <Image Source="{Binding Bitmap}"
+                                       Stretch="Fill"
+                                       Width="{Binding TileDisplayWidth}"
+                                       Height="{Binding TileDisplayHeight}"
+                                       Canvas.Left="{Binding TileDisplayX}"
+                                       Canvas.Top="{Binding TileDisplayY}" />
+                            </Canvas>
                         </Border>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
