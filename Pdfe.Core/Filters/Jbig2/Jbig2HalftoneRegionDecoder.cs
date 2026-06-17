@@ -12,7 +12,7 @@ internal static class Jbig2HalftoneRegionDecoder
         IReadOnlyList<Jbig2Bitmap> patterns)
     {
         if (segment.IsMmrEncoded)
-            throw new NotSupportedException("JBIG2 MMR halftone regions are not yet supported");
+            return DecodeMmr(segment, payload, patterns);
 
         var decoder = new Jbig2MqArithmeticDecoder(
             payload.ToArray(),
@@ -57,6 +57,28 @@ internal static class Jbig2HalftoneRegionDecoder
         return bitmap;
     }
 
+    private static Jbig2Bitmap DecodeMmr(
+        Jbig2HalftoneRegionSegment segment,
+        ReadOnlySpan<byte> payload,
+        IReadOnlyList<Jbig2Bitmap> patterns)
+    {
+        ValidateInputs(segment, patterns);
+
+        int regionWidth = checked((int)segment.Region.BitmapWidth);
+        int regionHeight = checked((int)segment.Region.BitmapHeight);
+        int gridWidth = checked((int)segment.GridWidth);
+        int gridHeight = checked((int)segment.GridHeight);
+        var bitmap = new Jbig2Bitmap(regionWidth, regionHeight);
+        if (segment.DefaultPixel != 0)
+            bitmap.Fill(true);
+
+        int bitsPerValue = GetBitsPerValue(patterns.Count);
+        var grayScalePlanes = DecodeMmrGrayScalePlanes(payload, gridWidth, gridHeight, bitsPerValue);
+
+        RenderPatterns(segment, bitmap, patterns, grayScalePlanes, gridWidth, gridHeight, bitsPerValue);
+        return bitmap;
+    }
+
     private static Jbig2Bitmap[] DecodeGrayScalePlanes(
         Jbig2HalftoneRegionSegment segment,
         IJbig2ArithmeticDecoder decoder,
@@ -87,6 +109,44 @@ internal static class Jbig2HalftoneRegionDecoder
         }
 
         return planes;
+    }
+
+    private static Jbig2Bitmap[] DecodeMmrGrayScalePlanes(
+        ReadOnlySpan<byte> payload,
+        int gridWidth,
+        int gridHeight,
+        int bitsPerValue)
+    {
+        if (bitsPerValue == 0)
+            return Array.Empty<Jbig2Bitmap>();
+
+        var collectiveBitmap = new Jbig2Bitmap(
+            checked(gridWidth * bitsPerValue),
+            gridHeight,
+            Jbig2MmrDecoder.Decode(payload.ToArray(), checked(gridWidth * bitsPerValue), gridHeight));
+        var planes = new Jbig2Bitmap[bitsPerValue];
+
+        for (int j = bitsPerValue - 1; j >= 0; j--)
+        {
+            int sourceX = (bitsPerValue - 1 - j) * gridWidth;
+            planes[j] = ExtractPlane(collectiveBitmap, sourceX, gridWidth);
+            if (j < bitsPerValue - 1)
+                XorInto(planes[j], planes[j + 1]);
+        }
+
+        return planes;
+    }
+
+    private static Jbig2Bitmap ExtractPlane(Jbig2Bitmap collectiveBitmap, int sourceX, int width)
+    {
+        var plane = new Jbig2Bitmap(width, collectiveBitmap.Height);
+        for (int y = 0; y < collectiveBitmap.Height; y++)
+        {
+            for (int x = 0; x < width; x++)
+                plane.SetPixel(x, y, collectiveBitmap.GetPixel(sourceX + x, y));
+        }
+
+        return plane;
     }
 
     private static void RenderPatterns(

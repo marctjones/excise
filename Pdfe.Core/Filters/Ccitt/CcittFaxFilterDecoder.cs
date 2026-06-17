@@ -106,6 +106,8 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
         while (a0 < columns - 1 && reader.HasBits)
         {
             var mode = ReadTwoDimensionalMode(reader);
+            if (mode.Kind == Ccitt2DModeKind.Invalid)
+                mode = TryReadByteAlignedModeAfterFill(reader);
             if (mode.Kind == Ccitt2DModeKind.Invalid || mode.Kind == Ccitt2DModeKind.Eofb)
                 break;
 
@@ -293,6 +295,8 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
                 break;
 
             var mode = ReadTwoDimensionalMode(reader);
+            if (mode.Kind == Ccitt2DModeKind.Invalid)
+                mode = TryReadByteAlignedModeAfterFill(reader);
             if (mode.Kind == Ccitt2DModeKind.Invalid || mode.Kind == Ccitt2DModeKind.Eofb)
                 break;
 
@@ -392,6 +396,25 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
         return new Ccitt2DMode(Ccitt2DModeKind.Invalid, 0);
     }
 
+    private static Ccitt2DMode TryReadByteAlignedModeAfterFill(CcittBitReader reader)
+    {
+        int originalPosition = reader.Position;
+        int fillBits = (8 - (originalPosition % 8)) % 8;
+        if (fillBits == 0)
+            return new Ccitt2DMode(Ccitt2DModeKind.Invalid, 0);
+
+        if (reader.PeekBits(fillBits) != 0)
+            return new Ccitt2DMode(Ccitt2DModeKind.Invalid, 0);
+
+        reader.ReadBits(fillBits);
+        var mode = ReadTwoDimensionalMode(reader);
+        if (mode.Kind != Ccitt2DModeKind.Invalid)
+            return mode;
+
+        reader.SetPosition(originalPosition);
+        return mode;
+    }
+
     private readonly record struct Ccitt2DMode(Ccitt2DModeKind Kind, int VerticalOffset);
 
     private enum Ccitt2DModeKind
@@ -481,11 +504,7 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
 
             if (!found)
                 return totalLen > 0 ? totalLen : -1;
-            if (totalLen >= 2560)
-                break;
         }
-
-        return totalLen;
     }
 
     private int FindNextRun(bool[] row, int startIdx, bool color)
@@ -583,6 +602,9 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
         public bool HasBits => _bitPos < _data.Length * 8;
 
         public int Position => _bitPos;
+
+        public void SetPosition(int bitPosition)
+            => _bitPos = Math.Max(0, Math.Min(bitPosition, _data.Length * 8));
 
         public int PeekBits(int count)
         {

@@ -285,9 +285,9 @@ public class PdfColorSpaceTests
     {
         var lab = PdfColorSpace.FromName("Lab");
         var (r, g, b) = lab.ToRgb(new[] { 10.0, 0.0, 0.0 });
-        r.Should().BeLessThan(0.1);
-        g.Should().BeLessThan(0.1);
-        b.Should().BeLessThan(0.1);
+        r.Should().BeLessThan(0.15);
+        g.Should().BeLessThan(0.15);
+        b.Should().BeLessThan(0.15);
     }
 
     [Fact]

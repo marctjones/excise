@@ -264,4 +264,28 @@ public class SegmentHeaderParserTests
         header.ReferredSegments.Should().Equal(1u, 2u);
         header.SegmentType.Should().Be((int)SegmentType.TextRegion);
     }
+
+    [Fact]
+    public void ParseSegmentHeader_WithExtendedReferredSegments_SkipsRetentionFlags()
+    {
+        var data = new System.Collections.Generic.List<byte>();
+        data.AddRange(new byte[] { 0, 0, 0, 7 }); // Segment number.
+        data.Add((byte)SegmentType.ImmediateLosslessTextRegion);
+        data.AddRange(new byte[] { 0xE0, 0, 0, 6 }); // Extended referred-segment count = 6.
+        data.Add(0); // One byte of retention flags for this segment + 6 references.
+        data.AddRange(new byte[] { 1, 2, 3, 4, 5, 6 });
+        data.Add(1); // Short page association.
+        data.AddRange(new byte[] { 0, 0, 0, 12 });
+
+        var parser = new SegmentHeaderParser(data.ToArray());
+
+        var header = parser.ParseSegmentHeader();
+
+        header.Should().NotBeNull();
+        header!.ReferredSegmentCount.Should().Be(6);
+        header.ReferredSegments.Should().Equal(1u, 2u, 3u, 4u, 5u, 6u);
+        header.PageNumber.Should().Be(1);
+        header.DataLength.Should().Be(12);
+        header.DataOffset.Should().Be(21);
+    }
 }

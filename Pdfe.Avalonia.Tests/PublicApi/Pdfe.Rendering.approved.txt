@@ -23,22 +23,50 @@ namespace Pdfe.Rendering.Differential
     {
         public static bool IsAvailable { get; }
         public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
+        public static Pdfe.Rendering.Differential.MutoolReferenceRenderer.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
+        public sealed class ReferenceRenderResult : System.IEquatable<Pdfe.Rendering.Differential.MutoolReferenceRenderer.ReferenceRenderResult>
+        {
+            public ReferenceRenderResult(SkiaSharp.SKBitmap? Bitmap, string Status, string? ErrorMessage, long ElapsedMs) { }
+            public SkiaSharp.SKBitmap? Bitmap { get; init; }
+            public long ElapsedMs { get; init; }
+            public string? ErrorMessage { get; init; }
+            public string Status { get; init; }
+        }
     }
     public static class PdftocairoReferenceRenderer
     {
         public static bool IsAvailable { get; }
         public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
+        public static Pdfe.Rendering.Differential.PdftocairoReferenceRenderer.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
+        public sealed class ReferenceRenderResult : System.IEquatable<Pdfe.Rendering.Differential.PdftocairoReferenceRenderer.ReferenceRenderResult>
+        {
+            public ReferenceRenderResult(SkiaSharp.SKBitmap? Bitmap, string Status, string? ErrorMessage, long ElapsedMs) { }
+            public SkiaSharp.SKBitmap? Bitmap { get; init; }
+            public long ElapsedMs { get; init; }
+            public string? ErrorMessage { get; init; }
+            public string Status { get; init; }
+        }
     }
 }
 namespace Pdfe.Rendering
 {
+    public sealed class InvalidPageGeometryException : System.InvalidOperationException
+    {
+        public InvalidPageGeometryException(string message) { }
+    }
     public class RenderOptions : System.IEquatable<Pdfe.Rendering.RenderOptions>
     {
+        public const long DefaultMaxPixelCount = 268435456;
         public RenderOptions() { }
         public bool AntiAlias { get; init; }
         public SkiaSharp.SKColor BackgroundColor { get; init; }
         public SkiaSharp.SKRect? ClipRect { get; init; }
         public int Dpi { get; init; }
+        public long MaxPixelCount { get; init; }
+    }
+    public sealed class RenderResourceLimitException : System.InvalidOperationException
+    {
+        public RenderResourceLimitException(string message) { }
     }
     public class SKBitmapPool : System.IDisposable
     {

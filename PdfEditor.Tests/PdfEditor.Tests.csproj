@@ -54,6 +54,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="xunit.runner.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Reference to main project -->
     <ProjectReference Include="..\PdfEditor\PdfEditor.csproj" />
     <!-- Direct ref so tests can use the extracted viewer control + its InternalsVisibleTo. -->

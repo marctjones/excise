@@ -120,7 +120,8 @@ public class Jbig2ArithmeticRegionTests
         var decoder = new ScriptedArithmeticDecoder(
             false, false, false, false, // IADT initial strip T: 0
             false, false, false, false, // IADT delta T: 0
-            false, false, false, false);// IAFS first S: 0
+            false, false, false, false, // IAFS first S: 0
+            true, false, false, false); // IADS strip terminator: OOB
 
         var bitmap = Jbig2TextRegionDecoder.DecodeArithmeticForTest(
             segment,
@@ -164,7 +165,8 @@ public class Jbig2ArithmeticRegionTests
             false, false, false, false, // IARDH: 0
             false, false, false, false, // IARDX: 0
             false, false, false, false, // IARDY: 0
-            false);                     // refined bitmap pixel
+            false,                     // refined bitmap pixel
+            true, false, false, false); // IADS strip terminator: OOB
 
         var bitmap = Jbig2TextRegionDecoder.DecodeArithmeticForTest(
             segment,
@@ -177,9 +179,10 @@ public class Jbig2ArithmeticRegionTests
     }
 
     [Fact]
-    public void TextRegion_HuffmanRefinement_ThrowsUntilRefinementBitmapByteScopingIsCorrect()
+    public void TextRegion_HuffmanRefinement_DecodesByteCountedArithmeticRefinementBitmap()
     {
         var symbol = new Jbig2Bitmap(1, 1);
+        symbol.SetPixel(0, 0, true);
         var segment = new Jbig2TextRegionSegment(
             Region: new Jbig2RegionSegmentInformation(1, 1, 0, 0, Jbig2CombinationOperator.Replace),
             IsHuffmanEncoded: true,
@@ -197,14 +200,77 @@ public class Jbig2ArithmeticRegionTests
             SymbolInstanceCount: 1,
             PayloadDataOffset: 0,
             PayloadDataLength: 0);
+        var codeLengthBits = new System.Text.StringBuilder();
+        for (int i = 0; i < 35; i++)
+            codeLengthBits.Append(i == 1 ? "0001" : "0000");
+        codeLengthBits.Append('0');
+        byte[] payload = PackBits(codeLengthBits.ToString())
+            .Concat(PackBits(
+                "0" +              // initial strip T = 1, then negated to -1
+                "0" +              // strip delta T = 1, yielding T = 0
+                "00" + "0000000" + // first S = 0
+                "0" +              // symbol id 0
+                "1" +              // refine this instance
+                "0" + "0" +        // RDW/RDH = 0
+                "0" + "0" +        // RDX/RDY = 0
+                "0" + "0011"))     // byte-counted arithmetic refinement bitmap size = 3
+            .Concat(new byte[] { 0x00, 0x00, 0x00 })
+            .Concat(PackBits("01")) // standard delta-S table OOB strip terminator
+            .ToArray();
 
-        var act = () => Jbig2TextRegionDecoder.Decode(
+        var bitmap = Jbig2TextRegionDecoder.Decode(
             segment,
-            ReadOnlySpan<byte>.Empty,
+            payload,
             new[] { symbol });
 
-        act.Should().Throw<NotSupportedException>()
-            .WithMessage("*Huffman refinement*");
+        bitmap.GetPixel(0, 0).Should().BeFalse();
+    }
+
+    [Fact]
+    public void SymbolDictionary_HuffmanSingleRefinement_UsesByteCountedArithmeticRefinementBitmap()
+    {
+        var importedSymbol = new Jbig2Bitmap(1, 1);
+        importedSymbol.SetPixel(0, 0, true);
+        var segment = new Jbig2SymbolDictionarySegment(
+            IsHuffmanEncoded: true,
+            UseRefinementAggregation: true,
+            SdHuffDecodeHeightSelection: 0,
+            SdHuffDecodeWidthSelection: 0,
+            SdHuffBmSizeSelection: 0,
+            SdHuffAggInstanceSelection: 0,
+            IsCodingContextUsed: false,
+            IsCodingContextRetained: false,
+            SdTemplate: 0,
+            SdrTemplate: 1,
+            AdaptiveTemplatePixels: Array.Empty<Jbig2AdaptiveTemplatePixel>(),
+            RefinementAdaptiveTemplatePixels: Array.Empty<Jbig2AdaptiveTemplatePixel>(),
+            ExportedSymbolCount: 1,
+            NewSymbolCount: 1,
+            PayloadDataOffset: 0,
+            PayloadDataLength: 0);
+        byte[] payload = PackBits(
+                "0" +              // height class delta = 1
+                "10" +             // symbol width delta = 1
+                "0" + "0001" +     // one refinement aggregate instance
+                "0" +              // referenced symbol id 0
+                "0" + "0" +        // RDX/RDY = 0
+                "0" + "0011")      // byte-counted arithmetic refinement bitmap size = 3
+            .Concat(new byte[] { 0x00, 0x00, 0x00 })
+            .Concat(PackBits(
+                "111111" +         // end the height class width run
+                "0" + "0001" +     // skip imported symbol in export flags
+                "0" + "0001"))     // export the new refined symbol
+            .ToArray();
+
+        var decoded = Jbig2SymbolDictionaryDecoder.Decode(
+            segment,
+            payload,
+            new[] { importedSymbol });
+
+        decoded.NewSymbols.Should().HaveCount(1);
+        decoded.ExportedSymbols.Should().HaveCount(1);
+        decoded.NewSymbols[0].GetPixel(0, 0).Should().BeFalse();
+        decoded.ExportedSymbols[0].Should().BeSameAs(decoded.NewSymbols[0]);
     }
 
     [Fact]
@@ -371,6 +437,19 @@ public class Jbig2ArithmeticRegionTests
             new(2, -2),
             new(-2, -2),
         ];
+
+    private static byte[] PackBits(string bits)
+    {
+        bits = new string(bits.Where(c => c == '0' || c == '1').ToArray());
+        var bytes = new byte[(bits.Length + 7) / 8];
+        for (int i = 0; i < bits.Length; i++)
+        {
+            if (bits[i] == '1')
+                bytes[i / 8] |= (byte)(1 << (7 - (i % 8)));
+        }
+
+        return bytes;
+    }
 
     private sealed class ScriptedArithmeticDecoder : IJbig2ArithmeticDecoder
     {

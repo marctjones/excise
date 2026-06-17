@@ -66,16 +66,6 @@ public class Jbig2JpxFilterIntegrationTests
         return body.ToArray();
     }
 
-    private static byte[] BuildUnsupportedRefinementSymbolDictionaryBody()
-        =>
-        [
-            0x00, 0x03, // Huffman encoded + refinement aggregation.
-            0x00, 0x00,
-            0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, // exported symbols
-            0x00, 0x00, 0x00, 0x00, // new symbols
-        ];
-
     private static PdfStream MakeImage(string filter, byte[] data, int width, int height)
     {
         var dict = new PdfDictionary();
@@ -91,9 +81,7 @@ public class Jbig2JpxFilterIntegrationTests
     [Fact]
     public void Jbig2_UnsupportedSegment_FallsBackToRawBytes()
     {
-        // Crafted bytes that parse as a valid Huffman symbol dictionary with refinement aggregation (unsupported).
-        byte[] symbolDictionary = BuildUnsupportedRefinementSymbolDictionaryBody();
-        byte[] raw = BuildJbig2Segment(1, 0, symbolDictionary);
+        byte[] raw = BuildJbig2Segment(1, 63);
         var stream = MakeImage("JBIG2Decode", raw, 8, 8);
 
         new StreamDecompressor().Decompress(stream);

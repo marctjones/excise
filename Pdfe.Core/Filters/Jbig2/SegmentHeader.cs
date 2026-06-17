@@ -60,6 +60,7 @@ internal enum SegmentType
     EndOfFile = 51,
     ProfileSegment = 52,
     Table = 53,
+    Extension = 62,
 }
 
 /// <summary>
@@ -102,7 +103,9 @@ internal class SegmentHeaderParser
         // field size; bit 7 is the retain flag.
         header.SegmentType = header.Flags & 0x3F;
 
-        header.ReferredSegmentCount = ReadReferredSegmentCount();
+        header.ReferredSegmentCount = ReadReferredSegmentCount(out bool hasExtendedRetentionFlags);
+        if (hasExtendedRetentionFlags)
+            SkipExtendedRetentionFlags(header.ReferredSegmentCount);
 
         // Parse referred-to segment list
         if (header.ReferredSegmentCount > 0)
@@ -194,20 +197,31 @@ internal class SegmentHeaderParser
         return value;
     }
 
-    private int ReadReferredSegmentCount()
+    private int ReadReferredSegmentCount(out bool hasExtendedRetentionFlags)
     {
         byte first = ReadByte();
         int shortCount = first >> 5;
+        hasExtendedRetentionFlags = false;
         if (shortCount < 7)
             return shortCount;
 
         if (_pos + 3 > _data.Length)
             throw new InvalidOperationException("Truncated segment header: not enough data for referred-to segment count");
 
+        hasExtendedRetentionFlags = true;
         return ((first & 0x1F) << 24)
              | (_data[_pos++] << 16)
              | (_data[_pos++] << 8)
              | _data[_pos++];
+    }
+
+    private void SkipExtendedRetentionFlags(int referredSegmentCount)
+    {
+        int retentionFlagBytes = checked((referredSegmentCount + 1 + 7) / 8);
+        if (_pos + retentionFlagBytes > _data.Length)
+            throw new InvalidOperationException("Truncated segment header: not enough data for referred-to segment retention flags");
+
+        _pos += retentionFlagBytes;
     }
 
     private uint ReadSegmentNumber(int byteCount)

@@ -11,20 +11,18 @@ namespace Pdfe.Core.Filters.Jbig2;
 /// Supported features:
 /// - Generic region decoding (arithmetic templates 0-3 with AT pixels and TPGDON, and MMR)
 /// - Generic refinement regions without TPGRON
-/// - Huffman symbol dictionaries without refinement/aggregation
-/// - Huffman text regions without refinement
-/// - Arithmetic symbol dictionaries without refinement/aggregation, retained contexts, or custom AT pixels
-/// - Arithmetic text regions without refinement
-/// - Pattern dictionaries and arithmetic halftone regions
+/// - Huffman symbol dictionaries, including single-symbol refinement and aggregate refinement
+/// - Huffman text regions, including byte-counted arithmetic refinement bitmaps
+/// - Arithmetic symbol dictionaries, including single-symbol and aggregate refinement
+/// - Arithmetic text regions, including symbol refinement
+/// - Pattern dictionaries and arithmetic/MMR halftone regions
 /// - Standard and referenced user Huffman tables for supported symbol/text paths
 /// - Segment header parsing for embedded organization (Annex D.3)
 /// - Typed metadata parsing for page, region, symbol dictionary, and text region bodies
 ///
 /// Not yet implemented:
-/// - Symbol/text refinement and aggregate coding
 /// - Retained symbol-dictionary bitmap coding contexts
 /// - Generic refinement TPGRON
-/// - MMR halftone regions
 /// </summary>
 [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 internal static class Jbig2Decoder
@@ -94,6 +92,8 @@ internal static class Jbig2Decoder
 [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 internal class Jbig2PageDecoder
 {
+    private const uint UnknownSegmentLength = 0xFFFFFFFF;
+
     private readonly int _width;
     private readonly int _height;
     private readonly Dictionary<uint, SegmentData> _segments = new();
@@ -125,15 +125,19 @@ internal class Jbig2PageDecoder
             try
             {
                 // Extract segment data
-                int dataLen = header.DataLength is > 0 and <= int.MaxValue
-                    ? (int)header.DataLength
-                    : EstimateRemainingLength(data, parser.Position);
+                bool hasUnknownLength = header.DataLength == UnknownSegmentLength;
+                int dataLen = hasUnknownLength
+                    ? EstimateRemainingLength(data, parser.Position)
+                    : checked((int)header.DataLength);
                 byte[] segmentData = ExtractSegmentData(data, header.DataOffset, dataLen);
 
                 // Process the segment
                 ProcessSegment(header, segmentData, pageImage);
 
                 // Advance parser past the segment data
+                if (hasUnknownLength)
+                    break;
+
                 if (header.DataLength > 0)
                     parser.SetPosition(header.DataOffset + (int)header.DataLength);
             }
@@ -201,6 +205,7 @@ internal class Jbig2PageDecoder
             case SegmentType.EndOfStripe:
             case SegmentType.EndOfFile:
             case SegmentType.ProfileSegment:
+            case SegmentType.Extension:
                 // These are metadata/control segments; skip
                 break;
 

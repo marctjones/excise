@@ -34,14 +34,14 @@ namespace Pdfe.Rendering.Tests.Differential;
 /// Within a chunk we also force GC every N iterations so per-bitmap
 /// native memory doesn't pile up before exit.
 ///
-/// To run a single chunk locally:
-///   PDFE_CHUNK_INDEX=0 PDFE_CHUNK_TOTAL=14 \
+/// To run this legacy xUnit entry point for a single chunk locally:
+///   PDFE_RUN_EXPLORATORY_TEST=1 PDFE_CHUNK_INDEX=0 PDFE_CHUNK_TOTAL=14 \
 ///     dotnet test --filter "Category=Exploratory"
 ///
 /// To run the whole corpus chunked:
 ///   ./scripts/run-exploratory-corpus.sh
 ///
-/// Default `dotnet test` skips this class (Trait("Category", "Exploratory")).
+/// Default `dotnet test` skips this class unless PDFE_RUN_EXPLORATORY_TEST=1.
 /// </summary>
 [Trait("Category", "Exploratory")]
 public sealed class ExploratoryDifferentialTests
@@ -66,6 +66,9 @@ public sealed class ExploratoryDifferentialTests
     [Trait("Category", "Exploratory")]
     public void GenerateCorpusReportChunk()
     {
+        Assert.SkipUnless(IsExploratoryTestEnabled(),
+            "set PDFE_RUN_EXPLORATORY_TEST=1 to run the legacy xUnit exploratory corpus path; prefer scripts/run-exploratory-corpus.sh for full runs");
+
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable,
             "mutool not on PATH — install mupdf-tools to generate the exploratory report");
 
@@ -177,6 +180,13 @@ public sealed class ExploratoryDifferentialTests
     {
         var raw = Environment.GetEnvironmentVariable(name);
         return int.TryParse(raw, out var v) ? v : defaultValue;
+    }
+
+    private static bool IsExploratoryTestEnabled()
+    {
+        var raw = Environment.GetEnvironmentVariable("PDFE_RUN_EXPLORATORY_TEST");
+        return string.Equals(raw, "1", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(raw, "true", StringComparison.OrdinalIgnoreCase);
     }
 
     private CorpusEntry ScanOne(string rel, string pdfPath)

@@ -9,6 +9,23 @@ internal interface IJbig2ArithmeticDecoder
     bool Decode(ref int context);
 }
 
+internal sealed class Jbig2ArithmeticContextState
+{
+    public Jbig2ArithmeticContextState(int contextCount)
+    {
+        if (contextCount <= 0)
+            throw new ArgumentOutOfRangeException(nameof(contextCount), contextCount, "Context count must be positive.");
+
+        QeIndexByContext = new byte[contextCount];
+        MpsByContext = new byte[contextCount];
+    }
+
+    public int Count => QeIndexByContext.Length;
+
+    internal byte[] QeIndexByContext { get; }
+    internal byte[] MpsByContext { get; }
+}
+
 /// <summary>
 /// Context-state MQ arithmetic decoder following the JBIG2 arithmetic coding model.
 /// This is the shared arithmetic engine for generic regions, symbol dictionaries,
@@ -77,13 +94,18 @@ internal sealed class Jbig2MqArithmeticDecoder : IJbig2ArithmeticDecoder
     private int _ct;
 
     public Jbig2MqArithmeticDecoder(byte[] data, int contextCount)
+        : this(data, new Jbig2ArithmeticContextState(contextCount))
     {
-        if (contextCount <= 0)
-            throw new ArgumentOutOfRangeException(nameof(contextCount), contextCount, "Context count must be positive.");
+    }
 
+    public Jbig2MqArithmeticDecoder(byte[] data, Jbig2ArithmeticContextState contextState)
+    {
         _data = data ?? throw new ArgumentNullException(nameof(data));
-        _qeIndexByContext = new byte[contextCount];
-        _mpsByContext = new byte[contextCount];
+        if (contextState == null)
+            throw new ArgumentNullException(nameof(contextState));
+
+        _qeIndexByContext = contextState.QeIndexByContext;
+        _mpsByContext = contextState.MpsByContext;
         _a = 0x8000;
 
         if (_data.Length > 0)

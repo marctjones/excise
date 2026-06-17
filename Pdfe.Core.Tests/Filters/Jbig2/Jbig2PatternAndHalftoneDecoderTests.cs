@@ -66,6 +66,36 @@ public class Jbig2PatternAndHalftoneDecoderTests
         decoder.Contexts.Should().HaveCount(1);
     }
 
+    [Fact]
+    public void HalftoneRegion_Mmr_DecodesGrayScalePlanesAndRendersPatterns()
+    {
+        var whitePattern = new Jbig2Bitmap(1, 1);
+        var blackPattern = new Jbig2Bitmap(1, 1);
+        blackPattern.SetPixel(0, 0, true);
+        var segment = new Jbig2HalftoneRegionSegment(
+            Region: new Jbig2RegionSegmentInformation(8, 1, 0, 0, Jbig2CombinationOperator.Replace),
+            DefaultPixel: 0,
+            CombinationOperator: Jbig2CombinationOperator.Replace,
+            SkipEnabled: false,
+            Template: 0,
+            IsMmrEncoded: true,
+            GridWidth: 8,
+            GridHeight: 1,
+            GridX: 0,
+            GridY: 0,
+            RegionX: 256,
+            RegionY: 0,
+            BitmapDataOffset: 0,
+            BitmapDataLength: 0);
+
+        var bitmap = Jbig2HalftoneRegionDecoder.Decode(
+            segment,
+            [0b00110110, 0b11000000],
+            [whitePattern, blackPattern]);
+
+        bitmap.Data.Should().Equal(0x0F);
+    }
+
     private sealed class ScriptedArithmeticDecoder : IJbig2ArithmeticDecoder
     {
         private readonly Queue<bool> _bits;

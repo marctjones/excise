@@ -44,9 +44,6 @@ public class Jbig2DecoderTests
 
     private static byte[] BuildSegmentWithReferences(uint segmentNumber, SegmentType type, byte[] segmentData, params byte[] referredSegments)
     {
-        if (referredSegments.Length > 6)
-            throw new ArgumentOutOfRangeException(nameof(referredSegments));
-
         var header = new List<byte>
         {
             (byte)(segmentNumber >> 24),
@@ -54,8 +51,21 @@ public class Jbig2DecoderTests
             (byte)(segmentNumber >> 8),
             (byte)segmentNumber,
             (byte)type,
-            (byte)(referredSegments.Length << 5),
         };
+        if (referredSegments.Length <= 4)
+        {
+            header.Add((byte)(referredSegments.Length << 5));
+        }
+        else
+        {
+            header.Add(0xE0);
+            header.Add((byte)(referredSegments.Length >> 16));
+            header.Add((byte)(referredSegments.Length >> 8));
+            header.Add((byte)referredSegments.Length);
+            int retentionFlagBytes = (referredSegments.Length + 1 + 7) / 8;
+            for (int i = 0; i < retentionFlagBytes; i++)
+                header.Add(0);
+        }
         header.AddRange(referredSegments);
         header.Add(1);
         header.Add((byte)(segmentData.Length >> 24));
@@ -97,6 +107,57 @@ public class Jbig2DecoderTests
         body.Add(symbolByte);
         body.AddRange(PackBits("0" + "0000" + "0" + "0001"));
         return body.ToArray();
+    }
+
+    private static byte[] BuildImmediateEmptyTextRegionBody(byte defaultPixel = 0)
+    {
+        var body = new List<byte>
+        {
+            0, 0, 0, 8, // region width
+            0, 0, 0, 1, // region height
+            0, 0, 0, 0, // x
+            0, 0, 0, 0, // y
+            0x04,       // region combination operator: Replace
+            (byte)(defaultPixel == 0 ? 0x00 : 0x02), 0x00, // arithmetic text flags, optional default pixel
+            0x00, 0x00, 0x00, 0x00, // zero symbol instances
+        };
+
+        return body.ToArray();
+    }
+
+    private static byte[] BuildMmrImmediateGenericRegionBody()
+    {
+        var body = new List<byte>
+        {
+            0, 0, 0, 8, // region width
+            0, 0, 0, 1, // region height
+            0, 0, 0, 0, // x
+            0, 0, 0, 0, // y
+            0x04,       // region combination operator: Replace
+            0x01,       // MMR generic region, no AT pixels
+            0b00110110, 0b11000000, // one-row T.6 horizontal-mode bitmap
+        };
+
+        return body.ToArray();
+    }
+
+    private static byte[] BuildUnknownLengthSegment(uint segmentNumber, SegmentType type, byte[] segmentData, uint pageNumber = 1)
+    {
+        byte[] header =
+        [
+            (byte)(segmentNumber >> 24),
+            (byte)(segmentNumber >> 16),
+            (byte)(segmentNumber >> 8),
+            (byte)segmentNumber,
+            (byte)type,
+            0,
+            (byte)pageNumber,
+            0xFF, 0xFF, 0xFF, 0xFF,
+        ];
+        byte[] result = new byte[header.Length + segmentData.Length];
+        Array.Copy(header, result, header.Length);
+        Array.Copy(segmentData, 0, result, header.Length, segmentData.Length);
+        return result;
     }
 
     private static byte[] BuildHuffmanSymbolDictionaryBodyWithMmrCollectiveBitmap()
@@ -208,16 +269,6 @@ public class Jbig2DecoderTests
 
         return body.ToArray();
     }
-
-    private static byte[] BuildUnsupportedRefinementSymbolDictionaryBody()
-        =>
-        [
-            0x00, 0x03, // Huffman encoded + refinement aggregation.
-            0x00, 0x00,
-            0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, // exported symbols
-            0x00, 0x00, 0x00, 0x00, // new symbols
-        ];
 
     private static byte[] BuildImmediateHuffmanTextRegionBody()
     {
@@ -376,6 +427,42 @@ public class Jbig2DecoderTests
             .WithMessage("*TPGRON*");
     }
 
+    [Fact]
+    public void Decode_WithExtensionSegment_SkipsKnownLengthPayload()
+    {
+        byte[] data = BuildSegment(1, SegmentType.Extension, [1, 2, 3, 4]);
+
+        byte[] result = Jbig2Decoder.Decode(data, null, 8, 1);
+
+        result.Should().Equal(0xFF);
+    }
+
+    [Fact]
+    public void Decode_WithUnknownLengthImmediateGenericRegion_ConsumesRemainingPayloadOnce()
+    {
+        byte[] data = BuildUnknownLengthSegment(
+            1,
+            SegmentType.ImmediateGenericRegion,
+            BuildMmrImmediateGenericRegionBody());
+
+        byte[] result = Jbig2Decoder.Decode(data, null, 8, 1);
+
+        result.Should().Equal(0xF0);
+    }
+
+    [Fact]
+    public void Decode_WithZeroInstanceTextRegionWithoutSymbols_ComposesDefaultRegion()
+    {
+        byte[] data = BuildSegment(
+            1,
+            SegmentType.ImmediateTextRegion,
+            BuildImmediateEmptyTextRegionBody(defaultPixel: 0));
+
+        byte[] result = Jbig2Decoder.Decode(data, null, 8, 1);
+
+        result.Should().Equal(0xFF);
+    }
+
     /// <summary>
     /// Test that output size is calculated correctly.
     /// </summary>
@@ -402,13 +489,12 @@ public class Jbig2DecoderTests
     [Fact]
     public void Decode_WithUnsupportedSegment_ThrowsRatherThanBlank()
     {
-        byte[] symbolDictionary = BuildUnsupportedRefinementSymbolDictionaryBody();
-        byte[] globals = BuildSegment(1, SegmentType.SymbolDictionary, symbolDictionary, pageNumber: 0);
-        byte[] pageData = Array.Empty<byte>();
+        byte[] pageData = BuildSegment(1, (SegmentType)63, Array.Empty<byte>());
 
-        var act = () => Jbig2Decoder.Decode(pageData, globals, 8, 8);
+        var act = () => Jbig2Decoder.Decode(pageData, null, 8, 8);
 
-        act.Should().Throw<NotSupportedException>();
+        act.Should().Throw<NotSupportedException>()
+            .WithMessage("*Unknown segment type*");
     }
 
     [Fact]
@@ -584,10 +670,12 @@ public class Jbig2DecoderTests
     [Fact]
     public void Decode_WithUnsupportedSegmentType_ThrowsNotSupportedException()
     {
-        // Build a segment header for symbol dictionary (type 0)
-        // This is too complex to test here without proper segment building infrastructure,
-        // but the decoder should handle it gracefully.
-        // For now, we'll just verify that an invalid stream doesn't crash the decoder.
+        byte[] data = BuildSegment(1, (SegmentType)63, Array.Empty<byte>());
+
+        var act = () => Jbig2Decoder.Decode(data, null, 8, 8);
+
+        act.Should().Throw<NotSupportedException>()
+            .WithMessage("*Unknown segment type*");
     }
 
     /// <summary>

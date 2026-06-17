@@ -27,6 +27,7 @@ using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Reactive;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Xunit;
 using Xunit.Sdk;
 using Xunit.v3;
@@ -300,8 +301,27 @@ internal static class HeadlessWindowTracker
         lock (_lock) { snapshot = _open.ToArray(); _open.Clear(); }
         foreach (var w in snapshot)
         {
-            try { w.Close(); }
+            try
+            {
+                DetachWindowContent(w);
+                w.Close();
+            }
             catch { /* a test may have left the window in an odd state; ignore */ }
+        }
+    }
+
+    private static void DetachWindowContent(Window window)
+    {
+        try
+        {
+            foreach (var image in window.GetVisualDescendants().OfType<Image>())
+                image.Source = null;
+
+            window.DataContext = null;
+        }
+        catch
+        {
+            // Cleanup is best-effort; failing here would mask the test result.
         }
     }
 }
