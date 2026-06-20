@@ -196,6 +196,14 @@ public class ObjectStreamResolutionTests
         "../../../../test-pdfs/encrypted/birth-cert-aes-128.pdf";
     private const string EncryptedAES_256 =
         "../../../../test-pdfs/encrypted/birth-cert-aes-256.pdf";
+    private const string EmbeddedFileOnlyEncryptedPdf =
+        "../../../../test-pdfs/pdfjs/auth-event-ef-open.pdf";
+    private const string PasswordEncryptedAes128 =
+        "../../../../test-pdfs/poppler/unittestcases/PasswordEncrypted.pdf";
+    private const string PasswordEncryptedAes256 =
+        "../../../../test-pdfs/poppler/unittestcases/encrypted-256.pdf";
+    private const string PasswordEncryptedPdfDocEncoding =
+        "../../../../test-pdfs/poppler/unittestcases/Gday garçon - open.pdf";
 
     [Theory]
     [InlineData(EncryptedRC4_128, "RC4 V=2 R=3 (128-bit)")]
@@ -257,6 +265,19 @@ public class ObjectStreamResolutionTests
     }
 
     [Fact]
+    public void OpensEmbeddedFileOnlyEncryptedPdf_IdentityDocumentFiltersDoNotRequirePassword()
+    {
+        if (!File.Exists(EmbeddedFileOnlyEncryptedPdf)) return;
+
+        using var doc = PdfDocument.Open(EmbeddedFileOnlyEncryptedPdf);
+
+        doc.IsEncrypted.Should().BeTrue();
+        doc.IsDecrypting.Should().BeFalse(
+            "the file's /StmF and /StrF are /Identity; only embedded-file streams use the encrypted crypt filter");
+        doc.PageCount.Should().Be(1);
+    }
+
+    [Fact]
     public void OpensEncryptedPdf_RC4_BuildsHandlerAndDecryptsStreams()
     {
         // Pin down that the Isartor encrypted file (RC4 V=2 R=3 with empty
@@ -308,6 +329,42 @@ public class ObjectStreamResolutionTests
         doc.IsEncrypted.Should().BeTrue();
         doc.Trailer.GetOptional("Encrypt").Should().NotBeNull(
             "/Encrypt dict must be reachable so callers inspecting encryption parameters can read /V, /R, /U, /O");
+    }
+
+    [Fact]
+    public void OpensEncryptedPdf_WithSuppliedAsciiUserPassword()
+    {
+        if (!File.Exists(PasswordEncryptedAes128)) return;
+
+        using var doc = PdfDocument.Open(PasswordEncryptedAes128, userPassword: "password");
+
+        doc.IsEncrypted.Should().BeTrue();
+        doc.IsDecrypting.Should().BeTrue();
+        doc.PageCount.Should().Be(1);
+    }
+
+    [Fact]
+    public void OpensEncryptedPdf_WithSuppliedAes256UserPassword()
+    {
+        if (!File.Exists(PasswordEncryptedAes256)) return;
+
+        using var doc = PdfDocument.Open(PasswordEncryptedAes256, userPassword: "user-secret");
+
+        doc.IsEncrypted.Should().BeTrue();
+        doc.IsDecrypting.Should().BeTrue();
+        doc.PageCount.Should().Be(1);
+    }
+
+    [Fact]
+    public void OpensEncryptedPdf_WithPdfDocEncodingPassword()
+    {
+        if (!File.Exists(PasswordEncryptedPdfDocEncoding)) return;
+
+        using var doc = PdfDocument.Open(PasswordEncryptedPdfDocEncoding, userPassword: "garçon");
+
+        doc.IsEncrypted.Should().BeTrue();
+        doc.IsDecrypting.Should().BeTrue();
+        doc.PageCount.Should().Be(1);
     }
 
     private static IReadOnlyDictionary<int, Pdfe.Core.Parsing.XRefEntry> GetXRef(PdfDocument doc)

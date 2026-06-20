@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Text;
 using Pdfe.Core.Parsing;
 using Pdfe.Core.Primitives;
 
@@ -129,12 +130,45 @@ public sealed class PdfStandardSecurityHandler
         if (!VerifyUserPassword(fileKey, uBytes, firstId, r))
         {
             throw new PdfEncryptionNotSupportedException(
-                "Password verification failed. The file requires a non-empty user password, " +
-                "which pdfe doesn't yet prompt for. Pass allowEncrypted: true to inspect the " +
-                "encryption dict, or open the file in a tool that supports password input.");
+                "Password verification failed. The supplied user password was rejected, " +
+                "or the file requires a non-empty user password.");
         }
 
         return new PdfStandardSecurityHandler(v, r, keyBytes, fileKey, usesAes);
+    }
+
+    /// <summary>
+    /// Build a handler from a .NET password string. PDF encryption algorithms
+    /// operate on byte strings; legacy files commonly use PDFDocEncoding bytes
+    /// while PDF 2.0 AES-256 files use UTF-8 bytes. This overload tries the
+    /// spec-appropriate encoding first and keeps the byte-exact overload
+    /// available for callers that already have raw password bytes.
+    /// </summary>
+    /// <param name="encryptDict">The /Encrypt dictionary from the trailer.</param>
+    /// <param name="firstId">First element of the trailer /ID array.</param>
+    /// <param name="userPassword">User password text. <c>null</c> is treated as the empty password.</param>
+    public static PdfStandardSecurityHandler Build(
+        PdfDictionary encryptDict, byte[] firstId, string? userPassword)
+    {
+        var password = userPassword ?? string.Empty;
+        var revision = encryptDict.GetInt("R");
+        PdfEncryptionNotSupportedException? lastPasswordFailure = null;
+
+        foreach (var candidate in EncodeUserPasswordCandidates(password, revision))
+        {
+            try
+            {
+                return Build(encryptDict, firstId, candidate);
+            }
+            catch (PdfEncryptionNotSupportedException ex) when (IsPasswordVerificationFailure(ex))
+            {
+                lastPasswordFailure = ex;
+            }
+        }
+
+        throw new PdfEncryptionNotSupportedException(
+            lastPasswordFailure?.Message
+            ?? "Password verification failed. The supplied user password was rejected.");
     }
 
     /// <summary>
@@ -355,11 +389,10 @@ public sealed class PdfStandardSecurityHandler
         if (!ConstantTimeEquals(userValidation, 0, u, 0, 32))
         {
             // Algorithm 12: try the owner password (rare for empty-pwd files).
-            // For now we only support empty user password; throw a clear error.
+            // For now we support user passwords only; throw a clear error.
             throw new PdfEncryptionNotSupportedException(
-                "AES-256 (V=5 R=6) password verification failed for the empty user password. " +
-                "Owner-password-only files and files requiring a non-empty user password are " +
-                "not yet supported (#324).");
+                "AES-256 (V=5 R=6) password verification failed for the supplied user password. " +
+                "Owner-password-only files are not yet supported (#324).");
         }
 
         // Algorithm 11 step (b): derive intermediate user key, then AES-256
@@ -459,6 +492,67 @@ public sealed class PdfStandardSecurityHandler
         return decryptor.TransformFinalBlock(cipherBytes, 0, cipherBytes.Length);
     }
 
+    private static IEnumerable<byte[]> EncodeUserPasswordCandidates(string password, int revision)
+    {
+        if (password.Length == 0)
+        {
+            yield return Array.Empty<byte>();
+            yield break;
+        }
+
+        var emitted = new List<byte[]>();
+
+        if (revision >= 5)
+        {
+            foreach (var bytes in UniquePasswordEncodings(password, preferUtf8: true, emitted))
+                yield return bytes;
+        }
+        else
+        {
+            foreach (var bytes in UniquePasswordEncodings(password, preferUtf8: false, emitted))
+                yield return bytes;
+        }
+    }
+
+    private static IEnumerable<byte[]> UniquePasswordEncodings(
+        string password,
+        bool preferUtf8,
+        List<byte[]> emitted)
+    {
+        if (preferUtf8)
+        {
+            foreach (var bytes in AddUnique(Encoding.UTF8.GetBytes(password), emitted))
+                yield return bytes;
+            if (PdfString.TryEncodePdfDocEncoding(password, out var pdfDocBytes))
+            {
+                foreach (var bytes in AddUnique(pdfDocBytes, emitted))
+                    yield return bytes;
+            }
+        }
+        else
+        {
+            if (PdfString.TryEncodePdfDocEncoding(password, out var pdfDocBytes))
+            {
+                foreach (var bytes in AddUnique(pdfDocBytes, emitted))
+                    yield return bytes;
+            }
+            foreach (var bytes in AddUnique(Encoding.UTF8.GetBytes(password), emitted))
+                yield return bytes;
+        }
+    }
+
+    private static IEnumerable<byte[]> AddUnique(byte[] candidate, List<byte[]> emitted)
+    {
+        if (emitted.Any(existing => existing.SequenceEqual(candidate)))
+            yield break;
+
+        emitted.Add(candidate);
+        yield return candidate;
+    }
+
+    private static bool IsPasswordVerificationFailure(PdfEncryptionNotSupportedException ex)
+        => ex.Message.Contains("password verification failed", StringComparison.OrdinalIgnoreCase);
+
     private static byte[] ConcatBytes(params byte[][] parts)
     {
         int total = parts.Sum(p => p.Length);
@@ -493,10 +587,28 @@ public sealed class PdfStandardSecurityHandler
         var s = dict.GetOptional(name) as PdfString
             ?? throw new PdfParseException($"/Encrypt dict is missing /{name}");
         var bytes = s.Bytes;
+        if (bytes.Length > expectedLength
+            && expectedLength == 48
+            && HasOnlyZeroPaddingAfter(bytes, expectedLength))
+        {
+            return bytes[..expectedLength];
+        }
+
         if (bytes.Length != expectedLength)
             throw new PdfParseException(
                 $"/{name} must be exactly {expectedLength} bytes; got {bytes.Length}");
         return bytes;
+    }
+
+    private static bool HasOnlyZeroPaddingAfter(byte[] bytes, int expectedLength)
+    {
+        for (int i = expectedLength; i < bytes.Length; i++)
+        {
+            if (bytes[i] != 0)
+                return false;
+        }
+
+        return true;
     }
 
     private static bool ByteArrayEquals(byte[] a, byte[] b)

@@ -87,6 +87,23 @@ startxref
     }
 
     [Fact]
+    public void FindStartXRef_WithLargeTrailingGarbage_ReturnsPosition()
+    {
+        var pdf = Encoding.ASCII.GetBytes(
+            "%PDF-1.4\n" +
+            "startxref\n" +
+            "42\n" +
+            "%%EOF\n" +
+            new string('x', 4096));
+        using var stream = new MemoryStream(pdf);
+        var parser = new XRefParser(stream);
+
+        var pos = parser.FindStartXRef();
+
+        pos.Should().Be(42);
+    }
+
+    [Fact]
     public void FindStartXRef_NoStartXRef_ThrowsException()
     {
         var pdf = Encoding.ASCII.GetBytes("%PDF-1.4\n...no startxref here...");

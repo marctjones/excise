@@ -15,6 +15,7 @@ public class PdfLexer : IDisposable
     private int _bufferPos;
     private int _bufferLen;
     private const int BufferSize = 8192;
+    private const int DefaultMaxRecoveredStreamBytes = 128 * 1024 * 1024;
 
     // PDF whitespace characters (ISO 32000-2:2020 Table 1)
     private static readonly HashSet<byte> Whitespace = new() { 0, 9, 10, 12, 13, 32 };
@@ -154,20 +155,10 @@ public class PdfLexer : IDisposable
     /// <param name="length">Number of bytes to read.</param>
     public byte[] ReadStreamData(int length)
     {
-        // Skip optional whitespace after 'stream' keyword
-        // Must be either \r\n or \n (not just \r)
-        int c = ReadByte();
-        if (c == '\r')
-        {
-            c = ReadByte();
-            if (c != '\n')
-                UnreadByte(); // Just \r, put it back and hope for the best
-        }
-        else if (c != '\n')
-        {
-            // No newline, this is technically invalid but we'll allow it
-            UnreadByte();
-        }
+        if (length < 0)
+            throw new PdfParseException($"Invalid negative stream length: {length}");
+
+        SkipStreamDataLineEnding();
 
         var data = new byte[length];
         int totalRead = 0;
@@ -199,6 +190,99 @@ public class PdfLexer : IDisposable
         }
 
         return data;
+    }
+
+    /// <summary>
+    /// Recover malformed stream data by scanning to the next <c>endstream</c>
+    /// marker. This is used only when /Length is absent, cannot be resolved, or
+    /// is proved wrong by the following token. Valid streams still use
+    /// <see cref="ReadStreamData(int)"/> so binary data containing the marker is
+    /// governed by the declared length, as the PDF spec intends.
+    /// </summary>
+    internal byte[] ReadStreamDataUntilEndstream(int maxBytes = DefaultMaxRecoveredStreamBytes)
+    {
+        SkipStreamDataLineEnding();
+
+        var output = new MemoryStream();
+        ReadOnlySpan<byte> marker = "endstream"u8;
+        int matched = 0;
+
+        while (true)
+        {
+            int c = ReadByte();
+            if (c == -1)
+                throw new PdfParseException("Unexpected end of file while scanning for endstream");
+
+            output.WriteByte((byte)c);
+            if (output.Length > maxBytes)
+                throw new PdfParseException(
+                    $"Recovered stream exceeded {maxBytes} bytes without an endstream marker");
+
+            if ((byte)c == marker[matched])
+            {
+                matched++;
+                if (matched == marker.Length)
+                {
+                    var bytes = output.ToArray();
+                    int dataLength = bytes.Length - marker.Length;
+
+                    // The EOL before endstream is PDF syntax, not stream data,
+                    // when we recover by marker scan.
+                    while (dataLength > 0 && (bytes[dataLength - 1] == '\n' || bytes[dataLength - 1] == '\r'))
+                        dataLength--;
+
+                    var data = new byte[dataLength];
+                    Array.Copy(bytes, data, dataLength);
+                    return data;
+                }
+            }
+            else
+            {
+                matched = (byte)c == marker[0] ? 1 : 0;
+            }
+        }
+    }
+
+    private void SkipStreamDataLineEnding()
+    {
+        // The spec requires EOL after the stream keyword. Some real-world files
+        // insert horizontal whitespace before that EOL; skip it only when the
+        // EOL is actually present so malformed no-EOL streams keep their data.
+        var start = Position;
+        var c = ReadByte();
+        if (c == '\r')
+        {
+            c = ReadByte();
+            if (c != '\n')
+                UnreadByte();
+            return;
+        }
+
+        if (c == '\n' || c == -1)
+            return;
+
+        if (IsHorizontalWhitespace(c))
+        {
+            while (IsHorizontalWhitespace(PeekByte()))
+                ReadByte();
+
+            c = ReadByte();
+            if (c == '\r')
+            {
+                c = ReadByte();
+                if (c != '\n')
+                    UnreadByte();
+                return;
+            }
+
+            if (c == '\n')
+                return;
+
+            Seek(start);
+            return;
+        }
+
+        UnreadByte();
     }
 
     /// <summary>
@@ -524,6 +608,9 @@ public class PdfLexer : IDisposable
 
     private static bool IsNumberStart(int c) =>
         (c >= '0' && c <= '9') || c == '+' || c == '-' || c == '.';
+
+    private static bool IsHorizontalWhitespace(int c) =>
+        c is 0 or 9 or 12 or 32;
 
     private static bool IsRegularChar(int c) =>
         c > 32 && c < 127 && !Delimiters.Contains((byte)c);

@@ -466,39 +466,42 @@ public class PdfParserTests
     }
 
     [Fact]
-    public void ParseStream_MissingLength_ThrowsException()
+    public void ParseStream_MissingLength_RecoversByEndstreamMarker()
     {
         using var parser = new PdfParser(Encoding.ASCII.GetBytes("1 0 obj\n<< >>\nstream\ndata\nendstream\nendobj"));
 
-        Action act = () => parser.ParseIndirectObject();
+        var indObj = parser.ParseIndirectObject();
 
-        act.Should().Throw<PdfParseException>()
-            .WithMessage("*missing /Length*");
+        indObj.Value.Should().BeOfType<PdfStream>();
+        var stream = (PdfStream)indObj.Value;
+        Encoding.ASCII.GetString(stream.EncodedData).Should().Be("data");
     }
 
     [Fact]
-    public void ParseStream_InvalidLengthType_ThrowsException()
+    public void ParseStream_InvalidLengthType_RecoversByEndstreamMarker()
     {
         using var parser = new PdfParser(Encoding.ASCII.GetBytes("1 0 obj\n<< /Length /NotANumber >>\nstream\ndata\nendstream\nendobj"));
 
-        Action act = () => parser.ParseIndirectObject();
+        var indObj = parser.ParseIndirectObject();
 
-        act.Should().Throw<PdfParseException>()
-            .WithMessage("*missing /Length*");
+        indObj.Value.Should().BeOfType<PdfStream>();
+        var stream = (PdfStream)indObj.Value;
+        Encoding.ASCII.GetString(stream.EncodedData).Should().Be("data");
     }
 
     [Fact]
-    public void ParseStream_ResolvedIndirectLengthNotInteger_ThrowsException()
+    public void ParseStream_ResolvedIndirectLengthNotInteger_RecoversByEndstreamMarker()
     {
         var pdfData = "1 0 obj\n<< /Length 2 0 R >>\nstream\nHello\nendstream\nendobj";
         using var parser = new PdfParser(Encoding.ASCII.GetBytes(pdfData));
 
         parser.IndirectObjectResolver = num => num == 2 ? new PdfName("NotInt") : null;
 
-        Action act = () => parser.ParseIndirectObject();
+        var indObj = parser.ParseIndirectObject();
 
-        act.Should().Throw<PdfParseException>()
-            .WithMessage("*did not resolve to an integer*");
+        indObj.Value.Should().BeOfType<PdfStream>();
+        var stream = (PdfStream)indObj.Value;
+        Encoding.ASCII.GetString(stream.EncodedData).Should().Be("Hello");
     }
 
     [Fact]
@@ -633,6 +636,25 @@ public class PdfParserTests
     }
 
     [Fact]
+    public void ParseIndirectObject_StreamWhitespaceBeforeEol_DoesNotShiftDeclaredBytes()
+    {
+        // Some conformance fixtures use "stream \n"; the space is producer
+        // whitespace before the required EOL, not the first byte of stream data.
+        var compressedEmptyStream = new byte[] { 0x78, 0x9C, 0x03, 0x00, 0x00, 0x00, 0x00, 0x01 };
+        using var ms = new MemoryStream();
+        ms.Write(Encoding.ASCII.GetBytes("1 0 obj\n<< /Length 8 /Filter /FlateDecode >>\nstream \n"));
+        ms.Write(compressedEmptyStream);
+        ms.Write(Encoding.ASCII.GetBytes("\nendstream\nendobj"));
+
+        using var parser = new PdfParser(ms.ToArray());
+
+        var indObj = parser.ParseIndirectObject();
+
+        var stream = indObj.Value.Should().BeOfType<PdfStream>().Subject;
+        stream.EncodedData.Should().Equal(compressedEmptyStream);
+    }
+
+    [Fact]
     public void ParseIndirectObject_WrongTokenAfterData_ThrowsException()
     {
         // Negative test: invalid token instead of endstream
@@ -643,7 +665,7 @@ public class PdfParserTests
         var action = () => parser.ParseIndirectObject();
 
         action.Should().Throw<PdfParseException>()
-            .WithMessage("*Expected 'endstream'*");
+            .WithMessage("*endstream*");
     }
 
     #endregion

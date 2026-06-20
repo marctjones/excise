@@ -117,12 +117,37 @@ public sealed class PdfString : PdfObject, IEquatable<PdfString>
     }
 
     /// <summary>
+    /// Encode text as PDFDocEncoding when every character is representable.
+    /// Returns <c>false</c> instead of falling back to Unicode; security-handler
+    /// password algorithms need the exact byte string attempted by the user.
+    /// </summary>
+    internal static bool TryEncodePdfDocEncoding(string text, out byte[] bytes)
+    {
+        bytes = Array.Empty<byte>();
+        if (text.Length == 0)
+            return true;
+
+        var encoded = new byte[text.Length];
+        for (int i = 0; i < text.Length; i++)
+        {
+            if (!PdfDocEncodingReverseTable.TryGetValue(text[i], out var b))
+                return false;
+            encoded[i] = b;
+        }
+
+        bytes = encoded;
+        return true;
+    }
+
+    /// <summary>
     /// PDFDocEncoding → Unicode for all 256 byte values (ISO 32000-1 Table
     /// D.2). Identity for everything except the typographic code points; the
     /// two positions the spec leaves undefined (0x9F, 0xAD) fall through to
     /// their Latin-1 value so no data is lost on round-trip.
     /// </summary>
     private static readonly char[] PdfDocEncodingTable = BuildPdfDocEncodingTable();
+    private static readonly IReadOnlyDictionary<char, byte> PdfDocEncodingReverseTable =
+        BuildPdfDocEncodingReverseTable();
 
     private static char[] BuildPdfDocEncodingTable()
     {
@@ -176,6 +201,19 @@ public sealed class PdfString : PdfObject, IEquatable<PdfString>
 
         table[0xA0] = '€'; // euro
         // 0xAD is undefined in PDFDocEncoding → leave as Latin-1.
+
+        return table;
+    }
+
+    private static IReadOnlyDictionary<char, byte> BuildPdfDocEncodingReverseTable()
+    {
+        var table = new Dictionary<char, byte>();
+        for (int i = 0; i < PdfDocEncodingTable.Length; i++)
+        {
+            var c = PdfDocEncodingTable[i];
+            if (!table.ContainsKey(c))
+                table[c] = (byte)i;
+        }
 
         return table;
     }

@@ -91,6 +91,73 @@ public class PdfPageTests
         return ms.ToArray();
     }
 
+    private static byte[] CreatePdfWithMalformedFilteredContent(string content = "BT /F1 12 Tf 100 700 Td (BadFilter) Tj ET")
+    {
+        using var ms = new MemoryStream();
+        using var writer = new StreamWriter(ms, new UTF8Encoding(false), leaveOpen: true);
+        writer.NewLine = "\n";
+
+        writer.WriteLine("%PDF-1.4");
+        writer.Flush();
+
+        var offsets = new long[6];
+
+        offsets[1] = ms.Position;
+        writer.WriteLine("1 0 obj");
+        writer.WriteLine("<< /Type /Catalog /Pages 2 0 R >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[2] = ms.Position;
+        writer.WriteLine("2 0 obj");
+        writer.WriteLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[3] = ms.Position;
+        writer.WriteLine("3 0 obj");
+        writer.WriteLine("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[4] = ms.Position;
+        writer.WriteLine("4 0 obj");
+        writer.WriteLine($"<< /Filter /Flatedecode /Length {content.Length} >>");
+        writer.WriteLine("stream");
+        writer.Write(content);
+        writer.WriteLine();
+        writer.WriteLine("endstream");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[5] = ms.Position;
+        writer.WriteLine("5 0 obj");
+        writer.WriteLine("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        long xrefPos = ms.Position;
+
+        writer.WriteLine("xref");
+        writer.WriteLine("0 6");
+        writer.WriteLine("0000000000 65535 f ");
+        writer.WriteLine($"{offsets[1]:D10} 00000 n ");
+        writer.WriteLine($"{offsets[2]:D10} 00000 n ");
+        writer.WriteLine($"{offsets[3]:D10} 00000 n ");
+        writer.WriteLine($"{offsets[4]:D10} 00000 n ");
+        writer.WriteLine($"{offsets[5]:D10} 00000 n ");
+        writer.Flush();
+
+        writer.WriteLine("trailer");
+        writer.WriteLine("<< /Root 1 0 R /Size 6 >>");
+        writer.WriteLine("startxref");
+        writer.WriteLine(xrefPos.ToString());
+        writer.WriteLine("%%EOF");
+        writer.Flush();
+
+        return ms.ToArray();
+    }
+
     /// <summary>
     /// Creates a PDF with multiple content streams in an array.
     /// </summary>
@@ -445,6 +512,21 @@ public class PdfPageTests
 
         content.Should().Contain("First");
         content.Should().Contain("Second");
+    }
+
+    [Fact]
+    public void TryGetContentStreamBytes_MalformedFilteredStream_SkipsWithoutWeakeningStrictRead()
+    {
+        var pdfData = CreatePdfWithMalformedFilteredContent();
+        using var doc = PdfDocument.Open(pdfData);
+        var page = doc.GetPage(1);
+
+        var strictRead = () => page.GetContentStreamBytes();
+        strictRead.Should().Throw<InvalidOperationException>()
+            .WithMessage("Stream has not been decoded*");
+
+        page.TryGetContentStreamBytes(out var bytes).Should().BeFalse();
+        bytes.Should().BeEmpty();
     }
 
     [Fact]

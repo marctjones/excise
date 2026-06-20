@@ -480,6 +480,9 @@ namespace Pdfe.Core.Document
         public static Pdfe.Core.Document.PdfDocument Open(byte[] data, bool allowEncrypted = false) { }
         public static Pdfe.Core.Document.PdfDocument Open(string path, bool allowEncrypted = false) { }
         public static Pdfe.Core.Document.PdfDocument Open(System.IO.Stream stream, bool ownsStream = false, bool allowEncrypted = false) { }
+        public static Pdfe.Core.Document.PdfDocument Open(byte[] data, string? userPassword, bool allowEncrypted = false) { }
+        public static Pdfe.Core.Document.PdfDocument Open(string path, string? userPassword, bool allowEncrypted = false) { }
+        public static Pdfe.Core.Document.PdfDocument Open(System.IO.Stream stream, string? userPassword, bool ownsStream = false, bool allowEncrypted = false) { }
     }
     public sealed class PdfEmbeddedFile : System.IEquatable<Pdfe.Core.Document.PdfEmbeddedFile>
     {
@@ -1411,6 +1414,7 @@ namespace Pdfe.Core.Security
         public byte[] DecryptStream(int objNum, int gen, byte[] cipherBytes) { }
         public byte[] DecryptString(int objNum, int gen, byte[] cipherBytes) { }
         public static Pdfe.Core.Security.PdfStandardSecurityHandler Build(Pdfe.Core.Primitives.PdfDictionary encryptDict, byte[] firstId, byte[] userPassword) { }
+        public static Pdfe.Core.Security.PdfStandardSecurityHandler Build(Pdfe.Core.Primitives.PdfDictionary encryptDict, byte[] firstId, string? userPassword) { }
     }
 }
 namespace Pdfe.Core.Text

@@ -11,6 +11,32 @@ public class PdfParser : IDisposable
 {
     private readonly PdfLexer _lexer;
     private readonly bool _ownsLexer;
+    private static readonly HashSet<string> KnownDictionaryKeysWithoutSlash = new(StringComparer.Ordinal)
+    {
+        "A", "AA", "AcroForm", "Annots", "AP", "AS",
+        "BaseFont", "BBox", "BitsPerComponent", "BM",
+        "C", "CA", "CIDSet", "CIDSystemInfo", "CIDToGIDMap", "ColorSpace", "Contents",
+        "Count", "CropBox", "CS",
+        "DA", "Decode", "DecodeParms", "DescendantFonts", "Dest", "Domain", "DR", "DW",
+        "Encoding", "Encrypt", "ExtGState",
+        "F", "Fields", "Filter", "First", "FirstChar", "Font", "FontBBox", "FontDescriptor",
+        "Function", "FunctionType",
+        "Group",
+        "Height",
+        "ID", "ImageMask", "Index", "Info", "Interpolate",
+        "Kids",
+        "LastChar", "Length", "Length1", "Length2", "Length3", "Limits",
+        "Matrix", "MediaBox", "Metadata",
+        "N", "Names",
+        "OC", "OpenAction", "Outlines",
+        "P", "Pages", "Parent", "Pattern", "ProcSet",
+        "Range", "Rect", "Resources", "Root",
+        "Shading", "Size", "SMask", "StemV", "StructTreeRoot", "Subtype",
+        "T", "ToUnicode", "TR", "Trapped", "Type",
+        "V", "ViewerPreferences",
+        "W", "Width", "Widths",
+        "XObject", "XRef",
+    };
 
     /// <summary>
     /// Current array/dictionary nesting depth, used to bound recursion on
@@ -150,15 +176,15 @@ public class PdfParser : IDisposable
             if (token3.IsKeyword("R"))
             {
                 // It's a reference
-                int objNum = int.Parse(intToken.Value, CultureInfo.InvariantCulture);
-                int genNum = int.Parse(token2.Value, CultureInfo.InvariantCulture);
+                int objNum = ParseInt32Token(intToken, "object number");
+                int genNum = ParseInt32Token(token2, "generation number");
                 return new PdfReference(objNum, genNum);
             }
         }
 
         // Not a reference, restore position and return integer
         _lexer.Seek(savedPos);
-        return new PdfInteger(long.Parse(intToken.Value, CultureInfo.InvariantCulture));
+        return new PdfInteger(ParseInt64Token(intToken, "integer"));
     }
 
     /// <summary>
@@ -240,9 +266,19 @@ public class PdfParser : IDisposable
                 if (token.Type == PdfTokenType.Eof)
                     throw new PdfParseException("Unterminated dictionary");
 
-                // Key must be a name
-                if (token.Type != PdfTokenType.Name)
+                // Key must be a name. A small number of real-world PDFs lose
+                // the leading slash on an otherwise standard dictionary key
+                // (for example "ToUnicode 37 0 R"). Recover only known keys so
+                // arbitrary content tokens do not get accepted as dictionary
+                // structure.
+                if (token.Type != PdfTokenType.Name
+                    && (token.Type != PdfTokenType.Keyword || !KnownDictionaryKeysWithoutSlash.Contains(token.Value)))
+                {
+                    if (IsRecoverableStrayDictionaryKeyword(token))
+                        continue;
+
                     throw new PdfParseException($"Expected name in dictionary, got {token.Type} at position {token.Position}");
+                }
 
                 var key = new PdfName(token.Value);
                 var value = ParseObject();
@@ -255,13 +291,24 @@ public class PdfParser : IDisposable
         finally { _depth--; }
     }
 
+    private bool IsRecoverableStrayDictionaryKeyword(PdfToken token)
+    {
+        if (token.Type != PdfTokenType.Keyword)
+            return false;
+
+        var next = _lexer.PeekToken();
+        return next.Type == PdfTokenType.Name
+               || next.Type == PdfTokenType.DictionaryEnd
+               || (next.Type == PdfTokenType.Keyword && KnownDictionaryKeysWithoutSlash.Contains(next.Value));
+    }
+
     /// <summary>
     /// Parse a stream (dictionary already parsed).
     /// </summary>
     private PdfStream ParseStream(PdfDictionary dict)
     {
         // Get length from dictionary
-        int length;
+        int? length = null;
         var lengthObj = dict.GetOptional("Length");
         if (lengthObj is PdfInteger li)
         {
@@ -282,17 +329,14 @@ public class PdfParser : IDisposable
 
             if (resolved is PdfInteger ri)
                 length = (int)ri.Value;
-            else
-                throw new PdfParseException(
-                    $"Stream /Length reference {lenRef.ObjectNum} did not resolve to an integer.");
-        }
-        else
-        {
-            throw new PdfParseException("Stream missing /Length");
         }
 
+        long streamDataStart = _lexer.Position;
+        if (length is not { } declaredLength)
+            return new PdfStream(dict, _lexer.ReadStreamDataUntilEndstream());
+
         // Read stream data
-        var data = _lexer.ReadStreamData(length);
+        var data = _lexer.ReadStreamData(declaredLength);
 
         // Expect 'endstream' keyword
         var token = _lexer.NextToken();
@@ -305,11 +349,43 @@ public class PdfParser : IDisposable
             }
             else
             {
-                throw new PdfParseException($"Expected 'endstream', got '{token.Value}' at position {token.Position}");
+                // Some producer bugs write a too-short or too-long /Length. If
+                // the declared-length path lands anywhere other than
+                // endstream, re-read from the actual stream-data start and
+                // recover by marker scan.
+                _lexer.Seek(streamDataStart);
+                data = _lexer.ReadStreamDataUntilEndstream();
             }
         }
 
+        ResolveStreamDecodeParms(dict);
         return new PdfStream(dict, data);
+    }
+
+    private void ResolveStreamDecodeParms(PdfDictionary dict)
+    {
+        if (IndirectObjectResolver == null)
+            return;
+
+        var parms = dict.GetOptional("DecodeParms");
+        switch (parms)
+        {
+            case PdfReference reference:
+                if (IndirectObjectResolver(reference.ObjectNum) is PdfDictionary resolved)
+                    dict["DecodeParms"] = resolved;
+                break;
+
+            case PdfArray array:
+                for (var i = 0; i < array.Count; i++)
+                {
+                    if (array[i] is not PdfReference itemReference)
+                        continue;
+
+                    if (IndirectObjectResolver(itemReference.ObjectNum) is PdfDictionary itemDictionary)
+                        array[i] = itemDictionary;
+                }
+                break;
+        }
     }
 
     /// <summary>
@@ -330,16 +406,73 @@ public class PdfParser : IDisposable
         if (!objToken.IsKeyword("obj"))
             throw new PdfParseException($"Expected 'obj', got '{objToken.Value}' at position {objToken.Position}");
 
-        int objNum = int.Parse(objNumToken.Value, CultureInfo.InvariantCulture);
-        int genNum = int.Parse(genNumToken.Value, CultureInfo.InvariantCulture);
+        int objNum = ParseInt32Token(objNumToken, "object number");
+        int genNum = ParseInt32Token(genNumToken, "generation number");
 
         var value = ParseObject();
 
         var endObjToken = _lexer.NextToken();
         if (!endObjToken.IsKeyword("endobj"))
-            throw new PdfParseException($"Expected 'endobj', got '{endObjToken.Value}' at position {endObjToken.Position}");
+        {
+            if (value is PdfName firstBareKey)
+            {
+                value = ParseBareDictionaryObject(firstBareKey, endObjToken);
+            }
+            else
+            {
+                throw new PdfParseException($"Expected 'endobj', got '{endObjToken.Value}' at position {endObjToken.Position}");
+            }
+        }
 
         return new PdfIndirectObject(objNum, genNum, value);
+    }
+
+    private PdfDictionary ParseBareDictionaryObject(PdfName firstKey, PdfToken firstValueToken)
+    {
+        var dict = new PdfDictionary
+        {
+            [firstKey] = ParseObjectFromToken(firstValueToken)
+        };
+
+        while (true)
+        {
+            var keyToken = _lexer.NextToken();
+            if (keyToken.IsKeyword("endobj"))
+                return dict;
+
+            if (keyToken.Type == PdfTokenType.Eof)
+                throw new PdfParseException("Unterminated bare dictionary object");
+
+            if (keyToken.Type != PdfTokenType.Name)
+                throw new PdfParseException(
+                    $"Expected name in bare dictionary object, got {keyToken.Type} at position {keyToken.Position}");
+
+            dict[new PdfName(keyToken.Value)] = ParseObject();
+        }
+    }
+
+    private static int ParseInt32Token(PdfToken token, string label)
+    {
+        try
+        {
+            return int.Parse(token.Value, CultureInfo.InvariantCulture);
+        }
+        catch (Exception ex) when (ex is FormatException or OverflowException)
+        {
+            throw new PdfParseException($"Invalid {label} '{token.Value}' at position {token.Position}", ex);
+        }
+    }
+
+    private static long ParseInt64Token(PdfToken token, string label)
+    {
+        try
+        {
+            return long.Parse(token.Value, CultureInfo.InvariantCulture);
+        }
+        catch (Exception ex) when (ex is FormatException or OverflowException)
+        {
+            throw new PdfParseException($"Invalid {label} '{token.Value}' at position {token.Position}", ex);
+        }
     }
 
     /// <summary>

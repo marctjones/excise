@@ -246,7 +246,14 @@ public class PdfDocument : IDisposable
         var infoRef = trailer.GetReferenceOrNull("Info");
         if (infoRef != null)
         {
-            Info = GetObject(infoRef) as PdfDictionary;
+            try
+            {
+                Info = GetObject(infoRef) as PdfDictionary;
+            }
+            catch (Exception __ex) when (__ex is not OutOfMemoryException)
+            {
+                Info = null;
+            }
         }
     }
 
@@ -258,7 +265,27 @@ public class PdfDocument : IDisposable
         var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
         try
         {
-            return Open(stream, ownsStream: true, allowEncrypted: allowEncrypted);
+            return OpenCore(stream, ownsStream: true, allowEncrypted: allowEncrypted, userPassword: null);
+        }
+        catch (Exception __ex) when (__ex is not OutOfMemoryException)
+        {
+            stream.Dispose();
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Open a password-protected PDF document from a file.
+    /// </summary>
+    /// <param name="path">Path to the PDF file.</param>
+    /// <param name="userPassword">User password. <c>null</c> is treated as the empty password.</param>
+    /// <param name="allowEncrypted">When true, unsupported encrypted PDFs are opened for inspection with ciphertext streams.</param>
+    public static PdfDocument Open(string path, string? userPassword, bool allowEncrypted = false)
+    {
+        var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+        try
+        {
+            return OpenCore(stream, ownsStream: true, allowEncrypted: allowEncrypted, userPassword: userPassword);
         }
         catch (Exception __ex) when (__ex is not OutOfMemoryException)
         {
@@ -280,18 +307,31 @@ public class PdfDocument : IDisposable
     /// Pass true to bypass the guard for unencrypted-dict / encrypted-stream
     /// inspection at the caller's own risk.</param>
     public static PdfDocument Open(Stream stream, bool ownsStream = false, bool allowEncrypted = false)
+        => OpenCore(stream, ownsStream, allowEncrypted, userPassword: null);
+
+    /// <summary>
+    /// Open a password-protected PDF document from a stream.
+    /// </summary>
+    /// <param name="stream">Stream to read.</param>
+    /// <param name="userPassword">User password. <c>null</c> is treated as the empty password.</param>
+    /// <param name="ownsStream">Whether the document should dispose the stream on close.</param>
+    /// <param name="allowEncrypted">When true, unsupported encrypted PDFs are opened for inspection with ciphertext streams.</param>
+    public static PdfDocument Open(Stream stream, string? userPassword, bool ownsStream = false, bool allowEncrypted = false)
+        => OpenCore(stream, ownsStream, allowEncrypted, userPassword);
+
+    private static PdfDocument OpenCore(Stream stream, bool ownsStream, bool allowEncrypted, string? userPassword)
     {
         // Read PDF version from header
         string version = ReadVersion(stream);
 
         // Find and parse xref
         var xrefParser = new XRefParser(stream);
-        long startXRef = xrefParser.FindStartXRef();
-        var (trailer, xref) = xrefParser.ParseXRef(startXRef);
+        var (trailer, xref) = xrefParser.ParseRootXRef();
 
         // Handle incremental updates (Prev pointer)
         var fullXRef = new Dictionary<int, XRefEntry>(xref);
         var currentTrailer = trailer;
+        var parsedPreviousXRefs = new HashSet<long>();
 
         while (currentTrailer.GetReferenceOrNull("Prev") != null || currentTrailer.ContainsKey("Prev"))
         {
@@ -299,16 +339,27 @@ public class PdfDocument : IDisposable
             if (prevObj == null) break;
 
             long prevXRef = prevObj.GetLong();
-            var (prevTrailer, prevXRefEntries) = xrefParser.ParseXRef(prevXRef);
+            if (prevXRef < 0 || prevXRef >= stream.Length || !parsedPreviousXRefs.Add(prevXRef))
+                break;
+
+            (PdfDictionary prevTrailer, Dictionary<int, XRefEntry> prevXRefEntries) previous;
+            try
+            {
+                previous = xrefParser.ParseDocumentXRef(prevXRef);
+            }
+            catch (Exception ex) when (IsRecoverableIncrementalXRefException(ex))
+            {
+                break;
+            }
 
             // Merge with previous xref (older entries don't override newer)
-            foreach (var kvp in prevXRefEntries)
+            foreach (var kvp in previous.prevXRefEntries)
             {
                 if (!fullXRef.ContainsKey(kvp.Key))
                     fullXRef[kvp.Key] = kvp.Value;
             }
 
-            currentTrailer = prevTrailer;
+            currentTrailer = previous.prevTrailer;
         }
 
         // Encrypted PDFs: try to build a security handler that decrypts
@@ -328,20 +379,43 @@ public class PdfDocument : IDisposable
                 {
                     // Need to read the object directly from xref since
                     // we don't have a document yet.
-                    encryptObj = ReadIndirectObjectAt(stream, fullXRef[encryptRef.ObjectNum].Offset);
+                    try
+                    {
+                        encryptObj = ReadIndirectObjectAt(stream, fullXRef[encryptRef.ObjectNum].Offset);
+                    }
+                    catch (Exception ex) when (IsRecoverableMalformedEncryptObjectException(ex))
+                    {
+                        encryptObj = null;
+                    }
                 }
-                if (encryptObj is not PdfDictionary encryptDict)
-                    throw new Pdfe.Core.Parsing.PdfParseException("/Encrypt is not a dictionary");
+                if (encryptObj == null)
+                    handler = null;
+                else
+                {
+                    if (encryptObj is not PdfDictionary encryptDict)
+                        throw new Pdfe.Core.Parsing.PdfParseException("/Encrypt is not a dictionary");
 
-                // /ID is required; first element is what the security handler hashes.
-                var idArr = trailer.GetArray("ID");
-                if (idArr.Count == 0 || idArr[0] is not PdfString idStr)
-                    throw new Pdfe.Core.Parsing.PdfParseException("/ID array missing or empty");
-                var firstId = idStr.Bytes;
+                    // Some PDF 2.0 files encrypt only embedded-file streams
+                    // (/EFF) while leaving normal document streams and strings
+                    // on /Identity. Rendering/search/redaction of visible page
+                    // content does not need a security handler in that case, and
+                    // attempting password verification would wrongly reject an
+                    // otherwise readable document.
+                    if (!UsesIdentityCryptFiltersForDocumentContent(encryptDict))
+                    {
+                        // /ID is required; first element is what the security handler hashes.
+                        var idArr = trailer.GetArray("ID");
+                        if (idArr.Count == 0 || idArr[0] is not PdfString idStr)
+                            throw new Pdfe.Core.Parsing.PdfParseException("/ID array missing or empty");
+                        var firstId = idStr.Bytes;
 
-                // Try the empty user password first — by far the most common case.
-                handler = Pdfe.Core.Security.PdfStandardSecurityHandler.Build(
-                    encryptDict, firstId, Array.Empty<byte>());
+                        // Try the supplied user password. A null password is the
+                        // same as the empty user password, by far the most common
+                        // case for encrypted PDFs.
+                        handler = Pdfe.Core.Security.PdfStandardSecurityHandler.Build(
+                            encryptDict, firstId, userPassword);
+                    }
+                }
             }
             catch (Pdfe.Core.Parsing.PdfEncryptionNotSupportedException)
             {
@@ -359,6 +433,21 @@ public class PdfDocument : IDisposable
         // Create document (loads catalog internally)
         return new PdfDocument(stream, ownsStream, fullXRef, trailer, version, handler);
     }
+
+    private static bool UsesIdentityCryptFiltersForDocumentContent(PdfDictionary encryptDict)
+        => string.Equals(encryptDict.GetNameOrNull("StmF"), "Identity", StringComparison.Ordinal)
+           && string.Equals(encryptDict.GetNameOrNull("StrF"), "Identity", StringComparison.Ordinal);
+
+    private static bool IsRecoverableIncrementalXRefException(Exception ex)
+        => ex is PdfParseException or FormatException or OverflowException or KeyNotFoundException;
+
+    private static bool IsRecoverableMalformedEncryptObjectException(Exception ex)
+        => ex is PdfParseException { Message: var message }
+           && (message.Contains("Unexpected keyword", StringComparison.Ordinal)
+               || message.Contains("Expected object number", StringComparison.Ordinal)
+               || message.Contains("Expected generation number", StringComparison.Ordinal)
+               || message.Contains("Expected 'obj'", StringComparison.Ordinal)
+               || message.Contains("Unterminated dictionary", StringComparison.Ordinal));
 
     /// <summary>
     /// One-shot reader used by <see cref="Open(Stream, bool, bool)"/> to
@@ -379,7 +468,18 @@ public class PdfDocument : IDisposable
     /// </summary>
     public static PdfDocument Open(byte[] data, bool allowEncrypted = false)
     {
-        return Open(new MemoryStream(data, writable: false), ownsStream: true, allowEncrypted: allowEncrypted);
+        return OpenCore(new MemoryStream(data, writable: false), ownsStream: true, allowEncrypted: allowEncrypted, userPassword: null);
+    }
+
+    /// <summary>
+    /// Open a password-protected PDF document from a byte array.
+    /// </summary>
+    /// <param name="data">PDF bytes.</param>
+    /// <param name="userPassword">User password. <c>null</c> is treated as the empty password.</param>
+    /// <param name="allowEncrypted">When true, unsupported encrypted PDFs are opened for inspection with ciphertext streams.</param>
+    public static PdfDocument Open(byte[] data, string? userPassword, bool allowEncrypted = false)
+    {
+        return OpenCore(new MemoryStream(data, writable: false), ownsStream: true, allowEncrypted: allowEncrypted, userPassword: userPassword);
     }
 
     /// <summary>
@@ -449,19 +549,20 @@ public class PdfDocument : IDisposable
     private static string ReadVersion(Stream stream)
     {
         stream.Position = 0;
-        var buffer = new byte[20];
+        var buffer = new byte[Math.Min(1024, Math.Max(20, (int)Math.Min(stream.Length, 1024)))];
         int read = stream.Read(buffer, 0, buffer.Length);
 
         var header = System.Text.Encoding.ASCII.GetString(buffer, 0, read);
-        if (!header.StartsWith("%PDF-"))
+        var headerStart = header.IndexOf("%PDF-", StringComparison.Ordinal);
+        if (headerStart < 0)
             throw new PdfParseException("Invalid PDF header");
 
         // Extract version (e.g., "1.4", "1.7", "2.0")
-        int idx = 5;
+        int idx = headerStart + 5;
         while (idx < header.Length && (char.IsDigit(header[idx]) || header[idx] == '.'))
             idx++;
 
-        return header.Substring(5, idx - 5);
+        return header.Substring(headerStart + 5, idx - (headerStart + 5));
     }
 
     /// <summary>

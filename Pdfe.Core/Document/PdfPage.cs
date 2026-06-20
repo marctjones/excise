@@ -266,33 +266,74 @@ public class PdfPage
     /// </summary>
     public byte[] GetContentStreamBytes()
     {
+        TryCollectContentStreamBytes(skipUndecodableStreams: false, out var data);
+        return data;
+    }
+
+    /// <summary>
+    /// Try to get decoded page content stream bytes, skipping streams whose
+    /// filter pipeline could not be decoded. Returns false if any stream was
+    /// skipped. Use this for best-effort viewing only; editing and redaction
+    /// should keep using <see cref="GetContentStreamBytes"/> so undecodable
+    /// content never silently disappears from mutation paths.
+    /// </summary>
+    internal bool TryGetContentStreamBytes(out byte[] data)
+        => TryCollectContentStreamBytes(skipUndecodableStreams: true, out data);
+
+    private bool TryCollectContentStreamBytes(bool skipUndecodableStreams, out byte[] data)
+    {
         var contentsObj = _pageDict.GetOptional("Contents");
         if (contentsObj == null)
-            return Array.Empty<byte>();
+        {
+            data = Array.Empty<byte>();
+            return true;
+        }
 
         contentsObj = _document.Resolve(contentsObj);
 
         if (contentsObj is PdfStream stream)
         {
-            return stream.DecodedData;
+            return TryGetDecodedContentStreamBytes(stream, skipUndecodableStreams, out data);
         }
         else if (contentsObj is PdfArray array)
         {
             // Multiple content streams - concatenate
+            var complete = true;
             using var ms = new MemoryStream();
             foreach (var item in array)
             {
                 var resolved = _document.Resolve(item);
                 if (resolved is PdfStream s)
                 {
-                    ms.Write(s.DecodedData);
+                    if (!TryGetDecodedContentStreamBytes(s, skipUndecodableStreams, out var streamData))
+                    {
+                        complete = false;
+                        continue;
+                    }
+
+                    ms.Write(streamData);
                     ms.WriteByte((byte)'\n'); // Separate streams with newline
                 }
             }
-            return ms.ToArray();
+            data = ms.ToArray();
+            return complete;
         }
 
-        return Array.Empty<byte>();
+        data = Array.Empty<byte>();
+        return true;
+    }
+
+    private static bool TryGetDecodedContentStreamBytes(
+        PdfStream stream,
+        bool skipUndecodableStreams,
+        out byte[] data)
+    {
+        data = Array.Empty<byte>();
+        if (skipUndecodableStreams && stream.IsFiltered && !stream.IsDecoded)
+            return false;
+
+        data = stream.DecodedData;
+        return true;
     }
 
     /// <summary>
