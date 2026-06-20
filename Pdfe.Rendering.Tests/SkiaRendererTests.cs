@@ -437,7 +437,7 @@ public class SkiaRendererTests
     }
 
     [Fact(Timeout = 20000)]
-    public void RenderPage_PdfjsBug920426_IdentityUnicodeCidFontUsesEmbeddedTrueTypeCmap()
+    public void RenderPage_PdfjsBug920426_Type0EncodingCMapRemapsCharacterCodesToGlyphs()
     {
         var path = FindRepoFile("test-pdfs", "pdfjs", "bug920426.pdf");
         Assert.SkipWhen(path == null,
@@ -451,6 +451,10 @@ public class SkiaRendererTests
 
         CountDarkPixels(bitmap, new SKRectI(10, 10, 170, 35)).Should().BeGreaterThan(600,
             "the embedded Type0/Identity-H text should render as readable glyphs");
+        CountDarkPixels(bitmap, new SKRectI(9, 17, 14, 23)).Should().BeGreaterThan(8,
+            "the first word should start with the left stroke of C");
+        CountDarkPixels(bitmap, new SKRectI(19, 17, 24, 23)).Should().BeLessThan(15,
+            "the embedded Encoding CMap should remap 0043 to the C glyph, leaving the right side open");
         CountDarkPixels(bitmap, new SKRectI(94, 10, 101, 35)).Should().BeLessThan(60,
             "the rendered words should preserve the visible space between Checkliste and Service");
         CountDarkPixels(bitmap, new SKRectI(105, 10, 165, 35)).Should().BeGreaterThan(200,

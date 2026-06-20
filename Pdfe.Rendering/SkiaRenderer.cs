@@ -6,6 +6,7 @@ using Pdfe.Core.Content;
 using Pdfe.Core.Document;
 using Pdfe.Core.Filters.Jpx;
 using Pdfe.Core.Primitives;
+using Pdfe.Core.Text;
 using Pdfe.Rendering.Fonts;
 using SkiaSharp;
 using CoreCffParser = Pdfe.Core.Fonts.CffParser;
@@ -409,6 +410,7 @@ internal partial class RenderContext
     private Dictionary<int, float>? _currentCidWidths;
     private float _currentCidDefaultWidth = 1000f;
     private bool _currentCidUseUnicodeCmap;
+    private CidCMap? _currentCidEncodingCMap;
 
     // CID → glyph-id mapping for the active CIDFontType2 font, when a
     // non-identity /CIDToGIDMap stream is present. ushort.MaxValue at
@@ -433,6 +435,7 @@ internal partial class RenderContext
     // _embeddedTypefaces so two different /Font dicts with the same
     // resource name but different physical fonts don't collide.
     private readonly Dictionary<Pdfe.Core.Primitives.PdfDictionary, Dictionary<int, int>?> _embeddedCffCidToGlyph = new();
+    private readonly Dictionary<Pdfe.Core.Primitives.PdfDictionary, CidCMap?> _type0EncodingCMaps = new();
     private readonly Dictionary<(int ObjectNumber, int Generation, int TargetWidth, int TargetHeight), SoftMaskAlpha?> _softMaskAlphaByReference = new();
     private readonly Dictionary<Pdfe.Core.Primitives.PdfStream, Dictionary<(int TargetWidth, int TargetHeight), SoftMaskAlpha?>> _softMaskAlphaByStream =
         new(ReferenceEqualityComparer.Instance);
@@ -1225,8 +1228,11 @@ internal partial class RenderContext
         _currentCidDefaultWidth = 1000f;
         _currentCidToGidMap = null;
         _currentCidUseUnicodeCmap = false;
+        _currentCidEncodingCMap = null;
         if (_currentFontIsType0 && fontDict != null)
         {
+            _currentCidEncodingCMap = TryGetType0EncodingCMap(fontDict);
+
             var descendants = ResolveArray(fontDict, "DescendantFonts");
             if (descendants != null && descendants.Count > 0 &&
                 _page.Document.Resolve(descendants[0]) is Pdfe.Core.Primitives.PdfDictionary cidFont)
@@ -1265,9 +1271,34 @@ internal partial class RenderContext
                 _currentCidUseUnicodeCmap =
                     _currentFontHasEmbeddedProgram &&
                     _currentCidToGidMap == null &&
+                    _currentCidEncodingCMap == null &&
                     (toUnicodeName == "Identity-H" || toUnicodeName == "Identity-V");
             }
         }
+    }
+
+    private CidCMap? TryGetType0EncodingCMap(Pdfe.Core.Primitives.PdfDictionary fontDict)
+    {
+        if (_type0EncodingCMaps.TryGetValue(fontDict, out var cached))
+            return cached;
+
+        CidCMap? cmap = null;
+        try
+        {
+            var encodingObj = fontDict.GetOptional("Encoding");
+            if (encodingObj != null &&
+                _page.Document.Resolve(encodingObj) is Pdfe.Core.Primitives.PdfStream stream)
+            {
+                cmap = CidCMap.Parse(stream.DecodedData);
+            }
+        }
+        catch
+        {
+            cmap = null;
+        }
+
+        _type0EncodingCMaps[fontDict] = cmap;
+        return cmap;
     }
 
     // Resolve `dict[key]` as a dictionary, following indirect references.
@@ -2399,16 +2430,20 @@ internal partial class RenderContext
         return builder.Build();
     }
 
-    // Type0 rendering path. Content-stream bytes come in 2-at-a-time as
-    // big-endian CIDs under /Identity-H (the only CMap we currently handle).
-    // CIDs are rendered as glyph IDs directly — correct for /CIDToGIDMap
-    // /Identity (the default and most common case for /CIDFontType2 fonts).
+    // Type0 rendering path. Content-stream bytes are character codes; the
+    // active Encoding CMap maps them to CIDs. Identity-H/Identity-V are the
+    // common 2-byte no-op maps, while embedded CMap streams can remap retained
+    // Unicode-ish codes onto the descendant font's CID/glyph space.
     private void RenderCidBytes(byte[] bytes)
     {
-        if (!_inTextBlock || _currentTypeface == null || bytes.Length < 2)
+        if (!_inTextBlock || _currentTypeface == null || bytes.Length == 0)
             return;
 
-        var count = bytes.Length / 2;
+        var cids = _currentCidEncodingCMap?.Decode(bytes) ?? DecodeIdentityCidBytes(bytes);
+        if (cids.Length == 0)
+            return;
+
+        var count = cids.Length;
         var effectiveSize = GetEffectiveFontSize();
         using var font = new SKFont(_currentTypeface, effectiveSize);
         // Two parallel arrays: CIDs (used for /W width lookup, which is
@@ -2421,16 +2456,14 @@ internal partial class RenderContext
         //     inside the embedded CFF charset; CffCidToGlyph holds it.
         //   - CIDFontType2 with /CIDToGIDMap = /Identity (or absent) → CID
         //     equals GID and we draw straight through.
-        var cids = new ushort[count];
         var gids = new ushort[count];
         var positions = new SKPoint[count];
         var cursor = 0f;
         for (int i = 0; i < count; i++)
         {
-            ushort cid = (ushort)((bytes[i * 2] << 8) | bytes[i * 2 + 1]);
-            cids[i] = cid;
+            var cid = cids[i];
             ushort gid;
-            if (_currentCidToGidMap != null && cid < _currentCidToGidMap.Length)
+            if (_currentCidToGidMap != null && cid >= 0 && cid < _currentCidToGidMap.Length)
                 gid = _currentCidToGidMap[cid];
             else if (_currentCffCidToGlyph != null
                      && _currentCffCidToGlyph.TryGetValue(cid, out var cffGid))
@@ -2438,7 +2471,7 @@ internal partial class RenderContext
             else if (_currentCidUseUnicodeCmap)
                 gid = (ushort)(font.GetGlyph(cid) is var unicodeGid && unicodeGid != 0 ? unicodeGid : cid);
             else
-                gid = cid;
+                gid = ToGlyphId(cid);
             gids[i] = gid;
 
             positions[i] = new SKPoint(cursor, 0);
@@ -2507,6 +2540,21 @@ internal partial class RenderContext
         width *= _textState.HorizontalScale / 100.0f;
         AdvanceTextMatrixX(width);
     }
+
+    private static int[] DecodeIdentityCidBytes(byte[] bytes)
+    {
+        var count = bytes.Length / 2;
+        if (count == 0)
+            return Array.Empty<int>();
+
+        var cids = new int[count];
+        for (var i = 0; i < count; i++)
+            cids[i] = (bytes[i * 2] << 8) | bytes[i * 2 + 1];
+        return cids;
+    }
+
+    private static ushort ToGlyphId(int cid)
+        => cid is >= 0 and <= ushort.MaxValue ? (ushort)cid : (ushort)0;
 
     private float GetCidWidthThousandths(int cid)
         => (_currentCidWidths != null && _currentCidWidths.TryGetValue(cid, out var width))
@@ -5041,6 +5089,7 @@ internal partial class RenderContext
             var savedCffCidToGlyph = _currentCffCidToGlyph;
             var savedCidToGidMap = _currentCidToGidMap;
             var savedCidUseUnicodeCmap = _currentCidUseUnicodeCmap;
+            var savedCidEncodingCMap = _currentCidEncodingCMap;
             var savedFontIsType0 = _currentFontIsType0;
             var savedCidWidths = _currentCidWidths;
             var savedCurrentFontWidths = _currentFontWidths;
@@ -5110,6 +5159,7 @@ internal partial class RenderContext
                 _currentCffCidToGlyph = savedCffCidToGlyph;
                 _currentCidToGidMap = savedCidToGidMap;
                 _currentCidUseUnicodeCmap = savedCidUseUnicodeCmap;
+                _currentCidEncodingCMap = savedCidEncodingCMap;
                 _currentFontIsType0 = savedFontIsType0;
                 _currentCidWidths = savedCidWidths;
                 _currentFontWidths = savedCurrentFontWidths;
