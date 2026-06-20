@@ -823,10 +823,23 @@ public partial class MainWindowViewModel : ViewModelBase
             // Both services need their own instance — they have separate
             // ownership lifecycles — but the parses run in parallel.
             _logger.LogInformation(">>> STEP 5: Loading Pdfe.Core document (parallel parse)");
-            var docServiceLoad = Task.Run(() => _documentService.LoadDocument(filePath));
-            var coreDocLoad = Task.Run(() => Pdfe.Core.Document.PdfDocument.Open(filePath));
-            await Task.WhenAll(docServiceLoad, coreDocLoad);
-            PdfCoreDocument = await coreDocLoad;
+            try
+            {
+                PdfCoreDocument = await LoadDocumentInstancesAsync(filePath, userPassword: null);
+            }
+            catch (Pdfe.Core.Parsing.PdfEncryptionNotSupportedException ex) when (IsPasswordVerificationFailure(ex))
+            {
+                OperationStatus = "Password required…";
+                var password = await _dialogService.PromptPasswordAsync(
+                    "Password Required",
+                    "Enter the user password for this PDF.");
+                if (password == null)
+                    throw new Pdfe.Core.Parsing.PdfEncryptionNotSupportedException(
+                        "Password is required to open this PDF.");
+
+                OperationStatus = "Opening PDF…";
+                PdfCoreDocument = await LoadDocumentInstancesAsync(filePath, password);
+            }
             _logger.LogInformation(">>> STEP 5: Both document instances loaded");
 
             _logger.LogInformation(">>> STEP 6: Setting CurrentPageIndex = 0");
@@ -838,7 +851,6 @@ public partial class MainWindowViewModel : ViewModelBase
             // document we'd block on N×Task.Run thumbnail jobs before the
             // user saw page 1, saturating the threadpool the main render
             // also needed.
-            OperationStatus = $"Rendering page 1 of {TotalPages}…";
             _logger.LogInformation(">>> STEP 7: Rendering current page");
             await RenderCurrentPageAsync();
             _logger.LogInformation(">>> STEP 7: Current page rendered successfully");
@@ -935,12 +947,13 @@ public partial class MainWindowViewModel : ViewModelBase
 
             // Determine user-friendly error message
             string userMessage;
-            if (ex.Message.Contains("owner password") || ex.Message.Contains("password is required"))
+            if (IsPasswordVerificationFailure(ex) || ex.Message.Contains("owner password", StringComparison.OrdinalIgnoreCase)
+                || ex.Message.Contains("password is required", StringComparison.OrdinalIgnoreCase))
             {
-                userMessage = "This PDF is password-protected and cannot be opened for editing.";
-                _toastService.ShowError("Cannot Open PDF", "Password-protected file. Please remove protection and try again.");
+                userMessage = "This PDF requires a user password. The password was not provided, was rejected, or the file uses an unsupported owner-password-only mode.";
+                _toastService.ShowError("Cannot Open PDF", "Password required or rejected.");
             }
-            else if (ex.Message.Contains("encrypted"))
+            else if (ex.Message.Contains("encrypted", StringComparison.OrdinalIgnoreCase))
             {
                 userMessage = "This PDF is encrypted and cannot be opened.";
                 _toastService.ShowError("Cannot Open PDF", "File is encrypted. Please provide an unencrypted version.");
@@ -956,6 +969,20 @@ public partial class MainWindowViewModel : ViewModelBase
             await ShowErrorDialogAsync("Cannot Open PDF", userMessage);
         }
     }
+
+    private async Task<PdfCoreDocument> LoadDocumentInstancesAsync(string filePath, string? userPassword)
+    {
+        var docServiceLoad = Task.Run(() => _documentService.LoadDocument(filePath, userPassword));
+        var coreDocLoad = Task.Run(() => userPassword is null
+            ? Pdfe.Core.Document.PdfDocument.Open(filePath)
+            : Pdfe.Core.Document.PdfDocument.Open(filePath, userPassword));
+        await Task.WhenAll(docServiceLoad, coreDocLoad);
+        return await coreDocLoad;
+    }
+
+    private static bool IsPasswordVerificationFailure(Exception ex)
+        => ex.Message.Contains("password verification failed", StringComparison.OrdinalIgnoreCase)
+           || ex.Message.Contains("requires a non-empty user password", StringComparison.OrdinalIgnoreCase);
 
     private async Task ShowErrorDialogAsync(string title, string message)
     {
@@ -1784,7 +1811,9 @@ public partial class MainWindowViewModel : ViewModelBase
         // Surface a stage label in the status bar so the user has feedback
         // during the render. Keep the existing label if a thumbnail batch
         // is still in flight (it'll overwrite this anyway as it ticks).
-        var existingStatus = OperationStatus;
+        var existingStatus = IsRenderingStatus(OperationStatus)
+            ? string.Empty
+            : OperationStatus;
         var renderingStatus = $"Rendering page {DisplayPageNumber} of {TotalPages}…";
         OperationStatus = renderingStatus;
 
@@ -1849,6 +1878,11 @@ public partial class MainWindowViewModel : ViewModelBase
             if (OperationStatus == renderingStatus)
                 OperationStatus = existingStatus;
         }
+    }
+
+    private static bool IsRenderingStatus(string status)
+    {
+        return status.StartsWith("Rendering page ", StringComparison.Ordinal);
     }
 
     private void UpdateThumbnailSelection()

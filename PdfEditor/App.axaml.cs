@@ -10,6 +10,9 @@ using PdfEditor.Services;
 using PdfEditor.ViewModels;
 using PdfEditor.Views;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace PdfEditor;
 
@@ -41,11 +44,43 @@ public partial class App : Application
         logger.LogInformation("Framework initialization completed");
         logger.LogInformation("ReactiveUI configured to use Avalonia scheduler");
 
+        MainWindowViewModel? mainViewModel = null;
+        string? pendingActivationPath = null;
+
+        void OpenOrQueueActivatedPath(string path)
+        {
+            if (mainViewModel != null)
+            {
+                OpenPathOnUiThread(mainViewModel, path, logger);
+                return;
+            }
+
+            logger.LogInformation("Queued activated PDF until main window is ready: {Path}", path);
+            pendingActivationPath = path;
+        }
+
+        // Register this before building the main window. macOS Launch Services
+        // may deliver document-open activation while the Avalonia lifetime is
+        // still starting, and queueing here avoids dropping that early event.
+        if (ApplicationLifetime is IActivatableLifetime activatable)
+        {
+            activatable.Activated += (_, e) =>
+            {
+                if (e is not FileActivatedEventArgs fileArgs)
+                    return;
+
+                var path = ResolveActivatedPdfPath(fileArgs.Files);
+                if (path != null)
+                    OpenOrQueueActivatedPath(path);
+            };
+        }
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             logger.LogInformation("Creating main window");
 
             var vm = _serviceProvider.GetRequiredService<MainWindowViewModel>();
+            mainViewModel = vm;
             desktop.MainWindow = new MainWindow
             {
                 DataContext = vm,
@@ -53,47 +88,42 @@ public partial class App : Application
 
             logger.LogInformation("Main window created successfully");
 
-            // Open a PDF that was passed on the command line once the window is
-            // shown (Windows/Linux "Open With", `pdfe file.pdf`, demos). On macOS
+            // Open a PDF that was passed on the command line (Windows/Linux
+            // "Open With", `pdfe file.pdf`, demos). Avalonia's Window.Opened
+            // event is not a reliable handoff point for every backend, so post
+            // the load directly to the dispatcher after the VM/window exist.
+            // On macOS
             // a double-clicked file does NOT arrive as a command-line arg — it
             // comes through the activation event wired up below.
-            var args = desktop.Args;
-            if (args != null && args.Length > 0 && System.IO.File.Exists(args[0]))
+            var path = StartupDocumentResolver.Resolve(
+                desktop.Args,
+                Environment.GetCommandLineArgs().Skip(1));
+
+            if (path != null)
             {
-                var path = args[0];
-                desktop.MainWindow.Opened += (_, _) => OpenPathOnUiThread(vm, path, logger);
-            }
-        }
-
-        // macOS (and other platforms) deliver "open this document" as an
-        // activation event, not a command-line arg — Finder double-click, the
-        // Dock, or `open -a pdfe file.pdf` against an already-running instance all
-        // come through here. Requires /CFBundleDocumentTypes in the .app's
-        // Info.plist so the OS routes PDFs to us. (#420)
-        if (ApplicationLifetime is IActivatableLifetime activatable
-            && _serviceProvider != null)
-        {
-            activatable.Activated += (_, e) =>
-            {
-                if (e is not FileActivatedEventArgs fileArgs)
-                    return;
-
-                // Resolve the VM lazily: on a warm activation the main window's
-                // VM is the live one; fall back to a fresh resolve if needed.
-                var vm = (ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)
-                             ?.MainWindow?.DataContext as MainWindowViewModel
-                         ?? _serviceProvider.GetRequiredService<MainWindowViewModel>();
-
-                foreach (var file in fileArgs.Files)
+                logger.LogInformation("Opening startup PDF: {Path}", path);
+                desktop.Startup += (_, _) =>
                 {
-                    var path = file.TryGetLocalPath();
-                    if (!string.IsNullOrEmpty(path) && System.IO.File.Exists(path))
-                    {
-                        OpenPathOnUiThread(vm, path, logger);
-                        break;   // single-window app: open the first document
-                    }
-                }
-            };
+                    DispatcherTimer.RunOnce(
+                        () => OpenPathOnUiThread(vm, path, logger),
+                        TimeSpan.FromMilliseconds(250),
+                        DispatcherPriority.Background);
+                };
+            }
+
+            if (pendingActivationPath != null)
+            {
+                var pathToOpen = pendingActivationPath;
+                pendingActivationPath = null;
+                logger.LogInformation("Opening queued activated PDF: {Path}", pathToOpen);
+                desktop.Startup += (_, _) =>
+                {
+                    DispatcherTimer.RunOnce(
+                        () => OpenPathOnUiThread(vm, pathToOpen, logger),
+                        TimeSpan.FromMilliseconds(250),
+                        DispatcherPriority.Background);
+                };
+            }
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -105,11 +135,45 @@ public partial class App : Application
     /// </summary>
     private static void OpenPathOnUiThread(MainWindowViewModel vm, string path, ILogger logger)
     {
-        Dispatcher.UIThread.Post(async () =>
+        if (Dispatcher.UIThread.CheckAccess())
         {
-            try { await vm.LoadDocumentAsync(path); }
-            catch (Exception ex) { logger.LogError(ex, "Failed to open {Path}", path); }
-        });
+            _ = OpenPathAsync(vm, path, logger);
+            return;
+        }
+
+        Dispatcher.UIThread.Post(() => _ = OpenPathAsync(vm, path, logger));
+    }
+
+    private static async Task OpenPathAsync(MainWindowViewModel vm, string path, ILogger logger)
+    {
+        try
+        {
+            logger.LogInformation("Loading PDF from startup/open event: {Path}", path);
+            await vm.LoadDocumentAsync(path);
+            logger.LogInformation("Loaded PDF from startup/open event: {Path}", path);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to open {Path}", path);
+        }
+    }
+
+    private static string? ResolveActivatedPdfPath(IReadOnlyList<IStorageItem> files)
+    {
+        foreach (var file in files)
+        {
+            var path = file.TryGetLocalPath();
+            if (string.IsNullOrWhiteSpace(path))
+                continue;
+
+            if (!string.Equals(System.IO.Path.GetExtension(path), ".pdf", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            if (System.IO.File.Exists(path))
+                return System.IO.Path.GetFullPath(path);
+        }
+
+        return null;
     }
 
     private void ConfigureServices(IServiceCollection services)

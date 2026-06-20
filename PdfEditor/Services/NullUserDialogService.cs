@@ -8,4 +8,7 @@ public sealed class NullUserDialogService : IUserDialogService
 
     public Task<string?> PromptTextAsync(string title, string message, string? defaultValue = null) =>
         Task.FromResult<string?>(defaultValue);
+
+    public Task<string?> PromptPasswordAsync(string title, string message) =>
+        Task.FromResult<string?>(null);
 }

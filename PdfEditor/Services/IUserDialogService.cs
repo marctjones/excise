@@ -8,4 +8,7 @@ public interface IUserDialogService
 
     Task<string?> PromptTextAsync(string title, string message, string? defaultValue = null) =>
         Task.FromResult<string?>(defaultValue);
+
+    Task<string?> PromptPasswordAsync(string title, string message) =>
+        PromptTextAsync(title, message);
 }

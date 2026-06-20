@@ -133,6 +133,73 @@ public sealed class AvaloniaUserDialogService : IUserDialogService
         return await dialog.ShowDialog<string?>(mainWindow);
     }
 
+    public async Task<string?> PromptPasswordAsync(string title, string message)
+    {
+        var mainWindow = GetMainWindow();
+        if (mainWindow == null)
+        {
+            _logger.LogWarning("Could not show password prompt: Main window not found. Prompt was: {Message}", message);
+            return null;
+        }
+
+        var dialog = new Window
+        {
+            Title = title,
+            Width = 460,
+            Height = 220,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            CanResize = false
+        };
+
+        var passwordBox = new TextBox
+        {
+            PasswordChar = '*',
+            MaxWidth = 410
+        };
+
+        var okButton = new Button
+        {
+            Content = "OK",
+            IsDefault = true,
+            Padding = new Thickness(24, 5)
+        };
+
+        var cancelButton = new Button
+        {
+            Content = "Cancel",
+            IsCancel = true,
+            Padding = new Thickness(24, 5)
+        };
+
+        okButton.Click += (_, _) => dialog.Close(passwordBox.Text ?? string.Empty);
+        cancelButton.Click += (_, _) => dialog.Close(null);
+
+        dialog.Content = new StackPanel
+        {
+            Margin = new Thickness(20),
+            Spacing = 12,
+            Children =
+            {
+                new TextBlock
+                {
+                    Text = message,
+                    TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+                    MaxWidth = 410
+                },
+                passwordBox,
+                new StackPanel
+                {
+                    Orientation = Avalonia.Layout.Orientation.Horizontal,
+                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+                    Spacing = 8,
+                    Children = { cancelButton, okButton }
+                }
+            }
+        };
+
+        return await dialog.ShowDialog<string?>(mainWindow);
+    }
+
     private static Window? GetMainWindow()
     {
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)

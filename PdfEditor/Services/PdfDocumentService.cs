@@ -17,6 +17,7 @@ public class PdfDocumentService
     private readonly ILogger<PdfDocumentService> _logger;
     private PdfDocument? _currentDocument;
     private string? _currentFilePath;
+    private string? _currentUserPassword;
 
     public int PageCount => _currentDocument?.PageCount ?? 0;
     public bool IsDocumentLoaded => _currentDocument != null;
@@ -49,7 +50,7 @@ public class PdfDocumentService
     }
 
     /// <summary>Load a PDF from disk. Replaces any previously-loaded document.</summary>
-    public void LoadDocument(string filePath)
+    public void LoadDocument(string filePath, string? userPassword = null)
     {
         _logger.LogInformation("Loading PDF document from: {FilePath}", filePath);
         if (!File.Exists(filePath))
@@ -58,8 +59,11 @@ public class PdfDocumentService
         _currentDocument?.Dispose();
         // Open from bytes so the file is not held open — matches the
         // previous file-based behavior that kept the file freely writable.
-        _currentDocument = PdfDocument.Open(File.ReadAllBytes(filePath));
+        _currentDocument = userPassword is null
+            ? PdfDocument.Open(File.ReadAllBytes(filePath))
+            : PdfDocument.Open(File.ReadAllBytes(filePath), userPassword);
         _currentFilePath = filePath;
+        _currentUserPassword = userPassword;
 
         _logger.LogInformation(
             "PDF loaded. Pages: {PageCount}, Version: {Version}, File: {FileName}",
@@ -83,7 +87,9 @@ public class PdfDocumentService
 
         // Reload to reset in-memory state from the persisted bytes.
         _currentDocument.Dispose();
-        _currentDocument = PdfDocument.Open(File.ReadAllBytes(savePath));
+        _currentDocument = _currentUserPassword is null
+            ? PdfDocument.Open(File.ReadAllBytes(savePath))
+            : PdfDocument.Open(File.ReadAllBytes(savePath), _currentUserPassword);
         _currentFilePath = savePath;
     }
 
