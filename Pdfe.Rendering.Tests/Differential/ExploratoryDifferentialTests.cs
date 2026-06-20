@@ -87,7 +87,11 @@ public sealed class ExploratoryDifferentialTests
                 nameof(chunkIndex),
                 $"PDFE_CHUNK_INDEX={chunkIndex} out of range for PDFE_CHUNK_TOTAL={chunkTotal}");
 
-        var allPdfs = Directory.EnumerateFiles(corpus, "*.pdf").OrderBy(p => p).ToList();
+        // Keep this order in sync with the CLI corpus scanner and isolated
+        // recovery script so chunked reports cover each PDF exactly once.
+        var allPdfs = Directory.EnumerateFiles(corpus, "*.pdf")
+            .OrderBy(p => p, StringComparer.Ordinal)
+            .ToList();
         // Stable assignment: PDF i goes into chunk i % chunkTotal. Using
         // index modulo (rather than contiguous slicing) means the chunks
         // are roughly equally weighted across whatever ordering quirks

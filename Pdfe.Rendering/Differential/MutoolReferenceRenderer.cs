@@ -21,12 +21,6 @@ namespace Pdfe.Rendering.Differential;
 /// </summary>
 public static class MutoolReferenceRenderer
 {
-    public sealed record ReferenceRenderResult(
-        SKBitmap? Bitmap,
-        string Status,
-        string? ErrorMessage,
-        long ElapsedMs);
-
     private static readonly Lazy<bool> _available = new(() =>
     {
         // mutool is one of those CLIs that exits non-zero when invoked
@@ -65,7 +59,18 @@ public static class MutoolReferenceRenderer
     public static SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30_000)
         => TryRenderPage(pdfPath, pageNumber, dpi, timeoutMs).Bitmap;
 
+    public static SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword)
+        => TryRenderPage(pdfPath, pageNumber, dpi, timeoutMs, userPassword).Bitmap;
+
     public static ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30_000)
+        => TryRenderPage(pdfPath, pageNumber, dpi, timeoutMs, userPassword: null);
+
+    public static ReferenceRenderResult TryRenderPage(
+        string pdfPath,
+        int pageNumber,
+        int dpi,
+        int timeoutMs,
+        string? userPassword)
     {
         var sw = Stopwatch.StartNew();
         if (!IsAvailable)
@@ -76,14 +81,28 @@ public static class MutoolReferenceRenderer
 
         try
         {
-            var psi = new ProcessStartInfo("mutool",
-                $"draw -o \"{outPath}\" -F png -r {dpi} \"{pdfPath}\" {pageNumber}")
+            var psi = new ProcessStartInfo("mutool")
             {
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
             };
+            psi.ArgumentList.Add("draw");
+            psi.ArgumentList.Add("-o");
+            psi.ArgumentList.Add(outPath);
+            psi.ArgumentList.Add("-F");
+            psi.ArgumentList.Add("png");
+            psi.ArgumentList.Add("-r");
+            psi.ArgumentList.Add(dpi.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            if (userPassword != null)
+            {
+                psi.ArgumentList.Add("-p");
+                psi.ArgumentList.Add(userPassword);
+            }
+            psi.ArgumentList.Add(pdfPath);
+            psi.ArgumentList.Add(pageNumber.ToString(System.Globalization.CultureInfo.InvariantCulture));
+
             using var p = Process.Start(psi);
             if (p == null)
                 return new ReferenceRenderResult(null, "START_FAILED", "Process.Start returned null", sw.ElapsedMilliseconds);

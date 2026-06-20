@@ -95,7 +95,10 @@ for e in slow[:5]:
         f"  slow {elapsed(e):7d}ms {get(e,'status','UNKNOWN'):18s} "
         f"{get(e,'path','')}#p{get(e,'pageNumber',0)} "
         f"mutool={get(e,'mutoolStatus','-') or '-'} "
-        f"cairo={get(e,'cairoStatus','-') or '-'}"
+        f"cairo={get(e,'cairoStatus','-') or '-'} "
+        f"gs={get(e,'ghostscriptStatus','-') or '-'} "
+        f"pdfbox={get(e,'pdfboxStatus','-') or '-'} "
+        f"pdfium={get(e,'pdfiumStatus','-') or '-'}"
     )
 fail_status = {
     "TIMEOUT", "MALFORMED_PDF", "UNSUPPORTED_ENCRYPTED",
@@ -112,7 +115,13 @@ for e in entries:
                 f"mutool={get(e, 'mutoolStatus', '-') or '-'}"
                 f" ({get(e, 'mutoolError', '') or ''}); "
                 f"pdftocairo={get(e, 'cairoStatus', '-') or '-'}"
-                f" ({get(e, 'cairoError', '') or ''})"
+                f" ({get(e, 'cairoError', '') or ''}); "
+                f"ghostscript={get(e, 'ghostscriptStatus', '-') or '-'}"
+                f" ({get(e, 'ghostscriptError', '') or ''}); "
+                f"pdfbox={get(e, 'pdfboxStatus', '-') or '-'}"
+                f" ({get(e, 'pdfboxError', '') or ''}); "
+                f"pdfium={get(e, 'pdfiumStatus', '-') or '-'}"
+                f" ({get(e, 'pdfiumError', '') or ''})"
             )
         if len(msg) > 100: msg = msg[:97] + "..."
         print(f"  fail {get(e,'status','UNKNOWN'):18s} phase={get(e,'errorPhase','-') or '-':10s} {get(e,'path','')}#p{get(e,'pageNumber',0)} {msg}")

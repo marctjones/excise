@@ -23,12 +23,6 @@ namespace Pdfe.Rendering.Differential;
 /// </summary>
 public static class PdftocairoReferenceRenderer
 {
-    public sealed record ReferenceRenderResult(
-        SKBitmap? Bitmap,
-        string Status,
-        string? ErrorMessage,
-        long ElapsedMs);
-
     private static readonly Lazy<bool> _available = new(() =>
     {
         try
@@ -60,7 +54,18 @@ public static class PdftocairoReferenceRenderer
     public static SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30_000)
         => TryRenderPage(pdfPath, pageNumber, dpi, timeoutMs).Bitmap;
 
+    public static SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword)
+        => TryRenderPage(pdfPath, pageNumber, dpi, timeoutMs, userPassword).Bitmap;
+
     public static ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30_000)
+        => TryRenderPage(pdfPath, pageNumber, dpi, timeoutMs, userPassword: null);
+
+    public static ReferenceRenderResult TryRenderPage(
+        string pdfPath,
+        int pageNumber,
+        int dpi,
+        int timeoutMs,
+        string? userPassword)
     {
         var sw = Stopwatch.StartNew();
         if (!IsAvailable)
@@ -74,14 +79,29 @@ public static class PdftocairoReferenceRenderer
 
         try
         {
-            var psi = new ProcessStartInfo("pdftocairo",
-                $"-png -singlefile -r {dpi} -f {pageNumber} -l {pageNumber} \"{pdfPath}\" \"{outPrefix}\"")
+            var psi = new ProcessStartInfo("pdftocairo")
             {
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
             };
+            psi.ArgumentList.Add("-png");
+            psi.ArgumentList.Add("-singlefile");
+            psi.ArgumentList.Add("-r");
+            psi.ArgumentList.Add(dpi.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            psi.ArgumentList.Add("-f");
+            psi.ArgumentList.Add(pageNumber.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            psi.ArgumentList.Add("-l");
+            psi.ArgumentList.Add(pageNumber.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            if (userPassword != null)
+            {
+                psi.ArgumentList.Add("-upw");
+                psi.ArgumentList.Add(userPassword);
+            }
+            psi.ArgumentList.Add(pdfPath);
+            psi.ArgumentList.Add(outPrefix);
+
             using var p = Process.Start(psi);
             if (p == null)
                 return new ReferenceRenderResult(null, "START_FAILED", "Process.Start returned null", sw.ElapsedMilliseconds);

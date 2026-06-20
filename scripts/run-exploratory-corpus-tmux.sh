@@ -22,6 +22,7 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$ROOT"
 
 SESSION="pdfe-corpus"
+TMUX_SOCKET="${PDFE_TMUX_SOCKET:-}"
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --session) SESSION="$2"; shift 2 ;;
@@ -35,7 +36,7 @@ done
 
 RUN_ARGS=("$@")
 if [[ ${#RUN_ARGS[@]} -eq 0 ]]; then
-    RUN_ARGS=(--page-mode all --pdf-timeout-ms 120000 --chunk-parallel 2 --per-chunk-parallel 1)
+    RUN_ARGS=(--page-mode all --pdf-timeout-ms 120000 --chunk-parallel 2 --per-chunk-parallel 1 --extra-oracles all)
 fi
 
 if ! command -v tmux >/dev/null 2>&1; then
@@ -43,9 +44,18 @@ if ! command -v tmux >/dev/null 2>&1; then
     exit 1
 fi
 
-if tmux has-session -t "$SESSION" 2>/dev/null; then
+TMUX_CMD=(tmux)
+if [[ -n "$TMUX_SOCKET" ]]; then
+    TMUX_CMD=(tmux -L "$TMUX_SOCKET")
+fi
+
+if "${TMUX_CMD[@]}" has-session -t "$SESSION" 2>/dev/null; then
     echo "✗ tmux session '$SESSION' already exists" >&2
-    echo "  attach: tmux attach -t $SESSION" >&2
+    if [[ -n "$TMUX_SOCKET" ]]; then
+        echo "  attach: tmux -L $TMUX_SOCKET attach -t $SESSION" >&2
+    else
+        echo "  attach: tmux attach -t $SESSION" >&2
+    fi
     exit 1
 fi
 
@@ -55,16 +65,27 @@ mkdir -p "$LOG_DIR"
 
 printf '%s\n' "${RUN_ARGS[@]}" > "$LOG_DIR/args.txt"
 
-RUN_CMD=$(printf '%q ' "$ROOT/scripts/run-exploratory-corpus.sh" "${RUN_ARGS[@]}" --log-dir "$LOG_DIR")
+RUN_ENV=()
+for name in PDFE_PDFBOX_JAR PDFE_PDFBOX_COMMAND PDFE_PDFIUM_TEST PDFE_JAVA_COMMAND; do
+    if [[ -n "${!name:-}" ]]; then
+        RUN_ENV+=("$name=${!name}")
+    fi
+done
+
+if [[ ${#RUN_ENV[@]} -gt 0 ]]; then
+    RUN_CMD=$(printf '%q ' env "${RUN_ENV[@]}" "$ROOT/scripts/run-exploratory-corpus.sh" "${RUN_ARGS[@]}" --log-dir "$LOG_DIR")
+else
+    RUN_CMD=$(printf '%q ' "$ROOT/scripts/run-exploratory-corpus.sh" "${RUN_ARGS[@]}" --log-dir "$LOG_DIR")
+fi
 MONITOR_CMD=$(printf '%q ' "$ROOT/scripts/monitor-exploratory-corpus.sh" "$LOG_DIR")
 
-tmux new-session -d -s "$SESSION" -n run -c "$ROOT" \
+"${TMUX_CMD[@]}" new-session -d -s "$SESSION" -n run -c "$ROOT" \
     "set -o pipefail; $RUN_CMD 2>&1 | tee '$LOG_DIR/run.log'; printf '\nexit=%s\n' \"\$?\" | tee '$LOG_DIR/exit.log'; touch '$LOG_DIR/done'; exec \$SHELL"
 
-tmux split-window -t "$SESSION:run" -h -c "$ROOT" \
+"${TMUX_CMD[@]}" split-window -t "$SESSION:run" -h -c "$ROOT" \
     "$MONITOR_CMD 2>&1 | tee '$LOG_DIR/monitor.log'; exec \$SHELL"
 
-tmux select-pane -t "$SESSION:run.0"
+"${TMUX_CMD[@]}" select-pane -t "$SESSION:run.0"
 
 cat <<EOF
 Started tmux session '$SESSION'.
@@ -74,7 +95,11 @@ Monitor log: $LOG_DIR/monitor.log
 Chunk logs:  $LOG_DIR/exploratory-chunk-N.log
 
 Attach:
-  tmux attach -t $SESSION
+$(if [[ -n "$TMUX_SOCKET" ]]; then
+  printf '  tmux -L %s attach -t %s\n' "$TMUX_SOCKET" "$SESSION"
+else
+  printf '  tmux attach -t %s\n' "$SESSION"
+fi)
 
 Watch logs without attaching:
   tail -f $LOG_DIR/run.log

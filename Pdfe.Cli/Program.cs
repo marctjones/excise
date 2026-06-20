@@ -8,6 +8,7 @@ using Pdfe.Core.Primitives;
 using Pdfe.Core.Text.Segmentation;
 using Pdfe.Ocr;
 using Pdfe.Rendering;
+using Pdfe.Rendering.Differential;
 using SkiaSharp;
 
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Pdfe.Cli.Tests")]
@@ -16,6 +17,8 @@ namespace Pdfe.Cli;
 
 class Program
 {
+    private const long CorpusFallbackMaxPixelCount = 32L * 1024L * 1024L;
+
     static Task<int> Main(string[] args) => RunAsync(args);
 
     /// <summary>
@@ -1523,6 +1526,8 @@ class Program
     /// <summary>
     /// pdfe corpus-scan &lt;corpus-dir&gt; --output out.json
     ///                  [--chunk N] [--total M] [--dpi 150]
+    ///                  [--page-manifest manifest.tsv]
+    ///                  [--password-manifest passwords.tsv]
     ///
     /// Internal-use subcommand that powers the chunked exploratory
     /// differential harness without the overhead of `dotnet test`.
@@ -1587,12 +1592,26 @@ class Program
             Description = "Pages to compare: first, sample, or all.",
             DefaultValueFactory = _ => "first",
         };
+        var pageManifestOption = new Option<FileInfo?>("--page-manifest")
+        {
+            Description = "Optional TSV of exact corpus-relative PDF pages to scan. Columns: path<TAB>pageNumber; extra columns ignored.",
+        };
+        var passwordManifestOption = new Option<FileInfo?>("--password-manifest")
+        {
+            Description = "Optional TSV of corpus-relative PDF passwords. Columns: path<TAB>userPassword; extra columns ignored.",
+        };
+        var extraOraclesOption = new Option<string>("--extra-oracles")
+        {
+            Description = "Optional escalation oracles: none, ghostscript, pdfbox, pdfium, or all (comma-separated).",
+            DefaultValueFactory = _ => "ghostscript",
+        };
 
         var command = new Command("corpus-scan",
             "Render corpus PDFs with pdfe + reference oracles, compute pixel-diff, write JSON report")
         {
             corpusArg, outputOption, chunkOption, totalOption,
             dpiOption, diffPctOption, maxMaeOption, parallelOption, perPdfTimeoutOption, pageModeOption,
+            pageManifestOption, passwordManifestOption, extraOraclesOption,
         };
 
         command.SetAction(parseResult =>
@@ -1607,11 +1626,19 @@ class Program
             var parallel = parseResult.GetValue(parallelOption);
             var pdfTimeoutMs = parseResult.GetValue(perPdfTimeoutOption);
             var pageModeRaw = parseResult.GetValue(pageModeOption) ?? "first";
+            var pageManifestFile = parseResult.GetValue(pageManifestOption);
+            var passwordManifestFile = parseResult.GetValue(passwordManifestOption);
+            var extraOraclesRaw = parseResult.GetValue(extraOraclesOption) ?? "ghostscript";
 
             if (parallel <= 0) parallel = Math.Max(1, Environment.ProcessorCount / 2);
             if (!TryParseCorpusPageMode(pageModeRaw, out var pageMode))
             {
                 Console.Error.WriteLine($"Bad --page-mode '{pageModeRaw}'. Use first, sample, or all.");
+                Environment.ExitCode = 1; return;
+            }
+            if (!TryParseCorpusExtraOracles(extraOraclesRaw, out var extraOracles, out var extraOracleError))
+            {
+                Console.Error.WriteLine(extraOracleError);
                 Environment.ExitCode = 1; return;
             }
 
@@ -1633,8 +1660,11 @@ class Program
 
             try
             {
+                var pageManifest = LoadCorpusPageManifest(pageManifestFile);
+                var passwordManifest = LoadCorpusPasswordManifest(passwordManifestFile);
                 var ok = RunCorpusScan(corpus.FullName, output.FullName,
-                    chunk, total, dpi, diffPct, maxMae, parallel, pdfTimeoutMs, pageMode);
+                    chunk, total, dpi, diffPct, maxMae, parallel, pdfTimeoutMs, pageMode, extraOracles,
+                    pageManifest, passwordManifest);
                 Environment.ExitCode = ok ? 0 : 1;
             }
             catch (Exception ex)
@@ -1657,18 +1687,19 @@ class Program
         string corpusDir, string outputPath,
         int chunkIndex, int chunkTotal,
         int dpi, double maxDiffFraction, double maxMae,
-        int parallel, int pdfTimeoutMs, CorpusPageMode pageMode = CorpusPageMode.First)
+        int parallel, int pdfTimeoutMs, CorpusPageMode pageMode = CorpusPageMode.First,
+        CorpusExtraOracles extraOracles = CorpusExtraOracles.Ghostscript,
+        IReadOnlyDictionary<string, IReadOnlySet<int>>? pageManifest = null,
+        IReadOnlyDictionary<string, string>? passwordManifest = null)
     {
-        var pdfs = Directory.EnumerateFiles(corpusDir, "*.pdf")
-            .OrderBy(p => p)
-            .Select((path, idx) => (path, idx))
-            .Where(t => t.idx % chunkTotal == chunkIndex)
-            .Select(t => t.path)
-            .ToList();
+        var pdfs = DiscoverCorpusPdfs(corpusDir, chunkIndex, chunkTotal, pageManifest?.Keys);
 
         Console.Out.WriteLine(
             $"chunk {chunkIndex + 1}/{chunkTotal}: scanning {pdfs.Count} PDFs in {corpusDir} " +
-            $"({parallel}-way parallel, {pdfTimeoutMs}ms oracle timeout, page-mode={PageModeName(pageMode)})");
+            $"({parallel}-way parallel, {pdfTimeoutMs}ms oracle timeout, page-mode={PageModeName(pageMode)}, " +
+            $"page-manifest={(pageManifest is null ? "none" : pageManifest.Count.ToString())}, " +
+            $"password-manifest={(passwordManifest is null ? "none" : passwordManifest.Count.ToString())}, " +
+            $"extra-oracles={ExtraOraclesName(extraOracles)})");
 
         // Use a thread-safe collector. Order in the final JSON is
         // restored by sort-on-write since Parallel.ForEach completion
@@ -1678,20 +1709,21 @@ class Program
         int processed = 0;
 
         var po = new ParallelOptions { MaxDegreeOfParallelism = parallel };
-        Parallel.ForEach(pdfs, po, pdf =>
+        Parallel.ForEach(pdfs, po, corpusPdf =>
         {
-            var rel = Path.GetFileName(pdf);
-            // Wall-clock budget covers pdfe's render (no internal
-            // timeout) AND mutool's render together. Some pdf.js
-            // fixtures have pathological pdfe-side rendering that
-            // would otherwise grind chunks for minutes per PDF.
-            // Budget is 2× the mutool timeout — generous for normal
-            // PDFs, hard cap on the bad ones.
-            var wallBudgetMs = pdfTimeoutMs * 2;
+            var pdf = corpusPdf.FullPath;
+            var rel = corpusPdf.RelativePath;
             IReadOnlyList<CorpusScanEntry> pdfEntries;
             var pdfStopwatch = Stopwatch.StartNew();
             var progress = new CorpusScanProgress(rel);
-            var task = Task.Run(() => ScanOnePdf(rel, pdf, dpi, maxDiffFraction, maxMae, pdfTimeoutMs, pageMode, progress));
+            IReadOnlySet<int>? selectedPages = null;
+            pageManifest?.TryGetValue(rel, out selectedPages);
+            string? userPassword = null;
+            passwordManifest?.TryGetValue(rel, out userPassword);
+            var wallBudgetMs = ComputeCorpusScanWallBudgetMs(
+                pdfTimeoutMs, pageMode, extraOracles, selectedPages);
+            var task = Task.Run(() => ScanOnePdf(rel, pdf, dpi, maxDiffFraction, maxMae, pdfTimeoutMs,
+                pageMode, extraOracles, selectedPages, progress, userPassword));
             if (task.Wait(wallBudgetMs))
             {
                 pdfEntries = task.Result;
@@ -1765,6 +1797,9 @@ class Program
             chunkIndex,
             chunkTotal,
             pageMode = PageModeName(pageMode),
+            pageManifest = pageManifest is null ? null : new { pdfs = pageManifest.Count },
+            passwordManifest = passwordManifest is null ? null : new { pdfs = passwordManifest.Count },
+            extraOracles = ExtraOraclesName(extraOracles),
             counts,
             total = entries.Count,
             pdfs = pdfs.Count,
@@ -1779,11 +1814,49 @@ class Program
         return true;
     }
 
+    internal readonly record struct CorpusPdf(string FullPath, string RelativePath);
+
+    internal static IReadOnlyList<CorpusPdf> DiscoverCorpusPdfs(
+        string corpusDir,
+        int chunkIndex,
+        int chunkTotal,
+        IEnumerable<string>? includeRelativePaths = null)
+    {
+        HashSet<string>? include = includeRelativePaths is null
+            ? null
+            : new HashSet<string>(
+                includeRelativePaths.Select(NormalizeManifestPath),
+                StringComparer.Ordinal);
+
+        // Keep this ordinal order in sync with scripts/run-exploratory-corpus.sh
+        // isolated recovery for the flat pdf.js corpus. Culture-sensitive sorting
+        // can select a different chunk slice and silently duplicate/miss PDFs in
+        // merged reports. Use relative paths so nested corpora such as veraPDF
+        // and Isartor keep stable, unique report paths.
+        return Directory.EnumerateFiles(corpusDir, "*.pdf", SearchOption.AllDirectories)
+            .Select(path => new CorpusPdf(path, NormalizeCorpusRelativePath(corpusDir, path)))
+            .Where(pdf => include is null || include.Contains(pdf.RelativePath))
+            .OrderBy(p => p.RelativePath, StringComparer.Ordinal)
+            .Select((pdf, idx) => (pdf, idx))
+            .Where(t => t.idx % chunkTotal == chunkIndex)
+            .Select(t => t.pdf)
+            .ToList();
+    }
+
+    private static string NormalizeCorpusRelativePath(string corpusDir, string pdfPath)
+    {
+        var relative = Path.GetRelativePath(corpusDir, pdfPath);
+        return NormalizeManifestPath(relative);
+    }
+
     private static IReadOnlyList<CorpusScanEntry> ScanOnePdf(
         string relPath, string pdfPath, int dpi,
         double maxDiffFraction, double maxMae, int oracleTimeoutMs,
         CorpusPageMode pageMode,
-        CorpusScanProgress? progress = null)
+        CorpusExtraOracles extraOracles,
+        IReadOnlySet<int>? selectedPages = null,
+        CorpusScanProgress? progress = null,
+        string? userPassword = null)
     {
         PdfDocument? doc = null;
         int pageCount;
@@ -1791,7 +1864,9 @@ class Program
         try
         {
             progress?.Update("open", 0, "PdfDocument.Open");
-            doc = PdfDocument.Open(pdfPath);
+            doc = userPassword is null
+                ? PdfDocument.Open(pdfPath)
+                : PdfDocument.Open(pdfPath, userPassword);
             pageCount = doc.PageCount;
             if (pageCount == 0)
             {
@@ -1830,11 +1905,11 @@ class Program
         {
             var renderer = new SkiaRenderer();
             var entries = new List<CorpusScanEntry>();
-            foreach (var pageNumber in SelectCorpusPages(pageCount, pageMode))
+            foreach (var pageNumber in SelectCorpusPages(pageCount, pageMode, selectedPages))
             {
                 progress?.Update("page", pageNumber, $"page {pageNumber}/{pageCount}");
                 entries.Add(ScanOnePage(relPath, pdfPath, doc, renderer, pageNumber, dpi,
-                    maxDiffFraction, maxMae, oracleTimeoutMs, progress));
+                    maxDiffFraction, maxMae, oracleTimeoutMs, extraOracles, progress, userPassword));
             }
             pdfStopwatch.Stop();
             foreach (var entry in entries)
@@ -1847,7 +1922,9 @@ class Program
         string relPath, string pdfPath, PdfDocument doc, SkiaRenderer renderer,
         int pageNumber, int dpi,
         double maxDiffFraction, double maxMae, int oracleTimeoutMs,
-        CorpusScanProgress? progress = null)
+        CorpusExtraOracles extraOracles,
+        CorpusScanProgress? progress = null,
+        string? userPassword = null)
     {
         var pageStopwatch = Stopwatch.StartNew();
         var entry = new CorpusScanEntry
@@ -1860,6 +1937,10 @@ class Program
         SkiaSharp.SKBitmap? pdfeBmp = null;
         SkiaSharp.SKBitmap? mutoolBmp = null;
         SkiaSharp.SKBitmap? cairoBmp = null;
+        SkiaSharp.SKBitmap? ghostscriptBmp = null;
+        SkiaSharp.SKBitmap? pdfboxBmp = null;
+        SkiaSharp.SKBitmap? pdfiumBmp = null;
+        var comparisonDpi = dpi;
         try
         {
             try
@@ -1872,6 +1953,35 @@ class Program
             }
             catch (Exception ex)
             {
+                if (ex is Pdfe.Rendering.RenderResourceLimitException
+                    && TryComputeResourceSafeDpi(doc.GetPage(pageNumber), dpi, out var fallbackDpi))
+                {
+                    progress?.Update("render", pageNumber,
+                        $"pdfe render page {pageNumber}/{doc.PageCount} at fallback {fallbackDpi} DPI");
+                    var fallbackStopwatch = Stopwatch.StartNew();
+                    try
+                    {
+                        pdfeBmp = renderer.RenderPage(doc.GetPage(pageNumber), new RenderOptions { Dpi = fallbackDpi });
+                        fallbackStopwatch.Stop();
+                        entry.renderMs = fallbackStopwatch.ElapsedMilliseconds;
+                        entry.effectiveDpi = fallbackDpi;
+                        entry.diagnostic =
+                            $"Requested {dpi} DPI exceeded the render pixel cap; compared at {fallbackDpi} DPI.";
+                        comparisonDpi = fallbackDpi;
+                    }
+                    catch (Exception fallbackEx)
+                    {
+                        pageStopwatch.Stop();
+                        entry.status = ClassifyCorpusFailure(fallbackEx, CorpusFailurePhase.Render);
+                        entry.errorPhase = "render";
+                        entry.errorType = fallbackEx.GetType().Name;
+                        entry.errorMessage = Trunc(fallbackEx.Message, 200);
+                        entry.elapsedMs = pageStopwatch.ElapsedMilliseconds;
+                        return entry;
+                    }
+                }
+                else
+                {
                 pageStopwatch.Stop();
                 entry.status = ClassifyCorpusFailure(ex, CorpusFailurePhase.Render);
                 entry.errorPhase = "render";
@@ -1879,6 +1989,7 @@ class Program
                 entry.errorMessage = Trunc(ex.Message, 200);
                 entry.elapsedMs = pageStopwatch.ElapsedMilliseconds;
                 return entry;
+                }
             }
 
             if (pdfeBmp == null)
@@ -1889,27 +2000,118 @@ class Program
                 return entry;
             }
 
-            // Two oracles: mutool (MuPDF) and pdftocairo (Poppler). pdfe
-            // is judged correct if it agrees with EITHER. A disagreement
-            // with both is a real bug; a disagreement with one but not
-            // the other is more likely a viewer-specific quirk.
+            // Primary oracles: mutool (MuPDF) and pdftocairo (Poppler).
+            // Optional escalation oracles run only when the primary pair
+            // does not both agree, keeping passing pages cheap while giving
+            // remaining DIFFs more evidence.
             progress?.Update("mutool", pageNumber, $"mutool render page {pageNumber}/{doc.PageCount}");
-            var mutoolResult = Pdfe.Rendering.Differential.MutoolReferenceRenderer.TryRenderPage(
-                pdfPath, pageNumber, dpi, oracleTimeoutMs);
+            var mutoolResult = MutoolReferenceRenderer.TryRenderPage(
+                pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs, userPassword);
             mutoolBmp = mutoolResult.Bitmap;
             entry.mutoolMs = mutoolResult.ElapsedMs;
             entry.mutoolStatus = mutoolResult.Status;
             entry.mutoolError = TruncNullable(mutoolResult.ErrorMessage, 200);
 
             progress?.Update("pdftocairo", pageNumber, $"pdftocairo render page {pageNumber}/{doc.PageCount}");
-            var cairoResult = Pdfe.Rendering.Differential.PdftocairoReferenceRenderer.TryRenderPage(
-                pdfPath, pageNumber, dpi, oracleTimeoutMs);
+            var cairoResult = PdftocairoReferenceRenderer.TryRenderPage(
+                pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs, userPassword);
             cairoBmp = cairoResult.Bitmap;
             entry.cairoMs = cairoResult.ElapsedMs;
             entry.cairoStatus = cairoResult.Status;
             entry.cairoError = TruncNullable(cairoResult.ErrorMessage, 200);
 
-            if (mutoolBmp == null && cairoBmp == null)
+            var metrics = new List<(string Name, double Diff, double Mae)>();
+
+            (double diff, double mae)? mutoolMetrics = null;
+            (double diff, double mae)? cairoMetrics = null;
+            (double diff, double mae)? ghostscriptMetrics = null;
+            (double diff, double mae)? pdfboxMetrics = null;
+            (double diff, double mae)? pdfiumMetrics = null;
+
+            if (mutoolBmp != null)
+            {
+                progress?.Update("compare", pageNumber, $"compare pdfe vs mutool page {pageNumber}/{doc.PageCount}");
+                var (a, b) = MatchAndCompare(pdfeBmp, mutoolBmp);
+                mutoolMetrics = (a, b);
+                entry.diffFractionMutool = a;
+                entry.maeMutool = b;
+                metrics.Add(("mutool", a, b));
+            }
+            if (cairoBmp != null)
+            {
+                progress?.Update("compare", pageNumber, $"compare pdfe vs pdftocairo page {pageNumber}/{doc.PageCount}");
+                var (a, b) = MatchAndCompare(pdfeBmp, cairoBmp);
+                cairoMetrics = (a, b);
+                entry.diffFractionCairo = a;
+                entry.maeCairo = b;
+                metrics.Add(("pdftocairo", a, b));
+            }
+
+            bool passMutool = IsPassing(mutoolMetrics, maxDiffFraction, maxMae);
+            bool passCairo = IsPassing(cairoMetrics, maxDiffFraction, maxMae);
+            var shouldEscalate = extraOracles != CorpusExtraOracles.None && !(passMutool && passCairo);
+
+            if (shouldEscalate && extraOracles.HasFlag(CorpusExtraOracles.Ghostscript))
+            {
+                progress?.Update("ghostscript", pageNumber, $"ghostscript render page {pageNumber}/{doc.PageCount}");
+                var ghostscriptResult = GhostscriptReferenceRenderer.TryRenderPage(
+                    pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs, userPassword);
+                ghostscriptBmp = ghostscriptResult.Bitmap;
+                entry.ghostscriptMs = ghostscriptResult.ElapsedMs;
+                entry.ghostscriptStatus = ghostscriptResult.Status;
+                entry.ghostscriptError = TruncNullable(ghostscriptResult.ErrorMessage, 200);
+                if (ghostscriptBmp != null)
+                {
+                    progress?.Update("compare", pageNumber, $"compare pdfe vs ghostscript page {pageNumber}/{doc.PageCount}");
+                    var (a, b) = MatchAndCompare(pdfeBmp, ghostscriptBmp);
+                    ghostscriptMetrics = (a, b);
+                    entry.diffFractionGhostscript = a;
+                    entry.maeGhostscript = b;
+                    metrics.Add(("ghostscript", a, b));
+                }
+            }
+
+            if (shouldEscalate && extraOracles.HasFlag(CorpusExtraOracles.PdfBox))
+            {
+                progress?.Update("pdfbox", pageNumber, $"pdfbox render page {pageNumber}/{doc.PageCount}");
+                var pdfboxResult = PdfBoxReferenceRenderer.TryRenderPage(
+                    pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs, userPassword);
+                pdfboxBmp = pdfboxResult.Bitmap;
+                entry.pdfboxMs = pdfboxResult.ElapsedMs;
+                entry.pdfboxStatus = pdfboxResult.Status;
+                entry.pdfboxError = TruncNullable(pdfboxResult.ErrorMessage, 200);
+                if (pdfboxBmp != null)
+                {
+                    progress?.Update("compare", pageNumber, $"compare pdfe vs pdfbox page {pageNumber}/{doc.PageCount}");
+                    var (a, b) = MatchAndCompare(pdfeBmp, pdfboxBmp);
+                    pdfboxMetrics = (a, b);
+                    entry.diffFractionPdfBox = a;
+                    entry.maePdfBox = b;
+                    metrics.Add(("pdfbox", a, b));
+                }
+            }
+
+            if (shouldEscalate && extraOracles.HasFlag(CorpusExtraOracles.Pdfium))
+            {
+                progress?.Update("pdfium", pageNumber, $"pdfium_test render page {pageNumber}/{doc.PageCount}");
+                var pdfiumResult = PdfiumReferenceRenderer.TryRenderPage(
+                    pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs);
+                pdfiumBmp = pdfiumResult.Bitmap;
+                entry.pdfiumMs = pdfiumResult.ElapsedMs;
+                entry.pdfiumStatus = pdfiumResult.Status;
+                entry.pdfiumError = TruncNullable(pdfiumResult.ErrorMessage, 200);
+                if (pdfiumBmp != null)
+                {
+                    progress?.Update("compare", pageNumber, $"compare pdfe vs pdfium page {pageNumber}/{doc.PageCount}");
+                    var (a, b) = MatchAndCompare(pdfeBmp, pdfiumBmp);
+                    pdfiumMetrics = (a, b);
+                    entry.diffFractionPdfium = a;
+                    entry.maePdfium = b;
+                    metrics.Add(("pdfium", a, b));
+                }
+            }
+
+            if (metrics.Count == 0)
             {
                 pageStopwatch.Stop();
                 entry.status = "ALL_ORACLES_REFUSED";
@@ -1920,45 +2122,24 @@ class Program
                 return entry;
             }
 
-            // Compute pdfe-vs-mutool and pdfe-vs-cairo separately,
-            // then take the BEST agreement (lowest diff). This is
-            // "best of two oracles" voting.
-            (double diff, double mae)? mutoolMetrics = null;
-            (double diff, double mae)? cairoMetrics = null;
+            var best = metrics.OrderBy(m => m.Diff).First();
+            entry.diffFraction = best.Diff;
+            entry.mae = best.Mae;
+            entry.bestOracle = best.Name;
 
-            if (mutoolBmp != null)
-            {
-                progress?.Update("compare", pageNumber, $"compare pdfe vs mutool page {pageNumber}/{doc.PageCount}");
-                var (a, b) = MatchAndCompare(pdfeBmp, mutoolBmp);
-                mutoolMetrics = (a, b);
-                entry.diffFractionMutool = a;
-                entry.maeMutool = b;
-            }
-            if (cairoBmp != null)
-            {
-                progress?.Update("compare", pageNumber, $"compare pdfe vs pdftocairo page {pageNumber}/{doc.PageCount}");
-                var (a, b) = MatchAndCompare(pdfeBmp, cairoBmp);
-                cairoMetrics = (a, b);
-                entry.diffFractionCairo = a;
-                entry.maeCairo = b;
-            }
-
-            // Best-of-two: if pdfe agrees with either oracle within
-            // thresholds, that's a PASS. Take the better of the two
-            // for the headline diffFraction/mae fields.
-            double bestDiff = double.MaxValue, bestMae = double.MaxValue;
-            if (mutoolMetrics is var (md, mm)) { if (md < bestDiff) { bestDiff = md; bestMae = mm; } }
-            if (cairoMetrics  is var (cd, cm)) { if (cd < bestDiff) { bestDiff = cd; bestMae = cm; } }
-            entry.diffFraction = bestDiff;
-            entry.mae = bestMae;
-
-            bool passMutool = mutoolMetrics is var (md2, mm2)
-                && md2 <= maxDiffFraction && mm2 <= maxMae;
-            bool passCairo = cairoMetrics is var (cd2, cm2)
-                && cd2 <= maxDiffFraction && cm2 <= maxMae;
+            var passGhostscript = IsPassing(ghostscriptMetrics, maxDiffFraction, maxMae);
+            var passPdfBox = IsPassing(pdfboxMetrics, maxDiffFraction, maxMae);
+            var passPdfium = IsPassing(pdfiumMetrics, maxDiffFraction, maxMae);
+            entry.comparedOracles = metrics.Count;
+            entry.agreeingOracles =
+                (passMutool ? 1 : 0)
+                + (passCairo ? 1 : 0)
+                + (passGhostscript ? 1 : 0)
+                + (passPdfBox ? 1 : 0)
+                + (passPdfium ? 1 : 0);
 
             if (passMutool && passCairo)        entry.status = "PASS";
-            else if (passMutool || passCairo)   entry.status = "PASS_ONE";  // partial agreement
+            else if (entry.agreeingOracles.GetValueOrDefault() > 0) entry.status = "PASS_ONE";  // partial agreement
             else                                entry.status = "DIFF";
             pageStopwatch.Stop();
             entry.elapsedMs = pageStopwatch.ElapsedMilliseconds;
@@ -1977,6 +2158,9 @@ class Program
             pdfeBmp?.Dispose();
             mutoolBmp?.Dispose();
             cairoBmp?.Dispose();
+            ghostscriptBmp?.Dispose();
+            pdfboxBmp?.Dispose();
+            pdfiumBmp?.Dispose();
         }
         return entry;
     }
@@ -1986,6 +2170,64 @@ class Program
         First,
         Sample,
         All,
+    }
+
+    [Flags]
+    internal enum CorpusExtraOracles
+    {
+        None = 0,
+        Ghostscript = 1,
+        PdfBox = 2,
+        Pdfium = 4,
+        All = Ghostscript | PdfBox | Pdfium,
+    }
+
+    internal static int ComputeCorpusScanWallBudgetMs(
+        int oracleTimeoutMs,
+        CorpusPageMode pageMode,
+        CorpusExtraOracles extraOracles,
+        IReadOnlySet<int>? selectedPages = null)
+    {
+        var timeout = Math.Max(1_000, oracleTimeoutMs);
+        var pages = EstimateCorpusScanPageCount(pageMode, selectedPages);
+
+        // Each page always attempts pdfe, mutool, and pdftocairo. If the
+        // primary references do not both pass, it can also run every enabled
+        // escalation oracle. The outer budget is only a stuck-task backstop;
+        // individual reference processes have their own stricter timeout and
+        // should be allowed to return structured per-oracle TIMEOUT statuses.
+        var renderSlotsPerPage = 3 + CountExtraOracles(extraOracles);
+        var slackSlots = 2;
+        var totalSlots = ((long)pages * renderSlotsPerPage) + slackSlots;
+        var budget = totalSlots * timeout;
+        return (int)Math.Clamp(budget, timeout * 2L, int.MaxValue);
+    }
+
+    private static int EstimateCorpusScanPageCount(
+        CorpusPageMode pageMode,
+        IReadOnlySet<int>? selectedPages)
+    {
+        if (selectedPages is not null)
+        {
+            var count = selectedPages.Count(page => page > 0);
+            return Math.Max(1, count);
+        }
+
+        return pageMode switch
+        {
+            CorpusPageMode.Sample => 4,
+            CorpusPageMode.All => 64,
+            _ => 1,
+        };
+    }
+
+    private static int CountExtraOracles(CorpusExtraOracles extraOracles)
+    {
+        var count = 0;
+        if (extraOracles.HasFlag(CorpusExtraOracles.Ghostscript)) count++;
+        if (extraOracles.HasFlag(CorpusExtraOracles.PdfBox)) count++;
+        if (extraOracles.HasFlag(CorpusExtraOracles.Pdfium)) count++;
+        return count;
     }
 
     private static bool TryParseCorpusPageMode(string value, out CorpusPageMode mode)
@@ -2019,10 +2261,177 @@ class Program
         _ => "first",
     };
 
-    private static IEnumerable<int> SelectCorpusPages(int pageCount, CorpusPageMode pageMode)
+    internal static bool TryParseCorpusExtraOracles(
+        string value,
+        out CorpusExtraOracles extraOracles,
+        out string error)
+    {
+        extraOracles = CorpusExtraOracles.None;
+        error = "";
+
+        if (string.IsNullOrWhiteSpace(value))
+            return true;
+
+        foreach (var part in value.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+        {
+            switch (part.ToLowerInvariant())
+            {
+                case "none":
+                case "off":
+                case "false":
+                    extraOracles = CorpusExtraOracles.None;
+                    break;
+                case "ghostscript":
+                case "ghostpdf":
+                case "gs":
+                    extraOracles |= CorpusExtraOracles.Ghostscript;
+                    break;
+                case "pdfbox":
+                    extraOracles |= CorpusExtraOracles.PdfBox;
+                    break;
+                case "pdfium":
+                case "pdfium_test":
+                    extraOracles |= CorpusExtraOracles.Pdfium;
+                    break;
+                case "all":
+                case "expanded":
+                    extraOracles |= CorpusExtraOracles.All;
+                    break;
+                default:
+                    error = $"Bad --extra-oracles '{value}'. Use none, ghostscript, pdfbox, pdfium, or all.";
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static string ExtraOraclesName(CorpusExtraOracles extraOracles)
+    {
+        if (extraOracles == CorpusExtraOracles.None)
+            return "none";
+        if (extraOracles == CorpusExtraOracles.All)
+            return "all";
+
+        var names = new List<string>();
+        if (extraOracles.HasFlag(CorpusExtraOracles.Ghostscript)) names.Add("ghostscript");
+        if (extraOracles.HasFlag(CorpusExtraOracles.PdfBox)) names.Add("pdfbox");
+        if (extraOracles.HasFlag(CorpusExtraOracles.Pdfium)) names.Add("pdfium");
+        return string.Join(",", names);
+    }
+
+    internal static IReadOnlyDictionary<string, IReadOnlySet<int>>? LoadCorpusPageManifest(FileInfo? manifestFile)
+    {
+        if (manifestFile is null)
+            return null;
+
+        if (!manifestFile.Exists)
+            throw new FileNotFoundException("Page manifest not found.", manifestFile.FullName);
+
+        var pagesByPath = new Dictionary<string, HashSet<int>>(StringComparer.Ordinal);
+        var lineNumber = 0;
+        foreach (var rawLine in File.ReadLines(manifestFile.FullName))
+        {
+            lineNumber++;
+            var line = rawLine.Trim();
+            if (line.Length == 0 || line.StartsWith('#'))
+                continue;
+
+            var columns = rawLine.Split('\t');
+            if (columns.Length < 2)
+                throw new InvalidDataException($"{manifestFile.FullName}:{lineNumber}: expected path<TAB>pageNumber");
+
+            if (lineNumber == 1 && columns[0].Equals("path", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var path = NormalizeManifestPath(columns[0].Trim());
+            if (path.Length == 0)
+                throw new InvalidDataException($"{manifestFile.FullName}:{lineNumber}: path is empty");
+
+            if (!int.TryParse(columns[1].Trim(), out var pageNumber) || pageNumber < 0)
+                throw new InvalidDataException($"{manifestFile.FullName}:{lineNumber}: pageNumber must be a non-negative integer");
+
+            if (!pagesByPath.TryGetValue(path, out var pages))
+            {
+                pages = new HashSet<int>();
+                pagesByPath[path] = pages;
+            }
+            pages.Add(pageNumber);
+        }
+
+        return pagesByPath.ToDictionary(
+            kvp => kvp.Key,
+            kvp => (IReadOnlySet<int>)kvp.Value,
+            StringComparer.Ordinal);
+    }
+
+    internal static IReadOnlyDictionary<string, string>? LoadCorpusPasswordManifest(FileInfo? manifestFile)
+    {
+        if (manifestFile is null)
+            return null;
+
+        if (!manifestFile.Exists)
+            throw new FileNotFoundException("Password manifest not found.", manifestFile.FullName);
+
+        var passwordsByPath = new Dictionary<string, string>(StringComparer.Ordinal);
+        var lineNumber = 0;
+        foreach (var rawLine in File.ReadLines(manifestFile.FullName))
+        {
+            lineNumber++;
+            var line = rawLine.Trim();
+            if (line.Length == 0 || line.StartsWith('#'))
+                continue;
+
+            var columns = rawLine.Split('\t');
+            if (columns.Length < 2)
+                throw new InvalidDataException($"{manifestFile.FullName}:{lineNumber}: expected path<TAB>userPassword");
+
+            if (lineNumber == 1 && columns[0].Equals("path", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var path = NormalizeManifestPath(columns[0].Trim());
+            if (path.Length == 0)
+                throw new InvalidDataException($"{manifestFile.FullName}:{lineNumber}: path is empty");
+
+            passwordsByPath[path] = columns[1];
+        }
+
+        return passwordsByPath;
+    }
+
+    private static string NormalizeManifestPath(string path)
+    {
+        return path
+            .Trim()
+            .Replace(Path.DirectorySeparatorChar, '/')
+            .Replace(Path.AltDirectorySeparatorChar, '/');
+    }
+
+    internal static IEnumerable<int> SelectCorpusPages(
+        int pageCount,
+        CorpusPageMode pageMode,
+        IReadOnlySet<int>? selectedPages = null)
     {
         if (pageCount <= 0)
             yield break;
+
+        if (selectedPages is not null)
+        {
+            var emitted = false;
+            foreach (var page in selectedPages.Where(page => page > 0 && page <= pageCount).OrderBy(page => page))
+            {
+                emitted = true;
+                yield return page;
+            }
+
+            // Page 0 records come from open-time failures. If a parser fix makes
+            // such a file open successfully, render page 1 so the focused subset
+            // advances to a normal PASS/PASS_ONE/DIFF signal instead of doing no work.
+            if (!emitted && selectedPages.Contains(0))
+                yield return 1;
+
+            yield break;
+        }
 
         if (pageMode == CorpusPageMode.All)
         {
@@ -2042,6 +2451,25 @@ class Program
         }
 
         yield return 1;
+    }
+
+    private static bool TryComputeResourceSafeDpi(PdfPage page, int requestedDpi, out int dpi)
+    {
+        dpi = requestedDpi;
+        if (requestedDpi <= 1)
+            return false;
+
+        var rotation = ((page.Rotation % 360) + 360) % 360;
+        var quarterTurn = rotation is 90 or 270;
+        var widthPoints = Math.Max(1.0, quarterTurn ? page.Height : page.Width);
+        var heightPoints = Math.Max(1.0, quarterTurn ? page.Width : page.Height);
+        var pageAreaPoints = widthPoints * heightPoints;
+        if (!double.IsFinite(pageAreaPoints) || pageAreaPoints <= 0)
+            return false;
+
+        var maxDpi = (int)Math.Floor(72.0 * Math.Sqrt(CorpusFallbackMaxPixelCount / pageAreaPoints));
+        dpi = Math.Clamp(maxDpi, 1, requestedDpi - 1);
+        return dpi < requestedDpi;
     }
 
     /// <summary>
@@ -2071,6 +2499,17 @@ class Program
         }
     }
 
+    private static bool IsPassing(
+        (double diff, double mae)? metrics,
+        double maxDiffFraction,
+        double maxMae)
+    {
+        if (metrics is not { } value)
+            return false;
+
+        return value.diff <= maxDiffFraction && value.mae <= maxMae;
+    }
+
     private static string Trunc(string s, int n) =>
         s.Length <= n ? s : s.Substring(0, n) + "…";
 
@@ -2078,10 +2517,23 @@ class Program
         => string.IsNullOrEmpty(value) ? value : Trunc(value, length);
 
     internal static string BuildOracleDiagnostic(CorpusScanEntry entry)
-        => $"mutool={entry.mutoolStatus ?? "UNKNOWN"}"
-           + FormatOracleError(entry.mutoolError)
-           + $"; pdftocairo={entry.cairoStatus ?? "UNKNOWN"}"
-           + FormatOracleError(entry.cairoError);
+    {
+        var parts = new List<string>
+        {
+            FormatOracleDiagnostic("mutool", entry.mutoolStatus, entry.mutoolError),
+            FormatOracleDiagnostic("pdftocairo", entry.cairoStatus, entry.cairoError),
+        };
+        if (entry.ghostscriptStatus != null)
+            parts.Add(FormatOracleDiagnostic("ghostscript", entry.ghostscriptStatus, entry.ghostscriptError));
+        if (entry.pdfboxStatus != null)
+            parts.Add(FormatOracleDiagnostic("pdfbox", entry.pdfboxStatus, entry.pdfboxError));
+        if (entry.pdfiumStatus != null)
+            parts.Add(FormatOracleDiagnostic("pdfium", entry.pdfiumStatus, entry.pdfiumError));
+        return string.Join("; ", parts);
+    }
+
+    private static string FormatOracleDiagnostic(string name, string? status, string? error)
+        => $"{name}={status ?? "UNKNOWN"}" + FormatOracleError(error);
 
     private static string FormatOracleError(string? error)
         => string.IsNullOrWhiteSpace(error) ? "" : $" ({error})";
@@ -2137,7 +2589,7 @@ class Program
         if (phase == CorpusFailurePhase.Open)
         {
             if (ex is PdfEncryptionNotSupportedException)
-                return "UNSUPPORTED_ENCRYPTED";
+                return IsPasswordRequiredFailure(ex) ? "PASSWORD_REQUIRED" : "UNSUPPORTED_ENCRYPTED";
 
             if (ex is InvalidDataException && IsCompressionFailure(ex))
                 return "UNSUPPORTED_COMPRESSION";
@@ -2182,6 +2634,22 @@ class Program
                 || message.Contains("zlib", StringComparison.OrdinalIgnoreCase)
                 || message.Contains("unsupported filter", StringComparison.OrdinalIgnoreCase)
                 || message.Contains("unsupported stream", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsPasswordRequiredFailure(Exception ex)
+    {
+        for (Exception? current = ex; current != null; current = current.InnerException)
+        {
+            var message = current.Message;
+            if (message.Contains("password verification failed", StringComparison.OrdinalIgnoreCase)
+                || message.Contains("requires a non-empty user password", StringComparison.OrdinalIgnoreCase)
+                || message.Contains("requiring a non-empty user password", StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }
@@ -2239,15 +2707,34 @@ class Program
         public double? maeMutool { get; set; }
         public double? diffFractionCairo { get; set; }
         public double? maeCairo { get; set; }
+        public double? diffFractionGhostscript { get; set; }
+        public double? maeGhostscript { get; set; }
+        public double? diffFractionPdfBox { get; set; }
+        public double? maePdfBox { get; set; }
+        public double? diffFractionPdfium { get; set; }
+        public double? maePdfium { get; set; }
+        public string? bestOracle { get; set; }
+        public int? comparedOracles { get; set; }
+        public int? agreeingOracles { get; set; }
         public long? elapsedMs { get; set; }
         public long? pdfElapsedMs { get; set; }
         public long? renderMs { get; set; }
+        public int? effectiveDpi { get; set; }
         public long? mutoolMs { get; set; }
         public long? cairoMs { get; set; }
+        public long? ghostscriptMs { get; set; }
+        public long? pdfboxMs { get; set; }
+        public long? pdfiumMs { get; set; }
         public string? mutoolStatus { get; set; }
         public string? cairoStatus { get; set; }
+        public string? ghostscriptStatus { get; set; }
+        public string? pdfboxStatus { get; set; }
+        public string? pdfiumStatus { get; set; }
         public string? mutoolError { get; set; }
         public string? cairoError { get; set; }
+        public string? ghostscriptError { get; set; }
+        public string? pdfboxError { get; set; }
+        public string? pdfiumError { get; set; }
         public long? timeoutMs { get; set; }
         public string? diagnostic { get; set; }
         public string? errorPhase { get; set; }

@@ -19,33 +19,51 @@ namespace Pdfe.Rendering.Differential
         public int Width { get; init; }
         public override string ToString() { }
     }
+    public static class GhostscriptReferenceRenderer
+    {
+        public static bool IsAvailable { get; }
+        public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
+        public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword) { }
+        public static Pdfe.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
+        public static Pdfe.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword) { }
+    }
     public static class MutoolReferenceRenderer
     {
         public static bool IsAvailable { get; }
         public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
-        public static Pdfe.Rendering.Differential.MutoolReferenceRenderer.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
-        public sealed class ReferenceRenderResult : System.IEquatable<Pdfe.Rendering.Differential.MutoolReferenceRenderer.ReferenceRenderResult>
-        {
-            public ReferenceRenderResult(SkiaSharp.SKBitmap? Bitmap, string Status, string? ErrorMessage, long ElapsedMs) { }
-            public SkiaSharp.SKBitmap? Bitmap { get; init; }
-            public long ElapsedMs { get; init; }
-            public string? ErrorMessage { get; init; }
-            public string Status { get; init; }
-        }
+        public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword) { }
+        public static Pdfe.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
+        public static Pdfe.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword) { }
+    }
+    public static class PdfBoxReferenceRenderer
+    {
+        public static bool IsAvailable { get; }
+        public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
+        public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword) { }
+        public static Pdfe.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
+        public static Pdfe.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword) { }
+    }
+    public static class PdfiumReferenceRenderer
+    {
+        public static bool IsAvailable { get; }
+        public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
+        public static Pdfe.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
     }
     public static class PdftocairoReferenceRenderer
     {
         public static bool IsAvailable { get; }
         public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
-        public static Pdfe.Rendering.Differential.PdftocairoReferenceRenderer.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
-        public sealed class ReferenceRenderResult : System.IEquatable<Pdfe.Rendering.Differential.PdftocairoReferenceRenderer.ReferenceRenderResult>
-        {
-            public ReferenceRenderResult(SkiaSharp.SKBitmap? Bitmap, string Status, string? ErrorMessage, long ElapsedMs) { }
-            public SkiaSharp.SKBitmap? Bitmap { get; init; }
-            public long ElapsedMs { get; init; }
-            public string? ErrorMessage { get; init; }
-            public string Status { get; init; }
-        }
+        public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword) { }
+        public static Pdfe.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
+        public static Pdfe.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword) { }
+    }
+    public sealed class ReferenceRenderResult : System.IEquatable<Pdfe.Rendering.Differential.ReferenceRenderResult>
+    {
+        public ReferenceRenderResult(SkiaSharp.SKBitmap? Bitmap, string Status, string? ErrorMessage, long ElapsedMs) { }
+        public SkiaSharp.SKBitmap? Bitmap { get; init; }
+        public long ElapsedMs { get; init; }
+        public string? ErrorMessage { get; init; }
+        public string Status { get; init; }
     }
 }
 namespace Pdfe.Rendering

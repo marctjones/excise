@@ -17,6 +17,12 @@ Use this checklist before tagging any `v*` release.
 - Run `dotnet test --no-build --filter "FullyQualifiedName~Redaction"` after any redaction-adjacent change.
 - Run the signature verification and UI workflow gates in `scripts/release-smoke.sh`.
 - Run the focused tests for the changed area.
+- Run the all-pages pdf.js rendering gate in tmux before declaring rendering
+  quality final:
+  `scripts/run-exploratory-corpus-tmux.sh -- --page-mode all --pdf-timeout-ms 120000 --chunk-parallel 2 --per-chunk-parallel 1`.
+  Review `PASS` / `PASS_ONE` / `DIFF` / classified non-fidelity counts and
+  ensure remaining blockers are fixed, issue-linked, or documented as accepted
+  limitations.
 - Run `dotnet test pdfe.sln --no-build --logger "console;verbosity=minimal"` before tagging.
 - Run `scripts/run-visual-regression-local.sh --release` before tagging a release candidate.
 - Run `git diff --check`.

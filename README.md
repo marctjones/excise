@@ -125,6 +125,30 @@ per-file exceptions.
 
 See [`Pdfe.Rendering.Tests/Visual/`](Pdfe.Rendering.Tests/Visual) and [`PdfEditor.Tests/UI/baselines/`](PdfEditor.Tests/UI/baselines) for the regression baselines.
 
+### Release scope and known limitations
+
+pdfe targets an everyday PDF workbench: open, read, search/copy, annotate,
+organize pages, fill/flatten forms, add flat typewriter text, audit hidden
+content, and perform true content-level redaction. It is not an Acrobat Pro
+replacement for prepress, color-managed print production, JavaScript workflows,
+portfolio workflows, or certificate-authority trust decisions.
+
+Current release-quality limitations are tracked in GitHub Issues and surfaced in
+release notes:
+
+- **Digital signatures** — pdfe checks ByteRange structure and verifies the
+  detached CMS signature/digest over the signed bytes, but does not evaluate the
+  signer certificate chain against the OS trust store yet (#466).
+- **Rendering fidelity** — the renderer has broad PDF 2.0 operator coverage and
+  real-corpus differential gates, but remaining `DIFF` cases are fixed, deferred,
+  or documented through the #491 dashboard before release. JBIG2, advanced
+  shadings, annotation appearances, and malformed/fuzzed pdf.js repro files
+  remain the main classes to watch.
+- **Encrypted and malformed PDFs** — PDFs requiring a non-empty user password,
+  some owner-password-only flows, unsupported compression filters, invalid
+  geometry, and intentionally malformed xref/stream structures are classified by
+  the corpus scanner rather than treated as everyday-release blockers.
+
 ### PDF 2.0 conformance
 All 15 conformance phases shipped:
 

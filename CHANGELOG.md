@@ -9,6 +9,15 @@ semantic versioning.
 Rendering quality hardening checkpoint. No intended API break.
 
 ### Changed
+- **Release blocker rendering fixes (#491, #500, #502, #503).** DCT/JPEG soft masks
+  now render through a Skia layer/luminance-mask path instead of treating encoded
+  JPEG bytes as alpha or rewriting every source pixel. The real-world
+  `22060_A1_01_Plans.pdf` blocker now passes the focused MuPDF scan and renders
+  page 1 at 72 DPI in under one second locally. The focused CCITT/image-primitives
+  gate now passes all three tracked fixtures. Embedded Type1C/CFF simple fonts
+  now preserve custom `/Encoding /Differences` glyph names and resolve CFF
+  custom strings from the spec-defined SID 391 boundary, restoring readable
+  body text in `TAMReview.pdf` without a file-specific workaround.
 - **Everyday PDF workbench release-candidate matrix (#490).** The release
   checklist now maps common open, navigation, search/copy, form, typewriter,
   annotation, page organization, redaction, hidden-text, and signature
@@ -30,8 +39,29 @@ Rendering quality hardening checkpoint. No intended API break.
 - **Render resource guardrails.** `Pdfe.Rendering` now rejects zero-sized page
   output and page renders that would exceed the configured bitmap pixel budget
   before allocating native Skia bitmaps.
+- **Known release limitations (#466, #489).** User-facing docs now state that
+  signature inspection verifies ByteRange/CMS integrity but does not evaluate
+  signer certificate chains against the OS trust store. Remaining rendering
+  divergences must be fixed, issue-linked, or documented through the #491 quality
+  dashboard before tagging.
 
 ### Tests
+- Full pdf.js all-pages release corpus scan completed on 2026-06-18 after the
+  #503 CFF fix: 682 PDFs, 1,275 page results, 830 `PASS`, 353 `PASS_ONE`, 57
+  `DIFF`, and 35 classified non-visual failures. The remaining `DIFF` set is
+  documented in `docs/corpus-reports/README.md` and issue #491.
+- Focused #503 scan over `TAMReview.pdf`, `issue11878_reduced.pdf`, and
+  `freeculture.pdf` improved from 30 `DIFF` pages to 12: all 18 `TAMReview.pdf`
+  DIFF pages now pass, while the remaining results are the known 3x3 pt reduced
+  fixture and two isolated `freeculture.pdf` pages.
+- Sampled pdf.js corpus gate passed after isolated native-crash recovery:
+  682 PDFs, 753 page results, 620 `PASS`, 51 `PASS_ONE`, 47 `DIFF`, and the
+  expected classified non-visual limitations.
+- Full solution test run passed locally: 7,286 passed, 50 skipped.
+- Focused release-blocker rendering scan passed 4/5 fixtures; the only remaining
+  focused DIFF is the known `S2.pdf` JPX residual, improved but still tracked by
+  the broader corpus dashboard.
+- Focused CCITT/image-primitives scan passed: 3 passed, 0 diff.
 - Release-candidate workflow matrix gate passed: 112 passed, 1 known headless
   keyboard-search skip.
 - Smoke text differential passed for DS-11 and DS-82 after Form XObject text

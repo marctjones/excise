@@ -19,11 +19,16 @@ namespace Pdfe.Rendering.Differential;
 /// Returns null on missing tool, timeout, non-zero exit, or decode
 /// failure.
 /// </summary>
-internal static class GhostscriptReferenceRenderer
+public static class GhostscriptReferenceRenderer
 {
     private static readonly Lazy<string?> _commandName = new(() =>
     {
-        foreach (var candidate in new[] { "gs", "gswin64c", "gswin32c" })
+        var explicitCommand = Environment.GetEnvironmentVariable("PDFE_GHOSTSCRIPT_COMMAND");
+        var candidates = string.IsNullOrWhiteSpace(explicitCommand)
+            ? new[] { "ghostpdf", "gpdf", "gs", "gswin64c", "gswin32c" }
+            : new[] { explicitCommand };
+
+        foreach (var candidate in candidates)
         {
             try
             {
@@ -55,46 +60,87 @@ internal static class GhostscriptReferenceRenderer
     /// via Ghostscript. Returns null on any failure.
     /// </summary>
     public static SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30_000)
+        => TryRenderPage(pdfPath, pageNumber, dpi, timeoutMs).Bitmap;
+
+    public static SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword)
+        => TryRenderPage(pdfPath, pageNumber, dpi, timeoutMs, userPassword).Bitmap;
+
+    public static ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30_000)
+        => TryRenderPage(pdfPath, pageNumber, dpi, timeoutMs, userPassword: null);
+
+    public static ReferenceRenderResult TryRenderPage(
+        string pdfPath,
+        int pageNumber,
+        int dpi,
+        int timeoutMs,
+        string? userPassword)
     {
+        var sw = Stopwatch.StartNew();
         var command = _commandName.Value;
         if (command == null)
-            return null;
+            return new ReferenceRenderResult(null, "TOOL_UNAVAILABLE",
+                "Ghostscript is not on PATH; set PDFE_GHOSTSCRIPT_COMMAND or install gs/ghostpdf",
+                sw.ElapsedMilliseconds);
 
         var outPath = Path.Combine(Path.GetTempPath(),
             $"pdfe-ghostscript-ref-{Guid.NewGuid():N}.png");
 
         try
         {
-            var psi = new ProcessStartInfo(command,
-                $"-dBATCH -dNOPAUSE -dSAFER -dQUIET -sDEVICE=png16m " +
-                $"-dTextAlphaBits=4 -dGraphicsAlphaBits=4 -r{dpi} " +
-                $"-dFirstPage={pageNumber} -dLastPage={pageNumber} " +
-                $"-sOutputFile=\"{outPath}\" \"{pdfPath}\"")
+            var psi = new ProcessStartInfo(command)
             {
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
             };
+            psi.ArgumentList.Add("-dBATCH");
+            psi.ArgumentList.Add("-dNOPAUSE");
+            psi.ArgumentList.Add("-dSAFER");
+            psi.ArgumentList.Add("-dQUIET");
+            psi.ArgumentList.Add("-sDEVICE=png16m");
+            psi.ArgumentList.Add("-dTextAlphaBits=4");
+            psi.ArgumentList.Add("-dGraphicsAlphaBits=4");
+            psi.ArgumentList.Add($"-r{dpi.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+            psi.ArgumentList.Add($"-dFirstPage={pageNumber.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+            psi.ArgumentList.Add($"-dLastPage={pageNumber.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+            if (userPassword != null)
+                psi.ArgumentList.Add($"-sPDFPassword={userPassword}");
+            psi.ArgumentList.Add($"-sOutputFile={outPath}");
+            psi.ArgumentList.Add(pdfPath);
+
             using var p = Process.Start(psi);
-            if (p == null) return null;
+            if (p == null)
+                return new ReferenceRenderResult(null, "START_FAILED", "Process.Start returned null", sw.ElapsedMilliseconds);
             if (!p.WaitForExit(timeoutMs))
             {
                 try { p.Kill(entireProcessTree: true); } catch { }
-                return null;
+                return new ReferenceRenderResult(null, "TIMEOUT", $"{command} exceeded {timeoutMs}ms", sw.ElapsedMilliseconds);
             }
-            if (p.ExitCode != 0) return null;
-            if (!File.Exists(outPath)) return null;
+            if (p.ExitCode != 0)
+            {
+                var stderr = p.StandardError.ReadToEnd();
+                return new ReferenceRenderResult(null, "EXIT_CODE",
+                    $"{command} exited {p.ExitCode}: {Trunc(stderr.Trim(), 200)}", sw.ElapsedMilliseconds);
+            }
+            if (!File.Exists(outPath))
+                return new ReferenceRenderResult(null, "MISSING_OUTPUT", $"{command} did not write an output PNG", sw.ElapsedMilliseconds);
 
-            return SKBitmap.Decode(outPath);
+            var bitmap = SKBitmap.Decode(outPath);
+            return bitmap == null
+                ? new ReferenceRenderResult(null, "DECODE_ERROR", $"{command} output PNG could not be decoded", sw.ElapsedMilliseconds)
+                : new ReferenceRenderResult(bitmap, "OK", null, sw.ElapsedMilliseconds);
         }
-        catch
+        catch (Exception ex)
         {
-            return null;
+            return new ReferenceRenderResult(null, "ERROR", ex.Message, sw.ElapsedMilliseconds);
         }
         finally
         {
             try { File.Delete(outPath); } catch { }
         }
     }
+
+    private static string Trunc(string value, int length)
+        => value.Length <= length ? value : value.Substring(0, length) + "…";
 }
