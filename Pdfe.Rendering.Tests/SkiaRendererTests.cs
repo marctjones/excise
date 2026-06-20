@@ -41,6 +41,48 @@ public class SkiaRendererTests
         act.Should().Throw<System.OperationCanceledException>();
     }
 
+    [Fact]
+    public void RenderPage_MalformedFilteredContentStream_RendersBlankPageInsteadOfThrowing()
+    {
+        var pdfData = CreatePdfWithMalformedFilteredContentAndPageSize("0 0 100 100 re f", width: 100, height: 100);
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        bitmap.Width.Should().Be(100);
+        bitmap.Height.Should().Be(100);
+        CountDarkPixels(bitmap, new SKRectI(0, 0, bitmap.Width, bitmap.Height)).Should().Be(0,
+            "malformed filtered page content is skipped by the render-only recovery path");
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_Isartor617_StreamWhitespaceBeforeEol_RendersBlankPage()
+    {
+        var path = FindRepoFile(
+            "test-pdfs",
+            "isartor",
+            "Isartor testsuite",
+            "PDFA-1b",
+            "6.1 File structure",
+            "6.1.7 Stream objects",
+            "isartor-6-1-7-t01-fail-a.pdf");
+        Assert.SkipWhen(path == null,
+            "No Isartor 6.1.7 stream-object fixture found in test-pdfs.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        bitmap.Width.Should().Be(595);
+        bitmap.Height.Should().Be(842);
+        CountDarkPixels(bitmap, new SKRectI(0, 0, bitmap.Width, bitmap.Height)).Should().Be(0,
+            "the empty Flate content stream should decode without shifting its final binary byte into the parser");
+    }
+
     [Fact(Timeout = 20000)]
     public void RenderPage_PdfjsIssue14256_InlineImagesDoNotTokenizeData()
     {
@@ -58,15 +100,435 @@ public class SkiaRendererTests
         bitmap.Height.Should().Be(900);
     }
 
-    [Fact]
-    public void RenderPage_ZeroSizedPage_ThrowsInvalidPageGeometry()
+    [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsIssue16742_FormXObjectClipsToBBox()
     {
-        var pdfData = CreatePdfWithContentAndPageSize("", width: 0, height: 0);
+        var path = FindRepoFile("test-pdfs", "pdfjs", "issue16742.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js issue16742 fixture found at test-pdfs/pdfjs/issue16742.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        bitmap.Width.Should().Be(200);
+        bitmap.Height.Should().Be(200);
+
+        var visibleGreen = bitmap.GetPixel(30, 100);
+        visibleGreen.Green.Should().BeGreaterThan(100);
+        visibleGreen.Red.Should().BeLessThan(32);
+
+        var outsideFormBBox = bitmap.GetPixel(160, 100);
+        outsideFormBBox.Red.Should().BeGreaterThan(240);
+        outsideFormBBox.Green.Should().BeGreaterThan(240);
+        outsideFormBBox.Blue.Should().BeGreaterThan(240);
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsFranz2_FormBBoxResolvesIndirectNumbers()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "franz_2.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js franz_2 fixture found at test-pdfs/pdfjs/franz_2.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        bitmap.Width.Should().Be(200);
+        bitmap.Height.Should().Be(50);
+
+        var background = bitmap.GetPixel(10, 10);
+        background.Red.Should().BeInRange(110, 150);
+        background.Green.Should().BeInRange(110, 150);
+        background.Blue.Should().BeInRange(110, 150);
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsJbig2MmrSymbolDictionary_RendersDecodedBitonalPage()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "bitmap-symbol-symhuff-texthuff.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js bitmap-symbol-symhuff-texthuff fixture found at test-pdfs/pdfjs/bitmap-symbol-symhuff-texthuff.pdf.");
+        var uncompressedPath = FindRepoFile("test-pdfs", "pdfjs", "bitmap-symbol-symhuffuncompressed-texthuff.pdf");
+        Assert.SkipWhen(uncompressedPath == null,
+            "No pdf.js bitmap-symbol-symhuffuncompressed-texthuff fixture found at test-pdfs/pdfjs/bitmap-symbol-symhuffuncompressed-texthuff.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+        using var uncompressedDoc = PdfDocument.Open(uncompressedPath);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+        using var uncompressedBitmap = new SkiaRenderer().RenderPage(
+            uncompressedDoc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var (whiteFraction, darkFraction) = MeasureWhiteAndDarkPixels(bitmap);
+        whiteFraction.Should().BeGreaterThan(0.75,
+            "a decoded JBIG2 symbol page should preserve the white background instead of rendering raw compressed bytes as a black field");
+        darkFraction.Should().BeInRange(0.005, 0.50,
+            "the page should contain visible black symbols without becoming a raw-data fallback page");
+        MeasureDifferentPixelFraction(bitmap, uncompressedBitmap).Should().BeLessThan(0.01,
+            "MMR-compressed and uncompressed JBIG2 symbol dictionaries should decode to the same glyph shapes");
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsJbig2ArithmeticTextRegion_RendersDecodedBitonalPage()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "issue17871_top_right.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js issue17871_top_right fixture found at test-pdfs/pdfjs/issue17871_top_right.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var (whiteFraction, darkFraction) = MeasureWhiteAndDarkPixels(bitmap);
+        whiteFraction.Should().BeGreaterThan(0.75,
+            "a malformed-but-decodable JBIG2 arithmetic text region should not fall back to rendering raw compressed bytes");
+        darkFraction.Should().BeInRange(0.005, 0.50,
+            "the page should contain visible black symbols without becoming a raw-data fallback page");
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsIssue2948_Type4MeshPatternRendersColorfulBackground()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "issue2948.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js issue2948 fixture found at test-pdfs/pdfjs/issue2948.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var (saturatedFraction, darkFraction) = MeasureSaturatedAndDarkPixels(bitmap);
+        saturatedFraction.Should().BeGreaterThan(0.25,
+            "the type 4 mesh shading should render the rainbow background instead of falling back to black");
+        darkFraction.Should().BeLessThan(0.40,
+            "the page should not be dominated by the former black fallback fill");
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsBug852992_FormSoftMaskCanResolveFormShadingResources()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "bug852992_reduced.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js bug852992_reduced fixture found at test-pdfs/pdfjs/bug852992_reduced.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var (whiteFraction, darkFraction, redFraction) = MeasureWhiteDarkAndRedPixels(bitmap);
+        whiteFraction.Should().BeLessThan(0.90,
+            "the form soft mask should resolve /Shading resources from the mask form instead of suppressing all content");
+        darkFraction.Should().BeLessThan(0.01);
+        redFraction.Should().BeGreaterThan(0.02,
+            "the masked red form rectangle should remain visible");
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsIssue13372_ImageMaskPaintsCurrentShadingPattern()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "issue13372.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js issue13372 fixture found at test-pdfs/pdfjs/issue13372.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var (saturatedFraction, darkFraction) = MeasureSaturatedAndDarkPixels(bitmap);
+        saturatedFraction.Should().BeGreaterThan(0.03,
+            "a CCITT image mask used as a stencil with current /Pattern color should paint the shading pattern, not grayscale mask bits");
+        darkFraction.Should().BeLessThan(0.05);
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsIssue1905_FlateSoftMasksRespectDecodePolarity()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "issue1905.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js issue1905 fixture found at test-pdfs/pdfjs/issue1905.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        CountDarkPixels(bitmap, new SKRectI(100, 320, 585, 580)).Should().BeLessThan(15_000,
+            "Flate soft masks with /Decode [1 0] should not invert alpha and turn chart backgrounds black");
+    }
+
+    [Theory(Timeout = 20000)]
+    [InlineData("issue4379.pdf")]
+    [InlineData("issue4246.pdf")]
+    public void RenderPage_PdfjsExplicitImageMask_StencilsSourceImage(string fileName)
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", fileName);
+        Assert.SkipWhen(path == null,
+            $"No pdf.js {fileName} fixture found at test-pdfs/pdfjs/{fileName}.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var (whiteFraction, _) = MeasureWhiteAndDarkPixels(bitmap);
+        whiteFraction.Should().BeInRange(0.70, 0.98,
+            "explicit /Mask image streams should stencil the source image instead of painting its full rectangular bounds or hiding it entirely");
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsIssue14814_IndirectDecodeParmsPngPredictorRendersSmoothImage()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "issue14814.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js issue14814 fixture found at test-pdfs/pdfjs/issue14814.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(2),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var center = bitmap.GetPixel(bitmap.Width / 2, bitmap.Height / 2);
+        center.Green.Should().BeGreaterThan(80,
+            "the image stream's indirect /DecodeParms PNG predictor should be applied before RGB conversion");
+        center.Red.Should().BeGreaterThan(80);
+        center.Blue.Should().BeLessThan(80);
+        var (_, darkFraction) = MeasureSaturatedAndDarkPixels(bitmap);
+        darkFraction.Should().BeLessThan(0.02,
+            "raw predictor bytes render as dark/noisy speckles instead of a smooth gradient");
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsS2_JpxSoftMasksClearImageBackgrounds()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "S2.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js S2 fixture found at test-pdfs/pdfjs/S2.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var (whiteFraction, darkFraction) = MeasureWhiteAndDarkPixels(bitmap);
+        whiteFraction.Should().BeGreaterThan(0.30,
+            "JPX soft masks should preserve the white page background around transparent image regions");
+        darkFraction.Should().BeLessThan(0.18,
+            "transparent JPX image regions should not render as black rectangles");
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsIssue15716_ZapfDingbatsDifferencesRenderTilingPattern()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "issue15716.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js issue15716 fixture found at test-pdfs/pdfjs/issue15716.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var (whiteFraction, darkFraction, redFraction) = MeasureWhiteDarkAndRedPixels(bitmap);
+        whiteFraction.Should().BeLessThan(0.98,
+            "ZapfDingbats /Differences names a109-a112 should paint the pattern glyphs instead of producing a blank page");
+        darkFraction.Should().BeGreaterThan(0.02,
+            "the black suit glyphs in the tiling pattern should render");
+        redFraction.Should().BeGreaterThan(0.02,
+            "the red suit glyphs in the tiling pattern should render");
+        CountRedPixels(bitmap, new SKRectI(24, 22, 32, 30)).Should().BeGreaterThan(30,
+            "the first red diamond should be filled; missing-glyph boxes leave this center area white");
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsIssue13931_FlateSoftMaskMakesImageMatteTransparent()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "issue13931.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js issue13931 fixture found at test-pdfs/pdfjs/issue13931.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        CountDarkPixels(bitmap, new SKRectI(300, 350, 400, 450)).Should().BeLessThan(100,
+            "the black matte behind the soft-masked JPEG should become transparent instead of covering the page");
+        CountRedPixels(bitmap, new SKRectI(450, 80, 545, 135)).Should().BeGreaterThan(100,
+            "the red stamp inside the soft-masked image should remain visible");
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsIssue10339_IndexedLabImagesDoNotRenderAsBlackBlocks()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "issue10339_reduced.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js issue10339_reduced fixture found at test-pdfs/pdfjs/issue10339_reduced.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var (saturatedFraction, darkFraction) = MeasureSaturatedAndDarkPixels(bitmap);
+        darkFraction.Should().BeLessThan(0.20,
+            "Indexed images with Lab lookup tables should decode to visible palette colors instead of black blocks");
+        saturatedFraction.Should().BeGreaterThan(0.05,
+            "the decoded Lab palette should include visible blue/cyan tiles");
+        CountBluePixels(bitmap, new SKRectI(15, 15, 50, 45)).Should().BeGreaterThan(100,
+            "the first image's /Decode [255 0] should invert Indexed palette samples");
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsAlphaTrans_DirectAxialShadingUsesFunctionReferencesAndAlpha()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "alphatrans.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js alphatrans fixture found at test-pdfs/pdfjs/alphatrans.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        CountDarkPixels(bitmap, new SKRectI(300, 145, 500, 330)).Should().BeLessThan(100,
+            "the direct axial shading should render as a translucent gradient instead of a black fallback rectangle");
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsIssue10572_StitchedShadingPatternUsesDeclaredDomain()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "issue10572.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js issue10572 fixture found at test-pdfs/pdfjs/issue10572.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        CountBlueDominantPixels(bitmap, new SKRectI(70, 155, 275, 230)).Should().BeGreaterThan(2000,
+            "stitched axial shading functions with non-0..1 domains should produce the blue bands in the pattern");
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsBug920426_IdentityUnicodeCidFontUsesEmbeddedTrueTypeCmap()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "bug920426.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js bug920426 fixture found at test-pdfs/pdfjs/bug920426.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        CountDarkPixels(bitmap, new SKRectI(10, 10, 170, 35)).Should().BeGreaterThan(600,
+            "the embedded Type0/Identity-H text should render as readable glyphs");
+        CountDarkPixels(bitmap, new SKRectI(94, 10, 101, 35)).Should().BeLessThan(60,
+            "the rendered words should preserve the visible space between Checkliste and Service");
+        CountDarkPixels(bitmap, new SKRectI(105, 10, 165, 35)).Should().BeGreaterThan(200,
+            "the second word should render after the space instead of wrong CID glyphs filling the gap");
+    }
+
+    [Theory(Timeout = 20000)]
+    [InlineData("issue1045.pdf", 200, 50)]
+    [InlineData("issue11549_reduced.pdf", 200, 50)]
+    [InlineData("issue1293r.pdf", 200, 50)]
+    [InlineData("issue13147.pdf", 200, 50)]
+    [InlineData("issue15150.pdf", 10, 10)]
+    [InlineData("issue3566.pdf", 200, 50)]
+    public void RenderPage_PdfjsMalformedStreamFixtures_RenderViaParserRecovery(
+        string fileName,
+        int expectedWidth,
+        int expectedHeight)
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", fileName);
+        Assert.SkipWhen(path == null,
+            $"No pdf.js fixture found at test-pdfs/pdfjs/{fileName}.");
+
+        using var doc = PdfDocument.Open(path);
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        bitmap.Width.Should().Be(expectedWidth);
+        bitmap.Height.Should().Be(expectedHeight);
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsIssue13147_CidTextUsesPdfWidths()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "issue13147.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js issue13147 fixture found at test-pdfs/pdfjs/issue13147.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 150, BackgroundColor = SKColors.White });
+
+        CountDarkPixels(bitmap, new SKRectI(120, 0, 190, bitmap.Height)).Should().BeGreaterThan(500,
+            "CID glyphs should be positioned with PDF /W and /DW widths instead of collapsing into overlapped clusters");
+        CountDarkPixels(bitmap, new SKRectI(300, 0, bitmap.Width, bitmap.Height)).Should().BeGreaterThan(350,
+            "the final Japanese glyphs should reach the right side of the phrase instead of being hidden by overlap");
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsIssue16263_HugeSoftMaskDownsamplesInsteadOfTimingOut()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "issue16263.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js issue16263 fixture found at test-pdfs/pdfjs/issue16263.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        bitmap.Width.Should().Be(960);
+        bitmap.Height.Should().Be(540);
+    }
+
+    [Fact]
+    public void RenderPage_ZeroSizedMediaBox_UsesBoundedFallbackPage()
+    {
+        var pdfData = CreatePdfWithContentAndPageSize("0 g 10 10 20 20 re f", width: 0, height: 0);
         using var doc = PdfDocument.Open(pdfData);
 
-        var act = () => new SkiaRenderer().RenderPage(doc.GetPage(1), new RenderOptions { Dpi = 72 });
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
 
-        act.Should().Throw<InvalidPageGeometryException>();
+        bitmap.Width.Should().Be(612);
+        bitmap.Height.Should().Be(792);
+        bitmap.GetPixel(20, 772).Should().NotBe(SKColors.White);
     }
 
     [Fact]
@@ -157,8 +619,8 @@ public class SkiaRendererTests
 
         // Assert - US Letter at 150 DPI should be ~1275x1650 pixels
         // 612 points * 150/72 = 1275, 792 points * 150/72 = 1650
-        var expectedWidth = (int)Math.Round(page.Width * 150 / 72);
-        var expectedHeight = (int)Math.Round(page.Height * 150 / 72);
+        var expectedWidth = (int)Math.Ceiling(page.Width * 150 / 72);
+        var expectedHeight = (int)Math.Ceiling(page.Height * 150 / 72);
         bitmap.Width.Should().Be(expectedWidth);
         bitmap.Height.Should().Be(expectedHeight);
     }
@@ -177,10 +639,155 @@ public class SkiaRendererTests
         using var bitmap = renderer.RenderPage(page, options);
 
         // Assert - 300 DPI should be double the size of 150 DPI
-        var expectedWidth = (int)Math.Round(page.Width * 300 / 72);
-        var expectedHeight = (int)Math.Round(page.Height * 300 / 72);
+        var expectedWidth = (int)Math.Ceiling(page.Width * 300 / 72);
+        var expectedHeight = (int)Math.Ceiling(page.Height * 300 / 72);
         bitmap.Width.Should().Be(expectedWidth);
         bitmap.Height.Should().Be(expectedHeight);
+    }
+
+    [Fact]
+    public void RenderPage_FractionalDevicePageSize_UsesCeiling()
+    {
+        var pdfData = CreatePdfWithContentAndPageSize("q 1 0 0 rg 0 0 1 1 re f Q", width: 3, height: 3);
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 150, BackgroundColor = SKColors.White });
+
+        bitmap.Width.Should().Be(7);
+        bitmap.Height.Should().Be(7);
+    }
+
+    [Fact]
+    public void RenderPage_WithCropBox_UsesVisibleBoxSizeAndOrigin()
+    {
+        var pdfData = CreatePdfWithContentPageSizeAndCropBox(
+            "0 g 10 20 50 50 re f",
+            width: 100,
+            height: 100,
+            cropBox: "[10 20 60 70]");
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        bitmap.Width.Should().Be(50);
+        bitmap.Height.Should().Be(50);
+        bitmap.GetPixel(25, 25).Should().NotBe(SKColors.White);
+    }
+
+    [Fact]
+    public void RenderPage_WithOversizedCropBox_ClampsToMediaBox()
+    {
+        var pdfData = CreatePdfWithContentPageSizeAndCropBox(
+            "0 g 10 10 20 20 re f",
+            width: 100,
+            height: 100,
+            cropBox: "[-10 -10 110 110]");
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        bitmap.Width.Should().Be(100);
+        bitmap.Height.Should().Be(100);
+        bitmap.GetPixel(20, 80).Should().NotBe(SKColors.White);
+    }
+
+    [Fact]
+    public void RenderPage_WithPartiallyOverlappingCropBox_UsesMediaIntersection()
+    {
+        var pdfData = CreatePdfWithContentPageSizeAndCropBox(
+            "0 g 50 40 50 60 re f",
+            width: 100,
+            height: 100,
+            cropBox: "[50 40 150 140]");
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        bitmap.Width.Should().Be(50);
+        bitmap.Height.Should().Be(60);
+        bitmap.GetPixel(25, 30).Should().NotBe(SKColors.White);
+    }
+
+    [Fact]
+    public void RenderPage_WithZeroAreaCropBox_UsesMediaBox()
+    {
+        var pdfData = CreatePdfWithContentPageSizeAndCropBox(
+            "0 g 10 10 20 20 re f",
+            width: 100,
+            height: 100,
+            cropBox: "[0 0 0 0]");
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        bitmap.Width.Should().Be(100);
+        bitmap.Height.Should().Be(100);
+        bitmap.GetPixel(20, 80).Should().NotBe(SKColors.White);
+    }
+
+    [Fact]
+    public void RenderPage_WithDisjointCropBox_UsesMediaBox()
+    {
+        var pdfData = CreatePdfWithContentPageSizeAndCropBox(
+            "0 g 10 10 20 20 re f",
+            width: 100,
+            height: 100,
+            cropBox: "[200 200 300 300]");
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        bitmap.Width.Should().Be(100);
+        bitmap.Height.Should().Be(100);
+        bitmap.GetPixel(20, 80).Should().NotBe(SKColors.White);
+    }
+
+    [Fact]
+    public void RenderPage_WithHugeCropBox_AppliesResourceLimitAfterClamping()
+    {
+        var pdfData = CreatePdfWithContentPageSizeAndCropBox(
+            "",
+            width: 100,
+            height: 100,
+            cropBox: "[0 0 14405 14405]");
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, MaxPixelCount = 20_000 });
+
+        bitmap.Width.Should().Be(100);
+        bitmap.Height.Should().Be(100);
+    }
+
+    [Fact]
+    public void RenderPage_WithNoisyCropBox_SnapsNearIntegerDeviceSize()
+    {
+        var pdfData = CreatePdfWithContentPageSizeAndCropBox(
+            "0 g 42 42 10 10 re f",
+            width: 480,
+            height: 678,
+            cropBox: "[41.759996 41.759996 438.24 636.24]");
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 150, BackgroundColor = SKColors.White });
+
+        bitmap.Width.Should().Be(826);
+        bitmap.Height.Should().Be(1239);
     }
 
     [Fact]
@@ -1634,6 +2241,28 @@ public class SkiaRendererTests
     }
 
     [Fact]
+    public void RenderPage_Tm_RotatesTextInk()
+    {
+        var content = @"
+            BT
+            /F1 42 Tf
+            0 1 -1 0 300 250 Tm
+            (IIIIIIIIIIII) Tj
+            ET
+        ";
+        var pdfData = CreatePdfWithContent(content);
+        using var doc = PdfDocument.Open(pdfData);
+        var renderer = new SkiaRenderer();
+
+        using var bitmap = renderer.RenderPage(doc.GetPage(1), new RenderOptions { Dpi = 72 });
+
+        var bounds = GetDarkPixelBounds(bitmap);
+        bounds.Should().NotBeNull();
+        bounds!.Value.Height.Should().BeGreaterThan(bounds.Value.Width * 2,
+            "a 90-degree Tm should rotate the text run instead of drawing it horizontally");
+    }
+
+    [Fact]
     public void RenderPage_TextRenderMode_AffectsRendering()
     {
         // Arrange - Tr operator sets text rendering mode
@@ -1663,6 +2292,67 @@ public class SkiaRendererTests
         // Assert - different rendering modes should work
         bitmap.Should().NotBeNull();
         bitmap.Width.Should().BeGreaterThan(0);
+    }
+
+    [Fact]
+    public void RenderPage_TextRenderMode7_ClipsFollowingPaintToGlyphOutlines()
+    {
+        // Regression for pdf.js issue3584: mode 7 adds text to the clipping path.
+        // The following filled rectangle must be clipped to the word outlines.
+        var content = @"
+            BT
+            7 Tr
+            10 20 TD
+            /F1 20 Tf
+            (waves) Tj
+            ET
+            0 0 1 rg
+            0 0 200 50 re
+            f
+        ";
+        var pdfData = CreatePdfWithContentAndPageSize(content, width: 200, height: 50);
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var (whiteFraction, blueFraction) = MeasureWhiteAndBluePixels(bitmap);
+        whiteFraction.Should().BeGreaterThan(0.80,
+            "text clipping should preserve the white background around the clipped paint");
+        blueFraction.Should().BeInRange(0.005, 0.20,
+            "the rectangle should render only through glyph outlines, not as a full-page fill");
+    }
+
+    [Fact]
+    public void RenderPage_PrePathClipOperator_DefersClipToNextPathPaint()
+    {
+        // Regression for pdf.js clippath.pdf: some malformed producer output
+        // emits W before constructing the path, then terminates it with n.
+        var content = @"
+            W
+            40 20 m
+            160 20 l
+            160 80 l
+            40 80 l
+            h
+            n
+            0 0 0 sc
+            0 0 200 100 re
+            f
+        ";
+        var pdfData = CreatePdfWithContentAndPageSize(content, width: 200, height: 100);
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var (whiteFraction, darkFraction) = MeasureWhiteAndDarkPixels(bitmap);
+        whiteFraction.Should().BeGreaterThan(0.50,
+            "the deferred clipping path should leave the area outside the rectangle white");
+        darkFraction.Should().BeInRange(0.25, 0.45,
+            "only the clipped center rectangle should be filled");
     }
 
     [Fact]
@@ -2109,6 +2799,49 @@ public class SkiaRendererTests
         postFormPagePixel.Blue.Should().BeGreaterThan(200);
         postFormPagePixel.Red.Should().BeLessThan(40);
         postFormPagePixel.Green.Should().BeLessThan(40);
+    }
+
+    [Fact]
+    public void RenderPage_FormXObjectUnbalancedSave_DoesNotLeakCallerGraphicsState()
+    {
+        var pdfData = CreatePdfWithUnbalancedFormGraphicsStack();
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, AntiAlias = false, BackgroundColor = SKColors.White });
+
+        var postFormPagePixel = bitmap.GetPixel(75, 75);
+        postFormPagePixel.Blue.Should().BeGreaterThan(200);
+        postFormPagePixel.Red.Should().BeLessThan(40);
+        postFormPagePixel.Green.Should().BeLessThan(40);
+    }
+
+    [Fact]
+    public void RenderPage_ExtGState_SMask_AppliesForFilledRect()
+    {
+        var pdfData = CreatePdfWithExtGStateSoftMask(transparentMaskValue: 0x00);
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, AntiAlias = false });
+
+        var hasRedPixel = false;
+        for (int y = 0; y < bitmap.Height && !hasRedPixel; y++)
+        {
+            for (int x = 0; x < bitmap.Width; x++)
+            {
+                var pixel = bitmap.GetPixel(x, y);
+                if (pixel.Red > 200 && pixel.Green < 20 && pixel.Blue < 20)
+                {
+                    hasRedPixel = true;
+                    break;
+                }
+            }
+        }
+
+        hasRedPixel.Should().BeFalse("a zero-alpha soft mask should suppress the masked fill");
     }
 
     #endregion
@@ -3343,6 +4076,82 @@ public class SkiaRendererTests
         return ms.ToArray();
     }
 
+    private static byte[] CreatePdfWithExtGStateSoftMask(int transparentMaskValue)
+    {
+        var content = "/GS1 gs\n20 20 60 60 re f\n";
+        using var ms = new MemoryStream();
+        using var writer = new StreamWriter(ms, System.Text.Encoding.ASCII, leaveOpen: true);
+        writer.NewLine = "\n";
+
+        writer.WriteLine("%PDF-1.4");
+        writer.Flush();
+
+        var offsets = new long[8];
+
+        offsets[1] = ms.Position;
+        writer.WriteLine("1 0 obj");
+        writer.WriteLine("<< /Type /Catalog /Pages 2 0 R >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[2] = ms.Position;
+        writer.WriteLine("2 0 obj");
+        writer.WriteLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[3] = ms.Position;
+        writer.WriteLine("3 0 obj");
+        writer.WriteLine("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 100 100]");
+        writer.WriteLine("   /Contents 4 0 R");
+        writer.WriteLine("   /Resources << /ExtGState << /GS1 5 0 R >> >> >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[4] = ms.Position;
+        writer.WriteLine("4 0 obj");
+        writer.WriteLine($"<< /Length {content.Length} >>");
+        writer.WriteLine("stream");
+        writer.Write(content);
+        writer.WriteLine();
+        writer.WriteLine("endstream");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[5] = ms.Position;
+        writer.WriteLine("5 0 obj");
+        writer.WriteLine("<< /Type /ExtGState /SMask << /Type /Mask /S /Alpha /G 6 0 R >> >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[6] = ms.Position;
+        writer.WriteLine("6 0 obj");
+        writer.WriteLine("<< /Type /XObject /Subtype /Image /Width 1 /Height 1");
+        writer.WriteLine("   /ColorSpace /DeviceGray /BitsPerComponent 8 /Length 1 >>");
+        writer.WriteLine("stream");
+        writer.Flush();
+        ms.WriteByte((byte)transparentMaskValue);
+        writer.WriteLine();
+        writer.WriteLine("endstream");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        long xrefPos = ms.Position;
+        writer.WriteLine("xref");
+        writer.WriteLine("0 8");
+        writer.WriteLine("0000000000 65535 f ");
+        for (int i = 1; i <= 7; i++)
+            writer.WriteLine($"{offsets[i]:D10} 00000 n ");
+        writer.WriteLine("trailer");
+        writer.WriteLine("<< /Size 8 /Root 1 0 R >>");
+        writer.WriteLine("startxref");
+        writer.WriteLine(xrefPos.ToString());
+        writer.WriteLine("%%EOF");
+        writer.Flush();
+
+        return ms.ToArray();
+    }
+
     private static byte[] CreatePdfWithFormLocalExtGState()
     {
         const string pageContent = "/Fm1 Do\n0 0 1 rg\n60 10 30 30 re\nf\n";
@@ -3419,8 +4228,205 @@ public class SkiaRendererTests
         return ms.ToArray();
     }
 
+    private static byte[] CreatePdfWithUnbalancedFormGraphicsStack()
+    {
+        const string pageContent = "q /GS1 gs /Fm1 Do Q\n0 0 1 rg\n60 10 30 30 re\nf\n";
+        const string formContent = "q\n1 0 0 rg\n10 10 30 30 re\nf\n";
+
+        using var ms = new MemoryStream();
+        using var writer = new StreamWriter(ms, System.Text.Encoding.ASCII, leaveOpen: true);
+        writer.NewLine = "\n";
+
+        writer.WriteLine("%PDF-1.4");
+        writer.Flush();
+
+        var offsets = new long[8];
+
+        offsets[1] = ms.Position;
+        writer.WriteLine("1 0 obj");
+        writer.WriteLine("<< /Type /Catalog /Pages 2 0 R >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[2] = ms.Position;
+        writer.WriteLine("2 0 obj");
+        writer.WriteLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[3] = ms.Position;
+        writer.WriteLine("3 0 obj");
+        writer.WriteLine(
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 100 100] " +
+            "/Contents 4 0 R /Resources << /XObject << /Fm1 5 0 R >> /ExtGState << /GS1 6 0 R >> >> >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[4] = ms.Position;
+        writer.WriteLine("4 0 obj");
+        writer.WriteLine($"<< /Length {pageContent.Length} >>");
+        writer.WriteLine("stream");
+        writer.Write(pageContent);
+        writer.WriteLine("endstream");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[5] = ms.Position;
+        writer.WriteLine("5 0 obj");
+        writer.WriteLine(
+            $"<< /Type /XObject /Subtype /Form /FormType 1 /BBox [0 0 100 100] /Length {formContent.Length} >>");
+        writer.WriteLine("stream");
+        writer.Write(formContent);
+        writer.WriteLine("endstream");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[6] = ms.Position;
+        writer.WriteLine("6 0 obj");
+        writer.WriteLine("<< /Type /ExtGState /CA .5 /ca .5 >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        var xrefPos = ms.Position;
+        writer.WriteLine("xref");
+        writer.WriteLine("0 7");
+        writer.WriteLine("0000000000 65535 f ");
+        for (int i = 1; i <= 6; i++)
+            writer.WriteLine($"{offsets[i]:D10} 00000 n ");
+        writer.WriteLine("trailer");
+        writer.WriteLine("<< /Size 7 /Root 1 0 R >>");
+        writer.WriteLine("startxref");
+        writer.WriteLine(xrefPos.ToString());
+        writer.WriteLine("%%EOF");
+        writer.Flush();
+
+        return ms.ToArray();
+    }
+
     private static byte[] CreatePdfWithContent(string content)
         => CreatePdfWithContentAndPageSize(content, width: 612, height: 792);
+
+    private static byte[] CreatePdfWithContentPageSizeAndCropBox(string content, int width, int height, string cropBox)
+    {
+        using var ms = new MemoryStream();
+        using var writer = new StreamWriter(ms, System.Text.Encoding.ASCII, leaveOpen: true);
+        writer.NewLine = "\n";
+
+        writer.WriteLine("%PDF-1.4");
+        writer.Flush();
+
+        var offsets = new long[6];
+
+        offsets[1] = ms.Position;
+        writer.WriteLine("1 0 obj");
+        writer.WriteLine("<< /Type /Catalog /Pages 2 0 R >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[2] = ms.Position;
+        writer.WriteLine("2 0 obj");
+        writer.WriteLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[3] = ms.Position;
+        writer.WriteLine("3 0 obj");
+        writer.WriteLine($"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {width} {height}] /CropBox {cropBox} /Contents 4 0 R /Resources << >> >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[4] = ms.Position;
+        writer.WriteLine("4 0 obj");
+        writer.WriteLine($"<< /Length {content.Length} >>");
+        writer.WriteLine("stream");
+        writer.Write(content);
+        writer.WriteLine();
+        writer.WriteLine("endstream");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[5] = ms.Position;
+        writer.WriteLine("5 0 obj");
+        writer.WriteLine("<< >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        var xrefPos = ms.Position;
+        writer.WriteLine("xref");
+        writer.WriteLine("0 6");
+        writer.WriteLine("0000000000 65535 f ");
+        for (int i = 1; i <= 5; i++)
+            writer.WriteLine($"{offsets[i]:D10} 00000 n ");
+        writer.WriteLine("trailer");
+        writer.WriteLine("<< /Size 6 /Root 1 0 R >>");
+        writer.WriteLine("startxref");
+        writer.WriteLine(xrefPos.ToString());
+        writer.WriteLine("%%EOF");
+        writer.Flush();
+
+        return ms.ToArray();
+    }
+
+    private static byte[] CreatePdfWithMalformedFilteredContentAndPageSize(string content, int width, int height)
+    {
+        using var ms = new MemoryStream();
+        using var writer = new StreamWriter(ms, System.Text.Encoding.ASCII, leaveOpen: true);
+        writer.NewLine = "\n";
+
+        writer.WriteLine("%PDF-1.4");
+        writer.Flush();
+
+        var offsets = new long[6];
+
+        offsets[1] = ms.Position;
+        writer.WriteLine("1 0 obj");
+        writer.WriteLine("<< /Type /Catalog /Pages 2 0 R >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[2] = ms.Position;
+        writer.WriteLine("2 0 obj");
+        writer.WriteLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[3] = ms.Position;
+        writer.WriteLine("3 0 obj");
+        writer.WriteLine($"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {width} {height}] /Contents 4 0 R /Resources << >> >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[4] = ms.Position;
+        writer.WriteLine("4 0 obj");
+        writer.WriteLine($"<< /Filter /Flatedecode /Length {content.Length} >>");
+        writer.WriteLine("stream");
+        writer.Write(content);
+        writer.WriteLine();
+        writer.WriteLine("endstream");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[5] = ms.Position;
+        writer.WriteLine("5 0 obj");
+        writer.WriteLine("<< >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        var xrefPos = ms.Position;
+        writer.WriteLine("xref");
+        writer.WriteLine("0 6");
+        writer.WriteLine("0000000000 65535 f ");
+        for (int i = 1; i <= 5; i++)
+            writer.WriteLine($"{offsets[i]:D10} 00000 n ");
+        writer.WriteLine("trailer");
+        writer.WriteLine("<< /Size 6 /Root 1 0 R >>");
+        writer.WriteLine("startxref");
+        writer.WriteLine(xrefPos.ToString());
+        writer.WriteLine("%%EOF");
+        writer.Flush();
+
+        return ms.ToArray();
+    }
 
     private static string? FindRepoFile(params string[] segments)
     {
@@ -3434,6 +4440,231 @@ public class SkiaRendererTests
         }
 
         return null;
+    }
+
+    private static (double WhiteFraction, double DarkFraction) MeasureWhiteAndDarkPixels(SKBitmap bitmap)
+    {
+        long white = 0;
+        long dark = 0;
+        long total = (long)bitmap.Width * bitmap.Height;
+
+        for (int y = 0; y < bitmap.Height; y++)
+        {
+            for (int x = 0; x < bitmap.Width; x++)
+            {
+                var pixel = bitmap.GetPixel(x, y);
+                if (pixel.Red > 245 && pixel.Green > 245 && pixel.Blue > 245)
+                    white++;
+                if (pixel.Red < 32 && pixel.Green < 32 && pixel.Blue < 32)
+                    dark++;
+            }
+        }
+
+        return ((double)white / total, (double)dark / total);
+    }
+
+    private static double MeasureDifferentPixelFraction(SKBitmap first, SKBitmap second)
+    {
+        first.Width.Should().Be(second.Width);
+        first.Height.Should().Be(second.Height);
+
+        long different = 0;
+        long total = (long)first.Width * first.Height;
+        for (int y = 0; y < first.Height; y++)
+        {
+            for (int x = 0; x < first.Width; x++)
+            {
+                var a = first.GetPixel(x, y);
+                var b = second.GetPixel(x, y);
+                var delta = Math.Abs(a.Red - b.Red)
+                            + Math.Abs(a.Green - b.Green)
+                            + Math.Abs(a.Blue - b.Blue)
+                            + Math.Abs(a.Alpha - b.Alpha);
+                if (delta > 32)
+                    different++;
+            }
+        }
+
+        return (double)different / total;
+    }
+
+    private static (double WhiteFraction, double BlueFraction) MeasureWhiteAndBluePixels(SKBitmap bitmap)
+    {
+        long white = 0;
+        long blue = 0;
+        long total = (long)bitmap.Width * bitmap.Height;
+
+        for (int y = 0; y < bitmap.Height; y++)
+        {
+            for (int x = 0; x < bitmap.Width; x++)
+            {
+                var pixel = bitmap.GetPixel(x, y);
+                if (pixel.Red > 245 && pixel.Green > 245 && pixel.Blue > 245)
+                    white++;
+                if (pixel.Blue > 120 && pixel.Red < 80 && pixel.Green < 80)
+                    blue++;
+            }
+        }
+
+        return ((double)white / total, (double)blue / total);
+    }
+
+    private static (double SaturatedFraction, double DarkFraction) MeasureSaturatedAndDarkPixels(SKBitmap bitmap)
+    {
+        long saturated = 0;
+        long dark = 0;
+        long total = (long)bitmap.Width * bitmap.Height;
+
+        for (int y = 0; y < bitmap.Height; y++)
+        {
+            for (int x = 0; x < bitmap.Width; x++)
+            {
+                var pixel = bitmap.GetPixel(x, y);
+                var max = Math.Max(pixel.Red, Math.Max(pixel.Green, pixel.Blue));
+                var min = Math.Min(pixel.Red, Math.Min(pixel.Green, pixel.Blue));
+                if (max > 140 && max - min > 90)
+                    saturated++;
+                if (pixel.Red < 32 && pixel.Green < 32 && pixel.Blue < 32)
+                    dark++;
+            }
+        }
+
+        return ((double)saturated / total, (double)dark / total);
+    }
+
+    private static (double WhiteFraction, double DarkFraction, double RedFraction) MeasureWhiteDarkAndRedPixels(SKBitmap bitmap)
+    {
+        long white = 0;
+        long dark = 0;
+        long red = 0;
+        long total = (long)bitmap.Width * bitmap.Height;
+
+        for (int y = 0; y < bitmap.Height; y++)
+        {
+            for (int x = 0; x < bitmap.Width; x++)
+            {
+                var pixel = bitmap.GetPixel(x, y);
+                if (pixel.Red > 245 && pixel.Green > 245 && pixel.Blue > 245)
+                    white++;
+                if (pixel.Red < 32 && pixel.Green < 32 && pixel.Blue < 32)
+                    dark++;
+                if (pixel.Red > 160 && pixel.Green < 80 && pixel.Blue < 80)
+                    red++;
+            }
+        }
+
+        return ((double)white / total, (double)dark / total, (double)red / total);
+    }
+
+    private static int CountRedPixels(SKBitmap bitmap, SKRectI region)
+    {
+        var left = Math.Clamp(region.Left, 0, bitmap.Width);
+        var top = Math.Clamp(region.Top, 0, bitmap.Height);
+        var right = Math.Clamp(region.Right, left, bitmap.Width);
+        var bottom = Math.Clamp(region.Bottom, top, bitmap.Height);
+        var count = 0;
+
+        for (int y = top; y < bottom; y++)
+        {
+            for (int x = left; x < right; x++)
+            {
+                var pixel = bitmap.GetPixel(x, y);
+                if (pixel.Red > 160 && pixel.Green < 80 && pixel.Blue < 80)
+                    count++;
+            }
+        }
+
+        return count;
+    }
+
+    private static int CountDarkPixels(SKBitmap bitmap, SKRectI region)
+    {
+        var left = Math.Clamp(region.Left, 0, bitmap.Width);
+        var top = Math.Clamp(region.Top, 0, bitmap.Height);
+        var right = Math.Clamp(region.Right, left, bitmap.Width);
+        var bottom = Math.Clamp(region.Bottom, top, bitmap.Height);
+        var count = 0;
+
+        for (int y = top; y < bottom; y++)
+        {
+            for (int x = left; x < right; x++)
+            {
+                var pixel = bitmap.GetPixel(x, y);
+                if (pixel.Red < 32 && pixel.Green < 32 && pixel.Blue < 32)
+                    count++;
+            }
+        }
+
+        return count;
+    }
+
+    private static SKRectI? GetDarkPixelBounds(SKBitmap bitmap)
+    {
+        var left = bitmap.Width;
+        var top = bitmap.Height;
+        var right = -1;
+        var bottom = -1;
+
+        for (int y = 0; y < bitmap.Height; y++)
+        {
+            for (int x = 0; x < bitmap.Width; x++)
+            {
+                var pixel = bitmap.GetPixel(x, y);
+                if (pixel.Red >= 32 || pixel.Green >= 32 || pixel.Blue >= 32)
+                    continue;
+
+                left = Math.Min(left, x);
+                top = Math.Min(top, y);
+                right = Math.Max(right, x + 1);
+                bottom = Math.Max(bottom, y + 1);
+            }
+        }
+
+        return right >= left && bottom >= top
+            ? new SKRectI(left, top, right, bottom)
+            : null;
+    }
+
+    private static int CountBluePixels(SKBitmap bitmap, SKRectI region)
+    {
+        var left = Math.Clamp(region.Left, 0, bitmap.Width);
+        var top = Math.Clamp(region.Top, 0, bitmap.Height);
+        var right = Math.Clamp(region.Right, left, bitmap.Width);
+        var bottom = Math.Clamp(region.Bottom, top, bitmap.Height);
+        var count = 0;
+
+        for (int y = top; y < bottom; y++)
+        {
+            for (int x = left; x < right; x++)
+            {
+                var pixel = bitmap.GetPixel(x, y);
+                if (pixel.Blue > 120 && pixel.Green > 80 && pixel.Red < 80)
+                    count++;
+            }
+        }
+
+        return count;
+    }
+
+    private static int CountBlueDominantPixels(SKBitmap bitmap, SKRectI region)
+    {
+        var left = Math.Clamp(region.Left, 0, bitmap.Width);
+        var top = Math.Clamp(region.Top, 0, bitmap.Height);
+        var right = Math.Clamp(region.Right, left, bitmap.Width);
+        var bottom = Math.Clamp(region.Bottom, top, bitmap.Height);
+        var count = 0;
+
+        for (int y = top; y < bottom; y++)
+        {
+            for (int x = left; x < right; x++)
+            {
+                var pixel = bitmap.GetPixel(x, y);
+                if (pixel.Blue > 120 && pixel.Blue > pixel.Green + 40 && pixel.Blue > pixel.Red + 40)
+                    count++;
+            }
+        }
+
+        return count;
     }
 
     private static byte[] CreatePdfWithContentAndPageSize(string content, int width, int height)

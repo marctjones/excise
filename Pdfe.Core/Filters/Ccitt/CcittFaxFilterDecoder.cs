@@ -10,6 +10,8 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
 {
     private const int EolCode = 0b000000000001;
     private const int EolBitCount = 12;
+    private const int EofbCode = (EolCode << EolBitCount) | EolCode;
+    private const int EofbBitCount = EolBitCount * 2;
 
     public CcittFaxFilterDecoder()
         : base("CCITTFaxDecode", "CCF")
@@ -33,10 +35,12 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
             if (rows <= 0)
                 rows = stream?.GetInt("Height", 0) ?? 0;
             bool blackIs1 = parms?.GetBool("BlackIs1", false) ?? false;
+            bool endOfLine = parms?.GetBool("EndOfLine", false) ?? false;
+            bool encodedByteAlign = parms?.GetBool("EncodedByteAlign", false) ?? false;
 
             if (K < 0)
             {
-                return DecodeGroup4(data, columns, rows, blackIs1);
+                return DecodeGroup4(data, columns, rows, blackIs1, endOfLine, encodedByteAlign);
             }
             else if (K == 0)
             {
@@ -56,7 +60,13 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
     /// <summary>
     /// Decode Group 4 (Modified READ / MMR) fax data.
     /// </summary>
-    private byte[] DecodeGroup4(byte[] data, int columns, int rows, bool blackIs1)
+    private byte[] DecodeGroup4(
+        byte[] data,
+        int columns,
+        int rows,
+        bool blackIs1,
+        bool allowRowEndOfLine,
+        bool encodedByteAlign)
     {
         try
         {
@@ -68,12 +78,22 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
             var bytesPerRow = (columns + 7) / 8;
 
             bool[] refRow = new bool[columns];
+            var twoDimensionalState = new CcittTwoDimensionalState();
             int rowsDecoded = 0;
 
             while (reader.HasBits && (rows == 0 || rowsDecoded < rows))
             {
+                if (allowRowEndOfLine)
+                {
+                    if (TrySkipEofb(reader))
+                        break;
+                    TrySkipEOL(reader, maxFillBits: 7);
+                    if (TrySkipEofb(reader))
+                        break;
+                }
+
                 int bitsBefore = reader.Position;
-                var currentRow = DecodeGroup4Row(reader, refRow, columns);
+                var currentRow = DecodeGroup4Row(reader, refRow, columns, twoDimensionalState);
                 if (currentRow == null)
                     break;
 
@@ -84,6 +104,8 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
                 AppendRowToOutput(output, currentRow, bytesPerRow, blackIs1);
                 refRow = currentRow;
                 rowsDecoded++;
+                if (encodedByteAlign)
+                    reader.AlignToByte();
             }
 
             return output.ToArray();
@@ -97,19 +119,27 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
     /// <summary>
     /// Decode a single Group 4 row using 2D MMR encoding.
     /// </summary>
-    private bool[] DecodeGroup4Row(CcittBitReader reader, bool[] refRow, int columns)
-        => DecodeTwoDimensionalRow(reader, refRow, columns);
+    private bool[]? DecodeGroup4Row(
+        CcittBitReader reader,
+        bool[] refRow,
+        int columns,
+        CcittTwoDimensionalState twoDimensionalState)
+        => DecodeTwoDimensionalRow(reader, refRow, columns, twoDimensionalState);
 
     /// <summary>
     /// Decode a single Group 3 2D row.
     /// </summary>
-    private bool[] DecodeGroup3_2DRow(CcittBitReader reader, bool[] refRow, int columns)
-        => DecodeTwoDimensionalRow(reader, refRow, columns);
+    private bool[]? DecodeGroup3_2DRow(CcittBitReader reader, bool[] refRow, int columns)
+        => DecodeTwoDimensionalRow(reader, refRow, columns, new CcittTwoDimensionalState());
 
     /// <summary>
     /// Decode one T.4/T.6 two-dimensional row using changing-element coordinates.
     /// </summary>
-    private bool[] DecodeTwoDimensionalRow(CcittBitReader reader, bool[] refRow, int columns)
+    private bool[]? DecodeTwoDimensionalRow(
+        CcittBitReader reader,
+        bool[] refRow,
+        int columns,
+        CcittTwoDimensionalState twoDimensionalState)
     {
         var row = new bool[columns];
         int a0 = 0;
@@ -117,23 +147,71 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
 
         while (a0 < columns && reader.HasBits)
         {
+            if (twoDimensionalState.PendingUncompressedPixels.Count > 0)
+            {
+                CopyPendingUncompressedPixels(twoDimensionalState, row, ref a0, columns);
+                if (a0 >= columns)
+                    break;
+                if (twoDimensionalState.PendingBasicRunColor.HasValue)
+                {
+                    color = twoDimensionalState.PendingBasicRunColor.Value;
+                    twoDimensionalState.PendingBasicRunColor = null;
+                }
+                if (twoDimensionalState.InUncompressedMode)
+                    continue;
+            }
+            if (twoDimensionalState.PendingBasicRunColor.HasValue)
+            {
+                color = twoDimensionalState.PendingBasicRunColor.Value;
+                twoDimensionalState.PendingBasicRunColor = null;
+            }
+            if (twoDimensionalState.InUncompressedMode)
+            {
+                if (!DecodeUncompressedPixels(reader, row, ref a0, columns, twoDimensionalState, out var nextRunColor))
+                    break;
+                if (!twoDimensionalState.InUncompressedMode && nextRunColor.HasValue)
+                    color = nextRunColor.Value;
+                continue;
+            }
+
+            int modeBitsBefore = reader.Position;
             var mode = ReadTwoDimensionalMode(reader);
             if (mode.Kind == Ccitt2DModeKind.Invalid)
                 mode = TryReadByteAlignedModeAfterFill(reader);
-            if (mode.Kind == Ccitt2DModeKind.Invalid || mode.Kind == Ccitt2DModeKind.Eofb)
+            if (mode.Kind == Ccitt2DModeKind.Invalid ||
+                mode.Kind == Ccitt2DModeKind.UnsupportedExtension ||
+                mode.Kind == Ccitt2DModeKind.Eofb)
+            {
+                if (mode.Kind == Ccitt2DModeKind.Eofb && a0 == 0)
+                    return null;
+                if (mode.Kind != Ccitt2DModeKind.Eofb && a0 > 0)
+                    FillRun(row, a0, columns, color);
+                if (mode.Kind == Ccitt2DModeKind.Invalid &&
+                    a0 > 0 &&
+                    reader.Position == modeBitsBefore &&
+                    reader.HasBits)
+                {
+                    reader.ReadBits(1);
+                }
                 break;
+            }
+            if (mode.Kind == Ccitt2DModeKind.Uncompressed)
+            {
+                twoDimensionalState.InUncompressedMode = true;
+                continue;
+            }
 
             if (mode.Kind == Ccitt2DModeKind.Pass)
             {
-                int b1 = FindChangingElement(refRow, a0, color);
-                int b2 = FindChangingElement(refRow, b1, !color);
+                int b1 = FindChangingElement(refRow, a0, !color);
+                int b2 = FindChangingElement(refRow, b1, color);
                 FillRun(row, a0, b2, color);
                 a0 = b2;
             }
             else if (mode.Kind == Ccitt2DModeKind.Horizontal)
             {
-                int len1 = DecodeHuffmanRun(reader, color, CcittTables.WhiteTerminating);
-                int len2 = DecodeHuffmanRun(reader, !color, CcittTables.WhiteTerminating);
+                int len1 = DecodeHuffmanRun(reader, color, color ? CcittTables.BlackTerminating : CcittTables.WhiteTerminating);
+                int len2 = DecodeHuffmanRun(reader, !color, !color ? CcittTables.BlackTerminating : CcittTables.WhiteTerminating);
                 if (len1 < 0 || len2 < 0)
                     break;
 
@@ -145,7 +223,7 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
             }
             else
             {
-                int b1 = FindChangingElement(refRow, a0, color);
+                int b1 = FindChangingElement(refRow, a0, !color);
                 int a1 = Math.Clamp(b1 + mode.VerticalOffset, a0, columns);
                 FillRun(row, a0, a1, color);
                 a0 = a1;
@@ -154,6 +232,123 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
         }
 
         return row;
+    }
+
+    private static bool DecodeUncompressedPixels(
+        CcittBitReader reader,
+        bool[] row,
+        ref int a0,
+        int columns,
+        CcittTwoDimensionalState twoDimensionalState,
+        out bool? nextRunColor)
+    {
+        nextRunColor = null;
+        int bitsBefore = reader.Position;
+        int outputBefore = a0;
+
+        while (a0 < columns)
+        {
+            CopyPendingUncompressedPixels(twoDimensionalState, row, ref a0, columns);
+            if (a0 >= columns || !twoDimensionalState.InUncompressedMode)
+                break;
+
+            if (!ReadUncompressedCode(reader, twoDimensionalState, out nextRunColor))
+                break;
+
+            if (nextRunColor.HasValue)
+            {
+                twoDimensionalState.PendingBasicRunColor = nextRunColor.Value;
+                CopyPendingUncompressedPixels(twoDimensionalState, row, ref a0, columns);
+                if (twoDimensionalState.PendingUncompressedPixels.Count == 0)
+                {
+                    nextRunColor = twoDimensionalState.PendingBasicRunColor;
+                    twoDimensionalState.PendingBasicRunColor = null;
+                }
+                else
+                {
+                    nextRunColor = null;
+                }
+                break;
+            }
+        }
+
+        return reader.Position != bitsBefore || a0 != outputBefore;
+    }
+
+    private static bool ReadUncompressedCode(
+        CcittBitReader reader,
+        CcittTwoDimensionalState twoDimensionalState,
+        out bool? nextRunColor)
+    {
+        nextRunColor = null;
+        int originalPosition = reader.Position;
+        int zeroCount = 0;
+
+        while (reader.HasBits && reader.PeekBits(1) == 0)
+        {
+            reader.ReadBits(1);
+            zeroCount++;
+            if (zeroCount > 10)
+            {
+                reader.SetPosition(originalPosition);
+                return false;
+            }
+        }
+
+        if (!reader.HasBits)
+        {
+            reader.SetPosition(originalPosition);
+            return false;
+        }
+
+        reader.ReadBits(1);
+
+        if (zeroCount <= 4)
+        {
+            EnqueueUncompressedPixels(twoDimensionalState, zeroCount, false);
+            twoDimensionalState.PendingUncompressedPixels.Enqueue(true);
+            return true;
+        }
+
+        if (zeroCount == 5)
+        {
+            EnqueueUncompressedPixels(twoDimensionalState, 5, false);
+            return true;
+        }
+
+        if (!reader.HasBits)
+        {
+            reader.SetPosition(originalPosition);
+            return false;
+        }
+
+        nextRunColor = reader.ReadBits(1) == 1;
+        EnqueueUncompressedPixels(twoDimensionalState, zeroCount - 5, false);
+        twoDimensionalState.InUncompressedMode = false;
+        return true;
+    }
+
+    private static void CopyPendingUncompressedPixels(
+        CcittTwoDimensionalState twoDimensionalState,
+        bool[] row,
+        ref int a0,
+        int columns)
+    {
+        while (a0 < columns && twoDimensionalState.PendingUncompressedPixels.Count > 0)
+        {
+            row[a0++] = twoDimensionalState.PendingUncompressedPixels.Dequeue();
+        }
+    }
+
+    private static void EnqueueUncompressedPixels(
+        CcittTwoDimensionalState twoDimensionalState,
+        int count,
+        bool color)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            twoDimensionalState.PendingUncompressedPixels.Enqueue(color);
+        }
     }
 
     /// <summary>
@@ -336,6 +531,12 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
             return new Ccitt2DMode(Ccitt2DModeKind.Vertical, -2);
         }
 
+        if (reader.PeekBits(EofbBitCount) == EofbCode)
+        {
+            reader.ReadBits(EofbBitCount);
+            return new Ccitt2DMode(Ccitt2DModeKind.Eofb, 0);
+        }
+
         int sevenBits = reader.PeekBits(7);
         if (sevenBits == 0b0000011)
         {
@@ -347,11 +548,16 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
             reader.ReadBits(7);
             return new Ccitt2DMode(Ccitt2DModeKind.Vertical, -3);
         }
-
-        if (reader.PeekBits(12) == 0b000000000001)
+        if (sevenBits == 0b0000001)
         {
-            reader.ReadBits(12);
-            return new Ccitt2DMode(Ccitt2DModeKind.Eofb, 0);
+            int tenBits = reader.PeekBits(10);
+            if (tenBits < 0)
+                return new Ccitt2DMode(Ccitt2DModeKind.Invalid, 0);
+
+            reader.ReadBits(10);
+            return (tenBits & 0b111) == 0b111
+                ? new Ccitt2DMode(Ccitt2DModeKind.Uncompressed, 0)
+                : new Ccitt2DMode(Ccitt2DModeKind.UnsupportedExtension, 0);
         }
 
         return new Ccitt2DMode(Ccitt2DModeKind.Invalid, 0);
@@ -384,7 +590,18 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
         Eofb,
         Pass,
         Horizontal,
+        UnsupportedExtension,
+        Uncompressed,
         Vertical
+    }
+
+    private sealed class CcittTwoDimensionalState
+    {
+        public bool InUncompressedMode { get; set; }
+
+        public Queue<bool> PendingUncompressedPixels { get; } = new();
+
+        public bool? PendingBasicRunColor { get; set; }
     }
 
     private enum CcittGroup3LineMode
@@ -468,12 +685,20 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
         }
     }
 
-    private int FindChangingElement(bool[] row, int startIdx, bool currentColor)
+    private int FindChangingElement(bool[] row, int startIdx, bool targetColor)
     {
-        for (int i = Math.Max(0, startIdx); i < row.Length; i++)
+        int start = startIdx <= 0 ? 0 : Math.Min(startIdx + 1, row.Length);
+        bool previousColor = start == 0 ? false : row[start - 1];
+        for (int i = start; i < row.Length; i++)
         {
-            if (row[i] != currentColor)
+            bool color = row[i];
+            if (color == previousColor)
+                continue;
+
+            if (color == targetColor)
                 return i;
+
+            previousColor = color;
         }
 
         return row.Length;
@@ -493,6 +718,21 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
         {
             int bitsToRead = fillBits + EolBitCount;
             if (reader.PeekBits(bitsToRead) != EolCode)
+                continue;
+
+            reader.ReadBits(bitsToRead);
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool TrySkipEofb(CcittBitReader reader)
+    {
+        for (int fillBits = 0; fillBits <= 7; fillBits++)
+        {
+            int bitsToRead = fillBits + EofbBitCount;
+            if (reader.PeekBits(bitsToRead) != EofbCode)
                 continue;
 
             reader.ReadBits(bitsToRead);
@@ -595,6 +835,13 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
             }
             return result;
         }
+
+        public void AlignToByte()
+        {
+            int remainder = _bitPos % 8;
+            if (remainder != 0)
+                _bitPos += 8 - remainder;
+        }
     }
 
     /// <summary>
@@ -651,15 +898,15 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
             {832,(0b011010010, 9)}, {896,(0b011010011, 9)}, {960,(0b011010100, 9)},
             {1024,(0b011010101, 9)}, {1088,(0b011010110, 9)}, {1152,(0b011010111, 9)},
             {1216,(0b011011000, 9)}, {1280,(0b011011001, 9)}, {1344,(0b011011010, 9)},
-            {1408,(0b011011011, 9)}, {1472,(0b011100100, 9)}, {1536,(0b011100101, 9)},
-            {1600,(0b011100110, 9)}, {1664,(0b011100111, 9)}, {1728,(0b011101000, 9)},
-            {1792,(0b00000001000, 11)}, {1856,(0b00000001001, 11)},
-            {1920,(0b00000001010, 11)}, {1984,(0b00000001011, 11)},
-            {2048,(0b00000001100, 11)}, {2112,(0b00000001101, 11)},
-            {2176,(0b00000001110, 11)}, {2240,(0b00000001111, 11)},
-            {2304,(0b00000010000, 11)}, {2368,(0b00000010001, 11)},
-            {2432,(0b00000010010, 11)}, {2496,(0b00000010011, 11)},
-            {2560,(0b00000010100, 11)},
+            {1408,(0b011011011, 9)}, {1472,(0b010011000, 9)}, {1536,(0b010011001, 9)},
+            {1600,(0b010011010, 9)}, {1664,(0b011000, 6)}, {1728,(0b010011011, 9)},
+            {1792,(0b00000001000, 11)}, {1856,(0b00000001100, 11)},
+            {1920,(0b00000001101, 11)}, {1984,(0b000000010010, 12)},
+            {2048,(0b000000010011, 12)}, {2112,(0b000000010100, 12)},
+            {2176,(0b000000010101, 12)}, {2240,(0b000000010110, 12)},
+            {2304,(0b000000010111, 12)}, {2368,(0b000000011100, 12)},
+            {2432,(0b000000011101, 12)}, {2496,(0b000000011110, 12)},
+            {2560,(0b000000011111, 12)},
         };
 
         public static readonly Dictionary<int, (int code, int bits)> BlackMakeup = new()
@@ -673,13 +920,13 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
             {1216,(0b0000001110111, 13)}, {1280,(0b0000001010010, 13)}, {1344,(0b0000001010011, 13)},
             {1408,(0b0000001010100, 13)}, {1472,(0b0000001010101, 13)}, {1536,(0b0000001011010, 13)},
             {1600,(0b0000001011011, 13)}, {1664,(0b0000001100100, 13)}, {1728,(0b0000001100101, 13)},
-            {1792,(0b00000001000, 11)}, {1856,(0b00000001001, 11)},
-            {1920,(0b00000001010, 11)}, {1984,(0b00000001011, 11)},
-            {2048,(0b00000001100, 11)}, {2112,(0b00000001101, 11)},
-            {2176,(0b00000001110, 11)}, {2240,(0b00000001111, 11)},
-            {2304,(0b00000010000, 11)}, {2368,(0b00000010001, 11)},
-            {2432,(0b00000010010, 11)}, {2496,(0b00000010011, 11)},
-            {2560,(0b00000010100, 11)},
+            {1792,(0b00000001000, 11)}, {1856,(0b00000001100, 11)},
+            {1920,(0b00000001101, 11)}, {1984,(0b000000010010, 12)},
+            {2048,(0b000000010011, 12)}, {2112,(0b000000010100, 12)},
+            {2176,(0b000000010101, 12)}, {2240,(0b000000010110, 12)},
+            {2304,(0b000000010111, 12)}, {2368,(0b000000011100, 12)},
+            {2432,(0b000000011101, 12)}, {2496,(0b000000011110, 12)},
+            {2560,(0b000000011111, 12)},
         };
 
         public static readonly (int code, int bits)[] Group4Vertical = new (int, int)[7]

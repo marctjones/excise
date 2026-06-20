@@ -1,5 +1,7 @@
 using AwesomeAssertions;
+using Pdfe.Core.Document;
 using Pdfe.Core.Filters.Jpx;
+using Pdfe.Core.Primitives;
 using Xunit;
 
 namespace Pdfe.Core.Tests.Filters.Jpx;
@@ -100,6 +102,44 @@ public class CodestreamParserTests
             .WithMessage("*full decode not yet implemented*");
     }
 
+    [Fact]
+    public void ReadInfo_Jp2ContainerWithJp2cBox_ExtractsMetadata()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "issue19517.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js issue19517 fixture found at test-pdfs/pdfjs/issue19517.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+        var thumbnail = (PdfStream)doc.GetObject(13);
+
+        var (width, height, components, bpc) = JpxDecoder.ReadInfo(thumbnail.EncodedData);
+
+        width.Should().Be(1);
+        height.Should().Be(1);
+        components.Should().Be(4);
+        bpc.Should().Be(8);
+    }
+
+    [Fact]
+    public void TryDecodeManaged_Jp2ContainerFallbackExtractsCodestream()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "issue19517.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js issue19517 fixture found at test-pdfs/pdfjs/issue19517.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+        var thumbnail = (PdfStream)doc.GetObject(13);
+
+        var image = JpxDecoder.TryDecodeManaged(thumbnail.EncodedData, maxComponents: 3);
+
+        image.Should().NotBeNull();
+        image!.Components.Should().Be(4);
+        image.ComponentData.Should().HaveCount(3);
+        image.ComponentData[0].Should().Equal(255);
+        image.ComponentData[1].Should().Equal(0);
+        image.ComponentData[2].Should().Equal(39);
+    }
+
     /// <summary>
     /// Helper to build a minimal valid J2K codestream.
     /// Structure: SOC + SIZ + EOC
@@ -108,19 +148,20 @@ public class CodestreamParserTests
     {
         var builder = new System.IO.MemoryStream();
 
-        // SOC marker (0xFF 0xD9) - Start of Codestream
+        // SOC marker (0xFF 0x4F) - Start of Codestream
         builder.WriteByte(0xFF);
-        builder.WriteByte(0xD9);
+        builder.WriteByte(0x4F);
 
-        // SIZ marker (0xFF 0xD0) - Image and component size
+        // SIZ marker (0xFF 0x51) - Image and component size
         builder.WriteByte(0xFF);
-        builder.WriteByte(0xD0);
+        builder.WriteByte(0x51);
 
         // SIZ payload length (including the 2-byte length field itself)
-        // Components: we need Ssiz_i for each component (1 byte each)
+        // Components: Ssiz_i, XRsiz_i, YRsiz_i for each component (3 bytes each)
         // Total: 2 (Rsiz) + 4 (Xsiz) + 4 (Ysiz) + 4 (XOsiz) + 4 (YOsiz)
-        //        + 4 (XTsiz) + 4 (YTsiz) + 4 (XTOsiz) + 4 (YTOsiz) + 2 (Csiz) + components (Ssiz_i)
-        int sizPayloadLength = 2 + 2 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 2 + components;
+        //        + 4 (XTsiz) + 4 (YTsiz) + 4 (XTOsiz) + 4 (YTOsiz) + 2 (Csiz)
+        //        + components * 3, plus the 2-byte Lsiz field.
+        int sizPayloadLength = 38 + (components * 3);
         builder.WriteByte((byte)((sizPayloadLength >> 8) & 0xFF));
         builder.WriteByte((byte)(sizPayloadLength & 0xFF));
 
@@ -155,11 +196,13 @@ public class CodestreamParserTests
             // Bits 6-0: bit depth - 1
             byte bpcByte = (byte)((bpc - 1) & 0x7F); // unsigned
             builder.WriteByte(bpcByte);
+            builder.WriteByte(1); // XRsiz_i
+            builder.WriteByte(1); // YRsiz_i
         }
 
-        // EOC marker (0xFF 0xD8) - End of Codestream
+        // EOC marker (0xFF 0xD9) - End of Codestream
         builder.WriteByte(0xFF);
-        builder.WriteByte(0xD8);
+        builder.WriteByte(0xD9);
 
         return builder.ToArray();
     }
@@ -170,5 +213,19 @@ public class CodestreamParserTests
         stream.WriteByte((byte)((value >> 16) & 0xFF));
         stream.WriteByte((byte)((value >> 8) & 0xFF));
         stream.WriteByte((byte)(value & 0xFF));
+    }
+
+    private static string? FindRepoFile(params string[] segments)
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null)
+        {
+            var candidate = Path.Combine(new[] { dir.FullName }.Concat(segments).ToArray());
+            if (File.Exists(candidate))
+                return candidate;
+            dir = dir.Parent;
+        }
+
+        return null;
     }
 }

@@ -185,11 +185,15 @@ internal static class CffParser
         return (short)v;
     }
 
+    private const int StandardStringSidCount = 391;
+
     private static string? ResolveSid(int sid, IReadOnlyList<byte[]> stringIndex)
     {
         if (sid < 0) return null;
-        if (sid < StandardStrings.Length) return StandardStrings[sid];
-        int custom = sid - StandardStrings.Length;
+        if (sid < StandardStringSidCount)
+            return sid < StandardStrings.Length ? StandardStrings[sid] : null;
+
+        int custom = sid - StandardStringSidCount;
         if (custom < stringIndex.Count)
             return System.Text.Encoding.ASCII.GetString(stringIndex[custom]);
         return null;

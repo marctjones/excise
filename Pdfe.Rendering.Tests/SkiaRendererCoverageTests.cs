@@ -4,7 +4,9 @@ using Pdfe.Core.Primitives;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Text;
 using Xunit;
 
@@ -256,6 +258,60 @@ public class SkiaRendererCoverageTests
         secondBit.Red.Should().BeLessThan(20, "Decode [1 0] maps a one bit to black");
         secondBit.Green.Should().BeLessThan(20);
         secondBit.Blue.Should().BeLessThan(20);
+    }
+
+    [Fact]
+    public void RenderPage_DctSoftMask_DecodesJpegMaskAsAlpha()
+    {
+        var pdfData = CreatePdfWithDctSoftMaskImage();
+        using var doc = PdfDocument.Open(pdfData);
+        var renderer = new SkiaRenderer();
+
+        using var bitmap = renderer.RenderPage(doc.GetPage(1), new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var transparent = bitmap.GetPixel(120, bitmap.Height - 140);
+        var opaque = bitmap.GetPixel(240, bitmap.Height - 140);
+        transparent.Red.Should().BeGreaterThan(240);
+        transparent.Green.Should().BeGreaterThan(240);
+        transparent.Blue.Should().BeGreaterThan(240);
+        opaque.Red.Should().BeGreaterThan(200);
+        opaque.Green.Should().BeLessThan(80);
+        opaque.Blue.Should().BeLessThan(80);
+    }
+
+    [Fact]
+    public void RenderPage_FlateWrappedDctImage_DecodesTerminalJpegBytes()
+    {
+        var pdfData = CreatePdfWithFlateWrappedDctImage();
+        using var doc = PdfDocument.Open(pdfData);
+        var renderer = new SkiaRenderer();
+
+        using var bitmap = renderer.RenderPage(doc.GetPage(1), new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var pixel = bitmap.GetPixel(140, bitmap.Height - 140);
+        pixel.Red.Should().BeGreaterThan(200);
+        pixel.Green.Should().BeLessThan(80);
+        pixel.Blue.Should().BeLessThan(80);
+    }
+
+    [Fact]
+    public void RenderPage_AnnotationAppearance_IsClippedToAnnotationRect()
+    {
+        var pdfData = CreatePdfWithOversizedAnnotationAppearance();
+        using var doc = PdfDocument.Open(pdfData);
+        var renderer = new SkiaRenderer();
+
+        using var bitmap = renderer.RenderPage(doc.GetPage(1), new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var inside = bitmap.GetPixel(60, bitmap.Height - 60);
+        inside.Red.Should().BeInRange(170, 210);
+        inside.Green.Should().BeInRange(170, 210);
+        inside.Blue.Should().BeInRange(170, 210);
+
+        var outside = bitmap.GetPixel(120, bitmap.Height - 120);
+        outside.Red.Should().BeGreaterThan(245);
+        outside.Green.Should().BeGreaterThan(245);
+        outside.Blue.Should().BeGreaterThan(245);
     }
 
     #endregion
@@ -725,8 +781,8 @@ public class SkiaRendererCoverageTests
         using var bitmap = renderer.RenderPage(page, options);
 
         // Assert - dimensions should scale linearly with DPI
-        var expectedWidth = (int)Math.Round(page.Width * dpi / 72);
-        var expectedHeight = (int)Math.Round(page.Height * dpi / 72);
+        var expectedWidth = (int)Math.Ceiling(page.Width * dpi / 72);
+        var expectedHeight = (int)Math.Ceiling(page.Height * dpi / 72);
         bitmap.Width.Should().Be(expectedWidth, $"at {dpi} DPI");
         bitmap.Height.Should().Be(expectedHeight, $"at {dpi} DPI");
     }
@@ -786,8 +842,8 @@ public class SkiaRendererCoverageTests
         using var bitmap = renderer.RenderPage(page, options);
 
         // Assert - dimensions should scale correctly
-        var expectedWidth = (int)Math.Round((double)(1200 * 150 / 72));
-        var expectedHeight = (int)Math.Round((double)(1600 * 150 / 72));
+        var expectedWidth = (int)Math.Ceiling(1200 * 150 / 72.0);
+        var expectedHeight = (int)Math.Ceiling(1600 * 150 / 72.0);
         bitmap.Width.Should().Be(expectedWidth);
         bitmap.Height.Should().Be(expectedHeight);
     }
@@ -1309,6 +1365,210 @@ public class SkiaRendererCoverageTests
         sb.AppendLine("%%EOF");
 
         return Encoding.Latin1.GetBytes(sb.ToString());
+    }
+
+    private static byte[] CreatePdfWithDctSoftMaskImage()
+    {
+        const int width = 16;
+        const int height = 16;
+        const string content = "q\n160 0 0 80 100 100 cm\n/Im1 Do\nQ\n";
+        var imageData = new byte[width * height * 3];
+        for (var i = 0; i < imageData.Length; i += 3)
+        {
+            imageData[i] = 255;
+            imageData[i + 1] = 0;
+            imageData[i + 2] = 0;
+        }
+
+        var maskData = CreateHalfTransparentJpegMask(width, height);
+
+        using var ms = new MemoryStream();
+        var offsets = new long[7];
+
+        WriteAscii(ms, "%PDF-1.4\n");
+
+        offsets[1] = ms.Position;
+        WriteAscii(ms, "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
+
+        offsets[2] = ms.Position;
+        WriteAscii(ms, "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n");
+
+        offsets[3] = ms.Position;
+        WriteAscii(ms, "3 0 obj\n");
+        WriteAscii(ms, "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R\n");
+        WriteAscii(ms, "   /Resources << /XObject << /Im1 5 0 R >> >> >>\n");
+        WriteAscii(ms, "endobj\n");
+
+        offsets[4] = ms.Position;
+        WriteAscii(ms, "4 0 obj\n");
+        WriteAscii(ms, $"<< /Length {Encoding.ASCII.GetByteCount(content)} >>\nstream\n");
+        WriteAscii(ms, content);
+        WriteAscii(ms, "endstream\nendobj\n");
+
+        offsets[5] = ms.Position;
+        WriteAscii(ms, "5 0 obj\n");
+        WriteAscii(ms, $"<< /Type /XObject /Subtype /Image /Width {width} /Height {height}\n");
+        WriteAscii(ms, $"   /ColorSpace /DeviceRGB /BitsPerComponent 8 /SMask 6 0 R /Length {imageData.Length} >>\n");
+        WriteAscii(ms, "stream\n");
+        ms.Write(imageData);
+        WriteAscii(ms, "\nendstream\nendobj\n");
+
+        offsets[6] = ms.Position;
+        WriteAscii(ms, "6 0 obj\n");
+        WriteAscii(ms, $"<< /Type /XObject /Subtype /Image /Width {width} /Height {height}\n");
+        WriteAscii(ms, $"   /ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /DCTDecode /Length {maskData.Length} >>\n");
+        WriteAscii(ms, "stream\n");
+        ms.Write(maskData);
+        WriteAscii(ms, "\nendstream\nendobj\n");
+
+        var xrefPos = ms.Position;
+        WriteAscii(ms, "xref\n0 7\n0000000000 65535 f \n");
+        for (var i = 1; i <= 6; i++)
+            WriteAscii(ms, $"{offsets[i]:D10} 00000 n \n");
+        WriteAscii(ms, "trailer\n<< /Root 1 0 R /Size 7 >>\nstartxref\n");
+        WriteAscii(ms, xrefPos.ToString(CultureInfo.InvariantCulture));
+        WriteAscii(ms, "\n%%EOF\n");
+
+        return ms.ToArray();
+    }
+
+    private static byte[] CreateHalfTransparentJpegMask(int width, int height)
+    {
+        using var mask = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Opaque);
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+                mask.SetPixel(x, y, x < width / 2 ? SKColors.Black : SKColors.White);
+        }
+
+        using var encoded = mask.Encode(SKEncodedImageFormat.Jpeg, 100);
+        return encoded.ToArray();
+    }
+
+    private static byte[] CreatePdfWithFlateWrappedDctImage()
+    {
+        const int width = 16;
+        const int height = 16;
+        const string content = "q\n80 0 0 80 100 100 cm\n/Im1 Do\nQ\n";
+        var jpegData = CreateSolidColorJpeg(width, height, SKColors.Red);
+        var compressedJpegData = CompressZlib(jpegData);
+
+        using var ms = new MemoryStream();
+        var offsets = new long[6];
+
+        WriteAscii(ms, "%PDF-1.4\n");
+
+        offsets[1] = ms.Position;
+        WriteAscii(ms, "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
+
+        offsets[2] = ms.Position;
+        WriteAscii(ms, "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n");
+
+        offsets[3] = ms.Position;
+        WriteAscii(ms, "3 0 obj\n");
+        WriteAscii(ms, "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R\n");
+        WriteAscii(ms, "   /Resources << /XObject << /Im1 5 0 R >> >> >>\n");
+        WriteAscii(ms, "endobj\n");
+
+        offsets[4] = ms.Position;
+        WriteAscii(ms, "4 0 obj\n");
+        WriteAscii(ms, $"<< /Length {Encoding.ASCII.GetByteCount(content)} >>\nstream\n");
+        WriteAscii(ms, content);
+        WriteAscii(ms, "endstream\nendobj\n");
+
+        offsets[5] = ms.Position;
+        WriteAscii(ms, "5 0 obj\n");
+        WriteAscii(ms, $"<< /Type /XObject /Subtype /Image /Width {width} /Height {height}\n");
+        WriteAscii(ms, $"   /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter [/FlateDecode /DCTDecode] /Length {compressedJpegData.Length} >>\n");
+        WriteAscii(ms, "stream\n");
+        ms.Write(compressedJpegData);
+        WriteAscii(ms, "\nendstream\nendobj\n");
+
+        var xrefPos = ms.Position;
+        WriteAscii(ms, "xref\n0 6\n0000000000 65535 f \n");
+        for (var i = 1; i <= 5; i++)
+            WriteAscii(ms, $"{offsets[i]:D10} 00000 n \n");
+        WriteAscii(ms, "trailer\n<< /Root 1 0 R /Size 6 >>\nstartxref\n");
+        WriteAscii(ms, xrefPos.ToString(CultureInfo.InvariantCulture));
+        WriteAscii(ms, "\n%%EOF\n");
+
+        return ms.ToArray();
+    }
+
+    private static byte[] CreatePdfWithOversizedAnnotationAppearance()
+    {
+        const string pageContent = " ";
+        const string appearanceContent = "0.75 g\n10 10 980 980 re\nf\n";
+
+        using var ms = new MemoryStream();
+        var offsets = new long[7];
+
+        WriteAscii(ms, "%PDF-1.4\n");
+
+        offsets[1] = ms.Position;
+        WriteAscii(ms, "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
+
+        offsets[2] = ms.Position;
+        WriteAscii(ms, "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n");
+
+        offsets[3] = ms.Position;
+        WriteAscii(ms, "3 0 obj\n");
+        WriteAscii(ms, "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 4 0 R\n");
+        WriteAscii(ms, "   /Resources << /ProcSet [/PDF] >> /Annots [5 0 R] >>\n");
+        WriteAscii(ms, "endobj\n");
+
+        offsets[4] = ms.Position;
+        WriteAscii(ms, "4 0 obj\n");
+        WriteAscii(ms, $"<< /Length {Encoding.ASCII.GetByteCount(pageContent)} >>\nstream\n");
+        WriteAscii(ms, pageContent);
+        WriteAscii(ms, "\nendstream\nendobj\n");
+
+        offsets[5] = ms.Position;
+        WriteAscii(ms, "5 0 obj\n");
+        WriteAscii(ms, "<< /Type /Annot /Subtype /Square /Rect [50 50 90 80] /F 4\n");
+        WriteAscii(ms, "   /AP << /N 6 0 R >> >>\n");
+        WriteAscii(ms, "endobj\n");
+
+        offsets[6] = ms.Position;
+        WriteAscii(ms, "6 0 obj\n");
+        WriteAscii(ms, "<< /Type /XObject /Subtype /Form /FormType 1 /BBox [50 50 90 80]\n");
+        WriteAscii(ms, "   /Matrix [1 0 0 1 -50 -50] /Resources << /ProcSet [/PDF] >>\n");
+        WriteAscii(ms, $"   /Length {Encoding.ASCII.GetByteCount(appearanceContent)} >>\nstream\n");
+        WriteAscii(ms, appearanceContent);
+        WriteAscii(ms, "endstream\nendobj\n");
+
+        var xrefPos = ms.Position;
+        WriteAscii(ms, "xref\n0 7\n0000000000 65535 f \n");
+        for (var i = 1; i <= 6; i++)
+            WriteAscii(ms, $"{offsets[i]:D10} 00000 n \n");
+        WriteAscii(ms, "trailer\n<< /Root 1 0 R /Size 7 >>\nstartxref\n");
+        WriteAscii(ms, xrefPos.ToString(CultureInfo.InvariantCulture));
+        WriteAscii(ms, "\n%%EOF\n");
+
+        return ms.ToArray();
+    }
+
+    private static byte[] CreateSolidColorJpeg(int width, int height, SKColor color)
+    {
+        using var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Opaque);
+        bitmap.Erase(color);
+        using var encoded = bitmap.Encode(SKEncodedImageFormat.Jpeg, 100);
+        return encoded.ToArray();
+    }
+
+    private static byte[] CompressZlib(byte[] data)
+    {
+        using var output = new MemoryStream();
+        using (var zlib = new ZLibStream(output, CompressionLevel.SmallestSize, leaveOpen: true))
+            zlib.Write(data);
+
+        return output.ToArray();
+    }
+
+    private static void WriteAscii(Stream stream, string text)
+    {
+        var bytes = Encoding.ASCII.GetBytes(text);
+        stream.Write(bytes);
     }
 
     private static byte[] CreatePdfWithCustomPageSize(double width, double height)

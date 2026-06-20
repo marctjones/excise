@@ -96,9 +96,11 @@ internal partial class RenderContext
         {
             foreach (var item in dashArray)
             {
-                var v = (float)item.GetNumber();
-                if (v >= 0)
+                if (item.TryGetNumber(out var number) && number >= 0)
+                {
+                    var v = (float)number;
                     intervals.Add(v);
+                }
             }
         }
 
@@ -141,6 +143,8 @@ internal partial class RenderContext
     {
         if (_currentPath == null) return;
 
+        ApplyPendingClipToCurrentPath();
+
         using var paint = new SKPaint
         {
             Style = SKPaintStyle.Stroke,
@@ -166,7 +170,9 @@ internal partial class RenderContext
         using var dash = CreateDashEffect();
         if (dash != null) paint.PathEffect = dash;
 
-        _canvas.DrawPath(_currentPath, paint);
+        RenderWithCurrentSoftMask(
+            () => _canvas.DrawPath(_currentPath, paint),
+            paint);
         _currentPath.Dispose();
         _currentPath = null;
     }
@@ -175,6 +181,7 @@ internal partial class RenderContext
     {
         if (_currentPath == null) return;
 
+        ApplyPendingClipToCurrentPath();
         _currentPath.FillType = evenOdd ? SKPathFillType.EvenOdd : SKPathFillType.Winding;
 
         if (_state.FillPatternName != null && RenderFillPattern(_currentPath))
@@ -192,7 +199,9 @@ internal partial class RenderContext
             IsAntialias = _options.AntiAlias
         };
 
-        _canvas.DrawPath(_currentPath, paint);
+        RenderWithCurrentSoftMask(
+            () => _canvas.DrawPath(_currentPath, paint),
+            paint);
         _currentPath.Dispose();
         _currentPath = null;
     }
@@ -201,6 +210,7 @@ internal partial class RenderContext
     {
         if (_currentPath == null) return;
 
+        ApplyPendingClipToCurrentPath();
         _currentPath.FillType = evenOdd ? SKPathFillType.EvenOdd : SKPathFillType.Winding;
 
         // Fill first
@@ -213,7 +223,9 @@ internal partial class RenderContext
                 BlendMode = _state.BlendMode,
                 IsAntialias = _options.AntiAlias
             };
-            _canvas.DrawPath(_currentPath, fillPaint);
+            RenderWithCurrentSoftMask(
+                () => _canvas.DrawPath(_currentPath, fillPaint),
+                fillPaint);
         }
 
         // Then stroke
@@ -241,7 +253,9 @@ internal partial class RenderContext
         using (var dash = CreateDashEffect())
         {
             if (dash != null) strokePaint.PathEffect = dash;
-            _canvas.DrawPath(_currentPath, strokePaint);
+            RenderWithCurrentSoftMask(
+                () => _canvas.DrawPath(_currentPath, strokePaint),
+                strokePaint);
         }
 
         _currentPath.Dispose();

@@ -224,7 +224,6 @@ internal static class Jbig2CapabilityClassifier
         if (segment.UseRefinementAggregation)
         {
             features.Add("symbol-dictionary.refinement-aggregation");
-            unsupported.Add("symbol-dictionary.refinement-aggregation");
         }
         if (segment.IsCodingContextUsed)
         {
@@ -265,8 +264,6 @@ internal static class Jbig2CapabilityClassifier
         if (segment.UseRefinement)
         {
             features.Add("text-region.refinement");
-            if (segment.IsHuffmanEncoded)
-                unsupported.Add("text-region.refinement.huffman");
         }
         if (segment.IsTransposed)
             features.Add("text-region.transposed");
@@ -352,7 +349,6 @@ internal static class Jbig2CapabilityClassifier
         if (segment.TypicalPredictionGenericRefinementOn)
         {
             features.Add("generic-refinement-region.typical-prediction");
-            unsupported.Add("generic-refinement-region.typical-prediction");
         }
         if (segment.AdaptiveTemplatePixels.Length > 0)
             features.Add("generic-refinement-region.adaptive-template-pixels");

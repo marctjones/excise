@@ -10,7 +10,7 @@ namespace Pdfe.Core.Filters.Jbig2;
 ///
 /// Supported features:
 /// - Generic region decoding (arithmetic templates 0-3 with AT pixels and TPGDON, and MMR)
-/// - Generic refinement regions without TPGRON
+/// - Generic refinement regions (including TPGRON)
 /// - Huffman symbol dictionaries, including single-symbol refinement and aggregate refinement
 /// - Huffman text regions, including byte-counted arithmetic refinement bitmaps
 /// - Arithmetic symbol dictionaries, including single-symbol and aggregate refinement
@@ -22,7 +22,6 @@ namespace Pdfe.Core.Filters.Jbig2;
 ///
 /// Not yet implemented:
 /// - Retained symbol-dictionary bitmap coding contexts
-/// - Generic refinement TPGRON
 /// </summary>
 [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 internal static class Jbig2Decoder
@@ -272,8 +271,6 @@ internal class Jbig2PageDecoder
             throw new InvalidOperationException("JBIG2 generic refinement region dimensions exceed supported limits");
         if (segment.Region.XLocation > int.MaxValue || segment.Region.YLocation > int.MaxValue)
             throw new InvalidOperationException("JBIG2 generic refinement region coordinates exceed supported limits");
-        if (segment.TypicalPredictionGenericRefinementOn)
-            throw new NotSupportedException("JBIG2 generic refinement TPGRON is not yet supported");
 
         var referenceBitmap = ResolveRegionReferenceBitmap(header, segment.Region, pageImage);
         byte[] bitmapData = segmentData.AsSpan(segment.BitmapDataOffset, segment.BitmapDataLength).ToArray();

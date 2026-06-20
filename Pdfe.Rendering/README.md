@@ -60,7 +60,13 @@ returned `SKBitmap`.
 
 ## Known engine gaps
 
-Tracked in the [pdfe](https://github.com/marctjones/pdfe) issue tracker: JBIG2
-image filters, some CJK/Type3 edge cases, and large-file performance. Contributions welcome.
+Tracked in the [pdfe](https://github.com/marctjones/pdfe) issue tracker:
+remaining JBIG2 edge cases, advanced shading precision, annotation appearance
+fidelity, malformed/fuzzed PDFs, encrypted PDFs requiring non-empty passwords,
+and large-file performance. Release-quality rendering checks use the pdf.js
+all-pages corpus scanner against MuPDF plus Poppler, with optional
+Ghostscript/GhostPDF, Apache PDFBox, and PDFium escalation oracles for
+unsettled pages. Remaining `DIFF` cases are fixed, deferred, or documented
+through the #491 quality dashboard.
 
 MIT licensed. Part of the [pdfe](https://github.com/marctjones/pdfe) project.

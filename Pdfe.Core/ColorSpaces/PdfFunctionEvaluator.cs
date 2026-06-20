@@ -1,23 +1,49 @@
 using Pdfe.Core.Primitives;
+using System.Runtime.CompilerServices;
 
 namespace Pdfe.Core.ColorSpaces;
 
 internal static class PdfFunctionEvaluator
 {
+    private static readonly ConditionalWeakTable<PdfDictionary, CachedFunctionData> s_functionData = new();
+
+    private sealed class CachedFunctionData
+    {
+        public bool SampledInitialized { get; set; }
+        public SampledFunctionData? Sampled { get; set; }
+        public bool CalculatorInitialized { get; set; }
+        public IReadOnlyList<string>? CalculatorTokens { get; set; }
+    }
+
+    private sealed record SampledFunctionData(
+        int SampleCount,
+        int OutputComponentCount,
+        double[]? Range,
+        double[] Samples);
+
     public static double[]? Evaluate(PdfObject? funcObj, double t)
         => Evaluate(funcObj, new[] { t });
 
     public static double[]? Evaluate(PdfObject? funcObj, double[] inputs)
+        => Evaluate(funcObj, inputs, resolve: null);
+
+    public static double[]? Evaluate(PdfObject? funcObj, double t, Func<PdfObject, PdfObject>? resolve)
+        => Evaluate(funcObj, new[] { t }, resolve);
+
+    public static double[]? Evaluate(PdfObject? funcObj, double[] inputs, Func<PdfObject, PdfObject>? resolve)
     {
         if (funcObj == null)
             return null;
+
+        if (resolve != null)
+            funcObj = resolve(funcObj);
 
         if (funcObj is PdfArray arr)
         {
             var results = new List<double>();
             foreach (var item in arr)
             {
-                var r = Evaluate(item, inputs);
+                var r = Evaluate(item, inputs, resolve);
                 if (r != null)
                     results.AddRange(r);
             }
@@ -33,7 +59,7 @@ internal static class PdfFunctionEvaluator
         {
             0 => EvaluateSampled(func, inputs.Length > 0 ? inputs[0] : 0),
             2 => EvaluateExponential(func, inputs.Length > 0 ? inputs[0] : 0),
-            3 => EvaluateStitching(func, inputs.Length > 0 ? inputs[0] : 0),
+            3 => EvaluateStitching(func, inputs.Length > 0 ? inputs[0] : 0, resolve),
             4 => EvaluateCalculator(func, inputs),
             _ => null
         };
@@ -57,7 +83,7 @@ internal static class PdfFunctionEvaluator
         return result;
     }
 
-    private static double[]? EvaluateStitching(PdfDictionary func, double t)
+    private static double[]? EvaluateStitching(PdfDictionary func, double t, Func<PdfObject, PdfObject>? resolve)
     {
         var functions = func.GetOptional("Functions") as PdfArray;
         var boundsArr = GetNumberArray(func, "Bounds") ?? Array.Empty<double>();
@@ -65,6 +91,11 @@ internal static class PdfFunctionEvaluator
 
         if (functions == null || functions.Count == 0)
             return null;
+
+        var domainArr = GetNumberArray(func, "Domain");
+        var domainMin = domainArr is { Length: >= 2 } ? domainArr[0] : 0.0;
+        var domainMax = domainArr is { Length: >= 2 } ? domainArr[1] : 1.0;
+        t = Math.Clamp(t, Math.Min(domainMin, domainMax), Math.Max(domainMin, domainMax));
 
         int idx = 0;
         for (int i = 0; i < boundsArr.Length; i++)
@@ -75,53 +106,88 @@ internal static class PdfFunctionEvaluator
         }
         idx = Math.Clamp(idx, 0, functions.Count - 1);
 
-        double tMin = idx == 0 ? 0 : boundsArr[idx - 1];
-        double tMax = idx < boundsArr.Length ? boundsArr[idx] : 1;
+        double tMin = idx == 0 ? domainMin : boundsArr[idx - 1];
+        double tMax = idx < boundsArr.Length ? boundsArr[idx] : domainMax;
         double e0 = encodeArr.Length > idx * 2 ? encodeArr[idx * 2] : 0;
         double e1 = encodeArr.Length > idx * 2 + 1 ? encodeArr[idx * 2 + 1] : 1;
         double tEnc = tMax > tMin ? e0 + (t - tMin) / (tMax - tMin) * (e1 - e0) : e0;
 
-        return Evaluate(functions[idx], tEnc);
+        return Evaluate(functions[idx], tEnc, resolve);
     }
 
     private static double[]? EvaluateSampled(PdfDictionary func, double t)
     {
-        var sizeArr = GetNumberArray(func, "Size");
-        if (sizeArr == null || sizeArr.Length == 0)
+        var sampled = GetSampledFunctionData(func);
+        if (sampled == null)
             return null;
 
-        int n = (int)sizeArr[0];
-        if (n <= 1)
-            return null;
-
-        var bps = func.GetInt("BitsPerSample", 8);
-        var rangeArr = GetNumberArray(func, "Range");
-        var streamData = (func as PdfStream)?.DecodedData;
-
-        if (streamData == null)
-            return null;
-
-        int outComps = rangeArr != null ? rangeArr.Length / 2 : 1;
-        int totalSamples = n * outComps;
-        var samples = DecodeSamples(streamData, totalSamples, bps);
-
-        double idx = t * (n - 1);
+        double idx = t * (sampled.SampleCount - 1);
         int lo = (int)Math.Floor(idx);
-        int hi = Math.Min(lo + 1, n - 1);
+        int hi = Math.Min(lo + 1, sampled.SampleCount - 1);
         double frac = idx - lo;
 
-        var result = new double[outComps];
-        for (int c = 0; c < outComps; c++)
+        var result = new double[sampled.OutputComponentCount];
+        for (int c = 0; c < sampled.OutputComponentCount; c++)
         {
-            double v0 = lo * outComps + c < samples.Length ? samples[lo * outComps + c] : 0;
-            double v1 = hi * outComps + c < samples.Length ? samples[hi * outComps + c] : v0;
+            double v0 = lo * sampled.OutputComponentCount + c < sampled.Samples.Length
+                ? sampled.Samples[lo * sampled.OutputComponentCount + c]
+                : 0;
+            double v1 = hi * sampled.OutputComponentCount + c < sampled.Samples.Length
+                ? sampled.Samples[hi * sampled.OutputComponentCount + c]
+                : v0;
             result[c] = v0 + frac * (v1 - v0);
 
-            if (rangeArr != null && c * 2 + 1 < rangeArr.Length)
-                result[c] = result[c] * (rangeArr[c * 2 + 1] - rangeArr[c * 2]) + rangeArr[c * 2];
+            if (sampled.Range != null && c * 2 + 1 < sampled.Range.Length)
+                result[c] = result[c] * (sampled.Range[c * 2 + 1] - sampled.Range[c * 2]) + sampled.Range[c * 2];
         }
 
         return result;
+    }
+
+    private static SampledFunctionData? GetSampledFunctionData(PdfDictionary func)
+    {
+        var cached = s_functionData.GetOrCreateValue(func);
+        if (cached.SampledInitialized)
+            return cached.Sampled;
+
+        lock (cached)
+        {
+            if (cached.SampledInitialized)
+                return cached.Sampled;
+
+            var sizeArr = GetNumberArray(func, "Size");
+            if (sizeArr == null || sizeArr.Length == 0)
+            {
+                cached.SampledInitialized = true;
+                return null;
+            }
+
+            int n = (int)sizeArr[0];
+            if (n <= 1)
+            {
+                cached.SampledInitialized = true;
+                return null;
+            }
+
+            var bps = func.GetInt("BitsPerSample", 8);
+            var rangeArr = GetNumberArray(func, "Range");
+            var streamData = (func as PdfStream)?.DecodedData;
+            if (streamData == null)
+            {
+                cached.SampledInitialized = true;
+                return null;
+            }
+
+            int outComps = rangeArr != null ? rangeArr.Length / 2 : 1;
+            int totalSamples = n * outComps;
+            cached.Sampled = new SampledFunctionData(
+                n,
+                outComps,
+                rangeArr,
+                DecodeSamples(streamData, totalSamples, bps));
+            cached.SampledInitialized = true;
+            return cached.Sampled;
+        }
     }
 
     private static double[] DecodeSamples(byte[] streamData, int totalSamples, int bitsPerSample)
@@ -174,13 +240,9 @@ internal static class PdfFunctionEvaluator
         if (func is not PdfStream stream)
             return null;
 
-        var data = stream.DecodedData ?? stream.EncodedData;
-        var program = System.Text.Encoding.Latin1.GetString(data);
-        program = program.Trim();
-        if (program.StartsWith("{", StringComparison.Ordinal) &&
-            program.EndsWith("}", StringComparison.Ordinal))
-            program = program.Substring(1, program.Length - 2);
-        var tokens = TokenizeCalculator(program);
+        var tokens = GetCalculatorTokens(stream);
+        if (tokens == null)
+            return null;
         var stack = new Stack<double>();
 
         for (int i = 0; i < inputs.Length; i++)
@@ -202,6 +264,28 @@ internal static class PdfFunctionEvaluator
         }
 
         return values;
+    }
+
+    private static IReadOnlyList<string>? GetCalculatorTokens(PdfStream stream)
+    {
+        var cached = s_functionData.GetOrCreateValue(stream);
+        if (cached.CalculatorInitialized)
+            return cached.CalculatorTokens;
+
+        lock (cached)
+        {
+            if (cached.CalculatorInitialized)
+                return cached.CalculatorTokens;
+
+            var data = stream.DecodedData ?? stream.EncodedData;
+            var program = System.Text.Encoding.Latin1.GetString(data).Trim();
+            if (program.StartsWith("{", StringComparison.Ordinal) &&
+                program.EndsWith("}", StringComparison.Ordinal))
+                program = program.Substring(1, program.Length - 2);
+            cached.CalculatorTokens = TokenizeCalculator(program);
+            cached.CalculatorInitialized = true;
+            return cached.CalculatorTokens;
+        }
     }
 
     private static bool ExecuteCalculatorTokens(IReadOnlyList<string> tokens, Stack<double> stack)

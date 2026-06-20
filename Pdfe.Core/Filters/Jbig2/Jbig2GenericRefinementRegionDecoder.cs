@@ -5,7 +5,11 @@ namespace Pdfe.Core.Filters.Jbig2;
 
 internal static class Jbig2GenericRefinementRegionDecoder
 {
-    public const int ContextCount = 8192;
+    // Generic refinement regions share the arithmetic context space used by page-level
+    // region decoders (including line-typical-prediction contexts such as 0x9B25).
+    // Using the larger generic-region table avoids out-of-range context access when
+    // TPGRON is enabled and still covers all per-pixel context indices.
+    public const int ContextCount = 65536;
 
     public static Jbig2Bitmap Decode(
         IJbig2ArithmeticDecoder decoder,
@@ -27,8 +31,6 @@ internal static class Jbig2GenericRefinementRegionDecoder
             throw new InvalidOperationException("Invalid JBIG2 generic refinement region dimensions");
         if (template is < 0 or > 1)
             throw new NotSupportedException($"JBIG2 generic refinement region template {template} is not supported");
-        if (typicalPredictionGenericRefinementOn)
-            throw new NotSupportedException("JBIG2 generic refinement TPGRON is not yet supported");
         if (template == 0 && adaptiveTemplatePixels.Count != 2)
             throw new InvalidOperationException("JBIG2 generic refinement template 0 requires two adaptive template pixels");
         if (template == 1 && adaptiveTemplatePixels.Count != 0)
@@ -36,24 +38,164 @@ internal static class Jbig2GenericRefinementRegionDecoder
 
         var bitmap = new Jbig2Bitmap(width, height);
         bool[] overrides = GetTemplate0OverrideFlags(template, adaptiveTemplatePixels);
+        int lineTypicalPrediction = 0;
 
         for (int y = 0; y < height; y++)
         {
+            if (typicalPredictionGenericRefinementOn)
+            {
+                lineTypicalPrediction ^= DecodeTypicalPredictionLineToggle(
+                    decoder,
+                    template,
+                    contextBase) ? 1 : 0;
+            }
+
+            if (lineTypicalPrediction == 1)
+            {
+                if (template == 1)
+                    DecodeTypicalPredictionLineTemplate1(decoder, bitmap, referenceBitmap, width, y, referenceDx, referenceDy, contextBase);
+                else
+                    DecodeTypicalPredictionLineTemplate0(decoder, bitmap, referenceBitmap, width, y, referenceDx, referenceDy, contextBase, overrides, adaptiveTemplatePixels);
+                continue;
+            }
+
             for (int x = 0; x < width; x++)
             {
-                int context = template == 0
-                    ? BuildTemplate0Context(bitmap, referenceBitmap, x, y, referenceDx, referenceDy)
-                    : BuildTemplate1Context(bitmap, referenceBitmap, x, y, referenceDx, referenceDy);
-                if (template == 0)
-                    context = ApplyTemplate0Overrides(bitmap, referenceBitmap, context, x, y, referenceDx, referenceDy, adaptiveTemplatePixels, overrides);
-
-                int decodeContext = contextBase + context;
-                int bit = decoder.Decode(ref decodeContext) ? 1 : 0;
-                bitmap.SetPixel(x, y, bit != 0);
+                DecodePixel(decoder, bitmap, referenceBitmap, x, y, template, contextBase, adaptiveTemplatePixels, overrides, referenceDx, referenceDy);
             }
         }
 
         return bitmap;
+    }
+
+    private static void DecodePixel(
+        IJbig2ArithmeticDecoder decoder,
+        Jbig2Bitmap bitmap,
+        Jbig2Bitmap referenceBitmap,
+        int x,
+        int y,
+        int template,
+        int contextBase,
+        IReadOnlyList<Jbig2AdaptiveTemplatePixel> adaptiveTemplatePixels,
+        bool[] overrides,
+        int referenceDx,
+        int referenceDy)
+    {
+        int context = template == 0
+            ? BuildTemplate0Context(bitmap, referenceBitmap, x, y, referenceDx, referenceDy)
+            : BuildTemplate1Context(bitmap, referenceBitmap, x, y, referenceDx, referenceDy);
+        if (template == 0)
+            context = ApplyTemplate0Overrides(
+                bitmap,
+                referenceBitmap,
+                context,
+                x,
+                y,
+                referenceDx,
+                referenceDy,
+                adaptiveTemplatePixels,
+                overrides);
+
+        int decodeContext = contextBase + context;
+        int bit = decoder.Decode(ref decodeContext) ? 1 : 0;
+        bitmap.SetPixel(x, y, bit != 0);
+    }
+
+    private static bool DecodeTypicalPredictionLineToggle(
+        IJbig2ArithmeticDecoder decoder,
+        int template,
+        int contextBase)
+    {
+        int context = contextBase + (template switch
+        {
+            // Spec §6.3.5.6: template-specific TPGRON context seeds.
+            0 => 0x0100,
+            1 => 0x0008,
+            _ => throw new ArgumentOutOfRangeException(nameof(template)),
+        });
+
+        return decoder.Decode(ref context);
+    }
+
+    private static void CopyLineAbove(Jbig2Bitmap bitmap, int line)
+    {
+        int destination = line * bitmap.Stride;
+        int source = destination - bitmap.Stride;
+        Array.Copy(bitmap.Data, source, bitmap.Data, destination, bitmap.Stride);
+    }
+
+    private static void DecodeTypicalPredictionLineTemplate1(
+        IJbig2ArithmeticDecoder decoder,
+        Jbig2Bitmap bitmap,
+        Jbig2Bitmap referenceBitmap,
+        int width,
+        int line,
+        int referenceDx,
+        int referenceDy,
+        int contextBase)
+    {
+        for (int x = 0; x < width; x++)
+        {
+            if (IsReferenceNeighborhoodUniform(referenceBitmap, x, line, referenceDx, referenceDy))
+            {
+                bitmap.SetPixel(x, line, GetReferenceBit(referenceBitmap, x, line, referenceDx, referenceDy) != 0);
+                continue;
+            }
+
+            int context = BuildTemplate1Context(bitmap, referenceBitmap, x, line, referenceDx, referenceDy);
+            int decodeContext = contextBase + context;
+            int bit = decoder.Decode(ref decodeContext) ? 1 : 0;
+            bitmap.SetPixel(x, line, bit != 0);
+        }
+    }
+
+    private static void DecodeTypicalPredictionLineTemplate0(
+        IJbig2ArithmeticDecoder decoder,
+        Jbig2Bitmap bitmap,
+        Jbig2Bitmap referenceBitmap,
+        int width,
+        int line,
+        int referenceDx,
+        int referenceDy,
+        int contextBase,
+        bool[] overrides,
+        IReadOnlyList<Jbig2AdaptiveTemplatePixel> adaptiveTemplatePixels)
+    {
+        for (int x = 0; x < width; x++)
+        {
+            if (IsReferenceNeighborhoodUniform(referenceBitmap, x, line, referenceDx, referenceDy))
+            {
+                bitmap.SetPixel(x, line, GetReferenceBit(referenceBitmap, x, line, referenceDx, referenceDy) != 0);
+                continue;
+            }
+
+            int context = BuildTemplate0Context(bitmap, referenceBitmap, x, line, referenceDx, referenceDy);
+            context = ApplyTemplate0Overrides(bitmap, referenceBitmap, context, x, line, referenceDx, referenceDy, adaptiveTemplatePixels, overrides);
+            int decodeContext = contextBase + context;
+            int bit = decoder.Decode(ref decodeContext) ? 1 : 0;
+            bitmap.SetPixel(x, line, bit != 0);
+        }
+    }
+
+    private static bool IsReferenceNeighborhoodUniform(
+        Jbig2Bitmap referenceBitmap,
+        int x,
+        int y,
+        int referenceDx,
+        int referenceDy)
+    {
+        int center = GetReferenceBit(referenceBitmap, x, y, referenceDx, referenceDy);
+
+        for (int dy = -1; dy <= 1; dy++)
+        {
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                if (GetReferenceBit(referenceBitmap, x + dx, y + dy, referenceDx, referenceDy) != center)
+                    return false;
+            }
+        }
+
+        return true;
     }
 
     private static int BuildTemplate0Context(

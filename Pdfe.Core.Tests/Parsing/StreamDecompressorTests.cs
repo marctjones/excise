@@ -1,6 +1,7 @@
 using System.IO.Compression;
 using System.Text;
 using AwesomeAssertions;
+using Pdfe.Core.Document;
 using Pdfe.Core.Parsing;
 using Pdfe.Core.Primitives;
 using Xunit;
@@ -1353,6 +1354,52 @@ public class StreamDecompressorTests
         return output.ToArray();
     }
 
+    private static byte[] Bits(string bitString)
+    {
+        var bits = bitString.Where(c => c == '0' || c == '1').ToArray();
+        var output = new byte[(bits.Length + 7) / 8];
+
+        for (int i = 0; i < bits.Length; i++)
+        {
+            if (bits[i] == '1')
+            {
+                output[i / 8] |= (byte)(0x80 >> (i % 8));
+            }
+        }
+
+        return output;
+    }
+
+    private static string? FindRepoFile(params string[] segments)
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null)
+        {
+            var candidate = Path.Combine(new[] { dir.FullName }.Concat(segments).ToArray());
+            if (File.Exists(candidate))
+                return candidate;
+            dir = dir.Parent;
+        }
+
+        return null;
+    }
+
+    private static int CountOneBits(byte[] data)
+    {
+        var count = 0;
+        foreach (var value in data)
+        {
+            var bits = value;
+            while (bits != 0)
+            {
+                bits &= (byte)(bits - 1);
+                count++;
+            }
+        }
+
+        return count;
+    }
+
     private static void WriteBits(List<byte> output, int value, int numBits, ref int bitPos)
     {
         for (int i = numBits - 1; i >= 0; i--)
@@ -1643,6 +1690,67 @@ public class StreamDecompressorTests
     }
 
     [Fact]
+    public void ApplyFilter_CCITTFax_Group4_HorizontalMode_BlackTerminating52_IsNotDecodedAsMakeup()
+    {
+        var decompressor = new StreamDecompressor();
+
+        // Horizontal: white 1, black 52, then horizontal: white 1, black 0.
+        // Black terminating code 52 (000000100100) shares a prefix with an invalid
+        // one-bit-short 2432 make-up entry; it must consume all 12 bits and leave
+        // the following white run visible.
+        var data = Bits("001 000111 000000100100 001 000111 0000110111");
+
+        var parms = new PdfDictionary();
+        parms.SetInt("K", -1);
+        parms.SetInt("Columns", 54);
+        parms.SetInt("Rows", 1);
+
+        var result = decompressor.ApplyFilter("CCITTFaxDecode", data, parms);
+
+        result.Should().Equal(new byte[] { 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07 });
+    }
+
+    [Fact]
+    public void ApplyFilter_CCITTFax_Group4_HorizontalMode_WhiteMakeup1472_DecodesLongRun()
+    {
+        var decompressor = new StreamDecompressor();
+
+        // Horizontal: white 1, black 1, then horizontal: white 1472+55, black 1.
+        // The 1472 white make-up code is 010011000; a wrong table entry drops the
+        // trailing black pixel because the long white run cannot be decoded.
+        var data = Bits("001 000111 010 001 010011000 01011000 010");
+
+        var parms = new PdfDictionary();
+        parms.SetInt("K", -1);
+        parms.SetInt("Columns", 1530);
+        parms.SetInt("Rows", 1);
+
+        var result = decompressor.ApplyFilter("CCITTFaxDecode", data, parms);
+        var expected = Enumerable.Repeat((byte)0xFF, 192).ToArray();
+        expected[0] = 0xBF;
+        expected[^1] = 0xBF;
+
+        result.Should().Equal(expected);
+    }
+
+    [Fact]
+    public void ApplyFilter_CCITTFax_Group4_PopplerImageRetrieveFixture_DecodesFullImage()
+    {
+        var path = FindRepoFile("test-pdfs", "poppler", "unittestcases", "imageretrieve+attachment.pdf");
+        Assert.SkipWhen(path == null,
+            "No Poppler imageretrieve fixture found at test-pdfs/poppler/unittestcases/imageretrieve+attachment.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+        var image = doc.GetObject(24).Should().BeOfType<PdfStream>().Subject;
+
+        var decoded = image.DecodedData;
+
+        decoded.Should().HaveCount(466_400);
+        CountOneBits(decoded).Should().Be(3_439_904);
+        decoded.Take(212).Should().OnlyContain(b => b == 0xFF);
+    }
+
+    [Fact]
     public void ApplyFilter_CCITTFax_Group4_HorizontalMode_BlackIs1True_UsesOneForBlack()
     {
         var decompressor = new StreamDecompressor();
@@ -1660,6 +1768,82 @@ public class StreamDecompressorTests
         var result = decompressor.ApplyFilter("CCITTFaxDecode", data, parms);
 
         result.Should().Equal(new byte[] { 0x0F });
+    }
+
+    [Fact]
+    public void ApplyFilter_CCITTFax_Group4_UncompressedMode_DecodesRawPixels()
+    {
+        var decompressor = new StreamDecompressor();
+
+        // T.6 extension 0000001111 enters uncompressed mode. The raw codes below
+        // produce one black pixel followed by seven white pixels, then exit.
+        var data = Bits("0000001111 1 000001 000000010");
+
+        var parms = new PdfDictionary();
+        parms.SetInt("K", -1);
+        parms.SetInt("Columns", 8);
+        parms.SetInt("Rows", 1);
+
+        var result = decompressor.ApplyFilter("CCITTFaxDecode", data, parms);
+
+        result.Should().Equal(new byte[] { 0x7F });
+    }
+
+    [Fact]
+    public void ApplyFilter_CCITTFax_Group4_UncompressedMode_CarriesPixelsAcrossRows()
+    {
+        var decompressor = new StreamDecompressor();
+
+        // Five raw white pixels cross the four-column row boundary, then one black
+        // pixel and two white pixels complete the second row.
+        var data = Bits("0000001111 000001 1 000000010");
+
+        var parms = new PdfDictionary();
+        parms.SetInt("K", -1);
+        parms.SetInt("Columns", 4);
+        parms.SetInt("Rows", 2);
+
+        var result = decompressor.ApplyFilter("CCITTFaxDecode", data, parms);
+
+        result.Should().Equal(new byte[] { 0xFF, 0xBF });
+    }
+
+    [Fact]
+    public void ApplyFilter_CCITTFax_Group4_UnsupportedExtension_CompletesCurrentRow()
+    {
+        var decompressor = new StreamDecompressor();
+
+        // Horizontal mode writes two white then two black pixels. An unsupported
+        // T.6 extension completes the current white run instead of aborting the image.
+        var data = Bits("001 0111 11 0000001101");
+
+        var parms = new PdfDictionary();
+        parms.SetInt("K", -1);
+        parms.SetInt("Columns", 8);
+        parms.SetInt("Rows", 1);
+
+        var result = decompressor.ApplyFilter("CCITTFaxDecode", data, parms);
+
+        result.Should().Equal(new byte[] { 0xCF });
+    }
+
+    [Fact]
+    public void ApplyFilter_CCITTFax_Group4_SingleEolBetweenRows_DoesNotStopAsEofb()
+    {
+        var decompressor = new StreamDecompressor();
+
+        // Row 1 vertical-0, a single row-boundary EOL, then row 2 vertical-0.
+        // EOFB is two EOLs, so the single EOL must not terminate the image.
+        var data = new byte[] { 0x80, 0x0C };
+
+        var parms = new PdfDictionary();
+        parms.SetInt("K", -1);
+        parms.SetInt("Columns", 8);
+        parms.SetInt("Rows", 2);
+
+        var result = decompressor.ApplyFilter("CCITTFaxDecode", data, parms);
+
+        result.Should().Equal(new byte[] { 0xFF, 0xFF });
     }
 
     [Fact]

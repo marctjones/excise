@@ -88,18 +88,22 @@ internal static class JpxDecoder
     /// decompressor can keep its historical safe-fallback behavior for JPXDecode
     /// filters while renderers can opt into pixel decoding for image XObjects.
     /// </summary>
-    public static JpxImage? TryDecodeManaged(byte[] jpxData)
+    public static JpxImage? TryDecodeManaged(byte[] jpxData, int? maxComponents = null)
     {
         if (jpxData == null || jpxData.Length == 0)
             return null;
 
         try
         {
-            var image = DecodeWithSuppressedCodecOutput(jpxData);
+            var image = TryDecodeWithSuppressedCodecOutput(jpxData);
             if (image.NumberOfComponents <= 0)
                 return null;
 
-            var components = new int[image.NumberOfComponents][];
+            var componentCount = image.NumberOfComponents;
+            if (maxComponents is > 0)
+                componentCount = Math.Min(componentCount, maxComponents.Value);
+
+            var components = new int[componentCount][];
             for (int i = 0; i < components.Length; i++)
                 components[i] = image.GetComponent(i);
 
@@ -112,6 +116,18 @@ internal static class JpxDecoder
         catch
         {
             return null;
+        }
+    }
+
+    private static CSJ2K.Util.PortableImage TryDecodeWithSuppressedCodecOutput(byte[] jpxData)
+    {
+        try
+        {
+            return DecodeWithSuppressedCodecOutput(jpxData);
+        }
+        catch when (TryExtractJp2Codestream(jpxData, out var codestream))
+        {
+            return DecodeWithSuppressedCodecOutput(codestream);
         }
     }
 
@@ -130,6 +146,64 @@ internal static class JpxDecoder
                 FacilityManager.DefaultMsgLogger = oldLogger;
             }
         }
+    }
+
+    private static bool TryExtractJp2Codestream(byte[] data, out byte[] codestream)
+    {
+        codestream = Array.Empty<byte>();
+        var pos = 0;
+        while (pos <= data.Length - 8)
+        {
+            var start = pos;
+            var size = ReadUInt32BigEndian(data, pos);
+            pos += 4;
+            var type = System.Text.Encoding.ASCII.GetString(data, pos, 4);
+            pos += 4;
+            var headerSize = 8L;
+
+            if (size == 1)
+            {
+                if (pos > data.Length - 8)
+                    return false;
+
+                size = ReadUInt64BigEndian(data, pos);
+                pos += 8;
+                headerSize = 16L;
+            }
+            else if (size == 0)
+            {
+                size = (ulong)(data.Length - start);
+            }
+
+            if (size < (ulong)headerSize || size > (ulong)(data.Length - start))
+                return false;
+
+            if (type == "jp2c")
+            {
+                var payloadLength = (int)(size - (ulong)headerSize);
+                codestream = new byte[payloadLength];
+                Array.Copy(data, pos, codestream, 0, payloadLength);
+                return true;
+            }
+
+            pos = start + (int)size;
+        }
+
+        return false;
+    }
+
+    private static ulong ReadUInt32BigEndian(byte[] data, int offset)
+        => ((ulong)data[offset] << 24)
+           | ((ulong)data[offset + 1] << 16)
+           | ((ulong)data[offset + 2] << 8)
+           | data[offset + 3];
+
+    private static ulong ReadUInt64BigEndian(byte[] data, int offset)
+    {
+        ulong value = 0;
+        for (var i = 0; i < 8; i++)
+            value = (value << 8) | data[offset + i];
+        return value;
     }
 
     private sealed class NullMsgLogger : IMsgLogger

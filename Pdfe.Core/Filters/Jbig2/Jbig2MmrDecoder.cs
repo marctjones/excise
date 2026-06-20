@@ -21,10 +21,17 @@ internal static class Jbig2MmrDecoder
         var decoder = new CcittFaxFilterDecoder();
         byte[] output = decoder.Decode(data, new PdfFilterDecodeContext(parms, Stream: null));
         int expectedLength = checked(((width + 7) / 8) * height);
-        if (output.Length != expectedLength)
-            throw new InvalidOperationException(
-                $"MMR-encoded JBIG2 bitmap decoded to {output.Length} bytes, expected {expectedLength}.");
+        if (output.Length == expectedLength)
+            return output;
+        if (output.Length == 0)
+            throw new InvalidOperationException("MMR-encoded JBIG2 bitmap decoded to no bytes.");
 
-        return output;
+        // See issue #491. JBIG2 symbol and halftone dictionaries carry their
+        // bitmap dimensions out-of-band. Keep a partially decoded MMR bitmap
+        // usable instead of causing the whole JBIG2 filter to fall back to raw
+        // compressed bytes.
+        var normalized = new byte[expectedLength];
+        Array.Copy(output, normalized, Math.Min(output.Length, expectedLength));
+        return normalized;
     }
 }

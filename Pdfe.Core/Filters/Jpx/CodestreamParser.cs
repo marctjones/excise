@@ -29,7 +29,7 @@ internal sealed class CodestreamParser
             SkipJp2Boxes();
         }
 
-        // Now we should be at the J2K codestream (starts with SOC marker 0xFFD9)
+        // Now we should be at the J2K codestream (starts with SOC marker 0xFF4F).
         var metadata = new ImageMetadata();
         metadata = ParseCodestream(metadata);
         return metadata;
@@ -37,30 +37,48 @@ internal sealed class CodestreamParser
 
     private bool IsJp2Header()
     {
-        // Check for "jP  " signature (0xFF 0x4A 0x50 0x20) at offset 6-9
-        // or "ftyp" (0x66 0x74 0x79 0x70) at offset 4-7
+        // Check for a JP2 box type at offset 4-7. A JP2 file usually starts
+        // with the signature box (`jP  `) followed by `ftyp`; some producers
+        // begin directly with `ftyp`.
         if (_data.Length >= 12)
         {
-            // Box at offset 0, size at offset 0-3, type at offset 4-7
+            if (_data[4] == 0x6A && _data[5] == 0x50 && _data[6] == 0x20 && _data[7] == 0x20)
+                return true; // jP   signature box
             if (_data[4] == 0x66 && _data[5] == 0x74 && _data[6] == 0x79 && _data[7] == 0x70)
                 return true; // ftyp box
-            if (_data[6] == 0xFF && _data[7] == 0x4A && _data[8] == 0x50 && _data[9] == 0x20)
-                return true; // jP   signature
         }
         return false;
     }
 
     private void SkipJp2Boxes()
     {
-        // Skip JP2 boxes (ftyp, jP, jp2h) to reach the jpc (codestream) box
+        // Skip JP2 boxes (jP, ftyp, jp2h) to reach the jp2c codestream box.
         // Each box: 4 bytes size (big-endian), 4 bytes type
         while (_pos < _data.Length - 8)
         {
-            var size = (int)ReadU32();
+            var start = _pos;
+            var size = (long)ReadU32();
             var typeBytes = ReadBytes(4);
             var typeStr = System.Text.Encoding.ASCII.GetString(typeBytes);
+            var headerSize = 8L;
 
-            if (typeStr == "jpc ")
+            if (size == 1)
+            {
+                if (_pos > _data.Length - 8)
+                    break;
+
+                size = (long)ReadU64();
+                headerSize = 16L;
+            }
+            else if (size == 0)
+            {
+                size = _data.Length - start;
+            }
+
+            if (size < headerSize || start + size > _data.Length)
+                break;
+
+            if (typeStr == "jp2c")
             {
                 // Found the codestream box; the codestream data follows immediately
                 // (Note: if size > 0, we're already positioned at the start of codestream data)
@@ -68,10 +86,7 @@ internal sealed class CodestreamParser
             }
 
             // Skip to next box
-            if (size > 8)
-            {
-                _pos += size - 8;
-            }
+            _pos = (int)(start + size);
         }
 
         // If no jpc box found, assume we're at the start of raw J2K codestream
@@ -80,27 +95,27 @@ internal sealed class CodestreamParser
 
     private ImageMetadata ParseCodestream(ImageMetadata metadata)
     {
-        // Expect SOC marker (0xFF 0xD9)
+        // Expect SOC marker (0xFF4F).
         var marker = ReadMarker();
-        if (marker != 0xFFD9)
-            throw new ArgumentException($"Expected SOC marker (0xFFD9), got 0x{marker:X4}", nameof(marker));
+        if (marker != 0xFF4F)
+            throw new ArgumentException($"Expected SOC marker (0xFF4F), got 0x{marker:X4}", nameof(marker));
 
-        // Parse markers until EOC (0xFFD8)
+        // Parse markers until EOC (0xFFD9).
         while (_pos < _data.Length - 1)
         {
             marker = ReadMarker();
 
             switch (marker)
             {
-                case 0xFFD0: // SIZ - image and component size
+                case 0xFF51: // SIZ - image and component size
                     metadata = ParseSIZ(metadata);
                     break;
 
-                case 0xFF51: // COD - coding style default
+                case 0xFF52: // COD - coding style default
                     ParseCOD(); // For now, just skip (wavelet info)
                     break;
 
-                case 0xFF52: // COC - coding style component
+                case 0xFF53: // COC - coding style component
                     ParseCOC();
                     break;
 
@@ -122,7 +137,7 @@ internal sealed class CodestreamParser
                     SkipToNextMarker();
                     break;
 
-                case 0xFFD8: // EOC - end of codestream
+                case 0xFFD9: // EOC - end of codestream
                     return metadata;
 
                 default:
@@ -143,10 +158,12 @@ internal sealed class CodestreamParser
         var payloadStart = _pos;
 
         var capabilities = ReadU16(); // Rsiz (profile)
-        metadata.Width = (int)ReadU32();
-        metadata.Height = (int)ReadU32();
-        _ = ReadU32(); // XOSiz (horizontal offset)
-        _ = ReadU32(); // YOSiz (vertical offset)
+        var xsiz = ReadU32();
+        var ysiz = ReadU32();
+        var xosiz = ReadU32();
+        var yosiz = ReadU32();
+        metadata.Width = (int)Math.Max(0, xsiz - xosiz);
+        metadata.Height = (int)Math.Max(0, ysiz - yosiz);
         _ = ReadU32(); // XOTSiz (tile width offset)
         _ = ReadU32(); // YOTSiz (tile height offset)
         _ = ReadU32(); // XTSiz (tile width)
@@ -156,15 +173,16 @@ internal sealed class CodestreamParser
         metadata.Components = nComps;
 
         // Parse Csiz (component size) information
-        var firstBpc = ReadU8();
-        metadata.BitsPerComponent = (firstBpc & 0x7F) + 1;
-        metadata.SignedComponent = (firstBpc & 0x80) != 0;
-
-        // For simplicity, assume all components have same bit depth
-        // Skip remaining component definitions
-        for (int i = 1; i < nComps; i++)
+        for (int i = 0; i < nComps; i++)
         {
-            _ = ReadU8(); // Each component has 1 byte for bit depth + signedness
+            var bpc = ReadU8();
+            if (i == 0)
+            {
+                metadata.BitsPerComponent = (bpc & 0x7F) + 1;
+                metadata.SignedComponent = (bpc & 0x80) != 0;
+            }
+            _ = ReadU8(); // XRsiz
+            _ = ReadU8(); // YRsiz
         }
 
         // Advance past any remaining SIZ payload
@@ -250,6 +268,17 @@ internal sealed class CodestreamParser
                    ((uint)_data[_pos + 2] << 8) |
                    _data[_pos + 3];
         _pos += 4;
+        return val;
+    }
+
+    private ulong ReadU64()
+    {
+        if (_pos > _data.Length - 8)
+            throw new ArgumentException("Unexpected end of data while reading U64");
+
+        ulong val = 0;
+        for (var i = 0; i < 8; i++)
+            val = (val << 8) | _data[_pos++];
         return val;
     }
 

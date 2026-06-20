@@ -32,12 +32,27 @@ public class StreamFilterCoverageTests
         return ms.ToArray();
     }
 
+    private static byte[] Gzip(byte[] data)
+    {
+        using var ms = new MemoryStream();
+        using (var z = new GZipStream(ms, CompressionLevel.Optimal, true)) z.Write(data, 0, data.Length);
+        return ms.ToArray();
+    }
+
     [Fact]
     public void FlateDecode_RoundTrips()
     {
         var original = Encoding.ASCII.GetBytes("Hello, FlateDecode world! " + new string('x', 500));
         Decode("FlateDecode", Zlib(original)).Should().Equal(original);
         Decode("Fl", Zlib(original)).Should().Equal(original); // abbreviation
+    }
+
+    [Fact]
+    public void FlateDecode_WithGzipWrapper_RoundTrips()
+    {
+        var original = Encoding.ASCII.GetBytes("Hello, gzip-wrapped FlateDecode world!");
+
+        Decode("FlateDecode", Gzip(original)).Should().Equal(original);
     }
 
     [Fact]

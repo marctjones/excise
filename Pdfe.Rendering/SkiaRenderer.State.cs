@@ -19,6 +19,7 @@ internal class GraphicsState
     public string StrokeColorSpace { get; set; } = "DeviceGray";
     public string? FillPatternName { get; set; }
     public SKBlendMode BlendMode { get; set; } = SKBlendMode.SrcOver;
+    public Pdfe.Core.Primitives.PdfObject? SoftMask { get; set; }
     public SKMatrix CurrentTransform { get; set; } = new(1, 0, 0, 0, 1, 0, 0, 0, 1);
     // Dash pattern (PDF `d` operator): intervals in user-space units and a phase
     // offset. Null/empty means a solid line. ISO 32000-1 §8.4.3.6.
@@ -43,7 +44,8 @@ internal class GraphicsState
             BlendMode = BlendMode,
             CurrentTransform = CurrentTransform,
             DashArray = DashArray,            // replaced wholesale by `d`, never mutated in place -> safe to share
-            DashPhase = DashPhase
+            DashPhase = DashPhase,
+            SoftMask = SoftMask,
         };
     }
 }

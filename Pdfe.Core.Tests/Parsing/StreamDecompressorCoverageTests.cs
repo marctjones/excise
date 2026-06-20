@@ -265,22 +265,22 @@ public class StreamDecompressorCoverageTests
     #region CCITT Group 4 Tests (Lines 544-627)
 
     /// <summary>
-    /// CCITT Group 4 EOFB marker: bytes with top 6 bits = 0b000001 trigger EOFB.
-    /// Line 592-595: if (code == 0b000001) { reader.ReadBits(6); break; }
+    /// CCITT Group 4 EOFB marker is two consecutive 12-bit EOL codes.
     /// </summary>
     [Fact]
     public void ApplyFilter_CCITTFax_Group4_EOFB_Marker()
     {
         var decompressor = new StreamDecompressor();
 
-        var data = new byte[] { 0x04 };
+        var data = new byte[] { 0x00, 0x10, 0x01 };
         var parms = new PdfDictionary();
         parms.SetInt("K", -1);
         parms.SetInt("Columns", 8);
+        parms.SetInt("Rows", 1);
 
         var result = decompressor.ApplyFilter("CCITTFaxDecode", data, parms);
 
-        result.Should().NotBeNull();
+        result.Should().BeEmpty();
     }
 
     /// <summary>

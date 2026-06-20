@@ -409,24 +409,34 @@ public class Jbig2ArithmeticRegionTests
     }
 
     [Fact]
-    public void GenericRefinement_Tpgron_ThrowsUntilTypicalPredictionIsSupported()
+    public void GenericRefinement_Tpgron_UsesUniformReferenceNeighborhoodWhenToggleIndicates()
     {
-        var decoder = new ScriptedArithmeticDecoder();
-        var referenceBitmap = new Jbig2Bitmap(1, 1);
+        var decoder = new ScriptedArithmeticDecoder(
+            false, // line 0 SLTP: decode line 0
+            true,  // line 0 pixel
+            true); // line 1 SLTP: use template-1 uniform reference path
 
-        var act = () => Jbig2GenericRefinementRegionDecoder.Decode(
+        // Reference image is uniform around x=0 (after shifting) so the typical-predicted
+        // line is filled from reference data instead of decoding each pixel via arithmetic.
+        var referenceBitmap = new Jbig2Bitmap(3, 3);
+        for (var y = 0; y < 3; y++)
+        for (var x = 0; x < 3; x++)
+            referenceBitmap.SetPixel(x, y, true);
+
+        var bitmap = Jbig2GenericRefinementRegionDecoder.Decode(
             decoder,
             width: 1,
-            height: 1,
+            height: 2,
             template: 1,
             typicalPredictionGenericRefinementOn: true,
             referenceBitmap,
-            referenceDx: 0,
+            referenceDx: -1,
             referenceDy: 0,
             Array.Empty<Jbig2AdaptiveTemplatePixel>());
 
-        act.Should().Throw<NotSupportedException>()
-            .WithMessage("*TPGRON*");
+        bitmap.GetPixel(0, 0).Should().BeTrue();
+        bitmap.GetPixel(0, 1).Should().BeTrue();
+        decoder.Contexts.Should().Equal(0x008, 0x01F, 0x008);
     }
 
     private static Jbig2AdaptiveTemplatePixel[] DefaultTemplate0AdaptivePixels()

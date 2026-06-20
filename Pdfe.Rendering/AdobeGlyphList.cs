@@ -267,5 +267,12 @@ internal static class AdobeGlyphList
         ["notequal"] = '≠',
         ["lessequal"] = '≤',
         ["greaterequal"] = '≥',
+
+        // ZapfDingbats historical glyph names. These are not AGL names, but
+        // PDFs commonly use them in /Differences for the Standard 14 dingbat font.
+        ["a109"] = '♠',
+        ["a110"] = '♥',
+        ["a111"] = '♦',
+        ["a112"] = '♣',
     };
 }

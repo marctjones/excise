@@ -42,30 +42,35 @@ public class SkiaRenderer
     {
         cancellationToken.ThrowIfCancellationRequested();
         var scale = options.Dpi / 72.0;
-        float s = (float)scale, W = (float)page.Width, H = (float)page.Height;
+        var displayBox = ResolveEffectiveRenderBox(page);
+        float s = (float)scale;
+        float L = (float)displayBox.Left;
+        float B = (float)displayBox.Bottom;
+        float R = (float)displayBox.Right;
+        float T = (float)displayBox.Top;
 
         // The page /Rotate entry rotates the page clockwise when displayed.
         // The output bitmap is in *visual* dimensions (W/H swap for 90/270).
         int rot = ((page.Rotation % 360) + 360) % 360;
         bool quarter = rot is 90 or 270;
-        var fullWidth = (int)Math.Round((quarter ? page.Height : page.Width) * scale);
-        var fullHeight = (int)Math.Round((quarter ? page.Width : page.Height) * scale);
+        var fullWidth = CeilingPixelCount((quarter ? displayBox.Height : displayBox.Width) * scale);
+        var fullHeight = CeilingPixelCount((quarter ? displayBox.Width : displayBox.Height) * scale);
         if (fullWidth <= 0 || fullHeight <= 0)
             throw new InvalidPageGeometryException(
                 $"Page resolves to an invalid bitmap size: {fullWidth} x {fullHeight} pixels.");
 
         // Map content space (PDF: bottom-left origin, Y up) to device pixels
-        // (top-left origin, Y down) of the visual bitmap, applying /Rotate.
-        // Derived as the inverse of PdfPage.ToContentStreamCoordinates (#356);
-        // the 0° case is the classic scale+flip+translate. SKMatrix args are
+        // (top-left origin, Y down) of the visible CropBox bitmap, applying /Rotate.
+        // The 0° case is the classic scale+flip+translate with the CropBox
+        // origin subtracted. SKMatrix args are
         // (scaleX, skewX, transX, skewY, scaleY, transY, persp0, persp1, persp2)
         // where px = scaleX*cx + skewX*cy + transX, py = skewY*cx + scaleY*cy + transY.
         SKMatrix m = rot switch
         {
-            90  => new SKMatrix(0, s, 0,   s, 0, 0,     0, 0, 1),
-            180 => new SKMatrix(-s, 0, s * W,   0, s, 0,    0, 0, 1),
-            270 => new SKMatrix(0, -s, s * H,   -s, 0, s * W,  0, 0, 1),
-            _   => new SKMatrix(s, 0, 0,   0, -s, s * H,   0, 0, 1),
+            90  => new SKMatrix(0, s, -s * B,   s, 0, -s * L,     0, 0, 1),
+            180 => new SKMatrix(-s, 0, s * R,   0, s, -s * B,    0, 0, 1),
+            270 => new SKMatrix(0, -s, s * T,   -s, 0, s * R,  0, 0, 1),
+            _   => new SKMatrix(s, 0, -s * L,   0, -s, s * T,   0, 0, 1),
         };
 
         var deviceBounds = options.ClipRect.HasValue
@@ -120,6 +125,53 @@ public class SkiaRenderer
         var right = MathF.Max(MathF.Max(p1.X, p2.X), MathF.Max(p3.X, p4.X));
         var bottom = MathF.Max(MathF.Max(p1.Y, p2.Y), MathF.Max(p3.Y, p4.Y));
         return new SKRect(left, top, right, bottom);
+    }
+
+    internal static PdfRectangle ResolveEffectiveRenderBox(PdfPage page)
+    {
+        var mediaBox = page.MediaBox.Normalize();
+        var cropBox = page.CropBox.Normalize();
+
+        if (HasPositiveArea(mediaBox))
+        {
+            if (!HasPositiveArea(cropBox))
+                return mediaBox;
+
+            var visibleMediaCrop = Intersect(mediaBox, cropBox);
+            return HasPositiveArea(visibleMediaCrop)
+                ? visibleMediaCrop
+                : mediaBox;
+        }
+
+        if (HasPositiveArea(cropBox))
+            return cropBox;
+
+        return new PdfRectangle(0, 0, 612, 792);
+    }
+
+    private static PdfRectangle Intersect(PdfRectangle a, PdfRectangle b)
+    {
+        return new PdfRectangle(
+            Math.Max(a.Left, b.Left),
+            Math.Max(a.Bottom, b.Bottom),
+            Math.Min(a.Right, b.Right),
+            Math.Min(a.Top, b.Top));
+    }
+
+    private static bool HasPositiveArea(PdfRectangle rect)
+    {
+        return rect.Right > rect.Left && rect.Top > rect.Bottom;
+    }
+
+    private static int CeilingPixelCount(double value)
+    {
+        if (value <= 0)
+            return 0;
+
+        var rounded = Math.Round(value);
+        if (Math.Abs(value - rounded) < 1e-4)
+            return Math.Max(1, (int)rounded);
+        return Math.Max(1, (int)Math.Ceiling(value));
     }
 
     /// <summary>
@@ -177,6 +229,8 @@ internal partial class RenderContext
     private readonly Stack<GraphicsState> _stateStack;
     private GraphicsState _state;
     private SKPath? _currentPath;
+    private bool? _pendingClipEvenOdd;
+    private SKPath? _pendingTextClipPath;
     private TextState _textState;
     private bool _inTextBlock;
     private SKTypeface? _currentTypeface;
@@ -202,6 +256,8 @@ internal partial class RenderContext
     // mutool / Poppler use; cycle detection via _formXObjectStack
     // catches genuine self-reference loops independently.
     private const int MaxFormXObjectDepth = 64;
+    private const int ComplexGradientSampleCount = 384;
+    private const long MaxExpandedSoftMaskPixels = 32L * 1024L * 1024L;
 
     private sealed class MeshBitReader
     {
@@ -255,6 +311,30 @@ internal partial class RenderContext
         public static MeshPatch From(IReadOnlyList<SKPoint> points, SKColor[] colors) => new(points, colors);
     }
 
+    private readonly record struct MeshVertex(int Flag, SKPoint Point, SKColor Color);
+
+    private sealed class MeshTriangle
+    {
+        public MeshTriangle(MeshVertex a, MeshVertex b, MeshVertex c)
+        {
+            A = a;
+            B = b;
+            C = c;
+            MinX = Math.Min(a.Point.X, Math.Min(b.Point.X, c.Point.X));
+            MaxX = Math.Max(a.Point.X, Math.Max(b.Point.X, c.Point.X));
+            MinY = Math.Min(a.Point.Y, Math.Min(b.Point.Y, c.Point.Y));
+            MaxY = Math.Max(a.Point.Y, Math.Max(b.Point.Y, c.Point.Y));
+        }
+
+        public MeshVertex A { get; }
+        public MeshVertex B { get; }
+        public MeshVertex C { get; }
+        public double MinX { get; }
+        public double MaxX { get; }
+        public double MinY { get; }
+        public double MaxY { get; }
+    }
+
     // Glyph widths parsed from the current font dictionary's /Widths array.
     // Null when unavailable (e.g. standard 14 fonts that omit /Widths), in which
     // case we fall back to Skia's MeasureText on the system typeface.
@@ -272,6 +352,10 @@ internal partial class RenderContext
     // indexing /Widths. When a Unicode char appears at multiple codes we
     // keep the first (lowest) to match the likely intent.
     private Dictionary<char, byte>? _currentUnicodeToCode;
+    // Per-font character-code -> glyph-name table from the effective simple
+    // font encoding. This preserves custom subset glyph names such as /g18
+    // that do not have Unicode mappings but do exist in embedded CFF charsets.
+    private string?[]? _currentCodeToGlyphName;
 
     // Typefaces loaded from the PDF's own embedded font streams
     // (/FontFile2 = TrueType, /FontFile3 = OpenType/CFF). Keyed by the
@@ -308,6 +392,8 @@ internal partial class RenderContext
     // images defined in their own /Resources, so text in /AP /N streams
     // either rendered with wrong fonts or not at all.
     private readonly Stack<Pdfe.Core.Primitives.PdfDictionary?> _resourcesStack = new();
+    private readonly Stack<bool> _optionalContentVisibilityStack = new();
+    private int _hiddenOptionalContentDepth;
 
     // Type0 / CID font state. Type0 fonts use 2-byte-per-character codes and
     // index a descendant font's /W array for widths (different format from the
@@ -322,6 +408,7 @@ internal partial class RenderContext
     private bool _currentFontHasEmbeddedProgram;
     private Dictionary<int, float>? _currentCidWidths;
     private float _currentCidDefaultWidth = 1000f;
+    private bool _currentCidUseUnicodeCmap;
 
     // CID → glyph-id mapping for the active CIDFontType2 font, when a
     // non-identity /CIDToGIDMap stream is present. ushort.MaxValue at
@@ -346,8 +433,29 @@ internal partial class RenderContext
     // _embeddedTypefaces so two different /Font dicts with the same
     // resource name but different physical fonts don't collide.
     private readonly Dictionary<Pdfe.Core.Primitives.PdfDictionary, Dictionary<int, int>?> _embeddedCffCidToGlyph = new();
+    private readonly Dictionary<(int ObjectNumber, int Generation, int TargetWidth, int TargetHeight), SoftMaskAlpha?> _softMaskAlphaByReference = new();
+    private readonly Dictionary<Pdfe.Core.Primitives.PdfStream, Dictionary<(int TargetWidth, int TargetHeight), SoftMaskAlpha?>> _softMaskAlphaByStream =
+        new(ReferenceEqualityComparer.Instance);
+    private readonly Dictionary<(int ObjectNumber, int Generation, ImageBitmapCacheKey Key), SKBitmap?> _imageBitmapByReference = new();
+    private readonly Dictionary<Pdfe.Core.Primitives.PdfStream, Dictionary<ImageBitmapCacheKey, SKBitmap?>> _imageBitmapByStream =
+        new(ReferenceEqualityComparer.Instance);
+    private readonly List<SKBitmap> _cachedImageBitmaps = new();
 
     private readonly CancellationToken _cancellationToken;
+
+    private sealed record SoftMaskAlpha(byte[] Data, int Width, int Height);
+    private readonly record struct ImageBitmapCacheKey(
+        int Width,
+        int Height,
+        int BitsPerComponent,
+        string ColorSpace,
+        int TargetWidth,
+        int TargetHeight,
+        bool ImageMask,
+        byte FillRed,
+        byte FillGreen,
+        byte FillBlue,
+        byte FillAlpha);
 
     public RenderContext(SKCanvas canvas, PdfPage page, RenderOptions options,
         CancellationToken cancellationToken = default)
@@ -376,7 +484,7 @@ internal partial class RenderContext
             // a name isn't defined locally.
             _resourcesStack.Push(_page.Resources);
 
-            var contentBytes = _page.GetContentStreamBytes();
+            _page.TryGetContentStreamBytes(out var contentBytes);
             if (contentBytes.Length > 0)
                 ExecuteContentBytes(contentBytes);
 
@@ -391,6 +499,7 @@ internal partial class RenderContext
         finally
         {
             _resourcesStack.Clear();
+            DisposeImageBitmapCache();
             foreach (var typeface in _embeddedTypefaces.Values)
                 typeface.Dispose();
             _embeddedTypefaces.Clear();
@@ -400,6 +509,22 @@ internal partial class RenderContext
     private void ExecuteContentOperator(ContentOperator op)
     {
         var operands = op.Operands;
+        switch (op.Name)
+        {
+            case "BMC":
+                BeginMarkedContent(visible: true);
+                return;
+            case "BDC":
+                BeginMarkedContent(ResolveMarkedContentVisibility(op));
+                return;
+            case "EMC":
+                EndMarkedContent();
+                return;
+        }
+
+        if (IsOptionalContentSuppressed && SuppressHiddenOptionalContentPaint(op.Name))
+            return;
+
         switch (op.Name)
         {
             // Graphics state
@@ -503,6 +628,12 @@ internal partial class RenderContext
                 if (operands.Count >= 1)
                     RenderXObject(Name(operands, 0));
                 break;
+            case "BI":
+                if (operands.Count >= 1
+                    && operands[0] is PdfDictionary imageParams
+                    && op.InlineImageData is { } inlineImageData)
+                    RenderInlineImage(imageParams, inlineImageData);
+                break;
 
             // Path construction
             case "m":
@@ -573,6 +704,7 @@ internal partial class RenderContext
                 break;
             case "n":
                 // End path without fill or stroke (no-op)
+                ApplyPendingClipToCurrentPath();
                 _currentPath?.Dispose();
                 _currentPath = null;
                 break;
@@ -585,16 +717,7 @@ internal partial class RenderContext
                 SetClippingPath(true);
                 break;
 
-            // Marked content operators (#298)
-            case "BMC":
-                // Begin marked content - no visual effect
-                break;
-            case "BDC":
-                // Begin marked content with property list - no visual effect
-                break;
-            case "EMC":
-                // End marked content - no visual effect
-                break;
+            // Marked content operators (#298) are handled before paint suppression.
             case "MP":
                 // Marked content point - no visual effect
                 break;
@@ -746,8 +869,198 @@ internal partial class RenderContext
         ExecuteContentOperators(content.Operators);
     }
 
+    private bool IsOptionalContentSuppressed => _hiddenOptionalContentDepth > 0;
+
+    private void BeginMarkedContent(bool visible)
+    {
+        _optionalContentVisibilityStack.Push(visible);
+        if (!visible)
+            _hiddenOptionalContentDepth++;
+    }
+
+    private void EndMarkedContent()
+    {
+        if (_optionalContentVisibilityStack.Count == 0)
+            return;
+
+        if (!_optionalContentVisibilityStack.Pop())
+            _hiddenOptionalContentDepth--;
+    }
+
+    private bool ResolveMarkedContentVisibility(ContentOperator op)
+    {
+        var tag = Name(op.Operands, 0);
+        if (tag != "OC" || op.Operands.Count < 2)
+            return true;
+
+        var propertyObject = ResolveMarkedContentPropertyObject(op.Operands[1]);
+        if (propertyObject == null)
+            return true;
+
+        return IsOptionalContentObjectVisible(propertyObject);
+    }
+
+    private Pdfe.Core.Primitives.PdfObject? ResolveMarkedContentPropertyObject(Pdfe.Core.Primitives.PdfObject propertyObject)
+    {
+        if (propertyObject is PdfName propertyName)
+            return ResolvePropertyFromActiveResources(propertyName.Value);
+
+        return propertyObject;
+    }
+
+    private bool IsOptionalContentObjectVisible(Pdfe.Core.Primitives.PdfObject optionalContentObject)
+    {
+        var resolved = _page.Document.Resolve(optionalContentObject);
+        if (resolved is not Pdfe.Core.Primitives.PdfDictionary dict)
+            return true;
+
+        var type = dict.GetNameOrNull("Type");
+        return type switch
+        {
+            "OCG" => IsOptionalContentGroupVisible(optionalContentObject, dict),
+            "OCMD" => IsOptionalContentMembershipVisible(dict),
+            _ => dict.GetOptional("OC") is { } nested
+                ? IsOptionalContentObjectVisible(nested)
+                : true,
+        };
+    }
+
+    private bool IsOptionalContentMembershipVisible(Pdfe.Core.Primitives.PdfDictionary membership)
+    {
+        var ocgsObj = membership.GetOptional("OCGs");
+        if (ocgsObj == null)
+            return true;
+
+        var visibilities = new List<bool>();
+        var resolvedOcgs = _page.Document.Resolve(ocgsObj);
+        if (resolvedOcgs is Pdfe.Core.Primitives.PdfArray ocgArray)
+        {
+            foreach (var ocg in ocgArray)
+                visibilities.Add(IsOptionalContentObjectVisible(ocg));
+        }
+        else
+        {
+            visibilities.Add(IsOptionalContentObjectVisible(ocgsObj));
+        }
+
+        if (visibilities.Count == 0)
+            return true;
+
+        var policy = membership.GetNameOrNull("P") ?? "AnyOn";
+        return policy switch
+        {
+            "AllOn" => visibilities.All(v => v),
+            "AnyOff" => visibilities.Any(v => !v),
+            "AllOff" => visibilities.All(v => !v),
+            _ => visibilities.Any(v => v),
+        };
+    }
+
+    private bool IsOptionalContentGroupVisible(
+        Pdfe.Core.Primitives.PdfObject ocgObject,
+        Pdfe.Core.Primitives.PdfDictionary ocg)
+    {
+        var defaultConfig = GetOptionalContentDefaultConfig();
+        if (defaultConfig == null)
+            return true;
+
+        if (IsOcgListed(defaultConfig.GetOptional("OFF"), ocgObject, ocg))
+            return false;
+
+        if (IsOcgListed(defaultConfig.GetOptional("ON"), ocgObject, ocg))
+            return true;
+
+        return !string.Equals(defaultConfig.GetNameOrNull("BaseState"), "OFF", StringComparison.Ordinal);
+    }
+
+    private Pdfe.Core.Primitives.PdfDictionary? GetOptionalContentDefaultConfig()
+    {
+        var ocPropsObj = _page.Document.Catalog.GetOptional("OCProperties");
+        if (_page.Document.Resolve(ocPropsObj ?? PdfNull.Instance) is not Pdfe.Core.Primitives.PdfDictionary ocProps)
+            return null;
+
+        return _page.Document.Resolve(ocProps.GetOptional("D") ?? PdfNull.Instance)
+            as Pdfe.Core.Primitives.PdfDictionary;
+    }
+
+    private bool IsOcgListed(
+        Pdfe.Core.Primitives.PdfObject? listObject,
+        Pdfe.Core.Primitives.PdfObject ocgObject,
+        Pdfe.Core.Primitives.PdfDictionary ocg)
+    {
+        if (_page.Document.Resolve(listObject ?? PdfNull.Instance) is not Pdfe.Core.Primitives.PdfArray list)
+            return false;
+
+        foreach (var item in list)
+        {
+            if (ReferencesSameObject(item, ocgObject, ocg))
+                return true;
+        }
+
+        return false;
+    }
+
+    private bool ReferencesSameObject(
+        Pdfe.Core.Primitives.PdfObject item,
+        Pdfe.Core.Primitives.PdfObject ocgObject,
+        Pdfe.Core.Primitives.PdfDictionary ocg)
+    {
+        if (item is PdfReference itemRef && ocgObject is PdfReference ocgRef)
+            return itemRef == ocgRef;
+
+        if (item is PdfReference refItem &&
+            ocg.ObjectNumber == refItem.ObjectNum &&
+            ocg.GenerationNumber == refItem.Generation)
+            return true;
+
+        var resolvedItem = _page.Document.Resolve(item);
+        if (resolvedItem is Pdfe.Core.Primitives.PdfDictionary itemDict)
+        {
+            if (itemDict.ObjectNumber.HasValue && ocg.ObjectNumber.HasValue)
+                return itemDict.ObjectNumber == ocg.ObjectNumber &&
+                       itemDict.GenerationNumber == ocg.GenerationNumber;
+
+            return ReferenceEquals(itemDict, ocg);
+        }
+
+        return false;
+    }
+
+    private bool SuppressHiddenOptionalContentPaint(string name)
+    {
+        switch (name)
+        {
+            case "S":
+            case "s":
+            case "f":
+            case "F":
+            case "f*":
+            case "B":
+            case "B*":
+            case "b":
+            case "b*":
+                DiscardCurrentPath();
+                return true;
+            case "Do":
+            case "BI":
+            case "sh":
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private void DiscardCurrentPath()
+    {
+        _pendingClipEvenOdd = null;
+        _currentPath?.Dispose();
+        _currentPath = null;
+    }
+
     private static double Number(IReadOnlyList<PdfObject> operands, int index)
-        => index >= 0 && index < operands.Count ? operands[index].GetNumber() : 0;
+        => index >= 0 && index < operands.Count && operands[index].TryGetNumber(out var value)
+            ? value
+            : 0;
 
     private static string Name(IReadOnlyList<PdfObject> operands, int index)
         => index >= 0 && index < operands.Count && operands[index] is PdfName name
@@ -822,12 +1135,14 @@ internal partial class RenderContext
 
     private void BeginText()
     {
+        ClearPendingTextClipPath();
         _inTextBlock = true;
         _textState.Reset();
     }
 
     private void EndText()
     {
+        ApplyPendingTextClipPath();
         _inTextBlock = false;
     }
 
@@ -859,6 +1174,7 @@ internal partial class RenderContext
         _currentFontEncoding = encodingName;
         _currentCodeToUnicode = null;
         _currentUnicodeToCode = null;
+        _currentCodeToGlyphName = null;
         if (encodingDict != null)
         {
             BuildEncodingMaps(encodingDict, encodingName);
@@ -908,6 +1224,7 @@ internal partial class RenderContext
         _currentCidWidths = null;
         _currentCidDefaultWidth = 1000f;
         _currentCidToGidMap = null;
+        _currentCidUseUnicodeCmap = false;
         if (_currentFontIsType0 && fontDict != null)
         {
             var descendants = ResolveArray(fontDict, "DescendantFonts");
@@ -943,6 +1260,12 @@ internal partial class RenderContext
                         catch { _currentCidToGidMap = null; }
                     }
                 }
+
+                var toUnicodeName = fontDict.GetNameOrNull("ToUnicode");
+                _currentCidUseUnicodeCmap =
+                    _currentFontHasEmbeddedProgram &&
+                    _currentCidToGidMap == null &&
+                    (toUnicodeName == "Identity-H" || toUnicodeName == "Identity-V");
             }
         }
     }
@@ -967,6 +1290,53 @@ internal partial class RenderContext
         if (obj == null) return null;
         var resolved = _page.Document.Resolve(obj);
         return resolved as Pdfe.Core.Primitives.PdfArray;
+    }
+
+    private bool TryGetResolvedNumber(PdfObject? obj, out double value)
+    {
+        value = 0;
+        if (obj == null)
+            return false;
+
+        try
+        {
+            var resolved = _page.Document.Resolve(obj);
+            return resolved.TryGetNumber(out value);
+        }
+        catch
+        {
+            value = 0;
+            return false;
+        }
+    }
+
+    private bool TryGetArrayNumber(PdfArray? array, int index, out double value)
+    {
+        value = 0;
+        return array != null &&
+               index >= 0 &&
+               index < array.Count &&
+               TryGetResolvedNumber(array[index], out value);
+    }
+
+    private double ArrayNumberOrDefault(PdfArray? array, int index, double defaultValue = 0)
+        => TryGetArrayNumber(array, index, out var value) ? value : defaultValue;
+
+    private SKMatrix GetMatrix(PdfArray? array)
+    {
+        if (array == null || array.Count < 6)
+            return new SKMatrix(1, 0, 0, 0, 1, 0, 0, 0, 1);
+
+        return new SKMatrix(
+            (float)ArrayNumberOrDefault(array, 0, 1),
+            (float)ArrayNumberOrDefault(array, 2),
+            (float)ArrayNumberOrDefault(array, 4),
+            (float)ArrayNumberOrDefault(array, 1),
+            (float)ArrayNumberOrDefault(array, 3, 1),
+            (float)ArrayNumberOrDefault(array, 5),
+            0,
+            0,
+            1);
     }
 
     // Parse the /W array of a CIDFont (PDF spec 9.7.4.3). Two forms are
@@ -1069,9 +1439,10 @@ internal partial class RenderContext
         // glyph IDs directly.
         byte[] loadableBytes = fontBytes;
         Dictionary<int, int>? cffCidToGlyph = null;
+        ushort[]? cffByteToGlyph = null;
         if (isCff)
         {
-            var wrapped = TryWrapCffAsOpenType(fontBytes, fontDict, descriptor, out cffCidToGlyph);
+            var wrapped = TryWrapCffAsOpenType(fontBytes, fontDict, descriptor, out cffCidToGlyph, out cffByteToGlyph);
             if (wrapped != null) loadableBytes = wrapped;
         }
 
@@ -1101,7 +1472,7 @@ internal partial class RenderContext
         }
 
         _embeddedTypefaces[fontDict] = typeface;
-        _embeddedTypefaceByteToGlyph[fontDict] = ResolveByteCodeCmap(typeface, fontDict);
+        _embeddedTypefaceByteToGlyph[fontDict] = cffByteToGlyph ?? ResolveByteCodeCmap(typeface, fontDict);
         _embeddedCffCidToGlyph[fontDict] = cffCidToGlyph;
         return typeface;
     }
@@ -1165,9 +1536,11 @@ internal partial class RenderContext
         byte[] cff,
         Pdfe.Core.Primitives.PdfDictionary fontDict,
         Pdfe.Core.Primitives.PdfDictionary descriptor,
-        out Dictionary<int, int>? cffCidToGlyph)
+        out Dictionary<int, int>? cffCidToGlyph,
+        out ushort[]? cffByteToGlyph)
     {
         cffCidToGlyph = null;
+        cffByteToGlyph = null;
         var cffInfo = CoreCffParser.Parse(cff);
         if (cffInfo == null) return null;
 
@@ -1188,6 +1561,8 @@ internal partial class RenderContext
         }
         else
         {
+            cffByteToGlyph = BuildCffSimpleByteToGlyph(cffInfo);
+
             // Build Unicode → glyph-index map and glyph-index → PDF-width map.
             // Both derive from walking the PDF's character codes 0..255, resolving
             // each to (Unicode, glyph name) and then looking up the glyph index in
@@ -1205,6 +1580,19 @@ internal partial class RenderContext
                 // If /Widths covers this code, use it as the per-glyph hmtx width.
                 if (_currentFontWidths != null)
                 {
+                    int idx = code - _currentFontFirstChar;
+                    if (idx >= 0 && idx < _currentFontWidths.Length)
+                        glyphWidths[glyphIndex] = (ushort)Math.Clamp(_currentFontWidths[idx], 0, 65535);
+                }
+            }
+
+            if (cffByteToGlyph != null && _currentFontWidths != null)
+            {
+                for (int code = 0; code < cffByteToGlyph.Length; code++)
+                {
+                    int glyphIndex = cffByteToGlyph[code];
+                    if (glyphIndex == 0) continue;
+
                     int idx = code - _currentFontFirstChar;
                     if (idx >= 0 && idx < _currentFontWidths.Length)
                         glyphWidths[glyphIndex] = (ushort)Math.Clamp(_currentFontWidths[idx], 0, 65535);
@@ -1238,6 +1626,27 @@ internal partial class RenderContext
         return Fonts.CffToOpenType.Wrap(cff, cffInfo.NumGlyphs, info);
     }
 
+    private ushort[]? BuildCffSimpleByteToGlyph(CoreCffParser.CffFontInfo cffInfo)
+    {
+        if (_currentCodeToGlyphName == null) return null;
+
+        var map = new ushort[256];
+        var mapped = 0;
+        for (int code = 0; code < map.Length; code++)
+        {
+            var glyphName = _currentCodeToGlyphName[code];
+            if (string.IsNullOrEmpty(glyphName)) continue;
+
+            if (cffInfo.GlyphNameToIndex.TryGetValue(glyphName, out var glyphIndex))
+            {
+                map[code] = (ushort)Math.Clamp(glyphIndex, 0, ushort.MaxValue);
+                if (glyphIndex != 0) mapped++;
+            }
+        }
+
+        return mapped > 0 ? map : null;
+    }
+
     // Decode a raw PDF character code to its Unicode char under the current
     // font's encoding. Prefers the /Differences-derived map when present,
     // otherwise falls back to the named base encoding (WinAnsi/MacRoman).
@@ -1260,6 +1669,7 @@ internal partial class RenderContext
     private void BuildEncodingMaps(Pdfe.Core.Primitives.PdfDictionary encodingDict, string baseEncoding)
     {
         var map = BuildBaseEncodingTable(baseEncoding);
+        var glyphNames = BuildBaseEncodingGlyphNameTable(map);
 
         var differences = ResolveArray(encodingDict, "Differences");
         if (differences != null)
@@ -1270,10 +1680,12 @@ internal partial class RenderContext
                 var item = differences[i];
                 if (item is Pdfe.Core.Primitives.PdfName name)
                 {
-                    if (currentCode >= 0 && currentCode < 256 &&
-                        AdobeGlyphList.TryGet(name.Value, out var ch))
+                    if (currentCode >= 0 && currentCode < 256)
                     {
-                        map[currentCode] = ch;
+                        glyphNames[currentCode] = name.Value;
+                        map[currentCode] = AdobeGlyphList.TryGet(name.Value, out var ch)
+                            ? ch
+                            : '\0';
                     }
                     currentCode++;
                 }
@@ -1289,6 +1701,7 @@ internal partial class RenderContext
         }
 
         _currentCodeToUnicode = map;
+        _currentCodeToGlyphName = glyphNames;
         _currentUnicodeToCode = new Dictionary<char, byte>(256);
         for (int b = 0; b < 256; b++)
         {
@@ -1313,6 +1726,19 @@ internal partial class RenderContext
             map[b] = decoded.Length > 0 ? decoded[0] : '\0';
         }
         return map;
+    }
+
+    private static string?[] BuildBaseEncodingGlyphNameTable(char[] unicodeMap)
+    {
+        var glyphNames = new string?[256];
+        for (int b = 0; b < glyphNames.Length; b++)
+        {
+            var c = unicodeMap[b];
+            if (c != '\0' && AdobeGlyphList.TryGetName(c, out var glyphName))
+                glyphNames[b] = glyphName;
+        }
+
+        return glyphNames;
     }
 
     // Effective font size applied to glyph drawing: raw Tf size scaled by the
@@ -1344,6 +1770,52 @@ internal partial class RenderContext
         return xScale / yScale;
     }
 
+    private SKMatrix CreateTextRenderingMatrix(float x, float y, float horizontalScale, float ySign)
+    {
+        var a = _textState.TextMatrixA;
+        var b = _textState.TextMatrixB;
+        var c = _textState.TextMatrixC;
+        var d = _textState.TextMatrixD;
+        var yScale = (float)Math.Sqrt(c * c + d * d);
+        if (yScale < 1e-6f)
+            yScale = 1f;
+
+        // The existing draw path handles the PDF-vs-Skia vertical glyph
+        // direction through ySign. Preserve that behavior by removing only
+        // the Tm.d sign from the normalized text-matrix Y basis here.
+        var verticalSign = d >= 0 ? 1f : -1f;
+        var basisA = a / yScale;
+        var basisB = b / yScale;
+        var basisC = c / (yScale * verticalSign);
+        var basisD = d / (yScale * verticalSign);
+
+        return new SKMatrix(
+            basisA * horizontalScale,
+            basisC * ySign,
+            x,
+            basisB * horizontalScale,
+            basisD * ySign,
+            y,
+            0,
+            0,
+            1);
+    }
+
+    private void AdvanceTextMatrixX(float distance)
+    {
+        var a = _textState.TextMatrixA;
+        var b = _textState.TextMatrixB;
+        var xScale = (float)Math.Sqrt(a * a + b * b);
+        if (xScale < 1e-6f)
+        {
+            _textState.TextMatrixE += distance;
+            return;
+        }
+
+        _textState.TextMatrixE += distance * (a / xScale);
+        _textState.TextMatrixF += distance * (b / xScale);
+    }
+
     private SKTypeface GetTypeface(string baseFont)
     {
         // PDF subset fonts wear a 6-letter+'+' prefix (e.g. GFEDCB+MyriadPro-Semibold).
@@ -1352,6 +1824,15 @@ internal partial class RenderContext
         var bareName = baseFont;
         if (bareName.Length >= 8 && bareName[6] == '+')
             bareName = bareName.Substring(7);
+
+        var style = SKFontStyle.Normal;
+        if ((bareName.Contains("Bold") || bareName.Contains("Medi"))
+            && (bareName.Contains("Italic") || bareName.Contains("Oblique") || bareName.Contains("Ital")))
+            style = SKFontStyle.BoldItalic;
+        else if (bareName.Contains("Bold") || bareName.Contains("Semibold") || bareName.Contains("Medium") || bareName.Contains("Medi"))
+            style = SKFontStyle.Bold;
+        else if (bareName.Contains("Italic") || bareName.Contains("Oblique") || bareName.Contains("Ital"))
+            style = SKFontStyle.Italic;
 
         // Match standard PDF base fonts. Allow both exact and prefix matches so
         // family-named subsets ("ZapfDingbatsStd", "MyriadPro-Semibold", etc.)
@@ -1372,25 +1853,65 @@ internal partial class RenderContext
         else if (Starts(bareName, "Symbol"))
             family = "Symbol";
         else if (bareName.Contains("Dingbat") || bareName.Contains("Wingding"))
-            // Linux ships NotoSansSymbols2 / OpenSymbol that cover U+27A4 etc.;
-            // Skia's family-name lookup falls through to whichever is installed.
-            family = "Noto Sans Symbols2";
+            return GetTypefaceWithGlyphCoverage(
+                style,
+                ['♠', '♥', '♦', '♣'],
+                "Zapf Dingbats",
+                "ZapfDingbats",
+                "Apple Symbols",
+                "Noto Sans Symbols2",
+                "Noto Sans Symbols",
+                "Segoe UI Symbol",
+                "OpenSymbol",
+                "Symbola",
+                "DejaVu Sans");
         else
             family = "Sans-Serif";
 
-        var style = SKFontStyle.Normal;
-        if ((bareName.Contains("Bold") || bareName.Contains("Medi"))
-            && (bareName.Contains("Italic") || bareName.Contains("Oblique") || bareName.Contains("Ital")))
-            style = SKFontStyle.BoldItalic;
-        else if (bareName.Contains("Bold") || bareName.Contains("Semibold") || bareName.Contains("Medium") || bareName.Contains("Medi"))
-            style = SKFontStyle.Bold;
-        else if (bareName.Contains("Italic") || bareName.Contains("Oblique") || bareName.Contains("Ital"))
-            style = SKFontStyle.Italic;
+        return GetTypefaceFromFamily(family, style);
+    }
 
+    private static SKTypeface GetTypefaceFromFamily(string family, SKFontStyle style)
+    {
         lock (_typefaceLoadLock)
         {
             return SKTypeface.FromFamilyName(family, style) ?? SKTypeface.Default;
         }
+    }
+
+    private static SKTypeface GetTypefaceWithGlyphCoverage(
+        SKFontStyle style,
+        char[] requiredGlyphs,
+        params string[] familyNames)
+    {
+        lock (_typefaceLoadLock)
+        {
+            foreach (var familyName in familyNames)
+            {
+                var typeface = SKTypeface.FromFamilyName(familyName, style);
+                if (typeface == null)
+                    continue;
+
+                if (HasGlyphCoverage(typeface, requiredGlyphs))
+                    return typeface;
+
+                typeface.Dispose();
+            }
+
+            return SKTypeface.FromFamilyName("Sans-Serif", style) ?? SKTypeface.Default;
+        }
+    }
+
+    private static bool HasGlyphCoverage(SKTypeface typeface, IReadOnlyList<char> chars)
+    {
+        using var font = new SKFont(typeface, 12f);
+        foreach (var c in chars)
+        {
+            if (font.GetGlyph(c) == 0)
+                return false;
+        }
+
+        return true;
     }
 
     private static bool Starts(string s, string prefix) =>
@@ -1464,18 +1985,17 @@ internal partial class RenderContext
             {
                 ShowText(text);
             }
-            else if (operand is PdfInteger or PdfReal)
+            else if (operand.TryGetNumber(out var adjustment))
             {
                 // TJ position adjustment is in thousandths of text-space units,
                 // which map to device-space X via the text matrix's X-scale
                 // (not Y-scale). For non-uniform Tm (e.g. SCOTUS "SUPREME COURT"
                 // with 14.2001/15 ratio), using yScale instead of xScale
                 // compounds a ~6% per-glyph error into visible mid-word gaps.
-                var adjustment = operand.GetNumber();
                 var effectiveSize = GetEffectiveFontSize();
                 var xyRatio = GetTextMatrixXYRatio();
                 var xOffset = (float)(-adjustment * effectiveSize / 1000.0) * xyRatio;
-                _textState.TextMatrixE += xOffset * _textState.HorizontalScale / 100.0f;
+                AdvanceTextMatrixX(xOffset * _textState.HorizontalScale / 100.0f);
             }
         }
     }
@@ -1487,16 +2007,20 @@ internal partial class RenderContext
 
         var effectiveSize = GetEffectiveFontSize();
         var xyRatio = GetTextMatrixXYRatio();
+        var mode = _textState.RenderMode;
+        var fillText = TextRenderModeFills(mode);
+        var strokeText = TextRenderModeStrokes(mode);
+        var clipText = TextRenderModeAddsClip(mode);
 
         // SkiaSharp 3 separated SKPaint and SKFont — draw calls now take
         // both arguments rather than a paint that wraps a font.
         using var font = new SKFont(_currentTypeface, effectiveSize);
-        using var paint = new SKPaint
-        {
-            Color = _state.FillColor,
-            BlendMode = _state.BlendMode,
-            IsAntialias = _options.AntiAlias
-        };
+        using var fillPaint = CreateTextPaint(SKPaintStyle.Fill, _state.FillColor, _state.FillAlpha);
+        using var strokePaint = CreateTextPaint(SKPaintStyle.Stroke, _state.StrokeColor, _state.StrokeAlpha);
+        using var measurePaint = new SKPaint { IsAntialias = _options.AntiAlias };
+        using var strokeDash = CreateDashEffect();
+        if (strokeDash != null)
+            strokePaint.PathEffect = strokeDash;
 
         // Calculate position in PDF coordinates
         var x = _textState.TextMatrixE;
@@ -1524,78 +2048,128 @@ internal partial class RenderContext
         // count on TWG A001 / 6-1-12-t02 fixtures).
         float ySign = _textState.TextMatrixD >= 0 ? -1f : 1f;
         float th = _textState.HorizontalScale / 100.0f;
-        _canvas.Save();
-        _canvas.Translate(x, y);
-        _canvas.Scale(xyRatio * th, ySign);
-
-        bool drawWithPdfWidths =
-            !_currentFontHasEmbeddedProgram &&
-            _currentFontWidths != null &&
-            sourceBytes != null &&
-            text.Length == sourceBytes.Length;
-
-        if (drawWithPdfWidths)
+        if (!IsOptionalContentSuppressed)
         {
-            // Walk the bytes in lock-step with the decoded characters,
-            // drawing each glyph at the cumulative PDF-/Widths position
-            // *plus* the character/word spacing the PDF asked for.
-            // Visible layout matches what the PDF author authored
-            // against Times/Helvetica, regardless of the system font we
-            // substituted for the actual glyphs.
-            //
-            // Per-glyph cursor advance after drawing byte b:
-            //     /Widths[b]/1000 * fontSize    (intended glyph width)
-            //   + Tc                             (character spacing)
-            //   + (b == 0x20 ? Tw : 0)           (word spacing on space)
-            //
-            // Multiplied by the horizontal-scaling factor Tz (Th) per
-            // PDF spec 9.4.4.
-            //
-            // We're inside a canvas that's already been scaled by xyRatio
-            // for the X axis, so cursor is in the pre-xyRatio frame.
-            // Tc / Tw are unscaled; we don't apply Tm's xScale here
-            // because the canvas transform handles it.
-            // Per-glyph advance per PDF spec 9.4.4:
-            //   tx = (w0/1000 + Tc + (b == 0x20 ? Tw : 0)) * Tm_scale * Th
-            // With Tf=1 and Tm scale = effectiveSize, Tm_scale = effectiveSize.
-            // Multiplying everything together puts cursor in the canvas frame
-            // we just set up with Scale(xyRatio, -1).
-            // The outer Scale already folded Th into the canvas X axis, so
-            // cursor advances in the *pre-Th* frame: (w/1000 + spacing) * Tfs.
-            // Multiplying by Th again here would double-apply the horizontal
-            // scale and over-shoot per-glyph spacing under any non-default Tz.
-            float cursor = 0f;
-            float tc = _textState.CharSpacing;
-            float tw = _textState.WordSpacing;
-            for (int i = 0; i < sourceBytes!.Length; i++)
+            _canvas.Save();
+            var textMatrix = CreateTextRenderingMatrix(x, y, th, ySign);
+            _canvas.Concat(in textMatrix);
+
+            bool drawWithPdfWidths =
+                !_currentFontHasEmbeddedProgram &&
+                _currentFontWidths != null &&
+                sourceBytes != null &&
+                text.Length == sourceBytes.Length;
+
+            if (drawWithPdfWidths)
             {
-                _canvas.DrawText(text[i].ToString(), cursor, 0, font, paint);
-                int idx = sourceBytes[i] - _currentFontFirstChar;
-                float w = idx >= 0 && idx < _currentFontWidths!.Length
-                    ? _currentFontWidths[idx]
-                    : _currentFontMissingWidth;
-                float spacing = tc + (sourceBytes[i] == 0x20 ? tw : 0f);
-                cursor += (w / 1000f + spacing) * effectiveSize;
+                // Walk the bytes in lock-step with the decoded characters,
+                // drawing each glyph at the cumulative PDF-/Widths position
+                // *plus* the character/word spacing the PDF asked for.
+                // Visible layout matches what the PDF author authored
+                // against Times/Helvetica, regardless of the system font we
+                // substituted for the actual glyphs.
+                //
+                // Per-glyph cursor advance after drawing byte b:
+                //     /Widths[b]/1000 * fontSize    (intended glyph width)
+                //   + Tc                             (character spacing)
+                //   + (b == 0x20 ? Tw : 0)           (word spacing on space)
+                //
+                // Multiplied by the horizontal-scaling factor Tz (Th) per
+                // PDF spec 9.4.4.
+                //
+                // We're inside a canvas that's already been scaled by xyRatio
+                // for the X axis, so cursor is in the pre-xyRatio frame.
+                // Tc / Tw are unscaled; we don't apply Tm's xScale here
+                // because the canvas transform handles it.
+                // Per-glyph advance per PDF spec 9.4.4:
+                //   tx = (w0/1000 + Tc + (b == 0x20 ? Tw : 0)) * Tm_scale * Th
+                // With Tf=1 and Tm scale = effectiveSize, Tm_scale = effectiveSize.
+                // Multiplying everything together puts cursor in the canvas frame
+                // we just set up with Scale(xyRatio, -1).
+                // The outer Scale already folded Th into the canvas X axis, so
+                // cursor advances in the *pre-Th* frame: (w/1000 + spacing) * Tfs.
+                // Multiplying by Th again here would double-apply the horizontal
+                // scale and over-shoot per-glyph spacing under any non-default Tz.
+                float cursor = 0f;
+                float tc = _textState.CharSpacing;
+                float tw = _textState.WordSpacing;
+                SKPath? localClipPath = clipText ? new SKPath() : null;
+                for (int i = 0; i < sourceBytes!.Length; i++)
+                {
+                    var glyphText = text[i].ToString();
+                    if (fillText)
+                        RenderWithCurrentSoftMask(
+                            () => _canvas.DrawText(glyphText, cursor, 0, font, fillPaint),
+                            fillPaint);
+                    if (strokeText)
+                        RenderWithCurrentSoftMask(
+                            () => _canvas.DrawText(glyphText, cursor, 0, font, strokePaint),
+                            strokePaint);
+                    if (localClipPath != null)
+                    {
+                        using var glyphPath = font.GetTextPath(glyphText, new SKPoint(cursor, 0));
+                        if (glyphPath != null && !glyphPath.IsEmpty)
+                            localClipPath.AddPath(glyphPath, SKPathAddMode.Append);
+                    }
+
+                    int idx = sourceBytes[i] - _currentFontFirstChar;
+                    float w = idx >= 0 && idx < _currentFontWidths!.Length
+                        ? _currentFontWidths[idx]
+                        : _currentFontMissingWidth;
+                    float spacing = tc + (sourceBytes[i] == 0x20 ? tw : 0f);
+                    cursor += (w / 1000f + spacing) * effectiveSize;
+                }
+                AddPendingTextClipPath(localClipPath, x, y, th, ySign);
+                localClipPath?.Dispose();
             }
+            else if (_currentByteToGlyph != null && sourceBytes != null)
+            {
+                // The active typeface's cmap is byte-coded (Mac Roman / format-0)
+                // and Skia's shaper can't read it. Look each PDF byte code up in
+                // the parsed cmap and dispatch via SKTextBlob with explicit
+                // glyph IDs (SkiaSharp 3 dropped the DrawText(byte[], …)
+                // overload — SKTextBlob is the supported entry point).
+                // Without this branch every glyph would render as .notdef and
+                // the page would be blank.
+                var gids = BuildGlyphIds(sourceBytes, _currentByteToGlyph);
+                using var blob = BuildGlyphBlob(gids, font);
+                if (blob != null)
+                {
+                    if (fillText)
+                        RenderWithCurrentSoftMask(
+                            () => _canvas.DrawText(blob, 0, 0, fillPaint),
+                            fillPaint);
+                    if (strokeText)
+                        RenderWithCurrentSoftMask(
+                            () => _canvas.DrawText(blob, 0, 0, strokePaint),
+                            strokePaint);
+                }
+
+                if (clipText)
+                {
+                    using var localClipPath = BuildGlyphIdTextPath(gids, font, measurePaint);
+                    AddPendingTextClipPath(localClipPath, x, y, th, ySign);
+                }
+            }
+            else
+            {
+                if (fillText)
+                    RenderWithCurrentSoftMask(
+                        () => _canvas.DrawText(text, 0, 0, font, fillPaint),
+                        fillPaint);
+                if (strokeText)
+                    RenderWithCurrentSoftMask(
+                        () => _canvas.DrawText(text, 0, 0, font, strokePaint),
+                        strokePaint);
+                if (clipText)
+                {
+                    using var localClipPath = font.GetTextPath(text, SKPoint.Empty);
+                    AddPendingTextClipPath(localClipPath, x, y, th, ySign);
+                }
+            }
+
+            _canvas.Restore();
         }
-        else if (_currentByteToGlyph != null && sourceBytes != null)
-        {
-            // The active typeface's cmap is byte-coded (Mac Roman / format-0)
-            // and Skia's shaper can't read it. Look each PDF byte code up in
-            // the parsed cmap and dispatch via SKTextBlob with explicit
-            // glyph IDs (SkiaSharp 3 dropped the DrawText(byte[], …)
-            // overload — SKTextBlob is the supported entry point).
-            // Without this branch every glyph would render as .notdef and
-            // the page would be blank.
-            var gids = BuildGlyphIds(sourceBytes, _currentByteToGlyph);
-            using var blob = BuildGlyphBlob(gids, font);
-            if (blob != null) _canvas.DrawText(blob, 0, 0, paint);
-        }
-        else
-        {
-            _canvas.DrawText(text, 0, 0, font, paint);
-        }
-        _canvas.Restore();
 
         // Advance the cursor by what the PDF *intended*, which is not
         // always what Skia just drew.
@@ -1622,11 +2196,11 @@ internal partial class RenderContext
             // SkiaSharp 3 moved MeasureText off SKPaint, the glyph-id
             // overload now lives on SKFont.
             var gids = BuildGlyphIds(sourceBytes, _currentByteToGlyph);
-            widthInFontUnits = font.MeasureText(new ReadOnlySpan<ushort>(gids), paint);
+            widthInFontUnits = font.MeasureText(new ReadOnlySpan<ushort>(gids), measurePaint);
         }
         else
         {
-            widthInFontUnits = font.MeasureText(text, paint);
+            widthInFontUnits = font.MeasureText(text, measurePaint);
         }
 
         var width = widthInFontUnits * xyRatio;
@@ -1646,7 +2220,113 @@ internal partial class RenderContext
         width += spaceCount * _textState.WordSpacing * xScale;
         width *= _textState.HorizontalScale / 100.0f;
 
-        _textState.TextMatrixE += width;
+        AdvanceTextMatrixX(width);
+    }
+
+    private static bool TextRenderModeFills(int mode) => mode is 0 or 2 or 4 or 6;
+
+    private static bool TextRenderModeStrokes(int mode) => mode is 1 or 2 or 5 or 6;
+
+    private static bool TextRenderModeAddsClip(int mode) => mode is 4 or 5 or 6 or 7;
+
+    private SKPaint CreateTextPaint(SKPaintStyle style, SKColor color, float alpha)
+    {
+        var paint = new SKPaint
+        {
+            Style = style,
+            Color = color.WithAlpha((byte)Math.Clamp(alpha * 255, 0, 255)),
+            BlendMode = _state.BlendMode,
+            IsAntialias = _options.AntiAlias
+        };
+
+        if (style == SKPaintStyle.Stroke)
+        {
+            paint.StrokeWidth = (float)_state.LineWidth;
+            paint.StrokeCap = _state.LineCap switch
+            {
+                1 => SKStrokeCap.Round,
+                2 => SKStrokeCap.Square,
+                _ => SKStrokeCap.Butt
+            };
+            paint.StrokeJoin = _state.LineJoin switch
+            {
+                1 => SKStrokeJoin.Round,
+                2 => SKStrokeJoin.Bevel,
+                _ => SKStrokeJoin.Miter
+            };
+            paint.StrokeMiter = _state.MiterLimit;
+        }
+
+        return paint;
+    }
+
+    private void AddPendingTextClipPath(SKPath? localPath, float x, float y, float horizontalScale, float scaleY)
+    {
+        if (localPath == null || localPath.IsEmpty)
+            return;
+
+        var matrix = CreateTextRenderingMatrix(x, y, horizontalScale, scaleY);
+        using var transformed = new SKPath();
+        localPath.Transform(matrix, transformed);
+        if (transformed.IsEmpty)
+            return;
+
+        _pendingTextClipPath ??= new SKPath();
+        _pendingTextClipPath.AddPath(transformed, SKPathAddMode.Append);
+    }
+
+    private void ApplyPendingTextClipPath()
+    {
+        if (_pendingTextClipPath == null)
+            return;
+
+        using var clipPath = _pendingTextClipPath;
+        _pendingTextClipPath = null;
+        if (clipPath.IsEmpty)
+            return;
+
+        clipPath.FillType = SKPathFillType.Winding;
+        _canvas.ClipPath(clipPath, SKClipOperation.Intersect, _options.AntiAlias);
+    }
+
+    private void ClearPendingTextClipPath()
+    {
+        _pendingTextClipPath?.Dispose();
+        _pendingTextClipPath = null;
+    }
+
+    private static SKPath BuildGlyphIdTextPath(ushort[] gids, SKFont font, SKPaint measurePaint)
+    {
+        var path = new SKPath();
+        if (gids.Length == 0)
+            return path;
+
+        var widths = font.GetGlyphWidths(new ReadOnlySpan<ushort>(gids), measurePaint);
+        float cursor = 0f;
+        for (int i = 0; i < gids.Length; i++)
+        {
+            using var glyphPath = font.GetGlyphPath(gids[i]);
+            if (glyphPath != null && !glyphPath.IsEmpty)
+                path.AddPath(glyphPath, cursor, 0, SKPathAddMode.Append);
+            if (i < widths.Length)
+                cursor += widths[i];
+        }
+
+        return path;
+    }
+
+    private static SKPath BuildGlyphIdTextPath(ushort[] gids, SKPoint[] positions, SKFont font)
+    {
+        var path = new SKPath();
+        var count = Math.Min(gids.Length, positions.Length);
+        for (int i = 0; i < count; i++)
+        {
+            using var glyphPath = font.GetGlyphPath(gids[i]);
+            if (glyphPath != null && !glyphPath.IsEmpty)
+                path.AddPath(glyphPath, positions[i].X, positions[i].Y, SKPathAddMode.Append);
+        }
+
+        return path;
     }
 
     /// <summary>
@@ -1706,6 +2386,19 @@ internal partial class RenderContext
         return builder.Build();
     }
 
+    private static SKTextBlob? BuildPositionedGlyphBlob(ushort[] gids, SKPoint[] positions, SKFont font)
+    {
+        if (gids.Length == 0) return null;
+        var count = Math.Min(gids.Length, positions.Length);
+        if (count == 0) return null;
+        using var builder = new SKTextBlobBuilder();
+        builder.AddPositionedRun(
+            new ReadOnlySpan<ushort>(gids, 0, count),
+            font,
+            new ReadOnlySpan<SKPoint>(positions, 0, count));
+        return builder.Build();
+    }
+
     // Type0 rendering path. Content-stream bytes come in 2-at-a-time as
     // big-endian CIDs under /Identity-H (the only CMap we currently handle).
     // CIDs are rendered as glyph IDs directly — correct for /CIDToGIDMap
@@ -1716,6 +2409,8 @@ internal partial class RenderContext
             return;
 
         var count = bytes.Length / 2;
+        var effectiveSize = GetEffectiveFontSize();
+        using var font = new SKFont(_currentTypeface, effectiveSize);
         // Two parallel arrays: CIDs (used for /W width lookup, which is
         // keyed by CID per spec) and GIDs (what Skia actually draws). The
         // CID → GID resolution depends on the descendant font subtype:
@@ -1728,6 +2423,8 @@ internal partial class RenderContext
         //     equals GID and we draw straight through.
         var cids = new ushort[count];
         var gids = new ushort[count];
+        var positions = new SKPoint[count];
+        var cursor = 0f;
         for (int i = 0; i < count; i++)
         {
             ushort cid = (ushort)((bytes[i * 2] << 8) | bytes[i * 2 + 1]);
@@ -1738,55 +2435,83 @@ internal partial class RenderContext
             else if (_currentCffCidToGlyph != null
                      && _currentCffCidToGlyph.TryGetValue(cid, out var cffGid))
                 gid = (ushort)cffGid;
+            else if (_currentCidUseUnicodeCmap)
+                gid = (ushort)(font.GetGlyph(cid) is var unicodeGid && unicodeGid != 0 ? unicodeGid : cid);
             else
                 gid = cid;
             gids[i] = gid;
+
+            positions[i] = new SKPoint(cursor, 0);
+            cursor += GetCidWidthThousandths(cid) * effectiveSize / 1000f;
         }
 
-        var effectiveSize = GetEffectiveFontSize();
         var xyRatio = GetTextMatrixXYRatio();
+        var mode = _textState.RenderMode;
+        var fillText = TextRenderModeFills(mode);
+        var strokeText = TextRenderModeStrokes(mode);
+        var clipText = TextRenderModeAddsClip(mode);
 
         // SkiaSharp 3: SKPaint no longer carries the font or text encoding;
         // SKTextBlob (built below) embeds glyph IDs natively, so DrawText
         // doesn't need a paint-side encoding hint anymore.
-        using var font = new SKFont(_currentTypeface, effectiveSize);
-        using var paint = new SKPaint
-        {
-            Color = _state.FillColor,
-            BlendMode = _state.BlendMode,
-            IsAntialias = _options.AntiAlias,
-        };
+        using var fillPaint = CreateTextPaint(SKPaintStyle.Fill, _state.FillColor, _state.FillAlpha);
+        using var strokePaint = CreateTextPaint(SKPaintStyle.Stroke, _state.StrokeColor, _state.StrokeAlpha);
+        using var measurePaint = new SKPaint { IsAntialias = _options.AntiAlias };
+        using var strokeDash = CreateDashEffect();
+        if (strokeDash != null)
+            strokePaint.PathEffect = strokeDash;
 
         // Match RenderText's Tm.d-aware Y-flip — without this, all CJK text
         // and any other content authored with a browser-style flipped Tm
         // (`1 0 0 -1`) renders upside-down.
         float ySign = _textState.TextMatrixD >= 0 ? -1f : 1f;
-        _canvas.Save();
-        _canvas.Translate(_textState.TextMatrixE, _textState.TextMatrixF + _textState.TextRise);
-        _canvas.Scale(xyRatio, ySign);
+        float x = _textState.TextMatrixE;
+        float y = _textState.TextMatrixF + _textState.TextRise;
+        if (!IsOptionalContentSuppressed)
+        {
+            _canvas.Save();
+            var textMatrix = CreateTextRenderingMatrix(x, y, _textState.HorizontalScale / 100.0f, ySign);
+            _canvas.Concat(in textMatrix);
 
-        // Build a glyph-id text blob — SkiaSharp 3 routes glyph IDs
-        // through SKTextBlob (the v2 byte[] overload was removed). The
-        // GID array was already remapped through /CIDToGIDMap (or
-        // CFF charset) above, so we feed it straight in.
-        using var blob = BuildGlyphBlob(gids, font);
-        if (blob != null) _canvas.DrawText(blob, 0, 0, paint);
+            // Build a glyph-id text blob — SkiaSharp 3 routes glyph IDs
+            // through SKTextBlob (the v2 byte[] overload was removed). The
+            // GID array was already remapped through /CIDToGIDMap (or
+            // CFF charset) above, so we feed it straight in.
+            using var blob = BuildPositionedGlyphBlob(gids, positions, font);
+            if (blob != null)
+            {
+                if (fillText)
+                    RenderWithCurrentSoftMask(
+                        () => _canvas.DrawText(blob, 0, 0, fillPaint),
+                        fillPaint);
+                if (strokeText)
+                    RenderWithCurrentSoftMask(
+                        () => _canvas.DrawText(blob, 0, 0, strokePaint),
+                        strokePaint);
+            }
 
-        _canvas.Restore();
+            if (clipText)
+            {
+                using var localClipPath = BuildGlyphIdTextPath(gids, positions, font);
+                AddPendingTextClipPath(localClipPath, x, y, _textState.HorizontalScale / 100.0f, ySign);
+            }
+
+            _canvas.Restore();
+        }
 
         // Advance by summed widths from /W (with /DW as fallback per CID).
         float sumThousandthsOfEm = 0f;
         foreach (var cid in cids)
-        {
-            sumThousandthsOfEm += (_currentCidWidths != null &&
-                                   _currentCidWidths.TryGetValue(cid, out var w))
-                ? w
-                : _currentCidDefaultWidth;
-        }
+            sumThousandthsOfEm += GetCidWidthThousandths(cid);
         var width = sumThousandthsOfEm * effectiveSize / 1000f * xyRatio;
         width *= _textState.HorizontalScale / 100.0f;
-        _textState.TextMatrixE += width;
+        AdvanceTextMatrixX(width);
     }
+
+    private float GetCidWidthThousandths(int cid)
+        => (_currentCidWidths != null && _currentCidWidths.TryGetValue(cid, out var width))
+            ? width
+            : _currentCidDefaultWidth;
 
     // Returns the raw PDF string bytes WITHOUT decoding via encoding. Simple
     // fonts route these through DecodeTextBytes → Unicode → RenderText; Type0
@@ -1992,9 +2717,102 @@ internal partial class RenderContext
             var smaskObj = extGState.GetOptional("SMask");
             if (smaskObj is Pdfe.Core.Primitives.PdfName n && n.Value == "None")
             {
-                // Clear soft mask - no visual effect needed
+                _state.SoftMask = null;
+            }
+            else if (smaskObj != null)
+            {
+                _state.SoftMask = smaskObj;
             }
             // Note: full soft mask (transparency group) rendering not yet supported
+        }
+    }
+
+    private void RenderWithCurrentSoftMask(Action drawAction, SKPaint sourcePaint)
+    {
+        if (_state.SoftMask == null)
+        {
+            drawAction();
+            return;
+        }
+
+        var softMaskSource = _state.SoftMask;
+        var resolvedSoftMask = _page.Document.Resolve(softMaskSource) ?? softMaskSource;
+        Pdfe.Core.Primitives.PdfObject maskLookupObject = resolvedSoftMask;
+        if (resolvedSoftMask is Pdfe.Core.Primitives.PdfDictionary softMaskDictionary)
+        {
+            var smaskMode = softMaskDictionary.GetNameOrNull("S");
+            if (string.Equals(smaskMode, "None", StringComparison.Ordinal))
+            {
+                _state.SoftMask = null;
+                drawAction();
+                return;
+            }
+
+            var softMaskStreamObj = softMaskDictionary.GetOptional("G");
+            if (softMaskStreamObj == null)
+            {
+                drawAction();
+                return;
+            }
+
+            resolvedSoftMask = _page.Document.Resolve(softMaskStreamObj) ?? softMaskStreamObj;
+            maskLookupObject = softMaskStreamObj;
+        }
+
+        if (resolvedSoftMask is not Pdfe.Core.Primitives.PdfStream maskStream)
+        {
+            drawAction();
+            return;
+        }
+
+        // Soft-mask compositing is the same as images: draw content in an
+        // offscreen layer, then apply mask luminance with DstIn.
+        var maskBounds = _canvas.LocalClipBounds;
+        if (maskBounds.Width <= 0 || maskBounds.Height <= 0)
+            maskBounds = _canvas.DeviceClipBounds;
+
+        if (maskBounds.Width <= 0 || maskBounds.Height <= 0)
+        {
+            drawAction();
+            return;
+        }
+
+        using var maskBitmap = DecodeSoftMaskBitmap(
+            maskLookupObject,
+            maskStream,
+            (int)Math.Ceiling(maskBounds.Width),
+            (int)Math.Ceiling(maskBounds.Height),
+            maskBounds);
+
+        if (maskBitmap == null)
+        {
+            drawAction();
+            return;
+        }
+
+        using var layerPaint = new SKPaint
+        {
+            BlendMode = sourcePaint.BlendMode,
+            Color = sourcePaint.Color,
+            IsAntialias = sourcePaint.IsAntialias
+        };
+
+        _canvas.SaveLayer(maskBounds, layerPaint);
+        try
+        {
+            drawAction();
+            using var lumaFilter = SKColorFilter.CreateLumaColor();
+            using var maskPaint = new SKPaint
+            {
+                BlendMode = SKBlendMode.DstIn,
+                ColorFilter = lumaFilter,
+                IsAntialias = _options.AntiAlias
+            };
+            _canvas.DrawBitmap(maskBitmap, maskBounds, maskPaint);
+        }
+        finally
+        {
+            _canvas.Restore();
         }
     }
 
@@ -2033,6 +2851,9 @@ internal partial class RenderContext
         if (xobj is not Pdfe.Core.Primitives.PdfStream stream)
             return;
 
+        if (stream.GetOptional("OC") is { } ocObject && !IsOptionalContentObjectVisible(ocObject))
+            return;
+
         var subtype = stream.GetNameOrNull("Subtype");
         switch (subtype)
         {
@@ -2052,42 +2873,22 @@ internal partial class RenderContext
         if (width <= 0 || height <= 0)
             return;
 
+        if (imageStream.GetBool("ImageMask") &&
+            _state.FillPatternName != null &&
+            TryDrawImageMaskWithPattern(imageStream, width, height))
+        {
+            return;
+        }
+
         var bitsPerComponent = imageStream.GetInt("BitsPerComponent", 8);
         var colorSpace = imageStream.GetNameOrNull("ColorSpace") ?? "DeviceRGB";
-        var imageData = imageStream.DecodedData;
 
-        // Try to decode image
-        SKBitmap? bitmap = null;
+        SKBitmap? mutableBitmap = null;
         try
         {
-            // Check if it's a DCT (JPEG) encoded image
-            var filters = imageStream.Filters;
-            if (filters.Contains("DCTDecode"))
-            {
-                // JPEG data - decode directly. SafeDecode null-guards
-                // the encoded bytes and swallows SkiaSharp internal
-                // exceptions (ArgumentNullException 'codec', etc.) on
-                // malformed inputs so a single bad image doesn't kill
-                // the whole page.
-                bitmap = SafeDecode(imageStream.EncodedData);
-            }
-            else if (filters.Contains("JPXDecode"))
-            {
-                bitmap = DecodeJpxImage(imageStream);
-                bitmap ??= SafeDecode(imageStream.EncodedData);
-                if (bitmap == null && width > 0 && height > 0)
-                    bitmap = CreatePlaceholderBitmap(width, height);
-            }
-            else
-            {
-                // Raw image data - create bitmap based on color space
-                bitmap = CreateBitmapFromRawData(imageData, width, height, bitsPerComponent, colorSpace, imageStream);
-            }
-
+            var bitmap = GetOrDecodeImageBitmap(imageStream, width, height, bitsPerComponent, colorSpace);
             if (bitmap == null)
                 return;
-
-            ApplySoftMask(bitmap, imageStream);
 
             // Draw the image at unit square (0,0)-(1,1), the CTM handles positioning
             _canvas.Save();
@@ -2107,40 +2908,633 @@ internal partial class RenderContext
                 paint.Color = paint.Color.WithAlpha((byte)(_state.FillAlpha * 255));
             }
 
-            _canvas.DrawBitmap(bitmap, 0, 0, paint);
+            if (!TryDrawImageWithSoftMask(bitmap, imageStream, width, height, paint) &&
+                !TryDrawImageWithExplicitMask(bitmap, imageStream, width, height, paint))
+            {
+                var bitmapToDraw = bitmap;
+                if (imageStream.GetOptional("SMask") != null)
+                {
+                    mutableBitmap = bitmap.Copy(SKColorType.Rgba8888);
+                    if (mutableBitmap != null)
+                    {
+                        ApplySoftMask(mutableBitmap, imageStream);
+                        bitmapToDraw = mutableBitmap;
+                    }
+                }
+
+                _canvas.DrawBitmap(bitmapToDraw, new SKRect(0, 0, width, height), paint);
+            }
             _canvas.Restore();
         }
         finally
         {
-            bitmap?.Dispose();
+            mutableBitmap?.Dispose();
         }
     }
 
-    private SKBitmap? DecodeJpxImage(Pdfe.Core.Primitives.PdfStream imageStream)
+    private bool TryDrawImageMaskWithPattern(
+        Pdfe.Core.Primitives.PdfStream imageStream,
+        int width,
+        int height)
+    {
+        if (_state.FillPatternName == null)
+            return false;
+
+        SKBitmap? stencil = null;
+        try
+        {
+            stencil = CreateImageMaskStencilBitmap(imageStream.DecodedData, width, height, imageStream);
+            if (stencil == null)
+                return false;
+
+            _canvas.Save();
+            try
+            {
+                // Image XObjects paint into the unit square in the current
+                // user space. The source pixel grid is only the stencil
+                // sampler; pattern colors must still be evaluated in that
+                // current user space, not in source-pixel coordinates.
+                var dest = new SKRect(0, 0, 1, 1);
+                using var clipPath = new SKPath();
+                clipPath.AddRect(dest);
+
+                _canvas.SaveLayer();
+                try
+                {
+                    if (!RenderFillPattern(clipPath))
+                        return false;
+
+                    using var maskPaint = new SKPaint
+                    {
+                        BlendMode = SKBlendMode.DstIn,
+                        IsAntialias = _options.AntiAlias
+                    };
+                    DrawImageMaskStencil(stencil, dest, maskPaint);
+                }
+                finally
+                {
+                    _canvas.Restore();
+                }
+
+                return true;
+            }
+            finally
+            {
+                _canvas.Restore();
+            }
+        }
+        catch (Exception __ex) when (__ex is not OutOfMemoryException)
+        {
+            return false;
+        }
+        finally
+        {
+            stencil?.Dispose();
+        }
+    }
+
+    private void DrawImageMaskStencil(SKBitmap stencil, SKRect dest, SKPaint maskPaint)
+    {
+        if (TryCreateDeviceSpaceAreaResampledStencil(stencil, dest, out var coverage, out var deviceDest) &&
+            coverage != null)
+        {
+            using (coverage)
+            {
+                _canvas.Save();
+                try
+                {
+                    _canvas.SetMatrix(SKMatrix.Identity);
+                    _canvas.DrawBitmap(coverage, deviceDest, maskPaint);
+                }
+                finally
+                {
+                    _canvas.Restore();
+                }
+            }
+
+            return;
+        }
+
+        using var stencilImage = SKImage.FromBitmap(stencil);
+        var sampling = new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear);
+        _canvas.DrawImage(stencilImage, dest, sampling, maskPaint);
+    }
+
+    private bool TryCreateDeviceSpaceAreaResampledStencil(
+        SKBitmap stencil,
+        SKRect dest,
+        out SKBitmap? coverage,
+        out SKRect deviceDest)
+    {
+        coverage = null;
+        deviceDest = default;
+        var matrix = _canvas.TotalMatrix;
+        const float epsilon = 0.001f;
+        if (Math.Abs(matrix.SkewX) > epsilon ||
+            Math.Abs(matrix.SkewY) > epsilon ||
+            Math.Abs(matrix.ScaleX) <= epsilon ||
+            Math.Abs(matrix.ScaleY) <= epsilon)
+            return false;
+
+        var deviceBounds = MapAxisAlignedRect(matrix, dest);
+        var deviceLeft = (int)Math.Floor(deviceBounds.Left);
+        var deviceTop = (int)Math.Floor(deviceBounds.Top);
+        var deviceRight = (int)Math.Ceiling(deviceBounds.Right);
+        var deviceBottom = (int)Math.Ceiling(deviceBounds.Bottom);
+        var destWidth = deviceRight - deviceLeft;
+        var destHeight = deviceBottom - deviceTop;
+        if (destWidth <= 0 || destHeight <= 0)
+            return false;
+        if (destWidth >= stencil.Width && destHeight >= stencil.Height)
+            return false;
+
+        const int maxCoveragePixels = 16_000_000;
+        if ((long)destWidth * destHeight > maxCoveragePixels)
+            return false;
+
+        coverage = CreateDeviceSpaceAreaResampledStencil(
+            stencil,
+            dest,
+            matrix,
+            deviceLeft,
+            deviceTop,
+            destWidth,
+            destHeight);
+        if (coverage == null)
+            return false;
+
+        deviceDest = new SKRect(deviceLeft, deviceTop, deviceRight, deviceBottom);
+        return true;
+    }
+
+    private static SKRect MapAxisAlignedRect(SKMatrix matrix, SKRect rect)
+    {
+        var x0 = matrix.ScaleX * rect.Left + matrix.TransX;
+        var x1 = matrix.ScaleX * rect.Right + matrix.TransX;
+        var y0 = matrix.ScaleY * rect.Top + matrix.TransY;
+        var y1 = matrix.ScaleY * rect.Bottom + matrix.TransY;
+        return new SKRect(
+            Math.Min(x0, x1),
+            Math.Min(y0, y1),
+            Math.Max(x0, x1),
+            Math.Max(y0, y1));
+    }
+
+    private static SKBitmap? CreateDeviceSpaceAreaResampledStencil(
+        SKBitmap source,
+        SKRect dest,
+        SKMatrix deviceFromLocal,
+        int deviceLeft,
+        int deviceTop,
+        int destWidth,
+        int destHeight)
+    {
+        if (destWidth <= 0 || destHeight <= 0)
+            return null;
+
+        var pixels = new byte[destWidth * destHeight * 4];
+        var sourceScaleX = source.Width / (double)dest.Width;
+        var sourceScaleY = source.Height / (double)dest.Height;
+        var localPixelWidth = Math.Abs(1.0 / deviceFromLocal.ScaleX);
+        var localPixelHeight = Math.Abs(1.0 / deviceFromLocal.ScaleY);
+        var localPixelArea = localPixelWidth * localPixelHeight;
+        var dst = 0;
+
+        for (var y = 0; y < destHeight; y++)
+        {
+            var localY0 = (deviceTop + y - deviceFromLocal.TransY) / deviceFromLocal.ScaleY;
+            var localY1 = (deviceTop + y + 1 - deviceFromLocal.TransY) / deviceFromLocal.ScaleY;
+            var localTop = Math.Min(localY0, localY1);
+            var localBottom = Math.Max(localY0, localY1);
+            var clippedTop = Math.Max(dest.Top, localTop);
+            var clippedBottom = Math.Min(dest.Bottom, localBottom);
+
+            for (var x = 0; x < destWidth; x++)
+            {
+                var localX0 = (deviceLeft + x - deviceFromLocal.TransX) / deviceFromLocal.ScaleX;
+                var localX1 = (deviceLeft + x + 1 - deviceFromLocal.TransX) / deviceFromLocal.ScaleX;
+                var localLeft = Math.Min(localX0, localX1);
+                var localRight = Math.Max(localX0, localX1);
+                var clippedLeft = Math.Max(dest.Left, localLeft);
+                var clippedRight = Math.Min(dest.Right, localRight);
+
+                byte alpha = 0;
+                if (clippedRight > clippedLeft && clippedBottom > clippedTop)
+                {
+                    var sourceLeft = (clippedLeft - dest.Left) * sourceScaleX;
+                    var sourceRight = (clippedRight - dest.Left) * sourceScaleX;
+                    var sourceTop = (clippedTop - dest.Top) * sourceScaleY;
+                    var sourceBottom = (clippedBottom - dest.Top) * sourceScaleY;
+                    var averageAlpha = AverageAlphaOverSourceRect(
+                        source,
+                        sourceLeft,
+                        sourceTop,
+                        sourceRight,
+                        sourceBottom);
+                    var coveredLocalArea = (clippedRight - clippedLeft) * (clippedBottom - clippedTop);
+                    var devicePixelCoverage = localPixelArea > 0
+                        ? Math.Clamp(coveredLocalArea / localPixelArea, 0, 1)
+                        : 0;
+                    alpha = (byte)Math.Clamp(
+                        (int)Math.Round(averageAlpha * devicePixelCoverage),
+                        0,
+                        255);
+                }
+
+                // The bitmap is declared premultiplied, so partial stencil
+                // pixels must use premultiplied white rather than RGB 255.
+                pixels[dst++] = alpha;
+                pixels[dst++] = alpha;
+                pixels[dst++] = alpha;
+                pixels[dst++] = alpha;
+            }
+        }
+
+        return CreateBitmapFromRgbaBytes(destWidth, destHeight, pixels);
+    }
+
+    private static double AverageAlphaOverSourceRect(
+        SKBitmap source,
+        double left,
+        double top,
+        double right,
+        double bottom)
+    {
+        left = Math.Clamp(left, 0, source.Width);
+        right = Math.Clamp(right, 0, source.Width);
+        top = Math.Clamp(top, 0, source.Height);
+        bottom = Math.Clamp(bottom, 0, source.Height);
+        if (right <= left || bottom <= top)
+            return 0;
+
+        var firstSourceX = Math.Max(0, (int)Math.Floor(left));
+        var lastSourceX = Math.Min(source.Width - 1, (int)Math.Ceiling(right) - 1);
+        var firstSourceY = Math.Max(0, (int)Math.Floor(top));
+        var lastSourceY = Math.Min(source.Height - 1, (int)Math.Ceiling(bottom) - 1);
+        var weightedAlpha = 0.0;
+        var coveredArea = 0.0;
+
+        for (var sy = firstSourceY; sy <= lastSourceY; sy++)
+        {
+            var yCoverage = Math.Min(sy + 1, bottom) - Math.Max(sy, top);
+            if (yCoverage <= 0)
+                continue;
+
+            for (var sx = firstSourceX; sx <= lastSourceX; sx++)
+            {
+                var xCoverage = Math.Min(sx + 1, right) - Math.Max(sx, left);
+                if (xCoverage <= 0)
+                    continue;
+
+                var area = xCoverage * yCoverage;
+                weightedAlpha += source.GetPixel(sx, sy).Alpha * area;
+                coveredArea += area;
+            }
+        }
+
+        return coveredArea > 0 ? weightedAlpha / coveredArea : 0;
+    }
+
+    private SKBitmap? GetOrDecodeImageBitmap(
+        Pdfe.Core.Primitives.PdfStream imageStream,
+        int width,
+        int height,
+        int bitsPerComponent,
+        string colorSpace)
+    {
+        var key = CreateImageBitmapCacheKey(imageStream, width, height, bitsPerComponent, colorSpace);
+        if (TryGetImageReferenceKey(imageStream, out var referenceKey))
+        {
+            var cacheKey = (referenceKey.ObjectNumber, referenceKey.Generation, key);
+            if (!_imageBitmapByReference.TryGetValue(cacheKey, out var bitmap))
+            {
+                bitmap = DecodeImageBitmap(imageStream, width, height, bitsPerComponent, colorSpace);
+                TrackCachedImageBitmap(bitmap);
+                _imageBitmapByReference[cacheKey] = bitmap;
+            }
+
+            return bitmap;
+        }
+
+        if (!_imageBitmapByStream.TryGetValue(imageStream, out var streamCache))
+        {
+            streamCache = new Dictionary<ImageBitmapCacheKey, SKBitmap?>();
+            _imageBitmapByStream[imageStream] = streamCache;
+        }
+
+        if (!streamCache.TryGetValue(key, out var streamBitmap))
+        {
+            streamBitmap = DecodeImageBitmap(imageStream, width, height, bitsPerComponent, colorSpace);
+            TrackCachedImageBitmap(streamBitmap);
+            streamCache[key] = streamBitmap;
+        }
+
+        return streamBitmap;
+    }
+
+    private SKBitmap? DecodeImageBitmap(
+        Pdfe.Core.Primitives.PdfStream imageStream,
+        int width,
+        int height,
+        int bitsPerComponent,
+        string colorSpace)
     {
         try
         {
-            var image = JpxDecoder.TryDecodeManaged(imageStream.EncodedData);
-            var width = imageStream.GetInt("Width", 0);
-            var height = imageStream.GetInt("Height", 0);
-            if (image == null || width <= 0 || height <= 0 || image.Components <= 0)
-                return null;
+            var filters = imageStream.Filters;
+            if (IsTerminalDctFilter(filters))
+            {
+                var (targetWidth, targetHeight) = EstimateImageDecodeSize(width, height);
+                return SafeDecode(
+                    GetTerminalDctData(imageStream, filters),
+                    GetDecodeSize(width, height, targetWidth, targetHeight));
+            }
 
+            if (filters.Contains("JPXDecode"))
+            {
+                var bitmap = DecodeJpxImage(imageStream, width, height);
+                bitmap ??= SafeDecode(imageStream.EncodedData);
+                return bitmap ?? (width > 0 && height > 0 ? CreatePlaceholderBitmap(width, height) : null);
+            }
+
+            return CreateBitmapFromRawData(
+                imageStream.DecodedData,
+                width,
+                height,
+                bitsPerComponent,
+                colorSpace,
+                imageStream);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private ImageBitmapCacheKey CreateImageBitmapCacheKey(
+        Pdfe.Core.Primitives.PdfStream imageStream,
+        int width,
+        int height,
+        int bitsPerComponent,
+        string colorSpace)
+    {
+        var filters = imageStream.Filters;
+        var (targetWidth, targetHeight) = filters.Contains("JPXDecode") || filters.Contains("DCTDecode")
+            ? EstimateImageDecodeSize(width, height)
+            : (width, height);
+        var isImageMask = imageStream.GetBool("ImageMask");
+        var fillAlpha = isImageMask
+            ? (byte)Math.Clamp(_state.FillAlpha * 255, 0, 255)
+            : (byte)0;
+
+        return new ImageBitmapCacheKey(
+            width,
+            height,
+            bitsPerComponent,
+            colorSpace,
+            targetWidth,
+            targetHeight,
+            isImageMask,
+            isImageMask ? _state.FillColor.Red : (byte)0,
+            isImageMask ? _state.FillColor.Green : (byte)0,
+            isImageMask ? _state.FillColor.Blue : (byte)0,
+            fillAlpha);
+    }
+
+    private void TrackCachedImageBitmap(SKBitmap? bitmap)
+    {
+        if (bitmap != null)
+            _cachedImageBitmaps.Add(bitmap);
+    }
+
+    private void DisposeImageBitmapCache()
+    {
+        foreach (var bitmap in _cachedImageBitmaps)
+            bitmap.Dispose();
+        _cachedImageBitmaps.Clear();
+        _imageBitmapByReference.Clear();
+        _imageBitmapByStream.Clear();
+    }
+
+    private static bool TryGetImageReferenceKey(
+        Pdfe.Core.Primitives.PdfStream imageStream,
+        out (int ObjectNumber, int Generation) key)
+    {
+        if (imageStream.ObjectNumber.HasValue)
+        {
+            key = (imageStream.ObjectNumber.Value, imageStream.GenerationNumber ?? 0);
+            return true;
+        }
+
+        key = default;
+        return false;
+    }
+
+    private bool TryDrawImageWithSoftMask(
+        SKBitmap bitmap,
+        Pdfe.Core.Primitives.PdfStream imageStream,
+        int width,
+        int height,
+        SKPaint imagePaint)
+    {
+        var maskObj = imageStream.GetOptional("SMask");
+        if (maskObj == null)
+            return false;
+
+        var resolved = _page.Document.Resolve(maskObj);
+        if (resolved is not Pdfe.Core.Primitives.PdfStream maskStream)
+            return false;
+
+        using var maskBitmap = DecodeSoftMaskBitmap(maskObj, maskStream, bitmap.Width, bitmap.Height);
+        if (maskBitmap == null)
+            return false;
+
+        var dest = new SKRect(0, 0, width, height);
+        using var layerPaint = new SKPaint
+        {
+            BlendMode = imagePaint.BlendMode,
+            Color = imagePaint.Color,
+            IsAntialias = imagePaint.IsAntialias
+        };
+
+        _canvas.SaveLayer(dest, layerPaint);
+        _canvas.DrawBitmap(bitmap, dest);
+
+        using var lumaFilter = SKColorFilter.CreateLumaColor();
+        using var maskPaint = new SKPaint
+        {
+            BlendMode = SKBlendMode.DstIn,
+            ColorFilter = lumaFilter,
+            IsAntialias = _options.AntiAlias
+        };
+        _canvas.DrawBitmap(maskBitmap, dest, maskPaint);
+        _canvas.Restore();
+        return true;
+    }
+
+    private bool TryDrawImageWithExplicitMask(
+        SKBitmap bitmap,
+        Pdfe.Core.Primitives.PdfStream imageStream,
+        int width,
+        int height,
+        SKPaint imagePaint)
+    {
+        var maskObj = imageStream.GetOptional("Mask");
+        if (maskObj == null)
+            return false;
+
+        var resolved = _page.Document.Resolve(maskObj) ?? maskObj;
+        if (resolved is not Pdfe.Core.Primitives.PdfStream maskStream)
+            return false;
+
+        var maskWidth = maskStream.GetInt("Width", 0);
+        var maskHeight = maskStream.GetInt("Height", 0);
+        if (maskWidth <= 0 || maskHeight <= 0)
+            return false;
+
+        using var maskBitmap = CreateExplicitImageMaskBitmap(maskStream, maskWidth, maskHeight);
+        if (maskBitmap == null)
+            return false;
+
+        var dest = new SKRect(0, 0, width, height);
+        using var layerPaint = new SKPaint
+        {
+            BlendMode = imagePaint.BlendMode,
+            Color = imagePaint.Color,
+            IsAntialias = imagePaint.IsAntialias
+        };
+
+        _canvas.SaveLayer(dest, layerPaint);
+        _canvas.DrawBitmap(bitmap, dest);
+
+        using var maskPaint = new SKPaint
+        {
+            BlendMode = SKBlendMode.DstIn,
+            IsAntialias = _options.AntiAlias
+        };
+        _canvas.DrawBitmap(maskBitmap, dest, maskPaint);
+        _canvas.Restore();
+        return true;
+    }
+
+    private SKBitmap? DecodeSoftMaskBitmap(
+        Pdfe.Core.Primitives.PdfObject maskObj,
+        Pdfe.Core.Primitives.PdfStream maskStream,
+        int targetWidth,
+        int targetHeight,
+        SKRect? maskBounds = null)
+    {
+        if (string.Equals(maskStream.GetNameOrNull("Subtype"), "Form", StringComparison.Ordinal))
+            return maskBounds.HasValue
+                ? RenderFormSoftMaskBitmap(maskStream, targetWidth, targetHeight, maskBounds.Value)
+                : null;
+
+        var width = maskStream.GetInt("Width", 0);
+        var height = maskStream.GetInt("Height", 0);
+        if (width <= 0 || height <= 0)
+            return null;
+
+        var alpha = GetSoftMaskData(maskObj, maskStream, width, height, targetWidth, targetHeight);
+        return alpha != null ? CreateSoftMaskLumaBitmap(alpha) : null;
+    }
+
+    private SKBitmap? RenderFormSoftMaskBitmap(
+        Pdfe.Core.Primitives.PdfStream maskStream,
+        int targetWidth,
+        int targetHeight,
+        SKRect maskBounds)
+    {
+        if (targetWidth <= 0 || targetHeight <= 0 || maskBounds.Width <= 0 || maskBounds.Height <= 0)
+            return null;
+
+        (targetWidth, targetHeight) = ClampSoftMaskTargetSize(
+            Math.Max(1, targetWidth),
+            Math.Max(1, targetHeight),
+            targetWidth,
+            targetHeight);
+
+        var bitmap = new SKBitmap(targetWidth, targetHeight, SKColorType.Rgba8888, SKAlphaType.Opaque);
+        try
+        {
+            using var canvas = new SKCanvas(bitmap);
+            canvas.Clear(SKColors.Black);
+
+            var scaleX = targetWidth / maskBounds.Width;
+            var scaleY = targetHeight / maskBounds.Height;
+            canvas.SetMatrix(new SKMatrix(
+                scaleX,
+                0,
+                -maskBounds.Left * scaleX,
+                0,
+                scaleY,
+                -maskBounds.Top * scaleY,
+                0,
+                0,
+                1));
+
+            var child = new RenderContext(canvas, _page, _options, _cancellationToken);
+            child._resourcesStack.Push(_page.Resources);
+            child._state = _state.Clone();
+            child._state.SoftMask = null;
+            try
+            {
+                child.RenderFormXObject(maskStream);
+            }
+            finally
+            {
+                child._resourcesStack.Clear();
+                child.DisposeImageBitmapCache();
+                foreach (var typeface in child._embeddedTypefaces.Values)
+                    typeface.Dispose();
+                child._embeddedTypefaces.Clear();
+            }
+
+            return bitmap;
+        }
+        catch (Exception __ex) when (__ex is not OutOfMemoryException)
+        {
+            bitmap.Dispose();
+            return null;
+        }
+    }
+
+    private SKBitmap? DecodeJpxImage(Pdfe.Core.Primitives.PdfStream imageStream, int sourceWidth, int sourceHeight)
+    {
+        try
+        {
             var colorSpaceObject = imageStream.GetOptional("ColorSpace");
             var colorSpace = colorSpaceObject != null
                 ? ResolveImageColorSpace(colorSpaceObject)
                 : PdfColorSpace.DeviceRGB;
 
-            var components = image.ComponentData;
+            var desiredComponents = Math.Max(1, colorSpace.Components);
+            if (imageStream.GetOptional("SMask") == null)
+                desiredComponents++;
 
-            var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
-            var pixelCount = width * height;
-            for (int y = 0; y < height; y++)
+            var image = JpxDecoder.TryDecodeManaged(imageStream.EncodedData, desiredComponents);
+            if (image == null || sourceWidth <= 0 || sourceHeight <= 0 || image.Components <= 0)
+                return null;
+
+            var components = image.ComponentData;
+            if (components.Length == 0)
+                return null;
+
+            var (targetWidth, targetHeight) = EstimateImageDecodeSize(sourceWidth, sourceHeight);
+
+            var bitmap = new SKBitmap(targetWidth, targetHeight, SKColorType.Rgba8888, SKAlphaType.Premul);
+            var sourcePixelCount = (long)sourceWidth * sourceHeight;
+            var hasEmbeddedAlpha = imageStream.GetOptional("SMask") == null
+                                   && components.Length > colorSpace.Components
+                                   && colorSpace.Components >= 1;
+            for (int y = 0; y < targetHeight; y++)
             {
-                for (int x = 0; x < width; x++)
+                var sourceY = MapTargetToSource(y, targetHeight, sourceHeight);
+                var sourceRow = (long)sourceY * sourceWidth;
+                for (int x = 0; x < targetWidth; x++)
                 {
-                    var idx = y * width + x;
-                    if (idx >= pixelCount)
+                    var sourceX = MapTargetToSource(x, targetWidth, sourceWidth);
+                    var idx = sourceRow + sourceX;
+                    if (idx >= sourcePixelCount)
                         continue;
 
                     var values = new double[Math.Max(1, colorSpace.Components)];
@@ -2152,19 +3546,27 @@ internal partial class RenderContext
                     {
                         for (int c = 0; c < values.Length; c++)
                         {
-                            var sample = c < components.Length && idx < components[c].Length
-                                ? components[c][idx]
+                            var sample = c < components.Length && idx < components[c].LongLength
+                                ? components[c][(int)idx]
                                 : 0;
-                            values[c] = Math.Clamp(sample / 255.0, 0, 1);
+                            values[c] = colorSpace.DecodeSampleByte(c, (byte)Math.Clamp(sample, 0, 255));
                         }
                     }
 
                     var (rd, gd, bd) = colorSpace.ToRgb(values);
+                    var alpha = 255;
+                    if (hasEmbeddedAlpha)
+                    {
+                        var alphaComponent = components[colorSpace.Components];
+                        if (idx < alphaComponent.LongLength)
+                            alpha = Math.Clamp(alphaComponent[(int)idx], 0, 255);
+                    }
+
                     bitmap.SetPixel(x, y, new SKColor(
                         (byte)Math.Clamp(rd * 255, 0, 255),
                         (byte)Math.Clamp(gd * 255, 0, 255),
                         (byte)Math.Clamp(bd * 255, 0, 255),
-                        255));
+                        (byte)alpha));
                 }
             }
 
@@ -2176,73 +3578,371 @@ internal partial class RenderContext
         }
     }
 
-    private void ApplySoftMask(SKBitmap bitmap, Pdfe.Core.Primitives.PdfStream imageStream)
+    private (int Width, int Height) EstimateImageDecodeSize(int sourceWidth, int sourceHeight)
+    {
+        var userWidth = Math.Sqrt(
+            (_state.CurrentTransform.ScaleX * _state.CurrentTransform.ScaleX)
+            + (_state.CurrentTransform.SkewY * _state.CurrentTransform.SkewY));
+        var userHeight = Math.Sqrt(
+            (_state.CurrentTransform.SkewX * _state.CurrentTransform.SkewX)
+            + (_state.CurrentTransform.ScaleY * _state.CurrentTransform.ScaleY));
+
+        var scale = Math.Max(1, _options.Dpi) / 72.0;
+        var targetWidth = userWidth > 0
+            ? Math.Clamp((int)Math.Round(userWidth * scale), 1, sourceWidth)
+            : sourceWidth;
+        var targetHeight = userHeight > 0
+            ? Math.Clamp((int)Math.Round(userHeight * scale), 1, sourceHeight)
+            : sourceHeight;
+
+        return ClampImageTargetSize(sourceWidth, sourceHeight, targetWidth, targetHeight);
+    }
+
+    private static (int Width, int Height) ClampImageTargetSize(
+        int sourceWidth,
+        int sourceHeight,
+        int targetWidth,
+        int targetHeight)
+    {
+        var width = Math.Clamp(targetWidth, 1, Math.Max(1, sourceWidth));
+        var height = Math.Clamp(targetHeight, 1, Math.Max(1, sourceHeight));
+        var pixels = (long)width * height;
+        if (pixels <= MaxExpandedSoftMaskPixels)
+            return (width, height);
+
+        var scale = Math.Sqrt(MaxExpandedSoftMaskPixels / (double)pixels);
+        return (
+            Math.Max(1, (int)Math.Floor(width * scale)),
+            Math.Max(1, (int)Math.Floor(height * scale)));
+    }
+
+    private bool ApplySoftMask(SKBitmap bitmap, Pdfe.Core.Primitives.PdfStream imageStream)
     {
         var maskObj = imageStream.GetOptional("SMask");
         if (maskObj == null)
-            return;
+            return false;
 
         var resolved = _page.Document.Resolve(maskObj);
         if (resolved is not Pdfe.Core.Primitives.PdfStream maskStream)
-            return;
+            return false;
 
         var maskWidth = maskStream.GetInt("Width", 0);
         var maskHeight = maskStream.GetInt("Height", 0);
         if (maskWidth <= 0 || maskHeight <= 0)
-            return;
+            return false;
 
-        var maskData = DecodeSoftMaskData(maskStream, maskWidth, maskHeight);
-        if (maskData == null || maskData.Length == 0)
-            return;
+        var targetWidth = Math.Max(1, bitmap.Width);
+        var targetHeight = Math.Max(1, bitmap.Height);
+        var maskData = GetSoftMaskData(maskObj, maskStream, maskWidth, maskHeight, targetWidth, targetHeight);
+        if (maskData == null || maskData.Data.Length == 0)
+            return false;
 
         for (int y = 0; y < bitmap.Height; y++)
         {
-            var maskY = Math.Clamp((int)((long)y * maskHeight / bitmap.Height), 0, maskHeight - 1);
+            var maskY = Math.Clamp((int)((long)y * maskData.Height / bitmap.Height), 0, maskData.Height - 1);
             for (int x = 0; x < bitmap.Width; x++)
             {
-                var maskX = Math.Clamp((int)((long)x * maskWidth / bitmap.Width), 0, maskWidth - 1);
-                var alphaIndex = maskY * maskWidth + maskX;
-                if (alphaIndex >= maskData.Length)
+                var maskX = Math.Clamp((int)((long)x * maskData.Width / bitmap.Width), 0, maskData.Width - 1);
+                var alphaIndex = maskY * maskData.Width + maskX;
+                if (alphaIndex >= maskData.Data.Length)
                     continue;
 
                 var color = bitmap.GetPixel(x, y);
-                bitmap.SetPixel(x, y, color.WithAlpha(maskData[alphaIndex]));
+                bitmap.SetPixel(x, y, color.WithAlpha(maskData.Data[alphaIndex]));
             }
         }
+
+        return true;
     }
 
-    private static byte[]? DecodeSoftMaskData(Pdfe.Core.Primitives.PdfStream maskStream, int width, int height)
+    private SoftMaskAlpha? GetSoftMaskData(
+        Pdfe.Core.Primitives.PdfObject maskObj,
+        Pdfe.Core.Primitives.PdfStream maskStream,
+        int maskWidth,
+        int maskHeight,
+        int targetWidth,
+        int targetHeight)
     {
+        SoftMaskAlpha? maskData;
+        if (TryGetSoftMaskReferenceKey(maskObj, maskStream, out var key))
+        {
+            var cacheKey = (key.ObjectNumber, key.Generation, targetWidth, targetHeight);
+            if (!_softMaskAlphaByReference.TryGetValue(cacheKey, out maskData))
+            {
+                maskData = DecodeSoftMaskData(maskStream, maskWidth, maskHeight, targetWidth, targetHeight);
+                _softMaskAlphaByReference[cacheKey] = maskData;
+            }
+        }
+        else
+        {
+            if (!_softMaskAlphaByStream.TryGetValue(maskStream, out var streamCache))
+            {
+                streamCache = new Dictionary<(int TargetWidth, int TargetHeight), SoftMaskAlpha?>();
+                _softMaskAlphaByStream[maskStream] = streamCache;
+            }
+
+            var cacheKey = (targetWidth, targetHeight);
+            if (!streamCache.TryGetValue(cacheKey, out maskData))
+            {
+                maskData = DecodeSoftMaskData(maskStream, maskWidth, maskHeight, targetWidth, targetHeight);
+                streamCache[cacheKey] = maskData;
+            }
+        }
+
+        return maskData;
+    }
+
+    private static SoftMaskAlpha? DecodeSoftMaskData(
+        Pdfe.Core.Primitives.PdfStream maskStream,
+        int width,
+        int height,
+        int targetWidth,
+        int targetHeight)
+    {
+        (targetWidth, targetHeight) = ClampSoftMaskTargetSize(width, height, targetWidth, targetHeight);
+
+        var filters = maskStream.Filters;
+        if (IsTerminalDctFilter(filters))
+        {
+            using var maskBitmap = SafeDecode(
+                GetTerminalDctData(maskStream, filters),
+                GetDecodeSize(width, height, targetWidth, targetHeight));
+            if (maskBitmap != null)
+                return new SoftMaskAlpha(
+                    ExtractSoftMaskAlpha(maskBitmap, targetWidth, targetHeight, maskStream),
+                    targetWidth,
+                    targetHeight);
+
+            return null;
+        }
+
+        if (filters.Contains("JPXDecode"))
+        {
+            var jpx = JpxDecoder.TryDecodeManaged(maskStream.EncodedData);
+            if (jpx is { Components: > 0 } && jpx.ComponentData.Length > 0)
+            {
+                var component = jpx.ComponentData[0];
+                if (component.Length >= width * height)
+                {
+                    var alpha = CreateSoftMaskAlphaFromSamples(component, width, height, targetWidth, targetHeight, maskStream);
+                    return new SoftMaskAlpha(alpha, targetWidth, targetHeight);
+                }
+            }
+
+            using var maskBitmap = SafeDecode(maskStream.EncodedData);
+            if (maskBitmap != null)
+                return new SoftMaskAlpha(ExtractSoftMaskAlpha(maskBitmap, targetWidth, targetHeight, maskStream), targetWidth, targetHeight);
+        }
+
         var bitsPerComponent = maskStream.GetInt("BitsPerComponent", 8);
         if (bitsPerComponent == 8)
         {
             var data = maskStream.DecodedData;
-            return data.Length >= width * height ? data : null;
+            if (data.LongLength < (long)width * height)
+                return null;
+
+            var alpha = CreateSoftMaskAlphaFrom8Bit(data, width, height, targetWidth, targetHeight, maskStream);
+            return new SoftMaskAlpha(alpha, targetWidth, targetHeight);
         }
 
         if (bitsPerComponent == 1)
         {
             var data = maskStream.DecodedData;
-            var alpha = new byte[width * height];
-            var srcBit = 0;
+            var alpha = new byte[targetWidth * targetHeight];
             var dst = 0;
-            for (int y = 0; y < height; y++)
+            for (int y = 0; y < targetHeight; y++)
             {
-                for (int x = 0; x < width; x++)
+                var sourceY = MapTargetToSource(y, targetHeight, height);
+                for (int x = 0; x < targetWidth; x++)
                 {
-                    var byteIndex = srcBit / 8;
-                    var bitIndex = 7 - (srcBit % 8);
-                    alpha[dst++] = byteIndex < data.Length && ((data[byteIndex] >> bitIndex) & 1) != 0
-                        ? (byte)255
-                        : (byte)0;
-                    srcBit++;
+                    var sourceX = MapTargetToSource(x, targetWidth, width);
+                    alpha[dst++] = DecodeSoftMaskSample(
+                        maskStream,
+                        ReadOneBitImageSample(data, width, sourceX, sourceY),
+                        bitsPerComponent);
                 }
-                srcBit = ((srcBit + 7) / 8) * 8;
             }
-            return alpha;
+            return new SoftMaskAlpha(alpha, targetWidth, targetHeight);
         }
 
         return null;
+    }
+
+    private static (int Width, int Height) ClampSoftMaskTargetSize(
+        int sourceWidth,
+        int sourceHeight,
+        int targetWidth,
+        int targetHeight)
+    {
+        var width = Math.Clamp(targetWidth, 1, Math.Max(1, sourceWidth));
+        var height = Math.Clamp(targetHeight, 1, Math.Max(1, sourceHeight));
+        var pixels = (long)width * height;
+        if (pixels <= MaxExpandedSoftMaskPixels)
+            return (width, height);
+
+        var scale = Math.Sqrt(MaxExpandedSoftMaskPixels / (double)pixels);
+        return (
+            Math.Max(1, (int)Math.Floor(width * scale)),
+            Math.Max(1, (int)Math.Floor(height * scale)));
+    }
+
+    private static bool IsTerminalDctFilter(IReadOnlyList<string> filters)
+        => filters.Count > 0 && IsDctFilter(filters[^1]);
+
+    private static bool IsDctFilter(string filter)
+        => string.Equals(filter, "DCTDecode", StringComparison.Ordinal)
+           || string.Equals(filter, "DCT", StringComparison.Ordinal);
+
+    private static byte[] GetTerminalDctData(Pdfe.Core.Primitives.PdfStream stream, IReadOnlyList<string> filters)
+        => filters.Count == 1 ? stream.EncodedData : stream.DecodedData;
+
+    private static byte[] CreateSoftMaskAlphaFrom8Bit(
+        byte[] data,
+        int sourceWidth,
+        int sourceHeight,
+        int targetWidth,
+        int targetHeight,
+        Pdfe.Core.Primitives.PdfStream maskStream)
+    {
+        var alpha = new byte[targetWidth * targetHeight];
+        var dst = 0;
+        for (int y = 0; y < targetHeight; y++)
+        {
+            var sourceY = MapTargetToSource(y, targetHeight, sourceHeight);
+            var sourceRow = sourceY * sourceWidth;
+            for (int x = 0; x < targetWidth; x++)
+            {
+                var sourceX = MapTargetToSource(x, targetWidth, sourceWidth);
+                var sourceIndex = sourceRow + sourceX;
+                alpha[dst++] = sourceIndex < data.Length
+                    ? DecodeSoftMaskSample(maskStream, data[sourceIndex], 8)
+                    : DecodeSoftMaskSample(maskStream, 0, 8);
+            }
+        }
+
+        return alpha;
+    }
+
+    private static byte[] CreateSoftMaskAlphaFromSamples(
+        int[] data,
+        int sourceWidth,
+        int sourceHeight,
+        int targetWidth,
+        int targetHeight,
+        Pdfe.Core.Primitives.PdfStream maskStream)
+    {
+        var alpha = new byte[targetWidth * targetHeight];
+        var dst = 0;
+        for (int y = 0; y < targetHeight; y++)
+        {
+            var sourceY = MapTargetToSource(y, targetHeight, sourceHeight);
+            var sourceRow = sourceY * sourceWidth;
+            for (int x = 0; x < targetWidth; x++)
+            {
+                var sourceX = MapTargetToSource(x, targetWidth, sourceWidth);
+                var sourceIndex = sourceRow + sourceX;
+                alpha[dst++] = sourceIndex < data.Length
+                    ? DecodeSoftMaskSample(maskStream, data[sourceIndex], 8)
+                    : DecodeSoftMaskSample(maskStream, 0, 8);
+            }
+        }
+
+        return alpha;
+    }
+
+    private static int ReadOneBitImageSample(byte[] data, int width, int x, int y)
+    {
+        var rowStrideBits = ((width + 7) / 8) * 8;
+        var bitIndex = (long)y * rowStrideBits + x;
+        var byteIndex = bitIndex / 8;
+        if (byteIndex < 0 || byteIndex >= data.LongLength)
+            return 0;
+
+        var bitInByte = 7 - (int)(bitIndex % 8);
+        return (data[byteIndex] >> bitInByte) & 1;
+    }
+
+    private static int MapTargetToSource(int targetPosition, int targetSize, int sourceSize)
+        => Math.Clamp((int)(((targetPosition + 0.5) * sourceSize) / targetSize), 0, sourceSize - 1);
+
+    private static SKSizeI GetDecodeSize(int sourceWidth, int sourceHeight, int targetWidth, int targetHeight)
+        => new(
+            Math.Clamp(targetWidth, 1, sourceWidth),
+            Math.Clamp(targetHeight, 1, sourceHeight));
+
+    private static bool TryGetSoftMaskReferenceKey(
+        Pdfe.Core.Primitives.PdfObject maskObj,
+        Pdfe.Core.Primitives.PdfStream maskStream,
+        out (int ObjectNumber, int Generation) key)
+    {
+        if (maskObj is PdfReference reference)
+        {
+            key = (reference.ObjectNum, reference.Generation);
+            return true;
+        }
+
+        if (maskStream.ObjectNumber.HasValue)
+        {
+            key = (maskStream.ObjectNumber.Value, maskStream.GenerationNumber ?? 0);
+            return true;
+        }
+
+        key = default;
+        return false;
+    }
+
+    private static byte[] ExtractSoftMaskAlpha(SKBitmap maskBitmap, int width, int height, Pdfe.Core.Primitives.PdfStream maskStream)
+    {
+        var alpha = new byte[width * height];
+        var pixels = maskBitmap.Pixels;
+        if (pixels.Length == 0)
+            return alpha;
+
+        for (int y = 0; y < height; y++)
+        {
+            var sourceY = Math.Clamp((int)((long)y * maskBitmap.Height / height), 0, maskBitmap.Height - 1);
+            var sourceRow = sourceY * maskBitmap.Width;
+            for (int x = 0; x < width; x++)
+            {
+                var sourceX = Math.Clamp((int)((long)x * maskBitmap.Width / width), 0, maskBitmap.Width - 1);
+                var pixel = pixels[sourceRow + sourceX];
+                var luma = (byte)Math.Clamp(
+                    (0.299 * pixel.Red) + (0.587 * pixel.Green) + (0.114 * pixel.Blue),
+                    0,
+                    255);
+                alpha[y * width + x] = DecodeSoftMaskSample(maskStream, luma, 8);
+            }
+        }
+
+        return alpha;
+    }
+
+    private static byte DecodeSoftMaskSample(Pdfe.Core.Primitives.PdfStream maskStream, int sample, int bitsPerComponent)
+    {
+        var decode = maskStream.GetOptional("Decode") as Pdfe.Core.Primitives.PdfArray;
+        var d0 = decode?.Count >= 2 ? decode.GetNumber(0) : 0.0;
+        var d1 = decode?.Count >= 2 ? decode.GetNumber(1) : 1.0;
+        var maxSample = Math.Pow(2, bitsPerComponent) - 1;
+        var decoded = maxSample > 0
+            ? d0 + Math.Clamp(sample, 0, maxSample) * ((d1 - d0) / maxSample)
+            : d0;
+        return (byte)Math.Clamp((int)Math.Round(decoded * 255), 0, 255);
+    }
+
+    private static SKBitmap CreateSoftMaskLumaBitmap(SoftMaskAlpha mask)
+    {
+        var bitmap = new SKBitmap(mask.Width, mask.Height, SKColorType.Rgba8888, SKAlphaType.Opaque);
+        for (int y = 0; y < mask.Height; y++)
+        {
+            var row = y * mask.Width;
+            for (int x = 0; x < mask.Width; x++)
+            {
+                var alpha = mask.Data[row + x];
+                bitmap.SetPixel(x, y, new SKColor(alpha, alpha, alpha));
+            }
+        }
+
+        return bitmap;
     }
 
     private SKBitmap? CreateBitmapFromRawData(byte[] data, int width, int height, int bitsPerComponent, string colorSpace, Pdfe.Core.Primitives.PdfStream stream)
@@ -2250,6 +3950,9 @@ internal partial class RenderContext
         var isImageMask = stream.GetBool("ImageMask");
         PdfColorSpace? pdfColorSpace = null;
         int componentsPerPixel = 3;
+
+        if (bitsPerComponent == 1 && isImageMask)
+            return CreateImageMaskBitmapFromPackedBits(data, width, height, stream);
 
         var csObj = isImageMask ? null : stream.GetOptional("ColorSpace");
         if (csObj != null)
@@ -2266,6 +3969,17 @@ internal partial class RenderContext
         if (componentsPerPixel == 0)
             componentsPerPixel = 3;
 
+        var fastBitmap = TryCreateFast8BitBitmapFromRawData(
+            data,
+            width,
+            height,
+            bitsPerComponent,
+            pdfColorSpace,
+            componentsPerPixel,
+            stream);
+        if (fastBitmap != null)
+            return fastBitmap;
+
         var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
         var pixels = new byte[width * height * 4];
 
@@ -2273,6 +3987,7 @@ internal partial class RenderContext
         {
             int srcIndex = 0;
             int dstIndex = 0;
+            var pixelValues = new double[componentsPerPixel];
 
             for (int y = 0; y < height; y++)
             {
@@ -2282,13 +3997,15 @@ internal partial class RenderContext
 
                     if (bitsPerComponent == 8 && pdfColorSpace != null)
                     {
-                        var pixelValues = new double[componentsPerPixel];
                         if (srcIndex + componentsPerPixel <= data.Length)
                         {
                             for (int i = 0; i < componentsPerPixel; i++)
-                                pixelValues[i] = pdfColorSpace.Type == PdfColorSpaceType.Indexed
-                                    ? data[srcIndex + i]
-                                    : data[srcIndex + i] / 255.0;
+                                pixelValues[i] = DecodeImageSample(
+                                    stream,
+                                    pdfColorSpace,
+                                    i,
+                                    data[srcIndex + i],
+                                    bitsPerComponent);
                             srcIndex += componentsPerPixel;
 
                             var (rd, gd, bd) = pdfColorSpace.ToRgb(pixelValues);
@@ -2361,6 +4078,227 @@ internal partial class RenderContext
         return bitmap;
     }
 
+    private static SKBitmap? TryCreateFast8BitBitmapFromRawData(
+        byte[] data,
+        int width,
+        int height,
+        int bitsPerComponent,
+        PdfColorSpace? colorSpace,
+        int componentsPerPixel,
+        Pdfe.Core.Primitives.PdfStream stream)
+    {
+        if (bitsPerComponent != 8 ||
+            colorSpace == null ||
+            stream.GetOptional("Decode") != null ||
+            width <= 0 ||
+            height <= 0)
+        {
+            return null;
+        }
+
+        var expectedPixels = checked((long)width * height);
+        var requiredBytes = expectedPixels * componentsPerPixel;
+        if (requiredBytes > data.LongLength)
+            return null;
+
+        return colorSpace.Type switch
+        {
+            PdfColorSpaceType.DeviceGray when componentsPerPixel == 1 =>
+                CreateFastGrayBitmap(data, width, height),
+            PdfColorSpaceType.DeviceRGB when componentsPerPixel == 3 =>
+                CreateFastRgbBitmap(data, width, height),
+            PdfColorSpaceType.DeviceCMYK when componentsPerPixel == 4 =>
+                CreateFastCmykBitmap(data, width, height),
+            _ => null
+        };
+    }
+
+    private static SKBitmap? CreateFastGrayBitmap(byte[] data, int width, int height)
+    {
+        var pixels = new byte[width * height * 4];
+        var src = 0;
+        var dst = 0;
+        for (var i = 0; i < width * height; i++)
+        {
+            var gray = data[src++];
+            pixels[dst++] = gray;
+            pixels[dst++] = gray;
+            pixels[dst++] = gray;
+            pixels[dst++] = 255;
+        }
+
+        return CreateBitmapFromRgbaBytes(width, height, pixels);
+    }
+
+    private static SKBitmap? CreateFastRgbBitmap(byte[] data, int width, int height)
+    {
+        var pixels = new byte[width * height * 4];
+        var src = 0;
+        var dst = 0;
+        for (var i = 0; i < width * height; i++)
+        {
+            pixels[dst++] = data[src++];
+            pixels[dst++] = data[src++];
+            pixels[dst++] = data[src++];
+            pixels[dst++] = 255;
+        }
+
+        return CreateBitmapFromRgbaBytes(width, height, pixels);
+    }
+
+    private static SKBitmap? CreateFastCmykBitmap(byte[] data, int width, int height)
+    {
+        var pixels = new byte[width * height * 4];
+        var src = 0;
+        var dst = 0;
+        for (var i = 0; i < width * height; i++)
+        {
+            var c = data[src++] / 255.0;
+            var m = data[src++] / 255.0;
+            var y = data[src++] / 255.0;
+            var k = data[src++] / 255.0;
+            pixels[dst++] = (byte)Math.Clamp((1 - c) * (1 - k) * 255, 0, 255);
+            pixels[dst++] = (byte)Math.Clamp((1 - m) * (1 - k) * 255, 0, 255);
+            pixels[dst++] = (byte)Math.Clamp((1 - y) * (1 - k) * 255, 0, 255);
+            pixels[dst++] = 255;
+        }
+
+        return CreateBitmapFromRgbaBytes(width, height, pixels);
+    }
+
+    private static SKBitmap? CreateBitmapFromRgbaBytes(int width, int height, byte[] pixels)
+    {
+        var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
+        try
+        {
+            var destination = bitmap.GetPixels();
+            if (destination == IntPtr.Zero)
+            {
+                bitmap.Dispose();
+                return null;
+            }
+
+            System.Runtime.InteropServices.Marshal.Copy(pixels, 0, destination, pixels.Length);
+            return bitmap;
+        }
+        catch
+        {
+            bitmap.Dispose();
+            return null;
+        }
+    }
+
+    private SKBitmap? CreateImageMaskBitmapFromPackedBits(
+        byte[] data,
+        int width,
+        int height,
+        Pdfe.Core.Primitives.PdfStream stream)
+    {
+        if (width <= 0 || height <= 0)
+            return null;
+
+        var pixels = new byte[width * height * 4];
+        var fillAlpha = (byte)Math.Clamp(_state.FillAlpha * 255, 0, 255);
+        var paintWhenZero = DecodeImageMaskBit(stream, 0);
+        var paintWhenOne = DecodeImageMaskBit(stream, 1);
+        var rowBytes = (width + 7) / 8;
+        var dst = 0;
+
+        for (int y = 0; y < height; y++)
+        {
+            var rowOffset = y * rowBytes;
+            for (int x = 0; x < width; x++)
+            {
+                var byteIndex = rowOffset + (x >> 3);
+                var bit = byteIndex < data.Length
+                    ? (data[byteIndex] >> (7 - (x & 7))) & 1
+                    : 0;
+                var paint = bit == 0 ? paintWhenZero : paintWhenOne;
+
+                pixels[dst++] = paint ? _state.FillColor.Red : (byte)0;
+                pixels[dst++] = paint ? _state.FillColor.Green : (byte)0;
+                pixels[dst++] = paint ? _state.FillColor.Blue : (byte)0;
+                pixels[dst++] = paint ? fillAlpha : (byte)0;
+            }
+        }
+
+        return CreateBitmapFromRgbaBytes(width, height, pixels);
+    }
+
+    private SKBitmap? CreateImageMaskStencilBitmap(
+        byte[] data,
+        int width,
+        int height,
+        Pdfe.Core.Primitives.PdfStream stream)
+    {
+        if (width <= 0 || height <= 0)
+            return null;
+
+        var pixels = new byte[width * height * 4];
+        var paintWhenZero = DecodeImageMaskBit(stream, 0);
+        var paintWhenOne = DecodeImageMaskBit(stream, 1);
+        var rowBytes = (width + 7) / 8;
+        var dst = 0;
+
+        for (int y = 0; y < height; y++)
+        {
+            var rowOffset = y * rowBytes;
+            for (int x = 0; x < width; x++)
+            {
+                var byteIndex = rowOffset + (x >> 3);
+                var bit = byteIndex < data.Length
+                    ? (data[byteIndex] >> (7 - (x & 7))) & 1
+                    : 0;
+                var paint = bit == 0 ? paintWhenZero : paintWhenOne;
+                var alpha = paint ? (byte)Math.Clamp(_state.FillAlpha * 255, 0, 255) : (byte)0;
+
+                pixels[dst++] = 255;
+                pixels[dst++] = 255;
+                pixels[dst++] = 255;
+                pixels[dst++] = alpha;
+            }
+        }
+
+        return CreateBitmapFromRgbaBytes(width, height, pixels);
+    }
+
+    private static SKBitmap? CreateExplicitImageMaskBitmap(
+        Pdfe.Core.Primitives.PdfStream stream,
+        int width,
+        int height)
+    {
+        if (width <= 0 || height <= 0)
+            return null;
+
+        var bitsPerComponent = stream.GetInt("BitsPerComponent", 1);
+        if (bitsPerComponent != 1)
+            return null;
+
+        var data = stream.DecodedData;
+        var pixels = new byte[width * height * 4];
+        var dst = 0;
+
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                var bit = ReadOneBitImageSample(data, width, x, y);
+                // Explicit image /Mask streams define source-image pixels to
+                // suppress; direct /ImageMask painting uses the opposite
+                // stencil convention handled by DecodeImageMaskBit callers.
+                var opaque = !DecodeImageMaskBit(stream, bit);
+                var alpha = opaque ? (byte)255 : (byte)0;
+
+                pixels[dst++] = 255;
+                pixels[dst++] = 255;
+                pixels[dst++] = 255;
+                pixels[dst++] = alpha;
+            }
+        }
+
+        return CreateBitmapFromRgbaBytes(width, height, pixels);
+    }
+
     private static double DecodeOneBitImageSample(Pdfe.Core.Primitives.PdfStream stream, int bit)
     {
         var decode = stream.GetOptional("Decode") as Pdfe.Core.Primitives.PdfArray;
@@ -2369,12 +4307,39 @@ internal partial class RenderContext
         return bit == 0 ? d0 : d1;
     }
 
+    private static double DecodeImageSample(
+        Pdfe.Core.Primitives.PdfStream stream,
+        PdfColorSpace colorSpace,
+        int componentIndex,
+        byte sample,
+        int bitsPerComponent)
+    {
+        var decode = stream.GetOptional("Decode") as Pdfe.Core.Primitives.PdfArray;
+        var offset = componentIndex * 2;
+        if (decode != null && decode.Count >= offset + 2)
+        {
+            var d0 = decode.GetNumber(offset);
+            var d1 = decode.GetNumber(offset + 1);
+            var maxSample = Math.Pow(2, bitsPerComponent) - 1;
+            return maxSample > 0
+                ? d0 + sample * ((d1 - d0) / maxSample)
+                : d0;
+        }
+
+        if (colorSpace.Type == PdfColorSpaceType.Indexed)
+            return sample;
+
+        return colorSpace.DecodeSampleByte(componentIndex, sample);
+    }
+
     private static bool DecodeImageMaskBit(Pdfe.Core.Primitives.PdfStream stream, int bit)
     {
         var decode = stream.GetOptional("Decode") as Pdfe.Core.Primitives.PdfArray;
         var d0 = decode?.Count >= 2 ? decode.GetNumber(0) : 0.0;
         var d1 = decode?.Count >= 2 ? decode.GetNumber(1) : 1.0;
-        return (bit == 0 ? d0 : d1) > 0.5;
+        // Image masks are stencils: decoded 1 paints with the current color,
+        // decoded 0 is transparent. /Decode [1 0] reverses that polarity.
+        return (bit == 0 ? d0 : d1) >= 0.5;
     }
 
     private PdfColorSpace ResolveImageColorSpace(Pdfe.Core.Primitives.PdfObject colorSpaceObject)
@@ -2395,11 +4360,20 @@ internal partial class RenderContext
     /// "Value cannot be null. (Parameter 'codec')" because
     /// SkiaSharp's Linux build ships without a JPX codec.
     /// </summary>
-    private static SKBitmap? SafeDecode(byte[]? bytes)
+    private static SKBitmap? SafeDecode(byte[]? bytes, SKSizeI? targetSize = null)
     {
         if (bytes == null || bytes.Length == 0) return null;
         try
         {
+            if (targetSize is { Width: > 0, Height: > 0 } size)
+            {
+                var scaled = SKBitmap.Decode(
+                    bytes,
+                    new SKImageInfo(size.Width, size.Height, SKColorType.Rgba8888, SKAlphaType.Premul));
+                if (scaled != null)
+                    return scaled;
+            }
+
             return SKBitmap.Decode(bytes);
         }
         catch
@@ -2461,10 +4435,14 @@ internal partial class RenderContext
             // Appearance bbox + matrix.
             if (appearance.GetOptional("BBox") is not Pdfe.Core.Primitives.PdfArray bboxArr ||
                 bboxArr.Count < 4) continue;
-            float bx1 = (float)bboxArr.GetNumber(0);
-            float by1 = (float)bboxArr.GetNumber(1);
-            float bx2 = (float)bboxArr.GetNumber(2);
-            float by2 = (float)bboxArr.GetNumber(3);
+            if (!TryGetArrayNumber(bboxArr, 0, out var bx1Value) ||
+                !TryGetArrayNumber(bboxArr, 1, out var by1Value) ||
+                !TryGetArrayNumber(bboxArr, 2, out var bx2Value) ||
+                !TryGetArrayNumber(bboxArr, 3, out var by2Value)) continue;
+            float bx1 = (float)bx1Value;
+            float by1 = (float)by1Value;
+            float bx2 = (float)bx2Value;
+            float by2 = (float)by2Value;
             float bMinX = Math.Min(bx1, bx2);
             float bMinY = Math.Min(by1, by2);
             float bMaxX = Math.Max(bx1, bx2);
@@ -2473,10 +4451,7 @@ internal partial class RenderContext
             var formMatrix = SKMatrix.Identity;
             if (appearance.GetOptional("Matrix") is Pdfe.Core.Primitives.PdfArray mArr && mArr.Count >= 6)
             {
-                formMatrix = new SKMatrix(
-                    (float)mArr.GetNumber(0), (float)mArr.GetNumber(2), (float)mArr.GetNumber(4),
-                    (float)mArr.GetNumber(1), (float)mArr.GetNumber(3), (float)mArr.GetNumber(5),
-                    0, 0, 1);
+                formMatrix = GetMatrix(mArr);
             }
 
             // Transform the four bbox corners through the form's /Matrix
@@ -2515,6 +4490,7 @@ internal partial class RenderContext
             _canvas.Save();
             try
             {
+                _canvas.ClipRect(new SKRect(rx1, ry1, rx2, ry2), SKClipOperation.Intersect, _options.AntiAlias);
                 _canvas.Concat(in fitMatrix);
                 RenderFormXObject(appearance);
             }
@@ -2991,6 +4967,7 @@ internal partial class RenderContext
             var savedByteToGlyph = _currentByteToGlyph;
             var savedCffCidToGlyph = _currentCffCidToGlyph;
             var savedCidToGidMap = _currentCidToGidMap;
+            var savedCidUseUnicodeCmap = _currentCidUseUnicodeCmap;
             var savedFontIsType0 = _currentFontIsType0;
             var savedCidWidths = _currentCidWidths;
             var savedCurrentFontWidths = _currentFontWidths;
@@ -2999,6 +4976,7 @@ internal partial class RenderContext
             var savedFontEncoding = _currentFontEncoding;
             var savedCodeToUnicode = _currentCodeToUnicode;
             var savedUnicodeToCode = _currentUnicodeToCode;
+            var savedCodeToGlyphName = _currentCodeToGlyphName;
             try
             {
                 _textState = new TextState();
@@ -3046,7 +5024,7 @@ internal partial class RenderContext
                 // the resolved typeface.
                 var bytes = Encoding.Latin1.GetBytes(value);
                 RenderText(value, bytes);
-                _inTextBlock = false;
+                EndText();
             }
             finally
             {
@@ -3058,6 +5036,7 @@ internal partial class RenderContext
                 _currentByteToGlyph = savedByteToGlyph;
                 _currentCffCidToGlyph = savedCffCidToGlyph;
                 _currentCidToGidMap = savedCidToGidMap;
+                _currentCidUseUnicodeCmap = savedCidUseUnicodeCmap;
                 _currentFontIsType0 = savedFontIsType0;
                 _currentCidWidths = savedCidWidths;
                 _currentFontWidths = savedCurrentFontWidths;
@@ -3066,6 +5045,7 @@ internal partial class RenderContext
                 _currentFontEncoding = savedFontEncoding;
                 _currentCodeToUnicode = savedCodeToUnicode;
                 _currentUnicodeToCode = savedUnicodeToCode;
+                _currentCodeToGlyphName = savedCodeToGlyphName;
             }
         }
         catch
@@ -3105,6 +5085,7 @@ internal partial class RenderContext
             HorizontalScale = _textState.HorizontalScale,
             TextLeading = _textState.TextLeading,
             TextRise = _textState.TextRise,
+            RenderMode = _textState.RenderMode,
             TextMatrixA = _textState.TextMatrixA,
             TextMatrixB = _textState.TextMatrixB,
             TextMatrixC = _textState.TextMatrixC,
@@ -3148,6 +5129,18 @@ internal partial class RenderContext
         if (formContent.Length == 0)
             return;
 
+        var savedCanvasCount = _canvas.SaveCount;
+        var savedStateStack = SnapshotGraphicsStateStack();
+        var savedState = _state.Clone();
+        var savedTextState = _textState.Clone();
+        var savedInTextBlock = _inTextBlock;
+        var savedCurrentPath = _currentPath;
+        var savedPendingClipEvenOdd = _pendingClipEvenOdd;
+        var savedPendingTextClipPath = _pendingTextClipPath;
+
+        _currentPath = null;
+        _pendingClipEvenOdd = null;
+        _pendingTextClipPath = null;
         _canvas.Save();
 
         // Push the form's own /Resources so font / XObject lookups inside
@@ -3160,7 +5153,6 @@ internal partial class RenderContext
             ? _page.Document.Resolve(resObj) as Pdfe.Core.Primitives.PdfDictionary
             : null;
         _resourcesStack.Push(formResources);
-        var savedState = _state.Clone();
 
         try
         {
@@ -3168,14 +5160,25 @@ internal partial class RenderContext
             var matrixArray = formStream.GetOptional("Matrix") as Pdfe.Core.Primitives.PdfArray;
             if (matrixArray != null && matrixArray.Count >= 6)
             {
-                var a = (float)matrixArray.GetNumber(0);
-                var b = (float)matrixArray.GetNumber(1);
-                var c = (float)matrixArray.GetNumber(2);
-                var d = (float)matrixArray.GetNumber(3);
-                var e = (float)matrixArray.GetNumber(4);
-                var f = (float)matrixArray.GetNumber(5);
-                var matrix = new SKMatrix(a, c, e, b, d, f, 0, 0, 1);
+                var matrix = GetMatrix(matrixArray);
                 _canvas.Concat(in matrix);
+                _state.CurrentTransform = Concat(_state.CurrentTransform, matrix);
+            }
+
+            var bboxArray = ResolveArray(formStream, "BBox");
+            if (bboxArray != null && bboxArray.Count >= 4)
+            {
+                var x0 = (float)ArrayNumberOrDefault(bboxArray, 0);
+                var y0 = (float)ArrayNumberOrDefault(bboxArray, 1);
+                var x1 = (float)ArrayNumberOrDefault(bboxArray, 2);
+                var y1 = (float)ArrayNumberOrDefault(bboxArray, 3);
+                var bounds = new SKRect(
+                    Math.Min(x0, x1),
+                    Math.Min(y0, y1),
+                    Math.Max(x0, x1),
+                    Math.Max(y0, y1));
+                if (bounds.Width > 0 && bounds.Height > 0)
+                    _canvas.ClipRect(bounds, SKClipOperation.Intersect, _options.AntiAlias);
             }
 
             // Parse and render the form's content stream through the same
@@ -3186,10 +5189,33 @@ internal partial class RenderContext
         }
         finally
         {
+            _currentPath?.Dispose();
+            _pendingTextClipPath?.Dispose();
+            RestoreGraphicsStateStack(savedStateStack);
             _state = savedState;
+            _textState = savedTextState;
+            _inTextBlock = savedInTextBlock;
+            _currentPath = savedCurrentPath;
+            _pendingClipEvenOdd = savedPendingClipEvenOdd;
+            _pendingTextClipPath = savedPendingTextClipPath;
             _resourcesStack.Pop();
-            _canvas.Restore();
+            _canvas.RestoreToCount(savedCanvasCount);
         }
+    }
+
+    private GraphicsState[] SnapshotGraphicsStateStack()
+    {
+        var snapshot = _stateStack.ToArray();
+        for (var i = 0; i < snapshot.Length; i++)
+            snapshot[i] = snapshot[i].Clone();
+        return snapshot;
+    }
+
+    private void RestoreGraphicsStateStack(GraphicsState[] snapshot)
+    {
+        _stateStack.Clear();
+        for (var i = snapshot.Length - 1; i >= 0; i--)
+            _stateStack.Push(snapshot[i]);
     }
 
     #endregion
@@ -3198,7 +5224,11 @@ internal partial class RenderContext
 
     private void SetClippingPath(bool evenOdd)
     {
-        if (_currentPath == null) return;
+        if (_currentPath == null)
+        {
+            _pendingClipEvenOdd = evenOdd;
+            return;
+        }
 
         _currentPath.FillType = evenOdd ? SKPathFillType.EvenOdd : SKPathFillType.Winding;
 
@@ -3207,6 +5237,18 @@ internal partial class RenderContext
 
         // Note: The path is NOT disposed here - it will be used by the following
         // path-painting operator (like n, S, f) which will dispose it
+    }
+
+    private void ApplyPendingClipToCurrentPath()
+    {
+        if (!_pendingClipEvenOdd.HasValue || _currentPath == null)
+            return;
+
+        _currentPath.FillType = _pendingClipEvenOdd.Value
+            ? SKPathFillType.EvenOdd
+            : SKPathFillType.Winding;
+        _canvas.ClipPath(_currentPath, SKClipOperation.Intersect, _options.AntiAlias);
+        _pendingClipEvenOdd = null;
     }
 
     #endregion
@@ -3238,6 +5280,7 @@ internal partial class RenderContext
         return shading.GetInt("ShadingType", 0) switch
         {
             1 or 2 or 3 => RenderShadingPattern(path, pattern, shading),
+            4 => RenderType4MeshPattern(path, pattern, shading),
             6 => RenderType6MeshPattern(path, pattern, shading),
             _ => false
         };
@@ -3257,10 +5300,10 @@ internal partial class RenderContext
             return false;
 
         var bbox = new SKRect(
-            (float)Math.Min(bboxArray.GetNumber(0), bboxArray.GetNumber(2)),
-            (float)Math.Min(bboxArray.GetNumber(1), bboxArray.GetNumber(3)),
-            (float)Math.Max(bboxArray.GetNumber(0), bboxArray.GetNumber(2)),
-            (float)Math.Max(bboxArray.GetNumber(1), bboxArray.GetNumber(3)));
+            (float)Math.Min(ArrayNumberOrDefault(bboxArray, 0), ArrayNumberOrDefault(bboxArray, 2)),
+            (float)Math.Min(ArrayNumberOrDefault(bboxArray, 1), ArrayNumberOrDefault(bboxArray, 3)),
+            (float)Math.Max(ArrayNumberOrDefault(bboxArray, 0), ArrayNumberOrDefault(bboxArray, 2)),
+            (float)Math.Max(ArrayNumberOrDefault(bboxArray, 1), ArrayNumberOrDefault(bboxArray, 3)));
         if (bbox.Width <= 0 || bbox.Height <= 0)
             return false;
 
@@ -3292,16 +5335,20 @@ internal partial class RenderContext
             if (clip.Width <= 0 || clip.Height <= 0)
                 return false;
 
-            var tileMinX = (float)Math.Floor((clip.Left - bbox.Right) / xStep) * xStep;
-            var tileMaxX = (float)Math.Ceiling((clip.Right - bbox.Left) / xStep) * xStep;
-            var tileMinY = (float)Math.Floor((clip.Top - bbox.Bottom) / yStep) * yStep;
-            var tileMaxY = (float)Math.Ceiling((clip.Bottom - bbox.Top) / yStep) * yStep;
+            var xStepAbs = Math.Abs(xStep);
+            var yStepAbs = Math.Abs(yStep);
+            var tileMinX = (float)(Math.Ceiling((clip.Left - bbox.Right) / xStepAbs) * xStepAbs);
+            var tileMaxX = (float)(Math.Floor((clip.Right - bbox.Left) / xStepAbs) * xStepAbs);
+            var tileMinY = (float)(Math.Ceiling((clip.Top - bbox.Bottom) / yStepAbs) * yStepAbs);
+            var tileMaxY = (float)(Math.Floor((clip.Bottom - bbox.Top) / yStepAbs) * yStepAbs);
+            if (tileMinX > tileMaxX || tileMinY > tileMaxY)
+                return true;
 
             const int maxTiles = 4096;
             var tileCount = 0;
-            for (var ty = tileMinY; ty <= tileMaxY; ty += Math.Abs(yStep))
+            for (var ty = tileMinY; ty <= tileMaxY; ty += yStepAbs)
             {
-                for (var tx = tileMinX; tx <= tileMaxX; tx += Math.Abs(xStep))
+                for (var tx = tileMinX; tx <= tileMaxX; tx += xStepAbs)
                 {
                     if (++tileCount > maxTiles)
                         return false;
@@ -3414,6 +5461,7 @@ internal partial class RenderContext
         {
             Shader = shader,
             BlendMode = _state.BlendMode,
+            Color = SKColors.White.WithAlpha((byte)Math.Clamp(_state.FillAlpha * 255, 0, 255)),
             IsAntialias = _options.AntiAlias
         };
 
@@ -3442,6 +5490,152 @@ internal partial class RenderContext
         }
 
         return true;
+    }
+
+    private bool RenderType4MeshPattern(
+        SKPath clipPath,
+        Pdfe.Core.Primitives.PdfDictionary pattern,
+        Pdfe.Core.Primitives.PdfDictionary shading)
+    {
+        if (shading is not Pdfe.Core.Primitives.PdfStream stream)
+            return false;
+
+        var triangles = DecodeType4MeshTriangles(stream);
+        if (triangles.Count == 0)
+            return false;
+
+        var minX = triangles.Min(t => t.MinX);
+        var minY = triangles.Min(t => t.MinY);
+        var maxX = triangles.Max(t => t.MaxX);
+        var maxY = triangles.Max(t => t.MaxY);
+        if (maxX <= minX || maxY <= minY)
+            return false;
+
+        var width = Math.Clamp((int)Math.Ceiling(maxX - minX) * 2, 16, 1024);
+        var height = Math.Clamp((int)Math.Ceiling(maxY - minY) * 2, 16, 1024);
+        using var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
+        bitmap.Erase(SKColors.Transparent);
+
+        foreach (var triangle in triangles)
+            RasterizeMeshTriangle(bitmap, triangle, minX, minY, maxX, maxY);
+
+        using var image = SKImage.FromBitmap(bitmap);
+        using var shader = SKShader.CreateImage(
+            image,
+            SKShaderTileMode.Clamp,
+            SKShaderTileMode.Clamp,
+            SKMatrix.CreateScale(
+                (float)((maxX - minX) / width),
+                (float)((maxY - minY) / height)));
+
+        using var paint = new SKPaint
+        {
+            Shader = shader,
+            BlendMode = _state.BlendMode,
+            Color = SKColors.White.WithAlpha((byte)Math.Clamp(_state.FillAlpha * 255, 0, 255)),
+            IsAntialias = _options.AntiAlias
+        };
+
+        _canvas.Save();
+        try
+        {
+            _canvas.ClipPath(clipPath, SKClipOperation.Intersect, _options.AntiAlias);
+
+            var inverseCtm = InvertAffine(_state.CurrentTransform);
+            if (inverseCtm.HasValue)
+            {
+                var inv = inverseCtm.Value;
+                _canvas.Concat(in inv);
+            }
+
+            var patternMatrix = GetMatrix(pattern.GetOptional("Matrix") as Pdfe.Core.Primitives.PdfArray);
+            _canvas.Concat(in patternMatrix);
+            _canvas.Translate((float)minX, (float)minY);
+            _canvas.DrawRect(
+                new SKRect(0, 0, (float)(maxX - minX), (float)(maxY - minY)),
+                paint);
+        }
+        finally
+        {
+            _canvas.Restore();
+        }
+
+        return true;
+    }
+
+    private List<MeshTriangle> DecodeType4MeshTriangles(Pdfe.Core.Primitives.PdfStream stream)
+    {
+        var decode = stream.GetOptional("Decode") as Pdfe.Core.Primitives.PdfArray;
+        var xMin = decode?.Count >= 2 ? decode.GetNumber(0) : 0;
+        var xMax = decode?.Count >= 2 ? decode.GetNumber(1) : 1;
+        var yMin = decode?.Count >= 4 ? decode.GetNumber(2) : 0;
+        var yMax = decode?.Count >= 4 ? decode.GetNumber(3) : 1;
+        var bitsPerCoordinate = stream.GetInt("BitsPerCoordinate", 16);
+        var bitsPerComponent = stream.GetInt("BitsPerComponent", 8);
+        var bitsPerFlag = stream.GetInt("BitsPerFlag", 2);
+        var functionObj = stream.GetOptional("Function");
+        var function = functionObj != null ? _page.Document.Resolve(functionObj) : null;
+        var colorSpace = stream.GetNameOrNull("ColorSpace") ?? "DeviceRGB";
+        var componentCount = GetMeshComponentCount(stream, colorSpace, function);
+
+        var reader = new MeshBitReader(stream.DecodedData);
+        var triangles = new List<MeshTriangle>();
+        var pending = new List<MeshVertex>(3);
+        MeshTriangle? previous = null;
+
+        while (reader.RemainingBits >= bitsPerFlag + (2 * bitsPerCoordinate) + (componentCount * bitsPerComponent))
+        {
+            MeshVertex vertex;
+            try
+            {
+                var flag = (int)reader.Read(bitsPerFlag);
+                var x = Decode(reader.Read(bitsPerCoordinate), bitsPerCoordinate, xMin, xMax);
+                var y = Decode(reader.Read(bitsPerCoordinate), bitsPerCoordinate, yMin, yMax);
+                var components = new double[componentCount];
+                for (int i = 0; i < componentCount; i++)
+                {
+                    var cMin = decode?.Count >= 6 + (2 * i) ? decode.GetNumber(4 + (2 * i)) : 0;
+                    var cMax = decode?.Count >= 6 + (2 * i) ? decode.GetNumber(5 + (2 * i)) : 1;
+                    components[i] = Decode(reader.Read(bitsPerComponent), bitsPerComponent, cMin, cMax);
+                }
+
+                var color = ComponentsToSkColor(
+                    function != null
+                        ? PdfFunctionEvaluator.Evaluate(function, components[0], _page.Document) ?? new[] { components[0] }
+                        : components,
+                    colorSpace);
+                vertex = new MeshVertex(flag, new SKPoint((float)x, (float)y), color);
+            }
+            catch
+            {
+                break;
+            }
+
+            if (vertex.Flag == 0 || previous == null)
+            {
+                pending.Add(vertex);
+                if (pending.Count < 3)
+                    continue;
+
+                previous = new MeshTriangle(pending[0], pending[1], pending[2]);
+                triangles.Add(previous);
+                pending.Clear();
+                continue;
+            }
+
+            pending.Clear();
+            previous = vertex.Flag switch
+            {
+                1 => new MeshTriangle(previous.B, previous.C, vertex),
+                2 => new MeshTriangle(previous.A, previous.C, vertex),
+                _ => null
+            };
+
+            if (previous != null)
+                triangles.Add(previous);
+        }
+
+        return triangles;
     }
 
     private List<MeshPatch> DecodeType6MeshPatches(Pdfe.Core.Primitives.PdfStream stream)
@@ -3498,7 +5692,7 @@ internal partial class RenderContext
                 break;
             }
 
-            var colors = ResolveMeshColors(components, previous, flag, function, colorSpace);
+            var colors = ResolveMeshColors(components, previous, flag, function, colorSpace, _page.Document);
             var patch = MeshPatch.From(points, colors);
             patches.Add(patch);
             previous = patch;
@@ -3513,15 +5707,35 @@ internal partial class RenderContext
         return min + encoded * ((max - min) / denominator);
     }
 
+    private static int GetMeshComponentCount(
+        Pdfe.Core.Primitives.PdfStream stream,
+        string colorSpace,
+        Pdfe.Core.Primitives.PdfObject? function)
+    {
+        if (function != null)
+            return 1;
+
+        if (stream.GetOptional("Decode") is Pdfe.Core.Primitives.PdfArray decode && decode.Count > 4)
+            return Math.Max(1, (decode.Count - 4) / 2);
+
+        return colorSpace switch
+        {
+            "DeviceRGB" or "RGB" => 3,
+            "DeviceCMYK" or "CMYK" => 4,
+            _ => 1
+        };
+    }
+
     private static SKColor[] ResolveMeshColors(
         List<double> components,
         MeshPatch? previous,
         int flag,
         Pdfe.Core.Primitives.PdfObject? function,
-        string colorSpace)
+        string colorSpace,
+        PdfDocument document)
     {
         var newColors = components
-            .Select(c => ComponentsToSkColor(PdfFunctionEvaluator.Evaluate(function, c) ?? new[] { c }, colorSpace))
+            .Select(c => ComponentsToSkColor(PdfFunctionEvaluator.Evaluate(function, c, document) ?? new[] { c }, colorSpace))
             .ToArray();
 
         if (newColors.Length >= 4)
@@ -3562,6 +5776,61 @@ internal partial class RenderContext
         }
     }
 
+    private static void RasterizeMeshTriangle(
+        SKBitmap bitmap,
+        MeshTriangle triangle,
+        double minX,
+        double minY,
+        double maxX,
+        double maxY)
+    {
+        var startX = Math.Clamp((int)Math.Floor((triangle.MinX - minX) / (maxX - minX) * bitmap.Width), 0, bitmap.Width - 1);
+        var endX = Math.Clamp((int)Math.Ceiling((triangle.MaxX - minX) / (maxX - minX) * bitmap.Width), 0, bitmap.Width - 1);
+        var startY = Math.Clamp((int)Math.Floor((triangle.MinY - minY) / (maxY - minY) * bitmap.Height), 0, bitmap.Height - 1);
+        var endY = Math.Clamp((int)Math.Ceiling((triangle.MaxY - minY) / (maxY - minY) * bitmap.Height), 0, bitmap.Height - 1);
+
+        var a = triangle.A.Point;
+        var b = triangle.B.Point;
+        var c = triangle.C.Point;
+        var denominator =
+            (b.Y - c.Y) * (a.X - c.X) +
+            (c.X - b.X) * (a.Y - c.Y);
+        if (Math.Abs(denominator) < 1e-9)
+            return;
+
+        for (var y = startY; y <= endY; y++)
+        {
+            var py = minY + ((y + 0.5) / bitmap.Height) * (maxY - minY);
+            for (var x = startX; x <= endX; x++)
+            {
+                var px = minX + ((x + 0.5) / bitmap.Width) * (maxX - minX);
+                var wa = ((b.Y - c.Y) * (px - c.X) + (c.X - b.X) * (py - c.Y)) / denominator;
+                var wb = ((c.Y - a.Y) * (px - c.X) + (a.X - c.X) * (py - c.Y)) / denominator;
+                var wc = 1 - wa - wb;
+                const double epsilon = -0.001;
+                if (wa < epsilon || wb < epsilon || wc < epsilon)
+                    continue;
+
+                bitmap.SetPixel(x, y, Barycentric(
+                    triangle.A.Color,
+                    triangle.B.Color,
+                    triangle.C.Color,
+                    wa,
+                    wb,
+                    wc));
+            }
+        }
+    }
+
+    private static SKColor Barycentric(SKColor a, SKColor b, SKColor c, double wa, double wb, double wc)
+    {
+        return new SKColor(
+            (byte)Math.Clamp((a.Red * wa) + (b.Red * wb) + (c.Red * wc), 0, 255),
+            (byte)Math.Clamp((a.Green * wa) + (b.Green * wb) + (c.Green * wc), 0, 255),
+            (byte)Math.Clamp((a.Blue * wa) + (b.Blue * wb) + (c.Blue * wc), 0, 255),
+            255);
+    }
+
     private static SKColor Bilinear(SKColor[] colors, double u, double v)
     {
         static double Lerp(double a, double b, double t) => a + (b - a) * t;
@@ -3576,23 +5845,6 @@ internal partial class RenderContext
             (byte)Math.Clamp(Lerp(g0, g1, v), 0, 255),
             (byte)Math.Clamp(Lerp(b0, b1, v), 0, 255),
             255);
-    }
-
-    private static SKMatrix GetMatrix(Pdfe.Core.Primitives.PdfArray? arr)
-    {
-        if (arr == null || arr.Count < 6)
-            return new SKMatrix(1, 0, 0, 0, 1, 0, 0, 0, 1);
-
-        return new SKMatrix(
-            (float)arr.GetNumber(0),
-            (float)arr.GetNumber(2),
-            (float)arr.GetNumber(4),
-            (float)arr.GetNumber(1),
-            (float)arr.GetNumber(3),
-            (float)arr.GetNumber(5),
-            0,
-            0,
-            1);
     }
 
     private static SKMatrix? InvertAffine(SKMatrix matrix)
@@ -3615,8 +5867,7 @@ internal partial class RenderContext
         // Remove leading / if present
         var name = nameOperand.TrimStart('/');
 
-        // Get the shading dictionary from page resources
-        var shading = _page.GetShading(name);
+        var shading = ResolveShadingFromActiveResources(name);
         if (shading == null)
             return;
 
@@ -3671,16 +5922,7 @@ internal partial class RenderContext
                 null,
                 SKShaderTileMode.Clamp);
 
-        using var paint = new SKPaint
-        {
-            Shader = shader,
-            BlendMode = _state.BlendMode,
-            IsAntialias = _options.AntiAlias
-        };
-
-        // Fill the current clipping area
-        var clipBounds = _canvas.LocalClipBounds;
-        _canvas.DrawRect(clipBounds, paint);
+        DrawShaderOverCurrentClip(shader);
     }
 
     private void RenderRadialShading(Pdfe.Core.Primitives.PdfDictionary shading)
@@ -3714,16 +5956,89 @@ internal partial class RenderContext
                 null,
                 SKShaderTileMode.Clamp);
 
+        var (extendStart, extendEnd) = GetShadingExtend(shading);
+        _canvas.Save();
+        try
+        {
+            ApplyRadialShadingDomainClip(x0, y0, r0, x1, y1, r1, extendStart, extendEnd);
+            DrawShaderOverCurrentClip(shader);
+        }
+        finally
+        {
+            _canvas.Restore();
+        }
+    }
+
+    private void ApplyRadialShadingDomainClip(
+        float x0,
+        float y0,
+        float r0,
+        float x1,
+        float y1,
+        float r1,
+        bool extendStart,
+        bool extendEnd)
+    {
+        if (!extendEnd)
+        {
+            using var endPath = new SKPath();
+            endPath.AddCircle(x1, y1, Math.Max(0, r1));
+            _canvas.ClipPath(endPath, SKClipOperation.Intersect, _options.AntiAlias);
+        }
+
+        if (!extendStart && r0 > 0)
+        {
+            using var startPath = new SKPath();
+            startPath.AddCircle(x0, y0, r0);
+            _canvas.ClipPath(startPath, SKClipOperation.Difference, _options.AntiAlias);
+        }
+    }
+
+    private static (bool Start, bool End) GetShadingExtend(Pdfe.Core.Primitives.PdfDictionary shading)
+    {
+        if (shading.GetOptional("Extend") is not Pdfe.Core.Primitives.PdfArray extend)
+            return (false, false);
+
+        return (
+            extend.Count > 0 && extend[0] is Pdfe.Core.Primitives.PdfBoolean start && start.Value,
+            extend.Count > 1 && extend[1] is Pdfe.Core.Primitives.PdfBoolean end && end.Value);
+    }
+
+    private void DrawShaderOverCurrentClip(SKShader shader)
+    {
+        var clipBounds = _canvas.LocalClipBounds;
+        if (clipBounds.Width <= 0 || clipBounds.Height <= 0)
+            return;
+
+        var alpha = (byte)Math.Clamp(_state.FillAlpha * 255, 0, 255);
         using var paint = new SKPaint
         {
             Shader = shader,
-            BlendMode = _state.BlendMode,
+            BlendMode = alpha == 255 ? _state.BlendMode : SKBlendMode.SrcOver,
             IsAntialias = _options.AntiAlias
         };
 
-        // Fill the current clipping area
-        var clipBounds = _canvas.LocalClipBounds;
-        _canvas.DrawRect(clipBounds, paint);
+        if (alpha == 255)
+        {
+            _canvas.DrawRect(clipBounds, paint);
+            return;
+        }
+
+        using var layerPaint = new SKPaint
+        {
+            Color = SKColors.White.WithAlpha(alpha),
+            BlendMode = _state.BlendMode,
+            IsAntialias = _options.AntiAlias
+        };
+        _canvas.SaveLayer(clipBounds, layerPaint);
+        try
+        {
+            _canvas.DrawRect(clipBounds, paint);
+        }
+        finally
+        {
+            _canvas.Restore();
+        }
     }
 
     private void RenderFunctionShading(Pdfe.Core.Primitives.PdfDictionary shading)
@@ -3782,7 +6097,7 @@ internal partial class RenderContext
                     continue;
 
                 var functionY = yMin + yMax - sourceY;
-                var comps = PdfFunctionEvaluator.Evaluate(funcObj, new[] { (double)sourceX, (double)functionY });
+                var comps = PdfFunctionEvaluator.Evaluate(funcObj, new[] { (double)sourceX, (double)functionY }, _page.Document);
                 if (comps == null)
                     continue;
 
@@ -3800,14 +6115,14 @@ internal partial class RenderContext
         _canvas.DrawImage(image, bounds, paint);
     }
 
-    private static double[]? GetNumberArray(Pdfe.Core.Primitives.PdfArray? arr)
+    private double[]? GetNumberArray(Pdfe.Core.Primitives.PdfArray? arr)
     {
         if (arr == null)
             return null;
 
         var values = new double[arr.Count];
         for (var i = 0; i < arr.Count; i++)
-            values[i] = arr.GetNumber(i);
+            values[i] = ArrayNumberOrDefault(arr, i);
         return values;
     }
 
@@ -3817,39 +6132,66 @@ internal partial class RenderContext
         var colorSpaceName = shading.GetNameOrNull("ColorSpace") ?? "DeviceGray";
         var funcRef = shading.GetOptional("Function");
         var funcObj = funcRef != null ? _page.Document.Resolve(funcRef) : null;
+        var domain = GetNumberArray(shading.GetOptional("Domain") as Pdfe.Core.Primitives.PdfArray)
+                     ?? GetNumberArray((funcObj as Pdfe.Core.Primitives.PdfDictionary)?.GetOptional("Domain") as Pdfe.Core.Primitives.PdfArray)
+                     ?? new[] { 0.0, 1.0 };
+        var domainMin = domain.Length >= 2 ? domain[0] : 0.0;
+        var domainMax = domain.Length >= 2 ? domain[1] : 1.0;
+        if (Math.Abs(domainMax - domainMin) < 1e-9)
+            domainMax = domainMin + 1.0;
 
-        var c0 = PdfFunctionEvaluator.Evaluate(funcObj, 0.0) ?? new[] { 0.0 };
-        var c1 = PdfFunctionEvaluator.Evaluate(funcObj, 1.0) ?? new[] { 1.0 };
+        var c0 = PdfFunctionEvaluator.Evaluate(funcObj, domainMin, _page.Document) ?? new[] { 0.0 };
+        var c1 = PdfFunctionEvaluator.Evaluate(funcObj, domainMax, _page.Document) ?? new[] { 1.0 };
 
         var startColor = ComponentsToSkColor(c0, colorSpaceName);
         var endColor = ComponentsToSkColor(c1, colorSpaceName);
 
-        SKColor[]? stops = null;
-        float[]? positions = null;
-
-        if (funcObj is Pdfe.Core.Primitives.PdfDictionary fd && fd.GetInt("FunctionType", -1) == 3)
-        {
-            var boundsObj = fd.GetOptional("Bounds") as Pdfe.Core.Primitives.PdfArray;
-            if (boundsObj != null && boundsObj.Count > 0)
-            {
-                var pts = new List<float> { 0f };
-                for (int i = 0; i < boundsObj.Count; i++)
-                    pts.Add((float)boundsObj.GetNumber(i));
-                pts.Add(1f);
-
-                var colors = new List<SKColor>();
-                foreach (var pt in pts)
-                {
-                    var c = PdfFunctionEvaluator.Evaluate(funcObj, pt) ?? new[] { 0.0 };
-                    colors.Add(ComponentsToSkColor(c, colorSpaceName));
-                }
-
-                stops = colors.ToArray();
-                positions = pts.ToArray();
-            }
-        }
+        var (stops, positions) = ShouldSampleGradientFunction(funcObj)
+            ? SampleGradientFunction(funcObj, colorSpaceName, domainMin, domainMax)
+            : (null, null);
 
         return (startColor, endColor, stops, positions);
+    }
+
+    private (SKColor[] stops, float[] positions) SampleGradientFunction(
+        PdfObject? funcObj,
+        string colorSpaceName,
+        double domainMin,
+        double domainMax)
+    {
+        var stops = new SKColor[ComplexGradientSampleCount + 1];
+        var positions = new float[ComplexGradientSampleCount + 1];
+
+        for (var i = 0; i <= ComplexGradientSampleCount; i++)
+        {
+            var position = (double)i / ComplexGradientSampleCount;
+            var t = domainMin + ((domainMax - domainMin) * position);
+            var comps = PdfFunctionEvaluator.Evaluate(funcObj, t, _page.Document) ?? new[] { 0.0 };
+            stops[i] = ComponentsToSkColor(comps, colorSpaceName);
+            positions[i] = (float)position;
+        }
+
+        return (stops, positions);
+    }
+
+    private bool ShouldSampleGradientFunction(PdfObject? funcObj)
+    {
+        if (funcObj == null)
+            return false;
+
+        var resolved = _page.Document.Resolve(funcObj);
+        if (resolved is PdfArray array)
+            return array.Any(ShouldSampleGradientFunction);
+
+        if (resolved is not PdfDictionary function)
+            return false;
+
+        return function.GetInt("FunctionType", -1) switch
+        {
+            0 or 3 or 4 => true,
+            2 => Math.Abs(function.GetNumber("N", 1.0) - 1.0) > 1e-9,
+            _ => false
+        };
     }
 
     private static SKColor ComponentsToSkColor(double[] comps, string colorSpace)
@@ -4028,6 +6370,23 @@ internal partial class RenderContext
         return null;
     }
 
+    private Pdfe.Core.Primitives.PdfObject? ResolvePropertyFromActiveResources(string name)
+    {
+        foreach (var resources in _resourcesStack)
+        {
+            if (resources == null) continue;
+            var propertiesObj = resources.GetOptional("Properties");
+            if (propertiesObj == null) continue;
+            if (_page.Document.Resolve(propertiesObj) is not Pdfe.Core.Primitives.PdfDictionary properties)
+                continue;
+            var property = properties.GetOptional(name);
+            if (property != null)
+                return property;
+        }
+
+        return null;
+    }
+
     private Pdfe.Core.Primitives.PdfDictionary? ResolvePatternFromActiveResources(string name)
     {
         foreach (var resources in _resourcesStack)
@@ -4043,6 +6402,23 @@ internal partial class RenderContext
         }
 
         return null;
+    }
+
+    private Pdfe.Core.Primitives.PdfDictionary? ResolveShadingFromActiveResources(string name)
+    {
+        foreach (var resources in _resourcesStack)
+        {
+            if (resources == null) continue;
+            var shadingsObj = resources.GetOptional("Shading");
+            if (shadingsObj == null) continue;
+            if (_page.Document.Resolve(shadingsObj) is not Pdfe.Core.Primitives.PdfDictionary shadings)
+                continue;
+            var shadingObj = shadings.GetOptional(name);
+            if (shadingObj == null) continue;
+            return _page.Document.Resolve(shadingObj) as Pdfe.Core.Primitives.PdfDictionary;
+        }
+
+        return _page.GetShading(name);
     }
 
     #endregion

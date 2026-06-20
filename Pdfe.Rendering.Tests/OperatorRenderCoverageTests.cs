@@ -60,6 +60,27 @@ public class OperatorRenderCoverageTests
     }
 
     [Fact]
+    public void Sh_RadialShadingWithoutExtend_DoesNotPaintOutsideEndpointCircles()
+    {
+        // /Sh3 omits /Extend. PDF radial shadings default to [false false],
+        // so the shader must not clamp-fill the whole current clipping area.
+        var pdf = CreatePdfWithShadings("/Sh3 sh");
+        using var doc = PdfDocument.Open(pdf);
+        using var bmp = new SkiaRenderer().RenderPage(doc.GetPage(1));
+
+        var center = bmp.GetPixel(Px(306), Py(bmp, 396));
+        var outside = bmp.GetPixel(Px(80), Py(bmp, 396));
+        var ring = bmp.GetPixel(Px(306), Py(bmp, 500));
+
+        center.Should().Be(SKColors.White,
+            "without start extension, the area inside the start circle must remain unpainted");
+        outside.Should().Be(SKColors.White,
+            "without end extension, the page outside the end circle must remain unpainted");
+        (ring.Red < 245 || ring.Green < 245 || ring.Blue < 245).Should().BeTrue(
+            "the annulus between the radial shading circles must still be painted");
+    }
+
+    [Fact]
     public void Sh_WithClipping_RestrictsGradientToClipRegion()
     {
         // Clip to a 120x120 box in the lower-left, then paint the axial gradient.
@@ -152,7 +173,7 @@ public class OperatorRenderCoverageTests
         w.WriteLine("%PDF-1.4");
         w.Flush();
 
-        var offsets = new long[8];
+        var offsets = new long[9];
 
         void Obj(int n, string body)
         {
@@ -166,7 +187,7 @@ public class OperatorRenderCoverageTests
         Obj(1, "<< /Type /Catalog /Pages 2 0 R >>");
         Obj(2, "<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
         Obj(3, "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R " +
-               "/Resources << /Font << /F1 5 0 R >> /Shading << /Sh1 6 0 R /Sh2 7 0 R >> >> >>");
+               "/Resources << /Font << /F1 5 0 R >> /Shading << /Sh1 6 0 R /Sh2 7 0 R /Sh3 8 0 R >> >> >>");
 
         offsets[4] = ms.Position;
         w.WriteLine("4 0 obj");
@@ -187,15 +208,18 @@ public class OperatorRenderCoverageTests
         Obj(7, "<< /ShadingType 3 /ColorSpace /DeviceRGB /Coords [306 396 0 306 396 300] /Domain [0 1] " +
                "/Function << /FunctionType 2 /Domain [0 1] /C0 [1 1 0] /C1 [0 1 0] /N 1 >> " +
                "/Extend [true true] >>");
+        // Radial annulus with default /Extend [false false].
+        Obj(8, "<< /ShadingType 3 /ColorSpace /DeviceRGB /Coords [306 396 80 306 396 120] /Domain [0 1] " +
+               "/Function << /FunctionType 2 /Domain [0 1] /C0 [0.6 0.8 0.8] /C1 [0 0.8 0.8] /N 1 >> >>");
 
         long xref = ms.Position;
         w.WriteLine("xref");
-        w.WriteLine("0 8");
+        w.WriteLine("0 9");
         w.WriteLine("0000000000 65535 f ");
-        for (int i = 1; i <= 7; i++)
+        for (int i = 1; i <= 8; i++)
             w.WriteLine($"{offsets[i]:D10} 00000 n ");
         w.WriteLine("trailer");
-        w.WriteLine("<< /Root 1 0 R /Size 8 >>");
+        w.WriteLine("<< /Root 1 0 R /Size 9 >>");
         w.WriteLine("startxref");
         w.WriteLine(xref.ToString());
         w.WriteLine("%%EOF");

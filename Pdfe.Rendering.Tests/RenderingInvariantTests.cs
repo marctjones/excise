@@ -210,8 +210,8 @@ public class RenderingInvariantTests
         using var bitmap = renderer.RenderPage(doc.GetPage(1), opts);
 
         // Assert - Bitmap dimensions must match formula: (int)(W * dpi/72) × (int)(H * dpi/72)
-        var expectedWidth = (int)Math.Round(width * dpi / 72.0);
-        var expectedHeight = (int)Math.Round(height * dpi / 72.0);
+        var expectedWidth = (int)Math.Ceiling(width * dpi / 72.0);
+        var expectedHeight = (int)Math.Ceiling(height * dpi / 72.0);
 
         bitmap.Width.Should().Be(expectedWidth,
             $"width must be (int)({width} * {dpi}/72) = {expectedWidth}");

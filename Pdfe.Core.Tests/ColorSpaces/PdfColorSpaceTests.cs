@@ -394,6 +394,31 @@ public class PdfColorSpaceTests
     }
 
     [Fact]
+    public void Indexed_LabLookup_DecodesLookupBytesIntoLabRanges()
+    {
+        using var doc = CreateMinimalPdf();
+        var labDict = new PdfDictionary
+        {
+            [new PdfName("WhitePoint")] = new PdfArray(new PdfReal(0.964203), new PdfInteger(1), new PdfReal(0.824905)),
+            [new PdfName("Range")] = new PdfArray(new PdfInteger(-128), new PdfInteger(127), new PdfInteger(-128), new PdfInteger(127))
+        };
+        var lab = new PdfArray(new PdfName("Lab"), labDict);
+        var lookupString = new PdfString(System.Text.Encoding.Latin1.GetString(new byte[] { 128, 128, 128 }));
+        var arr = new PdfArray(
+            new PdfName("Indexed"),
+            lab,
+            new PdfInteger(0),
+            lookupString);
+
+        var cs = PdfColorSpace.Parse(arr, doc);
+
+        var (r, g, b) = cs.LookupIndexed(0);
+        r.Should().BeGreaterThan(0.30);
+        g.Should().BeGreaterThan(0.30);
+        b.Should().BeGreaterThan(0.30);
+    }
+
+    [Fact]
     public void Indexed_ToRgb_UsesLookup()
     {
         using var doc = CreateMinimalPdf();

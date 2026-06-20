@@ -88,6 +88,26 @@ public class PdfFunctionEvaluatorTests
     }
 
     [Fact]
+    public void Evaluate_StitchingFunction_UsesDeclaredDomainForFirstAndLastSegments()
+    {
+        var stitching = new PdfDictionary
+        {
+            ["FunctionType"] = new PdfInteger(3),
+            ["Domain"] = Numbers(-6.0, 6.0),
+            ["Functions"] = new PdfArray(
+                ExponentialFunction(new[] { 0.0 }, new[] { 10.0 }, n: 1),
+                ExponentialFunction(new[] { 20.0 }, new[] { 30.0 }, n: 1)),
+            ["Bounds"] = Numbers(0.0),
+            ["Encode"] = Numbers(0.0, 1.0, 0.0, 1.0)
+        };
+
+        PdfFunctionEvaluator.Evaluate(stitching, -3.0)![0]
+            .Should().BeApproximately(5.0, 0.0001);
+        PdfFunctionEvaluator.Evaluate(stitching, 3.0)![0]
+            .Should().BeApproximately(25.0, 0.0001);
+    }
+
+    [Fact]
     public void Evaluate_StitchingFunction_HandlesMissingFunctionsAndDegenerateBounds()
     {
         PdfFunctionEvaluator.Evaluate(new PdfDictionary { ["FunctionType"] = new PdfInteger(3) }, 0.5)

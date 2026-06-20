@@ -414,17 +414,32 @@ public class Jbig2DecoderTests
     }
 
     [Fact]
-    public void Decode_WithGenericRefinementTpgron_ThrowsNotSupported()
+    public void Decode_WithGenericRefinementTpgron_Decodes()
     {
         byte[] data = BuildSegment(
             1,
             SegmentType.ImmediateGenericRefinementRegion,
             BuildGenericRefinementRegionBody(typicalPrediction: true));
 
-        var act = () => Jbig2Decoder.Decode(data, null, 1, 1);
+        byte[] result = Jbig2Decoder.Decode(data, null, 1, 1);
 
-        act.Should().Throw<NotSupportedException>()
-            .WithMessage("*TPGRON*");
+        result.Length.Should().Be(1);
+        // Empty payload + default refinement state is deterministic with this synthetic
+        // segment. We assert structural properties rather than pixel semantics to keep
+        // this test focused on successful decode wiring.
+    }
+
+    [Fact]
+    public void Decode_WithGenericRefinementTpgron_HasNoUnexpectedExceptions()
+    {
+        byte[] data = BuildSegment(
+            1,
+            SegmentType.ImmediateGenericRefinementRegion,
+            BuildGenericRefinementRegionBody(typicalPrediction: true));
+
+        byte[] result = Jbig2Decoder.Decode(data, null, 1, 1);
+
+        result.Length.Should().Be(1);
     }
 
     [Fact]
