@@ -3988,6 +3988,9 @@ internal partial class RenderContext
             int srcIndex = 0;
             int dstIndex = 0;
             var pixelValues = new double[componentsPerPixel];
+            var imageMaskPaintBits = isImageMask
+                ? ResolveImageMaskPaintBits(stream)
+                : default;
 
             for (int y = 0; y < height; y++)
             {
@@ -4027,11 +4030,12 @@ internal partial class RenderContext
 
                         if (isImageMask)
                         {
-                            var paintBit = DecodeImageMaskBit(stream, bit);
                             r = _state.FillColor.Red;
                             g = _state.FillColor.Green;
                             b = _state.FillColor.Blue;
-                            a = paintBit ? (byte)Math.Clamp(_state.FillAlpha * 255, 0, 255) : (byte)0;
+                            a = imageMaskPaintBits.Paints(bit)
+                                ? (byte)Math.Clamp(_state.FillAlpha * 255, 0, 255)
+                                : (byte)0;
                         }
                         else if (pdfColorSpace != null)
                         {
@@ -4199,8 +4203,7 @@ internal partial class RenderContext
 
         var pixels = new byte[width * height * 4];
         var fillAlpha = (byte)Math.Clamp(_state.FillAlpha * 255, 0, 255);
-        var paintWhenZero = DecodeImageMaskBit(stream, 0);
-        var paintWhenOne = DecodeImageMaskBit(stream, 1);
+        var paintBits = ResolveImageMaskPaintBits(stream);
         var rowBytes = (width + 7) / 8;
         var dst = 0;
 
@@ -4213,7 +4216,7 @@ internal partial class RenderContext
                 var bit = byteIndex < data.Length
                     ? (data[byteIndex] >> (7 - (x & 7))) & 1
                     : 0;
-                var paint = bit == 0 ? paintWhenZero : paintWhenOne;
+                var paint = paintBits.Paints(bit);
 
                 pixels[dst++] = paint ? _state.FillColor.Red : (byte)0;
                 pixels[dst++] = paint ? _state.FillColor.Green : (byte)0;
@@ -4235,8 +4238,7 @@ internal partial class RenderContext
             return null;
 
         var pixels = new byte[width * height * 4];
-        var paintWhenZero = DecodeImageMaskBit(stream, 0);
-        var paintWhenOne = DecodeImageMaskBit(stream, 1);
+        var paintBits = ResolveImageMaskPaintBits(stream);
         var rowBytes = (width + 7) / 8;
         var dst = 0;
 
@@ -4249,7 +4251,7 @@ internal partial class RenderContext
                 var bit = byteIndex < data.Length
                     ? (data[byteIndex] >> (7 - (x & 7))) & 1
                     : 0;
-                var paint = bit == 0 ? paintWhenZero : paintWhenOne;
+                var paint = paintBits.Paints(bit);
                 var alpha = paint ? (byte)Math.Clamp(_state.FillAlpha * 255, 0, 255) : (byte)0;
 
                 pixels[dst++] = 255;
@@ -4283,10 +4285,11 @@ internal partial class RenderContext
             for (int x = 0; x < width; x++)
             {
                 var bit = ReadOneBitImageSample(data, width, x, y);
-                // Explicit image /Mask streams define source-image pixels to
-                // suppress; direct /ImageMask painting uses the opposite
-                // stencil convention handled by DecodeImageMaskBit callers.
-                var opaque = !DecodeImageMaskBit(stream, bit);
+                // Explicit image /Mask streams use the same decoded stencil
+                // convention to decide which source-image pixels remain
+                // visible, but the result becomes alpha instead of current
+                // fill color.
+                var opaque = DecodeImageMaskBit(stream, bit);
                 var alpha = opaque ? (byte)255 : (byte)0;
 
                 pixels[dst++] = 255;
@@ -4337,9 +4340,79 @@ internal partial class RenderContext
         var decode = stream.GetOptional("Decode") as Pdfe.Core.Primitives.PdfArray;
         var d0 = decode?.Count >= 2 ? decode.GetNumber(0) : 0.0;
         var d1 = decode?.Count >= 2 ? decode.GetNumber(1) : 1.0;
-        // Image masks are stencils: decoded 1 paints with the current color,
-        // decoded 0 is transparent. /Decode [1 0] reverses that polarity.
-        return (bit == 0 ? d0 : d1) >= 0.5;
+        // Image masks are stencils: decoded 0 paints with the current color,
+        // decoded 1 is transparent. /Decode [1 0] reverses the source-bit
+        // polarity while preserving that decoded-value convention.
+        return (bit == 0 ? d0 : d1) < 0.5;
+    }
+
+    private static ImageMaskPaintBits ResolveImageMaskPaintBits(Pdfe.Core.Primitives.PdfStream stream)
+    {
+        if (HasExplicitImageMaskDecode(stream))
+            return new ImageMaskPaintBits(DecodeImageMaskBit(stream, 0), DecodeImageMaskBit(stream, 1));
+
+        if (TryGetCcittImageBlackIsOne(stream, out var blackIsOne))
+            return blackIsOne
+                ? new ImageMaskPaintBits(PaintWhenZero: false, PaintWhenOne: true)
+                : new ImageMaskPaintBits(PaintWhenZero: true, PaintWhenOne: false);
+
+        if (HasStreamFilter(stream, "JBIG2Decode"))
+        {
+            // The JBIG2 decoder returns normalized PDF one-bit image samples:
+            // 1 is white/background and 0 is black/foreground. For an image
+            // mask without an explicit /Decode, the foreground is the stencil.
+            return new ImageMaskPaintBits(PaintWhenZero: true, PaintWhenOne: false);
+        }
+
+        return new ImageMaskPaintBits(DecodeImageMaskBit(stream, 0), DecodeImageMaskBit(stream, 1));
+    }
+
+    private static bool HasExplicitImageMaskDecode(Pdfe.Core.Primitives.PdfStream stream)
+        => stream.GetOptional("Decode") is Pdfe.Core.Primitives.PdfArray decode && decode.Count >= 2;
+
+    private static bool TryGetCcittImageBlackIsOne(
+        Pdfe.Core.Primitives.PdfStream stream,
+        out bool blackIsOne)
+    {
+        var filters = stream.Filters;
+        var decodeParams = stream.DecodeParams;
+        for (int i = filters.Count - 1; i >= 0; i--)
+        {
+            if (!IsNamedFilter(filters[i], "CCITTFaxDecode"))
+                continue;
+
+            var parms = i < decodeParams.Count
+                ? decodeParams[i]
+                : decodeParams.Count == 1 ? decodeParams[0] : null;
+            blackIsOne = parms?.GetBool("BlackIs1", false) ?? false;
+            return true;
+        }
+
+        blackIsOne = false;
+        return false;
+    }
+
+    private static bool HasStreamFilter(Pdfe.Core.Primitives.PdfStream stream, string filterName)
+    {
+        foreach (var filter in stream.Filters)
+        {
+            if (IsNamedFilter(filter, filterName))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsNamedFilter(string actual, string expected)
+        => string.Equals(actual, expected, StringComparison.Ordinal) ||
+           (string.Equals(expected, "CCITTFaxDecode", StringComparison.Ordinal) &&
+            string.Equals(actual, "CCF", StringComparison.Ordinal)) ||
+           (string.Equals(expected, "JBIG2Decode", StringComparison.Ordinal) &&
+            string.Equals(actual, "JBIG2", StringComparison.Ordinal));
+
+    private readonly record struct ImageMaskPaintBits(bool PaintWhenZero, bool PaintWhenOne)
+    {
+        public bool Paints(int bit) => bit == 0 ? PaintWhenZero : PaintWhenOne;
     }
 
     private PdfColorSpace ResolveImageColorSpace(Pdfe.Core.Primitives.PdfObject colorSpaceObject)

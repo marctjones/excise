@@ -233,12 +233,46 @@ public class SkiaRendererCoverageTests
 
         using var bitmap = renderer.RenderPage(doc.GetPage(1), new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
 
+        var transparent = bitmap.GetPixel(105, bitmap.Height - 120);
+        var painted = bitmap.GetPixel(155, bitmap.Height - 120);
+        painted.Blue.Should().BeGreaterThan(200);
+        painted.Red.Should().BeLessThan(80);
+        painted.Green.Should().BeLessThan(80);
+        transparent.Should().Be(SKColors.White);
+    }
+
+    [Fact]
+    public void RenderPage_ImageMaskXObject_DecodeArrayReversesStencilPolarity()
+    {
+        var pdfData = CreatePdfWithImageMaskXObject("[1 0]");
+        using var doc = PdfDocument.Open(pdfData);
+        var renderer = new SkiaRenderer();
+
+        using var bitmap = renderer.RenderPage(doc.GetPage(1), new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
         var painted = bitmap.GetPixel(105, bitmap.Height - 120);
         var transparent = bitmap.GetPixel(155, bitmap.Height - 120);
         painted.Blue.Should().BeGreaterThan(200);
         painted.Red.Should().BeLessThan(80);
         painted.Green.Should().BeLessThan(80);
         transparent.Should().Be(SKColors.White);
+    }
+
+    [Fact]
+    public void RenderPage_CcittImageMaskXObject_UsesBlackSamplesAsDefaultStencil()
+    {
+        var pdfData = CreatePdfWithCcittImageMaskXObject();
+        using var doc = PdfDocument.Open(pdfData);
+        var renderer = new SkiaRenderer();
+
+        using var bitmap = renderer.RenderPage(doc.GetPage(1), new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var transparent = bitmap.GetPixel(105, bitmap.Height - 120);
+        var painted = bitmap.GetPixel(155, bitmap.Height - 120);
+        transparent.Should().Be(SKColors.White);
+        painted.Red.Should().BeGreaterThan(200);
+        painted.Green.Should().BeLessThan(80);
+        painted.Blue.Should().BeLessThan(80);
     }
 
     [Fact]
@@ -1251,10 +1285,11 @@ public class SkiaRendererCoverageTests
         return Encoding.Latin1.GetBytes(sb.ToString());
     }
 
-    private static byte[] CreatePdfWithImageMaskXObject()
+    private static byte[] CreatePdfWithImageMaskXObject(string? decode = null)
     {
         const string content = "0 0 1 rg\nq\n80 0 0 40 100 100 cm\n/Im1 Do\nQ\n";
         const string imageData = "\xF0";
+        var decodeEntry = decode is null ? string.Empty : $" /Decode {decode}";
         var sb = new StringBuilder();
         sb.AppendLine("%PDF-1.4");
         var offsets = new long[6];
@@ -1287,7 +1322,66 @@ public class SkiaRendererCoverageTests
         offsets[5] = sb.Length;
         sb.AppendLine("5 0 obj");
         sb.AppendLine("<< /Type /XObject /Subtype /Image /Width 8 /Height 1");
-        sb.AppendLine($"   /ImageMask true /BitsPerComponent 1 /Length {imageData.Length} >>");
+        sb.AppendLine($"   /ImageMask true /BitsPerComponent 1{decodeEntry} /Length {imageData.Length} >>");
+        sb.AppendLine("stream");
+        sb.Append(imageData);
+        sb.AppendLine();
+        sb.AppendLine("endstream");
+        sb.AppendLine("endobj");
+
+        var xrefPos = sb.Length;
+        sb.AppendLine("xref");
+        sb.AppendLine("0 6");
+        sb.AppendLine("0000000000 65535 f ");
+        for (int i = 1; i <= 5; i++)
+            sb.AppendLine($"{offsets[i]:D10} 00000 n ");
+        sb.AppendLine("trailer");
+        sb.AppendLine("<< /Root 1 0 R /Size 6 >>");
+        sb.AppendLine("startxref");
+        sb.AppendLine(xrefPos.ToString());
+        sb.AppendLine("%%EOF");
+
+        return Encoding.Latin1.GetBytes(sb.ToString());
+    }
+
+    private static byte[] CreatePdfWithCcittImageMaskXObject()
+    {
+        const string content = "1 0 0 rg\nq\n80 0 0 40 100 100 cm\n/Im1 Do\nQ\n";
+        const string imageData = "\x36\xC0";
+        var sb = new StringBuilder();
+        sb.AppendLine("%PDF-1.4");
+        var offsets = new long[6];
+
+        offsets[1] = sb.Length;
+        sb.AppendLine("1 0 obj");
+        sb.AppendLine("<< /Type /Catalog /Pages 2 0 R >>");
+        sb.AppendLine("endobj");
+
+        offsets[2] = sb.Length;
+        sb.AppendLine("2 0 obj");
+        sb.AppendLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+        sb.AppendLine("endobj");
+
+        offsets[3] = sb.Length;
+        sb.AppendLine("3 0 obj");
+        sb.AppendLine("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R");
+        sb.AppendLine("   /Resources << /XObject << /Im1 5 0 R >> >>");
+        sb.AppendLine(">>");
+        sb.AppendLine("endobj");
+
+        offsets[4] = sb.Length;
+        sb.AppendLine("4 0 obj");
+        sb.AppendLine($"<< /Length {content.Length} >>");
+        sb.AppendLine("stream");
+        sb.Append(content);
+        sb.AppendLine("endstream");
+        sb.AppendLine("endobj");
+
+        offsets[5] = sb.Length;
+        sb.AppendLine("5 0 obj");
+        sb.AppendLine("<< /Type /XObject /Subtype /Image /Width 8 /Height 1");
+        sb.AppendLine("   /ImageMask true /BitsPerComponent 1 /Filter /CCITTFaxDecode");
+        sb.AppendLine($"   /DecodeParms << /K -1 /Columns 8 /Rows 1 >> /Length {imageData.Length} >>");
         sb.AppendLine("stream");
         sb.Append(imageData);
         sb.AppendLine();
