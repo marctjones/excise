@@ -301,6 +301,23 @@ public class SkiaRendererTests
             "Flate soft masks with /Decode [1 0] should not invert alpha and turn chart backgrounds black");
     }
 
+    [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsChromeMarkedContent_MismatchedSoftMaskKeepsImageTextVisible()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "chrome-text-selection-markedContent.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js chrome-text-selection-markedContent fixture found at test-pdfs/pdfjs/chrome-text-selection-markedContent.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        CountBlueDominantPixels(bitmap, new SKRectI(20, 15, 190, 60)).Should().BeGreaterThan(500,
+            "the large header is a tiny indexed image with a much larger soft mask, so the mask must not be collapsed to the base image dimensions");
+    }
+
     [Theory(Timeout = 20000)]
     [InlineData("issue4379.pdf")]
     [InlineData("issue4246.pdf")]

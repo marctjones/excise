@@ -3515,31 +3515,119 @@ internal partial class RenderContext
         if (resolved is not Pdfe.Core.Primitives.PdfStream maskStream)
             return false;
 
-        using var maskBitmap = DecodeSoftMaskBitmap(maskObj, maskStream, bitmap.Width, bitmap.Height);
-        if (maskBitmap == null)
+        if (string.Equals(maskStream.GetNameOrNull("Subtype"), "Form", StringComparison.Ordinal))
+            return false;
+
+        var maskWidth = maskStream.GetInt("Width", 0);
+        var maskHeight = maskStream.GetInt("Height", 0);
+        if (maskWidth <= 0 || maskHeight <= 0)
+            return false;
+
+        var (targetWidth, targetHeight) = EstimateImageSoftMaskTargetSize(
+            width,
+            height,
+            bitmap.Width,
+            bitmap.Height,
+            maskWidth,
+            maskHeight);
+        var maskData = GetSoftMaskData(maskObj, maskStream, maskWidth, maskHeight, targetWidth, targetHeight);
+        if (maskData == null || maskData.Data.Length == 0)
+            return false;
+
+        using var maskedBitmap = CreateSoftMaskedImageBitmap(bitmap, maskData);
+        if (maskedBitmap == null)
             return false;
 
         var dest = new SKRect(0, 0, width, height);
-        using var layerPaint = new SKPaint
+        if ((maskedBitmap.Width != bitmap.Width || maskedBitmap.Height != bitmap.Height) &&
+            TryDrawSoftMaskedImageInDeviceSpace(maskedBitmap, dest, imagePaint))
         {
-            BlendMode = imagePaint.BlendMode,
-            Color = imagePaint.Color,
-            IsAntialias = imagePaint.IsAntialias
-        };
+            return true;
+        }
 
-        _canvas.SaveLayer(dest, layerPaint);
-        _canvas.DrawBitmap(bitmap, dest);
-
-        using var lumaFilter = SKColorFilter.CreateLumaColor();
-        using var maskPaint = new SKPaint
-        {
-            BlendMode = SKBlendMode.DstIn,
-            ColorFilter = lumaFilter,
-            IsAntialias = _options.AntiAlias
-        };
-        _canvas.DrawBitmap(maskBitmap, dest, maskPaint);
-        _canvas.Restore();
+        _canvas.DrawBitmap(maskedBitmap, dest, imagePaint);
         return true;
+    }
+
+    private (int Width, int Height) EstimateImageSoftMaskTargetSize(
+        int imageWidth,
+        int imageHeight,
+        int decodedImageWidth,
+        int decodedImageHeight,
+        int maskWidth,
+        int maskHeight)
+    {
+        if (decodedImageWidth == maskWidth && decodedImageHeight == maskHeight)
+            return (decodedImageWidth, decodedImageHeight);
+
+        var deviceDest = MapAxisAlignedRect(
+            _canvas.TotalMatrix,
+            new SKRect(0, 0, imageWidth, imageHeight));
+        var targetWidth = Math.Max(1, (int)Math.Ceiling(deviceDest.Width));
+        var targetHeight = Math.Max(1, (int)Math.Ceiling(deviceDest.Height));
+        return ClampSoftMaskTargetSize(maskWidth, maskHeight, targetWidth, targetHeight);
+    }
+
+    private bool TryDrawSoftMaskedImageInDeviceSpace(SKBitmap bitmap, SKRect dest, SKPaint imagePaint)
+    {
+        var matrix = _canvas.TotalMatrix;
+        const float epsilon = 0.001f;
+        if (Math.Abs(matrix.SkewX) > epsilon ||
+            Math.Abs(matrix.SkewY) > epsilon ||
+            Math.Abs(matrix.ScaleX) <= epsilon ||
+            Math.Abs(matrix.ScaleY) <= epsilon)
+        {
+            return false;
+        }
+
+        var deviceDest = MapAxisAlignedRect(matrix, dest);
+        if (deviceDest.Width <= epsilon || deviceDest.Height <= epsilon)
+            return false;
+
+        _canvas.Save();
+        try
+        {
+            _canvas.SetMatrix(SKMatrix.Identity);
+            _canvas.DrawBitmap(bitmap, deviceDest, imagePaint);
+        }
+        finally
+        {
+            _canvas.Restore();
+        }
+
+        return true;
+    }
+
+    private static SKBitmap? CreateSoftMaskedImageBitmap(SKBitmap source, SoftMaskAlpha mask)
+    {
+        if (source.Width <= 0 || source.Height <= 0 || mask.Width <= 0 || mask.Height <= 0)
+            return null;
+
+        var bitmap = new SKBitmap(mask.Width, mask.Height, SKColorType.Rgba8888, SKAlphaType.Premul);
+        try
+        {
+            var maskIndex = 0;
+            for (int y = 0; y < mask.Height; y++)
+            {
+                var sourceY = MapTargetToSource(y, mask.Height, source.Height);
+                for (int x = 0; x < mask.Width; x++)
+                {
+                    var sourceX = MapTargetToSource(x, mask.Width, source.Width);
+                    var sourceColor = source.GetPixel(sourceX, sourceY);
+                    var maskAlpha = maskIndex < mask.Data.Length ? mask.Data[maskIndex] : (byte)0;
+                    var alpha = (byte)((sourceColor.Alpha * maskAlpha + 127) / 255);
+                    bitmap.SetPixel(x, y, sourceColor.WithAlpha(alpha));
+                    maskIndex++;
+                }
+            }
+
+            return bitmap;
+        }
+        catch (Exception __ex) when (__ex is not OutOfMemoryException)
+        {
+            bitmap.Dispose();
+            return null;
+        }
     }
 
     private bool TryDrawImageWithExplicitMask(
@@ -4232,16 +4320,14 @@ internal partial class RenderContext
                 }
             }
 
-            // Copy pixels to bitmap
-            var handle = System.Runtime.InteropServices.GCHandle.Alloc(pixels, System.Runtime.InteropServices.GCHandleType.Pinned);
-            try
+            var destination = bitmap.GetPixels();
+            if (destination == IntPtr.Zero)
             {
-                bitmap.SetPixels(handle.AddrOfPinnedObject());
+                bitmap.Dispose();
+                return null;
             }
-            finally
-            {
-                handle.Free();
-            }
+
+            System.Runtime.InteropServices.Marshal.Copy(pixels, 0, destination, pixels.Length);
         }
         catch
         {
