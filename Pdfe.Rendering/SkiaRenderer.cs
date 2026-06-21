@@ -5428,6 +5428,7 @@ internal partial class RenderContext
         if (Math.Abs(xStep) < 0.001f || Math.Abs(yStep) < 0.001f)
             return false;
 
+        var paintType = pattern.GetInt("PaintType", 1);
         var patternResources = pattern.GetOptional("Resources") is { } resObj
             ? _page.Document.Resolve(resObj) as Pdfe.Core.Primitives.PdfDictionary
             : null;
@@ -5446,6 +5447,14 @@ internal partial class RenderContext
             var inv = inverseCtm.Value;
             _canvas.Concat(in inv);
             _canvas.Concat(in patternMatrix);
+            if (paintType == 2)
+            {
+                _state.FillPatternName = null;
+                _state.StrokeColor = savedState.FillColor;
+                _state.FillColor = savedState.FillColor;
+                _state.StrokeAlpha = savedState.FillAlpha;
+                _state.FillAlpha = savedState.FillAlpha;
+            }
 
             var clip = _canvas.LocalClipBounds;
             if (clip.Width <= 0 || clip.Height <= 0)
@@ -6387,6 +6396,9 @@ internal partial class RenderContext
         if (fillColorSpace?.Type == PdfColorSpaceType.Pattern)
         {
             _state.FillPatternName = operands.OfType<PdfName>().FirstOrDefault()?.Value;
+            var tintColor = ParsePatternTintColor(operands, _state.FillColorSpace);
+            if (tintColor.HasValue)
+                _state.FillColor = tintColor.Value;
             return;
         }
 
@@ -6424,12 +6436,62 @@ internal partial class RenderContext
         };
     }
 
+    private SKColor? ParsePatternTintColor(IReadOnlyList<PdfObject> operands, string colorSpaceName)
+    {
+        var colorSpaceObj = ResolveColorSpaceObject(colorSpaceName);
+        var resolved = colorSpaceObj != null ? _page.Document.Resolve(colorSpaceObj) : null;
+        if (resolved is not PdfArray arr ||
+            arr.Count < 2 ||
+            arr[0] is not PdfName typeName ||
+            typeName.Value != "Pattern")
+        {
+            return null;
+        }
+
+        var values = operands
+            .Where(o => o is not PdfName)
+            .Select(o => o.GetNumber())
+            .ToArray();
+        if (values.Length == 0)
+            return null;
+
+        var baseColorSpace = ResolvePatternBaseColorSpace(arr[1]);
+        if (baseColorSpace == null || baseColorSpace.Type == PdfColorSpaceType.Pattern)
+            return null;
+
+        var (r, g, b) = baseColorSpace.ToRgb(values);
+        return RgbToColor(r, g, b);
+    }
+
+    private PdfColorSpace? ResolvePatternBaseColorSpace(PdfObject colorSpaceObj)
+    {
+        if (colorSpaceObj is PdfName name)
+        {
+            var named = PdfColorSpace.FromName(name.Value);
+            if (named.Type != PdfColorSpaceType.Unknown)
+                return named;
+
+            var resourceObj = ResolveColorSpaceObject(name.Value);
+            return resourceObj != null
+                ? PdfColorSpace.Parse(resourceObj, _page.Document)
+                : null;
+        }
+
+        return PdfColorSpace.Parse(colorSpaceObj, _page.Document);
+    }
+
     private PdfColorSpace? ResolveColorSpace(string name)
     {
         var cs = PdfColorSpace.FromName(name);
         if (cs.Type != PdfColorSpaceType.Unknown)
             return cs;
 
+        var csObj = ResolveColorSpaceObject(name);
+        return csObj != null ? PdfColorSpace.Parse(csObj, _page.Document) : null;
+    }
+
+    private PdfObject? ResolveColorSpaceObject(string name)
+    {
         foreach (var resources in _resourcesStack)
         {
             if (resources == null) continue;
@@ -6439,15 +6501,11 @@ internal partial class RenderContext
                 continue;
 
             var csObj = colorSpaces.GetOptional(name);
-            if (csObj == null) continue;
-            return PdfColorSpace.Parse(csObj, _page.Document);
+            if (csObj != null)
+                return csObj;
         }
 
-        var pageCsObj = _page.GetColorSpaceObject(name);
-        if (pageCsObj != null)
-            return PdfColorSpace.Parse(pageCsObj, _page.Document);
-
-        return null;
+        return _page.GetColorSpaceObject(name);
     }
 
     /// <summary>

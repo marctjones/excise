@@ -355,6 +355,24 @@ public class SkiaRendererTests
     }
 
     [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsIssue16038_UncoloredTilingPatternUsesScnTint()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "issue16038.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js issue16038 fixture found at test-pdfs/pdfjs/issue16038.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 300, BackgroundColor = SKColors.White });
+
+        CountBlueDominantPixels(bitmap, new SKRectI(0, 0, bitmap.Width, bitmap.Height))
+            .Should().BeGreaterThan(1_000,
+                "uncolored tiling pattern cells should paint with the RGB tint supplied to scn instead of defaulting to black");
+    }
+
+    [Fact(Timeout = 20000)]
     public void RenderPage_PdfjsIssue15716_ZapfDingbatsDifferencesRenderTilingPattern()
     {
         var path = FindRepoFile("test-pdfs", "pdfjs", "issue15716.pdf");
