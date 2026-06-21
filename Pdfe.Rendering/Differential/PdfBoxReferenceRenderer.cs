@@ -66,17 +66,26 @@ public static class PdfBoxReferenceRenderer
             using var p = Process.Start(psi);
             if (p == null)
                 return new ReferenceRenderResult(null, "START_FAILED", "Process.Start returned null", sw.ElapsedMilliseconds);
+            var stdoutTask = p.StandardOutput.ReadToEndAsync();
+            var stderrTask = p.StandardError.ReadToEndAsync();
             if (!p.WaitForExit(timeoutMs))
             {
                 try { p.Kill(entireProcessTree: true); } catch { }
+                var timeoutOutput = FormatCapturedOutput(
+                    ReadCapturedOutput(stderrTask),
+                    ReadCapturedOutput(stdoutTask));
                 return new ReferenceRenderResult(null, "TIMEOUT",
-                    $"{invocation.Description} exceeded {timeoutMs}ms", sw.ElapsedMilliseconds);
+                    AppendDetail($"{invocation.Description} exceeded {timeoutMs}ms", timeoutOutput),
+                    sw.ElapsedMilliseconds);
             }
+
+            var stdout = ReadCapturedOutput(stdoutTask);
+            var stderr = ReadCapturedOutput(stderrTask);
+            var capturedOutput = FormatCapturedOutput(stderr, stdout);
             if (p.ExitCode != 0)
             {
-                var stderr = p.StandardError.ReadToEnd();
                 return new ReferenceRenderResult(null, "EXIT_CODE",
-                    $"{invocation.Description} exited {p.ExitCode}: {Trunc(stderr.Trim(), 200)}",
+                    AppendDetail($"{invocation.Description} exited {p.ExitCode}", capturedOutput),
                     sw.ElapsedMilliseconds);
             }
 
@@ -86,7 +95,8 @@ public static class PdfBoxReferenceRenderer
                 .FirstOrDefault();
             if (outPath == null)
                 return new ReferenceRenderResult(null, "MISSING_OUTPUT",
-                    $"{invocation.Description} did not write an output PNG", sw.ElapsedMilliseconds);
+                    AppendDetail($"{invocation.Description} did not write an output PNG", capturedOutput),
+                    sw.ElapsedMilliseconds);
 
             var bitmap = SKBitmap.Decode(outPath);
             return bitmap == null
@@ -117,7 +127,7 @@ public static class PdfBoxReferenceRenderer
             ?? Environment.GetEnvironmentVariable("PDFBOX_APP_JAR");
         var javaCommand = ResolveJavaCommand();
         if (!string.IsNullOrWhiteSpace(jarPath) && File.Exists(jarPath) && javaCommand != null)
-            return new Invocation(javaCommand, new[] { "-jar", jarPath }, $"PDFBox {Path.GetFileName(jarPath)}");
+            return new Invocation(javaCommand, new[] { "-Djava.awt.headless=true", "-jar", jarPath }, $"PDFBox {Path.GetFileName(jarPath)}");
 
         foreach (var command in new[] { "pdfbox", "pdfbox-app" })
         {
@@ -190,6 +200,32 @@ public static class PdfBoxReferenceRenderer
             psi.ArgumentList.Add(arg);
         return psi;
     }
+
+    private static string ReadCapturedOutput(System.Threading.Tasks.Task<string> readTask)
+    {
+        try
+        {
+            return readTask.GetAwaiter().GetResult();
+        }
+        catch
+        {
+            return "";
+        }
+    }
+
+    private static string? FormatCapturedOutput(string stderr, string stdout)
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(stderr))
+            parts.Add("stderr: " + stderr.Trim());
+        if (!string.IsNullOrWhiteSpace(stdout))
+            parts.Add("stdout: " + stdout.Trim());
+
+        return parts.Count == 0 ? null : Trunc(string.Join("; ", parts), 200);
+    }
+
+    private static string AppendDetail(string message, string? detail)
+        => string.IsNullOrWhiteSpace(detail) ? message : $"{message}: {detail}";
 
     private static string Trunc(string value, int length)
         => value.Length <= length ? value : value.Substring(0, length) + "…";
