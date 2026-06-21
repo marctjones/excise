@@ -288,6 +288,28 @@ public class PdfFunctionEvaluatorTests
             .Should().Equal(0.3, 0.1, 0.2);
     }
 
+    [Fact]
+    public void Evaluate_CalculatorFunction_SupportsIndexAndCvr()
+    {
+        var function = new PdfStream(System.Text.Encoding.Latin1.GetBytes(
+            "{ 1.000000 2 1 roll 1.000000 2 1 roll 1.000000 2 1 roll " +
+            "0 index 1.000000 cvr exch sub 2 1 roll 5 -1 roll " +
+            "1.000000 cvr exch sub 5 1 roll 4 -1 roll " +
+            "1.000000 cvr exch sub 4 1 roll 3 -1 roll " +
+            "1.000000 cvr exch sub 3 1 roll 2 -1 roll " +
+            "1.000000 cvr exch sub 2 1 roll pop }"))
+        {
+            ["FunctionType"] = new PdfInteger(4),
+            ["Domain"] = Numbers(0, 1),
+            ["Range"] = Numbers(0, 1, 0, 1, 0, 1, 0, 1)
+        };
+
+        PdfFunctionEvaluator.Evaluate(function, 0.0)!
+            .Should().Equal(0.0, 0.0, 0.0, 0.0);
+        PdfFunctionEvaluator.Evaluate(function, 0.6)!
+            .Should().Equal(0.0, 0.0, 0.0, 0.6);
+    }
+
     private static PdfDictionary ExponentialFunction(double[] c0, double[] c1, double n)
     {
         return new PdfDictionary

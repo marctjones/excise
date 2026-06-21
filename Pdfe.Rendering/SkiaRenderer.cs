@@ -6168,7 +6168,7 @@ internal partial class RenderContext
     {
         var funcRef = shading.GetOptional("Function");
         var funcObj = funcRef != null ? _page.Document.Resolve(funcRef) : null;
-        var colorSpaceName = shading.GetNameOrNull("ColorSpace") ?? "DeviceGray";
+        var colorSpace = ResolveShadingColorSpace(shading);
         var domain = GetNumberArray(shading.GetOptional("Domain") as Pdfe.Core.Primitives.PdfArray)
                      ?? new[] { 0.0, 1.0, 0.0, 1.0 };
         if (domain.Length < 4)
@@ -6224,7 +6224,7 @@ internal partial class RenderContext
                 if (comps == null)
                     continue;
 
-                var color = ComponentsToSkColor(comps, colorSpaceName);
+                var color = ComponentsToSkColor(comps, colorSpace);
                 bitmap.SetPixel(x, height - 1 - y, color.WithAlpha(alpha));
             }
         }
@@ -6252,7 +6252,7 @@ internal partial class RenderContext
     private (SKColor start, SKColor end, SKColor[]? stops, float[]? positions) ResolveGradientColors(
         Pdfe.Core.Primitives.PdfDictionary shading)
     {
-        var colorSpaceName = shading.GetNameOrNull("ColorSpace") ?? "DeviceGray";
+        var colorSpace = ResolveShadingColorSpace(shading);
         var funcRef = shading.GetOptional("Function");
         var funcObj = funcRef != null ? _page.Document.Resolve(funcRef) : null;
         var domain = GetNumberArray(shading.GetOptional("Domain") as Pdfe.Core.Primitives.PdfArray)
@@ -6266,11 +6266,11 @@ internal partial class RenderContext
         var c0 = PdfFunctionEvaluator.Evaluate(funcObj, domainMin, _page.Document) ?? new[] { 0.0 };
         var c1 = PdfFunctionEvaluator.Evaluate(funcObj, domainMax, _page.Document) ?? new[] { 1.0 };
 
-        var startColor = ComponentsToSkColor(c0, colorSpaceName);
-        var endColor = ComponentsToSkColor(c1, colorSpaceName);
+        var startColor = ComponentsToSkColor(c0, colorSpace);
+        var endColor = ComponentsToSkColor(c1, colorSpace);
 
         var (stops, positions) = ShouldSampleGradientFunction(funcObj)
-            ? SampleGradientFunction(funcObj, colorSpaceName, domainMin, domainMax)
+            ? SampleGradientFunction(funcObj, colorSpace, domainMin, domainMax)
             : (null, null);
 
         return (startColor, endColor, stops, positions);
@@ -6278,7 +6278,7 @@ internal partial class RenderContext
 
     private (SKColor[] stops, float[] positions) SampleGradientFunction(
         PdfObject? funcObj,
-        string colorSpaceName,
+        PdfColorSpace colorSpace,
         double domainMin,
         double domainMax)
     {
@@ -6290,11 +6290,27 @@ internal partial class RenderContext
             var position = (double)i / ComplexGradientSampleCount;
             var t = domainMin + ((domainMax - domainMin) * position);
             var comps = PdfFunctionEvaluator.Evaluate(funcObj, t, _page.Document) ?? new[] { 0.0 };
-            stops[i] = ComponentsToSkColor(comps, colorSpaceName);
+            stops[i] = ComponentsToSkColor(comps, colorSpace);
             positions[i] = (float)position;
         }
 
         return (stops, positions);
+    }
+
+    private PdfColorSpace ResolveShadingColorSpace(Pdfe.Core.Primitives.PdfDictionary shading)
+    {
+        var colorSpaceObj = shading.GetOptional("ColorSpace");
+        if (colorSpaceObj == null)
+            return PdfColorSpace.DeviceGray;
+
+        try
+        {
+            return PdfColorSpace.Parse(colorSpaceObj, _page.Document);
+        }
+        catch
+        {
+            return PdfColorSpace.DeviceGray;
+        }
     }
 
     private bool ShouldSampleGradientFunction(PdfObject? funcObj)
@@ -6330,6 +6346,15 @@ internal partial class RenderContext
             _ => comps.Length >= 3 ? ToRGB(comps[0], comps[1], comps[2])
                : comps.Length >= 1 ? ToGray(comps[0]) : SKColors.Black
         };
+    }
+
+    private static SKColor ComponentsToSkColor(double[] comps, PdfColorSpace colorSpace)
+    {
+        if (comps.Length == 0)
+            return SKColors.Black;
+
+        var (r, g, b) = colorSpace.ToRgb(comps);
+        return ToRGB(r, g, b);
     }
 
     private static SKColor ToGray(double g)

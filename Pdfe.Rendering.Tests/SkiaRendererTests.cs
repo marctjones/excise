@@ -437,6 +437,23 @@ public class SkiaRendererTests
     }
 
     [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsIssue13520_DeviceNShadingTintTransformDoesNotCollapseToBlack()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "issue13520.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js issue13520 fixture found at test-pdfs/pdfjs/issue13520.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        CountDarkPixels(bitmap, new SKRectI(70, 25, 140, 55)).Should().BeLessThan(50,
+            "DeviceN radial shading tint transforms should produce the light center instead of an all-black overpaint");
+    }
+
+    [Fact(Timeout = 20000)]
     public void RenderPage_PdfjsBug920426_Type0EncodingCMapRemapsCharacterCodesToGlyphs()
     {
         var path = FindRepoFile("test-pdfs", "pdfjs", "bug920426.pdf");

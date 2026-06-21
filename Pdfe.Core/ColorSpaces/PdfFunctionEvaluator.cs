@@ -355,6 +355,14 @@ internal static class PdfFunctionEvaluator
                     if (degrees < 0) degrees += 360.0;
                     stack.Push(degrees);
                     break;
+                case "cvr":
+                    // Calculator-function operands are already represented as
+                    // doubles, so PostScript's convert-to-real operator is a no-op.
+                    if (stack.Count < 1) return false;
+                    break;
+                case "index":
+                    if (!Index(stack)) return false;
+                    break;
                 case "lt":
                     if (!Binary(stack, (x, y) => x < y ? 1 : 0)) return false;
                     break;
@@ -388,6 +396,23 @@ internal static class PdfFunctionEvaluator
             }
         }
 
+        return true;
+    }
+
+    private static bool Index(Stack<double> stack)
+    {
+        if (stack.Count < 1)
+            return false;
+
+        var indexValue = stack.Pop();
+        if (indexValue < 0 || Math.Abs(indexValue - Math.Round(indexValue)) > double.Epsilon)
+            return false;
+
+        var index = (int)Math.Round(indexValue);
+        if (index >= stack.Count)
+            return false;
+
+        stack.Push(stack.ElementAt(index));
         return true;
     }
 
