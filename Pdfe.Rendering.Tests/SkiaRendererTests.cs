@@ -379,6 +379,10 @@ public class SkiaRendererTests
             "JPX soft masks should preserve the white page background around transparent image regions");
         darkFraction.Should().BeLessThan(0.18,
             "transparent JPX image regions should not render as black rectangles");
+
+        var (redDominant, blueDominant) = CountRedAndBlueDominantPixels(bitmap, new SKRectI(70, 70, 190, 210));
+        redDominant.Should().BeGreaterThan(blueDominant + 500,
+            "RGB JPX image components should be mapped from CSJ2K's BGR bitmap order into PDF RGB order");
     }
 
     [Fact(Timeout = 20000)]
@@ -530,6 +534,8 @@ public class SkiaRendererTests
 
         CountDarkPixels(bitmap, new SKRectI(70, 25, 140, 55)).Should().BeLessThan(50,
             "DeviceN radial shading tint transforms should produce the light center instead of an all-black overpaint");
+        CountWarmPalePixels(bitmap, new SKRectI(25, 15, 185, 75)).Should().BeGreaterThan(2_500,
+            "transparency-group Form XObjects should apply parent Screen blending and soft masks at the form invocation boundary");
     }
 
     [Fact(Timeout = 20000)]
@@ -4825,6 +4831,33 @@ public class SkiaRendererTests
         return count;
     }
 
+    private static int CountWarmPalePixels(SKBitmap bitmap, SKRectI region)
+    {
+        var left = Math.Clamp(region.Left, 0, bitmap.Width);
+        var top = Math.Clamp(region.Top, 0, bitmap.Height);
+        var right = Math.Clamp(region.Right, left, bitmap.Width);
+        var bottom = Math.Clamp(region.Bottom, top, bitmap.Height);
+        var count = 0;
+
+        for (int y = top; y < bottom; y++)
+        {
+            for (int x = left; x < right; x++)
+            {
+                var pixel = bitmap.GetPixel(x, y);
+                if (pixel.Red > 165 &&
+                    pixel.Green > 160 &&
+                    pixel.Blue < 185 &&
+                    pixel.Red > pixel.Blue + 20 &&
+                    pixel.Green > pixel.Blue + 10)
+                {
+                    count++;
+                }
+            }
+        }
+
+        return count;
+    }
+
     private static SKRectI? GetDarkPixelBounds(SKBitmap bitmap)
     {
         var left = bitmap.Width;
@@ -4892,6 +4925,30 @@ public class SkiaRendererTests
         }
 
         return count;
+    }
+
+    private static (int RedDominant, int BlueDominant) CountRedAndBlueDominantPixels(SKBitmap bitmap, SKRectI region)
+    {
+        var left = Math.Clamp(region.Left, 0, bitmap.Width);
+        var top = Math.Clamp(region.Top, 0, bitmap.Height);
+        var right = Math.Clamp(region.Right, left, bitmap.Width);
+        var bottom = Math.Clamp(region.Bottom, top, bitmap.Height);
+        var red = 0;
+        var blue = 0;
+
+        for (int y = top; y < bottom; y++)
+        {
+            for (int x = left; x < right; x++)
+            {
+                var pixel = bitmap.GetPixel(x, y);
+                if (pixel.Red > 150 && pixel.Red > pixel.Green + 40 && pixel.Red > pixel.Blue + 40)
+                    red++;
+                if (pixel.Blue > 150 && pixel.Blue > pixel.Red + 40 && pixel.Blue > pixel.Green + 40)
+                    blue++;
+            }
+        }
+
+        return (red, blue);
     }
 
     private static byte[] CreatePdfWithContentAndPageSize(string content, int width, int height)

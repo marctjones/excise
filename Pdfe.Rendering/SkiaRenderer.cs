@@ -2879,7 +2879,7 @@ internal partial class RenderContext
         }
     }
 
-    private void RenderWithCurrentSoftMask(Action drawAction, SKPaint sourcePaint)
+    private void RenderWithCurrentSoftMask(Action drawAction, SKPaint sourcePaint, SKRect? preferredBounds = null)
     {
         if (_state.SoftMask == null)
         {
@@ -2919,11 +2919,7 @@ internal partial class RenderContext
 
         // Soft-mask compositing is the same as images: draw content in an
         // offscreen layer, then apply mask luminance with DstIn.
-        var maskBounds = _canvas.LocalClipBounds;
-        if (maskBounds.Width <= 0 || maskBounds.Height <= 0)
-            maskBounds = _canvas.DeviceClipBounds;
-
-        if (maskBounds.Width <= 0 || maskBounds.Height <= 0)
+        if (!TryGetLayerBounds(preferredBounds, out var maskBounds))
         {
             drawAction();
             return;
@@ -3013,9 +3009,106 @@ internal partial class RenderContext
                 RenderImageXObject(stream);
                 break;
             case "Form":
-                RenderFormXObject(stream);
+                RenderFormXObjectAtInvocation(stream);
                 break;
         }
+    }
+
+    private void RenderFormXObjectAtInvocation(Pdfe.Core.Primitives.PdfStream formStream)
+    {
+        var isTransparencyGroup = IsTransparencyGroupForm(formStream);
+        if (!isTransparencyGroup)
+        {
+            RenderFormXObject(formStream);
+            return;
+        }
+
+        var invocationState = _state.Clone();
+        using var paint = new SKPaint
+        {
+            BlendMode = invocationState.BlendMode,
+            Color = SKColors.White.WithAlpha((byte)Math.Clamp(invocationState.FillAlpha * 255, 0, 255)),
+            IsAntialias = _options.AntiAlias
+        };
+
+        var layerBounds = GetFormInvocationBounds(formStream);
+        void DrawFormContent()
+        {
+            var savedState = _state;
+            try
+            {
+                _state = invocationState.Clone();
+                _state.BlendMode = SKBlendMode.SrcOver;
+                _state.FillAlpha = 1;
+                _state.StrokeAlpha = 1;
+                _state.SoftMask = null;
+
+                RenderFormXObject(formStream);
+            }
+            finally
+            {
+                _state = savedState;
+            }
+        }
+
+        if (invocationState.SoftMask != null)
+        {
+            var savedState = _state;
+            try
+            {
+                _state = invocationState.Clone();
+                RenderWithCurrentSoftMask(DrawFormContent, paint, layerBounds);
+            }
+            finally
+            {
+                _state = savedState;
+            }
+            return;
+        }
+
+        if (!TryGetLayerBounds(layerBounds, out var bounds))
+        {
+            DrawFormContent();
+            return;
+        }
+
+        _canvas.SaveLayer(bounds, paint);
+        try
+        {
+            DrawFormContent();
+        }
+        finally
+        {
+            _canvas.Restore();
+        }
+    }
+
+    private bool IsTransparencyGroupForm(Pdfe.Core.Primitives.PdfStream formStream)
+    {
+        var groupObj = formStream.GetOptional("Group");
+        if (groupObj == null)
+            return false;
+
+        var group = _page.Document.Resolve(groupObj) as Pdfe.Core.Primitives.PdfDictionary;
+        return string.Equals(group?.GetNameOrNull("S"), "Transparency", StringComparison.Ordinal);
+    }
+
+    private SKRect? GetFormInvocationBounds(Pdfe.Core.Primitives.PdfStream formStream)
+    {
+        var bbox = ResolveArray(formStream, "BBox");
+        if (bbox == null || bbox.Count < 4)
+            return null;
+
+        var bounds = new SKRect(
+            (float)Math.Min(ArrayNumberOrDefault(bbox, 0), ArrayNumberOrDefault(bbox, 2)),
+            (float)Math.Min(ArrayNumberOrDefault(bbox, 1), ArrayNumberOrDefault(bbox, 3)),
+            (float)Math.Max(ArrayNumberOrDefault(bbox, 0), ArrayNumberOrDefault(bbox, 2)),
+            (float)Math.Max(ArrayNumberOrDefault(bbox, 1), ArrayNumberOrDefault(bbox, 3)));
+        if (bounds.Width <= 0 || bounds.Height <= 0)
+            return null;
+
+        var matrix = GetMatrix(formStream.GetOptional("Matrix") as Pdfe.Core.Primitives.PdfArray);
+        return MapRect(matrix, bounds);
     }
 
     private void RenderImageXObject(Pdfe.Core.Primitives.PdfStream imageStream)
@@ -3244,6 +3337,43 @@ internal partial class RenderContext
             Math.Min(y0, y1),
             Math.Max(x0, x1),
             Math.Max(y0, y1));
+    }
+
+    private static SKRect MapRect(SKMatrix matrix, SKRect rect)
+    {
+        var p0 = MapPoint(matrix, rect.Left, rect.Top);
+        var p1 = MapPoint(matrix, rect.Right, rect.Top);
+        var p2 = MapPoint(matrix, rect.Right, rect.Bottom);
+        var p3 = MapPoint(matrix, rect.Left, rect.Bottom);
+        return new SKRect(
+            Math.Min(Math.Min(p0.X, p1.X), Math.Min(p2.X, p3.X)),
+            Math.Min(Math.Min(p0.Y, p1.Y), Math.Min(p2.Y, p3.Y)),
+            Math.Max(Math.Max(p0.X, p1.X), Math.Max(p2.X, p3.X)),
+            Math.Max(Math.Max(p0.Y, p1.Y), Math.Max(p2.Y, p3.Y)));
+    }
+
+    private static SKPoint MapPoint(SKMatrix matrix, float x, float y)
+        => new(
+            (matrix.ScaleX * x) + (matrix.SkewX * y) + matrix.TransX,
+            (matrix.SkewY * x) + (matrix.ScaleY * y) + matrix.TransY);
+
+    private bool TryGetLayerBounds(SKRect? preferredBounds, out SKRect bounds)
+    {
+        bounds = preferredBounds ?? _canvas.LocalClipBounds;
+        var clipBounds = _canvas.LocalClipBounds;
+        if (bounds.Width > 0 && bounds.Height > 0 && clipBounds.Width > 0 && clipBounds.Height > 0)
+        {
+            bounds.Intersect(clipBounds);
+            return bounds.Width > 0 && bounds.Height > 0;
+        }
+
+        if (bounds.Width <= 0 || bounds.Height <= 0)
+            bounds = clipBounds;
+
+        if (bounds.Width <= 0 || bounds.Height <= 0)
+            bounds = _canvas.DeviceClipBounds;
+
+        return bounds.Width > 0 && bounds.Height > 0;
     }
 
     private static SKBitmap? CreateDeviceSpaceAreaResampledStencil(
@@ -3804,8 +3934,9 @@ internal partial class RenderContext
                     {
                         for (int c = 0; c < values.Length; c++)
                         {
-                            var sample = c < components.Length && idx < components[c].LongLength
-                                ? components[c][(int)idx]
+                            var componentIndex = GetJpxColorComponentIndex(colorSpace, c, components.Length);
+                            var sample = componentIndex < components.Length && idx < components[componentIndex].LongLength
+                                ? components[componentIndex][(int)idx]
                                 : 0;
                             values[c] = colorSpace.DecodeSampleByte(c, (byte)Math.Clamp(sample, 0, 255));
                         }
@@ -3834,6 +3965,23 @@ internal partial class RenderContext
         {
             return null;
         }
+    }
+
+    private static int GetJpxColorComponentIndex(PdfColorSpace colorSpace, int requestedComponent, int decodedComponentCount)
+    {
+        if (decodedComponentCount >= 3 &&
+            requestedComponent < 3 &&
+            colorSpace.Components == 3 &&
+            (colorSpace.Type == PdfColorSpaceType.DeviceRGB ||
+             colorSpace.Type == PdfColorSpaceType.CalRGB ||
+             colorSpace.Type == PdfColorSpaceType.ICCBased))
+        {
+            // CSJ2K exposes decoded color components in bitmap BGR order for
+            // RGB JP2 images. PDF color conversion expects logical RGB order.
+            return 2 - requestedComponent;
+        }
+
+        return requestedComponent;
     }
 
     private (int Width, int Height) EstimateImageDecodeSize(int sourceWidth, int sourceHeight)
