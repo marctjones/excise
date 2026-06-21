@@ -2197,25 +2197,39 @@ internal partial class RenderContext
                 for (int i = 0; i < sourceBytes!.Length; i++)
                 {
                     var glyphText = text[i].ToString();
-                    if (fillText)
-                        RenderWithCurrentSoftMask(
-                            () => _canvas.DrawText(glyphText, cursor, 0, font, fillPaint),
-                            fillPaint);
-                    if (strokeText)
-                        RenderWithCurrentSoftMask(
-                            () => _canvas.DrawText(glyphText, cursor, 0, font, strokePaint),
-                            strokePaint);
-                    if (localClipPath != null)
-                    {
-                        using var glyphPath = font.GetTextPath(glyphText, new SKPoint(cursor, 0));
-                        if (glyphPath != null && !glyphPath.IsEmpty)
-                            localClipPath.AddPath(glyphPath, SKPathAddMode.Append);
-                    }
-
                     int idx = sourceBytes[i] - _currentFontFirstChar;
                     float w = idx >= 0 && idx < _currentFontWidths!.Length
                         ? _currentFontWidths[idx]
                         : _currentFontMissingWidth;
+                    var pdfGlyphWidth = Math.Max(0f, (w / 1000f) * effectiveSize);
+                    var naturalGlyphWidth = font.MeasureText(glyphText, measurePaint);
+                    var fallbackGlyphScale = pdfGlyphWidth > 0f && naturalGlyphWidth > 0f
+                        ? Math.Min(1f, pdfGlyphWidth / naturalGlyphWidth)
+                        : 1f;
+
+                    if (fillText)
+                        RenderWithCurrentSoftMask(
+                            () => DrawFallbackGlyph(glyphText, cursor, fallbackGlyphScale, font, fillPaint),
+                            fillPaint);
+                    if (strokeText)
+                        RenderWithCurrentSoftMask(
+                            () => DrawFallbackGlyph(glyphText, cursor, fallbackGlyphScale, font, strokePaint),
+                            strokePaint);
+                    if (localClipPath != null)
+                    {
+                        using var glyphPath = font.GetTextPath(glyphText, SKPoint.Empty);
+                        if (glyphPath != null && !glyphPath.IsEmpty)
+                        {
+                            using var transformedGlyphPath = new SKPath();
+                            var glyphMatrix = new SKMatrix(
+                                fallbackGlyphScale, 0, cursor,
+                                0, 1, 0,
+                                0, 0, 1);
+                            glyphPath.Transform(glyphMatrix, transformedGlyphPath);
+                            localClipPath.AddPath(transformedGlyphPath, SKPathAddMode.Append);
+                        }
+                    }
+
                     float spacing = tc + (sourceBytes[i] == 0x20 ? tw : 0f);
                     cursor += (w / 1000f + spacing) * effectiveSize;
                 }
@@ -2328,6 +2342,27 @@ internal partial class RenderContext
     private static bool TextRenderModeStrokes(int mode) => mode is 1 or 2 or 5 or 6;
 
     private static bool TextRenderModeAddsClip(int mode) => mode is 4 or 5 or 6 or 7;
+
+    private void DrawFallbackGlyph(string glyphText, float cursor, float horizontalScale, SKFont font, SKPaint paint)
+    {
+        if (Math.Abs(horizontalScale - 1f) < 0.001f)
+        {
+            _canvas.DrawText(glyphText, cursor, 0, font, paint);
+            return;
+        }
+
+        _canvas.Save();
+        try
+        {
+            _canvas.Translate(cursor, 0);
+            _canvas.Scale(horizontalScale, 1);
+            _canvas.DrawText(glyphText, 0, 0, font, paint);
+        }
+        finally
+        {
+            _canvas.Restore();
+        }
+    }
 
     private SKPaint CreateTextPaint(SKPaintStyle style, SKColor color, float alpha)
     {

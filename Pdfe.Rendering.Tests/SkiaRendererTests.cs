@@ -559,6 +559,27 @@ public class SkiaRendererTests
             "the embedded font should use its byte cmap instead of drawing repeated .notdef box outlines");
     }
 
+    [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsBug1308536_SubstitutedCondensedType1UsesPdfWidths()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "bug1308536.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js bug1308536 fixture found at test-pdfs/pdfjs/bug1308536.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 150, BackgroundColor = SKColors.White });
+
+        var textRegion = new SKRectI(0, 20, bitmap.Width, 80);
+        var darkPixels = CountDarkPixels(bitmap, textRegion);
+        darkPixels.Should().BeGreaterThan(1_800,
+            "the substituted Type1 text should still be visible");
+        darkPixels.Should().BeLessThan(4_800,
+            "fallback glyphs should be horizontally condensed to the PDF /Widths instead of overprinting into an unreadable blob");
+    }
+
     [Theory(Timeout = 20000)]
     [InlineData("issue1045.pdf", 200, 50)]
     [InlineData("issue11549_reduced.pdf", 200, 50)]
