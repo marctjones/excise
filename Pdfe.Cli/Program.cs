@@ -1,5 +1,7 @@
 using System.CommandLine;
 using System.Diagnostics;
+using System.Security.Cryptography;
+using System.Text;
 using Pdfe.Core.Document;
 using Pdfe.Core.Filters.Jbig2;
 using Pdfe.Core.Graphics;
@@ -1605,6 +1607,15 @@ class Program
             Description = "Optional escalation oracles: none, ghostscript, pdfbox, pdfium, or all (comma-separated).",
             DefaultValueFactory = _ => "ghostscript",
         };
+        var oracleCacheDirOption = new Option<DirectoryInfo?>("--oracle-cache-dir")
+        {
+            Description = "Directory for cached third-party oracle PNGs. Defaults to $PDFE_ORACLE_CACHE_DIR or the system temp cache.",
+        };
+        var noOracleCacheOption = new Option<bool>("--no-oracle-cache")
+        {
+            Description = "Disable the third-party oracle render cache for cold timing runs.",
+            DefaultValueFactory = _ => false,
+        };
 
         var command = new Command("corpus-scan",
             "Render corpus PDFs with pdfe + reference oracles, compute pixel-diff, write JSON report")
@@ -1612,6 +1623,7 @@ class Program
             corpusArg, outputOption, chunkOption, totalOption,
             dpiOption, diffPctOption, maxMaeOption, parallelOption, perPdfTimeoutOption, pageModeOption,
             pageManifestOption, passwordManifestOption, extraOraclesOption,
+            oracleCacheDirOption, noOracleCacheOption,
         };
 
         command.SetAction(parseResult =>
@@ -1629,6 +1641,8 @@ class Program
             var pageManifestFile = parseResult.GetValue(pageManifestOption);
             var passwordManifestFile = parseResult.GetValue(passwordManifestOption);
             var extraOraclesRaw = parseResult.GetValue(extraOraclesOption) ?? "ghostscript";
+            var oracleCacheDir = parseResult.GetValue(oracleCacheDirOption);
+            var noOracleCache = parseResult.GetValue(noOracleCacheOption);
 
             if (parallel <= 0) parallel = Math.Max(1, Environment.ProcessorCount / 2);
             if (!TryParseCorpusPageMode(pageModeRaw, out var pageMode))
@@ -1664,7 +1678,8 @@ class Program
                 var passwordManifest = LoadCorpusPasswordManifest(passwordManifestFile);
                 var ok = RunCorpusScan(corpus.FullName, output.FullName,
                     chunk, total, dpi, diffPct, maxMae, parallel, pdfTimeoutMs, pageMode, extraOracles,
-                    pageManifest, passwordManifest);
+                    pageManifest, passwordManifest,
+                    noOracleCache ? null : ResolveCorpusOracleCacheDir(oracleCacheDir));
                 Environment.ExitCode = ok ? 0 : 1;
             }
             catch (Exception ex)
@@ -1690,16 +1705,19 @@ class Program
         int parallel, int pdfTimeoutMs, CorpusPageMode pageMode = CorpusPageMode.First,
         CorpusExtraOracles extraOracles = CorpusExtraOracles.Ghostscript,
         IReadOnlyDictionary<string, IReadOnlySet<int>>? pageManifest = null,
-        IReadOnlyDictionary<string, string>? passwordManifest = null)
+        IReadOnlyDictionary<string, string>? passwordManifest = null,
+        DirectoryInfo? oracleCacheDir = null)
     {
         var pdfs = DiscoverCorpusPdfs(corpusDir, chunkIndex, chunkTotal, pageManifest?.Keys);
+        var oracleCache = CreateOracleRenderCache(oracleCacheDir);
 
         Console.Out.WriteLine(
             $"chunk {chunkIndex + 1}/{chunkTotal}: scanning {pdfs.Count} PDFs in {corpusDir} " +
             $"({parallel}-way parallel, {pdfTimeoutMs}ms oracle timeout, page-mode={PageModeName(pageMode)}, " +
             $"page-manifest={(pageManifest is null ? "none" : pageManifest.Count.ToString())}, " +
             $"password-manifest={(passwordManifest is null ? "none" : passwordManifest.Count.ToString())}, " +
-            $"extra-oracles={ExtraOraclesName(extraOracles)})");
+            $"extra-oracles={ExtraOraclesName(extraOracles)}, " +
+            $"oracle-cache={(oracleCache is null ? "off" : oracleCache.CacheDirectory)})");
 
         // Use a thread-safe collector. Order in the final JSON is
         // restored by sort-on-write since Parallel.ForEach completion
@@ -1723,7 +1741,7 @@ class Program
             var wallBudgetMs = ComputeCorpusScanWallBudgetMs(
                 pdfTimeoutMs, pageMode, extraOracles, selectedPages);
             var task = Task.Run(() => ScanOnePdf(rel, pdf, dpi, maxDiffFraction, maxMae, pdfTimeoutMs,
-                pageMode, extraOracles, selectedPages, progress, userPassword));
+                pageMode, extraOracles, selectedPages, progress, userPassword, oracleCache));
             if (task.Wait(wallBudgetMs))
             {
                 pdfEntries = task.Result;
@@ -1786,6 +1804,13 @@ class Program
             Console.Out.WriteLine($"  {kv.Value,4}  {kv.Key}");
         Console.Out.WriteLine($"  total processed: {entries.Count}");
         Console.Out.WriteLine($"  peak RSS: {peakBytes / 1024 / 1024} MB");
+        var oracleCacheReport = oracleCache?.CreateReport() ?? CorpusOracleCacheReport.CreateDisabled();
+        if (oracleCacheReport.enabled)
+        {
+            Console.Out.WriteLine(
+                $"  oracle cache: {oracleCacheReport.hits} hits, {oracleCacheReport.misses} misses, " +
+                $"{oracleCacheReport.writes} writes, {oracleCacheReport.errors} errors");
+        }
 
         // Sort entries by path so parallel completion order doesn't make
         // diffs noisy across runs.
@@ -1804,6 +1829,7 @@ class Program
             total = entries.Count,
             pdfs = pdfs.Count,
             peakRssBytes = peakBytes,
+            oracleCache = oracleCacheReport,
             entries = sortedEntries,
         };
         var json = System.Text.Json.JsonSerializer.Serialize(report,
@@ -1856,7 +1882,8 @@ class Program
         CorpusExtraOracles extraOracles,
         IReadOnlySet<int>? selectedPages = null,
         CorpusScanProgress? progress = null,
-        string? userPassword = null)
+        string? userPassword = null,
+        OracleRenderCache? oracleCache = null)
     {
         PdfDocument? doc = null;
         int pageCount;
@@ -1909,7 +1936,7 @@ class Program
             {
                 progress?.Update("page", pageNumber, $"page {pageNumber}/{pageCount}");
                 entries.Add(ScanOnePage(relPath, pdfPath, doc, renderer, pageNumber, dpi,
-                    maxDiffFraction, maxMae, oracleTimeoutMs, extraOracles, progress, userPassword));
+                    maxDiffFraction, maxMae, oracleTimeoutMs, extraOracles, progress, userPassword, oracleCache));
             }
             pdfStopwatch.Stop();
             foreach (var entry in entries)
@@ -1924,7 +1951,8 @@ class Program
         double maxDiffFraction, double maxMae, int oracleTimeoutMs,
         CorpusExtraOracles extraOracles,
         CorpusScanProgress? progress = null,
-        string? userPassword = null)
+        string? userPassword = null,
+        OracleRenderCache? oracleCache = null)
     {
         var pageStopwatch = Stopwatch.StartNew();
         var entry = new CorpusScanEntry
@@ -2005,16 +2033,20 @@ class Program
             // does not both agree, keeping passing pages cheap while giving
             // remaining DIFFs more evidence.
             progress?.Update("mutool", pageNumber, $"mutool render page {pageNumber}/{doc.PageCount}");
-            var mutoolResult = MutoolReferenceRenderer.TryRenderPage(
-                pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs, userPassword);
+            var mutoolResult = RenderOracleWithCache(
+                oracleCache, "mutool", pdfPath, pageNumber, comparisonDpi, userPassword,
+                () => MutoolReferenceRenderer.TryRenderPage(
+                    pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs, userPassword));
             mutoolBmp = mutoolResult.Bitmap;
             entry.mutoolMs = mutoolResult.ElapsedMs;
             entry.mutoolStatus = mutoolResult.Status;
             entry.mutoolError = TruncNullable(mutoolResult.ErrorMessage, 200);
 
             progress?.Update("pdftocairo", pageNumber, $"pdftocairo render page {pageNumber}/{doc.PageCount}");
-            var cairoResult = PdftocairoReferenceRenderer.TryRenderPage(
-                pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs, userPassword);
+            var cairoResult = RenderOracleWithCache(
+                oracleCache, "pdftocairo", pdfPath, pageNumber, comparisonDpi, userPassword,
+                () => PdftocairoReferenceRenderer.TryRenderPage(
+                    pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs, userPassword));
             cairoBmp = cairoResult.Bitmap;
             entry.cairoMs = cairoResult.ElapsedMs;
             entry.cairoStatus = cairoResult.Status;
@@ -2054,8 +2086,10 @@ class Program
             if (shouldEscalate && extraOracles.HasFlag(CorpusExtraOracles.Ghostscript))
             {
                 progress?.Update("ghostscript", pageNumber, $"ghostscript render page {pageNumber}/{doc.PageCount}");
-                var ghostscriptResult = GhostscriptReferenceRenderer.TryRenderPage(
-                    pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs, userPassword);
+                var ghostscriptResult = RenderOracleWithCache(
+                    oracleCache, "ghostscript", pdfPath, pageNumber, comparisonDpi, userPassword,
+                    () => GhostscriptReferenceRenderer.TryRenderPage(
+                        pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs, userPassword));
                 ghostscriptBmp = ghostscriptResult.Bitmap;
                 entry.ghostscriptMs = ghostscriptResult.ElapsedMs;
                 entry.ghostscriptStatus = ghostscriptResult.Status;
@@ -2074,8 +2108,10 @@ class Program
             if (shouldEscalate && extraOracles.HasFlag(CorpusExtraOracles.PdfBox))
             {
                 progress?.Update("pdfbox", pageNumber, $"pdfbox render page {pageNumber}/{doc.PageCount}");
-                var pdfboxResult = PdfBoxReferenceRenderer.TryRenderPage(
-                    pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs, userPassword);
+                var pdfboxResult = RenderOracleWithCache(
+                    oracleCache, "pdfbox", pdfPath, pageNumber, comparisonDpi, userPassword,
+                    () => PdfBoxReferenceRenderer.TryRenderPage(
+                        pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs, userPassword));
                 pdfboxBmp = pdfboxResult.Bitmap;
                 entry.pdfboxMs = pdfboxResult.ElapsedMs;
                 entry.pdfboxStatus = pdfboxResult.Status;
@@ -2094,8 +2130,10 @@ class Program
             if (shouldEscalate && extraOracles.HasFlag(CorpusExtraOracles.Pdfium))
             {
                 progress?.Update("pdfium", pageNumber, $"pdfium_test render page {pageNumber}/{doc.PageCount}");
-                var pdfiumResult = PdfiumReferenceRenderer.TryRenderPage(
-                    pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs);
+                var pdfiumResult = RenderOracleWithCache(
+                    oracleCache, "pdfium", pdfPath, pageNumber, comparisonDpi, userPassword: null,
+                    () => PdfiumReferenceRenderer.TryRenderPage(
+                        pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs));
                 pdfiumBmp = pdfiumResult.Bitmap;
                 entry.pdfiumMs = pdfiumResult.ElapsedMs;
                 entry.pdfiumStatus = pdfiumResult.Status;
@@ -2163,6 +2201,211 @@ class Program
             pdfiumBmp?.Dispose();
         }
         return entry;
+    }
+
+    private static ReferenceRenderResult RenderOracleWithCache(
+        OracleRenderCache? cache,
+        string oracleName,
+        string pdfPath,
+        int pageNumber,
+        int dpi,
+        string? userPassword,
+        Func<ReferenceRenderResult> render)
+    {
+        return cache?.GetOrRender(oracleName, pdfPath, pageNumber, dpi, userPassword, render)
+               ?? render();
+    }
+
+    private static DirectoryInfo ResolveCorpusOracleCacheDir(DirectoryInfo? explicitDir)
+    {
+        if (explicitDir != null)
+            return explicitDir;
+
+        var envDir = Environment.GetEnvironmentVariable("PDFE_ORACLE_CACHE_DIR");
+        return !string.IsNullOrWhiteSpace(envDir)
+            ? new DirectoryInfo(envDir)
+            : new DirectoryInfo(Path.Combine(Path.GetTempPath(), "pdfe-oracle-cache-v1"));
+    }
+
+    private static OracleRenderCache? CreateOracleRenderCache(DirectoryInfo? cacheDir)
+    {
+        if (cacheDir == null)
+            return null;
+
+        try
+        {
+            return new OracleRenderCache(cacheDir.FullName);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"warning: oracle cache disabled: {ex.Message}");
+            return null;
+        }
+    }
+
+    private sealed class OracleRenderCache
+    {
+        private const string CacheVersion = "v1";
+        private readonly System.Collections.Concurrent.ConcurrentDictionary<string, object> _locks = new(StringComparer.Ordinal);
+        private long _hits;
+        private long _misses;
+        private long _writes;
+        private long _errors;
+
+        public OracleRenderCache(string cacheDirectory)
+        {
+            CacheDirectory = Path.GetFullPath(cacheDirectory);
+            Directory.CreateDirectory(CacheDirectory);
+        }
+
+        public string CacheDirectory { get; }
+
+        public ReferenceRenderResult GetOrRender(
+            string oracleName,
+            string pdfPath,
+            int pageNumber,
+            int dpi,
+            string? userPassword,
+            Func<ReferenceRenderResult> render)
+        {
+            var cachePath = GetCachePath(oracleName, pdfPath, pageNumber, dpi, userPassword);
+            var gate = _locks.GetOrAdd(cachePath, _ => new object());
+
+            lock (gate)
+            {
+                if (TryDecode(cachePath, out var cachedBitmap, out var elapsedMs))
+                {
+                    System.Threading.Interlocked.Increment(ref _hits);
+                    return new ReferenceRenderResult(cachedBitmap, "OK", null, elapsedMs);
+                }
+
+                System.Threading.Interlocked.Increment(ref _misses);
+                var result = render();
+                if (result is { Status: "OK", Bitmap: not null })
+                    TryWrite(cachePath, result.Bitmap);
+                return result;
+            }
+        }
+
+        public CorpusOracleCacheReport CreateReport() => new()
+        {
+            enabled = true,
+            directory = CacheDirectory,
+            hits = System.Threading.Interlocked.Read(ref _hits),
+            misses = System.Threading.Interlocked.Read(ref _misses),
+            writes = System.Threading.Interlocked.Read(ref _writes),
+            errors = System.Threading.Interlocked.Read(ref _errors),
+        };
+
+        private string GetCachePath(
+            string oracleName,
+            string pdfPath,
+            int pageNumber,
+            int dpi,
+            string? userPassword)
+        {
+            var fullPath = Path.GetFullPath(pdfPath);
+            var info = new FileInfo(fullPath);
+            var material = string.Join('\n',
+                CacheVersion,
+                oracleName,
+                fullPath,
+                info.Length.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                info.LastWriteTimeUtc.Ticks.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                pageNumber.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                dpi.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                userPassword == null ? "<none>" : HashText(userPassword));
+            var key = HashText(material);
+            return Path.Combine(CacheDirectory, key[..2], key + ".png");
+        }
+
+        private bool TryDecode(string cachePath, out SKBitmap? bitmap, out long elapsedMs)
+        {
+            var sw = Stopwatch.StartNew();
+            bitmap = null;
+            elapsedMs = 0;
+            if (!File.Exists(cachePath))
+                return false;
+
+            try
+            {
+                bitmap = SKBitmap.Decode(cachePath);
+                sw.Stop();
+                elapsedMs = sw.ElapsedMilliseconds;
+                if (bitmap != null)
+                    return true;
+
+                TryDelete(cachePath);
+                System.Threading.Interlocked.Increment(ref _errors);
+                return false;
+            }
+            catch
+            {
+                sw.Stop();
+                elapsedMs = sw.ElapsedMilliseconds;
+                TryDelete(cachePath);
+                System.Threading.Interlocked.Increment(ref _errors);
+                return false;
+            }
+        }
+
+        private void TryWrite(string cachePath, SKBitmap bitmap)
+        {
+            var directory = Path.GetDirectoryName(cachePath);
+            if (directory == null)
+                return;
+
+            var tempPath = cachePath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+            try
+            {
+                Directory.CreateDirectory(directory);
+                using var image = SKImage.FromBitmap(bitmap);
+                using var data = image.Encode(SKEncodedImageFormat.Png, quality: 100);
+                if (data == null)
+                    return;
+
+                using (var stream = File.Create(tempPath))
+                    data.SaveTo(stream);
+
+                File.Move(tempPath, cachePath, overwrite: true);
+                System.Threading.Interlocked.Increment(ref _writes);
+            }
+            catch
+            {
+                System.Threading.Interlocked.Increment(ref _errors);
+            }
+            finally
+            {
+                TryDelete(tempPath);
+            }
+        }
+
+        private static void TryDelete(string path)
+        {
+            try
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
+            }
+            catch
+            {
+            }
+        }
+
+        private static string HashText(string text)
+            => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text))).ToLowerInvariant();
+    }
+
+    internal sealed class CorpusOracleCacheReport
+    {
+        public static CorpusOracleCacheReport CreateDisabled() => new();
+
+        public bool enabled { get; set; }
+        public string? directory { get; set; }
+        public long hits { get; set; }
+        public long misses { get; set; }
+        public long writes { get; set; }
+        public long errors { get; set; }
     }
 
     internal enum CorpusPageMode
