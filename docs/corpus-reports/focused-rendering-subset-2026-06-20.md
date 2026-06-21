@@ -24,7 +24,7 @@ PDFE_PDFBOX_JAR=/private/tmp/pdfe-tools/pdfbox-app-3.0.7.jar Pdfe.Cli/bin/Debug/
 | `PASSWORD_REQUIRED` | 5 |
 | `PASS_ONE` | 109 |
 | `RESOURCE_LIMIT` | 2 |
-| `TIMEOUT` | 3 |
+| `TIMEOUT` | 2 |
 
 ## Repeated Files
 
@@ -218,5 +218,4 @@ PDFE_PDFBOX_JAR=/private/tmp/pdfe-tools/pdfbox-app-3.0.7.jar Pdfe.Cli/bin/Debug/
 | `RESOURCE_LIMIT` | `verapdf-corpus/veraPDF-corpus-master/PDF_A-2b/6.1 File structure/6.1.13 Implementation limits/veraPDF test suite 6-1-13-t09-fail-b.pdf` | 1 | Renderer refused an oversized page allocation; Page render would allocate 29811 x 29811 pixels (888,695,721), exceeding the configured limit of 268,435,456 pixels. |
 | `RESOURCE_LIMIT` | `verapdf-corpus/veraPDF-corpus-master/PDF_A-2b/6.1 File structure/6.1.13 Implementation limits/veraPDF test suite 6-1-13-t09-fail-f.pdf` | 1 | Renderer refused an oversized page allocation; Page render would allocate 29805 x 29805 pixels (888,338,025), exceeding the configured limit of 268,435,456 pixels. |
 | `TIMEOUT` | `isartor/Isartor testsuite/PDFA-1b/6.1 File structure/6.1.12 Implementation Limits/isartor-6-1-12-t01-fail-a.pdf` | 1172 | Timed out during mutool; Per-PDF budget 240000ms exceeded during mutool: isartor/Isartor testsuite/PDFA-1b/6.1 File structure/6.1.12 Implementation Limits/isartor-6-1-12-t01-fail-a.pdf: mutool render pa... |
-| `TIMEOUT` | `pdfjs/bomb_giant.pdf` | 1 | Timed out during pdftocairo; Per-PDF budget 240000ms exceeded during pdftocairo: pdfjs/bomb_giant.pdf: pdftocairo render page 1/1 |
 | `TIMEOUT` | `pdfjs/freeculture.pdf` | 129 | Timed out during pdfbox; Per-PDF budget 240000ms exceeded during pdfbox: pdfjs/freeculture.pdf: pdfbox render page 129/352 |

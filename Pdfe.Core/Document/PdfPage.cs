@@ -266,7 +266,7 @@ public class PdfPage
     /// </summary>
     public byte[] GetContentStreamBytes()
     {
-        TryCollectContentStreamBytes(skipUndecodableStreams: false, out var data);
+        TryCollectContentStreamBytes(skipRecoverableContentStreams: false, out var data, out _);
         return data;
     }
 
@@ -278,14 +278,24 @@ public class PdfPage
     /// content never silently disappears from mutation paths.
     /// </summary>
     internal bool TryGetContentStreamBytes(out byte[] data)
-        => TryCollectContentStreamBytes(skipUndecodableStreams: true, out data);
+        => TryGetContentStreamBytes(out data, out _);
 
-    private bool TryCollectContentStreamBytes(bool skipUndecodableStreams, out byte[] data)
+    internal bool TryGetContentStreamBytes(
+        out byte[] data,
+        out IReadOnlyList<ContentStreamReadWarning> warnings)
+        => TryCollectContentStreamBytes(skipRecoverableContentStreams: true, out data, out warnings);
+
+    private bool TryCollectContentStreamBytes(
+        bool skipRecoverableContentStreams,
+        out byte[] data,
+        out IReadOnlyList<ContentStreamReadWarning> warnings)
     {
+        var warningList = new List<ContentStreamReadWarning>();
         var contentsObj = _pageDict.GetOptional("Contents");
         if (contentsObj == null)
         {
             data = Array.Empty<byte>();
+            warnings = Array.Empty<ContentStreamReadWarning>();
             return true;
         }
 
@@ -293,7 +303,13 @@ public class PdfPage
 
         if (contentsObj is PdfStream stream)
         {
-            return TryGetDecodedContentStreamBytes(stream, skipUndecodableStreams, out data);
+            var complete = TryGetDecodedContentStreamBytes(
+                stream,
+                skipRecoverableContentStreams,
+                warningList,
+                out data);
+            warnings = warningList;
+            return complete;
         }
         else if (contentsObj is PdfArray array)
         {
@@ -305,7 +321,11 @@ public class PdfPage
                 var resolved = _document.Resolve(item);
                 if (resolved is PdfStream s)
                 {
-                    if (!TryGetDecodedContentStreamBytes(s, skipUndecodableStreams, out var streamData))
+                    if (!TryGetDecodedContentStreamBytes(
+                            s,
+                            skipRecoverableContentStreams,
+                            warningList,
+                            out var streamData))
                     {
                         complete = false;
                         continue;
@@ -316,25 +336,69 @@ public class PdfPage
                 }
             }
             data = ms.ToArray();
+            warnings = warningList;
             return complete;
         }
 
         data = Array.Empty<byte>();
+        warnings = Array.Empty<ContentStreamReadWarning>();
         return true;
     }
 
     private static bool TryGetDecodedContentStreamBytes(
         PdfStream stream,
-        bool skipUndecodableStreams,
+        bool skipRecoverableContentStreams,
+        List<ContentStreamReadWarning> warnings,
         out byte[] data)
     {
         data = Array.Empty<byte>();
-        if (skipUndecodableStreams && stream.IsFiltered && !stream.IsDecoded)
+        if (TryGetImageOnlyContentFilter(stream, out var imageOnlyFilter))
+        {
+            var warning = ContentStreamReadWarning.ImageOnlyFilter(
+                stream.ObjectNumber ?? 0,
+                stream.GenerationNumber ?? 0,
+                imageOnlyFilter);
+            if (skipRecoverableContentStreams)
+            {
+                warnings.Add(warning);
+                return false;
+            }
+
+            throw new InvalidDataException(warning.Message);
+        }
+
+        if (skipRecoverableContentStreams && stream.IsFiltered && !stream.IsDecoded)
+        {
+            warnings.Add(ContentStreamReadWarning.UndecodedFilter(
+                stream.ObjectNumber ?? 0,
+                stream.GenerationNumber ?? 0,
+                stream.Filters));
             return false;
+        }
 
         data = stream.DecodedData;
         return true;
     }
+
+    private static bool TryGetImageOnlyContentFilter(PdfStream stream, out string filter)
+    {
+        foreach (var candidate in stream.Filters)
+        {
+            if (IsNamedFilter(candidate, "JBIG2Decode"))
+            {
+                filter = candidate;
+                return true;
+            }
+        }
+
+        filter = "";
+        return false;
+    }
+
+    private static bool IsNamedFilter(string actual, string expected)
+        => string.Equals(actual, expected, StringComparison.Ordinal)
+           || (string.Equals(expected, "JBIG2Decode", StringComparison.Ordinal)
+               && string.Equals(actual, "JBIG2", StringComparison.Ordinal));
 
     /// <summary>
     /// Sets the content stream bytes for this page.
@@ -666,6 +730,52 @@ public class PdfPage
 
     /// <inheritdoc />
     public override string ToString() => $"Page {PageNumber} ({Width}x{Height} pts)";
+}
+
+/// <summary>
+/// A recoverable problem encountered while assembling page content streams for
+/// best-effort viewing. Strict editing/redaction paths still reject these cases.
+/// </summary>
+internal readonly record struct ContentStreamReadWarning(
+    string Code,
+    string Message,
+    int ObjectNumber,
+    int GenerationNumber,
+    string? Detail = null)
+{
+    public const string ImageOnlyFilterInContentStreamCode = "IMAGE_ONLY_FILTER_IN_CONTENT_STREAM";
+    public const string UndecodedFilteredContentStreamCode = "UNDECODED_FILTERED_CONTENT_STREAM";
+
+    internal static ContentStreamReadWarning ImageOnlyFilter(
+        int objectNumber,
+        int generationNumber,
+        string filter)
+        => new(
+            ImageOnlyFilterInContentStreamCode,
+            $"Page content stream {FormatObjectId(objectNumber, generationNumber)} uses /{filter}; PDF restricts JBIG2Decode to image XObjects, so the stream was skipped for best-effort rendering.",
+            objectNumber,
+            generationNumber,
+            filter);
+
+    internal static ContentStreamReadWarning UndecodedFilter(
+        int objectNumber,
+        int generationNumber,
+        IReadOnlyList<string> filters)
+    {
+        var detail = filters.Count == 0 ? null : string.Join(",", filters);
+        return new(
+            UndecodedFilteredContentStreamCode,
+            $"Page content stream {FormatObjectId(objectNumber, generationNumber)} was filtered but not decoded, so it was skipped for best-effort rendering.",
+            objectNumber,
+            generationNumber,
+            detail);
+    }
+
+    public override string ToString()
+        => string.IsNullOrWhiteSpace(Detail) ? $"{Code}: {Message}" : $"{Code}: {Message} ({Detail})";
+
+    private static string FormatObjectId(int objectNumber, int generationNumber)
+        => objectNumber > 0 ? $"{objectNumber} {generationNumber} R" : "(direct)";
 }
 
 /// <summary>

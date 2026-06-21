@@ -487,7 +487,8 @@ internal partial class RenderContext
             // a name isn't defined locally.
             _resourcesStack.Push(_page.Resources);
 
-            _page.TryGetContentStreamBytes(out var contentBytes);
+            _page.TryGetContentStreamBytes(out var contentBytes, out var contentWarnings);
+            AddDiagnostics(contentWarnings);
             if (contentBytes.Length > 0)
                 ExecuteContentBytes(contentBytes);
 
@@ -854,6 +855,15 @@ internal partial class RenderContext
             default:
                 break;
         }
+    }
+
+    private void AddDiagnostics(IEnumerable<ContentStreamReadWarning> warnings)
+    {
+        if (_options.Diagnostics == null)
+            return;
+
+        foreach (var warning in warnings)
+            _options.Diagnostics.Add(warning.ToString());
     }
 
     private void ExecuteContentOperators(IEnumerable<ContentOperator> operators)

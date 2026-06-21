@@ -1969,15 +1969,19 @@ class Program
         SkiaSharp.SKBitmap? pdfboxBmp = null;
         SkiaSharp.SKBitmap? pdfiumBmp = null;
         var comparisonDpi = dpi;
+        var renderDiagnostics = new List<string>();
         try
         {
             try
             {
                 progress?.Update("render", pageNumber, $"pdfe render page {pageNumber}/{doc.PageCount}");
                 var renderStopwatch = Stopwatch.StartNew();
-                pdfeBmp = renderer.RenderPage(doc.GetPage(pageNumber), new RenderOptions { Dpi = dpi });
+                pdfeBmp = renderer.RenderPage(
+                    doc.GetPage(pageNumber),
+                    new RenderOptions { Dpi = dpi, Diagnostics = renderDiagnostics });
                 renderStopwatch.Stop();
                 entry.renderMs = renderStopwatch.ElapsedMilliseconds;
+                ApplyRenderDiagnostics(entry, renderDiagnostics);
             }
             catch (Exception ex)
             {
@@ -1989,12 +1993,16 @@ class Program
                     var fallbackStopwatch = Stopwatch.StartNew();
                     try
                     {
-                        pdfeBmp = renderer.RenderPage(doc.GetPage(pageNumber), new RenderOptions { Dpi = fallbackDpi });
+                        renderDiagnostics.Clear();
+                        pdfeBmp = renderer.RenderPage(
+                            doc.GetPage(pageNumber),
+                            new RenderOptions { Dpi = fallbackDpi, Diagnostics = renderDiagnostics });
                         fallbackStopwatch.Stop();
                         entry.renderMs = fallbackStopwatch.ElapsedMilliseconds;
                         entry.effectiveDpi = fallbackDpi;
                         entry.diagnostic =
                             $"Requested {dpi} DPI exceeded the render pixel cap; compared at {fallbackDpi} DPI.";
+                        ApplyRenderDiagnostics(entry, renderDiagnostics);
                         comparisonDpi = fallbackDpi;
                     }
                     catch (Exception fallbackEx)
@@ -2162,10 +2170,19 @@ class Program
             if (metrics.Count == 0)
             {
                 pageStopwatch.Stop();
-                entry.status = "ALL_ORACLES_REFUSED";
-                entry.errorPhase = "oracle";
-                entry.errorType = "AllOraclesRefused";
-                entry.diagnostic = BuildOracleDiagnostic(entry);
+                if (HasRecoveredMalformedContentDiagnostic(entry))
+                {
+                    entry.status = "RECOVERED_MALFORMED_CONTENT";
+                    entry.errorPhase = "render";
+                    entry.errorType = "RecoveredMalformedContent";
+                }
+                else
+                {
+                    entry.status = "ALL_ORACLES_REFUSED";
+                    entry.errorPhase = "oracle";
+                    entry.errorType = "AllOraclesRefused";
+                }
+                entry.diagnostic = AppendDiagnostic(entry.diagnostic, BuildOracleDiagnostic(entry));
                 entry.elapsedMs = pageStopwatch.ElapsedMilliseconds;
                 return entry;
             }
@@ -2906,6 +2923,30 @@ class Program
         if (entry.pdfiumStatus != null)
             parts.Add(FormatOracleDiagnostic("pdfium", entry.pdfiumStatus, entry.pdfiumError));
         return string.Join("; ", parts);
+    }
+
+    private static void ApplyRenderDiagnostics(CorpusScanEntry entry, IReadOnlyList<string> diagnostics)
+    {
+        if (diagnostics.Count == 0)
+            return;
+
+        entry.diagnostic = AppendDiagnostic(
+            entry.diagnostic,
+            "pdfe=" + string.Join("; ", diagnostics.Select(d => Trunc(d, 200))));
+    }
+
+    private static bool HasRecoveredMalformedContentDiagnostic(CorpusScanEntry entry)
+        => entry.diagnostic?.Contains(
+            ContentStreamReadWarning.ImageOnlyFilterInContentStreamCode,
+            StringComparison.Ordinal) == true;
+
+    private static string AppendDiagnostic(string? existing, string detail)
+    {
+        if (string.IsNullOrWhiteSpace(existing))
+            return detail;
+        if (string.IsNullOrWhiteSpace(detail))
+            return existing;
+        return $"{existing}; {detail}";
     }
 
     private static string FormatOracleDiagnostic(string name, string? status, string? error)

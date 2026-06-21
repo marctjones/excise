@@ -158,6 +158,82 @@ public class PdfPageTests
         return ms.ToArray();
     }
 
+    private static byte[] CreatePdfWithImageOnlyJbig2ContentStream()
+    {
+        using var ms = new MemoryStream();
+        using var writer = new StreamWriter(ms, new UTF8Encoding(false), leaveOpen: true);
+        writer.NewLine = "\n";
+
+        writer.WriteLine("%PDF-1.4");
+        writer.Flush();
+
+        var offsets = new long[7];
+        const string validContent = "BT /F1 12 Tf 100 700 Td (Visible) Tj ET";
+        const string invalidContent = "NotPdfContent";
+
+        offsets[1] = ms.Position;
+        writer.WriteLine("1 0 obj");
+        writer.WriteLine("<< /Type /Catalog /Pages 2 0 R >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[2] = ms.Position;
+        writer.WriteLine("2 0 obj");
+        writer.WriteLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[3] = ms.Position;
+        writer.WriteLine("3 0 obj");
+        writer.WriteLine("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents [4 0 R 5 0 R] /Resources << /Font << /F1 6 0 R >> >> >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[4] = ms.Position;
+        writer.WriteLine("4 0 obj");
+        writer.WriteLine($"<< /Length {validContent.Length} >>");
+        writer.WriteLine("stream");
+        writer.Write(validContent);
+        writer.WriteLine();
+        writer.WriteLine("endstream");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[5] = ms.Position;
+        writer.WriteLine("5 0 obj");
+        writer.WriteLine($"<< /Filter /JBIG2Decode /Length {invalidContent.Length} >>");
+        writer.WriteLine("stream");
+        writer.Write(invalidContent);
+        writer.WriteLine();
+        writer.WriteLine("endstream");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[6] = ms.Position;
+        writer.WriteLine("6 0 obj");
+        writer.WriteLine("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        long xrefPos = ms.Position;
+
+        writer.WriteLine("xref");
+        writer.WriteLine("0 7");
+        writer.WriteLine("0000000000 65535 f ");
+        for (int i = 1; i <= 6; i++)
+            writer.WriteLine($"{offsets[i]:D10} 00000 n ");
+        writer.Flush();
+
+        writer.WriteLine("trailer");
+        writer.WriteLine("<< /Root 1 0 R /Size 7 >>");
+        writer.WriteLine("startxref");
+        writer.WriteLine(xrefPos.ToString());
+        writer.WriteLine("%%EOF");
+        writer.Flush();
+
+        return ms.ToArray();
+    }
+
     /// <summary>
     /// Creates a PDF with multiple content streams in an array.
     /// </summary>
@@ -527,6 +603,25 @@ public class PdfPageTests
 
         page.TryGetContentStreamBytes(out var bytes).Should().BeFalse();
         bytes.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void TryGetContentStreamBytes_ImageOnlyJbig2ContentStream_SkipsWithoutWeakeningStrictRead()
+    {
+        var pdfData = CreatePdfWithImageOnlyJbig2ContentStream();
+        using var doc = PdfDocument.Open(pdfData);
+        var page = doc.GetPage(1);
+
+        var strictRead = () => page.GetContentStreamBytes();
+        strictRead.Should().Throw<InvalidDataException>()
+            .WithMessage("*JBIG2Decode*image XObjects*");
+
+        page.TryGetContentStreamBytes(out var bytes, out var warnings).Should().BeFalse();
+        var content = Encoding.ASCII.GetString(bytes);
+        content.Should().Contain("Visible");
+        content.Should().NotContain("NotPdfContent");
+        warnings.Should().ContainSingle()
+            .Which.Code.Should().Be(ContentStreamReadWarning.ImageOnlyFilterInContentStreamCode);
     }
 
     [Fact]

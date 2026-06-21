@@ -57,6 +57,25 @@ public class SkiaRendererTests
             "malformed filtered page content is skipped by the render-only recovery path");
     }
 
+    [Fact]
+    public void RenderPage_ImageOnlyJbig2ContentStream_RendersValidPrefixAndReportsDiagnostic()
+    {
+        var pdfData = CreatePdfWithImageOnlyJbig2ContentStream();
+        using var doc = PdfDocument.Open(pdfData);
+        var diagnostics = new List<string>();
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White, Diagnostics = diagnostics });
+
+        bitmap.Width.Should().Be(100);
+        bitmap.Height.Should().Be(100);
+        CountDarkPixels(bitmap, new SKRectI(0, 0, bitmap.Width, bitmap.Height)).Should().BeGreaterThan(300,
+            "valid earlier page content should still be rendered");
+        diagnostics.Should().ContainSingle(d =>
+            d.Contains(ContentStreamReadWarning.ImageOnlyFilterInContentStreamCode, StringComparison.Ordinal));
+    }
+
     [Fact(Timeout = 20000)]
     public void RenderPage_Isartor617_StreamWhitespaceBeforeEol_RendersBlankPage()
     {
@@ -4465,6 +4484,73 @@ public class SkiaRendererTests
         offsets[5] = ms.Position;
         writer.WriteLine("5 0 obj");
         writer.WriteLine("<< >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        var xrefPos = ms.Position;
+        writer.WriteLine("xref");
+        writer.WriteLine("0 6");
+        writer.WriteLine("0000000000 65535 f ");
+        for (int i = 1; i <= 5; i++)
+            writer.WriteLine($"{offsets[i]:D10} 00000 n ");
+        writer.WriteLine("trailer");
+        writer.WriteLine("<< /Size 6 /Root 1 0 R >>");
+        writer.WriteLine("startxref");
+        writer.WriteLine(xrefPos.ToString());
+        writer.WriteLine("%%EOF");
+        writer.Flush();
+
+        return ms.ToArray();
+    }
+
+    private static byte[] CreatePdfWithImageOnlyJbig2ContentStream()
+    {
+        using var ms = new MemoryStream();
+        using var writer = new StreamWriter(ms, System.Text.Encoding.ASCII, leaveOpen: true);
+        writer.NewLine = "\n";
+
+        writer.WriteLine("%PDF-1.4");
+        writer.Flush();
+
+        var offsets = new long[6];
+        const string validContent = "0 0 20 20 re f";
+        const string invalidContent = "NotPdfContent";
+
+        offsets[1] = ms.Position;
+        writer.WriteLine("1 0 obj");
+        writer.WriteLine("<< /Type /Catalog /Pages 2 0 R >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[2] = ms.Position;
+        writer.WriteLine("2 0 obj");
+        writer.WriteLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[3] = ms.Position;
+        writer.WriteLine("3 0 obj");
+        writer.WriteLine("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 100 100] /Contents [4 0 R 5 0 R] /Resources << >> >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[4] = ms.Position;
+        writer.WriteLine("4 0 obj");
+        writer.WriteLine($"<< /Length {validContent.Length} >>");
+        writer.WriteLine("stream");
+        writer.Write(validContent);
+        writer.WriteLine();
+        writer.WriteLine("endstream");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[5] = ms.Position;
+        writer.WriteLine("5 0 obj");
+        writer.WriteLine($"<< /Filter /JBIG2Decode /Length {invalidContent.Length} >>");
+        writer.WriteLine("stream");
+        writer.Write(invalidContent);
+        writer.WriteLine();
+        writer.WriteLine("endstream");
         writer.WriteLine("endobj");
         writer.Flush();
 

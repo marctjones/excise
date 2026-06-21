@@ -30,6 +30,7 @@ prints the slowest pages and failure diagnostics into the run log.
 | `DECODE_ERROR` | pdfe opened the PDF but a stream, image, or content decode path failed during rendering |
 | `TIMEOUT` | per-PDF wall-clock budget exceeded |
 | `ALL_ORACLES_REFUSED` | reference engines cannot render the page |
+| `RECOVERED_MALFORMED_CONTENT` | pdfe rendered bounded valid content after skipping malformed page-content streams; tracked as robustness coverage, not focused visual-fidelity work |
 | `EMPTY_DOC` | 0 pages |
 | `COMPARE_ERROR` | bitmap-comparison crashed |
 | `SCANNER_CRASH` | a one-PDF recovery subprocess exited before writing a report |
@@ -201,8 +202,10 @@ chunk crashes:
   outside current unattended rendering support.
 * 2 `UNSUPPORTED_COMPRESSION` — compressed archive methods outside the current
   input reader.
-* 1 each: `ALL_ORACLES_REFUSED` (`bomb_giant.pdf`, mutool exit plus pdftocairo
-  timeout), `RESOURCE_LIMIT`, and `INVALID_PAGE_GEOMETRY`.
+* 1 each: `RESOURCE_LIMIT` and `INVALID_PAGE_GEOMETRY`. The previous
+  `ALL_ORACLES_REFUSED` entry (`bomb_giant.pdf`) is now classified as
+  `RECOVERED_MALFORMED_CONTENT`: pdfe renders the valid prefix and skips the
+  malformed JBIG2 page-content streams.
 
 **`PASS_ONE` (353) — pdfe sides with one oracle:**
 

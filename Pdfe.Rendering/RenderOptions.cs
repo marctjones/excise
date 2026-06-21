@@ -37,4 +37,10 @@ public record RenderOptions
     /// Maximum output pixels allowed for one rendered page.
     /// </summary>
     public long MaxPixelCount { get; init; } = DefaultMaxPixelCount;
+
+    /// <summary>
+    /// Optional diagnostic sink for recoverable rendering warnings, such as
+    /// malformed page content skipped on best-effort viewer paths.
+    /// </summary>
+    internal ICollection<string>? Diagnostics { get; init; }
 }
