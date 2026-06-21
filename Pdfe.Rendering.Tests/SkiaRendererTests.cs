@@ -338,6 +338,23 @@ public class SkiaRendererTests
     }
 
     [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsIssue19326_UnsupportedJpxDoesNotPaintGrayPlaceholder()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "issue19326.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js issue19326 fixture found at test-pdfs/pdfjs/issue19326.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        MeasureNeutralMidGrayFraction(bitmap).Should().BeLessThan(0.10,
+            "an unsupported JPX image should be omitted or decoded, not replaced with an opaque gray block over existing page content");
+    }
+
+    [Fact(Timeout = 20000)]
     public void RenderPage_PdfjsIssue15716_ZapfDingbatsDifferencesRenderTilingPattern()
     {
         var path = FindRepoFile("test-pdfs", "pdfjs", "issue15716.pdf");
@@ -4507,6 +4524,26 @@ public class SkiaRendererTests
         }
 
         return (double)different / total;
+    }
+
+    private static double MeasureNeutralMidGrayFraction(SKBitmap bitmap)
+    {
+        long gray = 0;
+        long total = (long)bitmap.Width * bitmap.Height;
+
+        for (int y = 0; y < bitmap.Height; y++)
+        {
+            for (int x = 0; x < bitmap.Width; x++)
+            {
+                var pixel = bitmap.GetPixel(x, y);
+                var max = Math.Max(pixel.Red, Math.Max(pixel.Green, pixel.Blue));
+                var min = Math.Min(pixel.Red, Math.Min(pixel.Green, pixel.Blue));
+                if (min >= 96 && max <= 224 && max - min <= 4)
+                    gray++;
+            }
+        }
+
+        return (double)gray / total;
     }
 
     private static (double WhiteFraction, double BlueFraction) MeasureWhiteAndBluePixels(SKBitmap bitmap)

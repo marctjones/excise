@@ -3302,7 +3302,7 @@ internal partial class RenderContext
             {
                 var bitmap = DecodeJpxImage(imageStream, width, height);
                 bitmap ??= SafeDecode(imageStream.EncodedData);
-                return bitmap ?? (width > 0 && height > 0 ? CreatePlaceholderBitmap(width, height) : null);
+                return bitmap;
             }
 
             return CreateBitmapFromRawData(
@@ -4501,13 +4501,6 @@ internal partial class RenderContext
         {
             return null;
         }
-    }
-
-    private static SKBitmap CreatePlaceholderBitmap(int width, int height)
-    {
-        var bmp = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
-        bmp.Erase(new SKColor(192, 192, 192, 255));
-        return bmp;
     }
 
     /// <summary>
