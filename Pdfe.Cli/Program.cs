@@ -2033,24 +2033,28 @@ class Program
             // does not both agree, keeping passing pages cheap while giving
             // remaining DIFFs more evidence.
             progress?.Update("mutool", pageNumber, $"mutool render page {pageNumber}/{doc.PageCount}");
-            var mutoolResult = RenderOracleWithCache(
+            var mutoolOutcome = RenderOracleWithCache(
                 oracleCache, "mutool", pdfPath, pageNumber, comparisonDpi, userPassword,
                 () => MutoolReferenceRenderer.TryRenderPage(
                     pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs, userPassword));
+            var mutoolResult = mutoolOutcome.Result;
             mutoolBmp = mutoolResult.Bitmap;
             entry.mutoolMs = mutoolResult.ElapsedMs;
             entry.mutoolStatus = mutoolResult.Status;
             entry.mutoolError = TruncNullable(mutoolResult.ErrorMessage, 200);
+            ApplyOracleCacheFields(entry, "mutool", mutoolOutcome);
 
             progress?.Update("pdftocairo", pageNumber, $"pdftocairo render page {pageNumber}/{doc.PageCount}");
-            var cairoResult = RenderOracleWithCache(
+            var cairoOutcome = RenderOracleWithCache(
                 oracleCache, "pdftocairo", pdfPath, pageNumber, comparisonDpi, userPassword,
                 () => PdftocairoReferenceRenderer.TryRenderPage(
                     pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs, userPassword));
+            var cairoResult = cairoOutcome.Result;
             cairoBmp = cairoResult.Bitmap;
             entry.cairoMs = cairoResult.ElapsedMs;
             entry.cairoStatus = cairoResult.Status;
             entry.cairoError = TruncNullable(cairoResult.ErrorMessage, 200);
+            ApplyOracleCacheFields(entry, "pdftocairo", cairoOutcome);
 
             var metrics = new List<(string Name, double Diff, double Mae)>();
 
@@ -2086,14 +2090,16 @@ class Program
             if (shouldEscalate && extraOracles.HasFlag(CorpusExtraOracles.Ghostscript))
             {
                 progress?.Update("ghostscript", pageNumber, $"ghostscript render page {pageNumber}/{doc.PageCount}");
-                var ghostscriptResult = RenderOracleWithCache(
+                var ghostscriptOutcome = RenderOracleWithCache(
                     oracleCache, "ghostscript", pdfPath, pageNumber, comparisonDpi, userPassword,
                     () => GhostscriptReferenceRenderer.TryRenderPage(
                         pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs, userPassword));
+                var ghostscriptResult = ghostscriptOutcome.Result;
                 ghostscriptBmp = ghostscriptResult.Bitmap;
                 entry.ghostscriptMs = ghostscriptResult.ElapsedMs;
                 entry.ghostscriptStatus = ghostscriptResult.Status;
                 entry.ghostscriptError = TruncNullable(ghostscriptResult.ErrorMessage, 200);
+                ApplyOracleCacheFields(entry, "ghostscript", ghostscriptOutcome);
                 if (ghostscriptBmp != null)
                 {
                     progress?.Update("compare", pageNumber, $"compare pdfe vs ghostscript page {pageNumber}/{doc.PageCount}");
@@ -2108,14 +2114,16 @@ class Program
             if (shouldEscalate && extraOracles.HasFlag(CorpusExtraOracles.PdfBox))
             {
                 progress?.Update("pdfbox", pageNumber, $"pdfbox render page {pageNumber}/{doc.PageCount}");
-                var pdfboxResult = RenderOracleWithCache(
+                var pdfboxOutcome = RenderOracleWithCache(
                     oracleCache, "pdfbox", pdfPath, pageNumber, comparisonDpi, userPassword,
                     () => PdfBoxReferenceRenderer.TryRenderPage(
                         pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs, userPassword));
+                var pdfboxResult = pdfboxOutcome.Result;
                 pdfboxBmp = pdfboxResult.Bitmap;
                 entry.pdfboxMs = pdfboxResult.ElapsedMs;
                 entry.pdfboxStatus = pdfboxResult.Status;
                 entry.pdfboxError = TruncNullable(pdfboxResult.ErrorMessage, 200);
+                ApplyOracleCacheFields(entry, "pdfbox", pdfboxOutcome);
                 if (pdfboxBmp != null)
                 {
                     progress?.Update("compare", pageNumber, $"compare pdfe vs pdfbox page {pageNumber}/{doc.PageCount}");
@@ -2130,14 +2138,16 @@ class Program
             if (shouldEscalate && extraOracles.HasFlag(CorpusExtraOracles.Pdfium))
             {
                 progress?.Update("pdfium", pageNumber, $"pdfium_test render page {pageNumber}/{doc.PageCount}");
-                var pdfiumResult = RenderOracleWithCache(
+                var pdfiumOutcome = RenderOracleWithCache(
                     oracleCache, "pdfium", pdfPath, pageNumber, comparisonDpi, userPassword: null,
                     () => PdfiumReferenceRenderer.TryRenderPage(
                         pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs));
+                var pdfiumResult = pdfiumOutcome.Result;
                 pdfiumBmp = pdfiumResult.Bitmap;
                 entry.pdfiumMs = pdfiumResult.ElapsedMs;
                 entry.pdfiumStatus = pdfiumResult.Status;
                 entry.pdfiumError = TruncNullable(pdfiumResult.ErrorMessage, 200);
+                ApplyOracleCacheFields(entry, "pdfium", pdfiumOutcome);
                 if (pdfiumBmp != null)
                 {
                     progress?.Update("compare", pageNumber, $"compare pdfe vs pdfium page {pageNumber}/{doc.PageCount}");
@@ -2203,7 +2213,7 @@ class Program
         return entry;
     }
 
-    private static ReferenceRenderResult RenderOracleWithCache(
+    private static OracleRenderOutcome RenderOracleWithCache(
         OracleRenderCache? cache,
         string oracleName,
         string pdfPath,
@@ -2213,7 +2223,51 @@ class Program
         Func<ReferenceRenderResult> render)
     {
         return cache?.GetOrRender(oracleName, pdfPath, pageNumber, dpi, userPassword, render)
-               ?? render();
+               ?? new OracleRenderOutcome(render(), CacheEnabled: false, CacheHit: false,
+                   CachedRenderMs: null, CachedStatus: null, CachedErrorMessage: null);
+    }
+
+    private static void ApplyOracleCacheFields(
+        CorpusScanEntry entry,
+        string oracleName,
+        OracleRenderOutcome outcome)
+    {
+        if (!outcome.CacheEnabled)
+            return;
+
+        switch (oracleName)
+        {
+            case "mutool":
+                entry.mutoolCacheHit = outcome.CacheHit;
+                entry.mutoolCachedRenderMs = outcome.CachedRenderMs;
+                entry.mutoolCachedStatus = outcome.CachedStatus;
+                entry.mutoolCachedError = TruncNullable(outcome.CachedErrorMessage, 200);
+                break;
+            case "pdftocairo":
+                entry.cairoCacheHit = outcome.CacheHit;
+                entry.cairoCachedRenderMs = outcome.CachedRenderMs;
+                entry.cairoCachedStatus = outcome.CachedStatus;
+                entry.cairoCachedError = TruncNullable(outcome.CachedErrorMessage, 200);
+                break;
+            case "ghostscript":
+                entry.ghostscriptCacheHit = outcome.CacheHit;
+                entry.ghostscriptCachedRenderMs = outcome.CachedRenderMs;
+                entry.ghostscriptCachedStatus = outcome.CachedStatus;
+                entry.ghostscriptCachedError = TruncNullable(outcome.CachedErrorMessage, 200);
+                break;
+            case "pdfbox":
+                entry.pdfboxCacheHit = outcome.CacheHit;
+                entry.pdfboxCachedRenderMs = outcome.CachedRenderMs;
+                entry.pdfboxCachedStatus = outcome.CachedStatus;
+                entry.pdfboxCachedError = TruncNullable(outcome.CachedErrorMessage, 200);
+                break;
+            case "pdfium":
+                entry.pdfiumCacheHit = outcome.CacheHit;
+                entry.pdfiumCachedRenderMs = outcome.CachedRenderMs;
+                entry.pdfiumCachedStatus = outcome.CachedStatus;
+                entry.pdfiumCachedError = TruncNullable(outcome.CachedErrorMessage, 200);
+                break;
+        }
     }
 
     private static DirectoryInfo ResolveCorpusOracleCacheDir(DirectoryInfo? explicitDir)
@@ -2260,7 +2314,7 @@ class Program
 
         public string CacheDirectory { get; }
 
-        public ReferenceRenderResult GetOrRender(
+        public OracleRenderOutcome GetOrRender(
             string oracleName,
             string pdfPath,
             int pageNumber,
@@ -2273,17 +2327,24 @@ class Program
 
             lock (gate)
             {
-                if (TryDecode(cachePath, out var cachedBitmap, out var elapsedMs))
+                if (TryDecode(cachePath, out var cachedBitmap, out var elapsedMs, out var metadata))
                 {
                     System.Threading.Interlocked.Increment(ref _hits);
-                    return new ReferenceRenderResult(cachedBitmap, "OK", null, elapsedMs);
+                    return new OracleRenderOutcome(
+                        new ReferenceRenderResult(cachedBitmap, "OK", null, elapsedMs),
+                        CacheEnabled: true,
+                        CacheHit: true,
+                        CachedRenderMs: metadata?.elapsedMs,
+                        CachedStatus: metadata?.status,
+                        CachedErrorMessage: metadata?.errorMessage);
                 }
 
                 System.Threading.Interlocked.Increment(ref _misses);
                 var result = render();
                 if (result is { Status: "OK", Bitmap: not null })
-                    TryWrite(cachePath, result.Bitmap);
-                return result;
+                    TryWrite(cachePath, oracleName, pageNumber, dpi, result);
+                return new OracleRenderOutcome(result, CacheEnabled: true, CacheHit: false,
+                    CachedRenderMs: null, CachedStatus: null, CachedErrorMessage: null);
             }
         }
 
@@ -2319,11 +2380,16 @@ class Program
             return Path.Combine(CacheDirectory, key[..2], key + ".png");
         }
 
-        private bool TryDecode(string cachePath, out SKBitmap? bitmap, out long elapsedMs)
+        private bool TryDecode(
+            string cachePath,
+            out SKBitmap? bitmap,
+            out long elapsedMs,
+            out OracleCacheMetadata? metadata)
         {
             var sw = Stopwatch.StartNew();
             bitmap = null;
             elapsedMs = 0;
+            metadata = null;
             if (!File.Exists(cachePath))
                 return false;
 
@@ -2333,9 +2399,13 @@ class Program
                 sw.Stop();
                 elapsedMs = sw.ElapsedMilliseconds;
                 if (bitmap != null)
+                {
+                    metadata = TryReadMetadata(GetMetadataPath(cachePath));
                     return true;
+                }
 
                 TryDelete(cachePath);
+                TryDelete(GetMetadataPath(cachePath));
                 System.Threading.Interlocked.Increment(ref _errors);
                 return false;
             }
@@ -2344,22 +2414,30 @@ class Program
                 sw.Stop();
                 elapsedMs = sw.ElapsedMilliseconds;
                 TryDelete(cachePath);
+                TryDelete(GetMetadataPath(cachePath));
                 System.Threading.Interlocked.Increment(ref _errors);
                 return false;
             }
         }
 
-        private void TryWrite(string cachePath, SKBitmap bitmap)
+        private void TryWrite(
+            string cachePath,
+            string oracleName,
+            int pageNumber,
+            int dpi,
+            ReferenceRenderResult result)
         {
             var directory = Path.GetDirectoryName(cachePath);
-            if (directory == null)
+            if (directory == null || result.Bitmap == null)
                 return;
 
             var tempPath = cachePath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+            var metadataPath = GetMetadataPath(cachePath);
+            var tempMetadataPath = metadataPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
             try
             {
                 Directory.CreateDirectory(directory);
-                using var image = SKImage.FromBitmap(bitmap);
+                using var image = SKImage.FromBitmap(result.Bitmap);
                 using var data = image.Encode(SKEncodedImageFormat.Png, quality: 100);
                 if (data == null)
                     return;
@@ -2367,7 +2445,22 @@ class Program
                 using (var stream = File.Create(tempPath))
                     data.SaveTo(stream);
 
+                var metadata = new OracleCacheMetadata
+                {
+                    cacheVersion = CacheVersion,
+                    oracleName = oracleName,
+                    pageNumber = pageNumber,
+                    dpi = dpi,
+                    status = result.Status,
+                    errorMessage = result.ErrorMessage,
+                    elapsedMs = result.ElapsedMs,
+                    createdUtc = DateTimeOffset.UtcNow.ToString("O", System.Globalization.CultureInfo.InvariantCulture),
+                };
+                var metadataJson = System.Text.Json.JsonSerializer.Serialize(metadata);
+                File.WriteAllText(tempMetadataPath, metadataJson, Encoding.UTF8);
+
                 File.Move(tempPath, cachePath, overwrite: true);
+                File.Move(tempMetadataPath, metadataPath, overwrite: true);
                 System.Threading.Interlocked.Increment(ref _writes);
             }
             catch
@@ -2377,8 +2470,28 @@ class Program
             finally
             {
                 TryDelete(tempPath);
+                TryDelete(tempMetadataPath);
             }
         }
+
+        private OracleCacheMetadata? TryReadMetadata(string metadataPath)
+        {
+            if (!File.Exists(metadataPath))
+                return null;
+
+            try
+            {
+                return System.Text.Json.JsonSerializer.Deserialize<OracleCacheMetadata>(
+                    File.ReadAllText(metadataPath, Encoding.UTF8));
+            }
+            catch
+            {
+                System.Threading.Interlocked.Increment(ref _errors);
+                return null;
+            }
+        }
+
+        private static string GetMetadataPath(string cachePath) => cachePath + ".json";
 
         private static void TryDelete(string path)
         {
@@ -2394,6 +2507,26 @@ class Program
 
         private static string HashText(string text)
             => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text))).ToLowerInvariant();
+    }
+
+    private sealed record OracleRenderOutcome(
+        ReferenceRenderResult Result,
+        bool CacheEnabled,
+        bool CacheHit,
+        long? CachedRenderMs,
+        string? CachedStatus,
+        string? CachedErrorMessage);
+
+    private sealed class OracleCacheMetadata
+    {
+        public string cacheVersion { get; set; } = "";
+        public string oracleName { get; set; } = "";
+        public int pageNumber { get; set; }
+        public int dpi { get; set; }
+        public string status { get; set; } = "";
+        public string? errorMessage { get; set; }
+        public long elapsedMs { get; set; }
+        public string createdUtc { get; set; } = "";
     }
 
     internal sealed class CorpusOracleCacheReport
@@ -2968,6 +3101,26 @@ class Program
         public long? ghostscriptMs { get; set; }
         public long? pdfboxMs { get; set; }
         public long? pdfiumMs { get; set; }
+        public bool? mutoolCacheHit { get; set; }
+        public bool? cairoCacheHit { get; set; }
+        public bool? ghostscriptCacheHit { get; set; }
+        public bool? pdfboxCacheHit { get; set; }
+        public bool? pdfiumCacheHit { get; set; }
+        public long? mutoolCachedRenderMs { get; set; }
+        public long? cairoCachedRenderMs { get; set; }
+        public long? ghostscriptCachedRenderMs { get; set; }
+        public long? pdfboxCachedRenderMs { get; set; }
+        public long? pdfiumCachedRenderMs { get; set; }
+        public string? mutoolCachedStatus { get; set; }
+        public string? cairoCachedStatus { get; set; }
+        public string? ghostscriptCachedStatus { get; set; }
+        public string? pdfboxCachedStatus { get; set; }
+        public string? pdfiumCachedStatus { get; set; }
+        public string? mutoolCachedError { get; set; }
+        public string? cairoCachedError { get; set; }
+        public string? ghostscriptCachedError { get; set; }
+        public string? pdfboxCachedError { get; set; }
+        public string? pdfiumCachedError { get; set; }
         public string? mutoolStatus { get; set; }
         public string? cairoStatus { get; set; }
         public string? ghostscriptStatus { get; set; }
