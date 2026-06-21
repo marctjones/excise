@@ -383,6 +383,7 @@ internal partial class RenderContext
     // independent byte-cmap probes.
     private readonly Dictionary<Pdfe.Core.Primitives.PdfDictionary, ushort[]?> _embeddedTypefaceByteToGlyph = new();
     private ushort[]? _currentByteToGlyph;
+    private readonly Dictionary<Pdfe.Core.Primitives.PdfDictionary, IReadOnlyDictionary<int, string>?> _toUnicodeMaps = new();
 
     // Stack of /Resources dictionaries currently active. The page's own
     // /Resources is the bottom; entering a Form XObject pushes its own
@@ -1221,7 +1222,8 @@ internal partial class RenderContext
         // (/FontFile2 = TrueType, /FontFile3 = OpenType/CFF). When no embedded
         // data is present or the format isn't SkiaSharp-loadable (e.g. /FontFile
         // is raw Type1 PostScript), fall through to the system-font mapping.
-        var embedded = TryLoadEmbeddedTypeface(fontDict);
+        var toUnicodeMap = fontDict != null ? TryLoadToUnicodeMap(fontDict) : null;
+        var embedded = TryLoadEmbeddedTypeface(fontDict, toUnicodeMap);
         _currentFontHasEmbeddedProgram = embedded != null;
         _currentTypeface = embedded ?? GetTypeface(baseFont);
         _currentByteToGlyph = embedded != null && fontDict != null
@@ -1425,7 +1427,9 @@ internal partial class RenderContext
     // so glyphs render in the face the PDF actually specifies, with the widths
     // and kerning the PDF's /Widths table was authored against. Cached per-
     // dict for the life of this RenderContext; disposed at end of Render().
-    private SKTypeface? TryLoadEmbeddedTypeface(Pdfe.Core.Primitives.PdfDictionary? fontDict)
+    private SKTypeface? TryLoadEmbeddedTypeface(
+        Pdfe.Core.Primitives.PdfDictionary? fontDict,
+        IReadOnlyDictionary<int, string>? toUnicodeMap)
     {
         if (fontDict == null) return null;
         if (_embeddedTypefaces.TryGetValue(fontDict, out var cached))
@@ -1513,9 +1517,33 @@ internal partial class RenderContext
         }
 
         _embeddedTypefaces[fontDict] = typeface;
-        _embeddedTypefaceByteToGlyph[fontDict] = cffByteToGlyph ?? ResolveByteCodeCmap(typeface, fontDict);
+        _embeddedTypefaceByteToGlyph[fontDict] = cffByteToGlyph ?? ResolveByteCodeCmap(typeface, fontDict, toUnicodeMap);
         _embeddedCffCidToGlyph[fontDict] = cffCidToGlyph;
         return typeface;
+    }
+
+    private IReadOnlyDictionary<int, string>? TryLoadToUnicodeMap(Pdfe.Core.Primitives.PdfDictionary fontDict)
+    {
+        if (_toUnicodeMaps.TryGetValue(fontDict, out var cached))
+            return cached;
+
+        IReadOnlyDictionary<int, string>? map = null;
+        var toUnicodeObj = fontDict.GetOptional("ToUnicode");
+        if (toUnicodeObj != null)
+        {
+            try
+            {
+                if (_page.Document.Resolve(toUnicodeObj) is Pdfe.Core.Primitives.PdfStream stream)
+                    map = ToUnicodeCMapParser.Parse(stream.DecodedData);
+            }
+            catch
+            {
+                map = null;
+            }
+        }
+
+        _toUnicodeMaps[fontDict] = map;
+        return map;
     }
 
     /// <summary>
@@ -1532,12 +1560,20 @@ internal partial class RenderContext
     /// </summary>
     private static ushort[]? ResolveByteCodeCmap(
         SKTypeface typeface,
-        Pdfe.Core.Primitives.PdfDictionary? fontDict)
+        Pdfe.Core.Primitives.PdfDictionary? fontDict,
+        IReadOnlyDictionary<int, string>? toUnicodeMap)
     {
         // Type0 (CID) fonts go through a separate draw path that already
         // walks bytes 2 at a time and resolves through the descendant font;
         // the format-0 workaround would double-encode.
         if (fontDict?.GetNameOrNull("Subtype") == "Type0") return null;
+
+        var byteMap = CmapFormat0Table.TryRead(typeface);
+        if (byteMap == null)
+            return null;
+
+        if (ToUnicodeMapsToMissingEmbeddedGlyphs(typeface, toUnicodeMap))
+            return byteMap;
 
         using var probe = new SKFont(typeface, 12f);
         int[] unicodeProbe = { 'A', 'a', 'M', 'e', '0', ' ', 'i' };
@@ -1552,7 +1588,30 @@ internal partial class RenderContext
 
         // No Unicode coverage Skia can see — fall back to the format-0
         // subtable if present.
-        return CmapFormat0Table.TryRead(typeface);
+        return byteMap;
+    }
+
+    private static bool ToUnicodeMapsToMissingEmbeddedGlyphs(
+        SKTypeface typeface,
+        IReadOnlyDictionary<int, string>? toUnicodeMap)
+    {
+        if (toUnicodeMap == null || toUnicodeMap.Count == 0)
+            return false;
+
+        using var probe = new SKFont(typeface, 12f);
+        foreach (var text in toUnicodeMap.Values)
+        {
+            foreach (var rune in text.EnumerateRunes())
+            {
+                if (Rune.IsControl(rune) || Rune.IsWhiteSpace(rune))
+                    continue;
+
+                if (probe.GetGlyph(rune.Value) == 0)
+                    return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool ProducesGlyphOutlines(SKTypeface typeface)
@@ -3075,7 +3134,21 @@ internal partial class RenderContext
 
         using var stencilImage = SKImage.FromBitmap(stencil);
         var sampling = new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear);
-        _canvas.DrawImage(stencilImage, dest, sampling, maskPaint);
+        _canvas.Save();
+        try
+        {
+            _canvas.Translate(dest.Left, dest.Bottom);
+            _canvas.Scale(dest.Width / stencil.Width, -dest.Height / stencil.Height);
+            _canvas.DrawImage(
+                stencilImage,
+                new SKRect(0, 0, stencil.Width, stencil.Height),
+                sampling,
+                maskPaint);
+        }
+        finally
+        {
+            _canvas.Restore();
+        }
     }
 
     private bool TryCreateDeviceSpaceAreaResampledStencil(
@@ -3181,8 +3254,12 @@ internal partial class RenderContext
                 {
                     var sourceLeft = (clippedLeft - dest.Left) * sourceScaleX;
                     var sourceRight = (clippedRight - dest.Left) * sourceScaleX;
-                    var sourceTop = (clippedTop - dest.Top) * sourceScaleY;
-                    var sourceBottom = (clippedBottom - dest.Top) * sourceScaleY;
+                    // PDF image space maps the first image sample row to the
+                    // top of the unit-square image area. Normal image drawing
+                    // applies this as a Y flip; the device-space stencil path
+                    // must do the same while sampling coverage directly.
+                    var sourceTop = (dest.Bottom - clippedBottom) * sourceScaleY;
+                    var sourceBottom = (dest.Bottom - clippedTop) * sourceScaleY;
                     var averageAlpha = AverageAlphaOverSourceRect(
                         source,
                         sourceLeft,

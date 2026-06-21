@@ -274,6 +274,14 @@ public class SkiaRendererTests
         saturatedFraction.Should().BeGreaterThan(0.03,
             "a CCITT image mask used as a stencil with current /Pattern color should paint the shading pattern, not grayscale mask bits");
         darkFraction.Should().BeLessThan(0.05);
+
+        var whiteCutout = bitmap.GetPixel(130, 300);
+        whiteCutout.Red.Should().BeGreaterThan(245,
+            "pattern-filled image masks must use PDF image-space orientation, not an upside-down stencil");
+        whiteCutout.Green.Should().BeGreaterThan(245,
+            "pattern-filled image masks must use PDF image-space orientation, not an upside-down stencil");
+        whiteCutout.Blue.Should().BeGreaterThan(245,
+            "pattern-filled image masks must use PDF image-space orientation, not an upside-down stencil");
     }
 
     [Fact(Timeout = 20000)]
@@ -530,6 +538,25 @@ public class SkiaRendererTests
             "the rendered words should preserve the visible space between Checkliste and Service");
         CountDarkPixels(bitmap, new SKRectI(105, 10, 165, 35)).Should().BeGreaterThan(200,
             "the second word should render after the space instead of wrong CID glyphs filling the gap");
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsBug1108301_EmbeddedBengaliTrueTypeUsesByteCmap()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "bug1108301.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js bug1108301 fixture found at test-pdfs/pdfjs/bug1108301.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        CountDarkPixels(bitmap, new SKRectI(0, 0, bitmap.Width, bitmap.Height)).Should().BeGreaterThan(700,
+            "the embedded Bengali text should render visible glyphs");
+        CountDarkPixels(bitmap, new SKRectI(0, 5, bitmap.Width, 10)).Should().BeLessThan(80,
+            "the embedded font should use its byte cmap instead of drawing repeated .notdef box outlines");
     }
 
     [Theory(Timeout = 20000)]
