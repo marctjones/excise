@@ -11,7 +11,7 @@ public sealed class PdfJsFontFallbackDifferentialTests
     private const int SmallTextRenderDpi = 150;
 
     [Fact]
-    public void HighlightsPage5_UsesSerifFallbackForUrwType1Fonts()
+    public void HighlightsPage5_LoadsEmbeddedUrwType1FontFile()
     {
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable,
             "mutool not on PATH - install mupdf-tools to run this differential fixture.");
@@ -34,14 +34,13 @@ public sealed class PdfJsFontFallbackDifferentialTests
         using var aligned = DifferentialMetrics.ResizeMatch(pdfe, mutool!.Width, mutool.Height);
         var report = DifferentialMetrics.Compare(aligned, mutool);
 
-        report.DifferingPixelFraction.Should().BeLessThan(0.075,
-            "URW Nimbus Roman Type1 fallback should use a Times-compatible serif face, " +
-            "not generic sans-serif");
-        report.MeanAbsoluteError.Should().BeLessThan(12.0);
+        report.DifferingPixelFraction.Should().BeLessThan(0.005,
+            "URW Nimbus Roman raw Type 1 /FontFile programs should load through the embedded-font path");
+        report.MeanAbsoluteError.Should().BeLessThan(6.0);
     }
 
     [Fact]
-    public void Issue16316_SubstitutedType1TextUsesStableAntialiasing()
+    public void Issue16316_LoadsEmbeddedRawType1FontFile()
     {
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable,
             "mutool not on PATH - install mupdf-tools to run this differential fixture.");
@@ -64,9 +63,9 @@ public sealed class PdfJsFontFallbackDifferentialTests
         using var aligned = DifferentialMetrics.ResizeMatch(pdfe, mutool!.Width, mutool.Height);
         var report = DifferentialMetrics.Compare(aligned, mutool);
 
-        report.DifferingPixelFraction.Should().BeLessThan(0.05,
-            "substituted raw Type1 text should stay in the small antialiasing-noise range");
-        report.MeanAbsoluteError.Should().BeLessThan(12.0);
+        report.DifferingPixelFraction.Should().BeLessThan(0.02,
+            "raw Type 1 /FontFile text should render from embedded outlines rather than metric-compatible fallback");
+        report.MeanAbsoluteError.Should().BeLessThan(9.5);
     }
 
     private static string? LocateRepoRoot()

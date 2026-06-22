@@ -1453,17 +1453,22 @@ internal partial class RenderContext
         }
         if (descriptor == null) return null;
 
+        // /FontFile  (Type 1 PostScript) → SkiaSharp/FreeType loads PFA/PFB directly.
         // /FontFile2 (TrueType) → SkiaSharp loads directly.
         // /FontFile3 (OpenType/CFF) → if already SFNT-wrapped, Skia loads it;
         //   if it's raw Type1C/CIDFontType0C (more common in modern PDFs),
         //   we wrap it in a minimal OpenType container first.
-        // /FontFile (raw Type1 PostScript) — Skia can't load directly. Skipped.
+        var ff1 = descriptor.GetOptional("FontFile");
         var ff2 = descriptor.GetOptional("FontFile2");
         var ff3 = descriptor.GetOptional("FontFile3");
 
         byte[]? fontBytes = null;
         bool isCff = false;
-        if (ff2 != null && _page.Document.Resolve(ff2) is Pdfe.Core.Primitives.PdfStream s2)
+        if (ff1 != null && _page.Document.Resolve(ff1) is Pdfe.Core.Primitives.PdfStream s1)
+        {
+            try { fontBytes = s1.DecodedData; } catch { }
+        }
+        else if (ff2 != null && _page.Document.Resolve(ff2) is Pdfe.Core.Primitives.PdfStream s2)
         {
             try { fontBytes = s2.DecodedData; } catch { }
         }
