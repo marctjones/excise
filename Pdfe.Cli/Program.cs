@@ -1815,7 +1815,7 @@ partial class Program
 
         // Sort entries by path so parallel completion order doesn't make
         // diffs noisy across runs.
-        var sortedEntries = entries.OrderBy(e => e.path).ToList();
+        var sortedEntries = entries.OrderBy(e => e.path).ThenBy(e => e.pageNumber).ToList();
         var report = new
         {
             generatedUtc = DateTime.UtcNow.ToString("o"),
@@ -1827,6 +1827,7 @@ partial class Program
             passwordManifest = passwordManifest is null ? null : new { pdfs = passwordManifest.Count },
             extraOracles = ExtraOraclesName(extraOracles),
             counts,
+            summary = BuildCorpusScanSummary(sortedEntries),
             total = entries.Count,
             pdfs = pdfs.Count,
             peakRssBytes = peakBytes,
@@ -2583,6 +2584,34 @@ partial class Program
         public long errors { get; set; }
     }
 
+    internal sealed class CorpusScanSummary
+    {
+        public Dictionary<string, int> statusCounts { get; set; } = new(StringComparer.Ordinal);
+        public int nonPassCount { get; set; }
+        public int trueDiffCount { get; set; }
+        public int passOneCount { get; set; }
+        public Dictionary<string, int> nonPassVisualHumanImpactCounts { get; set; } = new(StringComparer.Ordinal);
+        public Dictionary<string, int> nonPassVisualCategoryCounts { get; set; } = new(StringComparer.Ordinal);
+        public Dictionary<string, int> oracleDisagreementBuckets { get; set; } = new(StringComparer.Ordinal);
+        public IReadOnlyList<CorpusScanPriorityEntry> topNonPass { get; set; } = Array.Empty<CorpusScanPriorityEntry>();
+    }
+
+    internal sealed class CorpusScanPriorityEntry
+    {
+        public string path { get; set; } = "";
+        public int pageNumber { get; set; }
+        public string status { get; set; } = "";
+        public string? visualHumanImpact { get; set; }
+        public string? visualCategory { get; set; }
+        public string? bestOracle { get; set; }
+        public double diffFraction { get; set; }
+        public double mae { get; set; }
+        public int? oracleComparisonPairs { get; set; }
+        public int? oracleDisagreeingPairs { get; set; }
+        public string oracleDisagreementBucket { get; set; } = "unmeasured";
+        public double? oracleMeanMae { get; set; }
+    }
+
     internal enum CorpusPageMode
     {
         First,
@@ -3142,6 +3171,110 @@ partial class Program
 
         return false;
     }
+
+    internal static CorpusScanSummary BuildCorpusScanSummary(IReadOnlyList<CorpusScanEntry> entries)
+    {
+        var nonPass = entries
+            .Where(entry => !string.Equals(entry.status, "PASS", StringComparison.Ordinal))
+            .ToArray();
+
+        return new CorpusScanSummary
+        {
+            statusCounts = CountBy(entries.Select(entry => entry.status)),
+            nonPassCount = nonPass.Length,
+            trueDiffCount = nonPass.Count(entry => string.Equals(entry.status, "DIFF", StringComparison.Ordinal)),
+            passOneCount = nonPass.Count(entry => string.Equals(entry.status, "PASS_ONE", StringComparison.Ordinal)),
+            nonPassVisualHumanImpactCounts = CountBy(nonPass.Select(entry => NormalizeSummaryValue(entry.visualHumanImpact))),
+            nonPassVisualCategoryCounts = CountBy(nonPass.Select(entry => NormalizeSummaryValue(entry.visualCategory))),
+            oracleDisagreementBuckets = CountBy(entries.Select(GetOracleDisagreementBucket)),
+            topNonPass = nonPass
+                .OrderBy(GetCorpusScanPriorityRank)
+                .ThenBy(entry => entry.path, StringComparer.Ordinal)
+                .ThenBy(entry => entry.pageNumber)
+                .Take(50)
+                .Select(ToPriorityEntry)
+                .ToArray(),
+        };
+    }
+
+    private static Dictionary<string, int> CountBy(IEnumerable<string> values)
+    {
+        return values
+            .GroupBy(value => value, StringComparer.Ordinal)
+            .OrderBy(group => group.Key, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal);
+    }
+
+    private static string NormalizeSummaryValue(string? value)
+        => string.IsNullOrWhiteSpace(value) ? "unclassified" : value;
+
+    private static string GetOracleDisagreementBucket(CorpusScanEntry entry)
+    {
+        if (entry.oracleComparisonPairs is not { } pairs || pairs <= 0
+            || entry.oracleDisagreeingPairs is not { } disagreeing)
+            return "unmeasured";
+
+        if (disagreeing <= 0)
+            return "none";
+
+        return disagreeing >= pairs ? "all" : "some";
+    }
+
+    private static int GetCorpusScanPriorityRank(CorpusScanEntry entry)
+    {
+        var impactRank = entry.visualHumanImpact switch
+        {
+            "high" => 0,
+            "medium" => 1,
+            "low" => 2,
+            "none" => 3,
+            _ => StatusFallbackPriorityRank(entry.status),
+        };
+
+        var statusRank = entry.status switch
+        {
+            "DIFF" => 0,
+            "TIMEOUT" => 1,
+            "RESOURCE_LIMIT" => 1,
+            "INVALID_PAGE_GEOMETRY" => 1,
+            "MALFORMED_PDF" => 2,
+            "DECODE_ERROR" => 2,
+            "RENDER_ERROR" => 2,
+            "PASS_ONE" => 3,
+            _ => 4,
+        };
+
+        return impactRank * 10 + statusRank;
+    }
+
+    private static int StatusFallbackPriorityRank(string? status) => status switch
+    {
+        "TIMEOUT" => 0,
+        "RESOURCE_LIMIT" => 0,
+        "INVALID_PAGE_GEOMETRY" => 0,
+        "MALFORMED_PDF" => 1,
+        "DECODE_ERROR" => 1,
+        "RENDER_ERROR" => 1,
+        "PASS_ONE" => 3,
+        _ => 2,
+    };
+
+    private static CorpusScanPriorityEntry ToPriorityEntry(CorpusScanEntry entry)
+        => new()
+        {
+            path = entry.path,
+            pageNumber = entry.pageNumber,
+            status = entry.status,
+            visualHumanImpact = entry.visualHumanImpact,
+            visualCategory = entry.visualCategory,
+            bestOracle = entry.bestOracle,
+            diffFraction = entry.diffFraction,
+            mae = entry.mae,
+            oracleComparisonPairs = entry.oracleComparisonPairs,
+            oracleDisagreeingPairs = entry.oracleDisagreeingPairs,
+            oracleDisagreementBucket = GetOracleDisagreementBucket(entry),
+            oracleMeanMae = entry.oracleMeanMae,
+        };
 
     internal sealed class Jbig2ClassifyReport
     {

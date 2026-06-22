@@ -88,6 +88,78 @@ public class CorpusScanClassificationTests
     }
 
     [Fact]
+    public void BuildCorpusScanSummary_AggregatesVisualAndOracleSignals()
+    {
+        var entries = new[]
+        {
+            new Program.CorpusScanEntry
+            {
+                path = "pass.pdf",
+                pageNumber = 1,
+                status = "PASS",
+                oracleComparisonPairs = 1,
+                oracleDisagreeingPairs = 0,
+            },
+            new Program.CorpusScanEntry
+            {
+                path = "low-color.pdf",
+                pageNumber = 1,
+                status = "DIFF",
+                visualHumanImpact = "low",
+                visualCategory = "color-tone-or-texture",
+                bestOracle = "pdftocairo",
+                diffFraction = 0.12,
+                mae = 4.2,
+                oracleComparisonPairs = 6,
+                oracleDisagreeingPairs = 0,
+                oracleMeanMae = 0.4,
+            },
+            new Program.CorpusScanEntry
+            {
+                path = "high-missing.pdf",
+                pageNumber = 2,
+                status = "DIFF",
+                visualHumanImpact = "high",
+                visualCategory = "localized-content-or-geometry",
+                bestOracle = "mutool",
+                diffFraction = 0.4,
+                mae = 70,
+                oracleComparisonPairs = 6,
+                oracleDisagreeingPairs = 6,
+                oracleMeanMae = 34,
+            },
+            new Program.CorpusScanEntry
+            {
+                path = "partial.pdf",
+                pageNumber = 1,
+                status = "PASS_ONE",
+                visualHumanImpact = "medium",
+                visualCategory = "mixed",
+                oracleComparisonPairs = 6,
+                oracleDisagreeingPairs = 4,
+            },
+        };
+
+        var summary = Program.BuildCorpusScanSummary(entries);
+
+        summary.statusCounts.Should().ContainKey("PASS").WhoseValue.Should().Be(1);
+        summary.statusCounts.Should().ContainKey("DIFF").WhoseValue.Should().Be(2);
+        summary.nonPassCount.Should().Be(3);
+        summary.trueDiffCount.Should().Be(2);
+        summary.passOneCount.Should().Be(1);
+        summary.nonPassVisualHumanImpactCounts.Should().ContainKey("high").WhoseValue.Should().Be(1);
+        summary.nonPassVisualHumanImpactCounts.Should().ContainKey("medium").WhoseValue.Should().Be(1);
+        summary.nonPassVisualHumanImpactCounts.Should().ContainKey("low").WhoseValue.Should().Be(1);
+        summary.nonPassVisualCategoryCounts.Should().ContainKey("color-tone-or-texture").WhoseValue.Should().Be(1);
+        summary.oracleDisagreementBuckets.Should().ContainKey("none").WhoseValue.Should().Be(2);
+        summary.oracleDisagreementBuckets.Should().ContainKey("some").WhoseValue.Should().Be(1);
+        summary.oracleDisagreementBuckets.Should().ContainKey("all").WhoseValue.Should().Be(1);
+        summary.topNonPass.Select(entry => entry.path)
+            .Should().Equal("high-missing.pdf", "partial.pdf", "low-color.pdf");
+        summary.topNonPass[0].oracleDisagreementBucket.Should().Be("all");
+    }
+
+    [Fact]
     public void TryParseCorpusExtraOracles_AllowsCommaSeparatedValues()
     {
         Program.TryParseCorpusExtraOracles("ghostscript,pdfbox,pdfium", out var value, out var error)
