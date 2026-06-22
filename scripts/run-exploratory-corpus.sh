@@ -10,9 +10,11 @@
 # kernel OOM-killed it (and Claude's session along with it) on
 # 2026-05-01. Process exit is the only reliable native-memory release.
 #
-# Each chunk processes ~50 PDFs, peaks at ~600 MB, and exits. The
-# slice JSONs (exploratory-chunk-NNN-of-MMM.json) are merged into
-# a single exploratory-report.json at the end.
+# Each chunk exits after writing a slice JSON. All-page runs default to
+# page-sharded manifests so very large PDFs are split into bounded page
+# ranges instead of pinning one chunk on a single huge document. The slice
+# JSONs (exploratory-chunk-NNN-of-MMM.json) are merged into one report at
+# the end.
 #
 # Usage:
 #   scripts/run-exploratory-corpus.sh                                      # pdf.js page 1, 14 chunks
@@ -21,6 +23,8 @@
 #   scripts/run-exploratory-corpus.sh --corpus test-pdfs/poppler --page-mode all
 #   scripts/run-exploratory-corpus.sh --corpus test-pdfs --report-name exploratory-report-all-corpora-all.json --page-mode all
 #   scripts/run-exploratory-corpus.sh --extra-oracles all                  # add Ghostscript/PDFBox/PDFium where available
+#   scripts/run-exploratory-corpus.sh --no-page-shards                     # keep legacy PDF-level chunking
+#   scripts/run-exploratory-corpus.sh --resume-pdfe-render-cache           # reuse pdfe cache from a prior interrupted run
 #   scripts/run-exploratory-corpus.sh --chunks 14 --tiny                    # 10-PDF smoke run
 #   scripts/run-exploratory-corpus.sh --log-dir logs/run                    # keep chunk logs
 #
@@ -44,6 +48,12 @@ EXTRA_ORACLES="ghostscript"   # none | ghostscript | pdfbox | pdfium | all
 CHUNK_LOG_DIR="/tmp"
 CORPUS=""
 REPORT_NAME=""
+PAGE_SHARDS="auto"            # auto | off
+LARGE_PDF_PAGE_THRESHOLD="250"
+PAGE_RANGE_SIZE="100"
+PDFE_RENDER_CACHE="auto"      # auto | off
+PDFE_RENDER_CACHE_DIR=""
+RESUME_PDFE_RENDER_CACHE="0"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -62,8 +72,18 @@ while [[ $# -gt 0 ]]; do
         --corpus=*)          CORPUS="${1#*=}"; shift ;;
         --report-name)       REPORT_NAME="$2"; shift 2 ;;
         --report-name=*)     REPORT_NAME="${1#*=}"; shift ;;
+        --page-shards)       PAGE_SHARDS="auto"; shift ;;
+        --no-page-shards)    PAGE_SHARDS="off"; shift ;;
+        --large-pdf-page-threshold) LARGE_PDF_PAGE_THRESHOLD="$2"; shift 2 ;;
+        --large-pdf-page-threshold=*) LARGE_PDF_PAGE_THRESHOLD="${1#*=}"; shift ;;
+        --page-range-size)   PAGE_RANGE_SIZE="$2"; shift 2 ;;
+        --page-range-size=*) PAGE_RANGE_SIZE="${1#*=}"; shift ;;
+        --pdfe-render-cache-dir) PDFE_RENDER_CACHE_DIR="$2"; shift 2 ;;
+        --pdfe-render-cache-dir=*) PDFE_RENDER_CACHE_DIR="${1#*=}"; shift ;;
+        --no-pdfe-render-cache) PDFE_RENDER_CACHE="off"; shift ;;
+        --resume-pdfe-render-cache) RESUME_PDFE_RENDER_CACHE="1"; shift ;;
         --help|-h)
-            sed -n '2,24p' "$0"; exit 0 ;;
+            sed -n '2,28p' "$0"; exit 0 ;;
         *)
             echo "Unknown option: $1" >&2; exit 2 ;;
     esac
@@ -166,10 +186,151 @@ if [[ "$PAGE_MODE" == "first" && "$CORPUS_LABEL" == "test-pdfs/pdfjs" ]]; then
     rm -f "$BIN_DIR/exploratory-report.json"
 fi
 
+PDFE_RENDER_CACHE_ENABLED="0"
+PDFE_CACHE_ARG=()
+if [[ "$PDFE_RENDER_CACHE" != "off" && "$PAGE_MODE" == "all" ]]; then
+    if [[ -z "$PDFE_RENDER_CACHE_DIR" ]]; then
+        PDFE_RENDER_CACHE_DIR="$CHUNK_LOG_DIR/pdfe-render-cache"
+    elif [[ "$PDFE_RENDER_CACHE_DIR" != /* ]]; then
+        PDFE_RENDER_CACHE_DIR="$ROOT/$PDFE_RENDER_CACHE_DIR"
+    fi
+
+    if [[ "$RESUME_PDFE_RENDER_CACHE" != "1" ]]; then
+        rm -rf "$PDFE_RENDER_CACHE_DIR"
+    fi
+    mkdir -p "$PDFE_RENDER_CACHE_DIR"
+    PDFE_RENDER_CACHE_ENABLED="1"
+    PDFE_CACHE_ARG=(--pdfe-render-cache-dir "$PDFE_RENDER_CACHE_DIR")
+fi
+
+PAGE_SHARD_DIR=""
+PAGE_SHARD_SUMMARY=""
+if [[ "$PAGE_MODE" == "all" && "$PAGE_SHARDS" != "off" ]]; then
+    PAGE_SHARD_DIR="$SLICE_DIR/page-manifests"
+    PAGE_SHARD_SUMMARY="$SLICE_DIR/page-shards-summary.tsv"
+    mkdir -p "$PAGE_SHARD_DIR"
+    echo "▶ Building page-shard manifests (threshold=$LARGE_PDF_PAGE_THRESHOLD pages, range=$PAGE_RANGE_SIZE pages)"
+    python3 - "$CORPUS" "$CHUNKS" "$PAGE_SHARD_DIR" "$PAGE_SHARD_SUMMARY" "$LARGE_PDF_PAGE_THRESHOLD" "$PAGE_RANGE_SIZE" <<'PY'
+import heapq
+import os
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+corpus = Path(sys.argv[1])
+chunks = int(sys.argv[2])
+manifest_dir = Path(sys.argv[3])
+summary_path = Path(sys.argv[4])
+threshold = int(sys.argv[5])
+range_size = int(sys.argv[6])
+
+if chunks < 1:
+    raise SystemExit("chunks must be >= 1")
+if threshold < 1:
+    raise SystemExit("large PDF page threshold must be >= 1")
+if range_size < 1:
+    raise SystemExit("page range size must be >= 1")
+
+pdfs = []
+for pdf in corpus.rglob("*.pdf"):
+    if ".git" in pdf.parts:
+        continue
+    rel = pdf.relative_to(corpus).as_posix()
+    pdfs.append((rel, pdf))
+pdfs.sort(key=lambda item: item[0])
+
+def page_count(pdf: Path) -> int:
+    try:
+        result = subprocess.run(
+            ["pdfinfo", str(pdf)],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=20,
+            check=False,
+        )
+    except Exception:
+        return 0
+    if result.returncode != 0:
+        return 0
+    match = re.search(r"^Pages:\s+(\d+)\s*$", result.stdout, re.MULTILINE)
+    return int(match.group(1)) if match else 0
+
+units = []
+large = []
+unknown = []
+for rel, pdf in pdfs:
+    count = page_count(pdf)
+    if count <= 0:
+        units.append((1, rel, 0, 0))
+        unknown.append(rel)
+        continue
+
+    if count > threshold:
+        large.append((rel, count))
+        for start in range(1, count + 1, range_size):
+            end = min(count, start + range_size - 1)
+            units.append((end - start + 1, rel, start, end))
+    else:
+        units.append((count, rel, 1, count))
+
+loads = [(0, i) for i in range(chunks)]
+heapq.heapify(loads)
+assigned = [[] for _ in range(chunks)]
+for weight, rel, start, end in sorted(units, key=lambda item: (-item[0], item[1], item[2])):
+    load, chunk = heapq.heappop(loads)
+    assigned[chunk].append((rel, start, end))
+    heapq.heappush(loads, (load + weight, chunk))
+
+manifest_dir.mkdir(parents=True, exist_ok=True)
+for chunk, rows in enumerate(assigned):
+    rows.sort(key=lambda item: (item[0], item[1], item[2]))
+    path = manifest_dir / f"chunk-{chunk:03d}.tsv"
+    with path.open("w", encoding="utf-8") as f:
+        f.write("path\tpageNumber\n")
+        for rel, start, end in rows:
+            if start == 0:
+                f.write(f"{rel}\t0\n")
+            else:
+                for page in range(start, end + 1):
+                    f.write(f"{rel}\t{page}\n")
+
+with summary_path.open("w", encoding="utf-8") as f:
+    f.write("chunk\tunits\tpages\tmanifest\n")
+    for chunk, rows in enumerate(assigned):
+        pages = sum(1 if start == 0 else end - start + 1 for _, start, end in rows)
+        f.write(f"{chunk}\t{len(rows)}\t{pages}\t{manifest_dir / f'chunk-{chunk:03d}.tsv'}\n")
+    f.write("\nlarge_pdf\tpages\n")
+    for rel, count in large:
+        f.write(f"{rel}\t{count}\n")
+    f.write("\nunknown_page_count_pdf\n")
+    for rel in unknown:
+        f.write(f"{rel}\n")
+
+total_pages = sum(weight for weight, *_ in units)
+max_pages = max((sum(1 if start == 0 else end - start + 1 for _, start, end in rows) for rows in assigned), default=0)
+min_pages = min((sum(1 if start == 0 else end - start + 1 for _, start, end in rows) for rows in assigned), default=0)
+print(f"  PDFs: {len(pdfs)}")
+print(f"  work units: {len(units)}")
+print(f"  manifest page rows: {total_pages}")
+print(f"  split large PDFs: {len(large)}")
+print(f"  unknown page-count PDFs: {len(unknown)}")
+print(f"  pages per chunk: min={min_pages}, max={max_pages}")
+print(f"  summary: {summary_path}")
+PY
+fi
+
 echo "▶ Running $CHUNKS chunks ($CHUNK_PARALLEL chunks concurrent, each $PER_CHUNK_PARALLEL-way internally parallel, page-mode=$PAGE_MODE, extra-oracles=$EXTRA_ORACLES, process-timeout=${PROCESS_TIMEOUT_SECONDS}s)"
 echo "  corpus: $CORPUS_LABEL"
 echo "  chunk logs: $CHUNK_LOG_DIR/exploratory-chunk-N.log"
 echo "  slice dir: $SLICE_DIR"
+if [[ -n "$PAGE_SHARD_DIR" ]]; then
+    echo "  page shards: $PAGE_SHARD_DIR"
+fi
+if [[ ${#PDFE_CACHE_ARG[@]} -gt 0 ]]; then
+    echo "  pdfe render cache: $PDFE_RENDER_CACHE_DIR ($(if [[ "$RESUME_PDFE_RENDER_CACHE" == "1" ]]; then echo resume; else echo fresh; fi))"
+fi
 chunk_failures=0
 chunk_start=$(date +%s)
 
@@ -178,6 +339,18 @@ run_one_chunk() {
     local i="$1"
     local slice_path
     slice_path=$(printf '%s/exploratory-chunk-%03d-of-%03d.json' "$SLICE_DIR" "$i" "$CHUNKS")
+    local scan_chunk="$i"
+    local scan_total="$CHUNKS"
+    local manifest_args=()
+    local pdfe_cache_args=()
+    if [[ -n "${PAGE_SHARD_DIR:-}" ]]; then
+        manifest_args=(--page-manifest "$(printf '%s/chunk-%03d.tsv' "$PAGE_SHARD_DIR" "$i")")
+        scan_chunk="0"
+        scan_total="1"
+    fi
+    if [[ "${PDFE_RENDER_CACHE_ENABLED:-0}" == "1" ]]; then
+        pdfe_cache_args=(--pdfe-render-cache-dir "$PDFE_RENDER_CACHE_DIR")
+    fi
     local runner=()
     if command -v timeout >/dev/null 2>&1; then
         runner=(timeout --kill-after=10s "$PROCESS_TIMEOUT_SECONDS")
@@ -188,22 +361,26 @@ run_one_chunk() {
     if (( ${#runner[@]} > 0 )); then
         "${runner[@]}" "$PDFE_BIN" corpus-scan "$CORPUS" \
             --output "$slice_path" \
-            --chunk "$i" \
-            --total "$CHUNKS" \
+            --chunk "$scan_chunk" \
+            --total "$scan_total" \
             --parallel "$PER_CHUNK_PARALLEL" \
             --pdf-timeout-ms "$PDF_TIMEOUT_MS" \
             --page-mode "$PAGE_MODE" \
             --extra-oracles "$EXTRA_ORACLES" \
+            "${manifest_args[@]}" \
+            "${pdfe_cache_args[@]}" \
             > "$CHUNK_LOG_DIR/exploratory-chunk-$i.log" 2>&1
     else
         "$PDFE_BIN" corpus-scan "$CORPUS" \
             --output "$slice_path" \
-            --chunk "$i" \
-            --total "$CHUNKS" \
+            --chunk "$scan_chunk" \
+            --total "$scan_total" \
             --parallel "$PER_CHUNK_PARALLEL" \
             --pdf-timeout-ms "$PDF_TIMEOUT_MS" \
             --page-mode "$PAGE_MODE" \
             --extra-oracles "$EXTRA_ORACLES" \
+            "${manifest_args[@]}" \
+            "${pdfe_cache_args[@]}" \
             > "$CHUNK_LOG_DIR/exploratory-chunk-$i.log" 2>&1
     fi
     local rc=$?
@@ -223,6 +400,146 @@ print(f'{d[\"total\"]} page results, peak {d[\"peakRssBytes\"]//1024//1024} MB')
 }
 export -f run_one_chunk
 export PDFE_BIN CORPUS CORPUS_LABEL BIN_DIR SLICE_DIR CHUNKS PER_CHUNK_PARALLEL PDF_TIMEOUT_MS PROCESS_TIMEOUT_SECONDS PAGE_MODE EXTRA_ORACLES CHUNK_LOG_DIR
+export PAGE_SHARD_DIR PDFE_RENDER_CACHE_ENABLED PDFE_RENDER_CACHE_DIR
+
+recover_one_page_shard_chunk_isolated() {
+    local i="$1"
+    local slice_path="$2"
+    local recovery_dir="$3"
+    local source_manifest
+    source_manifest=$(printf '%s/chunk-%03d.tsv' "$PAGE_SHARD_DIR" "$i")
+    if [[ ! -f "$source_manifest" ]]; then
+        echo "  missing page-shard manifest for chunk $((i + 1)): $source_manifest" >&2
+        return 1
+    fi
+
+    local n=0
+    local rel page rest
+    while IFS=$'\t' read -r rel page rest; do
+        if [[ "$rel" == "path" && "$page" == "pageNumber" ]]; then
+            continue
+        fi
+        if [[ -z "$rel" || -z "$page" ]]; then
+            continue
+        fi
+
+        local single_manifest single_json single_log
+        single_manifest=$(printf '%s/single-%05d.tsv' "$recovery_dir" "$n")
+        single_json=$(printf '%s/single-%05d.json' "$recovery_dir" "$n")
+        single_log=$(printf '%s/single-%05d.log' "$recovery_dir" "$n")
+        {
+            printf 'path\tpageNumber\n'
+            printf '%s\t%s\n' "$rel" "$page"
+        } > "$single_manifest"
+
+        local runner=()
+        if command -v timeout >/dev/null 2>&1; then
+            runner=(timeout --kill-after=10s "$PROCESS_TIMEOUT_SECONDS")
+        elif command -v gtimeout >/dev/null 2>&1; then
+            runner=(gtimeout --kill-after=10s "$PROCESS_TIMEOUT_SECONDS")
+        fi
+
+        local pdfe_cache_args=()
+        if [[ "${PDFE_RENDER_CACHE_ENABLED:-0}" == "1" ]]; then
+            pdfe_cache_args=(--pdfe-render-cache-dir "$PDFE_RENDER_CACHE_DIR")
+        fi
+
+        local command=("$PDFE_BIN" corpus-scan "$CORPUS" \
+            --output "$single_json" \
+            --chunk 0 \
+            --total 1 \
+            --parallel 1 \
+            --pdf-timeout-ms "$PDF_TIMEOUT_MS" \
+            --page-mode "$PAGE_MODE" \
+            --extra-oracles "$EXTRA_ORACLES" \
+            --page-manifest "$single_manifest" \
+            "${pdfe_cache_args[@]}")
+
+        local rc=0
+        if (( ${#runner[@]} > 0 )); then
+            if "${runner[@]}" "${command[@]}" > "$single_log" 2>&1; then
+                rc=0
+            else
+                rc=$?
+            fi
+        elif "${command[@]}" > "$single_log" 2>&1; then
+            rc=0
+        else
+            rc=$?
+        fi
+
+        if [[ "$rc" != "0" || ! -f "$single_json" ]]; then
+            python3 - "$single_json" "$rel" "$page" "$rc" "$PAGE_MODE" <<'PY'
+import json, sys, datetime
+out, rel, page, rc, page_mode = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4]), sys.argv[5]
+status = "TIMEOUT" if rc == 124 else "SCANNER_CRASH"
+error_type = "ProcessTimeout" if rc == 124 else "ProcessExit"
+entry = {
+    "path": rel,
+    "pageNumber": page,
+    "status": status,
+    "errorPhase": "scan",
+    "errorType": error_type,
+    "errorMessage": f"pdfe corpus-scan exited {rc} before writing a single-page report",
+}
+report = {
+    "generatedUtc": datetime.datetime.utcnow().isoformat() + "Z",
+    "corpus": rel,
+    "chunkIndex": 0,
+    "chunkTotal": 1,
+    "pageMode": page_mode,
+    "counts": {status: 1},
+    "total": 1,
+    "pdfs": 1,
+    "peakRssBytes": 0,
+    "entries": [entry],
+}
+with open(out, "w", encoding="utf-8") as f:
+    json.dump(report, f, indent=2)
+PY
+        fi
+        n=$((n + 1))
+    done < "$source_manifest"
+
+    python3 - "$recovery_dir" "$slice_path" "$i" "$CHUNKS" "$PAGE_MODE" "$CORPUS_LABEL" "$EXTRA_ORACLES" <<'PY'
+import glob, json, os, sys, datetime
+recovery_dir, out_path, chunk, total, page_mode, corpus_label, extra_oracles = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4]), sys.argv[5], sys.argv[6], sys.argv[7]
+entries = []
+counts = {}
+pdfs = set()
+peak = 0
+generated = []
+for path in sorted(glob.glob(os.path.join(recovery_dir, "single-*.json"))):
+    with open(path, encoding="utf-8") as f:
+        d = json.load(f)
+    for entry in d.get("entries", []):
+        entries.append(entry)
+        p = entry.get("path", entry.get("Path"))
+        if p:
+            pdfs.add(p)
+    for k, v in d.get("counts", {}).items():
+        counts[k] = counts.get(k, 0) + v
+    peak = max(peak, d.get("peakRssBytes", 0))
+    if d.get("generatedUtc"):
+        generated.append(d["generatedUtc"])
+report = {
+    "generatedUtc": max(generated) if generated else datetime.datetime.utcnow().isoformat() + "Z",
+    "corpus": corpus_label,
+    "chunkIndex": chunk,
+    "chunkTotal": total,
+    "pageMode": page_mode,
+    "extraOracles": extra_oracles,
+    "counts": counts,
+    "total": len(entries),
+    "pdfs": len(pdfs),
+    "peakRssBytes": peak,
+    "entries": sorted(entries, key=lambda e: (e.get("path", e.get("Path", "")), e.get("pageNumber", e.get("PageNumber", 0)))),
+}
+with open(out_path, "w", encoding="utf-8") as f:
+    json.dump(report, f, indent=2)
+print(f"  isolated page-shard recovery wrote {out_path} ({len(entries)} page results)")
+PY
+}
 
 recover_one_chunk_isolated() {
     local i="$1"
@@ -232,6 +549,11 @@ recover_one_chunk_isolated() {
     recovery_dir=$(printf '%s/exploratory-recovery-chunk-%03d-of-%03d' "$SLICE_DIR" "$i" "$CHUNKS")
     mkdir -p "$recovery_dir"
     rm -f "$recovery_dir"/single-*.json "$recovery_dir"/single-*.log "$recovery_dir"/files.txt
+
+    if [[ -n "${PAGE_SHARD_DIR:-}" ]]; then
+        recover_one_page_shard_chunk_isolated "$i" "$slice_path" "$recovery_dir"
+        return
+    fi
 
     python3 - "$CORPUS" "$i" "$CHUNKS" "$recovery_dir/files.txt" <<'PY'
 import os, sys
@@ -266,6 +588,11 @@ PY
             runner=(gtimeout --kill-after=10s "$PROCESS_TIMEOUT_SECONDS")
         fi
 
+        local pdfe_cache_args=()
+        if [[ "${PDFE_RENDER_CACHE_ENABLED:-0}" == "1" ]]; then
+            pdfe_cache_args=(--pdfe-render-cache-dir "$PDFE_RENDER_CACHE_DIR")
+        fi
+
         local command=("$PDFE_BIN" corpus-scan "$item_dir" \
             --output "$single_json" \
             --chunk 0 \
@@ -273,7 +600,8 @@ PY
             --parallel 1 \
             --pdf-timeout-ms "$PDF_TIMEOUT_MS" \
             --page-mode "$PAGE_MODE" \
-            --extra-oracles "$EXTRA_ORACLES")
+            --extra-oracles "$EXTRA_ORACLES" \
+            "${pdfe_cache_args[@]}")
 
         local rc=0
         if (( ${#runner[@]} > 0 )); then
@@ -412,16 +740,16 @@ echo "  total chunk runtime: ${chunk_elapsed}s"
 
 echo
 echo "▶ Merging $CHUNKS chunk reports → $REPORT_NAME"
-python3 - "$BIN_DIR" "$SLICE_DIR" "$CHUNKS" "$PAGE_MODE" "$REPORT_NAME" "$CORPUS_LABEL" "$EXTRA_ORACLES" <<'PY'
+python3 - "$BIN_DIR" "$SLICE_DIR" "$CHUNKS" "$PAGE_MODE" "$REPORT_NAME" "$CORPUS_LABEL" "$EXTRA_ORACLES" "$PAGE_SHARD_SUMMARY" "$PDFE_RENDER_CACHE_DIR" "$PDFE_RENDER_CACHE_ENABLED" <<'PY'
 import json, os, sys, glob
-bin_dir, slice_dir, expected, page_mode, report_name, corpus_label, extra_oracles = sys.argv[1], sys.argv[2], int(sys.argv[3]), sys.argv[4], sys.argv[5], sys.argv[6], sys.argv[7]
+bin_dir, slice_dir, expected, page_mode, report_name, corpus_label, extra_oracles, page_shard_summary, pdfe_cache_dir, pdfe_cache_enabled = sys.argv[1], sys.argv[2], int(sys.argv[3]), sys.argv[4], sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9], sys.argv[10]
 slices = sorted(glob.glob(os.path.join(slice_dir, "exploratory-chunk-*.json")))
 print(f"  found {len(slices)} slice file(s) (expected {expected})")
 
 merged_entries = []
 counts = {}
 peak = 0
-pdfs = 0
+chunk_pdf_visits = 0
 generated_utcs = []
 for path in slices:
     with open(path) as f:
@@ -430,24 +758,39 @@ for path in slices:
     for k, v in d.get("counts", {}).items():
         counts[k] = counts.get(k, 0) + v
     peak = max(peak, d.get("peakRssBytes", 0))
-    pdfs += d.get("pdfs", 0)
+    chunk_pdf_visits += d.get("pdfs", 0)
     if d.get("generatedUtc"):
         generated_utcs.append(d["generatedUtc"])
+
+def get(e, key, default=None):
+    return e.get(key, e.get(key[:1].upper() + key[1:], default))
+
+unique_pdfs = {
+    get(entry, "path")
+    for entry in merged_entries
+    if get(entry, "path")
+}
 
 out = {
     "generatedUtc": max(generated_utcs) if generated_utcs else None,
     "corpus": corpus_label,
     "pageMode": page_mode,
     "extraOracles": extra_oracles,
+    "pageShardSummary": page_shard_summary or None,
+    "pdfeRenderCache": {
+        "enabled": pdfe_cache_enabled == "1",
+        "directory": pdfe_cache_dir or None,
+    },
     "chunksMerged": len(slices),
     "expectedChunks": expected,
     "counts": counts,
     "total": len(merged_entries),
-    "pdfs": pdfs,
+    "pdfs": len(unique_pdfs),
+    "chunkPdfVisits": chunk_pdf_visits,
     "perChunkPeakRssBytes": peak,
     # JSON keys come through as PascalCase from the .NET serializer
     # (Path, Status, …); use case-insensitive lookup defensively.
-    "entries": sorted(merged_entries, key=lambda e: e.get("path", e.get("Path", ""))),
+    "entries": sorted(merged_entries, key=lambda e: (get(e, "path", ""), get(e, "pageNumber", 0))),
 }
 out_path = os.path.join(bin_dir, report_name)
 with open(out_path, "w") as f:
@@ -455,12 +798,11 @@ with open(out_path, "w") as f:
 
 print(f"  wrote {out_path}")
 print(f"  total page results: {out['total']}")
-print(f"  pdfs scanned: {out['pdfs']}")
+print(f"  unique PDFs scanned: {out['pdfs']}")
+if chunk_pdf_visits != out["pdfs"]:
+    print(f"  chunk PDF visits: {chunk_pdf_visits}")
 for k in sorted(counts, key=counts.get, reverse=True):
     print(f"    {counts[k]:4d}  {k}")
-
-def get(e, key, default=None):
-    return e.get(key, e.get(key[:1].upper() + key[1:], default))
 
 def elapsed(e):
     v = get(e, "elapsedMs")

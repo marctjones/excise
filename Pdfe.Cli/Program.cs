@@ -1618,6 +1618,10 @@ partial class Program
             Description = "Disable the third-party oracle render cache for cold timing runs.",
             DefaultValueFactory = _ => false,
         };
+        var pdfeRenderCacheDirOption = new Option<DirectoryInfo?>("--pdfe-render-cache-dir")
+        {
+            Description = "Directory for cached pdfe-rendered PNGs. Disabled unless explicitly set.",
+        };
 
         var command = new Command("corpus-scan",
             "Render corpus PDFs with pdfe + reference oracles, compute pixel-diff, write JSON report")
@@ -1625,7 +1629,7 @@ partial class Program
             corpusArg, outputOption, chunkOption, totalOption,
             dpiOption, diffPctOption, maxMaeOption, parallelOption, perPdfTimeoutOption, pageModeOption,
             pageManifestOption, passwordManifestOption, extraOraclesOption,
-            oracleCacheDirOption, noOracleCacheOption,
+            oracleCacheDirOption, noOracleCacheOption, pdfeRenderCacheDirOption,
         };
 
         command.SetAction(parseResult =>
@@ -1645,6 +1649,7 @@ partial class Program
             var extraOraclesRaw = parseResult.GetValue(extraOraclesOption) ?? "ghostscript";
             var oracleCacheDir = parseResult.GetValue(oracleCacheDirOption);
             var noOracleCache = parseResult.GetValue(noOracleCacheOption);
+            var pdfeRenderCacheDir = parseResult.GetValue(pdfeRenderCacheDirOption);
 
             if (parallel <= 0) parallel = Math.Max(1, Environment.ProcessorCount / 2);
             if (!TryParseCorpusPageMode(pageModeRaw, out var pageMode))
@@ -1681,7 +1686,8 @@ partial class Program
                 var ok = RunCorpusScan(corpus.FullName, output.FullName,
                     chunk, total, dpi, diffPct, maxMae, parallel, pdfTimeoutMs, pageMode, extraOracles,
                     pageManifest, passwordManifest,
-                    noOracleCache ? null : ResolveCorpusOracleCacheDir(oracleCacheDir));
+                    noOracleCache ? null : ResolveCorpusOracleCacheDir(oracleCacheDir),
+                    pdfeRenderCacheDir);
                 Environment.ExitCode = ok ? 0 : 1;
             }
             catch (Exception ex)
@@ -1708,10 +1714,12 @@ partial class Program
         CorpusExtraOracles extraOracles = CorpusExtraOracles.Ghostscript,
         IReadOnlyDictionary<string, IReadOnlySet<int>>? pageManifest = null,
         IReadOnlyDictionary<string, string>? passwordManifest = null,
-        DirectoryInfo? oracleCacheDir = null)
+        DirectoryInfo? oracleCacheDir = null,
+        DirectoryInfo? pdfeRenderCacheDir = null)
     {
         var pdfs = DiscoverCorpusPdfs(corpusDir, chunkIndex, chunkTotal, pageManifest?.Keys);
         var oracleCache = CreateOracleRenderCache(oracleCacheDir);
+        var pdfeRenderCache = CreatePdfeRenderCache(pdfeRenderCacheDir);
 
         Console.Out.WriteLine(
             $"chunk {chunkIndex + 1}/{chunkTotal}: scanning {pdfs.Count} PDFs in {corpusDir} " +
@@ -1719,7 +1727,8 @@ partial class Program
             $"page-manifest={(pageManifest is null ? "none" : pageManifest.Count.ToString())}, " +
             $"password-manifest={(passwordManifest is null ? "none" : passwordManifest.Count.ToString())}, " +
             $"extra-oracles={ExtraOraclesName(extraOracles)}, " +
-            $"oracle-cache={(oracleCache is null ? "off" : oracleCache.CacheDirectory)})");
+            $"oracle-cache={(oracleCache is null ? "off" : oracleCache.CacheDirectory)}, " +
+            $"pdfe-cache={(pdfeRenderCache is null ? "off" : pdfeRenderCache.CacheDirectory)})");
 
         // Use a thread-safe collector. Order in the final JSON is
         // restored by sort-on-write since Parallel.ForEach completion
@@ -1743,7 +1752,7 @@ partial class Program
             var wallBudgetMs = ComputeCorpusScanWallBudgetMs(
                 pdfTimeoutMs, pageMode, extraOracles, selectedPages);
             var task = Task.Run(() => ScanOnePdf(rel, pdf, dpi, maxDiffFraction, maxMae, pdfTimeoutMs,
-                pageMode, extraOracles, selectedPages, progress, userPassword, oracleCache));
+                pageMode, extraOracles, selectedPages, progress, userPassword, oracleCache, pdfeRenderCache));
             if (task.Wait(wallBudgetMs))
             {
                 pdfEntries = task.Result;
@@ -1813,6 +1822,13 @@ partial class Program
                 $"  oracle cache: {oracleCacheReport.hits} hits, {oracleCacheReport.misses} misses, " +
                 $"{oracleCacheReport.writes} writes, {oracleCacheReport.errors} errors");
         }
+        var pdfeRenderCacheReport = pdfeRenderCache?.CreateReport() ?? CorpusRenderCacheReport.CreateDisabled();
+        if (pdfeRenderCacheReport.enabled)
+        {
+            Console.Out.WriteLine(
+                $"  pdfe render cache: {pdfeRenderCacheReport.hits} hits, {pdfeRenderCacheReport.misses} misses, " +
+                $"{pdfeRenderCacheReport.writes} writes, {pdfeRenderCacheReport.errors} errors");
+        }
 
         // Sort entries by path so parallel completion order doesn't make
         // diffs noisy across runs.
@@ -1833,6 +1849,7 @@ partial class Program
             pdfs = pdfs.Count,
             peakRssBytes = peakBytes,
             oracleCache = oracleCacheReport,
+            pdfeRenderCache = pdfeRenderCacheReport,
             entries = sortedEntries,
         };
         var json = System.Text.Json.JsonSerializer.Serialize(report,
@@ -1886,7 +1903,8 @@ partial class Program
         IReadOnlySet<int>? selectedPages = null,
         CorpusScanProgress? progress = null,
         string? userPassword = null,
-        OracleRenderCache? oracleCache = null)
+        OracleRenderCache? oracleCache = null,
+        PdfeRenderCache? pdfeRenderCache = null)
     {
         PdfDocument? doc = null;
         int pageCount;
@@ -1939,7 +1957,8 @@ partial class Program
             {
                 progress?.Update("page", pageNumber, $"page {pageNumber}/{pageCount}");
                 entries.Add(ScanOnePage(relPath, pdfPath, doc, renderer, pageNumber, dpi,
-                    maxDiffFraction, maxMae, oracleTimeoutMs, extraOracles, progress, userPassword, oracleCache));
+                    maxDiffFraction, maxMae, oracleTimeoutMs, extraOracles, progress, userPassword, oracleCache,
+                    pdfeRenderCache));
             }
             pdfStopwatch.Stop();
             foreach (var entry in entries)
@@ -1955,7 +1974,8 @@ partial class Program
         CorpusExtraOracles extraOracles,
         CorpusScanProgress? progress = null,
         string? userPassword = null,
-        OracleRenderCache? oracleCache = null)
+        OracleRenderCache? oracleCache = null,
+        PdfeRenderCache? pdfeRenderCache = null)
     {
         var pageStopwatch = Stopwatch.StartNew();
         var entry = new CorpusScanEntry
@@ -1978,13 +1998,27 @@ partial class Program
             try
             {
                 progress?.Update("render", pageNumber, $"pdfe render page {pageNumber}/{doc.PageCount}");
-                var renderStopwatch = Stopwatch.StartNew();
-                pdfeBmp = renderer.RenderPage(
-                    doc.GetPage(pageNumber),
-                    new RenderOptions { Dpi = dpi, Diagnostics = renderDiagnostics });
-                renderStopwatch.Stop();
-                entry.renderMs = renderStopwatch.ElapsedMilliseconds;
-                ApplyRenderDiagnostics(entry, renderDiagnostics);
+                renderDiagnostics.Clear();
+                var pdfeOutcome = RenderPdfeWithCache(
+                    pdfeRenderCache, pdfPath, pageNumber, dpi, userPassword,
+                    () =>
+                    {
+                        var renderStopwatch = Stopwatch.StartNew();
+                        var bitmap = renderer.RenderPage(
+                            doc.GetPage(pageNumber),
+                            new RenderOptions { Dpi = dpi, Diagnostics = renderDiagnostics });
+                        renderStopwatch.Stop();
+                        return new PdfeRenderResult(
+                            bitmap,
+                            "OK",
+                            null,
+                            renderStopwatch.ElapsedMilliseconds,
+                            renderDiagnostics.ToArray());
+                    });
+                pdfeBmp = pdfeOutcome.Result.Bitmap;
+                entry.renderMs = pdfeOutcome.Result.ElapsedMs;
+                ApplyPdfeCacheFields(entry, pdfeOutcome);
+                ApplyRenderDiagnostics(entry, pdfeOutcome.Result.Diagnostics);
             }
             catch (Exception ex)
             {
@@ -1993,19 +2027,32 @@ partial class Program
                 {
                     progress?.Update("render", pageNumber,
                         $"pdfe render page {pageNumber}/{doc.PageCount} at fallback {fallbackDpi} DPI");
-                    var fallbackStopwatch = Stopwatch.StartNew();
                     try
                     {
                         renderDiagnostics.Clear();
-                        pdfeBmp = renderer.RenderPage(
-                            doc.GetPage(pageNumber),
-                            new RenderOptions { Dpi = fallbackDpi, Diagnostics = renderDiagnostics });
-                        fallbackStopwatch.Stop();
-                        entry.renderMs = fallbackStopwatch.ElapsedMilliseconds;
+                        var fallbackOutcome = RenderPdfeWithCache(
+                            pdfeRenderCache, pdfPath, pageNumber, fallbackDpi, userPassword,
+                            () =>
+                            {
+                                var fallbackStopwatch = Stopwatch.StartNew();
+                                var bitmap = renderer.RenderPage(
+                                    doc.GetPage(pageNumber),
+                                    new RenderOptions { Dpi = fallbackDpi, Diagnostics = renderDiagnostics });
+                                fallbackStopwatch.Stop();
+                                return new PdfeRenderResult(
+                                    bitmap,
+                                    "OK",
+                                    null,
+                                    fallbackStopwatch.ElapsedMilliseconds,
+                                    renderDiagnostics.ToArray());
+                            });
+                        pdfeBmp = fallbackOutcome.Result.Bitmap;
+                        entry.renderMs = fallbackOutcome.Result.ElapsedMs;
+                        ApplyPdfeCacheFields(entry, fallbackOutcome);
                         entry.effectiveDpi = fallbackDpi;
                         entry.diagnostic =
                             $"Requested {dpi} DPI exceeded the render pixel cap; compared at {fallbackDpi} DPI.";
-                        ApplyRenderDiagnostics(entry, renderDiagnostics);
+                        ApplyRenderDiagnostics(entry, fallbackOutcome.Result.Diagnostics);
                         comparisonDpi = fallbackDpi;
                     }
                     catch (Exception fallbackEx)
@@ -2021,13 +2068,13 @@ partial class Program
                 }
                 else
                 {
-                pageStopwatch.Stop();
-                entry.status = ClassifyCorpusFailure(ex, CorpusFailurePhase.Render);
-                entry.errorPhase = "render";
-                entry.errorType = ex.GetType().Name;
-                entry.errorMessage = Trunc(ex.Message, 200);
-                entry.elapsedMs = pageStopwatch.ElapsedMilliseconds;
-                return entry;
+                    pageStopwatch.Stop();
+                    entry.status = ClassifyCorpusFailure(ex, CorpusFailurePhase.Render);
+                    entry.errorPhase = "render";
+                    entry.errorType = ex.GetType().Name;
+                    entry.errorMessage = Trunc(ex.Message, 200);
+                    entry.elapsedMs = pageStopwatch.ElapsedMilliseconds;
+                    return entry;
                 }
             }
 
@@ -2288,6 +2335,30 @@ partial class Program
                    CachedRenderMs: null, CachedStatus: null, CachedErrorMessage: null);
     }
 
+    private static PdfeRenderOutcome RenderPdfeWithCache(
+        PdfeRenderCache? cache,
+        string pdfPath,
+        int pageNumber,
+        int dpi,
+        string? userPassword,
+        Func<PdfeRenderResult> render)
+    {
+        return cache?.GetOrRender(pdfPath, pageNumber, dpi, userPassword, render)
+               ?? new PdfeRenderOutcome(render(), CacheEnabled: false, CacheHit: false,
+                   CachedRenderMs: null, CachedStatus: null, CachedErrorMessage: null);
+    }
+
+    private static void ApplyPdfeCacheFields(CorpusScanEntry entry, PdfeRenderOutcome outcome)
+    {
+        if (!outcome.CacheEnabled)
+            return;
+
+        entry.pdfeCacheHit = outcome.CacheHit;
+        entry.pdfeCachedRenderMs = outcome.CachedRenderMs;
+        entry.pdfeCachedStatus = outcome.CachedStatus;
+        entry.pdfeCachedError = TruncNullable(outcome.CachedErrorMessage, 200);
+    }
+
     private static void ApplyOracleCacheFields(
         CorpusScanEntry entry,
         string oracleName,
@@ -2356,6 +2427,261 @@ partial class Program
             Console.Error.WriteLine($"warning: oracle cache disabled: {ex.Message}");
             return null;
         }
+    }
+
+    private static PdfeRenderCache? CreatePdfeRenderCache(DirectoryInfo? cacheDir)
+    {
+        if (cacheDir == null)
+            return null;
+
+        try
+        {
+            return new PdfeRenderCache(cacheDir.FullName);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"warning: pdfe render cache disabled: {ex.Message}");
+            return null;
+        }
+    }
+
+    private static void TryDeleteFile(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+                File.Delete(path);
+        }
+        catch
+        {
+        }
+    }
+
+    private static string HashCacheText(string text)
+        => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text))).ToLowerInvariant();
+
+    private sealed class PdfeRenderCache
+    {
+        private const string CacheVersion = "pdfe-v1";
+        private readonly System.Collections.Concurrent.ConcurrentDictionary<string, object> _locks = new(StringComparer.Ordinal);
+        private readonly string _rendererIdentity;
+        private long _hits;
+        private long _misses;
+        private long _writes;
+        private long _errors;
+
+        public PdfeRenderCache(string cacheDirectory)
+        {
+            CacheDirectory = Path.GetFullPath(cacheDirectory);
+            Directory.CreateDirectory(CacheDirectory);
+            _rendererIdentity = BuildRendererIdentity();
+        }
+
+        public string CacheDirectory { get; }
+
+        public PdfeRenderOutcome GetOrRender(
+            string pdfPath,
+            int pageNumber,
+            int dpi,
+            string? userPassword,
+            Func<PdfeRenderResult> render)
+        {
+            var cachePath = GetCachePath(pdfPath, pageNumber, dpi, userPassword);
+            var gate = _locks.GetOrAdd(cachePath, _ => new object());
+
+            lock (gate)
+            {
+                if (TryDecode(cachePath, out var cachedBitmap, out var elapsedMs, out var metadata))
+                {
+                    System.Threading.Interlocked.Increment(ref _hits);
+                    return new PdfeRenderOutcome(
+                        new PdfeRenderResult(
+                            cachedBitmap,
+                            metadata?.status ?? "OK",
+                            metadata?.errorMessage,
+                            elapsedMs,
+                            metadata?.diagnostics ?? Array.Empty<string>()),
+                        CacheEnabled: true,
+                        CacheHit: true,
+                        CachedRenderMs: metadata?.elapsedMs,
+                        CachedStatus: metadata?.status,
+                        CachedErrorMessage: metadata?.errorMessage);
+                }
+
+                System.Threading.Interlocked.Increment(ref _misses);
+                var result = render();
+                if (result is { Status: "OK", Bitmap: not null })
+                    TryWrite(cachePath, pageNumber, dpi, result);
+                return new PdfeRenderOutcome(result, CacheEnabled: true, CacheHit: false,
+                    CachedRenderMs: null, CachedStatus: null, CachedErrorMessage: null);
+            }
+        }
+
+        public CorpusRenderCacheReport CreateReport() => new()
+        {
+            enabled = true,
+            directory = CacheDirectory,
+            hits = System.Threading.Interlocked.Read(ref _hits),
+            misses = System.Threading.Interlocked.Read(ref _misses),
+            writes = System.Threading.Interlocked.Read(ref _writes),
+            errors = System.Threading.Interlocked.Read(ref _errors),
+        };
+
+        private string GetCachePath(
+            string pdfPath,
+            int pageNumber,
+            int dpi,
+            string? userPassword)
+        {
+            var fullPath = Path.GetFullPath(pdfPath);
+            var info = new FileInfo(fullPath);
+            var material = string.Join('\n',
+                CacheVersion,
+                _rendererIdentity,
+                fullPath,
+                info.Length.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                info.LastWriteTimeUtc.Ticks.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                pageNumber.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                dpi.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                userPassword == null ? "<none>" : HashCacheText(userPassword));
+            var key = HashCacheText(material);
+            return Path.Combine(CacheDirectory, key[..2], key + ".png");
+        }
+
+        private bool TryDecode(
+            string cachePath,
+            out SKBitmap? bitmap,
+            out long elapsedMs,
+            out PdfeRenderCacheMetadata? metadata)
+        {
+            var sw = Stopwatch.StartNew();
+            bitmap = null;
+            elapsedMs = 0;
+            metadata = null;
+            if (!File.Exists(cachePath))
+                return false;
+
+            try
+            {
+                bitmap = SKBitmap.Decode(cachePath);
+                sw.Stop();
+                elapsedMs = sw.ElapsedMilliseconds;
+                if (bitmap != null)
+                {
+                    metadata = TryReadMetadata(GetMetadataPath(cachePath));
+                    return true;
+                }
+
+                TryDeleteFile(cachePath);
+                TryDeleteFile(GetMetadataPath(cachePath));
+                System.Threading.Interlocked.Increment(ref _errors);
+                return false;
+            }
+            catch
+            {
+                sw.Stop();
+                elapsedMs = sw.ElapsedMilliseconds;
+                TryDeleteFile(cachePath);
+                TryDeleteFile(GetMetadataPath(cachePath));
+                System.Threading.Interlocked.Increment(ref _errors);
+                return false;
+            }
+        }
+
+        private void TryWrite(
+            string cachePath,
+            int pageNumber,
+            int dpi,
+            PdfeRenderResult result)
+        {
+            var directory = Path.GetDirectoryName(cachePath);
+            if (directory == null || result.Bitmap == null)
+                return;
+
+            var tempPath = cachePath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+            var metadataPath = GetMetadataPath(cachePath);
+            var tempMetadataPath = metadataPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+            try
+            {
+                Directory.CreateDirectory(directory);
+                using var image = SKImage.FromBitmap(result.Bitmap);
+                using var data = image.Encode(SKEncodedImageFormat.Png, quality: 100);
+                if (data == null)
+                    return;
+
+                using (var stream = File.Create(tempPath))
+                    data.SaveTo(stream);
+
+                var metadata = new PdfeRenderCacheMetadata
+                {
+                    cacheVersion = CacheVersion,
+                    rendererIdentity = _rendererIdentity,
+                    pageNumber = pageNumber,
+                    dpi = dpi,
+                    status = result.Status,
+                    errorMessage = result.ErrorMessage,
+                    elapsedMs = result.ElapsedMs,
+                    diagnostics = result.Diagnostics,
+                    createdUtc = DateTimeOffset.UtcNow.ToString("O", System.Globalization.CultureInfo.InvariantCulture),
+                };
+                var metadataJson = System.Text.Json.JsonSerializer.Serialize(metadata);
+                File.WriteAllText(tempMetadataPath, metadataJson, Encoding.UTF8);
+
+                File.Move(tempPath, cachePath, overwrite: true);
+                File.Move(tempMetadataPath, metadataPath, overwrite: true);
+                System.Threading.Interlocked.Increment(ref _writes);
+            }
+            catch
+            {
+                System.Threading.Interlocked.Increment(ref _errors);
+            }
+            finally
+            {
+                TryDeleteFile(tempPath);
+                TryDeleteFile(tempMetadataPath);
+            }
+        }
+
+        private PdfeRenderCacheMetadata? TryReadMetadata(string metadataPath)
+        {
+            if (!File.Exists(metadataPath))
+                return null;
+
+            try
+            {
+                return System.Text.Json.JsonSerializer.Deserialize<PdfeRenderCacheMetadata>(
+                    File.ReadAllText(metadataPath, Encoding.UTF8));
+            }
+            catch
+            {
+                System.Threading.Interlocked.Increment(ref _errors);
+                return null;
+            }
+        }
+
+        private static string BuildRendererIdentity()
+        {
+            static string DescribeAssembly(System.Reflection.Assembly assembly)
+            {
+                var location = assembly.Location;
+                if (string.IsNullOrWhiteSpace(location) || !File.Exists(location))
+                    return assembly.FullName ?? assembly.GetName().Name ?? "unknown";
+
+                var info = new FileInfo(location);
+                return string.Join('|',
+                    Path.GetFullPath(location),
+                    info.Length.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    info.LastWriteTimeUtc.Ticks.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            }
+
+            return string.Join('\n',
+                DescribeAssembly(typeof(Program).Assembly),
+                DescribeAssembly(typeof(SkiaRenderer).Assembly),
+                DescribeAssembly(typeof(PdfDocument).Assembly),
+                DescribeAssembly(typeof(SKBitmap).Assembly));
+        }
+
+        private static string GetMetadataPath(string cachePath) => cachePath + ".json";
     }
 
     private sealed class OracleRenderCache
@@ -2578,6 +2904,21 @@ partial class Program
         string? CachedStatus,
         string? CachedErrorMessage);
 
+    private sealed record PdfeRenderResult(
+        SKBitmap? Bitmap,
+        string Status,
+        string? ErrorMessage,
+        long ElapsedMs,
+        IReadOnlyList<string> Diagnostics);
+
+    private sealed record PdfeRenderOutcome(
+        PdfeRenderResult Result,
+        bool CacheEnabled,
+        bool CacheHit,
+        long? CachedRenderMs,
+        string? CachedStatus,
+        string? CachedErrorMessage);
+
     private sealed class OracleCacheMetadata
     {
         public string cacheVersion { get; set; } = "";
@@ -2590,9 +2931,34 @@ partial class Program
         public string createdUtc { get; set; } = "";
     }
 
+    private sealed class PdfeRenderCacheMetadata
+    {
+        public string cacheVersion { get; set; } = "";
+        public string rendererIdentity { get; set; } = "";
+        public int pageNumber { get; set; }
+        public int dpi { get; set; }
+        public string status { get; set; } = "";
+        public string? errorMessage { get; set; }
+        public long elapsedMs { get; set; }
+        public IReadOnlyList<string> diagnostics { get; set; } = Array.Empty<string>();
+        public string createdUtc { get; set; } = "";
+    }
+
     internal sealed class CorpusOracleCacheReport
     {
         public static CorpusOracleCacheReport CreateDisabled() => new();
+
+        public bool enabled { get; set; }
+        public string? directory { get; set; }
+        public long hits { get; set; }
+        public long misses { get; set; }
+        public long writes { get; set; }
+        public long errors { get; set; }
+    }
+
+    internal sealed class CorpusRenderCacheReport
+    {
+        public static CorpusRenderCacheReport CreateDisabled() => new();
 
         public bool enabled { get; set; }
         public string? directory { get; set; }
@@ -3661,21 +4027,25 @@ partial class Program
         public long? ghostscriptMs { get; set; }
         public long? pdfboxMs { get; set; }
         public long? pdfiumMs { get; set; }
+        public bool? pdfeCacheHit { get; set; }
         public bool? mutoolCacheHit { get; set; }
         public bool? cairoCacheHit { get; set; }
         public bool? ghostscriptCacheHit { get; set; }
         public bool? pdfboxCacheHit { get; set; }
         public bool? pdfiumCacheHit { get; set; }
+        public long? pdfeCachedRenderMs { get; set; }
         public long? mutoolCachedRenderMs { get; set; }
         public long? cairoCachedRenderMs { get; set; }
         public long? ghostscriptCachedRenderMs { get; set; }
         public long? pdfboxCachedRenderMs { get; set; }
         public long? pdfiumCachedRenderMs { get; set; }
+        public string? pdfeCachedStatus { get; set; }
         public string? mutoolCachedStatus { get; set; }
         public string? cairoCachedStatus { get; set; }
         public string? ghostscriptCachedStatus { get; set; }
         public string? pdfboxCachedStatus { get; set; }
         public string? pdfiumCachedStatus { get; set; }
+        public string? pdfeCachedError { get; set; }
         public string? mutoolCachedError { get; set; }
         public string? cairoCachedError { get; set; }
         public string? ghostscriptCachedError { get; set; }

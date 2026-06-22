@@ -36,7 +36,7 @@ done
 
 RUN_ARGS=("$@")
 if [[ ${#RUN_ARGS[@]} -eq 0 ]]; then
-    RUN_ARGS=(--page-mode all --pdf-timeout-ms 120000 --chunk-parallel 2 --per-chunk-parallel 1 --extra-oracles all)
+    RUN_ARGS=(--page-mode all --pdf-timeout-ms 120000 --chunks 80 --chunk-parallel 2 --per-chunk-parallel 1 --extra-oracles all)
 fi
 
 if ! command -v tmux >/dev/null 2>&1; then
