@@ -14,6 +14,19 @@ interval="${PDFE_MONITOR_INTERVAL:-15}"
 
 while true; do
     clear 2>/dev/null || true
+    current_slice_dir=""
+    current_report=""
+    if [[ -f "$LOG_DIR/run.log" ]]; then
+        current_slice_dir="$(awk -F'slice dir: ' '/slice dir:/ { value=$2 } END { print value }' "$LOG_DIR/run.log")"
+        current_report="$(awk '/^  wrote .*\.json$/ { sub(/^  wrote /, ""); value=$0 } END { print value }' "$LOG_DIR/run.log")"
+    fi
+    if [[ -z "$current_report" && -f "$LOG_DIR/args.txt" ]]; then
+        report_name="$(awk 'previous { print; exit } $0 == "--report-name" { previous=1 }' "$LOG_DIR/args.txt")"
+        if [[ -n "$report_name" ]]; then
+            current_report="Pdfe.Rendering.Tests/bin/Debug/net10.0/$report_name"
+        fi
+    fi
+
     echo "pdfe exploratory corpus monitor"
     echo "time: $(date)"
     echo "logs: $LOG_DIR"
@@ -59,24 +72,22 @@ while true; do
     echo
 
     echo "partial chunk result files:"
-    find Pdfe.Rendering.Tests/bin/Debug/net10.0 -maxdepth 1 -name 'exploratory-chunk-*.json' -print 2>/dev/null |
-        sort |
-        sed 's#^#  #' |
-        tail -20
+    if [[ -n "$current_slice_dir" && -d "$current_slice_dir" ]]; then
+        find "$current_slice_dir" -maxdepth 1 -name 'exploratory-chunk-*.json' -print 2>/dev/null |
+            sort |
+            sed 's#^#  #' |
+            tail -20
+    elif [[ -n "$current_slice_dir" ]]; then
+        echo "  current slice dir not created yet: $current_slice_dir"
+    else
+        echo "  slice dir not reported yet"
+    fi
     echo
 
     report=""
-    for candidate in \
-        Pdfe.Rendering.Tests/bin/Debug/net10.0/exploratory-report-all.json \
-        Pdfe.Rendering.Tests/bin/Debug/net10.0/exploratory-report-sample.json \
-        Pdfe.Rendering.Tests/bin/Debug/net10.0/exploratory-report-first.json \
-        Pdfe.Rendering.Tests/bin/Debug/net10.0/exploratory-report.json
-    do
-        if [[ -f "$candidate" ]]; then
-            report="$candidate"
-            break
-        fi
-    done
+    if [[ -n "$current_report" && -f "$current_report" ]]; then
+        report="$current_report"
+    fi
     if [[ -n "$report" ]]; then
         echo "merged report diagnostics: $report"
         python3 - "$report" <<'PY' 2>/dev/null || true
@@ -129,6 +140,9 @@ for e in entries:
         if shown >= 8:
             break
 PY
+        echo
+    elif [[ -n "$current_report" ]]; then
+        echo "merged report diagnostics: waiting for $current_report"
         echo
     fi
 
