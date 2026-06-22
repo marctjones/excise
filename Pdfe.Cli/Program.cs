@@ -2188,6 +2188,19 @@ partial class Program
                 return entry;
             }
 
+            ApplyOracleDisagreementMetrics(
+                entry,
+                new (string Name, SkiaSharp.SKBitmap? Bitmap)[]
+                {
+                    ("mutool", mutoolBmp),
+                    ("pdftocairo", cairoBmp),
+                    ("ghostscript", ghostscriptBmp),
+                    ("pdfbox", pdfboxBmp),
+                    ("pdfium", pdfiumBmp),
+                },
+                maxDiffFraction,
+                maxMae);
+
             var best = metrics.OrderBy(m => m.Diff).First();
             entry.diffFraction = best.Diff;
             entry.mae = best.Mae;
@@ -2904,6 +2917,49 @@ partial class Program
         }
     }
 
+    internal static void ApplyOracleDisagreementMetrics(
+        CorpusScanEntry entry,
+        IReadOnlyList<(string Name, SkiaSharp.SKBitmap? Bitmap)> oracles,
+        double maxDiffFraction,
+        double maxMae)
+    {
+        var rendered = oracles
+            .Where(o => o.Bitmap != null)
+            .Select(o => (o.Name, Bitmap: o.Bitmap!))
+            .ToArray();
+        if (rendered.Length < 2)
+            return;
+
+        var pairs = 0;
+        var disagreeingPairs = 0;
+        double sumDiff = 0;
+        double sumMae = 0;
+        double maxDiff = 0;
+        double maxPairMae = 0;
+
+        for (var i = 0; i < rendered.Length; i++)
+        {
+            for (var j = i + 1; j < rendered.Length; j++)
+            {
+                var (diff, mae) = MatchAndCompare(rendered[i].Bitmap, rendered[j].Bitmap);
+                pairs++;
+                sumDiff += diff;
+                sumMae += mae;
+                maxDiff = Math.Max(maxDiff, diff);
+                maxPairMae = Math.Max(maxPairMae, mae);
+                if (!IsPassing((diff, mae), maxDiffFraction, maxMae))
+                    disagreeingPairs++;
+            }
+        }
+
+        entry.oracleComparisonPairs = pairs;
+        entry.oracleDisagreeingPairs = disagreeingPairs;
+        entry.oracleMaxDiffFraction = maxDiff;
+        entry.oracleMaxMae = maxPairMae;
+        entry.oracleMeanDiffFraction = sumDiff / pairs;
+        entry.oracleMeanMae = sumMae / pairs;
+    }
+
     private static bool IsPassing(
         (double diff, double mae)? metrics,
         double maxDiffFraction,
@@ -3149,6 +3205,12 @@ partial class Program
         public IReadOnlyList<VisualDiffRegion>? visualTopRegions { get; set; }
         public int? comparedOracles { get; set; }
         public int? agreeingOracles { get; set; }
+        public int? oracleComparisonPairs { get; set; }
+        public int? oracleDisagreeingPairs { get; set; }
+        public double? oracleMaxDiffFraction { get; set; }
+        public double? oracleMaxMae { get; set; }
+        public double? oracleMeanDiffFraction { get; set; }
+        public double? oracleMeanMae { get; set; }
         public long? elapsedMs { get; set; }
         public long? pdfElapsedMs { get; set; }
         public long? renderMs { get; set; }

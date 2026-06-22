@@ -84,6 +84,34 @@ public class VisualDiffCommandTests
     }
 
     [Fact]
+    public void ApplyOracleDisagreementMetrics_RecordsPairwiseOracleSpread()
+    {
+        using var oracleA = CreateSolidBitmap(30, 30, SKColors.White);
+        using var oracleB = CreateSolidBitmap(30, 30, SKColors.White);
+        using var oracleC = CreateSolidBitmap(30, 30, SKColors.White);
+        FillRect(oracleC, 10, 10, 10, 10, SKColors.Black);
+        var entry = new Program.CorpusScanEntry();
+
+        Program.ApplyOracleDisagreementMetrics(
+            entry,
+            new (string Name, SKBitmap? Bitmap)[]
+            {
+                ("a", oracleA),
+                ("b", oracleB),
+                ("c", oracleC),
+            },
+            maxDiffFraction: 0.001,
+            maxMae: 0.1);
+
+        entry.oracleComparisonPairs.Should().Be(3);
+        entry.oracleDisagreeingPairs.Should().Be(2);
+        entry.oracleMaxDiffFraction.Should().BeGreaterThan(0.10);
+        entry.oracleMaxMae.Should().BeGreaterThan(20);
+        entry.oracleMeanDiffFraction.Should().BeGreaterThan(0);
+        entry.oracleMeanMae.Should().BeGreaterThan(0);
+    }
+
+    [Fact]
     public void AnalyzeVisualDiff_SmallSparseTextEdges_ClassifiesAsLowImpactAntialiasing()
     {
         using var reference = CreateSolidBitmap(125, 20, SKColors.White);
