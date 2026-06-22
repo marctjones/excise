@@ -120,6 +120,28 @@ public class VisualDiffCommandTests
     }
 
     [Fact]
+    public void AnalyzeVisualDiff_RepeatedSymbolSaturationShift_ClassifiesAsColorTone()
+    {
+        using var reference = CreateSolidBitmap(100, 100, SKColors.White);
+        using var actual = CreateSolidBitmap(100, 100, SKColors.White);
+        for (var y = 10; y <= 70; y += 20)
+        {
+            for (var x = 10; x <= 70; x += 20)
+            {
+                FillRect(reference, x, y, 10, 10, new SKColor(95, 150, 105));
+                FillRect(actual, x, y, 10, 10, new SKColor(45, 210, 75));
+            }
+        }
+
+        var report = Program.AnalyzeVisualDiff(actual, reference, tolerance: 16);
+
+        report.category.Should().Be("color-tone-or-texture");
+        report.humanImpact.Should().Be("low");
+        report.meanAbsoluteError.Should().BeLessThan(12);
+        report.darkPixelBalance.Should().BeGreaterThan(0.75);
+    }
+
+    [Fact]
     public async Task VisualDiffCommand_WritesJsonAndTriptych()
     {
         var root = Path.Combine(Path.GetTempPath(), "pdfe-visual-diff-" + Guid.NewGuid().ToString("N"));
@@ -208,5 +230,14 @@ public class VisualDiffCommandTests
     {
         for (var x = left; x < right; x++)
             bitmap.SetPixel(x, y, color);
+    }
+
+    private static void FillRect(SKBitmap bitmap, int left, int top, int width, int height, SKColor color)
+    {
+        for (var y = top; y < top + height; y++)
+        {
+            for (var x = left; x < left + width; x++)
+                bitmap.SetPixel(x, y, color);
+        }
     }
 }

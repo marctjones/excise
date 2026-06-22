@@ -402,6 +402,13 @@ partial class Program
         if (meanDiffLuminance <= 18 && meanAbsoluteError <= 24)
             return "color-tone-or-texture";
 
+        if (meanAbsoluteError <= 12 &&
+            meanDiffChroma >= 12 &&
+            darkPixelBalance >= 0.75)
+        {
+            return "color-tone-or-texture";
+        }
+
         var largestRegionMinSide = Math.Min(largestRegionWidth, largestRegionHeight);
         var largestRegionMaxSide = Math.Max(largestRegionWidth, largestRegionHeight);
         var largestRegionAspect = largestRegionMinSide == 0
