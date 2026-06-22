@@ -973,7 +973,8 @@ public class SkiaRendererCoverageTests
         center.Green.Should().BeGreaterThan(180,
             "colored tiling patterns with a BBox larger than XStep/YStep should render a composed cell instead of falling back to a solid fill");
         center.Red.Should().BeLessThan(80);
-        center.Blue.Should().BeLessThan(80);
+        center.Blue.Should().BeLessThan((byte)130);
+        ((int)center.Green).Should().BeGreaterThan(center.Blue + 80);
     }
 
     [Fact]

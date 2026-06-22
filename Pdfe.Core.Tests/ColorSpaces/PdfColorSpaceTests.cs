@@ -46,9 +46,9 @@ public class PdfColorSpaceTests
     {
         var cs = PdfColorSpace.DeviceCMYK;
         var (r, g, b) = cs.ToRgb(new[] { 0.0, 0.0, 0.0, 1.0 });
-        r.Should().Be(0.0);
-        g.Should().Be(0.0);
-        b.Should().Be(0.0);
+        r.Should().BeApproximately(35.0 / 255.0, 0.001);
+        g.Should().BeApproximately(31.0 / 255.0, 0.001);
+        b.Should().BeApproximately(32.0 / 255.0, 0.001);
     }
 
     [Fact]
@@ -67,18 +67,18 @@ public class PdfColorSpaceTests
         var cs = PdfColorSpace.DeviceCMYK;
         var (r, g, b) = cs.ToRgb(new[] { 0.0, 0.0, 1.0, 0.0 });
         r.Should().BeApproximately(1.0, 0.01);
-        g.Should().BeApproximately(1.0, 0.01);
+        g.Should().BeApproximately(242.0 / 255.0, 0.01);
         b.Should().BeApproximately(0.0, 0.01);
     }
 
     [Fact]
-    public void DeviceCmyk_MixedWithBlack_UsesPdfReferenceConversion()
+    public void DeviceCmyk_MixedWithBlack_UsesProcessScreenPreview()
     {
         var cs = PdfColorSpace.DeviceCMYK;
         var (r, g, b) = cs.ToRgb(new[] { 0.5, 0.25, 0.75, 0.1 });
-        r.Should().BeApproximately(0.4, 0.0001);
-        g.Should().BeApproximately(0.65, 0.0001);
-        b.Should().BeApproximately(0.15, 0.0001);
+        r.Should().BeApproximately(129.0 / 255.0, 0.01);
+        g.Should().BeApproximately(147.0 / 255.0, 0.01);
+        b.Should().BeApproximately(92.0 / 255.0, 0.01);
     }
 
     [Fact]
@@ -320,7 +320,8 @@ public class PdfColorSpaceTests
 
         var arr = new PdfArray(new PdfName("ICCBased"), iccStream);
         var cs = PdfColorSpace.Parse(arr, doc);
-        // Parser maps ICCBased N=4 to DeviceCMYK proxy for rendering compatibility
+        // Parser maps ICCBased N=4 to a DeviceCMYK-shaped proxy while keeping
+        // its calibrated-CMYK fallback separate from raw DeviceCMYK preview.
         cs.Type.Should().Be(PdfColorSpaceType.DeviceCMYK);
         cs.Components.Should().Be(4);
     }
@@ -340,6 +341,23 @@ public class PdfColorSpaceTests
         r.Should().Be(0.0);
         g.Should().Be(0.0);
         b.Should().Be(0.0);
+    }
+
+    [Fact]
+    public void ICCBased_N4_CMYK_UsesConservativeFallbackUntilProfileTransformsAreSupported()
+    {
+        using var doc = CreateMinimalPdf();
+        var iccDict = new PdfDictionary();
+        iccDict[new PdfName("N")] = new PdfInteger(4);
+        var iccStream = new PdfStream(iccDict, Array.Empty<byte>());
+
+        var arr = new PdfArray(new PdfName("ICCBased"), iccStream);
+        var cs = PdfColorSpace.Parse(arr, doc);
+
+        var (r, g, b) = cs.ToRgb(new[] { 0.5, 0.25, 0.75, 0.1 });
+        r.Should().BeApproximately(0.4, 0.001);
+        g.Should().BeApproximately(0.65, 0.001);
+        b.Should().BeApproximately(0.15, 0.001);
     }
 
     [Fact]
@@ -519,9 +537,9 @@ public class PdfColorSpaceTests
     {
         var cs = PdfColorSpace.DeviceCMYK;
         var (r, g, b) = cs.ToRgb(new[] { 0.0, 1.0, 0.0, 0.0 });
-        r.Should().BeApproximately(1.0, 0.01);
+        r.Should().BeApproximately(236.0 / 255.0, 0.01);
         g.Should().BeApproximately(0.0, 0.01);
-        b.Should().BeApproximately(1.0, 0.01);
+        b.Should().BeApproximately(140.0 / 255.0, 0.01);
     }
 
     [Fact]

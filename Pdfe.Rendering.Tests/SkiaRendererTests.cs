@@ -318,6 +318,25 @@ public class SkiaRendererTests
             "the large header is a tiny indexed image with a much larger soft mask, so the mask must not be collapsed to the base image dimensions");
     }
 
+    [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsIssue12798_DeviceCmykScreenPreviewMatchesCommonReaders()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "issue12798_page1_reduced.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js issue12798 fixture found at test-pdfs/pdfjs/issue12798_page1_reduced.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 96, BackgroundColor = SKColors.White });
+
+        var strip = bitmap.GetPixel(20, bitmap.Height - 80);
+        strip.Red.Should().BeInRange(220, 240);
+        strip.Green.Should().BeLessThan(15);
+        strip.Blue.Should().BeInRange(110, 130);
+    }
+
     [Theory(Timeout = 20000)]
     [InlineData("issue4379.pdf")]
     [InlineData("issue4246.pdf")]
@@ -1490,10 +1509,10 @@ public class SkiaRendererTests
     }
 
     [Fact]
-    public void RenderPage_DirectCMYKOperator_UsesSharedPdfReferenceFallback()
+    public void RenderPage_DirectCMYKOperator_UsesSharedProcessScreenPreview()
     {
-        // Arrange - nonzero K distinguishes the PDF reference fallback
-        // (1 - min(1, component + K)) from the older multiplicative shortcut.
+        // Arrange - nonzero K distinguishes the shared DeviceCMYK preview from
+        // both the older multiplicative shortcut and ICCBased fallback.
         var content = @"
             0.25 0.50 0.10 0.20 k
             100 100 200 150 re f
@@ -1509,9 +1528,30 @@ public class SkiaRendererTests
         var pixelX = (int)(150 * 150 / 72);
         var pixelY = bitmap.Height - (int)(150 * 150 / 72);
         var pixel = bitmap.GetPixel(pixelX, pixelY);
-        pixel.Red.Should().BeInRange((byte)138, (byte)142);
-        pixel.Green.Should().BeInRange((byte)74, (byte)78);
-        pixel.Blue.Should().BeInRange((byte)176, (byte)180);
+        pixel.Red.Should().BeInRange((byte)145, (byte)149);
+        pixel.Green.Should().BeInRange((byte)68, (byte)72);
+        pixel.Blue.Should().BeInRange((byte)142, (byte)146);
+    }
+
+    [Fact]
+    public void RenderPage_DefaultCmykOverridesDirectAndPatternDeviceCmyk()
+    {
+        var pdfData = CreatePdfWithDefaultCmykAndPattern();
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var directFill = bitmap.GetPixel(25, 50);
+        directFill.Red.Should().BeGreaterThan(240);
+        directFill.Green.Should().BeLessThan(10);
+        directFill.Blue.Should().BeGreaterThan(190);
+
+        var patternFill = bitmap.GetPixel(75, 50);
+        patternFill.Red.Should().BeGreaterThan(240);
+        patternFill.Green.Should().BeLessThan(10);
+        patternFill.Blue.Should().BeGreaterThan(190);
     }
 
     [Fact]
@@ -1848,13 +1888,13 @@ public class SkiaRendererTests
         // Act
         using var bitmap = renderer.RenderPage(doc.GetPage(1));
 
-        // Assert - cyan = RGB(0, 255, 255) or close to it
+        // Assert - direct DeviceCMYK uses the shared process screen preview.
         var pixelX = (int)(200 * 150 / 72);
         var pixelY = bitmap.Height - (int)(175 * 150 / 72);
         var pixel = bitmap.GetPixel(pixelX, pixelY);
-        pixel.Red.Should().BeLessThan(100, "red component should be low for cyan");
-        pixel.Green.Should().BeGreaterThan(200, "green component should be high for cyan");
-        pixel.Blue.Should().BeGreaterThan(200, "blue component should be high for cyan");
+        pixel.Red.Should().BeLessThan(20, "red component should be low for process cyan");
+        pixel.Green.Should().BeInRange((byte)165, (byte)185, "process cyan green should match the shared preview anchor");
+        pixel.Blue.Should().BeGreaterThan(220, "blue component should be high for process cyan");
     }
 
     [Fact]
@@ -1868,13 +1908,13 @@ public class SkiaRendererTests
         // Act
         using var bitmap = renderer.RenderPage(doc.GetPage(1));
 
-        // Assert - magenta = RGB(255, 0, 255) or close to it
+        // Assert - direct DeviceCMYK uses the shared process screen preview.
         var pixelX = (int)(200 * 150 / 72);
         var pixelY = bitmap.Height - (int)(175 * 150 / 72);
         var pixel = bitmap.GetPixel(pixelX, pixelY);
-        pixel.Red.Should().BeGreaterThan(200, "red component should be high for magenta");
-        pixel.Green.Should().BeLessThan(100, "green component should be low for magenta");
-        pixel.Blue.Should().BeGreaterThan(200, "blue component should be high for magenta");
+        pixel.Red.Should().BeInRange((byte)225, (byte)245, "process magenta red should match the shared preview anchor");
+        pixel.Green.Should().BeLessThan(20, "green component should be low for process magenta");
+        pixel.Blue.Should().BeInRange((byte)130, (byte)150, "process magenta blue should match the shared preview anchor");
     }
 
     [Fact]
@@ -4562,6 +4602,92 @@ public class SkiaRendererTests
 
     private static byte[] CreatePdfWithContent(string content)
         => CreatePdfWithContentAndPageSize(content, width: 612, height: 792);
+
+    private static byte[] CreatePdfWithDefaultCmykAndPattern()
+    {
+        using var ms = new MemoryStream();
+        using var writer = new StreamWriter(ms, System.Text.Encoding.ASCII, leaveOpen: true);
+        writer.NewLine = "\n";
+
+        const string content = """
+            /DeviceCMYK cs
+            0 1 0.18 0.03 sc
+            0 0 50 100 re f
+            /CS0 cs
+            0 1 0.18 0.03 /P0 scn
+            50 0 50 100 re f
+            """;
+        const string patternContent = "0 0 10 10 re f";
+
+        writer.WriteLine("%PDF-1.4");
+        writer.Flush();
+
+        var offsets = new long[7];
+
+        offsets[1] = ms.Position;
+        writer.WriteLine("1 0 obj");
+        writer.WriteLine("<< /Type /Catalog /Pages 2 0 R >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[2] = ms.Position;
+        writer.WriteLine("2 0 obj");
+        writer.WriteLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[3] = ms.Position;
+        writer.WriteLine("3 0 obj");
+        writer.WriteLine("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 100 100] /Contents 4 0 R /Resources << /ColorSpace << /DefaultCMYK [ /ICCBased 6 0 R ] /CS0 [ /Pattern /DeviceCMYK ] >> /Pattern << /P0 5 0 R >> >> >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[4] = ms.Position;
+        writer.WriteLine("4 0 obj");
+        writer.WriteLine($"<< /Length {content.Length} >>");
+        writer.WriteLine("stream");
+        writer.Write(content);
+        writer.WriteLine();
+        writer.WriteLine("endstream");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[5] = ms.Position;
+        writer.WriteLine("5 0 obj");
+        writer.WriteLine($"<< /Type /Pattern /PatternType 1 /PaintType 2 /TilingType 1 /BBox [0 0 10 10] /XStep 10 /YStep 10 /Length {patternContent.Length} >>");
+        writer.WriteLine("stream");
+        writer.Write(patternContent);
+        writer.WriteLine();
+        writer.WriteLine("endstream");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[6] = ms.Position;
+        writer.WriteLine("6 0 obj");
+        writer.WriteLine("<< /N 4 /Length 0 >>");
+        writer.WriteLine("stream");
+        writer.WriteLine();
+        writer.WriteLine("endstream");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        long xrefPos = ms.Position;
+        writer.WriteLine("xref");
+        writer.WriteLine("0 7");
+        writer.WriteLine("0000000000 65535 f ");
+        for (int i = 1; i <= 6; i++)
+            writer.WriteLine($"{offsets[i]:D10} 00000 n ");
+        writer.Flush();
+
+        writer.WriteLine("trailer");
+        writer.WriteLine("<< /Root 1 0 R /Size 7 >>");
+        writer.WriteLine("startxref");
+        writer.WriteLine(xrefPos.ToString());
+        writer.WriteLine("%%EOF");
+        writer.Flush();
+
+        return ms.ToArray();
+    }
 
     private static byte[] CreatePdfWithType3Glyph(string pageContent, string charProcContent)
     {

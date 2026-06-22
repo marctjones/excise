@@ -294,7 +294,8 @@ public class PdfAnnotationParserTests
     [Fact]
     public void Parse_CmykColor_BlackInk_ConvertsCorrectly()
     {
-        // CMYK [0 0 0 1] = full black in CMYK
+        // CMYK [0 0 0 1] renders as process black in the shared DeviceCMYK
+        // screen preview, not pure DeviceRGB black.
         var annotsDef = @"[<< /Type /Annot /Subtype /Text /Rect [0 0 10 10] /C [0 0 0 1] >>]";
         var pdf = MakePdfWithAnnots(annotsDef);
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
@@ -303,9 +304,9 @@ public class PdfAnnotationParserTests
         var result = PdfAnnotationParser.Parse(doc, pageDict, new(), null);
 
         var color = result[0].Color;
-        color!.Value.R.Should().BeApproximately(0.0, 0.01);
-        color!.Value.G.Should().BeApproximately(0.0, 0.01);
-        color!.Value.B.Should().BeApproximately(0.0, 0.01);
+        color!.Value.R.Should().BeApproximately(35.0 / 255.0, 0.01);
+        color!.Value.G.Should().BeApproximately(31.0 / 255.0, 0.01);
+        color!.Value.B.Should().BeApproximately(32.0 / 255.0, 0.01);
     }
 
     [Fact]

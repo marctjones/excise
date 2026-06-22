@@ -12,6 +12,12 @@ public sealed class PdfColorSpace
     public PdfColorSpaceType Type { get; }
     public int Components { get; }
 
+    private enum CmykConversionMode
+    {
+        ProcessScreenPreview,
+        ReferenceFormula
+    }
+
     private readonly PdfColorSpace? _indexedBase;
     private readonly byte[]? _indexedLookup;
     private readonly PdfColorSpace? _alternateSpace;
@@ -20,6 +26,7 @@ public sealed class PdfColorSpace
     private readonly double[]? _calGamma;
     private readonly double[]? _calMatrix;
     private readonly double[]? _labRange;
+    private readonly CmykConversionMode _cmykConversionMode;
     private Dictionary<TintColorCacheKey, (double R, double G, double B)>? _tintRgbCache;
 
     private const int MaxTintRgbCacheEntries = 4096;
@@ -30,7 +37,8 @@ public sealed class PdfColorSpace
         PdfColorSpace? indexedBase = null, byte[]? indexedLookup = null,
         PdfColorSpace? alternateSpace = null, PdfObject? tintTransform = null,
         double[]? whitePoint = null, double[]? calGamma = null, double[]? calMatrix = null,
-        double[]? labRange = null)
+        double[]? labRange = null,
+        CmykConversionMode cmykConversionMode = CmykConversionMode.ProcessScreenPreview)
     {
         Type = type;
         Components = components;
@@ -42,6 +50,7 @@ public sealed class PdfColorSpace
         _calGamma = calGamma;
         _calMatrix = calMatrix;
         _labRange = labRange;
+        _cmykConversionMode = cmykConversionMode;
     }
 
     public static readonly PdfColorSpace DeviceGray = new(PdfColorSpaceType.DeviceGray, 1);
@@ -105,7 +114,8 @@ public sealed class PdfColorSpace
         return n switch
         {
             1 => DeviceGray,
-            4 => DeviceCMYK,
+            4 => new PdfColorSpace(PdfColorSpaceType.DeviceCMYK, 4,
+                cmykConversionMode: CmykConversionMode.ReferenceFormula),
             _ => DeviceRGB
         };
     }
@@ -375,14 +385,65 @@ public sealed class PdfColorSpace
         y = Math.Clamp(y, 0, 1);
         k = Math.Clamp(k, 0, 1);
 
+        // DeviceCMYK is an uncalibrated, output-device colour space. The
+        // simple PDF reference conversion maps process magenta to electric RGB
+        // magenta (#ff00ff), but common screen PDF renderers use process-print
+        // preview anchors close to SWOP/Generic CMYK: C=(0,174,239),
+        // M=(236,0,140), Y=(255,242,0), K=(35,31,32). Use that deterministic
+        // preview model for raw DeviceCMYK. ICCBased/default-CMYK proxies use
+        // a separate conservative fallback until real ICC transforms exist.
+        var r = 1
+            - c
+            - 0.0745098039 * m
+            - 0.8627450980 * k
+            + 0.2000000000 * c * m
+            + 0.2000000000 * c * y
+            + 0.1500000000 * c * k;
+        var g = 1
+            - 0.3176470588 * c
+            - m
+            - 0.0509803922 * y
+            - 0.8784313725 * k
+            + 0.1500000000 * c * y
+            + 0.1000000000 * c * k
+            + 0.2500000000 * m * y
+            + 0.1500000000 * m * k;
+        var b = 1
+            - 0.0627450980 * c
+            - 0.4509803922 * m
+            - y
+            - 0.8745098039 * k
+            + 0.4650000000 * c * y
+            + 0.0800000000 * c * m
+            + 0.6500000000 * m * y
+            + 0.2000000000 * m * k
+            + 0.4000000000 * y * k;
+
+        return (
+            Math.Clamp(r, 0, 1),
+            Math.Clamp(g, 0, 1),
+            Math.Clamp(b, 0, 1));
+    }
+
+    private (double R, double G, double B) CmykToRgb(double c, double m, double y, double k)
+        => _cmykConversionMode switch
+        {
+            CmykConversionMode.ReferenceFormula => ConvertCmykReferenceFormulaToRgb(c, m, y, k),
+            _ => ConvertDeviceCmykToRgb(c, m, y, k)
+        };
+
+    private static (double R, double G, double B) ConvertCmykReferenceFormulaToRgb(double c, double m, double y, double k)
+    {
+        c = Math.Clamp(c, 0, 1);
+        m = Math.Clamp(m, 0, 1);
+        y = Math.Clamp(y, 0, 1);
+        k = Math.Clamp(k, 0, 1);
+
         return (
             1 - Math.Min(1, c + k),
             1 - Math.Min(1, m + k),
             1 - Math.Min(1, y + k));
     }
-
-    private static (double R, double G, double B) CmykToRgb(double c, double m, double y, double k)
-        => ConvertDeviceCmykToRgb(c, m, y, k);
 
     private static (double R, double G, double B) XyzToRgb(double x, double y, double z)
     {

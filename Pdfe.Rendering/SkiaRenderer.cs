@@ -5039,7 +5039,7 @@ internal partial class RenderContext
             PdfColorSpaceType.DeviceRGB when componentsPerPixel == 3 =>
                 CreateFastRgbBitmap(data, width, height),
             PdfColorSpaceType.DeviceCMYK when componentsPerPixel == 4 =>
-                CreateFastCmykBitmap(data, width, height),
+                CreateFastCmykBitmap(data, width, height, colorSpace),
             _ => null
         };
     }
@@ -5077,7 +5077,7 @@ internal partial class RenderContext
         return CreateBitmapFromRgbaBytes(width, height, pixels);
     }
 
-    private static SKBitmap? CreateFastCmykBitmap(byte[] data, int width, int height)
+    private static SKBitmap? CreateFastCmykBitmap(byte[] data, int width, int height, PdfColorSpace colorSpace)
     {
         var pixels = new byte[width * height * 4];
         var src = 0;
@@ -5088,9 +5088,10 @@ internal partial class RenderContext
             var m = data[src++] / 255.0;
             var y = data[src++] / 255.0;
             var k = data[src++] / 255.0;
-            pixels[dst++] = (byte)Math.Clamp((1 - c) * (1 - k) * 255, 0, 255);
-            pixels[dst++] = (byte)Math.Clamp((1 - m) * (1 - k) * 255, 0, 255);
-            pixels[dst++] = (byte)Math.Clamp((1 - y) * (1 - k) * 255, 0, 255);
+            var (r, g, b) = colorSpace.ToRgb(new[] { c, m, y, k });
+            pixels[dst++] = (byte)Math.Clamp(r * 255, 0, 255);
+            pixels[dst++] = (byte)Math.Clamp(g * 255, 0, 255);
+            pixels[dst++] = (byte)Math.Clamp(b * 255, 0, 255);
             pixels[dst++] = 255;
         }
 
@@ -7480,6 +7481,9 @@ internal partial class RenderContext
 
         try
         {
+            if (colorSpaceObj is PdfName name)
+                return ResolveColorSpace(name.Value) ?? PdfColorSpace.Parse(colorSpaceObj, _page.Document);
+
             return PdfColorSpace.Parse(colorSpaceObj, _page.Document);
         }
         catch
@@ -7632,8 +7636,8 @@ internal partial class RenderContext
     {
         if (colorSpaceObj is PdfName name)
         {
-            var named = PdfColorSpace.FromName(name.Value);
-            if (named.Type != PdfColorSpaceType.Unknown)
+            var named = ResolveColorSpace(name.Value);
+            if (named != null)
                 return named;
 
             var resourceObj = ResolveColorSpaceObject(name.Value);
@@ -7647,12 +7651,29 @@ internal partial class RenderContext
 
     private PdfColorSpace? ResolveColorSpace(string name)
     {
+        var defaultCsObj = ResolveDefaultColorSpaceObject(name);
+        if (defaultCsObj != null)
+            return PdfColorSpace.Parse(defaultCsObj, _page.Document);
+
         var cs = PdfColorSpace.FromName(name);
         if (cs.Type != PdfColorSpaceType.Unknown)
             return cs;
 
         var csObj = ResolveColorSpaceObject(name);
         return csObj != null ? PdfColorSpace.Parse(csObj, _page.Document) : null;
+    }
+
+    private PdfObject? ResolveDefaultColorSpaceObject(string deviceColorSpaceName)
+    {
+        var defaultName = deviceColorSpaceName switch
+        {
+            "DeviceGray" or "G" => "DefaultGray",
+            "DeviceRGB" or "RGB" => "DefaultRGB",
+            "DeviceCMYK" or "CMYK" => "DefaultCMYK",
+            _ => null
+        };
+
+        return defaultName != null ? ResolveColorSpaceObject(defaultName) : null;
     }
 
     private PdfObject? ResolveColorSpaceObject(string name)
