@@ -293,9 +293,16 @@ public class CorpusScanClassificationTests
     }
 
     [Fact]
-    public void SelectCorpusPages_WithOnlyOpenFailureSentinel_RendersFirstPageAfterOpenSucceeds()
+    public void SelectCorpusPages_WithOnlyOpenFailureSentinel_RendersAllPagesInAllPageMode()
     {
         Program.SelectCorpusPages(10, Program.CorpusPageMode.All, new HashSet<int> { 0 })
+            .Should().Equal(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+    }
+
+    [Fact]
+    public void SelectCorpusPages_WithOnlyOpenFailureSentinel_RendersFirstPageInFocusedModes()
+    {
+        Program.SelectCorpusPages(10, Program.CorpusPageMode.First, new HashSet<int> { 0 })
             .Should().Equal(1);
     }
 

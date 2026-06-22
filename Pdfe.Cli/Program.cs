@@ -1953,6 +1953,24 @@ partial class Program
         {
             var renderer = new SkiaRenderer();
             var entries = new List<CorpusScanEntry>();
+            if (selectedPages is not null)
+            {
+                foreach (var invalidPage in selectedPages.Where(page => page > pageCount).OrderBy(page => page))
+                {
+                    entries.Add(new CorpusScanEntry
+                    {
+                        path = relPath,
+                        pageNumber = invalidPage,
+                        pageCount = pageCount,
+                        status = "INVALID_PAGE_NUMBER",
+                        errorPhase = "page-select",
+                        errorType = "ManifestPageOutOfRange",
+                        errorMessage =
+                            $"Page manifest requested page {invalidPage}, but the document has {pageCount} page(s).",
+                    });
+                }
+            }
+
             foreach (var pageNumber in SelectCorpusPages(pageCount, pageMode, selectedPages))
             {
                 progress?.Update("page", pageNumber, $"page {pageNumber}/{pageCount}");
@@ -3259,11 +3277,22 @@ partial class Program
                 yield return page;
             }
 
-            // Page 0 records come from open-time failures. If a parser fix makes
-            // such a file open successfully, render page 1 so the focused subset
-            // advances to a normal PASS/PASS_ONE/DIFF signal instead of doing no work.
+            // Page 0 records come from open-time failures or page-count probe
+            // failures. If an all-page run can open such a file, render every
+            // page so the coverage manifest stays complete; narrower modes still
+            // render page 1 to advance focused parser-fix subsets.
             if (!emitted && selectedPages.Contains(0))
-                yield return 1;
+            {
+                if (pageMode == CorpusPageMode.All)
+                {
+                    for (var page = 1; page <= pageCount; page++)
+                        yield return page;
+                }
+                else
+                {
+                    yield return 1;
+                }
+            }
 
             yield break;
         }
