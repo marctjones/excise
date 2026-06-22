@@ -4159,7 +4159,7 @@ internal partial class RenderContext
                     {
                         for (int c = 0; c < values.Length; c++)
                         {
-                            var componentIndex = GetJpxColorComponentIndex(colorSpace, c, components.Length);
+                            var componentIndex = GetJpxColorComponentIndex(image, colorSpace, c, components.Length);
                             var sample = componentIndex < components.Length && idx < components[componentIndex].LongLength
                                 ? components[componentIndex][(int)idx]
                                 : 0;
@@ -4171,7 +4171,8 @@ internal partial class RenderContext
                     var alpha = 255;
                     if (hasEmbeddedAlpha)
                     {
-                        var alphaComponent = components[colorSpace.Components];
+                        var alphaComponentIndex = GetJpxAlphaComponentIndex(image, colorSpace.Components, components.Length);
+                        var alphaComponent = components[alphaComponentIndex];
                         if (idx < alphaComponent.LongLength)
                             alpha = Math.Clamp(alphaComponent[(int)idx], 0, 255);
                     }
@@ -4192,8 +4193,27 @@ internal partial class RenderContext
         }
     }
 
-    private static int GetJpxColorComponentIndex(PdfColorSpace colorSpace, int requestedComponent, int decodedComponentCount)
+    private static int GetJpxColorComponentIndex(
+        JpxImage image,
+        PdfColorSpace colorSpace,
+        int requestedComponent,
+        int decodedComponentCount)
     {
+        if (image.ComponentDefinitions.Count > 0)
+        {
+            var association = requestedComponent + 1;
+            foreach (var component in image.ComponentDefinitions)
+            {
+                if (component.Type == 0 &&
+                    component.Association == association &&
+                    component.ComponentIndex >= 0 &&
+                    component.ComponentIndex < decodedComponentCount)
+                {
+                    return component.ComponentIndex;
+                }
+            }
+        }
+
         if (decodedComponentCount >= 3 &&
             requestedComponent < 3 &&
             colorSpace.Components == 3 &&
@@ -4207,6 +4227,24 @@ internal partial class RenderContext
         }
 
         return requestedComponent;
+    }
+
+    private static int GetJpxAlphaComponentIndex(JpxImage image, int fallbackIndex, int decodedComponentCount)
+    {
+        if (image.ComponentDefinitions.Count > 0)
+        {
+            foreach (var component in image.ComponentDefinitions)
+            {
+                if (component.Type is 1 or 2 &&
+                    component.ComponentIndex >= 0 &&
+                    component.ComponentIndex < decodedComponentCount)
+                {
+                    return component.ComponentIndex;
+                }
+            }
+        }
+
+        return Math.Clamp(fallbackIndex, 0, Math.Max(0, decodedComponentCount - 1));
     }
 
     private (int Width, int Height) EstimateImageDecodeSize(int sourceWidth, int sourceHeight)
@@ -6427,20 +6465,7 @@ internal partial class RenderContext
                     if (++tileCount > maxTiles)
                         return false;
 
-                    _canvas.Save();
-                    var savedPath = _currentPath;
-                    _currentPath = null;
-                    try
-                    {
-                        _canvas.Translate(tx, ty);
-                        ExecuteContentBytes(content);
-                    }
-                    finally
-                    {
-                        _currentPath?.Dispose();
-                        _currentPath = savedPath;
-                        _canvas.Restore();
-                    }
+                    RenderTilingPatternContentInstance(content, tx, ty, bbox);
                 }
             }
 

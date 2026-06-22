@@ -138,6 +138,12 @@ public class CodestreamParserTests
         image.ComponentData[0].Should().Equal(255);
         image.ComponentData[1].Should().Equal(0);
         image.ComponentData[2].Should().Equal(39);
+        image.ComponentDefinitions.Should().Contain(definition =>
+            definition.ComponentIndex == 0 && definition.Type == 0 && definition.Association == 1);
+        image.ComponentDefinitions.Should().Contain(definition =>
+            definition.ComponentIndex == 1 && definition.Type == 0 && definition.Association == 2);
+        image.ComponentDefinitions.Should().Contain(definition =>
+            definition.ComponentIndex == 2 && definition.Type == 0 && definition.Association == 3);
     }
 
     /// <summary>

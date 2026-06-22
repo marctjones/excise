@@ -405,6 +405,26 @@ public class SkiaRendererTests
     }
 
     [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsIssue19517_Jp2ComponentDefinitionKeepsRgbOrder()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "issue19517.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js issue19517 fixture found at test-pdfs/pdfjs/issue19517.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 1, BackgroundColor = SKColors.White });
+
+        var (redDominant, blueDominant) = CountRedAndBlueDominantPixels(
+            bitmap,
+            new SKRectI(0, 0, bitmap.Width, bitmap.Height));
+        redDominant.Should().BeGreaterThan(blueDominant + 10_000,
+            "the JP2 cdef box maps component 0 to the red channel; blindly applying the CSJ2K BGR fallback turns this fixture blue");
+    }
+
+    [Fact(Timeout = 20000)]
     public void RenderPage_PdfjsIssue19326_UnsupportedJpxDoesNotPaintGrayPlaceholder()
     {
         var path = FindRepoFile("test-pdfs", "pdfjs", "issue19326.pdf");

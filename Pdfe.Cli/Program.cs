@@ -20,6 +20,7 @@ namespace Pdfe.Cli;
 partial class Program
 {
     private const long CorpusFallbackMaxPixelCount = 32L * 1024L * 1024L;
+    private const long VisualVectorMaxPixelCount = 2L * 1024L * 1024L;
 
     static Task<int> Main(string[] args) => RunAsync(args);
 
@@ -2228,9 +2229,26 @@ partial class Program
                 + (passGhostscript ? 1 : 0)
                 + (passPdfBox ? 1 : 0)
                 + (passPdfium ? 1 : 0);
+            if (!(passMutool && passCairo))
+            {
+                ApplyReferenceCenterMetrics(
+                    entry,
+                    new (string Name, SkiaSharp.SKBitmap? Bitmap)[]
+                    {
+                        ("pdfe", pdfeBmp),
+                        ("mutool", mutoolBmp),
+                        ("pdftocairo", cairoBmp),
+                        ("ghostscript", ghostscriptBmp),
+                        ("pdfbox", pdfboxBmp),
+                        ("pdfium", pdfiumBmp),
+                    },
+                    maxDiffFraction,
+                    maxMae);
+            }
 
             if (passMutool && passCairo)        entry.status = "PASS";
-            else if (entry.agreeingOracles.GetValueOrDefault() > 0) entry.status = "PASS_ONE";  // partial agreement
+            else if (entry.agreeingOracles.GetValueOrDefault() > 0 ||
+                     entry.referenceCenterAgreement == true) entry.status = "PASS_ONE";  // partial agreement
             else                                entry.status = "DIFF";
             pageStopwatch.Stop();
             entry.elapsedMs = pageStopwatch.ElapsedMilliseconds;
@@ -2610,6 +2628,10 @@ partial class Program
         public int? oracleDisagreeingPairs { get; set; }
         public string oracleDisagreementBucket { get; set; } = "unmeasured";
         public double? oracleMeanMae { get; set; }
+        public bool? referenceCenterAgreement { get; set; }
+        public double? pdfeReferenceCenterScore { get; set; }
+        public double? oracleMeanCenterScore { get; set; }
+        public int? pdfeReferenceCenterRank { get; set; }
     }
 
     internal enum CorpusPageMode
@@ -2989,6 +3011,280 @@ partial class Program
         entry.oracleMeanMae = sumMae / pairs;
     }
 
+    internal static void ApplyReferenceCenterMetrics(
+        CorpusScanEntry entry,
+        IReadOnlyList<(string Name, SkiaSharp.SKBitmap? Bitmap)> renderers,
+        double maxDiffFraction,
+        double maxMae)
+    {
+        var rendered = renderers
+            .Where(item => item.Bitmap != null)
+            .Select(item => (item.Name, Bitmap: item.Bitmap!))
+            .ToArray();
+        if (rendered.Length < 3 || rendered.All(item => item.Name != "pdfe"))
+            return;
+
+        var pairs = new List<CorpusVisualVectorPair>();
+        for (var i = 0; i < rendered.Length; i++)
+        {
+            for (var j = i + 1; j < rendered.Length; j++)
+            {
+                var metrics = MatchAndCompareVisualVector(rendered[i].Bitmap, rendered[j].Bitmap);
+                pairs.Add(new CorpusVisualVectorPair
+                {
+                    a = rendered[i].Name,
+                    b = rendered[j].Name,
+                    diffFraction = metrics.diffFraction,
+                    mae = metrics.mae,
+                    rmse = metrics.rmse,
+                    maxChannelDelta = metrics.maxChannelDelta,
+                    meanDiffLuminance = metrics.meanDiffLuminance,
+                    meanDiffChroma = metrics.meanDiffChroma,
+                    darkPixelBalance = metrics.darkPixelBalance,
+                    diffBoundsAreaFraction = metrics.diffBoundsAreaFraction,
+                    score = metrics.score,
+                });
+            }
+        }
+
+        if (pairs.Count == 0)
+            return;
+
+        entry.visualVectorPairs = pairs;
+
+        var pdfeReferencePairs = pairs
+            .Where(pair => pair.a == "pdfe" ^ pair.b == "pdfe")
+            .ToArray();
+        if (pdfeReferencePairs.Length == 0)
+            return;
+
+        entry.pdfeReferenceCenterScore = pdfeReferencePairs.Average(pair => pair.score);
+
+        var oracleNames = rendered
+            .Select(item => item.Name)
+            .Where(name => name != "pdfe")
+            .ToArray();
+        var oracleScores = new List<CorpusVisualCenterScore>();
+        foreach (var oracle in oracleNames)
+        {
+            var oraclePairs = pairs
+                .Where(pair => pair.a != "pdfe" && pair.b != "pdfe")
+                .Where(pair => pair.a == oracle || pair.b == oracle)
+                .ToArray();
+            if (oraclePairs.Length == 0)
+                continue;
+
+            oracleScores.Add(new CorpusVisualCenterScore
+            {
+                name = oracle,
+                score = oraclePairs.Average(pair => pair.score),
+            });
+        }
+
+        if (oracleScores.Count == 0)
+            return;
+
+        var sortedOracleScores = oracleScores
+            .OrderBy(score => score.score)
+            .ThenBy(score => score.name, StringComparer.Ordinal)
+            .ToArray();
+        entry.visualCenterScores = sortedOracleScores;
+        entry.oracleMeanCenterScore = sortedOracleScores.Average(score => score.score);
+        entry.oracleMinCenterScore = sortedOracleScores.Min(score => score.score);
+        entry.oracleMaxCenterScore = sortedOracleScores.Max(score => score.score);
+        entry.pdfeReferenceCenterRank =
+            1 + sortedOracleScores.Count(score => score.score < entry.pdfeReferenceCenterScore);
+
+        entry.referenceCenterAgreement = IsReferenceCenterAgreement(
+            entry,
+            maxDiffFraction,
+            maxMae);
+    }
+
+    private static bool IsReferenceCenterAgreement(
+        CorpusScanEntry entry,
+        double maxDiffFraction,
+        double maxMae)
+    {
+        if (entry.comparedOracles is { } compared && compared < 3)
+            return false;
+
+        if (entry.oracleComparisonPairs is not { } oraclePairs || oraclePairs < 3)
+            return false;
+
+        if (entry.oracleDisagreeingPairs is not { } disagreeingPairs || disagreeingPairs == 0)
+            return false;
+
+        if (entry.pdfeReferenceCenterScore is not { } pdfeCenter ||
+            entry.oracleMeanCenterScore is not { } oracleMeanCenter ||
+            entry.oracleMeanDiffFraction is not { } oracleMeanDiff ||
+            entry.oracleMeanMae is not { } oracleMeanMae)
+        {
+            return false;
+        }
+
+        // Keep this as a tolerance for renderer splits, not a way to hide
+        // missing or badly wrong content. The best direct comparison still
+        // needs acceptable average color error and must be no worse than the
+        // reference renderers' own average disagreement.
+        if (entry.mae > maxMae || entry.mae > oracleMeanMae)
+            return false;
+
+        if (entry.diffFraction > Math.Max(maxDiffFraction, oracleMeanDiff))
+            return false;
+
+        return pdfeCenter <= oracleMeanCenter;
+    }
+
+    private static CorpusVisualVectorMetrics MatchAndCompareVisualVector(
+        SkiaSharp.SKBitmap actual,
+        SkiaSharp.SKBitmap reference)
+    {
+        SkiaSharp.SKBitmap probe = actual;
+        SkiaSharp.SKBitmap referenceProbe = reference;
+        var disposables = new List<SkiaSharp.SKBitmap>();
+        if (actual.Width != reference.Width || actual.Height != reference.Height)
+        {
+            probe = Pdfe.Rendering.Differential.DifferentialMetrics
+                .ResizeMatch(actual, reference.Width, reference.Height).Copy();
+            disposables.Add(probe);
+        }
+
+        var pixels = (long)referenceProbe.Width * referenceProbe.Height;
+        if (pixels > VisualVectorMaxPixelCount)
+        {
+            var scale = Math.Sqrt(VisualVectorMaxPixelCount / (double)pixels);
+            var targetWidth = Math.Max(1, (int)Math.Round(referenceProbe.Width * scale));
+            var targetHeight = Math.Max(1, (int)Math.Round(referenceProbe.Height * scale));
+            var scaledProbe = Pdfe.Rendering.Differential.DifferentialMetrics
+                .ResizeMatch(probe, targetWidth, targetHeight);
+            var scaledReference = Pdfe.Rendering.Differential.DifferentialMetrics
+                .ResizeMatch(referenceProbe, targetWidth, targetHeight);
+            disposables.Add(scaledProbe);
+            disposables.Add(scaledReference);
+            probe = scaledProbe;
+            referenceProbe = scaledReference;
+        }
+
+        try
+        {
+            return ComputeVisualVectorMetrics(probe, referenceProbe);
+        }
+        finally
+        {
+            foreach (var disposable in disposables)
+                disposable.Dispose();
+        }
+    }
+
+    private static CorpusVisualVectorMetrics ComputeVisualVectorMetrics(
+        SkiaSharp.SKBitmap actual,
+        SkiaSharp.SKBitmap reference)
+    {
+        if (actual.Width != reference.Width || actual.Height != reference.Height)
+            throw new ArgumentException("Images must have matching dimensions.");
+
+        var width = actual.Width;
+        var height = actual.Height;
+        var pixelCount = checked(width * height);
+        long differingPixels = 0;
+        long sumAbs = 0;
+        double sumSquared = 0;
+        int maxChannelDelta = 0;
+        double diffLuminance = 0;
+        double diffChroma = 0;
+        long actualDarkPixels = 0;
+        long referenceDarkPixels = 0;
+        var left = width;
+        var top = height;
+        var right = -1;
+        var bottom = -1;
+
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                var actualPixel = actual.GetPixel(x, y);
+                var referencePixel = reference.GetPixel(x, y);
+                if (IsVisualVectorDarkPixel(actualPixel))
+                    actualDarkPixels++;
+                if (IsVisualVectorDarkPixel(referencePixel))
+                    referenceDarkPixels++;
+
+                var dR = Math.Abs(actualPixel.Red - referencePixel.Red);
+                var dG = Math.Abs(actualPixel.Green - referencePixel.Green);
+                var dB = Math.Abs(actualPixel.Blue - referencePixel.Blue);
+                var worst = Math.Max(dR, Math.Max(dG, dB));
+
+                sumAbs += dR + dG + dB;
+                sumSquared += dR * dR + dG * dG + dB * dB;
+                maxChannelDelta = Math.Max(maxChannelDelta, worst);
+
+                if (worst <= DefaultVisualDiffTolerance)
+                    continue;
+
+                differingPixels++;
+                left = Math.Min(left, x);
+                top = Math.Min(top, y);
+                right = Math.Max(right, x + 1);
+                bottom = Math.Max(bottom, y + 1);
+                diffLuminance += Math.Abs(VisualVectorLuminance(actualPixel) - VisualVectorLuminance(referencePixel));
+                diffChroma += VisualVectorChromaDistance(actualPixel, referencePixel);
+            }
+        }
+
+        var diffFraction = (double)differingPixels / pixelCount;
+        var mae = (double)sumAbs / (pixelCount * 3.0);
+        var rmse = Math.Sqrt(sumSquared / (pixelCount * 3.0));
+        var meanDiffLuminance = differingPixels == 0 ? 0 : diffLuminance / differingPixels;
+        var meanDiffChroma = differingPixels == 0 ? 0 : diffChroma / differingPixels;
+        var darkPixelBalance = ComputeVisualVectorBalance(actualDarkPixels, referenceDarkPixels);
+        var boundsAreaFraction = differingPixels == 0
+            ? 0
+            : ((right - left) * (double)(bottom - top)) / pixelCount;
+
+        var score =
+            (0.25 * diffFraction)
+            + (0.25 * Math.Clamp(mae / 255.0, 0, 1))
+            + (0.15 * Math.Clamp(rmse / 255.0, 0, 1))
+            + (0.15 * Math.Clamp(meanDiffLuminance / 255.0, 0, 1))
+            + (0.10 * Math.Clamp(meanDiffChroma / 255.0, 0, 1))
+            + (0.05 * (1.0 - darkPixelBalance))
+            + (0.05 * Math.Clamp(boundsAreaFraction, 0, 1));
+
+        return new CorpusVisualVectorMetrics(
+            diffFraction,
+            mae,
+            rmse,
+            maxChannelDelta,
+            meanDiffLuminance,
+            meanDiffChroma,
+            darkPixelBalance,
+            boundsAreaFraction,
+            score);
+    }
+
+    private static double VisualVectorLuminance(SKColor color)
+        => 0.299 * color.Red + 0.587 * color.Green + 0.114 * color.Blue;
+
+    private static bool IsVisualVectorDarkPixel(SKColor color)
+        => VisualVectorLuminance(color) < 200;
+
+    private static double ComputeVisualVectorBalance(long a, long b)
+    {
+        var max = Math.Max(a, b);
+        return max == 0 ? 1 : (double)Math.Min(a, b) / max;
+    }
+
+    private static double VisualVectorChromaDistance(SKColor a, SKColor b)
+    {
+        var cbA = -0.168736 * a.Red - 0.331264 * a.Green + 0.5 * a.Blue;
+        var crA = 0.5 * a.Red - 0.418688 * a.Green - 0.081312 * a.Blue;
+        var cbB = -0.168736 * b.Red - 0.331264 * b.Green + 0.5 * b.Blue;
+        var crB = 0.5 * b.Red - 0.418688 * b.Green - 0.081312 * b.Blue;
+        return (Math.Abs(cbA - cbB) + Math.Abs(crA - crB)) / 2.0;
+    }
+
     private static bool IsPassing(
         (double diff, double mae)? metrics,
         double maxDiffFraction,
@@ -3274,6 +3570,10 @@ partial class Program
             oracleDisagreeingPairs = entry.oracleDisagreeingPairs,
             oracleDisagreementBucket = GetOracleDisagreementBucket(entry),
             oracleMeanMae = entry.oracleMeanMae,
+            referenceCenterAgreement = entry.referenceCenterAgreement,
+            pdfeReferenceCenterScore = entry.pdfeReferenceCenterScore,
+            oracleMeanCenterScore = entry.oracleMeanCenterScore,
+            pdfeReferenceCenterRank = entry.pdfeReferenceCenterRank,
         };
 
     internal sealed class Jbig2ClassifyReport
@@ -3344,6 +3644,14 @@ partial class Program
         public double? oracleMaxMae { get; set; }
         public double? oracleMeanDiffFraction { get; set; }
         public double? oracleMeanMae { get; set; }
+        public bool? referenceCenterAgreement { get; set; }
+        public double? pdfeReferenceCenterScore { get; set; }
+        public double? oracleMinCenterScore { get; set; }
+        public double? oracleMeanCenterScore { get; set; }
+        public double? oracleMaxCenterScore { get; set; }
+        public int? pdfeReferenceCenterRank { get; set; }
+        public IReadOnlyList<CorpusVisualVectorPair>? visualVectorPairs { get; set; }
+        public IReadOnlyList<CorpusVisualCenterScore>? visualCenterScores { get; set; }
         public long? elapsedMs { get; set; }
         public long? pdfElapsedMs { get; set; }
         public long? renderMs { get; set; }
@@ -3389,4 +3697,36 @@ partial class Program
         public string? errorType { get; set; }
         public string? errorMessage { get; set; }
     }
+
+    internal sealed class CorpusVisualVectorPair
+    {
+        public string a { get; set; } = "";
+        public string b { get; set; } = "";
+        public double diffFraction { get; set; }
+        public double mae { get; set; }
+        public double rmse { get; set; }
+        public int maxChannelDelta { get; set; }
+        public double meanDiffLuminance { get; set; }
+        public double meanDiffChroma { get; set; }
+        public double darkPixelBalance { get; set; }
+        public double diffBoundsAreaFraction { get; set; }
+        public double score { get; set; }
+    }
+
+    internal sealed class CorpusVisualCenterScore
+    {
+        public string name { get; set; } = "";
+        public double score { get; set; }
+    }
+
+    private readonly record struct CorpusVisualVectorMetrics(
+        double diffFraction,
+        double mae,
+        double rmse,
+        int maxChannelDelta,
+        double meanDiffLuminance,
+        double meanDiffChroma,
+        double darkPixelBalance,
+        double diffBoundsAreaFraction,
+        double score);
 }

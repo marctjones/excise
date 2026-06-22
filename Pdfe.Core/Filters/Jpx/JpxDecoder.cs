@@ -95,6 +95,7 @@ internal static class JpxDecoder
 
         try
         {
+            var componentDefinitions = ReadComponentDefinitions(jpxData);
             var image = TryDecodeWithSuppressedCodecOutput(jpxData);
             if (image.NumberOfComponents <= 0)
                 return null;
@@ -111,6 +112,7 @@ internal static class JpxDecoder
             {
                 Components = image.NumberOfComponents,
                 ComponentData = components,
+                ComponentDefinitions = componentDefinitions,
             };
         }
         catch
@@ -151,8 +153,69 @@ internal static class JpxDecoder
     private static bool TryExtractJp2Codestream(byte[] data, out byte[] codestream)
     {
         codestream = Array.Empty<byte>();
-        var pos = 0;
-        while (pos <= data.Length - 8)
+        foreach (var box in EnumerateBoxes(data, 0, data.Length))
+        {
+            if (box.Type == "jp2c")
+            {
+                var payloadLength = box.PayloadLength;
+                codestream = new byte[payloadLength];
+                Array.Copy(data, box.PayloadOffset, codestream, 0, payloadLength);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static IReadOnlyList<JpxComponentDefinition> ReadComponentDefinitions(byte[] data)
+    {
+        foreach (var topLevel in EnumerateBoxes(data, 0, data.Length))
+        {
+            if (topLevel.Type != "jp2h")
+                continue;
+
+            foreach (var box in EnumerateBoxes(data, topLevel.PayloadOffset, topLevel.PayloadLength))
+            {
+                if (box.Type == "cdef")
+                    return ParseComponentDefinitionBox(data, box.PayloadOffset, box.PayloadLength);
+            }
+        }
+
+        return Array.Empty<JpxComponentDefinition>();
+    }
+
+    private static IReadOnlyList<JpxComponentDefinition> ParseComponentDefinitionBox(
+        byte[] data,
+        int offset,
+        int length)
+    {
+        if (length < 2)
+            return Array.Empty<JpxComponentDefinition>();
+
+        var end = offset + length;
+        var count = ReadUInt16BigEndian(data, offset);
+        var pos = offset + 2;
+        var definitions = new List<JpxComponentDefinition>(count);
+        for (var i = 0; i < count && pos <= end - 6; i++)
+        {
+            var componentIndex = ReadUInt16BigEndian(data, pos);
+            var type = ReadUInt16BigEndian(data, pos + 2);
+            var association = ReadUInt16BigEndian(data, pos + 4);
+            definitions.Add(new JpxComponentDefinition(componentIndex, type, association));
+            pos += 6;
+        }
+
+        return definitions;
+    }
+
+    private static IEnumerable<Jp2Box> EnumerateBoxes(byte[] data, int offset, int length)
+    {
+        if (offset < 0 || length < 0 || offset > data.Length - length)
+            yield break;
+
+        var pos = offset;
+        var end = offset + length;
+        while (pos <= end - 8)
         {
             var start = pos;
             var size = ReadUInt32BigEndian(data, pos);
@@ -163,8 +226,8 @@ internal static class JpxDecoder
 
             if (size == 1)
             {
-                if (pos > data.Length - 8)
-                    return false;
+                if (pos > end - 8)
+                    yield break;
 
                 size = ReadUInt64BigEndian(data, pos);
                 pos += 8;
@@ -172,25 +235,20 @@ internal static class JpxDecoder
             }
             else if (size == 0)
             {
-                size = (ulong)(data.Length - start);
+                size = (ulong)(end - start);
             }
 
-            if (size < (ulong)headerSize || size > (ulong)(data.Length - start))
-                return false;
+            if (size < (ulong)headerSize || size > (ulong)(end - start))
+                yield break;
 
-            if (type == "jp2c")
-            {
-                var payloadLength = (int)(size - (ulong)headerSize);
-                codestream = new byte[payloadLength];
-                Array.Copy(data, pos, codestream, 0, payloadLength);
-                return true;
-            }
-
+            var payloadLength = checked((int)(size - (ulong)headerSize));
+            yield return new Jp2Box(type, pos, payloadLength);
             pos = start + (int)size;
         }
-
-        return false;
     }
+
+    private static int ReadUInt16BigEndian(byte[] data, int offset)
+        => (data[offset] << 8) | data[offset + 1];
 
     private static ulong ReadUInt32BigEndian(byte[] data, int offset)
         => ((ulong)data[offset] << 24)
@@ -205,6 +263,8 @@ internal static class JpxDecoder
             value = (value << 8) | data[offset + i];
         return value;
     }
+
+    private readonly record struct Jp2Box(string Type, int PayloadOffset, int PayloadLength);
 
     private sealed class NullMsgLogger : IMsgLogger
     {
@@ -237,4 +297,18 @@ internal sealed class JpxImage
     public int BitsPerComponent { get; set; }
     public byte[] Pixels { get; set; } = Array.Empty<byte>();
     public int[][] ComponentData { get; set; } = Array.Empty<int[]>();
+    public IReadOnlyList<JpxComponentDefinition> ComponentDefinitions { get; set; } =
+        Array.Empty<JpxComponentDefinition>();
 }
+
+/// <summary>
+/// JP2 Component Definition box entry. The JPEG2000 Part 1 cdef box maps
+/// codestream component numbers to color channels or opacity channels.
+/// Type 0 is color image data; type 1/2 are alpha/opacity data.
+/// Association 1, 2, 3 map to the first, second, third color-space channels.
+/// </summary>
+[System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+internal readonly record struct JpxComponentDefinition(
+    int ComponentIndex,
+    int Type,
+    int Association);
