@@ -445,6 +445,7 @@ internal partial class RenderContext
     private readonly Dictionary<Pdfe.Core.Primitives.PdfStream, Dictionary<ImageBitmapCacheKey, SKBitmap?>> _imageBitmapByStream =
         new(ReferenceEqualityComparer.Instance);
     private readonly List<SKBitmap> _cachedImageBitmaps = new();
+    private int _tilingPatternDepth;
 
     private readonly CancellationToken _cancellationToken;
 
@@ -6005,6 +6006,7 @@ internal partial class RenderContext
         var savedState = _state.Clone();
         try
         {
+            _tilingPatternDepth++;
             _canvas.ClipPath(clipPath, SKClipOperation.Intersect, _options.AntiAlias);
 
             var inv = inverseCtm.Value;
@@ -6062,6 +6064,7 @@ internal partial class RenderContext
         }
         finally
         {
+            _tilingPatternDepth--;
             _state = savedState;
             _resourcesStack.Pop();
             _canvas.Restore();

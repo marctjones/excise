@@ -413,11 +413,14 @@ public class SkiaRendererTests
 
         using var bitmap = new SkiaRenderer().RenderPage(
             doc.GetPage(1),
-            new RenderOptions { Dpi = 300, BackgroundColor = SKColors.White });
+            new RenderOptions { Dpi = 150, BackgroundColor = SKColors.White });
 
         CountBlueDominantPixels(bitmap, new SKRectI(0, 0, bitmap.Width, bitmap.Height))
-            .Should().BeGreaterThan(1_000,
+            .Should().BeGreaterThan(500,
                 "uncolored tiling pattern cells should paint with the RGB tint supplied to scn instead of defaulting to black");
+        CountRowsWithBlueDominantPixels(bitmap, new SKRectI(10, 10, 71, 71), minimumBluePixels: 20)
+            .Should().BeGreaterThanOrEqualTo(10,
+                "subpixel strokes inside tiling pattern cells should not disappear at repeated tile phases");
     }
 
     [Fact(Timeout = 20000)]
@@ -4989,6 +4992,31 @@ public class SkiaRendererTests
         }
 
         return count;
+    }
+
+    private static int CountRowsWithBlueDominantPixels(SKBitmap bitmap, SKRectI region, int minimumBluePixels)
+    {
+        var left = Math.Clamp(region.Left, 0, bitmap.Width);
+        var top = Math.Clamp(region.Top, 0, bitmap.Height);
+        var right = Math.Clamp(region.Right, left, bitmap.Width);
+        var bottom = Math.Clamp(region.Bottom, top, bitmap.Height);
+        var rows = 0;
+
+        for (int y = top; y < bottom; y++)
+        {
+            var blue = 0;
+            for (int x = left; x < right; x++)
+            {
+                var pixel = bitmap.GetPixel(x, y);
+                if (pixel.Blue > 120 && pixel.Blue > pixel.Green + 40 && pixel.Blue > pixel.Red + 40)
+                    blue++;
+            }
+
+            if (blue >= minimumBluePixels)
+                rows++;
+        }
+
+        return rows;
     }
 
     private static (int RedDominant, int BlueDominant) CountRedAndBlueDominantPixels(SKBitmap bitmap, SKRectI region)

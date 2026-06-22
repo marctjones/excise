@@ -149,7 +149,7 @@ internal partial class RenderContext
         {
             Style = SKPaintStyle.Stroke,
             Color = _state.StrokeColor.WithAlpha((byte)(_state.StrokeAlpha * 255)),
-            StrokeWidth = (float)_state.LineWidth,
+            StrokeWidth = ResolvePathStrokeWidth(),
             StrokeCap = _state.LineCap switch
             {
                 1 => SKStrokeCap.Round,
@@ -233,7 +233,7 @@ internal partial class RenderContext
         {
             Style = SKPaintStyle.Stroke,
             Color = _state.StrokeColor.WithAlpha((byte)(_state.StrokeAlpha * 255)),
-            StrokeWidth = (float)_state.LineWidth,
+            StrokeWidth = ResolvePathStrokeWidth(),
             StrokeCap = _state.LineCap switch
             {
                 1 => SKStrokeCap.Round,
@@ -260,6 +260,19 @@ internal partial class RenderContext
 
         _currentPath.Dispose();
         _currentPath = null;
+    }
+
+    private float ResolvePathStrokeWidth()
+    {
+        var width = (float)_state.LineWidth;
+        if (width <= 0 || _tilingPatternDepth <= 0)
+            return width;
+
+        var matrix = _canvas.TotalMatrix;
+        var scaleX = Math.Sqrt(matrix.ScaleX * matrix.ScaleX + matrix.SkewY * matrix.SkewY);
+        var scaleY = Math.Sqrt(matrix.SkewX * matrix.SkewX + matrix.ScaleY * matrix.ScaleY);
+        var deviceWidth = width * (float)Math.Max(scaleX, scaleY);
+        return deviceWidth is > 0 and < 1 ? 0 : width;
     }
 
     #endregion
