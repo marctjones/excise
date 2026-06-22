@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using System.Threading;
+using BitMiracle.LibJpeg.Classic;
 using Pdfe.Core.ColorSpaces;
 using Pdfe.Core.Content;
 using Pdfe.Core.Document;
@@ -459,7 +460,8 @@ internal partial class RenderContext
         byte FillRed,
         byte FillGreen,
         byte FillBlue,
-        byte FillAlpha);
+        byte FillAlpha,
+        int? DctColorTransform);
 
     public RenderContext(SKCanvas canvas, PdfPage page, RenderOptions options,
         CancellationToken cancellationToken = default)
@@ -2925,11 +2927,12 @@ internal partial class RenderContext
             return;
         }
 
+        var (maskWidth, maskHeight) = EstimateSoftMaskBitmapSize(maskBounds);
         using var maskBitmap = DecodeSoftMaskBitmap(
             maskLookupObject,
             maskStream,
-            (int)Math.Ceiling(maskBounds.Width),
-            (int)Math.Ceiling(maskBounds.Height),
+            maskWidth,
+            maskHeight,
             maskBounds);
 
         if (maskBitmap == null)
@@ -3376,6 +3379,14 @@ internal partial class RenderContext
         return bounds.Width > 0 && bounds.Height > 0;
     }
 
+    private (int Width, int Height) EstimateSoftMaskBitmapSize(SKRect localBounds)
+    {
+        var deviceBounds = MapRect(_canvas.TotalMatrix, localBounds);
+        var targetWidth = Math.Max(1, (int)Math.Ceiling(deviceBounds.Width));
+        var targetHeight = Math.Max(1, (int)Math.Ceiling(deviceBounds.Height));
+        return ClampSoftMaskTargetSize(targetWidth, targetHeight, targetWidth, targetHeight);
+    }
+
     private static SKBitmap? CreateDeviceSpaceAreaResampledStencil(
         SKBitmap source,
         SKRect dest,
@@ -3545,8 +3556,23 @@ internal partial class RenderContext
             if (IsTerminalDctFilter(filters))
             {
                 var (targetWidth, targetHeight) = EstimateImageDecodeSize(width, height);
+                var dctData = GetTerminalDctData(imageStream, filters);
+                if (GetTerminalDctColorTransform(imageStream, filters) is { } colorTransform)
+                {
+                    var decoded = DecodeDctImageWithColorTransform(
+                        dctData,
+                        width,
+                        height,
+                        colorSpace,
+                        targetWidth,
+                        targetHeight,
+                        colorTransform);
+                    if (decoded != null)
+                        return decoded;
+                }
+
                 return SafeDecode(
-                    GetTerminalDctData(imageStream, filters),
+                    dctData,
                     GetDecodeSize(width, height, targetWidth, targetHeight));
             }
 
@@ -3579,13 +3605,16 @@ internal partial class RenderContext
         string colorSpace)
     {
         var filters = imageStream.Filters;
-        var (targetWidth, targetHeight) = filters.Contains("JPXDecode") || filters.Contains("DCTDecode")
+        var (targetWidth, targetHeight) = filters.Contains("JPXDecode") || ContainsDctFilter(filters)
             ? EstimateImageDecodeSize(width, height)
             : (width, height);
         var isImageMask = imageStream.GetBool("ImageMask");
         var fillAlpha = isImageMask
             ? (byte)Math.Clamp(_state.FillAlpha * 255, 0, 255)
             : (byte)0;
+        var dctColorTransform = IsTerminalDctFilter(filters)
+            ? GetTerminalDctColorTransform(imageStream, filters)
+            : null;
 
         return new ImageBitmapCacheKey(
             width,
@@ -3598,7 +3627,8 @@ internal partial class RenderContext
             isImageMask ? _state.FillColor.Red : (byte)0,
             isImageMask ? _state.FillColor.Green : (byte)0,
             isImageMask ? _state.FillColor.Blue : (byte)0,
-            fillAlpha);
+            fillAlpha,
+            dctColorTransform);
     }
 
     private void TrackCachedImageBitmap(SKBitmap? bitmap)
@@ -4195,12 +4225,189 @@ internal partial class RenderContext
     private static bool IsTerminalDctFilter(IReadOnlyList<string> filters)
         => filters.Count > 0 && IsDctFilter(filters[^1]);
 
+    private static bool ContainsDctFilter(IReadOnlyList<string> filters)
+        => filters.Any(IsDctFilter);
+
     private static bool IsDctFilter(string filter)
         => string.Equals(filter, "DCTDecode", StringComparison.Ordinal)
            || string.Equals(filter, "DCT", StringComparison.Ordinal);
 
     private static byte[] GetTerminalDctData(Pdfe.Core.Primitives.PdfStream stream, IReadOnlyList<string> filters)
         => filters.Count == 1 ? stream.EncodedData : stream.DecodedData;
+
+    private int? GetTerminalDctColorTransform(PdfStream stream, IReadOnlyList<string> filters)
+    {
+        try
+        {
+            var parmsObject = stream.GetOptional("DecodeParms") ?? stream.GetOptional("DP");
+            if (parmsObject == null || filters.Count == 0)
+                return null;
+
+            PdfDictionary? parms = null;
+            var resolved = _page.Document.Resolve(parmsObject);
+            if (resolved is PdfDictionary dictionary && filters.Count == 1)
+            {
+                parms = dictionary;
+            }
+            else if (resolved is PdfArray array)
+            {
+                var filterIndex = filters.Count - 1;
+                if (filterIndex >= 0 && filterIndex < array.Count)
+                    parms = _page.Document.Resolve(array[filterIndex]) as PdfDictionary;
+            }
+
+            if (parms == null)
+                return null;
+
+            var colorTransformObj = parms.GetOptional("ColorTransform");
+            if (!TryGetResolvedNumber(colorTransformObj, out var colorTransform))
+                return null;
+
+            var value = (int)colorTransform;
+            return value is 0 or 1 ? value : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static SKBitmap? DecodeDctImageWithColorTransform(
+        byte[] data,
+        int sourceWidth,
+        int sourceHeight,
+        string colorSpace,
+        int targetWidth,
+        int targetHeight,
+        int colorTransform)
+    {
+        if (data.Length == 0 ||
+            !TryGetDctInputColorSpace(colorSpace, colorTransform, out var inputColorSpace))
+        {
+            return null;
+        }
+
+        var scaleDenominator = ChooseDctScaleDenominator(sourceWidth, sourceHeight, targetWidth, targetHeight);
+        var cinfo = new jpeg_decompress_struct();
+        try
+        {
+            using var input = new MemoryStream(data, writable: false);
+            cinfo.jpeg_stdio_src(input);
+            cinfo.jpeg_read_header(true);
+            cinfo.Jpeg_color_space = inputColorSpace;
+            cinfo.Out_color_space = J_COLOR_SPACE.JCS_RGB;
+            cinfo.Scale_num = 1;
+            cinfo.Scale_denom = scaleDenominator;
+
+            cinfo.jpeg_start_decompress();
+            var width = cinfo.Output_width;
+            var height = cinfo.Output_height;
+            if (width <= 0 || height <= 0 || cinfo.Output_components != 3)
+                return null;
+
+            var pixels = new byte[checked(width * height * 4)];
+            var scanline = new[] { new byte[checked(width * cinfo.Output_components)] };
+            var dst = 0;
+            while (cinfo.Output_scanline < cinfo.Output_height)
+            {
+                cinfo.jpeg_read_scanlines(scanline, 1);
+                var row = scanline[0];
+                for (var src = 0; src < width * 3;)
+                {
+                    pixels[dst++] = row[src++];
+                    pixels[dst++] = row[src++];
+                    pixels[dst++] = row[src++];
+                    pixels[dst++] = 255;
+                }
+            }
+
+            cinfo.jpeg_finish_decompress();
+            var bitmap = CreateBitmapFromRgbaBytes(width, height, pixels);
+            if (bitmap == null)
+                return null;
+
+            return ResizeDecodedBitmap(
+                bitmap,
+                Math.Clamp(targetWidth, 1, sourceWidth),
+                Math.Clamp(targetHeight, 1, sourceHeight));
+        }
+        catch
+        {
+            return null;
+        }
+        finally
+        {
+            try { cinfo.jpeg_destroy(); }
+            catch { /* Ignore cleanup failures from malformed JPEG data. */ }
+        }
+    }
+
+    private static bool TryGetDctInputColorSpace(
+        string colorSpace,
+        int colorTransform,
+        out J_COLOR_SPACE inputColorSpace)
+    {
+        inputColorSpace = J_COLOR_SPACE.JCS_UNKNOWN;
+        switch (NormalizeDctColorSpaceName(colorSpace))
+        {
+            case "DeviceRGB":
+                inputColorSpace = colorTransform == 0
+                    ? J_COLOR_SPACE.JCS_RGB
+                    : J_COLOR_SPACE.JCS_YCbCr;
+                return true;
+            case "DeviceCMYK":
+                inputColorSpace = colorTransform == 0
+                    ? J_COLOR_SPACE.JCS_CMYK
+                    : J_COLOR_SPACE.JCS_YCCK;
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private static string NormalizeDctColorSpaceName(string colorSpace)
+        => colorSpace switch
+        {
+            "RGB" => "DeviceRGB",
+            "CMYK" => "DeviceCMYK",
+            _ => colorSpace
+        };
+
+    private static int ChooseDctScaleDenominator(
+        int sourceWidth,
+        int sourceHeight,
+        int targetWidth,
+        int targetHeight)
+    {
+        foreach (var denominator in new[] { 8, 4, 2 })
+        {
+            if ((sourceWidth + denominator - 1) / denominator >= targetWidth &&
+                (sourceHeight + denominator - 1) / denominator >= targetHeight)
+            {
+                return denominator;
+            }
+        }
+
+        return 1;
+    }
+
+    private static SKBitmap? ResizeDecodedBitmap(SKBitmap bitmap, int targetWidth, int targetHeight)
+    {
+        if (bitmap.Width == targetWidth && bitmap.Height == targetHeight)
+            return bitmap;
+
+        try
+        {
+            var resized = bitmap.Resize(
+                new SKImageInfo(targetWidth, targetHeight, SKColorType.Rgba8888, SKAlphaType.Premul),
+                new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear));
+            return resized;
+        }
+        finally
+        {
+            bitmap.Dispose();
+        }
+    }
 
     private static byte[] CreateSoftMaskAlphaFrom8Bit(
         byte[] data,

@@ -464,6 +464,35 @@ public class SkiaRendererTests
     }
 
     [Fact(Timeout = 20000)]
+    public void RenderPage_PopplerJpeg_ExplicitDctColorTransformColumnsRender()
+    {
+        var path = FindRepoFile("test-pdfs", "poppler", "tests", "jpeg.pdf");
+        Assert.SkipWhen(path == null,
+            "No Poppler jpeg.pdf fixture found at test-pdfs/poppler/tests/jpeg.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var explicitColorTransformColumns = new[] { 270.667, 441.333 };
+        var rowBottoms = new[] { 100, 164, 228, 292, 356, 420, 484, 548, 612, 676 };
+        foreach (var x in explicitColorTransformColumns)
+        {
+            var columnContentPixels = 0;
+            foreach (var y in rowBottoms)
+            {
+                var region = PdfRectToPixelRegion(bitmap, x + 6, y + 6, width: 73, height: 52);
+                columnContentPixels += CountNonWhitePixels(bitmap, region);
+            }
+
+            columnContentPixels.Should().BeGreaterThan(20_000,
+                "explicit /DecodeParms /ColorTransform DCTDecode images should render instead of leaving a blank column");
+        }
+    }
+
+    [Fact(Timeout = 20000)]
     public void RenderPage_PdfjsIssue10339_IndexedLabImagesDoNotRenderAsBlackBlocks()
     {
         var path = FindRepoFile("test-pdfs", "pdfjs", "issue10339_reduced.pdf");
@@ -4829,6 +4858,41 @@ public class SkiaRendererTests
         }
 
         return count;
+    }
+
+    private static int CountNonWhitePixels(SKBitmap bitmap, SKRectI region)
+    {
+        var left = Math.Clamp(region.Left, 0, bitmap.Width);
+        var top = Math.Clamp(region.Top, 0, bitmap.Height);
+        var right = Math.Clamp(region.Right, left, bitmap.Width);
+        var bottom = Math.Clamp(region.Bottom, top, bitmap.Height);
+        var count = 0;
+
+        for (int y = top; y < bottom; y++)
+        {
+            for (int x = left; x < right; x++)
+            {
+                var pixel = bitmap.GetPixel(x, y);
+                if (pixel.Red < 245 || pixel.Green < 245 || pixel.Blue < 245)
+                    count++;
+            }
+        }
+
+        return count;
+    }
+
+    private static SKRectI PdfRectToPixelRegion(
+        SKBitmap bitmap,
+        double left,
+        double bottom,
+        double width,
+        double height)
+    {
+        var x0 = (int)Math.Floor(left);
+        var x1 = (int)Math.Ceiling(left + width);
+        var y0 = (int)Math.Floor(bitmap.Height - bottom - height);
+        var y1 = (int)Math.Ceiling(bitmap.Height - bottom);
+        return new SKRectI(x0, y0, x1, y1);
     }
 
     private static int CountWarmPalePixels(SKBitmap bitmap, SKRectI region)
