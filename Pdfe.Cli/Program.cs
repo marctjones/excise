@@ -17,7 +17,7 @@ using SkiaSharp;
 
 namespace Pdfe.Cli;
 
-class Program
+partial class Program
 {
     private const long CorpusFallbackMaxPixelCount = 32L * 1024L * 1024L;
 
@@ -45,6 +45,7 @@ class Program
             CreateOcrCommand(),
             CreateDemoCommand(),
             CreateJbig2ClassifyCommand(),
+            CreateVisualDiffCommand(),
             CreateCorpusScanCommand(),
         };
 
