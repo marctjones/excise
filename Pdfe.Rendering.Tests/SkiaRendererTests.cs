@@ -477,7 +477,7 @@ public class SkiaRendererTests
 
         using var bitmap = new SkiaRenderer().RenderPage(
             doc.GetPage(1),
-            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+            new RenderOptions { Dpi = 150, BackgroundColor = SKColors.White });
 
         var explicitColorTransformColumns = new[] { 270.667, 441.333 };
         var rowBottoms = new[] { 100, 164, 228, 292, 356, 420, 484, 548, 612, 676 };
@@ -493,6 +493,38 @@ public class SkiaRendererTests
             columnContentPixels.Should().BeGreaterThan(20_000,
                 "explicit /DecodeParms /ColorTransform DCTDecode images should render instead of leaving a blank column");
         }
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_PopplerJpeg_DeviceCmykDctUsesPdfColorRulesAndAdobeMarkerPrecedence()
+    {
+        var path = FindRepoFile("test-pdfs", "poppler", "tests", "jpeg.pdf");
+        Assert.SkipWhen(path == null,
+            "No Poppler jpeg.pdf fixture found at test-pdfs/poppler/tests/jpeg.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 150, BackgroundColor = SKColors.White });
+
+        var defaultCmykAdobe = PdfRectToPixelRegion(bitmap, 100 + 6, 100 + 6, width: 73, height: 52);
+        var explicitCmykAdobe = PdfRectToPixelRegion(bitmap, 270.667 + 6, 100 + 6, width: 73, height: 52);
+        var explicitYcckAdobe = PdfRectToPixelRegion(bitmap, 270.667 + 6, 484 + 6, width: 73, height: 52);
+
+        MeanRgb(bitmap, defaultCmykAdobe).Luminance.Should().BeLessThan(45,
+            "four-component DCTDecode samples in /DeviceCMYK should flow through PDF CMYK conversion instead of JPEG RGB conventions");
+        MeanRgb(bitmap, explicitCmykAdobe).Luminance.Should().BeLessThan(45,
+            "an Adobe APP14 marker overrides a conflicting explicit /ColorTransform value for CMYK DCTDecode images");
+        MeanRgb(bitmap, explicitYcckAdobe).Luminance.Should().BeLessThan(45,
+            "Adobe APP14 YCCK images should decode to CMYK samples before PDF color conversion");
+
+        var explicitRgbAdobe = PdfRectToPixelRegion(bitmap, 270.667 + 6, 228 + 6, width: 73, height: 52);
+        var rgbMean = MeanRgb(bitmap, explicitRgbAdobe);
+        rgbMean.Red.Should().BeGreaterThan(rgbMean.Blue + 20,
+            "an Adobe APP14 no-transform marker should override explicit /ColorTransform 1 for RGB DCTDecode images");
+        rgbMean.Green.Should().BeGreaterThan(rgbMean.Blue + 10,
+            "the RGB Adobe-marker cell should remain warm instead of being interpreted as YCbCr");
     }
 
     [Fact(Timeout = 20000)]
@@ -4884,6 +4916,38 @@ public class SkiaRendererTests
         return count;
     }
 
+    private static (double Red, double Green, double Blue, double Luminance) MeanRgb(SKBitmap bitmap, SKRectI region)
+    {
+        var left = Math.Clamp(region.Left, 0, bitmap.Width);
+        var top = Math.Clamp(region.Top, 0, bitmap.Height);
+        var right = Math.Clamp(region.Right, left, bitmap.Width);
+        var bottom = Math.Clamp(region.Bottom, top, bitmap.Height);
+        long red = 0;
+        long green = 0;
+        long blue = 0;
+        var count = 0;
+
+        for (int y = top; y < bottom; y++)
+        {
+            for (int x = left; x < right; x++)
+            {
+                var pixel = bitmap.GetPixel(x, y);
+                red += pixel.Red;
+                green += pixel.Green;
+                blue += pixel.Blue;
+                count++;
+            }
+        }
+
+        if (count == 0)
+            return (0, 0, 0, 0);
+
+        var r = red / (double)count;
+        var g = green / (double)count;
+        var b = blue / (double)count;
+        return (r, g, b, 0.2126 * r + 0.7152 * g + 0.0722 * b);
+    }
+
     private static SKRectI PdfRectToPixelRegion(
         SKBitmap bitmap,
         double left,
@@ -4891,10 +4955,12 @@ public class SkiaRendererTests
         double width,
         double height)
     {
-        var x0 = (int)Math.Floor(left);
-        var x1 = (int)Math.Ceiling(left + width);
-        var y0 = (int)Math.Floor(bitmap.Height - bottom - height);
-        var y1 = (int)Math.Ceiling(bitmap.Height - bottom);
+        var scaleX = bitmap.Width / 595.0;
+        var scaleY = bitmap.Height / 840.0;
+        var x0 = (int)Math.Floor(left * scaleX);
+        var x1 = (int)Math.Ceiling((left + width) * scaleX);
+        var y0 = (int)Math.Floor((840.0 - bottom - height) * scaleY);
+        var y1 = (int)Math.Ceiling((840.0 - bottom) * scaleY);
         return new SKRectI(x0, y0, x1, y1);
     }
 
