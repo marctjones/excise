@@ -184,8 +184,9 @@ internal partial class RenderContext
         ApplyPendingClipToCurrentPath();
         _currentPath.FillType = evenOdd ? SKPathFillType.EvenOdd : SKPathFillType.Winding;
 
-        if (_state.FillPatternName != null && RenderFillPattern(_currentPath))
+        if (_state.FillPatternName != null)
         {
+            RenderFillPattern(_currentPath);
             _currentPath.Dispose();
             _currentPath = null;
             return;
@@ -214,18 +215,21 @@ internal partial class RenderContext
         _currentPath.FillType = evenOdd ? SKPathFillType.EvenOdd : SKPathFillType.Winding;
 
         // Fill first
-        if (!(_state.FillPatternName != null && RenderFillPattern(_currentPath)))
+        if (_state.FillPatternName == null || !RenderFillPattern(_currentPath))
         {
-            using var fillPaint = new SKPaint
+            if (_state.FillPatternName == null)
             {
-                Style = SKPaintStyle.Fill,
-                Color = _state.FillColor.WithAlpha((byte)(_state.FillAlpha * 255)),
-                BlendMode = _state.BlendMode,
-                IsAntialias = _options.AntiAlias
-            };
-            RenderWithCurrentSoftMask(
-                () => _canvas.DrawPath(_currentPath, fillPaint),
-                fillPaint);
+                using var fillPaint = new SKPaint
+                {
+                    Style = SKPaintStyle.Fill,
+                    Color = _state.FillColor.WithAlpha((byte)(_state.FillAlpha * 255)),
+                    BlendMode = _state.BlendMode,
+                    IsAntialias = _options.AntiAlias
+                };
+                RenderWithCurrentSoftMask(
+                    () => _canvas.DrawPath(_currentPath, fillPaint),
+                    fillPaint);
+            }
         }
 
         // Then stroke

@@ -959,6 +959,41 @@ public class SkiaRendererCoverageTests
     }
 
     [Fact]
+    public void RenderPage_PatternType1ColoredTilingFill_ComposesOverlappingCell()
+    {
+        var pdfData = CreatePdfWithOverlappingColoredTilingPattern();
+        using var doc = PdfDocument.Open(pdfData);
+        var renderer = new SkiaRenderer();
+
+        using var bitmap = renderer.RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var center = bitmap.GetPixel(250, bitmap.Height - 250);
+        center.Green.Should().BeGreaterThan(180,
+            "colored tiling patterns with a BBox larger than XStep/YStep should render a composed cell instead of falling back to a solid fill");
+        center.Red.Should().BeLessThan(80);
+        center.Blue.Should().BeLessThan(80);
+    }
+
+    [Fact]
+    public void RenderPage_MissingPatternFill_DoesNotFallbackToSolidCurrentColor()
+    {
+        var pdfData = CreatePdfWithMissingTilingPatternFill();
+        using var doc = PdfDocument.Open(pdfData);
+        var renderer = new SkiaRenderer();
+
+        using var bitmap = renderer.RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var center = bitmap.GetPixel(120, bitmap.Height - 120);
+        center.Red.Should().BeGreaterThan(240);
+        center.Green.Should().BeGreaterThan(240);
+        center.Blue.Should().BeGreaterThan(240);
+    }
+
+    [Fact]
     public void RenderPage_FunctionBasedShading_EvaluatesAcrossDomain()
     {
         var pdfData = CreatePdfWithFunctionBasedShading();
@@ -1233,6 +1268,110 @@ public class SkiaRendererCoverageTests
             sb.AppendLine($"{offsets[i]:D10} 00000 n ");
         sb.AppendLine("trailer");
         sb.AppendLine("<< /Root 1 0 R /Size 6 >>");
+        sb.AppendLine("startxref");
+        sb.AppendLine(xrefPos.ToString());
+        sb.AppendLine("%%EOF");
+
+        return Encoding.ASCII.GetBytes(sb.ToString());
+    }
+
+    private static byte[] CreatePdfWithOverlappingColoredTilingPattern()
+    {
+        const string content = "/Pattern cs\n/P1 scn\n0 0 500 500 re f\n";
+        const string patternContent = "1 0 1 0 k\n0 0 80 80 re f\n";
+        var sb = new StringBuilder();
+        sb.AppendLine("%PDF-1.4");
+        var offsets = new long[6];
+
+        offsets[1] = sb.Length;
+        sb.AppendLine("1 0 obj");
+        sb.AppendLine("<< /Type /Catalog /Pages 2 0 R >>");
+        sb.AppendLine("endobj");
+
+        offsets[2] = sb.Length;
+        sb.AppendLine("2 0 obj");
+        sb.AppendLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+        sb.AppendLine("endobj");
+
+        offsets[3] = sb.Length;
+        sb.AppendLine("3 0 obj");
+        sb.AppendLine("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 500 500] /Contents 4 0 R");
+        sb.AppendLine("   /Group << /S /Transparency /CS [/CalGray << /WhitePoint [1 1 1] /Gamma 1 >>] >>");
+        sb.AppendLine("   /Resources << /Pattern << /P1 5 0 R >> >>");
+        sb.AppendLine(">>");
+        sb.AppendLine("endobj");
+
+        offsets[4] = sb.Length;
+        sb.AppendLine("4 0 obj");
+        sb.AppendLine($"<< /Length {content.Length} >>");
+        sb.AppendLine("stream");
+        sb.Append(content);
+        sb.AppendLine("endstream");
+        sb.AppendLine("endobj");
+
+        offsets[5] = sb.Length;
+        sb.AppendLine("5 0 obj");
+        sb.AppendLine($"<< /Type /Pattern /PatternType 1 /PaintType 1 /TilingType 1 /BBox [0 0 80 80] /XStep 15 /YStep 15 /Length {patternContent.Length} >>");
+        sb.AppendLine("stream");
+        sb.Append(patternContent);
+        sb.AppendLine("endstream");
+        sb.AppendLine("endobj");
+
+        var xrefPos = sb.Length;
+        sb.AppendLine("xref");
+        sb.AppendLine("0 6");
+        sb.AppendLine("0000000000 65535 f ");
+        for (int i = 1; i <= 5; i++)
+            sb.AppendLine($"{offsets[i]:D10} 00000 n ");
+        sb.AppendLine("trailer");
+        sb.AppendLine("<< /Root 1 0 R /Size 6 >>");
+        sb.AppendLine("startxref");
+        sb.AppendLine(xrefPos.ToString());
+        sb.AppendLine("%%EOF");
+
+        return Encoding.ASCII.GetBytes(sb.ToString());
+    }
+
+    private static byte[] CreatePdfWithMissingTilingPatternFill()
+    {
+        const string content = "/Pattern cs\n/Missing scn\n80 80 80 80 re f\n";
+        var sb = new StringBuilder();
+        sb.AppendLine("%PDF-1.4");
+        var offsets = new long[5];
+
+        offsets[1] = sb.Length;
+        sb.AppendLine("1 0 obj");
+        sb.AppendLine("<< /Type /Catalog /Pages 2 0 R >>");
+        sb.AppendLine("endobj");
+
+        offsets[2] = sb.Length;
+        sb.AppendLine("2 0 obj");
+        sb.AppendLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+        sb.AppendLine("endobj");
+
+        offsets[3] = sb.Length;
+        sb.AppendLine("3 0 obj");
+        sb.AppendLine("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 300] /Contents 4 0 R");
+        sb.AppendLine("   /Resources << /Pattern << >> >>");
+        sb.AppendLine(">>");
+        sb.AppendLine("endobj");
+
+        offsets[4] = sb.Length;
+        sb.AppendLine("4 0 obj");
+        sb.AppendLine($"<< /Length {content.Length} >>");
+        sb.AppendLine("stream");
+        sb.Append(content);
+        sb.AppendLine("endstream");
+        sb.AppendLine("endobj");
+
+        var xrefPos = sb.Length;
+        sb.AppendLine("xref");
+        sb.AppendLine("0 5");
+        sb.AppendLine("0000000000 65535 f ");
+        for (int i = 1; i <= 4; i++)
+            sb.AppendLine($"{offsets[i]:D10} 00000 n ");
+        sb.AppendLine("trailer");
+        sb.AppendLine("<< /Root 1 0 R /Size 5 >>");
         sb.AppendLine("startxref");
         sb.AppendLine(xrefPos.ToString());
         sb.AppendLine("%%EOF");

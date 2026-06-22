@@ -511,10 +511,7 @@ internal partial class RenderContext
         finally
         {
             _resourcesStack.Clear();
-            DisposeImageBitmapCache();
-            foreach (var typeface in _embeddedTypefaces.Values)
-                typeface.Dispose();
-            _embeddedTypefaces.Clear();
+            DisposeOwnedResources();
         }
     }
 
@@ -3839,6 +3836,14 @@ internal partial class RenderContext
         _imageBitmapByStream.Clear();
     }
 
+    private void DisposeOwnedResources()
+    {
+        DisposeImageBitmapCache();
+        foreach (var typeface in _embeddedTypefaces.Values)
+            typeface.Dispose();
+        _embeddedTypefaces.Clear();
+    }
+
     private static bool TryGetImageReferenceKey(
         Pdfe.Core.Primitives.PdfStream imageStream,
         out (int ObjectNumber, int Generation) key)
@@ -4094,10 +4099,7 @@ internal partial class RenderContext
             finally
             {
                 child._resourcesStack.Clear();
-                child.DisposeImageBitmapCache();
-                foreach (var typeface in child._embeddedTypefaces.Values)
-                    typeface.Dispose();
-                child._embeddedTypefaces.Clear();
+                child.DisposeOwnedResources();
             }
 
             return bitmap;
@@ -6390,9 +6392,9 @@ internal partial class RenderContext
             var inv = inverseCtm.Value;
             _canvas.Concat(in inv);
             _canvas.Concat(in patternMatrix);
+            _state.FillPatternName = null;
             if (paintType == 2)
             {
-                _state.FillPatternName = null;
                 _state.StrokeColor = savedState.FillColor;
                 _state.FillColor = savedState.FillColor;
                 _state.StrokeAlpha = savedState.FillAlpha;
@@ -6467,6 +6469,8 @@ internal partial class RenderContext
         if (cellMinX > cellMaxX || cellMinY > cellMaxY)
             return true;
 
+        var cellBounds = new SKRect(0, 0, xStep, yStep);
+
         var contributionMinX = (float)(Math.Ceiling((0 - bbox.Right + epsilon) / xStep) * xStep);
         var contributionMaxX = (float)(Math.Floor((xStep - bbox.Left - epsilon) / xStep) * xStep);
         var contributionMinY = (float)(Math.Ceiling((0 - bbox.Bottom + epsilon) / yStep) * yStep);
@@ -6474,8 +6478,64 @@ internal partial class RenderContext
         if (contributionMinX > contributionMaxX || contributionMinY > contributionMaxY)
             return true;
 
-        const int maxContentInstances = 8192;
-        var contentInstances = 0;
+        const int maxCellContentInstances = 4096;
+        var origins = new List<SKPoint>();
+        for (var relY = contributionMinY; relY <= contributionMaxY + epsilon; relY += yStep)
+        {
+            for (var relX = contributionMinX; relX <= contributionMaxX + epsilon; relX += xStep)
+            {
+                if (origins.Count >= maxCellContentInstances)
+                    return false;
+
+                var tileBounds = new SKRect(
+                    relX + bbox.Left,
+                    relY + bbox.Top,
+                    relX + bbox.Right,
+                    relY + bbox.Bottom);
+                if (tileBounds.IntersectsWith(cellBounds))
+                    origins.Add(new SKPoint(relX, relY));
+            }
+        }
+
+        if (origins.Count == 0)
+            return true;
+
+        var cellCountX = 1 + (long)Math.Floor((cellMaxX - cellMinX) / xStep);
+        var cellCountY = 1 + (long)Math.Floor((cellMaxY - cellMinY) / yStep);
+        const long maxDirectContentInstances = 8192;
+        if (cellCountX > 0 &&
+            cellCountY > 0 &&
+            cellCountX * cellCountY * origins.Count <= maxDirectContentInstances)
+        {
+            return RenderDirectComposedTilingPatternCells(
+                content,
+                clip,
+                bbox,
+                xStep,
+                yStep,
+                origins,
+                cellMinX,
+                cellMaxX,
+                cellMinY,
+                cellMaxY);
+        }
+
+        return RenderRepeatedComposedTilingPatternCell(content, clip, bbox, cellBounds, origins);
+    }
+
+    private bool RenderDirectComposedTilingPatternCells(
+        byte[] content,
+        SKRect clip,
+        SKRect bbox,
+        float xStep,
+        float yStep,
+        IReadOnlyList<SKPoint> origins,
+        float cellMinX,
+        float cellMaxX,
+        float cellMinY,
+        float cellMaxY)
+    {
+        const float epsilon = 0.0001f;
         for (var cellY = cellMinY; cellY <= cellMaxY + epsilon; cellY += yStep)
         {
             for (var cellX = cellMinX; cellX <= cellMaxX + epsilon; cellX += xStep)
@@ -6491,26 +6551,8 @@ internal partial class RenderContext
                     // Antialiased clipping here creates repeat seams on thin pattern strokes.
                     _canvas.ClipRect(cell, SKClipOperation.Intersect, antialias: false);
 
-                    for (var relY = contributionMinY; relY <= contributionMaxY + epsilon; relY += yStep)
-                    {
-                        for (var relX = contributionMinX; relX <= contributionMaxX + epsilon; relX += xStep)
-                        {
-                            if (++contentInstances > maxContentInstances)
-                                return false;
-
-                            var tileOriginX = cellX + relX;
-                            var tileOriginY = cellY + relY;
-                            var tileBounds = new SKRect(
-                                tileOriginX + bbox.Left,
-                                tileOriginY + bbox.Top,
-                                tileOriginX + bbox.Right,
-                                tileOriginY + bbox.Bottom);
-                            if (!tileBounds.IntersectsWith(cell))
-                                continue;
-
-                            RenderTilingPatternContentInstance(content, tileOriginX, tileOriginY, bbox);
-                        }
-                    }
+                    foreach (var origin in origins)
+                        RenderTilingPatternContentInstance(content, cellX + origin.X, cellY + origin.Y, bbox);
                 }
                 finally
                 {
@@ -6520,6 +6562,73 @@ internal partial class RenderContext
         }
 
         return true;
+    }
+
+    private bool RenderRepeatedComposedTilingPatternCell(
+        byte[] content,
+        SKRect clip,
+        SKRect bbox,
+        SKRect cellBounds,
+        IReadOnlyList<SKPoint> origins)
+    {
+        using var recorder = new SKPictureRecorder();
+        var cellCanvas = recorder.BeginRecording(cellBounds);
+        RenderContext? child = null;
+        SKPicture? cellPicture = null;
+        var recordingEnded = false;
+        try
+        {
+            cellCanvas.Save();
+            cellCanvas.ClipRect(cellBounds, SKClipOperation.Intersect, antialias: false);
+
+            child = new RenderContext(cellCanvas, _page, _options, _cancellationToken);
+            CopyRenderScopeTo(child);
+            child._state = _state.Clone();
+            child._state.FillPatternName = null;
+            child._tilingPatternDepth = _tilingPatternDepth;
+
+            foreach (var origin in origins)
+                child.RenderTilingPatternContentInstance(content, origin.X, origin.Y, bbox);
+
+            cellCanvas.Restore();
+            cellPicture = recorder.EndRecording();
+            recordingEnded = true;
+            if (cellPicture == null)
+                return false;
+
+            using var shader = SKShader.CreatePicture(
+                cellPicture,
+                SKShaderTileMode.Repeat,
+                SKShaderTileMode.Repeat,
+                SKFilterMode.Nearest,
+                cellBounds);
+            using var paint = new SKPaint
+            {
+                Shader = shader,
+                IsAntialias = _options.AntiAlias
+            };
+
+            _canvas.DrawRect(clip, paint);
+            return true;
+        }
+        finally
+        {
+            if (!recordingEnded)
+                recorder.EndRecording()?.Dispose();
+            child?._resourcesStack.Clear();
+            child?._optionalContentVisibilityStack.Clear();
+            child?.DisposeOwnedResources();
+            cellPicture?.Dispose();
+        }
+    }
+
+    private void CopyRenderScopeTo(RenderContext child)
+    {
+        foreach (var resources in _resourcesStack.Reverse())
+            child._resourcesStack.Push(resources);
+        foreach (var visible in _optionalContentVisibilityStack.Reverse())
+            child._optionalContentVisibilityStack.Push(visible);
+        child._hiddenOptionalContentDepth = _hiddenOptionalContentDepth;
     }
 
     private void RenderTilingPatternContentInstance(byte[] content, float tx, float ty, SKRect bbox)
