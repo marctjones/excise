@@ -102,6 +102,24 @@ public class VisualDiffCommandTests
     }
 
     [Fact]
+    public void AnalyzeVisualDiff_SparseRepeatedLinework_ClassifiesAsTexture()
+    {
+        using var reference = CreateSolidBitmap(80, 80, SKColors.White);
+        using var actual = CreateSolidBitmap(80, 80, SKColors.White);
+        for (var y = 10; y <= 60; y += 10)
+        {
+            DrawHorizontalLine(reference, 10, 70, y, SKColors.Blue);
+            DrawHorizontalLine(actual, 10, 70, y + 1, SKColors.Blue);
+        }
+
+        var report = Program.AnalyzeVisualDiff(actual, reference, tolerance: 16);
+
+        report.category.Should().Be("localized-linework-or-texture");
+        report.humanImpact.Should().Be("medium");
+        report.darkPixelBalance.Should().BeGreaterThan(0.75);
+    }
+
+    [Fact]
     public async Task VisualDiffCommand_WritesJsonAndTriptych()
     {
         var root = Path.Combine(Path.GetTempPath(), "pdfe-visual-diff-" + Guid.NewGuid().ToString("N"));
@@ -184,5 +202,11 @@ public class VisualDiffCommandTests
             bitmap.SetPixel(x + 9, y + row, SKColors.Black);
         for (var col = 0; col < 10; col++)
             bitmap.SetPixel(x + col, y + 6, SKColors.Black);
+    }
+
+    private static void DrawHorizontalLine(SKBitmap bitmap, int left, int right, int y, SKColor color)
+    {
+        for (var x = left; x < right; x++)
+            bitmap.SetPixel(x, y, color);
     }
 }

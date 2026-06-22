@@ -201,6 +201,8 @@ partial class Program
             meanDiffLuminance,
             meanDiffChroma,
             regions.FirstOrDefault()?.pixelCount ?? 0,
+            regions.FirstOrDefault()?.width ?? 0,
+            regions.FirstOrDefault()?.height ?? 0,
             regions.FirstOrDefault()?.density ?? 0,
             darkPixelBalance,
             pixelCount);
@@ -384,6 +386,8 @@ partial class Program
         double meanDiffLuminance,
         double meanDiffChroma,
         int largestRegionPixels,
+        int largestRegionWidth,
+        int largestRegionHeight,
         double largestRegionDensity,
         double darkPixelBalance,
         int pixelCount)
@@ -397,6 +401,20 @@ partial class Program
 
         if (meanDiffLuminance <= 18 && meanAbsoluteError <= 24)
             return "color-tone-or-texture";
+
+        var largestRegionMinSide = Math.Min(largestRegionWidth, largestRegionHeight);
+        var largestRegionMaxSide = Math.Max(largestRegionWidth, largestRegionHeight);
+        var largestRegionAspect = largestRegionMinSide == 0
+            ? 0
+            : (double)largestRegionMaxSide / largestRegionMinSide;
+
+        if (largestRegionFraction >= 0.01 &&
+            (largestRegionDensity < 0.30 || largestRegionAspect >= 8) &&
+            darkPixelBalance >= 0.75 &&
+            meanAbsoluteError <= 20)
+        {
+            return "localized-linework-or-texture";
+        }
 
         if (largestRegionFraction >= 0.01 &&
             largestRegionDensity >= 0.60 &&
@@ -442,6 +460,7 @@ partial class Program
             "color-tone-or-texture" => "medium",
             "localized-color-or-image-content" => "medium",
             "small-text-antialiasing" => "low",
+            "localized-linework-or-texture" => "medium",
             "structural-or-missing-content-candidate" => "high",
             "localized-text-or-geometry" when diffFraction >= 0.03 => "high",
             "localized-text-or-geometry" => "medium",
