@@ -358,9 +358,11 @@ internal partial class RenderContext
     // font encoding. This preserves custom subset glyph names such as /g18
     // that do not have Unicode mappings but do exist in embedded CFF charsets.
     private string?[]? _currentCodeToGlyphName;
+    private Pdfe.Core.Primitives.PdfDictionary? _currentFontDict;
 
     // Typefaces loaded from the PDF's own embedded font streams
-    // (/FontFile2 = TrueType, /FontFile3 = OpenType/CFF). Keyed by the
+    // (/FontFile = Type 1, /FontFile2 = TrueType, /FontFile3 = OpenType/CFF).
+    // Keyed by the
     // resolved /Font dictionary's reference identity (PdfDocument.Resolve
     // caches by object number, so two ResolveFontFromActiveResources calls
     // for the same indirect ref return the same C# instance). Keying by
@@ -403,6 +405,7 @@ internal partial class RenderContext
     // simple-font /Widths). When _currentFontIsType0 is true, content-stream
     // bytes must be parsed 2 at a time and rendered via glyph ID, not Unicode.
     private bool _currentFontIsType0;
+    private bool _currentFontIsType3;
     // True when /FontFile, /FontFile2, or /FontFile3 produced a usable
     // SKTypeface — i.e. Skia is rendering with the actual PDF font and
     // its MeasureText reports correct advances. False means we
@@ -438,6 +441,7 @@ internal partial class RenderContext
     // resource name but different physical fonts don't collide.
     private readonly Dictionary<Pdfe.Core.Primitives.PdfDictionary, Dictionary<int, int>?> _embeddedCffCidToGlyph = new();
     private readonly Dictionary<Pdfe.Core.Primitives.PdfDictionary, CidCMap?> _type0EncodingCMaps = new();
+    private readonly HashSet<Pdfe.Core.Primitives.PdfStream> _type3GlyphStack = new();
     private readonly Dictionary<(int ObjectNumber, int Generation, int TargetWidth, int TargetHeight), SoftMaskAlpha?> _softMaskAlphaByReference = new();
     private readonly Dictionary<Pdfe.Core.Primitives.PdfStream, Dictionary<(int TargetWidth, int TargetHeight), SoftMaskAlpha?>> _softMaskAlphaByStream =
         new(ReferenceEqualityComparer.Instance);
@@ -1176,6 +1180,9 @@ internal partial class RenderContext
         // XObject's /Resources, falling back to the page) to determine the
         // base font and encoding.
         var fontDict = ResolveFontFromActiveResources(fontName);
+        var fontSubtype = fontDict?.GetNameOrNull("Subtype");
+        _currentFontDict = fontDict;
+        _currentFontIsType3 = fontSubtype == "Type3";
         var baseFont = fontDict?.GetNameOrNull("BaseFont") ?? "Helvetica";
 
         // /Encoding can be either a Name (e.g. /WinAnsiEncoding) or a Dictionary
@@ -1195,6 +1202,13 @@ internal partial class RenderContext
         if (encodingDict != null)
         {
             BuildEncodingMaps(encodingDict, encodingName);
+        }
+        else if (_currentFontIsType3)
+        {
+            var map = BuildBaseEncodingTable(encodingName);
+            _currentCodeToUnicode = map;
+            _currentCodeToGlyphName = BuildBaseEncodingGlyphNameTable(map);
+            _currentUnicodeToCode = BuildUnicodeToCodeMap(map);
         }
 
         // Parse the font's glyph width table FIRST. The CFF→OpenType wrapper
@@ -1237,7 +1251,7 @@ internal partial class RenderContext
 
         // Type0 (composite CID) fonts need a completely different content-stream
         // parse (2 bytes per character, widths indexed via /W not /Widths).
-        _currentFontIsType0 = fontDict?.GetNameOrNull("Subtype") == "Type0";
+        _currentFontIsType0 = fontSubtype == "Type0";
         _currentCidWidths = null;
         _currentCidDefaultWidth = 1000f;
         _currentCidToGidMap = null;
@@ -1809,13 +1823,20 @@ internal partial class RenderContext
 
         _currentCodeToUnicode = map;
         _currentCodeToGlyphName = glyphNames;
-        _currentUnicodeToCode = new Dictionary<char, byte>(256);
+        _currentUnicodeToCode = BuildUnicodeToCodeMap(map);
+    }
+
+    private static Dictionary<char, byte> BuildUnicodeToCodeMap(char[] map)
+    {
+        var unicodeToCode = new Dictionary<char, byte>(256);
         for (int b = 0; b < 256; b++)
         {
             var c = map[b];
-            if (c != '\0' && !_currentUnicodeToCode.ContainsKey(c))
-                _currentUnicodeToCode[c] = (byte)b;
+            if (c != '\0' && !unicodeToCode.ContainsKey(c))
+                unicodeToCode[c] = (byte)b;
         }
+
+        return unicodeToCode;
     }
 
     private static char[] BuildBaseEncodingTable(string encodingName)
@@ -2074,7 +2095,9 @@ internal partial class RenderContext
     private void ShowTextBytes(byte[] bytes)
     {
         if (bytes.Length == 0) return;
-        if (_currentFontIsType0)
+        if (_currentFontIsType3)
+            RenderType3Bytes(bytes);
+        else if (_currentFontIsType0)
             RenderCidBytes(bytes);
         else
             RenderText(DecodeTextBytes(bytes), bytes);
@@ -2550,6 +2573,161 @@ internal partial class RenderContext
             font,
             new ReadOnlySpan<SKPoint>(positions, 0, count));
         return builder.Build();
+    }
+
+    private void RenderType3Bytes(byte[] bytes)
+    {
+        if (!_inTextBlock || _currentFontDict == null || bytes.Length == 0)
+            return;
+
+        var charProcs = ResolveDict(_currentFontDict, "CharProcs");
+        var fontResources = ResolveDict(_currentFontDict, "Resources");
+        var fontMatrix = GetType3FontMatrix(_currentFontDict);
+        var canPaint = !IsOptionalContentSuppressed && _textState.RenderMode is not (3 or 7);
+        var cursorTextUnits = 0f;
+        var th = _textState.HorizontalScale / 100.0f;
+
+        foreach (var code in bytes)
+        {
+            if (canPaint &&
+                charProcs != null &&
+                TryResolveType3CharProc(charProcs, code, out var charProc))
+            {
+                RenderType3Glyph(charProc, fontResources, fontMatrix, cursorTextUnits, th);
+            }
+
+            cursorTextUnits += GetType3TextSpaceAdvance(code, fontMatrix);
+            cursorTextUnits += _textState.CharSpacing;
+            if (code == 0x20)
+                cursorTextUnits += _textState.WordSpacing;
+        }
+
+        var effectiveSize = GetEffectiveFontSize();
+        var width = cursorTextUnits * effectiveSize * GetTextMatrixXYRatio() * th;
+        AdvanceTextMatrixX(width);
+    }
+
+    private bool TryResolveType3CharProc(
+        Pdfe.Core.Primitives.PdfDictionary charProcs,
+        byte code,
+        out Pdfe.Core.Primitives.PdfStream charProc)
+    {
+        charProc = null!;
+        var glyphName = GetGlyphNameForCode(code);
+        if (string.IsNullOrEmpty(glyphName))
+            return false;
+
+        var charProcObj = charProcs.GetOptional(glyphName);
+        if (charProcObj == null)
+            return false;
+
+        if (_page.Document.Resolve(charProcObj) is not Pdfe.Core.Primitives.PdfStream stream)
+            return false;
+
+        charProc = stream;
+        return true;
+    }
+
+    private string? GetGlyphNameForCode(byte code)
+    {
+        var glyphName = _currentCodeToGlyphName?[code];
+        if (!string.IsNullOrEmpty(glyphName))
+            return glyphName;
+
+        var unicode = GetUnicodeForCode(code);
+        return unicode != '\0' && AdobeGlyphList.TryGetName(unicode, out var name)
+            ? name
+            : null;
+    }
+
+    private SKMatrix GetType3FontMatrix(Pdfe.Core.Primitives.PdfDictionary fontDict)
+    {
+        var matrixArray = ResolveArray(fontDict, "FontMatrix");
+        return matrixArray != null && matrixArray.Count >= 6
+            ? GetMatrix(matrixArray)
+            : new SKMatrix(0.001f, 0, 0, 0, 0.001f, 0, 0, 0, 1);
+    }
+
+    private float GetType3TextSpaceAdvance(byte code, SKMatrix fontMatrix)
+    {
+        var rawWidth = GetSimpleFontWidth(code);
+        var fontMatrixX = Math.Abs(fontMatrix.ScaleX) > 1e-9f ? fontMatrix.ScaleX : 0.001f;
+        return rawWidth * fontMatrixX;
+    }
+
+    private float GetSimpleFontWidth(byte code)
+    {
+        if (_currentFontWidths == null || _currentFontWidths.Length == 0)
+            return _currentFontMissingWidth;
+
+        var index = code - _currentFontFirstChar;
+        return index >= 0 && index < _currentFontWidths.Length
+            ? _currentFontWidths[index]
+            : _currentFontMissingWidth;
+    }
+
+    private void RenderType3Glyph(
+        Pdfe.Core.Primitives.PdfStream charProc,
+        Pdfe.Core.Primitives.PdfDictionary? fontResources,
+        SKMatrix fontMatrix,
+        float cursorTextUnits,
+        float horizontalScale)
+    {
+        if (!_type3GlyphStack.Add(charProc))
+            return;
+
+        var savedCanvasCount = _canvas.SaveCount;
+        var savedStateStack = SnapshotGraphicsStateStack();
+        var savedState = _state.Clone();
+        var savedTextState = _textState.Clone();
+        var savedFontState = SnapshotCurrentFontState();
+        var savedInTextBlock = _inTextBlock;
+        var savedCurrentPath = _currentPath;
+        var savedPendingClipEvenOdd = _pendingClipEvenOdd;
+        var savedPendingTextClipPath = _pendingTextClipPath;
+
+        _currentPath = null;
+        _pendingClipEvenOdd = null;
+        _pendingTextClipPath = null;
+        _inTextBlock = false;
+        _canvas.Save();
+        _resourcesStack.Push(fontResources);
+
+        try
+        {
+            var textMatrix = new SKMatrix(
+                _textState.TextMatrixA,
+                _textState.TextMatrixC,
+                _textState.TextMatrixE,
+                _textState.TextMatrixB,
+                _textState.TextMatrixD,
+                _textState.TextMatrixF + _textState.TextRise,
+                0,
+                0,
+                1);
+            _canvas.Concat(in textMatrix);
+            _canvas.Scale(_textState.FontSize * horizontalScale, _textState.FontSize);
+            _canvas.Translate(cursorTextUnits, 0);
+            _canvas.Concat(in fontMatrix);
+
+            ExecuteContentBytes(charProc.DecodedData);
+        }
+        finally
+        {
+            _currentPath?.Dispose();
+            _pendingTextClipPath?.Dispose();
+            RestoreGraphicsStateStack(savedStateStack);
+            _state = savedState;
+            _textState = savedTextState;
+            RestoreCurrentFontState(savedFontState);
+            _inTextBlock = savedInTextBlock;
+            _currentPath = savedCurrentPath;
+            _pendingClipEvenOdd = savedPendingClipEvenOdd;
+            _pendingTextClipPath = savedPendingTextClipPath;
+            _resourcesStack.Pop();
+            _canvas.RestoreToCount(savedCanvasCount);
+            _type3GlyphStack.Remove(charProc);
+        }
     }
 
     // Type0 rendering path. Content-stream bytes are character codes; the
@@ -6032,6 +6210,71 @@ internal partial class RenderContext
         for (var i = snapshot.Length - 1; i >= 0; i--)
             _stateStack.Push(snapshot[i]);
     }
+
+    private CurrentFontState SnapshotCurrentFontState() => new(
+        _currentFontWidths,
+        _currentFontFirstChar,
+        _currentFontMissingWidth,
+        _currentCodeToUnicode,
+        _currentUnicodeToCode,
+        _currentCodeToGlyphName,
+        _currentFontDict,
+        _currentTypeface,
+        _currentByteToGlyph,
+        _currentFontEncoding,
+        _currentFontIsType0,
+        _currentFontIsType3,
+        _currentFontHasEmbeddedProgram,
+        _currentCidWidths,
+        _currentCidDefaultWidth,
+        _currentCidUseUnicodeCmap,
+        _currentCidEncodingCMap,
+        _currentCidToGidMap,
+        _currentCffCidToGlyph);
+
+    private void RestoreCurrentFontState(CurrentFontState state)
+    {
+        _currentFontWidths = state.FontWidths;
+        _currentFontFirstChar = state.FontFirstChar;
+        _currentFontMissingWidth = state.FontMissingWidth;
+        _currentCodeToUnicode = state.CodeToUnicode;
+        _currentUnicodeToCode = state.UnicodeToCode;
+        _currentCodeToGlyphName = state.CodeToGlyphName;
+        _currentFontDict = state.FontDict;
+        _currentTypeface = state.Typeface;
+        _currentByteToGlyph = state.ByteToGlyph;
+        _currentFontEncoding = state.FontEncoding;
+        _currentFontIsType0 = state.FontIsType0;
+        _currentFontIsType3 = state.FontIsType3;
+        _currentFontHasEmbeddedProgram = state.FontHasEmbeddedProgram;
+        _currentCidWidths = state.CidWidths;
+        _currentCidDefaultWidth = state.CidDefaultWidth;
+        _currentCidUseUnicodeCmap = state.CidUseUnicodeCmap;
+        _currentCidEncodingCMap = state.CidEncodingCMap;
+        _currentCidToGidMap = state.CidToGidMap;
+        _currentCffCidToGlyph = state.CffCidToGlyph;
+    }
+
+    private sealed record CurrentFontState(
+        float[]? FontWidths,
+        int FontFirstChar,
+        float FontMissingWidth,
+        char[]? CodeToUnicode,
+        Dictionary<char, byte>? UnicodeToCode,
+        string?[]? CodeToGlyphName,
+        Pdfe.Core.Primitives.PdfDictionary? FontDict,
+        SKTypeface? Typeface,
+        ushort[]? ByteToGlyph,
+        string FontEncoding,
+        bool FontIsType0,
+        bool FontIsType3,
+        bool FontHasEmbeddedProgram,
+        Dictionary<int, float>? CidWidths,
+        float CidDefaultWidth,
+        bool CidUseUnicodeCmap,
+        CidCMap? CidEncodingCMap,
+        ushort[]? CidToGidMap,
+        Dictionary<int, int>? CffCidToGlyph);
 
     #endregion
 

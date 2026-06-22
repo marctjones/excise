@@ -3763,6 +3763,28 @@ public class SkiaRendererTests
     #region Type 3 Font Operators (d0, d1)
 
     [Fact]
+    public void RenderPage_Type3Font_RendersCharProcPathGlyph()
+    {
+        // Arrange
+        var pdfData = CreatePdfWithType3Glyph(
+            pageContent: "1 0 0 rg BT /F1 24 Tf 100 120 Td <41> Tj ET",
+            charProcContent: "500 0 0 0 500 700 d1 0 0 500 700 re f");
+        using var doc = PdfDocument.Open(pdfData);
+        var renderer = new SkiaRenderer();
+
+        // Act
+        using var bitmap = renderer.RenderPage(doc.GetPage(1));
+
+        // Assert - glyph A is a 12pt x 16.8pt red rectangle at (100, 120).
+        var pixelX = (int)(106 * 150 / 72);
+        var pixelY = bitmap.Height - (int)(128 * 150 / 72);
+        var pixel = bitmap.GetPixel(pixelX, pixelY);
+        pixel.Red.Should().BeGreaterThan(180);
+        pixel.Green.Should().BeLessThan(80);
+        pixel.Blue.Should().BeLessThan(80);
+    }
+
+    [Fact]
     public void RenderPage_Type3Font_d0_SetsGlyphWidth()
     {
         // Arrange - d0 operator sets glyph width for Type 3 fonts
@@ -4540,6 +4562,79 @@ public class SkiaRendererTests
 
     private static byte[] CreatePdfWithContent(string content)
         => CreatePdfWithContentAndPageSize(content, width: 612, height: 792);
+
+    private static byte[] CreatePdfWithType3Glyph(string pageContent, string charProcContent)
+    {
+        using var ms = new MemoryStream();
+        using var writer = new StreamWriter(ms, System.Text.Encoding.ASCII, leaveOpen: true);
+        writer.NewLine = "\n";
+
+        writer.WriteLine("%PDF-1.4");
+        writer.Flush();
+
+        var offsets = new long[7];
+
+        offsets[1] = ms.Position;
+        writer.WriteLine("1 0 obj");
+        writer.WriteLine("<< /Type /Catalog /Pages 2 0 R >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[2] = ms.Position;
+        writer.WriteLine("2 0 obj");
+        writer.WriteLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[3] = ms.Position;
+        writer.WriteLine("3 0 obj");
+        writer.WriteLine("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[4] = ms.Position;
+        writer.WriteLine("4 0 obj");
+        writer.WriteLine($"<< /Length {pageContent.Length} >>");
+        writer.WriteLine("stream");
+        writer.Write(pageContent);
+        writer.WriteLine();
+        writer.WriteLine("endstream");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[5] = ms.Position;
+        writer.WriteLine("5 0 obj");
+        writer.WriteLine("<< /Type /Font /Subtype /Type3 /Name /F1 /FontBBox [0 0 500 700] /FontMatrix [0.001 0 0 0.001 0 0] /CharProcs << /A 6 0 R >> /Encoding << /Type /Encoding /Differences [65 /A] >> /FirstChar 65 /LastChar 65 /Widths [500] /Resources << >> >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[6] = ms.Position;
+        writer.WriteLine("6 0 obj");
+        writer.WriteLine($"<< /Length {charProcContent.Length} >>");
+        writer.WriteLine("stream");
+        writer.Write(charProcContent);
+        writer.WriteLine();
+        writer.WriteLine("endstream");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        long xrefPos = ms.Position;
+        writer.WriteLine("xref");
+        writer.WriteLine("0 7");
+        writer.WriteLine("0000000000 65535 f ");
+        for (int i = 1; i <= 6; i++)
+            writer.WriteLine($"{offsets[i]:D10} 00000 n ");
+        writer.Flush();
+
+        writer.WriteLine("trailer");
+        writer.WriteLine("<< /Root 1 0 R /Size 7 >>");
+        writer.WriteLine("startxref");
+        writer.WriteLine(xrefPos.ToString());
+        writer.WriteLine("%%EOF");
+        writer.Flush();
+
+        return ms.ToArray();
+    }
 
     private static byte[] CreatePdfWithContentPageSizeAndCropBox(string content, int width, int height, string cropBox)
     {
