@@ -2117,7 +2117,7 @@ internal partial class RenderContext
 
         // SkiaSharp 3 separated SKPaint and SKFont — draw calls now take
         // both arguments rather than a paint that wraps a font.
-        using var font = new SKFont(_currentTypeface, effectiveSize);
+        using var font = CreateTextFont(_currentTypeface, effectiveSize);
         using var fillPaint = CreateTextPaint(SKPaintStyle.Fill, _state.FillColor, _state.FillAlpha);
         using var strokePaint = CreateTextPaint(SKPaintStyle.Stroke, _state.StrokeColor, _state.StrokeAlpha);
         using var measurePaint = new SKPaint { IsAntialias = _options.AntiAlias };
@@ -2346,6 +2346,17 @@ internal partial class RenderContext
 
     private static bool TextRenderModeAddsClip(int mode) => mode is 4 or 5 or 6 or 7;
 
+    private static SKFont CreateTextFont(SKTypeface typeface, float size)
+    {
+        return new SKFont(typeface, size)
+        {
+            Edging = SKFontEdging.Antialias,
+            Hinting = SKFontHinting.Normal,
+            LinearMetrics = true,
+            Subpixel = true
+        };
+    }
+
     private void DrawFallbackGlyph(string glyphText, float cursor, float horizontalScale, SKFont font, SKPaint paint)
     {
         if (Math.Abs(horizontalScale - 1f) < 0.001f)
@@ -2552,7 +2563,7 @@ internal partial class RenderContext
 
         var count = cids.Length;
         var effectiveSize = GetEffectiveFontSize();
-        using var font = new SKFont(_currentTypeface, effectiveSize);
+        using var font = CreateTextFont(_currentTypeface, effectiveSize);
         // Two parallel arrays: CIDs (used for /W width lookup, which is
         // keyed by CID per spec) and GIDs (what Skia actually draws). The
         // CID → GID resolution depends on the descendant font subtype:
