@@ -936,6 +936,29 @@ public class SkiaRendererCoverageTests
     }
 
     [Fact]
+    public void RenderPage_PatternType1TilingFill_ClipsContentToPatternBBox()
+    {
+        var pdfData = CreatePdfWithTilingPatternBBoxClip();
+        using var doc = PdfDocument.Open(pdfData);
+        var renderer = new SkiaRenderer();
+
+        using var bitmap = renderer.RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var redCellPixel = bitmap.GetPixel(106, bitmap.Height - 106);
+        redCellPixel.Red.Should().BeGreaterThan(200,
+            "pattern content inside the declared BBox should paint");
+        redCellPixel.Blue.Should().BeLessThan(80);
+
+        var outsideBBoxPixel = bitmap.GetPixel(116, bitmap.Height - 106);
+        outsideBBoxPixel.Red.Should().BeGreaterThan(240,
+            "pattern content outside the BBox should be clipped rather than leaking into the step gap");
+        outsideBBoxPixel.Green.Should().BeGreaterThan(240);
+        outsideBBoxPixel.Blue.Should().BeGreaterThan(240);
+    }
+
+    [Fact]
     public void RenderPage_FunctionBasedShading_EvaluatesAcrossDomain()
     {
         var pdfData = CreatePdfWithFunctionBasedShading();
@@ -1141,6 +1164,62 @@ public class SkiaRendererCoverageTests
         offsets[5] = sb.Length;
         sb.AppendLine("5 0 obj");
         sb.AppendLine($"<< /PatternType 1 /PaintType 1 /TilingType 1 /BBox [0 0 20 20] /XStep 20 /YStep 20 /Length {patternContent.Length} >>");
+        sb.AppendLine("stream");
+        sb.Append(patternContent);
+        sb.AppendLine("endstream");
+        sb.AppendLine("endobj");
+
+        var xrefPos = sb.Length;
+        sb.AppendLine("xref");
+        sb.AppendLine("0 6");
+        sb.AppendLine("0000000000 65535 f ");
+        for (int i = 1; i <= 5; i++)
+            sb.AppendLine($"{offsets[i]:D10} 00000 n ");
+        sb.AppendLine("trailer");
+        sb.AppendLine("<< /Root 1 0 R /Size 6 >>");
+        sb.AppendLine("startxref");
+        sb.AppendLine(xrefPos.ToString());
+        sb.AppendLine("%%EOF");
+
+        return Encoding.ASCII.GetBytes(sb.ToString());
+    }
+
+    private static byte[] CreatePdfWithTilingPatternBBoxClip()
+    {
+        const string content = "/Pattern cs\n/P1 scn\n100 100 80 40 re f\n";
+        const string patternContent = "1 0 0 rg\n0 0 10 10 re f\n0 0 1 rg\n10 0 10 10 re f\n";
+        var sb = new StringBuilder();
+        sb.AppendLine("%PDF-1.4");
+        var offsets = new long[6];
+
+        offsets[1] = sb.Length;
+        sb.AppendLine("1 0 obj");
+        sb.AppendLine("<< /Type /Catalog /Pages 2 0 R >>");
+        sb.AppendLine("endobj");
+
+        offsets[2] = sb.Length;
+        sb.AppendLine("2 0 obj");
+        sb.AppendLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+        sb.AppendLine("endobj");
+
+        offsets[3] = sb.Length;
+        sb.AppendLine("3 0 obj");
+        sb.AppendLine("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 300] /Contents 4 0 R");
+        sb.AppendLine("   /Resources << /Pattern << /P1 5 0 R >> >>");
+        sb.AppendLine(">>");
+        sb.AppendLine("endobj");
+
+        offsets[4] = sb.Length;
+        sb.AppendLine("4 0 obj");
+        sb.AppendLine($"<< /Length {content.Length} >>");
+        sb.AppendLine("stream");
+        sb.Append(content);
+        sb.AppendLine("endstream");
+        sb.AppendLine("endobj");
+
+        offsets[5] = sb.Length;
+        sb.AppendLine("5 0 obj");
+        sb.AppendLine($"<< /PatternType 1 /PaintType 1 /TilingType 1 /BBox [0 0 10 10] /XStep 20 /YStep 20 /Length {patternContent.Length} >>");
         sb.AppendLine("stream");
         sb.Append(patternContent);
         sb.AppendLine("endstream");

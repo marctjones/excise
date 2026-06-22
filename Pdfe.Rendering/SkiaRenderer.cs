@@ -6405,6 +6405,9 @@ internal partial class RenderContext
 
             var xStepAbs = Math.Abs(xStep);
             var yStepAbs = Math.Abs(yStep);
+            if (NeedsComposedTilingCell(bbox, xStepAbs, yStepAbs))
+                return RenderComposedTilingPatternCells(content, clip, bbox, xStepAbs, yStepAbs);
+
             var tileMinX = (float)(Math.Ceiling((clip.Left - bbox.Right) / xStepAbs) * xStepAbs);
             var tileMaxX = (float)(Math.Floor((clip.Right - bbox.Left) / xStepAbs) * xStepAbs);
             var tileMinY = (float)(Math.Ceiling((clip.Top - bbox.Bottom) / yStepAbs) * yStepAbs);
@@ -6447,6 +6450,123 @@ internal partial class RenderContext
             _resourcesStack.Pop();
             _canvas.Restore();
         }
+    }
+
+    private bool RenderComposedTilingPatternCells(
+        byte[] content,
+        SKRect clip,
+        SKRect bbox,
+        float xStep,
+        float yStep)
+    {
+        const float epsilon = 0.0001f;
+        var cellMinX = (float)(Math.Floor(clip.Left / xStep) * xStep);
+        var cellMaxX = (float)(Math.Floor((clip.Right - epsilon) / xStep) * xStep);
+        var cellMinY = (float)(Math.Floor(clip.Top / yStep) * yStep);
+        var cellMaxY = (float)(Math.Floor((clip.Bottom - epsilon) / yStep) * yStep);
+        if (cellMinX > cellMaxX || cellMinY > cellMaxY)
+            return true;
+
+        var contributionMinX = (float)(Math.Ceiling((0 - bbox.Right + epsilon) / xStep) * xStep);
+        var contributionMaxX = (float)(Math.Floor((xStep - bbox.Left - epsilon) / xStep) * xStep);
+        var contributionMinY = (float)(Math.Ceiling((0 - bbox.Bottom + epsilon) / yStep) * yStep);
+        var contributionMaxY = (float)(Math.Floor((yStep - bbox.Top - epsilon) / yStep) * yStep);
+        if (contributionMinX > contributionMaxX || contributionMinY > contributionMaxY)
+            return true;
+
+        const int maxContentInstances = 8192;
+        var contentInstances = 0;
+        for (var cellY = cellMinY; cellY <= cellMaxY + epsilon; cellY += yStep)
+        {
+            for (var cellX = cellMinX; cellX <= cellMaxX + epsilon; cellX += xStep)
+            {
+                var cell = new SKRect(cellX, cellY, cellX + xStep, cellY + yStep);
+                if (!cell.IntersectsWith(clip))
+                    continue;
+
+                _canvas.Save();
+                try
+                {
+                    // Pattern cell and BBox clips are lattice boundaries, not painted edges.
+                    // Antialiased clipping here creates repeat seams on thin pattern strokes.
+                    _canvas.ClipRect(cell, SKClipOperation.Intersect, antialias: false);
+
+                    for (var relY = contributionMinY; relY <= contributionMaxY + epsilon; relY += yStep)
+                    {
+                        for (var relX = contributionMinX; relX <= contributionMaxX + epsilon; relX += xStep)
+                        {
+                            if (++contentInstances > maxContentInstances)
+                                return false;
+
+                            var tileOriginX = cellX + relX;
+                            var tileOriginY = cellY + relY;
+                            var tileBounds = new SKRect(
+                                tileOriginX + bbox.Left,
+                                tileOriginY + bbox.Top,
+                                tileOriginX + bbox.Right,
+                                tileOriginY + bbox.Bottom);
+                            if (!tileBounds.IntersectsWith(cell))
+                                continue;
+
+                            RenderTilingPatternContentInstance(content, tileOriginX, tileOriginY, bbox);
+                        }
+                    }
+                }
+                finally
+                {
+                    _canvas.Restore();
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private void RenderTilingPatternContentInstance(byte[] content, float tx, float ty, SKRect bbox)
+    {
+        var savedCanvasCount = _canvas.SaveCount;
+        var savedStateStack = SnapshotGraphicsStateStack();
+        var savedPath = _currentPath;
+        var savedPendingClip = _pendingClipEvenOdd;
+        var savedPendingTextClipPath = _pendingTextClipPath;
+        var savedState = _state.Clone();
+        var savedTextState = _textState.Clone();
+        var savedFontState = SnapshotCurrentFontState();
+        var savedInTextBlock = _inTextBlock;
+        _currentPath = null;
+        _pendingClipEvenOdd = null;
+        _pendingTextClipPath = null;
+        _canvas.Save();
+        try
+        {
+            _canvas.Translate(tx, ty);
+            // Keep BBox clipping hard for the same reason as the repeat-cell clip above.
+            _canvas.ClipRect(bbox, SKClipOperation.Intersect, antialias: false);
+            ExecuteContentBytes(content);
+        }
+        finally
+        {
+            _currentPath?.Dispose();
+            _pendingTextClipPath?.Dispose();
+            RestoreGraphicsStateStack(savedStateStack);
+            _currentPath = savedPath;
+            _pendingClipEvenOdd = savedPendingClip;
+            _pendingTextClipPath = savedPendingTextClipPath;
+            _state = savedState;
+            _textState = savedTextState;
+            RestoreCurrentFontState(savedFontState);
+            _inTextBlock = savedInTextBlock;
+            _canvas.RestoreToCount(savedCanvasCount);
+        }
+    }
+
+    private static bool NeedsComposedTilingCell(SKRect bbox, float xStep, float yStep)
+    {
+        const float epsilon = 0.0001f;
+        return Math.Abs(bbox.Left) > epsilon
+            || Math.Abs(bbox.Top) > epsilon
+            || Math.Abs(bbox.Right - xStep) > epsilon
+            || Math.Abs(bbox.Bottom - yStep) > epsilon;
     }
 
     private bool RenderShadingPattern(
