@@ -1222,9 +1222,8 @@ internal partial class RenderContext
         }
 
         // Prefer a typeface loaded from the PDF's own embedded font stream
-        // (/FontFile2 = TrueType, /FontFile3 = OpenType/CFF). When no embedded
-        // data is present or the format isn't SkiaSharp-loadable (e.g. /FontFile
-        // is raw Type1 PostScript), fall through to the system-font mapping.
+        // (/FontFile = Type 1, /FontFile2 = TrueType, /FontFile3 = OpenType/CFF).
+        // When no embedded data is present, fall through to the system-font mapping.
         var toUnicodeMap = fontDict != null ? TryLoadToUnicodeMap(fontDict) : null;
         var embedded = TryLoadEmbeddedTypeface(fontDict, toUnicodeMap);
         _currentFontHasEmbeddedProgram = embedded != null;
@@ -2817,14 +2816,8 @@ internal partial class RenderContext
 
     private static SKColor CmykToColor(double c, double m, double y, double k)
     {
-        // Simple CMYK to RGB conversion (not color-managed)
-        // R = 255 × (1-C) × (1-K)
-        // G = 255 × (1-M) × (1-K)
-        // B = 255 × (1-Y) × (1-K)
-        var r = (byte)Math.Clamp(255 * (1 - c) * (1 - k), 0, 255);
-        var g = (byte)Math.Clamp(255 * (1 - m) * (1 - k), 0, 255);
-        var b = (byte)Math.Clamp(255 * (1 - y) * (1 - k), 0, 255);
-        return new SKColor(r, g, b);
+        var (r, g, b) = PdfColorSpace.ConvertDeviceCmykToRgb(c, m, y, k);
+        return RgbToColor(r, g, b);
     }
 
     #endregion
@@ -7052,7 +7045,7 @@ internal partial class RenderContext
             "DeviceRGB" or "RGB" =>
                 comps.Length >= 3 ? ToRGB(comps[0], comps[1], comps[2]) : SKColors.Black,
             "DeviceCMYK" or "CMYK" =>
-                comps.Length >= 4 ? CmykToRgbColor(comps[0], comps[1], comps[2], comps[3]) : SKColors.Black,
+                comps.Length >= 4 ? CmykToColor(comps[0], comps[1], comps[2], comps[3]) : SKColors.Black,
             _ => comps.Length >= 3 ? ToRGB(comps[0], comps[1], comps[2])
                : comps.Length >= 1 ? ToGray(comps[0]) : SKColors.Black
         };
@@ -7078,12 +7071,6 @@ internal partial class RenderContext
             (byte)Math.Clamp(r * 255, 0, 255),
             (byte)Math.Clamp(g * 255, 0, 255),
             (byte)Math.Clamp(b * 255, 0, 255));
-
-    private static SKColor CmykToRgbColor(double c, double m, double y, double k)
-    {
-        var (r, g, b) = PdfColorSpace.ConvertDeviceCmykToRgb(c, m, y, k);
-        return ToRGB(r, g, b);
-    }
 
     #endregion
 

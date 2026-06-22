@@ -1490,6 +1490,31 @@ public class SkiaRendererTests
     }
 
     [Fact]
+    public void RenderPage_DirectCMYKOperator_UsesSharedPdfReferenceFallback()
+    {
+        // Arrange - nonzero K distinguishes the PDF reference fallback
+        // (1 - min(1, component + K)) from the older multiplicative shortcut.
+        var content = @"
+            0.25 0.50 0.10 0.20 k
+            100 100 200 150 re f
+        ";
+        var pdfData = CreatePdfWithContent(content);
+        using var doc = PdfDocument.Open(pdfData);
+        var renderer = new SkiaRenderer();
+
+        // Act
+        using var bitmap = renderer.RenderPage(doc.GetPage(1));
+
+        // Assert
+        var pixelX = (int)(150 * 150 / 72);
+        var pixelY = bitmap.Height - (int)(150 * 150 / 72);
+        var pixel = bitmap.GetPixel(pixelX, pixelY);
+        pixel.Red.Should().BeInRange((byte)138, (byte)142);
+        pixel.Green.Should().BeInRange((byte)74, (byte)78);
+        pixel.Blue.Should().BeInRange((byte)176, (byte)180);
+    }
+
+    [Fact]
     public void RenderPage_ColorSpace_SeparateFillAndStroke_UsesIndependentSpaces()
     {
         // Arrange - cs/CS set fill/stroke color spaces independently
