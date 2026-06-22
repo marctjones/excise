@@ -84,6 +84,24 @@ public class VisualDiffCommandTests
     }
 
     [Fact]
+    public void AnalyzeVisualDiff_SmallSparseTextEdges_ClassifiesAsLowImpactAntialiasing()
+    {
+        using var reference = CreateSolidBitmap(125, 20, SKColors.White);
+        using var actual = CreateSolidBitmap(125, 20, SKColors.White);
+        for (var offset = 0; offset < 4; offset++)
+        {
+            DrawSparseConnectedEdge(reference, x: 5 + offset * 28, y: 3);
+            DrawSparseConnectedEdge(actual, x: 6 + offset * 28, y: 3);
+        }
+
+        var report = Program.AnalyzeVisualDiff(actual, reference, tolerance: 16);
+
+        report.category.Should().Be("small-text-antialiasing");
+        report.humanImpact.Should().Be("low");
+        report.darkPixelBalance.Should().BeGreaterThan(0.95);
+    }
+
+    [Fact]
     public async Task VisualDiffCommand_WritesJsonAndTriptych()
     {
         var root = Path.Combine(Path.GetTempPath(), "pdfe-visual-diff-" + Guid.NewGuid().ToString("N"));
@@ -156,5 +174,15 @@ public class VisualDiffCommandTests
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);
         using var stream = File.OpenWrite(path);
         data.SaveTo(stream);
+    }
+
+    private static void DrawSparseConnectedEdge(SKBitmap bitmap, int x, int y)
+    {
+        for (var col = 0; col < 10; col++)
+            bitmap.SetPixel(x + col, y, SKColors.Black);
+        for (var row = 1; row < 6; row++)
+            bitmap.SetPixel(x + 9, y + row, SKColors.Black);
+        for (var col = 0; col < 10; col++)
+            bitmap.SetPixel(x + col, y + 6, SKColors.Black);
     }
 }

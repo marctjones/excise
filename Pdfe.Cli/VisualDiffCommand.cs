@@ -142,6 +142,8 @@ partial class Program
         int maxChannelDelta = 0;
         double diffLuminance = 0;
         double diffChroma = 0;
+        long actualDarkPixels = 0;
+        long referenceDarkPixels = 0;
         var left = width;
         var top = height;
         var right = -1;
@@ -154,6 +156,10 @@ partial class Program
             {
                 var pa = actual.GetPixel(x, y);
                 var pr = reference.GetPixel(x, y);
+                if (IsDarkTextPixel(pa))
+                    actualDarkPixels++;
+                if (IsDarkTextPixel(pr))
+                    referenceDarkPixels++;
                 var dR = Math.Abs(pa.Red - pr.Red);
                 var dG = Math.Abs(pa.Green - pr.Green);
                 var dB = Math.Abs(pa.Blue - pr.Blue);
@@ -185,6 +191,7 @@ partial class Program
         var rootMeanSquaredError = Math.Sqrt(sumSquared / (pixelCount * 3.0));
         var meanDiffLuminance = differingPixels == 0 ? 0 : diffLuminance / differingPixels;
         var meanDiffChroma = differingPixels == 0 ? 0 : diffChroma / differingPixels;
+        var darkPixelBalance = ComputeBalance(actualDarkPixels, referenceDarkPixels);
         var bounds = differingPixels == 0
             ? null
             : new VisualDiffBounds(left, top, right - left, bottom - top);
@@ -195,6 +202,7 @@ partial class Program
             meanDiffChroma,
             regions.FirstOrDefault()?.pixelCount ?? 0,
             regions.FirstOrDefault()?.density ?? 0,
+            darkPixelBalance,
             pixelCount);
         var humanImpact = ClassifyHumanImpact(category, diffFraction, meanAbsoluteError);
 
@@ -215,6 +223,9 @@ partial class Program
             meanAbsoluteError = meanAbsoluteError,
             rootMeanSquaredError = rootMeanSquaredError,
             maxChannelDelta = maxChannelDelta,
+            actualDarkPixels = (int)actualDarkPixels,
+            referenceDarkPixels = (int)referenceDarkPixels,
+            darkPixelBalance = darkPixelBalance,
             meanDiffLuminance = meanDiffLuminance,
             meanDiffChroma = meanDiffChroma,
             diffBounds = bounds,
@@ -349,6 +360,15 @@ partial class Program
     private static double Luminance(SKColor color)
         => 0.299 * color.Red + 0.587 * color.Green + 0.114 * color.Blue;
 
+    private static bool IsDarkTextPixel(SKColor color)
+        => Luminance(color) < 200;
+
+    private static double ComputeBalance(long a, long b)
+    {
+        var max = Math.Max(a, b);
+        return max == 0 ? 1 : (double)Math.Min(a, b) / max;
+    }
+
     private static double ChromaDistance(SKColor a, SKColor b)
     {
         var cbA = -0.168736 * a.Red - 0.331264 * a.Green + 0.5 * a.Blue;
@@ -365,6 +385,7 @@ partial class Program
         double meanDiffChroma,
         int largestRegionPixels,
         double largestRegionDensity,
+        double darkPixelBalance,
         int pixelCount)
     {
         if (diffFraction == 0)
@@ -389,7 +410,18 @@ partial class Program
             largestRegionDensity < 0.50 &&
             meanAbsoluteError >= 8)
         {
+            if (pixelCount <= 10_000 && largestRegionPixels < 100 && darkPixelBalance >= 0.50)
+                return "small-text-antialiasing";
+
             return "localized-text-or-geometry";
+        }
+
+        if (pixelCount <= 10_000 &&
+            largestRegionPixels < 100 &&
+            diffFraction >= 0.005 &&
+            darkPixelBalance >= 0.50)
+        {
+            return "small-text-antialiasing";
         }
 
         if (largestRegionFraction >= 0.01 && meanAbsoluteError >= 12)
@@ -409,6 +441,7 @@ partial class Program
             "color-tone-or-texture" when meanAbsoluteError <= 16 => "low",
             "color-tone-or-texture" => "medium",
             "localized-color-or-image-content" => "medium",
+            "small-text-antialiasing" => "low",
             "structural-or-missing-content-candidate" => "high",
             "localized-text-or-geometry" when diffFraction >= 0.03 => "high",
             "localized-text-or-geometry" => "medium",
@@ -442,6 +475,9 @@ partial class Program
         public double meanAbsoluteError { get; set; }
         public double rootMeanSquaredError { get; set; }
         public int maxChannelDelta { get; set; }
+        public int actualDarkPixels { get; set; }
+        public int referenceDarkPixels { get; set; }
+        public double darkPixelBalance { get; set; }
         public double meanDiffLuminance { get; set; }
         public double meanDiffChroma { get; set; }
         public VisualDiffBounds? diffBounds { get; set; }
