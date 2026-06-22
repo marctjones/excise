@@ -2192,6 +2192,17 @@ partial class Program
             entry.diffFraction = best.Diff;
             entry.mae = best.Mae;
             entry.bestOracle = best.Name;
+            var bestReference = best.Name switch
+            {
+                "mutool" => mutoolBmp,
+                "pdftocairo" => cairoBmp,
+                "ghostscript" => ghostscriptBmp,
+                "pdfbox" => pdfboxBmp,
+                "pdfium" => pdfiumBmp,
+                _ => null,
+            };
+            if (bestReference != null)
+                ApplyCorpusVisualDiffClassification(entry, pdfeBmp, bestReference);
 
             var passGhostscript = IsPassing(ghostscriptMetrics, maxDiffFraction, maxMae);
             var passPdfBox = IsPassing(pdfboxMetrics, maxDiffFraction, maxMae);
@@ -3132,6 +3143,10 @@ partial class Program
         public double? diffFractionPdfium { get; set; }
         public double? maePdfium { get; set; }
         public string? bestOracle { get; set; }
+        public string? visualCategory { get; set; }
+        public string? visualHumanImpact { get; set; }
+        public VisualDiffBounds? visualDiffBounds { get; set; }
+        public IReadOnlyList<VisualDiffRegion>? visualTopRegions { get; set; }
         public int? comparedOracles { get; set; }
         public int? agreeingOracles { get; set; }
         public long? elapsedMs { get; set; }

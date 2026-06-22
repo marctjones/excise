@@ -224,6 +224,27 @@ partial class Program
         };
     }
 
+    internal static void ApplyCorpusVisualDiffClassification(
+        CorpusScanEntry entry,
+        SKBitmap pdfe,
+        SKBitmap reference)
+    {
+        using var comparablePdfe = pdfe.Width == reference.Width && pdfe.Height == reference.Height
+            ? pdfe.Copy()
+            : DifferentialMetrics.ResizeMatch(pdfe, reference.Width, reference.Height);
+        var report = AnalyzeVisualDiff(
+            comparablePdfe,
+            reference,
+            DefaultVisualDiffTolerance,
+            originalActualWidth: pdfe.Width,
+            originalActualHeight: pdfe.Height);
+
+        entry.visualCategory = report.category;
+        entry.visualHumanImpact = report.humanImpact;
+        entry.visualDiffBounds = report.diffBounds;
+        entry.visualTopRegions = report.topRegions.Take(5).ToArray();
+    }
+
     private static SKBitmap LoadBitmapOrThrow(FileInfo file)
     {
         var bitmap = SKBitmap.Decode(file.FullName);

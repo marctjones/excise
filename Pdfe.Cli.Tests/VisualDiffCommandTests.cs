@@ -63,6 +63,27 @@ public class VisualDiffCommandTests
     }
 
     [Fact]
+    public void ApplyCorpusVisualDiffClassification_PopulatesCorpusEntryFields()
+    {
+        using var reference = CreateSolidBitmap(50, 50, SKColors.White);
+        using var actual = CreateSolidBitmap(50, 50, SKColors.White);
+        using (var canvas = new SKCanvas(actual))
+        using (var paint = new SKPaint { Color = SKColors.Black })
+        {
+            canvas.DrawRect(new SKRect(10, 10, 30, 30), paint);
+        }
+
+        var entry = new Program.CorpusScanEntry();
+
+        Program.ApplyCorpusVisualDiffClassification(entry, actual, reference);
+
+        entry.visualCategory.Should().Be("localized-content-or-geometry");
+        entry.visualHumanImpact.Should().Be("high");
+        entry.visualDiffBounds.Should().Be(new Program.VisualDiffBounds(10, 10, 20, 20));
+        entry.visualTopRegions.Should().ContainSingle(r => r.pixelCount == 400);
+    }
+
+    [Fact]
     public async Task VisualDiffCommand_WritesJsonAndTriptych()
     {
         var root = Path.Combine(Path.GetTempPath(), "pdfe-visual-diff-" + Guid.NewGuid().ToString("N"));
