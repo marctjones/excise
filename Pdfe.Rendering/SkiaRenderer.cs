@@ -7065,9 +7065,7 @@ internal partial class RenderContext
 
     private static SKColor CmykToRgbColor(double c, double m, double y, double k)
     {
-        double r = (1 - c) * (1 - k);
-        double g = (1 - m) * (1 - k);
-        double b = (1 - y) * (1 - k);
+        var (r, g, b) = PdfColorSpace.ConvertDeviceCmykToRgb(c, m, y, k);
         return ToRGB(r, g, b);
     }
 

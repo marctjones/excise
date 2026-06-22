@@ -368,10 +368,21 @@ public sealed class PdfColorSpace
         return XyzToRgb(adaptedX, adaptedY, adaptedZ);
     }
 
-    private static (double, double, double) CmykToRgb(double c, double m, double y, double k)
+    internal static (double R, double G, double B) ConvertDeviceCmykToRgb(double c, double m, double y, double k)
     {
-        return ((1 - c) * (1 - k), (1 - m) * (1 - k), (1 - y) * (1 - k));
+        c = Math.Clamp(c, 0, 1);
+        m = Math.Clamp(m, 0, 1);
+        y = Math.Clamp(y, 0, 1);
+        k = Math.Clamp(k, 0, 1);
+
+        return (
+            1 - Math.Min(1, c + k),
+            1 - Math.Min(1, m + k),
+            1 - Math.Min(1, y + k));
     }
+
+    private static (double R, double G, double B) CmykToRgb(double c, double m, double y, double k)
+        => ConvertDeviceCmykToRgb(c, m, y, k);
 
     private static (double R, double G, double B) XyzToRgb(double x, double y, double z)
     {

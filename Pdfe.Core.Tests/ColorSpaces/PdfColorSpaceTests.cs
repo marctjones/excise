@@ -72,6 +72,16 @@ public class PdfColorSpaceTests
     }
 
     [Fact]
+    public void DeviceCmyk_MixedWithBlack_UsesPdfReferenceConversion()
+    {
+        var cs = PdfColorSpace.DeviceCMYK;
+        var (r, g, b) = cs.ToRgb(new[] { 0.5, 0.25, 0.75, 0.1 });
+        r.Should().BeApproximately(0.4, 0.0001);
+        g.Should().BeApproximately(0.65, 0.0001);
+        b.Should().BeApproximately(0.15, 0.0001);
+    }
+
+    [Fact]
     public void DeviceGray_Half_ConvertsToDarkGray()
     {
         var cs = PdfColorSpace.DeviceGray;

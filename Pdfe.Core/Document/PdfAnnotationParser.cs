@@ -1,3 +1,4 @@
+using Pdfe.Core.ColorSpaces;
 using Pdfe.Core.Primitives;
 
 namespace Pdfe.Core.Document;
@@ -243,12 +244,7 @@ internal static class PdfAnnotationParser
     }
 
     private static (double R, double G, double B) CmykToRgb(double c, double m, double y, double k)
-    {
-        var r = (1 - c) * (1 - k);
-        var g = (1 - m) * (1 - k);
-        var b = (1 - y) * (1 - k);
-        return (r, g, b);
-    }
+        => PdfColorSpace.ConvertDeviceCmykToRgb(c, m, y, k);
 
     private static IReadOnlyList<PdfRectangle>? ParseQuadPoints(PdfDocument doc, PdfDictionary annot)
     {
