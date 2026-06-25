@@ -1,0 +1,4 @@
+path	pageNumber	expectedStatus	expectedErrorContains	note
+pdfjs/bug1020226.pdf	0	MALFORMED_PDF	Expected name in dictionary	Severely corrupt PDF; upstream pdf.js expects InvalidPDFException rather than rendering.
+pdfjs/REDHAT-1531897-0.pdf	0	MALFORMED_PDF	No recoverable trailer dictionary	Corrupt xref stream with nonsensical /W entry; upstream pdf.js fix is fail-correctly rather than render/hang.
+pdfjs/issue15590.pdf	0	EMPTY_DOC		Corrupt/incomplete trailer with no renderable /Pages dictionary; no page should be rendered.

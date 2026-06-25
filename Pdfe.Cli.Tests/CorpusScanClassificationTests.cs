@@ -1,5 +1,6 @@
 using AwesomeAssertions;
 using Pdfe.Core.Parsing;
+using System.Text.Json;
 using Xunit;
 
 namespace Pdfe.Cli.Tests;
@@ -329,4 +330,121 @@ public class CorpusScanClassificationTests
 
         budget.Should().BeGreaterThanOrEqualTo(14 * 15_000);
     }
+
+    [Fact]
+    public void CorpusScan_ExpectedRefusals_RefusesForDocumentedReasons()
+    {
+        var root = FindRepoRoot();
+        var corpus = Path.Combine(root, "test-pdfs");
+        var manifestPath = Path.Combine(
+            corpus,
+            "manifests",
+            "rendering-expected-refusals-2026-06-24.tsv");
+
+        if (!Directory.Exists(corpus) || !File.Exists(manifestPath))
+            return;
+
+        var expectations = LoadExpectedRefusals(manifestPath);
+        expectations.Should().NotBeEmpty();
+
+        var pageManifest = expectations.ToDictionary(
+            expectation => expectation.Path,
+            expectation => (IReadOnlySet<int>)new HashSet<int> { expectation.PageNumber },
+            StringComparer.Ordinal);
+        var outputPath = Path.Combine(
+            Path.GetTempPath(),
+            "pdfe-expected-refusals-" + Guid.NewGuid().ToString("N") + ".json");
+
+        try
+        {
+            Program.RunCorpusScan(
+                    corpus,
+                    outputPath,
+                    chunkIndex: 0,
+                    chunkTotal: 1,
+                    dpi: 72,
+                    maxDiffFraction: 0.05,
+                    maxMae: 5,
+                    parallel: 1,
+                    pdfTimeoutMs: 30_000,
+                    pageMode: Program.CorpusPageMode.First,
+                    extraOracles: Program.CorpusExtraOracles.None,
+                    pageManifest: pageManifest)
+                .Should().BeTrue();
+
+            using var document = JsonDocument.Parse(File.ReadAllText(outputPath));
+            var entries = document.RootElement.GetProperty("entries")
+                .EnumerateArray()
+                .Select(entry => new
+                {
+                    Path = entry.GetProperty("path").GetString()!,
+                    PageNumber = entry.GetProperty("pageNumber").GetInt32(),
+                    Status = entry.GetProperty("status").GetString()!,
+                    ErrorMessage = entry.TryGetProperty("errorMessage", out var error)
+                        ? error.GetString()
+                        : null,
+                })
+                .ToDictionary(entry => (entry.Path, entry.PageNumber));
+
+            foreach (var expectation in expectations)
+            {
+                entries.Should().ContainKey((expectation.Path, expectation.PageNumber));
+                var entry = entries[(expectation.Path, expectation.PageNumber)];
+                entry.Status.Should().Be(expectation.ExpectedStatus, expectation.Note);
+                if (!string.IsNullOrWhiteSpace(expectation.ExpectedErrorContains))
+                {
+                    entry.ErrorMessage.Should().Contain(
+                        expectation.ExpectedErrorContains,
+                        expectation.Note);
+                }
+            }
+        }
+        finally
+        {
+            if (File.Exists(outputPath))
+                File.Delete(outputPath);
+        }
+    }
+
+    private static IReadOnlyList<ExpectedRefusal> LoadExpectedRefusals(string manifestPath)
+    {
+        return File.ReadLines(manifestPath)
+            .Skip(1)
+            .Where(line => !string.IsNullOrWhiteSpace(line))
+            .Select(line =>
+            {
+                var parts = line.Split('\t');
+                parts.Length.Should().BeGreaterThanOrEqualTo(5);
+                return new ExpectedRefusal(
+                    parts[0],
+                    int.Parse(parts[1], System.Globalization.CultureInfo.InvariantCulture),
+                    parts[2],
+                    parts[3],
+                    parts[4]);
+            })
+            .ToArray();
+    }
+
+    private static string FindRepoRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null)
+        {
+            if (File.Exists(Path.Combine(dir.FullName, "pdfe.sln")) &&
+                Directory.Exists(Path.Combine(dir.FullName, "test-pdfs")))
+            {
+                return dir.FullName;
+            }
+            dir = dir.Parent;
+        }
+
+        return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
+    }
+
+    private sealed record ExpectedRefusal(
+        string Path,
+        int PageNumber,
+        string ExpectedStatus,
+        string ExpectedErrorContains,
+        string Note);
 }
