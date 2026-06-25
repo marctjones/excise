@@ -120,6 +120,46 @@ public class SkiaRendererTests
     }
 
     [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsIssue14999_Type3CcittDecodeParmsRenderReadableGlyphMasks()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "issue14999_reduced.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js issue14999_reduced fixture found at test-pdfs/pdfjs/issue14999_reduced.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 150, BackgroundColor = SKColors.White });
+
+        CountDarkPixels(bitmap, new SKRectI(0, 0, bitmap.Width, bitmap.Height)).Should().BeLessThan(8_000,
+            "losing inline /DecodeParms makes the Type3 CCITT masks decode as large blocky glyphs");
+        CountDarkPixels(bitmap, new SKRectI(150, 55, 650, 70)).Should().BeLessThan(120,
+            "the readable two-line text should not leave a dense horizontal block band between lines");
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsBug859204_EmbeddedType1EncodingRendersBulletGlyph()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "bug859204.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js bug859204 fixture found at test-pdfs/pdfjs/bug859204.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 150, BackgroundColor = SKColors.White });
+
+        CountDarkPixels(bitmap, new SKRectI(0, 20, 45, 52)).Should().BeGreaterThan(120,
+            "the leading bullet should paint as a compact filled dot");
+        CountDarkPixels(bitmap, new SKRectI(0, 55, 45, 90)).Should().Be(0,
+            "a bullet has no lower stem; the old Unicode cmap path rendered a yen-like glyph here");
+        CountDarkPixels(bitmap, new SKRectI(32, 20, 46, 80)).Should().BeLessThan(100,
+            "a bullet should not have the strong right-side vertical strokes of the wrong glyph");
+    }
+
+    [Fact(Timeout = 20000)]
     public void RenderPage_PdfjsIssue16742_FormXObjectClipsToBBox()
     {
         var path = FindRepoFile("test-pdfs", "pdfjs", "issue16742.pdf");

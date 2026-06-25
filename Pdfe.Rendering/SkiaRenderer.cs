@@ -1473,10 +1473,12 @@ internal partial class RenderContext
         var ff3 = descriptor.GetOptional("FontFile3");
 
         byte[]? fontBytes = null;
+        bool isType1 = false;
         bool isCff = false;
         if (ff1 != null && _page.Document.Resolve(ff1) is Pdfe.Core.Primitives.PdfStream s1)
         {
             try { fontBytes = s1.DecodedData; } catch { }
+            isType1 = fontBytes != null;
         }
         else if (ff2 != null && _page.Document.Resolve(ff2) is Pdfe.Core.Primitives.PdfStream s2)
         {
@@ -1503,10 +1505,17 @@ internal partial class RenderContext
         byte[] loadableBytes = fontBytes;
         Dictionary<int, int>? cffCidToGlyph = null;
         ushort[]? cffByteToGlyph = null;
+        ushort[]? type1ByteToGlyph = null;
         if (isCff)
         {
             var wrapped = TryWrapCffAsOpenType(fontBytes, fontDict, descriptor, out cffCidToGlyph, out cffByteToGlyph);
             if (wrapped != null) loadableBytes = wrapped;
+        }
+        else if (isType1)
+        {
+            type1ByteToGlyph = ShouldBuildType1ByteToGlyphMap(fontDict, _currentCodeToGlyphName)
+                ? TryBuildType1ByteToGlyph(fontBytes, _currentCodeToGlyphName)
+                : null;
         }
 
         SKTypeface? typeface;
@@ -1535,9 +1544,339 @@ internal partial class RenderContext
         }
 
         _embeddedTypefaces[fontDict] = typeface;
-        _embeddedTypefaceByteToGlyph[fontDict] = cffByteToGlyph ?? ResolveByteCodeCmap(typeface, fontDict, toUnicodeMap);
+        _embeddedTypefaceByteToGlyph[fontDict] = cffByteToGlyph
+            ?? type1ByteToGlyph
+            ?? ResolveByteCodeCmap(typeface, fontDict, toUnicodeMap);
         _embeddedCffCidToGlyph[fontDict] = cffCidToGlyph;
         return typeface;
+    }
+
+    private static ushort[]? TryBuildType1ByteToGlyph(byte[] fontBytes, string?[]? pdfCodeToGlyphName)
+    {
+        try
+        {
+            var fontEncoding = ParseType1Encoding(fontBytes);
+            var charStringNames = ParseType1CharStringNames(fontBytes);
+            if (charStringNames.Count == 0)
+                return null;
+
+            var glyphNameToId = new Dictionary<string, ushort>(StringComparer.Ordinal);
+            for (int i = 0; i < charStringNames.Count && i <= ushort.MaxValue; i++)
+            {
+                if (!glyphNameToId.ContainsKey(charStringNames[i]))
+                    glyphNameToId[charStringNames[i]] = (ushort)i;
+            }
+
+            var sourceNames = HasAnyGlyphNames(pdfCodeToGlyphName)
+                ? pdfCodeToGlyphName
+                : fontEncoding;
+            if (!HasAnyGlyphNames(sourceNames))
+                return null;
+
+            var map = new ushort[256];
+            var mapped = 0;
+            for (int code = 0; code < map.Length; code++)
+            {
+                var glyphName = sourceNames?[code];
+                if (string.IsNullOrEmpty(glyphName))
+                    continue;
+
+                if (glyphNameToId.TryGetValue(glyphName, out var glyphId))
+                {
+                    map[code] = glyphId;
+                    if (glyphId != 0)
+                        mapped++;
+                }
+            }
+
+            return mapped > 0 ? map : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static bool HasAnyGlyphNames(string?[]? names)
+        => names != null && names.Any(static name => !string.IsNullOrEmpty(name));
+
+    private static bool ShouldBuildType1ByteToGlyphMap(
+        Pdfe.Core.Primitives.PdfDictionary fontDict,
+        string?[]? pdfCodeToGlyphName)
+    {
+        if (HasAnyGlyphNames(pdfCodeToGlyphName))
+            return false;
+
+        var encodingName = fontDict.GetNameOrNull("Encoding");
+        return encodingName != null &&
+               encodingName is not "WinAnsiEncoding" and not "MacRomanEncoding" and not "StandardEncoding";
+    }
+
+    private static string?[]? ParseType1Encoding(byte[] fontBytes)
+    {
+        var eexec = IndexOfAscii(fontBytes, "eexec");
+        var clearLength = eexec >= 0 ? eexec : fontBytes.Length;
+        var clear = Encoding.Latin1.GetString(fontBytes, 0, clearLength);
+        var names = new string?[256];
+        var mapped = 0;
+        var index = 0;
+        while ((index = clear.IndexOf("dup", index, StringComparison.Ordinal)) >= 0)
+        {
+            var p = index + 3;
+            SkipAsciiWhite(clear, ref p);
+            if (!TryReadInt(clear, ref p, out var code) || code < 0 || code >= 256)
+            {
+                index += 3;
+                continue;
+            }
+
+            SkipAsciiWhite(clear, ref p);
+            if (p >= clear.Length || clear[p] != '/')
+            {
+                index += 3;
+                continue;
+            }
+
+            p++;
+            var start = p;
+            while (p < clear.Length && IsPdfNameChar(clear[p]))
+                p++;
+            if (p == start)
+            {
+                index += 3;
+                continue;
+            }
+
+            var glyphName = clear[start..p];
+            SkipAsciiWhite(clear, ref p);
+            if (p + 3 <= clear.Length && string.Equals(clear.AsSpan(p, Math.Min(3, clear.Length - p)).ToString(), "put", StringComparison.Ordinal))
+            {
+                names[code] = glyphName;
+                mapped++;
+            }
+
+            index = p;
+        }
+
+        return mapped > 0 ? names : null;
+    }
+
+    private static List<string> ParseType1CharStringNames(byte[] fontBytes)
+    {
+        var decrypted = DecryptType1Eexec(fontBytes);
+        if (decrypted == null || decrypted.Length == 0)
+            return new List<string>();
+
+        var text = Encoding.Latin1.GetString(decrypted);
+        var charStrings = text.IndexOf("/CharStrings", StringComparison.Ordinal);
+        if (charStrings < 0)
+            return new List<string>();
+
+        var names = new List<string>();
+        var index = charStrings + "/CharStrings".Length;
+        while ((index = text.IndexOf('/', index)) >= 0)
+        {
+            index++;
+            if (index >= text.Length)
+                break;
+
+            var start = index;
+            while (index < text.Length && IsPdfNameChar(text[index]))
+                index++;
+            if (index == start)
+                continue;
+
+            var glyphName = text[start..index];
+            var p = index;
+            SkipAsciiWhite(text, ref p);
+            if (!TryReadInt(text, ref p, out _))
+                continue;
+
+            SkipAsciiWhite(text, ref p);
+            if (!StartsType1CharStringOperator(text, p))
+                continue;
+
+            names.Add(glyphName);
+        }
+
+        return names;
+    }
+
+    private static byte[]? DecryptType1Eexec(byte[] fontBytes)
+    {
+        var eexec = IndexOfAscii(fontBytes, "eexec");
+        if (eexec < 0)
+            return null;
+
+        var start = eexec + "eexec".Length;
+        while (start < fontBytes.Length && IsAsciiWhite(fontBytes[start]))
+            start++;
+        if (start >= fontBytes.Length)
+            return null;
+
+        var encrypted = LooksLikeAsciiHex(fontBytes, start)
+            ? ReadAsciiHexBytes(fontBytes, start)
+            : fontBytes[start..];
+        if (encrypted.Length <= 4)
+            return null;
+
+        var plain = DecryptType1Bytes(encrypted, 55665);
+        return plain.Length > 4 ? plain[4..] : Array.Empty<byte>();
+    }
+
+    private static byte[] DecryptType1Bytes(byte[] encrypted, int seed)
+    {
+        const int c1 = 52845;
+        const int c2 = 22719;
+        var r = seed;
+        var plain = new byte[encrypted.Length];
+        for (int i = 0; i < encrypted.Length; i++)
+        {
+            var cipher = encrypted[i];
+            plain[i] = (byte)(cipher ^ (r >> 8));
+            r = ((cipher + r) * c1 + c2) & 0xffff;
+        }
+
+        return plain;
+    }
+
+    private static bool LooksLikeAsciiHex(byte[] data, int start)
+    {
+        var significant = 0;
+        var hex = 0;
+        for (int i = start; i < data.Length && significant < 16; i++)
+        {
+            var b = data[i];
+            if (IsAsciiWhite(b))
+                continue;
+
+            significant++;
+            if (IsAsciiHex(b))
+                hex++;
+        }
+
+        return significant >= 8 && hex == significant;
+    }
+
+    private static byte[] ReadAsciiHexBytes(byte[] data, int start)
+    {
+        var nibbles = new List<int>();
+        for (int i = start; i < data.Length; i++)
+        {
+            var b = data[i];
+            if (IsAsciiWhite(b))
+                continue;
+            if (!TryHexValue(b, out var value))
+                break;
+            nibbles.Add(value);
+        }
+
+        if ((nibbles.Count & 1) == 1)
+            nibbles.Add(0);
+
+        var bytes = new byte[nibbles.Count / 2];
+        for (int i = 0; i < bytes.Length; i++)
+            bytes[i] = (byte)((nibbles[i * 2] << 4) | nibbles[i * 2 + 1]);
+        return bytes;
+    }
+
+    private static int IndexOfAscii(byte[] data, string needle)
+    {
+        var bytes = Encoding.ASCII.GetBytes(needle);
+        for (int i = 0; i <= data.Length - bytes.Length; i++)
+        {
+            var matched = true;
+            for (int j = 0; j < bytes.Length; j++)
+            {
+                if (data[i + j] != bytes[j])
+                {
+                    matched = false;
+                    break;
+                }
+            }
+
+            if (matched)
+                return i;
+        }
+
+        return -1;
+    }
+
+    private static bool StartsType1CharStringOperator(string text, int index)
+    {
+        if (index >= text.Length)
+            return false;
+        if (text[index] == '-')
+            return true;
+        if (index + 2 <= text.Length && text.AsSpan(index, 2).SequenceEqual("RD"))
+            return true;
+        return false;
+    }
+
+    private static void SkipAsciiWhite(string text, ref int index)
+    {
+        while (index < text.Length && char.IsWhiteSpace(text[index]))
+            index++;
+    }
+
+    private static bool TryReadInt(string text, ref int index, out int value)
+    {
+        value = 0;
+        var start = index;
+        var sign = 1;
+        if (index < text.Length && text[index] == '-')
+        {
+            sign = -1;
+            index++;
+        }
+
+        var parsed = false;
+        while (index < text.Length && char.IsDigit(text[index]))
+        {
+            parsed = true;
+            value = checked(value * 10 + (text[index] - '0'));
+            index++;
+        }
+
+        if (!parsed)
+        {
+            index = start;
+            return false;
+        }
+
+        value *= sign;
+        return true;
+    }
+
+    private static bool IsPdfNameChar(char c)
+        => !char.IsWhiteSpace(c) && c is not '/' and not '[' and not ']' and not '<' and not '>' and not '(' and not ')';
+
+    private static bool IsAsciiWhite(byte b)
+        => b is 0x00 or 0x09 or 0x0a or 0x0c or 0x0d or 0x20;
+
+    private static bool IsAsciiHex(byte b)
+        => (b >= '0' && b <= '9') || (b >= 'a' && b <= 'f') || (b >= 'A' && b <= 'F');
+
+    private static bool TryHexValue(byte b, out int value)
+    {
+        if (b >= '0' && b <= '9')
+        {
+            value = b - '0';
+            return true;
+        }
+        if (b >= 'a' && b <= 'f')
+        {
+            value = b - 'a' + 10;
+            return true;
+        }
+        if (b >= 'A' && b <= 'F')
+        {
+            value = b - 'A' + 10;
+            return true;
+        }
+
+        value = 0;
+        return false;
     }
 
     private IReadOnlyDictionary<int, string>? TryLoadToUnicodeMap(Pdfe.Core.Primitives.PdfDictionary fontDict)

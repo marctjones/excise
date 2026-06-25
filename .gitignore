@@ -69,6 +69,7 @@ ISO-32000-*.md
 # Test output
 test-output/
 run_output.txt
+output/
 
 # Screenshots (temporary debug files)
 screenshots/
@@ -101,6 +102,10 @@ PDF32000_2008.md
 # Test-host crash/hang dumps and blame sequence files (xUnit --blame-hang)
 *.dmp
 Sequence_*.xml
+
+# Python bytecode caches from local helper scripts
+__pycache__/
+*.pyc
 
 # Git history-rewrite backup bundles
 *.bundle

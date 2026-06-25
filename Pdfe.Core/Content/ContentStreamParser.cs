@@ -1189,12 +1189,7 @@ public class ContentStreamParser
         if (c == '<')
         {
             if (_pos + 1 < _content.Length && _content[_pos + 1] == '<')
-            {
-                // Dictionary - skip
-                _pos += 2;
-                SkipDictionary();
-                return null;
-            }
+                return ParseDictionary();
             return ParseHexString();
         }
 
@@ -1344,6 +1339,60 @@ public class ContentStreamParser
                 var item = ParseToken();
                 if (item is PdfObject pdfObj)
                     result.Add(pdfObj);
+            }
+
+            return result;
+        }
+        finally { _nestingDepth--; }
+    }
+
+    private PdfDictionary ParseDictionary()
+    {
+        if (++_nestingDepth > MaxNestingDepth)
+        {
+            _nestingDepth--;
+            throw new PdfParseException(
+                $"Maximum nesting depth ({MaxNestingDepth}) exceeded while parsing content-stream dictionary");
+        }
+
+        try
+        {
+            var result = new PdfDictionary();
+            _pos += 2; // Skip '<<'
+
+            while (_pos < _content.Length)
+            {
+                _cancellationToken.ThrowIfCancellationRequested();
+                SkipWhitespaceAndComments();
+                if (_pos + 1 < _content.Length && _content[_pos] == '>' && _content[_pos + 1] == '>')
+                {
+                    _pos += 2;
+                    break;
+                }
+
+                var keyToken = ParseToken();
+                if (keyToken is not PdfName key)
+                    continue;
+
+                SkipWhitespaceAndComments();
+                if (_pos + 1 < _content.Length && _content[_pos] == '>' && _content[_pos + 1] == '>')
+                {
+                    result[key] = PdfNull.Instance;
+                    _pos += 2;
+                    break;
+                }
+
+                var valueToken = ParseToken();
+                var value = valueToken switch
+                {
+                    PdfObject obj => obj,
+                    "true" => PdfBoolean.True,
+                    "false" => PdfBoolean.False,
+                    "null" => PdfNull.Instance,
+                    _ => null,
+                };
+                if (value != null)
+                    result[key] = value;
             }
 
             return result;

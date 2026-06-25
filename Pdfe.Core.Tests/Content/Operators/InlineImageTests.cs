@@ -153,9 +153,8 @@ public class InlineImageTests
     [Fact]
     public void Parse_InlineImage_AllTable91KeysCovered()
     {
-        // Every full↔abbreviated pair from ISO 32000-2 Table 91 (excluding
-        // /DecodeParms, which has a dict value the content-stream parser
-        // skips by design). Abbreviated wins regardless of source order.
+        // Every full↔abbreviated pair from ISO 32000-2 Table 91.
+        // Abbreviated wins regardless of source order.
         var content = "BI " +
             "/Width 999 /W 1 " +
             "/Height 998 /H 2 " +
@@ -163,6 +162,7 @@ public class InlineImageTests
             "/ColorSpace /Wrong /CS /DeviceGray " +
             "/Filter /Wrong /F /ASCII85Decode " +
             "/Decode [9 9] /D [0 1] " +
+            "/DecodeParms << /Wrong true >> /DP << /K -1 /Columns 1 /BlackIs1 true >> " +
             "/ImageMask false /IM true " +
             "/Interpolate true /I false " +
             "/Length 999 /L 4 " +
@@ -178,13 +178,35 @@ public class InlineImageTests
         dict.GetNameOrNull("CS").Should().Be("DeviceGray");
         dict.GetNameOrNull("F").Should().Be("ASCII85Decode");
         dict.GetArrayOrNull("D").Should().NotBeNull();
+        var decodeParms = dict.GetDictionaryOrNull("DP");
+        decodeParms.Should().NotBeNull();
+        decodeParms!.GetInt("K").Should().Be(-1);
+        decodeParms.GetInt("Columns").Should().Be(1);
+        decodeParms.GetBool("BlackIs1").Should().BeTrue();
         dict.GetBool("IM").Should().BeTrue();
         dict.GetBool("I").Should().BeFalse();
         dict.GetInt("L").Should().Be(4);
         // Full-form keys must be normalized away.
         dict.ContainsKey("Width").Should().BeFalse();
+        dict.ContainsKey("DecodeParms").Should().BeFalse();
         dict.ContainsKey("ImageMask").Should().BeFalse();
         dict.ContainsKey("Interpolate").Should().BeFalse();
+    }
+
+    [Fact]
+    public void Parse_InlineImage_DecodeParmsDictionary_CompactSyntax()
+    {
+        var content = "BI /IM true /W 106 /H 100 /BPC 1 /D[1 0] /F/CCF /DP<</K -1 /Columns 106 /BlackIs1 false>> ID abc EI ";
+
+        var result = new ContentStreamParser(Encoding.ASCII.GetBytes(content)).Parse();
+
+        var bi = result.Operators.Single(op => op.Name == "BI");
+        var dict = (Pdfe.Core.Primitives.PdfDictionary)bi.Operands[0];
+        var decodeParms = dict.GetDictionaryOrNull("DP");
+        decodeParms.Should().NotBeNull("Type3 CCITT image masks store K and Columns in inline /DP dictionaries");
+        decodeParms!.GetInt("K").Should().Be(-1);
+        decodeParms.GetInt("Columns").Should().Be(106);
+        decodeParms.GetBool("BlackIs1", true).Should().BeFalse();
     }
 
     [Fact]
