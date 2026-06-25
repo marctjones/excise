@@ -23,6 +23,7 @@
 #   scripts/run-exploratory-corpus.sh --corpus test-pdfs/poppler --page-mode all
 #   scripts/run-exploratory-corpus.sh --corpus test-pdfs --report-name exploratory-report-all-corpora-all.json --page-mode all
 #   scripts/run-exploratory-corpus.sh --extra-oracles all                  # add Ghostscript/PDFBox/PDFium where available
+#   scripts/run-exploratory-corpus.sh --password-manifest test-pdfs/manifests/rendering-known-passwords-2026-06-20.tsv
 #   scripts/run-exploratory-corpus.sh --no-page-shards                     # keep legacy PDF-level chunking
 #   scripts/run-exploratory-corpus.sh --resume-pdfe-render-cache           # reuse pdfe cache from a prior interrupted run
 #   scripts/run-exploratory-corpus.sh --chunks 14 --tiny                    # 10-PDF smoke run
@@ -48,6 +49,8 @@ EXTRA_ORACLES="ghostscript"   # none | ghostscript | pdfbox | pdfium | all
 CHUNK_LOG_DIR="/tmp"
 CORPUS=""
 REPORT_NAME=""
+PASSWORD_MANIFEST=""
+PASSWORD_MANIFEST_MODE="auto" # auto | explicit | off
 PAGE_SHARDS="auto"            # auto | off
 LARGE_PDF_PAGE_THRESHOLD="250"
 PAGE_RANGE_SIZE="100"
@@ -72,6 +75,9 @@ while [[ $# -gt 0 ]]; do
         --corpus=*)          CORPUS="${1#*=}"; shift ;;
         --report-name)       REPORT_NAME="$2"; shift 2 ;;
         --report-name=*)     REPORT_NAME="${1#*=}"; shift ;;
+        --password-manifest) PASSWORD_MANIFEST="$2"; PASSWORD_MANIFEST_MODE="explicit"; shift 2 ;;
+        --password-manifest=*) PASSWORD_MANIFEST="${1#*=}"; PASSWORD_MANIFEST_MODE="explicit"; shift ;;
+        --no-password-manifest) PASSWORD_MANIFEST=""; PASSWORD_MANIFEST_MODE="off"; shift ;;
         --page-shards)       PAGE_SHARDS="auto"; shift ;;
         --no-page-shards)    PAGE_SHARDS="off"; shift ;;
         --large-pdf-page-threshold) LARGE_PDF_PAGE_THRESHOLD="$2"; shift 2 ;;
@@ -99,6 +105,28 @@ CORPUS="${CORPUS%/}"
 if [[ ! -d "$CORPUS" ]]; then
     echo "✗ corpus not found at $CORPUS" >&2
     exit 1
+fi
+
+if [[ "$PASSWORD_MANIFEST_MODE" == "explicit" && "$PASSWORD_MANIFEST" != /* ]]; then
+    PASSWORD_MANIFEST="$ROOT/$PASSWORD_MANIFEST"
+fi
+
+DEFAULT_PASSWORD_MANIFEST="$ROOT/test-pdfs/manifests/rendering-known-passwords-2026-06-20.tsv"
+if [[ "$PASSWORD_MANIFEST_MODE" == "auto" && -f "$DEFAULT_PASSWORD_MANIFEST" ]]; then
+    TEST_PDFS_ROOT="$(cd "$ROOT/test-pdfs" && pwd -P)"
+    CORPUS_REAL="$(cd "$CORPUS" && pwd -P)"
+    if [[ "$CORPUS_REAL" == "$TEST_PDFS_ROOT" ]]; then
+        PASSWORD_MANIFEST="$DEFAULT_PASSWORD_MANIFEST"
+    fi
+fi
+
+PASSWORD_ARGS=()
+if [[ -n "$PASSWORD_MANIFEST" ]]; then
+    if [[ ! -f "$PASSWORD_MANIFEST" ]]; then
+        echo "✗ password manifest not found at $PASSWORD_MANIFEST" >&2
+        exit 1
+    fi
+    PASSWORD_ARGS=(--password-manifest "$PASSWORD_MANIFEST")
 fi
 
 CORPUS_LABEL="$(python3 - "$ROOT" "$CORPUS" <<'PY'
@@ -328,6 +356,9 @@ echo "  slice dir: $SLICE_DIR"
 if [[ -n "$PAGE_SHARD_DIR" ]]; then
     echo "  page shards: $PAGE_SHARD_DIR"
 fi
+if [[ ${#PASSWORD_ARGS[@]} -gt 0 ]]; then
+    echo "  password manifest: $PASSWORD_MANIFEST"
+fi
 if [[ ${#PDFE_CACHE_ARG[@]} -gt 0 ]]; then
     echo "  pdfe render cache: $PDFE_RENDER_CACHE_DIR ($(if [[ "$RESUME_PDFE_RENDER_CACHE" == "1" ]]; then echo resume; else echo fresh; fi))"
 fi
@@ -342,11 +373,15 @@ run_one_chunk() {
     local scan_chunk="$i"
     local scan_total="$CHUNKS"
     local manifest_args=()
+    local password_args=()
     local pdfe_cache_args=()
     if [[ -n "${PAGE_SHARD_DIR:-}" ]]; then
         manifest_args=(--page-manifest "$(printf '%s/chunk-%03d.tsv' "$PAGE_SHARD_DIR" "$i")")
         scan_chunk="0"
         scan_total="1"
+    fi
+    if [[ -n "${PASSWORD_MANIFEST:-}" ]]; then
+        password_args=(--password-manifest "$PASSWORD_MANIFEST")
     fi
     if [[ "${PDFE_RENDER_CACHE_ENABLED:-0}" == "1" ]]; then
         pdfe_cache_args=(--pdfe-render-cache-dir "$PDFE_RENDER_CACHE_DIR")
@@ -368,6 +403,7 @@ run_one_chunk() {
             --page-mode "$PAGE_MODE" \
             --extra-oracles "$EXTRA_ORACLES" \
             "${manifest_args[@]}" \
+            "${password_args[@]}" \
             "${pdfe_cache_args[@]}" \
             > "$CHUNK_LOG_DIR/exploratory-chunk-$i.log" 2>&1
     else
@@ -380,6 +416,7 @@ run_one_chunk() {
             --page-mode "$PAGE_MODE" \
             --extra-oracles "$EXTRA_ORACLES" \
             "${manifest_args[@]}" \
+            "${password_args[@]}" \
             "${pdfe_cache_args[@]}" \
             > "$CHUNK_LOG_DIR/exploratory-chunk-$i.log" 2>&1
     fi
@@ -400,7 +437,7 @@ print(f'{d[\"total\"]} page results, peak {d[\"peakRssBytes\"]//1024//1024} MB')
 }
 export -f run_one_chunk
 export PDFE_BIN CORPUS CORPUS_LABEL BIN_DIR SLICE_DIR CHUNKS PER_CHUNK_PARALLEL PDF_TIMEOUT_MS PROCESS_TIMEOUT_SECONDS PAGE_MODE EXTRA_ORACLES CHUNK_LOG_DIR
-export PAGE_SHARD_DIR PDFE_RENDER_CACHE_ENABLED PDFE_RENDER_CACHE_DIR
+export PAGE_SHARD_DIR PASSWORD_MANIFEST PDFE_RENDER_CACHE_ENABLED PDFE_RENDER_CACHE_DIR
 
 recover_one_page_shard_chunk_isolated() {
     local i="$1"
@@ -440,6 +477,10 @@ recover_one_page_shard_chunk_isolated() {
         fi
 
         local pdfe_cache_args=()
+        local password_args=()
+        if [[ -n "${PASSWORD_MANIFEST:-}" ]]; then
+            password_args=(--password-manifest "$PASSWORD_MANIFEST")
+        fi
         if [[ "${PDFE_RENDER_CACHE_ENABLED:-0}" == "1" ]]; then
             pdfe_cache_args=(--pdfe-render-cache-dir "$PDFE_RENDER_CACHE_DIR")
         fi
@@ -453,6 +494,7 @@ recover_one_page_shard_chunk_isolated() {
             --page-mode "$PAGE_MODE" \
             --extra-oracles "$EXTRA_ORACLES" \
             --page-manifest "$single_manifest" \
+            "${password_args[@]}" \
             "${pdfe_cache_args[@]}")
 
         local rc=0
@@ -589,6 +631,10 @@ PY
         fi
 
         local pdfe_cache_args=()
+        local password_args=()
+        if [[ -n "${PASSWORD_MANIFEST:-}" ]]; then
+            password_args=(--password-manifest "$PASSWORD_MANIFEST")
+        fi
         if [[ "${PDFE_RENDER_CACHE_ENABLED:-0}" == "1" ]]; then
             pdfe_cache_args=(--pdfe-render-cache-dir "$PDFE_RENDER_CACHE_DIR")
         fi
@@ -601,6 +647,7 @@ PY
             --pdf-timeout-ms "$PDF_TIMEOUT_MS" \
             --page-mode "$PAGE_MODE" \
             --extra-oracles "$EXTRA_ORACLES" \
+            "${password_args[@]}" \
             "${pdfe_cache_args[@]}")
 
         local rc=0
