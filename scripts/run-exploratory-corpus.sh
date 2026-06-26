@@ -51,6 +51,7 @@ CORPUS=""
 REPORT_NAME=""
 PASSWORD_MANIFEST=""
 PASSWORD_MANIFEST_MODE="auto" # auto | explicit | off
+EXPECTATION_MANIFEST=""
 PAGE_SHARDS="auto"            # auto | off
 LARGE_PDF_PAGE_THRESHOLD="250"
 PAGE_RANGE_SIZE="100"
@@ -78,6 +79,8 @@ while [[ $# -gt 0 ]]; do
         --password-manifest) PASSWORD_MANIFEST="$2"; PASSWORD_MANIFEST_MODE="explicit"; shift 2 ;;
         --password-manifest=*) PASSWORD_MANIFEST="${1#*=}"; PASSWORD_MANIFEST_MODE="explicit"; shift ;;
         --no-password-manifest) PASSWORD_MANIFEST=""; PASSWORD_MANIFEST_MODE="off"; shift ;;
+        --expectation-manifest) EXPECTATION_MANIFEST="$2"; shift 2 ;;
+        --expectation-manifest=*) EXPECTATION_MANIFEST="${1#*=}"; shift ;;
         --page-shards)       PAGE_SHARDS="auto"; shift ;;
         --no-page-shards)    PAGE_SHARDS="off"; shift ;;
         --large-pdf-page-threshold) LARGE_PDF_PAGE_THRESHOLD="$2"; shift 2 ;;
@@ -110,12 +113,15 @@ fi
 if [[ "$PASSWORD_MANIFEST_MODE" == "explicit" && "$PASSWORD_MANIFEST" != /* ]]; then
     PASSWORD_MANIFEST="$ROOT/$PASSWORD_MANIFEST"
 fi
+if [[ -n "$EXPECTATION_MANIFEST" && "$EXPECTATION_MANIFEST" != /* ]]; then
+    EXPECTATION_MANIFEST="$ROOT/$EXPECTATION_MANIFEST"
+fi
 
 DEFAULT_PASSWORD_MANIFEST="$ROOT/test-pdfs/manifests/rendering-known-passwords-2026-06-20.tsv"
 if [[ "$PASSWORD_MANIFEST_MODE" == "auto" && -f "$DEFAULT_PASSWORD_MANIFEST" ]]; then
     TEST_PDFS_ROOT="$(cd "$ROOT/test-pdfs" && pwd -P)"
     CORPUS_REAL="$(cd "$CORPUS" && pwd -P)"
-    if [[ "$CORPUS_REAL" == "$TEST_PDFS_ROOT" ]]; then
+    if [[ "$CORPUS_REAL" == "$TEST_PDFS_ROOT" || "$CORPUS_REAL" == "$TEST_PDFS_ROOT/"* ]]; then
         PASSWORD_MANIFEST="$DEFAULT_PASSWORD_MANIFEST"
     fi
 fi
@@ -127,6 +133,14 @@ if [[ -n "$PASSWORD_MANIFEST" ]]; then
         exit 1
     fi
     PASSWORD_ARGS=(--password-manifest "$PASSWORD_MANIFEST")
+fi
+EXPECTATION_ARGS=()
+if [[ -n "$EXPECTATION_MANIFEST" ]]; then
+    if [[ ! -f "$EXPECTATION_MANIFEST" ]]; then
+        echo "✗ expectation manifest not found at $EXPECTATION_MANIFEST" >&2
+        exit 1
+    fi
+    EXPECTATION_ARGS=(--expectation-manifest "$EXPECTATION_MANIFEST")
 fi
 
 CORPUS_LABEL="$(python3 - "$ROOT" "$CORPUS" <<'PY'
@@ -359,6 +373,9 @@ fi
 if [[ ${#PASSWORD_ARGS[@]} -gt 0 ]]; then
     echo "  password manifest: $PASSWORD_MANIFEST"
 fi
+if [[ ${#EXPECTATION_ARGS[@]} -gt 0 ]]; then
+    echo "  expectation manifest: $EXPECTATION_MANIFEST"
+fi
 if [[ ${#PDFE_CACHE_ARG[@]} -gt 0 ]]; then
     echo "  pdfe render cache: $PDFE_RENDER_CACHE_DIR ($(if [[ "$RESUME_PDFE_RENDER_CACHE" == "1" ]]; then echo resume; else echo fresh; fi))"
 fi
@@ -374,6 +391,7 @@ run_one_chunk() {
     local scan_total="$CHUNKS"
     local manifest_args=()
     local password_args=()
+    local expectation_args=()
     local pdfe_cache_args=()
     if [[ -n "${PAGE_SHARD_DIR:-}" ]]; then
         manifest_args=(--page-manifest "$(printf '%s/chunk-%03d.tsv' "$PAGE_SHARD_DIR" "$i")")
@@ -382,6 +400,9 @@ run_one_chunk() {
     fi
     if [[ -n "${PASSWORD_MANIFEST:-}" ]]; then
         password_args=(--password-manifest "$PASSWORD_MANIFEST")
+    fi
+    if [[ -n "${EXPECTATION_MANIFEST:-}" ]]; then
+        expectation_args=(--expectation-manifest "$EXPECTATION_MANIFEST")
     fi
     if [[ "${PDFE_RENDER_CACHE_ENABLED:-0}" == "1" ]]; then
         pdfe_cache_args=(--pdfe-render-cache-dir "$PDFE_RENDER_CACHE_DIR")
@@ -404,6 +425,7 @@ run_one_chunk() {
             --extra-oracles "$EXTRA_ORACLES" \
             "${manifest_args[@]}" \
             "${password_args[@]}" \
+            "${expectation_args[@]}" \
             "${pdfe_cache_args[@]}" \
             > "$CHUNK_LOG_DIR/exploratory-chunk-$i.log" 2>&1
     else
@@ -417,6 +439,7 @@ run_one_chunk() {
             --extra-oracles "$EXTRA_ORACLES" \
             "${manifest_args[@]}" \
             "${password_args[@]}" \
+            "${expectation_args[@]}" \
             "${pdfe_cache_args[@]}" \
             > "$CHUNK_LOG_DIR/exploratory-chunk-$i.log" 2>&1
     fi
@@ -437,7 +460,7 @@ print(f'{d[\"total\"]} page results, peak {d[\"peakRssBytes\"]//1024//1024} MB')
 }
 export -f run_one_chunk
 export PDFE_BIN CORPUS CORPUS_LABEL BIN_DIR SLICE_DIR CHUNKS PER_CHUNK_PARALLEL PDF_TIMEOUT_MS PROCESS_TIMEOUT_SECONDS PAGE_MODE EXTRA_ORACLES CHUNK_LOG_DIR
-export PAGE_SHARD_DIR PASSWORD_MANIFEST PDFE_RENDER_CACHE_ENABLED PDFE_RENDER_CACHE_DIR
+export PAGE_SHARD_DIR PASSWORD_MANIFEST EXPECTATION_MANIFEST PDFE_RENDER_CACHE_ENABLED PDFE_RENDER_CACHE_DIR
 
 recover_one_page_shard_chunk_isolated() {
     local i="$1"
@@ -478,8 +501,12 @@ recover_one_page_shard_chunk_isolated() {
 
         local pdfe_cache_args=()
         local password_args=()
+        local expectation_args=()
         if [[ -n "${PASSWORD_MANIFEST:-}" ]]; then
             password_args=(--password-manifest "$PASSWORD_MANIFEST")
+        fi
+        if [[ -n "${EXPECTATION_MANIFEST:-}" ]]; then
+            expectation_args=(--expectation-manifest "$EXPECTATION_MANIFEST")
         fi
         if [[ "${PDFE_RENDER_CACHE_ENABLED:-0}" == "1" ]]; then
             pdfe_cache_args=(--pdfe-render-cache-dir "$PDFE_RENDER_CACHE_DIR")
@@ -495,6 +522,7 @@ recover_one_page_shard_chunk_isolated() {
             --extra-oracles "$EXTRA_ORACLES" \
             --page-manifest "$single_manifest" \
             "${password_args[@]}" \
+            "${expectation_args[@]}" \
             "${pdfe_cache_args[@]}")
 
         local rc=0
@@ -571,6 +599,12 @@ report = {
     "chunkTotal": total,
     "pageMode": page_mode,
     "extraOracles": extra_oracles,
+    "recovery": {
+        "mode": "isolated-page-shard",
+        "sourceChunkCrashed": True,
+        "sourceChunkIndex": chunk,
+        "recoveredReports": len(generated),
+    },
     "counts": counts,
     "total": len(entries),
     "pdfs": len(pdfs),
@@ -632,8 +666,12 @@ PY
 
         local pdfe_cache_args=()
         local password_args=()
+        local expectation_args=()
         if [[ -n "${PASSWORD_MANIFEST:-}" ]]; then
             password_args=(--password-manifest "$PASSWORD_MANIFEST")
+        fi
+        if [[ -n "${EXPECTATION_MANIFEST:-}" ]]; then
+            expectation_args=(--expectation-manifest "$EXPECTATION_MANIFEST")
         fi
         if [[ "${PDFE_RENDER_CACHE_ENABLED:-0}" == "1" ]]; then
             pdfe_cache_args=(--pdfe-render-cache-dir "$PDFE_RENDER_CACHE_DIR")
@@ -648,6 +686,7 @@ PY
             --page-mode "$PAGE_MODE" \
             --extra-oracles "$EXTRA_ORACLES" \
             "${password_args[@]}" \
+            "${expectation_args[@]}" \
             "${pdfe_cache_args[@]}")
 
         local rc=0
@@ -719,6 +758,12 @@ report = {
     "chunkIndex": chunk,
     "chunkTotal": total,
     "pageMode": page_mode,
+    "recovery": {
+        "mode": "isolated-pdf",
+        "sourceChunkCrashed": True,
+        "sourceChunkIndex": chunk,
+        "recoveredReports": len(generated),
+    },
     "counts": counts,
     "total": len(entries),
     "pdfs": pdfs,
@@ -795,19 +840,32 @@ print(f"  found {len(slices)} slice file(s) (expected {expected})")
 
 merged_entries = []
 counts = {}
+result_counts = {}
+result_category_counts = {}
 peak = 0
 chunk_pdf_visits = 0
 generated_utcs = []
+recoveries = []
+expectation_manifest_entries = 0
 for path in slices:
     with open(path) as f:
         d = json.load(f)
     merged_entries.extend(d.get("entries", []))
     for k, v in d.get("counts", {}).items():
         counts[k] = counts.get(k, 0) + v
+    for k, v in d.get("resultCounts", {}).items():
+        result_counts[k] = result_counts.get(k, 0) + v
+    for k, v in d.get("resultCategoryCounts", {}).items():
+        result_category_counts[k] = result_category_counts.get(k, 0) + v
     peak = max(peak, d.get("peakRssBytes", 0))
     chunk_pdf_visits += d.get("pdfs", 0)
     if d.get("generatedUtc"):
         generated_utcs.append(d["generatedUtc"])
+    if d.get("recovery"):
+        recoveries.append(d["recovery"])
+    manifest = d.get("expectationManifest")
+    if isinstance(manifest, dict):
+        expectation_manifest_entries = max(expectation_manifest_entries, manifest.get("entries", 0) or 0)
 
 def get(e, key, default=None):
     return e.get(key, e.get(key[:1].upper() + key[1:], default))
@@ -828,9 +886,16 @@ out = {
         "enabled": pdfe_cache_enabled == "1",
         "directory": pdfe_cache_dir or None,
     },
+    "expectationManifest": {"entries": expectation_manifest_entries} if expectation_manifest_entries else None,
     "chunksMerged": len(slices),
     "expectedChunks": expected,
+    "recoverySummary": {
+        "recoveredChunks": len(recoveries),
+        "recoveries": recoveries,
+    },
     "counts": counts,
+    "resultCounts": result_counts or None,
+    "resultCategoryCounts": result_category_counts or None,
     "total": len(merged_entries),
     "pdfs": len(unique_pdfs),
     "chunkPdfVisits": chunk_pdf_visits,

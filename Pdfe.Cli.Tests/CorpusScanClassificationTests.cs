@@ -287,6 +287,64 @@ public class CorpusScanClassificationTests
     }
 
     [Fact]
+    public void TryGetCorpusPassword_MatchesPdfjsPrefixedManifestAgainstBarePdfjsCorpusPath()
+    {
+        var passwords = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["pdfjs/bug1782186.pdf"] = "Hello",
+        };
+
+        Program.TryGetCorpusPassword(passwords, "bug1782186.pdf", out var password)
+            .Should().BeTrue();
+        password.Should().Be("Hello");
+    }
+
+    [Fact]
+    public void TryGetCorpusPassword_MatchesBareManifestAgainstPdfjsPrefixedPath()
+    {
+        var passwords = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["issue3371.pdf"] = "ELXRTQWS",
+        };
+
+        Program.TryGetCorpusPassword(passwords, "pdfjs/issue3371.pdf", out var password)
+            .Should().BeTrue();
+        password.Should().Be("ELXRTQWS");
+    }
+
+    [Fact]
+    public void LoadCorpusExpectationManifest_ReadsOptionalResultMetadata()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "pdfe-expectation-manifest-" + Guid.NewGuid().ToString("N") + ".tsv");
+        try
+        {
+            File.WriteAllText(path,
+                "path\tpageNumber\texpectedStatus\texpectedErrorContains\tnote\tresultStatus\tresultCategory\tresultReason\n" +
+                "pdfjs/semantic.pdf\t1\tPASS_ONE\t\taccepted by majority\tPASS\tPASS_ONE_SEMANTIC_OK\tpdfe matches semantic majority\n" +
+                "pdfjs/legacy.pdf\t0\tMALFORMED_PDF\tbad xref\tlegacy note\n");
+
+            var manifest = Program.LoadCorpusExpectationManifest(new FileInfo(path))!;
+
+            var semantic = manifest[new Program.CorpusPageKey("pdfjs/semantic.pdf", 1)];
+            semantic.ExpectedStatus.Should().Be("PASS_ONE");
+            semantic.ExpectedResultStatus.Should().Be("PASS");
+            semantic.ExpectedResultCategory.Should().Be("PASS_ONE_SEMANTIC_OK");
+            semantic.ExpectedResultReason.Should().Be("pdfe matches semantic majority");
+
+            var legacy = manifest[new Program.CorpusPageKey("pdfjs/legacy.pdf", 0)];
+            legacy.ExpectedStatus.Should().Be("MALFORMED_PDF");
+            legacy.ExpectedResultStatus.Should().BeEmpty();
+            legacy.ExpectedResultCategory.Should().BeEmpty();
+            legacy.ExpectedResultReason.Should().BeEmpty();
+        }
+        finally
+        {
+            if (File.Exists(path))
+                File.Delete(path);
+        }
+    }
+
+    [Fact]
     public void SelectCorpusPages_WithManifest_UsesExactPages()
     {
         Program.SelectCorpusPages(10, Program.CorpusPageMode.All, new HashSet<int> { 5, 2, 99 })
@@ -351,6 +409,7 @@ public class CorpusScanClassificationTests
             expectation => expectation.Path,
             expectation => (IReadOnlySet<int>)new HashSet<int> { expectation.PageNumber },
             StringComparer.Ordinal);
+        var expectationManifest = Program.LoadCorpusExpectationManifest(new FileInfo(manifestPath));
         var outputPath = Path.Combine(
             Path.GetTempPath(),
             "pdfe-expected-refusals-" + Guid.NewGuid().ToString("N") + ".json");
@@ -369,7 +428,8 @@ public class CorpusScanClassificationTests
                     pdfTimeoutMs: 30_000,
                     pageMode: Program.CorpusPageMode.First,
                     extraOracles: Program.CorpusExtraOracles.None,
-                    pageManifest: pageManifest)
+                    pageManifest: pageManifest,
+                    expectationManifest: expectationManifest)
                 .Should().BeTrue();
 
             using var document = JsonDocument.Parse(File.ReadAllText(outputPath));
@@ -380,6 +440,13 @@ public class CorpusScanClassificationTests
                     Path = entry.GetProperty("path").GetString()!,
                     PageNumber = entry.GetProperty("pageNumber").GetInt32(),
                     Status = entry.GetProperty("status").GetString()!,
+                    ResultStatus = entry.GetProperty("resultStatus").GetString()!,
+                    ExpectedStatus = entry.TryGetProperty("expectedStatus", out var expectedStatus)
+                        ? expectedStatus.GetString()
+                        : null,
+                    ExpectationResult = entry.TryGetProperty("expectationResult", out var expectationResult)
+                        ? expectationResult.GetString()
+                        : null,
                     ErrorMessage = entry.TryGetProperty("errorMessage", out var error)
                         ? error.GetString()
                         : null,
@@ -391,6 +458,9 @@ public class CorpusScanClassificationTests
                 entries.Should().ContainKey((expectation.Path, expectation.PageNumber));
                 var entry = entries[(expectation.Path, expectation.PageNumber)];
                 entry.Status.Should().Be(expectation.ExpectedStatus, expectation.Note);
+                entry.ResultStatus.Should().Be("PASS", expectation.Note);
+                entry.ExpectedStatus.Should().Be(expectation.ExpectedStatus, expectation.Note);
+                entry.ExpectationResult.Should().Be("PASS", expectation.Note);
                 if (!string.IsNullOrWhiteSpace(expectation.ExpectedErrorContains))
                 {
                     entry.ErrorMessage.Should().Contain(
@@ -404,6 +474,146 @@ public class CorpusScanClassificationTests
             if (File.Exists(outputPath))
                 File.Delete(outputPath);
         }
+    }
+
+    [Fact]
+    public void ApplyCorpusExpectations_MatchingExpectedFailureKeepsRawStatusAndPassesResult()
+    {
+        var entries = new[]
+        {
+            new Program.CorpusScanEntry
+            {
+                path = "pdfjs/bad.pdf",
+                pageNumber = 0,
+                status = "MALFORMED_PDF",
+                errorMessage = "Document has no Pages dictionary",
+            },
+            new Program.CorpusScanEntry
+            {
+                path = "pdfjs/renderable.pdf",
+                pageNumber = 1,
+                status = "PASS_ONE",
+            },
+        };
+        var expectations = new Dictionary<Program.CorpusPageKey, Program.CorpusExpectedOutcome>
+        {
+            [new Program.CorpusPageKey("pdfjs/bad.pdf", 0)] =
+                new("MALFORMED_PDF", "no Pages dictionary", "accepted malformed fixture"),
+        };
+
+        Program.ApplyCorpusExpectations(entries, expectations);
+        var summary = Program.BuildCorpusScanSummary(entries);
+
+        entries[0].status.Should().Be("MALFORMED_PDF");
+        entries[0].resultStatus.Should().Be("PASS");
+        entries[0].resultCategory.Should().Be("ACCEPTED_DEGENERATE_INPUT");
+        entries[0].resultReason.Should().Be("accepted malformed fixture");
+        entries[0].expectationResult.Should().Be("PASS");
+        entries[1].status.Should().Be("PASS_ONE");
+        entries[1].resultStatus.Should().Be("PASS");
+        summary.statusCounts.Should().ContainKey("MALFORMED_PDF").WhoseValue.Should().Be(1);
+        summary.resultStatusCounts.Should().ContainKey("PASS").WhoseValue.Should().Be(2);
+        summary.resultCategoryCounts.Should().ContainKey("ACCEPTED_DEGENERATE_INPUT").WhoseValue.Should().Be(1);
+        summary.resultNonPassCount.Should().Be(0);
+        summary.expectedPassCount.Should().Be(1);
+    }
+
+    [Fact]
+    public void ApplyCorpusExpectations_UsesExplicitSemanticResultMetadata()
+    {
+        var entries = new[]
+        {
+            new Program.CorpusScanEntry
+            {
+                path = "pdfjs/reference-refusal.pdf",
+                pageNumber = 1,
+                status = "PASS_ONE",
+            },
+        };
+        var expectations = new Dictionary<Program.CorpusPageKey, Program.CorpusExpectedOutcome>
+        {
+            [new Program.CorpusPageKey("pdfjs/reference-refusal.pdf", 1)] =
+                new(
+                    "PASS_ONE",
+                    "",
+                    "one reference refused",
+                    "PASS",
+                    "PASS_ONE_REFERENCE_REFUSAL",
+                    "pdfe agrees with the renderable references"),
+        };
+
+        Program.ApplyCorpusExpectations(entries, expectations);
+        var summary = Program.BuildCorpusScanSummary(entries);
+
+        entries[0].status.Should().Be("PASS_ONE");
+        entries[0].resultStatus.Should().Be("PASS");
+        entries[0].resultCategory.Should().Be("PASS_ONE_REFERENCE_REFUSAL");
+        entries[0].resultReason.Should().Be("pdfe agrees with the renderable references");
+        summary.resultCategoryCounts.Should().ContainKey("PASS_ONE_REFERENCE_REFUSAL").WhoseValue.Should().Be(1);
+    }
+
+    [Fact]
+    public void ApplyCorpusExpectations_AllowsWildcardRawStatusForSemanticAcceptance()
+    {
+        var entries = new[]
+        {
+            new Program.CorpusScanEntry
+            {
+                path = "pdfjs/font-policy.pdf",
+                pageNumber = 1,
+                status = "DIFF",
+            },
+        };
+        var expectations = new Dictionary<Program.CorpusPageKey, Program.CorpusExpectedOutcome>
+        {
+            [new Program.CorpusPageKey("pdfjs/font-policy.pdf", 1)] =
+                new(
+                    "*",
+                    "",
+                    "accepted by semantic review",
+                    "PASS",
+                    "PASS_ONE_SEMANTIC_OK",
+                    "raw oracle class may vary by oracle set"),
+        };
+
+        Program.ApplyCorpusExpectations(entries, expectations);
+
+        entries[0].status.Should().Be("DIFF");
+        entries[0].expectedStatus.Should().Be("*");
+        entries[0].expectationResult.Should().Be("PASS");
+        entries[0].resultStatus.Should().Be("PASS");
+        entries[0].resultCategory.Should().Be("PASS_ONE_SEMANTIC_OK");
+    }
+
+    [Fact]
+    public void ApplyCorpusExpectations_MatchesPdfjsPrefixedManifestAgainstBarePdfjsCorpusPath()
+    {
+        var entries = new[]
+        {
+            new Program.CorpusScanEntry
+            {
+                path = "bug920426.pdf",
+                pageNumber = 1,
+                status = "PASS_ONE",
+            },
+        };
+        var expectations = new Dictionary<Program.CorpusPageKey, Program.CorpusExpectedOutcome>
+        {
+            [new Program.CorpusPageKey("pdfjs/bug920426.pdf", 1)] =
+                new(
+                    "PASS_ONE",
+                    "",
+                    "semantic pass",
+                    "PASS",
+                    "PASS_ONE_SEMANTIC_OK",
+                    "bare default pdf.js corpus path should still match"),
+        };
+
+        Program.ApplyCorpusExpectations(entries, expectations);
+
+        entries[0].expectationResult.Should().Be("PASS");
+        entries[0].resultStatus.Should().Be("PASS");
+        entries[0].resultCategory.Should().Be("PASS_ONE_SEMANTIC_OK");
     }
 
     private static IReadOnlyList<ExpectedRefusal> LoadExpectedRefusals(string manifestPath)

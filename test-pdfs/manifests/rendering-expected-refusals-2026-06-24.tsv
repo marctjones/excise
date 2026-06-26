@@ -1,4 +1,7 @@
 path	pageNumber	expectedStatus	expectedErrorContains	note
 pdfjs/bug1020226.pdf	0	MALFORMED_PDF	Expected name in dictionary	Severely corrupt PDF; upstream pdf.js expects InvalidPDFException rather than rendering.
 pdfjs/REDHAT-1531897-0.pdf	0	MALFORMED_PDF	No recoverable trailer dictionary	Corrupt xref stream with nonsensical /W entry; upstream pdf.js fix is fail-correctly rather than render/hang.
+pdfjs/bug1978317.pdf	0	MALFORMED_PDF	Document has no Pages dictionary	Catalog has no renderable /Pages tree, so there is no page surface to recover.
 pdfjs/issue15590.pdf	0	EMPTY_DOC		Corrupt/incomplete trailer with no renderable /Pages dictionary; no page should be rendered.
+pdfjs/issue19484_1.pdf	1	ALL_ORACLES_REFUSED		pdfe renders the Acrobat-compatible short-key encrypted fixture, but all configured reference renderers refuse it.
+pdfjs/issue19484_2.pdf	1	ALL_ORACLES_REFUSED		pdfe renders the Acrobat-compatible short-key encrypted fixture, but all configured reference renderers refuse it.

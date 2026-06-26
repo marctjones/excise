@@ -250,7 +250,7 @@ partial class Program
     }
 
     /// <summary>
-    /// pdfe render <file> -o <output.png> [--page N] [--dpi N]
+    /// pdfe render <file> -o <output.png> [--page N] [--dpi N] [--password P]
     /// </summary>
     static Command CreateRenderCommand()
     {
@@ -270,13 +270,18 @@ partial class Program
             Description = "Resolution in DPI",
             DefaultValueFactory = _ => 150,
         };
+        var passwordOption = new Option<string?>("--password")
+        {
+            Description = "User password for encrypted PDFs",
+        };
 
         var command = new Command("render", "Render PDF page to image")
         {
             fileArg,
             outputOption,
             pageOption,
-            dpiOption
+            dpiOption,
+            passwordOption
         };
 
         command.SetAction(parseResult =>
@@ -285,6 +290,7 @@ partial class Program
             var output = parseResult.GetValue(outputOption)!;
             var page = parseResult.GetValue(pageOption);
             var dpi = parseResult.GetValue(dpiOption);
+            var password = parseResult.GetValue(passwordOption);
             if (!file.Exists)
             {
                 Console.Error.WriteLine($"File not found: {file.FullName}");
@@ -293,7 +299,9 @@ partial class Program
 
             try
             {
-                using var doc = PdfDocument.Open(file.FullName);
+                using var doc = string.IsNullOrEmpty(password)
+                    ? PdfDocument.Open(file.FullName)
+                    : PdfDocument.Open(file.FullName, password);
 
                 if (page < 1 || page > doc.PageCount)
                 {
@@ -1604,6 +1612,10 @@ partial class Program
         {
             Description = "Optional TSV of corpus-relative PDF passwords. Columns: path<TAB>userPassword; extra columns ignored.",
         };
+        var expectationManifestOption = new Option<FileInfo?>("--expectation-manifest")
+        {
+            Description = "Optional TSV of expected corpus outcomes. Columns: path<TAB>pageNumber<TAB>expectedStatus<TAB>expectedErrorContains<TAB>note[<TAB>resultStatus<TAB>resultCategory<TAB>resultReason].",
+        };
         var extraOraclesOption = new Option<string>("--extra-oracles")
         {
             Description = "Optional escalation oracles: none, ghostscript, pdfbox, pdfium, or all (comma-separated).",
@@ -1628,7 +1640,7 @@ partial class Program
         {
             corpusArg, outputOption, chunkOption, totalOption,
             dpiOption, diffPctOption, maxMaeOption, parallelOption, perPdfTimeoutOption, pageModeOption,
-            pageManifestOption, passwordManifestOption, extraOraclesOption,
+            pageManifestOption, passwordManifestOption, expectationManifestOption, extraOraclesOption,
             oracleCacheDirOption, noOracleCacheOption, pdfeRenderCacheDirOption,
         };
 
@@ -1646,6 +1658,7 @@ partial class Program
             var pageModeRaw = parseResult.GetValue(pageModeOption) ?? "first";
             var pageManifestFile = parseResult.GetValue(pageManifestOption);
             var passwordManifestFile = parseResult.GetValue(passwordManifestOption);
+            var expectationManifestFile = parseResult.GetValue(expectationManifestOption);
             var extraOraclesRaw = parseResult.GetValue(extraOraclesOption) ?? "ghostscript";
             var oracleCacheDir = parseResult.GetValue(oracleCacheDirOption);
             var noOracleCache = parseResult.GetValue(noOracleCacheOption);
@@ -1683,9 +1696,10 @@ partial class Program
             {
                 var pageManifest = LoadCorpusPageManifest(pageManifestFile);
                 var passwordManifest = LoadCorpusPasswordManifest(passwordManifestFile);
+                var expectationManifest = LoadCorpusExpectationManifest(expectationManifestFile);
                 var ok = RunCorpusScan(corpus.FullName, output.FullName,
                     chunk, total, dpi, diffPct, maxMae, parallel, pdfTimeoutMs, pageMode, extraOracles,
-                    pageManifest, passwordManifest,
+                    pageManifest, passwordManifest, expectationManifest,
                     noOracleCache ? null : ResolveCorpusOracleCacheDir(oracleCacheDir),
                     pdfeRenderCacheDir);
                 Environment.ExitCode = ok ? 0 : 1;
@@ -1714,6 +1728,7 @@ partial class Program
         CorpusExtraOracles extraOracles = CorpusExtraOracles.Ghostscript,
         IReadOnlyDictionary<string, IReadOnlySet<int>>? pageManifest = null,
         IReadOnlyDictionary<string, string>? passwordManifest = null,
+        IReadOnlyDictionary<CorpusPageKey, CorpusExpectedOutcome>? expectationManifest = null,
         DirectoryInfo? oracleCacheDir = null,
         DirectoryInfo? pdfeRenderCacheDir = null)
     {
@@ -1726,6 +1741,7 @@ partial class Program
             $"({parallel}-way parallel, {pdfTimeoutMs}ms oracle timeout, page-mode={PageModeName(pageMode)}, " +
             $"page-manifest={(pageManifest is null ? "none" : pageManifest.Count.ToString())}, " +
             $"password-manifest={(passwordManifest is null ? "none" : passwordManifest.Count.ToString())}, " +
+            $"expectation-manifest={(expectationManifest is null ? "none" : expectationManifest.Count.ToString())}, " +
             $"extra-oracles={ExtraOraclesName(extraOracles)}, " +
             $"oracle-cache={(oracleCache is null ? "off" : oracleCache.CacheDirectory)}, " +
             $"pdfe-cache={(pdfeRenderCache is null ? "off" : pdfeRenderCache.CacheDirectory)})");
@@ -1748,7 +1764,8 @@ partial class Program
             IReadOnlySet<int>? selectedPages = null;
             pageManifest?.TryGetValue(rel, out selectedPages);
             string? userPassword = null;
-            passwordManifest?.TryGetValue(rel, out userPassword);
+            if (passwordManifest != null)
+                TryGetCorpusPassword(passwordManifest, rel, out userPassword);
             var wallBudgetMs = ComputeCorpusScanWallBudgetMs(
                 pdfTimeoutMs, pageMode, extraOracles, selectedPages);
             var task = Task.Run(() => ScanOnePdf(rel, pdf, dpi, maxDiffFraction, maxMae, pdfTimeoutMs,
@@ -1803,8 +1820,14 @@ partial class Program
         GC.Collect();
         GC.WaitForPendingFinalizers();
 
+        // Sort entries by path so parallel completion order doesn't make
+        // diffs noisy across runs, then annotate expectation-aware result
+        // status before printing or serializing summaries.
+        var sortedEntries = entries.OrderBy(e => e.path).ThenBy(e => e.pageNumber).ToList();
+        ApplyCorpusExpectations(sortedEntries, expectationManifest);
+
         var counts = new Dictionary<string, int>();
-        foreach (var e in entries)
+        foreach (var e in sortedEntries)
         {
             counts.TryGetValue(e.status, out var c);
             counts[e.status] = c + 1;
@@ -1813,6 +1836,12 @@ partial class Program
         Console.Out.WriteLine();
         foreach (var kv in counts.OrderByDescending(kv => kv.Value))
             Console.Out.WriteLine($"  {kv.Value,4}  {kv.Key}");
+        if (expectationManifest is not null)
+        {
+            Console.Out.WriteLine("  result counts:");
+            foreach (var kv in CountBy(sortedEntries.Select(entry => entry.resultStatus)).OrderByDescending(kv => kv.Value))
+                Console.Out.WriteLine($"  {kv.Value,4}  {kv.Key}");
+        }
         Console.Out.WriteLine($"  total processed: {entries.Count}");
         Console.Out.WriteLine($"  peak RSS: {peakBytes / 1024 / 1024} MB");
         var oracleCacheReport = oracleCache?.CreateReport() ?? CorpusOracleCacheReport.CreateDisabled();
@@ -1830,9 +1859,6 @@ partial class Program
                 $"{pdfeRenderCacheReport.writes} writes, {pdfeRenderCacheReport.errors} errors");
         }
 
-        // Sort entries by path so parallel completion order doesn't make
-        // diffs noisy across runs.
-        var sortedEntries = entries.OrderBy(e => e.path).ThenBy(e => e.pageNumber).ToList();
         var report = new
         {
             generatedUtc = DateTime.UtcNow.ToString("o"),
@@ -1842,8 +1868,11 @@ partial class Program
             pageMode = PageModeName(pageMode),
             pageManifest = pageManifest is null ? null : new { pdfs = pageManifest.Count },
             passwordManifest = passwordManifest is null ? null : new { pdfs = passwordManifest.Count },
+            expectationManifest = expectationManifest is null ? null : new { entries = expectationManifest.Count },
             extraOracles = ExtraOraclesName(extraOracles),
             counts,
+            resultCounts = CountBy(sortedEntries.Select(entry => entry.resultStatus)),
+            resultCategoryCounts = CountBy(sortedEntries.Select(GetCorpusResultCategory)),
             summary = BuildCorpusScanSummary(sortedEntries),
             total = entries.Count,
             pdfs = pdfs.Count,
@@ -1861,6 +1890,16 @@ partial class Program
     }
 
     internal readonly record struct CorpusPdf(string FullPath, string RelativePath);
+
+    internal readonly record struct CorpusPageKey(string Path, int PageNumber);
+
+    internal readonly record struct CorpusExpectedOutcome(
+        string ExpectedStatus,
+        string ExpectedErrorContains,
+        string Note,
+        string ExpectedResultStatus = "",
+        string ExpectedResultCategory = "",
+        string ExpectedResultReason = "");
 
     internal static IReadOnlyList<CorpusPdf> DiscoverCorpusPdfs(
         string corpusDir,
@@ -2989,7 +3028,12 @@ partial class Program
     internal sealed class CorpusScanSummary
     {
         public Dictionary<string, int> statusCounts { get; set; } = new(StringComparer.Ordinal);
+        public Dictionary<string, int> resultStatusCounts { get; set; } = new(StringComparer.Ordinal);
+        public Dictionary<string, int> resultCategoryCounts { get; set; } = new(StringComparer.Ordinal);
         public int nonPassCount { get; set; }
+        public int resultNonPassCount { get; set; }
+        public int expectedPassCount { get; set; }
+        public int expectedFailCount { get; set; }
         public int trueDiffCount { get; set; }
         public int passOneCount { get; set; }
         public Dictionary<string, int> nonPassVisualHumanImpactCounts { get; set; } = new(StringComparer.Ordinal);
@@ -3250,6 +3294,58 @@ partial class Program
         }
 
         return passwordsByPath;
+    }
+
+    internal static IReadOnlyDictionary<CorpusPageKey, CorpusExpectedOutcome>? LoadCorpusExpectationManifest(FileInfo? manifestFile)
+    {
+        if (manifestFile is null)
+            return null;
+
+        if (!manifestFile.Exists)
+            throw new FileNotFoundException("Expectation manifest not found.", manifestFile.FullName);
+
+        var expectations = new Dictionary<CorpusPageKey, CorpusExpectedOutcome>();
+        var lineNumber = 0;
+        foreach (var rawLine in File.ReadLines(manifestFile.FullName))
+        {
+            lineNumber++;
+            var line = rawLine.Trim();
+            if (line.Length == 0 || line.StartsWith('#'))
+                continue;
+
+            var columns = rawLine.Split('\t');
+            if (columns.Length < 3)
+                throw new InvalidDataException($"{manifestFile.FullName}:{lineNumber}: expected path<TAB>pageNumber<TAB>expectedStatus");
+
+            if (lineNumber == 1 && columns[0].Equals("path", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var path = NormalizeManifestPath(columns[0].Trim());
+            if (path.Length == 0)
+                throw new InvalidDataException($"{manifestFile.FullName}:{lineNumber}: path is empty");
+
+            if (!int.TryParse(columns[1].Trim(), out var pageNumber) || pageNumber < 0)
+                throw new InvalidDataException($"{manifestFile.FullName}:{lineNumber}: pageNumber must be a non-negative integer");
+
+            var expectedStatus = columns[2].Trim();
+            if (expectedStatus.Length == 0)
+                throw new InvalidDataException($"{manifestFile.FullName}:{lineNumber}: expectedStatus is empty");
+
+            var expectedErrorContains = columns.Length > 3 ? columns[3].Trim() : string.Empty;
+            var note = columns.Length > 4 ? columns[4].Trim() : string.Empty;
+            var expectedResultStatus = columns.Length > 5 ? columns[5].Trim() : string.Empty;
+            var expectedResultCategory = columns.Length > 6 ? columns[6].Trim() : string.Empty;
+            var expectedResultReason = columns.Length > 7 ? columns[7].Trim() : string.Empty;
+            expectations[new CorpusPageKey(path, pageNumber)] = new CorpusExpectedOutcome(
+                expectedStatus,
+                expectedErrorContains,
+                note,
+                expectedResultStatus,
+                expectedResultCategory,
+                expectedResultReason);
+        }
+
+        return expectations;
     }
 
     private static string NormalizeManifestPath(string path)
@@ -3863,6 +3959,132 @@ partial class Program
         return false;
     }
 
+    internal static void ApplyCorpusExpectations(
+        IReadOnlyList<CorpusScanEntry> entries,
+        IReadOnlyDictionary<CorpusPageKey, CorpusExpectedOutcome>? expectations)
+    {
+        foreach (var entry in entries)
+        {
+            entry.resultStatus = IsPassingRawStatus(entry.status) ? "PASS" : entry.status;
+
+            if (expectations is null ||
+                !TryGetCorpusExpectation(expectations, entry, out var expectation))
+            {
+                continue;
+            }
+
+            entry.expectedStatus = expectation.ExpectedStatus;
+            entry.expectedErrorContains = expectation.ExpectedErrorContains;
+            entry.expectedNote = expectation.Note;
+            entry.expectedResultStatus = expectation.ExpectedResultStatus;
+            entry.expectedResultCategory = expectation.ExpectedResultCategory;
+            entry.expectedResultReason = expectation.ExpectedResultReason;
+
+            if (!ExpectedStatusMatches(entry.status, expectation.ExpectedStatus))
+            {
+                entry.expectationResult = "FAIL";
+                entry.expectationFailure = $"Expected status {expectation.ExpectedStatus}, got {entry.status}.";
+                continue;
+            }
+
+            if (!ExpectedErrorMatches(entry, expectation.ExpectedErrorContains))
+            {
+                entry.expectationResult = "FAIL";
+                entry.expectationFailure = $"Expected error text containing '{expectation.ExpectedErrorContains}'.";
+                continue;
+            }
+
+            entry.expectationResult = "PASS";
+            entry.resultStatus = string.IsNullOrWhiteSpace(expectation.ExpectedResultStatus)
+                ? "PASS"
+                : expectation.ExpectedResultStatus;
+            entry.resultCategory = string.IsNullOrWhiteSpace(expectation.ExpectedResultCategory)
+                ? InferCorpusResultCategory(entry)
+                : expectation.ExpectedResultCategory;
+            entry.resultReason = string.IsNullOrWhiteSpace(expectation.ExpectedResultReason)
+                ? (string.IsNullOrWhiteSpace(expectation.Note) ? null : expectation.Note)
+                : expectation.ExpectedResultReason;
+        }
+    }
+
+    private static bool ExpectedStatusMatches(string actualStatus, string expectedStatus)
+        => string.Equals(expectedStatus, "*", StringComparison.Ordinal) ||
+           string.Equals(actualStatus, expectedStatus, StringComparison.Ordinal);
+
+    private static bool TryGetCorpusExpectation(
+        IReadOnlyDictionary<CorpusPageKey, CorpusExpectedOutcome> expectations,
+        CorpusScanEntry entry,
+        out CorpusExpectedOutcome expectation)
+    {
+        if (expectations.TryGetValue(new CorpusPageKey(entry.path, entry.pageNumber), out expectation))
+            return true;
+
+        if (!entry.path.Contains('/', StringComparison.Ordinal) &&
+            expectations.TryGetValue(new CorpusPageKey("pdfjs/" + entry.path, entry.pageNumber), out expectation))
+        {
+            return true;
+        }
+
+        const string pdfjsPrefix = "pdfjs/";
+        if (entry.path.StartsWith(pdfjsPrefix, StringComparison.Ordinal) &&
+            expectations.TryGetValue(new CorpusPageKey(entry.path[pdfjsPrefix.Length..], entry.pageNumber), out expectation))
+        {
+            return true;
+        }
+
+        expectation = default;
+        return false;
+    }
+
+    internal static bool TryGetCorpusPassword(
+        IReadOnlyDictionary<string, string> passwords,
+        string path,
+        out string password)
+    {
+        if (passwords.TryGetValue(path, out password!))
+            return true;
+
+        if (!path.Contains('/', StringComparison.Ordinal) &&
+            passwords.TryGetValue("pdfjs/" + path, out password!))
+        {
+            return true;
+        }
+
+        const string pdfjsPrefix = "pdfjs/";
+        if (path.StartsWith(pdfjsPrefix, StringComparison.Ordinal) &&
+            passwords.TryGetValue(path[pdfjsPrefix.Length..], out password!))
+        {
+            return true;
+        }
+
+        password = string.Empty;
+        return false;
+    }
+
+    private static bool IsPassingRawStatus(string status)
+        => string.Equals(status, "PASS", StringComparison.Ordinal)
+           || string.Equals(status, "PASS_ONE", StringComparison.Ordinal);
+
+    private static bool ExpectedErrorMatches(CorpusScanEntry entry, string expectedErrorContains)
+    {
+        if (string.IsNullOrWhiteSpace(expectedErrorContains))
+            return true;
+
+        return (entry.errorMessage?.Contains(expectedErrorContains, StringComparison.Ordinal) ?? false)
+               || (entry.diagnostic?.Contains(expectedErrorContains, StringComparison.Ordinal) ?? false);
+    }
+
+    private static string InferCorpusResultCategory(CorpusScanEntry entry)
+    {
+        if (string.Equals(entry.status, "PASS_ONE", StringComparison.Ordinal))
+            return "PASS_ONE_SEMANTIC_OK";
+
+        if (IsPassingRawStatus(entry.status))
+            return "PASS";
+
+        return "ACCEPTED_DEGENERATE_INPUT";
+    }
+
     internal static CorpusScanSummary BuildCorpusScanSummary(IReadOnlyList<CorpusScanEntry> entries)
     {
         var nonPass = entries
@@ -3872,7 +4094,12 @@ partial class Program
         return new CorpusScanSummary
         {
             statusCounts = CountBy(entries.Select(entry => entry.status)),
+            resultStatusCounts = CountBy(entries.Select(GetCorpusResultStatus)),
+            resultCategoryCounts = CountBy(entries.Select(GetCorpusResultCategory)),
             nonPassCount = nonPass.Length,
+            resultNonPassCount = entries.Count(entry => !string.Equals(GetCorpusResultStatus(entry), "PASS", StringComparison.Ordinal)),
+            expectedPassCount = entries.Count(entry => string.Equals(entry.expectationResult, "PASS", StringComparison.Ordinal)),
+            expectedFailCount = entries.Count(entry => string.Equals(entry.expectationResult, "FAIL", StringComparison.Ordinal)),
             trueDiffCount = nonPass.Count(entry => string.Equals(entry.status, "DIFF", StringComparison.Ordinal)),
             passOneCount = nonPass.Count(entry => string.Equals(entry.status, "PASS_ONE", StringComparison.Ordinal)),
             nonPassVisualHumanImpactCounts = CountBy(nonPass.Select(entry => NormalizeSummaryValue(entry.visualHumanImpact))),
@@ -3898,6 +4125,14 @@ partial class Program
 
     private static string NormalizeSummaryValue(string? value)
         => string.IsNullOrWhiteSpace(value) ? "unclassified" : value;
+
+    private static string GetCorpusResultStatus(CorpusScanEntry entry)
+        => string.IsNullOrWhiteSpace(entry.resultStatus) || string.Equals(entry.resultStatus, "UNKNOWN", StringComparison.Ordinal)
+            ? (IsPassingRawStatus(entry.status) ? "PASS" : entry.status)
+            : entry.resultStatus;
+
+    private static string GetCorpusResultCategory(CorpusScanEntry entry)
+        => string.IsNullOrWhiteSpace(entry.resultCategory) ? "unclassified" : entry.resultCategory;
 
     private static string GetOracleDisagreementBucket(CorpusScanEntry entry)
     {
@@ -4008,6 +4243,17 @@ partial class Program
         public string path { get; set; } = "";
         public int pageNumber { get; set; } = 1;
         public string status { get; set; } = "UNKNOWN";
+        public string resultStatus { get; set; } = "UNKNOWN";
+        public string? resultCategory { get; set; }
+        public string? resultReason { get; set; }
+        public string? expectedStatus { get; set; }
+        public string? expectedErrorContains { get; set; }
+        public string? expectedResultStatus { get; set; }
+        public string? expectedResultCategory { get; set; }
+        public string? expectedResultReason { get; set; }
+        public string? expectationResult { get; set; }
+        public string? expectationFailure { get; set; }
+        public string? expectedNote { get; set; }
         public int pageCount { get; set; }
         // Best-of-two oracle metrics (pdfe vs whichever oracle pdfe
         // agrees with most closely). Used by the gating logic.
