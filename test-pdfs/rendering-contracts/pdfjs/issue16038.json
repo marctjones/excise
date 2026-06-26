@@ -2,26 +2,27 @@
   "Path": "pdfjs/issue16038.pdf",
   "Source": "pdf.js corpus",
   "Owner": "rendering:quality",
-  "RootCause": "SEMANTIC_OK",
-  "ImprovementPriority": "P2",
-  "Confidence": "MEDIUM",
-  "Notes": "Migrated from the legacy TSV rendering manifests.",
+  "RootCause": "TILING_PATTERN_PHASE_REFERENCE_DISAGREEMENT",
+  "ImprovementPriority": "NONE",
+  "Confidence": "HIGH",
+  "Notes": "Focused review: pdfe renders the repeated blue tiling-pattern strokes and follows Cairo's accepted phase/density.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "GOOD_ENOUGH",
-      "PixelAgreement": "MATCHES_SOME",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_TARGET",
       "ReferenceSituation": "REFS_DISAGREE",
-      "RootCause": "SEMANTIC_OK",
+      "RootCause": "TILING_PATTERN_PHASE_REFERENCE_DISAGREEMENT",
       "Target": {
-        "Mode": "REFERENCE_CONSENSUS",
-        "Reason": "Use all configured reference renderers; when they disagree, matching an accepted renderer is sufficient."
+        "Mode": "REFERENCE_RENDERER",
+        "Primary": "pdftocairo",
+        "Reason": "Cairo and pdfe preserve the dense repeated blue strokes; MuPDF and Ghostscript choose different stroke density/phase."
       },
-      "ImprovementPriority": "P2",
+      "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Focused tiling-pattern regression covers the prior primitive gap.",
-      "Notes": "Uncolored tiling pattern renders visible blue repeated strokes; remaining difference is pattern phase/stroke density."
+      "QualityReason": "pdfe matches the accepted Cairo-style rendering for this tiling-pattern phase disagreement.",
+      "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders."
     }
   }
 }

@@ -2,26 +2,27 @@
   "Path": "pdfjs/issue12418_reduced.pdf",
   "Source": "pdf.js corpus",
   "Owner": "rendering:quality",
-  "RootCause": "SEMANTIC_OK",
-  "ImprovementPriority": "P2",
-  "Confidence": "MEDIUM",
-  "Notes": "Migrated from the legacy TSV rendering manifests.",
+  "RootCause": "REFERENCE_TEXT_EXTRACTION_DISAGREEMENT",
+  "ImprovementPriority": "NONE",
+  "Confidence": "HIGH",
+  "Notes": "Focused review: pdfe and MuPDF render the Czech text correctly; Ghostscript emits garbled glyphs for this reduced font fixture.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "GOOD_ENOUGH",
-      "PixelAgreement": "MATCHES_SOME",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "MATCHES_TARGET",
       "ReferenceSituation": "REFS_DISAGREE",
-      "RootCause": "SEMANTIC_OK",
+      "RootCause": "REFERENCE_TEXT_EXTRACTION_DISAGREEMENT",
       "Target": {
-        "Mode": "REFERENCE_CONSENSUS",
-        "Reason": "Use all configured reference renderers; when they disagree, matching an accepted renderer is sufficient."
+        "Mode": "REFERENCE_RENDERER",
+        "Primary": "mutool",
+        "Reason": "MuPDF and pdfe render the intended Czech text; Ghostscript is the visible outlier with garbled glyphs."
       },
-      "ImprovementPriority": "P2",
+      "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Current focused scan treats this as acceptable reduced-fixture disagreement.",
-      "Notes": "Reduced single-page fixture renders meaningful output with bounded oracle disagreement."
+      "QualityReason": "pdfe renders the intended text and matches the accepted MuPDF target; raw PASS_ONE is caused by reference renderer disagreement.",
+      "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders."
     }
   }
 }

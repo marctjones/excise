@@ -2,26 +2,27 @@
   "Path": "pdfjs/22060_A1_01_Plans.pdf",
   "Source": "pdf.js corpus",
   "Owner": "rendering:quality",
-  "RootCause": "SEMANTIC_OK",
+  "RootCause": "TECHNICAL_LINEWORK_COLOR_TRANSPARENCY_DISAGREEMENT",
   "ImprovementPriority": "P2",
   "Confidence": "MEDIUM",
-  "Notes": "Migrated from the legacy TSV rendering manifests.",
+  "Notes": "Focused review: pdfe renders all expected content, but the architectural raster linework remains greener than Ghostscript/MuPDF.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "GOOD_ENOUGH",
+      "QualityStatus": "LOWER_QUALITY_ACCEPTABLE",
       "PixelAgreement": "MATCHES_SOME",
       "ReferenceSituation": "REFS_DISAGREE",
-      "RootCause": "SEMANTIC_OK",
+      "RootCause": "TECHNICAL_LINEWORK_COLOR_TRANSPARENCY_DISAGREEMENT",
       "Target": {
-        "Mode": "REFERENCE_CONSENSUS",
-        "Reason": "Use all configured reference renderers; when they disagree, matching an accepted renderer is sufficient."
+        "Mode": "REFERENCE_RENDERER",
+        "Primary": "ghostscript",
+        "Reason": "Ghostscript preserves the architectural linework as grayscale while keeping the colored safety overlays; pdfe still renders this linework with an excessive green cast."
       },
       "ImprovementPriority": "P2",
       "Confidence": "HIGH",
-      "QualityReason": "Current focused scan treats this as acceptable linework/texture disagreement, not content loss.",
-      "Notes": "Technical drawing linework now renders meaningfully; remaining oracle disagreement is bounded linework density."
+      "QualityReason": "pdfe renders the full drawing and annotations, but linework color fidelity is below the Ghostscript target and remains an improvement candidate.",
+      "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders; do not count as pixel-perfect or accepted-reference match."
     }
   }
 }
