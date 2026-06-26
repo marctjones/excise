@@ -1,5 +1,6 @@
 using AwesomeAssertions;
 using Pdfe.Core.Parsing;
+using System.Diagnostics;
 using System.Text.Json;
 using Xunit;
 
@@ -86,6 +87,46 @@ public class CorpusScanClassificationTests
 
         Program.BuildOracleDiagnostic(entry)
             .Should().Be("mutool=TIMEOUT (mutool exceeded 15000ms); pdftocairo=EXIT_CODE (pdftocairo exited 1); ghostscript=OK; pdfbox=TOOL_UNAVAILABLE; pdfium=TOOL_UNAVAILABLE");
+    }
+
+    [Fact]
+    public void TryApplyRecoveredMalformedContentShortCircuit_ClassifiesWithoutOracleWork()
+    {
+        var entry = new Program.CorpusScanEntry
+        {
+            path = "pdfjs/bomb_giant.pdf",
+            pageNumber = 1,
+            diagnostic = "pdfe=ContentStreamReadWarning { Code = IMAGE_ONLY_FILTER_IN_CONTENT_STREAM }",
+            renderMs = 1,
+        };
+
+        Program.TryApplyRecoveredMalformedContentShortCircuit(entry, Stopwatch.StartNew())
+            .Should().BeTrue();
+
+        entry.status.Should().Be("RECOVERED_MALFORMED_CONTENT");
+        entry.errorPhase.Should().Be("render");
+        entry.errorType.Should().Be("RecoveredMalformedContent");
+        entry.diagnostic.Should().Contain("Skipped reference oracles");
+        entry.mutoolStatus.Should().BeNull();
+        entry.cairoStatus.Should().BeNull();
+    }
+
+    [Fact]
+    public void TryApplyRecoveredMalformedContentShortCircuit_IgnoresOrdinaryDiagnostics()
+    {
+        var entry = new Program.CorpusScanEntry
+        {
+            path = "pdfjs/normal.pdf",
+            pageNumber = 1,
+            diagnostic = "pdfe=ordinary render warning",
+        };
+
+        Program.TryApplyRecoveredMalformedContentShortCircuit(entry, Stopwatch.StartNew())
+            .Should().BeFalse();
+
+        entry.status.Should().Be("UNKNOWN");
+        entry.errorPhase.Should().BeNull();
+        entry.errorType.Should().BeNull();
     }
 
     [Fact]

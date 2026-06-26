@@ -2143,6 +2143,9 @@ partial class Program
                 return entry;
             }
 
+            if (TryApplyRecoveredMalformedContentShortCircuit(entry, pageStopwatch))
+                return entry;
+
             // Primary oracles: mutool (MuPDF) and pdftocairo (Poppler).
             // Optional escalation oracles run only when the primary pair
             // does not both agree, keeping passing pages cheap while giving
@@ -3823,6 +3826,24 @@ partial class Program
         => entry.diagnostic?.Contains(
             ContentStreamReadWarning.ImageOnlyFilterInContentStreamCode,
             StringComparison.Ordinal) == true;
+
+    internal static bool TryApplyRecoveredMalformedContentShortCircuit(
+        CorpusScanEntry entry,
+        Stopwatch pageStopwatch)
+    {
+        if (!HasRecoveredMalformedContentDiagnostic(entry))
+            return false;
+
+        pageStopwatch.Stop();
+        entry.status = "RECOVERED_MALFORMED_CONTENT";
+        entry.errorPhase = "render";
+        entry.errorType = "RecoveredMalformedContent";
+        entry.diagnostic = AppendDiagnostic(
+            entry.diagnostic,
+            "Skipped reference oracles because pdfe recovered malformed page content.");
+        entry.elapsedMs = pageStopwatch.ElapsedMilliseconds;
+        return true;
+    }
 
     private static string AppendDiagnostic(string? existing, string detail)
     {
