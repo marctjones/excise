@@ -2,26 +2,27 @@
   "Path": "verapdf-corpus/veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-m.pdf",
   "Source": "veraPDF corpus",
   "Owner": "rendering:quality",
-  "RootCause": "SEMANTIC_OK",
-  "ImprovementPriority": "P2",
-  "Confidence": "MEDIUM",
-  "Notes": "Migrated from the legacy TSV rendering manifests.",
+  "RootCause": "REFERENCE_SUBSET_EXACT_MATCH",
+  "ImprovementPriority": "NONE",
+  "Confidence": "HIGH",
+  "Notes": "Focused scan: pdfe is pixel-identical to the accepted Ghostscript reference for this annotation appearance conformance fixture.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "GOOD_ENOUGH",
-      "PixelAgreement": "MATCHES_SOME",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_TARGET",
       "ReferenceSituation": "REFS_DISAGREE",
-      "RootCause": "SEMANTIC_OK",
+      "RootCause": "REFERENCE_SUBSET_EXACT_MATCH",
       "Target": {
-        "Mode": "REFERENCE_CONSENSUS",
-        "Reason": "Use all configured reference renderers; when they disagree, matching an accepted renderer is sufficient."
+        "Mode": "REFERENCE_RENDERER",
+        "Primary": "ghostscript",
+        "Reason": "pdfe is pixel-identical to Ghostscript; raw PASS_ONE is due remaining reference disagreement."
       },
-      "ImprovementPriority": "P2",
+      "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Annotation-appearance conformance fixture renders meaningful content; remaining difference is bounded oracle disagreement.",
-      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+      "QualityReason": "pdfe exactly matches the accepted reference renderer; no renderer improvement is pending for this page.",
+      "Notes": "Reviewed through current P2 focused raw scan."
     }
   }
 }
