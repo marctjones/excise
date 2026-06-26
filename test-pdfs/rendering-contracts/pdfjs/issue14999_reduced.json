@@ -1,28 +1,27 @@
 {
   "Path": "pdfjs/issue14999_reduced.pdf",
   "Source": "pdf.js corpus",
-  "Owner": "rendering:quality",
-  "RootCause": "FULL_CORPUS_BASELINE",
+  "Owner": "rendering:image",
+  "RootCause": "TYPE3_CCITT_DECODEPARMS",
   "ImprovementPriority": "NONE",
   "Confidence": "MEDIUM",
   "Notes": "Baseline contract inferred from full all-pages raw corpus report exploratory-report-test-pdfs-all-20260622-passone-sharded-coverage.json.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "DIFF",
-      "ReleaseStatus": "BLOCKED",
-      "QualityStatus": "FAIL",
-      "PixelAgreement": "MATCHES_NONE",
-      "ReferenceSituation": "REFS_DISAGREE",
-      "RootCause": "UNCLASSIFIED_RAW_DIFF",
+      "ExpectedRawStatus": "PASS",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PIXEL_EXACT",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
+      "ReferenceSituation": "REFS_AGREE",
+      "RootCause": "TYPE3_CCITT_DECODEPARMS",
       "Target": {
         "Mode": "REFERENCE_CONSENSUS",
-        "Primary": "pdftocairo",
-        "Reason": "Baseline full-corpus contract inferred from raw all-pages scan; this raw DIFF needs explicit root-cause review."
+        "Reason": "Type 3 CCITT image masks with inline DecodeParms now render readable glyphs in agreement with required references."
       },
-      "ImprovementPriority": "P1",
-      "Confidence": "LOW",
-      "QualityReason": "Baseline classification inferred from full all-pages raw corpus scan; promote to a reviewed contract when triaged.",
-      "Notes": "Auto-classified from exploratory-report-test-pdfs-all-20260622-passone-sharded-coverage.json."
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Renderer now passes the Type 3 CCITT DecodeParms regression covered by SkiaRendererTests.",
+      "Notes": "Reclassified after focused current render-quality scan reported raw PASS."
     }
   }
 }
