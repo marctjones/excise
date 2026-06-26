@@ -1,0 +1,27 @@
+{
+  "Path": "verapdf-corpus/veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.4 Colour spaces/6.2.4.2 ICCBased colour spaces/veraPDF test suite 6-2-4-2-t03-fail-d.pdf",
+  "Source": "veraPDF corpus",
+  "Owner": "rendering:quality",
+  "RootCause": "FULL_CORPUS_BASELINE",
+  "ImprovementPriority": "NONE",
+  "Confidence": "MEDIUM",
+  "Notes": "Baseline contract inferred from full all-pages raw corpus report exploratory-report-test-pdfs-all-20260622-passone-sharded-coverage.json.",
+  "Pages": {
+    "1": {
+      "ExpectedRawStatus": "PASS",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PIXEL_EXACT",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
+      "ReferenceSituation": "REFS_AGREE",
+      "RootCause": "RAW_PIXEL_MATCH",
+      "Target": {
+        "Mode": "REFERENCE_CONSENSUS",
+        "Reason": "Baseline full-corpus contract inferred from raw all-pages scan."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Baseline classification inferred from full all-pages raw corpus scan; promote to a reviewed contract when triaged.",
+      "Notes": "Auto-classified from exploratory-report-test-pdfs-all-20260622-passone-sharded-coverage.json."
+    }
+  }
+}

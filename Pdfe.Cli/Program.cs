@@ -49,6 +49,7 @@ partial class Program
             CreateVisualDiffCommand(),
             CreateCorpusScanCommand(),
             CreateRenderQualityScanCommand(),
+            CreateRenderQualityClassifyCommand(),
         };
 
         // System.CommandLine 2.0 split parsing from invocation: build a

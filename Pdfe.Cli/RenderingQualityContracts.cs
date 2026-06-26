@@ -173,6 +173,74 @@ partial class Program
         return command;
     }
 
+    static Command CreateRenderQualityClassifyCommand()
+    {
+        var rawReportArg = new Argument<FileInfo>("raw-report") { Description = "Existing corpus-scan JSON report" };
+        var outputOption = new Option<FileInfo>("--output")
+        {
+            Description = "Output quality JSON path",
+            Required = true,
+        };
+        var contractsOption = new Option<DirectoryInfo>("--contracts")
+        {
+            Description = "Directory containing per-PDF rendering quality contract JSON files",
+            DefaultValueFactory = _ => new DirectoryInfo("test-pdfs/rendering-contracts"),
+        };
+        var strictContractsOption = new Option<bool>("--strict-contracts")
+        {
+            Description = "Mark pages without contracts as NEEDS_REVIEW.",
+            DefaultValueFactory = _ => false,
+        };
+
+        var command = new Command(
+            "render-quality-classify",
+            "Apply rendering quality contracts to an existing raw corpus-scan JSON report")
+        {
+            rawReportArg,
+            outputOption,
+            contractsOption,
+            strictContractsOption,
+        };
+
+        command.SetAction(parseResult =>
+        {
+            var rawReport = parseResult.GetValue(rawReportArg)!;
+            var output = parseResult.GetValue(outputOption)!;
+            var contracts = parseResult.GetValue(contractsOption)!;
+            var strictContracts = parseResult.GetValue(strictContractsOption);
+
+            if (!rawReport.Exists)
+            {
+                Console.Error.WriteLine($"Raw corpus report not found: {rawReport.FullName}");
+                Environment.ExitCode = 1;
+                return;
+            }
+            if (!contracts.Exists)
+            {
+                Console.Error.WriteLine($"Rendering quality contracts not found: {contracts.FullName}");
+                Environment.ExitCode = 1;
+                return;
+            }
+
+            try
+            {
+                var ok = RunRenderQualityClassify(
+                    rawReport.FullName,
+                    contracts.FullName,
+                    output.FullName,
+                    strictContracts);
+                Environment.ExitCode = ok ? 0 : 1;
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error: {ex.Message}");
+                Environment.ExitCode = 1;
+            }
+        });
+
+        return command;
+    }
+
     internal static bool RunRenderQualityScan(
         string corpusDir,
         string contractsDir,
@@ -220,6 +288,24 @@ partial class Program
             return false;
 
         var rawReport = LoadCorpusScanReport(rawPath);
+        ApplyRenderingQualityContracts(rawReport.entries, contractSet, strictContracts);
+        var report = BuildRenderingQualityReport(rawReport, contractSet, contractsDir, strictContracts);
+        var json = JsonSerializer.Serialize(report, RenderingQualityJsonOptions);
+        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+        File.WriteAllText(outputPath, json);
+        Console.Out.WriteLine($"  wrote quality report {outputPath}");
+        PrintRenderingQualitySummary(report.summary);
+        return !strictContracts || report.summary.missingContractPages == 0;
+    }
+
+    internal static bool RunRenderQualityClassify(
+        string rawReportPath,
+        string contractsDir,
+        string outputPath,
+        bool strictContracts)
+    {
+        var contractSet = RenderingQualityContractSet.Load(contractsDir);
+        var rawReport = LoadCorpusScanReport(rawReportPath);
         ApplyRenderingQualityContracts(rawReport.entries, contractSet, strictContracts);
         var report = BuildRenderingQualityReport(rawReport, contractSet, contractsDir, strictContracts);
         var json = JsonSerializer.Serialize(report, RenderingQualityJsonOptions);
@@ -314,6 +400,9 @@ partial class Program
 
         if (entry.status == "PASS_ONE")
         {
+            if (entry.agreeingOracles == 1)
+                return "MATCHES_ONE_REFERENCE";
+
             if (!string.IsNullOrWhiteSpace(contract?.Target?.Primary)
                 && string.Equals(entry.bestOracle, contract.Target.Primary, StringComparison.Ordinal))
                 return "MATCHES_TARGET";

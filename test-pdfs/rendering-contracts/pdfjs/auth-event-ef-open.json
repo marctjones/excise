@@ -11,7 +11,7 @@
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
       "QualityStatus": "PDFE_BETTER_THAN_REFS",
-      "PixelAgreement": "NOT_COMPARABLE",
+      "PixelAgreement": "MATCHES_ONE_REFERENCE",
       "ReferenceSituation": "REFS_INCOMPLETE",
       "RootCause": "REFERENCE_COVERAGE_GAP",
       "Target": {

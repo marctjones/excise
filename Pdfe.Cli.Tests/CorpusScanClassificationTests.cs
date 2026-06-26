@@ -152,6 +152,68 @@ public class CorpusScanClassificationTests
     }
 
     [Fact]
+    public void RunRenderQualityClassify_AppliesContractsToExistingRawReport()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "pdfe-contracts-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        var rawPath = Path.Combine(Path.GetTempPath(), "pdfe-raw-report-" + Guid.NewGuid().ToString("N") + ".json");
+        var outputPath = Path.Combine(Path.GetTempPath(), "pdfe-quality-report-" + Guid.NewGuid().ToString("N") + ".json");
+        try
+        {
+            File.WriteAllText(Path.Combine(dir, "issue.json"), """
+                {
+                  "Path": "pdfjs/issue.pdf",
+                  "RootCause": "IMAGE_ORACLE_DISAGREEMENT",
+                  "Pages": {
+                    "1": {
+                      "ExpectedRawStatus": "PASS_ONE",
+                      "ReleaseStatus": "PASS",
+                      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+                      "PixelAgreement": "MATCHES_SOME",
+                      "ReferenceSituation": "REFS_DISAGREE",
+                      "Confidence": "HIGH"
+                    }
+                  }
+                }
+                """);
+            File.WriteAllText(rawPath, """
+                {
+                  "generatedUtc": "2026-06-26T00:00:00Z",
+                  "corpus": "test-pdfs",
+                  "counts": { "PASS_ONE": 1 },
+                  "entries": [
+                    {
+                      "path": "pdfjs/issue.pdf",
+                      "pageNumber": 1,
+                      "status": "PASS_ONE",
+                      "bestOracle": "mutool",
+                      "comparedOracles": 4,
+                      "agreeingOracles": 2,
+                      "oracleDisagreeingPairs": 1
+                    }
+                  ]
+                }
+                """);
+
+            Program.RunRenderQualityClassify(rawPath, dir, outputPath, strictContracts: true)
+                .Should().BeTrue();
+
+            using var stream = File.OpenRead(outputPath);
+            var report = System.Text.Json.JsonSerializer.Deserialize<Program.RenderingQualityReport>(stream);
+            report.Should().NotBeNull();
+            report!.summary.missingContractPages.Should().Be(0);
+            report.summary.qualityStatusCounts.Should().ContainKey("MATCHES_ACCEPTED_REFERENCE")
+                .WhoseValue.Should().Be(1);
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+            if (File.Exists(rawPath)) File.Delete(rawPath);
+            if (File.Exists(outputPath)) File.Delete(outputPath);
+        }
+    }
+
+    [Fact]
     public void RenderingQualityContractSet_LoadsRepositoryContracts()
     {
         var root = FindRepoRoot();

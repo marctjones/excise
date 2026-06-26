@@ -23,6 +23,22 @@
       "Confidence": "HIGH",
       "QualityReason": "The renderer opens page 1; page 2 is intentionally invalid and no longer reports a generic invalid page number.",
       "Notes": "Circular page-tree fixture page 2 must fail with a typed circular-reference parse error."
+    },
+    "1": {
+      "ExpectedRawStatus": "PASS",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PIXEL_EXACT",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
+      "ReferenceSituation": "REFS_AGREE",
+      "RootCause": "RAW_PIXEL_MATCH",
+      "Target": {
+        "Mode": "REFERENCE_CONSENSUS",
+        "Reason": "Baseline full-corpus contract inferred from raw all-pages scan."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Baseline classification inferred from full all-pages raw corpus scan; promote to a reviewed contract when triaged.",
+      "Notes": "Auto-classified from exploratory-report-test-pdfs-all-20260622-passone-sharded-coverage.json."
     }
   }
 }

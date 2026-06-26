@@ -11,7 +11,7 @@
       "ExpectedRawStatus": "*",
       "ReleaseStatus": "PASS",
       "QualityStatus": "GOOD_ENOUGH",
-      "PixelAgreement": "NOT_COMPARABLE",
+      "PixelAgreement": "MATCHES_ONE_REFERENCE",
       "ReferenceSituation": "NOT_APPLICABLE",
       "RootCause": "SEMANTIC_OK",
       "Target": {

@@ -23,6 +23,23 @@
       "Confidence": "HIGH",
       "QualityReason": "Short-key R4/V4 padding is covered by focused parser/security and rendering tests; oracle refusal is not a pdfe renderer defect.",
       "Notes": "Encrypted short-key fixture renders in pdfe but all sample references refuse it."
+    },
+    "0": {
+      "ExpectedRawStatus": "MALFORMED_PDF",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "NON_RENDERABLE_ACCEPTED",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "NOT_APPLICABLE",
+      "RootCause": "DEGENERATE_INPUT",
+      "Target": {
+        "Mode": "MALFORMED_INPUT_POLICY",
+        "Reason": "Baseline full-corpus contract inferred from raw all-pages scan; correct outcome is bounded non-renderable handling until explicitly reviewed."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "MEDIUM",
+      "QualityReason": "Baseline classification inferred from full all-pages raw corpus scan; promote to a reviewed contract when triaged.",
+      "Notes": "Auto-classified from exploratory-report-test-pdfs-all-20260622-passone-sharded-coverage.json.",
+      "ExpectedErrorContains": "Could not decode Flate stream"
     }
   }
 }

@@ -11,7 +11,7 @@
       "ExpectedRawStatus": "DIFF",
       "ReleaseStatus": "PASS",
       "QualityStatus": "GOOD_ENOUGH",
-      "PixelAgreement": "MATCHES_NONE",
+      "PixelAgreement": "MATCHES_ONE_REFERENCE",
       "ReferenceSituation": "REFS_DISAGREE",
       "RootCause": "COLOR_MANAGEMENT_DISAGREEMENT",
       "Target": {

@@ -1,0 +1,28 @@
+{
+  "Path": "pdfjs/bug859204.pdf",
+  "Source": "pdf.js corpus",
+  "Owner": "rendering:quality",
+  "RootCause": "FULL_CORPUS_BASELINE",
+  "ImprovementPriority": "NONE",
+  "Confidence": "MEDIUM",
+  "Notes": "Baseline contract inferred from full all-pages raw corpus report exploratory-report-test-pdfs-all-20260622-passone-sharded-coverage.json.",
+  "Pages": {
+    "1": {
+      "ExpectedRawStatus": "DIFF",
+      "ReleaseStatus": "BLOCKED",
+      "QualityStatus": "FAIL",
+      "PixelAgreement": "MATCHES_NONE",
+      "ReferenceSituation": "REFS_DISAGREE",
+      "RootCause": "UNCLASSIFIED_RAW_DIFF",
+      "Target": {
+        "Mode": "REFERENCE_CONSENSUS",
+        "Primary": "pdfbox",
+        "Reason": "Baseline full-corpus contract inferred from raw all-pages scan; this raw DIFF needs explicit root-cause review."
+      },
+      "ImprovementPriority": "P1",
+      "Confidence": "LOW",
+      "QualityReason": "Baseline classification inferred from full all-pages raw corpus scan; promote to a reviewed contract when triaged.",
+      "Notes": "Auto-classified from exploratory-report-test-pdfs-all-20260622-passone-sharded-coverage.json."
+    }
+  }
+}
