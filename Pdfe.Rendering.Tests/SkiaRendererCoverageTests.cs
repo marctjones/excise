@@ -314,6 +314,21 @@ public class SkiaRendererCoverageTests
     }
 
     [Fact]
+    public void RenderPage_SoftMaskedImage_ComposesStraightAlphaSamples()
+    {
+        var pdfData = CreatePdfWithHalfTransparentGrayImage();
+        using var doc = PdfDocument.Open(pdfData);
+        var renderer = new SkiaRenderer();
+
+        using var bitmap = renderer.RenderPage(doc.GetPage(1), new RenderOptions { Dpi = 72, BackgroundColor = SKColors.Black });
+
+        var pixel = bitmap.GetPixel(140, bitmap.Height - 140);
+        pixel.Red.Should().BeInRange(55, 75, "50% alpha gray 128 over black should compose to roughly 64");
+        pixel.Green.Should().BeInRange(55, 75);
+        pixel.Blue.Should().BeInRange(55, 75);
+    }
+
+    [Fact]
     public void RenderPage_FlateWrappedDctImage_DecodesTerminalJpegBytes()
     {
         var pdfData = CreatePdfWithFlateWrappedDctImage();
@@ -1730,6 +1745,68 @@ public class SkiaRendererCoverageTests
         WriteAscii(ms, "6 0 obj\n");
         WriteAscii(ms, $"<< /Type /XObject /Subtype /Image /Width {width} /Height {height}\n");
         WriteAscii(ms, $"   /ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /DCTDecode /Length {maskData.Length} >>\n");
+        WriteAscii(ms, "stream\n");
+        ms.Write(maskData);
+        WriteAscii(ms, "\nendstream\nendobj\n");
+
+        var xrefPos = ms.Position;
+        WriteAscii(ms, "xref\n0 7\n0000000000 65535 f \n");
+        for (var i = 1; i <= 6; i++)
+            WriteAscii(ms, $"{offsets[i]:D10} 00000 n \n");
+        WriteAscii(ms, "trailer\n<< /Root 1 0 R /Size 7 >>\nstartxref\n");
+        WriteAscii(ms, xrefPos.ToString(CultureInfo.InvariantCulture));
+        WriteAscii(ms, "\n%%EOF\n");
+
+        return ms.ToArray();
+    }
+
+    private static byte[] CreatePdfWithHalfTransparentGrayImage()
+    {
+        const int width = 16;
+        const int height = 16;
+        const string content = "q\n80 0 0 80 100 100 cm\n/Im1 Do\nQ\n";
+        var imageData = new byte[width * height * 3];
+        for (var i = 0; i < imageData.Length; i++)
+            imageData[i] = 128;
+
+        var maskData = new byte[width * height];
+        Array.Fill(maskData, (byte)128);
+
+        using var ms = new MemoryStream();
+        var offsets = new long[7];
+
+        WriteAscii(ms, "%PDF-1.4\n");
+
+        offsets[1] = ms.Position;
+        WriteAscii(ms, "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
+
+        offsets[2] = ms.Position;
+        WriteAscii(ms, "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n");
+
+        offsets[3] = ms.Position;
+        WriteAscii(ms, "3 0 obj\n");
+        WriteAscii(ms, "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R\n");
+        WriteAscii(ms, "   /Resources << /XObject << /Im1 5 0 R >> >> >>\n");
+        WriteAscii(ms, "endobj\n");
+
+        offsets[4] = ms.Position;
+        WriteAscii(ms, "4 0 obj\n");
+        WriteAscii(ms, $"<< /Length {Encoding.ASCII.GetByteCount(content)} >>\nstream\n");
+        WriteAscii(ms, content);
+        WriteAscii(ms, "endstream\nendobj\n");
+
+        offsets[5] = ms.Position;
+        WriteAscii(ms, "5 0 obj\n");
+        WriteAscii(ms, $"<< /Type /XObject /Subtype /Image /Width {width} /Height {height}\n");
+        WriteAscii(ms, $"   /ColorSpace /DeviceRGB /BitsPerComponent 8 /SMask 6 0 R /Length {imageData.Length} >>\n");
+        WriteAscii(ms, "stream\n");
+        ms.Write(imageData);
+        WriteAscii(ms, "\nendstream\nendobj\n");
+
+        offsets[6] = ms.Position;
+        WriteAscii(ms, "6 0 obj\n");
+        WriteAscii(ms, $"<< /Type /XObject /Subtype /Image /Width {width} /Height {height}\n");
+        WriteAscii(ms, $"   /ColorSpace /DeviceGray /BitsPerComponent 8 /Length {maskData.Length} >>\n");
         WriteAscii(ms, "stream\n");
         ms.Write(maskData);
         WriteAscii(ms, "\nendstream\nendobj\n");

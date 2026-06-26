@@ -4368,7 +4368,7 @@ internal partial class RenderContext
                 }
             }
 
-            return CreateBitmapFromRgbaBytes(mask.Width, mask.Height, pixels);
+            return CreateBitmapFromRgbaBytes(mask.Width, mask.Height, pixels, SKAlphaType.Unpremul);
         }
         catch (Exception __ex) when (__ex is not OutOfMemoryException)
         {
@@ -5583,9 +5583,13 @@ internal partial class RenderContext
         return CreateBitmapFromRgbaBytes(width, height, pixels);
     }
 
-    private static SKBitmap? CreateBitmapFromRgbaBytes(int width, int height, byte[] pixels)
+    private static SKBitmap? CreateBitmapFromRgbaBytes(
+        int width,
+        int height,
+        byte[] pixels,
+        SKAlphaType alphaType = SKAlphaType.Premul)
     {
-        var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
+        var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, alphaType);
         try
         {
             var destination = bitmap.GetPixels();
