@@ -257,6 +257,28 @@ public class SkiaRendererTests
     }
 
     [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsJbig2BitmapRefinement_RendersNonBlankNonBlackPage()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "bitmap-refine-page.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js bitmap-refine-page fixture found at test-pdfs/pdfjs/bitmap-refine-page.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var (whiteFraction, darkFraction) = MeasureWhiteAndDarkPixels(bitmap);
+        darkFraction.Should().BeGreaterThan(0.001,
+            "a decoded JBIG2 bitmap refinement page should paint visible bitonal content instead of a blank page");
+        whiteFraction.Should().BeGreaterThan(0.05,
+            "a decoded JBIG2 bitmap refinement page should preserve background pixels instead of rendering all black");
+        darkFraction.Should().BeLessThan(0.95,
+            "the rendered page should not collapse to an all-black raw-data fallback");
+    }
+
+    [Fact(Timeout = 20000)]
     public void RenderPage_PdfjsIssue2948_Type4MeshPatternRendersColorfulBackground()
     {
         var path = FindRepoFile("test-pdfs", "pdfjs", "issue2948.pdf");
