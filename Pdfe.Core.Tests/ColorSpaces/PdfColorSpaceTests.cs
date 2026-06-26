@@ -236,6 +236,61 @@ public class PdfColorSpaceTests
     }
 
     [Fact]
+    public void CalGray_ParseArray_MapsDeclaredWhitePointToDisplayWhite()
+    {
+        using var doc = CreateMinimalPdf();
+        var arr = new PdfArray(
+            new PdfName("CalGray"),
+            new PdfDictionary
+            {
+                ["WhitePoint"] = new PdfArray(new PdfReal(0.2), new PdfReal(1), new PdfReal(0.2)),
+                ["Gamma"] = new PdfReal(1.0)
+            });
+
+        var cs = PdfColorSpace.Parse(arr, doc);
+        var (r, g, b) = cs.ToRgb(new[] { 1.0 });
+
+        r.Should().BeApproximately(1.0, 0.0001);
+        g.Should().BeApproximately(1.0, 0.0001);
+        b.Should().BeApproximately(1.0, 0.0001);
+    }
+
+    [Fact]
+    public void CalGray_ParseArray_UsesWhitePointXyzBeforeDisplayAdaptation()
+    {
+        using var doc = CreateMinimalPdf();
+        var calGray = PdfColorSpace.Parse(
+            new PdfArray(
+                new PdfName("CalGray"),
+                new PdfDictionary
+                {
+                    ["WhitePoint"] = new PdfArray(new PdfReal(0.9505), new PdfReal(1), new PdfReal(1.0890)),
+                    ["Gamma"] = new PdfReal(2.0)
+                }),
+            doc);
+        var equivalentCalRgb = PdfColorSpace.Parse(
+            new PdfArray(
+                new PdfName("CalRGB"),
+                new PdfDictionary
+                {
+                    ["WhitePoint"] = new PdfArray(new PdfReal(0.9505), new PdfReal(1), new PdfReal(1.0890)),
+                    ["Gamma"] = new PdfArray(new PdfReal(2.0), new PdfReal(2.0), new PdfReal(2.0)),
+                    ["Matrix"] = new PdfArray(
+                        new PdfReal(0.9505), new PdfReal(1), new PdfReal(1.0890),
+                        new PdfReal(0), new PdfReal(0), new PdfReal(0),
+                        new PdfReal(0), new PdfReal(0), new PdfReal(0))
+                }),
+            doc);
+
+        var gray = calGray.ToRgb(new[] { 0.5 });
+        var rgb = equivalentCalRgb.ToRgb(new[] { 0.5, 0.0, 0.0 });
+
+        gray.R.Should().BeApproximately(rgb.R, 0.0001);
+        gray.G.Should().BeApproximately(rgb.G, 0.0001);
+        gray.B.Should().BeApproximately(rgb.B, 0.0001);
+    }
+
+    [Fact]
     public void FromName_Separation_ReturnsSeparationColorSpace()
     {
         var cs = PdfColorSpace.FromName("Separation");

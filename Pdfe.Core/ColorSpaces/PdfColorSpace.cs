@@ -348,9 +348,14 @@ public sealed class PdfColorSpace
     private (double R, double G, double B) CalGrayToRgb(double a)
     {
         var gamma = _calGamma is { Length: > 0 } ? _calGamma[0] : 1.0;
+        var wp = _whitePoint ?? new[] { 1.0, 1.0, 1.0 };
         var y = Math.Pow(Math.Clamp(a, 0, 1), gamma);
-        var encoded = EncodeSrgb(y);
-        return (encoded, encoded, encoded);
+        var (adaptedX, adaptedY, adaptedZ) = AdaptXyzToD65(
+            wp[0] * y,
+            wp[1] * y,
+            wp[2] * y,
+            wp);
+        return XyzToRgb(adaptedX, adaptedY, adaptedZ);
     }
 
     private (double R, double G, double B) CalRgbToRgb(double a, double b, double c)
