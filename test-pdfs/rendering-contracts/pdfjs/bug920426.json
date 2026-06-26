@@ -2,26 +2,27 @@
   "Path": "pdfjs/bug920426.pdf",
   "Source": "pdf.js corpus",
   "Owner": "rendering:quality",
-  "RootCause": "SEMANTIC_OK",
-  "ImprovementPriority": "P2",
-  "Confidence": "MEDIUM",
-  "Notes": "Migrated from the legacy TSV rendering manifests.",
+  "RootCause": "REFERENCE_FONT_RASTERIZATION_DISAGREEMENT",
+  "ImprovementPriority": "NONE",
+  "Confidence": "HIGH",
+  "Notes": "Focused review: pdfe renders the intended Checkliste Service text; references differ only in font rasterization/fallback policy.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "GOOD_ENOUGH",
-      "PixelAgreement": "MATCHES_SOME",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_TARGET",
       "ReferenceSituation": "REFS_DISAGREE",
-      "RootCause": "SEMANTIC_OK",
+      "RootCause": "REFERENCE_FONT_RASTERIZATION_DISAGREEMENT",
       "Target": {
-        "Mode": "REFERENCE_CONSENSUS",
-        "Reason": "Use all configured reference renderers; when they disagree, matching an accepted renderer is sufficient."
+        "Mode": "REFERENCE_RENDERER",
+        "Primary": "mutool",
+        "Reason": "MuPDF and pdfe render the intended text legibly; remaining differences are font rasterization/fallback policy."
       },
-      "ImprovementPriority": "P2",
+      "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "pdfe output is semantically correct enough for the release gate; the residual pixel diff is oracle/font-policy disagreement.",
-      "Notes": "pdfe renders meaningful Checkliste Service text while a minority oracle emits tofu boxes."
+      "QualityReason": "pdfe matches the accepted text rendering target closely enough for this font-policy disagreement.",
+      "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders."
     }
   }
 }

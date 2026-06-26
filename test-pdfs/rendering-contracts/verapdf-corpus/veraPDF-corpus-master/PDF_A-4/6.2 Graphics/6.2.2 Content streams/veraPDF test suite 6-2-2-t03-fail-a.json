@@ -2,26 +2,27 @@
   "Path": "verapdf-corpus/veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.2 Content streams/veraPDF test suite 6-2-2-t03-fail-a.pdf",
   "Source": "veraPDF corpus",
   "Owner": "rendering:quality",
-  "RootCause": "SEMANTIC_OK",
-  "ImprovementPriority": "P2",
-  "Confidence": "MEDIUM",
-  "Notes": "Migrated from the legacy TSV rendering manifests.",
+  "RootCause": "REFERENCE_PIXEL_ART_COLOR_DISAGREEMENT",
+  "ImprovementPriority": "NONE",
+  "Confidence": "HIGH",
+  "Notes": "Focused review: pdfe preserves the black pixel-art glyph while Cairo renders the same glyph gray.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "GOOD_ENOUGH",
-      "PixelAgreement": "MATCHES_SOME",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "MATCHES_TARGET",
       "ReferenceSituation": "REFS_DISAGREE",
-      "RootCause": "SEMANTIC_OK",
+      "RootCause": "REFERENCE_PIXEL_ART_COLOR_DISAGREEMENT",
       "Target": {
-        "Mode": "REFERENCE_CONSENSUS",
-        "Reason": "Use all configured reference renderers; when they disagree, matching an accepted renderer is sufficient."
+        "Mode": "QUALITY_STANDARD",
+        "Primary": "pdfe",
+        "Reason": "Quality target is the conformance fixture's black pixel-art glyph; pdfe preserves black pixels while Cairo gray-renders the glyph."
       },
-      "ImprovementPriority": "P2",
+      "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Content-stream conformance fixture renders meaningful content; remaining difference is bounded oracle disagreement.",
-      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+      "QualityReason": "pdfe satisfies the documented pixel-art quality target and is preferable to the gray Cairo output.",
+      "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders."
     }
   }
 }
