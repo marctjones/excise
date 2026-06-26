@@ -48,6 +48,7 @@ partial class Program
             CreateJbig2ClassifyCommand(),
             CreateVisualDiffCommand(),
             CreateCorpusScanCommand(),
+            CreateRenderQualityScanCommand(),
         };
 
         // System.CommandLine 2.0 split parsing from invocation: build a
@@ -4267,6 +4268,18 @@ partial class Program
         public string resultStatus { get; set; } = "UNKNOWN";
         public string? resultCategory { get; set; }
         public string? resultReason { get; set; }
+        public string? releaseStatus { get; set; }
+        public string? qualityStatus { get; set; }
+        public string? pixelAgreement { get; set; }
+        public string? referenceSituation { get; set; }
+        public string? targetBasis { get; set; }
+        public string? targetRenderer { get; set; }
+        public string? rootCause { get; set; }
+        public string? improvementPriority { get; set; }
+        public string? confidence { get; set; }
+        public string? trackedBy { get; set; }
+        public string? qualityReason { get; set; }
+        public string? contractStatus { get; set; }
         public string? expectedStatus { get; set; }
         public string? expectedErrorContains { get; set; }
         public string? expectedResultStatus { get; set; }
