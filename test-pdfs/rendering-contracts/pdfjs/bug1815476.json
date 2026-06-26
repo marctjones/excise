@@ -1,11 +1,11 @@
 {
   "Path": "pdfjs/bug1815476.pdf",
   "Source": "pdf.js corpus",
-  "Owner": "rendering:color",
-  "RootCause": "COLOR_MANAGEMENT_DISAGREEMENT",
-  "ImprovementPriority": "P2",
-  "Confidence": "MEDIUM",
-  "Notes": "Migrated from the legacy TSV rendering manifests.",
+  "Owner": "rendering:image",
+  "RootCause": "BOUNDED_MIXED_RENDERING_NOISE",
+  "ImprovementPriority": "NONE",
+  "Confidence": "HIGH",
+  "Notes": "The visible green header-band defect was fixed by letting RGB Adobe APP14 DCT images use the inferred JPEG transform; remaining differences are bounded image/text rasterization noise.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS",
@@ -13,15 +13,15 @@
       "QualityStatus": "GOOD_ENOUGH",
       "PixelAgreement": "MATCHES_ALL_REQUIRED",
       "ReferenceSituation": "REFS_AGREE",
-      "RootCause": "COLOR_MANAGEMENT_DISAGREEMENT",
+      "RootCause": "BOUNDED_MIXED_RENDERING_NOISE",
       "Target": {
         "Mode": "QUALITY_STANDARD",
         "Reason": "Reference renderers disagree due to policy-sensitive rendering; judge by documented visual quality standard."
       },
-      "ImprovementPriority": "P2",
+      "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Residual difference is localized color/image preview variance; target oracle is mutool and current pdfe is within threshold.",
-      "Notes": "Current all-oracle scan now matches the MuPDF target after image/color rendering fixes."
+      "QualityReason": "Residual difference is localized image/text rasterization variance; target oracle is mutool and current pdfe is within threshold.",
+      "Notes": "Current all-oracle scan matches the MuPDF target after the RGB Adobe APP14 DCT transform fix."
     }
   }
 }

@@ -2,10 +2,10 @@
   "Path": "pdfjs/22060_A1_01_Plans.pdf",
   "Source": "pdf.js corpus",
   "Owner": "rendering:quality",
-  "RootCause": "TECHNICAL_LINEWORK_COLOR_TRANSPARENCY_DISAGREEMENT",
+  "RootCause": "TECHNICAL_LINEWORK_RASTER_FIDELITY_DISAGREEMENT",
   "ImprovementPriority": "P2",
   "Confidence": "MEDIUM",
-  "Notes": "Focused review: pdfe renders all expected content, but the architectural raster linework remains greener than Ghostscript/MuPDF.",
+  "Notes": "Focused review: pdfe renders all expected content. The RGB Adobe APP14 DCT fix removed the severe green cast; remaining differences are line-density and antialias fidelity against the Ghostscript target.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
@@ -13,16 +13,16 @@
       "QualityStatus": "LOWER_QUALITY_ACCEPTABLE",
       "PixelAgreement": "MATCHES_SOME",
       "ReferenceSituation": "REFS_DISAGREE",
-      "RootCause": "TECHNICAL_LINEWORK_COLOR_TRANSPARENCY_DISAGREEMENT",
+      "RootCause": "TECHNICAL_LINEWORK_RASTER_FIDELITY_DISAGREEMENT",
       "Target": {
         "Mode": "REFERENCE_RENDERER",
         "Primary": "ghostscript",
-        "Reason": "Ghostscript preserves the architectural linework as grayscale while keeping the colored safety overlays; pdfe still renders this linework with an excessive green cast."
+        "Reason": "Ghostscript preserves the architectural linework with the strongest grayscale line-density while keeping the colored safety overlays; pdfe is now color-correct but still lighter/noisier in fine raster linework."
       },
       "ImprovementPriority": "P2",
       "Confidence": "HIGH",
-      "QualityReason": "pdfe renders the full drawing and annotations, but linework color fidelity is below the Ghostscript target and remains an improvement candidate.",
-      "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders; do not count as pixel-perfect or accepted-reference match."
+      "QualityReason": "pdfe renders the full drawing and annotations, but fine linework raster fidelity remains below the Ghostscript target and is still an improvement candidate.",
+      "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders after the DCT color-transform fix; do not count as pixel-perfect or accepted-reference match."
     }
   }
 }
