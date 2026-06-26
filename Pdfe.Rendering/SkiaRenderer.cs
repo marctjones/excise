@@ -4419,9 +4419,10 @@ internal partial class RenderContext
             if (imageStream.GetOptional("SMask") == null)
                 desiredComponents++;
 
+            var estimatedTarget = EstimateImageDecodeSize(sourceWidth, sourceHeight);
             var image = desiredComponents == 1 && imageStream.GetOptional("SMask") != null
                 ? JpxDecoder.TryDecodeOpenJpegGray(imageStream.EncodedData)
-                : null;
+                : TryDecodeLargeJpxWithOpenJpeg(imageStream, sourceWidth, sourceHeight, estimatedTarget.Width, estimatedTarget.Height, desiredComponents);
             image ??= JpxDecoder.TryDecodeManaged(imageStream.EncodedData, desiredComponents);
             if (image == null || sourceWidth <= 0 || sourceHeight <= 0 || image.Components <= 0)
                 return null;
@@ -4430,21 +4431,23 @@ internal partial class RenderContext
             if (components.Length == 0)
                 return null;
 
+            var decodedWidth = image.Width > 0 ? image.Width : sourceWidth;
+            var decodedHeight = image.Height > 0 ? image.Height : sourceHeight;
             var (targetWidth, targetHeight) = image.BitsPerComponent > 8
                 ? ClampImageTargetSize(sourceWidth, sourceHeight, sourceWidth, sourceHeight)
-                : EstimateImageDecodeSize(sourceWidth, sourceHeight);
+                : ClampImageTargetSize(decodedWidth, decodedHeight, estimatedTarget.Width, estimatedTarget.Height);
 
             var bitmap = new SKBitmap(targetWidth, targetHeight, SKColorType.Rgba8888, SKAlphaType.Premul);
-            var sourcePixelCount = (long)sourceWidth * sourceHeight;
+            var sourcePixelCount = (long)decodedWidth * decodedHeight;
             var hasEmbeddedAlpha = components.Length > colorSpace.Components
                                    && colorSpace.Components >= 1;
             for (int y = 0; y < targetHeight; y++)
             {
-                var sourceY = MapTargetToSource(y, targetHeight, sourceHeight);
-                var sourceRow = (long)sourceY * sourceWidth;
+                var sourceY = MapTargetToSource(y, targetHeight, decodedHeight);
+                var sourceRow = (long)sourceY * decodedWidth;
                 for (int x = 0; x < targetWidth; x++)
                 {
-                    var sourceX = MapTargetToSource(x, targetWidth, sourceWidth);
+                    var sourceX = MapTargetToSource(x, targetWidth, decodedWidth);
                     var idx = sourceRow + sourceX;
                     if (idx >= sourcePixelCount)
                         continue;
@@ -4490,6 +4493,42 @@ internal partial class RenderContext
         {
             return null;
         }
+    }
+
+    private JpxImage? TryDecodeLargeJpxWithOpenJpeg(
+        Pdfe.Core.Primitives.PdfStream imageStream,
+        int sourceWidth,
+        int sourceHeight,
+        int targetWidth,
+        int targetHeight,
+        int desiredComponents)
+    {
+        if (desiredComponents < 3)
+            return null;
+
+        var sourcePixels = (long)sourceWidth * sourceHeight;
+        if (sourcePixels <= MaxExpandedSoftMaskPixels)
+            return null;
+
+        var reduceFactor = ChooseOpenJpegReduceFactor(sourceWidth, sourceHeight, targetWidth, targetHeight);
+        return JpxDecoder.TryDecodeOpenJpeg(imageStream.EncodedData, reduceFactor);
+    }
+
+    private static int ChooseOpenJpegReduceFactor(int sourceWidth, int sourceHeight, int targetWidth, int targetHeight)
+    {
+        var reduce = 0;
+        while (reduce < 8)
+        {
+            var next = reduce + 1;
+            var nextWidth = Math.Max(1, sourceWidth >> next);
+            var nextHeight = Math.Max(1, sourceHeight >> next);
+            if (nextWidth < targetWidth || nextHeight < targetHeight)
+                break;
+
+            reduce = next;
+        }
+
+        return reduce;
     }
 
     private static int GetJpxColorComponentIndex(

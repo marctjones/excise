@@ -128,6 +128,15 @@ internal static class JpxDecoder
 
     public static JpxImage? TryDecodeOpenJpegGray(byte[] jpxData)
     {
+        var image = TryDecodeOpenJpeg(jpxData, reduceFactor: 0, outputFileName: "output.pgm");
+        return image is { ComponentData.Length: 1 } ? image : null;
+    }
+
+    public static JpxImage? TryDecodeOpenJpeg(byte[] jpxData, int reduceFactor = 0)
+        => TryDecodeOpenJpeg(jpxData, reduceFactor, outputFileName: "output.pnm");
+
+    private static JpxImage? TryDecodeOpenJpeg(byte[] jpxData, int reduceFactor, string outputFileName)
+    {
         if (jpxData == null || jpxData.Length == 0)
             return null;
 
@@ -140,7 +149,7 @@ internal static class JpxDecoder
         {
             Directory.CreateDirectory(tempDir);
             var input = Path.Combine(tempDir, "input.jp2");
-            var output = Path.Combine(tempDir, "output.pgm");
+            var output = Path.Combine(tempDir, outputFileName);
             File.WriteAllBytes(input, jpxData);
 
             using var process = new Process();
@@ -155,6 +164,11 @@ internal static class JpxDecoder
             process.StartInfo.ArgumentList.Add(input);
             process.StartInfo.ArgumentList.Add("-o");
             process.StartInfo.ArgumentList.Add(output);
+            if (reduceFactor > 0)
+            {
+                process.StartInfo.ArgumentList.Add("-r");
+                process.StartInfo.ArgumentList.Add(reduceFactor.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            }
 
             if (!process.Start())
                 return null;
@@ -169,16 +183,16 @@ internal static class JpxDecoder
                 return null;
 
             var pnm = File.ReadAllBytes(output);
-            if (!TryParsePgm(pnm, out var width, out var height, out var maxValue, out var samples))
+            if (!TryParsePnm(pnm, out var width, out var height, out var maxValue, out var components))
                 return null;
 
             return new JpxImage
             {
                 Width = width,
                 Height = height,
-                Components = 1,
+                Components = components.Length,
                 BitsPerComponent = maxValue > 255 ? 16 : 8,
-                ComponentData = new[] { samples },
+                ComponentData = components,
                 ComponentDefinitions = ReadComponentDefinitions(jpxData),
             };
         }
@@ -242,21 +256,29 @@ internal static class JpxDecoder
         return null;
     }
 
-    private static bool TryParsePgm(
+    private static bool TryParsePnm(
         byte[] data,
         out int width,
         out int height,
         out int maxValue,
-        out int[] samples)
+        out int[][] components)
     {
         width = 0;
         height = 0;
         maxValue = 0;
-        samples = Array.Empty<int>();
+        components = Array.Empty<int[]>();
 
         var offset = 0;
-        if (!TryReadPnmToken(data, ref offset, out var magic) || magic != "P5")
+        if (!TryReadPnmToken(data, ref offset, out var magic))
             return false;
+
+        if (magic == "P7")
+            return TryParsePam(data, ref offset, out width, out height, out maxValue, out components);
+
+        if (magic != "P5" && magic != "P6")
+            return false;
+
+        var componentCount = magic == "P6" ? 3 : 1;
         if (!TryReadPnmToken(data, ref offset, out var widthToken) ||
             !int.TryParse(widthToken, out width) ||
             width <= 0)
@@ -277,25 +299,99 @@ internal static class JpxDecoder
         }
 
         SkipPnmWhitespace(data, ref offset);
-        var count = checked(width * height);
-        samples = new int[count];
-        if (maxValue <= 255)
-        {
-            if (data.Length - offset < count)
-                return false;
+        return TryReadInterleavedSamples(data, offset, width, height, componentCount, maxValue, out components);
+    }
 
-            for (var i = 0; i < count; i++)
-                samples[i] = data[offset + i];
-            return true;
+    private static bool TryParsePam(
+        byte[] data,
+        ref int offset,
+        out int width,
+        out int height,
+        out int maxValue,
+        out int[][] components)
+    {
+        width = 0;
+        height = 0;
+        maxValue = 0;
+        components = Array.Empty<int[]>();
+        var depth = 0;
+
+        while (TryReadPamHeaderLine(data, ref offset, out var line))
+        {
+            if (line == "ENDHDR")
+                return width > 0 &&
+                       height > 0 &&
+                       depth > 0 &&
+                       maxValue > 0 &&
+                       TryReadInterleavedSamples(data, offset, width, height, depth, maxValue, out components);
+
+            var split = line.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+            if (split.Length != 2)
+                continue;
+
+            _ = split[0] switch
+            {
+                "WIDTH" => int.TryParse(split[1], out width),
+                "HEIGHT" => int.TryParse(split[1], out height),
+                "DEPTH" => int.TryParse(split[1], out depth),
+                "MAXVAL" => int.TryParse(split[1], out maxValue),
+                _ => false
+            };
         }
 
-        if (data.Length - offset < count * 2)
+        return false;
+    }
+
+    private static bool TryReadPamHeaderLine(byte[] data, ref int offset, out string line)
+    {
+        line = string.Empty;
+        if (offset >= data.Length)
             return false;
 
+        var start = offset;
+        while (offset < data.Length && data[offset] != (byte)'\n')
+            offset++;
+
+        var end = offset;
+        if (offset < data.Length && data[offset] == (byte)'\n')
+            offset++;
+
+        line = System.Text.Encoding.ASCII.GetString(data, start, end - start).Trim();
+        return line.Length > 0 && line[0] != '#';
+    }
+
+    private static bool TryReadInterleavedSamples(
+        byte[] data,
+        int offset,
+        int width,
+        int height,
+        int componentCount,
+        int maxValue,
+        out int[][] components)
+    {
+        components = Array.Empty<int[]>();
+        if (width <= 0 || height <= 0 || componentCount <= 0 || maxValue <= 0)
+            return false;
+
+        var count = checked(width * height);
+        var bytesPerSample = maxValue <= 255 ? 1 : 2;
+        var required = checked(count * componentCount * bytesPerSample);
+        if (data.Length - offset < required)
+            return false;
+
+        components = new int[componentCount][];
+        for (var c = 0; c < componentCount; c++)
+            components[c] = new int[count];
+
+        var pos = offset;
         for (var i = 0; i < count; i++)
         {
-            var sampleOffset = offset + i * 2;
-            samples[i] = (data[sampleOffset] << 8) | data[sampleOffset + 1];
+            for (var c = 0; c < componentCount; c++)
+            {
+                components[c][i] = bytesPerSample == 1
+                    ? data[pos++]
+                    : (data[pos++] << 8) | data[pos++];
+            }
         }
 
         return true;
