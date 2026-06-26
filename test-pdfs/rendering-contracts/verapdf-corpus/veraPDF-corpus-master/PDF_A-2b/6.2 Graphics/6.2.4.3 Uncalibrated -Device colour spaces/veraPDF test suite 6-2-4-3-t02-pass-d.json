@@ -3,7 +3,7 @@
   "Source": "veraPDF corpus",
   "Owner": "rendering:color",
   "RootCause": "COLOR_MANAGEMENT_DISAGREEMENT",
-  "ImprovementPriority": "P2",
+  "ImprovementPriority": "NONE",
   "Confidence": "MEDIUM",
   "Notes": "Migrated from the legacy TSV rendering manifests.",
   "Pages": {
@@ -18,7 +18,7 @@
         "Mode": "QUALITY_STANDARD",
         "Reason": "Reference renderers disagree due to policy-sensitive rendering; judge by documented visual quality standard."
       },
-      "ImprovementPriority": "P2",
+      "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
       "QualityReason": "veraPDF color-space conformance fixture is accepted pending the screen-preview color boundary.",
       "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."

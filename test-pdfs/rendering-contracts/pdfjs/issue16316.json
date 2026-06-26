@@ -3,7 +3,7 @@
   "Source": "pdf.js corpus",
   "Owner": "rendering:page-geometry",
   "RootCause": "PAGE_BOX_DISAGREEMENT",
-  "ImprovementPriority": "P2",
+  "ImprovementPriority": "NONE",
   "Confidence": "MEDIUM",
   "Notes": "Migrated from the legacy TSV rendering manifests.",
   "Pages": {
@@ -18,7 +18,7 @@
         "Mode": "QUALITY_STANDARD",
         "Reason": "Reference renderers disagree due to policy-sensitive rendering; judge by documented visual quality standard."
       },
-      "ImprovementPriority": "P2",
+      "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
       "QualityReason": "Page-box normalization policy owns this case unless content loss is reproduced.",
       "Notes": "Reference outputs disagree on the effective page surface."
