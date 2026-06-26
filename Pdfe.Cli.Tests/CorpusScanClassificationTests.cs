@@ -9,6 +9,168 @@ namespace Pdfe.Cli.Tests;
 public class CorpusScanClassificationTests
 {
     [Fact]
+    public void RenderingQualityContractSet_LoadsPerPdfContractsAndExpandsRanges()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "pdfe-contracts-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            var contractPath = Path.Combine(dir, "issue.json");
+            File.WriteAllText(contractPath, """
+                {
+                  "Path": "pdfjs/issue.pdf",
+                  "Password": "secret",
+                  "RootCause": "FONT_TEXT",
+                  "Target": {
+                    "Mode": "REFERENCE_RENDERER",
+                    "Primary": "mutool"
+                  },
+                  "Pages": {
+                    "1-2": {
+                      "ExpectedRawStatus": "PASS_ONE",
+                      "ReleaseStatus": "PASS",
+                      "QualityStatus": "TARGET_MATCH"
+                    }
+                  }
+                }
+                """);
+
+            var set = Program.RenderingQualityContractSet.Load(dir);
+
+            set.Contracts.Should().HaveCount(1);
+            set.CreatePageManifest()["pdfjs/issue.pdf"].Should().BeEquivalentTo(new[] { 1, 2 });
+            set.CreatePasswordManifest()!["pdfjs/issue.pdf"].Should().Be("secret");
+            set.CreateExpectationManifest()
+                .Should().ContainKey(new Program.CorpusPageKey("pdfjs/issue.pdf", 1));
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void ApplyRenderingQualityContracts_AnnotatesQualityColumns()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "pdfe-contracts-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            File.WriteAllText(Path.Combine(dir, "issue.json"), """
+                {
+                  "Path": "pdfjs/issue19326.pdf",
+                  "Issue": 403,
+                  "RootCause": "JPX_ALPHA_LIMITATION",
+                  "Target": {
+                    "Mode": "PDF_SPEC",
+                    "Primary": "mutool"
+                  },
+                  "Pages": {
+                    "1": {
+                      "ExpectedRawStatus": "DIFF",
+                      "ReleaseStatus": "PASS",
+                      "QualityStatus": "ACCEPTED_LIMITATION",
+                      "PixelAgreement": "MATCHES_NONE",
+                      "ReferenceSituation": "REFS_DISAGREE",
+                      "ImprovementPriority": "P2",
+                      "Confidence": "HIGH",
+                      "QualityReason": "Visible content is present; JPX alpha fidelity remains tracked."
+                    }
+                  }
+                }
+                """);
+            var set = Program.RenderingQualityContractSet.Load(dir);
+            var entries = new[]
+            {
+                new Program.CorpusScanEntry
+                {
+                    path = "pdfjs/issue19326.pdf",
+                    pageNumber = 1,
+                    status = "DIFF",
+                    bestOracle = "mutool",
+                    comparedOracles = 4,
+                    oracleDisagreeingPairs = 2,
+                },
+            };
+
+            Program.ApplyRenderingQualityContracts(entries, set, strictContracts: true);
+
+            entries[0].contractStatus.Should().Be("APPLIED");
+            entries[0].releaseStatus.Should().Be("PASS");
+            entries[0].qualityStatus.Should().Be("ACCEPTED_LIMITATION");
+            entries[0].pixelAgreement.Should().Be("MATCHES_NONE");
+            entries[0].referenceSituation.Should().Be("REFS_DISAGREE");
+            entries[0].targetBasis.Should().Be("PDF_SPEC");
+            entries[0].targetRenderer.Should().Be("mutool");
+            entries[0].rootCause.Should().Be("JPX_ALPHA_LIMITATION");
+            entries[0].trackedBy.Should().Be("#403");
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void ApplyRenderingQualityContracts_StrictMissingContractMarksNeedsReview()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "pdfe-contracts-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            File.WriteAllText(Path.Combine(dir, "other.json"), """
+                {
+                  "Path": "pdfjs/other.pdf",
+                  "Pages": {
+                    "1": {
+                      "ExpectedRawStatus": "PASS"
+                    }
+                  }
+                }
+                """);
+            var set = Program.RenderingQualityContractSet.Load(dir);
+            var entries = new[]
+            {
+                new Program.CorpusScanEntry
+                {
+                    path = "pdfjs/uncontracted.pdf",
+                    pageNumber = 1,
+                    status = "PASS",
+                },
+            };
+
+            Program.ApplyRenderingQualityContracts(entries, set, strictContracts: true);
+
+            entries[0].contractStatus.Should().Be("MISSING");
+            entries[0].releaseStatus.Should().Be("NEEDS_REVIEW");
+            entries[0].qualityStatus.Should().Be("NEEDS_REVIEW");
+            entries[0].qualityReason.Should().Contain("No rendering quality contract");
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void RenderingQualityContractSet_LoadsRepositoryContracts()
+    {
+        var root = FindRepoRoot();
+        var dir = Path.Combine(root, "test-pdfs", "rendering-contracts");
+        Directory.Exists(dir).Should().BeTrue("rendering quality contracts are versioned test metadata");
+
+        var set = Program.RenderingQualityContractSet.Load(dir);
+
+        set.Contracts.Should().NotBeEmpty();
+        set.CreateExpectationManifest()
+            .Should().ContainKey(new Program.CorpusPageKey("pdfjs/issue19326.pdf", 1));
+        var issue19326 = set.FindPage("pdfjs/issue19326.pdf", 1);
+        issue19326.Should().NotBeNull();
+        issue19326!.Page.QualityStatus.Should().Be("ACCEPTED_LIMITATION");
+        issue19326.Page.Target!.Mode.Should().Be("PDF_SPEC");
+    }
+
+    [Fact]
     public void ClassifyCorpusFailure_OpenPhase_ReturnsParseError()
     {
         Program.ClassifyCorpusFailure(
