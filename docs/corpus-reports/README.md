@@ -1,17 +1,46 @@
-# Exploratory Differential Reports
+# Rendering Quality Reports
 
-This directory holds merged JSON reports from running real-world corpus
-PDFs through pdfe with primary reference oracles (`mutool draw` and
-`pdftocairo`) plus optional escalation oracles (`Ghostscript`/GhostPDF,
-Apache PDFBox, and PDFium's `pdfium_test`).
+The preferred rendering gate is the contract-driven quality scanner. It runs
+real-world corpus PDFs through pdfe plus reference oracles (`mutool draw`,
+`pdftocairo`, Ghostscript/GhostPDF, Apache PDFBox, and PDFium's `pdfium_test`
+where configured), then evaluates the result against per-PDF JSON contracts in
+`test-pdfs/rendering-contracts/`.
 
 ```bash
-./scripts/run-exploratory-corpus.sh --page-mode first
+./scripts/run-render-quality-scan.sh --page-mode all --oracles all
 ```
 
-Each entry records pdfe's render result for one page, plus the per-oracle
-diff metrics and oracle statuses. Page-1 reports therefore have one entry per PDF;
-sampled and exhaustive reports have multiple entries per PDF.
+The quality report deliberately separates raw pixel comparison from the release
+decision:
+
+| Column | Meaning |
+|---|---|
+| `rawStatus` | Mechanical oracle comparison: `PASS`, `PASS_ONE`, `DIFF`, or a non-rendering status. |
+| `releaseStatus` | Release gate result: `PASS`, `BLOCKED`, or `NEEDS_REVIEW`. |
+| `qualityStatus` | Rendering-quality judgment: `PIXEL_EXACT`, `TARGET_MATCH`, `MATCHES_ACCEPTED_REFERENCE`, `GOOD_ENOUGH`, `PDFE_BETTER_THAN_REFS`, `ACCEPTED_LIMITATION`, `NON_RENDERABLE_ACCEPTED`, `FAIL`, or `NEEDS_REVIEW`. |
+| `pixelAgreement` | Whether pdfe matched all required references, the chosen target, some references, no references, or the page is not comparable. |
+| `referenceSituation` | Whether references agree, disagree, refuse, are incomplete, are known lossy/wrong, or are not applicable. |
+| `targetBasis` | Why the page is judged this way: reference renderer, reference consensus, PDF spec, semantic quality standard, resource policy, or malformed-input policy. |
+| `targetRenderer` | Chosen reference renderer when one renderer is the documented target. |
+| `rootCause` | Improvement cluster such as JPX alpha, color management, font/text, page box, transparency, image oracle disagreement, malformed input, or resource policy. |
+| `improvementPriority` | Follow-up priority: `P0`, `P1`, `P2`, or `NONE`. |
+| `confidence` | Classification confidence: `HIGH`, `MEDIUM`, or `LOW`. |
+
+This avoids the old ambiguity where `PASS_ONE` could mean “good enough,”
+“matches the intended reference,” “references disagree,” or “accepted for
+release but still lower quality than the best renderer.”
+
+## Legacy Raw Scanner
+
+`pdfe corpus-scan` and `scripts/run-exploratory-corpus.sh` still exist for raw
+oracle exploration and sharded long runs. They can emit `PASS` / `PASS_ONE` /
+`DIFF` reports, and the shell driver still supports TSV page, password, and
+expectation manifests for compatibility. New release-quality rendering status
+should use `render-quality-scan` and JSON contracts instead.
+
+Each raw scanner entry records pdfe's render result for one page, plus the
+per-oracle diff metrics and oracle statuses. Page-1 reports therefore have one
+entry per PDF; sampled and exhaustive reports have multiple entries per PDF.
 
 Entries also include timing diagnostics when produced by current tooling:
 `elapsedMs` for the page, `pdfElapsedMs` for the whole PDF, and per-phase
@@ -41,13 +70,14 @@ The rendering harness deliberately has separate layers:
 
 | Layer | Command | What it answers |
 |---|---|---|
-| Fast trend scan | `./scripts/run-exploratory-corpus.sh --page-mode first` | Broad corpus signal, one page per PDF |
-| Sampled multi-page scan | `./scripts/run-exploratory-corpus.sh --page-mode sample` | Common later-page regressions without full corpus cost |
-| Exhaustive release scan | `./scripts/run-exploratory-corpus.sh --page-mode all --extra-oracles all` | Every page of every corpus PDF against the primary visual oracles, with expanded oracle evidence on unsettled pages |
+| Fast raw trend scan | `./scripts/run-exploratory-corpus.sh --page-mode first` | Broad raw oracle signal, one page per PDF |
+| Contract smoke scan | `./scripts/run-render-quality-scan.sh --page-mode first --oracles ghostscript` | Quality/report vocabulary over the contracted PDFs without full corpus cost |
+| Sampled quality scan | `./scripts/run-render-quality-scan.sh --page-mode sample --oracles all` | Common later-page regressions with target renderer/root-cause classification |
+| Exhaustive release scan | `./scripts/run-render-quality-scan.sh --page-mode all --oracles all --strict-contracts` | Every page of every contracted corpus PDF with release, quality, pixel-agreement, reference-situation, and root-cause summaries |
 
-The default remains `first` so local iteration stays fast. Release
-validation should use `sample` while investigating and `all` before
-declaring rendering quality final.
+Release validation should use `sample` while investigating and `all` before
+declaring rendering quality final. `--strict-contracts` makes uncontracted pages
+show up as `NEEDS_REVIEW` instead of silently inheriting default classifications.
 
 `--extra-oracles ghostscript` is the default. Use `--extra-oracles none` to
 reproduce the older MuPDF+Poppler-only reports, or `--extra-oracles all` to add
