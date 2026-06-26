@@ -674,6 +674,23 @@ public class SkiaRendererTests
     }
 
     [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsBug1815476_DeviceRgbAdobeDctKeepsHeaderWhite()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "bug1815476.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js bug1815476 fixture found at test-pdfs/pdfjs/bug1815476.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 150, BackgroundColor = SKColors.White });
+
+        CountGreenDominantPixels(bitmap, new SKRectI(0, 30, bitmap.Width, 90)).Should().BeLessThan(1_000,
+            "the RGB JPEG header strip has an Adobe APP14 transform byte of 1, but forcing libjpeg to YCbCr makes it render as a solid green band");
+    }
+
+    [Fact(Timeout = 20000)]
     public void RenderPage_PdfjsIssue10339_IndexedLabImagesDoNotRenderAsBlackBlocks()
     {
         var path = FindRepoFile("test-pdfs", "pdfjs", "issue10339_reduced.pdf");
@@ -5653,6 +5670,27 @@ public class SkiaRendererTests
             {
                 var pixel = bitmap.GetPixel(x, y);
                 if (pixel.Blue > 120 && pixel.Blue > pixel.Green + 40 && pixel.Blue > pixel.Red + 40)
+                    count++;
+            }
+        }
+
+        return count;
+    }
+
+    private static int CountGreenDominantPixels(SKBitmap bitmap, SKRectI region)
+    {
+        var left = Math.Clamp(region.Left, 0, bitmap.Width);
+        var top = Math.Clamp(region.Top, 0, bitmap.Height);
+        var right = Math.Clamp(region.Right, left, bitmap.Width);
+        var bottom = Math.Clamp(region.Bottom, top, bitmap.Height);
+        var count = 0;
+
+        for (int y = top; y < bottom; y++)
+        {
+            for (int x = left; x < right; x++)
+            {
+                var pixel = bitmap.GetPixel(x, y);
+                if (pixel.Green > 120 && pixel.Green > pixel.Red + 40 && pixel.Green > pixel.Blue + 40)
                     count++;
             }
         }

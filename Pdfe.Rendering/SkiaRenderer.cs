@@ -4920,13 +4920,20 @@ internal partial class RenderContext
         byte[] dctData,
         string colorSpace)
     {
+        var normalizedColorSpace = NormalizeDctColorSpaceName(colorSpace);
         if (TryGetAdobeDctColorTransform(dctData, out var markerColorTransform))
-            return markerColorTransform;
+        {
+            if (normalizedColorSpace == "DeviceCMYK" || markerColorTransform == 0)
+                return markerColorTransform;
+
+            if (normalizedColorSpace == "DeviceRGB")
+                return null;
+        }
 
         if (GetTerminalDctDecodeParmsColorTransform(stream, filters) is { } decodeParmsColorTransform)
             return decodeParmsColorTransform;
 
-        return NormalizeDctColorSpaceName(colorSpace) == "DeviceCMYK" ? 0 : null;
+        return normalizedColorSpace == "DeviceCMYK" ? 0 : null;
     }
 
     private int? GetTerminalDctDecodeParmsColorTransform(PdfStream stream, IReadOnlyList<string> filters)
