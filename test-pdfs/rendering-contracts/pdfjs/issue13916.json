@@ -2,26 +2,27 @@
   "Path": "pdfjs/issue13916.pdf",
   "Source": "pdf.js corpus",
   "Owner": "rendering:quality",
-  "RootCause": "SEMANTIC_OK",
+  "RootCause": "MALFORMED_FONT_ENCODING_TEXT_QUALITY",
   "ImprovementPriority": "P2",
-  "Confidence": "MEDIUM",
-  "Notes": "Migrated from the legacy TSV rendering manifests.",
+  "Confidence": "HIGH",
+  "Notes": "Focused review: pdfe and reference renderers all show garbled text for this malformed font/encoding fixture; MuPDF is the closest current target.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "GOOD_ENOUGH",
-      "PixelAgreement": "MATCHES_SOME",
+      "QualityStatus": "LOWER_QUALITY_ACCEPTABLE",
+      "PixelAgreement": "MATCHES_TARGET",
       "ReferenceSituation": "REFS_DISAGREE",
-      "RootCause": "SEMANTIC_OK",
+      "RootCause": "MALFORMED_FONT_ENCODING_TEXT_QUALITY",
       "Target": {
-        "Mode": "REFERENCE_CONSENSUS",
-        "Reason": "Use all configured reference renderers; when they disagree, matching an accepted renderer is sufficient."
+        "Mode": "REFERENCE_RENDERER",
+        "Primary": "mutool",
+        "Reason": "MuPDF is the closest current target for this malformed font/encoding fixture, but the page remains lower quality because visible text is still garbled."
       },
       "ImprovementPriority": "P2",
       "Confidence": "HIGH",
-      "QualityReason": "Focused review treats this as acceptable isolated oracle disagreement, not release-blocking content loss.",
-      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+      "QualityReason": "pdfe renders the visible content but text quality is still lower than desired; keep this as an explicit P2 improvement target instead of vague SEMANTIC_OK.",
+      "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders."
     }
   }
 }
