@@ -135,7 +135,7 @@ public class PdfFunctionEvaluatorTests
             new PdfStream(new byte[] { 0 })
             {
                 ["FunctionType"] = new PdfInteger(0),
-                ["Size"] = Numbers(1)
+                ["Size"] = Numbers(0)
             },
             0.5).Should().BeNull();
 
@@ -164,6 +164,45 @@ public class PdfFunctionEvaluatorTests
         result.Should().NotBeNull();
         result![0].Should().BeApproximately(0.0, 0.0001);
         result[1].Should().BeApproximately(15.0, 0.0001);
+    }
+
+    [Fact]
+    public void Evaluate_SampledFunction_InterpolatesTwoInputFunctions()
+    {
+        var function = new PdfStream(new byte[] { 0, 64, 128, 255 })
+        {
+            ["FunctionType"] = new PdfInteger(0),
+            ["Size"] = Numbers(2, 2),
+            ["BitsPerSample"] = new PdfInteger(8),
+            ["Domain"] = Numbers(0, 1, 0, 1),
+            ["Range"] = Numbers(0, 1)
+        };
+
+        PdfFunctionEvaluator.Evaluate(function, new[] { 1.0, 0.0 })![0]
+            .Should().BeApproximately(64.0 / 255.0, 0.0001);
+
+        PdfFunctionEvaluator.Evaluate(function, new[] { 0.5, 0.5 })![0]
+            .Should().BeApproximately((0 + 64 + 128 + 255) / 4.0 / 255.0, 0.0001);
+    }
+
+    [Fact]
+    public void Evaluate_SampledFunction_AppliesDomainEncodeAndDecode()
+    {
+        var function = new PdfStream(new byte[] { 0, 255, 64, 128 })
+        {
+            ["FunctionType"] = new PdfInteger(0),
+            ["Size"] = Numbers(2, 2),
+            ["BitsPerSample"] = new PdfInteger(8),
+            ["Domain"] = Numbers(-1, 1, 10, 20),
+            ["Encode"] = Numbers(1, 0, 0, 1),
+            ["Decode"] = Numbers(10, 20)
+        };
+
+        PdfFunctionEvaluator.Evaluate(function, new[] { -1.0, 10.0 })![0]
+            .Should().BeApproximately(20.0, 0.0001);
+
+        PdfFunctionEvaluator.Evaluate(function, new[] { 1.0, 20.0 })![0]
+            .Should().BeApproximately(10.0 + (64.0 / 255.0 * 10.0), 0.0001);
     }
 
     [Fact]
@@ -213,6 +252,39 @@ public class PdfFunctionEvaluatorTests
 
         PdfFunctionEvaluator.Evaluate(function, 0.5)![0]
             .Should().BeApproximately(5.0, 0.0001);
+    }
+
+    [Fact]
+    public void Evaluate_SampledFunction_AllowsSingleSampleDimension()
+    {
+        var function = new PdfStream(new byte[] { 128 })
+        {
+            ["FunctionType"] = new PdfInteger(0),
+            ["Size"] = Numbers(1),
+            ["BitsPerSample"] = new PdfInteger(8),
+            ["Range"] = Numbers(0, 1)
+        };
+
+        PdfFunctionEvaluator.Evaluate(function, 0.0)![0]
+            .Should().BeApproximately(128.0 / 255.0, 0.0001);
+        PdfFunctionEvaluator.Evaluate(function, 1.0)![0]
+            .Should().BeApproximately(128.0 / 255.0, 0.0001);
+    }
+
+    [Fact]
+    public void Evaluate_SampledFunction_ClipsDecodedValuesToRange()
+    {
+        var function = new PdfStream(new byte[] { 255 })
+        {
+            ["FunctionType"] = new PdfInteger(0),
+            ["Size"] = Numbers(1),
+            ["BitsPerSample"] = new PdfInteger(8),
+            ["Decode"] = Numbers(0, 2),
+            ["Range"] = Numbers(0, 1)
+        };
+
+        PdfFunctionEvaluator.Evaluate(function, 0.5)![0]
+            .Should().BeApproximately(1.0, 0.0001);
     }
 
     [Fact]

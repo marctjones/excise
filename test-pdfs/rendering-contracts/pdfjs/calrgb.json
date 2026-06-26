@@ -88,20 +88,20 @@
       "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
     },
     "17": {
-      "ExpectedRawStatus": "PASS_ONE",
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "GOOD_ENOUGH",
-      "PixelAgreement": "MATCHES_ONE_REFERENCE",
-      "ReferenceSituation": "REFS_DISAGREE",
-      "RootCause": "COLOR_MANAGEMENT_DISAGREEMENT",
+      "QualityStatus": "PIXEL_EXACT",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
+      "ReferenceSituation": "REFS_AGREE",
+      "RootCause": "RAW_PIXEL_MATCH",
       "Target": {
-        "Mode": "QUALITY_STANDARD",
-        "Reason": "Reference renderers disagree due to policy-sensitive rendering; judge by documented visual quality standard."
+        "Mode": "REFERENCE_CONSENSUS",
+        "Reason": "CalRGB matrix-to-XYZ handling now matches the required reference set."
       },
-      "ImprovementPriority": "P2",
+      "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Color-space function fixture has bounded screen-preview disagreement between reference renderers.",
-      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+      "QualityReason": "CalRGB page now reaches raw PASS after applying the Matrix result directly as XYZ before white-point adaptation.",
+      "Notes": "Updated after the spec-aligned CalRGB conversion fix."
     },
     "1": {
       "ExpectedRawStatus": "PASS",

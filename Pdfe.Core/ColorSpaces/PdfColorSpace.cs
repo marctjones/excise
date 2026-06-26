@@ -368,9 +368,9 @@ public sealed class PdfColorSpace
         double z = matrix[2] * ag + matrix[5] * bg + matrix[8] * cg;
 
         var (adaptedX, adaptedY, adaptedZ) = AdaptXyzToD65(
-            wp[0] * x,
-            wp[1] * y,
-            wp[2] * z,
+            x,
+            y,
+            z,
             wp);
         return XyzToRgb(adaptedX, adaptedY, adaptedZ);
     }

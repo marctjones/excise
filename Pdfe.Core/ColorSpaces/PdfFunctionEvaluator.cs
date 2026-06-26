@@ -6,6 +6,7 @@ namespace Pdfe.Core.ColorSpaces;
 internal static class PdfFunctionEvaluator
 {
     private static readonly ConditionalWeakTable<PdfDictionary, CachedFunctionData> s_functionData = new();
+    private const int MaxSampledFunctionInputDimensions = 16;
 
     private sealed class CachedFunctionData
     {
@@ -16,9 +17,12 @@ internal static class PdfFunctionEvaluator
     }
 
     private sealed record SampledFunctionData(
-        int SampleCount,
+        int[] Sizes,
         int OutputComponentCount,
-        double[]? Range,
+        double[] Domain,
+        double[] Encode,
+        double[] Decode,
+        double[] Range,
         double[] Samples);
 
     public static double[]? Evaluate(PdfObject? funcObj, double t)
@@ -57,7 +61,7 @@ internal static class PdfFunctionEvaluator
         var funcType = func.GetInt("FunctionType", -1);
         return funcType switch
         {
-            0 => EvaluateSampled(func, inputs.Length > 0 ? inputs[0] : 0),
+            0 => EvaluateSampled(func, inputs),
             2 => EvaluateExponential(func, inputs.Length > 0 ? inputs[0] : 0),
             3 => EvaluateStitching(func, inputs.Length > 0 ? inputs[0] : 0, resolve),
             4 => EvaluateCalculator(func, inputs),
@@ -115,33 +119,91 @@ internal static class PdfFunctionEvaluator
         return Evaluate(functions[idx], tEnc, resolve);
     }
 
-    private static double[]? EvaluateSampled(PdfDictionary func, double t)
+    private static double[]? EvaluateSampled(PdfDictionary func, double[] inputs)
     {
         var sampled = GetSampledFunctionData(func);
         if (sampled == null)
             return null;
 
-        double idx = t * (sampled.SampleCount - 1);
-        int lo = (int)Math.Floor(idx);
-        int hi = Math.Min(lo + 1, sampled.SampleCount - 1);
-        double frac = idx - lo;
+        var coords = ResolveSampleCoordinates(sampled, inputs);
+        var lows = new int[coords.Length];
+        var highs = new int[coords.Length];
+        var fractions = new double[coords.Length];
+        for (var i = 0; i < coords.Length; i++)
+        {
+            lows[i] = (int)Math.Floor(coords[i]);
+            highs[i] = Math.Min(lows[i] + 1, sampled.Sizes[i] - 1);
+            fractions[i] = coords[i] - lows[i];
+        }
 
         var result = new double[sampled.OutputComponentCount];
-        for (int c = 0; c < sampled.OutputComponentCount; c++)
+        var vertexCount = 1 << sampled.Sizes.Length;
+        for (var vertex = 0; vertex < vertexCount; vertex++)
         {
-            double v0 = lo * sampled.OutputComponentCount + c < sampled.Samples.Length
-                ? sampled.Samples[lo * sampled.OutputComponentCount + c]
-                : 0;
-            double v1 = hi * sampled.OutputComponentCount + c < sampled.Samples.Length
-                ? sampled.Samples[hi * sampled.OutputComponentCount + c]
-                : v0;
-            result[c] = v0 + frac * (v1 - v0);
+            var sampleIndices = new int[sampled.Sizes.Length];
+            double weight = 1.0;
+            for (var dim = 0; dim < sampled.Sizes.Length; dim++)
+            {
+                var high = ((vertex >> dim) & 1) != 0;
+                sampleIndices[dim] = high ? highs[dim] : lows[dim];
+                weight *= high ? fractions[dim] : 1 - fractions[dim];
+            }
 
-            if (sampled.Range != null && c * 2 + 1 < sampled.Range.Length)
-                result[c] = result[c] * (sampled.Range[c * 2 + 1] - sampled.Range[c * 2]) + sampled.Range[c * 2];
+            var sampleOffset = FlattenSampleIndex(sampleIndices, sampled.Sizes) * sampled.OutputComponentCount;
+            for (var c = 0; c < sampled.OutputComponentCount; c++)
+            {
+                var sampleIndex = sampleOffset + c;
+                var value = sampleIndex < sampled.Samples.Length ? sampled.Samples[sampleIndex] : 0;
+                result[c] += value * weight;
+            }
+        }
+
+        for (var c = 0; c < sampled.OutputComponentCount; c++)
+        {
+            if (c * 2 + 1 < sampled.Decode.Length)
+            {
+                var min = sampled.Decode[c * 2];
+                var max = sampled.Decode[c * 2 + 1];
+                result[c] = result[c] * (max - min) + min;
+            }
+            if (c * 2 + 1 < sampled.Range.Length)
+                result[c] = Math.Clamp(result[c], sampled.Range[c * 2], sampled.Range[c * 2 + 1]);
         }
 
         return result;
+    }
+
+    private static double[] ResolveSampleCoordinates(SampledFunctionData sampled, double[] inputs)
+    {
+        var coords = new double[sampled.Sizes.Length];
+        for (var dim = 0; dim < sampled.Sizes.Length; dim++)
+        {
+            var input = dim < inputs.Length ? inputs[dim] : 0.0;
+            var d0 = sampled.Domain.Length > dim * 2 ? sampled.Domain[dim * 2] : 0.0;
+            var d1 = sampled.Domain.Length > dim * 2 + 1 ? sampled.Domain[dim * 2 + 1] : 1.0;
+            var e0 = sampled.Encode.Length > dim * 2 ? sampled.Encode[dim * 2] : 0.0;
+            var e1 = sampled.Encode.Length > dim * 2 + 1 ? sampled.Encode[dim * 2 + 1] : sampled.Sizes[dim] - 1;
+            input = Math.Clamp(input, Math.Min(d0, d1), Math.Max(d0, d1));
+            var encoded = Math.Abs(d1 - d0) > double.Epsilon
+                ? e0 + (input - d0) * (e1 - e0) / (d1 - d0)
+                : e0;
+            coords[dim] = Math.Clamp(encoded, 0, sampled.Sizes[dim] - 1);
+        }
+
+        return coords;
+    }
+
+    private static int FlattenSampleIndex(int[] indices, int[] sizes)
+    {
+        var index = 0;
+        var stride = 1;
+        for (var dim = 0; dim < sizes.Length; dim++)
+        {
+            index += indices[dim] * stride;
+            stride *= sizes[dim];
+        }
+
+        return index;
     }
 
     private static SampledFunctionData? GetSampledFunctionData(PdfDictionary func)
@@ -162,8 +224,10 @@ internal static class PdfFunctionEvaluator
                 return null;
             }
 
-            int n = (int)sizeArr[0];
-            if (n <= 1)
+            var sizes = sizeArr.Select(v => (int)v).ToArray();
+            if (sizes.Length == 0 ||
+                sizes.Length > MaxSampledFunctionInputDimensions ||
+                sizes.Any(v => v <= 0))
             {
                 cached.SampledInitialized = true;
                 return null;
@@ -171,6 +235,7 @@ internal static class PdfFunctionEvaluator
 
             var bps = func.GetInt("BitsPerSample", 8);
             var rangeArr = GetNumberArray(func, "Range");
+            var decodeArr = GetNumberArray(func, "Decode") ?? rangeArr ?? new[] { 0.0, 1.0 };
             var streamData = (func as PdfStream)?.DecodedData;
             if (streamData == null)
             {
@@ -178,16 +243,60 @@ internal static class PdfFunctionEvaluator
                 return null;
             }
 
-            int outComps = rangeArr != null ? rangeArr.Length / 2 : 1;
-            int totalSamples = n * outComps;
+            int outComps = decodeArr.Length >= 2 ? decodeArr.Length / 2 : 1;
+            int sampleCount = 1;
+            foreach (var size in sizes)
+            {
+                if (sampleCount > int.MaxValue / size)
+                {
+                    cached.SampledInitialized = true;
+                    return null;
+                }
+                sampleCount *= size;
+            }
+
+            if (sampleCount > int.MaxValue / Math.Max(1, outComps))
+            {
+                cached.SampledInitialized = true;
+                return null;
+            }
+
+            int totalSamples = sampleCount * outComps;
             cached.Sampled = new SampledFunctionData(
-                n,
+                sizes,
                 outComps,
-                rangeArr,
+                GetNumberArray(func, "Domain") ?? DefaultPairs(sizes.Length, 0.0, 1.0),
+                GetNumberArray(func, "Encode") ?? DefaultEncode(sizes),
+                decodeArr,
+                rangeArr ?? decodeArr,
                 DecodeSamples(streamData, totalSamples, bps));
             cached.SampledInitialized = true;
             return cached.Sampled;
         }
+    }
+
+    private static double[] DefaultEncode(int[] sizes)
+    {
+        var encode = new double[sizes.Length * 2];
+        for (var i = 0; i < sizes.Length; i++)
+        {
+            encode[i * 2] = 0.0;
+            encode[i * 2 + 1] = sizes[i] - 1;
+        }
+
+        return encode;
+    }
+
+    private static double[] DefaultPairs(int count, double min, double max)
+    {
+        var values = new double[count * 2];
+        for (var i = 0; i < count; i++)
+        {
+            values[i * 2] = min;
+            values[i * 2 + 1] = max;
+        }
+
+        return values;
     }
 
     private static double[] DecodeSamples(byte[] streamData, int totalSamples, int bitsPerSample)
