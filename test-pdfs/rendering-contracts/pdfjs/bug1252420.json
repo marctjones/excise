@@ -2,10 +2,10 @@
   "Path": "pdfjs/bug1252420.pdf",
   "Source": "pdf.js corpus",
   "Owner": "rendering:quality",
-  "RootCause": "SEMANTIC_OK",
-  "ImprovementPriority": "P2",
-  "Confidence": "MEDIUM",
-  "Notes": "Migrated from the legacy TSV rendering manifests.",
+  "RootCause": "BOUNDED_MIXED_RENDERING_NOISE",
+  "ImprovementPriority": "NONE",
+  "Confidence": "HIGH",
+  "Notes": "Focused review: pdfe is within the raw PASS threshold and remaining difference is bounded mixed rendering noise.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS",
@@ -13,15 +13,16 @@
       "QualityStatus": "GOOD_ENOUGH",
       "PixelAgreement": "MATCHES_ALL_REQUIRED",
       "ReferenceSituation": "REFS_AGREE",
-      "RootCause": "SEMANTIC_OK",
+      "RootCause": "BOUNDED_MIXED_RENDERING_NOISE",
       "Target": {
-        "Mode": "REFERENCE_CONSENSUS",
-        "Reason": "Use all configured reference renderers; when they disagree, matching an accepted renderer is sufficient."
+        "Mode": "REFERENCE_RENDERER",
+        "Primary": "pdftocairo",
+        "Reason": "Cairo is the closest current target and pdfe is inside the raw PASS threshold; residual differences are bounded mixed rendering noise."
       },
-      "ImprovementPriority": "P2",
+      "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
       "QualityReason": "Residual difference is bounded mixed rendering noise; target oracle is pdftocairo and current pdfe is within threshold.",
-      "Notes": "Current all-oracle scan now matches the Poppler target after shared rendering fixes."
+      "Notes": "Current focused quality scan treats this as resolved; no active renderer improvement target remains."
     }
   }
 }
