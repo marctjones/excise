@@ -227,7 +227,8 @@ public class CorpusScanClassificationTests
             .Should().ContainKey(new Program.CorpusPageKey("pdfjs/issue19326.pdf", 1));
         var issue19326 = set.FindPage("pdfjs/issue19326.pdf", 1);
         issue19326.Should().NotBeNull();
-        issue19326!.Page.QualityStatus.Should().Be("ACCEPTED_LIMITATION");
+        issue19326!.Page.QualityStatus.Should().Be("MATCHES_ACCEPTED_REFERENCE");
+        issue19326.Page.RootCause.Should().Be("JPX_CDEF_OPACITY_ORACLE_DISAGREEMENT");
         issue19326.Page.Target!.Mode.Should().Be("PDF_SPEC");
     }
 

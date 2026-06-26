@@ -4419,7 +4419,10 @@ internal partial class RenderContext
             if (imageStream.GetOptional("SMask") == null)
                 desiredComponents++;
 
-            var image = JpxDecoder.TryDecodeManaged(imageStream.EncodedData, desiredComponents);
+            var image = desiredComponents == 1 && imageStream.GetOptional("SMask") != null
+                ? JpxDecoder.TryDecodeOpenJpegGray(imageStream.EncodedData)
+                : null;
+            image ??= JpxDecoder.TryDecodeManaged(imageStream.EncodedData, desiredComponents);
             if (image == null || sourceWidth <= 0 || sourceHeight <= 0 || image.Components <= 0)
                 return null;
 
@@ -4433,8 +4436,7 @@ internal partial class RenderContext
 
             var bitmap = new SKBitmap(targetWidth, targetHeight, SKColorType.Rgba8888, SKAlphaType.Premul);
             var sourcePixelCount = (long)sourceWidth * sourceHeight;
-            var hasEmbeddedAlpha = imageStream.GetOptional("SMask") == null
-                                   && components.Length > colorSpace.Components
+            var hasEmbeddedAlpha = components.Length > colorSpace.Components
                                    && colorSpace.Components >= 1;
             for (int y = 0; y < targetHeight; y++)
             {
@@ -4471,7 +4473,7 @@ internal partial class RenderContext
                         var alphaComponentIndex = GetJpxAlphaComponentIndex(image, colorSpace.Components, components.Length);
                         var alphaComponent = components[alphaComponentIndex];
                         if (idx < alphaComponent.LongLength)
-                            alpha = Math.Clamp(alphaComponent[(int)idx], 0, 255);
+                            alpha = NormalizeJpxSampleToByte(alphaComponent[(int)idx], image.BitsPerComponent);
                     }
 
                     bitmap.SetPixel(x, y, new SKColor(

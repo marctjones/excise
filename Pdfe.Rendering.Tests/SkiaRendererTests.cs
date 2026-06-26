@@ -508,6 +508,26 @@ public class SkiaRendererTests
     }
 
     [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsIssue19326_OpenJpegFallbackKeepsJpxBackgroundClean()
+    {
+        Assert.SkipWhen(!IsOpenJpegDecompressAvailable(),
+            "opj_decompress is not available; the strict JPX cdef-opacity regression only runs when the optional OpenJPEG fallback can execute.");
+        var path = FindRepoFile("test-pdfs", "pdfjs", "issue19326.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js issue19326 fixture found at test-pdfs/pdfjs/issue19326.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var (whiteFraction, _) = MeasureWhiteAndDarkPixels(bitmap);
+        whiteFraction.Should().BeGreaterThan(0.65,
+            "the JP2 cdef opacity channel should keep transparent/background samples from rendering as grayscale noise");
+    }
+
+    [Fact(Timeout = 20000)]
     public void RenderPage_PdfjsIssue16038_UncoloredTilingPatternUsesScnTint()
     {
         var path = FindRepoFile("test-pdfs", "pdfjs", "issue16038.pdf");
@@ -5387,6 +5407,29 @@ public class SkiaRendererTests
         }
 
         return count;
+    }
+
+    private static bool IsOpenJpegDecompressAvailable()
+    {
+        try
+        {
+            var configured = Environment.GetEnvironmentVariable("PDFE_OPENJPEG_DECOMPRESS");
+            if (!string.IsNullOrWhiteSpace(configured) && File.Exists(configured))
+                return true;
+
+            var path = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
+            foreach (var dir in path.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var candidate = Path.Combine(dir, OperatingSystem.IsWindows() ? "opj_decompress.exe" : "opj_decompress");
+                if (File.Exists(candidate))
+                    return true;
+            }
+        }
+        catch
+        {
+        }
+
+        return false;
     }
 
     private static (double Red, double Green, double Blue, double Luminance) MeanRgb(SKBitmap bitmap, SKRectI region)

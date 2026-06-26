@@ -2,27 +2,27 @@
   "Path": "pdfjs/issue19326.pdf",
   "Source": "pdf.js corpus",
   "Owner": "rendering:image",
-  "RootCause": "JPX_ALPHA_LIMITATION",
-  "ImprovementPriority": "P2",
-  "Confidence": "MEDIUM",
-  "Notes": "Migrated from the legacy TSV rendering manifests.",
+  "RootCause": "JPX_CDEF_OPACITY_ORACLE_DISAGREEMENT",
+  "ImprovementPriority": "NONE",
+  "Confidence": "HIGH",
+  "Notes": "OpenJPEG fallback resolves the prior JPX alpha/background limitation; remaining differences are reference-oracle disagreement.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "DIFF",
+      "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "ACCEPTED_LIMITATION",
-      "PixelAgreement": "MATCHES_NONE",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_ONE_REFERENCE",
       "ReferenceSituation": "REFS_DISAGREE",
-      "RootCause": "JPX_ALPHA_LIMITATION",
+      "RootCause": "JPX_CDEF_OPACITY_ORACLE_DISAGREEMENT",
       "Target": {
         "Mode": "PDF_SPEC",
         "Primary": "mutool",
         "Reason": "PDF JPX alpha/component semantics are the quality target; references are evidence, not the full contract."
       },
-      "ImprovementPriority": "P2",
+      "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Visible JPX content now renders; remaining gray background is JP2 embedded opacity/background fidelity deferred to full JPEG2000 alpha-component support in #403.",
-      "Notes": "JPX fixture now renders visible content; exact JP2 embedded opacity/background handling remains a documented limitation under the full JPX roadmap.",
+      "QualityReason": "pdfe uses the optional OpenJPEG fallback for this JP2 cdef-opacity grayscale fixture and now closely matches the mutool target while references disagree.",
+      "Notes": "OpenJPEG fallback decodes the JP2 grayscale component cleanly; remaining small pixel difference is antialiasing/resampling against the mutool target.",
       "Issue": 403
     }
   },

@@ -2,6 +2,7 @@ namespace Pdfe.Core.Filters.Jpx;
 
 using CSJ2K;
 using CSJ2K.j2k.util;
+using System.Diagnostics;
 
 /// <summary>
 /// JPEG2000 (JPXDecode) decoder for PDF streams.
@@ -125,6 +126,72 @@ internal static class JpxDecoder
         }
     }
 
+    public static JpxImage? TryDecodeOpenJpegGray(byte[] jpxData)
+    {
+        if (jpxData == null || jpxData.Length == 0)
+            return null;
+
+        var executable = ResolveOpenJpegDecompress();
+        if (executable == null)
+            return null;
+
+        var tempDir = Path.Combine(Path.GetTempPath(), "pdfe-openjpeg-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            Directory.CreateDirectory(tempDir);
+            var input = Path.Combine(tempDir, "input.jp2");
+            var output = Path.Combine(tempDir, "output.pgm");
+            File.WriteAllBytes(input, jpxData);
+
+            using var process = new Process();
+            process.StartInfo = new ProcessStartInfo
+            {
+                FileName = executable,
+                UseShellExecute = false,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true,
+            };
+            process.StartInfo.ArgumentList.Add("-i");
+            process.StartInfo.ArgumentList.Add(input);
+            process.StartInfo.ArgumentList.Add("-o");
+            process.StartInfo.ArgumentList.Add(output);
+
+            if (!process.Start())
+                return null;
+
+            if (!process.WaitForExit(10_000))
+            {
+                try { process.Kill(entireProcessTree: true); } catch { }
+                return null;
+            }
+
+            if (process.ExitCode != 0 || !File.Exists(output))
+                return null;
+
+            var pnm = File.ReadAllBytes(output);
+            if (!TryParsePgm(pnm, out var width, out var height, out var maxValue, out var samples))
+                return null;
+
+            return new JpxImage
+            {
+                Width = width,
+                Height = height,
+                Components = 1,
+                BitsPerComponent = maxValue > 255 ? 16 : 8,
+                ComponentData = new[] { samples },
+                ComponentDefinitions = ReadComponentDefinitions(jpxData),
+            };
+        }
+        catch
+        {
+            return null;
+        }
+        finally
+        {
+            try { if (Directory.Exists(tempDir)) Directory.Delete(tempDir, recursive: true); } catch { }
+        }
+    }
+
     private static CSJ2K.Util.PortableImage TryDecodeWithSuppressedCodecOutput(byte[] jpxData, int? maxComponents)
     {
         try
@@ -146,6 +213,129 @@ internal static class JpxDecoder
         {
             return DecodeWithSuppressedCodecOutput(firstComponentJp2);
         }
+    }
+
+    private static string? ResolveOpenJpegDecompress()
+    {
+        var configured = Environment.GetEnvironmentVariable("PDFE_OPENJPEG_DECOMPRESS");
+        if (!string.IsNullOrWhiteSpace(configured) && File.Exists(configured))
+            return configured;
+
+        var executableName = OperatingSystem.IsWindows() ? "opj_decompress.exe" : "opj_decompress";
+        var path = Environment.GetEnvironmentVariable("PATH");
+        if (string.IsNullOrWhiteSpace(path))
+            return null;
+
+        foreach (var dir in path.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
+        {
+            try
+            {
+                var candidate = Path.Combine(dir, executableName);
+                if (File.Exists(candidate))
+                    return candidate;
+            }
+            catch
+            {
+            }
+        }
+
+        return null;
+    }
+
+    private static bool TryParsePgm(
+        byte[] data,
+        out int width,
+        out int height,
+        out int maxValue,
+        out int[] samples)
+    {
+        width = 0;
+        height = 0;
+        maxValue = 0;
+        samples = Array.Empty<int>();
+
+        var offset = 0;
+        if (!TryReadPnmToken(data, ref offset, out var magic) || magic != "P5")
+            return false;
+        if (!TryReadPnmToken(data, ref offset, out var widthToken) ||
+            !int.TryParse(widthToken, out width) ||
+            width <= 0)
+        {
+            return false;
+        }
+        if (!TryReadPnmToken(data, ref offset, out var heightToken) ||
+            !int.TryParse(heightToken, out height) ||
+            height <= 0)
+        {
+            return false;
+        }
+        if (!TryReadPnmToken(data, ref offset, out var maxValueToken) ||
+            !int.TryParse(maxValueToken, out maxValue) ||
+            maxValue <= 0)
+        {
+            return false;
+        }
+
+        SkipPnmWhitespace(data, ref offset);
+        var count = checked(width * height);
+        samples = new int[count];
+        if (maxValue <= 255)
+        {
+            if (data.Length - offset < count)
+                return false;
+
+            for (var i = 0; i < count; i++)
+                samples[i] = data[offset + i];
+            return true;
+        }
+
+        if (data.Length - offset < count * 2)
+            return false;
+
+        for (var i = 0; i < count; i++)
+        {
+            var sampleOffset = offset + i * 2;
+            samples[i] = (data[sampleOffset] << 8) | data[sampleOffset + 1];
+        }
+
+        return true;
+    }
+
+    private static bool TryReadPnmToken(byte[] data, ref int offset, out string token)
+    {
+        token = string.Empty;
+        SkipPnmWhitespaceAndComments(data, ref offset);
+        if (offset >= data.Length)
+            return false;
+
+        var start = offset;
+        while (offset < data.Length && !char.IsWhiteSpace((char)data[offset]))
+            offset++;
+
+        if (offset == start)
+            return false;
+
+        token = System.Text.Encoding.ASCII.GetString(data, start, offset - start);
+        return true;
+    }
+
+    private static void SkipPnmWhitespaceAndComments(byte[] data, ref int offset)
+    {
+        while (true)
+        {
+            SkipPnmWhitespace(data, ref offset);
+            if (offset >= data.Length || data[offset] != (byte)'#')
+                return;
+
+            while (offset < data.Length && data[offset] != (byte)'\n')
+                offset++;
+        }
+    }
+
+    private static void SkipPnmWhitespace(byte[] data, ref int offset)
+    {
+        while (offset < data.Length && char.IsWhiteSpace((char)data[offset]))
+            offset++;
     }
 
     private static (int Width, int Height, int Components, int BitsPerComponent) ReadInfoOrDefault(byte[] jpxData)

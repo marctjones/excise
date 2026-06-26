@@ -1,10 +1,12 @@
 # Pdfe.Rendering
 
-A **pure-managed, framework-neutral PDF render API** for .NET, built on
+A **framework-neutral PDF render API** for .NET, built on
 [`Pdfe.Core`](https://www.nuget.org/packages/Pdfe.Core) (parser) and
 [SkiaSharp](https://github.com/mono/SkiaSharp) (rasterizer). No native PDFium, no
 platform lock-in — runs anywhere SkiaSharp does (Windows/Linux/macOS), trim/AOT-friendlier,
-permissively licensed (MIT).
+permissively licensed (MIT). The default pipeline is managed; an optional
+OpenJPEG command-line fallback can improve selected JPEG2000/JPX images when
+available.
 
 For an Avalonia UI control built on this, see
 [`Pdfe.Avalonia`](https://www.nuget.org/packages/Pdfe.Avalonia). This package is the
@@ -68,6 +70,12 @@ all-pages corpus scanner against MuPDF plus Poppler, with optional
 Ghostscript/GhostPDF, Apache PDFBox, and PDFium escalation oracles for
 unsettled pages. Remaining `DIFF` cases are fixed, deferred, or documented
 through the #491 quality dashboard.
+
+For JPEG2000/JPX images, the renderer uses the managed CSJ2K decoder first. If
+`opj_decompress` from OpenJPEG is available on `PATH` (or configured with
+`PDFE_OPENJPEG_DECOMPRESS`), grayscale JP2 images with explicit PDF soft masks
+can use OpenJPEG as a best-effort fallback for JP2 component-definition/opacity
+profiles that CSJ2K cannot decode cleanly.
 
 ## Color preview boundary
 
