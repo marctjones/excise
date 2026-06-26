@@ -807,6 +807,8 @@ public class SkiaRendererTests
             "the substituted Type1 text should still be visible");
         darkPixels.Should().BeLessThan(4_800,
             "fallback glyphs should be horizontally condensed to the PDF /Widths instead of overprinting into an unreadable blob");
+        darkPixels.Should().BeLessThan(3_100,
+            "ultra-condensed fallback fonts should use a narrow substitute rather than a generic heavy sans face");
     }
 
     [Theory(Timeout = 20000)]

@@ -2285,11 +2285,29 @@ internal partial class RenderContext
                 "OpenSymbol",
                 "Symbola",
                 "DejaVu Sans");
+        else if (IsCondensedFontName(bareName))
+            return GetTypefaceWithGlyphCoverage(
+                style,
+                ['A', 'a', 'e', 'i', 'n', 't'],
+                "Avenir Next Condensed",
+                "Arial Narrow",
+                "Helvetica Condensed",
+                "Helvetica Neue Condensed",
+                "Liberation Sans Narrow",
+                "Nimbus Sans Narrow",
+                "Noto Sans Condensed",
+                "DejaVu Sans Condensed",
+                "Arial");
         else
             family = "Sans-Serif";
 
         return GetTypefaceFromFamily(family, style);
     }
+
+    private static bool IsCondensedFontName(string fontName)
+        => fontName.Contains("Condensed", StringComparison.OrdinalIgnoreCase)
+           || fontName.Contains("Compressed", StringComparison.OrdinalIgnoreCase)
+           || fontName.Contains("Narrow", StringComparison.OrdinalIgnoreCase);
 
     private static SKTypeface GetTypefaceFromFamily(string family, SKFontStyle style)
     {

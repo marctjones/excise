@@ -2,26 +2,27 @@
   "Path": "pdfjs/bug1308536.pdf",
   "Source": "pdf.js corpus",
   "Owner": "rendering:quality",
-  "RootCause": "SEMANTIC_OK",
-  "ImprovementPriority": "P2",
-  "Confidence": "MEDIUM",
-  "Notes": "Migrated from the legacy TSV rendering manifests.",
+  "RootCause": "FONT_SUBSTITUTION_ORACLE_DISAGREEMENT",
+  "ImprovementPriority": "NONE",
+  "Confidence": "HIGH",
+  "Notes": "Condensed fallback font selection now keeps the page within the raw PASS threshold.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "*",
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "GOOD_ENOUGH",
-      "PixelAgreement": "MATCHES_ONE_REFERENCE",
-      "ReferenceSituation": "NOT_APPLICABLE",
-      "RootCause": "SEMANTIC_OK",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
+      "ReferenceSituation": "REFS_AGREE",
+      "RootCause": "FONT_SUBSTITUTION_ORACLE_DISAGREEMENT",
       "Target": {
         "Mode": "REFERENCE_CONSENSUS",
-        "Reason": "Use all configured reference renderers; when they disagree, matching an accepted renderer is sufficient."
+        "Primary": "pdftocairo",
+        "Reason": "Condensed font fallback now stays within the raw PASS threshold against the configured reference renderers."
       },
-      "ImprovementPriority": "P2",
+      "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Focused condensed-font regression covers the prior readability risk; broader font fidelity remains under #512/#513/#515.",
-      "Notes": "Condensed substituted Type1 text is visible and bounded by PDF widths."
+      "QualityReason": "The page remains visually readable and no longer exceeds raw diff thresholds after selecting narrow fallback families for condensed fonts.",
+      "Notes": "Focused P2 corpus scan changed this page from DIFF to PASS."
     }
   }
 }
