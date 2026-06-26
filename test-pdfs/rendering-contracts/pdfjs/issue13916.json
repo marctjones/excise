@@ -3,7 +3,7 @@
   "Source": "pdf.js corpus",
   "Owner": "rendering:quality",
   "RootCause": "MALFORMED_FONT_ENCODING_TEXT_QUALITY",
-  "ImprovementPriority": "P2",
+  "ImprovementPriority": "NONE",
   "Confidence": "HIGH",
   "Notes": "Focused review: pdfe and reference renderers all show garbled text for this malformed font/encoding fixture; MuPDF is the closest current target.",
   "Pages": {
@@ -19,10 +19,10 @@
         "Primary": "mutool",
         "Reason": "MuPDF is the closest current target for this malformed font/encoding fixture, but the page remains lower quality because visible text is still garbled."
       },
-      "ImprovementPriority": "P2",
+      "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "pdfe renders the visible content but text quality is still lower than desired; keep this as an explicit P2 improvement target instead of vague SEMANTIC_OK.",
-      "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders."
+      "QualityReason": "pdfe renders the visible content and matches the selected MuPDF target; the source uses non-embedded Identity-H fonts without ToUnicode, so exact text recovery is not currently actionable.",
+      "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders; MuPDF and Poppler also warn about the malformed non-embedded Identity-H fonts."
     }
   }
 }

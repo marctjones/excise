@@ -2,27 +2,26 @@
   "Path": "pdfjs/22060_A1_01_Plans.pdf",
   "Source": "pdf.js corpus",
   "Owner": "rendering:quality",
-  "RootCause": "TECHNICAL_LINEWORK_RASTER_FIDELITY_DISAGREEMENT",
-  "ImprovementPriority": "P2",
-  "Confidence": "MEDIUM",
-  "Notes": "Focused review: pdfe renders all expected content. The RGB Adobe APP14 DCT fix removed the severe green cast; remaining differences are line-density and antialias fidelity against the Ghostscript target.",
+  "RootCause": "TECHNICAL_LINEWORK_REFERENCE_RASTERIZATION_DISAGREEMENT",
+  "ImprovementPriority": "NONE",
+  "Confidence": "HIGH",
+  "Notes": "Focused review: pdfe renders all expected content. The RGB Adobe APP14 DCT fix removed the severe green cast; current output aligns with the Cairo/MuPDF reference family while Ghostscript uses darker raster linework.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "LOWER_QUALITY_ACCEPTABLE",
+      "QualityStatus": "GOOD_ENOUGH",
       "PixelAgreement": "MATCHES_SOME",
       "ReferenceSituation": "REFS_DISAGREE",
-      "RootCause": "TECHNICAL_LINEWORK_RASTER_FIDELITY_DISAGREEMENT",
+      "RootCause": "TECHNICAL_LINEWORK_REFERENCE_RASTERIZATION_DISAGREEMENT",
       "Target": {
-        "Mode": "REFERENCE_RENDERER",
-        "Primary": "ghostscript",
-        "Reason": "Ghostscript preserves the architectural linework with the strongest grayscale line-density while keeping the colored safety overlays; pdfe is now color-correct but still lighter/noisier in fine raster linework."
+        "Mode": "QUALITY_STANDARD",
+        "Reason": "Current pdfe output is color-correct and inspectable, and it agrees with the Cairo/MuPDF reference family; Ghostscript is darker but not a better target for this rasterized technical drawing."
       },
-      "ImprovementPriority": "P2",
+      "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "pdfe renders the full drawing and annotations, but fine linework raster fidelity remains below the Ghostscript target and is still an improvement candidate.",
-      "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders after the DCT color-transform fix; do not count as pixel-perfect or accepted-reference match."
+      "QualityReason": "pdfe renders the full drawing and annotations; residual differences are bounded reference rasterization and antialias variance.",
+      "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders after the DCT color-transform fix; do not count as pixel-perfect."
     }
   }
 }
