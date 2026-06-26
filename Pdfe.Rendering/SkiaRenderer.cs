@@ -4256,29 +4256,40 @@ internal partial class RenderContext
         if (source.Width <= 0 || source.Height <= 0 || mask.Width <= 0 || mask.Height <= 0)
             return null;
 
-        var bitmap = new SKBitmap(mask.Width, mask.Height, SKColorType.Rgba8888, SKAlphaType.Premul);
+        var pixels = new byte[checked(mask.Width * mask.Height * 4)];
         try
         {
+            var sourcePixels = source.Pixels;
+            if (sourcePixels.Length == 0)
+                return null;
+
+            var dst = 0;
             var maskIndex = 0;
             for (int y = 0; y < mask.Height; y++)
             {
                 var sourceY = MapTargetToSource(y, mask.Height, source.Height);
+                var sourceRow = sourceY * source.Width;
                 for (int x = 0; x < mask.Width; x++)
                 {
                     var sourceX = MapTargetToSource(x, mask.Width, source.Width);
-                    var sourceColor = source.GetPixel(sourceX, sourceY);
+                    var sourceIndex = sourceRow + sourceX;
+                    var sourceColor = sourceIndex < sourcePixels.Length
+                        ? sourcePixels[sourceIndex]
+                        : SKColors.Transparent;
                     var maskAlpha = maskIndex < mask.Data.Length ? mask.Data[maskIndex] : (byte)0;
                     var alpha = (byte)((sourceColor.Alpha * maskAlpha + 127) / 255);
-                    bitmap.SetPixel(x, y, sourceColor.WithAlpha(alpha));
+                    pixels[dst++] = sourceColor.Red;
+                    pixels[dst++] = sourceColor.Green;
+                    pixels[dst++] = sourceColor.Blue;
+                    pixels[dst++] = alpha;
                     maskIndex++;
                 }
             }
 
-            return bitmap;
+            return CreateBitmapFromRgbaBytes(mask.Width, mask.Height, pixels);
         }
         catch (Exception __ex) when (__ex is not OutOfMemoryException)
         {
-            bitmap.Dispose();
             return null;
         }
     }
@@ -4437,7 +4448,8 @@ internal partial class RenderContext
                 ? ClampImageTargetSize(sourceWidth, sourceHeight, sourceWidth, sourceHeight)
                 : ClampImageTargetSize(decodedWidth, decodedHeight, estimatedTarget.Width, estimatedTarget.Height);
 
-            var bitmap = new SKBitmap(targetWidth, targetHeight, SKColorType.Rgba8888, SKAlphaType.Premul);
+            var pixels = new byte[checked(targetWidth * targetHeight * 4)];
+            var dst = 0;
             var sourcePixelCount = (long)decodedWidth * decodedHeight;
             var hasEmbeddedAlpha = components.Length > colorSpace.Components
                                    && colorSpace.Components >= 1;
@@ -4479,15 +4491,14 @@ internal partial class RenderContext
                             alpha = NormalizeJpxSampleToByte(alphaComponent[(int)idx], image.BitsPerComponent);
                     }
 
-                    bitmap.SetPixel(x, y, new SKColor(
-                        (byte)Math.Clamp(rd * 255, 0, 255),
-                        (byte)Math.Clamp(gd * 255, 0, 255),
-                        (byte)Math.Clamp(bd * 255, 0, 255),
-                        (byte)alpha));
+                    pixels[dst++] = (byte)Math.Clamp(rd * 255, 0, 255);
+                    pixels[dst++] = (byte)Math.Clamp(gd * 255, 0, 255);
+                    pixels[dst++] = (byte)Math.Clamp(bd * 255, 0, 255);
+                    pixels[dst++] = (byte)alpha;
                 }
             }
 
-            return bitmap;
+            return CreateBitmapFromRgbaBytes(targetWidth, targetHeight, pixels);
         }
         catch
         {
@@ -5251,18 +5262,19 @@ internal partial class RenderContext
 
     private static SKBitmap CreateSoftMaskLumaBitmap(SoftMaskAlpha mask)
     {
-        var bitmap = new SKBitmap(mask.Width, mask.Height, SKColorType.Rgba8888, SKAlphaType.Opaque);
-        for (int y = 0; y < mask.Height; y++)
+        var pixels = new byte[checked(mask.Width * mask.Height * 4)];
+        var dst = 0;
+        for (int i = 0; i < mask.Data.Length; i++)
         {
-            var row = y * mask.Width;
-            for (int x = 0; x < mask.Width; x++)
-            {
-                var alpha = mask.Data[row + x];
-                bitmap.SetPixel(x, y, new SKColor(alpha, alpha, alpha));
-            }
+            var alpha = mask.Data[i];
+            pixels[dst++] = alpha;
+            pixels[dst++] = alpha;
+            pixels[dst++] = alpha;
+            pixels[dst++] = 255;
         }
 
-        return bitmap;
+        return CreateBitmapFromRgbaBytes(mask.Width, mask.Height, pixels)
+               ?? new SKBitmap(mask.Width, mask.Height, SKColorType.Rgba8888, SKAlphaType.Opaque);
     }
 
     private SKBitmap? CreateBitmapFromRawData(byte[] data, int width, int height, int bitsPerComponent, string colorSpace, Pdfe.Core.Primitives.PdfStream stream)
