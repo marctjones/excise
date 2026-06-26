@@ -8,21 +8,21 @@
   "Notes": "Migrated from the legacy TSV rendering manifests.",
   "Pages": {
     "129": {
-      "ExpectedRawStatus": "TIMEOUT",
-      "ExpectedErrorContains": "pdfbox",
+      "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "GOOD_ENOUGH",
-      "PixelAgreement": "NOT_COMPARABLE",
-      "ReferenceSituation": "NOT_APPLICABLE",
-      "RootCause": "PAGE_BOX_DISAGREEMENT",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_SOME",
+      "ReferenceSituation": "REFS_DISAGREE",
+      "RootCause": "REFERENCE_ORACLE_DISAGREEMENT",
       "Target": {
-        "Mode": "QUALITY_STANDARD",
-        "Reason": "Reference renderers disagree due to policy-sensitive rendering; judge by documented visual quality standard."
+        "Mode": "REFERENCE_CONSENSUS",
+        "Primary": "mutool",
+        "Reason": "Focused page 129 scan now renders within budget; references disagree and pdfe matches the accepted mutool reference."
       },
-      "ImprovementPriority": "P2",
+      "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "The page is tracked as page-box/reference policy, not a pdfe renderer defect.",
-      "Notes": "Reference renderer timeout/page-extent disagreement while pdfe and other oracles remain inspectable."
+      "QualityReason": "The page now renders quickly and matches the accepted reference despite oracle disagreement.",
+      "Notes": "Validated by focused corpus-scan for pdfjs/freeculture.pdf page 129."
     },
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
