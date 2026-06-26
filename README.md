@@ -90,7 +90,7 @@ Build the packages locally with `dotnet pack -c Release` (they are also attached
 pdfe info              <file>
 pdfe text              <file>
 pdfe letters           <file>
-pdfe render            <file>           -o out.png  [--page N] [--dpi N]
+pdfe render            <file>           -o out.png  [--page N] [--dpi N] [--password P]
 pdfe draw              <file>                                 # graphics-API demo
 pdfe redact            <input> <output> <text>  [--case-sensitive]
 pdfe fill-form         <input> <output> --field Name=Value [...] [--flatten]
@@ -108,11 +108,15 @@ The Skia renderer has been smoke-tested against a real-world corpus and is valid
 
 For release-quality rendering work, pdfe also has an exploratory all-pages
 corpus scanner for the pdf.js corpus. The report separates visual fidelity
-results (`PASS`, `PASS_ONE`, `DIFF`) from bounded non-fidelity classifications
-such as malformed PDFs, unsupported encryption/compression, decode failures,
-invalid page geometry, render resource limits, oracle refusal, and timeouts.
-This keeps quick-win rendering work focused on shared root causes rather than
-per-file exceptions.
+results (`PASS`, `PASS_ONE`, `DIFF`) from semantic release-gate results
+(`resultStatus`, `resultCategory`, and `resultReason`) and bounded non-fidelity
+classifications such as malformed PDFs, unsupported encryption/compression,
+decode failures, invalid page geometry, render resource limits, oracle refusal,
+and timeouts. Expectation manifests keep raw scanner status stable while
+allowing reviewed page-box, color-management, reference-refusal, and degenerate
+fixture cases to be counted separately from real content-loss bugs. This keeps
+quick-win rendering work focused on shared root causes rather than per-file
+exceptions.
 
 | PDF type | Notes |
 |---|---|
@@ -144,6 +148,11 @@ release notes:
   or documented through the #491 dashboard before release. JBIG2, advanced
   shadings, annotation appearances, and malformed/fuzzed pdf.js repro files
   remain the main classes to watch.
+- **Color-managed print preview** — pdfe renders DeviceCMYK through a deterministic
+  screen-preview conversion and resolves `/DefaultCMYK` / ICCBased CMYK through a
+  conservative reference fallback. It does not currently apply `/OutputIntents`
+  as a screen-preview profile; shade/tone-only differences are tracked below
+  missing content, geometry, and unreadable-output defects.
 - **Encrypted and malformed PDFs** — PDFs requiring a non-empty user password,
   some owner-password-only flows, unsupported compression filters, invalid
   geometry, and intentionally malformed xref/stream structures are classified by

@@ -95,8 +95,9 @@ internal static class JpxDecoder
 
         try
         {
+            var info = ReadInfoOrDefault(jpxData);
             var componentDefinitions = ReadComponentDefinitions(jpxData);
-            var image = TryDecodeWithSuppressedCodecOutput(jpxData);
+            var image = TryDecodeWithSuppressedCodecOutput(jpxData, maxComponents);
             if (image.NumberOfComponents <= 0)
                 return null;
 
@@ -110,7 +111,10 @@ internal static class JpxDecoder
 
             return new JpxImage
             {
+                Width = info.Width,
+                Height = info.Height,
                 Components = image.NumberOfComponents,
+                BitsPerComponent = info.BitsPerComponent,
                 ComponentData = components,
                 ComponentDefinitions = componentDefinitions,
             };
@@ -121,7 +125,7 @@ internal static class JpxDecoder
         }
     }
 
-    private static CSJ2K.Util.PortableImage TryDecodeWithSuppressedCodecOutput(byte[] jpxData)
+    private static CSJ2K.Util.PortableImage TryDecodeWithSuppressedCodecOutput(byte[] jpxData, int? maxComponents)
     {
         try
         {
@@ -129,7 +133,31 @@ internal static class JpxDecoder
         }
         catch when (TryExtractJp2Codestream(jpxData, out var codestream))
         {
-            return DecodeWithSuppressedCodecOutput(codestream);
+            try
+            {
+                return DecodeWithSuppressedCodecOutput(codestream);
+            }
+            catch when (maxComponents == 1 && TryCreateFirstComponentOnlyJp2(jpxData, out var firstComponentJp2))
+            {
+                return DecodeWithSuppressedCodecOutput(firstComponentJp2);
+            }
+        }
+        catch when (maxComponents == 1 && TryCreateFirstComponentOnlyJp2(jpxData, out var firstComponentJp2))
+        {
+            return DecodeWithSuppressedCodecOutput(firstComponentJp2);
+        }
+    }
+
+    private static (int Width, int Height, int Components, int BitsPerComponent) ReadInfoOrDefault(byte[] jpxData)
+    {
+        try
+        {
+            var (width, height, components, bpc) = ReadInfo(jpxData);
+            return (width, height, components, bpc);
+        }
+        catch
+        {
+            return (0, 0, 0, 8);
         }
     }
 
@@ -165,6 +193,104 @@ internal static class JpxDecoder
         }
 
         return false;
+    }
+
+    private static bool TryCreateFirstComponentOnlyJp2(byte[] data, out byte[] patched)
+    {
+        patched = Array.Empty<byte>();
+        try
+        {
+            if (!TryFindJp2HeaderAndCodestream(data, out var jp2h, out var jp2c))
+                return false;
+
+            var headerChildren = EnumerateBoxes(data, jp2h.PayloadOffset, jp2h.PayloadLength).ToArray();
+            var ihdr = headerChildren.FirstOrDefault(box => box.Type == "ihdr");
+            if (ihdr.PayloadLength < 14)
+                return false;
+
+            var componentCountOffset = ihdr.PayloadOffset + 8;
+            if (ReadUInt16BigEndian(data, componentCountOffset) < 2)
+                return false;
+
+            var codestreamOffset = jp2c.PayloadOffset;
+            if (!TryPatchCodestreamComponentCount(data, codestreamOffset, requiredComponentCount: 1, out var codestreamComponentCountOffset))
+                return false;
+
+            patched = RemoveJp2HeaderChild(data, jp2h, "cdef");
+            var shift = data.Length - patched.Length;
+
+            patched[componentCountOffset] = 0;
+            patched[componentCountOffset + 1] = 1;
+            patched[codestreamComponentCountOffset - shift] = 0;
+            patched[codestreamComponentCountOffset - shift + 1] = 1;
+            return true;
+        }
+        catch
+        {
+            patched = Array.Empty<byte>();
+            return false;
+        }
+    }
+
+    private static bool TryFindJp2HeaderAndCodestream(byte[] data, out Jp2Box header, out Jp2Box codestream)
+    {
+        header = default;
+        codestream = default;
+        foreach (var box in EnumerateBoxes(data, 0, data.Length))
+        {
+            if (box.Type == "jp2h")
+                header = box;
+            else if (box.Type == "jp2c")
+                codestream = box;
+        }
+
+        return header.PayloadLength > 0 && codestream.PayloadLength > 0;
+    }
+
+    private static bool TryPatchCodestreamComponentCount(
+        byte[] data,
+        int codestreamOffset,
+        int requiredComponentCount,
+        out int componentCountOffset)
+    {
+        componentCountOffset = 0;
+        if (codestreamOffset < 0 || codestreamOffset > data.Length - 46)
+            return false;
+
+        if (data[codestreamOffset] != 0xFF || data[codestreamOffset + 1] != 0x4F ||
+            data[codestreamOffset + 2] != 0xFF || data[codestreamOffset + 3] != 0x51)
+        {
+            return false;
+        }
+
+        var sizLength = ReadUInt16BigEndian(data, codestreamOffset + 4);
+        if (sizLength < 41 || codestreamOffset + 2 + sizLength > data.Length)
+            return false;
+
+        componentCountOffset = codestreamOffset + 40;
+        return ReadUInt16BigEndian(data, componentCountOffset) > requiredComponentCount;
+    }
+
+    private static byte[] RemoveJp2HeaderChild(byte[] data, Jp2Box header, string childType)
+    {
+        foreach (var child in EnumerateBoxes(data, header.PayloadOffset, header.PayloadLength))
+        {
+            if (child.Type != childType)
+                continue;
+
+            var childStart = child.PayloadOffset - 8;
+            var childLength = child.PayloadLength + 8;
+            var patched = new byte[data.Length - childLength];
+            Buffer.BlockCopy(data, 0, patched, 0, childStart);
+            Buffer.BlockCopy(data, childStart + childLength, patched, childStart, data.Length - childStart - childLength);
+
+            var headerStart = header.PayloadOffset - 8;
+            var headerSize = ReadUInt32BigEndian(data, headerStart);
+            WriteUInt32BigEndian(patched, headerStart, headerSize - (uint)childLength);
+            return patched;
+        }
+
+        return (byte[])data.Clone();
     }
 
     private static IReadOnlyList<JpxComponentDefinition> ReadComponentDefinitions(byte[] data)
@@ -262,6 +388,14 @@ internal static class JpxDecoder
         for (var i = 0; i < 8; i++)
             value = (value << 8) | data[offset + i];
         return value;
+    }
+
+    private static void WriteUInt32BigEndian(byte[] data, int offset, ulong value)
+    {
+        data[offset] = (byte)((value >> 24) & 0xFF);
+        data[offset + 1] = (byte)((value >> 16) & 0xFF);
+        data[offset + 2] = (byte)((value >> 8) & 0xFF);
+        data[offset + 3] = (byte)(value & 0xFF);
     }
 
     private readonly record struct Jp2Box(string Type, int PayloadOffset, int PayloadLength);

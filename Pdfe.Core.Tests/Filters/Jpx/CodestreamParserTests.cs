@@ -146,6 +146,27 @@ public class CodestreamParserTests
             definition.ComponentIndex == 2 && definition.Type == 0 && definition.Association == 3);
     }
 
+    [Fact]
+    public void TryDecodeManaged_Jp2GrayWithOpacityCanDecodeFirstColorComponent()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "issue19326.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js issue19326 fixture found at test-pdfs/pdfjs/issue19326.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+        var imageStream = (PdfStream)doc.GetObject(8);
+
+        var image = JpxDecoder.TryDecodeManaged(imageStream.EncodedData, maxComponents: 1);
+
+        image.Should().NotBeNull();
+        image!.Width.Should().Be(551);
+        image.Height.Should().Be(337);
+        image.BitsPerComponent.Should().Be(16);
+        image.ComponentData.Should().ContainSingle();
+        image.ComponentData[0].Should().Contain(sample => sample < 4096);
+        image.ComponentData[0].Should().Contain(sample => sample > 60000);
+    }
+
     /// <summary>
     /// Helper to build a minimal valid J2K codestream.
     /// Structure: SOC + SIZ + EOC

@@ -123,6 +123,11 @@ internal sealed class CidCMap
                         case "beginbfrange":
                             i = ParseBfRanges(i + 1);
                             continue;
+                        case "usecmap":
+                            if (i > 0 && _tokens[i - 1].Type == TokenType.Name)
+                                AddPredefinedCMap(_tokens[i - 1].Text);
+                            i++;
+                            continue;
                     }
                 }
 
@@ -242,6 +247,18 @@ internal sealed class CidCMap
 
             for (var code = lowCode; code <= highCode; code++)
                 Mapping[code] = firstCid + code - lowCode;
+        }
+
+        private void AddPredefinedCMap(string name)
+        {
+            if (name is "Identity-H" or "Identity-V")
+                AddCodespaceIfMissing(new CodespaceRange(0x0000, 0xffff, 2));
+        }
+
+        private void AddCodespaceIfMissing(CodespaceRange range)
+        {
+            if (!Codespaces.Contains(range))
+                Codespaces.Add(range);
         }
 
         private int SkipPast(int i, string keyword)

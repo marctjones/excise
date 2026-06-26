@@ -386,7 +386,6 @@ internal partial class RenderContext
     // independent byte-cmap probes.
     private readonly Dictionary<Pdfe.Core.Primitives.PdfDictionary, ushort[]?> _embeddedTypefaceByteToGlyph = new();
     private ushort[]? _currentByteToGlyph;
-    private readonly Dictionary<Pdfe.Core.Primitives.PdfDictionary, IReadOnlyDictionary<int, string>?> _toUnicodeMaps = new();
 
     // Stack of /Resources dictionaries currently active. The page's own
     // /Resources is the bottom; entering a Form XObject pushes its own
@@ -1177,20 +1176,17 @@ internal partial class RenderContext
         // XObject's /Resources, falling back to the page) to determine the
         // base font and encoding.
         var fontDict = ResolveFontFromActiveResources(fontName);
-        var fontSubtype = fontDict?.GetNameOrNull("Subtype");
-        _currentFontDict = fontDict;
-        _currentFontIsType3 = fontSubtype == "Type3";
-        var baseFont = fontDict?.GetNameOrNull("BaseFont") ?? "Helvetica";
+        var resolvedFont = PdfFontResolver.Resolve(fontName, fontDict, _page.Document);
+        _currentFontDict = resolvedFont.Dictionary;
+        _currentFontIsType3 = resolvedFont.IsType3;
 
         // /Encoding can be either a Name (e.g. /WinAnsiEncoding) or a Dictionary
         // with /BaseEncoding and /Differences. The dictionary form is how embedded
         // subset fonts remap small character codes to specific glyphs — without
         // handling it, text decodes as control characters and renders invisibly.
         // Must resolve the indirect reference; most real PDFs use `/Encoding N 0 R`.
-        var encodingDict = fontDict != null ? ResolveDict(fontDict, "Encoding") : null;
-        var encodingName = fontDict?.GetNameOrNull("Encoding")
-                           ?? encodingDict?.GetNameOrNull("BaseEncoding")
-                           ?? "WinAnsiEncoding";
+        var encodingDict = resolvedFont.EncodingDictionary;
+        var encodingName = resolvedFont.EncodingName;
 
         _currentFontEncoding = encodingName;
         _currentCodeToUnicode = null;
@@ -1213,32 +1209,17 @@ internal partial class RenderContext
         // hmtx — without populating them first, every embedded font would be
         // wrapped with stale widths from the previously-active font, producing
         // visibly wrong layout (mid-word gaps and overlaps).
-        _currentFontWidths = null;
-        _currentFontFirstChar = 0;
-        _currentFontMissingWidth = 0f;
-        if (fontDict != null)
-        {
-            var widthsArray = ResolveArray(fontDict, "Widths");
-            if (widthsArray != null && widthsArray.Count > 0)
-            {
-                _currentFontFirstChar = fontDict.GetInt("FirstChar", 0);
-                var widths = new float[widthsArray.Count];
-                for (int i = 0; i < widthsArray.Count; i++)
-                    widths[i] = (float)widthsArray.GetNumber(i);
-                _currentFontWidths = widths;
-            }
-            var descriptor = ResolveDict(fontDict, "FontDescriptor");
-            if (descriptor != null)
-                _currentFontMissingWidth = (float)descriptor.GetNumber("MissingWidth", 0);
-        }
+        _currentFontWidths = resolvedFont.Widths;
+        _currentFontFirstChar = resolvedFont.FirstChar;
+        _currentFontMissingWidth = resolvedFont.MissingWidth;
 
         // Prefer a typeface loaded from the PDF's own embedded font stream
         // (/FontFile = Type 1, /FontFile2 = TrueType, /FontFile3 = OpenType/CFF).
         // When no embedded data is present, fall through to the system-font mapping.
-        var toUnicodeMap = fontDict != null ? TryLoadToUnicodeMap(fontDict) : null;
+        var toUnicodeMap = resolvedFont.ToUnicodeMap;
         var embedded = TryLoadEmbeddedTypeface(fontDict, toUnicodeMap);
         _currentFontHasEmbeddedProgram = embedded != null;
-        _currentTypeface = embedded ?? GetTypeface(baseFont);
+        _currentTypeface = embedded ?? GetTypeface(resolvedFont.BaseFont);
         _currentByteToGlyph = embedded != null && fontDict != null
             && _embeddedTypefaceByteToGlyph.TryGetValue(fontDict, out var btg)
             ? btg : null;
@@ -1248,7 +1229,7 @@ internal partial class RenderContext
 
         // Type0 (composite CID) fonts need a completely different content-stream
         // parse (2 bytes per character, widths indexed via /W not /Widths).
-        _currentFontIsType0 = fontSubtype == "Type0";
+        _currentFontIsType0 = resolvedFont.IsType0;
         _currentCidWidths = null;
         _currentCidDefaultWidth = 1000f;
         _currentCidToGidMap = null;
@@ -1258,9 +1239,8 @@ internal partial class RenderContext
         {
             _currentCidEncodingCMap = TryGetType0EncodingCMap(fontDict);
 
-            var descendants = ResolveArray(fontDict, "DescendantFonts");
-            if (descendants != null && descendants.Count > 0 &&
-                _page.Document.Resolve(descendants[0]) is Pdfe.Core.Primitives.PdfDictionary cidFont)
+            var cidFont = PdfFontResolver.ResolveDescendantFont(resolvedFont, _page.Document);
+            if (cidFont != null)
             {
                 _currentCidDefaultWidth = (float)cidFont.GetNumber("DW", 1000);
                 var w = ResolveArray(cidFont, "W");
@@ -1877,30 +1857,6 @@ internal partial class RenderContext
 
         value = 0;
         return false;
-    }
-
-    private IReadOnlyDictionary<int, string>? TryLoadToUnicodeMap(Pdfe.Core.Primitives.PdfDictionary fontDict)
-    {
-        if (_toUnicodeMaps.TryGetValue(fontDict, out var cached))
-            return cached;
-
-        IReadOnlyDictionary<int, string>? map = null;
-        var toUnicodeObj = fontDict.GetOptional("ToUnicode");
-        if (toUnicodeObj != null)
-        {
-            try
-            {
-                if (_page.Document.Resolve(toUnicodeObj) is Pdfe.Core.Primitives.PdfStream stream)
-                    map = ToUnicodeCMapParser.Parse(stream.DecodedData);
-            }
-            catch
-            {
-                map = null;
-            }
-        }
-
-        _toUnicodeMaps[fontDict] = map;
-        return map;
     }
 
     /// <summary>
@@ -4471,7 +4427,9 @@ internal partial class RenderContext
             if (components.Length == 0)
                 return null;
 
-            var (targetWidth, targetHeight) = EstimateImageDecodeSize(sourceWidth, sourceHeight);
+            var (targetWidth, targetHeight) = image.BitsPerComponent > 8
+                ? ClampImageTargetSize(sourceWidth, sourceHeight, sourceWidth, sourceHeight)
+                : EstimateImageDecodeSize(sourceWidth, sourceHeight);
 
             var bitmap = new SKBitmap(targetWidth, targetHeight, SKColorType.Rgba8888, SKAlphaType.Premul);
             var sourcePixelCount = (long)sourceWidth * sourceHeight;
@@ -4502,7 +4460,7 @@ internal partial class RenderContext
                             var sample = componentIndex < components.Length && idx < components[componentIndex].LongLength
                                 ? components[componentIndex][(int)idx]
                                 : 0;
-                            values[c] = colorSpace.DecodeSampleByte(c, (byte)Math.Clamp(sample, 0, 255));
+                            values[c] = colorSpace.DecodeSampleByte(c, NormalizeJpxSampleToByte(sample, image.BitsPerComponent));
                         }
                     }
 
@@ -4584,6 +4542,21 @@ internal partial class RenderContext
         }
 
         return Math.Clamp(fallbackIndex, 0, Math.Max(0, decodedComponentCount - 1));
+    }
+
+    private static byte NormalizeJpxSampleToByte(int sample, int bitsPerComponent)
+    {
+        if (bitsPerComponent <= 8)
+            return (byte)Math.Clamp(sample, 0, 255);
+
+        var maxSample = bitsPerComponent >= 31
+            ? int.MaxValue
+            : (1 << bitsPerComponent) - 1;
+        if (maxSample <= 255)
+            return (byte)Math.Clamp(sample, 0, 255);
+
+        var normalized = (long)Math.Clamp(sample, 0, maxSample) * 255 + (maxSample / 2);
+        return (byte)(normalized / maxSample);
     }
 
     private (int Width, int Height) EstimateImageDecodeSize(int sourceWidth, int sourceHeight)

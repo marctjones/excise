@@ -55,4 +55,19 @@ public class CidCMapParserTests
         cmap.Decode([0x41, 0x42, 0x43, 0x81, 0x01, 0x81, 0x02, 0x81, 0x03])
             .Should().Equal(100, 101, 102, 0x0200, 0x0205, 0x0209);
     }
+
+    [Fact]
+    public void Parse_UseCMapIdentityH_InheritsTwoByteCodespace()
+    {
+        var cmap = CidCMap.Parse("""
+            1 begincodespacerange
+            <20> <7f>
+            endcodespacerange
+            /Identity-H usecmap
+            """);
+
+        cmap.CodespaceRanges.Should().Contain(r => r.Low == 0 && r.High == 0xffff && r.Bytes == 2);
+        cmap.Decode([0x00, 0x41, 0x00, 0x42])
+            .Should().Equal(0x0041, 0x0042);
+    }
 }

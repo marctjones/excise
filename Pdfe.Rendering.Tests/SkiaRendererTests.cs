@@ -465,7 +465,7 @@ public class SkiaRendererTests
     }
 
     [Fact(Timeout = 20000)]
-    public void RenderPage_PdfjsIssue19326_UnsupportedJpxDoesNotPaintGrayPlaceholder()
+    public void RenderPage_PdfjsIssue19326_JpxGrayImageWithSoftMaskRendersVisibleContent()
     {
         var path = FindRepoFile("test-pdfs", "pdfjs", "issue19326.pdf");
         Assert.SkipWhen(path == null,
@@ -477,8 +477,12 @@ public class SkiaRendererTests
             doc.GetPage(1),
             new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
 
-        MeasureNeutralMidGrayFraction(bitmap).Should().BeLessThan(0.10,
-            "an unsupported JPX image should be omitted or decoded, not replaced with an opaque gray block over existing page content");
+        MeasureNeutralMidGrayFraction(bitmap).Should().BeLessThan(0.50,
+            "the decoded JPX content should not collapse to the old uniform opaque gray placeholder");
+        CountNonWhitePixels(bitmap, new SKRectI(10, 10, 125, 70)).Should().BeGreaterThan(1_000,
+            "the grayscale JPX image should render visible sample content instead of a blank white page");
+        CountDarkPixels(bitmap, new SKRectI(10, 10, 125, 70)).Should().BeGreaterThan(500,
+            "the decoded 16-bit grayscale JPX samples should preserve the dark image content");
     }
 
     [Fact(Timeout = 20000)]
@@ -704,6 +708,23 @@ public class SkiaRendererTests
             "the rendered words should preserve the visible space between Checkliste and Service");
         CountDarkPixels(bitmap, new SKRectI(105, 10, 165, 35)).Should().BeGreaterThan(200,
             "the second word should render after the space instead of wrong CID glyphs filling the gap");
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsBug1802506_CheckmarkWidgetAppearancePaintsGlyph()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "bug1802506.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js bug1802506 fixture found at test-pdfs/pdfjs/bug1802506.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        CountDarkPixels(bitmap, new SKRectI(50, 45, 115, 110)).Should().BeGreaterThan(250,
+            "the left checkbox's /AP /N /Yes appearance should paint the ZapfDingbats checkmark glyph, not just the empty widget border");
     }
 
     [Fact(Timeout = 20000)]
@@ -3885,6 +3906,40 @@ public class SkiaRendererTests
     }
 
     [Fact]
+    public void RenderPage_Type3Font_NonDefaultFontMatrixScalesGlyphSpace()
+    {
+        var pdfData = CreatePdfWithType3Glyph(
+            pageContent: "0 0 1 rg BT /F1 24 Tf 100 120 Td <41> Tj ET",
+            charProcContent: "500 0 0 0 500 700 d1 0 0 500 700 re f",
+            fontMatrix: "[0.002 0 0 0.002 0 0]");
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(doc.GetPage(1));
+
+        var insideExpandedGlyph = bitmap.GetPixel((int)(122 * 150 / 72), bitmap.Height - (int)(138 * 150 / 72));
+        insideExpandedGlyph.Blue.Should().BeGreaterThan(180,
+            "the Type 3 FontMatrix should be applied before the glyph path is painted");
+        insideExpandedGlyph.Red.Should().BeLessThan(80);
+    }
+
+    [Fact]
+    public void RenderPage_Type3Font_CharProcUsesFontResourcesForImageGlyph()
+    {
+        var pdfData = CreatePdfWithType3ImageGlyph();
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(doc.GetPage(1));
+
+        CountDarkPixels(bitmap, new SKRectI(
+                (int)(101 * 150 / 72),
+                bitmap.Height - (int)(131 * 150 / 72),
+                (int)(110 * 150 / 72),
+                bitmap.Height - (int)(122 * 150 / 72)))
+            .Should().BeGreaterThan(30,
+                "Type 3 CharProcs must resolve image XObjects from the font /Resources dictionary");
+    }
+
+    [Fact]
     public void RenderPage_Type3Font_d0_SetsGlyphWidth()
     {
         // Arrange - d0 operator sets glyph width for Type 3 fonts
@@ -4749,7 +4804,11 @@ public class SkiaRendererTests
         return ms.ToArray();
     }
 
-    private static byte[] CreatePdfWithType3Glyph(string pageContent, string charProcContent)
+    private static byte[] CreatePdfWithType3Glyph(
+        string pageContent,
+        string charProcContent,
+        string fontMatrix = "[0.001 0 0 0.001 0 0]",
+        string fontResources = "<< >>")
     {
         using var ms = new MemoryStream();
         using var writer = new StreamWriter(ms, System.Text.Encoding.ASCII, leaveOpen: true);
@@ -4790,7 +4849,7 @@ public class SkiaRendererTests
 
         offsets[5] = ms.Position;
         writer.WriteLine("5 0 obj");
-        writer.WriteLine("<< /Type /Font /Subtype /Type3 /Name /F1 /FontBBox [0 0 500 700] /FontMatrix [0.001 0 0 0.001 0 0] /CharProcs << /A 6 0 R >> /Encoding << /Type /Encoding /Differences [65 /A] >> /FirstChar 65 /LastChar 65 /Widths [500] /Resources << >> >>");
+        writer.WriteLine($"<< /Type /Font /Subtype /Type3 /Name /F1 /FontBBox [0 0 500 700] /FontMatrix {fontMatrix} /CharProcs << /A 6 0 R >> /Encoding << /Type /Encoding /Differences [65 /A] >> /FirstChar 65 /LastChar 65 /Widths [500] /Resources {fontResources} >>");
         writer.WriteLine("endobj");
         writer.Flush();
 
@@ -4814,6 +4873,92 @@ public class SkiaRendererTests
 
         writer.WriteLine("trailer");
         writer.WriteLine("<< /Root 1 0 R /Size 7 >>");
+        writer.WriteLine("startxref");
+        writer.WriteLine(xrefPos.ToString());
+        writer.WriteLine("%%EOF");
+        writer.Flush();
+
+        return ms.ToArray();
+    }
+
+    private static byte[] CreatePdfWithType3ImageGlyph()
+    {
+        const string pageContent = "BT /F1 24 Tf 100 120 Td <41> Tj ET";
+        const string charProcContent = "500 0 0 0 500 500 d1 q 500 0 0 500 0 0 cm /Im1 Do Q";
+        using var ms = new MemoryStream();
+        using var writer = new StreamWriter(ms, System.Text.Encoding.ASCII, leaveOpen: true);
+        writer.NewLine = "\n";
+
+        writer.WriteLine("%PDF-1.4");
+        writer.Flush();
+
+        var offsets = new long[8];
+
+        offsets[1] = ms.Position;
+        writer.WriteLine("1 0 obj");
+        writer.WriteLine("<< /Type /Catalog /Pages 2 0 R >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[2] = ms.Position;
+        writer.WriteLine("2 0 obj");
+        writer.WriteLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[3] = ms.Position;
+        writer.WriteLine("3 0 obj");
+        writer.WriteLine("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[4] = ms.Position;
+        writer.WriteLine("4 0 obj");
+        writer.WriteLine($"<< /Length {pageContent.Length} >>");
+        writer.WriteLine("stream");
+        writer.Write(pageContent);
+        writer.WriteLine();
+        writer.WriteLine("endstream");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[5] = ms.Position;
+        writer.WriteLine("5 0 obj");
+        writer.WriteLine("<< /Type /Font /Subtype /Type3 /Name /F1 /FontBBox [0 0 500 500] /FontMatrix [0.001 0 0 0.001 0 0] /CharProcs << /A 6 0 R >> /Encoding << /Type /Encoding /Differences [65 /A] >> /FirstChar 65 /LastChar 65 /Widths [500] /Resources << /XObject << /Im1 7 0 R >> >> >>");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[6] = ms.Position;
+        writer.WriteLine("6 0 obj");
+        writer.WriteLine($"<< /Length {charProcContent.Length} >>");
+        writer.WriteLine("stream");
+        writer.Write(charProcContent);
+        writer.WriteLine();
+        writer.WriteLine("endstream");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        offsets[7] = ms.Position;
+        writer.WriteLine("7 0 obj");
+        writer.WriteLine("<< /Type /XObject /Subtype /Image /Width 1 /Height 1 /ColorSpace /DeviceGray /BitsPerComponent 8 /Length 1 >>");
+        writer.WriteLine("stream");
+        writer.Flush();
+        ms.WriteByte(0x00);
+        writer.WriteLine();
+        writer.WriteLine("endstream");
+        writer.WriteLine("endobj");
+        writer.Flush();
+
+        long xrefPos = ms.Position;
+        writer.WriteLine("xref");
+        writer.WriteLine("0 8");
+        writer.WriteLine("0000000000 65535 f ");
+        for (int i = 1; i <= 7; i++)
+            writer.WriteLine($"{offsets[i]:D10} 00000 n ");
+        writer.Flush();
+
+        writer.WriteLine("trailer");
+        writer.WriteLine("<< /Root 1 0 R /Size 8 >>");
         writer.WriteLine("startxref");
         writer.WriteLine(xrefPos.ToString());
         writer.WriteLine("%%EOF");

@@ -42,6 +42,23 @@ public class PdfColorSpaceTests
     }
 
     [Fact]
+    public void Parse_ReferenceToNamedColorSpace_ResolvesName()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "issue19326.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js issue19326 fixture found at test-pdfs/pdfjs/issue19326.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+        var image = (PdfStream)doc.GetObject(8);
+        var colorSpaceRef = image.GetOptional("ColorSpace")!;
+
+        var colorSpace = PdfColorSpace.Parse(colorSpaceRef, doc);
+
+        colorSpace.Type.Should().Be(PdfColorSpaceType.DeviceGray);
+        colorSpace.Components.Should().Be(1);
+    }
+
+    [Fact]
     public void DeviceCmyk_Black_ConvertsToBlack()
     {
         var cs = PdfColorSpace.DeviceCMYK;
@@ -79,6 +96,30 @@ public class PdfColorSpaceTests
         r.Should().BeApproximately(129.0 / 255.0, 0.01);
         g.Should().BeApproximately(147.0 / 255.0, 0.01);
         b.Should().BeApproximately(92.0 / 255.0, 0.01);
+    }
+
+    [Fact]
+    public void CmykConverter_SeparatesDevicePreviewFromReferenceFallback()
+    {
+        var preview = PdfColorConverter.CmykToRgb(
+            0.5,
+            0.25,
+            0.75,
+            0.1,
+            PdfColorConverter.CmykPolicy.ProcessScreenPreview);
+        var reference = PdfColorConverter.CmykToRgb(
+            0.5,
+            0.25,
+            0.75,
+            0.1,
+            PdfColorConverter.CmykPolicy.ReferenceFormula);
+
+        preview.R.Should().BeApproximately(129.0 / 255.0, 0.01);
+        preview.G.Should().BeApproximately(147.0 / 255.0, 0.01);
+        preview.B.Should().BeApproximately(92.0 / 255.0, 0.01);
+        reference.R.Should().BeApproximately(0.4, 0.001);
+        reference.G.Should().BeApproximately(0.65, 0.001);
+        reference.B.Should().BeApproximately(0.15, 0.001);
     }
 
     [Fact]
@@ -1031,5 +1072,19 @@ public class PdfColorSpaceTests
         var cs = PdfColorSpace.Parse(arr, doc);
         cs.Type.Should().Be(PdfColorSpaceType.Separation);
         cs.Components.Should().Be(1);
+    }
+
+    private static string? FindRepoFile(params string[] segments)
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null)
+        {
+            var candidate = Path.Combine(new[] { dir.FullName }.Concat(segments).ToArray());
+            if (File.Exists(candidate))
+                return candidate;
+            dir = dir.Parent;
+        }
+
+        return null;
     }
 }
