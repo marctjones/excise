@@ -1,0 +1,27 @@
+{
+  "Path": "pdfjs/issue16038.pdf",
+  "Source": "pdf.js corpus",
+  "Owner": "rendering:quality",
+  "RootCause": "SEMANTIC_OK",
+  "ImprovementPriority": "P2",
+  "Confidence": "MEDIUM",
+  "Notes": "Migrated from rendering-expected-outcomes-2026-06-25.tsv.",
+  "Pages": {
+    "1": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "GOOD_ENOUGH",
+      "PixelAgreement": "MATCHES_SOME",
+      "ReferenceSituation": "REFS_DISAGREE",
+      "RootCause": "SEMANTIC_OK",
+      "Target": {
+        "Mode": "REFERENCE_CONSENSUS",
+        "Reason": "Use all configured reference renderers; when they disagree, matching an accepted renderer is sufficient."
+      },
+      "ImprovementPriority": "P2",
+      "Confidence": "HIGH",
+      "QualityReason": "Focused tiling-pattern regression covers the prior primitive gap.",
+      "Notes": "Uncolored tiling pattern renders visible blue repeated strokes; remaining difference is pattern phase/stroke density."
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "Path": "pdfjs/bug1020226.pdf",
+  "Source": "pdf.js corpus",
+  "Owner": "rendering:input-policy",
+  "RootCause": "DEGENERATE_INPUT",
+  "ImprovementPriority": "NONE",
+  "Confidence": "HIGH",
+  "Notes": "Migrated from rendering-expected-outcomes-2026-06-25.tsv.",
+  "Pages": {
+    "0": {
+      "ExpectedRawStatus": "MALFORMED_PDF",
+      "ExpectedErrorContains": "Expected name in dictionary",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "NON_RENDERABLE_ACCEPTED",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "NOT_APPLICABLE",
+      "RootCause": "DEGENERATE_INPUT",
+      "Target": {
+        "Mode": "MALFORMED_INPUT_POLICY",
+        "Reason": "Correct behavior is bounded refusal or documented non-renderable handling."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Failing closed is acceptable for this malformed fixture.",
+      "Notes": "Malformed dictionary syntax is accepted as parser refusal."
+    }
+  }
+}

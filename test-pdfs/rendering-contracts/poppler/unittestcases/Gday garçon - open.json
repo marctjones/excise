@@ -1,0 +1,27 @@
+{
+  "Path": "poppler/unittestcases/Gday garçon - open.pdf",
+  "Source": "Poppler regression corpus",
+  "Password": "garçon",
+  "Owner": "rendering:encrypted-input",
+  "RootCause": "PASSWORD_DOCUMENTED",
+  "ImprovementPriority": "NONE",
+  "Confidence": "HIGH",
+  "Notes": "Password migrated from rendering-known-passwords-2026-06-20.tsv.",
+  "Pages": {
+    "1": {
+      "ExpectedRawStatus": "*",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "NEEDS_REVIEW",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "REFS_INCOMPLETE",
+      "RootCause": "PASSWORD_DOCUMENTED",
+      "Target": {
+        "Mode": "REFERENCE_CONSENSUS",
+        "Reason": "Documented password allows normal rendering comparison."
+      },
+      "ImprovementPriority": "P2",
+      "Confidence": "LOW",
+      "Notes": "Password is documented, but no page-level quality contract existed in the current outcome manifest."
+    }
+  }
+}

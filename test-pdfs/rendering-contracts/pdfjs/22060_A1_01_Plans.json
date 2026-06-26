@@ -1,0 +1,27 @@
+{
+  "Path": "pdfjs/22060_A1_01_Plans.pdf",
+  "Source": "pdf.js corpus",
+  "Owner": "rendering:quality",
+  "RootCause": "SEMANTIC_OK",
+  "ImprovementPriority": "P2",
+  "Confidence": "MEDIUM",
+  "Notes": "Migrated from rendering-expected-outcomes-2026-06-25.tsv.",
+  "Pages": {
+    "1": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "GOOD_ENOUGH",
+      "PixelAgreement": "MATCHES_SOME",
+      "ReferenceSituation": "REFS_DISAGREE",
+      "RootCause": "SEMANTIC_OK",
+      "Target": {
+        "Mode": "REFERENCE_CONSENSUS",
+        "Reason": "Use all configured reference renderers; when they disagree, matching an accepted renderer is sufficient."
+      },
+      "ImprovementPriority": "P2",
+      "Confidence": "HIGH",
+      "QualityReason": "Current focused scan treats this as acceptable linework/texture disagreement, not content loss.",
+      "Notes": "Technical drawing linework now renders meaningfully; remaining oracle disagreement is bounded linework density."
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "Description": "Default rendering quality vocabulary for per-PDF contracts.",
+  "ReleaseStatus": [
+    "PASS",
+    "BLOCKED",
+    "NEEDS_REVIEW"
+  ],
+  "QualityStatus": [
+    "PIXEL_EXACT",
+    "TARGET_MATCH",
+    "MATCHES_ACCEPTED_REFERENCE",
+    "GOOD_ENOUGH",
+    "PDFE_BETTER_THAN_REFS",
+    "ACCEPTED_LIMITATION",
+    "NON_RENDERABLE_ACCEPTED",
+    "FAIL",
+    "NEEDS_REVIEW"
+  ],
+  "PixelAgreement": [
+    "MATCHES_ALL_REQUIRED",
+    "MATCHES_TARGET",
+    "MATCHES_SOME",
+    "MATCHES_NONE",
+    "NOT_COMPARABLE"
+  ],
+  "ReferenceSituation": [
+    "REFS_AGREE",
+    "REFS_DISAGREE",
+    "REFS_REFUSE",
+    "REFS_INCOMPLETE",
+    "REFS_WRONG_OR_LOSSY",
+    "NOT_APPLICABLE"
+  ],
+  "TargetMode": [
+    "REFERENCE_RENDERER",
+    "REFERENCE_CONSENSUS",
+    "PDF_SPEC",
+    "QUALITY_STANDARD",
+    "RESOURCE_POLICY",
+    "MALFORMED_INPUT_POLICY"
+  ]
+}

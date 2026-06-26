@@ -1,0 +1,27 @@
+{
+  "Path": "pdfjs/bug920426.pdf",
+  "Source": "pdf.js corpus",
+  "Owner": "rendering:quality",
+  "RootCause": "SEMANTIC_OK",
+  "ImprovementPriority": "P2",
+  "Confidence": "MEDIUM",
+  "Notes": "Migrated from rendering-expected-outcomes-2026-06-25.tsv.",
+  "Pages": {
+    "1": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "GOOD_ENOUGH",
+      "PixelAgreement": "MATCHES_SOME",
+      "ReferenceSituation": "REFS_DISAGREE",
+      "RootCause": "SEMANTIC_OK",
+      "Target": {
+        "Mode": "REFERENCE_CONSENSUS",
+        "Reason": "Use all configured reference renderers; when they disagree, matching an accepted renderer is sufficient."
+      },
+      "ImprovementPriority": "P2",
+      "Confidence": "HIGH",
+      "QualityReason": "pdfe output is semantically correct enough for the release gate; the residual pixel diff is oracle/font-policy disagreement.",
+      "Notes": "pdfe renders meaningful Checkliste Service text while a minority oracle emits tofu boxes."
+    }
+  }
+}

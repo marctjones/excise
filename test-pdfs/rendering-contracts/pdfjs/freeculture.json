@@ -1,0 +1,28 @@
+{
+  "Path": "pdfjs/freeculture.pdf",
+  "Source": "pdf.js corpus",
+  "Owner": "rendering:page-geometry",
+  "RootCause": "PAGE_BOX_DISAGREEMENT",
+  "ImprovementPriority": "P2",
+  "Confidence": "MEDIUM",
+  "Notes": "Migrated from rendering-expected-outcomes-2026-06-25.tsv.",
+  "Pages": {
+    "129": {
+      "ExpectedRawStatus": "TIMEOUT",
+      "ExpectedErrorContains": "pdfbox",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "GOOD_ENOUGH",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "NOT_APPLICABLE",
+      "RootCause": "PAGE_BOX_DISAGREEMENT",
+      "Target": {
+        "Mode": "QUALITY_STANDARD",
+        "Reason": "Reference renderers disagree due to policy-sensitive rendering; judge by documented visual quality standard."
+      },
+      "ImprovementPriority": "P2",
+      "Confidence": "HIGH",
+      "QualityReason": "The page is tracked as page-box/reference policy, not a pdfe renderer defect.",
+      "Notes": "Reference renderer timeout/page-extent disagreement while pdfe and other oracles remain inspectable."
+    }
+  }
+}

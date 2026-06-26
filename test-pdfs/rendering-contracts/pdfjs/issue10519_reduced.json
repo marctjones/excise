@@ -1,0 +1,27 @@
+{
+  "Path": "pdfjs/issue10519_reduced.pdf",
+  "Source": "pdf.js corpus",
+  "Owner": "rendering:quality",
+  "RootCause": "REDUCED_FIXTURE_ORACLE_DISAGREEMENT",
+  "ImprovementPriority": "NONE",
+  "Confidence": "MEDIUM",
+  "Notes": "Migrated from rendering-expected-outcomes-2026-06-25.tsv.",
+  "Pages": {
+    "1": {
+      "ExpectedRawStatus": "PASS",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
+      "ReferenceSituation": "REFS_AGREE",
+      "RootCause": "REDUCED_FIXTURE_ORACLE_DISAGREEMENT",
+      "Target": {
+        "Mode": "REFERENCE_CONSENSUS",
+        "Reason": "Use all configured reference renderers; when they disagree, matching an accepted renderer is sufficient."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Reduced fixture has bounded mixed rendering noise; target oracle is pdftocairo and current pdfe is within threshold.",
+      "Notes": "Current all-oracle scan now matches the Poppler target after shared rendering fixes."
+    }
+  }
+}

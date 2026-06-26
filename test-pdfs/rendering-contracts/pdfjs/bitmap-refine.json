@@ -1,0 +1,27 @@
+{
+  "Path": "pdfjs/bitmap-refine.pdf",
+  "Source": "pdf.js corpus",
+  "Owner": "rendering:image",
+  "RootCause": "IMAGE_ORACLE_DISAGREEMENT",
+  "ImprovementPriority": "NONE",
+  "Confidence": "MEDIUM",
+  "Notes": "Migrated from rendering-expected-outcomes-2026-06-25.tsv.",
+  "Pages": {
+    "1": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_SOME",
+      "ReferenceSituation": "REFS_DISAGREE",
+      "RootCause": "IMAGE_ORACLE_DISAGREEMENT",
+      "Target": {
+        "Mode": "REFERENCE_CONSENSUS",
+        "Reason": "Use all configured reference renderers; when they disagree, matching an accepted renderer is sufficient."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "JBIG2 bitmap/refinement fixture has bounded disagreement between reference image engines; pdfe matches at least one oracle.",
+      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+    }
+  }
+}

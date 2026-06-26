@@ -1,0 +1,28 @@
+{
+  "Path": "verapdf-corpus/veraPDF-corpus-master/PDF_A-1b/6.1 File structure/6.1.12 Implementation limits/veraPDF test suite 6-1-12-t02-pass-k.pdf",
+  "Source": "veraPDF corpus",
+  "Owner": "rendering:quality",
+  "RootCause": "REFERENCE_COVERAGE_GAP",
+  "ImprovementPriority": "NONE",
+  "Confidence": "MEDIUM",
+  "Notes": "Migrated from rendering-expected-outcomes-2026-06-25.tsv.",
+  "Pages": {
+    "1": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "REFS_INCOMPLETE",
+      "RootCause": "REFERENCE_COVERAGE_GAP",
+      "Target": {
+        "Mode": "QUALITY_STANDARD",
+        "Primary": null,
+        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Implementation-limit conformance fixture is accepted because pdfe matches at least one available reference.",
+      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+    }
+  }
+}

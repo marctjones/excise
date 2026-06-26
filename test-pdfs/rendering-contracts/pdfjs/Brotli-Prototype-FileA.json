@@ -1,0 +1,436 @@
+{
+  "Path": "pdfjs/Brotli-Prototype-FileA.pdf",
+  "Source": "pdf.js corpus",
+  "Owner": "rendering:quality",
+  "RootCause": "REFERENCE_COVERAGE_GAP",
+  "ImprovementPriority": "NONE",
+  "Confidence": "MEDIUM",
+  "Notes": "Migrated from rendering-expected-outcomes-2026-06-25.tsv.",
+  "Pages": {
+    "1": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "REFS_INCOMPLETE",
+      "RootCause": "REFERENCE_COVERAGE_GAP",
+      "Target": {
+        "Mode": "QUALITY_STANDARD",
+        "Primary": null,
+        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Brotli prototype pages compare cleanly against available references; remaining PASS_ONE status reflects limited oracle coverage.",
+      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+    },
+    "2": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "REFS_INCOMPLETE",
+      "RootCause": "REFERENCE_COVERAGE_GAP",
+      "Target": {
+        "Mode": "QUALITY_STANDARD",
+        "Primary": null,
+        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Brotli prototype pages compare cleanly against available references; remaining PASS_ONE status reflects limited oracle coverage.",
+      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+    },
+    "3": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "REFS_INCOMPLETE",
+      "RootCause": "REFERENCE_COVERAGE_GAP",
+      "Target": {
+        "Mode": "QUALITY_STANDARD",
+        "Primary": null,
+        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Brotli prototype pages compare cleanly against available references; remaining PASS_ONE status reflects limited oracle coverage.",
+      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+    },
+    "4": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "REFS_INCOMPLETE",
+      "RootCause": "REFERENCE_COVERAGE_GAP",
+      "Target": {
+        "Mode": "QUALITY_STANDARD",
+        "Primary": null,
+        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Brotli prototype pages compare cleanly against available references; remaining PASS_ONE status reflects limited oracle coverage.",
+      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+    },
+    "5": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "REFS_INCOMPLETE",
+      "RootCause": "REFERENCE_COVERAGE_GAP",
+      "Target": {
+        "Mode": "QUALITY_STANDARD",
+        "Primary": null,
+        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Brotli prototype pages compare cleanly against available references; remaining PASS_ONE status reflects limited oracle coverage.",
+      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+    },
+    "6": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "REFS_INCOMPLETE",
+      "RootCause": "REFERENCE_COVERAGE_GAP",
+      "Target": {
+        "Mode": "QUALITY_STANDARD",
+        "Primary": null,
+        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Brotli prototype pages compare cleanly against available references; remaining PASS_ONE status reflects limited oracle coverage.",
+      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+    },
+    "7": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "REFS_INCOMPLETE",
+      "RootCause": "REFERENCE_COVERAGE_GAP",
+      "Target": {
+        "Mode": "QUALITY_STANDARD",
+        "Primary": null,
+        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Brotli prototype pages compare cleanly against available references; remaining PASS_ONE status reflects limited oracle coverage.",
+      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+    },
+    "8": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "REFS_INCOMPLETE",
+      "RootCause": "REFERENCE_COVERAGE_GAP",
+      "Target": {
+        "Mode": "QUALITY_STANDARD",
+        "Primary": null,
+        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Brotli prototype pages compare cleanly against available references; remaining PASS_ONE status reflects limited oracle coverage.",
+      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+    },
+    "9": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "REFS_INCOMPLETE",
+      "RootCause": "REFERENCE_COVERAGE_GAP",
+      "Target": {
+        "Mode": "QUALITY_STANDARD",
+        "Primary": null,
+        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Brotli prototype pages compare cleanly against available references; remaining PASS_ONE status reflects limited oracle coverage.",
+      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+    },
+    "10": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "REFS_INCOMPLETE",
+      "RootCause": "REFERENCE_COVERAGE_GAP",
+      "Target": {
+        "Mode": "QUALITY_STANDARD",
+        "Primary": null,
+        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Brotli prototype pages compare cleanly against available references; remaining PASS_ONE status reflects limited oracle coverage.",
+      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+    },
+    "11": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "REFS_INCOMPLETE",
+      "RootCause": "REFERENCE_COVERAGE_GAP",
+      "Target": {
+        "Mode": "QUALITY_STANDARD",
+        "Primary": null,
+        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Brotli prototype pages compare cleanly against available references; remaining PASS_ONE status reflects limited oracle coverage.",
+      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+    },
+    "12": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "REFS_INCOMPLETE",
+      "RootCause": "REFERENCE_COVERAGE_GAP",
+      "Target": {
+        "Mode": "QUALITY_STANDARD",
+        "Primary": null,
+        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Brotli prototype pages compare cleanly against available references; remaining PASS_ONE status reflects limited oracle coverage.",
+      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+    },
+    "13": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "REFS_INCOMPLETE",
+      "RootCause": "REFERENCE_COVERAGE_GAP",
+      "Target": {
+        "Mode": "QUALITY_STANDARD",
+        "Primary": null,
+        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Brotli prototype pages compare cleanly against available references; remaining PASS_ONE status reflects limited oracle coverage.",
+      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+    },
+    "14": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "REFS_INCOMPLETE",
+      "RootCause": "REFERENCE_COVERAGE_GAP",
+      "Target": {
+        "Mode": "QUALITY_STANDARD",
+        "Primary": null,
+        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Brotli prototype pages compare cleanly against available references; remaining PASS_ONE status reflects limited oracle coverage.",
+      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+    },
+    "15": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "REFS_INCOMPLETE",
+      "RootCause": "REFERENCE_COVERAGE_GAP",
+      "Target": {
+        "Mode": "QUALITY_STANDARD",
+        "Primary": null,
+        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Brotli prototype pages compare cleanly against available references; remaining PASS_ONE status reflects limited oracle coverage.",
+      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+    },
+    "16": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "REFS_INCOMPLETE",
+      "RootCause": "REFERENCE_COVERAGE_GAP",
+      "Target": {
+        "Mode": "QUALITY_STANDARD",
+        "Primary": null,
+        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Brotli prototype pages compare cleanly against available references; remaining PASS_ONE status reflects limited oracle coverage.",
+      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+    },
+    "17": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "REFS_INCOMPLETE",
+      "RootCause": "REFERENCE_COVERAGE_GAP",
+      "Target": {
+        "Mode": "QUALITY_STANDARD",
+        "Primary": null,
+        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Brotli prototype pages compare cleanly against available references; remaining PASS_ONE status reflects limited oracle coverage.",
+      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+    },
+    "18": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "REFS_INCOMPLETE",
+      "RootCause": "REFERENCE_COVERAGE_GAP",
+      "Target": {
+        "Mode": "QUALITY_STANDARD",
+        "Primary": null,
+        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Brotli prototype pages compare cleanly against available references; remaining PASS_ONE status reflects limited oracle coverage.",
+      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+    },
+    "19": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "REFS_INCOMPLETE",
+      "RootCause": "REFERENCE_COVERAGE_GAP",
+      "Target": {
+        "Mode": "QUALITY_STANDARD",
+        "Primary": null,
+        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Brotli prototype pages compare cleanly against available references; remaining PASS_ONE status reflects limited oracle coverage.",
+      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+    },
+    "20": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "REFS_INCOMPLETE",
+      "RootCause": "REFERENCE_COVERAGE_GAP",
+      "Target": {
+        "Mode": "QUALITY_STANDARD",
+        "Primary": null,
+        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Brotli prototype pages compare cleanly against available references; remaining PASS_ONE status reflects limited oracle coverage.",
+      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+    },
+    "21": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "REFS_INCOMPLETE",
+      "RootCause": "REFERENCE_COVERAGE_GAP",
+      "Target": {
+        "Mode": "QUALITY_STANDARD",
+        "Primary": null,
+        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Brotli prototype pages compare cleanly against available references; remaining PASS_ONE status reflects limited oracle coverage.",
+      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+    },
+    "22": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "REFS_INCOMPLETE",
+      "RootCause": "REFERENCE_COVERAGE_GAP",
+      "Target": {
+        "Mode": "QUALITY_STANDARD",
+        "Primary": null,
+        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Brotli prototype pages compare cleanly against available references; remaining PASS_ONE status reflects limited oracle coverage.",
+      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+    },
+    "23": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "REFS_INCOMPLETE",
+      "RootCause": "REFERENCE_COVERAGE_GAP",
+      "Target": {
+        "Mode": "QUALITY_STANDARD",
+        "Primary": null,
+        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Brotli prototype pages compare cleanly against available references; remaining PASS_ONE status reflects limited oracle coverage.",
+      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+    },
+    "24": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "REFS_INCOMPLETE",
+      "RootCause": "REFERENCE_COVERAGE_GAP",
+      "Target": {
+        "Mode": "QUALITY_STANDARD",
+        "Primary": null,
+        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Brotli prototype pages compare cleanly against available references; remaining PASS_ONE status reflects limited oracle coverage.",
+      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+    },
+    "25": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "REFS_INCOMPLETE",
+      "RootCause": "REFERENCE_COVERAGE_GAP",
+      "Target": {
+        "Mode": "QUALITY_STANDARD",
+        "Primary": null,
+        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Brotli prototype pages compare cleanly against available references; remaining PASS_ONE status reflects limited oracle coverage.",
+      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+    }
+  }
+}

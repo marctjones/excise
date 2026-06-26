@@ -1,0 +1,28 @@
+{
+  "Path": "pdfjs/issue15893_reduced.pdf",
+  "Source": "pdf.js corpus",
+  "Owner": "rendering:input-policy",
+  "RootCause": "DEGENERATE_INPUT",
+  "ImprovementPriority": "NONE",
+  "Confidence": "HIGH",
+  "Notes": "Migrated from rendering-expected-outcomes-2026-06-25.tsv.",
+  "Pages": {
+    "0": {
+      "ExpectedRawStatus": "PASSWORD_REQUIRED",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "NON_RENDERABLE_ACCEPTED",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "NOT_APPLICABLE",
+      "RootCause": "DEGENERATE_INPUT",
+      "Target": {
+        "Mode": "MALFORMED_INPUT_POLICY",
+        "Reason": "Correct behavior is bounded refusal or documented non-renderable handling."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Passworded content can be inspected through pdfe render --password when credentials are known.",
+      "Notes": "Password-protected reduced fixture without a corpus password is accepted as non-renderable in sample scans."
+    }
+  },
+  "Password": "test"
+}

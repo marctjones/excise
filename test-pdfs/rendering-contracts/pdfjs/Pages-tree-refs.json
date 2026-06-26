@@ -1,0 +1,28 @@
+{
+  "Path": "pdfjs/Pages-tree-refs.pdf",
+  "Source": "pdf.js corpus",
+  "Owner": "rendering:input-policy",
+  "RootCause": "DEGENERATE_INPUT",
+  "ImprovementPriority": "NONE",
+  "Confidence": "HIGH",
+  "Notes": "Migrated from rendering-expected-outcomes-2026-06-25.tsv.",
+  "Pages": {
+    "2": {
+      "ExpectedRawStatus": "DECODE_ERROR",
+      "ExpectedErrorContains": "circular reference",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "NON_RENDERABLE_ACCEPTED",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "NOT_APPLICABLE",
+      "RootCause": "DEGENERATE_INPUT",
+      "Target": {
+        "Mode": "MALFORMED_INPUT_POLICY",
+        "Reason": "Correct behavior is bounded refusal or documented non-renderable handling."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "The renderer opens page 1; page 2 is intentionally invalid and no longer reports a generic invalid page number.",
+      "Notes": "Circular page-tree fixture page 2 must fail with a typed circular-reference parse error."
+    }
+  }
+}

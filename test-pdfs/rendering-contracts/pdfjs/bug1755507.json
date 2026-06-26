@@ -1,0 +1,27 @@
+{
+  "Path": "pdfjs/bug1755507.pdf",
+  "Source": "pdf.js corpus",
+  "Owner": "rendering:quality",
+  "RootCause": "SEMANTIC_OK",
+  "ImprovementPriority": "P2",
+  "Confidence": "MEDIUM",
+  "Notes": "Migrated from rendering-expected-outcomes-2026-06-25.tsv.",
+  "Pages": {
+    "1": {
+      "ExpectedRawStatus": "PASS",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "GOOD_ENOUGH",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
+      "ReferenceSituation": "REFS_AGREE",
+      "RootCause": "SEMANTIC_OK",
+      "Target": {
+        "Mode": "REFERENCE_CONSENSUS",
+        "Reason": "Use all configured reference renderers; when they disagree, matching an accepted renderer is sufficient."
+      },
+      "ImprovementPriority": "P2",
+      "Confidence": "HIGH",
+      "QualityReason": "Residual difference is low-impact antialiasing; target oracle is mutool and current pdfe is within threshold.",
+      "Notes": "Current all-oracle scan now matches the MuPDF target after shared rendering fixes."
+    }
+  }
+}

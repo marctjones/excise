@@ -1,0 +1,27 @@
+{
+  "Path": "pdfjs/bug_jpx.pdf",
+  "Source": "pdf.js corpus",
+  "Owner": "rendering:image",
+  "RootCause": "IMAGE_ORACLE_DISAGREEMENT",
+  "ImprovementPriority": "NONE",
+  "Confidence": "MEDIUM",
+  "Notes": "Migrated from rendering-expected-outcomes-2026-06-25.tsv.",
+  "Pages": {
+    "1": {
+      "ExpectedRawStatus": "PASS",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
+      "ReferenceSituation": "REFS_AGREE",
+      "RootCause": "IMAGE_ORACLE_DISAGREEMENT",
+      "Target": {
+        "Mode": "REFERENCE_CONSENSUS",
+        "Reason": "Use all configured reference renderers; when they disagree, matching an accepted renderer is sufficient."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "JPX image fixture now matches enough references for the release gate; residual disagreement is oracle/image-decoder policy.",
+      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+    }
+  }
+}

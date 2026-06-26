@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "pdfe rendering quality contract",
+  "type": "object",
+  "required": [
+    "Path",
+    "Pages"
+  ],
+  "properties": {
+    "Path": {
+      "type": "string"
+    },
+    "Source": {
+      "type": "string"
+    },
+    "Password": {
+      "type": "string"
+    },
+    "Owner": {
+      "type": "string"
+    },
+    "Issue": {
+      "type": "integer"
+    },
+    "RootCause": {
+      "type": "string"
+    },
+    "ImprovementPriority": {
+      "enum": [
+        "P0",
+        "P1",
+        "P2",
+        "NONE"
+      ]
+    },
+    "Confidence": {
+      "enum": [
+        "HIGH",
+        "MEDIUM",
+        "LOW"
+      ]
+    },
+    "Pages": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,28 @@
+{
+  "Path": "pdfjs/GHOSTSCRIPT-698804-1-fuzzed.pdf",
+  "Source": "pdf.js corpus",
+  "Owner": "rendering:input-policy",
+  "RootCause": "DEGENERATE_INPUT",
+  "ImprovementPriority": "NONE",
+  "Confidence": "HIGH",
+  "Notes": "Migrated from rendering-expected-outcomes-2026-06-25.tsv.",
+  "Pages": {
+    "0": {
+      "ExpectedRawStatus": "MALFORMED_PDF",
+      "ExpectedErrorContains": "Value was either too large or too small",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "NON_RENDERABLE_ACCEPTED",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "NOT_APPLICABLE",
+      "RootCause": "DEGENERATE_INPUT",
+      "Target": {
+        "Mode": "MALFORMED_INPUT_POLICY",
+        "Reason": "Correct behavior is bounded refusal or documented non-renderable handling."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Failing closed is acceptable for this fuzzed fixture.",
+      "Notes": "Overflowing fuzzed object data is accepted as malformed input."
+    }
+  }
+}

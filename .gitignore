@@ -52,6 +52,9 @@ test-pdfs/*
 # But do commit corpus manifests
 !test-pdfs/manifests/
 !test-pdfs/manifests/**
+# But do commit rendering quality contracts
+!test-pdfs/rendering-contracts/
+!test-pdfs/rendering-contracts/**
 # But do commit our sample PDFs
 !test-pdfs/sample-pdfs/
 !test-pdfs/sample-pdfs/**

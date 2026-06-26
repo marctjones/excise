@@ -1,0 +1,30 @@
+{
+  "Path": "pdfjs/issue19326.pdf",
+  "Source": "pdf.js corpus",
+  "Owner": "rendering:image",
+  "RootCause": "JPX_ALPHA_LIMITATION",
+  "ImprovementPriority": "P2",
+  "Confidence": "MEDIUM",
+  "Notes": "Migrated from rendering-expected-outcomes-2026-06-25.tsv.",
+  "Pages": {
+    "1": {
+      "ExpectedRawStatus": "DIFF",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "ACCEPTED_LIMITATION",
+      "PixelAgreement": "MATCHES_NONE",
+      "ReferenceSituation": "REFS_DISAGREE",
+      "RootCause": "JPX_ALPHA_LIMITATION",
+      "Target": {
+        "Mode": "PDF_SPEC",
+        "Primary": "mutool",
+        "Reason": "PDF JPX alpha/component semantics are the quality target; references are evidence, not the full contract."
+      },
+      "ImprovementPriority": "P2",
+      "Confidence": "HIGH",
+      "QualityReason": "Visible JPX content now renders; remaining gray background is JP2 embedded opacity/background fidelity deferred to full JPEG2000 alpha-component support in #403.",
+      "Notes": "JPX fixture now renders visible content; exact JP2 embedded opacity/background handling remains a documented limitation under the full JPX roadmap.",
+      "Issue": 403
+    }
+  },
+  "Issue": 403
+}

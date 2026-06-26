@@ -1,0 +1,28 @@
+{
+  "Path": "pdfjs/issue19484_1.pdf",
+  "Source": "pdf.js corpus",
+  "Owner": "rendering:quality",
+  "RootCause": "REFERENCE_REFUSAL",
+  "ImprovementPriority": "NONE",
+  "Confidence": "MEDIUM",
+  "Notes": "Migrated from rendering-expected-outcomes-2026-06-25.tsv.",
+  "Pages": {
+    "1": {
+      "ExpectedRawStatus": "ALL_ORACLES_REFUSED",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "REFS_REFUSE",
+      "RootCause": "REFERENCE_REFUSAL",
+      "Target": {
+        "Mode": "QUALITY_STANDARD",
+        "Primary": null,
+        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Short-key R4/V4 padding is covered by focused parser/security and rendering tests; oracle refusal is not a pdfe renderer defect.",
+      "Notes": "Encrypted short-key fixture renders in pdfe but all sample references refuse it."
+    }
+  }
+}

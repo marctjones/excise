@@ -1,0 +1,27 @@
+{
+  "Path": "pdfjs/issue19517.pdf",
+  "Source": "pdf.js corpus",
+  "Owner": "rendering:page-geometry",
+  "RootCause": "PAGE_BOX_DISAGREEMENT",
+  "ImprovementPriority": "P2",
+  "Confidence": "MEDIUM",
+  "Notes": "Migrated from rendering-expected-outcomes-2026-06-25.tsv.",
+  "Pages": {
+    "1": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "GOOD_ENOUGH",
+      "PixelAgreement": "MATCHES_SOME",
+      "ReferenceSituation": "REFS_DISAGREE",
+      "RootCause": "PAGE_BOX_DISAGREEMENT",
+      "Target": {
+        "Mode": "QUALITY_STANDARD",
+        "Reason": "Reference renderers disagree due to policy-sensitive rendering; judge by documented visual quality standard."
+      },
+      "ImprovementPriority": "P2",
+      "Confidence": "HIGH",
+      "QualityReason": "Page geometry or effective page extent differs between references; pdfe output remains inspectable.",
+      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+    }
+  }
+}
