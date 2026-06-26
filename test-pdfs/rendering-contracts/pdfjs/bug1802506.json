@@ -1,27 +1,28 @@
 {
   "Path": "pdfjs/bug1802506.pdf",
   "Source": "pdf.js corpus",
-  "Owner": "rendering:quality",
-  "RootCause": "SEMANTIC_OK",
-  "ImprovementPriority": "P2",
-  "Confidence": "MEDIUM",
-  "Notes": "Migrated from the legacy TSV rendering manifests.",
+  "Owner": "rendering:font",
+  "RootCause": "ZAPF_DINGBATS_CHECKMARK_ENCODING",
+  "ImprovementPriority": "NONE",
+  "Confidence": "HIGH",
+  "Notes": "pdfe now decodes the selected checkbox appearance through ZapfDingbatsEncoding; remaining PASS_ONE status is reference page-box disagreement.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "GOOD_ENOUGH",
-      "PixelAgreement": "MATCHES_SOME",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_TARGET",
       "ReferenceSituation": "REFS_DISAGREE",
-      "RootCause": "SEMANTIC_OK",
+      "RootCause": "ZAPF_DINGBATS_CHECKMARK_ENCODING",
       "Target": {
-        "Mode": "REFERENCE_CONSENSUS",
-        "Reason": "Use all configured reference renderers; when they disagree, matching an accepted renderer is sufficient."
+        "Mode": "REFERENCE_RENDERER",
+        "Primary": "mutool",
+        "Reason": "MuPDF uses the same cropped page box as pdfe and renders the selected ZapfDingbats checkbox appearance correctly; Cairo and Ghostscript render a different page extent."
       },
-      "ImprovementPriority": "P2",
+      "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Focused checkmark regression covers the prior empty-widget failure.",
-      "Notes": "Checkmark widget appearance paints the selected ZapfDingbats glyph; remaining oracle disagreement is bounded appearance antialiasing."
+      "QualityReason": "pdfe now paints the ZapfDingbats checkmark and closely matches the accepted MuPDF target; remaining raw PASS_ONE is caused by reference page-box disagreement.",
+      "Notes": "Focused regression checks the upper-right checkmark arm so a missing-glyph rectangle cannot satisfy the test."
     }
   }
 }

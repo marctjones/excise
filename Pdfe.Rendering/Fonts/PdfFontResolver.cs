@@ -15,7 +15,7 @@ internal static class PdfFontResolver
             : null;
         var encodingName = fontDictionary?.GetNameOrNull("Encoding")
                            ?? encodingDictionary?.GetNameOrNull("BaseEncoding")
-                           ?? "WinAnsiEncoding";
+                           ?? GetDefaultEncodingName(baseFont);
 
         float[]? widths = null;
         var firstChar = 0;
@@ -79,6 +79,19 @@ internal static class PdfFontResolver
 
         var resolved = document != null ? document.Resolve(obj) : obj;
         return resolved as T;
+    }
+
+    private static string GetDefaultEncodingName(string baseFont)
+    {
+        var bareName = baseFont;
+        if (bareName.Length >= 8 && bareName[6] == '+')
+            bareName = bareName[7..];
+
+        if (bareName.Contains("ZapfDingbats", StringComparison.OrdinalIgnoreCase)
+            || bareName.Contains("Dingbat", StringComparison.OrdinalIgnoreCase))
+            return "ZapfDingbatsEncoding";
+
+        return "WinAnsiEncoding";
     }
 
     private static IReadOnlyDictionary<int, string>? TryLoadToUnicodeMap(

@@ -788,6 +788,8 @@ public class SkiaRendererTests
 
         CountDarkPixels(bitmap, new SKRectI(50, 45, 115, 110)).Should().BeGreaterThan(250,
             "the left checkbox's /AP /N /Yes appearance should paint the ZapfDingbats checkmark glyph, not just the empty widget border");
+        CountDarkPixels(bitmap, new SKRectI(80, 20, 125, 50)).Should().BeGreaterThan(40,
+            "the ZapfDingbats checkmark should extend into the checkbox's upper-right arm region instead of rendering as a vertical missing-glyph box");
     }
 
     [Fact(Timeout = 20000)]
