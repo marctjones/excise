@@ -555,14 +555,23 @@ public class PdfDocument : IDisposable
         var header = System.Text.Encoding.ASCII.GetString(buffer, 0, read);
         var headerStart = header.IndexOf("%PDF-", StringComparison.Ordinal);
         if (headerStart < 0)
-            throw new PdfParseException("Invalid PDF header");
+            return "0.0";
 
         // Extract version (e.g., "1.4", "1.7", "2.0")
         int idx = headerStart + 5;
         while (idx < header.Length && (char.IsDigit(header[idx]) || header[idx] == '.'))
             idx++;
 
-        return header.Substring(headerStart + 5, idx - (headerStart + 5));
+        var version = header.Substring(headerStart + 5, idx - (headerStart + 5));
+        return IsValidPdfVersion(version) ? version : "0.0";
+    }
+
+    private static bool IsValidPdfVersion(string version)
+    {
+        if (version.Length != 3 || version[1] != '.')
+            return false;
+
+        return char.IsDigit(version[0]) && char.IsDigit(version[2]);
     }
 
     /// <summary>

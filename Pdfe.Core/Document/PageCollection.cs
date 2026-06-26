@@ -14,6 +14,7 @@ public class PageCollection : IReadOnlyList<PdfPage>
     private readonly List<PdfPage> _pages;
     private readonly PdfDictionary _pagesDict;
     private PdfArray _kidsArray;
+    private int _declaredCount;
 
     /// <summary>
     /// Creates a new page collection for the document.
@@ -49,8 +50,28 @@ public class PageCollection : IReadOnlyList<PdfPage>
     private void LoadPages()
     {
         _pages.Clear();
+        _declaredCount = GetDeclaredRootPageCount();
         var visited = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
         LoadPagesRecursive(_pagesDict, 0, visited, depth: 0);
+    }
+
+    private int GetDeclaredRootPageCount()
+    {
+        try
+        {
+            var countObj = _pagesDict.GetOptional("Count");
+            if (countObj == null || !countObj.TryGetNumber(out var count))
+                return 0;
+
+            if (count <= 0 || count > int.MaxValue)
+                return 0;
+
+            return (int)count;
+        }
+        catch (Exception ex) when (ex is FormatException or OverflowException)
+        {
+            return 0;
+        }
     }
 
     /// <summary>
@@ -79,45 +100,47 @@ public class PageCollection : IReadOnlyList<PdfPage>
         if (depth > MaxPageTreeDepth) return 0;
         if (!visited.Add(node)) return 0; // cycle — already on this path
 
-        var type = node.GetNameOrNull("Type");
-
-        if (type == "Page")
+        try
         {
-            // This is a leaf page
-            _pages.Add(new PdfPage(_document, node, pageNumber + 1));
-            return 1;
-        }
+            var type = node.GetNameOrNull("Type");
 
-        // This is a Pages node
-        var kids = node.GetArrayOrNull("Kids");
-        if (kids == null)
-            return 0;
-
-        int count = 0;
-        foreach (var kidObj in kids)
-        {
-            // Kids may be either indirect references (standard) or inline
-            // dictionaries (our mutation path — AddBlank/Insert — writes
-            // inline dicts because a full indirect-object registry isn't
-            // wired up yet). Handle both.
-            PdfDictionary? kid = kidObj switch
+            if (type == "Page")
             {
-                PdfReference kr => _document.GetObject(kr) as PdfDictionary,
-                PdfDictionary kd => kd,
-                _ => null,
-            };
-            if (kid == null) continue;
+                // This is a leaf page
+                _pages.Add(new PdfPage(_document, node, pageNumber + 1));
+                return 1;
+            }
 
-            count += LoadPagesRecursive(kid, pageNumber + count, visited, depth + 1);
+            // This is a Pages node
+            var kids = node.GetArrayOrNull("Kids");
+            if (kids == null)
+                return 0;
+
+            int count = 0;
+            foreach (var kidObj in kids)
+            {
+                // Kids may be either indirect references (standard) or inline
+                // dictionaries (our mutation path — AddBlank/Insert — writes
+                // inline dicts because a full indirect-object registry isn't
+                // wired up yet). Handle both.
+                var kid = ResolvePageTreeKid(kidObj);
+                if (kid == null) continue;
+
+                count += LoadPagesRecursive(kid, pageNumber + count, visited, depth + 1);
+            }
+
+            return count;
         }
-
-        return count;
+        finally
+        {
+            visited.Remove(node);
+        }
     }
 
     /// <summary>
     /// Number of pages in the collection.
     /// </summary>
-    public int Count => _pages.Count;
+    public int Count => _declaredCount > 0 ? _declaredCount : _pages.Count;
 
     /// <summary>
     /// Get a page by index (0-based).
@@ -127,10 +150,85 @@ public class PageCollection : IReadOnlyList<PdfPage>
         get
         {
             if (index < 0 || index >= _pages.Count)
-                throw new ArgumentOutOfRangeException(nameof(index), $"Page index must be between 0 and {_pages.Count - 1}");
+            {
+                if (index < 0 || index >= Count)
+                    throw new ArgumentOutOfRangeException(nameof(index), $"Page index must be between 0 and {Count - 1}");
+
+                return FindPageByIndex(index);
+            }
             return _pages[index];
         }
     }
+
+    private PdfPage FindPageByIndex(int targetIndex)
+    {
+        int currentIndex = 0;
+        var page = FindPageByIndexRecursive(
+            _pagesDict,
+            targetIndex,
+            ref currentIndex,
+            new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance),
+            depth: 0);
+
+        if (page != null)
+            return page;
+
+        throw new PdfParseException($"Page index {targetIndex} could not be resolved from the page tree");
+    }
+
+    private PdfPage? FindPageByIndexRecursive(
+        PdfDictionary node,
+        int targetIndex,
+        ref int currentIndex,
+        HashSet<PdfDictionary> path,
+        int depth)
+    {
+        if (depth > MaxPageTreeDepth)
+            throw new PdfParseException("Page tree exceeds maximum depth");
+        if (!path.Add(node))
+            throw new PdfParseException("Page tree contains a circular reference");
+
+        try
+        {
+            var type = node.GetNameOrNull("Type");
+            if (type == "Page")
+            {
+                if (currentIndex == targetIndex)
+                    return new PdfPage(_document, node, targetIndex + 1);
+
+                currentIndex++;
+                return null;
+            }
+
+            var kids = node.GetArrayOrNull("Kids");
+            if (kids == null)
+                return null;
+
+            foreach (var kidObj in kids)
+            {
+                var kid = ResolvePageTreeKid(kidObj);
+                if (kid == null) continue;
+
+                var page = FindPageByIndexRecursive(kid, targetIndex, ref currentIndex, path, depth + 1);
+                if (page != null)
+                    return page;
+            }
+
+            return null;
+        }
+        finally
+        {
+            path.Remove(node);
+        }
+    }
+
+    private PdfDictionary? ResolvePageTreeKid(PdfObject kidObj)
+        => kidObj switch
+        {
+            PdfReference kr => _document.GetObject(kr) as PdfDictionary,
+            PdfDictionary kd => kd,
+            _ => null,
+        };
 
     /// <summary>
     /// Add a page from another document to the end of this document.

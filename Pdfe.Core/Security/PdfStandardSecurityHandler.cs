@@ -134,6 +134,14 @@ public sealed class PdfStandardSecurityHandler
                 "or the file requires a non-empty user password.");
         }
 
+        if (v == 4 && r == 4 && fileKey.Length < 16)
+        {
+            var paddedFileKey = new byte[16];
+            Array.Copy(fileKey, paddedFileKey, fileKey.Length);
+            fileKey = paddedFileKey;
+            keyBytes = 16;
+        }
+
         return new PdfStandardSecurityHandler(v, r, keyBytes, fileKey, usesAes);
     }
 
