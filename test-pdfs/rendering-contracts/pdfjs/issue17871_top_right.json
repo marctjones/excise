@@ -1,27 +1,28 @@
 {
   "Path": "pdfjs/issue17871_top_right.pdf",
   "Source": "pdf.js corpus",
-  "Owner": "rendering:page-geometry",
-  "RootCause": "PAGE_BOX_DISAGREEMENT",
-  "ImprovementPriority": "P2",
-  "Confidence": "MEDIUM",
-  "Notes": "Migrated from the legacy TSV rendering manifests.",
+  "Owner": "rendering:jbig2",
+  "RootCause": "JBIG2_ARITHMETIC_TEXT_IAIT_PLACEMENT",
+  "ImprovementPriority": "NONE",
+  "Confidence": "HIGH",
+  "Notes": "pdfe now preserves out-of-strip arithmetic text-region IAIT placement and matches the accepted MuPDF target.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "PASS_ONE",
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "GOOD_ENOUGH",
-      "PixelAgreement": "MATCHES_ONE_REFERENCE",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_TARGET",
       "ReferenceSituation": "REFS_DISAGREE",
-      "RootCause": "PAGE_BOX_DISAGREEMENT",
+      "RootCause": "JBIG2_ARITHMETIC_TEXT_IAIT_PLACEMENT",
       "Target": {
-        "Mode": "QUALITY_STANDARD",
-        "Reason": "Reference renderers disagree due to policy-sensitive rendering; judge by documented visual quality standard."
+        "Mode": "REFERENCE_RENDERER",
+        "Primary": "mutool",
+        "Reason": "MuPDF and Ghostscript preserve the two left-dot JBIG2 symbols; Cairo is the outlier for this malformed-but-renderable fixture."
       },
-      "ImprovementPriority": "P2",
+      "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Page geometry/oracle policy owns this isolated residual unless ordinary content loss is reproduced.",
-      "Notes": "Single-page reduced/edge-position fixture remains readable enough but references disagree on localized geometry."
+      "QualityReason": "pdfe now decodes the JBIG2 arithmetic text region with the lower-left out-of-strip symbol preserved and matches the accepted MuPDF target.",
+      "Notes": "Focused regression asserts the four dark connected components so IAIT placement cannot silently collapse again."
     }
   }
 }

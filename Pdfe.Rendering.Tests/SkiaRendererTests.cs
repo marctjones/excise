@@ -257,6 +257,27 @@ public class SkiaRendererTests
     }
 
     [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsJbig2ArithmeticTextRegion_PreservesOutOfStripSymbolPlacement()
+    {
+        var path = FindRepoFile("test-pdfs", "pdfjs", "issue17871_top_right.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js issue17871_top_right fixture found at test-pdfs/pdfjs/issue17871_top_right.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var components = MeasureDarkConnectedComponents(bitmap, minimumPixels: 100);
+        components.Should().HaveCount(4,
+            "the malformed-but-reference-renderable JBIG2 arithmetic text region has two left-dot symbols plus two larger symbols");
+        components.Should().Contain(
+            component => component.Left < bitmap.Width / 4 && component.Top > bitmap.Height * 0.60,
+            "out-of-strip IAIT values must preserve the lower-left dot instead of clamping it into an earlier strip");
+    }
+
+    [Fact(Timeout = 20000)]
     public void RenderPage_PdfjsJbig2BitmapRefinement_RendersNonBlankNonBlackPage()
     {
         var path = FindRepoFile("test-pdfs", "pdfjs", "bitmap-refine-page.pdf");
@@ -5234,6 +5255,65 @@ public class SkiaRendererTests
 
         return ((double)white / total, (double)dark / total);
     }
+
+    private static List<SKRectI> MeasureDarkConnectedComponents(SKBitmap bitmap, int minimumPixels)
+    {
+        var seen = new bool[bitmap.Width * bitmap.Height];
+        var components = new List<SKRectI>();
+        var stack = new Stack<(int X, int Y)>();
+
+        for (int y = 0; y < bitmap.Height; y++)
+        {
+            for (int x = 0; x < bitmap.Width; x++)
+            {
+                var start = y * bitmap.Width + x;
+                if (seen[start] || !IsDark(bitmap.GetPixel(x, y)))
+                    continue;
+
+                var left = x;
+                var top = y;
+                var right = x;
+                var bottom = y;
+                var pixels = 0;
+
+                seen[start] = true;
+                stack.Push((x, y));
+                while (stack.Count > 0)
+                {
+                    var (currentX, currentY) = stack.Pop();
+                    pixels++;
+                    left = Math.Min(left, currentX);
+                    top = Math.Min(top, currentY);
+                    right = Math.Max(right, currentX);
+                    bottom = Math.Max(bottom, currentY);
+
+                    for (int nextY = currentY - 1; nextY <= currentY + 1; nextY++)
+                    {
+                        for (int nextX = currentX - 1; nextX <= currentX + 1; nextX++)
+                        {
+                            if (nextX < 0 || nextY < 0 || nextX >= bitmap.Width || nextY >= bitmap.Height)
+                                continue;
+
+                            var next = nextY * bitmap.Width + nextX;
+                            if (seen[next] || !IsDark(bitmap.GetPixel(nextX, nextY)))
+                                continue;
+
+                            seen[next] = true;
+                            stack.Push((nextX, nextY));
+                        }
+                    }
+                }
+
+                if (pixels >= minimumPixels)
+                    components.Add(new SKRectI(left, top, right + 1, bottom + 1));
+            }
+        }
+
+        return components;
+    }
+
+    private static bool IsDark(SKColor pixel)
+        => pixel.Red < 32 && pixel.Green < 32 && pixel.Blue < 32;
 
     private static double MeasureDifferentPixelFraction(SKBitmap first, SKBitmap second)
     {

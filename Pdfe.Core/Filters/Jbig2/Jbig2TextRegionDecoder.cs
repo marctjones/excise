@@ -350,11 +350,6 @@ internal static class Jbig2TextRegionDecoder
                 long currentT = segment.LogSbStrips == 0
                     ? 0
                     : DecodeRequired(decoders.Iait, "text-region current T");
-                // See issue #491. Some malformed-but-reference-renderable
-                // streams decode an out-of-strip IAIT value; consume the value
-                // and clamp placement instead of falling back to raw bytes.
-                currentT = Math.Clamp(currentT, 0, sbStrips - 1);
-
                 long t = stripT + currentT;
                 long id = decoders.DecodeSymbolId();
                 if ((uint)id >= (uint)symbols.Count)
