@@ -5,7 +5,7 @@
   "RootCause": "DEGENERATE_INPUT",
   "ImprovementPriority": "NONE",
   "Confidence": "HIGH",
-  "Notes": "Migrated from rendering-expected-outcomes-2026-06-25.tsv.",
+  "Notes": "Migrated from the legacy TSV rendering manifests.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",

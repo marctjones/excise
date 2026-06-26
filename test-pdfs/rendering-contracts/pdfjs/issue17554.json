@@ -2,10 +2,10 @@
   "Path": "pdfjs/issue17554.pdf",
   "Source": "pdf.js corpus",
   "Owner": "rendering:input-policy",
-  "RootCause": "DEGENERATE_INPUT",
+  "RootCause": "RECOVERED_INPUT_RENDERING",
   "ImprovementPriority": "NONE",
   "Confidence": "HIGH",
-  "Notes": "Migrated from rendering-expected-outcomes-2026-06-25.tsv.",
+  "Notes": "Migrated from the legacy TSV rendering manifests.",
   "Pages": {
     "0": {
       "ExpectedRawStatus": "MALFORMED_PDF",
@@ -23,6 +23,22 @@
       "Confidence": "HIGH",
       "QualityReason": "Failing closed is acceptable for this malformed fixture.",
       "Notes": "Broken object header is accepted as a parser refusal."
+    },
+    "1": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_SOME",
+      "ReferenceSituation": "REFS_DISAGREE",
+      "RootCause": "RECOVERED_INPUT_RENDERING",
+      "Target": {
+        "Mode": "REFERENCE_CONSENSUS",
+        "Reason": "Recovered input now renders with documented corpus credentials/recovery behavior; judge against configured references."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Recovered malformed fixture now opens and renders page 1; compare as accepted reference disagreement while keeping page 0 refusal policy documented.",
+      "Notes": "Explicit page-1 contract added after contract-driven scan confirmed this page renders."
     }
   }
 }

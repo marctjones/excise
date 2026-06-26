@@ -1,7 +1,6 @@
 using AwesomeAssertions;
 using Pdfe.Core.Parsing;
 using System.Diagnostics;
-using System.Text.Json;
 using Xunit;
 
 namespace Pdfe.Cli.Tests;
@@ -593,93 +592,6 @@ public class CorpusScanClassificationTests
     }
 
     [Fact]
-    public void CorpusScan_ExpectedRefusals_RefusesForDocumentedReasons()
-    {
-        var root = FindRepoRoot();
-        var corpus = Path.Combine(root, "test-pdfs");
-        var manifestPath = Path.Combine(
-            corpus,
-            "manifests",
-            "rendering-expected-refusals-2026-06-24.tsv");
-
-        if (!Directory.Exists(corpus) || !File.Exists(manifestPath))
-            return;
-
-        var expectations = LoadExpectedRefusals(manifestPath);
-        expectations.Should().NotBeEmpty();
-
-        var pageManifest = expectations.ToDictionary(
-            expectation => expectation.Path,
-            expectation => (IReadOnlySet<int>)new HashSet<int> { expectation.PageNumber },
-            StringComparer.Ordinal);
-        var expectationManifest = Program.LoadCorpusExpectationManifest(new FileInfo(manifestPath));
-        var outputPath = Path.Combine(
-            Path.GetTempPath(),
-            "pdfe-expected-refusals-" + Guid.NewGuid().ToString("N") + ".json");
-
-        try
-        {
-            Program.RunCorpusScan(
-                    corpus,
-                    outputPath,
-                    chunkIndex: 0,
-                    chunkTotal: 1,
-                    dpi: 72,
-                    maxDiffFraction: 0.05,
-                    maxMae: 5,
-                    parallel: 1,
-                    pdfTimeoutMs: 30_000,
-                    pageMode: Program.CorpusPageMode.First,
-                    extraOracles: Program.CorpusExtraOracles.None,
-                    pageManifest: pageManifest,
-                    expectationManifest: expectationManifest)
-                .Should().BeTrue();
-
-            using var document = JsonDocument.Parse(File.ReadAllText(outputPath));
-            var entries = document.RootElement.GetProperty("entries")
-                .EnumerateArray()
-                .Select(entry => new
-                {
-                    Path = entry.GetProperty("path").GetString()!,
-                    PageNumber = entry.GetProperty("pageNumber").GetInt32(),
-                    Status = entry.GetProperty("status").GetString()!,
-                    ResultStatus = entry.GetProperty("resultStatus").GetString()!,
-                    ExpectedStatus = entry.TryGetProperty("expectedStatus", out var expectedStatus)
-                        ? expectedStatus.GetString()
-                        : null,
-                    ExpectationResult = entry.TryGetProperty("expectationResult", out var expectationResult)
-                        ? expectationResult.GetString()
-                        : null,
-                    ErrorMessage = entry.TryGetProperty("errorMessage", out var error)
-                        ? error.GetString()
-                        : null,
-                })
-                .ToDictionary(entry => (entry.Path, entry.PageNumber));
-
-            foreach (var expectation in expectations)
-            {
-                entries.Should().ContainKey((expectation.Path, expectation.PageNumber));
-                var entry = entries[(expectation.Path, expectation.PageNumber)];
-                entry.Status.Should().Be(expectation.ExpectedStatus, expectation.Note);
-                entry.ResultStatus.Should().Be("PASS", expectation.Note);
-                entry.ExpectedStatus.Should().Be(expectation.ExpectedStatus, expectation.Note);
-                entry.ExpectationResult.Should().Be("PASS", expectation.Note);
-                if (!string.IsNullOrWhiteSpace(expectation.ExpectedErrorContains))
-                {
-                    entry.ErrorMessage.Should().Contain(
-                        expectation.ExpectedErrorContains,
-                        expectation.Note);
-                }
-            }
-        }
-        finally
-        {
-            if (File.Exists(outputPath))
-                File.Delete(outputPath);
-        }
-    }
-
-    [Fact]
     public void ApplyCorpusExpectations_MatchingExpectedFailureKeepsRawStatusAndPassesResult()
     {
         var entries = new[]
@@ -819,25 +731,6 @@ public class CorpusScanClassificationTests
         entries[0].resultCategory.Should().Be("PASS_ONE_SEMANTIC_OK");
     }
 
-    private static IReadOnlyList<ExpectedRefusal> LoadExpectedRefusals(string manifestPath)
-    {
-        return File.ReadLines(manifestPath)
-            .Skip(1)
-            .Where(line => !string.IsNullOrWhiteSpace(line))
-            .Select(line =>
-            {
-                var parts = line.Split('\t');
-                parts.Length.Should().BeGreaterThanOrEqualTo(5);
-                return new ExpectedRefusal(
-                    parts[0],
-                    int.Parse(parts[1], System.Globalization.CultureInfo.InvariantCulture),
-                    parts[2],
-                    parts[3],
-                    parts[4]);
-            })
-            .ToArray();
-    }
-
     private static string FindRepoRoot()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
@@ -853,11 +746,4 @@ public class CorpusScanClassificationTests
 
         return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
     }
-
-    private sealed record ExpectedRefusal(
-        string Path,
-        int PageNumber,
-        string ExpectedStatus,
-        string ExpectedErrorContains,
-        string Note);
 }

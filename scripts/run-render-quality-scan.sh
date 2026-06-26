@@ -56,24 +56,25 @@ while [[ $# -gt 0 ]]; do
 done
 
 mkdir -p "$(dirname "$OUTPUT")"
-RAW_ARGS=()
-if [[ -n "$RAW_OUTPUT" ]]; then
-    mkdir -p "$(dirname "$RAW_OUTPUT")"
-    RAW_ARGS=(--raw-output "$RAW_OUTPUT")
-fi
-STRICT_ARGS=()
-if [[ "$STRICT_CONTRACTS" == "1" ]]; then
-    STRICT_ARGS=(--strict-contracts)
-fi
-
-dotnet run --project Pdfe.Cli/Pdfe.Cli.csproj -c "$CONFIG" -- \
+CMD=(dotnet run --project Pdfe.Cli/Pdfe.Cli.csproj -c "$CONFIG" -- \
     render-quality-scan "$CORPUS" \
     --contracts "$CONTRACTS" \
-    --output "$OUTPUT" \
-    "${RAW_ARGS[@]}" \
+    --output "$OUTPUT")
+if [[ -n "$RAW_OUTPUT" ]]; then
+    mkdir -p "$(dirname "$RAW_OUTPUT")"
+    CMD+=(--raw-output "$RAW_OUTPUT")
+fi
+
+CMD+=( \
     --page-mode "$PAGE_MODE" \
     --oracles "$ORACLES" \
     --parallel "$PARALLEL" \
-    --pdf-timeout-ms "$PDF_TIMEOUT_MS" \
-    "${STRICT_ARGS[@]}" \
-    "${EXTRA_ARGS[@]}"
+    --pdf-timeout-ms "$PDF_TIMEOUT_MS")
+if [[ "$STRICT_CONTRACTS" == "1" ]]; then
+    CMD+=(--strict-contracts)
+fi
+if (( ${#EXTRA_ARGS[@]} > 0 )); then
+    CMD+=("${EXTRA_ARGS[@]}")
+fi
+
+"${CMD[@]}"

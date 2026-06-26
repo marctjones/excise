@@ -2,10 +2,10 @@
   "Path": "pdfjs/encrypted-attachment.pdf",
   "Source": "pdf.js corpus",
   "Owner": "rendering:input-policy",
-  "RootCause": "DEGENERATE_INPUT",
+  "RootCause": "RECOVERED_INPUT_RENDERING",
   "ImprovementPriority": "NONE",
   "Confidence": "HIGH",
-  "Notes": "Migrated from rendering-expected-outcomes-2026-06-25.tsv.",
+  "Notes": "Migrated from the legacy TSV rendering manifests.",
   "Pages": {
     "0": {
       "ExpectedRawStatus": "MALFORMED_PDF",
@@ -23,6 +23,22 @@
       "Confidence": "HIGH",
       "QualityReason": "The file does not expose a useful page-rendering surface for the release gate.",
       "Notes": "Attachment-only encrypted fixture is accepted as non-renderable corpus input."
+    },
+    "1": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_SOME",
+      "ReferenceSituation": "REFS_DISAGREE",
+      "RootCause": "RECOVERED_INPUT_RENDERING",
+      "Target": {
+        "Mode": "REFERENCE_CONSENSUS",
+        "Reason": "Recovered input now renders with documented corpus credentials/recovery behavior; judge against configured references."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Recovered encrypted attachment fixture now exposes page 1; compare as accepted reference disagreement while keeping page 0 non-renderable policy documented.",
+      "Notes": "Explicit page-1 contract added after contract-driven scan confirmed this page renders."
     }
   }
 }

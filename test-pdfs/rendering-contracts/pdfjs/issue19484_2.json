@@ -5,7 +5,7 @@
   "RootCause": "REFERENCE_REFUSAL",
   "ImprovementPriority": "NONE",
   "Confidence": "MEDIUM",
-  "Notes": "Migrated from rendering-expected-outcomes-2026-06-25.tsv.",
+  "Notes": "Migrated from the legacy TSV rendering manifests.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "ALL_ORACLES_REFUSED",

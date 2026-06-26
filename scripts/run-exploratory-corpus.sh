@@ -23,7 +23,7 @@
 #   scripts/run-exploratory-corpus.sh --corpus test-pdfs/poppler --page-mode all
 #   scripts/run-exploratory-corpus.sh --corpus test-pdfs --report-name exploratory-report-all-corpora-all.json --page-mode all
 #   scripts/run-exploratory-corpus.sh --extra-oracles all                  # add Ghostscript/PDFBox/PDFium where available
-#   scripts/run-exploratory-corpus.sh --password-manifest test-pdfs/manifests/rendering-known-passwords-2026-06-20.tsv
+#   scripts/run-exploratory-corpus.sh --password-manifest path/to/passwords.tsv
 #   scripts/run-exploratory-corpus.sh --no-page-shards                     # keep legacy PDF-level chunking
 #   scripts/run-exploratory-corpus.sh --resume-pdfe-render-cache           # reuse pdfe cache from a prior interrupted run
 #   scripts/run-exploratory-corpus.sh --chunks 14 --tiny                    # 10-PDF smoke run
@@ -115,15 +115,6 @@ if [[ "$PASSWORD_MANIFEST_MODE" == "explicit" && "$PASSWORD_MANIFEST" != /* ]]; 
 fi
 if [[ -n "$EXPECTATION_MANIFEST" && "$EXPECTATION_MANIFEST" != /* ]]; then
     EXPECTATION_MANIFEST="$ROOT/$EXPECTATION_MANIFEST"
-fi
-
-DEFAULT_PASSWORD_MANIFEST="$ROOT/test-pdfs/manifests/rendering-known-passwords-2026-06-20.tsv"
-if [[ "$PASSWORD_MANIFEST_MODE" == "auto" && -f "$DEFAULT_PASSWORD_MANIFEST" ]]; then
-    TEST_PDFS_ROOT="$(cd "$ROOT/test-pdfs" && pwd -P)"
-    CORPUS_REAL="$(cd "$CORPUS" && pwd -P)"
-    if [[ "$CORPUS_REAL" == "$TEST_PDFS_ROOT" || "$CORPUS_REAL" == "$TEST_PDFS_ROOT/"* ]]; then
-        PASSWORD_MANIFEST="$DEFAULT_PASSWORD_MANIFEST"
-    fi
 fi
 
 PASSWORD_ARGS=()
