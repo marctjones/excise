@@ -1,0 +1,168 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Spec-driven coverage matrix for PDF image rendering conformance and quality scans.",
+  "notes": [
+    "This matrix enumerates PDF image/filter features that should be covered by either synthetic fixtures, public corpuses, or real-world regression PDFs.",
+    "The scanner scripts use the feature ids to group PDFs and run focused differential rendering checks against reference renderers."
+  ],
+  "corpusSources": [
+    {
+      "id": "pdfjs",
+      "kind": "bug-regression",
+      "path": "test-pdfs/pdfjs",
+      "downloadScript": "scripts/download-pdfjs-corpus.sh",
+      "focus": ["historical renderer bugs", "JBIG2 fixtures", "image masks", "color spaces", "malformed streams"]
+    },
+    {
+      "id": "poppler",
+      "kind": "renderer-regression",
+      "path": "test-pdfs/poppler",
+      "downloadScript": "scripts/download-poppler-corpus.sh",
+      "focus": ["filter edge cases", "reference images", "low-level parser/rendering regressions"]
+    },
+    {
+      "id": "verapdf",
+      "kind": "standards-conformance",
+      "path": "test-pdfs/verapdf-corpus",
+      "downloadScript": "scripts/download-test-pdfs.sh",
+      "focus": ["PDF/A", "PDF/UA", "ISO 32000-1", "ISO 32000-2 atomic fixtures"]
+    },
+    {
+      "id": "isartor",
+      "kind": "standards-conformance",
+      "path": "test-pdfs/isartor",
+      "downloadScript": "scripts/download-test-pdfs.sh",
+      "focus": ["PDF/A-1 atomic fixtures"]
+    },
+    {
+      "id": "altona",
+      "kind": "print-color",
+      "path": "test-pdfs/altona",
+      "downloadScript": "scripts/download-standards-image-corpora.sh",
+      "focus": ["PDF/X", "ICC color management", "print-oriented image/color quality"]
+    },
+    {
+      "id": "ghent",
+      "kind": "print-color",
+      "path": "test-pdfs/ghent",
+      "downloadScript": "scripts/download-standards-image-corpora.sh",
+      "focus": ["PDF/X-4", "DeviceCMYK", "spot color", "ICCBased color management", "transparency"]
+    }
+  ],
+  "features": [
+    {
+      "id": "filter:DCTDecode",
+      "category": "image-filter",
+      "requiredBy": "PDF image XObject and inline image filter support",
+      "mustCover": ["RGB JPEG", "YCbCr JPEG", "CMYK JPEG", "YCCK JPEG", "Adobe APP14 transform", "DecodeParms ColorTransform", "ICCBased CMYK"]
+    },
+    {
+      "id": "filter:JPXDecode",
+      "category": "image-filter",
+      "requiredBy": "JPEG 2000 / JPX image support",
+      "mustCover": ["gray", "RGB", "CMYK", "indexed", "embedded alpha", "component definitions", "16-bit components"]
+    },
+    {
+      "id": "filter:JBIG2Decode",
+      "category": "image-filter",
+      "requiredBy": "JBIG2 bi-level image support",
+      "mustCover": ["generic regions", "symbol dictionaries", "text regions", "refinement regions", "halftone regions", "JBIG2Globals", "resource limits"]
+    },
+    {
+      "id": "filter:CCITTFaxDecode",
+      "category": "image-filter",
+      "requiredBy": "fax/bi-level image support",
+      "mustCover": ["K=0", "K>0", "K<0", "BlackIs1", "EncodedByteAlign", "Columns", "Rows", "EndOfLine", "EndOfBlock"]
+    },
+    {
+      "id": "filter:FlateDecode",
+      "category": "image-filter",
+      "requiredBy": "raw image stream support",
+      "mustCover": ["predictors", "1-bit", "2-bit", "4-bit", "8-bit", "16-bit", "indexed color", "decode arrays"]
+    },
+    {
+      "id": "filter:LZWDecode",
+      "category": "image-filter",
+      "requiredBy": "legacy raw image stream support",
+      "mustCover": ["early change", "predictors", "indexed color", "decode arrays"]
+    },
+    {
+      "id": "filter:RunLengthDecode",
+      "category": "image-filter",
+      "requiredBy": "legacy raw image stream support",
+      "mustCover": ["short streams", "runs crossing rows", "malformed terminators"]
+    },
+    {
+      "id": "image:ImageMask",
+      "category": "image-mask",
+      "requiredBy": "stencil image rendering",
+      "mustCover": ["default decode", "Decode [1 0]", "current fill color", "alpha", "CTM transforms"]
+    },
+    {
+      "id": "image:SMask",
+      "category": "image-mask",
+      "requiredBy": "soft-mask image compositing",
+      "mustCover": ["gray soft mask", "image soft mask", "form soft mask", "mask decode arrays", "transparency group interaction"]
+    },
+    {
+      "id": "image:Mask",
+      "category": "image-mask",
+      "requiredBy": "explicit mask and color-key mask support",
+      "mustCover": ["image mask", "color-key array", "indexed images", "DCT images"]
+    },
+    {
+      "id": "colorspace:ICCBased",
+      "category": "image-color",
+      "requiredBy": "calibrated image color management",
+      "mustCover": ["N=1", "N=3", "N=4", "alternate space fallback", "DCT CMYK/YCCK", "JPX embedded components"]
+    },
+    {
+      "id": "colorspace:DeviceCMYK",
+      "category": "image-color",
+      "requiredBy": "CMYK image conversion",
+      "mustCover": ["raw CMYK", "DCT CMYK", "DCT YCCK", "decode inversion", "DefaultCMYK interaction"]
+    },
+    {
+      "id": "colorspace:Indexed",
+      "category": "image-color",
+      "requiredBy": "indexed image color tables",
+      "mustCover": ["string lookup", "stream lookup", "RGB base", "CMYK base", "Lab base", "bounds clamping"]
+    },
+    {
+      "id": "colorspace:Lab",
+      "category": "image-color",
+      "requiredBy": "Lab image conversion",
+      "mustCover": ["default range", "custom range", "indexed Lab", "JPX/Flate images"]
+    },
+    {
+      "id": "colorspace:Separation",
+      "category": "image-color",
+      "requiredBy": "spot-color image handling",
+      "mustCover": ["alternate tint transform", "image data", "soft masks", "overprint interactions"]
+    },
+    {
+      "id": "colorspace:DeviceN",
+      "category": "image-color",
+      "requiredBy": "multi-ink image handling",
+      "mustCover": ["alternate tint transform", "process plus spot", "overprint interactions"]
+    },
+    {
+      "id": "decode:ExplicitDecode",
+      "category": "image-decode",
+      "requiredBy": "PDF image sample remapping",
+      "mustCover": ["inverted grayscale", "inverted CMYK", "Lab ranges", "indexed passthrough", "image masks"]
+    },
+    {
+      "id": "placement:ImageCTM",
+      "category": "image-composition",
+      "requiredBy": "image positioning and compositing",
+      "mustCover": ["scale", "rotate", "skew", "clip", "interpolation", "blend mode", "transparency group"]
+    },
+    {
+      "id": "policy:ResourceLimit",
+      "category": "resource-policy",
+      "requiredBy": "bounded rendering of malformed or adversarial image streams",
+      "mustCover": ["huge dimensions", "expansion bombs", "JBIG2 complexity", "timeouts", "recoverable malformed content"]
+    }
+  ]
+}

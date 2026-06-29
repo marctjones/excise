@@ -93,6 +93,7 @@ with `PDFE_PDFBOX_JAR=/path/to/pdfbox-app.jar`; PDFium can be enabled with
 | Federal everyday corpus | `scripts/download-federal-corpus.sh` | `test-pdfs/federal` | Manifest-driven release-quality corpus with source URL, category, agency, license basis, page count, and SHA-256 for each official `.gov` PDF. |
 | pdf.js corpus | `scripts/download-pdfjs-corpus.sh` | `test-pdfs/pdfjs` | Broad bug-reproduction corpus for exploratory fidelity scans. |
 | Poppler corpus | `scripts/download-poppler-corpus.sh` | `test-pdfs/poppler` | Poppler's public regression test-data repository, including rendering fixtures and reference assets. |
+| Standards image/filter corpus set | `scripts/download-standards-image-corpora.sh` | `test-pdfs` | Meta-downloader for pdf.js, Poppler, veraPDF, Isartor, smoke/federal, and Altona print/color PDFs. Ghent is registered as a manual source because the public page does not expose a stable direct archive URL. |
 
 The federal everyday corpus manifest lives at
 `test-pdfs/manifests/federal-everyday-corpus.json`. It currently includes IRS
@@ -124,6 +125,50 @@ dotnet run --project Pdfe.Cli/Pdfe.Cli.csproj -c Debug -- \
     --parallel 2 \
     --pdf-timeout-ms 30000
 ```
+
+## Image and Filter Conformance
+
+Image/filter rendering coverage is driven by
+`test-pdfs/manifests/pdf-image-feature-matrix.json`. The matrix lists the
+required buckets for PDF image rendering: DCT/JPEG, JPX/JPEG 2000, JBIG2,
+CCITT, Flate/LZW/RunLength image streams, image masks, soft masks, explicit
+decode arrays, ICCBased/CMYK/Indexed/Lab/Separation/DeviceN color spaces, and
+bounded resource-policy cases.
+
+Download or refresh the current public corpus set with:
+
+```bash
+./scripts/download-standards-image-corpora.sh
+```
+
+Add the large Altona 2.0 PDF/X-4 technical pages with:
+
+```bash
+./scripts/download-standards-image-corpora.sh --include-large
+```
+
+Build an image feature inventory without running renderers:
+
+```bash
+./scripts/build-image-feature-inventory.py \
+    --corpus test-pdfs \
+    --matrix test-pdfs/manifests/pdf-image-feature-matrix.json \
+    --output logs/image-conformance/inventory.json \
+    --page-manifest logs/image-conformance/all-image-pdfs.tsv
+```
+
+Run a focused differential rendering scan for a feature bucket:
+
+```bash
+./scripts/run-image-conformance-suite.sh \
+    --feature filter:JBIG2Decode \
+    --page-mode all \
+    --oracles all
+```
+
+Omit `--feature` to scan every PDF where the inventory found an image stream.
+The runner writes raw pixel results, quality-classified results, and JBIG2
+capability metadata under `logs/image-conformance/`.
 
 ## Latest snapshot
 
