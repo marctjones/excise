@@ -1,168 +1,675 @@
 {
-  "schemaVersion": 1,
-  "purpose": "Spec-driven coverage matrix for PDF image rendering conformance and quality scans.",
-  "notes": [
-    "This matrix enumerates PDF image/filter features that should be covered by either synthetic fixtures, public corpuses, or real-world regression PDFs.",
-    "The scanner scripts use the feature ids to group PDFs and run focused differential rendering checks against reference renderers."
+  "schemaVersion": 2,
+  "purpose": "Normative coverage matrix for PDF image rendering, stream filters, image dictionaries, and image compositing.",
+  "sourceBasis": [
+    {
+      "id": "iso-32000-1",
+      "title": "ISO 32000-1:2008 / PDF 1.7",
+      "sections": [
+        "7.4 Filters",
+        "8.6 Colour spaces",
+        "8.9 Images",
+        "11 Transparency"
+      ],
+      "notes": "The public PDF 1.7 standard is the baseline for required stream filters and image XObject behavior."
+    },
+    {
+      "id": "iso-32000-2",
+      "title": "ISO 32000-2 / PDF 2.0",
+      "sections": [
+        "7.4 Filters",
+        "8.6 Colour spaces",
+        "8.9 Images",
+        "11 Transparency"
+      ],
+      "notes": "PDF 2.0 clarifies and updates behavior, especially around JBIG2 and modern conformance."
+    }
   ],
+  "coveragePolicy": {
+    "requiredLevels": [
+      "atomic",
+      "corpus"
+    ],
+    "meaning": {
+      "atomic": "A small fixture or unit test constructed to exercise this exact PDF feature obligation.",
+      "corpus": "At least one public, real-world, or regression PDF discovered by the inventory and suitable for differential rendering."
+    },
+    "defaultMinimum": {
+      "atomic": 1,
+      "corpus": 1
+    }
+  },
   "corpusSources": [
     {
       "id": "pdfjs",
       "kind": "bug-regression",
       "path": "test-pdfs/pdfjs",
       "downloadScript": "scripts/download-pdfjs-corpus.sh",
-      "focus": ["historical renderer bugs", "JBIG2 fixtures", "image masks", "color spaces", "malformed streams"]
+      "focus": [
+        "historical renderer bugs",
+        "JBIG2 fixtures",
+        "image masks",
+        "color spaces",
+        "malformed streams"
+      ]
     },
     {
       "id": "poppler",
       "kind": "renderer-regression",
       "path": "test-pdfs/poppler",
       "downloadScript": "scripts/download-poppler-corpus.sh",
-      "focus": ["filter edge cases", "reference images", "low-level parser/rendering regressions"]
+      "focus": [
+        "filter edge cases",
+        "reference images",
+        "low-level parser/rendering regressions"
+      ]
     },
     {
       "id": "verapdf",
       "kind": "standards-conformance",
       "path": "test-pdfs/verapdf-corpus",
       "downloadScript": "scripts/download-test-pdfs.sh",
-      "focus": ["PDF/A", "PDF/UA", "ISO 32000-1", "ISO 32000-2 atomic fixtures"]
+      "focus": [
+        "PDF/A",
+        "PDF/UA",
+        "ISO 32000-1",
+        "ISO 32000-2 atomic fixtures"
+      ]
     },
     {
       "id": "isartor",
       "kind": "standards-conformance",
       "path": "test-pdfs/isartor",
       "downloadScript": "scripts/download-test-pdfs.sh",
-      "focus": ["PDF/A-1 atomic fixtures"]
+      "focus": [
+        "PDF/A-1 atomic fixtures"
+      ]
     },
     {
       "id": "altona",
       "kind": "print-color",
       "path": "test-pdfs/altona",
       "downloadScript": "scripts/download-standards-image-corpora.sh",
-      "focus": ["PDF/X", "ICC color management", "print-oriented image/color quality"]
+      "focus": [
+        "PDF/X",
+        "ICC color management",
+        "print-oriented image/color quality"
+      ]
     },
     {
       "id": "ghent",
       "kind": "print-color",
       "path": "test-pdfs/ghent",
       "downloadScript": "scripts/download-standards-image-corpora.sh",
-      "focus": ["PDF/X-4", "DeviceCMYK", "spot color", "ICCBased color management", "transparency"]
+      "focus": [
+        "PDF/X-4",
+        "DeviceCMYK",
+        "spot color",
+        "ICCBased color management",
+        "transparency"
+      ],
+      "manualDownload": true
     }
   ],
-  "features": [
+  "requirements": [
     {
-      "id": "filter:DCTDecode",
-      "category": "image-filter",
-      "requiredBy": "PDF image XObject and inline image filter support",
-      "mustCover": ["RGB JPEG", "YCbCr JPEG", "CMYK JPEG", "YCCK JPEG", "Adobe APP14 transform", "DecodeParms ColorTransform", "ICCBased CMYK"]
+      "id": "stream-filter:ASCIIHexDecode",
+      "category": "stream-filter",
+      "requiredBy": "PDF stream filter support",
+      "detectFeatures": [
+        "filter:ASCIIHexDecode"
+      ],
+      "mustCover": [
+        "full name",
+        "abbreviation AHx",
+        "odd nibble final byte",
+        "whitespace",
+        "EOD marker",
+        "invalid digit failure"
+      ]
     },
     {
-      "id": "filter:JPXDecode",
-      "category": "image-filter",
-      "requiredBy": "JPEG 2000 / JPX image support",
-      "mustCover": ["gray", "RGB", "CMYK", "indexed", "embedded alpha", "component definitions", "16-bit components"]
+      "id": "stream-filter:ASCII85Decode",
+      "category": "stream-filter",
+      "requiredBy": "PDF stream filter support",
+      "detectFeatures": [
+        "filter:ASCII85Decode"
+      ],
+      "mustCover": [
+        "full name",
+        "abbreviation A85",
+        "z short form",
+        "partial final tuple",
+        "EOD marker",
+        "invalid byte failure"
+      ]
     },
     {
-      "id": "filter:JBIG2Decode",
-      "category": "image-filter",
-      "requiredBy": "JBIG2 bi-level image support",
-      "mustCover": ["generic regions", "symbol dictionaries", "text regions", "refinement regions", "halftone regions", "JBIG2Globals", "resource limits"]
+      "id": "stream-filter:FlateDecode",
+      "category": "stream-filter",
+      "requiredBy": "PDF stream and raw image support",
+      "detectFeatures": [
+        "filter:FlateDecode"
+      ],
+      "mustCover": [
+        "full name",
+        "abbreviation Fl",
+        "zlib stream",
+        "raw deflate compatibility",
+        "filter arrays",
+        "per-filter DecodeParms"
+      ]
     },
     {
-      "id": "filter:CCITTFaxDecode",
-      "category": "image-filter",
-      "requiredBy": "fax/bi-level image support",
-      "mustCover": ["K=0", "K>0", "K<0", "BlackIs1", "EncodedByteAlign", "Columns", "Rows", "EndOfLine", "EndOfBlock"]
+      "id": "stream-filter:FlateDecode.predictor-tiff",
+      "category": "stream-filter-decodeparms",
+      "requiredBy": "FlateDecode predictor DecodeParms",
+      "detectFeatures": [
+        "decodeparms:Predictor:2"
+      ],
+      "mustCover": [
+        "Predictor 2",
+        "Colors",
+        "Columns",
+        "BitsPerComponent"
+      ]
     },
     {
-      "id": "filter:FlateDecode",
-      "category": "image-filter",
-      "requiredBy": "raw image stream support",
-      "mustCover": ["predictors", "1-bit", "2-bit", "4-bit", "8-bit", "16-bit", "indexed color", "decode arrays"]
+      "id": "stream-filter:FlateDecode.predictor-png",
+      "category": "stream-filter-decodeparms",
+      "requiredBy": "FlateDecode predictor DecodeParms",
+      "detectFeatures": [
+        "decodeparms:Predictor:10-15"
+      ],
+      "mustCover": [
+        "PNG None",
+        "PNG Sub",
+        "PNG Up",
+        "PNG Average",
+        "PNG Paeth",
+        "Predictor 10-15 row filter selection"
+      ]
     },
     {
-      "id": "filter:LZWDecode",
-      "category": "image-filter",
-      "requiredBy": "legacy raw image stream support",
-      "mustCover": ["early change", "predictors", "indexed color", "decode arrays"]
+      "id": "stream-filter:LZWDecode",
+      "category": "stream-filter",
+      "requiredBy": "PDF stream and legacy raw image support",
+      "detectFeatures": [
+        "filter:LZWDecode"
+      ],
+      "mustCover": [
+        "full name",
+        "abbreviation LZW",
+        "clear code",
+        "EOI code",
+        "dictionary growth",
+        "filter arrays"
+      ]
     },
     {
-      "id": "filter:RunLengthDecode",
-      "category": "image-filter",
-      "requiredBy": "legacy raw image stream support",
-      "mustCover": ["short streams", "runs crossing rows", "malformed terminators"]
+      "id": "stream-filter:LZWDecode.early-change",
+      "category": "stream-filter-decodeparms",
+      "requiredBy": "LZWDecode DecodeParms",
+      "detectFeatures": [
+        "decodeparms:EarlyChange"
+      ],
+      "mustCover": [
+        "EarlyChange 0",
+        "EarlyChange 1"
+      ]
     },
     {
-      "id": "image:ImageMask",
+      "id": "stream-filter:LZWDecode.predictors",
+      "category": "stream-filter-decodeparms",
+      "requiredBy": "LZWDecode predictor DecodeParms",
+      "detectFeatures": [
+        "filter:LZWDecode",
+        "decode:DecodeParms"
+      ],
+      "mustCover": [
+        "TIFF predictor",
+        "PNG predictors",
+        "Colors",
+        "Columns",
+        "BitsPerComponent"
+      ]
+    },
+    {
+      "id": "stream-filter:RunLengthDecode",
+      "category": "stream-filter",
+      "requiredBy": "PDF stream and legacy raw image support",
+      "detectFeatures": [
+        "filter:RunLengthDecode"
+      ],
+      "mustCover": [
+        "full name",
+        "abbreviation RL",
+        "literal run",
+        "repeat run",
+        "EOD marker",
+        "malformed terminator"
+      ]
+    },
+    {
+      "id": "image-filter:CCITTFaxDecode",
+      "category": "image-filter",
+      "requiredBy": "Bi-level fax image XObject support",
+      "detectFeatures": [
+        "filter:CCITTFaxDecode"
+      ],
+      "mustCover": [
+        "full name",
+        "abbreviation CCF",
+        "K 0 one-dimensional Group 3",
+        "K positive mixed Group 3",
+        "K negative Group 4",
+        "Columns",
+        "Rows"
+      ]
+    },
+    {
+      "id": "image-filter:CCITTFaxDecode.decodeparms",
+      "category": "image-filter-decodeparms",
+      "requiredBy": "CCITTFaxDecode DecodeParms",
+      "detectFeatures": [
+        "ccitt:K",
+        "decode:DecodeParms"
+      ],
+      "mustCover": [
+        "BlackIs1",
+        "EncodedByteAlign",
+        "EndOfLine",
+        "EndOfBlock",
+        "DamagedRowsBeforeError"
+      ]
+    },
+    {
+      "id": "image-filter:DCTDecode",
+      "category": "image-filter",
+      "requiredBy": "JPEG image XObject support",
+      "detectFeatures": [
+        "filter:DCTDecode"
+      ],
+      "mustCover": [
+        "full name",
+        "abbreviation DCT",
+        "baseline JPEG",
+        "progressive JPEG",
+        "grayscale",
+        "RGB",
+        "CMYK",
+        "YCCK",
+        "filter arrays"
+      ]
+    },
+    {
+      "id": "image-filter:DCTDecode.color-transform",
+      "category": "image-filter-decodeparms",
+      "requiredBy": "JPEG color interpretation in PDF",
+      "detectFeatures": [
+        "dct:ColorTransform"
+      ],
+      "mustCover": [
+        "DecodeParms ColorTransform 0",
+        "DecodeParms ColorTransform 1",
+        "Adobe APP14 transform 0",
+        "Adobe APP14 transform 1",
+        "Adobe APP14 transform 2",
+        "APP14 override precedence"
+      ]
+    },
+    {
+      "id": "image-filter:JPXDecode",
+      "category": "image-filter",
+      "requiredBy": "JPEG 2000 / JPX image XObject support",
+      "detectFeatures": [
+        "filter:JPXDecode"
+      ],
+      "mustCover": [
+        "codestream",
+        "JP2 wrapper",
+        "gray",
+        "RGB",
+        "CMYK",
+        "indexed",
+        "embedded alpha",
+        "component definitions",
+        "16-bit components"
+      ]
+    },
+    {
+      "id": "image-filter:JBIG2Decode",
+      "category": "image-filter",
+      "requiredBy": "JBIG2 bi-level image XObject support",
+      "detectFeatures": [
+        "filter:JBIG2Decode"
+      ],
+      "mustCover": [
+        "generic region",
+        "symbol dictionary",
+        "text region",
+        "refinement region",
+        "pattern dictionary",
+        "halftone region",
+        "MMR",
+        "arithmetic",
+        "sequential organization",
+        "random-access organization"
+      ]
+    },
+    {
+      "id": "image-filter:JBIG2Decode.globals",
+      "category": "image-filter-decodeparms",
+      "requiredBy": "JBIG2Decode DecodeParms",
+      "detectFeatures": [
+        "jbig2:Globals"
+      ],
+      "mustCover": [
+        "JBIG2Globals stream",
+        "shared symbol dictionaries",
+        "multi-image reuse"
+      ]
+    },
+    {
+      "id": "stream-filter:Crypt",
+      "category": "stream-filter",
+      "requiredBy": "Encrypted stream filter handling",
+      "detectFeatures": [
+        "filter:Crypt"
+      ],
+      "mustCover": [
+        "Identity crypt filter",
+        "named crypt filter",
+        "filter order with compression filters"
+      ],
+      "minimumCoverage": {
+        "atomic": 1,
+        "corpus": 0
+      }
+    },
+    {
+      "id": "stream-filter-arrays",
+      "category": "stream-filter-composition",
+      "requiredBy": "PDF stream filter arrays",
+      "detectFeatures": [
+        "filter:array"
+      ],
+      "mustCover": [
+        "multiple filters",
+        "per-filter DecodeParms array",
+        "null DecodeParms entries",
+        "abbreviated names inside arrays"
+      ]
+    },
+    {
+      "id": "image-dictionary:ImageMask",
       "category": "image-mask",
-      "requiredBy": "stencil image rendering",
-      "mustCover": ["default decode", "Decode [1 0]", "current fill color", "alpha", "CTM transforms"]
+      "requiredBy": "Stencil image rendering",
+      "detectFeatures": [
+        "image:ImageMask"
+      ],
+      "mustCover": [
+        "default Decode",
+        "Decode [1 0]",
+        "current fill color",
+        "alpha interaction",
+        "CTM transforms"
+      ]
     },
     {
-      "id": "image:SMask",
+      "id": "image-dictionary:SMask",
       "category": "image-mask",
-      "requiredBy": "soft-mask image compositing",
-      "mustCover": ["gray soft mask", "image soft mask", "form soft mask", "mask decode arrays", "transparency group interaction"]
+      "requiredBy": "Soft-mask image compositing",
+      "detectFeatures": [
+        "image:SMask"
+      ],
+      "mustCover": [
+        "gray image soft mask",
+        "image soft mask",
+        "mask Decode",
+        "transparency group interaction"
+      ]
     },
     {
-      "id": "image:Mask",
+      "id": "image-dictionary:Mask.image",
       "category": "image-mask",
-      "requiredBy": "explicit mask and color-key mask support",
-      "mustCover": ["image mask", "color-key array", "indexed images", "DCT images"]
+      "requiredBy": "Explicit image mask compositing",
+      "detectFeatures": [
+        "image:Mask"
+      ],
+      "mustCover": [
+        "explicit image mask",
+        "indexed base image",
+        "DCT base image"
+      ]
     },
     {
-      "id": "colorspace:ICCBased",
-      "category": "image-color",
-      "requiredBy": "calibrated image color management",
-      "mustCover": ["N=1", "N=3", "N=4", "alternate space fallback", "DCT CMYK/YCCK", "JPX embedded components"]
+      "id": "image-dictionary:Mask.color-key",
+      "category": "image-mask",
+      "requiredBy": "Color-key mask compositing",
+      "detectFeatures": [
+        "image:ColorKeyMask"
+      ],
+      "mustCover": [
+        "DeviceGray ranges",
+        "DeviceRGB ranges",
+        "DeviceCMYK ranges",
+        "Indexed ranges"
+      ]
     },
     {
-      "id": "colorspace:DeviceCMYK",
-      "category": "image-color",
-      "requiredBy": "CMYK image conversion",
-      "mustCover": ["raw CMYK", "DCT CMYK", "DCT YCCK", "decode inversion", "DefaultCMYK interaction"]
-    },
-    {
-      "id": "colorspace:Indexed",
-      "category": "image-color",
-      "requiredBy": "indexed image color tables",
-      "mustCover": ["string lookup", "stream lookup", "RGB base", "CMYK base", "Lab base", "bounds clamping"]
-    },
-    {
-      "id": "colorspace:Lab",
-      "category": "image-color",
-      "requiredBy": "Lab image conversion",
-      "mustCover": ["default range", "custom range", "indexed Lab", "JPX/Flate images"]
-    },
-    {
-      "id": "colorspace:Separation",
-      "category": "image-color",
-      "requiredBy": "spot-color image handling",
-      "mustCover": ["alternate tint transform", "image data", "soft masks", "overprint interactions"]
-    },
-    {
-      "id": "colorspace:DeviceN",
-      "category": "image-color",
-      "requiredBy": "multi-ink image handling",
-      "mustCover": ["alternate tint transform", "process plus spot", "overprint interactions"]
-    },
-    {
-      "id": "decode:ExplicitDecode",
+      "id": "image-dictionary:Decode",
       "category": "image-decode",
       "requiredBy": "PDF image sample remapping",
-      "mustCover": ["inverted grayscale", "inverted CMYK", "Lab ranges", "indexed passthrough", "image masks"]
+      "detectFeatures": [
+        "decode:ExplicitDecode"
+      ],
+      "mustCover": [
+        "inverted grayscale",
+        "inverted CMYK",
+        "Lab ranges",
+        "indexed passthrough",
+        "image masks"
+      ]
     },
     {
-      "id": "placement:ImageCTM",
+      "id": "image-dictionary:BitsPerComponent",
+      "category": "image-samples",
+      "requiredBy": "Image sample unpacking",
+      "detectFeatures": [
+        "bpc:1",
+        "bpc:2",
+        "bpc:4",
+        "bpc:8",
+        "bpc:16"
+      ],
+      "mustCover": [
+        "1-bit",
+        "2-bit",
+        "4-bit",
+        "8-bit",
+        "16-bit"
+      ]
+    },
+    {
+      "id": "image-dictionary:Interpolate",
+      "category": "image-sampling",
+      "requiredBy": "Image interpolation hint handling",
+      "detectFeatures": [
+        "image:Interpolate"
+      ],
+      "mustCover": [
+        "Interpolate false",
+        "Interpolate true",
+        "large upsample",
+        "downsample"
+      ]
+    },
+    {
+      "id": "image-color:DeviceGray",
+      "category": "image-color",
+      "requiredBy": "Device color space image rendering",
+      "detectFeatures": [
+        "colorspace:DeviceGray"
+      ],
+      "mustCover": [
+        "1 component",
+        "Decode inversion",
+        "ICCBased alternate interaction"
+      ]
+    },
+    {
+      "id": "image-color:DeviceRGB",
+      "category": "image-color",
+      "requiredBy": "Device color space image rendering",
+      "detectFeatures": [
+        "colorspace:DeviceRGB"
+      ],
+      "mustCover": [
+        "3 components",
+        "DCT YCbCr",
+        "raw RGB"
+      ]
+    },
+    {
+      "id": "image-color:DeviceCMYK",
+      "category": "image-color",
+      "requiredBy": "Device color space image rendering",
+      "detectFeatures": [
+        "colorspace:DeviceCMYK"
+      ],
+      "mustCover": [
+        "raw CMYK",
+        "DCT CMYK",
+        "DCT YCCK",
+        "decode inversion",
+        "DefaultCMYK interaction"
+      ]
+    },
+    {
+      "id": "image-color:ICCBased",
+      "category": "image-color",
+      "requiredBy": "Calibrated image color management",
+      "detectFeatures": [
+        "colorspace:ICCBased"
+      ],
+      "mustCover": [
+        "N=1",
+        "N=3",
+        "N=4",
+        "Alternate color space fallback",
+        "DCT CMYK/YCCK",
+        "JPX embedded components"
+      ]
+    },
+    {
+      "id": "image-color:Indexed",
+      "category": "image-color",
+      "requiredBy": "Indexed image color table handling",
+      "detectFeatures": [
+        "colorspace:Indexed"
+      ],
+      "mustCover": [
+        "string lookup",
+        "stream lookup",
+        "DeviceRGB base",
+        "DeviceCMYK base",
+        "Lab base",
+        "bounds clamping"
+      ]
+    },
+    {
+      "id": "image-color:Lab",
+      "category": "image-color",
+      "requiredBy": "CIE-based Lab image color conversion",
+      "detectFeatures": [
+        "colorspace:Lab"
+      ],
+      "mustCover": [
+        "default range",
+        "custom range",
+        "indexed Lab",
+        "JPX/Flate image data"
+      ]
+    },
+    {
+      "id": "image-color:Separation",
+      "category": "image-color",
+      "requiredBy": "Spot-color image handling",
+      "detectFeatures": [
+        "colorspace:Separation"
+      ],
+      "mustCover": [
+        "alternate tint transform",
+        "image data",
+        "soft masks",
+        "overprint interactions"
+      ]
+    },
+    {
+      "id": "image-color:DeviceN",
+      "category": "image-color",
+      "requiredBy": "Multi-ink image handling",
+      "detectFeatures": [
+        "colorspace:DeviceN"
+      ],
+      "mustCover": [
+        "alternate tint transform",
+        "process plus spot",
+        "overprint interactions"
+      ]
+    },
+    {
+      "id": "image-placement:CTM",
       "category": "image-composition",
-      "requiredBy": "image positioning and compositing",
-      "mustCover": ["scale", "rotate", "skew", "clip", "interpolation", "blend mode", "transparency group"]
+      "requiredBy": "Image placement through graphics state CTM",
+      "detectFeatures": [
+        "placement:ImageCTM"
+      ],
+      "mustCover": [
+        "scale",
+        "rotate",
+        "skew",
+        "clip",
+        "nested form XObject"
+      ]
     },
     {
-      "id": "policy:ResourceLimit",
+      "id": "image-compositing:BlendTransparency",
+      "category": "image-composition",
+      "requiredBy": "Transparent image compositing",
+      "detectFeatures": [
+        "image:SMask",
+        "graphics:ExtGState"
+      ],
+      "mustCover": [
+        "alpha",
+        "blend mode",
+        "transparency group",
+        "isolated group",
+        "knockout group"
+      ]
+    },
+    {
+      "id": "resource-policy:image-limits",
       "category": "resource-policy",
-      "requiredBy": "bounded rendering of malformed or adversarial image streams",
-      "mustCover": ["huge dimensions", "expansion bombs", "JBIG2 complexity", "timeouts", "recoverable malformed content"]
+      "requiredBy": "Bounded rendering of malformed or adversarial image streams",
+      "detectFeatures": [
+        "policy:ResourceLimit"
+      ],
+      "mustCover": [
+        "huge dimensions",
+        "large decoded byte count",
+        "expansion bombs",
+        "JBIG2 complexity",
+        "timeouts",
+        "recoverable malformed content"
+      ],
+      "minimumCoverage": {
+        "atomic": 1,
+        "corpus": 0
+      }
     }
-  ]
+  ],
+  "features": []
 }

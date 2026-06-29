@@ -31,7 +31,8 @@ Usage:
 Options:
   --download             Download/refresh public corpuses before scanning.
   --include-large        With --download, include large Altona 2.0 PDFs.
-  --feature <id>         Restrict to one feature id, e.g. filter:JBIG2Decode.
+  --feature <id>         Restrict to one detected feature or matrix requirement
+                         id, e.g. filter:JBIG2Decode or image-filter:JBIG2Decode.
                          Omit to scan every PDF with any image stream.
   --page-mode <mode>     first, sample, or all. Default: sample.
   --oracles <set>        none, ghostscript, pdfbox, pdfium, all. Default: all.
@@ -92,6 +93,7 @@ PAGE_MANIFEST="$OUT_DIR/page-manifest.tsv"
 RAW_REPORT="$OUT_DIR/raw-corpus-scan.json"
 QUALITY_REPORT="$OUT_DIR/quality-report.json"
 JBIG2_REPORT="$OUT_DIR/jbig2-classify.json"
+COVERAGE_REPORT="$OUT_DIR/coverage-audit.json"
 
 INVENTORY_ARGS=(
     --corpus "$CORPUS"
@@ -104,6 +106,11 @@ if [[ -n "$FEATURE" ]]; then
 fi
 
 "$SCRIPT_DIR/build-image-feature-inventory.py" "${INVENTORY_ARGS[@]}"
+
+"$SCRIPT_DIR/audit-image-feature-coverage.py" \
+    --matrix "$MATRIX" \
+    --inventory "$INVENTORY" \
+    --output "$COVERAGE_REPORT"
 
 if ! awk 'NR > 1 { found=1; exit } END { exit found ? 0 : 1 }' "$PAGE_MANIFEST"; then
     echo "No PDFs matched feature '${FEATURE:-image:any}'." >&2
@@ -139,6 +146,7 @@ echo
 echo "wrote:"
 echo "  inventory:      $INVENTORY"
 echo "  page manifest:  $PAGE_MANIFEST"
+echo "  coverage audit: $COVERAGE_REPORT"
 echo "  raw report:     $RAW_REPORT"
 echo "  quality report: $QUALITY_REPORT"
 if [[ -f "$JBIG2_REPORT" ]]; then
