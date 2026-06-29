@@ -73,9 +73,10 @@ echo "Target: $TARGET"
 echo ""
 
 if [[ -d "$TARGET/.git" ]]; then
-    if [[ -n "$(git -C "$TARGET" status --porcelain)" ]]; then
+    local_changes="$(git -C "$TARGET" status --porcelain | grep -v -E '^\?\? \.pdfe-manifest\.tsv$' || true)"
+    if [[ -n "$local_changes" ]]; then
         echo "Existing Poppler corpus checkout has local changes:" >&2
-        git -C "$TARGET" status --short >&2
+        printf '%s\n' "$local_changes" >&2
         echo "Refusing to overwrite it. Clean the checkout or use a different --target." >&2
         exit 1
     fi
