@@ -24,7 +24,7 @@ internal partial class RenderContext
         }
 
         var bitsPerComponent = imageStream.GetInt("BitsPerComponent", 8);
-        var colorSpace = imageStream.GetNameOrNull("ColorSpace") ?? "DeviceRGB";
+        var colorSpace = ResolveImageColorSpaceFamilyName(imageStream);
 
         SKBitmap? mutableBitmap = null;
         try
@@ -1322,7 +1322,9 @@ internal partial class RenderContext
             return null;
         }
 
-        var scaleDenominator = ChooseDctScaleDenominator(sourceWidth, sourceHeight, targetWidth, targetHeight);
+        var scaleDenominator = outputColorSpace == J_COLOR_SPACE.JCS_CMYK
+            ? 1
+            : ChooseDctScaleDenominator(sourceWidth, sourceHeight, targetWidth, targetHeight);
         var cinfo = new jpeg_decompress_struct();
         try
         {
@@ -2178,6 +2180,32 @@ internal partial class RenderContext
             return ResolveColorSpace(name.Value) ?? PdfColorSpace.Parse(colorSpaceObject, _page.Document);
 
         return PdfColorSpace.Parse(colorSpaceObject, _page.Document);
+    }
+
+    private string ResolveImageColorSpaceFamilyName(Pdfe.Core.Primitives.PdfStream stream)
+    {
+        var colorSpaceObject = stream.GetOptional("ColorSpace") ?? stream.GetOptional("CS");
+        if (colorSpaceObject == null)
+            return "DeviceRGB";
+
+        try
+        {
+            var colorSpace = ResolveImageColorSpace(colorSpaceObject);
+            return colorSpace.Type switch
+            {
+                PdfColorSpaceType.DeviceGray or PdfColorSpaceType.CalGray => "DeviceGray",
+                PdfColorSpaceType.DeviceCMYK => "DeviceCMYK",
+                PdfColorSpaceType.DeviceRGB or PdfColorSpaceType.CalRGB or PdfColorSpaceType.Lab => "DeviceRGB",
+                PdfColorSpaceType.ICCBased when colorSpace.Components == 4 => "DeviceCMYK",
+                PdfColorSpaceType.ICCBased when colorSpace.Components == 1 => "DeviceGray",
+                PdfColorSpaceType.ICCBased => "DeviceRGB",
+                _ => colorSpaceObject is Pdfe.Core.Primitives.PdfName name ? name.Value : "DeviceRGB"
+            };
+        }
+        catch
+        {
+            return colorSpaceObject is Pdfe.Core.Primitives.PdfName name ? name.Value : "DeviceRGB";
+        }
     }
 
     /// <summary>
