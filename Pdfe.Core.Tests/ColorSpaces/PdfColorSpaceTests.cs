@@ -1129,6 +1129,28 @@ public class PdfColorSpaceTests
         cs.Components.Should().Be(1);
     }
 
+    [Fact]
+    public void Indexed_AltonaWideGamutPalette_DoesNotMapDarkBrushEntriesToWhite()
+    {
+        var path = FindRepoFile(
+            "test-pdfs",
+            "altona",
+            "eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf");
+        Assert.SkipWhen(path == null,
+            "No Altona PDF/X fixture found at test-pdfs/altona/eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+        var imageStream = (PdfStream)doc.GetObject(335);
+        var colorSpaceObject = imageStream.GetOptional("ColorSpace");
+        colorSpaceObject.Should().NotBeNull();
+        var colorSpace = PdfColorSpace.Parse(colorSpaceObject!, doc);
+
+        var (r, g, b) = colorSpace.LookupIndexed(58);
+
+        (0.2126 * r + 0.7152 * g + 0.0722 * b).Should().BeLessThan(0.55,
+            "the common Altona Indexed JPX brush palette entries should stay visibly dark after ICC preview conversion");
+    }
+
     private static string? FindRepoFile(params string[] segments)
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);

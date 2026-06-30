@@ -409,41 +409,9 @@ internal partial class RenderContext
         if (shading is not Pdfe.Core.Primitives.PdfStream stream)
             return false;
 
-        var patches = DecodeType6MeshPatches(stream);
+        var patches = DecodeType6MeshPatches(stream, tensorPatch: false);
         if (patches.Count == 0)
             return false;
-
-        var minX = patches.Min(p => p.MinX);
-        var minY = patches.Min(p => p.MinY);
-        var maxX = patches.Max(p => p.MaxX);
-        var maxY = patches.Max(p => p.MaxY);
-        if (maxX <= minX || maxY <= minY)
-            return false;
-
-        var width = Math.Clamp((int)Math.Ceiling(maxX - minX) * 2, 16, 768);
-        var height = Math.Clamp((int)Math.Ceiling(maxY - minY) * 2, 16, 768);
-        using var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
-        bitmap.Erase(SKColors.Transparent);
-
-        foreach (var patch in patches)
-            RasterizeMeshPatch(bitmap, patch, minX, minY, maxX, maxY);
-
-        using var image = SKImage.FromBitmap(bitmap);
-        using var shader = SKShader.CreateImage(
-            image,
-            SKShaderTileMode.Clamp,
-            SKShaderTileMode.Clamp,
-            SKMatrix.CreateScale(
-                (float)((maxX - minX) / width),
-                (float)((maxY - minY) / height)));
-
-        using var paint = new SKPaint
-        {
-            Shader = shader,
-            BlendMode = _state.BlendMode,
-            Color = SKColors.White.WithAlpha((byte)Math.Clamp(_state.FillAlpha * 255, 0, 255)),
-            IsAntialias = _options.AntiAlias
-        };
 
         _canvas.Save();
         try
@@ -459,10 +427,7 @@ internal partial class RenderContext
 
             var patternMatrix = GetMatrix(pattern.GetOptional("Matrix") as Pdfe.Core.Primitives.PdfArray);
             _canvas.Concat(in patternMatrix);
-            _canvas.Translate((float)minX, (float)minY);
-            _canvas.DrawRect(
-                new SKRect(0, 0, (float)(maxX - minX), (float)(maxY - minY)),
-                paint);
+            DrawMeshPatches(patches, tensorPatch: false);
         }
         finally
         {
@@ -484,38 +449,6 @@ internal partial class RenderContext
         if (triangles.Count == 0)
             return false;
 
-        var minX = triangles.Min(t => t.MinX);
-        var minY = triangles.Min(t => t.MinY);
-        var maxX = triangles.Max(t => t.MaxX);
-        var maxY = triangles.Max(t => t.MaxY);
-        if (maxX <= minX || maxY <= minY)
-            return false;
-
-        var width = Math.Clamp((int)Math.Ceiling(maxX - minX) * 2, 16, 1024);
-        var height = Math.Clamp((int)Math.Ceiling(maxY - minY) * 2, 16, 1024);
-        using var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
-        bitmap.Erase(SKColors.Transparent);
-
-        foreach (var triangle in triangles)
-            RasterizeMeshTriangle(bitmap, triangle, minX, minY, maxX, maxY);
-
-        using var image = SKImage.FromBitmap(bitmap);
-        using var shader = SKShader.CreateImage(
-            image,
-            SKShaderTileMode.Clamp,
-            SKShaderTileMode.Clamp,
-            SKMatrix.CreateScale(
-                (float)((maxX - minX) / width),
-                (float)((maxY - minY) / height)));
-
-        using var paint = new SKPaint
-        {
-            Shader = shader,
-            BlendMode = _state.BlendMode,
-            Color = SKColors.White.WithAlpha((byte)Math.Clamp(_state.FillAlpha * 255, 0, 255)),
-            IsAntialias = _options.AntiAlias
-        };
-
         _canvas.Save();
         try
         {
@@ -530,10 +463,7 @@ internal partial class RenderContext
 
             var patternMatrix = GetMatrix(pattern.GetOptional("Matrix") as Pdfe.Core.Primitives.PdfArray);
             _canvas.Concat(in patternMatrix);
-            _canvas.Translate((float)minX, (float)minY);
-            _canvas.DrawRect(
-                new SKRect(0, 0, (float)(maxX - minX), (float)(maxY - minY)),
-                paint);
+            DrawMeshTriangles(triangles);
         }
         finally
         {
@@ -555,7 +485,7 @@ internal partial class RenderContext
         var bitsPerFlag = stream.GetInt("BitsPerFlag", 2);
         var functionObj = stream.GetOptional("Function");
         var function = functionObj != null ? _page.Document.Resolve(functionObj) : null;
-        var colorSpace = stream.GetNameOrNull("ColorSpace") ?? "DeviceRGB";
+        var colorSpace = ResolveShadingColorSpace(stream);
         var componentCount = GetMeshComponentCount(stream, colorSpace, function);
 
         var reader = new MeshBitReader(stream.DecodedData);
@@ -568,7 +498,7 @@ internal partial class RenderContext
             MeshVertex vertex;
             try
             {
-                var flag = (int)reader.Read(bitsPerFlag);
+                var flag = (int)(reader.Read(bitsPerFlag) & 0x3);
                 var x = Decode(reader.Read(bitsPerCoordinate), bitsPerCoordinate, xMin, xMax);
                 var y = Decode(reader.Read(bitsPerCoordinate), bitsPerCoordinate, yMin, yMax);
                 var components = new double[componentCount];
@@ -618,21 +548,81 @@ internal partial class RenderContext
         return triangles;
     }
 
-    private List<MeshPatch> DecodeType6MeshPatches(Pdfe.Core.Primitives.PdfStream stream)
+    private List<MeshTriangle> DecodeType5MeshTriangles(Pdfe.Core.Primitives.PdfStream stream)
     {
         var decode = stream.GetOptional("Decode") as Pdfe.Core.Primitives.PdfArray;
         var xMin = decode?.Count >= 2 ? decode.GetNumber(0) : 0;
         var xMax = decode?.Count >= 2 ? decode.GetNumber(1) : 1;
         var yMin = decode?.Count >= 4 ? decode.GetNumber(2) : 0;
         var yMax = decode?.Count >= 4 ? decode.GetNumber(3) : 1;
-        var cMin = decode?.Count >= 6 ? decode.GetNumber(4) : 0;
-        var cMax = decode?.Count >= 6 ? decode.GetNumber(5) : 1;
+        var bitsPerCoordinate = stream.GetInt("BitsPerCoordinate", 16);
+        var bitsPerComponent = stream.GetInt("BitsPerComponent", 8);
+        var verticesPerRow = stream.GetInt("VerticesPerRow", 0);
+        if (verticesPerRow < 2)
+            return new List<MeshTriangle>();
+
+        var functionObj = stream.GetOptional("Function");
+        var function = functionObj != null ? _page.Document.Resolve(functionObj) : null;
+        var colorSpace = ResolveShadingColorSpace(stream);
+        var componentCount = GetMeshComponentCount(stream, colorSpace, function);
+        var bitsPerVertex = (2 * bitsPerCoordinate) + (componentCount * bitsPerComponent);
+
+        var reader = new MeshBitReader(stream.DecodedData);
+        var vertices = new List<MeshVertex>();
+        while (reader.RemainingBits >= bitsPerVertex)
+        {
+            try
+            {
+                var x = Decode(reader.Read(bitsPerCoordinate), bitsPerCoordinate, xMin, xMax);
+                var y = Decode(reader.Read(bitsPerCoordinate), bitsPerCoordinate, yMin, yMax);
+                var components = ReadMeshComponents(reader, bitsPerComponent, componentCount, decode);
+                var color = ComponentsToSkColor(
+                    function != null
+                        ? PdfFunctionEvaluator.Evaluate(function, components[0], _page.Document) ?? new[] { components[0] }
+                        : components,
+                    colorSpace);
+                vertices.Add(new MeshVertex(0, new SKPoint((float)x, (float)y), color));
+            }
+            catch
+            {
+                break;
+            }
+        }
+
+        var rowCount = vertices.Count / verticesPerRow;
+        var triangles = new List<MeshTriangle>();
+        for (var row = 0; row < rowCount - 1; row++)
+        {
+            var rowOffset = row * verticesPerRow;
+            var nextRowOffset = (row + 1) * verticesPerRow;
+            for (var col = 0; col < verticesPerRow - 1; col++)
+            {
+                var v00 = vertices[rowOffset + col];
+                var v10 = vertices[rowOffset + col + 1];
+                var v01 = vertices[nextRowOffset + col];
+                var v11 = vertices[nextRowOffset + col + 1];
+                triangles.Add(new MeshTriangle(v00, v10, v01));
+                triangles.Add(new MeshTriangle(v10, v11, v01));
+            }
+        }
+
+        return triangles;
+    }
+
+    private List<MeshPatch> DecodeType6MeshPatches(Pdfe.Core.Primitives.PdfStream stream, bool tensorPatch)
+    {
+        var decode = stream.GetOptional("Decode") as Pdfe.Core.Primitives.PdfArray;
+        var xMin = decode?.Count >= 2 ? decode.GetNumber(0) : 0;
+        var xMax = decode?.Count >= 2 ? decode.GetNumber(1) : 1;
+        var yMin = decode?.Count >= 4 ? decode.GetNumber(2) : 0;
+        var yMax = decode?.Count >= 4 ? decode.GetNumber(3) : 1;
         var bitsPerCoordinate = stream.GetInt("BitsPerCoordinate", 16);
         var bitsPerComponent = stream.GetInt("BitsPerComponent", 8);
         var bitsPerFlag = stream.GetInt("BitsPerFlag", 2);
         var functionObj = stream.GetOptional("Function");
         var function = functionObj != null ? _page.Document.Resolve(functionObj) : null;
-        var colorSpace = stream.GetNameOrNull("ColorSpace") ?? "DeviceRGB";
+        var colorSpace = ResolveShadingColorSpace(stream);
+        var componentCount = GetMeshComponentCount(stream, colorSpace, function);
 
         var reader = new MeshBitReader(stream.DecodedData);
         var patches = new List<MeshPatch>();
@@ -643,17 +633,19 @@ internal partial class RenderContext
             int flag;
             try
             {
-                flag = (int)reader.Read(bitsPerFlag);
+                flag = (int)(reader.Read(bitsPerFlag) & 0x3);
             }
             catch
             {
                 break;
             }
 
-            var coordinateCount = flag == 0 ? 12 : 8;
-            var componentCount = flag == 0 ? 4 : 2;
+            var coordinateCount = tensorPatch
+                ? flag == 0 ? 16 : 12
+                : flag == 0 ? 12 : 8;
+            var colorCount = flag == 0 ? 4 : 2;
             var points = new List<SKPoint>(coordinateCount);
-            var components = new List<double>(componentCount);
+            var colors = new List<SKColor>(colorCount);
 
             try
             {
@@ -664,21 +656,73 @@ internal partial class RenderContext
                     points.Add(new SKPoint((float)x, (float)y));
                 }
 
-                for (int i = 0; i < componentCount; i++)
-                    components.Add(Decode(reader.Read(bitsPerComponent), bitsPerComponent, cMin, cMax));
+                for (int i = 0; i < colorCount; i++)
+                {
+                    var components = ReadMeshComponents(reader, bitsPerComponent, componentCount, decode);
+                    colors.Add(ComponentsToSkColor(
+                        function != null
+                            ? PdfFunctionEvaluator.Evaluate(function, components[0], _page.Document) ?? new[] { components[0] }
+                            : components,
+                        colorSpace));
+                }
             }
             catch
             {
                 break;
             }
 
-            var colors = ResolveMeshColors(components, previous, flag, function, colorSpace, _page.Document);
-            var patch = MeshPatch.From(points, colors);
+            var patchPoints = ResolveMeshPatchPoints(points, previous, flag, tensorPatch);
+            var patch = MeshPatch.From(patchPoints, ResolveMeshColors(colors, previous, flag));
             patches.Add(patch);
             previous = patch;
         }
 
         return patches;
+    }
+
+    private static IReadOnlyList<SKPoint> ResolveMeshPatchPoints(
+        IReadOnlyList<SKPoint> newPoints,
+        MeshPatch? previous,
+        int flag,
+        bool tensorPatch)
+    {
+        if (flag == 0 || previous == null)
+            return newPoints;
+
+        var previousPoints = previous.Points;
+        var shared = flag switch
+        {
+            1 when previousPoints.Count >= 7 => new[] { previousPoints[3], previousPoints[4], previousPoints[5], previousPoints[6] },
+            2 when previousPoints.Count >= 10 => new[] { previousPoints[6], previousPoints[7], previousPoints[8], previousPoints[9] },
+            3 when tensorPatch && previousPoints.Count >= 12 => new[] { previousPoints[9], previousPoints[10], previousPoints[11], previousPoints[0] },
+            3 when previousPoints.Count >= 12 => new[] { previousPoints[9], previousPoints[10], previousPoints[11], previousPoints[0] },
+            _ => Array.Empty<SKPoint>()
+        };
+
+        if (shared.Length == 0)
+            return newPoints;
+
+        var resolved = new List<SKPoint>(shared.Length + newPoints.Count);
+        resolved.AddRange(shared);
+        resolved.AddRange(newPoints);
+        return resolved;
+    }
+
+    private static double[] ReadMeshComponents(
+        MeshBitReader reader,
+        int bitsPerComponent,
+        int componentCount,
+        Pdfe.Core.Primitives.PdfArray? decode)
+    {
+        var components = new double[componentCount];
+        for (var i = 0; i < componentCount; i++)
+        {
+            var cMin = decode?.Count >= 6 + (2 * i) ? decode.GetNumber(4 + (2 * i)) : 0;
+            var cMax = decode?.Count >= 6 + (2 * i) ? decode.GetNumber(5 + (2 * i)) : 1;
+            components[i] = Decode(reader.Read(bitsPerComponent), bitsPerComponent, cMin, cMax);
+        }
+
+        return components;
     }
 
     private static double Decode(uint encoded, int bits, double min, double max)
@@ -689,7 +733,7 @@ internal partial class RenderContext
 
     private static int GetMeshComponentCount(
         Pdfe.Core.Primitives.PdfStream stream,
-        string colorSpace,
+        PdfColorSpace colorSpace,
         Pdfe.Core.Primitives.PdfObject? function)
     {
         if (function != null)
@@ -698,27 +742,15 @@ internal partial class RenderContext
         if (stream.GetOptional("Decode") is Pdfe.Core.Primitives.PdfArray decode && decode.Count > 4)
             return Math.Max(1, (decode.Count - 4) / 2);
 
-        return colorSpace switch
-        {
-            "DeviceRGB" or "RGB" => 3,
-            "DeviceCMYK" or "CMYK" => 4,
-            _ => 1
-        };
+        return Math.Max(1, colorSpace.Components);
     }
 
     private static SKColor[] ResolveMeshColors(
-        List<double> components,
+        List<SKColor> newColors,
         MeshPatch? previous,
-        int flag,
-        Pdfe.Core.Primitives.PdfObject? function,
-        string colorSpace,
-        PdfDocument document)
+        int flag)
     {
-        var newColors = components
-            .Select(c => ComponentsToSkColor(PdfFunctionEvaluator.Evaluate(function, c, document) ?? new[] { c }, colorSpace))
-            .ToArray();
-
-        if (newColors.Length >= 4)
+        if (newColors.Count >= 4)
             return newColors.Take(4).ToArray();
 
         if (previous == null)
@@ -726,11 +758,95 @@ internal partial class RenderContext
 
         return flag switch
         {
-            1 => new[] { previous.Colors[1], newColors[0], newColors[^1], previous.Colors[2] },
+            1 => new[] { previous.Colors[1], previous.Colors[2], newColors[0], newColors[^1] },
             2 => new[] { previous.Colors[2], previous.Colors[3], newColors[0], newColors[^1] },
             3 => new[] { previous.Colors[3], previous.Colors[0], newColors[0], newColors[^1] },
             _ => new[] { newColors[0], newColors[0], newColors[^1], newColors[^1] }
         };
+    }
+
+    private void DrawMeshPatches(IReadOnlyList<MeshPatch> patches, bool tensorPatch)
+    {
+        if (patches.Count == 0)
+            return;
+
+        var minX = patches.Min(p => p.MinX);
+        var minY = patches.Min(p => p.MinY);
+        var maxX = patches.Max(p => p.MaxX);
+        var maxY = patches.Max(p => p.MaxY);
+        if (maxX <= minX || maxY <= minY)
+            return;
+
+        var width = Math.Clamp((int)Math.Ceiling(maxX - minX) * 2, 16, 768);
+        var height = Math.Clamp((int)Math.Ceiling(maxY - minY) * 2, 16, 768);
+        using var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
+        bitmap.Erase(SKColors.Transparent);
+
+        foreach (var patch in patches)
+        {
+            if (tensorPatch && patch.Points.Count >= 16)
+                RasterizeTensorPatch(bitmap, patch, minX, minY, maxX, maxY);
+            else
+                RasterizeMeshPatch(bitmap, patch, minX, minY, maxX, maxY);
+        }
+
+        DrawMeshBitmap(bitmap, minX, minY, maxX, maxY);
+    }
+
+    private void DrawMeshTriangles(IReadOnlyList<MeshTriangle> triangles)
+    {
+        if (triangles.Count == 0)
+            return;
+
+        var minX = triangles.Min(t => t.MinX);
+        var minY = triangles.Min(t => t.MinY);
+        var maxX = triangles.Max(t => t.MaxX);
+        var maxY = triangles.Max(t => t.MaxY);
+        if (maxX <= minX || maxY <= minY)
+            return;
+
+        var width = Math.Clamp((int)Math.Ceiling(maxX - minX) * 2, 16, 1024);
+        var height = Math.Clamp((int)Math.Ceiling(maxY - minY) * 2, 16, 1024);
+        using var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
+        bitmap.Erase(SKColors.Transparent);
+
+        foreach (var triangle in triangles)
+            RasterizeMeshTriangle(bitmap, triangle, minX, minY, maxX, maxY);
+
+        DrawMeshBitmap(bitmap, minX, minY, maxX, maxY);
+    }
+
+    private void DrawMeshBitmap(SKBitmap bitmap, double minX, double minY, double maxX, double maxY)
+    {
+        using var image = SKImage.FromBitmap(bitmap);
+        using var shader = SKShader.CreateImage(
+            image,
+            SKShaderTileMode.Clamp,
+            SKShaderTileMode.Clamp,
+            SKMatrix.CreateScale(
+                (float)((maxX - minX) / bitmap.Width),
+                (float)((maxY - minY) / bitmap.Height)));
+
+        using var paint = new SKPaint
+        {
+            Shader = shader,
+            BlendMode = _state.BlendMode,
+            Color = SKColors.White.WithAlpha((byte)Math.Clamp(_state.FillAlpha * 255, 0, 255)),
+            IsAntialias = _options.AntiAlias
+        };
+
+        _canvas.Save();
+        try
+        {
+            _canvas.Translate((float)minX, (float)minY);
+            _canvas.DrawRect(
+                new SKRect(0, 0, (float)(maxX - minX), (float)(maxY - minY)),
+                paint);
+        }
+        finally
+        {
+            _canvas.Restore();
+        }
     }
 
     private static void RasterizeMeshPatch(SKBitmap bitmap, MeshPatch patch, double minX, double minY, double maxX, double maxY)
@@ -755,6 +871,100 @@ internal partial class RenderContext
             }
         }
     }
+
+    private static void RasterizeTensorPatch(SKBitmap bitmap, MeshPatch patch, double minX, double minY, double maxX, double maxY)
+    {
+        const int steps = 20;
+        var vertices = new MeshVertex[steps + 1, steps + 1];
+
+        for (var row = 0; row <= steps; row++)
+        {
+            var v = row / (double)steps;
+            for (var col = 0; col <= steps; col++)
+            {
+                var u = col / (double)steps;
+                vertices[row, col] = new MeshVertex(
+                    0,
+                    EvaluateTensorPatchPoint(patch.Points, u, v),
+                    Bilinear(patch.Colors, u, v));
+            }
+        }
+
+        for (var row = 0; row < steps; row++)
+        {
+            for (var col = 0; col < steps; col++)
+            {
+                RasterizeMeshTriangle(
+                    bitmap,
+                    new MeshTriangle(vertices[row, col], vertices[row, col + 1], vertices[row + 1, col + 1]),
+                    minX,
+                    minY,
+                    maxX,
+                    maxY);
+                RasterizeMeshTriangle(
+                    bitmap,
+                    new MeshTriangle(vertices[row, col], vertices[row + 1, col + 1], vertices[row + 1, col]),
+                    minX,
+                    minY,
+                    maxX,
+                    maxY);
+            }
+        }
+    }
+
+    private static SKPoint EvaluateTensorPatchPoint(IReadOnlyList<SKPoint> points, double u, double v)
+    {
+        Span<double> bu = stackalloc double[4];
+        Span<double> bv = stackalloc double[4];
+        CubicBernstein(u, bu);
+        CubicBernstein(v, bv);
+
+        double x = 0;
+        double y = 0;
+        for (var row = 0; row < 4; row++)
+        {
+            for (var col = 0; col < 4; col++)
+            {
+                var point = GetTensorPatchPoint(points, row, col);
+                var weight = bv[row] * bu[col];
+                x += point.X * weight;
+                y += point.Y * weight;
+            }
+        }
+
+        return new SKPoint((float)x, (float)y);
+    }
+
+    private static void CubicBernstein(double t, Span<double> values)
+    {
+        var mt = 1 - t;
+        values[0] = mt * mt * mt;
+        values[1] = 3 * t * mt * mt;
+        values[2] = 3 * t * t * mt;
+        values[3] = t * t * t;
+    }
+
+    private static SKPoint GetTensorPatchPoint(IReadOnlyList<SKPoint> points, int row, int col)
+        => (row, col) switch
+        {
+            (0, 0) => points[0],
+            (0, 1) => points[1],
+            (0, 2) => points[2],
+            (0, 3) => points[3],
+            (1, 0) => points[11],
+            (1, 1) => points[12],
+            (1, 2) => points[13],
+            (1, 3) => points[4],
+            (2, 0) => points[10],
+            (2, 1) => points[15],
+            (2, 2) => points[14],
+            (2, 3) => points[5],
+            (3, 0) => points[9],
+            (3, 1) => points[8],
+            (3, 2) => points[7],
+            (3, 3) => points[6],
+            _ => points[0]
+        };
 
     private static void RasterizeMeshTriangle(
         SKBitmap bitmap,
@@ -865,11 +1075,46 @@ internal partial class RenderContext
             case 3: // Radial shading (radial gradient)
                 RenderRadialShading(shading);
                 break;
-            // Types 4-7 are more complex (mesh-based)
-            // For now, just fill with background color as fallback
+            case 4: // Free-form Gouraud triangle mesh
+            case 5: // Lattice-form Gouraud triangle mesh
+            case 6: // Coons patch mesh
+            case 7: // Tensor-product patch mesh
+                RenderMeshShading(shading, shadingType);
+                break;
             default:
                 // Shading fills the current clipping path
                 break;
+        }
+    }
+
+    private void RenderMeshShading(Pdfe.Core.Primitives.PdfDictionary shading, int shadingType)
+    {
+        if (shading is not Pdfe.Core.Primitives.PdfStream stream)
+            return;
+
+        _canvas.Save();
+        try
+        {
+            ApplyShadingBoundingBoxClip(shading);
+            switch (shadingType)
+            {
+                case 4:
+                    DrawMeshTriangles(DecodeType4MeshTriangles(stream));
+                    break;
+                case 5:
+                    DrawMeshTriangles(DecodeType5MeshTriangles(stream));
+                    break;
+                case 6:
+                    DrawMeshPatches(DecodeType6MeshPatches(stream, tensorPatch: false), tensorPatch: false);
+                    break;
+                case 7:
+                    DrawMeshPatches(DecodeType6MeshPatches(stream, tensorPatch: true), tensorPatch: true);
+                    break;
+            }
+        }
+        finally
+        {
+            _canvas.Restore();
         }
     }
 
@@ -902,7 +1147,16 @@ internal partial class RenderContext
                 null,
                 SKShaderTileMode.Clamp);
 
-        DrawShaderOverCurrentClip(shader);
+        _canvas.Save();
+        try
+        {
+            ApplyShadingBoundingBoxClip(shading);
+            DrawShaderOverCurrentClip(shader);
+        }
+        finally
+        {
+            _canvas.Restore();
+        }
     }
 
     private void RenderRadialShading(Pdfe.Core.Primitives.PdfDictionary shading)
@@ -940,6 +1194,7 @@ internal partial class RenderContext
         _canvas.Save();
         try
         {
+            ApplyShadingBoundingBoxClip(shading);
             ApplyRadialShadingDomainClip(x0, y0, r0, x1, y1, r1, extendStart, extendEnd);
             DrawShaderOverCurrentClip(shader);
         }
@@ -982,6 +1237,29 @@ internal partial class RenderContext
         return (
             extend.Count > 0 && extend[0] is Pdfe.Core.Primitives.PdfBoolean start && start.Value,
             extend.Count > 1 && extend[1] is Pdfe.Core.Primitives.PdfBoolean end && end.Value);
+    }
+
+    private void ApplyShadingBoundingBoxClip(Pdfe.Core.Primitives.PdfDictionary shading)
+    {
+        var bbox = GetShadingBoundingBox(shading);
+        if (bbox.HasValue)
+            _canvas.ClipRect(bbox.Value, SKClipOperation.Intersect, _options.AntiAlias);
+    }
+
+    private SKRect? GetShadingBoundingBox(Pdfe.Core.Primitives.PdfDictionary shading)
+    {
+        var bbox = GetNumberArray(shading.GetOptional("BBox") as Pdfe.Core.Primitives.PdfArray);
+        if (bbox is not { Length: >= 4 })
+            return null;
+
+        var rect = new SKRect(
+            (float)Math.Min(bbox[0], bbox[2]),
+            (float)Math.Min(bbox[1], bbox[3]),
+            (float)Math.Max(bbox[0], bbox[2]),
+            (float)Math.Max(bbox[1], bbox[3]));
+        return rect.Width > 0 && rect.Height > 0
+            ? rect
+            : null;
     }
 
     private void DrawShaderOverCurrentClip(SKShader shader)
@@ -1237,7 +1515,10 @@ internal partial class RenderContext
     {
         var color = ParseColorFromOperands(operands, _state.StrokeColorSpace);
         if (color.HasValue)
+        {
             _state.StrokeColor = color.Value;
+            _state.StrokeDeviceCmyk = TryParseDeviceCmykOperands(operands, _state.StrokeColorSpace);
+        }
     }
 
     private void SetNonStrokingColor(IReadOnlyList<PdfObject> operands)
@@ -1246,6 +1527,7 @@ internal partial class RenderContext
         if (fillColorSpace?.Type == PdfColorSpaceType.Pattern)
         {
             _state.FillPatternName = operands.OfType<PdfName>().FirstOrDefault()?.Value;
+            _state.FillDeviceCmyk = null;
             var tintColor = ParsePatternTintColor(operands, _state.FillColorSpace);
             if (tintColor.HasValue)
                 _state.FillColor = tintColor.Value;
@@ -1256,6 +1538,7 @@ internal partial class RenderContext
         if (color.HasValue)
         {
             _state.FillColor = color.Value;
+            _state.FillDeviceCmyk = TryParseDeviceCmykOperands(operands, _state.FillColorSpace);
             _state.FillPatternName = null;
         }
     }
@@ -1284,6 +1567,50 @@ internal partial class RenderContext
 
             _ => null
         };
+    }
+
+    private DeviceCmykColor? TryParseDeviceCmykOperands(IReadOnlyList<PdfObject> operands, string colorSpace)
+    {
+        var values = operands
+            .Where(o => o is not PdfName)
+            .Select(o => o.GetNumber())
+            .ToArray();
+
+        var cs = ResolveColorSpace(colorSpace);
+        if (cs?.Type == PdfColorSpaceType.DeviceCMYK)
+        {
+            return values.Length >= 4
+            ? new DeviceCmykColor(values[0], values[1], values[2], values[3])
+            : null;
+        }
+
+        return TryEvaluateTintTransformToDeviceCmyk(colorSpace, values);
+    }
+
+    private DeviceCmykColor? TryEvaluateTintTransformToDeviceCmyk(string colorSpace, double[] values)
+    {
+        if (values.Length == 0)
+            return null;
+
+        var colorSpaceObj = ResolveColorSpaceObject(colorSpace);
+        if (colorSpaceObj == null)
+            return null;
+
+        var resolved = _page.Document.Resolve(colorSpaceObj);
+        if (resolved is not PdfArray arr || arr.Count < 4 || arr[0] is not PdfName typeName)
+            return null;
+
+        if (typeName.Value is not ("Separation" or "DeviceN"))
+            return null;
+
+        var alternateSpace = PdfColorSpace.Parse(arr[2], _page.Document);
+        if (alternateSpace.Type != PdfColorSpaceType.DeviceCMYK)
+            return null;
+
+        var evaluated = PdfFunctionEvaluator.Evaluate(arr[3], values, _page.Document);
+        return evaluated is { Length: >= 4 }
+            ? new DeviceCmykColor(evaluated[0], evaluated[1], evaluated[2], evaluated[3])
+            : null;
     }
 
     private SKColor? ParsePatternTintColor(IReadOnlyList<PdfObject> operands, string colorSpaceName)
@@ -1336,7 +1663,7 @@ internal partial class RenderContext
         if (defaultCsObj != null)
             return PdfColorSpace.Parse(defaultCsObj, _page.Document);
 
-        var cs = PdfColorSpace.FromName(name);
+        var cs = PdfColorSpace.FromName(name, _page.Document);
         if (cs.Type != PdfColorSpaceType.Unknown)
             return cs;
 

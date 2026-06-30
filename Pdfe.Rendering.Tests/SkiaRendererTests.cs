@@ -766,6 +766,312 @@ public class SkiaRendererTests
     }
 
     [Fact(Timeout = 20000)]
+    public void RenderPage_GhentOptionalContentMembershipDictionary_EvaluatesVisibilityExpression()
+    {
+        var path = FindRepoFile(
+            "test-pdfs",
+            "ghent",
+            "extracted",
+            "patches",
+            "Ghent_PDF_Output_Suite_V50_Patches",
+            "Categories",
+            "1-CMYK",
+            "Patches",
+            "GWG152_OptionalContent-OCMD_X4.pdf");
+        Assert.SkipWhen(path == null,
+            "No Ghent OCMD fixture found at test-pdfs/ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/1-CMYK/Patches/GWG152_OptionalContent-OCMD_X4.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        CountNearBlackPixels(bitmap, new SKRectI(110, 35, 145, 55)).Should().BeGreaterThan(100,
+            "the default-view check mark should be visible when OCMD /VE expressions are evaluated");
+        CountNonWhitePixels(bitmap, new SKRectI(75, 15, 185, 75)).Should().BeLessThan(7_000,
+            "hidden optional-content alternatives should not paint the large X over the default view");
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_Ghent16BitDeviceCmykImage_AppliesTiffPredictor()
+    {
+        var path = FindRepoFile(
+            "test-pdfs",
+            "ghent",
+            "extracted",
+            "patches",
+            "Ghent_PDF_Output_Suite_V50_Patches",
+            "Categories",
+            "1-CMYK",
+            "Patches",
+            "GWG181_16Bit_DeviceCMYK_x4.pdf");
+        Assert.SkipWhen(path == null,
+            "No Ghent 16-bit DeviceCMYK fixture found at test-pdfs/ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/1-CMYK/Patches/GWG181_16Bit_DeviceCMYK_x4.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var imageRegion = new SKRectI(86, 25, 150, 90);
+        CountDarkPixels(bitmap, imageRegion).Should().BeLessThan(450,
+            "16-bit TIFF predictor data should be reconstructed before CMYK sample conversion instead of rendering as dark noise");
+        CountGreenDominantPixels(bitmap, imageRegion).Should().BeGreaterThan(1_600,
+            "the corrected 16-bit image should preserve the green background content");
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_GhentIccSourceProfile_AppliesSourceAndOutputIntentProfiles()
+    {
+        var path = FindRepoFile(
+            "test-pdfs",
+            "ghent",
+            "extracted",
+            "patches",
+            "Ghent_PDF_Output_Suite_V50_Patches",
+            "Categories",
+            "3-ICC-CMS",
+            "Patches",
+            "GWG130_ICC_Source_Profile_x4.pdf");
+        Assert.SkipWhen(path == null,
+            "No Ghent ICC source-profile fixture found at test-pdfs/ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/3-ICC-CMS/Patches/GWG130_ICC_Source_Profile_x4.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        CountRedPixels(bitmap, new SKRectI(5, 20, 245, 92)).Should().Be(0,
+            "source ICC profiles plus the PDF/X output intent should convert the red source X marks into the green output color");
+        CountGreenDominantPixels(bitmap, new SKRectI(14, 28, 240, 84)).Should().BeGreaterThan(7_000,
+            "the four proof patches should render as green output-intent preview colors");
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_GhentIccBasedCmykOverprint_UsesIccPreviewColor()
+    {
+        var path = FindRepoFile(
+            "test-pdfs",
+            "ghent",
+            "extracted",
+            "patches",
+            "Ghent_PDF_Output_Suite_V50_Patches",
+            "Categories",
+            "3-ICC-CMS",
+            "Patches",
+            "GWG132_ICCbasedCMYK_OverPrint_x4.pdf");
+        Assert.SkipWhen(path == null,
+            "No Ghent ICCBased CMYK overprint fixture found at test-pdfs/ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/3-ICC-CMS/Patches/GWG132_ICCbasedCMYK_OverPrint_x4.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var greenPatch = bitmap.GetPixel(158, 55);
+        greenPatch.Red.Should().BeInRange(80, 120,
+            "ICCBased CMYK should render through the profile/output-intent path, not as saturated generic RGB green");
+        greenPatch.Green.Should().BeInRange(180, 225);
+        greenPatch.Blue.Should().BeInRange(60, 100);
+        CountRedPixels(bitmap, new SKRectI(128, 28, 185, 85)).Should().Be(0,
+            "the ICCBased object must not leave the red overprint-failure X visible");
+    }
+
+    [Fact(Timeout = 30000)]
+    public void RenderPage_AltonaDeviceCmykImage_UsesDocumentOutputIntent()
+    {
+        var path = FindRepoFile(
+            "test-pdfs",
+            "altona",
+            "eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf");
+        Assert.SkipWhen(path == null,
+            "No Altona PDF/X fixture found at test-pdfs/altona/eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(13),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var rightColumnWood = MeanRgb(bitmap, new SKRectI(132, 54, 177, 82));
+        rightColumnWood.Red.Should().BeGreaterThan(rightColumnWood.Blue + 20,
+            "explicit /DeviceCMYK image samples in a PDF/X file should use the document output intent instead of the fallback raw CMYK preview");
+        rightColumnWood.Green.Should().BeGreaterThan(rightColumnWood.Blue + 8);
+    }
+
+    [Fact(Timeout = 30000)]
+    public void RenderPage_AltonaJpxGrayImage_UsesOpenJpegForContinuousToneTiles()
+    {
+        Assert.SkipWhen(!IsOpenJpegDecompressAvailable(),
+            "opj_decompress is not available; the Altona grayscale JPX regression only runs when the optional OpenJPEG decoder can execute.");
+        var path = FindRepoFile(
+            "test-pdfs",
+            "altona",
+            "eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf");
+        Assert.SkipWhen(path == null,
+            "No Altona PDF/X fixture found at test-pdfs/altona/eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(13),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        CountNeutralGrayPixels(bitmap, new SKRectI(0, 154, 103, 204)).Should().BeGreaterThan(2_500,
+            "DeviceGray JPX tiles without /SMask should use the OpenJPEG path; the managed fallback rendered this Altona grayscale panel as black/white noise");
+    }
+
+    [Fact(Timeout = 40000)]
+    public void RenderPage_AltonaPatternText_FillsGlyphsWithPatternInsteadOfFallbackBlack()
+    {
+        var path = FindRepoFile(
+            "test-pdfs",
+            "altona",
+            "eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf");
+        Assert.SkipWhen(path == null,
+            "No Altona PDF/X fixture found at test-pdfs/altona/eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(7),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var topLeftPatternText = new SKRectI(0, 0, 52, 52);
+        CountDarkPixels(bitmap, topLeftPatternText).Should().BeLessThan(50,
+            "pattern-filled text glyphs should not fall back to opaque black fill");
+        CountPurplePixels(bitmap, topLeftPatternText).Should().BeGreaterThan(250,
+            "the Altona transparency text glyph should be painted with its tiling pattern color");
+    }
+
+    [Fact(Timeout = 40000)]
+    public void RenderPage_AltonaTensorPatchMesh_RendersSampledGradient()
+    {
+        var path = FindRepoFile(
+            "test-pdfs",
+            "altona",
+            "eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf");
+        Assert.SkipWhen(path == null,
+            "No Altona PDF/X fixture found at test-pdfs/altona/eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(8),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        CountWarmPalePixels(bitmap, new SKRectI(0, 170, 102, 204)).Should().BeGreaterThan(700,
+            "Type 7 tensor patch meshes should be sampled as curved patches, not reduced to a coarse patch bounding-box fill");
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_GhentDeviceCmykTransparencyGroup_AppliesInvocationBlendInCmyk()
+    {
+        var path = FindRepoFile(
+            "test-pdfs",
+            "ghent",
+            "extracted",
+            "patches",
+            "Ghent_PDF_Output_Suite_V50_Patches",
+            "Categories",
+            "1-CMYK",
+            "Patches",
+            "GWG160_Transp_Basic_BM_DeviceCMYK_Non-knockout_X4.pdf");
+        Assert.SkipWhen(path == null,
+            "No Ghent DeviceCMYK transparency fixture found at test-pdfs/ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/1-CMYK/Patches/GWG160_Transp_Basic_BM_DeviceCMYK_Non-knockout_X4.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        CountPixelsDifferentFromRegionCenter(bitmap, new SKRectI(9, 20, 26, 38)).Should().BeLessThan(30,
+            "the Darken swatch should not show the neutral-source X after CMYK group compositing");
+        CountPixelsDifferentFromRegionCenter(bitmap, new SKRectI(39, 20, 56, 38)).Should().BeLessThan(30,
+            "the Multiply swatch should not show the neutral-source X after CMYK group compositing");
+        CountPixelsDifferentFromRegionCenter(bitmap, new SKRectI(70, 20, 87, 38)).Should().BeLessThan(30,
+            "the ColorBurn swatch should not show the neutral-source X after CMYK group compositing");
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_GhentDeviceCmykKnockoutGroup_CompositesNestedGroupInCmyk()
+    {
+        var path = FindRepoFile(
+            "test-pdfs",
+            "ghent",
+            "extracted",
+            "patches",
+            "Ghent_PDF_Output_Suite_V50_Patches",
+            "Categories",
+            "1-CMYK",
+            "Patches",
+            "GWG161_Transp_Basic_BM_DeviceCMYK_Knockout_X4.pdf");
+        Assert.SkipWhen(path == null,
+            "No Ghent DeviceCMYK knockout transparency fixture found at test-pdfs/ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/1-CMYK/Patches/GWG161_Transp_Basic_BM_DeviceCMYK_Knockout_X4.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        CountPixelsDifferentFromRegionCenter(bitmap, new SKRectI(9, 20, 26, 38)).Should().BeLessThan(30,
+            "Darken in a DeviceCMYK knockout group should use the knockout initial backdrop, not leave the first nested form's X visible");
+        CountPixelsDifferentFromRegionCenter(bitmap, new SKRectI(39, 20, 56, 38)).Should().BeLessThan(30,
+            "Multiply in a DeviceCMYK knockout group should cancel the zero-ink nested form against the initial backdrop");
+        CountPixelsDifferentFromRegionCenter(bitmap, new SKRectI(70, 20, 87, 38)).Should().BeLessThan(30,
+            "ColorBurn in a DeviceCMYK knockout group should not accumulate prior sibling forms");
+        CountRedPixels(bitmap, new SKRectI(165, 20, 182, 38)).Should().BeGreaterThan(120,
+            "nested Form XObjects must contribute shape alpha when composited inside the knockout group");
+        CountRedPixels(bitmap, new SKRectI(197, 20, 214, 38)).Should().BeGreaterThan(220,
+            "device color operators must reset the current color space so later sc/scn CMYK operands update the retained backdrop");
+
+        var nestedBlendPatch = MeanRgb(bitmap, new SKRectI(232, 56, 248, 72));
+        nestedBlendPatch.Red.Should().BeLessThan(40,
+            "DeviceCMYK transparency groups with /I false and /K false still form group boundaries when invoked inside a knockout parent");
+        nestedBlendPatch.Green.Should().BeGreaterThan(120);
+        nestedBlendPatch.Blue.Should().BeGreaterThan(185);
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_GhentDeviceCmykIsolatedGroup_CompositesNestedGroupInCmyk()
+    {
+        var path = FindRepoFile(
+            "test-pdfs",
+            "ghent",
+            "extracted",
+            "patches",
+            "Ghent_PDF_Output_Suite_V50_Patches",
+            "Categories",
+            "1-CMYK",
+            "Patches",
+            "GWG162_Transp_Basic_BM_DeviceCMYK_Isolate_X4.pdf");
+        Assert.SkipWhen(path == null,
+            "No Ghent DeviceCMYK isolated transparency fixture found at test-pdfs/ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/1-CMYK/Patches/GWG162_Transp_Basic_BM_DeviceCMYK_Isolate_X4.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        CountRedPixels(bitmap, new SKRectI(165, 20, 182, 38)).Should().BeGreaterThan(150,
+            "isolated DeviceCMYK groups still need retained CMYK backdrop colors for nested ColorDodge form compositing");
+        CountDarkPixels(bitmap, new SKRectI(40, 55, 57, 72)).Should().BeGreaterThan(80,
+            "isolated DeviceCMYK Difference groups should preserve the nested form shape instead of flattening it away");
+
+        var nestedBlendPatch = MeanRgb(bitmap, new SKRectI(232, 56, 248, 72));
+        nestedBlendPatch.Red.Should().BeGreaterThan(nestedBlendPatch.Green + 60,
+            "nested non-isolated DeviceCMYK groups should be composited in CMYK before the isolated parent group is blended back");
+        nestedBlendPatch.Blue.Should().BeGreaterThan(nestedBlendPatch.Green + 30);
+    }
+
+    [Fact(Timeout = 20000)]
     public void RenderPage_PdfjsBug920426_Type0EncodingCMapRemapsCharacterCodesToGlyphs()
     {
         var path = FindRepoFile("test-pdfs", "pdfjs", "bug920426.pdf");
@@ -5489,6 +5795,27 @@ public class SkiaRendererTests
         return count;
     }
 
+    private static int CountNearBlackPixels(SKBitmap bitmap, SKRectI region)
+    {
+        var left = Math.Clamp(region.Left, 0, bitmap.Width);
+        var top = Math.Clamp(region.Top, 0, bitmap.Height);
+        var right = Math.Clamp(region.Right, left, bitmap.Width);
+        var bottom = Math.Clamp(region.Bottom, top, bitmap.Height);
+        var count = 0;
+
+        for (int y = top; y < bottom; y++)
+        {
+            for (int x = left; x < right; x++)
+            {
+                var pixel = bitmap.GetPixel(x, y);
+                if (pixel.Red < 80 && pixel.Green < 80 && pixel.Blue < 80)
+                    count++;
+            }
+        }
+
+        return count;
+    }
+
     private static int CountNonWhitePixels(SKBitmap bitmap, SKRectI region)
     {
         var left = Math.Clamp(region.Left, 0, bitmap.Width);
@@ -5503,6 +5830,34 @@ public class SkiaRendererTests
             {
                 var pixel = bitmap.GetPixel(x, y);
                 if (pixel.Red < 245 || pixel.Green < 245 || pixel.Blue < 245)
+                    count++;
+            }
+        }
+
+        return count;
+    }
+
+    private static int CountPixelsDifferentFromRegionCenter(SKBitmap bitmap, SKRectI region)
+    {
+        var left = Math.Clamp(region.Left, 0, bitmap.Width);
+        var top = Math.Clamp(region.Top, 0, bitmap.Height);
+        var right = Math.Clamp(region.Right, left, bitmap.Width);
+        var bottom = Math.Clamp(region.Bottom, top, bitmap.Height);
+        if (right <= left || bottom <= top)
+            return 0;
+
+        var reference = bitmap.GetPixel((left + right) / 2, (top + bottom) / 2);
+        var count = 0;
+
+        for (int y = top; y < bottom; y++)
+        {
+            for (int x = left; x < right; x++)
+            {
+                var pixel = bitmap.GetPixel(x, y);
+                var delta = Math.Abs(pixel.Red - reference.Red) +
+                            Math.Abs(pixel.Green - reference.Green) +
+                            Math.Abs(pixel.Blue - reference.Blue);
+                if (delta > 48)
                     count++;
             }
         }
@@ -5691,6 +6046,51 @@ public class SkiaRendererTests
             {
                 var pixel = bitmap.GetPixel(x, y);
                 if (pixel.Green > 120 && pixel.Green > pixel.Red + 40 && pixel.Green > pixel.Blue + 40)
+                    count++;
+            }
+        }
+
+        return count;
+    }
+
+    private static int CountPurplePixels(SKBitmap bitmap, SKRectI region)
+    {
+        var left = Math.Clamp(region.Left, 0, bitmap.Width);
+        var top = Math.Clamp(region.Top, 0, bitmap.Height);
+        var right = Math.Clamp(region.Right, left, bitmap.Width);
+        var bottom = Math.Clamp(region.Bottom, top, bitmap.Height);
+        var count = 0;
+
+        for (int y = top; y < bottom; y++)
+        {
+            for (int x = left; x < right; x++)
+            {
+                var pixel = bitmap.GetPixel(x, y);
+                if (pixel.Red > 70 && pixel.Blue > 100 && pixel.Green < 100)
+                    count++;
+            }
+        }
+
+        return count;
+    }
+
+    private static int CountNeutralGrayPixels(SKBitmap bitmap, SKRectI region)
+    {
+        var left = Math.Clamp(region.Left, 0, bitmap.Width);
+        var top = Math.Clamp(region.Top, 0, bitmap.Height);
+        var right = Math.Clamp(region.Right, left, bitmap.Width);
+        var bottom = Math.Clamp(region.Bottom, top, bitmap.Height);
+        var count = 0;
+
+        for (int y = top; y < bottom; y++)
+        {
+            for (int x = left; x < right; x++)
+            {
+                var pixel = bitmap.GetPixel(x, y);
+                var max = Math.Max(pixel.Red, Math.Max(pixel.Green, pixel.Blue));
+                var min = Math.Min(pixel.Red, Math.Min(pixel.Green, pixel.Blue));
+                var luminance = 0.2126 * pixel.Red + 0.7152 * pixel.Green + 0.0722 * pixel.Blue;
+                if (max - min <= 6 && luminance > 20 && luminance < 235)
                     count++;
             }
         }

@@ -1,5 +1,6 @@
 namespace Pdfe.Core.ColorSpaces;
 
+using System.Runtime.CompilerServices;
 using Pdfe.Core.Document;
 using Pdfe.Core.Primitives;
 
@@ -21,7 +22,10 @@ public sealed class PdfColorSpace
     private readonly double[]? _calMatrix;
     private readonly double[]? _labRange;
     private readonly PdfColorConverter.CmykPolicy _cmykPolicy;
+    private readonly PdfIccProfile? _iccProfile;
+    private readonly PdfIccProfile? _iccOutputIntentProfile;
     private Dictionary<TintColorCacheKey, (double R, double G, double B)>? _tintRgbCache;
+    private static readonly ConditionalWeakTable<PdfDocument, OutputIntentProfileBox> OutputIntentProfiles = new();
 
     private const int MaxTintRgbCacheEntries = 4096;
 
@@ -32,6 +36,8 @@ public sealed class PdfColorSpace
         PdfColorSpace? alternateSpace = null, PdfObject? tintTransform = null,
         double[]? whitePoint = null, double[]? calGamma = null, double[]? calMatrix = null,
         double[]? labRange = null,
+        PdfIccProfile? iccProfile = null,
+        PdfIccProfile? iccOutputIntentProfile = null,
         PdfColorConverter.CmykPolicy cmykPolicy = PdfColorConverter.CmykPolicy.ProcessScreenPreview)
     {
         Type = type;
@@ -44,6 +50,8 @@ public sealed class PdfColorSpace
         _calGamma = calGamma;
         _calMatrix = calMatrix;
         _labRange = labRange;
+        _iccProfile = iccProfile;
+        _iccOutputIntentProfile = iccOutputIntentProfile;
         _cmykPolicy = cmykPolicy;
     }
 
@@ -66,17 +74,31 @@ public sealed class PdfColorSpace
         _ => new PdfColorSpace(PdfColorSpaceType.Unknown, 1)
     };
 
+    internal static PdfColorSpace FromName(string name, PdfDocument doc)
+    {
+        if (name is "DeviceCMYK" or "CMYK" &&
+            GetOutputIntentProfile(doc) is { } outputIntentProfile)
+        {
+            return new PdfColorSpace(
+                PdfColorSpaceType.DeviceCMYK,
+                4,
+                iccProfile: outputIntentProfile);
+        }
+
+        return FromName(name);
+    }
+
     /// <summary>
     /// Parse a color space from a PdfObject (name or array) using the document.
     /// </summary>
     public static PdfColorSpace Parse(PdfObject csObj, PdfDocument doc)
     {
         if (csObj is PdfName n)
-            return FromName(n.Value);
+            return FromName(n.Value, doc);
 
         var resolved = doc.Resolve(csObj);
         if (resolved is PdfName resolvedName)
-            return FromName(resolvedName.Value);
+            return FromName(resolvedName.Value, doc);
 
         if (resolved is PdfArray arr && arr.Count >= 1)
         {
@@ -108,6 +130,14 @@ public sealed class PdfColorSpace
         if (iccStream == null) return DeviceRGB;
 
         var n = iccStream.GetInt("N", 3);
+        var iccProfile = PdfIccProfile.TryParse(iccStream.DecodedData ?? iccStream.EncodedData);
+        if (iccProfile != null)
+            return new PdfColorSpace(
+                PdfColorSpaceType.ICCBased,
+                n,
+                iccProfile: iccProfile,
+                iccOutputIntentProfile: GetOutputIntentProfile(doc));
+
         return n switch
         {
             1 => DeviceGray,
@@ -223,15 +253,18 @@ public sealed class PdfColorSpace
                     : (values[0], values[0], values[0]),
 
             PdfColorSpaceType.DeviceCMYK =>
-                (values.Length >= 4) ? CmykToRgb(values[0], values[1], values[2], values[3]) : (0, 0, 0),
+                values.Length >= 4
+                    ? (_iccProfile?.ToRgb(values) ?? CmykToRgb(values[0], values[1], values[2], values[3]))
+                    : (0, 0, 0),
 
             PdfColorSpaceType.Lab =>
                 (values.Length >= 3) ? LabToRgb(values[0], values[1], values[2]) : (0, 0, 0),
 
             PdfColorSpaceType.ICCBased =>
-                Components == 1 ? (values[0], values[0], values[0]) :
-                Components == 4 ? (values.Length >= 4 ? CmykToRgb(values[0], values[1], values[2], values[3]) : (0, 0, 0)) :
-                (values.Length >= 3) ? (values[0], values[1], values[2]) : (0, 0, 0),
+                _iccProfile?.ToOutputIntentPreviewRgb(values, _iccOutputIntentProfile) ??
+                (Components == 1 ? (values[0], values[0], values[0]) :
+                 Components == 4 ? (values.Length >= 4 ? CmykToRgb(values[0], values[1], values[2], values[3]) : (0, 0, 0)) :
+                 (values.Length >= 3) ? (values[0], values[1], values[2]) : (0, 0, 0)),
 
             PdfColorSpaceType.Separation =>
                 ResolveTintedColor(values),
@@ -343,6 +376,46 @@ public sealed class PdfColorSpace
             values.Length > 2 ? BitConverter.DoubleToInt64Bits(values[2]) : 0,
             values.Length > 3 ? BitConverter.DoubleToInt64Bits(values[3]) : 0);
         return true;
+    }
+
+    private static PdfIccProfile? GetOutputIntentProfile(PdfDocument doc)
+        => OutputIntentProfiles.GetValue(doc, CreateOutputIntentProfileBox).Profile;
+
+    private static OutputIntentProfileBox CreateOutputIntentProfileBox(PdfDocument doc)
+    {
+        try
+        {
+            var outputIntentsObj = doc.Catalog.GetOptional("OutputIntents");
+            if (outputIntentsObj == null || doc.Resolve(outputIntentsObj) is not PdfArray outputIntents)
+                return new OutputIntentProfileBox(null);
+
+            foreach (var item in outputIntents)
+            {
+                if (doc.Resolve(item) is not PdfDictionary intent)
+                    continue;
+
+                var profileObj = intent.GetOptional("DestOutputProfile");
+                if (profileObj == null || doc.Resolve(profileObj) is not PdfStream profileStream)
+                    continue;
+
+                var profile = PdfIccProfile.TryParse(profileStream.DecodedData ?? profileStream.EncodedData);
+                if (profile != null)
+                    return new OutputIntentProfileBox(profile);
+            }
+        }
+        catch
+        {
+            return new OutputIntentProfileBox(null);
+        }
+
+        return new OutputIntentProfileBox(null);
+    }
+
+    private sealed class OutputIntentProfileBox
+    {
+        public OutputIntentProfileBox(PdfIccProfile? profile) => Profile = profile;
+
+        public PdfIccProfile? Profile { get; }
     }
 
     private (double R, double G, double B) CalGrayToRgb(double a)

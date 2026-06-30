@@ -194,6 +194,8 @@ internal static class JpxDecoder
                 BitsPerComponent = maxValue > 255 ? 16 : 8,
                 ComponentData = components,
                 ComponentDefinitions = ReadComponentDefinitions(jpxData),
+                ComponentsAreLogicalColorOrder = true,
+                ComponentsAreDisplayRgb = components.Length == 3,
             };
         }
         catch
@@ -218,16 +220,21 @@ internal static class JpxDecoder
             {
                 return DecodeWithSuppressedCodecOutput(codestream);
             }
-            catch when (maxComponents == 1 && TryCreateFirstComponentOnlyJp2(jpxData, out var firstComponentJp2))
+            catch when (ShouldTryFirstComponentOnly(maxComponents) &&
+                        TryCreateFirstComponentOnlyJp2(jpxData, out var firstComponentJp2))
             {
                 return DecodeWithSuppressedCodecOutput(firstComponentJp2);
             }
         }
-        catch when (maxComponents == 1 && TryCreateFirstComponentOnlyJp2(jpxData, out var firstComponentJp2))
+        catch when (ShouldTryFirstComponentOnly(maxComponents) &&
+                    TryCreateFirstComponentOnlyJp2(jpxData, out var firstComponentJp2))
         {
             return DecodeWithSuppressedCodecOutput(firstComponentJp2);
         }
     }
+
+    private static bool ShouldTryFirstComponentOnly(int? maxComponents)
+        => maxComponents is > 0 and <= 2;
 
     private static string? ResolveOpenJpegDecompress()
     {
@@ -717,6 +724,8 @@ internal sealed class JpxImage
     public int BitsPerComponent { get; set; }
     public byte[] Pixels { get; set; } = Array.Empty<byte>();
     public int[][] ComponentData { get; set; } = Array.Empty<int[]>();
+    public bool ComponentsAreLogicalColorOrder { get; set; }
+    public bool ComponentsAreDisplayRgb { get; set; }
     public IReadOnlyList<JpxComponentDefinition> ComponentDefinitions { get; set; } =
         Array.Empty<JpxComponentDefinition>();
 }

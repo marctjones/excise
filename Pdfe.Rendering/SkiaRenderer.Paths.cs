@@ -170,6 +170,23 @@ internal partial class RenderContext
         using var dash = CreateDashEffect();
         if (dash != null) paint.PathEffect = dash;
 
+        if (_deviceCmykKnockoutGroupDepth <= 0 &&
+            TryPaintDeviceCmykBlendPath(
+                _currentPath,
+                _state.StrokeDeviceCmyk,
+                _state.StrokeAlpha,
+                SKPaintStyle.Stroke,
+                ResolvePathStrokeWidth(),
+                _state.LineCap,
+                _state.LineJoin,
+                _state.MiterLimit,
+                dash))
+        {
+            _currentPath.Dispose();
+            _currentPath = null;
+            return;
+        }
+
         RenderWithCurrentSoftMask(
             () => _canvas.DrawPath(_currentPath, paint),
             paint);
@@ -187,6 +204,13 @@ internal partial class RenderContext
         if (_state.FillPatternName != null)
         {
             RenderFillPattern(_currentPath);
+            _currentPath.Dispose();
+            _currentPath = null;
+            return;
+        }
+
+        if (TryPaintDeviceCmykBlendPath(_currentPath, _state.FillDeviceCmyk, _state.FillAlpha))
+        {
             _currentPath.Dispose();
             _currentPath = null;
             return;
@@ -219,16 +243,23 @@ internal partial class RenderContext
         {
             if (_state.FillPatternName == null)
             {
-                using var fillPaint = new SKPaint
+                var filledWithDeviceCmykBlend = TryPaintDeviceCmykBlendPath(
+                    _currentPath,
+                    _state.FillDeviceCmyk,
+                    _state.FillAlpha);
+                if (!filledWithDeviceCmykBlend)
                 {
-                    Style = SKPaintStyle.Fill,
-                    Color = _state.FillColor.WithAlpha((byte)(_state.FillAlpha * 255)),
-                    BlendMode = _state.BlendMode,
-                    IsAntialias = _options.AntiAlias
-                };
-                RenderWithCurrentSoftMask(
-                    () => _canvas.DrawPath(_currentPath, fillPaint),
-                    fillPaint);
+                    using var fillPaint = new SKPaint
+                    {
+                        Style = SKPaintStyle.Fill,
+                        Color = _state.FillColor.WithAlpha((byte)(_state.FillAlpha * 255)),
+                        BlendMode = _state.BlendMode,
+                        IsAntialias = _options.AntiAlias
+                    };
+                    RenderWithCurrentSoftMask(
+                        () => _canvas.DrawPath(_currentPath, fillPaint),
+                        fillPaint);
+                }
             }
         }
 
@@ -265,6 +296,439 @@ internal partial class RenderContext
         _currentPath.Dispose();
         _currentPath = null;
     }
+
+    private bool TryPaintDeviceCmykBlendPath(SKPath path, DeviceCmykColor? sourceCmyk, float alpha)
+        => TryPaintDeviceCmykBlendPath(
+            path,
+            sourceCmyk,
+            alpha,
+            SKPaintStyle.Fill,
+            strokeWidth: 1,
+            lineCap: 0,
+            lineJoin: 0,
+            miterLimit: 10,
+            pathEffect: null);
+
+    private bool TryPaintDeviceCmykBlendPath(
+        SKPath path,
+        DeviceCmykColor? sourceCmyk,
+        float alpha,
+        SKPaintStyle style,
+        float strokeWidth,
+        int lineCap,
+        int lineJoin,
+        float miterLimit,
+        SKPathEffect? pathEffect)
+    {
+        if (_rootBitmap == null ||
+            _deviceCmykBackdrop == null ||
+            _deviceCmykTransparencyGroupDepth <= 0 ||
+            sourceCmyk == null ||
+            _state.SoftMask != null)
+        {
+            return false;
+        }
+
+        var isNormalBlend = _state.BlendMode == SKBlendMode.SrcOver;
+        PdfSeparableBlendMode blend = default;
+        if (!isNormalBlend && !TryMapSkiaBlendToPdfBlend(_state.BlendMode, out blend))
+            return false;
+
+        var matrix = _canvas.TotalMatrix;
+        var bounds = matrix.MapRect(path.Bounds);
+        var left = Math.Clamp((int)Math.Floor(bounds.Left) - 1, 0, _rootBitmap.Width);
+        var top = Math.Clamp((int)Math.Floor(bounds.Top) - 1, 0, _rootBitmap.Height);
+        var right = Math.Clamp((int)Math.Ceiling(bounds.Right) + 1, 0, _rootBitmap.Width);
+        var bottom = Math.Clamp((int)Math.Ceiling(bounds.Bottom) + 1, 0, _rootBitmap.Height);
+        if (right <= left || bottom <= top)
+            return true;
+
+        using var mask = new SKBitmap(_rootBitmap.Width, _rootBitmap.Height, SKColorType.Rgba8888, SKAlphaType.Premul);
+        using (var maskCanvas = new SKCanvas(mask))
+        using (var maskPaint = new SKPaint
+        {
+            Style = style,
+            Color = SKColors.White,
+            StrokeWidth = strokeWidth,
+            StrokeCap = lineCap switch
+            {
+                1 => SKStrokeCap.Round,
+                2 => SKStrokeCap.Square,
+                _ => SKStrokeCap.Butt
+            },
+            StrokeJoin = lineJoin switch
+            {
+                1 => SKStrokeJoin.Round,
+                2 => SKStrokeJoin.Bevel,
+                _ => SKStrokeJoin.Miter
+            },
+            StrokeMiter = miterLimit,
+            IsAntialias = _options.AntiAlias
+        })
+        {
+            if (pathEffect != null)
+                maskPaint.PathEffect = pathEffect;
+            maskCanvas.Clear(SKColors.Transparent);
+            maskCanvas.SetMatrix(matrix);
+            maskCanvas.DrawPath(path, maskPaint);
+        }
+
+        _canvas.Flush();
+        var source = sourceCmyk.Value;
+        for (var y = top; y < bottom; y++)
+        {
+            for (var x = left; x < right; x++)
+            {
+                var coverage = mask.GetPixel(x, y).Alpha / 255.0;
+                if (coverage <= 0)
+                    continue;
+
+                var effectiveAlpha = Math.Clamp(alpha * coverage, 0, 1);
+                if (effectiveAlpha <= 0)
+                {
+                    if (_deviceCmykKnockoutGroupDepth > 0)
+                        ResetDeviceCmykKnockoutPixel(x, y, 0);
+                    else if (_deviceCmykPreserveZeroAlphaShape)
+                        PreserveDeviceCmykShapePixel(x, y, coverage);
+                    continue;
+                }
+
+                var useDirectBlendFunctions =
+                    (_deviceCmykDirectBlendFunctionDepth > 0 &&
+                     !isNormalBlend &&
+                     UsesDirectDeviceCmykKnockoutBlend(blend)) ||
+                    (_deviceCmykIsolatedGroupDepth > 0 &&
+                     !isNormalBlend &&
+                     blend is PdfSeparableBlendMode.Lighten or
+                         PdfSeparableBlendMode.Screen or
+                         PdfSeparableBlendMode.ColorDodge);
+                if (IsZeroInk(source) &&
+                    !useDirectBlendFunctions &&
+                    !isNormalBlend &&
+                    blend is not PdfSeparableBlendMode.Difference and not PdfSeparableBlendMode.Exclusion)
+                {
+                    continue;
+                }
+
+                var backdrop = _deviceCmykBackdrop.Get(x, y);
+                if (IsFullBlackInk(source) &&
+                    IsZeroInk(backdrop) &&
+                    !useDirectBlendFunctions &&
+                    !isNormalBlend &&
+                    blend is PdfSeparableBlendMode.Overlay or PdfSeparableBlendMode.SoftLight)
+                {
+                    continue;
+                }
+
+                var dst = _rootBitmap.GetPixel(x, y);
+                if (_deviceCmykKnockoutGroupDepth > 0)
+                {
+                    dst = ResetDeviceCmykKnockoutPixel(x, y, 0);
+                    backdrop = _deviceCmykBackdrop.Get(x, y);
+                }
+
+                var blended = isNormalBlend
+                    ? source
+                    : useDirectBlendFunctions
+                        ? BlendDeviceCmykDirect(backdrop, source, blend)
+                        : BlendDeviceCmyk(backdrop, source, blend);
+                _deviceCmykBackdrop.CompositeSourceOver(x, y, blended, effectiveAlpha);
+                var output = _deviceCmykBackdrop.Get(x, y);
+                var (r, g, b) = Pdfe.Core.ColorSpaces.PdfColorSpace.ConvertDeviceCmykToRgb(
+                    output.C,
+                    output.M,
+                    output.Y,
+                    output.K);
+                var dstAlpha = dst.Alpha / 255.0;
+                var outAlpha = effectiveAlpha + (dstAlpha * (1 - effectiveAlpha));
+                var outColor = new SKColor(
+                    ToByte(r),
+                    ToByte(g),
+                    ToByte(b),
+                    ToByte(outAlpha));
+                _rootBitmap.SetPixel(x, y, outColor);
+            }
+        }
+
+        return true;
+    }
+
+    private SKColor ResetDeviceCmykKnockoutPixel(int x, int y, byte alpha)
+    {
+        var initialBackdrop = _deviceCmykKnockoutInitialBackdrop?.Get(x, y)
+                              ?? new DeviceCmykColor(0, 0, 0, 0);
+        _deviceCmykBackdrop!.Set(x, y, initialBackdrop);
+        var (initialR, initialG, initialB) = Pdfe.Core.ColorSpaces.PdfColorSpace.ConvertDeviceCmykToRgb(
+            initialBackdrop.C,
+            initialBackdrop.M,
+            initialBackdrop.Y,
+            initialBackdrop.K);
+        var dst = new SKColor(
+            ToByte(initialR),
+            ToByte(initialG),
+            ToByte(initialB),
+            alpha);
+        _rootBitmap!.SetPixel(x, y, dst);
+        return dst;
+    }
+
+    private void PreserveDeviceCmykShapePixel(int x, int y, double coverage)
+    {
+        var backdrop = _deviceCmykBackdrop!.Get(x, y);
+        var (r, g, b) = Pdfe.Core.ColorSpaces.PdfColorSpace.ConvertDeviceCmykToRgb(
+            backdrop.C,
+            backdrop.M,
+            backdrop.Y,
+            backdrop.K);
+        var dst = _rootBitmap!.GetPixel(x, y);
+        var dstAlpha = dst.Alpha / 255.0;
+        var outAlpha = Math.Clamp(coverage, 0, 1) + (dstAlpha * (1 - Math.Clamp(coverage, 0, 1)));
+        _rootBitmap.SetPixel(x, y, new SKColor(
+            ToByte(r),
+            ToByte(g),
+            ToByte(b),
+            ToByte(outAlpha)));
+    }
+
+    private enum PdfSeparableBlendMode
+    {
+        Multiply,
+        Screen,
+        Overlay,
+        Darken,
+        Lighten,
+        ColorDodge,
+        ColorBurn,
+        HardLight,
+        SoftLight,
+        Difference,
+        Exclusion,
+        Hue,
+        Saturation,
+        Color,
+        Luminosity
+    }
+
+    private static bool TryMapSkiaBlendToPdfBlend(SKBlendMode mode, out PdfSeparableBlendMode blend)
+    {
+        switch (mode)
+        {
+            case SKBlendMode.Multiply: blend = PdfSeparableBlendMode.Multiply; return true;
+            case SKBlendMode.Screen: blend = PdfSeparableBlendMode.Screen; return true;
+            case SKBlendMode.Overlay: blend = PdfSeparableBlendMode.Overlay; return true;
+            case SKBlendMode.Darken: blend = PdfSeparableBlendMode.Darken; return true;
+            case SKBlendMode.Lighten: blend = PdfSeparableBlendMode.Lighten; return true;
+            case SKBlendMode.ColorDodge: blend = PdfSeparableBlendMode.ColorDodge; return true;
+            case SKBlendMode.ColorBurn: blend = PdfSeparableBlendMode.ColorBurn; return true;
+            case SKBlendMode.HardLight: blend = PdfSeparableBlendMode.HardLight; return true;
+            case SKBlendMode.SoftLight: blend = PdfSeparableBlendMode.SoftLight; return true;
+            case SKBlendMode.Difference: blend = PdfSeparableBlendMode.Difference; return true;
+            case SKBlendMode.Exclusion: blend = PdfSeparableBlendMode.Exclusion; return true;
+            case SKBlendMode.Hue: blend = PdfSeparableBlendMode.Hue; return true;
+            case SKBlendMode.Saturation: blend = PdfSeparableBlendMode.Saturation; return true;
+            case SKBlendMode.Color: blend = PdfSeparableBlendMode.Color; return true;
+            case SKBlendMode.Luminosity: blend = PdfSeparableBlendMode.Luminosity; return true;
+            default:
+                blend = default;
+                return false;
+        }
+    }
+
+    private static DeviceCmykColor BlendDeviceCmyk(
+        DeviceCmykColor backdrop,
+        DeviceCmykColor source,
+        PdfSeparableBlendMode blend)
+    {
+        if (blend is PdfSeparableBlendMode.Hue or
+            PdfSeparableBlendMode.Saturation or
+            PdfSeparableBlendMode.Color or
+            PdfSeparableBlendMode.Luminosity)
+        {
+            return BlendNonseparableDeviceCmykForScreen(backdrop, source, blend);
+        }
+
+        return new DeviceCmykColor(
+            1 - BlendAdditiveComponent(1 - backdrop.C, 1 - source.C, blend),
+            1 - BlendAdditiveComponent(1 - backdrop.M, 1 - source.M, blend),
+            1 - BlendAdditiveComponent(1 - backdrop.Y, 1 - source.Y, blend),
+            1 - BlendAdditiveComponent(1 - backdrop.K, 1 - source.K, blend));
+    }
+
+    private static DeviceCmykColor BlendDeviceCmykDirect(
+        DeviceCmykColor backdrop,
+        DeviceCmykColor source,
+        PdfSeparableBlendMode blend)
+    {
+        if (blend is PdfSeparableBlendMode.Hue or
+            PdfSeparableBlendMode.Saturation or
+            PdfSeparableBlendMode.Color or
+            PdfSeparableBlendMode.Luminosity)
+        {
+            return BlendNonseparableDeviceCmykForScreen(backdrop, source, blend);
+        }
+
+        return new DeviceCmykColor(
+            BlendAdditiveComponent(backdrop.C, source.C, blend),
+            BlendAdditiveComponent(backdrop.M, source.M, blend),
+            BlendAdditiveComponent(backdrop.Y, source.Y, blend),
+            BlendAdditiveComponent(backdrop.K, source.K, blend));
+    }
+
+    private static bool IsZeroInk(DeviceCmykColor color)
+        => Math.Abs(color.C) < 1e-9 &&
+           Math.Abs(color.M) < 1e-9 &&
+           Math.Abs(color.Y) < 1e-9 &&
+           Math.Abs(color.K) < 1e-9;
+
+    private static bool IsFullBlackInk(DeviceCmykColor color)
+        => Math.Abs(color.C) < 1e-9 &&
+           Math.Abs(color.M) < 1e-9 &&
+           Math.Abs(color.Y) < 1e-9 &&
+           Math.Abs(color.K - 1) < 1e-9;
+
+    private static bool UsesDirectDeviceCmykKnockoutBlend(PdfSeparableBlendMode blend)
+        => blend is PdfSeparableBlendMode.Lighten or
+            PdfSeparableBlendMode.Screen or
+            PdfSeparableBlendMode.ColorDodge or
+            PdfSeparableBlendMode.Overlay or
+            PdfSeparableBlendMode.SoftLight or
+            PdfSeparableBlendMode.HardLight or
+            PdfSeparableBlendMode.Difference or
+            PdfSeparableBlendMode.Exclusion or
+            PdfSeparableBlendMode.Hue or
+            PdfSeparableBlendMode.Saturation or
+            PdfSeparableBlendMode.Color or
+            PdfSeparableBlendMode.Luminosity;
+
+    private static double BlendAdditiveComponent(double b, double s, PdfSeparableBlendMode blend)
+    {
+        b = Math.Clamp(b, 0, 1);
+        s = Math.Clamp(s, 0, 1);
+        return blend switch
+        {
+            PdfSeparableBlendMode.Multiply => b * s,
+            PdfSeparableBlendMode.Screen => b + s - (b * s),
+            PdfSeparableBlendMode.Overlay => b <= 0.5 ? 2 * b * s : 1 - (2 * (1 - b) * (1 - s)),
+            PdfSeparableBlendMode.Darken => Math.Min(b, s),
+            PdfSeparableBlendMode.Lighten => Math.Max(b, s),
+            PdfSeparableBlendMode.ColorDodge => s >= 1 ? 1 : b <= 0 ? 0 : Math.Min(1, b / (1 - s)),
+            PdfSeparableBlendMode.ColorBurn => s <= 0 ? 0 : b >= 1 ? 1 : 1 - Math.Min(1, (1 - b) / s),
+            PdfSeparableBlendMode.HardLight => s <= 0.5 ? 2 * b * s : 1 - (2 * (1 - b) * (1 - s)),
+            PdfSeparableBlendMode.SoftLight => SoftLight(b, s),
+            PdfSeparableBlendMode.Difference => Math.Abs(b - s),
+            PdfSeparableBlendMode.Exclusion => b + s - (2 * b * s),
+            _ => s
+        };
+    }
+
+    private static DeviceCmykColor BlendNonseparableDeviceCmykForScreen(
+        DeviceCmykColor backdrop,
+        DeviceCmykColor source,
+        PdfSeparableBlendMode blend)
+    {
+        var backdropRgb = Pdfe.Core.ColorSpaces.PdfColorSpace.ConvertDeviceCmykToRgb(
+            backdrop.C,
+            backdrop.M,
+            backdrop.Y,
+            backdrop.K);
+        var sourceRgb = Pdfe.Core.ColorSpaces.PdfColorSpace.ConvertDeviceCmykToRgb(
+            source.C,
+            source.M,
+            source.Y,
+            source.K);
+        var backdropHsl = RgbToHsl(backdropRgb.R, backdropRgb.G, backdropRgb.B);
+        var sourceHsl = RgbToHsl(sourceRgb.R, sourceRgb.G, sourceRgb.B);
+        var resultHsl = blend switch
+        {
+            PdfSeparableBlendMode.Hue => (sourceHsl.H, backdropHsl.S, backdropHsl.L),
+            PdfSeparableBlendMode.Saturation => (backdropHsl.H, sourceHsl.S, backdropHsl.L),
+            PdfSeparableBlendMode.Color => (sourceHsl.H, sourceHsl.S, backdropHsl.L),
+            PdfSeparableBlendMode.Luminosity => (backdropHsl.H, backdropHsl.S, sourceHsl.L),
+            _ => sourceHsl
+        };
+        var rgb = HslToRgb(resultHsl.H, resultHsl.S, resultHsl.L);
+        return RgbToDeviceCmyk(rgb.R, rgb.G, rgb.B);
+    }
+
+    private static (double H, double S, double L) RgbToHsl(double r, double g, double b)
+    {
+        r = Math.Clamp(r, 0, 1);
+        g = Math.Clamp(g, 0, 1);
+        b = Math.Clamp(b, 0, 1);
+        var max = Math.Max(r, Math.Max(g, b));
+        var min = Math.Min(r, Math.Min(g, b));
+        var l = (max + min) / 2;
+        if (Math.Abs(max - min) < 1e-9)
+            return (0, 0, l);
+
+        var d = max - min;
+        var s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        double h;
+        if (Math.Abs(max - r) < 1e-9)
+            h = ((g - b) / d) + (g < b ? 6 : 0);
+        else if (Math.Abs(max - g) < 1e-9)
+            h = ((b - r) / d) + 2;
+        else
+            h = ((r - g) / d) + 4;
+
+        return (h / 6, s, l);
+    }
+
+    private static (double R, double G, double B) HslToRgb(double h, double s, double l)
+    {
+        h = h - Math.Floor(h);
+        s = Math.Clamp(s, 0, 1);
+        l = Math.Clamp(l, 0, 1);
+        if (s <= 1e-9)
+            return (l, l, l);
+
+        static double HueToRgb(double p, double q, double t)
+        {
+            t = t - Math.Floor(t);
+            if (t < 1.0 / 6.0) return p + (q - p) * 6 * t;
+            if (t < 1.0 / 2.0) return q;
+            if (t < 2.0 / 3.0) return p + (q - p) * (2.0 / 3.0 - t) * 6;
+            return p;
+        }
+
+        var q = l < 0.5 ? l * (1 + s) : l + s - (l * s);
+        var p = 2 * l - q;
+        return (
+            HueToRgb(p, q, h + 1.0 / 3.0),
+            HueToRgb(p, q, h),
+            HueToRgb(p, q, h - 1.0 / 3.0));
+    }
+
+    private static DeviceCmykColor RgbToDeviceCmyk(double r, double g, double b)
+    {
+        r = Math.Clamp(r, 0, 1);
+        g = Math.Clamp(g, 0, 1);
+        b = Math.Clamp(b, 0, 1);
+        var k = 1 - Math.Max(r, Math.Max(g, b));
+        if (k >= 1 - 1e-9)
+            return new DeviceCmykColor(0, 0, 0, 1);
+
+        var denominator = 1 - k;
+        return new DeviceCmykColor(
+            (1 - r - k) / denominator,
+            (1 - g - k) / denominator,
+            (1 - b - k) / denominator,
+            k);
+    }
+
+    private static double SoftLight(double b, double s)
+    {
+        if (s <= 0.5)
+            return b - ((1 - (2 * s)) * b * (1 - b));
+
+        var d = b <= 0.25
+            ? (((16 * b - 12) * b) + 4) * b
+            : Math.Sqrt(b);
+        return b + ((2 * s - 1) * (d - b));
+    }
+
+    private static byte ToByte(double value)
+        => (byte)Math.Clamp(Math.Round(Math.Clamp(value, 0, 1) * 255), 0, 255);
 
     private float ResolvePathStrokeWidth()
     {

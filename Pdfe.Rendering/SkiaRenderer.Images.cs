@@ -842,13 +842,13 @@ internal partial class RenderContext
                 : PdfColorSpace.DeviceRGB;
 
             var desiredComponents = Math.Max(1, colorSpace.Components);
-            if (imageStream.GetOptional("SMask") == null)
+            if (colorSpace.Components >= 3 && imageStream.GetOptional("SMask") == null)
                 desiredComponents++;
 
             var estimatedTarget = EstimateImageDecodeSize(sourceWidth, sourceHeight);
             var image = desiredComponents == 1 && imageStream.GetOptional("SMask") != null
                 ? JpxDecoder.TryDecodeOpenJpegGray(imageStream.EncodedData)
-                : TryDecodeLargeJpxWithOpenJpeg(imageStream, sourceWidth, sourceHeight, estimatedTarget.Width, estimatedTarget.Height, desiredComponents);
+                : TryDecodeJpxWithOpenJpeg(imageStream, sourceWidth, sourceHeight, estimatedTarget.Width, estimatedTarget.Height, desiredComponents);
             image ??= JpxDecoder.TryDecodeManaged(imageStream.EncodedData, desiredComponents);
             if (image == null || sourceWidth <= 0 || sourceHeight <= 0 || image.Components <= 0)
                 return null;
@@ -879,13 +879,30 @@ internal partial class RenderContext
                     if (idx >= sourcePixelCount)
                         continue;
 
-                    var values = new double[Math.Max(1, colorSpace.Components)];
-                    if (colorSpace.Type == PdfColorSpaceType.Indexed)
+                    double rd;
+                    double gd;
+                    double bd;
+                    if (image.ComponentsAreDisplayRgb && components.Length >= 3)
                     {
+                        rd = NormalizeJpxSampleToUnit(
+                            idx < components[0].LongLength ? components[0][(int)idx] : 0,
+                            image.BitsPerComponent);
+                        gd = NormalizeJpxSampleToUnit(
+                            idx < components[1].LongLength ? components[1][(int)idx] : 0,
+                            image.BitsPerComponent);
+                        bd = NormalizeJpxSampleToUnit(
+                            idx < components[2].LongLength ? components[2][(int)idx] : 0,
+                            image.BitsPerComponent);
+                    }
+                    else if (colorSpace.Type == PdfColorSpaceType.Indexed)
+                    {
+                        var values = new double[1];
                         values[0] = idx < components[0].Length ? components[0][idx] : 0;
+                        (rd, gd, bd) = colorSpace.ToRgb(values);
                     }
                     else
                     {
+                        var values = new double[Math.Max(1, colorSpace.Components)];
                         for (int c = 0; c < values.Length; c++)
                         {
                             var componentIndex = GetJpxColorComponentIndex(image, colorSpace, c, components.Length);
@@ -894,9 +911,10 @@ internal partial class RenderContext
                                 : 0;
                             values[c] = colorSpace.DecodeSampleByte(c, NormalizeJpxSampleToByte(sample, image.BitsPerComponent));
                         }
+
+                        (rd, gd, bd) = colorSpace.ToRgb(values);
                     }
 
-                    var (rd, gd, bd) = colorSpace.ToRgb(values);
                     var alpha = 255;
                     if (hasEmbeddedAlpha)
                     {
@@ -921,7 +939,7 @@ internal partial class RenderContext
         }
     }
 
-    private JpxImage? TryDecodeLargeJpxWithOpenJpeg(
+    private JpxImage? TryDecodeJpxWithOpenJpeg(
         Pdfe.Core.Primitives.PdfStream imageStream,
         int sourceWidth,
         int sourceHeight,
@@ -929,13 +947,6 @@ internal partial class RenderContext
         int targetHeight,
         int desiredComponents)
     {
-        if (desiredComponents < 3)
-            return null;
-
-        var sourcePixels = (long)sourceWidth * sourceHeight;
-        if (sourcePixels <= MaxExpandedSoftMaskPixels)
-            return null;
-
         var reduceFactor = ChooseOpenJpegReduceFactor(sourceWidth, sourceHeight, targetWidth, targetHeight);
         return JpxDecoder.TryDecodeOpenJpeg(imageStream.EncodedData, reduceFactor);
     }
@@ -980,6 +991,7 @@ internal partial class RenderContext
 
         if (decodedComponentCount >= 3 &&
             requestedComponent < 3 &&
+            !image.ComponentsAreLogicalColorOrder &&
             colorSpace.Components == 3 &&
             (colorSpace.Type == PdfColorSpaceType.DeviceRGB ||
              colorSpace.Type == PdfColorSpaceType.CalRGB ||
@@ -1024,6 +1036,19 @@ internal partial class RenderContext
 
         var normalized = (long)Math.Clamp(sample, 0, maxSample) * 255 + (maxSample / 2);
         return (byte)(normalized / maxSample);
+    }
+
+    private static double NormalizeJpxSampleToUnit(int sample, int bitsPerComponent)
+    {
+        if (bitsPerComponent <= 8)
+            return Math.Clamp(sample, 0, 255) / 255.0;
+
+        var maxSample = bitsPerComponent >= 31
+            ? int.MaxValue
+            : (1 << bitsPerComponent) - 1;
+        return maxSample > 0
+            ? Math.Clamp(sample, 0, maxSample) / (double)maxSample
+            : 0;
     }
 
     private (int Width, int Height) EstimateImageDecodeSize(int sourceWidth, int sourceHeight)
@@ -1718,7 +1743,7 @@ internal partial class RenderContext
         }
         else if (!isImageMask)
         {
-            pdfColorSpace = PdfColorSpace.FromName(colorSpace);
+            pdfColorSpace = PdfColorSpace.FromName(colorSpace, _page.Document);
             componentsPerPixel = pdfColorSpace.Components;
         }
 
@@ -1754,9 +1779,9 @@ internal partial class RenderContext
                 {
                     byte r = 0, g = 0, b = 0, a = 255;
 
-                    if (bitsPerComponent == 8 && pdfColorSpace != null)
+                    if (bitsPerComponent > 1 && pdfColorSpace != null)
                     {
-                        if (srcIndex + componentsPerPixel <= data.Length)
+                        if (bitsPerComponent == 8 && srcIndex + componentsPerPixel <= data.Length)
                         {
                             for (int i = 0; i < componentsPerPixel; i++)
                                 pixelValues[i] = DecodeImageSample(
@@ -1771,6 +1796,33 @@ internal partial class RenderContext
                             r = (byte)Math.Clamp(rd * 255, 0, 255);
                             g = (byte)Math.Clamp(gd * 255, 0, 255);
                             b = (byte)Math.Clamp(bd * 255, 0, 255);
+                        }
+                        else if (bitsPerComponent != 8)
+                        {
+                            var rowBits = checked(width * componentsPerPixel * bitsPerComponent);
+                            var rowStrideBits = AlignBitsToByte(rowBits);
+                            var bitOffset = checked((y * rowStrideBits) + (x * componentsPerPixel * bitsPerComponent));
+                            if (bitOffset + (componentsPerPixel * bitsPerComponent) <= data.Length * 8)
+                            {
+                                for (int i = 0; i < componentsPerPixel; i++)
+                                {
+                                    var sample = ReadPackedImageSample(
+                                        data,
+                                        bitOffset + (i * bitsPerComponent),
+                                        bitsPerComponent);
+                                    pixelValues[i] = DecodeImageSample(
+                                        stream,
+                                        pdfColorSpace,
+                                        i,
+                                        sample,
+                                        bitsPerComponent);
+                                }
+
+                                var (rd, gd, bd) = pdfColorSpace.ToRgb(pixelValues);
+                                r = (byte)Math.Clamp(rd * 255, 0, 255);
+                                g = (byte)Math.Clamp(gd * 255, 0, 255);
+                                b = (byte)Math.Clamp(bd * 255, 0, 255);
+                            }
                         }
                     }
                     else if (bitsPerComponent == 1)
@@ -2069,20 +2121,40 @@ internal partial class RenderContext
         return bit == 0 ? d0 : d1;
     }
 
+    private static int AlignBitsToByte(int bitCount)
+        => ((bitCount + 7) / 8) * 8;
+
+    private static int ReadPackedImageSample(byte[] data, int bitOffset, int bitsPerComponent)
+    {
+        var sample = 0;
+        for (var i = 0; i < bitsPerComponent; i++)
+        {
+            var absoluteBit = bitOffset + i;
+            var byteIndex = absoluteBit / 8;
+            if (byteIndex >= data.Length)
+                break;
+
+            var bitIndex = 7 - (absoluteBit % 8);
+            sample = (sample << 1) | ((data[byteIndex] >> bitIndex) & 1);
+        }
+
+        return sample;
+    }
+
     private static double DecodeImageSample(
         Pdfe.Core.Primitives.PdfStream stream,
         PdfColorSpace colorSpace,
         int componentIndex,
-        byte sample,
+        int sample,
         int bitsPerComponent)
     {
         var decode = stream.GetOptional("Decode") as Pdfe.Core.Primitives.PdfArray;
         var offset = componentIndex * 2;
+        var maxSample = Math.Pow(2, bitsPerComponent) - 1;
         if (decode != null && decode.Count >= offset + 2)
         {
             var d0 = decode.GetNumber(offset);
             var d1 = decode.GetNumber(offset + 1);
-            var maxSample = Math.Pow(2, bitsPerComponent) - 1;
             return maxSample > 0
                 ? d0 + sample * ((d1 - d0) / maxSample)
                 : d0;
@@ -2091,7 +2163,10 @@ internal partial class RenderContext
         if (colorSpace.Type == PdfColorSpaceType.Indexed)
             return sample;
 
-        return colorSpace.DecodeSampleByte(componentIndex, sample);
+        var normalizedByte = maxSample > 0
+            ? (byte)Math.Clamp((int)Math.Round(sample * (255.0 / maxSample)), 0, 255)
+            : (byte)0;
+        return colorSpace.DecodeSampleByte(componentIndex, normalizedByte);
     }
 
     private static bool DecodeImageMaskBit(Pdfe.Core.Primitives.PdfStream stream, int bit)

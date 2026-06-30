@@ -90,6 +90,9 @@ internal static class PdfPredictor
 
     private static byte[] ApplyTiffPredictor(byte[] data, int colors, int columns, int bitsPerComponent)
     {
+        if (bitsPerComponent == 16)
+            return ApplyTiffPredictor16Bit(data, colors, columns);
+
         if (bitsPerComponent != 8)
             return data;
 
@@ -121,4 +124,44 @@ internal static class PdfPredictor
 
         return output;
     }
+
+    private static byte[] ApplyTiffPredictor16Bit(byte[] data, int colors, int columns)
+    {
+        int bytesPerSample = 2;
+        int bytesPerRow = colors * columns * bytesPerSample;
+        int rows = data.Length / bytesPerRow;
+        var output = new byte[data.Length];
+
+        for (int row = 0; row < rows; row++)
+        {
+            int rowOffset = row * bytesPerRow;
+
+            for (int col = 0; col < columns; col++)
+            {
+                for (int comp = 0; comp < colors; comp++)
+                {
+                    int idx = rowOffset + ((col * colors) + comp) * bytesPerSample;
+                    var value = ReadBigEndianUInt16(data, idx);
+                    if (col > 0)
+                    {
+                        int prevIdx = rowOffset + (((col - 1) * colors) + comp) * bytesPerSample;
+                        value = (value + ReadBigEndianUInt16(output, prevIdx)) & 0xFFFF;
+                    }
+
+                    output[idx] = (byte)(value >> 8);
+                    output[idx + 1] = (byte)value;
+                }
+            }
+        }
+
+        if (rows * bytesPerRow < data.Length)
+            Array.Copy(data, rows * bytesPerRow, output, rows * bytesPerRow, data.Length - (rows * bytesPerRow));
+
+        return output;
+    }
+
+    private static int ReadBigEndianUInt16(byte[] data, int offset)
+        => offset + 1 < data.Length
+            ? (data[offset] << 8) | data[offset + 1]
+            : 0;
 }

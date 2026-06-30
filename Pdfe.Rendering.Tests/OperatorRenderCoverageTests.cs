@@ -99,6 +99,22 @@ public class OperatorRenderCoverageTests
     }
 
     [Fact]
+    public void Sh_AxialShadingWithBBox_DoesNotPaintOutsideShadingBounds()
+    {
+        var pdf = CreatePdfWithShadings("/Sh4 sh");
+        using var doc = PdfDocument.Open(pdf);
+        using var bmp = new SkiaRenderer().RenderPage(doc.GetPage(1));
+
+        var inside = bmp.GetPixel(Px(130), Py(bmp, 130));
+        var outside = bmp.GetPixel(Px(300), Py(bmp, 130));
+
+        (inside.Red < 245 || inside.Green < 245 || inside.Blue < 245).Should().BeTrue(
+            "the axial shading must still paint inside its declared BBox");
+        outside.Should().Be(SKColors.White,
+            "a direct sh operator must not clamp-fill the page outside the shading BBox");
+    }
+
+    [Fact]
     public void Sh_MissingShadingResource_DoesNotThrowAndLeavesPageBlank()
     {
         var pdf = CreatePdfWithShadings("/DoesNotExist sh");
@@ -173,7 +189,7 @@ public class OperatorRenderCoverageTests
         w.WriteLine("%PDF-1.4");
         w.Flush();
 
-        var offsets = new long[9];
+        var offsets = new long[10];
 
         void Obj(int n, string body)
         {
@@ -187,7 +203,7 @@ public class OperatorRenderCoverageTests
         Obj(1, "<< /Type /Catalog /Pages 2 0 R >>");
         Obj(2, "<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
         Obj(3, "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R " +
-               "/Resources << /Font << /F1 5 0 R >> /Shading << /Sh1 6 0 R /Sh2 7 0 R /Sh3 8 0 R >> >> >>");
+               "/Resources << /Font << /F1 5 0 R >> /Shading << /Sh1 6 0 R /Sh2 7 0 R /Sh3 8 0 R /Sh4 9 0 R >> >> >>");
 
         offsets[4] = ms.Position;
         w.WriteLine("4 0 obj");
@@ -211,15 +227,20 @@ public class OperatorRenderCoverageTests
         // Radial annulus with default /Extend [false false].
         Obj(8, "<< /ShadingType 3 /ColorSpace /DeviceRGB /Coords [306 396 80 306 396 120] /Domain [0 1] " +
                "/Function << /FunctionType 2 /Domain [0 1] /C0 [0.6 0.8 0.8] /C1 [0 0.8 0.8] /N 1 >> >>");
+        // Small axial shading with Extend true and a BBox. Without BBox clipping,
+        // the clamped shader would paint far beyond the intended 80x80 area.
+        Obj(9, "<< /ShadingType 2 /ColorSpace /DeviceRGB /Coords [100 120 180 120] /Domain [0 1] " +
+               "/Function << /FunctionType 2 /Domain [0 1] /C0 [1 0 0] /C1 [0 0 1] /N 1 >> " +
+               "/Extend [true true] /BBox [100 100 180 180] >>");
 
         long xref = ms.Position;
         w.WriteLine("xref");
-        w.WriteLine("0 9");
+        w.WriteLine("0 10");
         w.WriteLine("0000000000 65535 f ");
-        for (int i = 1; i <= 8; i++)
+        for (int i = 1; i <= 9; i++)
             w.WriteLine($"{offsets[i]:D10} 00000 n ");
         w.WriteLine("trailer");
-        w.WriteLine("<< /Root 1 0 R /Size 9 >>");
+        w.WriteLine("<< /Root 1 0 R /Size 10 >>");
         w.WriteLine("startxref");
         w.WriteLine(xref.ToString());
         w.WriteLine("%%EOF");

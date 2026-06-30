@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,7 +19,7 @@ namespace PdfEditor.Services;
 /// only render the pages the user actually looks at (the View triggers
 /// loads via <see cref="EffectiveViewportChanged"/> on each item).
 ///
-/// Cache layout: <c>{cacheRoot}/thumbnails/{contentHash}/p{NNNNN}.webp</c>
+/// Cache layout: <c>{cacheRoot}/thumbnails/v2/{contentHash}/p{NNNNN}.webp</c>
 /// Cache root is OS-conventional:
 ///   Linux:   $XDG_CACHE_HOME/pdfe (default $HOME/.cache/pdfe)
 ///   macOS:   $HOME/Library/Caches/pdfe
@@ -44,14 +45,17 @@ public sealed class ThumbnailCacheService : IDisposable
     private readonly int _thumbnailDpi;
     private bool _disposed;
 
+    private static readonly string RendererCacheIdentity =
+        typeof(SkiaRenderer).Module.ModuleVersionId.ToString("N");
+
     public ThumbnailCacheService(string pdfPath, PdfDocument doc, ILogger logger,
         int thumbnailDpi = 36)
     {
         _doc = doc ?? throw new ArgumentNullException(nameof(doc));
         _logger = logger;
         _thumbnailDpi = thumbnailDpi;
-        var hash = HashFile(pdfPath);
-        _cacheDir = Path.Combine(GetCacheRoot(), "thumbnails", hash);
+        var hash = HashFile(pdfPath, thumbnailDpi, RendererCacheIdentity);
+        _cacheDir = Path.Combine(GetCacheRoot(), "thumbnails", "v2", hash);
         _logger.LogInformation("Thumbnail cache for {File} → {Dir}",
             Path.GetFileName(pdfPath), _cacheDir);
     }
@@ -210,15 +214,22 @@ public sealed class ThumbnailCacheService : IDisposable
     // --- Helpers ---
 
     /// <summary>
-    /// SHA-256 of file content, truncated to 16 hex chars. Content-stable —
-    /// moving the file or duplicating it doesn't invalidate the cache.
-    /// 64 bits of hash space is plenty for a personal cache.
+    /// SHA-256 of file content plus render-affecting cache salt, truncated to
+    /// 16 hex chars. Moving the file or duplicating it doesn't invalidate the
+    /// cache, but renderer/options changes do.
     /// </summary>
-    private static string HashFile(string path)
+    private static string HashFile(string path, int thumbnailDpi, string rendererCacheIdentity)
     {
         using var sha = SHA256.Create();
+        var salt = Encoding.UTF8.GetBytes($"thumbnail-dpi={thumbnailDpi}\nrenderer={rendererCacheIdentity}\n");
+        sha.TransformBlock(salt, 0, salt.Length, null, 0);
         using var fs = File.OpenRead(path);
-        var bytes = sha.ComputeHash(fs);
+        var buffer = new byte[81920];
+        int read;
+        while ((read = fs.Read(buffer, 0, buffer.Length)) > 0)
+            sha.TransformBlock(buffer, 0, read, null, 0);
+        sha.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
+        var bytes = sha.Hash ?? Array.Empty<byte>();
         return Convert.ToHexString(bytes, 0, 8).ToLowerInvariant();
     }
 

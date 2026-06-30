@@ -2,6 +2,79 @@ using SkiaSharp;
 
 namespace Pdfe.Rendering;
 
+internal readonly record struct DeviceCmykColor(double C, double M, double Y, double K);
+
+internal sealed class DeviceCmykBackdrop
+{
+    private readonly byte[] _cyan;
+    private readonly byte[] _magenta;
+    private readonly byte[] _yellow;
+    private readonly byte[] _black;
+
+    public DeviceCmykBackdrop(int width, int height)
+    {
+        Width = width;
+        Height = height;
+        var count = checked(width * height);
+        _cyan = new byte[count];
+        _magenta = new byte[count];
+        _yellow = new byte[count];
+        _black = new byte[count];
+    }
+
+    public int Width { get; }
+    public int Height { get; }
+
+    public DeviceCmykColor Get(int x, int y)
+    {
+        var i = Index(x, y);
+        return new DeviceCmykColor(
+            _cyan[i] / 255.0,
+            _magenta[i] / 255.0,
+            _yellow[i] / 255.0,
+            _black[i] / 255.0);
+    }
+
+    public void CompositeSourceOver(int x, int y, DeviceCmykColor source, double alpha)
+    {
+        var i = Index(x, y);
+        _cyan[i] = BlendByte(_cyan[i], source.C, alpha);
+        _magenta[i] = BlendByte(_magenta[i], source.M, alpha);
+        _yellow[i] = BlendByte(_yellow[i], source.Y, alpha);
+        _black[i] = BlendByte(_black[i], source.K, alpha);
+    }
+
+    public void Set(int x, int y, DeviceCmykColor color)
+    {
+        var i = Index(x, y);
+        _cyan[i] = ToByte(color.C);
+        _magenta[i] = ToByte(color.M);
+        _yellow[i] = ToByte(color.Y);
+        _black[i] = ToByte(color.K);
+    }
+
+    public DeviceCmykBackdrop Clone()
+    {
+        var clone = new DeviceCmykBackdrop(Width, Height);
+        Array.Copy(_cyan, clone._cyan, _cyan.Length);
+        Array.Copy(_magenta, clone._magenta, _magenta.Length);
+        Array.Copy(_yellow, clone._yellow, _yellow.Length);
+        Array.Copy(_black, clone._black, _black.Length);
+        return clone;
+    }
+
+    private int Index(int x, int y) => y * Width + x;
+
+    private static byte BlendByte(byte backdrop, double source, double alpha)
+    {
+        var value = (backdrop / 255.0 * (1 - alpha)) + (Math.Clamp(source, 0, 1) * alpha);
+        return (byte)Math.Clamp(Math.Round(value * 255), 0, 255);
+    }
+
+    private static byte ToByte(double value)
+        => (byte)Math.Clamp(Math.Round(Math.Clamp(value, 0, 1) * 255), 0, 255);
+}
+
 /// <summary>
 /// Graphics state for rendering.
 /// </summary>
@@ -9,6 +82,8 @@ internal class GraphicsState
 {
     public SKColor FillColor { get; set; } = SKColors.Black;
     public SKColor StrokeColor { get; set; } = SKColors.Black;
+    public DeviceCmykColor? FillDeviceCmyk { get; set; } = new(0, 0, 0, 1);
+    public DeviceCmykColor? StrokeDeviceCmyk { get; set; } = new(0, 0, 0, 1);
     public double LineWidth { get; set; } = 1;
     public float FillAlpha { get; set; } = 1.0f;
     public float StrokeAlpha { get; set; } = 1.0f;
@@ -32,6 +107,8 @@ internal class GraphicsState
         {
             FillColor = FillColor,
             StrokeColor = StrokeColor,
+            FillDeviceCmyk = FillDeviceCmyk,
+            StrokeDeviceCmyk = StrokeDeviceCmyk,
             LineWidth = LineWidth,
             FillAlpha = FillAlpha,
             StrokeAlpha = StrokeAlpha,

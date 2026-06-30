@@ -391,6 +391,35 @@ public class StreamDecompressorTests
         result[2].Should().Be(0x18); // 0x15 + 0x03
     }
 
+    [Fact]
+    public void ApplyFilter_FlateDecode_WithTiffPredictor16Bit_AppliesSampleDifferencing()
+    {
+        var decompressor = new StreamDecompressor();
+
+        // Two 16-bit, two-component pixels. Predictor 2 differences each
+        // component from the previous pixel's same component.
+        var data = new byte[]
+        {
+            0x10, 0x00, 0x20, 0x00,
+            0x00, 0x10, 0x00, 0x20
+        };
+        var compressed = CompressWithDeflate(data);
+
+        var parms = new PdfDictionary();
+        parms.SetInt("Predictor", 2);
+        parms.SetInt("Colors", 2);
+        parms.SetInt("BitsPerComponent", 16);
+        parms.SetInt("Columns", 2);
+
+        var result = decompressor.ApplyFilter("FlateDecode", compressed, parms);
+
+        result.Should().Equal(new byte[]
+        {
+            0x10, 0x00, 0x20, 0x00,
+            0x10, 0x10, 0x20, 0x20
+        });
+    }
+
     #endregion
 
     #region LZWDecode Tests

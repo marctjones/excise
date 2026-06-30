@@ -1366,6 +1366,8 @@ internal partial class RenderContext
         var fillText = TextRenderModeFills(mode);
         var strokeText = TextRenderModeStrokes(mode);
         var clipText = TextRenderModeAddsClip(mode);
+        var fillWithPattern = fillText && _state.FillPatternName != null;
+        SKPath? localFillPatternPath = fillWithPattern ? new SKPath() : null;
 
         // SkiaSharp 3 separated SKPaint and SKFont — draw calls now take
         // both arguments rather than a paint that wraps a font.
@@ -1463,9 +1465,19 @@ internal partial class RenderContext
                         : 1f;
 
                     if (fillText)
-                        RenderWithCurrentSoftMask(
-                            () => DrawFallbackGlyph(glyphText, cursor, fallbackGlyphScale, font, fillPaint),
-                            fillPaint);
+                    {
+                        if (fillWithPattern)
+                        {
+                            using var glyphPath = font.GetTextPath(glyphText, SKPoint.Empty);
+                            AddScaledGlyphPath(localFillPatternPath, glyphPath, cursor, fallbackGlyphScale);
+                        }
+                        else
+                        {
+                            RenderWithCurrentSoftMask(
+                                () => DrawFallbackGlyph(glyphText, cursor, fallbackGlyphScale, font, fillPaint),
+                                fillPaint);
+                        }
+                    }
                     if (strokeText)
                         RenderWithCurrentSoftMask(
                             () => DrawFallbackGlyph(glyphText, cursor, fallbackGlyphScale, font, strokePaint),
@@ -1504,10 +1516,18 @@ internal partial class RenderContext
                 using var blob = BuildGlyphBlob(gids, font);
                 if (blob != null)
                 {
-                    if (fillText)
+                    if (fillText && fillWithPattern)
+                    {
+                        using var localPath = BuildGlyphIdTextPath(gids, font, measurePaint);
+                        if (localPath != null && !localPath.IsEmpty)
+                            localFillPatternPath!.AddPath(localPath, SKPathAddMode.Append);
+                    }
+                    else if (fillText)
+                    {
                         RenderWithCurrentSoftMask(
                             () => _canvas.DrawText(blob, 0, 0, fillPaint),
                             fillPaint);
+                    }
                     if (strokeText)
                         RenderWithCurrentSoftMask(
                             () => _canvas.DrawText(blob, 0, 0, strokePaint),
@@ -1522,10 +1542,18 @@ internal partial class RenderContext
             }
             else
             {
-                if (fillText)
+                if (fillText && fillWithPattern)
+                {
+                    using var localPath = font.GetTextPath(text, SKPoint.Empty);
+                    if (localPath != null && !localPath.IsEmpty)
+                        localFillPatternPath!.AddPath(localPath, SKPathAddMode.Append);
+                }
+                else if (fillText)
+                {
                     RenderWithCurrentSoftMask(
                         () => _canvas.DrawText(text, 0, 0, font, fillPaint),
                         fillPaint);
+                }
                 if (strokeText)
                     RenderWithCurrentSoftMask(
                         () => _canvas.DrawText(text, 0, 0, font, strokePaint),
@@ -1538,7 +1566,10 @@ internal partial class RenderContext
             }
 
             _canvas.Restore();
+            RenderTextPatternFill(localFillPatternPath, x, y, th, ySign);
         }
+
+        localFillPatternPath?.Dispose();
 
         // Advance the cursor by what the PDF *intended*, which is not
         // always what Skia just drew.
@@ -1659,6 +1690,31 @@ internal partial class RenderContext
         }
 
         return paint;
+    }
+
+    private void RenderTextPatternFill(SKPath? localTextPath, float x, float y, float horizontalScale, float ySign)
+    {
+        if (localTextPath == null || localTextPath.IsEmpty || _state.FillPatternName == null)
+            return;
+
+        using var textPath = new SKPath();
+        var textMatrix = CreateTextRenderingMatrix(x, y, horizontalScale, ySign);
+        localTextPath.Transform(textMatrix, textPath);
+        RenderFillPattern(textPath);
+    }
+
+    private static void AddScaledGlyphPath(SKPath? destination, SKPath? glyphPath, float cursor, float horizontalScale)
+    {
+        if (destination == null || glyphPath == null || glyphPath.IsEmpty)
+            return;
+
+        using var transformedGlyphPath = new SKPath();
+        var glyphMatrix = new SKMatrix(
+            horizontalScale, 0, cursor,
+            0, 1, 0,
+            0, 0, 1);
+        glyphPath.Transform(glyphMatrix, transformedGlyphPath);
+        destination.AddPath(transformedGlyphPath, SKPathAddMode.Append);
     }
 
     private void AddPendingTextClipPath(SKPath? localPath, float x, float y, float horizontalScale, float scaleY)
@@ -2008,6 +2064,8 @@ internal partial class RenderContext
         var fillText = TextRenderModeFills(mode);
         var strokeText = TextRenderModeStrokes(mode);
         var clipText = TextRenderModeAddsClip(mode);
+        var fillWithPattern = fillText && _state.FillPatternName != null;
+        SKPath? localFillPatternPath = fillWithPattern ? new SKPath() : null;
 
         // SkiaSharp 3: SKPaint no longer carries the font or text encoding;
         // SKTextBlob (built below) embeds glyph IDs natively, so DrawText
@@ -2038,10 +2096,18 @@ internal partial class RenderContext
             using var blob = BuildPositionedGlyphBlob(gids, positions, font);
             if (blob != null)
             {
-                if (fillText)
+                if (fillText && fillWithPattern)
+                {
+                    using var localPath = BuildGlyphIdTextPath(gids, positions, font);
+                    if (localPath != null && !localPath.IsEmpty)
+                        localFillPatternPath!.AddPath(localPath, SKPathAddMode.Append);
+                }
+                else if (fillText)
+                {
                     RenderWithCurrentSoftMask(
                         () => _canvas.DrawText(blob, 0, 0, fillPaint),
                         fillPaint);
+                }
                 if (strokeText)
                     RenderWithCurrentSoftMask(
                         () => _canvas.DrawText(blob, 0, 0, strokePaint),
@@ -2055,7 +2121,15 @@ internal partial class RenderContext
             }
 
             _canvas.Restore();
+            RenderTextPatternFill(
+                localFillPatternPath,
+                x,
+                y,
+                _textState.HorizontalScale / 100.0f,
+                ySign);
         }
+
+        localFillPatternPath?.Dispose();
 
         // Advance by summed widths from /W (with /DW as fallback per CID).
         float sumThousandthsOfEm = 0f;

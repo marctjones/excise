@@ -156,7 +156,7 @@ public class CodestreamParserTests
         using var doc = PdfDocument.Open(path);
         var imageStream = (PdfStream)doc.GetObject(8);
 
-        var image = JpxDecoder.TryDecodeManaged(imageStream.EncodedData, maxComponents: 1);
+        var image = JpxDecoder.TryDecodeManaged(imageStream.EncodedData, maxComponents: 2);
 
         image.Should().NotBeNull();
         image!.Width.Should().Be(551);
@@ -165,6 +165,60 @@ public class CodestreamParserTests
         image.ComponentData.Should().ContainSingle();
         image.ComponentData[0].Should().Contain(sample => sample < 4096);
         image.ComponentData[0].Should().Contain(sample => sample > 60000);
+    }
+
+    [Fact]
+    public void TryDecodeManaged_AltonaIndexedJpxDecodesSingleIndexPlane()
+    {
+        var path = FindRepoFile(
+            "test-pdfs",
+            "altona",
+            "eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf");
+        Assert.SkipWhen(path == null,
+            "No Altona PDF/X fixture found at test-pdfs/altona/eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+        var imageStream = (PdfStream)doc.GetObject(335);
+
+        var image = JpxDecoder.TryDecodeManaged(imageStream.EncodedData, maxComponents: 1);
+
+        image.Should().NotBeNull();
+        image!.Width.Should().BeOneOf(0, 424);
+        image.Height.Should().BeOneOf(0, 212);
+        image.BitsPerComponent.Should().Be(8);
+        image.ComponentData.Should().ContainSingle(
+            "the Altona Indexed JPX has one color index component and no embedded alpha component");
+        image.ComponentData[0].Should().HaveCount(424 * 212);
+        image.ComponentData[0].Should().Contain(sample => sample < 64);
+        image.ComponentData[0].Should().Contain(sample => sample > 180);
+    }
+
+    [Theory]
+    [InlineData(338, 16)]
+    [InlineData(341, 8)]
+    public void TryDecodeJpx_AltonaGrayJpxDecodesSingleColorPlane(int objectNumber, int bitsPerComponent)
+    {
+        var path = FindRepoFile(
+            "test-pdfs",
+            "altona",
+            "eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf");
+        Assert.SkipWhen(path == null,
+            "No Altona PDF/X fixture found at test-pdfs/altona/eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+        var imageStream = (PdfStream)doc.GetObject(objectNumber);
+
+        var image = JpxDecoder.TryDecodeManaged(imageStream.EncodedData, maxComponents: 2)
+                    ?? JpxDecoder.TryDecodeOpenJpegGray(imageStream.EncodedData);
+
+        Assert.SkipWhen(image == null,
+            "Neither managed JPX nor optional opj_decompress could decode the Altona grayscale JPX fixture.");
+        image!.BitsPerComponent.Should().Be(bitsPerComponent);
+        image.ComponentData.Should().ContainSingle(
+            "single-component grayscale JPX images should not expose a bogus alpha component");
+        image.ComponentData[0].Should().HaveCount(424 * 212);
+        image.ComponentData[0].Should().Contain(sample => sample < (bitsPerComponent == 16 ? 16_384 : 64));
+        image.ComponentData[0].Should().Contain(sample => sample > (bitsPerComponent == 16 ? 49_152 : 180));
     }
 
     /// <summary>

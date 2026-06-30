@@ -109,7 +109,13 @@ public class SkiaRenderer
             canvas.ClipRect(options.ClipRect.Value, SKClipOperation.Intersect, options.AntiAlias);
 
         // Render content
-        var context = new RenderContext(canvas, page, options, cancellationToken);
+        var context = new RenderContext(
+            canvas,
+            page,
+            options,
+            cancellationToken,
+            bitmap,
+            IsDeviceCmykTransparencyGroup(page.Dictionary.GetOptional("Group"), page.Document));
         context.Render();
 
         return bitmap;
@@ -127,6 +133,20 @@ public class SkiaRenderer
         var right = MathF.Max(MathF.Max(p1.X, p2.X), MathF.Max(p3.X, p4.X));
         var bottom = MathF.Max(MathF.Max(p1.Y, p2.Y), MathF.Max(p3.Y, p4.Y));
         return new SKRect(left, top, right, bottom);
+    }
+
+    internal static bool IsDeviceCmykTransparencyGroup(PdfObject? groupObject, PdfDocument document)
+    {
+        if (groupObject == null)
+            return false;
+
+        if (document.Resolve(groupObject) is not PdfDictionary group)
+            return false;
+
+        if (!string.Equals(group.GetNameOrNull("S"), "Transparency", StringComparison.Ordinal))
+            return false;
+
+        return string.Equals(group.GetNameOrNull("CS"), "DeviceCMYK", StringComparison.Ordinal);
     }
 
     internal static PdfRectangle ResolveEffectiveRenderBox(PdfPage page)
@@ -226,6 +246,7 @@ internal partial class RenderContext
     private static readonly object _typefaceLoadLock = new();
 
     private readonly SKCanvas _canvas;
+    private readonly SKBitmap? _rootBitmap;
     private readonly PdfPage _page;
     private readonly RenderOptions _options;
     private readonly Stack<GraphicsState> _stateStack;
@@ -398,6 +419,13 @@ internal partial class RenderContext
     private readonly Stack<Pdfe.Core.Primitives.PdfDictionary?> _resourcesStack = new();
     private readonly Stack<bool> _optionalContentVisibilityStack = new();
     private int _hiddenOptionalContentDepth;
+    private int _deviceCmykTransparencyGroupDepth;
+    private int _deviceCmykKnockoutGroupDepth;
+    private int _deviceCmykIsolatedGroupDepth;
+    private int _deviceCmykDirectBlendFunctionDepth;
+    private bool _deviceCmykPreserveZeroAlphaShape;
+    private SKBlendMode? _deviceCmykGroupCompositeBlendOverride;
+    private readonly DeviceCmykBackdrop? _deviceCmykBackdrop;
 
     // Type0 / CID font state. Type0 fonts use 2-byte-per-character codes and
     // index a descendant font's /W array for widths (different format from the
@@ -448,6 +476,7 @@ internal partial class RenderContext
     private readonly Dictionary<Pdfe.Core.Primitives.PdfStream, Dictionary<ImageBitmapCacheKey, SKBitmap?>> _imageBitmapByStream =
         new(ReferenceEqualityComparer.Instance);
     private readonly List<SKBitmap> _cachedImageBitmaps = new();
+    private DeviceCmykBackdrop? _deviceCmykKnockoutInitialBackdrop;
     private int _tilingPatternDepth;
 
     private readonly CancellationToken _cancellationToken;
@@ -468,12 +497,19 @@ internal partial class RenderContext
         int? DctColorTransform);
 
     public RenderContext(SKCanvas canvas, PdfPage page, RenderOptions options,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        SKBitmap? rootBitmap = null,
+        bool startsInDeviceCmykTransparencyGroup = false)
     {
         _canvas = canvas;
+        _rootBitmap = rootBitmap;
         _page = page;
         _options = options;
         _cancellationToken = cancellationToken;
+        _deviceCmykTransparencyGroupDepth = startsInDeviceCmykTransparencyGroup ? 1 : 0;
+        _deviceCmykBackdrop = startsInDeviceCmykTransparencyGroup && rootBitmap != null
+            ? new DeviceCmykBackdrop(rootBitmap.Width, rootBitmap.Height)
+            : null;
         _stateStack = new Stack<GraphicsState>();
         _state = new GraphicsState();
         _textState = new TextState();
@@ -577,12 +613,18 @@ internal partial class RenderContext
                 if (operands.Count >= 1)
                 {
                     _state.FillColor = GrayToColor(Number(operands, 0));
+                    _state.FillColorSpace = "DeviceGray";
+                    _state.FillDeviceCmyk = null;
                     _state.FillPatternName = null;
                 }
                 break;
             case "G":
                 if (operands.Count >= 1)
+                {
                     _state.StrokeColor = GrayToColor(Number(operands, 0));
+                    _state.StrokeColorSpace = "DeviceGray";
+                    _state.StrokeDeviceCmyk = null;
+                }
                 break;
 
             // Color (RGB)
@@ -593,36 +635,56 @@ internal partial class RenderContext
                         Number(operands, 0),
                         Number(operands, 1),
                         Number(operands, 2));
+                    _state.FillColorSpace = "DeviceRGB";
+                    _state.FillDeviceCmyk = null;
                     _state.FillPatternName = null;
                 }
                 break;
             case "RG":
                 if (operands.Count >= 3)
+                {
                     _state.StrokeColor = RgbToColor(
                         Number(operands, 0),
                         Number(operands, 1),
                         Number(operands, 2));
+                    _state.StrokeColorSpace = "DeviceRGB";
+                    _state.StrokeDeviceCmyk = null;
+                }
                 break;
 
             // Color (CMYK)
             case "k":
                 if (operands.Count >= 4)
                 {
+                    var c = Number(operands, 0);
+                    var m = Number(operands, 1);
+                    var y = Number(operands, 2);
+                    var k = Number(operands, 3);
                     _state.FillColor = CmykToColor(
-                        Number(operands, 0),
-                        Number(operands, 1),
-                        Number(operands, 2),
-                        Number(operands, 3));
+                        c,
+                        m,
+                        y,
+                        k);
+                    _state.FillColorSpace = "DeviceCMYK";
+                    _state.FillDeviceCmyk = new DeviceCmykColor(c, m, y, k);
                     _state.FillPatternName = null;
                 }
                 break;
             case "K":
                 if (operands.Count >= 4)
+                {
+                    var c = Number(operands, 0);
+                    var m = Number(operands, 1);
+                    var y = Number(operands, 2);
+                    var k = Number(operands, 3);
                     _state.StrokeColor = CmykToColor(
-                        Number(operands, 0),
-                        Number(operands, 1),
-                        Number(operands, 2),
-                        Number(operands, 3));
+                        c,
+                        m,
+                        y,
+                        k);
+                    _state.StrokeColorSpace = "DeviceCMYK";
+                    _state.StrokeDeviceCmyk = new DeviceCmykColor(c, m, y, k);
+                }
                 break;
 
             // Extended graphics state
@@ -944,6 +1006,9 @@ internal partial class RenderContext
 
     private bool IsOptionalContentMembershipVisible(Pdfe.Core.Primitives.PdfDictionary membership)
     {
+        if (membership.GetOptional("VE") is { } visibilityExpression)
+            return EvaluateOptionalContentVisibilityExpression(visibilityExpression);
+
         var ocgsObj = membership.GetOptional("OCGs");
         if (ocgsObj == null)
             return true;
@@ -971,6 +1036,34 @@ internal partial class RenderContext
             "AllOff" => visibilities.All(v => !v),
             _ => visibilities.Any(v => v),
         };
+    }
+
+    private bool EvaluateOptionalContentVisibilityExpression(Pdfe.Core.Primitives.PdfObject expressionObject)
+    {
+        var resolved = _page.Document.Resolve(expressionObject);
+        if (resolved is Pdfe.Core.Primitives.PdfDictionary dict)
+            return IsOptionalContentObjectVisible(dict);
+
+        if (resolved is not Pdfe.Core.Primitives.PdfArray expression || expression.Count == 0)
+            return true;
+
+        var op = expression[0] as PdfName;
+        if (op == null)
+            return true;
+
+        return op.Value switch
+        {
+            "And" => EvaluateVisibilityOperands(expression).All(v => v),
+            "Or" => EvaluateVisibilityOperands(expression).Any(v => v),
+            "Not" => expression.Count < 2 || !EvaluateOptionalContentVisibilityExpression(expression[1]),
+            _ => true,
+        };
+    }
+
+    private IEnumerable<bool> EvaluateVisibilityOperands(Pdfe.Core.Primitives.PdfArray expression)
+    {
+        for (var i = 1; i < expression.Count; i++)
+            yield return EvaluateOptionalContentVisibilityExpression(expression[i]);
     }
 
     private bool IsOptionalContentGroupVisible(
@@ -1223,7 +1316,10 @@ internal partial class RenderContext
         if (extGState.ContainsKey("BM"))
         {
             var bm = extGState.GetNameOrNull("BM") ?? "Normal";
-            _state.BlendMode = MapBlendMode(bm);
+            _state.BlendMode = _deviceCmykGroupCompositeBlendOverride.HasValue &&
+                string.Equals(bm, "Normal", StringComparison.Ordinal)
+                ? _deviceCmykGroupCompositeBlendOverride.Value
+                : MapBlendMode(bm);
         }
 
         if (extGState.ContainsKey("SMask"))

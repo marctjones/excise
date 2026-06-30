@@ -44,6 +44,31 @@ internal partial class RenderContext
         }
 
         var invocationState = _state.Clone();
+        var group = ResolveTransparencyGroup(formStream);
+        var isDeviceCmykGroup = SkiaRenderer.IsDeviceCmykTransparencyGroup(group, _page.Document);
+        if (isDeviceCmykGroup && invocationState.SoftMask == null)
+        {
+            if (TryRenderDeviceCmykFormGroup(formStream, group, invocationState))
+                return;
+
+            var savedState = _state;
+            var savedBlendOverride = _deviceCmykGroupCompositeBlendOverride;
+            _deviceCmykTransparencyGroupDepth++;
+            try
+            {
+                _state = invocationState.Clone();
+                _deviceCmykGroupCompositeBlendOverride = invocationState.BlendMode;
+                RenderFormXObject(formStream);
+            }
+            finally
+            {
+                _state = savedState;
+                _deviceCmykGroupCompositeBlendOverride = savedBlendOverride;
+                _deviceCmykTransparencyGroupDepth--;
+            }
+            return;
+        }
+
         using var paint = new SKPaint
         {
             BlendMode = invocationState.BlendMode,
@@ -105,12 +130,16 @@ internal partial class RenderContext
 
     private bool IsTransparencyGroupForm(Pdfe.Core.Primitives.PdfStream formStream)
     {
-        var groupObj = formStream.GetOptional("Group");
-        if (groupObj == null)
-            return false;
-
-        var group = _page.Document.Resolve(groupObj) as Pdfe.Core.Primitives.PdfDictionary;
+        var group = ResolveTransparencyGroup(formStream);
         return string.Equals(group?.GetNameOrNull("S"), "Transparency", StringComparison.Ordinal);
+    }
+
+    private Pdfe.Core.Primitives.PdfDictionary? ResolveTransparencyGroup(Pdfe.Core.Primitives.PdfStream formStream)
+    {
+        var groupObj = formStream.GetOptional("Group");
+        return groupObj != null
+            ? _page.Document.Resolve(groupObj) as Pdfe.Core.Primitives.PdfDictionary
+            : null;
     }
 
     private SKRect? GetFormInvocationBounds(Pdfe.Core.Primitives.PdfStream formStream)
@@ -129,6 +158,199 @@ internal partial class RenderContext
 
         var matrix = GetMatrix(formStream.GetOptional("Matrix") as Pdfe.Core.Primitives.PdfArray);
         return MapRect(matrix, bounds);
+    }
+
+    private bool TryRenderDeviceCmykFormGroup(
+        Pdfe.Core.Primitives.PdfStream formStream,
+        Pdfe.Core.Primitives.PdfDictionary? group,
+        GraphicsState invocationState)
+    {
+        if (group == null ||
+            _rootBitmap == null ||
+            _deviceCmykBackdrop == null)
+        {
+            return false;
+        }
+
+        var invocationBounds = GetFormInvocationBounds(formStream);
+        if (invocationBounds == null)
+            return false;
+
+        var parentMatrix = _canvas.TotalMatrix;
+        var deviceBounds = parentMatrix.MapRect(invocationBounds.Value);
+        var left = Math.Clamp((int)Math.Floor(deviceBounds.Left) - 1, 0, _rootBitmap.Width);
+        var top = Math.Clamp((int)Math.Floor(deviceBounds.Top) - 1, 0, _rootBitmap.Height);
+        var right = Math.Clamp((int)Math.Ceiling(deviceBounds.Right) + 1, 0, _rootBitmap.Width);
+        var bottom = Math.Clamp((int)Math.Ceiling(deviceBounds.Bottom) + 1, 0, _rootBitmap.Height);
+        var width = right - left;
+        var height = bottom - top;
+        if (width <= 0 || height <= 0)
+            return true;
+
+        var pixels = (long)width * height;
+        if (pixels > _options.MaxPixelCount)
+            return false;
+
+        using var groupBitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
+        using (var groupCanvas = new SKCanvas(groupBitmap))
+        {
+            groupCanvas.Clear(SKColors.Transparent);
+            var groupMatrix = parentMatrix;
+            groupMatrix.TransX -= left;
+            groupMatrix.TransY -= top;
+            groupCanvas.SetMatrix(groupMatrix);
+
+            var child = new RenderContext(
+                groupCanvas,
+                _page,
+                _options,
+                _cancellationToken,
+                groupBitmap,
+                startsInDeviceCmykTransparencyGroup: true);
+            child._resourcesStack.Push(_page.Resources);
+            child._state = invocationState.Clone();
+            child._state.BlendMode = SKBlendMode.SrcOver;
+            child._state.SoftMask = null;
+            var isIsolated = group.GetBool("I");
+            var isKnockout = group.GetBool("K");
+            child._deviceCmykPreserveZeroAlphaShape = _deviceCmykKnockoutGroupDepth > 0 && !isIsolated;
+
+            var parentBackdropForChild = _deviceCmykKnockoutGroupDepth > 0 &&
+                                         _deviceCmykKnockoutInitialBackdrop != null
+                ? _deviceCmykKnockoutInitialBackdrop
+                : _deviceCmykBackdrop;
+            if (!isIsolated && child._deviceCmykBackdrop != null && parentBackdropForChild != null)
+                SeedDeviceCmykGroupBackdrop(child._deviceCmykBackdrop, parentBackdropForChild, left, top, width, height);
+
+            if (isKnockout)
+            {
+                child._deviceCmykKnockoutGroupDepth++;
+                child._deviceCmykDirectBlendFunctionDepth++;
+                child._deviceCmykKnockoutInitialBackdrop = child._deviceCmykBackdrop?.Clone();
+            }
+            if (isIsolated)
+                child._deviceCmykIsolatedGroupDepth++;
+
+            try
+            {
+                child.RenderFormXObject(formStream);
+            }
+            finally
+            {
+                child._resourcesStack.Clear();
+                child.DisposeOwnedResources();
+            }
+
+            if (child._deviceCmykBackdrop == null)
+                return false;
+
+            CompositeDeviceCmykGroupBitmap(groupBitmap, child._deviceCmykBackdrop, left, top, invocationState.BlendMode);
+        }
+
+        return true;
+    }
+
+    private static void SeedDeviceCmykGroupBackdrop(
+        DeviceCmykBackdrop groupBackdrop,
+        DeviceCmykBackdrop sourceBackdrop,
+        int left,
+        int top,
+        int width,
+        int height)
+    {
+        for (var y = 0; y < height; y++)
+        {
+            var parentY = top + y;
+            for (var x = 0; x < width; x++)
+            {
+                var parentX = left + x;
+                groupBackdrop.Set(x, y, sourceBackdrop.Get(parentX, parentY));
+            }
+        }
+    }
+
+    private void CompositeDeviceCmykGroupBitmap(
+        SKBitmap groupBitmap,
+        DeviceCmykBackdrop groupBackdrop,
+        int left,
+        int top,
+        SKBlendMode invocationBlendMode)
+    {
+        if (_rootBitmap == null || _deviceCmykBackdrop == null)
+            return;
+
+        var isNormalBlend = invocationBlendMode == SKBlendMode.SrcOver;
+        PdfSeparableBlendMode blend = default;
+        if (!isNormalBlend && !TryMapSkiaBlendToPdfBlend(invocationBlendMode, out blend))
+            return;
+        var useDirectBlendFunctions =
+            (_deviceCmykDirectBlendFunctionDepth > 0 &&
+             !isNormalBlend &&
+             UsesDirectDeviceCmykKnockoutBlend(blend)) ||
+            (_deviceCmykIsolatedGroupDepth > 0 &&
+             !isNormalBlend &&
+             blend is PdfSeparableBlendMode.Lighten or
+                 PdfSeparableBlendMode.Screen or
+                 PdfSeparableBlendMode.ColorDodge);
+
+        for (var y = 0; y < groupBitmap.Height; y++)
+        {
+            var parentY = top + y;
+            if (parentY < 0 || parentY >= _rootBitmap.Height)
+                continue;
+
+            for (var x = 0; x < groupBitmap.Width; x++)
+            {
+                var alpha = groupBitmap.GetPixel(x, y).Alpha / 255.0;
+                if (alpha <= 0)
+                    continue;
+
+                var parentX = left + x;
+                if (parentX < 0 || parentX >= _rootBitmap.Width)
+                    continue;
+
+                var dst = _rootBitmap.GetPixel(parentX, parentY);
+                if (_deviceCmykKnockoutGroupDepth > 0)
+                {
+                    var initialBackdrop = _deviceCmykKnockoutInitialBackdrop?.Get(parentX, parentY)
+                                          ?? new DeviceCmykColor(0, 0, 0, 0);
+                    _deviceCmykBackdrop.Set(parentX, parentY, initialBackdrop);
+                    var (initialR, initialG, initialB) = Pdfe.Core.ColorSpaces.PdfColorSpace.ConvertDeviceCmykToRgb(
+                        initialBackdrop.C,
+                        initialBackdrop.M,
+                        initialBackdrop.Y,
+                        initialBackdrop.K);
+                    dst = new SKColor(
+                        ToByte(initialR),
+                        ToByte(initialG),
+                        ToByte(initialB),
+                        0);
+                    _rootBitmap.SetPixel(parentX, parentY, dst);
+                }
+
+                var source = groupBackdrop.Get(x, y);
+                var backdrop = _deviceCmykBackdrop.Get(parentX, parentY);
+                var blended = isNormalBlend
+                    ? source
+                    : useDirectBlendFunctions
+                        ? BlendDeviceCmykDirect(backdrop, source, blend)
+                        : BlendDeviceCmyk(backdrop, source, blend);
+                _deviceCmykBackdrop.CompositeSourceOver(parentX, parentY, blended, alpha);
+                var output = _deviceCmykBackdrop.Get(parentX, parentY);
+                var (r, g, b) = Pdfe.Core.ColorSpaces.PdfColorSpace.ConvertDeviceCmykToRgb(
+                    output.C,
+                    output.M,
+                    output.Y,
+                    output.K);
+                var dstAlpha = dst.Alpha / 255.0;
+                var outAlpha = alpha + (dstAlpha * (1 - alpha));
+                _rootBitmap.SetPixel(parentX, parentY, new SKColor(
+                    ToByte(r),
+                    ToByte(g),
+                    ToByte(b),
+                    ToByte(outAlpha)));
+            }
+        }
     }
 
     private void RenderFormXObject(Pdfe.Core.Primitives.PdfStream formStream)
