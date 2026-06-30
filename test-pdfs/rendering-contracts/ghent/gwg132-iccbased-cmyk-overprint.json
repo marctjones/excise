@@ -1,0 +1,25 @@
+{
+  "Path": "ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/3-ICC-CMS/Patches/GWG132_ICCbasedCMYK_OverPrint_x4.pdf",
+  "Source": "Ghent PDF Output Suite 5.0",
+  "Owner": "rendering:quality",
+  "Issue": 491,
+  "RootCause": "ICCBASED_CMYK_OVERPRINT_COLOR_MANAGEMENT_FIXED",
+  "ImprovementPriority": "DONE",
+  "Confidence": "HIGH",
+  "QualityReason": "ICCBased CMYK now renders through the embedded profile and output-intent preview path, preserving the no-X overprint semantic and expected muted green.",
+  "Notes": "Fixed with ICC v2 CMYK mft2 A2B plus output-intent B2A preview transforms.",
+  "Pages": {
+    "1": {
+      "ExpectedRawStatus": "PASS",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PIXEL_EXACT",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
+      "ReferenceSituation": "REFS_AGREE",
+      "Target": {
+        "Mode": "REFERENCE_CONSENSUS",
+        "Primary": "pdftocairo",
+        "Reason": "Reference renderers agree on the muted ICCBased CMYK green."
+      }
+    }
+  }
+}

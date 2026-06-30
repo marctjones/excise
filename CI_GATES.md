@@ -34,11 +34,31 @@ Every push to `main` or `develop` and every pull request is subject to automated
 12. **Coverage gate**: Parse coverage XML and verify Pdfe.Core line-rate ≥ 0.94
 13. Run Pdfe.Cli.Tests
 14. Run Pdfe.Rendering.Tests (excluding slow Corpus tests)
-15. Run PerformanceBenchmarkTests and MemoryBenchmarkTests (informational)
-16. Run Pdfe.Ocr.Tests (non-blocking)
-17. Run PdfEditor.Tests with xvfb (GUI tests)
-18. Upload coverage report as artifact
-19. Upload test results on failure
+15. Run PDF 2.0 renderer conformance gate
+16. Run PerformanceBenchmarkTests and MemoryBenchmarkTests (informational)
+17. Run Pdfe.Ocr.Tests (non-blocking)
+18. Run PdfEditor.Tests with xvfb (GUI tests)
+19. Upload coverage report as artifact
+20. Upload test results on failure
+
+### PDF 2.0 Renderer Conformance Gate
+
+**Trigger**: Every CI run, and release smoke via the `pdf20` gate
+
+**Command**:
+```bash
+scripts/run-pdf20-renderer-conformance.sh --run-tests
+```
+
+This fixture-based gate is deterministic in CI. It regenerates tiny PDF 2.0
+image/filter fixtures, verifies the full image/filter matrix, validates the
+curated PDF 2.0 renderer matrix, checks explicit rendering-contract corpus
+evidence, and runs focused matrix guard tests. Large local corpus inventories
+can be merged manually with:
+
+```bash
+scripts/run-pdf20-renderer-conformance.sh --include-base-image-inventory
+```
 
 ### Local Visual Regression Runner: `scripts/run-visual-regression-local.sh`
 
@@ -75,6 +95,7 @@ This runs:
 - Pdfe.Core.Tests with coverage
 - Coverage gate check
 - Other test projects
+- PDF 2.0 renderer conformance gate
 - Performance benchmarks
 
 **Runtime**: ~3-5 minutes locally

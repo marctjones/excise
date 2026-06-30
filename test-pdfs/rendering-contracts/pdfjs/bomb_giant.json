@@ -5,6 +5,10 @@
   "RootCause": "DEGENERATE_INPUT",
   "ImprovementPriority": "NONE",
   "Confidence": "HIGH",
+  "Pdf20Requirements": [
+    "pdf20.resource-limits.streams",
+    "pdf20.resource-limits.images"
+  ],
   "Notes": "Migrated from the legacy TSV rendering manifests.",
   "Pages": {
     "1": {

@@ -1,0 +1,25 @@
+{
+  "Path": "ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/3-ICC-CMS/Patches/GWG130_ICC_Source_Profile_x4.pdf",
+  "Source": "Ghent PDF Output Suite 5.0",
+  "Owner": "rendering:quality",
+  "Issue": 491,
+  "RootCause": "ICC_SOURCE_PROFILE_CONVERSION_FIXED",
+  "ImprovementPriority": "DONE",
+  "Confidence": "HIGH",
+  "QualityReason": "Embedded source ICC profiles and the PDF/X output intent convert the red source X marks into green output-intent preview colors.",
+  "Notes": "Fixed with ICC v2 RGB matrix/TRC and CMYK mft2 A2B plus output-intent B2A preview transforms.",
+  "Pages": {
+    "1": {
+      "ExpectedRawStatus": "PASS",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PIXEL_EXACT",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
+      "ReferenceSituation": "REFS_AGREE",
+      "Target": {
+        "Mode": "REFERENCE_CONSENSUS",
+        "Primary": "pdftocairo",
+        "Reason": "Poppler and MuPDF agree that no red or faint green X marks should remain visible."
+      }
+    }
+  }
+}

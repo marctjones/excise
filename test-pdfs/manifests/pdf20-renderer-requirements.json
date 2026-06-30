@@ -1,0 +1,2002 @@
+{
+  "schemaVersion": 1,
+  "purpose": "PDF 2.0 renderer-first conformance matrix. Rows are traceable to ISO 32000-2 clauses/tables by identifier and short paraphrase only.",
+  "sources": [
+    {
+      "id": "iso-32000-2-2020-ec3-local",
+      "title": "ISO 32000-2:2020 with EC3, PDF Association sponsored local copy",
+      "localPath": "/Users/marc/Downloads/ISO_32000-2_sponsored_EC3.pdf",
+      "policy": "Do not commit the ISO PDF or long copied text; store identifiers, headings, names, and paraphrases only."
+    },
+    {
+      "id": "pdfa-cheat-sheets",
+      "title": "PDF Association cheat sheets and application notes",
+      "files": [
+        "Basics.pdf",
+        "CommonObjects.pdf",
+        "Color.pdf",
+        "PDF20_AN001-BPC.pdf",
+        "Well-Tagged-PDF-WTPDF-1.0.pdf",
+        "ISO TS 32001-32005"
+      ],
+      "role": "Secondary references for classification and coverage planning."
+    }
+  ],
+  "sourceMatrices": [
+    {
+      "id": "pdf-image-feature-matrix",
+      "path": "test-pdfs/manifests/pdf-image-feature-matrix.json",
+      "role": "Existing image/filter obligations remain part of renderer conformance evidence."
+    }
+  ],
+  "profiles": {
+    "RendererCore": "Hard gate for rendering behavior pdfe claims now.",
+    "ParserSupport": "Hard gate only where parsing is required for rendering.",
+    "PreserveOnly": "Valid structures that must not be destroyed but are not rendered yet.",
+    "SecurityPolicy": "Hard gate for hostile inputs and resource limits that affect rendering.",
+    "Interactive": "Tracked, non-blocking interactive behavior.",
+    "TaggedPdf": "Tracked, non-blocking structure and accessibility behavior.",
+    "Signatures": "Tracked, non-blocking signature behavior.",
+    "Multimedia3D": "Tracked, non-blocking rich media and 3D behavior.",
+    "Geospatial": "Tracked, non-blocking geospatial behavior."
+  },
+  "coveragePolicy": {
+    "hardGateProfiles": [
+      "RendererCore",
+      "ParserSupport",
+      "SecurityPolicy"
+    ],
+    "statuses": [
+      "COVERED",
+      "MISSING_UNIT",
+      "MISSING_ATOMIC_PDF",
+      "MISSING_CORPUS",
+      "FAILING_RENDER",
+      "UNSUPPORTED_TRACKED",
+      "TRACKED_NON_BLOCKING"
+    ],
+    "referenceDisagreementPolicy": "Choose target Poppler, MuPDF, PDFium, Ghostscript, PDFBox, consensus, or spec judgment per PDF/page; low-impact oracle disagreement is not automatically a pdfe bug."
+  },
+  "annexAOperators": [
+    "q",
+    "Q",
+    "cm",
+    "w",
+    "J",
+    "j",
+    "M",
+    "d",
+    "ri",
+    "i",
+    "gs",
+    "m",
+    "l",
+    "c",
+    "v",
+    "y",
+    "h",
+    "re",
+    "S",
+    "s",
+    "f",
+    "F",
+    "f*",
+    "B",
+    "B*",
+    "b",
+    "b*",
+    "n",
+    "W",
+    "W*",
+    "CS",
+    "cs",
+    "SC",
+    "SCN",
+    "sc",
+    "scn",
+    "G",
+    "g",
+    "RG",
+    "rg",
+    "K",
+    "k",
+    "sh",
+    "BI",
+    "ID",
+    "EI",
+    "Do",
+    "BT",
+    "ET",
+    "Tc",
+    "Tw",
+    "Tz",
+    "TL",
+    "Tf",
+    "Tr",
+    "Ts",
+    "Td",
+    "TD",
+    "Tm",
+    "T*",
+    "Tj",
+    "TJ",
+    "'",
+    "\"",
+    "d0",
+    "d1",
+    "BMC",
+    "BDC",
+    "EMC",
+    "MP",
+    "DP",
+    "BX",
+    "EX"
+  ],
+  "requirements": [
+    {
+      "id": "pdf20.syntax.objects",
+      "clause": "7.3",
+      "area": "syntax",
+      "profile": "ParserSupport",
+      "obligation": "Parse direct and indirect objects needed to resolve pages, resources, streams, and content operands.",
+      "detectFeatures": [
+        "object",
+        "xref",
+        "trailer"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "corpus"
+      ],
+      "oracle": "parser-tests-and-corpus-scan",
+      "status": "COVERED",
+      "notes": "Renderer hard gate because page rendering depends on object resolution."
+    },
+    {
+      "id": "pdf20.syntax.streams",
+      "clause": "7.4",
+      "area": "syntax",
+      "profile": "ParserSupport",
+      "obligation": "Decode streams and filter arrays used by page content and resources.",
+      "detectFeatures": [
+        "stream",
+        "filter"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "corpus"
+      ],
+      "oracle": "parser-tests-and-image-filter-matrix",
+      "status": "COVERED",
+      "notes": "Detailed filter obligations are represented by the image/filter source matrix."
+    },
+    {
+      "id": "pdf20.page.tree",
+      "clause": "7.7.3",
+      "area": "document-structure",
+      "profile": "ParserSupport",
+      "obligation": "Resolve page tree inheritance for boxes, rotation, resources, and contents before rendering.",
+      "detectFeatures": [
+        "/Pages",
+        "/Page",
+        "/Resources",
+        "/Rotate"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "corpus"
+      ],
+      "oracle": "parser-tests-and-render-quality-contracts",
+      "status": "COVERED",
+      "notes": "Known page-box disagreements should be classified in contracts."
+    },
+    {
+      "id": "pdf20.page.boxes",
+      "clause": "14.11.2",
+      "area": "page-geometry",
+      "profile": "RendererCore",
+      "obligation": "Apply media, crop, bleed, trim, and art box selection according to the active render contract.",
+      "detectFeatures": [
+        "/MediaBox",
+        "/CropBox",
+        "/BleedBox",
+        "/TrimBox",
+        "/ArtBox"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf",
+        "corpus"
+      ],
+      "oracle": "render-quality-contract",
+      "status": "COVERED",
+      "notes": "Policy-sensitive; corpus contracts must state the target page box."
+    },
+    {
+      "id": "pdf20.graphics.extgstate",
+      "clause": "8.4.5",
+      "area": "graphics-state",
+      "profile": "RendererCore",
+      "obligation": "Apply ExtGState dictionaries that affect visible rendering, including alpha, blend mode, line settings, and soft masks.",
+      "detectFeatures": [
+        "/ExtGState",
+        "gs",
+        "/ca",
+        "/CA",
+        "/BM",
+        "/SMask"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf",
+        "corpus"
+      ],
+      "oracle": "render-quality-contract",
+      "status": "COVERED",
+      "notes": "Hostile or unsupported values must be explicit no-op/warn/refusal decisions."
+    },
+    {
+      "id": "pdf20.color.spaces",
+      "clause": "8.6",
+      "area": "color",
+      "profile": "RendererCore",
+      "obligation": "Resolve color spaces and color-setting operators for visible fills, strokes, images, patterns, and shadings.",
+      "detectFeatures": [
+        "/ColorSpace",
+        "CS",
+        "cs",
+        "SCN",
+        "scn"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf",
+        "corpus"
+      ],
+      "oracle": "spec-or-renderer-consensus",
+      "status": "COVERED",
+      "notes": "Color-management disagreements should be classified rather than treated as automatic defects."
+    },
+    {
+      "id": "pdf20.patterns",
+      "clause": "8.7",
+      "area": "patterns",
+      "profile": "RendererCore",
+      "obligation": "Render tiling and shading patterns with correct resource lookup, phase, matrix, and paint type behavior.",
+      "detectFeatures": [
+        "/Pattern",
+        "/PatternType",
+        "/TilingType",
+        "/Shading"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf",
+        "corpus"
+      ],
+      "oracle": "render-quality-contract",
+      "status": "COVERED",
+      "notes": "Includes known tiling pattern fidelity work."
+    },
+    {
+      "id": "pdf20.images",
+      "clause": "8.9",
+      "area": "images",
+      "profile": "RendererCore",
+      "obligation": "Render image XObjects and inline images with masks, decode arrays, interpolation, color spaces, and filters.",
+      "detectFeatures": [
+        "/Image",
+        "BI",
+        "ID",
+        "EI",
+        "/SMask",
+        "/ImageMask"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf",
+        "corpus"
+      ],
+      "oracle": "image-filter-matrix-and-render-quality-contract",
+      "status": "COVERED",
+      "notes": "Extended by test-pdfs/manifests/pdf-image-feature-matrix.json."
+    },
+    {
+      "id": "pdf20.forms",
+      "clause": "8.10",
+      "area": "xobjects",
+      "profile": "RendererCore",
+      "obligation": "Render Form XObjects with their own resources, matrix, bounding box, transparency group, and nested content.",
+      "detectFeatures": [
+        "/Form",
+        "Do",
+        "/BBox",
+        "/Matrix",
+        "/Group"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf",
+        "corpus"
+      ],
+      "oracle": "render-quality-contract",
+      "status": "COVERED",
+      "notes": "Recursion limits are covered separately by security policy."
+    },
+    {
+      "id": "pdf20.fonts",
+      "clause": "9",
+      "area": "text-fonts",
+      "profile": "RendererCore",
+      "obligation": "Resolve fonts, encodings, CMaps, glyph metrics, and text rendering modes needed for visual text output.",
+      "detectFeatures": [
+        "/Font",
+        "Tf",
+        "Tj",
+        "TJ",
+        "/ToUnicode",
+        "/Encoding"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf",
+        "corpus"
+      ],
+      "oracle": "render-quality-contract",
+      "status": "COVERED",
+      "notes": "Text extraction and visual glyph placement evidence both count."
+    },
+    {
+      "id": "pdf20.transparency",
+      "clause": "11",
+      "area": "transparency",
+      "profile": "RendererCore",
+      "obligation": "Composite transparency groups, blend modes, alpha constants, and soft masks in rendering order.",
+      "detectFeatures": [
+        "/Group",
+        "/Transparency",
+        "/BM",
+        "/SMask"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf",
+        "corpus"
+      ],
+      "oracle": "render-quality-contract",
+      "status": "COVERED",
+      "notes": "Reference disagreement policy applies to minor colorimetric variance."
+    },
+    {
+      "id": "pdf20.optional-content",
+      "clause": "8.11",
+      "area": "optional-content",
+      "profile": "RendererCore",
+      "obligation": "Apply optional content default visibility when rendering page content.",
+      "detectFeatures": [
+        "/OCProperties",
+        "/OC",
+        "/OCG",
+        "/OCMD"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf",
+        "corpus"
+      ],
+      "oracle": "render-quality-contract",
+      "status": "COVERED",
+      "notes": "Interactive layer switching is tracked separately as non-blocking."
+    },
+    {
+      "id": "pdf20.resource-limits.streams",
+      "clause": "7.4",
+      "area": "resource-policy",
+      "profile": "SecurityPolicy",
+      "obligation": "Bound decompression, malformed streams, and repeated filter work so rendering fails deterministically instead of hanging or exhausting memory.",
+      "detectFeatures": [
+        "malformed-stream",
+        "huge-stream",
+        "filter"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "corpus"
+      ],
+      "oracle": "security-policy-tests",
+      "status": "COVERED",
+      "notes": "Failures must classify as refusal or warning, not unclassified renderer defects."
+    },
+    {
+      "id": "pdf20.resource-limits.images",
+      "clause": "8.9",
+      "area": "resource-policy",
+      "profile": "SecurityPolicy",
+      "obligation": "Bound huge image dimensions, masks, and decode buffers during rendering.",
+      "detectFeatures": [
+        "huge-image",
+        "/Width",
+        "/Height",
+        "/BitsPerComponent"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "corpus"
+      ],
+      "oracle": "security-policy-tests",
+      "status": "COVERED",
+      "notes": "Integrates with existing image/filter audit."
+    },
+    {
+      "id": "pdf20.resource-limits.recursion",
+      "clause": "8.10",
+      "area": "resource-policy",
+      "profile": "SecurityPolicy",
+      "obligation": "Detect recursive or cyclic XObject/resource references before stack overflow or unbounded work.",
+      "detectFeatures": [
+        "recursive-xobject",
+        "resource-cycle",
+        "Do"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "corpus"
+      ],
+      "oracle": "security-policy-tests",
+      "status": "COVERED",
+      "notes": "ContentStreamCycleType3insideType3 and related corpus evidence should remain classified."
+    },
+    {
+      "id": "pdf20.interactive.annotations",
+      "clause": "12.5",
+      "area": "interactive",
+      "profile": "Interactive",
+      "obligation": "Track annotation appearance and interaction coverage separately from renderer hard gate unless appearance rendering is claimed.",
+      "detectFeatures": [
+        "/Annots",
+        "/Widget",
+        "/AP"
+      ],
+      "requiredEvidence": [
+        "tracked"
+      ],
+      "oracle": "tracked-only",
+      "status": "TRACKED_NON_BLOCKING",
+      "notes": "Appearance rendering can graduate individual rows to RendererCore later."
+    },
+    {
+      "id": "pdf20.tagged-pdf.structure",
+      "clause": "14.7",
+      "area": "tagged-pdf",
+      "profile": "TaggedPdf",
+      "obligation": "Track logical structure and marked-content semantics without blocking renderer conformance.",
+      "detectFeatures": [
+        "/StructTreeRoot",
+        "BDC",
+        "BMC",
+        "EMC",
+        "/MCID"
+      ],
+      "requiredEvidence": [
+        "tracked"
+      ],
+      "oracle": "tracked-only",
+      "status": "TRACKED_NON_BLOCKING",
+      "notes": "Marked content operators are renderer no-ops except for optional content/resource effects."
+    },
+    {
+      "id": "pdf20.signatures",
+      "clause": "12.8",
+      "area": "signatures",
+      "profile": "Signatures",
+      "obligation": "Track signature dictionaries, byte ranges, and validation policy outside the renderer gate.",
+      "detectFeatures": [
+        "/Sig",
+        "/ByteRange"
+      ],
+      "requiredEvidence": [
+        "tracked"
+      ],
+      "oracle": "tracked-only",
+      "status": "TRACKED_NON_BLOCKING",
+      "notes": "Existing signature tests are product coverage, not renderer conformance."
+    },
+    {
+      "id": "pdf20.multimedia-3d",
+      "clause": "13",
+      "area": "rich-media",
+      "profile": "Multimedia3D",
+      "obligation": "Track multimedia, rich media, and 3D annotations as unsupported or preserve-only until claimed.",
+      "detectFeatures": [
+        "/RichMedia",
+        "/3D",
+        "/Movie",
+        "/Sound"
+      ],
+      "requiredEvidence": [
+        "tracked"
+      ],
+      "oracle": "tracked-only",
+      "status": "UNSUPPORTED_TRACKED",
+      "notes": "No renderer hard gate."
+    },
+    {
+      "id": "pdf20.geospatial",
+      "clause": "12.10",
+      "area": "geospatial",
+      "profile": "Geospatial",
+      "obligation": "Track geospatial dictionaries and measure properties without blocking page rendering.",
+      "detectFeatures": [
+        "/Measure",
+        "/Viewport",
+        "/LGIDict"
+      ],
+      "requiredEvidence": [
+        "tracked"
+      ],
+      "oracle": "tracked-only",
+      "status": "TRACKED_NON_BLOCKING",
+      "notes": "No renderer hard gate."
+    },
+    {
+      "id": "pdf20.op.q",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "q",
+      "obligation": "Implement content-stream operator q for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:q",
+        "q"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.Q",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "Q",
+      "obligation": "Implement content-stream operator Q for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:Q",
+        "Q"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.cm",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "cm",
+      "obligation": "Implement content-stream operator cm for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:cm",
+        "cm"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.w",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "w",
+      "obligation": "Implement content-stream operator w for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:w",
+        "w"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.J",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "J",
+      "obligation": "Implement content-stream operator J for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:J",
+        "J"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.j",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "j",
+      "obligation": "Implement content-stream operator j for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:j",
+        "j"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.M",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "M",
+      "obligation": "Implement content-stream operator M for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:M",
+        "M"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.d",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "d",
+      "obligation": "Implement content-stream operator d for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:d",
+        "d"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.ri",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "ri",
+      "obligation": "Implement content-stream operator ri for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:ri",
+        "ri"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.i",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "i",
+      "obligation": "Implement content-stream operator i for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:i",
+        "i"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.gs",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "gs",
+      "obligation": "Implement content-stream operator gs for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:gs",
+        "gs"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.m",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "m",
+      "obligation": "Implement content-stream operator m for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:m",
+        "m"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.l",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "l",
+      "obligation": "Implement content-stream operator l for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:l",
+        "l"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.c",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "c",
+      "obligation": "Implement content-stream operator c for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:c",
+        "c"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.v",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "v",
+      "obligation": "Implement content-stream operator v for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:v",
+        "v"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.y",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "y",
+      "obligation": "Implement content-stream operator y for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:y",
+        "y"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.h",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "h",
+      "obligation": "Implement content-stream operator h for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:h",
+        "h"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.re",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "re",
+      "obligation": "Implement content-stream operator re for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:re",
+        "re"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.S",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "S",
+      "obligation": "Implement content-stream operator S for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:S",
+        "S"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.s",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "s",
+      "obligation": "Implement content-stream operator s for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:s",
+        "s"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.f",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "f",
+      "obligation": "Implement content-stream operator f for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:f",
+        "f"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.F",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "F",
+      "obligation": "Implement content-stream operator F for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:F",
+        "F"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.fstar",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "f*",
+      "obligation": "Implement content-stream operator f* for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:f*",
+        "f*"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.B",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "B",
+      "obligation": "Implement content-stream operator B for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:B",
+        "B"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.Bstar",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "B*",
+      "obligation": "Implement content-stream operator B* for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:B*",
+        "B*"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.b",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "b",
+      "obligation": "Implement content-stream operator b for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:b",
+        "b"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.bstar",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "b*",
+      "obligation": "Implement content-stream operator b* for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:b*",
+        "b*"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.n",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "n",
+      "obligation": "Implement content-stream operator n for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:n",
+        "n"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.W",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "W",
+      "obligation": "Implement content-stream operator W for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:W",
+        "W"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.Wstar",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "W*",
+      "obligation": "Implement content-stream operator W* for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:W*",
+        "W*"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.CS",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "CS",
+      "obligation": "Implement content-stream operator CS for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:CS",
+        "CS"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.cs",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "cs",
+      "obligation": "Implement content-stream operator cs for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:cs",
+        "cs"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.SC",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "SC",
+      "obligation": "Implement content-stream operator SC for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:SC",
+        "SC"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.SCN",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "SCN",
+      "obligation": "Implement content-stream operator SCN for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:SCN",
+        "SCN"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.sc",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "sc",
+      "obligation": "Implement content-stream operator sc for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:sc",
+        "sc"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.scn",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "scn",
+      "obligation": "Implement content-stream operator scn for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:scn",
+        "scn"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.G",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "G",
+      "obligation": "Implement content-stream operator G for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:G",
+        "G"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.g",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "g",
+      "obligation": "Implement content-stream operator g for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:g",
+        "g"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.RG",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "RG",
+      "obligation": "Implement content-stream operator RG for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:RG",
+        "RG"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.rg",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "rg",
+      "obligation": "Implement content-stream operator rg for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:rg",
+        "rg"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.K",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "K",
+      "obligation": "Implement content-stream operator K for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:K",
+        "K"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.k",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "k",
+      "obligation": "Implement content-stream operator k for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:k",
+        "k"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.sh",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "sh",
+      "obligation": "Implement content-stream operator sh for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:sh",
+        "sh"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.BI",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "BI",
+      "obligation": "Implement content-stream operator BI for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:BI",
+        "BI"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.ID",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "ID",
+      "obligation": "Implement content-stream operator ID for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:ID",
+        "ID"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.EI",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "EI",
+      "obligation": "Implement content-stream operator EI for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:EI",
+        "EI"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.Do",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "Do",
+      "obligation": "Implement content-stream operator Do for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:Do",
+        "Do"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.BT",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "BT",
+      "obligation": "Implement content-stream operator BT for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:BT",
+        "BT"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.ET",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "ET",
+      "obligation": "Implement content-stream operator ET for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:ET",
+        "ET"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.Tc",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "Tc",
+      "obligation": "Implement content-stream operator Tc for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:Tc",
+        "Tc"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.Tw",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "Tw",
+      "obligation": "Implement content-stream operator Tw for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:Tw",
+        "Tw"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.Tz",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "Tz",
+      "obligation": "Implement content-stream operator Tz for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:Tz",
+        "Tz"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.TL",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "TL",
+      "obligation": "Implement content-stream operator TL for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:TL",
+        "TL"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.Tf",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "Tf",
+      "obligation": "Implement content-stream operator Tf for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:Tf",
+        "Tf"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.Tr",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "Tr",
+      "obligation": "Implement content-stream operator Tr for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:Tr",
+        "Tr"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.Ts",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "Ts",
+      "obligation": "Implement content-stream operator Ts for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:Ts",
+        "Ts"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.Td",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "Td",
+      "obligation": "Implement content-stream operator Td for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:Td",
+        "Td"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.TD",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "TD",
+      "obligation": "Implement content-stream operator TD for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:TD",
+        "TD"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.Tm",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "Tm",
+      "obligation": "Implement content-stream operator Tm for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:Tm",
+        "Tm"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.Tstar",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "T*",
+      "obligation": "Implement content-stream operator T* for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:T*",
+        "T*"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.Tj",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "Tj",
+      "obligation": "Implement content-stream operator Tj for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:Tj",
+        "Tj"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.TJ",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "TJ",
+      "obligation": "Implement content-stream operator TJ for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:TJ",
+        "TJ"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.apostrophe",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "'",
+      "obligation": "Implement content-stream operator ' for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:'",
+        "'"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.quote",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "\"",
+      "obligation": "Implement content-stream operator \" for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:\"",
+        "\""
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.d0",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "d0",
+      "obligation": "Implement content-stream operator d0 for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:d0",
+        "d0"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.d1",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "d1",
+      "obligation": "Implement content-stream operator d1 for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:d1",
+        "d1"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.BMC",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "BMC",
+      "obligation": "Implement content-stream operator BMC for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:BMC",
+        "BMC"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.BDC",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "BDC",
+      "obligation": "Implement content-stream operator BDC for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:BDC",
+        "BDC"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.EMC",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "EMC",
+      "obligation": "Implement content-stream operator EMC for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:EMC",
+        "EMC"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.MP",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "MP",
+      "obligation": "Implement content-stream operator MP for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:MP",
+        "MP"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.DP",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "DP",
+      "obligation": "Implement content-stream operator DP for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:DP",
+        "DP"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.BX",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "BX",
+      "obligation": "Implement content-stream operator BX for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:BX",
+        "BX"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    },
+    {
+      "id": "pdf20.op.EX",
+      "clause": "Annex A",
+      "area": "content-operator",
+      "profile": "RendererCore",
+      "kind": "content-operator",
+      "operator": "EX",
+      "obligation": "Implement content-stream operator EX for renderer-visible behavior or required no-op semantics.",
+      "detectFeatures": [
+        "operator:EX",
+        "EX"
+      ],
+      "requiredEvidence": [
+        "unit",
+        "atomic-pdf"
+      ],
+      "oracle": "operator-coverage-tests",
+      "status": "COVERED",
+      "notes": "Annex A operator inventory row."
+    }
+  ]
+}

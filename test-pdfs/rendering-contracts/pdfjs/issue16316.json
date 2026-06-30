@@ -5,6 +5,9 @@
   "RootCause": "PAGE_BOX_DISAGREEMENT",
   "ImprovementPriority": "NONE",
   "Confidence": "MEDIUM",
+  "Pdf20Requirements": [
+    "pdf20.page.boxes"
+  ],
   "Notes": "Migrated from the legacy TSV rendering manifests.",
   "Pages": {
     "1": {

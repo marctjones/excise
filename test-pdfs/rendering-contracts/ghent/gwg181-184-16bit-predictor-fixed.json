@@ -1,0 +1,24 @@
+{
+  "Path": "ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/1-CMYK/Patches/GWG181_16Bit_DeviceCMYK_x4.pdf",
+  "Source": "Ghent PDF Output Suite 5.0",
+  "Owner": "rendering:quality",
+  "Issue": 491,
+  "RootCause": "TIFF_PREDICTOR_16BIT_FIXED",
+  "ImprovementPriority": "DONE",
+  "Confidence": "HIGH",
+  "QualityReason": "16-bit TIFF Predictor 2 samples are reconstructed before image color conversion, removing the noisy 16-bit image failure.",
+  "Pages": {
+    "1": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_ONE_REFERENCE",
+      "ReferenceSituation": "REFS_DISAGREE",
+      "Target": {
+        "Mode": "REFERENCE_DISAGREEMENT",
+        "Primary": "mutool",
+        "Reason": "MuPDF matches the corrected 16-bit image rendering in the targeted rerun."
+      }
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "Path": "pdf20/soft-mask-image.pdf",
+  "Source": "Generated PDF 2.0 renderer fixture",
+  "Owner": "rendering:quality",
+  "Issue": 491,
+  "RootCause": "GENERATED_FIXTURE_XREF_FIXED",
+  "ImprovementPriority": "DONE",
+  "Confidence": "HIGH",
+  "QualityReason": "Generated soft-mask fixture now includes the referenced mask object and renders pixel-exact against references.",
+  "Pages": {
+    "1": {
+      "ExpectedRawStatus": "PASS",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PIXEL_EXACT",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
+      "ReferenceSituation": "REFS_AGREE",
+      "Target": {
+        "Mode": "REFERENCE_CONSENSUS",
+        "Reason": "Generated fixture validates soft-mask image rendering after xref repair."
+      }
+    }
+  }
+}

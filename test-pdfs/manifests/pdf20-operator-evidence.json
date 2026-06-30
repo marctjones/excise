@@ -1,0 +1,1394 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Explicit evidence map for PDF 2.0 Annex A content-stream operators. This keeps operator matrix rows from passing the audit through broad text search alone.",
+  "matrix": "test-pdfs/manifests/pdf20-renderer-requirements.json",
+  "operatorEvidence": [
+    {
+      "id": "pdf20.op.q",
+      "operator": "q",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.Q",
+      "operator": "Q",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.cm",
+      "operator": "cm",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.w",
+      "operator": "w",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.J",
+      "operator": "J",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.j",
+      "operator": "j",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.M",
+      "operator": "M",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.d",
+      "operator": "d",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.ri",
+      "operator": "ri",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.i",
+      "operator": "i",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.gs",
+      "operator": "gs",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.m",
+      "operator": "m",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.l",
+      "operator": "l",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.c",
+      "operator": "c",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.v",
+      "operator": "v",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.y",
+      "operator": "y",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.h",
+      "operator": "h",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.re",
+      "operator": "re",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.S",
+      "operator": "S",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.s",
+      "operator": "s",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.f",
+      "operator": "f",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.F",
+      "operator": "F",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.fstar",
+      "operator": "f*",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.B",
+      "operator": "B",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.Bstar",
+      "operator": "B*",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.b",
+      "operator": "b",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.bstar",
+      "operator": "b*",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.n",
+      "operator": "n",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.W",
+      "operator": "W",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.Wstar",
+      "operator": "W*",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.CS",
+      "operator": "CS",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.cs",
+      "operator": "cs",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.SC",
+      "operator": "SC",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.SCN",
+      "operator": "SCN",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.sc",
+      "operator": "sc",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.scn",
+      "operator": "scn",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.G",
+      "operator": "G",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.g",
+      "operator": "g",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.RG",
+      "operator": "RG",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.rg",
+      "operator": "rg",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.K",
+      "operator": "K",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.k",
+      "operator": "k",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.sh",
+      "operator": "sh",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.BI",
+      "operator": "BI",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.ID",
+      "operator": "ID",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.EI",
+      "operator": "EI",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.Do",
+      "operator": "Do",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.BT",
+      "operator": "BT",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.ET",
+      "operator": "ET",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.Tc",
+      "operator": "Tc",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.Tw",
+      "operator": "Tw",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.Tz",
+      "operator": "Tz",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.TL",
+      "operator": "TL",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.Tf",
+      "operator": "Tf",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.Tr",
+      "operator": "Tr",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.Ts",
+      "operator": "Ts",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.Td",
+      "operator": "Td",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.TD",
+      "operator": "TD",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.Tm",
+      "operator": "Tm",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.Tstar",
+      "operator": "T*",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.Tj",
+      "operator": "Tj",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.TJ",
+      "operator": "TJ",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.apostrophe",
+      "operator": "'",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.quote",
+      "operator": "\"",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.d0",
+      "operator": "d0",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.d1",
+      "operator": "d1",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.BMC",
+      "operator": "BMC",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.BDC",
+      "operator": "BDC",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.EMC",
+      "operator": "EMC",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.MP",
+      "operator": "MP",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.DP",
+      "operator": "DP",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.BX",
+      "operator": "BX",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    },
+    {
+      "id": "pdf20.op.EX",
+      "operator": "EX",
+      "unitEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "covers": "parser recognition and parse-write-parse round-trip"
+        }
+      ],
+      "atomicEvidence": [
+        {
+          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
+          "fixture": "single authoritative content stream containing every Annex A operator",
+          "covers": "operator-specific operands in an executable content stream"
+        }
+      ]
+    }
+  ]
+}

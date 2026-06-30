@@ -179,6 +179,9 @@ jobs:
             --filter "FullyQualifiedName!~Corpus&FullyQualifiedName!~Differential&FullyQualifiedName!~Benchmark&FullyQualifiedName!~Visual" \
             --logger "console;verbosity=normal"
 
+      - name: PDF 2.0 Renderer Conformance Gate
+        run: scripts/run-pdf20-renderer-conformance.sh --run-tests
+
       - name: Run Performance Benchmark Tests (informational)
         # Allocation/timing thresholds are environment-sensitive; run them for
         # visibility but don't fail the gate. Release candidates should run the

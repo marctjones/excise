@@ -58,6 +58,9 @@ test-pdfs/*
 # But do commit our sample PDFs
 !test-pdfs/sample-pdfs/
 !test-pdfs/sample-pdfs/**
+# But do commit generated PDF 2.0 conformance fixtures
+!test-pdfs/pdf20/
+!test-pdfs/pdf20/**
 
 # Publish output
 publish/
@@ -88,7 +91,6 @@ coverage-results/
 artifacts/
 coverage/
 dist/
-tools/
 .claude/worktrees/
 .wiki/
 pdfe.sh

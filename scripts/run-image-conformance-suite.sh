@@ -87,9 +87,14 @@ PY
 )"
 OUT_DIR="logs/image-conformance/$SLUG"
 mkdir -p "$OUT_DIR"
+PDF20_FIXTURE_DIR="test-pdfs/pdf20"
+PDF20_FIXTURE_OUT_DIR="logs/image-conformance/pdf20-fixtures"
+mkdir -p "$PDF20_FIXTURE_OUT_DIR"
 
 INVENTORY="$OUT_DIR/inventory.json"
 PAGE_MANIFEST="$OUT_DIR/page-manifest.tsv"
+PDF20_FIXTURE_INVENTORY="$PDF20_FIXTURE_OUT_DIR/inventory.json"
+PDF20_FIXTURE_PAGE_MANIFEST="$PDF20_FIXTURE_OUT_DIR/page-manifest.tsv"
 RAW_REPORT="$OUT_DIR/raw-corpus-scan.json"
 QUALITY_REPORT="$OUT_DIR/quality-report.json"
 JBIG2_REPORT="$OUT_DIR/jbig2-classify.json"
@@ -107,10 +112,25 @@ fi
 
 "$SCRIPT_DIR/build-image-feature-inventory.py" "${INVENTORY_ARGS[@]}"
 
-"$SCRIPT_DIR/audit-image-feature-coverage.py" \
-    --matrix "$MATRIX" \
-    --inventory "$INVENTORY" \
+if [[ -z "$FEATURE" ]]; then
+    "$SCRIPT_DIR/generate-pdf20-image-fixtures.py" --output-dir "$PDF20_FIXTURE_DIR"
+    "$SCRIPT_DIR/build-image-feature-inventory.py" \
+        --corpus "$PDF20_FIXTURE_DIR" \
+        --matrix "$MATRIX" \
+        --output "$PDF20_FIXTURE_INVENTORY" \
+        --page-manifest "$PDF20_FIXTURE_PAGE_MANIFEST"
+fi
+
+AUDIT_ARGS=(
+    --matrix "$MATRIX"
+    --inventory "$INVENTORY"
     --output "$COVERAGE_REPORT"
+)
+if [[ -z "$FEATURE" ]]; then
+    AUDIT_ARGS+=(--inventory "$PDF20_FIXTURE_INVENTORY")
+fi
+"$SCRIPT_DIR/audit-image-feature-coverage.py" \
+    "${AUDIT_ARGS[@]}"
 
 if ! awk 'NR > 1 { found=1; exit } END { exit found ? 0 : 1 }' "$PAGE_MANIFEST"; then
     echo "No PDFs matched feature '${FEATURE:-image:any}'." >&2

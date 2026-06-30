@@ -28,6 +28,16 @@ def load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def load_inventories(paths: list[Path]) -> tuple[list[dict[str, Any]], list[str]]:
+    entries: list[dict[str, Any]] = []
+    sources: list[str] = []
+    for path in paths:
+        inventory = load_json(path)
+        entries.extend(inventory.get("entries", []))
+        sources.append(str(path))
+    return entries, sources
+
+
 def iter_source_files(roots: list[Path]) -> list[Path]:
     files: list[Path] = []
     skipped_dirs = {".git", "bin", "obj", "logs"}
@@ -167,7 +177,7 @@ def requirements_from_matrix(matrix: dict[str, Any]) -> list[dict[str, Any]]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--matrix", default="test-pdfs/manifests/pdf-image-feature-matrix.json")
-    parser.add_argument("--inventory", required=True)
+    parser.add_argument("--inventory", action="append", required=True, help="Inventory JSON. Repeat to merge supplemental fixture inventories.")
     parser.add_argument("--output", required=True)
     parser.add_argument("--atomic-root", action="append", dest="atomic_roots", help="Root containing atomic tests/fixtures. Repeatable.")
     parser.add_argument("--max-examples", type=int, default=8)
@@ -176,15 +186,13 @@ def main() -> int:
 
     root = Path.cwd()
     matrix_path = Path(args.matrix)
-    inventory_path = Path(args.inventory)
+    inventory_paths = [Path(item) for item in args.inventory]
     matrix = load_json(matrix_path)
-    inventory = load_json(inventory_path)
+    entries, inventory_sources = load_inventories(inventory_paths)
     requirements = requirements_from_matrix(matrix)
 
     atomic_roots = [Path(item) for item in (args.atomic_roots or DEFAULT_ATOMIC_ROOTS)]
     source_files = iter_source_files(atomic_roots)
-    entries = inventory.get("entries", [])
-
     results: list[dict[str, Any]] = []
     status_counts: Counter[str] = Counter()
     missing_atomic = 0
@@ -229,7 +237,7 @@ def main() -> int:
     report = {
         "schemaVersion": 1,
         "matrix": str(matrix_path),
-        "inventory": str(inventory_path),
+        "inventories": inventory_sources,
         "requirements": len(results),
         "statusCounts": dict(sorted(status_counts.items())),
         "missingAtomicRequirements": missing_atomic,

@@ -5,6 +5,10 @@
   "RootCause": "FULL_CORPUS_BASELINE",
   "ImprovementPriority": "NONE",
   "Confidence": "MEDIUM",
+  "Pdf20Requirements": [
+    "pdf20.graphics.extgstate",
+    "pdf20.transparency"
+  ],
   "Notes": "Baseline contract inferred from full all-pages raw corpus report exploratory-report-test-pdfs-all-20260622-passone-sharded-coverage.json.",
   "Pages": {
     "1": {

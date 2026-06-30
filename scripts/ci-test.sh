@@ -75,6 +75,9 @@ run_gate "Pdfe.Rendering.Tests (no Corpus)" \
      --filter \"FullyQualifiedName!~Corpus\" \
      --logger \"console;verbosity=quiet\""
 
+run_gate "PDF 2.0 Renderer Conformance" \
+    "scripts/run-pdf20-renderer-conformance.sh --run-tests"
+
 run_gate "Pdfe.Ocr.Tests" \
     "dotnet test Pdfe.Ocr.Tests --no-build -c Debug \
      --logger \"console;verbosity=quiet\" || true"

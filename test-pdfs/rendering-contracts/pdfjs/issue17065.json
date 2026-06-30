@@ -5,6 +5,9 @@
   "RootCause": "COLOR_MANAGEMENT_DISAGREEMENT",
   "ImprovementPriority": "NONE",
   "Confidence": "MEDIUM",
+  "Pdf20Requirements": [
+    "pdf20.color.spaces"
+  ],
   "Notes": "Migrated from the legacy TSV rendering manifests.",
   "Pages": {
     "1": {

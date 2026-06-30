@@ -34,10 +34,7 @@ Always refreshes:
 Direct-download print/color corpuses:
   - Altona 1.2 files by default
   - Altona 2.0 Technical Page files with --include-large
-
-Ghent PDF Output Suite is registered as a manual source because its current
-WordPress download endpoint does not expose a stable direct file URL suitable
-for scripted non-browser download.
+  - Ghent PDF Output Suite V50 Test Pages and Patches
 EOF
 }
 
@@ -67,6 +64,22 @@ download_file() {
     echo "  $url"
     curl -fL --retry 3 --retry-delay 2 --connect-timeout 20 -o "$dest.tmp" "$url"
     mv "$dest.tmp" "$dest"
+}
+
+extract_zip() {
+    local name="$1"
+    local archive="$2"
+    local dest="$3"
+
+    if [[ "$SKIP_EXISTING" == "1" && -d "$dest" && -n "$(find "$dest" -type f -name '*.pdf' -print -quit)" ]]; then
+        echo "already extracted: $name -> ${dest#$ROOT/}"
+        return 0
+    fi
+
+    echo "extracting: $name -> ${dest#$ROOT/}"
+    rm -rf "$dest"
+    mkdir -p "$dest"
+    unzip -oq "$archive" -d "$dest"
 }
 
 write_manifest() {
@@ -135,22 +148,24 @@ else
 fi
 write_manifest "$ALTONA_DIR"
 
+echo
+echo "== Ghent PDF Output Suite =="
 GHENT_DIR="$TEST_PDFS/ghent"
-mkdir -p "$GHENT_DIR"
-cat > "$GHENT_DIR/README.manual-download.txt" <<'EOF'
-Ghent PDF Output Suite 5.0 manual source
-
-Download page:
-  https://gwg.org/gos5/
-
-Reason this is manual:
-  The current WordPress download page lists the V50 Test Pages and V50 Patches
-  downloads, but does not expose a stable direct archive URL from the static
-  HTML suitable for a non-browser script.
-
-After downloading, place the extracted PDFs under this directory and re-run:
-  scripts/build-image-feature-inventory.py --corpus test-pdfs --output logs/image-conformance/inventory.json
-EOF
+GHENT_ARCHIVES="$GHENT_DIR/archives"
+GHENT_EXTRACTED="$GHENT_DIR/extracted"
+download_file "Ghent PDF Output Suite V50 Test Pages" \
+    "https://gwg.org/?wpdmdl=9080" \
+    "$GHENT_ARCHIVES/Ghent_PDF_Output_Suite_V50_Testpages.zip"
+download_file "Ghent PDF Output Suite V50 Patches" \
+    "https://gwg.org/?wpdmdl=9076" \
+    "$GHENT_ARCHIVES/Ghent_PDF_Output_Suite_V50_Patches.zip"
+extract_zip "Ghent PDF Output Suite V50 Test Pages" \
+    "$GHENT_ARCHIVES/Ghent_PDF_Output_Suite_V50_Testpages.zip" \
+    "$GHENT_EXTRACTED/testpages"
+extract_zip "Ghent PDF Output Suite V50 Patches" \
+    "$GHENT_ARCHIVES/Ghent_PDF_Output_Suite_V50_Patches.zip" \
+    "$GHENT_EXTRACTED/patches"
+write_manifest "$GHENT_DIR"
 
 echo
 echo "== Image feature inventory =="

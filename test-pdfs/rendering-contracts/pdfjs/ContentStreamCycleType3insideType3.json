@@ -5,6 +5,9 @@
   "RootCause": "FONT_OR_TEXT_ORACLE_DISAGREEMENT",
   "ImprovementPriority": "NONE",
   "Confidence": "MEDIUM",
+  "Pdf20Requirements": [
+    "pdf20.resource-limits.recursion"
+  ],
   "Notes": "Migrated from the legacy TSV rendering manifests.",
   "Pages": {
     "1": {

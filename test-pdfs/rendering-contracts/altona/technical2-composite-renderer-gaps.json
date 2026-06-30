@@ -1,0 +1,54 @@
+{
+  "Path": "altona/eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf",
+  "Source": "Altona Technical 2",
+  "Owner": "rendering:quality",
+  "Issue": 491,
+  "RootCause": "COMPOSITE_PRINT_CONFORMANCE_GAPS",
+  "ImprovementPriority": "HIGH_VISIBLE_SEMANTICS",
+  "Confidence": "MEDIUM",
+  "QualityReason": "Composite Altona patch pages combine several currently open renderer gaps, including print color management, overprint, transparency, and advanced color spaces.",
+  "Notes": "Keep these classified separately from atomic Ghent failures; use them as integration confirmation after the narrower ICC and CMYK transparency fixes land.",
+  "Pages": {
+    "7-8": {
+      "ExpectedRawStatus": "DIFF",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "FAIL",
+      "PixelAgreement": "MATCHES_NONE",
+      "ReferenceSituation": "REFS_DISAGREE",
+      "RootCause": "ALTONA_COMPOSITE_COLOR_TRANSPARENCY",
+      "Target": {
+        "Mode": "REFERENCE_DISAGREEMENT",
+        "Primary": "pdftocairo",
+        "Reason": "References disagree on exact print-preview color, but pdfe remains outside all accepted references."
+      }
+    },
+    "13": {
+      "ExpectedRawStatus": "DIFF",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "FAIL",
+      "PixelAgreement": "MATCHES_NONE",
+      "ReferenceSituation": "REFS_AGREE",
+      "RootCause": "ALTONA_COMPOSITE_COLOR_MANAGEMENT",
+      "Target": {
+        "Mode": "REFERENCE_CONSENSUS",
+        "Primary": "pdftocairo",
+        "Reason": "Available references agree; fix after atomic ICC/overprint coverage."
+      }
+    },
+    "15": {
+      "ExpectedRawStatus": "PASS",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PIXEL_EXACT",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
+      "ReferenceSituation": "REFS_AGREE",
+      "RootCause": "ALTONA_COMPOSITE_TRANSPARENCY_COLOR_FIXED",
+      "ImprovementPriority": "DONE",
+      "Confidence": "HIGH",
+      "Target": {
+        "Mode": "REFERENCE_CONSENSUS_FIXED",
+        "Primary": "pdftocairo",
+        "Reason": "Direct axial/radial shadings are clipped to their transformed BBox before painting; this fixes the page 15 transparency-color smear while preserving the reference consensus target."
+      }
+    }
+  }
+}

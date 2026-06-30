@@ -37,7 +37,7 @@ Options:
   --visual            Run the local visual-regression runner.
   --package           Build local package artifacts for the current platform.
   --no-build          Skip the initial build gate.
-  --only=a,b          Run only named gates: docs,build,redaction,signature,ui,tests,visual,package,diffcheck.
+  --only=a,b          Run only named gates: docs,build,redaction,signature,ui,tests,pdf20,visual,package,diffcheck.
   -h, --help          Show this help.
 EOF
 }
@@ -173,6 +173,7 @@ fi
 run_gate "redaction" dotnet test --no-build -c "$CONFIG" --filter "FullyQualifiedName~Redaction" --logger "console;verbosity=normal"
 run_gate "signature" dotnet test PdfEditor.Tests --no-build -c "$CONFIG" --filter "FullyQualifiedName~SignatureVerification" --logger "console;verbosity=normal"
 run_gate "ui" dotnet test PdfEditor.Tests --no-build -c "$CONFIG" --filter "FullyQualifiedName~GuiWorkflowCoverageMatrix|FullyQualifiedName~GoldenPath|FullyQualifiedName~Workflow" --logger "console;verbosity=normal"
+run_gate "pdf20" scripts/run-pdf20-renderer-conformance.sh --run-tests
 
 if should_run "tests"; then
     if [ "$RUN_FULL_TESTS" = "1" ]; then

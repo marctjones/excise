@@ -1,0 +1,24 @@
+{
+  "Path": "ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/1-CMYK/Patches/GWG162_Transp_Basic_BM_DeviceCMYK_Isolate_X4.pdf",
+  "Source": "Ghent PDF Output Suite 5.0",
+  "Owner": "rendering:quality",
+  "Issue": 491,
+  "RootCause": "CMYK_TRANSPARENCY_GROUP_ISOLATION",
+  "ImprovementPriority": "HIGH_VISIBLE_SEMANTICS",
+  "Confidence": "HIGH",
+  "QualityReason": "Isolated transparency group semantics are not implemented; pdfe currently relies on Skia RGB layers after DeviceCMYK conversion.",
+  "Pages": {
+    "1": {
+      "ExpectedRawStatus": "DIFF",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "FAIL",
+      "PixelAgreement": "MATCHES_NONE",
+      "ReferenceSituation": "REFS_DISAGREE",
+      "Target": {
+        "Mode": "REFERENCE_DISAGREEMENT",
+        "Primary": "pdftocairo",
+        "Reason": "Poppler is the closest available reference for this page in the 2026-06-29 run."
+      }
+    }
+  }
+}

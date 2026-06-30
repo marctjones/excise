@@ -1,0 +1,25 @@
+{
+  "Path": "ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/1-CMYK/Patches/GWG160_Transp_Basic_BM_DeviceCMYK_Non-knockout_X4.pdf",
+  "Source": "Ghent PDF Output Suite 5.0",
+  "Owner": "rendering:quality",
+  "Issue": 491,
+  "RootCause": "CMYK_TRANSPARENCY_GROUP_COMPOSITING_FIXED",
+  "ImprovementPriority": "DONE",
+  "Confidence": "HIGH",
+  "QualityReason": "DeviceCMYK non-knockout blend-mode chart now renders through pdfe's retained CMYK backdrop path rather than lossy RGB reconstruction.",
+  "Notes": "Contract covers the non-knockout page. Related knockout and isolate pages have separate contracts because each exercises a different group flag.",
+  "Pages": {
+    "1": {
+      "ExpectedRawStatus": "PASS",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PIXEL_EXACT",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
+      "ReferenceSituation": "REFS_DISAGREE",
+      "Target": {
+        "Mode": "REFERENCE_DISAGREEMENT",
+        "Primary": "mutool",
+        "Reason": "References disagree on exact CMYK preview pixels, but all expose pdfe's RGB-compositing gap."
+      }
+    }
+  }
+}
