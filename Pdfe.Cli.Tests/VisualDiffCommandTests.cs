@@ -1,7 +1,10 @@
 using System.Text.Json;
 using AwesomeAssertions;
+using Pdfe.ImageInspection;
 using SkiaSharp;
 using Xunit;
+
+using RenderProgram = Pdfe.RenderTools.Program;
 
 namespace Pdfe.Cli.Tests;
 
@@ -13,7 +16,7 @@ public class VisualDiffCommandTests
         using var reference = CreateSolidBitmap(12, 12, new SKColor(100, 150, 100));
         using var actual = CreateSolidBitmap(12, 12, new SKColor(100, 142, 138));
 
-        var report = Program.AnalyzeVisualDiff(actual, reference, tolerance: 8);
+        var report = VisualDiffAnalyzer.Analyze(actual, reference, tolerance: 8);
 
         report.category.Should().Be("color-tone-or-texture");
         report.humanImpact.Should().Be("low");
@@ -32,11 +35,11 @@ public class VisualDiffCommandTests
             canvas.DrawRect(new SKRect(30, 30, 70, 70), paint);
         }
 
-        var report = Program.AnalyzeVisualDiff(actual, reference, tolerance: 16);
+        var report = VisualDiffAnalyzer.Analyze(actual, reference, tolerance: 16);
 
         report.category.Should().Be("localized-content-or-geometry");
         report.humanImpact.Should().Be("high");
-        report.diffBounds.Should().Be(new Program.VisualDiffBounds(30, 30, 40, 40));
+        report.diffBounds.Should().Be(new VisualDiffBounds(30, 30, 40, 40));
         report.topRegions.Should().ContainSingle(r => r.pixelCount == 1600);
     }
 
@@ -55,7 +58,7 @@ public class VisualDiffCommandTests
             actualCanvas.DrawRect(rect, actualPaint);
         }
 
-        var report = Program.AnalyzeVisualDiff(actual, reference, tolerance: 16);
+        var report = VisualDiffAnalyzer.Analyze(actual, reference, tolerance: 16);
 
         report.category.Should().Be("localized-color-or-image-content");
         report.humanImpact.Should().Be("medium");
@@ -73,13 +76,13 @@ public class VisualDiffCommandTests
             canvas.DrawRect(new SKRect(10, 10, 30, 30), paint);
         }
 
-        var entry = new Program.CorpusScanEntry();
+        var entry = new RenderProgram.CorpusScanEntry();
 
-        Program.ApplyCorpusVisualDiffClassification(entry, actual, reference);
+        RenderProgram.ApplyCorpusVisualDiffClassification(entry, actual, reference);
 
         entry.visualCategory.Should().Be("localized-content-or-geometry");
         entry.visualHumanImpact.Should().Be("high");
-        entry.visualDiffBounds.Should().Be(new Program.VisualDiffBounds(10, 10, 20, 20));
+        entry.visualDiffBounds.Should().Be(new VisualDiffBounds(10, 10, 20, 20));
         entry.visualTopRegions.Should().ContainSingle(r => r.pixelCount == 400);
     }
 
@@ -90,9 +93,9 @@ public class VisualDiffCommandTests
         using var oracleB = CreateSolidBitmap(30, 30, SKColors.White);
         using var oracleC = CreateSolidBitmap(30, 30, SKColors.White);
         FillRect(oracleC, 10, 10, 10, 10, SKColors.Black);
-        var entry = new Program.CorpusScanEntry();
+        var entry = new RenderProgram.CorpusScanEntry();
 
-        Program.ApplyOracleDisagreementMetrics(
+        RenderProgram.ApplyOracleDisagreementMetrics(
             entry,
             new (string Name, SKBitmap? Bitmap)[]
             {
@@ -122,7 +125,7 @@ public class VisualDiffCommandTests
             DrawSparseConnectedEdge(actual, x: 6 + offset * 28, y: 3);
         }
 
-        var report = Program.AnalyzeVisualDiff(actual, reference, tolerance: 16);
+        var report = VisualDiffAnalyzer.Analyze(actual, reference, tolerance: 16);
 
         report.category.Should().Be("small-text-antialiasing");
         report.humanImpact.Should().Be("low");
@@ -140,7 +143,7 @@ public class VisualDiffCommandTests
             DrawHorizontalLine(actual, 10, 70, y + 1, SKColors.Blue);
         }
 
-        var report = Program.AnalyzeVisualDiff(actual, reference, tolerance: 16);
+        var report = VisualDiffAnalyzer.Analyze(actual, reference, tolerance: 16);
 
         report.category.Should().Be("localized-linework-or-texture");
         report.humanImpact.Should().Be("medium");
@@ -161,71 +164,12 @@ public class VisualDiffCommandTests
             }
         }
 
-        var report = Program.AnalyzeVisualDiff(actual, reference, tolerance: 16);
+        var report = VisualDiffAnalyzer.Analyze(actual, reference, tolerance: 16);
 
         report.category.Should().Be("color-tone-or-texture");
         report.humanImpact.Should().Be("low");
         report.meanAbsoluteError.Should().BeLessThan(12);
         report.darkPixelBalance.Should().BeGreaterThan(0.75);
-    }
-
-    [Fact]
-    public async Task VisualDiffCommand_WritesJsonAndTriptych()
-    {
-        var root = Path.Combine(Path.GetTempPath(), "pdfe-visual-diff-" + Guid.NewGuid().ToString("N"));
-        try
-        {
-            Directory.CreateDirectory(root);
-            var actualPath = Path.Combine(root, "actual.png");
-            var referencePath = Path.Combine(root, "reference.png");
-            var jsonPath = Path.Combine(root, "report.json");
-            var outputPath = Path.Combine(root, "triptych.png");
-
-            using (var reference = CreateSolidBitmap(20, 20, SKColors.White))
-            using (var actual = CreateSolidBitmap(20, 20, SKColors.White))
-            {
-                using (var canvas = new SKCanvas(actual))
-                using (var paint = new SKPaint { Color = SKColors.Black })
-                {
-                    canvas.DrawRect(new SKRect(5, 5, 15, 15), paint);
-                }
-
-                SavePng(reference, referencePath);
-                SavePng(actual, actualPath);
-            }
-
-            Environment.ExitCode = 0;
-            var exitCode = await Program.RunAsync(new[]
-            {
-                "visual-diff",
-                actualPath,
-                referencePath,
-                "--json",
-                jsonPath,
-                "--output",
-                outputPath,
-                "--tolerance",
-                "16",
-            });
-
-            exitCode.Should().Be(0);
-            Environment.ExitCode.Should().Be(0);
-            File.Exists(jsonPath).Should().BeTrue();
-            File.Exists(outputPath).Should().BeTrue();
-
-            using var doc = JsonDocument.Parse(File.ReadAllText(jsonPath));
-            doc.RootElement.GetProperty("category").GetString()
-                .Should().Be("localized-content-or-geometry");
-            doc.RootElement.GetProperty("humanImpact").GetString()
-                .Should().Be("high");
-            doc.RootElement.GetProperty("topRegions").GetArrayLength()
-                .Should().BeGreaterThan(0);
-        }
-        finally
-        {
-            if (Directory.Exists(root))
-                Directory.Delete(root, recursive: true);
-        }
     }
 
     private static SKBitmap CreateSolidBitmap(int width, int height, SKColor color)

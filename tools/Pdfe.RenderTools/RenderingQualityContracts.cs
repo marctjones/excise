@@ -2,7 +2,7 @@ using System.CommandLine;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Pdfe.Cli;
+namespace Pdfe.RenderTools;
 
 partial class Program
 {

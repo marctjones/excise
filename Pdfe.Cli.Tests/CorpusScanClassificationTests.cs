@@ -3,6 +3,8 @@ using Pdfe.Core.Parsing;
 using System.Diagnostics;
 using Xunit;
 
+using RenderProgram = Pdfe.RenderTools.Program;
+
 namespace Pdfe.Cli.Tests;
 
 public class CorpusScanClassificationTests
@@ -34,13 +36,13 @@ public class CorpusScanClassificationTests
                 }
                 """);
 
-            var set = Program.RenderingQualityContractSet.Load(dir);
+            var set = RenderProgram.RenderingQualityContractSet.Load(dir);
 
             set.Contracts.Should().HaveCount(1);
             set.CreatePageManifest()["pdfjs/issue.pdf"].Should().BeEquivalentTo(new[] { 1, 2 });
             set.CreatePasswordManifest()!["pdfjs/issue.pdf"].Should().Be("secret");
             set.CreateExpectationManifest()
-                .Should().ContainKey(new Program.CorpusPageKey("pdfjs/issue.pdf", 1));
+                .Should().ContainKey(new RenderProgram.CorpusPageKey("pdfjs/issue.pdf", 1));
         }
         finally
         {
@@ -78,10 +80,10 @@ public class CorpusScanClassificationTests
                   }
                 }
                 """);
-            var set = Program.RenderingQualityContractSet.Load(dir);
+            var set = RenderProgram.RenderingQualityContractSet.Load(dir);
             var entries = new[]
             {
-                new Program.CorpusScanEntry
+                new RenderProgram.CorpusScanEntry
                 {
                     path = "pdfjs/issue19326.pdf",
                     pageNumber = 1,
@@ -92,7 +94,7 @@ public class CorpusScanClassificationTests
                 },
             };
 
-            Program.ApplyRenderingQualityContracts(entries, set, strictContracts: true);
+            RenderProgram.ApplyRenderingQualityContracts(entries, set, strictContracts: true);
 
             entries[0].contractStatus.Should().Be("APPLIED");
             entries[0].releaseStatus.Should().Be("PASS");
@@ -127,10 +129,10 @@ public class CorpusScanClassificationTests
                   }
                 }
                 """);
-            var set = Program.RenderingQualityContractSet.Load(dir);
+            var set = RenderProgram.RenderingQualityContractSet.Load(dir);
             var entries = new[]
             {
-                new Program.CorpusScanEntry
+                new RenderProgram.CorpusScanEntry
                 {
                     path = "pdfjs/uncontracted.pdf",
                     pageNumber = 1,
@@ -138,7 +140,7 @@ public class CorpusScanClassificationTests
                 },
             };
 
-            Program.ApplyRenderingQualityContracts(entries, set, strictContracts: true);
+            RenderProgram.ApplyRenderingQualityContracts(entries, set, strictContracts: true);
 
             entries[0].contractStatus.Should().Be("MISSING");
             entries[0].releaseStatus.Should().Be("NEEDS_REVIEW");
@@ -195,11 +197,11 @@ public class CorpusScanClassificationTests
                 }
                 """);
 
-            Program.RunRenderQualityClassify(rawPath, dir, outputPath, strictContracts: true)
+            RenderProgram.RunRenderQualityClassify(rawPath, dir, outputPath, strictContracts: true)
                 .Should().BeTrue();
 
             using var stream = File.OpenRead(outputPath);
-            var report = System.Text.Json.JsonSerializer.Deserialize<Program.RenderingQualityReport>(stream);
+            var report = System.Text.Json.JsonSerializer.Deserialize<RenderProgram.RenderingQualityReport>(stream);
             report.Should().NotBeNull();
             report!.summary.missingContractPages.Should().Be(0);
             report.summary.qualityStatusCounts.Should().ContainKey("MATCHES_ACCEPTED_REFERENCE")
@@ -220,11 +222,11 @@ public class CorpusScanClassificationTests
         var dir = Path.Combine(root, "test-pdfs", "rendering-contracts");
         Directory.Exists(dir).Should().BeTrue("rendering quality contracts are versioned test metadata");
 
-        var set = Program.RenderingQualityContractSet.Load(dir);
+        var set = RenderProgram.RenderingQualityContractSet.Load(dir);
 
         set.Contracts.Should().NotBeEmpty();
         set.CreateExpectationManifest()
-            .Should().ContainKey(new Program.CorpusPageKey("pdfjs/issue19326.pdf", 1));
+            .Should().ContainKey(new RenderProgram.CorpusPageKey("pdfjs/issue19326.pdf", 1));
         var issue19326 = set.FindPage("pdfjs/issue19326.pdf", 1);
         issue19326.Should().NotBeNull();
         issue19326!.Page.QualityStatus.Should().Be("MATCHES_ACCEPTED_REFERENCE");
@@ -235,70 +237,70 @@ public class CorpusScanClassificationTests
     [Fact]
     public void ClassifyCorpusFailure_OpenPhase_ReturnsParseError()
     {
-        Program.ClassifyCorpusFailure(
+        RenderProgram.ClassifyCorpusFailure(
                 new InvalidDataException("bad xref"),
-                Program.CorpusFailurePhase.Open)
+                RenderProgram.CorpusFailurePhase.Open)
             .Should().Be("MALFORMED_PDF");
     }
 
     [Fact]
     public void ClassifyCorpusFailure_OpenPhaseCompression_ReturnsUnsupportedCompression()
     {
-        Program.ClassifyCorpusFailure(
+        RenderProgram.ClassifyCorpusFailure(
                 new InvalidDataException("unsupported deflate compression method"),
-                Program.CorpusFailurePhase.Open)
+                RenderProgram.CorpusFailurePhase.Open)
             .Should().Be("UNSUPPORTED_COMPRESSION");
     }
 
     [Fact]
     public void ClassifyCorpusFailure_OpenPhasePasswordRequired_ReturnsPasswordRequired()
     {
-        Program.ClassifyCorpusFailure(
+        RenderProgram.ClassifyCorpusFailure(
                 new PdfEncryptionNotSupportedException("Password verification failed. The file requires a non-empty user password."),
-                Program.CorpusFailurePhase.Open)
+                RenderProgram.CorpusFailurePhase.Open)
             .Should().Be("PASSWORD_REQUIRED");
     }
 
     [Fact]
     public void ClassifyCorpusFailure_OpenPhaseUnsupportedEncryption_ReturnsUnsupportedEncrypted()
     {
-        Program.ClassifyCorpusFailure(
+        RenderProgram.ClassifyCorpusFailure(
                 new PdfEncryptionNotSupportedException("Encryption algorithm V=99 is not supported."),
-                Program.CorpusFailurePhase.Open)
+                RenderProgram.CorpusFailurePhase.Open)
             .Should().Be("UNSUPPORTED_ENCRYPTED");
     }
 
     [Fact]
     public void ClassifyCorpusFailure_RenderDecodeFailure_ReturnsDecodeError()
     {
-        Program.ClassifyCorpusFailure(
+        RenderProgram.ClassifyCorpusFailure(
                 new PdfParseException("Invalid hex digit in ASCIIHexDecode"),
-                Program.CorpusFailurePhase.Render)
+                RenderProgram.CorpusFailurePhase.Render)
             .Should().Be("DECODE_ERROR");
     }
 
     [Fact]
     public void ClassifyCorpusFailure_RenderFilterFailure_ReturnsDecodeError()
     {
-        Program.ClassifyCorpusFailure(
+        RenderProgram.ClassifyCorpusFailure(
                 new NotSupportedException("Unknown filter: BogusDecode"),
-                Program.CorpusFailurePhase.Render)
+                RenderProgram.CorpusFailurePhase.Render)
             .Should().Be("DECODE_ERROR");
     }
 
     [Fact]
     public void ClassifyCorpusFailure_RenderNonDecodeFailure_ReturnsRenderError()
     {
-        Program.ClassifyCorpusFailure(
+        RenderProgram.ClassifyCorpusFailure(
                 new InvalidOperationException("renderer state failed"),
-                Program.CorpusFailurePhase.Render)
+                RenderProgram.CorpusFailurePhase.Render)
             .Should().Be("RENDER_ERROR");
     }
 
     [Fact]
     public void BuildOracleDiagnostic_IncludesBothOracleStatuses()
     {
-        var entry = new Program.CorpusScanEntry
+        var entry = new RenderProgram.CorpusScanEntry
         {
             mutoolStatus = "TIMEOUT",
             mutoolError = "mutool exceeded 15000ms",
@@ -309,14 +311,14 @@ public class CorpusScanClassificationTests
             pdfiumStatus = "TOOL_UNAVAILABLE",
         };
 
-        Program.BuildOracleDiagnostic(entry)
+        RenderProgram.BuildOracleDiagnostic(entry)
             .Should().Be("mutool=TIMEOUT (mutool exceeded 15000ms); pdftocairo=EXIT_CODE (pdftocairo exited 1); ghostscript=OK; pdfbox=TOOL_UNAVAILABLE; pdfium=TOOL_UNAVAILABLE");
     }
 
     [Fact]
     public void TryApplyRecoveredMalformedContentShortCircuit_ClassifiesWithoutOracleWork()
     {
-        var entry = new Program.CorpusScanEntry
+        var entry = new RenderProgram.CorpusScanEntry
         {
             path = "pdfjs/bomb_giant.pdf",
             pageNumber = 1,
@@ -324,7 +326,7 @@ public class CorpusScanClassificationTests
             renderMs = 1,
         };
 
-        Program.TryApplyRecoveredMalformedContentShortCircuit(entry, Stopwatch.StartNew())
+        RenderProgram.TryApplyRecoveredMalformedContentShortCircuit(entry, Stopwatch.StartNew())
             .Should().BeTrue();
 
         entry.status.Should().Be("RECOVERED_MALFORMED_CONTENT");
@@ -338,14 +340,14 @@ public class CorpusScanClassificationTests
     [Fact]
     public void TryApplyRecoveredMalformedContentShortCircuit_IgnoresOrdinaryDiagnostics()
     {
-        var entry = new Program.CorpusScanEntry
+        var entry = new RenderProgram.CorpusScanEntry
         {
             path = "pdfjs/normal.pdf",
             pageNumber = 1,
             diagnostic = "pdfe=ordinary render warning",
         };
 
-        Program.TryApplyRecoveredMalformedContentShortCircuit(entry, Stopwatch.StartNew())
+        RenderProgram.TryApplyRecoveredMalformedContentShortCircuit(entry, Stopwatch.StartNew())
             .Should().BeFalse();
 
         entry.status.Should().Be("UNKNOWN");
@@ -358,7 +360,7 @@ public class CorpusScanClassificationTests
     {
         var entries = new[]
         {
-            new Program.CorpusScanEntry
+            new RenderProgram.CorpusScanEntry
             {
                 path = "pass.pdf",
                 pageNumber = 1,
@@ -366,7 +368,7 @@ public class CorpusScanClassificationTests
                 oracleComparisonPairs = 1,
                 oracleDisagreeingPairs = 0,
             },
-            new Program.CorpusScanEntry
+            new RenderProgram.CorpusScanEntry
             {
                 path = "low-color.pdf",
                 pageNumber = 1,
@@ -380,7 +382,7 @@ public class CorpusScanClassificationTests
                 oracleDisagreeingPairs = 0,
                 oracleMeanMae = 0.4,
             },
-            new Program.CorpusScanEntry
+            new RenderProgram.CorpusScanEntry
             {
                 path = "high-missing.pdf",
                 pageNumber = 2,
@@ -394,7 +396,7 @@ public class CorpusScanClassificationTests
                 oracleDisagreeingPairs = 6,
                 oracleMeanMae = 34,
             },
-            new Program.CorpusScanEntry
+            new RenderProgram.CorpusScanEntry
             {
                 path = "partial.pdf",
                 pageNumber = 1,
@@ -406,7 +408,7 @@ public class CorpusScanClassificationTests
             },
         };
 
-        var summary = Program.BuildCorpusScanSummary(entries);
+        var summary = RenderProgram.BuildCorpusScanSummary(entries);
 
         summary.statusCounts.Should().ContainKey("PASS").WhoseValue.Should().Be(1);
         summary.statusCounts.Should().ContainKey("DIFF").WhoseValue.Should().Be(2);
@@ -428,20 +430,20 @@ public class CorpusScanClassificationTests
     [Fact]
     public void TryParseCorpusExtraOracles_AllowsCommaSeparatedValues()
     {
-        Program.TryParseCorpusExtraOracles("ghostscript,pdfbox,pdfium", out var value, out var error)
+        RenderProgram.TryParseCorpusExtraOracles("ghostscript,pdfbox,pdfium", out var value, out var error)
             .Should().BeTrue(error);
 
         value.Should().Be(
-            Program.CorpusExtraOracles.Ghostscript
-            | Program.CorpusExtraOracles.PdfBox
-            | Program.CorpusExtraOracles.Pdfium);
+            RenderProgram.CorpusExtraOracles.Ghostscript
+            | RenderProgram.CorpusExtraOracles.PdfBox
+            | RenderProgram.CorpusExtraOracles.Pdfium);
         error.Should().BeEmpty();
     }
 
     [Fact]
     public void TryParseCorpusExtraOracles_RejectsUnknownValue()
     {
-        Program.TryParseCorpusExtraOracles("ghostscript,bogus", out _, out var error)
+        RenderProgram.TryParseCorpusExtraOracles("ghostscript,bogus", out _, out var error)
             .Should().BeFalse();
 
         error.Should().Contain("Bad --extra-oracles");
@@ -459,14 +461,14 @@ public class CorpusScanClassificationTests
             File.WriteAllText(Path.Combine(root, "b", "middle.pdf"), "%PDF");
             File.WriteAllText(Path.Combine(root, "a", "nested", "deep.pdf"), "%PDF");
 
-            var all = Program.DiscoverCorpusPdfs(root, chunkIndex: 0, chunkTotal: 1);
+            var all = RenderProgram.DiscoverCorpusPdfs(root, chunkIndex: 0, chunkTotal: 1);
 
             all.Select(p => p.RelativePath).Should().Equal(
                 "a/nested/deep.pdf",
                 "b/middle.pdf",
                 "top.pdf");
 
-            var chunk = Program.DiscoverCorpusPdfs(root, chunkIndex: 1, chunkTotal: 2);
+            var chunk = RenderProgram.DiscoverCorpusPdfs(root, chunkIndex: 1, chunkTotal: 2);
             chunk.Select(p => p.RelativePath).Should().Equal("b/middle.pdf");
         }
         finally
@@ -488,7 +490,7 @@ public class CorpusScanClassificationTests
             File.WriteAllText(Path.Combine(root, "b", "two.pdf"), "%PDF");
             File.WriteAllText(Path.Combine(root, "three.pdf"), "%PDF");
 
-            var filtered = Program.DiscoverCorpusPdfs(
+            var filtered = RenderProgram.DiscoverCorpusPdfs(
                 root,
                 chunkIndex: 0,
                 chunkTotal: 1,
@@ -515,7 +517,7 @@ public class CorpusScanClassificationTests
                 "pdfjs/a.pdf\t1\tPASS_ONE\n" +
                 "pdfjs/b.pdf\t0\tMALFORMED_PDF\n");
 
-            var manifest = Program.LoadCorpusPageManifest(new FileInfo(path))!;
+            var manifest = RenderProgram.LoadCorpusPageManifest(new FileInfo(path))!;
 
             manifest.Keys.Should().Equal("pdfjs/a.pdf", "pdfjs/b.pdf");
             manifest["pdfjs/a.pdf"].Should().BeEquivalentTo(new[] { 1, 3 });
@@ -539,7 +541,7 @@ public class CorpusScanClassificationTests
                 "pdfjs/a.pdf\tHello\tascii\n" +
                 "poppler/Gday.pdf\tgarçon\tpdfdoc\n");
 
-            var manifest = Program.LoadCorpusPasswordManifest(new FileInfo(path))!;
+            var manifest = RenderProgram.LoadCorpusPasswordManifest(new FileInfo(path))!;
 
             manifest.Should().ContainKey("pdfjs/a.pdf").WhoseValue.Should().Be("Hello");
             manifest.Should().ContainKey("poppler/Gday.pdf").WhoseValue.Should().Be("garçon");
@@ -559,7 +561,7 @@ public class CorpusScanClassificationTests
             ["pdfjs/bug1782186.pdf"] = "Hello",
         };
 
-        Program.TryGetCorpusPassword(passwords, "bug1782186.pdf", out var password)
+        RenderProgram.TryGetCorpusPassword(passwords, "bug1782186.pdf", out var password)
             .Should().BeTrue();
         password.Should().Be("Hello");
     }
@@ -572,7 +574,7 @@ public class CorpusScanClassificationTests
             ["issue3371.pdf"] = "ELXRTQWS",
         };
 
-        Program.TryGetCorpusPassword(passwords, "pdfjs/issue3371.pdf", out var password)
+        RenderProgram.TryGetCorpusPassword(passwords, "pdfjs/issue3371.pdf", out var password)
             .Should().BeTrue();
         password.Should().Be("ELXRTQWS");
     }
@@ -588,15 +590,15 @@ public class CorpusScanClassificationTests
                 "pdfjs/semantic.pdf\t1\tPASS_ONE\t\taccepted by majority\tPASS\tPASS_ONE_SEMANTIC_OK\tpdfe matches semantic majority\n" +
                 "pdfjs/legacy.pdf\t0\tMALFORMED_PDF\tbad xref\tlegacy note\n");
 
-            var manifest = Program.LoadCorpusExpectationManifest(new FileInfo(path))!;
+            var manifest = RenderProgram.LoadCorpusExpectationManifest(new FileInfo(path))!;
 
-            var semantic = manifest[new Program.CorpusPageKey("pdfjs/semantic.pdf", 1)];
+            var semantic = manifest[new RenderProgram.CorpusPageKey("pdfjs/semantic.pdf", 1)];
             semantic.ExpectedStatus.Should().Be("PASS_ONE");
             semantic.ExpectedResultStatus.Should().Be("PASS");
             semantic.ExpectedResultCategory.Should().Be("PASS_ONE_SEMANTIC_OK");
             semantic.ExpectedResultReason.Should().Be("pdfe matches semantic majority");
 
-            var legacy = manifest[new Program.CorpusPageKey("pdfjs/legacy.pdf", 0)];
+            var legacy = manifest[new RenderProgram.CorpusPageKey("pdfjs/legacy.pdf", 0)];
             legacy.ExpectedStatus.Should().Be("MALFORMED_PDF");
             legacy.ExpectedResultStatus.Should().BeEmpty();
             legacy.ExpectedResultCategory.Should().BeEmpty();
@@ -612,31 +614,31 @@ public class CorpusScanClassificationTests
     [Fact]
     public void SelectCorpusPages_WithManifest_UsesExactPages()
     {
-        Program.SelectCorpusPages(10, Program.CorpusPageMode.All, new HashSet<int> { 5, 2, 99 })
+        RenderProgram.SelectCorpusPages(10, RenderProgram.CorpusPageMode.All, new HashSet<int> { 5, 2, 99 })
             .Should().Equal(2, 5);
     }
 
     [Fact]
     public void SelectCorpusPages_WithOnlyOpenFailureSentinel_RendersAllPagesInAllPageMode()
     {
-        Program.SelectCorpusPages(10, Program.CorpusPageMode.All, new HashSet<int> { 0 })
+        RenderProgram.SelectCorpusPages(10, RenderProgram.CorpusPageMode.All, new HashSet<int> { 0 })
             .Should().Equal(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
     }
 
     [Fact]
     public void SelectCorpusPages_WithOnlyOpenFailureSentinel_RendersFirstPageInFocusedModes()
     {
-        Program.SelectCorpusPages(10, Program.CorpusPageMode.First, new HashSet<int> { 0 })
+        RenderProgram.SelectCorpusPages(10, RenderProgram.CorpusPageMode.First, new HashSet<int> { 0 })
             .Should().Equal(1);
     }
 
     [Fact]
     public void ComputeCorpusScanWallBudget_AllOracles_AllowsEveryOracleTimeout()
     {
-        var budget = Program.ComputeCorpusScanWallBudgetMs(
+        var budget = RenderProgram.ComputeCorpusScanWallBudgetMs(
             oracleTimeoutMs: 30_000,
-            Program.CorpusPageMode.First,
-            Program.CorpusExtraOracles.All);
+            RenderProgram.CorpusPageMode.First,
+            RenderProgram.CorpusExtraOracles.All);
 
         budget.Should().BeGreaterThanOrEqualTo(7 * 30_000,
             "pdfe plus two primary references and three escalation references need room to return structured oracle statuses before the outer stuck-task guard fires");
@@ -645,10 +647,10 @@ public class CorpusScanClassificationTests
     [Fact]
     public void ComputeCorpusScanWallBudget_ManifestPages_ScalesWithSelectedPages()
     {
-        var budget = Program.ComputeCorpusScanWallBudgetMs(
+        var budget = RenderProgram.ComputeCorpusScanWallBudgetMs(
             oracleTimeoutMs: 15_000,
-            Program.CorpusPageMode.First,
-            Program.CorpusExtraOracles.Ghostscript,
+            RenderProgram.CorpusPageMode.First,
+            RenderProgram.CorpusExtraOracles.Ghostscript,
             new HashSet<int> { 1, 7, 25 });
 
         budget.Should().BeGreaterThanOrEqualTo(14 * 15_000);
@@ -659,28 +661,28 @@ public class CorpusScanClassificationTests
     {
         var entries = new[]
         {
-            new Program.CorpusScanEntry
+            new RenderProgram.CorpusScanEntry
             {
                 path = "pdfjs/bad.pdf",
                 pageNumber = 0,
                 status = "MALFORMED_PDF",
                 errorMessage = "Document has no Pages dictionary",
             },
-            new Program.CorpusScanEntry
+            new RenderProgram.CorpusScanEntry
             {
                 path = "pdfjs/renderable.pdf",
                 pageNumber = 1,
                 status = "PASS_ONE",
             },
         };
-        var expectations = new Dictionary<Program.CorpusPageKey, Program.CorpusExpectedOutcome>
+        var expectations = new Dictionary<RenderProgram.CorpusPageKey, RenderProgram.CorpusExpectedOutcome>
         {
-            [new Program.CorpusPageKey("pdfjs/bad.pdf", 0)] =
+            [new RenderProgram.CorpusPageKey("pdfjs/bad.pdf", 0)] =
                 new("MALFORMED_PDF", "no Pages dictionary", "accepted malformed fixture"),
         };
 
-        Program.ApplyCorpusExpectations(entries, expectations);
-        var summary = Program.BuildCorpusScanSummary(entries);
+        RenderProgram.ApplyCorpusExpectations(entries, expectations);
+        var summary = RenderProgram.BuildCorpusScanSummary(entries);
 
         entries[0].status.Should().Be("MALFORMED_PDF");
         entries[0].resultStatus.Should().Be("PASS");
@@ -701,16 +703,16 @@ public class CorpusScanClassificationTests
     {
         var entries = new[]
         {
-            new Program.CorpusScanEntry
+            new RenderProgram.CorpusScanEntry
             {
                 path = "pdfjs/reference-refusal.pdf",
                 pageNumber = 1,
                 status = "PASS_ONE",
             },
         };
-        var expectations = new Dictionary<Program.CorpusPageKey, Program.CorpusExpectedOutcome>
+        var expectations = new Dictionary<RenderProgram.CorpusPageKey, RenderProgram.CorpusExpectedOutcome>
         {
-            [new Program.CorpusPageKey("pdfjs/reference-refusal.pdf", 1)] =
+            [new RenderProgram.CorpusPageKey("pdfjs/reference-refusal.pdf", 1)] =
                 new(
                     "PASS_ONE",
                     "",
@@ -720,8 +722,8 @@ public class CorpusScanClassificationTests
                     "pdfe agrees with the renderable references"),
         };
 
-        Program.ApplyCorpusExpectations(entries, expectations);
-        var summary = Program.BuildCorpusScanSummary(entries);
+        RenderProgram.ApplyCorpusExpectations(entries, expectations);
+        var summary = RenderProgram.BuildCorpusScanSummary(entries);
 
         entries[0].status.Should().Be("PASS_ONE");
         entries[0].resultStatus.Should().Be("PASS");
@@ -735,16 +737,16 @@ public class CorpusScanClassificationTests
     {
         var entries = new[]
         {
-            new Program.CorpusScanEntry
+            new RenderProgram.CorpusScanEntry
             {
                 path = "pdfjs/font-policy.pdf",
                 pageNumber = 1,
                 status = "DIFF",
             },
         };
-        var expectations = new Dictionary<Program.CorpusPageKey, Program.CorpusExpectedOutcome>
+        var expectations = new Dictionary<RenderProgram.CorpusPageKey, RenderProgram.CorpusExpectedOutcome>
         {
-            [new Program.CorpusPageKey("pdfjs/font-policy.pdf", 1)] =
+            [new RenderProgram.CorpusPageKey("pdfjs/font-policy.pdf", 1)] =
                 new(
                     "*",
                     "",
@@ -754,7 +756,7 @@ public class CorpusScanClassificationTests
                     "raw oracle class may vary by oracle set"),
         };
 
-        Program.ApplyCorpusExpectations(entries, expectations);
+        RenderProgram.ApplyCorpusExpectations(entries, expectations);
 
         entries[0].status.Should().Be("DIFF");
         entries[0].expectedStatus.Should().Be("*");
@@ -768,16 +770,16 @@ public class CorpusScanClassificationTests
     {
         var entries = new[]
         {
-            new Program.CorpusScanEntry
+            new RenderProgram.CorpusScanEntry
             {
                 path = "bug920426.pdf",
                 pageNumber = 1,
                 status = "PASS_ONE",
             },
         };
-        var expectations = new Dictionary<Program.CorpusPageKey, Program.CorpusExpectedOutcome>
+        var expectations = new Dictionary<RenderProgram.CorpusPageKey, RenderProgram.CorpusExpectedOutcome>
         {
-            [new Program.CorpusPageKey("pdfjs/bug920426.pdf", 1)] =
+            [new RenderProgram.CorpusPageKey("pdfjs/bug920426.pdf", 1)] =
                 new(
                     "PASS_ONE",
                     "",
@@ -787,7 +789,7 @@ public class CorpusScanClassificationTests
                     "bare default pdf.js corpus path should still match"),
         };
 
-        Program.ApplyCorpusExpectations(entries, expectations);
+        RenderProgram.ApplyCorpusExpectations(entries, expectations);
 
         entries[0].expectationResult.Should().Be("PASS");
         entries[0].resultStatus.Should().Be("PASS");

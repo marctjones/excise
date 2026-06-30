@@ -36,6 +36,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="pdfe" />
+    <InternalsVisibleTo Include="Pdfe.RenderTools" />
     <InternalsVisibleTo Include="Pdfe.Rendering.Tests" />
   </ItemGroup>
 

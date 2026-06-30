@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Run a focused image/filter rendering conformance scan. This script ties the
-# feature inventory to pdfe's existing corpus-scan and rendering-quality
+# feature inventory to Pdfe.RenderTools corpus-scan and rendering-quality
 # classification commands.
 
 set -euo pipefail
@@ -36,7 +36,7 @@ Options:
                          Omit to scan every PDF with any image stream.
   --page-mode <mode>     first, sample, or all. Default: sample.
   --oracles <set>        none, ghostscript, pdfbox, pdfium, all. Default: all.
-  --parallel <n>         pdfe corpus-scan parallelism. Default: 0 auto.
+  --parallel <n>         Pdfe.RenderTools corpus-scan parallelism. Default: 0 auto.
   --pdf-timeout-ms <n>   Per-PDF oracle timeout. Default: 120000.
   --release              Use Release build.
   -h, --help             Show this help.
@@ -117,19 +117,19 @@ if ! awk 'NR > 1 { found=1; exit } END { exit found ? 0 : 1 }' "$PAGE_MANIFEST";
     exit 1
 fi
 
-echo "building Pdfe.Cli ($CONFIG)"
-dotnet build -c "$CONFIG" Pdfe.Cli/Pdfe.Cli.csproj >/dev/null
-PDFE_BIN="$ROOT/Pdfe.Cli/bin/$CONFIG/net10.0/pdfe"
+echo "building Pdfe.RenderTools ($CONFIG)"
+dotnet build -c "$CONFIG" tools/Pdfe.RenderTools/Pdfe.RenderTools.csproj >/dev/null
+RENDER_TOOLS_BIN="$ROOT/tools/Pdfe.RenderTools/bin/$CONFIG/net10.0/Pdfe.RenderTools"
 
 if [[ -z "$FEATURE" || "$FEATURE" == "filter:JBIG2Decode" ]]; then
     echo "classifying JBIG2 requirements"
-    "$PDFE_BIN" jbig2-classify "$CORPUS" --output "$JBIG2_REPORT"
+    "$RENDER_TOOLS_BIN" jbig2-classify "$CORPUS" --output "$JBIG2_REPORT"
 else
     echo "skipping JBIG2 classification for non-JBIG2 feature '$FEATURE'"
 fi
 
 echo "running raw differential image/filter scan"
-"$PDFE_BIN" corpus-scan "$CORPUS" \
+"$RENDER_TOOLS_BIN" corpus-scan "$CORPUS" \
     --output "$RAW_REPORT" \
     --page-manifest "$PAGE_MANIFEST" \
     --page-mode "$PAGE_MODE" \
@@ -138,7 +138,7 @@ echo "running raw differential image/filter scan"
     --pdf-timeout-ms "$PDF_TIMEOUT_MS"
 
 echo "applying rendering quality contracts"
-"$PDFE_BIN" render-quality-classify "$RAW_REPORT" \
+"$RENDER_TOOLS_BIN" render-quality-classify "$RAW_REPORT" \
     --contracts "$CONTRACTS" \
     --output "$QUALITY_REPORT"
 

@@ -394,7 +394,7 @@ def write_page_manifest(path: Path, entries: list[dict[str, Any]], feature_filte
             if not features:
                 continue
             # Page 0 means "all pages when page-mode=all, otherwise page 1" in
-            # pdfe corpus-scan. The inventory is file-level, so this is the
+            # Pdfe.RenderTools corpus-scan. The inventory is file-level, so this is the
             # safest way to avoid guessing which page owns a resource.
             out.write(f"{entry['path']}\t0\t{label}\n")
 

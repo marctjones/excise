@@ -42,7 +42,7 @@ CONFIG="Debug"
 TINY=0
 PER_CHUNK_PARALLEL="0"        # 0 = pdfe auto-picks (ProcessorCount/2)
 PDF_TIMEOUT_MS="15000"        # mutool per-page timeout
-PROCESS_TIMEOUT_SECONDS="600" # whole pdfe corpus-scan process timeout
+PROCESS_TIMEOUT_SECONDS="600" # whole Pdfe.RenderTools corpus-scan process timeout
 CHUNK_PARALLEL="4"            # how many chunks to run concurrently
 PAGE_MODE="first"             # first | sample | all
 EXTRA_ORACLES="ghostscript"   # none | ghostscript | pdfbox | pdfium | all
@@ -197,14 +197,14 @@ PY
     echo "▶ tiny mode: corpus symlinked to $TINY_DIR ($tiny_count PDFs)"
 fi
 
-echo "▶ Building Pdfe.Cli ($CONFIG)"
+echo "▶ Building Pdfe.RenderTools ($CONFIG)"
 # Build once. Each chunk then runs the published binary directly,
 # avoiding the ~3-min `dotnet test` VSTest startup tax per invocation.
 # Net effect: 14 chunks now take ~2 min total instead of 65+.
-dotnet build -c "$CONFIG" Pdfe.Cli/Pdfe.Cli.csproj >/dev/null
-PDFE_BIN="$ROOT/Pdfe.Cli/bin/$CONFIG/net10.0/pdfe"
-if [[ ! -x "$PDFE_BIN" ]]; then
-    echo "✗ pdfe binary not found at $PDFE_BIN" >&2
+dotnet build -c "$CONFIG" tools/Pdfe.RenderTools/Pdfe.RenderTools.csproj >/dev/null
+PDFE_RENDER_TOOLS_BIN="$ROOT/tools/Pdfe.RenderTools/bin/$CONFIG/net10.0/Pdfe.RenderTools"
+if [[ ! -x "$PDFE_RENDER_TOOLS_BIN" ]]; then
+    echo "✗ Pdfe.RenderTools binary not found at $PDFE_RENDER_TOOLS_BIN" >&2
     exit 1
 fi
 
@@ -405,34 +405,23 @@ run_one_chunk() {
         runner=(gtimeout --kill-after=10s "$PROCESS_TIMEOUT_SECONDS")
     fi
 
+    local command=("$PDFE_RENDER_TOOLS_BIN" corpus-scan "$CORPUS"
+        --output "$slice_path"
+        --chunk "$scan_chunk"
+        --total "$scan_total"
+        --parallel "$PER_CHUNK_PARALLEL"
+        --pdf-timeout-ms "$PDF_TIMEOUT_MS"
+        --page-mode "$PAGE_MODE"
+        --extra-oracles "$EXTRA_ORACLES")
+    if (( ${#manifest_args[@]} > 0 )); then command+=("${manifest_args[@]}"); fi
+    if (( ${#password_args[@]} > 0 )); then command+=("${password_args[@]}"); fi
+    if (( ${#expectation_args[@]} > 0 )); then command+=("${expectation_args[@]}"); fi
+    if (( ${#pdfe_cache_args[@]} > 0 )); then command+=("${pdfe_cache_args[@]}"); fi
+
     if (( ${#runner[@]} > 0 )); then
-        "${runner[@]}" "$PDFE_BIN" corpus-scan "$CORPUS" \
-            --output "$slice_path" \
-            --chunk "$scan_chunk" \
-            --total "$scan_total" \
-            --parallel "$PER_CHUNK_PARALLEL" \
-            --pdf-timeout-ms "$PDF_TIMEOUT_MS" \
-            --page-mode "$PAGE_MODE" \
-            --extra-oracles "$EXTRA_ORACLES" \
-            "${manifest_args[@]}" \
-            "${password_args[@]}" \
-            "${expectation_args[@]}" \
-            "${pdfe_cache_args[@]}" \
-            > "$CHUNK_LOG_DIR/exploratory-chunk-$i.log" 2>&1
+        "${runner[@]}" "${command[@]}" > "$CHUNK_LOG_DIR/exploratory-chunk-$i.log" 2>&1
     else
-        "$PDFE_BIN" corpus-scan "$CORPUS" \
-            --output "$slice_path" \
-            --chunk "$scan_chunk" \
-            --total "$scan_total" \
-            --parallel "$PER_CHUNK_PARALLEL" \
-            --pdf-timeout-ms "$PDF_TIMEOUT_MS" \
-            --page-mode "$PAGE_MODE" \
-            --extra-oracles "$EXTRA_ORACLES" \
-            "${manifest_args[@]}" \
-            "${password_args[@]}" \
-            "${expectation_args[@]}" \
-            "${pdfe_cache_args[@]}" \
-            > "$CHUNK_LOG_DIR/exploratory-chunk-$i.log" 2>&1
+        "${command[@]}" > "$CHUNK_LOG_DIR/exploratory-chunk-$i.log" 2>&1
     fi
     local rc=$?
     if [[ "$rc" == "0" && -f "$slice_path" ]]; then
@@ -450,7 +439,7 @@ print(f'{d[\"total\"]} page results, peak {d[\"peakRssBytes\"]//1024//1024} MB')
     fi
 }
 export -f run_one_chunk
-export PDFE_BIN CORPUS CORPUS_LABEL BIN_DIR SLICE_DIR CHUNKS PER_CHUNK_PARALLEL PDF_TIMEOUT_MS PROCESS_TIMEOUT_SECONDS PAGE_MODE EXTRA_ORACLES CHUNK_LOG_DIR
+export PDFE_RENDER_TOOLS_BIN CORPUS CORPUS_LABEL BIN_DIR SLICE_DIR CHUNKS PER_CHUNK_PARALLEL PDF_TIMEOUT_MS PROCESS_TIMEOUT_SECONDS PAGE_MODE EXTRA_ORACLES CHUNK_LOG_DIR
 export PAGE_SHARD_DIR PASSWORD_MANIFEST EXPECTATION_MANIFEST PDFE_RENDER_CACHE_ENABLED PDFE_RENDER_CACHE_DIR
 
 recover_one_page_shard_chunk_isolated() {
@@ -503,18 +492,18 @@ recover_one_page_shard_chunk_isolated() {
             pdfe_cache_args=(--pdfe-render-cache-dir "$PDFE_RENDER_CACHE_DIR")
         fi
 
-        local command=("$PDFE_BIN" corpus-scan "$CORPUS" \
-            --output "$single_json" \
-            --chunk 0 \
-            --total 1 \
-            --parallel 1 \
-            --pdf-timeout-ms "$PDF_TIMEOUT_MS" \
-            --page-mode "$PAGE_MODE" \
-            --extra-oracles "$EXTRA_ORACLES" \
-            --page-manifest "$single_manifest" \
-            "${password_args[@]}" \
-            "${expectation_args[@]}" \
-            "${pdfe_cache_args[@]}")
+        local command=("$PDFE_RENDER_TOOLS_BIN" corpus-scan "$CORPUS"
+            --output "$single_json"
+            --chunk 0
+            --total 1
+            --parallel 1
+            --pdf-timeout-ms "$PDF_TIMEOUT_MS"
+            --page-mode "$PAGE_MODE"
+            --extra-oracles "$EXTRA_ORACLES"
+            --page-manifest "$single_manifest")
+        if (( ${#password_args[@]} > 0 )); then command+=("${password_args[@]}"); fi
+        if (( ${#expectation_args[@]} > 0 )); then command+=("${expectation_args[@]}"); fi
+        if (( ${#pdfe_cache_args[@]} > 0 )); then command+=("${pdfe_cache_args[@]}"); fi
 
         local rc=0
         if (( ${#runner[@]} > 0 )); then
@@ -541,7 +530,7 @@ entry = {
     "status": status,
     "errorPhase": "scan",
     "errorType": error_type,
-    "errorMessage": f"pdfe corpus-scan exited {rc} before writing a single-page report",
+    "errorMessage": f"Pdfe.RenderTools corpus-scan exited {rc} before writing a single-page report",
 }
 report = {
     "generatedUtc": datetime.datetime.utcnow().isoformat() + "Z",
@@ -668,17 +657,17 @@ PY
             pdfe_cache_args=(--pdfe-render-cache-dir "$PDFE_RENDER_CACHE_DIR")
         fi
 
-        local command=("$PDFE_BIN" corpus-scan "$item_dir" \
-            --output "$single_json" \
-            --chunk 0 \
-            --total 1 \
-            --parallel 1 \
-            --pdf-timeout-ms "$PDF_TIMEOUT_MS" \
-            --page-mode "$PAGE_MODE" \
-            --extra-oracles "$EXTRA_ORACLES" \
-            "${password_args[@]}" \
-            "${expectation_args[@]}" \
-            "${pdfe_cache_args[@]}")
+        local command=("$PDFE_RENDER_TOOLS_BIN" corpus-scan "$item_dir"
+            --output "$single_json"
+            --chunk 0
+            --total 1
+            --parallel 1
+            --pdf-timeout-ms "$PDF_TIMEOUT_MS"
+            --page-mode "$PAGE_MODE"
+            --extra-oracles "$EXTRA_ORACLES")
+        if (( ${#password_args[@]} > 0 )); then command+=("${password_args[@]}"); fi
+        if (( ${#expectation_args[@]} > 0 )); then command+=("${expectation_args[@]}"); fi
+        if (( ${#pdfe_cache_args[@]} > 0 )); then command+=("${pdfe_cache_args[@]}"); fi
 
         local rc=0
         if (( ${#runner[@]} > 0 )); then
@@ -704,7 +693,7 @@ entry = {
     "status": status,
     "errorPhase": "scan",
     "errorType": error_type,
-    "errorMessage": f"pdfe corpus-scan exited {rc} before writing a single-PDF report",
+    "errorMessage": f"Pdfe.RenderTools corpus-scan exited {rc} before writing a single-PDF report",
 }
 report = {
     "generatedUtc": datetime.datetime.utcnow().isoformat() + "Z",

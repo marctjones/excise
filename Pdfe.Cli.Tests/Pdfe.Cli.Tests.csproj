@@ -22,6 +22,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Pdfe.Cli\Pdfe.Cli.csproj" />
     <ProjectReference Include="..\Pdfe.Core\Pdfe.Core.csproj" />
+    <ProjectReference Include="..\tools\Pdfe.ImageInspection\Pdfe.ImageInspection.csproj" />
+    <ProjectReference Include="..\tools\Pdfe.RenderTools\Pdfe.RenderTools.csproj" />
   </ItemGroup>
 
 </Project>

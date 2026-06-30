@@ -70,9 +70,9 @@ echo ""
 echo "=========================================="
 echo "5. DRAW SHAPES - Graphics API demo"
 echo "=========================================="
-echo "Command: dotnet run --project Pdfe.Cli -- draw \"$SIMPLE_PDF\" -o /tmp/pdfe_demo_shapes.pdf"
+echo "Command: dotnet run --project tools/Pdfe.RenderTools -- draw \"$SIMPLE_PDF\" -o /tmp/pdfe_demo_shapes.pdf"
 echo ""
-dotnet run --project Pdfe.Cli -- draw "$SIMPLE_PDF" -o /tmp/pdfe_demo_shapes.pdf
+dotnet run --project tools/Pdfe.RenderTools -- draw "$SIMPLE_PDF" -o /tmp/pdfe_demo_shapes.pdf
 echo ""
 echo "Output: /tmp/pdfe_demo_shapes.pdf"
 ls -la /tmp/pdfe_demo_shapes.pdf
@@ -124,11 +124,11 @@ echo ""
 echo "=========================================="
 echo "9. INTERACTIVE DEMOS"
 echo "=========================================="
-echo "Command: dotnet run --project Pdfe.Cli -- demo"
+echo "Command: dotnet run --project tools/Pdfe.RenderTools -- demo"
 echo ""
 echo "This will run interactive demos. Press Ctrl+C to exit."
 pause
-dotnet run --project Pdfe.Cli -- demo
+dotnet run --project tools/Pdfe.RenderTools -- demo
 
 echo ""
 echo "=========================================="

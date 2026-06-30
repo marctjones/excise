@@ -1,127 +1,15 @@
-using System.CommandLine;
-using System.Text.Json;
-using Pdfe.Rendering.Differential;
 using SkiaSharp;
 
-namespace Pdfe.Cli;
+namespace Pdfe.ImageInspection;
 
-partial class Program
+public static class VisualDiffAnalyzer
 {
-    private const int DefaultVisualDiffTolerance = 64;
+    public const int DefaultTolerance = 64;
 
-    static Command CreateVisualDiffCommand()
-    {
-        var actualArg = new Argument<FileInfo>("actual") { Description = "Actual PNG, usually pdfe output" };
-        var referenceArg = new Argument<FileInfo>("reference") { Description = "Reference PNG" };
-        var outputOption = new Option<FileInfo?>("--output", "-o")
-        {
-            Description = "Optional side-by-side diff PNG output",
-        };
-        var jsonOption = new Option<FileInfo?>("--json")
-        {
-            Description = "Optional JSON report output",
-        };
-        var toleranceOption = new Option<int>("--tolerance")
-        {
-            Description = "Per-channel pixel tolerance used for diff masks",
-            DefaultValueFactory = _ => DefaultVisualDiffTolerance,
-        };
-
-        var command = new Command("visual-diff",
-            "Analyze two rendered PNGs and classify the visual difference")
-        {
-            actualArg,
-            referenceArg,
-            outputOption,
-            jsonOption,
-            toleranceOption,
-        };
-
-        command.SetAction(parseResult =>
-        {
-            var actualFile = parseResult.GetValue(actualArg)!;
-            var referenceFile = parseResult.GetValue(referenceArg)!;
-            var outputFile = parseResult.GetValue(outputOption);
-            var jsonFile = parseResult.GetValue(jsonOption);
-            var tolerance = parseResult.GetValue(toleranceOption);
-
-            if (!actualFile.Exists)
-            {
-                Console.Error.WriteLine($"Actual image not found: {actualFile.FullName}");
-                Environment.ExitCode = 1;
-                return;
-            }
-
-            if (!referenceFile.Exists)
-            {
-                Console.Error.WriteLine($"Reference image not found: {referenceFile.FullName}");
-                Environment.ExitCode = 1;
-                return;
-            }
-
-            if (tolerance < 0 || tolerance > 255)
-            {
-                Console.Error.WriteLine("--tolerance must be between 0 and 255.");
-                Environment.ExitCode = 1;
-                return;
-            }
-
-            try
-            {
-                using var actual = LoadBitmapOrThrow(actualFile);
-                using var reference = LoadBitmapOrThrow(referenceFile);
-                using var comparableActual = actual.Width == reference.Width && actual.Height == reference.Height
-                    ? actual.Copy()
-                    : DifferentialMetrics.ResizeMatch(actual, reference.Width, reference.Height);
-
-                var report = AnalyzeVisualDiff(
-                    comparableActual,
-                    reference,
-                    tolerance,
-                    actualFile.FullName,
-                    referenceFile.FullName,
-                    actual.Width,
-                    actual.Height);
-
-                Console.WriteLine($"Category: {report.category}");
-                Console.WriteLine($"Human impact: {report.humanImpact}");
-                Console.WriteLine(
-                    $"Diff: {report.diffFraction:P2} ({report.differingPixels:N0}/{report.pixelCount:N0}), " +
-                    $"MAE {report.meanAbsoluteError:F2}, RMSE {report.rootMeanSquaredError:F2}, " +
-                    $"max {report.maxChannelDelta}");
-                if (report.diffBounds != null)
-                    Console.WriteLine($"Bounds: {report.diffBounds}");
-
-                if (outputFile != null)
-                {
-                    EnsureParentDirectory(outputFile);
-                    using var diff = BuildVisualDiffOverlay(comparableActual, reference, tolerance);
-                    DifferentialMetrics.SaveTriptych(outputFile.FullName, comparableActual, reference, diff);
-                    Console.WriteLine($"Wrote diff image: {outputFile.FullName}");
-                }
-
-                if (jsonFile != null)
-                {
-                    EnsureParentDirectory(jsonFile);
-                    var json = JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true });
-                    File.WriteAllText(jsonFile.FullName, json);
-                    Console.WriteLine($"Wrote JSON: {jsonFile.FullName}");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Error: {ex.Message}");
-                Environment.ExitCode = 1;
-            }
-        });
-
-        return command;
-    }
-
-    internal static VisualDiffReport AnalyzeVisualDiff(
+    public static VisualDiffReport Analyze(
         SKBitmap actual,
         SKBitmap reference,
-        int tolerance = DefaultVisualDiffTolerance,
+        int tolerance = DefaultTolerance,
         string? actualPath = null,
         string? referencePath = null,
         int? originalActualWidth = null,
@@ -139,7 +27,7 @@ partial class Program
         long differingPixels = 0;
         long sumAbs = 0;
         double sumSquared = 0;
-        int maxChannelDelta = 0;
+        var maxChannelDelta = 0;
         double diffLuminance = 0;
         double diffChroma = 0;
         long actualDarkPixels = 0;
@@ -149,10 +37,10 @@ partial class Program
         var right = -1;
         var bottom = -1;
 
-        for (int y = 0; y < height; y++)
+        for (var y = 0; y < height; y++)
         {
             var rowOffset = y * width;
-            for (int x = 0; x < width; x++)
+            for (var x = 0; x < width; x++)
             {
                 var pa = actual.GetPixel(x, y);
                 var pr = reference.GetPixel(x, y);
@@ -160,6 +48,7 @@ partial class Program
                     actualDarkPixels++;
                 if (IsDarkTextPixel(pr))
                     referenceDarkPixels++;
+
                 var dR = Math.Abs(pa.Red - pr.Red);
                 var dG = Math.Abs(pa.Green - pr.Green);
                 var dB = Math.Abs(pa.Blue - pr.Blue);
@@ -237,42 +126,25 @@ partial class Program
         };
     }
 
-    internal static void ApplyCorpusVisualDiffClassification(
-        CorpusScanEntry entry,
-        SKBitmap pdfe,
-        SKBitmap reference)
+    public static SKBitmap ResizeMatch(SKBitmap source, int targetWidth, int targetHeight)
     {
-        using var comparablePdfe = pdfe.Width == reference.Width && pdfe.Height == reference.Height
-            ? pdfe.Copy()
-            : DifferentialMetrics.ResizeMatch(pdfe, reference.Width, reference.Height);
-        var report = AnalyzeVisualDiff(
-            comparablePdfe,
-            reference,
-            DefaultVisualDiffTolerance,
-            originalActualWidth: pdfe.Width,
-            originalActualHeight: pdfe.Height);
+        if (source.Width == targetWidth && source.Height == targetHeight)
+            return source.Copy();
 
-        entry.visualCategory = report.category;
-        entry.visualHumanImpact = report.humanImpact;
-        entry.visualDiffBounds = report.diffBounds;
-        entry.visualTopRegions = report.topRegions.Take(5).ToArray();
+        var sampling = new SKSamplingOptions(SKCubicResampler.Mitchell);
+        return source.Resize(new SKImageInfo(targetWidth, targetHeight), sampling)
+            ?? throw new InvalidOperationException("Resize failed.");
     }
 
-    private static SKBitmap LoadBitmapOrThrow(FileInfo file)
-    {
-        var bitmap = SKBitmap.Decode(file.FullName);
-        return bitmap ?? throw new InvalidDataException($"Could not decode image: {file.FullName}");
-    }
-
-    private static SKBitmap BuildVisualDiffOverlay(SKBitmap actual, SKBitmap reference, int tolerance)
+    public static SKBitmap BuildDiffOverlay(SKBitmap actual, SKBitmap reference, int tolerance = DefaultTolerance)
     {
         if (actual.Width != reference.Width || actual.Height != reference.Height)
-            throw new ArgumentException("Dimension mismatch");
+            throw new ArgumentException("Dimension mismatch.");
 
         var diff = new SKBitmap(actual.Width, actual.Height);
-        for (int y = 0; y < actual.Height; y++)
+        for (var y = 0; y < actual.Height; y++)
         {
-            for (int x = 0; x < actual.Width; x++)
+            for (var x = 0; x < actual.Width; x++)
             {
                 var pa = actual.GetPixel(x, y);
                 var pr = reference.GetPixel(x, y);
@@ -288,6 +160,30 @@ partial class Program
         return diff;
     }
 
+    public static void SaveTriptych(string path, SKBitmap actual, SKBitmap reference, SKBitmap? diff = null)
+    {
+        diff ??= BuildDiffOverlay(actual, reference);
+        var width = actual.Width;
+        var height = actual.Height;
+        const int gap = 8;
+
+        using var combined = new SKBitmap((width * 3) + (gap * 2), height);
+        using var canvas = new SKCanvas(combined);
+        canvas.Clear(SKColors.White);
+        canvas.DrawBitmap(actual, 0, 0);
+        canvas.DrawBitmap(reference, width + gap, 0);
+        canvas.DrawBitmap(diff, 2 * (width + gap), 0);
+        canvas.Flush();
+
+        var directory = Path.GetDirectoryName(path);
+        if (!string.IsNullOrWhiteSpace(directory))
+            Directory.CreateDirectory(directory);
+        using var image = SKImage.FromBitmap(combined);
+        using var data = image.Encode(SKEncodedImageFormat.Png, 90);
+        using var stream = File.Open(path, FileMode.Create, FileAccess.Write);
+        data.SaveTo(stream);
+    }
+
     private static IReadOnlyList<VisualDiffRegion> FindDiffRegions(
         bool[] diffMask,
         byte[] deltas,
@@ -299,7 +195,7 @@ partial class Program
         var regions = new List<VisualDiffRegion>();
         var stack = new Stack<int>();
 
-        for (int index = 0; index < diffMask.Length; index++)
+        for (var index = 0; index < diffMask.Length; index++)
         {
             if (!diffMask[index] || visited[index])
                 continue;
@@ -477,51 +373,45 @@ partial class Program
             _ when diffFraction >= 0.08 && meanAbsoluteError >= 16 => "high",
             _ => "medium",
         };
+}
 
-    private static void EnsureParentDirectory(FileInfo file)
-    {
-        if (!string.IsNullOrWhiteSpace(file.DirectoryName))
-            Directory.CreateDirectory(file.DirectoryName);
-    }
+public sealed class VisualDiffReport
+{
+    public string? actualPath { get; set; }
+    public string? referencePath { get; set; }
+    public int actualWidth { get; set; }
+    public int actualHeight { get; set; }
+    public int referenceWidth { get; set; }
+    public int referenceHeight { get; set; }
+    public int comparedWidth { get; set; }
+    public int comparedHeight { get; set; }
+    public int pixelCount { get; set; }
+    public int tolerance { get; set; }
+    public int differingPixels { get; set; }
+    public double diffFraction { get; set; }
+    public double meanAbsoluteError { get; set; }
+    public double rootMeanSquaredError { get; set; }
+    public int maxChannelDelta { get; set; }
+    public int actualDarkPixels { get; set; }
+    public int referenceDarkPixels { get; set; }
+    public double darkPixelBalance { get; set; }
+    public double meanDiffLuminance { get; set; }
+    public double meanDiffChroma { get; set; }
+    public VisualDiffBounds? diffBounds { get; set; }
+    public IReadOnlyList<VisualDiffRegion> topRegions { get; set; } = Array.Empty<VisualDiffRegion>();
+    public string category { get; set; } = "";
+    public string humanImpact { get; set; } = "";
+}
 
-    internal sealed class VisualDiffReport
-    {
-        public string? actualPath { get; set; }
-        public string? referencePath { get; set; }
-        public int actualWidth { get; set; }
-        public int actualHeight { get; set; }
-        public int referenceWidth { get; set; }
-        public int referenceHeight { get; set; }
-        public int comparedWidth { get; set; }
-        public int comparedHeight { get; set; }
-        public int pixelCount { get; set; }
-        public int tolerance { get; set; }
-        public int differingPixels { get; set; }
-        public double diffFraction { get; set; }
-        public double meanAbsoluteError { get; set; }
-        public double rootMeanSquaredError { get; set; }
-        public int maxChannelDelta { get; set; }
-        public int actualDarkPixels { get; set; }
-        public int referenceDarkPixels { get; set; }
-        public double darkPixelBalance { get; set; }
-        public double meanDiffLuminance { get; set; }
-        public double meanDiffChroma { get; set; }
-        public VisualDiffBounds? diffBounds { get; set; }
-        public IReadOnlyList<VisualDiffRegion> topRegions { get; set; } = Array.Empty<VisualDiffRegion>();
-        public string category { get; set; } = "";
-        public string humanImpact { get; set; } = "";
-    }
+public sealed record VisualDiffBounds(int x, int y, int width, int height);
 
-    internal sealed record VisualDiffBounds(int x, int y, int width, int height);
-
-    internal sealed class VisualDiffRegion
-    {
-        public int x { get; set; }
-        public int y { get; set; }
-        public int width { get; set; }
-        public int height { get; set; }
-        public int pixelCount { get; set; }
-        public double density { get; set; }
-        public double meanChannelDelta { get; set; }
-    }
+public sealed class VisualDiffRegion
+{
+    public int x { get; set; }
+    public int y { get; set; }
+    public int width { get; set; }
+    public int height { get; set; }
+    public int pixelCount { get; set; }
+    public double density { get; set; }
+    public double meanChannelDelta { get; set; }
 }

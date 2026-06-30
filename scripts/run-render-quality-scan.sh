@@ -56,7 +56,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 mkdir -p "$(dirname "$OUTPUT")"
-CMD=(dotnet run --project Pdfe.Cli/Pdfe.Cli.csproj -c "$CONFIG" -- \
+CMD=(dotnet run --project tools/Pdfe.RenderTools/Pdfe.RenderTools.csproj -c "$CONFIG" -- \
     render-quality-scan "$CORPUS" \
     --contracts "$CONTRACTS" \
     --output "$OUTPUT")
