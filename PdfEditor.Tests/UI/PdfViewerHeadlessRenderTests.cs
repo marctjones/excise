@@ -8,8 +8,12 @@ using Pdfe.Avalonia.Controls;
 using Pdfe.Avalonia.Imaging;
 using SkiaSharp;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
 namespace PdfEditor.Tests.UI;
@@ -27,6 +31,8 @@ namespace PdfEditor.Tests.UI;
 [Collection("AvaloniaTests")]
 public class PdfViewerHeadlessRenderTests
 {
+    private const int ViewerRenderDpi = 120;
+
     private readonly ITestOutputHelper _output;
 
     public PdfViewerHeadlessRenderTests(ITestOutputHelper output)
@@ -92,7 +98,8 @@ public class PdfViewerHeadlessRenderTests
         var pdfPath = FindRepoFile("test-pdfs", "sample-pdfs", "acc-global-compensation-report.pdf");
         var pdfBytes = await File.ReadAllBytesAsync(pdfPath);
 
-        using var expected = RenderDirectPage(pdfBytes, pageNumber: 1, dpi: 120);
+        using var expectedRaw = RenderDirectPage(pdfBytes, pageNumber: 1, dpi: ViewerRenderDpi);
+        using var expected = NormalizeSkiaBitmap(expectedRaw);
         using var displayed = await RenderViaViewerControl(pdfBytes);
 
         displayed.Width.Should().Be(expected.Width);
@@ -127,6 +134,115 @@ public class PdfViewerHeadlessRenderTests
         AssertLightOpaquePage(visualSurface, "ACC cover offscreen GUI surface");
     }
 
+    [FixedAvaloniaFact(Timeout = 900_000)]
+    [Trait("Category", "GuiDisplay")]
+    public async Task PdfViewer_RenderingQualitySuite_DisplayBitmapsMatchRenderer()
+    {
+        var repoRoot = FindRepoRoot();
+        var includeAllContractPages = Environment.GetEnvironmentVariable("PDFE_GUI_DISPLAY_FULL_CONTRACTS") == "1";
+        var caseFilter = Environment.GetEnvironmentVariable("PDFE_GUI_DISPLAY_CASE_FILTER");
+        var cases = DiscoverGuiDisplayCases(repoRoot, includeAllContractPages).ToList();
+        if (!string.IsNullOrWhiteSpace(caseFilter))
+        {
+            cases = cases
+                .Where(testCase => testCase.Id.Contains(caseFilter, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+        cases.Should().NotBeEmpty("the repository should contain GUI display fixtures");
+
+        var outputDir = Path.Combine(AppContext.BaseDirectory, "UI", "test-output");
+        Directory.CreateDirectory(outputDir);
+        var failureArtifactDir = Path.Combine(outputDir, "gui-display-failures");
+        if (Directory.Exists(failureArtifactDir))
+            Directory.Delete(failureArtifactDir, recursive: true);
+        var reportPath = Path.Combine(outputDir, includeAllContractPages
+            ? "gui-display-suite-full-contract-pages.json"
+            : "gui-display-suite-representative-pages.json");
+
+        var pdfBytesCache = new Dictionary<string, byte[]>(StringComparer.Ordinal);
+        var results = new List<GuiDisplayResult>();
+        var failures = new List<string>();
+        var suiteSw = Stopwatch.StartNew();
+
+        _output.WriteLine(
+            $"GUI display sweep: {cases.Count} page(s), " +
+            $"{(includeAllContractPages ? "all contracted pages" : "representative contracted pages")}" +
+            $"{(string.IsNullOrWhiteSpace(caseFilter) ? "" : $", filter '{caseFilter}'")}.");
+
+        for (var i = 0; i < cases.Count; i++)
+        {
+            var testCase = cases[i];
+            var caseSw = Stopwatch.StartNew();
+            var result = new GuiDisplayResult
+            {
+                path = testCase.RelativePath,
+                page = testCase.PageNumber,
+                source = testCase.Source,
+            };
+
+            try
+            {
+                if (!File.Exists(testCase.AbsolutePath))
+                    throw new FileNotFoundException("Fixture PDF not found.", testCase.AbsolutePath);
+
+                if (!pdfBytesCache.TryGetValue(testCase.AbsolutePath, out var pdfBytes))
+                {
+                    pdfBytes = await File.ReadAllBytesAsync(testCase.AbsolutePath);
+                    pdfBytesCache[testCase.AbsolutePath] = pdfBytes;
+                }
+
+                using var expectedRaw = RenderDirectPage(pdfBytes, testCase.PageNumber, ViewerRenderDpi);
+                using var expected = NormalizeSkiaBitmap(expectedRaw);
+                var capture = await RenderViewerVisualSurface(pdfBytes, testCase.PageNumber);
+                using var displayed = capture.Displayed;
+                using var visualSurface = capture.VisualSurface;
+
+                displayed.Width.Should().Be(expected.Width, $"{testCase.Id} GUI image width should match renderer");
+                displayed.Height.Should().Be(expected.Height, $"{testCase.Id} GUI image height should match renderer");
+
+                var imageSourceDiff = VisualAssertions.CalculatePixelDifference(displayed, expected);
+                result.imageSourcePixelDifference = imageSourceDiff;
+                if (imageSourceDiff > 0.001)
+                    SaveGuiDisplayFailureArtifacts(outputDir, testCase, expected, displayed, visualSurface);
+                imageSourceDiff.Should().BeLessThanOrEqualTo(0.001,
+                    $"{testCase.Id} Image.Source should match the PNG-visible renderer output");
+
+                AssertBitmapOpaque(displayed, $"{testCase.Id} Image.Source");
+                AssertGuiSurfaceDoesNotObscureDisplayedBitmap(displayed, visualSurface, testCase.Id);
+
+                result.status = "PASS";
+                result.visualSurfaceMeanLuminanceDelta =
+                    MeasureImage(displayed).MeanLuminance - MeasureImage(visualSurface).MeanLuminance;
+            }
+            catch (Exception ex)
+            {
+                result.status = "FAIL";
+                result.error = $"{ex.GetType().Name}: {ex.Message}";
+                failures.Add($"{testCase.Id}: {result.error}");
+            }
+            finally
+            {
+                caseSw.Stop();
+                result.elapsedMs = caseSw.ElapsedMilliseconds;
+                results.Add(result);
+            }
+
+            if ((i + 1) % 10 == 0 || i + 1 == cases.Count)
+            {
+                await WriteGuiDisplayReport(reportPath, includeAllContractPages, caseFilter, cases.Count, suiteSw.ElapsedMilliseconds, results);
+                _output.WriteLine(
+                    $"  {i + 1}/{cases.Count} checked, " +
+                    $"{failures.Count} failure(s), elapsed {suiteSw.Elapsed:mm\\:ss}");
+            }
+        }
+
+        suiteSw.Stop();
+        await WriteGuiDisplayReport(reportPath, includeAllContractPages, caseFilter, cases.Count, suiteSw.ElapsedMilliseconds, results);
+        _output.WriteLine($"GUI display sweep report: {reportPath}");
+
+        failures.Should().BeEmpty("GUI display path should preserve renderer pixels and avoid black/transparent surface failures");
+    }
+
     /// <summary>
     /// Sanity test: render the same PDF directly via SkiaRenderer, bypassing the
     /// PdfViewerControl, to isolate whether a failure is in the renderer or the
@@ -147,14 +263,14 @@ public class PdfViewerHeadlessRenderTests
         bitmap.Height.Should().BeGreaterThan(100);
     }
 
-    private async Task<SKBitmap> RenderViaViewerControl(byte[] pdfBytes)
+    private async Task<SKBitmap> RenderViaViewerControl(byte[] pdfBytes, int pageNumber = 1)
     {
         // [FixedAvaloniaFact] already dispatches this method onto the UI thread, so
         // we can touch Avalonia types directly.
 
         var doc = Pdfe.Core.Document.PdfDocument.Open(pdfBytes);
 
-        var viewer = new PdfViewerControl();
+        var viewer = new PdfViewerControl { CurrentPage = pageNumber };
         var window = new Window
         {
             Content = viewer,
@@ -188,11 +304,11 @@ public class PdfViewerHeadlessRenderTests
         return result;
     }
 
-    private async Task<ViewerVisualCapture> RenderViewerVisualSurface(byte[] pdfBytes)
+    private async Task<ViewerVisualCapture> RenderViewerVisualSurface(byte[] pdfBytes, int pageNumber = 1)
     {
         var doc = Pdfe.Core.Document.PdfDocument.Open(pdfBytes);
 
-        var viewer = new PdfViewerControl();
+        var viewer = new PdfViewerControl { CurrentPage = pageNumber };
         var window = new Window
         {
             Content = viewer,
@@ -242,14 +358,14 @@ public class PdfViewerHeadlessRenderTests
         var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(60);
         while (DateTime.UtcNow < deadline)
         {
-            if (!viewer.IsLoading && pdfImage.Source != null)
+            if (viewer.HasError || (!viewer.IsLoading && pdfImage.Source != null))
                 break;
             await Task.Delay(50);
         }
 
-        pdfImage.Source.Should().NotBeNull("viewer should have rendered the first page within 60s");
-        viewer.IsLoading.Should().BeFalse();
         viewer.HasError.Should().BeFalse($"viewer reported error: {viewer.ErrorMessage}");
+        pdfImage.Source.Should().NotBeNull("viewer should have rendered the requested page within 60s");
+        viewer.IsLoading.Should().BeFalse();
     }
 
     private static SKBitmap DecodeAvaloniaBitmap(Bitmap bitmap)
@@ -263,6 +379,15 @@ public class PdfViewerHeadlessRenderTests
             ?? throw new InvalidOperationException(
                 $"Could not decode captured bitmap ({bitmap.PixelSize}, {ms.Length} bytes). " +
                 "If this happens after a working baseline, check that TestAppBuilder has UseHeadlessDrawing=false.");
+    }
+
+    private static SKBitmap NormalizeSkiaBitmap(SKBitmap bitmap)
+    {
+        using var image = SKImage.FromBitmap(bitmap);
+        using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+        using var stream = data.AsStream();
+        return SKBitmap.Decode(stream)
+            ?? throw new InvalidOperationException("Could not decode normalized renderer PNG.");
     }
 
     private static SKBitmap RenderDirectPage(byte[] pdfBytes, int pageNumber, int dpi)
@@ -313,6 +438,62 @@ public class PdfViewerHeadlessRenderTests
             $"{description} should preserve the light page background");
     }
 
+    private static void AssertBitmapOpaque(SKBitmap bitmap, string description)
+    {
+        var stats = MeasureImage(bitmap);
+        stats.TransparentRatio.Should().BeLessThan(0.001,
+            $"{description} should be an opaque composited page image, not transparent pixels that can turn black over a dark GUI background");
+    }
+
+    private static void AssertGuiSurfaceDoesNotObscureDisplayedBitmap(SKBitmap displayed, SKBitmap visualSurface, string description)
+    {
+        visualSurface.Width.Should().Be(displayed.Width, $"{description} offscreen GUI surface width should match Image.Source");
+        visualSurface.Height.Should().Be(displayed.Height, $"{description} offscreen GUI surface height should match Image.Source");
+
+        var displayedStats = MeasureImage(displayed);
+        var surfaceStats = MeasureImage(visualSurface);
+
+        surfaceStats.TransparentRatio.Should().BeLessThan(0.001,
+            $"{description} offscreen GUI surface should render opaque pixels");
+        surfaceStats.MeanLuminance.Should().BeGreaterThan(displayedStats.MeanLuminance - 40,
+            $"{description} offscreen GUI surface should not be materially darker than the displayed page bitmap");
+        surfaceStats.DarkRatio.Should().BeLessThanOrEqualTo(Math.Min(0.98, displayedStats.DarkRatio + 0.25),
+            $"{description} offscreen GUI surface should not obscure the page with a black background");
+    }
+
+    private static ImageStats MeasureImage(SKBitmap bitmap)
+    {
+        var total = (long)bitmap.Width * bitmap.Height;
+        long dark = 0;
+        long transparent = 0;
+        double luminanceSum = 0;
+
+        for (var y = 0; y < bitmap.Height; y++)
+        {
+            for (var x = 0; x < bitmap.Width; x++)
+            {
+                var pixel = bitmap.GetPixel(x, y);
+                if (pixel.Alpha < 250)
+                    transparent++;
+
+                var alpha = pixel.Alpha / 255.0;
+                var red = pixel.Red * alpha + 255 * (1 - alpha);
+                var green = pixel.Green * alpha + 255 * (1 - alpha);
+                var blue = pixel.Blue * alpha + 255 * (1 - alpha);
+                var luminance = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+                luminanceSum += luminance;
+
+                if (luminance < 32)
+                    dark++;
+            }
+        }
+
+        return new ImageStats(
+            TransparentRatio: (double)transparent / total,
+            DarkRatio: (double)dark / total,
+            MeanLuminance: luminanceSum / total);
+    }
+
     private void AssertMatchesBaseline(SKBitmap actual, string testName, double maxDifference)
     {
         var baseDir = AppContext.BaseDirectory;
@@ -359,21 +540,249 @@ public class PdfViewerHeadlessRenderTests
         return Path.Combine(dir.FullName, "UI", "baselines", $"{testName}.png");
     }
 
-    private static string FindRepoFile(params string[] pathParts)
+    private static string FindRepoRoot()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
         while (dir != null)
         {
-            var candidate = Path.Combine(new[] { dir.FullName }.Concat(pathParts).ToArray());
-            if (File.Exists(candidate))
-                return candidate;
+            if (File.Exists(Path.Combine(dir.FullName, "pdfe.sln")) &&
+                Directory.Exists(Path.Combine(dir.FullName, "test-pdfs")))
+                return dir.FullName;
             dir = dir.Parent;
         }
+
+        throw new InvalidOperationException("Could not locate repository root.");
+    }
+
+    private static string FindRepoFile(params string[] pathParts)
+    {
+        var candidate = Path.Combine(new[] { FindRepoRoot() }.Concat(pathParts).ToArray());
+        if (File.Exists(candidate))
+            return candidate;
 
         throw new FileNotFoundException($"Could not find repository file: {Path.Combine(pathParts)}");
     }
 
+    private static IEnumerable<GuiDisplayCase> DiscoverGuiDisplayCases(string repoRoot, bool includeAllContractPages)
+    {
+        var byId = new Dictionary<string, GuiDisplayCase>(StringComparer.Ordinal);
+
+        foreach (var testCase in DiscoverRenderingContractCases(repoRoot, includeAllContractPages))
+            byId.TryAdd(testCase.Id, testCase);
+
+        foreach (var testCase in DiscoverDirectoryFirstPageCases(repoRoot, Path.Combine("test-pdfs", "pdf20"), "pdf20 atomic fixture"))
+            byId.TryAdd(testCase.Id, testCase);
+
+        return byId.Values
+            .OrderBy(c => SourcePriority(c.Source))
+            .ThenBy(c => c.RelativePath, StringComparer.Ordinal)
+            .ThenBy(c => c.PageNumber);
+    }
+
+    private static int SourcePriority(string source) => source switch
+    {
+        "pdf20 atomic fixture" => 0,
+        "contract:pdf20" => 1,
+        "contract:sample-pdfs" => 2,
+        "contract:federal" => 3,
+        "contract:smoke" => 4,
+        "contract:ghent" => 5,
+        "contract:altona" => 6,
+        _ => 99,
+    };
+
+    private static IEnumerable<GuiDisplayCase> DiscoverRenderingContractCases(string repoRoot, bool includeAllContractPages)
+    {
+        var contractsRoot = Path.Combine(repoRoot, "test-pdfs", "rendering-contracts");
+        var contractDirs = new[]
+        {
+            "sample-pdfs",
+            "federal",
+            "pdf20",
+            "altona",
+            "ghent",
+            "smoke",
+        };
+
+        foreach (var contractDir in contractDirs)
+        {
+            var dir = Path.Combine(contractsRoot, contractDir);
+            if (!Directory.Exists(dir))
+                continue;
+
+            foreach (var contractPath in Directory.EnumerateFiles(dir, "*.json", SearchOption.AllDirectories)
+                         .Where(path => !Path.GetFileName(path).StartsWith('_'))
+                         .OrderBy(path => path, StringComparer.Ordinal))
+            {
+                using var json = JsonDocument.Parse(File.ReadAllText(contractPath));
+                var root = json.RootElement;
+                if (!root.TryGetProperty("Path", out var pathElement) ||
+                    pathElement.GetString() is not { Length: > 0 } relativePdfPath ||
+                    !root.TryGetProperty("Pages", out var pagesElement) ||
+                    pagesElement.ValueKind != JsonValueKind.Object)
+                {
+                    continue;
+                }
+
+                var allPages = pagesElement.EnumerateObject()
+                    .SelectMany(p => ExpandPageKey(p.Name))
+                    .Distinct()
+                    .OrderBy(page => page)
+                    .ToList();
+                var selectedPages = includeAllContractPages
+                    ? allPages
+                    : SelectRepresentativePages(allPages);
+
+                var normalizedRelativePdfPath = relativePdfPath.Replace('\\', Path.DirectorySeparatorChar);
+                var absolutePath = Path.Combine(repoRoot, "test-pdfs", normalizedRelativePdfPath);
+                foreach (var pageNumber in selectedPages)
+                {
+                    yield return new GuiDisplayCase(
+                        RelativePath: Path.Combine("test-pdfs", normalizedRelativePdfPath),
+                        AbsolutePath: absolutePath,
+                        PageNumber: pageNumber,
+                        Source: $"contract:{contractDir}");
+                }
+            }
+        }
+    }
+
+    private static IEnumerable<GuiDisplayCase> DiscoverDirectoryFirstPageCases(string repoRoot, string relativeDirectory, string source)
+    {
+        var absoluteDirectory = Path.Combine(repoRoot, relativeDirectory);
+        if (!Directory.Exists(absoluteDirectory))
+            yield break;
+
+        foreach (var pdfPath in Directory.EnumerateFiles(absoluteDirectory, "*.pdf", SearchOption.TopDirectoryOnly)
+                     .OrderBy(path => path, StringComparer.Ordinal))
+        {
+            yield return new GuiDisplayCase(
+                RelativePath: Path.GetRelativePath(repoRoot, pdfPath),
+                AbsolutePath: pdfPath,
+                PageNumber: 1,
+                Source: source);
+        }
+    }
+
+    private static IEnumerable<int> ExpandPageKey(string key)
+    {
+        var trimmed = key.Trim();
+        var dash = trimmed.IndexOf('-', StringComparison.Ordinal);
+        if (dash < 0)
+        {
+            if (int.TryParse(trimmed, out var page) && page > 0)
+                yield return page;
+            yield break;
+        }
+
+        if (!int.TryParse(trimmed[..dash], out var first) ||
+            !int.TryParse(trimmed[(dash + 1)..], out var last) ||
+            first <= 0 ||
+            last < first)
+        {
+            yield break;
+        }
+
+        for (var page = first; page <= last; page++)
+            yield return page;
+    }
+
+    private static IReadOnlyList<int> SelectRepresentativePages(IReadOnlyList<int> pages)
+    {
+        if (pages.Count <= 8)
+            return pages;
+
+        var selected = new SortedSet<int>
+        {
+            pages[0],
+            pages[1],
+            pages[pages.Count / 2],
+            pages[^2],
+            pages[^1],
+        };
+        return selected.ToArray();
+    }
+
+    private static async Task WriteGuiDisplayReport(
+        string reportPath,
+        bool includeAllContractPages,
+        string? caseFilter,
+        int expectedTotal,
+        long elapsedMs,
+        IReadOnlyList<GuiDisplayResult> results)
+    {
+        var report = new GuiDisplaySuiteReport
+        {
+            generatedAtUtc = DateTimeOffset.UtcNow,
+            fullContractPages = includeAllContractPages,
+            caseFilter = caseFilter,
+            total = expectedTotal,
+            checkedPages = results.Count,
+            passed = results.Count(r => r.status == "PASS"),
+            failed = results.Count(r => r.status == "FAIL"),
+            elapsedMs = elapsedMs,
+            results = results,
+        };
+        await File.WriteAllTextAsync(reportPath, JsonSerializer.Serialize(report, new JsonSerializerOptions
+        {
+            WriteIndented = true,
+        }));
+    }
+
+    private static void SaveGuiDisplayFailureArtifacts(
+        string outputDir,
+        GuiDisplayCase testCase,
+        SKBitmap expected,
+        SKBitmap displayed,
+        SKBitmap visualSurface)
+    {
+        var safeName = string.Concat(testCase.Id.Select(ch =>
+            char.IsLetterOrDigit(ch) || ch is '-' or '_' or '.' ? ch : '_'));
+        var failureDir = Path.Combine(outputDir, "gui-display-failures");
+        Directory.CreateDirectory(failureDir);
+
+        VisualAssertions.SavePng(expected, Path.Combine(failureDir, $"{safeName}-expected-renderer.png"));
+        VisualAssertions.SavePng(displayed, Path.Combine(failureDir, $"{safeName}-displayed-image-source.png"));
+        VisualAssertions.SavePng(visualSurface, Path.Combine(failureDir, $"{safeName}-visual-surface.png"));
+
+        if (expected.Width == displayed.Width && expected.Height == displayed.Height)
+        {
+            using var diff = VisualAssertions.CreateDiffImage(displayed, expected);
+            VisualAssertions.SavePng(diff, Path.Combine(failureDir, $"{safeName}-image-source-diff.png"));
+        }
+    }
+
     private sealed record ViewerVisualCapture(SKBitmap Displayed, SKBitmap VisualSurface);
+    private sealed record GuiDisplayCase(string RelativePath, string AbsolutePath, int PageNumber, string Source)
+    {
+        public string Id => $"{RelativePath}#{PageNumber}";
+    }
+    private sealed record ImageStats(double TransparentRatio, double DarkRatio, double MeanLuminance);
+
+    private sealed class GuiDisplaySuiteReport
+    {
+        public DateTimeOffset generatedAtUtc { get; set; }
+        public bool fullContractPages { get; set; }
+        public string? caseFilter { get; set; }
+        public int total { get; set; }
+        public int checkedPages { get; set; }
+        public int passed { get; set; }
+        public int failed { get; set; }
+        public long elapsedMs { get; set; }
+        public IReadOnlyList<GuiDisplayResult> results { get; set; } = Array.Empty<GuiDisplayResult>();
+    }
+
+    private sealed class GuiDisplayResult
+    {
+        public string path { get; set; } = "";
+        public int page { get; set; }
+        public string source { get; set; } = "";
+        public string status { get; set; } = "";
+        public double imageSourcePixelDifference { get; set; }
+        public double visualSurfaceMeanLuminanceDelta { get; set; }
+        public long elapsedMs { get; set; }
+        public string? error { get; set; }
+    }
 
     /// <summary>
     /// Builds a minimal PDF 1.4 document with the given content stream. Copied
