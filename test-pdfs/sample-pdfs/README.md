@@ -24,6 +24,23 @@ This directory contains real-world PDFs that demonstrate various text storage pa
 
 ---
 
+### acc-global-compensation-report.pdf
+
+**Source**: ACC 2018 Global Compensation Report executive summary
+**Issues Demonstrated**:
+- InDesign-produced cover artwork with transparency, vector linework, image-like shading, and corporate logo/text composition
+- Multi-page business report layout useful for renderer regression coverage
+
+**Test Cases**:
+- Render all 24 pages and compare against Poppler/MuPDF references
+- Visually inspect page 1 cover for title band, ACC logo, globe artwork, shadow, and typography
+
+**Known Behavior**:
+- Current renderer scan reports raw PASS for all 24 pages
+- Page 1 cover has only minor antialiasing/color differences versus references
+
+---
+
 ## Adding New Test PDFs
 
 When adding a new problematic PDF:

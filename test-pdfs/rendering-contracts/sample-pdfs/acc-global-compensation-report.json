@@ -1,0 +1,43 @@
+{
+  "Path": "sample-pdfs/acc-global-compensation-report.pdf",
+  "Source": "ACC 2018 Global Compensation Report executive summary",
+  "Owner": "rendering:quality",
+  "RootCause": "RAW_PIXEL_MATCH",
+  "ImprovementPriority": "NONE",
+  "Confidence": "HIGH",
+  "Notes": "Added from local Downloads after all-page rendering scan on 2026-07-01.",
+  "Pages": {
+    "1": {
+      "ExpectedRawStatus": "PASS",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PIXEL_EXACT",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
+      "ReferenceSituation": "REFS_AGREE",
+      "RootCause": "RAW_PIXEL_MATCH",
+      "Target": {
+        "Mode": "REFERENCE_CONSENSUS",
+        "Reason": "pdfe agrees with the required Poppler/MuPDF reference renders; cover page was visually reviewed for title band, ACC logo, globe artwork, shadow, and visible typography."
+      },
+      "ReviewStatus": "REVIEWED",
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Cover page renders with semantically complete visible content and only minor antialiasing/color differences versus references."
+    },
+    "2-24": {
+      "ExpectedRawStatus": "PASS",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PIXEL_EXACT",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
+      "ReferenceSituation": "REFS_AGREE",
+      "RootCause": "RAW_PIXEL_MATCH",
+      "Target": {
+        "Mode": "REFERENCE_CONSENSUS",
+        "Reason": "All scanned pages match the required reference renderers within the current render-quality thresholds."
+      },
+      "ReviewStatus": "GENERATED",
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "All-page scan produced raw PASS for this report."
+    }
+  }
+}
