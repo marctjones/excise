@@ -422,7 +422,6 @@ internal partial class RenderContext
     private int _deviceCmykTransparencyGroupDepth;
     private int _deviceCmykKnockoutGroupDepth;
     private int _deviceCmykIsolatedGroupDepth;
-    private int _deviceCmykDirectBlendFunctionDepth;
     private bool _deviceCmykPreserveZeroAlphaShape;
     private readonly DeviceCmykBackdrop? _deviceCmykBackdrop;
 

@@ -146,6 +146,30 @@ public class CodestreamParserTests
             definition.ComponentIndex == 2 && definition.Type == 0 && definition.Association == 3);
     }
 
+    [Fact(Timeout = 20000)]
+    public void TryDecodeOpenJpeg_Jp2RgbaPamOutputParsesHeader()
+    {
+        Assert.SkipWhen(!IsOpenJpegDecompressAvailable(),
+            "opj_decompress is not available; the OpenJPEG PAM parser regression only runs when the optional fallback can execute.");
+        var path = FindRepoFile("test-pdfs", "pdfjs", "issue19517.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js issue19517 fixture found at test-pdfs/pdfjs/issue19517.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+        var imageStream = (PdfStream)doc.GetObject(8);
+
+        var image = JpxDecoder.TryDecodeOpenJpeg(imageStream.EncodedData, reduceFactor: 5);
+
+        image.Should().NotBeNull(
+            "OpenJPEG writes this RGBA JP2 as PAM/P7, and the parser must consume the header after the magic token");
+        image!.Width.Should().Be(394);
+        image.Height.Should().Be(526);
+        image.ComponentData.Should().HaveCount(4);
+        image.ComponentData[0][0].Should().BeGreaterThan(200);
+        image.ComponentData[2][0].Should().BeLessThan(64);
+        image.ComponentData[3][0].Should().Be(255);
+    }
+
     [Fact]
     public void TryDecodeManaged_Jp2GrayWithOpacityCanDecodeFirstColorComponent()
     {
@@ -294,6 +318,29 @@ public class CodestreamParserTests
         stream.WriteByte((byte)((value >> 16) & 0xFF));
         stream.WriteByte((byte)((value >> 8) & 0xFF));
         stream.WriteByte((byte)(value & 0xFF));
+    }
+
+    private static bool IsOpenJpegDecompressAvailable()
+    {
+        try
+        {
+            var configured = Environment.GetEnvironmentVariable("PDFE_OPENJPEG_DECOMPRESS");
+            if (!string.IsNullOrWhiteSpace(configured) && File.Exists(configured))
+                return true;
+
+            var path = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
+            foreach (var dir in path.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var candidate = Path.Combine(dir, OperatingSystem.IsWindows() ? "opj_decompress.exe" : "opj_decompress");
+                if (File.Exists(candidate))
+                    return true;
+            }
+        }
+        catch
+        {
+        }
+
+        return false;
     }
 
     private static string? FindRepoFile(params string[] segments)

@@ -592,6 +592,14 @@ internal partial class RenderContext
         if (maskWidth <= 0 || maskHeight <= 0)
             return false;
 
+        if (IsFullyOpaqueSoftMask(maskStream, maskWidth, maskHeight))
+        {
+            var directDest = new SKRect(0, 0, width, height);
+            _canvas.DrawBitmap(bitmap, directDest, imagePaint);
+            CompositeImageIntoDeviceCmykBackdrop(bitmap, width, height, imagePaint);
+            return true;
+        }
+
         var (targetWidth, targetHeight) = EstimateImageSoftMaskTargetSize(
             width,
             height,
@@ -984,7 +992,8 @@ internal partial class RenderContext
             var image = desiredComponents == 1 && imageStream.GetOptional("SMask") != null
                 ? JpxDecoder.TryDecodeOpenJpegGray(imageStream.EncodedData)
                 : TryDecodeJpxWithOpenJpeg(imageStream, sourceWidth, sourceHeight, estimatedTarget.Width, estimatedTarget.Height, desiredComponents);
-            image ??= JpxDecoder.TryDecodeManaged(imageStream.EncodedData, desiredComponents);
+            if (image == null && (long)sourceWidth * sourceHeight <= MaxExpandedSoftMaskPixels)
+                image = JpxDecoder.TryDecodeManaged(imageStream.EncodedData, desiredComponents);
             if (image == null || sourceWidth <= 0 || sourceHeight <= 0 || image.Components <= 0)
                 return null;
 
@@ -1001,8 +1010,10 @@ internal partial class RenderContext
             var pixels = new byte[checked(targetWidth * targetHeight * 4)];
             var dst = 0;
             var sourcePixelCount = (long)decodedWidth * decodedHeight;
-            var hasEmbeddedAlpha = components.Length > colorSpace.Components
-                                   && colorSpace.Components >= 1;
+            var hasExternalSoftMask = imageStream.GetOptional("SMask") != null;
+            var hasEmbeddedAlpha = !hasExternalSoftMask &&
+                                   components.Length > colorSpace.Components &&
+                                   colorSpace.Components >= 1;
             for (int y = 0; y < targetHeight; y++)
             {
                 var sourceY = MapTargetToSource(y, targetHeight, decodedHeight);
@@ -1088,14 +1099,25 @@ internal partial class RenderContext
 
     private static int ChooseOpenJpegReduceFactor(int sourceWidth, int sourceHeight, int targetWidth, int targetHeight)
     {
+        const int maxOpenJpegReduction = 5;
         var reduce = 0;
-        while (reduce < 8)
+        while (reduce < maxOpenJpegReduction)
         {
             var next = reduce + 1;
             var nextWidth = Math.Max(1, sourceWidth >> next);
             var nextHeight = Math.Max(1, sourceHeight >> next);
             if (nextWidth < targetWidth || nextHeight < targetHeight)
+            {
+                var currentWidth = Math.Max(1, sourceWidth >> reduce);
+                var currentHeight = Math.Max(1, sourceHeight >> reduce);
+                if ((long)currentWidth * currentHeight > MaxExpandedSoftMaskPixels)
+                {
+                    reduce = next;
+                    continue;
+                }
+
                 break;
+            }
 
             reduce = next;
         }
@@ -1298,6 +1320,69 @@ internal partial class RenderContext
         }
 
         return maskData;
+    }
+
+    private static bool IsFullyOpaqueSoftMask(Pdfe.Core.Primitives.PdfStream maskStream, int width, int height)
+    {
+        if (width <= 0 ||
+            height <= 0 ||
+            maskStream.GetInt("BitsPerComponent", 8) != 8 ||
+            DecodeSoftMaskSample(maskStream, 255, 8) != 255)
+        {
+            return false;
+        }
+
+        var filters = maskStream.Filters;
+        if (filters.Count != 1 ||
+            filters[0] is not ("RunLengthDecode" or "RL"))
+        {
+            return false;
+        }
+
+        return RunLengthDecodesToRepeatedByte(maskStream.EncodedData, (long)width * height, 0xff);
+    }
+
+    private static bool RunLengthDecodesToRepeatedByte(byte[] data, long expectedLength, byte expectedValue)
+    {
+        if (data.Length == 0 || expectedLength <= 0)
+            return false;
+
+        var decoded = 0L;
+        var i = 0;
+        while (i < data.Length)
+        {
+            var length = data[i++];
+            if (length == 128)
+                break;
+
+            int count;
+            if (length < 128)
+            {
+                count = length + 1;
+                if (i + count > data.Length)
+                    return false;
+
+                for (var j = 0; j < count; j++)
+                {
+                    if (data[i + j] != expectedValue)
+                        return false;
+                }
+
+                i += count;
+            }
+            else
+            {
+                count = 257 - length;
+                if (i >= data.Length || data[i++] != expectedValue)
+                    return false;
+            }
+
+            decoded += count;
+            if (decoded > expectedLength)
+                return false;
+        }
+
+        return decoded == expectedLength;
     }
 
     private static SoftMaskAlpha? DecodeSoftMaskData(

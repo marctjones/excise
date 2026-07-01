@@ -612,6 +612,23 @@ public class SkiaRendererTests
             "the red stamp inside the soft-masked image should remain visible");
     }
 
+    [Fact]
+    public void RenderPage_RunLengthOpaqueSoftMaskRendersImageOpaque()
+    {
+        var pdfData = CreatePdfWithRunLengthOpaqueSoftMaskImage();
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var imageRegion = new SKRectI(10, 10, 90, 90);
+        CountNonWhitePixels(bitmap, imageRegion).Should().BeGreaterThan(1_000,
+            "an all-opaque RunLength soft mask should not suppress the image");
+        CountRedPixels(bitmap, imageRegion).Should().BeGreaterThan(250,
+            "the RGB image content should remain visible through the opaque mask");
+    }
+
     [Fact(Timeout = 20000)]
     public void RenderPage_PopplerJpeg_ExplicitDctColorTransformColumnsRender()
     {
@@ -1081,6 +1098,12 @@ public class SkiaRendererTests
             "Multiply in a DeviceCMYK knockout group should cancel the zero-ink nested form against the initial backdrop");
         CountPixelsDifferentFromRegionCenter(bitmap, new SKRectI(70, 20, 87, 38)).Should().BeLessThan(30,
             "ColorBurn in a DeviceCMYK knockout group should not accumulate prior sibling forms");
+        CountPixelsDifferentFromRegionCenter(bitmap, new SKRectI(102, 20, 119, 38)).Should().BeLessThan(30,
+            "Lighten in a DeviceCMYK knockout group should not leave the full-ink nested form's X visible");
+        CountPixelsDifferentFromRegionCenter(bitmap, new SKRectI(134, 20, 151, 38)).Should().BeLessThan(30,
+            "Screen in a DeviceCMYK knockout group should not leave the full-ink nested form's X visible");
+        CountPixelsDifferentFromRegionCenter(bitmap, new SKRectI(165, 20, 182, 38)).Should().BeLessThan(30,
+            "ColorDodge in a DeviceCMYK knockout group should not leave the full-ink nested form's X visible");
         CountRedPixels(bitmap, new SKRectI(165, 20, 182, 38)).Should().BeGreaterThan(120,
             "nested Form XObjects must contribute shape alpha when composited inside the knockout group");
         CountRedPixels(bitmap, new SKRectI(197, 20, 214, 38)).Should().BeGreaterThan(220,
@@ -5230,6 +5253,85 @@ public class SkiaRendererTests
 
     private static byte[] CreatePdfWithContent(string content)
         => CreatePdfWithContentAndPageSize(content, width: 612, height: 792);
+
+    private static byte[] CreatePdfWithRunLengthOpaqueSoftMaskImage()
+    {
+        using var ms = new MemoryStream();
+        var offsets = new long[7];
+
+        void WriteAscii(string value)
+        {
+            var bytes = System.Text.Encoding.ASCII.GetBytes(value);
+            ms.Write(bytes, 0, bytes.Length);
+        }
+
+        void WriteLine(string value) => WriteAscii(value + "\n");
+
+        WriteLine("%PDF-1.4");
+
+        offsets[1] = ms.Position;
+        WriteLine("1 0 obj");
+        WriteLine("<< /Type /Catalog /Pages 2 0 R >>");
+        WriteLine("endobj");
+
+        offsets[2] = ms.Position;
+        WriteLine("2 0 obj");
+        WriteLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+        WriteLine("endobj");
+
+        offsets[3] = ms.Position;
+        WriteLine("3 0 obj");
+        WriteLine("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 100 100] /Contents 4 0 R /Resources << /XObject << /Im1 5 0 R >> >> >>");
+        WriteLine("endobj");
+
+        const string content = "q 80 0 0 80 10 10 cm /Im1 Do Q";
+        offsets[4] = ms.Position;
+        WriteLine("4 0 obj");
+        WriteLine($"<< /Length {content.Length} >>");
+        WriteLine("stream");
+        WriteLine(content);
+        WriteLine("endstream");
+        WriteLine("endobj");
+
+        var imageData = new byte[]
+        {
+            255, 0, 0, 0, 255, 0,
+            0, 0, 255, 255, 255, 255
+        };
+        offsets[5] = ms.Position;
+        WriteLine("5 0 obj");
+        WriteLine($"<< /Type /XObject /Subtype /Image /Width 2 /Height 2 /ColorSpace /DeviceRGB /BitsPerComponent 8 /SMask 6 0 R /Length {imageData.Length} >>");
+        WriteLine("stream");
+        ms.Write(imageData, 0, imageData.Length);
+        WriteLine("");
+        WriteLine("endstream");
+        WriteLine("endobj");
+
+        var maskData = new byte[] { 253, 255, 128 };
+        offsets[6] = ms.Position;
+        WriteLine("6 0 obj");
+        WriteLine($"<< /Type /XObject /Subtype /Image /Width 2 /Height 2 /ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /RunLengthDecode /Length {maskData.Length} >>");
+        WriteLine("stream");
+        ms.Write(maskData, 0, maskData.Length);
+        WriteLine("");
+        WriteLine("endstream");
+        WriteLine("endobj");
+
+        var xrefPos = ms.Position;
+        WriteLine("xref");
+        WriteLine("0 7");
+        WriteLine("0000000000 65535 f ");
+        for (var i = 1; i <= 6; i++)
+            WriteLine($"{offsets[i]:D10} 00000 n ");
+
+        WriteLine("trailer");
+        WriteLine("<< /Root 1 0 R /Size 7 >>");
+        WriteLine("startxref");
+        WriteLine(xrefPos.ToString());
+        WriteLine("%%EOF");
+
+        return ms.ToArray();
+    }
 
     private static byte[] CreatePdfWithDefaultCmykAndPattern()
     {

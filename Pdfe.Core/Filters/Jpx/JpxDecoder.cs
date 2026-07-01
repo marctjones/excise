@@ -280,7 +280,10 @@ internal static class JpxDecoder
             return false;
 
         if (magic == "P7")
+        {
+            SkipPnmWhitespaceAndComments(data, ref offset);
             return TryParsePam(data, ref offset, out width, out height, out maxValue, out components);
+        }
 
         if (magic != "P5" && magic != "P6")
             return false;
@@ -325,6 +328,9 @@ internal static class JpxDecoder
 
         while (TryReadPamHeaderLine(data, ref offset, out var line))
         {
+            if (line.Length == 0 || line[0] == '#')
+                continue;
+
             if (line == "ENDHDR")
                 return width > 0 &&
                        height > 0 &&
@@ -364,7 +370,7 @@ internal static class JpxDecoder
             offset++;
 
         line = System.Text.Encoding.ASCII.GetString(data, start, end - start).Trim();
-        return line.Length > 0 && line[0] != '#';
+        return true;
     }
 
     private static bool TryReadInterleavedSamples(

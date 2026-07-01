@@ -211,7 +211,6 @@ internal partial class RenderContext
             if (isKnockout)
             {
                 child._deviceCmykKnockoutGroupDepth++;
-                child._deviceCmykDirectBlendFunctionDepth++;
                 child._deviceCmykKnockoutInitialBackdrop = child._deviceCmykBackdrop?.Clone();
             }
             if (isIsolated)
@@ -320,14 +319,14 @@ internal partial class RenderContext
         if (!isNormalBlend && !TryMapSkiaBlendToPdfBlend(invocationBlendMode, out blend))
             return;
         var useDirectBlendFunctions =
-            (_deviceCmykDirectBlendFunctionDepth > 0 &&
-             !isNormalBlend &&
-             UsesDirectDeviceCmykKnockoutBlend(blend)) ||
-            (_deviceCmykIsolatedGroupDepth > 0 &&
-             !isNormalBlend &&
-             blend is PdfSeparableBlendMode.Lighten or
-                 PdfSeparableBlendMode.Screen or
-                 PdfSeparableBlendMode.ColorDodge);
+            // Match the path-painting fast path: isolated CMYK groups keep direct
+            // handling for these retained-backdrop modes, but knockout compositing
+            // uses the subtractive DeviceCMYK blend path.
+            _deviceCmykIsolatedGroupDepth > 0 &&
+            !isNormalBlend &&
+            blend is PdfSeparableBlendMode.Lighten or
+                PdfSeparableBlendMode.Screen or
+                PdfSeparableBlendMode.ColorDodge;
 
         for (var y = 0; y < groupBitmap.Height; y++)
         {

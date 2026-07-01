@@ -399,14 +399,15 @@ internal partial class RenderContext
                 }
 
                 var useDirectBlendFunctions =
-                    (_deviceCmykDirectBlendFunctionDepth > 0 &&
-                     !isNormalBlend &&
-                     UsesDirectDeviceCmykKnockoutBlend(blend)) ||
-                    (_deviceCmykIsolatedGroupDepth > 0 &&
-                     !isNormalBlend &&
-                     blend is PdfSeparableBlendMode.Lighten or
-                         PdfSeparableBlendMode.Screen or
-                         PdfSeparableBlendMode.ColorDodge);
+                    // Isolated Ghent CMYK groups rely on direct component blending
+                    // for these retained-backdrop blend modes, while knockout groups
+                    // must use the subtractive DeviceCMYK path so neutral nested
+                    // forms do not leave a visible X.
+                    _deviceCmykIsolatedGroupDepth > 0 &&
+                    !isNormalBlend &&
+                    blend is PdfSeparableBlendMode.Lighten or
+                        PdfSeparableBlendMode.Screen or
+                        PdfSeparableBlendMode.ColorDodge;
                 if (IsZeroInk(source) &&
                     !useDirectBlendFunctions &&
                     !isNormalBlend &&
@@ -590,20 +591,6 @@ internal partial class RenderContext
            Math.Abs(color.M) < 1e-9 &&
            Math.Abs(color.Y) < 1e-9 &&
            Math.Abs(color.K - 1) < 1e-9;
-
-    private static bool UsesDirectDeviceCmykKnockoutBlend(PdfSeparableBlendMode blend)
-        => blend is PdfSeparableBlendMode.Lighten or
-            PdfSeparableBlendMode.Screen or
-            PdfSeparableBlendMode.ColorDodge or
-            PdfSeparableBlendMode.Overlay or
-            PdfSeparableBlendMode.SoftLight or
-            PdfSeparableBlendMode.HardLight or
-            PdfSeparableBlendMode.Difference or
-            PdfSeparableBlendMode.Exclusion or
-            PdfSeparableBlendMode.Hue or
-            PdfSeparableBlendMode.Saturation or
-            PdfSeparableBlendMode.Color or
-            PdfSeparableBlendMode.Luminosity;
 
     private static double BlendAdditiveComponent(double b, double s, PdfSeparableBlendMode blend)
     {
