@@ -2,27 +2,26 @@
   "Path": "pdfjs/bug1606566.pdf",
   "Source": "pdf.js corpus",
   "Owner": "rendering:quality",
-  "RootCause": "FULL_CORPUS_BASELINE",
+  "RootCause": "RAW_PIXEL_MATCH",
   "ImprovementPriority": "NONE",
   "Confidence": "MEDIUM",
   "Notes": "Baseline contract inferred from full all-pages raw corpus report exploratory-report-test-pdfs-all-20260622-passone-sharded-coverage.json.",
   "Pages": {
-    "0": {
-      "ExpectedRawStatus": "MALFORMED_PDF",
+    "1": {
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "NON_RENDERABLE_ACCEPTED",
-      "PixelAgreement": "NOT_COMPARABLE",
-      "ReferenceSituation": "NOT_APPLICABLE",
-      "RootCause": "DEGENERATE_INPUT",
+      "QualityStatus": "PIXEL_EXACT",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
+      "ReferenceSituation": "REFS_AGREE",
+      "RootCause": "RAW_PIXEL_MATCH",
       "Target": {
-        "Mode": "MALFORMED_INPUT_POLICY",
-        "Reason": "Baseline full-corpus contract inferred from raw all-pages scan; correct outcome is bounded non-renderable handling until explicitly reviewed."
+        "Mode": "REFERENCE_CONSENSUS",
+        "Reason": "Current renderer opens the fixture and page 1 matches the required reference renderers within thresholds."
       },
       "ImprovementPriority": "NONE",
-      "Confidence": "MEDIUM",
-      "QualityReason": "Baseline classification inferred from full all-pages raw corpus scan; promote to a reviewed contract when triaged.",
-      "Notes": "Auto-classified from exploratory-report-test-pdfs-all-20260622-passone-sharded-coverage.json.",
-      "ExpectedErrorContains": "Invalid PDF header"
+      "Confidence": "HIGH",
+      "QualityReason": "Current contract-driven sample scan renders page 1 as raw PASS against MuPDF and Poppler.",
+      "Notes": "Updated from stale page-0 malformed-input baseline after 2026-07-01 sample scan rendered page 1 successfully."
     }
   }
 }
