@@ -424,7 +424,6 @@ internal partial class RenderContext
     private int _deviceCmykIsolatedGroupDepth;
     private int _deviceCmykDirectBlendFunctionDepth;
     private bool _deviceCmykPreserveZeroAlphaShape;
-    private SKBlendMode? _deviceCmykGroupCompositeBlendOverride;
     private readonly DeviceCmykBackdrop? _deviceCmykBackdrop;
 
     // Type0 / CID font state. Type0 fonts use 2-byte-per-character codes and
@@ -1316,10 +1315,7 @@ internal partial class RenderContext
         if (extGState.ContainsKey("BM"))
         {
             var bm = extGState.GetNameOrNull("BM") ?? "Normal";
-            _state.BlendMode = _deviceCmykGroupCompositeBlendOverride.HasValue &&
-                string.Equals(bm, "Normal", StringComparison.Ordinal)
-                ? _deviceCmykGroupCompositeBlendOverride.Value
-                : MapBlendMode(bm);
+            _state.BlendMode = MapBlendMode(bm);
         }
 
         if (extGState.ContainsKey("SMask"))

@@ -63,11 +63,16 @@ internal partial class RenderContext
     private void Rectangle(double x, double y, double w, double h)
     {
         _currentPath ??= new SKPath();
-        _currentPath.AddRect(new SKRect(
-            ClampPathCoordinate(x),
-            ClampPathCoordinate(y),
-            ClampPathCoordinate(x + w),
-            ClampPathCoordinate(y + h)));
+        var x0 = ClampPathCoordinate(x);
+        var y0 = ClampPathCoordinate(y);
+        var x1 = ClampPathCoordinate(x + w);
+        var y1 = ClampPathCoordinate(y + h);
+
+        _currentPath.MoveTo(x0, y0);
+        _currentPath.LineTo(x1, y0);
+        _currentPath.LineTo(x1, y1);
+        _currentPath.LineTo(x0, y1);
+        _currentPath.Close();
     }
 
     private const float PathCoordinateMax = 10_000_000f;

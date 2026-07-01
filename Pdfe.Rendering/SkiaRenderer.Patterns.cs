@@ -786,6 +786,8 @@ internal partial class RenderContext
         {
             if (tensorPatch && patch.Points.Count >= 16)
                 RasterizeTensorPatch(bitmap, patch, minX, minY, maxX, maxY);
+            else if (!tensorPatch && patch.Points.Count >= 12)
+                RasterizeCoonsPatch(bitmap, patch, minX, minY, maxX, maxY);
             else
                 RasterizeMeshPatch(bitmap, patch, minX, minY, maxX, maxY);
         }
@@ -874,7 +876,7 @@ internal partial class RenderContext
 
     private static void RasterizeTensorPatch(SKBitmap bitmap, MeshPatch patch, double minX, double minY, double maxX, double maxY)
     {
-        const int steps = 20;
+        const int steps = 24;
         var vertices = new MeshVertex[steps + 1, steps + 1];
 
         for (var row = 0; row <= steps; row++)
@@ -910,6 +912,92 @@ internal partial class RenderContext
                     maxY);
             }
         }
+    }
+
+    private static void RasterizeCoonsPatch(SKBitmap bitmap, MeshPatch patch, double minX, double minY, double maxX, double maxY)
+    {
+        const int steps = 24;
+        var vertices = new MeshVertex[steps + 1, steps + 1];
+
+        for (var row = 0; row <= steps; row++)
+        {
+            var v = row / (double)steps;
+            for (var col = 0; col <= steps; col++)
+            {
+                var u = col / (double)steps;
+                vertices[row, col] = new MeshVertex(
+                    0,
+                    EvaluateCoonsPatchPoint(patch.Points, u, v),
+                    Bilinear(patch.Colors, u, v));
+            }
+        }
+
+        for (var row = 0; row < steps; row++)
+        {
+            for (var col = 0; col < steps; col++)
+            {
+                RasterizeMeshTriangle(
+                    bitmap,
+                    new MeshTriangle(vertices[row, col], vertices[row, col + 1], vertices[row + 1, col + 1]),
+                    minX,
+                    minY,
+                    maxX,
+                    maxY);
+                RasterizeMeshTriangle(
+                    bitmap,
+                    new MeshTriangle(vertices[row, col], vertices[row + 1, col + 1], vertices[row + 1, col]),
+                    minX,
+                    minY,
+                    maxX,
+                    maxY);
+            }
+        }
+    }
+
+    private static SKPoint EvaluateCoonsPatchPoint(IReadOnlyList<SKPoint> points, double u, double v)
+    {
+        var top = CubicBezier(points[0], points[1], points[2], points[3], u);
+        var right = CubicBezier(points[3], points[4], points[5], points[6], v);
+        var bottom = CubicBezier(points[9], points[8], points[7], points[6], u);
+        var left = CubicBezier(points[0], points[11], points[10], points[9], v);
+
+        var topLeft = points[0];
+        var topRight = points[3];
+        var bottomRight = points[6];
+        var bottomLeft = points[9];
+
+        var x =
+            ((1 - v) * top.X) +
+            (v * bottom.X) +
+            ((1 - u) * left.X) +
+            (u * right.X) -
+            (((1 - u) * (1 - v) * topLeft.X) +
+             (u * (1 - v) * topRight.X) +
+             (u * v * bottomRight.X) +
+             ((1 - u) * v * bottomLeft.X));
+        var y =
+            ((1 - v) * top.Y) +
+            (v * bottom.Y) +
+            ((1 - u) * left.Y) +
+            (u * right.Y) -
+            (((1 - u) * (1 - v) * topLeft.Y) +
+             (u * (1 - v) * topRight.Y) +
+             (u * v * bottomRight.Y) +
+             ((1 - u) * v * bottomLeft.Y));
+
+        return new SKPoint((float)x, (float)y);
+    }
+
+    private static SKPoint CubicBezier(SKPoint p0, SKPoint p1, SKPoint p2, SKPoint p3, double t)
+    {
+        var mt = 1 - t;
+        var b0 = mt * mt * mt;
+        var b1 = 3 * t * mt * mt;
+        var b2 = 3 * t * t * mt;
+        var b3 = t * t * t;
+        return new SKPoint(
+            (float)((p0.X * b0) + (p1.X * b1) + (p2.X * b2) + (p3.X * b3)),
+            (float)((p0.Y * b0) + (p1.Y * b1) + (p2.Y * b2) + (p3.Y * b3)));
     }
 
     private static SKPoint EvaluateTensorPatchPoint(IReadOnlyList<SKPoint> points, double u, double v)

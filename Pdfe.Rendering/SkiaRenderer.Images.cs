@@ -66,6 +66,7 @@ internal partial class RenderContext
                 }
 
                 _canvas.DrawBitmap(bitmapToDraw, new SKRect(0, 0, width, height), paint);
+                CompositeImageIntoDeviceCmykBackdrop(bitmapToDraw, width, height, paint);
             }
             _canvas.Restore();
         }
@@ -610,10 +611,12 @@ internal partial class RenderContext
         if ((maskedBitmap.Width != bitmap.Width || maskedBitmap.Height != bitmap.Height) &&
             TryDrawSoftMaskedImageInDeviceSpace(maskedBitmap, dest, imagePaint))
         {
+            CompositeImageIntoDeviceCmykBackdrop(maskedBitmap, width, height, imagePaint);
             return true;
         }
 
         _canvas.DrawBitmap(maskedBitmap, dest, imagePaint);
+        CompositeImageIntoDeviceCmykBackdrop(maskedBitmap, width, height, imagePaint);
         return true;
     }
 
@@ -751,6 +754,138 @@ internal partial class RenderContext
         };
         _canvas.DrawBitmap(maskBitmap, dest, maskPaint);
         _canvas.Restore();
+
+        using var maskedForBackdrop = CreateImageBitmapWithAlphaMask(bitmap, maskBitmap);
+        CompositeImageIntoDeviceCmykBackdrop(maskedForBackdrop ?? bitmap, width, height, imagePaint);
+        return true;
+    }
+
+    private static SKBitmap? CreateImageBitmapWithAlphaMask(SKBitmap source, SKBitmap mask)
+    {
+        if (source.Width <= 0 || source.Height <= 0 || mask.Width <= 0 || mask.Height <= 0)
+            return null;
+
+        var pixels = new byte[checked(source.Width * source.Height * 4)];
+        var dst = 0;
+        for (var y = 0; y < source.Height; y++)
+        {
+            var maskY = MapTargetToSource(y, source.Height, mask.Height);
+            for (var x = 0; x < source.Width; x++)
+            {
+                var sourceColor = source.GetPixel(x, y);
+                var maskX = MapTargetToSource(x, source.Width, mask.Width);
+                var maskAlpha = mask.GetPixel(maskX, maskY).Alpha;
+                var alpha = (byte)((sourceColor.Alpha * maskAlpha + 127) / 255);
+                pixels[dst++] = sourceColor.Red;
+                pixels[dst++] = sourceColor.Green;
+                pixels[dst++] = sourceColor.Blue;
+                pixels[dst++] = alpha;
+            }
+        }
+
+        return CreateBitmapFromRgbaBytes(source.Width, source.Height, pixels, SKAlphaType.Unpremul);
+    }
+
+    private void CompositeImageIntoDeviceCmykBackdrop(SKBitmap image, int imageWidth, int imageHeight, SKPaint imagePaint)
+    {
+        if (_rootBitmap == null ||
+            _deviceCmykBackdrop == null ||
+            _deviceCmykTransparencyGroupDepth <= 0 ||
+            image.Width <= 0 ||
+            image.Height <= 0 ||
+            imageWidth <= 0 ||
+            imageHeight <= 0)
+        {
+            return;
+        }
+
+        var imageBounds = new SKRect(0, 0, imageWidth, imageHeight);
+        var matrix = _canvas.TotalMatrix;
+        var deviceBounds = MapRect(matrix, imageBounds);
+        var clipBounds = _canvas.LocalClipBounds;
+        if (clipBounds.Width > 0 && clipBounds.Height > 0)
+        {
+            var deviceClip = MapRect(matrix, clipBounds);
+            deviceBounds.Intersect(deviceClip);
+            if (deviceBounds.Width <= 0 || deviceBounds.Height <= 0)
+                return;
+        }
+
+        var left = Math.Clamp((int)Math.Floor(deviceBounds.Left) - 1, 0, _rootBitmap.Width);
+        var top = Math.Clamp((int)Math.Floor(deviceBounds.Top) - 1, 0, _rootBitmap.Height);
+        var right = Math.Clamp((int)Math.Ceiling(deviceBounds.Right) + 1, 0, _rootBitmap.Width);
+        var bottom = Math.Clamp((int)Math.Ceiling(deviceBounds.Bottom) + 1, 0, _rootBitmap.Height);
+        if (right <= left || bottom <= top)
+            return;
+
+        if (!TryInvertAffine(matrix, out var inverse))
+            return;
+
+        var paintAlpha = imagePaint.Color.Alpha / 255.0;
+        var isNormalBlend = imagePaint.BlendMode == SKBlendMode.SrcOver;
+        PdfSeparableBlendMode blend = default;
+        if (!isNormalBlend && !TryMapSkiaBlendToPdfBlend(imagePaint.BlendMode, out blend))
+            return;
+
+        for (var y = top; y < bottom; y++)
+        {
+            for (var x = left; x < right; x++)
+            {
+                var sourcePoint = MapPoint(inverse, x + 0.5f, y + 0.5f);
+                if (sourcePoint.X < imageBounds.Left ||
+                    sourcePoint.X >= imageBounds.Right ||
+                    sourcePoint.Y < imageBounds.Top ||
+                    sourcePoint.Y >= imageBounds.Bottom)
+                {
+                    continue;
+                }
+
+                var sourceX = Math.Clamp(
+                    (int)((sourcePoint.X - imageBounds.Left) * image.Width / imageBounds.Width),
+                    0,
+                    image.Width - 1);
+                var sourceY = Math.Clamp(
+                    (int)((sourcePoint.Y - imageBounds.Top) * image.Height / imageBounds.Height),
+                    0,
+                    image.Height - 1);
+                var pixel = image.GetPixel(sourceX, sourceY);
+                var alpha = (pixel.Alpha / 255.0) * paintAlpha;
+                if (alpha <= 0)
+                    continue;
+
+                var source = RgbToDeviceCmyk(
+                    pixel.Red / 255.0,
+                    pixel.Green / 255.0,
+                    pixel.Blue / 255.0);
+                var backdrop = _deviceCmykBackdrop.Get(x, y);
+                var blended = isNormalBlend
+                    ? source
+                    : BlendDeviceCmyk(backdrop, source, blend);
+                _deviceCmykBackdrop.CompositeSourceOver(x, y, blended, alpha);
+            }
+        }
+    }
+
+    private static bool TryInvertAffine(SKMatrix matrix, out SKMatrix inverse)
+    {
+        var determinant = (matrix.ScaleX * matrix.ScaleY) - (matrix.SkewX * matrix.SkewY);
+        if (Math.Abs(determinant) <= 1e-6f)
+        {
+            inverse = SKMatrix.Identity;
+            return false;
+        }
+
+        var invDet = 1f / determinant;
+        inverse = new SKMatrix(
+            matrix.ScaleY * invDet,
+            -matrix.SkewX * invDet,
+            ((matrix.SkewX * matrix.TransY) - (matrix.ScaleY * matrix.TransX)) * invDet,
+            -matrix.SkewY * invDet,
+            matrix.ScaleX * invDet,
+            ((matrix.SkewY * matrix.TransX) - (matrix.ScaleX * matrix.TransY)) * invDet,
+            0,
+            0,
+            1);
         return true;
     }
 

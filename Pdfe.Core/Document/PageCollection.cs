@@ -15,6 +15,7 @@ public class PageCollection : IReadOnlyList<PdfPage>
     private readonly PdfDictionary _pagesDict;
     private PdfArray _kidsArray;
     private int _declaredCount;
+    private bool _malformedPageTree;
 
     /// <summary>
     /// Creates a new page collection for the document.
@@ -50,6 +51,7 @@ public class PageCollection : IReadOnlyList<PdfPage>
     private void LoadPages()
     {
         _pages.Clear();
+        _malformedPageTree = false;
         _declaredCount = GetDeclaredRootPageCount();
         var visited = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
         LoadPagesRecursive(_pagesDict, 0, visited, depth: 0);
@@ -97,8 +99,17 @@ public class PageCollection : IReadOnlyList<PdfPage>
         PdfDictionary node, int pageNumber,
         HashSet<PdfDictionary> visited, int depth)
     {
-        if (depth > MaxPageTreeDepth) return 0;
-        if (!visited.Add(node)) return 0; // cycle — already on this path
+        if (depth > MaxPageTreeDepth)
+        {
+            _malformedPageTree = true;
+            return 0;
+        }
+
+        if (!visited.Add(node))
+        {
+            _malformedPageTree = true;
+            return 0; // cycle — already on this path
+        }
 
         try
         {
@@ -140,7 +151,7 @@ public class PageCollection : IReadOnlyList<PdfPage>
     /// <summary>
     /// Number of pages in the collection.
     /// </summary>
-    public int Count => _declaredCount > 0 ? _declaredCount : _pages.Count;
+    public int Count => !_malformedPageTree && _declaredCount > 0 ? _declaredCount : _pages.Count;
 
     /// <summary>
     /// Get a page by index (0-based).

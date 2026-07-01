@@ -823,6 +823,35 @@ public class SkiaRendererTests
     }
 
     [Fact(Timeout = 20000)]
+    public void RenderPage_GhentDeviceCmykImageSoftMasks_UpdateTransparencyGroupBackdrop()
+    {
+        var path = FindRepoFile(
+            "test-pdfs",
+            "ghent",
+            "extracted",
+            "patches",
+            "Ghent_PDF_Output_Suite_V50_Patches",
+            "Categories",
+            "1-CMYK",
+            "Patches",
+            "GWG166_Softmasks_Images_DeviceCMYK_X4.pdf");
+        Assert.SkipWhen(path == null,
+            "No Ghent DeviceCMYK image-soft-mask fixture found at test-pdfs/ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/1-CMYK/Patches/GWG166_Softmasks_Images_DeviceCMYK_X4.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var maskedImageRegion = new SKRectI(14, 30, 122, 98);
+        CountNonWhitePixels(bitmap, maskedImageRegion).Should().BeGreaterThan(2_000,
+            "DeviceCMYK image XObjects inside transparency groups must update the retained CMYK backdrop instead of compositing back as blank white");
+        CountBlueDominantPixels(bitmap, maskedImageRegion).Should().BeGreaterThan(700,
+            "the soft-masked mountain image should remain visibly blue/purple after the group is composited");
+    }
+
+    [Fact(Timeout = 20000)]
     public void RenderPage_GhentIccSourceProfile_AppliesSourceAndOutputIntentProfiles()
     {
         var path = FindRepoFile(
@@ -903,6 +932,30 @@ public class SkiaRendererTests
         rightColumnWood.Green.Should().BeGreaterThan(rightColumnWood.Blue + 8);
     }
 
+    [Fact(Timeout = 60000)]
+    public void RenderPage_AltonaDeviceCmykTransparencyGroupFallback_PreservesInvocationAlpha()
+    {
+        var path = FindRepoFile(
+            "test-pdfs",
+            "altona",
+            "eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf");
+        Assert.SkipWhen(path == null,
+            "No Altona PDF/X fixture found at test-pdfs/altona/eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(5),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var inheritedAlphaGroup = new SKRectI(28, 38, 84, 156);
+        CountNonWhitePixels(bitmap, inheritedAlphaGroup).Should().BeGreaterThan(4_500,
+            "DeviceCMYK transparency groups that fall back to the generic RGB layer path must still apply the invocation alpha at the group boundary");
+
+        MeanRgb(bitmap, inheritedAlphaGroup).Luminance.Should().BeLessThan(210,
+            "the inherited-alpha form should not reset to opaque white and wipe out the underlying image content");
+    }
+
     [Fact(Timeout = 30000)]
     public void RenderPage_AltonaJpxGrayImage_UsesOpenJpegForContinuousToneTiles()
     {
@@ -966,6 +1019,8 @@ public class SkiaRendererTests
 
         CountWarmPalePixels(bitmap, new SKRectI(0, 170, 102, 204)).Should().BeGreaterThan(700,
             "Type 7 tensor patch meshes should be sampled as curved patches, not reduced to a coarse patch bounding-box fill");
+        CountAdjacentColumnJumps(bitmap, new SKRectI(0, 145, 102, 174), threshold: 48).Should().BeLessThan(12,
+            "Type 6 Coons patch meshes should be tessellated as curved patches instead of rendered as blocky rectangular columns");
     }
 
     [Fact(Timeout = 20000)]
@@ -1064,11 +1119,44 @@ public class SkiaRendererTests
             "isolated DeviceCMYK groups still need retained CMYK backdrop colors for nested ColorDodge form compositing");
         CountDarkPixels(bitmap, new SKRectI(40, 55, 57, 72)).Should().BeGreaterThan(80,
             "isolated DeviceCMYK Difference groups should preserve the nested form shape instead of flattening it away");
+        CountDarkPixels(bitmap, new SKRectI(226, 66, 249, 88)).Should().BeLessThan(25,
+            "the DeviceCMYK group fast path should apply Form XObject invocation alpha outside knockout groups");
 
         var nestedBlendPatch = MeanRgb(bitmap, new SKRectI(232, 56, 248, 72));
         nestedBlendPatch.Red.Should().BeGreaterThan(nestedBlendPatch.Green + 60,
             "nested non-isolated DeviceCMYK groups should be composited in CMYK before the isolated parent group is blended back");
         nestedBlendPatch.Blue.Should().BeGreaterThan(nestedBlendPatch.Green + 30);
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_GhentOutputIntentIndicator_SyncsLabBackdropForCmykBlendGroup()
+    {
+        var path = FindRepoFile(
+            "test-pdfs",
+            "ghent",
+            "extracted",
+            "patches",
+            "Ghent_PDF_Output_Suite_V50_Patches",
+            "Categories",
+            "3-ICC-CMS",
+            "Patches",
+            "GWG221_OutputIntentChangeIndicator_x4.pdf");
+        Assert.SkipWhen(path == null,
+            "No Ghent output-intent fixture found at test-pdfs/ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/3-ICC-CMS/Patches/GWG221_OutputIntentChangeIndicator_x4.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var labBackedSquare = new SKRectI(96, 36, 110, 88);
+        CountNonWhitePixels(bitmap, labBackedSquare).Should().BeGreaterThan(650,
+            "the Lab rectangle underneath the non-isolated DeviceCMYK form must be retained in the CMYK backdrop before ColorBurn compositing");
+
+        var squareMean = MeanRgb(bitmap, labBackedSquare);
+        squareMean.Luminance.Should().BeLessThan(210,
+            "the output-intent indicator square should not collapse to white when a CMYK blend group is painted over it");
     }
 
     [Fact(Timeout = 20000)]
@@ -1589,6 +1677,41 @@ public class SkiaRendererTests
         var centerY = bitmap.Height - (int)(100 * 150 / 72);
         var centerPixel = bitmap.GetPixel(centerX, centerY);
         centerPixel.Should().Be(SKColors.White, "rectangle interior should not be filled");
+    }
+
+    [Fact]
+    public void RenderPage_RectangleOperator_PreservesNegativeDimensionsForPaintAndClip()
+    {
+        var content = """
+            1 0 0 rg
+            30 80 -20 -20 re f
+            q
+            40 60 40 -30 re W n
+            0 0 1 rg
+            30 20 60 60 re f
+            Q
+            """;
+        var pdfData = CreatePdfWithContentAndPageSize(content, width: 100, height: 100);
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, AntiAlias = false, BackgroundColor = SKColors.White });
+
+        var redPixel = bitmap.GetPixel(20, 30);
+        redPixel.Red.Should().BeGreaterThan(220,
+            "the re operator must paint a rectangle even when width and height are negative");
+        redPixel.Green.Should().BeLessThan(30);
+        redPixel.Blue.Should().BeLessThan(30);
+
+        var clippedBluePixel = bitmap.GetPixel(60, 55);
+        clippedBluePixel.Blue.Should().BeGreaterThan(220,
+            "negative-height rectangles are valid clipping paths in PDF content streams");
+        clippedBluePixel.Red.Should().BeLessThan(30);
+        clippedBluePixel.Green.Should().BeLessThan(30);
+
+        bitmap.GetPixel(35, 55).Should().Be(SKColors.White,
+            "the clipped fill should not leak outside the signed rectangle path");
     }
 
     #endregion
@@ -5863,6 +5986,49 @@ public class SkiaRendererTests
         }
 
         return count;
+    }
+
+    private static int CountAdjacentColumnJumps(SKBitmap bitmap, SKRectI region, int threshold)
+    {
+        var left = Math.Clamp(region.Left, 0, bitmap.Width);
+        var top = Math.Clamp(region.Top, 0, bitmap.Height);
+        var right = Math.Clamp(region.Right, left, bitmap.Width);
+        var bottom = Math.Clamp(region.Bottom, top, bitmap.Height);
+        if (right - left < 2 || bottom <= top)
+            return 0;
+
+        var jumps = 0;
+        var previous = MeanColumn(bitmap, left, top, bottom);
+        for (var x = left + 1; x < right; x++)
+        {
+            var current = MeanColumn(bitmap, x, top, bottom);
+            var delta = Math.Abs(current.Red - previous.Red) +
+                        Math.Abs(current.Green - previous.Green) +
+                        Math.Abs(current.Blue - previous.Blue);
+            if (delta > threshold)
+                jumps++;
+
+            previous = current;
+        }
+
+        return jumps;
+    }
+
+    private static (double Red, double Green, double Blue) MeanColumn(SKBitmap bitmap, int x, int top, int bottom)
+    {
+        long red = 0;
+        long green = 0;
+        long blue = 0;
+        for (var y = top; y < bottom; y++)
+        {
+            var pixel = bitmap.GetPixel(x, y);
+            red += pixel.Red;
+            green += pixel.Green;
+            blue += pixel.Blue;
+        }
+
+        var count = Math.Max(1, bottom - top);
+        return (red / (double)count, green / (double)count, blue / (double)count);
     }
 
     private static bool IsOpenJpegDecompressAvailable()

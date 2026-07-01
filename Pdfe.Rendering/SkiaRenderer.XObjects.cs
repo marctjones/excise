@@ -50,23 +50,6 @@ internal partial class RenderContext
         {
             if (TryRenderDeviceCmykFormGroup(formStream, group, invocationState))
                 return;
-
-            var savedState = _state;
-            var savedBlendOverride = _deviceCmykGroupCompositeBlendOverride;
-            _deviceCmykTransparencyGroupDepth++;
-            try
-            {
-                _state = invocationState.Clone();
-                _deviceCmykGroupCompositeBlendOverride = invocationState.BlendMode;
-                RenderFormXObject(formStream);
-            }
-            finally
-            {
-                _state = savedState;
-                _deviceCmykGroupCompositeBlendOverride = savedBlendOverride;
-                _deviceCmykTransparencyGroupDepth--;
-            }
-            return;
         }
 
         using var paint = new SKPaint
@@ -215,6 +198,9 @@ internal partial class RenderContext
             var isKnockout = group.GetBool("K");
             child._deviceCmykPreserveZeroAlphaShape = _deviceCmykKnockoutGroupDepth > 0 && !isIsolated;
 
+            if (!isIsolated && invocationState.BlendMode != SKBlendMode.SrcOver)
+                SyncDeviceCmykBackdropFromRootBitmap(left, top, width, height);
+
             var parentBackdropForChild = _deviceCmykKnockoutGroupDepth > 0 &&
                                          _deviceCmykKnockoutInitialBackdrop != null
                 ? _deviceCmykKnockoutInitialBackdrop
@@ -244,10 +230,59 @@ internal partial class RenderContext
             if (child._deviceCmykBackdrop == null)
                 return false;
 
-            CompositeDeviceCmykGroupBitmap(groupBitmap, child._deviceCmykBackdrop, left, top, invocationState.BlendMode);
+            var groupInvocationAlpha = _deviceCmykKnockoutGroupDepth > 0
+                ? 1
+                : invocationState.FillAlpha;
+            CompositeDeviceCmykGroupBitmap(
+                groupBitmap,
+                child._deviceCmykBackdrop,
+                left,
+                top,
+                invocationState.BlendMode,
+                groupInvocationAlpha);
         }
 
         return true;
+    }
+
+    private void SyncDeviceCmykBackdropFromRootBitmap(int left, int top, int width, int height)
+    {
+        if (_rootBitmap == null || _deviceCmykBackdrop == null)
+            return;
+
+        for (var y = 0; y < height; y++)
+        {
+            var parentY = top + y;
+            if (parentY < 0 || parentY >= _rootBitmap.Height)
+                continue;
+
+            for (var x = 0; x < width; x++)
+            {
+                var parentX = left + x;
+                if (parentX < 0 || parentX >= _rootBitmap.Width)
+                    continue;
+
+                var pixel = _rootBitmap.GetPixel(parentX, parentY);
+                var retained = _deviceCmykBackdrop.Get(parentX, parentY);
+                var (retainedR, retainedG, retainedB) = Pdfe.Core.ColorSpaces.PdfColorSpace.ConvertDeviceCmykToRgb(
+                    retained.C,
+                    retained.M,
+                    retained.Y,
+                    retained.K);
+                if (Math.Abs(pixel.Red - ToByte(retainedR)) +
+                    Math.Abs(pixel.Green - ToByte(retainedG)) +
+                    Math.Abs(pixel.Blue - ToByte(retainedB)) <= 12)
+                {
+                    continue;
+                }
+
+                var alpha = pixel.Alpha / 255.0;
+                var r = (pixel.Red / 255.0 * alpha) + (1 - alpha);
+                var g = (pixel.Green / 255.0 * alpha) + (1 - alpha);
+                var b = (pixel.Blue / 255.0 * alpha) + (1 - alpha);
+                _deviceCmykBackdrop.Set(parentX, parentY, RgbToDeviceCmyk(r, g, b));
+            }
+        }
     }
 
     private static void SeedDeviceCmykGroupBackdrop(
@@ -274,7 +309,8 @@ internal partial class RenderContext
         DeviceCmykBackdrop groupBackdrop,
         int left,
         int top,
-        SKBlendMode invocationBlendMode)
+        SKBlendMode invocationBlendMode,
+        float invocationAlpha)
     {
         if (_rootBitmap == null || _deviceCmykBackdrop == null)
             return;
@@ -301,7 +337,7 @@ internal partial class RenderContext
 
             for (var x = 0; x < groupBitmap.Width; x++)
             {
-                var alpha = groupBitmap.GetPixel(x, y).Alpha / 255.0;
+                var alpha = (groupBitmap.GetPixel(x, y).Alpha / 255.0) * Math.Clamp(invocationAlpha, 0, 1);
                 if (alpha <= 0)
                     continue;
 
