@@ -275,9 +275,7 @@ partial class Program
         string? progressOutputPath = null)
     {
         var contractSet = RenderingQualityContractSet.Load(contractsDir);
-        var pageManifest = pageMode == CorpusPageMode.All
-            ? null
-            : contractSet.CreatePageManifest(pageMode);
+        var pageManifest = contractSet.CreatePageManifest();
         var passwordManifest = contractSet.CreatePasswordManifest();
         var expectations = contractSet.CreateExpectationManifest();
         var rawPath = string.IsNullOrWhiteSpace(rawOutputPath)
@@ -615,57 +613,6 @@ partial class Program
                     group => group.Key,
                     group => (IReadOnlySet<int>)group.Select(kvp => kvp.Key.PageNumber).ToHashSet(),
                     StringComparer.Ordinal);
-        }
-
-        public IReadOnlyDictionary<string, IReadOnlySet<int>> CreatePageManifest(CorpusPageMode pageMode)
-        {
-            if (pageMode == CorpusPageMode.All)
-                return CreatePageManifest();
-
-            return PageContracts
-                .GroupBy(kvp => kvp.Key.Path, StringComparer.Ordinal)
-                .ToDictionary(
-                    group => group.Key,
-                    group => (IReadOnlySet<int>)SelectContractPagesForMode(
-                            group.Select(kvp => kvp.Key.PageNumber),
-                            pageMode)
-                        .ToHashSet(),
-                    StringComparer.Ordinal);
-        }
-
-        private static IEnumerable<int> SelectContractPagesForMode(IEnumerable<int> pageNumbers, CorpusPageMode pageMode)
-        {
-            var pages = pageNumbers
-                .Where(page => page >= 0)
-                .Distinct()
-                .OrderBy(page => page)
-                .ToArray();
-            var positivePages = pages.Where(page => page > 0).ToArray();
-            if (positivePages.Length == 0)
-            {
-                if (pages.Contains(0))
-                    yield return 0;
-                yield break;
-            }
-
-            if (pageMode == CorpusPageMode.Sample)
-            {
-                var samplePages = positivePages
-                    .Intersect(CorpusSamplePageNumbers)
-                    .OrderBy(page => page)
-                    .ToArray();
-                if (samplePages.Length > 0)
-                {
-                    foreach (var page in samplePages)
-                        yield return page;
-                    yield break;
-                }
-            }
-
-            if (positivePages.Contains(1))
-                yield return 1;
-            else
-                yield return positivePages[0];
         }
 
         public IReadOnlyDictionary<string, string>? CreatePasswordManifest()

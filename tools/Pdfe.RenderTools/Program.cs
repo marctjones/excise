@@ -20,7 +20,6 @@ partial class Program
 {
     private const long CorpusFallbackMaxPixelCount = 32L * 1024L * 1024L;
     private const long VisualVectorMaxPixelCount = 2L * 1024L * 1024L;
-    private static readonly int[] CorpusSamplePageNumbers = { 1, 2, 5, 20 };
 
     static Task<int> Main(string[] args) => RunAsync(args);
 
@@ -2533,7 +2532,7 @@ partial class Program
 
         if (pageMode == CorpusPageMode.Sample)
         {
-            foreach (var page in CorpusSamplePageNumbers)
+            foreach (var page in new[] { 1, 2, 5, 20 })
             {
                 if (page <= pageCount)
                     yield return page;

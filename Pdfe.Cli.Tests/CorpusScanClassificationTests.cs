@@ -51,7 +51,7 @@ public class CorpusScanClassificationTests
     }
 
     [Fact]
-    public void RenderingQualityContractSet_PageModeManifestSamplesFullPageContracts()
+    public void RenderingQualityContractSet_PageManifestKeepsFullContractCoverage()
     {
         var dir = Path.Combine(Path.GetTempPath(), "pdfe-contracts-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(dir);
@@ -80,15 +80,12 @@ public class CorpusScanClassificationTests
 
             var set = RenderProgram.RenderingQualityContractSet.Load(dir);
 
-            set.CreatePageManifest(RenderProgram.CorpusPageMode.First)["isartor/long.pdf"]
-                .Should().BeEquivalentTo(new[] { 1 });
-            set.CreatePageManifest(RenderProgram.CorpusPageMode.Sample)["isartor/long.pdf"]
-                .Should().BeEquivalentTo(new[] { 1, 2, 5, 20 });
-            set.CreatePageManifest(RenderProgram.CorpusPageMode.Sample)["pdfjs/focused.pdf"]
-                .Should().BeEquivalentTo(new[] { 129 },
-                    "sample mode should still include one-off issue contracts that have no canonical sample page");
-            set.CreatePageManifest(RenderProgram.CorpusPageMode.All)["isartor/long.pdf"]
+            set.CreatePageManifest()["isartor/long.pdf"]
                 .Should().HaveCount(10_000);
+            set.CreatePageManifest()["isartor/long.pdf"]
+                .Should().Contain(new[] { 1, 2, 5, 20, 10_000 });
+            set.CreatePageManifest()["pdfjs/focused.pdf"]
+                .Should().BeEquivalentTo(new[] { 129 });
         }
         finally
         {
