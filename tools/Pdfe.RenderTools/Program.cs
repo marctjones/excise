@@ -864,6 +864,7 @@ partial class Program
             activeProgress,
             () => System.Threading.Volatile.Read(ref processed),
             () => System.Threading.Volatile.Read(ref peakBytes),
+            rss => ObservePeakBytes(ref peakBytes, rss),
             scanStopwatch,
             progressIntervalSeconds,
             resolvedProgressOutputPath,
@@ -926,8 +927,7 @@ partial class Program
 
                 // Cheap RSS sample.
                 var rss = Environment.WorkingSet;
-                if (rss > System.Threading.Interlocked.Read(ref peakBytes))
-                    System.Threading.Interlocked.Exchange(ref peakBytes, rss);
+                ObservePeakBytes(ref peakBytes, rss);
 
                 // Periodic GC to keep SkiaSharp's native memory bounded.
                 // Less aggressive than the serial version because parallel
@@ -3048,6 +3048,7 @@ partial class Program
         System.Collections.Concurrent.ConcurrentDictionary<string, CorpusScanProgress> activeProgress,
         Func<int> getProcessedPdfs,
         Func<long> getPeakRssBytes,
+        Action<long> observePeakRssBytes,
         Stopwatch scanStopwatch,
         int intervalSeconds,
         string? progressOutputPath,
@@ -3072,6 +3073,7 @@ partial class Program
                     activeProgress,
                     getProcessedPdfs(),
                     getPeakRssBytes(),
+                    observePeakRssBytes,
                     scanStopwatch,
                     progressOutputPath,
                     chunkIndex,
@@ -3102,6 +3104,7 @@ partial class Program
         System.Collections.Concurrent.ConcurrentDictionary<string, CorpusScanProgress> activeProgress,
         int processedPdfs,
         long peakRssBytes,
+        Action<long> observePeakRssBytes,
         Stopwatch scanStopwatch,
         string? progressOutputPath,
         int chunkIndex,
@@ -3109,6 +3112,11 @@ partial class Program
         CorpusPageMode pageMode,
         CorpusExtraOracles extraOracles)
     {
+        var currentRss = Environment.WorkingSet;
+        observePeakRssBytes(currentRss);
+        if (currentRss > peakRssBytes)
+            peakRssBytes = currentRss;
+
         var snapshots = activeProgress.Values
             .Select(progress => progress.Snapshot())
             .OrderBy(snapshot => snapshot.Path, StringComparer.Ordinal)
@@ -3167,6 +3175,19 @@ partial class Program
             new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
         File.WriteAllText(tempPath, json);
         File.Move(tempPath, outputPath, overwrite: true);
+    }
+
+    private static void ObservePeakBytes(ref long peakBytes, long observedBytes)
+    {
+        while (true)
+        {
+            var current = System.Threading.Interlocked.Read(ref peakBytes);
+            if (observedBytes <= current)
+                return;
+
+            if (System.Threading.Interlocked.CompareExchange(ref peakBytes, observedBytes, current) == current)
+                return;
+        }
     }
 
     internal static string ClassifyCorpusFailure(Exception ex, CorpusFailurePhase phase)
