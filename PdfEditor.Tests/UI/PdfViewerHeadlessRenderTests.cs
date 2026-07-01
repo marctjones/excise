@@ -1,9 +1,11 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using AwesomeAssertions;
 using Pdfe.Avalonia.Controls;
+using Pdfe.Avalonia.Imaging;
 using SkiaSharp;
 using System;
 using System.IO;
@@ -62,6 +64,69 @@ public class PdfViewerHeadlessRenderTests
         AssertMatchesBaseline(captured, testName: "pdfviewer-birth-certificate-page1", maxDifference: 0.06);
     }
 
+    [FixedAvaloniaFact]
+    public void SkiaInterop_PreservesOpaqueWhiteBackgroundAndColorChannels()
+    {
+        using var source = new SKBitmap(4, 1, SKColorType.Rgba8888, SKAlphaType.Premul);
+        source.SetPixel(0, 0, SKColors.White);
+        source.SetPixel(1, 0, SKColors.Red);
+        source.SetPixel(2, 0, SKColors.Green);
+        source.SetPixel(3, 0, SKColors.Blue);
+
+        using var avaloniaBitmap = SkiaInterop.ToAvaloniaBitmap(source);
+        avaloniaBitmap.Should().NotBeNull();
+
+        using var captured = DecodeAvaloniaBitmap(avaloniaBitmap!);
+
+        captured.GetPixel(0, 0).Should().Be(SKColors.White,
+            "an opaque PDF page background must not become transparent or black in the GUI bitmap");
+        captured.GetPixel(1, 0).Should().Be(SKColors.Red,
+            "red must not be swapped with blue while copying to Avalonia BGRA pixels");
+        captured.GetPixel(2, 0).Should().Be(SKColors.Green);
+        captured.GetPixel(3, 0).Should().Be(SKColors.Blue);
+    }
+
+    [FixedAvaloniaFact]
+    public async Task PdfViewer_AccCompensationCover_DisplayedBitmapMatchesRendererAndIsNotBlack()
+    {
+        var pdfPath = FindRepoFile("test-pdfs", "sample-pdfs", "acc-global-compensation-report.pdf");
+        var pdfBytes = await File.ReadAllBytesAsync(pdfPath);
+
+        using var expected = RenderDirectPage(pdfBytes, pageNumber: 1, dpi: 120);
+        using var displayed = await RenderViaViewerControl(pdfBytes);
+
+        displayed.Width.Should().Be(expected.Width);
+        displayed.Height.Should().Be(expected.Height);
+
+        var difference = VisualAssertions.CalculatePixelDifference(displayed, expected);
+        _output.WriteLine($"ACC cover GUI bitmap vs renderer difference: {difference:P4}");
+        difference.Should().BeLessThanOrEqualTo(0.001,
+            "the bitmap handed to the GUI Image control should match the renderer output");
+
+        AssertLightOpaquePage(displayed, "ACC cover GUI bitmap");
+    }
+
+    [FixedAvaloniaFact]
+    public async Task PdfViewer_AccCompensationCover_HeadlessVisualSurfaceMatchesDisplayedBitmap()
+    {
+        var pdfPath = FindRepoFile("test-pdfs", "sample-pdfs", "acc-global-compensation-report.pdf");
+        var pdfBytes = await File.ReadAllBytesAsync(pdfPath);
+
+        var capture = await RenderViewerVisualSurface(pdfBytes);
+        using var displayed = capture.Displayed;
+        using var visualSurface = capture.VisualSurface;
+
+        displayed.Width.Should().Be(visualSurface.Width);
+        displayed.Height.Should().Be(visualSurface.Height);
+
+        var difference = VisualAssertions.CalculatePixelDifference(visualSurface, displayed);
+        _output.WriteLine($"ACC cover offscreen GUI surface vs displayed bitmap difference: {difference:P4}");
+        difference.Should().BeLessThanOrEqualTo(0.01,
+            "the headless Avalonia visual surface should show the same pixels as the rendered page bitmap");
+
+        AssertLightOpaquePage(visualSurface, "ACC cover offscreen GUI surface");
+    }
+
     /// <summary>
     /// Sanity test: render the same PDF directly via SkiaRenderer, bypassing the
     /// PdfViewerControl, to isolate whether a failure is in the renderer or the
@@ -111,6 +176,64 @@ public class PdfViewerHeadlessRenderTests
         var pdfImage = viewer.FindControl<Image>("PdfImage");
         pdfImage.Should().NotBeNull("PdfViewerControl must expose the PdfImage element");
 
+        await WaitForViewerRender(viewer, pdfImage!);
+
+        var bitmap = (Bitmap)pdfImage.Source!;
+        var result = DecodeAvaloniaBitmap(bitmap);
+
+        window.Close();
+        doc.Dispose();
+
+        result.Should().NotBeNull();
+        return result;
+    }
+
+    private async Task<ViewerVisualCapture> RenderViewerVisualSurface(byte[] pdfBytes)
+    {
+        var doc = Pdfe.Core.Document.PdfDocument.Open(pdfBytes);
+
+        var viewer = new PdfViewerControl();
+        var window = new Window
+        {
+            Content = viewer,
+            Width = 612,
+            Height = 792,
+            WindowDecorations = WindowDecorations.None
+        };
+        window.Show();
+
+        await Task.Delay(50);
+        viewer.Document = doc;
+
+        var pdfImage = viewer.FindControl<Image>("PdfImage");
+        pdfImage.Should().NotBeNull("PdfViewerControl must expose the PdfImage element");
+
+        await WaitForViewerRender(viewer, pdfImage!);
+
+        var imageSource = (Bitmap)pdfImage!.Source!;
+        var displayed = DecodeAvaloniaBitmap(imageSource);
+
+        viewer.Width = displayed.Width;
+        viewer.Height = displayed.Height;
+        window.Width = displayed.Width;
+        window.Height = displayed.Height;
+        viewer.Measure(new Size(displayed.Width, displayed.Height));
+        viewer.Arrange(new Rect(0, 0, displayed.Width, displayed.Height));
+        Dispatcher.UIThread.RunJobs();
+        await Task.Delay(50);
+
+        using var renderTarget = new RenderTargetBitmap(new PixelSize(displayed.Width, displayed.Height));
+        renderTarget.Render(viewer);
+        var visualSurface = DecodeAvaloniaBitmap(renderTarget);
+
+        window.Close();
+        doc.Dispose();
+
+        return new ViewerVisualCapture(displayed, visualSurface);
+    }
+
+    private async Task WaitForViewerRender(PdfViewerControl viewer, Image pdfImage)
+    {
         // Render completes in ~2s locally, but the first render on a cold CI
         // runner (JIT + xvfb + SkiaSharp native init) can take far longer, so a
         // 15s budget intermittently failed in CI while passing everywhere else.
@@ -119,31 +242,75 @@ public class PdfViewerHeadlessRenderTests
         var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(60);
         while (DateTime.UtcNow < deadline)
         {
-            if (!viewer.IsLoading && pdfImage!.Source != null)
+            if (!viewer.IsLoading && pdfImage.Source != null)
                 break;
             await Task.Delay(50);
         }
 
-        pdfImage!.Source.Should().NotBeNull("viewer should have rendered the first page within 60s");
+        pdfImage.Source.Should().NotBeNull("viewer should have rendered the first page within 60s");
         viewer.IsLoading.Should().BeFalse();
         viewer.HasError.Should().BeFalse($"viewer reported error: {viewer.ErrorMessage}");
+    }
 
+    private static SKBitmap DecodeAvaloniaBitmap(Bitmap bitmap)
+    {
         // Avalonia Bitmap → PNG bytes → SKBitmap. Lossless (PNG), so pixel-equivalent
-        // to what a user sees on-screen from the control's Image.Source.
-        var bitmap = (Bitmap)pdfImage.Source!;
+        // to the pixels the control hands to the Avalonia renderer.
         using var ms = new MemoryStream();
         bitmap.Save(ms);
         ms.Position = 0;
-        var result = SKBitmap.Decode(ms)
+        return SKBitmap.Decode(ms)
             ?? throw new InvalidOperationException(
                 $"Could not decode captured bitmap ({bitmap.PixelSize}, {ms.Length} bytes). " +
                 "If this happens after a working baseline, check that TestAppBuilder has UseHeadlessDrawing=false.");
+    }
 
-        window.Close();
-        doc.Dispose();
+    private static SKBitmap RenderDirectPage(byte[] pdfBytes, int pageNumber, int dpi)
+    {
+        using var doc = Pdfe.Core.Document.PdfDocument.Open(pdfBytes);
+        var page = doc.GetPage(pageNumber);
+        var renderer = new Pdfe.Rendering.SkiaRenderer();
+        return renderer.RenderPage(page, new Pdfe.Rendering.RenderOptions { Dpi = dpi });
+    }
 
-        result.Should().NotBeNull();
-        return result;
+    private static void AssertLightOpaquePage(SKBitmap bitmap, string description)
+    {
+        var total = (long)bitmap.Width * bitmap.Height;
+        long dark = 0;
+        long light = 0;
+        long transparent = 0;
+
+        for (var y = 0; y < bitmap.Height; y++)
+        {
+            for (var x = 0; x < bitmap.Width; x++)
+            {
+                var pixel = bitmap.GetPixel(x, y);
+                if (pixel.Alpha < 250)
+                    transparent++;
+
+                var alpha = pixel.Alpha / 255.0;
+                var red = pixel.Red * alpha + 255 * (1 - alpha);
+                var green = pixel.Green * alpha + 255 * (1 - alpha);
+                var blue = pixel.Blue * alpha + 255 * (1 - alpha);
+                var luminance = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+
+                if (luminance < 32)
+                    dark++;
+                if (luminance > 220)
+                    light++;
+            }
+        }
+
+        var darkRatio = (double)dark / total;
+        var lightRatio = (double)light / total;
+        var transparentRatio = (double)transparent / total;
+
+        transparentRatio.Should().BeLessThan(0.001,
+            $"{description} should be an opaque composited page image, not transparent white that can turn black over a dark GUI background");
+        darkRatio.Should().BeLessThan(0.35,
+            $"{description} should not reproduce the black-background GUI failure");
+        lightRatio.Should().BeGreaterThan(0.25,
+            $"{description} should preserve the light page background");
     }
 
     private void AssertMatchesBaseline(SKBitmap actual, string testName, double maxDifference)
@@ -191,6 +358,22 @@ public class PdfViewerHeadlessRenderTests
 
         return Path.Combine(dir.FullName, "UI", "baselines", $"{testName}.png");
     }
+
+    private static string FindRepoFile(params string[] pathParts)
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null)
+        {
+            var candidate = Path.Combine(new[] { dir.FullName }.Concat(pathParts).ToArray());
+            if (File.Exists(candidate))
+                return candidate;
+            dir = dir.Parent;
+        }
+
+        throw new FileNotFoundException($"Could not find repository file: {Path.Combine(pathParts)}");
+    }
+
+    private sealed record ViewerVisualCapture(SKBitmap Displayed, SKBitmap VisualSurface);
 
     /// <summary>
     /// Builds a minimal PDF 1.4 document with the given content stream. Copied
