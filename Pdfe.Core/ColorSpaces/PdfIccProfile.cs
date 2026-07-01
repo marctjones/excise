@@ -13,6 +13,7 @@ internal sealed class PdfIccProfile
     private readonly Lut16Profile? _aToBLut16Profile;
     private readonly Lut16Profile? _bToALut16Profile;
     private readonly Dictionary<IccCacheKey, (double R, double G, double B)> _cache = new();
+    private readonly object _cacheLock = new();
 
     private const int MaxCacheEntries = 8192;
     private static readonly double[] D50WhitePoint = { 0.96422, 1.0, 0.82521 };
@@ -82,8 +83,11 @@ internal sealed class PdfIccProfile
             return null;
 
         var key = CreateCacheKey(values);
-        if (_cache.TryGetValue(key, out var cached))
-            return cached;
+        lock (_cacheLock)
+        {
+            if (_cache.TryGetValue(key, out var cached))
+                return cached;
+        }
 
         (double R, double G, double B)? color = null;
         if (ToPcsLab(values) is { } lab)
@@ -93,8 +97,14 @@ internal sealed class PdfIccProfile
             color = XyzD65ToSrgb(adapted.X, adapted.Y, adapted.Z);
         }
 
-        if (color.HasValue && _cache.Count < MaxCacheEntries)
-            _cache[key] = color.Value;
+        if (color.HasValue)
+        {
+            lock (_cacheLock)
+            {
+                if (_cache.Count < MaxCacheEntries)
+                    _cache[key] = color.Value;
+            }
+        }
 
         return color;
     }

@@ -25,6 +25,7 @@ public sealed class PdfColorSpace
     private readonly PdfIccProfile? _iccProfile;
     private readonly PdfIccProfile? _iccOutputIntentProfile;
     private Dictionary<TintColorCacheKey, (double R, double G, double B)>? _tintRgbCache;
+    private readonly object _tintRgbCacheLock = new();
     private static readonly ConditionalWeakTable<PdfDocument, OutputIntentProfileBox> OutputIntentProfiles = new();
 
     private const int MaxTintRgbCacheEntries = 4096;
@@ -322,19 +323,27 @@ public sealed class PdfColorSpace
 
     private (double R, double G, double B) ResolveTintedColor(double[] values)
     {
-        if (TryCreateTintColorCacheKey(values, out var cacheKey) &&
-            _tintRgbCache != null &&
-            _tintRgbCache.TryGetValue(cacheKey, out var cached))
+        if (TryCreateTintColorCacheKey(values, out var cacheKey))
         {
-            return cached;
+            lock (_tintRgbCacheLock)
+            {
+                if (_tintRgbCache != null &&
+                    _tintRgbCache.TryGetValue(cacheKey, out var cached))
+                {
+                    return cached;
+                }
+            }
         }
 
         var color = ResolveTintedColorUncached(values);
         if (TryCreateTintColorCacheKey(values, out cacheKey))
         {
-            _tintRgbCache ??= new Dictionary<TintColorCacheKey, (double R, double G, double B)>();
-            if (_tintRgbCache.Count < MaxTintRgbCacheEntries)
-                _tintRgbCache[cacheKey] = color;
+            lock (_tintRgbCacheLock)
+            {
+                _tintRgbCache ??= new Dictionary<TintColorCacheKey, (double R, double G, double B)>();
+                if (_tintRgbCache.Count < MaxTintRgbCacheEntries)
+                    _tintRgbCache[cacheKey] = color;
+            }
         }
 
         return color;
