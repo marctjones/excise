@@ -25,6 +25,16 @@
     "RootCause": {
       "type": "string"
     },
+    "ReviewStatus": {
+      "enum": [
+        "REVIEWED",
+        "GENERATED",
+        "NEEDS_REVIEW"
+      ]
+    },
+    "Target": {
+      "type": "object"
+    },
     "ImprovementPriority": {
       "enum": [
         "P0",

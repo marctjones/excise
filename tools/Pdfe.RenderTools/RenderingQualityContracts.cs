@@ -7,6 +7,10 @@ namespace Pdfe.RenderTools;
 partial class Program
 {
     private const string RenderingQualityUnknown = "UNKNOWN";
+    private const string PassOneReviewNotApplicable = "NOT_PASS_ONE";
+    private const string PassOneReviewAccepted = "ACCEPTED_PASS_ONE";
+    private const string PassOneReviewUnreviewed = "UNREVIEWED_PASS_ONE";
+    private const string PassOneReviewRejected = "REJECTED_PASS_ONE";
 
     static Command CreateRenderQualityScanCommand()
     {
@@ -389,6 +393,14 @@ partial class Program
             {
                 entry.contractStatus = "APPLIED";
             }
+
+            entry.passOneReviewStatus = InferPassOneReviewStatus(entry, contract);
+            if (entry.status == "PASS_ONE" && entry.passOneReviewStatus == PassOneReviewUnreviewed)
+            {
+                entry.qualityReason = string.IsNullOrWhiteSpace(entry.qualityReason)
+                    ? "Raw PASS_ONE has not been assigned a reviewed target decision."
+                    : entry.qualityReason;
+            }
         }
     }
 
@@ -455,6 +467,7 @@ partial class Program
             "MALFORMED_PDF" or "EMPTY_DOC" or "PASSWORD_REQUIRED" or "INVALID_PAGE_GEOMETRY" => "MALFORMED_INPUT_POLICY",
             "RESOURCE_LIMIT" or "TIMEOUT" => "RESOURCE_POLICY",
             "ALL_ORACLES_REFUSED" => "QUALITY_STANDARD",
+            "PASS_ONE" => "REFERENCE_DISAGREEMENT",
             _ => "REFERENCE_CONSENSUS",
         };
 
@@ -473,6 +486,50 @@ partial class Program
             "PASS_ONE" => entry.comparedOracles >= 3 ? "MEDIUM" : "LOW",
             _ => "MEDIUM",
         };
+
+    private static string InferPassOneReviewStatus(CorpusScanEntry entry, RenderingQualityPageMatch? contract)
+    {
+        if (entry.status != "PASS_ONE")
+            return PassOneReviewNotApplicable;
+
+        if (entry.releaseStatus is "BLOCKED" or "FAIL" || entry.qualityStatus == "FAIL")
+            return PassOneReviewRejected;
+
+        if (contract is null)
+            return PassOneReviewUnreviewed;
+
+        var explicitReviewStatus = contract.ReviewStatus;
+        if (string.Equals(explicitReviewStatus, "REVIEWED", StringComparison.Ordinal))
+            return PassOneReviewAccepted;
+        if (string.Equals(explicitReviewStatus, "GENERATED", StringComparison.Ordinal) ||
+            string.Equals(explicitReviewStatus, "NEEDS_REVIEW", StringComparison.Ordinal))
+            return PassOneReviewUnreviewed;
+
+        if (LooksLikeGeneratedBaseline(contract))
+            return PassOneReviewUnreviewed;
+
+        if (contract.Target is null)
+            return PassOneReviewUnreviewed;
+
+        if (string.IsNullOrWhiteSpace(contract.QualityReason) && string.IsNullOrWhiteSpace(contract.Notes))
+            return PassOneReviewUnreviewed;
+
+        return PassOneReviewAccepted;
+    }
+
+    private static bool LooksLikeGeneratedBaseline(RenderingQualityPageMatch contract)
+    {
+        static bool ContainsGeneratedMarker(string? value)
+            => !string.IsNullOrWhiteSpace(value)
+               && (value.Contains("Baseline", StringComparison.OrdinalIgnoreCase) ||
+                   value.Contains("Auto-classified", StringComparison.OrdinalIgnoreCase) ||
+                   value.Contains("promote to a reviewed contract", StringComparison.OrdinalIgnoreCase));
+
+        return string.Equals(contract.RootCause, "FULL_CORPUS_BASELINE", StringComparison.Ordinal) ||
+               ContainsGeneratedMarker(contract.QualityReason) ||
+               ContainsGeneratedMarker(contract.Notes) ||
+               ContainsGeneratedMarker(contract.Target?.Reason);
+    }
 
     private static RenderingQualityReport BuildRenderingQualityReport(
         CorpusScanReport rawReport,
@@ -511,6 +568,7 @@ partial class Program
                 rootCauseCounts = CountBy(entries.Select(entry => entry.rootCause ?? RenderingQualityUnknown)),
                 improvementPriorityCounts = CountBy(entries.Select(entry => entry.improvementPriority ?? RenderingQualityUnknown)),
                 confidenceCounts = CountBy(entries.Select(entry => entry.confidence ?? RenderingQualityUnknown)),
+                passOneReviewStatusCounts = CountBy(entries.Select(entry => entry.passOneReviewStatus ?? PassOneReviewNotApplicable)),
             },
             failures = reportEntries
                 .Where(entry => entry.releaseStatus is "BLOCKED" or "FAIL" || entry.qualityStatus == "FAIL")
@@ -518,15 +576,82 @@ partial class Program
             needsReview = reportEntries
                 .Where(entry => entry.releaseStatus == "NEEDS_REVIEW" || entry.qualityStatus == "NEEDS_REVIEW")
                 .ToArray(),
+            unreviewedPassOne = reportEntries
+                .Where(entry => entry.passOneReviewStatus == PassOneReviewUnreviewed)
+                .ToArray(),
+            rejectedPassOne = reportEntries
+                .Where(entry => entry.passOneReviewStatus == PassOneReviewRejected)
+                .ToArray(),
             acceptedLimitations = reportEntries
                 .Where(entry => entry.qualityStatus == "ACCEPTED_LIMITATION")
                 .ToArray(),
             referenceDisagreements = reportEntries
                 .Where(entry => entry.referenceSituation == "REFS_DISAGREE")
                 .ToArray(),
+            passOneTriage = BuildPassOneTriage(reportEntries),
             entries = reportEntries,
         };
     }
+
+    private static IReadOnlyList<RenderingQualityPassOneTriageCluster> BuildPassOneTriage(
+        IReadOnlyList<RenderingQualityReportEntry> entries)
+    {
+        return entries
+            .Where(entry => entry.rawStatus == "PASS_ONE")
+            .GroupBy(entry => new
+            {
+                entry.passOneReviewStatus,
+                entry.rootCause,
+                entry.targetBasis,
+                targetRenderer = entry.targetRenderer ?? "none",
+                entry.referenceSituation,
+                entry.visualHumanImpact,
+                entry.visualCategory,
+                bestOracle = entry.bestOracle ?? "none",
+                entry.contractStatus,
+            })
+            .Select(group => new RenderingQualityPassOneTriageCluster
+            {
+                passOneReviewStatus = group.Key.passOneReviewStatus,
+                rootCause = group.Key.rootCause,
+                targetBasis = group.Key.targetBasis,
+                targetRenderer = group.Key.targetRenderer,
+                referenceSituation = group.Key.referenceSituation,
+                visualHumanImpact = group.Key.visualHumanImpact,
+                visualCategory = group.Key.visualCategory,
+                bestOracle = group.Key.bestOracle,
+                contractStatus = group.Key.contractStatus,
+                count = group.Count(),
+                pdfCount = group.Select(entry => entry.path).Distinct(StringComparer.Ordinal).Count(),
+                representativePages = group
+                    .OrderBy(entry => entry.path, StringComparer.Ordinal)
+                    .ThenBy(entry => entry.pageNumber)
+                    .Take(12)
+                    .Select(entry => new RenderingQualityPageRef
+                    {
+                        path = entry.path,
+                        pageNumber = entry.pageNumber,
+                        qualityStatus = entry.qualityStatus,
+                        diffFraction = entry.diffFraction,
+                        mae = entry.mae,
+                    })
+                    .ToArray(),
+            })
+            .OrderBy(cluster => PassOneReviewRank(cluster.passOneReviewStatus))
+            .ThenByDescending(cluster => cluster.count)
+            .ThenBy(cluster => cluster.rootCause, StringComparer.Ordinal)
+            .ThenBy(cluster => cluster.targetBasis, StringComparer.Ordinal)
+            .ToArray();
+    }
+
+    private static int PassOneReviewRank(string? status)
+        => status switch
+        {
+            PassOneReviewRejected => 0,
+            PassOneReviewUnreviewed => 1,
+            PassOneReviewAccepted => 2,
+            _ => 3,
+        };
 
     private static void PrintRenderingQualitySummary(RenderingQualitySummary summary)
     {
@@ -535,6 +660,7 @@ partial class Program
         Console.Out.WriteLine($"  pages scanned: {summary.pagesScanned}");
         Console.Out.WriteLine($"  missing contract pages: {summary.missingContractPages}");
         PrintCountGroup("  quality", summary.qualityStatusCounts);
+        PrintCountGroup("  pass-one review", summary.passOneReviewStatusCounts);
         PrintCountGroup("  pixel agreement", summary.pixelAgreementCounts);
         PrintCountGroup("  reference situation", summary.referenceSituationCounts);
         PrintCountGroup("  release", summary.releaseStatusCounts);
@@ -677,6 +803,7 @@ partial class Program
         public int? Issue => Page.Issue ?? Contract.Issue;
         public string? Notes => Page.Notes ?? Contract.Notes;
         public string? QualityReason => Page.QualityReason ?? Contract.QualityReason;
+        public string? ReviewStatus => Page.ReviewStatus ?? Contract.ReviewStatus;
     }
 
     internal sealed class RenderingQualityPdfContract
@@ -690,6 +817,7 @@ partial class Program
         public int? Issue { get; set; }
         public string? RootCause { get; set; }
         public RenderingQualityTarget? Target { get; set; }
+        public string? ReviewStatus { get; set; }
         public string? ImprovementPriority { get; set; }
         public string? Confidence { get; set; }
         public string? QualityReason { get; set; }
@@ -759,6 +887,7 @@ partial class Program
         public string? RootCause { get; set; }
         public RenderingQualityTarget? Target { get; set; }
         public RenderingQualityGoal? QualityGoal { get; set; }
+        public string? ReviewStatus { get; set; }
         public string? ImprovementPriority { get; set; }
         public string? Confidence { get; set; }
         public int? Issue { get; set; }
@@ -778,6 +907,7 @@ partial class Program
                 RootCause = RootCause,
                 Target = Target,
                 QualityGoal = QualityGoal,
+                ReviewStatus = ReviewStatus,
                 ImprovementPriority = ImprovementPriority,
                 Confidence = Confidence,
                 Issue = Issue,
@@ -819,8 +949,11 @@ partial class Program
         public RenderingQualitySummary summary { get; set; } = new();
         public IReadOnlyList<RenderingQualityReportEntry> failures { get; set; } = Array.Empty<RenderingQualityReportEntry>();
         public IReadOnlyList<RenderingQualityReportEntry> needsReview { get; set; } = Array.Empty<RenderingQualityReportEntry>();
+        public IReadOnlyList<RenderingQualityReportEntry> unreviewedPassOne { get; set; } = Array.Empty<RenderingQualityReportEntry>();
+        public IReadOnlyList<RenderingQualityReportEntry> rejectedPassOne { get; set; } = Array.Empty<RenderingQualityReportEntry>();
         public IReadOnlyList<RenderingQualityReportEntry> acceptedLimitations { get; set; } = Array.Empty<RenderingQualityReportEntry>();
         public IReadOnlyList<RenderingQualityReportEntry> referenceDisagreements { get; set; } = Array.Empty<RenderingQualityReportEntry>();
+        public IReadOnlyList<RenderingQualityPassOneTriageCluster> passOneTriage { get; set; } = Array.Empty<RenderingQualityPassOneTriageCluster>();
         public IReadOnlyList<RenderingQualityReportEntry> entries { get; set; } = Array.Empty<RenderingQualityReportEntry>();
     }
 
@@ -840,6 +973,32 @@ partial class Program
         public Dictionary<string, int> rootCauseCounts { get; set; } = new(StringComparer.Ordinal);
         public Dictionary<string, int> improvementPriorityCounts { get; set; } = new(StringComparer.Ordinal);
         public Dictionary<string, int> confidenceCounts { get; set; } = new(StringComparer.Ordinal);
+        public Dictionary<string, int> passOneReviewStatusCounts { get; set; } = new(StringComparer.Ordinal);
+    }
+
+    internal sealed class RenderingQualityPassOneTriageCluster
+    {
+        public string passOneReviewStatus { get; set; } = "";
+        public string rootCause { get; set; } = "";
+        public string targetBasis { get; set; } = "";
+        public string targetRenderer { get; set; } = "";
+        public string referenceSituation { get; set; } = "";
+        public string? visualHumanImpact { get; set; }
+        public string? visualCategory { get; set; }
+        public string bestOracle { get; set; } = "";
+        public string? contractStatus { get; set; }
+        public int count { get; set; }
+        public int pdfCount { get; set; }
+        public IReadOnlyList<RenderingQualityPageRef> representativePages { get; set; } = Array.Empty<RenderingQualityPageRef>();
+    }
+
+    internal sealed class RenderingQualityPageRef
+    {
+        public string path { get; set; } = "";
+        public int pageNumber { get; set; }
+        public string qualityStatus { get; set; } = "";
+        public double diffFraction { get; set; }
+        public double mae { get; set; }
     }
 
     internal sealed class RenderingQualityReportEntry
@@ -856,8 +1015,11 @@ partial class Program
         public string rootCause { get; set; } = "";
         public string improvementPriority { get; set; } = "";
         public string confidence { get; set; } = "";
+        public string passOneReviewStatus { get; set; } = "";
         public string? trackedBy { get; set; }
         public string? bestOracle { get; set; }
+        public string? visualHumanImpact { get; set; }
+        public string? visualCategory { get; set; }
         public double diffFraction { get; set; }
         public double mae { get; set; }
         public int? comparedOracles { get; set; }
@@ -880,8 +1042,11 @@ partial class Program
                 rootCause = entry.rootCause ?? RenderingQualityUnknown,
                 improvementPriority = entry.improvementPriority ?? RenderingQualityUnknown,
                 confidence = entry.confidence ?? RenderingQualityUnknown,
+                passOneReviewStatus = entry.passOneReviewStatus ?? PassOneReviewNotApplicable,
                 trackedBy = entry.trackedBy,
                 bestOracle = entry.bestOracle,
+                visualHumanImpact = entry.visualHumanImpact,
+                visualCategory = entry.visualCategory,
                 diffFraction = entry.diffFraction,
                 mae = entry.mae,
                 comparedOracles = entry.comparedOracles,

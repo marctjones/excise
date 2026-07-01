@@ -209,6 +209,13 @@ public class CorpusScanClassificationTests
                 {
                   "Path": "pdfjs/issue.pdf",
                   "RootCause": "IMAGE_ORACLE_DISAGREEMENT",
+                  "ReviewStatus": "REVIEWED",
+                  "Target": {
+                    "Mode": "REFERENCE_RENDERER",
+                    "Primary": "mutool",
+                    "Reason": "Human-reviewed image fixture target."
+                  },
+                  "QualityReason": "pdfe matches the reviewed image target.",
                   "Pages": {
                     "1": {
                       "ExpectedRawStatus": "PASS_ONE",
@@ -249,12 +256,123 @@ public class CorpusScanClassificationTests
             report!.summary.missingContractPages.Should().Be(0);
             report.summary.qualityStatusCounts.Should().ContainKey("MATCHES_ACCEPTED_REFERENCE")
                 .WhoseValue.Should().Be(1);
+            report.summary.passOneReviewStatusCounts.Should().ContainKey("ACCEPTED_PASS_ONE")
+                .WhoseValue.Should().Be(1);
+            report.unreviewedPassOne.Should().BeEmpty();
+            report.passOneTriage.Should().ContainSingle()
+                .Which.passOneReviewStatus.Should().Be("ACCEPTED_PASS_ONE");
         }
         finally
         {
             Directory.Delete(dir, recursive: true);
             if (File.Exists(rawPath)) File.Delete(rawPath);
             if (File.Exists(outputPath)) File.Delete(outputPath);
+        }
+    }
+
+    [Fact]
+    public void ApplyRenderingQualityContracts_FlagsGeneratedPassOneAsUnreviewed()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "pdfe-contracts-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            File.WriteAllText(Path.Combine(dir, "baseline.json"), """
+                {
+                  "Path": "pdfjs/freeculture.pdf",
+                  "RootCause": "REFERENCE_ORACLE_DISAGREEMENT",
+                  "Target": {
+                    "Mode": "REFERENCE_CONSENSUS",
+                    "Primary": "mutool",
+                    "Reason": "Baseline full-corpus contract inferred from raw all-pages scan."
+                  },
+                  "Pages": {
+                    "1": {
+                      "ExpectedRawStatus": "PASS_ONE",
+                      "ReleaseStatus": "PASS",
+                      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+                      "ReferenceSituation": "REFS_DISAGREE",
+                      "QualityReason": "Baseline classification inferred from full all-pages raw corpus scan; promote to a reviewed contract when triaged."
+                    }
+                  }
+                }
+                """);
+            var set = RenderProgram.RenderingQualityContractSet.Load(dir);
+            var entries = new[]
+            {
+                new RenderProgram.CorpusScanEntry
+                {
+                    path = "pdfjs/freeculture.pdf",
+                    pageNumber = 1,
+                    status = "PASS_ONE",
+                    bestOracle = "mutool",
+                    comparedOracles = 4,
+                    agreeingOracles = 1,
+                    oracleDisagreeingPairs = 3,
+                },
+            };
+
+            RenderProgram.ApplyRenderingQualityContracts(entries, set, strictContracts: false);
+
+            entries[0].releaseStatus.Should().Be("PASS");
+            entries[0].qualityStatus.Should().Be("MATCHES_ACCEPTED_REFERENCE");
+            entries[0].passOneReviewStatus.Should().Be("UNREVIEWED_PASS_ONE");
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void ApplyRenderingQualityContracts_FlagsFailingPassOneAsRejected()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "pdfe-contracts-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            File.WriteAllText(Path.Combine(dir, "altona.json"), """
+                {
+                  "Path": "altona/composite.pdf",
+                  "RootCause": "ALTONA_COMPOSITE_COLOR_TRANSPARENCY",
+                  "Target": {
+                    "Mode": "PDF_SPEC",
+                    "Primary": "pdftocairo",
+                    "Reason": "Use the print-semantic target until pdfe implements the visible composite behavior."
+                  },
+                  "Pages": {
+                    "7": {
+                      "ExpectedRawStatus": "PASS_ONE",
+                      "ReleaseStatus": "PASS",
+                      "QualityStatus": "FAIL",
+                      "ReferenceSituation": "REFS_DISAGREE",
+                      "QualityReason": "pdfe still misses the reviewed composite print target."
+                    }
+                  }
+                }
+                """);
+            var set = RenderProgram.RenderingQualityContractSet.Load(dir);
+            var entries = new[]
+            {
+                new RenderProgram.CorpusScanEntry
+                {
+                    path = "altona/composite.pdf",
+                    pageNumber = 7,
+                    status = "PASS_ONE",
+                    bestOracle = "pdftocairo",
+                    comparedOracles = 4,
+                    agreeingOracles = 1,
+                    oracleDisagreeingPairs = 3,
+                },
+            };
+
+            RenderProgram.ApplyRenderingQualityContracts(entries, set, strictContracts: false);
+
+            entries[0].passOneReviewStatus.Should().Be("REJECTED_PASS_ONE");
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
         }
     }
 

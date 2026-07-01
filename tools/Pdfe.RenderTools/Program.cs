@@ -3566,6 +3566,7 @@ partial class Program
         public string? rootCause { get; set; }
         public string? improvementPriority { get; set; }
         public string? confidence { get; set; }
+        public string? passOneReviewStatus { get; set; }
         public string? trackedBy { get; set; }
         public string? qualityReason { get; set; }
         public string? contractStatus { get; set; }
