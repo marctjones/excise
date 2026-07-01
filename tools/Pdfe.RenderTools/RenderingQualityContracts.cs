@@ -78,6 +78,15 @@ partial class Program
         {
             Description = "Directory for cached pdfe-rendered PNGs.",
         };
+        var progressIntervalOption = new Option<int>("--progress-interval-seconds")
+        {
+            Description = "Emit raw corpus-scan heartbeat progress every N seconds. 0 disables heartbeat output.",
+            DefaultValueFactory = _ => 30,
+        };
+        var progressOutputOption = new Option<FileInfo?>("--progress-output")
+        {
+            Description = "Optional JSON sidecar for heartbeat progress. Defaults to <raw-output>.progress.json when heartbeat is enabled.",
+        };
 
         var command = new Command(
             "render-quality-scan",
@@ -98,6 +107,8 @@ partial class Program
             oracleCacheDirOption,
             noOracleCacheOption,
             pdfeRenderCacheDirOption,
+            progressIntervalOption,
+            progressOutputOption,
         };
 
         command.SetAction(parseResult =>
@@ -117,6 +128,8 @@ partial class Program
             var oracleCacheDir = parseResult.GetValue(oracleCacheDirOption);
             var noOracleCache = parseResult.GetValue(noOracleCacheOption);
             var pdfeRenderCacheDir = parseResult.GetValue(pdfeRenderCacheDirOption);
+            var progressIntervalSeconds = parseResult.GetValue(progressIntervalOption);
+            var progressOutput = parseResult.GetValue(progressOutputOption);
 
             if (parallel <= 0) parallel = Math.Max(1, Environment.ProcessorCount / 2);
             if (!TryParseCorpusPageMode(pageModeRaw, out var pageMode))
@@ -160,7 +173,9 @@ partial class Program
                     extraOracles,
                     strictContracts,
                     noOracleCache ? null : ResolveCorpusOracleCacheDir(oracleCacheDir),
-                    pdfeRenderCacheDir);
+                    pdfeRenderCacheDir,
+                    progressIntervalSeconds,
+                    progressOutput?.FullName);
                 Environment.ExitCode = ok ? 0 : 1;
             }
             catch (Exception ex)
@@ -255,10 +270,14 @@ partial class Program
         CorpusExtraOracles extraOracles,
         bool strictContracts,
         DirectoryInfo? oracleCacheDir,
-        DirectoryInfo? pdfeRenderCacheDir)
+        DirectoryInfo? pdfeRenderCacheDir,
+        int progressIntervalSeconds = 30,
+        string? progressOutputPath = null)
     {
         var contractSet = RenderingQualityContractSet.Load(contractsDir);
-        var pageManifest = contractSet.CreatePageManifest();
+        var pageManifest = pageMode == CorpusPageMode.All
+            ? null
+            : contractSet.CreatePageManifest(pageMode);
         var passwordManifest = contractSet.CreatePasswordManifest();
         var expectations = contractSet.CreateExpectationManifest();
         var rawPath = string.IsNullOrWhiteSpace(rawOutputPath)
@@ -283,7 +302,9 @@ partial class Program
             passwordManifest,
             expectations,
             oracleCacheDir,
-            pdfeRenderCacheDir);
+            pdfeRenderCacheDir,
+            progressIntervalSeconds,
+            progressOutputPath);
         if (!scanOk)
             return false;
 
@@ -594,6 +615,57 @@ partial class Program
                     group => group.Key,
                     group => (IReadOnlySet<int>)group.Select(kvp => kvp.Key.PageNumber).ToHashSet(),
                     StringComparer.Ordinal);
+        }
+
+        public IReadOnlyDictionary<string, IReadOnlySet<int>> CreatePageManifest(CorpusPageMode pageMode)
+        {
+            if (pageMode == CorpusPageMode.All)
+                return CreatePageManifest();
+
+            return PageContracts
+                .GroupBy(kvp => kvp.Key.Path, StringComparer.Ordinal)
+                .ToDictionary(
+                    group => group.Key,
+                    group => (IReadOnlySet<int>)SelectContractPagesForMode(
+                            group.Select(kvp => kvp.Key.PageNumber),
+                            pageMode)
+                        .ToHashSet(),
+                    StringComparer.Ordinal);
+        }
+
+        private static IEnumerable<int> SelectContractPagesForMode(IEnumerable<int> pageNumbers, CorpusPageMode pageMode)
+        {
+            var pages = pageNumbers
+                .Where(page => page >= 0)
+                .Distinct()
+                .OrderBy(page => page)
+                .ToArray();
+            var positivePages = pages.Where(page => page > 0).ToArray();
+            if (positivePages.Length == 0)
+            {
+                if (pages.Contains(0))
+                    yield return 0;
+                yield break;
+            }
+
+            if (pageMode == CorpusPageMode.Sample)
+            {
+                var samplePages = positivePages
+                    .Intersect(CorpusSamplePageNumbers)
+                    .OrderBy(page => page)
+                    .ToArray();
+                if (samplePages.Length > 0)
+                {
+                    foreach (var page in samplePages)
+                        yield return page;
+                    yield break;
+                }
+            }
+
+            if (positivePages.Contains(1))
+                yield return 1;
+            else
+                yield return positivePages[0];
         }
 
         public IReadOnlyDictionary<string, string>? CreatePasswordManifest()

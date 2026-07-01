@@ -51,6 +51,52 @@ public class CorpusScanClassificationTests
     }
 
     [Fact]
+    public void RenderingQualityContractSet_PageModeManifestSamplesFullPageContracts()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "pdfe-contracts-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            File.WriteAllText(Path.Combine(dir, "long.json"), """
+                {
+                  "Path": "isartor/long.pdf",
+                  "Pages": {
+                    "1-10000": {
+                      "ExpectedRawStatus": "PASS"
+                    }
+                  }
+                }
+                """);
+            File.WriteAllText(Path.Combine(dir, "focused.json"), """
+                {
+                  "Path": "pdfjs/focused.pdf",
+                  "Pages": {
+                    "129": {
+                      "ExpectedRawStatus": "PASS_ONE"
+                    }
+                  }
+                }
+                """);
+
+            var set = RenderProgram.RenderingQualityContractSet.Load(dir);
+
+            set.CreatePageManifest(RenderProgram.CorpusPageMode.First)["isartor/long.pdf"]
+                .Should().BeEquivalentTo(new[] { 1 });
+            set.CreatePageManifest(RenderProgram.CorpusPageMode.Sample)["isartor/long.pdf"]
+                .Should().BeEquivalentTo(new[] { 1, 2, 5, 20 });
+            set.CreatePageManifest(RenderProgram.CorpusPageMode.Sample)["pdfjs/focused.pdf"]
+                .Should().BeEquivalentTo(new[] { 129 },
+                    "sample mode should still include one-off issue contracts that have no canonical sample page");
+            set.CreatePageManifest(RenderProgram.CorpusPageMode.All)["isartor/long.pdf"]
+                .Should().HaveCount(10_000);
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
     public void ApplyRenderingQualityContracts_AnnotatesQualityColumns()
     {
         var dir = Path.Combine(Path.GetTempPath(), "pdfe-contracts-" + Guid.NewGuid().ToString("N"));

@@ -20,6 +20,7 @@ partial class Program
 {
     private const long CorpusFallbackMaxPixelCount = 32L * 1024L * 1024L;
     private const long VisualVectorMaxPixelCount = 2L * 1024L * 1024L;
+    private static readonly int[] CorpusSamplePageNumbers = { 1, 2, 5, 20 };
 
     static Task<int> Main(string[] args) => RunAsync(args);
 
@@ -717,6 +718,15 @@ partial class Program
         {
             Description = "Directory for cached pdfe-rendered PNGs. Disabled unless explicitly set.",
         };
+        var progressIntervalOption = new Option<int>("--progress-interval-seconds")
+        {
+            Description = "Emit corpus-scan heartbeat progress every N seconds. 0 disables heartbeat output.",
+            DefaultValueFactory = _ => 30,
+        };
+        var progressOutputOption = new Option<FileInfo?>("--progress-output")
+        {
+            Description = "Optional JSON sidecar for heartbeat progress. Defaults to <output>.progress.json when heartbeat is enabled.",
+        };
 
         var command = new Command("corpus-scan",
             "Render corpus PDFs with pdfe + reference oracles, compute pixel-diff, write JSON report")
@@ -725,6 +735,7 @@ partial class Program
             dpiOption, diffPctOption, maxMaeOption, parallelOption, perPdfTimeoutOption, pageModeOption,
             pageManifestOption, passwordManifestOption, expectationManifestOption, extraOraclesOption,
             oracleCacheDirOption, noOracleCacheOption, pdfeRenderCacheDirOption,
+            progressIntervalOption, progressOutputOption,
         };
 
         command.SetAction(parseResult =>
@@ -746,6 +757,8 @@ partial class Program
             var oracleCacheDir = parseResult.GetValue(oracleCacheDirOption);
             var noOracleCache = parseResult.GetValue(noOracleCacheOption);
             var pdfeRenderCacheDir = parseResult.GetValue(pdfeRenderCacheDirOption);
+            var progressIntervalSeconds = parseResult.GetValue(progressIntervalOption);
+            var progressOutput = parseResult.GetValue(progressOutputOption);
 
             if (parallel <= 0) parallel = Math.Max(1, Environment.ProcessorCount / 2);
             if (!TryParseCorpusPageMode(pageModeRaw, out var pageMode))
@@ -784,7 +797,9 @@ partial class Program
                     chunk, total, dpi, diffPct, maxMae, parallel, pdfTimeoutMs, pageMode, extraOracles,
                     pageManifest, passwordManifest, expectationManifest,
                     noOracleCache ? null : ResolveCorpusOracleCacheDir(oracleCacheDir),
-                    pdfeRenderCacheDir);
+                    pdfeRenderCacheDir,
+                    progressIntervalSeconds,
+                    progressOutput?.FullName);
                 Environment.ExitCode = ok ? 0 : 1;
             }
             catch (Exception ex)
@@ -813,7 +828,9 @@ partial class Program
         IReadOnlyDictionary<string, string>? passwordManifest = null,
         IReadOnlyDictionary<CorpusPageKey, CorpusExpectedOutcome>? expectationManifest = null,
         DirectoryInfo? oracleCacheDir = null,
-        DirectoryInfo? pdfeRenderCacheDir = null)
+        DirectoryInfo? pdfeRenderCacheDir = null,
+        int progressIntervalSeconds = 30,
+        string? progressOutputPath = null)
     {
         var pdfs = DiscoverCorpusPdfs(corpusDir, chunkIndex, chunkTotal, pageManifest?.Keys);
         var oracleCache = CreateOracleRenderCache(oracleCacheDir);
@@ -833,8 +850,28 @@ partial class Program
         // restored by sort-on-write since Parallel.ForEach completion
         // order is non-deterministic.
         var entries = new System.Collections.Concurrent.ConcurrentBag<CorpusScanEntry>();
+        var activeProgress = new System.Collections.Concurrent.ConcurrentDictionary<string, CorpusScanProgress>(StringComparer.Ordinal);
+        var scanStopwatch = Stopwatch.StartNew();
         long peakBytes = 0;
         int processed = 0;
+        var resolvedProgressOutputPath = progressIntervalSeconds <= 0
+            ? null
+            : string.IsNullOrWhiteSpace(progressOutputPath)
+                ? outputPath + ".progress.json"
+                : progressOutputPath;
+        using var progressReporter = StartCorpusScanProgressReporter(
+            pdfs.Count,
+            entries,
+            activeProgress,
+            () => System.Threading.Volatile.Read(ref processed),
+            () => System.Threading.Volatile.Read(ref peakBytes),
+            scanStopwatch,
+            progressIntervalSeconds,
+            resolvedProgressOutputPath,
+            chunkIndex,
+            chunkTotal,
+            pageMode,
+            extraOracles);
 
         var po = new ParallelOptions { MaxDegreeOfParallelism = parallel };
         Parallel.ForEach(pdfs, po, corpusPdf =>
@@ -844,59 +881,67 @@ partial class Program
             IReadOnlyList<CorpusScanEntry> pdfEntries;
             var pdfStopwatch = Stopwatch.StartNew();
             var progress = new CorpusScanProgress(rel);
-            IReadOnlySet<int>? selectedPages = null;
-            pageManifest?.TryGetValue(rel, out selectedPages);
-            string? userPassword = null;
-            if (passwordManifest != null)
-                TryGetCorpusPassword(passwordManifest, rel, out userPassword);
-            var wallBudgetMs = ComputeCorpusScanWallBudgetMs(
-                pdfTimeoutMs, pageMode, extraOracles, selectedPages);
-            var task = Task.Run(() => ScanOnePdf(rel, pdf, dpi, maxDiffFraction, maxMae, pdfTimeoutMs,
-                pageMode, extraOracles, selectedPages, progress, userPassword, oracleCache, pdfeRenderCache));
-            if (task.Wait(wallBudgetMs))
+            activeProgress[rel] = progress;
+            try
             {
-                pdfEntries = task.Result;
-            }
-            else
-            {
-                pdfStopwatch.Stop();
-                var snapshot = progress.Snapshot();
-                pdfEntries = new[]
+                IReadOnlySet<int>? selectedPages = null;
+                pageManifest?.TryGetValue(rel, out selectedPages);
+                string? userPassword = null;
+                if (passwordManifest != null)
+                    TryGetCorpusPassword(passwordManifest, rel, out userPassword);
+                var wallBudgetMs = ComputeCorpusScanWallBudgetMs(
+                    pdfTimeoutMs, pageMode, extraOracles, selectedPages);
+                var task = Task.Run(() => ScanOnePdf(rel, pdf, dpi, maxDiffFraction, maxMae, pdfTimeoutMs,
+                    pageMode, extraOracles, selectedPages, progress, userPassword, oracleCache, pdfeRenderCache));
+                if (task.Wait(wallBudgetMs))
                 {
-                    new CorpusScanEntry
+                    pdfEntries = task.Result;
+                }
+                else
+                {
+                    pdfStopwatch.Stop();
+                    var snapshot = progress.Snapshot();
+                    pdfEntries = new[]
                     {
-                        path = rel,
-                        pageNumber = snapshot.PageNumber,
-                        status = "TIMEOUT",
-                        errorPhase = snapshot.Phase,
-                        errorType = "WallClockTimeout",
-                        elapsedMs = pdfStopwatch.ElapsedMilliseconds,
-                        timeoutMs = wallBudgetMs,
-                        diagnostic = snapshot.Detail,
-                        errorMessage = $"Per-PDF budget {wallBudgetMs}ms exceeded during {snapshot.Phase}: {snapshot.Detail}",
-                    },
-                };
-                // Note: the underlying ScanOne task may keep running
-                // until the process exits. That's acceptable here:
-                // we're not sharing state, and process exit at chunk
-                // end reaps the orphan.
+                        new CorpusScanEntry
+                        {
+                            path = rel,
+                            pageNumber = snapshot.PageNumber,
+                            status = "TIMEOUT",
+                            errorPhase = snapshot.Phase,
+                            errorType = "WallClockTimeout",
+                            elapsedMs = pdfStopwatch.ElapsedMilliseconds,
+                            timeoutMs = wallBudgetMs,
+                            diagnostic = $"{snapshot.Path}: {snapshot.Detail}",
+                            errorMessage = $"Per-PDF budget {wallBudgetMs}ms exceeded during {snapshot.Phase}: {snapshot.Path}: {snapshot.Detail}",
+                        },
+                    };
+                    // Note: the underlying ScanOne task may keep running
+                    // until the process exits. That's acceptable here:
+                    // we're not sharing state, and process exit at chunk
+                    // end reaps the orphan.
+                }
+                foreach (var entry in pdfEntries)
+                    entries.Add(entry);
+                int n = System.Threading.Interlocked.Increment(ref processed);
+
+                // Cheap RSS sample.
+                var rss = Environment.WorkingSet;
+                if (rss > System.Threading.Interlocked.Read(ref peakBytes))
+                    System.Threading.Interlocked.Exchange(ref peakBytes, rss);
+
+                // Periodic GC to keep SkiaSharp's native memory bounded.
+                // Less aggressive than the serial version because parallel
+                // workers naturally interleave finalization.
+                if (n % 20 == 0)
+                {
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                }
             }
-            foreach (var entry in pdfEntries)
-                entries.Add(entry);
-            int n = System.Threading.Interlocked.Increment(ref processed);
-
-            // Cheap RSS sample.
-            var rss = Environment.WorkingSet;
-            if (rss > System.Threading.Interlocked.Read(ref peakBytes))
-                System.Threading.Interlocked.Exchange(ref peakBytes, rss);
-
-            // Periodic GC to keep SkiaSharp's native memory bounded.
-            // Less aggressive than the serial version because parallel
-            // workers naturally interleave finalization.
-            if (n % 20 == 0)
+            finally
             {
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
+                activeProgress.TryRemove(rel, out _);
             }
         });
 
@@ -2488,7 +2533,7 @@ partial class Program
 
         if (pageMode == CorpusPageMode.Sample)
         {
-            foreach (var page in new[] { 1, 2, 5, 20 })
+            foreach (var page in CorpusSamplePageNumbers)
             {
                 if (page <= pageCount)
                     yield return page;
@@ -2953,9 +2998,11 @@ partial class Program
     {
         private readonly object _gate = new();
         private readonly string _path;
+        private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
         private string _phase = "queued";
         private string _detail = "waiting to start";
         private int _pageNumber;
+        private DateTime _updatedUtc = DateTime.UtcNow;
 
         public CorpusScanProgress(string path)
         {
@@ -2969,6 +3016,7 @@ partial class Program
                 _phase = phase;
                 _pageNumber = pageNumber;
                 _detail = detail;
+                _updatedUtc = DateTime.UtcNow;
             }
         }
 
@@ -2976,11 +3024,150 @@ partial class Program
         {
             lock (_gate)
             {
-                return new ProgressSnapshot(_phase, _pageNumber, $"{_path}: {_detail}");
+                return new ProgressSnapshot(
+                    _path,
+                    _phase,
+                    _pageNumber,
+                    _detail,
+                    _updatedUtc.ToString("o"),
+                    _stopwatch.ElapsedMilliseconds);
             }
         }
 
-        public readonly record struct ProgressSnapshot(string Phase, int PageNumber, string Detail);
+        public readonly record struct ProgressSnapshot(
+            string Path,
+            string Phase,
+            int PageNumber,
+            string Detail,
+            string UpdatedUtc,
+            long ElapsedMs);
+    }
+
+    private static IDisposable? StartCorpusScanProgressReporter(
+        int totalPdfs,
+        System.Collections.Concurrent.ConcurrentBag<CorpusScanEntry> entries,
+        System.Collections.Concurrent.ConcurrentDictionary<string, CorpusScanProgress> activeProgress,
+        Func<int> getProcessedPdfs,
+        Func<long> getPeakRssBytes,
+        Stopwatch scanStopwatch,
+        int intervalSeconds,
+        string? progressOutputPath,
+        int chunkIndex,
+        int chunkTotal,
+        CorpusPageMode pageMode,
+        CorpusExtraOracles extraOracles)
+    {
+        if (intervalSeconds <= 0)
+            return null;
+
+        var gate = new object();
+        void Tick()
+        {
+            if (!System.Threading.Monitor.TryEnter(gate))
+                return;
+            try
+            {
+                WriteCorpusScanProgressSnapshot(
+                    totalPdfs,
+                    entries,
+                    activeProgress,
+                    getProcessedPdfs(),
+                    getPeakRssBytes(),
+                    scanStopwatch,
+                    progressOutputPath,
+                    chunkIndex,
+                    chunkTotal,
+                    pageMode,
+                    extraOracles);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"warning: corpus progress heartbeat failed: {ex.Message}");
+            }
+            finally
+            {
+                System.Threading.Monitor.Exit(gate);
+            }
+        }
+
+        return new System.Threading.Timer(
+            _ => Tick(),
+            null,
+            TimeSpan.FromSeconds(intervalSeconds),
+            TimeSpan.FromSeconds(intervalSeconds));
+    }
+
+    private static void WriteCorpusScanProgressSnapshot(
+        int totalPdfs,
+        System.Collections.Concurrent.ConcurrentBag<CorpusScanEntry> entries,
+        System.Collections.Concurrent.ConcurrentDictionary<string, CorpusScanProgress> activeProgress,
+        int processedPdfs,
+        long peakRssBytes,
+        Stopwatch scanStopwatch,
+        string? progressOutputPath,
+        int chunkIndex,
+        int chunkTotal,
+        CorpusPageMode pageMode,
+        CorpusExtraOracles extraOracles)
+    {
+        var snapshots = activeProgress.Values
+            .Select(progress => progress.Snapshot())
+            .OrderBy(snapshot => snapshot.Path, StringComparer.Ordinal)
+            .ToArray();
+        var completedEntries = entries.ToArray();
+        var statusCounts = CountBy(completedEntries.Select(entry => entry.status));
+        var elapsed = scanStopwatch.Elapsed;
+        var activeText = snapshots.Length == 0
+            ? "none"
+            : string.Join("; ", snapshots.Select(snapshot =>
+                $"{snapshot.Path} p{snapshot.PageNumber} {snapshot.Phase} ({snapshot.ElapsedMs / 1000}s)"));
+
+        Console.Out.WriteLine(
+            $"progress {processedPdfs}/{totalPdfs} PDFs, {completedEntries.Length} page results, " +
+            $"active: {activeText}, elapsed {elapsed:hh\\:mm\\:ss}, peak RSS {peakRssBytes / 1024 / 1024} MB");
+        Console.Out.Flush();
+
+        if (string.IsNullOrWhiteSpace(progressOutputPath))
+            return;
+
+        var report = new
+        {
+            generatedUtc = DateTime.UtcNow.ToString("o"),
+            chunkIndex,
+            chunkTotal,
+            pageMode = PageModeName(pageMode),
+            extraOracles = ExtraOraclesName(extraOracles),
+            elapsedMs = scanStopwatch.ElapsedMilliseconds,
+            totalPdfs,
+            processedPdfs,
+            activePdfs = snapshots.Length,
+            pageResults = completedEntries.Length,
+            peakRssBytes,
+            statusCounts,
+            active = snapshots.Select(snapshot => new
+            {
+                path = snapshot.Path,
+                pageNumber = snapshot.PageNumber,
+                phase = snapshot.Phase,
+                detail = snapshot.Detail,
+                updatedUtc = snapshot.UpdatedUtc,
+                elapsedMs = snapshot.ElapsedMs,
+            }).ToArray(),
+        };
+        WriteJsonAtomically(progressOutputPath, report);
+    }
+
+    private static void WriteJsonAtomically(string outputPath, object report)
+    {
+        var directory = Path.GetDirectoryName(outputPath);
+        if (!string.IsNullOrWhiteSpace(directory))
+            Directory.CreateDirectory(directory);
+
+        var tempPath = outputPath + ".tmp";
+        var json = System.Text.Json.JsonSerializer.Serialize(report,
+            new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        File.WriteAllText(tempPath, json);
+        File.Move(tempPath, outputPath, overwrite: true);
     }
 
     internal static string ClassifyCorpusFailure(Exception ex, CorpusFailurePhase phase)
