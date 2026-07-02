@@ -25,17 +25,17 @@ public class RecoverablePdfRegressionTests
     }
 
     [Fact]
-    public void GetPage_CircularPagesSubtree_ExposesRecoverablePagesOnly()
+    public void GetPage_CircularPagesSubtree_ExposesDeclaredPageAndThrowsTypedCycleError()
     {
         Assert.SkipWhen(!File.Exists(PagesTreeRefs), "pdf.js regression fixture not available");
 
         using var doc = PdfDocument.Open(PagesTreeRefs);
 
-        doc.PageCount.Should().Be(1);
+        doc.PageCount.Should().Be(2);
         new TextExtractor(doc.GetPage(1)).ExtractText().Should().Contain("Testcase");
         Action act = () => doc.GetPage(2);
-        act.Should().Throw<ArgumentOutOfRangeException>()
-            .WithMessage("*Page number must be between 1 and 1*");
+        act.Should().Throw<Pdfe.Core.Parsing.PdfParseException>()
+            .WithMessage("*circular reference*");
     }
 
     [Theory]

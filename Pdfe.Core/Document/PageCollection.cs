@@ -16,6 +16,7 @@ public class PageCollection : IReadOnlyList<PdfPage>
     private PdfArray _kidsArray;
     private int _declaredCount;
     private bool _malformedPageTree;
+    private const int MaxRecoverableMalformedPageCountOverage = 128;
 
     /// <summary>
     /// Creates a new page collection for the document.
@@ -151,7 +152,22 @@ public class PageCollection : IReadOnlyList<PdfPage>
     /// <summary>
     /// Number of pages in the collection.
     /// </summary>
-    public int Count => !_malformedPageTree && _declaredCount > 0 ? _declaredCount : _pages.Count;
+    public int Count
+    {
+        get
+        {
+            if (!_malformedPageTree)
+                return _declaredCount > 0 ? _declaredCount : _pages.Count;
+
+            if (_declaredCount > _pages.Count &&
+                _declaredCount - _pages.Count <= MaxRecoverableMalformedPageCountOverage)
+            {
+                return _declaredCount;
+            }
+
+            return _pages.Count;
+        }
+    }
 
     /// <summary>
     /// Get a page by index (0-based).
