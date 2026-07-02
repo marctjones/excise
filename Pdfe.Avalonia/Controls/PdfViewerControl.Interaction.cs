@@ -241,7 +241,7 @@ public partial class PdfViewerControl
         var page = Document.GetPage(CurrentPage);
         var contentPoint = PdfCoordinateMapper.ToContentPoints(
             page,
-            PdfPageRect.ViewerDips(CurrentPage, dipPoint.X, dipPoint.Y, 0, 0, DefaultRenderDpi));
+            PdfPageRect.ViewerDips(CurrentPage, dipPoint.X, dipPoint.Y, 0, 0, _currentSinglePageRenderDpi));
         var pdfX = contentPoint.X;
         var pdfY = contentPoint.Y;
         foreach (var link in _currentPageLinks)
@@ -264,7 +264,7 @@ public partial class PdfViewerControl
         // rotation stay consistent with overlays and redaction.
         var contentPoint = PdfCoordinateMapper.ToContentPoints(
             page,
-            PdfPageRect.ViewerDips(CurrentPage, dipPoint.X, dipPoint.Y, 0, 0, DefaultRenderDpi));
+            PdfPageRect.ViewerDips(CurrentPage, dipPoint.X, dipPoint.Y, 0, 0, _currentSinglePageRenderDpi));
         var pdfX = contentPoint.X;
         var pdfY = contentPoint.Y;
         return TextSelectionEngine.HitTest(_currentPageLetters, pdfX, pdfY);

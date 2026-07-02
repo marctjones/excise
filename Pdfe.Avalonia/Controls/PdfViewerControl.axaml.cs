@@ -253,6 +253,9 @@ public partial class PdfViewerControl : UserControl
     // 1020×1320 (1.3M px), 3× less rasterisation work, and the difference
     // is invisible at typical zoom levels.
     private const int DefaultRenderDpi = 120;
+    private const int MinSinglePageRenderDpi = 12;
+    private const long MaxSinglePagePreviewPixels = 64L * 1024L * 1024L;
+    private int _currentSinglePageRenderDpi = DefaultRenderDpi;
 
     // LRU bitmap cache so flipping back to a recently-viewed page is
     // instant. Capped small — bitmaps for a 200-page book can be ~6 MB
@@ -457,9 +460,9 @@ public partial class PdfViewerControl : UserControl
         }
     }
 
-    // DPI used for single-page viewer overlay scaling (must match DefaultRenderDpi).
-    private const double AnnotationRenderDpi = DefaultRenderDpi;
-    private static double ViewerUnitsPerPoint => DefaultRenderDpi / PdfPageRect.PdfPointsPerInch;
+    // DPI used for single-page viewer overlay scaling. Most pages use
+    // DefaultRenderDpi, but huge page boxes may render at a lower preview DPI.
+    private double ViewerUnitsPerPoint => _currentSinglePageRenderDpi / PdfPageRect.PdfPointsPerInch;
 
     private static Rect ToAvaloniaRect(PdfPageRect rect) =>
         new(rect.X, rect.Y, rect.Width, rect.Height);
@@ -475,11 +478,11 @@ public partial class PdfViewerControl : UserControl
         if (Document == null || rect.PageNumber < 1 || rect.PageNumber > Document.PageCount)
             return rect;
 
-        return PdfCoordinateMapper.ToViewerDips(Document.GetPage(rect.PageNumber), rect, DefaultRenderDpi);
+        return PdfCoordinateMapper.ToViewerDips(Document.GetPage(rect.PageNumber), rect, _currentSinglePageRenderDpi);
     }
 
     private PdfPageRect ViewerDipsRect(Rect rect, int pageNumber) =>
-        PdfPageRect.ViewerDips(pageNumber, rect.X, rect.Y, rect.Width, rect.Height, DefaultRenderDpi);
+        PdfPageRect.ViewerDips(pageNumber, rect.X, rect.Y, rect.Width, rect.Height, _currentSinglePageRenderDpi);
 
     private PdfPageRect ContentRect(PdfRectangle rect, int pageNumber) =>
         PdfPageRect.FromPdfRectangle(pageNumber, rect, PdfCoordinateSpace.ContentPoints);
@@ -1117,13 +1120,25 @@ public partial class PdfViewerControl : UserControl
         if (Document == null || CurrentPage < 1 || CurrentPage > Document.PageCount)
             return;
 
+        var doc = Document;
+        var pageNumber = CurrentPage;
+        var page = doc.GetPage(pageNumber);
+        var renderDpi = EffectiveSinglePageRenderDpi(page);
+        _currentSinglePageRenderDpi = renderDpi;
+
         // Cache hit short-circuits the renderer entirely — this is the
         // common case for backwards-paging, undoing redactions, and
         // toggling overlays. Set Image.Source immediately so the user
         // doesn't even see a loading flicker.
-        if (TryGetCached(CurrentPage, DefaultRenderDpi, out var cached))
+        if (TryGetCached(pageNumber, renderDpi, out var cached))
         {
-            if (_pdfImage != null) _pdfImage.Source = cached;
+            if (_pdfImage != null)
+            {
+                var cachedBitmap = cached!;
+                _pdfImage.Width = cachedBitmap.Size.Width;
+                _pdfImage.Height = cachedBitmap.Size.Height;
+                _pdfImage.Source = cachedBitmap;
+            }
             HasError = false;
             ErrorMessage = null;
             return;
@@ -1136,8 +1151,6 @@ public partial class PdfViewerControl : UserControl
         _renderCts = cts;
         var token = cts.Token;
 
-        var pageNumber = CurrentPage;
-        var doc = Document;
         try
         {
             IsLoading = true;
@@ -1147,8 +1160,11 @@ public partial class PdfViewerControl : UserControl
             var skBitmap = await Task.Run(() =>
             {
                 token.ThrowIfCancellationRequested();
-                var page = doc.GetPage(pageNumber);
-                var options = new Pdfe.Rendering.RenderOptions { Dpi = DefaultRenderDpi };
+                var options = new Pdfe.Rendering.RenderOptions
+                {
+                    Dpi = renderDpi,
+                    MaxPixelCount = MaxSinglePagePreviewPixels
+                };
                 return _renderer.RenderPage(page, options);
             }, token);
 
@@ -1162,8 +1178,13 @@ public partial class PdfViewerControl : UserControl
                 var bitmap = SkiaInterop.ToAvaloniaBitmap(skBitmap);
                 if (bitmap != null)
                 {
-                    AddToCache(pageNumber, DefaultRenderDpi, bitmap);
-                    if (_pdfImage != null) _pdfImage.Source = bitmap;
+                    AddToCache(pageNumber, renderDpi, bitmap);
+                    if (_pdfImage != null)
+                    {
+                        _pdfImage.Width = bitmap.Size.Width;
+                        _pdfImage.Height = bitmap.Size.Height;
+                        _pdfImage.Source = bitmap;
+                    }
                 }
             }
             finally
@@ -1187,6 +1208,25 @@ public partial class PdfViewerControl : UserControl
             if (_renderCts == cts)
                 IsLoading = false;
         }
+    }
+
+    internal static int EffectiveSinglePageRenderDpi(PdfPage page)
+    {
+        var box = page.CropBox.Normalize();
+        var rotation = ((page.Rotation % 360) + 360) % 360;
+        var widthPt = rotation is 90 or 270 ? box.Height : box.Width;
+        var heightPt = rotation is 90 or 270 ? box.Width : box.Height;
+        if (widthPt <= 0 || heightPt <= 0)
+            return DefaultRenderDpi;
+
+        var defaultPixels = (widthPt * DefaultRenderDpi / PdfPageRect.PdfPointsPerInch) *
+                            (heightPt * DefaultRenderDpi / PdfPageRect.PdfPointsPerInch);
+        if (defaultPixels <= MaxSinglePagePreviewPixels)
+            return DefaultRenderDpi;
+
+        var dpi = (int)Math.Floor(Math.Sqrt(MaxSinglePagePreviewPixels / (widthPt * heightPt)) *
+                                  PdfPageRect.PdfPointsPerInch);
+        return Math.Clamp(dpi, MinSinglePageRenderDpi, DefaultRenderDpi);
     }
 
     private bool TryGetCached(int page, int dpi, out WriteableBitmap? bmp)
@@ -1236,9 +1276,12 @@ public partial class PdfViewerControl : UserControl
 
     private void ClearDisplay()
     {
+        _currentSinglePageRenderDpi = DefaultRenderDpi;
         if (_pdfImage != null)
         {
             _pdfImage.Source = null;
+            _pdfImage.Width = double.NaN;
+            _pdfImage.Height = double.NaN;
         }
     }
 

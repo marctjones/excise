@@ -31,7 +31,7 @@
 
                 <Grid Name="ContentGrid">
                     <!-- PDF Page Image (no transform here — the wrapper scales us). -->
-                    <Image Name="PdfImage" Stretch="None" />
+                    <Image Name="PdfImage" Stretch="Fill" />
 
                     <!-- Overlay canvases for annotations. -->
                     <Canvas Name="OverlayCanvas"

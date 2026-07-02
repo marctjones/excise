@@ -363,7 +363,7 @@ public partial class PdfViewerControl
         var viewerRect = PdfCoordinateMapper.ToViewerDips(
             page,
             PdfPageRect.FromContentPoints(pageNumber, pdfRect),
-            DefaultRenderDpi);
+            _currentSinglePageRenderDpi);
         return NormalizeTypewriterDipRect(ToAvaloniaRect(viewerRect));
     }
 
