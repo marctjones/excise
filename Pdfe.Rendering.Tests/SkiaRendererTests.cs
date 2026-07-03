@@ -1145,8 +1145,11 @@ public class SkiaRendererTests
 
         CountRedPixels(bitmap, new SKRectI(165, 20, 182, 38)).Should().BeGreaterThan(150,
             "isolated DeviceCMYK groups still need retained CMYK backdrop colors for nested ColorDodge form compositing");
-        CountDarkPixels(bitmap, new SKRectI(40, 55, 57, 72)).Should().BeGreaterThan(80,
+        CountNonWhitePixels(bitmap, new SKRectI(40, 55, 57, 72)).Should().BeGreaterThan(250,
             "isolated DeviceCMYK Difference groups should preserve the nested form shape instead of flattening it away");
+        var differencePatch = MeanRgb(bitmap, new SKRectI(40, 55, 57, 72));
+        differencePatch.Green.Should().BeGreaterThan(differencePatch.Red + 100,
+            "isolated DeviceCMYK Difference groups should blend in the group color space instead of falling back to a black shape proxy");
         CountDarkPixels(bitmap, new SKRectI(226, 66, 249, 88)).Should().BeLessThan(25,
             "the DeviceCMYK group fast path should apply Form XObject invocation alpha outside knockout groups");
 
@@ -1154,6 +1157,14 @@ public class SkiaRendererTests
         nestedBlendPatch.Red.Should().BeGreaterThan(nestedBlendPatch.Green + 60,
             "nested non-isolated DeviceCMYK groups should be composited in CMYK before the isolated parent group is blended back");
         nestedBlendPatch.Blue.Should().BeGreaterThan(nestedBlendPatch.Green + 30);
+        var overlayPatch = MeanRgb(bitmap, new SKRectI(196, 20, 216, 38));
+        overlayPatch.Green.Should().BeLessThan(85,
+            "isolated DeviceCMYK Overlay groups should use a transparent initial backdrop instead of blending against zero-ink white");
+        overlayPatch.Blue.Should().BeLessThan(70);
+        var softLightPatch = MeanRgb(bitmap, new SKRectI(227, 20, 248, 38));
+        softLightPatch.Green.Should().BeLessThan(85,
+            "isolated DeviceCMYK SoftLight groups should use a transparent initial backdrop instead of blending against zero-ink white");
+        softLightPatch.Blue.Should().BeLessThan(70);
     }
 
     [Fact(Timeout = 20000)]

@@ -275,7 +275,7 @@ internal partial class RenderContext
                 var r = (pixel.Red / 255.0 * alpha) + (1 - alpha);
                 var g = (pixel.Green / 255.0 * alpha) + (1 - alpha);
                 var b = (pixel.Blue / 255.0 * alpha) + (1 - alpha);
-                _deviceCmykBackdrop.Set(parentX, parentY, RgbToDeviceCmyk(r, g, b));
+                _deviceCmykBackdrop.Set(parentX, parentY, RgbToDeviceCmyk(r, g, b), alpha);
             }
         }
     }
@@ -294,7 +294,11 @@ internal partial class RenderContext
             for (var x = 0; x < width; x++)
             {
                 var parentX = left + x;
-                groupBackdrop.Set(x, y, sourceBackdrop.Get(parentX, parentY));
+                groupBackdrop.Set(
+                    x,
+                    y,
+                    sourceBackdrop.Get(parentX, parentY),
+                    sourceBackdrop.GetAlpha(parentX, parentY));
             }
         }
     }
@@ -345,7 +349,8 @@ internal partial class RenderContext
                 {
                     var initialBackdrop = _deviceCmykKnockoutInitialBackdrop?.Get(parentX, parentY)
                                           ?? new DeviceCmykColor(0, 0, 0, 0);
-                    _deviceCmykBackdrop.Set(parentX, parentY, initialBackdrop);
+                    var initialAlpha = _deviceCmykKnockoutInitialBackdrop?.GetAlpha(parentX, parentY) ?? 0;
+                    _deviceCmykBackdrop.Set(parentX, parentY, initialBackdrop, initialAlpha);
                     var (initialR, initialG, initialB) = DeviceCmykToRgb(initialBackdrop);
                     dst = new SKColor(
                         ToByte(initialR),
@@ -359,9 +364,12 @@ internal partial class RenderContext
                 var backdrop = _deviceCmykBackdrop.Get(parentX, parentY);
                 var blended = isNormalBlend
                     ? source
-                    : useDirectBlendFunctions
-                        ? BlendDeviceCmykDirect(backdrop, source, blend)
-                        : BlendDeviceCmyk(backdrop, source, blend);
+                    : BlendDeviceCmykWithBackdropAlpha(
+                        backdrop,
+                        source,
+                        blend,
+                        _deviceCmykBackdrop.GetAlpha(parentX, parentY),
+                        useDirectBlendFunctions);
                 _deviceCmykBackdrop.CompositeSourceOver(parentX, parentY, blended, alpha);
                 var output = _deviceCmykBackdrop.Get(parentX, parentY);
                 var (r, g, b) = DeviceCmykToRgb(output);

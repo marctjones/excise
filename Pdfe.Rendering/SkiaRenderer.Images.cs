@@ -868,7 +868,12 @@ internal partial class RenderContext
                 var backdrop = _deviceCmykBackdrop.Get(x, y);
                 var blended = isNormalBlend
                     ? source
-                    : BlendDeviceCmyk(backdrop, source, blend);
+                    : BlendDeviceCmykWithBackdropAlpha(
+                        backdrop,
+                        source,
+                        blend,
+                        _deviceCmykBackdrop.GetAlpha(x, y),
+                        direct: false);
                 _deviceCmykBackdrop.CompositeSourceOver(x, y, blended, alpha);
             }
         }

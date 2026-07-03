@@ -2,11 +2,11 @@
   "Path": "ghent/extracted/patches/Ghent_PDF_Output_Suite_V50_Patches/Categories/1-CMYK/Patches/GWG162_Transp_Basic_BM_DeviceCMYK_Isolate_X4.pdf",
   "Source": "Ghent PDF Output Suite 5.0",
   "Owner": "rendering:quality",
-  "Issue": 491,
+  "Issue": 543,
   "RootCause": "CMYK_TRANSPARENCY_GROUP_ISOLATION",
   "ImprovementPriority": "ACCEPTED_PREPRESS_FIDELITY_LIMITATION",
   "Confidence": "HIGH",
-  "QualityReason": "Current focused scan preserves visible content and is raw PASS_ONE against available references, but isolated DeviceCMYK transparency group behavior still differs in localized linework/texture. Classify as an accepted screen-preview limitation and keep broader prepress-fidelity work tracked separately.",
+  "QualityReason": "Focused scan preserves visible content and the high-impact isolated-backdrop washout is fixed. Remaining raw PASS_ONE differences are localized blend/color-fidelity residuals against MuPDF, so classify as an accepted screen-preview limitation and keep broader prepress-fidelity work tracked separately.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "DIFF",
@@ -15,7 +15,7 @@
       "PixelAgreement": "MATCHES_SOME",
       "ReferenceSituation": "REFS_DISAGREE",
       "RootCause": "CMYK_TRANSPARENCY_GROUP_ISOLATION_SATURATION_RESIDUAL",
-      "QualityReason": "Current focused scan: raw PASS_ONE, medium localized-linework/saturation residual, no content loss. Earlier DeviceCMYK isolation and output-intent fixes preserve the page semantics; the remaining difference is a tracked prepress-fidelity limitation rather than a screen-rendering release blocker.",
+      "QualityReason": "Current focused scan: raw PASS_ONE, medium localized-linework/saturation residual, no content loss. DeviceCMYK isolation now preserves transparent initial backdrops for Overlay/SoftLight instead of washing them out against zero-ink white; the remaining difference is a tracked prepress-fidelity limitation rather than a screen-rendering release blocker.",
       "Target": {
         "Mode": "REFERENCE_DISAGREEMENT",
         "Primary": "mutool",

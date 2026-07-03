@@ -441,9 +441,12 @@ internal partial class RenderContext
 
                 var blended = isNormalBlend
                     ? source
-                    : useDirectBlendFunctions
-                        ? BlendDeviceCmykDirect(backdrop, source, blend)
-                        : BlendDeviceCmyk(backdrop, source, blend);
+                    : BlendDeviceCmykWithBackdropAlpha(
+                        backdrop,
+                        source,
+                        blend,
+                        _deviceCmykBackdrop.GetAlpha(x, y),
+                        useDirectBlendFunctions);
                 _deviceCmykBackdrop.CompositeSourceOver(x, y, blended, effectiveAlpha);
                 var output = _deviceCmykBackdrop.Get(x, y);
                 var (r, g, b) = DeviceCmykToRgb(output);
@@ -465,7 +468,8 @@ internal partial class RenderContext
     {
         var initialBackdrop = _deviceCmykKnockoutInitialBackdrop?.Get(x, y)
                               ?? new DeviceCmykColor(0, 0, 0, 0);
-        _deviceCmykBackdrop!.Set(x, y, initialBackdrop);
+        var initialAlpha = _deviceCmykKnockoutInitialBackdrop?.GetAlpha(x, y) ?? (alpha / 255.0);
+        _deviceCmykBackdrop!.Set(x, y, initialBackdrop, initialAlpha);
         var (initialR, initialG, initialB) = DeviceCmykToRgb(initialBackdrop);
         var dst = new SKColor(
             ToByte(initialR),
@@ -572,6 +576,35 @@ internal partial class RenderContext
             BlendAdditiveComponent(backdrop.M, source.M, blend),
             BlendAdditiveComponent(backdrop.Y, source.Y, blend),
             BlendAdditiveComponent(backdrop.K, source.K, blend));
+    }
+
+    private static DeviceCmykColor BlendDeviceCmykWithBackdropAlpha(
+        DeviceCmykColor backdrop,
+        DeviceCmykColor source,
+        PdfSeparableBlendMode blend,
+        double backdropAlpha,
+        bool direct)
+    {
+        var blended = direct
+            ? BlendDeviceCmykDirect(backdrop, source, blend)
+            : BlendDeviceCmyk(backdrop, source, blend);
+
+        if (backdropAlpha <= 1e-9)
+            return source;
+        if (backdropAlpha >= 1 - 1e-9)
+            return blended;
+
+        return LerpDeviceCmyk(source, blended, backdropAlpha);
+    }
+
+    private static DeviceCmykColor LerpDeviceCmyk(DeviceCmykColor from, DeviceCmykColor to, double t)
+    {
+        t = Math.Clamp(t, 0, 1);
+        return new DeviceCmykColor(
+            from.C + ((to.C - from.C) * t),
+            from.M + ((to.M - from.M) * t),
+            from.Y + ((to.Y - from.Y) * t),
+            from.K + ((to.K - from.K) * t));
     }
 
     private static bool IsZeroInk(DeviceCmykColor color)
