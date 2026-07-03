@@ -25,6 +25,22 @@ partial class Program
             Description = "Directory containing per-PDF rendering quality contract JSON files",
             DefaultValueFactory = _ => new DirectoryInfo("test-pdfs/rendering-contracts"),
         };
+        var contractPathContainsOption = new Option<string?>("--contract-path-contains")
+        {
+            Description = "Only scan contracts whose normalized PDF path contains this text.",
+        };
+        var contractRootCauseOption = new Option<string?>("--contract-root-cause")
+        {
+            Description = "Only scan contracts/pages whose root-cause value contains this text.",
+        };
+        var contractOwnerOption = new Option<string?>("--contract-owner")
+        {
+            Description = "Only scan contracts whose Owner contains this text.",
+        };
+        var contractIssueOption = new Option<int?>("--contract-issue")
+        {
+            Description = "Only scan contracts/pages linked to this GitHub issue number.",
+        };
         var pageModeOption = new Option<string>("--page-mode")
         {
             Description = "Pages to compare: first, sample, or all.",
@@ -99,6 +115,10 @@ partial class Program
             corpusArg,
             outputOption,
             contractsOption,
+            contractPathContainsOption,
+            contractRootCauseOption,
+            contractOwnerOption,
+            contractIssueOption,
             pageModeOption,
             extraOraclesOption,
             dpiOption,
@@ -120,6 +140,10 @@ partial class Program
             var corpus = parseResult.GetValue(corpusArg)!;
             var output = parseResult.GetValue(outputOption)!;
             var contracts = parseResult.GetValue(contractsOption)!;
+            var contractPathContains = parseResult.GetValue(contractPathContainsOption);
+            var contractRootCause = parseResult.GetValue(contractRootCauseOption);
+            var contractOwner = parseResult.GetValue(contractOwnerOption);
+            var contractIssue = parseResult.GetValue(contractIssueOption);
             var pageModeRaw = parseResult.GetValue(pageModeOption) ?? "all";
             var extraOraclesRaw = parseResult.GetValue(extraOraclesOption) ?? "all";
             var dpi = parseResult.GetValue(dpiOption);
@@ -179,7 +203,12 @@ partial class Program
                     noOracleCache ? null : ResolveCorpusOracleCacheDir(oracleCacheDir),
                     pdfeRenderCacheDir,
                     progressIntervalSeconds,
-                    progressOutput?.FullName);
+                    progressOutput?.FullName,
+                    new RenderingQualityContractFilter(
+                        contractPathContains,
+                        contractRootCause,
+                        contractOwner,
+                        contractIssue));
                 Environment.ExitCode = ok ? 0 : 1;
             }
             catch (Exception ex)
@@ -276,9 +305,19 @@ partial class Program
         DirectoryInfo? oracleCacheDir,
         DirectoryInfo? pdfeRenderCacheDir,
         int progressIntervalSeconds = 30,
-        string? progressOutputPath = null)
+        string? progressOutputPath = null,
+        RenderingQualityContractFilter? contractFilter = null)
     {
         var contractSet = RenderingQualityContractSet.Load(contractsDir);
+        if (contractFilter is { IsEmpty: false })
+        {
+            contractSet = contractSet.Filter(contractFilter);
+            if (contractSet.Contracts.Count == 0)
+            {
+                Console.Error.WriteLine("No rendering quality contracts matched the requested filter.");
+                return false;
+            }
+        }
         var pageManifest = contractSet.CreatePageManifest();
         var passwordManifest = contractSet.CreatePasswordManifest();
         var expectations = contractSet.CreateExpectationManifest();
@@ -300,7 +339,7 @@ partial class Program
             pdfTimeoutMs,
             pageMode,
             extraOracles,
-            pageMode == CorpusPageMode.All ? null : pageManifest,
+            pageManifest,
             passwordManifest,
             expectations,
             oracleCacheDir,
@@ -731,6 +770,27 @@ partial class Program
             };
         }
 
+        public RenderingQualityContractSet Filter(RenderingQualityContractFilter filter)
+        {
+            if (filter.IsEmpty)
+                return this;
+
+            var pageContracts = PageContracts
+                .Where(kvp => filter.Matches(kvp.Value))
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            var contracts = pageContracts.Values
+                .Select(match => match.Contract)
+                .DistinctBy(contract => contract.ContractFile ?? contract.Path)
+                .OrderBy(contract => contract.ContractFile ?? contract.Path, StringComparer.Ordinal)
+                .ToArray();
+
+            return new RenderingQualityContractSet
+            {
+                Contracts = contracts,
+                PageContracts = pageContracts,
+            };
+        }
+
         public IReadOnlyDictionary<string, IReadOnlySet<int>> CreatePageManifest()
         {
             return PageContracts
@@ -804,6 +864,38 @@ partial class Program
         public string? Notes => Page.Notes ?? Contract.Notes;
         public string? QualityReason => Page.QualityReason ?? Contract.QualityReason;
         public string? ReviewStatus => Page.ReviewStatus ?? Contract.ReviewStatus;
+    }
+
+    internal sealed record RenderingQualityContractFilter(
+        string? PathContains,
+        string? RootCauseContains,
+        string? OwnerContains,
+        int? Issue)
+    {
+        public bool IsEmpty =>
+            string.IsNullOrWhiteSpace(PathContains) &&
+            string.IsNullOrWhiteSpace(RootCauseContains) &&
+            string.IsNullOrWhiteSpace(OwnerContains) &&
+            Issue is null;
+
+        public bool Matches(RenderingQualityPageMatch match)
+        {
+            if (!Contains(match.Contract.Path, PathContains))
+                return false;
+            if (!Contains(match.RootCause, RootCauseContains))
+                return false;
+            if (!Contains(match.Contract.Owner, OwnerContains))
+                return false;
+            if (Issue is { } issue && match.Issue != issue)
+                return false;
+
+            return true;
+        }
+
+        private static bool Contains(string? value, string? expected)
+            => string.IsNullOrWhiteSpace(expected) ||
+               (!string.IsNullOrWhiteSpace(value) &&
+                value.Contains(expected, StringComparison.OrdinalIgnoreCase));
     }
 
     internal sealed class RenderingQualityPdfContract

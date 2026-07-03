@@ -98,12 +98,19 @@ The rendering harness deliberately has separate layers:
 |---|---|---|
 | Fast raw trend scan | `./scripts/run-exploratory-corpus.sh --page-mode first` | Broad raw oracle signal, one page per PDF |
 | Contract smoke scan | `./scripts/run-render-quality-scan.sh --page-mode first --oracles ghostscript` | Quality/report vocabulary over the contracted PDFs without full corpus cost |
+| Focused contract scan | `./scripts/run-render-quality-scan.sh --contract-root-cause ALTONA_P7 --page-mode all --oracles all` | Re-run one root-cause cluster through the normal contract/password/oracle/report pipeline |
 | Sampled quality scan | `./scripts/run-render-quality-scan.sh --page-mode sample --oracles all` | Common later-page regressions with target renderer/root-cause classification |
 | Exhaustive release scan | `./scripts/run-render-quality-scan.sh --page-mode all --oracles all --strict-contracts` | Every page of every contracted corpus PDF with release, quality, pixel-agreement, reference-situation, and root-cause summaries |
 
 Release validation should use `sample` while investigating and `all` before
 declaring rendering quality final. `--strict-contracts` makes uncontracted pages
 show up as `NEEDS_REVIEW` instead of silently inheriting default classifications.
+
+Focused development should still use the contract scanner rather than temporary
+TSV manifests. Use `--contract-root-cause`, `--contract-path-contains`,
+`--contract-owner`, or `--contract-issue` to select a subset from the normal
+contract tree while preserving contract passwords, expected raw statuses,
+quality classifications, and reference-target metadata.
 
 `--extra-oracles ghostscript` is the default. Use `--extra-oracles none` to
 reproduce the older MuPDF+Poppler-only reports, or `--extra-oracles all` to add

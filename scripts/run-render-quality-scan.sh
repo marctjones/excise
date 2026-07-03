@@ -8,6 +8,7 @@
 # Usage:
 #   scripts/run-render-quality-scan.sh
 #   scripts/run-render-quality-scan.sh --page-mode first --oracles ghostscript
+#   scripts/run-render-quality-scan.sh --contract-root-cause ALTONA_P7 --page-mode all --oracles all
 #   scripts/run-render-quality-scan.sh --corpus test-pdfs --output logs/render-quality/all.json
 
 set -euo pipefail
@@ -26,6 +27,10 @@ ORACLES="all"
 PARALLEL="0"
 PDF_TIMEOUT_MS="120000"
 STRICT_CONTRACTS="0"
+CONTRACT_PATH_CONTAINS=""
+CONTRACT_ROOT_CAUSE=""
+CONTRACT_OWNER=""
+CONTRACT_ISSUE=""
 EXTRA_ARGS=()
 
 while [[ $# -gt 0 ]]; do
@@ -35,6 +40,14 @@ while [[ $# -gt 0 ]]; do
         --corpus=*) CORPUS="${1#*=}"; shift ;;
         --contracts) CONTRACTS="$2"; shift 2 ;;
         --contracts=*) CONTRACTS="${1#*=}"; shift ;;
+        --contract-path-contains) CONTRACT_PATH_CONTAINS="$2"; shift 2 ;;
+        --contract-path-contains=*) CONTRACT_PATH_CONTAINS="${1#*=}"; shift ;;
+        --contract-root-cause) CONTRACT_ROOT_CAUSE="$2"; shift 2 ;;
+        --contract-root-cause=*) CONTRACT_ROOT_CAUSE="${1#*=}"; shift ;;
+        --contract-owner) CONTRACT_OWNER="$2"; shift 2 ;;
+        --contract-owner=*) CONTRACT_OWNER="${1#*=}"; shift ;;
+        --contract-issue) CONTRACT_ISSUE="$2"; shift 2 ;;
+        --contract-issue=*) CONTRACT_ISSUE="${1#*=}"; shift ;;
         --output) OUTPUT="$2"; shift 2 ;;
         --output=*) OUTPUT="${1#*=}"; shift ;;
         --raw-output) RAW_OUTPUT="$2"; shift 2 ;;
@@ -60,6 +73,18 @@ CMD=(dotnet run --project tools/Pdfe.RenderTools/Pdfe.RenderTools.csproj -c "$CO
     render-quality-scan "$CORPUS" \
     --contracts "$CONTRACTS" \
     --output "$OUTPUT")
+if [[ -n "$CONTRACT_PATH_CONTAINS" ]]; then
+    CMD+=(--contract-path-contains "$CONTRACT_PATH_CONTAINS")
+fi
+if [[ -n "$CONTRACT_ROOT_CAUSE" ]]; then
+    CMD+=(--contract-root-cause "$CONTRACT_ROOT_CAUSE")
+fi
+if [[ -n "$CONTRACT_OWNER" ]]; then
+    CMD+=(--contract-owner "$CONTRACT_OWNER")
+fi
+if [[ -n "$CONTRACT_ISSUE" ]]; then
+    CMD+=(--contract-issue "$CONTRACT_ISSUE")
+fi
 if [[ -n "$RAW_OUTPUT" ]]; then
     mkdir -p "$(dirname "$RAW_OUTPUT")"
     CMD+=(--raw-output "$RAW_OUTPUT")
