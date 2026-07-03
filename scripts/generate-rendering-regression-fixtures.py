@@ -76,6 +76,59 @@ def p7_form_shapes() -> str:
     )
 
 
+def p7_pattern_text_group_pdf() -> bytes:
+    page_content = (
+        "q\n"
+        "1 1 1 rg 0 0 160 120 re f\n"
+        "/Fm1 Do\n"
+        "Q\n"
+    )
+    form_content = (
+        "q\n"
+        "/Pattern cs /P1 scn\n"
+        "BT /F1 42 Tf 8 42 Td (PDF) Tj ET\n"
+        "Q\n"
+    )
+    pattern_content = (
+        ".65 0 .95 rg 0 0 8 8 re f\n"
+        ".15 .45 1 rg 8 0 8 8 re f\n"
+        ".85 .2 .55 rg 0 8 8 8 re f\n"
+        ".25 .05 .75 rg 8 8 8 8 re f\n"
+    )
+
+    objects = [
+        (1, "<< /Type /Catalog /Pages 2 0 R >>"),
+        (2, "<< /Type /Pages /Kids [3 0 R] /Count 1 >>"),
+        (
+            3,
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 160 120] "
+            "/Contents 4 0 R /Resources << /XObject << /Fm1 5 0 R >> >> >>",
+        ),
+        (4, stream_object("", page_content)),
+        (
+            5,
+            stream_object(
+                "/Type /XObject /Subtype /Form /FormType 1 /BBox [0 0 160 120] "
+                "/Resources << /ColorSpace << /CS1 [/Pattern] >> /Pattern << /P1 6 0 R >> "
+                "/Font << /F1 7 0 R >> >> "
+                "/Group << /S /Transparency /CS 8 0 R /I true /K false >>",
+                form_content,
+            ),
+        ),
+        (
+            6,
+            stream_object(
+                "/Type /Pattern /PatternType 1 /PaintType 1 /TilingType 1 "
+                "/BBox [0 0 16 16] /XStep 16 /YStep 16",
+                pattern_content,
+            ),
+        ),
+        (7, "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>"),
+        (8, "/DeviceCMYK"),
+    ]
+    return pdf_bytes(objects)
+
+
 def p7_probe_pdf(page_content: str, *, form_content: str | None = None, group: str | None = None) -> bytes:
     invoke_form = form_content is not None
     resources = (
@@ -141,6 +194,10 @@ def fixtures() -> list[tuple[str, bytes]]:
                 form_content=p7_form_shapes(),
                 group="<< /S /Transparency /CS /DeviceCMYK /I false /K false >>",
             ),
+        ),
+        (
+            "altona-p7-isolated-cmyk-group-pattern-text-probe.pdf",
+            p7_pattern_text_group_pdf(),
         ),
     ]
 

@@ -147,7 +147,23 @@ public class SkiaRenderer
         if (!string.Equals(group.GetNameOrNull("S"), "Transparency", StringComparison.Ordinal))
             return false;
 
-        return string.Equals(group.GetNameOrNull("CS"), "DeviceCMYK", StringComparison.Ordinal);
+        var colorSpaceObject = group.GetOptional("CS");
+        if (colorSpaceObject == null)
+            return false;
+
+        var resolvedColorSpace = document.Resolve(colorSpaceObject);
+        if (resolvedColorSpace is PdfName name)
+            return string.Equals(name.Value, "DeviceCMYK", StringComparison.Ordinal);
+
+        try
+        {
+            var colorSpace = PdfColorSpace.Parse(colorSpaceObject, document);
+            return colorSpace.Type == PdfColorSpaceType.DeviceCMYK;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     internal static PdfRectangle ResolveEffectiveRenderBox(PdfPage page)
@@ -402,6 +418,7 @@ internal partial class RenderContext
     private int _deviceCmykKnockoutGroupDepth;
     private int _deviceCmykIsolatedGroupDepth;
     private bool _deviceCmykPreserveZeroAlphaShape;
+    private bool _deviceCmykBackdropDirtyFromRgbPaint;
     private readonly DeviceCmykBackdrop? _deviceCmykBackdrop;
     private readonly PdfColorSpace _deviceCmykPreviewColorSpace;
 

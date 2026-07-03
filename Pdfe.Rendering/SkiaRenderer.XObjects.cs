@@ -220,6 +220,8 @@ internal partial class RenderContext
             try
             {
                 child.RenderFormXObject(formStream);
+                if (child._deviceCmykBackdropDirtyFromRgbPaint && child._deviceCmykBackdrop != null)
+                    child.SyncDeviceCmykBackdropFromRootBitmap(0, 0, width, height);
             }
             finally
             {

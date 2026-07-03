@@ -22,7 +22,7 @@ internal partial class RenderContext
             return false;
 
         if (pattern.GetInt("PatternType", 0) == 1)
-            return RenderTilingPattern(path, pattern);
+            return MarkDeviceCmykBackdropDirtyWhenRendered(RenderTilingPattern(path, pattern));
 
         if (pattern.GetInt("PatternType", 0) != 2)
             return false;
@@ -36,11 +36,19 @@ internal partial class RenderContext
 
         return shading.GetInt("ShadingType", 0) switch
         {
-            1 or 2 or 3 => RenderShadingPattern(path, pattern, shading),
-            4 => RenderType4MeshPattern(path, pattern, shading),
-            6 => RenderType6MeshPattern(path, pattern, shading),
+            1 or 2 or 3 => MarkDeviceCmykBackdropDirtyWhenRendered(RenderShadingPattern(path, pattern, shading)),
+            4 => MarkDeviceCmykBackdropDirtyWhenRendered(RenderType4MeshPattern(path, pattern, shading)),
+            6 => MarkDeviceCmykBackdropDirtyWhenRendered(RenderType6MeshPattern(path, pattern, shading)),
             _ => false
         };
+    }
+
+    private bool MarkDeviceCmykBackdropDirtyWhenRendered(bool rendered)
+    {
+        if (rendered && _deviceCmykTransparencyGroupDepth > 0)
+            _deviceCmykBackdropDirtyFromRgbPaint = true;
+
+        return rendered;
     }
 
     private bool RenderTilingPattern(SKPath clipPath, Pdfe.Core.Primitives.PdfDictionary pattern)
