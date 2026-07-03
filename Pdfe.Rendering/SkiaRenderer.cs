@@ -424,6 +424,7 @@ internal partial class RenderContext
     private int _deviceCmykIsolatedGroupDepth;
     private bool _deviceCmykPreserveZeroAlphaShape;
     private readonly DeviceCmykBackdrop? _deviceCmykBackdrop;
+    private readonly PdfColorSpace _deviceCmykPreviewColorSpace;
 
     // Type0 / CID font state. Type0 fonts use 2-byte-per-character codes and
     // index a descendant font's /W array for widths (different format from the
@@ -504,6 +505,7 @@ internal partial class RenderContext
         _page = page;
         _options = options;
         _cancellationToken = cancellationToken;
+        _deviceCmykPreviewColorSpace = PdfColorSpace.Parse(PdfName.DeviceCMYK, page.Document);
         _deviceCmykTransparencyGroupDepth = startsInDeviceCmykTransparencyGroup ? 1 : 0;
         _deviceCmykBackdrop = startsInDeviceCmykTransparencyGroup && rootBitmap != null
             ? new DeviceCmykBackdrop(rootBitmap.Width, rootBitmap.Height)
@@ -658,11 +660,7 @@ internal partial class RenderContext
                     var m = Number(operands, 1);
                     var y = Number(operands, 2);
                     var k = Number(operands, 3);
-                    _state.FillColor = CmykToColor(
-                        c,
-                        m,
-                        y,
-                        k);
+                    _state.FillColor = DeviceCmykToColor(new DeviceCmykColor(c, m, y, k));
                     _state.FillColorSpace = "DeviceCMYK";
                     _state.FillDeviceCmyk = new DeviceCmykColor(c, m, y, k);
                     _state.FillPatternName = null;
@@ -675,11 +673,7 @@ internal partial class RenderContext
                     var m = Number(operands, 1);
                     var y = Number(operands, 2);
                     var k = Number(operands, 3);
-                    _state.StrokeColor = CmykToColor(
-                        c,
-                        m,
-                        y,
-                        k);
+                    _state.StrokeColor = DeviceCmykToColor(new DeviceCmykColor(c, m, y, k));
                     _state.StrokeColorSpace = "DeviceCMYK";
                     _state.StrokeDeviceCmyk = new DeviceCmykColor(c, m, y, k);
                 }
@@ -1254,6 +1248,19 @@ internal partial class RenderContext
             (byte)Math.Clamp(g * 255, 0, 255),
             (byte)Math.Clamp(b * 255, 0, 255));
     }
+
+    private SKColor DeviceCmykToColor(DeviceCmykColor color, byte alpha = 255)
+    {
+        var (r, g, b) = DeviceCmykToRgb(color);
+        return new SKColor(
+            (byte)Math.Clamp(r * 255, 0, 255),
+            (byte)Math.Clamp(g * 255, 0, 255),
+            (byte)Math.Clamp(b * 255, 0, 255),
+            alpha);
+    }
+
+    private (double R, double G, double B) DeviceCmykToRgb(DeviceCmykColor color)
+        => _deviceCmykPreviewColorSpace.ToRgb(new[] { color.C, color.M, color.Y, color.K });
 
     private static SKColor CmykToColor(double c, double m, double y, double k)
     {

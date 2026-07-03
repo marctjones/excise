@@ -6,19 +6,19 @@
   "RootCause": "CMYK_TRANSPARENCY_GROUP_KNOCKOUT",
   "ImprovementPriority": "DONE",
   "Confidence": "HIGH",
-  "QualityReason": "DeviceCMYK knockout group Lighten/Screen/ColorDodge semantics were fixed through the subtractive CMYK blend path. Current focused scan is raw PASS_ONE with all references disagreeing and pdfe closest to the reference-center score.",
+  "QualityReason": "DeviceCMYK knockout group compositing now honors PDF nonseparable blend formulas and previews retained CMYK group pixels through the document output intent. Current focused comparison tracks MuPDF/Ghent semantics with only low residual antialias/text differences.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "DIFF",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "PDFE_BETTER_THAN_REFS",
-      "PixelAgreement": "MATCHES_SOME",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_TARGET",
       "ReferenceSituation": "REFS_DISAGREE",
-      "QualityReason": "Current focused scan: low-impact color-tone residual, referenceCenterAgreement=true, pdfeReferenceCenterRank=1. Treat as fixed for the screen-rendering gate while keeping the raw PASS_ONE evidence visible.",
+      "QualityReason": "Focused 150 DPI comparison against MuPDF after the ICC/output-intent CMYK transparency fix: 1.27% differing pixels, MAE 8.20, with remaining differences concentrated in antialiased text/linework and small residual X edges.",
       "Target": {
-        "Mode": "REFERENCE_DISAGREEMENT",
+        "Mode": "ACCEPTED_REFERENCE",
         "Primary": "mutool",
-        "Reason": "After the CMYK knockout fix, pdfe is closer to the reference-center result than any single reference renderer in the focused scan."
+        "Reason": "MuPDF is the best available reference for this Ghent knockout page; pdfe now follows its output-intent CMYK preview and knockout transparency behavior closely instead of claiming to be better than the references."
       }
     }
   }

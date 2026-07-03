@@ -1098,6 +1098,11 @@ public class SkiaRendererTests
             "Multiply in a DeviceCMYK knockout group should cancel the zero-ink nested form against the initial backdrop");
         CountPixelsDifferentFromRegionCenter(bitmap, new SKRectI(70, 20, 87, 38)).Should().BeLessThan(30,
             "ColorBurn in a DeviceCMYK knockout group should not accumulate prior sibling forms");
+        var darkenPatch = MeanRgb(bitmap, new SKRectI(9, 20, 26, 38));
+        darkenPatch.Red.Should().BeLessThan(40,
+            "DeviceCMYK knockout group previews should honor the document output intent instead of using the generic process-CMYK screen conversion");
+        darkenPatch.Green.Should().BeInRange(130, 185);
+        darkenPatch.Blue.Should().BeInRange(130, 185);
         CountPixelsDifferentFromRegionCenter(bitmap, new SKRectI(102, 20, 119, 38)).Should().BeLessThan(30,
             "Lighten in a DeviceCMYK knockout group should not leave the full-ink nested form's X visible");
         CountPixelsDifferentFromRegionCenter(bitmap, new SKRectI(134, 20, 151, 38)).Should().BeLessThan(30,

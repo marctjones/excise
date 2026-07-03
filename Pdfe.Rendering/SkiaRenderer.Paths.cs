@@ -409,9 +409,15 @@ internal partial class RenderContext
                         PdfSeparableBlendMode.Screen or
                         PdfSeparableBlendMode.ColorDodge;
                 if (IsZeroInk(source) &&
+                    _deviceCmykKnockoutGroupDepth <= 0 &&
                     !useDirectBlendFunctions &&
                     !isNormalBlend &&
-                    blend is not PdfSeparableBlendMode.Difference and not PdfSeparableBlendMode.Exclusion)
+                    blend is not PdfSeparableBlendMode.Difference and
+                        not PdfSeparableBlendMode.Exclusion and
+                        not PdfSeparableBlendMode.Hue and
+                        not PdfSeparableBlendMode.Saturation and
+                        not PdfSeparableBlendMode.Color and
+                        not PdfSeparableBlendMode.Luminosity)
                 {
                     continue;
                 }
@@ -440,11 +446,7 @@ internal partial class RenderContext
                         : BlendDeviceCmyk(backdrop, source, blend);
                 _deviceCmykBackdrop.CompositeSourceOver(x, y, blended, effectiveAlpha);
                 var output = _deviceCmykBackdrop.Get(x, y);
-                var (r, g, b) = Pdfe.Core.ColorSpaces.PdfColorSpace.ConvertDeviceCmykToRgb(
-                    output.C,
-                    output.M,
-                    output.Y,
-                    output.K);
+                var (r, g, b) = DeviceCmykToRgb(output);
                 var dstAlpha = dst.Alpha / 255.0;
                 var outAlpha = effectiveAlpha + (dstAlpha * (1 - effectiveAlpha));
                 var outColor = new SKColor(
@@ -464,11 +466,7 @@ internal partial class RenderContext
         var initialBackdrop = _deviceCmykKnockoutInitialBackdrop?.Get(x, y)
                               ?? new DeviceCmykColor(0, 0, 0, 0);
         _deviceCmykBackdrop!.Set(x, y, initialBackdrop);
-        var (initialR, initialG, initialB) = Pdfe.Core.ColorSpaces.PdfColorSpace.ConvertDeviceCmykToRgb(
-            initialBackdrop.C,
-            initialBackdrop.M,
-            initialBackdrop.Y,
-            initialBackdrop.K);
+        var (initialR, initialG, initialB) = DeviceCmykToRgb(initialBackdrop);
         var dst = new SKColor(
             ToByte(initialR),
             ToByte(initialG),
@@ -481,11 +479,7 @@ internal partial class RenderContext
     private void PreserveDeviceCmykShapePixel(int x, int y, double coverage)
     {
         var backdrop = _deviceCmykBackdrop!.Get(x, y);
-        var (r, g, b) = Pdfe.Core.ColorSpaces.PdfColorSpace.ConvertDeviceCmykToRgb(
-            backdrop.C,
-            backdrop.M,
-            backdrop.Y,
-            backdrop.K);
+        var (r, g, b) = DeviceCmykToRgb(backdrop);
         var dst = _rootBitmap!.GetPixel(x, y);
         var dstAlpha = dst.Alpha / 255.0;
         var outAlpha = Math.Clamp(coverage, 0, 1) + (dstAlpha * (1 - Math.Clamp(coverage, 0, 1)));
@@ -628,68 +622,96 @@ internal partial class RenderContext
             source.M,
             source.Y,
             source.K);
-        var backdropHsl = RgbToHsl(backdropRgb.R, backdropRgb.G, backdropRgb.B);
-        var sourceHsl = RgbToHsl(sourceRgb.R, sourceRgb.G, sourceRgb.B);
-        var resultHsl = blend switch
+        var backdropColor = new RgbColor(backdropRgb.R, backdropRgb.G, backdropRgb.B);
+        var sourceColor = new RgbColor(sourceRgb.R, sourceRgb.G, sourceRgb.B);
+        var rgb = blend switch
         {
-            PdfSeparableBlendMode.Hue => (sourceHsl.H, backdropHsl.S, backdropHsl.L),
-            PdfSeparableBlendMode.Saturation => (backdropHsl.H, sourceHsl.S, backdropHsl.L),
-            PdfSeparableBlendMode.Color => (sourceHsl.H, sourceHsl.S, backdropHsl.L),
-            PdfSeparableBlendMode.Luminosity => (backdropHsl.H, backdropHsl.S, sourceHsl.L),
-            _ => sourceHsl
+            PdfSeparableBlendMode.Hue => SetLum(SetSat(sourceColor, Sat(backdropColor)), Lum(backdropColor)),
+            PdfSeparableBlendMode.Saturation => SetLum(SetSat(backdropColor, Sat(sourceColor)), Lum(backdropColor)),
+            PdfSeparableBlendMode.Color => SetLum(sourceColor, Lum(backdropColor)),
+            PdfSeparableBlendMode.Luminosity => SetLum(backdropColor, Lum(sourceColor)),
+            _ => sourceColor
         };
-        var rgb = HslToRgb(resultHsl.H, resultHsl.S, resultHsl.L);
         return RgbToDeviceCmyk(rgb.R, rgb.G, rgb.B);
     }
 
-    private static (double H, double S, double L) RgbToHsl(double r, double g, double b)
+    private readonly record struct RgbColor(double R, double G, double B);
+
+    private static double Lum(RgbColor color)
+        => (0.3 * color.R) + (0.59 * color.G) + (0.11 * color.B);
+
+    private static double Sat(RgbColor color)
+        => Math.Max(color.R, Math.Max(color.G, color.B)) -
+           Math.Min(color.R, Math.Min(color.G, color.B));
+
+    private static RgbColor SetLum(RgbColor color, double targetLum)
     {
-        r = Math.Clamp(r, 0, 1);
-        g = Math.Clamp(g, 0, 1);
-        b = Math.Clamp(b, 0, 1);
-        var max = Math.Max(r, Math.Max(g, b));
-        var min = Math.Min(r, Math.Min(g, b));
-        var l = (max + min) / 2;
-        if (Math.Abs(max - min) < 1e-9)
-            return (0, 0, l);
-
-        var d = max - min;
-        var s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-        double h;
-        if (Math.Abs(max - r) < 1e-9)
-            h = ((g - b) / d) + (g < b ? 6 : 0);
-        else if (Math.Abs(max - g) < 1e-9)
-            h = ((b - r) / d) + 2;
-        else
-            h = ((r - g) / d) + 4;
-
-        return (h / 6, s, l);
+        var delta = targetLum - Lum(color);
+        return ClipColor(new RgbColor(color.R + delta, color.G + delta, color.B + delta));
     }
 
-    private static (double R, double G, double B) HslToRgb(double h, double s, double l)
+    private static RgbColor ClipColor(RgbColor color)
     {
-        h = h - Math.Floor(h);
-        s = Math.Clamp(s, 0, 1);
-        l = Math.Clamp(l, 0, 1);
-        if (s <= 1e-9)
-            return (l, l, l);
+        var lum = Lum(color);
+        var min = Math.Min(color.R, Math.Min(color.G, color.B));
+        var max = Math.Max(color.R, Math.Max(color.G, color.B));
+        var r = color.R;
+        var g = color.G;
+        var b = color.B;
 
-        static double HueToRgb(double p, double q, double t)
+        if (min < 0)
         {
-            t = t - Math.Floor(t);
-            if (t < 1.0 / 6.0) return p + (q - p) * 6 * t;
-            if (t < 1.0 / 2.0) return q;
-            if (t < 2.0 / 3.0) return p + (q - p) * (2.0 / 3.0 - t) * 6;
-            return p;
+            r = lum + (((r - lum) * lum) / (lum - min));
+            g = lum + (((g - lum) * lum) / (lum - min));
+            b = lum + (((b - lum) * lum) / (lum - min));
         }
 
-        var q = l < 0.5 ? l * (1 + s) : l + s - (l * s);
-        var p = 2 * l - q;
-        return (
-            HueToRgb(p, q, h + 1.0 / 3.0),
-            HueToRgb(p, q, h),
-            HueToRgb(p, q, h - 1.0 / 3.0));
+        if (max > 1)
+        {
+            r = lum + (((r - lum) * (1 - lum)) / (max - lum));
+            g = lum + (((g - lum) * (1 - lum)) / (max - lum));
+            b = lum + (((b - lum) * (1 - lum)) / (max - lum));
+        }
+
+        return new RgbColor(
+            Math.Clamp(r, 0, 1),
+            Math.Clamp(g, 0, 1),
+            Math.Clamp(b, 0, 1));
     }
+
+    private static RgbColor SetSat(RgbColor color, double targetSat)
+    {
+        var channels = new[]
+        {
+            new ColorChannel(0, color.R),
+            new ColorChannel(1, color.G),
+            new ColorChannel(2, color.B)
+        };
+        Array.Sort(channels, static (a, b) => a.Value.CompareTo(b.Value));
+
+        var min = channels[0];
+        var mid = channels[1];
+        var max = channels[2];
+        if (max.Value > min.Value)
+        {
+            mid = mid with { Value = ((mid.Value - min.Value) * targetSat) / (max.Value - min.Value) };
+            max = max with { Value = targetSat };
+        }
+        else
+        {
+            mid = mid with { Value = 0 };
+            max = max with { Value = 0 };
+        }
+        min = min with { Value = 0 };
+
+        var result = new double[3];
+        result[min.Index] = min.Value;
+        result[mid.Index] = mid.Value;
+        result[max.Index] = max.Value;
+        return new RgbColor(result[0], result[1], result[2]);
+    }
+
+    private readonly record struct ColorChannel(int Index, double Value);
 
     private static DeviceCmykColor RgbToDeviceCmyk(double r, double g, double b)
     {

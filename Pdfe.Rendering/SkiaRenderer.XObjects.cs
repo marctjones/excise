@@ -263,11 +263,7 @@ internal partial class RenderContext
 
                 var pixel = _rootBitmap.GetPixel(parentX, parentY);
                 var retained = _deviceCmykBackdrop.Get(parentX, parentY);
-                var (retainedR, retainedG, retainedB) = Pdfe.Core.ColorSpaces.PdfColorSpace.ConvertDeviceCmykToRgb(
-                    retained.C,
-                    retained.M,
-                    retained.Y,
-                    retained.K);
+                var (retainedR, retainedG, retainedB) = DeviceCmykToRgb(retained);
                 if (Math.Abs(pixel.Red - ToByte(retainedR)) +
                     Math.Abs(pixel.Green - ToByte(retainedG)) +
                     Math.Abs(pixel.Blue - ToByte(retainedB)) <= 12)
@@ -350,11 +346,7 @@ internal partial class RenderContext
                     var initialBackdrop = _deviceCmykKnockoutInitialBackdrop?.Get(parentX, parentY)
                                           ?? new DeviceCmykColor(0, 0, 0, 0);
                     _deviceCmykBackdrop.Set(parentX, parentY, initialBackdrop);
-                    var (initialR, initialG, initialB) = Pdfe.Core.ColorSpaces.PdfColorSpace.ConvertDeviceCmykToRgb(
-                        initialBackdrop.C,
-                        initialBackdrop.M,
-                        initialBackdrop.Y,
-                        initialBackdrop.K);
+                    var (initialR, initialG, initialB) = DeviceCmykToRgb(initialBackdrop);
                     dst = new SKColor(
                         ToByte(initialR),
                         ToByte(initialG),
@@ -372,11 +364,7 @@ internal partial class RenderContext
                         : BlendDeviceCmyk(backdrop, source, blend);
                 _deviceCmykBackdrop.CompositeSourceOver(parentX, parentY, blended, alpha);
                 var output = _deviceCmykBackdrop.Get(parentX, parentY);
-                var (r, g, b) = Pdfe.Core.ColorSpaces.PdfColorSpace.ConvertDeviceCmykToRgb(
-                    output.C,
-                    output.M,
-                    output.Y,
-                    output.K);
+                var (r, g, b) = DeviceCmykToRgb(output);
                 var dstAlpha = dst.Alpha / 255.0;
                 var outAlpha = alpha + (dstAlpha * (1 - alpha));
                 _rootBitmap.SetPixel(parentX, parentY, new SKColor(
