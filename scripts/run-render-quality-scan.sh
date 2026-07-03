@@ -27,6 +27,8 @@ ORACLES="all"
 PARALLEL="0"
 PDF_TIMEOUT_MS="120000"
 STRICT_CONTRACTS="0"
+INCREMENTAL_RAW_OUTPUT="1"
+LARGE_PDF_SHARD_PAGES="250"
 CONTRACT_PATH_CONTAINS=""
 CONTRACT_ROOT_CAUSE=""
 CONTRACT_OWNER=""
@@ -60,6 +62,10 @@ while [[ $# -gt 0 ]]; do
         --parallel=*) PARALLEL="${1#*=}"; shift ;;
         --pdf-timeout-ms) PDF_TIMEOUT_MS="$2"; shift 2 ;;
         --pdf-timeout-ms=*) PDF_TIMEOUT_MS="${1#*=}"; shift ;;
+        --incremental-raw-output) INCREMENTAL_RAW_OUTPUT="1"; shift ;;
+        --no-incremental-raw-output) INCREMENTAL_RAW_OUTPUT="0"; shift ;;
+        --large-pdf-shard-pages) LARGE_PDF_SHARD_PAGES="$2"; shift 2 ;;
+        --large-pdf-shard-pages=*) LARGE_PDF_SHARD_PAGES="${1#*=}"; shift ;;
         --strict-contracts) STRICT_CONTRACTS="1"; shift ;;
         --help|-h)
             sed -n '2,16p' "$0"; exit 0 ;;
@@ -69,6 +75,9 @@ while [[ $# -gt 0 ]]; do
 done
 
 mkdir -p "$(dirname "$OUTPUT")"
+if [[ "$INCREMENTAL_RAW_OUTPUT" == "1" && -z "$RAW_OUTPUT" ]]; then
+    RAW_OUTPUT="${OUTPUT%.json}.raw-corpus-scan.json"
+fi
 CMD=(dotnet run --project tools/Pdfe.RenderTools/Pdfe.RenderTools.csproj -c "$CONFIG" -- \
     render-quality-scan "$CORPUS" \
     --contracts "$CONTRACTS" \
@@ -95,6 +104,12 @@ CMD+=( \
     --oracles "$ORACLES" \
     --parallel "$PARALLEL" \
     --pdf-timeout-ms "$PDF_TIMEOUT_MS")
+if [[ "$INCREMENTAL_RAW_OUTPUT" == "1" ]]; then
+    CMD+=(--incremental-raw-output)
+fi
+if [[ "$LARGE_PDF_SHARD_PAGES" != "0" ]]; then
+    CMD+=(--large-pdf-shard-pages "$LARGE_PDF_SHARD_PAGES")
+fi
 if [[ "$STRICT_CONTRACTS" == "1" ]]; then
     CMD+=(--strict-contracts)
 fi

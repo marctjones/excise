@@ -107,6 +107,16 @@ partial class Program
         {
             Description = "Optional JSON sidecar for heartbeat progress. Defaults to <raw-output>.progress.json when heartbeat is enabled.",
         };
+        var incrementalRawOutputOption = new Option<bool>("--incremental-raw-output")
+        {
+            Description = "Rewrite --raw-output with completed page results on each heartbeat so interrupted long runs leave usable data.",
+            DefaultValueFactory = _ => false,
+        };
+        var largePdfShardPagesOption = new Option<int>("--large-pdf-shard-pages")
+        {
+            Description = "Split page-manifest PDFs with more than N selected pages into independent work items. 0 disables sharding.",
+            DefaultValueFactory = _ => 0,
+        };
 
         var command = new Command(
             "render-quality-scan",
@@ -133,6 +143,8 @@ partial class Program
             pdfeRenderCacheDirOption,
             progressIntervalOption,
             progressOutputOption,
+            incrementalRawOutputOption,
+            largePdfShardPagesOption,
         };
 
         command.SetAction(parseResult =>
@@ -158,6 +170,8 @@ partial class Program
             var pdfeRenderCacheDir = parseResult.GetValue(pdfeRenderCacheDirOption);
             var progressIntervalSeconds = parseResult.GetValue(progressIntervalOption);
             var progressOutput = parseResult.GetValue(progressOutputOption);
+            var incrementalRawOutput = parseResult.GetValue(incrementalRawOutputOption);
+            var largePdfShardPages = parseResult.GetValue(largePdfShardPagesOption);
 
             if (parallel <= 0) parallel = Math.Max(1, Environment.ProcessorCount / 2);
             if (!TryParseCorpusPageMode(pageModeRaw, out var pageMode))
@@ -204,6 +218,8 @@ partial class Program
                     pdfeRenderCacheDir,
                     progressIntervalSeconds,
                     progressOutput?.FullName,
+                    incrementalRawOutput,
+                    largePdfShardPages,
                     new RenderingQualityContractFilter(
                         contractPathContains,
                         contractRootCause,
@@ -306,6 +322,8 @@ partial class Program
         DirectoryInfo? pdfeRenderCacheDir,
         int progressIntervalSeconds = 30,
         string? progressOutputPath = null,
+        bool incrementalRawOutput = false,
+        int largePdfShardPages = 0,
         RenderingQualityContractFilter? contractFilter = null)
     {
         var contractSet = RenderingQualityContractSet.Load(contractsDir);
@@ -345,7 +363,9 @@ partial class Program
             oracleCacheDir,
             pdfeRenderCacheDir,
             progressIntervalSeconds,
-            progressOutputPath);
+            progressOutputPath,
+            incrementalRawOutput,
+            largePdfShardPages);
         if (!scanOk)
             return false;
 
