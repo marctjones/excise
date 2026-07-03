@@ -3,9 +3,10 @@
   "Source": "veraPDF corpus",
   "Owner": "rendering:transparency",
   "RootCause": "TRANSPARENCY_ORACLE_DISAGREEMENT",
+  "ReviewStatus": "REVIEWED",
   "ImprovementPriority": "NONE",
   "Confidence": "MEDIUM",
-  "Notes": "Migrated from the legacy TSV rendering manifests.",
+  "Notes": "Reviewed 2026-07-03 using logs/render-quality/pass-one-triage-20260703/transparency/pdfa4-transparency-t06-c-sheet.png; pdfe, MuPDF, and Ghostscript preserve the same visible symbol grid while Poppler is substantially lighter, so this is accepted as bounded reference disagreement rather than missing transparency content.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
@@ -20,8 +21,8 @@
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Transparency conformance fixture has bounded disagreement between reference renderers, not release-blocking content loss.",
-      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+      "QualityReason": "Reviewed transparency conformance fixture has bounded renderer tone disagreement; pdfe preserves visible content and tracks the MuPDF/Ghostscript cluster rather than Poppler's lighter output.",
+      "Notes": "2026-07-03 sheet: logs/render-quality/pass-one-triage-20260703/transparency/pdfa4-transparency-t06-c-sheet.png."
     }
   }
 }
