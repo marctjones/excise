@@ -375,9 +375,9 @@ public class CorpusScanClassificationTests
                   "Pages": {
                     "7": {
                       "ExpectedRawStatus": "PASS_ONE",
-                      "ReleaseStatus": "PASS",
+                      "ReleaseStatus": "FAIL",
                       "QualityStatus": "FAIL",
-                      "PixelAgreement": "MATCHES_NONE",
+                      "PixelAgreement": "MATCHES_TARGET",
                       "ReferenceSituation": "REFS_DISAGREE",
                       "QualityReason": "pdfe still misses the reviewed composite print target."
                     }
@@ -405,6 +405,70 @@ public class CorpusScanClassificationTests
             entries[0].pixelAgreement.Should().Be("MATCHES_TARGET",
                 "raw PASS_ONE means pdfe matched at least one reference; semantic rejection belongs in qualityStatus/passOneReviewStatus, not MATCHES_NONE");
             entries[0].qualityStatus.Should().Be("FAIL");
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void RenderingQualityContractSet_RejectsPassOneMatchesNoneContract()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "pdfe-contracts-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            File.WriteAllText(Path.Combine(dir, "bad.json"), """
+                {
+                  "Path": "pdfjs/bad.pdf",
+                  "Pages": {
+                    "1": {
+                      "ExpectedRawStatus": "PASS_ONE",
+                      "ReleaseStatus": "FAIL",
+                      "QualityStatus": "FAIL",
+                      "PixelAgreement": "MATCHES_NONE"
+                    }
+                  }
+                }
+                """);
+
+            var load = () => RenderProgram.RenderingQualityContractSet.Load(dir);
+
+            load.Should().Throw<InvalidDataException>()
+                .WithMessage("*PixelAgreement MATCHES_NONE is incompatible with ExpectedRawStatus PASS_ONE*");
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void RenderingQualityContractSet_RejectsFailQualityPassReleaseContract()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "pdfe-contracts-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            File.WriteAllText(Path.Combine(dir, "bad.json"), """
+                {
+                  "Path": "pdfjs/bad.pdf",
+                  "Pages": {
+                    "1": {
+                      "ExpectedRawStatus": "DIFF",
+                      "ReleaseStatus": "PASS",
+                      "QualityStatus": "FAIL",
+                      "PixelAgreement": "MATCHES_NONE"
+                    }
+                  }
+                }
+                """);
+
+            var load = () => RenderProgram.RenderingQualityContractSet.Load(dir);
+
+            load.Should().Throw<InvalidDataException>()
+                .WithMessage("*QualityStatus FAIL must not use ReleaseStatus PASS*");
         }
         finally
         {

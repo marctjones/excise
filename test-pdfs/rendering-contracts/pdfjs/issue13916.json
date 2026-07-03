@@ -11,7 +11,7 @@
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "FAIL",
       "QualityStatus": "FAIL",
-      "PixelAgreement": "MATCHES_NONE",
+      "PixelAgreement": "MATCHES_TARGET",
       "ReferenceSituation": "REFS_DISAGREE",
       "RootCause": "MALFORMED_IDENTITY_H_FONT_TEXT_QUALITY",
       "Target": {

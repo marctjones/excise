@@ -11,7 +11,7 @@
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "FAIL",
       "QualityStatus": "FAIL",
-      "PixelAgreement": "MATCHES_NONE",
+      "PixelAgreement": "MATCHES_TARGET",
       "ReferenceSituation": "REFS_DISAGREE",
       "RootCause": "FONT_SUBSTITUTION_METRICS_MISMATCH",
       "Target": {

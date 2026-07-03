@@ -628,6 +628,7 @@ partial class Program
                 improvementPriorityCounts = CountBy(entries.Select(entry => entry.improvementPriority ?? RenderingQualityUnknown)),
                 confidenceCounts = CountBy(entries.Select(entry => entry.confidence ?? RenderingQualityUnknown)),
                 passOneReviewStatusCounts = CountBy(entries.Select(entry => entry.passOneReviewStatus ?? PassOneReviewNotApplicable)),
+                expectationResultCounts = CountBy(entries.Select(entry => entry.expectationResult ?? RenderingQualityUnknown)),
             },
             failures = reportEntries
                 .Where(entry => entry.releaseStatus is "BLOCKED" or "FAIL" || entry.qualityStatus == "FAIL")
@@ -723,6 +724,7 @@ partial class Program
         PrintCountGroup("  pixel agreement", summary.pixelAgreementCounts);
         PrintCountGroup("  reference situation", summary.referenceSituationCounts);
         PrintCountGroup("  release", summary.releaseStatusCounts);
+        PrintCountGroup("  expectations", summary.expectationResultCounts);
     }
 
     private static void PrintCountGroup(string label, IReadOnlyDictionary<string, int> counts)
@@ -920,6 +922,107 @@ partial class Program
 
     internal sealed class RenderingQualityPdfContract
     {
+        private static readonly HashSet<string> KnownRawStatuses = new(StringComparer.Ordinal)
+        {
+            "*",
+            "PASS",
+            "PASS_ONE",
+            "DIFF",
+            "COMPARE_ERROR",
+            "ALL_ORACLES_REFUSED",
+            "RECOVERED_MALFORMED_CONTENT",
+            "DECODE_ERROR",
+            "MALFORMED_PDF",
+            "EMPTY_DOC",
+            "PASSWORD_REQUIRED",
+            "RESOURCE_LIMIT",
+            "INVALID_PAGE_GEOMETRY",
+            "TIMEOUT",
+            "UNSUPPORTED_COMPRESSION",
+        };
+
+        private static readonly HashSet<string> KnownReleaseStatuses = new(StringComparer.Ordinal)
+        {
+            "PASS",
+            "FAIL",
+            "BLOCKED",
+            "NEEDS_REVIEW",
+        };
+
+        private static readonly HashSet<string> KnownQualityStatuses = new(StringComparer.Ordinal)
+        {
+            "PIXEL_EXACT",
+            "TARGET_MATCH",
+            "MATCHES_ACCEPTED_REFERENCE",
+            "REFERENCE_REFUSAL_ACCEPTED",
+            "GOOD_ENOUGH",
+            "PDFE_BETTER_THAN_REFS",
+            "ACCEPTED_LIMITATION",
+            "LOWER_QUALITY_ACCEPTABLE",
+            "NON_RENDERABLE_ACCEPTED",
+            "FAIL",
+            "NEEDS_REVIEW",
+        };
+
+        private static readonly HashSet<string> KnownPixelAgreements = new(StringComparer.Ordinal)
+        {
+            "MATCHES_ALL_REQUIRED",
+            "MATCHES_TARGET",
+            "MATCHES_SOME",
+            "MATCHES_ONE_REFERENCE",
+            "MATCHES_NONE",
+            "NOT_COMPARABLE",
+        };
+
+        private static readonly HashSet<string> KnownReferenceSituations = new(StringComparer.Ordinal)
+        {
+            "REFS_AGREE",
+            "REFS_DISAGREE",
+            "REFS_REFUSE",
+            "REFS_INCOMPLETE",
+            "REFS_WRONG_OR_LOSSY",
+            "NOT_APPLICABLE",
+        };
+
+        private static readonly HashSet<string> KnownTargetModes = new(StringComparer.Ordinal)
+        {
+            "ACCEPTED_REFERENCE",
+            "PDF_FONT_DICTIONARY_WITH_REFERENCE_EVIDENCE",
+            "PREPRESS_REFERENCE_WITH_ALTONA_SEMANTICS",
+            "REFERENCE_RENDERER",
+            "REFERENCE_CONSENSUS",
+            "REFERENCE_CONSENSUS_FIXED",
+            "REFERENCE_DISAGREEMENT",
+            "PDF_SPEC",
+            "QUALITY_STANDARD",
+            "RESOURCE_POLICY",
+            "REFERENCE_REFUSAL",
+            "MALFORMED_INPUT_POLICY",
+        };
+
+        private static readonly HashSet<string> KnownReviewStatuses = new(StringComparer.Ordinal)
+        {
+            "REVIEWED",
+            "GENERATED",
+            "NEEDS_REVIEW",
+        };
+
+        private static readonly HashSet<string> KnownImprovementPriorities = new(StringComparer.Ordinal)
+        {
+            "P0",
+            "P1",
+            "P2",
+            "NONE",
+            "DONE",
+        };
+
+        private static readonly HashSet<string> KnownConfidenceValues = new(StringComparer.Ordinal)
+        {
+            "HIGH",
+            "MEDIUM",
+            "LOW",
+        };
+
         [JsonIgnore]
         public string? ContractFile { get; set; }
         public string Path { get; set; } = "";
@@ -942,11 +1045,74 @@ partial class Program
                 throw new InvalidDataException($"{ContractFile}: path is required");
             if (Pages.Count == 0)
                 throw new InvalidDataException($"{ContractFile}: at least one page contract is required");
+            ValidateKnownValue(nameof(ReviewStatus), ReviewStatus, KnownReviewStatuses);
+            ValidateKnownValue(nameof(ImprovementPriority), ImprovementPriority, KnownImprovementPriorities);
+            ValidateKnownValue(nameof(Confidence), Confidence, KnownConfidenceValues);
+            ValidateTarget("Target", Target);
             foreach (var page in ExpandPages())
             {
                 if (page.PageNumber < 0)
                     throw new InvalidDataException($"{ContractFile}: page numbers must be non-negative");
+                ValidatePage(page);
             }
+        }
+
+        private void ValidatePage(RenderingQualityPageContract page)
+        {
+            var prefix = $"page {page.PageNumber}";
+            ValidateKnownValue($"{prefix} ExpectedRawStatus", page.ExpectedRawStatus, KnownRawStatuses);
+            ValidateKnownValue($"{prefix} ReleaseStatus", page.ReleaseStatus, KnownReleaseStatuses);
+            ValidateKnownValue($"{prefix} QualityStatus", page.QualityStatus, KnownQualityStatuses);
+            ValidateKnownValue($"{prefix} PixelAgreement", page.PixelAgreement, KnownPixelAgreements);
+            ValidateKnownValue($"{prefix} ReferenceSituation", page.ReferenceSituation, KnownReferenceSituations);
+            ValidateKnownValue($"{prefix} ReviewStatus", page.ReviewStatus, KnownReviewStatuses);
+            ValidateKnownValue($"{prefix} ImprovementPriority", page.ImprovementPriority, KnownImprovementPriorities);
+            ValidateKnownValue($"{prefix} Confidence", page.Confidence, KnownConfidenceValues);
+            ValidateTarget($"{prefix} Target", page.Target);
+
+            if (page.ExpectedRawStatus is "PASS" or "PASS_ONE" &&
+                page.PixelAgreement is "MATCHES_NONE" or "NOT_COMPARABLE")
+            {
+                throw new InvalidDataException(
+                    $"{ContractFile}: {prefix} PixelAgreement {page.PixelAgreement} is incompatible with ExpectedRawStatus {page.ExpectedRawStatus}.");
+            }
+
+            if (page.QualityStatus == "FAIL" && page.ReleaseStatus == "PASS")
+            {
+                throw new InvalidDataException(
+                    $"{ContractFile}: {prefix} QualityStatus FAIL must not use ReleaseStatus PASS.");
+            }
+
+            if (page.QualityStatus is "PIXEL_EXACT" or "TARGET_MATCH" or "MATCHES_ACCEPTED_REFERENCE" &&
+                page.PixelAgreement is "MATCHES_NONE" or "NOT_COMPARABLE")
+            {
+                throw new InvalidDataException(
+                    $"{ContractFile}: {prefix} PixelAgreement {page.PixelAgreement} is incompatible with QualityStatus {page.QualityStatus}.");
+            }
+
+            if (page.PixelAgreement == "NOT_COMPARABLE" &&
+                page.QualityStatus is "PIXEL_EXACT" or "TARGET_MATCH" or "MATCHES_ACCEPTED_REFERENCE" or "GOOD_ENOUGH")
+            {
+                throw new InvalidDataException(
+                    $"{ContractFile}: {prefix} PixelAgreement NOT_COMPARABLE is incompatible with QualityStatus {page.QualityStatus}.");
+            }
+        }
+
+        private void ValidateKnownValue(string name, string? value, IReadOnlySet<string> knownValues)
+        {
+            if (string.IsNullOrWhiteSpace(value) || knownValues.Contains(value))
+                return;
+
+            throw new InvalidDataException(
+                $"{ContractFile}: {name} '{value}' is not in the rendering quality vocabulary.");
+        }
+
+        private void ValidateTarget(string name, RenderingQualityTarget? target)
+        {
+            if (target is null)
+                return;
+
+            ValidateKnownValue($"{name}.Mode", target.Mode, KnownTargetModes);
         }
 
         public IEnumerable<RenderingQualityPageContract> ExpandPages()
@@ -1086,6 +1252,7 @@ partial class Program
         public Dictionary<string, int> improvementPriorityCounts { get; set; } = new(StringComparer.Ordinal);
         public Dictionary<string, int> confidenceCounts { get; set; } = new(StringComparer.Ordinal);
         public Dictionary<string, int> passOneReviewStatusCounts { get; set; } = new(StringComparer.Ordinal);
+        public Dictionary<string, int> expectationResultCounts { get; set; } = new(StringComparer.Ordinal);
     }
 
     internal sealed class RenderingQualityPassOneTriageCluster
@@ -1138,6 +1305,9 @@ partial class Program
         public int? agreeingOracles { get; set; }
         public string? qualityReason { get; set; }
         public string? contractStatus { get; set; }
+        public string? expectedRawStatus { get; set; }
+        public string? expectationResult { get; set; }
+        public string? expectationFailure { get; set; }
 
         public static RenderingQualityReportEntry FromCorpusEntry(CorpusScanEntry entry)
             => new()
@@ -1165,6 +1335,9 @@ partial class Program
                 agreeingOracles = entry.agreeingOracles,
                 qualityReason = entry.qualityReason,
                 contractStatus = entry.contractStatus,
+                expectedRawStatus = entry.expectedStatus,
+                expectationResult = entry.expectationResult,
+                expectationFailure = entry.expectationFailure,
             };
     }
 }

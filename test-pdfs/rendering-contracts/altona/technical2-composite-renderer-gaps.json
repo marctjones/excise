@@ -10,10 +10,10 @@
   "Notes": "Do not hide these as accepted limitations while the goal is best-reference/prepress parity. Treat pages 7 and 8 as active rendering issues.",
   "Pages": {
     "7": {
-      "ExpectedRawStatus": "DIFF",
+      "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "FAIL",
       "QualityStatus": "FAIL",
-      "PixelAgreement": "MATCHES_NONE",
+      "PixelAgreement": "MATCHES_TARGET",
       "ReferenceSituation": "REFS_DISAGREE",
       "RootCause": "ALTONA_COMPOSITE_COLOR_TONE_VARIANCE",
       "ImprovementPriority": "P2",

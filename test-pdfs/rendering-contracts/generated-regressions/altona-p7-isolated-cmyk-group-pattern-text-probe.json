@@ -5,7 +5,7 @@
   "Issue": 491,
   "RootCause": "ALTONA_P7_ISOLATED_CMYK_GROUP_PATTERN_TEXT",
   "ReviewStatus": "REVIEWED",
-  "ImprovementPriority": "HIGH",
+  "ImprovementPriority": "NONE",
   "Confidence": "HIGH",
   "QualityReason": "Synthetic probe isolates pattern-filled text inside an isolated DeviceCMYK transparency group with an indirect group color space. It guards the Altona P7 failure mode where pattern text falls back to opaque black when CMYK group handling is enabled on an RGB page.",
   "Pages": {
