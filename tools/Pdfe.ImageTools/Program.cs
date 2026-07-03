@@ -23,17 +23,44 @@ static Command CreateInfoCommand()
     {
         Description = "Optional JSON report output",
     };
+    var rectOption = new Option<string[]>("--rect")
+    {
+        Description = "Optional analysis rectangle(s) as x,y,width,height",
+        Arity = ArgumentArity.ZeroOrMore,
+    };
 
     var command = new Command("info", "Print image dimensions and basic pixel statistics")
     {
         imagesArg,
         jsonOption,
+        rectOption,
     };
 
     command.SetAction(parseResult =>
     {
         var images = parseResult.GetValue(imagesArg) ?? Array.Empty<FileInfo>();
         var jsonFile = parseResult.GetValue(jsonOption);
+        var rectSpecs = parseResult.GetValue(rectOption) ?? Array.Empty<string>();
+        var regions = new List<(string Spec, SKRectI? Rect)>();
+        if (rectSpecs.Length == 0)
+        {
+            regions.Add(("full", null));
+        }
+        else
+        {
+            foreach (var spec in rectSpecs)
+            {
+                if (!TryParseRect(spec, out var rect))
+                {
+                    Console.Error.WriteLine($"Invalid --rect '{spec}'. Expected x,y,width,height.");
+                    Environment.ExitCode = 1;
+                    return;
+                }
+
+                regions.Add((spec, rect));
+            }
+        }
+
         var reports = new List<ImageInfoReport>();
 
         foreach (var file in images)
@@ -43,12 +70,16 @@ static Command CreateInfoCommand()
 
             using (bitmap)
             {
-                var report = ImageInfoAnalyzer.Analyze(bitmap, file.FullName);
-                reports.Add(report);
-                Console.WriteLine(
-                    $"{file.Name}: {report.width}x{report.height}, " +
-                    $"mean RGBA ({report.meanRed:F1}, {report.meanGreen:F1}, {report.meanBlue:F1}, {report.meanAlpha:F1}), " +
-                    $"dark {report.darkPixels:N0}, transparent {report.transparentPixels:N0}, non-white {report.nonWhitePixels:N0}");
+                foreach (var (spec, rect) in regions)
+                {
+                    var report = ImageInfoAnalyzer.Analyze(bitmap, file.FullName, rect);
+                    reports.Add(report);
+                    Console.WriteLine(
+                        $"{file.Name} [{spec}]: {report.width}x{report.height}, " +
+                        $"region {report.regionX},{report.regionY},{report.regionWidth},{report.regionHeight}, " +
+                        $"mean RGBA ({report.meanRed:F1}, {report.meanGreen:F1}, {report.meanBlue:F1}, {report.meanAlpha:F1}), " +
+                        $"dark {report.darkPixels:N0}, transparent {report.transparentPixels:N0}, non-white {report.nonWhitePixels:N0}");
+                }
             }
         }
 
@@ -63,6 +94,25 @@ static Command CreateInfoCommand()
     });
 
     return command;
+}
+
+static bool TryParseRect(string value, out SKRectI rect)
+{
+    rect = default;
+    var parts = value.Split(',', StringSplitOptions.TrimEntries);
+    if (parts.Length != 4 ||
+        !int.TryParse(parts[0], out var x) ||
+        !int.TryParse(parts[1], out var y) ||
+        !int.TryParse(parts[2], out var width) ||
+        !int.TryParse(parts[3], out var height) ||
+        width <= 0 ||
+        height <= 0)
+    {
+        return false;
+    }
+
+    rect = new SKRectI(x, y, checked(x + width), checked(y + height));
+    return true;
 }
 
 static Command CreateDiffCommand()

@@ -172,6 +172,27 @@ public class VisualDiffCommandTests
         report.darkPixelBalance.Should().BeGreaterThan(0.75);
     }
 
+    [Fact]
+    public void AnalyzeImageInfo_RegionReportsBoundedPixelStats()
+    {
+        using var bitmap = CreateSolidBitmap(10, 10, SKColors.White);
+        FillRect(bitmap, 2, 3, 4, 2, new SKColor(10, 20, 30));
+
+        var full = ImageInfoAnalyzer.Analyze(bitmap);
+        var region = ImageInfoAnalyzer.Analyze(bitmap, path: null, new SKRectI(2, 3, 6, 5));
+
+        full.nonWhitePixels.Should().Be(8);
+        region.regionX.Should().Be(2);
+        region.regionY.Should().Be(3);
+        region.regionWidth.Should().Be(4);
+        region.regionHeight.Should().Be(2);
+        region.pixelCount.Should().Be(8);
+        region.meanRed.Should().Be(10);
+        region.meanGreen.Should().Be(20);
+        region.meanBlue.Should().Be(30);
+        region.darkPixels.Should().Be(8);
+    }
+
     private static SKBitmap CreateSolidBitmap(int width, int height, SKColor color)
     {
         var bitmap = new SKBitmap(width, height);

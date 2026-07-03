@@ -5,7 +5,15 @@ namespace Pdfe.ImageInspection;
 public static class ImageInfoAnalyzer
 {
     public static ImageInfoReport Analyze(SKBitmap bitmap, string? path = null)
+        => Analyze(bitmap, path, null);
+
+    public static ImageInfoReport Analyze(SKBitmap bitmap, string? path, SKRectI? region)
     {
+        var bounds = region ?? new SKRectI(0, 0, bitmap.Width, bitmap.Height);
+        bounds.Intersect(new SKRectI(0, 0, bitmap.Width, bitmap.Height));
+        if (bounds.Width <= 0 || bounds.Height <= 0)
+            throw new ArgumentOutOfRangeException(nameof(region), "Image analysis region does not intersect the bitmap.");
+
         long sumR = 0;
         long sumG = 0;
         long sumB = 0;
@@ -13,11 +21,11 @@ public static class ImageInfoAnalyzer
         long darkPixels = 0;
         long transparentPixels = 0;
         long nonWhitePixels = 0;
-        var pixelCount = checked((long)bitmap.Width * bitmap.Height);
+        var pixelCount = checked((long)bounds.Width * bounds.Height);
 
-        for (var y = 0; y < bitmap.Height; y++)
+        for (var y = bounds.Top; y < bounds.Bottom; y++)
         {
-            for (var x = 0; x < bitmap.Width; x++)
+            for (var x = bounds.Left; x < bounds.Right; x++)
             {
                 var color = bitmap.GetPixel(x, y);
                 sumR += color.Red;
@@ -38,6 +46,10 @@ public static class ImageInfoAnalyzer
             path = path,
             width = bitmap.Width,
             height = bitmap.Height,
+            regionX = bounds.Left,
+            regionY = bounds.Top,
+            regionWidth = bounds.Width,
+            regionHeight = bounds.Height,
             pixelCount = pixelCount,
             colorType = bitmap.ColorType.ToString(),
             alphaType = bitmap.AlphaType.ToString(),
@@ -62,6 +74,10 @@ public sealed class ImageInfoReport
     public string? path { get; set; }
     public int width { get; set; }
     public int height { get; set; }
+    public int regionX { get; set; }
+    public int regionY { get; set; }
+    public int regionWidth { get; set; }
+    public int regionHeight { get; set; }
     public long pixelCount { get; set; }
     public string colorType { get; set; } = "";
     public string alphaType { get; set; } = "";
