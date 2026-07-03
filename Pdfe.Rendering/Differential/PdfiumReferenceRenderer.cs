@@ -24,9 +24,25 @@ public static class PdfiumReferenceRenderer
     public static bool IsAvailable => _commandName.Value != null;
 
     public static SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30_000)
-        => TryRenderPage(pdfPath, pageNumber, dpi, timeoutMs).Bitmap;
+        => TryRenderPage(pdfPath, pageNumber, dpi, timeoutMs, userPassword: null).Bitmap;
 
     public static ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30_000)
+        => TryRenderPage(pdfPath, pageNumber, dpi, timeoutMs, userPassword: null);
+
+    public static SKBitmap? RenderPage(
+        string pdfPath,
+        int pageNumber,
+        int dpi,
+        int timeoutMs,
+        string? userPassword)
+        => TryRenderPage(pdfPath, pageNumber, dpi, timeoutMs, userPassword).Bitmap;
+
+    public static ReferenceRenderResult TryRenderPage(
+        string pdfPath,
+        int pageNumber,
+        int dpi,
+        int timeoutMs,
+        string? userPassword)
     {
         var sw = Stopwatch.StartNew();
         var command = _commandName.Value;
@@ -53,10 +69,8 @@ public static class PdfiumReferenceRenderer
                 UseShellExecute = false,
                 CreateNoWindow = true,
             };
-            psi.ArgumentList.Add("--png");
-            psi.ArgumentList.Add($"--pages={zeroBasedPage}");
-            psi.ArgumentList.Add($"--scale={scale.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
-            psi.ArgumentList.Add(tempPdf);
+            foreach (var arg in BuildPdfiumTestArguments(tempPdf, zeroBasedPage, scale, userPassword))
+                psi.ArgumentList.Add(arg);
 
             using var p = Process.Start(psi);
             if (p == null)
@@ -125,4 +139,24 @@ public static class PdfiumReferenceRenderer
 
     private static string Trunc(string value, int length)
         => value.Length <= length ? value : value.Substring(0, length) + "…";
+
+    internal static IReadOnlyList<string> BuildPdfiumTestArguments(
+        string pdfPath,
+        int zeroBasedPage,
+        double scale,
+        string? userPassword)
+    {
+        var args = new List<string>
+        {
+            "--png",
+            $"--pages={zeroBasedPage}",
+            $"--scale={scale.ToString(System.Globalization.CultureInfo.InvariantCulture)}",
+        };
+
+        if (userPassword != null)
+            args.Add($"--password={userPassword}");
+
+        args.Add(pdfPath);
+        return args;
+    }
 }

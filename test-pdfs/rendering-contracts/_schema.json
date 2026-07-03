@@ -14,7 +14,8 @@
       "type": "string"
     },
     "Password": {
-      "type": "string"
+      "type": "string",
+      "description": "Known user password required to open this corpus PDF before rendering. Contract-driven scans pass this password to pdfe and every configured reference oracle."
     },
     "Owner": {
       "type": "string"

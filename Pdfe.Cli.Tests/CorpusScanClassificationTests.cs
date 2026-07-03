@@ -715,6 +715,25 @@ public class CorpusScanClassificationTests
     }
 
     [Fact]
+    public void RenderingContracts_DocumentKnownCorpusPasswords()
+    {
+        var repoRoot = FindRepoRoot();
+        var contractsDir = Path.Combine(repoRoot, "test-pdfs", "rendering-contracts");
+
+        var set = RenderProgram.RenderingQualityContractSet.Load(contractsDir);
+        var passwords = set.CreatePasswordManifest();
+
+        passwords.Should().NotBeNull();
+        passwords!.Should().Contain(new KeyValuePair<string, string>("pdfjs/bug1782186.pdf", "Hello"));
+        passwords.Should().Contain(new KeyValuePair<string, string>("pdfjs/issue15893_reduced.pdf", "test"));
+        passwords.Should().Contain(new KeyValuePair<string, string>("pdfjs/issue3371.pdf", "ELXRTQWS"));
+        passwords.Should().Contain(new KeyValuePair<string, string>("poppler/unittestcases/Gday garçon - open.pdf", "garçon"));
+        passwords.Should().Contain(new KeyValuePair<string, string>("poppler/unittestcases/PasswordEncrypted.pdf", "password"));
+        passwords.Should().Contain(new KeyValuePair<string, string>("poppler/unittestcases/PasswordEncryptedReconstructed.pdf", "test"));
+        passwords.Should().Contain(new KeyValuePair<string, string>("poppler/unittestcases/encrypted-256.pdf", "user-secret"));
+    }
+
+    [Fact]
     public void TryGetCorpusPassword_MatchesPdfjsPrefixedManifestAgainstBarePdfjsCorpusPath()
     {
         var passwords = new Dictionary<string, string>(StringComparer.Ordinal)

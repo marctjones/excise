@@ -30,6 +30,32 @@ This avoids the old ambiguity where `PASS_ONE` could mean “good enough,”
 “matches the intended reference,” “references disagree,” or “accepted for
 release but still lower quality than the best renderer.”
 
+## Password-Protected PDFs
+
+Known corpus passwords belong in the per-PDF rendering contract as the top-level
+`Password` field. The contract-driven scanner loads those values into an
+in-memory password manifest before opening the PDF, then passes the same user
+password to pdfe and each configured reference oracle. This keeps encrypted
+fixtures in normal page-rendering comparison instead of classifying them as
+`PASSWORD_REQUIRED`.
+
+Current documented password fixtures:
+
+| PDF | User password |
+|---|---|
+| `pdfjs/bug1782186.pdf` | `Hello` |
+| `pdfjs/issue15893_reduced.pdf` | `test` |
+| `pdfjs/issue3371.pdf` | `ELXRTQWS` |
+| `poppler/unittestcases/Gday garçon - open.pdf` | `garçon` |
+| `poppler/unittestcases/PasswordEncrypted.pdf` | `password` |
+| `poppler/unittestcases/PasswordEncryptedReconstructed.pdf` | `test` |
+| `poppler/unittestcases/encrypted-256.pdf` | `user-secret` |
+
+Legacy raw scans can still use `--password-manifest path/to/passwords.tsv`,
+but new rendering-quality work should prefer the JSON contract `Password`
+field so page selection, expectations, password handling, and release
+classification stay together.
+
 ## Legacy Raw Scanner
 
 `pdfe corpus-scan` and `scripts/run-exploratory-corpus.sh` still exist for raw

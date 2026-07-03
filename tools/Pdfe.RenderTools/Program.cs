@@ -1384,9 +1384,9 @@ partial class Program
             {
                 progress?.Update("pdfium", pageNumber, $"pdfium_test render page {pageNumber}/{doc.PageCount}");
                 var pdfiumOutcome = RenderOracleWithCache(
-                    oracleCache, "pdfium", pdfPath, pageNumber, comparisonDpi, userPassword: null,
+                    oracleCache, "pdfium", pdfPath, pageNumber, comparisonDpi, userPassword,
                     () => PdfiumReferenceRenderer.TryRenderPage(
-                        pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs));
+                        pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs, userPassword));
                 var pdfiumResult = pdfiumOutcome.Result;
                 pdfiumBmp = pdfiumResult.Bitmap;
                 entry.pdfiumMs = pdfiumResult.ElapsedMs;
