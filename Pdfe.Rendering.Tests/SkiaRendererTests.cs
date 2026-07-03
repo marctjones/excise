@@ -1045,6 +1045,37 @@ public class SkiaRendererTests
             "Type 6 Coons patch meshes should be tessellated as curved patches instead of rendered as blocky rectangular columns");
     }
 
+    [Fact(Timeout = 30000)]
+    public void RenderPage_GeneratedRegressionFixtures_RenderWithoutErrors()
+    {
+        var firstFixture = FindRepoFile(
+            "test-pdfs",
+            "generated-regressions",
+            "altona-p7-direct-devicecmyk-blend-probe.pdf");
+        Assert.SkipWhen(firstFixture == null,
+            "No generated regression fixtures found at test-pdfs/generated-regressions. Run scripts/generate-rendering-regression-fixtures.py.");
+
+        var fixtureDir = Path.GetDirectoryName(firstFixture)!;
+        var fixtures = Directory.EnumerateFiles(fixtureDir, "*.pdf")
+            .OrderBy(static path => path, StringComparer.Ordinal)
+            .ToArray();
+        fixtures.Should().NotBeEmpty("generated regression fixtures should be checked into test-pdfs/generated-regressions");
+
+        var renderer = new SkiaRenderer();
+        foreach (var fixture in fixtures)
+        {
+            using var doc = PdfDocument.Open(fixture);
+            using var bitmap = renderer.RenderPage(
+                doc.GetPage(1),
+                new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+            bitmap.Width.Should().BeGreaterThan(0, $"fixture {Path.GetFileName(fixture)} should render a page bitmap");
+            bitmap.Height.Should().BeGreaterThan(0, $"fixture {Path.GetFileName(fixture)} should render a page bitmap");
+            CountNonWhitePixels(bitmap, new SKRectI(0, 0, bitmap.Width, bitmap.Height)).Should().BeGreaterThan(500,
+                $"fixture {Path.GetFileName(fixture)} should draw visible regression content");
+        }
+    }
+
     [Fact(Timeout = 20000)]
     public void RenderPage_GhentDeviceCmykTransparencyGroup_AppliesInvocationBlendInCmyk()
     {

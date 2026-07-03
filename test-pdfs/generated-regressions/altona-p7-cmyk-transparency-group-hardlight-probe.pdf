@@ -1,0 +1,73 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 160 120] /Contents 4 0 R /Resources << /ExtGState << /BMHard 6 0 R /BMDark 7 0 R /BMExcl 8 0 R /Normal 9 0 R >> /XObject << /Fm1 5 0 R >> >> >>
+endobj
+4 0 obj
+<<  /Length 348 >>
+stream
+q
+1 1 1 rg 0 0 160 120 re f
+0 0 0 .10 K 0 0 160 120 re f
+0 0 0 .70 K 2 w [2 3] 0 d
+10 0 m 10 120 l S
+22 0 m 22 120 l S
+34 0 m 34 120 l S
+46 0 m 46 120 l S
+58 0 m 58 120 l S
+70 0 m 70 120 l S
+82 0 m 82 120 l S
+94 0 m 94 120 l S
+106 0 m 106 120 l S
+118 0 m 118 120 l S
+130 0 m 130 120 l S
+142 0 m 142 120 l S
+154 0 m 154 120 l S
+Q
+/BMHard gs /Fm1 Do
+endstream
+endobj
+5 0 obj
+<< /Type /XObject /Subtype /Form /FormType 1 /BBox [0 0 160 120] /Resources << /ExtGState << /Normal 9 0 R >> >> /Group << /S /Transparency /CS /DeviceCMYK /I false /K false >> /Length 105 >>
+stream
+q
+/Normal gs 0 .75 .35 0 K 16 20 45 80 re f
+.8 0 .3 0 K 58 20 45 80 re f
+.2 .7 0 0 K 100 20 45 80 re f
+Q
+endstream
+endobj
+6 0 obj
+<< /Type /ExtGState /BM /HardLight /ca 1 /CA 1 /SMask /None >>
+endobj
+7 0 obj
+<< /Type /ExtGState /BM /Darken /ca 1 /CA 1 /SMask /None >>
+endobj
+8 0 obj
+<< /Type /ExtGState /BM /Exclusion /ca 1 /CA 1 /SMask /None >>
+endobj
+9 0 obj
+<< /Type /ExtGState /BM /Normal /ca 1 /CA 1 /SMask /None >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000121 00000 n 
+0000000324 00000 n 
+0000000723 00000 n 
+0000001052 00000 n 
+0000001130 00000 n 
+0000001205 00000 n 
+0000001283 00000 n 
+trailer << /Size 10 /Root 1 0 R >>
+startxref
+1358
+%%EOF

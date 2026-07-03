@@ -61,6 +61,9 @@ test-pdfs/*
 # But do commit generated PDF 2.0 conformance fixtures
 !test-pdfs/pdf20/
 !test-pdfs/pdf20/**
+# But do commit pdfe-authored generated implementation-regression fixtures
+!test-pdfs/generated-regressions/
+!test-pdfs/generated-regressions/**
 
 # Publish output
 publish/

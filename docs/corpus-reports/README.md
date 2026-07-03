@@ -119,6 +119,7 @@ with `PDFE_PDFBOX_JAR=/path/to/pdfbox-app.jar`; PDFium can be enabled with
 | Federal everyday corpus | `scripts/download-federal-corpus.sh` | `test-pdfs/federal` | Manifest-driven release-quality corpus with source URL, category, agency, license basis, page count, and SHA-256 for each official `.gov` PDF. |
 | pdf.js corpus | `scripts/download-pdfjs-corpus.sh` | `test-pdfs/pdfjs` | Broad bug-reproduction corpus for exploratory fidelity scans. |
 | Poppler corpus | `scripts/download-poppler-corpus.sh` | `test-pdfs/poppler` | Poppler's public regression test-data repository, including rendering fixtures and reference assets. |
+| Generated implementation regressions | `scripts/generate-rendering-regression-fixtures.py` | `test-pdfs/generated-regressions` | Small pdfe-authored PDFs generated from focused debugging hypotheses. These are checked in and contract-covered so future fixes cannot regress known-good simplified cases. |
 | Standards image/filter corpus set | `scripts/download-standards-image-corpora.sh` | `test-pdfs` | Meta-downloader for pdf.js, Poppler, veraPDF, Isartor, smoke/federal, and Altona print/color PDFs. Ghent is registered as a manual source because the public page does not expose a stable direct archive URL. |
 
 The federal everyday corpus manifest lives at

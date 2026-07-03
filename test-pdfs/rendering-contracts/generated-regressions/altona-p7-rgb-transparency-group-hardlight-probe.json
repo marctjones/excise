@@ -1,0 +1,24 @@
+{
+  "Path": "generated-regressions/altona-p7-rgb-transparency-group-hardlight-probe.pdf",
+  "Source": "Generated pdfe implementation-regression fixture",
+  "Owner": "rendering:quality",
+  "Issue": 491,
+  "RootCause": "ALTONA_P7_RGB_GROUP_BLEND_PROBE",
+  "ReviewStatus": "REVIEWED",
+  "ImprovementPriority": "NONE",
+  "Confidence": "HIGH",
+  "QualityReason": "Synthetic probe isolates a non-isolated DeviceRGB transparency group invoked under HardLight over a DeviceCMYK backdrop. References agree and current pdfe output is acceptable; keep as a regression guard while fixing Altona P7.",
+  "Pages": {
+    "1": {
+      "ExpectedRawStatus": "PASS",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PIXEL_EXACT",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
+      "ReferenceSituation": "REFS_AGREE",
+      "Target": {
+        "Mode": "REFERENCE_CONSENSUS",
+        "Reason": "Generated fixture verifies RGB transparency-group invocation behavior remains aligned while larger Altona P7 issues are fixed."
+      }
+    }
+  }
+}
