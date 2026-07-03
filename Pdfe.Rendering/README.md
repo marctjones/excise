@@ -81,10 +81,11 @@ profiles that CSJ2K cannot decode cleanly.
 
 `Pdfe.Core.ColorSpaces.PdfColorConverter` is the shared CMYK-to-RGB boundary used
 by renderer-facing color spaces. Raw `/DeviceCMYK` uses pdfe's deterministic
-process screen-preview conversion. `/DefaultCMYK` and ICCBased CMYK currently use
-the conservative PDF reference fallback until a real ICC transform engine is
-chosen. `/OutputIntents` are preserved in the document model but are not applied
-as screen-preview profiles by the renderer; this is an explicit product choice
-so prepress color behavior does not silently change everyday viewing output.
+process screen-preview conversion when a document does not provide a calibrated
+CMYK preview. `/DefaultCMYK`, ICCBased CMYK, and PDF/X output intents are used
+for screen-preview color where the document supplies usable profiles. The
+remaining tracked color work is not a blanket "ICC missing" gap; it is limited
+to specific reference-disagreement and prepress-fidelity cases tracked through
+the #491 quality dashboard and focused renderer issues.
 
 MIT licensed. Part of the [pdfe](https://github.com/marctjones/pdfe) project.
