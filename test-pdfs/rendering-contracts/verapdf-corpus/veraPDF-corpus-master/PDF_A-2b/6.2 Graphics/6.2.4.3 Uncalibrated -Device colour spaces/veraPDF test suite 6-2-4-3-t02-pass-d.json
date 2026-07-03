@@ -10,18 +10,19 @@
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "GOOD_ENOUGH",
-      "PixelAgreement": "MATCHES_ONE_REFERENCE",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_TARGET",
       "ReferenceSituation": "REFS_DISAGREE",
       "RootCause": "COLOR_MANAGEMENT_DISAGREEMENT",
       "Target": {
-        "Mode": "QUALITY_STANDARD",
-        "Reason": "Reference renderers disagree due to policy-sensitive rendering; judge by documented visual quality standard."
+        "Mode": "ACCEPTED_REFERENCE",
+        "Primary": "pdftocairo",
+        "Reason": "Poppler is the accepted screen-preview target for this uncalibrated Device-color fixture; pdfe preserves the same brown/black source-color semantics while MuPDF/Ghostscript choose a visibly different cyan policy."
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "veraPDF color-space conformance fixture is accepted pending the screen-preview color boundary.",
-      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+      "QualityReason": "Focused 150 DPI review shows pdfe follows the accepted Poppler screen-preview color behavior; residual differences are edge/rasterization placement.",
+      "Notes": "Reviewed against pdfe, Poppler, MuPDF, and Ghostscript renders on 2026-07-03."
     }
   }
 }

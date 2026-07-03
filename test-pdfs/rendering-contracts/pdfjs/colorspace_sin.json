@@ -10,18 +10,19 @@
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "GOOD_ENOUGH",
-      "PixelAgreement": "MATCHES_SOME",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_TARGET",
       "ReferenceSituation": "REFS_DISAGREE",
       "RootCause": "COLOR_MANAGEMENT_DISAGREEMENT",
       "Target": {
-        "Mode": "QUALITY_STANDARD",
-        "Reason": "Reference renderers disagree due to policy-sensitive rendering; judge by documented visual quality standard."
+        "Mode": "ACCEPTED_REFERENCE",
+        "Primary": "pdftocairo",
+        "Reason": "Poppler is the accepted screen-preview target for this function color-space fixture; pdfe is visually aligned with Poppler while other references diverge."
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Color-space function fixture has bounded screen-preview disagreement between reference renderers.",
-      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+      "QualityReason": "Focused 150 DPI review shows pdfe has no visible difference from the accepted Poppler target; remaining raw PASS_ONE status comes from reference disagreement.",
+      "Notes": "Reviewed against pdfe, Poppler, MuPDF, and Ghostscript renders on 2026-07-03."
     }
   }
 }

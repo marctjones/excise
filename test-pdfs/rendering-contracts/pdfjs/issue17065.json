@@ -13,18 +13,19 @@
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "GOOD_ENOUGH",
-      "PixelAgreement": "MATCHES_SOME",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_TARGET",
       "ReferenceSituation": "REFS_DISAGREE",
       "RootCause": "COLOR_MANAGEMENT_DISAGREEMENT",
       "Target": {
-        "Mode": "QUALITY_STANDARD",
-        "Reason": "Reference renderers disagree due to policy-sensitive rendering; judge by documented visual quality standard."
+        "Mode": "ACCEPTED_REFERENCE",
+        "Primary": "pdftocairo",
+        "Reason": "Poppler is the accepted screen-preview target for this DeviceN/CalRGB shading fixture; pdfe closely matches Poppler while other references diverge."
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Color-management policy owns this low-impact disagreement.",
-      "Notes": "Reference outputs disagree on DeviceN/CalRGB shading color interpretation."
+      "QualityReason": "Focused 150 DPI review shows pdfe closely matches the accepted Poppler output; residual difference is low-impact antialiasing noise.",
+      "Notes": "Reviewed against pdfe, Poppler, MuPDF, and Ghostscript renders on 2026-07-03."
     }
   }
 }
