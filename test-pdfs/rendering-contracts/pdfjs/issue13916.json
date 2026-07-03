@@ -2,27 +2,27 @@
   "Path": "pdfjs/issue13916.pdf",
   "Source": "pdf.js corpus",
   "Owner": "rendering:quality",
-  "RootCause": "MALFORMED_FONT_ENCODING_TEXT_QUALITY",
-  "ImprovementPriority": "NONE",
+  "RootCause": "MALFORMED_IDENTITY_H_FONT_TEXT_QUALITY",
+  "ImprovementPriority": "P2",
   "Confidence": "HIGH",
-  "Notes": "Focused review: pdfe and reference renderers all show garbled text for this malformed font/encoding fixture; MuPDF is the closest current target.",
+  "Notes": "Cold 2026-07-03 verification shows a real visible text-quality issue. The input is malformed, but pdfe's glyph mapping/spacing remains visibly worse than the best readable references.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
-      "ReleaseStatus": "PASS",
-      "QualityStatus": "ACCEPTED_LIMITATION",
-      "PixelAgreement": "MATCHES_TARGET",
+      "ReleaseStatus": "FAIL",
+      "QualityStatus": "FAIL",
+      "PixelAgreement": "MATCHES_NONE",
       "ReferenceSituation": "REFS_DISAGREE",
-      "RootCause": "MALFORMED_FONT_ENCODING_TEXT_QUALITY",
+      "RootCause": "MALFORMED_IDENTITY_H_FONT_TEXT_QUALITY",
       "Target": {
         "Mode": "REFERENCE_RENDERER",
         "Primary": "mutool",
-        "Reason": "MuPDF is the closest current target for this malformed font/encoding fixture, but the page remains lower quality because visible text is still garbled."
+        "Reason": "MuPDF is the best current primary reference for the malformed non-embedded Identity-H font case, with Ghostscript as secondary evidence; both are more plausible than pdfe/Poppler."
       },
-      "ImprovementPriority": "NONE",
+      "ImprovementPriority": "P2",
       "Confidence": "HIGH",
-      "QualityReason": "pdfe renders the visible content and matches the selected MuPDF target closely enough for the malformed input policy; the source uses non-embedded Identity-H fonts without ToUnicode, so exact text recovery is not currently actionable.",
-      "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders; MuPDF and Poppler also warn about the malformed non-embedded Identity-H fonts. A TrueType-UCS2 fallback experiment made the MuPDF diff worse, so this remains an accepted malformed-font limitation rather than a renderer regression."
+      "QualityReason": "pdfe output is partially legible but visible glyph mapping/spacing is still wrong relative to the best reference family. This should remain an active renderer issue until fixed or proven impossible by spec/object evidence.",
+      "Notes": "Verified by cold no-cache scan and fresh contact sheet against pdfe, MuPDF, Poppler, and Ghostscript on 2026-07-03."
     }
   }
 }

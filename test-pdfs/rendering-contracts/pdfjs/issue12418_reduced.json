@@ -2,18 +2,18 @@
   "Path": "pdfjs/issue12418_reduced.pdf",
   "Source": "pdf.js corpus",
   "Owner": "rendering:quality",
-  "RootCause": "REFERENCE_TEXT_EXTRACTION_DISAGREEMENT",
+  "RootCause": "REFERENCE_FONT_RENDERING_DISAGREEMENT",
   "ImprovementPriority": "NONE",
   "Confidence": "HIGH",
-  "Notes": "Focused review: pdfe and MuPDF render the Czech text correctly; Ghostscript emits garbled glyphs for this reduced font fixture.",
+  "Notes": "Cold 2026-07-03 verification shows this is not an active pdfe semantic rendering issue. pdfe preserves the Czech text and accents; references disagree on fallback face/weight and Ghostscript is visibly worse.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
       "PixelAgreement": "MATCHES_TARGET",
       "ReferenceSituation": "REFS_DISAGREE",
-      "RootCause": "REFERENCE_TEXT_EXTRACTION_DISAGREEMENT",
+      "RootCause": "REFERENCE_FONT_RENDERING_DISAGREEMENT",
       "Target": {
         "Mode": "REFERENCE_RENDERER",
         "Primary": "mutool",
@@ -21,8 +21,8 @@
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "pdfe renders the intended text and matches the accepted MuPDF target; raw PASS_ONE is caused by reference renderer disagreement.",
-      "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders."
+      "QualityReason": "pdfe preserves the intended Czech text and accents. Residual differences are reference font fallback disagreement rather than an active pdfe semantic rendering bug.",
+      "Notes": "Verified by cold no-cache scan and fresh contact sheet against pdfe, MuPDF, Poppler, and Ghostscript on 2026-07-03. Do not classify this as pdfe better than all references without stronger font-object proof."
     }
   }
 }

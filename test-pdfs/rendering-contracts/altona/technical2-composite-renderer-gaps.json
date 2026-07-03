@@ -4,39 +4,39 @@
   "Owner": "rendering:quality",
   "Issue": 491,
   "RootCause": "COMPOSITE_PRINT_CONFORMANCE_GAPS",
-  "ImprovementPriority": "ACCEPTED_PREPRESS_FIDELITY_LIMITATION",
+  "ImprovementPriority": "P2",
   "Confidence": "MEDIUM",
-  "QualityReason": "Composite Altona patch pages combine print color management, overprint, transparency, mesh shadings, and advanced color spaces. Current pdfe output preserves visible semantic content for screen preview; remaining differences are high-fidelity prepress color/composite variance and localized mesh/edge residuals.",
-  "Notes": "Keep these classified separately from atomic Ghent failures; use them as integration confirmation for future prepress/color-conformance work.",
+  "QualityReason": "Composite Altona patch pages combine print color management, overprint, transparency, mesh shadings, and advanced color spaces. Cold 2026-07-03 verification confirms pages 7 and 8 still have real visible renderer fidelity issues.",
+  "Notes": "Do not hide these as accepted limitations while the goal is best-reference/prepress parity. Treat pages 7 and 8 as active rendering issues.",
   "Pages": {
     "7": {
       "ExpectedRawStatus": "DIFF",
-      "ReleaseStatus": "PASS",
-      "QualityStatus": "ACCEPTED_LIMITATION",
-      "PixelAgreement": "MATCHES_TARGET",
+      "ReleaseStatus": "FAIL",
+      "QualityStatus": "FAIL",
+      "PixelAgreement": "MATCHES_NONE",
       "ReferenceSituation": "REFS_DISAGREE",
       "RootCause": "ALTONA_COMPOSITE_COLOR_TONE_VARIANCE",
-      "ImprovementPriority": "ACCEPTED_PREPRESS_FIDELITY_LIMITATION",
-      "QualityReason": "Current focused scan is raw PASS_ONE against the pdftocairo target with reference disagreement. The remaining visible difference is low-impact print-preview color/composite tone variance; page content and geometry are preserved for screen rendering.",
+      "ImprovementPriority": "P2",
+      "QualityReason": "Fresh no-cache verification shows a real low-impact color/composite tone mismatch. Page content and geometry are preserved, but pdfe does not yet match the best screen/prepress reference target.",
       "Target": {
-        "Mode": "REFERENCE_DISAGREEMENT",
+        "Mode": "PREPRESS_REFERENCE_WITH_ALTONA_SEMANTICS",
         "Primary": "pdftocairo",
-        "Reason": "References disagree on exact print-preview color; pdftocairo is the accepted target for this screen-preview contract."
+        "Reason": "Poppler is closest in the cold scan and fresh contact sheet, but Altona expected prepress semantics remain the final arbiter for color/composite correctness."
       }
     },
     "8": {
       "ExpectedRawStatus": "DIFF",
-      "ReleaseStatus": "PASS",
-      "QualityStatus": "ACCEPTED_LIMITATION",
-      "PixelAgreement": "MATCHES_SOME",
+      "ReleaseStatus": "FAIL",
+      "QualityStatus": "FAIL",
+      "PixelAgreement": "MATCHES_NONE",
       "ReferenceSituation": "REFS_DISAGREE",
       "RootCause": "ALTONA_FUNCTION_SHADING_MATRIX_FIXED_WITH_MESH_EDGE_RESIDUAL",
-      "ImprovementPriority": "TRACKED_PREPRESS_FIDELITY_LIMITATION",
-      "QualityReason": "Current focused scan is raw PASS_ONE with pdfe vs Cairo at 1.49% differing pixels after fixing Type 1 function-shading matrix/domain bitmap orientation. The prior top-band pale background gap is resolved; remaining differences are localized mesh/edge and prepress-fidelity residuals rather than screen-rendering content loss. True Type 7 tensor-patch work remains tracked separately in #542.",
+      "ImprovementPriority": "P2",
+      "QualityReason": "Fresh no-cache verification shows visible shading/color differences remain after the earlier matrix/domain bitmap orientation fix. This is an active prepress fidelity issue.",
       "Target": {
-        "Mode": "REFERENCE_DISAGREEMENT",
+        "Mode": "PREPRESS_REFERENCE_WITH_ALTONA_SEMANTICS",
         "Primary": "pdftocairo",
-        "Reason": "Cairo and MuPDF are close on this screen-preview patch but still disagree; pdftocairo remains the selected contract target while residual mesh/prepress fidelity work is tracked separately."
+        "Reason": "Poppler is closest in the cold scan, but Altona expected prepress semantics remain the final arbiter for the residual shading/mesh/color behavior."
       }
     },
     "13": {

@@ -4,22 +4,22 @@
   "Owner": "rendering:quality",
   "Issue": 543,
   "RootCause": "CMYK_TRANSPARENCY_GROUP_ISOLATION",
-  "ImprovementPriority": "ACCEPTED_PREPRESS_FIDELITY_LIMITATION",
+  "ImprovementPriority": "NONE",
   "Confidence": "HIGH",
-  "QualityReason": "Focused scan preserves visible content and the high-impact isolated-backdrop washout is fixed. Remaining raw PASS_ONE differences are localized blend/color-fidelity residuals against MuPDF, so classify as an accepted screen-preview limitation and keep broader prepress-fidelity work tracked separately.",
+  "QualityReason": "Cold 2026-07-03 verification raw-passes this page and fresh visual review shows pdfe matches MuPDF on the important isolated DeviceCMYK transparency semantics; Poppler is the visible outlier.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "DIFF",
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "ACCEPTED_LIMITATION",
-      "PixelAgreement": "MATCHES_SOME",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_TARGET",
       "ReferenceSituation": "REFS_DISAGREE",
-      "RootCause": "CMYK_TRANSPARENCY_GROUP_ISOLATION_SATURATION_RESIDUAL",
-      "QualityReason": "Current focused scan: raw PASS_ONE, medium localized-linework/saturation residual, no content loss. DeviceCMYK isolation now preserves transparent initial backdrops for Overlay/SoftLight instead of washing them out against zero-ink white; the remaining difference is a tracked prepress-fidelity limitation rather than a screen-rendering release blocker.",
+      "RootCause": "CMYK_TRANSPARENCY_GROUP_ISOLATION_FIXED",
+      "QualityReason": "Cold no-cache scan raw-passes this page. Fresh contact sheet shows pdfe and MuPDF agree on the important knockout/isolation marks while Poppler is the visible outlier, so this is no longer an active rendering issue.",
       "Target": {
-        "Mode": "REFERENCE_DISAGREEMENT",
+        "Mode": "ACCEPTED_REFERENCE",
         "Primary": "mutool",
-        "Reason": "MuPDF is the closest available reference in the focused scan; references disagree on the exact isolated DeviceCMYK transparency rendering."
+        "Reason": "MuPDF is the best available reference for the isolated DeviceCMYK transparency semantics verified here; pdfe matches its important visible behavior."
       }
     }
   }

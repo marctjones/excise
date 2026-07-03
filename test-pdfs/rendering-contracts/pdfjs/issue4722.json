@@ -2,27 +2,27 @@
   "Path": "pdfjs/issue4722.pdf",
   "Source": "pdf.js corpus",
   "Owner": "rendering:quality",
-  "RootCause": "REFERENCE_FONT_MAPPING_DISAGREEMENT",
-  "ImprovementPriority": "NONE",
+  "RootCause": "FONT_SUBSTITUTION_METRICS_MISMATCH",
+  "ImprovementPriority": "P1",
   "Confidence": "HIGH",
-  "Notes": "Focused review: pdfe renders meaningful bold text while one reference emits incorrect numeric garbage and the others disagree on fallback font face.",
+  "Notes": "Cold 2026-07-03 verification shows this is a real pdfe text rendering issue, not a pdfe-better-than-reference case. pdfe renders readable text but the font shape/spacing is visibly wrong for the non-embedded CenturyGothic,Bold Identity-H font with explicit CID widths.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
-      "ReleaseStatus": "PASS",
-      "QualityStatus": "PDFE_BETTER_THAN_REFS",
-      "PixelAgreement": "MATCHES_TARGET",
+      "ReleaseStatus": "FAIL",
+      "QualityStatus": "FAIL",
+      "PixelAgreement": "MATCHES_NONE",
       "ReferenceSituation": "REFS_DISAGREE",
-      "RootCause": "REFERENCE_FONT_MAPPING_DISAGREEMENT",
+      "RootCause": "FONT_SUBSTITUTION_METRICS_MISMATCH",
       "Target": {
-        "Mode": "QUALITY_STANDARD",
-        "Primary": "pdfe",
-        "Reason": "Quality target is legible text with the intended glyph sequence; pdfe satisfies that while the reference renderers disagree on fallback face and one emits wrong content."
+        "Mode": "PDF_FONT_DICTIONARY_WITH_REFERENCE_EVIDENCE",
+        "Primary": "ghostscript",
+        "Reason": "The PDF declares a non-embedded CenturyGothic,Bold Type0 Identity-H font with explicit CID widths. Ghostscript is the best practical readable reference for spacing; Poppler is garbled and MuPDF substitutes a serif face, so the final target is the PDF font dictionary plus readable-reference evidence."
       },
-      "ImprovementPriority": "NONE",
+      "ImprovementPriority": "P1",
       "Confidence": "HIGH",
-      "QualityReason": "pdfe meets the documented text-quality target despite raw PASS_ONE caused by reference font-mapping disagreement.",
-      "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders."
+      "QualityReason": "pdfe preserves the glyph sequence but uses the wrong fallback metrics/shape, producing visibly incorrect bold text spacing. This is an active rendering issue.",
+      "Notes": "Verified by cold no-cache scan and fresh contact sheet against pdfe, MuPDF, Poppler, and Ghostscript on 2026-07-03."
     }
   }
 }
