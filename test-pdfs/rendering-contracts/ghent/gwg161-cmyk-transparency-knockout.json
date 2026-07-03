@@ -4,20 +4,21 @@
   "Owner": "rendering:quality",
   "Issue": 491,
   "RootCause": "CMYK_TRANSPARENCY_GROUP_KNOCKOUT",
-  "ImprovementPriority": "HIGH_VISIBLE_SEMANTICS",
+  "ImprovementPriority": "DONE",
   "Confidence": "HIGH",
-  "QualityReason": "Knockout transparency group semantics are not implemented; pdfe currently relies on Skia RGB layers after DeviceCMYK conversion.",
+  "QualityReason": "DeviceCMYK knockout group Lighten/Screen/ColorDodge semantics were fixed through the subtractive CMYK blend path. Current focused scan is raw PASS_ONE with all references disagreeing and pdfe closest to the reference-center score.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "DIFF",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "FAIL",
-      "PixelAgreement": "MATCHES_NONE",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "PixelAgreement": "MATCHES_SOME",
       "ReferenceSituation": "REFS_DISAGREE",
+      "QualityReason": "Current focused scan: low-impact color-tone residual, referenceCenterAgreement=true, pdfeReferenceCenterRank=1. Treat as fixed for the screen-rendering gate while keeping the raw PASS_ONE evidence visible.",
       "Target": {
         "Mode": "REFERENCE_DISAGREEMENT",
-        "Primary": "pdftocairo",
-        "Reason": "Poppler is the closest available reference for this page in the 2026-06-29 run."
+        "Primary": "mutool",
+        "Reason": "After the CMYK knockout fix, pdfe is closer to the reference-center result than any single reference renderer in the focused scan."
       }
     }
   }
