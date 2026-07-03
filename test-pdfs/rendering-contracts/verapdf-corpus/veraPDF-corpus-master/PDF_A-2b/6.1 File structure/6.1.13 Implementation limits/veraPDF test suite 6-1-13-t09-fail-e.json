@@ -5,23 +5,23 @@
   "RootCause": "REFERENCE_COVERAGE_GAP",
   "ImprovementPriority": "NONE",
   "Confidence": "MEDIUM",
-  "Notes": "Migrated from the legacy TSV rendering manifests.",
+  "Notes": "Cold no-cache verification on 2026-07-03 rendered the contracted page; pdfe pixel-matches an accepted available reference. This is a reference coverage gap, not a pdfe-better-than-refs claim.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "PDFE_BETTER_THAN_REFS",
-      "PixelAgreement": "NOT_COMPARABLE",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_TARGET",
       "ReferenceSituation": "REFS_INCOMPLETE",
       "RootCause": "REFERENCE_COVERAGE_GAP",
       "Target": {
-        "Mode": "QUALITY_STANDARD",
-        "Primary": null,
-        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+        "Mode": "ACCEPTED_REFERENCE",
+        "Primary": "mutool",
+        "Reason": "pdfe pixel-matches the accepted MuPDF target; other configured reference coverage is incomplete."
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Implementation-limit conformance fixture is accepted because pdfe matches at least one available reference.",
+      "QualityReason": "Implementation-limit conformance fixture is accepted because pdfe pixel-matches the selected available reference; no visual superiority claim is made.",
       "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
     }
   }

@@ -17,7 +17,7 @@ decision:
 |---|---|
 | `rawStatus` | Mechanical oracle comparison: `PASS`, `PASS_ONE`, `DIFF`, or a non-rendering status. |
 | `releaseStatus` | Release gate result: `PASS`, `BLOCKED`, or `NEEDS_REVIEW`. |
-| `qualityStatus` | Rendering-quality judgment: `PIXEL_EXACT`, `TARGET_MATCH`, `MATCHES_ACCEPTED_REFERENCE`, `GOOD_ENOUGH`, `PDFE_BETTER_THAN_REFS`, `ACCEPTED_LIMITATION`, `NON_RENDERABLE_ACCEPTED`, `FAIL`, or `NEEDS_REVIEW`. |
+| `qualityStatus` | Rendering-quality judgment: `PIXEL_EXACT`, `TARGET_MATCH`, `MATCHES_ACCEPTED_REFERENCE`, `REFERENCE_REFUSAL_ACCEPTED`, `PDFE_BETTER_THAN_REFS`, `ACCEPTED_LIMITATION`, `NON_RENDERABLE_ACCEPTED`, `FAIL`, or `NEEDS_REVIEW`. |
 | `pixelAgreement` | Whether pdfe matched all required references, the chosen target, some references, no references, or the page is not comparable. |
 | `referenceSituation` | Whether references agree, disagree, refuse, are incomplete, are known lossy/wrong, or are not applicable. |
 | `targetBasis` | Why the page is judged this way: reference renderer, reference consensus, PDF spec, semantic quality standard, resource policy, or malformed-input policy. |

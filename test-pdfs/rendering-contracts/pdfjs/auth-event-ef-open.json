@@ -5,23 +5,23 @@
   "RootCause": "REFERENCE_COVERAGE_GAP",
   "ImprovementPriority": "NONE",
   "Confidence": "MEDIUM",
-  "Notes": "Migrated from the legacy TSV rendering manifests.",
+  "Notes": "Cold no-cache verification on 2026-07-03 rendered the contracted page; pdfe matches the only comparable accepted reference. This is a reference coverage gap, not a pdfe-better-than-refs claim.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "PDFE_BETTER_THAN_REFS",
-      "PixelAgreement": "MATCHES_ONE_REFERENCE",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_TARGET",
       "ReferenceSituation": "REFS_INCOMPLETE",
       "RootCause": "REFERENCE_COVERAGE_GAP",
       "Target": {
-        "Mode": "QUALITY_STANDARD",
-        "Primary": null,
-        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+        "Mode": "ACCEPTED_REFERENCE",
+        "Primary": "pdftocairo",
+        "Reason": "pdfe matches the only comparable Poppler reference within tolerance; other configured references refuse or do not produce comparable output."
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Embedded-file auth-event fixture has only one comparable reference; pdfe matches that reference within tolerance.",
+      "QualityReason": "Cold no-cache verification rendered page 1; pdfe matches the accepted Poppler target with negligible residual difference.",
       "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
     }
   }

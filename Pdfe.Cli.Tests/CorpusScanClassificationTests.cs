@@ -156,6 +156,38 @@ public class CorpusScanClassificationTests
     }
 
     [Fact]
+    public void ApplyRenderingQualityContracts_ClassifiesOracleRefusalWithoutClaimingVisualSuperiority()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "pdfe-contracts-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            var set = RenderProgram.RenderingQualityContractSet.Load(dir);
+            var entries = new[]
+            {
+                new RenderProgram.CorpusScanEntry
+                {
+                    path = "pdfjs/encrypted-short-key.pdf",
+                    pageNumber = 1,
+                    status = "ALL_ORACLES_REFUSED",
+                    comparedOracles = 0,
+                    agreeingOracles = 0,
+                },
+            };
+
+            RenderProgram.ApplyRenderingQualityContracts(entries, set, strictContracts: false);
+
+            entries[0].qualityStatus.Should().Be("REFERENCE_REFUSAL_ACCEPTED");
+            entries[0].referenceSituation.Should().Be("REFS_REFUSE");
+            entries[0].pixelAgreement.Should().Be("NOT_COMPARABLE");
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
     public void ApplyRenderingQualityContracts_StrictMissingContractMarksNeedsReview()
     {
         var dir = Path.Combine(Path.GetTempPath(), "pdfe-contracts-" + Guid.NewGuid().ToString("N"));

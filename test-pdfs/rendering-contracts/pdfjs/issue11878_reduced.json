@@ -1,170 +1,180 @@
 {
   "Path": "pdfjs/issue11878_reduced.pdf",
   "Source": "pdf.js corpus",
-  "Owner": "rendering:input-policy",
-  "RootCause": "DEGENERATE_INPUT",
+  "Owner": "rendering:quality",
+  "RootCause": "TINY_REDUCED_FIXTURE_REFERENCE_MATCH",
   "ImprovementPriority": "NONE",
   "Confidence": "HIGH",
-  "Notes": "Migrated from the legacy TSV rendering manifests.",
+  "Notes": "Cold no-cache all-page verification on 2026-07-03 rendered pages 1-10; this fixture is not non-renderable.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "NON_RENDERABLE_ACCEPTED",
-      "PixelAgreement": "NOT_COMPARABLE",
-      "ReferenceSituation": "NOT_APPLICABLE",
-      "RootCause": "DEGENERATE_INPUT",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_TARGET",
+      "ReferenceSituation": "REFS_DISAGREE",
+      "RootCause": "TINY_REDUCED_FIXTURE_REFERENCE_MATCH",
       "Target": {
-        "Mode": "MALFORMED_INPUT_POLICY",
-        "Reason": "Correct behavior is bounded refusal or documented non-renderable handling."
+        "Mode": "ACCEPTED_REFERENCE",
+        "Reason": "Cold no-cache all-page verification rendered this tiny reduced fixture and matched the Poppler target exactly; MuPDF/Ghostscript recover differently on the 3x3 point page.",
+        "Primary": "pdftocairo"
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Tiny reduced fixture is accepted for the release gate unless it reproduces a normal-scale content loss.",
+      "QualityReason": "Pages 1-10 render and match Poppler exactly in the 2026-07-03 cold verification; the previous non-renderable label was stale.",
       "Notes": "3x3 point reduced fixture is below ordinary readable-document scale."
     },
     "2": {
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "NON_RENDERABLE_ACCEPTED",
-      "PixelAgreement": "NOT_COMPARABLE",
-      "ReferenceSituation": "NOT_APPLICABLE",
-      "RootCause": "DEGENERATE_INPUT",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_TARGET",
+      "ReferenceSituation": "REFS_DISAGREE",
+      "RootCause": "TINY_REDUCED_FIXTURE_REFERENCE_MATCH",
       "Target": {
-        "Mode": "MALFORMED_INPUT_POLICY",
-        "Reason": "Correct behavior is bounded refusal or documented non-renderable handling."
+        "Mode": "ACCEPTED_REFERENCE",
+        "Reason": "Cold no-cache all-page verification rendered this tiny reduced fixture and matched the Poppler target exactly; MuPDF/Ghostscript recover differently on the 3x3 point page.",
+        "Primary": "pdftocairo"
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Tiny reduced fixture is below ordinary readable-document scale and accepted unless it reproduces normal-scale content loss.",
+      "QualityReason": "Pages 1-10 render and match Poppler exactly in the 2026-07-03 cold verification; the previous non-renderable label was stale.",
       "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
     },
     "3": {
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "NON_RENDERABLE_ACCEPTED",
-      "PixelAgreement": "NOT_COMPARABLE",
-      "ReferenceSituation": "NOT_APPLICABLE",
-      "RootCause": "DEGENERATE_INPUT",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_TARGET",
+      "ReferenceSituation": "REFS_DISAGREE",
+      "RootCause": "TINY_REDUCED_FIXTURE_REFERENCE_MATCH",
       "Target": {
-        "Mode": "MALFORMED_INPUT_POLICY",
-        "Reason": "Correct behavior is bounded refusal or documented non-renderable handling."
+        "Mode": "ACCEPTED_REFERENCE",
+        "Reason": "Cold no-cache all-page verification rendered this tiny reduced fixture and matched the Poppler target exactly; MuPDF/Ghostscript recover differently on the 3x3 point page.",
+        "Primary": "pdftocairo"
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Tiny reduced fixture is below ordinary readable-document scale and accepted unless it reproduces normal-scale content loss.",
+      "QualityReason": "Pages 1-10 render and match Poppler exactly in the 2026-07-03 cold verification; the previous non-renderable label was stale.",
       "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
     },
     "4": {
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "NON_RENDERABLE_ACCEPTED",
-      "PixelAgreement": "NOT_COMPARABLE",
-      "ReferenceSituation": "NOT_APPLICABLE",
-      "RootCause": "DEGENERATE_INPUT",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_TARGET",
+      "ReferenceSituation": "REFS_DISAGREE",
+      "RootCause": "TINY_REDUCED_FIXTURE_REFERENCE_MATCH",
       "Target": {
-        "Mode": "MALFORMED_INPUT_POLICY",
-        "Reason": "Correct behavior is bounded refusal or documented non-renderable handling."
+        "Mode": "ACCEPTED_REFERENCE",
+        "Reason": "Cold no-cache all-page verification rendered this tiny reduced fixture and matched the Poppler target exactly; MuPDF/Ghostscript recover differently on the 3x3 point page.",
+        "Primary": "pdftocairo"
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Tiny reduced fixture is below ordinary readable-document scale and accepted unless it reproduces normal-scale content loss.",
+      "QualityReason": "Pages 1-10 render and match Poppler exactly in the 2026-07-03 cold verification; the previous non-renderable label was stale.",
       "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
     },
     "5": {
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "NON_RENDERABLE_ACCEPTED",
-      "PixelAgreement": "NOT_COMPARABLE",
-      "ReferenceSituation": "NOT_APPLICABLE",
-      "RootCause": "DEGENERATE_INPUT",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_TARGET",
+      "ReferenceSituation": "REFS_DISAGREE",
+      "RootCause": "TINY_REDUCED_FIXTURE_REFERENCE_MATCH",
       "Target": {
-        "Mode": "MALFORMED_INPUT_POLICY",
-        "Reason": "Correct behavior is bounded refusal or documented non-renderable handling."
+        "Mode": "ACCEPTED_REFERENCE",
+        "Reason": "Cold no-cache all-page verification rendered this tiny reduced fixture and matched the Poppler target exactly; MuPDF/Ghostscript recover differently on the 3x3 point page.",
+        "Primary": "pdftocairo"
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Tiny reduced fixture is below ordinary readable-document scale and accepted unless it reproduces normal-scale content loss.",
+      "QualityReason": "Pages 1-10 render and match Poppler exactly in the 2026-07-03 cold verification; the previous non-renderable label was stale.",
       "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
     },
     "6": {
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "NON_RENDERABLE_ACCEPTED",
-      "PixelAgreement": "NOT_COMPARABLE",
-      "ReferenceSituation": "NOT_APPLICABLE",
-      "RootCause": "DEGENERATE_INPUT",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_TARGET",
+      "ReferenceSituation": "REFS_DISAGREE",
+      "RootCause": "TINY_REDUCED_FIXTURE_REFERENCE_MATCH",
       "Target": {
-        "Mode": "MALFORMED_INPUT_POLICY",
-        "Reason": "Correct behavior is bounded refusal or documented non-renderable handling."
+        "Mode": "ACCEPTED_REFERENCE",
+        "Reason": "Cold no-cache all-page verification rendered this tiny reduced fixture and matched the Poppler target exactly; MuPDF/Ghostscript recover differently on the 3x3 point page.",
+        "Primary": "pdftocairo"
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Tiny reduced fixture is below ordinary readable-document scale and accepted unless it reproduces normal-scale content loss.",
+      "QualityReason": "Pages 1-10 render and match Poppler exactly in the 2026-07-03 cold verification; the previous non-renderable label was stale.",
       "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
     },
     "7": {
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "NON_RENDERABLE_ACCEPTED",
-      "PixelAgreement": "NOT_COMPARABLE",
-      "ReferenceSituation": "NOT_APPLICABLE",
-      "RootCause": "DEGENERATE_INPUT",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_TARGET",
+      "ReferenceSituation": "REFS_DISAGREE",
+      "RootCause": "TINY_REDUCED_FIXTURE_REFERENCE_MATCH",
       "Target": {
-        "Mode": "MALFORMED_INPUT_POLICY",
-        "Reason": "Correct behavior is bounded refusal or documented non-renderable handling."
+        "Mode": "ACCEPTED_REFERENCE",
+        "Reason": "Cold no-cache all-page verification rendered this tiny reduced fixture and matched the Poppler target exactly; MuPDF/Ghostscript recover differently on the 3x3 point page.",
+        "Primary": "pdftocairo"
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Tiny reduced fixture is below ordinary readable-document scale and accepted unless it reproduces normal-scale content loss.",
+      "QualityReason": "Pages 1-10 render and match Poppler exactly in the 2026-07-03 cold verification; the previous non-renderable label was stale.",
       "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
     },
     "8": {
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "NON_RENDERABLE_ACCEPTED",
-      "PixelAgreement": "NOT_COMPARABLE",
-      "ReferenceSituation": "NOT_APPLICABLE",
-      "RootCause": "DEGENERATE_INPUT",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_TARGET",
+      "ReferenceSituation": "REFS_DISAGREE",
+      "RootCause": "TINY_REDUCED_FIXTURE_REFERENCE_MATCH",
       "Target": {
-        "Mode": "MALFORMED_INPUT_POLICY",
-        "Reason": "Correct behavior is bounded refusal or documented non-renderable handling."
+        "Mode": "ACCEPTED_REFERENCE",
+        "Reason": "Cold no-cache all-page verification rendered this tiny reduced fixture and matched the Poppler target exactly; MuPDF/Ghostscript recover differently on the 3x3 point page.",
+        "Primary": "pdftocairo"
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Tiny reduced fixture is below ordinary readable-document scale and accepted unless it reproduces normal-scale content loss.",
+      "QualityReason": "Pages 1-10 render and match Poppler exactly in the 2026-07-03 cold verification; the previous non-renderable label was stale.",
       "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
     },
     "9": {
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "NON_RENDERABLE_ACCEPTED",
-      "PixelAgreement": "NOT_COMPARABLE",
-      "ReferenceSituation": "NOT_APPLICABLE",
-      "RootCause": "DEGENERATE_INPUT",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_TARGET",
+      "ReferenceSituation": "REFS_DISAGREE",
+      "RootCause": "TINY_REDUCED_FIXTURE_REFERENCE_MATCH",
       "Target": {
-        "Mode": "MALFORMED_INPUT_POLICY",
-        "Reason": "Correct behavior is bounded refusal or documented non-renderable handling."
+        "Mode": "ACCEPTED_REFERENCE",
+        "Reason": "Cold no-cache all-page verification rendered this tiny reduced fixture and matched the Poppler target exactly; MuPDF/Ghostscript recover differently on the 3x3 point page.",
+        "Primary": "pdftocairo"
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Tiny reduced fixture is below ordinary readable-document scale and accepted unless it reproduces normal-scale content loss.",
+      "QualityReason": "Pages 1-10 render and match Poppler exactly in the 2026-07-03 cold verification; the previous non-renderable label was stale.",
       "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
     },
     "10": {
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "NON_RENDERABLE_ACCEPTED",
-      "PixelAgreement": "NOT_COMPARABLE",
-      "ReferenceSituation": "NOT_APPLICABLE",
-      "RootCause": "DEGENERATE_INPUT",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_TARGET",
+      "ReferenceSituation": "REFS_DISAGREE",
+      "RootCause": "TINY_REDUCED_FIXTURE_REFERENCE_MATCH",
       "Target": {
-        "Mode": "MALFORMED_INPUT_POLICY",
-        "Reason": "Correct behavior is bounded refusal or documented non-renderable handling."
+        "Mode": "ACCEPTED_REFERENCE",
+        "Reason": "Cold no-cache all-page verification rendered this tiny reduced fixture and matched the Poppler target exactly; MuPDF/Ghostscript recover differently on the 3x3 point page.",
+        "Primary": "pdftocairo"
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Tiny reduced fixture is below ordinary readable-document scale and accepted unless it reproduces normal-scale content loss.",
+      "QualityReason": "Pages 1-10 render and match Poppler exactly in the 2026-07-03 cold verification; the previous non-renderable label was stale.",
       "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
     }
   }

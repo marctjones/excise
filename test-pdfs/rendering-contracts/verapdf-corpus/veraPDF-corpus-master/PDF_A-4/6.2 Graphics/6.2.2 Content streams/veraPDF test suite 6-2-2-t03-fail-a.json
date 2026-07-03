@@ -2,26 +2,26 @@
   "Path": "verapdf-corpus/veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.2 Content streams/veraPDF test suite 6-2-2-t03-fail-a.pdf",
   "Source": "veraPDF corpus",
   "Owner": "rendering:quality",
-  "RootCause": "REFERENCE_PIXEL_ART_COLOR_DISAGREEMENT",
+  "RootCause": "INVALID_MISSING_COLORSPACE_RESOURCE_RECOVERY",
   "ImprovementPriority": "NONE",
   "Confidence": "HIGH",
-  "Notes": "Focused review: pdfe preserves the black pixel-art glyph while Cairo renders the same glyph gray.",
+  "Notes": "Verified at 300 DPI on 2026-07-03: the invalid form XObject references missing /CS0. pdfe preserves the default black color while Poppler/Ghostscript recover as gray; this is malformed-input recovery, not proof that pdfe is better than references.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "PDFE_BETTER_THAN_REFS",
-      "PixelAgreement": "MATCHES_TARGET",
-      "ReferenceSituation": "REFS_DISAGREE",
-      "RootCause": "REFERENCE_PIXEL_ART_COLOR_DISAGREEMENT",
+      "QualityStatus": "ACCEPTED_LIMITATION",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "REFS_INCOMPLETE",
+      "RootCause": "INVALID_MISSING_COLORSPACE_RESOURCE_RECOVERY",
       "Target": {
-        "Mode": "QUALITY_STANDARD",
-        "Primary": "pdfe",
-        "Reason": "Quality target is the conformance fixture's black pixel-art glyph; pdfe preserves black pixels while Cairo gray-renders the glyph."
+        "Mode": "MALFORMED_INPUT_POLICY",
+        "Primary": null,
+        "Reason": "The fixture is intentionally invalid: its form XObject uses /CS0 without defining that resource. pdfe boundedly renders with default black; Poppler/Ghostscript recover as gray; MuPDF refuses."
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "pdfe satisfies the documented pixel-art quality target and is preferable to the gray Cairo output.",
+      "QualityReason": "Accepted malformed-input recovery difference on an invalid PDF/A fixture; do not classify as pdfe better than references.",
       "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders."
     }
   }

@@ -5,41 +5,24 @@
   "RootCause": "REFERENCE_REFUSAL",
   "ImprovementPriority": "NONE",
   "Confidence": "MEDIUM",
-  "Notes": "Migrated from the legacy TSV rendering manifests.",
+  "Notes": "Migrated from the legacy TSV rendering manifests. Legacy synthetic page-0 refusal rows were removed on 2026-07-03 after cold verification confirmed current real-page outcomes.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "ALL_ORACLES_REFUSED",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "QualityStatus": "REFERENCE_REFUSAL_ACCEPTED",
       "PixelAgreement": "NOT_COMPARABLE",
       "ReferenceSituation": "REFS_REFUSE",
       "RootCause": "REFERENCE_REFUSAL",
       "Target": {
-        "Mode": "QUALITY_STANDARD",
+        "Mode": "REFERENCE_REFUSAL",
         "Primary": null,
-        "Reason": "Reference renderers refuse or provide incomplete coverage; judge pdfe by documented semantic behavior."
+        "Reason": "All configured reference renderers refuse this encrypted short-key fixture; release acceptance is based on focused parser/security/rendering coverage, not visual superiority over references."
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Short-key R4/V4 padding is covered by focused parser/security and rendering tests; oracle refusal is not a pdfe renderer defect.",
+      "QualityReason": "Short-key R4/V4 padding is covered by focused parser/security and rendering tests; all-oracle refusal is tracked separately from pdfe-better-than-refs.",
       "Notes": "Encrypted short-key fixture renders in pdfe but all sample references refuse it."
-    },
-    "0": {
-      "ExpectedRawStatus": "MALFORMED_PDF",
-      "ReleaseStatus": "PASS",
-      "QualityStatus": "NON_RENDERABLE_ACCEPTED",
-      "PixelAgreement": "NOT_COMPARABLE",
-      "ReferenceSituation": "NOT_APPLICABLE",
-      "RootCause": "DEGENERATE_INPUT",
-      "Target": {
-        "Mode": "MALFORMED_INPUT_POLICY",
-        "Reason": "Baseline full-corpus contract inferred from raw all-pages scan; correct outcome is bounded non-renderable handling until explicitly reviewed."
-      },
-      "ImprovementPriority": "NONE",
-      "Confidence": "MEDIUM",
-      "QualityReason": "Baseline classification inferred from full all-pages raw corpus scan; promote to a reviewed contract when triaged.",
-      "Notes": "Auto-classified from exploratory-report-test-pdfs-all-20260622-passone-sharded-coverage.json.",
-      "ExpectedErrorContains": "Could not decode Flate stream"
     }
   }
 }
