@@ -9,6 +9,7 @@ using Pdfe.Core.Filters.Jpx;
 using Pdfe.Core.Primitives;
 using Pdfe.Core.Text;
 using Pdfe.Rendering.Fonts;
+using Pdfe.Rendering.Transparency;
 using SkiaSharp;
 using CoreCffParser = Pdfe.Core.Fonts.CffParser;
 

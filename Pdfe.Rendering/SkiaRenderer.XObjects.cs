@@ -1,5 +1,6 @@
 using Pdfe.Core.Primitives;
 using Pdfe.Core.Text;
+using Pdfe.Rendering.Transparency;
 using SkiaSharp;
 
 namespace Pdfe.Rendering;

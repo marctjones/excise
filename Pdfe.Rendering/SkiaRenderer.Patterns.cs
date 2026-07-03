@@ -3,6 +3,7 @@ using Pdfe.Core.Content;
 using Pdfe.Core.Document;
 using Pdfe.Core.Primitives;
 using Pdfe.Rendering.Shadings;
+using Pdfe.Rendering.Transparency;
 using SkiaSharp;
 
 namespace Pdfe.Rendering;
