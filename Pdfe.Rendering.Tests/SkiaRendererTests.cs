@@ -1034,6 +1034,11 @@ public class SkiaRendererTests
             doc.GetPage(8),
             new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
 
+        var topFunctionBand = new SKRectI(0, 0, 102, 30);
+        CountNonWhitePixels(bitmap, topFunctionBand).Should().BeGreaterThan(2900,
+            "Type 1 function shadings with their own Matrix should cover the transformed top-band domain instead of leaving a pale background gap");
+        MeanRgb(bitmap, topFunctionBand).Red.Should().BeLessThan(175,
+            "the Altona sampled function-shading band should remain saturated after mapping through the shading matrix");
         CountWarmPalePixels(bitmap, new SKRectI(0, 170, 102, 204)).Should().BeGreaterThan(700,
             "Type 7 tensor patch meshes should be sampled as curved patches, not reduced to a coarse patch bounding-box fill");
         CountAdjacentColumnJumps(bitmap, new SKRectI(0, 145, 102, 174), threshold: 48).Should().BeLessThan(12,

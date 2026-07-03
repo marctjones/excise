@@ -1442,13 +1442,12 @@ internal partial class RenderContext
                 if (sourceX < xMin || sourceX > xMax || sourceY < yMin || sourceY > yMax)
                     continue;
 
-                var functionY = yMin + yMax - sourceY;
-                var comps = PdfFunctionEvaluator.Evaluate(funcObj, new[] { (double)sourceX, (double)functionY }, _page.Document);
+                var comps = PdfFunctionEvaluator.Evaluate(funcObj, new[] { (double)sourceX, (double)sourceY }, _page.Document);
                 if (comps == null)
                     continue;
 
                 var color = ComponentsToSkColor(comps, colorSpace);
-                bitmap.SetPixel(x, height - 1 - y, color.WithAlpha(alpha));
+                bitmap.SetPixel(x, y, color.WithAlpha(alpha));
             }
         }
 
