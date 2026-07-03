@@ -2,6 +2,7 @@ using Pdfe.Core.ColorSpaces;
 using Pdfe.Core.Content;
 using Pdfe.Core.Document;
 using Pdfe.Core.Primitives;
+using Pdfe.Rendering.Shadings;
 using SkiaSharp;
 
 namespace Pdfe.Rendering;
@@ -671,41 +672,15 @@ internal partial class RenderContext
                 break;
             }
 
-            var patchPoints = ResolveMeshPatchPoints(points, previous, flag, tensorPatch);
-            var patch = MeshPatch.From(patchPoints, ResolveMeshColors(colors, previous, flag));
+            var patchPoints = PdfMeshPatchBuilder.ResolveCanonicalPatchPoints(points, previous, flag, tensorPatch);
+            var patch = MeshPatch.From(
+                patchPoints,
+                PdfMeshPatchBuilder.ResolveCanonicalPatchColors(colors, previous, flag));
             patches.Add(patch);
             previous = patch;
         }
 
         return patches;
-    }
-
-    private static IReadOnlyList<SKPoint> ResolveMeshPatchPoints(
-        IReadOnlyList<SKPoint> newPoints,
-        MeshPatch? previous,
-        int flag,
-        bool tensorPatch)
-    {
-        if (flag == 0 || previous == null)
-            return newPoints;
-
-        var previousPoints = previous.Points;
-        var shared = flag switch
-        {
-            1 when previousPoints.Count >= 7 => new[] { previousPoints[3], previousPoints[4], previousPoints[5], previousPoints[6] },
-            2 when previousPoints.Count >= 10 => new[] { previousPoints[6], previousPoints[7], previousPoints[8], previousPoints[9] },
-            3 when tensorPatch && previousPoints.Count >= 12 => new[] { previousPoints[9], previousPoints[10], previousPoints[11], previousPoints[0] },
-            3 when previousPoints.Count >= 12 => new[] { previousPoints[9], previousPoints[10], previousPoints[11], previousPoints[0] },
-            _ => Array.Empty<SKPoint>()
-        };
-
-        if (shared.Length == 0)
-            return newPoints;
-
-        var resolved = new List<SKPoint>(shared.Length + newPoints.Count);
-        resolved.AddRange(shared);
-        resolved.AddRange(newPoints);
-        return resolved;
     }
 
     private static double[] ReadMeshComponents(
@@ -743,26 +718,6 @@ internal partial class RenderContext
             return Math.Max(1, (decode.Count - 4) / 2);
 
         return Math.Max(1, colorSpace.Components);
-    }
-
-    private static SKColor[] ResolveMeshColors(
-        List<SKColor> newColors,
-        MeshPatch? previous,
-        int flag)
-    {
-        if (newColors.Count >= 4)
-            return newColors.Take(4).ToArray();
-
-        if (previous == null)
-            return new[] { newColors[0], newColors[0], newColors[^1], newColors[^1] };
-
-        return flag switch
-        {
-            1 => new[] { previous.Colors[1], previous.Colors[2], newColors[0], newColors[^1] },
-            2 => new[] { previous.Colors[2], previous.Colors[3], newColors[0], newColors[^1] },
-            3 => new[] { previous.Colors[3], previous.Colors[0], newColors[0], newColors[^1] },
-            _ => new[] { newColors[0], newColors[0], newColors[^1], newColors[^1] }
-        };
     }
 
     private void DrawMeshPatches(IReadOnlyList<MeshPatch> patches, bool tensorPatch)
@@ -927,7 +882,7 @@ internal partial class RenderContext
                 var u = col / (double)steps;
                 vertices[row, col] = new MeshVertex(
                     0,
-                    EvaluateCoonsPatchPoint(patch.Points, u, v),
+                    EvaluateTensorPatchPoint(patch.Points, u, v),
                     Bilinear(patch.Colors, u, v));
             }
         }
@@ -1033,26 +988,7 @@ internal partial class RenderContext
     }
 
     private static SKPoint GetTensorPatchPoint(IReadOnlyList<SKPoint> points, int row, int col)
-        => (row, col) switch
-        {
-            (0, 0) => points[0],
-            (0, 1) => points[1],
-            (0, 2) => points[2],
-            (0, 3) => points[3],
-            (1, 0) => points[11],
-            (1, 1) => points[12],
-            (1, 2) => points[13],
-            (1, 3) => points[4],
-            (2, 0) => points[10],
-            (2, 1) => points[15],
-            (2, 2) => points[14],
-            (2, 3) => points[5],
-            (3, 0) => points[9],
-            (3, 1) => points[8],
-            (3, 2) => points[7],
-            (3, 3) => points[6],
-            _ => points[0]
-        };
+        => points[(row * 4) + col];
 
     private static void RasterizeMeshTriangle(
         SKBitmap bitmap,
