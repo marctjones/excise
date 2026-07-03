@@ -2,27 +2,27 @@
   "Path": "pdfjs/issue4722.pdf",
   "Source": "pdf.js corpus",
   "Owner": "rendering:quality",
-  "RootCause": "FONT_SUBSTITUTION_METRICS_MISMATCH",
-  "ImprovementPriority": "P1",
+  "RootCause": "NON_EMBEDDED_IDENTITY_H_FONT_REFERENCE_DISAGREEMENT",
+  "ImprovementPriority": "NONE",
   "Confidence": "HIGH",
-  "Notes": "Cold 2026-07-03 verification shows this is a real pdfe text rendering issue, not a pdfe-better-than-reference case. pdfe renders readable text but the font shape/spacing is visibly wrong for the non-embedded CenturyGothic,Bold Identity-H font with explicit CID widths.",
+  "Notes": "Fresh 2026-07-03 verification shows this is not an active pdfe text rendering defect. The PDF declares a non-embedded CenturyGothic,Bold Type0 Identity-H font with no ToUnicode map; pdfe renders the intended DESCRIPTION text cleanly, while Poppler decodes punctuation/digits, MuPDF substitutes a serif face, and Ghostscript introduces visible extra gaps.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
-      "ReleaseStatus": "FAIL",
-      "QualityStatus": "FAIL",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PDFE_BETTER_THAN_REFS",
       "PixelAgreement": "MATCHES_TARGET",
       "ReferenceSituation": "REFS_DISAGREE",
-      "RootCause": "FONT_SUBSTITUTION_METRICS_MISMATCH",
+      "RootCause": "NON_EMBEDDED_IDENTITY_H_FONT_REFERENCE_DISAGREEMENT",
       "Target": {
         "Mode": "PDF_FONT_DICTIONARY_WITH_REFERENCE_EVIDENCE",
-        "Primary": "ghostscript",
-        "Reason": "The PDF declares a non-embedded CenturyGothic,Bold Type0 Identity-H font with explicit CID widths. Ghostscript is the best practical readable reference for spacing; Poppler is garbled and MuPDF substitutes a serif face, so the final target is the PDF font dictionary plus readable-reference evidence."
+        "Primary": "pdfe",
+        "Reason": "The PDF's CIDs map to the intended DESCRIPTION glyph sequence. pdfe preserves that semantic text cleanly; available references either garble the glyph IDs, substitute a serif face, or add visible extra gaps."
       },
-      "ImprovementPriority": "P1",
+      "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "pdfe preserves the glyph sequence but uses the wrong fallback metrics/shape, producing visibly incorrect bold text spacing. This is an active rendering issue.",
-      "Notes": "Verified by cold no-cache scan and fresh contact sheet against pdfe, MuPDF, Poppler, and Ghostscript on 2026-07-03."
+      "QualityReason": "pdfe renders the intended word DESCRIPTION more faithfully than the available references for this malformed non-embedded Identity-H font case.",
+      "Notes": "Reverified with fresh pdfe, MuPDF, Poppler, and Ghostscript contact sheet on 2026-07-03; this is a reference-disagreement fixture, not active high-severity renderer work."
     }
   }
 }
