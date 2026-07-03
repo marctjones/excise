@@ -13,18 +13,19 @@
     "1": {
       "ExpectedRawStatus": "DIFF",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "GOOD_ENOUGH",
-      "PixelAgreement": "MATCHES_ONE_REFERENCE",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_TARGET",
       "ReferenceSituation": "REFS_DISAGREE",
       "RootCause": "PAGE_BOX_DISAGREEMENT",
       "Target": {
-        "Mode": "QUALITY_STANDARD",
-        "Reason": "Reference renderers disagree due to policy-sensitive rendering; judge by documented visual quality standard."
+        "Mode": "ACCEPTED_REFERENCE",
+        "Primary": "mutool",
+        "Reason": "MuPDF is the accepted effective-page-box target; pdfe matches the same visible page extent while Poppler/Ghostscript choose incompatible extents."
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Page-box normalization policy owns this case unless content loss is reproduced.",
-      "Notes": "Reference outputs disagree on the effective page surface."
+      "QualityReason": "Focused 150 DPI review shows pdfe and MuPDF render the same cropped Experimentation page; residual difference is small text antialiasing.",
+      "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders on 2026-07-03."
     }
   }
 }

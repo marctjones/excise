@@ -10,18 +10,19 @@
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "GOOD_ENOUGH",
-      "PixelAgreement": "MATCHES_SOME",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "PixelAgreement": "MATCHES_TARGET",
       "ReferenceSituation": "REFS_DISAGREE",
       "RootCause": "PAGE_BOX_DISAGREEMENT",
       "Target": {
-        "Mode": "QUALITY_STANDARD",
-        "Reason": "Reference renderers disagree due to policy-sensitive rendering; judge by documented visual quality standard."
+        "Mode": "ACCEPTED_REFERENCE",
+        "Primary": "mutool",
+        "Reason": "MuPDF is the accepted target for this huge-page rendering case; pdfe also matches Ghostscript while Poppler renders an incompatible striped pattern."
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Page geometry or effective page extent differs between references; pdfe output remains inspectable.",
-      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+      "QualityReason": "Focused review shows pdfe matches the MuPDF/Ghostscript solid-red page semantics; residual difference against MuPDF is negligible antialias/noise.",
+      "Notes": "Reviewed at fallback/lower DPI against current pdfe, MuPDF, Cairo, and Ghostscript renders on 2026-07-03."
     }
   }
 }

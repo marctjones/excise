@@ -8,20 +8,20 @@
   "Notes": "Focused review: pdfe renders all expected content. The RGB Adobe APP14 DCT fix removed the severe green cast; current output aligns with the Cairo/MuPDF reference family while Ghostscript uses darker raster linework.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "PASS_ONE",
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "GOOD_ENOUGH",
-      "PixelAgreement": "MATCHES_SOME",
-      "ReferenceSituation": "REFS_DISAGREE",
+      "QualityStatus": "PIXEL_EXACT",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
+      "ReferenceSituation": "REFS_AGREE",
       "RootCause": "TECHNICAL_LINEWORK_REFERENCE_RASTERIZATION_DISAGREEMENT",
       "Target": {
-        "Mode": "QUALITY_STANDARD",
-        "Reason": "Current pdfe output is color-correct and inspectable, and it agrees with the Cairo/MuPDF reference family; Ghostscript is darker but not a better target for this rasterized technical drawing."
+        "Mode": "REFERENCE_CONSENSUS",
+        "Reason": "Focused 2026-07-03 raw scan now passes all available required references for this technical drawing."
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "pdfe renders the full drawing and annotations; residual differences are bounded reference rasterization and antialias variance.",
-      "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders after the DCT color-transform fix; do not count as pixel-perfect."
+      "QualityReason": "Focused 150 DPI scan now reports raw PASS; no residual quality exception is needed.",
+      "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders on 2026-07-03."
     }
   }
 }

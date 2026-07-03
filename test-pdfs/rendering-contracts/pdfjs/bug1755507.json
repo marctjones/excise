@@ -10,19 +10,18 @@
     "1": {
       "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "GOOD_ENOUGH",
+      "QualityStatus": "PIXEL_EXACT",
       "PixelAgreement": "MATCHES_ALL_REQUIRED",
       "ReferenceSituation": "REFS_AGREE",
       "RootCause": "REFERENCE_ANTIALIASING_NOISE",
       "Target": {
-        "Mode": "REFERENCE_RENDERER",
-        "Primary": "mutool",
-        "Reason": "MuPDF is the closest current target and pdfe is inside the raw PASS threshold; residual differences are antialiasing-level."
+        "Mode": "REFERENCE_CONSENSUS",
+        "Reason": "Focused 2026-07-03 raw scan passes all available required references."
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Residual difference is low-impact antialiasing; target oracle is mutool and current pdfe is within threshold.",
-      "Notes": "Current focused quality scan treats this as resolved; no active renderer improvement target remains."
+      "QualityReason": "Focused 150 DPI scan now reports raw PASS; no residual quality exception is needed.",
+      "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders on 2026-07-03."
     }
   }
 }

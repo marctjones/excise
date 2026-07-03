@@ -10,19 +10,18 @@
     "1": {
       "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "GOOD_ENOUGH",
+      "QualityStatus": "PIXEL_EXACT",
       "PixelAgreement": "MATCHES_ALL_REQUIRED",
       "ReferenceSituation": "REFS_AGREE",
       "RootCause": "MARKED_CONTENT_NON_VISUAL_METADATA",
       "Target": {
-        "Mode": "REFERENCE_RENDERER",
-        "Primary": "mutool",
-        "Reason": "MuPDF is the closest current target; marked-content metadata is non-visual and residual differences are within the raw PASS threshold."
+        "Mode": "REFERENCE_CONSENSUS",
+        "Reason": "Focused 2026-07-03 raw scan passes all available required references; marked-content metadata remains non-visual."
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Marked content does not affect visual rendering; target oracle is mutool and current pdfe is within threshold.",
-      "Notes": "Current focused quality scan treats this as resolved; no active renderer improvement target remains."
+      "QualityReason": "Focused 150 DPI scan now reports raw PASS; marked content remains a non-visual metadata feature.",
+      "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders on 2026-07-03."
     }
   }
 }

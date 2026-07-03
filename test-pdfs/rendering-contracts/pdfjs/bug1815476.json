@@ -10,18 +10,18 @@
     "1": {
       "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "GOOD_ENOUGH",
+      "QualityStatus": "PIXEL_EXACT",
       "PixelAgreement": "MATCHES_ALL_REQUIRED",
       "ReferenceSituation": "REFS_AGREE",
       "RootCause": "BOUNDED_MIXED_RENDERING_NOISE",
       "Target": {
-        "Mode": "QUALITY_STANDARD",
-        "Reason": "Reference renderers disagree due to policy-sensitive rendering; judge by documented visual quality standard."
+        "Mode": "REFERENCE_CONSENSUS",
+        "Reason": "Focused 2026-07-03 raw scan passes all available required references."
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Residual difference is localized image/text rasterization variance; target oracle is mutool and current pdfe is within threshold.",
-      "Notes": "Current all-oracle scan matches the MuPDF target after the RGB Adobe APP14 DCT transform fix."
+      "QualityReason": "Focused 150 DPI scan now reports raw PASS; no residual quality exception is needed.",
+      "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders on 2026-07-03."
     }
   }
 }
