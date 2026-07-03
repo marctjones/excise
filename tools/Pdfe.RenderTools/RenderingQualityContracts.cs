@@ -406,7 +406,10 @@ partial class Program
             {
                 entry.releaseStatus = string.IsNullOrWhiteSpace(page.ReleaseStatus) ? "PASS" : page.ReleaseStatus;
                 entry.qualityStatus = string.IsNullOrWhiteSpace(page.QualityStatus) ? entry.qualityStatus : page.QualityStatus;
-                entry.pixelAgreement = string.IsNullOrWhiteSpace(page.PixelAgreement) ? entry.pixelAgreement : page.PixelAgreement;
+                entry.pixelAgreement = NormalizeContractPixelAgreement(
+                    entry,
+                    string.IsNullOrWhiteSpace(page.PixelAgreement) ? entry.pixelAgreement : page.PixelAgreement,
+                    contract);
                 entry.referenceSituation = string.IsNullOrWhiteSpace(page.ReferenceSituation) ? entry.referenceSituation : page.ReferenceSituation;
                 entry.targetBasis = page.Target?.Mode ?? entry.targetBasis;
                 entry.targetRenderer = page.Target?.Primary ?? entry.targetRenderer;
@@ -470,12 +473,12 @@ partial class Program
 
         if (entry.status == "PASS_ONE")
         {
-            if (entry.agreeingOracles == 1)
-                return "MATCHES_ONE_REFERENCE";
-
             if (!string.IsNullOrWhiteSpace(contract?.Target?.Primary)
                 && string.Equals(entry.bestOracle, contract.Target.Primary, StringComparison.Ordinal))
                 return "MATCHES_TARGET";
+
+            if (entry.agreeingOracles == 1)
+                return "MATCHES_ONE_REFERENCE";
 
             return "MATCHES_SOME";
         }
@@ -484,6 +487,23 @@ partial class Program
             return "MATCHES_NONE";
 
         return "NOT_COMPARABLE";
+    }
+
+    private static string NormalizeContractPixelAgreement(
+        CorpusScanEntry entry,
+        string proposed,
+        RenderingQualityPageMatch? contract)
+    {
+        if (entry.status == "PASS_ONE" && proposed == "MATCHES_NONE")
+            return InferPixelAgreement(entry, contract);
+
+        if (entry.status == "PASS" && proposed != "MATCHES_ALL_REQUIRED")
+            return "MATCHES_ALL_REQUIRED";
+
+        if (entry.status == "DIFF" && proposed is not "MATCHES_NONE" and not "NOT_COMPARABLE")
+            return "MATCHES_NONE";
+
+        return proposed;
     }
 
     private static string InferReferenceSituation(CorpusScanEntry entry)

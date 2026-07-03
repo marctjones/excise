@@ -377,6 +377,7 @@ public class CorpusScanClassificationTests
                       "ExpectedRawStatus": "PASS_ONE",
                       "ReleaseStatus": "PASS",
                       "QualityStatus": "FAIL",
+                      "PixelAgreement": "MATCHES_NONE",
                       "ReferenceSituation": "REFS_DISAGREE",
                       "QualityReason": "pdfe still misses the reviewed composite print target."
                     }
@@ -401,6 +402,9 @@ public class CorpusScanClassificationTests
             RenderProgram.ApplyRenderingQualityContracts(entries, set, strictContracts: false);
 
             entries[0].passOneReviewStatus.Should().Be("REJECTED_PASS_ONE");
+            entries[0].pixelAgreement.Should().Be("MATCHES_TARGET",
+                "raw PASS_ONE means pdfe matched at least one reference; semantic rejection belongs in qualityStatus/passOneReviewStatus, not MATCHES_NONE");
+            entries[0].qualityStatus.Should().Be("FAIL");
         }
         finally
         {
