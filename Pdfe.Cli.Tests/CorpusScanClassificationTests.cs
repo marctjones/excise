@@ -346,8 +346,65 @@ public class CorpusScanClassificationTests
 
             RenderProgram.ApplyRenderingQualityContracts(entries, set, strictContracts: false);
 
-            entries[0].releaseStatus.Should().Be("PASS");
-            entries[0].qualityStatus.Should().Be("MATCHES_ACCEPTED_REFERENCE");
+            entries[0].releaseStatus.Should().Be("NEEDS_REVIEW");
+            entries[0].qualityStatus.Should().Be("NEEDS_REVIEW");
+            entries[0].passOneReviewStatus.Should().Be("UNREVIEWED_PASS_ONE");
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void ApplyRenderingQualityContracts_FlagsOutlierPassOneAsUnreviewed()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "pdfe-contracts-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            File.WriteAllText(Path.Combine(dir, "outlier.json"), """
+                {
+                  "Path": "pdfjs/freeculture.pdf",
+                  "ReviewStatus": "NEEDS_REVIEW",
+                  "RootCause": "REFERENCE_ORACLE_DISAGREEMENT",
+                  "Target": {
+                    "Mode": "REFERENCE_RENDERER",
+                    "Primary": "mutool",
+                    "Reason": "Candidate target, pending visual/spec review."
+                  },
+                  "Pages": {
+                    "74": {
+                      "ExpectedRawStatus": "PASS_ONE",
+                      "ReleaseStatus": "PASS",
+                      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+                      "ReferenceSituation": "REFS_AGREE",
+                      "QualityReason": "Candidate PASS_ONE target requires review because pdfe matches only a non-central renderer."
+                    }
+                  }
+                }
+                """);
+            var set = RenderProgram.RenderingQualityContractSet.Load(dir);
+            var entries = new[]
+            {
+                new RenderProgram.CorpusScanEntry
+                {
+                    path = "pdfjs/freeculture.pdf",
+                    pageNumber = 74,
+                    status = "PASS_ONE",
+                    bestOracle = "mutool",
+                    comparedOracles = 3,
+                    agreeingOracles = 1,
+                    oracleComparisonPairs = 3,
+                    oracleDisagreeingPairs = 0,
+                    pdfeReferenceCenterRank = 3,
+                },
+            };
+
+            RenderProgram.ApplyRenderingQualityContracts(entries, set, strictContracts: false);
+
+            entries[0].releaseStatus.Should().Be("NEEDS_REVIEW");
+            entries[0].qualityStatus.Should().Be("NEEDS_REVIEW");
             entries[0].passOneReviewStatus.Should().Be("UNREVIEWED_PASS_ONE");
         }
         finally

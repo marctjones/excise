@@ -459,8 +459,10 @@ partial class Program
             entry.passOneReviewStatus = InferPassOneReviewStatus(entry, contract);
             if (entry.status == "PASS_ONE" && entry.passOneReviewStatus == PassOneReviewUnreviewed)
             {
+                entry.releaseStatus = "NEEDS_REVIEW";
+                entry.qualityStatus = "NEEDS_REVIEW";
                 entry.qualityReason = string.IsNullOrWhiteSpace(entry.qualityReason)
-                    ? "Raw PASS_ONE has not been assigned a reviewed target decision."
+                    ? DescribeUnreviewedPassOne(entry)
                     : entry.qualityReason;
             }
         }
@@ -587,6 +589,9 @@ partial class Program
         if (LooksLikeGeneratedBaseline(contract))
             return PassOneReviewUnreviewed;
 
+        if (LooksLikeOutlierPassOne(entry))
+            return PassOneReviewUnreviewed;
+
         if (contract.Target is null)
             return PassOneReviewUnreviewed;
 
@@ -594,6 +599,44 @@ partial class Program
             return PassOneReviewUnreviewed;
 
         return PassOneReviewAccepted;
+    }
+
+    private static bool LooksLikeOutlierPassOne(CorpusScanEntry entry)
+    {
+        if (entry.status != "PASS_ONE")
+            return false;
+
+        var comparedOracles = entry.comparedOracles.GetValueOrDefault();
+        if (comparedOracles < 3)
+            return false;
+
+        var agreeingOracles = entry.agreeingOracles.GetValueOrDefault();
+        var oraclePairs = entry.oracleComparisonPairs.GetValueOrDefault();
+        var disagreeingPairs = entry.oracleDisagreeingPairs.GetValueOrDefault();
+        var rank = entry.pdfeReferenceCenterRank.GetValueOrDefault();
+
+        // Hard suspect: pdfe matches exactly one renderer while the references
+        // agree with each other. This is not a reviewed target match.
+        if (agreeingOracles == 1 && oraclePairs > 0 && disagreeingPairs == 0)
+            return true;
+
+        // Softer suspect: pdfe's matching renderer is at the edge of a
+        // multi-reference comparison. This catches cases such as FreeCulture
+        // where pdfe tracks MuPDF while Poppler/Ghostscript cluster elsewhere.
+        if (agreeingOracles <= 1 && rank >= 3)
+            return true;
+
+        return false;
+    }
+
+    private static string DescribeUnreviewedPassOne(CorpusScanEntry entry)
+    {
+        if (LooksLikeOutlierPassOne(entry))
+        {
+            return "Raw PASS_ONE matches only a non-consensus or outlier reference renderer; choose the target by visual/spec review before accepting.";
+        }
+
+        return "Raw PASS_ONE has not been assigned a reviewed target decision.";
     }
 
     private static bool LooksLikeGeneratedBaseline(RenderingQualityPageMatch contract)
@@ -714,6 +757,12 @@ partial class Program
                         qualityStatus = entry.qualityStatus,
                         diffFraction = entry.diffFraction,
                         mae = entry.mae,
+                        comparedOracles = entry.comparedOracles,
+                        agreeingOracles = entry.agreeingOracles,
+                        oracleComparisonPairs = entry.oracleComparisonPairs,
+                        oracleDisagreeingPairs = entry.oracleDisagreeingPairs,
+                        referenceCenterAgreement = entry.referenceCenterAgreement,
+                        pdfeReferenceCenterRank = entry.pdfeReferenceCenterRank,
                     })
                     .ToArray(),
             })
@@ -1298,6 +1347,12 @@ partial class Program
         public string qualityStatus { get; set; } = "";
         public double diffFraction { get; set; }
         public double mae { get; set; }
+        public int? comparedOracles { get; set; }
+        public int? agreeingOracles { get; set; }
+        public int? oracleComparisonPairs { get; set; }
+        public int? oracleDisagreeingPairs { get; set; }
+        public bool? referenceCenterAgreement { get; set; }
+        public int? pdfeReferenceCenterRank { get; set; }
     }
 
     internal sealed class RenderingQualityReportEntry
@@ -1323,6 +1378,10 @@ partial class Program
         public double mae { get; set; }
         public int? comparedOracles { get; set; }
         public int? agreeingOracles { get; set; }
+        public int? oracleComparisonPairs { get; set; }
+        public int? oracleDisagreeingPairs { get; set; }
+        public bool? referenceCenterAgreement { get; set; }
+        public int? pdfeReferenceCenterRank { get; set; }
         public string? qualityReason { get; set; }
         public string? contractStatus { get; set; }
         public string? expectedRawStatus { get; set; }
@@ -1353,6 +1412,10 @@ partial class Program
                 mae = entry.mae,
                 comparedOracles = entry.comparedOracles,
                 agreeingOracles = entry.agreeingOracles,
+                oracleComparisonPairs = entry.oracleComparisonPairs,
+                oracleDisagreeingPairs = entry.oracleDisagreeingPairs,
+                referenceCenterAgreement = entry.referenceCenterAgreement,
+                pdfeReferenceCenterRank = entry.pdfeReferenceCenterRank,
                 qualityReason = entry.qualityReason,
                 contractStatus = entry.contractStatus,
                 expectedRawStatus = entry.expectedStatus,
