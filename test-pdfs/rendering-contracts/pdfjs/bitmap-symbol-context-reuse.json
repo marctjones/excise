@@ -4,8 +4,8 @@
   "Owner": "rendering:image",
   "RootCause": "IMAGE_ORACLE_DISAGREEMENT",
   "ImprovementPriority": "NONE",
-  "Confidence": "MEDIUM",
-  "Notes": "Migrated from the legacy TSV rendering manifests.",
+  "Confidence": "HIGH",
+  "Notes": "Evidence sheet: logs/render-quality/pass-one-triage-20260703/remaining/pdfjs_bitmap-symbol-context-reuse.pdf-p1-sheet.png. Reference warnings are JBIG2 decoder/refinement-context failures, not pdfe content loss.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
@@ -23,5 +23,13 @@
       "QualityReason": "JBIG2 bitmap/refinement fixture has bounded disagreement between reference image engines; pdfe matches at least one oracle.",
       "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
     }
+  },
+  "ReviewStatus": "REVIEWED",
+  "Issue": 552,
+  "QualityReason": "Reviewed 2026-07-03 with current pdfe, MuPDF, Poppler, and Ghostscript sheets. This JBIG2 context-reuse stress file splits references: pdfe and MuPDF render the intended black bitmap region, while Poppler/Ghostscript warn or fail blank. Treat MuPDF as the accepted image-decoder target.",
+  "Target": {
+    "Mode": "REFERENCE_RENDERER",
+    "Primary": "mutool",
+    "Reason": "MuPDF renders the same semantic black bitmap region as pdfe; Poppler/Ghostscript fail this JBIG2 context-reuse case blank."
   }
 }

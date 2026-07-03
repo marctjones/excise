@@ -41,8 +41,12 @@ internal partial class RenderContext
             {
                 // No baked /AP /N stream — synthesize a minimal default
                 // appearance for the subtypes commercial viewers
-                // routinely show (interactive widgets, link rectangles,
-                // shape annotations). Without this, signature widgets
+                // routinely show (interactive widgets and shape
+                // annotations). Link annotations remain an interactive
+                // overlay unless the PDF supplies a real /AP stream;
+                // synthesizing borders can obscure page content when a
+                // producer writes a large /Border width.
+                // Without this, signature widgets
                 // and unfilled form fields are invisible and PDFs look
                 // visibly less complete than in Acrobat / Preview /
                 // Chrome.
@@ -204,7 +208,6 @@ internal partial class RenderContext
                 RenderWidgetDefault(annot, rect);
                 break;
             case Pdfe.Core.Document.PdfAnnotationSubtype.Link:
-                RenderLinkDefault(annot, rect);
                 break;
             case Pdfe.Core.Document.PdfAnnotationSubtype.Square:
                 RenderShapeDefault(annot, rect, isEllipse: false);
@@ -328,27 +331,6 @@ internal partial class RenderContext
         {
             _canvas.Restore();
         }
-    }
-
-    /// <summary>
-    /// Stroke a thin border around a /Link annotation when /C is set —
-    /// mimics Acrobat's "show all link borders" default. Without /C the
-    /// link is invisible in print, which matches every commercial viewer.
-    /// </summary>
-    private void RenderLinkDefault(Pdfe.Core.Document.PdfAnnotation annot, SKRect rect)
-    {
-        if (annot.Color is not { } color) return;
-        var (r, g, b) = color;
-        float borderWidth = (float)(annot.BorderWidth ?? 1.0);
-
-        using var paint = new SKPaint
-        {
-            IsAntialias = _options.AntiAlias,
-            Style = SKPaintStyle.Stroke,
-            StrokeWidth = borderWidth,
-            Color = RgbToColor(r, g, b),
-        };
-        _canvas.DrawRect(rect, paint);
     }
 
     /// <summary>

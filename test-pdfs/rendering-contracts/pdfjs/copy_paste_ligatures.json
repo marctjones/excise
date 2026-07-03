@@ -1,11 +1,11 @@
 {
   "Path": "pdfjs/copy_paste_ligatures.pdf",
   "Source": "pdf.js corpus",
-  "Owner": "rendering:text",
-  "RootCause": "FONT_OR_TEXT_ORACLE_DISAGREEMENT",
+  "Owner": "rendering:page-geometry",
+  "RootCause": "PAGE_BOX_REFERENCE_DISAGREEMENT",
   "ImprovementPriority": "NONE",
-  "Confidence": "MEDIUM",
-  "Notes": "Migrated from the legacy TSV rendering manifests.",
+  "Confidence": "HIGH",
+  "Notes": "Evidence sheet: logs/render-quality/pass-one-triage-20260703/remaining/pdfjs_copy_paste_ligatures.pdf-p1-sheet.png. pdfinfo shows a tight text CropBox inside a large MediaBox.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
@@ -23,5 +23,13 @@
       "QualityReason": "Text/font fixture renders meaningful content; remaining PASS_ONE status is bounded oracle/font-policy disagreement.",
       "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
     }
+  },
+  "ReviewStatus": "REVIEWED",
+  "Issue": 551,
+  "QualityReason": "Reviewed 2026-07-03: pdfe and MuPDF render the ligature text at the CropBox display extent. Poppler/Ghostscript render a much smaller apparent extent. The glyph content is present and semantically aligned with MuPDF.",
+  "Target": {
+    "Mode": "REFERENCE_RENDERER",
+    "Primary": "mutool",
+    "Reason": "MuPDF agrees with pdfe on the CropBox display target and visible ligature text."
   }
 }

@@ -3,9 +3,9 @@
   "Source": "pdf.js corpus",
   "Owner": "rendering:page-geometry",
   "RootCause": "PAGE_BOX_DISAGREEMENT",
-  "ImprovementPriority": "P2",
-  "Confidence": "MEDIUM",
-  "Notes": "Migrated from the legacy TSV rendering manifests.",
+  "ImprovementPriority": "NONE",
+  "Confidence": "HIGH",
+  "Notes": "PASS_ONE rows are retained as reference-oracle disagreements, not unresolved semantic rendering defects. Evidence sheets live under logs/render-quality/pass-one-triage-20260703/freeculture/.",
   "Pages": {
     "129": {
       "ExpectedRawStatus": "PASS_ONE",
@@ -5919,5 +5919,13 @@
       "QualityReason": "Baseline classification inferred from full all-pages raw corpus scan; promote to a reviewed contract when triaged.",
       "Notes": "Auto-classified from exploratory-report-test-pdfs-all-20260622-passone-sharded-coverage.json."
     }
+  },
+  "ReviewStatus": "REVIEWED",
+  "Issue": 548,
+  "QualityReason": "Reviewed 2026-07-03 against sampled FreeCulture pages 1, 74, 110, 161, 171, 298, 340, and 342 plus PDF page dictionaries. The PDF has a MediaBox of 612 x 792 and a CropBox/TrimBox of 489.6 x 734.4 offset inside it. pdfe matches MuPDF on the CropBox display area; Poppler/Ghostscript include the larger media/printer-mark extent. Treat MuPDF/CropBox as the screen-rendering target for this corpus file.",
+  "Target": {
+    "Mode": "REFERENCE_CONSENSUS",
+    "Primary": "mutool",
+    "Reason": "MuPDF agrees with pdfe on the CropBox display boundary. The disagreeing oracles include the MediaBox/printer-mark extent, which is not the intended screen-display target for this file."
   }
 }

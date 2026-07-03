@@ -5,7 +5,7 @@
   "RootCause": "ZAPF_DINGBATS_CHECKMARK_ENCODING",
   "ImprovementPriority": "NONE",
   "Confidence": "HIGH",
-  "Notes": "pdfe now decodes the selected checkbox appearance through ZapfDingbatsEncoding; remaining PASS_ONE status is reference page-box disagreement.",
+  "Notes": "Evidence sheet: logs/render-quality/pass-one-triage-20260703/remaining/pdfjs_bug1802506.pdf-p1-sheet.png. pdfinfo confirms a small CropBox inside a letter MediaBox.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
@@ -24,5 +24,13 @@
       "QualityReason": "pdfe now paints the ZapfDingbats checkmark and closely matches the accepted MuPDF target; remaining raw PASS_ONE is caused by reference page-box disagreement.",
       "Notes": "Focused regression checks the upper-right checkmark arm so a missing-glyph rectangle cannot satisfy the test."
     }
+  },
+  "ReviewStatus": "REVIEWED",
+  "Issue": 551,
+  "QualityReason": "Reviewed 2026-07-03: pdfe and MuPDF both render the ZapfDingbats checkmark and radio symbol at the CropBox display extent. Poppler/Ghostscript render the same content at a smaller apparent extent. No current missing-glyph bug remains.",
+  "Target": {
+    "Mode": "REFERENCE_RENDERER",
+    "Primary": "mutool",
+    "Reason": "MuPDF agrees with pdfe on the CropBox display boundary and correct ZapfDingbats appearance."
   }
 }

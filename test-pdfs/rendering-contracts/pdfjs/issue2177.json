@@ -1,11 +1,11 @@
 {
   "Path": "pdfjs/issue2177.pdf",
   "Source": "pdf.js corpus",
-  "Owner": "rendering:quality",
+  "Owner": "rendering:patterns",
   "RootCause": "REFERENCE_PATTERN_RASTERIZATION_DISAGREEMENT",
   "ImprovementPriority": "NONE",
   "Confidence": "HIGH",
-  "Notes": "Focused review: pdfe and MuPDF agree on the patterned shape composition; other references differ in rasterization.",
+  "Notes": "Evidence sheet: logs/render-quality/pass-one-triage-20260703/remaining/pdfjs_issue2177.pdf-p1-sheet.png. pdfinfo shows CropBox 0 0 225 225 inside a 900 x 900 MediaBox.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
@@ -24,5 +24,13 @@
       "QualityReason": "pdfe matches the accepted MuPDF target for this pattern-composition fixture.",
       "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders."
     }
+  },
+  "ReviewStatus": "REVIEWED",
+  "Issue": 552,
+  "QualityReason": "Reviewed 2026-07-03: pdfe and MuPDF agree on the visible tiling-pattern geometry and colors. Poppler/Ghostscript use a smaller apparent extent and differ in rasterization. No current pdfe pattern semantics issue is visible.",
+  "Target": {
+    "Mode": "REFERENCE_RENDERER",
+    "Primary": "mutool",
+    "Reason": "MuPDF agrees with pdfe on the visible pattern composition at the CropBox display target."
   }
 }

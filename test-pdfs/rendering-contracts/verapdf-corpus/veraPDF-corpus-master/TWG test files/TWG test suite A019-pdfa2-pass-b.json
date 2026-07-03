@@ -1,11 +1,11 @@
 {
   "Path": "verapdf-corpus/veraPDF-corpus-master/TWG test files/TWG test suite A019-pdfa2-pass-b.pdf",
   "Source": "veraPDF corpus",
-  "Owner": "rendering:quality",
-  "RootCause": "CONFORMANCE_ORACLE_DISAGREEMENT",
+  "Owner": "rendering:graphics-state",
+  "RootCause": "EXTREME_CTM_REFERENCE_DISAGREEMENT",
   "ImprovementPriority": "NONE",
-  "Confidence": "MEDIUM",
-  "Notes": "Migrated from the legacy TSV rendering manifests.",
+  "Confidence": "HIGH",
+  "Notes": "Evidence sheet: logs/render-quality/pass-one-triage-20260703/remaining/verapdf-corpus_veraPDF-corpus-master_TWG_test_files_TWG_test_suite_A019-pdfa2-pass-b.pdf-p1-sheet.png. Object outline says expected result pass and expected message references the extreme cm operand.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
@@ -13,15 +13,24 @@
       "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
       "PixelAgreement": "MATCHES_SOME",
       "ReferenceSituation": "REFS_DISAGREE",
-      "RootCause": "CONFORMANCE_ORACLE_DISAGREEMENT",
+      "RootCause": "EXTREME_CTM_REFERENCE_DISAGREEMENT",
       "Target": {
         "Mode": "REFERENCE_CONSENSUS",
-        "Reason": "Use all configured reference renderers; when they disagree, matching an accepted renderer is sufficient."
+        "Primary": "pdftocairo",
+        "Reason": "The red rectangle is translated off page by the extreme cm operand; blank output is the accepted screen-render result."
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Conformance-suite fixture has bounded reference disagreement; pdfe matches at least one oracle.",
-      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+      "QualityReason": "pdfe blank output is accepted; references that show a red rectangle are clamping/handling the extreme CTM differently.",
+      "Notes": "Reviewed against content stream object 8 and current contact sheet."
     }
+  },
+  "ReviewStatus": "REVIEWED",
+  "Issue": 552,
+  "QualityReason": "Reviewed 2026-07-03: the form content applies a cm with x translation about -3.4029e38 before painting the red rectangle, so the rectangle is off page. pdfe and Poppler blank output is semantically correct for the PDF/A pass fixture; MuPDF/Ghostscript clamp or otherwise render the red rectangle.",
+  "Target": {
+    "Mode": "REFERENCE_CONSENSUS",
+    "Primary": "pdftocairo",
+    "Reason": "Poppler agrees with pdfe that the extreme translated rectangle is off page; the veraPDF outline marks the case as PDF/A pass."
   }
 }

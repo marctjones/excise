@@ -1,11 +1,11 @@
 {
   "Path": "pdfjs/bug1552113.pdf",
   "Source": "pdf.js corpus",
-  "Owner": "rendering:text",
-  "RootCause": "FONT_OR_TEXT_ORACLE_DISAGREEMENT",
-  "ImprovementPriority": "NONE",
-  "Confidence": "MEDIUM",
-  "Notes": "Migrated from the legacy TSV rendering manifests.",
+  "Owner": "rendering:annotations",
+  "RootCause": "LINK_ANNOTATION_SYNTHETIC_BORDER_OBSCURES_TEXT",
+  "ImprovementPriority": "DONE",
+  "Confidence": "HIGH",
+  "Notes": "Evidence sheet: logs/render-quality/pass-one-triage-20260703/bug1552113-fixed/sheet.png. Regression covered by AnnotationDefaultAppearanceTests.RenderPage_LinkAnnotationWithoutAppearance_DoesNotPaintSyntheticBorder.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
@@ -13,15 +13,24 @@
       "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
       "PixelAgreement": "MATCHES_ONE_REFERENCE",
       "ReferenceSituation": "REFS_DISAGREE",
-      "RootCause": "FONT_OR_TEXT_ORACLE_DISAGREEMENT",
+      "RootCause": "LINK_ANNOTATION_SYNTHETIC_BORDER_OBSCURES_TEXT",
       "Target": {
-        "Mode": "REFERENCE_CONSENSUS",
-        "Reason": "Use all configured reference renderers; when they disagree, matching an accepted renderer is sufficient."
+        "Mode": "REFERENCE_RENDERER",
+        "Primary": "mutool",
+        "Reason": "Fresh focused render after the link default-appearance fix matches the text-preserving MuPDF/Ghostscript behavior."
       },
-      "ImprovementPriority": "NONE",
+      "ImprovementPriority": "DONE",
       "Confidence": "HIGH",
-      "QualityReason": "Text/font fixture renders meaningful content; remaining PASS_ONE status is bounded oracle/font-policy disagreement.",
-      "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
+      "QualityReason": "Fixed: no-/AP Link annotations remain interactive overlays and are not painted as synthetic page content.",
+      "Notes": "Focused sheet: logs/render-quality/pass-one-triage-20260703/bug1552113-fixed/sheet.png."
     }
+  },
+  "ReviewStatus": "REVIEWED",
+  "Issue": 551,
+  "QualityReason": "Fixed 2026-07-03: pdfe no longer paints synthetic borders for Link annotations without /AP streams. The fixture contains /Border [0 0 112], which previously painted a huge blue stroke over text. Fresh focused render shows pdfe now matches MuPDF/Ghostscript and preserves the visible text.",
+  "Target": {
+    "Mode": "REFERENCE_RENDERER",
+    "Primary": "mutool",
+    "Reason": "MuPDF and Ghostscript preserve the visible text and do not synthesize the giant no-/AP Link border into page content."
   }
 }

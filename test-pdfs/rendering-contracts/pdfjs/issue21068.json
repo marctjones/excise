@@ -1,11 +1,11 @@
 {
   "Path": "pdfjs/issue21068.pdf",
   "Source": "pdf.js corpus",
-  "Owner": "rendering:quality",
+  "Owner": "rendering:page-geometry",
   "RootCause": "PAGE_BOX_REFERENCE_DISAGREEMENT",
   "ImprovementPriority": "NONE",
   "Confidence": "HIGH",
-  "Notes": "Focused review: pdfe and MuPDF use the tight page extent while Ghostscript renders the same grid on a much larger canvas.",
+  "Notes": "Evidence sheet: logs/render-quality/pass-one-triage-20260703/remaining/pdfjs_issue21068.pdf-p1-sheet.png. pdfinfo confirms CropBox 198.11 490.03 361.31 651.49 inside letter MediaBox.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
@@ -24,5 +24,13 @@
       "QualityReason": "pdfe matches the accepted tight-page target; raw PASS_ONE is due reference page-box disagreement.",
       "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders."
     }
+  },
+  "ReviewStatus": "REVIEWED",
+  "Issue": 549,
+  "QualityReason": "Reviewed 2026-07-03: pdfe and MuPDF render the grid at the CropBox display extent. Poppler/Ghostscript use a smaller apparent extent; the grid semantics are otherwise preserved.",
+  "Target": {
+    "Mode": "REFERENCE_RENDERER",
+    "Primary": "mutool",
+    "Reason": "MuPDF agrees with pdfe on CropBox display geometry."
   }
 }

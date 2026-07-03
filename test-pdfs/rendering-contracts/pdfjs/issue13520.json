@@ -1,28 +1,36 @@
 {
   "Path": "pdfjs/issue13520.pdf",
   "Source": "pdf.js corpus",
-  "Owner": "rendering:quality",
-  "RootCause": "PAGE_BOX_REFERENCE_DISAGREEMENT",
-  "ImprovementPriority": "NONE",
+  "Owner": "rendering:transparency",
+  "RootCause": "CMYK_SOFT_MASK_SCREEN_BLEND_ARTIFACT",
+  "ImprovementPriority": "P1",
   "Confidence": "HIGH",
-  "Notes": "Focused review: pdfe and MuPDF use the tight page extent while Ghostscript renders the same content on a much larger canvas.",
+  "Notes": "Evidence sheet: logs/render-quality/pass-one-triage-20260703/remaining/pdfjs_issue13520.pdf-p1-sheet.png. Prior PAGE_BOX_REFERENCE_DISAGREEMENT contract was stale; pdfinfo confirms CropBox is tight, but the remaining difference is color/composite semantics.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
-      "ReleaseStatus": "PASS",
-      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "ReleaseStatus": "FAIL",
+      "QualityStatus": "FAIL",
       "PixelAgreement": "MATCHES_TARGET",
       "ReferenceSituation": "REFS_DISAGREE",
-      "RootCause": "PAGE_BOX_REFERENCE_DISAGREEMENT",
+      "RootCause": "CMYK_SOFT_MASK_SCREEN_BLEND_ARTIFACT",
       "Target": {
         "Mode": "REFERENCE_RENDERER",
         "Primary": "mutool",
-        "Reason": "MuPDF and pdfe agree on the tight page/crop extent; Ghostscript is the large-canvas outlier."
+        "Reason": "MuPDF is the best target for the CropBox render and does not show the pdfe right-side dark soft-mask/composite artifact."
       },
-      "ImprovementPriority": "NONE",
+      "ImprovementPriority": "P1",
       "Confidence": "HIGH",
-      "QualityReason": "pdfe matches the accepted tight-page target; raw PASS_ONE is due reference page-box disagreement.",
-      "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders."
+      "QualityReason": "Real visible rendering issue: CMYK transparency group with /BM /Screen and luminosity soft masks renders too dark on the right side in pdfe.",
+      "Notes": "Focused sheet: logs/render-quality/pass-one-triage-20260703/remaining/pdfjs_issue13520.pdf-p1-sheet.png."
     }
+  },
+  "Issue": 549,
+  "ReviewStatus": "REVIEWED",
+  "QualityReason": "Reviewed 2026-07-03: current sheet shows a real visible CMYK transparency/soft-mask artifact on the right side of the form. pdfe preserves page extent but does not match the accepted MuPDF target.",
+  "Target": {
+    "Mode": "REFERENCE_RENDERER",
+    "Primary": "mutool",
+    "Reason": "MuPDF renders the full CropBox extent without the dark right-side CMYK transparency artifact; Poppler/Ghostscript use a smaller apparent extent and are less useful targets for this page."
   }
 }

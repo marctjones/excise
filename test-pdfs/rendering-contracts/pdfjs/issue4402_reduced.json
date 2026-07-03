@@ -1,11 +1,11 @@
 {
   "Path": "pdfjs/issue4402_reduced.pdf",
   "Source": "pdf.js corpus",
-  "Owner": "rendering:quality",
-  "RootCause": "REDUCED_FIXTURE_ORACLE_DISAGREEMENT",
+  "Owner": "rendering:page-geometry",
+  "RootCause": "PAGE_BOX_REFERENCE_DISAGREEMENT",
   "ImprovementPriority": "NONE",
-  "Confidence": "MEDIUM",
-  "Notes": "Migrated from the legacy TSV rendering manifests.",
+  "Confidence": "HIGH",
+  "Notes": "Evidence sheet: logs/render-quality/pass-one-triage-20260703/remaining/pdfjs_issue4402_reduced.pdf-p1-sheet.png. pdfinfo confirms a tight heading CropBox inside an A4 MediaBox.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
@@ -23,5 +23,13 @@
       "QualityReason": "Reduced single-page fixture renders meaningful content with bounded oracle disagreement.",
       "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
     }
+  },
+  "ReviewStatus": "REVIEWED",
+  "Issue": 550,
+  "QualityReason": "Reviewed 2026-07-03: pdfe and MuPDF render the red heading and underline at the CropBox display extent. Poppler/Ghostscript render a much smaller apparent extent. The visible content is preserved.",
+  "Target": {
+    "Mode": "REFERENCE_RENDERER",
+    "Primary": "mutool",
+    "Reason": "MuPDF agrees with pdfe on CropBox display geometry and visible heading text."
   }
 }

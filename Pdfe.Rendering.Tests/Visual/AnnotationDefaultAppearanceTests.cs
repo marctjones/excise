@@ -28,6 +28,24 @@ public class AnnotationDefaultAppearanceTests
             "highlight opacity should honor /CA rather than always using a pale fallback alpha");
     }
 
+    [Fact]
+    public void RenderPage_LinkAnnotationWithoutAppearance_DoesNotPaintSyntheticBorder()
+    {
+        var pdf = CreatePdfWithAnnotation(
+            "<< /Type /Annot /Subtype /Link /Rect [5 25 155 45] " +
+            "/Border [0 0 112] /C [0 0 1] /A << /S /URI /URI (http://www.example.org) >> >>");
+
+        using var doc = PdfDocument.Open(pdf);
+        doc.GetPage(1).GetAnnotations()
+            .Should().ContainSingle(a => a.Subtype == PdfAnnotationSubtype.Link);
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, AntiAlias = false, BackgroundColor = SKColors.White });
+
+        CountStrongBluePixels(bitmap).Should().Be(0,
+            "a no-/AP link annotation is an interactive hit region, not page content to paint into the bitmap");
+    }
+
     private static int CountYellowishPixels(SKBitmap bitmap)
     {
         var count = 0;
@@ -52,6 +70,21 @@ public class AnnotationDefaultAppearanceTests
             {
                 var pixel = bitmap.GetPixel(x, y);
                 if (pixel.Red > 240 && pixel.Green > 240 && pixel.Blue < 40)
+                    count++;
+            }
+        }
+        return count;
+    }
+
+    private static int CountStrongBluePixels(SKBitmap bitmap)
+    {
+        var count = 0;
+        for (int y = 0; y < bitmap.Height; y++)
+        {
+            for (int x = 0; x < bitmap.Width; x++)
+            {
+                var pixel = bitmap.GetPixel(x, y);
+                if (pixel.Blue > 200 && pixel.Red < 80 && pixel.Green < 80)
                     count++;
             }
         }
