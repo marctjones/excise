@@ -831,7 +831,7 @@ internal partial class RenderContext
 
     private static void RasterizeTensorPatch(SKBitmap bitmap, MeshPatch patch, double minX, double minY, double maxX, double maxY)
     {
-        const int steps = 24;
+        var steps = CalculatePatchSubdivisionSteps(bitmap, patch, minX, minY, maxX, maxY);
         var vertices = new MeshVertex[steps + 1, steps + 1];
 
         for (var row = 0; row <= steps; row++)
@@ -871,7 +871,7 @@ internal partial class RenderContext
 
     private static void RasterizeCoonsPatch(SKBitmap bitmap, MeshPatch patch, double minX, double minY, double maxX, double maxY)
     {
-        const int steps = 24;
+        var steps = CalculatePatchSubdivisionSteps(bitmap, patch, minX, minY, maxX, maxY);
         var vertices = new MeshVertex[steps + 1, steps + 1];
 
         for (var row = 0; row <= steps; row++)
@@ -907,6 +907,20 @@ internal partial class RenderContext
                     maxY);
             }
         }
+    }
+
+    private static int CalculatePatchSubdivisionSteps(
+        SKBitmap bitmap,
+        MeshPatch patch,
+        double minX,
+        double minY,
+        double maxX,
+        double maxY)
+    {
+        var patchPixelWidth = (patch.MaxX - patch.MinX) / Math.Max(maxX - minX, 1e-9) * bitmap.Width;
+        var patchPixelHeight = (patch.MaxY - patch.MinY) / Math.Max(maxY - minY, 1e-9) * bitmap.Height;
+        var visiblePixels = Math.Max(patchPixelWidth, patchPixelHeight);
+        return Math.Clamp((int)Math.Ceiling(visiblePixels / 3), 24, 96);
     }
 
     private static SKPoint EvaluateCoonsPatchPoint(IReadOnlyList<SKPoint> points, double u, double v)
