@@ -82,7 +82,9 @@ internal partial class RenderContext
         var toUnicodeMap = resolvedFont.ToUnicodeMap;
         var embedded = TryLoadEmbeddedTypeface(fontDict, toUnicodeMap);
         _currentFontHasEmbeddedProgram = embedded != null;
-        _currentTypeface = embedded ?? GetTypeface(resolvedFont.BaseFont);
+        _currentTypeface = embedded ?? GetTypeface(
+            resolvedFont.BaseFont,
+            suppressSyntheticStyleForMissingType0: resolvedFont.IsType0);
         _currentByteToGlyph = embedded != null && fontDict != null
             && _embeddedTypefaceByteToGlyph.TryGetValue(fontDict, out var btg)
             ? btg : null;
@@ -1151,7 +1153,7 @@ internal partial class RenderContext
         _textState.TextMatrixF += distance * (b / xScale);
     }
 
-    private SKTypeface GetTypeface(string baseFont)
+    private SKTypeface GetTypeface(string baseFont, bool suppressSyntheticStyleForMissingType0 = false)
     {
         // PDF subset fonts wear a 6-letter+'+' prefix (e.g. GFEDCB+MyriadPro-Semibold).
         // Strip it before matching — otherwise even "ZapfDingbats" subsets fall
@@ -1161,13 +1163,16 @@ internal partial class RenderContext
             bareName = bareName.Substring(7);
 
         var style = SKFontStyle.Normal;
-        if ((bareName.Contains("Bold") || bareName.Contains("Medi"))
-            && (bareName.Contains("Italic") || bareName.Contains("Oblique") || bareName.Contains("Ital")))
-            style = SKFontStyle.BoldItalic;
-        else if (bareName.Contains("Bold") || bareName.Contains("Semibold") || bareName.Contains("Medium") || bareName.Contains("Medi"))
-            style = SKFontStyle.Bold;
-        else if (bareName.Contains("Italic") || bareName.Contains("Oblique") || bareName.Contains("Ital"))
-            style = SKFontStyle.Italic;
+        if (!suppressSyntheticStyleForMissingType0)
+        {
+            if ((bareName.Contains("Bold") || bareName.Contains("Medi"))
+                && (bareName.Contains("Italic") || bareName.Contains("Oblique") || bareName.Contains("Ital")))
+                style = SKFontStyle.BoldItalic;
+            else if (bareName.Contains("Bold") || bareName.Contains("Semibold") || bareName.Contains("Medium") || bareName.Contains("Medi"))
+                style = SKFontStyle.Bold;
+            else if (bareName.Contains("Italic") || bareName.Contains("Oblique") || bareName.Contains("Ital"))
+                style = SKFontStyle.Italic;
+        }
 
         // Match standard PDF base fonts. Allow both exact and prefix matches so
         // family-named subsets ("ZapfDingbatsStd", "MyriadPro-Semibold", etc.)
@@ -1786,6 +1791,65 @@ internal partial class RenderContext
         return path;
     }
 
+    private static SKPath BuildGlyphIdTextPath(ushort[] gids, SKPoint[] positions, float[] horizontalScales, SKFont font)
+    {
+        var path = new SKPath();
+        var count = Math.Min(Math.Min(gids.Length, positions.Length), horizontalScales.Length);
+        for (int i = 0; i < count; i++)
+        {
+            using var glyphPath = font.GetGlyphPath(gids[i]);
+            if (glyphPath == null || glyphPath.IsEmpty)
+                continue;
+
+            var scale = horizontalScales[i];
+            if (Math.Abs(scale - 1f) < 0.001f)
+            {
+                path.AddPath(glyphPath, positions[i].X, positions[i].Y, SKPathAddMode.Append);
+                continue;
+            }
+
+            using var transformedGlyphPath = new SKPath();
+            var glyphMatrix = new SKMatrix(
+                scale, 0, positions[i].X,
+                0, 1, positions[i].Y,
+                0, 0, 1);
+            glyphPath.Transform(glyphMatrix, transformedGlyphPath);
+            path.AddPath(transformedGlyphPath, SKPathAddMode.Append);
+        }
+
+        return path;
+    }
+
+    private void DrawPositionedGlyphIds(ushort[] gids, SKPoint[] positions, float[] horizontalScales, SKFont font, SKPaint paint)
+    {
+        var count = Math.Min(Math.Min(gids.Length, positions.Length), horizontalScales.Length);
+        for (int i = 0; i < count; i++)
+        {
+            using var blob = BuildGlyphBlob(new[] { gids[i] }, font);
+            if (blob == null)
+                continue;
+
+            var scale = horizontalScales[i];
+            if (Math.Abs(scale - 1f) < 0.001f)
+            {
+                _canvas.DrawText(blob, positions[i].X, positions[i].Y, paint);
+                continue;
+            }
+
+            _canvas.Save();
+            try
+            {
+                _canvas.Translate(positions[i].X, positions[i].Y);
+                _canvas.Scale(scale, 1);
+                _canvas.DrawText(blob, 0, 0, paint);
+            }
+            finally
+            {
+                _canvas.Restore();
+            }
+        }
+    }
+
     /// <summary>
     /// Total advance for <paramref name="bytes"/> in the current simple
     /// font, expressed as a fraction of the font's em (multiply by font
@@ -2039,6 +2103,9 @@ internal partial class RenderContext
         //     equals GID and we draw straight through.
         var gids = new ushort[count];
         var positions = new SKPoint[count];
+        float[]? fallbackGlyphScales = !_currentFontHasEmbeddedProgram
+            ? new float[count]
+            : null;
         var cursor = 0f;
         for (int i = 0; i < count; i++)
         {
@@ -2056,7 +2123,19 @@ internal partial class RenderContext
             gids[i] = gid;
 
             positions[i] = new SKPoint(cursor, 0);
-            cursor += GetCidWidthThousandths(cid) * effectiveSize / 1000f;
+            var pdfGlyphWidth = GetCidWidthThousandths(cid) * effectiveSize / 1000f;
+            if (fallbackGlyphScales != null)
+            {
+                using var glyphPath = font.GetGlyphPath(gid);
+                var boundsWidth = glyphPath != null && !glyphPath.IsEmpty
+                    ? glyphPath.Bounds.Width
+                    : 0f;
+                fallbackGlyphScales[i] = pdfGlyphWidth > 0f && boundsWidth > 0f
+                    ? Math.Min(1f, pdfGlyphWidth / boundsWidth)
+                    : 1f;
+            }
+
+            cursor += pdfGlyphWidth;
         }
 
         var xyRatio = GetTextMatrixXYRatio();
@@ -2093,30 +2172,54 @@ internal partial class RenderContext
             // through SKTextBlob (the v2 byte[] overload was removed). The
             // GID array was already remapped through /CIDToGIDMap (or
             // CFF charset) above, so we feed it straight in.
-            using var blob = BuildPositionedGlyphBlob(gids, positions, font);
-            if (blob != null)
+            if (fallbackGlyphScales != null)
             {
                 if (fillText && fillWithPattern)
                 {
-                    using var localPath = BuildGlyphIdTextPath(gids, positions, font);
+                    using var localPath = BuildGlyphIdTextPath(gids, positions, fallbackGlyphScales, font);
                     if (localPath != null && !localPath.IsEmpty)
                         localFillPatternPath!.AddPath(localPath, SKPathAddMode.Append);
                 }
                 else if (fillText)
                 {
                     RenderWithCurrentSoftMask(
-                        () => _canvas.DrawText(blob, 0, 0, fillPaint),
+                        () => DrawPositionedGlyphIds(gids, positions, fallbackGlyphScales, font, fillPaint),
                         fillPaint);
                 }
                 if (strokeText)
                     RenderWithCurrentSoftMask(
-                        () => _canvas.DrawText(blob, 0, 0, strokePaint),
+                        () => DrawPositionedGlyphIds(gids, positions, fallbackGlyphScales, font, strokePaint),
                         strokePaint);
+            }
+            else
+            {
+                using var blob = BuildPositionedGlyphBlob(gids, positions, font);
+                if (blob != null)
+                {
+                    if (fillText && fillWithPattern)
+                    {
+                        using var localPath = BuildGlyphIdTextPath(gids, positions, font);
+                        if (localPath != null && !localPath.IsEmpty)
+                            localFillPatternPath!.AddPath(localPath, SKPathAddMode.Append);
+                    }
+                    else if (fillText)
+                    {
+                        RenderWithCurrentSoftMask(
+                            () => _canvas.DrawText(blob, 0, 0, fillPaint),
+                            fillPaint);
+                    }
+                    if (strokeText)
+                        RenderWithCurrentSoftMask(
+                            () => _canvas.DrawText(blob, 0, 0, strokePaint),
+                            strokePaint);
+                }
             }
 
             if (clipText)
             {
-                using var localClipPath = BuildGlyphIdTextPath(gids, positions, font);
+                using var localClipPath = fallbackGlyphScales != null
+                    ? BuildGlyphIdTextPath(gids, positions, fallbackGlyphScales, font)
+                    : BuildGlyphIdTextPath(gids, positions, font);
                 AddPendingTextClipPath(localClipPath, x, y, _textState.HorizontalScale / 100.0f, ySign);
             }
 
