@@ -11,10 +11,11 @@
     "1": {
       "ExpectedRawStatus": "DIFF",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "LOWER_QUALITY_ACCEPTABLE",
+      "QualityStatus": "ACCEPTED_LIMITATION",
       "PixelAgreement": "MATCHES_SOME",
       "ReferenceSituation": "REFS_DISAGREE",
-      "QualityReason": "Current focused scan: raw PASS_ONE, medium localized-linework residual, no content loss. This remains a prepress-fidelity limitation rather than a screen-rendering release blocker.",
+      "RootCause": "CMYK_TRANSPARENCY_GROUP_ISOLATION_SATURATION_RESIDUAL",
+      "QualityReason": "Current focused scan: raw PASS_ONE, medium localized-linework/saturation residual, no content loss. Earlier DeviceCMYK isolation and output-intent fixes preserve the page semantics; the remaining difference is a tracked prepress-fidelity limitation rather than a screen-rendering release blocker.",
       "Target": {
         "Mode": "REFERENCE_DISAGREEMENT",
         "Primary": "mutool",

@@ -6,22 +6,37 @@
   "RootCause": "COMPOSITE_PRINT_CONFORMANCE_GAPS",
   "ImprovementPriority": "ACCEPTED_PREPRESS_FIDELITY_LIMITATION",
   "Confidence": "MEDIUM",
-  "QualityReason": "Composite Altona patch pages combine print color management, overprint, transparency, and advanced color spaces. Current pdfe output preserves visible semantic content for screen preview; remaining differences are high-fidelity prepress color/composite variance, not release-blocking content loss.",
+  "QualityReason": "Composite Altona patch pages combine print color management, overprint, transparency, mesh shadings, and advanced color spaces. Current pdfe output preserves visible semantic content for screen preview; remaining differences are high-fidelity prepress color/composite variance and a tracked Type 7 tensor-patch interpolation gap.",
   "Notes": "Keep these classified separately from atomic Ghent failures; use them as integration confirmation for future prepress/color-conformance work.",
   "Pages": {
-    "7-8": {
+    "7": {
       "ExpectedRawStatus": "DIFF",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "LOWER_QUALITY_ACCEPTABLE",
+      "QualityStatus": "ACCEPTED_LIMITATION",
       "PixelAgreement": "MATCHES_TARGET",
       "ReferenceSituation": "REFS_DISAGREE",
-      "RootCause": "ALTONA_COMPOSITE_COLOR_TRANSPARENCY",
+      "RootCause": "ALTONA_COMPOSITE_COLOR_TONE_VARIANCE",
       "ImprovementPriority": "ACCEPTED_PREPRESS_FIDELITY_LIMITATION",
-      "QualityReason": "Current focused scan is raw PASS_ONE against the pdftocairo target with reference disagreement. The remaining visible difference is print-preview color/composite fidelity, while page content and geometry are preserved for screen rendering.",
+      "QualityReason": "Current focused scan is raw PASS_ONE against the pdftocairo target with reference disagreement. The remaining visible difference is low-impact print-preview color/composite tone variance; page content and geometry are preserved for screen rendering.",
       "Target": {
         "Mode": "REFERENCE_DISAGREEMENT",
         "Primary": "pdftocairo",
         "Reason": "References disagree on exact print-preview color; pdftocairo is the accepted target for this screen-preview contract."
+      }
+    },
+    "8": {
+      "ExpectedRawStatus": "DIFF",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "ACCEPTED_LIMITATION",
+      "PixelAgreement": "MATCHES_SOME",
+      "ReferenceSituation": "REFS_DISAGREE",
+      "RootCause": "TYPE7_TENSOR_PATCH_INTERPOLATION_TARGET_GAP",
+      "ImprovementPriority": "TRACKED_PREPRESS_FIDELITY_LIMITATION",
+      "QualityReason": "Current focused scan is raw PASS_ONE but pdfe leaves a visible corner gap in the RGB tensor-patch panel compared with Cairo/MuPDF. Root-cause experiments ruled out Y inversion, Coons fallback, and rectangular patch-domain fill; all worsened the target diff or failed existing tensor-patch regression coverage. Keep this as a tracked Type 7 tensor-patch interpolation fidelity gap rather than a generic lower-quality bucket.",
+      "Target": {
+        "Mode": "REFERENCE_DISAGREEMENT",
+        "Primary": "pdftocairo",
+        "Reason": "Cairo and MuPDF are close on this screen-preview patch but still disagree; pdftocairo remains the selected contract target while the Type 7 interpolation gap is tracked under issue #491."
       }
     },
     "13": {

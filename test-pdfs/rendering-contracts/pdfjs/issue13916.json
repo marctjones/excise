@@ -10,7 +10,7 @@
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "LOWER_QUALITY_ACCEPTABLE",
+      "QualityStatus": "ACCEPTED_LIMITATION",
       "PixelAgreement": "MATCHES_TARGET",
       "ReferenceSituation": "REFS_DISAGREE",
       "RootCause": "MALFORMED_FONT_ENCODING_TEXT_QUALITY",
@@ -21,8 +21,8 @@
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "pdfe renders the visible content and matches the selected MuPDF target; the source uses non-embedded Identity-H fonts without ToUnicode, so exact text recovery is not currently actionable.",
-      "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders; MuPDF and Poppler also warn about the malformed non-embedded Identity-H fonts."
+      "QualityReason": "pdfe renders the visible content and matches the selected MuPDF target closely enough for the malformed input policy; the source uses non-embedded Identity-H fonts without ToUnicode, so exact text recovery is not currently actionable.",
+      "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders; MuPDF and Poppler also warn about the malformed non-embedded Identity-H fonts. A TrueType-UCS2 fallback experiment made the MuPDF diff worse, so this remains an accepted malformed-font limitation rather than a renderer regression."
     }
   }
 }
