@@ -12,11 +12,11 @@ public partial class MainWindowViewModel
     {
         get
         {
-            if (IsRedactionMode) return "🔴 Redaction Mode";
-            if (IsTextSelectionMode) return "📝 Text Selection Mode";
+            if (IsRedactionMode) return "Redaction Mode";
+            if (IsTextSelectionMode) return "Text Selection Mode";
             if (IsTypewriterMode) return "✎ Typewriter Mode";
-            if (IsContinuousView) return "📜 Continuous Scroll";
-            return "👆 View Mode";
+            if (IsContinuousView) return "Continuous Scroll";
+            return "View Mode";
         }
     }
 

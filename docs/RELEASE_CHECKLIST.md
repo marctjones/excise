@@ -30,6 +30,12 @@ Use this checklist before tagging any `v*` release.
   command refusal, and a real render workflow without taking keyboard or mouse
   focus. The platform contract and examples are documented in
   `docs/AUTOMATION_API.md`.
+- Run the dedicated UX/icon audit gate:
+  `scripts/release-smoke.sh --quick --only=ux`. This uses
+  `scripts/run-ux-icon-audit.sh` to capture headless screenshots for empty/open,
+  document navigation, search, redaction, forms, typewriter/annotation, and
+  preferences states while verifying toolbar/menu vector icons, tooltips, and
+  accessibility command IDs. This is separate from GUI display parity.
 - Run packaged-app GUI evidence when validating desktop packages:
   `scripts/release-smoke.sh --quick --package --packaged-gui --version <version>`.
   This writes JSON/markdown evidence for #558/#571 and responsiveness timing
@@ -88,6 +94,7 @@ limitation before tagging.
 | Audit hidden text and signatures with clear user-facing states | `RevealHiddenTextTests`; `HiddenTextDetectorTests`; `SignatureVerificationServiceTests`; `SignatureVerificationWorkflowServiceTests` | Packaged app: run hidden-text reveal on a generated black-box-redaction fixture; open a signed fixture when available or a generated invalid-signature fixture, verify the signature panel clearly distinguishes valid/invalid/unsupported trust states. |
 | Accessibility names, command metadata, keyboard-only reachability, and status announcements | `AccessibilityRegressionTests`; `PdfCommandRegistryTests`; `CommandMetadataCommandTests`; `scripts/run-accessibility-smoke.sh` | Platform review: follow `docs/ACCESSIBILITY_RELEASE_CHECKLIST.md` for macOS AX/VoiceOver, Windows UI Automation, and Linux/GNOME AT-SPI tree checks on dedicated runners. |
 | CLI automation, batch JSON, progress events, and platform wrappers | `BatchAutomationCommandTests`; `CommandMetadataCommandTests`; `scripts/run-automation-smoke.sh` | Platform review: follow `docs/AUTOMATION_API.md` examples for AppleScript/Shortcuts, PowerShell/Power Automate, and Linux/GNOME CLI workflows. |
+| UX/icon visual polish, toolbar/menu affordances, and design-quality screenshots | `VisualPolishAuditTests`; `scripts/run-ux-icon-audit.sh` | Review the generated `ux-icon-audit.md`, PNG screenshots, and `ux-icon-audit.json` before closing visual-polish issues. |
 
 The repeatable automated gate for this table is:
 

@@ -60,6 +60,7 @@ public class GuiWorkflowCoverageMatrixTests
         new("Open, search, redact, close golden paths", typeof(GoldenPathTests)),
         new("GUI responsiveness budgets for open and direct input handlers", typeof(GuiResponsivenessBudgetTests)),
         new("Accessibility metadata, keyboard-only reachability, and status announcements", typeof(AccessibilityRegressionTests)),
+        new("UX/icon polish screenshots and toolbar/menu affordance audit", typeof(VisualPolishAuditTests)),
         new("Scripted GUI automation entry points", typeof(ScriptedGuiTests)),
     ];
 

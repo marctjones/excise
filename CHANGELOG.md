@@ -8,6 +8,36 @@ semantic versioning.
 
 No changes yet.
 
+## [2.24.0] - 2026-07-04
+
+UX, icon, and visual-polish audit release. No intended public API break.
+
+### Changed
+- **Vector shell icons (#559).** Replaced the main menu, toolbar, and empty
+  state emoji icon affordances with local vector `StreamGeometry` resources so
+  the shell no longer depends on platform emoji fonts for core commands.
+- **Toolbar layout (#559).** Reserved the right side of the toolbar for zoom
+  controls and placed the main action strip in a horizontal scroll region. The
+  default 1280px workflow screenshot now keeps zoom controls visible and avoids
+  clipped toolbar labels by making secondary actions icon-only with explicit
+  tooltips and accessibility names.
+
+### Added
+- **Screenshot-backed UX/icon audit (#559).** Added
+  `VisualPolishAuditTests` and `scripts/run-ux-icon-audit.sh`, which capture
+  headless screenshots for empty/open, document navigation/page organization,
+  search, redaction, forms, typewriter/annotation, and preferences states and
+  write `ux-icon-audit.json` plus a markdown report.
+- **UX release gate (#559).** Added
+  `scripts/release-smoke.sh --quick --only=ux` and release-checklist coverage
+  so design-quality review stays separate from renderer/display parity.
+
+### Tests
+- v2.24 UX/icon audit passed:
+  `logs/ux-icon-audit/v2.24-local` (`VisualPolishAuditTests`, screenshots, and
+  manifest).
+- Full Debug build passed: `dotnet build pdfe.sln -c Debug`.
+
 ## [2.23.0] - 2026-07-04
 
 Automation API and platform integration release. Additive public API change in

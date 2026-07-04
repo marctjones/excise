@@ -47,7 +47,7 @@ Options:
   --packaged-gui-focus-input
                       Also run focus-taking native key/mouse smoke.
   --no-build          Skip the initial build gate.
-  --only=a,b          Run only named gates: docs,build,redaction,signature,ui,accessibility,automation,tests,pdf20,visual,package,packaged-gui,diffcheck.
+  --only=a,b          Run only named gates: docs,build,redaction,signature,ui,accessibility,automation,ux,tests,pdf20,visual,package,packaged-gui,diffcheck.
   -h, --help          Show this help.
 EOF
 }
@@ -365,6 +365,7 @@ run_gate "signature" dotnet test PdfEditor.Tests --no-build -c "$CONFIG" --filte
 run_gate "ui" dotnet test PdfEditor.Tests --no-build -c "$CONFIG" --filter "FullyQualifiedName~GuiWorkflowCoverageMatrix|FullyQualifiedName~GoldenPath|FullyQualifiedName~Workflow" --logger "console;verbosity=normal"
 run_gate "accessibility" scripts/run-accessibility-smoke.sh --config "$CONFIG" --output "$LOG_DIR/accessibility"
 run_gate "automation" scripts/run-automation-smoke.sh --config "$CONFIG" --output "$LOG_DIR/automation"
+run_gate "ux" scripts/run-ux-icon-audit.sh --config "$CONFIG" --output "$LOG_DIR/ux-icon-audit"
 run_gate "pdf20" scripts/run-pdf20-renderer-conformance.sh --run-tests
 
 run_full_tests_gate

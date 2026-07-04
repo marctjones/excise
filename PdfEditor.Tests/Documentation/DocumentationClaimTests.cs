@@ -127,6 +127,31 @@ public class DocumentationClaimTests
     }
 
     [Fact]
+    public void UxIconAuditDocs_MapToReleaseSmokeAndVisualPolishTests()
+    {
+        var checklist = Read("docs/RELEASE_CHECKLIST.md");
+        var releaseSmoke = Read("scripts/release-smoke.sh");
+        var uxAudit = Read("scripts/run-ux-icon-audit.sh");
+        var visualPolishTests = Read("PdfEditor.Tests/UI/VisualPolishAuditTests.cs");
+        var mainWindow = Read("PdfEditor/Views/MainWindow.axaml");
+        var icons = Read("PdfEditor/Styles/Icons.axaml");
+
+        checklist.Should().Contain("--only=ux");
+        checklist.Should().Contain("scripts/run-ux-icon-audit.sh");
+        checklist.Should().Contain("separate from GUI display parity");
+        releaseSmoke.Should().Contain("run-ux-icon-audit.sh");
+        releaseSmoke.Should().Contain("ux");
+        uxAudit.Should().Contain("VisualPolishAuditTests");
+        uxAudit.Should().Contain("ux-icon-audit.json");
+        visualPolishTests.Should().Contain("CoreWorkflowScreenshots_AreCapturedForUxIconAudit");
+        visualPolishTests.Should().Contain("issue = 559");
+        mainWindow.Should().Contain("PathIcon Classes=\"toolbar-icon\"");
+        mainWindow.Should().Contain("HorizontalScrollBarVisibility=\"Auto\"");
+        icons.Should().Contain("IconFolderOpen");
+        icons.Should().Contain("IconRedact");
+    }
+
+    [Fact]
     public void PackagedGuiSmokeDocs_MapToReleaseSmokeScript()
     {
         var checklist = Read("docs/RELEASE_CHECKLIST.md");

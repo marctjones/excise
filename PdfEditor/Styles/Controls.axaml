@@ -72,6 +72,29 @@
         <Setter Property="Opacity" Value="0.6"/>
     </Style>
 
+    <!-- Shared vector icon affordances. Icons use local StreamGeometry resources
+         so toolbars and menus do not depend on platform emoji fonts. -->
+    <Style Selector="PathIcon.toolbar-icon">
+        <Setter Property="Width" Value="16"/>
+        <Setter Property="Height" Value="16"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="Button.modern-button.toggle.active PathIcon.toolbar-icon">
+        <Setter Property="Foreground" Value="#0078D4"/>
+    </Style>
+
+    <Style Selector="Button.modern-button.primary PathIcon.toolbar-icon">
+        <Setter Property="Foreground" Value="White"/>
+    </Style>
+
+    <Style Selector="PathIcon.menu-icon">
+        <Setter Property="Width" Value="16"/>
+        <Setter Property="Height" Value="16"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+    </Style>
+
     <!-- TextBlock Styles -->
     <Style Selector="TextBlock.heading">
         <Setter Property="FontWeight" Value="SemiBold"/>

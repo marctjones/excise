@@ -18,6 +18,14 @@
         ExtendClientAreaTitleBarHeightHint="40"
         Background="{DynamicResource AppBackgroundBrush}">
 
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="/Styles/Icons.axaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
     <Design.DataContext>
         <vm:MainWindowViewModel/>
     </Design.DataContext>
@@ -32,11 +40,11 @@
             <MenuItem Header="_File">
                 <MenuItem Header="_Open..." Command="{Binding OpenFileCommand}" InputGesture="Ctrl+O"
                           access:CommandAccessibility.CommandId="app.open">
-                    <MenuItem.Icon><TextBlock Text="📁"/></MenuItem.Icon>
+                    <MenuItem.Icon><PathIcon Classes="menu-icon" Data="{StaticResource IconFolderOpen}"/></MenuItem.Icon>
                 </MenuItem>
                 <MenuItem Header="{Binding SaveButtonText, StringFormat='_{0}'}" Command="{Binding SaveFileCommand}" InputGesture="Ctrl+S"
                           access:CommandAccessibility.CommandId="app.save">
-                    <MenuItem.Icon><TextBlock Text="💾"/></MenuItem.Icon>
+                    <MenuItem.Icon><PathIcon Classes="menu-icon" Data="{StaticResource IconSave}"/></MenuItem.Icon>
                 </MenuItem>
                 <MenuItem Header="Save _As..." Command="{Binding SaveAsCommand}" InputGesture="Ctrl+Shift+S"
                           access:CommandAccessibility.CommandId="app.saveAs"/>
@@ -61,7 +69,7 @@
             <MenuItem Header="_Edit">
                 <MenuItem Header="_Find..." Command="{Binding ToggleSearchCommand}" InputGesture="Ctrl+F"
                           access:CommandAccessibility.CommandId="search.open">
-                    <MenuItem.Icon><TextBlock Text="🔍"/></MenuItem.Icon>
+                    <MenuItem.Icon><PathIcon Classes="menu-icon" Data="{StaticResource IconSearch}"/></MenuItem.Icon>
                 </MenuItem>
                 <MenuItem Header="Find _Next" Command="{Binding FindNextCommand}" InputGesture="F3"
                           access:CommandAccessibility.CommandId="search.next"/>
@@ -99,7 +107,7 @@
             <MenuItem Header="_Document">
                 <MenuItem Header="_Add Pages..." Command="{Binding AddPagesCommand}"
                           access:CommandAccessibility.CommandId="document.addPages">
-                    <MenuItem.Icon><TextBlock Text="➕"/></MenuItem.Icon>
+                    <MenuItem.Icon><PathIcon Classes="menu-icon" Data="{StaticResource IconAdd}"/></MenuItem.Icon>
                 </MenuItem>
                 <MenuItem Header="Insert Pages _Before Current..." Command="{Binding InsertPagesBeforeCurrentCommand}"
                           access:CommandAccessibility.CommandId="document.insertPagesBefore"/>
@@ -125,7 +133,7 @@
                 <MenuItem Header="_Remove Current Page" Command="{Binding RemoveCurrentPageCommand}"
                           IsEnabled="{Binding IsDocumentLoaded}"
                           access:CommandAccessibility.CommandId="document.removeCurrentPage">
-                    <MenuItem.Icon><TextBlock Text="🗑"/></MenuItem.Icon>
+                    <MenuItem.Icon><PathIcon Classes="menu-icon" Data="{StaticResource IconDelete}"/></MenuItem.Icon>
                 </MenuItem>
                 <MenuItem Header="Remove Selected Pages" Command="{Binding RemoveSelectedPagesCommand}"
                           IsEnabled="{Binding CanRemoveSelectedPages}"
@@ -160,14 +168,14 @@
                 <MenuItem Header="_Apply Redaction" Command="{Binding ApplyRedactionCommand}" InputGesture="Enter"
                           IsEnabled="{Binding IsRedactionMode}"
                           access:CommandAccessibility.CommandId="redaction.apply">
-                    <MenuItem.Icon><TextBlock Text="⬛" Foreground="Red"/></MenuItem.Icon>
+                    <MenuItem.Icon><PathIcon Classes="menu-icon" Data="{StaticResource IconRedact}" Foreground="#D32F2F"/></MenuItem.Icon>
                 </MenuItem>
                 <Separator/>
                 <MenuItem Header="_View Clipboard History"
                           ToggleType="CheckBox"
                           IsChecked="{Binding IsClipboardSidebarVisible, Mode=TwoWay}"
                           access:CommandAccessibility.CommandId="view.toggleClipboardHistory">
-                    <MenuItem.Icon><TextBlock Text="📋"/></MenuItem.Icon>
+                    <MenuItem.Icon><PathIcon Classes="menu-icon" Data="{StaticResource IconClipboard}"/></MenuItem.Icon>
                 </MenuItem>
             </MenuItem>
 
@@ -176,7 +184,7 @@
                 <MenuItem Header="_Verify Digital Signatures..." Command="{Binding VerifySignaturesCommand}"
                           IsEnabled="{Binding IsDocumentLoaded}"
                           access:CommandAccessibility.CommandId="tools.verifySignatures">
-                    <MenuItem.Icon><TextBlock Text="🔐"/></MenuItem.Icon>
+                    <MenuItem.Icon><PathIcon Classes="menu-icon" Data="{StaticResource IconLock}"/></MenuItem.Icon>
                 </MenuItem>
                 <MenuItem Header="Reveal _Hidden Text (audit overlay)"
                           ToolTip.Tip="Surface text that is present in the PDF but visually covered by an opaque overlay — the classic 'black-box redaction' failure mode."
@@ -193,7 +201,7 @@
                 <Separator/>
                 <MenuItem Header="_Preferences..." Command="{Binding ShowPreferencesCommand}" InputGesture="Ctrl+,"
                           access:CommandAccessibility.CommandId="app.preferences">
-                    <MenuItem.Icon><TextBlock Text="⚙"/></MenuItem.Icon>
+                    <MenuItem.Icon><PathIcon Classes="menu-icon" Data="{StaticResource IconSettings}"/></MenuItem.Icon>
                 </MenuItem>
             </MenuItem>
 
@@ -280,65 +288,90 @@
                 BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="0,0,0,1"
                 Padding="8,6">
-            <Grid ColumnDefinitions="Auto,*,Auto">
+            <Grid ColumnDefinitions="*,Auto">
                 <!-- Left: Main Actions -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4">
+                <ScrollViewer Grid.Column="0"
+                              HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollBarVisibility="Disabled"
+                              Margin="0,0,8,0">
+                <StackPanel Orientation="Horizontal" Spacing="4">
                     <!-- View Group: sidebar toggles (outline + page previews) -->
-                    <Button Content="📑" Command="{Binding ToggleOutlineCommand}"
+                    <Button Command="{Binding ToggleOutlineCommand}"
                             Classes="modern-button toggle"
                             Classes.active="{Binding IsOutlineSidebarVisible}"
                             Padding="10,6"
                             access:CommandAccessibility.CommandId="view.toggleOutline"
                             ToolTip.Tip="Show/hide Outline (Ctrl+Shift+O)"
                             AutomationProperties.Name="Toggle Outline Sidebar"
-                            AutomationProperties.HelpText="Show or hide the document outline / bookmarks panel"/>
-                    <Button Content="🗐" Command="{Binding ToggleThumbnailsCommand}"
+                            AutomationProperties.HelpText="Show or hide the document outline / bookmarks panel">
+                        <PathIcon Classes="toolbar-icon" Data="{StaticResource IconOutline}"/>
+                    </Button>
+                    <Button Command="{Binding ToggleThumbnailsCommand}"
                             Classes="modern-button toggle"
                             Classes.active="{Binding IsThumbnailsSidebarVisible}"
                             Padding="10,6"
                             access:CommandAccessibility.CommandId="view.toggleThumbnails"
                             ToolTip.Tip="Show/hide Page Previews (Ctrl+Shift+T)"
                             AutomationProperties.Name="Toggle Thumbnails Sidebar"
-                            AutomationProperties.HelpText="Show or hide the page thumbnails / previews panel"/>
-                    <Button Content="📜" Command="{Binding ToggleContinuousViewCommand}"
+                            AutomationProperties.HelpText="Show or hide the page thumbnails / previews panel">
+                        <PathIcon Classes="toolbar-icon" Data="{StaticResource IconThumbnails}"/>
+                    </Button>
+                    <Button Command="{Binding ToggleContinuousViewCommand}"
                             Classes="modern-button toggle"
                             Classes.active="{Binding IsContinuousView}"
                             Padding="10,6"
                             access:CommandAccessibility.CommandId="view.toggleContinuous"
                             ToolTip.Tip="Continuous scroll view (Ctrl+Shift+C)"
                             AutomationProperties.Name="Continuous Scroll View"
-                            AutomationProperties.HelpText="Toggle between single-page editing view and continuous reading view"/>
+                            AutomationProperties.HelpText="Toggle between single-page editing view and continuous reading view">
+                        <PathIcon Classes="toolbar-icon" Data="{StaticResource IconContinuous}"/>
+                    </Button>
 
                     <Border Width="1" Height="24" Margin="6,0"
                             Background="{DynamicResource DividerBrush}"/>
 
                     <!-- File Group -->
-                    <Button Content="📁 Open" Command="{Binding OpenFileCommand}"
+                    <Button Command="{Binding OpenFileCommand}"
                             Classes="modern-button" Padding="12,6"
                             access:CommandAccessibility.CommandId="app.open"
                             ToolTip.Tip="Open PDF (Ctrl+O)"
                             AutomationProperties.Name="Open PDF File"
-                            AutomationProperties.HelpText="Opens a file dialog to select a PDF document"/>
-                    <Button Content="{Binding SaveButtonText, StringFormat='💾 {0}'}" Command="{Binding SaveFileCommand}"
+                            AutomationProperties.HelpText="Opens a file dialog to select a PDF document">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Classes="toolbar-icon" Data="{StaticResource IconFolderOpen}"/>
+                            <TextBlock Text="Open"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding SaveFileCommand}"
                             Classes="modern-button" Padding="12,6"
                             IsEnabled="{Binding IsDocumentLoaded}"
                             access:CommandAccessibility.CommandId="app.save"
                             ToolTip.Tip="Save (Ctrl+S)"
                             AutomationProperties.Name="Save Document"
-                            AutomationProperties.HelpText="Saves the current PDF document"/>
-                    <Button Content="▣ Flatten Form" Command="{Binding SaveFlattenedFormCopyCommand}"
+                            AutomationProperties.HelpText="Saves the current PDF document">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Classes="toolbar-icon" Data="{StaticResource IconSave}"/>
+                            <TextBlock Text="{Binding SaveButtonText}"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding SaveFlattenedFormCopyCommand}"
                             Classes="modern-button" Padding="12,6"
                             IsEnabled="{Binding IsDocumentLoaded}"
                             access:CommandAccessibility.CommandId="form.saveFlattenedCopy"
                             ToolTip.Tip="Save a flattened copy of filled form values"
                             AutomationProperties.Name="Save Flattened Form Copy"
-                            AutomationProperties.HelpText="Creates a copy where interactive form values are baked into page content"/>
+                            AutomationProperties.HelpText="Creates a copy where interactive form values are baked into page content">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Classes="toolbar-icon" Data="{StaticResource IconLayers}"/>
+                            <TextBlock Text="Flatten Form"/>
+                        </StackPanel>
+                    </Button>
 
                     <Border Width="1" Height="24" Margin="6,0"
                             Background="{DynamicResource DividerBrush}"/>
 
                     <!-- Mode Toggles -->
-                    <Button Content="📝 Select Text" Command="{Binding ToggleTextSelectionModeCommand}"
+                    <Button Command="{Binding ToggleTextSelectionModeCommand}"
                             Classes="modern-button toggle"
                             Classes.active="{Binding IsTextSelectionMode}"
                             Padding="12,6"
@@ -346,9 +379,14 @@
                             access:CommandAccessibility.CommandId="edit.selectTextMode"
                             ToolTip.Tip="Text Selection Mode (T)"
                             AutomationProperties.Name="Text Selection Mode"
-                            AutomationProperties.HelpText="Toggle text selection mode to select and copy text"/>
+                            AutomationProperties.HelpText="Toggle text selection mode to select and copy text">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Classes="toolbar-icon" Data="{StaticResource IconTextSelect}"/>
+                            <TextBlock Text="Select Text"/>
+                        </StackPanel>
+                    </Button>
 
-                    <Button Content="✎ Type" Command="{Binding ToggleTypewriterModeCommand}"
+                    <Button Command="{Binding ToggleTypewriterModeCommand}"
                             Classes="modern-button toggle"
                             Classes.active="{Binding IsTypewriterMode}"
                             Padding="12,6"
@@ -356,27 +394,36 @@
                             access:CommandAccessibility.CommandId="edit.typewriterMode"
                             ToolTip.Tip="Typewriter Mode"
                             AutomationProperties.Name="Typewriter Mode"
-                            AutomationProperties.HelpText="Place editable text that saves as flat PDF page content"/>
+                            AutomationProperties.HelpText="Place editable text that saves as flat PDF page content">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Classes="toolbar-icon" Data="{StaticResource IconTypewriter}"/>
+                            <TextBlock Text="Type"/>
+                        </StackPanel>
+                    </Button>
 
-                    <Button Content="🖍 Highlight" Command="{Binding AddHighlightAnnotationFromSelectionCommand}"
+                    <Button Command="{Binding AddHighlightAnnotationFromSelectionCommand}"
                             Classes="modern-button"
-                            Padding="12,6"
+                            Padding="10,6"
                             IsEnabled="{Binding HasTextSelection}"
                             access:CommandAccessibility.CommandId="annotation.addHighlight"
                             ToolTip.Tip="Add highlight from selected text"
                             AutomationProperties.Name="Add Highlight From Selection"
-                            AutomationProperties.HelpText="Creates a real PDF highlight annotation from the current text selection"/>
+                            AutomationProperties.HelpText="Creates a real PDF highlight annotation from the current text selection">
+                        <PathIcon Classes="toolbar-icon" Data="{StaticResource IconHighlight}"/>
+                    </Button>
 
-                    <Button Content="🗒 Note" Command="{Binding AddStickyNoteAnnotationCommand}"
+                    <Button Command="{Binding AddStickyNoteAnnotationCommand}"
                             Classes="modern-button"
-                            Padding="12,6"
+                            Padding="10,6"
                             IsEnabled="{Binding IsDocumentLoaded}"
                             access:CommandAccessibility.CommandId="annotation.addStickyNote"
                             ToolTip.Tip="Add sticky note"
                             AutomationProperties.Name="Add Sticky Note"
-                            AutomationProperties.HelpText="Creates a real PDF sticky-note annotation on the current page or text selection"/>
+                            AutomationProperties.HelpText="Creates a real PDF sticky-note annotation on the current page or text selection">
+                        <PathIcon Classes="toolbar-icon" Data="{StaticResource IconNote}"/>
+                    </Button>
 
-                    <Button Content="⬛ Redact" Command="{Binding ToggleRedactionModeCommand}"
+                    <Button Command="{Binding ToggleRedactionModeCommand}"
                             Classes="modern-button toggle"
                             Classes.active="{Binding IsRedactionMode}"
                             Padding="12,6"
@@ -384,9 +431,14 @@
                             access:CommandAccessibility.CommandId="redaction.toggleMode"
                             ToolTip.Tip="Redaction Mode (R)"
                             AutomationProperties.Name="Redaction Mode"
-                            AutomationProperties.HelpText="Toggle redaction mode to mark areas for removal"/>
+                            AutomationProperties.HelpText="Toggle redaction mode to mark areas for removal">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Classes="toolbar-icon" Data="{StaticResource IconRedact}"/>
+                            <TextBlock Text="Redact"/>
+                        </StackPanel>
+                    </Button>
 
-                    <Button Content="✓ Apply" Command="{Binding ApplyRedactionCommand}"
+                    <Button Command="{Binding ApplyRedactionCommand}"
                             Classes="modern-button primary"
                             Padding="12,6"
                             IsEnabled="{Binding IsRedactionMode}"
@@ -394,20 +446,27 @@
                             access:CommandAccessibility.CommandId="redaction.apply"
                             ToolTip.Tip="Apply Redaction (Enter)"
                             AutomationProperties.Name="Apply Redaction"
-                            AutomationProperties.HelpText="Apply the current redaction selection"/>
+                            AutomationProperties.HelpText="Apply the current redaction selection">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Classes="toolbar-icon" Data="{StaticResource IconCheck}"/>
+                            <TextBlock Text="Apply"/>
+                        </StackPanel>
+                    </Button>
 
                     <Border Width="1" Height="24" Margin="6,0"
                             Background="{DynamicResource DividerBrush}"/>
 
                     <!-- Form Authoring -->
-                    <Button Content="📋 Add Field" Command="{Binding ToggleFormAuthoringModeCommand}"
+                    <Button Command="{Binding ToggleFormAuthoringModeCommand}"
                             Classes="modern-button toggle"
                             Classes.active="{Binding IsFormAuthoringMode}"
-                            Padding="12,6"
+                            Padding="10,6"
                             IsEnabled="{Binding IsDocumentLoaded}"
                             access:CommandAccessibility.CommandId="form.toggleAuthoring"
                             ToolTip.Tip="Form Authoring Mode — drag to define a new field"
-                            AutomationProperties.Name="Form Authoring Mode"/>
+                            AutomationProperties.Name="Form Authoring Mode">
+                        <PathIcon Classes="toolbar-icon" Data="{StaticResource IconForm}"/>
+                    </Button>
 
                     <ComboBox SelectedIndex="0"
                               IsVisible="{Binding IsFormAuthoringMode}"
@@ -421,25 +480,32 @@
                         <ComboBoxItem Content="Signature"/>
                     </ComboBox>
 
-                    <Button Content="🪄 Auto-detect" Command="{Binding AutoDetectFieldsCommand}"
+                    <Button Command="{Binding AutoDetectFieldsCommand}"
                             Classes="modern-button"
-                            Padding="12,6"
+                            Padding="10,6"
                             IsEnabled="{Binding IsDocumentLoaded}"
                             access:CommandAccessibility.CommandId="form.autoDetectFields"
                             ToolTip.Tip="Heuristically add form fields where the page has underline placeholders or empty squares"
-                            AutomationProperties.Name="Auto-detect Form Fields"/>
+                            AutomationProperties.Name="Auto-detect Form Fields">
+                        <PathIcon Classes="toolbar-icon" Data="{StaticResource IconSparkles}"/>
+                    </Button>
 
                     <Border Width="1" Height="24" Margin="6,0"
                             Background="{DynamicResource DividerBrush}"/>
 
                     <!-- Tools Group -->
-                    <Button Content="🔍 Find" Command="{Binding ToggleSearchCommand}"
+                    <Button Command="{Binding ToggleSearchCommand}"
                             Classes="modern-button" Padding="12,6"
                             IsEnabled="{Binding IsDocumentLoaded}"
                             access:CommandAccessibility.CommandId="search.open"
                             ToolTip.Tip="Find Text (Ctrl+F)"
                             AutomationProperties.Name="Find Text"
-                            AutomationProperties.HelpText="Opens the search bar to find text in the document"/>
+                            AutomationProperties.HelpText="Opens the search bar to find text in the document">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Classes="toolbar-icon" Data="{StaticResource IconSearch}"/>
+                            <TextBlock Text="Find"/>
+                        </StackPanel>
+                    </Button>
                     <Border Width="1" Height="24" Margin="6,0"
                             Background="{DynamicResource DividerBrush}"/>
 
@@ -459,9 +525,10 @@
                             AutomationProperties.Name="Rotate Page Right"
                             AutomationProperties.HelpText="Rotate the current page 90 degrees clockwise"/>
                 </StackPanel>
+                </ScrollViewer>
 
                 <!-- Right: Zoom Controls -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
                     <Button Content="−" Command="{Binding ZoomOutCommand}"
                             Classes="modern-button" Padding="10,6" FontWeight="Bold"
                             IsEnabled="{Binding IsDocumentLoaded}"
@@ -827,10 +894,12 @@
                           HorizontalAlignment="Center"
                           VerticalAlignment="Center">
                         <StackPanel Spacing="16" HorizontalAlignment="Center">
-                            <TextBlock Text="📄"
-                                       FontSize="64"
-                                       HorizontalAlignment="Center"
-                                       Opacity="0.3"/>
+                            <PathIcon Data="{StaticResource IconPage}"
+                                      Width="64"
+                                      Height="64"
+                                      Foreground="{DynamicResource TextTertiaryBrush}"
+                                      HorizontalAlignment="Center"
+                                      Opacity="0.45"/>
                             <TextBlock Text="No document open"
                                        FontSize="18"
                                        FontWeight="SemiBold"
@@ -840,13 +909,17 @@
                                        FontSize="13"
                                        HorizontalAlignment="Center"
                                        Foreground="{DynamicResource TextTertiaryBrush}"/>
-                            <Button Content="📁 Open File"
-                                    Command="{Binding OpenFileCommand}"
+                            <Button Command="{Binding OpenFileCommand}"
                                     HorizontalAlignment="Center"
                                     Padding="20,10"
                                     FontSize="14"
                                     Margin="0,8,0,0"
-                                    access:CommandAccessibility.CommandId="app.open"/>
+                                    access:CommandAccessibility.CommandId="app.open">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <PathIcon Classes="toolbar-icon" Data="{StaticResource IconFolderOpen}"/>
+                                    <TextBlock Text="Open File"/>
+                                </StackPanel>
+                            </Button>
                         </StackPanel>
                     </Grid>
 
