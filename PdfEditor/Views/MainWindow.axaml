@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:PdfEditor.ViewModels"
         xmlns:models="using:PdfEditor.Models"
+        xmlns:access="using:PdfEditor.Automation"
         xmlns:controls="using:Pdfe.Avalonia.Controls"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -29,14 +30,18 @@
               Background="{DynamicResource SecondaryBackgroundBrush}">
             <!-- FILE MENU -->
             <MenuItem Header="_File">
-                <MenuItem Header="_Open..." Command="{Binding OpenFileCommand}" InputGesture="Ctrl+O">
+                <MenuItem Header="_Open..." Command="{Binding OpenFileCommand}" InputGesture="Ctrl+O"
+                          access:CommandAccessibility.CommandId="app.open">
                     <MenuItem.Icon><TextBlock Text="📁"/></MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="{Binding SaveButtonText, StringFormat='_{0}'}" Command="{Binding SaveFileCommand}" InputGesture="Ctrl+S">
+                <MenuItem Header="{Binding SaveButtonText, StringFormat='_{0}'}" Command="{Binding SaveFileCommand}" InputGesture="Ctrl+S"
+                          access:CommandAccessibility.CommandId="app.save">
                     <MenuItem.Icon><TextBlock Text="💾"/></MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="Save _As..." Command="{Binding SaveAsCommand}" InputGesture="Ctrl+Shift+S"/>
-                <MenuItem Header="Save Flattened _Form Copy..." Command="{Binding SaveFlattenedFormCopyCommand}"/>
+                <MenuItem Header="Save _As..." Command="{Binding SaveAsCommand}" InputGesture="Ctrl+Shift+S"
+                          access:CommandAccessibility.CommandId="app.saveAs"/>
+                <MenuItem Header="Save Flattened _Form Copy..." Command="{Binding SaveFlattenedFormCopyCommand}"
+                          access:CommandAccessibility.CommandId="form.saveFlattenedCopy"/>
                 <Separator/>
                 <MenuItem Header="_Recent Files" Name="RecentFilesMenu" ItemsSource="{Binding RecentFileMenuItems}">
                     <!-- Placeholder shown when menu has no items (ensures submenu arrow appears) -->
@@ -47,91 +52,121 @@
                     </MenuItem.Styles>
                 </MenuItem>
                 <Separator/>
-                <MenuItem Header="_Close Document" Command="{Binding CloseDocumentCommand}" InputGesture="Ctrl+W"/>
+                <MenuItem Header="_Close Document" Command="{Binding CloseDocumentCommand}" InputGesture="Ctrl+W"
+                          access:CommandAccessibility.CommandId="app.closeDocument"/>
                 <MenuItem Header="E_xit" Command="{Binding ExitCommand}" InputGesture="Alt+F4"/>
             </MenuItem>
 
             <!-- EDIT MENU -->
             <MenuItem Header="_Edit">
-                <MenuItem Header="_Find..." Command="{Binding ToggleSearchCommand}" InputGesture="Ctrl+F">
+                <MenuItem Header="_Find..." Command="{Binding ToggleSearchCommand}" InputGesture="Ctrl+F"
+                          access:CommandAccessibility.CommandId="search.open">
                     <MenuItem.Icon><TextBlock Text="🔍"/></MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="Find _Next" Command="{Binding FindNextCommand}" InputGesture="F3"/>
-                <MenuItem Header="Find _Previous" Command="{Binding FindPreviousCommand}" InputGesture="Shift+F3"/>
+                <MenuItem Header="Find _Next" Command="{Binding FindNextCommand}" InputGesture="F3"
+                          access:CommandAccessibility.CommandId="search.next"/>
+                <MenuItem Header="Find _Previous" Command="{Binding FindPreviousCommand}" InputGesture="Shift+F3"
+                          access:CommandAccessibility.CommandId="search.previous"/>
                 <Separator/>
-                <MenuItem Header="_Select Text Mode" Command="{Binding ToggleTextSelectionModeCommand}" InputGesture="T">
+                <MenuItem Header="_Select Text Mode" Command="{Binding ToggleTextSelectionModeCommand}" InputGesture="T"
+                          access:CommandAccessibility.CommandId="edit.selectTextMode">
                     <MenuItem.Icon>
                         <TextBlock Text="✓" IsVisible="{Binding IsTextSelectionMode}"/>
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="_Typewriter Mode" Command="{Binding ToggleTypewriterModeCommand}">
+                <MenuItem Header="_Typewriter Mode" Command="{Binding ToggleTypewriterModeCommand}"
+                          access:CommandAccessibility.CommandId="edit.typewriterMode">
                     <MenuItem.Icon>
                         <TextBlock Text="✓" IsVisible="{Binding IsTypewriterMode}"/>
                     </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem Header="_Copy Selected Text" Command="{Binding CopyTextCommand}" InputGesture="Ctrl+C"
-                          IsEnabled="{Binding IsTextSelectionMode}"/>
+                          IsEnabled="{Binding IsTextSelectionMode}"
+                          access:CommandAccessibility.CommandId="edit.copyText"/>
             </MenuItem>
 
             <!-- ANNOTATE MENU -->
             <MenuItem Header="_Annotate">
                 <MenuItem Header="Add _Highlight From Selection" Command="{Binding AddHighlightAnnotationFromSelectionCommand}"
-                          IsEnabled="{Binding HasTextSelection}"/>
+                          IsEnabled="{Binding HasTextSelection}"
+                          access:CommandAccessibility.CommandId="annotation.addHighlight"/>
                 <MenuItem Header="Add _Sticky Note..." Command="{Binding AddStickyNoteAnnotationCommand}"
-                          IsEnabled="{Binding IsDocumentLoaded}"/>
+                          IsEnabled="{Binding IsDocumentLoaded}"
+                          access:CommandAccessibility.CommandId="annotation.addStickyNote"/>
             </MenuItem>
 
             <!-- DOCUMENT MENU -->
             <MenuItem Header="_Document">
-                <MenuItem Header="_Add Pages..." Command="{Binding AddPagesCommand}">
+                <MenuItem Header="_Add Pages..." Command="{Binding AddPagesCommand}"
+                          access:CommandAccessibility.CommandId="document.addPages">
                     <MenuItem.Icon><TextBlock Text="➕"/></MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="Insert Pages _Before Current..." Command="{Binding InsertPagesBeforeCurrentCommand}"/>
-                <MenuItem Header="Insert Pages _After Current..." Command="{Binding InsertPagesAfterCurrentCommand}"/>
-                <MenuItem Header="_Extract Current Page..." Command="{Binding ExtractCurrentPageCommand}"/>
+                <MenuItem Header="Insert Pages _Before Current..." Command="{Binding InsertPagesBeforeCurrentCommand}"
+                          access:CommandAccessibility.CommandId="document.insertPagesBefore"/>
+                <MenuItem Header="Insert Pages _After Current..." Command="{Binding InsertPagesAfterCurrentCommand}"
+                          access:CommandAccessibility.CommandId="document.insertPagesAfter"/>
+                <MenuItem Header="_Extract Current Page..." Command="{Binding ExtractCurrentPageCommand}"
+                          access:CommandAccessibility.CommandId="document.extractCurrentPage"/>
                 <MenuItem Header="Extract _Selected Pages..." Command="{Binding ExtractSelectedPagesCommand}"
-                          IsEnabled="{Binding HasSelectedPages}"/>
+                          IsEnabled="{Binding HasSelectedPages}"
+                          access:CommandAccessibility.CommandId="document.extractSelectedPages"/>
                 <Separator/>
-                <MenuItem Header="Move Page _Earlier" Command="{Binding MoveCurrentPageEarlierCommand}"/>
-                <MenuItem Header="Move Page _Later" Command="{Binding MoveCurrentPageLaterCommand}"/>
+                <MenuItem Header="Move Page _Earlier" Command="{Binding MoveCurrentPageEarlierCommand}"
+                          access:CommandAccessibility.CommandId="document.moveCurrentPageEarlier"/>
+                <MenuItem Header="Move Page _Later" Command="{Binding MoveCurrentPageLaterCommand}"
+                          access:CommandAccessibility.CommandId="document.moveCurrentPageLater"/>
                 <MenuItem Header="Move Selected Pages E_arlier" Command="{Binding MoveSelectedPagesEarlierCommand}"
-                          IsEnabled="{Binding CanMoveSelectedPagesEarlier}"/>
+                          IsEnabled="{Binding CanMoveSelectedPagesEarlier}"
+                          access:CommandAccessibility.CommandId="document.moveSelectedPagesEarlier"/>
                 <MenuItem Header="Move Selected Pages L_ater" Command="{Binding MoveSelectedPagesLaterCommand}"
-                          IsEnabled="{Binding CanMoveSelectedPagesLater}"/>
+                          IsEnabled="{Binding CanMoveSelectedPagesLater}"
+                          access:CommandAccessibility.CommandId="document.moveSelectedPagesLater"/>
                 <Separator/>
                 <MenuItem Header="_Remove Current Page" Command="{Binding RemoveCurrentPageCommand}"
-                          IsEnabled="{Binding IsDocumentLoaded}">
+                          IsEnabled="{Binding IsDocumentLoaded}"
+                          access:CommandAccessibility.CommandId="document.removeCurrentPage">
                     <MenuItem.Icon><TextBlock Text="🗑"/></MenuItem.Icon>
                 </MenuItem>
                 <MenuItem Header="Remove Selected Pages" Command="{Binding RemoveSelectedPagesCommand}"
-                          IsEnabled="{Binding CanRemoveSelectedPages}"/>
+                          IsEnabled="{Binding CanRemoveSelectedPages}"
+                          access:CommandAccessibility.CommandId="document.removeSelectedPages"/>
                 <MenuItem Header="Clear Page Selection" Command="{Binding ClearSelectedPagesCommand}"
-                          IsEnabled="{Binding HasSelectedPages}"/>
+                          IsEnabled="{Binding HasSelectedPages}"
+                          access:CommandAccessibility.CommandId="document.clearPageSelection"/>
                 <Separator/>
-                <MenuItem Header="Rotate _Left 90°" Command="{Binding RotatePageLeftCommand}" InputGesture="Ctrl+L"/>
-                <MenuItem Header="Rotate _Right 90°" Command="{Binding RotatePageRightCommand}" InputGesture="Ctrl+R"/>
-                <MenuItem Header="Rotate _180°" Command="{Binding RotatePage180Command}"/>
+                <MenuItem Header="Rotate _Left 90°" Command="{Binding RotatePageLeftCommand}" InputGesture="Ctrl+L"
+                          access:CommandAccessibility.CommandId="document.rotateLeft"/>
+                <MenuItem Header="Rotate _Right 90°" Command="{Binding RotatePageRightCommand}" InputGesture="Ctrl+R"
+                          access:CommandAccessibility.CommandId="document.rotateRight"/>
+                <MenuItem Header="Rotate _180°" Command="{Binding RotatePage180Command}"
+                          access:CommandAccessibility.CommandId="document.rotate180"/>
                 <Separator/>
-                <MenuItem Header="_Export Current Page..." Command="{Binding ExportCurrentPageCommand}" InputGesture="Ctrl+E"/>
-                <MenuItem Header="Export _All Pages as Images..." Command="{Binding ExportPagesCommand}"/>
-                <MenuItem Header="_Print..." Command="{Binding PrintCommand}" InputGesture="Ctrl+P"/>
+                <MenuItem Header="_Export Current Page..." Command="{Binding ExportCurrentPageCommand}" InputGesture="Ctrl+E"
+                          access:CommandAccessibility.CommandId="document.exportCurrentPage"/>
+                <MenuItem Header="Export _All Pages as Images..." Command="{Binding ExportPagesCommand}"
+                          access:CommandAccessibility.CommandId="document.exportAllPages"/>
+                <MenuItem Header="_Print..." Command="{Binding PrintCommand}" InputGesture="Ctrl+P"
+                          access:CommandAccessibility.CommandId="document.print"/>
             </MenuItem>
 
             <!-- REDACTION MENU -->
             <MenuItem Header="_Redaction">
-                <MenuItem Header="_Enable Redaction Mode" Command="{Binding ToggleRedactionModeCommand}" InputGesture="R">
+                <MenuItem Header="_Enable Redaction Mode" Command="{Binding ToggleRedactionModeCommand}" InputGesture="R"
+                          access:CommandAccessibility.CommandId="redaction.toggleMode">
                     <MenuItem.Icon>
                         <TextBlock Text="✓" IsVisible="{Binding IsRedactionMode}"/>
                     </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem Header="_Apply Redaction" Command="{Binding ApplyRedactionCommand}" InputGesture="Enter"
-                          IsEnabled="{Binding IsRedactionMode}">
+                          IsEnabled="{Binding IsRedactionMode}"
+                          access:CommandAccessibility.CommandId="redaction.apply">
                     <MenuItem.Icon><TextBlock Text="⬛" Foreground="Red"/></MenuItem.Icon>
                 </MenuItem>
                 <Separator/>
                 <MenuItem Header="_View Clipboard History"
                           ToggleType="CheckBox"
-                          IsChecked="{Binding IsClipboardSidebarVisible, Mode=TwoWay}">
+                          IsChecked="{Binding IsClipboardSidebarVisible, Mode=TwoWay}"
+                          access:CommandAccessibility.CommandId="view.toggleClipboardHistory">
                     <MenuItem.Icon><TextBlock Text="📋"/></MenuItem.Icon>
                 </MenuItem>
             </MenuItem>
@@ -139,59 +174,75 @@
             <!-- TOOLS MENU -->
             <MenuItem Header="_Tools">
                 <MenuItem Header="_Verify Digital Signatures..." Command="{Binding VerifySignaturesCommand}"
-                          IsEnabled="{Binding IsDocumentLoaded}">
+                          IsEnabled="{Binding IsDocumentLoaded}"
+                          access:CommandAccessibility.CommandId="tools.verifySignatures">
                     <MenuItem.Icon><TextBlock Text="🔐"/></MenuItem.Icon>
                 </MenuItem>
                 <MenuItem Header="Reveal _Hidden Text (audit overlay)"
                           ToolTip.Tip="Surface text that is present in the PDF but visually covered by an opaque overlay — the classic 'black-box redaction' failure mode."
                           IsEnabled="{Binding IsDocumentLoaded}"
                           ToggleType="CheckBox"
-                          IsChecked="{Binding RevealHiddenText, Mode=TwoWay}" />
+                          IsChecked="{Binding RevealHiddenText, Mode=TwoWay}"
+                          access:CommandAccessibility.CommandId="tools.revealHiddenText" />
                 <MenuItem Header="Reveal _Rasterized Hidden Text (deep / OCR)"
                           ToolTip.Tip="Also run differential OCR: render the page with overlays stripped, OCR both versions, and surface words present only in the underlying raster. Slower; requires 'tesseract' on PATH."
                           IsEnabled="{Binding IsDocumentLoaded}"
                           ToggleType="CheckBox"
-                          IsChecked="{Binding RevealRasterizedHidden, Mode=TwoWay}" />
+                          IsChecked="{Binding RevealRasterizedHidden, Mode=TwoWay}"
+                          access:CommandAccessibility.CommandId="tools.revealRasterizedHiddenText" />
                 <Separator/>
-                <MenuItem Header="_Preferences..." Command="{Binding ShowPreferencesCommand}" InputGesture="Ctrl+,">
+                <MenuItem Header="_Preferences..." Command="{Binding ShowPreferencesCommand}" InputGesture="Ctrl+,"
+                          access:CommandAccessibility.CommandId="app.preferences">
                     <MenuItem.Icon><TextBlock Text="⚙"/></MenuItem.Icon>
                 </MenuItem>
             </MenuItem>
 
             <!-- VIEW MENU -->
             <MenuItem Header="_View">
-                <MenuItem Header="_Zoom In" Command="{Binding ZoomInCommand}" InputGesture="Ctrl++"/>
-                <MenuItem Header="Zoom _Out" Command="{Binding ZoomOutCommand}" InputGesture="Ctrl+-"/>
-                <MenuItem Header="_Actual Size" Command="{Binding ZoomActualSizeCommand}" InputGesture="Ctrl+0"/>
+                <MenuItem Header="_Zoom In" Command="{Binding ZoomInCommand}" InputGesture="Ctrl++"
+                          access:CommandAccessibility.CommandId="view.zoomIn"/>
+                <MenuItem Header="Zoom _Out" Command="{Binding ZoomOutCommand}" InputGesture="Ctrl+-"
+                          access:CommandAccessibility.CommandId="view.zoomOut"/>
+                <MenuItem Header="_Actual Size" Command="{Binding ZoomActualSizeCommand}" InputGesture="Ctrl+0"
+                          access:CommandAccessibility.CommandId="view.zoomActualSize"/>
                 <Separator/>
-                <MenuItem Header="Fit _Width" Command="{Binding ZoomFitWidthCommand}" InputGesture="Ctrl+1"/>
-                <MenuItem Header="Fit _Page" Command="{Binding ZoomFitPageCommand}" InputGesture="Ctrl+2"/>
+                <MenuItem Header="Fit _Width" Command="{Binding ZoomFitWidthCommand}" InputGesture="Ctrl+1"
+                          access:CommandAccessibility.CommandId="view.zoomFitWidth"/>
+                <MenuItem Header="Fit _Page" Command="{Binding ZoomFitPageCommand}" InputGesture="Ctrl+2"
+                          access:CommandAccessibility.CommandId="view.zoomFitPage"/>
                 <Separator/>
                 <MenuItem Header="_Continuous Scroll"
                           Command="{Binding ToggleContinuousViewCommand}"
                           ToggleType="CheckBox"
                           InputGesture="Ctrl+Shift+C"
-                          IsChecked="{Binding IsContinuousView}"/>
+                          IsChecked="{Binding IsContinuousView}"
+                          access:CommandAccessibility.CommandId="view.toggleContinuous"/>
                 <Separator/>
                 <MenuItem Header="Show _Outline"
                           ToggleType="CheckBox"
                           InputGesture="Ctrl+Shift+O"
-                          IsChecked="{Binding IsOutlineSidebarVisible, Mode=TwoWay}"/>
+                          IsChecked="{Binding IsOutlineSidebarVisible, Mode=TwoWay}"
+                          access:CommandAccessibility.CommandId="view.toggleOutline"/>
                 <MenuItem Header="Show _Thumbnails"
                           ToggleType="CheckBox"
                           InputGesture="Ctrl+Shift+T"
-                          IsChecked="{Binding IsThumbnailsSidebarVisible, Mode=TwoWay}"/>
+                          IsChecked="{Binding IsThumbnailsSidebarVisible, Mode=TwoWay}"
+                          access:CommandAccessibility.CommandId="view.toggleThumbnails"/>
                 <MenuItem Header="Show _Clipboard History"
                           ToggleType="CheckBox"
-                          IsChecked="{Binding IsClipboardSidebarVisible, Mode=TwoWay}"/>
+                          IsChecked="{Binding IsClipboardSidebarVisible, Mode=TwoWay}"
+                          access:CommandAccessibility.CommandId="view.toggleClipboardHistory"/>
             </MenuItem>
 
             <!-- HELP MENU -->
             <MenuItem Header="_Help">
-                <MenuItem Header="_Keyboard Shortcuts" Command="{Binding ShowShortcutsCommand}" InputGesture="F1"/>
-                <MenuItem Header="_Documentation" Command="{Binding ShowDocumentationCommand}"/>
+                <MenuItem Header="_Keyboard Shortcuts" Command="{Binding ShowShortcutsCommand}" InputGesture="F1"
+                          access:CommandAccessibility.CommandId="app.keyboardShortcuts"/>
+                <MenuItem Header="_Documentation" Command="{Binding ShowDocumentationCommand}"
+                          access:CommandAccessibility.CommandId="app.documentation"/>
                 <Separator/>
-                <MenuItem Header="_About PDF Editor" Command="{Binding AboutCommand}"/>
+                <MenuItem Header="_About PDF Editor" Command="{Binding AboutCommand}"
+                          access:CommandAccessibility.CommandId="app.about"/>
             </MenuItem>
         </Menu>
 
@@ -237,6 +288,7 @@
                             Classes="modern-button toggle"
                             Classes.active="{Binding IsOutlineSidebarVisible}"
                             Padding="10,6"
+                            access:CommandAccessibility.CommandId="view.toggleOutline"
                             ToolTip.Tip="Show/hide Outline (Ctrl+Shift+O)"
                             AutomationProperties.Name="Toggle Outline Sidebar"
                             AutomationProperties.HelpText="Show or hide the document outline / bookmarks panel"/>
@@ -244,6 +296,7 @@
                             Classes="modern-button toggle"
                             Classes.active="{Binding IsThumbnailsSidebarVisible}"
                             Padding="10,6"
+                            access:CommandAccessibility.CommandId="view.toggleThumbnails"
                             ToolTip.Tip="Show/hide Page Previews (Ctrl+Shift+T)"
                             AutomationProperties.Name="Toggle Thumbnails Sidebar"
                             AutomationProperties.HelpText="Show or hide the page thumbnails / previews panel"/>
@@ -251,6 +304,7 @@
                             Classes="modern-button toggle"
                             Classes.active="{Binding IsContinuousView}"
                             Padding="10,6"
+                            access:CommandAccessibility.CommandId="view.toggleContinuous"
                             ToolTip.Tip="Continuous scroll view (Ctrl+Shift+C)"
                             AutomationProperties.Name="Continuous Scroll View"
                             AutomationProperties.HelpText="Toggle between single-page editing view and continuous reading view"/>
@@ -261,18 +315,21 @@
                     <!-- File Group -->
                     <Button Content="📁 Open" Command="{Binding OpenFileCommand}"
                             Classes="modern-button" Padding="12,6"
+                            access:CommandAccessibility.CommandId="app.open"
                             ToolTip.Tip="Open PDF (Ctrl+O)"
                             AutomationProperties.Name="Open PDF File"
                             AutomationProperties.HelpText="Opens a file dialog to select a PDF document"/>
                     <Button Content="{Binding SaveButtonText, StringFormat='💾 {0}'}" Command="{Binding SaveFileCommand}"
                             Classes="modern-button" Padding="12,6"
                             IsEnabled="{Binding IsDocumentLoaded}"
+                            access:CommandAccessibility.CommandId="app.save"
                             ToolTip.Tip="Save (Ctrl+S)"
                             AutomationProperties.Name="Save Document"
                             AutomationProperties.HelpText="Saves the current PDF document"/>
                     <Button Content="▣ Flatten Form" Command="{Binding SaveFlattenedFormCopyCommand}"
                             Classes="modern-button" Padding="12,6"
                             IsEnabled="{Binding IsDocumentLoaded}"
+                            access:CommandAccessibility.CommandId="form.saveFlattenedCopy"
                             ToolTip.Tip="Save a flattened copy of filled form values"
                             AutomationProperties.Name="Save Flattened Form Copy"
                             AutomationProperties.HelpText="Creates a copy where interactive form values are baked into page content"/>
@@ -286,6 +343,7 @@
                             Classes.active="{Binding IsTextSelectionMode}"
                             Padding="12,6"
                             IsEnabled="{Binding IsDocumentLoaded}"
+                            access:CommandAccessibility.CommandId="edit.selectTextMode"
                             ToolTip.Tip="Text Selection Mode (T)"
                             AutomationProperties.Name="Text Selection Mode"
                             AutomationProperties.HelpText="Toggle text selection mode to select and copy text"/>
@@ -295,6 +353,7 @@
                             Classes.active="{Binding IsTypewriterMode}"
                             Padding="12,6"
                             IsEnabled="{Binding IsDocumentLoaded}"
+                            access:CommandAccessibility.CommandId="edit.typewriterMode"
                             ToolTip.Tip="Typewriter Mode"
                             AutomationProperties.Name="Typewriter Mode"
                             AutomationProperties.HelpText="Place editable text that saves as flat PDF page content"/>
@@ -303,6 +362,7 @@
                             Classes="modern-button"
                             Padding="12,6"
                             IsEnabled="{Binding HasTextSelection}"
+                            access:CommandAccessibility.CommandId="annotation.addHighlight"
                             ToolTip.Tip="Add highlight from selected text"
                             AutomationProperties.Name="Add Highlight From Selection"
                             AutomationProperties.HelpText="Creates a real PDF highlight annotation from the current text selection"/>
@@ -311,6 +371,7 @@
                             Classes="modern-button"
                             Padding="12,6"
                             IsEnabled="{Binding IsDocumentLoaded}"
+                            access:CommandAccessibility.CommandId="annotation.addStickyNote"
                             ToolTip.Tip="Add sticky note"
                             AutomationProperties.Name="Add Sticky Note"
                             AutomationProperties.HelpText="Creates a real PDF sticky-note annotation on the current page or text selection"/>
@@ -320,6 +381,7 @@
                             Classes.active="{Binding IsRedactionMode}"
                             Padding="12,6"
                             IsEnabled="{Binding IsDocumentLoaded}"
+                            access:CommandAccessibility.CommandId="redaction.toggleMode"
                             ToolTip.Tip="Redaction Mode (R)"
                             AutomationProperties.Name="Redaction Mode"
                             AutomationProperties.HelpText="Toggle redaction mode to mark areas for removal"/>
@@ -329,6 +391,7 @@
                             Padding="12,6"
                             IsEnabled="{Binding IsRedactionMode}"
                             IsVisible="{Binding IsRedactionMode}"
+                            access:CommandAccessibility.CommandId="redaction.apply"
                             ToolTip.Tip="Apply Redaction (Enter)"
                             AutomationProperties.Name="Apply Redaction"
                             AutomationProperties.HelpText="Apply the current redaction selection"/>
@@ -342,6 +405,7 @@
                             Classes.active="{Binding IsFormAuthoringMode}"
                             Padding="12,6"
                             IsEnabled="{Binding IsDocumentLoaded}"
+                            access:CommandAccessibility.CommandId="form.toggleAuthoring"
                             ToolTip.Tip="Form Authoring Mode — drag to define a new field"
                             AutomationProperties.Name="Form Authoring Mode"/>
 
@@ -361,6 +425,7 @@
                             Classes="modern-button"
                             Padding="12,6"
                             IsEnabled="{Binding IsDocumentLoaded}"
+                            access:CommandAccessibility.CommandId="form.autoDetectFields"
                             ToolTip.Tip="Heuristically add form fields where the page has underline placeholders or empty squares"
                             AutomationProperties.Name="Auto-detect Form Fields"/>
 
@@ -371,6 +436,7 @@
                     <Button Content="🔍 Find" Command="{Binding ToggleSearchCommand}"
                             Classes="modern-button" Padding="12,6"
                             IsEnabled="{Binding IsDocumentLoaded}"
+                            access:CommandAccessibility.CommandId="search.open"
                             ToolTip.Tip="Find Text (Ctrl+F)"
                             AutomationProperties.Name="Find Text"
                             AutomationProperties.HelpText="Opens the search bar to find text in the document"/>
@@ -381,12 +447,14 @@
                     <Button Content="↺" Command="{Binding RotatePageLeftCommand}"
                             Classes="modern-button" Padding="10,6" FontSize="16"
                             IsEnabled="{Binding IsDocumentLoaded}"
+                            access:CommandAccessibility.CommandId="document.rotateLeft"
                             ToolTip.Tip="Rotate Left (Ctrl+L)"
                             AutomationProperties.Name="Rotate Page Left"
                             AutomationProperties.HelpText="Rotate the current page 90 degrees counter-clockwise"/>
                     <Button Content="↻" Command="{Binding RotatePageRightCommand}"
                             Classes="modern-button" Padding="10,6" FontSize="16"
                             IsEnabled="{Binding IsDocumentLoaded}"
+                            access:CommandAccessibility.CommandId="document.rotateRight"
                             ToolTip.Tip="Rotate Right (Ctrl+R)"
                             AutomationProperties.Name="Rotate Page Right"
                             AutomationProperties.HelpText="Rotate the current page 90 degrees clockwise"/>
@@ -397,6 +465,7 @@
                     <Button Content="−" Command="{Binding ZoomOutCommand}"
                             Classes="modern-button" Padding="10,6" FontWeight="Bold"
                             IsEnabled="{Binding IsDocumentLoaded}"
+                            access:CommandAccessibility.CommandId="view.zoomOut"
                             ToolTip.Tip="Zoom Out (Ctrl+-)"
                             AutomationProperties.Name="Zoom Out"
                             AutomationProperties.HelpText="Decrease zoom level"/>
@@ -409,15 +478,17 @@
                     <Button Content="+" Command="{Binding ZoomInCommand}"
                             Classes="modern-button" Padding="10,6" FontWeight="Bold"
                             IsEnabled="{Binding IsDocumentLoaded}"
+                            access:CommandAccessibility.CommandId="view.zoomIn"
                             ToolTip.Tip="Zoom In (Ctrl++)"
                             AutomationProperties.Name="Zoom In"
                             AutomationProperties.HelpText="Increase zoom level"/>
                     <Button Content="Fit" Command="{Binding ZoomFitWidthCommand}"
                             Classes="modern-button" Padding="10,6" FontSize="11"
                             IsEnabled="{Binding IsDocumentLoaded}"
+                            access:CommandAccessibility.CommandId="view.zoomFitWidth"
                             ToolTip.Tip="Fit Width (Ctrl+1)"
-                            AutomationProperties.Name="Fit to Width"
-                            AutomationProperties.HelpText="Fit page to window width"/>
+                            AutomationProperties.Name="Fit Width"
+                            AutomationProperties.HelpText="Fit the page to the window width. Shortcut: Ctrl+1."/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -459,19 +530,24 @@
                         Classes="modern-button compact"
                         Padding="12,4"
                         Margin="0,0,8,0"
+                        access:CommandAccessibility.CommandId="search.find"
                         AutomationProperties.Name="Find"
-                        AutomationProperties.HelpText="Search the document for the entered text"/>
+                        AutomationProperties.HelpText="Search for the entered text. Shortcut: Enter."/>
 
                 <!-- Case Sensitive Checkbox -->
                 <CheckBox Grid.Column="3"
                           IsChecked="{Binding SearchCaseSensitive}"
                           Content="Case sensitive"
+                          AutomationProperties.Name="Case Sensitive Search"
+                          AutomationProperties.HelpText="Match uppercase and lowercase letters exactly."
                           Margin="0,0,8,0"/>
 
                 <!-- Whole Words Checkbox -->
                 <CheckBox Grid.Column="4"
                           IsChecked="{Binding SearchWholeWords}"
                           Content="Whole words"
+                          AutomationProperties.Name="Whole Word Search"
+                          AutomationProperties.HelpText="Match only complete words."
                           Margin="0,0,8,0"/>
 
                 <!-- Regex Checkbox -->
@@ -479,6 +555,8 @@
                           IsChecked="{Binding SearchUseRegex}"
                           Content="Regex"
                           Margin="0,0,8,0"
+                          AutomationProperties.Name="Regular Expression Search"
+                          AutomationProperties.HelpText="Use regular expression pattern matching."
                           ToolTip.Tip="Use regular expression pattern matching"/>
 
                 <!-- Previous Button -->
@@ -488,8 +566,9 @@
                         Classes="modern-button compact"
                         Padding="8,4"
                         Margin="0,0,4,0"
+                        access:CommandAccessibility.CommandId="search.previous"
                         AutomationProperties.Name="Find Previous"
-                        AutomationProperties.HelpText="Navigate to previous search result"/>
+                        AutomationProperties.HelpText="Move to the previous search result. Shortcut: Shift+F3."/>
 
                 <!-- Next Button -->
                 <Button Grid.Column="7"
@@ -498,8 +577,9 @@
                         Classes="modern-button compact"
                         Padding="8,4"
                         Margin="0,0,8,0"
+                        access:CommandAccessibility.CommandId="search.next"
                         AutomationProperties.Name="Find Next"
-                        AutomationProperties.HelpText="Navigate to next search result"/>
+                        AutomationProperties.HelpText="Move to the next search result. Shortcut: F3."/>
 
                 <!-- Result Counter -->
                 <TextBlock Grid.Column="8"
@@ -516,8 +596,9 @@
                         Command="{Binding CloseSearchCommand}"
                         Classes="modern-button compact"
                         Padding="8,4"
+                        access:CommandAccessibility.CommandId="search.close"
                         AutomationProperties.Name="Close Search"
-                        AutomationProperties.HelpText="Close the find bar"/>
+                        AutomationProperties.HelpText="Close the search bar. Shortcut: Esc."/>
             </Grid>
 
             <!-- Inline search progress: indeterminate bar + page-progress
@@ -639,30 +720,35 @@
                                         Classes="modern-button"
                                         Margin="0,0,4,4"
                                         IsEnabled="{Binding CanMoveSelectedPagesEarlier}"
+                                        access:CommandAccessibility.CommandId="document.moveSelectedPagesEarlier"
                                         ToolTip.Tip="Move selected pages earlier"
                                         AutomationProperties.Name="Move Selected Pages Earlier"/>
                                 <Button Content="↓" Command="{Binding MoveSelectedPagesLaterCommand}"
                                         Classes="modern-button"
                                         Margin="0,0,4,4"
                                         IsEnabled="{Binding CanMoveSelectedPagesLater}"
+                                        access:CommandAccessibility.CommandId="document.moveSelectedPagesLater"
                                         ToolTip.Tip="Move selected pages later"
                                         AutomationProperties.Name="Move Selected Pages Later"/>
                                 <Button Content="Extract" Command="{Binding ExtractSelectedPagesCommand}"
                                         Classes="modern-button"
                                         Margin="0,0,4,4"
                                         IsEnabled="{Binding HasSelectedPages}"
+                                        access:CommandAccessibility.CommandId="document.extractSelectedPages"
                                         ToolTip.Tip="Extract selected pages"
                                         AutomationProperties.Name="Extract Selected Pages"/>
                                 <Button Content="Remove" Command="{Binding RemoveSelectedPagesCommand}"
                                         Classes="modern-button"
                                         Margin="0,0,4,4"
                                         IsEnabled="{Binding CanRemoveSelectedPages}"
+                                        access:CommandAccessibility.CommandId="document.removeSelectedPages"
                                         ToolTip.Tip="Remove selected pages"
                                         AutomationProperties.Name="Remove Selected Pages"/>
                                 <Button Content="Clear" Command="{Binding ClearSelectedPagesCommand}"
                                         Classes="modern-button"
                                         Margin="0,0,4,4"
                                         IsEnabled="{Binding HasSelectedPages}"
+                                        access:CommandAccessibility.CommandId="document.clearPageSelection"
                                         ToolTip.Tip="Clear page selection"
                                         AutomationProperties.Name="Clear Page Selection"/>
                             </WrapPanel>
@@ -672,14 +758,15 @@
                     <ItemsControl ItemsSource="{Binding PageThumbnails}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Button Margin="6" Padding="0" Background="Transparent"
-                                        BorderThickness="0"
-                                        Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).GoToPageCommand}"
-                                        CommandParameter="{Binding PageIndex}"
-                                        PointerPressed="OnThumbnailPointerPressed"
-                                        PointerReleased="OnThumbnailPointerReleased"
-                                        Cursor="Hand"
-                                        Classes.selected="{Binding IsSelected}">
+                                    <Button Margin="6" Padding="0" Background="Transparent"
+                                            BorderThickness="0"
+                                            Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).GoToPageCommand}"
+                                            CommandParameter="{Binding PageIndex}"
+                                            access:CommandAccessibility.CommandId="view.goToPage"
+                                            PointerPressed="OnThumbnailPointerPressed"
+                                            PointerReleased="OnThumbnailPointerReleased"
+                                            Cursor="Hand"
+                                            Classes.selected="{Binding IsSelected}">
                                     <Border Padding="6"
                                             Background="{DynamicResource CardBrush}"
                                             BorderBrush="{DynamicResource BorderBrush}"
@@ -758,7 +845,8 @@
                                     HorizontalAlignment="Center"
                                     Padding="20,10"
                                     FontSize="14"
-                                    Margin="0,8,0,0"/>
+                                    Margin="0,8,0,0"
+                                    access:CommandAccessibility.CommandId="app.open"/>
                         </StackPanel>
                     </Grid>
 
@@ -902,6 +990,7 @@
                                                         Padding="4,0"
                                                         Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemovePendingRedactionCommand}"
                                                         CommandParameter="{Binding Id}"
+                                                        access:CommandAccessibility.CommandId="redaction.removePending"
                                                         Background="Transparent"
                                                         Foreground="{DynamicResource TextSecondaryBrush}"/>
                                             </Grid>
@@ -938,6 +1027,7 @@
                                     HorizontalAlignment="Stretch"
                                     Padding="12,8"
                                     FontWeight="SemiBold"
+                                    access:CommandAccessibility.CommandId="redaction.clearAll"
                                     Background="{DynamicResource SecondaryBackgroundBrush}"
                                     Foreground="{DynamicResource TextPrimaryBrush}"
                                     BorderBrush="{DynamicResource BorderBrush}"
@@ -951,6 +1041,7 @@
                                     HorizontalAlignment="Stretch"
                                     Classes="primary"
                                     Padding="12,8"
+                                    access:CommandAccessibility.CommandId="redaction.applyAll"
                                     FontWeight="SemiBold">
                                 <Button.Styles>
                                     <Style Selector="Button.primary">
@@ -1056,10 +1147,13 @@
                             <Setter Property="Background" Value="#E53935"/>
                         </Style>
                     </Border.Styles>
-                    <TextBlock Text="{Binding CurrentModeText}"
+                    <TextBlock x:Name="CurrentModeStatusText"
+                               Text="{Binding CurrentModeText}"
                                VerticalAlignment="Center"
                                FontSize="11"
                                FontWeight="Medium"
+                               AutomationProperties.Name="Current Interaction Mode"
+                               AutomationProperties.ItemStatus="{Binding CurrentModeText}"
                                Classes.redactionActive="{Binding IsRedactionMode}">
                         <TextBlock.Styles>
                             <!-- Normal mode text color -->
@@ -1077,18 +1171,24 @@
                 <!-- Status Text / Operation Status -->
                 <StackPanel Grid.Column="1" Orientation="Vertical" Spacing="2">
                     <!-- Operation Status (shown when an operation is in progress) -->
-                    <TextBlock Text="{Binding OperationStatus}"
+                    <TextBlock x:Name="OperationStatusText"
+                               Text="{Binding OperationStatus}"
                                VerticalAlignment="Center"
                                FontSize="12"
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource AccentBrush}"
+                               AutomationProperties.Name="Operation Status"
+                               AutomationProperties.ItemStatus="{Binding OperationStatus}"
                                IsVisible="{Binding OperationStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 
                     <!-- Regular Status Text (shown when no operation) -->
-                    <TextBlock Text="{Binding StatusBarText}"
+                    <TextBlock x:Name="StatusBarTextBlock"
+                               Text="{Binding StatusBarText}"
                                VerticalAlignment="Center"
                                FontSize="12"
                                Foreground="{DynamicResource TextSecondaryBrush}"
+                               AutomationProperties.Name="Document Status"
+                               AutomationProperties.ItemStatus="{Binding StatusBarText}"
                                IsVisible="{Binding OperationStatus, Converter={x:Static StringConverters.IsNullOrEmpty}}"/>
                 </StackPanel>
 
@@ -1104,8 +1204,9 @@
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
                     <Button Content="◀" Command="{Binding PreviousPageCommand}"
                             Classes="modern-button compact" Padding="8,4"
+                            access:CommandAccessibility.CommandId="view.previousPage"
                             AutomationProperties.Name="Previous Page"
-                            AutomationProperties.HelpText="Navigate to the previous page"/>
+                            AutomationProperties.HelpText="Navigate to the previous page. Shortcut: Page Up."/>
                     <TextBlock Text="{Binding DisplayPageNumber, StringFormat='Page {0}'}"
                                VerticalAlignment="Center"
                                FontSize="12"
@@ -1116,8 +1217,9 @@
                                AutomationProperties.Name="Current Page Number"/>
                     <Button Content="▶" Command="{Binding NextPageCommand}"
                             Classes="modern-button compact" Padding="8,4"
+                            access:CommandAccessibility.CommandId="view.nextPage"
                             AutomationProperties.Name="Next Page"
-                            AutomationProperties.HelpText="Navigate to the next page"/>
+                            AutomationProperties.HelpText="Navigate to the next page. Shortcut: Page Down."/>
                 </StackPanel>
             </Grid>
         </Border>

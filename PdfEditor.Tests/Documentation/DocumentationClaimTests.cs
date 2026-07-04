@@ -39,7 +39,43 @@ public class DocumentationClaimTests
         checklist.Should().Contain("scripts/verify-doc-claims.sh");
         checklist.Should().Contain("dotnet build pdfe.sln --no-restore");
         checklist.Should().Contain("dotnet test pdfe.sln --no-build");
+        checklist.Should().Contain("scripts/run-accessibility-smoke.sh");
         checklist.Should().Contain("git diff --check");
+    }
+
+    [Fact]
+    public void AccessibilityReleaseDocs_MapToGateAndCommandMetadata()
+    {
+        var checklist = Read("docs/RELEASE_CHECKLIST.md");
+        var accessibilityChecklist = Read("docs/ACCESSIBILITY_RELEASE_CHECKLIST.md");
+        var releaseSmoke = Read("scripts/release-smoke.sh");
+        var accessibilitySmoke = Read("scripts/run-accessibility-smoke.sh");
+        var commandRegistry = Read("Pdfe.Core/Automation/PdfCommandRegistry.cs");
+        var commandAccessibility = Read("PdfEditor/Automation/CommandAccessibility.cs");
+        var mainWindow = Read("PdfEditor/Views/MainWindow.axaml");
+
+        checklist.Should().Contain("--only=accessibility");
+        checklist.Should().Contain("ACCESSIBILITY_RELEASE_CHECKLIST.md");
+        accessibilityChecklist.Should().Contain("#562");
+        accessibilityChecklist.Should().Contain("#566");
+        accessibilityChecklist.Should().Contain("#569");
+        accessibilityChecklist.Should().Contain("#570");
+        accessibilityChecklist.Should().Contain("#572");
+        accessibilityChecklist.Should().Contain("#573");
+        accessibilityChecklist.Should().Contain("macOS AX / VoiceOver");
+        accessibilityChecklist.Should().Contain("Windows UI Automation");
+        accessibilityChecklist.Should().Contain("Linux / GNOME AT-SPI");
+
+        releaseSmoke.Should().Contain("run-accessibility-smoke.sh");
+        releaseSmoke.Should().Contain("accessibility");
+        accessibilitySmoke.Should().Contain("AccessibilityRegressionTests");
+        accessibilitySmoke.Should().Contain("CommandMetadataCommandTests");
+        accessibilitySmoke.Should().Contain("PdfCommandRegistryTests");
+        commandRegistry.Should().Contain("PdfCommandIds.ApplyRedaction");
+        commandRegistry.Should().Contain("isSecuritySensitive");
+        commandAccessibility.Should().Contain("AutomationProperties.SetName");
+        commandAccessibility.Should().Contain("ToolTip.SetTip");
+        mainWindow.Should().Contain("access:CommandAccessibility.CommandId");
     }
 
     [Fact]

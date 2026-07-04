@@ -1,4 +1,6 @@
 using System.CommandLine;
+using System.Text.Json;
+using Pdfe.Core.Automation;
 using Pdfe.Core.Document;
 using Pdfe.Core.Text.Segmentation;
 using Pdfe.Ocr;
@@ -22,6 +24,7 @@ partial class Program
     {
         var rootCommand = new RootCommand("pdfe - PDF toolkit powered by Pdfe.Core")
         {
+            CreateCommandsCommand(),
             CreateInfoCommand(),
             CreateTextCommand(),
             CreateLettersCommand(),
@@ -39,6 +42,79 @@ partial class Program
         // because handlers are sync; if any command goes async later we'll
         // switch to Parse(args).InvokeAsync().
         return Task.FromResult(rootCommand.Parse(args).Invoke());
+    }
+
+    /// <summary>
+    /// pdfe commands [id] [--json] - Show stable semantic command metadata.
+    /// </summary>
+    static Command CreateCommandsCommand()
+    {
+        var idArg = new Argument<string?>("id")
+        {
+            Description = "Optional semantic command id to inspect",
+            Arity = ArgumentArity.ZeroOrOne,
+        };
+        var jsonOption = new Option<bool>("--json")
+        {
+            Description = "Write command metadata as JSON",
+            DefaultValueFactory = _ => false,
+        };
+
+        var command = new Command("commands", "Show stable pdfe command metadata for automation and accessibility")
+        {
+            idArg,
+            jsonOption
+        };
+
+        command.SetAction(parseResult =>
+        {
+            var id = parseResult.GetValue(idArg);
+            var json = parseResult.GetValue(jsonOption);
+
+            IReadOnlyList<PdfCommandMetadata> commands;
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                commands = PdfCommandRegistry.All;
+            }
+            else if (PdfCommandRegistry.TryGet(id, out var single))
+            {
+                commands = [single];
+            }
+            else
+            {
+                Console.Error.WriteLine($"Unknown command id: {id}");
+                Environment.ExitCode = 1;
+                return;
+            }
+
+            if (json)
+            {
+                Console.WriteLine(JsonSerializer.Serialize(commands, new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    WriteIndented = true,
+                }));
+                return;
+            }
+
+            foreach (var metadata in commands)
+            {
+                var shortcut = string.IsNullOrWhiteSpace(metadata.Shortcut)
+                    ? string.Empty
+                    : $" [{metadata.Shortcut}]";
+                var cli = string.IsNullOrWhiteSpace(metadata.CliCommand)
+                    ? string.Empty
+                    : $" cli: {metadata.CliCommand}";
+                Console.WriteLine($"{metadata.Id} - {metadata.Label}{shortcut}{cli}");
+                Console.WriteLine($"  {metadata.Description}");
+                if (metadata.IsSecuritySensitive)
+                    Console.WriteLine("  Security-sensitive: true");
+                if (metadata.IsDestructive)
+                    Console.WriteLine("  Destructive: true");
+            }
+        });
+
+        return command;
     }
 
     /// <summary>

@@ -57,7 +57,9 @@
                             <NumericUpDown Value="{Binding RenderCacheMax}"
                                            Minimum="1" Maximum="200"
                                            Increment="5"
-                                           FormatString="0"/>
+                                           FormatString="0"
+                                           AutomationProperties.Name="Render Cache Size"
+                                           AutomationProperties.HelpText="Maximum number of rendered pages to keep in memory."/>
                             <TextBlock Text="Maximum number of pages to keep in memory (higher = faster navigation, more RAM)"
                                        FontSize="10"
                                        Foreground="{DynamicResource TextTertiaryBrush}"
@@ -81,14 +83,22 @@
                 <Button Content="Reset to Defaults"
                         Command="{Binding ResetToDefaultsCommand}"
                         Classes="modern-button"
+                        AutomationProperties.Name="Reset Preferences to Defaults"
+                        AutomationProperties.HelpText="Restore preference values to their defaults."
                         Padding="15,8"/>
                 <Button Content="Cancel"
                         Command="{Binding CancelCommand}"
                         Classes="modern-button"
+                        IsCancel="True"
+                        AutomationProperties.Name="Cancel Preferences"
+                        AutomationProperties.HelpText="Close preferences without saving changes."
                         Padding="15,8"/>
                 <Button Content="Save"
                         Command="{Binding SaveCommand}"
                         Classes="modern-button accent"
+                        IsDefault="True"
+                        AutomationProperties.Name="Save Preferences"
+                        AutomationProperties.HelpText="Save preference changes and close this dialog."
                         Padding="15,8"/>
             </StackPanel>
         </Border>

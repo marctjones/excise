@@ -33,14 +33,19 @@
                            Foreground="#d0d0d0"/>
 
                 <Grid ColumnDefinitions="*,Auto">
-                    <TextBox Grid.Column="0"
+                    <TextBox x:Name="SavePathTextBox"
+                             Grid.Column="0"
                              Text="{Binding SaveFilePath}"
                              PlaceholderText="Choose location for redacted PDF"
+                             AutomationProperties.Name="Redacted PDF Save Path"
+                             AutomationProperties.HelpText="Destination path for the safe redacted PDF copy."
                              Margin="0,0,8,0" />
 
                     <Button Grid.Column="1"
                             Content="Browse..."
                             Click="BrowseButton_Click"
+                            AutomationProperties.Name="Browse Redacted PDF Save Location"
+                            AutomationProperties.HelpText="Choose where to save the redacted PDF copy."
                             Width="100" />
                 </Grid>
             </StackPanel>
@@ -80,6 +85,9 @@
                         Command="{Binding CancelCommand}"
                         Width="100"
                         Margin="0,0,8,0"
+                        IsCancel="True"
+                        AutomationProperties.Name="Cancel Save Redacted Version"
+                        AutomationProperties.HelpText="Close this dialog without saving a redacted copy."
                         Click="CancelButton_Click" />
 
                 <Button Grid.Column="2"
@@ -87,6 +95,9 @@
                         Command="{Binding SaveCommand}"
                         Width="100"
                         Classes="primary"
+                        IsDefault="True"
+                        AutomationProperties.Name="Save Redacted Version"
+                        AutomationProperties.HelpText="Save a safe redacted copy to the selected path."
                         Click="SaveButton_Click" />
             </Grid>
 

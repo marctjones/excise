@@ -124,6 +124,110 @@ namespace Pdfe.Core.Authoring
         public Pdfe.Core.Authoring.TextStyle WithSpaceAfter(double points) { }
     }
 }
+namespace Pdfe.Core.Automation
+{
+    public static class PdfCommandIds
+    {
+        public const string About = "app.about";
+        public const string AddFormField = "form.addField";
+        public const string AddHighlight = "annotation.addHighlight";
+        public const string AddPages = "document.addPages";
+        public const string AddStickyNote = "annotation.addStickyNote";
+        public const string ApplyAllRedactions = "redaction.applyAll";
+        public const string ApplyRedaction = "redaction.apply";
+        public const string AuditHiddenText = "audit.hiddenText";
+        public const string AutoDetectFields = "form.autoDetectFields";
+        public const string ClearAllRedactions = "redaction.clearAll";
+        public const string ClearPageSelection = "document.clearPageSelection";
+        public const string CloseDocument = "app.closeDocument";
+        public const string CopyText = "edit.copyText";
+        public const string DocumentInfo = "document.info";
+        public const string Documentation = "app.documentation";
+        public const string ExportAllPages = "document.exportAllPages";
+        public const string ExportCurrentPage = "document.exportCurrentPage";
+        public const string ExtractCurrentPage = "document.extractCurrentPage";
+        public const string ExtractSelectedPages = "document.extractSelectedPages";
+        public const string ExtractText = "text.extract";
+        public const string FillForm = "form.fillForm";
+        public const string GoToPage = "view.goToPage";
+        public const string InsertPagesAfter = "document.insertPagesAfter";
+        public const string InsertPagesBefore = "document.insertPagesBefore";
+        public const string KeyboardShortcuts = "app.keyboardShortcuts";
+        public const string MoveCurrentPageEarlier = "document.moveCurrentPageEarlier";
+        public const string MoveCurrentPageLater = "document.moveCurrentPageLater";
+        public const string MoveSelectedPagesEarlier = "document.moveSelectedPagesEarlier";
+        public const string MoveSelectedPagesLater = "document.moveSelectedPagesLater";
+        public const string NextPage = "view.nextPage";
+        public const string OcrPage = "ocr.page";
+        public const string Open = "app.open";
+        public const string Preferences = "app.preferences";
+        public const string PreviousPage = "view.previousPage";
+        public const string Print = "document.print";
+        public const string RemoveCurrentPage = "document.removeCurrentPage";
+        public const string RemovePendingRedaction = "redaction.removePending";
+        public const string RemoveSelectedPages = "document.removeSelectedPages";
+        public const string RenderPage = "render.page";
+        public const string RevealHiddenText = "tools.revealHiddenText";
+        public const string RevealRasterizedHiddenText = "tools.revealRasterizedHiddenText";
+        public const string Rotate180 = "document.rotate180";
+        public const string RotateLeft = "document.rotateLeft";
+        public const string RotateRight = "document.rotateRight";
+        public const string Save = "app.save";
+        public const string SaveAs = "app.saveAs";
+        public const string SaveFlattenedFormCopy = "form.saveFlattenedCopy";
+        public const string SearchClose = "search.close";
+        public const string SearchFind = "search.find";
+        public const string SearchNext = "search.next";
+        public const string SearchOpen = "search.open";
+        public const string SearchPrevious = "search.previous";
+        public const string SelectTextMode = "edit.selectTextMode";
+        public const string ShowLetters = "text.letters";
+        public const string ToggleClipboardHistory = "view.toggleClipboardHistory";
+        public const string ToggleContinuousView = "view.toggleContinuous";
+        public const string ToggleFormAuthoring = "form.toggleAuthoring";
+        public const string ToggleOutline = "view.toggleOutline";
+        public const string ToggleRedactionMode = "redaction.toggleMode";
+        public const string ToggleThumbnails = "view.toggleThumbnails";
+        public const string TypewriterMode = "edit.typewriterMode";
+        public const string VerifySignatures = "tools.verifySignatures";
+        public const string ZoomActualSize = "view.zoomActualSize";
+        public const string ZoomFitPage = "view.zoomFitPage";
+        public const string ZoomFitWidth = "view.zoomFitWidth";
+        public const string ZoomIn = "view.zoomIn";
+        public const string ZoomOut = "view.zoomOut";
+    }
+    public sealed class PdfCommandMetadata
+    {
+        public PdfCommandMetadata(string id, string label, string description, string category, string? shortcut = null, string? cliCommand = null, bool requiresDocument = false, bool isDestructive = false, bool isSecuritySensitive = false, string? disabledReason = null, System.Collections.Generic.IReadOnlyList<Pdfe.Core.Automation.PdfCommandParameterMetadata>? parameters = null, System.Collections.Generic.IReadOnlyList<string>? resultFields = null) { }
+        public string Category { get; }
+        public string? CliCommand { get; }
+        public string Description { get; }
+        public string DisabledReason { get; }
+        public string Id { get; }
+        public bool IsDestructive { get; }
+        public bool IsSecuritySensitive { get; }
+        public string Label { get; }
+        public System.Collections.Generic.IReadOnlyList<Pdfe.Core.Automation.PdfCommandParameterMetadata> Parameters { get; }
+        public bool RequiresDocument { get; }
+        public System.Collections.Generic.IReadOnlyList<string> ResultFields { get; }
+        public string? Shortcut { get; }
+    }
+    public sealed class PdfCommandParameterMetadata
+    {
+        public PdfCommandParameterMetadata(string name, string description, string type, bool required = false) { }
+        public string Description { get; }
+        public string Name { get; }
+        public bool Required { get; }
+        public string Type { get; }
+    }
+    public static class PdfCommandRegistry
+    {
+        public static System.Collections.Generic.IReadOnlyList<Pdfe.Core.Automation.PdfCommandMetadata> All { get; }
+        public static System.Collections.Generic.IReadOnlyList<Pdfe.Core.Automation.PdfCommandMetadata> ForCliCommand(string cliCommand) { }
+        public static Pdfe.Core.Automation.PdfCommandMetadata Get(string id) { }
+        public static bool TryGet(string id, out Pdfe.Core.Automation.PdfCommandMetadata command) { }
+    }
+}
 namespace Pdfe.Core.ColorSpaces
 {
     public sealed class PdfColorSpace

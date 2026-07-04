@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Microsoft.Extensions.Logging;
@@ -45,14 +46,20 @@ public sealed class AvaloniaUserDialogService : IUserDialogService
             TextWrapping = Avalonia.Media.TextWrapping.Wrap,
             MaxWidth = 400
         };
+        AutomationProperties.SetName(messageText, title);
+        AutomationProperties.SetHelpText(messageText, message);
 
         var okButton = new Button
         {
             Content = "OK",
             HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
             Padding = new Thickness(30, 5),
-            Margin = new Thickness(0, 10, 0, 0)
+            Margin = new Thickness(0, 10, 0, 0),
+            IsDefault = true,
+            IsCancel = true
         };
+        AutomationProperties.SetName(okButton, $"OK - {title}");
+        AutomationProperties.SetHelpText(okButton, "Close this message.");
 
         okButton.Click += (_, _) => dialog.Close();
 
@@ -89,6 +96,8 @@ public sealed class AvaloniaUserDialogService : IUserDialogService
             MinHeight = 80,
             MaxWidth = 410
         };
+        AutomationProperties.SetName(textBox, title);
+        AutomationProperties.SetHelpText(textBox, message);
 
         var okButton = new Button
         {
@@ -96,6 +105,8 @@ public sealed class AvaloniaUserDialogService : IUserDialogService
             IsDefault = true,
             Padding = new Thickness(24, 5)
         };
+        AutomationProperties.SetName(okButton, $"OK - {title}");
+        AutomationProperties.SetHelpText(okButton, "Accept the entered value.");
 
         var cancelButton = new Button
         {
@@ -103,6 +114,8 @@ public sealed class AvaloniaUserDialogService : IUserDialogService
             IsCancel = true,
             Padding = new Thickness(24, 5)
         };
+        AutomationProperties.SetName(cancelButton, $"Cancel - {title}");
+        AutomationProperties.SetHelpText(cancelButton, "Close this prompt without applying a value.");
 
         okButton.Click += (_, _) => dialog.Close(textBox.Text);
         cancelButton.Click += (_, _) => dialog.Close(null);
@@ -156,6 +169,8 @@ public sealed class AvaloniaUserDialogService : IUserDialogService
             PasswordChar = '*',
             MaxWidth = 410
         };
+        AutomationProperties.SetName(passwordBox, title);
+        AutomationProperties.SetHelpText(passwordBox, message);
 
         var okButton = new Button
         {
@@ -163,6 +178,8 @@ public sealed class AvaloniaUserDialogService : IUserDialogService
             IsDefault = true,
             Padding = new Thickness(24, 5)
         };
+        AutomationProperties.SetName(okButton, $"OK - {title}");
+        AutomationProperties.SetHelpText(okButton, "Accept the entered password.");
 
         var cancelButton = new Button
         {
@@ -170,6 +187,8 @@ public sealed class AvaloniaUserDialogService : IUserDialogService
             IsCancel = true,
             Padding = new Thickness(24, 5)
         };
+        AutomationProperties.SetName(cancelButton, $"Cancel - {title}");
+        AutomationProperties.SetHelpText(cancelButton, "Close this password prompt without applying a password.");
 
         okButton.Click += (_, _) => dialog.Close(passwordBox.Text ?? string.Empty);
         cancelButton.Click += (_, _) => dialog.Close(null);
