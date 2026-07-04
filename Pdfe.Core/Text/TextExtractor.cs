@@ -38,6 +38,7 @@ public class TextExtractor
     private double _ctm_a = 1, _ctm_b = 0, _ctm_c = 0, _ctm_d = 1, _ctm_e = 0, _ctm_f = 0;
     private readonly Stack<PdfDictionary> _resourcesStack = new();
     private readonly HashSet<PdfStream> _formXObjectStack = new();
+    private readonly Stack<bool> _optionalContentHiddenStack = new();
     private int _formXObjectDepth;
     private const int MaxFormXObjectDepth = 64;
 
@@ -752,7 +753,81 @@ public class TextExtractor
                 if (operands.Count >= 1 && operands[0] is string xObjectName)
                     ExtractFormXObjectText(xObjectName.TrimStart('/'));
                 break;
+
+            case "BDC":
+                _optionalContentHiddenStack.Push(IsHiddenOptionalContentSpan(operands));
+                break;
+
+            case "BMC":
+                _optionalContentHiddenStack.Push(false);
+                break;
+
+            case "EMC":
+                if (_optionalContentHiddenStack.Count > 0)
+                    _optionalContentHiddenStack.Pop();
+                break;
         }
+    }
+
+    private bool IsHiddenOptionalContentSpan(List<object> operands)
+    {
+        if (operands.Count < 2)
+            return false;
+
+        if (operands[0] is not string tag || tag != "/OC")
+            return false;
+
+        if (operands[1] is not string propertyName)
+            return false;
+
+        return IsHiddenOptionalContentProperty(propertyName.TrimStart('/'));
+    }
+
+    private bool IsHiddenOptionalContentProperty(string propertyName)
+    {
+        foreach (var resources in _resourcesStack)
+        {
+            var propertiesObj = resources.GetOptional("Properties");
+            if (propertiesObj == null)
+                continue;
+
+            if (_page.Document.Resolve(propertiesObj) is not PdfDictionary properties)
+                continue;
+
+            var propertyObj = properties.GetOptional(propertyName);
+            if (propertyObj == null)
+                continue;
+
+            if (IsHiddenOptionalContentObject(propertyObj))
+                return true;
+        }
+
+        return false;
+    }
+
+    private bool IsHiddenOptionalContentObject(PdfObject obj)
+    {
+        PdfObject resolved;
+        try { resolved = _page.Document.Resolve(obj); }
+        catch (Exception ex) when (ex is not OutOfMemoryException) { return false; }
+
+        if (resolved is PdfDictionary dict && dict.GetNameOrNull("Type") == "OCG")
+        {
+            var name = dict.GetOptional("Name") switch
+            {
+                PdfString s => s.Value,
+                PdfName n => n.Value,
+                _ => null
+            };
+
+            return !string.IsNullOrEmpty(name) &&
+                   _page.Document.GetOptionalContentGroupConfig().OffByDefault.Contains(name);
+        }
+
+        if (resolved is PdfName directName)
+            return _page.Document.GetOptionalContentGroupConfig().OffByDefault.Contains(directName.Value);
+
+        return false;
     }
 
     private void ConcatenateCtm(double a, double b, double c, double d, double e, double f)
@@ -949,7 +1024,10 @@ public class TextExtractor
                 glyphWidth,
                 charCode,
                 stride // 1 for simple fonts, 2 for Type0/CID (#353)
-            );
+            )
+            {
+                IsInHiddenOptionalContent = _optionalContentHiddenStack.Any(hidden => hidden)
+            };
             _letters.Add(letter);
 
             // Advance text position. For vertical writing (WMode 1) the

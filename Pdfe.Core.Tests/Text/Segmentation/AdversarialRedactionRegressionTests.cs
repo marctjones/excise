@@ -142,7 +142,82 @@ public sealed class AdversarialRedactionRegressionTests
             .Should().NotContain("ROTSECRET");
     }
 
+    [Fact]
+    public void RedactText_DefaultIncludesHiddenOptionalContentText()
+    {
+        var pdf = BuildHiddenOcgPdf();
+
+        using (var inspected = PdfDocument.Open(pdf))
+        {
+            var page = inspected.GetPage(1);
+            string.Concat(page.Letters.Where(l => !l.IsInHiddenOptionalContent).Select(l => l.Value))
+                .Should().Contain("VISIBLE");
+            string.Concat(page.Letters.Where(l => l.IsInHiddenOptionalContent).Select(l => l.Value))
+                .Should().Be("HIDDENSECRET");
+        }
+
+        using (var excluded = PdfDocument.Open(pdf))
+        {
+            excluded.RedactText("HIDDENSECRET", includeHiddenLayers: false).Should().Be(0);
+            Encoding.Latin1.GetString(excluded.SaveToBytes()).Should().Contain("HIDDENSECRET",
+                "callers can explicitly exclude hidden layers when they are not doing security redaction");
+        }
+
+        using (var included = PdfDocument.Open(pdf))
+        {
+            included.RedactText("HIDDENSECRET").Should().Be(1);
+            var saved = Encoding.Latin1.GetString(included.SaveToBytes());
+            saved.Should().NotContain("HIDDENSECRET",
+                "security redaction must include text hidden in default-off optional-content layers");
+            saved.Should().Contain("VISIBLE");
+        }
+    }
+
+    [Fact]
+    public void RedactArea_OverHiddenOptionalContentText_RemovesSavedBytes()
+    {
+        var pdf = BuildHiddenOcgPdf();
+
+        using var doc = PdfDocument.Open(pdf);
+        var page = doc.GetPage(1);
+        var hiddenLetters = page.Letters.Where(l => l.IsInHiddenOptionalContent).ToList();
+        hiddenLetters.Should().NotBeEmpty();
+
+        page.RedactArea(BoundingBoxOf(hiddenLetters));
+
+        var saved = Encoding.Latin1.GetString(doc.SaveToBytes());
+        saved.Should().NotContain("HIDDENSECRET");
+        saved.Should().Contain("VISIBLE");
+    }
+
     private static string Obj(string body) => body;
+
+    private static PdfRectangle BoundingBoxOf(IReadOnlyList<Pdfe.Core.Text.Letter> letters)
+    {
+        return new PdfRectangle(
+            letters.Min(l => l.GlyphRectangle.Left),
+            letters.Min(l => l.GlyphRectangle.Bottom),
+            letters.Max(l => l.GlyphRectangle.Right),
+            letters.Max(l => l.GlyphRectangle.Top));
+    }
+
+    private static byte[] BuildHiddenOcgPdf()
+    {
+        return Build(
+            Obj("<< /Type /Catalog /Pages 2 0 R " +
+                "/OCProperties << /OCGs [6 0 R] /D << /OFF [6 0 R] >> >> >>"),
+            Obj("<< /Type /Pages /Kids [3 0 R] /Count 1 >>"),
+            Obj("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] " +
+                "/Contents 4 0 R /Resources << /Font << /F1 5 0 R >> " +
+                "/Properties << /HiddenLayer 6 0 R >> >> >>"),
+            Stream("",
+                "BT /F1 12 Tf 100 720 Td (VISIBLE) Tj ET\n" +
+                "/OC /HiddenLayer BDC\n" +
+                "BT /F1 12 Tf 100 690 Td (HIDDENSECRET) Tj ET\n" +
+                "EMC"),
+            Obj("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>"),
+            Obj("<< /Type /OCG /Name (Confidential Layer) >>"));
+    }
 
     private static string Stream(string dictExtra, string content)
     {

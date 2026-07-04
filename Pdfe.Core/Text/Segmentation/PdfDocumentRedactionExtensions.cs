@@ -115,7 +115,8 @@ public static class PdfDocumentRedactionExtensions
                 }
             }
 
-            totalMatches += RemoveTextShowingOperatorsContaining(page, text, caseSensitive);
+            if (includeHiddenLayers)
+                totalMatches += RemoveTextShowingOperatorsContaining(page, text, caseSensitive);
             totalMatches += RemoveTextLinesStillContaining(page, text, caseSensitive, includeHiddenLayers);
         }
 
