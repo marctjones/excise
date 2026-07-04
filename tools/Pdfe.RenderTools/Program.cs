@@ -33,6 +33,8 @@ partial class Program
             CreateCorpusScanCommand(),
             CreateRenderQualityScanCommand(),
             CreateRenderQualityClassifyCommand(),
+            CreateGuiDisplayHotspotsCommand(),
+            CreateCorpusHotspotsCommand(),
         };
 
         return Task.FromResult(rootCommand.Parse(args).Invoke());
@@ -270,6 +272,517 @@ partial class Program
         writer.Flush();
 
         return ms.ToArray();
+    }
+
+    /// <summary>
+    /// Pdfe.RenderTools gui-display-hotspots report1.json [report2.json ...]
+    ///
+    /// Aggregates phase timings emitted by PdfViewerHeadlessRenderTests so GUI
+    /// and PDF processing optimization work is prioritized by code path across
+    /// the suite, not by one-off slow fixture names.
+    /// </summary>
+    static Command CreateGuiDisplayHotspotsCommand()
+    {
+        var reportsArg = new Argument<FileInfo[]>("reports")
+        {
+            Description = "One or more GUI display sweep JSON reports",
+            Arity = ArgumentArity.OneOrMore,
+        };
+        var outputOption = new Option<FileInfo?>("--output", "-o")
+        {
+            Description = "Optional output JSON path for the aggregate hotspot report",
+        };
+        var topOption = new Option<int>("--top")
+        {
+            Description = "Number of phases to print and include. 0 includes every phase.",
+            DefaultValueFactory = _ => 20,
+        };
+
+        var command = new Command(
+            "gui-display-hotspots",
+            "Aggregate GUI display sweep phase timings by code path")
+        {
+            reportsArg,
+            outputOption,
+            topOption,
+        };
+
+        command.SetAction(parseResult =>
+        {
+            var reports = parseResult.GetValue(reportsArg) ?? Array.Empty<FileInfo>();
+            var output = parseResult.GetValue(outputOption);
+            var top = parseResult.GetValue(topOption);
+
+            try
+            {
+                var report = BuildGuiDisplayHotspotReport(reports, top);
+                PrintGuiDisplayHotspotSummary(report);
+
+                if (output is not null)
+                {
+                    if (output.DirectoryName is { Length: > 0 })
+                        Directory.CreateDirectory(output.DirectoryName);
+                    var json = System.Text.Json.JsonSerializer.Serialize(report,
+                        new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+                    File.WriteAllText(output.FullName, json);
+                    Console.Out.WriteLine($"Wrote GUI display hotspot report: {output.FullName}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error: {ex.Message}");
+                Environment.ExitCode = 1;
+            }
+        });
+
+        return command;
+    }
+
+    /// <summary>
+    /// Pdfe.RenderTools corpus-hotspots corpus-scan.json [more.json ...]
+    ///
+    /// Aggregates existing corpus-scan timing fields into shared code-path
+    /// buckets. PDF names remain evidence in the source reports; this summary
+    /// ranks the work that runs most often and/or consumes the most time.
+    /// </summary>
+    static Command CreateCorpusHotspotsCommand()
+    {
+        var reportsArg = new Argument<FileInfo[]>("reports")
+        {
+            Description = "One or more corpus-scan JSON reports",
+            Arity = ArgumentArity.OneOrMore,
+        };
+        var outputOption = new Option<FileInfo?>("--output", "-o")
+        {
+            Description = "Optional output JSON path for the aggregate hotspot report",
+        };
+        var topOption = new Option<int>("--top")
+        {
+            Description = "Number of phases to print and include. 0 includes every phase.",
+            DefaultValueFactory = _ => 20,
+        };
+
+        var command = new Command(
+            "corpus-hotspots",
+            "Aggregate corpus-scan timings by shared renderer/test-harness code path")
+        {
+            reportsArg,
+            outputOption,
+            topOption,
+        };
+
+        command.SetAction(parseResult =>
+        {
+            var reports = parseResult.GetValue(reportsArg) ?? Array.Empty<FileInfo>();
+            var output = parseResult.GetValue(outputOption);
+            var top = parseResult.GetValue(topOption);
+
+            try
+            {
+                var report = BuildCorpusHotspotReport(reports, top);
+                PrintCorpusHotspotSummary(report);
+
+                if (output is not null)
+                {
+                    if (output.DirectoryName is { Length: > 0 })
+                        Directory.CreateDirectory(output.DirectoryName);
+                    var json = System.Text.Json.JsonSerializer.Serialize(report,
+                        new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+                    File.WriteAllText(output.FullName, json);
+                    Console.Out.WriteLine($"Wrote corpus hotspot report: {output.FullName}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error: {ex.Message}");
+                Environment.ExitCode = 1;
+            }
+        });
+
+        return command;
+    }
+
+    internal static GuiDisplayHotspotReport BuildGuiDisplayHotspotReport(
+        IReadOnlyCollection<FileInfo> reportFiles,
+        int top)
+    {
+        if (reportFiles.Count == 0)
+            throw new ArgumentException("At least one GUI display report is required.", nameof(reportFiles));
+
+        var phaseDurations = new Dictionary<string, List<long>>(StringComparer.Ordinal);
+        var statusCounts = new Dictionary<string, int>(StringComparer.Ordinal);
+        var inputReports = new List<string>();
+        long totalPageElapsedMs = 0;
+        long totalMeasuredPhaseMs = 0;
+        int pageResultCount = 0;
+        int reportsWithPhaseTiming = 0;
+
+        foreach (var reportFile in reportFiles)
+        {
+            if (!reportFile.Exists)
+                throw new FileNotFoundException("GUI display report not found.", reportFile.FullName);
+
+            inputReports.Add(reportFile.FullName);
+            var reportHasPhaseTiming = false;
+            using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(reportFile.FullName));
+            var root = document.RootElement;
+            if (!root.TryGetProperty("results", out var results) ||
+                results.ValueKind != System.Text.Json.JsonValueKind.Array)
+            {
+                continue;
+            }
+
+            foreach (var result in results.EnumerateArray())
+            {
+                pageResultCount++;
+
+                if (result.TryGetProperty("status", out var statusElement) &&
+                    statusElement.ValueKind == System.Text.Json.JsonValueKind.String)
+                {
+                    var status = statusElement.GetString() ?? "UNKNOWN";
+                    statusCounts.TryGetValue(status, out var count);
+                    statusCounts[status] = count + 1;
+                }
+
+                if (result.TryGetProperty("elapsedMs", out var elapsedElement) &&
+                    elapsedElement.TryGetInt64(out var elapsedMs))
+                {
+                    totalPageElapsedMs += elapsedMs;
+                }
+
+                if (!result.TryGetProperty("phaseElapsedMs", out var phases) ||
+                    phases.ValueKind != System.Text.Json.JsonValueKind.Object)
+                {
+                    continue;
+                }
+
+                reportHasPhaseTiming = true;
+                foreach (var phase in phases.EnumerateObject())
+                {
+                    if (!phase.Value.TryGetInt64(out var phaseMs))
+                        continue;
+
+                    if (!phaseDurations.TryGetValue(phase.Name, out var durations))
+                    {
+                        durations = new List<long>();
+                        phaseDurations[phase.Name] = durations;
+                    }
+
+                    durations.Add(phaseMs);
+                    totalMeasuredPhaseMs += phaseMs;
+                }
+            }
+
+            if (reportHasPhaseTiming)
+                reportsWithPhaseTiming++;
+        }
+
+        var allPhases = phaseDurations
+            .Select(kvp => ToGuiDisplayPhaseHotspot(kvp.Key, kvp.Value, totalMeasuredPhaseMs))
+            .OrderByDescending(phase => phase.totalMs)
+            .ThenByDescending(phase => phase.count)
+            .ThenBy(phase => phase.phase, StringComparer.Ordinal)
+            .ToArray();
+
+        var selectedPhases = top <= 0 ? allPhases : allPhases.Take(top).ToArray();
+        return new GuiDisplayHotspotReport
+        {
+            generatedUtc = DateTimeOffset.UtcNow.ToString("O"),
+            inputReports = inputReports,
+            reportCount = reportFiles.Count,
+            reportsWithPhaseTiming = reportsWithPhaseTiming,
+            pageResultCount = pageResultCount,
+            phaseCount = allPhases.Length,
+            totalPageElapsedMs = totalPageElapsedMs,
+            totalMeasuredPhaseMs = totalMeasuredPhaseMs,
+            statusCounts = statusCounts
+                .OrderByDescending(kvp => kvp.Value)
+                .ThenBy(kvp => kvp.Key, StringComparer.Ordinal)
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.Ordinal),
+            phases = selectedPhases,
+        };
+    }
+
+    private static GuiDisplayPhaseHotspot ToGuiDisplayPhaseHotspot(
+        string phase,
+        IReadOnlyCollection<long> durations,
+        long totalMeasuredPhaseMs)
+    {
+        var sorted = durations.OrderBy(value => value).ToArray();
+        var totalMs = sorted.Sum();
+        return new GuiDisplayPhaseHotspot
+        {
+            phase = phase,
+            count = sorted.Length,
+            totalMs = totalMs,
+            averageMs = sorted.Length == 0 ? 0 : totalMs / (double)sorted.Length,
+            p50Ms = Percentile(sorted, 0.50),
+            p95Ms = Percentile(sorted, 0.95),
+            maxMs = sorted.Length == 0 ? 0 : sorted[^1],
+            shareOfMeasuredPhaseTime = totalMeasuredPhaseMs == 0 ? 0 : totalMs / (double)totalMeasuredPhaseMs,
+        };
+    }
+
+    private static long Percentile(IReadOnlyList<long> sortedValues, double percentile)
+    {
+        if (sortedValues.Count == 0)
+            return 0;
+
+        var index = (int)Math.Ceiling(sortedValues.Count * percentile) - 1;
+        return sortedValues[Math.Clamp(index, 0, sortedValues.Count - 1)];
+    }
+
+    private static void PrintGuiDisplayHotspotSummary(GuiDisplayHotspotReport report)
+    {
+        Console.Out.WriteLine(
+            $"GUI display code-path hotspots: {report.pageResultCount} page results, " +
+            $"{report.phaseCount} measured phases, {report.reportsWithPhaseTiming}/{report.reportCount} reports with phase timing.");
+
+        if (report.statusCounts.Count > 0)
+            Console.Out.WriteLine("Statuses: " + string.Join(", ", report.statusCounts.Select(kvp => $"{kvp.Key}={kvp.Value}")));
+
+        Console.Out.WriteLine("Phase                              Count    Total ms    Avg ms    P50    P95    Max   Share");
+        foreach (var phase in report.phases)
+        {
+            Console.Out.WriteLine(
+                $"{phase.phase,-34} {phase.count,6} {phase.totalMs,11} {phase.averageMs,9:0.0} " +
+                $"{phase.p50Ms,6} {phase.p95Ms,6} {phase.maxMs,6} {phase.shareOfMeasuredPhaseTime,7:P1}");
+        }
+    }
+
+    internal static CorpusHotspotReport BuildCorpusHotspotReport(
+        IReadOnlyCollection<FileInfo> reportFiles,
+        int top)
+    {
+        if (reportFiles.Count == 0)
+            throw new ArgumentException("At least one corpus-scan report is required.", nameof(reportFiles));
+
+        var phaseDurations = new Dictionary<string, List<long>>(StringComparer.Ordinal);
+        var statusCounts = new Dictionary<string, int>(StringComparer.Ordinal);
+        var cacheCounts = new Dictionary<string, int>(StringComparer.Ordinal);
+        var inputReports = new List<string>();
+        long totalPageElapsedMs = 0;
+        long totalMeasuredPhaseMs = 0;
+        int pageResultCount = 0;
+
+        foreach (var reportFile in reportFiles)
+        {
+            if (!reportFile.Exists)
+                throw new FileNotFoundException("Corpus scan report not found.", reportFile.FullName);
+
+            inputReports.Add(reportFile.FullName);
+            using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(reportFile.FullName));
+            var root = document.RootElement;
+            if (!root.TryGetProperty("entries", out var entries) ||
+                entries.ValueKind != System.Text.Json.JsonValueKind.Array)
+            {
+                continue;
+            }
+
+            foreach (var entry in entries.EnumerateArray())
+            {
+                pageResultCount++;
+                IncrementStatusCount(statusCounts, ReadString(entry, "status") ?? "UNKNOWN");
+
+                var elapsedMs = ReadInt64(entry, "elapsedMs");
+                if (elapsedMs.HasValue)
+                    totalPageElapsedMs += elapsedMs.Value;
+
+                var measuredCurrentMs = 0L;
+                measuredCurrentMs += AddCorpusCurrentPhase(phaseDurations, cacheCounts, entry,
+                    "pdfe", "renderMs", "pdfeCacheHit", "pdfe-render-cold", "pdfe-cache-read");
+                measuredCurrentMs += AddCorpusCurrentPhase(phaseDurations, cacheCounts, entry,
+                    "mutool", "mutoolMs", "mutoolCacheHit", "reference-mutool-render", "reference-mutool-cache-read");
+                measuredCurrentMs += AddCorpusCurrentPhase(phaseDurations, cacheCounts, entry,
+                    "pdftocairo", "cairoMs", "cairoCacheHit", "reference-pdftocairo-render", "reference-pdftocairo-cache-read");
+                measuredCurrentMs += AddCorpusCurrentPhase(phaseDurations, cacheCounts, entry,
+                    "ghostscript", "ghostscriptMs", "ghostscriptCacheHit", "reference-ghostscript-render", "reference-ghostscript-cache-read");
+                measuredCurrentMs += AddCorpusCurrentPhase(phaseDurations, cacheCounts, entry,
+                    "pdfbox", "pdfboxMs", "pdfboxCacheHit", "reference-pdfbox-render", "reference-pdfbox-cache-read");
+                measuredCurrentMs += AddCorpusCurrentPhase(phaseDurations, cacheCounts, entry,
+                    "pdfium", "pdfiumMs", "pdfiumCacheHit", "reference-pdfium-render", "reference-pdfium-cache-read");
+
+                AddCorpusCachedOriginalPhase(phaseDurations, entry, "pdfeCachedRenderMs", "pdfe-render-cached-original");
+                AddCorpusCachedOriginalPhase(phaseDurations, entry, "mutoolCachedRenderMs", "reference-mutool-cached-original");
+                AddCorpusCachedOriginalPhase(phaseDurations, entry, "cairoCachedRenderMs", "reference-pdftocairo-cached-original");
+                AddCorpusCachedOriginalPhase(phaseDurations, entry, "ghostscriptCachedRenderMs", "reference-ghostscript-cached-original");
+                AddCorpusCachedOriginalPhase(phaseDurations, entry, "pdfboxCachedRenderMs", "reference-pdfbox-cached-original");
+                AddCorpusCachedOriginalPhase(phaseDurations, entry, "pdfiumCachedRenderMs", "reference-pdfium-cached-original");
+
+                if (elapsedMs.HasValue)
+                {
+                    var overheadMs = Math.Max(0, elapsedMs.Value - measuredCurrentMs);
+                    AddPhaseDuration(phaseDurations, "compare-classify-and-overhead", overheadMs);
+                }
+            }
+        }
+
+        totalMeasuredPhaseMs = phaseDurations.Values.SelectMany(values => values).Sum();
+        var allPhases = phaseDurations
+            .Select(kvp => ToCorpusPhaseHotspot(kvp.Key, kvp.Value, totalMeasuredPhaseMs))
+            .OrderByDescending(phase => phase.totalMs)
+            .ThenByDescending(phase => phase.count)
+            .ThenBy(phase => phase.phase, StringComparer.Ordinal)
+            .ToArray();
+
+        var selectedPhases = top <= 0 ? allPhases : allPhases.Take(top).ToArray();
+        return new CorpusHotspotReport
+        {
+            generatedUtc = DateTimeOffset.UtcNow.ToString("O"),
+            inputReports = inputReports,
+            reportCount = reportFiles.Count,
+            pageResultCount = pageResultCount,
+            phaseCount = allPhases.Length,
+            totalPageElapsedMs = totalPageElapsedMs,
+            totalMeasuredPhaseMs = totalMeasuredPhaseMs,
+            statusCounts = statusCounts
+                .OrderByDescending(kvp => kvp.Value)
+                .ThenBy(kvp => kvp.Key, StringComparer.Ordinal)
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.Ordinal),
+            cacheCounts = cacheCounts
+                .OrderBy(kvp => kvp.Key, StringComparer.Ordinal)
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.Ordinal),
+            phases = selectedPhases,
+        };
+    }
+
+    private static long AddCorpusCurrentPhase(
+        Dictionary<string, List<long>> phaseDurations,
+        Dictionary<string, int> cacheCounts,
+        System.Text.Json.JsonElement entry,
+        string cachePrefix,
+        string elapsedProperty,
+        string cacheHitProperty,
+        string coldPhase,
+        string cacheReadPhase)
+    {
+        var elapsedMs = ReadInt64(entry, elapsedProperty);
+        if (!elapsedMs.HasValue)
+            return 0;
+
+        var cacheHit = ReadBoolean(entry, cacheHitProperty);
+        if (cacheHit == true)
+        {
+            AddPhaseDuration(phaseDurations, cacheReadPhase, elapsedMs.Value);
+            IncrementStatusCount(cacheCounts, $"{cachePrefix}:hit");
+        }
+        else
+        {
+            AddPhaseDuration(phaseDurations, coldPhase, elapsedMs.Value);
+            if (cacheHit == false)
+                IncrementStatusCount(cacheCounts, $"{cachePrefix}:miss");
+            else
+                IncrementStatusCount(cacheCounts, $"{cachePrefix}:uncached");
+        }
+
+        return elapsedMs.Value;
+    }
+
+    private static void AddCorpusCachedOriginalPhase(
+        Dictionary<string, List<long>> phaseDurations,
+        System.Text.Json.JsonElement entry,
+        string elapsedProperty,
+        string phase)
+    {
+        var elapsedMs = ReadInt64(entry, elapsedProperty);
+        if (elapsedMs.HasValue)
+            AddPhaseDuration(phaseDurations, phase, elapsedMs.Value);
+    }
+
+    private static void AddPhaseDuration(
+        Dictionary<string, List<long>> phaseDurations,
+        string phase,
+        long elapsedMs)
+    {
+        if (!phaseDurations.TryGetValue(phase, out var durations))
+        {
+            durations = new List<long>();
+            phaseDurations[phase] = durations;
+        }
+
+        durations.Add(elapsedMs);
+    }
+
+    private static void IncrementStatusCount(Dictionary<string, int> counts, string value)
+    {
+        counts.TryGetValue(value, out var count);
+        counts[value] = count + 1;
+    }
+
+    private static long? ReadInt64(System.Text.Json.JsonElement element, string property)
+    {
+        if (element.TryGetProperty(property, out var propertyElement) &&
+            propertyElement.ValueKind == System.Text.Json.JsonValueKind.Number &&
+            propertyElement.TryGetInt64(out var value))
+        {
+            return value;
+        }
+
+        return null;
+    }
+
+    private static bool? ReadBoolean(System.Text.Json.JsonElement element, string property)
+    {
+        if (!element.TryGetProperty(property, out var propertyElement))
+            return null;
+
+        return propertyElement.ValueKind switch
+        {
+            System.Text.Json.JsonValueKind.True => true,
+            System.Text.Json.JsonValueKind.False => false,
+            _ => null,
+        };
+    }
+
+    private static string? ReadString(System.Text.Json.JsonElement element, string property)
+    {
+        if (element.TryGetProperty(property, out var propertyElement) &&
+            propertyElement.ValueKind == System.Text.Json.JsonValueKind.String)
+        {
+            return propertyElement.GetString();
+        }
+
+        return null;
+    }
+
+    private static CorpusPhaseHotspot ToCorpusPhaseHotspot(
+        string phase,
+        IReadOnlyCollection<long> durations,
+        long totalMeasuredPhaseMs)
+    {
+        var sorted = durations.OrderBy(value => value).ToArray();
+        var totalMs = sorted.Sum();
+        return new CorpusPhaseHotspot
+        {
+            phase = phase,
+            count = sorted.Length,
+            totalMs = totalMs,
+            averageMs = sorted.Length == 0 ? 0 : totalMs / (double)sorted.Length,
+            p50Ms = Percentile(sorted, 0.50),
+            p95Ms = Percentile(sorted, 0.95),
+            maxMs = sorted.Length == 0 ? 0 : sorted[^1],
+            shareOfMeasuredPhaseTime = totalMeasuredPhaseMs == 0 ? 0 : totalMs / (double)totalMeasuredPhaseMs,
+        };
+    }
+
+    private static void PrintCorpusHotspotSummary(CorpusHotspotReport report)
+    {
+        Console.Out.WriteLine(
+            $"Corpus code-path hotspots: {report.pageResultCount} page results, " +
+            $"{report.phaseCount} measured phases from {report.reportCount} report(s).");
+
+        if (report.statusCounts.Count > 0)
+            Console.Out.WriteLine("Statuses: " + string.Join(", ", report.statusCounts.Select(kvp => $"{kvp.Key}={kvp.Value}")));
+        if (report.cacheCounts.Count > 0)
+            Console.Out.WriteLine("Cache: " + string.Join(", ", report.cacheCounts.Select(kvp => $"{kvp.Key}={kvp.Value}")));
+
+        Console.Out.WriteLine("Phase                              Count    Total ms    Avg ms    P50    P95    Max   Share");
+        foreach (var phase in report.phases)
+        {
+            Console.Out.WriteLine(
+                $"{phase.phase,-34} {phase.count,6} {phase.totalMs,11} {phase.averageMs,9:0.0} " +
+                $"{phase.p50Ms,6} {phase.p95Ms,6} {phase.maxMs,6} {phase.shareOfMeasuredPhaseTime,7:P1}");
+        }
     }
 
 
@@ -3676,6 +4189,58 @@ partial class Program
         public IReadOnlyList<Jbig2CapabilitySegment> segments { get; set; } = Array.Empty<Jbig2CapabilitySegment>();
         public string? errorType { get; set; }
         public string? errorMessage { get; set; }
+    }
+
+    internal sealed class GuiDisplayHotspotReport
+    {
+        public string generatedUtc { get; set; } = "";
+        public IReadOnlyList<string> inputReports { get; set; } = Array.Empty<string>();
+        public int reportCount { get; set; }
+        public int reportsWithPhaseTiming { get; set; }
+        public int pageResultCount { get; set; }
+        public int phaseCount { get; set; }
+        public long totalPageElapsedMs { get; set; }
+        public long totalMeasuredPhaseMs { get; set; }
+        public Dictionary<string, int> statusCounts { get; set; } = new(StringComparer.Ordinal);
+        public IReadOnlyList<GuiDisplayPhaseHotspot> phases { get; set; } = Array.Empty<GuiDisplayPhaseHotspot>();
+    }
+
+    internal sealed class GuiDisplayPhaseHotspot
+    {
+        public string phase { get; set; } = "";
+        public int count { get; set; }
+        public long totalMs { get; set; }
+        public double averageMs { get; set; }
+        public long p50Ms { get; set; }
+        public long p95Ms { get; set; }
+        public long maxMs { get; set; }
+        public double shareOfMeasuredPhaseTime { get; set; }
+    }
+
+    internal sealed class CorpusHotspotReport
+    {
+        public string generatedUtc { get; set; } = "";
+        public IReadOnlyList<string> inputReports { get; set; } = Array.Empty<string>();
+        public int reportCount { get; set; }
+        public int pageResultCount { get; set; }
+        public int phaseCount { get; set; }
+        public long totalPageElapsedMs { get; set; }
+        public long totalMeasuredPhaseMs { get; set; }
+        public Dictionary<string, int> statusCounts { get; set; } = new(StringComparer.Ordinal);
+        public Dictionary<string, int> cacheCounts { get; set; } = new(StringComparer.Ordinal);
+        public IReadOnlyList<CorpusPhaseHotspot> phases { get; set; } = Array.Empty<CorpusPhaseHotspot>();
+    }
+
+    internal sealed class CorpusPhaseHotspot
+    {
+        public string phase { get; set; } = "";
+        public int count { get; set; }
+        public long totalMs { get; set; }
+        public double averageMs { get; set; }
+        public long p50Ms { get; set; }
+        public long p95Ms { get; set; }
+        public long maxMs { get; set; }
+        public double shareOfMeasuredPhaseTime { get; set; }
     }
 
     internal sealed class CorpusScanEntry

@@ -1,0 +1,66 @@
+{
+  "Path": "local-real-world/business-success-with-open-source_P1.0.pdf",
+  "Source": "optional local real-world books corpus",
+  "Owner": "rendering:quality",
+  "RootCause": "LOCAL_REAL_WORLD_BOOK_BASELINE",
+  "ImprovementPriority": "NONE",
+  "Confidence": "MEDIUM",
+  "QualityReason": "Every-page local book fixture for long-form text, headings, running headers, vector rules, and book-layout PDF display confidence. The PDF is ignored by git and populated locally from test-pdfs/manifests/local-real-world-books.json.",
+  "Notes": "Focused all-pages scan logs/render-quality/local-real-world-books.json verified 454/455 pages as raw PASS. Page 36 is an explicit lower-quality text rasterization follow-up tracked by #584.",
+  "Pages": {
+    "1-35": {
+      "ExpectedRawStatus": "PASS",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PIXEL_EXACT",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
+      "ReferenceSituation": "REFS_AGREE",
+      "RootCause": "LOCAL_REAL_WORLD_BOOK_BASELINE",
+      "ReviewStatus": "REVIEWED",
+      "Target": {
+        "Mode": "REFERENCE_CONSENSUS_FIXED",
+        "Reason": "Focused all-pages local book scan verified these pages as raw PASS against the available reference set."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Long-form local reading PDF page raw-passes against the reference renderer set."
+    },
+    "36": {
+      "ExpectedRawStatus": "PASS_ONE",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "LOWER_QUALITY_ACCEPTABLE",
+      "PixelAgreement": "MATCHES_ONE_REFERENCE",
+      "ReferenceSituation": "REFS_AGREE",
+      "RootCause": "EMBEDDED_CFF_TEXT_RASTERIZATION_DARKER_THAN_REFERENCE_CONSENSUS",
+      "ReviewStatus": "REVIEWED",
+      "Issue": 584,
+      "Target": {
+        "Mode": "REFERENCE_CONSENSUS",
+        "Primary": "pdftocairo",
+        "AcceptableAlternates": [
+          "mutool",
+          "ghostscript"
+        ],
+        "Reason": "Poppler, MuPDF, and Ghostscript preserve the same semantic content and cluster more closely with each other than with pdfe. Current pdfe output is semantically intact but renders the embedded Type 1C/CFF text darker/heavier over the full text page."
+      },
+      "ImprovementPriority": "P2",
+      "Confidence": "MEDIUM",
+      "QualityReason": "Visible content is present and readable, but embedded Type 1C/CFF text rasterization is darker/heavier than the reference consensus. Keep this visible as #584 rather than treating it as pixel-exact."
+    },
+    "37-455": {
+      "ExpectedRawStatus": "PASS",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PIXEL_EXACT",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
+      "ReferenceSituation": "REFS_AGREE",
+      "RootCause": "LOCAL_REAL_WORLD_BOOK_BASELINE",
+      "ReviewStatus": "REVIEWED",
+      "Target": {
+        "Mode": "REFERENCE_CONSENSUS_FIXED",
+        "Reason": "Focused all-pages local book scan verified these pages as raw PASS against the available reference set."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Long-form local reading PDF page raw-passes against the reference renderer set."
+    }
+  }
+}

@@ -76,6 +76,28 @@ Entries also include timing diagnostics when produced by current tooling:
 include a `diagnostic` snapshot for wall-clock timeouts. The merge script
 prints the slowest pages and failure diagnostics into the run log.
 
+Use aggregate hotspot reports when deciding what to optimize. Slow PDF/page
+names are reproduction evidence, not the priority list. The corpus hotspot
+command rolls raw scan entries up by shared code path: pdfe render/cache read,
+reference render/cache read, and compare/classify overhead.
+
+```bash
+dotnet run --project tools/Pdfe.RenderTools/Pdfe.RenderTools.csproj -c Debug -- \
+    corpus-hotspots logs/render-quality/local-real-world-books.raw-corpus-scan.json \
+    --output logs/render-quality/local-real-world-corpus-codepath-hotspots.json
+```
+
+The GUI display harness records per-page phase timings in its incremental JSON
+reports. Use `gui-display-hotspots` to rank GUI/test-display phases such as
+viewer render/capture, image-source diff, opacity checks, and visual-surface
+checks across all pages.
+
+```bash
+dotnet run --project tools/Pdfe.RenderTools/Pdfe.RenderTools.csproj -c Debug -- \
+    gui-display-hotspots PdfEditor.Tests/bin/Debug/net10.0/UI/test-output/gui-display-suite-*.json \
+    --output logs/render-quality/gui-display-codepath-hotspots.json
+```
+
 | Status | Meaning |
 |---|---|
 | `PASS` | pdfe matches both mutool and pdftocairo within thresholds |
@@ -124,6 +146,7 @@ with `PDFE_PDFBOX_JAR=/path/to/pdfbox-app.jar`; PDFium can be enabled with
 |---|---|---|---|
 | Smoke government corpus | `scripts/download-smoke-corpus.sh` | `test-pdfs/smoke` | Small gating set used by unit/differential tests. Keep this stable so normal test runs do not gain surprise fixtures. |
 | Federal everyday corpus | `scripts/download-federal-corpus.sh` | `test-pdfs/federal` | Manifest-driven release-quality corpus with source URL, category, agency, license basis, page count, and SHA-256 for each official `.gov` PDF. |
+| Optional local real-world books | `scripts/setup-local-real-world-corpus.sh` | `test-pdfs/local-real-world` | Local personal/reference reading PDFs such as OSS books. PDFs stay ignored by git; committed manifests/contracts let Marc's machine run every-page renderer and GUI display checks without redistributing the documents. |
 | pdf.js corpus | `scripts/download-pdfjs-corpus.sh` | `test-pdfs/pdfjs` | Broad bug-reproduction corpus for exploratory fidelity scans. |
 | Poppler corpus | `scripts/download-poppler-corpus.sh` | `test-pdfs/poppler` | Poppler's public regression test-data repository, including rendering fixtures and reference assets. |
 | Generated implementation regressions | `scripts/generate-rendering-regression-fixtures.py` | `test-pdfs/generated-regressions` | Small pdfe-authored PDFs generated from focused debugging hypotheses. These are checked in and contract-covered so future fixes cannot regress known-good simplified cases. |
@@ -145,6 +168,42 @@ Download or refresh Poppler's public regression corpus with:
 
 ```bash
 ./scripts/download-poppler-corpus.sh
+```
+
+Populate the optional local book corpus from already-present local files with:
+
+```bash
+./scripts/setup-local-real-world-corpus.sh
+```
+
+Run its focused every-page renderer-quality scan without kicking off the full
+corpus:
+
+```bash
+./scripts/run-render-quality-scan.sh \
+    --corpus test-pdfs \
+    --contract-root-cause LOCAL_REAL_WORLD_BOOK_BASELINE \
+    --page-mode all \
+    --oracles all \
+    --parallel 4 \
+    --large-pdf-shard-pages 64 \
+    --output logs/render-quality/local-real-world-books.json
+```
+
+Run the matching GUI display check over the same local contract group. Use the
+chunked wrapper for the full book set so long documents do not trip the xUnit
+per-test timeout, each chunk writes its own incremental JSON report, and the
+wrapper emits a final code-path hotspot summary:
+
+```bash
+scripts/run-local-real-world-gui-display.sh
+```
+
+Tune chunk size when working on slower machines or while doing other local work:
+
+```bash
+PDFE_LOCAL_REAL_WORLD_GUI_CHUNK_SIZE=75 \
+    scripts/run-local-real-world-gui-display.sh
 ```
 
 For release-candidate rendering checks against this tier, run the CLI scanner

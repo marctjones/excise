@@ -1,0 +1,28 @@
+{
+  "Path": "local-real-world/foss-primer.pdf",
+  "Source": "optional local real-world books corpus",
+  "Owner": "rendering:quality",
+  "RootCause": "LOCAL_REAL_WORLD_BOOK_BASELINE",
+  "ImprovementPriority": "NONE",
+  "Confidence": "MEDIUM",
+  "QualityReason": "Every-page local FOSS legal-primer fixture for LaTeX/pdfTeX output, letter-page text, links, and legal-document layout confidence. The PDF is ignored by git and populated locally from test-pdfs/manifests/local-real-world-books.json.",
+  "Notes": "Focused all-pages scan logs/render-quality/local-real-world-books.json verified all 45 pages as raw PASS.",
+  "Pages": {
+    "1-45": {
+      "ExpectedRawStatus": "PASS",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PIXEL_EXACT",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
+      "ReferenceSituation": "REFS_AGREE",
+      "RootCause": "LOCAL_REAL_WORLD_BOOK_BASELINE",
+      "ReviewStatus": "REVIEWED",
+      "Target": {
+        "Mode": "REFERENCE_CONSENSUS_FIXED",
+        "Reason": "Focused all-pages local book scan verified these pages as raw PASS against the available reference set."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Long-form local reading PDF page raw-passes against the reference renderer set."
+    }
+  }
+}

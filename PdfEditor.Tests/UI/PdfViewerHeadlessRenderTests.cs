@@ -244,6 +244,7 @@ public class PdfViewerHeadlessRenderTests
                 expectedRawStatus = testCase.Contract?.ExpectedRawStatus,
                 qualityStatus = testCase.Contract?.QualityStatus,
             };
+            var phaseElapsedMs = new Dictionary<string, long>(StringComparer.Ordinal);
 
             try
             {
@@ -252,44 +253,87 @@ public class PdfViewerHeadlessRenderTests
 
                 if (!pdfBytesCache.TryGetValue(testCase.AbsolutePath, out var pdfBytes))
                 {
-                    pdfBytes = await File.ReadAllBytesAsync(testCase.AbsolutePath);
+                    pdfBytes = await MeasurePhaseAsync(
+                        phaseElapsedMs,
+                        "pdf-bytes-read-and-cache",
+                        () => File.ReadAllBytesAsync(testCase.AbsolutePath));
                     pdfBytesCache[testCase.AbsolutePath] = pdfBytes;
-                }
-
-                using var expectedRaw = RenderDirectViewerPage(pdfBytes, testCase.PageNumber, testCase.Password);
-                using var expected = NormalizeSkiaBitmap(expectedRaw);
-                var capture = await RenderViewerVisualSurface(
-                    pdfBytes,
-                    testCase.PageNumber,
-                    testCase.Password,
-                    renderTimeout: TimeSpan.FromMinutes(3));
-                using var displayed = capture.Displayed;
-                using var visualSurface = capture.VisualSurface;
-
-                displayed.Width.Should().Be(expected.Width, $"{testCase.Id} GUI image width should match renderer");
-                displayed.Height.Should().Be(expected.Height, $"{testCase.Id} GUI image height should match renderer");
-
-                var imageSourceDiff = VisualAssertions.CalculatePixelDifference(displayed, expected);
-                result.imageSourcePixelDifference = imageSourceDiff;
-                if (imageSourceDiff > 0.001)
-                    SaveGuiDisplayFailureArtifacts(outputDir, testCase, expected, displayed, visualSurface);
-                imageSourceDiff.Should().BeLessThanOrEqualTo(0.001,
-                    $"{testCase.Id} Image.Source should match the PNG-visible renderer output");
-
-                AssertBitmapOpaque(displayed, $"{testCase.Id} Image.Source");
-                AssertGuiSurfaceDoesNotObscureDisplayedBitmap(displayed, visualSurface, testCase.Id);
-
-                if (ExpectsNonRenderable(testCase))
-                {
-                    result.status = "UNEXPECTED_RENDER";
-                    result.error = $"Expected non-renderable status {testCase.Contract?.ExpectedRawStatus}, but the page rendered.";
-                    failures.Add($"{testCase.Id}: {result.error}");
                 }
                 else
                 {
-                    result.status = "PASS";
-                    result.visualSurfaceMeanLuminanceDelta =
-                        MeasureImage(displayed).MeanLuminance - MeasureImage(visualSurface).MeanLuminance;
+                    phaseElapsedMs["pdf-bytes-cache-hit"] = 0;
+                }
+
+                using var expectedRaw = MeasurePhase(
+                    phaseElapsedMs,
+                    "expected-render-direct",
+                    () => RenderDirectViewerPage(pdfBytes, testCase.PageNumber, testCase.Password));
+                using var expected = MeasurePhase(
+                    phaseElapsedMs,
+                    "expected-normalize-png-roundtrip",
+                    () => NormalizeSkiaBitmap(expectedRaw));
+                var capture = await MeasurePhaseAsync(
+                    phaseElapsedMs,
+                    "viewer-render-and-capture",
+                    () => RenderViewerVisualSurface(
+                        pdfBytes,
+                        testCase.PageNumber,
+                        testCase.Password,
+                        renderTimeout: TimeSpan.FromMinutes(3)));
+                using var displayed = capture.Displayed;
+                using var visualSurface = capture.VisualSurface;
+
+                MeasurePhase(phaseElapsedMs, "dimension-check", () =>
+                {
+                    displayed.Width.Should().Be(expected.Width, $"{testCase.Id} GUI image width should match renderer");
+                    displayed.Height.Should().Be(expected.Height, $"{testCase.Id} GUI image height should match renderer");
+                });
+
+                var imageSourceDiff = MeasurePhase(
+                    phaseElapsedMs,
+                    "image-source-diff",
+                    () => VisualAssertions.CalculatePixelDifference(displayed, expected));
+                result.imageSourcePixelDifference = imageSourceDiff;
+                if (imageSourceDiff > 0.001)
+                {
+                    MeasurePhase(
+                        phaseElapsedMs,
+                        "failure-artifact-write",
+                        () => SaveGuiDisplayFailureArtifacts(outputDir, testCase, expected, displayed, visualSurface));
+                }
+                MeasurePhase(phaseElapsedMs, "image-source-diff-threshold", () =>
+                    imageSourceDiff.Should().BeLessThanOrEqualTo(0.001,
+                        $"{testCase.Id} Image.Source should match the PNG-visible renderer output"));
+
+                MeasurePhase(
+                    phaseElapsedMs,
+                    "image-source-opacity-check",
+                    () => AssertBitmapOpaque(displayed, $"{testCase.Id} Image.Source"));
+                MeasurePhase(
+                    phaseElapsedMs,
+                    "visual-surface-obscure-check",
+                    () => AssertGuiSurfaceDoesNotObscureDisplayedBitmap(displayed, visualSurface, testCase.Id));
+
+                MeasurePhase(phaseElapsedMs, "semantic-status-policy", () =>
+                {
+                    if (ExpectsNonRenderable(testCase))
+                    {
+                        result.status = "UNEXPECTED_RENDER";
+                        result.error = $"Expected non-renderable status {testCase.Contract?.ExpectedRawStatus}, but the page rendered.";
+                        failures.Add($"{testCase.Id}: {result.error}");
+                    }
+                    else
+                    {
+                        result.status = "PASS";
+                    }
+                });
+
+                if (result.status == "PASS")
+                {
+                    result.visualSurfaceMeanLuminanceDelta = MeasurePhase(
+                        phaseElapsedMs,
+                        "visual-luminance-measure",
+                        () => MeasureImage(displayed).MeanLuminance - MeasureImage(visualSurface).MeanLuminance);
                 }
             }
             catch (Exception ex)
@@ -307,6 +351,7 @@ public class PdfViewerHeadlessRenderTests
             {
                 caseSw.Stop();
                 result.elapsedMs = caseSw.ElapsedMilliseconds;
+                result.phaseElapsedMs = phaseElapsedMs;
                 results.Add(result);
             }
 
@@ -741,13 +786,14 @@ public class PdfViewerHeadlessRenderTests
         "contract:pdf20" => 1,
         "contract:sample-pdfs" => 2,
         "contract:federal" => 3,
-        "contract:smoke" => 4,
-        "contract:ghent" => 5,
-        "contract:altona" => 6,
-        "contract:pdfjs" => 7,
-        "contract:poppler" => 8,
-        "contract:isartor" => 9,
-        "contract:verapdf-corpus" => 10,
+        "contract:local-real-world" => 4,
+        "contract:smoke" => 5,
+        "contract:ghent" => 6,
+        "contract:altona" => 7,
+        "contract:pdfjs" => 8,
+        "contract:poppler" => 9,
+        "contract:isartor" => 10,
+        "contract:verapdf-corpus" => 11,
         _ => 99,
     };
 
@@ -972,6 +1018,50 @@ public class PdfViewerHeadlessRenderTests
         return selected.ToArray();
     }
 
+    private static T MeasurePhase<T>(
+        IDictionary<string, long> phaseElapsedMs,
+        string phase,
+        Func<T> action)
+    {
+        var sw = Stopwatch.StartNew();
+        try
+        {
+            return action();
+        }
+        finally
+        {
+            sw.Stop();
+            phaseElapsedMs[phase] = sw.ElapsedMilliseconds;
+        }
+    }
+
+    private static void MeasurePhase(
+        IDictionary<string, long> phaseElapsedMs,
+        string phase,
+        Action action) =>
+        MeasurePhase(phaseElapsedMs, phase, () =>
+        {
+            action();
+            return true;
+        });
+
+    private static async Task<T> MeasurePhaseAsync<T>(
+        IDictionary<string, long> phaseElapsedMs,
+        string phase,
+        Func<Task<T>> action)
+    {
+        var sw = Stopwatch.StartNew();
+        try
+        {
+            return await action();
+        }
+        finally
+        {
+            sw.Stop();
+            phaseElapsedMs[phase] = sw.ElapsedMilliseconds;
+        }
+    }
+
     private static async Task WriteGuiDisplayReport(
         string reportPath,
         bool includeAllContractPages,
@@ -1126,6 +1216,7 @@ public class PdfViewerHeadlessRenderTests
         public double imageSourcePixelDifference { get; set; }
         public double visualSurfaceMeanLuminanceDelta { get; set; }
         public long elapsedMs { get; set; }
+        public Dictionary<string, long> phaseElapsedMs { get; set; } = new(StringComparer.Ordinal);
         public string? error { get; set; }
     }
 

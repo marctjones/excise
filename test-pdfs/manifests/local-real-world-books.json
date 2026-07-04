@@ -1,0 +1,57 @@
+{
+  "name": "local-real-world-books",
+  "description": "Optional local reading PDFs used for every-page renderer and GUI display confidence. The PDFs are not committed; run scripts/setup-local-real-world-corpus.sh on Marc's machine to copy local personal/reference copies into test-pdfs/local-real-world.",
+  "defaultTarget": "test-pdfs/local-real-world",
+  "licenseBasis": "Local personal/reference copies only; do not commit or redistribute these PDFs from the repository.",
+  "documents": [
+    {
+      "filename": "business-success-with-open-source_P1.0.pdf",
+      "title": "Business Success with Open Source",
+      "author": "VM (Vicky) Brasseur",
+      "category": "book",
+      "source": "Local Downloads copy",
+      "licenseBasis": "Local personal/reference copy; not redistributed by pdfe.",
+      "pageCount": 455,
+      "pdfVersion": "1.4",
+      "encrypted": false,
+      "sizeBytes": 7434049,
+      "sha256": "470842edafa5717963978c69648c4eb4aa488e21fd7f3fd453079baeebbce8d4",
+      "localCandidates": [
+        "~/Downloads/business-success-with-open-source_P1.0.pdf",
+        "~/Library/Mail/V10/2B5C38E1-DA88-43BD-ABB0-7AF037D0D2C7/[Gmail].mbox/All Mail.mbox/9597AA50-1CF8-4568-A623-629F65AACEF9/Data/2/Attachments/2373/2/business-success-with-open-source_P1.0.pdf"
+      ]
+    },
+    {
+      "filename": "producingoss.pdf",
+      "title": "Producing Open Source Software - How to Run a Successful Free Software Project",
+      "author": "Karl Fogel",
+      "category": "book",
+      "source": "Local Mail attachment copy",
+      "licenseBasis": "Local reference copy; not redistributed by pdfe.",
+      "pageCount": 232,
+      "pdfVersion": "1.4",
+      "encrypted": false,
+      "sizeBytes": 1122205,
+      "sha256": "05f5f3972d96d2b53c889f505ad374f1e45943809fa32a55b24fb02f2ff63796",
+      "localCandidates": [
+        "~/Library/Mail/V10/2B5C38E1-DA88-43BD-ABB0-7AF037D0D2C7/[Gmail].mbox/All Mail.mbox/9597AA50-1CF8-4568-A623-629F65AACEF9/Data/8/8/Attachments/88235/3/producingoss.pdf"
+      ]
+    },
+    {
+      "filename": "foss-primer.pdf",
+      "title": "A Legal Issues Primer for Open Source and Free Software Projects",
+      "author": "Richard Fontana, Bradley M. Kuhn, Eben Moglen, Matthew Norwood, Daniel B. Ravicher, Karen Sandler, James Vasile, Aaron Williamson",
+      "category": "legal-primer",
+      "source": "Local Mail attachment copy",
+      "licenseBasis": "Local reference copy; not redistributed by pdfe.",
+      "pageCount": 45,
+      "pdfVersion": "1.4",
+      "encrypted": false,
+      "sizeBytes": 321055,
+      "sha256": "af3f2a7987c9ad380f08a8cf3d837626c8a840f48b3d193a207e45461c79db8a",
+      "localCandidates": [
+        "~/Library/Mail/V10/2B5C38E1-DA88-43BD-ABB0-7AF037D0D2C7/[Gmail].mbox/All Mail.mbox/9597AA50-1CF8-4568-A623-629F65AACEF9/Data/7/1/1/Attachments/117445/2/foss-primer.pdf"
+      ]
+    }
+  ]
+}

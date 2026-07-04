@@ -1,0 +1,28 @@
+{
+  "Path": "local-real-world/producingoss.pdf",
+  "Source": "optional local real-world books corpus",
+  "Owner": "rendering:quality",
+  "RootCause": "LOCAL_REAL_WORLD_BOOK_BASELINE",
+  "ImprovementPriority": "NONE",
+  "Confidence": "MEDIUM",
+  "QualityReason": "Every-page local open-source book fixture for long-form text, tables of contents, links, and letter-page book layout confidence. The PDF is ignored by git and populated locally from test-pdfs/manifests/local-real-world-books.json.",
+  "Notes": "Focused all-pages scan logs/render-quality/local-real-world-books.json verified all 232 pages as raw PASS.",
+  "Pages": {
+    "1-232": {
+      "ExpectedRawStatus": "PASS",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "PIXEL_EXACT",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
+      "ReferenceSituation": "REFS_AGREE",
+      "RootCause": "LOCAL_REAL_WORLD_BOOK_BASELINE",
+      "ReviewStatus": "REVIEWED",
+      "Target": {
+        "Mode": "REFERENCE_CONSENSUS_FIXED",
+        "Reason": "Focused all-pages local book scan verified these pages as raw PASS against the available reference set."
+      },
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Long-form local reading PDF page raw-passes against the reference renderer set."
+    }
+  }
+}
