@@ -71,6 +71,17 @@ public class DocumentationClaimTests
     }
 
     [Fact]
+    public void BenchmarkScript_UsesExistingRenderToolsHotspotCommands()
+    {
+        var script = Read("scripts/run-benchmarks.sh");
+
+        script.Should().NotContain("Pdfe.Benchmarks/Pdfe.Benchmarks.csproj");
+        script.Should().Contain("tools/Pdfe.RenderTools/Pdfe.RenderTools.csproj");
+        script.Should().Contain("corpus-hotspots");
+        script.Should().Contain("gui-display-hotspots");
+    }
+
+    [Fact]
     public void FileAssociationDocs_MapToPackagingAndStartupHandlers()
     {
         var readme = Read("README.md");

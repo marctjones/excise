@@ -81,6 +81,13 @@ names are reproduction evidence, not the priority list. The corpus hotspot
 command rolls raw scan entries up by shared code path: pdfe render/cache read,
 reference render/cache read, and compare/classify overhead.
 
+For the newest local raw scan and GUI display reports, use the benchmark
+wrapper:
+
+```bash
+scripts/run-benchmarks.sh
+```
+
 ```bash
 dotnet run --project tools/Pdfe.RenderTools/Pdfe.RenderTools.csproj -c Debug -- \
     corpus-hotspots logs/render-quality/local-real-world-books.raw-corpus-scan.json \
