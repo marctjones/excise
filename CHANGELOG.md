@@ -8,6 +8,48 @@ semantic versioning.
 
 No changes yet.
 
+## [2.21.0] - 2026-07-04
+
+GUI responsiveness and packaged-app release-gate hardening release. No intended
+API break.
+
+### Added
+- **GUI responsiveness reporting (#577, #581, #582).** The desktop app records
+  open-to-first-page-visible timing, background phase ordering, render cache
+  stats, and PASS/WARN/FAIL budget status in a JSON report that release smoke
+  can consume.
+- **Packaged app responsiveness smoke (#582).** `scripts/release-smoke.sh`
+  now supports a packaged-GUI direct-exec mode that launches the built macOS
+  app with a real PDF, captures app stdout/stderr, validates the first-page
+  report, and avoids taking keyboard or mouse focus by default.
+- **Interaction latency coverage (#578, #583).** Focused GUI tests cover direct
+  input paths for search typing, text selection feedback, redaction preview,
+  form authoring, and form edits, plus first-page-before-background-work
+  ordering.
+
+### Changed
+- **Render scheduling and cache behavior (#575, #579).** Visible page renders
+  cancel/drop stale work, adjacent-page prefetch is sequenced behind the visible
+  page, lazy thumbnail placeholders avoid front-loading all thumbnail renders,
+  and responsiveness reports include cache-hit/miss and cache-size signals.
+- **macOS packaged smoke stability.** The packaged-GUI smoke now wakes the
+  active display briefly before launching the app, avoiding Avalonia native
+  render-timer startup failures when the laptop display is asleep. Avalonia
+  packages were updated from 12.0.4 to 12.0.5.
+- **Benchmark wrapper cleanup (#536).** `scripts/run-benchmarks.sh` now routes
+  through the maintained render-tooling entry points so corpus hotspot reports
+  can separate pdfe render cost from reference-render and comparison overhead.
+
+### Tests
+- Focused responsiveness and scheduling gate passed:
+  `dotnet test PdfEditor.Tests/PdfEditor.Tests.csproj -c Debug --filter "FullyQualifiedName~GuiResponsivenessBudgetTests|FullyQualifiedName~MainWindowRenderSchedulingTests|FullyQualifiedName~PdfRenderServiceCacheTests|FullyQualifiedName~ResponsivenessReportTests|FullyQualifiedName~GuiWorkflowCoverageMatrixTests"`.
+- Packaged release smoke passed:
+  `logs/release-smoke_20260704_133123` (package and packaged-GUI direct-exec
+  gate; app first-page visible in `108ms` on the generated six-page smoke PDF).
+- Broader cross-library benchmark epics (#344, #357) remain open; this release
+  ships the GUI responsiveness gate and hotspot aggregation cleanup, not the
+  full future benchmarking system.
+
 ## [2.20.0] - 2026-07-04
 
 GUI interaction and redaction hardening release. No intended API break.

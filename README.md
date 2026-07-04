@@ -496,7 +496,7 @@ Before tagging, run the release checklist in
 the implemented commands and APIs. The repeatable local gate is:
 
 ```bash
-scripts/release-smoke.sh --visual --package --packaged-gui --version 2.19.0
+scripts/release-smoke.sh --visual --package --packaged-gui --version 2.21.0
 ```
 
 The release-smoke script does not create tags or upload artifacts. It runs the
@@ -507,8 +507,8 @@ responsiveness timing, and diff-cleanliness gates and writes logs under
 
 ```bash
 # Cut a new release
-git tag -a v2.19.0 -m "pdfe v2.19.0"
-git push origin v2.19.0          # workflow runs, attaches release artifacts
+git tag -a v2.21.0 -m "pdfe v2.21.0"
+git push origin v2.21.0          # workflow runs, attaches release artifacts
 # Or via the GitHub UI: Releases → Draft a new release → choose tag
 ```
 
