@@ -170,7 +170,8 @@ public class AcroFormReadOnlyTests
         matches.Should().Be(1);
         using var reopened = PdfDocument.Open(bytes);
         reopened.GetPage(1).Text.Should().NotContain("SECRET");
-        reopened.GetAcroForm()!.FindField("field1")!.Value.Should().Be("-12345");
+        reopened.GetAcroForm()!.FindField("field1")!.Value.Should().BeNull(
+            "security redaction removes the whole form value instead of leaving recoverable fragments in /V");
     }
 
     [Fact]
@@ -185,7 +186,8 @@ public class AcroFormReadOnlyTests
         matches.Should().Be(1);
         using var reopened = PdfDocument.Open(bytes);
         reopened.GetPage(1).Text.Should().NotContain("SECRET");
-        reopened.GetAcroForm()!.FindField("field1")!.DefaultValue.Should().Be("Fallback ");
+        reopened.GetAcroForm()!.FindField("field1")!.DefaultValue.Should().BeNull(
+            "security redaction removes the whole default value instead of leaving recoverable fragments in /DV");
     }
 
     // ─── PDF builder ─────────────────────────────────────────────────────────

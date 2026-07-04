@@ -48,8 +48,11 @@ public class PdfDocumentWriter
 
     private void WriteObjects(BinaryWriter writer)
     {
+        var reachable = _document.ComputeSaveReachableObjects();
+
         // Get all objects sorted by object number for consistent output
         var objects = _document.GetAllObjects()
+            .Where(o => reachable.Contains(o.ObjectNumber))
             .OrderBy(o => o.ObjectNumber)
             .ToList();
 

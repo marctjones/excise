@@ -98,10 +98,29 @@ public class PdfDocument : IDisposable
     /// XObject is truly orphaned before <see cref="RemoveObject"/> frees it.
     /// </summary>
     internal HashSet<int> ComputeReachableObjects()
+        => ComputeReachableObjectsFrom(Trailer.Values);
+
+    /// <summary>
+    /// Object numbers reachable from the trailer shape emitted by
+    /// <see cref="Pdfe.Core.Writing.PdfDocumentWriter"/>. This intentionally
+    /// excludes original-trailer entries that are not preserved on save, such
+    /// as /Prev and /Encrypt, so full-save output also garbage-collects
+    /// stale incremental-update objects.
+    /// </summary>
+    internal HashSet<int> ComputeSaveReachableObjects()
+    {
+        var roots = new List<PdfObject> { GetCatalogReference() };
+        var infoRef = Trailer.GetReferenceOrNull("Info");
+        if (infoRef != null)
+            roots.Add(infoRef);
+        return ComputeReachableObjectsFrom(roots);
+    }
+
+    private HashSet<int> ComputeReachableObjectsFrom(IEnumerable<PdfObject> roots)
     {
         var reachable = new HashSet<int>();
         var stack = new Stack<PdfObject>();
-        foreach (var v in Trailer.Values) stack.Push(v);
+        foreach (var v in roots) stack.Push(v);
 
         while (stack.Count > 0)
         {
