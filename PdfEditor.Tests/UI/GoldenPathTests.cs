@@ -73,6 +73,13 @@ public class GoldenPathTests
         vm.CurrentPageIndex.Should().Be(0, "should start at first page");
         vm.DocumentName.Should().NotBeNullOrEmpty("document name should be set");
         vm.IsDocumentLoaded.Should().BeTrue("document should be loaded");
+        vm.LastDocumentOpenTiming.Should().NotBeNull("open-to-first-page-visible timing should be captured");
+        vm.LastDocumentOpenTiming!.FilePath.Should().Be(pdfPath);
+        vm.LastDocumentOpenTiming.PageCount.Should().Be(5);
+        vm.LastDocumentOpenTiming.FirstPageVisibleElapsedMs.Should()
+            .BeGreaterThanOrEqualTo(vm.LastDocumentOpenTiming.DocumentInstancesLoadedElapsedMs);
+        vm.LastDocumentOpenTiming.TotalLoadElapsedMs.Should()
+            .BeGreaterThanOrEqualTo(vm.LastDocumentOpenTiming.FirstPageVisibleElapsedMs);
 
         // Step 2: Search for text present on multiple pages
         vm.SearchText = "Secret";

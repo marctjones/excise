@@ -9,6 +9,7 @@ using Pdfe.Core.Graphics;
 using Pdfe.Rendering;
 using PdfEditor.Models;
 using Pdfe.Avalonia.Controls;
+using PdfEditor.Tests.Utilities;
 using PdfEditor.ViewModels;
 using SkiaSharp;
 using Xunit;
@@ -22,6 +23,7 @@ namespace PdfEditor.Tests.Unit;
 /// <see cref="MainWindowViewModel.HiddenTextHighlights"/> when the
 /// <see cref="MainWindowViewModel.RevealHiddenText"/> toggle is on.
 /// </summary>
+[Collection("AvaloniaTests")]
 public class RevealHiddenTextTests : IDisposable
 {
     private readonly List<string> _tempFiles = new();
@@ -35,7 +37,7 @@ public class RevealHiddenTextTests : IDisposable
     private static bool TesseractAvailable
         => new Pdfe.Ocr.PdfOcrService().IsAvailable();
 
-    [Fact]
+    [FixedAvaloniaFact]
     public async Task RevealToggle_FlushesHighlightsForHiddenText()
     {
         // Arrange: build a PDF with "SECRET INFO 12345" covered by a
@@ -53,6 +55,7 @@ public class RevealHiddenTextTests : IDisposable
         vm.HiddenTextHighlights.Should().BeEmpty("nothing populated until revealed");
 
         vm.RevealHiddenText = true;
+        await WaitForHiddenTextScanAsync(vm, () => vm.HiddenTextHighlights.Count == 1);
 
         // Assert: the hidden text surfaces, with a non-zero on-screen
         // bounding box so the overlay can actually draw it.
@@ -74,7 +77,7 @@ public class RevealHiddenTextTests : IDisposable
         vm.HiddenTextHighlights.Should().BeEmpty();
     }
 
-    [Fact]
+    [FixedAvaloniaFact]
     public async Task RevealRasterizedHidden_FindsTextHiddenByOverlayInsideImage()
     {
         Assert.SkipUnless(TesseractAvailable, "tesseract CLI not installed");
@@ -90,11 +93,13 @@ public class RevealHiddenTextTests : IDisposable
         // Structural-only — should find nothing because the text only
         // exists inside the image.
         vm.RevealHiddenText = true;
+        await WaitForHiddenTextScanAsync(vm, () => vm.HiddenTextHighlights.Count == 0);
         vm.HiddenTextHighlights.Should().BeEmpty(
             "no Tj operators on the page; only image XObjects + filled rectangle");
 
         // Differential-OCR — should recover the hidden digits.
         vm.RevealRasterizedHidden = true;
+        await WaitForHiddenTextScanAsync(vm, () => vm.HiddenTextHighlights.Count > 0);
 
         vm.HiddenTextHighlights.Should().NotBeEmpty();
         var hits = string.Join(" ", vm.HiddenTextHighlights.Select(h => h.Text));
@@ -106,6 +111,22 @@ public class RevealHiddenTextTests : IDisposable
         // Toggle off — only the structural pass remains, which finds nothing.
         vm.RevealRasterizedHidden = false;
         vm.HiddenTextHighlights.Should().BeEmpty();
+    }
+
+    private static async Task WaitForHiddenTextScanAsync(
+        MainWindowViewModel vm,
+        Func<bool> predicate)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(10);
+        while (DateTime.UtcNow < deadline)
+        {
+            if (!vm.IsHiddenTextScanInProgress && predicate())
+                return;
+            await Task.Delay(25);
+        }
+
+        vm.IsHiddenTextScanInProgress.Should().BeFalse("hidden-text scan should complete");
+        predicate().Should().BeTrue("hidden-text scan should publish expected results");
     }
 
     /// <summary>

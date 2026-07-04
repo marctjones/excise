@@ -18,11 +18,22 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Reactive;
+using System.Threading;
 using System.Threading.Tasks;
 using SkiaSharp;
 using PdfCoreDocument = Pdfe.Core.Document.PdfDocument;
 
 namespace PdfEditor.ViewModels;
+
+public sealed record DocumentOpenTiming(
+    string FilePath,
+    int PageCount,
+    long DocumentInstancesLoadedElapsedMs,
+    long FirstPageVisibleElapsedMs,
+    long ThumbnailPlaceholdersReadyElapsedMs,
+    long OutlineReadyElapsedMs,
+    long SearchIndexStartedElapsedMs,
+    long TotalLoadElapsedMs);
 
 public partial class MainWindowViewModel : ViewModelBase
 {
@@ -51,6 +62,12 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     public ToastService ToastService => _toastService;
 
+    public DocumentOpenTiming? LastDocumentOpenTiming
+    {
+        get => _lastDocumentOpenTiming;
+        private set => this.RaiseAndSetIfChanged(ref _lastDocumentOpenTiming, value);
+    }
+
     private string _currentFilePath = string.Empty;
     private Bitmap? _currentPageImage;
     private PdfCoreDocument? _pdfCoreDocument;
@@ -74,6 +91,8 @@ public partial class MainWindowViewModel : ViewModelBase
     private Services.ThumbnailCacheService? _thumbnailCache;
     internal Services.DocumentTextIndex? TextIndex;
     private System.Threading.CancellationTokenSource? _indexBuildCts;
+    private CancellationTokenSource? _currentPageRenderCts;
+    private long _currentPageRenderSequence;
 
     /// <summary>
     /// Tracks whether the user is in an "auto-fit" zoom state. When set to
@@ -85,6 +104,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private ZoomFitMode _zoomFitMode = ZoomFitMode.FitWidth;
     private bool _isThumbnailsSidebarVisible = true;
     private bool _isClipboardSidebarVisible = true;
+    private DocumentOpenTiming? _lastDocumentOpenTiming;
 
     /// <summary>
     /// Parameterless constructor for testing and scripting scenarios.
@@ -780,11 +800,19 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         _logger.LogInformation(">>> STEP 1: LoadDocumentAsync START for: {FilePath}", filePath);
+        var openSw = Stopwatch.StartNew();
+        long documentInstancesLoadedElapsedMs = 0;
+        long firstPageVisibleElapsedMs = 0;
+        long thumbnailPlaceholdersReadyElapsedMs = 0;
+        long outlineReadyElapsedMs = 0;
+        long searchIndexStartedElapsedMs = 0;
 
         try
         {
             _logger.LogInformation(">>> STEP 2: Clearing previous document state");
             // Clear ALL state from previous document before loading new one
+            CancelCurrentPageRender();
+            LastDocumentOpenTiming = null;
             CurrentRedactionArea = new Rect();
             ClearCurrentTextSelection();
             RedactionWorkflow.Reset();
@@ -841,6 +869,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 PdfCoreDocument = await LoadDocumentInstancesAsync(filePath, password);
             }
             _logger.LogInformation(">>> STEP 5: Both document instances loaded");
+            documentInstancesLoadedElapsedMs = openSw.ElapsedMilliseconds;
 
             _logger.LogInformation(">>> STEP 6: Setting CurrentPageIndex = 0");
             CurrentPageIndex = 0;
@@ -854,6 +883,7 @@ public partial class MainWindowViewModel : ViewModelBase
             _logger.LogInformation(">>> STEP 7: Rendering current page");
             await RenderCurrentPageAsync();
             _logger.LogInformation(">>> STEP 7: Current page rendered successfully");
+            firstPageVisibleElapsedMs = openSw.ElapsedMilliseconds;
 
             // Auto-fit-width on document open so the page is never wider than
             // the central pane (otherwise it scrolls behind the right sidebar
@@ -872,6 +902,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
             _logger.LogInformation(">>> STEP 8: Creating thumbnail placeholders (lazy load)");
             await LoadPageThumbnailsAsync();
+            thumbnailPlaceholdersReadyElapsedMs = openSw.ElapsedMilliseconds;
 
             // Parse the document's table-of-contents outline (if any).
             // Cheap — just a tree walk over the catalog's /Outlines, no
@@ -890,6 +921,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 _logger.LogWarning(outlineEx, "Failed to parse document outline");
                 OutlineNodes.Clear();
             }
+            outlineReadyElapsedMs = openSw.ElapsedMilliseconds;
 
             // Kick off the text index build in the background. First
             // search after this completes is sub-second instead of the
@@ -916,6 +948,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 }
             });
             _ = TextIndex.BuildAsync(indexProgress, indexCts.Token);
+            searchIndexStartedElapsedMs = openSw.ElapsedMilliseconds;
 
             _logger.LogInformation(">>> STEP 9: RaisePropertyChanged(TotalPages)");
             this.RaisePropertyChanged(nameof(TotalPages));
@@ -932,7 +965,25 @@ public partial class MainWindowViewModel : ViewModelBase
             _logger.LogInformation(">>> STEP 12b: Restoring document state (zoom, page index)");
             await RestoreDocumentStateAsync(filePath);
 
-            _logger.LogInformation(">>> STEP 13: LoadDocumentAsync COMPLETE. Total pages: {PageCount}", TotalPages);
+            openSw.Stop();
+            LastDocumentOpenTiming = new DocumentOpenTiming(
+                filePath,
+                TotalPages,
+                documentInstancesLoadedElapsedMs,
+                firstPageVisibleElapsedMs,
+                thumbnailPlaceholdersReadyElapsedMs,
+                outlineReadyElapsedMs,
+                searchIndexStartedElapsedMs,
+                openSw.ElapsedMilliseconds);
+            _logger.LogInformation(
+                ">>> STEP 13: LoadDocumentAsync COMPLETE. Total pages: {PageCount}. Timings: docLoad={DocLoadMs}ms firstPage={FirstPageMs}ms thumbnails={ThumbnailsMs}ms outline={OutlineMs}ms indexStart={IndexStartMs}ms total={TotalMs}ms",
+                TotalPages,
+                LastDocumentOpenTiming.DocumentInstancesLoadedElapsedMs,
+                LastDocumentOpenTiming.FirstPageVisibleElapsedMs,
+                LastDocumentOpenTiming.ThumbnailPlaceholdersReadyElapsedMs,
+                LastDocumentOpenTiming.OutlineReadyElapsedMs,
+                LastDocumentOpenTiming.SearchIndexStartedElapsedMs,
+                LastDocumentOpenTiming.TotalLoadElapsedMs);
         }
         catch (Exception ex)
         {
@@ -1808,13 +1859,19 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        var cts = BeginCurrentPageRender(out var renderSequence);
+        var token = cts.Token;
+        var requestedFilePath = _currentFilePath;
+        var requestedPageIndex = CurrentPageIndex;
+        var requestedHasInMemoryModifications = _hasInMemoryModifications;
+
         // Surface a stage label in the status bar so the user has feedback
         // during the render. Keep the existing label if a thumbnail batch
         // is still in flight (it'll overwrite this anyway as it ticks).
         var existingStatus = IsRenderingStatus(OperationStatus)
             ? string.Empty
             : OperationStatus;
-        var renderingStatus = $"Rendering page {DisplayPageNumber} of {TotalPages}…";
+        var renderingStatus = $"Rendering page {requestedPageIndex + 1} of {TotalPages}…";
         OperationStatus = renderingStatus;
 
         try
@@ -1824,19 +1881,25 @@ public partial class MainWindowViewModel : ViewModelBase
             // If document has in-memory modifications (e.g., applied redactions not yet saved),
             // we must render from the in-memory stream, not the file on disk.
             // This fixes the bug where redacted text was still visible until file reopen.
-            if (_hasInMemoryModifications)
+            if (requestedHasInMemoryModifications)
             {
                 _logger.LogInformation(">>> RenderCurrentPageAsync: Using in-memory stream (document has unsaved modifications)");
-                var docStream = _documentService.GetCurrentDocumentAsStream();
+                using var docStream = _documentService.GetCurrentDocumentAsStream();
                 if (docStream != null)
                 {
                     try
                     {
-                        var memoryStream = new System.IO.MemoryStream();
-                        await docStream.CopyToAsync(memoryStream);
+                        using var memoryStream = new System.IO.MemoryStream();
+                        await docStream.CopyToAsync(memoryStream, token);
                         memoryStream.Position = 0;
-                        docStream.Dispose();
-                        skBitmap = await _renderService.RenderPageFromStreamAsync(memoryStream, CurrentPageIndex);
+                        skBitmap = await _renderService.RenderPageFromStreamAsync(
+                            memoryStream,
+                            requestedPageIndex,
+                            cancellationToken: token);
+                    }
+                    catch (OperationCanceledException) when (token.IsCancellationRequested)
+                    {
+                        throw;
                     }
                     catch (Exception streamEx)
                     {
@@ -1848,8 +1911,34 @@ public partial class MainWindowViewModel : ViewModelBase
             // Fallback to file-based rendering if in-memory rendering failed or wasn't needed
             if (skBitmap == null)
             {
-                _logger.LogInformation(">>> RenderCurrentPageAsync: Calling _renderService.RenderPageAsync for page {PageIndex}", CurrentPageIndex);
-                skBitmap = await _renderService.RenderPageAsync(_currentFilePath, CurrentPageIndex);
+                _logger.LogInformation(">>> RenderCurrentPageAsync: Calling _renderService.RenderPageAsync for page {PageIndex}", requestedPageIndex);
+                skBitmap = await _renderService.RenderPageAsync(
+                    requestedFilePath,
+                    requestedPageIndex,
+                    cancellationToken: token);
+            }
+
+            try
+            {
+                token.ThrowIfCancellationRequested();
+            }
+            catch
+            {
+                skBitmap?.Dispose();
+                throw;
+            }
+
+            if (!IsCurrentPageRender(renderSequence, cts, requestedFilePath, requestedPageIndex, requestedHasInMemoryModifications))
+            {
+                _logger.LogDebug("Dropping stale render for page {PageIndex}", requestedPageIndex);
+                skBitmap?.Dispose();
+                return;
+            }
+
+            if (skBitmap == null)
+            {
+                _logger.LogWarning(">>> RenderCurrentPageAsync: Render returned null for page {PageIndex}", requestedPageIndex);
+                return;
             }
 
             using (skBitmap)
@@ -1857,11 +1946,32 @@ public partial class MainWindowViewModel : ViewModelBase
                 _logger.LogInformation(">>> RenderCurrentPageAsync: Converting to Avalonia bitmap");
                 var avaloniaBitmap = ToAvaloniaBitmap(skBitmap);
 
+                try
+                {
+                    token.ThrowIfCancellationRequested();
+                }
+                catch
+                {
+                    avaloniaBitmap?.Dispose();
+                    throw;
+                }
+
+                if (!IsCurrentPageRender(renderSequence, cts, requestedFilePath, requestedPageIndex, requestedHasInMemoryModifications))
+                {
+                    _logger.LogDebug("Dropping stale converted bitmap for page {PageIndex}", requestedPageIndex);
+                    avaloniaBitmap?.Dispose();
+                    return;
+                }
+
                 _logger.LogInformation(">>> RenderCurrentPageAsync: Setting CurrentPageImage");
                 CurrentPageImage = avaloniaBitmap;
             }
 
             _logger.LogInformation(">>> RenderCurrentPageAsync: COMPLETE");
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            _logger.LogDebug(">>> RenderCurrentPageAsync: CANCELED page {PageIndex}", requestedPageIndex);
         }
         catch (Exception ex)
         {
@@ -1875,9 +1985,49 @@ public partial class MainWindowViewModel : ViewModelBase
             // Only clear if we set the rendering label AND nothing else
             // overwrote it during the render (the thumbnail batch keeps
             // updating as pages complete and should win).
-            if (OperationStatus == renderingStatus)
+            var isCurrentRender = ReferenceEquals(System.Threading.Volatile.Read(ref _currentPageRenderCts), cts);
+            if (isCurrentRender && OperationStatus == renderingStatus)
                 OperationStatus = existingStatus;
+            CompleteCurrentPageRender(cts);
         }
+    }
+
+    private CancellationTokenSource BeginCurrentPageRender(out long renderSequence)
+    {
+        var cts = new CancellationTokenSource();
+        renderSequence = System.Threading.Interlocked.Increment(ref _currentPageRenderSequence);
+        var previous = System.Threading.Interlocked.Exchange(ref _currentPageRenderCts, cts);
+        previous?.Cancel();
+        return cts;
+    }
+
+    private void CompleteCurrentPageRender(CancellationTokenSource cts)
+    {
+        if (ReferenceEquals(System.Threading.Volatile.Read(ref _currentPageRenderCts), cts))
+            System.Threading.Interlocked.CompareExchange(ref _currentPageRenderCts, null, cts);
+        cts.Dispose();
+    }
+
+    private void CancelCurrentPageRender()
+    {
+        System.Threading.Interlocked.Increment(ref _currentPageRenderSequence);
+        var cts = System.Threading.Interlocked.Exchange(ref _currentPageRenderCts, null);
+        cts?.Cancel();
+    }
+
+    private bool IsCurrentPageRender(
+        long renderSequence,
+        CancellationTokenSource cts,
+        string filePath,
+        int pageIndex,
+        bool hasInMemoryModifications)
+    {
+        return !cts.IsCancellationRequested
+            && System.Threading.Volatile.Read(ref _currentPageRenderSequence) == renderSequence
+            && ReferenceEquals(System.Threading.Volatile.Read(ref _currentPageRenderCts), cts)
+            && string.Equals(_currentFilePath, filePath, StringComparison.Ordinal)
+            && CurrentPageIndex == pageIndex
+            && _hasInMemoryModifications == hasInMemoryModifications;
     }
 
     private static bool IsRenderingStatus(string status)
@@ -2105,6 +2255,8 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             // Save document state before closing
             SaveDocumentState();
+
+            CancelCurrentPageRender();
 
             // Close the PDF document
             _documentService.CloseDocument();

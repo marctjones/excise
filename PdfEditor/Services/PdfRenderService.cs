@@ -8,6 +8,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace PdfEditor.Services;
@@ -103,14 +104,21 @@ public class PdfRenderService
     /// <summary>
     /// Render a specific page of a PDF to a bitmap
     /// </summary>
-    public async Task<SKBitmap?> RenderPageAsync(string pdfPath, int pageIndex, int dpi = 150)
+    public virtual async Task<SKBitmap?> RenderPageAsync(
+        string pdfPath,
+        int pageIndex,
+        int dpi = 150,
+        CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var cacheKey = BuildCacheKey(pdfPath, pageIndex, dpi);
         if (TryGetFromCache(cacheKey, out var cachedPngData))
         {
             _logger.LogDebug("Cache hit for {File} page {Page} @ {Dpi} DPI", Path.GetFileName(pdfPath), pageIndex, dpi);
             if (cachedPngData != null)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 using var stream = new MemoryStream(cachedPngData);
                 return SKBitmap.Decode(stream); // Decode from cached PNG data
             }
@@ -125,13 +133,20 @@ public class PdfRenderService
         {
             try
             {
-                _logger.LogDebug("Reading PDF file into memory stream");
+                cancellationToken.ThrowIfCancellationRequested();
+                _logger.LogDebug("Opening PDF file stream");
                 using var fileStream = File.OpenRead(pdfPath);
-                using var memoryStream = new MemoryStream();
-                fileStream.CopyTo(memoryStream);
-                memoryStream.Position = 0;
 
-                var skBitmap = RenderPageFromStream(memoryStream, pageIndex, dpi, sw);
+                var skBitmap = RenderPageFromStream(fileStream, pageIndex, dpi, sw, cancellationToken);
+                try
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
+                catch
+                {
+                    skBitmap?.Dispose();
+                    throw;
+                }
                 if (skBitmap != null)
                 {
                     // Cache the SKBitmap as PNG bytes
@@ -141,6 +156,13 @@ public class PdfRenderService
                 }
                 return skBitmap;
             }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                sw.Stop();
+                _logger.LogDebug("Canceled rendering page {PageIndex} from {FileName} after {ElapsedMs}ms",
+                    pageIndex, Path.GetFileName(pdfPath), sw.ElapsedMilliseconds);
+                throw;
+            }
             catch (Exception ex)
             {
                 sw.Stop();
@@ -148,29 +170,43 @@ public class PdfRenderService
                     pageIndex, Path.GetFileName(pdfPath), sw.ElapsedMilliseconds);
                 return null;
             }
-        });
+        }, cancellationToken);
     }
 
     /// <summary>
     /// Render a specific page from a PDF stream (for in-memory documents)
     /// </summary>
-    public async Task<SKBitmap?> RenderPageFromStreamAsync(Stream pdfStream, int pageIndex, int dpi = 150)
+    public virtual async Task<SKBitmap?> RenderPageFromStreamAsync(
+        Stream pdfStream,
+        int pageIndex,
+        int dpi = 150,
+        CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         _logger.LogInformation("Rendering page {PageIndex} from stream at {Dpi} DPI", pageIndex, dpi);
         var sw = Stopwatch.StartNew();
 
-        return await Task.Run(() => RenderPageFromStream(pdfStream, pageIndex, dpi, sw));
+        return await Task.Run(
+            () => RenderPageFromStream(pdfStream, pageIndex, dpi, sw, cancellationToken),
+            cancellationToken);
     }
 
-    private SKBitmap? RenderPageFromStream(Stream pdfStream, int pageIndex, int dpi, Stopwatch sw)
+    private SKBitmap? RenderPageFromStream(
+        Stream pdfStream,
+        int pageIndex,
+        int dpi,
+        Stopwatch sw,
+        CancellationToken cancellationToken)
     {
         try
         {
+            cancellationToken.ThrowIfCancellationRequested();
             _logger.LogDebug("Creating RenderOptions with DPI: {Dpi}", dpi);
             var options = new RenderOptions { Dpi = dpi };
 
             _logger.LogDebug("Opening PDF document from stream");
             using var pdfDoc = PdfDocument.Open(pdfStream, ownsStream: false);
+            cancellationToken.ThrowIfCancellationRequested();
 
             // pageIndex is 0-based, but GetPage expects 1-based
             var page = pdfDoc.GetPage(pageIndex + 1);
@@ -178,7 +214,16 @@ public class PdfRenderService
             _logger.LogDebug("Rendering page with Pdfe.Rendering.SkiaRenderer");
             var renderer = new SkiaRenderer();
             // NOTE: Do NOT use 'using' here - the caller is responsible for disposing the returned bitmap
-            var skBitmap = renderer.RenderPage(page, options);
+            var skBitmap = renderer.RenderPage(page, options, cancellationToken);
+            try
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+            catch
+            {
+                skBitmap?.Dispose();
+                throw;
+            }
 
             if (skBitmap == null)
             {
@@ -194,6 +239,13 @@ public class PdfRenderService
 
             return skBitmap;
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            sw.Stop();
+            _logger.LogDebug("Canceled rendering page {PageIndex} from stream after {ElapsedMs}ms",
+                pageIndex, sw.ElapsedMilliseconds);
+            throw;
+        }
         catch (Exception ex)
         {
             sw.Stop();
@@ -206,13 +258,17 @@ public class PdfRenderService
     /// <summary>
     /// Render a page as a thumbnail
     /// </summary>
-    public async Task<SKBitmap?> RenderThumbnailAsync(string pdfPath, int pageIndex, int width = 200)
+    public virtual async Task<SKBitmap?> RenderThumbnailAsync(
+        string pdfPath,
+        int pageIndex,
+        int width = 200,
+        CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("Rendering thumbnail for page {PageIndex}, target width: {Width}", pageIndex, width);
 
         // Calculate DPI for thumbnail - lower DPI for faster rendering
         int thumbnailDpi = 72; // Standard screen DPI
-        return await RenderPageAsync(pdfPath, pageIndex, thumbnailDpi);
+        return await RenderPageAsync(pdfPath, pageIndex, thumbnailDpi, cancellationToken);
     }
     
     /// <summary>
