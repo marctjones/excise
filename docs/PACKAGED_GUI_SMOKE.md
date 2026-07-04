@@ -12,6 +12,9 @@ Avalonia app instead of the in-process Avalonia.Headless test harness.
   logs, native-input log, app responsiveness report, and a screenshot path.
 - The report records timing evidence with PASS/WARN/FAIL budgets for packaged
   launch, PDF open, startup screenshot, and app-internal document-open phases.
+- When `--allow-focus-input` is explicitly enabled on a dedicated runner, the
+  report also records native search typing, page navigation, zoom, and
+  redaction-preview interaction latency rows.
 - The report references the headless coverage from #560 instead of duplicating
   every workflow in a brittle OS automation script.
 
@@ -72,3 +75,5 @@ JSON/markdown report but does not fail the smoke; a FAIL exits non-zero.
 | App first page visible | 4s | 15s |
 | App background work started | 6s | 20s |
 | App document load complete | 8s | 25s |
+| Native search typing, page navigation, zoom | 1s | 3s |
+| Native redaction preview | 1.5s | 5s |

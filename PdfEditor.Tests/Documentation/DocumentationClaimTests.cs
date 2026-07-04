@@ -66,6 +66,9 @@ public class DocumentationClaimTests
         packagedSmokeScript.Should().Contain("packaged-gui-smoke.json");
         packagedSmokeScript.Should().Contain("APP_RESPONSIVENESS_REPORT");
         packagedSmokeScript.Should().Contain("PDFE_RESPONSIVENESS_REPORT");
+        packagedSmokeScript.Should().Contain("native page navigation latency");
+        packagedSmokeScript.Should().Contain("native zoom latency");
+        packagedSmokeScript.Should().Contain("native redaction preview latency");
         packagedSmokeScript.Should().Contain("--allow-focus-input");
         packagedSmokeScript.Should().Contain("MANUAL_REQUIRED");
     }

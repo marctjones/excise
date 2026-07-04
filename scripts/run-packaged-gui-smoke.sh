@@ -200,6 +200,35 @@ extract_app_report_status() {
     sed -n 's/.*"overallStatus": "\([^"]*\)".*/\1/p' "$APP_RESPONSIVENESS_REPORT" | head -1
 }
 
+run_focus_applescript_workflow() {
+    local workflow="$1"
+    local detail="$2"
+    local focused_control="$3"
+    local pass_budget_ms="$4"
+    local warn_budget_ms="$5"
+    local script_path="$OUT/${workflow//[^A-Za-z0-9]/-}.applescript"
+    cat > "$script_path"
+
+    local start_ms
+    start_ms="$(now_ms)"
+    {
+        echo
+        echo "===== $workflow ====="
+        osascript "$script_path"
+    } >> "$INPUT_LOG" 2>&1
+    local rc=$?
+    local elapsed_ms=$(( $(now_ms) - start_ms ))
+    local status
+    if [ "$rc" = "0" ]; then
+        status="$(budget_status "$elapsed_ms" "$pass_budget_ms" "$warn_budget_ms")"
+    else
+        status="FAIL"
+        detail="$detail System Events failed with rc=$rc; check Accessibility permission and focus state."
+    fi
+
+    record_row "$workflow" "$status" "focus-input" "$INPUT_LOG" "$detail" "$focused_control" "$elapsed_ms" "$pass_budget_ms" "$warn_budget_ms"
+}
+
 write_reports() {
     {
         printf '{\n'
@@ -373,7 +402,9 @@ else
 fi
 
 if [ "$ALLOW_FOCUS_INPUT" = "1" ]; then
-    osascript > "$INPUT_LOG" 2>&1 <<'APPLESCRIPT'
+    run_focus_applescript_workflow "native search typing latency" \
+        "System Events focused the search box, typed a query, and dismissed search." \
+        "SearchTextBox" 1000 3000 <<'APPLESCRIPT'
 tell application "System Events"
     set targetName to ""
     if exists process "pdfe" then
@@ -400,14 +431,85 @@ tell application "System Events"
     end tell
 end tell
 APPLESCRIPT
-    input_rc=$?
-    if [ "$input_rc" = "0" ]; then
-        record_row "native keyboard and mouse input" "PASS" "focus-input" "$INPUT_LOG" "System Events sent Cmd+F, typed a query, dismissed search, and clicked the window." "front window"
+
+    run_focus_applescript_workflow "native page navigation latency" \
+        "System Events sent Page Down and Page Up through the packaged window." \
+        "front window" 1000 3000 <<'APPLESCRIPT'
+tell application "System Events"
+    set targetName to ""
+    if exists process "pdfe" then
+        set targetName to "pdfe"
+    else if exists process "PdfEditor" then
+        set targetName to "PdfEditor"
     else
-        record_row "native keyboard and mouse input" "FAIL" "focus-input" "$INPUT_LOG" "System Events failed with rc=$input_rc; check Accessibility permission and focus state."
-    fi
+        error "pdfe/PdfEditor process is not visible to System Events"
+    end if
+
+    tell process targetName
+        set frontmost to true
+        delay 0.3
+        key code 121
+        delay 0.2
+        key code 116
+    end tell
+end tell
+APPLESCRIPT
+
+    run_focus_applescript_workflow "native zoom latency" \
+        "System Events sent zoom in and zoom out shortcuts through the packaged window." \
+        "front window" 1000 3000 <<'APPLESCRIPT'
+tell application "System Events"
+    set targetName to ""
+    if exists process "pdfe" then
+        set targetName to "pdfe"
+    else if exists process "PdfEditor" then
+        set targetName to "PdfEditor"
+    else
+        error "pdfe/PdfEditor process is not visible to System Events"
+    end if
+
+    tell process targetName
+        set frontmost to true
+        delay 0.3
+        keystroke "+" using command down
+        delay 0.2
+        keystroke "-" using command down
+    end tell
+end tell
+APPLESCRIPT
+
+    run_focus_applescript_workflow "native redaction preview latency" \
+        "System Events toggled redaction mode and clicked the page surface." \
+        "front window" 1500 5000 <<'APPLESCRIPT'
+tell application "System Events"
+    set targetName to ""
+    if exists process "pdfe" then
+        set targetName to "pdfe"
+    else if exists process "PdfEditor" then
+        set targetName to "PdfEditor"
+    else
+        error "pdfe/PdfEditor process is not visible to System Events"
+    end if
+
+    tell process targetName
+        set frontmost to true
+        delay 0.3
+        keystroke "r"
+        delay 0.2
+        try
+            set p to position of front window
+            click at {item 1 of p + 180, item 2 of p + 180}
+        end try
+        delay 0.2
+        keystroke "r"
+    end tell
+end tell
+APPLESCRIPT
 else
-    record_row "native keyboard and mouse input" "MANUAL_REQUIRED" "background-safe" "$INPUT_LOG" "Not run by default. macOS System Events key/mouse injection requires Accessibility permission and foreground focus; rerun with --allow-focus-input on a dedicated runner."
+    record_row "native search typing latency" "MANUAL_REQUIRED" "background-safe" "$INPUT_LOG" "Not run by default. macOS System Events key/mouse injection requires Accessibility permission and foreground focus; rerun with --allow-focus-input on a dedicated runner."
+    record_row "native page navigation latency" "MANUAL_REQUIRED" "background-safe" "$INPUT_LOG" "Not run by default. Page-key delivery requires foreground focus; rerun with --allow-focus-input on a dedicated runner."
+    record_row "native zoom latency" "MANUAL_REQUIRED" "background-safe" "$INPUT_LOG" "Not run by default. Zoom shortcut delivery requires foreground focus; rerun with --allow-focus-input on a dedicated runner."
+    record_row "native redaction preview latency" "MANUAL_REQUIRED" "background-safe" "$INPUT_LOG" "Not run by default. Redaction-mode click delivery requires foreground focus; rerun with --allow-focus-input on a dedicated runner."
 fi
 
 record_row "packaged interaction matrix" "PASS" "$MODE" "$JSON_REPORT" "JSON and markdown reports enumerate packaged-app workflows and evidence artifacts."
