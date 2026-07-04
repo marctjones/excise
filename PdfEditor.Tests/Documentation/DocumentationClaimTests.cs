@@ -43,6 +43,29 @@ public class DocumentationClaimTests
     }
 
     [Fact]
+    public void PackagedGuiSmokeDocs_MapToReleaseSmokeScript()
+    {
+        var checklist = Read("docs/RELEASE_CHECKLIST.md");
+        var packagedSmokeDocs = Read("docs/PACKAGED_GUI_SMOKE.md");
+        var releaseSmokeScript = Read("scripts/release-smoke.sh");
+        var packagedSmokeScript = Read("scripts/run-packaged-gui-smoke.sh");
+
+        checklist.Should().Contain("--packaged-gui");
+        checklist.Should().Contain("--packaged-gui-focus-input");
+        packagedSmokeDocs.Should().Contain("#558");
+        packagedSmokeDocs.Should().Contain("#571");
+        packagedSmokeDocs.Should().Contain("Accessibility permission");
+
+        releaseSmokeScript.Should().Contain("run_packaged_gui_gate");
+        releaseSmokeScript.Should().Contain("--packaged-gui");
+        releaseSmokeScript.Should().Contain("--packaged-gui-focus-input");
+
+        packagedSmokeScript.Should().Contain("packaged-gui-smoke.json");
+        packagedSmokeScript.Should().Contain("--allow-focus-input");
+        packagedSmokeScript.Should().Contain("MANUAL_REQUIRED");
+    }
+
+    [Fact]
     public void FileAssociationDocs_MapToPackagingAndStartupHandlers()
     {
         var readme = Read("README.md");

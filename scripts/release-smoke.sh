@@ -15,6 +15,8 @@ CONFIG="Debug"
 RUN_FULL_TESTS=1
 RUN_VISUAL=0
 RUN_PACKAGE=0
+RUN_PACKAGED_GUI=0
+PACKAGED_GUI_FOCUS_INPUT=0
 NO_BUILD=0
 VERSION=""
 ONLY=""
@@ -36,8 +38,11 @@ Options:
   --quick             Skip the full solution test pass.
   --visual            Run the local visual-regression runner.
   --package           Build local package artifacts for the current platform.
+  --packaged-gui      Run packaged-app GUI smoke evidence after package build.
+  --packaged-gui-focus-input
+                      Also run focus-taking native key/mouse smoke.
   --no-build          Skip the initial build gate.
-  --only=a,b          Run only named gates: docs,build,redaction,signature,ui,tests,pdf20,visual,package,diffcheck.
+  --only=a,b          Run only named gates: docs,build,redaction,signature,ui,tests,pdf20,visual,package,packaged-gui,diffcheck.
   -h, --help          Show this help.
 EOF
 }
@@ -57,6 +62,12 @@ while [ "$#" -gt 0 ]; do
         --quick) RUN_FULL_TESTS=0; shift ;;
         --visual) RUN_VISUAL=1; shift ;;
         --package) RUN_PACKAGE=1; shift ;;
+        --packaged-gui) RUN_PACKAGED_GUI=1; shift ;;
+        --packaged-gui-focus-input)
+            RUN_PACKAGED_GUI=1
+            PACKAGED_GUI_FOCUS_INPUT=1
+            shift
+            ;;
         --no-build) NO_BUILD=1; shift ;;
         --only=*) ONLY="${1#*=}"; shift ;;
         --only)
@@ -93,6 +104,28 @@ should_run() {
     local name="$1"
     [ -z "$ONLY" ] && return 0
     echo ",$ONLY," | grep -qi ",$name,"
+}
+
+run_packaged_gui_gate() {
+    if ! should_run "packaged-gui"; then
+        return
+    fi
+
+    if [ "$RUN_PACKAGED_GUI" != "1" ]; then
+        say "${Y}[packaged-gui] SKIP${N} - pass --packaged-gui to run packaged app GUI evidence."
+        RESULTS+=("packaged-gui|SKIP|pass --packaged-gui")
+        say ""
+        return
+    fi
+
+    local app="$ROOT/dist/pdfe.app"
+    local pdf="$ROOT/test-pdfs/smoke/irs-w9.pdf"
+    local out="$LOG_DIR/packaged-gui"
+    local -a args=("--app" "$app" "--pdf" "$pdf" "--output" "$out")
+    if [ "$PACKAGED_GUI_FOCUS_INPUT" = "1" ]; then
+        args+=("--allow-focus-input")
+    fi
+    run_gate "packaged-gui" scripts/run-packaged-gui-smoke.sh "${args[@]}"
 }
 
 declare -a RESULTS
@@ -332,6 +365,7 @@ if should_run "visual"; then
 fi
 
 run_package_gate
+run_packaged_gui_gate
 run_gate "diffcheck" git diff --check
 
 say "${B}Summary${N}"

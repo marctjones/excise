@@ -496,13 +496,13 @@ Before tagging, run the release checklist in
 the implemented commands and APIs. The repeatable local gate is:
 
 ```bash
-scripts/release-smoke.sh --visual --package --version 2.19.0
+scripts/release-smoke.sh --visual --package --packaged-gui --version 2.19.0
 ```
 
 The release-smoke script does not create tags or upload artifacts. It runs the
 documentation, build, redaction, signature-verification, UI workflow, full-test,
-local visual-regression, packaging, and diff-cleanliness gates and writes logs
-under `logs/release-smoke_*`.
+local visual-regression, packaging, packaged-GUI evidence, and diff-cleanliness
+gates and writes logs under `logs/release-smoke_*`.
 
 ```bash
 # Cut a new release

@@ -12,10 +12,16 @@ Use this checklist before tagging any `v*` release.
 
 ## Validation
 
-- Run `scripts/release-smoke.sh --visual --package --version <version>` before tagging a release candidate.
+- Run `scripts/release-smoke.sh --visual --package --packaged-gui --version <version>` before tagging a release candidate.
 - Run `dotnet build pdfe.sln --no-restore`.
 - Run `dotnet test --no-build --filter "FullyQualifiedName~Redaction"` after any redaction-adjacent change.
 - Run the signature verification and UI workflow gates in `scripts/release-smoke.sh`.
+- Run packaged-app GUI evidence when validating desktop packages:
+  `scripts/release-smoke.sh --quick --package --packaged-gui --version <version>`.
+  This writes JSON/markdown evidence for #558/#571 without taking keyboard or
+  mouse focus. On a dedicated runner, add `--packaged-gui-focus-input` to run
+  the native System Events key/mouse smoke that requires macOS Accessibility
+  permission and foreground focus.
 - Run the focused tests for the changed area.
 - Run the all-pages pdf.js rendering gate in tmux before declaring rendering
   quality final:
@@ -33,7 +39,12 @@ restores packages so it is reliable after configuration-changing package
 builds. Its build and test gates use the same Debug configuration as CI because
 Release excludes the developer scripting surface by default; `--package` is the
 Release artifact check. Use `--quick` for a short documentation/build/redaction
-check, and use `--visual --package` for the full local release-candidate pass.
+check, and use `--visual --package --packaged-gui` for the full local
+release-candidate pass. The packaged-GUI smoke differs from Avalonia.Headless
+tests: headless tests prove routed events and view-model behavior in process,
+while packaged-GUI smoke proves the built `.app` launches with a real PDF and
+records screenshot/log/report artifacts. Focus-taking native keyboard/mouse
+injection is opt-in because macOS requires Accessibility permission.
 
 ## Everyday PDF Workbench RC Matrix
 
