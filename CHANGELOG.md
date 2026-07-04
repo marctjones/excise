@@ -8,6 +8,45 @@ semantic versioning.
 
 No changes yet.
 
+## [2.20.0] - 2026-07-04
+
+GUI interaction and redaction hardening release. No intended API break.
+
+### Added
+- **Adversarial redaction regression coverage (#555).** Added generated tests
+  for AcroForm values and appearances, annotations and appearance streams,
+  partial glyph overlaps, rotated text, hidden optional-content layers,
+  password-protected fixtures with documented passwords, incremental-update
+  previous revisions, and OCR/scanned-image recovery cases.
+- **Packaged GUI smoke evidence (#558, #571).** Added
+  `scripts/run-packaged-gui-smoke.sh` and wired it into
+  `scripts/release-smoke.sh --packaged-gui`, producing JSON/markdown reports,
+  launch logs, and screenshot artifacts for the packaged macOS `.app`.
+
+### Changed
+- **Redaction save safety.** Saved redacted copies now serialize only objects
+  reachable from the current trailer roots, which prevents stale previous
+  revisions, annotation appearances, and orphaned image/form content from being
+  re-emitted.
+- **Scanned-image redaction.** Named image XObjects removed from redacted page
+  content are pruned from page resources when no surviving page content uses
+  them, so object bytes do not remain reachable after save.
+- **Redacted-copy safety report.** The GUI safety report now includes a raster
+  redaction audit that warns/fails closed when raster image content still
+  overlaps requested redaction areas.
+- **GUI input coverage.** Previously skipped headless keyboard/mouse tests now
+  use Avalonia Headless input injection, and release docs distinguish those
+  routed-event tests from packaged-app launch evidence and opt-in native
+  System Events key/mouse smoke.
+
+### Tests
+- Required redaction gate passed after redaction changes:
+  `dotnet test --no-restore --filter "FullyQualifiedName~Redaction"`.
+- Focused OCR/image redaction and redacted-copy safety tests passed.
+- v2.20 release smoke passed:
+  `logs/release-smoke_20260704_124540` (docs, build, redaction, signature, UI
+  workflow, macOS package, packaged-GUI evidence, and diffcheck).
+
 ## [2.19.0] - 2026-07-04
 
 Everyday PDF workbench final release gate. No intended API break.
