@@ -43,7 +43,11 @@ public class PdfRenderService
     public int MaxCacheEntries
     {
         get => _maxCacheEntries;
-        set => _maxCacheEntries = Math.Max(1, value);
+        set
+        {
+            _maxCacheEntries = Math.Max(1, value);
+            TrimCacheToLimits();
+        }
     }
 
     /// <summary>
@@ -52,7 +56,11 @@ public class PdfRenderService
     public long MaxCacheMemoryBytes
     {
         get => _maxCacheMemoryBytes;
-        set => _maxCacheMemoryBytes = Math.Max(1024 * 1024, value); // Minimum 1 MB
+        set
+        {
+            _maxCacheMemoryBytes = Math.Max(1024 * 1024, value); // Minimum 1 MB
+            TrimCacheToLimits();
+        }
     }
 
     /// <summary>
@@ -63,6 +71,25 @@ public class PdfRenderService
         _cache.Clear();
         System.Threading.Interlocked.Exchange(ref _currentCacheBytes, 0);
         _logger.LogInformation("Cache cleared");
+    }
+
+    /// <summary>
+    /// Trim cached page bitmaps in response to memory pressure without changing
+    /// the user's normal cache limit. The oldest entries are evicted first.
+    /// </summary>
+    public void TrimCacheForMemoryPressure(long targetBytes)
+    {
+        var normalizedTarget = Math.Max(0, targetBytes);
+        while (System.Threading.Interlocked.Read(ref _currentCacheBytes) > normalizedTarget)
+        {
+            if (!EvictOldestEntry())
+                break;
+        }
+
+        _logger.LogInformation(
+            "Trimmed render cache for memory pressure to {CurrentKB:F1}/{TargetKB:F1} KB",
+            System.Threading.Interlocked.Read(ref _currentCacheBytes) / 1024.0,
+            normalizedTarget / 1024.0);
     }
 
     /// <summary>
@@ -334,6 +361,11 @@ public class PdfRenderService
             System.Threading.Interlocked.Add(ref _currentCacheBytes, entrySize);
         }
 
+        TrimCacheToLimits();
+    }
+
+    private void TrimCacheToLimits()
+    {
         // Evict entries if over limits (entry count OR memory)
         while (_cache.Count > _maxCacheEntries ||
                System.Threading.Interlocked.Read(ref _currentCacheBytes) > _maxCacheMemoryBytes)

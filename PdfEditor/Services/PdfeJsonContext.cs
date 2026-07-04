@@ -23,6 +23,7 @@ namespace PdfEditor.Services;
 [JsonSerializable(typeof(WindowSettings))]
 [JsonSerializable(typeof(RecentFilesService.RecentFilesData))]
 [JsonSerializable(typeof(LicenseManifest))]
+[JsonSerializable(typeof(DocumentOpenResponsivenessReport))]
 internal partial class PdfeJsonContext : JsonSerializerContext
 {
 }

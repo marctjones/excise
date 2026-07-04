@@ -2,6 +2,7 @@ using AwesomeAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using PdfEditor.Services;
+using System.Reflection;
 using Xunit;
 
 namespace PdfEditor.Tests.Unit;
@@ -88,10 +89,45 @@ public class PdfRenderServiceCacheTests
     }
 
     [Fact]
+    public void MaxCacheEntries_SetBelowCurrentCount_EvictsImmediately()
+    {
+        AddCacheEntry(_service, "a", 100);
+        AddCacheEntry(_service, "b", 100);
+        AddCacheEntry(_service, "c", 100);
+
+        _service.MaxCacheEntries = 2;
+
+        _service.GetCacheStats().Count.Should().Be(2);
+    }
+
+    [Fact]
+    public void TrimCacheForMemoryPressure_EvictsOldestEntriesToTarget()
+    {
+        AddCacheEntry(_service, "a", 400 * 1024);
+        AddCacheEntry(_service, "b", 400 * 1024);
+        AddCacheEntry(_service, "c", 400 * 1024);
+
+        _service.TrimCacheForMemoryPressure(800 * 1024);
+
+        var stats = _service.GetCacheStats();
+        stats.Count.Should().BeLessThanOrEqualTo(2);
+        stats.CurrentBytes.Should().BeLessThanOrEqualTo(800 * 1024);
+    }
+
+    [Fact]
     public void LogCacheStats_DoesNotThrow()
     {
         var action = () => _service.LogCacheStats();
         action.Should().NotThrow();
+    }
+
+    private static void AddCacheEntry(PdfRenderService service, string key, int sizeBytes)
+    {
+        var method = typeof(PdfRenderService).GetMethod(
+            "AddToCache",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        method.Should().NotBeNull("cache eviction behavior should remain testable without rendering PDFs");
+        method!.Invoke(service, new object[] { key, new byte[sizeBytes] });
     }
 
     [Fact]

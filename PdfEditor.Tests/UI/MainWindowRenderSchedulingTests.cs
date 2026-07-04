@@ -29,6 +29,7 @@ public class MainWindowRenderSchedulingTests
             documentService.LoadDocument(pdfPath);
             var renderService = new ControlledRenderService();
             var vm = CreateViewModel(documentService, renderService);
+            vm.AdjacentPagePrefetchEnabled = false;
             SetPrivateField(vm, "_currentFilePath", pdfPath);
 
             vm.CurrentPageIndex = 0;
@@ -50,6 +51,42 @@ public class MainWindowRenderSchedulingTests
 
             vm.CurrentPageImage.Should().NotBeNull();
             vm.CurrentPageImage!.PixelSize.Width.Should().Be(20);
+        }
+        finally
+        {
+            TestPdfGenerator.CleanupTestFile(pdfPath);
+        }
+    }
+
+    [FixedAvaloniaFact]
+    public async Task RenderCurrentPageAsync_PrefetchesAdjacentPagesAfterVisiblePageWins()
+    {
+        var pdfPath = Path.Combine(Path.GetTempPath(), $"pdfe-render-prefetch-{Guid.NewGuid():N}.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 3);
+
+        try
+        {
+            var documentService = new PdfDocumentService(NullLogger<PdfDocumentService>.Instance);
+            documentService.LoadDocument(pdfPath);
+            var renderService = new ControlledRenderService();
+            var vm = CreateViewModel(documentService, renderService);
+            SetPrivateField(vm, "_currentFilePath", pdfPath);
+
+            vm.CurrentPageIndex = 1;
+            var render = InvokeRenderCurrentPageAsync(vm);
+            await renderService.WaitForRequestAsync(1);
+
+            renderService.Complete(1, CreateBitmap(width: 20, height: 10, SKColors.Blue));
+            await render;
+
+            vm.CurrentPageImage.Should().NotBeNull("the visible page should be committed before prefetch starts");
+            await renderService.WaitForRequestAsync(2);
+            renderService.RequestToken(2).IsCancellationRequested.Should().BeFalse();
+            renderService.Complete(2, CreateBitmap(width: 10, height: 10, SKColors.Green));
+
+            await renderService.WaitForRequestAsync(0);
+            renderService.RequestToken(0).IsCancellationRequested.Should().BeFalse();
+            renderService.Complete(0, CreateBitmap(width: 10, height: 10, SKColors.Red));
         }
         finally
         {

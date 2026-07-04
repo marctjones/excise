@@ -54,6 +54,9 @@ public class DocumentationClaimTests
         checklist.Should().Contain("--packaged-gui-focus-input");
         packagedSmokeDocs.Should().Contain("#558");
         packagedSmokeDocs.Should().Contain("#571");
+        packagedSmokeDocs.Should().Contain("#577");
+        packagedSmokeDocs.Should().Contain("app-responsiveness.json");
+        packagedSmokeDocs.Should().Contain("Timing Budgets");
         packagedSmokeDocs.Should().Contain("Accessibility permission");
 
         releaseSmokeScript.Should().Contain("run_packaged_gui_gate");
@@ -61,6 +64,8 @@ public class DocumentationClaimTests
         releaseSmokeScript.Should().Contain("--packaged-gui-focus-input");
 
         packagedSmokeScript.Should().Contain("packaged-gui-smoke.json");
+        packagedSmokeScript.Should().Contain("APP_RESPONSIVENESS_REPORT");
+        packagedSmokeScript.Should().Contain("PDFE_RESPONSIVENESS_REPORT");
         packagedSmokeScript.Should().Contain("--allow-focus-input");
         packagedSmokeScript.Should().Contain("MANUAL_REQUIRED");
     }

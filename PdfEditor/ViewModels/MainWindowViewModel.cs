@@ -92,7 +92,9 @@ public partial class MainWindowViewModel : ViewModelBase
     internal Services.DocumentTextIndex? TextIndex;
     private System.Threading.CancellationTokenSource? _indexBuildCts;
     private CancellationTokenSource? _currentPageRenderCts;
+    private CancellationTokenSource? _adjacentPagePrefetchCts;
     private long _currentPageRenderSequence;
+    private long _adjacentPagePrefetchSequence;
 
     /// <summary>
     /// Tracks whether the user is in an "auto-fit" zoom state. When set to
@@ -640,8 +642,13 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             this.RaiseAndSetIfChanged(ref _renderCacheMax, value);
             _renderService.MaxCacheEntries = Math.Max(1, value);
+            this.RaisePropertyChanged(nameof(RenderCacheStats));
         }
     }
+
+    public PdfRenderService.CacheStatistics RenderCacheStats => _renderService.GetCacheStats();
+
+    internal bool AdjacentPagePrefetchEnabled { get; set; } = true;
 
     public string StatusText => _documentService.IsDocumentLoaded
         ? $"Page {CurrentPageIndex + 1} of {TotalPages} - Zoom: {ZoomLevel:P0}"
@@ -820,6 +827,7 @@ public partial class MainWindowViewModel : ViewModelBase
             ClipboardHistory.Clear();
             PageThumbnails.Clear();
             _renderService.ClearCache();
+            this.RaisePropertyChanged(nameof(RenderCacheStats));
             _hasInMemoryModifications = false;
 
             // Exit redaction mode if active
@@ -984,6 +992,10 @@ public partial class MainWindowViewModel : ViewModelBase
                 LastDocumentOpenTiming.OutlineReadyElapsedMs,
                 LastDocumentOpenTiming.SearchIndexStartedElapsedMs,
                 LastDocumentOpenTiming.TotalLoadElapsedMs);
+            ResponsivenessReportWriter.TryWriteDocumentOpenReportFromEnvironment(
+                LastDocumentOpenTiming,
+                _renderService.GetCacheStats(),
+                _logger);
         }
         catch (Exception ex)
         {
@@ -1965,8 +1977,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
                 _logger.LogInformation(">>> RenderCurrentPageAsync: Setting CurrentPageImage");
                 CurrentPageImage = avaloniaBitmap;
+                this.RaisePropertyChanged(nameof(RenderCacheStats));
             }
 
+            QueueAdjacentPagePrefetch(requestedFilePath, requestedPageIndex, requestedHasInMemoryModifications);
             _logger.LogInformation(">>> RenderCurrentPageAsync: COMPLETE");
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
@@ -1994,6 +2008,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private CancellationTokenSource BeginCurrentPageRender(out long renderSequence)
     {
+        CancelAdjacentPagePrefetch();
         var cts = new CancellationTokenSource();
         renderSequence = System.Threading.Interlocked.Increment(ref _currentPageRenderSequence);
         var previous = System.Threading.Interlocked.Exchange(ref _currentPageRenderCts, cts);
@@ -2010,9 +2025,112 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void CancelCurrentPageRender()
     {
+        CancelAdjacentPagePrefetch();
         System.Threading.Interlocked.Increment(ref _currentPageRenderSequence);
         var cts = System.Threading.Interlocked.Exchange(ref _currentPageRenderCts, null);
         cts?.Cancel();
+    }
+
+    private void QueueAdjacentPagePrefetch(string filePath, int centerPageIndex, bool hasInMemoryModifications)
+    {
+        if (!AdjacentPagePrefetchEnabled ||
+            hasInMemoryModifications ||
+            string.IsNullOrEmpty(filePath) ||
+            TotalPages <= 1)
+        {
+            return;
+        }
+
+        var candidates = GetAdjacentPrefetchCandidates(centerPageIndex, TotalPages);
+        if (candidates.Count == 0)
+            return;
+
+        var cts = BeginAdjacentPagePrefetch(out var prefetchSequence);
+        var token = cts.Token;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                foreach (var pageIndex in candidates)
+                {
+                    token.ThrowIfCancellationRequested();
+                    if (!IsCurrentAdjacentPrefetch(prefetchSequence, cts, filePath, centerPageIndex))
+                        return;
+
+                    _logger.LogDebug("Prefetching adjacent page {PageIndex}", pageIndex);
+                    using var bitmap = await _renderService.RenderPageAsync(
+                        filePath,
+                        pageIndex,
+                        cancellationToken: token);
+                }
+
+                this.RaisePropertyChanged(nameof(RenderCacheStats));
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            {
+                _logger.LogDebug("Canceled adjacent-page prefetch for page {PageIndex}", centerPageIndex);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "Adjacent-page prefetch failed for page {PageIndex}", centerPageIndex);
+            }
+            finally
+            {
+                CompleteAdjacentPagePrefetch(cts);
+            }
+        });
+    }
+
+    private static IReadOnlyList<int> GetAdjacentPrefetchCandidates(int centerPageIndex, int pageCount)
+    {
+        var candidates = new List<int>(capacity: 2);
+        var next = centerPageIndex + 1;
+        var previous = centerPageIndex - 1;
+
+        if (next < pageCount)
+            candidates.Add(next);
+        if (previous >= 0)
+            candidates.Add(previous);
+
+        return candidates;
+    }
+
+    private CancellationTokenSource BeginAdjacentPagePrefetch(out long prefetchSequence)
+    {
+        var cts = new CancellationTokenSource();
+        prefetchSequence = System.Threading.Interlocked.Increment(ref _adjacentPagePrefetchSequence);
+        var previous = System.Threading.Interlocked.Exchange(ref _adjacentPagePrefetchCts, cts);
+        previous?.Cancel();
+        return cts;
+    }
+
+    private void CompleteAdjacentPagePrefetch(CancellationTokenSource cts)
+    {
+        if (ReferenceEquals(System.Threading.Volatile.Read(ref _adjacentPagePrefetchCts), cts))
+            System.Threading.Interlocked.CompareExchange(ref _adjacentPagePrefetchCts, null, cts);
+        cts.Dispose();
+    }
+
+    private void CancelAdjacentPagePrefetch()
+    {
+        System.Threading.Interlocked.Increment(ref _adjacentPagePrefetchSequence);
+        var cts = System.Threading.Interlocked.Exchange(ref _adjacentPagePrefetchCts, null);
+        cts?.Cancel();
+    }
+
+    private bool IsCurrentAdjacentPrefetch(
+        long prefetchSequence,
+        CancellationTokenSource cts,
+        string filePath,
+        int centerPageIndex)
+    {
+        return !cts.IsCancellationRequested
+            && System.Threading.Volatile.Read(ref _adjacentPagePrefetchSequence) == prefetchSequence
+            && ReferenceEquals(System.Threading.Volatile.Read(ref _adjacentPagePrefetchCts), cts)
+            && string.Equals(_currentFilePath, filePath, StringComparison.Ordinal)
+            && CurrentPageIndex == centerPageIndex
+            && !_hasInMemoryModifications;
     }
 
     private bool IsCurrentPageRender(
