@@ -1335,7 +1335,11 @@ internal partial class RenderContext
         }
     }
 
-    private void RenderWithCurrentSoftMask(Action drawAction, SKPaint sourcePaint, SKRect? preferredBounds = null)
+    private void RenderWithCurrentSoftMask(
+        Action drawAction,
+        SKPaint sourcePaint,
+        SKRect? preferredBounds = null,
+        bool seedBackdrop = false)
     {
         if (_state.SoftMask == null)
         {
@@ -1405,6 +1409,18 @@ internal partial class RenderContext
         _canvas.SaveLayer(maskBounds, layerPaint);
         try
         {
+            if (seedBackdrop && _rootBitmap != null)
+            {
+                _canvas.Save();
+                _canvas.ResetMatrix();
+                using var backdropPaint = new SKPaint
+                {
+                    BlendMode = SKBlendMode.Src,
+                    IsAntialias = false
+                };
+                _canvas.DrawBitmap(_rootBitmap, 0, 0, backdropPaint);
+                _canvas.Restore();
+            }
             drawAction();
             using var lumaFilter = SKColorFilter.CreateLumaColor();
             using var maskPaint = new SKPaint

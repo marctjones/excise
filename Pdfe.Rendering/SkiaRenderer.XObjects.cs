@@ -86,7 +86,11 @@ internal partial class RenderContext
             try
             {
                 _state = invocationState.Clone();
-                RenderWithCurrentSoftMask(DrawFormContent, paint, layerBounds);
+                RenderWithCurrentSoftMask(
+                    DrawFormContent,
+                    paint,
+                    layerBounds,
+                    seedBackdrop: group?.GetBool("I") == false);
             }
             finally
             {

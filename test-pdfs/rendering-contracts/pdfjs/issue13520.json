@@ -2,35 +2,35 @@
   "Path": "pdfjs/issue13520.pdf",
   "Source": "pdf.js corpus",
   "Owner": "rendering:transparency",
-  "RootCause": "CMYK_SOFT_MASK_SCREEN_BLEND_ARTIFACT",
-  "ImprovementPriority": "P1",
+  "RootCause": "CMYK_SOFT_MASK_SCREEN_BLEND_FIXED",
+  "ImprovementPriority": "DONE",
   "Confidence": "HIGH",
-  "Notes": "Evidence sheet: logs/render-quality/pass-one-triage-20260703/remaining/pdfjs_issue13520.pdf-p1-sheet.png. Prior PAGE_BOX_REFERENCE_DISAGREEMENT contract was stale; pdfinfo confirms CropBox is tight, but the remaining difference is color/composite semantics.",
+  "Notes": "Evidence: logs/render-quality/issue13520-fix-20260703/backdrop-seed-softmask/sheet.png and pdfe-mutool-diff.json. Regression: CmykTransparencyRegressionTests.RenderPage_Issue13520_DoesNotPaintDarkSoftMaskLobe.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
-      "ReleaseStatus": "FAIL",
-      "QualityStatus": "FAIL",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
       "PixelAgreement": "MATCHES_TARGET",
       "ReferenceSituation": "REFS_DISAGREE",
-      "RootCause": "CMYK_SOFT_MASK_SCREEN_BLEND_ARTIFACT",
+      "RootCause": "CMYK_SOFT_MASK_SCREEN_BLEND_FIXED",
       "Target": {
         "Mode": "REFERENCE_RENDERER",
         "Primary": "mutool",
-        "Reason": "MuPDF is the best target for the CropBox render and does not show the pdfe right-side dark soft-mask/composite artifact."
+        "Reason": "After the non-isolated soft-mask backdrop fix, pdfe no longer shows the dark lobe and remains aligned with the MuPDF semantic target."
       },
-      "ImprovementPriority": "P1",
+      "ImprovementPriority": "DONE",
       "Confidence": "HIGH",
-      "QualityReason": "Real visible rendering issue: CMYK transparency group with /BM /Screen and luminosity soft masks renders too dark on the right side in pdfe.",
-      "Notes": "Focused sheet: logs/render-quality/pass-one-triage-20260703/remaining/pdfjs_issue13520.pdf-p1-sheet.png."
+      "QualityReason": "Fixed: dark CMYK soft-mask Screen blend lobe removed; remaining difference is low-impact color-tone residual.",
+      "Notes": "Focused current-code diff versus MuPDF: diffFraction 0.25%, MAE 4.90. Evidence under logs/render-quality/issue13520-fix-20260703/backdrop-seed-softmask/."
     }
   },
   "Issue": 549,
   "ReviewStatus": "REVIEWED",
-  "QualityReason": "Reviewed 2026-07-03: current sheet shows a real visible CMYK transparency/soft-mask artifact on the right side of the form. pdfe preserves page extent but does not match the accepted MuPDF target.",
+  "QualityReason": "Fixed 2026-07-03: soft-masked non-isolated transparency groups now seed the offscreen layer with the existing backdrop before applying blend-mode content. This removes the visible dark right-side lobe; focused diff versus MuPDF is now low impact color-tone residual, diffFraction 0.25%, MAE 4.90.",
   "Target": {
     "Mode": "REFERENCE_RENDERER",
     "Primary": "mutool",
-    "Reason": "MuPDF renders the full CropBox extent without the dark right-side CMYK transparency artifact; Poppler/Ghostscript use a smaller apparent extent and are less useful targets for this page."
+    "Reason": "MuPDF remains the preferred CropBox target; pdfe now preserves the same semantic appearance without the dark soft-mask/composite artifact."
   }
 }
