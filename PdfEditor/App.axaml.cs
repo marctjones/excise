@@ -95,9 +95,23 @@ public partial class App : Application
             // On macOS
             // a double-clicked file does NOT arrive as a command-line arg — it
             // comes through the activation event wired up below.
+            var processArgs = Environment.GetCommandLineArgs().Skip(1).ToArray();
+            var responsivenessReportPath = StartupDocumentResolver.ResolveResponsivenessReportPath(
+                desktop.Args,
+                processArgs)
+                ?? ResponsivenessReportWriter.ConsumeOneShotReportRequest(logger);
+            if (!string.IsNullOrWhiteSpace(responsivenessReportPath))
+            {
+                Environment.SetEnvironmentVariable(
+                    ResponsivenessReportWriter.ReportPathEnvironmentVariable,
+                    responsivenessReportPath);
+                logger.LogInformation("Configured responsiveness report from startup args: {Path}",
+                    responsivenessReportPath);
+            }
+
             var path = StartupDocumentResolver.Resolve(
                 desktop.Args,
-                Environment.GetCommandLineArgs().Skip(1));
+                processArgs);
 
             if (path != null)
             {

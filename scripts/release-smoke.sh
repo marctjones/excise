@@ -17,6 +17,7 @@ RUN_VISUAL=0
 RUN_PACKAGE=0
 RUN_PACKAGED_GUI=0
 PACKAGED_GUI_FOCUS_INPUT=0
+PACKAGED_GUI_MODE="background-open"
 NO_BUILD=0
 VERSION=""
 ONLY=""
@@ -39,6 +40,8 @@ Options:
   --visual            Run the local visual-regression runner.
   --package           Build local package artifacts for the current platform.
   --packaged-gui      Run packaged-app GUI smoke evidence after package build.
+  --packaged-gui-direct-exec
+                      Run packaged GUI smoke through the app executable so app-internal timing JSON is reliable.
   --packaged-gui-focus-input
                       Also run focus-taking native key/mouse smoke.
   --no-build          Skip the initial build gate.
@@ -63,6 +66,11 @@ while [ "$#" -gt 0 ]; do
         --visual) RUN_VISUAL=1; shift ;;
         --package) RUN_PACKAGE=1; shift ;;
         --packaged-gui) RUN_PACKAGED_GUI=1; shift ;;
+        --packaged-gui-direct-exec)
+            RUN_PACKAGED_GUI=1
+            PACKAGED_GUI_MODE="direct-exec"
+            shift
+            ;;
         --packaged-gui-focus-input)
             RUN_PACKAGED_GUI=1
             PACKAGED_GUI_FOCUS_INPUT=1
@@ -121,7 +129,7 @@ run_packaged_gui_gate() {
     local app="$ROOT/dist/pdfe.app"
     local pdf="$ROOT/test-pdfs/smoke/irs-w9.pdf"
     local out="$LOG_DIR/packaged-gui"
-    local -a args=("--app" "$app" "--pdf" "$pdf" "--output" "$out")
+    local -a args=("--app" "$app" "--pdf" "$pdf" "--output" "$out" "--mode" "$PACKAGED_GUI_MODE")
     if [ "$PACKAGED_GUI_FOCUS_INPUT" = "1" ]; then
         args+=("--allow-focus-input")
     fi

@@ -52,20 +52,24 @@ public class DocumentationClaimTests
 
         checklist.Should().Contain("--packaged-gui");
         checklist.Should().Contain("--packaged-gui-focus-input");
+        checklist.Should().Contain("--packaged-gui-direct-exec");
         packagedSmokeDocs.Should().Contain("#558");
         packagedSmokeDocs.Should().Contain("#571");
         packagedSmokeDocs.Should().Contain("#577");
         packagedSmokeDocs.Should().Contain("app-responsiveness.json");
+        packagedSmokeDocs.Should().Contain("process remains alive");
         packagedSmokeDocs.Should().Contain("Timing Budgets");
         packagedSmokeDocs.Should().Contain("Accessibility permission");
 
         releaseSmokeScript.Should().Contain("run_packaged_gui_gate");
         releaseSmokeScript.Should().Contain("--packaged-gui");
         releaseSmokeScript.Should().Contain("--packaged-gui-focus-input");
+        releaseSmokeScript.Should().Contain("--packaged-gui-direct-exec");
 
         packagedSmokeScript.Should().Contain("packaged-gui-smoke.json");
         packagedSmokeScript.Should().Contain("APP_RESPONSIVENESS_REPORT");
         packagedSmokeScript.Should().Contain("PDFE_RESPONSIVENESS_REPORT");
+        packagedSmokeScript.Should().Contain("packaged app stayed alive");
         packagedSmokeScript.Should().Contain("native page navigation latency");
         packagedSmokeScript.Should().Contain("native zoom latency");
         packagedSmokeScript.Should().Contain("native redaction preview latency");

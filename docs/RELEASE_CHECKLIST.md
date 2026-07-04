@@ -20,9 +20,10 @@ Use this checklist before tagging any `v*` release.
   `scripts/release-smoke.sh --quick --package --packaged-gui --version <version>`.
   This writes JSON/markdown evidence for #558/#571 and responsiveness timing
   evidence for #577/#581/#582 without taking keyboard or mouse focus. On a
-  dedicated runner, add `--packaged-gui-focus-input` to run the native System
-  Events key/mouse smoke that requires macOS Accessibility permission and
-  foreground focus.
+  local release-candidate pass where app-internal first-page timing is required,
+  use `--packaged-gui-direct-exec`. On a dedicated runner, add
+  `--packaged-gui-focus-input` to run the native System Events key/mouse smoke
+  that requires macOS Accessibility permission and foreground focus.
 - Run the focused tests for the changed area.
 - Run the all-pages pdf.js rendering gate in tmux before declaring rendering
   quality final:

@@ -12,6 +12,7 @@ namespace PdfEditor.Services;
 internal static class ResponsivenessReportWriter
 {
     public const string ReportPathEnvironmentVariable = "PDFE_RESPONSIVENESS_REPORT";
+    public const string ReportPathArgument = "--responsiveness-report";
 
     private static readonly ResponsivenessBudget DocumentInstancesLoadedBudget = new(
         "document_instances_loaded",
@@ -101,6 +102,30 @@ internal static class ResponsivenessReportWriter
         catch (Exception ex)
         {
             logger.LogWarning(ex, "Failed to write PDFE responsiveness report");
+        }
+    }
+
+    public static string? ConsumeOneShotReportRequest(ILogger logger)
+    {
+        try
+        {
+            var requestPath = AppPaths.ResponsivenessReportRequestPath;
+            if (!File.Exists(requestPath))
+                return null;
+
+            var reportPath = File.ReadLines(requestPath).FirstOrDefault();
+            File.Delete(requestPath);
+            if (string.IsNullOrWhiteSpace(reportPath))
+                return null;
+
+            var fullPath = Path.GetFullPath(reportPath);
+            logger.LogInformation("Consumed one-shot responsiveness report request: {Path}", fullPath);
+            return fullPath;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to consume one-shot responsiveness report request");
+            return null;
         }
     }
 

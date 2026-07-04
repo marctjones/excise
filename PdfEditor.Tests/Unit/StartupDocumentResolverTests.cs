@@ -66,6 +66,23 @@ public class StartupDocumentResolverTests
         result.Should().BeNull();
     }
 
+    [Fact]
+    public void ResolveResponsivenessReportPath_AcceptsSeparatedOrEqualsOption()
+    {
+        var separated = Path.Combine(Path.GetTempPath(), $"pdfe-report-{Guid.NewGuid():N}.json");
+        var equals = Path.Combine(Path.GetTempPath(), $"pdfe-report-{Guid.NewGuid():N}.json");
+
+        StartupDocumentResolver.ResolveResponsivenessReportPath(
+                new[] { "--responsiveness-report", separated },
+                new[] { $"--responsiveness-report={equals}" })
+            .Should().Be(Path.GetFullPath(separated));
+
+        StartupDocumentResolver.ResolveResponsivenessReportPath(
+                Array.Empty<string>(),
+                new[] { $"--responsiveness-report={equals}" })
+            .Should().Be(Path.GetFullPath(equals));
+    }
+
     private static TempPath TestPdfFile()
     {
         var path = Path.Combine(Path.GetTempPath(), $"pdfe-startup-{Guid.NewGuid():N}.pdf");

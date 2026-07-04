@@ -67,15 +67,18 @@ LAUNCH_LOG="$OUT/launch.log"
 INPUT_LOG="$OUT/native-input.log"
 SCREENSHOT="$OUT/startup-screen.png"
 APP_RESPONSIVENESS_REPORT="$OUT/app-responsiveness.json"
+RESPONSIVENESS_REQUEST_FILE="$HOME/Library/Application Support/PdfEditor/responsiveness-report-request.txt"
 : > "$MATRIX_TSV"
 : > "$APP_LOG"
 : > "$LAUNCH_LOG"
 : > "$INPUT_LOG"
 
+MATRIX_DELIMITER=$'\037'
 overall=0
 app_pid=""
 script_start_ms=""
 launch_start_ms=""
+launch_start_epoch=""
 pid_seen_ms=""
 launchctl_env_set=0
 
@@ -141,9 +144,16 @@ record_row() {
     local elapsed_ms="${7:-}"
     local pass_budget_ms="${8:-}"
     local warn_budget_ms="${9:-}"
-    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
-        "$workflow" "$status" "$mode" "$artifact" "$detail" "$focused_control" \
-        "$elapsed_ms" "$pass_budget_ms" "$warn_budget_ms" >> "$MATRIX_TSV"
+    printf '%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n' \
+        "$workflow" "$MATRIX_DELIMITER" \
+        "$status" "$MATRIX_DELIMITER" \
+        "$mode" "$MATRIX_DELIMITER" \
+        "$artifact" "$MATRIX_DELIMITER" \
+        "$detail" "$MATRIX_DELIMITER" \
+        "$focused_control" "$MATRIX_DELIMITER" \
+        "$elapsed_ms" "$MATRIX_DELIMITER" \
+        "$pass_budget_ms" "$MATRIX_DELIMITER" \
+        "$warn_budget_ms" >> "$MATRIX_TSV"
     if [ "$status" = "FAIL" ]; then
         overall=1
     fi
@@ -153,11 +163,33 @@ find_app_pid() {
     /bin/ps -axo pid=,command= | awk -v exe="$APP_EXEC" 'index($0, exe) { print $1; exit }'
 }
 
+pid_is_live() {
+    local pid="$1"
+    local state
+    state="$(/bin/ps -p "$pid" -o stat= 2>/dev/null | tr -d '[:space:]')"
+    [ -n "$state" ] && [[ "$state" != *Z* ]]
+}
+
+app_is_alive() {
+    if [ -n "$app_pid" ] && pid_is_live "$app_pid"; then
+        return 0
+    fi
+
+    local current_pid
+    current_pid="$(find_app_pid)"
+    if [ -n "$current_pid" ] && pid_is_live "$current_pid"; then
+        app_pid="$current_pid"
+        return 0
+    fi
+
+    return 1
+}
+
 wait_for_pid() {
     local remaining="$TIMEOUT_SECONDS"
     while [ "$remaining" -gt 0 ]; do
         app_pid="$(find_app_pid)"
-        if [ -n "$app_pid" ]; then
+        if [ -n "$app_pid" ] && pid_is_live "$app_pid"; then
             pid_seen_ms="$(now_ms)"
             return 0
         fi
@@ -165,6 +197,34 @@ wait_for_pid() {
         remaining=$((remaining - 1))
     done
     return 1
+}
+
+latest_crash_report_since_launch() {
+    local latest=""
+    local latest_mtime=0
+    local report
+    for report in "$HOME/Library/Logs/DiagnosticReports"/PdfEditor-*.ips; do
+        [ -e "$report" ] || continue
+        local mtime
+        mtime="$(stat -f %m "$report" 2>/dev/null || printf '0')"
+        if [ "$mtime" -ge "$launch_start_epoch" ] && [ "$mtime" -gt "$latest_mtime" ]; then
+            latest="$report"
+            latest_mtime="$mtime"
+        fi
+    done
+
+    printf '%s' "$latest"
+}
+
+process_exit_detail() {
+    local context="$1"
+    local detail="App process exited before ${context}."
+    local crash_report
+    crash_report="$(latest_crash_report_since_launch)"
+    if [ -n "$crash_report" ]; then
+        detail="$detail Latest crash report: $crash_report."
+    fi
+    printf '%s' "$detail"
 }
 
 quit_app() {
@@ -182,6 +242,7 @@ clear_launch_environment() {
         launchctl unsetenv PDFE_RESPONSIVENESS_REPORT >/dev/null 2>&1 || true
         launchctl_env_set=0
     fi
+    rm -f "$RESPONSIVENESS_REQUEST_FILE" 2>/dev/null || true
 }
 
 wait_for_app_report() {
@@ -248,7 +309,7 @@ write_reports() {
         printf '  },\n'
         printf '  "matrix": [\n'
         local first=1
-        while IFS=$'\t' read -r workflow status row_mode artifact detail focused_control elapsed_ms pass_budget_ms warn_budget_ms; do
+        while IFS="$MATRIX_DELIMITER" read -r workflow status row_mode artifact detail focused_control elapsed_ms pass_budget_ms warn_budget_ms; do
             [ -n "$workflow" ] || continue
             if [ "$first" = "0" ]; then
                 printf ',\n'
@@ -277,7 +338,7 @@ write_reports() {
         printf '%s\n\n' "- Issues: #558, #560, #571"
         printf '| Workflow | Status | Mode | Elapsed | Budget | Artifact | Detail |\n'
         printf '| --- | --- | --- | --- | --- | --- | --- |\n'
-        while IFS=$'\t' read -r workflow status row_mode artifact detail focused_control elapsed_ms pass_budget_ms warn_budget_ms; do
+        while IFS="$MATRIX_DELIMITER" read -r workflow status row_mode artifact detail focused_control elapsed_ms pass_budget_ms warn_budget_ms; do
             [ -n "$workflow" ] || continue
             if [ -n "$focused_control" ]; then
                 detail="$detail Focused control: $focused_control"
@@ -318,21 +379,26 @@ fi
 
 script_start_ms="$(now_ms)"
 launch_start_ms="$(now_ms)"
+launch_start_epoch="$(date +%s)"
+mkdir -p "$(dirname "$RESPONSIVENESS_REQUEST_FILE")"
+printf '%s\n' "$APP_RESPONSIVENESS_REPORT" > "$RESPONSIVENESS_REQUEST_FILE"
 case "$MODE" in
     background-open)
         if command -v launchctl >/dev/null 2>&1; then
             launchctl setenv PDFE_RESPONSIVENESS_REPORT "$APP_RESPONSIVENESS_REPORT" >> "$LAUNCH_LOG" 2>&1 && launchctl_env_set=1
         fi
         {
-            echo "Launching with: open -g -n $APP --args $PDF"
-            PDFE_RESPONSIVENESS_REPORT="$APP_RESPONSIVENESS_REPORT" open -g -n "$APP" --args "$PDF"
+            echo "Launching with: open -g -n -a $APP $PDF --args --responsiveness-report $APP_RESPONSIVENESS_REPORT"
+            PDFE_RESPONSIVENESS_REPORT="$APP_RESPONSIVENESS_REPORT" \
+                open -g -n -a "$APP" "$PDF" --args --responsiveness-report "$APP_RESPONSIVENESS_REPORT"
         } > "$LAUNCH_LOG" 2>&1
         launch_rc=$?
         ;;
     direct-exec)
         {
-            echo "Launching with: $APP_EXEC $PDF"
-            PDFE_RESPONSIVENESS_REPORT="$APP_RESPONSIVENESS_REPORT" "$APP_EXEC" "$PDF"
+            echo "Launching with: $APP_EXEC --responsiveness-report $APP_RESPONSIVENESS_REPORT $PDF"
+            PDFE_RESPONSIVENESS_REPORT="$APP_RESPONSIVENESS_REPORT" \
+                "$APP_EXEC" --responsiveness-report "$APP_RESPONSIVENESS_REPORT" "$PDF"
         } > "$APP_LOG" 2>&1 &
         app_pid=$!
         launch_rc=0
@@ -364,6 +430,17 @@ else
 fi
 
 sleep 3
+stable_elapsed_ms=$(( $(now_ms) - launch_start_ms ))
+if app_is_alive; then
+    stable_status="$(budget_status "$stable_elapsed_ms" 5000 15000)"
+    record_row "packaged app stayed alive" "$stable_status" "$MODE" "$LAUNCH_LOG" "Packaged app remained alive after startup stabilization with pid $app_pid." "" "$stable_elapsed_ms" 5000 15000
+else
+    record_row "packaged app stayed alive" "FAIL" "$MODE" "$LAUNCH_LOG" "$(process_exit_detail "startup stabilization")" "" "$stable_elapsed_ms" 5000 15000
+    clear_launch_environment
+    write_reports
+    exit 1
+fi
+
 open_elapsed_ms=$(( $(now_ms) - launch_start_ms ))
 open_status="$(budget_status "$open_elapsed_ms" 5000 15000)"
 record_row "open PDF from packaged app" "$open_status" "$MODE" "$LAUNCH_LOG" "Launched packaged app with PDF argument: $PDF." "" "$open_elapsed_ms" 5000 15000
@@ -395,10 +472,13 @@ if wait_for_app_report; then
     fi
     app_report_elapsed_ms=$(( $(now_ms) - launch_start_ms ))
     record_row "app first-page responsiveness report" "$app_report_status" "$MODE" "$APP_RESPONSIVENESS_REPORT" "App emitted document-open phases and cache statistics." "" "$app_report_elapsed_ms" 8000 25000
-elif [ "$MODE" = "direct-exec" ]; then
-    record_row "app first-page responsiveness report" "FAIL" "$MODE" "$APP_RESPONSIVENESS_REPORT" "App did not emit PDFE_RESPONSIVENESS_REPORT within ${TIMEOUT_SECONDS}s."
 else
-    record_row "app first-page responsiveness report" "MANUAL_REQUIRED" "$MODE" "$APP_RESPONSIVENESS_REPORT" "Background Launch Services mode may not inherit PDFE_RESPONSIVENESS_REPORT; use --mode direct-exec for app-internal timing."
+    app_report_elapsed_ms=$(( $(now_ms) - launch_start_ms ))
+    report_detail="App did not emit app-responsiveness.json within ${TIMEOUT_SECONDS}s from startup args, launchctl environment, or one-shot request file."
+    if ! app_is_alive; then
+        report_detail="$(process_exit_detail "app-internal responsiveness report")"
+    fi
+    record_row "app first-page responsiveness report" "FAIL" "$MODE" "$APP_RESPONSIVENESS_REPORT" "$report_detail" "" "$app_report_elapsed_ms" 8000 25000
 fi
 
 if [ "$ALLOW_FOCUS_INPUT" = "1" ]; then

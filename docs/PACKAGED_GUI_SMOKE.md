@@ -8,6 +8,8 @@ Avalonia app instead of the in-process Avalonia.Headless test harness.
 
 - The macOS `.app` bundle contains an executable GUI.
 - Launch Services or the packaged executable can start the app with a real PDF.
+- The packaged process remains alive after startup stabilization instead of
+  crashing immediately after Launch Services reports success.
 - The smoke writes durable evidence: JSON report, markdown summary, app/launch
   logs, native-input log, app responsiveness report, and a screenshot path.
 - The report records timing evidence with PASS/WARN/FAIL budgets for packaged
@@ -24,13 +26,17 @@ The default mode uses macOS `open -g` and does not inject keyboard or mouse
 events. That keeps the check suitable for normal local work where the user may
 still be using the machine. The script sets a temporary
 `PDFE_RESPONSIVENESS_REPORT` Launch Services environment value so the packaged
-app can write `app-responsiveness.json`, then unsets it during cleanup.
+app can write `app-responsiveness.json`, also writes a one-shot request file for
+Launch Services runs that do not inherit environment values, then unsets and
+removes that state during cleanup. Missing app-internal timing is a smoke
+failure because it means the package did not prove first-page display.
 
 Use direct executable launch when investigating app stdout/stderr or when
 Launch Services environment inheritance is unavailable:
 
 ```bash
 scripts/run-packaged-gui-smoke.sh --mode direct-exec
+scripts/release-smoke.sh --quick --package --packaged-gui-direct-exec --version <version>
 ```
 
 Native key/mouse delivery through `System Events` is available only with:
@@ -69,6 +75,7 @@ JSON/markdown report but does not fail the smoke; a FAIL exits non-zero.
 | Workflow | PASS | WARN |
 | --- | ---: | ---: |
 | Packaged process appears | 3s | 8s |
+| Packaged process survives startup stabilization | 5s | 15s |
 | PDF argument open observed externally | 5s | 15s |
 | Startup screenshot captured | 6s | 18s |
 | App document instances loaded | 2s | 8s |

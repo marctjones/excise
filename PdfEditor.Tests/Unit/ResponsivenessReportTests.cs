@@ -85,4 +85,28 @@ public class ResponsivenessReportTests
                 File.Delete(outputPath);
         }
     }
+
+    [Fact]
+    public void ConsumeOneShotReportRequest_ReadsAndDeletesRequestFile()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "pdfe-responsiveness-request", Guid.NewGuid().ToString("N"));
+        AppPaths.OverrideForTests(root);
+        var reportPath = Path.Combine(root, "report.json");
+
+        try
+        {
+            File.WriteAllText(AppPaths.ResponsivenessReportRequestPath, reportPath + Environment.NewLine);
+
+            var consumed = ResponsivenessReportWriter.ConsumeOneShotReportRequest(NullLogger.Instance);
+
+            consumed.Should().Be(Path.GetFullPath(reportPath));
+            File.Exists(AppPaths.ResponsivenessReportRequestPath).Should().BeFalse();
+        }
+        finally
+        {
+            AppPaths.OverrideForTests(null);
+            if (Directory.Exists(root))
+                Directory.Delete(root, recursive: true);
+        }
+    }
 }

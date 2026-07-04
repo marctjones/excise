@@ -106,6 +106,14 @@ public static class AppPaths
     public static string PreferencesPath => Path.Combine(ConfigDir, "preferences.json");
 
     /// <summary>
+    /// One-shot request file used by packaged GUI smoke to ask the next app
+    /// launch to write a responsiveness report when Launch Services does not
+    /// propagate environment variables or command-line args consistently.
+    /// </summary>
+    public static string ResponsivenessReportRequestPath =>
+        Path.Combine(DataDir, "responsiveness-report-request.txt");
+
+    /// <summary>
     /// Test-only: resolve each storage directory ignoring both the cache and
     /// the OverrideForTests redirection. Lets AppPathsTests verify the real
     /// XDG / platform-specific resolution logic without disturbing the
