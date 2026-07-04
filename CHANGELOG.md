@@ -8,6 +8,49 @@ semantic versioning.
 
 No changes yet.
 
+## [2.22.0] - 2026-07-04
+
+Accessibility and assistive-technology readiness release. Additive public API
+change in `Pdfe.Core.Automation`; no intended breaking change.
+
+### Added
+- **Shared semantic command metadata (#562).** Added `Pdfe.Core.Automation`
+  with stable command IDs, labels, descriptions, shortcuts, CLI verbs,
+  parameters, result fields, disabled reasons, and destructive/security flags.
+- **CLI command metadata (#562).** Added `pdfe commands` and
+  `pdfe commands <id> --json` so automation and batch workflows can query the
+  same command model used by the GUI.
+- **Accessibility command binding (#569).** Added the Avalonia
+  `CommandAccessibility.CommandId` attached property, binding command metadata
+  into accessible names, help text, unavailable status, and tooltips across the
+  main menu, toolbar, search bar, page controls, redaction controls, and status
+  surfaces.
+- **Accessibility release gate (#570, #573).** Added
+  `scripts/run-accessibility-smoke.sh` and wired it into
+  `scripts/release-smoke.sh --only=accessibility`, producing a JSON report with
+  automated check status and platform accessibility-tree probe status.
+- **Accessibility checklist (#566, #570).** Added
+  `docs/ACCESSIBILITY_RELEASE_CHECKLIST.md` for macOS AX/VoiceOver, Windows UI
+  Automation, and Linux/GNOME AT-SPI verification on dedicated runners.
+
+### Changed
+- **Keyboard-only and dialog semantics (#572).** Preferences, Save Redacted
+  Version, About, and dynamically-created message/prompt dialogs now expose
+  accessible names/help text plus default/cancel button semantics. The main
+  status bar exposes current mode, operation status, and document status for
+  assistive technology.
+- **Release checklist.** Accessibility is now reported separately from GUI
+  display parity and packaged-app smoke.
+
+### Tests
+- v2.22 accessibility smoke passed:
+  `logs/release-smoke_20260704_135843` (`accessibility` gate PASS).
+- Focused gates passed:
+  `PdfCommandRegistryTests`, `CommandMetadataCommandTests`,
+  `AccessibilityRegressionTests`, `GuiWorkflowCoverageMatrixTests`,
+  `DocumentationClaimTests`, and `PublicApiApprovalTests`.
+- Full Debug build passed: `dotnet build pdfe.sln -c Debug`.
+
 ## [2.21.0] - 2026-07-04
 
 GUI responsiveness and packaged-app release-gate hardening release. No intended
