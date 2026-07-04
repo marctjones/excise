@@ -8,6 +8,42 @@ semantic versioning.
 
 No changes yet.
 
+## [2.23.0] - 2026-07-04
+
+Automation API and platform integration release. Additive public API change in
+`Pdfe.Core.Automation`; no intended breaking change.
+
+### Added
+- **Stable CLI automation contract (#561).** Added `pdfe batch` for JSON
+  workflows with structured final reports, optional report files, progress
+  NDJSON on stderr, documented exit codes, relative-path resolution, and
+  password-aware document open without writing passwords to reports.
+- **JSON CLI output (#561).** Added `--json` output to `pdfe info`,
+  `pdfe text`, and `pdfe render`, and added `--password` handling to
+  `info` and `text` to match the render command.
+- **Automation command metadata (#561).** Added `automation.batch` to the
+  shared command registry and corrected hidden-text audit metadata to point at
+  the existing `audit` CLI command.
+- **Platform examples (#564, #567, #568, #574).** Added AppleScript,
+  Shortcuts, PowerShell, Power Automate Desktop, and Linux/GNOME examples that
+  call the CLI/batch JSON contract instead of clicking the GUI.
+- **Automation release gate (#561, #574).** Added
+  `scripts/run-automation-smoke.sh` and wired it into
+  `scripts/release-smoke.sh --only=automation`.
+
+### Security
+- **Automation boundary (#565).** Documented the CLI-first threat model:
+  no background GUI automation listener is enabled by default, Release builds
+  still exclude Roslyn GUI scripting unless explicitly enabled, mutating batch
+  commands require explicit output paths, in-place overwrite is refused, and
+  redaction requires `confirmDestructive: true`.
+
+### Tests
+- Focused gates passed:
+  `BatchAutomationCommandTests`, `CommandMetadataCommandTests`,
+  `PdfCommandRegistryTests`, and `PublicApiApprovalTests`.
+- Full Debug build passed: `dotnet build pdfe.sln -c Debug`.
+
 ## [2.22.0] - 2026-07-04
 
 Accessibility and assistive-technology readiness release. Additive public API

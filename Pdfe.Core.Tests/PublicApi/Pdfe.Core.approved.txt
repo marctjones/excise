@@ -137,6 +137,7 @@ namespace Pdfe.Core.Automation
         public const string ApplyRedaction = "redaction.apply";
         public const string AuditHiddenText = "audit.hiddenText";
         public const string AutoDetectFields = "form.autoDetectFields";
+        public const string BatchWorkflow = "automation.batch";
         public const string ClearAllRedactions = "redaction.clearAll";
         public const string ClearPageSelection = "document.clearPageSelection";
         public const string CloseDocument = "app.closeDocument";

@@ -79,6 +79,54 @@ public class DocumentationClaimTests
     }
 
     [Fact]
+    public void AutomationReleaseDocs_MapToCliBatchGateAndPlatformExamples()
+    {
+        var readme = Read("README.md");
+        var checklist = Read("docs/RELEASE_CHECKLIST.md");
+        var automationDocs = Read("docs/AUTOMATION_API.md");
+        var releaseSmoke = Read("scripts/release-smoke.sh");
+        var automationSmoke = Read("scripts/run-automation-smoke.sh");
+        var program = Read("Pdfe.Cli/Program.cs");
+        var batch = Read("Pdfe.Cli/AutomationBatch.cs");
+        var registry = Read("Pdfe.Core/Automation/PdfCommandRegistry.cs");
+        var macos = Read("automation-scripts/macos/render-page.applescript");
+        var powershell = Read("automation-scripts/windows/Pdfe.Automation.psm1");
+        var linux = Read("automation-scripts/linux/pdfe-automation.sh");
+        var dbus = Read("automation-scripts/linux/gnome-dbus-evaluation.md");
+
+        readme.Should().Contain("pdfe batch");
+        readme.Should().Contain("AUTOMATION_API.md");
+        checklist.Should().Contain("--only=automation");
+        checklist.Should().Contain("scripts/run-automation-smoke.sh");
+        automationDocs.Should().Contain("#561");
+        automationDocs.Should().Contain("#564");
+        automationDocs.Should().Contain("#565");
+        automationDocs.Should().Contain("#567");
+        automationDocs.Should().Contain("#568");
+        automationDocs.Should().Contain("#574");
+        automationDocs.Should().Contain("`redaction.apply` requires `confirmDestructive: true`");
+        automationDocs.Should().Contain("Password values are accepted as inputs but are not written");
+
+        releaseSmoke.Should().Contain("run-automation-smoke.sh");
+        releaseSmoke.Should().Contain("automation");
+        automationSmoke.Should().Contain("BatchAutomationCommandTests");
+        automationSmoke.Should().Contain("--progress");
+        program.Should().Contain("CreateBatchCommand()");
+        batch.Should().Contain("UNSAFE_OVERWRITE_REFUSED");
+        batch.Should().Contain("DESTRUCTIVE_CONFIRMATION_REQUIRED");
+        batch.Should().Contain("AutomationProgressJsonOptions");
+        registry.Should().Contain("PdfCommandIds.BatchWorkflow");
+
+        macos.Should().Contain("do shell script");
+        macos.Should().Contain("--json");
+        powershell.Should().Contain("Invoke-PdfeBatch");
+        powershell.Should().Contain("Invoke-PdfeRedaction");
+        linux.Should().Contain("batch");
+        linux.Should().Contain("--progress");
+        dbus.Should().Contain("D-Bus interface is not shipped in v2.23");
+    }
+
+    [Fact]
     public void PackagedGuiSmokeDocs_MapToReleaseSmokeScript()
     {
         var checklist = Read("docs/RELEASE_CHECKLIST.md");

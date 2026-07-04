@@ -23,6 +23,13 @@ Use this checklist before tagging any `v*` release.
   representative keyboard-only reachability without taking keyboard or mouse
   focus. Platform AX/UIA/AT-SPI procedures are documented in
   `docs/ACCESSIBILITY_RELEASE_CHECKLIST.md`.
+- Run the dedicated automation API gate:
+  `scripts/release-smoke.sh --quick --only=automation`. This uses
+  `scripts/run-automation-smoke.sh` to verify `pdfe commands`, JSON output,
+  batch workflow reports, progress NDJSON, password redaction, destructive
+  command refusal, and a real render workflow without taking keyboard or mouse
+  focus. The platform contract and examples are documented in
+  `docs/AUTOMATION_API.md`.
 - Run packaged-app GUI evidence when validating desktop packages:
   `scripts/release-smoke.sh --quick --package --packaged-gui --version <version>`.
   This writes JSON/markdown evidence for #558/#571 and responsiveness timing
@@ -80,6 +87,7 @@ limitation before tagging.
 | Redact text/area, save redacted copy, verify text removal plus metadata/attachment scrub status | `RedactionMouseWorkflowTests`; `RedactionServiceTests`; `RedactedCopySafetyServiceTests`; `dotnet test --filter "FullyQualifiedName~Redaction"` | Packaged app: open `test-pdfs/smoke/irs-w9.pdf`, redact a visible phrase and an area, save redacted copy, reopen, verify copied/extracted text no longer contains the phrase and safety summary reports metadata/attachment scrub status. |
 | Audit hidden text and signatures with clear user-facing states | `RevealHiddenTextTests`; `HiddenTextDetectorTests`; `SignatureVerificationServiceTests`; `SignatureVerificationWorkflowServiceTests` | Packaged app: run hidden-text reveal on a generated black-box-redaction fixture; open a signed fixture when available or a generated invalid-signature fixture, verify the signature panel clearly distinguishes valid/invalid/unsupported trust states. |
 | Accessibility names, command metadata, keyboard-only reachability, and status announcements | `AccessibilityRegressionTests`; `PdfCommandRegistryTests`; `CommandMetadataCommandTests`; `scripts/run-accessibility-smoke.sh` | Platform review: follow `docs/ACCESSIBILITY_RELEASE_CHECKLIST.md` for macOS AX/VoiceOver, Windows UI Automation, and Linux/GNOME AT-SPI tree checks on dedicated runners. |
+| CLI automation, batch JSON, progress events, and platform wrappers | `BatchAutomationCommandTests`; `CommandMetadataCommandTests`; `scripts/run-automation-smoke.sh` | Platform review: follow `docs/AUTOMATION_API.md` examples for AppleScript/Shortcuts, PowerShell/Power Automate, and Linux/GNOME CLI workflows. |
 
 The repeatable automated gate for this table is:
 

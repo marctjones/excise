@@ -22,9 +22,11 @@ partial class Program
     /// </summary>
     internal static Task<int> RunAsync(string[] args)
     {
+        Environment.ExitCode = 0;
         var rootCommand = new RootCommand("pdfe - PDF toolkit powered by Pdfe.Core")
         {
             CreateCommandsCommand(),
+            CreateBatchCommand(),
             CreateInfoCommand(),
             CreateTextCommand(),
             CreateLettersCommand(),
@@ -41,7 +43,9 @@ partial class Program
         // ParseResult first, then run its action. Wrap with Task.FromResult
         // because handlers are sync; if any command goes async later we'll
         // switch to Parse(args).InvokeAsync().
-        return Task.FromResult(rootCommand.Parse(args).Invoke());
+        var parserExitCode = rootCommand.Parse(args).Invoke();
+        var handlerExitCode = Environment.ExitCode;
+        return Task.FromResult(parserExitCode != 0 ? parserExitCode : handlerExitCode);
     }
 
     /// <summary>
@@ -123,23 +127,73 @@ partial class Program
     static Command CreateInfoCommand()
     {
         var fileArg = new Argument<FileInfo>("file") { Description = "PDF file to analyze" };
+        var jsonOption = new Option<bool>("--json")
+        {
+            Description = "Write document information as JSON",
+            DefaultValueFactory = _ => false,
+        };
+        var passwordOption = new Option<string?>("--password")
+        {
+            Description = "User password for encrypted PDFs",
+        };
         var command = new Command("info", "Show PDF document information")
         {
-            fileArg
+            fileArg,
+            jsonOption,
+            passwordOption,
         };
 
         command.SetAction(parseResult =>
         {
             var file = parseResult.GetValue(fileArg)!;
+            var json = parseResult.GetValue(jsonOption);
+            var password = parseResult.GetValue(passwordOption);
             if (!file.Exists)
             {
                 Console.Error.WriteLine($"File not found: {file.FullName}");
+                Environment.ExitCode = 1;
                 return;
             }
 
             try
             {
-                using var doc = PdfDocument.Open(file.FullName);
+                using var doc = OpenPdfDocument(file.FullName, password);
+
+                if (json)
+                {
+                    WriteJson(new
+                    {
+                        schemaVersion = 1,
+                        command = PdfCommandIds.DocumentInfo,
+                        status = "PASS",
+                        file = file.FullName,
+                        sizeBytes = file.Length,
+                        version = doc.Version,
+                        pageCount = doc.PageCount,
+                        encrypted = doc.IsEncrypted,
+                        metadata = new
+                        {
+                            doc.Title,
+                            doc.Author,
+                            doc.Subject,
+                            doc.Creator,
+                            doc.Producer,
+                        },
+                        pages = Enumerable.Range(1, Math.Min(doc.PageCount, 10))
+                            .Select(pageNumber =>
+                            {
+                                var page = doc.GetPage(pageNumber);
+                                return new
+                                {
+                                    pageNumber,
+                                    width = page.Width,
+                                    height = page.Height,
+                                };
+                            })
+                            .ToArray(),
+                    });
+                    return;
+                }
 
                 Console.WriteLine($"File: {file.Name}");
                 Console.WriteLine($"Size: {file.Length:N0} bytes");
@@ -169,6 +223,7 @@ partial class Program
             catch (Exception ex)
             {
                 Console.Error.WriteLine($"Error: {ex.Message}");
+                Environment.ExitCode = 1;
             }
         });
 
@@ -182,40 +237,69 @@ partial class Program
     {
         var fileArg = new Argument<FileInfo>("file") { Description = "PDF file" };
         var pageOption = new Option<int?>("--page", "-p") { Description = "Specific page number (1-based)" };
+        var jsonOption = new Option<bool>("--json")
+        {
+            Description = "Write extracted text as JSON",
+            DefaultValueFactory = _ => false,
+        };
+        var passwordOption = new Option<string?>("--password")
+        {
+            Description = "User password for encrypted PDFs",
+        };
 
         var command = new Command("text", "Extract text from PDF")
         {
             fileArg,
-            pageOption
+            pageOption,
+            jsonOption,
+            passwordOption,
         };
 
         command.SetAction(parseResult =>
         {
             var file = parseResult.GetValue(fileArg)!;
             var page = parseResult.GetValue(pageOption);
+            var json = parseResult.GetValue(jsonOption);
+            var password = parseResult.GetValue(passwordOption);
             if (!file.Exists)
             {
                 Console.Error.WriteLine($"File not found: {file.FullName}");
+                Environment.ExitCode = 1;
                 return;
             }
 
             try
             {
-                using var doc = PdfDocument.Open(file.FullName);
+                using var doc = OpenPdfDocument(file.FullName, password);
 
                 if (page.HasValue)
                 {
                     if (page.Value < 1 || page.Value > doc.PageCount)
                     {
                         Console.Error.WriteLine($"Invalid page number. Document has {doc.PageCount} pages.");
+                        Environment.ExitCode = 1;
                         return;
                     }
                     var p = doc.GetPage(page.Value);
+                    if (json)
+                    {
+                        WriteTextJson(file.FullName, doc.PageCount, [new(page.Value, p.Text)]);
+                        return;
+                    }
                     Console.WriteLine($"=== Page {page.Value} ===");
                     Console.WriteLine(p.Text);
                 }
                 else
                 {
+                    if (json)
+                    {
+                        var pages = Enumerable.Range(1, doc.PageCount)
+                            .Select(pageNumber => new TextPageResult(pageNumber, doc.GetPage(pageNumber).Text))
+                            .ToArray();
+                        WriteTextJson(file.FullName, doc.PageCount, pages);
+                        return;
+                    }
+
                     for (int i = 1; i <= doc.PageCount; i++)
                     {
                         var p = doc.GetPage(i);
@@ -230,6 +314,7 @@ partial class Program
             catch (Exception ex)
             {
                 Console.Error.WriteLine($"Error: {ex.Message}");
+                Environment.ExitCode = 1;
             }
         });
 
@@ -334,6 +419,11 @@ partial class Program
         {
             Description = "User password for encrypted PDFs",
         };
+        var jsonOption = new Option<bool>("--json")
+        {
+            Description = "Write render result as JSON",
+            DefaultValueFactory = _ => false,
+        };
 
         var command = new Command("render", "Render PDF page to image")
         {
@@ -341,7 +431,8 @@ partial class Program
             outputOption,
             pageOption,
             dpiOption,
-            passwordOption
+            passwordOption,
+            jsonOption,
         };
 
         command.SetAction(parseResult =>
@@ -351,42 +442,54 @@ partial class Program
             var page = parseResult.GetValue(pageOption);
             var dpi = parseResult.GetValue(dpiOption);
             var password = parseResult.GetValue(passwordOption);
+            var json = parseResult.GetValue(jsonOption);
             if (!file.Exists)
             {
                 Console.Error.WriteLine($"File not found: {file.FullName}");
+                Environment.ExitCode = 1;
                 return;
             }
 
             try
             {
-                using var doc = string.IsNullOrEmpty(password)
-                    ? PdfDocument.Open(file.FullName)
-                    : PdfDocument.Open(file.FullName, password);
+                using var doc = OpenPdfDocument(file.FullName, password);
 
                 if (page < 1 || page > doc.PageCount)
                 {
                     Console.Error.WriteLine($"Invalid page number. Document has {doc.PageCount} pages.");
+                    Environment.ExitCode = 1;
                     return;
                 }
 
-                var renderer = new SkiaRenderer();
-                var options = new RenderOptions { Dpi = dpi };
+                if (!json)
+                    Console.WriteLine($"Rendering page {page} at {dpi} DPI...");
 
-                Console.WriteLine($"Rendering page {page} at {dpi} DPI...");
-                using var bitmap = renderer.RenderPage(doc.GetPage(page), options);
+                var result = RenderPageToPng(doc, page, dpi, output.FullName);
 
-                Console.WriteLine($"Output size: {bitmap.Width} x {bitmap.Height} pixels");
+                if (json)
+                {
+                    WriteJson(new
+                    {
+                        schemaVersion = 1,
+                        command = PdfCommandIds.RenderPage,
+                        status = "PASS",
+                        inputPath = file.FullName,
+                        outputPath = output.FullName,
+                        pageNumber = page,
+                        dpi,
+                        result.Width,
+                        result.Height,
+                    });
+                    return;
+                }
 
-                using var image = SKImage.FromBitmap(bitmap);
-                using var data = image.Encode(SKEncodedImageFormat.Png, 100);
-                using var stream = File.OpenWrite(output.FullName);
-                data.SaveTo(stream);
-
+                Console.WriteLine($"Output size: {result.Width} x {result.Height} pixels");
                 Console.WriteLine($"Saved to: {output.FullName}");
             }
             catch (Exception ex)
             {
                 Console.Error.WriteLine($"Error: {ex.Message}");
+                Environment.ExitCode = 1;
             }
         });
 

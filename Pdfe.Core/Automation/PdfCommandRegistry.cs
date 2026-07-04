@@ -87,7 +87,10 @@ public static class PdfCommandRegistry
         Cli(PdfCommandIds.RenderPage, "Render Page", "Render a PDF page to a PNG image.", "render", requiresDocument: true,
             parameters: [Param("file", "PDF file.", "file", true), Param("output", "Output PNG path.", "file", true), Param("page", "Page number.", "integer")],
             resultFields: ["outputPath", "width", "height"]),
-        Redaction(PdfCommandIds.AuditHiddenText, "Audit Hidden Text", "Find hidden or covered text that can indicate failed visual-only redaction.", cliCommand: "audit-hidden-text", isSecuritySensitive: true),
+        Cli(PdfCommandIds.BatchWorkflow, "Run Automation Batch", "Run a JSON automation workflow with structured progress and report output.", "batch",
+            parameters: [Param("workflow", "Workflow JSON file.", "file", true), Param("output", "Optional report JSON path.", "file")],
+            resultFields: ["overallStatus", "steps"]),
+        Redaction(PdfCommandIds.AuditHiddenText, "Audit Hidden Text", "Find hidden or covered text that can indicate failed visual-only redaction.", cliCommand: "audit", isSecuritySensitive: true),
         Cli(PdfCommandIds.OcrPage, "OCR Page", "Run OCR on a rendered page.", "ocr",
             parameters: [Param("file", "PDF file.", "file", true), Param("page", "Page number.", "integer")], resultFields: ["text"]),
 

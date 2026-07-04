@@ -56,15 +56,17 @@ public class CommandMetadataCommandTests
         var previousErr = Console.Error;
         var captured = new StringWriter();
         Console.SetError(captured);
+        int exitCode;
         try
         {
-            _ = await Program.RunAsync(["commands", "missing.command"]);
+            exitCode = await Program.RunAsync(["commands", "missing.command"]);
         }
         finally
         {
             Console.SetError(previousErr);
         }
 
+        exitCode.Should().Be(1);
         Environment.ExitCode.Should().Be(1);
         captured.ToString().Should().Contain("Unknown command id: missing.command");
         Environment.ExitCode = 0;

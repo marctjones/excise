@@ -65,6 +65,8 @@ Build the packages locally with `dotnet pack -c Release` (they are also attached
 - Reveal Hidden Text — yellow highlights for structural detections (text covered by rectangles), orange for differential-OCR recoveries (text inside rasterized images)
 - Digital signature inspection — checks ByteRange structure, verifies the detached CMS digest/signature over the signed bytes, and clearly reports current OS trust-chain validation limitations
 - Bates numbering
+- CLI-first automation with stable JSON, batch workflows, progress NDJSON, and
+  AppleScript/Shortcuts, PowerShell/Power Automate, and Linux/GNOME examples
 - Roslyn-based GUI scripting for developer/test automation in Debug builds; Release builds exclude it by default unless `-p:EnableScripting=true` is set
 
 ### Glyph-level redaction
@@ -93,10 +95,12 @@ Build the packages locally with `dotnet pack -c Release` (they are also attached
 
 ### CLI (`pdfe`)
 ```bash
-pdfe info              <file>
-pdfe text              <file>
+pdfe info              <file>           [--json] [--password P]
+pdfe text              <file>           [--json] [--password P]
 pdfe letters           <file>
-pdfe render            <file>           -o out.png  [--page N] [--dpi N] [--password P]
+pdfe render            <file>           -o out.png  [--page N] [--dpi N] [--password P] [--json]
+pdfe commands          [id]             [--json]
+pdfe batch             <workflow.json>  [--json] [--progress] [--output report.json]
 pdfe draw              <file>                                 # graphics-API demo
 pdfe redact            <input> <output> <text>  [--case-sensitive]
 pdfe fill-form         <input> <output> --field Name=Value [...] [--flatten]
@@ -108,6 +112,11 @@ pdfe demo
 ```
 
 `audit --deep` runs differential OCR — renders the page twice (once with overlays stripped) and diffs the OCR text — to catch words hidden inside rasterized images by an opaque overlay (the rasterized analogue of a black-box redaction).
+
+See [`docs/AUTOMATION_API.md`](docs/AUTOMATION_API.md) for the supported
+automation contract, exit codes, batch workflow schema, security boundary, and
+platform examples. The public automation path is CLI-first; Release builds do
+not enable a background GUI automation listener.
 
 ### Renderer coverage
 The Skia renderer has been smoke-tested against a real-world corpus and is validated with a MuPDF-first differential harness. When MuPDF disagrees, the test suite escalates to Poppler and Ghostscript for second and third opinions. Known divergences are issue-linked allowlist entries; new unclassified divergences fail the differential slice.
@@ -496,7 +505,7 @@ Before tagging, run the release checklist in
 the implemented commands and APIs. The repeatable local gate is:
 
 ```bash
-scripts/release-smoke.sh --visual --package --packaged-gui --version 2.22.0
+scripts/release-smoke.sh --visual --package --packaged-gui --version 2.23.0
 ```
 
 The release-smoke script does not create tags or upload artifacts. It runs the
@@ -507,8 +516,8 @@ responsiveness timing, and diff-cleanliness gates and writes logs under
 
 ```bash
 # Cut a new release
-git tag -a v2.22.0 -m "pdfe v2.22.0"
-git push origin v2.22.0          # workflow runs, attaches release artifacts
+git tag -a v2.23.0 -m "pdfe v2.23.0"
+git push origin v2.23.0          # workflow runs, attaches release artifacts
 # Or via the GitHub UI: Releases → Draft a new release → choose tag
 ```
 

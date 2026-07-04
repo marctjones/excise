@@ -75,6 +75,7 @@ public static class PdfCommandIds
     public const string ExtractText = "text.extract";
     public const string ShowLetters = "text.letters";
     public const string DocumentInfo = "document.info";
+    public const string BatchWorkflow = "automation.batch";
     public const string AuditHiddenText = "audit.hiddenText";
     public const string OcrPage = "ocr.page";
 
