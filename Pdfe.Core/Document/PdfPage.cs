@@ -92,6 +92,17 @@ public class PdfPage
     }
 
     /// <summary>
+    /// Clear cached text extraction after page-adjacent structures such as
+    /// annotations or form fields change without rewriting /Contents.
+    /// </summary>
+    internal void InvalidateTextExtractionCache()
+    {
+        _cachedLetters = null;
+        _cachedText = null;
+        _cachedWords = null;
+    }
+
+    /// <summary>
     /// All annotations on this page (§12.5).
     /// Covers every subtype: Text, Link, Highlight, Widget, Stamp, Ink, etc.
     /// </summary>

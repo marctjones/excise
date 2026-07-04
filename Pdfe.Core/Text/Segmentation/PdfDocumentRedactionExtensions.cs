@@ -5,7 +5,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Pdfe.Core.Content;
 using Pdfe.Core.Document;
-using Pdfe.Core.Primitives;
 
 namespace Pdfe.Core.Text.Segmentation;
 
@@ -99,7 +98,7 @@ public static class PdfDocumentRedactionExtensions
                     }
                     else if (IsAcroFormMatch(matchLetters))
                     {
-                        RedactFormFieldsInArea(page, bbox, text, caseSensitive);
+                        InteractiveRedactionScrubber.ScrubArea(page, bbox);
                     }
                     else
                     {
@@ -210,80 +209,6 @@ public static class PdfDocumentRedactionExtensions
 
         page.SetContentStream(new ContentStream(kept));
         return matches.Count;
-    }
-
-    private static void RedactFormFieldsInArea(
-        PdfPage page,
-        PdfRectangle matchBounds,
-        string searchText,
-        bool caseSensitive)
-    {
-        IReadOnlyList<PdfField> fields;
-        try { fields = page.GetFormFields(); }
-        catch (Exception ex) when (ex is not OutOfMemoryException) { return; }
-
-        foreach (var field in fields)
-        {
-            if (field.Rect is not { } rect || !rect.IntersectsWith(matchBounds))
-                continue;
-
-            if (field.FieldType is PdfFieldType.Button or PdfFieldType.Signature)
-                continue;
-
-            RedactFieldEntry(field.RawDictionary, "V", searchText, caseSensitive);
-            RedactFieldEntry(field.RawDictionary, "DV", searchText, caseSensitive);
-
-            // Appearance streams can contain the old value even after /V is
-            // updated. Remove them so readers regenerate from the redacted
-            // value instead of preserving recoverable stale text.
-            field.RawDictionary.Remove("AP");
-            foreach (var widget in field.WidgetDictionaries)
-                widget.Remove("AP");
-        }
-    }
-
-    private static void RedactFieldEntry(
-        PdfDictionary fieldDictionary,
-        string key,
-        string searchText,
-        bool caseSensitive)
-    {
-        if (fieldDictionary.GetOptional(key) is not PdfString value)
-            return;
-
-        var redacted = RemoveOccurrences(value.Value, searchText, caseSensitive);
-        if (redacted == value.Value)
-            return;
-
-        if (string.IsNullOrEmpty(redacted))
-            fieldDictionary.Remove(key);
-        else
-            fieldDictionary.Set(key, new PdfString(redacted));
-    }
-
-    private static string RemoveOccurrences(string value, string searchText, bool caseSensitive)
-    {
-        if (string.IsNullOrEmpty(value) || string.IsNullOrEmpty(searchText))
-            return value;
-
-        var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-        var result = new StringBuilder(value.Length);
-        var start = 0;
-
-        while (start < value.Length)
-        {
-            var index = value.IndexOf(searchText, start, comparison);
-            if (index < 0)
-            {
-                result.Append(value, start, value.Length - start);
-                break;
-            }
-
-            result.Append(value, start, index - start);
-            start = index + searchText.Length;
-        }
-
-        return result.ToString();
     }
 
     /// <summary>

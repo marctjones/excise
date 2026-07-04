@@ -36,6 +36,9 @@ public static class PdfPageRedactionExtensions
     {
         if (page == null) throw new System.ArgumentNullException(nameof(page));
 
+        area = area.Normalize();
+        InteractiveRedactionScrubber.ScrubArea(page, area);
+
         var content = page.GetContentStream();
 
         // Short-circuit on empty pages — no ops means no work, and building
