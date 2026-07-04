@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
@@ -292,6 +293,7 @@ public class KeyboardShortcutTests
 
         await vm.LoadDocumentAsync(pdfPath);
         await Task.Delay(100);
+        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => window.Focus());
         var initialPage = vm.CurrentPageIndex;
 
         // Act
@@ -322,6 +324,7 @@ public class KeyboardShortcutTests
         // Start at page 2
         vm.CurrentPageIndex = 1;
         await Task.Delay(50);
+        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => window.Focus());
         var pageBeforeUp = vm.CurrentPageIndex;
 
         // Act
@@ -394,7 +397,7 @@ public class KeyboardShortcutTests
     /// <summary>
     /// Down arrow: Advance to next page (when not in a text control).
     /// </summary>
-    [FixedAvaloniaFact(Timeout = 15000, Skip = "Arrow keys in Avalonia.Headless tests do not route through window KeyDown handler; PageDown/PageUp work as alternative")]
+    [FixedAvaloniaFact(Timeout = 15000)]
     public async Task DownArrow_AdvancesToNextPage()
     {
         // Arrange
@@ -409,8 +412,7 @@ public class KeyboardShortcutTests
         var initialPage = vm.CurrentPageIndex;
 
         // Act
-        await window.PressKeyAsync(Key.Down);
-        await KeyboardTestHelpers.FlushDispatcherAsync();
+        await InvokeMainWindowKeyDownAsync(window, Key.Down);
         await Task.Delay(100);
 
         // Assert
@@ -420,7 +422,7 @@ public class KeyboardShortcutTests
     /// <summary>
     /// Up arrow: Return to previous page.
     /// </summary>
-    [FixedAvaloniaFact(Timeout = 15000, Skip = "Arrow keys in Avalonia.Headless tests do not route through window KeyDown handler; PageUp works as alternative")]
+    [FixedAvaloniaFact(Timeout = 15000)]
     public async Task UpArrow_ReturnsToPreviousPage()
     {
         // Arrange
@@ -439,8 +441,7 @@ public class KeyboardShortcutTests
         var pageBeforeUp = vm.CurrentPageIndex;
 
         // Act
-        await window.PressKeyAsync(Key.Up);
-        await KeyboardTestHelpers.FlushDispatcherAsync();
+        await InvokeMainWindowKeyDownAsync(window, Key.Up);
         await Task.Delay(100);
 
         // Assert
@@ -448,6 +449,28 @@ public class KeyboardShortcutTests
     }
 
     #endregion
+
+    private static async Task InvokeMainWindowKeyDownAsync(
+        MainWindow window,
+        Key key,
+        KeyModifiers modifiers = KeyModifiers.None)
+    {
+        var method = typeof(MainWindow).GetMethod(
+            "MainWindow_KeyDown",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        method.Should().NotBeNull("arrow shortcut replacements should exercise the real MainWindow key handler");
+
+        var args = new KeyEventArgs
+        {
+            RoutedEvent = InputElement.KeyDownEvent,
+            Route = Avalonia.Interactivity.RoutingStrategies.Bubble,
+            Key = key,
+            KeyModifiers = modifiers,
+        };
+        method!.Invoke(window, new object?[] { window, args });
+        args.Handled.Should().BeTrue($"{key} should be handled by MainWindow_KeyDown");
+        await KeyboardTestHelpers.FlushDispatcherAsync();
+    }
 
     #region Page Operations
 
@@ -819,7 +842,7 @@ public class KeyboardShortcutTests
     /// <summary>
     /// Compound: Ctrl+F → type text → Enter → verify search progresses.
     /// </summary>
-    [FixedAvaloniaFact(Timeout = 5000, Skip = "Depends on search textbox receiving focus/input correctly in headless tests")]
+    [FixedAvaloniaFact(Timeout = 15000)]
     public async Task CompoundFlow_SearchWorkflow()
     {
         // Arrange

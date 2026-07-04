@@ -15,6 +15,7 @@ using Pdfe.Core.Text;
 using Pdfe.Avalonia.Controls;
 using Pdfe.Avalonia.Services;
 using PdfEditor.Services;
+using PdfEditor.Tests.Utilities;
 using PdfEditor.ViewModels;
 using PdfEditor.Views;
 using Xunit;
@@ -305,36 +306,46 @@ public class MouseInputTests
             "dragging across letters in text-selection mode must select text");
     }
 
-    [FixedAvaloniaFact(Skip = "Drag synthesis in headless mode doesn't reach the redaction handler reliably; covered by ScriptedGuiTests via ViewModel.")]
+    [FixedAvaloniaFact]
     public async Task DragInRedactionMode_CreatesRedactionRect()
     {
         // When the user drags in redaction mode, a redaction rectangle is
         // drawn and RedactionDrawn event fires. The rectangle coordinates
         // are adjusted for zoom level.
-        if (!File.Exists(PragmaticBook)) return;
+        var pdfPath = Path.Combine(
+            Path.GetTempPath(),
+            "pdfe-mouse-redaction",
+            $"{Guid.NewGuid():N}.pdf");
+        Directory.CreateDirectory(Path.GetDirectoryName(pdfPath)!);
+        TestPdfGenerator.CreatePdfWithTextAt(pdfPath, "MOUSESECRET", 100, 400, 18);
 
         var vm = new MainWindowViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await Task.Delay(200);
 
-        await vm.LoadDocumentAsync(PragmaticBook);
+        await vm.LoadDocumentAsync(pdfPath);
         await Task.Delay(300);
 
-        const int targetPageNumber = 5;
+        const int targetPageNumber = 1;
         vm.CurrentPageIndex = targetPageNumber - 1;
         vm.IsRedactionMode = true; // Sets InteractionMode to Redaction
         for (int i = 0; i < 10; i++) { await Task.Delay(150); window.UpdateLayout(); }
 
         var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
         viewer.Should().NotBeNull();
+        viewer!.InteractionMode.Should().Be(InteractionMode.Redaction);
 
-        Rect? redactionRect = null;
-        viewer!.RedactionDrawn += (_, e) => { redactionRect = e.Area; };
+        RedactionDrawnEventArgs? redaction = null;
+        viewer.RedactionDrawn += (_, e) => { redaction = e; };
 
-        // Drag a rectangle from (200, 200) to (500, 300).
-        var startPoint = new Point(200, 200);
-        var endPoint = new Point(500, 300);
+        var page = vm.PdfCoreDocument!.GetPage(targetPageNumber);
+        var overlay = FindNamedDescendant<Canvas>(viewer, "OverlayCanvas")!;
+        var (startPoint, endPoint) = ToWindowDragPoints(
+            new PdfRectangle(90, 375, 280, 430),
+            page,
+            overlay,
+            window);
 
         await Dispatcher.UIThread.InvokeAsync(() =>
             window.MouseDown(startPoint, MouseButton.Left));
@@ -346,12 +357,14 @@ public class MouseInputTests
             window.MouseUp(endPoint, MouseButton.Left));
         for (int i = 0; i < 3; i++) { await Task.Delay(100); window.UpdateLayout(); }
 
-        redactionRect.Should().NotBeNull(
+        redaction.Should().NotBeNull(
             "dragging in redaction mode must fire RedactionDrawn event");
-        // The rect should be non-zero (width and height both > 0).
-        redactionRect!.Value.Width.Should().BeGreaterThan(0);
-        redactionRect.Value.Height.Should().BeGreaterThan(0);
-        _out.WriteLine($"Redaction rect: {redactionRect}");
+        redaction!.PageArea.PageNumber.Should().Be(targetPageNumber);
+        redaction.PageArea.Space.Should().Be(PdfCoordinateSpace.ViewerDips);
+        redaction.RenderDpi.Should().Be((int)RenderDpi);
+        redaction.Area.Width.Should().BeGreaterThan(0);
+        redaction.Area.Height.Should().BeGreaterThan(0);
+        _out.WriteLine($"Redaction rect: {redaction.Area}");
     }
 
     [FixedAvaloniaFact]
@@ -708,6 +721,21 @@ public class MouseInputTests
             PdfPageRect.FromContentPoints(page.PageNumber, contentRect),
             RenderDpi);
         return overlay.TranslatePoint(new Point(viewerPoint.X, viewerPoint.Y), window) ?? default;
+    }
+
+    private static (Point Start, Point End) ToWindowDragPoints(
+        PdfRectangle contentRect,
+        PdfPage page,
+        Canvas overlay,
+        Window window)
+    {
+        var viewerRect = PdfCoordinateMapper.ToViewerDips(
+            page,
+            PdfPageRect.FromContentPoints(page.PageNumber, contentRect),
+            RenderDpi);
+        var start = overlay.TranslatePoint(new Point(viewerRect.X, viewerRect.Y), window) ?? default;
+        var end = overlay.TranslatePoint(new Point(viewerRect.Right, viewerRect.Y2), window) ?? default;
+        return (start, end);
     }
 
     private static T? FindNamedDescendant<T>(Control root, string name) where T : Control

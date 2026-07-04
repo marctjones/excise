@@ -1,9 +1,8 @@
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Input;
-using Avalonia.Interactivity;
 using Avalonia.Threading;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace PdfEditor.Tests.UI;
@@ -23,28 +22,14 @@ public static class KeyboardTestHelpers
         Key key,
         RawInputModifiers modifiers = RawInputModifiers.None)
     {
-        // Create and dispatch a KeyDown event. RoutedEvent must be set explicitly
-        // because Avalonia's KeyEventArgs doesn't infer it from the Route alone.
-        var keyDown = new KeyEventArgs
-        {
-            RoutedEvent = InputElement.KeyDownEvent,
-            Route = RoutingStrategies.Tunnel | RoutingStrategies.Bubble,
-            Key = key,
-            KeyModifiers = ConvertToKeyModifiers(modifiers),
-        };
-
-        window.RaiseEvent(keyDown);
-
-        // Also raise KeyUp so handlers that listen to either event observe the
-        // full press sequence.
-        var keyUp = new KeyEventArgs
-        {
-            RoutedEvent = InputElement.KeyUpEvent,
-            Route = RoutingStrategies.Tunnel | RoutingStrategies.Bubble,
-            Key = key,
-            KeyModifiers = ConvertToKeyModifiers(modifiers),
-        };
-        window.RaiseEvent(keyUp);
+        // Use Avalonia.Headless' raw-input path instead of manually raising
+        // routed events. The raw path exercises focus, key routing, and
+        // TopLevel input processing in the same way as the rest of the
+        // headless pointer helpers.
+        var physicalKey = ToPhysicalKey(key);
+        var keySymbol = ToKeySymbol(key);
+        window.KeyPress(key, modifiers, physicalKey, keySymbol);
+        window.KeyRelease(key, modifiers, physicalKey, keySymbol);
 
         // Flush the dispatcher to allow commands to execute
         await FlushDispatcherAsync();
@@ -56,13 +41,11 @@ public static class KeyboardTestHelpers
     /// </summary>
     public static async Task TypeTextAsync(this Window window, string text)
     {
-        foreach (var ch in text)
-        {
-            var (key, modifiers) = CharToKeyAndModifiers(ch);
-            await window.PressKeyAsync(key, modifiers);
-            // Small delay between keystrokes for realism
-            await Task.Delay(10);
-        }
+        // Avalonia.Headless explicitly documents KeyTextInput as the supported
+        // path for TextBox text entry. KeyPress alone routes shortcuts but does
+        // not synthesize text composition.
+        window.KeyTextInput(text);
+        await FlushDispatcherAsync();
     }
 
     /// <summary>
@@ -98,116 +81,91 @@ public static class KeyboardTestHelpers
         await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(5)));
     }
 
-    /// <summary>
-    /// Convert character to Key and required modifiers (e.g., 'A' -> (Key.A, Shift)).
-    /// </summary>
-    private static (Key Key, RawInputModifiers Modifiers) CharToKeyAndModifiers(char ch)
+    private static PhysicalKey ToPhysicalKey(Key key) => key switch
     {
-        return ch switch
-        {
-            // Letters
-            >= 'a' and <= 'z' => (KeyForChar(char.ToUpper(ch)), RawInputModifiers.None),
-            >= 'A' and <= 'Z' => (KeyForChar(ch), RawInputModifiers.Shift),
-
-            // Numbers
-            '0' => (Key.D0, RawInputModifiers.None),
-            '1' => (Key.D1, RawInputModifiers.None),
-            '2' => (Key.D2, RawInputModifiers.None),
-            '3' => (Key.D3, RawInputModifiers.None),
-            '4' => (Key.D4, RawInputModifiers.None),
-            '5' => (Key.D5, RawInputModifiers.None),
-            '6' => (Key.D6, RawInputModifiers.None),
-            '7' => (Key.D7, RawInputModifiers.None),
-            '8' => (Key.D8, RawInputModifiers.None),
-            '9' => (Key.D9, RawInputModifiers.None),
-
-            // Symbols
-            ' ' => (Key.Space, RawInputModifiers.None),
-            '!' => (Key.D1, RawInputModifiers.Shift),
-            '@' => (Key.D2, RawInputModifiers.Shift),
-            '#' => (Key.D3, RawInputModifiers.Shift),
-            '$' => (Key.D4, RawInputModifiers.Shift),
-            '%' => (Key.D5, RawInputModifiers.Shift),
-            '^' => (Key.D6, RawInputModifiers.Shift),
-            '&' => (Key.D7, RawInputModifiers.Shift),
-            '*' => (Key.D8, RawInputModifiers.Shift),
-            '(' => (Key.D9, RawInputModifiers.Shift),
-            ')' => (Key.D0, RawInputModifiers.Shift),
-            '-' => (Key.OemMinus, RawInputModifiers.None),
-            '_' => (Key.OemMinus, RawInputModifiers.Shift),
-            '=' => (Key.OemPlus, RawInputModifiers.None),
-            '+' => (Key.OemPlus, RawInputModifiers.Shift),
-            '[' => (Key.OemOpenBrackets, RawInputModifiers.None),
-            '{' => (Key.OemOpenBrackets, RawInputModifiers.Shift),
-            ']' => (Key.OemCloseBrackets, RawInputModifiers.None),
-            '}' => (Key.OemCloseBrackets, RawInputModifiers.Shift),
-            ';' => (Key.OemSemicolon, RawInputModifiers.None),
-            ':' => (Key.OemSemicolon, RawInputModifiers.Shift),
-            '\'' => (Key.OemQuotes, RawInputModifiers.None),
-            '"' => (Key.OemQuotes, RawInputModifiers.Shift),
-            ',' => (Key.OemComma, RawInputModifiers.None),
-            '<' => (Key.OemComma, RawInputModifiers.Shift),
-            '.' => (Key.OemPeriod, RawInputModifiers.None),
-            '>' => (Key.OemPeriod, RawInputModifiers.Shift),
-            '/' => (Key.OemQuestion, RawInputModifiers.None),
-            '?' => (Key.OemQuestion, RawInputModifiers.Shift),
-            '\\' => (Key.OemBackslash, RawInputModifiers.None),
-            '|' => (Key.OemBackslash, RawInputModifiers.Shift),
-            '`' => (Key.OemTilde, RawInputModifiers.None),
-            '~' => (Key.OemTilde, RawInputModifiers.Shift),
-
-            _ => throw new NotSupportedException($"Character '{ch}' is not supported for typing"),
-        };
-    }
-
-    /// <summary>
-    /// Map uppercase letter to Key enum.
-    /// </summary>
-    private static Key KeyForChar(char ch) => ch switch
-    {
-        'A' => Key.A,
-        'B' => Key.B,
-        'C' => Key.C,
-        'D' => Key.D,
-        'E' => Key.E,
-        'F' => Key.F,
-        'G' => Key.G,
-        'H' => Key.H,
-        'I' => Key.I,
-        'J' => Key.J,
-        'K' => Key.K,
-        'L' => Key.L,
-        'M' => Key.M,
-        'N' => Key.N,
-        'O' => Key.O,
-        'P' => Key.P,
-        'Q' => Key.Q,
-        'R' => Key.R,
-        'S' => Key.S,
-        'T' => Key.T,
-        'U' => Key.U,
-        'V' => Key.V,
-        'W' => Key.W,
-        'X' => Key.X,
-        'Y' => Key.Y,
-        'Z' => Key.Z,
-        _ => throw new ArgumentException($"Unknown character: {ch}"),
+        Key.A => PhysicalKey.A,
+        Key.B => PhysicalKey.B,
+        Key.C => PhysicalKey.C,
+        Key.D => PhysicalKey.D,
+        Key.E => PhysicalKey.E,
+        Key.F => PhysicalKey.F,
+        Key.G => PhysicalKey.G,
+        Key.H => PhysicalKey.H,
+        Key.I => PhysicalKey.I,
+        Key.J => PhysicalKey.J,
+        Key.K => PhysicalKey.K,
+        Key.L => PhysicalKey.L,
+        Key.M => PhysicalKey.M,
+        Key.N => PhysicalKey.N,
+        Key.O => PhysicalKey.O,
+        Key.P => PhysicalKey.P,
+        Key.Q => PhysicalKey.Q,
+        Key.R => PhysicalKey.R,
+        Key.S => PhysicalKey.S,
+        Key.T => PhysicalKey.T,
+        Key.U => PhysicalKey.U,
+        Key.V => PhysicalKey.V,
+        Key.W => PhysicalKey.W,
+        Key.X => PhysicalKey.X,
+        Key.Y => PhysicalKey.Y,
+        Key.Z => PhysicalKey.Z,
+        Key.D0 => PhysicalKey.Digit0,
+        Key.D1 => PhysicalKey.Digit1,
+        Key.D2 => PhysicalKey.Digit2,
+        Key.D3 => PhysicalKey.Digit3,
+        Key.D4 => PhysicalKey.Digit4,
+        Key.D5 => PhysicalKey.Digit5,
+        Key.D6 => PhysicalKey.Digit6,
+        Key.D7 => PhysicalKey.Digit7,
+        Key.D8 => PhysicalKey.Digit8,
+        Key.D9 => PhysicalKey.Digit9,
+        Key.OemPlus => PhysicalKey.Equal,
+        Key.OemMinus => PhysicalKey.Minus,
+        Key.OemComma => PhysicalKey.Comma,
+        Key.OemPeriod => PhysicalKey.Period,
+        Key.OemQuestion => PhysicalKey.Slash,
+        Key.OemOpenBrackets => PhysicalKey.BracketLeft,
+        Key.OemCloseBrackets => PhysicalKey.BracketRight,
+        Key.OemBackslash => PhysicalKey.Backslash,
+        Key.OemTilde => PhysicalKey.Backquote,
+        Key.OemSemicolon => PhysicalKey.Semicolon,
+        Key.OemQuotes => PhysicalKey.Quote,
+        Key.PageDown => PhysicalKey.PageDown,
+        Key.PageUp => PhysicalKey.PageUp,
+        Key.Home => PhysicalKey.Home,
+        Key.End => PhysicalKey.End,
+        Key.Down => PhysicalKey.ArrowDown,
+        Key.Up => PhysicalKey.ArrowUp,
+        Key.Left => PhysicalKey.ArrowLeft,
+        Key.Right => PhysicalKey.ArrowRight,
+        Key.Return => PhysicalKey.Enter,
+        Key.Escape => PhysicalKey.Escape,
+        Key.F1 => PhysicalKey.F1,
+        Key.F3 => PhysicalKey.F3,
+        _ => PhysicalKey.None,
     };
 
-    /// <summary>
-    /// Convert RawInputModifiers to Avalonia KeyModifiers for KeyEventArgs.
-    /// </summary>
-    private static KeyModifiers ConvertToKeyModifiers(RawInputModifiers raw)
+    private static string ToKeySymbol(Key key)
     {
-        var result = KeyModifiers.None;
-        if (raw.HasFlag(RawInputModifiers.Control))
-            result |= KeyModifiers.Control;
-        if (raw.HasFlag(RawInputModifiers.Alt))
-            result |= KeyModifiers.Alt;
-        if (raw.HasFlag(RawInputModifiers.Shift))
-            result |= KeyModifiers.Shift;
-        if (raw.HasFlag(RawInputModifiers.Meta))
-            result |= KeyModifiers.Meta;
-        return result;
+        if (key >= Key.A && key <= Key.Z)
+            return key.ToString();
+        if (key >= Key.D0 && key <= Key.D9)
+            return key.ToString()[1..];
+
+        return key switch
+        {
+            Key.OemPlus => "=",
+            Key.OemMinus => "-",
+            Key.OemComma => ",",
+            Key.OemPeriod => ".",
+            Key.OemQuestion => "/",
+            Key.OemOpenBrackets => "[",
+            Key.OemCloseBrackets => "]",
+            Key.OemBackslash => "\\",
+            Key.OemTilde => "`",
+            Key.OemSemicolon => ";",
+            Key.OemQuotes => "'",
+            _ => "",
+        };
     }
 }
