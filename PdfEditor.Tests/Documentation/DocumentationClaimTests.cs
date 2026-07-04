@@ -194,11 +194,26 @@ public class DocumentationClaimTests
     public void BenchmarkScript_UsesExistingRenderToolsHotspotCommands()
     {
         var script = Read("scripts/run-benchmarks.sh");
+        var releaseSmoke = Read("scripts/release-smoke.sh");
+        var checklist = Read("docs/RELEASE_CHECKLIST.md");
+        var ci = Read(".github/workflows/ci.yml");
+        var benchmarkSuite = Read("tools/Pdfe.RenderTools/BenchmarkSuite.cs");
 
-        script.Should().NotContain("Pdfe.Benchmarks/Pdfe.Benchmarks.csproj");
+        script.Should().Contain("benchmark-suite");
+        script.Should().Contain("benchmarkdotnet");
+        script.Should().Contain("Pdfe.Benchmarks/Pdfe.Benchmarks.csproj");
         script.Should().Contain("tools/Pdfe.RenderTools/Pdfe.RenderTools.csproj");
         script.Should().Contain("corpus-hotspots");
         script.Should().Contain("gui-display-hotspots");
+        releaseSmoke.Should().Contain("automation,ux,benchmark,tests");
+        releaseSmoke.Should().Contain("run-benchmarks.sh suite");
+        checklist.Should().Contain("benchmark-report.json");
+        checklist.Should().Contain("RMSE/SSIM");
+        ci.Should().Contain("Run Benchmark Suite Regression Gate");
+        ci.Should().Contain("--oracles none");
+        benchmarkSuite.Should().Contain("licenseIsolation");
+        benchmarkSuite.Should().Contain("redactionCompleteness");
+        benchmarkSuite.Should().Contain("CalculateLuminanceSsim");
     }
 
     [Fact]

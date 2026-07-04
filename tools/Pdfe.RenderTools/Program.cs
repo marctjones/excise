@@ -25,6 +25,7 @@ partial class Program
 
     internal static Task<int> RunAsync(string[] args)
     {
+        Environment.ExitCode = 0;
         var rootCommand = new RootCommand("pdfe renderer/conformance utility commands")
         {
             CreateDrawCommand(),
@@ -35,9 +36,12 @@ partial class Program
             CreateRenderQualityClassifyCommand(),
             CreateGuiDisplayHotspotsCommand(),
             CreateCorpusHotspotsCommand(),
+            CreateBenchmarkSuiteCommand(),
         };
 
-        return Task.FromResult(rootCommand.Parse(args).Invoke());
+        var parserExitCode = rootCommand.Parse(args).Invoke();
+        var handlerExitCode = Environment.ExitCode;
+        return Task.FromResult(parserExitCode != 0 ? parserExitCode : handlerExitCode);
     }
 
     /// <summary>

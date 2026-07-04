@@ -191,6 +191,18 @@ jobs:
             --filter "FullyQualifiedName~PerformanceBenchmark|FullyQualifiedName~MemoryBenchmark" \
             --logger "console;verbosity=normal" || true
 
+      - name: Run Benchmark Suite Regression Gate
+        # Deterministic synthetic benchmark gate for #344/#357. The no-oracle
+        # mode keeps CI independent of MuPDF/Poppler/Ghostscript availability
+        # while still failing on pdfe parser/render/redaction regressions and
+        # verifying the benchmark report contract.
+        run: |
+          CONFIG=Debug scripts/run-benchmarks.sh suite \
+            --oracles none \
+            --page-limit 1 \
+            --output-dir logs/ci-benchmark-suite \
+            --fail-on-regression
+
       - name: Run Pdfe.Ocr.Tests
         run: |
           dotnet test Pdfe.Ocr.Tests --no-build -c Debug \

@@ -36,6 +36,13 @@ Use this checklist before tagging any `v*` release.
   document navigation, search, redaction, forms, typewriter/annotation, and
   preferences states while verifying toolbar/menu vector icons, tooltips, and
   accessibility command IDs. This is separate from GUI display parity.
+- Run the dedicated benchmark gate:
+  `scripts/release-smoke.sh --quick --only=benchmark`. This uses
+  `scripts/run-benchmarks.sh suite` to emit `benchmark-report.json`,
+  `benchmark-pages.csv`, and `benchmark-report.md` with pdfe parse/text/render
+  timing, reference-render fidelity when installed reference CLIs are present,
+  RMSE/SSIM metrics, redaction-completeness evidence, and explicit license
+  isolation for subprocess-only reference renderers.
 - Run packaged-app GUI evidence when validating desktop packages:
   `scripts/release-smoke.sh --quick --package --packaged-gui --version <version>`.
   This writes JSON/markdown evidence for #558/#571 and responsiveness timing
@@ -95,6 +102,7 @@ limitation before tagging.
 | Accessibility names, command metadata, keyboard-only reachability, and status announcements | `AccessibilityRegressionTests`; `PdfCommandRegistryTests`; `CommandMetadataCommandTests`; `scripts/run-accessibility-smoke.sh` | Platform review: follow `docs/ACCESSIBILITY_RELEASE_CHECKLIST.md` for macOS AX/VoiceOver, Windows UI Automation, and Linux/GNOME AT-SPI tree checks on dedicated runners. |
 | CLI automation, batch JSON, progress events, and platform wrappers | `BatchAutomationCommandTests`; `CommandMetadataCommandTests`; `scripts/run-automation-smoke.sh` | Platform review: follow `docs/AUTOMATION_API.md` examples for AppleScript/Shortcuts, PowerShell/Power Automate, and Linux/GNOME CLI workflows. |
 | UX/icon visual polish, toolbar/menu affordances, and design-quality screenshots | `VisualPolishAuditTests`; `scripts/run-ux-icon-audit.sh` | Review the generated `ux-icon-audit.md`, PNG screenshots, and `ux-icon-audit.json` before closing visual-polish issues. |
+| Benchmark speed, reference fidelity, redaction completeness, and renderer hotspot evidence | `BenchmarkSuiteTests`; `scripts/run-benchmarks.sh suite`; `Pdfe.RenderTools benchmark-suite`; `Pdfe.Rendering.Tests` performance/memory tests | Review `benchmark-report.md`, `benchmark-report.json`, `benchmark-pages.csv`, and aggregate `corpus-hotspots`/`gui-display-hotspots` reports before closing performance issues. |
 
 The repeatable automated gate for this table is:
 

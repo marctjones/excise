@@ -1,6 +1,6 @@
 using BenchmarkDotNet.Running;
 using Pdfe.Benchmarks;
 
-// `dotnet run -c Release` runs all benchmarks; pass a filter to narrow, e.g.
-//   scripts/run-benchmarks.sh --filter '*Render*'
+// `dotnet run -c Release` runs all microbenchmarks. The maintained wrapper is:
+//   scripts/run-benchmarks.sh benchmarkdotnet --filter '*Render*'
 BenchmarkSwitcher.FromAssembly(typeof(PdfeBenchmarks).Assembly).Run(args);

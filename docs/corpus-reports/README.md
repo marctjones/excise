@@ -79,7 +79,11 @@ prints the slowest pages and failure diagnostics into the run log.
 Use aggregate hotspot reports when deciding what to optimize. Slow PDF/page
 names are reproduction evidence, not the priority list. The corpus hotspot
 command rolls raw scan entries up by shared code path: pdfe render/cache read,
-reference render/cache read, and compare/classify overhead.
+reference render/cache read, and compare/classify overhead. For release
+benchmarking, the `benchmark-suite` command also emits speed, reference
+fidelity, text extraction, RMSE/SSIM, and redaction-completeness reports while
+keeping MuPDF, Poppler, Ghostscript, PDFBox, and PDFium as external subprocess
+tools only.
 
 For the newest local raw scan and GUI display reports, use the benchmark
 wrapper:
@@ -87,6 +91,20 @@ wrapper:
 ```bash
 scripts/run-benchmarks.sh
 ```
+
+To run only the release-grade benchmark report:
+
+```bash
+scripts/run-benchmarks.sh suite \
+    --output-dir logs/benchmarks/latest-suite \
+    --page-limit 8 \
+    --oracles all \
+    --fail-on-regression
+```
+
+The suite writes `benchmark-report.json`, `benchmark-pages.csv`, and
+`benchmark-report.md`. In CI, `--oracles none` is used for the deterministic
+synthetic gate; local release runs use installed reference CLIs when present.
 
 ```bash
 dotnet run --project tools/Pdfe.RenderTools/Pdfe.RenderTools.csproj -c Debug -- \

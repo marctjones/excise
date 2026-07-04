@@ -8,6 +8,38 @@ semantic versioning.
 
 No changes yet.
 
+## [2.25.0] - 2026-07-04
+
+Benchmarking and renderer-performance release. No intended public API break.
+
+### Added
+- **Benchmark suite (#344, #357).** Added `Pdfe.RenderTools benchmark-suite`
+  and wired `scripts/run-benchmarks.sh` so one command emits
+  `benchmark-report.json`, `benchmark-pages.csv`, and `benchmark-report.md`
+  covering pdfe parse/text/render speed, external-reference fidelity,
+  RMSE/SSIM metrics, tool availability, and subprocess-only license isolation.
+- **Benchmark regression gate (#344, #357).** Added a release-smoke benchmark
+  gate plus a deterministic CI gate that runs the benchmark suite in synthetic
+  no-oracle mode and fails on pdfe parse/render/redaction regressions.
+- **Redaction-completeness signal (#357).** The benchmark report now includes a
+  synthetic glyph-level redaction check so speed reporting does not drift away
+  from pdfe's security-critical differentiator.
+
+### Changed
+- **Benchmark wrapper (#344).** `scripts/run-benchmarks.sh` now runs the
+  benchmark suite by default, keeps `corpus-hotspots` and
+  `gui-display-hotspots`, and exposes `benchmarkdotnet` for the isolated
+  `Pdfe.Benchmarks` microbenchmark project.
+- **RenderTools exit codes (#344).** Utility commands now normalize handler
+  `Environment.ExitCode` the same way the public CLI does, so failed benchmark
+  gates return a non-zero process exit.
+
+### Tests
+- `BenchmarkSuiteTests` covers oracle parsing, report generation, license
+  metadata, redaction-completeness reporting, and non-zero regression exits.
+- Local reference smoke passed with MuPDF, Poppler, and Ghostscript available:
+  `logs/benchmarks/v2.25-reference-smoke`.
+
 ## [2.24.0] - 2026-07-04
 
 UX, icon, and visual-polish audit release. No intended public API break.
