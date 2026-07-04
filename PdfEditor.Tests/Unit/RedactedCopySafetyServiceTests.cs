@@ -1,6 +1,7 @@
 using AwesomeAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Pdfe.Core.Document;
+using Pdfe.Core.Text.Segmentation;
 using PdfEditor.Models;
 using PdfEditor.Services;
 using PdfEditor.Tests.Utilities;
@@ -112,6 +113,53 @@ public class RedactedCopySafetyServiceTests : IDisposable
         reopened.GetEmbeddedFiles().Should().BeEmpty();
     }
 
+    [Fact]
+    public void PrepareRedactedCopy_WhenRasterStillOverlapsRedactionArea_WarnsForManualReview()
+    {
+        using var document = PdfDocument.Open(BuildPdfWithImageOnlyXObject("SCANNEDIMAGESECRET"));
+        var pending = new[]
+        {
+            new PendingRedaction
+            {
+                PageNumber = 1,
+                PageArea = PdfPageRect.FromContentPoints(1, new PdfRectangle(110, 650, 150, 680)),
+                PreviewText = "SECRET"
+            }
+        };
+
+        var report = _service.PrepareRedactedCopy(document, pending);
+        var dialog = _service.FormatForDialog(Path.Combine(_tempDir, "redacted.pdf"), report);
+
+        report.RasterRedactionAuditStatus.Should().Be(RedactedContentVerificationStatus.Warning);
+        report.RemainingRasterOverlapCount.Should().Be(1);
+        report.Warnings.Should().Contain(w => w.Contains("raster image invocation"));
+        dialog.Should().NotContain("SECRET");
+    }
+
+    [Fact]
+    public void PrepareRedactedCopy_AfterImageOnlyAreaRedaction_VerifiesNoRasterOverlapAndDropsBytes()
+    {
+        const string marker = "SCANNEDIMAGESECRET";
+        var area = new PdfRectangle(110, 650, 150, 680);
+        using var document = PdfDocument.Open(BuildPdfWithImageOnlyXObject(marker));
+
+        document.GetPage(1).RedactArea(area);
+
+        var report = _service.PrepareRedactedCopy(document, new[]
+        {
+            new PendingRedaction
+            {
+                PageNumber = 1,
+                PageArea = PdfPageRect.FromContentPoints(1, area),
+                PreviewText = "SECRET"
+            }
+        });
+
+        report.RasterRedactionAuditStatus.Should().Be(RedactedContentVerificationStatus.Verified);
+        report.RemainingRasterOverlapCount.Should().Be(0);
+        Encoding.Latin1.GetString(document.SaveToBytes()).Should().NotContain(marker);
+    }
+
     void IDisposable.Dispose()
     {
         try
@@ -179,5 +227,51 @@ public class RedactedCopySafetyServiceTests : IDisposable
             .Append("\n%%EOF\n");
 
         return Encoding.UTF8.GetBytes(sb.ToString());
+    }
+
+    private static byte[] BuildPdfWithImageOnlyXObject(string imageMarker)
+    {
+        var contentBytes = Encoding.Latin1.GetBytes("q 160 0 0 80 100 640 cm /Im0 Do Q\n");
+        var imageBytes = Encoding.Latin1.GetBytes(imageMarker);
+
+        using var ms = new MemoryStream();
+        void Write(string value)
+        {
+            var bytes = Encoding.Latin1.GetBytes(value);
+            ms.Write(bytes, 0, bytes.Length);
+        }
+
+        Write("%PDF-1.7\n");
+        var offsets = new long[6];
+
+        offsets[1] = ms.Position;
+        Write("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
+
+        offsets[2] = ms.Position;
+        Write("2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n");
+
+        offsets[3] = ms.Position;
+        Write("3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] " +
+              "/Contents 4 0 R /Resources << /XObject << /Im0 5 0 R >> >> >>\nendobj\n");
+
+        offsets[4] = ms.Position;
+        Write($"4 0 obj\n<< /Length {contentBytes.Length} >>\nstream\n");
+        ms.Write(contentBytes, 0, contentBytes.Length);
+        Write("\nendstream\nendobj\n");
+
+        offsets[5] = ms.Position;
+        Write("5 0 obj\n<< /Type /XObject /Subtype /Image " +
+              $"/Width {imageBytes.Length} /Height 1 /ColorSpace /DeviceGray /BitsPerComponent 8 " +
+              $"/Length {imageBytes.Length} >>\nstream\n");
+        ms.Write(imageBytes, 0, imageBytes.Length);
+        Write("\nendstream\nendobj\n");
+
+        var xref = ms.Position;
+        Write("xref\n0 6\n0000000000 65535 f \n");
+        for (var i = 1; i <= 5; i++)
+            Write($"{offsets[i]:D10} 00000 n \n");
+
+        Write($"trailer\n<< /Root 1 0 R /Size 6 >>\nstartxref\n{xref}\n%%EOF");
+        return ms.ToArray();
     }
 }

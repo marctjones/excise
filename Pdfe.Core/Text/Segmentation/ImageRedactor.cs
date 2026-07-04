@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Pdfe.Core.Content;
 using Pdfe.Core.Document;
 using Pdfe.Core.Primitives;
@@ -112,6 +113,68 @@ internal static class ImageRedactor
 
         return output;
     }
+
+    public static void PruneUnusedImageXObjects(PdfPage page, IReadOnlyList<ContentOperator> survivingPageOperations)
+    {
+        var resources = page.Resources;
+        var xobjects = resources?.GetDictionaryOrNull("XObject");
+        if (xobjects == null)
+            return;
+
+        var survivingNames = new HashSet<string>(
+            survivingPageOperations
+                .Where(op => op.Name == "Do" && op.Operands.Count > 0)
+                .Select(op => op.GetName(0))
+                .Where(name => !string.IsNullOrEmpty(name))
+                .Select(name => name!),
+            StringComparer.Ordinal);
+
+        foreach (var key in xobjects.Keys.Select(k => k.Value).ToArray())
+        {
+            if (survivingNames.Contains(key))
+                continue;
+
+            var xobject = xobjects.GetOptional(key);
+            if (xobject == null ||
+                page.Document.Resolve(xobject) is not PdfStream stream ||
+                !string.Equals(stream.GetNameOrNull("Subtype"), "Image", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            if (IsUsedByOtherPageSharingXObjectDictionary(page, xobjects, key))
+                continue;
+
+            xobjects.Remove(key);
+        }
+    }
+
+    private static bool IsUsedByOtherPageSharingXObjectDictionary(
+        PdfPage redactedPage,
+        PdfDictionary xobjects,
+        string name)
+    {
+        for (var pageNumber = 1; pageNumber <= redactedPage.Document.PageCount; pageNumber++)
+        {
+            if (pageNumber == redactedPage.PageNumber)
+                continue;
+
+            var page = redactedPage.Document.GetPage(pageNumber);
+            if (!ReferenceEquals(page.Resources?.GetDictionaryOrNull("XObject"), xobjects))
+                continue;
+
+            if (ContentUsesXObjectName(page.GetContentStream().Operators, name))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static bool ContentUsesXObjectName(IReadOnlyList<ContentOperator> operations, string name) =>
+        operations.Any(op =>
+            op.Name == "Do" &&
+            op.Operands.Count > 0 &&
+            string.Equals(op.GetName(0), name, StringComparison.Ordinal));
 
     private static bool ShouldRemoveImageDo(
         ContentOperator op,

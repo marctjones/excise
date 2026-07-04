@@ -78,6 +78,7 @@ public static class PdfPageRedactionExtensions
         // tracking CTM and drops image Do invocations whose transformed
         // unit-square AABB overlaps the redaction area.
         working = ImageRedactor.ProcessOperations(working, page, area, strategy, out _);
+        ImageRedactor.PruneUnusedImageXObjects(page, working);
 
         page.SetContentStream(new ContentStream(working));
     }
