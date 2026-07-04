@@ -22,14 +22,21 @@ Avalonia app instead of the in-process Avalonia.Headless test harness.
 
 ## Background-Safe Default
 
-The default mode uses macOS `open -g` and does not inject keyboard or mouse
-events. That keeps the check suitable for normal local work where the user may
-still be using the machine. The script sets a temporary
+The standalone script defaults to macOS `open -g` and does not inject keyboard
+or mouse events. That keeps direct script use suitable for normal local work
+where the user may still be using the machine. The release wrapper uses
+`--mode direct-exec` by default because it reliably captures app stdout/stderr
+and app-internal first-page timing even when Launch Services is constrained by a
+locked session. The script sets a temporary
 `PDFE_RESPONSIVENESS_REPORT` Launch Services environment value so the packaged
 app can write `app-responsiveness.json`, also writes a one-shot request file for
 Launch Services runs that do not inherit environment values, then unsets and
-removes that state during cleanup. Missing app-internal timing is a smoke
-failure because it means the package did not prove first-page display.
+removes that state during cleanup. Before launch it also starts a bounded
+`caffeinate -u` assertion so macOS exposes an active display link when the
+display is asleep; this can wake the screen, but it does not send keyboard or
+mouse input and does not require foreground focus. Missing app-internal timing
+is a smoke failure because it means the package did not prove first-page
+display.
 
 Use direct executable launch when investigating app stdout/stderr or when
 Launch Services environment inheritance is unavailable:
@@ -37,6 +44,7 @@ Launch Services environment inheritance is unavailable:
 ```bash
 scripts/run-packaged-gui-smoke.sh --mode direct-exec
 scripts/release-smoke.sh --quick --package --packaged-gui-direct-exec --version <version>
+scripts/release-smoke.sh --quick --package --packaged-gui-background-open --version <version>
 ```
 
 Native key/mouse delivery through `System Events` is available only with:
@@ -57,6 +65,10 @@ After building a local package:
 scripts/release-smoke.sh --quick --package --packaged-gui --version <version>
 ```
 
+That release wrapper command runs the packaged executable directly. Use
+`--packaged-gui-background-open` only when specifically investigating Launch
+Services/open-with behavior.
+
 For the focus-taking native input path:
 
 ```bash
@@ -74,6 +86,7 @@ JSON/markdown report but does not fail the smoke; a FAIL exits non-zero.
 
 | Workflow | PASS | WARN |
 | --- | ---: | ---: |
+| Display wake assertion | assertion started | assertion unavailable |
 | Packaged process appears | 3s | 8s |
 | Packaged process survives startup stabilization | 5s | 15s |
 | PDF argument open observed externally | 5s | 15s |

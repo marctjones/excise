@@ -17,7 +17,7 @@ RUN_VISUAL=0
 RUN_PACKAGE=0
 RUN_PACKAGED_GUI=0
 PACKAGED_GUI_FOCUS_INPUT=0
-PACKAGED_GUI_MODE="background-open"
+PACKAGED_GUI_MODE="direct-exec"
 NO_BUILD=0
 VERSION=""
 ONLY=""
@@ -42,6 +42,8 @@ Options:
   --packaged-gui      Run packaged-app GUI smoke evidence after package build.
   --packaged-gui-direct-exec
                       Run packaged GUI smoke through the app executable so app-internal timing JSON is reliable.
+  --packaged-gui-background-open
+                      Run packaged GUI smoke through Launch Services/open for file-activation investigation.
   --packaged-gui-focus-input
                       Also run focus-taking native key/mouse smoke.
   --no-build          Skip the initial build gate.
@@ -69,6 +71,11 @@ while [ "$#" -gt 0 ]; do
         --packaged-gui-direct-exec)
             RUN_PACKAGED_GUI=1
             PACKAGED_GUI_MODE="direct-exec"
+            shift
+            ;;
+        --packaged-gui-background-open)
+            RUN_PACKAGED_GUI=1
+            PACKAGED_GUI_MODE="background-open"
             shift
             ;;
         --packaged-gui-focus-input)

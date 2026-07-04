@@ -81,6 +81,7 @@ launch_start_ms=""
 launch_start_epoch=""
 pid_seen_ms=""
 launchctl_env_set=0
+caffeinate_pid=""
 
 now_ms() {
     perl -MTime::HiRes=time -e 'printf "%d\n", time() * 1000'
@@ -242,7 +243,30 @@ clear_launch_environment() {
         launchctl unsetenv PDFE_RESPONSIVENESS_REPORT >/dev/null 2>&1 || true
         launchctl_env_set=0
     fi
+    if [ -n "$caffeinate_pid" ] && kill -0 "$caffeinate_pid" 2>/dev/null; then
+        kill "$caffeinate_pid" 2>/dev/null || true
+        caffeinate_pid=""
+    fi
     rm -f "$RESPONSIVENESS_REQUEST_FILE" 2>/dev/null || true
+}
+
+start_display_wake_assertion() {
+    local duration=$((TIMEOUT_SECONDS + 30))
+    if ! command -v caffeinate >/dev/null 2>&1; then
+        record_row "display wake assertion" "WARN" "$MODE" "$LAUNCH_LOG" "caffeinate is unavailable; native render timer may fail if all displays are asleep."
+        return
+    fi
+
+    caffeinate -u -t "$duration" >> "$LAUNCH_LOG" 2>&1 &
+    caffeinate_pid=$!
+    sleep 1
+
+    if [ -n "$caffeinate_pid" ] && kill -0 "$caffeinate_pid" 2>/dev/null; then
+        record_row "display wake assertion" "PASS" "$MODE" "$LAUNCH_LOG" "Started bounded caffeinate -u assertion for ${duration}s so macOS exposes an active display link without focus input."
+    else
+        record_row "display wake assertion" "WARN" "$MODE" "$LAUNCH_LOG" "caffeinate exited before launch; native render timer may fail if all displays are asleep."
+        caffeinate_pid=""
+    fi
 }
 
 wait_for_app_report() {
@@ -378,6 +402,7 @@ if [ ! -f "$PDF" ]; then
 fi
 
 script_start_ms="$(now_ms)"
+start_display_wake_assertion
 launch_start_ms="$(now_ms)"
 launch_start_epoch="$(date +%s)"
 mkdir -p "$(dirname "$RESPONSIVENESS_REQUEST_FILE")"

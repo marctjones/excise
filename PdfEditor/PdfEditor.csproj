@@ -60,10 +60,10 @@
          ReactiveUI.Avalonia provides the ReactiveUI integration; it is held
          at 12.0.1 deliberately (14.x is a major jump that shifts the
          Avalonia/ReactiveUI floors — see #340). -->
-    <PackageReference Include="Avalonia" Version="12.0.4" />
-    <PackageReference Include="Avalonia.Desktop" Version="12.0.4" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.4" />
-    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.4" />
+    <PackageReference Include="Avalonia" Version="12.0.5" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.0.5" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.5" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.5" />
     <PackageReference Include="ReactiveUI.Avalonia" Version="12.0.3" />
     <PackageReference Include="FluentAvaloniaUI" Version="3.0.0-preview4" />
     <!-- FluentIcons.Avalonia.Fluent dropped: not referenced anywhere

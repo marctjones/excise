@@ -19,9 +19,12 @@ Use this checklist before tagging any `v*` release.
 - Run packaged-app GUI evidence when validating desktop packages:
   `scripts/release-smoke.sh --quick --package --packaged-gui --version <version>`.
   This writes JSON/markdown evidence for #558/#571 and responsiveness timing
-  evidence for #577/#581/#582 without taking keyboard or mouse focus. On a
-  local release-candidate pass where app-internal first-page timing is required,
-  use `--packaged-gui-direct-exec`. On a dedicated runner, add
+  evidence for #577/#581/#582 without taking keyboard or mouse focus. The
+  release wrapper uses the packaged executable directly so app-internal timing
+  works even when Launch Services is constrained by a locked session; the
+  explicit alias is `--packaged-gui-direct-exec`. Use
+  `--packaged-gui-background-open` when specifically investigating
+  open-with/file-activation behavior. On a dedicated runner, add
   `--packaged-gui-focus-input` to run the native System Events key/mouse smoke
   that requires macOS Accessibility permission and foreground focus.
 - Run the focused tests for the changed area.
