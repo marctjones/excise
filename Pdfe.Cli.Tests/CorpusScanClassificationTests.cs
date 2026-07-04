@@ -270,6 +270,8 @@ public class CorpusScanClassificationTests
                       "path": "pdfjs/issue.pdf",
                       "pageNumber": 1,
                       "status": "PASS_ONE",
+                      "expectedStatus": "DIFF",
+                      "expectationResult": "FAIL",
                       "bestOracle": "mutool",
                       "comparedOracles": 4,
                       "agreeingOracles": 2,
@@ -290,6 +292,10 @@ public class CorpusScanClassificationTests
                 .WhoseValue.Should().Be(1);
             report.summary.passOneReviewStatusCounts.Should().ContainKey("ACCEPTED_PASS_ONE")
                 .WhoseValue.Should().Be(1);
+            report.summary.expectationResultCounts.Should().ContainKey("PASS")
+                .WhoseValue.Should().Be(1);
+            report.entries.Should().ContainSingle()
+                .Which.expectedRawStatus.Should().Be("PASS_ONE");
             report.unreviewedPassOne.Should().BeEmpty();
             report.passOneTriage.Should().ContainSingle()
                 .Which.passOneReviewStatus.Should().Be("ACCEPTED_PASS_ONE");

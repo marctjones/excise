@@ -9,7 +9,7 @@
   "QualityReason": "DeviceCMYK knockout group compositing now honors PDF nonseparable blend formulas and previews retained CMYK group pixels through the document output intent. Current focused comparison tracks MuPDF/Ghent semantics with only low residual antialias/text differences.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "DIFF",
+      "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
       "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
       "PixelAgreement": "MATCHES_TARGET",

@@ -9,7 +9,7 @@
   "QualityReason": "16-bit TIFF Predictor 2 samples are reconstructed before image color conversion, removing the noisy 16-bit image failure.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "PASS_ONE",
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
       "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
       "PixelAgreement": "MATCHES_ONE_REFERENCE",

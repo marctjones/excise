@@ -8,7 +8,7 @@
   "Notes": "Migrated from the legacy TSV rendering manifests.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "DIFF",
+      "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
       "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
       "PixelAgreement": "MATCHES_TARGET",

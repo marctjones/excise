@@ -47,7 +47,9 @@ namespace Pdfe.Rendering.Differential
     {
         public static bool IsAvailable { get; }
         public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
+        public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword) { }
         public static Pdfe.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
+        public static Pdfe.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword) { }
     }
     public static class PdftocairoReferenceRenderer
     {

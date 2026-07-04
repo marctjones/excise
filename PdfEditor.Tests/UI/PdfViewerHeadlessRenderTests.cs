@@ -135,7 +135,7 @@ public class PdfViewerHeadlessRenderTests
         AssertLightOpaquePage(visualSurface, "ACC cover offscreen GUI surface");
     }
 
-    [FixedAvaloniaFact(Timeout = 900_000)]
+    [FixedAvaloniaFact(Timeout = 1_200_000)]
     [Trait("Category", "GuiDisplay")]
     public async Task PdfViewer_RenderingQualitySuite_DisplayBitmapsMatchRenderer()
     {
@@ -258,7 +258,11 @@ public class PdfViewerHeadlessRenderTests
 
                 using var expectedRaw = RenderDirectViewerPage(pdfBytes, testCase.PageNumber, testCase.Password);
                 using var expected = NormalizeSkiaBitmap(expectedRaw);
-                var capture = await RenderViewerVisualSurface(pdfBytes, testCase.PageNumber, testCase.Password);
+                var capture = await RenderViewerVisualSurface(
+                    pdfBytes,
+                    testCase.PageNumber,
+                    testCase.Password,
+                    renderTimeout: TimeSpan.FromMinutes(3));
                 using var displayed = capture.Displayed;
                 using var visualSurface = capture.VisualSurface;
 
@@ -411,7 +415,11 @@ public class PdfViewerHeadlessRenderTests
         return result;
     }
 
-    private async Task<ViewerVisualCapture> RenderViewerVisualSurface(byte[] pdfBytes, int pageNumber = 1, string? password = null)
+    private async Task<ViewerVisualCapture> RenderViewerVisualSurface(
+        byte[] pdfBytes,
+        int pageNumber = 1,
+        string? password = null,
+        TimeSpan? renderTimeout = null)
     {
         var doc = password == null
             ? Pdfe.Core.Document.PdfDocument.Open(pdfBytes)
@@ -433,7 +441,7 @@ public class PdfViewerHeadlessRenderTests
         var pdfImage = viewer.FindControl<Image>("PdfImage");
         pdfImage.Should().NotBeNull("PdfViewerControl must expose the PdfImage element");
 
-        await WaitForViewerRender(viewer, pdfImage!);
+        await WaitForViewerRender(viewer, pdfImage!, renderTimeout);
 
         var imageSource = (Bitmap)pdfImage!.Source!;
         var displayed = DecodeAvaloniaBitmap(imageSource);
@@ -457,14 +465,17 @@ public class PdfViewerHeadlessRenderTests
         return new ViewerVisualCapture(displayed, visualSurface);
     }
 
-    private async Task WaitForViewerRender(PdfViewerControl viewer, Image pdfImage)
+    private async Task WaitForViewerRender(PdfViewerControl viewer, Image pdfImage, TimeSpan? timeout = null)
     {
         // Render completes in ~2s locally, but the first render on a cold CI
         // runner (JIT + xvfb + SkiaSharp native init) can take far longer, so a
         // 15s budget intermittently failed in CI while passing everywhere else.
-        // Use a generous 60s budget — we're asserting "it renders", not "it
-        // renders fast" (perf is covered by the benchmark suite). (#363)
-        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(60);
+        // Use a generous default budget — we're asserting "it renders", not
+        // "it renders fast" (perf is covered by the benchmark suite). The
+        // rendering-quality GUI sweep passes a larger budget for slow semantic
+        // fixtures such as Altona P7. (#363)
+        var effectiveTimeout = timeout ?? TimeSpan.FromSeconds(60);
+        var deadline = DateTime.UtcNow + effectiveTimeout;
         while (DateTime.UtcNow < deadline)
         {
             if (viewer.HasError || (!viewer.IsLoading && pdfImage.Source != null))
@@ -473,7 +484,8 @@ public class PdfViewerHeadlessRenderTests
         }
 
         viewer.HasError.Should().BeFalse($"viewer reported error: {viewer.ErrorMessage}");
-        pdfImage.Source.Should().NotBeNull("viewer should have rendered the requested page within 60s");
+        pdfImage.Source.Should().NotBeNull(
+            $"viewer should have rendered the requested page within {effectiveTimeout.TotalSeconds:0}s");
         viewer.IsLoading.Should().BeFalse();
     }
 

@@ -388,6 +388,7 @@ partial class Program
     {
         var contractSet = RenderingQualityContractSet.Load(contractsDir);
         var rawReport = LoadCorpusScanReport(rawReportPath);
+        ApplyCorpusExpectations(rawReport.entries, contractSet.CreateExpectationManifest());
         ApplyRenderingQualityContracts(rawReport.entries, contractSet, strictContracts);
         var report = BuildRenderingQualityReport(rawReport, contractSet, contractsDir, strictContracts);
         var json = JsonSerializer.Serialize(report, RenderingQualityJsonOptions);

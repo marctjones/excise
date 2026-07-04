@@ -11,7 +11,13 @@ A cross-platform PDF editor and pure-.NET PDF framework, built with **C# + .NET 
 [![Tests](https://img.shields.io/badge/tests-7000%2B%20passing-brightgreen)](Pdfe.Core.Tests)
 [![Build](https://img.shields.io/badge/build-0%20warnings-brightgreen)](Pdfe.Core)
 
-> **v2.1** completed all 15 PDF 2.0 conformance phases (CID fonts, AcroForms, color spaces, optional content groups, structure tree, embedded files, page labels, named destinations) and added **AcroForm editing and authoring** — fill, flatten, click-to-create, and heuristic auto-detect. The PDF stack is pdfe-owned end-to-end — `Pdfe.Core` (parser/writer), `Pdfe.Rendering` (Skia), and `Pdfe.Ocr` (system tesseract shell) — with no third-party PDF dependencies. See [CHANGELOG.md](CHANGELOG.md) for full release notes.
+> The current release line has completed the everyday PDF workbench gate:
+> renderer and GUI display evidence are issue-linked, PDF 2.0 renderer
+> coverage is tracked by contract, and remaining advanced renderer/font work is
+> explicitly deferred rather than implied as shipped. The PDF stack is
+> pdfe-owned end-to-end — `Pdfe.Core` (parser/writer), `Pdfe.Rendering` (Skia),
+> and `Pdfe.Ocr` (system tesseract shell) — with no third-party PDF
+> dependencies. See [CHANGELOG.md](CHANGELOG.md) for full release notes.
 
 ## What's in the box
 
@@ -143,16 +149,18 @@ release notes:
 - **Digital signatures** — pdfe checks ByteRange structure and verifies the
   detached CMS signature/digest over the signed bytes, but does not evaluate the
   signer certificate chain against the OS trust store yet (#466).
-- **Rendering fidelity** — the renderer has broad PDF 2.0 operator coverage and
-  real-corpus differential gates, but remaining `DIFF` cases are fixed, deferred,
-  or documented through the #491 dashboard before release. JBIG2, advanced
-  shadings, annotation appearances, and malformed/fuzzed pdf.js repro files
-  remain the main classes to watch.
-- **Color-managed print preview** — pdfe renders DeviceCMYK through a deterministic
-  screen-preview conversion and resolves `/DefaultCMYK` / ICCBased CMYK through a
-  conservative reference fallback. It does not currently apply `/OutputIntents`
-  as a screen-preview profile; shade/tone-only differences are tracked below
-  missing content, geometry, and unreadable-output defects.
+- **Rendering fidelity** — the current release dashboard classifies every
+  contracted page as release `PASS`. Remaining non-exact rows are issue-linked
+  accepted-reference matches, malformed-input/refusal classifications, or named
+  accepted limitations rather than unclassified `DIFF` blockers (#491).
+  Niche color/shading residuals and deeper font-model work remain tracked for
+  future releases (#512, #513, #514, #515, #532).
+- **Color-managed print preview** — pdfe renders DeviceCMYK through a
+  deterministic screen-preview conversion, resolves `/DefaultCMYK` and ICCBased
+  CMYK through managed ICC preview support, and uses document output-intent data
+  in the CMYK transparency-preview paths covered by the release corpus. It is
+  still not a prepress proofing engine; shade/tone-only differences are tracked
+  below missing content, geometry, and unreadable-output defects.
 - **Encrypted and malformed PDFs** — PDFs requiring a non-empty user password,
   some owner-password-only flows, unsupported compression filters, invalid
   geometry, and intentionally malformed xref/stream structures are classified by
@@ -473,13 +481,14 @@ Explorer → right-click a PDF → **Open with** → **Choose another app** → 
 
 ### Release automation
 
-`.github/workflows/release.yml` builds both installers and attaches
-them to a GitHub Release whenever a `v*` tag is pushed (or a release is
-published manually):
+`.github/workflows/release.yml` builds installers/app bundles and attaches them
+to a GitHub Release whenever a `v*` tag is pushed (or a release is published
+manually):
 
 1. `linux-deb` job (ubuntu-latest) → `pdfe_<version>_amd64.deb` + portable `.tar.gz`
 2. `windows-exe` job (windows-latest) → `pdfe-<version>-win-x64-setup.exe` + portable `.zip`
-3. `publish` job uploads all artifacts with `.sha256` files; tags containing `-rc`/`-beta`/`-alpha` are flagged as pre-releases.
+3. `macos-app` job (macos-latest) → arm64 `.app` bundle `.zip`
+4. `publish` job uploads all artifacts with `.sha256` files; tags containing `-rc`/`-beta`/`-alpha` are flagged as pre-releases.
 
 Before tagging, run the release checklist in
 [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md), including
@@ -487,7 +496,7 @@ Before tagging, run the release checklist in
 the implemented commands and APIs. The repeatable local gate is:
 
 ```bash
-scripts/release-smoke.sh --visual --package --version 2.1.0
+scripts/release-smoke.sh --visual --package --version 2.19.0
 ```
 
 The release-smoke script does not create tags or upload artifacts. It runs the
@@ -497,8 +506,8 @@ under `logs/release-smoke_*`.
 
 ```bash
 # Cut a new release
-git tag -a v2.1.0 -m "pdfe v2.1.0"
-git push origin v2.1.0           # workflow runs, attaches installers
+git tag -a v2.19.0 -m "pdfe v2.19.0"
+git push origin v2.19.0          # workflow runs, attaches release artifacts
 # Or via the GitHub UI: Releases → Draft a new release → choose tag
 ```
 

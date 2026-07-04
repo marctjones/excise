@@ -154,6 +154,148 @@ run_package_gate() {
     esac
 }
 
+run_dotnet_test_step() {
+    local log="$1"
+    local label="$2"
+    local project="$3"
+    local filter="${4:-}"
+    local hang_timeout="${5:-}"
+    local -a args=("test" "$project" "--no-build" "-c" "$CONFIG" "--logger" "console;verbosity=minimal")
+
+    if [ -n "$filter" ]; then
+        args+=("--filter" "$filter")
+    fi
+    if [ -n "$hang_timeout" ]; then
+        args+=("--blame-hang-timeout" "$hang_timeout")
+    fi
+
+    say "  -> $label"
+    {
+        echo "================================================="
+        echo "$label"
+        echo "================================================="
+    } >> "$log"
+
+    local rc=0
+    dotnet "${args[@]}" >> "$log" 2>&1 || rc=$?
+    if [ "$rc" = "0" ]; then
+        say "     PASS"
+        return 0
+    fi
+
+    say "     ${R}FAIL${N} rc=$rc -> $log"
+    tail -80 "$log" | sed 's/^/    /'
+    return "$rc"
+}
+
+run_pdfeditor_gui_display_step() {
+    local log="$1"
+    local label="PdfEditor.Tests GUI display sweep"
+    local project="PdfEditor.Tests/PdfEditor.Tests.csproj"
+    local filter="FullyQualifiedName~PdfViewerHeadlessRenderTests.PdfViewer_RenderingQualitySuite_DisplayBitmapsMatchRenderer"
+    local report="PdfEditor.Tests/bin/$CONFIG/net10.0/UI/test-output/gui-display-suite-renderer-contracts-representative-pages.json"
+    local last_progress=""
+
+    say "  -> $label"
+    {
+        echo "================================================="
+        echo "$label"
+        echo "================================================="
+    } >> "$log"
+    rm -f "$report" 2>/dev/null || true
+
+    dotnet test "$project" --no-build -c "$CONFIG" --filter "$filter" --logger "console;verbosity=minimal" >> "$log" 2>&1 &
+    local pid=$!
+    while kill -0 "$pid" 2>/dev/null; do
+        sleep 30
+        if [ -f "$report" ] && command -v jq >/dev/null 2>&1; then
+            local progress
+            progress="$(jq -r '
+                def failures: ([.results[]? | select(.status == "FAIL")] | length);
+                def nonpass: ([.results[]? | select(.status != "PASS" and .status != "NON_RENDERABLE_ACCEPTED")] | length);
+                if .current then
+                    "\(.current.ordinal)/\(.current.total) \(.current.path) page \(.current.page), failures \(failures), non-pass \(nonpass)"
+                else
+                    "\(.results | length) result(s), failures \(failures), non-pass \(nonpass)"
+                end
+            ' "$report" 2>/dev/null || true)"
+            if [ -n "$progress" ] && [ "$progress" != "$last_progress" ]; then
+                say "     progress: $progress"
+                last_progress="$progress"
+            fi
+        fi
+    done
+
+    local rc=0
+    wait "$pid" || rc=$?
+    if [ "$rc" = "0" ]; then
+        say "     PASS"
+        return 0
+    fi
+
+    say "     ${R}FAIL${N} rc=$rc -> $log"
+    tail -80 "$log" | sed 's/^/    /'
+    return "$rc"
+}
+
+run_full_tests_gate() {
+    if ! should_run "tests"; then
+        return
+    fi
+
+    if [ "$RUN_FULL_TESTS" != "1" ]; then
+        say "${Y}[tests] SKIP${N} - --quick selected."
+        RESULTS+=("tests|SKIP|--quick")
+        say ""
+        return
+    fi
+
+    local log="$LOG_DIR/tests.log"
+    local start
+    start="$(date +%s)"
+    local rc=0
+    local project
+    local -a test_projects=(
+        "Pdfe.Avalonia.Tests/Pdfe.Avalonia.Tests.csproj"
+        "Pdfe.Cli.Tests/Pdfe.Cli.Tests.csproj"
+        "Pdfe.Core.Tests/Pdfe.Core.Tests.csproj"
+        "Pdfe.Ocr.Tests/Pdfe.Ocr.Tests.csproj"
+        "Pdfe.Rendering.Tests/Pdfe.Rendering.Tests.csproj"
+    )
+
+    say "${B}[tests]${N} sequential project tests with hang diagnostics"
+    : > "$log"
+    for project in "${test_projects[@]}"; do
+        run_dotnet_test_step "$log" "$project" "$project" "" "5m" || { rc=$?; break; }
+    done
+
+    if [ "$rc" = "0" ]; then
+        run_dotnet_test_step "$log" "PdfEditor.Tests ordinary slice" \
+            "PdfEditor.Tests/PdfEditor.Tests.csproj" \
+            "FullyQualifiedName!~KeyboardShortcutTests.CtrlW_ClosesDocument&FullyQualifiedName!~PdfViewerHeadlessRenderTests.PdfViewer_RenderingQualitySuite_DisplayBitmapsMatchRenderer" \
+            "5m" || rc=$?
+    fi
+    if [ "$rc" = "0" ]; then
+        run_dotnet_test_step "$log" "PdfEditor.Tests Ctrl+W shortcut" \
+            "PdfEditor.Tests/PdfEditor.Tests.csproj" \
+            "FullyQualifiedName~KeyboardShortcutTests.CtrlW_ClosesDocument" \
+            "2m" || rc=$?
+    fi
+    if [ "$rc" = "0" ]; then
+        run_pdfeditor_gui_display_step "$log" || rc=$?
+    fi
+
+    local dur=$(( $(date +%s) - start ))
+    if [ "$rc" = "0" ]; then
+        say "  ${G}PASS${N} (${dur}s) -> $log"
+        RESULTS+=("tests|PASS|${dur}s")
+    else
+        RESULTS+=("tests|FAIL|rc=$rc ${dur}s")
+        overall=1
+    fi
+    say ""
+}
+
 say "${B}=================================================${N}"
 say "${B} pdfe release smoke${N}"
 say "${B}=================================================${N}"
@@ -175,15 +317,7 @@ run_gate "signature" dotnet test PdfEditor.Tests --no-build -c "$CONFIG" --filte
 run_gate "ui" dotnet test PdfEditor.Tests --no-build -c "$CONFIG" --filter "FullyQualifiedName~GuiWorkflowCoverageMatrix|FullyQualifiedName~GoldenPath|FullyQualifiedName~Workflow" --logger "console;verbosity=normal"
 run_gate "pdf20" scripts/run-pdf20-renderer-conformance.sh --run-tests
 
-if should_run "tests"; then
-    if [ "$RUN_FULL_TESTS" = "1" ]; then
-        run_gate "tests" dotnet test pdfe.sln --no-build -c "$CONFIG" --logger "console;verbosity=minimal"
-    else
-        say "${Y}[tests] SKIP${N} - --quick selected."
-        RESULTS+=("tests|SKIP|--quick")
-        say ""
-    fi
-fi
+run_full_tests_gate
 
 if should_run "visual"; then
     if [ "$RUN_VISUAL" = "1" ]; then

@@ -10,7 +10,7 @@
 
   <PropertyGroup>
     <PackageId>Pdfe.Core</PackageId>
-    <Version>2.11.0</Version>
+    <Version>2.19.0</Version>
     <Authors>Marc Jones</Authors>
     <Description>Pure-managed PDF parser, document model, and writer for .NET. Open/edit/save PDFs, extract text/links/annotations/forms, and perform true glyph-level redaction. No native dependencies; cross-platform and trim/AOT-friendlier.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

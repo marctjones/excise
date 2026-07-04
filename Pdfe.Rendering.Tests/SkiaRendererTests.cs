@@ -927,7 +927,10 @@ public class SkiaRendererTests
             "the ICCBased object must not leave the red overprint-failure X visible");
     }
 
-    [Fact(Timeout = 30000)]
+    // These Altona PDF/X patch pages are semantic rendering fixtures over a
+    // large real-world file. They validate visible CMYK/transparency/shading
+    // behavior and can take over a minute on a release-smoke machine.
+    [Fact(Timeout = 120000)]
     public void RenderPage_AltonaDeviceCmykImage_UsesDocumentOutputIntent()
     {
         var path = FindRepoFile(
@@ -949,7 +952,7 @@ public class SkiaRendererTests
         rightColumnWood.Green.Should().BeGreaterThan(rightColumnWood.Blue + 8);
     }
 
-    [Fact(Timeout = 60000)]
+    [Fact(Timeout = 120000)]
     public void RenderPage_AltonaDeviceCmykTransparencyGroupFallback_PreservesInvocationAlpha()
     {
         var path = FindRepoFile(
@@ -973,7 +976,7 @@ public class SkiaRendererTests
             "the inherited-alpha form should not reset to opaque white and wipe out the underlying image content");
     }
 
-    [Fact(Timeout = 30000)]
+    [Fact(Timeout = 120000)]
     public void RenderPage_AltonaJpxGrayImage_UsesOpenJpegForContinuousToneTiles()
     {
         Assert.SkipWhen(!IsOpenJpegDecompressAvailable(),
@@ -995,7 +998,7 @@ public class SkiaRendererTests
             "DeviceGray JPX tiles without /SMask should use the OpenJPEG path; the managed fallback rendered this Altona grayscale panel as black/white noise");
     }
 
-    [Fact(Timeout = 40000)]
+    [Fact(Timeout = 120000)]
     public void RenderPage_AltonaPatternText_FillsGlyphsWithPatternInsteadOfFallbackBlack()
     {
         var path = FindRepoFile(
@@ -1018,7 +1021,7 @@ public class SkiaRendererTests
             "the Altona transparency text glyph should retain visible tiling pattern color even though page-level P7 color parity remains contract-gated");
     }
 
-    [Fact(Timeout = 40000)]
+    [Fact(Timeout = 120000)]
     public void RenderPage_AltonaTensorPatchMesh_RendersSampledGradient()
     {
         var path = FindRepoFile(

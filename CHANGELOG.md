@@ -6,68 +6,53 @@ semantic versioning.
 
 ## [Unreleased]
 
-Rendering quality hardening checkpoint. No intended API break.
+No changes yet.
+
+## [2.19.0] - 2026-07-04
+
+Everyday PDF workbench final release gate. No intended API break.
 
 ### Changed
-- **Release blocker rendering fixes (#491, #500, #502, #503).** DCT/JPEG soft masks
-  now render through a Skia layer/luminance-mask path instead of treating encoded
-  JPEG bytes as alpha or rewriting every source pixel. The real-world
-  `22060_A1_01_Plans.pdf` blocker now passes the focused MuPDF scan and renders
-  page 1 at 72 DPI in under one second locally. The focused CCITT/image-primitives
-  gate now passes all three tracked fixtures. Embedded Type1C/CFF simple fonts
-  now preserve custom `/Encoding /Differences` glyph names and resolve CFF
-  custom strings from the spec-defined SID 391 boundary, restoring readable
-  body text in `TAMReview.pdf` without a file-specific workaround.
-- **Everyday PDF workbench release-candidate matrix (#490).** The release
-  checklist now maps common open, navigation, search/copy, form, typewriter,
-  annotation, page organization, redaction, hidden-text, and signature
-  workflows to automated gates plus named packaged-app smoke fixtures.
-- **Real-world corpus failure taxonomy (#491, #492).** The exploratory corpus
-  scanner now distinguishes malformed PDFs, unsupported encrypted files,
-  unsupported compression, decode failures, invalid page geometry, render
-  resource limits, and timeouts instead of collapsing them into generic
-  parse/render errors.
-- **Form XObject text extraction (#445).** `TextExtractor` now traverses Form
-  XObjects invoked with `Do`, honoring nested resources so government forms like
-  DS-11/DS-82 extract the visible page text instead of starting from later
-  overlay content.
-- **Default-open packaging polish (#470).** The Windows installer now registers
-  pdfe with `RegisteredApplications`/Capabilities metadata so it appears in
-  Default apps / Open With flows for `.pdf`, while preserving user choice about
-  whether pdfe becomes the default PDF handler. README now documents Windows
-  installer and portable `.zip` setup alongside the existing macOS instructions.
-- **Render resource guardrails.** `Pdfe.Rendering` now rejects zero-sized page
-  output and page renders that would exceed the configured bitmap pixel budget
-  before allocating native Skia bitmaps.
-- **Known release limitations (#466, #489).** User-facing docs now state that
-  signature inspection verifies ByteRange/CMS integrity but does not evaluate
-  signer certificate chains against the OS trust store. Remaining rendering
-  divergences must be fixed, issue-linked, or documented through the #491 quality
-  dashboard before tagging.
+- **Release rendering dashboard (#491, #535, #546).** The current full
+  contract-driven rendering report classifies `14,979/14,979` scanned pages as
+  release `PASS`, with `0` missing contract pages, `0` failed expectations, and
+  `0` unreviewed or rejected `PASS_ONE` rows. Remaining low-impact reference
+  disagreements stay visible as `MATCHES_ACCEPTED_REFERENCE`,
+  `REFERENCE_REFUSAL_ACCEPTED`, `NON_RENDERABLE_ACCEPTED`, or a named accepted
+  limitation instead of generic failures.
+- **CMYK, ICC, and transparency rendering.** DeviceCMYK transparency-group
+  preview now uses document output-intent information where available, ICCBased
+  CMYK and `/DefaultCMYK` paths use the managed ICC preview evaluator, and
+  CMYK soft-mask/screen-blend and knockout cases from the release corpus are
+  classified against accepted reference targets.
+- **GUI display parity (#537, #541).** The headless GUI display suite now checks
+  that the displayed Avalonia bitmap matches the renderer output, including the
+  ACC compensation-report cover page. Representative renderer-contract GUI
+  coverage and pdf.js/Poppler shards are release evidence rather than manual
+  spot checks.
+- **Corpus tooling and progress reporting.** Long rendering runs write
+  incremental/progress JSON, support large-PDF page sharding, use documented
+  passwords from rendering contracts, and reclassify existing raw reports
+  against current contract expectations without rerendering reference pages.
+- **Release scope.** Broad font-model completion (#512, #513, #514, #515,
+  #532), renderer performance optimization (#536), and narrower future
+  renderer-quality issues remain tracked, but are explicitly deferred from this
+  tag because the current release dashboard is clean.
 
 ### Tests
-- Full pdf.js all-pages release corpus scan completed on 2026-06-18 after the
-  #503 CFF fix: 682 PDFs, 1,275 page results, 830 `PASS`, 353 `PASS_ONE`, 57
-  `DIFF`, and 35 classified non-visual failures. The remaining `DIFF` set is
-  documented in `docs/corpus-reports/README.md` and issue #491.
-- Focused #503 scan over `TAMReview.pdf`, `issue11878_reduced.pdf`, and
-  `freeculture.pdf` improved from 30 `DIFF` pages to 12: all 18 `TAMReview.pdf`
-  DIFF pages now pass, while the remaining results are the known 3x3 pt reduced
-  fixture and two isolated `freeculture.pdf` pages.
-- Sampled pdf.js corpus gate passed after isolated native-crash recovery:
-  682 PDFs, 753 page results, 620 `PASS`, 51 `PASS_ONE`, 47 `DIFF`, and the
-  expected classified non-visual limitations.
-- Full solution test run passed locally: 7,286 passed, 50 skipped.
-- Focused release-blocker rendering scan passed 4/5 fixtures; the only remaining
-  focused DIFF is the known `S2.pdf` JPX residual, improved but still tracked by
-  the broader corpus dashboard.
-- Focused CCITT/image-primitives scan passed: 3 passed, 0 diff.
-- Release-candidate workflow matrix gate passed: 112 passed, 1 known headless
-  keyboard-search skip.
-- Smoke text differential passed for DS-11 and DS-82 after Form XObject text
-  extraction; current gate is 9 passed, 1 known IRS marked-content skip.
-- Focused renderer guard tests passed: 2 passed.
-- `Pdfe.Cli` Debug build passed locally.
+- Rendering quality reclassification:
+  `logs/render-quality/release-prep-20260704/full-current-quality.json`
+  reports `14,979 PASS`, `0` missing contracts, and `14,979` expectation passes.
+- `dotnet test Pdfe.Cli.Tests/Pdfe.Cli.Tests.csproj --filter "FullyQualifiedName~CorpusScanClassificationTests"`
+  passed: `42` passed, `0` failed.
+- Release smoke evidence:
+  - `logs/release-smoke_20260704_035730`: docs, build, redaction,
+    signature, UI workflow, and PDF 2.0 renderer-conformance gates passed.
+  - `logs/release-smoke_20260704_033109`: sequential project test gate passed,
+    including the 144-page GUI display sweep with `0` failures and `0`
+    non-pass display comparisons.
+  - `logs/release-smoke_20260704_035238`: visual regression, macOS package
+    build, and `git diff --check` gates passed.
 
 ## [2.15.0] - 2026-06-11
 
