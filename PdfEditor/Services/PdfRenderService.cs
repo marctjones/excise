@@ -26,9 +26,14 @@ public class PdfRenderService
     private long _cacheMisses;
     private long _currentCacheBytes;
 
-    // Cache SKBitmap data directly as PNG bytes
-    private record RenderCacheEntry(byte[] PngData, DateTime LastAccessUtc, long SizeBytes);
+    // Cache owned bitmap copies so page navigation avoids PNG encode/decode overhead.
+    private sealed record RenderCacheEntry(SKBitmap Bitmap, DateTime LastAccessUtc, long SizeBytes) : IDisposable
+    {
+        public void Dispose() => Bitmap.Dispose();
+    }
+
     private readonly ConcurrentDictionary<string, RenderCacheEntry> _cache = new();
+    private readonly object _cacheLock = new();
 
     public PdfRenderService(ILogger<PdfRenderService> logger)
     {
@@ -68,8 +73,17 @@ public class PdfRenderService
     /// </summary>
     public void ClearCache()
     {
-        _cache.Clear();
-        System.Threading.Interlocked.Exchange(ref _currentCacheBytes, 0);
+        lock (_cacheLock)
+        {
+            foreach (var entry in _cache.Values)
+            {
+                entry.Dispose();
+            }
+
+            _cache.Clear();
+            System.Threading.Interlocked.Exchange(ref _currentCacheBytes, 0);
+        }
+
         _logger.LogInformation("Cache cleared");
     }
 
@@ -140,15 +154,10 @@ public class PdfRenderService
         cancellationToken.ThrowIfCancellationRequested();
 
         var cacheKey = BuildCacheKey(pdfPath, pageIndex, dpi);
-        if (TryGetFromCache(cacheKey, out var cachedPngData))
+        if (TryGetFromCache(cacheKey, out var cachedBitmap))
         {
             _logger.LogDebug("Cache hit for {File} page {Page} @ {Dpi} DPI", Path.GetFileName(pdfPath), pageIndex, dpi);
-            if (cachedPngData != null)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                using var stream = new MemoryStream(cachedPngData);
-                return SKBitmap.Decode(stream); // Decode from cached PNG data
-            }
+            return cachedBitmap;
         }
 
         _logger.LogInformation("Rendering page {PageIndex} from {FileName} at {Dpi} DPI",
@@ -176,10 +185,7 @@ public class PdfRenderService
                 }
                 if (skBitmap != null)
                 {
-                    // Cache the SKBitmap as PNG bytes
-                    using var image = SKImage.FromBitmap(skBitmap);
-                    using var data = image.Encode(SKEncodedImageFormat.Png, 100);
-                    AddToCache(cacheKey, data.ToArray());
+                    AddToCache(cacheKey, skBitmap);
                 }
                 return skBitmap;
             }
@@ -327,76 +333,103 @@ public class PdfRenderService
         return $"{pdfPath}|{pageIndex}|{dpi}|{lastWrite}";
     }
 
-    private bool TryGetFromCache(string key, out byte[]? pngData)
+    private bool TryGetFromCache(string key, out SKBitmap? bitmap)
     {
-        pngData = null;
+        bitmap = null;
 
-        if (_cache.TryGetValue(key, out var entry))
+        lock (_cacheLock)
         {
-            pngData = entry.PngData;
-            _cache[key] = entry with { LastAccessUtc = DateTime.UtcNow };
-            System.Threading.Interlocked.Increment(ref _cacheHits);
-            return true;
+            if (_cache.TryGetValue(key, out var entry))
+            {
+                bitmap = entry.Bitmap.Copy();
+                if (bitmap == null)
+                {
+                    if (_cache.TryRemove(key, out var removed))
+                    {
+                        System.Threading.Interlocked.Add(ref _currentCacheBytes, -removed.SizeBytes);
+                        removed.Dispose();
+                    }
+
+                    System.Threading.Interlocked.Increment(ref _cacheMisses);
+                    return false;
+                }
+
+                _cache[key] = entry with { LastAccessUtc = DateTime.UtcNow };
+                System.Threading.Interlocked.Increment(ref _cacheHits);
+                return true;
+            }
         }
 
         System.Threading.Interlocked.Increment(ref _cacheMisses);
         return false;
     }
 
-    private void AddToCache(string key, byte[] pngData)
+    private void AddToCache(string key, SKBitmap bitmap)
     {
-        long entrySize = pngData.Length;
-
-        // Update entry (or add new one)
-        if (_cache.TryGetValue(key, out var existingEntry))
+        var cachedBitmap = bitmap.Copy();
+        if (cachedBitmap == null)
         {
-            // Entry exists - update it and adjust size
-            System.Threading.Interlocked.Add(ref _currentCacheBytes, entrySize - existingEntry.SizeBytes);
-            _cache[key] = new RenderCacheEntry(pngData, DateTime.UtcNow, entrySize);
+            return;
         }
-        else
+
+        var entrySize = cachedBitmap.ByteCount;
+        var entry = new RenderCacheEntry(cachedBitmap, DateTime.UtcNow, entrySize);
+
+        lock (_cacheLock)
         {
-            // New entry
-            _cache[key] = new RenderCacheEntry(pngData, DateTime.UtcNow, entrySize);
+            if (_cache.TryRemove(key, out var existingEntry))
+            {
+                System.Threading.Interlocked.Add(ref _currentCacheBytes, -existingEntry.SizeBytes);
+                existingEntry.Dispose();
+            }
+
+            _cache[key] = entry;
             System.Threading.Interlocked.Add(ref _currentCacheBytes, entrySize);
-        }
 
-        TrimCacheToLimits();
+            TrimCacheToLimits();
+        }
     }
 
     private void TrimCacheToLimits()
     {
-        // Evict entries if over limits (entry count OR memory)
-        while (_cache.Count > _maxCacheEntries ||
-               System.Threading.Interlocked.Read(ref _currentCacheBytes) > _maxCacheMemoryBytes)
+        lock (_cacheLock)
         {
-            if (!EvictOldestEntry())
-                break; // No more entries to evict
+            // Evict entries if over limits (entry count OR memory)
+            while (_cache.Count > _maxCacheEntries ||
+                   System.Threading.Interlocked.Read(ref _currentCacheBytes) > _maxCacheMemoryBytes)
+            {
+                if (!EvictOldestEntry())
+                    break; // No more entries to evict
+            }
         }
     }
 
     private bool EvictOldestEntry()
     {
-        var oldest = DateTime.MaxValue;
-        string? oldestKey = null;
-
-        foreach (var kvp in _cache)
+        lock (_cacheLock)
         {
-            if (kvp.Value.LastAccessUtc < oldest)
+            var oldest = DateTime.MaxValue;
+            string? oldestKey = null;
+
+            foreach (var kvp in _cache)
             {
-                oldest = kvp.Value.LastAccessUtc;
-                oldestKey = kvp.Key;
+                if (kvp.Value.LastAccessUtc < oldest)
+                {
+                    oldest = kvp.Value.LastAccessUtc;
+                    oldestKey = kvp.Key;
+                }
             }
-        }
 
-        if (oldestKey != null && _cache.TryRemove(oldestKey, out var evicted))
-        {
-            System.Threading.Interlocked.Add(ref _currentCacheBytes, -evicted.SizeBytes);
-            _logger.LogDebug("Evicted cache entry: {Key}, freed {SizeKB:F1} KB",
-                oldestKey, evicted.SizeBytes / 1024.0);
-            return true;
-        }
+            if (oldestKey != null && _cache.TryRemove(oldestKey, out var evicted))
+            {
+                System.Threading.Interlocked.Add(ref _currentCacheBytes, -evicted.SizeBytes);
+                evicted.Dispose();
+                _logger.LogDebug("Evicted cache entry: {Key}, freed {SizeKB:F1} KB",
+                    oldestKey, evicted.SizeBytes / 1024.0);
+                return true;
+            }
 
-        return false;
+            return false;
+        }
     }
 }

@@ -2,6 +2,7 @@ using AwesomeAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using PdfEditor.Services;
+using SkiaSharp;
 using System.Reflection;
 using Xunit;
 
@@ -127,7 +128,28 @@ public class PdfRenderServiceCacheTests
             "AddToCache",
             BindingFlags.Instance | BindingFlags.NonPublic);
         method.Should().NotBeNull("cache eviction behavior should remain testable without rendering PDFs");
-        method!.Invoke(service, new object[] { key, new byte[sizeBytes] });
+
+        using var bitmap = CreateBitmapWithApproximateSize(sizeBytes);
+        method!.Invoke(service, new object[] { key, bitmap });
+    }
+
+    private static SKBitmap CreateBitmapWithApproximateSize(int sizeBytes)
+    {
+        var pixels = Math.Max(1, sizeBytes / 4);
+        var side = Math.Max(1, (int)Math.Floor(Math.Sqrt(pixels)));
+        return new SKBitmap(new SKImageInfo(side, side, SKColorType.Rgba8888, SKAlphaType.Premul));
+    }
+
+    private static SKBitmap? TryGetCachedBitmap(PdfRenderService service, string key)
+    {
+        var method = typeof(PdfRenderService).GetMethod(
+            "TryGetFromCache",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        method.Should().NotBeNull("cache hit behavior should remain testable without rendering PDFs");
+
+        object?[] args = [key, null];
+        var hit = (bool)method!.Invoke(service, args)!;
+        return hit ? (SKBitmap?)args[1] : null;
     }
 
     [Fact]
@@ -157,6 +179,40 @@ public class PdfRenderServiceCacheTests
         var stats2 = new PdfRenderService.CacheStatistics(5, 20, 10, 5, 1024, 2048, 0.67);
 
         stats1.Should().Be(stats2);
+    }
+
+    [Fact]
+    public void AddToCache_CopiesBitmapSoCallerCanDisposeOriginal()
+    {
+        var method = typeof(PdfRenderService).GetMethod(
+            "AddToCache",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        method.Should().NotBeNull();
+
+        using (var original = new SKBitmap(new SKImageInfo(12, 8, SKColorType.Rgba8888, SKAlphaType.Premul)))
+        {
+            original.Erase(SKColors.CornflowerBlue);
+            method!.Invoke(_service, new object[] { "bitmap-copy", original });
+        }
+
+        using var cached = TryGetCachedBitmap(_service, "bitmap-copy");
+
+        cached.Should().NotBeNull("the cache should store an owned bitmap copy instead of the caller-owned bitmap");
+        cached!.Width.Should().Be(12);
+        cached.Height.Should().Be(8);
+    }
+
+    [Fact]
+    public void TryGetFromCache_ReturnsFreshBitmapCopies()
+    {
+        AddCacheEntry(_service, "fresh-copy", 4 * 1024);
+
+        using var first = TryGetCachedBitmap(_service, "fresh-copy");
+        using var second = TryGetCachedBitmap(_service, "fresh-copy");
+
+        first.Should().NotBeNull();
+        second.Should().NotBeNull();
+        ReferenceEquals(first, second).Should().BeFalse("cache hits must not share caller-disposed bitmap instances");
     }
 
     // ========================================================================
