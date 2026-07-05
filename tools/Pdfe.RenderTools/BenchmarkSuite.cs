@@ -174,12 +174,13 @@ partial class Program
 
         var redaction = RunSyntheticRedactionBenchmark(outputDir);
         var summary = BuildBenchmarkSummary(pages, redaction);
+        var hotPaths = BuildBenchmarkHotPaths(pages, redaction);
         var gate = EvaluateBenchmarkGate(summary, gateConfig);
         return new BenchmarkSuiteReport
         {
             schemaVersion = 1,
             generatedUtc = DateTimeOffset.UtcNow.ToString("O"),
-            issues = new[] { "#344", "#357", "#536" },
+            issues = new[] { "#344", "#357", "#536", "#596", "#597", "#602" },
             licenseIsolation = new BenchmarkLicenseIsolation
             {
                 policy = "Copyleft or AGPL/GPL reference renderers are invoked only as external CLI subprocesses; no MuPDF, Poppler, Ghostscript, or PDFBox libraries are referenced by pdfe.",
@@ -197,6 +198,7 @@ partial class Program
             },
             tools = tools,
             summary = summary,
+            hotPaths = hotPaths,
             regressionGate = gate,
             pages = pages.ToArray(),
             redactionCompleteness = redaction,
@@ -484,6 +486,86 @@ partial class Program
         };
     }
 
+    private static IReadOnlyList<BenchmarkHotPathBucket> BuildBenchmarkHotPaths(
+        IReadOnlyList<BenchmarkPageResult> pages,
+        BenchmarkRedactionResult redaction)
+    {
+        var buckets = new List<BenchmarkHotPathBucket>();
+        AddBenchmarkHotPath(
+            buckets,
+            "renderer.page-render",
+            "Pdfe.Rendering page rasterization",
+            pages.Select(p => p.pdfeRenderMs),
+            "pdfe-owned",
+            "#598 #599");
+        AddBenchmarkHotPath(
+            buckets,
+            "text.extract-search-input",
+            "Pdfe.Core text extraction and text-path preparation",
+            pages.Select(p => p.pdfeTextExtractMs),
+            "pdfe-owned",
+            "#600");
+        AddBenchmarkHotPath(
+            buckets,
+            "parser.document-open",
+            "Pdfe.Core document open/parse time",
+            pages
+                .GroupBy(p => p.path, StringComparer.Ordinal)
+                .Select(g => g.First().parseMs),
+            "pdfe-owned",
+            "#597");
+        AddBenchmarkHotPath(
+            buckets,
+            "redaction.synthetic-save",
+            "Synthetic glyph-level redaction and save/reopen verification",
+            new[] { redaction.elapsedMs },
+            "pdfe-owned-security-critical",
+            "#597 #602");
+        AddBenchmarkHotPath(
+            buckets,
+            "reference.external-render",
+            "External reference renderer subprocess time; reported for comparison, not optimized by pdfe",
+            pages.SelectMany(p => p.references).Where(r => r.elapsedMs.HasValue).Select(r => r.elapsedMs!.Value),
+            "external-reference",
+            "#597");
+
+        return buckets
+            .OrderByDescending(bucket => bucket.scope == "pdfe-owned" || bucket.scope == "pdfe-owned-security-critical")
+            .ThenByDescending(bucket => bucket.totalMs)
+            .ThenBy(bucket => bucket.name, StringComparer.Ordinal)
+            .ToArray();
+    }
+
+    private static void AddBenchmarkHotPath(
+        List<BenchmarkHotPathBucket> buckets,
+        string name,
+        string description,
+        IEnumerable<long> rawDurations,
+        string scope,
+        string issueRefs)
+    {
+        var durations = rawDurations
+            .Where(value => value >= 0)
+            .OrderBy(value => value)
+            .ToArray();
+        if (durations.Length == 0)
+            return;
+
+        buckets.Add(new BenchmarkHotPathBucket
+        {
+            name = name,
+            description = description,
+            scope = scope,
+            issueRefs = issueRefs,
+            count = durations.Length,
+            totalMs = durations.Sum(),
+            averageMs = durations.Average(),
+            p50Ms = PercentileDouble(durations, 0.50),
+            p95Ms = PercentileDouble(durations, 0.95),
+            maxMs = durations[^1],
+        });
+    }
+
     private static IReadOnlyList<BenchmarkInput> ResolveBenchmarkInputs(string outputDir, string? corpusDir, int pageLimit)
     {
         if (!string.IsNullOrWhiteSpace(corpusDir) && Directory.Exists(corpusDir))
@@ -586,6 +668,9 @@ partial class Program
             Path.Combine(outputDir, "benchmark-pages.csv"),
             BuildBenchmarkCsv(report));
         File.WriteAllText(
+            Path.Combine(outputDir, "benchmark-hotpaths.json"),
+            JsonSerializer.Serialize(report.hotPaths, BenchmarkJsonOptions));
+        File.WriteAllText(
             Path.Combine(outputDir, "benchmark-report.md"),
             BuildBenchmarkMarkdown(report));
     }
@@ -648,6 +733,17 @@ partial class Program
         }
 
         sb.AppendLine();
+        sb.AppendLine("## Hot Path Buckets");
+        sb.AppendLine();
+        sb.AppendLine("| Bucket | Scope | Count | Total ms | Avg ms | P95 ms | Issues |");
+        sb.AppendLine("|---|---|---:|---:|---:|---:|---|");
+        foreach (var bucket in report.hotPaths)
+        {
+            sb.AppendLine(
+                $"| `{bucket.name}` | {bucket.scope} | {bucket.count} | {bucket.totalMs} | {bucket.averageMs:0.0} | {bucket.p95Ms:0.0} | {bucket.issueRefs} |");
+        }
+
+        sb.AppendLine();
         sb.AppendLine("## Page Results");
         sb.AppendLine();
         sb.AppendLine("| PDF | Page | Status | pdfe render ms | References |");
@@ -667,6 +763,9 @@ partial class Program
             $"pdfe render avg {report.summary.pdfeRenderAverageMs:F1}ms, " +
             $"gate {(report.regressionGate.passed ? "PASS" : "FAIL")}");
         Console.Out.WriteLine("Tools: " + string.Join(", ", report.tools.Select(t => $"{t.name}={(t.available ? "available" : "missing")}")));
+        var topPdfeHotPath = report.hotPaths.FirstOrDefault(h => h.scope.StartsWith("pdfe-owned", StringComparison.Ordinal));
+        if (topPdfeHotPath is not null)
+            Console.Out.WriteLine($"Top pdfe-owned hot path: {topPdfeHotPath.name} ({topPdfeHotPath.totalMs}ms total)");
         Console.Out.WriteLine("Report: " + Path.Combine(report.configuration.outputDir, "benchmark-report.md"));
     }
 
@@ -833,6 +932,7 @@ partial class Program
         public BenchmarkSuiteConfiguration configuration { get; set; } = new();
         public IReadOnlyList<BenchmarkToolStatus> tools { get; set; } = Array.Empty<BenchmarkToolStatus>();
         public BenchmarkSummary summary { get; set; } = new();
+        public IReadOnlyList<BenchmarkHotPathBucket> hotPaths { get; set; } = Array.Empty<BenchmarkHotPathBucket>();
         public BenchmarkRegressionGate regressionGate { get; set; } = new();
         public IReadOnlyList<BenchmarkPageResult> pages { get; set; } = Array.Empty<BenchmarkPageResult>();
         public BenchmarkRedactionResult redactionCompleteness { get; set; } = new();
@@ -887,6 +987,20 @@ partial class Program
     {
         public bool passed { get; set; }
         public IReadOnlyList<BenchmarkGateCheck> checks { get; set; } = Array.Empty<BenchmarkGateCheck>();
+    }
+
+    internal sealed class BenchmarkHotPathBucket
+    {
+        public string name { get; set; } = "";
+        public string description { get; set; } = "";
+        public string scope { get; set; } = "";
+        public string issueRefs { get; set; } = "";
+        public int count { get; set; }
+        public long totalMs { get; set; }
+        public double averageMs { get; set; }
+        public double p50Ms { get; set; }
+        public double p95Ms { get; set; }
+        public long maxMs { get; set; }
     }
 
     internal sealed class BenchmarkGateCheck

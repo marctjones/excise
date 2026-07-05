@@ -10,11 +10,17 @@ Update: 2026-06-13 — Release builds now default `EnableScripting=false`, so
 opts back in with `-p:EnableScripting=true`. Debug/test builds continue to keep
 the scripting surface enabled.
 
-> **Status: lab notes / investigation.** Per the project's knowledge-management
-> tiering this content belongs in a GitHub Discussion; it lives here as a
-> branch deliverable and should be copied into a Discussion (the CLI can't
-> create those directly). It records empirical measurements only — no
-> production code was changed.
+Update: 2026-07-04 — Native AOT is now a tracked release lane under milestone
+`v2.26.0 - Native AOT Release Lane` (#590-#595). Use
+`scripts/release-smoke.sh --quick --only=aot` or `scripts/run-aot-smoke.sh`
+for current evidence. The current gate publishes/packages AOT, captures warning
+output, splits `.dSYM`/`.pdb` symbols from the user-facing macOS artifact, and
+optionally runs packaged GUI smoke with `scripts/run-aot-smoke.sh --gui-smoke`.
+
+> **Status: historical investigation plus current release-lane pointer.** The
+> measurements below explain the original decision. Current release readiness is
+> determined by #590-#595 and the generated `aot-smoke.json` evidence, not by
+> these older measurements alone.
 
 ## TL;DR
 
@@ -89,42 +95,37 @@ the single `WhenAnyValue` is the only AOT-fragile site (IL2026/IL3050).
 
 ## Warnings to close before shipping AOT (impact of code changes)
 
-All 22 warnings reduce to **three small buckets**:
+The original June 2026 probe produced 22 warnings in **three small buckets**:
 
 1. **System.Text.Json reflection (IL2026 + IL3050)** — 4 sites: `WindowSettings`
    (load/save), `RecentFilesService` (load/save), `AboutWindowViewModel`
    (manifest). Reflection-based (de)serialization is unsupported under AOT and
    can throw `NotSupportedException` at runtime (it happened to survive the smoke
    test because the types are simple and rooted — fragile, not safe).
-   **Fix:** add a source-generated `JsonSerializerContext` for these ~4 DTOs.
-   Small, well-understood, ~half a day.
+   **Status:** fixed. The app now uses `PdfEditor/Services/PdfeJsonContext.cs`
+   for persisted window settings, recent files, the license manifest, and
+   responsiveness reports.
 
-2. **ReactiveUI `WhenAnyValue` (IL2026/IL3050)** — 1 site. **Fix:** replace with
-   a plain `CanExecute` predicate, or migrate MVVM to
-   `CommunityToolkit.Mvvm` (source-generated, fully AOT-safe). The ReactiveUI →
-   CommunityToolkit swap is mechanical (`ReactiveObject`→`ObservableObject`,
-   `RaiseAndSetIfChanged`→`SetProperty`, `ReactiveCommand`→`RelayCommand`).
+2. **ReactiveUI `WhenAnyValue` (IL2026/IL3050)** — 1 site.
+   **Status:** fixed in the product code path by replacing the fragile
+   expression-based `WhenAnyValue` usage with explicit can-execute state.
 
-3. **Third-party assembly warnings (IL2104/IL3053)** — `FluentAvalonia`
-   (3.0.0-preview4) and `Avalonia.Controls.DataGrid` (12.0.0). These are the
-   real unknowns: assembly-level "produced AOT warnings." They did not crash the
-   smoke test, but the app is on **preview** Avalonia 12 + FluentAvalonia, so
-   full functional QA under AOT (open PDF, search, redact, save, preferences,
-   about dialog, datagrid views) is required. This is where the actual risk and
-   testing effort live — not in our own code.
+3. **Third-party assembly warnings (IL2104/IL3053)** — current remaining buckets
+   are `ReactiveUI.Avalonia`, `FluentAvalonia`, `Avalonia.Controls.DataGrid`,
+   and `CSJ2K`. These are the real release-readiness risks: the gate records the
+   warning budget, and full functional QA under AOT must cover open PDF, search,
+   redact/save, preferences, About/license surfaces, DataGrid-backed views, and
+   image/codecs paths.
 
 ## Suggested staged path
 
-1. **Trim-only first** (`PublishTrimmed`, no AOT): 206→87 MB, drops Roslyn,
-   lowest risk. Fix the 4 JSON sites with source-gen. Validate full app.
-2. **Drop Roslyn scripting** from the shipped app by default. **Done for default
-   Release builds** via `EnableScripting=false`; remaining work is to migrate
-   any long-term automation that should survive in product releases to
-   `Pdfe.Core` / `Pdfe.Cli`.
-3. **ReactiveUI → CommunityToolkit.Mvvm** (or just remove the one `WhenAnyValue`).
-4. **Flip `PublishAot`**, run full functional QA focused on FluentAvalonia +
-   DataGrid paths. Keep the JIT/R2R build as the fallback if a preview-control
-   path misbehaves.
+1. Keep the ReadyToRun build as the default/fallback release artifact.
+2. Run `scripts/release-smoke.sh --quick --only=aot` to publish/package the AOT
+   lane and record warning/size/symbol evidence.
+3. Run `scripts/run-aot-smoke.sh --gui-smoke` on an interactive macOS runner
+   before shipping an AOT app bundle.
+4. Close #591-#595 only when the publish profile, GUI smoke, warning budget,
+   symbol split, and RID rollout decisions are validated.
 
 ## Reproduce
 

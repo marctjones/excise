@@ -18,6 +18,8 @@ RUN_PACKAGE=0
 RUN_PACKAGED_GUI=0
 PACKAGED_GUI_FOCUS_INPUT=0
 PACKAGED_GUI_MODE="direct-exec"
+RUN_AOT=0
+RUN_AOT_GUI_SMOKE=0
 NO_BUILD=0
 VERSION=""
 ONLY=""
@@ -40,6 +42,8 @@ Options:
   --visual            Run the local visual-regression runner.
   --package           Build local package artifacts for the current platform.
   --packaged-gui      Run packaged-app GUI smoke evidence after package build.
+  --aot               Publish/package the GUI Native AOT release lane.
+  --aot-gui-smoke     Also run packaged GUI smoke against the AOT app bundle.
   --packaged-gui-direct-exec
                       Run packaged GUI smoke through the app executable so app-internal timing JSON is reliable.
   --packaged-gui-background-open
@@ -47,7 +51,7 @@ Options:
   --packaged-gui-focus-input
                       Also run focus-taking native key/mouse smoke.
   --no-build          Skip the initial build gate.
-  --only=a,b          Run only named gates: docs,build,redaction,signature,ui,accessibility,automation,ux,benchmark,tests,pdf20,visual,package,packaged-gui,diffcheck.
+  --only=a,b          Run only named gates: docs,build,redaction,signature,ui,accessibility,automation,ux,benchmark,aot,tests,pdf20,visual,package,packaged-gui,diffcheck.
   -h, --help          Show this help.
 EOF
 }
@@ -68,6 +72,12 @@ while [ "$#" -gt 0 ]; do
         --visual) RUN_VISUAL=1; shift ;;
         --package) RUN_PACKAGE=1; shift ;;
         --packaged-gui) RUN_PACKAGED_GUI=1; shift ;;
+        --aot) RUN_AOT=1; shift ;;
+        --aot-gui-smoke)
+            RUN_AOT=1
+            RUN_AOT_GUI_SMOKE=1
+            shift
+            ;;
         --packaged-gui-direct-exec)
             RUN_PACKAGED_GUI=1
             PACKAGED_GUI_MODE="direct-exec"
@@ -200,6 +210,27 @@ run_package_gate() {
             say ""
             ;;
     esac
+}
+
+run_aot_gate() {
+    if ! should_run "aot"; then
+        return
+    fi
+
+    if [ "$RUN_AOT" != "1" ] && [ -z "$ONLY" ]; then
+        say "${Y}[aot] SKIP${N} - pass --aot to publish/package the Native AOT release lane."
+        RESULTS+=("aot|SKIP|pass --aot")
+        say ""
+        return
+    fi
+
+    local version="${VERSION:-$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || echo 0.0.0-local)}"
+    local -a args=("--config" "Release" "--version" "$version" "--output" "$LOG_DIR/aot")
+    if [ "$RUN_AOT_GUI_SMOKE" = "1" ]; then
+        args+=("--gui-smoke" "--gui-mode" "$PACKAGED_GUI_MODE")
+    fi
+
+    run_gate "aot" scripts/run-aot-smoke.sh "${args[@]}"
 }
 
 run_dotnet_test_step() {
@@ -367,6 +398,7 @@ run_gate "accessibility" scripts/run-accessibility-smoke.sh --config "$CONFIG" -
 run_gate "automation" scripts/run-automation-smoke.sh --config "$CONFIG" --output "$LOG_DIR/automation"
 run_gate "ux" scripts/run-ux-icon-audit.sh --config "$CONFIG" --output "$LOG_DIR/ux-icon-audit"
 run_gate "benchmark" env CONFIG="$CONFIG" scripts/run-benchmarks.sh suite --output-dir "$LOG_DIR/benchmarks" --page-limit 2 --dpi 96 --timeout-ms 20000 --oracles all --fail-on-regression
+run_aot_gate
 run_gate "pdf20" scripts/run-pdf20-renderer-conformance.sh --run-tests
 
 run_full_tests_gate

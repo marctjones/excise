@@ -205,15 +205,43 @@ public class DocumentationClaimTests
         script.Should().Contain("tools/Pdfe.RenderTools/Pdfe.RenderTools.csproj");
         script.Should().Contain("corpus-hotspots");
         script.Should().Contain("gui-display-hotspots");
-        releaseSmoke.Should().Contain("automation,ux,benchmark,tests");
+        script.Should().Contain("latest-performance-baseline.json");
+        script.Should().Contain("benchmark-hotpaths.json");
+        releaseSmoke.Should().Contain("automation,ux,benchmark,aot,tests");
         releaseSmoke.Should().Contain("run-benchmarks.sh suite");
         checklist.Should().Contain("benchmark-report.json");
+        checklist.Should().Contain("benchmark-hotpaths.json");
+        checklist.Should().Contain("latest-performance-baseline.md");
         checklist.Should().Contain("RMSE/SSIM");
         ci.Should().Contain("Run Benchmark Suite Regression Gate");
         ci.Should().Contain("--oracles none");
         benchmarkSuite.Should().Contain("licenseIsolation");
         benchmarkSuite.Should().Contain("redactionCompleteness");
+        benchmarkSuite.Should().Contain("BenchmarkHotPathBucket");
         benchmarkSuite.Should().Contain("CalculateLuminanceSsim");
+    }
+
+    [Fact]
+    public void NativeAotReleaseDocs_MapToAotSmokeAndMacPackageLane()
+    {
+        var readme = Read("README.md");
+        var checklist = Read("docs/RELEASE_CHECKLIST.md");
+        var releaseSmoke = Read("scripts/release-smoke.sh");
+        var aotSmoke = Read("scripts/run-aot-smoke.sh");
+        var macosBundle = Read("scripts/build-macos-app.sh");
+        var aotInvestigation = Read("docs/NATIVE_AOT_INVESTIGATION.md");
+
+        readme.Should().Contain("Native AOT release lane");
+        readme.Should().Contain("scripts/run-aot-smoke.sh");
+        checklist.Should().Contain("--only=aot");
+        checklist.Should().Contain("aot-smoke.json");
+        releaseSmoke.Should().Contain("run-aot-smoke.sh");
+        releaseSmoke.Should().Contain("--aot-gui-smoke");
+        aotSmoke.Should().Contain("PublishAot=true");
+        aotSmoke.Should().Contain("aot-warnings.txt");
+        macosBundle.Should().Contain("--aot");
+        macosBundle.Should().Contain("--symbols-output");
+        aotInvestigation.Should().Contain("v2.26.0 - Native AOT Release Lane");
     }
 
     [Fact]

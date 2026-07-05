@@ -457,6 +457,23 @@ scripts/build-macos-app.sh --version <version>            # → dist/pdfe-<versi
 scripts/build-macos-app.sh --version <version> --rid osx-x64
 ```
 
+### Native AOT release lane
+
+Native AOT is an explicit release lane, not the default package until its GUI
+smoke and warning budget are green for the target platform. The local gate
+publishes/packages the AOT app, captures IL/AOT warning output, separates
+debug symbols from the user-facing artifact, and writes JSON/markdown evidence:
+
+```bash
+scripts/release-smoke.sh --quick --only=aot
+scripts/run-aot-smoke.sh --version <version> --rid osx-arm64
+scripts/build-macos-app.sh --version <version> --rid osx-arm64 --aot
+```
+
+Use `scripts/run-aot-smoke.sh --gui-smoke` on an interactive macOS runner when
+validating the AOT app against packaged GUI launch/open/render evidence. ReadyToRun
+remains the fallback artifact until AOT passes the same release gates.
+
 ### Using pdfe as a PDF reader on macOS
 
 The `.app` bundle declares itself a handler for PDF files (`CFBundleDocumentTypes`)
@@ -510,8 +527,8 @@ scripts/release-smoke.sh --visual --package --packaged-gui --version 2.25.0
 
 The release-smoke script does not create tags or upload artifacts. It runs the
 documentation, build, redaction, signature-verification, UI workflow,
-benchmark, full-test, local visual-regression, packaging, packaged-GUI
-evidence, packaged first-page responsiveness timing, and diff-cleanliness gates
+benchmark, optional Native AOT, full-test, local visual-regression, packaging,
+packaged-GUI evidence, packaged first-page responsiveness timing, and diff-cleanliness gates
 and writes logs under `logs/release-smoke_*`.
 
 ```bash

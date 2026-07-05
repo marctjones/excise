@@ -39,10 +39,22 @@ Use this checklist before tagging any `v*` release.
 - Run the dedicated benchmark gate:
   `scripts/release-smoke.sh --quick --only=benchmark`. This uses
   `scripts/run-benchmarks.sh suite` to emit `benchmark-report.json`,
-  `benchmark-pages.csv`, and `benchmark-report.md` with pdfe parse/text/render
-  timing, reference-render fidelity when installed reference CLIs are present,
+  `benchmark-pages.csv`, `benchmark-hotpaths.json`, and
+  `benchmark-report.md` with pdfe parse/text/render timing, pdfe-owned hot-path
+  buckets, reference-render fidelity when installed reference CLIs are present,
   RMSE/SSIM metrics, redaction-completeness evidence, and explicit license
-  isolation for subprocess-only reference renderers.
+  isolation for subprocess-only reference renderers. The default
+  `scripts/run-benchmarks.sh` wrapper additionally writes
+  `latest-performance-baseline.json` and `latest-performance-baseline.md` to
+  index benchmark, corpus, and GUI hotspot artifacts.
+- Run the dedicated Native AOT release-lane gate before shipping an AOT
+  artifact:
+  `scripts/release-smoke.sh --quick --only=aot`. This uses
+  `scripts/run-aot-smoke.sh` to publish/package the GUI with
+  `-p:PublishAot=true`, capture IL/AOT warning output, split `.dSYM`/`.pdb`
+  symbols from the user-facing macOS app bundle, and write `aot-smoke.json` plus
+  `aot-smoke.md`. Use `scripts/run-aot-smoke.sh --gui-smoke` on an interactive
+  macOS runner for packaged AOT launch/open/render evidence.
 - Run packaged-app GUI evidence when validating desktop packages:
   `scripts/release-smoke.sh --quick --package --packaged-gui --version <version>`.
   This writes JSON/markdown evidence for #558/#571 and responsiveness timing
@@ -102,7 +114,8 @@ limitation before tagging.
 | Accessibility names, command metadata, keyboard-only reachability, and status announcements | `AccessibilityRegressionTests`; `PdfCommandRegistryTests`; `CommandMetadataCommandTests`; `scripts/run-accessibility-smoke.sh` | Platform review: follow `docs/ACCESSIBILITY_RELEASE_CHECKLIST.md` for macOS AX/VoiceOver, Windows UI Automation, and Linux/GNOME AT-SPI tree checks on dedicated runners. |
 | CLI automation, batch JSON, progress events, and platform wrappers | `BatchAutomationCommandTests`; `CommandMetadataCommandTests`; `scripts/run-automation-smoke.sh` | Platform review: follow `docs/AUTOMATION_API.md` examples for AppleScript/Shortcuts, PowerShell/Power Automate, and Linux/GNOME CLI workflows. |
 | UX/icon visual polish, toolbar/menu affordances, and design-quality screenshots | `VisualPolishAuditTests`; `scripts/run-ux-icon-audit.sh` | Review the generated `ux-icon-audit.md`, PNG screenshots, and `ux-icon-audit.json` before closing visual-polish issues. |
-| Benchmark speed, reference fidelity, redaction completeness, and renderer hotspot evidence | `BenchmarkSuiteTests`; `scripts/run-benchmarks.sh suite`; `Pdfe.RenderTools benchmark-suite`; `Pdfe.Rendering.Tests` performance/memory tests | Review `benchmark-report.md`, `benchmark-report.json`, `benchmark-pages.csv`, and aggregate `corpus-hotspots`/`gui-display-hotspots` reports before closing performance issues. |
+| Benchmark speed, reference fidelity, redaction completeness, and renderer hotspot evidence | `BenchmarkSuiteTests`; `scripts/run-benchmarks.sh suite`; `Pdfe.RenderTools benchmark-suite`; `Pdfe.Rendering.Tests` performance/memory tests | Review `benchmark-report.md`, `benchmark-report.json`, `benchmark-pages.csv`, `benchmark-hotpaths.json`, `latest-performance-baseline.md`, and aggregate `corpus-hotspots`/`gui-display-hotspots` reports before closing performance issues. |
+| Native AOT app packaging, warning budget, and symbol split | `scripts/run-aot-smoke.sh`; `scripts/release-smoke.sh --quick --only=aot`; optional `scripts/run-aot-smoke.sh --gui-smoke` on an interactive macOS runner | Review `aot-smoke.md`, `aot-smoke.json`, `aot-warnings.txt`, package size, symbol archive size, and any packaged GUI smoke evidence before shipping an AOT artifact. |
 
 The repeatable automated gate for this table is:
 

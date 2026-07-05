@@ -46,15 +46,18 @@ public class BenchmarkSuiteTests
             exitCode.Should().Be(0);
             File.Exists(Path.Combine(dir, "benchmark-report.json")).Should().BeTrue();
             File.Exists(Path.Combine(dir, "benchmark-pages.csv")).Should().BeTrue();
+            File.Exists(Path.Combine(dir, "benchmark-hotpaths.json")).Should().BeTrue();
             File.Exists(Path.Combine(dir, "benchmark-report.md")).Should().BeTrue();
 
             using var stream = File.OpenRead(Path.Combine(dir, "benchmark-report.json"));
             var report = JsonSerializer.Deserialize<RenderProgram.BenchmarkSuiteReport>(stream);
             report.Should().NotBeNull();
             report!.schemaVersion.Should().Be(1);
-            report.issues.Should().Contain(new[] { "#344", "#357", "#536" });
+            report.issues.Should().Contain(new[] { "#344", "#357", "#536", "#596", "#597", "#602" });
             report.summary.pageCount.Should().Be(1);
             report.summary.statusCounts.Should().ContainKey("NO_REFERENCES");
+            report.hotPaths.Should().Contain(h => h.name == "renderer.page-render" && h.scope == "pdfe-owned");
+            report.hotPaths.Should().Contain(h => h.name == "parser.document-open" && h.issueRefs.Contains("#597", StringComparison.Ordinal));
             report.redactionCompleteness.status.Should().Be("PASS");
             report.regressionGate.passed.Should().BeTrue();
             report.tools.Should().Contain(t => t.name == "pdfe" && t.kind == "in-process" && t.available);

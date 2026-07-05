@@ -102,9 +102,13 @@ scripts/run-benchmarks.sh suite \
     --fail-on-regression
 ```
 
-The suite writes `benchmark-report.json`, `benchmark-pages.csv`, and
-`benchmark-report.md`. In CI, `--oracles none` is used for the deterministic
-synthetic gate; local release runs use installed reference CLIs when present.
+The suite writes `benchmark-report.json`, `benchmark-pages.csv`,
+`benchmark-hotpaths.json`, and `benchmark-report.md`. The default wrapper also
+writes `latest-performance-baseline.json` and
+`latest-performance-baseline.md`, which index the suite, corpus, and GUI
+hotspot artifacts for release evidence. In CI, `--oracles none` is used for the
+deterministic synthetic gate; local release runs use installed reference CLIs
+when present.
 
 ```bash
 dotnet run --project tools/Pdfe.RenderTools/Pdfe.RenderTools.csproj -c Debug -- \

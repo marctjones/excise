@@ -23,7 +23,8 @@ Run pdfe performance/hotspot benchmark reports.
 Usage:
   scripts/run-benchmarks.sh
       Run the speed/quality benchmark suite with deterministic regression
-      gates, then aggregate any available corpus/GUI hotspot reports.
+      gates, then aggregate any available corpus/GUI hotspot reports and
+      write latest-performance-baseline.{json,md}.
 
   scripts/run-benchmarks.sh suite <benchmark-suite args...>
       Run Pdfe.RenderTools benchmark-suite directly.
@@ -65,6 +66,76 @@ newest_file() {
         xargs -0 ls -t 2>/dev/null |
         head -1 |
         sed 's#^\./##'
+}
+
+json_escape() {
+    local s="${1:-}"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    s="${s//$'\n'/\\n}"
+    s="${s//$'\r'/}"
+    printf '%s' "$s"
+}
+
+artifact_json() {
+    local name="$1"
+    local path="$2"
+    local issue_refs="$3"
+    local exists=false
+    [ -f "$path" ] && exists=true
+    printf '    {"name":"%s","path":"%s","exists":%s,"issueRefs":"%s"}' \
+        "$(json_escape "$name")" \
+        "$(json_escape "$path")" \
+        "$exists" \
+        "$(json_escape "$issue_refs")"
+}
+
+write_performance_baseline_summary() {
+    local suite_output="$1"
+    local corpus_output="$2"
+    local gui_output="$3"
+    local baseline_json="$OUTPUT_DIR/latest-performance-baseline.json"
+    local baseline_md="$OUTPUT_DIR/latest-performance-baseline.md"
+
+    {
+        printf '{\n'
+        printf '  "schemaVersion": 1,\n'
+        printf '  "issues": ["#596", "#597", "#602"],\n'
+        printf '  "generatedUtc": "%s",\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        printf '  "policy": "Benchmark and hotspot evidence is grouped by pdfe-owned workload/code-path area; reference renderer timing is evidence only and is not an optimization target.",\n'
+        printf '  "artifacts": [\n'
+        artifact_json "benchmark-report" "$suite_output/benchmark-report.json" "#596 #597 #602"; printf ',\n'
+        artifact_json "benchmark-pages" "$suite_output/benchmark-pages.csv" "#596 #597 #602"; printf ',\n'
+        artifact_json "benchmark-hotpaths" "$suite_output/benchmark-hotpaths.json" "#596 #597 #598 #599 #600"; printf ',\n'
+        artifact_json "benchmark-markdown" "$suite_output/benchmark-report.md" "#596 #597"; printf ',\n'
+        artifact_json "corpus-codepath-hotspots" "$corpus_output" "#597 #598 #599"; printf ',\n'
+        artifact_json "gui-codepath-hotspots" "$gui_output" "#597 #601"; printf '\n'
+        printf '  ]\n'
+        printf '}\n'
+    } > "$baseline_json"
+
+    {
+        printf '# pdfe Performance Baseline\n\n'
+        printf -- '- Issues: #596, #597, #602\n'
+        printf -- '- Policy: benchmark and hotspot evidence is grouped by pdfe-owned workload/code-path area; reference renderer timing is evidence only.\n\n'
+        printf '| Artifact | Exists | Path | Issues |\n'
+        printf '| --- | --- | --- | --- |\n'
+        for row in \
+            "benchmark-report|$suite_output/benchmark-report.json|#596 #597 #602" \
+            "benchmark-pages|$suite_output/benchmark-pages.csv|#596 #597 #602" \
+            "benchmark-hotpaths|$suite_output/benchmark-hotpaths.json|#596 #597 #598 #599 #600" \
+            "benchmark-markdown|$suite_output/benchmark-report.md|#596 #597" \
+            "corpus-codepath-hotspots|$corpus_output|#597 #598 #599" \
+            "gui-codepath-hotspots|$gui_output|#597 #601"; do
+            IFS='|' read -r name path issues <<< "$row"
+            local exists="no"
+            [ -f "$path" ] && exists="yes"
+            printf '| %s | %s | `%s` | %s |\n' "$name" "$exists" "$path" "$issues"
+        done
+    } > "$baseline_md"
+
+    echo
+    echo "Performance baseline summary: $baseline_md"
 }
 
 default_benchmarks() {
@@ -126,6 +197,11 @@ default_benchmarks() {
         echo
         echo "No hotspot inputs were available. The speed + quality benchmark report was still written." >&2
     fi
+
+    write_performance_baseline_summary \
+        "$suite_output" \
+        "$OUTPUT_DIR/latest-corpus-codepath-hotspots.json" \
+        "$OUTPUT_DIR/latest-gui-codepath-hotspots.json"
 }
 
 if [ "$#" -eq 0 ]; then

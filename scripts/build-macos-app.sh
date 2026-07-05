@@ -8,7 +8,7 @@
 # Apple Developer cert (not configured).
 #
 # Usage:
-#   scripts/build-macos-app.sh --version 2.4.1 [--rid osx-arm64] [--output dist]
+#   scripts/build-macos-app.sh --version 2.4.1 [--rid osx-arm64] [--output dist] [--aot]
 
 set -euo pipefail
 
@@ -18,11 +18,15 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 VERSION="0.0.0"
 RID="osx-arm64"
 OUT="$ROOT/dist"
+AOT=0
+SYMBOLS_OUT=""
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --version) VERSION="$2"; shift 2 ;;
         --rid)     RID="$2"; shift 2 ;;
         --output)  OUT="$2"; shift 2 ;;
+        --aot)     AOT=1; shift ;;
+        --symbols-output) SYMBOLS_OUT="$2"; shift 2 ;;
         --help|-h) sed -n '2,12p' "$0"; exit 0 ;;
         *) echo "Unknown arg: $1" >&2; exit 2 ;;
     esac
@@ -32,15 +36,42 @@ ARCH="${RID#osx-}"            # arm64 | x64
 APP_NAME="pdfe"
 BUNDLE="$OUT/${APP_NAME}.app"
 PUBLISH_DIR="$ROOT/artifacts/macos-publish"
+SYMBOLS_OUT="${SYMBOLS_OUT:-$OUT/symbols/${APP_NAME}-${VERSION}-macos-${ARCH}}"
 
 rm -rf "$BUNDLE" "$PUBLISH_DIR"
 mkdir -p "$OUT"
 
-echo "▶ Publishing PdfEditor ($RID, self-contained)"
-dotnet publish "$ROOT/PdfEditor/PdfEditor.csproj" \
-    -c Release -r "$RID" --self-contained true \
-    -p:PublishSingleFile=false \
+echo "▶ Publishing PdfEditor ($RID, self-contained$([ "$AOT" = "1" ] && printf ', Native AOT'))"
+PUBLISH_ARGS=(
+    "$ROOT/PdfEditor/PdfEditor.csproj"
+    -c Release -r "$RID" --self-contained true
+    -p:PublishSingleFile=false
     -o "$PUBLISH_DIR"
+)
+if [ "$AOT" = "1" ]; then
+    PUBLISH_ARGS+=(
+        -p:PublishAot=true
+        -p:PublishReadyToRun=false
+        -p:EnableScripting=false
+        -p:IncludeTessdataInApp=false
+    )
+fi
+dotnet publish "${PUBLISH_ARGS[@]}"
+
+if [ "$AOT" = "1" ]; then
+    echo "▶ Splitting AOT symbols into $SYMBOLS_OUT"
+    rm -rf "$SYMBOLS_OUT"
+    mkdir -p "$SYMBOLS_OUT"
+    found_symbols=0
+    while IFS= read -r symbol; do
+        [ -e "$symbol" ] || continue
+        found_symbols=1
+        mv "$symbol" "$SYMBOLS_OUT/"
+    done < <(find "$PUBLISH_DIR" -maxdepth 1 \( -name '*.dSYM' -o -name '*.pdb' \) -print)
+    if [ "$found_symbols" = "0" ]; then
+        echo "::warning::no AOT symbol files found to split"
+    fi
+fi
 
 echo "▶ Assembling $BUNDLE"
 mkdir -p "$BUNDLE/Contents/MacOS" "$BUNDLE/Contents/Resources"
@@ -151,3 +182,6 @@ rm -f "$OUT/$ZIP"
 ( cd "$OUT" && shasum -a 256 "$ZIP" > "$ZIP.sha256" )
 
 echo "✔ Built $OUT/$ZIP"
+if [ "$AOT" = "1" ]; then
+    echo "✔ Symbols: $SYMBOLS_OUT"
+fi
