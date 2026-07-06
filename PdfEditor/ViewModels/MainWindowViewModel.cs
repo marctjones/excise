@@ -95,6 +95,9 @@ public partial class MainWindowViewModel : ViewModelBase
     private CancellationTokenSource? _adjacentPagePrefetchCts;
     private long _currentPageRenderSequence;
     private long _adjacentPagePrefetchSequence;
+    private readonly Dictionary<int, Task> _thumbnailLoadTasks = new();
+    private readonly object _thumbnailLoadLock = new();
+    private long _thumbnailLoadGeneration;
 
     /// <summary>
     /// Tracks whether the user is in an "auto-fit" zoom state. When set to
@@ -833,6 +836,7 @@ public partial class MainWindowViewModel : ViewModelBase
             RedactionWorkflow.Reset();
             ClearPendingTypewriterText();
             ClipboardHistory.Clear();
+            ResetThumbnailLoadTracking();
             PageThumbnails.Clear();
             _renderService.ClearCache();
             this.RaisePropertyChanged(nameof(RenderCacheStats));
@@ -1561,6 +1565,7 @@ public partial class MainWindowViewModel : ViewModelBase
         CurrentPageIndex = Math.Clamp(CurrentPageIndex, 0, Math.Max(0, _documentService.PageCount - 1));
         _renderService.ClearCache();
         var mutationVersion = System.Threading.Interlocked.Increment(ref _documentMutationVersion);
+        ResetThumbnailLoadTracking();
 
         _thumbnailCache?.Dispose();
         _thumbnailCache = !string.IsNullOrWhiteSpace(_currentFilePath)
@@ -2294,6 +2299,15 @@ public partial class MainWindowViewModel : ViewModelBase
         return Task.CompletedTask;
     }
 
+    private void ResetThumbnailLoadTracking()
+    {
+        System.Threading.Interlocked.Increment(ref _thumbnailLoadGeneration);
+        lock (_thumbnailLoadLock)
+        {
+            _thumbnailLoadTasks.Clear();
+        }
+    }
+
     /// <summary>
     /// Render or load the thumbnail for one page. Called by the View when
     /// the corresponding item scrolls into the visible viewport. Idempotent:
@@ -2304,18 +2318,70 @@ public partial class MainWindowViewModel : ViewModelBase
         System.Threading.CancellationToken cancellationToken = default)
     {
         if (pageIndex < 0 || pageIndex >= PageThumbnails.Count) return;
-        var thumb = PageThumbnails[pageIndex];
-        if (thumb.ThumbnailImage != null) return; // already loaded
-        if (_thumbnailCache == null) return; // no doc loaded yet
+        var thumbnailCache = _thumbnailCache;
+        if (thumbnailCache == null) return; // no doc loaded yet
+        if (PageThumbnails[pageIndex].ThumbnailImage != null) return; // already loaded
+
+        var generation = System.Threading.Volatile.Read(ref _thumbnailLoadGeneration);
+        Task loadTask;
+        lock (_thumbnailLoadLock)
+        {
+            if (PageThumbnails[pageIndex].ThumbnailImage != null) return;
+            if (!_thumbnailLoadTasks.TryGetValue(pageIndex, out loadTask!))
+            {
+                loadTask = LoadThumbnailCoreAsync(pageIndex, generation, thumbnailCache, cancellationToken);
+                _thumbnailLoadTasks[pageIndex] = loadTask;
+                _ = loadTask.ContinueWith(
+                    _ =>
+                    {
+                        lock (_thumbnailLoadLock)
+                        {
+                            if (_thumbnailLoadTasks.TryGetValue(pageIndex, out var current) &&
+                                ReferenceEquals(current, loadTask))
+                            {
+                                _thumbnailLoadTasks.Remove(pageIndex);
+                            }
+                        }
+                    },
+                    CancellationToken.None,
+                    TaskContinuationOptions.ExecuteSynchronously,
+                    TaskScheduler.Default);
+            }
+        }
 
         try
         {
-            using var sk = await _thumbnailCache.GetThumbnailAsync(pageIndex, cancellationToken);
+            await loadTask.WaitAsync(cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected when a viewport notification is canceled because the
+            // item scrolled away or the document changed.
+        }
+    }
+
+    private async Task LoadThumbnailCoreAsync(
+        int pageIndex,
+        long generation,
+        Services.ThumbnailCacheService thumbnailCache,
+        System.Threading.CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (pageIndex < 0 || pageIndex >= PageThumbnails.Count) return;
+            var thumb = PageThumbnails[pageIndex];
+            if (thumb.ThumbnailImage != null) return;
+
+            using var sk = await thumbnailCache.GetThumbnailAsync(pageIndex, cancellationToken);
             if (sk == null) return;
 
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 if (cancellationToken.IsCancellationRequested) return;
+                if (generation != System.Threading.Volatile.Read(ref _thumbnailLoadGeneration)) return;
+                if (pageIndex < 0 || pageIndex >= PageThumbnails.Count) return;
+                if (thumb.ThumbnailImage != null) return;
+
                 thumb.ThumbnailImage = ToAvaloniaBitmap(sk);
             }, DispatcherPriority.Background);
         }
@@ -2432,6 +2498,7 @@ public partial class MainWindowViewModel : ViewModelBase
             // Clear visual state
             CurrentPageImage = null;
             PdfCoreDocument = null;
+            ResetThumbnailLoadTracking();
             PageThumbnails.Clear();
             _renderService.ClearCache();
 

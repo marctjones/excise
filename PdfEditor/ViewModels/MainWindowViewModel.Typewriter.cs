@@ -136,6 +136,7 @@ public partial class MainWindowViewModel
         CurrentPageIndex = pageIndex;
         _hasInMemoryModifications = false;
         _renderService.ClearCache();
+        ResetThumbnailLoadTracking();
 
         _thumbnailCache?.Dispose();
         _thumbnailCache = new Services.ThumbnailCacheService(

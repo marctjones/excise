@@ -48,6 +48,9 @@ public static class DifferentialMetrics
                 $"Dimension mismatch: {a.Width}x{a.Height} vs {b.Width}x{b.Height}. " +
                 $"Use ResizeMatch first if intentional.");
 
+        if (TryComparePacked32(a, b, out var fastReport))
+            return fastReport;
+
         int w = a.Width, h = a.Height;
         long pixelCount = (long)w * h;
         long differingPixels = 0;
@@ -85,6 +88,94 @@ public static class DifferentialMetrics
             // per-channel L1 in 0..255 units.
             MeanAbsoluteError: (double)sumL1 / (pixelCount * 3.0),
             MaxAbsoluteError: maxL1);
+    }
+
+    private static unsafe bool TryComparePacked32(
+        SKBitmap a,
+        SKBitmap b,
+        out DifferentialReport report)
+    {
+        report = default!;
+
+        var colorType = a.ColorType;
+        if (colorType != b.ColorType ||
+            a.AlphaType != b.AlphaType ||
+            colorType is not (SKColorType.Rgba8888 or SKColorType.Bgra8888))
+        {
+            return false;
+        }
+
+        var aPixels = a.GetPixels();
+        var bPixels = b.GetPixels();
+        if (aPixels == IntPtr.Zero || bPixels == IntPtr.Zero)
+            return false;
+
+        int w = a.Width, h = a.Height;
+        long pixelCount = (long)w * h;
+        long differingPixels = 0;
+        long sumL1 = 0;
+        int maxL1 = 0;
+        var aBase = (byte*)aPixels;
+        var bBase = (byte*)bPixels;
+        var aRowBytes = a.RowBytes;
+        var bRowBytes = b.RowBytes;
+        var redOffset = colorType == SKColorType.Rgba8888 ? 0 : 2;
+        var blueOffset = colorType == SKColorType.Rgba8888 ? 2 : 0;
+        var alphaType = a.AlphaType;
+
+        for (int y = 0; y < h; y++)
+        {
+            var aRow = aBase + y * aRowBytes;
+            var bRow = bBase + y * bRowBytes;
+            for (int x = 0; x < w; x++)
+            {
+                var offset = x * 4;
+                int aR = ReadColorChannel(aRow, offset + redOffset, offset + 3, alphaType);
+                int aG = ReadColorChannel(aRow, offset + 1, offset + 3, alphaType);
+                int aB = ReadColorChannel(aRow, offset + blueOffset, offset + 3, alphaType);
+                int bR = ReadColorChannel(bRow, offset + redOffset, offset + 3, alphaType);
+                int bG = ReadColorChannel(bRow, offset + 1, offset + 3, alphaType);
+                int bB = ReadColorChannel(bRow, offset + blueOffset, offset + 3, alphaType);
+                int dR = Math.Abs(aR - bR);
+                int dG = Math.Abs(aG - bG);
+                int dB = Math.Abs(aB - bB);
+                int l1 = dR + dG + dB;
+                int worst = Math.Max(dR, Math.Max(dG, dB));
+
+                sumL1 += l1;
+                if (worst > maxL1) maxL1 = worst;
+                if (worst > PerPixelTolerance) differingPixels++;
+            }
+        }
+
+        report = new DifferentialReport(
+            Width: w,
+            Height: h,
+            PixelCount: (int)pixelCount,
+            DifferingPixels: (int)differingPixels,
+            DifferingPixelFraction: (double)differingPixels / pixelCount,
+            MeanAbsoluteError: (double)sumL1 / (pixelCount * 3.0),
+            MaxAbsoluteError: maxL1);
+        return true;
+    }
+
+    private static unsafe int ReadColorChannel(
+        byte* row,
+        int colorOffset,
+        int alphaOffset,
+        SKAlphaType alphaType)
+    {
+        var channel = row[colorOffset];
+        if (alphaType != SKAlphaType.Premul)
+            return channel;
+
+        var alpha = row[alphaOffset];
+        if (alpha == 255)
+            return channel;
+        if (alpha == 0)
+            return 0;
+
+        return Math.Min(255, (channel * 255 + alpha / 2) / alpha);
     }
 
     /// <summary>

@@ -117,6 +117,7 @@ public partial class PdfViewerControl
             var page = doc.GetPage(i);
             slots.Add(new PdfPageSlot(i, page.VisualWidth, page.VisualHeight, ZoomLevel));
         }
+        ApplyContinuousSlotLayout(slots);
         _continuousSlots = slots;
         _continuousItems.ItemsSource = slots;
     }
@@ -143,9 +144,19 @@ public partial class PdfViewerControl
     private void ApplyContinuousZoom()
     {
         if (_continuousSlots == null) return;
-        foreach (var slot in _continuousSlots) slot.ApplyZoom(ZoomLevel);
+        ApplyContinuousSlotLayout(_continuousSlots);
 
         RenderVisibleContinuousTiles();
+    }
+
+    private void ApplyContinuousSlotLayout(IReadOnlyList<PdfPageSlot> slots)
+    {
+        double top = 0;
+        foreach (var slot in slots)
+        {
+            slot.ApplyLayout(top, ZoomLevel);
+            top += slot.DisplayHeight + PageGapDip;
+        }
     }
 
     // ---- Scroll <-> CurrentPage sync -----------------------------------
@@ -155,12 +166,8 @@ public partial class PdfViewerControl
         if (_continuousScrollViewer == null || _continuousSlots == null) return;
         if (pageNumber < 1 || pageNumber > _continuousSlots.Count) return;
 
-        double y = 0;
-        for (int i = 0; i < pageNumber - 1; i++)
-            y += _continuousSlots[i].DisplayHeight + PageGapDip;
-
         var x = _continuousScrollViewer.Offset.X;
-        _continuousScrollViewer.Offset = new Vector(x, y);
+        _continuousScrollViewer.Offset = new Vector(x, _continuousSlots[pageNumber - 1].TopDip);
     }
 
     private void OnContinuousScrolled()
@@ -172,14 +179,7 @@ public partial class PdfViewerControl
         // current vertical offset (+ a small bias so a page counts as "current"
         // once its top edge is in view).
         double offsetY = _continuousScrollViewer.Offset.Y + 1;
-        double cumulative = 0;
-        int top = 1;
-        for (int i = 0; i < _continuousSlots.Count; i++)
-        {
-            cumulative += _continuousSlots[i].DisplayHeight + PageGapDip;
-            top = i + 1;
-            if (offsetY < cumulative) break;
-        }
+        int top = FindTopVisibleContinuousPage(_continuousSlots, offsetY);
 
         if (top != CurrentPage)
         {
@@ -312,17 +312,39 @@ public partial class PdfViewerControl
         if (viewport.Width <= 0 || viewport.Height <= 0 || ZoomLevel <= 0)
             return false;
 
-        double pageTop = 0;
-        for (int i = 0; i < slot.PageNumber - 1 && i < _continuousSlots.Count; i++)
-            pageTop += _continuousSlots[i].DisplayHeight + PageGapDip;
-
         return TryCreateContinuousTileRequest(
             slot,
             _continuousScrollViewer.Offset,
             viewport,
-            pageTop,
+            slot.TopDip,
             ZoomLevel,
             out request);
+    }
+
+    internal static int FindTopVisibleContinuousPage(IReadOnlyList<PdfPageSlot> slots, double offsetY)
+    {
+        if (slots.Count == 0)
+            return 1;
+
+        int low = 0;
+        int high = slots.Count - 1;
+        int result = slots.Count - 1;
+        while (low <= high)
+        {
+            int mid = low + ((high - low) / 2);
+            var bottom = slots[mid].TopDip + slots[mid].DisplayHeight + PageGapDip;
+            if (offsetY < bottom)
+            {
+                result = mid;
+                high = mid - 1;
+            }
+            else
+            {
+                low = mid + 1;
+            }
+        }
+
+        return result + 1;
     }
 
     internal static bool TryCreateContinuousTileRequest(
@@ -412,6 +434,7 @@ public sealed class PdfPageSlot : INotifyPropertyChanged
 {
     private double _displayWidth;
     private double _displayHeight;
+    private double _topDip;
     private double _tileDisplayX;
     private double _tileDisplayY;
     private double _tileDisplayWidth;
@@ -430,6 +453,7 @@ public sealed class PdfPageSlot : INotifyPropertyChanged
     public double WidthPt { get; }
     public double HeightPt { get; }
 
+    internal double TopDip { get => _topDip; private set => Set(ref _topDip, value); }
     public double DisplayWidth { get => _displayWidth; private set => Set(ref _displayWidth, value); }
     public double DisplayHeight { get => _displayHeight; private set => Set(ref _displayHeight, value); }
     public double TileDisplayX { get => _tileDisplayX; private set => Set(ref _tileDisplayX, value); }
@@ -443,6 +467,12 @@ public sealed class PdfPageSlot : INotifyPropertyChanged
     {
         DisplayWidth = WidthPt * PdfViewerControl.PointsToDip * zoom;
         DisplayHeight = HeightPt * PdfViewerControl.PointsToDip * zoom;
+    }
+
+    internal void ApplyLayout(double topDip, double zoom)
+    {
+        TopDip = topDip;
+        ApplyZoom(zoom);
     }
 
     internal void ApplyTile(PdfViewerControl.ContinuousTileRequest request, PdfViewerControl.ContinuousTileKey key)

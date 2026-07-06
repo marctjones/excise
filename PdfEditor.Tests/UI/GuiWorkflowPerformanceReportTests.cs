@@ -1,7 +1,9 @@
 using System.Diagnostics;
 using System.Text.Json;
 using Avalonia;
+using Avalonia.Controls;
 using AwesomeAssertions;
+using Pdfe.Avalonia.Controls;
 using Pdfe.Core.Document;
 using PdfEditor.Tests.Utilities;
 using PdfEditor.ViewModels;
@@ -47,6 +49,15 @@ public class GuiWorkflowPerformanceReportTests
             results.Add(MeasureInput("zoom-in-command", () => vm.ZoomInCommand.Execute().Subscribe()));
             results.Add(MeasureInput("zoom-fit-width-command", () => vm.ZoomFitWidthCommand.Execute().Subscribe()));
             results.Add(MeasureInput("continuous-view-toggle", () => vm.ToggleContinuousViewCommand.Execute().Subscribe()));
+            results.Add(MeasureInput("continuous-scroll-offset", () =>
+            {
+                vm.ViewMode = PdfViewMode.Continuous;
+                var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
+                var scroll = viewer?.FindControl<ScrollViewer>("ContinuousScrollViewer");
+                scroll.Should().NotBeNull("continuous view should expose its scroll viewer for workflow timing");
+                scroll!.Offset = new Vector(0, 1_800);
+                scroll.Offset = new Vector(0, 3_600);
+            }));
             results.Add(MeasureInput("redaction-preview-state", () =>
             {
                 vm.IsRedactionMode = true;

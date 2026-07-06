@@ -3172,7 +3172,7 @@ partial class Program
         if (pdfeBmp.Width != reference.Width || pdfeBmp.Height != reference.Height)
         {
             probe = Pdfe.Rendering.Differential.DifferentialMetrics
-                .ResizeMatch(pdfeBmp, reference.Width, reference.Height).Copy();
+                .ResizeMatch(pdfeBmp, reference.Width, reference.Height);
             needDispose = true;
         }
         try
@@ -3364,7 +3364,7 @@ partial class Program
         if (actual.Width != reference.Width || actual.Height != reference.Height)
         {
             probe = Pdfe.Rendering.Differential.DifferentialMetrics
-                .ResizeMatch(actual, reference.Width, reference.Height).Copy();
+                .ResizeMatch(actual, reference.Width, reference.Height);
             disposables.Add(probe);
         }
 

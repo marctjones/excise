@@ -127,11 +127,11 @@ public class PdfSearchService
                 var pageText = index.GetPageText(i);
                 var pageWords = index.GetPageWords(i);
                 if (useRegex)
-                    matches.AddRange(SearchWithRegex(pageText, searchTerm, pageWords.ToList(), i, caseSensitive));
+                    matches.AddRange(SearchWithRegex(pageText, searchTerm, pageWords, i, caseSensitive));
                 else if (wholeWordsOnly)
-                    matches.AddRange(SearchWholeWords(pageWords.ToList(), searchTerm, i, caseSensitive));
+                    matches.AddRange(SearchWholeWords(pageWords, searchTerm, i, caseSensitive));
                 else
-                    matches.AddRange(SearchSubstring(pageText, pageWords.ToList(), searchTerm, i, caseSensitive));
+                    matches.AddRange(SearchSubstring(pageText, pageWords, searchTerm, i, caseSensitive));
 
                 if (progress != null && ((i & 3) == 0 || i == totalPages - 1))
                     progress.Report(new SearchProgress(i + 1, totalPages, matches.Count));
@@ -229,7 +229,7 @@ public class PdfSearchService
         try
         {
             var pageText = page.Text;
-            var words = page.GetWords().ToList();
+            var words = page.GetWords();
 
             if (useRegex)
             {
@@ -412,7 +412,7 @@ public class PdfSearchService
     private List<SearchMatch> SearchWithRegex(
         string pageText,
         string pattern,
-        List<Word> words,
+        IReadOnlyList<Word> words,
         int pageIndex,
         bool caseSensitive)
     {
@@ -423,11 +423,12 @@ public class PdfSearchService
             var options = caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase;
             var regex = new Regex(pattern, options);
             var regexMatches = regex.Matches(pageText);
+            var wordSpans = BuildWordSpans(words, pageText);
 
             foreach (Match match in regexMatches)
             {
                 // Find word positions for this match
-                var matchedWords = FindWordsAtPosition(words, pageText, match.Index, match.Length);
+                var matchedWords = FindWordsAtPosition(wordSpans, match.Index, match.Length);
 
                 if (matchedWords.Any())
                 {
@@ -459,7 +460,7 @@ public class PdfSearchService
     /// Search for whole words only
     /// </summary>
     private List<SearchMatch> SearchWholeWords(
-        List<Word> words,
+        IReadOnlyList<Word> words,
         string searchTerm,
         int pageIndex,
         bool caseSensitive)
@@ -492,19 +493,20 @@ public class PdfSearchService
     /// </summary>
     private List<SearchMatch> SearchSubstring(
         string pageText,
-        List<Word> words,
+        IReadOnlyList<Word> words,
         string searchTerm,
         int pageIndex,
         bool caseSensitive)
     {
         var matches = new List<SearchMatch>();
         var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+        var wordSpans = BuildWordSpans(words, pageText);
 
         int index = 0;
         while ((index = pageText.IndexOf(searchTerm, index, comparison)) != -1)
         {
             // Find words that contain this match
-            var matchedWords = FindWordsAtPosition(words, pageText, index, searchTerm.Length);
+            var matchedWords = FindWordsAtPosition(wordSpans, index, searchTerm.Length);
 
             if (matchedWords.Any())
             {
@@ -535,17 +537,14 @@ public class PdfSearchService
     /// FIX for issue #96: The previous implementation used IndexOf to find word positions,
     /// which was unreliable when the same word appeared multiple times on a page.
     ///
-    /// New approach: Build a character index map by iterating through words in order,
-    /// tracking cumulative text positions. This ensures correct bounding box mapping
-    /// even when duplicate words exist.
+    /// New approach: build page word spans once by iterating through words in order,
+    /// then reuse those spans for every match on that page. This ensures correct
+    /// bounding box mapping even when duplicate words exist without rebuilding a
+    /// character map for each match.
     /// </summary>
-    private List<Word> FindWordsAtPosition(List<Word> words, string pageText, int startIndex, int length)
+    private static List<WordSpan> BuildWordSpans(IReadOnlyList<Word> words, string pageText)
     {
-        var matchedWords = new List<Word>();
-
-        // Build character index map from words
-        // This maps character index in pageText to the corresponding Word
-        var wordAtIndex = new Dictionary<int, Word>();
+        var spans = new List<WordSpan>(words.Count);
         int charIndex = 0;
 
         foreach (var word in words)
@@ -556,33 +555,39 @@ public class PdfSearchService
 
             if (wordPos != -1)
             {
-                // Map each character index to this word
-                for (int i = 0; i < word.Text.Length; i++)
-                {
-                    wordAtIndex[wordPos + i] = word;
-                }
+                spans.Add(new WordSpan(wordPos, wordPos + word.Text.Length, word));
 
                 // Advance past this word (+ any whitespace/separator)
                 charIndex = wordPos + word.Text.Length;
             }
         }
 
+        return spans;
+    }
+
+    private static List<Word> FindWordsAtPosition(IReadOnlyList<WordSpan> wordSpans, int startIndex, int length)
+    {
+        var matchedWords = new List<Word>();
+
         // Now find all words that overlap with the search range [startIndex, startIndex+length)
         var matchEndIndex = startIndex + length;
 
-        for (int i = startIndex; i < matchEndIndex && i < pageText.Length; i++)
+        foreach (var span in wordSpans)
         {
-            if (wordAtIndex.TryGetValue(i, out var word))
-            {
-                if (!matchedWords.Contains(word))
-                {
-                    matchedWords.Add(word);
-                }
-            }
+            if (span.Start >= matchEndIndex)
+                break;
+
+            if (span.End <= startIndex)
+                continue;
+
+            if (!matchedWords.Contains(span.Word))
+                matchedWords.Add(span.Word);
         }
 
         return matchedWords;
     }
+
+    private readonly record struct WordSpan(int Start, int End, Word Word);
 
     /// <summary>
     /// Get surrounding context for a match

@@ -19,7 +19,7 @@ namespace PdfEditor.Services;
 /// only render the pages the user actually looks at (the View triggers
 /// loads via <see cref="EffectiveViewportChanged"/> on each item).
 ///
-/// Cache layout: <c>{cacheRoot}/thumbnails/v2/{contentHash}/p{NNNNN}.webp</c>
+/// Cache layout: <c>{cacheRoot}/thumbnails/v3/{fileIdentity}/p{NNNNN}.webp</c>
 /// Cache root is OS-conventional:
 ///   Linux:   $XDG_CACHE_HOME/pdfe (default $HOME/.cache/pdfe)
 ///   macOS:   $HOME/Library/Caches/pdfe
@@ -55,8 +55,8 @@ public sealed class ThumbnailCacheService : IDisposable
         _doc = doc ?? throw new ArgumentNullException(nameof(doc));
         _logger = logger;
         _thumbnailDpi = thumbnailDpi;
-        var hash = HashFile(pdfPath, thumbnailDpi, RendererCacheIdentity, cacheSalt);
-        _cacheDir = Path.Combine(GetCacheRoot(), "thumbnails", "v2", hash);
+        var identity = BuildCacheIdentity(pdfPath, thumbnailDpi, RendererCacheIdentity, cacheSalt);
+        _cacheDir = Path.Combine(GetCacheRoot(), "thumbnails", "v3", identity);
         _logger.LogInformation("Thumbnail cache for {File} → {Dir}",
             Path.GetFileName(pdfPath), _cacheDir);
     }
@@ -166,9 +166,10 @@ public sealed class ThumbnailCacheService : IDisposable
                     new RenderOptions { Dpi = _thumbnailDpi });
                 if (bmp == null) return null;
 
-                // 3) Best-effort write to disk. Failure here shouldn't
-                // break thumbnail display.
-                TryWriteCache(cachePath, bmp);
+                // 3) Best-effort write to disk after returning the pixels to
+                // the UI. WebP encoding can dominate first-visible-thumbnail
+                // latency, while cache persistence is only an optimization.
+                QueueCacheWrite(cachePath, bmp);
                 return bmp;
             }
             finally { _renderGate.Release(); }
@@ -183,6 +184,21 @@ public sealed class ThumbnailCacheService : IDisposable
         {
             lock (_lock) { _inFlight.Remove(pageIndex); }
         }
+    }
+
+    private void QueueCacheWrite(string path, SKBitmap bmp)
+    {
+        var cacheBitmap = bmp.Copy();
+        if (cacheBitmap == null)
+            return;
+
+        _ = Task.Run(() =>
+        {
+            using (cacheBitmap)
+            {
+                TryWriteCache(path, cacheBitmap);
+            }
+        });
     }
 
     private void TryWriteCache(string path, SKBitmap bmp)
@@ -215,23 +231,26 @@ public sealed class ThumbnailCacheService : IDisposable
     // --- Helpers ---
 
     /// <summary>
-    /// SHA-256 of file content plus render-affecting cache salt, truncated to
-    /// 16 hex chars. Moving the file or duplicating it doesn't invalidate the
-    /// cache, but renderer/options changes do.
+    /// SHA-256 of cheap file identity plus render-affecting cache salt,
+    /// truncated to 16 hex chars. This intentionally avoids hashing the full
+    /// PDF during document open; large books should not block startup just to
+    /// choose a thumbnail cache directory.
     /// </summary>
-    private static string HashFile(string path, int thumbnailDpi, string rendererCacheIdentity, string? cacheSalt)
+    private static string BuildCacheIdentity(
+        string path,
+        int thumbnailDpi,
+        string rendererCacheIdentity,
+        string? cacheSalt)
     {
-        using var sha = SHA256.Create();
-        var salt = Encoding.UTF8.GetBytes(
-            $"thumbnail-dpi={thumbnailDpi}\nrenderer={rendererCacheIdentity}\ncache-salt={cacheSalt ?? string.Empty}\n");
-        sha.TransformBlock(salt, 0, salt.Length, null, 0);
-        using var fs = File.OpenRead(path);
-        var buffer = new byte[81920];
-        int read;
-        while ((read = fs.Read(buffer, 0, buffer.Length)) > 0)
-            sha.TransformBlock(buffer, 0, read, null, 0);
-        sha.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
-        var bytes = sha.Hash ?? Array.Empty<byte>();
+        var info = new FileInfo(path);
+        var identity = string.Join('\n',
+            $"thumbnail-dpi={thumbnailDpi}",
+            $"renderer={rendererCacheIdentity}",
+            $"cache-salt={cacheSalt ?? string.Empty}",
+            $"path={Path.GetFullPath(path)}",
+            $"length={(info.Exists ? info.Length : 0)}",
+            $"last-write-utc={(info.Exists ? info.LastWriteTimeUtc.Ticks : 0)}");
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(identity));
         return Convert.ToHexString(bytes, 0, 8).ToLowerInvariant();
     }
 

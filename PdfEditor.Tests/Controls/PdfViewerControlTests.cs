@@ -691,5 +691,29 @@ public class PdfViewerControlTests
             "page slots resize with zoom so the reading view scales");
     }
 
+    [FixedAvaloniaFact]
+    public void ContinuousMode_CachesSlotTopOffsetsForScrollLookup()
+    {
+        var path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"pdfe_cont_offsets_{Guid.NewGuid():N}.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 3);
+        try
+        {
+            var control = new PdfViewerControl { Document = PdfCoreDocument.Open(path) };
+            control.ViewMode = PdfViewMode.Continuous;
+
+            var slots = control.FindControl<ItemsControl>("ContinuousItems")!
+                .ItemsSource!.Cast<PdfPageSlot>().ToArray();
+
+            slots[0].TopDip.Should().Be(0);
+            slots[1].TopDip.Should().BeApproximately(
+                slots[0].DisplayHeight + 12.0,
+                0.01,
+                "slot offsets should be precomputed once instead of summed on every scroll event");
+            PdfViewerControl.FindTopVisibleContinuousPage(slots, slots[1].TopDip + 1)
+                .Should().Be(2);
+        }
+        finally { System.IO.File.Delete(path); }
+    }
+
     #endregion
 }

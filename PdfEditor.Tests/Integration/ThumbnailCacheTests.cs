@@ -6,6 +6,7 @@ using AwesomeAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Pdfe.Core.Document;
 using PdfEditor.Services;
+using PdfEditor.Tests.Utilities;
 using Xunit;
 namespace PdfEditor.Tests.Integration;
 
@@ -21,13 +22,11 @@ public class ThumbnailCacheTests
     private readonly ITestOutputHelper _out;
     public ThumbnailCacheTests(ITestOutputHelper o) { _out = o; }
 
-    private const string PragmaticBook =
-        "/home/marc/Downloads/business-success-with-open-source_P1.0.pdf";
-
     [Fact]
     public async Task FirstCallRenders_SecondCallLoadsFromDisk()
     {
-        if (!File.Exists(PragmaticBook)) return;
+        var pdfPath = Path.Combine(Path.GetTempPath(), $"pdfe-thumb-cache-{Guid.NewGuid():N}.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 4);
 
         // Sandbox the cache dir for this test so we don't fight other
         // runs or pollute ~/.cache/pdfe.
@@ -38,10 +37,10 @@ public class ThumbnailCacheTests
         Environment.SetEnvironmentVariable("XDG_CACHE_HOME", tempCache);
         try
         {
-            using var doc = PdfDocument.Open(PragmaticBook);
+            using var doc = PdfDocument.Open(pdfPath);
 
             // First service instance — populates the cache from scratch.
-            using (var svc1 = new ThumbnailCacheService(PragmaticBook, doc, NullLogger.Instance))
+            using (var svc1 = new ThumbnailCacheService(pdfPath, doc, NullLogger.Instance))
             {
                 var sw = Stopwatch.StartNew();
                 using var bmp = await svc1.GetThumbnailAsync(2); // page 3
@@ -51,16 +50,14 @@ public class ThumbnailCacheTests
                 bmp.Should().NotBeNull("first call must produce a thumbnail");
                 bmp!.Width.Should().BeGreaterThan(50);
 
-                // Disk file should exist.
-                var any = Directory.GetFiles(svc1.CacheDir, "p00002.webp",
-                    SearchOption.AllDirectories);
-                any.Should().NotBeEmpty(
-                    $"cache file should be written under {svc1.CacheDir}");
+                var cacheFile = await WaitForCacheFileAsync(svc1.CacheDir, "p00002.webp");
+                cacheFile.Should().NotBeNull(
+                    $"cache file should be written asynchronously under {svc1.CacheDir}");
             }
 
             // Second service instance over the same file — the same hash
             // dir is already populated, so this must NOT need to render.
-            using (var svc2 = new ThumbnailCacheService(PragmaticBook, doc, NullLogger.Instance))
+            using (var svc2 = new ThumbnailCacheService(pdfPath, doc, NullLogger.Instance))
             {
                 var sw = Stopwatch.StartNew();
                 using var bmp = await svc2.GetThumbnailAsync(2);
@@ -82,6 +79,7 @@ public class ThumbnailCacheTests
         {
             Environment.SetEnvironmentVariable("XDG_CACHE_HOME", prevXdg);
             try { Directory.Delete(tempCache, recursive: true); } catch { }
+            TestPdfGenerator.CleanupTestFile(pdfPath);
         }
     }
 
@@ -95,7 +93,8 @@ public class ThumbnailCacheTests
         // would race their Dispose calls on the same handle and SkiaSharp
         // would segfault on the second disposal. The fix gives each
         // caller a freshly-copied SKBitmap.
-        if (!File.Exists(PragmaticBook)) return;
+        var pdfPath = Path.Combine(Path.GetTempPath(), $"pdfe-thumb-cache-{Guid.NewGuid():N}.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 2);
 
         var tempCache = Path.Combine(Path.GetTempPath(),
             "pdfe-thumb-test-" + Guid.NewGuid().ToString("N"));
@@ -104,8 +103,8 @@ public class ThumbnailCacheTests
         Environment.SetEnvironmentVariable("XDG_CACHE_HOME", tempCache);
         try
         {
-            using var doc = PdfDocument.Open(PragmaticBook);
-            using var svc = new ThumbnailCacheService(PragmaticBook, doc, NullLogger.Instance);
+            using var doc = PdfDocument.Open(pdfPath);
+            using var svc = new ThumbnailCacheService(pdfPath, doc, NullLogger.Instance);
 
             // Eight concurrent same-page requests — pre-fix every awaiter
             // got the same SKBitmap reference, so their Dispose calls
@@ -133,13 +132,15 @@ public class ThumbnailCacheTests
         {
             Environment.SetEnvironmentVariable("XDG_CACHE_HOME", prevXdg);
             try { Directory.Delete(tempCache, recursive: true); } catch { }
+            TestPdfGenerator.CleanupTestFile(pdfPath);
         }
     }
 
     [Fact]
     public async Task ConcurrentRequestsForSamePage_CoalesceOnSingleTask()
     {
-        if (!File.Exists(PragmaticBook)) return;
+        var pdfPath = Path.Combine(Path.GetTempPath(), $"pdfe-thumb-cache-{Guid.NewGuid():N}.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 2);
 
         var tempCache = Path.Combine(Path.GetTempPath(),
             "pdfe-thumb-test-" + Guid.NewGuid().ToString("N"));
@@ -148,8 +149,8 @@ public class ThumbnailCacheTests
         Environment.SetEnvironmentVariable("XDG_CACHE_HOME", tempCache);
         try
         {
-            using var doc = PdfDocument.Open(PragmaticBook);
-            using var svc = new ThumbnailCacheService(PragmaticBook, doc, NullLogger.Instance);
+            using var doc = PdfDocument.Open(pdfPath);
+            using var svc = new ThumbnailCacheService(pdfPath, doc, NullLogger.Instance);
 
             // Fire 8 concurrent requests for the same page. The service's
             // _inFlight dedupe table should make all 8 await one underlying
@@ -164,8 +165,9 @@ public class ThumbnailCacheTests
 
             // Only one cache file should have been written (the others
             // coalesced onto the same load).
-            var files = Directory.GetFiles(svc.CacheDir, "p*.webp");
-            files.Length.Should().Be(1);
+            var cacheFile = await WaitForCacheFileAsync(svc.CacheDir, "p*.webp");
+            cacheFile.Should().NotBeNull();
+            Directory.GetFiles(svc.CacheDir, "p*.webp").Length.Should().Be(1);
 
             foreach (var b in results) b?.Dispose();
         }
@@ -173,6 +175,24 @@ public class ThumbnailCacheTests
         {
             Environment.SetEnvironmentVariable("XDG_CACHE_HOME", prevXdg);
             try { Directory.Delete(tempCache, recursive: true); } catch { }
+            TestPdfGenerator.CleanupTestFile(pdfPath);
         }
+    }
+
+    private static async Task<string?> WaitForCacheFileAsync(string cacheDir, string fileName)
+    {
+        var deadline = Stopwatch.StartNew();
+        while (deadline.Elapsed < TimeSpan.FromSeconds(2))
+        {
+            var files = Directory.Exists(cacheDir)
+                ? Directory.GetFiles(cacheDir, fileName, SearchOption.AllDirectories)
+                : Array.Empty<string>();
+            if (files.Length > 0)
+                return files[0];
+
+            await Task.Delay(25);
+        }
+
+        return null;
     }
 }
