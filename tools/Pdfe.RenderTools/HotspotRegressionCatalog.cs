@@ -66,6 +66,62 @@ partial class Program
                 "gate",
                 "Desktop GUI input responsiveness phases."),
             Definition(
+                "gui.search",
+                "PdfEditor",
+                "gui",
+                "search",
+                "pdfe-owned",
+                "gate",
+                "Desktop search scheduling, execution, and result navigation phases."),
+            Definition(
+                "gui.annotation",
+                "PdfEditor",
+                "gui",
+                "annotation",
+                "pdfe-owned",
+                "gate",
+                "Desktop annotation authoring workflow phases."),
+            Definition(
+                "gui.form",
+                "PdfEditor",
+                "gui",
+                "form",
+                "pdfe-owned",
+                "gate",
+                "Desktop form authoring and form-edit workflow phases."),
+            Definition(
+                "gui.page-organization",
+                "PdfEditor",
+                "gui",
+                "page-organization",
+                "pdfe-owned",
+                "gate",
+                "Desktop page move, rotate, extract, remove, and thumbnail refresh phases."),
+            Definition(
+                "gui.redaction",
+                "PdfEditor",
+                "gui",
+                "redaction",
+                "pdfe-owned-security-critical",
+                "gate",
+                "Desktop redaction preview and workflow state phases."),
+            Definition(
+                "gui.save",
+                "PdfEditor",
+                "gui",
+                "save",
+                "pdfe-owned",
+                "gate",
+                "Desktop save and save-as workflow phases."),
+            Definition(
+                "gui.close",
+                "PdfEditor",
+                "gui",
+                "close",
+                "pdfe-owned",
+                "gate",
+                "Desktop close-document workflow phases."),
+            Definition(
                 "gui.display-render-capture",
                 "PdfEditor",
                 "gui",
@@ -127,6 +183,20 @@ partial class Program
                 return Find("gui.document-open");
             if (phase.StartsWith("gui.input.", StringComparison.Ordinal))
                 return Find("gui.input");
+            if (phase.StartsWith("gui.search.", StringComparison.Ordinal))
+                return Find("gui.search");
+            if (phase.StartsWith("gui.annotation.", StringComparison.Ordinal))
+                return Find("gui.annotation");
+            if (phase.StartsWith("gui.form.", StringComparison.Ordinal))
+                return Find("gui.form");
+            if (phase.StartsWith("gui.page-organization.", StringComparison.Ordinal))
+                return Find("gui.page-organization");
+            if (phase.StartsWith("gui.redaction.", StringComparison.Ordinal))
+                return Find("gui.redaction");
+            if (phase.StartsWith("gui.save.", StringComparison.Ordinal))
+                return Find("gui.save");
+            if (phase.StartsWith("gui.close.", StringComparison.Ordinal))
+                return Find("gui.close");
             if (phase.StartsWith("gui.thumbnail.", StringComparison.Ordinal))
                 return Find("gui.thumbnail");
             if (phase is "viewer-render-and-capture" ||

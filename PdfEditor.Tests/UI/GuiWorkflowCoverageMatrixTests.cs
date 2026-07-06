@@ -59,6 +59,7 @@ public class GuiWorkflowCoverageMatrixTests
         new("Form authoring mouse workflow", typeof(FormAuthoringTests)),
         new("Open, search, redact, close golden paths", typeof(GoldenPathTests)),
         new("GUI responsiveness budgets for open and direct input handlers", typeof(GuiResponsivenessBudgetTests)),
+        new("Full GUI responsiveness under long documents and broad workflows", typeof(GuiFullResponsivenessCoverageTests)),
         new("Accessibility metadata, keyboard-only reachability, and status announcements", typeof(AccessibilityRegressionTests)),
         new("UX/icon polish screenshots and toolbar/menu affordance audit", typeof(VisualPolishAuditTests)),
         new("Scripted GUI automation entry points", typeof(ScriptedGuiTests)),

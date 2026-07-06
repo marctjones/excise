@@ -123,6 +123,13 @@ public class BenchmarkSuiteTests
         definitions.Should().Contain(d => d.workloadId == "cli.render-page" && d.route == "cli");
         definitions.Should().Contain(d => d.workloadId == "gui.document-open" && d.route == "gui");
         definitions.Should().Contain(d => d.workloadId == "gui.input" && d.route == "gui");
+        definitions.Should().Contain(d => d.workloadId == "gui.search" && d.route == "gui");
+        definitions.Should().Contain(d => d.workloadId == "gui.annotation" && d.route == "gui");
+        definitions.Should().Contain(d => d.workloadId == "gui.form" && d.route == "gui");
+        definitions.Should().Contain(d => d.workloadId == "gui.page-organization" && d.route == "gui");
+        definitions.Should().Contain(d => d.workloadId == "gui.redaction" && d.route == "gui");
+        definitions.Should().Contain(d => d.workloadId == "gui.save" && d.route == "gui");
+        definitions.Should().Contain(d => d.workloadId == "gui.close" && d.route == "gui");
         definitions.Should().Contain(d => d.workloadId == "gui.display-render-capture" && d.route == "gui");
         definitions.Should().Contain(d => d.workloadId == "reference.external-render" && d.route == "external-cli");
 
@@ -132,6 +139,20 @@ public class BenchmarkSuiteTests
             .workloadId.Should().Be("gui.document-open");
         RenderProgram.HotspotRegressionCatalog.ForPhase("gui.input.continuous-scroll-offset")
             .workloadId.Should().Be("gui.input");
+        RenderProgram.HotspotRegressionCatalog.ForPhase("gui.search.complete")
+            .workloadId.Should().Be("gui.search");
+        RenderProgram.HotspotRegressionCatalog.ForPhase("gui.annotation.highlight-from-selection")
+            .workloadId.Should().Be("gui.annotation");
+        RenderProgram.HotspotRegressionCatalog.ForPhase("gui.form.author-and-edit")
+            .workloadId.Should().Be("gui.form");
+        RenderProgram.HotspotRegressionCatalog.ForPhase("gui.page-organization.move-page")
+            .workloadId.Should().Be("gui.page-organization");
+        RenderProgram.HotspotRegressionCatalog.ForPhase("gui.redaction.preview-state")
+            .workloadId.Should().Be("gui.redaction");
+        RenderProgram.HotspotRegressionCatalog.ForPhase("gui.save.save-as-after-edits")
+            .workloadId.Should().Be("gui.save");
+        RenderProgram.HotspotRegressionCatalog.ForPhase("gui.close.document")
+            .workloadId.Should().Be("gui.close");
         RenderProgram.HotspotRegressionCatalog.ForPhase("viewer-render-and-capture")
             .workloadId.Should().Be("gui.display-render-capture");
         RenderProgram.HotspotRegressionCatalog.ForPhase("reference-mutool-render")
@@ -160,6 +181,13 @@ public class BenchmarkSuiteTests
                   "phaseElapsedMs": {
                     "gui.document-open.total": 11,
                     "gui.input.continuous-scroll-offset": 2,
+                    "gui.search.complete": 8,
+                    "gui.annotation.highlight-from-selection": 5,
+                    "gui.form.author-and-edit": 4,
+                    "gui.page-organization.move-page": 9,
+                    "gui.redaction.preview-state": 3,
+                    "gui.save.save-as-after-edits": 10,
+                    "gui.close.document": 1,
                     "viewer-render-and-capture": 7
                   }
                 }
@@ -181,9 +209,40 @@ public class BenchmarkSuiteTests
                 phase.workloadId == "gui.input" &&
                 phase.route == "gui");
             aggregate.phases.Should().Contain(phase =>
+                phase.phase == "gui.search.complete" &&
+                phase.workloadId == "gui.search" &&
+                phase.route == "gui");
+            aggregate.phases.Should().Contain(phase =>
+                phase.phase == "gui.annotation.highlight-from-selection" &&
+                phase.workloadId == "gui.annotation" &&
+                phase.route == "gui");
+            aggregate.phases.Should().Contain(phase =>
+                phase.phase == "gui.form.author-and-edit" &&
+                phase.workloadId == "gui.form" &&
+                phase.route == "gui");
+            aggregate.phases.Should().Contain(phase =>
+                phase.phase == "gui.page-organization.move-page" &&
+                phase.workloadId == "gui.page-organization" &&
+                phase.route == "gui");
+            aggregate.phases.Should().Contain(phase =>
+                phase.phase == "gui.redaction.preview-state" &&
+                phase.workloadId == "gui.redaction" &&
+                phase.route == "gui");
+            aggregate.phases.Should().Contain(phase =>
+                phase.phase == "gui.save.save-as-after-edits" &&
+                phase.workloadId == "gui.save" &&
+                phase.route == "gui");
+            aggregate.phases.Should().Contain(phase =>
+                phase.phase == "gui.close.document" &&
+                phase.workloadId == "gui.close" &&
+                phase.route == "gui");
+            aggregate.phases.Should().Contain(phase =>
                 phase.phase == "viewer-render-and-capture" &&
                 phase.workloadId == "gui.display-render-capture" &&
                 phase.route == "gui");
+            aggregate.phases.Should().OnlyContain(phase =>
+                phase.workloadId != "unknown",
+                "GUI workflow phases used by responsiveness regression tests must be first-class catalog entries");
         }
         finally
         {
