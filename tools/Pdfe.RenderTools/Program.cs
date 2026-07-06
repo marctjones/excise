@@ -514,9 +514,16 @@ partial class Program
     {
         var sorted = durations.OrderBy(value => value).ToArray();
         var totalMs = sorted.Sum();
+        var definition = HotspotRegressionCatalog.ForPhase(phase);
         return new GuiDisplayPhaseHotspot
         {
             phase = phase,
+            workloadId = definition.workloadId,
+            component = definition.component,
+            route = definition.route,
+            category = definition.category,
+            scope = definition.scope,
+            regressionPolicy = definition.regressionPolicy,
             count = sorted.Length,
             totalMs = totalMs,
             averageMs = sorted.Length == 0 ? 0 : totalMs / (double)sorted.Length,
@@ -756,9 +763,16 @@ partial class Program
     {
         var sorted = durations.OrderBy(value => value).ToArray();
         var totalMs = sorted.Sum();
+        var definition = HotspotRegressionCatalog.ForPhase(phase);
         return new CorpusPhaseHotspot
         {
             phase = phase,
+            workloadId = definition.workloadId,
+            component = definition.component,
+            route = definition.route,
+            category = definition.category,
+            scope = definition.scope,
+            regressionPolicy = definition.regressionPolicy,
             count = sorted.Length,
             totalMs = totalMs,
             averageMs = sorted.Length == 0 ? 0 : totalMs / (double)sorted.Length,
@@ -4212,6 +4226,12 @@ partial class Program
     internal sealed class GuiDisplayPhaseHotspot
     {
         public string phase { get; set; } = "";
+        public string workloadId { get; set; } = "";
+        public string component { get; set; } = "";
+        public string route { get; set; } = "";
+        public string category { get; set; } = "";
+        public string scope { get; set; } = "";
+        public string regressionPolicy { get; set; } = "";
         public int count { get; set; }
         public long totalMs { get; set; }
         public double averageMs { get; set; }
@@ -4238,6 +4258,12 @@ partial class Program
     internal sealed class CorpusPhaseHotspot
     {
         public string phase { get; set; } = "";
+        public string workloadId { get; set; } = "";
+        public string component { get; set; } = "";
+        public string route { get; set; } = "";
+        public string category { get; set; } = "";
+        public string scope { get; set; } = "";
+        public string regressionPolicy { get; set; } = "";
         public int count { get; set; }
         public long totalMs { get; set; }
         public double averageMs { get; set; }

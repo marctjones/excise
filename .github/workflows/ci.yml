@@ -201,6 +201,7 @@ jobs:
             --oracles none \
             --page-limit 1 \
             --output-dir logs/ci-benchmark-suite \
+            --include-cli-render \
             --fail-on-regression
 
       - name: Run Pdfe.Ocr.Tests

@@ -72,6 +72,11 @@ partial class Program
             Description = "Regression gate: minimum pdfe-vs-reference page pass rate when at least one reference renderer is available.",
             DefaultValueFactory = _ => 0.60,
         };
+        var includeCliRenderOption = new Option<bool>("--include-cli-render")
+        {
+            Description = "Also render each page through the pdfe CLI subprocess and compare it to the in-process renderer.",
+            DefaultValueFactory = _ => false,
+        };
 
         var command = new Command(
             "benchmark-suite",
@@ -87,6 +92,7 @@ partial class Program
             maxPdfeRenderMsOption,
             maxPdfeParseMsOption,
             minReferencePassRateOption,
+            includeCliRenderOption,
         };
 
         command.SetAction(parseResult =>
@@ -101,6 +107,7 @@ partial class Program
             var maxPdfeRenderMs = parseResult.GetValue(maxPdfeRenderMsOption);
             var maxPdfeParseMs = parseResult.GetValue(maxPdfeParseMsOption);
             var minReferencePassRate = parseResult.GetValue(minReferencePassRateOption);
+            var includeCliRender = parseResult.GetValue(includeCliRenderOption);
 
             try
             {
@@ -121,7 +128,8 @@ partial class Program
                     new BenchmarkGateConfig(
                         maxPdfeRenderMs,
                         maxPdfeParseMs,
-                        minReferencePassRate));
+                        minReferencePassRate),
+                    includeCliRender);
 
                 WriteBenchmarkSuiteReport(report, output.FullName);
                 PrintBenchmarkSuiteSummary(report);
@@ -146,12 +154,13 @@ partial class Program
         int dpi,
         int timeoutMs,
         BenchmarkOracleSelection oracleSelection,
-        BenchmarkGateConfig gateConfig)
+        BenchmarkGateConfig gateConfig,
+        bool includeCliRender = false)
     {
         Directory.CreateDirectory(outputDir);
         var inputs = ResolveBenchmarkInputs(outputDir, corpusDir, pageLimit);
         var selectedOracles = ResolveBenchmarkOracles(oracleSelection);
-        var tools = BuildBenchmarkToolInventory(selectedOracles);
+        var tools = BuildBenchmarkToolInventory(selectedOracles, includeCliRender);
         var pages = new List<BenchmarkPageResult>();
 
         foreach (var input in inputs)
@@ -163,7 +172,7 @@ partial class Program
             var pagesToRun = Math.Min(doc.PageCount, Math.Max(0, pageLimit - pages.Count));
             for (var pageNumber = 1; pageNumber <= pagesToRun; pageNumber++)
             {
-                pages.Add(BenchmarkPage(input, doc, pageNumber, dpi, timeoutMs, selectedOracles, parseSw.ElapsedMilliseconds));
+                pages.Add(BenchmarkPage(input, doc, pageNumber, dpi, timeoutMs, selectedOracles, parseSw.ElapsedMilliseconds, includeCliRender));
                 if (pages.Count >= pageLimit)
                     break;
             }
@@ -195,6 +204,7 @@ partial class Program
                 dpi = dpi,
                 timeoutMs = timeoutMs,
                 selectedOracles = selectedOracles.Select(o => o.Name).ToArray(),
+                includeCliRender = includeCliRender,
             },
             tools = tools,
             summary = summary,
@@ -212,7 +222,8 @@ partial class Program
         int dpi,
         int timeoutMs,
         IReadOnlyList<BenchmarkOracle> oracles,
-        long parseMs)
+        long parseMs,
+        bool includeCliRender)
     {
         SKBitmap? pdfeBitmap = null;
         var text = "";
@@ -240,6 +251,10 @@ partial class Program
                 references.Add(reference);
             }
 
+            var cliRender = includeCliRender
+                ? BenchmarkCliRender(input.Path, pageNumber, dpi, timeoutMs, pdfeBitmap)
+                : null;
+
             var okReferences = references.Where(r => r.status == "OK").ToArray();
             var passingReferences = okReferences.Count(IsBenchmarkReferencePass);
             return new BenchmarkPageResult
@@ -259,6 +274,7 @@ partial class Program
                 referenceCount = okReferences.Length,
                 passingReferenceCount = passingReferences,
                 references = references.ToArray(),
+                cliRender = cliRender,
             };
         }
         catch (Exception ex)
@@ -276,12 +292,238 @@ partial class Program
                 status = "PDFE_ERROR",
                 error = ex.Message,
                 references = Array.Empty<BenchmarkReferenceResult>(),
+                cliRender = null,
             };
         }
         finally
         {
             pdfeBitmap?.Dispose();
         }
+    }
+
+    private static BenchmarkCliRenderResult BenchmarkCliRender(
+        string pdfPath,
+        int pageNumber,
+        int dpi,
+        int timeoutMs,
+        SKBitmap pdfeBitmap)
+    {
+        var outputPath = Path.Combine(
+            Path.GetTempPath(),
+            $"pdfe-cli-benchmark-{Environment.ProcessId}-{Guid.NewGuid():N}.png");
+        var invocation = ResolvePdfeCliInvocation();
+        if (invocation is null)
+        {
+            return new BenchmarkCliRenderResult
+            {
+                name = "pdfe-cli",
+                kind = "external-subprocess",
+                status = "MISSING",
+                error = "Could not locate Pdfe.Cli project or built assembly.",
+            };
+        }
+
+        var args = new List<string>(invocation.Value.Arguments)
+        {
+            "render",
+            pdfPath,
+            "--page",
+            pageNumber.ToString(CultureInfo.InvariantCulture),
+            "--dpi",
+            dpi.ToString(CultureInfo.InvariantCulture),
+            "--output",
+            outputPath,
+        };
+
+        var sw = Stopwatch.StartNew();
+        try
+        {
+            var result = RunProcess(invocation.Value.FileName, args, timeoutMs);
+            sw.Stop();
+            if (result.ExitCode != 0)
+            {
+                return new BenchmarkCliRenderResult
+                {
+                    name = "pdfe-cli",
+                    kind = "external-subprocess",
+                    status = result.TimedOut ? "TIMEOUT" : "ERROR",
+                    elapsedMs = sw.ElapsedMilliseconds,
+                    error = string.IsNullOrWhiteSpace(result.StandardError)
+                        ? result.StandardOutput
+                        : result.StandardError,
+                };
+            }
+
+            using var cliBitmap = SKBitmap.Decode(outputPath);
+            if (cliBitmap is null)
+            {
+                return new BenchmarkCliRenderResult
+                {
+                    name = "pdfe-cli",
+                    kind = "external-subprocess",
+                    status = "ERROR",
+                    elapsedMs = sw.ElapsedMilliseconds,
+                    error = "CLI render completed but did not write a readable PNG.",
+                };
+            }
+
+            using var normalized = DifferentialMetrics.ResizeMatch(cliBitmap, pdfeBitmap.Width, pdfeBitmap.Height);
+            var diff = DifferentialMetrics.Compare(pdfeBitmap, normalized);
+            return new BenchmarkCliRenderResult
+            {
+                name = "pdfe-cli",
+                kind = "external-subprocess",
+                status = "OK",
+                elapsedMs = sw.ElapsedMilliseconds,
+                width = cliBitmap.Width,
+                height = cliBitmap.Height,
+                diffFraction = diff.DifferingPixelFraction,
+                meanAbsoluteError = diff.MeanAbsoluteError,
+                pass = diff.DifferingPixelFraction <= 0.001 && diff.MeanAbsoluteError <= 1.0,
+            };
+        }
+        catch (Exception ex)
+        {
+            sw.Stop();
+            return new BenchmarkCliRenderResult
+            {
+                name = "pdfe-cli",
+                kind = "external-subprocess",
+                status = "ERROR",
+                elapsedMs = sw.ElapsedMilliseconds,
+                error = ex.Message,
+            };
+        }
+        finally
+        {
+            try
+            {
+                if (File.Exists(outputPath))
+                    File.Delete(outputPath);
+            }
+            catch
+            {
+                // Best-effort cleanup only.
+            }
+        }
+    }
+
+    private static (string FileName, IReadOnlyList<string> Arguments)? ResolvePdfeCliInvocation()
+    {
+        var overrideCommand = Environment.GetEnvironmentVariable("PDFE_BENCHMARK_CLI_COMMAND");
+        if (!string.IsNullOrWhiteSpace(overrideCommand))
+            return (overrideCommand, Array.Empty<string>());
+
+        var root = FindRepositoryRoot();
+        if (root is null)
+            return null;
+
+        var configuration = Environment.GetEnvironmentVariable("CONFIG") ??
+#if DEBUG
+            "Debug";
+#else
+            "Release";
+#endif
+        var outputDir = Path.Combine(root, "Pdfe.Cli", "bin", configuration, "net10.0");
+        var executable = Path.Combine(outputDir, OperatingSystem.IsWindows() ? "pdfe.exe" : "pdfe");
+        if (File.Exists(executable))
+            return (executable, Array.Empty<string>());
+
+        foreach (var candidate in new[]
+                 {
+                     Path.Combine(outputDir, "pdfe.dll"),
+                     Path.Combine(outputDir, "Pdfe.Cli.dll"),
+                 })
+        {
+            if (File.Exists(candidate))
+                return ("dotnet", new[] { candidate });
+        }
+
+        var project = Path.Combine(root, "Pdfe.Cli", "Pdfe.Cli.csproj");
+        if (!File.Exists(project))
+            return null;
+
+        return ("dotnet", new[]
+        {
+            "run",
+            "--project",
+            project,
+            "-c",
+            configuration,
+            "--",
+        });
+    }
+
+    private static string? FindRepositoryRoot()
+    {
+        var current = new DirectoryInfo(Directory.GetCurrentDirectory());
+        while (current is not null)
+        {
+            if (File.Exists(Path.Combine(current.FullName, "pdfe.sln")) &&
+                File.Exists(Path.Combine(current.FullName, "Pdfe.Cli", "Pdfe.Cli.csproj")))
+            {
+                return current.FullName;
+            }
+
+            current = current.Parent;
+        }
+
+        current = new DirectoryInfo(AppContext.BaseDirectory);
+        while (current is not null)
+        {
+            if (File.Exists(Path.Combine(current.FullName, "pdfe.sln")) &&
+                File.Exists(Path.Combine(current.FullName, "Pdfe.Cli", "Pdfe.Cli.csproj")))
+            {
+                return current.FullName;
+            }
+
+            current = current.Parent;
+        }
+
+        return null;
+    }
+
+    private static ProcessResult RunProcess(
+        string fileName,
+        IReadOnlyList<string> arguments,
+        int timeoutMs)
+    {
+        using var process = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = fileName,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+            },
+        };
+        foreach (var argument in arguments)
+            process.StartInfo.ArgumentList.Add(argument);
+
+        var stdout = new StringBuilder();
+        var stderr = new StringBuilder();
+        process.OutputDataReceived += (_, e) =>
+        {
+            if (e.Data is not null) stdout.AppendLine(e.Data);
+        };
+        process.ErrorDataReceived += (_, e) =>
+        {
+            if (e.Data is not null) stderr.AppendLine(e.Data);
+        };
+
+        process.Start();
+        process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
+        if (!process.WaitForExit(timeoutMs))
+        {
+            try { process.Kill(entireProcessTree: true); }
+            catch { }
+            return new ProcessResult(-1, stdout.ToString(), stderr.ToString(), TimedOut: true);
+        }
+
+        process.WaitForExit();
+        return new ProcessResult(process.ExitCode, stdout.ToString(), stderr.ToString(), TimedOut: false);
     }
 
     private static BenchmarkReferenceResult BenchmarkReference(
@@ -409,6 +651,14 @@ partial class Program
         var pdfeText = pages.Select(p => p.pdfeTextExtractMs).Where(v => v >= 0).OrderBy(v => v).ToArray();
         var parse = pages.Select(p => p.parseMs).Where(v => v >= 0).OrderBy(v => v).ToArray();
         var references = pages.SelectMany(p => p.references).Where(r => r.status == "OK").ToArray();
+        var cliRenders = pages
+            .Select(p => p.cliRender)
+            .Where(r => r?.status == "OK" && r.elapsedMs.HasValue)
+            .Select(r => r!)
+            .ToArray();
+        var cliRenderDurations = cliRenders.Select(r => r.elapsedMs!.Value).OrderBy(v => v).ToArray();
+        var cliRenderAttempted = pages.Count(p => p.cliRender is not null);
+        var cliRenderPassed = pages.Count(p => p.cliRender?.pass == true);
         var passedPages = pages.Count(p => p.status is "PASS_REFERENCE" or "NO_REFERENCES");
         var comparedPages = pages.Count(p => p.referenceCount > 0);
         var referencePassPages = pages.Count(p => p.referenceCount > 0 && p.passingReferenceCount > 0);
@@ -429,6 +679,9 @@ partial class Program
             pdfeRenderP50Ms = PercentileDouble(pdfeRender, 0.50),
             pdfeRenderP95Ms = PercentileDouble(pdfeRender, 0.95),
             pdfeTextExtractAverageMs = Average(pdfeText),
+            cliRenderAverageMs = Average(cliRenderDurations),
+            cliRenderP95Ms = PercentileDouble(cliRenderDurations, 0.95),
+            cliRenderPassRate = cliRenderAttempted == 0 ? null : cliRenderPassed / (double)cliRenderAttempted,
             referenceRenderAverageMs = Average(references.Select(r => r.elapsedMs ?? 0).OrderBy(v => v).ToArray()),
             referencePassRate = comparedPages == 0 ? null : referencePassPages / (double)comparedPages,
             averageRmse = Average(references.Where(r => r.rmse.HasValue).Select(r => r.rmse!.Value).OrderBy(v => v).ToArray()),
@@ -479,6 +732,18 @@ partial class Program
             });
         }
 
+        if (summary.cliRenderPassRate.HasValue)
+        {
+            checks.Add(new BenchmarkGateCheck
+            {
+                name = "pdfe-cli-render-pass-rate",
+                actual = summary.cliRenderPassRate.Value,
+                threshold = 1.0,
+                passed = summary.cliRenderPassRate.Value >= 1.0,
+                unit = "ratio",
+            });
+        }
+
         return new BenchmarkRegressionGate
         {
             passed = checks.All(c => c.passed),
@@ -516,6 +781,16 @@ partial class Program
             "#597");
         AddBenchmarkHotPath(
             buckets,
+            "cli.render-page-subprocess",
+            "Pdfe.Cli render command subprocess, PNG write, and output comparison",
+            pages
+                .Select(page => page.cliRender?.elapsedMs)
+                .Where(value => value.HasValue)
+                .Select(value => value!.Value),
+            "pdfe-owned",
+            "#596 #597");
+        AddBenchmarkHotPath(
+            buckets,
             "redaction.synthetic-save",
             "Synthetic glyph-level redaction and save/reopen verification",
             new[] { redaction.elapsedMs },
@@ -551,11 +826,17 @@ partial class Program
         if (durations.Length == 0)
             return;
 
+        var definition = HotspotRegressionCatalog.ForBenchmarkBucket(name);
         buckets.Add(new BenchmarkHotPathBucket
         {
             name = name,
+            workloadId = definition.workloadId,
+            component = definition.component,
+            route = definition.route,
+            category = definition.category,
             description = description,
             scope = scope,
+            regressionPolicy = definition.regressionPolicy,
             issueRefs = issueRefs,
             count = durations.Length,
             totalMs = durations.Sum(),
@@ -634,12 +915,15 @@ partial class Program
         return oracles.Where(o => o.IsAvailable()).ToArray();
     }
 
-    private static IReadOnlyList<BenchmarkToolStatus> BuildBenchmarkToolInventory(IReadOnlyList<BenchmarkOracle> selectedOracles)
+    private static IReadOnlyList<BenchmarkToolStatus> BuildBenchmarkToolInventory(
+        IReadOnlyList<BenchmarkOracle> selectedOracles,
+        bool includeCliRender)
     {
         var selected = selectedOracles.Select(o => o.Name).ToHashSet(StringComparer.Ordinal);
         return new[]
         {
             Tool("pdfe", "in-process", true, true, "MIT project code"),
+            Tool("pdfe-cli", "external-subprocess", ResolvePdfeCliInvocation() is not null, includeCliRender, "pdfe CLI invoked as a subprocess to test the shipped command route"),
             Tool("mutool", "external-cli", MutoolReferenceRenderer.IsAvailable, selected.Contains("mutool"), "AGPL/GPL-family renderer invoked only as subprocess"),
             Tool("pdftocairo", "external-cli", PdftocairoReferenceRenderer.IsAvailable, selected.Contains("pdftocairo"), "GPL Poppler renderer invoked only as subprocess"),
             Tool("ghostscript", "external-cli", GhostscriptReferenceRenderer.IsAvailable, selected.Contains("ghostscript"), "AGPL Ghostscript renderer invoked only as subprocess"),
@@ -678,7 +962,7 @@ partial class Program
     private static string BuildBenchmarkCsv(BenchmarkSuiteReport report)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("path,page,status,pdfeRenderMs,pdfeTextExtractMs,referenceCount,passingReferenceCount,bestReference,bestDiffFraction,bestMae,bestRmse,bestSsim");
+        sb.AppendLine("path,page,status,pdfeRenderMs,pdfeTextExtractMs,cliRenderStatus,cliRenderMs,cliRenderPass,cliDiffFraction,referenceCount,passingReferenceCount,bestReference,bestDiffFraction,bestMae,bestRmse,bestSsim");
         foreach (var page in report.pages)
         {
             var best = page.references
@@ -692,6 +976,10 @@ partial class Program
                 Csv(page.status),
                 page.pdfeRenderMs.ToString(CultureInfo.InvariantCulture),
                 page.pdfeTextExtractMs.ToString(CultureInfo.InvariantCulture),
+                Csv(page.cliRender?.status ?? ""),
+                page.cliRender?.elapsedMs?.ToString(CultureInfo.InvariantCulture) ?? "",
+                page.cliRender?.pass?.ToString() ?? "",
+                CsvNumber(page.cliRender?.diffFraction),
                 page.referenceCount.ToString(CultureInfo.InvariantCulture),
                 page.passingReferenceCount.ToString(CultureInfo.InvariantCulture),
                 Csv(best?.name ?? ""),
@@ -714,6 +1002,11 @@ partial class Program
         sb.AppendLine($"- Regression gate: `{(report.regressionGate.passed ? "PASS" : "FAIL")}`");
         sb.AppendLine($"- pdfe render average: `{report.summary.pdfeRenderAverageMs:F1} ms`");
         sb.AppendLine($"- pdfe render p95: `{report.summary.pdfeRenderP95Ms:F1} ms`");
+        if (report.summary.cliRenderPassRate.HasValue)
+        {
+            sb.AppendLine($"- pdfe CLI render average: `{report.summary.cliRenderAverageMs:F1} ms`");
+            sb.AppendLine($"- pdfe CLI render pass rate: `{report.summary.cliRenderPassRate.Value:P1}`");
+        }
         sb.AppendLine($"- Reference pass rate: `{(report.summary.referencePassRate?.ToString("P1", CultureInfo.InvariantCulture) ?? "n/a")}`");
         sb.AppendLine($"- Redaction completeness: `{report.redactionCompleteness.status}`");
         sb.AppendLine();
@@ -735,22 +1028,25 @@ partial class Program
         sb.AppendLine();
         sb.AppendLine("## Hot Path Buckets");
         sb.AppendLine();
-        sb.AppendLine("| Bucket | Scope | Count | Total ms | Avg ms | P95 ms | Issues |");
-        sb.AppendLine("|---|---|---:|---:|---:|---:|---|");
+        sb.AppendLine("| Bucket | Workload | Route | Scope | Count | Total ms | Avg ms | P95 ms | Issues |");
+        sb.AppendLine("|---|---|---|---|---:|---:|---:|---:|---|");
         foreach (var bucket in report.hotPaths)
         {
             sb.AppendLine(
-                $"| `{bucket.name}` | {bucket.scope} | {bucket.count} | {bucket.totalMs} | {bucket.averageMs:0.0} | {bucket.p95Ms:0.0} | {bucket.issueRefs} |");
+                $"| `{bucket.name}` | {bucket.workloadId} | {bucket.route} | {bucket.scope} | {bucket.count} | {bucket.totalMs} | {bucket.averageMs:0.0} | {bucket.p95Ms:0.0} | {bucket.issueRefs} |");
         }
 
         sb.AppendLine();
         sb.AppendLine("## Page Results");
         sb.AppendLine();
-        sb.AppendLine("| PDF | Page | Status | pdfe render ms | References |");
-        sb.AppendLine("|---|---:|---|---:|---:|");
+        sb.AppendLine("| PDF | Page | Status | pdfe render ms | CLI | References |");
+        sb.AppendLine("|---|---:|---|---:|---|---:|");
         foreach (var page in report.pages)
         {
-            sb.AppendLine($"| `{page.path}` | {page.pageNumber} | {page.status} | {page.pdfeRenderMs} | {page.passingReferenceCount}/{page.referenceCount} |");
+            var cli = page.cliRender is null
+                ? "not run"
+                : $"{page.cliRender.status} {page.cliRender.elapsedMs?.ToString(CultureInfo.InvariantCulture) ?? ""}ms";
+            sb.AppendLine($"| `{page.path}` | {page.pageNumber} | {page.status} | {page.pdfeRenderMs} | {cli} | {page.passingReferenceCount}/{page.referenceCount} |");
         }
 
         return sb.ToString();
@@ -855,6 +1151,12 @@ partial class Program
     private static string CsvNumber(double? value)
         => value?.ToString("0.######", CultureInfo.InvariantCulture) ?? "";
 
+    private sealed record ProcessResult(
+        int ExitCode,
+        string StandardOutput,
+        string StandardError,
+        bool TimedOut);
+
     internal static bool TryParseBenchmarkOracles(
         string value,
         out BenchmarkOracleSelection selection,
@@ -953,6 +1255,7 @@ partial class Program
         public int dpi { get; set; }
         public int timeoutMs { get; set; }
         public IReadOnlyList<string> selectedOracles { get; set; } = Array.Empty<string>();
+        public bool includeCliRender { get; set; }
     }
 
     internal sealed class BenchmarkToolStatus
@@ -976,6 +1279,9 @@ partial class Program
         public double pdfeRenderP50Ms { get; set; }
         public double pdfeRenderP95Ms { get; set; }
         public double pdfeTextExtractAverageMs { get; set; }
+        public double cliRenderAverageMs { get; set; }
+        public double cliRenderP95Ms { get; set; }
+        public double? cliRenderPassRate { get; set; }
         public double referenceRenderAverageMs { get; set; }
         public double? referencePassRate { get; set; }
         public double averageRmse { get; set; }
@@ -992,8 +1298,13 @@ partial class Program
     internal sealed class BenchmarkHotPathBucket
     {
         public string name { get; set; } = "";
+        public string workloadId { get; set; } = "";
+        public string component { get; set; } = "";
+        public string route { get; set; } = "";
+        public string category { get; set; } = "";
         public string description { get; set; } = "";
         public string scope { get; set; } = "";
+        public string regressionPolicy { get; set; } = "";
         public string issueRefs { get; set; } = "";
         public int count { get; set; }
         public long totalMs { get; set; }
@@ -1028,6 +1339,7 @@ partial class Program
         public int referenceCount { get; set; }
         public int passingReferenceCount { get; set; }
         public IReadOnlyList<BenchmarkReferenceResult> references { get; set; } = Array.Empty<BenchmarkReferenceResult>();
+        public BenchmarkCliRenderResult? cliRender { get; set; }
     }
 
     internal sealed class BenchmarkReferenceResult
@@ -1043,6 +1355,20 @@ partial class Program
         public double? meanAbsoluteError { get; set; }
         public double? rmse { get; set; }
         public double? ssim { get; set; }
+        public bool? pass { get; set; }
+    }
+
+    internal sealed class BenchmarkCliRenderResult
+    {
+        public string name { get; set; } = "";
+        public string kind { get; set; } = "";
+        public string status { get; set; } = "";
+        public string? error { get; set; }
+        public long? elapsedMs { get; set; }
+        public int? width { get; set; }
+        public int? height { get; set; }
+        public double? diffFraction { get; set; }
+        public double? meanAbsoluteError { get; set; }
         public bool? pass { get; set; }
     }
 

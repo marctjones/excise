@@ -48,6 +48,7 @@ Environment:
   PDFE_BENCHMARK_DPI=96
   PDFE_BENCHMARK_TIMEOUT_MS=20000
   PDFE_BENCHMARK_ORACLES=all
+  PDFE_BENCHMARK_CLI_RENDER=0
 
 Notes:
   - Copyleft/AGPL renderers remain external subprocesses; no reference
@@ -150,6 +151,7 @@ default_benchmarks() {
     local dpi="${PDFE_BENCHMARK_DPI:-96}"
     local timeout_ms="${PDFE_BENCHMARK_TIMEOUT_MS:-20000}"
     local oracles="${PDFE_BENCHMARK_ORACLES:-all}"
+    local cli_render="${PDFE_BENCHMARK_CLI_RENDER:-0}"
     local suite_args=(
         benchmark-suite
         --output-dir "$suite_output"
@@ -162,6 +164,9 @@ default_benchmarks() {
 
     if [ -n "${PDFE_BENCHMARK_CORPUS_DIR:-}" ]; then
         suite_args+=(--corpus "$PDFE_BENCHMARK_CORPUS_DIR")
+    fi
+    if [ "$cli_render" = "1" ] || [ "$cli_render" = "true" ]; then
+        suite_args+=(--include-cli-render)
     fi
 
     echo "Speed + quality benchmark suite"
