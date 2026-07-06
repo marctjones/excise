@@ -6,7 +6,6 @@ using PdfEditor.Models;
 using PdfEditor.Services;
 using ReactiveUI;
 using System;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -262,38 +261,8 @@ public partial class MainWindowViewModel
                 _logger.LogInformation("Added redacted text to clipboard history: '{Text}'", redactedText);
             }
 
-            _logger.LogInformation("Redaction applied to in-memory document, now re-rendering page...");
-
-            var docStream = _documentService.GetCurrentDocumentAsStream();
-            if (docStream != null)
-            {
-                try
-                {
-                    var memoryStream = new MemoryStream();
-                    await docStream.CopyToAsync(memoryStream);
-                    memoryStream.Position = 0;
-                    docStream.Dispose();
-
-                    var skBitmap = await _renderService.RenderPageFromStreamAsync(memoryStream, CurrentPageIndex);
-                    if (skBitmap != null)
-                    {
-                        CurrentPageImage = ToAvaloniaBitmap(skBitmap);
-                        _logger.LogInformation("Page re-rendered successfully after redaction");
-                    }
-                    else
-                    {
-                        _logger.LogWarning("RenderPageFromStreamAsync returned null");
-                    }
-                }
-                catch (Exception renderEx)
-                {
-                    _logger.LogError(renderEx, "Error rendering page after redaction");
-                }
-            }
-            else
-            {
-                _logger.LogWarning("GetCurrentDocumentAsStream returned null");
-            }
+            _logger.LogInformation("Redaction applied to in-memory document, refreshing bound viewer document...");
+            await ReloadPdfCoreDocumentFromCurrentDocumentAsync();
 
             _logger.LogInformation("Redaction complete - draw another selection or click 'Redact Mode' to exit.");
         }

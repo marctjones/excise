@@ -424,7 +424,6 @@ public partial class MainWindowViewModel
         if (match.PageIndex != CurrentPageIndex)
         {
             CurrentPageIndex = match.PageIndex;
-            Task.Run(async () => await RenderCurrentPageAsync());
         }
 
         // Update search highlights for the current page

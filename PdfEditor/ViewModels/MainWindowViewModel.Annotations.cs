@@ -151,24 +151,17 @@ public partial class MainWindowViewModel
         _pdfCoreDocument.AddTextAnnotation(pageNumber, contentRect, contents);
     }
 
-    private async Task MarkAnnotationChangedAsync(string toastMessage)
+    private Task MarkAnnotationChangedAsync(string toastMessage)
     {
         FileState.AnnotationEditsCount++;
         _hasInMemoryModifications = true;
         this.RaisePropertyChanged(nameof(SaveButtonText));
         this.RaisePropertyChanged(nameof(StatusBarText));
         AnnotationsChanged?.Invoke(this, EventArgs.Empty);
-
-        try
-        {
-            await RenderCurrentPageAsync();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Annotation was added, but the current page did not rerender immediately");
-        }
+        RequestViewerRenderRefresh();
 
         _toastService.ShowSuccess(toastMessage);
+        return Task.CompletedTask;
     }
 
     private void ClearCurrentTextSelection()

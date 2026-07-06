@@ -44,6 +44,9 @@ public class PageOrganizationWorkflowTests : IDisposable
         await vm.MoveCurrentPageAsync(1);
 
         vm.FileState.HasUnsavedChanges.Should().BeTrue();
+        vm.PdfCoreDocument.Should().NotBeNull("page organization refreshes the document bound to PdfViewerControl");
+        new TextExtractor(vm.PdfCoreDocument!.GetPage(1)).ExtractText().Should().Contain("Page 2 Content");
+
         documentService.SaveDocument(Path.Combine(_tempDir, "reordered.pdf"));
         using var reopened = PdfDocument.Open(File.ReadAllBytes(Path.Combine(_tempDir, "reordered.pdf")));
         new TextExtractor(reopened.GetPage(1)).ExtractText().Should().Contain("Page 2 Content");
@@ -77,6 +80,10 @@ public class PageOrganizationWorkflowTests : IDisposable
 
         vm.CurrentPageIndex.Should().Be(1, "the same page stays current after another page moves after it");
         vm.FileState.HasUnsavedChanges.Should().BeTrue();
+        vm.PdfCoreDocument.Should().NotBeNull("the viewer-bound document must stay in sync with the document-service page order");
+        new TextExtractor(vm.PdfCoreDocument!.GetPage(1)).ExtractText().Should().Contain("Page 2 Content");
+        new TextExtractor(vm.PdfCoreDocument.GetPage(2)).ExtractText().Should().Contain("Page 3 Content");
+        new TextExtractor(vm.PdfCoreDocument.GetPage(3)).ExtractText().Should().Contain("Page 1 Content");
 
         var outputPath = Path.Combine(_tempDir, "drag-reordered.pdf");
         documentService.SaveDocument(outputPath);

@@ -94,6 +94,37 @@ public class MainWindowRenderSchedulingTests
         }
     }
 
+    [FixedAvaloniaFact]
+    public async Task LoadAndNavigate_DoNotInvokeLegacyViewModelRenderService()
+    {
+        var pdfPath = Path.Combine(Path.GetTempPath(), $"pdfe-viewer-owned-render-{Guid.NewGuid():N}.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 3);
+
+        try
+        {
+            var documentService = new PdfDocumentService(NullLogger<PdfDocumentService>.Instance);
+            var renderService = new ControlledRenderService();
+            var vm = CreateViewModel(documentService, renderService);
+
+            await vm.LoadDocumentAsync(pdfPath);
+
+            renderService.RenderCallCount.Should().Be(
+                0,
+                "the bound PdfViewerControl owns display rendering; the VM should not render an unbound CurrentPageImage during document open");
+
+            vm.CurrentPageIndex = 1;
+            vm.CurrentPageIndex = 2;
+
+            renderService.RenderCallCount.Should().Be(
+                0,
+                "page navigation should update CurrentPage and let PdfViewerControl render through its binding");
+        }
+        finally
+        {
+            TestPdfGenerator.CleanupTestFile(pdfPath);
+        }
+    }
+
     private static MainWindowViewModel CreateViewModel(PdfDocumentService documentService, PdfRenderService renderService)
     {
         return new MainWindowViewModel(
@@ -137,6 +168,7 @@ public class MainWindowRenderSchedulingTests
     {
         private readonly ConcurrentDictionary<int, RenderRequest> _requests = new();
         private readonly ConcurrentDictionary<int, TaskCompletionSource<object?>> _arrivals = new();
+        private int _renderCallCount;
 
         public ControlledRenderService()
             : base(NullLogger<PdfRenderService>.Instance)
@@ -149,11 +181,14 @@ public class MainWindowRenderSchedulingTests
             int dpi = 150,
             CancellationToken cancellationToken = default)
         {
+            Interlocked.Increment(ref _renderCallCount);
             var request = new RenderRequest(cancellationToken);
             _requests[pageIndex] = request;
             _arrivals.GetOrAdd(pageIndex, _ => NewArrival()).TrySetResult(null);
             return request.Completion.Task;
         }
+
+        public int RenderCallCount => Volatile.Read(ref _renderCallCount);
 
         public Task WaitForRequestAsync(int pageIndex) =>
             _arrivals.GetOrAdd(pageIndex, _ => NewArrival()).Task.WaitAsync(TimeSpan.FromSeconds(5));

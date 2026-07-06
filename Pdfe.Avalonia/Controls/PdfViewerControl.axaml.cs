@@ -98,6 +98,20 @@ public partial class PdfViewerControl : UserControl
     }
 
     /// <summary>
+    /// Monotonic host-provided content version. Increment when the same
+    /// document instance has visually changed and the viewer should invalidate
+    /// page caches and render the current view again.
+    /// </summary>
+    public static readonly StyledProperty<long> RenderVersionProperty =
+        AvaloniaProperty.Register<PdfViewerControl, long>(nameof(RenderVersion));
+
+    public long RenderVersion
+    {
+        get => GetValue(RenderVersionProperty);
+        set => SetValue(RenderVersionProperty, value);
+    }
+
+    /// <summary>
     /// Is page currently loading?
     /// </summary>
     public static readonly StyledProperty<bool> IsLoadingProperty =
@@ -319,6 +333,8 @@ public partial class PdfViewerControl : UserControl
                 e.NewValue as System.Collections.Generic.IEnumerable<PdfTypewriterTextOperation>));
         ViewModeProperty.Changed.AddClassHandler<PdfViewerControl>((control, _) =>
             control.OnViewModeChanged());
+        RenderVersionProperty.Changed.AddClassHandler<PdfViewerControl>((control, _) =>
+            control.OnRenderVersionChanged());
         // Editing interactions are single-page only. If the host turns on an
         // editing mode while we're in the continuous reading view, switch back
         // to single-page (at the current page) so the editing overlays line up
@@ -1094,6 +1110,35 @@ public partial class PdfViewerControl : UserControl
             // link) should scroll the reading view to that page.
             if (ViewMode == PdfViewMode.Continuous && !_syncingPageFromScroll)
                 ScrollToPageContinuous(CurrentPage);
+        }
+    }
+
+    private void OnRenderVersionChanged()
+    {
+        if (Document == null)
+            return;
+
+        InvalidatePageCache();
+        InvalidateContinuousCache();
+        _currentPageLetters = null;
+        _readingOrderedLetters = null;
+        _lettersPageNumber = -1;
+        _selectionAnchor = null;
+        _selectionFocus = null;
+        _currentPageLinks = null;
+        _linksPageNumber = -1;
+        ClearSelectionHighlight();
+        RefreshPageAnnotations();
+        RedrawTypewriterLayer();
+
+        if (ViewMode == PdfViewMode.Continuous)
+        {
+            RebuildContinuous();
+            RenderVisibleContinuousTiles();
+        }
+        else
+        {
+            _ = RenderCurrentPageAsync();
         }
     }
 

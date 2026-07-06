@@ -107,6 +107,8 @@ public partial class MainWindowViewModel : ViewModelBase
     private bool _isThumbnailsSidebarVisible = true;
     private bool _isClipboardSidebarVisible = true;
     private DocumentOpenTiming? _lastDocumentOpenTiming;
+    private long _renderVersion;
+    private long _documentMutationVersion;
 
     /// <summary>
     /// Parameterless constructor for testing and scripting scenarios.
@@ -301,6 +303,12 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     public bool IsContinuousView => ViewMode == PdfViewMode.Continuous;
+
+    public long RenderVersion
+    {
+        get => _renderVersion;
+        private set => this.RaiseAndSetIfChanged(ref _renderVersion, value);
+    }
 
     public int CurrentPage => CurrentPageIndex + 1; // 1-based for PdfViewerControl
 
@@ -882,15 +890,11 @@ public partial class MainWindowViewModel : ViewModelBase
             _logger.LogInformation(">>> STEP 6: Setting CurrentPageIndex = 0");
             CurrentPageIndex = 0;
 
-            // Render the current page FIRST — the user wants to see
-            // something. The 455 thumbnails for the sidebar can come
-            // afterwards. Pre-fix the order was reversed and on a long
-            // document we'd block on N×Task.Run thumbnail jobs before the
-            // user saw page 1, saturating the threadpool the main render
-            // also needed.
-            _logger.LogInformation(">>> STEP 7: Rendering current page");
-            await RenderCurrentPageAsync();
-            _logger.LogInformation(">>> STEP 7: Current page rendered successfully");
+            // The bound PdfViewerControl owns display rendering. At this point
+            // it has enough state (Document + CurrentPage) to render page 1;
+            // avoid the legacy VM render path, which produced an unbound
+            // CurrentPageImage and duplicated raster work.
+            _logger.LogInformation(">>> STEP 7: Current page render scheduled in viewer");
             firstPageVisibleElapsedMs = openSw.ElapsedMilliseconds;
 
             // Auto-fit-width on document open so the page is never wider than
@@ -1189,9 +1193,8 @@ public partial class MainWindowViewModel : ViewModelBase
                 _logger.LogDebug("Adjusted current page index to {PageIndex}", CurrentPageIndex);
             }
 
-            _logger.LogDebug("Reloading thumbnails and rendering current page");
-            await LoadPageThumbnailsAsync();
-            await RenderCurrentPageAsync();
+            _logger.LogDebug("Reloading bound document and thumbnails after page removal");
+            await RefreshAfterDocumentMutationAsync();
 
             this.RaisePropertyChanged(nameof(TotalPages));
             this.RaisePropertyChanged(nameof(StatusText));
@@ -1534,11 +1537,55 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private async Task RefreshAfterDocumentMutationAsync()
     {
+        await ReloadPdfCoreDocumentFromCurrentDocumentAsync();
         await LoadPageThumbnailsAsync();
-        await RenderCurrentPageAsync();
         this.RaisePropertyChanged(nameof(TotalPages));
         this.RaisePropertyChanged(nameof(StatusText));
         this.RaisePropertyChanged(nameof(StatusBarText));
+    }
+
+    private Task ReloadPdfCoreDocumentFromCurrentDocumentAsync()
+    {
+        var documentStream = _documentService.GetCurrentDocumentAsStream();
+        if (documentStream == null)
+            return Task.CompletedTask;
+
+        using (documentStream)
+        {
+            documentStream.Position = 0;
+            var reloaded = PdfCoreDocument.Open(documentStream.ToArray());
+            PdfCoreDocument?.Dispose();
+            PdfCoreDocument = reloaded;
+        }
+
+        CurrentPageIndex = Math.Clamp(CurrentPageIndex, 0, Math.Max(0, _documentService.PageCount - 1));
+        _renderService.ClearCache();
+        var mutationVersion = System.Threading.Interlocked.Increment(ref _documentMutationVersion);
+
+        _thumbnailCache?.Dispose();
+        _thumbnailCache = !string.IsNullOrWhiteSpace(_currentFilePath)
+            ? new Services.ThumbnailCacheService(
+                _currentFilePath,
+                PdfCoreDocument!,
+                Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance,
+                cacheSalt: $"memory-version-{mutationVersion}")
+            : null;
+
+        _indexBuildCts?.Cancel();
+        _indexBuildCts = new System.Threading.CancellationTokenSource();
+        TextIndex = new Services.DocumentTextIndex(
+            PdfCoreDocument!,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance);
+        _ = TextIndex.BuildAsync(cancellationToken: _indexBuildCts.Token);
+
+        this.RaisePropertyChanged(nameof(CurrentPage));
+        this.RaisePropertyChanged(nameof(CurrentPageFormFields));
+        return Task.CompletedTask;
+    }
+
+    private void RequestViewerRenderRefresh()
+    {
+        RenderVersion++;
     }
 
     private void ToggleTextSelectionMode()
@@ -1757,33 +1804,36 @@ public partial class MainWindowViewModel : ViewModelBase
         return widthDip > 0 && heightDip > 0;
     }
 
-    private async Task NextPageAsync()
+    private Task NextPageAsync()
     {
         if (CurrentPageIndex < TotalPages - 1)
         {
             CurrentPageIndex++;
-            await RenderCurrentPageAsync();
         }
+
+        return Task.CompletedTask;
     }
 
-    private async Task PreviousPageAsync()
+    private Task PreviousPageAsync()
     {
         if (CurrentPageIndex > 0)
         {
             CurrentPageIndex--;
-            await RenderCurrentPageAsync();
         }
+
+        return Task.CompletedTask;
     }
 
-    private async Task GoToPageAsync(int pageIndex)
+    private Task GoToPageAsync(int pageIndex)
     {
         _logger.LogInformation("Navigating to page {PageIndex}", pageIndex);
 
         if (pageIndex >= 0 && pageIndex < TotalPages && pageIndex != CurrentPageIndex)
         {
             CurrentPageIndex = pageIndex;
-            await RenderCurrentPageAsync();
         }
+
+        return Task.CompletedTask;
     }
 
     private async Task RotatePageLeftAsync()
@@ -1802,8 +1852,7 @@ public partial class MainWindowViewModel : ViewModelBase
             MarkPageOrganizationChanged();
             _logger.LogInformation("Page {PageIndex} rotated left successfully", CurrentPageIndex);
 
-            // Re-render the page to show the rotation
-            await RenderCurrentPageAsync();
+            await RefreshAfterDocumentMutationAsync();
         }
         catch (Exception ex)
         {
@@ -1827,8 +1876,7 @@ public partial class MainWindowViewModel : ViewModelBase
             MarkPageOrganizationChanged();
             _logger.LogInformation("Page {PageIndex} rotated right successfully", CurrentPageIndex);
 
-            // Re-render the page to show the rotation
-            await RenderCurrentPageAsync();
+            await RefreshAfterDocumentMutationAsync();
         }
         catch (Exception ex)
         {
@@ -1852,8 +1900,7 @@ public partial class MainWindowViewModel : ViewModelBase
             MarkPageOrganizationChanged();
             _logger.LogInformation("Page {PageIndex} rotated 180 degrees successfully", CurrentPageIndex);
 
-            // Re-render the page to show the rotation
-            await RenderCurrentPageAsync();
+            await RefreshAfterDocumentMutationAsync();
         }
         catch (Exception ex)
         {

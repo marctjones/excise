@@ -49,12 +49,13 @@ public sealed class ThumbnailCacheService : IDisposable
         typeof(SkiaRenderer).Module.ModuleVersionId.ToString("N");
 
     public ThumbnailCacheService(string pdfPath, PdfDocument doc, ILogger logger,
-        int thumbnailDpi = 36)
+        int thumbnailDpi = 36,
+        string? cacheSalt = null)
     {
         _doc = doc ?? throw new ArgumentNullException(nameof(doc));
         _logger = logger;
         _thumbnailDpi = thumbnailDpi;
-        var hash = HashFile(pdfPath, thumbnailDpi, RendererCacheIdentity);
+        var hash = HashFile(pdfPath, thumbnailDpi, RendererCacheIdentity, cacheSalt);
         _cacheDir = Path.Combine(GetCacheRoot(), "thumbnails", "v2", hash);
         _logger.LogInformation("Thumbnail cache for {File} → {Dir}",
             Path.GetFileName(pdfPath), _cacheDir);
@@ -218,10 +219,11 @@ public sealed class ThumbnailCacheService : IDisposable
     /// 16 hex chars. Moving the file or duplicating it doesn't invalidate the
     /// cache, but renderer/options changes do.
     /// </summary>
-    private static string HashFile(string path, int thumbnailDpi, string rendererCacheIdentity)
+    private static string HashFile(string path, int thumbnailDpi, string rendererCacheIdentity, string? cacheSalt)
     {
         using var sha = SHA256.Create();
-        var salt = Encoding.UTF8.GetBytes($"thumbnail-dpi={thumbnailDpi}\nrenderer={rendererCacheIdentity}\n");
+        var salt = Encoding.UTF8.GetBytes(
+            $"thumbnail-dpi={thumbnailDpi}\nrenderer={rendererCacheIdentity}\ncache-salt={cacheSalt ?? string.Empty}\n");
         sha.TransformBlock(salt, 0, salt.Length, null, 0);
         using var fs = File.OpenRead(path);
         var buffer = new byte[81920];
