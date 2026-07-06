@@ -205,6 +205,7 @@ public class DocumentationClaimTests
         script.Should().Contain("tools/Pdfe.RenderTools/Pdfe.RenderTools.csproj");
         script.Should().Contain("corpus-hotspots");
         script.Should().Contain("gui-display-hotspots");
+        script.Should().Contain("latest-gui-workflow-hotspots.json");
         script.Should().Contain("latest-performance-baseline.json");
         script.Should().Contain("benchmark-hotpaths.json");
         releaseSmoke.Should().Contain("automation,ux,benchmark,aot,tests");
@@ -212,6 +213,7 @@ public class DocumentationClaimTests
         checklist.Should().Contain("benchmark-report.json");
         checklist.Should().Contain("benchmark-hotpaths.json");
         checklist.Should().Contain("latest-performance-baseline.md");
+        checklist.Should().Contain("gui-workflow-hotspots");
         checklist.Should().Contain("RMSE/SSIM");
         ci.Should().Contain("Run Benchmark Suite Regression Gate");
         ci.Should().Contain("--oracles none");

@@ -46,7 +46,7 @@ Use this checklist before tagging any `v*` release.
   isolation for subprocess-only reference renderers. The default
   `scripts/run-benchmarks.sh` wrapper additionally writes
   `latest-performance-baseline.json` and `latest-performance-baseline.md` to
-  index benchmark, corpus, and GUI hotspot artifacts.
+  index benchmark, corpus, GUI display, and GUI workflow hotspot artifacts.
 - Run the dedicated Native AOT release-lane gate before shipping an AOT
   artifact:
   `scripts/release-smoke.sh --quick --only=aot`. This uses
@@ -114,7 +114,7 @@ limitation before tagging.
 | Accessibility names, command metadata, keyboard-only reachability, and status announcements | `AccessibilityRegressionTests`; `PdfCommandRegistryTests`; `CommandMetadataCommandTests`; `scripts/run-accessibility-smoke.sh` | Platform review: follow `docs/ACCESSIBILITY_RELEASE_CHECKLIST.md` for macOS AX/VoiceOver, Windows UI Automation, and Linux/GNOME AT-SPI tree checks on dedicated runners. |
 | CLI automation, batch JSON, progress events, and platform wrappers | `BatchAutomationCommandTests`; `CommandMetadataCommandTests`; `scripts/run-automation-smoke.sh` | Platform review: follow `docs/AUTOMATION_API.md` examples for AppleScript/Shortcuts, PowerShell/Power Automate, and Linux/GNOME CLI workflows. |
 | UX/icon visual polish, toolbar/menu affordances, and design-quality screenshots | `VisualPolishAuditTests`; `scripts/run-ux-icon-audit.sh` | Review the generated `ux-icon-audit.md`, PNG screenshots, and `ux-icon-audit.json` before closing visual-polish issues. |
-| Benchmark speed, reference fidelity, redaction completeness, and renderer hotspot evidence | `BenchmarkSuiteTests`; `scripts/run-benchmarks.sh suite`; `Pdfe.RenderTools benchmark-suite`; `Pdfe.Rendering.Tests` performance/memory tests | Review `benchmark-report.md`, `benchmark-report.json`, `benchmark-pages.csv`, `benchmark-hotpaths.json`, `latest-performance-baseline.md`, and aggregate `corpus-hotspots`/`gui-display-hotspots` reports before closing performance issues. |
+| Benchmark speed, reference fidelity, redaction completeness, and renderer hotspot evidence | `BenchmarkSuiteTests`; `scripts/run-benchmarks.sh suite`; `Pdfe.RenderTools benchmark-suite`; `Pdfe.Rendering.Tests` performance/memory tests | Review `benchmark-report.md`, `benchmark-report.json`, `benchmark-pages.csv`, `benchmark-hotpaths.json`, `latest-performance-baseline.md`, and aggregate `corpus-hotspots`, `gui-display-hotspots`, and `gui-workflow-hotspots` reports before closing performance issues. |
 | Native AOT app packaging, warning budget, and symbol split | `scripts/run-aot-smoke.sh`; `scripts/release-smoke.sh --quick --only=aot`; optional `scripts/run-aot-smoke.sh --gui-smoke` on an interactive macOS runner | Review `aot-smoke.md`, `aot-smoke.json`, `aot-warnings.txt`, package size, symbol archive size, and any packaged GUI smoke evidence before shipping an AOT artifact. |
 
 The repeatable automated gate for this table is:

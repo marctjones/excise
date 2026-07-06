@@ -106,9 +106,9 @@ The suite writes `benchmark-report.json`, `benchmark-pages.csv`,
 `benchmark-hotpaths.json`, and `benchmark-report.md`. The default wrapper also
 writes `latest-performance-baseline.json` and
 `latest-performance-baseline.md`, which index the suite, corpus, and GUI
-hotspot artifacts for release evidence. In CI, `--oracles none` is used for the
-deterministic synthetic gate; local release runs use installed reference CLIs
-when present.
+display/workflow hotspot artifacts for release evidence. In CI, `--oracles
+none` is used for the deterministic synthetic gate; local release runs use
+installed reference CLIs when present.
 
 ```bash
 dotnet run --project tools/Pdfe.RenderTools/Pdfe.RenderTools.csproj -c Debug -- \
@@ -125,6 +125,17 @@ checks across all pages.
 dotnet run --project tools/Pdfe.RenderTools/Pdfe.RenderTools.csproj -c Debug -- \
     gui-display-hotspots PdfEditor.Tests/bin/Debug/net10.0/UI/test-output/gui-display-suite-*.json \
     --output logs/render-quality/gui-display-codepath-hotspots.json
+```
+
+The GUI workflow performance test records interaction timings such as document
+open, navigation, zoom, thumbnail loading, search, and redaction preview state
+publication in `gui-workflow-suite-*.json`. The same phase-hotspot aggregator
+can rank those workflow phases.
+
+```bash
+dotnet run --project tools/Pdfe.RenderTools/Pdfe.RenderTools.csproj -c Debug -- \
+    gui-display-hotspots PdfEditor.Tests/bin/Debug/net10.0/UI/test-output/gui-workflow-suite-*.json \
+    --output logs/render-quality/gui-workflow-codepath-hotspots.json
 ```
 
 | Status | Meaning |

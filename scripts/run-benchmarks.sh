@@ -31,6 +31,7 @@ Usage:
 
   scripts/run-benchmarks.sh corpus-hotspots <corpus-scan.json>... [--output out.json]
   scripts/run-benchmarks.sh gui-display-hotspots <gui-display.json>... [--output out.json]
+  scripts/run-benchmarks.sh gui-display-hotspots <gui-workflow.json>... [--output out.json]
       Pass explicit hotspot inputs through to Pdfe.RenderTools.
 
   scripts/run-benchmarks.sh benchmarkdotnet <BenchmarkDotNet args...>
@@ -94,13 +95,14 @@ write_performance_baseline_summary() {
     local suite_output="$1"
     local corpus_output="$2"
     local gui_output="$3"
+    local gui_workflow_output="$4"
     local baseline_json="$OUTPUT_DIR/latest-performance-baseline.json"
     local baseline_md="$OUTPUT_DIR/latest-performance-baseline.md"
 
     {
         printf '{\n'
         printf '  "schemaVersion": 1,\n'
-        printf '  "issues": ["#596", "#597", "#602"],\n'
+        printf '  "issues": ["#596", "#597", "#601", "#602"],\n'
         printf '  "generatedUtc": "%s",\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
         printf '  "policy": "Benchmark and hotspot evidence is grouped by pdfe-owned workload/code-path area; reference renderer timing is evidence only and is not an optimization target.",\n'
         printf '  "artifacts": [\n'
@@ -109,14 +111,15 @@ write_performance_baseline_summary() {
         artifact_json "benchmark-hotpaths" "$suite_output/benchmark-hotpaths.json" "#596 #597 #598 #599 #600"; printf ',\n'
         artifact_json "benchmark-markdown" "$suite_output/benchmark-report.md" "#596 #597"; printf ',\n'
         artifact_json "corpus-codepath-hotspots" "$corpus_output" "#597 #598 #599"; printf ',\n'
-        artifact_json "gui-codepath-hotspots" "$gui_output" "#597 #601"; printf '\n'
+        artifact_json "gui-codepath-hotspots" "$gui_output" "#597 #601"; printf ',\n'
+        artifact_json "gui-workflow-hotspots" "$gui_workflow_output" "#601"; printf '\n'
         printf '  ]\n'
         printf '}\n'
     } > "$baseline_json"
 
     {
         printf '# pdfe Performance Baseline\n\n'
-        printf -- '- Issues: #596, #597, #602\n'
+        printf -- '- Issues: #596, #597, #601, #602\n'
         printf -- '- Policy: benchmark and hotspot evidence is grouped by pdfe-owned workload/code-path area; reference renderer timing is evidence only.\n\n'
         printf '| Artifact | Exists | Path | Issues |\n'
         printf '| --- | --- | --- | --- |\n'
@@ -126,7 +129,8 @@ write_performance_baseline_summary() {
             "benchmark-hotpaths|$suite_output/benchmark-hotpaths.json|#596 #597 #598 #599 #600" \
             "benchmark-markdown|$suite_output/benchmark-report.md|#596 #597" \
             "corpus-codepath-hotspots|$corpus_output|#597 #598 #599" \
-            "gui-codepath-hotspots|$gui_output|#597 #601"; do
+            "gui-codepath-hotspots|$gui_output|#597 #601" \
+            "gui-workflow-hotspots|$gui_workflow_output|#601"; do
             IFS='|' read -r name path issues <<< "$row"
             local exists="no"
             [ -f "$path" ] && exists="yes"
@@ -193,6 +197,23 @@ default_benchmarks() {
         echo "No GUI display reports found under PdfEditor.Tests/bin/*/UI/test-output/" >&2
     fi
 
+    local gui_workflow_reports=()
+    while IFS= read -r gui_report; do
+        gui_workflow_reports+=("$gui_report")
+    done < <(
+        find PdfEditor.Tests/bin -path "*/UI/test-output/gui-workflow-suite-*.json" -type f -print 2>/dev/null |
+            sort
+    )
+    if [ "${#gui_workflow_reports[@]}" -gt 0 ]; then
+        echo
+        echo "GUI workflow code-path hotspots from ${#gui_workflow_reports[@]} report(s)"
+        run_render_tools gui-display-hotspots "${gui_workflow_reports[@]}" \
+            --output "$OUTPUT_DIR/latest-gui-workflow-hotspots.json"
+        ran=1
+    else
+        echo "No GUI workflow reports found under PdfEditor.Tests/bin/*/UI/test-output/" >&2
+    fi
+
     if [ "$ran" = "0" ]; then
         echo
         echo "No hotspot inputs were available. The speed + quality benchmark report was still written." >&2
@@ -201,7 +222,8 @@ default_benchmarks() {
     write_performance_baseline_summary \
         "$suite_output" \
         "$OUTPUT_DIR/latest-corpus-codepath-hotspots.json" \
-        "$OUTPUT_DIR/latest-gui-codepath-hotspots.json"
+        "$OUTPUT_DIR/latest-gui-codepath-hotspots.json" \
+        "$OUTPUT_DIR/latest-gui-workflow-hotspots.json"
 }
 
 if [ "$#" -eq 0 ]; then
