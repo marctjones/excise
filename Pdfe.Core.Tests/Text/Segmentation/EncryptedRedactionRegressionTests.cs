@@ -29,7 +29,9 @@ public sealed class EncryptedRedactionRegressionTests
         string password,
         string secret)
     {
-        using var doc = PdfDocument.Open(Path.Combine(FindRepoRoot(), relativePath), password);
+        var path = ExistingFixturePath(relativePath);
+
+        using var doc = PdfDocument.Open(path, password);
         doc.IsEncrypted.Should().BeTrue();
         string.Concat(doc.GetPage(1).Letters.Select(l => l.Value)).Should().Contain(secret);
 
@@ -49,7 +51,7 @@ public sealed class EncryptedRedactionRegressionTests
         string relativePath,
         string password)
     {
-        var path = Path.Combine(FindRepoRoot(), relativePath);
+        var path = ExistingFixturePath(relativePath);
 
         var missingPassword = () => PdfDocument.Open(path);
         missingPassword.Should().Throw<PdfEncryptionNotSupportedException>();
@@ -69,5 +71,12 @@ public sealed class EncryptedRedactionRegressionTests
         }
 
         throw new DirectoryNotFoundException("Could not find repository root from test base directory.");
+    }
+
+    private static string ExistingFixturePath(string relativePath)
+    {
+        var path = Path.Combine(FindRepoRoot(), relativePath);
+        Assert.SkipWhen(!File.Exists(path), $"Encrypted PDF fixture not available: {relativePath}");
+        return path;
     }
 }
