@@ -96,7 +96,7 @@ public class BenchmarkSuiteTests
                 "--page-limit", "1",
                 "--output-dir", dir,
                 "--fail-on-regression",
-                "--max-pdfe-render-ms", "0.001",
+                "--max-pdfe-render-ms", "-1",
             });
 
             exitCode.Should().Be(1);
