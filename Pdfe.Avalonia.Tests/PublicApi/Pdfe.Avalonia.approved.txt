@@ -76,6 +76,7 @@ namespace Pdfe.Avalonia.Controls
         public static readonly Avalonia.StyledProperty<System.Collections.Generic.IEnumerable<Pdfe.Avalonia.Controls.HiddenTextHighlight>?> HiddenTextHighlightsProperty;
         public static readonly Avalonia.StyledProperty<Pdfe.Avalonia.Controls.InteractionMode> InteractionModeProperty;
         public static readonly Avalonia.StyledProperty<bool> IsLoadingProperty;
+        public static readonly Avalonia.StyledProperty<long> RenderVersionProperty;
         public static readonly Avalonia.StyledProperty<System.Collections.Generic.IEnumerable<Pdfe.Core.Editing.PdfTypewriterTextOperation>?> TypewriterTextOperationsProperty;
         public static readonly Avalonia.StyledProperty<Pdfe.Avalonia.Controls.PdfViewMode> ViewModeProperty;
         public static readonly Avalonia.StyledProperty<double> ZoomLevelProperty;
@@ -89,6 +90,7 @@ namespace Pdfe.Avalonia.Controls
         public System.Collections.Generic.IEnumerable<Pdfe.Avalonia.Controls.HiddenTextHighlight>? HiddenTextHighlights { get; set; }
         public Pdfe.Avalonia.Controls.InteractionMode InteractionMode { get; set; }
         public bool IsLoading { get; }
+        public long RenderVersion { get; set; }
         public System.Collections.Generic.IEnumerable<Pdfe.Core.Editing.PdfTypewriterTextOperation>? TypewriterTextOperations { get; set; }
         public Pdfe.Avalonia.Controls.PdfViewMode ViewMode { get; set; }
         public double ZoomLevel { get; set; }

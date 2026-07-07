@@ -8,6 +8,37 @@ semantic versioning.
 
 No changes yet.
 
+## [2.26.0] - 2026-07-07
+
+Native AOT and GUI hot-path responsiveness release. Additive public API change
+in `Pdfe.Avalonia`; no intended breaking change.
+
+### Added
+- **Native AOT release lane (#590-#595).** Added
+  `scripts/run-aot-smoke.sh` and wired `scripts/release-smoke.sh --only=aot`
+  so the GUI AOT build can be published, packaged, warning-audited, and
+  optionally exercised with packaged GUI smoke evidence.
+- **GUI hotspot regression reporting (#596, #601).** Added structured GUI
+  workflow hotspot reports for document open, continuous scroll, page jumps,
+  search, annotation, forms, redaction, save, and close workflows.
+- **Full GUI responsiveness coverage (#601).** Added end-to-end responsiveness
+  tests and catalog coverage for the long-document and broad workflow phases
+  that should stay below human-visible interaction budgets.
+
+### Changed
+- **Viewer-owned display rendering (#601).** Shifted display rendering
+  ownership into the viewer, cached rendered pages as bitmaps, and exposed the
+  additive `PdfViewerControl.RenderVersion` API so hosts can explicitly
+  invalidate viewer caches after visual document changes.
+- **Continuous-view hot path (#601).** Cached continuous page layout positions
+  and optimized visible-page lookup for long-document scrolling.
+
+### Tests
+- Regenerated the `Pdfe.Avalonia` public API approval baseline for the
+  intentional `RenderVersion` addition.
+- Redaction gates remain required for this release line:
+  `dotnet test ... --filter "FullyQualifiedName~Redaction"`.
+
 ## [2.25.0] - 2026-07-04
 
 Benchmarking and renderer-performance release. No intended public API break.
