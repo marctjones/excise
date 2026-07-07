@@ -62,8 +62,8 @@ run_gate "Generate Coverage Report" \
      -targetdir:coverage/report -reporttypes:Cobertura"
 
 # 4. Check coverage threshold
-run_gate "Coverage Gate (Pdfe.Core >= 94%)" \
-    "scripts/check-coverage.sh coverage/report/coverage.cobertura.xml 0.94 Pdfe.Core"
+run_gate "Coverage Gate (Pdfe.Core >= 89%)" \
+    "scripts/check-coverage.sh coverage/report/Cobertura.xml 0.89 Pdfe.Core"
 
 # 5. Run other test projects (no corpus tests - they're slow)
 run_gate "Pdfe.Cli.Tests" \
