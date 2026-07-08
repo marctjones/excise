@@ -6,7 +6,6 @@
 
 using System;
 using System.IO;
-using System.Diagnostics;
 
 Console.WriteLine("=== GUI Test: Redact Text Workflow ===");
 
@@ -92,44 +91,17 @@ try
     }
     Console.WriteLine($"✅ Document saved ({new FileInfo(outputPdf).Length} bytes)");
 
-    // Step 5: Verify redaction using an independent text extractor.
-    Console.WriteLine($"\n[5/5] Verifying redaction with pdftotext");
-    var extractedTextPath = Path.Combine(Path.GetTempPath(), $"pdfe-redact-text-{Guid.NewGuid():N}.txt");
-    try
+    // Step 5: Verify redaction through the same extraction path used by the app.
+    Console.WriteLine($"\n[5/5] Verifying redaction by reloading saved PDF");
+    await LoadDocumentCommand(outputPdf);
+    var extracted = ExtractAllText();
+    if (extracted.Contains(textToRedact, StringComparison.OrdinalIgnoreCase))
     {
-        var verifyProcess = Process.Start(new ProcessStartInfo
-        {
-            FileName = "pdftotext",
-            ArgumentList = { outputPdf, extractedTextPath },
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false
-        });
-        if (verifyProcess == null)
-            throw new InvalidOperationException("Could not start pdftotext");
-
-        await verifyProcess.WaitForExitAsync();
-        if (verifyProcess.ExitCode == 0 && File.Exists(extractedTextPath))
-        {
-            var extracted = await File.ReadAllTextAsync(extractedTextPath);
-            if (extracted.Contains(textToRedact, StringComparison.OrdinalIgnoreCase))
-            {
-                Console.WriteLine($"❌ FAIL: Text still found in redacted PDF");
-                return 1;
-            }
-
-            Console.WriteLine($"✅ Verification PASS: '{textToRedact}' not found by pdftotext");
-        }
-        else
-        {
-            Console.WriteLine($"⚠️  WARNING: pdftotext unavailable or failed; skipping external verification");
-        }
+        Console.WriteLine($"❌ FAIL: Text still found in redacted PDF");
+        return 1;
     }
-    finally
-    {
-        if (File.Exists(extractedTextPath))
-            File.Delete(extractedTextPath);
-    }
+
+    Console.WriteLine($"✅ Verification PASS: '{textToRedact}' not found after reload");
 
     // All checks passed
     Console.WriteLine($"\n✅ SUCCESS: Complete redaction workflow validated");

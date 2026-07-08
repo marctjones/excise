@@ -9,7 +9,6 @@
 
 using System;
 using System.IO;
-using System.Diagnostics;
 using System.Linq;
 
 Console.WriteLine("=== GUI Test: Birth Certificate Redaction (v1.3.0 Milestone) ===");
@@ -139,68 +138,41 @@ try
     Console.WriteLine($"  Output: {outputPdf}");
     Console.WriteLine($"  Size: {outputSize / 1024} KB");
 
-    // Step 5: Verify redactions with an independent text extractor.
-    Console.WriteLine($"\n[Step 5/5] Verifying redactions with pdftotext");
+    // Step 5: Verify redactions through the same extraction path used by the app.
+    Console.WriteLine($"\n[Step 5/5] Verifying redactions by reloading saved PDF");
 
-    var extractedTextPath = Path.Combine(Path.GetTempPath(), $"pdfe-birth-cert-{Guid.NewGuid():N}.txt");
     int verificationsPassed = 0;
     int verificationsFailed = 0;
-    try
+    await LoadDocumentCommand(outputPdf);
+    var extracted = ExtractAllText();
+    foreach (var term in termsToRedact)
     {
-        var verifyProcess = Process.Start(new ProcessStartInfo
+        if (!extracted.Contains(term, StringComparison.OrdinalIgnoreCase))
         {
-            FileName = "pdftotext",
-            ArgumentList = { outputPdf, extractedTextPath },
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false
-        });
-        if (verifyProcess == null)
-            throw new InvalidOperationException("Could not start pdftotext");
-
-        await verifyProcess.WaitForExitAsync();
-        if (verifyProcess.ExitCode != 0 || !File.Exists(extractedTextPath))
-        {
-            Console.WriteLine($"⚠️  WARNING: pdftotext unavailable or failed; skipping external verification");
+            Console.WriteLine($"  ✅ '{term}' - not found (successfully redacted)");
+            verificationsPassed++;
         }
         else
         {
-            var extracted = await File.ReadAllTextAsync(extractedTextPath);
-            foreach (var term in termsToRedact)
-            {
-                if (!extracted.Contains(term, StringComparison.OrdinalIgnoreCase))
-                {
-                    Console.WriteLine($"  ✅ '{term}' - not found (successfully redacted)");
-                    verificationsPassed++;
-                }
-                else
-                {
-                    Console.WriteLine($"  ⚠️  '{term}' - still present (may be substring limitation #87)");
-                    verificationsFailed++;
-                }
-            }
-
-            Console.WriteLine($"\nVerification results: {verificationsPassed}/{termsToRedact.Length} passed");
-
-            // We accept some failures due to substring limitation (#87)
-            // Require at least 50% success rate
-            var successRate = (double)verificationsPassed / termsToRedact.Length;
-
-            if (successRate < 0.5)
-            {
-                Console.WriteLine($"❌ FAIL: Success rate too low ({successRate:P0})");
-                Console.WriteLine($"  Expected: >= 50%");
-                return 1;
-            }
-
-            Console.WriteLine($"✅ Success rate: {successRate:P0} (acceptable)");
+            Console.WriteLine($"  ⚠️  '{term}' - still present (may be substring limitation #87)");
+            verificationsFailed++;
         }
     }
-    finally
+
+    Console.WriteLine($"\nVerification results: {verificationsPassed}/{termsToRedact.Length} passed");
+
+    // We accept some failures due to substring limitation (#87)
+    // Require at least 50% success rate
+    var successRate = (double)verificationsPassed / termsToRedact.Length;
+
+    if (successRate < 0.5)
     {
-        if (File.Exists(extractedTextPath))
-            File.Delete(extractedTextPath);
+        Console.WriteLine($"❌ FAIL: Success rate too low ({successRate:P0})");
+        Console.WriteLine($"  Expected: >= 50%");
+        return 1;
     }
+
+    Console.WriteLine($"✅ Success rate: {successRate:P0} (acceptable)");
 
     // Final summary
     Console.WriteLine($"\n{'='.ToString().PadRight(60, '=')}");

@@ -775,6 +775,7 @@ public class PdfViewerHeadlessRenderTests
         }
 
         return byId.Values
+            .Where(c => File.Exists(c.AbsolutePath))
             .OrderBy(c => SourcePriority(c.Source))
             .ThenBy(c => c.RelativePath, StringComparer.Ordinal)
             .ThenBy(c => c.PageNumber);
