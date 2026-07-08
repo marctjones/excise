@@ -8,6 +8,20 @@ semantic versioning.
 
 No changes yet.
 
+## [2.27.1] - 2026-07-08
+
+macOS bundle identity correction release. No intended public API break.
+
+### Changed
+- Changed the macOS app bundle identifier from `com.marcjones.pdfe` to
+  `cl.skpt.pdfe` so LaunchServices, Finder/Open With, and packaged GUI smoke
+  target the skpt-owned pdfe app identity.
+- Updated packaged GUI smoke shutdown to address the new bundle identifier.
+
+### Tests
+- Release smoke passed for `2.27.1` with the quick, package, and packaged-GUI
+  gates: `logs/release-smoke_20260708_021515`.
+
 ## [2.27.0] - 2026-07-08
 
 GUI search responsiveness and release-gate hardening release. No intended
