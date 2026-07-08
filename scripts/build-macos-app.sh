@@ -139,7 +139,7 @@ cat > "$BUNDLE/Contents/Info.plist" <<PLIST
     <key>CFBundleDisplayName</key>
     <string>pdfe</string>
     <key>CFBundleIdentifier</key>
-    <string>com.marcjones.pdfe</string>
+    <string>cl.skpt.pdfe</string>
     <key>CFBundleVersion</key>
     <string>${VERSION}</string>
     <key>CFBundleShortVersionString</key>

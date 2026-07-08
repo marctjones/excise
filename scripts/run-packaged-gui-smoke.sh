@@ -234,7 +234,7 @@ quit_app() {
         sleep 2
         kill -KILL "$app_pid" 2>/dev/null || true
     else
-        osascript -e 'tell application id "com.marcjones.pdfe" to quit' >/dev/null 2>&1 || true
+        osascript -e 'tell application id "cl.skpt.pdfe" to quit' >/dev/null 2>&1 || true
     fi
 }
 
