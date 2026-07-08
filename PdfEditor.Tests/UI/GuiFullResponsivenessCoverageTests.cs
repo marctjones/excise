@@ -150,7 +150,20 @@ public class GuiFullResponsivenessCoverageTests
                 vm.FindNow();
                 await WaitForAsync(() => vm.SearchMatches.Count >= 40 && !vm.IsSearching, TimeSpan.FromSeconds(8));
             });
-            AddResult(results, "search-complete-large-document", searchCompleteMs, 3_000, 8_000, "gui.search.complete");
+            AddResult(
+                results,
+                "search-complete-large-document",
+                searchCompleteMs,
+                passMs: 3_000,
+                warnMs: 8_000,
+                new Dictionary<string, long>(StringComparer.Ordinal)
+                {
+                    ["gui.search.complete"] = searchCompleteMs,
+                    ["gui.search.worker"] = vm.LastSearchWorkerElapsedMs,
+                    ["gui.search.ui-queue"] = vm.LastSearchUiQueueElapsedMs,
+                    ["gui.search.ui-publish"] = vm.LastSearchUiPublishElapsedMs,
+                    ["gui.search.total"] = vm.LastSearchTotalElapsedMs,
+                });
             vm.SearchMatches.Should().HaveCountGreaterThanOrEqualTo(40);
 
             AddResult(

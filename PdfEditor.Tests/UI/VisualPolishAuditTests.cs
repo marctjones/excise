@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Avalonia;
@@ -44,6 +46,31 @@ public class VisualPolishAuditTests
         iconResources.Should().Contain("IconPage");
         styles.Should().Contain("PathIcon.toolbar-icon");
         styles.Should().Contain("PathIcon.menu-icon");
+    }
+
+    [Fact]
+    public void MainShell_PathIconResources_AllResolve()
+    {
+        var mainWindow = Read("PdfEditor/Views/MainWindow.axaml");
+        var iconResources = Read("PdfEditor/Styles/Icons.axaml");
+
+        var referencedKeys = Regex.Matches(
+                mainWindow,
+                "PathIcon\\b[^>]*\\bData=\"\\{StaticResource (?<key>Icon[A-Za-z0-9_]+)\\}\"",
+                RegexOptions.Singleline)
+            .Select(match => match.Groups["key"].Value)
+            .Distinct(StringComparer.Ordinal)
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+        var definedKeys = Regex.Matches(
+                iconResources,
+                "x:Key=\"(?<key>Icon[A-Za-z0-9_]+)\"")
+            .Select(match => match.Groups["key"].Value)
+            .ToHashSet(StringComparer.Ordinal);
+
+        referencedKeys.Should().NotBeEmpty("the main shell should use vector icon resources");
+        referencedKeys.Where(key => !definedKeys.Contains(key)).Should().BeEmpty(
+            "every menu and toolbar PathIcon StaticResource must resolve at runtime");
     }
 
     [Fact]

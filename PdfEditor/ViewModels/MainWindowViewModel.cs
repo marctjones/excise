@@ -91,6 +91,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private Services.ThumbnailCacheService? _thumbnailCache;
     internal Services.DocumentTextIndex? TextIndex;
     private System.Threading.CancellationTokenSource? _indexBuildCts;
+    private const int SearchIndexBackgroundStartDelayMs = 750;
     private CancellationTokenSource? _currentPageRenderCts;
     private CancellationTokenSource? _adjacentPagePrefetchCts;
     private long _currentPageRenderSequence;
@@ -963,7 +964,7 @@ public partial class MainWindowViewModel : ViewModelBase
                         : string.Empty;
                 }
             });
-            _ = TextIndex.BuildAsync(indexProgress, indexCts.Token);
+            StartSearchIndexBuild(TextIndex, indexCts, indexProgress);
             searchIndexStartedElapsedMs = openSw.ElapsedMilliseconds;
 
             _logger.LogInformation(">>> STEP 9: RaisePropertyChanged(TotalPages)");
@@ -980,6 +981,9 @@ public partial class MainWindowViewModel : ViewModelBase
 
             _logger.LogInformation(">>> STEP 12b: Restoring document state (zoom, page index)");
             await RestoreDocumentStateAsync(filePath);
+
+            if (OperationStatus == "Opening PDF…")
+                OperationStatus = string.Empty;
 
             openSw.Stop();
             LastDocumentOpenTiming = new DocumentOpenTiming(
@@ -1581,11 +1585,31 @@ public partial class MainWindowViewModel : ViewModelBase
         TextIndex = new Services.DocumentTextIndex(
             PdfCoreDocument!,
             Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance);
-        _ = TextIndex.BuildAsync(cancellationToken: _indexBuildCts.Token);
+        StartSearchIndexBuild(TextIndex, _indexBuildCts);
 
         this.RaisePropertyChanged(nameof(CurrentPage));
         this.RaisePropertyChanged(nameof(CurrentPageFormFields));
         return Task.CompletedTask;
+    }
+
+    private void StartSearchIndexBuild(
+        Services.DocumentTextIndex index,
+        System.Threading.CancellationTokenSource indexCts,
+        IProgress<(int Done, int Total)>? progress = null)
+    {
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(SearchIndexBackgroundStartDelayMs, indexCts.Token)
+                    .ConfigureAwait(false);
+                await index.BuildAsync(progress, indexCts.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected when the document changes before the idle index starts.
+            }
+        }, CancellationToken.None);
     }
 
     private void RequestViewerRenderRefresh()

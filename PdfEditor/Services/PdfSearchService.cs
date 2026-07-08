@@ -4,7 +4,6 @@ using Pdfe.Core.Text;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -279,6 +278,9 @@ public class PdfSearchService
         bool wholeWordsOnly,
         bool useRegex)
     {
+        if (page.Dictionary.GetOptional("Annots") == null)
+            yield break;
+
         IReadOnlyList<PdfAnnotation> annots;
         try { annots = page.GetAnnotations(); }
         catch (Exception ex)
@@ -427,21 +429,20 @@ public class PdfSearchService
 
             foreach (Match match in regexMatches)
             {
-                // Find word positions for this match
-                var matchedWords = FindWordsAtPosition(wordSpans, match.Index, match.Length);
-
-                if (matchedWords.Any())
+                if (TryFindWordBoundsAtPosition(
+                    wordSpans,
+                    match.Index,
+                    match.Length,
+                    out var firstWord,
+                    out var lastWord))
                 {
-                    var firstWord = matchedWords.First();
-                    var lastWord = matchedWords.Last();
-
                     matches.Add(new SearchMatch
                     {
                         PageIndex = pageIndex,
                         MatchedText = match.Value,
-                        X = firstWord.BoundingBox.Left,
+                        X = firstWord!.BoundingBox.Left,
                         Y = firstWord.BoundingBox.Bottom,
-                        Width = lastWord.BoundingBox.Right - firstWord.BoundingBox.Left,
+                        Width = lastWord!.BoundingBox.Right - firstWord.BoundingBox.Left,
                         Height = Math.Max(firstWord.BoundingBox.Height, lastWord.BoundingBox.Height),
                         Context = GetContext(pageText, match.Index, match.Length)
                     });
@@ -505,21 +506,20 @@ public class PdfSearchService
         int index = 0;
         while ((index = pageText.IndexOf(searchTerm, index, comparison)) != -1)
         {
-            // Find words that contain this match
-            var matchedWords = FindWordsAtPosition(wordSpans, index, searchTerm.Length);
-
-            if (matchedWords.Any())
+            if (TryFindWordBoundsAtPosition(
+                wordSpans,
+                index,
+                searchTerm.Length,
+                out var firstWord,
+                out var lastWord))
             {
-                var firstWord = matchedWords.First();
-                var lastWord = matchedWords.Last();
-
                 matches.Add(new SearchMatch
                 {
                     PageIndex = pageIndex,
                     MatchedText = pageText.Substring(index, searchTerm.Length),
-                    X = firstWord.BoundingBox.Left,
+                    X = firstWord!.BoundingBox.Left,
                     Y = firstWord.BoundingBox.Bottom,
-                    Width = lastWord.BoundingBox.Right - firstWord.BoundingBox.Left,
+                    Width = lastWord!.BoundingBox.Right - firstWord.BoundingBox.Left,
                     Height = Math.Max(firstWord.BoundingBox.Height, lastWord.BoundingBox.Height),
                     Context = GetContext(pageText, index, searchTerm.Length)
                 });
@@ -565,9 +565,15 @@ public class PdfSearchService
         return spans;
     }
 
-    private static List<Word> FindWordsAtPosition(IReadOnlyList<WordSpan> wordSpans, int startIndex, int length)
+    private static bool TryFindWordBoundsAtPosition(
+        IReadOnlyList<WordSpan> wordSpans,
+        int startIndex,
+        int length,
+        out Word? firstWord,
+        out Word? lastWord)
     {
-        var matchedWords = new List<Word>();
+        firstWord = null;
+        lastWord = null;
 
         // Now find all words that overlap with the search range [startIndex, startIndex+length)
         var matchEndIndex = startIndex + length;
@@ -580,11 +586,11 @@ public class PdfSearchService
             if (span.End <= startIndex)
                 continue;
 
-            if (!matchedWords.Contains(span.Word))
-                matchedWords.Add(span.Word);
+            firstWord ??= span.Word;
+            lastWord = span.Word;
         }
 
-        return matchedWords;
+        return firstWord != null && lastWord != null;
     }
 
     private readonly record struct WordSpan(int Start, int End, Word Word);

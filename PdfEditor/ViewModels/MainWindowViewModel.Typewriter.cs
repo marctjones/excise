@@ -149,7 +149,7 @@ public partial class MainWindowViewModel
         TextIndex = new Services.DocumentTextIndex(
             PdfCoreDocument!,
             Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance);
-        _ = TextIndex.BuildAsync(cancellationToken: _indexBuildCts.Token);
+        StartSearchIndexBuild(TextIndex, _indexBuildCts);
 
         this.RaisePropertyChanged(nameof(TotalPages));
         this.RaisePropertyChanged(nameof(CurrentPage));

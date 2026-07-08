@@ -8,6 +8,42 @@ semantic versioning.
 
 No changes yet.
 
+## [2.27.0] - 2026-07-08
+
+GUI search responsiveness and release-gate hardening release. No intended
+public API break.
+
+### Changed
+- **Search and indexing hot paths.** Reused the page letter cache for page text
+  and word extraction, made document text-index builds single-flight, skipped
+  annotation search work on pages without annotations, and removed per-match word
+  list allocations from search result bounds calculation.
+- **Background indexing responsiveness.** Delayed search-index startup after
+  document open and page mutations so first-page interaction stays responsive,
+  while keeping the index available for fast repeated searches.
+- **Search result publication.** Batched search-match publication to the UI,
+  deferred first-match navigation behind the result update, and recorded worker,
+  UI queue, UI publish, and total search timings for hotspot reports.
+- **Status-message accuracy.** Cleared `Opening PDF…` once the document is
+  usable and hardened search cancellation/close paths so stale `Searching…`
+  status and inline progress text do not remain visible.
+
+### Added
+- **Status-message regression audit.** Added UI tests that verify document-open
+  and cleared-search status transitions remain accurate.
+- **Icon resource regression audit.** Added a main-shell `PathIcon`
+  `StaticResource` sweep so toolbar and menu icon references fail tests if an
+  icon resource is missing.
+- **Search subphase hotspot reporting.** Added `gui.search.worker`,
+  `gui.search.ui-queue`, `gui.search.ui-publish`, and `gui.search.total` to the
+  GUI workflow performance reports.
+
+### Tests
+- Stabilized headless GUI fixture checks and encrypted redaction fixture skips on
+  machines where optional encrypted fixtures are unavailable.
+- Aligned the core coverage gate with the current baseline so CI fails on real
+  regressions instead of stale thresholds.
+
 ## [2.26.0] - 2026-07-07
 
 Native AOT and GUI hot-path responsiveness release. Additive public API change

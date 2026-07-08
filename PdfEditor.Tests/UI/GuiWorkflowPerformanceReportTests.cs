@@ -97,6 +97,10 @@ public class GuiWorkflowPerformanceReportTests
                 phaseElapsedMs: new Dictionary<string, long>(StringComparer.Ordinal)
                 {
                     ["gui.search.complete"] = searchCompleteElapsedMs,
+                    ["gui.search.worker"] = vm.LastSearchWorkerElapsedMs,
+                    ["gui.search.ui-queue"] = vm.LastSearchUiQueueElapsedMs,
+                    ["gui.search.ui-publish"] = vm.LastSearchUiPublishElapsedMs,
+                    ["gui.search.total"] = vm.LastSearchTotalElapsedMs,
                 }));
 
             var reportPath = WriteReport(results);

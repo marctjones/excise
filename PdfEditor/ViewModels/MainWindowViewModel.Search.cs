@@ -4,6 +4,7 @@ using PdfEditor.Services;
 using ReactiveUI;
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Reactive;
 using System.Threading;
@@ -35,9 +36,15 @@ public partial class MainWindowViewModel
     // sluggish; 150 ms is short enough to feel "live" but still cancels
     // intermediate keystrokes when typing a multi-letter word at speed.
     private const int SearchDebounceMs = 150;
+    private long _searchGeneration;
 
     private bool _isSearching;
     private string _searchProgressText = string.Empty;
+
+    internal long LastSearchWorkerElapsedMs { get; private set; }
+    internal long LastSearchUiQueueElapsedMs { get; private set; }
+    internal long LastSearchUiPublishElapsedMs { get; private set; }
+    internal long LastSearchTotalElapsedMs { get; private set; }
 
     /// <summary>True while a search is in flight. Drives the inline spinner.</summary>
     public bool IsSearching
@@ -105,7 +112,7 @@ public partial class MainWindowViewModel
     /// </summary>
     private void ScheduleSearchDebounced()
     {
-        _searchCts?.Cancel();
+        CancelActiveSearch();
         if (string.IsNullOrWhiteSpace(_searchText))
         {
             ClearSearch();
@@ -113,7 +120,7 @@ public partial class MainWindowViewModel
         }
 
         var cts = new CancellationTokenSource();
-        _searchCts = cts;
+        var searchGeneration = BeginSearch(cts);
         var token = cts.Token;
         OperationStatus = "Searching…";
 
@@ -129,8 +136,8 @@ public partial class MainWindowViewModel
             try
             {
                 await Task.Delay(SearchDebounceMs, token).ConfigureAwait(false);
-                if (token.IsCancellationRequested) return;
-                PerformSearch(query, caseSensitive, wholeWords, useRegex, token);
+                if (token.IsCancellationRequested || !IsCurrentSearch(searchGeneration)) return;
+                PerformSearch(query, caseSensitive, wholeWords, useRegex, token, Stopwatch.GetTimestamp(), searchGeneration);
             }
             catch (OperationCanceledException) { /* superseded */ }
         });
@@ -220,21 +227,22 @@ public partial class MainWindowViewModel
     /// </summary>
     public void FindNow()
     {
-        _searchCts?.Cancel();
+        CancelActiveSearch();
         if (string.IsNullOrWhiteSpace(_searchText))
         {
             ClearSearch();
             return;
         }
         var cts = new CancellationTokenSource();
-        _searchCts = cts;
+        var searchGeneration = BeginSearch(cts);
         var token = cts.Token;
         OperationStatus = "Searching…";
         var query = _searchText;
         var caseSensitive = _searchCaseSensitive;
         var wholeWords = _searchWholeWords;
         var useRegex = _searchUseRegex;
-        Task.Run(() => PerformSearch(query, caseSensitive, wholeWords, useRegex, token));
+        var searchStartedTimestamp = Stopwatch.GetTimestamp();
+        Task.Run(() => PerformSearch(query, caseSensitive, wholeWords, useRegex, token, searchStartedTimestamp, searchGeneration));
     }
 
     /// <summary>
@@ -259,6 +267,7 @@ public partial class MainWindowViewModel
     /// </summary>
     private void CloseSearch()
     {
+        CancelActiveSearch();
         IsSearchVisible = false;
         ClearSearch();
         _logger.LogInformation("Search closed");
@@ -271,9 +280,13 @@ public partial class MainWindowViewModel
     /// superseding query abort us mid-walk.
     /// </summary>
     private void PerformSearch(string query, bool caseSensitive, bool wholeWords, bool useRegex,
-        CancellationToken token)
+        CancellationToken token, long searchStartedTimestamp, long searchGeneration)
     {
-        if (_searchService == null) return;
+        if (_searchService == null)
+        {
+            PostClearSearchStatus(searchGeneration);
+            return;
+        }
 
         var doc = PdfCoreDocument;
         // Fall back to file-path-based search only when the in-memory
@@ -288,6 +301,8 @@ public partial class MainWindowViewModel
             // the UI thread to avoid cross-thread RaisePropertyChanged.
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
+                if (token.IsCancellationRequested || !IsCurrentSearch(searchGeneration))
+                    return;
                 IsSearching = true;
                 SearchProgressText = "Searching…";
             });
@@ -298,14 +313,20 @@ public partial class MainWindowViewModel
             // the dispatcher.
             var progress = new Progress<PdfSearchService.SearchProgress>(p =>
             {
-                if (token.IsCancellationRequested) return;
-                SearchProgressText = p.PagesScanned == 0
+                if (token.IsCancellationRequested || !IsCurrentSearch(searchGeneration)) return;
+                var progressText = p.PagesScanned == 0
                     ? $"Searching… 0 of {p.TotalPages} pages"
                     : $"Searching… page {p.PagesScanned} of {p.TotalPages} — " +
                       $"{p.MatchesFound} match{(p.MatchesFound == 1 ? "" : "es")} so far";
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    if (!token.IsCancellationRequested && IsCurrentSearch(searchGeneration))
+                        SearchProgressText = progressText;
+                }, Avalonia.Threading.DispatcherPriority.Background);
             });
 
             System.Collections.Generic.List<PdfSearchService.SearchMatch> matches;
+            var workerSw = Stopwatch.StartNew();
             // Prefer the pre-built text index when available — searches
             // become near-instant because per-page extraction has already
             // happened. Fall back to live extraction while the index is
@@ -326,22 +347,30 @@ public partial class MainWindowViewModel
                 matches = _searchService.Search(_currentFilePath, query,
                     caseSensitive, wholeWords, useRegex: useRegex, progress: progress);
             }
-            else return;
+            else
+            {
+                PostClearSearchStatus(searchGeneration);
+                return;
+            }
+            workerSw.Stop();
+            LastSearchWorkerElapsedMs = workerSw.ElapsedMilliseconds;
 
-            if (token.IsCancellationRequested) return;
+            if (token.IsCancellationRequested || !IsCurrentSearch(searchGeneration)) return;
 
+            var publishQueuedTimestamp = Stopwatch.GetTimestamp();
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
-                if (token.IsCancellationRequested) return;
+                if (token.IsCancellationRequested || !IsCurrentSearch(searchGeneration)) return;
+                LastSearchUiQueueElapsedMs = ElapsedMillisecondsSince(publishQueuedTimestamp);
+                var publishStartedTimestamp = Stopwatch.GetTimestamp();
 
-                SearchMatches.Clear();
-                foreach (var match in matches)
-                    SearchMatches.Add(match);
+                SearchMatches = new ObservableCollection<PdfSearchService.SearchMatch>(matches);
+                PdfSearchService.SearchMatch? firstMatch = null;
 
                 if (SearchMatches.Count > 0)
                 {
                     CurrentSearchMatchIndex = 0;
-                    NavigateToSearchMatch(SearchMatches[0]);
+                    firstMatch = SearchMatches[0];
                 }
                 else
                 {
@@ -349,24 +378,37 @@ public partial class MainWindowViewModel
                 }
 
                 this.RaisePropertyChanged(nameof(SearchResultText));
-                IsSearching = false;
-                SearchProgressText = string.Empty;
-                OperationStatus = string.Empty;
+                ClearSearchStatus();
+                LastSearchUiPublishElapsedMs = ElapsedMillisecondsSince(publishStartedTimestamp);
+                LastSearchTotalElapsedMs = ElapsedMillisecondsSince(searchStartedTimestamp);
+
+                if (firstMatch != null)
+                {
+                    Avalonia.Threading.Dispatcher.UIThread.Post(
+                        () => NavigateToSearchMatch(firstMatch),
+                        Avalonia.Threading.DispatcherPriority.Background);
+                }
             });
 
             _logger.LogInformation("Found {MatchCount} matches", matches.Count);
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogDebug("Search cancelled");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error performing search: {Message}", ex.Message);
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
-                IsSearching = false;
-                SearchProgressText = string.Empty;
-                OperationStatus = string.Empty;
+                if (IsCurrentSearch(searchGeneration))
+                    ClearSearchStatus();
             });
         }
     }
+
+    private static long ElapsedMillisecondsSince(long startTimestamp) =>
+        (long)Stopwatch.GetElapsedTime(startTimestamp).TotalMilliseconds;
 
     /// <summary>
     /// Navigate to next search match
@@ -475,6 +517,43 @@ public partial class MainWindowViewModel
     {
         SearchMatches.Clear();
         CurrentSearchMatchIndex = -1;
+        ClearSearchStatus();
         this.RaisePropertyChanged(nameof(SearchResultText));
     }
+
+    private long BeginSearch(CancellationTokenSource cts)
+    {
+        _searchCts = cts;
+        return Interlocked.Increment(ref _searchGeneration);
+    }
+
+    private void CancelActiveSearch()
+    {
+        _searchCts?.Cancel();
+        _searchCts = null;
+        Interlocked.Increment(ref _searchGeneration);
+    }
+
+    private bool IsCurrentSearch(long searchGeneration) =>
+        Interlocked.Read(ref _searchGeneration) == searchGeneration;
+
+    private void PostClearSearchStatus(long searchGeneration)
+    {
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            if (IsCurrentSearch(searchGeneration))
+                ClearSearchStatus();
+        });
+    }
+
+    private void ClearSearchStatus()
+    {
+        IsSearching = false;
+        SearchProgressText = string.Empty;
+        if (IsSearchOperationStatus(OperationStatus))
+            OperationStatus = string.Empty;
+    }
+
+    private static bool IsSearchOperationStatus(string status) =>
+        status.StartsWith("Searching", StringComparison.Ordinal);
 }

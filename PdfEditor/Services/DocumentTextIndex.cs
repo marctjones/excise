@@ -30,6 +30,8 @@ public sealed class DocumentTextIndex
     private readonly ILogger _logger;
     private readonly string?[] _pageTexts;
     private readonly IReadOnlyList<Word>?[] _pageWords;
+    private readonly object _buildLock = new();
+    private Task? _buildTask;
     private int _pagesIndexed;
     private bool _ready;
 
@@ -54,29 +56,41 @@ public sealed class DocumentTextIndex
         CancellationToken cancellationToken = default)
     {
         if (_ready) return Task.CompletedTask;
-        return Task.Run(() =>
+
+        lock (_buildLock)
         {
-            try
+            if (_ready) return Task.CompletedTask;
+            if (_buildTask is { IsCompleted: false })
+                return _buildTask.WaitAsync(cancellationToken);
+
+            _buildTask = Task.Run(() => BuildCore(progress, cancellationToken), cancellationToken);
+            return _buildTask;
+        }
+    }
+
+    private void BuildCore(IProgress<(int Done, int Total)>? progress,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            for (int i = 0; i < _doc.PageCount; i++)
             {
-                for (int i = 0; i < _doc.PageCount; i++)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    if (_pageTexts[i] != null) continue;
-                    var page = _doc.GetPage(i + 1);
-                    _pageTexts[i] = page.Text ?? string.Empty;
-                    _pageWords[i] = page.GetWords();
-                    Interlocked.Increment(ref _pagesIndexed);
-                    progress?.Report((_pagesIndexed, _doc.PageCount));
-                }
-                _ready = true;
-                _logger.LogInformation("Text index built ({Pages} pages)", _doc.PageCount);
+                cancellationToken.ThrowIfCancellationRequested();
+                if (_pageTexts[i] != null) continue;
+                var page = _doc.GetPage(i + 1);
+                _pageTexts[i] = page.Text ?? string.Empty;
+                _pageWords[i] = page.GetWords();
+                Interlocked.Increment(ref _pagesIndexed);
+                progress?.Report((_pagesIndexed, _doc.PageCount));
             }
-            catch (OperationCanceledException) { /* expected on doc switch */ }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Text index build failed at page {Page}", _pagesIndexed);
-            }
-        }, cancellationToken);
+            _ready = true;
+            _logger.LogInformation("Text index built ({Pages} pages)", _doc.PageCount);
+        }
+        catch (OperationCanceledException) { /* expected on doc switch */ }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Text index build failed at page {Page}", _pagesIndexed);
+        }
     }
 
     /// <summary>

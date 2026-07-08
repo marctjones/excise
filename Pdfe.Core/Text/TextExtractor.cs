@@ -158,6 +158,11 @@ public class TextExtractor
     public IReadOnlyList<Word> ExtractWords()
     {
         var letters = ExtractLetters();
+        return BuildWords(letters);
+    }
+
+    internal static IReadOnlyList<Word> BuildWords(IReadOnlyList<Letter> letters)
+    {
         if (letters.Count == 0)
             return Array.Empty<Word>();
 

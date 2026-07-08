@@ -2,6 +2,7 @@ using Pdfe.Core.Content;
 using Pdfe.Core.Graphics;
 using Pdfe.Core.Primitives;
 using Pdfe.Core.Text;
+using System.Text;
 
 namespace Pdfe.Core.Document;
 
@@ -52,8 +53,10 @@ public class PdfPage
             if (_cachedText != null)
                 return _cachedText;
 
-            var extractor = new TextExtractor(this);
-            _cachedText = extractor.ExtractText();
+            var sb = new StringBuilder();
+            foreach (var letter in Letters)
+                sb.Append(letter.Value);
+            _cachedText = sb.ToString();
             return _cachedText;
         }
     }
@@ -86,8 +89,7 @@ public class PdfPage
         if (_cachedWords != null)
             return _cachedWords;
 
-        var extractor = new TextExtractor(this);
-        _cachedWords = extractor.ExtractWords();
+        _cachedWords = TextExtractor.BuildWords(Letters);
         return _cachedWords;
     }
 
