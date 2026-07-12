@@ -6,7 +6,31 @@ semantic versioning.
 
 ## [Unreleased]
 
-No changes yet.
+### Added
+- Continuous scroll is now the default view mode, and the choice is remembered
+  across sessions via the new `ContinuousScrollEnabled` window setting.
+
+### Changed
+- Continuous-scroll page rendering now coalesces render passes and de-duplicates
+  in-flight tile requests, so fast scrolling through large documents no longer
+  queues and cancels a render for every intermediate scroll position. Tiles are
+  quantized and rendered with overscan so nearby scroll offsets reuse one cache
+  entry. Adds a `gui.render` benchmark workload covering visible-page settle time.
+
+### Fixed
+- View and Tools menu checkmarks (Show Outline, Show Thumbnails, Show Clipboard
+  History, Continuous Scroll, Reveal Hidden Text, Reveal Rasterized Hidden Text)
+  stayed permanently checked and did nothing when clicked. They bound `IsChecked`
+  two-way with no `Command`, so a click never reached the ViewModel. They now
+  mutate state through a ViewModel command with a one-way `IsChecked` binding,
+  and the macOS native menu drives its check state from `PropertyChanged` instead
+  of owning it.
+- Leaving an editing mode (redaction, text selection, form authoring, typewriter)
+  now restores the saved continuous-scroll preference. Previously these modes
+  forced single-page view on entry and never restored it, stranding the session in
+  single-page for the rest of its life.
+- Suppressed the tooltip on the status-bar page arrows, whose popup made the small
+  footer targets hard to click while the status bar was re-measuring.
 
 ## [2.27.1] - 2026-07-08
 
