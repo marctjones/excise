@@ -126,6 +126,82 @@ public class GuiFullResponsivenessCoverageTests
     }
 
     [FixedAvaloniaFact(Timeout = 120_000)]
+    public async Task AccCompensationReportContinuousScroll_RendersVisiblePageWithoutLagAndWritesHotspotReport()
+    {
+        var path = FindRepoFile("test-pdfs", "sample-pdfs", "acc-global-compensation-report.pdf");
+        var results = new List<GuiWorkflowResult>();
+        MainWindow? window = null;
+
+        try
+        {
+            var vm = new MainWindowViewModel();
+            window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+            window.Show();
+
+            var openElapsedMs = await MeasureAsync(() => vm.LoadDocumentAsync(path));
+            vm.TotalPages.Should().Be(24, "the ACC compensation report fixture should remain the real-world scroll target");
+            AddResult(results, "acc-compensation-document-open", openElapsedMs, 6_000, 12_000, "gui.document-open.acc-compensation-total");
+
+            var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
+            viewer.Should().NotBeNull("the main window should host the reusable viewer control");
+            await WaitForIdleLayout(window);
+
+            var toggleElapsedMs = Measure(() => vm.ViewMode = PdfViewMode.Continuous);
+            AddResult(results, "acc-compensation-continuous-view-toggle", toggleElapsedMs, 150, 500, "gui.input.acc-compensation-continuous-view-toggle");
+            await WaitForIdleLayout(window);
+
+            var scroll = viewer!.FindControl<ScrollViewer>("ContinuousScrollViewer");
+            scroll.Should().NotBeNull("continuous mode should expose a scroll viewer for real-report timing");
+            var items = viewer.FindControl<ItemsControl>("ContinuousItems");
+            items.Should().NotBeNull("continuous mode should expose page slots for real-report timing");
+            var slots = items!.ItemsSource!.Cast<PdfPageSlot>().ToArray();
+            slots.Should().HaveCount(24);
+
+            await WaitForContinuousPageBitmapAsync(window, items, pageNumber: 1, TimeSpan.FromSeconds(10));
+            var initialStarts = viewer.ContinuousRenderStartCount;
+            var initialCancellations = viewer.ContinuousRenderCancellationCount;
+
+            var targetPages = new[] { 2, 4, 8, 12, 16, 20, 24 };
+            var scrollElapsedMs = Measure(() =>
+            {
+                foreach (var pageNumber in targetPages)
+                    scroll!.Offset = new Vector(0, slots[pageNumber - 1].TopDip);
+            });
+            AddResult(
+                results,
+                "acc-compensation-continuous-scroll-schedule",
+                scrollElapsedMs,
+                passMs: 150,
+                warnMs: 500,
+                phase: "gui.input.acc-compensation-continuous-scroll-schedule");
+
+            var settleElapsedMs = await MeasureAsync(() =>
+                WaitForContinuousPageBitmapAsync(window, items, pageNumber: targetPages[^1], TimeSpan.FromSeconds(12)));
+            AddResult(
+                results,
+                "acc-compensation-continuous-scroll-render-settle",
+                settleElapsedMs,
+                passMs: 8_000,
+                warnMs: 15_000,
+                phase: "gui.render.acc-compensation-continuous-scroll-settle");
+
+            var renderStarts = viewer.ContinuousRenderStartCount - initialStarts;
+            var renderCancellations = viewer.ContinuousRenderCancellationCount - initialCancellations;
+            renderStarts.Should().BeLessThanOrEqualTo(4,
+                "rapid continuous scrolling should coalesce stale ACC report tile renders instead of rendering each intermediate page");
+            renderCancellations.Should().BeLessThanOrEqualTo(1,
+                "rapid continuous scrolling should not churn cancelled ACC report renders");
+
+            AssertNoHardFailures(results);
+            WriteReport("gui-workflow-suite-acc-compensation-continuous-scroll.json", "gui-workflow-acc-compensation-continuous-scroll", results);
+        }
+        finally
+        {
+            window?.Close();
+        }
+    }
+
+    [FixedAvaloniaFact(Timeout = 120_000)]
     public async Task BroadGuiWorkflows_StayWithinResponsivenessBudgetsAndWriteHotspotReport()
     {
         var inputPath = Path.Combine(Path.GetTempPath(), $"pdfe-broad-gui-{Guid.NewGuid():N}.pdf");
@@ -300,6 +376,29 @@ public class GuiFullResponsivenessCoverageTests
         }
     }
 
+    private static async Task WaitForContinuousPageBitmapAsync(
+        Window window,
+        ItemsControl items,
+        int pageNumber,
+        TimeSpan timeout)
+    {
+        var deadline = Stopwatch.StartNew();
+        while (true)
+        {
+            await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Background);
+            Dispatcher.UIThread.RunJobs();
+
+            var slot = items.ItemsSource?.Cast<PdfPageSlot>().FirstOrDefault(candidate => candidate.PageNumber == pageNumber);
+            if (slot?.Bitmap != null)
+                return;
+
+            if (deadline.Elapsed > timeout)
+                throw new TimeoutException($"Continuous page {pageNumber} did not render within {timeout.TotalSeconds:0.0}s.");
+
+            await Task.Delay(25);
+        }
+    }
+
     private static async Task WaitForIdleLayout(Window window, int iterations = 4)
     {
         for (var i = 0; i < iterations; i++)
@@ -329,6 +428,20 @@ public class GuiFullResponsivenessCoverageTests
         };
 
         File.WriteAllText(path, JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }));
+    }
+
+    private static string FindRepoFile(params string[] relativeParts)
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null)
+        {
+            var candidate = Path.Combine(new[] { dir.FullName }.Concat(relativeParts).ToArray());
+            if (File.Exists(candidate))
+                return candidate;
+            dir = dir.Parent;
+        }
+
+        throw new FileNotFoundException($"Could not find repository file: {Path.Combine(relativeParts)}");
     }
 
     private sealed record GuiWorkflowResult(

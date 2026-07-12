@@ -66,6 +66,14 @@ partial class Program
                 "gate",
                 "Desktop GUI input responsiveness phases."),
             Definition(
+                "gui.render",
+                "PdfEditor",
+                "gui",
+                "render",
+                "pdfe-owned",
+                "gate",
+                "Desktop GUI display-render scheduling and visible-page settle phases."),
+            Definition(
                 "gui.search",
                 "PdfEditor",
                 "gui",
@@ -183,6 +191,8 @@ partial class Program
                 return Find("gui.document-open");
             if (phase.StartsWith("gui.input.", StringComparison.Ordinal))
                 return Find("gui.input");
+            if (phase.StartsWith("gui.render.", StringComparison.Ordinal))
+                return Find("gui.render");
             if (phase.StartsWith("gui.search.", StringComparison.Ordinal))
                 return Find("gui.search");
             if (phase.StartsWith("gui.annotation.", StringComparison.Ordinal))

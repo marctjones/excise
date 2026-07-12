@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
@@ -713,6 +714,30 @@ public class PdfViewerControlTests
                 .Should().Be(2);
         }
         finally { System.IO.File.Delete(path); }
+    }
+
+    [FixedAvaloniaFact]
+    public void ContinuousTileRequest_ExpandsAndQuantizesViewportForScrollCoalescing()
+    {
+        var slot = new PdfPageSlot(pageNumber: 1, widthPt: 612, heightPt: 792, zoom: 2.0);
+
+        var created = PdfViewerControl.TryCreateContinuousTileRequest(
+            slot,
+            viewportOffset: new Vector(0, 600),
+            viewport: new Size(900, 500),
+            pageTop: 0,
+            zoom: 2.0,
+            out var request);
+
+        created.Should().BeTrue();
+        request.YDip.Should().BeLessThanOrEqualTo(600,
+            "the rendered tile should start before the visible viewport to absorb small scroll deltas");
+        (request.YDip % PdfViewerControl.ContinuousTileQuantumDip).Should().Be(0,
+            "tile starts should be aligned so nearby scroll offsets reuse the same cache key");
+        (request.YDip + request.HeightDip).Should().BeGreaterThanOrEqualTo(1_100,
+            "the rendered tile should cover the visible viewport plus overscan");
+        request.HeightDip.Should().BeGreaterThan(500,
+            "continuous mode should render ahead of the exact viewport instead of rerendering every scroll pixel");
     }
 
     #endregion

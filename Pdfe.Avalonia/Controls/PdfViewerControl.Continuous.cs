@@ -34,9 +34,12 @@ public partial class PdfViewerControl
     // slot/Image holds it. Full disposal happens only on document change.
     private readonly LinkedList<(ContinuousTileKey Key, WriteableBitmap Bitmap)> _continuousCache = new();
     private readonly Dictionary<int, CancellationTokenSource> _continuousRenderCts = new();
+    private readonly Dictionary<int, ContinuousTileKey> _continuousRenderKeys = new();
     private const int ContinuousCacheCapacity = 10;
     internal const double PointsToDip = 96.0 / 72.0;
     private const double PageGapDip = 12.0;   // matches the DataTemplate Border bottom margin
+    internal const int ContinuousTileQuantumDip = 256;
+    internal const int ContinuousTileOverscanDip = 256;
 
     // Sharp high-zoom (#371): render each continuous page at a DPI that scales
     // with zoom so it stays crisp instead of upscaling a fixed-DPI bitmap, capped
@@ -52,6 +55,12 @@ public partial class PdfViewerControl
 
     // Guards the scroll -> CurrentPage -> scroll feedback loop.
     private bool _syncingPageFromScroll;
+    private bool _continuousRenderPassScheduled;
+
+    internal int ContinuousRenderStartCount { get; private set; }
+    internal int ContinuousRenderCancellationCount { get; private set; }
+    internal int ContinuousRenderCacheHitCount { get; private set; }
+    internal int ContinuousRenderCoalescedRequestCount { get; private set; }
 
     private void InitializeContinuous()
     {
@@ -132,6 +141,8 @@ public partial class PdfViewerControl
     {
         foreach (var cts in _continuousRenderCts.Values) cts.Cancel();
         _continuousRenderCts.Clear();
+        _continuousRenderKeys.Clear();
+        _continuousRenderPassScheduled = false;
         foreach (var entry in _continuousCache) entry.Bitmap.Dispose();
         _continuousCache.Clear();
     }
@@ -211,11 +222,25 @@ public partial class PdfViewerControl
             {
                 cts.Cancel();
                 _continuousRenderCts.Remove(slot.PageNumber);
+                _continuousRenderKeys.Remove(slot.PageNumber);
             }
         }
     }
 
     private void RenderVisibleContinuousTiles()
+    {
+        if (_continuousItems == null || _continuousRenderPassScheduled)
+            return;
+
+        _continuousRenderPassScheduled = true;
+        Dispatcher.UIThread.Post(() =>
+        {
+            _continuousRenderPassScheduled = false;
+            RenderVisibleContinuousTilesNow();
+        }, DispatcherPriority.Render);
+    }
+
+    private void RenderVisibleContinuousTilesNow()
     {
         if (_continuousItems == null) return;
 
@@ -241,21 +266,33 @@ public partial class PdfViewerControl
 
         if (TryGetContinuousCached(key, out var cached))
         {
+            ContinuousRenderCacheHitCount++;
             slot.ApplyTile(request, key);
             slot.Bitmap = cached;
             return;
         }
 
+        if (_continuousRenderKeys.TryGetValue(slot.PageNumber, out var inFlightKey) && inFlightKey.Equals(key))
+        {
+            ContinuousRenderCoalescedRequestCount++;
+            return;
+        }
+
         // Cancel any prior in-flight render for this same page.
         if (_continuousRenderCts.TryGetValue(slot.PageNumber, out var prior))
+        {
             prior.Cancel();
+            ContinuousRenderCancellationCount++;
+        }
         var cts = new CancellationTokenSource();
         _continuousRenderCts[slot.PageNumber] = cts;
+        _continuousRenderKeys[slot.PageNumber] = key;
         var token = cts.Token;
         var pageNumber = slot.PageNumber;
 
         try
         {
+            ContinuousRenderStartCount++;
             var skBitmap = await Task.Run(() =>
             {
                 token.ThrowIfCancellationRequested();
@@ -299,6 +336,8 @@ public partial class PdfViewerControl
         {
             if (_continuousRenderCts.TryGetValue(pageNumber, out var mine) && mine == cts)
                 _continuousRenderCts.Remove(pageNumber);
+            if (_continuousRenderKeys.TryGetValue(pageNumber, out var mineKey) && mineKey.Equals(key))
+                _continuousRenderKeys.Remove(pageNumber);
         }
     }
 
@@ -367,6 +406,11 @@ public partial class PdfViewerControl
         if (visibleRight <= visibleLeft || visibleBottom <= visibleTop)
             return false;
 
+        visibleLeft = AlignTileDown(Math.Max(0, visibleLeft - ContinuousTileOverscanDip));
+        visibleTop = AlignTileDown(Math.Max(0, visibleTop - ContinuousTileOverscanDip));
+        visibleRight = Math.Min(slot.DisplayWidth, AlignTileUp(visibleRight + ContinuousTileOverscanDip));
+        visibleBottom = Math.Min(slot.DisplayHeight, AlignTileUp(visibleBottom + ContinuousTileOverscanDip));
+
         double dipPerPoint = PointsToDip * zoom;
         double leftPt = visibleLeft / dipPerPoint;
         double rightPt = visibleRight / dipPerPoint;
@@ -387,6 +431,12 @@ public partial class PdfViewerControl
             Math.Max(1, (int)Math.Ceiling(visibleBottom - visibleTop)));
         return true;
     }
+
+    private static double AlignTileDown(double value) =>
+        Math.Floor(value / ContinuousTileQuantumDip) * ContinuousTileQuantumDip;
+
+    private static double AlignTileUp(double value) =>
+        Math.Ceiling(value / ContinuousTileQuantumDip) * ContinuousTileQuantumDip;
 
     private bool TryGetContinuousCached(ContinuousTileKey key, out WriteableBitmap? bmp)
     {

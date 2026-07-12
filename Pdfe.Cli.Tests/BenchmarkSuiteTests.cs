@@ -123,6 +123,7 @@ public class BenchmarkSuiteTests
         definitions.Should().Contain(d => d.workloadId == "cli.render-page" && d.route == "cli");
         definitions.Should().Contain(d => d.workloadId == "gui.document-open" && d.route == "gui");
         definitions.Should().Contain(d => d.workloadId == "gui.input" && d.route == "gui");
+        definitions.Should().Contain(d => d.workloadId == "gui.render" && d.route == "gui");
         definitions.Should().Contain(d => d.workloadId == "gui.search" && d.route == "gui");
         definitions.Should().Contain(d => d.workloadId == "gui.annotation" && d.route == "gui");
         definitions.Should().Contain(d => d.workloadId == "gui.form" && d.route == "gui");
@@ -139,6 +140,8 @@ public class BenchmarkSuiteTests
             .workloadId.Should().Be("gui.document-open");
         RenderProgram.HotspotRegressionCatalog.ForPhase("gui.input.continuous-scroll-offset")
             .workloadId.Should().Be("gui.input");
+        RenderProgram.HotspotRegressionCatalog.ForPhase("gui.render.acc-compensation-continuous-scroll-settle")
+            .workloadId.Should().Be("gui.render");
         RenderProgram.HotspotRegressionCatalog.ForPhase("gui.search.complete")
             .workloadId.Should().Be("gui.search");
         RenderProgram.HotspotRegressionCatalog.ForPhase("gui.annotation.highlight-from-selection")
@@ -181,6 +184,7 @@ public class BenchmarkSuiteTests
                   "phaseElapsedMs": {
                     "gui.document-open.total": 11,
                     "gui.input.continuous-scroll-offset": 2,
+                    "gui.render.acc-compensation-continuous-scroll-settle": 13,
                     "gui.search.complete": 8,
                     "gui.annotation.highlight-from-selection": 5,
                     "gui.form.author-and-edit": 4,
@@ -207,6 +211,10 @@ public class BenchmarkSuiteTests
             aggregate.phases.Should().Contain(phase =>
                 phase.phase == "gui.input.continuous-scroll-offset" &&
                 phase.workloadId == "gui.input" &&
+                phase.route == "gui");
+            aggregate.phases.Should().Contain(phase =>
+                phase.phase == "gui.render.acc-compensation-continuous-scroll-settle" &&
+                phase.workloadId == "gui.render" &&
                 phase.route == "gui");
             aggregate.phases.Should().Contain(phase =>
                 phase.phase == "gui.search.complete" &&

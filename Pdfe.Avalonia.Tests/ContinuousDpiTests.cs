@@ -46,27 +46,27 @@ public class ContinuousDpiTests
     }
 
     [Fact]
-    public void TryCreateContinuousTileRequest_WhenViewportCutsPage_ConvertsVisualDipToPdfClip()
+    public void TryCreateContinuousTileRequest_WhenViewportCutsPage_ConvertsQuantizedOverscanTileToPdfClip()
     {
-        var slot = new PdfPageSlot(pageNumber: 2, widthPt: 100, heightPt: 200, zoom: 1.0);
+        var slot = new PdfPageSlot(pageNumber: 2, widthPt: 2_000, heightPt: 3_000, zoom: 1.0);
 
         var ok = PdfViewerControl.TryCreateContinuousTileRequest(
             slot,
-            viewportOffset: new Vector(10, 120),
-            viewport: new Size(50, 80),
+            viewportOffset: new Vector(700, 1_000),
+            viewport: new Size(400, 600),
             pageTop: 100,
             zoom: 1.0,
             out var request);
 
         ok.Should().BeTrue();
-        request.XDip.Should().Be(10);
-        request.YDip.Should().Be(20);
-        request.WidthDip.Should().Be(50);
-        request.HeightDip.Should().Be(80);
-        request.ClipRect.Left.Should().BeApproximately(7.5f, 0.001f);
-        request.ClipRect.Top.Should().BeApproximately(125, 0.001f);
-        request.ClipRect.Right.Should().BeApproximately(45, 0.001f);
-        request.ClipRect.Bottom.Should().BeApproximately(185, 0.001f);
+        request.XDip.Should().Be(256);
+        request.YDip.Should().Be(512);
+        request.WidthDip.Should().Be(1_280);
+        request.HeightDip.Should().Be(1_280);
+        request.ClipRect.Left.Should().BeApproximately(192, 0.001f);
+        request.ClipRect.Top.Should().BeApproximately(1_656, 0.001f);
+        request.ClipRect.Right.Should().BeApproximately(1_152, 0.001f);
+        request.ClipRect.Bottom.Should().BeApproximately(2_616, 0.001f);
     }
 
     [Fact]
