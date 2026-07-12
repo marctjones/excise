@@ -15,11 +15,26 @@ public static class CommandAccessibility
             "CommandId",
             typeof(CommandAccessibility));
 
+    public static readonly AttachedProperty<bool> ShowToolTipProperty =
+        AvaloniaProperty.RegisterAttached<Control, bool>(
+            "ShowToolTip",
+            typeof(CommandAccessibility),
+            defaultValue: true);
+
     static CommandAccessibility()
     {
         CommandIdProperty.Changed.AddClassHandler<Control>((control, args) =>
         {
             Apply(control, args.NewValue as string);
+        });
+
+        ShowToolTipProperty.Changed.AddClassHandler<Control>((control, _) =>
+        {
+            var commandId = GetCommandId(control);
+            if (string.IsNullOrWhiteSpace(commandId))
+                return;
+
+            ApplyMetadata(control, PdfCommandRegistry.Get(commandId));
         });
     }
 
@@ -28,6 +43,12 @@ public static class CommandAccessibility
 
     public static string? GetCommandId(AvaloniaObject element) =>
         element.GetValue(CommandIdProperty);
+
+    public static void SetShowToolTip(AvaloniaObject element, bool value) =>
+        element.SetValue(ShowToolTipProperty, value);
+
+    public static bool GetShowToolTip(AvaloniaObject element) =>
+        element.GetValue(ShowToolTipProperty);
 
     private static void Apply(Control control, string? commandId)
     {
@@ -50,7 +71,7 @@ public static class CommandAccessibility
         AutomationProperties.SetHelpText(control, BuildHelpText(metadata));
         UpdateItemStatus(control, metadata);
 
-        ToolTip.SetTip(control, BuildTooltip(metadata));
+        ToolTip.SetTip(control, GetShowToolTip(control) ? BuildTooltip(metadata) : null);
     }
 
     private static string BuildHelpText(PdfCommandMetadata metadata)

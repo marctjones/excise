@@ -171,12 +171,18 @@
                     <MenuItem.Icon><PathIcon Classes="menu-icon" Data="{StaticResource IconRedact}" Foreground="#D32F2F"/></MenuItem.Icon>
                 </MenuItem>
                 <Separator/>
-                <MenuItem Header="_View Clipboard History"
+                <!-- Toggle items bind IsChecked ONE-WAY and mutate state only via
+                     their Command. A TwoWay IsChecked binding with no Command is
+                     what desynced these menus before: MenuItem does not toggle
+                     itself, so the click did nothing and the check never moved.
+                     ToggleType is kept so screen readers still get the UIA Toggle
+                     pattern (AutomationProperties alone cannot express it). -->
+                <MenuItem x:Name="RedactionClipboardMenuItem"
+                          Header="_View Clipboard History"
                           ToggleType="CheckBox"
-                          IsChecked="{Binding IsClipboardSidebarVisible, Mode=TwoWay}"
-                          access:CommandAccessibility.CommandId="view.toggleClipboardHistory">
-                    <MenuItem.Icon><PathIcon Classes="menu-icon" Data="{StaticResource IconClipboard}"/></MenuItem.Icon>
-                </MenuItem>
+                          IsChecked="{Binding IsClipboardSidebarVisible, Mode=OneWay}"
+                          Command="{Binding ToggleClipboardSidebarCommand}"
+                          access:CommandAccessibility.CommandId="view.toggleClipboardHistory"/>
             </MenuItem>
 
             <!-- TOOLS MENU -->
@@ -186,18 +192,22 @@
                           access:CommandAccessibility.CommandId="tools.verifySignatures">
                     <MenuItem.Icon><PathIcon Classes="menu-icon" Data="{StaticResource IconLock}"/></MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="Reveal _Hidden Text (audit overlay)"
+                <MenuItem x:Name="RevealHiddenTextMenuItem"
+                          Header="Reveal _Hidden Text (audit overlay)"
                           ToolTip.Tip="Surface text that is present in the PDF but visually covered by an opaque overlay — the classic 'black-box redaction' failure mode."
                           IsEnabled="{Binding IsDocumentLoaded}"
                           ToggleType="CheckBox"
-                          IsChecked="{Binding RevealHiddenText, Mode=TwoWay}"
-                          access:CommandAccessibility.CommandId="tools.revealHiddenText" />
-                <MenuItem Header="Reveal _Rasterized Hidden Text (deep / OCR)"
+                          IsChecked="{Binding RevealHiddenText, Mode=OneWay}"
+                          Command="{Binding ToggleRevealHiddenTextCommand}"
+                          access:CommandAccessibility.CommandId="tools.revealHiddenText"/>
+                <MenuItem x:Name="RevealRasterizedHiddenMenuItem"
+                          Header="Reveal _Rasterized Hidden Text (deep / OCR)"
                           ToolTip.Tip="Also run differential OCR: render the page with overlays stripped, OCR both versions, and surface words present only in the underlying raster. Slower; requires 'tesseract' on PATH."
                           IsEnabled="{Binding IsDocumentLoaded}"
                           ToggleType="CheckBox"
-                          IsChecked="{Binding RevealRasterizedHidden, Mode=TwoWay}"
-                          access:CommandAccessibility.CommandId="tools.revealRasterizedHiddenText" />
+                          IsChecked="{Binding RevealRasterizedHidden, Mode=OneWay}"
+                          Command="{Binding ToggleRevealRasterizedHiddenCommand}"
+                          access:CommandAccessibility.CommandId="tools.revealRasterizedHiddenText"/>
                 <Separator/>
                 <MenuItem Header="_Preferences..." Command="{Binding ShowPreferencesCommand}" InputGesture="Ctrl+,"
                           access:CommandAccessibility.CommandId="app.preferences">
@@ -219,26 +229,33 @@
                 <MenuItem Header="Fit _Page" Command="{Binding ZoomFitPageCommand}" InputGesture="Ctrl+2"
                           access:CommandAccessibility.CommandId="view.zoomFitPage"/>
                 <Separator/>
-                <MenuItem Header="_Continuous Scroll"
-                          Command="{Binding ToggleContinuousViewCommand}"
+                <MenuItem x:Name="ViewContinuousMenuItem"
+                          Header="_Continuous Scroll"
                           ToggleType="CheckBox"
+                          IsChecked="{Binding IsContinuousView, Mode=OneWay}"
+                          Command="{Binding ToggleContinuousViewCommand}"
                           InputGesture="Ctrl+Shift+C"
-                          IsChecked="{Binding IsContinuousView}"
                           access:CommandAccessibility.CommandId="view.toggleContinuous"/>
                 <Separator/>
-                <MenuItem Header="Show _Outline"
+                <MenuItem x:Name="ViewOutlineMenuItem"
+                          Header="Show _Outline"
                           ToggleType="CheckBox"
+                          IsChecked="{Binding IsOutlineSidebarVisible, Mode=OneWay}"
+                          Command="{Binding ToggleOutlineCommand}"
                           InputGesture="Ctrl+Shift+O"
-                          IsChecked="{Binding IsOutlineSidebarVisible, Mode=TwoWay}"
                           access:CommandAccessibility.CommandId="view.toggleOutline"/>
-                <MenuItem Header="Show _Thumbnails"
+                <MenuItem x:Name="ViewThumbnailsMenuItem"
+                          Header="Show _Thumbnails"
                           ToggleType="CheckBox"
+                          IsChecked="{Binding IsThumbnailsSidebarVisible, Mode=OneWay}"
+                          Command="{Binding ToggleThumbnailsCommand}"
                           InputGesture="Ctrl+Shift+T"
-                          IsChecked="{Binding IsThumbnailsSidebarVisible, Mode=TwoWay}"
                           access:CommandAccessibility.CommandId="view.toggleThumbnails"/>
-                <MenuItem Header="Show _Clipboard History"
+                <MenuItem x:Name="ViewClipboardMenuItem"
+                          Header="Show _Clipboard History"
                           ToggleType="CheckBox"
-                          IsChecked="{Binding IsClipboardSidebarVisible, Mode=TwoWay}"
+                          IsChecked="{Binding IsClipboardSidebarVisible, Mode=OneWay}"
+                          Command="{Binding ToggleClipboardSidebarCommand}"
                           access:CommandAccessibility.CommandId="view.toggleClipboardHistory"/>
             </MenuItem>
 
@@ -296,7 +313,8 @@
                               Margin="0,0,8,0">
                 <StackPanel Orientation="Horizontal" Spacing="4">
                     <!-- View Group: sidebar toggles (outline + page previews) -->
-                    <Button Command="{Binding ToggleOutlineCommand}"
+                    <Button x:Name="ToolbarOutlineButton"
+                            Command="{Binding ToggleOutlineCommand}"
                             Classes="modern-button toggle"
                             Classes.active="{Binding IsOutlineSidebarVisible}"
                             Padding="10,6"
@@ -306,7 +324,8 @@
                             AutomationProperties.HelpText="Show or hide the document outline / bookmarks panel">
                         <PathIcon Classes="toolbar-icon" Data="{StaticResource IconOutline}"/>
                     </Button>
-                    <Button Command="{Binding ToggleThumbnailsCommand}"
+                    <Button x:Name="ToolbarThumbnailsButton"
+                            Command="{Binding ToggleThumbnailsCommand}"
                             Classes="modern-button toggle"
                             Classes.active="{Binding IsThumbnailsSidebarVisible}"
                             Padding="10,6"
@@ -316,7 +335,8 @@
                             AutomationProperties.HelpText="Show or hide the page thumbnails / previews panel">
                         <PathIcon Classes="toolbar-icon" Data="{StaticResource IconThumbnails}"/>
                     </Button>
-                    <Button Command="{Binding ToggleContinuousViewCommand}"
+                    <Button x:Name="ToolbarContinuousButton"
+                            Command="{Binding ToggleContinuousViewCommand}"
                             Classes="modern-button toggle"
                             Classes.active="{Binding IsContinuousView}"
                             Padding="10,6"
@@ -702,7 +722,8 @@
                  The outline pane only takes screen space when the document
                  actually has a table of contents (HasOutline) AND the user
                  hasn't toggled it off via View → Show Outline. -->
-            <Border Grid.Column="0"
+            <Border x:Name="LeftSidebarHost"
+                    Grid.Column="0"
                     Width="220"
                     IsVisible="{Binding IsLeftSidebarVisible}"
                     Background="{DynamicResource SidebarBackgroundBrush}"
@@ -711,7 +732,8 @@
               <Grid RowDefinitions="*,Auto,*">
 
                 <!-- Outline / Table of Contents -->
-                <Grid Grid.Row="0" RowDefinitions="Auto,*"
+                <Grid x:Name="OutlinePanel"
+                      Grid.Row="0" RowDefinitions="Auto,*"
                       IsVisible="{Binding IsOutlineSidebarVisible}">
                     <Border Grid.Row="0"
                             Background="{DynamicResource SecondaryBackgroundBrush}"
@@ -765,7 +787,8 @@
                               IsVisible="{Binding IsSidebarSplitterVisible}"/>
 
                 <!-- Thumbnails -->
-                <Grid Grid.Row="2" RowDefinitions="Auto,*"
+                <Grid x:Name="ThumbnailsPanel"
+                      Grid.Row="2" RowDefinitions="Auto,*"
                       IsVisible="{Binding IsThumbnailsSidebarVisible}">
                     <Border Grid.Row="0"
                             Background="{DynamicResource SecondaryBackgroundBrush}"
@@ -949,7 +972,8 @@
             </Border>
 
             <!-- Clipboard History Sidebar -->
-            <Border Grid.Column="2"
+            <Border x:Name="ClipboardSidebarHost"
+                    Grid.Column="2"
                     Width="250"
                     IsVisible="{Binding IsClipboardSidebarVisible}"
                     Background="{DynamicResource SidebarBackgroundBrush}"
@@ -1266,19 +1290,16 @@
                                IsVisible="{Binding OperationStatus, Converter={x:Static StringConverters.IsNullOrEmpty}}"/>
                 </StackPanel>
 
-                <!-- Page Navigation. No tooltips on the arrow buttons —
-                     the "Page N" label between them already explains
-                     them, and the flickering tooltip popup on hover (the
-                     adjacent OperationStatus / StatusBarText cell flips
-                     visibility while thumbnails load, re-measuring the
-                     status-bar StackPanel and yanking the tooltip's
-                     anchor out from under it on every tick) made the
-                     buttons hard to click. AutomationProperties stay
-                     for screen readers. -->
+                <!-- Page Navigation. No command tooltips on the arrow buttons:
+                     the nearby page label already explains them, and the
+                     hover popup can make these small footer targets hard to
+                     click while the status bar is remeasuring. Accessibility
+                     metadata still comes from CommandAccessibility. -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
                     <Button Content="◀" Command="{Binding PreviousPageCommand}"
                             Classes="modern-button compact" Padding="8,4"
                             access:CommandAccessibility.CommandId="view.previousPage"
+                            access:CommandAccessibility.ShowToolTip="False"
                             AutomationProperties.Name="Previous Page"
                             AutomationProperties.HelpText="Navigate to the previous page. Shortcut: Page Up."/>
                     <TextBlock Text="{Binding DisplayPageNumber, StringFormat='Page {0}'}"
@@ -1292,6 +1313,7 @@
                     <Button Content="▶" Command="{Binding NextPageCommand}"
                             Classes="modern-button compact" Padding="8,4"
                             access:CommandAccessibility.CommandId="view.nextPage"
+                            access:CommandAccessibility.ShowToolTip="False"
                             AutomationProperties.Name="Next Page"
                             AutomationProperties.HelpText="Navigate to the next page. Shortcut: Page Down."/>
                 </StackPanel>

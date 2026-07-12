@@ -65,11 +65,46 @@ public class AccessibilityRegressionTests
             }
 
             var tooltip = ToolTip.GetTip(control)?.ToString() ?? string.Empty;
-            if (!tooltip.Contains(metadata.Label, StringComparison.OrdinalIgnoreCase))
-                failures.Add($"{Describe(control)} tooltip does not include registry label '{metadata.Label}'");
+            if (CommandAccessibility.GetShowToolTip(control))
+            {
+                if (!tooltip.Contains(metadata.Label, StringComparison.OrdinalIgnoreCase))
+                    failures.Add($"{Describe(control)} tooltip does not include registry label '{metadata.Label}'");
+            }
+            else if (!string.IsNullOrWhiteSpace(tooltip))
+            {
+                failures.Add($"{Describe(control)} suppresses command tooltips but still has tooltip '{tooltip}'");
+            }
         }
 
         failures.Should().BeEmpty();
+    }
+
+    [FixedAvaloniaFact]
+    public async Task FooterPageNavigation_KeepsCommandMetadataWithoutHoverTooltips()
+    {
+        var vm = new MainWindowViewModel();
+        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+        window.Show();
+        window.UpdateLayout();
+        await KeyboardTestHelpers.FlushDispatcherAsync();
+        window.UpdateLayout();
+
+        var footerPageButtons = CollectControls(window)
+            .OfType<Button>()
+            .Where(button =>
+            {
+                var commandId = CommandAccessibility.GetCommandId(button);
+                return commandId == PdfCommandIds.PreviousPage || commandId == PdfCommandIds.NextPage;
+            })
+            .ToList();
+
+        footerPageButtons.Should().HaveCount(2);
+        footerPageButtons.Should().OnlyContain(button => !CommandAccessibility.GetShowToolTip(button));
+        footerPageButtons.Should().OnlyContain(button => ToolTip.GetTip(button) == null);
+        footerPageButtons.Select(AutomationProperties.GetName)
+            .Should().BeEquivalentTo(new[] { "Previous Page", "Next Page" });
+        footerPageButtons.Select(AutomationProperties.GetHelpText)
+            .Should().OnlyContain(help => help != null && help.Contains("Shortcut:", StringComparison.Ordinal));
     }
 
     [FixedAvaloniaFact]

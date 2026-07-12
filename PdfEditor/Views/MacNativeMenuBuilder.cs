@@ -1,9 +1,11 @@
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Threading;
 using PdfEditor.ViewModels;
-using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Windows.Input;
 
 namespace PdfEditor.Views;
 
@@ -69,19 +71,13 @@ internal static class MacNativeMenuBuilder
             _selectTextItem = CommandItem("Select Text Mode", _viewModel.ToggleTextSelectionModeCommand, Key.T);
             _typewriterItem = CommandItem("Typewriter Mode", _viewModel.ToggleTypewriterModeCommand);
             _redactionModeItem = CommandItem("Redaction Mode", _viewModel.ToggleRedactionModeCommand, Key.R, modifiers: KeyModifiers.None);
-            _viewClipboardItem = ToggleItem("Show Clipboard History", () =>
-                _viewModel.IsClipboardSidebarVisible = !_viewModel.IsClipboardSidebarVisible);
-            _redactionClipboardItem = ToggleItem("Show Clipboard History", () =>
-                _viewModel.IsClipboardSidebarVisible = !_viewModel.IsClipboardSidebarVisible);
+            _viewClipboardItem = ToggleItem("Show Clipboard History", _viewModel.ToggleClipboardSidebarCommand);
+            _redactionClipboardItem = ToggleItem("Show Clipboard History", _viewModel.ToggleClipboardSidebarCommand);
             _continuousScrollItem = CommandItem("Continuous Scroll", _viewModel.ToggleContinuousViewCommand, Key.C, KeyModifiers.Meta | KeyModifiers.Shift);
-            _outlineItem = ToggleItem("Show Outline", () =>
-                _viewModel.IsOutlineSidebarVisible = !_viewModel.IsOutlineSidebarVisible, Key.O, KeyModifiers.Meta | KeyModifiers.Shift);
-            _thumbnailsItem = ToggleItem("Show Thumbnails", () =>
-                _viewModel.IsThumbnailsSidebarVisible = !_viewModel.IsThumbnailsSidebarVisible, Key.T, KeyModifiers.Meta | KeyModifiers.Shift);
-            _revealHiddenTextItem = ToggleItem("Reveal Hidden Text", () =>
-                _viewModel.RevealHiddenText = !_viewModel.RevealHiddenText);
-            _revealRasterizedHiddenItem = ToggleItem("Reveal Rasterized Hidden Text", () =>
-                _viewModel.RevealRasterizedHidden = !_viewModel.RevealRasterizedHidden);
+            _outlineItem = ToggleItem("Show Outline", _viewModel.ToggleOutlineCommand, Key.O, KeyModifiers.Meta | KeyModifiers.Shift);
+            _thumbnailsItem = ToggleItem("Show Thumbnails", _viewModel.ToggleThumbnailsCommand, Key.T, KeyModifiers.Meta | KeyModifiers.Shift);
+            _revealHiddenTextItem = ToggleItem("Reveal Hidden Text", _viewModel.ToggleRevealHiddenTextCommand);
+            _revealRasterizedHiddenItem = ToggleItem("Reveal Rasterized Hidden Text", _viewModel.ToggleRevealRasterizedHiddenCommand);
         }
 
         public NativeMenu Create()
@@ -173,9 +169,44 @@ internal static class MacNativeMenuBuilder
                     CommandItem("Documentation", _viewModel.ShowDocumentationCommand)));
 
             menu.NeedsUpdate += (_, _) => Refresh();
+            _viewModel.PropertyChanged += OnViewModelPropertyChanged;
+            _viewModel.RecentFiles.CollectionChanged += (_, _) => QueueRefresh();
             Refresh();
             return menu;
         }
+
+        private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (ShouldRefreshFor(e.PropertyName))
+                QueueRefresh();
+        }
+
+        private void QueueRefresh()
+        {
+            if (Dispatcher.UIThread.CheckAccess())
+                Refresh();
+            else
+                Dispatcher.UIThread.Post(Refresh, DispatcherPriority.Background);
+        }
+
+        private static bool ShouldRefreshFor(string? propertyName) =>
+            propertyName is null
+            or nameof(MainWindowViewModel.SaveButtonText)
+            or nameof(MainWindowViewModel.IsDocumentLoaded)
+            or nameof(MainWindowViewModel.HasSelectedPages)
+            or nameof(MainWindowViewModel.CanRemoveSelectedPages)
+            or nameof(MainWindowViewModel.CanMoveSelectedPagesEarlier)
+            or nameof(MainWindowViewModel.CanMoveSelectedPagesLater)
+            or nameof(MainWindowViewModel.IsTextSelectionMode)
+            or nameof(MainWindowViewModel.IsTypewriterMode)
+            or nameof(MainWindowViewModel.HasTextSelection)
+            or nameof(MainWindowViewModel.IsRedactionMode)
+            or nameof(MainWindowViewModel.IsContinuousView)
+            or nameof(MainWindowViewModel.IsOutlineSidebarVisible)
+            or nameof(MainWindowViewModel.IsThumbnailsSidebarVisible)
+            or nameof(MainWindowViewModel.IsClipboardSidebarVisible)
+            or nameof(MainWindowViewModel.RevealHiddenText)
+            or nameof(MainWindowViewModel.RevealRasterizedHidden);
 
         private void Refresh()
         {
@@ -315,17 +346,17 @@ internal static class MacNativeMenuBuilder
 
         private static NativeMenuItem ToggleItem(
             string header,
-            Action toggle,
+            ICommand command,
             Key? key = null,
             KeyModifiers modifiers = KeyModifiers.Meta)
         {
             var item = new NativeMenuItem(header)
             {
-                ToggleType = MenuItemToggleType.CheckBox
+                ToggleType = MenuItemToggleType.CheckBox,
+                Command = command
             };
             if (key.HasValue)
                 item.Gesture = new KeyGesture(key.Value, modifiers);
-            item.Click += (_, _) => toggle();
             return item;
         }
 
