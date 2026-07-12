@@ -58,6 +58,8 @@ public partial class MainWindow : Window
         // Save settings on close
         this.Closing += (s, e) =>
         {
+            if (DataContext is MainWindowViewModel viewModel)
+                _windowSettings.ContinuousScrollEnabled = viewModel.ContinuousScrollPreference;
             _windowSettings.CaptureFrom(this);
             _windowSettings.Save();
             // Cancel any pending toast auto-dismiss so nothing is left queued on
@@ -84,6 +86,7 @@ public partial class MainWindow : Window
 
         if (DataContext is MainWindowViewModel viewModel)
         {
+            viewModel.ApplyContinuousScrollPreference(_windowSettings.ContinuousScrollEnabled);
             SchedulePlatformMenuConfigure();
 
             // Subscribe to toast notifications

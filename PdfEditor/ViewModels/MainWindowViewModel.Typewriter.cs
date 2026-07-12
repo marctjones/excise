@@ -31,6 +31,10 @@ public partial class MainWindowViewModel
                 if (IsTextSelectionMode) IsTextSelectionMode = false;
                 if (IsFormAuthoringMode) IsFormAuthoringMode = false;
             }
+            else
+            {
+                RestoreViewModeFromPreference();
+            }
 
             this.RaisePropertyChanged(nameof(CurrentModeText));
             this.RaisePropertyChanged(nameof(InteractionMode));

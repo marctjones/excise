@@ -863,29 +863,114 @@ public class MainWindowViewModelTests
     [Fact]
     public void ToggleContinuousViewCommand_TogglesViewMode()
     {
+        _viewModel.ViewMode.Should().Be(PdfViewMode.Continuous);
+        _viewModel.IsContinuousView.Should().BeTrue();
+        _viewModel.ContinuousScrollPreference.Should().BeTrue();
+
+        _viewModel.ToggleContinuousViewCommand.Execute().Subscribe();
+
         _viewModel.ViewMode.Should().Be(PdfViewMode.SinglePage);
         _viewModel.IsContinuousView.Should().BeFalse();
+        _viewModel.ContinuousScrollPreference.Should().BeFalse();
 
         _viewModel.ToggleContinuousViewCommand.Execute().Subscribe();
 
         _viewModel.ViewMode.Should().Be(PdfViewMode.Continuous);
         _viewModel.IsContinuousView.Should().BeTrue();
-
-        _viewModel.ToggleContinuousViewCommand.Execute().Subscribe();
-
-        _viewModel.ViewMode.Should().Be(PdfViewMode.SinglePage);
-        _viewModel.IsContinuousView.Should().BeFalse();
+        _viewModel.ContinuousScrollPreference.Should().BeTrue();
     }
 
     [Fact]
-    public void EnteringEditingMode_LeavesContinuousView()
+    public void ApplyContinuousScrollPreference_SetsCurrentViewAndSavedPreference()
+    {
+        _viewModel.ApplyContinuousScrollPreference(false);
+
+        _viewModel.ViewMode.Should().Be(PdfViewMode.SinglePage);
+        _viewModel.IsContinuousView.Should().BeFalse();
+        _viewModel.ContinuousScrollPreference.Should().BeFalse();
+
+        _viewModel.ApplyContinuousScrollPreference(true);
+
+        _viewModel.ViewMode.Should().Be(PdfViewMode.Continuous);
+        _viewModel.IsContinuousView.Should().BeTrue();
+        _viewModel.ContinuousScrollPreference.Should().BeTrue();
+    }
+
+    [Fact]
+    public void EnteringEditingMode_LeavesContinuousViewWithoutChangingPreference()
     {
         _viewModel.ViewMode = PdfViewMode.Continuous;
+        _viewModel.ApplyContinuousScrollPreference(true);
 
         _viewModel.IsRedactionMode = true;
 
         _viewModel.ViewMode.Should().Be(PdfViewMode.SinglePage);
         _viewModel.IsContinuousView.Should().BeFalse();
+        _viewModel.ContinuousScrollPreference.Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData(EditingMode.Redaction)]
+    [InlineData(EditingMode.TextSelection)]
+    [InlineData(EditingMode.FormAuthoring)]
+    [InlineData(EditingMode.Typewriter)]
+    public void ExitingEditingMode_RestoresSavedContinuousScrollPreference(EditingMode mode)
+    {
+        _viewModel.ApplyContinuousScrollPreference(true);
+
+        SetEditingMode(mode, true);
+        _viewModel.IsContinuousView.Should().BeFalse("editing modes are single-page only");
+
+        SetEditingMode(mode, false);
+
+        _viewModel.ViewMode.Should().Be(PdfViewMode.Continuous);
+        _viewModel.IsContinuousView.Should().BeTrue(
+            "leaving an editing mode must re-apply the saved continuous-scroll preference, " +
+            "otherwise the preference is a one-way valve and the session is stranded in single-page");
+    }
+
+    [Theory]
+    [InlineData(EditingMode.Redaction)]
+    [InlineData(EditingMode.TextSelection)]
+    [InlineData(EditingMode.FormAuthoring)]
+    [InlineData(EditingMode.Typewriter)]
+    public void ExitingEditingMode_DoesNotForceContinuousWhenPreferenceIsSinglePage(EditingMode mode)
+    {
+        _viewModel.ApplyContinuousScrollPreference(false);
+
+        SetEditingMode(mode, true);
+        SetEditingMode(mode, false);
+
+        _viewModel.ViewMode.Should().Be(PdfViewMode.SinglePage);
+        _viewModel.IsContinuousView.Should().BeFalse(
+            "restoring must honour the saved preference, not unconditionally switch to continuous");
+    }
+
+    public enum EditingMode
+    {
+        Redaction,
+        TextSelection,
+        FormAuthoring,
+        Typewriter
+    }
+
+    private void SetEditingMode(EditingMode mode, bool active)
+    {
+        switch (mode)
+        {
+            case EditingMode.Redaction:
+                _viewModel.IsRedactionMode = active;
+                break;
+            case EditingMode.TextSelection:
+                _viewModel.IsTextSelectionMode = active;
+                break;
+            case EditingMode.FormAuthoring:
+                _viewModel.IsFormAuthoringMode = active;
+                break;
+            case EditingMode.Typewriter:
+                _viewModel.IsTypewriterMode = active;
+                break;
+        }
     }
 
     [Fact]

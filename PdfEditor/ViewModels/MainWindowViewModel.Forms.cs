@@ -44,6 +44,10 @@ public partial class MainWindowViewModel
                 if (_isTextSelectionMode) IsTextSelectionMode = false;
                 if (_isTypewriterMode) IsTypewriterMode = false;
             }
+            else
+            {
+                RestoreViewModeFromPreference();
+            }
 
             this.RaisePropertyChanged(nameof(InteractionMode));
             this.RaisePropertyChanged(nameof(CurrentModeText));
