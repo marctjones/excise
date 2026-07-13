@@ -6,6 +6,13 @@ semantic versioning.
 
 ## [Unreleased]
 
+## [2.29.0] - 2026-07-13
+
+User-facing: continuous scroll is the default again, and "go to page N" now
+actually goes there. Under the hood: the test suite can no longer lose coverage
+silently, and a performance change can no longer quietly rewrite what a
+correctness test considers correct.
+
 ### Fixed
 - **Continuous mode swallowed programmatic navigation.** "Go to page N" — an
   outline click, the page-number box, a jump to a search hit — could be silently
@@ -18,6 +25,27 @@ semantic versioning.
 ### Changed
 - **Continuous scroll is the default view mode again**, now that the navigation
   race above is fixed. The preference is still remembered across sessions.
+
+### Test integrity (#617, #618, #619, #620)
+- **Coverage can no longer vanish silently.** `scripts/check-skip-budget.sh` fails
+  the build when the set of skipped tests changes in either direction. Seeding it
+  found **33 skipped tests in Pdfe.Core alone** — including rotation tests in code
+  v2.28.0 had just touched. A security-relevant assertion (does hidden-text reveal
+  avoid loading OCR?) had already stopped running unnoticed.
+- **A perf change can no longer rewrite a correctness assertion quietly.**
+  `scripts/check-gate-asymmetry.sh` (in CI) fails a change that touches a
+  performance-sensitive path *and* rewrites a test's expected values, unless the
+  commit says so explicitly. Validated against the commit that did exactly that.
+- **The 144-page display sweep no longer fails on machine load.** It owns its
+  deadline and reports what actually happened; `scripts/run-gui-display-sweep.sh`
+  shards it (one shard of four: 1m24s, vs 5–20min). It had produced three false
+  reds in a single day.
+- **Geometry tests state invariants, not pinned numbers**, so they survive a legal
+  optimization and still fail an illegal one. Mutation-tested against three real
+  defects.
+- **CLAUDE.md corrected**: it was pointing contributors at a redaction directory
+  that does not exist, listing closed issues as current, and — worst — prescribing
+  a redaction test assertion that is **blind** to three of the leaks fixed in 2.28.0.
 
 ## [2.28.0] - 2026-07-13
 
