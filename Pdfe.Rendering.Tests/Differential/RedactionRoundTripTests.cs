@@ -66,16 +66,7 @@ public sealed class RedactionRoundTripTests
     /// Known redaction round-trip failures by relative PDF path.
     /// Each entry: reason. Removing a line re-enables the gate.
     /// </summary>
-    private static readonly Dictionary<string, string> KnownRedactionFailures = new()
-    {
-        ["test-pdfs/smoke/irs-1040-instructions.pdf"] =
-            "#637 — pdfe's text extraction is blind to ~85% of page 47 (pdfe: 471 chars, " +
-            "mutool: 3192). RedactText therefore never matches the target there, never removes " +
-            "it, and reports success. This is NOT a glyph-removal bug: it is redaction " +
-            "completeness bounded by extraction coverage. Only the independent-extractor pass " +
-            "can see it — the pdfe-verifies-pdfe pass is green on this file, because the " +
-            "extractor that cannot read the text is the one asked to confirm it is gone.",
-    };
+    private static readonly Dictionary<string, string> KnownRedactionFailures = new();
 
     public static IEnumerable<object[]> CorpusPdfs() => Discover();
 

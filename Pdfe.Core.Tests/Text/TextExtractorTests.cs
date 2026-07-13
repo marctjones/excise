@@ -1167,6 +1167,49 @@ public class TextExtractorTests
         letters.Should().NotBeEmpty();
     }
 
+    /// <summary>
+    /// REVERSE SOLIDUS immediately followed by a raw LF byte (not the "\n"
+    /// named escape above — an actual line-wrap in the source PDF) is a
+    /// line-continuation and must produce zero characters (PDF32000-1
+    /// §7.3.4.2 Table 3). Before the #637 fix this decoded as a spurious
+    /// literal newline, splitting "Instructions" into "Instruc\ntions" and
+    /// breaking RedactText's substring matching on real-world PDFs that wrap
+    /// long strings mid-word in their content stream.
+    /// </summary>
+    [Fact]
+    public void ExtractLetters_StringLiteralWithLineContinuationLF_ProducesNoCharacter()
+    {
+        var content = "BT /F1 12 Tf 100 700 Td (Instruc\\\ntions) Tj ET";
+        var pdfData = CreatePdfWithContentStream(content);
+        using var doc = PdfDocument.Open(pdfData);
+        var page = doc.GetPage(1);
+        var extractor = new TextExtractor(page);
+
+        var text = extractor.ExtractText();
+
+        text.Should().Contain("Instructions");
+        text.Should().NotContain("Instruc\ntions");
+    }
+
+    /// <summary>
+    /// CRLF is a single end-of-line marker per the PDF spec, not two — both
+    /// bytes after the REVERSE SOLIDUS must be consumed, producing zero
+    /// characters, not a stray '\r' left behind.
+    /// </summary>
+    [Fact]
+    public void ExtractLetters_StringLiteralWithLineContinuationCRLF_ProducesNoCharacter()
+    {
+        var content = "BT /F1 12 Tf 100 700 Td (Instruc\\\r\ntions) Tj ET";
+        var pdfData = CreatePdfWithContentStream(content);
+        using var doc = PdfDocument.Open(pdfData);
+        var page = doc.GetPage(1);
+        var extractor = new TextExtractor(page);
+
+        var text = extractor.ExtractText();
+
+        text.Should().Contain("Instructions");
+    }
+
     [Fact]
     public void ExtractLetters_StringLiteralWithTabEscape_DecodedCorrectly()
     {

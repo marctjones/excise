@@ -363,6 +363,18 @@ public class TextExtractor
                     case '(': bytes.Add((byte)'('); break;
                     case ')': bytes.Add((byte)')'); break;
                     case '\\': bytes.Add((byte)'\\'); break;
+                    // REVERSE SOLIDUS followed by an end-of-line marker is a
+                    // line-continuation: it produces NO character (PDF32000-1
+                    // §7.3.4.2 Table 3). CRLF is one marker, not two — consume
+                    // both bytes. Without this, a source-wrapped word like
+                    // "Instruc\<LF>tions" decodes with a spurious literal
+                    // newline splitting it in two, which breaks substring
+                    // matching in RedactText (#637).
+                    case '\r':
+                        if (pos + 1 < content.Length && content[pos + 1] == '\n') pos++;
+                        break;
+                    case '\n':
+                        break;
                     default:
                         // Octal escape
                         if (escaped >= '0' && escaped <= '7')

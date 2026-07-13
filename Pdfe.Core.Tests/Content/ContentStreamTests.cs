@@ -1342,6 +1342,38 @@ public class ContentStreamParserTests
         content.Operators[0].TextContent.Should().Contain("Hello");
     }
 
+    /// <summary>
+    /// REVERSE SOLIDUS immediately followed by a raw EOL byte is a
+    /// line-continuation and must produce zero characters (PDF32000-1
+    /// §7.3.4.2 Table 3), not a spurious literal newline. This parser feeds
+    /// the glyph-removal rewrite pipeline (LetterFinder/GlyphRemover), so a
+    /// mismatch against TextExtractor's handling of the same escape risks a
+    /// matched-but-not-actually-excised redaction leak (#637).
+    /// </summary>
+    [Fact]
+    public void Parse_StringLiteralWithLineContinuationLF_ProducesNoCharacter()
+    {
+        var data = System.Text.Encoding.ASCII.GetBytes("(Instruc\\\ntions) Tj");
+        var parser = new ContentStreamParser(data, null);
+
+        var content = parser.Parse();
+
+        content.Operators.Should().HaveCount(1);
+        content.Operators[0].TextContent.Should().Be("Instructions");
+    }
+
+    [Fact]
+    public void Parse_StringLiteralWithLineContinuationCRLF_ProducesNoCharacter()
+    {
+        var data = System.Text.Encoding.ASCII.GetBytes("(Instruc\\\r\ntions) Tj");
+        var parser = new ContentStreamParser(data, null);
+
+        var content = parser.Parse();
+
+        content.Operators.Should().HaveCount(1);
+        content.Operators[0].TextContent.Should().Be("Instructions");
+    }
+
     [Fact]
     public void Parse_HexString_OddNumberOfHexDigits_HandlesCorrectly()
     {

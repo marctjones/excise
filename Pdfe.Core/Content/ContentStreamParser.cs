@@ -1237,6 +1237,18 @@ public class ContentStreamParser
                     case (byte)'(': sb.Append('('); break;
                     case (byte)')': sb.Append(')'); break;
                     case (byte)'\\': sb.Append('\\'); break;
+                    // REVERSE SOLIDUS followed by an end-of-line marker is a
+                    // line-continuation: it produces NO character (PDF32000-1
+                    // §7.3.4.2 Table 3). CRLF is one marker, not two — consume
+                    // both bytes. Must match TextExtractor.ParseStringLiteral's
+                    // handling of the same escape (#637) — this parser feeds
+                    // the glyph-removal rewrite pipeline, so a mismatch here
+                    // risks a matched-but-not-actually-excised redaction leak.
+                    case (byte)'\r':
+                        if (_pos + 1 < _content.Length && _content[_pos + 1] == '\n') _pos++;
+                        break;
+                    case (byte)'\n':
+                        break;
                     default:
                         if (escaped >= '0' && escaped <= '7')
                         {
