@@ -229,7 +229,7 @@ public static class PdfCoordinateMapper
         var b = mb.Bottom;
         var w = mb.Width;
         var h = mb.Height;
-        var rotation = NormalizeRotation(page.Rotation);
+        var rotation = page.Rotation;   // already canonical {0,90,180,270}
 
         (double x, double y) Map(double cx, double cy) => rotation switch
         {
@@ -268,5 +268,4 @@ public static class PdfCoordinateMapper
                 nameof(rect));
     }
 
-    private static int NormalizeRotation(int rotation) => ((rotation % 360) + 360) % 360;
 }

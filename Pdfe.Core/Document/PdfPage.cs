@@ -156,11 +156,21 @@ public class PdfPage
     public double Height => MediaBox.Height;
 
     /// <summary>
-    /// Page rotation in degrees (0, 90, 180, 270).
+    /// Page rotation in degrees, always folded into the canonical {0, 90, 180, 270}.
     /// </summary>
+    /// <remarks>
+    /// The stored /Rotate may be any integer — the spec permits multiples of 90,
+    /// and real-world files carry negatives (-90) and values past a full turn
+    /// (450). A plain `% 360` preserves sign in C#, so this getter previously
+    /// returned -90 for a /Rotate -90 page. Every consumer then had to re-fold it
+    /// (SkiaRenderer, PdfViewerControl, PdfCoordinateMapper each carried their own
+    /// copy), and any consumer that forgot would fall through a `switch` to the
+    /// unrotated case — silently mapping coordinates as if the page were upright.
+    /// Normalizing once, here, is what makes that class of bug impossible.
+    /// </remarks>
     public int Rotation
     {
-        get => GetInheritedInt("Rotate", 0) % 360;
+        get => ((GetInheritedInt("Rotate", 0) % 360) + 360) % 360;
         set
         {
             // Normalize to 0, 90, 180, or 270
@@ -205,19 +215,13 @@ public class PdfPage
     /// Width of the page as displayed, i.e. after applying <see cref="Rotation"/>.
     /// Equals <see cref="Width"/> for 0°/180° and <see cref="Height"/> for 90°/270°.
     /// </summary>
-    public double VisualWidth => NormalizedRotation is 90 or 270 ? Height : Width;
+    public double VisualWidth => Rotation is 90 or 270 ? Height : Width;
 
     /// <summary>
     /// Height of the page as displayed, i.e. after applying <see cref="Rotation"/>.
     /// Equals <see cref="Height"/> for 0°/180° and <see cref="Width"/> for 90°/270°.
     /// </summary>
-    public double VisualHeight => NormalizedRotation is 90 or 270 ? Width : Height;
-
-    /// <summary><see cref="Rotation"/> folded into the canonical {0,90,180,270}.</summary>
-    private int NormalizedRotation
-    {
-        get { int r = ((Rotation % 360) + 360) % 360; return r; }
-    }
+    public double VisualHeight => Rotation is 90 or 270 ? Width : Height;
 
     /// <summary>
     /// Map a rectangle from <em>visual</em> space — what the viewer sees after
@@ -243,7 +247,7 @@ public class PdfPage
     {
         var mb = MediaBox.Normalize();
         double l = mb.Left, b = mb.Bottom, w = mb.Width, h = mb.Height;
-        int r = NormalizedRotation;
+        int r = Rotation;
 
         // Map one visual point (x right, y down, top-left origin) to content
         // space (x right, y up, MediaBox bottom-left origin). Derived from

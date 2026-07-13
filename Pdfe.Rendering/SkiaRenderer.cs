@@ -54,7 +54,7 @@ public class SkiaRenderer
 
         // The page /Rotate entry rotates the page clockwise when displayed.
         // The output bitmap is in *visual* dimensions (W/H swap for 90/270).
-        int rot = ((page.Rotation % 360) + 360) % 360;
+        int rot = page.Rotation;   // already canonical {0,90,180,270}
         bool quarter = rot is 90 or 270;
         var fullWidth = CeilingPixelCount((quarter ? displayBox.Height : displayBox.Width) * scale);
         var fullHeight = CeilingPixelCount((quarter ? displayBox.Width : displayBox.Height) * scale);
