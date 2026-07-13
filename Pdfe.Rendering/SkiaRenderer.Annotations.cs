@@ -562,22 +562,7 @@ internal partial class RenderContext
             var savedTextState = CloneTextState();
             var savedFillColor = _state.FillColor;
             var savedStrokeColor = _state.StrokeColor;
-            var savedTypeface = _currentTypeface;
-            var savedFontHasEmbeddedProgram = _currentFontHasEmbeddedProgram;
-            var savedByteToGlyph = _currentByteToGlyph;
-            var savedCffCidToGlyph = _currentCffCidToGlyph;
-            var savedCidToGidMap = _currentCidToGidMap;
-            var savedCidUseUnicodeCmap = _currentCidUseUnicodeCmap;
-            var savedCidEncodingCMap = _currentCidEncodingCMap;
-            var savedFontIsType0 = _currentFontIsType0;
-            var savedCidWidths = _currentCidWidths;
-            var savedCurrentFontWidths = _currentFontWidths;
-            var savedFontFirstChar = _currentFontFirstChar;
-            var savedFontMissingWidth = _currentFontMissingWidth;
-            var savedFontEncoding = _currentFontEncoding;
-            var savedCodeToUnicode = _currentCodeToUnicode;
-            var savedUnicodeToCode = _currentUnicodeToCode;
-            var savedCodeToGlyphName = _currentCodeToGlyphName;
+            var savedFont = _currentFont;
             try
             {
                 _textState = new TextState();
@@ -587,12 +572,17 @@ internal partial class RenderContext
 
                 float fontSize = _textState.FontSize > 0.001f
                     ? _textState.FontSize : autoSize;
-                if (_currentTypeface == null)
-                    _currentTypeface = GetTypeface("Helvetica");
+                // A malformed/empty /DA (no Tf) leaves _currentFont exactly
+                // as it was before this method ran — possibly null (first
+                // text ever on the page). Resolve a plain Helvetica fallback
+                // the same way any other font resolves, rather than patching
+                // a single field on an immutable ResolvedRenderFont.
+                if (_currentFont?.Typeface == null)
+                    _currentFont = ResolveRenderFont("Helvetica", null);
 
                 // Measure text to compute alignment. Use the active
                 // typeface so the width matches what we're about to draw.
-                using var measureFont = new SKFont(_currentTypeface, fontSize);
+                using var measureFont = new SKFont(_currentFont!.Typeface!, fontSize);
                 using var measurePaint = new SKPaint();
                 float textWidth = measureFont.MeasureText(value, measurePaint);
 
@@ -632,22 +622,7 @@ internal partial class RenderContext
                 _textState = savedTextState;
                 _state.FillColor = savedFillColor;
                 _state.StrokeColor = savedStrokeColor;
-                _currentTypeface = savedTypeface;
-                _currentFontHasEmbeddedProgram = savedFontHasEmbeddedProgram;
-                _currentByteToGlyph = savedByteToGlyph;
-                _currentCffCidToGlyph = savedCffCidToGlyph;
-                _currentCidToGidMap = savedCidToGidMap;
-                _currentCidUseUnicodeCmap = savedCidUseUnicodeCmap;
-                _currentCidEncodingCMap = savedCidEncodingCMap;
-                _currentFontIsType0 = savedFontIsType0;
-                _currentCidWidths = savedCidWidths;
-                _currentFontWidths = savedCurrentFontWidths;
-                _currentFontFirstChar = savedFontFirstChar;
-                _currentFontMissingWidth = savedFontMissingWidth;
-                _currentFontEncoding = savedFontEncoding;
-                _currentCodeToUnicode = savedCodeToUnicode;
-                _currentUnicodeToCode = savedUnicodeToCode;
-                _currentCodeToGlyphName = savedCodeToGlyphName;
+                _currentFont = savedFont;
             }
         }
         catch

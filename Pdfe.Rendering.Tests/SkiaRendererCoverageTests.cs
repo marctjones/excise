@@ -363,6 +363,42 @@ public class SkiaRendererCoverageTests
         outside.Blue.Should().BeGreaterThan(245);
     }
 
+    /// <summary>
+    /// Unfilled-AP text widgets with a /V value (common in unflattened
+    /// filled forms — Acrobat, Foxit, mutool all render these) route
+    /// through RenderWidgetDefault -> RenderTextFieldValue, the one
+    /// SkiaRenderer.Annotations.cs method whose #513 refactor changed
+    /// behavior rather than just relocating fields: it now restores
+    /// _currentFont (including the dict) after drawing the field value,
+    /// where the pre-#513 code never saved/restored the font dict at all.
+    /// Two widgets are rendered back-to-back so a save/restore bug in the
+    /// first widget's RenderTextFieldValue call would corrupt the font
+    /// state the second widget's call starts from.
+    /// </summary>
+    [Fact]
+    public void RenderPage_UnfilledApTextWidgetsWithValues_PaintBothAndRestoreFontStateBetween()
+    {
+        var pdfData = CreatePdfWithTwoTextWidgetValues();
+        using var doc = PdfDocument.Open(pdfData);
+        var renderer = new SkiaRenderer();
+
+        using var bitmap = renderer.RenderPage(doc.GetPage(1), new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        bool SawInkInRect(int x0, int x1, int yTopPdf0, int yTopPdf1)
+        {
+            for (var x = x0; x < x1; x++)
+            for (var y = bitmap.Height - yTopPdf1; y < bitmap.Height - yTopPdf0; y++)
+            {
+                var pixel = bitmap.GetPixel(x, y);
+                if (pixel.Red < 200 || pixel.Green < 200 || pixel.Blue < 200) return true;
+            }
+            return false;
+        }
+
+        SawInkInRect(20, 190, 150, 180).Should().BeTrue("the first widget's /V value should be painted since it has no /AP");
+        SawInkInRect(20, 190, 60, 90).Should().BeTrue("the second widget's /V value should be painted using its own restored font state");
+    }
+
     #endregion
 
     #region Path Operator Tests (fill rules, no-op)
@@ -1932,6 +1968,68 @@ public class SkiaRendererCoverageTests
         for (var i = 1; i <= 6; i++)
             WriteAscii(ms, $"{offsets[i]:D10} 00000 n \n");
         WriteAscii(ms, "trailer\n<< /Root 1 0 R /Size 7 >>\nstartxref\n");
+        WriteAscii(ms, xrefPos.ToString(CultureInfo.InvariantCulture));
+        WriteAscii(ms, "\n%%EOF\n");
+
+        return ms.ToArray();
+    }
+
+    /// <summary>
+    /// A page with two /Widget /Tx annotations that each have a /V value
+    /// but no /AP — the path that hits RenderTextFieldValue back-to-back,
+    /// exercising the font-state save/restore that #513 changed.
+    /// </summary>
+    private static byte[] CreatePdfWithTwoTextWidgetValues()
+    {
+        const string pageContent = " ";
+        const string da = "/F1 12 Tf 0 g";
+
+        using var ms = new MemoryStream();
+        var offsets = new long[9];
+
+        WriteAscii(ms, "%PDF-1.4\n");
+
+        offsets[1] = ms.Position;
+        WriteAscii(ms, "1 0 obj\n<< /Type /Catalog /Pages 2 0 R /AcroForm 7 0 R >>\nendobj\n");
+
+        offsets[2] = ms.Position;
+        WriteAscii(ms, "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n");
+
+        offsets[3] = ms.Position;
+        WriteAscii(ms, "3 0 obj\n");
+        WriteAscii(ms, "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 4 0 R\n");
+        WriteAscii(ms, "   /Resources << /ProcSet [/PDF] >> /Annots [5 0 R 8 0 R] >>\n");
+        WriteAscii(ms, "endobj\n");
+
+        offsets[4] = ms.Position;
+        WriteAscii(ms, "4 0 obj\n");
+        WriteAscii(ms, $"<< /Length {Encoding.ASCII.GetByteCount(pageContent)} >>\nstream\n");
+        WriteAscii(ms, pageContent);
+        WriteAscii(ms, "\nendstream\nendobj\n");
+
+        offsets[5] = ms.Position;
+        WriteAscii(ms, "5 0 obj\n");
+        WriteAscii(ms, "<< /Type /Annot /Subtype /Widget /FT /Tx /Rect [20 150 190 180]\n");
+        WriteAscii(ms, $"   /DA ({da}) /V (First Value) >>\n");
+        WriteAscii(ms, "endobj\n");
+
+        offsets[6] = ms.Position;
+        WriteAscii(ms, "6 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>\nendobj\n");
+
+        offsets[7] = ms.Position;
+        WriteAscii(ms, "7 0 obj\n<< /DR << /Font << /F1 6 0 R >> >> /Fields [5 0 R 8 0 R] >>\nendobj\n");
+
+        offsets[8] = ms.Position;
+        WriteAscii(ms, "8 0 obj\n");
+        WriteAscii(ms, "<< /Type /Annot /Subtype /Widget /FT /Tx /Rect [20 60 190 90]\n");
+        WriteAscii(ms, $"   /DA ({da}) /V (Second Value) >>\n");
+        WriteAscii(ms, "endobj\n");
+
+        var xrefPos = ms.Position;
+        WriteAscii(ms, "xref\n0 9\n0000000000 65535 f \n");
+        for (var i = 1; i <= 8; i++)
+            WriteAscii(ms, $"{offsets[i]:D10} 00000 n \n");
+        WriteAscii(ms, "trailer\n<< /Root 1 0 R /Size 9 >>\nstartxref\n");
         WriteAscii(ms, xrefPos.ToString(CultureInfo.InvariantCulture));
         WriteAscii(ms, "\n%%EOF\n");
 

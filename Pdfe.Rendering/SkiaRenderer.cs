@@ -273,8 +273,13 @@ internal partial class RenderContext
     private SKPath? _pendingTextClipPath;
     private TextState _textState;
     private bool _inTextBlock;
-    private SKTypeface? _currentTypeface;
-    private string _currentFontEncoding;
+    // The complete resolved state of the font set by the most recent Tf
+    // operator — see Fonts/ResolvedRenderFont.cs (#513). Null before the
+    // first Tf in a content stream; read sites fall back to the same
+    // defaults the old scattered fields had (WinAnsiEncoding, empty widths,
+    // no typeface) rather than throwing, matching prior behavior for
+    // malformed streams that show text before setting a font.
+    private Fonts.ResolvedRenderFont? _currentFont;
 
     // Form-XObject recursion guards. PDF allows Form XObjects to invoke
     // each other via the `Do` operator, and a malformed file can have
@@ -353,29 +358,6 @@ internal partial class RenderContext
         public double MaxY { get; }
     }
 
-    // Glyph widths parsed from the current font dictionary's /Widths array.
-    // Null when unavailable (e.g. standard 14 fonts that omit /Widths), in which
-    // case we fall back to Skia's MeasureText on the system typeface.
-    private float[]? _currentFontWidths;
-    private int _currentFontFirstChar;
-    private float _currentFontMissingWidth;
-
-    // Per-font character-code → Unicode map, built from /BaseEncoding +
-    // /Differences when /Encoding is a dictionary. Null for the common case
-    // of a simple name encoding (WinAnsiEncoding/MacRomanEncoding), in which
-    // case DecodeTextBytes uses the raw codepage.
-    private char[]? _currentCodeToUnicode;
-    // Inverse map, populated whenever _currentCodeToUnicode is; lets
-    // MeasurePdfAdvance go from Unicode text back to PDF byte codes for
-    // indexing /Widths. When a Unicode char appears at multiple codes we
-    // keep the first (lowest) to match the likely intent.
-    private Dictionary<char, byte>? _currentUnicodeToCode;
-    // Per-font character-code -> glyph-name table from the effective simple
-    // font encoding. This preserves custom subset glyph names such as /g18
-    // that do not have Unicode mappings but do exist in embedded CFF charsets.
-    private string?[]? _currentCodeToGlyphName;
-    private Pdfe.Core.Primitives.PdfDictionary? _currentFontDict;
-
     // Typefaces loaded from the PDF's own embedded font streams
     // (/FontFile = Type 1, /FontFile2 = TrueType, /FontFile3 = OpenType/CFF).
     // Keyed by the
@@ -401,7 +383,6 @@ internal partial class RenderContext
     // appearance-scoped /F0 entries that point to different fonts get
     // independent byte-cmap probes.
     private readonly Dictionary<Pdfe.Core.Primitives.PdfDictionary, ushort[]?> _embeddedTypefaceByteToGlyph = new();
-    private ushort[]? _currentByteToGlyph;
 
     // Stack of /Resources dictionaries currently active. The page's own
     // /Resources is the bottom; entering a Form XObject pushes its own
@@ -422,43 +403,7 @@ internal partial class RenderContext
     private readonly DeviceCmykBackdrop? _deviceCmykBackdrop;
     private readonly PdfColorSpace _deviceCmykPreviewColorSpace;
 
-    // Type0 / CID font state. Type0 fonts use 2-byte-per-character codes and
-    // index a descendant font's /W array for widths (different format from the
-    // simple-font /Widths). When _currentFontIsType0 is true, content-stream
-    // bytes must be parsed 2 at a time and rendered via glyph ID, not Unicode.
-    private bool _currentFontIsType0;
-    private bool _currentFontIsType3;
-    // True when /FontFile, /FontFile2, or /FontFile3 produced a usable
-    // SKTypeface — i.e. Skia is rendering with the actual PDF font and
-    // its MeasureText reports correct advances. False means we
-    // substituted a system typeface; in that case PDF /Widths (if present)
-    // are the source of truth for cursor advance, not Skia metrics.
-    private bool _currentFontHasEmbeddedProgram;
-    private Dictionary<int, float>? _currentCidWidths;
-    private float _currentCidDefaultWidth = 1000f;
-    private bool _currentCidUseUnicodeCmap;
-    private CidCMap? _currentCidEncodingCMap;
-
-    // CID → glyph-id mapping for the active CIDFontType2 font, when a
-    // non-identity /CIDToGIDMap stream is present. ushort.MaxValue at
-    // index N means "this CID is unmapped". Null means /CIDToGIDMap is
-    // absent or /Identity, so CID == GID and RenderCidBytes draws CIDs
-    // straight. Subset CIDFontType2 fonts (NotoSans, Noto* family) ship
-    // a stream remapping each used CID to its small subset glyph index;
-    // skipping the remap draws .notdef for every glyph and the page
-    // appears blank.
-    private ushort[]? _currentCidToGidMap;
-
-    // CID → glyph-index mapping for the active CIDFontType0 (CFF-based)
-    // font, derived from the /ROS-marked CFF's charset table. Same
-    // purpose as _currentCidToGidMap, but for CFF-keyed CID fonts where
-    // the mapping lives inside the embedded CFF rather than alongside
-    // it as /CIDToGIDMap. Subset Adobe-Japan1 fonts (KozMinPro,
-    // YuMincho, Source Han Sans, etc.) reach this path; without it,
-    // every CJK glyph resolves to .notdef and Japanese / Chinese /
-    // Korean PDFs render as blank pages.
-    private Dictionary<int, int>? _currentCffCidToGlyph;
-    // Per-fontDict cache for the above, keyed the same way as
+    // Per-fontDict cache for CFF CID→glyph maps, keyed the same way as
     // _embeddedTypefaces so two different /Font dicts with the same
     // resource name but different physical fonts don't collide.
     private readonly Dictionary<Pdfe.Core.Primitives.PdfDictionary, Dictionary<int, int>?> _embeddedCffCidToGlyph = new();
@@ -510,7 +455,6 @@ internal partial class RenderContext
         _state = new GraphicsState();
         _textState = new TextState();
         _inTextBlock = false;
-        _currentFontEncoding = "WinAnsiEncoding"; // Default encoding
 
         // Register code pages encoding provider for Windows-1252, Mac Roman, etc.
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);

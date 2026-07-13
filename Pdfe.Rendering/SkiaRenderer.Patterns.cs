@@ -332,7 +332,7 @@ internal partial class RenderContext
         var savedPendingTextClipPath = _pendingTextClipPath;
         var savedState = _state.Clone();
         var savedTextState = _textState.Clone();
-        var savedFontState = SnapshotCurrentFontState();
+        var savedFont = _currentFont;
         var savedInTextBlock = _inTextBlock;
         _currentPath = null;
         _pendingClipEvenOdd = null;
@@ -355,7 +355,7 @@ internal partial class RenderContext
             _pendingTextClipPath = savedPendingTextClipPath;
             _state = savedState;
             _textState = savedTextState;
-            RestoreCurrentFontState(savedFontState);
+            _currentFont = savedFont;
             _inTextBlock = savedInTextBlock;
             _canvas.RestoreToCount(savedCanvasCount);
         }
