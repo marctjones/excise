@@ -13,6 +13,18 @@ Use this checklist before tagging any `v*` release.
 ## Validation
 
 - Run `scripts/release-smoke.sh --visual --package --packaged-gui --version <version>` before tagging a release candidate.
+- **Run it on an otherwise idle machine.** `PdfEditor.Tests` is serial by design
+  (SkiaSharp's process-wide native font manager, #363) and its 144-page display
+  sweep is therefore load-sensitive. Concurrent work — or a bloated `logs/` +
+  `artifacts/` tree — has produced **false reds** with zero page failures (#619).
+  If the sweep reports DEADLINE, that is a TIME limit, not a correctness failure;
+  shard it rather than ignore it:
+  `scripts/run-gui-display-sweep.sh 4`
+- **Run the skip budget** for every suite you touched:
+  `scripts/check-skip-budget.sh <project>.csproj`
+  A test that silently stops running is coverage loss you cannot see — this is
+  how a security-relevant assertion (`HiddenTextToggles_DoNotLoadOcrAssembly…`)
+  quietly stopped executing while the suite stayed green (#619).
 - Run `dotnet build pdfe.sln --no-restore`.
 - Run `dotnet test --no-build --filter "FullyQualifiedName~Redaction"` after any redaction-adjacent change.
 - Run the signature verification and UI workflow gates in `scripts/release-smoke.sh`.

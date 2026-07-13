@@ -120,14 +120,62 @@ public class MainWindowViewModelTests
         _viewModel.IsTypewriterMode.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Ordinary hidden-text reveal must stay structural-only and must not drag in
+    /// the OCR assembly — that is a real dependency/privacy property, not a
+    /// performance nicety (OCR shells out to an external `tesseract` binary).
+    /// </summary>
+    /// <remarks>
+    /// This assertion is ORDER-DEPENDENT and cannot be made otherwise in-process:
+    /// once any earlier test has loaded Pdfe.Ocr, "is it loaded?" can no longer
+    /// distinguish "we pulled it in" from "it was already here". Proving it
+    /// properly needs a dedicated process.
+    ///
+    /// On 2026-07-13 that bit us: adding unrelated tests to this class reordered
+    /// execution, this test silently began skipping, and the suite stayed green
+    /// with one less security-relevant assertion running. Nobody noticed.
+    ///
+    /// So it is now defended two ways:
+    ///   1. The strong check below still skips when it cannot be trusted — but
+    ///      that skip is now ALLOW-LISTED and enforced by
+    ///      scripts/check-skip-budget.sh (#619). If it starts or stops skipping,
+    ///      the build fails. Coverage can no longer vanish quietly.
+    ///   2. The weaker check runs UNCONDITIONALLY: watch AssemblyLoad while the
+    ///      toggle happens and assert this ACTION did not trigger the load. That
+    ///      holds regardless of what ran before.
+    /// </remarks>
     [Fact]
     public void HiddenTextToggles_DoNotLoadOcrAssemblyBeforeRasterizedScan()
     {
-        Assert.SkipWhen(IsAssemblyLoaded("Pdfe.Ocr"),
-            "Pdfe.Ocr was already loaded by an earlier test in this process");
+        // (2) — order-independent: did THIS action pull OCR in?
+        var loadedDuringAction = new List<string>();
+        AssemblyLoadEventHandler handler = (_, e) =>
+            loadedDuringAction.Add(e.LoadedAssembly.GetName().Name ?? "");
+        AppDomain.CurrentDomain.AssemblyLoad += handler;
 
-        _viewModel.RevealHiddenText = true;
-        _viewModel.RevealRasterizedHidden = false;
+        bool wasAlreadyLoaded = IsAssemblyLoaded("Pdfe.Ocr");
+        try
+        {
+            _viewModel.RevealHiddenText = true;
+            _viewModel.RevealRasterizedHidden = false;
+        }
+        finally
+        {
+            AppDomain.CurrentDomain.AssemblyLoad -= handler;
+        }
+
+        loadedDuringAction.Should().NotContain("Pdfe.Ocr",
+            "toggling structural hidden-text reveal must not pull in the OCR assembly — " +
+            "OCR shells out to an external tesseract binary and must stay behind an " +
+            "explicit rasterized-scan request");
+
+        // (1) — the strong check, only meaningful in a process that has not
+        // already loaded OCR. The skip is allow-listed, so it cannot disappear
+        // unnoticed (scripts/check-skip-budget.sh).
+        Assert.SkipWhen(wasAlreadyLoaded,
+            "Pdfe.Ocr was already loaded by an earlier test in this process — the " +
+            "absolute check cannot distinguish 'we loaded it' from 'it was here'. " +
+            "This skip is allow-listed and budget-enforced (#619).");
 
         IsAssemblyLoaded("Pdfe.Ocr").Should().BeFalse(
             "ordinary hidden-text reveal should stay structural-only until rasterized OCR is explicitly requested");

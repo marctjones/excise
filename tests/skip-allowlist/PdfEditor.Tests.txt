@@ -1,0 +1,6 @@
+# Skips allow-listed for PdfEditor.Tests. See scripts/check-skip-budget.sh (#619).
+# Every line is coverage we are NOT getting. Justify it or delete it.
+# Format:  TestName   # why
+#
+PdfEditor.Tests.Integration.SearchPerformanceTests.Search_OnSyntheticDoc_CompletesInReasonableTime   # perf assertion; skips when the synthetic fixture is absent. Timing test, not correctness.
+PdfEditor.Tests.Unit.MainWindowViewModelTests.HiddenTextToggles_DoNotLoadOcrAssemblyBeforeRasterizedScan   # ORDER-DEPENDENT by nature: once any earlier test loads Pdfe.Ocr, "is it loaded?" cannot distinguish "we pulled it in" from "it was already here". Proving it needs a dedicated process. The weaker, order-INDEPENDENT half (watch AssemblyLoad during the toggle) now always runs. This skip is why the budget exists: on 2026-07-13 it silently stopped running and the suite stayed green.

@@ -135,7 +135,7 @@ public class PdfViewerHeadlessRenderTests
         AssertLightOpaquePage(visualSurface, "ACC cover offscreen GUI surface");
     }
 
-    [FixedAvaloniaFact(Timeout = 1_200_000)]
+    [FixedAvaloniaFact(Timeout = 2_400_000)]   // see SoftDeadline below — ours must fire first
     [Trait("Category", "GuiDisplay")]
     public async Task PdfViewer_RenderingQualitySuite_DisplayBitmapsMatchRenderer()
     {
@@ -207,8 +207,33 @@ public class PdfViewerHeadlessRenderTests
             $"{(pageOffset == 0 && !pageLimit.HasValue ? "" : $", offset {pageOffset}, limit {pageLimit?.ToString() ?? "none"}")}" +
             $"{(string.IsNullOrWhiteSpace(caseFilter) ? "" : $", filter '{caseFilter}'")}.");
 
+        // Soft deadline (#619). This sweep is a single test over 144 pages inside a
+        // SERIAL suite, so its wall-clock time depends on the machine, on what else is
+        // running, and even on how much junk has accumulated in logs/ + artifacts/.
+        // On 2026-07-13 it produced THREE false reds: twice from concurrent test runs,
+        // once from ~900MB of accumulated artifacts — every time with ZERO page
+        // failures, and every time reported to the developer as the useless
+        // "Test execution timed out after 1200000 milliseconds".
+        //
+        // A gate that flips red based on machine load is a gate people learn to ignore.
+        // So we now own the deadline: stop cleanly, and fail with what actually
+        // happened — how many pages were checked, how many FAILED, and what to do.
+        // Time exhaustion and correctness failure are different things and must not
+        // look the same.
+        var softDeadlineMs = ParsePositiveEnvironmentInt("PDFE_GUI_DISPLAY_DEADLINE_MS", defaultValue: 1_500_000);
+        var timedOut = false;
+
         for (var i = 0; i < cases.Count; i++)
         {
+            if (suiteSw.ElapsedMilliseconds > softDeadlineMs)
+            {
+                timedOut = true;
+                _output.WriteLine(
+                    $"  DEADLINE: stopped after {i}/{cases.Count} page(s), " +
+                    $"{failures.Count} failure(s), elapsed {suiteSw.Elapsed:mm\\:ss}");
+                break;
+            }
+
             var testCase = cases[i];
             var caseSw = Stopwatch.StartNew();
             var currentPage = new GuiDisplayCurrentPage
@@ -394,7 +419,20 @@ public class PdfViewerHeadlessRenderTests
             current: null);
         _output.WriteLine($"GUI display sweep report: {reportPath}");
 
-        failures.Should().BeEmpty("GUI display path should preserve renderer pixels and avoid black/transparent surface failures");
+        // Correctness first: a real pixel failure is a real failure regardless of time.
+        failures.Should().BeEmpty(
+            "GUI display path should preserve renderer pixels and avoid black/transparent surface failures");
+
+        // Only then, coverage. Passing a partially-run sweep would be a silent cap —
+        // "we checked everything" when we checked 120 of 144.
+        timedOut.Should().BeFalse(
+            $"the sweep ran out of time after {results.Count}/{cases.Count} page(s) with " +
+            $"{failures.Count} failure(s). This is a TIME limit, not a correctness failure — " +
+            "no page disagreed with the renderer. This suite is SERIAL and load-sensitive: " +
+            "run it alone (nothing else on the machine), or shard it with " +
+            "PDFE_GUI_DISPLAY_SHARD_COUNT / PDFE_GUI_DISPLAY_SHARD_INDEX. Raise the budget " +
+            "with PDFE_GUI_DISPLAY_DEADLINE_MS if the machine is genuinely slower. " +
+            "Do NOT ignore it: a partially-run sweep must never report success.");
     }
 
     /// <summary>
