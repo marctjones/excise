@@ -6,9 +6,56 @@ semantic versioning.
 
 ## [Unreleased]
 
+## [2.28.0] - 2026-07-13
+
+**Security release. Two redaction leaks are fixed. Upgrading is recommended for
+anyone using pdfe to redact sensitive documents.**
+
+Both fixed leaks share one root cause: redaction was verified by asking pdfe's
+own text extractor whether pdfe had removed the text. That extractor reads the
+content stream and nothing else, so text surviving in any other carrier was
+reported as a clean redaction — by a fully green test suite.
+
+### Security
+
+- **Fixed: redacted text survived in the structure tree of tagged PDFs (#636).**
+  `/ActualText` and `/Alt` restate the text of a marked-content span. Glyph
+  removal rewrote the content stream and left them untouched, so Acrobat, screen
+  readers, and any tag-aware extractor still read the redacted name straight out
+  of the file. Tagged PDFs are exactly the institutional documents (government
+  forms, court filings, medical records) most likely to hold sensitive data.
+- **Fixed: redacted text survived in document-level carriers (#608).** The XMP
+  `/Metadata` packet, outline (bookmark) titles, and annotation `/Contents` were
+  never scrubbed — only `/Info` was, and only in the GUI. A redacted name left in
+  a bookmark title is visible in the reader's navigation sidebar without the page
+  ever being opened.
+- **Verified (was only asserted in a comment): a full save garbage-collects the
+  previous revision**, so an incremental-update PDF cannot retain the
+  un-redacted page. Now proven by test rather than believed.
+- **New: redaction is now verified by tools that are not pdfe** (#606, #607,
+  #609) — independent extraction (mutool), independent rendering (Ghostscript)
+  as a before/after ink differential, and the full corpus. Ink absence is the
+  stronger claim: extraction cannot see text rendered as vector paths or raster
+  pixels; a renderer can.
+
+### Known security limitations (unchanged from 2.27.1 — not introduced here)
+
+- **Redaction is silently incomplete where text extraction is blind (#637).**
+  Where pdfe cannot read text, it cannot redact it, and it reports success
+  anyway. Measured on `irs-1040-instructions.pdf` page 47: pdfe extracts 471
+  characters, mutool extracts 3,192. **Verify redactions of unfamiliar documents
+  with an independent tool.** This is pre-existing; it is disclosed here because
+  the new independent-verification suite is what found it.
+- **Redacting an encrypted PDF returns an unencrypted copy (#638).** The writer
+  cannot emit `/Encrypt`. The redaction succeeds; the protection on the rest of
+  the document is silently dropped.
+- **`/P` permissions are parsed but never enforced (#642).**
+
 ### Added
 - Continuous scroll is now the default view mode, and the choice is remembered
   across sessions via the new `ContinuousScrollEnabled` window setting.
+- `PdfDocumentSanitizer.ScrubTerms` (public API, additive) — removes redacted
+  terms from `/Info`, XMP `/Metadata`, outline titles, and annotation `/Contents`.
 
 ### Changed
 - Continuous-scroll page rendering now coalesces render passes and de-duplicates

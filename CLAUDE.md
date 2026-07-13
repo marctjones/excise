@@ -70,13 +70,61 @@ Pdfe.Core/Content/ContentStreamWriter.cs               ← serializes operators 
 PdfEditor/Services/RedactionService.cs                 ← GUI orchestration; mirrors the rewrite onto the page
 ```
 
-### Required Test Assertion
+### Required Test Assertions
+
+⚠️ **The assertion below is NOT sufficient on its own. It has passed on leaking
+documents three separate times.**
 
 ```csharp
+// NECESSARY, BUT BLIND. Reads only the CONTENT STREAM.
 var textAfter = PdfTestHelpers.ExtractAllText(redactedPdf);
 textAfter.Should().NotContain("REDACTED_TEXT",
     "Text must be REMOVED from PDF structure, not just hidden");
 ```
+
+**Why this is not enough.** `ExtractAllText` reads the content stream. A PDF
+restates the same text in carriers it cannot see, and each one has already
+shipped a green suite over a leaking file:
+
+| Leak | Where the text survived | What our assertion said |
+|------|------------------------|-------------------------|
+| #636 | `/ActualText`, `/Alt` in the structure tree | ✅ clean |
+| #608 | XMP `/Metadata`, outline titles, annotation `/Contents` | ✅ clean |
+| #637 | A page our own **extractor cannot read** (IRS 1040 p47: pdfe sees 471 chars, mutool sees 3192) | ✅ clean |
+
+The third is the general case, and the rule to remember:
+
+> **Redaction completeness is bounded by extraction coverage. pdfe cannot redact
+> what pdfe cannot read — and it will report success anyway.**
+
+So a redaction test MUST also assert at least one of:
+
+```csharp
+// 1. CARRIER-AGNOSTIC — search the SAVED BYTES (ASCII *and* UTF-16BE).
+//    If the secret is anywhere in the file, in any carrier, this fails.
+var saved = SaveToBytes(redactedPdf);
+(Encoding.ASCII.GetString(saved) + Encoding.BigEndianUnicode.GetString(saved))
+    .Should().NotContain("REDACTED_TEXT");
+
+// 2. INDEPENDENT EXTRACTOR — a tool that is not pdfe.
+MutoolTextExtractor.ExtractPage(path, page).Should().NotContain("REDACTED_TEXT");
+
+// 3. INDEPENDENT RENDERER — an ink differential over the redacted region.
+//    Text can be gone from every text carrier and still be VISIBLE (vector
+//    paths, raster pixels). Extraction cannot see ink; a renderer can.
+InkFractionIn(after, box).Should().BeLessThan(0.001);   // was > 0.02 before
+```
+
+**The principle, learned the hard way:**
+
+> **A tool must not be its own oracle for the property it exists to guarantee.**
+> pdfe confirming that pdfe removed the text proves only that its bugs are
+> self-consistent.
+
+Working examples of all three:
+- `Pdfe.Core.Tests/Text/Segmentation/StructureTreeRedactionLeakTests.cs` (saved bytes)
+- `Pdfe.Rendering.Tests/Differential/RedactionReferenceVerificationTests.cs` (independent extractor + ink differential)
+- `Pdfe.Rendering.Tests/Differential/RedactionRoundTripTests.cs` (corpus, both ways)
 
 **See `REDACTION_AI_GUIDELINES.md` for complete documentation.**
 
@@ -509,10 +557,28 @@ Never manually modify content stream bytes without parsing first.
 
 ## Limitations
 
-1. **Font Metrics**: Uses approximation, not actual font dictionaries
-2. **Inline Images**: `BI...ID...EI` operators not yet handled
-3. **Rotated Pages**: Page rotation (`/Rotate` entry) not fully supported
-4. **Clipping Paths**: `W`, `W*` operators not tracked
+Verified against the code on 2026-07-13. Do not add a limitation here without
+checking it is still true — several entries in this list were stale for months
+and cost real planning time.
+
+1. **Text extraction coverage bounds redaction completeness** (#637) — ⚠️ the
+   most important entry in this file. Where pdfe's extractor cannot read text,
+   `RedactText` cannot match it, does not remove it, **and reports success**.
+   Measured: IRS 1040 instructions p47 — pdfe extracts 471 chars, mutool 3192.
+   This makes the font-model work (#512–#515, #532) *redaction security*, not
+   display polish.
+2. **Font Metrics**: approximation, not full font dictionaries (#512, #513).
+3. **Encryption is decrypt-only** (#624) — the writer emits no `/Encrypt`, so
+   redacting a password-protected PDF returns an **unprotected** copy (#638).
+4. **`/P` permissions parsed but never enforced** (#642) — pdfe will copy text
+   out of a copy-forbidden document.
+
+**Previously listed here and now FIXED — do not re-add:**
+- ~~Inline images `BI...ID...EI` not handled~~ → handled (`ContentStreamWriter.cs:39-81`).
+- ~~Clipping paths `W`, `W*` not tracked~~ → tracked (`ContentStreamParser.cs:448`).
+- ~~Rotated pages not supported~~ → `/Rotate` 0/90/180/270 and inherited rotation
+  are honoured end-to-end (`PdfPage.ToContentStreamCoordinates`), covered by
+  `RotatedPageRedactionTests`.
 
 See GitHub issues labeled `component: redaction-engine` for enhancement tracking.
 
@@ -704,10 +770,18 @@ if (!System.IO.File.Exists(filePath))
 
 ### Current High-Priority Issues
 
-Check GitHub for the latest, but as of this writing:
-- **#95**: Text leak - substring redaction leaves partial text (CRITICAL, security)
-- **#96**: Empty area redactions - coordinate mismatch (HIGH)
-- **#87**: Substring matching limitations (additional test cases added)
+**Do not hard-code an issue list here — it goes stale and misleads.** (#95, #96
+and #87 sat in this section long after they were closed, and two separate agents
+planned work off them.) Query it live:
+
+```bash
+gh issue list --label "priority: critical,priority: high" --state open
+gh issue list --label "track: redaction-trust" --state open   # correctness first
+gh issue list --label "track: daily-driver"    --state open   # usability second
+```
+
+The roadmap lives in the named-track milestones (`1. Redaction Trust (blocking)`
+… `10. Document Security`), ordered by the sequence they should be done in.
 
 View all: `gh issue list --label "priority: high,priority: critical"`
 
