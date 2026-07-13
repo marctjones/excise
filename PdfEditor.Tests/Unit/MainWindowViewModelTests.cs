@@ -863,12 +863,9 @@ public class MainWindowViewModelTests
     [Fact]
     public void ToggleContinuousViewCommand_TogglesViewMode()
     {
-        _viewModel.ViewMode.Should().Be(PdfViewMode.Continuous);
-        _viewModel.IsContinuousView.Should().BeTrue();
-        _viewModel.ContinuousScrollPreference.Should().BeTrue();
-
-        _viewModel.ToggleContinuousViewCommand.Execute().Subscribe();
-
+        // Single-page is the default until v2.29.0 — continuous-by-default is
+        // deferred behind the viewer navigation race (fix/continuous-nav-race).
+        // The toggle and the persisted preference are fully wired regardless.
         _viewModel.ViewMode.Should().Be(PdfViewMode.SinglePage);
         _viewModel.IsContinuousView.Should().BeFalse();
         _viewModel.ContinuousScrollPreference.Should().BeFalse();
@@ -877,7 +874,13 @@ public class MainWindowViewModelTests
 
         _viewModel.ViewMode.Should().Be(PdfViewMode.Continuous);
         _viewModel.IsContinuousView.Should().BeTrue();
-        _viewModel.ContinuousScrollPreference.Should().BeTrue();
+        _viewModel.ContinuousScrollPreference.Should().BeTrue("opting in must be remembered");
+
+        _viewModel.ToggleContinuousViewCommand.Execute().Subscribe();
+
+        _viewModel.ViewMode.Should().Be(PdfViewMode.SinglePage);
+        _viewModel.IsContinuousView.Should().BeFalse();
+        _viewModel.ContinuousScrollPreference.Should().BeFalse();
     }
 
     [Fact]
