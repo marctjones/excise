@@ -5,6 +5,7 @@ using System.Linq;
 using AwesomeAssertions;
 using Pdfe.Core.Document;
 using Pdfe.Core.Text.Segmentation;
+using Pdfe.Rendering.Differential;
 using Xunit;
 namespace Pdfe.Rendering.Tests.Differential;
 
@@ -65,7 +66,16 @@ public sealed class RedactionRoundTripTests
     /// Known redaction round-trip failures by relative PDF path.
     /// Each entry: reason. Removing a line re-enables the gate.
     /// </summary>
-    private static readonly Dictionary<string, string> KnownRedactionFailures = new();
+    private static readonly Dictionary<string, string> KnownRedactionFailures = new()
+    {
+        ["test-pdfs/smoke/irs-1040-instructions.pdf"] =
+            "#637 — pdfe's text extraction is blind to ~85% of page 47 (pdfe: 471 chars, " +
+            "mutool: 3192). RedactText therefore never matches the target there, never removes " +
+            "it, and reports success. This is NOT a glyph-removal bug: it is redaction " +
+            "completeness bounded by extraction coverage. Only the independent-extractor pass " +
+            "can see it — the pdfe-verifies-pdfe pass is green on this file, because the " +
+            "extractor that cannot read the text is the one asked to confirm it is gone.",
+    };
 
     public static IEnumerable<object[]> CorpusPdfs() => Discover();
 
@@ -180,6 +190,99 @@ public sealed class RedactionRoundTripTests
             $"SECURITY: redacted text leaked through save+reopen on {relativePath}. " +
             $"Target word '{target}' was removed from the source ({matchCount} matches) " +
             $"but is still extractable from the saved output.");
+    }
+
+    /// <summary>
+    /// The same corpus round-trip, verified by a tool that is not pdfe (#607).
+    /// </summary>
+    /// <remarks>
+    /// <see cref="RedactedWordIsGoneAfterSaveAndReopen"/> asks pdfe whether pdfe
+    /// removed the text — it re-extracts with <c>page.Text</c>, which reads the
+    /// content stream and nothing else. That blind spot is not hypothetical: it is
+    /// exactly how #636 (/ActualText in the structure tree) and #608 (an XMP scrub
+    /// that never reached the saved bytes) passed a full green suite while the
+    /// secret sat in the file.
+    ///
+    /// mutool reads carriers our extractor does not. Running it over the whole
+    /// corpus — rather than a handful of synthetic fixtures — is what turns
+    /// "we believe redaction works" into "an independent tool cannot find the word
+    /// in any of these real documents".
+    ///
+    /// A disagreement here is a genuine leak, not a rendering nicety: pdfe says the
+    /// word is gone and something else can still read it.
+    /// </remarks>
+    [Theory]
+    [MemberData(nameof(CorpusPdfs))]
+    public void RedactedWordIsNotRecoverableByAnIndependentExtractor(string relativePath)
+    {
+        Assert.SkipWhen(relativePath == SentinelNoCorpus,
+            "No smoke corpus found at test-pdfs/smoke/. Run scripts/download-smoke-corpus.sh to populate it.");
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable,
+            "mutool not installed — independent verification unavailable (NOT a pass)");
+
+        var root = LocateRepoRoot()!;
+        var pdfBytes = File.ReadAllBytes(Path.Combine(root, relativePath));
+
+        string? target;
+        try
+        {
+            using var doc = PdfDocument.Open(pdfBytes);
+            target = PickRedactionTarget(doc);
+        }
+        catch (Exception ex)
+        {
+            Assert.SkipWhen(true, $"pdfe could not open {relativePath}: {ex.GetType().Name}: {ex.Message}");
+            return;
+        }
+
+        Assert.SkipWhen(target == null, $"{relativePath}: no suitable target word");
+
+        byte[] redactedBytes;
+        int matchCount;
+        using (var doc = PdfDocument.Open(pdfBytes))
+        {
+            matchCount = doc.RedactText(target!, caseSensitive: false);
+            redactedBytes = doc.SaveToBytes();
+        }
+
+        Assert.SkipWhen(matchCount == 0, $"{relativePath}: '{target}' wasn't matched by RedactText");
+
+        var temp = Path.Combine(Path.GetTempPath(), $"pdfe-corpus-{Guid.NewGuid():N}.pdf");
+        try
+        {
+            File.WriteAllBytes(temp, redactedBytes);
+
+            var recovered = new List<int>();
+            using (var reopened = PdfDocument.Open(redactedBytes))
+            {
+                for (int p = 1; p <= reopened.PageCount; p++)
+                {
+                    var text = MutoolTextExtractor.ExtractPage(temp, p);
+                    if (text == null) continue;   // mutool declined this page; not a pass, just no signal
+                    if (text.IndexOf(target!, StringComparison.OrdinalIgnoreCase) >= 0)
+                        recovered.Add(p);
+                }
+            }
+
+            _output.WriteLine($"  {relativePath}: redacted '{target}' ({matchCount} match(es)); " +
+                              $"mutool-recoverable on page(s): [{string.Join(",", recovered)}]");
+
+            if (recovered.Count > 0 && KnownRedactionFailures.TryGetValue(relativePath, out var reason))
+            {
+                _output.WriteLine($"  ⚑ KNOWN FAILURE — not gating: {reason}");
+                Assert.SkipWhen(true, $"Known redaction failure for {relativePath}: {reason}");
+            }
+
+            recovered.Should().BeEmpty(
+                $"SECURITY: pdfe reports '{target}' redacted from {relativePath}, but mutool still " +
+                $"recovers it from page(s) [{string.Join(",", recovered)}] of the saved output. " +
+                "pdfe's own extractor reads only the content stream; mutool reads the structure " +
+                "tree, the ToUnicode CMap, and the raw strings. The word is still in the file.");
+        }
+        finally
+        {
+            try { File.Delete(temp); } catch { /* best effort */ }
+        }
     }
 
     /// <summary>
