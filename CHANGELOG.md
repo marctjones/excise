@@ -6,6 +6,19 @@ semantic versioning.
 
 ## [Unreleased]
 
+### Fixed
+- **Continuous mode swallowed programmatic navigation.** "Go to page N" — an
+  outline click, the page-number box, a jump to a search hit — could be silently
+  discarded and land the user on page 1. Three stacked defects: the scroll request
+  was dropped when the page slots did not exist yet; the document-changed path
+  wiped the pending-navigation latch; and the "did we arrive?" check treated an
+  un-laid-out ScrollViewer (extent 0, so max offset 0) as *already arrived*, which
+  disarmed the guard instantly and let the scroll handler snap back to page 1.
+
+### Changed
+- **Continuous scroll is the default view mode again**, now that the navigation
+  race above is fixed. The preference is still remembered across sessions.
+
 ## [2.28.0] - 2026-07-13
 
 **Security release. Two redaction leaks are fixed. Upgrading is recommended for
