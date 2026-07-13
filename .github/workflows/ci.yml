@@ -113,8 +113,29 @@ jobs:
       - name: Verify TRUE Redaction Implementation
         run: ./scripts/verify-true-redaction.sh
 
+      # Gate asymmetry (#618): CORRECTNESS is a blocking gate, PERFORMANCE is a
+      # budget. A perf regression may never be resolved by weakening a correctness
+      # assertion. This fails a PR that touches a perf-sensitive path AND rewrites
+      # the expected values of a test, unless the commit explicitly says
+      # "Correctness-Expectations-Changed: <why>".
+      #
+      # It is not hypothetical: 8a8e661 changed the tile quantization constants and,
+      # in the same commit, rewrote ContinuousDpiTests' expected values. Legitimate
+      # edit, unacceptable mechanism — nothing signalled that an optimization had
+      # just redefined "correct".
+      - name: Gate asymmetry (correctness cannot be weakened by perf)
+        run: ./scripts/check-gate-asymmetry.sh origin/${{ github.base_ref || 'main' }}
+
       - name: Build (Debug)
         run: dotnet build pdfe.sln -c Debug
+
+      # Skip budget (#619): a test that silently stops running is coverage loss you
+      # cannot see. A security-relevant assertion
+      # (HiddenTextToggles_DoNotLoadOcrAssemblyBeforeRasterizedScan) quietly stopped
+      # executing when unrelated tests were added to its class, and the suite stayed
+      # green. This fails the build when the skip set CHANGES in either direction.
+      - name: Skip budget (Pdfe.Core.Tests)
+        run: ./scripts/check-skip-budget.sh Pdfe.Core.Tests/Pdfe.Core.Tests.csproj
 
       - name: Run Pdfe.Core.Tests with coverage
         run: |
