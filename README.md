@@ -174,6 +174,29 @@ release notes:
   some owner-password-only flows, unsupported compression filters, invalid
   geometry, and intentionally malformed xref/stream structures are classified by
   the corpus scanner rather than treated as everyday-release blockers.
+- **Text-extraction parity** — redaction completeness is bounded by extraction
+  coverage: `RedactText` cannot remove what pdfe cannot read, and reports
+  success anyway (#637). Measured against `mutool` across 332 pages / 12
+  fixtures (10 real-world government PDFs plus checked-in edge-case fixtures
+  covering CJK/Type0 text and scrambled glyph order), pdfe currently extracts
+  **102.6%** of mutool's Unicode letter/digit count in aggregate — counted
+  per-script, not ASCII-folded, so CJK/accented-text loss would show up here
+  rather than cancel out on both sides. Both blind spots #645 was written to
+  measure are currently clean on their fixtures (the CJK page and the
+  scrambled-order page both extract byte-for-byte against mutool), but
+  per-page **content similarity** dips as low as **0.75** on 83 Type0/CID-font
+  pages (all `/Encoding /Identity-H`) of `irs-1040-instructions.pdf`, where
+  marked-content `/Artifact` text pollutes the extraction alongside the real
+  content — that is the live worklist for #513-#515. (The CJK fixture is
+  clean on both the raw-text path this gate measures *and* the word/search
+  path `RedactText` actually depends on —
+  `RealWorldSearchTests.CjkFixture_Search_FindsLatinWord` now genuinely
+  passes, not skips, confirming the paths agree rather than one extractor
+  vouching for the other.) This is a checked-in,
+  ratcheting floor per page, not an aspiration — see
+  `tests/extraction-parity/baseline.json`, regenerate with
+  `scripts/check-extraction-parity.sh --update` (requires `mutool`), and see
+  #645/#513.
 
 ### PDF 2.0 conformance
 All 15 conformance phases shipped:

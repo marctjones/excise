@@ -94,6 +94,19 @@ shipped a green suite over a leaking file:
 
 The third is the general case, and the rule to remember:
 
+*(The #637 p47 anecdote no longer reproduces — pdfe now extracts 3233 chars
+there vs. mutool's 3192 — but the general failure mode is not fixed, it's now
+**measured**: #645's corpus-wide gate (332 pages / 12 fixtures, including the
+checked-in CJK Type0 fixture that names #645's second blind spot) shows no
+broad under-extraction (aggregate coverage 102.6% of mutool's Unicode
+letter/digit count — deliberately not ASCII-folded, so it can't silently
+cancel out CJK/accented-text loss on both sides), but per-page content
+similarity falls to 0.75 on 83 Type0/CID-font pages of
+`irs-1040-instructions.pdf`, where a marked-content `/Artifact` leak pollutes
+the extraction. See `tests/extraction-parity/baseline.json` and
+`scripts/check-extraction-parity.sh`. Anecdote → measurement is the point of
+#645: don't restate a specific number here without re-running the gate.)
+
 > **Redaction completeness is bounded by extraction coverage. pdfe cannot redact
 > what pdfe cannot read — and it will report success anyway.**
 
@@ -576,12 +589,33 @@ Verified against the code on 2026-07-13. Do not add a limitation here without
 checking it is still true — several entries in this list were stale for months
 and cost real planning time.
 
-1. **Text extraction coverage bounds redaction completeness** (#637) — ⚠️ the
-   most important entry in this file. Where pdfe's extractor cannot read text,
-   `RedactText` cannot match it, does not remove it, **and reports success**.
-   Measured: IRS 1040 instructions p47 — pdfe extracts 471 chars, mutool 3192.
-   This makes the font-model work (#512–#515, #532) *redaction security*, not
-   display polish.
+1. **Text extraction coverage bounds redaction completeness** (#637, gated by
+   #645) — ⚠️ the most important entry in this file. Where pdfe's extractor
+   cannot read text, `RedactText` cannot match it, does not remove it, **and
+   reports success**. Corpus-wide measurement (332 pages / 12 fixtures —
+   10 real-world government PDFs plus checked-in CJK/Type0 and
+   scrambled-glyph-order edge cases, `scripts/check-extraction-parity.sh`):
+   aggregate coverage 102.6% of mutool's Unicode letter/digit count (counted
+   per-script, not ASCII-folded, specifically so CJK/accented-text loss can't
+   cancel out invisibly on both sides of the ratio). Both blind spots #645 was
+   written to measure — the p47-style under-extraction and the CJK/Type0
+   "extracts as empty" case (`RealWorldSearchTests.CjkFixture_*`) — are
+   currently clean on their fixtures. The live finding is per-page *content
+   similarity*, which drops to 0.75 on 83 Type0/CID-font pages (all
+   `/Encoding /Identity-H`) of `irs-1040-instructions.pdf`, where a
+   marked-content `/Artifact` leak pollutes the extraction alongside the real
+   text — the blast-radius rollup in the report puts all 83 on that one
+   subtype/encoding pair, which is #513's worklist. (Checked that "CJK is
+   clean" isn't `page.Text` vouching for itself: `RedactText` locates words
+   via the search/word path, not `page.Text`, and
+   `RealWorldSearchTests.CjkFixture_Search_FindsLatinWord` — previously a
+   documented `SkipWhen(matches.Count == 0)` gap — now genuinely passes, so
+   both paths agree.) Floors are checked in at
+   `tests/extraction-parity/baseline.json` and ratchet on `--update`; a
+   font-resolver change either improves the delta or the gate fails it. This
+   makes the font-model work (#512–#515, #532) *redaction security*, not
+   display polish — #513 must not start until this gate is green on its
+   changes.
 2. **Font Metrics**: approximation, not full font dictionaries (#512, #513).
 3. **Encryption is decrypt-only** (#624) — the writer emits no `/Encrypt`, so
    redacting a password-protected PDF returns an **unprotected** copy (#638).

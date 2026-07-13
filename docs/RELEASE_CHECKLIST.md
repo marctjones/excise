@@ -20,6 +20,16 @@ Use this checklist before tagging any `v*` release.
   If the sweep reports DEADLINE, that is a TIME limit, not a correctness failure;
   shard it rather than ignore it:
   `scripts/run-gui-display-sweep.sh 4`
+- **Run the extraction-parity gate**: `scripts/check-extraction-parity.sh`
+  (requires `mutool` on `PATH` and `test-pdfs/smoke/` downloaded — it fails
+  loudly rather than silently skipping when either is missing, which is the
+  exact failure mode #645 exists to close). Compares pdfe-vs-mutool text
+  extraction across the smoke corpus against the checked-in floors in
+  `tests/extraction-parity/baseline.json`; fails on regression. Run any font
+  or text-extraction change (#513–#515) through this before merging — a
+  font-resolver change either improves the parity delta or it is rejected.
+  `--update` rewrites the baseline from the current measurement; review the
+  diff before committing.
 - **Run the skip budget** for every suite you touched:
   `scripts/check-skip-budget.sh <project>.csproj`
   A test that silently stops running is coverage loss you cannot see — this is
