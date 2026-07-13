@@ -185,11 +185,14 @@ release notes:
   measure are currently clean on their fixtures (the CJK page and the
   scrambled-order page both extract byte-for-byte against mutool), but
   per-page **content similarity** dips as low as **0.75** on 83 Type0/CID-font
-  pages (all `/Encoding /Identity-H`) of `irs-1040-instructions.pdf`, where
-  marked-content `/Artifact` text pollutes the extraction alongside the real
-  content — that is the live worklist for #513-#515. (The CJK fixture is
-  clean on both the raw-text path this gate measures *and* the word/search
-  path `RedactText` actually depends on —
+  pages (all `/Encoding /Identity-H`) of `irs-1040-instructions.pdf` — but
+  coverage on those same pages is **>1.0** (over-extraction, not blindness):
+  fonts decode correctly, and a marked-content `/Artifact` running-header leak
+  is prepended ahead of the (correctly extracted) real content. That's a
+  content-stream marked-content filtering gap, tracked separately as #649 —
+  not a font-resolution defect, so it is explicitly out of scope for #513.
+  (The CJK fixture is clean on both the raw-text path this gate measures
+  *and* the word/search path `RedactText` actually depends on —
   `RealWorldSearchTests.CjkFixture_Search_FindsLatinWord` now genuinely
   passes, not skips, confirming the paths agree rather than one extractor
   vouching for the other.) This is a checked-in,

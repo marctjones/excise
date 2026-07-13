@@ -102,8 +102,10 @@ broad under-extraction (aggregate coverage 102.6% of mutool's Unicode
 letter/digit count — deliberately not ASCII-folded, so it can't silently
 cancel out CJK/accented-text loss on both sides), but per-page content
 similarity falls to 0.75 on 83 Type0/CID-font pages of
-`irs-1040-instructions.pdf`, where a marked-content `/Artifact` leak pollutes
-the extraction. See `tests/extraction-parity/baseline.json` and
+`irs-1040-instructions.pdf` (coverage >1.0 there — over-extraction, not
+blindness: fonts decode fine, a marked-content `/Artifact` leak pollutes
+the extraction ahead of the correct real content; tracked as #649, not a
+font-resolution bug). See `tests/extraction-parity/baseline.json` and
 `scripts/check-extraction-parity.sh`. Anecdote → measurement is the point of
 #645: don't restate a specific number here without re-running the gate.)
 
@@ -602,10 +604,15 @@ and cost real planning time.
    "extracts as empty" case (`RealWorldSearchTests.CjkFixture_*`) — are
    currently clean on their fixtures. The live finding is per-page *content
    similarity*, which drops to 0.75 on 83 Type0/CID-font pages (all
-   `/Encoding /Identity-H`) of `irs-1040-instructions.pdf`, where a
-   marked-content `/Artifact` leak pollutes the extraction alongside the real
-   text — the blast-radius rollup in the report puts all 83 on that one
-   subtype/encoding pair, which is #513's worklist. (Checked that "CJK is
+   `/Encoding /Identity-H`) of `irs-1040-instructions.pdf` — but coverage on
+   those same pages is **>1.0**, i.e. over-extraction: glyphs decode
+   correctly, and a marked-content `/Artifact` running-header leak is
+   prepended ahead of the (correct) real content. That is a content-stream
+   marked-content filtering gap (`ContentStreamParser`/`TextExtractor` not
+   honoring `/Artifact`-tagged `BMC`/`BDC`/`EMC` spans), tracked as **#649**
+   — it is a font-resolution non-issue on these pages (fonts decode fine) and
+   is explicitly NOT part of #513's scope; don't let #513 work chase this
+   number, it won't move it. (Checked that "CJK is
    clean" isn't `page.Text` vouching for itself: `RedactText` locates words
    via the search/word path, not `page.Text`, and
    `RealWorldSearchTests.CjkFixture_Search_FindsLatinWord` — previously a
