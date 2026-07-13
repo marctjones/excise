@@ -24,7 +24,7 @@ public class WindowSettings
     public double Width { get; set; } = 1200;
     public double Height { get; set; } = 800;
     public bool IsMaximized { get; set; }
-    public bool ContinuousScrollEnabled { get; set; } = true;
+    public bool ContinuousScrollEnabled { get; set; }   // default off until v2.29.0 (see MainWindowViewModel)
 
     /// <summary>
     /// Per-document state: file path -> (zoom level, last page index, timestamp).

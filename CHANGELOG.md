@@ -52,10 +52,20 @@ reported as a clean redaction — by a fully green test suite.
 - **`/P` permissions are parsed but never enforced (#642).**
 
 ### Added
-- Continuous scroll is now the default view mode, and the choice is remembered
-  across sessions via the new `ContinuousScrollEnabled` window setting.
+- Continuous scroll can now be enabled from View > Continuous Scroll and the
+  choice is remembered across sessions (`ContinuousScrollEnabled`). It is
+  **opt-in**; making it the default is deferred to 2.29.0 (see Deferred below).
 - `PdfDocumentSanitizer.ScrubTerms` (public API, additive) — removes redacted
   terms from `/Info`, XMP `/Metadata`, outline titles, and annotation `/Contents`.
+
+### Deferred to 2.29.0
+- **Continuous scroll as the default view mode.** Enabling it by default surfaced
+  a pre-existing navigation race in the viewer: a programmatic "go to page N"
+  (outline click, page-number box, search hit) issued before layout settles is
+  swallowed by the scroll→page sync and silently lands on page 1. The preference
+  machinery ships and works; only the default is off. Held back rather than delay
+  the security fixes in this release. Tracked on `fix/continuous-nav-race` with
+  failing regression tests that pin the contract.
 
 ### Changed
 - Continuous-scroll page rendering now coalesces render passes and de-duplicates

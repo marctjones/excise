@@ -72,8 +72,14 @@ public partial class MainWindowViewModel : ViewModelBase
     private Bitmap? _currentPageImage;
     private PdfCoreDocument? _pdfCoreDocument;
     private int _currentPageIndex;
-    private PdfViewMode _viewMode = PdfViewMode.Continuous;
-    private bool _continuousScrollPreference = true;
+    // Continuous-scroll-by-default is deferred to v2.29.0: it exposed a navigation
+    // race in the viewer (a programmatic "go to page N" issued before layout settles
+    // is swallowed by the scroll -> CurrentPage sync). Tracked on
+    // fix/continuous-nav-race with failing regression tests. The PREFERENCE machinery
+    // below is fully wired and persisted — only the default is off, so a user can
+    // still opt in via View > Continuous Scroll and have it remembered.
+    private PdfViewMode _viewMode = PdfViewMode.SinglePage;
+    private bool _continuousScrollPreference;
     private double _zoomLevel = 1.0;
     private bool _skipZoomSave; // Flag to skip zoom save during auto-reset
     private bool _isRedactionMode;
