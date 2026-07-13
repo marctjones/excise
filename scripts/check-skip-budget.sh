@@ -29,8 +29,13 @@
 #   --update   rewrite the allowlist from the current run (review the diff!)
 set -euo pipefail
 
-PROJECT="${1:?usage: check-skip-budget.sh <project.csproj> [--update]}"
+PROJECT="${1:?usage: check-skip-budget.sh <project.csproj> [--update] [--trx <file>]}"
 UPDATE="${2:-}"
+# --trx lets CI reuse a trx from a run that already happened (the coverage run),
+# instead of executing the whole suite a second time just to count skips.
+EXISTING_TRX=""
+if [[ "${2:-}" == "--trx" ]]; then EXISTING_TRX="${3:-}"; UPDATE=""; fi
+if [[ "${3:-}" == "--trx" ]]; then EXISTING_TRX="${4:-}"; fi
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 NAME="$(basename "$PROJECT" .csproj)"
@@ -40,9 +45,13 @@ trap 'rm -rf "$TMP"' EXIT
 
 mkdir -p "$(dirname "$ALLOWLIST")"
 
-echo "==> running $NAME to enumerate skips"
-# --blame keeps a crash from looking like "no skips".
-dotnet test "$PROJECT" --nologo --logger "trx;LogFileName=$TMP/r.trx" >"$TMP/out.log" 2>&1 || true
+if [[ -n "$EXISTING_TRX" ]]; then
+  echo "==> reading skips from $EXISTING_TRX (no second test run)"
+  cp "$EXISTING_TRX" "$TMP/r.trx" 2>/dev/null || true
+else
+  echo "==> running $NAME to enumerate skips"
+  dotnet test "$PROJECT" --nologo --logger "trx;LogFileName=$TMP/r.trx" >"$TMP/out.log" 2>&1 || true
+fi
 
 if [[ ! -f "$TMP/r.trx" ]]; then
   echo "FAIL: no trx produced — the run did not complete. Not treating that as 'no skips'."

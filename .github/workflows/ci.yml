@@ -129,21 +129,25 @@ jobs:
       - name: Build (Debug)
         run: dotnet build pdfe.sln -c Debug
 
-      # Skip budget (#619): a test that silently stops running is coverage loss you
-      # cannot see. A security-relevant assertion
-      # (HiddenTextToggles_DoNotLoadOcrAssemblyBeforeRasterizedScan) quietly stopped
-      # executing when unrelated tests were added to its class, and the suite stayed
-      # green. This fails the build when the skip set CHANGES in either direction.
-      - name: Skip budget (Pdfe.Core.Tests)
-        run: ./scripts/check-skip-budget.sh Pdfe.Core.Tests/Pdfe.Core.Tests.csproj
-
       - name: Run Pdfe.Core.Tests with coverage
         run: |
           dotnet test Pdfe.Core.Tests --no-build -c Debug \
             --collect:"XPlat Code Coverage" \
             --results-directory coverage/ \
             --logger "console;verbosity=normal" \
+            --logger "trx;LogFileName=core.trx" \
             --verbosity normal
+
+      # Skip budget (#619): a test that silently stops running is coverage loss you
+      # cannot see. A security-relevant assertion
+      # (HiddenTextToggles_DoNotLoadOcrAssemblyBeforeRasterizedScan) quietly stopped
+      # executing when unrelated tests were added to its class, and the suite stayed
+      # green. Fails when the skip set CHANGES in either direction.
+      #
+      # Reads the trx from the run above rather than executing the suite a second
+      # time — a gate should not double the CI bill to count skips.
+      - name: Skip budget (Pdfe.Core.Tests)
+        run: ./scripts/check-skip-budget.sh Pdfe.Core.Tests/Pdfe.Core.Tests.csproj --trx coverage/core.trx
 
       - name: Install reportgenerator
         run: mkdir -p tools && dotnet tool install --tool-path ./tools dotnet-reportgenerator-globaltool
