@@ -371,9 +371,13 @@ public class SkiaRendererCoverageTests
     /// behavior rather than just relocating fields: it now restores
     /// _currentFont (including the dict) after drawing the field value,
     /// where the pre-#513 code never saved/restored the font dict at all.
-    /// Two widgets are rendered back-to-back so a save/restore bug in the
-    /// first widget's RenderTextFieldValue call would corrupt the font
-    /// state the second widget's call starts from.
+    /// This confirms the two-widget path runs end-to-end without
+    /// throwing and paints both values. It is a liveness check, not a
+    /// guard on the dict-restore itself: each widget resolves its own
+    /// /DA font independently, so the ink here would look identical
+    /// even with a broken restore — pinning that would need content
+    /// rendered after the widget that depends on the pre-widget font
+    /// state, which this fixture doesn't set up.
     /// </summary>
     [Fact]
     public void RenderPage_UnfilledApTextWidgetsWithValues_PaintBothAndRestoreFontStateBetween()
@@ -396,7 +400,7 @@ public class SkiaRendererCoverageTests
         }
 
         SawInkInRect(20, 190, 150, 180).Should().BeTrue("the first widget's /V value should be painted since it has no /AP");
-        SawInkInRect(20, 190, 60, 90).Should().BeTrue("the second widget's /V value should be painted using its own restored font state");
+        SawInkInRect(20, 190, 60, 90).Should().BeTrue("the second widget's /V value should be painted after the first widget's RenderTextFieldValue call returns");
     }
 
     #endregion
