@@ -39,6 +39,16 @@ public static class PdfPageRedactionExtensions
         area = area.Normalize();
         InteractiveRedactionScrubber.ScrubArea(page, area);
 
+        // Structure-tree carriers (#636). Must run BEFORE the content stream is
+        // rewritten: it reads the page's original operators and letters to learn
+        // which /MCID spans the area covers and which words are about to vanish.
+        // A tagged PDF restates the same text in /ActualText, /Alt and /E, and
+        // those survive glyph removal untouched — leaving a document whose
+        // glyphs are gone, whose text extraction reports clean, and whose
+        // structure tree still spells out the redacted name to Acrobat and to
+        // every screen reader.
+        StructureTreeRedactionScrubber.ScrubArea(page, area);
+
         var content = page.GetContentStream();
 
         // Short-circuit on empty pages — no ops means no work, and building
