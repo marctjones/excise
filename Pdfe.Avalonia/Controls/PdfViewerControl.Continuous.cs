@@ -55,6 +55,14 @@ public partial class PdfViewerControl
 
     // Guards the scroll -> CurrentPage -> scroll feedback loop.
     private bool _syncingPageFromScroll;
+
+    /// <summary>
+    /// Page a programmatic navigation is trying to reach but has not reached yet
+    /// (the ScrollViewer clamps Offset to a not-yet-computed extent). While this
+    /// is set, scroll events must not derive CurrentPage from the stale offset.
+    /// </summary>
+    private int? _pendingContinuousPage;
+    private int _pendingContinuousAttempts;
     private bool _continuousRenderPassScheduled;
 
     internal int ContinuousRenderStartCount { get; private set; }
@@ -129,6 +137,10 @@ public partial class PdfViewerControl
         ApplyContinuousSlotLayout(slots);
         _continuousSlots = slots;
         _continuousItems.ItemsSource = slots;
+
+        // Slots exist now: service a navigation that arrived before layout.
+        if (_pendingContinuousPage is not null)
+            Dispatcher.UIThread.Post(RetryPendingContinuousScroll, DispatcherPriority.Loaded);
     }
 
     private void ClearContinuous()
@@ -143,6 +155,7 @@ public partial class PdfViewerControl
         _continuousRenderCts.Clear();
         _continuousRenderKeys.Clear();
         _continuousRenderPassScheduled = false;
+        _pendingContinuousPage = null;
         foreach (var entry in _continuousCache) entry.Bitmap.Dispose();
         _continuousCache.Clear();
     }
@@ -174,17 +187,134 @@ public partial class PdfViewerControl
 
     private void ScrollToPageContinuous(int pageNumber)
     {
-        if (_continuousScrollViewer == null || _continuousSlots == null) return;
-        if (pageNumber < 1 || pageNumber > _continuousSlots.Count) return;
+        if (pageNumber < 1) return;
 
+        // The slots may not exist yet: the document has loaded but the items panel
+        // has not measured. Dropping the navigation here (the old early return) is
+        // what silently swallowed "go to page N" issued right after open — the
+        // caller's CurrentPage was then overwritten by the first scroll event.
+        // Remember it and retry once the slots arrive.
+        if (_continuousScrollViewer == null || _continuousSlots == null)
+        {
+            _pendingContinuousPage = pageNumber;
+            _pendingContinuousAttempts = 0;
+            Dispatcher.UIThread.Post(RetryPendingContinuousScroll, DispatcherPriority.Loaded);
+            return;
+        }
+
+        if (pageNumber > _continuousSlots.Count) return;
+
+        var targetY = _continuousSlots[pageNumber - 1].TopDip;
         var x = _continuousScrollViewer.Offset.X;
-        _continuousScrollViewer.Offset = new Vector(x, _continuousSlots[pageNumber - 1].TopDip);
+        _continuousScrollViewer.Offset = new Vector(x, targetY);
+
+        // A ScrollViewer CLAMPS Offset to its extent. Before layout has run the
+        // extent is 0, so the assignment above silently becomes Offset.Y = 0 —
+        // and OnContinuousScrolled then computes "topmost visible page = 1" and
+        // overwrites CurrentPage, swallowing the navigation entirely.
+        //
+        // That is not a theoretical race. Open a document and immediately click
+        // an outline entry, type a page number, or jump to a search hit, and the
+        // jump is lost with no feedback. It only became reachable when continuous
+        // scroll became the default view mode.
+        //
+        // So: remember where we were actually trying to go. Until we get there,
+        // OnContinuousScrolled must not overwrite CurrentPage with the stale
+        // offset, and we retry once layout gives the viewer a real extent.
+        if (!ReachedContinuousTarget(targetY))
+        {
+            _pendingContinuousPage = pageNumber;
+            Dispatcher.UIThread.Post(RetryPendingContinuousScroll, DispatcherPriority.Loaded);
+        }
+        else
+        {
+            _pendingContinuousPage = null;
+        }
+    }
+
+    /// <summary>
+    /// Bounded so a document that never lays out cannot leave the pending page set
+    /// forever — that would permanently disable the scroll -> CurrentPage sync and
+    /// freeze the page number while the user scrolls.
+    /// </summary>
+    private const int MaxPendingContinuousScrollAttempts = 16;
+
+    private void RetryPendingContinuousScroll()
+    {
+        if (_pendingContinuousPage is not { } page) return;
+
+        if (++_pendingContinuousAttempts > MaxPendingContinuousScrollAttempts)
+        {
+            // Give up rather than spin. CurrentPage keeps the value the caller
+            // asked for; only the scroll position failed to follow.
+            _pendingContinuousPage = null;
+            return;
+        }
+
+        // Slots still not built — the items panel hasn't measured yet. Wait.
+        if (_continuousScrollViewer == null || _continuousSlots == null)
+        {
+            Dispatcher.UIThread.Post(RetryPendingContinuousScroll, DispatcherPriority.Loaded);
+            return;
+        }
+
+        if (page < 1 || page > _continuousSlots.Count) { _pendingContinuousPage = null; return; }
+
+        var targetY = _continuousSlots[page - 1].TopDip;
+        if (ReachedContinuousTarget(targetY))
+        {
+            _pendingContinuousPage = null;
+            return;
+        }
+
+        var before = _continuousScrollViewer.Offset.Y;
+        _continuousScrollViewer.Offset = new Vector(_continuousScrollViewer.Offset.X, targetY);
+
+        if (ReachedContinuousTarget(targetY))
+        {
+            _pendingContinuousPage = null;
+        }
+        else if (!_continuousScrollViewer.Offset.Y.Equals(before))
+        {
+            // We moved but haven't arrived — layout is still settling. Try again.
+            Dispatcher.UIThread.Post(RetryPendingContinuousScroll, DispatcherPriority.Loaded);
+        }
+        else
+        {
+            // The offset didn't budge. Either the target is genuinely unreachable
+            // (a short document whose last page sits above the max scroll) or the
+            // extent is still zero. Give up rather than spin: CurrentPage stays
+            // where the caller asked for it, which is the honest outcome.
+            _pendingContinuousPage = null;
+        }
+    }
+
+    private bool ReachedContinuousTarget(double targetY)
+    {
+        if (_continuousScrollViewer == null) return false;
+
+        // Clamped-to-max counts as arrival: the last page's top can exceed the
+        // maximum scroll offset, and demanding exact equality would spin forever.
+        var offsetY = _continuousScrollViewer.Offset.Y;
+        var maxY = Math.Max(0, _continuousScrollViewer.Extent.Height - _continuousScrollViewer.Viewport.Height);
+        var effectiveTarget = Math.Min(targetY, maxY);
+
+        return Math.Abs(offsetY - effectiveTarget) < 1.0;
     }
 
     private void OnContinuousScrolled()
     {
         if (ViewMode != PdfViewMode.Continuous || _continuousScrollViewer == null || _continuousSlots == null)
             return;
+
+        // A programmatic jump is in flight and hasn't landed. The offset we would
+        // read here is the STALE one, so deriving CurrentPage from it would undo
+        // the navigation the user just asked for.
+        if (_pendingContinuousPage is not null)
+        {
+            RenderVisibleContinuousTiles();
+            return;
+        }
 
         // Topmost visible page = the slot whose cumulative bottom passes the
         // current vertical offset (+ a small bias so a page counts as "current"
