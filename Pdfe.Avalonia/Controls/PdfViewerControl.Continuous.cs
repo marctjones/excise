@@ -107,9 +107,16 @@ public partial class PdfViewerControl
         {
             RebuildContinuous();
             ReportActiveViewport();
-            // Defer the scroll-to until the items panel has measured the slots.
-            int target = CurrentPage;
-            Dispatcher.UIThread.Post(() => ScrollToPageContinuous(target), DispatcherPriority.Background);
+
+            // Defer the scroll-to until the items panel has measured the slots —
+            // but read CurrentPage when the callback RUNS, not when it is posted.
+            //
+            // Capturing it here (`int target = CurrentPage;`) captured a STALE page:
+            // a navigation issued between the post and the callback would be
+            // overwritten by this deferred scroll dragging the user back to
+            // wherever they were when the view mode flipped. Switching to
+            // continuous and immediately jumping to a page did exactly that.
+            Dispatcher.UIThread.Post(() => ScrollToPageContinuous(CurrentPage), DispatcherPriority.Background);
         }
         else
         {
@@ -138,9 +145,19 @@ public partial class PdfViewerControl
         _continuousSlots = slots;
         _continuousItems.ItemsSource = slots;
 
-        // Slots exist now: service a navigation that arrived before layout.
-        if (_pendingContinuousPage is not null)
-            Dispatcher.UIThread.Post(RetryPendingContinuousScroll, DispatcherPriority.Loaded);
+        // Re-assert CurrentPage now that the slots exist.
+        //
+        // A navigation can arrive BEFORE the document reaches the viewer — the
+        // ViewModel sets the page and the Document binding propagates a frame
+        // later. At that moment there are no slots to scroll to, so the request
+        // could only be latched... and OnDocumentChanged calls
+        // InvalidateContinuousCache(), which clears the latch. The navigation
+        // was lost in exactly the window it needed to survive.
+        //
+        // So don't depend on the latch surviving a document change. The viewer's
+        // CurrentPage IS the request; once slots exist, honour it. If it is
+        // already page 1 this is a no-op.
+        Dispatcher.UIThread.Post(() => ScrollToPageContinuous(CurrentPage), DispatcherPriority.Loaded);
     }
 
     private void ClearContinuous()
@@ -293,10 +310,22 @@ public partial class PdfViewerControl
     {
         if (_continuousScrollViewer == null) return false;
 
-        // Clamped-to-max counts as arrival: the last page's top can exceed the
-        // maximum scroll offset, and demanding exact equality would spin forever.
+        // No extent yet => layout has not run => the Offset assignment was clamped
+        // to 0 and we have arrived NOWHERE.
+        //
+        // This check is the whole fix. Without it, "clamped to max" reads as
+        // arrival, and with extent 0 the max is 0 — so EVERY target looks reached
+        // at offset 0. The pending-navigation latch cleared itself immediately, and
+        // the scroll handler was then free to derive CurrentPage from the stale
+        // offset and snap the user back to page 1. The guard was disarming itself.
+        var extentHeight = _continuousScrollViewer.Extent.Height;
+        if (extentHeight <= 0) return false;
+
+        // With a real extent, clamped-to-max DOES count as arrival: the last page's
+        // top can legitimately exceed the maximum scroll offset, and demanding exact
+        // equality there would spin forever.
         var offsetY = _continuousScrollViewer.Offset.Y;
-        var maxY = Math.Max(0, _continuousScrollViewer.Extent.Height - _continuousScrollViewer.Viewport.Height);
+        var maxY = Math.Max(0, extentHeight - _continuousScrollViewer.Viewport.Height);
         var effectiveTarget = Math.Min(targetY, maxY);
 
         return Math.Abs(offsetY - effectiveTarget) < 1.0;
