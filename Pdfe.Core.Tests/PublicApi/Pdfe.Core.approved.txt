@@ -1030,6 +1030,10 @@ namespace Pdfe.Core.Graphics
 }
 namespace Pdfe.Core.Operations
 {
+    public static class PdfDocumentSanitizer
+    {
+        public static bool ScrubTerms(Pdfe.Core.Document.PdfDocument document, System.Collections.Generic.IEnumerable<string> terms) { }
+    }
     public class PdfRedaction
     {
         public Pdfe.Core.Operations.PdfRedaction AllText() { }

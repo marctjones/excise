@@ -2,6 +2,7 @@ using Avalonia;
 using Microsoft.Extensions.Logging;
 using PdfEditor.Models;
 using Pdfe.Core.Document;
+using Pdfe.Core.Operations;
 using Pdfe.Core.Text.Segmentation;
 using System;
 using System.Collections.Generic;
@@ -189,28 +190,18 @@ public class RedactionService
 
     /// <summary>
     /// Remove every entry of <paramref name="terms"/> from the document's
-    /// <c>/Info</c> dictionary values. Defensive — mostly relevant when
-    /// titles or subjects happen to echo page content.
+    /// non-page text carriers: <c>/Info</c>, the XMP <c>/Metadata</c> packet,
+    /// outline (bookmark) titles, and annotation <c>/Contents</c>.
     /// </summary>
-    public void SanitizeMetadata(PdfDocument document, IEnumerable<string> terms)
-    {
-        var info = document.Info;
-        if (info == null) return;
-
-        var keys = new[] { "Title", "Author", "Subject", "Keywords", "Creator", "Producer" };
-        foreach (var key in keys)
-        {
-            var value = info.GetStringOrNull(key);
-            if (string.IsNullOrEmpty(value)) continue;
-
-            var cleaned = value;
-            foreach (var term in terms)
-                cleaned = cleaned.Replace(term, string.Empty, StringComparison.OrdinalIgnoreCase);
-
-            if (cleaned != value)
-                info.SetString(key, cleaned);
-        }
-    }
+    /// <remarks>
+    /// Delegates to <see cref="PdfDocumentSanitizer"/> (#608). This previously
+    /// scrubbed only <c>/Info</c>, which left three carriers holding the redacted
+    /// string in a document whose glyphs were perfectly removed — most visibly a
+    /// bookmark title, which a reader shows in the navigation sidebar without the
+    /// page ever being opened.
+    /// </remarks>
+    public void SanitizeMetadata(PdfDocument document, IEnumerable<string> terms) =>
+        PdfDocumentSanitizer.ScrubTerms(document, terms);
 
     /// <summary>Remove the <c>/Info</c> dictionary entirely.</summary>
     public void StripAllMetadata(PdfDocument document)
