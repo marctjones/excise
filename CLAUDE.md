@@ -337,7 +337,22 @@ Located in `PdfEditor.Tests/`:
 
 **Framework**: xUnit 2.5.3 with FluentAssertions 6.12.0
 
-**Test Count**: 600+ tests (598 passing, 2 skipped for VeraPDF)
+**Test Count** (2026-07-13): ~7,600 across five suites — Pdfe.Core ~3,180,
+Pdfe.Rendering ~3,420, PdfEditor ~905, Pdfe.Cli 86, Pdfe.Avalonia 10.
+Don't hard-code a number here; it goes stale. Run the suites.
+
+⚠️ **`PdfEditor.Tests` is SERIAL BY DESIGN** — `[assembly: CollectionBehavior(
+DisableTestParallelization = true)]` in `AssemblyInfo.cs`. xunit's parallelism
+races SkiaSharp's **process-wide native font manager** and crashes the test host
+(#363). **Do not re-enable parallelism.** The natural instinct on seeing a
+~17-minute serial suite is to parallelize it; that reintroduces a native crash
+that took real effort to diagnose.
+
+Because it is serial and long, it is also sensitive to CPU contention: running
+other test projects alongside it can push the 144-page display sweep past its
+wall-clock timeout and produce a **false red** (observed three times on
+2026-07-13 — twice from concurrent runs, once from ~900MB of accumulated
+`logs/` + `artifacts/` in the working copy). Run it alone. See #619.
 
 **Utilities:**
 - `Utilities/TestPdfGenerator.cs` - Creates test PDFs with known content
@@ -584,29 +599,53 @@ See GitHub issues labeled `component: redaction-engine` for enhancement tracking
 
 ## File Locations Quick Reference
 
+⚠️ This map was wrong for months: it pointed redaction at
+`PdfEditor/Services/Redaction/*` (ContentStreamBuilder, PdfOperation,
+TextBoundsCalculator, PdfGraphicsState…). **That directory does not exist.** It
+all moved to `Pdfe.Core` in v2.0. If you are looking for the redaction engine,
+it is in `Pdfe.Core`, not in the GUI project.
+
 ```
-PdfEditor/
+Pdfe.Core/                          # the PDF engine — parser, writer, redaction
+├── Text/Segmentation/              # ← THE REDACTION ENGINE
+│   ├── GlyphRemover.cs             # orchestrates glyph-level removal
+│   ├── LetterFinder.cs             # text-based letter matching
+│   ├── OperationReconstructor.cs   # rebuilds BT/Tf/Tj without removed glyphs
+│   ├── PdfPageRedactionExtensions.cs      # page.RedactArea(rect) entry point
+│   ├── PdfDocumentRedactionExtensions.cs  # doc.RedactText(word) entry point
+│   ├── StructureTreeRedactionScrubber.cs  # /ActualText, /Alt (#636)
+│   ├── InteractiveRedactionScrubber.cs    # annotations, form fields
+│   ├── ImageRedactor.cs            # raster/scanned pixel removal
+│   ├── FormXObjectFlattener.cs     # inlines forms so their text is reachable
+│   └── HiddenTextDetector.cs       # audit: visible-but-unextractable text
+├── Content/
+│   ├── ContentStreamParser.cs      # parse operators (+ bounds, clip, marked content)
+│   └── ContentStreamWriter.cs      # serialize operators back to bytes
+├── Operations/
+│   └── PdfDocumentSanitizer.cs     # /Info, XMP, outlines, annots (#608)
+├── Document/                       # PdfDocument, PdfPage, PdfPageRect, coords
+├── Fonts/                          # CFF, TrueType parse + subset (see #512-#515)
+└── Security/                       # decrypt only — no encrypt-on-save (#624)
+
+Pdfe.Rendering/                     # SkiaSharp renderer
+└── Differential/                   # ← REFERENCE ORACLES. Use these, don't build new ones.
+    ├── GhostscriptReferenceRenderer.cs
+    ├── MutoolReferenceRenderer.cs
+    ├── PdfiumReferenceRenderer.cs
+    ├── PdftocairoReferenceRenderer.cs
+    └── PdfBoxReferenceRenderer.cs
+
+PdfEditor/                          # the Avalonia GUI (orchestration only)
 ├── Services/
-│   ├── PdfDocumentService.cs       # PDF load/save/page manipulation
-│   ├── PdfRenderService.cs         # PDF to image rendering
-│   ├── RedactionService.cs         # Redaction orchestration
-│   └── Redaction/
-│       ├── ContentStreamParser.cs  # Parse PDF operators
-│       ├── ContentStreamBuilder.cs # Build PDF operators
-│       ├── PdfOperation.cs         # Operation models
-│       ├── TextBoundsCalculator.cs # Text positioning
-│       ├── PdfGraphicsState.cs     # Graphics state tracking
-│       └── PdfTextState.cs         # Text state tracking
-├── ViewModels/
-│   └── MainWindowViewModel.cs      # Application state & commands
-├── Views/
-│   ├── MainWindow.axaml            # UI definition
-│   └── MainWindow.axaml.cs         # Code-behind
-├── Models/
-│   └── PageThumbnail.cs            # Data models
-├── App.axaml                       # Application resources
-├── Program.cs                      # Entry point
-└── PdfEditor.csproj                # Project file
+│   ├── PdfDocumentService.cs       # load/save/page manipulation
+│   ├── PdfRenderService.cs         # render to image
+│   └── RedactionService.cs         # ORCHESTRATES Pdfe.Core; owns no engine logic
+├── ViewModels/MainWindowViewModel.cs   # (partial: .Commands/.Search/.Forms/…)
+├── Views/MainWindow.axaml(.cs)
+└── Automation/CommandAccessibility.cs
+
+Pdfe.Avalonia/                      # reusable viewer control
+└── Controls/PdfViewerControl*.cs   # incl. .Continuous.cs (continuous scroll)
 
 PdfEditor.Tests/
 ├── Integration/
