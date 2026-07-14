@@ -621,6 +621,27 @@ public partial class MainWindow : Window
         viewModel.CurrentPageIndex = idx;
     }
 
+    /// <summary>External (http/https/mailto) link click (#625) — confirmation and navigation live in the VM.</summary>
+    private void OnExternalLinkClicked(object? sender, ExternalLinkClickedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel viewModel) return;
+        viewModel.OpenExternalLinkCommand.Execute(e.Uri).Subscribe();
+    }
+
+    /// <summary>Click on a link pdfe refuses to run (#625) — /Launch, /GoToE, /GoToR, disallowed URI scheme.</summary>
+    private void OnDangerousLinkClicked(object? sender, DangerousLinkClickedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel viewModel) return;
+        viewModel.ShowDangerousLinkRefusalCommand.Execute(e.ActionType).Subscribe();
+    }
+
+    /// <summary>Pointer hover over a link (#625) — status-bar target text.</summary>
+    private void OnLinkHovered(object? sender, LinkHoveredEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel viewModel) return;
+        viewModel.SetHoveredLinkTarget(e.DisplayText);
+    }
+
     private void OnTextSelected(object? sender, TextSelectedEventArgs e)
     {
         if (DataContext is not MainWindowViewModel viewModel)

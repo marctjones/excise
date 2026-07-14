@@ -60,6 +60,34 @@ public class LinkClickedEventArgs : EventArgs
     public LinkClickedEventArgs(int pageNumber) { PageNumber = pageNumber; }
 }
 
+/// <summary>Event arguments for an external (http/https/mailto) link click (#625).</summary>
+public class ExternalLinkClickedEventArgs : EventArgs
+{
+    public string Uri { get; }
+    public ExternalLinkClickedEventArgs(string uri) { Uri = uri; }
+}
+
+/// <summary>
+/// Event arguments for a click on a link pdfe refuses to run (#625) —
+/// /Launch, /GoToE, /GoToR, or a URI action with a disallowed scheme.
+/// </summary>
+public class DangerousLinkClickedEventArgs : EventArgs
+{
+    /// <summary>What was refused, e.g. "Launch", "GoToE", "URI:file".</summary>
+    public string ActionType { get; }
+    public DangerousLinkClickedEventArgs(string actionType) { ActionType = actionType; }
+}
+
+/// <summary>
+/// Event arguments for pointer hover over a link (#625). <see cref="DisplayText"/>
+/// is null when the pointer has moved off the link.
+/// </summary>
+public class LinkHoveredEventArgs : EventArgs
+{
+    public string? DisplayText { get; }
+    public LinkHoveredEventArgs(string? displayText) { DisplayText = displayText; }
+}
+
 /// <summary>
 /// Event arguments for the user finishing a drag-rect in FormAuthoring
 /// mode. The rect is in PDF points, bottom-left origin.

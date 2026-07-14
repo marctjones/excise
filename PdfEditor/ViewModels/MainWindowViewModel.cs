@@ -384,14 +384,22 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     public string SaveButtonText => FileState.GetSaveButtonText();
 
+    /// <summary>Link target shown while the pointer hovers a link, set via <see cref="SetHoveredLinkTarget"/> (#625).</summary>
+    private string? _hoveredLinkTarget;
+
     /// <summary>
     /// Status bar text showing pending redaction count and file type.
-    /// Updates dynamically as user marks/applies redactions.
+    /// Updates dynamically as user marks/applies redactions. Link-hover
+    /// target (#625) takes priority when present — it's transient,
+    /// pointer-driven feedback the user is actively looking at, same as a
+    /// browser's status-bar link preview.
     /// </summary>
     public string StatusBarText
     {
         get
         {
+            if (!string.IsNullOrEmpty(_hoveredLinkTarget))
+                return _hoveredLinkTarget;
             if (RedactionWorkflow.PendingRedactions.Count > 0)
                 return $"{RedactionWorkflow.PendingRedactions.Count} areas marked";
             if (FileState.TypewriterEditsCount > 0)
@@ -2879,6 +2887,87 @@ public partial class MainWindowViewModel : ViewModelBase
             "Use Export Current Page or Export All Pages as Images from the Document menu, then print the image from your OS's own viewer.";
         _logger.LogInformation("Print command: {Message}", message);
         await _dialogService.ShowMessageAsync("Print", message);
+    }
+
+    /// <summary>
+    /// http/https/mailto schemes pdfe will navigate to after confirmation
+    /// (#625). Kept in sync with <c>PdfLinkParser.AllowedUriSchemes</c> —
+    /// that gate decides what reaches this method at all, this one is
+    /// defense-in-depth: a link-click handler that trusts a single
+    /// upstream filter for something security-relevant is exactly the
+    /// pattern this codebase avoids everywhere else (see CLAUDE.md's
+    /// no-self-oracle / defense-in-depth threads on the redaction path).
+    /// </summary>
+    private static readonly HashSet<string> AllowedExternalLinkSchemes =
+        new(StringComparer.OrdinalIgnoreCase) { "http", "https", "mailto" };
+
+    /// <summary>
+    /// External (http/https/mailto) link click (#625). PDFs are a phishing
+    /// vector — a reader that opens arbitrary URLs on click without showing
+    /// them first is a liability, so this always confirms with the actual
+    /// target URL visible before navigating, and never opens anything if the
+    /// scheme isn't allowlisted (should be unreachable given the parser
+    /// already filtered it, but a click handler for a security-sensitive
+    /// action doesn't get to assume its only caller is trustworthy).
+    /// </summary>
+    private async Task OpenExternalLinkAsync(string uri)
+    {
+        _logger.LogInformation("External link clicked: {Uri}", uri);
+
+        if (!Uri.TryCreate(uri, UriKind.Absolute, out var parsed) ||
+            !AllowedExternalLinkSchemes.Contains(parsed.Scheme))
+        {
+            _logger.LogWarning("Refusing external link with disallowed/malformed scheme: {Uri}", uri);
+            await _dialogService.ShowMessageAsync(
+                "Link Blocked",
+                $"pdfe won't open this link — its scheme isn't one of the ones considered safe to navigate to automatically (http, https, mailto):\n\n{uri}");
+            return;
+        }
+
+        var confirmed = await _dialogService.ShowConfirmAsync(
+            "Open Link?",
+            $"This will open the following link in your default browser:\n\n{uri}\n\n" +
+            "Only continue if you trust this destination — PDFs are a common phishing vector.");
+        if (!confirmed)
+        {
+            _logger.LogInformation("User declined to open external link: {Uri}", uri);
+            return;
+        }
+
+        Services.UrlOpener.Open(uri);
+    }
+
+    /// <summary>
+    /// Click on a link pdfe refuses to run (#625) — /Launch (launches an
+    /// external app/file), /GoToE (embedded-file destination), /GoToR
+    /// (remote-file destination), or a URI action with a disallowed scheme.
+    /// All are malware/exfiltration vectors PDF readers have historically
+    /// been abused through; refusing with a clear message (instead of
+    /// silently doing nothing, the pre-#625 behavior) is the point.
+    /// </summary>
+    private async Task ShowDangerousLinkRefusalAsync(string actionType)
+    {
+        _logger.LogWarning("Refused dangerous link action: {ActionType}", actionType);
+        var reason = actionType switch
+        {
+            "Launch" => "it launches an external application or file",
+            "GoToE" => "it navigates into an embedded file",
+            "GoToR" => "it navigates into a remote file",
+            _ when actionType.StartsWith("URI:", StringComparison.Ordinal) =>
+                $"its link scheme ('{actionType["URI:".Length..]}') isn't one pdfe considers safe to open automatically",
+            _ => "it's a link action type pdfe doesn't run automatically",
+        };
+        await _dialogService.ShowMessageAsync(
+            "Link Blocked",
+            $"pdfe blocked this link because {reason}. This kind of action is a common malware vector in PDFs.");
+    }
+
+    /// <summary>Status-bar hover feedback for the link under the pointer, or null when not hovering one (#625).</summary>
+    public void SetHoveredLinkTarget(string? target)
+    {
+        if (_hoveredLinkTarget == target) return;
+        _hoveredLinkTarget = target;
+        this.RaisePropertyChanged(nameof(StatusBarText));
     }
 
     // Help Menu Commands

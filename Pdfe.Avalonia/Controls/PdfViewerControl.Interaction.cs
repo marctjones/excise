@@ -37,7 +37,18 @@ public partial class PdfViewerControl
         var linkHit = HitTestLinkAt(pressPoint);
         if (linkHit != null)
         {
-            LinkClicked?.Invoke(this, new LinkClickedEventArgs(linkHit.DestinationPage));
+            switch (linkHit.Kind)
+            {
+                case PdfLinkKind.InternalDestination:
+                    LinkClicked?.Invoke(this, new LinkClickedEventArgs(linkHit.DestinationPage));
+                    break;
+                case PdfLinkKind.ExternalUri:
+                    ExternalLinkClicked?.Invoke(this, new ExternalLinkClickedEventArgs(linkHit.Uri!));
+                    break;
+                case PdfLinkKind.Dangerous:
+                    DangerousLinkClicked?.Invoke(this, new DangerousLinkClickedEventArgs(linkHit.DangerousActionType!));
+                    break;
+            }
             e.Handled = true;
             return;
         }
@@ -69,6 +80,25 @@ public partial class PdfViewerControl
     {
         if (IsTypewriterOverlayEvent(e))
             return;
+
+        // Link hover feedback (cursor + status text) is an ambient affordance
+        // like the click handler above — active in any interaction mode,
+        // including mid-drag would be misleading, so skip while dragging (#625).
+        // This now runs on *every* pointer move (previously pointer-moved
+        // did nothing at all outside a drag), so it must never throw — a
+        // cosmetic hover-feedback bug must not be able to break clicking or
+        // scrolling by corrupting the interaction pipeline.
+        if (!_isDragging)
+        {
+            try
+            {
+                UpdateLinkHoverState(HitTestLinkAt(GetPressPoint(e)));
+            }
+            catch
+            {
+                UpdateLinkHoverState(null);
+            }
+        }
 
         if (!_isDragging || InteractionMode == InteractionMode.None)
             return;
@@ -252,6 +282,36 @@ public partial class PdfViewerControl
                 return link;
         }
         return null;
+    }
+
+    /// <summary>
+    /// Cursor + <see cref="LinkHovered"/> feedback for whatever link (if any)
+    /// is currently under the pointer (#625). Reference-compares against the
+    /// last hover target so this is a no-op while the pointer sits still or
+    /// moves within the same link's rect, and only fires on genuine enter/exit.
+    /// </summary>
+    private void UpdateLinkHoverState(PdfLink? link)
+    {
+        if (ReferenceEquals(link, _lastHoveredLink))
+            return;
+        _lastHoveredLink = link;
+
+        if (link == null)
+        {
+            Cursor = Cursor.Default;
+            LinkHovered?.Invoke(this, new LinkHoveredEventArgs(null));
+            return;
+        }
+
+        Cursor = new Cursor(StandardCursorType.Hand);
+        var displayText = link.Kind switch
+        {
+            PdfLinkKind.ExternalUri => link.Uri,
+            PdfLinkKind.InternalDestination => $"Go to page {link.DestinationPage}",
+            PdfLinkKind.Dangerous => "Blocked link",
+            _ => null
+        };
+        LinkHovered?.Invoke(this, new LinkHoveredEventArgs(displayText));
     }
 
     private Letter? HitTestLetterAt(Point dipPoint)

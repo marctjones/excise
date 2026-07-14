@@ -650,8 +650,19 @@ namespace Pdfe.Core.Document
     public sealed class PdfLink
     {
         public PdfLink(Pdfe.Core.Document.PdfRectangle rect, int destinationPage) { }
+        public string? DangerousActionType { get; }
         public int DestinationPage { get; }
+        public Pdfe.Core.Document.PdfLinkKind Kind { get; }
         public Pdfe.Core.Document.PdfRectangle Rect { get; }
+        public string? Uri { get; }
+        public static Pdfe.Core.Document.PdfLink DangerousLink(Pdfe.Core.Document.PdfRectangle rect, string actionType) { }
+        public static Pdfe.Core.Document.PdfLink ExternalLink(Pdfe.Core.Document.PdfRectangle rect, string uri) { }
+    }
+    public enum PdfLinkKind
+    {
+        InternalDestination = 0,
+        ExternalUri = 1,
+        Dangerous = 2,
     }
     public static class PdfLinkParser
     {

@@ -3,25 +3,63 @@ using System.Collections.Generic;
 
 namespace Pdfe.Core.Document;
 
+/// <summary>What kind of target a <see cref="PdfLink"/> points at.</summary>
+public enum PdfLinkKind
+{
+    /// <summary>A GoTo action or /Dest — another page in this document. <see cref="PdfLink.DestinationPage"/> is valid.</summary>
+    InternalDestination,
+    /// <summary>A URI action with an http/https/mailto target. <see cref="PdfLink.Uri"/> is valid.</summary>
+    ExternalUri,
+    /// <summary>
+    /// An action type pdfe refuses to run rather than silently ignore
+    /// (#625) — /Launch, /GoToE (embedded-file), /GoToR (remote-file) actions,
+    /// and URI actions with a non-allowlisted scheme (file:, javascript:, etc.).
+    /// <see cref="PdfLink.DangerousActionType"/> names what was refused, for
+    /// the UI to show a clear "this was blocked" message instead of nothing
+    /// happening.
+    /// </summary>
+    Dangerous,
+}
+
 /// <summary>
 /// One link annotation extracted from a PDF page's /Annots array
-/// (PDF spec §12.5.6.5). For now we only surface internal-document
-/// destinations — the kind that turn up in clickable tables of
-/// contents and back-of-book indexes. External URI links are
-/// dropped so callers don't have to disambiguate the click target.
+/// (PDF spec §12.5.6.5) — either an internal-document destination, an
+/// external URI, or a dangerous action type pdfe refuses to run (#625).
 /// </summary>
 public sealed class PdfLink
 {
     /// <summary>Click rectangle in PDF points (Y-up, bottom-left origin).</summary>
     public PdfRectangle Rect { get; }
-    /// <summary>1-based page number of the link's destination.</summary>
+    /// <summary>What kind of target this link points at.</summary>
+    public PdfLinkKind Kind { get; }
+    /// <summary>1-based page number of the link's destination. Valid only when <see cref="Kind"/> is <see cref="PdfLinkKind.InternalDestination"/>.</summary>
     public int DestinationPage { get; }
+    /// <summary>The link's target URI. Valid only when <see cref="Kind"/> is <see cref="PdfLinkKind.ExternalUri"/>.</summary>
+    public string? Uri { get; }
+    /// <summary>What action type was refused (e.g. "Launch", "GoToE", "URI:file"). Valid only when <see cref="Kind"/> is <see cref="PdfLinkKind.Dangerous"/>.</summary>
+    public string? DangerousActionType { get; }
 
+    /// <summary>Internal-destination link. Preserved as the original two-arg constructor for source/binary compatibility.</summary>
     public PdfLink(PdfRectangle rect, int destinationPage)
     {
         Rect = rect;
+        Kind = PdfLinkKind.InternalDestination;
         DestinationPage = destinationPage;
     }
+
+    private PdfLink(PdfRectangle rect, PdfLinkKind kind, string? uri, string? dangerousActionType)
+    {
+        Rect = rect;
+        Kind = kind;
+        Uri = uri;
+        DangerousActionType = dangerousActionType;
+    }
+
+    public static PdfLink ExternalLink(PdfRectangle rect, string uri) =>
+        new(rect, PdfLinkKind.ExternalUri, uri, dangerousActionType: null);
+
+    public static PdfLink DangerousLink(PdfRectangle rect, string actionType) =>
+        new(rect, PdfLinkKind.Dangerous, uri: null, dangerousActionType: actionType);
 }
 
 public static class PdfLinkParser
@@ -56,15 +94,23 @@ public static class PdfLinkParser
                 (double)rectArr.GetNumber(2),
                 (double)rectArr.GetNumber(3));
 
-            var destPage = ResolveLinkDestination(doc, annot, pageRefToNumber, namedDests);
-            if (destPage == null) continue;
+            var link = ResolveLink(doc, annot, rect, pageRefToNumber, namedDests);
+            if (link == null) continue;
 
-            links.Add(new PdfLink(rect, destPage.Value));
+            links.Add(link);
         }
         return links;
     }
 
-    private static int? ResolveLinkDestination(PdfDocument doc, PdfDictionary annot,
+    /// <summary>
+    /// URI schemes pdfe will navigate to after user confirmation (#625).
+    /// Everything else — file:, javascript:, data:, and any other scheme —
+    /// resolves to <see cref="PdfLinkKind.Dangerous"/> instead.
+    /// </summary>
+    private static readonly System.Collections.Generic.HashSet<string> AllowedUriSchemes =
+        new(System.StringComparer.OrdinalIgnoreCase) { "http", "https", "mailto" };
+
+    private static PdfLink? ResolveLink(PdfDocument doc, PdfDictionary annot, PdfRectangle rect,
         System.Collections.Generic.Dictionary<(int, int), int> pageRefToNumber,
         System.Collections.Generic.Dictionary<string, PdfObject>? namedDests)
     {
@@ -73,9 +119,34 @@ public static class PdfLinkParser
         {
             var action = doc.Resolve(annot.GetOptional("A") ?? (PdfObject)PdfNull.Instance) as PdfDictionary;
             if (action == null) return null;
-            // Only GoTo actions resolve to internal pages — drop URI etc.
-            if (action.GetNameOrNull("S") != "GoTo") return null;
-            dest = action.GetOptional("D");
+
+            var actionType = action.GetNameOrNull("S");
+            switch (actionType)
+            {
+                case "GoTo":
+                    dest = action.GetOptional("D");
+                    break;
+                case "URI":
+                    var uriObj = doc.Resolve(action.GetOptional("URI") ?? (PdfObject)PdfNull.Instance);
+                    var uriValue = (uriObj as PdfString)?.Value;
+                    if (string.IsNullOrWhiteSpace(uriValue)) return null;
+                    return System.Uri.TryCreate(uriValue, System.UriKind.Absolute, out var parsed)
+                        && AllowedUriSchemes.Contains(parsed.Scheme)
+                        ? PdfLink.ExternalLink(rect, uriValue)
+                        : PdfLink.DangerousLink(rect, $"URI:{(parsed?.Scheme ?? "malformed")}");
+                // /Launch runs an external application or file — a classic
+                // malware vector. /GoToE and /GoToR navigate into an
+                // embedded or remote file rather than this document, which
+                // is the same "leaves the document pdfe is showing you"
+                // risk as /Launch. Refuse all three explicitly (#625)
+                // rather than silently doing nothing.
+                case "Launch":
+                case "GoToE":
+                case "GoToR":
+                    return PdfLink.DangerousLink(rect, actionType);
+                default:
+                    return null;
+            }
         }
         if (dest == null) return null;
 
@@ -100,7 +171,7 @@ public static class PdfLinkParser
             arr[0] is PdfReference pageRef &&
             pageRefToNumber.TryGetValue((pageRef.ObjectNum, pageRef.Generation), out var pageNum))
         {
-            return pageNum;
+            return new PdfLink(rect, pageNum);
         }
         return null;
     }

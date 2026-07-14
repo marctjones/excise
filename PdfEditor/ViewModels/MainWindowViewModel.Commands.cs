@@ -78,6 +78,8 @@ public partial class MainWindowViewModel
     public ReactiveCommand<Unit, Unit> ExportCurrentPageCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ExportPagesCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> PrintCommand { get; private set; } = null!;
+    public ReactiveCommand<string, Unit> OpenExternalLinkCommand { get; private set; } = null!;
+    public ReactiveCommand<string, Unit> ShowDangerousLinkRefusalCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> VerifySignaturesCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ShowPreferencesCommand { get; private set; } = null!;
 
@@ -148,6 +150,8 @@ public partial class MainWindowViewModel
         ExportCurrentPageCommand = ReactiveCommand.CreateFromTask(ExportCurrentPageAsync);
         ExportPagesCommand = ReactiveCommand.CreateFromTask(ExportPagesAsync);
         PrintCommand = ReactiveCommand.CreateFromTask(PrintAsync);
+        OpenExternalLinkCommand = ReactiveCommand.CreateFromTask<string>(OpenExternalLinkAsync);
+        ShowDangerousLinkRefusalCommand = ReactiveCommand.CreateFromTask<string>(ShowDangerousLinkRefusalAsync);
         VerifySignaturesCommand = ReactiveCommand.CreateFromTask(VerifySignaturesAsync);
         ShowPreferencesCommand = ReactiveCommand.Create(ShowPreferences);
 

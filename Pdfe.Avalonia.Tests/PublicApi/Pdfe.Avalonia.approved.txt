@@ -1,5 +1,15 @@
 namespace Pdfe.Avalonia.Controls
 {
+    public class DangerousLinkClickedEventArgs : System.EventArgs
+    {
+        public DangerousLinkClickedEventArgs(string actionType) { }
+        public string ActionType { get; }
+    }
+    public class ExternalLinkClickedEventArgs : System.EventArgs
+    {
+        public ExternalLinkClickedEventArgs(string uri) { }
+        public string Uri { get; }
+    }
     public class FormFieldEditedEventArgs : System.EventArgs
     {
         public FormFieldEditedEventArgs(string fieldName, string? newValue, int pageNumber) { }
@@ -40,6 +50,11 @@ namespace Pdfe.Avalonia.Controls
     {
         public LinkClickedEventArgs(int pageNumber) { }
         public int PageNumber { get; }
+    }
+    public class LinkHoveredEventArgs : System.EventArgs
+    {
+        public LinkHoveredEventArgs(string? displayText) { }
+        public string? DisplayText { get; }
     }
     public class PageChangedEventArgs : System.EventArgs
     {
@@ -94,9 +109,12 @@ namespace Pdfe.Avalonia.Controls
         public System.Collections.Generic.IEnumerable<Pdfe.Core.Editing.PdfTypewriterTextOperation>? TypewriterTextOperations { get; set; }
         public Pdfe.Avalonia.Controls.PdfViewMode ViewMode { get; set; }
         public double ZoomLevel { get; set; }
+        public event System.EventHandler<Pdfe.Avalonia.Controls.DangerousLinkClickedEventArgs>? DangerousLinkClicked;
+        public event System.EventHandler<Pdfe.Avalonia.Controls.ExternalLinkClickedEventArgs>? ExternalLinkClicked;
         public event System.EventHandler<Pdfe.Avalonia.Controls.FormFieldEditedEventArgs>? FormFieldEdited;
         public event System.EventHandler<Pdfe.Avalonia.Controls.FormFieldRectDrawnEventArgs>? FormFieldRectDrawn;
         public event System.EventHandler<Pdfe.Avalonia.Controls.LinkClickedEventArgs>? LinkClicked;
+        public event System.EventHandler<Pdfe.Avalonia.Controls.LinkHoveredEventArgs>? LinkHovered;
         public event System.EventHandler<Pdfe.Avalonia.Controls.PageChangedEventArgs>? PageChanged;
         public event System.EventHandler<Pdfe.Avalonia.Controls.RedactionDrawnEventArgs>? RedactionDrawn;
         public event System.EventHandler<Pdfe.Avalonia.Controls.TextSelectedEventArgs>? TextSelected;

@@ -224,6 +224,28 @@ public partial class PdfViewerControl : UserControl
     public event EventHandler<LinkClickedEventArgs>? LinkClicked;
 
     /// <summary>
+    /// Fired when the user clicks an external (http/https/mailto) link
+    /// (#625). The handler is responsible for confirming with the user
+    /// before navigating — this control only reports the click, it never
+    /// opens anything itself.
+    /// </summary>
+    public event EventHandler<ExternalLinkClickedEventArgs>? ExternalLinkClicked;
+
+    /// <summary>
+    /// Fired when the user clicks a link pdfe refuses to run — /Launch,
+    /// /GoToE, /GoToR, or a URI action with a non-allowlisted scheme (#625).
+    /// The handler typically shows a message explaining the refusal.
+    /// </summary>
+    public event EventHandler<DangerousLinkClickedEventArgs>? DangerousLinkClicked;
+
+    /// <summary>
+    /// Fired as the pointer moves over a link (any kind) or off one (#625).
+    /// <c>null</c> target text means "no longer hovering a link" — hosts
+    /// typically clear their status-bar hover text in that case.
+    /// </summary>
+    public event EventHandler<LinkHoveredEventArgs>? LinkHovered;
+
+    /// <summary>
     /// Fired when the user edits an AcroForm field via the FormFieldsLayer
     /// inputs. The control has already mutated the underlying PdfField; the
     /// host typically reacts by re-rendering the page so any baked-in
@@ -295,6 +317,8 @@ public partial class PdfViewerControl : UserControl
     // apply here.
     private int _linksPageNumber = -1;
     private IReadOnlyList<PdfLink>? _currentPageLinks;
+    /// <summary>Last link the pointer hovered, for hover enter/exit edge detection (#625).</summary>
+    private PdfLink? _lastHoveredLink;
 
     #endregion
 

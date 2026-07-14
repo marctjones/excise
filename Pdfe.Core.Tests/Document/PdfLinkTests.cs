@@ -294,11 +294,13 @@ public class PdfLinkTests
         result.Should().BeEmpty();
     }
 
-    // ─── Test: URI links (dropped) ──────────────────────────────────────────
+    // ─── Test: URI / dangerous-action links (#625) ──────────────────────────
 
     [Fact]
-    public void Parse_LinkWithUriAction_Skipped()
+    public void Parse_LinkWithUriAction_ResolvesAsExternalUri()
     {
+        // #625: URI actions used to be dropped entirely; now they resolve to
+        // an ExternalUri-kind link so the UI can offer to open them.
         var annotsDef = @"[
             << /Type /Annot /Subtype /Link /Rect [10 10 50 50] /A << /S /URI /URI (https://example.com) >> >>
         ]";
@@ -309,15 +311,20 @@ public class PdfLinkTests
 
         var result = PdfLinkParser.Parse(doc, pageDict, pageRefMap, null);
 
-        // URI links are dropped (internal document links only)
-        result.Should().BeEmpty();
+        result.Should().ContainSingle();
+        result[0].Kind.Should().Be(PdfLinkKind.ExternalUri);
+        result[0].Uri.Should().Be("https://example.com");
     }
 
-    [Fact]
-    public void Parse_LinkWithOtherAction_Skipped()
+    [Theory]
+    [InlineData("file:///etc/passwd")]
+    [InlineData("javascript:alert(1)")]
+    public void Parse_LinkWithUriAction_NonAllowlistedScheme_ResolvesAsDangerous(string uri)
     {
-        var annotsDef = @"[
-            << /Type /Annot /Subtype /Link /Rect [10 10 50 50] /A << /S /Launch >> >>
+        // #625: file:, javascript:, and any other non-http(s)/mailto scheme
+        // must not be treated as a normal, confirmable external link.
+        var annotsDef = $@"[
+            << /Type /Annot /Subtype /Link /Rect [10 10 50 50] /A << /S /URI /URI ({uri}) >> >>
         ]";
         var pdf = MakePdfWithLinks(annotsDef, "[]");
         using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
@@ -326,7 +333,51 @@ public class PdfLinkTests
 
         var result = PdfLinkParser.Parse(doc, pageDict, pageRefMap, null);
 
-        // Non-GoTo actions are skipped
+        result.Should().ContainSingle();
+        result[0].Kind.Should().Be(PdfLinkKind.Dangerous);
+        result[0].Uri.Should().BeNull();
+    }
+
+    [Theory]
+    [InlineData("Launch")]
+    [InlineData("GoToE")]
+    [InlineData("GoToR")]
+    public void Parse_LinkWithDangerousAction_ResolvesAsDangerous(string actionType)
+    {
+        // #625: /Launch (external app/file), /GoToE (embedded file), and
+        // /GoToR (remote file) actions used to be silently skipped — now
+        // they resolve to a Dangerous-kind link so the UI can refuse them
+        // with a clear message instead of doing nothing.
+        var annotsDef = $@"[
+            << /Type /Annot /Subtype /Link /Rect [10 10 50 50] /A << /S /{actionType} >> >>
+        ]";
+        var pdf = MakePdfWithLinks(annotsDef, "[]");
+        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        var pageDict = doc.GetPage(1).Dictionary;
+        var pageRefMap = new Dictionary<(int, int), int> { { (3, 0), 1 }, { (4, 0), 2 } };
+
+        var result = PdfLinkParser.Parse(doc, pageDict, pageRefMap, null);
+
+        result.Should().ContainSingle();
+        result[0].Kind.Should().Be(PdfLinkKind.Dangerous);
+        result[0].DangerousActionType.Should().Be(actionType);
+    }
+
+    [Fact]
+    public void Parse_LinkWithUnknownAction_Skipped()
+    {
+        var annotsDef = @"[
+            << /Type /Annot /Subtype /Link /Rect [10 10 50 50] /A << /S /SubmitForm >> >>
+        ]";
+        var pdf = MakePdfWithLinks(annotsDef, "[]");
+        using var doc = PdfDocument.Open(new MemoryStream(pdf), false);
+        var pageDict = doc.GetPage(1).Dictionary;
+        var pageRefMap = new Dictionary<(int, int), int> { { (3, 0), 1 }, { (4, 0), 2 } };
+
+        var result = PdfLinkParser.Parse(doc, pageDict, pageRefMap, null);
+
+        // Action types this parser doesn't have opinions about (neither a
+        // navigable link nor a recognized dangerous type) are still skipped.
         result.Should().BeEmpty();
     }
 
