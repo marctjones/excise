@@ -1,24 +1,27 @@
-using System.IO;
 using AwesomeAssertions;
 using Pdfe.Core.Fonts;
+using Pdfe.Core.Tests.Fixtures;
 using Xunit;
 
 namespace Pdfe.Core.Tests.Fonts;
 
 /// <summary>
 /// Direct tests for the sfnt reader behind font embedding (#378), driving its
-/// coverage (#351). Font-dependent cases skip when the system font is absent;
-/// CI installs fonts-dejavu-core so they run there too.
+/// coverage (#351, #603). The DejaVu Sans fixture is embedded in this
+/// assembly (Fixtures/Fonts/DejaVuSans.ttf, #603) rather than loaded from a
+/// system font path: the previous version of this file hard-coded
+/// <c>/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf</c>, a Linux-only
+/// path, so these tests silently skipped on every macOS and Windows dev
+/// machine — an invisible coverage loss of exactly the kind #619's
+/// skip-budget philosophy exists to catch, just not one wired into that
+/// gate. Bundling the font removes the environment dependency entirely.
 /// </summary>
 public class TrueTypeFontFileTests
 {
-    private const string DejaVu = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
-
     [Fact]
     public void Parse_DejaVu_ExposesMetricsAndCmap()
     {
-        Assert.SkipUnless(File.Exists(DejaVu), "DejaVuSans not installed");
-        var ttf = TrueTypeFontFile.Parse(File.ReadAllBytes(DejaVu));
+        var ttf = TrueTypeFontFile.Parse(TestFontFixtures.LoadDejaVuSansBytes());
 
         ttf.UnitsPerEm.Should().BeGreaterThan(0);
         ttf.GlyphCount.Should().BeGreaterThan(100);
@@ -28,6 +31,9 @@ public class TrueTypeFontFileTests
         ttf.XMax.Should().BeGreaterThan(ttf.XMin);
         ttf.Cmap.Count.Should().BeGreaterThan(100);
         ttf.IsCff.Should().Be(false, "DejaVuSans is a TrueType (glyf) font");
+        ttf.IsBold.Should().BeFalse("DejaVu Sans Regular is not bold");
+        ttf.IsItalic.Should().BeFalse("DejaVu Sans Regular is not italic");
+        ttf.Data.Should().NotBeEmpty();
 
         int gidA = ttf.GidForCodepoint('A');
         gidA.Should().BeGreaterThan(0);
@@ -55,17 +61,8 @@ public class TrueTypeFontFileTests
     [Fact]
     public void Parse_CffFont_ExposesCffFlag()
     {
-        const string linLibertineOtf = "/usr/share/fonts/opentype/linux-libertine/LinLibertine_RB.otf";
-        const string cantarellOtf = "/usr/share/fonts/opentype/cantarell/Cantarell-VF.otf";
-
-        string? fontPath = File.Exists(linLibertineOtf) ? linLibertineOtf
-                         : File.Exists(cantarellOtf) ? cantarellOtf
-                         : null;
-
-        Assert.SkipUnless(fontPath != null, "No CFF OpenType font found on system");
-
-        var cff = TrueTypeFontFile.Parse(File.ReadAllBytes(fontPath));
-        cff.IsCff.Should().Be(true, "LinLibertine/Cantarell are CFF-based OpenType");
+        var cff = TrueTypeFontFile.Parse(TestFontFixtures.LoadLibertinusSerifCffBytes());
+        cff.IsCff.Should().Be(true, "Libertinus Serif is a CFF-based OpenType ('OTTO') font");
         cff.UnitsPerEm.Should().BeGreaterThan(0);
         cff.GlyphCount.Should().BeGreaterThan(0);
         cff.Cmap.Count.Should().BeGreaterThan(0);

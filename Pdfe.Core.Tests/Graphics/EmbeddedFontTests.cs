@@ -1,22 +1,21 @@
-using System.IO;
 using System.Linq;
 using AwesomeAssertions;
 using Pdfe.Core.Document;
 using Pdfe.Core.Graphics;
 using Pdfe.Core.Primitives;
+using Pdfe.Core.Tests.Fixtures;
 using Pdfe.Core.Text;
 using Xunit;
 
 namespace Pdfe.Core.Tests.Graphics;
 
 /// <summary>
-/// Tests for TrueType/OpenType font embedding + Unicode text (#378). They embed a
-/// real system font, so each skips cleanly when that font isn't installed.
+/// Tests for TrueType/OpenType font embedding + Unicode text (#378), using
+/// the DejaVu Sans fixture embedded in this assembly (#603) rather than a
+/// system font path.
 /// </summary>
 public class EmbeddedFontTests
 {
-    private const string DejaVu = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
-
     private static string ExtractAll(byte[] pdf)
     {
         using var doc = PdfDocument.Open(pdf);
@@ -25,7 +24,7 @@ public class EmbeddedFontTests
 
     private static byte[] AuthorWith(string text, out PdfFont font)
     {
-        font = PdfFont.FromFile(DejaVu, 18);
+        font = PdfFont.FromTrueType(TestFontFixtures.LoadDejaVuSansBytes(), 18);
         var doc = PdfDocument.CreateNew();
         var page = doc.Pages.AddBlank(400, 200);
         using (var g = page.GetGraphics())
@@ -36,8 +35,7 @@ public class EmbeddedFontTests
     [Fact]
     public void FromFile_ProducesType0EmbeddedFont()
     {
-        Assert.SkipUnless(File.Exists(DejaVu), "DejaVuSans not installed");
-        var font = PdfFont.FromFile(DejaVu, 12);
+        var font = PdfFont.FromTrueType(TestFontFixtures.LoadDejaVuSansBytes(), 12);
         font.Should().BeOfType<PdfTrueTypeFont>();
         // Identity-H encodes 2-byte glyph ids as a hex string.
         font.EncodeString("AB").Should().StartWith("<").And.EndWith(">");
@@ -47,7 +45,6 @@ public class EmbeddedFontTests
     [Fact]
     public void EmbeddedFont_UnicodeText_RoundTripsThroughExtraction()
     {
-        Assert.SkipUnless(File.Exists(DejaVu), "DejaVuSans not installed");
         const string text = "Café résumé naïve — Ø ½ € Ελληνικά Кириллица";
         var pdf = AuthorWith(text, out _);
 
@@ -61,7 +58,6 @@ public class EmbeddedFontTests
     [Fact]
     public void EmbeddedFont_DictionaryIsType0WithFontFile2AndToUnicode()
     {
-        Assert.SkipUnless(File.Exists(DejaVu), "DejaVuSans not installed");
         var pdf = AuthorWith("Hello Café", out _);
         using var doc = PdfDocument.Open(pdf);
         var page = doc.GetPage(1);
@@ -81,8 +77,7 @@ public class EmbeddedFontTests
     [Fact]
     public void EmbeddedFont_MeasureWidth_IsPositiveAndScalesWithText()
     {
-        Assert.SkipUnless(File.Exists(DejaVu), "DejaVuSans not installed");
-        var font = PdfFont.FromFile(DejaVu, 20);
+        var font = PdfFont.FromTrueType(TestFontFixtures.LoadDejaVuSansBytes(), 20);
         double w1 = font.MeasureWidth("i");
         double wLong = font.MeasureWidth("WWWWW");
         w1.Should().BeGreaterThan(0);
@@ -92,7 +87,6 @@ public class EmbeddedFontTests
     [Fact]
     public void EmbeddedFont_RoundTripsThroughOpen_NoErrors()
     {
-        Assert.SkipUnless(File.Exists(DejaVu), "DejaVuSans not installed");
         var pdf = AuthorWith("Round trip Ω", out _);
         var act = () => PdfDocument.Open(pdf).Dispose();
         act.Should().NotThrow();

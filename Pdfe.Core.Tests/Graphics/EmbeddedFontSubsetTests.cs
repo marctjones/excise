@@ -1,10 +1,10 @@
-using System.IO;
 using System.Linq;
 using AwesomeAssertions;
 using Pdfe.Core.Document;
 using Pdfe.Core.Fonts;
 using Pdfe.Core.Graphics;
 using Pdfe.Core.Primitives;
+using Pdfe.Core.Tests.Fixtures;
 using Pdfe.Core.Text;
 using Xunit;
 
@@ -12,12 +12,11 @@ namespace Pdfe.Core.Tests.Graphics;
 
 /// <summary>
 /// Tests for TrueType font subsetting (#393): only the drawn glyphs are embedded,
-/// the font is tagged as a subset, and text still renders/extracts.
+/// the font is tagged as a subset, and text still renders/extracts. Uses the
+/// DejaVu Sans fixture embedded in this assembly (#603).
 /// </summary>
 public class EmbeddedFontSubsetTests
 {
-    private const string DejaVu = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
-
     private static (PdfDictionary fd, long length1, string baseFont) DescriptorOf(PdfDocument doc)
     {
         var (_, font) = doc.GetPage(1).GetFonts().First();
@@ -32,13 +31,13 @@ public class EmbeddedFontSubsetTests
     [Fact]
     public void Subset_EmbedsFarLessThanTheFullFont()
     {
-        Assert.SkipUnless(File.Exists(DejaVu), "DejaVuSans not installed");
-        long fullSize = new FileInfo(DejaVu).Length;
+        byte[] fullBytes = TestFontFixtures.LoadDejaVuSansBytes();
+        long fullSize = fullBytes.Length;
 
         var doc = PdfDocument.CreateNew();
         var page = doc.Pages.AddBlank(300, 120);
         using (var g = page.GetGraphics())
-            g.DrawString("Hello", PdfFont.FromFile(DejaVu, 20), PdfBrush.Black, 30, 70);
+            g.DrawString("Hello", PdfFont.FromTrueType(fullBytes, 20), PdfBrush.Black, 30, 70);
         var bytes = doc.SaveToBytes();
 
         using var re = PdfDocument.Open(bytes);
@@ -50,11 +49,10 @@ public class EmbeddedFontSubsetTests
     [Fact]
     public void Subset_TagsTheFontName()
     {
-        Assert.SkipUnless(File.Exists(DejaVu), "DejaVuSans not installed");
         var doc = PdfDocument.CreateNew();
         var page = doc.Pages.AddBlank(300, 120);
         using (var g = page.GetGraphics())
-            g.DrawString("Hi", PdfFont.FromFile(DejaVu, 20), PdfBrush.Black, 30, 70);
+            g.DrawString("Hi", PdfFont.FromTrueType(TestFontFixtures.LoadDejaVuSansBytes(), 20), PdfBrush.Black, 30, 70);
 
         using var re = PdfDocument.Open(doc.SaveToBytes());
         var (_, _, baseFont) = DescriptorOf(re);
@@ -65,12 +63,11 @@ public class EmbeddedFontSubsetTests
     [Fact]
     public void Subset_TextStillExtractsAndRoundTrips()
     {
-        Assert.SkipUnless(File.Exists(DejaVu), "DejaVuSans not installed");
         const string text = "Subset café résumé";
         var doc = PdfDocument.CreateNew();
         var page = doc.Pages.AddBlank(400, 120);
         using (var g = page.GetGraphics())
-            g.DrawString(text, PdfFont.FromFile(DejaVu, 18), PdfBrush.Black, 30, 70);
+            g.DrawString(text, PdfFont.FromTrueType(TestFontFixtures.LoadDejaVuSansBytes(), 18), PdfBrush.Black, 30, 70);
 
         var bytes = doc.SaveToBytes();
         var act = () => PdfDocument.Open(bytes).Dispose();
@@ -83,8 +80,7 @@ public class EmbeddedFontSubsetTests
     [Fact]
     public void Subsetter_RetainsGidsAndProducesValidSfnt()
     {
-        Assert.SkipUnless(File.Exists(DejaVu), "DejaVuSans not installed");
-        byte[] fullBytes = File.ReadAllBytes(DejaVu);
+        byte[] fullBytes = TestFontFixtures.LoadDejaVuSansBytes();
         var full = TrueTypeFontFile.Parse(fullBytes);
         int gidH = full.GidForCodepoint('H');
 

@@ -238,17 +238,6 @@ internal sealed class PdfIccProfile
         return true;
     }
 
-    private static (double R, double G, double B) EvaluateMatrixProfile(
-        MatrixProfile profile,
-        double red,
-        double green,
-        double blue)
-    {
-        var xyz = EvaluateMatrixProfileToXyzD50(profile, red, green, blue);
-        var adapted = AdaptD50ToD65(xyz.X, xyz.Y, xyz.Z);
-        return XyzD65ToSrgb(adapted.X, adapted.Y, adapted.Z);
-    }
-
     private static (double X, double Y, double Z) EvaluateMatrixProfileToXyzD50(
         MatrixProfile profile,
         double red,
@@ -263,21 +252,6 @@ internal sealed class PdfIccProfile
         var y = profile.Red.Y * r + profile.Green.Y * g + profile.Blue.Y * b;
         var z = profile.Red.Z * r + profile.Green.Z * g + profile.Blue.Z * b;
         return (x, y, z);
-    }
-
-    private static (double R, double G, double B) EvaluateLut16Profile(Lut16Profile profile, double[] values)
-    {
-        var output = EvaluateLut16(profile, values);
-        if (output.Length >= 3)
-        {
-            var lab = DecodeIccLab(output[0], output[1], output[2]);
-            var xyz = LabD50ToXyz(lab.L, lab.A, lab.B);
-            var adapted = AdaptD50ToD65(xyz.X, xyz.Y, xyz.Z);
-            return XyzD65ToSrgb(adapted.X, adapted.Y, adapted.Z);
-        }
-
-        var gray = output.Length > 0 ? output[0] : 0;
-        return (gray, gray, gray);
     }
 
     private static double[] EvaluateLut16(Lut16Profile profile, double[] values)

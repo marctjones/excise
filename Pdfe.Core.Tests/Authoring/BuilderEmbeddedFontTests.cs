@@ -1,9 +1,9 @@
-using System.IO;
 using System.Linq;
 using AwesomeAssertions;
 using Pdfe.Core.Authoring;
 using Pdfe.Core.Document;
 using Pdfe.Core.Graphics;
+using Pdfe.Core.Tests.Fixtures;
 using Pdfe.Core.Text;
 using Xunit;
 
@@ -11,12 +11,11 @@ namespace Pdfe.Core.Tests.Authoring;
 
 /// <summary>
 /// Tests for using embedded (Unicode) fonts through the high-level
-/// PdfDocumentBuilder / TextStyle facade (#398).
+/// PdfDocumentBuilder / TextStyle facade (#398). Uses the DejaVu Sans
+/// fixture embedded in this assembly (#603).
 /// </summary>
 public class BuilderEmbeddedFontTests
 {
-    private const string DejaVu = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
-
     private static string ExtractAll(byte[] pdf)
     {
         using var doc = PdfDocument.Open(pdf);
@@ -26,8 +25,7 @@ public class BuilderEmbeddedFontTests
     [Fact]
     public void TextStyle_WithFont_ResolvesToThatFontAtStyleSize()
     {
-        Assert.SkipUnless(File.Exists(DejaVu), "DejaVuSans not installed");
-        var embedded = PdfFont.FromFile(DejaVu, 10);
+        var embedded = PdfFont.FromTrueType(TestFontFixtures.LoadDejaVuSansBytes(), 10);
         var style = TextStyle.Body.WithSize(20).WithFont(embedded);
 
         var resolved = style.ResolveFont();
@@ -38,9 +36,8 @@ public class BuilderEmbeddedFontTests
     [Fact]
     public void Builder_DefaultFont_RendersUnicodeAndExtracts()
     {
-        Assert.SkipUnless(File.Exists(DejaVu), "DejaVuSans not installed");
         var pdf = PdfDocumentBuilder.Create()
-            .DefaultFont(PdfFont.FromFile(DejaVu, 11))
+            .DefaultFont(PdfFont.FromTrueType(TestFontFixtures.LoadDejaVuSansBytes(), 11))
             .Heading("Отчёт — Café")
             .Paragraph("Ελληνικά, Кириллица, naïve, € ½ Ø")
             .KeyValue("Имя", "Ada")
@@ -56,10 +53,9 @@ public class BuilderEmbeddedFontTests
     [Fact]
     public void Builder_DefaultFont_EmbedsOneSubsetAcrossSizes()
     {
-        Assert.SkipUnless(File.Exists(DejaVu), "DejaVuSans not installed");
         // Heading(18) + body(11) + bold key-value all use the one default font.
         var pdf = PdfDocumentBuilder.Create()
-            .DefaultFont(PdfFont.FromFile(DejaVu, 11))
+            .DefaultFont(PdfFont.FromTrueType(TestFontFixtures.LoadDejaVuSansBytes(), 11))
             .Heading("Большой", 1)
             .Paragraph("маленький")
             .SaveToBytes();
@@ -78,8 +74,7 @@ public class BuilderEmbeddedFontTests
     [Fact]
     public void EmbeddedFont_WithSize_PreservesEmbeddingAndSharesGlyphSet()
     {
-        Assert.SkipUnless(File.Exists(DejaVu), "DejaVuSans not installed");
-        var f11 = PdfFont.FromFile(DejaVu, 11);
+        var f11 = PdfFont.FromTrueType(TestFontFixtures.LoadDejaVuSansBytes(), 11);
         var f22 = f11.WithSize(22);
         f22.Should().BeOfType<PdfTrueTypeFont>("WithSize keeps the embedded type");
 

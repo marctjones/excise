@@ -4,6 +4,7 @@ using System.IO;
 using AwesomeAssertions;
 using Pdfe.Core.Authoring;
 using Pdfe.Core.Graphics;
+using Pdfe.Core.Tests.Fixtures;
 using Xunit;
 
 namespace Pdfe.Core.Tests.Authoring;
@@ -11,13 +12,12 @@ namespace Pdfe.Core.Tests.Authoring;
 /// <summary>
 /// PDF/UA-1 conformance gate (#413): validates a representative
 /// <see cref="PdfDocumentBuilder.Tagged"/> document with the veraPDF validator.
-/// Skips when veraPDF or the embedding font isn't available (so local/dev runs
-/// without them don't fail); CI installs both so it runs there.
+/// The embedding font is bundled as an assembly resource (#603); veraPDF
+/// itself is a separate Java tool this still skips cleanly without (so
+/// local/dev runs without it don't fail — CI installs it, so it runs there).
 /// </summary>
 public class PdfUaConformanceTests
 {
-    private const string Dejavu = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
-
     private static string? FindVeraPdf()
     {
         var home = Environment.GetEnvironmentVariable("HOME") ?? "";
@@ -34,12 +34,11 @@ public class PdfUaConformanceTests
     [Fact]
     public void TaggedBuilderOutput_IsPdfUa1Compliant()
     {
-        Assert.SkipUnless(File.Exists(Dejavu), "DejaVuSans (embedding font) not installed");
         var verapdf = FindVeraPdf();
         Assert.SkipWhen(verapdf is null, "veraPDF not installed (~/verapdf/verapdf or PATH)");
 
         // A representative accessible document exercising every tagged block.
-        var font = PdfFont.FromFile(Dejavu, 11);
+        var font = PdfFont.FromTrueType(TestFontFixtures.LoadDejaVuSansBytes(), 11);
         var pdf = PdfDocumentBuilder.Create()
             .Tagged().DefaultFont(font).Language("en-US").Title("Accessible Sample")
             .Heading("Application Form", 1)

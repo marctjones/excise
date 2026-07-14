@@ -2,10 +2,6 @@
 # Every line is coverage we are NOT getting. Justify it or delete it.
 # Format:  TestName   # why
 #
-Pdfe.Core.Tests.Authoring.BuilderEmbeddedFontTests.Builder_DefaultFont_EmbedsOneSubsetAcrossSizes   # TODO: justify or fix
-Pdfe.Core.Tests.Authoring.BuilderEmbeddedFontTests.Builder_DefaultFont_RendersUnicodeAndExtracts   # TODO: justify or fix
-Pdfe.Core.Tests.Authoring.BuilderEmbeddedFontTests.EmbeddedFont_WithSize_PreservesEmbeddingAndSharesGlyphSet   # TODO: justify or fix
-Pdfe.Core.Tests.Authoring.BuilderEmbeddedFontTests.TextStyle_WithFont_ResolvesToThatFontAtStyleSize   # TODO: justify or fix
 Pdfe.Core.Tests.Authoring.PdfUaConformanceTests.TaggedBuilderOutput_IsPdfUa1Compliant   # TODO: justify or fix
 Pdfe.Core.Tests.Document.PageCollectionTests.PageRotation_AcceptsValidValues   # TODO: justify or fix
 Pdfe.Core.Tests.Document.PageCollectionTests.PageRotation_CanBeSetAndRead   # TODO: justify or fix
@@ -14,24 +10,4 @@ Pdfe.Core.Tests.Document.PageCollectionTests.PageRotation_RejectsInvalidValues  
 Pdfe.Core.Tests.Document.PageCollectionTests.Pages_IndexerReturnsCorrectPage   # TODO: justify or fix
 Pdfe.Core.Tests.Document.PageCollectionTests.Pages_InvalidIndexThrowsException   # TODO: justify or fix
 Pdfe.Core.Tests.Document.PageCollectionTests.Pages_ReturnsAllPages   # TODO: justify or fix
-Pdfe.Core.Tests.Fonts.TrueTypeFontFileTests.Parse_CffFont_ExposesCffFlag   # TODO: justify or fix
-Pdfe.Core.Tests.Fonts.TrueTypeFontFileTests.Parse_DejaVu_ExposesMetricsAndCmap   # TODO: justify or fix
-Pdfe.Core.Tests.Graphics.CffOpenTypeEmbeddingTests.CffFont_DictionaryUsesCIDFontType0AndFontFile3   # TODO: justify or fix
-Pdfe.Core.Tests.Graphics.CffOpenTypeEmbeddingTests.CffFont_FontFile3HasOpenTypeSubtype   # TODO: justify or fix
-Pdfe.Core.Tests.Graphics.CffOpenTypeEmbeddingTests.CffFont_MeasureWidth_IsPositiveAndScalesWithText   # TODO: justify or fix
-Pdfe.Core.Tests.Graphics.CffOpenTypeEmbeddingTests.CffFont_MultiplePages_AllEmbedWithCIDFontType0   # TODO: justify or fix
-Pdfe.Core.Tests.Graphics.CffOpenTypeEmbeddingTests.CffFont_RoundTripsThroughOpen_NoErrors   # TODO: justify or fix
-Pdfe.Core.Tests.Graphics.CffOpenTypeEmbeddingTests.CffFont_UnicodeText_RoundTripsThroughExtraction   # TODO: justify or fix
-Pdfe.Core.Tests.Graphics.CffOpenTypeEmbeddingTests.FromFile_CffFont_ProducesType0EmbeddedFont   # TODO: justify or fix
-Pdfe.Core.Tests.Graphics.EmbeddedFontSubsetTests.Subset_EmbedsFarLessThanTheFullFont   # TODO: justify or fix
-Pdfe.Core.Tests.Graphics.EmbeddedFontSubsetTests.Subset_TagsTheFontName   # TODO: justify or fix
-Pdfe.Core.Tests.Graphics.EmbeddedFontSubsetTests.Subset_TextStillExtractsAndRoundTrips   # TODO: justify or fix
-Pdfe.Core.Tests.Graphics.EmbeddedFontSubsetTests.Subsetter_RetainsGidsAndProducesValidSfnt   # TODO: justify or fix
-Pdfe.Core.Tests.Graphics.EmbeddedFontTests.EmbeddedFont_DictionaryIsType0WithFontFile2AndToUnicode   # TODO: justify or fix
-Pdfe.Core.Tests.Graphics.EmbeddedFontTests.EmbeddedFont_MeasureWidth_IsPositiveAndScalesWithText   # TODO: justify or fix
-Pdfe.Core.Tests.Graphics.EmbeddedFontTests.EmbeddedFont_RoundTripsThroughOpen_NoErrors   # TODO: justify or fix
-Pdfe.Core.Tests.Graphics.EmbeddedFontTests.EmbeddedFont_UnicodeText_RoundTripsThroughExtraction   # TODO: justify or fix
-Pdfe.Core.Tests.Graphics.EmbeddedFontTests.FromFile_ProducesType0EmbeddedFont   # TODO: justify or fix
-Pdfe.Core.Tests.PdfATests.PdfA1B_EmitsPart1AndCidSet   # TODO: justify or fix
-Pdfe.Core.Tests.PdfATests.PdfA2B_EmitsXmpPdfaId_OutputIntent_AndTrailerId   # TODO: justify or fix
 Pdfe.Core.Tests.PdfATests.PdfA_Output_IsConformant_PerVeraPdf   # TODO: justify or fix

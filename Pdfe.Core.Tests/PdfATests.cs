@@ -5,6 +5,7 @@ using System.Text;
 using AwesomeAssertions;
 using Pdfe.Core.Authoring;
 using Pdfe.Core.Graphics;
+using Pdfe.Core.Tests.Fixtures;
 using Xunit;
 
 namespace Pdfe.Core.Tests;
@@ -14,15 +15,14 @@ namespace Pdfe.Core.Tests;
 /// structures PDF/A requires: an XMP packet with the pdfaid identifier, an sRGB
 /// OutputIntent, a trailer /ID, an embedded font (no base-14), and — for
 /// subset CID fonts — a /CIDSet (required by PDF/A-1b §6.3.5). Full conformance
-/// is validated with veraPDF when present (both PDF/A-1b and -2b PASS).
+/// is validated with veraPDF when present (both PDF/A-1b and -2b PASS). Uses
+/// the DejaVu Sans fixture embedded in this assembly (#603).
 /// </summary>
 public class PdfATests
 {
-    private const string Dejavu = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
-
     private static byte[] BuildPdfA(PdfAConformance conformance)
     {
-        var font = PdfFont.FromFile(Dejavu, 11);
+        var font = PdfFont.FromTrueType(TestFontFixtures.LoadDejaVuSansBytes(), 11);
         return PdfDocumentBuilder.Create()
             .Language("en-US")
             .Title("Archival Test")
@@ -36,7 +36,6 @@ public class PdfATests
     [Fact]
     public void PdfA2B_EmitsXmpPdfaId_OutputIntent_AndTrailerId()
     {
-        Assert.SkipUnless(File.Exists(Dejavu), "DejaVuSans (embedding font) not installed");
         var latin1 = Encoding.Latin1.GetString(BuildPdfA(PdfAConformance.PdfA2B));
 
         Assert.Contains("pdfaid:part>2", latin1);
@@ -49,7 +48,6 @@ public class PdfATests
     [Fact]
     public void PdfA1B_EmitsPart1AndCidSet()
     {
-        Assert.SkipUnless(File.Exists(Dejavu), "DejaVuSans (embedding font) not installed");
         var latin1 = Encoding.Latin1.GetString(BuildPdfA(PdfAConformance.PdfA1B));
 
         Assert.Contains("pdfaid:part>1", latin1);
@@ -69,7 +67,6 @@ public class PdfATests
     [InlineData(PdfAConformance.PdfA2B, "2b")]
     public void PdfA_Output_IsConformant_PerVeraPdf(PdfAConformance conformance, string flavour)
     {
-        Assert.SkipUnless(File.Exists(Dejavu), "DejaVuSans (embedding font) not installed");
         var verapdf = FindVeraPdf();
         Assert.SkipWhen(verapdf is null, "veraPDF not installed (~/verapdf/verapdf or PATH)");
 

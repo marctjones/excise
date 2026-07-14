@@ -1,9 +1,9 @@
-using System.IO;
 using System.Linq;
 using AwesomeAssertions;
 using Pdfe.Core.Document;
 using Pdfe.Core.Graphics;
 using Pdfe.Core.Primitives;
+using Pdfe.Core.Tests.Fixtures;
 using Pdfe.Core.Text;
 using Xunit;
 
@@ -13,31 +13,20 @@ namespace Pdfe.Core.Tests.Graphics;
 /// Tests for CFF-based OpenType ('OTTO') font embedding + Unicode text (#393).
 /// CFF fonts are embedded as a complete OTTO sfnt with a CIDFontType0 descendant
 /// and FontFile3 stream (unlike TrueType which uses FontFile2 + CIDFontType2).
-/// Tests use real system OpenType fonts, skipping cleanly if unavailable.
+/// Uses the Libertinus Serif fixture embedded in this assembly (#603) rather
+/// than a system font path.
 /// </summary>
 public class CffOpenTypeEmbeddingTests
 {
-    // Prefer LinLibertine (more common in development), fallback to Cantarell
-    private const string LinLibertineOtf = "/usr/share/fonts/opentype/linux-libertine/LinLibertine_RB.otf";
-    private const string CantarellOtf = "/usr/share/fonts/opentype/cantarell/Cantarell-VF.otf";
-
-    private static string FindCffFont()
-    {
-        if (File.Exists(LinLibertineOtf)) return LinLibertineOtf;
-        if (File.Exists(CantarellOtf)) return CantarellOtf;
-        return null!;
-    }
-
     private static string ExtractAll(byte[] pdf)
     {
         using var doc = PdfDocument.Open(pdf);
         return string.Join("\n", doc.GetPages().Select(p => new TextExtractor(p).ExtractText()));
     }
 
-    private static byte[] AuthorWith(string text, out PdfFont font, string? fontPath = null)
+    private static byte[] AuthorWith(string text, out PdfFont font)
     {
-        fontPath ??= FindCffFont();
-        font = PdfFont.FromFile(fontPath, 18);
+        font = PdfFont.FromTrueType(TestFontFixtures.LoadLibertinusSerifCffBytes(), 18);
         var doc = PdfDocument.CreateNew();
         var page = doc.Pages.AddBlank(400, 200);
         using (var g = page.GetGraphics())
@@ -48,10 +37,7 @@ public class CffOpenTypeEmbeddingTests
     [Fact]
     public void FromFile_CffFont_ProducesType0EmbeddedFont()
     {
-        var fontPath = FindCffFont();
-        Assert.SkipUnless(!string.IsNullOrEmpty(fontPath), "No CFF OpenType font found on system");
-
-        var font = PdfFont.FromFile(fontPath!, 12);
+        var font = PdfFont.FromTrueType(TestFontFixtures.LoadLibertinusSerifCffBytes(), 12);
         font.Should().BeOfType<PdfTrueTypeFont>();
         // Identity-H encodes 2-byte glyph ids as a hex string.
         font.EncodeString("AB").Should().StartWith("<").And.EndWith(">");
@@ -61,10 +47,7 @@ public class CffOpenTypeEmbeddingTests
     [Fact]
     public void CffFont_DictionaryUsesCIDFontType0AndFontFile3()
     {
-        var fontPath = FindCffFont();
-        Assert.SkipUnless(!string.IsNullOrEmpty(fontPath), "No CFF OpenType font found on system");
-
-        var pdf = AuthorWith("Hello CFF", out _, fontPath!);
+        var pdf = AuthorWith("Hello CFF", out _);
         using var doc = PdfDocument.Open(pdf);
         var page = doc.GetPage(1);
 
@@ -83,10 +66,7 @@ public class CffOpenTypeEmbeddingTests
     [Fact]
     public void CffFont_FontFile3HasOpenTypeSubtype()
     {
-        var fontPath = FindCffFont();
-        Assert.SkipUnless(!string.IsNullOrEmpty(fontPath), "No CFF OpenType font found on system");
-
-        var pdf = AuthorWith("OpenType Test", out _, fontPath!);
+        var pdf = AuthorWith("OpenType Test", out _);
         using var doc = PdfDocument.Open(pdf);
         var page = doc.GetPage(1);
 
@@ -106,11 +86,8 @@ public class CffOpenTypeEmbeddingTests
     [Fact]
     public void CffFont_UnicodeText_RoundTripsThroughExtraction()
     {
-        var fontPath = FindCffFont();
-        Assert.SkipUnless(!string.IsNullOrEmpty(fontPath), "No CFF OpenType font found on system");
-
         const string text = "Café résumé — Ø € ½";
-        var pdf = AuthorWith(text, out _, fontPath!);
+        var pdf = AuthorWith(text, out _);
 
         var extracted = ExtractAll(pdf);
         extracted.Should().Contain("Café résumé");
@@ -121,10 +98,7 @@ public class CffOpenTypeEmbeddingTests
     [Fact]
     public void CffFont_RoundTripsThroughOpen_NoErrors()
     {
-        var fontPath = FindCffFont();
-        Assert.SkipUnless(!string.IsNullOrEmpty(fontPath), "No CFF OpenType font found on system");
-
-        var pdf = AuthorWith("CFF round trip Ω", out _, fontPath!);
+        var pdf = AuthorWith("CFF round trip Ω", out _);
         var act = () => PdfDocument.Open(pdf).Dispose();
         act.Should().NotThrow();
     }
@@ -132,10 +106,7 @@ public class CffOpenTypeEmbeddingTests
     [Fact]
     public void CffFont_MeasureWidth_IsPositiveAndScalesWithText()
     {
-        var fontPath = FindCffFont();
-        Assert.SkipUnless(!string.IsNullOrEmpty(fontPath), "No CFF OpenType font found on system");
-
-        var font = PdfFont.FromFile(fontPath!, 20);
+        var font = PdfFont.FromTrueType(TestFontFixtures.LoadLibertinusSerifCffBytes(), 20);
         double w1 = font.MeasureWidth("i");
         double wLong = font.MeasureWidth("WWWWW");
         w1.Should().BeGreaterThan(0);
@@ -145,10 +116,7 @@ public class CffOpenTypeEmbeddingTests
     [Fact]
     public void CffFont_MultiplePages_AllEmbedWithCIDFontType0()
     {
-        var fontPath = FindCffFont();
-        Assert.SkipUnless(!string.IsNullOrEmpty(fontPath), "No CFF OpenType font found on system");
-
-        var font = PdfFont.FromFile(fontPath, 14);
+        var font = PdfFont.FromTrueType(TestFontFixtures.LoadLibertinusSerifCffBytes(), 14);
         var doc = PdfDocument.CreateNew();
 
         for (int i = 0; i < 3; i++)

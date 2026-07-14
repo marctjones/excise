@@ -47,6 +47,19 @@
     <!-- Real CFF font data for CffSubsetter round-trip tests.
          Inconsolata (SIL OFL 1.1) — see Fixtures/Fonts/NOTICE.md. -->
     <EmbeddedResource Include="Fixtures/Fonts/Inconsolata.cff" />
+
+    <!-- Real TrueType font data for TrueTypeFontFile/PdfTrueTypeFont/
+         TrueTypeSubsetter tests (#603, #648). DejaVu Sans (Bitstream Vera
+         License) — see Fixtures/Fonts/NOTICE.md. Bundled rather than
+         depending on a system-installed font: the prior tests hard-coded
+         a Linux-only path and silently skipped on macOS/Windows. -->
+    <EmbeddedResource Include="Fixtures/Fonts/DejaVuSans.ttf" />
+
+    <!-- Real CFF-flavored OpenType ('OTTO') font data for the CFF-OpenType
+         embedding path (TrueTypeFontFile.IsCff, PdfTrueTypeFont's FontFile3
+         branch) — #603, #648. Libertinus Serif (SIL OFL 1.1) — see
+         Fixtures/Fonts/NOTICE.md. -->
+    <EmbeddedResource Include="Fixtures/Fonts/LibertinusSerif-Regular.otf" />
   </ItemGroup>
 
 </Project>

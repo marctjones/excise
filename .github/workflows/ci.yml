@@ -159,15 +159,23 @@ jobs:
             -targetdir:coverage/report \
             -reporttypes:Cobertura
 
-      - name: Coverage Gate (Pdfe.Core >= 89%)
-        # The consolidated v2.26 branch measures 89.78% in GitHub's minimal CI
-        # fixture environment after optional encrypted/corpus PDFs skip cleanly.
-        # Keep the gate just below that baseline so coverage cannot drift down
-        # unnoticed, and restore the previous 93% ratchet via #603.
+      - name: Coverage Gate (Pdfe.Core >= 93%)
+        # Restored to the 93% ratchet (#603) — the branch had drifted to
+        # 89.78% not because coverage was genuinely hard to reach, but
+        # because six test files hard-coded a Linux-only system font path
+        # (/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf) and silently
+        # skipped on every macOS/Windows dev machine (a real instance of the
+        # #619 "invisible coverage loss" pattern, just not one the skip-
+        # budget gate happened to be watching). Fixed by bundling the fonts
+        # as embedded test resources (Pdfe.Core.Tests/Fixtures/Fonts/,
+        # NOTICE.md) instead of depending on system fonts, plus focused
+        # tests for the previously-untested PdfIccProfile matrix/lut16 paths.
+        # Measured 93.01% locally after the fix — keep this at exactly 93%,
+        # not padded, so the next real regression still trips the gate.
         #
         # reportgenerator's Cobertura output is named Cobertura.xml (not
         # coverage.cobertura.xml — that's coverlet's raw collector name).
-        run: scripts/check-coverage.sh coverage/report/Cobertura.xml 0.89 Pdfe.Core
+        run: scripts/check-coverage.sh coverage/report/Cobertura.xml 0.93 Pdfe.Core
 
       - name: Run Pdfe.Cli.Tests
         run: |
