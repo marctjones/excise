@@ -167,6 +167,139 @@ public sealed class ExtractionParityTests
     }
 
     /// <summary>
+    /// #648's "parser/renderer disagreement" requirement, applied to the
+    /// adversarial/malformed corpus (poppler, pdf.js, Isartor — the same
+    /// files <c>CorpusConformanceTests</c> scans for crashes/hangs) rather
+    /// than the curated smoke corpus above. Deliberately a coarser,
+    /// unbaselined pass/fail rather than <see cref="GenerateExtractionParityReport"/>'s
+    /// per-page floor ratchet: a malformed-by-design corpus is far noisier
+    /// (garbled/partial content is often the CORRECT extraction of a
+    /// deliberately-broken file), so per-page regression tracking would be
+    /// mostly maintenance noise. What's worth gating on is the catastrophic
+    /// case — pdfe silently extracting near-nothing from a file mutool can
+    /// still read a meaningful amount of text from, which is exactly the
+    /// "redact what pdfe can't see" failure #637/#645 are about, just
+    /// discovered via hostile input instead of a real-world form.
+    ///
+    /// It is expected and CORRECT for one tool to fail to open a file the
+    /// other doesn't — that is not a disagreement, it's two different
+    /// (both potentially valid) refusals. Only files BOTH tools open
+    /// contribute to this check.
+    /// </summary>
+    /// <summary>
+    /// Known adversarial-corpus disagreements by relative PDF path, filed
+    /// as #651 on first discovery. Each entry: reason. Removing a line
+    /// re-enables the gate for that file. Mirrors
+    /// <c>RedactionRoundTripTests.KnownRedactionFailures</c>'s exact
+    /// pattern — a new gate that immediately finds real findings should
+    /// report them loudly and track them, not silently loosen its own
+    /// threshold to pass.
+    /// </summary>
+    private static readonly Dictionary<string, string> KnownAdversarialDisagreements = new()
+    {
+        ["test-pdfs/pdfjs/freetexts.pdf"] =
+            "#651 — FreeText annotation /Contents ('Hello World from Acrobat' etc.) is invisible " +
+            "to page.Text; TextExtractor.EmitFormFieldLetters only covers AcroForm widgets, not " +
+            "markup annotations. A RedactText blind spot, same shape as #637.",
+        ["test-pdfs/pdfjs/freetext_no_appearance.pdf"] =
+            "#651 — same FreeText-annotation-content gap as freetexts.pdf.",
+        ["test-pdfs/pdfjs/annotation-choice-widget.pdf"] =
+            "#651 — partial coverage (48%), likely the same annotation-content family.",
+        ["test-pdfs/pdfjs/canvas.pdf"] =
+            "#651 — 0% coverage; not yet distinguished from the FreeText-annotation family or a separate cause.",
+        ["test-pdfs/pdfjs/bug1001080.pdf"] =
+            "#651 — 0% coverage on ordinary page text ('Untitled', 'pint test'), not annotation " +
+            "content — a distinct, uncharacterized gap.",
+        ["test-pdfs/pdfjs/bug854315.pdf"] =
+            "#651 — 21% coverage, uncharacterized.",
+        ["test-pdfs/pdfjs/issue13242.pdf"] =
+            "#651 — 27% coverage on ordinary Lorem-ipsum body text — a distinct, uncharacterized gap.",
+        ["test-pdfs/pdfjs/issue14497.pdf"] = "#651 — 6% coverage, uncharacterized.",
+        ["test-pdfs/pdfjs/issue17069.pdf"] = "#651 — 28% coverage, uncharacterized.",
+        ["test-pdfs/pdfjs/issue18036.pdf"] = "#651 — 18% coverage, uncharacterized.",
+        ["test-pdfs/pdfjs/issue19389.pdf"] = "#651 — 37% coverage, uncharacterized.",
+    };
+
+    [Fact]
+    public void AdversarialCorpus_PdfeDoesNotCatastrophicallyUnderExtractRelativeToMutool()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable,
+            "mutool not on PATH — install mupdf-tools to run the adversarial-corpus disagreement check");
+
+        var root = LocateRepoRoot();
+        Assert.SkipWhen(root == null, "could not locate repo root (pdfe.sln not found above AppContext.BaseDirectory)");
+
+        var corpusDirs = new[]
+        {
+            Path.Combine(root!, "test-pdfs", "poppler"),
+            Path.Combine(root!, "test-pdfs", "pdfjs"),
+            Path.Combine(root!, "test-pdfs", "isartor"),
+        };
+        var pdfPaths = corpusDirs
+            .Where(Directory.Exists)
+            .SelectMany(d => Directory.EnumerateFiles(d, "*.pdf", SearchOption.AllDirectories))
+            .OrderBy(p => p, StringComparer.Ordinal)
+            .ToList();
+        Assert.SkipWhen(pdfPaths.Count == 0,
+            "no adversarial corpus found — run scripts/download-poppler-corpus.sh / download-pdfjs-corpus.sh / download-test-pdfs.sh");
+
+        int bothOpened = 0, eitherRefused = 0;
+        var newDisagreements = new List<string>();
+        var knownDisagreements = new List<string>();
+
+        foreach (var pdfPath in pdfPaths)
+        {
+            string? pdfeText = null;
+            try
+            {
+                using var doc = PdfDocument.Open(pdfPath);
+                if (doc.PageCount >= 1) pdfeText = doc.GetPage(1).Text;
+            }
+            catch { /* pdfe refusing a malformed file is an acceptable outcome — not a disagreement. */ }
+
+            var mutoolText = MutoolTextExtractor.ExtractPage(pdfPath, 1);
+
+            if (pdfeText == null || mutoolText == null)
+            {
+                eitherRefused++;
+                continue;
+            }
+            bothOpened++;
+
+            int mutoolChars = CountLetterOrDigit(mutoolText);
+            if (mutoolChars < MinReferenceLength) continue; // not enough reference text to be meaningful signal.
+
+            int pdfeChars = CountLetterOrDigit(pdfeText);
+            double coverage = (double)pdfeChars / mutoolChars;
+
+            // Deliberately coarse (0.5, vs the smoke corpus's 0.95 worklist
+            // threshold): this corpus is adversarial by construction, and
+            // the goal here is catching a real blind spot, not chasing
+            // noise from files designed to confuse extraction generally.
+            if (coverage >= 0.5) continue;
+
+            var relPath = Path.GetRelativePath(root!, pdfPath).Replace('\\', '/');
+            var finding = $"{relPath}: pdfe={pdfeChars} mutool={mutoolChars} chars (coverage={coverage:P0})";
+            if (KnownAdversarialDisagreements.TryGetValue(relPath, out var reason))
+                knownDisagreements.Add($"{finding} — ⚑ KNOWN, not gating: {reason}");
+            else
+                newDisagreements.Add(finding);
+        }
+
+        _output.WriteLine($"Adversarial corpus: {pdfPaths.Count} files, {bothOpened} opened by both tools, {eitherRefused} refused by at least one (expected/fine).");
+        _output.WriteLine($"Known findings, not gating ({knownDisagreements.Count}), see #651:");
+        foreach (var d in knownDisagreements) _output.WriteLine($"  {d}");
+        _output.WriteLine($"NEW catastrophic under-extraction findings ({newDisagreements.Count}):");
+        foreach (var d in newDisagreements) _output.WriteLine($"  {d}");
+
+        newDisagreements.Should().BeEmpty(
+            "pdfe extracting <50% of what mutool reads from a file both tools opened is a redaction-relevant " +
+            "blind spot, not an expected adversarial-corpus refusal — see the NEW findings above. If this is a " +
+            "genuinely new file/regression, investigate before adding it to KnownAdversarialDisagreements — that " +
+            "allowlist is for tracked, not-yet-fixed findings (#651), not a way to silence the gate.");
+    }
+
+    /// <summary>
     /// Mirrors <see cref="TextExtractionDifferentialTests.MinReferenceTextLength"/>
     /// — pages with almost no reference text produce noisy ratios (a single
     /// stray character can swing coverage from 0% to 300%) and aren't useful

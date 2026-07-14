@@ -51,7 +51,7 @@ Options:
   --packaged-gui-focus-input
                       Also run focus-taking native key/mouse smoke.
   --no-build          Skip the initial build gate.
-  --only=a,b          Run only named gates: docs,build,redaction,signature,ui,accessibility,automation,ux,benchmark,aot,tests,pdf20,visual,package,packaged-gui,diffcheck.
+  --only=a,b          Run only named gates: docs,build,redaction,signature,ui,accessibility,automation,ux,benchmark,aot,pdf20,corpus-resilience,adversarial-extraction,tests,visual,package,packaged-gui,diffcheck.
   -h, --help          Show this help.
 EOF
 }
@@ -400,6 +400,15 @@ run_gate "ux" scripts/run-ux-icon-audit.sh --config "$CONFIG" --output "$LOG_DIR
 run_gate "benchmark" env CONFIG="$CONFIG" scripts/run-benchmarks.sh suite --output-dir "$LOG_DIR/benchmarks" --page-limit 2 --dpi 96 --timeout-ms 20000 --oracles all --fail-on-regression
 run_aot_gate
 run_gate "pdf20" scripts/run-pdf20-renderer-conformance.sh --run-tests
+
+# #648: malformed/adversarial-PDF resilience. Both silently no-op (not fail)
+# when test-pdfs/ or mutool are absent — same posture as the rest of this
+# script's corpus-dependent gates (unlike check-extraction-parity.sh, which
+# is a hard-fail release gate specifically because it's the one place #619's
+# skip-budget concern was found being violated; these two don't have that
+# history yet, so they follow the existing local convention here).
+run_gate "corpus-resilience" dotnet test Pdfe.Core.Tests --no-build -c "$CONFIG" --filter "FullyQualifiedName~Corpus" --logger "console;verbosity=normal"
+run_gate "adversarial-extraction" dotnet test Pdfe.Rendering.Tests --no-build -c "$CONFIG" --filter "FullyQualifiedName~AdversarialCorpus" --logger "console;verbosity=normal"
 
 run_full_tests_gate
 
