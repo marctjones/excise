@@ -4325,6 +4325,122 @@ public class SkiaRendererTests
 
     #endregion
 
+    #region Shading Types 5 and 7 as Pattern Fills (Issue #633)
+
+    // The dispatch bug lived specifically in RenderFillPattern (PatternType 2
+    // shading-pattern fills via `scn`) — the direct `sh` operator already
+    // handled types 5 and 7 correctly. These tests exercise the pattern-fill
+    // path that was actually broken; see
+    // Differential/ShadingPatternMeshDifferentialTests.cs for the
+    // independent-renderer (mutool) confirmation that ink genuinely appears,
+    // per CLAUDE.md's no-self-oracle rule.
+
+    [Fact]
+    public void RenderPage_Type5MeshShadingPatternFill_RendersInsteadOfNothing()
+    {
+        var pdfData = Differential.MeshShadingPdfFixtures.CreateShadingPatternFillPdf(
+            Differential.MeshShadingPdfFixtures.Type5ShadingDictExtra,
+            Differential.MeshShadingPdfFixtures.BuildType5MeshBytes());
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var (saturatedFraction, _) = MeasureSaturatedAndDarkPixels(bitmap);
+        saturatedFraction.Should().BeGreaterThan(0.25,
+            "#633: ShadingType 5 fell through RenderFillPattern's `_ => false` and drew nothing; " +
+            "the lattice mesh should now paint its red/green/blue/yellow corners across the page");
+    }
+
+    [Fact]
+    public void RenderPage_Type7TensorPatchShadingPatternFill_RendersInsteadOfNothing()
+    {
+        var pdfData = Differential.MeshShadingPdfFixtures.CreateShadingPatternFillPdf(
+            Differential.MeshShadingPdfFixtures.Type7ShadingDictExtra,
+            Differential.MeshShadingPdfFixtures.BuildType7TensorPatchBytes());
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        var (saturatedFraction, _) = MeasureSaturatedAndDarkPixels(bitmap);
+        saturatedFraction.Should().BeGreaterThan(0.15,
+            "#633: ShadingType 7's DecodeType6MeshPatches(tensorPatch: true)/RasterizeTensorPatch " +
+            "path already existed for the direct `sh` operator but was never wired into the " +
+            "pattern-fill dispatch, so a tensor-patch pattern fill drew nothing");
+    }
+
+    [Fact]
+    public void RenderPage_UnsupportedShadingTypeInPatternFill_RecordsDiagnosticInsteadOfSilentFailure()
+    {
+        // ShadingType 99 is not a value the PDF spec defines (1-7). Used to
+        // fall through RenderFillPattern's `_ => false` with zero signal.
+        var pdfData = Differential.MeshShadingPdfFixtures.CreateShadingPatternFillPdf(
+            "/ShadingType 99 /ColorSpace /DeviceRGB", shadingStreamBytes: null);
+        using var doc = PdfDocument.Open(pdfData);
+
+        var diagnostics = new List<string>();
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White, Diagnostics = diagnostics });
+
+        bitmap.Should().NotBeNull("an unsupported shading type must not crash the renderer");
+        diagnostics.Should().Contain(d => d.Contains("ShadingType 99"),
+            "#633: no shading type may fail silently — an unrecognized ShadingType used as a " +
+            "pattern fill must be reported via RenderOptions.Diagnostics, not just draw nothing");
+    }
+
+    [Fact]
+    public void RenderPage_UnsupportedShadingTypeInShOperator_RecordsDiagnosticInsteadOfSilentFailure()
+    {
+        var pdfData = Differential.MeshShadingPdfFixtures.CreateDirectShadingPdf(
+            "/ShadingType 99 /ColorSpace /DeviceRGB");
+        using var doc = PdfDocument.Open(pdfData);
+
+        var diagnostics = new List<string>();
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White, Diagnostics = diagnostics });
+
+        bitmap.Should().NotBeNull("an unsupported shading type must not crash the renderer");
+        diagnostics.Should().Contain(d => d.Contains("ShadingType 99"),
+            "#633: the direct `sh` operator's default case silently no-op'd for reserved/invalid " +
+            "ShadingType values; it must report them via RenderOptions.Diagnostics instead");
+    }
+
+    [Fact(Timeout = 20000)]
+    public void RenderPage_PdfjsIssue18816_Type7TensorPatchPatternFillRendersRealWorldFile()
+    {
+        // Corpus coverage for #633's checklist: a genuine pdf.js regression
+        // fixture (not synthetic) that uses ShadingType 7 as a PatternType 2
+        // fill alongside types 2, 3 and 6 — confirmed via `strings
+        // issue18816.pdf | grep ShadingType` while triaging this issue.
+        var path = FindRepoFile("test-pdfs", "pdfjs", "issue18816.pdf");
+        Assert.SkipWhen(path == null,
+            "No pdf.js issue18816 fixture found at test-pdfs/pdfjs/issue18816.pdf.");
+
+        using var doc = PdfDocument.Open(path);
+
+        using var bitmap = new SkiaRenderer().RenderPage(
+            doc.GetPage(1),
+            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
+
+        // The page has plenty of other content, so a loose "not all white"
+        // threshold (e.g. 0.98) passes with or without the fix — measured
+        // 0.8522 white with the fix vs. 0.8838 without it (git-stashing
+        // SkiaRenderer.Patterns.cs to confirm), a real but small ~3%-of-page
+        // difference. 0.87 sits between the two, so this only stays green
+        // when the type 7 pattern fill is actually contributing ink.
+        var (whiteFraction, _) = MeasureWhiteAndDarkPixels(bitmap);
+        whiteFraction.Should().BeLessThan(0.87,
+            "#633: this file's ShadingType 7 pattern fill previously fell through " +
+            "RenderFillPattern's `_ => false` and drew nothing");
+    }
+
+    #endregion
+
     #region Marked Content Operators (MP, DP, BMC, BDC, EMC)
 
     [Fact]

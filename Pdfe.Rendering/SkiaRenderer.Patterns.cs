@@ -34,13 +34,28 @@ internal partial class RenderContext
         if (shading == null)
             return false;
 
-        return shading.GetInt("ShadingType", 0) switch
+        var shadingType = shading.GetInt("ShadingType", 0);
+        var rendered = shadingType switch
         {
             1 or 2 or 3 => MarkDeviceCmykBackdropDirtyWhenRendered(RenderShadingPattern(path, pattern, shading)),
             4 => MarkDeviceCmykBackdropDirtyWhenRendered(RenderType4MeshPattern(path, pattern, shading)),
+            5 => MarkDeviceCmykBackdropDirtyWhenRendered(RenderType5MeshPattern(path, pattern, shading)),
             6 => MarkDeviceCmykBackdropDirtyWhenRendered(RenderType6MeshPattern(path, pattern, shading)),
+            7 => MarkDeviceCmykBackdropDirtyWhenRendered(RenderType7MeshPattern(path, pattern, shading)),
             _ => false
         };
+
+        // #633: an unrecognized/reserved ShadingType used to fall through to
+        // `_ => false` with no signal at all — a page missing artwork and no
+        // way to tell why. Every dispatch path below already returns false
+        // for its own internal failures (missing stream, empty decode,
+        // degenerate bbox); this only fires for a ShadingType PDF never
+        // defines (not 1-7), which is the one case none of those paths can
+        // explain on their own.
+        if (!rendered && shadingType is < 1 or > 7)
+            _options.Diagnostics?.Add($"Unsupported ShadingType {shadingType} in pattern fill; nothing drawn.");
+
+        return rendered;
     }
 
     private bool MarkDeviceCmykBackdropDirtyWhenRendered(bool rendered)
@@ -447,6 +462,48 @@ internal partial class RenderContext
         return true;
     }
 
+    // #633: ShadingType 7 (tensor-product patch mesh) as a pattern fill.
+    // The decode/rasterize path already exists and is used by the direct
+    // `sh` operator (RenderMeshShading below) — this was simply never
+    // wired into the PatternType 2 dispatch, so a type 7 shading pattern
+    // fill rendered nothing while the identical shading painted directly
+    // with `sh` worked fine.
+    private bool RenderType7MeshPattern(
+        SKPath clipPath,
+        Pdfe.Core.Primitives.PdfDictionary pattern,
+        Pdfe.Core.Primitives.PdfDictionary shading)
+    {
+        if (shading is not Pdfe.Core.Primitives.PdfStream stream)
+            return false;
+
+        var patches = DecodeType6MeshPatches(stream, tensorPatch: true);
+        if (patches.Count == 0)
+            return false;
+
+        _canvas.Save();
+        try
+        {
+            _canvas.ClipPath(clipPath, SKClipOperation.Intersect, _options.AntiAlias);
+
+            var inverseCtm = InvertAffine(_state.CurrentTransform);
+            if (inverseCtm.HasValue)
+            {
+                var inv = inverseCtm.Value;
+                _canvas.Concat(in inv);
+            }
+
+            var patternMatrix = GetMatrix(pattern.GetOptional("Matrix") as Pdfe.Core.Primitives.PdfArray);
+            _canvas.Concat(in patternMatrix);
+            DrawMeshPatches(patches, tensorPatch: true);
+        }
+        finally
+        {
+            _canvas.Restore();
+        }
+
+        return true;
+    }
+
     private bool RenderType4MeshPattern(
         SKPath clipPath,
         Pdfe.Core.Primitives.PdfDictionary pattern,
@@ -456,6 +513,46 @@ internal partial class RenderContext
             return false;
 
         var triangles = DecodeType4MeshTriangles(stream);
+        if (triangles.Count == 0)
+            return false;
+
+        _canvas.Save();
+        try
+        {
+            _canvas.ClipPath(clipPath, SKClipOperation.Intersect, _options.AntiAlias);
+
+            var inverseCtm = InvertAffine(_state.CurrentTransform);
+            if (inverseCtm.HasValue)
+            {
+                var inv = inverseCtm.Value;
+                _canvas.Concat(in inv);
+            }
+
+            var patternMatrix = GetMatrix(pattern.GetOptional("Matrix") as Pdfe.Core.Primitives.PdfArray);
+            _canvas.Concat(in patternMatrix);
+            DrawMeshTriangles(triangles);
+        }
+        finally
+        {
+            _canvas.Restore();
+        }
+
+        return true;
+    }
+
+    // #633: ShadingType 5 (lattice-form triangle mesh) as a pattern fill.
+    // Same story as type 7 above — DecodeType5MeshTriangles already exists
+    // and is used by the direct `sh` operator; only the pattern-fill route
+    // was missing.
+    private bool RenderType5MeshPattern(
+        SKPath clipPath,
+        Pdfe.Core.Primitives.PdfDictionary pattern,
+        Pdfe.Core.Primitives.PdfDictionary shading)
+    {
+        if (shading is not Pdfe.Core.Primitives.PdfStream stream)
+            return false;
+
+        var triangles = DecodeType5MeshTriangles(stream);
         if (triangles.Count == 0)
             return false;
 
@@ -1129,7 +1226,10 @@ internal partial class RenderContext
                 RenderMeshShading(shading, shadingType);
                 break;
             default:
-                // Shading fills the current clipping path
+                // #633: ShadingType is only defined 1-7; anything else is
+                // reserved/invalid. Previously silent — report it so a
+                // missing-artwork page has a traceable cause.
+                _options.Diagnostics?.Add($"Unsupported ShadingType {shadingType} in sh operator; nothing drawn.");
                 break;
         }
     }
