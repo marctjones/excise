@@ -386,6 +386,33 @@ wall-clock timeout and produce a **false red** (observed three times on
 
 **Running Tests:** See "Build and Run Commands" section above.
 
+### Test Tiers — what to run before what (#646)
+
+There is one defined answer to "what do I run before X?" —
+`scripts/test-tier.sh {t0|t1|t2|t3}`. Before this, the choice in practice was
+either *nothing* or the full ~28-minute release smoke, and both are wrong
+most of the time.
+
+| Tier | Cost | What | When |
+|------|------|------|------|
+| `t0` | ~30s | Build + Pdfe.Core/Cli/Avalonia tests + `verify-doc-claims.sh` + `check-gate-asymmetry.sh` + `verify-true-redaction.sh` | Before every push. No excuse not to run it — `scripts/test-tier.sh --install-hook` installs it as `.git/hooks/pre-push`. |
+| `t1` | ~10m | `t0` + the full redaction test suites + `Pdfe.Rendering.Tests` (deterministic) + `check-skip-budget.sh` | What CI blocks a PR on. `scripts/ci-test.sh` is now a thin wrapper around this. |
+| `t2` | ~30m | `scripts/release-smoke.sh --release-tests` | Release candidate. |
+| `t3` | — | `t2` plus the same on macOS and Windows (#647) | Before tagging a release. |
+
+**Tier is selected by blast radius — who gets hurt if this is wrong — not by
+convenience.** Pick the tier that matches what the change touches, not the
+tier that's fastest to run.
+
+**pdfe-specific rule: you are your own third party.** A local build you
+redact a real document with is a binary whose failure hurts someone, and the
+failure is silent — no crash, no error, the name is just still in the file.
+The redaction gate is therefore non-negotiable at every tier that produces a
+binary anyone could redact with, including a purely local build: `t0`
+includes the near-free static redaction-architecture guard
+(`verify-true-redaction.sh`); `t1`'s redaction test suites run unconditionally
+and there is no flag to skip them.
+
 ## Common Development Workflows
 
 ### Adding a New PDF Operation Type

@@ -8,7 +8,7 @@ Every push to `main` or `develop` and every pull request is subject to automated
 
 1. **Build Gate** - All projects must build with zero errors (warnings are tolerated)
 2. **Test Gates** - All unit and integration tests must pass
-3. **Coverage Gate** - Pdfe.Core must maintain ≥94% line coverage (v2.1.0-rc baseline)
+3. **Coverage Gate** - Pdfe.Core must maintain the line-coverage threshold set in `.github/workflows/ci.yml`'s "Coverage Gate" step. Don't hard-code the percentage here — it ratchets over time (most recently tracked in #603) and this doc goes stale; that file does not.
 4. **Performance Signal** - Performance benchmarks run for visibility; release candidates use local long-running gates
 
 ## CI Workflows
@@ -17,29 +17,20 @@ Every push to `main` or `develop` and every pull request is subject to automated
 
 **Trigger**: Every push to `main`/`develop`, every pull request
 
-**Duration**: ~5-8 minutes
+Don't hand-copy its step list here — it has drifted from the real file
+before (this doc once listed 20 steps and was missing three real gates:
+`check-gate-asymmetry.sh`, `check-skip-budget.sh`,
+`verify-true-redaction.sh`). Read `.github/workflows/ci.yml` directly, or run
+the equivalent locally with `scripts/test-tier.sh t1` (#646) — that script
+and the workflow are kept in step by construction (`scripts/ci-test.sh` is
+now a thin wrapper around `test-tier.sh t1`, not a second hand-maintained
+copy). See `CLAUDE.md`'s "Test Tiers" section for the full T0-T3 table.
 
-**Steps**:
-1. Checkout code
-2. Setup .NET 10 SDK
-3. Setup Java 17 (for veraPDF)
-4. Install veraPDF for PDF/A compliance testing
-5. Install xvfb for headless GUI tests
-6. Restore NuGet packages
-7. Verify true redaction implementation
-8. **Build gate**: `dotnet build pdfe.sln -c Debug`
-9. Run Pdfe.Core.Tests with XPlat Code Coverage collection
-10. Install reportgenerator tool
-11. Generate Cobertura coverage report
-12. **Coverage gate**: Parse coverage XML and verify Pdfe.Core line-rate ≥ 0.94
-13. Run Pdfe.Cli.Tests
-14. Run Pdfe.Rendering.Tests (excluding slow Corpus tests)
-15. Run PDF 2.0 renderer conformance gate
-16. Run PerformanceBenchmarkTests and MemoryBenchmarkTests (informational)
-17. Run Pdfe.Ocr.Tests (non-blocking)
-18. Run PdfEditor.Tests with xvfb (GUI tests)
-19. Upload coverage report as artifact
-20. Upload test results on failure
+CI currently runs on Linux only (`ubuntu-latest`) — macOS- and Windows-specific
+code (`PdfEditor/Views/MacNativeMenuBuilder.cs`, `.app` bundle behavior,
+Windows installer/file associations) is untested in CI (#647, tracked and
+in progress). Check `.github/workflows/ci.yml`'s `jobs:` keys for the
+current, authoritative platform coverage rather than trusting this note.
 
 ### PDF 2.0 Renderer Conformance Gate
 
@@ -84,27 +75,19 @@ scripts/run-visual-regression-local.sh --only=render-visual-baselines,gui-headle
 
 ## Local Testing
 
-Before pushing, simulate the CI gates locally:
+Before pushing, run the tier that matches your change's blast radius
+(`CLAUDE.md`'s "Test Tiers" section, #646):
 
 ```bash
-./scripts/ci-test.sh
+scripts/test-tier.sh t0   # ~30s, before every push
+scripts/test-tier.sh t1   # ~10m, what CI blocks a PR on — scripts/ci-test.sh is a thin wrapper around this
+scripts/test-tier.sh t2   # ~30m, release candidate (release-smoke.sh)
 ```
-
-This runs:
-- Build (Debug)
-- Pdfe.Core.Tests with coverage
-- Coverage gate check
-- Other test projects
-- PDF 2.0 renderer conformance gate
-- Performance benchmarks
-
-**Runtime**: ~3-5 minutes locally
-
-**Output**: Colored pass/fail summary, detailed log saved to `ci-test.log`
 
 ### Manual Coverage Check
 
-To check coverage for a specific package:
+To check coverage for a specific package (substitute the threshold from
+`.github/workflows/ci.yml`'s "Coverage Gate" step — don't hard-code it here):
 
 ```bash
 # Run tests and collect coverage
@@ -119,20 +102,22 @@ dotnet tool install --tool-path ./tools dotnet-reportgenerator-globaltool
   -targetdir:coverage/report \
   -reporttypes:Cobertura
 
-# Check coverage
-scripts/check-coverage.sh coverage/report/coverage.cobertura.xml 0.94 Pdfe.Core
+# Check coverage (reportgenerator's Cobertura output; note the filename is
+# Cobertura.xml, not coverlet's raw coverage.cobertura.xml)
+scripts/check-coverage.sh coverage/report/Cobertura.xml <threshold-from-ci.yml> Pdfe.Core
 ```
 
-## Coverage Baseline (v2.1.0-rc)
+## Coverage Gate
 
-**Pdfe.Core Line Coverage**: 94.41%
+The gate targets `Pdfe.Core` specifically (the core PDF parsing and
+redaction engine), not the whole solution, because:
+- It's the security-critical component.
+- Pdfe.Cli, PdfEditor, and other components have different coverage profiles.
+- New features may add untested code; coverage is a project-level metric, not a per-component lock.
 
-This is the baseline locked in v2.1.0-rc. The CI gate enforces ≥94% to prevent regressions while allowing minor fluctuations from test variations.
-
-The gate specifically targets `Pdfe.Core` (the core PDF parsing and redaction engine) rather than the entire solution, because:
-- This is the security-critical component
-- Pdfe.Cli, PdfEditor, and other components have different coverage baselines
-- New features may add untested code; coverage is a project-level metric, not per-component lock
+The enforced threshold ratchets over time (most recently #603) — read it
+from `.github/workflows/ci.yml`'s "Coverage Gate" step rather than trusting
+a number in this doc; every prior version of this section has gone stale.
 
 ## Performance Benchmarks
 
@@ -177,25 +162,30 @@ dotnet test PdfEditor.Tests --no-build -c Debug
 
 ## Test Project Summary
 
-| Project | Purpose | Count | Timeout | CI Behavior |
-|---------|---------|-------|---------|-------------|
-| Pdfe.Core.Tests | Core PDF parsing, redaction | ~2400 tests | 5s | Full run, coverage collected |
-| Pdfe.Cli.Tests | CLI application | ~74 tests | 30s | Full run |
-| Pdfe.Rendering.Tests | PDF rendering (Skia) | ~200 tests | 60s | Run except Corpus (slow) |
-|  | Performance benchmarks | ~20 tests | 120s | Enforces thresholds |
-| Pdfe.Ocr.Tests | OCR integration (Tesseract) | ~30 tests | 60s | Non-blocking |
-| PdfEditor.Tests | GUI and integration tests | ~600+ tests | 120s (blame-hang) | Headless via xvfb |
+Don't hard-code test counts here — they go stale immediately (this table
+previously said "~2400" for Pdfe.Core.Tests and "~600+" for PdfEditor.Tests;
+both are now off by hundreds of tests). Run the suites, or see
+`CLAUDE.md`'s "Test Infrastructure" section, which carries the same warning
+rather than a number that will be wrong by the time you read it.
+
+| Project | Purpose | CI Behavior |
+|---------|---------|-------------|
+| Pdfe.Core.Tests | Core PDF parsing, redaction | Full run, coverage collected |
+| Pdfe.Cli.Tests | CLI application | Full run |
+| Pdfe.Rendering.Tests | PDF rendering (Skia) | Deterministic filter only (Corpus/Differential/Benchmark/Visual excluded — see `ci.yml`'s comment for why) |
+| Pdfe.Ocr.Tests | OCR integration (Tesseract) | Non-blocking |
+| PdfEditor.Tests | GUI and integration tests | Headless via xvfb; serial by design (#363), skipped for library-only PRs, always run on `main` |
 
 ## Failure Diagnosis
 
 ### Build fails
 - Check for CS8625 or other null reference warnings in error output
 - May indicate code that needs null-coalescing or null-forgiving operators
-- See `/home/marc/Projects/pdfe/CLAUDE.md` for build warning standards
+- See `CLAUDE.md`'s "Build Warnings" section for build warning standards
 
 ### Coverage gate fails
-- Coverage dropped below 94% for Pdfe.Core
-- Check which files lost coverage with: `scripts/check-coverage.sh coverage/report/coverage.cobertura.xml 0.94 Pdfe.Core`
+- Coverage dropped below the threshold set in `.github/workflows/ci.yml`'s "Coverage Gate" step
+- Check which files lost coverage with: `scripts/check-coverage.sh coverage/report/Cobertura.xml <threshold> Pdfe.Core`
 - May need to add tests to new code or remove untested dead code
 
 ### Performance benchmarks fail
@@ -235,29 +225,22 @@ Local visual-regression runs store logs and copied PNG artifacts under
 Parses a Cobertura XML coverage report and verifies line coverage meets a minimum threshold.
 
 ```bash
-# Check entire solution >= 85%
-scripts/check-coverage.sh coverage/report/coverage.cobertura.xml 0.85
+scripts/check-coverage.sh <path-to-Cobertura.xml> <min-line-rate> [package-filter]
 
-# Check Pdfe.Core >= 94%
-scripts/check-coverage.sh coverage/report/coverage.cobertura.xml 0.94 Pdfe.Core
+# e.g. check Pdfe.Core against whatever ci.yml currently enforces
+scripts/check-coverage.sh coverage/report/Cobertura.xml 0.93 Pdfe.Core
 ```
 
 Exit codes:
 - 0: Coverage met or exceeded threshold
 - 1: Coverage below threshold, or file not found
 
-### `scripts/ci-test.sh`
+### `scripts/test-tier.sh` (#646)
 
-Simulates the full CI workflow locally.
-
-```bash
-./scripts/ci-test.sh
-```
-
-Output:
-- Colored summary of each gate (PASSED / FAILED)
-- Detailed log in `ci-test.log`
-- Exit code 0 if all gates pass, 1 if any fail
+The single entry point for "what do I run before X" — see `CLAUDE.md`'s
+"Test Tiers" section. `scripts/ci-test.sh` is a thin wrapper around
+`test-tier.sh t1` kept for backward compatibility; both stay in sync by
+construction rather than by hand.
 
 ## GitHub Integration
 
@@ -265,9 +248,10 @@ Output:
 - Required status checks are configured in branch protection rules
 - Failure blocks merge until all gates pass
 
-## Next Steps / Future Work
+## Corpus Testing Outside PR Gates
 
-- [ ] **Windows/Mac CI matrices** (v2.2 work) - Add `windows-latest` and `macos-latest` to CI matrix once platform-specific issues are resolved
-- [ ] **Corpus testing outside PR gates** - Keep full corpus runs in local or dedicated infrastructure because they are too slow for every PR
-- [ ] **Sonarqube integration** - Optional: code quality scanning
-- [ ] **Flaky test detection** - Track test failure patterns across runs
+Full corpus runs (veraPDF, poppler, pdf.js, malformed/adversarial files —
+#648) are too slow for every PR and stay in local/release-gate scripts
+(`scripts/run-corpus-tests.sh`, `scripts/check-extraction-parity.sh`, and
+similar) rather than `ci.yml`. See `docs/RELEASE_CHECKLIST.md` for what runs
+at T2/T3 that doesn't run on every PR.

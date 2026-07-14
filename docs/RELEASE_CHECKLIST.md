@@ -12,6 +12,11 @@ Use this checklist before tagging any `v*` release.
 
 ## Validation
 
+- **This checklist is tier T2/T3** (`scripts/test-tier.sh t2`/`t3`, #646) — the
+  release-candidate and third-party-distribution gates. T0 (pre-push) and T1
+  (what CI blocks a PR on) are lighter and run far more often; see
+  `CLAUDE.md`'s "Test Tiers" section for the full table and the blast-radius
+  rule for picking one. Everything below this line is what T2/T3 actually run.
 - Run `scripts/release-smoke.sh --visual --package --packaged-gui --version <version>` before tagging a release candidate.
 - **Run it on an otherwise idle machine.** `PdfEditor.Tests` is serial by design
   (SkiaSharp's process-wide native font manager, #363) and its 144-page display
