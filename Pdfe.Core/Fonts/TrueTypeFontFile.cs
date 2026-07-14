@@ -56,6 +56,27 @@ internal sealed class TrueTypeFontFile
     public static TrueTypeFontFile Parse(byte[] data)
     {
         ArgumentNullException.ThrowIfNull(data);
+        try
+        {
+            return ParseCore(data);
+        }
+        catch (Exception ex) when (ex is not (OutOfMemoryException or NotSupportedException))
+        {
+            // #648: BE.U16/S16/U32 do raw, unchecked array indexing (by
+            // design — this is a hot path). A truncated or adversarially
+            // mutated font (offsets/counts pointing past the buffer) turns
+            // that into a raw IndexOutOfRangeException/ArgumentOutOfRangeException
+            // instead of this class's documented failure mode. Convert it
+            // to the same NotSupportedException every other "can't use this
+            // font" path already throws, rather than letting a malformed
+            // embedded font crash the caller.
+            throw new NotSupportedException(
+                $"Malformed or truncated font data ({ex.GetType().Name}: {ex.Message}).", ex);
+        }
+    }
+
+    private static TrueTypeFontFile ParseCore(byte[] data)
+    {
         var r = new BE(data);
         uint sfnt = r.U32(0);
         bool isCff = sfnt == 0x4F54544F; // 'OTTO'
@@ -172,6 +193,14 @@ internal sealed class TrueTypeFontFile
             for (uint g = 0; g < nGroups; g++, gp += 12)
             {
                 uint startC = r.U32(gp), endC = r.U32(gp + 4), startG = r.U32(gp + 8);
+                // #648: a malformed/adversarial cmap can set endC far below
+                // startC (loop never enters — harmless) or so far above it
+                // that this becomes a multi-billion-iteration loop; endC =
+                // 0xFFFFFFFF is worse still, since incrementing a uint past
+                // its max wraps to 0 and the loop never terminates at all.
+                // Valid Unicode tops out at 0x10FFFF — reject any group
+                // that claims a bigger span than the entire codepoint space.
+                if (endC < startC || endC - startC > 0x10FFFF) continue;
                 for (uint c = startC; c <= endC; c++)
                     map[(int)c] = (int)(startG + (c - startC));
             }
