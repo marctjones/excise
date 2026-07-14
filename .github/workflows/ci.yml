@@ -7,17 +7,23 @@ on:
       - develop
   pull_request:
 
+env:
+  DOTNET_VERSION: '10.0.x'
+  # ReactiveUI/Splat's author signing certificate was revoked upstream,
+  # so a fresh `dotnet restore` fails with NU3012 (revoked cert) for
+  # packages that are otherwise the correct published versions. Skip NuGet
+  # signature verification in CI so a third-party cert revocation can't
+  # block the build. Tracked alongside the ReactiveUI removal in #343.
+  DOTNET_NUGET_SIGNATURE_VERIFICATION: false
+
 jobs:
-  build-test-coverage:
-    name: Build, Test & Coverage Gates
+  # ── 1. Linux: full T1 gate, plus the Linux-only release-adjacent gates
+  #        (coverage, pdf20 conformance, benchmark suite) that don't yet
+  #        have a portable equivalent worth tripling the runner cost for.
+  #        See #646 for the T0-T3 tier definitions this job targets. ──────
+  test-linux:
+    name: Test (Linux)
     runs-on: ubuntu-latest
-    env:
-      # ReactiveUI/Splat's author signing certificate was revoked upstream,
-      # so a fresh `dotnet restore` fails with NU3012 (revoked cert) for
-      # packages that are otherwise the correct published versions. Skip NuGet
-      # signature verification in CI so a third-party cert revocation can't
-      # block the build. Tracked alongside the ReactiveUI removal in #343.
-      DOTNET_NUGET_SIGNATURE_VERIFICATION: false
     steps:
       - uses: actions/checkout@v6
 
@@ -25,6 +31,11 @@ jobs:
       # suite is slow and Avalonia-dispatcher-sensitive; there's no need to run
       # it for library-only changes (e.g. a Pdfe.Core-only PR). It still always
       # runs on pushes to main as a post-merge integration safety net.
+      #
+      # Only the Linux job honours this conditional: macOS and Windows always
+      # run PdfEditor.Tests unconditionally (see those jobs below) because
+      # #612's MacNativeMenuBuilder regression was itself platform-specific
+      # and not a GUI-code-path change that this filter would have caught.
       - name: Detect changed areas
         uses: dorny/paths-filter@v4
         id: changes
@@ -36,7 +47,14 @@ jobs:
 
       - uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: 10.0.x
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache nuget
+        uses: actions/cache@v5
+        with:
+          path: ~/.nuget/packages
+          key: nuget-linux-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-linux-
 
       - name: Set up Java (for veraPDF)
         uses: actions/setup-java@v5
@@ -100,12 +118,6 @@ jobs:
       - name: Install xvfb for headless UI tests
         if: steps.changes.outputs.gui == 'true' || github.ref == 'refs/heads/main'
         run: sudo apt-get install -y xvfb
-
-      - name: Install test fonts
-        # DejaVuSans is the font the embedding tests (#378) load by path; without
-        # it those tests skip and Pdfe.Core coverage drops below the gate. Always
-        # install so coverage is deterministic.
-        run: sudo apt-get install -y fonts-dejavu-core
 
       - name: Restore packages
         run: dotnet restore
@@ -272,7 +284,271 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: test-results
+          name: test-results-linux
+          path: |
+            **/TestResults/
+            **/*.trx
+          retention-days: 7
+
+  # ── 2. macOS: T1 gate, always including PdfEditor.Tests unconditionally.
+  #        #647 exists because #612 (a MacNativeMenuBuilder checkmark-state
+  #        regression) shipped silently — no CI job ran on macOS at all, so
+  #        the GUI-changed-files conditional the Linux job uses is
+  #        deliberately NOT applied here: any change, GUI-labelled or not,
+  #        could regress native macOS menu behaviour. ─────────────────────
+  test-macos:
+    name: Test (macOS)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache nuget
+        uses: actions/cache@v5
+        with:
+          path: ~/.nuget/packages
+          key: nuget-macos-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-macos-
+
+      - name: Set up Java (for veraPDF)
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install veraPDF
+        # Same izpack installer as Linux; the jar is cross-platform and Java
+        # is already set up above. Best-effort — see the Linux job's install
+        # step for the full rationale.
+        continue-on-error: true
+        run: |
+          set -uo pipefail
+          curl -fSL --retry 3 --connect-timeout 30 \
+            https://software.verapdf.org/releases/verapdf-installer.zip \
+            -o /tmp/verapdf.zip \
+            || { echo "::warning::veraPDF download failed; skipping veraPDF setup"; exit 0; }
+          unzip -q /tmp/verapdf.zip -d /tmp/verapdf-installer \
+            || { echo "::warning::veraPDF archive invalid; skipping veraPDF setup"; exit 0; }
+
+          cat > /tmp/auto-install.xml << EOF
+          <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+          <AutomatedInstallation langpack="eng">
+              <com.izforge.izpack.panels.htmlhello.HTMLHelloPanel id="welcome"/>
+              <com.izforge.izpack.panels.target.TargetPanel id="install_dir">
+                  <installpath>$HOME/verapdf</installpath>
+              </com.izforge.izpack.panels.target.TargetPanel>
+              <com.izforge.izpack.panels.packs.PacksPanel id="sdk_pack_select">
+                  <pack index="0" name="veraPDF GUI" selected="false"/>
+                  <pack index="1" name="veraPDF Mac and *nix Scripts" selected="true"/>
+                  <pack index="2" name="veraPDF Validation model" selected="true"/>
+                  <pack index="3" name="veraPDF Documentation" selected="false"/>
+                  <pack index="4" name="veraPDF Sample Plugins" selected="false"/>
+              </com.izforge.izpack.panels.packs.PacksPanel>
+              <com.izforge.izpack.panels.install.InstallPanel id="install"/>
+              <com.izforge.izpack.panels.finish.FinishPanel id="finish"/>
+          </AutomatedInstallation>
+          EOF
+
+          cd /tmp/verapdf-installer
+          INSTALLER=$(find . \( -name "verapdf-izpack-installer-*.jar" -o -name "verapdf-greenfield-*.jar" -o -name "verapdf-*installer*.jar" \) | head -1)
+          if [ -z "$INSTALLER" ]; then
+            echo "::warning::veraPDF installer jar not found; skipping veraPDF setup"
+            exit 0
+          fi
+          java -jar "$INSTALLER" /tmp/auto-install.xml || \
+            { echo "::warning::veraPDF install failed; continuing without it"; exit 0; }
+
+          ~/verapdf/verapdf --version || true
+
+      - name: Restore packages
+        run: dotnet restore
+
+      - name: Verify TRUE Redaction Implementation
+        run: ./scripts/verify-true-redaction.sh
+
+      - name: Gate asymmetry (correctness cannot be weakened by perf)
+        run: ./scripts/check-gate-asymmetry.sh origin/${{ github.base_ref || 'main' }}
+
+      - name: Build (Debug)
+        run: dotnet build pdfe.sln -c Debug
+
+      - name: Run Pdfe.Core.Tests
+        # No coverage collection here — the coverage gate is Linux-only
+        # (one definition, avoids threshold drift between platforms); font
+        # fixtures are embedded resources (#603) so this needs no system
+        # font install to pass identically to Linux.
+        run: |
+          dotnet test Pdfe.Core.Tests --no-build -c Debug \
+            --logger "console;verbosity=normal"
+
+      - name: Run Pdfe.Cli.Tests
+        run: |
+          dotnet test Pdfe.Cli.Tests --no-build -c Debug \
+            --logger "console;verbosity=normal"
+
+      - name: Run Pdfe.Avalonia.Tests
+        run: |
+          dotnet test Pdfe.Avalonia.Tests --no-build -c Debug \
+            --logger "console;verbosity=normal"
+
+      - name: Run Pdfe.Rendering.Tests (deterministic only)
+        # Same filter rationale as the Linux job — see that job's comment.
+        run: |
+          dotnet test Pdfe.Rendering.Tests --no-build -c Debug \
+            --filter "FullyQualifiedName!~Corpus&FullyQualifiedName!~Differential&FullyQualifiedName!~Benchmark&FullyQualifiedName!~Visual" \
+            --logger "console;verbosity=normal"
+
+      - name: Run PdfEditor.Tests
+        # Unconditional (see job comment) and no xvfb wrapper: Avalonia's
+        # headless platform (UseHeadless, UseHeadlessDrawing=false in
+        # PdfEditor.Tests/UI/TestAppBuilder.cs) renders through real Skia
+        # without needing an X server, so it needs no display-server shim on
+        # macOS. *_MatchesBaseline visual-pixel tests are excluded: they're
+        # calibrated to Linux CI's specific Skia/freetype/font build, exactly
+        # as noted for the equivalent Linux exclusions elsewhere in this file.
+        run: |
+          dotnet test PdfEditor.Tests --no-build -c Debug \
+            --filter "FullyQualifiedName!~MatchesBaseline" \
+            --logger "console;verbosity=normal" \
+            --blame-hang-timeout 120000
+
+      - name: Upload test results on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results-macos
+          path: |
+            **/TestResults/
+            **/*.trx
+          retention-days: 7
+
+  # ── 3. Windows: T1 gate, always including PdfEditor.Tests unconditionally
+  #        (same rationale as macOS above). Default shell is pwsh, matching
+  #        release.yml's windows-exe job; bash scripts are invoked through
+  #        Git Bash (always present on windows-latest) rather than ported to
+  #        PowerShell, so there is exactly one implementation of each gate
+  #        script instead of a shell-specific fork. ──────────────────────
+  test-windows:
+    name: Test (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache nuget
+        uses: actions/cache@v5
+        with:
+          path: ~/.nuget/packages
+          key: nuget-windows-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-windows-
+
+      - name: Set up Java (for veraPDF)
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install veraPDF
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          & "C:\Program Files\Git\bin\bash.exe" -c "
+            set -uo pipefail
+            curl -fSL --retry 3 --connect-timeout 30 \
+              https://software.verapdf.org/releases/verapdf-installer.zip \
+              -o /tmp/verapdf.zip \
+              || { echo '::warning::veraPDF download failed; skipping veraPDF setup'; exit 0; }
+            unzip -q /tmp/verapdf.zip -d /tmp/verapdf-installer \
+              || { echo '::warning::veraPDF archive invalid; skipping veraPDF setup'; exit 0; }
+            cat > /tmp/auto-install.xml << EOF
+          <?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>
+          <AutomatedInstallation langpack=\"eng\">
+              <com.izforge.izpack.panels.htmlhello.HTMLHelloPanel id=\"welcome\"/>
+              <com.izforge.izpack.panels.target.TargetPanel id=\"install_dir\">
+                  <installpath>\$HOME/verapdf</installpath>
+              </com.izforge.izpack.panels.target.TargetPanel>
+              <com.izforge.izpack.panels.packs.PacksPanel id=\"sdk_pack_select\">
+                  <pack index=\"0\" name=\"veraPDF GUI\" selected=\"false\"/>
+                  <pack index=\"1\" name=\"veraPDF Mac and *nix Scripts\" selected=\"true\"/>
+                  <pack index=\"2\" name=\"veraPDF Validation model\" selected=\"true\"/>
+                  <pack index=\"3\" name=\"veraPDF Documentation\" selected=\"false\"/>
+                  <pack index=\"4\" name=\"veraPDF Sample Plugins\" selected=\"false\"/>
+              </com.izforge.izpack.panels.packs.PacksPanel>
+              <com.izforge.izpack.panels.install.InstallPanel id=\"install\"/>
+              <com.izforge.izpack.panels.finish.FinishPanel id=\"finish\"/>
+          </AutomatedInstallation>
+          EOF
+            cd /tmp/verapdf-installer
+            INSTALLER=\$(find . \( -name 'verapdf-izpack-installer-*.jar' -o -name 'verapdf-greenfield-*.jar' -o -name 'verapdf-*installer*.jar' \) | head -1)
+            if [ -z \"\$INSTALLER\" ]; then
+              echo '::warning::veraPDF installer jar not found; skipping veraPDF setup'
+              exit 0
+            fi
+            java -jar \"\$INSTALLER\" /tmp/auto-install.xml || \
+              { echo '::warning::veraPDF install failed; continuing without it'; exit 0; }
+            ~/verapdf/verapdf --version || true
+          "
+
+      - name: Restore packages
+        run: dotnet restore
+
+      - name: Verify TRUE Redaction Implementation
+        shell: pwsh
+        run: |
+          & "C:\Program Files\Git\bin\bash.exe" ./scripts/verify-true-redaction.sh
+
+      - name: Gate asymmetry (correctness cannot be weakened by perf)
+        shell: pwsh
+        run: |
+          & "C:\Program Files\Git\bin\bash.exe" ./scripts/check-gate-asymmetry.sh "origin/${{ github.base_ref || 'main' }}"
+
+      - name: Build (Debug)
+        run: dotnet build pdfe.sln -c Debug
+
+      - name: Run Pdfe.Core.Tests
+        # No coverage collection — see the macOS job's identical note.
+        run: |
+          dotnet test Pdfe.Core.Tests --no-build -c Debug `
+            --logger "console;verbosity=normal"
+
+      - name: Run Pdfe.Cli.Tests
+        run: |
+          dotnet test Pdfe.Cli.Tests --no-build -c Debug `
+            --logger "console;verbosity=normal"
+
+      - name: Run Pdfe.Avalonia.Tests
+        run: |
+          dotnet test Pdfe.Avalonia.Tests --no-build -c Debug `
+            --logger "console;verbosity=normal"
+
+      - name: Run Pdfe.Rendering.Tests (deterministic only)
+        # Same filter rationale as the Linux job — see that job's comment.
+        run: |
+          dotnet test Pdfe.Rendering.Tests --no-build -c Debug `
+            --filter "FullyQualifiedName!~Corpus&FullyQualifiedName!~Differential&FullyQualifiedName!~Benchmark&FullyQualifiedName!~Visual" `
+            --logger "console;verbosity=normal"
+
+      - name: Run PdfEditor.Tests
+        # Unconditional, no display-server shim needed — same rationale as
+        # the macOS job's identical step. *_MatchesBaseline excluded for the
+        # same Linux-Skia-baseline reason.
+        run: |
+          dotnet test PdfEditor.Tests --no-build -c Debug `
+            --filter "FullyQualifiedName!~MatchesBaseline" `
+            --logger "console;verbosity=normal" `
+            --blame-hang-timeout 120000
+
+      - name: Upload test results on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results-windows
           path: |
             **/TestResults/
             **/*.trx
