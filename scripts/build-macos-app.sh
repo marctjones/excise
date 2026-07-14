@@ -2,10 +2,12 @@
 # Build a macOS .app bundle for pdfe (the PdfEditor GUI), self-contained.
 # Produces dist/pdfe-<version>-macos-<arch>.zip (+ .sha256).
 #
-# Must run on macOS (uses sips / iconutil / ditto). The .app is UNSIGNED —
-# Gatekeeper will quarantine it; users open via right-click → Open or
-# `xattr -dr com.apple.quarantine pdfe.app`. Signing/notarization needs an
-# Apple Developer cert (not configured).
+# Must run on macOS (uses sips / iconutil / ditto). The .app is AD-HOC
+# SIGNED (#635, codesign --sign -) for a stable local app identity across
+# rebuilds — that is not the same as being signed for distribution.
+# Gatekeeper will still quarantine it; users open via right-click → Open or
+# `xattr -dr com.apple.quarantine pdfe.app`. Real signing/notarization needs
+# an Apple Developer cert (not configured, tracked separately as #629).
 #
 # Usage:
 #   scripts/build-macos-app.sh --version 2.4.1 [--rid osx-arm64] [--output dist] [--aot]
@@ -173,6 +175,25 @@ ${ICON_PLIST}
 </dict>
 </plist>
 PLIST
+
+echo "▶ Ad-hoc signing bundle for stable app identity (#635)"
+# Ad-hoc signing (--sign -) costs nothing, needs no Apple Developer account,
+# and is not about Gatekeeper — the bundle is still unsigned-for-distribution
+# and still gets quarantined on download (see the header comment above).
+# What it buys: a stable code identity so macOS treats every local rebuild
+# of pdfe.app as the *same* app. Without it, each rebuild is a fresh
+# identity, so TCC grants (Files & Folders, Full Disk Access, Automation)
+# and Keychain ACLs get re-prompted or silently dropped on every rebuild —
+# a constant papercut for an app you build and run daily. --deep signs the
+# self-contained publish output's bundled native libraries (SkiaSharp,
+# HarfBuzz, etc.) too, not just the outer bundle. Must run after every file
+# is in place (Info.plist, icon, executable) — codesign seals the bundle's
+# contents, so signing before assembly is finished would invalidate it.
+if command -v codesign >/dev/null 2>&1; then
+    codesign --force --deep --sign - "$BUNDLE"
+else
+    echo "::warning::codesign not found; pdfe.app will not have a stable identity across rebuilds (#635)"
+fi
 
 ZIP="${APP_NAME}-${VERSION}-macos-${ARCH}.zip"
 echo "▶ Zipping $OUT/$ZIP"
