@@ -1636,16 +1636,36 @@ internal partial class RenderContext
 
         // Advance the cursor by what the PDF *intended*, which is not
         // always what Skia just drew.
-        //   - Embedded font program → Skia loaded the real font, its
-        //     MeasureText is correct.
-        //   - No embedded program but PDF supplies /Widths → trust the
-        //     PDF's explicit widths; the substituted system typeface's
-        //     metrics differ and would compound per-glyph drift into
-        //     visible mid-word gaps (the birth-cert form is the canary).
-        //   - Otherwise fall back to Skia's MeasureText.
+        //   - PDF supplies /Widths → trust the PDF's explicit widths,
+        //     embedded or not (#584). PDF /Widths is authoritative per ISO
+        //     32000 9.2.4 regardless of what's baked into the font program;
+        //     for a substituted system typeface this also avoids per-glyph
+        //     drift into visible mid-word gaps (the birth-cert form is the
+        //     canary — that fixture has no embedded program, so this branch
+        //     already covered it before #584 and still does).
+        //     For an *embedded* CFF program specifically, this branch used
+        //     to be skipped entirely (only the substituted-typeface case
+        //     trusted /Widths) on the assumption that Skia's own MeasureText
+        //     against the real embedded outlines is always right. It isn't:
+        //     the CFF→OpenType wrapper's hmtx is built from /Widths keyed by
+        //     CFF glyph INDEX (CffToOpenType.BuildHmtx), but a subsetted font
+        //     can have the same glyph index reachable from more than one PDF
+        //     character code with different declared widths, and a glyph
+        //     whose code falls outside every alias's /Widths coverage gets a
+        //     hardcoded stub (500) instead of its real width — hmtx and the
+        //     PDF's own /Widths can disagree. Going straight to /Widths
+        //     (SumPdfWidths, indexed by PDF code, not glyph index) removes
+        //     that disagreement instead of trusting whichever one hmtx
+        //     happened to end up with. Confirmed via #584: this makes the
+        //     computed advance for a specific real-world em-dash glyph
+        //     exactly the intended full em (was previously reachable only
+        //     through the buggy hmtx path) — though the glyph OUTLINE for
+        //     that same font still renders at the wrong scale/baseline, a
+        //     separate, unresolved defect in the wrapper's synthesized
+        //     metrics tables (see #584's follow-up notes).
+        //   - Otherwise (no /Widths at all) fall back to Skia's MeasureText.
         float widthInFontUnits;
         bool advanceFromPdfWidths =
-            !currentFont.HasEmbeddedProgram &&
             currentFont.Widths != null &&
             sourceBytes != null;
 

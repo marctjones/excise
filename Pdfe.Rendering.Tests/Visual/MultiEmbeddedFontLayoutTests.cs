@@ -21,15 +21,26 @@ namespace Pdfe.Rendering.Tests.Visual;
 /// </summary>
 public class MultiEmbeddedFontLayoutTests
 {
-    private const string BookPath =
-        "/home/marc/Downloads/business-success-with-open-source_P1.0.pdf";
+    // The fixture lives outside the repo (large file, not redistributable;
+    // gitignored under test-pdfs/, populated locally from
+    // test-pdfs/manifests/local-real-world-books.json). This used to be a
+    // hardcoded single-machine absolute path
+    // ("/home/marc/Downloads/business-success-with-open-source_P1.0.pdf")
+    // that doesn't exist on any dev machine or CI runner but this repo's
+    // original author's — meaning this regression test, written for a real
+    // SetFont-ordering bug, silently skipped everywhere else the whole time
+    // (the exact #619 "invisible coverage loss" pattern). Resolved via the
+    // same FindRepoFile convention every other corpus-dependent test in
+    // this project uses.
+    private static string? BookPath => FindRepoFile("test-pdfs", "local-real-world",
+        "business-success-with-open-source_P1.0.pdf");
 
     [Fact]
     public void Page3_ParagraphHasNoLargeIntraLineGaps()
     {
-        // The fixture lives outside the repo (large file, not redistributable).
-        // Tests skip cleanly when it's missing rather than failing CI.
-        if (!File.Exists(BookPath))
+        // Tests skip cleanly when the local corpus is missing rather than
+        // failing CI.
+        if (BookPath == null)
             return;
 
         using var doc = PdfDocument.Open(File.ReadAllBytes(BookPath));
@@ -60,7 +71,7 @@ public class MultiEmbeddedFontLayoutTests
         // either an embedded CFF outline (when wrapping succeeds) or a
         // system-symbol-font fallback drawn via the GetTypeface path —
         // both produce ink in roughly the same place.
-        if (!File.Exists(BookPath)) return;
+        if (BookPath == null) return;
 
         using var doc = PdfDocument.Open(File.ReadAllBytes(BookPath));
         var page = doc.GetPage(3);
@@ -83,6 +94,20 @@ public class MultiEmbeddedFontLayoutTests
         inkCount.Should().BeGreaterThan(20,
             $"the dingbats bullet must produce visible ink near ({xCenter},{yCenter}); " +
             $"got {inkCount} ink pixels — see commit-message context for the wrap-fallback path.");
+    }
+
+    private static string? FindRepoFile(params string[] parts)
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null)
+        {
+            var candidate = Path.Combine(new[] { dir.FullName }.Concat(parts).ToArray());
+            if (File.Exists(candidate))
+                return candidate;
+            dir = dir.Parent;
+        }
+
+        return null;
     }
 
     /// <summary>
