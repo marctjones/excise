@@ -2869,8 +2869,15 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        const string message = "Printing is not available in this build. Use Export Current Page or Export All Pages as Images from the Document menu.";
-        _logger.LogInformation("Print command unavailable: {Message}", message);
+        // Intentionally not implemented — see #621. Avalonia ships no print API,
+        // and a real cross-platform pipeline (CUPS on macOS/Linux,
+        // System.Drawing.Printing on Windows, plus a print-options dialog) is a
+        // lot of platform-specific surface to build and maintain for a workflow
+        // most users reach a dedicated PDF viewer for, not an editor. This is a
+        // permanent decision, not a "coming soon" placeholder — say so plainly.
+        const string message = "pdfe doesn't print directly — this is a deliberate choice, not a missing feature (see #621). " +
+            "Use Export Current Page or Export All Pages as Images from the Document menu, then print the image from your OS's own viewer.";
+        _logger.LogInformation("Print command: {Message}", message);
         await _dialogService.ShowMessageAsync("Print", message);
     }
 

@@ -155,6 +155,17 @@ portfolio workflows, or certificate-authority trust decisions.
 Current release-quality limitations are tracked in GitHub Issues and surfaced in
 release notes:
 
+- **Printing — intentionally not implemented (#621, closed as won't-fix).**
+  Avalonia (pdfe's UI framework) ships no print API at all, so shipping this
+  would mean building and maintaining three separate platform pipelines from
+  scratch (CUPS shell-out on macOS/Linux, `System.Drawing.Printing` on
+  Windows) plus a print-options dialog, for a workflow most users reach a
+  dedicated PDF viewer for, not an editor. The Print menu item and Ctrl+P
+  explain the workaround rather than pretending to work: use
+  **Document → Export Current Page / Export All Pages as Images**, then print
+  that image from your OS's own viewer, which already has a real, tested
+  print pipeline. Revisit only if real user demand shows up — see #621 for
+  the full reasoning.
 - **Digital signatures** — pdfe checks ByteRange structure and verifies the
   detached CMS signature/digest over the signed bytes, but does not evaluate the
   signer certificate chain against the OS trust store yet (#466).
