@@ -625,7 +625,12 @@ and cost real planning time.
    changes.
 2. **Font Metrics**: approximation, not full font dictionaries (#512, #513).
 3. **Encryption is decrypt-only** (#624) — the writer emits no `/Encrypt`, so
-   redacting a password-protected PDF returns an **unprotected** copy (#638).
+   redacting a password-protected PDF still returns an **unprotected** copy.
+   As of #638 this is no longer silent: the GUI asks for explicit
+   confirmation before any save that would drop source encryption, and the
+   CLI/batch-automation paths hard-fail unless `--allow-decrypt` /
+   `allowDecrypt: true` is passed. The capability gap (#624) is unchanged —
+   only the silence is fixed.
 4. **`/P` permissions parsed but never enforced** (#642) — pdfe will copy text
    out of a copy-forbidden document.
 

@@ -93,6 +93,77 @@ public class BatchAutomationCommandTests : IDisposable
         result.StdErr.Should().NotContain("super-secret-password");
     }
 
+    /// <summary>
+    /// #638: redacting an encrypted source through a batch workflow must
+    /// require explicit acknowledgement (allowDecrypt: true), the same
+    /// contract-violation shape as confirmDestructive, since batch/CI
+    /// callers won't see a GUI dialog or read stderr.
+    /// </summary>
+    [Fact]
+    public async Task RunAsync_BatchRedaction_EncryptedSource_RequiresAllowDecrypt()
+    {
+        var directory = TempDirectory();
+        var input = Path.Combine(directory, "input.pdf");
+        var output = Path.Combine(directory, "redacted.pdf");
+        var workflow = Path.Combine(directory, "workflow.json");
+        File.WriteAllBytes(input, TestPdfBuilder.EncryptedSinglePageEmptyPassword());
+        File.WriteAllText(workflow, JsonSerializer.Serialize(new
+        {
+            schemaVersion = 1,
+            steps = new object[]
+            {
+                new
+                {
+                    id = "redact",
+                    command = PdfCommandIds.ApplyRedaction,
+                    input = "input.pdf",
+                    output = "redacted.pdf",
+                    text = "SECRET",
+                    confirmDestructive = true,
+                },
+            },
+        }));
+
+        var result = await RunCliCaptureAsync(["batch", workflow, "--json", "--progress"]);
+
+        result.ExitCode.Should().Be(2);
+        File.Exists(output).Should().BeFalse();
+        result.StdOut.Should().Contain("DECRYPT_CONFIRMATION_REQUIRED");
+    }
+
+    [Fact]
+    public async Task RunAsync_BatchRedaction_EncryptedSource_WithAllowDecrypt_Proceeds()
+    {
+        var directory = TempDirectory();
+        var input = Path.Combine(directory, "input.pdf");
+        var output = Path.Combine(directory, "redacted.pdf");
+        var workflow = Path.Combine(directory, "workflow.json");
+        File.WriteAllBytes(input, TestPdfBuilder.EncryptedSinglePageEmptyPassword());
+        File.WriteAllText(workflow, JsonSerializer.Serialize(new
+        {
+            schemaVersion = 1,
+            steps = new object[]
+            {
+                new
+                {
+                    id = "redact",
+                    command = PdfCommandIds.ApplyRedaction,
+                    input = "input.pdf",
+                    output = "redacted.pdf",
+                    text = "SECRET",
+                    confirmDestructive = true,
+                    allowDecrypt = true,
+                },
+            },
+        }));
+
+        var result = await RunCliCaptureAsync(["batch", workflow, "--json", "--progress"]);
+
+        result.ExitCode.Should().Be(0);
+        File.Exists(output).Should().BeTrue();
+        result.StdOut.Should().NotContain("DECRYPT_CONFIRMATION_REQUIRED");
+    }
+
     [Fact]
     public async Task RunAsync_BatchRedaction_RefusesInPlaceOutput()
     {

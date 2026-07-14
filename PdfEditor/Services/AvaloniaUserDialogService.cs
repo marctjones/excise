@@ -219,6 +219,82 @@ public sealed class AvaloniaUserDialogService : IUserDialogService
         return await dialog.ShowDialog<string?>(mainWindow);
     }
 
+    /// <summary>
+    /// Yes/No confirmation for a consequential action. Unlike
+    /// <see cref="PromptTextAsync"/>/<see cref="PromptPasswordAsync"/> (where
+    /// the affirmative button is the default), the Cancel button here is both
+    /// <c>IsDefault</c> and <c>IsCancel</c> — the caller decides whether the
+    /// action is destructive enough that Enter should not trigger it. Safe to
+    /// reuse for any confirm dialog with that property.
+    /// </summary>
+    public async Task<bool> ShowConfirmAsync(string title, string message)
+    {
+        var mainWindow = GetMainWindow();
+        if (mainWindow == null)
+        {
+            _logger.LogWarning("Could not show confirm dialog: Main window not found. Message was: {Message}", message);
+            return false;
+        }
+
+        var dialog = new Window
+        {
+            Title = title,
+            Width = 460,
+            Height = 220,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            CanResize = false
+        };
+
+        var messageText = new TextBlock
+        {
+            Text = message,
+            TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+            MaxWidth = 410
+        };
+        AutomationProperties.SetName(messageText, title);
+        AutomationProperties.SetHelpText(messageText, message);
+
+        var continueButton = new Button
+        {
+            Content = "Continue",
+            Padding = new Thickness(24, 5)
+        };
+        AutomationProperties.SetName(continueButton, $"Continue - {title}");
+        AutomationProperties.SetHelpText(continueButton, "Proceed with this action.");
+
+        var cancelButton = new Button
+        {
+            Content = "Cancel",
+            IsDefault = true,
+            IsCancel = true,
+            Padding = new Thickness(24, 5)
+        };
+        AutomationProperties.SetName(cancelButton, $"Cancel - {title}");
+        AutomationProperties.SetHelpText(cancelButton, "Do not proceed with this action.");
+
+        continueButton.Click += (_, _) => dialog.Close(true);
+        cancelButton.Click += (_, _) => dialog.Close(false);
+
+        dialog.Content = new StackPanel
+        {
+            Margin = new Thickness(20),
+            Spacing = 12,
+            Children =
+            {
+                messageText,
+                new StackPanel
+                {
+                    Orientation = Avalonia.Layout.Orientation.Horizontal,
+                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+                    Spacing = 8,
+                    Children = { cancelButton, continueButton }
+                }
+            }
+        };
+
+        return await dialog.ShowDialog<bool>(mainWindow);
+    }
+
     private static Window? GetMainWindow()
     {
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)

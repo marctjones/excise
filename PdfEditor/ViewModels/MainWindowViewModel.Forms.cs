@@ -260,6 +260,12 @@ public partial class MainWindowViewModel
         if (document == null)
             return;
 
+        if (!await ConfirmEncryptionLossIfNeededAsync(document.IsEncrypted))
+        {
+            _logger.LogInformation("User declined to save a copy that would drop source encryption");
+            return;
+        }
+
         SyncAllFormFieldValuesToServiceDocument();
         using var flattenedCopy = PdfDocument.Open(document.SaveToBytes());
         ApplyPendingTypewriterText(flattenedCopy);

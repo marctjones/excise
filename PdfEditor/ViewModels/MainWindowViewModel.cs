@@ -1162,6 +1162,24 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Gate before any save that could produce output from a possibly-
+    /// encrypted source document. pdfe's writer cannot emit /Encrypt (#624),
+    /// so saving an encrypted-source document always drops its protection —
+    /// the user must explicitly acknowledge that before it happens (#638).
+    /// Returns true when it's safe to proceed (source wasn't encrypted, or
+    /// the user confirmed anyway).
+    /// </summary>
+    private async Task<bool> ConfirmEncryptionLossIfNeededAsync(bool sourceIsEncrypted)
+    {
+        if (!sourceIsEncrypted) return true;
+
+        return await _dialogService.ShowConfirmAsync(
+            "Encryption Will Be Removed",
+            "This document is password-protected. The redacted copy will be saved " +
+            "WITHOUT encryption. Continue?");
+    }
+
     private async Task SaveFileAsync()
     {
         _logger.LogInformation("Save command triggered");
@@ -1194,6 +1212,12 @@ public partial class MainWindowViewModel : ViewModelBase
         // Safe to save directly - either redacted version or no changes
         try
         {
+            if (!await ConfirmEncryptionLossIfNeededAsync(_documentService.IsEncrypted))
+            {
+                _logger.LogInformation("User declined to save a copy that would drop source encryption");
+                return;
+            }
+
             SyncAllFormFieldValuesToServiceDocument();
             var document = _documentService.GetCurrentDocument();
             var flattenedTypewriter = document != null && ApplyPendingTypewriterText(document);
@@ -2516,6 +2540,12 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
+            if (!await ConfirmEncryptionLossIfNeededAsync(_documentService.IsEncrypted))
+            {
+                _logger.LogInformation("User declined to save a copy that would drop source encryption");
+                return;
+            }
+
             SyncAllFormFieldValuesToServiceDocument();
             var document = _documentService.GetCurrentDocument();
             var flattenedTypewriter = document != null && ApplyPendingTypewriterText(document);

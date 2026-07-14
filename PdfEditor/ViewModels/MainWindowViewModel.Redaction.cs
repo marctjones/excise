@@ -146,6 +146,12 @@ public partial class MainWindowViewModel
                 return;
             }
 
+            if (!await ConfirmEncryptionLossIfNeededAsync(document.IsEncrypted))
+            {
+                _logger.LogInformation("User declined to save a copy that would drop source encryption");
+                return;
+            }
+
             var requestedRedactions = RedactionWorkflow.PendingRedactions.ToList();
             var skippedRedactionCount = ApplyPendingAreaRedactions(document);
             ApplyPendingTypewriterText(document);

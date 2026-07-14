@@ -512,12 +512,19 @@ partial class Program
             Description = "Match case exactly (default: case-insensitive)",
             DefaultValueFactory = _ => false,
         };
+        var allowDecryptOption = new Option<bool>("--allow-decrypt")
+        {
+            Description = "Required when the source PDF is encrypted: pdfe cannot write encrypted " +
+                "output (see #624), so redacting an encrypted PDF would otherwise silently produce " +
+                "an unprotected copy. Without this flag, redacting an encrypted source fails closed.",
+            DefaultValueFactory = _ => false,
+        };
 
         var command = new Command(
             "redact",
             "Remove text from a PDF (glyph-level removal; text extraction will not find it)")
         {
-            inputArg, outputArg, textArg, caseSensitiveOption
+            inputArg, outputArg, textArg, caseSensitiveOption, allowDecryptOption
         };
 
         command.SetAction(parseResult =>
@@ -526,6 +533,7 @@ partial class Program
             var output = parseResult.GetValue(outputArg)!;
             var text = parseResult.GetValue(textArg)!;
             var caseSensitive = parseResult.GetValue(caseSensitiveOption);
+            var allowDecrypt = parseResult.GetValue(allowDecryptOption);
             if (!input.Exists)
             {
                 Console.Error.WriteLine($"File not found: {input.FullName}");
@@ -541,7 +549,7 @@ partial class Program
 
             try
             {
-                int count = RunRedact(input.FullName, output.FullName, text, caseSensitive);
+                int count = RunRedact(input.FullName, output.FullName, text, caseSensitive, allowDecrypt);
                 Console.WriteLine($"Redacted {count} occurrence(s) of '{text}'");
                 Console.WriteLine($"Output: {output.FullName}");
             }
@@ -556,13 +564,37 @@ partial class Program
     }
 
     /// <summary>
+    /// Thrown when the source PDF is encrypted and the caller did not pass
+    /// <c>--allow-decrypt</c> (CLI) / <c>allowDecrypt: true</c> (batch
+    /// automation). pdfe's writer cannot emit <c>/Encrypt</c> (#624), so
+    /// proceeding would silently produce an unprotected copy (#638). A
+    /// dedicated type — rather than a bare <see cref="InvalidOperationException"/>
+    /// with a matched message — lets callers like <c>AutomationBatch</c>
+    /// catch this specific failure and translate it into their own error
+    /// contract.
+    /// </summary>
+    internal sealed class PdfWouldLoseEncryptionException(string message) : InvalidOperationException(message);
+
+    /// <summary>
     /// Core redact-a-file operation — open, call Pdfe.Core's text
     /// redaction, save. Exposed internally for tests.
     /// </summary>
-    internal static int RunRedact(string inputPath, string outputPath, string text, bool caseSensitive)
+    internal static int RunRedact(string inputPath, string outputPath, string text, bool caseSensitive, bool allowDecrypt = false)
     {
         var bytes = File.ReadAllBytes(inputPath);
         using var doc = PdfDocument.Open(bytes);
+        if (doc.IsEncrypted && !allowDecrypt)
+        {
+            throw new PdfWouldLoseEncryptionException(
+                "Source PDF is encrypted. pdfe cannot write encrypted output (#624), so saving " +
+                "would silently produce an UNPROTECTED copy. Pass --allow-decrypt to proceed anyway.");
+        }
+        if (doc.IsEncrypted)
+        {
+            Console.Error.WriteLine(
+                "Warning: output will NOT be encrypted (source was encrypted; pdfe cannot write " +
+                "encrypted PDFs yet, see #624).");
+        }
         var count = doc.RedactText(text, caseSensitive);
         doc.Save(outputPath);
         return count;

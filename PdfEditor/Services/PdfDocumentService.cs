@@ -23,6 +23,14 @@ public class PdfDocumentService
     public bool IsDocumentLoaded => _currentDocument != null;
 
     /// <summary>
+    /// Whether the currently-loaded document's source was encrypted. pdfe's
+    /// writer cannot emit <c>/Encrypt</c> (#624), so any save of this
+    /// document produces an unprotected copy — callers must warn before
+    /// saving when this is true (#638).
+    /// </summary>
+    public bool IsEncrypted => _currentDocument?.IsEncrypted ?? false;
+
+    /// <summary>
     /// Current document's declared PDF version (e.g. "1.7"). Empty when
     /// no document is loaded.
     /// </summary>

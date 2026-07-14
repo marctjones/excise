@@ -396,7 +396,15 @@ partial class Program
         EnsureMutationWritesCopy(input, output);
         EnsureOutputParent(output);
 
-        var count = RunRedact(input, output, step.Text!, step.CaseSensitive ?? false);
+        int count;
+        try
+        {
+            count = RunRedact(input, output, step.Text!, step.CaseSensitive ?? false, step.AllowDecrypt ?? false);
+        }
+        catch (PdfWouldLoseEncryptionException ex)
+        {
+            throw new AutomationContractException("DECRYPT_CONFIRMATION_REQUIRED", ex.Message, "SECURITY");
+        }
         return new
         {
             inputPath = input,
@@ -626,6 +634,7 @@ partial class Program
         string? Text,
         bool? CaseSensitive,
         bool? ConfirmDestructive,
+        bool? AllowDecrypt,
         bool? Flatten,
         string[]? Field,
         Dictionary<string, string>? Fields,

@@ -11,4 +11,7 @@ public sealed class NullUserDialogService : IUserDialogService
 
     public Task<string?> PromptPasswordAsync(string title, string message) =>
         Task.FromResult<string?>(null);
+
+    public Task<bool> ShowConfirmAsync(string title, string message) =>
+        Task.FromResult(false);
 }

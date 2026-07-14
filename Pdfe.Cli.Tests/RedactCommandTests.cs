@@ -158,6 +158,116 @@ public class RedactCommandTests : IDisposable
         File.Exists(outputPath).Should().BeFalse();
     }
 
+    /// <summary>
+    /// #638: --allow-decrypt defaults to false but must never block a
+    /// redaction of an unencrypted source — the flag only matters when
+    /// pdfe would otherwise silently drop the source's encryption.
+    /// </summary>
+    [Fact]
+    public void RunRedact_UnencryptedSource_AllowDecryptFalse_StillSucceeds()
+    {
+        var inputPath = TempPath(".pdf");
+        var outputPath = TempPath(".pdf");
+        File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("HELLO WORLD"));
+
+        int count = Program.RunRedact(inputPath, outputPath, "WORLD", caseSensitive: false, allowDecrypt: false);
+
+        count.Should().Be(1);
+        File.Exists(outputPath).Should().BeTrue();
+    }
+
+    /// <summary>
+    /// #638's actual security property: an encrypted source must not be
+    /// silently redacted into an unprotected copy. Uses a hand-built
+    /// empty-password-encrypted fixture (see
+    /// <see cref="TestPdfBuilder.EncryptedSinglePageEmptyPassword"/>) since
+    /// no such fixture exists in the checked-in corpus and pdfe cannot
+    /// write one itself (#624).
+    /// </summary>
+    [Fact]
+    public void RunRedact_EncryptedSource_WithoutAllowDecrypt_ThrowsAndWritesNoOutput()
+    {
+        var inputPath = TempPath(".pdf");
+        var outputPath = TempPath(".pdf");
+        File.WriteAllBytes(inputPath, TestPdfBuilder.EncryptedSinglePageEmptyPassword());
+
+        var act = () => Program.RunRedact(inputPath, outputPath, "SECRET", caseSensitive: false, allowDecrypt: false);
+
+        act.Should().Throw<Program.PdfWouldLoseEncryptionException>()
+            .WithMessage("*--allow-decrypt*");
+        File.Exists(outputPath).Should().BeFalse("no output must be written when the encryption-loss guard fires");
+    }
+
+    /// <summary>
+    /// With --allow-decrypt, the guard must not fire — RunRedact proceeds
+    /// to open/redact/save rather than throwing before it gets there. The
+    /// fixture's content stream is plaintext (see
+    /// <see cref="TestPdfBuilder.EncryptedSinglePageEmptyPassword"/>'s
+    /// remarks — building genuinely per-object-encrypted content is #624's
+    /// concern, not this guard's), so pdfe's decrypt-on-read pass garbles it
+    /// and the match count is not asserted here; what this proves is that
+    /// allowDecrypt:true reaches RedactText/Save at all instead of throwing.
+    /// </summary>
+    [Fact]
+    public void RunRedact_EncryptedSource_WithAllowDecrypt_ProceedsAndWarns()
+    {
+        var inputPath = TempPath(".pdf");
+        var outputPath = TempPath(".pdf");
+        File.WriteAllBytes(inputPath, TestPdfBuilder.EncryptedSinglePageEmptyPassword());
+
+        var prevErr = Console.Error;
+        var capturedErr = new StringWriter();
+        Console.SetError(capturedErr);
+        try
+        {
+            var act = () => Program.RunRedact(inputPath, outputPath, "SECRET", caseSensitive: false, allowDecrypt: true);
+            act.Should().NotThrow<Program.PdfWouldLoseEncryptionException>(
+                "allowDecrypt:true must bypass the encryption-loss guard");
+        }
+        finally
+        {
+            Console.SetError(prevErr);
+        }
+
+        File.Exists(outputPath).Should().BeTrue();
+        capturedErr.ToString().Should().Contain("output will NOT be encrypted");
+
+        using var reopened = PdfDocument.Open(File.ReadAllBytes(outputPath));
+        reopened.IsEncrypted.Should().BeFalse("--allow-decrypt proceeds, and pdfe cannot write encrypted output (#624)");
+    }
+
+    [Fact]
+    public async Task RunAsync_RedactSubcommand_AllowDecryptFlag_IsRecognized()
+    {
+        var inputPath = TempPath(".pdf");
+        var outputPath = TempPath(".pdf");
+        File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("SECRET DATA"));
+
+        var prevOut = Console.Out;
+        var capturedOut = new StringWriter();
+        Console.SetOut(capturedOut);
+        int exitCode;
+        try
+        {
+            exitCode = await Program.RunAsync(new[]
+            {
+                "redact", inputPath, outputPath, "SECRET", "--allow-decrypt"
+            });
+        }
+        finally
+        {
+            Console.SetOut(prevOut);
+        }
+
+        // The flag is a no-op on an unencrypted source; this asserts
+        // System.CommandLine accepts it (an unknown option would report a
+        // parse error and a non-zero/empty result) and the redaction still
+        // runs normally.
+        exitCode.Should().Be(0);
+        capturedOut.ToString().Should().Contain("Redacted 1 occurrence(s) of 'SECRET'");
+        File.Exists(outputPath).Should().BeTrue();
+    }
+
     [Fact]
     public void RunRedact_MultipleMatches_AllRemoved()
     {

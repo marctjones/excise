@@ -41,7 +41,9 @@ public sealed class EncryptedRedactionRegressionTests
         Encoding.Latin1.GetString(saved).Should().NotContain(secret);
 
         using var reopened = PdfDocument.Open(saved);
-        reopened.IsEncrypted.Should().BeFalse("redacted output is currently written as an unencrypted clean copy");
+        reopened.IsEncrypted.Should().BeFalse(
+            "redacted output is written as an unencrypted copy until #624 adds an encryption " +
+            "writer; the GUI/CLI now warn before this happens (#638)");
         string.Concat(reopened.GetPage(1).Letters.Select(l => l.Value)).Should().NotContain(secret);
     }
 
