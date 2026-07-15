@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Pdfe.Core.Document;
+using Pdfe.Core.Operations;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -250,6 +251,97 @@ public class PdfDocumentService
     }
 
     /// <summary>
+    /// Merge every page of each source PDF (opened fresh, in the given
+    /// order) into a brand-new document and save it to
+    /// <paramref name="outputPath"/>. Does not touch or replace the
+    /// currently-loaded document. Preserves per-source internal links,
+    /// splices each source's outline (bookmarks), and merges AcroForm
+    /// fields with collision-safe renaming — see
+    /// <see cref="PdfDocumentMerger"/>.
+    /// </summary>
+    public void MergeDocumentsToPdf(IReadOnlyList<string> sourcePaths, string outputPath)
+    {
+        if (sourcePaths == null || sourcePaths.Count == 0)
+            throw new ArgumentException("At least one source PDF is required.", nameof(sourcePaths));
+        if (string.IsNullOrWhiteSpace(outputPath))
+            throw new ArgumentException("Output path is required", nameof(outputPath));
+
+        var opened = new List<PdfDocument>();
+        try
+        {
+            var sources = new List<(PdfDocument Document, IReadOnlyList<int> PageIndices)>();
+            foreach (var path in sourcePaths)
+            {
+                var doc = PdfDocument.Open(File.ReadAllBytes(path));
+                opened.Add(doc);
+                sources.Add((doc, Enumerable.Range(0, doc.PageCount).ToList()));
+            }
+
+            using var merged = PdfDocumentMerger.Merge(sources);
+            merged.Save(outputPath);
+        }
+        finally
+        {
+            foreach (var doc in opened)
+                doc.Dispose();
+        }
+
+        _logger.LogInformation("Merged {Count} source document(s) into {OutputPath}", sourcePaths.Count, outputPath);
+    }
+
+    /// <summary>
+    /// Split the currently-loaded document into multiple files under
+    /// <paramref name="outputFolder"/> per <paramref name="mode"/>, and
+    /// return the written file paths in order. Does not modify the
+    /// currently-loaded document. See <see cref="PdfDocumentSplitter"/>.
+    /// </summary>
+    public IReadOnlyList<string> SplitDocument(
+        string outputFolder,
+        SplitMode mode,
+        int pagesPerChunk = 1,
+        IReadOnlyList<int>? boundaries = null)
+    {
+        if (_currentDocument == null)
+            throw new InvalidOperationException("No document loaded");
+        if (string.IsNullOrWhiteSpace(outputFolder))
+            throw new ArgumentException("Output folder is required", nameof(outputFolder));
+
+        Directory.CreateDirectory(outputFolder);
+
+        IReadOnlyList<PdfDocument> fragments = mode switch
+        {
+            SplitMode.EveryNPages => PdfDocumentSplitter.SplitEveryNPages(_currentDocument, pagesPerChunk),
+            SplitMode.PageBoundaries => PdfDocumentSplitter.SplitAtPageBoundaries(
+                _currentDocument,
+                boundaries ?? throw new ArgumentException("Boundaries are required for this split mode.", nameof(boundaries))),
+            SplitMode.SinglePages => PdfDocumentSplitter.SplitToSinglePages(_currentDocument),
+            SplitMode.Bookmarks => PdfDocumentSplitter.SplitAtBookmarks(_currentDocument),
+            _ => throw new ArgumentOutOfRangeException(nameof(mode)),
+        };
+
+        var baseName = _currentFilePath != null ? Path.GetFileNameWithoutExtension(_currentFilePath) : "document";
+        var digits = fragments.Count.ToString().Length;
+        var paths = new List<string>();
+        try
+        {
+            for (int i = 0; i < fragments.Count; i++)
+            {
+                var path = Path.Combine(outputFolder, $"{baseName}_{(i + 1).ToString().PadLeft(digits, '0')}.pdf");
+                fragments[i].Save(path);
+                paths.Add(path);
+            }
+        }
+        finally
+        {
+            foreach (var fragment in fragments)
+                fragment.Dispose();
+        }
+
+        _logger.LogInformation("Split document into {Count} file(s) in {OutputFolder}", paths.Count, outputFolder);
+        return paths;
+    }
+
+    /// <summary>
     /// Report document structures that page operations may not preserve perfectly
     /// with the current page-copy implementation.
     /// </summary>
@@ -333,4 +425,20 @@ public class PdfDocumentService
 public sealed record PageOperationDiagnostics(IReadOnlyList<string> Warnings)
 {
     public bool HasWarnings => Warnings.Count > 0;
+}
+
+/// <summary>How <see cref="PdfDocumentService.SplitDocument"/> groups pages into output files.</summary>
+public enum SplitMode
+{
+    /// <summary>Fixed-size chunks of N pages each; the last chunk may be smaller.</summary>
+    EveryNPages,
+
+    /// <summary>Explicit 0-based start indices; each begins a new fragment.</summary>
+    PageBoundaries,
+
+    /// <summary>One output file per page.</summary>
+    SinglePages,
+
+    /// <summary>Split at each root-level outline (bookmark) destination.</summary>
+    Bookmarks,
 }

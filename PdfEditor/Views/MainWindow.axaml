@@ -119,6 +119,12 @@
                           IsEnabled="{Binding HasSelectedPages}"
                           access:CommandAccessibility.CommandId="document.extractSelectedPages"/>
                 <Separator/>
+                <MenuItem Header="_Combine Documents..." Command="{Binding CombineDocumentsCommand}"
+                          access:CommandAccessibility.CommandId="document.combine"/>
+                <MenuItem Header="S_plit Document..." Command="{Binding SplitDocumentCommand}"
+                          IsEnabled="{Binding IsDocumentLoaded}"
+                          access:CommandAccessibility.CommandId="document.split"/>
+                <Separator/>
                 <MenuItem Header="Move Page _Earlier" Command="{Binding MoveCurrentPageEarlierCommand}"
                           access:CommandAccessibility.CommandId="document.moveCurrentPageEarlier"/>
                 <MenuItem Header="Move Page _Later" Command="{Binding MoveCurrentPageLaterCommand}"

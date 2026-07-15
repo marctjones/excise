@@ -28,6 +28,8 @@ public partial class MainWindowViewModel
     public ReactiveCommand<Unit, Unit> InsertPagesAfterCurrentCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ExtractCurrentPageCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ExtractSelectedPagesCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> CombineDocumentsCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> SplitDocumentCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> RemoveSelectedPagesCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> MoveSelectedPagesEarlierCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> MoveSelectedPagesLaterCommand { get; private set; } = null!;
@@ -99,6 +101,13 @@ public partial class MainWindowViewModel
         InsertPagesAfterCurrentCommand = ReactiveCommand.CreateFromTask(InsertPagesAfterCurrentAsync);
         ExtractCurrentPageCommand = ReactiveCommand.CreateFromTask(ExtractCurrentPageAsync);
         ExtractSelectedPagesCommand = ReactiveCommand.CreateFromTask(ExtractSelectedPagesAsync);
+        CombineDocumentsCommand = ReactiveCommand.CreateFromTask(CombineDocumentsAsync);
+        SplitDocumentCommand = ReactiveCommand.CreateFromTask(SplitDocumentAsync);
+
+        CombineDocumentsCommand.ThrownExceptions.Subscribe(ex =>
+            _logger.LogError(ex, "CombineDocumentsCommand threw exception"));
+        SplitDocumentCommand.ThrownExceptions.Subscribe(ex =>
+            _logger.LogError(ex, "SplitDocumentCommand threw exception"));
         RemoveSelectedPagesCommand = ReactiveCommand.CreateFromTask(RemoveSelectedPagesAsync);
         MoveSelectedPagesEarlierCommand = ReactiveCommand.CreateFromTask(() => MoveSelectedPagesAsync(-1));
         MoveSelectedPagesLaterCommand = ReactiveCommand.CreateFromTask(() => MoveSelectedPagesAsync(1));

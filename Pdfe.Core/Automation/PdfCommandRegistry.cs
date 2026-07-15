@@ -48,6 +48,14 @@ public static class PdfCommandRegistry
         Document(PdfCommandIds.ExportCurrentPage, "Export Current Page", "Export the current page as an image.", "Ctrl+E"),
         Document(PdfCommandIds.ExportAllPages, "Export All Pages as Images", "Export every page as images."),
         Document(PdfCommandIds.Print, "Print", "Print the current document.", "Ctrl+P"),
+        Document(PdfCommandIds.CombineDocuments, "Combine Documents", "Merge pages from multiple PDFs into a new document, preserving links, bookmarks, and form fields.",
+            requiresDocument: false, cliCommand: "merge",
+            parameters: [Param("input", "Source PDF file path. Repeat for multiple sources.", "file[]", true), Param("output", "Output PDF path.", "file", true)],
+            resultFields: ["pageCount", "outputPath"]),
+        Document(PdfCommandIds.SplitDocument, "Split Document", "Split the current document into multiple PDFs by page count, boundaries, or bookmarks.",
+            cliCommand: "split",
+            parameters: [Param("input", "Source PDF file path.", "file", true), Param("output", "Output folder.", "file", true), Param("every", "Pages per output file.", "integer"), Param("boundaries", "Comma-separated 1-based page numbers where new files start.", "string"), Param("bookmarks", "Split at root-level bookmark destinations.", "boolean"), Param("single", "One page per output file.", "boolean")],
+            resultFields: ["fileCount", "outputPaths"]),
 
         View(PdfCommandIds.PreviousPage, "Previous Page", "Navigate to the previous page.", "Page Up"),
         View(PdfCommandIds.NextPage, "Next Page", "Navigate to the next page.", "Page Down"),
@@ -139,8 +147,18 @@ public static class PdfCommandRegistry
     private static PdfCommandMetadata Annotate(string id, string label, string description)
         => New(id, label, description, "Annotation", requiresDocument: true);
 
-    private static PdfCommandMetadata Document(string id, string label, string description, string? shortcut = null, bool isDestructive = false)
-        => New(id, label, description, "Document", shortcut, requiresDocument: true, isDestructive: isDestructive);
+    private static PdfCommandMetadata Document(
+        string id,
+        string label,
+        string description,
+        string? shortcut = null,
+        bool isDestructive = false,
+        bool requiresDocument = true,
+        string? cliCommand = null,
+        IReadOnlyList<PdfCommandParameterMetadata>? parameters = null,
+        IReadOnlyList<string>? resultFields = null)
+        => New(id, label, description, "Document", shortcut, cliCommand, requiresDocument: requiresDocument, isDestructive: isDestructive,
+            parameters: parameters, resultFields: resultFields);
 
     private static PdfCommandMetadata View(string id, string label, string description, string? shortcut = null, IReadOnlyList<PdfCommandParameterMetadata>? parameters = null)
         => New(id, label, description, "View", shortcut, requiresDocument: true, parameters: parameters);

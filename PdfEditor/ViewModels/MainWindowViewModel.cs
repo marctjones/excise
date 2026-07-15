@@ -1381,6 +1381,182 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    private async Task CombineDocumentsAsync()
+    {
+        _logger.LogInformation("Combine documents command triggered");
+
+        var storageProvider = GetStorageProvider();
+        if (storageProvider == null)
+        {
+            _logger.LogWarning("Storage provider unavailable, cannot show Combine Documents dialog");
+            return;
+        }
+
+        var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Select PDFs to Combine",
+            AllowMultiple = true,
+            FileTypeFilter = new[]
+            {
+                new FilePickerFileType("PDF Files")
+                {
+                    Patterns = new[] { "*.pdf" }
+                }
+            }
+        });
+
+        if (files.Count == 0)
+        {
+            _logger.LogInformation("Combine Documents dialog cancelled");
+            return;
+        }
+
+        var sourcePaths = files
+            .Select(f => f.Path.LocalPath)
+            .Where(p => !string.IsNullOrWhiteSpace(p))
+            .ToList();
+
+        if (sourcePaths.Count == 0)
+        {
+            _logger.LogWarning("No selected files have a local path");
+            return;
+        }
+
+        var outputFile = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "Save Combined PDF",
+            DefaultExtension = "pdf",
+            SuggestedFileName = "combined.pdf",
+            FileTypeChoices = new[]
+            {
+                new FilePickerFileType("PDF Files")
+                {
+                    Patterns = new[] { "*.pdf" }
+                }
+            }
+        });
+
+        if (outputFile == null)
+            return;
+
+        var outputPath = outputFile.Path.LocalPath;
+        if (string.IsNullOrWhiteSpace(outputPath))
+            return;
+
+        try
+        {
+            await _pageOrganizationWorkflow.MergeDocumentsAsync(sourcePaths, outputPath);
+            _toastService.ShowSuccess($"Combined {sourcePaths.Count} document(s) into {Path.GetFileName(outputPath)}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error combining documents");
+            _toastService.ShowError("Failed to combine documents", ex.Message);
+        }
+    }
+
+    private async Task SplitDocumentAsync()
+    {
+        _logger.LogInformation("Split document command triggered");
+
+        if (!_documentService.IsDocumentLoaded)
+        {
+            _logger.LogWarning("Cannot split: No document loaded");
+            return;
+        }
+
+        var storageProvider = GetStorageProvider();
+        if (storageProvider == null)
+        {
+            _logger.LogWarning("Storage provider unavailable, cannot show Split Document dialog");
+            return;
+        }
+
+        var response = await _dialogService.PromptTextAsync(
+            "Split Document",
+            "How should the document be split?\n\n" +
+            "- A number (e.g. \"5\"): every N pages per file\n" +
+            "- \"single\": one page per file\n" +
+            "- \"bookmarks\": split at each top-level bookmark\n" +
+            "- Comma-separated page numbers (e.g. \"1,5,10\"): start a new file at each",
+            "1");
+
+        if (string.IsNullOrWhiteSpace(response))
+            return;
+
+        response = response.Trim();
+
+        SplitMode mode;
+        int pagesPerChunk = 1;
+        IReadOnlyList<int>? boundaries = null;
+
+        if (string.Equals(response, "single", StringComparison.OrdinalIgnoreCase))
+        {
+            mode = SplitMode.SinglePages;
+        }
+        else if (string.Equals(response, "bookmarks", StringComparison.OrdinalIgnoreCase))
+        {
+            mode = SplitMode.Bookmarks;
+        }
+        else if (response.Contains(','))
+        {
+            var parsed = response
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(s => int.TryParse(s, out var n) ? n - 1 : -1)
+                .Where(n => n >= 0)
+                .ToList();
+
+            if (parsed.Count == 0)
+            {
+                await _dialogService.ShowMessageAsync("Split Document", $"Could not parse page numbers from \"{response}\".");
+                return;
+            }
+
+            mode = SplitMode.PageBoundaries;
+            boundaries = parsed;
+        }
+        else if (int.TryParse(response, out var everyN) && everyN > 0)
+        {
+            mode = SplitMode.EveryNPages;
+            pagesPerChunk = everyN;
+        }
+        else
+        {
+            await _dialogService.ShowMessageAsync("Split Document", $"Could not understand \"{response}\".");
+            return;
+        }
+
+        var folder = await storageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = "Select Folder for Split PDFs",
+            AllowMultiple = false
+        });
+
+        if (folder.Count == 0)
+        {
+            _logger.LogInformation("Split Document dialog cancelled");
+            return;
+        }
+
+        var folderPath = folder[0].Path.LocalPath;
+        if (string.IsNullOrWhiteSpace(folderPath))
+        {
+            _logger.LogWarning("Split target folder has no local path");
+            return;
+        }
+
+        try
+        {
+            var paths = await _pageOrganizationWorkflow.SplitDocumentAsync(folderPath, mode, pagesPerChunk, boundaries);
+            _toastService.ShowSuccess($"Split into {paths.Count} file(s)");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error splitting document");
+            _toastService.ShowError("Failed to split document", ex.Message);
+        }
+    }
+
     private async Task ExtractCurrentPageAsync()
     {
         if (!_documentService.IsDocumentLoaded)

@@ -310,26 +310,55 @@ public class PageCollection : IReadOnlyList<PdfPage>
             throw new ArgumentOutOfRangeException(nameof(index), $"Insert index must be between 0 and {_pages.Count}");
 
         // Clone the page dictionary and any indirect objects the page owns
-        // (content streams, resources, annotations). Without this, copying a
-        // page between documents can leave dangling references to source-doc
-        // object numbers that do not exist in the target.
-        var newPageDict = ClonePageDictionary(page);
-
-        // Set the parent to our Pages dictionary
-        // Note: In a full implementation, we'd create a new indirect object reference
-        // For now, we reference the parent directly
+        // (content streams, resources, annotations) via the shared cloner
+        // (#628 — also used by document-merge for outline/AcroForm subtrees).
+        // Without this, copying a page between documents can leave dangling
+        // references to source-doc object numbers that do not exist in the
+        // target. No PageMap is set here, so any /Type Page reference this
+        // page's own annotations happen to carry (e.g. a same-document
+        // internal link) resolves to null, exactly as before — resolving it
+        // correctly requires the multi-page merge context in
+        // PdfDocumentMerger, which knows about every page being copied, not
+        // just this one in isolation.
+        var cloner = new PdfObjectCloner(_document);
+        var clonedRefs = new Dictionary<(int, int), PdfReference>();
+        var newPageDict = cloner.ClonePageDictionary(page, clonedRefs);
         newPageDict["Parent"] = _document.Catalog.GetReference("Pages");
 
-        // Add to Kids array
-        // Note: This simplified implementation adds directly to the array
-        // A full implementation would create a proper indirect object
-        _kidsArray.Insert(index, newPageDict);
+        // Register as an indirect object (matching AddBlank's convention)
+        // so the page has a stable identity other objects (links, outline
+        // entries added later) could reference — previously this stored
+        // the dict inline in /Kids, which the loader already tolerated
+        // (ResolvePageTreeKid handles both) but gave the page no reference
+        // of its own.
+        var pageRef = _document.AddIndirectObject(newPageDict);
+        _kidsArray.Insert(index, pageRef);
         _pagesDict["Kids"] = _kidsArray;
 
         // Update Count
         _pagesDict.SetInt("Count", _pages.Count + 1);
 
         // Reload pages to get correct page numbers
+        LoadPages();
+    }
+
+    /// <summary>
+    /// Append a page reference that has already been registered as an
+    /// indirect object in this document (#628 — used by
+    /// <c>PdfDocumentMerger</c>, which reserves and fills page objects
+    /// itself via <see cref="PdfDocument.AddIndirectObject"/>/
+    /// <see cref="PdfDocument.ReplaceIndirectObject"/> before wiring them
+    /// into any target's page tree, so cross-page destinations across the
+    /// whole merge can resolve regardless of which page gets appended
+    /// first). Does no cloning — the caller is responsible for the
+    /// object already existing and being a valid <c>/Type Page</c> dict
+    /// with the correct <c>/Parent</c>.
+    /// </summary>
+    internal void AppendPreRegisteredPage(PdfReference pageRef)
+    {
+        _kidsArray.Add(pageRef);
+        _pagesDict["Kids"] = _kidsArray;
+        _pagesDict.SetInt("Count", _pages.Count + 1);
         LoadPages();
     }
 
@@ -384,141 +413,6 @@ public class PageCollection : IReadOnlyList<PdfPage>
 
         // Reload pages
         LoadPages();
-    }
-
-    /// <summary>
-    /// Clone a page dictionary for insertion into this document.
-    /// </summary>
-    private PdfDictionary ClonePageDictionary(PdfPage sourcePage)
-    {
-        var sourceDict = sourcePage.Dictionary;
-        var newDict = new PdfDictionary();
-        var clonedRefs = new Dictionary<(int ObjectNumber, int GenerationNumber), PdfReference>();
-
-        // Copy all entries except Parent (we'll set our own)
-        foreach (var kvp in sourceDict)
-        {
-            if (kvp.Key.Value == "Parent")
-                continue;
-
-            newDict[kvp.Key.Value] = CloneObject(sourcePage.Document, kvp.Value, clonedRefs);
-        }
-
-        // Ensure required entries
-        newDict.SetName("Type", "Page");
-
-        return newDict;
-    }
-
-    private PdfObject CloneObject(
-        PdfDocument sourceDocument,
-        PdfObject obj,
-        Dictionary<(int ObjectNumber, int GenerationNumber), PdfReference> clonedRefs)
-    {
-        if (obj is PdfReference reference)
-            return CloneReference(sourceDocument, reference, clonedRefs);
-
-        if (obj is PdfStream stream)
-            return CloneStream(sourceDocument, stream, clonedRefs);
-
-        if (obj is PdfDictionary dictionary)
-            return CloneDictionary(sourceDocument, dictionary, clonedRefs);
-
-        if (obj is PdfArray array)
-            return CloneArray(sourceDocument, array, clonedRefs);
-
-        if (obj is PdfName name)
-            return new PdfName(name.Value);
-
-        if (obj is PdfString str)
-            return new PdfString(str.Bytes.ToArray());
-
-        if (obj is PdfInteger integer)
-            return new PdfInteger(integer.Value);
-
-        if (obj is PdfReal real)
-            return new PdfReal(real.Value);
-
-        if (obj is PdfBoolean boolean)
-            return PdfBoolean.Get(boolean.Value);
-
-        return obj;
-    }
-
-    private PdfObject CloneReference(
-        PdfDocument sourceDocument,
-        PdfReference reference,
-        Dictionary<(int ObjectNumber, int GenerationNumber), PdfReference> clonedRefs)
-    {
-        var key = (reference.ObjectNum, reference.Generation);
-        if (clonedRefs.TryGetValue(key, out var existing))
-            return existing;
-
-        var resolved = sourceDocument.Resolve(reference);
-        if (resolved is PdfDictionary dict)
-        {
-            var type = dict.GetNameOrNull("Type");
-            if (type is "Page" or "Pages")
-                return PdfNull.Instance;
-        }
-
-        var clonedObject = CloneObject(sourceDocument, resolved, clonedRefs);
-        var clonedRef = _document.AddIndirectObject(clonedObject);
-        clonedRefs[key] = clonedRef;
-        return clonedRef;
-    }
-
-    private PdfDictionary CloneDictionary(
-        PdfDocument sourceDocument,
-        PdfDictionary source,
-        Dictionary<(int ObjectNumber, int GenerationNumber), PdfReference> clonedRefs)
-    {
-        var clone = new PdfDictionary();
-        var isAnnotation = source.GetNameOrNull("Type") == "Annot";
-
-        foreach (var kvp in source)
-        {
-            var key = kvp.Key.Value;
-            if (key == "Parent")
-                continue;
-
-            if (isAnnotation && key == "P")
-                continue;
-
-            var cloned = CloneObject(sourceDocument, kvp.Value, clonedRefs);
-            if (cloned is not PdfNull)
-                clone[key] = cloned;
-        }
-
-        return clone;
-    }
-
-    private PdfArray CloneArray(
-        PdfDocument sourceDocument,
-        PdfArray source,
-        Dictionary<(int ObjectNumber, int GenerationNumber), PdfReference> clonedRefs)
-    {
-        var clone = new PdfArray();
-        foreach (var item in source)
-        {
-            var cloned = CloneObject(sourceDocument, item, clonedRefs);
-            clone.Add(cloned);
-        }
-
-        return clone;
-    }
-
-    private PdfStream CloneStream(
-        PdfDocument sourceDocument,
-        PdfStream source,
-        Dictionary<(int ObjectNumber, int GenerationNumber), PdfReference> clonedRefs)
-    {
-        var dict = CloneDictionary(sourceDocument, source, clonedRefs);
-        var clone = new PdfStream(dict, source.EncodedData.ToArray());
-        if (source.IsDecoded)
-            clone.SetDecodedData(source.DecodedData.ToArray());
-
-        return clone;
     }
 
     /// <summary>

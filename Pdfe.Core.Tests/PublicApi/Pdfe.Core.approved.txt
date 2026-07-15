@@ -141,6 +141,7 @@ namespace Pdfe.Core.Automation
         public const string ClearAllRedactions = "redaction.clearAll";
         public const string ClearPageSelection = "document.clearPageSelection";
         public const string CloseDocument = "app.closeDocument";
+        public const string CombineDocuments = "document.combine";
         public const string CopyText = "edit.copyText";
         public const string DocumentInfo = "document.info";
         public const string Documentation = "app.documentation";
@@ -183,6 +184,7 @@ namespace Pdfe.Core.Automation
         public const string SearchPrevious = "search.previous";
         public const string SelectTextMode = "edit.selectTextMode";
         public const string ShowLetters = "text.letters";
+        public const string SplitDocument = "document.split";
         public const string ToggleClipboardHistory = "view.toggleClipboardHistory";
         public const string ToggleContinuousView = "view.toggleContinuous";
         public const string ToggleFormAuthoring = "form.toggleAuthoring";
@@ -1041,9 +1043,22 @@ namespace Pdfe.Core.Graphics
 }
 namespace Pdfe.Core.Operations
 {
+    public static class PdfDocumentMerger
+    {
+        public static Pdfe.Core.Document.PdfDocument Merge([System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "Document",
+                "PageIndices"})] System.Collections.Generic.IReadOnlyList<System.ValueTuple<Pdfe.Core.Document.PdfDocument, System.Collections.Generic.IReadOnlyList<int>>> sources) { }
+    }
     public static class PdfDocumentSanitizer
     {
         public static bool ScrubTerms(Pdfe.Core.Document.PdfDocument document, System.Collections.Generic.IEnumerable<string> terms) { }
+    }
+    public static class PdfDocumentSplitter
+    {
+        public static System.Collections.Generic.IReadOnlyList<Pdfe.Core.Document.PdfDocument> SplitAtBookmarks(Pdfe.Core.Document.PdfDocument source) { }
+        public static System.Collections.Generic.IReadOnlyList<Pdfe.Core.Document.PdfDocument> SplitAtPageBoundaries(Pdfe.Core.Document.PdfDocument source, System.Collections.Generic.IReadOnlyList<int> startIndices) { }
+        public static System.Collections.Generic.IReadOnlyList<Pdfe.Core.Document.PdfDocument> SplitEveryNPages(Pdfe.Core.Document.PdfDocument source, int pagesPerChunk) { }
+        public static System.Collections.Generic.IReadOnlyList<Pdfe.Core.Document.PdfDocument> SplitToSinglePages(Pdfe.Core.Document.PdfDocument source) { }
     }
     public class PdfRedaction
     {

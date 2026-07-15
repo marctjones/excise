@@ -2,6 +2,7 @@ using System.CommandLine;
 using System.Text.Json;
 using Pdfe.Core.Automation;
 using Pdfe.Core.Document;
+using Pdfe.Core.Operations;
 using Pdfe.Core.Text.Segmentation;
 using Pdfe.Ocr;
 using Pdfe.Rendering;
@@ -32,6 +33,8 @@ partial class Program
             CreateLettersCommand(),
             CreateRenderCommand(),
             CreateRedactCommand(),
+            CreateMergeCommand(),
+            CreateSplitCommand(),
             CreateFillFormCommand(),
             CreateAddFieldCommand(),
             CreateAutodetectFieldsCommand(),
@@ -598,6 +601,258 @@ partial class Program
         var count = doc.RedactText(text, caseSensitive);
         doc.Save(outputPath);
         return count;
+    }
+
+    /// <summary>
+    /// pdfe merge --input a.pdf --input b.pdf --output out.pdf
+    /// Combine every page of each source PDF, in order, into a new
+    /// document — preserving per-source internal links, splicing each
+    /// source's outline (bookmarks), and merging AcroForm fields with
+    /// collision-safe renaming (see <see cref="PdfDocumentMerger"/>).
+    /// </summary>
+    static Command CreateMergeCommand()
+    {
+        var inputOption = new Option<string[]>("--input", "-i")
+        {
+            Description = "Source PDF file to merge, in order. Repeat for multiple sources.",
+            AllowMultipleArgumentsPerToken = false,
+        };
+        var outputOption = new Option<FileInfo>("--output", "-o")
+        {
+            Description = "Output PDF path",
+            Required = true,
+        };
+
+        var command = new Command(
+            "merge",
+            "Combine pages from multiple PDFs into a new document, preserving links, bookmarks, and form fields")
+        {
+            inputOption, outputOption
+        };
+
+        command.SetAction(parseResult =>
+        {
+            var inputs = parseResult.GetValue(inputOption);
+            var output = parseResult.GetValue(outputOption)!;
+
+            if (inputs == null || inputs.Length == 0)
+            {
+                Console.Error.WriteLine("At least one --input <file> is required.");
+                Environment.ExitCode = 1;
+                return;
+            }
+
+            foreach (var path in inputs)
+            {
+                if (!File.Exists(path))
+                {
+                    Console.Error.WriteLine($"File not found: {path}");
+                    Environment.ExitCode = 1;
+                    return;
+                }
+            }
+
+            try
+            {
+                int pageCount = RunMerge(inputs, output.FullName);
+                Console.WriteLine($"Merged {inputs.Length} document(s), {pageCount} page(s) total");
+                Console.WriteLine($"Output: {output.FullName}");
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error: {ex.Message}");
+                Environment.ExitCode = 1;
+            }
+        });
+
+        return command;
+    }
+
+    /// <summary>
+    /// Core merge operation. Opens every source, merges all their pages via
+    /// <see cref="PdfDocumentMerger"/>, saves to <paramref name="outputPath"/>,
+    /// and returns the merged page count. Exposed internally for tests.
+    /// </summary>
+    internal static int RunMerge(string[] inputPaths, string outputPath)
+    {
+        var opened = new List<PdfDocument>();
+        try
+        {
+            var sources = new List<(PdfDocument Document, IReadOnlyList<int> PageIndices)>();
+            foreach (var path in inputPaths)
+            {
+                var doc = PdfDocument.Open(File.ReadAllBytes(path));
+                opened.Add(doc);
+                sources.Add((doc, Enumerable.Range(0, doc.PageCount).ToList()));
+            }
+
+            using var merged = PdfDocumentMerger.Merge(sources);
+            merged.Save(outputPath);
+            return merged.PageCount;
+        }
+        finally
+        {
+            foreach (var doc in opened)
+                doc.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// pdfe split &lt;input&gt; --output &lt;folder&gt; (--every N | --single | --bookmarks | --boundaries "1,5,10")
+    /// Split a PDF into multiple documents by exactly one policy. Does not
+    /// splice outlines/AcroForm per fragment — see <see cref="PdfDocumentSplitter"/>.
+    /// </summary>
+    static Command CreateSplitCommand()
+    {
+        var inputArg = new Argument<FileInfo>("input") { Description = "Input PDF file" };
+        var outputOption = new Option<DirectoryInfo>("--output", "-o")
+        {
+            Description = "Output folder for split PDFs",
+            Required = true,
+        };
+        var everyOption = new Option<int?>("--every")
+        {
+            Description = "Split into fixed-size chunks of N pages each (last chunk may be smaller)",
+        };
+        var singleOption = new Option<bool>("--single")
+        {
+            Description = "Split into one PDF per page",
+            DefaultValueFactory = _ => false,
+        };
+        var bookmarksOption = new Option<bool>("--bookmarks")
+        {
+            Description = "Split at each root-level bookmark destination",
+            DefaultValueFactory = _ => false,
+        };
+        var boundariesOption = new Option<string?>("--boundaries")
+        {
+            Description = "Comma-separated 1-based page numbers where a new output file starts, e.g. '1,5,10'",
+        };
+
+        var command = new Command(
+            "split",
+            "Split a PDF into multiple documents by page count, boundaries, or bookmarks")
+        {
+            inputArg, outputOption, everyOption, singleOption, bookmarksOption, boundariesOption
+        };
+
+        command.SetAction(parseResult =>
+        {
+            var input = parseResult.GetValue(inputArg)!;
+            var output = parseResult.GetValue(outputOption)!;
+            var every = parseResult.GetValue(everyOption);
+            var single = parseResult.GetValue(singleOption);
+            var bookmarks = parseResult.GetValue(bookmarksOption);
+            var boundariesRaw = parseResult.GetValue(boundariesOption);
+
+            if (!input.Exists)
+            {
+                Console.Error.WriteLine($"File not found: {input.FullName}");
+                Environment.ExitCode = 1;
+                return;
+            }
+
+            var modesSelected = new[] { every.HasValue, single, bookmarks, boundariesRaw != null }.Count(selected => selected);
+            if (modesSelected == 0)
+            {
+                Console.Error.WriteLine("Choose exactly one split mode: --every N, --single, --bookmarks, or --boundaries.");
+                Environment.ExitCode = 1;
+                return;
+            }
+            if (modesSelected > 1)
+            {
+                Console.Error.WriteLine("Choose only one of --every, --single, --bookmarks, --boundaries.");
+                Environment.ExitCode = 1;
+                return;
+            }
+
+            try
+            {
+                IReadOnlyList<string> written;
+                if (every.HasValue)
+                {
+                    if (every.Value < 1)
+                    {
+                        Console.Error.WriteLine("--every must be at least 1.");
+                        Environment.ExitCode = 1;
+                        return;
+                    }
+                    written = RunSplit(input.FullName, output.FullName, doc => PdfDocumentSplitter.SplitEveryNPages(doc, every.Value));
+                }
+                else if (single)
+                {
+                    written = RunSplit(input.FullName, output.FullName, PdfDocumentSplitter.SplitToSinglePages);
+                }
+                else if (bookmarks)
+                {
+                    written = RunSplit(input.FullName, output.FullName, PdfDocumentSplitter.SplitAtBookmarks);
+                }
+                else
+                {
+                    var boundaries = boundariesRaw!
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                        .Select(s => int.TryParse(s, out var n) ? n - 1 : -1)
+                        .Where(n => n >= 0)
+                        .ToList();
+                    if (boundaries.Count == 0)
+                    {
+                        Console.Error.WriteLine($"Could not parse any page numbers from --boundaries '{boundariesRaw}'.");
+                        Environment.ExitCode = 1;
+                        return;
+                    }
+                    written = RunSplit(input.FullName, output.FullName, doc => PdfDocumentSplitter.SplitAtPageBoundaries(doc, boundaries));
+                }
+
+                Console.WriteLine($"Split into {written.Count} file(s)");
+                foreach (var path in written)
+                    Console.WriteLine($"  {path}");
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error: {ex.Message}");
+                Environment.ExitCode = 1;
+            }
+        });
+
+        return command;
+    }
+
+    /// <summary>
+    /// Core split operation. Opens <paramref name="inputPath"/>, applies
+    /// <paramref name="split"/> to get the page-group fragments, saves each
+    /// under <paramref name="outputFolder"/>, and returns the written paths
+    /// in order. Exposed internally for tests.
+    /// </summary>
+    internal static IReadOnlyList<string> RunSplit(
+        string inputPath,
+        string outputFolder,
+        Func<PdfDocument, IReadOnlyList<PdfDocument>> split)
+    {
+        var bytes = File.ReadAllBytes(inputPath);
+        using var doc = PdfDocument.Open(bytes);
+
+        Directory.CreateDirectory(outputFolder);
+        var fragments = split(doc);
+
+        var baseName = Path.GetFileNameWithoutExtension(inputPath);
+        var digits = fragments.Count.ToString().Length;
+        var paths = new List<string>();
+        try
+        {
+            for (int i = 0; i < fragments.Count; i++)
+            {
+                var path = Path.Combine(outputFolder, $"{baseName}_{(i + 1).ToString().PadLeft(digits, '0')}.pdf");
+                fragments[i].Save(path);
+                paths.Add(path);
+            }
+        }
+        finally
+        {
+            foreach (var fragment in fragments)
+                fragment.Dispose();
+        }
+
+        return paths;
     }
 
     /// <summary>

@@ -122,6 +122,38 @@ public sealed class PageOrganizationWorkflowService
         return PageOrganizationResult.Changed(newCurrentPageIndex, newSelectedPageIndices);
     }
 
+    /// <summary>
+    /// Merge every page of each source PDF into a new document saved at
+    /// <paramref name="outputPath"/>. Does not affect the currently-loaded
+    /// document, so it does not report a <see cref="PageOrganizationResult"/>
+    /// change (there is nothing on screen to refresh).
+    /// </summary>
+    public Task MergeDocumentsAsync(IReadOnlyList<string> sourcePaths, string outputPath)
+    {
+        _documentService.MergeDocumentsToPdf(sourcePaths, outputPath);
+        _logger.LogInformation("Combined {Count} document(s) into {OutputPath}", sourcePaths.Count, outputPath);
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Split the currently-loaded document into multiple files under
+    /// <paramref name="outputFolder"/> and return the written paths.
+    /// Does not modify the currently-loaded document.
+    /// </summary>
+    public Task<IReadOnlyList<string>> SplitDocumentAsync(
+        string outputFolder,
+        SplitMode mode,
+        int pagesPerChunk = 1,
+        IReadOnlyList<int>? boundaries = null)
+    {
+        if (!_documentService.IsDocumentLoaded)
+            return Task.FromResult<IReadOnlyList<string>>(Array.Empty<string>());
+
+        var paths = _documentService.SplitDocument(outputFolder, mode, pagesPerChunk, boundaries);
+        _logger.LogInformation("Split document into {Count} file(s) in {OutputFolder}", paths.Count, outputFolder);
+        return Task.FromResult(paths);
+    }
+
     private async Task ShowOperationWarningsAsync(IEnumerable<int>? pageIndices = null)
     {
         var diagnostics = _documentService.AnalyzePageOperationPreservation(pageIndices);

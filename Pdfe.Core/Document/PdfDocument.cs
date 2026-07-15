@@ -78,6 +78,24 @@ public class PdfDocument : IDisposable
     }
 
     /// <summary>
+    /// Overwrite the content of an already-registered indirect object.
+    /// </summary>
+    /// <remarks>
+    /// Used by the merge/split page-cloning path (#628) to <em>reserve</em>
+    /// a stable <see cref="PdfReference"/> for every page across every
+    /// source up front (via <see cref="AddIndirectObject"/> with a
+    /// placeholder), so links/outlines being cloned in the same pass can
+    /// resolve a forward reference to a page that hasn't been fully cloned
+    /// yet — then fill in each page's real content once cloning completes.
+    /// The xref entry from the original <see cref="AddIndirectObject"/>
+    /// call is left untouched; only the cached object changes.
+    /// </remarks>
+    internal void ReplaceIndirectObject(int objectNumber, PdfObject obj)
+    {
+        _objectCache[objectNumber] = obj;
+    }
+
+    /// <summary>
     /// Mark an indirect object as free so it is no longer serialized.
     /// Used by flatten-then-redact (#355) to drop a Form XObject that has
     /// been inlined into a page and is no longer reachable from the trailer —
