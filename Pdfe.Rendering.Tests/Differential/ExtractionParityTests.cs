@@ -326,10 +326,8 @@ public sealed class ExtractionParityTests
 
         entry.PdfeChars = CountLetterOrDigit(pdfeText);
         entry.MutoolChars = CountLetterOrDigit(mutoolText);
-        entry.CoverageRatio = entry.MutoolChars == 0
-            ? 1.0 // no reference text to be blind to; MinReferenceLength excludes these from the worklist anyway
-            : (double)entry.PdfeChars / entry.MutoolChars;
-        entry.Similarity = BigramJaccard(Normalize(mutoolText), Normalize(pdfeText));
+        entry.CoverageRatio = TextSimilarity.CoverageRatio(pdfeText, mutoolText);
+        entry.Similarity = TextSimilarity.BigramJaccard(pdfeText, mutoolText);
 
         try
         {
@@ -371,42 +369,6 @@ public sealed class ExtractionParityTests
     /// just ASCII. See the class doc comment for why this matters.
     /// </summary>
     private static int CountLetterOrDigit(string s) => s.Count(char.IsLetterOrDigit);
-
-    /// <summary>Same normalization as <see cref="TextExtractionDifferentialTests.Normalize"/> — ASCII alnum, lowercase.</summary>
-    private static string Normalize(string s)
-    {
-        var sb = new StringBuilder(s.Length);
-        foreach (var ch in s)
-        {
-            if ((ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9'))
-                sb.Append(ch);
-            else if (ch >= 'A' && ch <= 'Z')
-                sb.Append((char)(ch + 32));
-        }
-        return sb.ToString();
-    }
-
-    /// <summary>Same metric as <see cref="TextExtractionDifferentialTests.BigramJaccard"/>.</summary>
-    private static double BigramJaccard(string a, string b)
-    {
-        if (a.Length < 2 && b.Length < 2) return 1.0;
-        var setA = Bigrams(a);
-        var setB = Bigrams(b);
-        if (setA.Count == 0 && setB.Count == 0) return 1.0;
-        var intersection = new HashSet<string>(setA);
-        intersection.IntersectWith(setB);
-        var union = new HashSet<string>(setA);
-        union.UnionWith(setB);
-        return union.Count == 0 ? 1.0 : (double)intersection.Count / union.Count;
-    }
-
-    private static HashSet<string> Bigrams(string s)
-    {
-        var result = new HashSet<string>();
-        for (int i = 0; i + 1 < s.Length; i++)
-            result.Add(s.Substring(i, 2));
-        return result;
-    }
 
     private static string Truncate(string s, int n) => s.Length <= n ? s : s.Substring(0, n) + "…";
 

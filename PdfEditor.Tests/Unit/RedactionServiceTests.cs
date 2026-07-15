@@ -384,6 +384,34 @@ public class RedactionServiceTests : IDisposable
         result.Success.Should().BeFalse();
     }
 
+    /// <summary>#650: every result carries a Warnings collection — never null, even when empty.</summary>
+    [Fact]
+    public void RedactText_ResultAlwaysHasNonNullWarnings()
+    {
+        var inputPath = CreateTestFile("input.pdf", path =>
+            TestPdfGenerator.CreateSimpleTextPdf(path, "RedactMe"));
+        var outputPath = Path.Combine(_tempDir, "output.pdf");
+
+        var result = _service.RedactText(inputPath, outputPath, "RedactMe");
+
+        result.Success.Should().BeTrue();
+        result.Warnings.Should().NotBeNull();
+    }
+
+    /// <summary>#650: allowLowConfidence must not change behavior on a healthy document — it only matters when the confidence check refuses.</summary>
+    [Fact]
+    public void RedactText_WithAllowLowConfidenceTrue_HealthyDocument_StillSucceeds()
+    {
+        var inputPath = CreateTestFile("input.pdf", path =>
+            TestPdfGenerator.CreateSimpleTextPdf(path, "RedactMe"));
+        var outputPath = Path.Combine(_tempDir, "output.pdf");
+
+        var result = _service.RedactText(inputPath, outputPath, "RedactMe", allowLowConfidence: true);
+
+        result.Success.Should().BeTrue();
+        result.RedactionCount.Should().BeGreaterThan(0);
+    }
+
     [Fact]
     public void RedactText_MultiplePages_RedactsAllPages()
     {

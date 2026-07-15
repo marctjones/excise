@@ -333,6 +333,8 @@ public partial class MainWindowViewModel
 
                     _logger.LogInformation("[SCRIPT] Redacted {Count} occurrences of '{Text}'",
                         result.RedactionCount, text);
+                    foreach (var warning in result.Warnings)
+                        _logger.LogWarning("[SCRIPT] Redaction warning for '{Text}': {Warning}", text, warning);
 
                     // Clean up intermediate files
                     if (!isLast && currentInput != _currentFilePath && System.IO.File.Exists(currentInput))

@@ -35,6 +35,11 @@ namespace Pdfe.Rendering.Differential
         public static Pdfe.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
         public static Pdfe.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword) { }
     }
+    public static class MutoolTextExtractor
+    {
+        public static string[]? ExtractAllPages(string pdfPath, int pageCount, int timeoutMs = 120000) { }
+        public static string? ExtractPage(string pdfPath, int pageNumber, int timeoutMs = 30000) { }
+    }
     public static class PdfBoxReferenceRenderer
     {
         public static bool IsAvailable { get; }
@@ -66,6 +71,12 @@ namespace Pdfe.Rendering.Differential
         public long ElapsedMs { get; init; }
         public string? ErrorMessage { get; init; }
         public string Status { get; init; }
+    }
+    public static class TextSimilarity
+    {
+        public static double BigramJaccard(string pdfeText, string oracleText) { }
+        public static double CoverageRatio(string pdfeText, string oracleText) { }
+        public static string Normalize(string s) { }
     }
 }
 namespace Pdfe.Rendering

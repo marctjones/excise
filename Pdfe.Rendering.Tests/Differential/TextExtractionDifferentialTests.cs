@@ -142,12 +142,12 @@ public sealed class TextExtractionDifferentialTests
         Assert.SkipWhen(mutoolText == null,
             $"mutool refused to extract text from {relativePath}");
 
-        var refNormalized = Normalize(mutoolText!);
+        var refNormalized = TextSimilarity.Normalize(mutoolText!);
         Assert.SkipWhen(refNormalized.Length < MinReferenceTextLength,
             $"{relativePath}: reference extraction is only {refNormalized.Length} chars — too noisy to compare");
 
-        var ourNormalized = Normalize(pdfeText ?? string.Empty);
-        var sim = BigramJaccard(refNormalized, ourNormalized);
+        var ourNormalized = TextSimilarity.Normalize(pdfeText ?? string.Empty);
+        var sim = TextSimilarity.BigramJaccard(refNormalized, ourNormalized);
 
         _output.WriteLine($"  {relativePath}");
         _output.WriteLine($"  pdfe:   {Truncate(ourNormalized, 96)}");
@@ -163,53 +163,6 @@ public sealed class TextExtractionDifferentialTests
         sim.Should().BeGreaterThanOrEqualTo(MinSimilarity,
             $"{relativePath}: pdfe text-extraction differs from mutool. " +
             $"Bigram-Jaccard {sim:F3} < {MinSimilarity}.");
-    }
-
-    /// <summary>
-    /// Normalize text for comparison: keep only ASCII letters and
-    /// digits, lowercase, strip whitespace. The point is to compare
-    /// *content* — line breaks, hyphenation choices, ligatures
-    /// (often expanded by one extractor and not the other) shouldn't
-    /// register as disagreement.
-    /// </summary>
-    private static string Normalize(string s)
-    {
-        var sb = new StringBuilder(s.Length);
-        foreach (var ch in s)
-        {
-            if ((ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9'))
-                sb.Append(ch);
-            else if (ch >= 'A' && ch <= 'Z')
-                sb.Append((char)(ch + 32));
-        }
-        return sb.ToString();
-    }
-
-    /// <summary>
-    /// Jaccard similarity over character bigrams. Robust to small
-    /// reorderings, missing/extra characters, and length differences;
-    /// degrades sharply when entire word boundaries are wrong (which is
-    /// exactly the Betterment-class symptom).
-    /// </summary>
-    private static double BigramJaccard(string a, string b)
-    {
-        if (a.Length < 2 && b.Length < 2) return 1.0;
-        var setA = Bigrams(a);
-        var setB = Bigrams(b);
-        if (setA.Count == 0 && setB.Count == 0) return 1.0;
-        var intersection = new HashSet<string>(setA);
-        intersection.IntersectWith(setB);
-        var union = new HashSet<string>(setA);
-        union.UnionWith(setB);
-        return union.Count == 0 ? 1.0 : (double)intersection.Count / union.Count;
-    }
-
-    private static HashSet<string> Bigrams(string s)
-    {
-        var result = new HashSet<string>();
-        for (int i = 0; i + 1 < s.Length; i++)
-            result.Add(s.Substring(i, 2));
-        return result;
     }
 
     private static string Truncate(string s, int n) =>

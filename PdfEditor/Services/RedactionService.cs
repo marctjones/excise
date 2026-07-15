@@ -4,6 +4,7 @@ using PdfEditor.Models;
 using Pdfe.Core.Document;
 using Pdfe.Core.Operations;
 using Pdfe.Core.Text.Segmentation;
+using Pdfe.Ocr;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -129,21 +130,51 @@ public class RedactionService
     /// PDF at <paramref name="inputPath"/>, writing to <paramref name="outputPath"/>.
     /// Shares the same Pdfe.Core pipeline as area-click redaction.
     /// </summary>
-    public TextRedactionResult RedactText(string inputPath, string outputPath, string textToRedact, bool caseSensitive = false)
+    /// <param name="allowLowConfidence">
+    /// #650: before redacting, pdfe's own extraction is checked against an
+    /// independent oracle (mutool, or tesseract if mutool isn't installed)
+    /// for this specific document. When that check comes back Severe — the
+    /// oracle finds substantially more/different text than pdfe extracted,
+    /// the same signature as a real redaction leak — the redaction is
+    /// refused by default. Pass true to proceed anyway. A Degraded or
+    /// Unverified result never blocks; it's surfaced in
+    /// <see cref="TextRedactionResult.Warnings"/> instead.
+    /// </param>
+    public TextRedactionResult RedactText(
+        string inputPath, string outputPath, string textToRedact, bool caseSensitive = false,
+        bool allowLowConfidence = false)
     {
         _logger.LogInformation("RedactText: '{Text}' in {Input}", textToRedact, inputPath);
 
         try
         {
             using var doc = PdfDocument.Open(File.ReadAllBytes(inputPath));
+
+            var confidence = new RedactionConfidenceChecker().CheckDocument(doc, sourceFilePath: inputPath);
+            if (confidence.ShouldRefuse && !allowLowConfidence)
+            {
+                _logger.LogWarning(
+                    "RedactText refused for '{Text}': extraction-confidence check reported {Tier} (oracle: {Oracle})",
+                    textToRedact, confidence.Tier, confidence.Oracle);
+                return TextRedactionResult.Failed(
+                    $"Redaction refused: pdfe's own text extraction disagrees sharply with an independent " +
+                    $"check ({confidence.Oracle}) on this document — the same signature as a real redaction " +
+                    "leak. This may be a false alarm, but proceeding without understanding why requires " +
+                    "explicit confirmation.");
+            }
+
             int totalMatches = doc.RedactText(textToRedact, caseSensitive);
             doc.Save(outputPath);
 
             if (totalMatches > 0)
                 _redactedTerms.Add(textToRedact);
 
+            var warnings = confidence.ShouldWarn
+                ? new[] { BuildConfidenceWarning(confidence) }
+                : null;
+
             _logger.LogInformation("Redacted {Count} occurrence(s) of '{Text}'", totalMatches, textToRedact);
-            return TextRedactionResult.Succeeded(totalMatches);
+            return TextRedactionResult.Succeeded(totalMatches, warnings);
         }
         catch (Exception ex)
         {
@@ -151,6 +182,13 @@ public class RedactionService
             return TextRedactionResult.Failed($"Redaction failed: {ex.Message}");
         }
     }
+
+    private static string BuildConfidenceWarning(RedactionConfidenceReport confidence) =>
+        confidence.Tier == RedactionConfidenceTier.Unverified
+            ? "Redaction could not be independently verified — neither mutool nor tesseract is installed. " +
+              "pdfe's own extraction was used as-is; install one of those tools for a confidence check on future redactions."
+            : $"Redaction succeeded, but pdfe's extraction differs somewhat from an independent check " +
+              $"({confidence.Oracle}) on one or more pages of this document. Review the result before relying on it.";
 
     /// <summary>
     /// Full workflow: redact multiple areas on <paramref name="page"/>,

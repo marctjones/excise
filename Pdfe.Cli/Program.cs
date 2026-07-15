@@ -522,12 +522,26 @@ partial class Program
                 "an unprotected copy. Without this flag, redacting an encrypted source fails closed.",
             DefaultValueFactory = _ => false,
         };
+        var strictOption = new Option<bool>("--strict")
+        {
+            Description = "Require an independent extraction-confidence check (mutool or tesseract) " +
+                "to run at all — fail rather than proceed unverified when neither is on PATH. " +
+                "Mirrors `audit --deep`'s posture.",
+            DefaultValueFactory = _ => false,
+        };
+        var allowLowConfidenceOption = new Option<bool>("--allow-low-confidence")
+        {
+            Description = "Proceed even when the extraction-confidence check (#650) finds pdfe's own " +
+                "text extraction disagrees sharply with an independent oracle on this document — the " +
+                "same signature as a real redaction leak. Without this flag, that case fails closed.",
+            DefaultValueFactory = _ => false,
+        };
 
         var command = new Command(
             "redact",
             "Remove text from a PDF (glyph-level removal; text extraction will not find it)")
         {
-            inputArg, outputArg, textArg, caseSensitiveOption, allowDecryptOption
+            inputArg, outputArg, textArg, caseSensitiveOption, allowDecryptOption, strictOption, allowLowConfidenceOption
         };
 
         command.SetAction(parseResult =>
@@ -537,6 +551,8 @@ partial class Program
             var text = parseResult.GetValue(textArg)!;
             var caseSensitive = parseResult.GetValue(caseSensitiveOption);
             var allowDecrypt = parseResult.GetValue(allowDecryptOption);
+            var strict = parseResult.GetValue(strictOption);
+            var allowLowConfidence = parseResult.GetValue(allowLowConfidenceOption);
             if (!input.Exists)
             {
                 Console.Error.WriteLine($"File not found: {input.FullName}");
@@ -552,7 +568,7 @@ partial class Program
 
             try
             {
-                int count = RunRedact(input.FullName, output.FullName, text, caseSensitive, allowDecrypt);
+                int count = RunRedact(input.FullName, output.FullName, text, caseSensitive, allowDecrypt, strict, allowLowConfidence);
                 Console.WriteLine($"Redacted {count} occurrence(s) of '{text}'");
                 Console.WriteLine($"Output: {output.FullName}");
             }
@@ -579,10 +595,21 @@ partial class Program
     internal sealed class PdfWouldLoseEncryptionException(string message) : InvalidOperationException(message);
 
     /// <summary>
+    /// Thrown when the #650 extraction-confidence check refuses: either the
+    /// oracle disagreed severely with pdfe's own extraction (same signature
+    /// as a real redaction leak) and <c>--allow-low-confidence</c> wasn't
+    /// passed, or <c>--strict</c> was passed and no oracle was available at
+    /// all to check against. Same shape as <see cref="PdfWouldLoseEncryptionException"/>.
+    /// </summary>
+    internal sealed class LowConfidenceExtractionException(string message) : InvalidOperationException(message);
+
+    /// <summary>
     /// Core redact-a-file operation — open, call Pdfe.Core's text
     /// redaction, save. Exposed internally for tests.
     /// </summary>
-    internal static int RunRedact(string inputPath, string outputPath, string text, bool caseSensitive, bool allowDecrypt = false)
+    internal static int RunRedact(
+        string inputPath, string outputPath, string text, bool caseSensitive,
+        bool allowDecrypt = false, bool strict = false, bool allowLowConfidence = false)
     {
         var bytes = File.ReadAllBytes(inputPath);
         using var doc = PdfDocument.Open(bytes);
@@ -598,9 +625,68 @@ partial class Program
                 "Warning: output will NOT be encrypted (source was encrypted; pdfe cannot write " +
                 "encrypted PDFs yet, see #624).");
         }
+
+        var confidence = new Pdfe.Ocr.RedactionConfidenceChecker().CheckDocument(doc, sourceFilePath: inputPath);
+        foreach (var line in EnforceConfidencePolicy(confidence, strict, allowLowConfidence))
+            Console.Error.WriteLine(line);
+
         var count = doc.RedactText(text, caseSensitive);
         doc.Save(outputPath);
         return count;
+    }
+
+    /// <summary>
+    /// Decide what #650's confidence check means for this redaction: throw
+    /// <see cref="LowConfidenceExtractionException"/> to refuse, or return
+    /// warning lines to print (empty when the result is clean). Pure — no
+    /// PDF/oracle I/O — so the policy itself (refuse vs. warn vs. proceed
+    /// silently, and how <c>--strict</c>/<c>--allow-low-confidence</c>
+    /// change that) is directly testable without a real SEVERE fixture.
+    /// </summary>
+    internal static IReadOnlyList<string> EnforceConfidencePolicy(
+        Pdfe.Ocr.RedactionConfidenceReport confidence, bool strict, bool allowLowConfidence)
+    {
+        if (confidence.Oracle == null)
+        {
+            if (strict)
+            {
+                throw new LowConfidenceExtractionException(
+                    "--strict requires an independent extraction-confidence check, but neither mutool " +
+                    "nor tesseract is on PATH. Install one of them, or drop --strict to proceed unverified.");
+            }
+            return new[]
+            {
+                "Warning: redaction could not be independently verified — neither mutool nor tesseract " +
+                "is installed. pdfe's own extraction was used as-is.",
+            };
+        }
+
+        if (confidence.ShouldRefuse)
+        {
+            if (!allowLowConfidence)
+            {
+                throw new LowConfidenceExtractionException(
+                    $"pdfe's own text extraction disagrees sharply with an independent check " +
+                    $"({confidence.Oracle}) on this document — the same signature as a real redaction " +
+                    "leak. This may be a false alarm, but pass --allow-low-confidence to proceed anyway.");
+            }
+            return new[]
+            {
+                $"Warning: proceeding despite a low-confidence extraction check ({confidence.Oracle} " +
+                "disagrees sharply with pdfe's own extraction) — --allow-low-confidence was passed.",
+            };
+        }
+
+        if (confidence.ShouldWarn)
+        {
+            return new[]
+            {
+                $"Warning: pdfe's extraction differs somewhat from an independent check ({confidence.Oracle}) " +
+                "on one or more pages of this document. Review the result before relying on it.",
+            };
+        }
+
+        return Array.Empty<string>();
     }
 
     /// <summary>

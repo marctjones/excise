@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace PdfEditor.Models;
 
 /// <summary>
@@ -14,6 +16,15 @@ public sealed record TextRedactionResult(
     int RedactionCount,
     string? ErrorMessage = null)
 {
-    public static TextRedactionResult Succeeded(int count) => new(true, count);
+    /// <summary>
+    /// Non-blocking caveats about this redaction — currently only the
+    /// extraction-confidence check (#650): a degraded or unverified result
+    /// against an independent oracle. Empty, never null, on every result.
+    /// </summary>
+    public IReadOnlyList<string> Warnings { get; init; } = System.Array.Empty<string>();
+
+    public static TextRedactionResult Succeeded(int count, IReadOnlyList<string>? warnings = null) =>
+        new(true, count) { Warnings = warnings ?? System.Array.Empty<string>() };
+
     public static TextRedactionResult Failed(string error) => new(false, 0, error);
 }
