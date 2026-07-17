@@ -142,19 +142,36 @@ public class MouseInputTests
         //
         Assert.SkipWhen(!File.Exists(PragmaticBook), "Pragmatic book corpus fixture not available locally.");
         // #653: this test's PragmaticBook path was broken (a hardcoded
-        // personal path) for so long it never actually ran; now that it's
-        // fixed and the test genuinely executes, it fails against the real
-        // 455-page book — reproduced as pre-existing (confirmed via
-        // git-stash: fails identically without #625's changes) and unrelated
-        // to link dispatch specifically (MouseWheelScrollDown_ScrollsViewerVertically,
-        // a completely different feature, fails the same way against the
-        // same book). Tracked here rather than silently skipped.
-        Assert.Skip("#653: coordinate mapping against the real 455-page book fails in headless mode — pre-existing, tracked, not yet root-caused.");
-
+        // personal path) for so long it never actually ran. Once fixed, it
+        // failed for a reason unrelated to the book's size or a layout-timing
+        // race: the app's default ViewMode is Continuous (restored in
+        // 543ada9), and Continuous mode hides the single-page ScrollViewer
+        // (OnViewModeChanged sets `_scrollViewer.IsVisible = false`). This
+        // test computes its simulated click point via
+        // InteractionLayer.TranslatePoint(..., window) — Avalonia's
+        // TranslatePoint walks the visual ancestor chain and returns null
+        // (silently ?? defaulted to (0,0) here) the moment any ancestor isn't
+        // part of a live, visible layout, which is exactly what an
+        // IsVisible=false ScrollViewer does. The resulting click landed at
+        // window (0,0), never on the link. (Note: InteractionLayer's own
+        // Bounds is a red herring here — it has no explicit size and is
+        // always 0,0,0,0 in *either* view mode; the production click
+        // dispatch is deliberately attached at the UserControl root instead,
+        // per the comment in PdfViewerControl.axaml.cs InitializeComponent
+        // — "Pre-fix attachment was on _interactionLayer (zero-sized —
+        // never received events)". Asserting on InteractionLayer.Bounds
+        // would just time out waiting for something that never happens.)
+        // Every other InteractionLayer-based test in this file forces
+        // single-page as a side effect of setting IsTextSelectionMode/
+        // IsRedactionMode; this one never did, so it silently relied on
+        // single-page having been the default. Link click hit-testing is
+        // genuinely single-page-only today (see #667 for the continuous-mode
+        // gap) — force it explicitly here.
         var vm = new MainWindowViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await Task.Delay(200);
+        vm.ViewMode = PdfViewMode.SinglePage;
 
         await vm.LoadDocumentAsync(PragmaticBook);
         var indexDeadline = DateTime.UtcNow.AddSeconds(60);
@@ -175,16 +192,30 @@ public class MouseInputTests
         if (targetLink == null) return; // Skip if no links found
 
         vm.CurrentPageIndex = linkPage - 1;
-        for (int i = 0; i < 10; i++) { await Task.Delay(150); window.UpdateLayout(); }
 
         var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
         viewer.Should().NotBeNull();
 
-        var page = vm.PdfCoreDocument!.GetPage(linkPage);
+        // Poll on the ScrollViewer that actually gates the click-point
+        // translation (IsVisible + laid out), not a fixed number of retries.
+        var scrollViewer = FindNamedDescendant<ScrollViewer>(viewer!, "PdfScrollViewer");
+        scrollViewer.Should().NotBeNull();
+        var layoutDeadline = DateTime.UtcNow.AddSeconds(10);
+        while (DateTime.UtcNow < layoutDeadline &&
+               (!scrollViewer!.IsVisible || scrollViewer.Bounds == default(Rect)))
+        {
+            await Task.Delay(150);
+            window.UpdateLayout();
+        }
+        scrollViewer!.IsVisible.Should().BeTrue(
+            "PdfScrollViewer must be visible (single-page mode) before a click point can be translated through it");
+        scrollViewer.Bounds.Should().NotBe(default(Rect),
+            "PdfScrollViewer must be laid out before a click point can be translated through it");
+
         var interaction = FindNamedDescendant<Canvas>(viewer!, "InteractionLayer");
-        var pointInWindow = interaction is null
-            ? default
-            : ToWindowPoint(targetLink.Rect, page, interaction, window);
+        interaction.Should().NotBeNull("InteractionLayer must exist");
+        var page = vm.PdfCoreDocument!.GetPage(linkPage);
+        var pointInWindow = ToWindowPoint(targetLink.Rect, page, interaction!, window);
 
         bool linkFired = false;
         viewer!.LinkClicked += (_, args) => { linkFired = true; };
@@ -208,28 +239,57 @@ public class MouseInputTests
         // ScrollViewer, which is part of the control hierarchy.
         // In headless mode, we test via the ScrollViewer's public methods.
         Assert.SkipWhen(!File.Exists(PragmaticBook), "Pragmatic book corpus fixture not available locally.");
-        // #653: same pre-existing, unrelated-to-#625 failure as the two link
-        // tests above — this test's path was also broken, and now that it
-        // genuinely runs, scroll offset never changes against the real book.
-        Assert.Skip("#653: scroll-offset mapping against the real 455-page book fails in headless mode — pre-existing, tracked, not yet root-caused.");
-
+        // #653: this test originally targeted the single-page "PdfScrollViewer"
+        // and failed the same way as the link tests, for the same reason —
+        // but unlike those, there is no fix that just forces single-page here:
+        // Continuous is the app's actual default (543ada9) and wheel-scroll is
+        // exactly the interaction continuous mode exists for, so testing the
+        // single-page ScrollViewer would no longer exercise what a user
+        // actually hits by default. There was also no other test anywhere in
+        // the suite that drives a real wheel/LineDown gesture against
+        // ContinuousScrollViewer (ContinuousNavigationRegressionTests only
+        // covers *programmatic* CurrentPageIndex navigation, not a scroll
+        // gesture) — so this test now targets ContinuousScrollViewer instead
+        // of PdfScrollViewer, which is both the honest fix and closes that
+        // coverage gap.
+        //
+        // This is a real 455-page book, and ContinuousScrollViewer's extent
+        // depends on VirtualizingStackPanel measuring every one of 455 slot
+        // heights before LineDown()'s offset delta has anything to clamp
+        // against — genuinely more layout work than the smaller synthetic
+        // fixtures elsewhere in this file, so the wait here polls the
+        // ScrollViewer's own Extent becoming non-zero (with a generous
+        // ceiling) rather than a fixed delay/iteration count.
         var vm = new MainWindowViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await Task.Delay(200);
 
         await vm.LoadDocumentAsync(PragmaticBook);
-        await Task.Delay(300);
 
         var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
         viewer.Should().NotBeNull();
+        vm.IsContinuousView.Should().BeTrue("continuous scroll is the app's default view mode");
 
-        var scrollViewer = FindNamedDescendant<ScrollViewer>(viewer!, "PdfScrollViewer");
+        var scrollViewer = FindNamedDescendant<ScrollViewer>(viewer!, "ContinuousScrollViewer");
         scrollViewer.Should().NotBeNull();
 
+        // Poll on the thing that actually gates LineDown() doing anything —
+        // a non-zero Extent — instead of a fixed number of retries. 455 pages
+        // of slot layout is real work; a magic iteration count would either
+        // be too short here or wastefully long for a 3-page fixture.
+        var layoutDeadline = DateTime.UtcNow.AddSeconds(30);
+        while (DateTime.UtcNow < layoutDeadline && scrollViewer!.Extent.Height <= 0)
+        {
+            await Task.Delay(150);
+            window.UpdateLayout();
+        }
+        scrollViewer!.Extent.Height.Should().BeGreaterThan(0,
+            "ContinuousScrollViewer must have laid out its (455-page) content before a scroll can move it");
+
         // Record initial scroll position.
-        var initialOffset = scrollViewer!.Offset;
-        _out.WriteLine($"Initial scroll offset: {initialOffset}");
+        var initialOffset = scrollViewer.Offset;
+        _out.WriteLine($"Initial scroll offset: {initialOffset}, extent: {scrollViewer.Extent}");
 
         // Simulate wheel scroll by calling ScrollViewer's LineDown method,
         // which is the standard way to scroll down (mouse wheel scroll calls this).
@@ -238,6 +298,7 @@ public class MouseInputTests
             scrollViewer.LineDown();
         });
         await Task.Delay(150);
+        window.UpdateLayout();
 
         var afterOffset = scrollViewer.Offset;
         _out.WriteLine($"After scroll offset: {afterOffset}");
@@ -600,14 +661,18 @@ public class MouseInputTests
         // In headless mode, we can't easily detect cursor changes, but we
         // can verify that the link-hit-test infrastructure works.
         Assert.SkipWhen(!File.Exists(PragmaticBook), "Pragmatic book corpus fixture not available locally.");
-        // #653: same pre-existing, unrelated-to-#625 failure as the click
-        // and scroll tests above.
-        Assert.Skip("#653: coordinate mapping against the real 455-page book fails in headless mode — pre-existing, tracked, not yet root-caused.");
-
+        // #653: same root cause as ClickOnLinkAnnotation_FiresLinkClickedEvent
+        // above (see the detailed comment there for why the failure was a
+        // TranslatePoint-through-a-hidden-ancestor problem, not a
+        // document-size/layout-timing race, and why InteractionLayer's own
+        // Bounds is not the right thing to poll on). Link hit-testing is
+        // single-page-only today (#667 tracks the continuous-mode gap); force
+        // single-page here.
         var vm = new MainWindowViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await Task.Delay(200);
+        vm.ViewMode = PdfViewMode.SinglePage;
 
         await vm.LoadDocumentAsync(PragmaticBook);
         var indexDeadline = DateTime.UtcNow.AddSeconds(60);
@@ -628,15 +693,30 @@ public class MouseInputTests
         if (targetLink == null) return;
 
         vm.CurrentPageIndex = linkPage - 1;
-        for (int i = 0; i < 10; i++) { await Task.Delay(150); window.UpdateLayout(); }
 
         var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
         viewer.Should().NotBeNull();
-        var page = vm.PdfCoreDocument!.GetPage(linkPage);
+
+        // Poll on the ScrollViewer that actually gates the click/hover-point
+        // translation (IsVisible + laid out), not a fixed number of retries.
+        var scrollViewer = FindNamedDescendant<ScrollViewer>(viewer!, "PdfScrollViewer");
+        scrollViewer.Should().NotBeNull();
+        var layoutDeadline = DateTime.UtcNow.AddSeconds(10);
+        while (DateTime.UtcNow < layoutDeadline &&
+               (!scrollViewer!.IsVisible || scrollViewer.Bounds == default(Rect)))
+        {
+            await Task.Delay(150);
+            window.UpdateLayout();
+        }
+        scrollViewer!.IsVisible.Should().BeTrue(
+            "PdfScrollViewer must be visible (single-page mode) before a hover point can be translated through it");
+        scrollViewer.Bounds.Should().NotBe(default(Rect),
+            "PdfScrollViewer must be laid out before a hover point can be translated through it");
+
         var interaction = FindNamedDescendant<Canvas>(viewer!, "InteractionLayer");
-        var hoverPoint = interaction is null
-            ? default
-            : ToWindowPoint(targetLink.Rect, page, interaction, window);
+        interaction.Should().NotBeNull("InteractionLayer must exist");
+        var page = vm.PdfCoreDocument!.GetPage(linkPage);
+        var hoverPoint = ToWindowPoint(targetLink.Rect, page, interaction!, window);
 
         // Simulate hover (MouseMove without click).
         await Dispatcher.UIThread.InvokeAsync(() =>

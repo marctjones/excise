@@ -58,18 +58,38 @@ public class InPageLinkClickTests
         var pragmaticBook = FindPragmaticBook();
         Assert.SkipWhen(pragmaticBook == null, "Pragmatic book corpus fixture not available locally.");
         // #653: this test's path was broken (hardcoded personal path) for so
-        // long it never actually ran; now that it genuinely executes, the
-        // simulated click never reaches the interaction layer (zero-size
-        // bounds — never got laid out in time) against the real 455-page
-        // book. Reproduced as pre-existing (fails identically without #625's
-        // changes) and shared with two link tests plus an unrelated scroll
-        // test in MouseInputTests.cs — tracked there, not re-explained here.
-        Assert.Skip("#653: coordinate mapping against the real 455-page book fails in headless mode — pre-existing, tracked, not yet root-caused.");
+        // long it never actually ran. Once fixed, it failed for a reason that
+        // had nothing to do with the book's size or a layout-timing race (the
+        // original hypothesis): the app's default ViewMode is Continuous
+        // (restored in 543ada9), and in Continuous mode PdfViewerControl hides
+        // the single-page ScrollViewer (`_scrollViewer.IsVisible = false` in
+        // OnViewModeChanged). This test computes its click point via
+        // InteractionLayer.TranslatePoint(..., window), which walks the
+        // visual ancestor chain and returns null the moment any ancestor
+        // (here, that hidden ScrollViewer) isn't part of a live, visible
+        // layout — silently defaulting the click to window (0,0). See the
+        // longer note at the InteractionLayer lookup below for why
+        // InteractionLayer's own Bounds is a red herring, not the real
+        // signal. Every other test in this file/MouseInputTests.cs that
+        // clicks/hovers via InteractionLayer forces single-page first
+        // (IsTextSelectionMode/IsRedactionMode = true does this as a side
+        // effect); this test never did, so it silently depended on
+        // single-page having been the default. Link-annotation hit testing
+        // is genuinely single-page-only today (HitTestLinkAt reads
+        // _overlayCanvas/_pdfImage/_currentSinglePageRenderDpi, none of which
+        // continuous mode populates) — tracked as a real product gap in #667,
+        // not papered over here. This test forces single-page explicitly,
+        // which is the correct scope for "does single-page link click work".
 
         var vm = new MainWindowViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await Task.Delay(200);
+
+        // Link click/hover hit-testing only exists for single-page mode (#667
+        // tracks giving continuous mode its own). Force it explicitly instead
+        // of relying on whatever the app's current default happens to be.
+        vm.ViewMode = PdfViewMode.SinglePage;
 
         await vm.LoadDocumentAsync(pragmaticBook);
 
@@ -121,9 +141,20 @@ public class InPageLinkClickTests
             RenderDpi);
 
         // Find the InteractionLayer Canvas to translate to window coords.
+        // Note: InteractionLayer itself has no explicit size and its own
+        // Bounds is always 0,0,0,0 in *either* view mode (production click
+        // dispatch is deliberately attached at the UserControl root instead
+        // — see the InitializeComponent comment in PdfViewerControl.axaml.cs
+        // — "Pre-fix attachment was on _interactionLayer (zero-sized —
+        // never received events)"). What actually matters for
+        // TranslatePoint below to succeed is that every ANCESTOR (in
+        // particular PdfScrollViewer) is visible and laid out — Continuous
+        // view mode hides that ScrollViewer (#653), which is what silently
+        // degenerates TranslatePoint to null (?? default = window (0,0)),
+        // not InteractionLayer's own size.
         var interaction = FindNamedDescendant<Canvas>(viewer!, "InteractionLayer");
         interaction.Should().NotBeNull("InteractionLayer must exist");
-        _out.WriteLine($"InteractionLayer Bounds={interaction!.Bounds} (zero size = no clicks)");
+        _out.WriteLine($"InteractionLayer Bounds={interaction!.Bounds}");
 
         // Sanity: hit-test the click point against the actual visual tree.
         var pointInWindow = interaction.TranslatePoint(new Point(center.X, center.Y), window) ?? default;
