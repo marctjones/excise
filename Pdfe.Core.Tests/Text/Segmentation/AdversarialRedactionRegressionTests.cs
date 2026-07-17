@@ -122,6 +122,65 @@ public sealed class AdversarialRedactionRegressionTests
     }
 
     [Fact]
+    public void RedactText_FindsAndRemovesSignatureAppearanceContent()
+    {
+        // #669: before this fix, TextExtractor unconditionally skipped
+        // Signature fields — RedactText("SIGSECRET") would find zero matches
+        // and report success while the widget's /AP/N appearance (real,
+        // mutool-visible "Digitally signed by…" style text, confirmed on
+        // test-pdfs/pdfjs/bug854315.pdf) survived untouched. This fixture
+        // mirrors that file's nesting: /AP/N invokes a /FRM Form XObject,
+        // and the Tj call lives inside /FRM, not directly in /AP/N.
+        //
+        // Also exercises the InteractiveRedactionScrubber half of the fix:
+        // ScrubFormFields used to skip Signature fields unconditionally
+        // (same "no text here" assumption TextExtractor made), so a match
+        // reaching that method for a Signature field would previously be
+        // findable but NOT removable — the exact gap #660 already had to
+        // close once for FreeText. Verified via saved bytes, not
+        // page.Text/page.Letters re-reading pdfe's own synthetic letters
+        // (the self-oracle mistake CLAUDE.md's redaction requirements exist
+        // to prevent).
+        var pdf = Build(
+            Obj("<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [5 0 R] >> >>"),
+            Obj("<< /Type /Pages /Kids [3 0 R] /Count 1 >>"),
+            Obj("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] " +
+                "/Contents 4 0 R /Annots [5 0 R] >>"),
+            Stream("", ""),
+            Obj("<< /Type /Annot /Subtype /Widget /FT /Sig /T (Signature1) " +
+                "/Rect [100 650 260 700] /P 3 0 R /V 8 0 R /AP << /N 6 0 R >> >>"),
+            Stream("/Type /XObject /Subtype /Form /BBox [0 0 160 50] " +
+                   "/Resources << /XObject << /FRM 7 0 R >> >>",
+                   "q 1 0 0 1 0 0 cm /FRM Do Q"),
+            Stream("/Type /XObject /Subtype /Form /BBox [0 0 160 50] " +
+                   "/Resources << /Font << /F1 9 0 R >> >>",
+                   "BT /F1 12 Tf 4 12 Td (SIGSECRET) Tj ET"),
+            Obj("<< /Type /Sig /Filter /Adobe.PPKLite /SubFilter /adbe.pkcs7.detached " +
+                "/Contents <00> /ByteRange [0 0 0 0] >>"),
+            Obj("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>"));
+
+        Encoding.Latin1.GetString(pdf).Should().Contain("SIGSECRET");
+
+        using var doc = PdfDocument.Open(pdf);
+        var page = doc.GetPage(1);
+
+        string.Concat(page.Letters.Select(l => l.Value)).Should().Contain("SIGSECRET",
+            "a Signature widget's /AP/N appearance text must be findable by search/RedactText, " +
+            "not just page.GetFormFields() (#669)");
+
+        var removed = doc.RedactText("SIGSECRET", drawBlackRect: false);
+        removed.Should().BeGreaterThan(0, "RedactText must actually find the signature appearance text");
+
+        var saved = doc.SaveToBytes();
+        Encoding.Latin1.GetString(saved).Should().NotContain("SIGSECRET",
+            "a word RedactText reports as removed must actually be gone from the saved bytes — " +
+            "'found but not removable' is a new leak, not a fix");
+
+        using var reopened = PdfDocument.Open(saved);
+        string.Concat(reopened.GetPage(1).Letters.Select(l => l.Value)).Should().NotContain("SIGSECRET");
+    }
+
+    [Fact]
     public void RedactArea_PartialGlyphOverlap_RemovesGlyphButKeepsNeighbor()
     {
         var pdf = Build(

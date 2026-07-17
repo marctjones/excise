@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Text;
 using Pdfe.Core.Document;
 using Pdfe.Core.Primitives;
@@ -124,15 +125,135 @@ public class TextExtractor
                 continue;
             }
 
+            // Signature fields have no string /V (it's a signature dictionary,
+            // not text) but their /AP/N appearance stream commonly draws real,
+            // visible text — a "Digitally signed by X, date, reason" block
+            // (#669). That text lives in a nested Form XObject the appearance
+            // invokes, not anywhere EmitFormFieldLetters otherwise looks.
+            if (field.FieldType == PdfFieldType.Signature)
+            {
+                EmitSignatureAppearanceLetters(field);
+                continue;
+            }
+
             var value = field.Value ?? field.DefaultValue;
             if (string.IsNullOrEmpty(value)) continue;
             // Buttons are off/on/checked/unchecked names — not human-readable text.
             if (field.FieldType == PdfFieldType.Button) continue;
-            // Signatures don't render text in the field; skip.
-            if (field.FieldType == PdfFieldType.Signature) continue;
 
-            EmitLettersInRect(value, field.Rect.Value, $"AcroForm:{field.FieldType}");
+            // Plain multiline text fields (/Ff bit 12) can hold far more than
+            // fits on one line — the same reasoning as the Choice-listbox
+            // branch above, just for /FT /Tx instead of /FT /Ch (#672). The
+            // single-line EmitLettersInRect silently truncates to whatever
+            // fits the rect's width, which is wrong for one long line.
+            if (field.IsMultiline)
+                EmitMultiLineLettersInRect(value, field.Rect.Value, $"AcroForm:{field.FieldType}");
+            else
+                EmitLettersInRect(value, field.Rect.Value, $"AcroForm:{field.FieldType}");
         }
+    }
+
+    /// <summary>
+    /// Emit synthetic Letters for a Signature field's rendered appearance
+    /// text (#669). A signature widget's <c>/V</c> is a signature dictionary,
+    /// not a string, so the normal value-based path above never applies —
+    /// but the widget's <c>/AP/N</c> appearance stream frequently draws real
+    /// text ("Digitally signed by…", date, reason) that mutool's renderer
+    /// (and a human) sees, which pdfe was blind to entirely before this.
+    /// Font-name prefix is still "AcroForm:" (not a new prefix) so
+    /// <c>PdfDocumentRedactionExtensions.IsInteractiveOnlyMatch</c> already
+    /// routes a match here through <see cref="InteractiveRedactionScrubber"/>
+    /// with no changes needed there beyond no longer skipping Signature
+    /// fields when scrubbing (see that class).
+    /// </summary>
+    private void EmitSignatureAppearanceLetters(PdfField field)
+    {
+        if (field.Rect == null) return;
+
+        foreach (var widget in field.WidgetDictionaries)
+        {
+            var text = ExtractWidgetAppearanceText(widget);
+            if (string.IsNullOrEmpty(text)) continue;
+
+            EmitMultiLineLettersInRect(text, field.Rect.Value, $"AcroForm:{field.FieldType}");
+        }
+    }
+
+    /// <summary>
+    /// Resolve a widget annotation's <c>/AP/N</c> appearance stream (direct
+    /// Form XObject, or an appearance-state sub-dictionary keyed by name —
+    /// ISO 32000-2 §12.5.5) and extract its text content by parsing it with
+    /// the same machinery used for page-content <c>Do</c> targets
+    /// (<see cref="ExtractFormXObjectContent"/>), which already knows how to
+    /// walk into a nested Form XObject (the confirmed <c>bug854315.pdf</c>
+    /// fixture routes <c>/AP/N</c> → <c>/FRM</c> → further nested forms
+    /// before reaching the actual <c>Tj</c> calls).
+    /// </summary>
+    /// <remarks>
+    /// Deliberately does NOT try to map the appearance's own coordinate
+    /// space (its <c>/BBox</c>/<c>/Matrix</c>) into the widget's <c>/Rect</c>
+    /// — that mapping is real work with its own edge cases and buys nothing
+    /// here, since the letters this parse produces are positioned in a
+    /// throwaway, appearance-local space and then discarded. Only the
+    /// decoded text VALUE survives; the caller re-lays it out with
+    /// <see cref="EmitMultiLineLettersInRect"/> against the real page-space
+    /// <c>/Rect</c>, exactly like the AcroForm value and FreeText annotation
+    /// paths already do (#660, #661) — this keeps one positioning convention
+    /// instead of two.
+    /// </remarks>
+    private string ExtractWidgetAppearanceText(PdfDictionary widgetDict)
+    {
+        var apObj = widgetDict.GetOptional("AP");
+        if (apObj == null || _page.Document.Resolve(apObj) is not PdfDictionary ap)
+            return string.Empty;
+
+        var nObj = ap.GetOptional("N");
+        if (nObj == null) return string.Empty;
+
+        var nResolved = _page.Document.Resolve(nObj);
+        var appearanceStream = nResolved as PdfStream;
+        if (appearanceStream == null && nResolved is PdfDictionary states)
+        {
+            // /AP/N is a sub-dictionary of appearance states (one stream per
+            // /AS name) rather than a single stream directly. Prefer the
+            // widget's current /AS state; fall back to the first entry when
+            // /AS is absent or doesn't match (mirrors the leniency of
+            // ExtractWidgetExportValue in PdfAcroFormParser.cs).
+            var asName = widgetDict.GetNameOrNull("AS");
+            PdfObject? chosen = asName != null ? states.GetOptional(asName) : null;
+            chosen ??= states.Values.FirstOrDefault();
+            appearanceStream = chosen != null ? _page.Document.Resolve(chosen) as PdfStream : null;
+        }
+
+        if (appearanceStream == null || appearanceStream.GetNameOrNull("Subtype") != "Form")
+            return string.Empty;
+
+        var lettersBefore = _letters.Count;
+        var savedCtm = (_ctm_a, _ctm_b, _ctm_c, _ctm_d, _ctm_e, _ctm_f);
+        // Reset to identity: this parse happens after the page's own content
+        // stream has already been walked (ExtractLetters calls
+        // EmitFormFieldLetters after ParseContentStream), so whatever CTM was
+        // left behind is unrelated to the annotation and would just pollute
+        // the (already-discarded) positions computed below.
+        _ctm_a = 1; _ctm_b = 0; _ctm_c = 0; _ctm_d = 1; _ctm_e = 0; _ctm_f = 0;
+
+        try
+        {
+            ExtractFormXObjectContent(appearanceStream);
+        }
+        finally
+        {
+            (_ctm_a, _ctm_b, _ctm_c, _ctm_d, _ctm_e, _ctm_f) = savedCtm;
+        }
+
+        if (_letters.Count == lettersBefore) return string.Empty;
+
+        var text = string.Concat(_letters.Skip(lettersBefore).Select(l => l.Value));
+        // These letters were positioned in the appearance's own local space,
+        // not the page's — discard them so they don't get returned twice
+        // (once here, mispositioned; once properly via EmitMultiLineLettersInRect).
+        _letters.RemoveRange(lettersBefore, _letters.Count - lettersBefore);
+        return text;
     }
 
     /// <summary>
@@ -975,6 +1096,24 @@ public class TextExtractor
 
         var xObject = ResolveXObjectFromActiveResources(name);
         if (xObject is not PdfStream stream || stream.GetNameOrNull("Subtype") != "Form")
+            return;
+
+        ExtractFormXObjectContent(stream);
+    }
+
+    /// <summary>
+    /// Parses a resolved Form XObject stream's content, applying its
+    /// <c>/Matrix</c> and pushing its <c>/Resources</c> (mirroring §8.10.1's
+    /// <c>q &lt;Matrix&gt; cm … Q</c> semantics), and restoring all graphics
+    /// and text state afterward. Shared by <see cref="ExtractFormXObjectText"/>
+    /// (a <c>Do</c> operator invoking a form named in the active resources)
+    /// and <see cref="ExtractWidgetAppearanceText"/> (a Widget annotation's
+    /// <c>/AP/N</c> appearance stream, reached without going through a page
+    /// content-stream <c>Do</c> at all — #669).
+    /// </summary>
+    private void ExtractFormXObjectContent(PdfStream stream)
+    {
+        if (_formXObjectDepth >= MaxFormXObjectDepth)
             return;
 
         if (!_formXObjectStack.Add(stream))

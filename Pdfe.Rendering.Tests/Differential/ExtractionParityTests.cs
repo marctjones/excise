@@ -197,13 +197,13 @@ public sealed class ExtractionParityTests
     /// </summary>
     private static readonly Dictionary<string, string> KnownAdversarialDisagreements = new()
     {
-        ["test-pdfs/pdfjs/bug854315.pdf"] =
-            "#669 — Signature widget /AP appearance text never extracted.",
+        // bug854315.pdf and issue18036.pdf are deliberately NOT listed here
+        // anymore: #669 (signature widget /AP appearance text) and #672
+        // (multiline AcroForm field truncation) fully cover this file's gap
+        // each was filed for — both now clear the coverage gate on their own.
         ["test-pdfs/pdfjs/issue17069.pdf"] =
-            "#669 + #670 — Signature widget /AP appearance text (#669) plus orphaned Widget " +
-            "annotations outside /AcroForm/Fields (#670).",
-        ["test-pdfs/pdfjs/issue18036.pdf"] =
-            "#672 — EmitFormFieldLetters truncates multiline field values to one line, ignoring PdfField.IsMultiline.",
+            "#669 + #670 — Signature widget /AP appearance text (#669, now fixed) plus orphaned " +
+            "Widget annotations outside /AcroForm/Fields (#670, still open) — this file needs both.",
         ["test-pdfs/pdfjs/issue19389.pdf"] =
             "#671 — Widget page resolution requires /P, but /P is optional per spec; widgets with no /P are silently dropped.",
     };

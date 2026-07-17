@@ -291,6 +291,132 @@ public class AcroFormReadOnlyTests
             "would restate the redacted option");
     }
 
+    // ─── Signature field appearance tests — #669 ───────────────────────────
+
+    [Fact]
+    public void SignatureField_AppearanceText_AppearsInExtractedText()
+    {
+        // #669: a signature widget's /V is a signature dictionary, not text,
+        // but its /AP/N appearance stream commonly draws real, visible text
+        // (a "Digitally signed by..." block) — confirmed against mutool on
+        // test-pdfs/pdfjs/bug854315.pdf, which nests /AP/N -> a Form XObject
+        // -> a further nested Form XObject before reaching the Tj calls, the
+        // same nesting depth this fixture exercises.
+        var pdf = BuildSignatureFieldPdf(appearanceText: "Digitally signed by Jane Doe");
+        using var doc = PdfDocument.Open(pdf);
+
+        var page = doc.GetPage(1);
+        page.Text.Should().Contain("Digitally signed by Jane Doe");
+    }
+
+    [Fact]
+    public void SignatureField_AppearanceText_LettersUseAcroFormFontNamePrefix()
+    {
+        // The synthesized letters must carry the "AcroForm:" FontName prefix
+        // so PdfDocumentRedactionExtensions.IsInteractiveOnlyMatch routes a
+        // match through InteractiveRedactionScrubber instead of the
+        // content-stream glyph-removal pass — there is no content-stream
+        // glyph here to remove, only the widget's /AP.
+        var pdf = BuildSignatureFieldPdf(appearanceText: "SIGTEXT");
+        using var doc = PdfDocument.Open(pdf);
+
+        var letters = doc.GetPage(1).Letters;
+        letters.Should().NotBeEmpty();
+        letters.All(l => l.FontName.StartsWith("AcroForm:", StringComparison.Ordinal)).Should().BeTrue();
+    }
+
+    [Fact]
+    public void SignatureField_NoAppearance_StillEmitsNoText()
+    {
+        // No /AP at all (e.g. an unsigned signature field): must stay silent,
+        // same as before #669 — there is nothing to extract.
+        var pdf = BuildFormPdf(signature: true);
+        using var doc = PdfDocument.Open(pdf);
+
+        doc.GetPage(1).Text.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void RedactText_FindsAndRemovesSignatureAppearanceText()
+    {
+        // #669's redaction-completeness half, mirroring
+        // RedactText_RemovesListBoxOptionFromSavedBytes: a matched
+        // signature-appearance word must be gone from the SAVED BYTES
+        // (ASCII and UTF-16BE), not just page.Text, and the widget's /AP
+        // must actually be stripped rather than merely made unfindable —
+        // the exact "found but not removable" risk #660 had to check for
+        // FreeText annotations.
+        var pdf = BuildSignatureFieldPdf(appearanceText: "SIGSECRET signed the document");
+        using var doc = PdfDocument.Open(pdf);
+
+        var matches = doc.RedactText("SIGSECRET", caseSensitive: false);
+        matches.Should().BeGreaterThan(0, "RedactText must actually find the signature appearance text");
+
+        var saved = doc.SaveToBytes();
+        var savedAscii = Encoding.ASCII.GetString(saved);
+        var savedUtf16 = Encoding.BigEndianUnicode.GetString(saved);
+        (savedAscii + savedUtf16).Should().NotContain("SIGSECRET",
+            "the signature appearance text must be gone from the saved bytes in every carrier");
+
+        using var reopened = PdfDocument.Open(saved);
+        reopened.GetPage(1).Text.Should().NotContain("SIGSECRET");
+    }
+
+    // ─── Multiline text field tests — #672 ─────────────────────────────────
+
+    [Fact]
+    public void MultilineTextField_LongValue_IsNotTruncatedToOneLine()
+    {
+        // #672: EmitFormFieldLetters routed every non-Choice-listbox field
+        // through the single-line EmitLettersInRect, which truncates to
+        // whatever fits the rect's width — even when /Ff bit 12 (Multiline)
+        // is set and the rect is tall enough for many lines. Rect here is
+        // 300pt wide; a single line fits roughly 45 chars at the default
+        // approximation, so a value well past that length would previously
+        // have been cut off partway through a word.
+        var longValue = string.Join(" ", Enumerable.Repeat("word", 40)); // ~200 chars
+        var pdf = BuildFormPdf(textValue: longValue, multiline: true, tall: true);
+        using var doc = PdfDocument.Open(pdf);
+
+        var page = doc.GetPage(1);
+        page.Text.Should().Contain(longValue.Substring(longValue.Length - 10),
+            "the tail of a long multiline value must survive, not just the first ~45 chars");
+    }
+
+    [Fact]
+    public void PlainTextField_LongValue_StillTruncatesToOneLine()
+    {
+        // Non-multiline fields keep the existing single-line truncation
+        // behavior — #672 only changes routing for IsMultiline fields.
+        var longValue = new string('A', 200);
+        var pdf = BuildFormPdf(textValue: longValue, multiline: false, tall: true);
+        using var doc = PdfDocument.Open(pdf);
+
+        var letters = doc.GetPage(1).Letters.Where(l => l.FontName.StartsWith("AcroForm:")).ToList();
+        letters.Count.Should().BeLessThan(longValue.Length);
+    }
+
+    [Fact]
+    public void RedactText_RemovesMultilineFieldTailFromSavedBytes()
+    {
+        // The previously-truncated tail of a multiline value must actually be
+        // removable, not merely unreachable by the old truncating path.
+        var longValue = "Head text " + new string('X', 30) + " TAILSECRET at the very end";
+        var pdf = BuildFormPdf(textValue: longValue, multiline: true, tall: true);
+        using var doc = PdfDocument.Open(pdf);
+
+        doc.GetPage(1).Text.Should().Contain("TAILSECRET",
+            "the tail must be extractable before it can be redacted");
+
+        var matches = doc.RedactText("TAILSECRET", caseSensitive: false);
+        matches.Should().BeGreaterThan(0);
+
+        var saved = doc.SaveToBytes();
+        var savedAscii = Encoding.ASCII.GetString(saved);
+        var savedUtf16 = Encoding.BigEndianUnicode.GetString(saved);
+        (savedAscii + savedUtf16).Should().NotContain("TAILSECRET");
+    }
+
     // ─── PDF builder ─────────────────────────────────────────────────────────
 
     /// <summary>
@@ -341,7 +467,9 @@ public class AcroFormReadOnlyTests
     private static byte[] BuildFormPdf(string? textValue = "Hello",
                                         string? defaultValue = null,
                                         string? buttonValue = null,
-                                        bool signature = false)
+                                        bool signature = false,
+                                        bool multiline = false,
+                                        bool tall = false)
     {
         var sb = new StringBuilder();
         var offsets = new long[8];
@@ -353,15 +481,19 @@ public class AcroFormReadOnlyTests
         Mark(2); sb.Append("2 0 obj <</Type/Pages/Count 1/Kids[3 0 R]>> endobj\n");
 
         // Page 3: page dict referring to the field-as-widget annotation (4).
+        // "tall" gives a multiline field room for several lines (used by the
+        // #672 tests) instead of the default single-line-height rect.
+        var rect = tall ? "[100 500 400 720]" : "[100 700 400 720]";
         Mark(3);
         sb.Append("3 0 obj <</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]" +
                   "/Annots[4 0 R]/Resources<<>>>> endobj\n");
 
         // Field 4: combined Widget + form field (the common minimal shape).
         var ft = signature ? "Sig" : (buttonValue != null ? "Btn" : "Tx");
+        var ff = multiline ? 0x1000 : 0;
         Mark(4);
-        sb.Append($"4 0 obj <</Type/Annot/Subtype/Widget/FT/{ft}/T(field1)" +
-                  $"/Rect[100 700 400 720]/P 3 0 R");
+        sb.Append($"4 0 obj <</Type/Annot/Subtype/Widget/FT/{ft}/T(field1)/Ff {ff}" +
+                  $"/Rect{rect}/P 3 0 R");
         if (signature)
         {
             // Signature: /V is a dict — we don't care about its contents for
@@ -389,6 +521,65 @@ public class AcroFormReadOnlyTests
         for (int i = 1; i <= 5; i++)
             sb.Append(offsets[i].ToString("D10")).Append(" 00000 n \n");
         sb.Append("trailer <</Size 6/Root 1 0 R>>\nstartxref\n").Append(xrefPos).Append("\n%%EOF\n");
+        return Encoding.ASCII.GetBytes(sb.ToString());
+    }
+
+    /// <summary>
+    /// Build a one-page PDF with a single Signature (/FT /Sig) AcroForm
+    /// field whose widget has a real /AP/N appearance stream, nested two
+    /// Form XObjects deep — mirroring the confirmed shape of
+    /// test-pdfs/pdfjs/bug854315.pdf (/AP/N invokes a /FRM Form XObject,
+    /// which is where the Tj calls actually live) so the fixture exercises
+    /// the same nested-Do resolution path (#669) as the real-world file.
+    /// </summary>
+    private static byte[] BuildSignatureFieldPdf(string appearanceText)
+    {
+        var sb = new StringBuilder();
+        var offsets = new long[9];
+        void Mark(int n) => offsets[n] = sb.Length;
+
+        sb.Append("%PDF-1.7\n");
+
+        Mark(1); sb.Append("1 0 obj <</Type/Catalog/Pages 2 0 R/AcroForm 7 0 R>> endobj\n");
+        Mark(2); sb.Append("2 0 obj <</Type/Pages/Count 1/Kids[3 0 R]>> endobj\n");
+        Mark(3);
+        sb.Append("3 0 obj <</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]" +
+                  "/Annots[4 0 R]/Resources<<>>>> endobj\n");
+
+        // Field 4: Signature widget. /V is a minimal signature dict (its
+        // contents are irrelevant here — #669 is about /AP text, not /V).
+        Mark(4);
+        sb.Append("4 0 obj <</Type/Annot/Subtype/Widget/FT/Sig/T(field1)" +
+                  "/Rect[100 700 400 720]/P 3 0 R/V<</Type/Sig>>/AP<</N 5 0 R>>>> endobj\n");
+
+        // Object 5: /AP/N — a Form XObject whose content just invokes a
+        // further-nested Form XObject (object 6), exactly like bug854315.pdf's
+        // /AP/N -> /FRM shape.
+        var apContent = "q 1 0 0 1 0 0 cm /FRM Do Q";
+        Mark(5);
+        sb.Append("5 0 obj <</Type/XObject/Subtype/Form/BBox[0 0 300 20]" +
+                  $"/Resources<</XObject<</FRM 6 0 R>>>>/Length {apContent.Length}>>\n" +
+                  $"stream\n{apContent}\nendstream\nendobj\n");
+
+        // Object 6: the nested form — this is where the actual Tj call lives.
+        var frmContent = $"BT /F1 10 Tf 2 4 Td ({appearanceText}) Tj ET";
+        Mark(6);
+        sb.Append("6 0 obj <</Type/XObject/Subtype/Form/BBox[0 0 300 20]" +
+                  $"/Resources<</Font<</F1 8 0 R>>>>/Length {frmContent.Length}>>\n" +
+                  $"stream\n{frmContent}\nendstream\nendobj\n");
+
+        // AcroForm 7: minimal — just /Fields.
+        Mark(7);
+        sb.Append("7 0 obj <</Fields[4 0 R]>> endobj\n");
+
+        Mark(8);
+        sb.Append("8 0 obj <</Type/Font/Subtype/Type1/BaseFont/Helvetica/Encoding/WinAnsiEncoding>> endobj\n");
+
+        var xrefPos = sb.Length;
+        sb.Append("xref\n0 9\n0000000000 65535 f \n");
+        for (int i = 1; i <= 8; i++)
+            sb.Append(offsets[i].ToString("D10")).Append(" 00000 n \n");
+        sb.Append("trailer <</Size 9/Root 1 0 R>>\nstartxref\n").Append(xrefPos).Append("\n%%EOF\n");
         return Encoding.ASCII.GetBytes(sb.ToString());
     }
 

@@ -48,7 +48,22 @@ internal static class InteractiveRedactionScrubber
             if (!widgets.Any(w => w.PageNumber == page.PageNumber && w.Rect.IntersectsWith(area)))
                 continue;
 
-            if (field.FieldType is PdfFieldType.Button or PdfFieldType.Signature)
+            // Buttons are off/on/checked/unchecked names, never human-readable
+            // text — TextExtractor never emits letters for them, so a match
+            // can't reach this method for a Button field. Signature fields
+            // USED to be excluded here too, on the same "no text" assumption
+            // — but #669 fixed TextExtractor to read a signature widget's
+            // /AP/N appearance text (a real "Digitally signed by…" block),
+            // so a match can now legitimately reach here for a Signature
+            // field, and skipping it would be exactly the "found but not
+            // removable" gap #660 already had to fix for FreeText. Removing
+            // /V here drops the reference to the signature dictionary (whose
+            // /Reason, /Name, /Location strings can restate the same text as
+            // the appearance) — since Save() only serializes objects
+            // reachable from the trailer, letting that reference go is
+            // enough for the dictionary to fall out of the saved bytes with
+            // no separate prune step needed for it specifically.
+            if (field.FieldType == PdfFieldType.Button)
                 continue;
 
             CaptureObjectGraph(page.Document, field.RawDictionary.GetOptional("AP"), pruneCandidates);
