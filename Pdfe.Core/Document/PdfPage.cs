@@ -148,16 +148,40 @@ public class PdfPage
 
     /// <summary>
     /// AcroForm fields whose Widget annotation lives on this page (§12.7).
-    /// Returns the document-wide AcroForm filtered to this page; returns an
-    /// empty list when the document has no /AcroForm dictionary or none of
-    /// its widgets reference this page.
+    /// Returns the document-wide AcroForm filtered to this page, plus any
+    /// Widget annotations that live directly in this page's own /Annots array
+    /// but were never reachable by walking /AcroForm/Fields (#670) — a Widget
+    /// annotation may legally BE its own field dictionary (a "merged"
+    /// field/widget, §12.7.3.1), carrying /FT and /V directly, with no entry
+    /// anywhere in the /Fields tree pointing at it. Those are surfaced here so
+    /// extraction and redaction can see their values; widgets already reached
+    /// through /AcroForm/Fields are not duplicated. Returns an empty list only
+    /// when the document has no /AcroForm dictionary AND this page's own
+    /// /Annots has no merged field/widgets either.
     /// </summary>
     public IReadOnlyList<PdfField> GetFormFields()
     {
         var form = _document.GetAcroForm();
-        if (form == null) return Array.Empty<PdfField>();
         var pageNum = PageNumber;
-        return form.Fields.Where(f => f.PageNumber == pageNum).ToList();
+        var linked = form?.Fields.Where(f => f.PageNumber == pageNum).ToList()
+            ?? new List<PdfField>();
+
+        var linkedWidgets = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
+        if (form != null)
+        {
+            foreach (var f in form.Fields)
+                foreach (var w in f.WidgetDictionaries)
+                    linkedWidgets.Add(w);
+        }
+
+        var orphaned = PdfAcroFormParser.ExtractOrphanedPageWidgetFields(_document, _pageDict, pageNum, linkedWidgets);
+        if (orphaned.Count == 0)
+            return linked;
+
+        var combined = new List<PdfField>(linked.Count + orphaned.Count);
+        combined.AddRange(linked);
+        combined.AddRange(orphaned);
+        return combined;
     }
 
     /// <summary>

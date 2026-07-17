@@ -202,10 +202,10 @@ public sealed class ExtractionParityTests
         // (multiline AcroForm field truncation) fully cover this file's gap
         // each was filed for — both now clear the coverage gate on their own.
         ["test-pdfs/pdfjs/issue17069.pdf"] =
-            "#669 + #670 — Signature widget /AP appearance text (#669, now fixed) plus orphaned " +
-            "Widget annotations outside /AcroForm/Fields (#670, still open) — this file needs both.",
-        ["test-pdfs/pdfjs/issue19389.pdf"] =
-            "#671 — Widget page resolution requires /P, but /P is optional per spec; widgets with no /P are silently dropped.",
+            "#669 (signature widget /AP appearance text) and #670 (orphaned Widget annotations " +
+            "outside /AcroForm/Fields) are both fixed as of this line. Re-verify coverage with both " +
+            "landed before deciding whether to remove this entry — do not assume clean without " +
+            "re-running the gate.",
     };
 
     [Fact]

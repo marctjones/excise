@@ -181,6 +181,92 @@ public sealed class AdversarialRedactionRegressionTests
     }
 
     [Fact]
+    public void RedactText_FindsAndRemovesOrphanedMergedWidgetValue()
+    {
+        // #670: before this fix, a Widget annotation that is its own field
+        // dictionary (§12.7.3.1 "merged" field/widget) but isn't reachable
+        // by walking /AcroForm/Fields was invisible to page.Text/page.Letters
+        // entirely — RedactText("WIDGETSECRET") would find zero matches and
+        // report success while the value survived untouched in the widget's
+        // own /V. No /AcroForm dictionary exists at all here, matching
+        // issue17069.pdf's shape (widgets with real /FT+/V living only in
+        // the page's own /Annots array). Verified via saved bytes, not
+        // page.Text re-reading pdfe's own synthetic letters.
+        var pdf = Build(
+            Obj("<< /Type /Catalog /Pages 2 0 R >>"),
+            Obj("<< /Type /Pages /Kids [3 0 R] /Count 1 >>"),
+            Obj("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] " +
+                "/Contents 4 0 R /Annots [5 0 R] /Resources << >> >>"),
+            Stream("", ""),
+            Obj("<< /Type /Annot /Subtype /Widget /FT /Tx /T (Orphan) " +
+                "/V (WIDGETSECRET) /Rect [100 650 260 675] /P 3 0 R >>"));
+
+        Encoding.Latin1.GetString(pdf).Should().Contain("WIDGETSECRET");
+
+        using var doc = PdfDocument.Open(pdf);
+        var page = doc.GetPage(1);
+
+        string.Concat(page.Letters.Select(l => l.Value)).Should().Contain("WIDGETSECRET",
+            "an orphaned merged field/widget's /V must be findable by search/RedactText, " +
+            "not just page.GetFormFields() called in isolation");
+
+        // The merged widget has no content-stream glyphs to match against —
+        // this must route through InteractiveRedactionScrubber via the
+        // "AcroForm:"-prefixed FontName convention, same as #660's
+        // FreeText-annotation case, not PdfPage.RedactArea's glyph pass.
+        page.Letters.Where(l => l.Value != " ")
+            .Should().OnlyContain(l => l.FontName.StartsWith("AcroForm:", StringComparison.Ordinal),
+                "orphaned widget letters must carry the AcroForm: FontName prefix so RedactText " +
+                "routes them through InteractiveRedactionScrubber instead of the glyph-removal path");
+
+        var removed = doc.RedactText("WIDGETSECRET", drawBlackRect: false);
+        removed.Should().BeGreaterThan(0, "RedactText must actually find the orphaned widget's value");
+
+        var saved = doc.SaveToBytes();
+        Encoding.Latin1.GetString(saved).Should().NotContain("WIDGETSECRET",
+            "a word RedactText reports as removed must actually be gone from the saved bytes — " +
+            "'found but not removable' is a new leak, not a fix");
+
+        using var reopened = PdfDocument.Open(saved);
+        reopened.GetPage(1).GetFormFields().Should().NotContain(f => f.Value == "WIDGETSECRET");
+    }
+
+    [Fact]
+    public void RedactText_FindsAndRemovesLinkedFieldValue_WhenWidgetHasNoP()
+    {
+        // #671: the field IS properly linked via /AcroForm/Fields, but its
+        // widget carries no /P — exactly issue19389.pdf's "Password" and
+        // "Text" fields. Before this fix, PdfField.PageNumber stayed null
+        // and PdfPage.GetFormFields()'s `PageNumber == pageNum` filter
+        // silently dropped it, so RedactText never saw it even though the
+        // field dictionary itself was fully populated and reachable.
+        var pdf = Build(
+            Obj("<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [5 0 R] >> >>"),
+            Obj("<< /Type /Pages /Kids [3 0 R] /Count 1 >>"),
+            Obj("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] " +
+                "/Contents 4 0 R /Annots [5 0 R] /Resources << >> >>"),
+            Stream("", ""),
+            Obj("<< /Type /Annot /Subtype /Widget /FT /Tx /T (NoPage) " +
+                "/V (NOPAGESECRET) /Rect [100 650 260 675] >>"));
+
+        using var doc = PdfDocument.Open(pdf);
+        var page = doc.GetPage(1);
+
+        string.Concat(page.Letters.Select(l => l.Value)).Should().Contain("NOPAGESECRET",
+            "a linked field's value must be findable even when its widget has no /P");
+
+        var removed = doc.RedactText("NOPAGESECRET", drawBlackRect: false);
+        removed.Should().BeGreaterThan(0, "RedactText must find the value of a field whose widget lacks /P");
+
+        var saved = doc.SaveToBytes();
+        Encoding.Latin1.GetString(saved).Should().NotContain("NOPAGESECRET",
+            "a word RedactText reports as removed must actually be gone from the saved bytes");
+
+        using var reopened = PdfDocument.Open(saved);
+        reopened.GetPage(1).GetFormFields().Should().NotContain(f => f.Value == "NOPAGESECRET");
+    }
+
+    [Fact]
     public void RedactArea_PartialGlyphOverlap_RemovesGlyphButKeepsNeighbor()
     {
         var pdf = Build(

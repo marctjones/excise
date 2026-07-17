@@ -23,6 +23,11 @@ internal static class PdfAcroFormParser
         // Build a page-ref → page-number map for fast lookup
         var pageRefToNumber = PdfOutlineParser.BuildPageRefMap(doc);
 
+        // Widget → page association from every page's own /Annots array
+        // (#671: /P is optional per spec, so this is the fallback — and for
+        // some widgets, the only source of truth at all).
+        var widgetToPage = PdfWidgetAnnotationIndex.BuildWidgetToPageMap(doc);
+
         // Parse the /Fields array (top-level fields)
         var fields = new List<PdfField>();
         var fieldsObj = acroFormDict.GetOptional("Fields");
@@ -30,7 +35,7 @@ internal static class PdfAcroFormParser
         {
             foreach (var fieldRef in fieldsArray)
             {
-                ParseFieldTree(doc, fieldRef, parentName: "", fields, pageRefToNumber);
+                ParseFieldTree(doc, fieldRef, parentName: "", fields, pageRefToNumber, widgetToPage);
             }
         }
 
@@ -46,7 +51,8 @@ internal static class PdfAcroFormParser
         PdfObject? fieldObj,
         string parentName,
         List<PdfField> outputFields,
-        Dictionary<(int, int), int> pageRefToNumber)
+        Dictionary<(int, int), int> pageRefToNumber,
+        Dictionary<PdfDictionary, int> widgetToPage)
     {
         // Resolve indirect reference
         if (fieldObj == null || doc.Resolve(fieldObj) is not PdfDictionary fieldDict)
@@ -77,21 +83,21 @@ internal static class PdfAcroFormParser
 
                 if (allPureWidgets)
                 {
-                    var field = ExtractField(doc, fieldDict, fullName, partialName, pageRefToNumber);
+                    var field = ExtractField(doc, fieldDict, fullName, partialName, pageRefToNumber, widgetToPage);
                     if (field != null)
                         outputFields.Add(field);
                 }
                 else
                 {
                     foreach (var kidRef in kidsArray)
-                        ParseFieldTree(doc, kidRef, fullName, outputFields, pageRefToNumber);
+                        ParseFieldTree(doc, kidRef, fullName, outputFields, pageRefToNumber, widgetToPage);
                 }
             }
         }
         else
         {
             // Terminal field (leaf). Extract its properties and create a PdfField.
-            var field = ExtractField(doc, fieldDict, fullName, partialName, pageRefToNumber);
+            var field = ExtractField(doc, fieldDict, fullName, partialName, pageRefToNumber, widgetToPage);
             if (field != null)
                 outputFields.Add(field);
         }
@@ -105,7 +111,8 @@ internal static class PdfAcroFormParser
         PdfDictionary fieldDict,
         string fullName,
         string partialName,
-        Dictionary<(int, int), int> pageRefToNumber)
+        Dictionary<(int, int), int> pageRefToNumber,
+        Dictionary<PdfDictionary, int> widgetToPage)
     {
         // Get field type (/FT: /Btn, /Tx, /Ch, /Sig). FT may be inherited from
         // a parent field — walk /Parent chain if not present locally.
@@ -144,7 +151,7 @@ internal static class PdfAcroFormParser
         if (subtype == "Widget")
         {
             widgetDicts.Add(fieldDict);
-            (rect, pageNumber) = ExtractWidgetInfo(doc, fieldDict, pageRefToNumber);
+            (rect, pageNumber) = ExtractWidgetInfo(doc, fieldDict, pageRefToNumber, widgetToPage);
             if (rect != null)
                 widgets.Add(new PdfFieldWidget(rect.Value, pageNumber, ExtractWidgetExportValue(doc, fieldDict)));
         }
@@ -155,7 +162,7 @@ internal static class PdfAcroFormParser
             widgetDicts.AddRange(widgetKids);
             foreach (var widget in widgetKids)
             {
-                var (widgetRect, widgetPageNumber) = ExtractWidgetInfo(doc, widget, pageRefToNumber);
+                var (widgetRect, widgetPageNumber) = ExtractWidgetInfo(doc, widget, pageRefToNumber, widgetToPage);
                 if (widgetRect != null)
                     widgets.Add(new PdfFieldWidget(widgetRect.Value, widgetPageNumber, ExtractWidgetExportValue(doc, widget)));
             }
@@ -215,7 +222,8 @@ internal static class PdfAcroFormParser
     private static (PdfRectangle? rect, int? pageNumber) ExtractWidgetInfo(
         PdfDocument doc,
         PdfDictionary widgetDict,
-        Dictionary<(int, int), int> pageRefToNumber)
+        Dictionary<(int, int), int> pageRefToNumber,
+        Dictionary<PdfDictionary, int> widgetToPage)
     {
         PdfRectangle? rect = null;
         int? pageNumber = null;
@@ -242,8 +250,74 @@ internal static class PdfAcroFormParser
                 pageNumber = pn;
         }
 
+        // #671: /P is OPTIONAL per spec (§12.5.2) — page association can be
+        // established purely by the widget appearing in that page's own
+        // /Annots array. Fall back to that when /P is absent, or present but
+        // unresolvable (dangling reference).
+        if (pageNumber == null && widgetToPage.TryGetValue(widgetDict, out var fallbackPage))
+            pageNumber = fallbackPage;
+
         return (rect, pageNumber);
     }
+
+    /// <summary>
+    /// #670 fallback: surface Widget annotations that live in this page's own
+    /// /Annots array but were never reached while walking /AcroForm/Fields —
+    /// either because the document has no /AcroForm at all, or because the
+    /// /Fields tree simply omits them. Per §12.7.3.1 a Widget annotation may BE
+    /// its own field dictionary (a "merged" field/widget); such widgets carry
+    /// /FT (and usually /V) directly and are legal fields in their own right
+    /// even when nothing in /AcroForm/Fields points at them.
+    ///
+    /// Only widgets that carry /FT directly are surfaced — that is the merged-
+    /// widget signal. This deliberately excludes ordinary Widget annotations
+    /// that have no field semantics of their own (a widget kid whose field
+    /// properties live on a separate parent field dictionary reached via
+    /// /Kids — those are already covered by the AcroForm walk, and skipped
+    /// here even if <paramref name="alreadyLinked"/> somehow missed them,
+    /// because they fail the /FT check).
+    ///
+    /// Widgets already reached via /AcroForm/Fields (present in
+    /// <paramref name="alreadyLinked"/>, compared by reference — see
+    /// <see cref="PdfWidgetAnnotationIndex"/>) are skipped so their text isn't
+    /// emitted or redacted twice.
+    /// </summary>
+    public static IReadOnlyList<PdfField> ExtractOrphanedPageWidgetFields(
+        PdfDocument doc,
+        PdfDictionary pageDict,
+        int pageNumber,
+        IReadOnlySet<PdfDictionary> alreadyLinked)
+    {
+        List<PdfField>? result = null;
+
+        foreach (var widget in PdfWidgetAnnotationIndex.GetPageAnnotWidgets(doc, pageDict))
+        {
+            if (alreadyLinked.Contains(widget)) continue;
+            if (widget.GetNameOrNull("FT") == null) continue; // not a merged field/widget
+
+            var partialName = widget.GetStringOrNull("T");
+            if (partialName == null) continue; // fields require a name (same rule as ParseFieldTree)
+
+            // The widget's page is already known — it came from this page's
+            // own /Annots — so a single-entry map is enough for ExtractField's
+            // page-resolution fallback; there's no /P vs. /Annots ambiguity
+            // to settle here.
+            var widgetToPage = new Dictionary<PdfDictionary, int>(ReferenceEqualityComparer.Instance)
+            {
+                [widget] = pageNumber
+            };
+
+            var field = ExtractField(
+                doc, widget, fullName: partialName, partialName: partialName,
+                pageRefToNumber: EmptyPageRefMap, widgetToPage: widgetToPage);
+            if (field != null)
+                (result ??= new List<PdfField>()).Add(field);
+        }
+
+        return (IReadOnlyList<PdfField>?)result ?? Array.Empty<PdfField>();
+    }
+
+    private static readonly Dictionary<(int, int), int> EmptyPageRefMap = new();
 
     /// <summary>
     /// Walk the /Parent chain to find an inherited name entry. Used for /FT,
