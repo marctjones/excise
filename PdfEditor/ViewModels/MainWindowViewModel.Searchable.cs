@@ -86,6 +86,19 @@ public partial class MainWindowViewModel
         var ocrService = new PdfOcrService(language: effectiveLanguage);
         var converter = new PdfSearchableConverter(ocrService);
 
+        // Known limitation: PdfSearchableConverter.MakeSearchable throws
+        // OperationCanceledException at the top of its per-page loop, after
+        // already having flushed invisible-text layers onto any pages
+        // processed before the cancellation. Because the exception means
+        // OnMakeSearchableCompletedAsync never runs, those already-written
+        // pages stay mutated in the live document but the app doesn't mark
+        // itself dirty for them (no doc-mutation "Completed" event fires).
+        // Each page's own flush is self-consistent (not corrupt), and on
+        // the common "cancel and discard" path this is arguably the right
+        // behavior anyway — but a "cancel then Save" sequence would silently
+        // keep the partial OCR layer without prompting a save. Not
+        // reworked here (would need copy-then-swap semantics); flag if it
+        // becomes a real workflow.
         return Task.Run(
             () => converter.MakeSearchable(document, force, progress, cancellationToken),
             cancellationToken);
