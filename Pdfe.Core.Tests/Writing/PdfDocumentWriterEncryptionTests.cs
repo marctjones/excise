@@ -2,6 +2,7 @@ using System.Text;
 using AwesomeAssertions;
 using Pdfe.Core.Document;
 using Pdfe.Core.Parsing;
+using Pdfe.Core.Primitives;
 using Pdfe.Core.Security;
 using Pdfe.Core.Writing;
 using Xunit;
@@ -68,6 +69,56 @@ public class PdfDocumentWriterEncryptionTests
         text.Should().NotContain(secretMarker,
             "the content stream must be AES-256 encrypted, not written as plaintext");
         text.Should().NotContain("BT", "text-showing operators must not be visible in ciphertext");
+    }
+
+    [Fact]
+    public void Write_EncryptMetadataFalse_LeavesMetadataStreamPlaintextButEncryptsEverythingElse()
+    {
+        // ISO 32000-2 §7.6.1: when /EncryptMetadata is false, the XMP
+        // /Metadata stream itself must stay plaintext even though every
+        // other stream in the document is encrypted. This is a distinct
+        // code path from the default (EncryptMetadata=true, exercised by
+        // every other test in this file) — cover it explicitly.
+        const string metadataMarker = "METADATA_MARKER_EXPECTED_PLAINTEXT";
+        const string bodyMarker = "BODY_MARKER_EXPECTED_CIPHERTEXT";
+        using var doc = PdfDocument.Open(CreateSimplePdf(bodyMarker));
+
+        var metaDict = new PdfDictionary();
+        metaDict.SetName("Type", "Metadata");
+        metaDict.SetName("Subtype", "XML");
+        var metaBytes = Encoding.UTF8.GetBytes($"<x:xmpmeta>{metadataMarker}</x:xmpmeta>");
+        doc.Catalog["Metadata"] = doc.AddIndirectObject(new PdfStream(metaDict, metaBytes));
+
+        var bytes = SaveEncrypted(doc, new PdfEncryptionOptions { EncryptMetadata = false });
+        var text = Encoding.Latin1.GetString(bytes);
+
+        text.Should().Contain(metadataMarker,
+            "EncryptMetadata=false must skip encrypting the /Metadata stream's own bytes");
+        text.Should().Contain("/EncryptMetadata false");
+        text.Should().NotContain(bodyMarker,
+            "every other stream must still be encrypted even when metadata is exempted");
+    }
+
+    [Fact]
+    public void Write_EncryptMetadataTrue_EncryptsMetadataStreamToo()
+    {
+        // The inverse of the test above: confirm the default (true) does
+        // NOT accidentally exempt the metadata stream.
+        const string metadataMarker = "METADATA_MARKER_EXPECTED_CIPHERTEXT";
+        using var doc = PdfDocument.Open(CreateSimplePdf("Body"));
+
+        var metaDict = new PdfDictionary();
+        metaDict.SetName("Type", "Metadata");
+        metaDict.SetName("Subtype", "XML");
+        var metaBytes = Encoding.UTF8.GetBytes($"<x:xmpmeta>{metadataMarker}</x:xmpmeta>");
+        doc.Catalog["Metadata"] = doc.AddIndirectObject(new PdfStream(metaDict, metaBytes));
+
+        var bytes = SaveEncrypted(doc, new PdfEncryptionOptions { EncryptMetadata = true });
+        var text = Encoding.Latin1.GetString(bytes);
+
+        text.Should().NotContain(metadataMarker,
+            "EncryptMetadata=true (the default) must encrypt the /Metadata stream like any other stream");
+        text.Should().Contain("/EncryptMetadata true");
     }
 
     [Fact]
