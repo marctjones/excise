@@ -87,6 +87,14 @@ grep -vE '^\s*(#|$)' "$ALLOWLIST" \
 LC_ALL=C sort -u "$TMP/actual.txt" -o "$TMP/actual.txt"
 
 if [[ "$UPDATE" == "--update" ]]; then
+  # Capture the OLD allowlist contents BEFORE opening the `> "$ALLOWLIST"`
+  # redirection below. Bash sets up a compound command's output redirection
+  # (which truncates $ALLOWLIST) before running any of the command's body, so
+  # a `grep ... "$ALLOWLIST"` *inside* the loop below would always see an
+  # empty file — reason would always be empty and every entry would fall
+  # through to "TODO: justify or fix" regardless of what was there (#663).
+  # Grepping against $OLD instead of the file sidesteps the ordering bug.
+  OLD="$(cat "$ALLOWLIST" 2>/dev/null || true)"
   {
     echo "# Skips allow-listed for $NAME. See scripts/check-skip-budget.sh (#619)."
     echo "# Every line is coverage we are NOT getting. Justify it or delete it."
@@ -96,8 +104,14 @@ if [[ "$UPDATE" == "--update" ]]; then
       # `|| true` is load-bearing: with `set -e -o pipefail`, a grep that finds
       # nothing (the common case — a brand-new skip) returns 1 and would abort
       # the script mid-write, leaving an allowlist containing only its header.
-      reason="$( { grep -E "^${name}([[:space:]]|#|\$)" "$ALLOWLIST" 2>/dev/null || true; } \
-                | head -1 | sed -n 's/.*#[[:space:]]*//p')"
+      # `[^#]*#` (not `.*#`) matters: `.*` is greedy and matches through to
+      # the LAST `#` on the line, so a reason that itself references another
+      # issue (e.g. "#653: ...") would have everything up to and including
+      # that inner `#` stripped too. `[^#]*` stops at the FIRST `#`, which is
+      # the separator between the test name and the reason (discovered while
+      # verifying #663 against real reasons that cite other issue numbers).
+      reason="$( { printf '%s\n' "$OLD" | grep -E "^${name}([[:space:]]|#|\$)" 2>/dev/null || true; } \
+                | head -1 | sed -n 's/[^#]*#[[:space:]]*//p')"
       if [[ -n "$reason" ]]; then
         printf '%s   # %s\n' "$name" "$reason"
       else
