@@ -197,15 +197,6 @@ public sealed class ExtractionParityTests
     /// </summary>
     private static readonly Dictionary<string, string> KnownAdversarialDisagreements = new()
     {
-        // bug854315.pdf and issue18036.pdf are deliberately NOT listed here
-        // anymore: #669 (signature widget /AP appearance text) and #672
-        // (multiline AcroForm field truncation) fully cover this file's gap
-        // each was filed for — both now clear the coverage gate on their own.
-        ["test-pdfs/pdfjs/issue17069.pdf"] =
-            "#669 (signature widget /AP appearance text) and #670 (orphaned Widget annotations " +
-            "outside /AcroForm/Fields) are both fixed as of this line. Re-verify coverage with both " +
-            "landed before deciding whether to remove this entry — do not assume clean without " +
-            "re-running the gate.",
     };
 
     [Fact]
