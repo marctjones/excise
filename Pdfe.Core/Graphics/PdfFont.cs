@@ -281,6 +281,27 @@ public class PdfFont
         return sb.ToString();
     }
 
+    /// <summary>
+    /// True if every character in <paramref name="text"/> can round-trip
+    /// through <see cref="EncodeString"/> without falling back to <c>?</c>
+    /// (i.e. is ASCII, Latin-1, or a mapped CP1252 special). Callers that
+    /// must not silently corrupt text (e.g. writing an OCR text layer,
+    /// where a wrong-but-plausible-looking <c>?</c> would defeat search
+    /// without anyone noticing) should check this before calling
+    /// <see cref="EncodeString"/> and skip instead of encoding.
+    /// </summary>
+    public virtual bool CanEncodeFully(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return true;
+        foreach (var c in text)
+        {
+            if (c is '(' or ')' or '\\' or '\n' or '\r' or '\t') continue; // always escapable
+            if (c >= 32 && c <= 126) continue; // printable ASCII
+            if (!TryMapToWinAnsi(c, out _)) return false;
+        }
+        return true;
+    }
+
     // Unicode -> WinAnsi (CP1252) byte for the 0x80–0x9F range, whose code points
     // differ from Latin-1. Outside this range, ASCII (0x20–0x7E) and Latin-1
     // (0xA0–0xFF) map to their own code point.

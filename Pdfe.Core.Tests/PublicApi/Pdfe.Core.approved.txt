@@ -943,6 +943,7 @@ namespace Pdfe.Core.Graphics
         public virtual double LineHeight { get; }
         public string Name { get; }
         public double Size { get; }
+        public virtual bool CanEncodeFully(string text) { }
         public Pdfe.Core.Primitives.PdfDictionary CreateFontDictionary() { }
         public virtual string EncodeString(string text) { }
         public virtual double MeasureWidth(string text) { }
@@ -987,6 +988,7 @@ namespace Pdfe.Core.Graphics
         public void ClosePath() { }
         public void CurveTo(double x1, double y1, double x2, double y2, double x3, double y3) { }
         public void Dispose() { }
+        public void DrawInvisibleText(string text, Pdfe.Core.Graphics.PdfFont font, double x, double y, double targetWidth) { }
         public void DrawLine(double x1, double y1, double x2, double y2, Pdfe.Core.Graphics.PdfPen pen) { }
         public void DrawRectangle(double x, double y, double width, double height, Pdfe.Core.Graphics.PdfBrush fill) { }
         public void DrawRectangle(double x, double y, double width, double height, Pdfe.Core.Graphics.PdfBrush? fill, Pdfe.Core.Graphics.PdfPen? stroke) { }

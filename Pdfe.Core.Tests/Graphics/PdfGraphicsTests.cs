@@ -1,3 +1,4 @@
+using System.Linq;
 using AwesomeAssertions;
 using Pdfe.Core.Document;
 using Pdfe.Core.Graphics;
@@ -726,6 +727,99 @@ public class PdfGraphicsTests
         var operators = graphics.GetOperators();
         operators.Should().NotBeEmpty();
         operators.Should().Contain("Tj");
+    }
+
+    [Fact]
+    public void PdfGraphics_DrawInvisibleText_EmitsRenderMode3()
+    {
+        var pdfData = CreateSimplePdf();
+        using var doc = PdfDocument.Open(pdfData);
+        var page = doc.GetPage(1);
+        using var graphics = page.GetGraphics();
+
+        var font = PdfFont.Helvetica(12);
+        graphics.DrawInvisibleText("Test", font, 100, 100, 50);
+
+        var operators = graphics.GetOperators();
+        operators.Should().Contain("3 Tr");
+        operators.Should().Contain("Tj");
+        operators.Should().Contain("Tz");
+    }
+
+    [Fact]
+    public void PdfGraphics_DrawInvisibleText_ResetsRenderModeAndScaleAfterward()
+    {
+        // Tr/Tz are text state, not part of the q/Q graphics-state stack — a
+        // later DrawString call on the same graphics session must not
+        // inherit invisible/scaled state from an earlier DrawInvisibleText.
+        var pdfData = CreateSimplePdf();
+        using var doc = PdfDocument.Open(pdfData);
+        var page = doc.GetPage(1);
+        using var graphics = page.GetGraphics();
+
+        var font = PdfFont.Helvetica(12);
+        graphics.DrawInvisibleText("Test", font, 100, 100, 50);
+
+        var operators = graphics.GetOperators();
+        operators.Should().Contain("0 Tr");
+        operators.Should().Contain("100 Tz");
+
+        var trIndex = operators.IndexOf("3 Tr");
+        var resetIndex = operators.IndexOf("0 Tr", trIndex);
+        var etIndex = operators.IndexOf("ET", trIndex);
+        resetIndex.Should().BeLessThan(etIndex, "the render mode must be reset before ET, inside this call's own block");
+    }
+
+    [Fact]
+    public void PdfGraphics_DrawInvisibleText_ScalesToTargetWidth()
+    {
+        var pdfData = CreateSimplePdf();
+        using var doc = PdfDocument.Open(pdfData);
+        var page = doc.GetPage(1);
+        using var graphics = page.GetGraphics();
+
+        var font = PdfFont.Helvetica(12);
+        var naturalWidth = font.MeasureWidth("Test");
+        var targetWidth = naturalWidth * 2; // force a distinct, checkable scale
+        graphics.DrawInvisibleText("Test", font, 100, 100, targetWidth);
+
+        var operators = graphics.GetOperators();
+        // First "Tz" line is the fitted scale; DrawInvisibleText appends a
+        // "100 Tz" reset afterward, so take the first match, not Single().
+        var tzLine = operators.Split('\n').First(l => l.EndsWith(" Tz"));
+        var scale = double.Parse(tzLine.Split(' ')[0], System.Globalization.CultureInfo.InvariantCulture);
+        scale.Should().BeApproximately(200.0, 1.0, "targetWidth is 2x natural width, so Tz should scale to ~200%");
+    }
+
+    [Fact]
+    public void PdfGraphics_DrawInvisibleText_SkipsCharactersFontCannotEncode()
+    {
+        var pdfData = CreateSimplePdf();
+        using var doc = PdfDocument.Open(pdfData);
+        var page = doc.GetPage(1);
+        using var graphics = page.GetGraphics();
+
+        var font = PdfFont.Helvetica(12);
+        graphics.DrawInvisibleText("中文", font, 100, 100, 50); // CJK, not WinAnsi-representable
+
+        graphics.GetOperators().Should().BeEmpty(
+            "writing a lossy '?' for unrepresentable text would silently corrupt search — must skip instead");
+    }
+
+    [Fact]
+    public void PdfGraphics_DrawInvisibleText_AfterFlush_LettersAndTextReflectTheWord()
+    {
+        var pdfData = CreateSimplePdf();
+        using var doc = PdfDocument.Open(pdfData);
+        var page = doc.GetPage(1);
+
+        using (var graphics = page.GetGraphics())
+        {
+            graphics.DrawInvisibleText("HIDDENWORD", PdfFont.Helvetica(12), 100, 100, 60);
+        }
+
+        page.Text.Should().Contain("HIDDENWORD");
+        string.Concat(page.Letters.Select(l => l.Value)).Should().Contain("HIDDENWORD");
     }
 
     [Fact]

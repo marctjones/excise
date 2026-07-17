@@ -381,6 +381,48 @@ public class PdfGraphics : IDisposable
     }
 
     /// <summary>
+    /// Draws invisible text (render mode 3 — neither fill nor stroke) scaled
+    /// horizontally via <c>Tz</c> so its rendered width matches
+    /// <paramref name="targetWidth"/>. Used to lay an OCR text layer over a
+    /// raster scan: nothing is painted, but the glyphs occupy the word's
+    /// true bounding box, so search/selection/redaction land in the right
+    /// place (#627). No-ops (writes nothing) if <paramref name="text"/> is
+    /// empty, contains a character <paramref name="font"/> can't represent
+    /// (see <see cref="PdfFont.CanEncodeFully"/> — writing a lossy
+    /// <c>?</c> would silently corrupt search, worse than omitting the
+    /// word), or its natural width at this font size is ~0.
+    /// </summary>
+    public void DrawInvisibleText(string text, PdfFont font, double x, double y, double targetWidth)
+    {
+        ThrowIfDisposed();
+        ArgumentNullException.ThrowIfNull(font);
+
+        if (string.IsNullOrEmpty(text)) return;
+        if (targetWidth <= 0) return;
+        if (!font.CanEncodeFully(text)) return;
+
+        var naturalWidth = font.MeasureWidth(text);
+        if (naturalWidth <= 0.001) return;
+
+        var scale = Math.Clamp(100.0 * targetWidth / naturalWidth, 10.0, 400.0);
+
+        var fontName = _page.AddFont(font);
+
+        _operators.AppendLine("BT");
+        _operators.AppendLine($"/{fontName} {Fmt(font.Size)} Tf");
+        _operators.AppendLine("3 Tr");
+        _operators.AppendLine($"{Fmt(scale)} Tz");
+        _operators.AppendLine($"{Fmt(x)} {Fmt(y)} Td");
+        _operators.AppendLine($"{font.EncodeString(text)} Tj");
+        // Tr/Tz are text state, not part of the q/Q graphics-state stack —
+        // they'd otherwise leak into any later DrawString/DrawText call in
+        // this (or a future) PdfGraphics session on the same content stream.
+        _operators.AppendLine("0 Tr");
+        _operators.AppendLine("100 Tz");
+        _operators.AppendLine("ET");
+    }
+
+    /// <summary>
     /// Measures the size of a string when rendered with the specified font.
     /// </summary>
     public static PdfSize MeasureString(string text, PdfFont font)

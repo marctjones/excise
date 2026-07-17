@@ -40,6 +40,7 @@ partial class Program
             CreateAutodetectFieldsCommand(),
             CreateAuditCommand(),
             CreateOcrCommand(),
+            CreateMakeSearchableCommand(),
         };
 
         // System.CommandLine 2.0 split parsing from invocation: build a
@@ -1493,5 +1494,123 @@ partial class Program
         return command;
     }
 
+    static Command CreateMakeSearchableCommand()
+    {
+        var inputArg = new Argument<FileInfo>("input") { Description = "Input PDF file" };
+        var outputArg = new Argument<FileInfo>("output") { Description = "Output PDF path" };
+        var pageOption = new Option<int?>("--page", "-p") { Description = "Page to process (1-based). Omit for all pages." };
+        var dpiOption = new Option<int>("--dpi")
+        {
+            Description = "Render DPI for OCR (higher = slower, more accurate)",
+            DefaultValueFactory = _ => 300,
+        };
+        var langOption = new Option<string>("--lang")
+        {
+            Description = "Tesseract language code (e.g. eng, deu, eng+spa)",
+            DefaultValueFactory = _ => "eng",
+        };
+        var tessdataOption = new Option<string?>("--tessdata")
+        {
+            Description = "Path to a directory containing <lang>.traineddata. Defaults to TESSDATA_PREFIX.",
+        };
+        var forceOption = new Option<bool>("--force")
+        {
+            Description = "OCR and overlay even pages that already have an extractable text layer. " +
+                "Default: such pages are left untouched.",
+            DefaultValueFactory = _ => false,
+        };
 
+        var command = new Command(
+            "make-searchable",
+            "OCR a scanned PDF and write the recognized text back as an invisible, searchable text layer")
+        {
+            inputArg, outputArg, pageOption, dpiOption, langOption, tessdataOption, forceOption,
+        };
+
+        command.SetAction(parseResult =>
+        {
+            var input = parseResult.GetValue(inputArg)!;
+            var output = parseResult.GetValue(outputArg)!;
+            var page = parseResult.GetValue(pageOption);
+            var dpi = parseResult.GetValue(dpiOption);
+            var lang = parseResult.GetValue(langOption)!;
+            var tessdata = parseResult.GetValue(tessdataOption);
+            var force = parseResult.GetValue(forceOption);
+
+            if (!input.Exists)
+            {
+                Console.Error.WriteLine($"File not found: {input.FullName}");
+                Environment.ExitCode = 1;
+                return;
+            }
+
+            var ocr = new PdfOcrService(language: lang, dpi: dpi, tessdataPrefix: tessdata);
+            if (!ocr.IsAvailable())
+            {
+                Console.Error.WriteLine(
+                    "tesseract CLI not found on PATH. Install with `apt install tesseract-ocr` " +
+                    "(or your platform's equivalent).");
+                Environment.ExitCode = 1;
+                return;
+            }
+
+            try
+            {
+                using var doc = PdfDocument.Open(File.ReadAllBytes(input.FullName));
+                int from = page.GetValueOrDefault(1);
+                int to = page.HasValue ? page.Value : doc.PageCount;
+
+                if (from < 1 || from > doc.PageCount || to < from || to > doc.PageCount)
+                {
+                    Console.Error.WriteLine($"Page out of range (document has {doc.PageCount} pages).");
+                    Environment.ExitCode = 1;
+                    return;
+                }
+
+                var converter = new PdfSearchableConverter(ocr);
+                var pagesWithEncodingGaps = new List<(int Page, int Skipped)>();
+                int wordsWritten = 0, pagesSkipped = 0, pagesProcessed = 0;
+
+                for (int p = from; p <= to; p++)
+                {
+                    var result = converter.MakePageSearchable(doc.GetPage(p), force);
+                    if (result.Skipped)
+                    {
+                        pagesSkipped++;
+                        Console.WriteLine($"Page {p}/{to}: skipped (already has a text layer)");
+                    }
+                    else
+                    {
+                        pagesProcessed++;
+                        wordsWritten += result.WordsWritten;
+                        Console.WriteLine($"Page {p}/{to}: {result.WordsWritten} word(s) written");
+                        if (result.WordsSkippedEncoding > 0)
+                            pagesWithEncodingGaps.Add((p, result.WordsSkippedEncoding));
+                    }
+                }
+
+                doc.Save(output.FullName);
+
+                Console.WriteLine($"Processed {pagesProcessed} page(s), skipped {pagesSkipped}, wrote {wordsWritten} word(s).");
+                Console.WriteLine($"Output: {output.FullName}");
+
+                if (pagesWithEncodingGaps.Count > 0)
+                {
+                    Console.Error.WriteLine(
+                        "Warning: some recognized words were not written because they contain characters " +
+                        "outside the supported font's range (non-Latin scripts aren't fully supported yet, " +
+                        "see #627) — these pages are only partially searchable:");
+                    foreach (var (p, skipped) in pagesWithEncodingGaps)
+                        Console.Error.WriteLine($"  Page {p}: {skipped} word(s) skipped");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error: {ex.Message}");
+                Environment.ExitCode = 1;
+            }
+        });
+
+        return command;
+    }
 }
