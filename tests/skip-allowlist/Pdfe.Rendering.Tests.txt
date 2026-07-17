@@ -1,0 +1,108 @@
+# Skips allow-listed for Pdfe.Rendering.Tests. See scripts/check-skip-budget.sh (#619, #655).
+# Every line is coverage we are NOT getting. Justify it or delete it.
+# Format:  TestName   # why
+#
+# Generated against a CI-equivalent reference environment, not this box:
+# neither mutool/ghostscript/pdftocairo/tesseract on PATH, nor the gitignored
+# corpus dirs (test-pdfs/{smoke,isartor,local-real-world,pdfjs,poppler,
+# altona,baselines,federal,ghent,samples,verapdf-corpus}) — only what CI
+# actually checks out (test-pdfs/{generated-regressions,manifests,pdf20,
+# rendering-contracts,sample-pdfs} plus tracked fixtures like
+# Pdfe.Core.Tests/Fixtures/Fonts/Inconsolata.cff). Regenerating this file on a
+# machine that HAS those tools/corpus installed (e.g. a maintainer box that
+# ran scripts/download-test-pdfs.sh) will silently shrink it, because those
+# same skip sites stop skipping there — confirmed empirically: an initial
+# --update on such a box produced 26 entries by finding real files three
+# directory levels up from a nested worktree, not 75. Regenerate only against
+# the reference environment above, e.g. by clearing PATH of the four tools
+# and running from a checkout with no ancestor directory containing test-pdfs.
+#
+# Scrutiny (#655 point 4): given a bulk sample across every category below
+# (Differential/mutool-or-ghostscript-gated, and one gitignored-corpus
+# subdirectory per family — Altona/Ghent/Isartor/pdf.js/Poppler/TAMReview)
+# confirmed each skip is a genuine Assert.SkipWhen/SkipUnless on tool or
+# fixture availability, not a lazy/unconditional skip, this list was NOT
+# given the same line-by-line manual "justify or fix" pass #619's original
+# 33-skip Pdfe.Core.Tests cleanup did. At 75 entries, nearly all sharing one
+# of a handful of root causes, a bulk category-level justification (below)
+# gives the same guarantee the mechanism actually needs — a FUTURE skip that
+# doesn't fit one of these categories still shows up as unlisted and fails
+# the gate — without 75 near-duplicate paragraphs. Pdfe.Core.Tests' smaller,
+# more heterogeneous set (veraPDF absence, page-rotation edge cases) still
+# warranted individual attention; this project's population does not.
+#
+Pdfe.Rendering.Tests.Corpus.IsartorRoundTripTests.RoundTripsThroughWriter   # test-pdfs/isartor (top-level, gitignored) PDF/A conformance corpus absent unless downloaded
+Pdfe.Rendering.Tests.Corpus.RecoverablePdfRenderingTests.Render_AcrobatCompatibleV4R4ShortKeyPadding_RendersFirstPage   # test-pdfs/pdfjs (gitignored) recoverable-PDF fixtures absent unless downloaded
+Pdfe.Rendering.Tests.Differential.DifferentialRenderingTests.RendersSimilarlyToMutool   # external reference-renderer tool (mutool/ghostscript) and/or the gitignored test-pdfs/smoke corpus is absent in this environment; SkipUnless/SkipWhen-gated (#619 no-self-oracle: these compare against an independent tool, not pdfe itself)
+Pdfe.Rendering.Tests.Differential.ExploratoryDifferentialTests.GenerateCorpusReportChunk   # external reference-renderer tool (mutool/ghostscript) and/or the gitignored test-pdfs/smoke corpus is absent in this environment; SkipUnless/SkipWhen-gated (#619 no-self-oracle: these compare against an independent tool, not pdfe itself)
+Pdfe.Rendering.Tests.Differential.ExtractionParityTests.AdversarialCorpus_PdfeDoesNotCatastrophicallyUnderExtractRelativeToMutool   # external reference-renderer tool (mutool/ghostscript) and/or the gitignored test-pdfs/smoke corpus is absent in this environment; SkipUnless/SkipWhen-gated (#619 no-self-oracle: these compare against an independent tool, not pdfe itself)
+Pdfe.Rendering.Tests.Differential.ExtractionParityTests.GenerateExtractionParityReport   # external reference-renderer tool (mutool/ghostscript) and/or the gitignored test-pdfs/smoke corpus is absent in this environment; SkipUnless/SkipWhen-gated (#619 no-self-oracle: these compare against an independent tool, not pdfe itself)
+Pdfe.Rendering.Tests.Differential.PdfJsFontFallbackDifferentialTests.HighlightsPage5_LoadsEmbeddedUrwType1FontFile   # external reference-renderer tool (mutool/ghostscript) and/or the gitignored test-pdfs/smoke corpus is absent in this environment; SkipUnless/SkipWhen-gated (#619 no-self-oracle: these compare against an independent tool, not pdfe itself)
+Pdfe.Rendering.Tests.Differential.PdfJsFontFallbackDifferentialTests.Issue16316_LoadsEmbeddedRawType1FontFile   # external reference-renderer tool (mutool/ghostscript) and/or the gitignored test-pdfs/smoke corpus is absent in this environment; SkipUnless/SkipWhen-gated (#619 no-self-oracle: these compare against an independent tool, not pdfe itself)
+Pdfe.Rendering.Tests.Differential.RedactionReferenceVerificationTests.RedactedGlyphs_AreNotDrawnByAnIndependentRenderer   # external reference-renderer tool (mutool/ghostscript) and/or the gitignored test-pdfs/smoke corpus is absent in this environment; SkipUnless/SkipWhen-gated (#619 no-self-oracle: these compare against an independent tool, not pdfe itself)
+Pdfe.Rendering.Tests.Differential.RedactionReferenceVerificationTests.RedactedInk_IsGoneFromThePage_NotMerelyCoveredByABox   # external reference-renderer tool (mutool/ghostscript) and/or the gitignored test-pdfs/smoke corpus is absent in this environment; SkipUnless/SkipWhen-gated (#619 no-self-oracle: these compare against an independent tool, not pdfe itself)
+Pdfe.Rendering.Tests.Differential.RedactionReferenceVerificationTests.RedactedText_IsNotRecoverableByAnIndependentExtractor   # external reference-renderer tool (mutool/ghostscript) and/or the gitignored test-pdfs/smoke corpus is absent in this environment; SkipUnless/SkipWhen-gated (#619 no-self-oracle: these compare against an independent tool, not pdfe itself)
+Pdfe.Rendering.Tests.Differential.RedactionRoundTripTests.RedactedWordIsGoneAfterSaveAndReopen   # external reference-renderer tool (mutool/ghostscript) and/or the gitignored test-pdfs/smoke corpus is absent in this environment; SkipUnless/SkipWhen-gated (#619 no-self-oracle: these compare against an independent tool, not pdfe itself)
+Pdfe.Rendering.Tests.Differential.RedactionRoundTripTests.RedactedWordIsNotRecoverableByAnIndependentExtractor   # external reference-renderer tool (mutool/ghostscript) and/or the gitignored test-pdfs/smoke corpus is absent in this environment; SkipUnless/SkipWhen-gated (#619 no-self-oracle: these compare against an independent tool, not pdfe itself)
+Pdfe.Rendering.Tests.Differential.ScannedRasterRedactionLeakTests.ScannedInk_IsDeletedFromTheRaster_NotCoveredByABox   # external reference-renderer tool (mutool/ghostscript) and/or the gitignored test-pdfs/smoke corpus is absent in this environment; SkipUnless/SkipWhen-gated (#619 no-self-oracle: these compare against an independent tool, not pdfe itself)
+Pdfe.Rendering.Tests.Differential.ScannedRasterRedactionLeakTests.SearchableScan_LosesBothTheRasterInkAndTheInvisibleTextLayer   # external reference-renderer tool (mutool/ghostscript) and/or the gitignored test-pdfs/smoke corpus is absent in this environment; SkipUnless/SkipWhen-gated (#619 no-self-oracle: these compare against an independent tool, not pdfe itself)
+Pdfe.Rendering.Tests.Differential.ShadingPatternMeshDifferentialTests.Type5LatticeMeshPatternFill_MutoolAgreesInkIsDrawn   # external reference-renderer tool (mutool/ghostscript) and/or the gitignored test-pdfs/smoke corpus is absent in this environment; SkipUnless/SkipWhen-gated (#619 no-self-oracle: these compare against an independent tool, not pdfe itself)
+Pdfe.Rendering.Tests.Differential.ShadingPatternMeshDifferentialTests.Type7TensorPatchMeshPatternFill_MutoolAgreesInkIsDrawn   # external reference-renderer tool (mutool/ghostscript) and/or the gitignored test-pdfs/smoke corpus is absent in this environment; SkipUnless/SkipWhen-gated (#619 no-self-oracle: these compare against an independent tool, not pdfe itself)
+Pdfe.Rendering.Tests.Differential.TextExtractionDifferentialTests.TextMatchesMutool   # external reference-renderer tool (mutool/ghostscript) and/or the gitignored test-pdfs/smoke corpus is absent in this environment; SkipUnless/SkipWhen-gated (#619 no-self-oracle: these compare against an independent tool, not pdfe itself)
+Pdfe.Rendering.Tests.SkiaRendererCoverageTests.RenderPage_PatternType6CoonsMesh_RendersMeshArea   # test-pdfs/pdfjs Coons-mesh fixture is gitignored corpus, absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_AltonaDeviceCmykImage_UsesDocumentOutputIntent   # test-pdfs/altona (Altona Test Suite, gitignored) corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_AltonaDeviceCmykTransparencyGroupFallback_PreservesInvocationAlpha   # test-pdfs/altona (Altona Test Suite, gitignored) corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_AltonaJpxGrayImage_UsesOpenJpegForContinuousToneTiles   # test-pdfs/altona (Altona Test Suite, gitignored) corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_AltonaPatternText_FillsGlyphsWithPatternInsteadOfFallbackBlack   # test-pdfs/altona (Altona Test Suite, gitignored) corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_AltonaTensorPatchMesh_RendersSampledGradient   # test-pdfs/altona (Altona Test Suite, gitignored) corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_Ghent16BitDeviceCmykImage_AppliesTiffPredictor   # test-pdfs/ghent (Ghent Output Suite, gitignored) corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_GhentDeviceCmykImageSoftMasks_UpdateTransparencyGroupBackdrop   # test-pdfs/ghent (Ghent Output Suite, gitignored) corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_GhentDeviceCmykIsolatedGroup_CompositesNestedGroupInCmyk   # test-pdfs/ghent (Ghent Output Suite, gitignored) corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_GhentDeviceCmykKnockoutGroup_CompositesNestedGroupInCmyk   # test-pdfs/ghent (Ghent Output Suite, gitignored) corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_GhentDeviceCmykTransparencyGroup_AppliesInvocationBlendInCmyk   # test-pdfs/ghent (Ghent Output Suite, gitignored) corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_GhentIccBasedCmykOverprint_UsesIccPreviewColor   # test-pdfs/ghent (Ghent Output Suite, gitignored) corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_GhentIccSourceProfile_AppliesSourceAndOutputIntentProfiles   # test-pdfs/ghent (Ghent Output Suite, gitignored) corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_GhentOptionalContentMembershipDictionary_EvaluatesVisibilityExpression   # test-pdfs/ghent (Ghent Output Suite, gitignored) corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_GhentOutputIntentIndicator_SyncsLabBackdropForCmykBlendGroup   # test-pdfs/ghent (Ghent Output Suite, gitignored) corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_Isartor617_StreamWhitespaceBeforeEol_RendersBlankPage   # test-pdfs/isartor (top-level, gitignored) PDF/A conformance corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsAlphaTrans_DirectAxialShadingUsesFunctionReferencesAndAlpha   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsBug1108301_EmbeddedBengaliTrueTypeUsesByteCmap   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsBug1308536_SubstitutedCondensedType1UsesPdfWidths   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsBug1802506_CheckmarkWidgetAppearancePaintsGlyph   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsBug1815476_DeviceRgbAdobeDctKeepsHeaderWhite   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsBug852992_FormSoftMaskCanResolveFormShadingResources   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsBug859204_EmbeddedType1EncodingRendersBulletGlyph   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsBug920426_Type0EncodingCMapRemapsCharacterCodesToGlyphs   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsChromeMarkedContent_MismatchedSoftMaskKeepsImageTextVisible   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsExplicitImageMask_StencilsSourceImage   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsFranz2_FormBBoxResolvesIndirectNumbers   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsIssue10339_IndexedLabImagesDoNotRenderAsBlackBlocks   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsIssue10572_StitchedShadingPatternUsesDeclaredDomain   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsIssue12798_DeviceCmykScreenPreviewMatchesCommonReaders   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsIssue13147_CidTextUsesPdfWidths   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsIssue13372_ImageMaskPaintsCurrentShadingPattern   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsIssue13520_DeviceNShadingTintTransformDoesNotCollapseToBlack   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsIssue13931_FlateSoftMaskMakesImageMatteTransparent   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsIssue14256_InlineImagesDoNotTokenizeData   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsIssue14814_IndirectDecodeParmsPngPredictorRendersSmoothImage   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsIssue14999_Type3CcittDecodeParmsRenderReadableGlyphMasks   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsIssue15716_ZapfDingbatsDifferencesRenderTilingPattern   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsIssue16038_UncoloredTilingPatternUsesScnTint   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsIssue16263_HugeSoftMaskDownsamplesInsteadOfTimingOut   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsIssue16742_FormXObjectClipsToBBox   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsIssue18816_Type7TensorPatchPatternFillRendersRealWorldFile   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsIssue1905_FlateSoftMasksRespectDecodePolarity   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsIssue19326_JpxGrayImageWithSoftMaskRendersVisibleContent   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsIssue19326_OpenJpegFallbackKeepsJpxBackgroundClean   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsIssue19517_Jp2ComponentDefinitionKeepsRgbOrder   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsIssue2948_Type4MeshPatternRendersColorfulBackground   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsJbig2ArithmeticTextRegion_PreservesOutOfStripSymbolPlacement   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsJbig2ArithmeticTextRegion_RendersDecodedBitonalPage   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsJbig2BitmapRefinement_RendersNonBlankNonBlackPage   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsJbig2MmrSymbolDictionary_RendersDecodedBitonalPage   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsMalformedStreamFixtures_RenderViaParserRecovery   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PdfjsS2_JpxSoftMasksClearImageBackgrounds   # test-pdfs/pdfjs (gitignored) pdf.js regression-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PopplerJpeg_DeviceCmykDctUsesPdfColorRulesAndAdobeMarkerPrecedence   # test-pdfs/poppler (gitignored) reference-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.SkiaRendererTests.RenderPage_PopplerJpeg_ExplicitDctColorTransformColumnsRender   # test-pdfs/poppler (gitignored) reference-fixture corpus absent unless downloaded
+Pdfe.Rendering.Tests.Visual.TamReviewCffSubsetTests.TamReviewBodyFont_CustomGNamesResolveToDrawableCffGlyphs   # test-pdfs/pdfjs/TAMReview.pdf is gitignored corpus, absent unless scripts/download-test-pdfs.sh has been run
+Pdfe.Rendering.Tests.Visual.TamReviewCffSubsetTests.TamReviewPage17_BodyParagraphTextProducesInk   # test-pdfs/pdfjs/TAMReview.pdf is gitignored corpus, absent unless scripts/download-test-pdfs.sh has been run

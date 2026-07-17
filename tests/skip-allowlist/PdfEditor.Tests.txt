@@ -1,10 +1,24 @@
-# Skips allow-listed for PdfEditor.Tests. See scripts/check-skip-budget.sh (#619).
+# Skips allow-listed for PdfEditor.Tests. See scripts/check-skip-budget.sh (#619, #655).
 # Every line is coverage we are NOT getting. Justify it or delete it.
 # Format:  TestName   # why
 #
+# #655 wired check-skip-budget.sh to this project for the first time (the
+# file already existed from earlier ad-hoc bookkeeping but nothing enforced
+# it). Verified against a CI-equivalent reference environment — no mutool/
+# ghostscript/pdftocairo/tesseract on PATH, and only the gitignored corpus
+# CI does NOT have (test-pdfs/{local-real-world,pdfjs,smoke,...} absent;
+# test-pdfs/sample-pdfs and the other tracked subdirs present) — which
+# surfaced two real gaps versus the pre-existing 6-entry file: tesseract
+# absence and the encrypted-fixture path both being gitignored, neither of
+# which had ever actually been exercised against a from-scratch CI checkout
+# before this pass. Added below with the same scrutiny the original 6 got.
+#
 PdfEditor.Tests.Integration.SearchPerformanceTests.Search_OnSyntheticDoc_CompletesInReasonableTime   # perf assertion; skips when the synthetic fixture is absent. Timing test, not correctness.
+PdfEditor.Tests.UI.EncryptedDocumentSaveWarningTests.SaveFileAsAsync_EncryptedSource_AsksForConfirmation_AndDoesNotSaveWhenDeclined   # test-pdfs/pdfjs/issue15893_reduced.pdf is gitignored corpus, absent unless scripts/download-test-pdfs.sh has been run (and absent in CI, which never runs it for PR jobs)
+PdfEditor.Tests.UI.EncryptedDocumentSaveWarningTests.SaveFileAsAsync_EncryptedSource_SavesWhenConfirmed   # same gitignored test-pdfs/pdfjs/issue15893_reduced.pdf fixture as the test above
 PdfEditor.Tests.UI.InPageLinkClickTests.ClickOnTocLink_NavigatesToDestinationPage   # #653: this test's real-book fixture path was a stale hardcoded personal path and had never actually run; now that it's fixed, it reveals a pre-existing (not #625-related) headless-layout timing issue against that specific 455-page book. Tracked, not yet root-caused.
 PdfEditor.Tests.UI.MouseInputTests.ClickOnLinkAnnotation_FiresLinkClickedEvent   # #653: same pre-existing real-book layout-timing issue as InPageLinkClickTests above.
 PdfEditor.Tests.UI.MouseInputTests.HoverOverLinkAnnotation_IndicatesInteractivity   # #653: same pre-existing real-book layout-timing issue.
 PdfEditor.Tests.UI.MouseInputTests.MouseWheelScrollDown_ScrollsViewerVertically   # #653: same pre-existing real-book issue, but for scroll offset rather than link hit-testing — confirms the root cause is generic to this book/headless-mode, not link-specific.
 PdfEditor.Tests.Unit.MainWindowViewModelTests.HiddenTextToggles_DoNotLoadOcrAssemblyBeforeRasterizedScan   # ORDER-DEPENDENT by nature: once any earlier test loads Pdfe.Ocr, "is it loaded?" cannot distinguish "we pulled it in" from "it was already here". Proving it needs a dedicated process. The weaker, order-INDEPENDENT half (watch AssemblyLoad during the toggle) now always runs. This skip is why the budget exists: on 2026-07-13 it silently stopped running and the suite stayed green.
+PdfEditor.Tests.Unit.RevealHiddenTextTests.RevealRasterizedHidden_FindsTextHiddenByOverlayInsideImage   # tesseract CLI not installed; CI's Linux/macOS/Windows jobs never install it (Pdfe.Ocr shells out to system tesseract by design, see CLAUDE.md), so this is permanently skipped in CI, not flaky-by-environment

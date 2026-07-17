@@ -221,6 +221,23 @@ jobs:
             --filter "FullyQualifiedName!~Corpus&FullyQualifiedName!~Differential&FullyQualifiedName!~Benchmark&FullyQualifiedName!~Visual" \
             --logger "console;verbosity=normal"
 
+      # Skip budget (#619, #655): Pdfe.Rendering.Tests has ~114
+      # Assert.SkipWhen/SkipUnless call sites and had no gate watching them —
+      # only Pdfe.Core.Tests was covered. Can't reuse the "deterministic
+      # only" run's trx above: that step deliberately excludes Corpus/
+      # Differential/Benchmark/Visual (see its own comment), which is most of
+      # the skip population, so its trx would silently omit them from the
+      # budget. Runs the project standalone instead. This is NOT the
+      # double-the-CI-bill problem check-skip-budget.sh's own header warns
+      # about: this runner has neither the gitignored corpus (test-pdfs/
+      # smoke, /isartor, /local-real-world, ...) nor mutool/ghostscript/
+      # pdftocairo/tesseract installed, so every one of those ~114 sites
+      # gates on Assert.SkipUnless/SkipWhen and returns in seconds —
+      # confirmed locally by hiding those tools from PATH and the untracked
+      # corpus dirs, which is materially what this runner already is.
+      - name: Skip budget (Pdfe.Rendering.Tests)
+        run: ./scripts/check-skip-budget.sh Pdfe.Rendering.Tests/Pdfe.Rendering.Tests.csproj
+
       - name: PDF 2.0 Renderer Conformance Gate
         run: scripts/run-pdf20-renderer-conformance.sh --run-tests
 
@@ -270,7 +287,21 @@ jobs:
         run: |
           xvfb-run -a dotnet test PdfEditor.Tests --no-build -c Debug \
             --logger "console;verbosity=normal" \
+            --logger "trx;LogFileName=pdfeditor.trx" \
+            --results-directory PdfEditor.Tests/TestResults \
             --blame-hang-timeout 120000
+
+      # Skip budget (#619, #655): tests/skip-allowlist/PdfEditor.Tests.txt
+      # already existed (from earlier ad-hoc bookkeeping) but nothing ever
+      # invoked check-skip-budget.sh against it — dead weight, not an
+      # enforced gate. Same condition as the run above: this step reads that
+      # run's trx (PdfEditor.Tests is the full, unfiltered, serial ~17-minute
+      # suite — reusing its trx instead of a second run is the same
+      # "don't double the CI bill" reasoning as the Pdfe.Core.Tests step),
+      # so it must not run on a job where the suite above didn't.
+      - name: Skip budget (PdfEditor.Tests)
+        if: steps.changes.outputs.gui == 'true' || github.ref == 'refs/heads/main'
+        run: ./scripts/check-skip-budget.sh PdfEditor.Tests/PdfEditor.Tests.csproj --trx PdfEditor.Tests/TestResults/pdfeditor.trx
 
       - name: Upload coverage report as artifact
         if: always()

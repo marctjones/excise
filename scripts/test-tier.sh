@@ -6,9 +6,18 @@
 # gets hurt if this is wrong — not by convenience:
 #
 #   t0  ~30s   "did I break it"      pre-push, no excuse not to run it
-#   t1  ~10m   correctness gate      what CI blocks a PR on; nothing merges red
+#   t1  ~10m*  correctness gate      what CI blocks a PR on; nothing merges red
 #   t2  ~30m   release candidate     today's release-smoke.sh
 #   t3         third-party distribution  t2 on all three platforms + package
+#
+#   * t1's skip-budget checks (#655) run Pdfe.Rendering.Tests and
+#     PdfEditor.Tests standalone, with no corpus/tool-run to reuse locally
+#     the way ci.yml's equivalent steps do. On a bare machine (no test-pdfs
+#     corpus, no mutool/ghostscript/pdftocairo/tesseract) every skip site
+#     gates fast and ~10m holds. On a machine with the corpus downloaded and
+#     the reference tools installed, Rendering does real corpus/mutool work
+#     and PdfEditor.Tests' serial ~17-minute suite runs in full — t1 is
+#     meaningfully longer there. See the comment on those two run_step calls.
 #
 # pdfe-specific rule: YOU ARE YOUR OWN THIRD PARTY. A local build you redact
 # a real document with is a binary whose failure hurts someone, silently — no
@@ -46,7 +55,9 @@ Usage: scripts/test-tier.sh {t0|t1|t2|t3} [--install-hook]
   t0  ~30s   build + Core/Cli/Avalonia tests + doc-claims + gate-asymmetry
              + redaction-architecture guard. Pre-push, no excuse not to run it.
   t1  ~10m   t0 + full redaction test suites + Rendering (deterministic) +
-             skip-budget. What CI blocks a PR on.
+             skip-budget for Core/Rendering/PdfEditor (#655). What CI blocks
+             a PR on; can run longer on a machine with the full test-pdfs
+             corpus and mutool/ghostscript/pdftocairo/tesseract installed.
   t2  ~30m   release candidate — runs scripts/release-smoke.sh --release-tests.
   t3         t2, then prints the CI checks that must also be green on
              macOS/Windows before tagging (this script runs on one machine;
@@ -125,6 +136,25 @@ run_t1() {
         --filter "FullyQualifiedName!~Corpus&FullyQualifiedName!~Differential&FullyQualifiedName!~Benchmark&FullyQualifiedName!~Visual" \
         --logger "console;verbosity=normal"
     run_step "skip-budget-core" scripts/check-skip-budget.sh Pdfe.Core.Tests/Pdfe.Core.Tests.csproj
+    # #655: Pdfe.Core.Tests was the only project this gate watched — Pdfe.
+    # Rendering.Tests (~114 Assert.SkipWhen/SkipUnless call sites) and
+    # PdfEditor.Tests (its own allowlist already existed but was never wired
+    # to anything) had zero enumeration. Neither call below passes --trx:
+    # test-tier.sh, unlike ci.yml, has no earlier full run of either project
+    # to reuse (rendering-deterministic above deliberately excludes Corpus/
+    # Differential/Benchmark/Visual, and PdfEditor.Tests isn't run in t1 at
+    # all), so each runs its own full `dotnet test`. On a machine without
+    # the gitignored smoke/isartor/local-real-world corpus or mutool/
+    # ghostscript/pdftocairo/tesseract installed, every skip site gates fast
+    # and this is cheap. On a machine that DOES have them (this is common
+    # for a maintainer box that ran scripts/download-test-pdfs.sh), Rendering
+    # genuinely does real corpus/mutool work and PdfEditor.Tests' serial
+    # ~17-minute suite genuinely runs in full — t1 stops being "~10m" for
+    # that machine. Accepted deliberately: the coverage guarantee (#619) is
+    # worth more than keeping the estimate accurate everywhere, and #646's
+    # original ~10m figure was already a rough one.
+    run_step "skip-budget-rendering" scripts/check-skip-budget.sh Pdfe.Rendering.Tests/Pdfe.Rendering.Tests.csproj
+    run_step "skip-budget-pdfeditor" scripts/check-skip-budget.sh PdfEditor.Tests/PdfEditor.Tests.csproj
 }
 
 case "$TIER" in
