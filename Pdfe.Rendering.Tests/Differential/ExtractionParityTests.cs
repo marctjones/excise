@@ -200,13 +200,6 @@ public sealed class ExtractionParityTests
         ["test-pdfs/pdfjs/annotation-choice-widget.pdf"] =
             "#661 — partial coverage (48%); listbox widgets only emit the selected /V value, not " +
             "the full rendered /Opt option list.",
-        ["test-pdfs/pdfjs/canvas.pdf"] =
-            "#662 — 0% coverage; Differences-encoded simple TrueType font with no /ToUnicode " +
-            "decodes to non-printable garbage.",
-        ["test-pdfs/pdfjs/bug1001080.pdf"] =
-            "#662 — 0% coverage on ordinary page text ('Untitled', 'pint test'); likely the same " +
-            "Differences-encoding-without-ToUnicode gap as canvas.pdf (font is Type3, not TrueType, " +
-            "but no ToUnicode + /Differences is the same shape).",
         ["test-pdfs/pdfjs/bug854315.pdf"] =
             "#651 — 21% coverage, uncharacterized (has ToUnicode; does not match #659 or #662).",
         ["test-pdfs/pdfjs/issue14497.pdf"] = "#651 — 6% coverage, uncharacterized (no ToUnicode; does not match #662's Differences shape).",

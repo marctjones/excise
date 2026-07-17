@@ -17,6 +17,12 @@ public class TextExtractor
     private string _fontName = "";
     private PdfDictionary? _currentFont;
     private Dictionary<int, string>? _toUnicodeMap;
+    // /Encoding << /BaseEncoding ... /Differences [...] >> (ISO 32000-2 §9.6.6.2),
+    // consulted when there is no /ToUnicode CMap (#662). _differencesGlyphNames
+    // maps char code -> PostScript glyph name for codes the Differences array
+    // overrides; codes not present fall back to _differencesBaseEncoding.
+    private Dictionary<int, string>? _differencesGlyphNames;
+    private string? _differencesBaseEncoding;
     private double _textLeading = 0;
     private double _charSpacing = 0;
     private double _wordSpacing = 0;
@@ -692,6 +698,7 @@ public class TextExtractor
                     _fontSize = ToDouble(operands[1]);
                     _currentFont = ResolveFontFromActiveResources(_fontName);
                     _toUnicodeMap = LoadToUnicodeMap(_currentFont);
+                    (_differencesGlyphNames, _differencesBaseEncoding) = LoadDifferencesEncoding(_currentFont);
                     LoadFontGeometry();
                 }
                 break;
@@ -1297,10 +1304,33 @@ public class TextExtractor
             return unicode;
         }
 
+        // /Encoding << /Differences [...] >> (#662): a Differences entry for
+        // this exact code overrides everything below it — the glyph name it
+        // assigns takes priority over both /BaseEncoding and the bare-name
+        // fallback, because it's the font's own explicit remapping.
+        if (_differencesGlyphNames != null && _differencesGlyphNames.TryGetValue(charCode, out var glyphName))
+        {
+            var mapped = GlyphNameToUnicode(glyphName);
+            if (mapped != null)
+                return mapped;
+            // Unrecognized glyph name for this one code — fall through to the
+            // same default decode used below rather than inventing new
+            // guessing logic (deliberately not "return" here).
+        }
+        else if (_differencesGlyphNames != null)
+        {
+            // Differences dictionary present, but this code has no override —
+            // fall back to its /BaseEncoding (if any) before the bare default.
+            if (_differencesBaseEncoding == "WinAnsiEncoding")
+                return DecodeWinAnsi(charCode);
+            if (_differencesBaseEncoding == "MacRomanEncoding")
+                return DecodeMacRoman(charCode);
+        }
+
         // Check for encoding in font dictionary
         if (_currentFont != null)
         {
-            var encoding = _currentFont.GetOptional("Encoding");
+            var encoding = _page.Document.Resolve(_currentFont.GetOptional("Encoding") ?? PdfNull.Instance);
             if (encoding is PdfName encName)
             {
                 var encNameStr = encName.Value;
@@ -1313,6 +1343,117 @@ public class TextExtractor
 
         // Default: assume WinAnsiEncoding for Type1 fonts with standard base fonts
         return DecodeWinAnsi(charCode);
+    }
+
+    /// <summary>
+    /// Loads a simple font's <c>/Encoding &lt;&lt; /BaseEncoding ... /Differences [...] &gt;&gt;</c>
+    /// dictionary (ISO 32000-2 §9.6.6.2) if present. Returns (null, null) when
+    /// <c>/Encoding</c> is absent, a bare name, or an indirect object that
+    /// doesn't resolve to a dictionary. The Differences array alternates
+    /// [startCode name name ... startCode2 name ...] — an integer resets the
+    /// running code counter, and each following name is assigned to that
+    /// code, incrementing.
+    /// </summary>
+    private (Dictionary<int, string>? names, string? baseEncoding) LoadDifferencesEncoding(PdfDictionary? font)
+    {
+        if (font == null)
+            return (null, null);
+
+        var encObj = _page.Document.Resolve(font.GetOptional("Encoding") ?? PdfNull.Instance);
+        if (encObj is not PdfDictionary encDict)
+            return (null, null);
+
+        var baseEncoding = encDict.GetNameOrNull("BaseEncoding");
+
+        var diffsObj = _page.Document.Resolve(encDict.GetOptional("Differences") ?? PdfNull.Instance);
+        if (diffsObj is not PdfArray diffs || diffs.Count == 0)
+            return (null, baseEncoding);
+
+        var map = new Dictionary<int, string>();
+        int code = 0;
+        foreach (var item in diffs)
+        {
+            var resolved = _page.Document.Resolve(item);
+            if (TryNumber(resolved, out var codeNum))
+            {
+                code = (int)codeNum;
+            }
+            else if (resolved is PdfName glyphName)
+            {
+                map[code] = glyphName.Value;
+                code++;
+            }
+        }
+
+        return (map, baseEncoding);
+    }
+
+    /// <summary>
+    /// Converts a PostScript glyph name to Unicode, trying the algorithmic
+    /// <c>uniXXXX</c> / <c>uXXXX[XX[XX]]</c> convention first (covers most
+    /// modern subset fonts without needing any table), then the Adobe Glyph
+    /// List subset in <see cref="AdobeGlyphList"/>. Returns null if neither
+    /// recognizes the name.
+    /// </summary>
+    private static string? GlyphNameToUnicode(string glyphName)
+    {
+        var fromUniConvention = TryDecodeUniName(glyphName);
+        if (fromUniConvention != null)
+            return fromUniConvention;
+
+        return AdobeGlyphList.ToUnicode(glyphName);
+    }
+
+    /// <summary>
+    /// "uniXXXX" (one or more 4-hex-digit groups, e.g. "uniFB01" or a
+    /// multi-character "uni00410042") or "uXXXX"/"uXXXXX"/"uXXXXXX" (a single
+    /// 4-6 hex digit codepoint) per the Adobe Glyph List naming convention.
+    /// </summary>
+    private static string? TryDecodeUniName(string glyphName)
+    {
+        if (glyphName.StartsWith("uni", StringComparison.Ordinal))
+        {
+            var hex = glyphName.Substring(3);
+            if (hex.Length == 0 || hex.Length % 4 != 0 || !IsAllHex(hex))
+                return null;
+
+            var sb = new StringBuilder();
+            for (int i = 0; i < hex.Length; i += 4)
+            {
+                if (!int.TryParse(hex.AsSpan(i, 4), System.Globalization.NumberStyles.HexNumber,
+                        System.Globalization.CultureInfo.InvariantCulture, out var codePoint))
+                    return null;
+                sb.Append((char)codePoint);
+            }
+            return sb.ToString();
+        }
+
+        if (glyphName.Length >= 1 && glyphName[0] == 'u' && glyphName.Length != 1)
+        {
+            var hex = glyphName.Substring(1);
+            if (hex.Length is < 4 or > 6 || !IsAllHex(hex))
+                return null;
+
+            if (!int.TryParse(hex, System.Globalization.NumberStyles.HexNumber,
+                    System.Globalization.CultureInfo.InvariantCulture, out var codePoint))
+                return null;
+            if (codePoint is < 0 or > 0x10FFFF or (>= 0xD800 and <= 0xDFFF))
+                return null;
+
+            return char.ConvertFromUtf32(codePoint);
+        }
+
+        return null;
+    }
+
+    private static bool IsAllHex(string s)
+    {
+        foreach (var c in s)
+        {
+            if (!Uri.IsHexDigit(c))
+                return false;
+        }
+        return true;
     }
 
     private static string DecodeWinAnsi(int charCode)
