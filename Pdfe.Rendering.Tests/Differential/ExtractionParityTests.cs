@@ -198,26 +198,27 @@ public sealed class ExtractionParityTests
     private static readonly Dictionary<string, string> KnownAdversarialDisagreements = new()
     {
         ["test-pdfs/pdfjs/freetexts.pdf"] =
-            "#651 — FreeText annotation /Contents ('Hello World from Acrobat' etc.) is invisible " +
+            "#660 — FreeText annotation /Contents ('Hello World from Acrobat' etc.) is invisible " +
             "to page.Text; TextExtractor.EmitFormFieldLetters only covers AcroForm widgets, not " +
             "markup annotations. A RedactText blind spot, same shape as #637.",
         ["test-pdfs/pdfjs/freetext_no_appearance.pdf"] =
-            "#651 — same FreeText-annotation-content gap as freetexts.pdf.",
+            "#660 — same FreeText-annotation-content gap as freetexts.pdf.",
         ["test-pdfs/pdfjs/annotation-choice-widget.pdf"] =
-            "#651 — partial coverage (48%), likely the same annotation-content family.",
+            "#661 — partial coverage (48%); listbox widgets only emit the selected /V value, not " +
+            "the full rendered /Opt option list.",
         ["test-pdfs/pdfjs/canvas.pdf"] =
-            "#651 — 0% coverage; not yet distinguished from the FreeText-annotation family or a separate cause.",
+            "#662 — 0% coverage; Differences-encoded simple TrueType font with no /ToUnicode " +
+            "decodes to non-printable garbage.",
         ["test-pdfs/pdfjs/bug1001080.pdf"] =
-            "#651 — 0% coverage on ordinary page text ('Untitled', 'pint test'), not annotation " +
-            "content — a distinct, uncharacterized gap.",
+            "#662 — 0% coverage on ordinary page text ('Untitled', 'pint test'); likely the same " +
+            "Differences-encoding-without-ToUnicode gap as canvas.pdf (font is Type3, not TrueType, " +
+            "but no ToUnicode + /Differences is the same shape).",
         ["test-pdfs/pdfjs/bug854315.pdf"] =
-            "#651 — 21% coverage, uncharacterized.",
-        ["test-pdfs/pdfjs/issue13242.pdf"] =
-            "#651 — 27% coverage on ordinary Lorem-ipsum body text — a distinct, uncharacterized gap.",
-        ["test-pdfs/pdfjs/issue14497.pdf"] = "#651 — 6% coverage, uncharacterized.",
-        ["test-pdfs/pdfjs/issue17069.pdf"] = "#651 — 28% coverage, uncharacterized.",
-        ["test-pdfs/pdfjs/issue18036.pdf"] = "#651 — 18% coverage, uncharacterized.",
-        ["test-pdfs/pdfjs/issue19389.pdf"] = "#651 — 37% coverage, uncharacterized.",
+            "#651 — 21% coverage, uncharacterized (has ToUnicode; does not match #659 or #662).",
+        ["test-pdfs/pdfjs/issue14497.pdf"] = "#651 — 6% coverage, uncharacterized (no ToUnicode; does not match #662's Differences shape).",
+        ["test-pdfs/pdfjs/issue17069.pdf"] = "#651 — 28% coverage, uncharacterized (has ToUnicode; does not match #659 or #662).",
+        ["test-pdfs/pdfjs/issue18036.pdf"] = "#651 — 18% coverage, uncharacterized (standard /Identity-H Type0; does not match #659).",
+        ["test-pdfs/pdfjs/issue19389.pdf"] = "#651 — 37% coverage, uncharacterized (simple Type1, no ToUnicode; does not match #662's Differences shape).",
     };
 
     [Fact]

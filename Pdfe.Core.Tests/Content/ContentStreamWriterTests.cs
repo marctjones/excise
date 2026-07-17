@@ -82,6 +82,34 @@ public class ContentStreamWriterTests
         parsed.Operators[0].GetString(0).Should().Be("Line1\nLine2\t(test)");
     }
 
+    [Theory]
+    [InlineData((byte)0x18)]  // spacing diacritic range start
+    [InlineData((byte)0x80)]  // bullet — PDFDocEncoding remap range start
+    [InlineData((byte)0x99)]  // Ž — the exact byte that exposed this bug (#659)
+    [InlineData((byte)0x9E)]  // remap range end
+    [InlineData((byte)0xA0)]  // € — the odd one out, not contiguous with 0x80-0x9E
+    public void Write_RawByteString_InPdfDocEncodingRemapRange_RoundTripsExactByte(byte rawByte)
+    {
+        // A PdfString built from raw bytes (not text) — e.g. a Type0/CID
+        // font's original character code preserved verbatim for redaction
+        // reconstruction (#353/#659) — must round-trip through Write() byte
+        // for byte. PdfString.Value decodes through PDFDocEncoding, which
+        // remaps exactly these positions to Unicode code points above 255
+        // (e.g. 0x99 -> 'Ž', U+017D = 381). Octal-escaping THAT decoded
+        // value instead of the raw byte writes `\575` — no PDF octal escape
+        // can represent 381 (max is `\377` = 255) — which a reader re-parses
+        // as 381 mod 256 = 125 ('}'), silently corrupting the byte. The
+        // writer must operate on PdfString.Bytes directly, never .Value.
+        var op = new ContentOperator("Tj", new PdfObject[] { new PdfString(new[] { rawByte }) });
+        var content = new ContentStream(new[] { op });
+
+        var bytes = _writer.Write(content);
+        var parsed = Parse(bytes);
+
+        var roundTripped = ((PdfString)parsed.Operators[0].Operands[0]).Bytes;
+        roundTripped.Should().Equal(new[] { rawByte });
+    }
+
     [Fact]
     public void Write_Array_RoundTrips()
     {

@@ -23,6 +23,7 @@ public class TextExtractor
     private double _horizontalScaling = 100;
     // Type 0 / CID font state (§9.7)
     private bool _is2ByteFont;
+    private bool _isCidFont;
     private bool _isVerticalWriting;
     private Dictionary<int, double>? _cidWidths;
     private double _cidDefaultWidth = 1000;
@@ -1040,10 +1041,11 @@ public class TextExtractor
                 y,
                 glyphWidth,
                 charCode,
-                stride // 1 for simple fonts, 2 for Type0/CID (#353)
+                stride // 1 for simple fonts and 1-byte-codespace Type0 (#659), 2 for Identity-H/V and other 2-byte Type0
             )
             {
-                IsInHiddenOptionalContent = _optionalContentHiddenStack.Any(hidden => hidden)
+                IsInHiddenOptionalContent = _optionalContentHiddenStack.Any(hidden => hidden),
+                IsCidFont = _isCidFont
             };
             _letters.Add(letter);
 
@@ -1076,6 +1078,7 @@ public class TextExtractor
     private void LoadFontGeometry()
     {
         _is2ByteFont = false;
+        _isCidFont = false;
         _isVerticalWriting = false;
         _cidWidths = null;
         _cidDefaultWidth = 1000;
@@ -1086,12 +1089,29 @@ public class TextExtractor
         if (subtype != "Type0") return;
 
         _is2ByteFont = true;
+        _isCidFont = true;
 
         // /Encoding can be a name (Identity-H/V) or a CMap stream. Identity-V
         // and any /WMode 1 in a custom CMap means vertical writing.
-        var encObj = _currentFont.GetOptional("Encoding");
+        var encObj = _page.Document.Resolve(_currentFont.GetOptional("Encoding") ?? PdfNull.Instance);
         if (encObj is PdfName encName && encName.Value == "Identity-V")
             _isVerticalWriting = true;
+
+        // A Type0 font is not guaranteed to use Identity-H/V's 2-byte codes —
+        // that's just what every mainstream producer emits. A font can wrap
+        // an embedded CMap declaring a narrower codespace (#659: a real
+        // corpus file uses a single-byte `<00> <FF>` codespace). Decoding
+        // that 2 bytes at a time pairs up unrelated adjacent character codes
+        // into one bogus double-width code, corrupting every character.
+        // Only switch to 1-byte on an EXPLICITLY UNIFORM 1-byte codespace —
+        // any 2-byte or mixed-width codespace keeps the safe 2-byte default,
+        // which is what the vast majority of real-world Type0 fonts need.
+        if (encObj is PdfStream encStream)
+        {
+            var detail = ToUnicodeCMapParser.ParseDetailed(encStream.DecodedData);
+            if (detail.CodespaceRanges.Count > 0 && detail.MaxCodeBytes == 1)
+                _is2ByteFont = false;
+        }
 
         // Resolve descendant CIDFont (always exactly one entry, per §9.7.6.1).
         var descendantsObj = _currentFont.GetOptional("DescendantFonts");

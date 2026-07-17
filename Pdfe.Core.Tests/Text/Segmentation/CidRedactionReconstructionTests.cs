@@ -24,7 +24,12 @@ public class CidRedactionReconstructionTests
     {
         var rect = new PdfRectangle(left, 100, left + 10, 112);
         return new Letter(value, rect, fontSize: 12, fontName: "F1",
-            startX: left, startY: 100, width: 10, characterCode: code, codeByteLength: 2);
+            startX: left, startY: 100, width: 10, characterCode: code, codeByteLength: 2)
+        {
+            // Real Type0/CID fonts set this from Subtype, independent of byte
+            // length (#659 — a Type0 font can legally use a 1-byte codespace).
+            IsCidFont = true,
+        };
     }
 
     [Fact]

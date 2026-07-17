@@ -122,7 +122,7 @@ public class ContentStreamWriter
                 break;
 
             case PdfString s:
-                WriteString(s.Value);
+                WriteStringBytes(s.Bytes);
                 break;
 
             case PdfName n:
@@ -161,50 +161,63 @@ public class ContentStreamWriter
     }
 
     /// <summary>
-    /// Write a string literal with proper escaping.
+    /// Write a string literal with proper escaping, operating on the
+    /// PdfString's RAW BYTES directly — never <see cref="PdfString.Value"/>.
+    /// <c>Value</c> decodes through PDFDocEncoding, which remaps bytes
+    /// 0x18-0x1F/0x80-0x9E/0xA0 to Unicode code points above 255 (e.g. 0x99
+    /// → 'Ž', U+017D = 381 decimal). Octal-escaping *that* decoded value
+    /// instead of the original byte writes `\575` (381 in octal) into the
+    /// content stream — a value no PDF octal escape can represent losslessly
+    /// (max is `\377` = 255), so a reader re-parses it as 381 mod 256 = 125
+    /// ('}'), silently corrupting the byte. This bit a Type0/CID font whose
+    /// original code (preserved verbatim by <c>OperationReconstructor</c> for
+    /// redaction, #353/#659) happened to fall in the remapped range — the
+    /// bytes must round-trip exactly, not through a text-decoding table meant
+    /// for actual PDFDocEncoded text strings.
     /// </summary>
-    private void WriteString(string value)
+    private void WriteStringBytes(byte[] bytes)
     {
         _sb.Append('(');
 
-        foreach (var c in value)
+        foreach (var b in bytes)
         {
-            switch (c)
+            switch (b)
             {
-                case '\\':
+                case (byte)'\\':
                     _sb.Append("\\\\");
                     break;
-                case '(':
+                case (byte)'(':
                     _sb.Append("\\(");
                     break;
-                case ')':
+                case (byte)')':
                     _sb.Append("\\)");
                     break;
-                case '\n':
+                case (byte)'\n':
                     _sb.Append("\\n");
                     break;
-                case '\r':
+                case (byte)'\r':
                     _sb.Append("\\r");
                     break;
-                case '\t':
+                case (byte)'\t':
                     _sb.Append("\\t");
                     break;
-                case '\b':
+                case (byte)'\b':
                     _sb.Append("\\b");
                     break;
-                case '\f':
+                case (byte)'\f':
                     _sb.Append("\\f");
                     break;
                 default:
-                    if (c < 32 || c > 126)
+                    if (b < 32 || b > 126)
                     {
-                        // Write as octal escape
+                        // Write as octal escape — b is 0-255, so this always
+                        // fits in 3 octal digits (max \377).
                         _sb.Append('\\');
-                        _sb.Append(Convert.ToString(c, 8).PadLeft(3, '0'));
+                        _sb.Append(Convert.ToString(b, 8).PadLeft(3, '0'));
                     }
                     else
                     {
-                        _sb.Append(c);
+                        _sb.Append((char)b);
                     }
                     break;
             }

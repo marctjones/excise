@@ -945,6 +945,26 @@ public class ContentStreamParser
             var subtype = _currentFont.GetNameOrNull("Subtype");
             _is2ByteFont = subtype == "Type0";
 
+            // A Type0 font isn't guaranteed to use Identity-H/V's 2-byte
+            // codes — a font can wrap an embedded CMap declaring a narrower
+            // codespace (#659). Only switch to 1-byte on an EXPLICITLY
+            // UNIFORM 1-byte codespace; keep the safe 2-byte default for
+            // Identity-H/V and any 2-byte/mixed-width codespace. Mirrors the
+            // identical fix in TextExtractor.LoadFontGeometry — this parser
+            // feeds redaction's glyph removal, and it must decode the same
+            // bytes the same way TextExtractor does or redaction can target
+            // the wrong glyphs.
+            if (_is2ByteFont)
+            {
+                var encObj = _page.Document.Resolve(_currentFont.GetOptional("Encoding") ?? PdfNull.Instance);
+                if (encObj is PdfStream encStream)
+                {
+                    var detail = Text.ToUnicodeCMapParser.ParseDetailed(encStream.DecodedData);
+                    if (detail.CodespaceRanges.Count > 0 && detail.MaxCodeBytes == 1)
+                        _is2ByteFont = false;
+                }
+            }
+
             if (_is2ByteFont)
             {
                 // Type0 font: load descendant CID font

@@ -51,11 +51,25 @@ public class Letter
 
     /// <summary>
     /// Number of bytes the source code occupies in the content stream: 1 for
-    /// simple fonts, 2 for Type0/CID fonts using Identity-H/V (the common CJK
-    /// case). Used by redaction to re-encode kept glyphs with their original
-    /// bytes instead of Unicode, which a CID font cannot render. (Issue #353)
+    /// simple fonts and for Type0/CID fonts with a 1-byte codespace (#659),
+    /// 2 for Type0/CID fonts using Identity-H/V (the common CJK case) or any
+    /// other 2-byte codespace.
     /// </summary>
     public int CodeByteLength { get; }
+
+    /// <summary>
+    /// Whether this letter came from a Type0/composite (CID-keyed) font, of
+    /// ANY byte-code stride. Used by redaction to re-encode kept glyphs with
+    /// their original CID bytes instead of Unicode, which a CID font cannot
+    /// render (issue #353). Deliberately independent of
+    /// <see cref="CodeByteLength"/>: before #659, "is this a CID font" and
+    /// "is the code 2 bytes" were the same test, because every real-world
+    /// Type0 font used Identity-H/V's 2-byte codespace. #659 broke that
+    /// correlation — a Type0 font can legally use a 1-byte codespace — so a
+    /// 1-byte CID-keyed glyph still needs its original byte preserved on
+    /// reconstruction, exactly like a 2-byte one.
+    /// </summary>
+    public bool IsCidFont { get; set; }
 
     /// <summary>
     /// Whether this letter was rendered inside an Optional Content Group (OCG)

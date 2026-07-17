@@ -134,10 +134,14 @@ public class TextSegmenter
                 if (match != null)
                 {
                     currentSegment.LetterMatches.Add(match);
-                    // A 2-byte source code means a Type0/CID font; mark the
-                    // segment so reconstruction re-emits original CID bytes
-                    // instead of unrenderable Unicode. (Issue #353)
-                    if (match.Letter.CodeByteLength > 1)
+                    // A Type0/CID font's original code must be preserved on
+                    // reconstruction, not re-encoded via Unicode (#353) — a
+                    // CID font can't render arbitrary Unicode bytes. This is
+                    // independent of byte length (#659: a Type0 font can
+                    // legally use a 1-byte codespace, not just Identity-H/V's
+                    // 2-byte one), so check the font kind directly rather
+                    // than inferring it from CodeByteLength.
+                    if (match.Letter.IsCidFont)
                         currentSegment.IsCidFont = true;
                 }
             }
@@ -151,7 +155,7 @@ public class TextSegmenter
                 if (match != null)
                 {
                     currentSegment.LetterMatches.Add(match);
-                    if (match.Letter.CodeByteLength > 1)
+                    if (match.Letter.IsCidFont)
                         currentSegment.IsCidFont = true;
                 }
             }

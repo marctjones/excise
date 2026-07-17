@@ -142,6 +142,103 @@ public class TextExtractorType0Tests
         letters.Should().HaveCount(2);
     }
 
+    [Fact]
+    public void Extract_Type0Font_SingleByteCodespaceEncodingCMap_DecodesOneByteAtATime()
+    {
+        // #659: a Type0 font's /Encoding can be an embedded CMap stream
+        // declaring a codespace narrower than Identity-H/V's 2 bytes. Two
+        // single-byte codes 0x41 0x42 must decode as CIDs 0x41 and 0x42
+        // ("A","B") — not as one bogus 2-byte code 0x4142.
+        var contentStream = "BT /F0 12 Tf 100 700 Td <4142> Tj ET";
+        var encodingCMap = @"
+/CIDInit /ProcSet findresource begin
+12 dict begin
+begincmap
+1 begincodespacerange
+<00> <FF>
+endcodespacerange
+1 begincidrange
+<00> <FF> 0
+endcidrange
+endcmap
+CMapName currentdict /CMap defineresource pop
+end
+end
+";
+        var toUnicode = @"
+/CIDInit /ProcSet findresource begin
+12 dict begin
+begincmap
+1 begincodespacerange
+<00> <FF>
+endcodespacerange
+2 beginbfchar
+<41> <0041>
+<42> <0042>
+endbfchar
+endcmap
+end end
+";
+        var pdf = BuildType0PdfWithEncodingCMap(contentStream, encodingCMap, toUnicode,
+                                                 widths: "[65 [500 500]]", defaultWidth: 1000);
+
+        using var doc = PdfDocument.Open(pdf);
+        var page = doc.GetPage(1);
+        var extractor = new TextExtractor(page);
+        var letters = extractor.ExtractLetters();
+
+        letters.Should().HaveCount(2, "a 1-byte codespace must decode 2 letters from 2 bytes, not 1 from 4 hex digits");
+        letters[0].Value.Should().Be("A");
+        letters[1].Value.Should().Be("B");
+    }
+
+    [Fact]
+    public void Extract_Type0Font_TwoByteCodespaceEncodingCMap_StillDecodesTwoBytesAtATime()
+    {
+        // Guardrail: an embedded CMap declaring a 2-byte codespace (not
+        // Identity-H by name, but still 2-byte) must not be affected by the
+        // #659 fix — the safe default only changes for an explicitly
+        // UNIFORM 1-byte codespace.
+        var contentStream = "BT /F0 12 Tf 100 700 Td <00410042> Tj ET";
+        var encodingCMap = @"
+/CIDInit /ProcSet findresource begin
+12 dict begin
+begincmap
+1 begincodespacerange
+<0000> <FFFF>
+endcodespacerange
+1 begincidrange
+<0000> <FFFF> 0
+endcidrange
+endcmap
+CMapName currentdict /CMap defineresource pop
+end
+end
+";
+        var toUnicode = @"
+/CIDInit /ProcSet findresource begin
+12 dict begin
+begincmap
+2 beginbfchar
+<0041> <0041>
+<0042> <0042>
+endbfchar
+endcmap
+end end
+";
+        var pdf = BuildType0PdfWithEncodingCMap(contentStream, encodingCMap, toUnicode,
+                                                 widths: "[65 [500 500]]", defaultWidth: 1000);
+
+        using var doc = PdfDocument.Open(pdf);
+        var page = doc.GetPage(1);
+        var extractor = new TextExtractor(page);
+        var letters = extractor.ExtractLetters();
+
+        letters.Should().HaveCount(2, "a 2-byte codespace CMap must still decode 2 letters from 4 bytes");
+        letters[0].Value.Should().Be("A");
+        letters[1].Value.Should().Be("B");
+    }
+
     // ─── PDF builders ────────────────────────────────────────────────────────
 
     /// <summary>Build a single-page PDF that uses a Type 0 font /F0.</summary>
@@ -155,6 +252,69 @@ public class TextExtractorType0Tests
 
     private static byte[] BuildType0PdfNoToUnicode(string contentStream, string widths, double defaultWidth)
         => BuildBase(contentStream, null, wmode: 0, widths, defaultWidth);
+
+    /// <summary>
+    /// Build a single-page PDF whose Type0 font's /Encoding is an embedded
+    /// CMap stream (not the /Identity-H or /Identity-V name) — the shape
+    /// #659 fixes decoding for.
+    /// </summary>
+    private static byte[] BuildType0PdfWithEncodingCMap(
+        string contentStream, string encodingCMapContent, string toUnicodeContent,
+        string widths, double defaultWidth)
+    {
+        var sb = new StringBuilder();
+        var offsets = new long[10];
+        void Mark(int n) => offsets[n] = sb.Length;
+
+        sb.Append("%PDF-1.7\n");
+
+        Mark(1); sb.Append("1 0 obj <</Type/Catalog/Pages 2 0 R>> endobj\n");
+        Mark(2); sb.Append("2 0 obj <</Type/Pages/Count 1/Kids[3 0 R]>> endobj\n");
+
+        Mark(3);
+        sb.Append("3 0 obj <</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]" +
+                  "/Resources<</Font<</F0 4 0 R>>>>" +
+                  "/Contents 9 0 R>> endobj\n");
+
+        Mark(4);
+        sb.Append("4 0 obj <</Type/Font/Subtype/Type0/BaseFont/Test" +
+                  "/Encoding 8 0 R/DescendantFonts[5 0 R]/ToUnicode 7 0 R>> endobj\n");
+
+        Mark(5);
+        sb.Append("5 0 obj <</Type/Font/Subtype/CIDFontType2/BaseFont/Test" +
+                  "/CIDSystemInfo<</Registry(Adobe)/Ordering(Identity)/Supplement 0>>" +
+                  $"/FontDescriptor 6 0 R/W {widths}/DW {defaultWidth.ToString(System.Globalization.CultureInfo.InvariantCulture)}>> endobj\n");
+
+        Mark(6);
+        sb.Append("6 0 obj <</Type/FontDescriptor/FontName/Test" +
+                  "/Flags 4/FontBBox[0 0 1000 1000]/ItalicAngle 0/Ascent 800/Descent -200" +
+                  "/CapHeight 700/StemV 80>> endobj\n");
+
+        Mark(7);
+        var tu = Encoding.ASCII.GetBytes(toUnicodeContent);
+        sb.Append($"7 0 obj <</Length {tu.Length}>>\nstream\n");
+        sb.Append(toUnicodeContent);
+        sb.Append("\nendstream endobj\n");
+
+        Mark(8);
+        var enc = Encoding.ASCII.GetBytes(encodingCMapContent);
+        sb.Append($"8 0 obj <</Type/CMap/CMapName/Test-Encoding/Length {enc.Length}>>\nstream\n");
+        sb.Append(encodingCMapContent);
+        sb.Append("\nendstream endobj\n");
+
+        Mark(9);
+        var cs = Encoding.ASCII.GetBytes(contentStream);
+        sb.Append($"9 0 obj <</Length {cs.Length}>>\nstream\n");
+        sb.Append(contentStream);
+        sb.Append("\nendstream endobj\n");
+
+        var xrefPos = sb.Length;
+        sb.Append("xref\n0 10\n0000000000 65535 f \n");
+        for (int i = 1; i <= 9; i++)
+            sb.Append(offsets[i].ToString("D10")).Append(" 00000 n \n");
+        sb.Append("trailer <</Size 10/Root 1 0 R>>\nstartxref\n").Append(xrefPos).Append("\n%%EOF\n");
+        return Encoding.ASCII.GetBytes(sb.ToString());
+    }
 
     private static byte[] BuildBase(string contentStream, byte[]? cmapBytes,
                                     int wmode, string widths, double defaultWidth)

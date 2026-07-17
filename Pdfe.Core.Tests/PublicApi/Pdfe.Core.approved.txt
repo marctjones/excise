@@ -1565,6 +1565,7 @@ namespace Pdfe.Core.Text
         public string FontName { get; }
         public double FontSize { get; }
         public Pdfe.Core.Document.PdfRectangle GlyphRectangle { get; }
+        public bool IsCidFont { get; set; }
         public bool IsInHiddenOptionalContent { get; set; }
         public Pdfe.Core.Document.PdfPoint StartBaseLine { get; }
         public double StartX { get; }
