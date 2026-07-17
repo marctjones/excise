@@ -56,6 +56,19 @@ internal static class InteractiveRedactionScrubber
             changed |= field.RawDictionary.Remove("DV");
             changed |= field.RawDictionary.Remove("AP");
 
+            // Choice fields (combo/list boxes) restate every option string in
+            // /Opt independent of /V — a list box's full option list is what
+            // TextExtractor now surfaces for search/redaction (#661). Leaving
+            // /Opt behind after wiping V/DV/AP would be a redaction leak: the
+            // matched text would still sit in the saved file bytes, and a
+            // reader that regenerates the appearance from NeedAppearances
+            // would draw the option list right back. Stripped for every
+            // Choice field here (not just list boxes) since a combo box's
+            // /Opt carries the same risk even though it isn't rendered as
+            // extractable text today.
+            if (field.FieldType == PdfFieldType.Choice)
+                changed |= field.RawDictionary.Remove("Opt");
+
             foreach (var widget in field.WidgetDictionaries)
             {
                 CaptureObjectGraph(page.Document, widget.GetOptional("AP"), pruneCandidates);

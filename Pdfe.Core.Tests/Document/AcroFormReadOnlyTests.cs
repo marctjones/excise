@@ -190,7 +190,148 @@ public class AcroFormReadOnlyTests
             "security redaction removes the whole default value instead of leaving recoverable fragments in /DV");
     }
 
+    // ─── Choice field (combo/list box) tests — #661 ────────────────────────
+
+    [Fact]
+    public void ListBoxField_AllOptionsAppearInExtractedText()
+    {
+        // A list box (Choice, Ff=0 i.e. no Combo bit) visually renders its
+        // ENTIRE /Opt option list, not just the selected /V — that's how
+        // list boxes work (you see every option, with the selection
+        // highlighted). Confirmed against mutool on the real fixture
+        // test-pdfs/pdfjs/annotation-choice-widget.pdf.
+        var pdf = BuildChoiceFieldPdf(
+            options: new[] { "Lorem", "Ipsum", "Dolor", "Sit", "Amet", "Consectetur" },
+            selectedValue: "Dolor",
+            isCombo: false);
+        using var doc = PdfDocument.Open(pdf);
+
+        var page = doc.GetPage(1);
+        var text = page.Text;
+
+        text.Should().Contain("Lorem");
+        text.Should().Contain("Ipsum");
+        text.Should().Contain("Dolor");
+        text.Should().Contain("Sit");
+        text.Should().Contain("Amet");
+        text.Should().Contain("Consectetur");
+    }
+
+    [Fact]
+    public void ListBoxField_OptionLettersLandInWidgetRect()
+    {
+        var pdf = BuildChoiceFieldPdf(
+            options: new[] { "Lorem", "Ipsum", "Dolor" },
+            selectedValue: "Dolor",
+            isCombo: false);
+        using var doc = PdfDocument.Open(pdf);
+
+        var letters = doc.GetPage(1).Letters
+            .Where(l => l.FontName.StartsWith("AcroForm:", StringComparison.Ordinal))
+            .ToList();
+
+        letters.Should().NotBeEmpty();
+        letters.All(l => l.GlyphRectangle.Left   >= 100 - 0.5
+                      && l.GlyphRectangle.Right  <= 400 + 0.5
+                      && l.GlyphRectangle.Bottom >= 500 - 0.5
+                      && l.GlyphRectangle.Top    <= 700 + 0.5).Should().BeTrue(
+            "list-box option letters must land within the widget rectangle");
+    }
+
+    [Fact]
+    public void ComboBoxField_OnlySelectedValueAppears_NotOtherOptions()
+    {
+        // A closed combo box only ever renders its currently-selected value —
+        // confirmed against mutool. Unlike a list box, unselected /Opt
+        // entries must NOT show up in extracted text.
+        var pdf = BuildChoiceFieldPdf(
+            options: new[] { "Lorem", "Ipsum", "Dolor", "Sit" },
+            selectedValue: "Dolor",
+            isCombo: true);
+        using var doc = PdfDocument.Open(pdf);
+
+        var text = doc.GetPage(1).Text;
+
+        text.Should().Contain("Dolor");
+        text.Should().NotContain("Lorem");
+        text.Should().NotContain("Ipsum");
+        text.Should().NotContain("Sit");
+    }
+
+    [Fact]
+    public void RedactText_RemovesListBoxOptionFromSavedBytes()
+    {
+        // #661's redaction-completeness half: a matched option must not
+        // merely disappear from page.Text — it must be gone from the SAVED
+        // BYTES (ASCII and UTF-16BE), and gone from /Opt itself. Leaving
+        // /Opt behind after wiping /V/DV/AP would let a NeedAppearances
+        // re-render restate the option, and a raw byte-scan of the file
+        // would still find the "redacted" string. Carrier-agnostic check per
+        // CLAUDE.md — page.Text/ExtractAllText alone is not sufficient.
+        var pdf = BuildChoiceFieldPdf(
+            options: new[] { "Lorem", "Ipsum", "SECRET-Consectetur", "Sit" },
+            selectedValue: "Sit",
+            isCombo: false);
+        using var doc = PdfDocument.Open(pdf);
+
+        var matches = doc.RedactText("SECRET-Consectetur", caseSensitive: false);
+        matches.Should().BeGreaterThan(0);
+
+        var saved = doc.SaveToBytes();
+        var savedAscii = Encoding.ASCII.GetString(saved);
+        var savedUtf16 = Encoding.BigEndianUnicode.GetString(saved);
+        (savedAscii + savedUtf16).Should().NotContain("SECRET-Consectetur",
+            "the option text must be gone from the saved bytes in every carrier, not just page.Text");
+
+        using var reopened = PdfDocument.Open(saved);
+        reopened.GetPage(1).Text.Should().NotContain("SECRET-Consectetur");
+        var field = reopened.GetAcroForm()!.FindField("field1")!;
+        (field.Options ?? Array.Empty<string>()).Should().NotContain("SECRET-Consectetur",
+            "the whole /Opt array must be cleared, not just /V, or a NeedAppearances re-render " +
+            "would restate the redacted option");
+    }
+
     // ─── PDF builder ─────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Build a one-page PDF with a single Choice (/FT /Ch) AcroForm field —
+    /// combo box or list box depending on <paramref name="isCombo"/> (Ff bit
+    /// 0x20000). Options are emitted as plain PDF string literals in /Opt
+    /// (the simpler of the two spec-legal /Opt shapes; the
+    /// [exportValue, displayValue] pair form is covered by
+    /// <c>PdfAcroFormParserTests</c>, not needed to exercise #661's
+    /// extraction/redaction path).
+    /// </summary>
+    private static byte[] BuildChoiceFieldPdf(string[] options, string selectedValue, bool isCombo)
+    {
+        var sb = new StringBuilder();
+        var offsets = new long[8];
+        void Mark(int n) => offsets[n] = sb.Length;
+
+        sb.Append("%PDF-1.7\n");
+
+        Mark(1); sb.Append("1 0 obj <</Type/Catalog/Pages 2 0 R/AcroForm 5 0 R>> endobj\n");
+        Mark(2); sb.Append("2 0 obj <</Type/Pages/Count 1/Kids[3 0 R]>> endobj\n");
+        Mark(3);
+        sb.Append("3 0 obj <</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]" +
+                  "/Annots[4 0 R]/Resources<<>>>> endobj\n");
+
+        var ff = isCombo ? 0x20000 : 0;
+        var optArray = string.Concat(options.Select(o => $"({o})"));
+        Mark(4);
+        sb.Append($"4 0 obj <</Type/Annot/Subtype/Widget/FT/Ch/T(field1)/Ff {ff}" +
+                  $"/Rect[100 500 400 700]/P 3 0 R/Opt[{optArray}]/V({selectedValue})>> endobj\n");
+
+        Mark(5);
+        sb.Append("5 0 obj <</Fields[4 0 R]>> endobj\n");
+
+        var xrefPos = sb.Length;
+        sb.Append("xref\n0 6\n0000000000 65535 f \n");
+        for (int i = 1; i <= 5; i++)
+            sb.Append(offsets[i].ToString("D10")).Append(" 00000 n \n");
+        sb.Append("trailer <</Size 6/Root 1 0 R>>\nstartxref\n").Append(xrefPos).Append("\n%%EOF\n");
+        return Encoding.ASCII.GetBytes(sb.ToString());
+    }
 
     /// <summary>
     /// Build a one-page PDF with a single AcroForm field. The field has

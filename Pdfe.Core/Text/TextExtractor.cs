@@ -105,6 +105,25 @@ public class TextExtractor
         foreach (var field in fields)
         {
             if (field.Rect == null) continue;
+
+            // List box (Choice, non-combo): the widget visually renders its
+            // ENTIRE /Opt option list, with the current selection
+            // highlighted — that's how list boxes work, unlike a closed
+            // combo box which shows only the selected value. mutool
+            // (render-based) sees every option string across all of a
+            // page's list-box widgets; before this, pdfe only emitted the
+            // selected /V, systematically under-extracting them (#661).
+            // Combo boxes deliberately stay on the /V-only path below —
+            // confirmed against mutool that a closed combo box renders
+            // only its selected value, never its option list.
+            if (field.FieldType == PdfFieldType.Choice && !field.IsComboBox &&
+                field.Options is { Count: > 0 } options)
+            {
+                EmitMultiLineLettersInRect(
+                    string.Join("\n", options), field.Rect.Value, $"AcroForm:{field.FieldType}");
+                continue;
+            }
+
             var value = field.Value ?? field.DefaultValue;
             if (string.IsNullOrEmpty(value)) continue;
             // Buttons are off/on/checked/unchecked names — not human-readable text.

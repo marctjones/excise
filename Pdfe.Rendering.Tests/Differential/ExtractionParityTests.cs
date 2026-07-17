@@ -197,9 +197,6 @@ public sealed class ExtractionParityTests
     /// </summary>
     private static readonly Dictionary<string, string> KnownAdversarialDisagreements = new()
     {
-        ["test-pdfs/pdfjs/annotation-choice-widget.pdf"] =
-            "#661 — partial coverage (48%); listbox widgets only emit the selected /V value, not " +
-            "the full rendered /Opt option list.",
         ["test-pdfs/pdfjs/bug854315.pdf"] =
             "#651 — 21% coverage, uncharacterized (has ToUnicode; does not match #659 or #662).",
         ["test-pdfs/pdfjs/issue14497.pdf"] = "#651 — 6% coverage, uncharacterized (no ToUnicode; does not match #662's Differences shape).",
