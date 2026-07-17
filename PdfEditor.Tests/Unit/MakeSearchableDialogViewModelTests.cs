@@ -55,8 +55,14 @@ public class MakeSearchableDialogViewModelTests
             {
                 language.Should().Be("eng");
                 force.Should().BeFalse();
-                progress.Report((1, 2));
-                progress.Report((2, 2));
+                // 3 total pages (document.PageCount): 2 OCR'd + 1 already-
+                // searchable and skipped. Real PdfSearchableConverter.MakeSearchable
+                // reports (pageIndex, PageCount) for every page including
+                // skipped ones, so Done/Total must land on 3, matching
+                // PagesProcessed + PagesSkipped below — not the count of
+                // Report calls alone.
+                progress.Report((1, 3));
+                progress.Report((2, 3));
                 return Task.FromResult(MakeResult(processed: 2, skipped: 1, written: 5));
             });
 
@@ -67,8 +73,12 @@ public class MakeSearchableDialogViewModelTests
 
         vm.IsRunning.Should().BeFalse();
         vm.IsDone.Should().BeTrue();
-        vm.ProgressDone.Should().Be(2);
-        vm.ProgressTotal.Should().Be(2);
+        // Asserted from the final result (PagesProcessed + PagesSkipped),
+        // not the last Report() call — Progress<T> marshals asynchronously,
+        // so the last report landing before this assertion runs is not
+        // guaranteed. See MakeSearchableDialogViewModel.StartAsync.
+        vm.ProgressDone.Should().Be(3);
+        vm.ProgressTotal.Should().Be(3);
         vm.ResultSummary.Should().Contain("2 page(s) processed")
             .And.Contain("1 skipped (already searchable)")
             .And.Contain("5 word(s) written");

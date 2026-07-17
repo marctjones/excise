@@ -189,8 +189,15 @@ public sealed class MakeSearchableDialogViewModel : ReactiveObject
         // Progress<T>.Report marshals its callback back to the UI thread
         // via the captured SynchronizationContext — same pattern as
         // MainWindowViewModel's indexProgress for the search-index build.
+        // `finished` guards against a Report callback landing AFTER the run
+        // completes: Progress<T> marshals asynchronously (falling back to
+        // the thread pool when no SynchronizationContext is captured, e.g.
+        // in a plain unit test), so a stale in-flight callback can otherwise
+        // race the deterministic final assignment below and clobber it.
+        var finished = false;
         var progress = new Progress<(int Done, int Total)>(p =>
         {
+            if (finished) return;
             ProgressDone = p.Done;
             ProgressTotal = p.Total;
         });
@@ -198,17 +205,25 @@ public sealed class MakeSearchableDialogViewModel : ReactiveObject
         try
         {
             var result = await _runOcr(Language, Force, progress, _cts.Token).ConfigureAwait(true);
+            finished = true;
             LastResult = result;
+            // Set the final tally directly from the result rather than
+            // trusting the last-landed Report call, so the UI always ends
+            // on a consistent 100% regardless of Progress<T>'s marshaling.
+            ProgressDone = result.PagesProcessed + result.PagesSkipped;
+            ProgressTotal = ProgressDone;
             ResultSummary = FormatSummary(result);
             IsDone = true;
             Completed?.Invoke(this, result);
         }
         catch (OperationCanceledException)
         {
+            finished = true;
             ErrorMessage = "Make Searchable was cancelled.";
         }
         catch (Exception ex)
         {
+            finished = true;
             ErrorMessage = $"Make Searchable failed: {ex.Message}";
         }
         finally
