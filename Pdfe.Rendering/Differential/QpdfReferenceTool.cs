@@ -122,6 +122,32 @@ public static class QpdfReferenceTool
         return result?.ExitCode == 0;
     }
 
+    /// <summary>
+    /// Uses qpdf's own (non-pdfe) writer to produce a V=4 R=4 AES-128
+    /// encrypted file — the reverse-direction oracle for pdfe's R=4 reader.
+    /// Where every other method in this class asks qpdf to validate
+    /// something pdfe wrote, this asks pdfe to open something qpdf wrote:
+    /// the only check that actually exercises pdfe's shared key-derivation
+    /// helpers (<c>PdfStandardSecurityHandler.DeriveFileKey</c>,
+    /// <c>ComputeObjectKey</c>, the R&gt;=3 RC4 chain) against an /O, /U,
+    /// and per-object ciphertext pdfe had zero part in producing — a bug
+    /// shared between pdfe's own encrypt and decrypt implementations of
+    /// those helpers would not be caught by pdfe round-tripping its own
+    /// output, but would be caught here. Returns false (not an exception)
+    /// on any failure so callers can assert on it directly.
+    /// </summary>
+    public static bool EncryptR4(
+        string inputPath, string outputPath, string userPassword, string ownerPassword, int timeoutMs = 30_000)
+    {
+        var args = new[]
+        {
+            "--encrypt", userPassword, ownerPassword, "128", "--use-aes=y", "--",
+            inputPath, outputPath
+        };
+        var result = Run(args, timeoutMs);
+        return result?.ExitCode == 0 && System.IO.File.Exists(outputPath);
+    }
+
     private static string[] BuildArgs(string command, string pdfPath, string? password)
     {
         var args = new System.Collections.Generic.List<string> { command };

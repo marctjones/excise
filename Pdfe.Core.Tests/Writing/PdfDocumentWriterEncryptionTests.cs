@@ -244,17 +244,186 @@ public class PdfDocumentWriterEncryptionTests
 
     #endregion
 
-    #region Algorithm not yet implemented
+    #region V=4 R=4 (AES-128) — issue #640
+
+    // The pdfe-internal / "own decrypt path" checks for R=4, same caveat as
+    // the class remarks: these confirm the encrypt and decrypt halves agree
+    // with each other, NOT that either is spec-correct. The independent
+    // oracles (qpdf/mutool/Ghostscript) live in
+    // Pdfe.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs.
 
     [Fact]
-    public void Write_WithAes128Algorithm_ThrowsNotSupported()
+    public void Write_WithAes128Options_EmitsR4EncryptDictionaryWithoutR6OnlyFields()
     {
-        using var doc = PdfDocument.Open(CreateSimplePdf("Text"));
-        var options = new PdfEncryptionOptions { Algorithm = PdfEncryptionAlgorithm.Aes128 };
+        using var doc = PdfDocument.Open(CreateSimplePdf("Hello R4 World"));
 
-        Action act = () => SaveEncrypted(doc, options);
+        var bytes = SaveEncrypted(doc, new PdfEncryptionOptions { Algorithm = PdfEncryptionAlgorithm.Aes128 });
+        var text = Encoding.Latin1.GetString(bytes);
 
-        act.Should().Throw<NotSupportedException>();
+        text.Should().Contain("/Encrypt");
+        text.Should().Contain("/Filter /Standard");
+        text.Should().Contain("/V 4");
+        text.Should().Contain("/R 4");
+        text.Should().Contain("/CFM /AESV2");
+        text.Should().Contain("/StmF /StdCF");
+        text.Should().Contain("/StrF /StdCF");
+        // R=6-only fields must not appear in an R=4 dict.
+        text.Should().NotContain("/OE (", "R=4 has no /OE — that field doesn't exist before V=5");
+        text.Should().NotContain("/UE (", "R=4 has no /UE — that field doesn't exist before V=5");
+        text.Should().NotContain("/Perms (", "R=4 has no /Perms — that field doesn't exist before V=5");
+    }
+
+    [Fact]
+    public void Write_WithAes128Options_ContentStreamBytesAreNotPlaintext()
+    {
+        const string secretMarker = "R4_MARKER_TEXT_NOT_IN_CIPHERTEXT";
+        using var doc = PdfDocument.Open(CreateSimplePdf(secretMarker));
+
+        var bytes = SaveEncrypted(doc, new PdfEncryptionOptions { Algorithm = PdfEncryptionAlgorithm.Aes128 });
+        var text = Encoding.Latin1.GetString(bytes);
+
+        text.Should().NotContain(secretMarker);
+        text.Should().NotContain("BT");
+    }
+
+    [Fact]
+    public void RoundTrip_Aes128_EmptyPassword_ReopensAndMatchesOriginalText()
+    {
+        using var doc = PdfDocument.Open(CreateSimplePdf("R4 Round Trip Empty Password"));
+
+        var bytes = SaveEncrypted(doc, new PdfEncryptionOptions { Algorithm = PdfEncryptionAlgorithm.Aes128 });
+
+        using var reopened = PdfDocument.Open(bytes, userPassword: null);
+        reopened.PageCount.Should().Be(1);
+        reopened.GetPage(1).Text.Should().Contain("R4 Round Trip Empty Password");
+    }
+
+    [Fact]
+    public void RoundTrip_Aes128_NonEmptyUserPassword_RequiresCorrectPasswordToOpen()
+    {
+        using var doc = PdfDocument.Open(CreateSimplePdf("R4 Password Protected Text"));
+
+        var bytes = SaveEncrypted(doc, new PdfEncryptionOptions
+        {
+            Algorithm = PdfEncryptionAlgorithm.Aes128,
+            UserPassword = "correct-horse-battery-staple",
+            OwnerPassword = "owner-secret",
+        });
+
+        Action openWrong = () => PdfDocument.Open(bytes, userPassword: "wrong-password");
+        openWrong.Should().Throw<PdfEncryptionNotSupportedException>();
+
+        using var reopened = PdfDocument.Open(bytes, userPassword: "correct-horse-battery-staple");
+        reopened.GetPage(1).Text.Should().Contain("R4 Password Protected Text");
+    }
+
+    [Fact]
+    public void RoundTrip_Aes128_NonAsciiPassword_EncodesAsPdfDocEncodingAndRoundTrips()
+    {
+        // R4 prefers PDFDocEncoding (a different code path from R6's
+        // UTF-8-preferred one) — pick a password representable in WinAnsi-ish
+        // PDFDocEncoding so this exercises that branch, not the UTF-8 fallback.
+        const string password = "pâsswörd-café";
+        using var doc = PdfDocument.Open(CreateSimplePdf("R4 Non ASCII Password Text"));
+
+        var bytes = SaveEncrypted(doc, new PdfEncryptionOptions
+        {
+            Algorithm = PdfEncryptionAlgorithm.Aes128,
+            UserPassword = password,
+        });
+
+        using var reopened = PdfDocument.Open(bytes, userPassword: password);
+        reopened.GetPage(1).Text.Should().Contain("R4 Non ASCII Password Text");
+    }
+
+    [Fact]
+    public void RoundTrip_Aes128_DifferentUserAndOwnerPasswords_UserPasswordOpensTheFile()
+    {
+        using var doc = PdfDocument.Open(CreateSimplePdf("R4 Dual Password Text"));
+
+        var bytes = SaveEncrypted(doc, new PdfEncryptionOptions
+        {
+            Algorithm = PdfEncryptionAlgorithm.Aes128,
+            UserPassword = "user-pw-1",
+            OwnerPassword = "owner-pw-2",
+        });
+
+        using var viaUser = PdfDocument.Open(bytes, userPassword: "user-pw-1");
+        viaUser.GetPage(1).Text.Should().Contain("R4 Dual Password Text");
+
+        // As with R6: pdfe's own decrypt handler doesn't implement owner-
+        // password recovery (#324), so the owner-password-also-opens-the-file
+        // property is verified independently via qpdf in
+        // Pdfe.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs.
+    }
+
+    [Fact]
+    public void RoundTrip_Aes128_StreamAndStringBothEncrypted_BothDecryptCorrectly()
+    {
+        const string secretAuthor = "R4 Confidential Author Name";
+        const string secretBody = "R4 Confidential Body Text In Content Stream";
+        using var doc = PdfDocument.Open(CreateSimplePdf(secretBody));
+        doc.SetAuthor(secretAuthor);
+        doc.SetTitle("R4 Confidential Title");
+
+        var bytes = SaveEncrypted(doc, new PdfEncryptionOptions { Algorithm = PdfEncryptionAlgorithm.Aes128, UserPassword = "pw" });
+
+        using var reopened = PdfDocument.Open(bytes, userPassword: "pw");
+        reopened.GetPage(1).Text.Should().Contain(secretBody, "stream content must decrypt correctly");
+        reopened.Author.Should().Be(secretAuthor, "string content (Info /Author) must decrypt correctly");
+        reopened.Title.Should().Be("R4 Confidential Title");
+    }
+
+    [Fact]
+    public void RoundTrip_Aes128_MultipleSaves_DoNotLeakGrowingEncryptObjects()
+    {
+        using var doc = PdfDocument.Open(CreateSimplePdf("R4 Stable Save Test"));
+        var options = new PdfEncryptionOptions { Algorithm = PdfEncryptionAlgorithm.Aes128, UserPassword = "pw" };
+
+        var first = SaveEncrypted(doc, options);
+        var second = SaveEncrypted(doc, options);
+
+        using var reopenedFirst = PdfDocument.Open(first, userPassword: "pw");
+        using var reopenedSecond = PdfDocument.Open(second, userPassword: "pw");
+        reopenedFirst.GetPage(1).Text.Should().Contain("R4 Stable Save Test");
+        reopenedSecond.GetPage(1).Text.Should().Contain("R4 Stable Save Test");
+    }
+
+    [Fact]
+    public void Write_Aes128_MultipleObjectsWithIdenticalPlaintext_ProduceDifferentCiphertext()
+    {
+        // The concrete regression this guards against: a missed call site
+        // that forgets to thread objNum/gen through to EncryptObjectBytes
+        // (or reuses one object's key/IV for another) would make two
+        // objects containing the exact same plaintext string encrypt to the
+        // exact same ciphertext bytes. Per-object key derivation (Algorithm
+        // 1) plus a fresh random IV per encryption should make that
+        // vanishingly unlikely even by chance — so any observed collision
+        // here is a real bug.
+        const string sharedSecret = "IdenticalSharedSecretAcrossObjects";
+        using var doc = PdfDocument.Open(CreateSimplePdf("R4 Multi Object Test"));
+        doc.SetAuthor(sharedSecret);
+        doc.SetTitle(sharedSecret);
+
+        var bytes = SaveEncrypted(doc, new PdfEncryptionOptions { Algorithm = PdfEncryptionAlgorithm.Aes128 });
+
+        using var reopened = PdfDocument.Open(bytes, userPassword: null);
+        reopened.Author.Should().Be(sharedSecret);
+        reopened.Title.Should().Be(sharedSecret);
+
+        // The raw ciphertext bytes for /Author and /Title must differ even
+        // though the plaintext is identical — encrypted strings are always
+        // serialized as hex (see PdfObjectWriter.SerializeString), so pull
+        // the hex blob that immediately follows each key.
+        var raw = Encoding.Latin1.GetString(bytes);
+        var authorHex = System.Text.RegularExpressions.Regex.Match(raw, @"/Author\s*<([0-9A-Fa-f]+)>").Groups[1].Value;
+        var titleHex = System.Text.RegularExpressions.Regex.Match(raw, @"/Title\s*<([0-9A-Fa-f]+)>").Groups[1].Value;
+        authorHex.Should().NotBeNullOrEmpty();
+        titleHex.Should().NotBeNullOrEmpty();
+        authorHex.Should().NotBe(titleHex,
+            "identical plaintext in two different objects must encrypt to different ciphertext " +
+            "(different per-object derived key AND a fresh random IV) — an identical result would mean " +
+            "either the per-object key derivation was skipped (missed objNum/gen call site) or the IV wasn't randomized");
     }
 
     #endregion

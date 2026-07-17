@@ -4,19 +4,21 @@ namespace Pdfe.Core.Security;
 /// Standard Security Handler algorithm variant to encrypt with.
 /// </summary>
 /// <remarks>
-/// Only <see cref="Aes256"/> (V=5 R=6, the PDF 2.0 native algorithm) is
-/// implemented today (issue #639). <see cref="Aes128"/> is reserved for
-/// issue #640 (V=4 R=4, CFM=AESV2) so callers/serialized options written
-/// against this version keep compiling once that lands — selecting it
-/// before #640 ships throws <see cref="System.NotSupportedException"/>
-/// from <see cref="Pdfe.Core.Writing.PdfDocumentWriter"/>.
+/// Both variants are implemented: <see cref="Aes256"/> (V=5 R=6, the PDF 2.0
+/// native algorithm — issue #639) and <see cref="Aes128"/> (V=4 R=4,
+/// CFM=AESV2 — issue #640, for readers that don't support the PDF 2.0 R=6
+/// handler). R=4 additionally derives a fresh AES key per object (ISO
+/// 32000-1 §7.6.2 Algorithm 1), unlike R=6's single file-wide key — see
+/// <see cref="Pdfe.Core.Writing.PdfDocumentWriter"/> and
+/// <c>Pdfe.Core.Security.PdfStandardSecurityEncryptor</c> (internal) for the
+/// writer-side implementation of each.
 /// </remarks>
 public enum PdfEncryptionAlgorithm
 {
-    /// <summary>AES-256 in CBC mode, V=5 R=6 (PDF 2.0 native). Implemented.</summary>
+    /// <summary>AES-256 in CBC mode, V=5 R=6 (PDF 2.0 native).</summary>
     Aes256 = 0,
 
-    /// <summary>AES-128 in CBC mode, V=4 R=4 (CFM=AESV2). Reserved for issue #640 — not yet implemented.</summary>
+    /// <summary>AES-128 in CBC mode, V=4 R=4 (CFM=AESV2) — for compatibility with pre-PDF-2.0 readers.</summary>
     Aes128 = 1,
 }
 
@@ -39,8 +41,10 @@ public sealed class PdfEncryptionOptions
     /// <summary>
     /// The user (open) password. <c>null</c> or empty means an empty user
     /// password — the common "encrypted, but no prompt to open" case.
-    /// Encoded as UTF-8 for R=6 (matches the decrypt handler's
-    /// <c>EncodeUserPasswordCandidates</c> for revision &gt;= 5).
+    /// Encoded as UTF-8 for R=6, or PDFDocEncoding (falling back to UTF-8
+    /// only if unrepresentable) for R=4 — matches the decrypt handler's
+    /// <c>EncodeUserPasswordCandidates</c> precedence for the corresponding
+    /// revision.
     /// </summary>
     public string? UserPassword { get; init; }
 
@@ -72,9 +76,10 @@ public sealed class PdfEncryptionOptions
     public bool EncryptMetadata { get; init; } = true;
 
     /// <summary>
-    /// The Standard Security Handler algorithm variant. Only
-    /// <see cref="PdfEncryptionAlgorithm.Aes256"/> is implemented; see the
-    /// enum's remarks.
+    /// The Standard Security Handler algorithm variant; see
+    /// <see cref="PdfEncryptionAlgorithm"/>'s remarks for what each value
+    /// implies. Defaults to <see cref="PdfEncryptionAlgorithm.Aes256"/>
+    /// (the PDF 2.0 native handler).
     /// </summary>
     public PdfEncryptionAlgorithm Algorithm { get; init; } = PdfEncryptionAlgorithm.Aes256;
 }

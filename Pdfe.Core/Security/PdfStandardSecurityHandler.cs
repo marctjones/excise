@@ -250,20 +250,33 @@ public sealed class PdfStandardSecurityHandler
     private byte[] DeriveObjectKey(int objNum, int gen)
     {
         if (V == 5) return _fileEncryptionKey;
+        return ComputeObjectKey(_fileEncryptionKey, objNum, gen, UsesAes);
+    }
 
+    /// <summary>
+    /// Algorithm 1 core (R2-R4 family): per-object key from file key +
+    /// obj# + gen# (+ "sAlT" for AES), independent of any handler
+    /// instance state. Internal so <see cref="PdfStandardSecurityEncryptor"/>
+    /// (the R=4 writer, which needs a per-object key for every
+    /// stream/string — unlike R=6, which uses the file key directly) can
+    /// derive the exact same key the read side computes, instead of
+    /// duplicating this MD5 machinery.
+    /// </summary>
+    internal static byte[] ComputeObjectKey(byte[] fileEncryptionKey, int objNum, int gen, bool usesAes)
+    {
         // Append low-order 3 bytes of obj#, low-order 2 bytes of gen# (LE).
         // For AES (CFM=AESV2), append "sAlT" (4 bytes 0x73 0x41 0x6C 0x54)
         // before MD5 — this differentiates AES per-object keys from RC4.
-        int extra = UsesAes ? 9 : 5;
-        var input = new byte[_fileEncryptionKey.Length + extra];
-        Array.Copy(_fileEncryptionKey, input, _fileEncryptionKey.Length);
-        int p = _fileEncryptionKey.Length;
+        int extra = usesAes ? 9 : 5;
+        var input = new byte[fileEncryptionKey.Length + extra];
+        Array.Copy(fileEncryptionKey, input, fileEncryptionKey.Length);
+        int p = fileEncryptionKey.Length;
         input[p + 0] = (byte)(objNum & 0xFF);
         input[p + 1] = (byte)((objNum >> 8) & 0xFF);
         input[p + 2] = (byte)((objNum >> 16) & 0xFF);
         input[p + 3] = (byte)(gen & 0xFF);
         input[p + 4] = (byte)((gen >> 8) & 0xFF);
-        if (UsesAes)
+        if (usesAes)
         {
             input[p + 5] = 0x73; // 's'
             input[p + 6] = 0x41; // 'A'
@@ -274,7 +287,7 @@ public sealed class PdfStandardSecurityHandler
         var hash = MD5.HashData(input);
         // Object key length: min(filekey + 5, 16). For AES the cipher
         // requires exactly the file-key length bytes (16 for AES-128).
-        int n = Math.Min(_fileEncryptionKey.Length + 5, 16);
+        int n = Math.Min(fileEncryptionKey.Length + 5, 16);
         var key = new byte[n];
         Array.Copy(hash, key, n);
         return key;
@@ -282,8 +295,14 @@ public sealed class PdfStandardSecurityHandler
 
     /// <summary>
     /// Algorithm 2: file encryption key from password + /O + /P + /ID[0].
+    ///
+    /// Internal (not private) so <see cref="PdfStandardSecurityEncryptor"/>
+    /// (the R=4 writer-side counterpart — Algorithm 2 is also step (a) of
+    /// Algorithm 5's /U computation) can reuse this exact implementation
+    /// instead of duplicating it — mirrors how <see cref="ComputeR6Hash"/>
+    /// is shared for the R=6 path.
     /// </summary>
-    private static byte[] DeriveFileKey(
+    internal static byte[] DeriveFileKey(
         byte[] password, byte[] o, long p, byte[] firstId,
         int r, int keyBytes, bool encryptMetadata)
     {
@@ -345,26 +364,45 @@ public sealed class PdfStandardSecurityHandler
         }
 
         // R ≥ 3
-        using var md5 = MD5.Create();
-        md5.TransformBlock(PasswordPadding, 0, 32, null, 0);
-        md5.TransformBlock(firstId, 0, firstId.Length, null, 0);
-        md5.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
-        var hash = md5.Hash!;
-
-        var encrypted2 = Rc4.Transform(fileKey, hash);
-        for (int i = 1; i <= 19; i++)
-        {
-            var keyMod = new byte[fileKey.Length];
-            for (int j = 0; j < fileKey.Length; j++)
-                keyMod[j] = (byte)(fileKey[j] ^ i);
-            encrypted2 = Rc4.Transform(keyMod, encrypted2);
-        }
+        var encrypted2 = ComputeUserPasswordHashR3Plus(fileKey, firstId);
 
         // Compare first 16 bytes only — /U for R≥3 is 32 bytes, but the
         // last 16 are arbitrary salt.
         for (int i = 0; i < 16; i++)
             if (encrypted2[i] != u[i]) return false;
         return true;
+    }
+
+    /// <summary>
+    /// Algorithm 5 (R≥3) core: MD5(padding || ID[0]) then 20 rounds of RC4
+    /// keyed by the file key (round 0 uses the key as-is, rounds 1-19 XOR
+    /// every key byte with the round index). Produces the 16-byte value
+    /// that becomes the first 16 bytes of /U.
+    ///
+    /// Shared between <see cref="VerifyUserPassword"/> (which compares this
+    /// against an existing /U — Algorithm 6's read-side check) and
+    /// <see cref="PdfStandardSecurityEncryptor"/> (which captures this value
+    /// to *compute* /U on write — Algorithm 5 proper). Internal so the
+    /// writer-side type can call it instead of duplicating the RC4/MD5
+    /// machinery.
+    /// </summary>
+    internal static byte[] ComputeUserPasswordHashR3Plus(byte[] fileKey, byte[] firstId)
+    {
+        using var md5 = MD5.Create();
+        md5.TransformBlock(PasswordPadding, 0, 32, null, 0);
+        md5.TransformBlock(firstId, 0, firstId.Length, null, 0);
+        md5.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
+        var hash = md5.Hash!;
+
+        var encrypted = Rc4.Transform(fileKey, hash);
+        for (int i = 1; i <= 19; i++)
+        {
+            var keyMod = new byte[fileKey.Length];
+            for (int j = 0; j < fileKey.Length; j++)
+                keyMod[j] = (byte)(fileKey[j] ^ i);
+            encrypted = Rc4.Transform(keyMod, encrypted);
+        }
+        return encrypted;
     }
 
     /// <summary>
@@ -585,7 +623,14 @@ public sealed class PdfStandardSecurityHandler
         return diff == 0;
     }
 
-    private static byte[] PadPassword(byte[] password)
+    /// <summary>
+    /// Algorithms 2/3/6 step: pad/truncate a password to exactly 32 bytes
+    /// using the fixed <see cref="PasswordPadding"/> string. Internal so
+    /// <see cref="PdfStandardSecurityEncryptor"/>'s R=4 /O computation
+    /// (Algorithm 3) can reuse it — /O and /U padding must be byte-for-byte
+    /// identical to what this handler expects on read.
+    /// </summary>
+    internal static byte[] PadPassword(byte[] password)
     {
         var padded = new byte[32];
         int copyLen = Math.Min(password.Length, 32);

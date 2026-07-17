@@ -242,6 +242,256 @@ public class EncryptionWriterInteropTests : IDisposable
 
     #endregion
 
+    #region V=4 R=4 (AES-128) — issue #640
+
+    [Fact]
+    public void Qpdf_R4_EmptyPasswords_ReportsR4AesV2AndBothPasswordsValidate()
+    {
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not on PATH");
+
+        var path = SaveEncrypted(new PdfEncryptionOptions { Algorithm = PdfEncryptionAlgorithm.Aes128 });
+
+        var show = QpdfReferenceTool.ShowEncryption(path);
+        show.Should().NotBeNull();
+        show.Should().Contain("R = 4", "qpdf's independent parser must agree this is R=4");
+        show.Should().Contain("AESv2", "qpdf's independent parser must agree streams/strings use AES-128, not AESv3");
+        show.Should().NotContain("AESv3");
+        show.Should().Contain("Supplied password is owner password");
+        show.Should().Contain("Supplied password is user password");
+
+        var check = QpdfReferenceTool.Check(path);
+        check.Should().NotBeNull();
+        check!.Value.Success.Should().BeTrue($"qpdf --check reported problems:\n{check.Value.Output}");
+    }
+
+    [Fact]
+    public void Qpdf_R4_Decrypt_WithEmptyPassword_ProducesAReadablePlaintextFile()
+    {
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not on PATH");
+
+        var path = SaveEncrypted(new PdfEncryptionOptions { Algorithm = PdfEncryptionAlgorithm.Aes128 });
+        var outPath = Path.Combine(_tempDir, "decrypted-r4.pdf");
+
+        var succeeded = QpdfReferenceTool.Decrypt(path, outPath);
+
+        succeeded.Should().BeTrue("qpdf must be able to independently derive the R=4 file key and strip /Encrypt");
+        File.Exists(outPath).Should().BeTrue();
+        QpdfReferenceTool.IsEncrypted(outPath).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Qpdf_R4_DifferentUserAndOwnerPasswords_BothIndependentlyOpenTheFile()
+    {
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not on PATH");
+
+        var path = SaveEncrypted(new PdfEncryptionOptions
+        {
+            Algorithm = PdfEncryptionAlgorithm.Aes128,
+            UserPassword = "user-pw-1",
+            OwnerPassword = "owner-pw-2",
+        });
+
+        var checkUser = QpdfReferenceTool.Check(path, "user-pw-1");
+        checkUser.Should().NotBeNull();
+        checkUser!.Value.Success.Should().BeTrue($"user password should open the file:\n{checkUser.Value.Output}");
+
+        var checkOwner = QpdfReferenceTool.Check(path, "owner-pw-2");
+        checkOwner.Should().NotBeNull();
+        checkOwner!.Value.Success.Should().BeTrue($"owner password should also open the file:\n{checkOwner.Value.Output}");
+
+        var showOwner = QpdfReferenceTool.ShowEncryption(path, "owner-pw-2");
+        showOwner.Should().Contain("Supplied password is owner password",
+            "the owner password must unlock full (owner-level) access, not just user-level");
+    }
+
+    [Fact]
+    public void Qpdf_R4_NonAsciiPassword_ValidatesAsPdfDocEncoding()
+    {
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not on PATH");
+        // Representable in PDFDocEncoding (unlike R6's emoji test password) —
+        // R4 prefers PDFDocEncoding, a distinct code path from R6's UTF-8.
+        const string password = "pâsswörd-café";
+
+        var path = SaveEncrypted(new PdfEncryptionOptions { Algorithm = PdfEncryptionAlgorithm.Aes128, UserPassword = password });
+
+        var show = QpdfReferenceTool.ShowEncryption(path, password);
+        show.Should().Contain("R = 4");
+    }
+
+    [Fact]
+    public void Qpdf_R4_MultipleObjectsWithIdenticalPlaintext_DecryptToTheSameTextViaDifferentCiphertext()
+    {
+        // Same discriminating property as the pdfe-internal test
+        // (Write_Aes128_MultipleObjectsWithIdenticalPlaintext_ProduceDifferentCiphertext
+        // in Pdfe.Core.Tests), checked here against qpdf's independent
+        // decrypt instead of pdfe's own: two objects sharing identical
+        // plaintext must still both decrypt correctly via a reader pdfe
+        // does not control.
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not on PATH");
+
+        using var doc = PdfDocument.Open(BuildDocumentBytes());
+        const string sharedSecret = "R4SharedSecretAcrossMultipleObjects";
+        doc.SetAuthor(sharedSecret);
+        doc.SetTitle(sharedSecret);
+        var path = Path.Combine(_tempDir, $"r4-multiobj-{Guid.NewGuid():N}.pdf");
+        using (var fs = new FileStream(path, FileMode.Create, FileAccess.Write))
+        {
+            new PdfDocumentWriter(doc, new PdfEncryptionOptions { Algorithm = PdfEncryptionAlgorithm.Aes128 }).Write(fs);
+        }
+
+        var outPath = Path.Combine(_tempDir, "decrypted-r4-multiobj.pdf");
+        QpdfReferenceTool.Decrypt(path, outPath).Should().BeTrue();
+
+        using var decrypted = PdfDocument.Open(File.ReadAllBytes(outPath));
+        decrypted.Author.Should().Be(sharedSecret);
+        decrypted.Title.Should().Be(sharedSecret);
+    }
+
+    [Fact]
+    public void Qpdf_R4_ShowEncryption_ReportsPermissionsFromOptions()
+    {
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not on PATH");
+
+        var path = SaveEncrypted(new PdfEncryptionOptions { Algorithm = PdfEncryptionAlgorithm.Aes128 });
+
+        var show = QpdfReferenceTool.ShowEncryption(path);
+        show.Should().Contain("P = -4");
+        show.Should().Contain("modify anything: allowed");
+    }
+
+    [Fact]
+    public void QpdfWrittenR4File_PdfeIndependentlyDecryptsIt()
+    {
+        // The reverse-direction oracle (see QpdfReferenceTool.EncryptR4's
+        // remarks): a file whose /O, /U, and per-object AES-128 ciphertext
+        // were produced entirely by qpdf, with zero pdfe code involved in
+        // the encrypt side. A successful read here is the strongest
+        // evidence pdfe's shared KDF helpers (DeriveFileKey, ComputeObjectKey,
+        // the R>=3 RC4 chain) are actually spec-correct, not just
+        // self-consistent between pdfe's own encrypt and decrypt halves.
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not on PATH");
+
+        var plainPath = SavePlain();
+        var qpdfEncryptedPath = Path.Combine(_tempDir, "qpdf-written-r4.pdf");
+        var encrypted = QpdfReferenceTool.EncryptR4(plainPath, qpdfEncryptedPath, "user-secret", "owner-secret");
+        encrypted.Should().BeTrue("qpdf must succeed at writing its own R=4 encrypted file for this test to be meaningful");
+
+        using var reopened = PdfDocument.Open(File.ReadAllBytes(qpdfEncryptedPath), userPassword: "user-secret");
+        reopened.GetPage(1).Text.Should().Contain(MarkerText,
+            "pdfe must be able to independently derive the correct file key and per-object keys " +
+            "from a file it did not write, using only the same shared KDF helpers its own R=4 writer uses");
+    }
+
+    #endregion
+
+    #region Mutool: R=4 independent decryption + text extraction
+
+    [Fact]
+    public void Mutool_R4_EmptyPassword_ExtractsCorrectText()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not on PATH");
+
+        var path = SaveEncrypted(new PdfEncryptionOptions { Algorithm = PdfEncryptionAlgorithm.Aes128 });
+
+        var extracted = MutoolTextExtractor.ExtractPage(path, 1, password: null);
+
+        extracted.Should().NotBeNull();
+        extracted.Should().Contain(MarkerText);
+    }
+
+    [Fact]
+    public void Mutool_R4_DifferentUserAndOwnerPasswords_BothExtractTheSameCorrectText()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not on PATH");
+
+        var path = SaveEncrypted(new PdfEncryptionOptions
+        {
+            Algorithm = PdfEncryptionAlgorithm.Aes128,
+            UserPassword = "user-pw-1",
+            OwnerPassword = "owner-pw-2",
+        });
+
+        var viaUser = MutoolTextExtractor.ExtractPage(path, 1, "user-pw-1");
+        var viaOwner = MutoolTextExtractor.ExtractPage(path, 1, "owner-pw-2");
+
+        viaUser.Should().NotBeNull();
+        viaUser.Should().Contain(MarkerText);
+        viaOwner.Should().NotBeNull();
+        viaOwner.Should().Contain(MarkerText);
+    }
+
+    [Fact]
+    public void Mutool_R4_NonAsciiPassword_ExtractsCorrectText()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not on PATH");
+        const string password = "pâsswörd-café";
+
+        var path = SaveEncrypted(new PdfEncryptionOptions { Algorithm = PdfEncryptionAlgorithm.Aes128, UserPassword = password });
+
+        var extracted = MutoolTextExtractor.ExtractPage(path, 1, password);
+
+        extracted.Should().NotBeNull();
+        extracted.Should().Contain(MarkerText);
+    }
+
+    [Fact]
+    public void Mutool_R4_WrongPassword_FailsToExtract()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not on PATH");
+
+        var path = SaveEncrypted(new PdfEncryptionOptions { Algorithm = PdfEncryptionAlgorithm.Aes128, UserPassword = "correct-password" });
+
+        var extracted = MutoolTextExtractor.ExtractPage(path, 1, "wrong-password");
+
+        if (extracted != null)
+            extracted.Should().NotContain(MarkerText);
+    }
+
+    #endregion
+
+    #region Ghostscript: R=4 independent rendering
+
+    [Fact]
+    public void Ghostscript_R4_EmptyPassword_RendersIdenticallyToUnencryptedBaseline()
+    {
+        Assert.SkipUnless(GhostscriptReferenceRenderer.IsAvailable, "ghostscript not installed");
+
+        var plainPath = SavePlain();
+        var encPath = SaveEncrypted(new PdfEncryptionOptions { Algorithm = PdfEncryptionAlgorithm.Aes128 });
+
+        var baseline = GhostscriptReferenceRenderer.RenderPage(plainPath, 1, dpi: 150, timeoutMs: 30_000, userPassword: null);
+        var encrypted = GhostscriptReferenceRenderer.RenderPage(encPath, 1, dpi: 150, timeoutMs: 30_000, userPassword: null);
+
+        baseline.Should().NotBeNull();
+        encrypted.Should().NotBeNull();
+        MaxChannelDiff(baseline!, encrypted!).Should().BeLessThanOrEqualTo(2,
+            "Ghostscript's independent decryption + rendering of the R=4 encrypted file must match the unencrypted baseline pixel-for-pixel");
+    }
+
+    [Fact]
+    public void Ghostscript_R4_OwnerPassword_RendersIdenticallyToUnencryptedBaseline()
+    {
+        Assert.SkipUnless(GhostscriptReferenceRenderer.IsAvailable, "ghostscript not installed");
+
+        var plainPath = SavePlain();
+        var encPath = SaveEncrypted(new PdfEncryptionOptions
+        {
+            Algorithm = PdfEncryptionAlgorithm.Aes128,
+            UserPassword = "user-pw-1",
+            OwnerPassword = "owner-pw-2",
+        });
+
+        var baseline = GhostscriptReferenceRenderer.RenderPage(plainPath, 1, dpi: 150, timeoutMs: 30_000, userPassword: null);
+        var viaOwner = GhostscriptReferenceRenderer.RenderPage(encPath, 1, dpi: 150, timeoutMs: 30_000, userPassword: "owner-pw-2");
+
+        baseline.Should().NotBeNull();
+        viaOwner.Should().NotBeNull();
+        MaxChannelDiff(baseline!, viaOwner!).Should().BeLessThanOrEqualTo(2,
+            "the owner password must unlock full rendering, matching the unencrypted baseline");
+    }
+
+    #endregion
+
     #region Helpers
 
     private byte[] BuildDocumentBytes()
