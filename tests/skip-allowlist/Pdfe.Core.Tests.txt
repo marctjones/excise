@@ -4,3 +4,19 @@
 #
 Pdfe.Core.Tests.Authoring.PdfUaConformanceTests.TaggedBuilderOutput_IsPdfUa1Compliant   # TODO: justify or fix
 Pdfe.Core.Tests.PdfATests.PdfA_Output_IsConformant_PerVeraPdf   # TODO: justify or fix
+#
+# Below (#664): 7 skips that gate on gitignored, on-demand-downloaded fixtures
+# under test-pdfs/ (scripts/download-test-pdfs.sh, download-pdfjs-corpus.sh,
+# download-poppler-corpus.sh). None of these directories exist on a
+# from-scratch checkout, and ci.yml's test-linux job never runs any of the
+# three download scripts, so these are the correct, legitimate skip set on
+# CI and on a fresh clone alike. Not lazy skips: each is a real regression
+# fixture and the test would run and assert against it if the file were
+# present (verified locally with the fixtures downloaded).
+Pdfe.Core.Tests.Document.RealPdfTests.Open_VeraPdfCorpusFile_ParsesSuccessfully   # needs test-pdfs/verapdf-corpus/veraPDF-corpus-master/PDF_A-1b/*.pdf (scripts/download-test-pdfs.sh)
+Pdfe.Core.Tests.Document.RealPdfTests.GetContentStreamBytes_VeraPdfCorpusFile_ReturnsContent   # same veraPDF corpus/gate as Open_VeraPdfCorpusFile_ParsesSuccessfully
+Pdfe.Core.Tests.Parsing.RecoverablePdfRegressionTests.Open_InvalidHeaderWithRecoverableXref_UsesUnknownVersionAndLoadsPage   # needs test-pdfs/pdfjs/bug1606566.pdf (scripts/download-pdfjs-corpus.sh)
+Pdfe.Core.Tests.Parsing.RecoverablePdfRegressionTests.GetPage_CircularPagesSubtree_ExposesDeclaredPageAndThrowsTypedCycleError   # needs test-pdfs/pdfjs/Pages-tree-refs.pdf (scripts/download-pdfjs-corpus.sh)
+Pdfe.Core.Tests.Parsing.RecoverablePdfRegressionTests.Open_AcrobatCompatibleV4R4ShortKeyPadding_DecodesFirstPage   # Theory over test-pdfs/pdfjs/issue19484_1.pdf + issue19484_2.pdf (scripts/download-pdfjs-corpus.sh)
+Pdfe.Core.Tests.Text.Segmentation.EncryptedRedactionRegressionTests.OpenEncryptedPdf_WithoutDocumentedPassword_FailsClosed   # Theory over test-pdfs/pdfjs/issue15893_reduced.pdf + test-pdfs/poppler/unittestcases/PasswordEncryptedReconstructed.pdf (download-pdfjs-corpus.sh + download-poppler-corpus.sh)
+Pdfe.Core.Tests.Text.Segmentation.EncryptedRedactionRegressionTests.RedactText_WithDocumentedPassword_RemovesRecoverableText   # same encrypted fixtures/gate as OpenEncryptedPdf_WithoutDocumentedPassword_FailsClosed
