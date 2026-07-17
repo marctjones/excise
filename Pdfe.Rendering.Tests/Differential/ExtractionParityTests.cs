@@ -198,11 +198,14 @@ public sealed class ExtractionParityTests
     private static readonly Dictionary<string, string> KnownAdversarialDisagreements = new()
     {
         ["test-pdfs/pdfjs/bug854315.pdf"] =
-            "#651 — 21% coverage, uncharacterized (has ToUnicode; does not match #659 or #662).",
-        ["test-pdfs/pdfjs/issue14497.pdf"] = "#651 — 6% coverage, uncharacterized (no ToUnicode; does not match #662's Differences shape).",
-        ["test-pdfs/pdfjs/issue17069.pdf"] = "#651 — 41% coverage, uncharacterized (has ToUnicode; does not match #659 or #662).",
-        ["test-pdfs/pdfjs/issue18036.pdf"] = "#651 — 18% coverage, uncharacterized (standard /Identity-H Type0; does not match #659).",
-        ["test-pdfs/pdfjs/issue19389.pdf"] = "#651 — 37% coverage, uncharacterized (simple Type1, no ToUnicode; does not match #662's Differences shape).",
+            "#669 — Signature widget /AP appearance text never extracted.",
+        ["test-pdfs/pdfjs/issue17069.pdf"] =
+            "#669 + #670 — Signature widget /AP appearance text (#669) plus orphaned Widget " +
+            "annotations outside /AcroForm/Fields (#670).",
+        ["test-pdfs/pdfjs/issue18036.pdf"] =
+            "#672 — EmitFormFieldLetters truncates multiline field values to one line, ignoring PdfField.IsMultiline.",
+        ["test-pdfs/pdfjs/issue19389.pdf"] =
+            "#671 — Widget page resolution requires /P, but /P is optional per spec; widgets with no /P are silently dropped.",
     };
 
     [Fact]
