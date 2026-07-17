@@ -517,6 +517,75 @@ public class TextExtractionTests
 
     #endregion
 
+    #region Off-page content (#649)
+
+    [Fact]
+    public void Page_Text_ExcludesTextAboveTheCropBox()
+    {
+        // Arrange - MediaBox is [0 0 612 792] (see CreatePdfWithContentStream);
+        // Y=900 is ~100pt above the top edge, matching the off-canvas workflow
+        // "slug" metadata (Userid/XSL/XMLFileid) real IRS-produced PDFs place
+        // there — text a renderer (and mutool) never draws.
+        var content = "BT /F1 12 Tf 100 700 Td (OnPage) Tj ET BT /F1 12 Tf 100 900 Td (OffTop) Tj ET";
+        var pdfData = CreatePdfWithContentStream(content);
+
+        using var doc = PdfDocument.Open(pdfData);
+        var page = doc.GetPage(1);
+
+        page.Text.Should().Contain("OnPage");
+        page.Text.Should().NotContain("OffTop");
+    }
+
+    [Fact]
+    public void Page_Text_ExcludesTextBelowTheCropBox()
+    {
+        var content = "BT /F1 12 Tf 100 700 Td (OnPage) Tj ET BT /F1 12 Tf 100 -50 Td (OffBottom) Tj ET";
+        var pdfData = CreatePdfWithContentStream(content);
+
+        using var doc = PdfDocument.Open(pdfData);
+        var page = doc.GetPage(1);
+
+        page.Text.Should().Contain("OnPage");
+        page.Text.Should().NotContain("OffBottom");
+    }
+
+    [Fact]
+    public void Page_Letters_StillIncludesOffPageContent()
+    {
+        // Redaction reads Letters directly (RedactText/RedactArea) and must
+        // keep full reach into off-page content: Text is a display/search
+        // view, not the redaction source of truth. See PdfPage.Text remarks.
+        var content = "BT /F1 12 Tf 100 700 Td (OnPage) Tj ET BT /F1 12 Tf 100 900 Td (OffTop) Tj ET";
+        var pdfData = CreatePdfWithContentStream(content);
+
+        using var doc = PdfDocument.Open(pdfData);
+        var page = doc.GetPage(1);
+        var allText = string.Concat(page.Letters.Select(l => l.Value));
+
+        allText.Should().Contain("OnPage");
+        allText.Should().Contain("OffTop");
+    }
+
+    [Fact]
+    public void Page_Text_DoesNotExcludeTextByXPositionAlone()
+    {
+        // A vertical-only check is deliberate: pdfe's own X-position math has
+        // known drift on real documents (#90), and a full-bounding-box filter
+        // was found (scotus-trump-v-us.pdf p56) to delete genuinely visible,
+        // on-page footnote text purely because pdfe's computed X ran past the
+        // right edge. Text with an in-bounds Y but out-of-bounds X must still
+        // survive into Text.
+        var content = "BT /F1 12 Tf 900 700 Td (FarRight) Tj ET";
+        var pdfData = CreatePdfWithContentStream(content);
+
+        using var doc = PdfDocument.Open(pdfData);
+        var page = doc.GetPage(1);
+
+        page.Text.Should().Contain("FarRight");
+    }
+
+    #endregion
+
     #region State Management
 
     [Fact]

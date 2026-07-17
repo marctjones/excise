@@ -46,6 +46,31 @@ public class PdfPage
     /// Get the extracted text content from the page.
     /// Cached on first access; subsequent calls return the cached result.
     /// </summary>
+    /// <remarks>
+    /// Excludes letters positioned entirely above or below the page's
+    /// <see cref="CropBox"/> (#649): producers routinely place production
+    /// metadata — filename slugs, proofing notes, workflow IDs — far off-canvas
+    /// (e.g. Y &gt; 900 on a 792pt-tall page) using ordinary content-stream text
+    /// operators with no reliable tag to distinguish it. Two rejected approaches,
+    /// both found by direct measurement against mutool (the parity oracle):
+    /// (1) a <c>/Artifact</c>-tag-based filter — on real documents
+    /// (irs-1040-instructions.pdf p1) the same tag covers both the off-page junk
+    /// AND the genuinely visible, on-page running footer ("Department of the
+    /// Treasury..."), so filtering by tag alone hid real, searchable content;
+    /// (2) a full bounding-box (X and Y) filter — pdfe's own X-position
+    /// calculation has known drift on some real documents (#90; horizontal
+    /// advance-width accumulation, unlike Y which comes from explicit line
+    /// operators), and on scotus-trump-v-us.pdf p56 that drift alone pushed
+    /// genuinely visible footnote text (confirmed present in mutool's output)
+    /// up to ~100pt past the right edge — an X-bounds filter would have deleted
+    /// real content to paper over an unrelated, pre-existing position bug.
+    /// Every off-page slug measured across the smoke corpus is a pure vertical
+    /// violation (Y entirely outside the CropBox, X untouched), so the filter
+    /// checks Y only — narrow enough to remove the slug, too narrow to be
+    /// tripped by X-axis drift. <see cref="Letters"/> itself is NOT filtered —
+    /// redaction reads letters directly and must keep full reach into off-page
+    /// content, so only this derived, display/search-facing view is narrowed.
+    /// </remarks>
     public string Text
     {
         get
@@ -53,9 +78,15 @@ public class PdfPage
             if (_cachedText != null)
                 return _cachedText;
 
+            var cropBox = CropBox.Normalize();
             var sb = new StringBuilder();
             foreach (var letter in Letters)
+            {
+                var glyphBox = letter.GlyphRectangle.Normalize();
+                if (glyphBox.Top <= cropBox.Bottom || glyphBox.Bottom >= cropBox.Top)
+                    continue;
                 sb.Append(letter.Value);
+            }
             _cachedText = sb.ToString();
             return _cachedText;
         }

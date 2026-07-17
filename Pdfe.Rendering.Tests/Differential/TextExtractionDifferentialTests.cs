@@ -71,15 +71,7 @@ public sealed class TextExtractionDifferentialTests
     /// entry is the relative path → reason. Removing a line re-enables
     /// the gate. Same protocol as DifferentialRenderingTests.
     /// </summary>
-    private static readonly Dictionary<string, string> KnownTextFailures = new()
-    {
-        ["test-pdfs/smoke/irs-1040-instructions.pdf"] =
-            "pdfe text extraction returns XML/Marked-Content metadata " +
-            "(\"useridcpmschemai1040xleadpct100ptsize10draftoktoprint…\") instead of the " +
-            "visible page content. Marked-content boundaries (BMC/BDC/EMC) aren't being " +
-            "honored — we're emitting hidden /Subtype /Artifact text that mutool correctly " +
-            "filters out.",
-    };
+    private static readonly Dictionary<string, string> KnownTextFailures = new();
 
     public static IEnumerable<object[]> CorpusPdfs() => Discover();
 
