@@ -54,10 +54,14 @@ public class TextExtractor
     }
 
     /// <summary>
-    /// When true, AcroForm field values whose widget is on this page are
-    /// emitted as synthetic Letters in addition to the content-stream text.
-    /// This makes form-fill values visible to search, text extraction, and
-    /// — critically — redaction. Defaults to true; the only reason to turn
+    /// When true, AcroForm field values and FreeText annotation content
+    /// (§12.5.6.6 — text drawn directly on the page via an annotation rather
+    /// than a content-stream Tj, e.g. sticky-note-style comments left by
+    /// Acrobat/Preview/Foxit) whose widget/rect is on this page are emitted
+    /// as synthetic Letters in addition to the content-stream text. This
+    /// makes both visible to search, text extraction, and — critically —
+    /// redaction (#660: FreeText content was previously findable by nothing,
+    /// a `RedactText` blind spot). Defaults to true; the only reason to turn
     /// it off is to inspect raw content-stream output for diagnostics.
     /// </summary>
     public bool IncludeFormFieldValues { get; set; } = true;
@@ -70,7 +74,10 @@ public class TextExtractor
         _letters.Clear();
         ParseContentStream();
         if (IncludeFormFieldValues)
+        {
             EmitFormFieldLetters();
+            EmitMarkupAnnotationLetters();
+        }
         return _letters.AsReadOnly();
     }
 
@@ -100,6 +107,79 @@ public class TextExtractor
             if (field.FieldType == PdfFieldType.Signature) continue;
 
             EmitLettersInRect(value, field.Rect.Value, $"AcroForm:{field.FieldType}");
+        }
+    }
+
+    /// <summary>
+    /// Walk the page's markup annotations and emit synthetic Letters for
+    /// FreeText content (§12.5.6.6 — text drawn directly on the page, not a
+    /// popup/icon comment). #660: confirmed against mutool that FreeText
+    /// content is genuinely visible page text (mutool's renderer draws it),
+    /// while a plain `/Text` sticky-note annotation is NOT (mutool's `-F txt`
+    /// never surfaces sticky-note `/Contents` — it's an icon+popup UI
+    /// element, not inline content) — so only FreeText is in scope here,
+    /// deliberately not every annotation subtype with a `/Contents` string.
+    /// The synthesized "Annotation:FreeText" font-name prefix mirrors
+    /// EmitFormFieldLetters's "AcroForm:" convention: <c>RedactText</c> uses
+    /// it to route a match to <c>InteractiveRedactionScrubber</c> (which
+    /// removes the whole annotation, /Contents and /AP together) instead of
+    /// the content-stream glyph-removal pass, since there's no content-stream
+    /// glyph here to remove.
+    /// </summary>
+    private void EmitMarkupAnnotationLetters()
+    {
+        IReadOnlyList<Document.PdfAnnotation> annotations;
+        try { annotations = _page.GetAnnotations(); }
+        catch (Exception ex) when (ex is not OutOfMemoryException) { return; }
+
+        foreach (var annot in annotations)
+        {
+            if (annot.Subtype != Document.PdfAnnotationSubtype.FreeText) continue;
+            if (string.IsNullOrEmpty(annot.Contents)) continue;
+
+            EmitMultiLineLettersInRect(annot.Contents, annot.Rect, "Annotation:FreeText");
+        }
+    }
+
+    /// <summary>
+    /// Like <see cref="EmitLettersInRect"/> but word-wraps across multiple
+    /// lines within the rect (via the shared <see cref="Graphics.TextWrapper"/>)
+    /// instead of truncating to one line. FreeText comments are commonly
+    /// multi-line and can be much longer than a single-line form-field value
+    /// — a single-line truncation would drop most of a real fixture's content
+    /// (confirmed: a Arabic FreeText comment in the wild runs ~380 characters
+    /// across several lines). Lines that don't fit vertically are dropped,
+    /// same "truncate what doesn't fit" precedent as EmitLettersInRect's
+    /// horizontal truncation.
+    /// </summary>
+    private void EmitMultiLineLettersInRect(string text, PdfRectangle rect, string fontName)
+    {
+        if (rect.Width <= 0 || rect.Height <= 0) return;
+
+        var fontSize = Math.Min(rect.Height, 10.0);
+        if (fontSize <= 0) return;
+
+        var font = Graphics.PdfFont.Helvetica(fontSize);
+        var advance = fontSize * 0.55; // same flat-advance approximation as EmitLettersInRect
+        var lineHeight = fontSize * 1.2;
+
+        var lines = Graphics.TextWrapper.Wrap(text, font, rect.Width);
+
+        var y = rect.Top - fontSize;
+        foreach (var line in lines)
+        {
+            if (y < rect.Bottom) break;
+            if (line.Length == 0) { y -= lineHeight; continue; }
+
+            var x = rect.Left;
+            foreach (var ch in line)
+            {
+                var bbox = new PdfRectangle(x, y, x + advance, y + fontSize);
+                _letters.Add(new Letter(ch.ToString(), bbox, fontSize, fontName, x, y, advance, ch));
+                x += advance;
+            }
+
+            y -= lineHeight;
         }
     }
 

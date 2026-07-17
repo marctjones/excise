@@ -80,6 +80,48 @@ public sealed class AdversarialRedactionRegressionTests
     }
 
     [Fact]
+    public void RedactText_FindsAndRemovesFreeTextAnnotationContent()
+    {
+        // #660: before this fix, FreeText /Contents was invisible to
+        // page.Text/page.Letters entirely — RedactText("ANNOTSECRET") would
+        // find zero matches and report success while the annotation
+        // survived untouched. Verified via saved bytes (the ONLY carrier
+        // that can prove removal, not page.Text re-reading pdfe's own
+        // synthetic letters — the purest form of the self-oracle mistake
+        // CLAUDE.md's redaction-code requirements exist to prevent).
+        var pdf = Build(
+            Obj("<< /Type /Catalog /Pages 2 0 R >>"),
+            Obj("<< /Type /Pages /Kids [3 0 R] /Count 1 >>"),
+            Obj("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] " +
+                "/Contents 4 0 R /Annots [5 0 R] /Resources << /Font << /F1 7 0 R >> >> >>"),
+            Stream("", ""),
+            Obj("<< /Type /Annot /Subtype /FreeText /Rect [90 690 280 725] " +
+                "/Contents (ANNOTSECRET) /RC (ANNOTSECRET) /AP << /N 6 0 R >> >>"),
+            Stream("/Type /XObject /Subtype /Form /BBox [0 0 190 35] " +
+                   "/Resources << /Font << /F1 7 0 R >> >>",
+                   "BT /F1 12 Tf 4 12 Td (ANNOTSECRET) Tj ET"),
+            Obj("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>"));
+
+        using var doc = PdfDocument.Open(pdf);
+        var page = doc.GetPage(1);
+
+        string.Concat(page.Letters.Select(l => l.Value)).Should().Contain("ANNOTSECRET",
+            "FreeText content must be findable by search/RedactText, not just page.GetAnnotations()");
+
+        var removed = doc.RedactText("ANNOTSECRET", drawBlackRect: false);
+        removed.Should().BeGreaterThan(0, "RedactText must actually find the annotation content");
+
+        var saved = doc.SaveToBytes();
+        Encoding.Latin1.GetString(saved).Should().NotContain("ANNOTSECRET",
+            "a word RedactText reports as removed must actually be gone from the saved bytes — " +
+            "'found but not removable' is a new leak, not a fix");
+
+        using var reopened = PdfDocument.Open(saved);
+        reopened.GetPage(1).GetAnnotations().Should().BeEmpty(
+            "the whole annotation (Contents + AP) must be gone, not just made unfindable");
+    }
+
+    [Fact]
     public void RedactArea_PartialGlyphOverlap_RemovesGlyphButKeepsNeighbor()
     {
         var pdf = Build(

@@ -96,7 +96,7 @@ public static class PdfDocumentRedactionExtensions
                     {
                         RemoveIntersectingOperators(page, bbox);
                     }
-                    else if (IsAcroFormMatch(matchLetters))
+                    else if (IsInteractiveOnlyMatch(matchLetters))
                     {
                         InteractiveRedactionScrubber.ScrubArea(page, bbox);
                     }
@@ -135,9 +135,19 @@ public static class PdfDocumentRedactionExtensions
             letters.Max(l => l.GlyphRectangle.Top));
     }
 
-    private static bool IsAcroFormMatch(IReadOnlyList<Letter> letters) =>
+    /// <summary>
+    /// True when every letter in a match was synthesized from something OTHER
+    /// than the content stream — an AcroForm widget value or FreeText
+    /// annotation content (#660) — meaning there is no content-stream glyph
+    /// for <see cref="PdfPage.RedactArea"/>'s glyph/image passes to find.
+    /// These route to <see cref="InteractiveRedactionScrubber"/> directly
+    /// instead, which removes the underlying field value/appearance or
+    /// annotation object.
+    /// </summary>
+    private static bool IsInteractiveOnlyMatch(IReadOnlyList<Letter> letters) =>
         letters.Count > 0 &&
-        letters.All(l => l.FontName.StartsWith("AcroForm:", StringComparison.Ordinal));
+        letters.All(l => l.FontName.StartsWith("AcroForm:", StringComparison.Ordinal) ||
+                          l.FontName.StartsWith("Annotation:", StringComparison.Ordinal));
 
     private static void RemoveIntersectingOperators(PdfPage page, PdfRectangle bounds)
     {
