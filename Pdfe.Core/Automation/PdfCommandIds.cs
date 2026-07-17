@@ -84,4 +84,5 @@ public static class PdfCommandIds
     public const string RevealHiddenText = "tools.revealHiddenText";
     public const string RevealRasterizedHiddenText = "tools.revealRasterizedHiddenText";
     public const string VerifySignatures = "tools.verifySignatures";
+    public const string MakeSearchable = "tools.makeSearchable";
 }

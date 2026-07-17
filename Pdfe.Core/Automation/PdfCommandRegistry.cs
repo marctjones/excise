@@ -105,6 +105,7 @@ public static class PdfCommandRegistry
         Tool(PdfCommandIds.RevealHiddenText, "Reveal Hidden Text", "Show text that is present in the PDF but visually covered.", isSecuritySensitive: true),
         Tool(PdfCommandIds.RevealRasterizedHiddenText, "Reveal Rasterized Hidden Text", "Run differential OCR to find rasterized hidden text.", isSecuritySensitive: true),
         Tool(PdfCommandIds.VerifySignatures, "Verify Digital Signatures", "Verify digital signatures in the current document.", isSecuritySensitive: true),
+        Tool(PdfCommandIds.MakeSearchable, "Make Searchable", "OCR a scanned PDF and write the recognized text back as an invisible, searchable text layer."),
     ];
 
     private static readonly IReadOnlyDictionary<string, PdfCommandMetadata> ById =

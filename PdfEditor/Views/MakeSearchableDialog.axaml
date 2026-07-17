@@ -1,0 +1,117 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PdfEditor.ViewModels"
+        x:Class="PdfEditor.Views.MakeSearchableDialog"
+        x:DataType="vm:MakeSearchableDialogViewModel"
+        Title="Make Searchable"
+        Width="480"
+        Height="360"
+        WindowStartupLocation="CenterOwner"
+        CanResize="false"
+        Background="#2b2b2b"
+        Foreground="#f0f0f0">
+
+    <Border Padding="20">
+        <StackPanel Spacing="15">
+
+            <!-- Header -->
+            <TextBlock Text="Make Searchable"
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       Foreground="#f0f0f0"/>
+            <TextBlock Text="OCRs every page that doesn't already have extractable text and writes the recognized words back as an invisible, searchable layer. The page's visual appearance is unchanged."
+                       TextWrapping="Wrap"
+                       Foreground="#a0a0a0"
+                       FontSize="12"/>
+
+            <Separator Background="#444" />
+
+            <!-- Tesseract-not-installed banner -->
+            <Border Background="#4a2020"
+                    CornerRadius="4"
+                    Padding="10"
+                    IsVisible="{Binding !TesseractAvailable}">
+                <TextBlock Text="{x:Static vm:MakeSearchableDialogViewModel.TesseractMissingMessage}"
+                           TextWrapping="Wrap"
+                           Foreground="#f0b0b0"
+                           FontSize="12"/>
+            </Border>
+
+            <!-- Options -->
+            <StackPanel Spacing="8" IsEnabled="{Binding CanEditOptions}">
+                <TextBlock Text="Language:" FontWeight="Medium" Foreground="#d0d0d0"/>
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBox x:Name="LanguageTextBox"
+                             Grid.Column="0"
+                             Text="{Binding Language}"
+                             PlaceholderText="e.g. eng, deu, eng+spa"
+                             AutomationProperties.Name="OCR Language"
+                             AutomationProperties.HelpText="Tesseract language code, e.g. eng, deu, or eng+spa for multiple languages."
+                             Margin="0,0,8,0"/>
+                    <ComboBox x:Name="LanguagePresetComboBox"
+                              Grid.Column="1"
+                              ItemsSource="{Binding LanguagePresets}"
+                              SelectedItem="{Binding Language}"
+                              PlaceholderText="Presets"
+                              AutomationProperties.Name="OCR Language Preset"
+                              AutomationProperties.HelpText="Pick a common tesseract language code."
+                              Width="120"/>
+                </Grid>
+
+                <CheckBox Content="Re-OCR pages that already have text"
+                          IsChecked="{Binding Force}"
+                          Foreground="#d0d0d0"
+                          AutomationProperties.Name="Force Re-OCR"
+                          AutomationProperties.HelpText="OCR and overlay even pages that already have an extractable text layer."/>
+            </StackPanel>
+
+            <!-- Progress -->
+            <StackPanel Spacing="4" IsVisible="{Binding IsRunning}">
+                <ProgressBar Minimum="0" Maximum="1" Value="{Binding ProgressFraction}"
+                             Height="6"
+                             AutomationProperties.Name="Make Searchable Progress"/>
+                <TextBlock Text="{Binding ProgressText}"
+                           Foreground="#a0a0a0"
+                           FontSize="12"/>
+            </StackPanel>
+
+            <!-- Result summary -->
+            <TextBlock Text="{Binding ResultSummary}"
+                       TextWrapping="Wrap"
+                       Foreground="#4ec9b0"
+                       FontSize="12"
+                       IsVisible="{Binding ResultSummary, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+            <!-- Error -->
+            <TextBlock Text="{Binding ErrorMessage}"
+                       TextWrapping="Wrap"
+                       Foreground="#f0b0b0"
+                       FontSize="12"
+                       IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+            <!-- Buttons -->
+            <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,10,0,0">
+                <Button Grid.Column="1"
+                        Content="{Binding CancelButtonText}"
+                        Command="{Binding CancelCommand}"
+                        Width="100"
+                        Margin="0,0,8,0"
+                        IsCancel="True"
+                        AutomationProperties.Name="Cancel or Close Make Searchable"
+                        AutomationProperties.HelpText="Cancel the running OCR pass, or close this dialog."/>
+
+                <Button Grid.Column="2"
+                        Content="Start"
+                        Command="{Binding StartCommand}"
+                        IsEnabled="{Binding CanStart}"
+                        Width="100"
+                        Classes="primary"
+                        IsDefault="True"
+                        AutomationProperties.Name="Start Make Searchable"
+                        AutomationProperties.HelpText="Start OCR and write the recognized text back as an invisible, searchable layer."/>
+            </Grid>
+
+        </StackPanel>
+    </Border>
+
+</Window>

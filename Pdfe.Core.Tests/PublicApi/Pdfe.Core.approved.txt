@@ -155,6 +155,7 @@ namespace Pdfe.Core.Automation
         public const string InsertPagesAfter = "document.insertPagesAfter";
         public const string InsertPagesBefore = "document.insertPagesBefore";
         public const string KeyboardShortcuts = "app.keyboardShortcuts";
+        public const string MakeSearchable = "tools.makeSearchable";
         public const string MoveCurrentPageEarlier = "document.moveCurrentPageEarlier";
         public const string MoveCurrentPageLater = "document.moveCurrentPageLater";
         public const string MoveSelectedPagesEarlier = "document.moveSelectedPagesEarlier";

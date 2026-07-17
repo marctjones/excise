@@ -215,6 +215,11 @@
                           Command="{Binding ToggleRevealRasterizedHiddenCommand}"
                           access:CommandAccessibility.CommandId="tools.revealRasterizedHiddenText"/>
                 <Separator/>
+                <MenuItem Header="Make _Searchable..." Command="{Binding MakeSearchableCommand}"
+                          ToolTip.Tip="OCR scanned pages and write the recognized text back as an invisible, searchable layer."
+                          IsEnabled="{Binding IsDocumentLoaded}"
+                          access:CommandAccessibility.CommandId="tools.makeSearchable"/>
+                <Separator/>
                 <MenuItem Header="_Preferences..." Command="{Binding ShowPreferencesCommand}" InputGesture="Ctrl+,"
                           access:CommandAccessibility.CommandId="app.preferences">
                     <MenuItem.Icon><PathIcon Classes="menu-icon" Data="{StaticResource IconSettings}"/></MenuItem.Icon>
