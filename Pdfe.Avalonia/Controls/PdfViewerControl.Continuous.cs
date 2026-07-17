@@ -35,7 +35,44 @@ public partial class PdfViewerControl
     private readonly LinkedList<(ContinuousTileKey Key, WriteableBitmap Bitmap)> _continuousCache = new();
     private readonly Dictionary<int, CancellationTokenSource> _continuousRenderCts = new();
     private readonly Dictionary<int, ContinuousTileKey> _continuousRenderKeys = new();
-    private const int ContinuousCacheCapacity = 10;
+    // #615: this used to be a flat COUNT (`ContinuousCacheCapacity = 10`), unchanged
+    // since before tile quantization (256 dip grid) + overscan (256 dip margin) were
+    // added. Those made cached tiles both bigger AND wildly variable in size — a
+    // fixed count is the wrong lever once tile bytes range 10x across ordinary
+    // scenarios, so the cache now bounds total resident BYTES instead.
+    //
+    // Measurement (reproducible via
+    // Pdfe.Avalonia.Tests/ContinuousCacheMemoryTests.cs, which calls the real
+    // TryCreateContinuousTileRequest + EffectiveContinuousDpi code paths rather
+    // than hand-deriving the dip -> point -> pixel algebra): for a matrix of
+    // {US Letter, a 36x48in large-format scan} x {1280x800, 1920x1080, 2560x1440
+    // dip viewports} x {1.0, 1.5, 2.0, 4.0 zoom}, per-tile bytes (Bgra8888, 4
+    // bytes/px — see SkiaInterop.ToAvaloniaBitmap) range from ~4.7MB (Letter page,
+    // small viewport, deep zoom, where the DPI cap shrinks the tile) up to
+    // ~45.7MB (the large-format page, 2560x1440 viewport, 1.5x zoom — the point
+    // where render DPI has scaled up with zoom but the tile hasn't yet shrunk
+    // from the deep-zoom 1/zoom pixel-density falloff). At the OLD flat count of
+    // 10, that worst tile alone priced the cache at 457MB, unmeasured, for a
+    // single large-format document on a large monitor -- versus ~51MB for the
+    // same count of ordinary Letter-page tiles. That 10x spread is exactly why a
+    // tile COUNT cannot be sized correctly: any fixed number is either wasteful
+    // for common documents or unbounded for uncommon ones.
+    //
+    // Budget: ~200MB peak resident bytes for this cache. That is a little over
+    // 4x the single worst measured tile (45.7MB) -- room for the current page
+    // plus a couple of scroll-buffered neighbours even in the worst-observed
+    // scenario -- while for an ordinary Letter document (5-20MB/tile) the same
+    // budget holds 10-40 tiles, comfortably more scroll buffer than the old flat
+    // cap of 10 ever gave. If tile geometry changes (quantum, overscan, or the
+    // DPI cap) re-run ContinuousCacheMemoryTests and reconsider this number --
+    // don't just restate it.
+    private const long ContinuousCacheByteBudget = 200L * 1024 * 1024;
+
+    // Always keep at least this many entries, even if a single tile alone
+    // exceeds the byte budget -- a single huge page must not defeat the LRU
+    // entirely and force a full re-render on every scroll frame.
+    private const int ContinuousCacheMinEntries = 2;
+
     internal const double PointsToDip = 96.0 / 72.0;
     private const double PageGapDip = 12.0;   // matches the DataTemplate Border bottom margin
     internal const int ContinuousTileQuantumDip = 256;
@@ -620,10 +657,32 @@ public partial class PdfViewerControl
             if (node.Value.Key.Equals(key)) { _continuousCache.Remove(node); break; }
         }
         _continuousCache.AddFirst((key, bmp));
-        // Drop (don't dispose) the LRU tail — see field comment on why.
-        while (_continuousCache.Count > ContinuousCacheCapacity)
+        // Drop (don't dispose) the LRU tail until back under the byte budget —
+        // see the ContinuousCacheByteBudget field comment for how that number
+        // was measured (#615). See the field comment on _continuousCache for why
+        // eviction drops the reference rather than disposing it.
+        while (_continuousCache.Count > ContinuousCacheMinEntries &&
+               ContinuousCacheResidentBytes() > ContinuousCacheByteBudget)
             _continuousCache.RemoveLast();
     }
+
+    private long ContinuousCacheResidentBytes()
+    {
+        long total = 0;
+        foreach (var entry in _continuousCache)
+            total += ContinuousTileByteSize(entry.Bitmap.PixelSize.Width, entry.Bitmap.PixelSize.Height);
+        return total;
+    }
+
+    /// <summary>
+    /// Resident byte cost of one cached tile: Bgra8888 is always 4 bytes/pixel —
+    /// see <see cref="Imaging.SkiaInterop.ToAvaloniaBitmap"/>, which forces that
+    /// format for anything Skia hands back. Pure and internal so it can be
+    /// exercised directly from tests (#615) without needing a real
+    /// <see cref="WriteableBitmap"/>, which requires a platform render backend.
+    /// </summary>
+    internal static long ContinuousTileByteSize(int pixelWidth, int pixelHeight) =>
+        (long)pixelWidth * pixelHeight * 4;
 
     internal readonly record struct ContinuousTileKey(int Page, int Dpi, int XDip, int YDip, int WidthDip, int HeightDip);
 
