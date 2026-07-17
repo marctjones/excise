@@ -20,7 +20,16 @@ public static class MutoolTextExtractor
 {
     /// <summary>Extract text from a single page (1-based). Returns null when mutool isn't available or refuses.</summary>
     public static string? ExtractPage(string pdfPath, int pageNumber, int timeoutMs = 30_000)
-        => ExtractRange(pdfPath, pageNumber.ToString(CultureInfo.InvariantCulture), timeoutMs);
+        => ExtractRange(pdfPath, pageNumber.ToString(CultureInfo.InvariantCulture), timeoutMs, password: null);
+
+    /// <summary>
+    /// Extract text from a single page (1-based) of a password-protected
+    /// PDF, using mutool's own independent decryption (<c>-p</c>) — not
+    /// pdfe's. Returns null when mutool isn't available or refuses
+    /// (including a wrong password).
+    /// </summary>
+    public static string? ExtractPage(string pdfPath, int pageNumber, string? password, int timeoutMs = 30_000)
+        => ExtractRange(pdfPath, pageNumber.ToString(CultureInfo.InvariantCulture), timeoutMs, password);
 
     /// <summary>
     /// Extract every page in one mutool invocation instead of one process
@@ -37,7 +46,7 @@ public static class MutoolTextExtractor
     {
         if (pageCount <= 0) return Array.Empty<string>();
 
-        var combined = ExtractRange(pdfPath, $"1-{pageCount.ToString(CultureInfo.InvariantCulture)}", timeoutMs);
+        var combined = ExtractRange(pdfPath, $"1-{pageCount.ToString(CultureInfo.InvariantCulture)}", timeoutMs, password: null);
         if (combined == null) return null;
 
         // mutool separates pages with a form-feed (0x0c); splitting yields
@@ -51,7 +60,7 @@ public static class MutoolTextExtractor
         return pages;
     }
 
-    private static string? ExtractRange(string pdfPath, string pageSpec, int timeoutMs)
+    private static string? ExtractRange(string pdfPath, string pageSpec, int timeoutMs, string? password)
     {
         if (!MutoolReferenceRenderer.IsAvailable) return null;
 
@@ -69,6 +78,11 @@ public static class MutoolTextExtractor
             // -F txt makes mutool emit plain UTF-8 text (extracted by its
             // own text-merge engine, which is independent of pdfe).
             psi.ArgumentList.Add("draw");
+            if (!string.IsNullOrEmpty(password))
+            {
+                psi.ArgumentList.Add("-p");
+                psi.ArgumentList.Add(password);
+            }
             psi.ArgumentList.Add("-o");
             psi.ArgumentList.Add(outPath);
             psi.ArgumentList.Add("-F");

@@ -20,9 +20,36 @@ public static class PdfObjectWriter
     }
 
     /// <summary>
+    /// Serialize a PDF object to its string representation, encrypting any
+    /// <see cref="PdfString"/> values found (recursively, inside arrays and
+    /// dictionaries) via <paramref name="encryptString"/> before writing
+    /// them.
+    /// </summary>
+    /// <remarks>
+    /// Internal — this hook exists solely for
+    /// <see cref="Pdfe.Core.Writing.PdfDocumentWriter"/>, currently this
+    /// type's only caller in the codebase, to encrypt strings per-object
+    /// when writing an encrypted document (ISO 32000-2 §7.6.2). Kept off
+    /// the public surface so it doesn't leak encryption plumbing to
+    /// consumers who have no reason to call it directly.
+    /// </remarks>
+    internal static string Serialize(PdfObject obj, Func<byte[], byte[]>? encryptString)
+    {
+        var sb = new StringBuilder();
+        SerializeObject(obj, sb, encryptString);
+        return sb.ToString();
+    }
+
+    /// <summary>
     /// Write a PDF object to a StringBuilder.
     /// </summary>
-    public static void SerializeObject(PdfObject obj, StringBuilder sb)
+    public static void SerializeObject(PdfObject obj, StringBuilder sb) => SerializeObject(obj, sb, null);
+
+    /// <summary>
+    /// Write a PDF object to a StringBuilder, optionally encrypting string
+    /// values. See <see cref="Serialize(PdfObject, Func{byte[], byte[]}?)"/>.
+    /// </summary>
+    internal static void SerializeObject(PdfObject obj, StringBuilder sb, Func<byte[], byte[]>? encryptString)
     {
         switch (obj)
         {
@@ -52,15 +79,15 @@ public static class PdfObjectWriter
                 break;
 
             case PdfString s:
-                SerializeString(s, sb);
+                SerializeString(s, sb, encryptString);
                 break;
 
             case PdfArray a:
-                SerializeArray(a, sb);
+                SerializeArray(a, sb, encryptString);
                 break;
 
             case PdfDictionary d:
-                SerializeDictionary(d, sb);
+                SerializeDictionary(d, sb, encryptString);
                 break;
 
             case PdfReference r:
@@ -76,6 +103,14 @@ public static class PdfObjectWriter
     /// Serialize a stream object (dictionary part only, data handled separately).
     /// </summary>
     public static void SerializeStreamDictionary(PdfStream stream, StringBuilder sb)
+        => SerializeStreamDictionary(stream, sb, null);
+
+    /// <summary>
+    /// Serialize a stream object's dictionary, optionally encrypting string
+    /// values found within it (a stream's own data is encrypted separately
+    /// by the caller — see <see cref="Pdfe.Core.Writing.PdfDocumentWriter"/>).
+    /// </summary>
+    internal static void SerializeStreamDictionary(PdfStream stream, StringBuilder sb, Func<byte[], byte[]>? encryptString)
     {
         // Write dictionary entries (but not the stream data)
         sb.Append("<<");
@@ -84,7 +119,7 @@ public static class PdfObjectWriter
             sb.Append(' ');
             SerializeName(kvp.Key, sb);
             sb.Append(' ');
-            SerializeObject(kvp.Value, sb);
+            SerializeObject(kvp.Value, sb, encryptString);
         }
         sb.Append(" >>");
     }
@@ -109,8 +144,23 @@ public static class PdfObjectWriter
         }
     }
 
-    private static void SerializeString(PdfString str, StringBuilder sb)
+    private static void SerializeString(PdfString str, StringBuilder sb, Func<byte[], byte[]>? encryptString)
     {
+        if (encryptString != null)
+        {
+            // Encrypted output is arbitrary binary (IV || ciphertext) —
+            // always emit as a hex string regardless of the original
+            // IsHex flag. Hex sidesteps balanced-parenthesis/escaping
+            // concerns a naive lexer could trip over in random ciphertext
+            // bytes; it's the conventional format for encrypted strings.
+            var cipher = encryptString(str.Bytes);
+            sb.Append('<');
+            foreach (byte b in cipher)
+                sb.Append(b.ToString("X2"));
+            sb.Append('>');
+            return;
+        }
+
         if (str.IsHex)
         {
             sb.Append('<');
@@ -156,19 +206,19 @@ public static class PdfObjectWriter
         }
     }
 
-    private static void SerializeArray(PdfArray array, StringBuilder sb)
+    private static void SerializeArray(PdfArray array, StringBuilder sb, Func<byte[], byte[]>? encryptString)
     {
         sb.Append('[');
         for (int i = 0; i < array.Count; i++)
         {
             if (i > 0)
                 sb.Append(' ');
-            SerializeObject(array[i], sb);
+            SerializeObject(array[i], sb, encryptString);
         }
         sb.Append(']');
     }
 
-    private static void SerializeDictionary(PdfDictionary dict, StringBuilder sb)
+    private static void SerializeDictionary(PdfDictionary dict, StringBuilder sb, Func<byte[], byte[]>? encryptString)
     {
         sb.Append("<<");
         foreach (var kvp in dict)
@@ -176,7 +226,7 @@ public static class PdfObjectWriter
             sb.Append(' ');
             SerializeName(kvp.Key, sb);
             sb.Append(' ');
-            SerializeObject(kvp.Value, sb);
+            SerializeObject(kvp.Value, sb, encryptString);
         }
         sb.Append(" >>");
     }

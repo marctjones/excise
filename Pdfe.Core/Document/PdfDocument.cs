@@ -78,6 +78,22 @@ public class PdfDocument : IDisposable
     }
 
     /// <summary>
+    /// The object number <see cref="AddIndirectObject"/> would allocate if
+    /// called right now — computed without mutating the xref/object cache.
+    /// </summary>
+    /// <remarks>
+    /// Used by <see cref="Pdfe.Core.Writing.PdfDocumentWriter"/> to reserve
+    /// a number for a write-time-only <c>/Encrypt</c> dictionary that must
+    /// never become part of the persistent document graph (it is not
+    /// reachable from the catalog, so re-adding it via
+    /// <see cref="AddIndirectObject"/> on every save would leak an
+    /// ever-growing number of orphaned encrypt-dict objects into
+    /// <c>_xref</c>/<c>_objectCache</c> across repeated Save() calls on the
+    /// same <see cref="PdfDocument"/> instance).
+    /// </remarks>
+    internal int NextFreeObjectNumber => _xref.Count == 0 ? 1 : _xref.Keys.Max() + 1;
+
+    /// <summary>
     /// Overwrite the content of an already-registered indirect object.
     /// </summary>
     /// <remarks>

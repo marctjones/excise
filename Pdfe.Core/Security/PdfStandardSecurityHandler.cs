@@ -422,8 +422,12 @@ public sealed class PdfStandardSecurityHandler
     /// AES-128 hash used for password verification and intermediate key
     /// derivation in R=6. The choice of hash for each round depends on
     /// (sum of first 16 bytes of the AES output) mod 3.
+    ///
+    /// Internal (not private) so <see cref="PdfStandardSecurityEncryptor"/>
+    /// (the writer-side counterpart — Algorithms 8/9/10) can reuse this
+    /// exact, already-correct implementation instead of duplicating it.
     /// </summary>
-    private static byte[] ComputeR6Hash(byte[] password, byte[] salt, byte[] userKey)
+    internal static byte[] ComputeR6Hash(byte[] password, byte[] salt, byte[] userKey)
     {
         // Initial K = SHA-256(password || salt || userKey)
         // userKey is empty for the user-password path (Algorithm 11), or

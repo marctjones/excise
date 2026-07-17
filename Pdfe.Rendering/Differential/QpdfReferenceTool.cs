@@ -163,6 +163,16 @@ public static class QpdfReferenceTool
                 return null;
             }
 
+            // WaitForExit(int) returning true only means the process itself
+            // exited — it does NOT guarantee the async OutputDataReceived/
+            // ErrorDataReceived callbacks have finished delivering already-
+            // buffered lines (a well-known .NET Process race). Without this,
+            // stdout/stderr below can be read before qpdf's final lines have
+            // been appended, silently truncating (sometimes to empty)
+            // output that was actually produced. The parameterless overload
+            // blocks until the redirected-stream pump threads complete.
+            p.WaitForExit();
+
             // qpdf writes --show-encryption's actual info to stdout and
             // warnings ("Incorrect password supplied") to stderr — combine
             // so callers see both without having to know which stream

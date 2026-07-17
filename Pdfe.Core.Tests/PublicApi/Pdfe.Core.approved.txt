@@ -1543,6 +1543,20 @@ namespace Pdfe.Core.Primitives
 }
 namespace Pdfe.Core.Security
 {
+    public enum PdfEncryptionAlgorithm
+    {
+        Aes256 = 0,
+        Aes128 = 1,
+    }
+    public sealed class PdfEncryptionOptions
+    {
+        public PdfEncryptionOptions() { }
+        public Pdfe.Core.Security.PdfEncryptionAlgorithm Algorithm { get; init; }
+        public bool EncryptMetadata { get; init; }
+        public string? OwnerPassword { get; init; }
+        public long Permissions { get; init; }
+        public string? UserPassword { get; init; }
+    }
     public sealed class PdfStandardSecurityHandler
     {
         public int KeyLengthBytes { get; }
@@ -1716,7 +1730,7 @@ namespace Pdfe.Core.Writing
 {
     public class PdfDocumentWriter
     {
-        public PdfDocumentWriter(Pdfe.Core.Document.PdfDocument document) { }
+        public PdfDocumentWriter(Pdfe.Core.Document.PdfDocument document, Pdfe.Core.Security.PdfEncryptionOptions? encryptionOptions = null) { }
         public void Write(System.IO.Stream stream) { }
     }
     public static class PdfObjectWriter

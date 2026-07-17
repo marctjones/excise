@@ -39,6 +39,7 @@ namespace Pdfe.Rendering.Differential
     {
         public static string[]? ExtractAllPages(string pdfPath, int pageCount, int timeoutMs = 120000) { }
         public static string? ExtractPage(string pdfPath, int pageNumber, int timeoutMs = 30000) { }
+        public static string? ExtractPage(string pdfPath, int pageNumber, string? password, int timeoutMs = 30000) { }
     }
     public static class PdfBoxReferenceRenderer
     {
@@ -63,6 +64,17 @@ namespace Pdfe.Rendering.Differential
         public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword) { }
         public static Pdfe.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
         public static Pdfe.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword) { }
+    }
+    public static class QpdfReferenceTool
+    {
+        public static bool IsAvailable { get; }
+        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "Success",
+                "Output"})]
+        public static System.ValueTuple<bool, string>? Check(string pdfPath, string? password = null, int timeoutMs = 30000) { }
+        public static bool Decrypt(string pdfPath, string outputPath, string? password = null, int timeoutMs = 30000) { }
+        public static bool? IsEncrypted(string pdfPath, int timeoutMs = 10000) { }
+        public static string? ShowEncryption(string pdfPath, string? password = null, int timeoutMs = 15000) { }
     }
     public sealed class ReferenceRenderResult : System.IEquatable<Pdfe.Rendering.Differential.ReferenceRenderResult>
     {
