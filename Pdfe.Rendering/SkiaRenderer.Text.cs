@@ -1576,12 +1576,71 @@ internal partial class RenderContext
                 // Without this branch every glyph would render as .notdef and
                 // the page would be blank.
                 var gids = BuildGlyphIds(sourceBytes, currentFont.ByteToGlyph);
-                using var blob = BuildGlyphBlob(gids, font);
+
+                // Character/word spacing (Tc/Tw) is applied when *advancing
+                // the cursor* between Tj calls (see SumPdfWidths below), but
+                // a naive default-positioned SKTextBlob run lays out glyphs
+                // using only the wrapped font's own hmtx — it has no idea Tc
+                // or Tw exist. When either is non-zero the glyph run drawn
+                // here silently drifts from the PDF-intended (and
+                // cursor-tracked) positions: each glyph after a space ends up
+                // further right than the PDF asked for, and by the end of a
+                // long/justified line the drift is large enough for the
+                // final glyph to visually collide with whatever is drawn
+                // next (e.g. issue #652 — Tw=-0.588 over 10 spaces shifted
+                // "movement"'s trailing "t" ~6pt right of where the
+                // following em-dash correctly starts, visually merging the
+                // two). Fix: when Tc/Tw actually apply, position each glyph
+                // explicitly using cumulative /Widths advances plus Tc/Tw,
+                // matching the PDF-spec formula used to track the cursor
+                // (SumPdfWidths below): tx = (w0/1000 * Tfs) + Tc + Tw — Tc
+                // and Tw are ALREADY in unscaled text-space units and must
+                // NOT be multiplied by font size again (unlike w0, which is
+                // in thousandths of an em and does need the Tfs scale).
+                // "cursor" here lives in the pre-xyRatio canvas frame (the
+                // canvas's own Scale(xyRatio, …) converts it to device
+                // space), so Tc/Tw are scaled by the text matrix's own
+                // Y-axis scale (yScale) rather than by effectiveSize, to
+                // land in that same frame — consistent with how effectiveSize
+                // itself is fontSize*yScale.
+                float tcSpacing = _textState.CharSpacing;
+                float twSpacing = _textState.WordSpacing;
+                bool needsExplicitSpacing =
+                    (tcSpacing != 0f || twSpacing != 0f) &&
+                    currentFont.Widths != null;
+
+                SKPoint[]? positions = null;
+                if (needsExplicitSpacing)
+                {
+                    var tmC = _textState.TextMatrixC;
+                    var tmD = _textState.TextMatrixD;
+                    var yScale = (float)Math.Sqrt(tmC * tmC + tmD * tmD);
+                    if (yScale < 1e-6f) yScale = 1f;
+
+                    positions = new SKPoint[gids.Length];
+                    float cursor = 0f;
+                    for (int i = 0; i < sourceBytes.Length; i++)
+                    {
+                        positions[i] = new SKPoint(cursor, 0);
+                        int idx = sourceBytes[i] - currentFont.FirstChar;
+                        float w = idx >= 0 && idx < currentFont.Widths!.Length
+                            ? currentFont.Widths[idx]
+                            : currentFont.MissingWidth;
+                        float spacing = (tcSpacing + (sourceBytes[i] == 0x20 ? twSpacing : 0f)) * yScale;
+                        cursor += (w / 1000f) * effectiveSize + spacing;
+                    }
+                }
+
+                using var blob = positions != null
+                    ? BuildPositionedGlyphBlob(gids, positions, font)
+                    : BuildGlyphBlob(gids, font);
                 if (blob != null)
                 {
                     if (fillText && fillWithPattern)
                     {
-                        using var localPath = BuildGlyphIdTextPath(gids, font, measurePaint);
+                        using var localPath = positions != null
+                            ? BuildGlyphIdTextPath(gids, positions, font)
+                            : BuildGlyphIdTextPath(gids, font, measurePaint);
                         if (localPath != null && !localPath.IsEmpty)
                             localFillPatternPath!.AddPath(localPath, SKPathAddMode.Append);
                     }
@@ -1599,7 +1658,9 @@ internal partial class RenderContext
 
                 if (clipText)
                 {
-                    using var localClipPath = BuildGlyphIdTextPath(gids, font, measurePaint);
+                    using var localClipPath = positions != null
+                        ? BuildGlyphIdTextPath(gids, positions, font)
+                        : BuildGlyphIdTextPath(gids, font, measurePaint);
                     AddPendingTextClipPath(localClipPath, x, y, th, ySign);
                 }
             }

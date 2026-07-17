@@ -6,7 +6,7 @@
   "ImprovementPriority": "NONE",
   "Confidence": "MEDIUM",
   "QualityReason": "Every-page local book fixture for long-form text, headings, running headers, vector rules, and book-layout PDF display confidence. The PDF is ignored by git and populated locally from test-pdfs/manifests/local-real-world-books.json.",
-  "Notes": "Focused all-pages scan logs/render-quality/local-real-world-books.json verified 454/455 pages as raw PASS. Page 36 is an explicit lower-quality text rasterization follow-up tracked by #584.",
+  "Notes": "Focused all-pages scan logs/render-quality/local-real-world-books.json verified 454/455 pages as raw PASS. Page 36 is an explicit lower-quality text rasterization follow-up tracked by #584. #652 investigated a further page-36 symptom (em-dash visually colliding with the preceding word) hypothesized to be a CFF FontMatrix bug; that hypothesis was refuted at the byte level (Top DICT has no FontMatrix operator in either font resource involved, both share a byte-identical embedded CFF program). The actual cause: RenderText's embedded/byte-to-glyph glyph-ID draw path (SkiaRenderer.Text.cs) dispatched glyph runs via SKTextBlobBuilder.AddRun with Skia's default (hmtx-only) positioning, which has no notion of PDF Tc/Tw (character/word spacing) — those were only applied to the *tracked cursor* used for the next Tj/Tf's position, not to the actual on-canvas glyph layout. With Tw=-0.588 over 10 spaces in the \"Supporters of Free Software maintain that the goals of their movement\" run, the drawn glyphs (unaware of Tw) landed ~6pt further right than the Tw-adjusted cursor, so \"movement\"'s trailing \"t\" visually merged with the em-dash that correctly started at the Tw-adjusted position. Fixed by explicitly positioning glyphs (AddPositionedRun) using the same /Widths+Tc+Tw cumulative formula already used by the non-embedded fallback path, whenever Tc or Tw is non-zero. Page 36 mutool-diff (DifferentialMetrics.Compare, 150 DPI): 9.55% -> 0.59% differing pixels.",
   "Pages": {
     "1-35": {
       "ExpectedRawStatus": "PASS",
@@ -33,6 +33,7 @@
       "RootCause": "EMBEDDED_CFF_TEXT_RASTERIZATION_DARKER_THAN_REFERENCE_CONSENSUS",
       "ReviewStatus": "REVIEWED",
       "Issue": 584,
+      "FollowUpIssue": 652,
       "Target": {
         "Mode": "REFERENCE_CONSENSUS",
         "Primary": "pdftocairo",
@@ -42,9 +43,9 @@
         ],
         "Reason": "Poppler, MuPDF, and Ghostscript preserve the same semantic content and cluster more closely with each other than with pdfe. Current pdfe output is semantically intact but renders the embedded Type 1C/CFF text darker/heavier over the full text page."
       },
-      "ImprovementPriority": "P2",
+      "ImprovementPriority": "P3",
       "Confidence": "MEDIUM",
-      "QualityReason": "Visible content is present and readable, but embedded Type 1C/CFF text rasterization is darker/heavier than the reference consensus. Keep this visible as #584 rather than treating it as pixel-exact."
+      "QualityReason": "#652 fixed a missing-Tc/Tw-in-glyph-positioning bug that was the dominant remaining contributor on this page (mutool pixel diff at 150 DPI: 9.55% -> 0.59%; see top-level Notes for the mechanism). The residual ~0.6% is the pre-existing #584 CFF rasterization weight difference (darker/heavier strokes than the pdftocairo/mutool/ghostscript consensus) — visible content is present and readable, not pixel-exact, but no longer causing visual collisions between glyphs."
     },
     "37-455": {
       "ExpectedRawStatus": "PASS",

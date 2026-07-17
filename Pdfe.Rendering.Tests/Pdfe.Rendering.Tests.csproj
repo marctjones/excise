@@ -42,4 +42,12 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Real CFF font data for embedded-glyph text-layout regression tests
+         (issue #652) — reuses the fixture already checked into
+         Pdfe.Core.Tests rather than duplicating the font file.
+         Inconsolata (SIL OFL 1.1) — see ../Pdfe.Core.Tests/Fixtures/Fonts/NOTICE.md. -->
+    <EmbeddedResource Include="../Pdfe.Core.Tests/Fixtures/Fonts/Inconsolata.cff" LogicalName="Inconsolata.cff" Link="Fonts/Fixtures/Inconsolata.cff" />
+  </ItemGroup>
+
 </Project>
