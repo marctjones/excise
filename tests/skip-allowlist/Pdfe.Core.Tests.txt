@@ -3,11 +3,4 @@
 # Format:  TestName   # why
 #
 Pdfe.Core.Tests.Authoring.PdfUaConformanceTests.TaggedBuilderOutput_IsPdfUa1Compliant   # TODO: justify or fix
-Pdfe.Core.Tests.Document.PageCollectionTests.PageRotation_AcceptsValidValues   # TODO: justify or fix
-Pdfe.Core.Tests.Document.PageCollectionTests.PageRotation_CanBeSetAndRead   # TODO: justify or fix
-Pdfe.Core.Tests.Document.PageCollectionTests.PageRotation_NormalizesNegativeValues   # TODO: justify or fix
-Pdfe.Core.Tests.Document.PageCollectionTests.PageRotation_RejectsInvalidValues   # TODO: justify or fix
-Pdfe.Core.Tests.Document.PageCollectionTests.Pages_IndexerReturnsCorrectPage   # TODO: justify or fix
-Pdfe.Core.Tests.Document.PageCollectionTests.Pages_InvalidIndexThrowsException   # TODO: justify or fix
-Pdfe.Core.Tests.Document.PageCollectionTests.Pages_ReturnsAllPages   # TODO: justify or fix
 Pdfe.Core.Tests.PdfATests.PdfA_Output_IsConformant_PerVeraPdf   # TODO: justify or fix

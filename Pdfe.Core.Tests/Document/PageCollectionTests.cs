@@ -532,24 +532,81 @@ public class PageCollectionTests
         doc.Pages.Count.Should().Be(2);
     }
 
-    private static string? GetTestPdfPath()
+    // Cache the synthetic fixture path so it is built once per test process,
+    // not once per call (this method is called from every test in the file).
+    private static string? _syntheticTestPdfPath;
+
+    /// <summary>
+    /// Builds a small, valid two-page PDF entirely in-process and returns a
+    /// path to it on disk.
+    ///
+    /// This used to try `Resources/test.pdf` (a directory that does not
+    /// exist in this project) and then fall back to absolute paths under
+    /// `/home/marc/Projects/pdfe/...` — the original author's own machine.
+    /// Those paths exist nowhere else, so `GetTestPdfPath()` returned null
+    /// unconditionally on any other checkout, and every caller's
+    /// `Assert.SkipWhen(string.IsNullOrEmpty(pdfPath), ...)` silently
+    /// skipped forever (see #654, the same bug class as #653).
+    ///
+    /// Rather than pointing at another absolute path (portable this time,
+    /// but still a dependency on the gitignored, on-demand-downloaded
+    /// `test-pdfs/` corpus — see `scripts/download-test-pdfs.sh`), this
+    /// builds a minimal fixture with the raw-PDF-byte-builder convention
+    /// already used elsewhere in this same file
+    /// (`Open_PageTreeWithSelfReferencingKids_DoesNotStackOverflow`,
+    /// `Open_PathologicallyDeepPageTree_BailsAtDepthLimit`). That makes the
+    /// fixture available on every machine, with no external download step.
+    ///
+    /// Two pages (with different MediaBoxes) rather than one, so
+    /// `Pages_ReturnsAllPages` genuinely exercises enumeration across
+    /// multiple kids instead of trivially checking `1 == 1`.
+    /// </summary>
+    private static string GetTestPdfPath()
     {
-        // Try to find a test PDF
-        var possiblePaths = new[]
-        {
-            Path.Combine(Directory.GetCurrentDirectory(), "Resources", "test.pdf"),
-            Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "Resources", "test.pdf"),
-            "/home/marc/Projects/pdfe/test-pdfs/sample-pdfs/birth-cert-sample.pdf",
-            "/home/marc/Projects/pdfe/test-pdfs/verapdf-corpus/veraPDF-corpus-master/PDF_A-1b/6.1 File structure/6.1.2 File header/veraPDF test suite 6-1-2-t02-pass-a.pdf"
-        };
+        if (_syntheticTestPdfPath is { } cached && File.Exists(cached))
+            return cached;
 
-        foreach (var path in possiblePaths)
-        {
-            if (File.Exists(path))
-                return path;
-        }
+        var sb = new StringBuilder();
+        sb.AppendLine("%PDF-1.7");
+        var offsets = new List<long>();
+        offsets.Add(0); // obj 0 placeholder
 
-        return null;
+        offsets.Add(sb.Length);
+        sb.AppendLine("1 0 obj");
+        sb.AppendLine("<< /Type /Catalog /Pages 2 0 R >>");
+        sb.AppendLine("endobj");
+
+        offsets.Add(sb.Length);
+        sb.AppendLine("2 0 obj");
+        sb.AppendLine("<< /Type /Pages /Kids [3 0 R 4 0 R] /Count 2 >>");
+        sb.AppendLine("endobj");
+
+        offsets.Add(sb.Length);
+        sb.AppendLine("3 0 obj");
+        sb.AppendLine("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << >> >>");
+        sb.AppendLine("endobj");
+
+        offsets.Add(sb.Length);
+        sb.AppendLine("4 0 obj");
+        sb.AppendLine("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << >> >>");
+        sb.AppendLine("endobj");
+
+        long xref = sb.Length;
+        sb.AppendLine("xref");
+        sb.AppendLine("0 5");
+        sb.AppendLine("0000000000 65535 f ");
+        for (int i = 1; i < 5; i++)
+            sb.AppendLine($"{offsets[i]:D10} 00000 n ");
+        sb.AppendLine("trailer << /Size 5 /Root 1 0 R >>");
+        sb.AppendLine("startxref");
+        sb.AppendLine(xref.ToString());
+        sb.AppendLine("%%EOF");
+
+        var bytes = Encoding.Latin1.GetBytes(sb.ToString());
+        var path = Path.Combine(Path.GetTempPath(), $"pdfe-PageCollectionTests-{Guid.NewGuid():N}.pdf");
+        File.WriteAllBytes(path, bytes);
+        _syntheticTestPdfPath = path;
+        return path;
     }
 
     /// <summary>
