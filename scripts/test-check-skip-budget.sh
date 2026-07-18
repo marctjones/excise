@@ -48,6 +48,8 @@ cat > "$ALLOWLIST" <<'EOF'
 # Format:  TestName   # why
 #
 Demo.Tests.FooTests.Skip1   # real hand-written justification A
+# --- grouping note: the following are veraPDF-dependent (#668) ---
+# second line of the same hand-written comment block
 Demo.Tests.FooTests.Skip2   # real hand-written justification B
 Demo.Tests.FooTests.Skip3   # #123: references another issue, and (see #456) a second one too
 EOF
@@ -95,6 +97,29 @@ if grep -q 'TODO: justify or fix' <<<"$AFTER"; then
   FAIL=1
 fi
 
+# #668: hand-written comment BLOCKS (not just per-entry reasons) must survive
+# --update, attached to the entry they precede.
+if ! grep -qF '# --- grouping note: the following are veraPDF-dependent (#668) ---' <<<"$AFTER"; then
+  echo "FAIL: a hand-written comment block was discarded by --update (#668)"
+  FAIL=1
+fi
+if ! grep -qF '# second line of the same hand-written comment block' <<<"$AFTER"; then
+  echo "FAIL: a multi-line hand-written comment block was only partially preserved (#668)"
+  FAIL=1
+fi
+# The preserved block must sit immediately before the entry it annotated (Skip2)
+# — checked portably (BSD grep has no -P): the two block lines then the entry,
+# consecutively.
+if ! printf '%s\n' "$AFTER" | awk '
+  /^# --- grouping note: the following are veraPDF-dependent \(#668\) ---$/ { s = 1; next }
+  s == 1 && /^# second line of the same hand-written comment block$/ { s = 2; next }
+  s == 2 && /^Demo\.Tests\.FooTests\.Skip2 / { ok = 1 }
+  { s = 0 }
+  END { exit ok ? 0 : 1 }'; then
+  echo "FAIL: the preserved comment block is not positioned immediately before its entry (#668)"
+  FAIL=1
+fi
+
 if [[ $FAIL -ne 0 ]]; then
   echo
   echo "--- allowlist BEFORE --update ---"
@@ -106,4 +131,5 @@ if [[ $FAIL -ne 0 ]]; then
   exit 1
 fi
 
-echo "PASS: check-skip-budget.sh --update preserves justifications for unchanged names (#663)"
+echo "PASS: check-skip-budget.sh --update preserves justifications (#663), reasons that"
+echo "      contain '#' (#665), and hand-written comment blocks (#668)"

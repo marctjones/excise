@@ -683,9 +683,11 @@ and cost real planning time.
    `ExtractAllText(forAccessibility: true)`; explicit overrides
    (`--ignore-permissions`, batch `ignorePermissions: true`, scripting
    `IgnoreDocumentPermissions`) exist because owner-password opening is #324
-   — every open today is user-level, so restrictions always apply. Not yet
-   gated anywhere: printing (doesn't exist, #621/#622 dropped it), page
-   assembly (bit 11) on merge/split/page-manipulation.
+   — every open today is user-level, so restrictions always apply. Page
+   assembly (bit 11) is now gated on the CLI `merge`/`split` commands (#677,
+   `DocumentAction.AssembleDocument` → `CanAssemble`); still NOT gated: bit 11
+   in the GUI page-organization surface (reorder/rotate/delete in the app) and
+   printing (doesn't exist, #621/#622 dropped it).
 
 **Previously listed here and now FIXED — do not re-add:**
 - ~~Inline images `BI...ID...EI` not handled~~ → handled (`ContentStreamWriter.cs:39-81`).

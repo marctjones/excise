@@ -169,11 +169,11 @@ public class InPageLinkClickTests
             walk = walk.Parent as Control;
         }
 
-        bool linkFired = false;
+        int linkFiredCount = 0;
         int observedDestPage = -1;
         viewer!.LinkClicked += (s2, args) =>
         {
-            linkFired = true;
+            linkFiredCount++;
             observedDestPage = args.PageNumber;
             _out.WriteLine($"LinkClicked fired with page={args.PageNumber}");
         };
@@ -199,11 +199,13 @@ public class InPageLinkClickTests
         for (int i = 0; i < 5; i++) { await Task.Delay(100); window.UpdateLayout(); }
 
         _out.WriteLine($"After click: rawPointerEvent={sawAnyPointerEvent}, " +
-                       $"linkFired={linkFired}, observedDestPage={observedDestPage}, " +
+                       $"linkFiredCount={linkFiredCount}, observedDestPage={observedDestPage}, " +
                        $"vm.CurrentPageIndex={vm.CurrentPageIndex + 1}");
 
-        linkFired.Should().BeTrue(
-            "PdfViewerControl.LinkClicked must fire when the user clicks within a link annotation rect");
+        linkFiredCount.Should().Be(1,
+            "PdfViewerControl.LinkClicked must fire exactly once per click within a link "
+            + "annotation rect — the Tunnel|Bubble handler registration dispatched pointer "
+            + "presses twice (#675)");
         observedDestPage.Should().Be(targetLink.DestinationPage);
         vm.CurrentPageIndex.Should().Be(targetLink.DestinationPage - 1,
             $"VM should navigate to the link's destination page ({targetLink.DestinationPage})");

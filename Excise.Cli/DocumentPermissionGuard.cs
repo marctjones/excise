@@ -34,6 +34,9 @@ partial class Program
 
         /// <summary>Fill in existing interactive form fields — /P bit 6 or bit 9.</summary>
         FillForms,
+
+        /// <summary>Assemble the document — insert/rotate/delete pages, split, merge — /P bit 11.</summary>
+        AssembleDocument,
     }
 
     /// <summary>
@@ -94,6 +97,7 @@ partial class Program
                 "copy/extract permission (/P bit 5)"),
             DocumentAction.ModifyContents => (perms.CanModify, "modify permission (/P bit 4)"),
             DocumentAction.FillForms => (perms.CanFillForms, "form fill-in permission (/P bit 6 or 9)"),
+            DocumentAction.AssembleDocument => (perms.CanAssemble, "page-assembly permission (/P bit 11)"),
             _ => (true, ""),
         };
 

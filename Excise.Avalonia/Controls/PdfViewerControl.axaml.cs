@@ -804,14 +804,20 @@ public partial class PdfViewerControl : UserControl
         // sibling above it). Listening at the UserControl root catches
         // everything; the handlers compute pointer coords relative to
         // the ZoomHost wrapper themselves.
+        // Register on a SINGLE routing pass (Bubble). handledEventsToo:true
+        // still delivers the event even when an intermediate control marked it
+        // handled, so the root handler catches everything — but only ONCE.
+        // Registering for Tunnel|Bubble fired each handler twice per event
+        // (once descending, once ascending), which double-dispatched pointer
+        // presses — e.g. a single in-page link click was handled twice (#675).
         AddHandler(PointerPressedEvent, OnInteractionLayerPointerPressed,
-            global::Avalonia.Interactivity.RoutingStrategies.Tunnel | global::Avalonia.Interactivity.RoutingStrategies.Bubble,
+            global::Avalonia.Interactivity.RoutingStrategies.Bubble,
             handledEventsToo: true);
         AddHandler(PointerMovedEvent, OnInteractionLayerPointerMoved,
-            global::Avalonia.Interactivity.RoutingStrategies.Tunnel | global::Avalonia.Interactivity.RoutingStrategies.Bubble,
+            global::Avalonia.Interactivity.RoutingStrategies.Bubble,
             handledEventsToo: true);
         AddHandler(PointerReleasedEvent, OnInteractionLayerPointerReleased,
-            global::Avalonia.Interactivity.RoutingStrategies.Tunnel | global::Avalonia.Interactivity.RoutingStrategies.Bubble,
+            global::Avalonia.Interactivity.RoutingStrategies.Bubble,
             handledEventsToo: true);
         AddHandler(KeyDownEvent, OnViewerKeyDown,
             global::Avalonia.Interactivity.RoutingStrategies.Tunnel | global::Avalonia.Interactivity.RoutingStrategies.Bubble,
