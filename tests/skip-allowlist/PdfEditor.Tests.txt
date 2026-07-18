@@ -14,11 +14,30 @@
 # before this pass. Added below with the same scrutiny the original 6 got.
 #
 PdfEditor.Tests.Integration.SearchPerformanceTests.Search_OnSyntheticDoc_CompletesInReasonableTime   # perf assertion; skips when the synthetic fixture is absent. Timing test, not correctness.
-PdfEditor.Tests.UI.EncryptedDocumentSaveWarningTests.SaveFileAsAsync_EncryptedSource_AsksForConfirmation_AndDoesNotSaveWhenDeclined   # test-pdfs/pdfjs/issue15893_reduced.pdf is gitignored corpus, absent unless scripts/download-test-pdfs.sh has been run (and absent in CI, which never runs it for PR jobs)
-PdfEditor.Tests.UI.EncryptedDocumentSaveWarningTests.SaveFileAsAsync_EncryptedSource_SavesWhenConfirmed   # same gitignored test-pdfs/pdfjs/issue15893_reduced.pdf fixture as the test above
 PdfEditor.Tests.UI.InPageLinkClickTests.ClickOnTocLink_NavigatesToDestinationPage   # #653: this test's real-book fixture path was a stale hardcoded personal path and had never actually run; now that it's fixed, it reveals a pre-existing (not #625-related) headless-layout timing issue against that specific 455-page book. Tracked, not yet root-caused.
 PdfEditor.Tests.UI.MouseInputTests.ClickOnLinkAnnotation_FiresLinkClickedEvent   # #653: same pre-existing real-book layout-timing issue as InPageLinkClickTests above.
 PdfEditor.Tests.UI.MouseInputTests.HoverOverLinkAnnotation_IndicatesInteractivity   # #653: same pre-existing real-book layout-timing issue.
 PdfEditor.Tests.UI.MouseInputTests.MouseWheelScrollDown_ScrollsViewerVertically   # #653: same pre-existing real-book issue, but for scroll offset rather than link hit-testing — confirms the root cause is generic to this book/headless-mode, not link-specific.
-PdfEditor.Tests.Unit.MainWindowViewModelTests.HiddenTextToggles_DoNotLoadOcrAssemblyBeforeRasterizedScan   # ORDER-DEPENDENT by nature: once any earlier test loads Pdfe.Ocr, "is it loaded?" cannot distinguish "we pulled it in" from "it was already here". Proving it needs a dedicated process. The weaker, order-INDEPENDENT half (watch AssemblyLoad during the toggle) now always runs. This skip is why the budget exists: on 2026-07-13 it silently stopped running and the suite stayed green.
 PdfEditor.Tests.Unit.RevealHiddenTextTests.RevealRasterizedHidden_FindsTextHiddenByOverlayInsideImage   # tesseract CLI not installed; CI's Linux/macOS/Windows jobs never install it (Pdfe.Ocr shells out to system tesseract by design, see CLAUDE.md), so this is permanently skipped in CI, not flaky-by-environment
+#
+# This cycle (v2.30.0): fixture/tool-gated skips on CI's reference runner.
+# The permission-enforcement suite gates on the gitignored poppler corpus
+# (its copy-forbidden P=-3392 fixture); Make Searchable's wiring test needs
+# real tesseract; the two #643 preservation tests need encrypted corpus
+# fixtures. Each runs and asserts when its prerequisite exists (verified
+# on a corpus-and-tools machine).
+PdfEditor.Tests.Integration.MakeSearchableWiringTests.RunMakeSearchable_ThenOnCompleted_MakesScanSearchable_AndRefreshesTheBoundDocument   # needs the system tesseract CLI, not installed on CI (#658)
+PdfEditor.Tests.UI.DocumentPermissionEnforcementTests.AddStickyNoteAnnotation_AnnotateForbidden_BlocksWithToast   # needs gitignored poppler copy-forbidden fixture (scripts/download-poppler-corpus.sh) (#642)
+PdfEditor.Tests.UI.DocumentPermissionEnforcementTests.CopyTextCommand_CopyForbiddenDocument_BlocksWithToast_AndKeepsClipboardEmpty   # needs gitignored poppler copy-forbidden fixture (#642)
+PdfEditor.Tests.UI.DocumentPermissionEnforcementTests.ExportCurrentPageToImage_CopyForbidden_BlocksWithToast_AndWritesNoFile   # needs gitignored poppler copy-forbidden fixture (#642)
+PdfEditor.Tests.UI.DocumentPermissionEnforcementTests.Rendering_CopyForbiddenDocument_StillRenders   # needs gitignored poppler copy-forbidden fixture (#642)
+PdfEditor.Tests.UI.DocumentPermissionEnforcementTests.ScriptExtractAllText_CopyForbidden_Throws_WithAccessibilityAndOverrideGuidance   # needs gitignored poppler copy-forbidden fixture (#642)
+PdfEditor.Tests.UI.DocumentPermissionEnforcementTests.ScriptExtractAllText_ForAccessibility_HonoursBit10CarveOut   # needs gitignored poppler copy-forbidden fixture (#642)
+PdfEditor.Tests.UI.DocumentPermissionEnforcementTests.ScriptExtractAllText_IgnoreDocumentPermissions_Overrides   # needs gitignored poppler copy-forbidden fixture (#642)
+PdfEditor.Tests.UI.DocumentPermissionEnforcementTests.Search_CopyForbiddenDocument_StillFindsText   # needs gitignored poppler copy-forbidden fixture (#642)
+PdfEditor.Tests.UI.DocumentPermissionEnforcementTests.SetSelectedTextAndCopyAsync_CopyForbidden_BlocksClipboard_ButKeepsSelection   # needs gitignored poppler copy-forbidden fixture (#642)
+PdfEditor.Tests.UI.DocumentPermissionEnforcementTests.SetSelectedTextAndCopyAsync_IgnoreDocumentPermissions_Overrides   # needs gitignored poppler copy-forbidden fixture (#642)
+PdfEditor.Tests.UI.DocumentPermissionEnforcementTests.ToggleFormAuthoringMode_ModifyForbidden_StaysOff_WithToast   # needs gitignored poppler copy-forbidden fixture (#642)
+PdfEditor.Tests.UI.DocumentPermissionEnforcementTests.ToggleTypewriterMode_ModifyForbidden_StaysOff_WithToast   # needs gitignored poppler copy-forbidden fixture (#642)
+PdfEditor.Tests.UI.EncryptedDocumentSaveWarningTests.SaveDocument_EncryptedSource_PreservesPermissionsMask   # needs gitignored encrypted corpus fixture (#643 preservation)
+PdfEditor.Tests.UI.EncryptedDocumentSaveWarningTests.SaveFileAsAsync_EncryptedSource_SavesEncrypted_WithoutAskingAnything   # needs gitignored encrypted corpus fixture (#643 preservation; replaces the deleted #638-era confirmation tests)
