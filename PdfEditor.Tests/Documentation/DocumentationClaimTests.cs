@@ -208,7 +208,7 @@ public class DocumentationClaimTests
         script.Should().Contain("latest-gui-workflow-hotspots.json");
         script.Should().Contain("latest-performance-baseline.json");
         script.Should().Contain("benchmark-hotpaths.json");
-        releaseSmoke.Should().Contain("automation,ux,benchmark,aot,tests");
+        releaseSmoke.Should().Contain("automation,ux,benchmark,aot,pdf20,corpus-resilience,adversarial-extraction,tests");
         releaseSmoke.Should().Contain("run-benchmarks.sh suite");
         checklist.Should().Contain("benchmark-report.json");
         checklist.Should().Contain("benchmark-hotpaths.json");
