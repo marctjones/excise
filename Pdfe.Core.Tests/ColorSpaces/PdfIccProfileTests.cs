@@ -54,7 +54,7 @@ public class PdfIccProfileTests
     /// — colorimetric accuracy doesn't matter here, only that the mft2
     /// structure is valid enough to parse and evaluate.
     /// </summary>
-    private static byte[] BuildLut16CmykProfile(int inputChannels = 4)
+    internal static byte[] BuildLut16CmykProfile(int inputChannels = 4)
     {
         var tags = new List<(string Sig, byte[] Data)>
         {
@@ -140,7 +140,7 @@ public class PdfIccProfileTests
     }
 
     /// <summary>Assembles header + tag table + tag data into one profile byte array.</summary>
-    private static byte[] BuildProfile(string colorSpace, List<(string Sig, byte[] Data)> tags)
+    internal static byte[] BuildProfile(string colorSpace, List<(string Sig, byte[] Data)> tags)
     {
         const int headerSize = 132;
         int tagTableSize = tags.Count * 12;
