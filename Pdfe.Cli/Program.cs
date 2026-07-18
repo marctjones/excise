@@ -41,6 +41,8 @@ partial class Program
             CreateAuditCommand(),
             CreateOcrCommand(),
             CreateMakeSearchableCommand(),
+            CreateEncryptCommand(),
+            CreateDecryptCommand(),
         };
 
         // System.CommandLine 2.0 split parsing from invocation: build a
@@ -1612,5 +1614,239 @@ partial class Program
         });
 
         return command;
+    }
+
+    /// <summary>
+    /// pdfe encrypt &lt;input&gt; &lt;output&gt; [--user-password] [--owner-password]
+    /// [--permissions] [--algorithm aes256|aes128] [--no-encrypt-metadata] (#641)
+    ///
+    /// Writes a new, password-protected copy of an UNencrypted source using
+    /// the already-verified Standard Security Handler writer (#639 AES-256
+    /// R=6 / #640 AES-128 R=4 — see <see cref="Pdfe.Core.Security.PdfEncryptionOptions"/>
+    /// and <see cref="Pdfe.Core.Writing.PdfDocumentWriter"/>). Deliberately
+    /// does not accept an already-encrypted source (see the /Encrypt guard
+    /// below): "change password" is `decrypt` then `encrypt` as two
+    /// separate invocations rather than a combined verb, since a single
+    /// command would have to juggle both an "open" password (to read the
+    /// source) and a "new" password (to write the output) with no clear
+    /// spec-driven shape for that — simpler to keep them as two commands
+    /// that already exist.
+    /// </summary>
+    static Command CreateEncryptCommand()
+    {
+        var inputArg = new Argument<FileInfo>("input") { Description = "Input PDF file (must not already be encrypted)" };
+        var outputArg = new Argument<FileInfo>("output") { Description = "Output PDF path" };
+        var userPasswordOption = new Option<string?>("--user-password")
+        {
+            Description = "User (open) password. Omit for no password required to open the file.",
+        };
+        var ownerPasswordOption = new Option<string?>("--owner-password")
+        {
+            Description = "Owner (permissions) password. Omit for no owner password.",
+        };
+        var permissionsOption = new Option<long>("--permissions")
+        {
+            Description = "Raw /P permission bitmask (ISO 32000-2 Table 22). Default -4 grants every " +
+                "permission bit — pdfe stores this value correctly but does not yet enforce permissions " +
+                "on read (#642); this is a plumbing-only escape hatch, not a security control yet.",
+            DefaultValueFactory = _ => -4L,
+        };
+        var algorithmOption = new Option<string>("--algorithm")
+        {
+            Description = "Encryption algorithm: 'aes256' (V=5 R=6, PDF 2.0 native, default) or " +
+                "'aes128' (V=4 R=4, for readers that don't support PDF 2.0 encryption).",
+            DefaultValueFactory = _ => "aes256",
+        };
+        var noEncryptMetadataOption = new Option<bool>("--no-encrypt-metadata")
+        {
+            Description = "Leave the XMP /Metadata stream unencrypted while encrypting everything else. " +
+                "Default: metadata is encrypted too.",
+            DefaultValueFactory = _ => false,
+        };
+
+        var command = new Command(
+            "encrypt",
+            "Write a password-protected copy of a PDF (AES-256 R=6 by default; AES-128 R=4 with --algorithm aes128)")
+        {
+            inputArg, outputArg, userPasswordOption, ownerPasswordOption, permissionsOption, algorithmOption, noEncryptMetadataOption,
+        };
+
+        command.SetAction(parseResult =>
+        {
+            var input = parseResult.GetValue(inputArg)!;
+            var output = parseResult.GetValue(outputArg)!;
+            var userPassword = parseResult.GetValue(userPasswordOption);
+            var ownerPassword = parseResult.GetValue(ownerPasswordOption);
+            var permissions = parseResult.GetValue(permissionsOption);
+            var algorithmText = parseResult.GetValue(algorithmOption)!;
+            var noEncryptMetadata = parseResult.GetValue(noEncryptMetadataOption);
+
+            if (!input.Exists)
+            {
+                Console.Error.WriteLine($"File not found: {input.FullName}");
+                Environment.ExitCode = 1;
+                return;
+            }
+
+            if (string.IsNullOrEmpty(userPassword) && string.IsNullOrEmpty(ownerPassword))
+            {
+                Console.Error.WriteLine(
+                    "At least one of --user-password or --owner-password is required " +
+                    "(otherwise there is nothing to protect).");
+                Environment.ExitCode = 1;
+                return;
+            }
+
+            Pdfe.Core.Security.PdfEncryptionAlgorithm algorithm;
+            switch (algorithmText.Trim().ToLowerInvariant())
+            {
+                case "aes256": algorithm = Pdfe.Core.Security.PdfEncryptionAlgorithm.Aes256; break;
+                case "aes128": algorithm = Pdfe.Core.Security.PdfEncryptionAlgorithm.Aes128; break;
+                default:
+                    Console.Error.WriteLine($"Unknown --algorithm '{algorithmText}'. Use 'aes256' or 'aes128'.");
+                    Environment.ExitCode = 1;
+                    return;
+            }
+
+            try
+            {
+                RunEncrypt(input.FullName, output.FullName, userPassword, ownerPassword,
+                    permissions, algorithm, encryptMetadata: !noEncryptMetadata);
+
+                Console.WriteLine($"Encrypted with {algorithmText} ({(algorithm == Pdfe.Core.Security.PdfEncryptionAlgorithm.Aes256 ? "V=5 R=6" : "V=4 R=4")}).");
+                Console.WriteLine($"Output: {output.FullName}");
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error: {ex.Message}");
+                Environment.ExitCode = 1;
+            }
+        });
+
+        return command;
+    }
+
+    /// <summary>
+    /// Core encrypt-a-file operation — open (must be unencrypted), write a
+    /// password-protected copy via the #639/#640 Standard Security Handler
+    /// writer. Exposed internally for tests, mirroring <see cref="RunRedact"/>.
+    /// Throws <see cref="InvalidOperationException"/> for the
+    /// already-encrypted guard.
+    /// </summary>
+    internal static void RunEncrypt(
+        string inputPath, string outputPath, string? userPassword, string? ownerPassword,
+        long permissions, Pdfe.Core.Security.PdfEncryptionAlgorithm algorithm, bool encryptMetadata)
+    {
+        const string alreadyEncrypted =
+            "Source PDF is already encrypted. To change its password, run `pdfe decrypt` " +
+            "first, then `pdfe encrypt` the result with the new password(s).";
+
+        Pdfe.Core.Document.PdfDocument doc;
+        try
+        {
+            doc = Pdfe.Core.Document.PdfDocument.Open(File.ReadAllBytes(inputPath));
+        }
+        catch (Pdfe.Core.Parsing.PdfEncryptionNotSupportedException)
+        {
+            // A password-protected source fails to OPEN here (empty password
+            // rejected) before the IsEncrypted guard below can fire — and the
+            // raw "password verification failed" message would misread as the
+            // NEW password being wrong. Same guidance either way.
+            throw new InvalidOperationException(alreadyEncrypted);
+        }
+
+        using var _ = doc;
+        if (doc.IsEncrypted)
+            throw new InvalidOperationException(alreadyEncrypted);
+
+        var options = new Pdfe.Core.Security.PdfEncryptionOptions
+        {
+            UserPassword = userPassword,
+            OwnerPassword = ownerPassword,
+            Permissions = permissions,
+            Algorithm = algorithm,
+            EncryptMetadata = encryptMetadata,
+        };
+
+        using var fs = new FileStream(outputPath, FileMode.Create, FileAccess.Write);
+        new Pdfe.Core.Writing.PdfDocumentWriter(doc, options).Write(fs);
+    }
+
+    /// <summary>
+    /// pdfe decrypt &lt;input&gt; &lt;output&gt; [--password] (#641)
+    ///
+    /// Writes an unencrypted copy of an encrypted source. Running this
+    /// command IS the explicit, informed act of dropping protection — the
+    /// same "informed acknowledgement" spirit as `redact --allow-decrypt`
+    /// (#638), just via a dedicated verb whose entire purpose is decryption
+    /// rather than a flag that overrides a fail-closed default on a command
+    /// meant to do something else. <paramref name="passwordOption"/> is
+    /// tried as a USER password only: pdfe's read-side Standard Security
+    /// Handler does not yet support opening with only an owner (permissions)
+    /// password (tracked as #324) — an owner-only password will fail to
+    /// open here even though it independently verifies against qpdf.
+    /// </summary>
+    static Command CreateDecryptCommand()
+    {
+        var inputArg = new Argument<FileInfo>("input") { Description = "Input PDF file (must be encrypted)" };
+        var outputArg = new Argument<FileInfo>("output") { Description = "Output PDF path (will NOT be password-protected)" };
+        var passwordOption = new Option<string?>("--password")
+        {
+            Description = "Password to open the source PDF (tried as the USER/open password; an " +
+                "owner-only password is not yet supported for opening, see #324). Omit for an empty password.",
+        };
+
+        var command = new Command("decrypt", "Write an unprotected copy of a password-protected PDF")
+        {
+            inputArg, outputArg, passwordOption,
+        };
+
+        command.SetAction(parseResult =>
+        {
+            var input = parseResult.GetValue(inputArg)!;
+            var output = parseResult.GetValue(outputArg)!;
+            var password = parseResult.GetValue(passwordOption);
+
+            if (!input.Exists)
+            {
+                Console.Error.WriteLine($"File not found: {input.FullName}");
+                Environment.ExitCode = 1;
+                return;
+            }
+
+            try
+            {
+                RunDecrypt(input.FullName, output.FullName, password);
+
+                Console.WriteLine($"Decrypted. Output: {output.FullName}");
+                Console.WriteLine("Warning: the output file is NOT password-protected.");
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error: {ex.Message}");
+                Environment.ExitCode = 1;
+            }
+        });
+
+        return command;
+    }
+
+    /// <summary>
+    /// Core decrypt-a-file operation — open with <paramref name="password"/>
+    /// (tried as the USER password; owner-only opening is #324), write an
+    /// unencrypted copy. Exposed internally for tests, mirroring
+    /// <see cref="RunRedact"/>. Throws <see cref="InvalidOperationException"/>
+    /// when the source isn't encrypted (nothing to decrypt), and lets
+    /// <c>PdfDocument.Open</c>'s own password-verification exception
+    /// propagate for a wrong password.
+    /// </summary>
+    internal static void RunDecrypt(string inputPath, string outputPath, string? password)
+    {
+        using var doc = Pdfe.Core.Document.PdfDocument.Open(File.ReadAllBytes(inputPath), password);
+        if (!doc.IsEncrypted)
+            throw new InvalidOperationException("Source PDF is not encrypted; nothing to decrypt.");
+
+        using var fs = new FileStream(outputPath, FileMode.Create, FileAccess.Write);
+        new Pdfe.Core.Writing.PdfDocumentWriter(doc, encryptionOptions: null).Write(fs);
     }
 }

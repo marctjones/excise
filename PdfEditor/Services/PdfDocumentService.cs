@@ -376,6 +376,32 @@ public class PdfDocumentService
         return new PageOperationDiagnostics(warnings.Distinct().ToList());
     }
 
+    /// <summary>
+    /// Whether <paramref name="candidate"/> matches the password that
+    /// successfully opened the currently-loaded document (empty/null for an
+    /// empty user password — the common case). Used by the Security dialog
+    /// (#641) to gate changing/removing password protection on a re-entered
+    /// "current password" before writing anything.
+    ///
+    /// This is NOT a fresh cryptographic re-derivation against the
+    /// document's own <c>/Encrypt</c> dictionary — it compares against
+    /// <see cref="_currentUserPassword"/>, which <see cref="LoadDocument"/>
+    /// already proved correct via <see cref="PdfDocument.Open(byte[],string?)"/>'s
+    /// own <c>PdfStandardSecurityHandler</c> verification. Re-deriving here
+    /// would mean re-resolving the trailer's <c>/Encrypt</c> dictionary
+    /// through the document's normal (decrypting) object resolver, which
+    /// risks running the dictionary's own ciphertext /O /U strings back
+    /// through string-decryption a second time — comparing against the
+    /// already-verified password is exactly as strong and avoids that.
+    /// Returns <c>true</c> unconditionally when the document isn't
+    /// encrypted (nothing to verify).
+    /// </summary>
+    public bool VerifyPassword(string? candidate)
+    {
+        if (_currentDocument == null || !_currentDocument.IsEncrypted) return true;
+        return string.Equals(candidate ?? string.Empty, _currentUserPassword ?? string.Empty, StringComparison.Ordinal);
+    }
+
     /// <summary>Get the current document for advanced operations. Null when unloaded.</summary>
     public PdfDocument? GetCurrentDocument() => _currentDocument;
 

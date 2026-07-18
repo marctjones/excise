@@ -53,6 +53,7 @@ public partial class MainWindowViewModel
     public ReactiveCommand<Unit, Unit> ToggleRevealHiddenTextCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleRevealRasterizedHiddenCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> MakeSearchableCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> SecurityCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, int> AutoDetectFieldsCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> SaveFlattenedFormCopyCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> CopyTextCommand { get; private set; } = null!;
@@ -138,6 +139,9 @@ public partial class MainWindowViewModel
         MakeSearchableCommand = ReactiveCommand.CreateFromTask(MakeSearchableAsync);
         MakeSearchableCommand.ThrownExceptions.Subscribe(ex =>
             _logger.LogError(ex, "MakeSearchableCommand threw exception"));
+        SecurityCommand = ReactiveCommand.CreateFromTask(ShowSecurityDialogAsync);
+        SecurityCommand.ThrownExceptions.Subscribe(ex =>
+            _logger.LogError(ex, "SecurityCommand threw exception"));
         AutoDetectFieldsCommand = ReactiveCommand.Create(() => AutoDetectAndApplyFormFields());
         SaveFlattenedFormCopyCommand = ReactiveCommand.CreateFromTask(SaveFlattenedFormCopyAsync);
         CopyTextCommand = ReactiveCommand.CreateFromTask(CopyTextAsync);

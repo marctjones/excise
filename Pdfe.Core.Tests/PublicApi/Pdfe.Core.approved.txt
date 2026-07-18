@@ -183,6 +183,7 @@ namespace Pdfe.Core.Automation
         public const string SearchNext = "search.next";
         public const string SearchOpen = "search.open";
         public const string SearchPrevious = "search.previous";
+        public const string Security = "document.security";
         public const string SelectTextMode = "edit.selectTextMode";
         public const string ShowLetters = "text.letters";
         public const string SplitDocument = "document.split";

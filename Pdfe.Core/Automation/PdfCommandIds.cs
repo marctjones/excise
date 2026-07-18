@@ -45,6 +45,7 @@ public static class PdfCommandIds
     public const string ExportCurrentPage = "document.exportCurrentPage";
     public const string ExportAllPages = "document.exportAllPages";
     public const string Print = "document.print";
+    public const string Security = "document.security";
     public const string CombineDocuments = "document.combine";
     public const string SplitDocument = "document.split";
 

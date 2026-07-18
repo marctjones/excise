@@ -161,6 +161,13 @@
                           access:CommandAccessibility.CommandId="document.exportAllPages"/>
                 <MenuItem Header="_Print..." Command="{Binding PrintCommand}" InputGesture="Ctrl+P"
                           access:CommandAccessibility.CommandId="document.print"/>
+                <Separator/>
+                <MenuItem Header="_Security..." Command="{Binding SecurityCommand}"
+                          ToolTip.Tip="Set, change, or remove password protection on this document."
+                          IsEnabled="{Binding IsDocumentLoaded}"
+                          access:CommandAccessibility.CommandId="document.security">
+                    <MenuItem.Icon><PathIcon Classes="menu-icon" Data="{StaticResource IconLock}"/></MenuItem.Icon>
+                </MenuItem>
             </MenuItem>
 
             <!-- REDACTION MENU -->
