@@ -132,6 +132,16 @@ run_t0() {
 run_t1() {
     run_t0
     run_step "redaction-suites" dotnet test --no-build -c Debug --filter "FullyQualifiedName~Redaction" --logger "console;verbosity=normal"
+    # #644: the encryption interop gate. Neither of t1's other rendering
+    # steps reaches it — the redaction filter doesn't match it and
+    # rendering-deterministic excludes Differential — so it gets its own
+    # step. It runs in seconds: tiny generated fixtures, and on a machine
+    # without mutool/qpdf/ghostscript/pdftoppm every test skips loudly
+    # (release evidence instead sets PDFE_REQUIRE_ENCRYPTION_INTEROP_TOOLS=1
+    # so a tool-less run cannot green the gate vacuously — see
+    # docs/RELEASE_CHECKLIST.md "Encryption Evidence").
+    run_step "encryption-interop-gate" dotnet test Pdfe.Rendering.Tests --no-build -c Debug \
+        --filter "FullyQualifiedName~EncryptionInteropGateTests" --logger "console;verbosity=normal"
     run_step "rendering-deterministic" dotnet test Pdfe.Rendering.Tests --no-build -c Debug \
         --filter "FullyQualifiedName!~Corpus&FullyQualifiedName!~Differential&FullyQualifiedName!~Benchmark&FullyQualifiedName!~Visual" \
         --logger "console;verbosity=normal"

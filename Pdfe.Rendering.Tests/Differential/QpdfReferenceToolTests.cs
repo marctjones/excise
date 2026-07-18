@@ -24,6 +24,8 @@ public class QpdfReferenceToolTests
     public void IsEncrypted_OnAnEncryptedFixture_ReturnsTrue()
     {
         Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not on PATH");
+        Assert.SkipUnless(File.Exists(EncryptedFixture),
+            "test-pdfs/poppler corpus (gitignored) not downloaded — run scripts/download-test-pdfs.sh");
 
         QpdfReferenceTool.IsEncrypted(EncryptedFixture).Should().BeTrue(
             "qpdf's own independent parser must agree this file is encrypted");
@@ -33,6 +35,8 @@ public class QpdfReferenceToolTests
     public void ShowEncryption_OnAnEncryptedFixture_ReportsAesV3AndRSix()
     {
         Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not on PATH");
+        Assert.SkipUnless(File.Exists(EncryptedFixture),
+            "test-pdfs/poppler corpus (gitignored) not downloaded — run scripts/download-test-pdfs.sh");
 
         var output = QpdfReferenceTool.ShowEncryption(EncryptedFixture);
 
@@ -45,6 +49,8 @@ public class QpdfReferenceToolTests
     public void Decrypt_WithEmptyUserPassword_ProducesAReadablePlaintextFile()
     {
         Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not on PATH");
+        Assert.SkipUnless(File.Exists(EmptyPasswordEncryptedFixture),
+            "test-pdfs/poppler corpus (gitignored) not downloaded — run scripts/download-test-pdfs.sh");
 
         var outputPath = Path.Combine(Path.GetTempPath(), $"pdfe-qpdf-decrypt-test-{Guid.NewGuid():N}.pdf");
         try

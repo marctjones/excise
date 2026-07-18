@@ -50,4 +50,11 @@ require_code_text PdfEditor/Services/SignatureVerificationSummaryFormatter.cs "t
 require_file_text README.md "PublicApiApprovalTests"
 require_code_text Pdfe.Core.Tests/Authoring/PublicApiApprovalTests.cs "APPROVE_PUBLIC_API"
 
+# #644: the release checklist names the encryption interop gate as required
+# evidence — the suite (and its vacuous-run guard) must actually exist.
+require_file_text docs/RELEASE_CHECKLIST.md "EncryptionInteropGateTests"
+require_file_text docs/RELEASE_CHECKLIST.md "PDFE_REQUIRE_ENCRYPTION_INTEROP_TOOLS"
+require_code_text Pdfe.Rendering.Tests/Differential/EncryptionInteropGateTests.cs "PDFE_REQUIRE_ENCRYPTION_INTEROP_TOOLS"
+require_code_text Pdfe.Rendering.Tests/Differential/EncryptionInteropGateTests.cs "AtLeastOneIndependentToolIsAvailable_GateIsNotVacuous"
+
 echo "doc-claim check passed"

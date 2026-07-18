@@ -5,6 +5,24 @@ using System.Text;
 namespace Pdfe.Rendering.Differential;
 
 /// <summary>
+/// What <c>qpdf --requires-password</c> reported about a file's password
+/// status, mapped 1:1 from its documented exit codes (0/2/3; exit code 1 is
+/// unused by qpdf for this flag). See
+/// <see cref="QpdfReferenceTool.RequiresPassword"/>.
+/// </summary>
+public enum QpdfPasswordStatus
+{
+    /// <summary>Exit 0: a password, other than as supplied, is required — i.e. the supplied (or absent) password was REJECTED.</summary>
+    PasswordRequired = 0,
+
+    /// <summary>Exit 2: the file is not encrypted at all.</summary>
+    NotEncrypted = 2,
+
+    /// <summary>Exit 3: the file is encrypted, and the correct password (if any) has been supplied.</summary>
+    PasswordCorrect = 3,
+}
+
+/// <summary>
 /// Shells out to <c>qpdf</c> — an independent, non-pdfe oracle for PDF
 /// structural validity and encryption metadata. Unlike the other tools in
 /// this namespace (Ghostscript, mutool, pdfium, pdftocairo), qpdf has no
@@ -100,6 +118,30 @@ public static class QpdfReferenceTool
     {
         var result = Run(new[] { "--is-encrypted", pdfPath }, timeoutMs);
         return result?.ExitCode == 0;
+    }
+
+    /// <summary>
+    /// Runs <c>qpdf --requires-password</c> and maps its documented exit
+    /// codes onto <see cref="QpdfPasswordStatus"/>. This — not
+    /// <see cref="Check"/> — is the right primitive for asserting a wrong
+    /// or missing password is REJECTED: qpdf 12's <c>--check</c> reports a
+    /// wrong password as <c>"invalid password"</c> with no
+    /// <c>"error:"</c> substring, so <see cref="Check"/>'s warning-tolerant
+    /// success heuristic would read the rejection as success (verified
+    /// against qpdf 12.3.2 while building the #644 gate).
+    /// Returns null when qpdf is unavailable, times out, or exits with a
+    /// code outside its documented 0/2/3 set.
+    /// </summary>
+    public static QpdfPasswordStatus? RequiresPassword(string pdfPath, string? password = null, int timeoutMs = 10_000)
+    {
+        var result = Run(BuildArgs("--requires-password", pdfPath, password), timeoutMs);
+        return result?.ExitCode switch
+        {
+            0 => QpdfPasswordStatus.PasswordRequired,
+            2 => QpdfPasswordStatus.NotEncrypted,
+            3 => QpdfPasswordStatus.PasswordCorrect,
+            _ => null,
+        };
     }
 
     /// <summary>

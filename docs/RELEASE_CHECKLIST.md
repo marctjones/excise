@@ -150,6 +150,46 @@ The repeatable automated gate for this table is:
 dotnet test PdfEditor.Tests --filter "FullyQualifiedName~GuiWorkflowCoverageMatrix|FullyQualifiedName~GoldenPath|FullyQualifiedName~Workflow|FullyQualifiedName~RevealHiddenText|FullyQualifiedName~SignatureVerification" --logger "console;verbosity=normal"
 ```
 
+## Encryption Evidence (#644)
+
+The encryption writer's release evidence is the interop gate suite — pdfe
+must never be its own oracle for "this file is actually protected." A
+mis-emitted `/Encrypt` dictionary that some reader silently ignores (opening
+the "protected" file without a password) is the catastrophic failure mode
+this section exists to catch.
+
+- Run the automated gate on a machine with the reference tools installed
+  (mutool, qpdf, ghostscript, pdftoppm):
+
+  ```bash
+  PDFE_REQUIRE_ENCRYPTION_INTEROP_TOOLS=1 \
+    dotnet test Pdfe.Rendering.Tests --filter "FullyQualifiedName~EncryptionInteropGateTests"
+  ```
+
+  `EncryptionInteropGateTests` covers, for BOTH AES-256 (R6) and AES-128
+  (R4): correct user password opens (mutool extraction, qpdf `--check`,
+  Ghostscript and pdftoppm pixel-identical renders vs. the plain baseline);
+  the distinct owner password opens with full authority (qpdf reports
+  "owner password", pdftoppm `-opw` renders); the wrong password and the
+  ABSENT password are rejected by every tool; and qpdf's independent
+  `--show-encryption` decode reports the `/P` mask semantically exactly as
+  set. Unavailable tools skip loudly by name; the
+  `PDFE_REQUIRE_ENCRYPTION_INTEROP_TOOLS=1` env var makes an all-tools-missing
+  (vacuously green) run a hard failure, which is what release evidence
+  requires.
+- **Manual Acrobat step** (Acrobat is not scriptable in this environment —
+  it is deliberately not faked in the automated gate): produce one R6
+  (AES-256) and one R4 (AES-128) sample encrypted by pdfe with a non-empty
+  user password, and open each in Adobe Acrobat (Reader is fine):
+  - the correct password must open the document;
+  - the wrong password must be rejected;
+  - dismissing the password prompt (no password) must not show any content;
+  - File > Properties > Security must report the document as protected.
+- Also relevant: `EncryptionWriterInteropTests` (per-writer-issue coverage,
+  #639/#640) and `EncryptionPreservationInteropTests` (#643 round-trips);
+  both run under `dotnet test Pdfe.Rendering.Tests --filter
+  "FullyQualifiedName~Encryption"`.
+
 ## Issue Hygiene
 
 - Every shipped issue has a completion comment with validation evidence.

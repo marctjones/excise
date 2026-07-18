@@ -65,6 +65,20 @@ namespace Pdfe.Rendering.Differential
         public static Pdfe.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
         public static Pdfe.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword) { }
     }
+    public static class PdftoppmReferenceRenderer
+    {
+        public static bool IsAvailable { get; }
+        public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
+        public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword, string? ownerPassword = null) { }
+        public static Pdfe.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
+        public static Pdfe.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword, string? ownerPassword = null) { }
+    }
+    public enum QpdfPasswordStatus
+    {
+        PasswordRequired = 0,
+        NotEncrypted = 2,
+        PasswordCorrect = 3,
+    }
     public static class QpdfReferenceTool
     {
         public static bool IsAvailable { get; }
@@ -75,6 +89,7 @@ namespace Pdfe.Rendering.Differential
         public static bool Decrypt(string pdfPath, string outputPath, string? password = null, int timeoutMs = 30000, bool uncompressStreams = false) { }
         public static bool EncryptR4(string inputPath, string outputPath, string userPassword, string ownerPassword, int timeoutMs = 30000) { }
         public static bool? IsEncrypted(string pdfPath, int timeoutMs = 10000) { }
+        public static Pdfe.Rendering.Differential.QpdfPasswordStatus? RequiresPassword(string pdfPath, string? password = null, int timeoutMs = 10000) { }
         public static string? ShowEncryption(string pdfPath, string? password = null, int timeoutMs = 15000) { }
     }
     public sealed class ReferenceRenderResult : System.IEquatable<Pdfe.Rendering.Differential.ReferenceRenderResult>
