@@ -812,7 +812,7 @@ changelog instead.
 - ✅ `ViewModels/MainWindowViewModel.Scripting.cs` - Scripting surface
 
 The separate `Excise.App.Redaction` library (the PdfPig/PDFsharp-based
-`TextRedactor` engine and its `exciser` CLI) was removed once both the
+`TextRedactor` engine and its `pdfer` CLI) was removed once both the
 area-click and scripting paths were unified onto Excise.Core.
 
 ## Task Tracking and GitHub Issues

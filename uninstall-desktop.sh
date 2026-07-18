@@ -3,7 +3,7 @@
 # Uninstall Excise.App desktop application
 #
 
-APP_ID="com.exciseditor.Excise.App"
+APP_ID="cl.skpt.excise"
 INSTALL_DIR="$HOME/.local/share/Excise.App"
 DESKTOP_FILE="$HOME/.local/share/applications/${APP_ID}.desktop"
 ICON_PATH="$HOME/.local/share/icons/hicolor/256x256/apps/${APP_ID}.svg"

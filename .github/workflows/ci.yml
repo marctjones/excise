@@ -287,7 +287,7 @@ jobs:
         run: |
           xvfb-run -a dotnet test Excise.App.Tests --no-build -c Debug \
             --logger "console;verbosity=normal" \
-            --logger "trx;LogFileName=exciseditor.trx" \
+            --logger "trx;LogFileName=excise-app.trx" \
             --results-directory Excise.App.Tests/TestResults \
             --blame-hang-timeout 120000
 
@@ -301,7 +301,7 @@ jobs:
       # so it must not run on a job where the suite above didn't.
       - name: Skip budget (Excise.App.Tests)
         if: steps.changes.outputs.gui == 'true' || github.ref == 'refs/heads/main'
-        run: ./scripts/check-skip-budget.sh Excise.App.Tests/Excise.App.Tests.csproj --trx Excise.App.Tests/TestResults/exciseditor.trx
+        run: ./scripts/check-skip-budget.sh Excise.App.Tests/Excise.App.Tests.csproj --trx Excise.App.Tests/TestResults/excise-app.trx
 
       - name: Upload coverage report as artifact
         if: always()

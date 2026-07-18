@@ -164,7 +164,7 @@ run_t1() {
     # worth more than keeping the estimate accurate everywhere, and #646's
     # original ~10m figure was already a rough one.
     run_step "skip-budget-rendering" scripts/check-skip-budget.sh Excise.Rendering.Tests/Excise.Rendering.Tests.csproj
-    run_step "skip-budget-exciseditor" scripts/check-skip-budget.sh Excise.App.Tests/Excise.App.Tests.csproj
+    run_step "skip-budget-app" scripts/check-skip-budget.sh Excise.App.Tests/Excise.App.Tests.csproj
 }
 
 case "$TIER" in

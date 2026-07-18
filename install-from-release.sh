@@ -7,7 +7,7 @@
 set -e
 
 APP_NAME="Excise.App"
-APP_ID="com.exciseditor.Excise.App"
+APP_ID="cl.skpt.excise"
 REPO_OWNER="marctjones"
 REPO_NAME="excise"
 INSTALL_DIR="$HOME/.local/share/Excise.App"

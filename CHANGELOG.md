@@ -1300,9 +1300,9 @@ WeasyPrint, Word, XEP, and CJK toolchains without falling back to garbage.
 - `RedactionService` unified — `RedactArea` (mouse marquee) and `RedactText`
   (find-and-redact) now share a single Excise.Core pipeline; the previous
   parallel PdfSharp+PdfPig path is gone.
-- The legacy `Excise.App.Redaction` library (and its `exciser` CLI) deleted —
+- The legacy `Excise.App.Redaction` library (and its `pdfer` CLI) deleted —
   glyph-level redaction lives in Excise.Core; the Excise.Cli `redact` command
-  replaces `exciser`.
+  replaces `pdfer`.
 - System-font fallback widened: strip the 6-letter PDF subset prefix,
   match by family prefix instead of exact name, and recognize Semibold /
   Medium as Bold. `TimesNewRomanPS-BoldMT` now correctly maps to Times New
@@ -1316,7 +1316,7 @@ WeasyPrint, Word, XEP, and CJK toolchains without falling back to garbage.
 - **PDFsharp 6.2.2** — replaced by `Excise.Core.Document` + `Excise.Core.Writing`.
 - **PDFtoImage 4.0.2** + native PDFium — replaced by `Excise.Rendering` (Skia).
 - **Tesseract.NET nuget** — replaced by `Excise.Ocr` (CLI shell).
-- **Excise.App.Redaction** project + **`exciser` CLI** — replaced by
+- **Excise.App.Redaction** project + **`pdfer` CLI** — replaced by
   Excise.Core glyph-level redaction + `excise redact`.
 - **Excise.App.Demo** + Validator tools — superseded by Excise.Cli + the new
   visual regression suite.
@@ -1384,7 +1384,7 @@ embedders moving off the v1.0 surface:
   use `page.RedactArea(rect)` / `page.RedactAreas(rects)` /
   `document.RedactText("phrase")` from `PdfPageRedactionExtensions` /
   `PdfDocumentRedactionExtensions`.
-- `exciser` CLI → `excise redact` — same options.
+- `pdfer` CLI → `excise redact` — same options.
 - PdfPig text extraction → `Excise.Core.Text` — `PdfDocument.GetText(page)`
   and `PdfDocument.GetLetters(page)`.
 - PDFsharp `PdfDocument` → `Excise.Core.Document.PdfDocument` — note that

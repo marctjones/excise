@@ -5,24 +5,24 @@
   "RootCause": "NON_EMBEDDED_IDENTITY_H_FONT_REFERENCE_DISAGREEMENT",
   "ImprovementPriority": "NONE",
   "Confidence": "HIGH",
-  "Notes": "Fresh 2026-07-03 verification shows this is not an active pdfe text rendering defect. The PDF declares a non-embedded CenturyGothic,Bold Type0 Identity-H font with no ToUnicode map; pdfe renders the intended DESCRIPTION text cleanly, while Poppler decodes punctuation/digits, MuPDF substitutes a serif face, and Ghostscript introduces visible extra gaps.",
+  "Notes": "Fresh 2026-07-03 verification shows this is not an active excise text rendering defect. The PDF declares a non-embedded CenturyGothic,Bold Type0 Identity-H font with no ToUnicode map; excise renders the intended DESCRIPTION text cleanly, while Poppler decodes punctuation/digits, MuPDF substitutes a serif face, and Ghostscript introduces visible extra gaps.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "PDFE_BETTER_THAN_REFS",
+      "QualityStatus": "EXCISE_BETTER_THAN_REFS",
       "PixelAgreement": "MATCHES_TARGET",
       "ReferenceSituation": "REFS_DISAGREE",
       "RootCause": "NON_EMBEDDED_IDENTITY_H_FONT_REFERENCE_DISAGREEMENT",
       "Target": {
         "Mode": "PDF_FONT_DICTIONARY_WITH_REFERENCE_EVIDENCE",
-        "Primary": "pdfe",
-        "Reason": "The PDF's CIDs map to the intended DESCRIPTION glyph sequence. pdfe preserves that semantic text cleanly; available references either garble the glyph IDs, substitute a serif face, or add visible extra gaps."
+        "Primary": "excise",
+        "Reason": "The PDF's CIDs map to the intended DESCRIPTION glyph sequence. excise preserves that semantic text cleanly; available references either garble the glyph IDs, substitute a serif face, or add visible extra gaps."
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "pdfe renders the intended word DESCRIPTION more faithfully than the available references for this malformed non-embedded Identity-H font case.",
-      "Notes": "Reverified with fresh pdfe, MuPDF, Poppler, and Ghostscript contact sheet on 2026-07-03; this is a reference-disagreement fixture, not active high-severity renderer work."
+      "QualityReason": "excise renders the intended word DESCRIPTION more faithfully than the available references for this malformed non-embedded Identity-H font case.",
+      "Notes": "Reverified with fresh excise, MuPDF, Poppler, and Ghostscript contact sheet on 2026-07-03; this is a reference-disagreement fixture, not active high-severity renderer work."
     }
   }
 }

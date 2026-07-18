@@ -8,14 +8,14 @@
       "operator": "q",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -27,14 +27,14 @@
       "operator": "Q",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -46,14 +46,14 @@
       "operator": "cm",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -65,14 +65,14 @@
       "operator": "w",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -84,14 +84,14 @@
       "operator": "J",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -103,14 +103,14 @@
       "operator": "j",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -122,14 +122,14 @@
       "operator": "M",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -141,14 +141,14 @@
       "operator": "d",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -160,14 +160,14 @@
       "operator": "ri",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -179,14 +179,14 @@
       "operator": "i",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -198,14 +198,14 @@
       "operator": "gs",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -217,14 +217,14 @@
       "operator": "m",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -236,14 +236,14 @@
       "operator": "l",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -255,14 +255,14 @@
       "operator": "c",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -274,14 +274,14 @@
       "operator": "v",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -293,14 +293,14 @@
       "operator": "y",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -312,14 +312,14 @@
       "operator": "h",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -331,14 +331,14 @@
       "operator": "re",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -350,14 +350,14 @@
       "operator": "S",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -369,14 +369,14 @@
       "operator": "s",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -388,14 +388,14 @@
       "operator": "f",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -407,14 +407,14 @@
       "operator": "F",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -426,14 +426,14 @@
       "operator": "f*",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -445,14 +445,14 @@
       "operator": "B",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -464,14 +464,14 @@
       "operator": "B*",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -483,14 +483,14 @@
       "operator": "b",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -502,14 +502,14 @@
       "operator": "b*",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -521,14 +521,14 @@
       "operator": "n",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -540,14 +540,14 @@
       "operator": "W",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -559,14 +559,14 @@
       "operator": "W*",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -578,14 +578,14 @@
       "operator": "CS",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -597,14 +597,14 @@
       "operator": "cs",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -616,14 +616,14 @@
       "operator": "SC",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -635,14 +635,14 @@
       "operator": "SCN",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -654,14 +654,14 @@
       "operator": "sc",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -673,14 +673,14 @@
       "operator": "scn",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -692,14 +692,14 @@
       "operator": "G",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -711,14 +711,14 @@
       "operator": "g",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -730,14 +730,14 @@
       "operator": "RG",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -749,14 +749,14 @@
       "operator": "rg",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -768,14 +768,14 @@
       "operator": "K",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -787,14 +787,14 @@
       "operator": "k",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -806,14 +806,14 @@
       "operator": "sh",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -825,14 +825,14 @@
       "operator": "BI",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -844,14 +844,14 @@
       "operator": "ID",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -863,14 +863,14 @@
       "operator": "EI",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -882,14 +882,14 @@
       "operator": "Do",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -901,14 +901,14 @@
       "operator": "BT",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -920,14 +920,14 @@
       "operator": "ET",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -939,14 +939,14 @@
       "operator": "Tc",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -958,14 +958,14 @@
       "operator": "Tw",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -977,14 +977,14 @@
       "operator": "Tz",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -996,14 +996,14 @@
       "operator": "TL",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -1015,14 +1015,14 @@
       "operator": "Tf",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -1034,14 +1034,14 @@
       "operator": "Tr",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -1053,14 +1053,14 @@
       "operator": "Ts",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -1072,14 +1072,14 @@
       "operator": "Td",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -1091,14 +1091,14 @@
       "operator": "TD",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -1110,14 +1110,14 @@
       "operator": "Tm",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -1129,14 +1129,14 @@
       "operator": "T*",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -1148,14 +1148,14 @@
       "operator": "Tj",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -1167,14 +1167,14 @@
       "operator": "TJ",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -1186,14 +1186,14 @@
       "operator": "'",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -1205,14 +1205,14 @@
       "operator": "\"",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -1224,14 +1224,14 @@
       "operator": "d0",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -1243,14 +1243,14 @@
       "operator": "d1",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -1262,14 +1262,14 @@
       "operator": "BMC",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -1281,14 +1281,14 @@
       "operator": "BDC",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -1300,14 +1300,14 @@
       "operator": "EMC",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -1319,14 +1319,14 @@
       "operator": "MP",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -1338,14 +1338,14 @@
       "operator": "DP",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -1357,14 +1357,14 @@
       "operator": "BX",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"
@@ -1376,14 +1376,14 @@
       "operator": "EX",
       "unitEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "covers": "parser recognition and parse-write-parse round-trip"
         }
       ],
       "atomicEvidence": [
         {
-          "file": "Pdfe.Core.Tests/Content/OperatorCoverageTests.cs",
+          "file": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "test": "AuthoritativeOperatorInventory_AllStandardOperators_ParseAndRoundTrip",
           "fixture": "single authoritative content stream containing every Annex A operator",
           "covers": "operator-specific operands in an executable content stream"

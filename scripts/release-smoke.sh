@@ -267,7 +267,7 @@ run_dotnet_test_step() {
     return "$rc"
 }
 
-run_exciseditor_gui_display_step() {
+run_excise_gui_display_step() {
     local log="$1"
     local label="Excise.App.Tests GUI display sweep"
     local project="Excise.App.Tests/Excise.App.Tests.csproj"
@@ -361,7 +361,7 @@ run_full_tests_gate() {
             "2m" || rc=$?
     fi
     if [ "$rc" = "0" ]; then
-        run_exciseditor_gui_display_step "$log" || rc=$?
+        run_excise_gui_display_step "$log" || rc=$?
     fi
 
     local dur=$(( $(date +%s) - start ))
