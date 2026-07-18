@@ -74,21 +74,21 @@ public class InPageLinkClickTests
         // clicks/hovers via InteractionLayer forces single-page first
         // (IsTextSelectionMode/IsRedactionMode = true does this as a side
         // effect); this test never did, so it silently depended on
-        // single-page having been the default. Link-annotation hit testing
-        // is genuinely single-page-only today (HitTestLinkAt reads
-        // _overlayCanvas/_pdfImage/_currentSinglePageRenderDpi, none of which
-        // continuous mode populates) — tracked as a real product gap in #667,
-        // not papered over here. This test forces single-page explicitly,
-        // which is the correct scope for "does single-page link click work".
+        // single-page having been the default. Continuous mode has since
+        // grown its own link hit-testing (#667; covered by
+        // ContinuousLinkInteractionTests). This test forces single-page
+        // explicitly, which is the correct scope for "does single-page link
+        // click work".
 
         var vm = new MainWindowViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
         await Task.Delay(200);
 
-        // Link click/hover hit-testing only exists for single-page mode (#667
-        // tracks giving continuous mode its own). Force it explicitly instead
-        // of relying on whatever the app's current default happens to be.
+        // This test covers the SINGLE-PAGE link path; the continuous-mode
+        // path (#667) is covered by ContinuousLinkInteractionTests. Force
+        // single-page explicitly instead of relying on whatever the app's
+        // current default happens to be.
         vm.ViewMode = PdfViewMode.SinglePage;
 
         await vm.LoadDocumentAsync(pragmaticBook);

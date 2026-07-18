@@ -164,9 +164,9 @@ public class MouseInputTests
         // Every other InteractionLayer-based test in this file forces
         // single-page as a side effect of setting IsTextSelectionMode/
         // IsRedactionMode; this one never did, so it silently relied on
-        // single-page having been the default. Link click hit-testing is
-        // genuinely single-page-only today (see #667 for the continuous-mode
-        // gap) — force it explicitly here.
+        // single-page having been the default. Continuous mode has since
+        // grown its own link hit-testing (#667; ContinuousLinkInteractionTests)
+        // — this test's scope stays single-page, forced explicitly here.
         var vm = new MainWindowViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
@@ -665,9 +665,9 @@ public class MouseInputTests
         // above (see the detailed comment there for why the failure was a
         // TranslatePoint-through-a-hidden-ancestor problem, not a
         // document-size/layout-timing race, and why InteractionLayer's own
-        // Bounds is not the right thing to poll on). Link hit-testing is
-        // single-page-only today (#667 tracks the continuous-mode gap); force
-        // single-page here.
+        // Bounds is not the right thing to poll on). Continuous-mode link
+        // hover is covered by ContinuousLinkInteractionTests (#667); this
+        // test's scope stays single-page, forced here.
         var vm = new MainWindowViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();

@@ -20,7 +20,9 @@ namespace Pdfe.Avalonia.Controls;
 /// viewport are rendered, bitmaps are bounded, and off-screen renders are
 /// cancelled. This view is read-only — all editing happens in single-page mode
 /// (entering an editing interaction auto-switches back), so none of the
-/// security-critical redaction/selection overlays run here.
+/// security-critical redaction/selection overlays run here. Non-editing
+/// ambient affordances DO run here: link click/hover hit-testing maps pointer
+/// positions through the slot geometry below (#667, Interaction partial).
 /// </summary>
 public partial class PdfViewerControl
 {
@@ -33,6 +35,11 @@ public partial class PdfViewerControl
     // crash the render. Dropping the reference lets the GC reclaim it once no
     // slot/Image holds it. Full disposal happens only on document change.
     private readonly LinkedList<(ContinuousTileKey Key, WriteableBitmap Bitmap)> _continuousCache = new();
+
+    // Per-page PdfLink lists for continuous-mode link click/hover hit-testing
+    // (#667). Populated lazily by GetContinuousPageLinks (Interaction partial);
+    // cleared alongside the tile cache on document change / RenderVersion bump.
+    private readonly Dictionary<int, IReadOnlyList<Pdfe.Core.Document.PdfLink>> _continuousPageLinks = new();
     private readonly Dictionary<int, CancellationTokenSource> _continuousRenderCts = new();
     private readonly Dictionary<int, ContinuousTileKey> _continuousRenderKeys = new();
     // #615: this used to be a flat COUNT (`ContinuousCacheCapacity = 10`), unchanged
@@ -212,6 +219,7 @@ public partial class PdfViewerControl
         _pendingContinuousPage = null;
         foreach (var entry in _continuousCache) entry.Bitmap.Dispose();
         _continuousCache.Clear();
+        _continuousPageLinks.Clear();
     }
 
     /// <summary>
@@ -580,6 +588,44 @@ public partial class PdfViewerControl
         }
 
         return result + 1;
+    }
+
+    /// <summary>
+    /// Map a point in ContinuousItems coordinates (post-zoom dips, scroll
+    /// already accounted for because the ItemsControl scrolls as content) to
+    /// the page slot under it and the point's page-local dips (#667). Pure —
+    /// unit-tested in Pdfe.Avalonia.Tests without a window. Uses the same
+    /// TopDip/DisplayWidth/DisplayHeight layout math the tile renderer uses:
+    /// each slot's Border sits at TopDip and is horizontally centered within
+    /// the items width. Points in the inter-page gap or in the letterbox
+    /// margins beside a centered page map to nothing.
+    /// </summary>
+    internal static bool TryMapContinuousPointToPage(
+        IReadOnlyList<PdfPageSlot> slots,
+        double itemsWidthDip,
+        Point itemsPointDip,
+        out int pageNumber,
+        out Point pagePointDip)
+    {
+        pageNumber = 0;
+        pagePointDip = default;
+        if (slots.Count == 0) return false;
+
+        // Candidate = the slot whose bottom edge (incl. trailing gap) is the
+        // first to pass the point's Y; containment below rejects gap hits.
+        var candidate = FindTopVisibleContinuousPage(slots, itemsPointDip.Y);
+        var slot = slots[candidate - 1];
+
+        double yInPage = itemsPointDip.Y - slot.TopDip;
+        if (yInPage < 0 || yInPage > slot.DisplayHeight) return false;
+
+        double xOffset = Math.Max(0, (itemsWidthDip - slot.DisplayWidth) / 2);
+        double xInPage = itemsPointDip.X - xOffset;
+        if (xInPage < 0 || xInPage > slot.DisplayWidth) return false;
+
+        pageNumber = slot.PageNumber;
+        pagePointDip = new Point(xInPage, yInPage);
+        return true;
     }
 
     internal static bool TryCreateContinuousTileRequest(

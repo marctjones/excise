@@ -27,14 +27,11 @@ public partial class PdfViewerControl
         // a drawing tool — so the redaction/text-selection mode shouldn't
         // suppress them. We only consume the event when a link actually
         // hits, otherwise let the rest of the press handling continue.
-        // GetPosition relative to OverlayCanvas — that control sits INSIDE
-        // the LayoutTransformControl wrapper, so its local coordinate
-        // system is bitmap-native (pre-zoom). Asking for coords relative
-        // to the wrapper itself returns post-zoom values, which then
-        // miss every link rect when the user has zoomed at all (auto-
-        // fit-width on document load = always).
-        var pressPoint = GetPressPoint(e);
-        var linkHit = HitTestLinkAt(pressPoint);
+        // HitTestLinkForEvent picks the coordinate pipeline for the active
+        // view mode (single-page overlay vs continuous slot geometry, #667)
+        // but both funnel into this one dispatch switch — the link-activation
+        // policy (incl. #625's external/dangerous handling) is never forked.
+        var linkHit = HitTestLinkForEvent(e);
         if (linkHit != null)
         {
             switch (linkHit.Kind)
@@ -92,7 +89,7 @@ public partial class PdfViewerControl
         {
             try
             {
-                UpdateLinkHoverState(HitTestLinkAt(GetPressPoint(e)));
+                UpdateLinkHoverState(HitTestLinkForEvent(e));
             }
             catch
             {
@@ -263,6 +260,21 @@ public partial class PdfViewerControl
         }
     }
 
+    /// <summary>
+    /// Link hit-test for a pointer event in whatever view mode is active
+    /// (#667). Single-page mode reads the pointer relative to the overlay
+    /// canvas (bitmap-native, pre-zoom — see <see cref="GetPressPoint"/>);
+    /// continuous mode maps the pointer through the per-slot geometry the
+    /// tile renderer already uses. Both end in the same PDF content-space
+    /// rect containment, so a link behaves identically in either mode.
+    /// </summary>
+    private PdfLink? HitTestLinkForEvent(PointerEventArgs e)
+    {
+        return ViewMode == PdfViewMode.Continuous
+            ? HitTestContinuousLinkAt(e)
+            : HitTestLinkAt(GetPressPoint(e));
+    }
+
     private PdfLink? HitTestLinkAt(Point dipPoint)
     {
         EnsurePageLinksLoaded();
@@ -272,9 +284,47 @@ public partial class PdfViewerControl
         var contentPoint = PdfCoordinateMapper.ToContentPoints(
             page,
             PdfPageRect.ViewerDips(CurrentPage, dipPoint.X, dipPoint.Y, 0, 0, _currentSinglePageRenderDpi));
-        var pdfX = contentPoint.X;
-        var pdfY = contentPoint.Y;
-        foreach (var link in _currentPageLinks)
+        return FindLinkAt(_currentPageLinks, contentPoint.X, contentPoint.Y);
+    }
+
+    /// <summary>
+    /// Continuous-mode link hit-test (#667). The pointer position relative to
+    /// the ContinuousItems ItemsControl is mapped to (page, in-page dips) via
+    /// the same <see cref="PdfPageSlot"/> TopDip/DisplayWidth/DisplayHeight
+    /// layout math tile rendering uses, then to PDF content points through
+    /// <see cref="PdfCoordinateMapper"/>'s ContinuousDips space — which
+    /// handles the dip→point scale, the Y flip, and page /Rotate exactly the
+    /// way every other overlay conversion does. No new coordinate math.
+    /// </summary>
+    private PdfLink? HitTestContinuousLinkAt(PointerEventArgs e)
+    {
+        var doc = Document;
+        if (doc == null || _continuousItems == null || _continuousSlots == null) return null;
+        var zoom = ZoomLevel;
+        if (zoom <= 0) return null;
+
+        var itemsPoint = e.GetPosition(_continuousItems);
+        if (!TryMapContinuousPointToPage(
+                _continuousSlots, _continuousItems.Bounds.Width, itemsPoint,
+                out var pageNumber, out var pagePointDip))
+            return null;
+        if (pageNumber < 1 || pageNumber > doc.PageCount) return null;
+
+        var links = GetContinuousPageLinks(pageNumber);
+        if (links.Count == 0) return null;
+
+        var page = doc.GetPage(pageNumber);
+        var contentPoint = PdfCoordinateMapper.ToContentPoints(
+            page,
+            new PdfPageRect(pageNumber, pagePointDip.X, pagePointDip.Y, 0, 0,
+                PdfCoordinateSpace.ContinuousDips, PointsToDip * zoom));
+        return FindLinkAt(links, contentPoint.X, contentPoint.Y);
+    }
+
+    /// <summary>Rect containment over a page's link annotations, in PDF content points.</summary>
+    private static PdfLink? FindLinkAt(IReadOnlyList<PdfLink> links, double pdfX, double pdfY)
+    {
+        foreach (var link in links)
         {
             var r = link.Rect;
             if (pdfX >= r.Left && pdfX <= r.Right &&
@@ -282,6 +332,33 @@ public partial class PdfViewerControl
                 return link;
         }
         return null;
+    }
+
+    /// <summary>
+    /// Per-page link cache for continuous mode. Hover hit-testing runs on
+    /// every pointer move over the reading view and the view shows many
+    /// pages, so re-parsing /Annots per move is off the table — each page's
+    /// links are parsed once and kept until the document changes or the host
+    /// bumps RenderVersion (both call <see cref="InvalidateContinuousCache"/>,
+    /// which clears this cache). Link lists are tiny (a few rects), so an
+    /// unbounded per-document dictionary is fine where bitmaps were not.
+    /// </summary>
+    private IReadOnlyList<PdfLink> GetContinuousPageLinks(int pageNumber)
+    {
+        if (_continuousPageLinks.TryGetValue(pageNumber, out var cached))
+            return cached;
+
+        IReadOnlyList<PdfLink> links;
+        try
+        {
+            links = Document?.GetPage(pageNumber).GetLinks() ?? Array.Empty<PdfLink>();
+        }
+        catch
+        {
+            links = Array.Empty<PdfLink>();
+        }
+        _continuousPageLinks[pageNumber] = links;
+        return links;
     }
 
     /// <summary>
