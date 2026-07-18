@@ -1,5 +1,6 @@
 using System.IO;
 using AwesomeAssertions;
+using Excise.Core.Operations;
 using Excise.Core.Security;
 using Xunit;
 
@@ -199,6 +200,40 @@ public class PermissionEnforcementTests : IDisposable
         Program.RunAddField(pdf, output, "Text", "field1", 1, "100,100,300,130", null, [],
             ignorePermissions: true);
         File.Exists(output).Should().BeTrue();
+    }
+
+    // ---- page assembly: merge / split — #677 ---------------------------------
+
+    [Fact]
+    public void RunMerge_AssembleForbidden_FailsClosed_AndOverrides()
+    {
+        // Clear bit 11 (value 1024): page-assembly denied, everything else allowed.
+        var pdf = RestrictedFixture(-4 & ~1024);
+        var output = TempPath(".pdf");
+
+        var act = () => Program.RunMerge([pdf], output);
+        act.Should().Throw<Program.PdfPermissionDeniedException>()
+            .WithMessage("*bit 11*");
+        File.Exists(output).Should().BeFalse("a merge blocked by /P bit 11 must not produce a file");
+
+        Program.RunMerge([pdf], output, ignorePermissions: true);
+        File.Exists(output).Should().BeTrue();
+    }
+
+    [Fact]
+    public void RunSplit_AssembleForbidden_FailsClosed_AndOverrides()
+    {
+        var pdf = RestrictedFixture(-4 & ~1024);
+        var outDir = TempPath("");   // RunSplit creates the directory itself
+
+        var act = () => Program.RunSplit(pdf, outDir, PdfDocumentSplitter.SplitToSinglePages);
+        act.Should().Throw<Program.PdfPermissionDeniedException>()
+            .WithMessage("*bit 11*");
+        Directory.Exists(outDir).Should().BeFalse("a split blocked by /P bit 11 must not write fragments");
+
+        var written = Program.RunSplit(pdf, outDir, PdfDocumentSplitter.SplitToSinglePages,
+            ignorePermissions: true);
+        written.Should().NotBeEmpty();
     }
 
     [Fact]

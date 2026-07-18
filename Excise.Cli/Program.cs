@@ -745,18 +745,20 @@ partial class Program
             Description = "Output PDF path",
             Required = true,
         };
+        var ignorePermissionsOption = CreateIgnorePermissionsOption();
 
         var command = new Command(
             "merge",
             "Combine pages from multiple PDFs into a new document, preserving links, bookmarks, and form fields")
         {
-            inputOption, outputOption
+            inputOption, outputOption, ignorePermissionsOption
         };
 
         command.SetAction(parseResult =>
         {
             var inputs = parseResult.GetValue(inputOption);
             var output = parseResult.GetValue(outputOption)!;
+            var ignorePermissions = parseResult.GetValue(ignorePermissionsOption);
 
             if (inputs == null || inputs.Length == 0)
             {
@@ -777,7 +779,7 @@ partial class Program
 
             try
             {
-                int pageCount = RunMerge(inputs, output.FullName);
+                int pageCount = RunMerge(inputs, output.FullName, ignorePermissions);
                 Console.WriteLine($"Merged {inputs.Length} document(s), {pageCount} page(s) total");
                 Console.WriteLine($"Output: {output.FullName}");
             }
@@ -796,7 +798,7 @@ partial class Program
     /// <see cref="PdfDocumentMerger"/>, saves to <paramref name="outputPath"/>,
     /// and returns the merged page count. Exposed internally for tests.
     /// </summary>
-    internal static int RunMerge(string[] inputPaths, string outputPath)
+    internal static int RunMerge(string[] inputPaths, string outputPath, bool ignorePermissions = false)
     {
         var opened = new List<PdfDocument>();
         try
@@ -806,6 +808,10 @@ partial class Program
             {
                 var doc = PdfDocument.Open(File.ReadAllBytes(path));
                 opened.Add(doc);
+                // #677: assembling a source's pages into a new document requires
+                // that source's page-assembly permission (/P bit 11).
+                RequireDocumentPermission(doc, DocumentAction.AssembleDocument,
+                    $"merging pages from '{Path.GetFileName(path)}'", ignorePermissions);
                 sources.Add((doc, Enumerable.Range(0, doc.PageCount).ToList()));
             }
 
@@ -851,12 +857,13 @@ partial class Program
         {
             Description = "Comma-separated 1-based page numbers where a new output file starts, e.g. '1,5,10'",
         };
+        var ignorePermissionsOption = CreateIgnorePermissionsOption();
 
         var command = new Command(
             "split",
             "Split a PDF into multiple documents by page count, boundaries, or bookmarks")
         {
-            inputArg, outputOption, everyOption, singleOption, bookmarksOption, boundariesOption
+            inputArg, outputOption, everyOption, singleOption, bookmarksOption, boundariesOption, ignorePermissionsOption
         };
 
         command.SetAction(parseResult =>
@@ -867,6 +874,7 @@ partial class Program
             var single = parseResult.GetValue(singleOption);
             var bookmarks = parseResult.GetValue(bookmarksOption);
             var boundariesRaw = parseResult.GetValue(boundariesOption);
+            var ignorePermissions = parseResult.GetValue(ignorePermissionsOption);
 
             if (!input.Exists)
             {
@@ -900,15 +908,15 @@ partial class Program
                         Environment.ExitCode = 1;
                         return;
                     }
-                    written = RunSplit(input.FullName, output.FullName, doc => PdfDocumentSplitter.SplitEveryNPages(doc, every.Value));
+                    written = RunSplit(input.FullName, output.FullName, doc => PdfDocumentSplitter.SplitEveryNPages(doc, every.Value), ignorePermissions);
                 }
                 else if (single)
                 {
-                    written = RunSplit(input.FullName, output.FullName, PdfDocumentSplitter.SplitToSinglePages);
+                    written = RunSplit(input.FullName, output.FullName, PdfDocumentSplitter.SplitToSinglePages, ignorePermissions);
                 }
                 else if (bookmarks)
                 {
-                    written = RunSplit(input.FullName, output.FullName, PdfDocumentSplitter.SplitAtBookmarks);
+                    written = RunSplit(input.FullName, output.FullName, PdfDocumentSplitter.SplitAtBookmarks, ignorePermissions);
                 }
                 else
                 {
@@ -923,7 +931,7 @@ partial class Program
                         Environment.ExitCode = 1;
                         return;
                     }
-                    written = RunSplit(input.FullName, output.FullName, doc => PdfDocumentSplitter.SplitAtPageBoundaries(doc, boundaries));
+                    written = RunSplit(input.FullName, output.FullName, doc => PdfDocumentSplitter.SplitAtPageBoundaries(doc, boundaries), ignorePermissions);
                 }
 
                 Console.WriteLine($"Split into {written.Count} file(s)");
@@ -949,10 +957,16 @@ partial class Program
     internal static IReadOnlyList<string> RunSplit(
         string inputPath,
         string outputFolder,
-        Func<PdfDocument, IReadOnlyList<PdfDocument>> split)
+        Func<PdfDocument, IReadOnlyList<PdfDocument>> split,
+        bool ignorePermissions = false)
     {
         var bytes = File.ReadAllBytes(inputPath);
         using var doc = PdfDocument.Open(bytes);
+
+        // #677: splitting a document into fragment PDFs is a page-assembly
+        // operation, governed by the source's /P bit 11.
+        RequireDocumentPermission(doc, DocumentAction.AssembleDocument,
+            "splitting this document", ignorePermissions);
 
         Directory.CreateDirectory(outputFolder);
         var fragments = split(doc);
