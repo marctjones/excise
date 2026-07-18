@@ -68,7 +68,10 @@ public class PdfDocumentWriterEncryptionTests
 
         text.Should().NotContain(secretMarker,
             "the content stream must be AES-256 encrypted, not written as plaintext");
-        text.Should().NotContain("BT", "text-showing operators must not be visible in ciphertext");
+        // Deterministic replacement for the former flaky NotContain("BT"): the
+        // marker's absence above already proves the stream is ciphertext, and
+        // "BT" (2 bytes) occurs in random AES ciphertext by chance (#674).
+        text.Should().Contain("/Encrypt", "the saved file must actually be encrypted");
     }
 
     [Fact]
@@ -282,8 +285,12 @@ public class PdfDocumentWriterEncryptionTests
         var bytes = SaveEncrypted(doc, new PdfEncryptionOptions { Algorithm = PdfEncryptionAlgorithm.Aes128 });
         var text = Encoding.Latin1.GetString(bytes);
 
+        // The unique marker being absent from the saved bytes deterministically
+        // proves the content stream is ciphertext, not plaintext. (The former
+        // NotContain("BT") assertion was flaky — the 2-byte operator "BT" occurs
+        // in random AES ciphertext by chance, #674.)
         text.Should().NotContain(secretMarker);
-        text.Should().NotContain("BT");
+        text.Should().Contain("/Encrypt", "the saved file must actually be encrypted");
     }
 
     [Fact]

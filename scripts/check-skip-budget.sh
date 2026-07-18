@@ -95,12 +95,33 @@ if [[ "$UPDATE" == "--update" ]]; then
   # through to "TODO: justify or fix" regardless of what was there (#663).
   # Grepping against $OLD instead of the file sidesteps the ordering bug.
   OLD="$(cat "$ALLOWLIST" 2>/dev/null || true)"
+
+  # Preserve hand-written comment BLOCKS across --update (#668). A comment block
+  # that precedes an entry is a human note about that skip (e.g. a
+  # "# --- veraPDF-dependent ---" grouping header). Previously --update emitted
+  # only the auto-header + entries, silently discarding those notes. Tag every
+  # hand-written comment line with the entry it immediately precedes, so notes
+  # travel with their test across the sort. The regenerated auto-header is
+  # filtered out so it can't accumulate. Map lines: NAME<TAB>comment.
+  printf '%s\n' "$OLD" | awk '
+    /^# (Skips allow-listed for|Every line is coverage we are NOT getting|Format:  TestName)/ { next }
+    /^#$/ { next }
+    /^[[:space:]]*#/ { buf[++n] = $0; next }        # hand-written comment
+    /^[[:space:]]*$/ { n = 0; next }                # blank line ends a block
+    {
+      name = $0; sub(/[[:space:]]*#.*$/, "", name); sub(/[[:space:]]*$/, "", name);
+      for (i = 1; i <= n; i++) printf "%s\t%s\n", name, buf[i];
+      n = 0;
+    }' > "$TMP/comment-map.txt"
+
   {
     echo "# Skips allow-listed for $NAME. See scripts/check-skip-budget.sh (#619)."
     echo "# Every line is coverage we are NOT getting. Justify it or delete it."
     echo "# Format:  TestName   # why"
     echo "#"
     while IFS= read -r name; do
+      # Re-emit any hand-written comment block that preceded this entry (#668).
+      awk -F'\t' -v n="$name" '$1 == n { sub(/^[^\t]*\t/, ""); print }' "$TMP/comment-map.txt"
       # `|| true` is load-bearing: with `set -e -o pipefail`, a grep that finds
       # nothing (the common case — a brand-new skip) returns 1 and would abort
       # the script mid-write, leaving an allowlist containing only its header.
