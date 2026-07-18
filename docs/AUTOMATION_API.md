@@ -27,8 +27,9 @@ pdfe batch workflow.json --json --progress --output report.json
 ```
 
 `--password` is supported by `info`, `text`, `render`, `redact`, and batch
-workflow document-open steps. Password values are accepted as inputs but are
-not written to JSON reports or progress events.
+workflow document-open steps.
+Password values are accepted as inputs but are not written to JSON reports
+or progress events.
 
 ## Batch Workflow Schema
 
