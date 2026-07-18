@@ -95,9 +95,16 @@ if [[ -z "${rewritten// /}" ]]; then
 fi
 
 # Escape hatch: an explicit, reviewed acknowledgement in the commit message.
-if git log "$BASE..HEAD" --format=%B | grep -qi '^Correctness-Expectations-Changed:'; then
+# Capture first instead of `grep -q` in the condition: under `set -o
+# pipefail`, `grep -q` exits on the FIRST match and closes its stdin, so on
+# a large range `git log` dies with SIGPIPE (exit 141) and the pipeline
+# "fails" even though the trailer WAS found — silently skipping this hatch
+# exactly when the range is big enough to matter (observed on the 56-commit
+# v2.30.0 push range, whose head commit carried a valid trailer).
+trailers="$(git log "$BASE..HEAD" --format=%B | { grep -i '^Correctness-Expectations-Changed:' || true; })"
+if [[ -n "$trailers" ]]; then
   echo "==> gate asymmetry: expectations changed, but ACKNOWLEDGED in the commit message."
-  git log "$BASE..HEAD" --format=%B | grep -i '^Correctness-Expectations-Changed:' | sed 's/^/    /'
+  echo "$trailers" | sed 's/^/    /'
   exit 0
 fi
 
