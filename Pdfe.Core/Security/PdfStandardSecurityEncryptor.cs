@@ -73,12 +73,27 @@ internal sealed class PdfStandardSecurityEncryptor
     /// permission bitmask.
     /// </summary>
     /// <param name="userPasswordBytes">User password bytes (UTF-8 encoded by the caller). Empty array for an empty password.</param>
-    /// <param name="ownerPasswordBytes">Owner password bytes (UTF-8 encoded by the caller). Empty array for an empty password.</param>
+    /// <param name="ownerPasswordBytes">Owner password bytes (UTF-8 encoded by the caller). Empty array falls back to the user password — see the security note in the method body.</param>
     /// <param name="permissions">The /P permission bitmask (signed 32-bit).</param>
     /// <param name="encryptMetadata">Whether /EncryptMetadata is true.</param>
     public static PdfStandardSecurityEncryptor CreateR6(
         byte[] userPasswordBytes, byte[] ownerPasswordBytes, long permissions, bool encryptMetadata)
     {
+        // SECURITY: an empty owner password with a non-empty user password
+        // would make /O and /OE validate against the EMPTY password — and
+        // per spec the owner password confers full authority, so qpdf,
+        // Ghostscript, and pdftoppm would all silently open the "protected"
+        // file with no password at all, bypassing the user password
+        // entirely. Fall back to the user password as the owner password,
+        // mirroring what CreateR4's Algorithm 3 step (a) already does for
+        // R<=4 ("if there is no owner password, use the user password") and
+        // what qpdf's own writer does semantically. Found empirically via a
+        // no-password qpdf --requires-password probe after the #644 interop
+        // gate landed; the gate's matrix now pins this case for both
+        // algorithms.
+        if (ownerPasswordBytes.Length == 0 && userPasswordBytes.Length > 0)
+            ownerPasswordBytes = userPasswordBytes;
+
         var fileKey = RandomNumberGenerator.GetBytes(32);
 
         // Algorithm 8: /U and /UE from the user password. userKey parameter

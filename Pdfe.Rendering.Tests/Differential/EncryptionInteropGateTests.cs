@@ -247,6 +247,51 @@ public class EncryptionInteropGateTests : IClassFixture<EncryptionGateFixtures>
 
     [Theory]
     [MemberData(nameof(BothAlgorithms))]
+    public void Qpdf_UserPasswordOnly_NoPasswordIsStillRejected(PdfEncryptionAlgorithm algorithm)
+    {
+        // SECURITY REGRESSION PIN: with a user password and NO owner
+        // password, the R6 writer originally emitted /O//OE that validated
+        // against the EMPTY password — and since the owner password confers
+        // full authority, qpdf ("Supplied password is owner password"),
+        // Ghostscript, and pdftoppm all opened the "protected" file with no
+        // password at all. Caught by a manual qpdf --requires-password
+        // probe AFTER this gate first went green: the original matrix only
+        // ever built dual-password fixtures, so the shipped-by-default
+        // `pdfe encrypt --user-password X` shape was never tested. R4 was
+        // never vulnerable (Algorithm 3 step (a) falls back to the user
+        // password); CreateR6 now does the same.
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not on PATH");
+        var path = _fx.UserOnlyEncryptedPath(algorithm);
+
+        QpdfReferenceTool.RequiresPassword(path).Should().Be(QpdfPasswordStatus.PasswordRequired,
+            "a user-password-only file must reject a passwordless open — PasswordCorrect here " +
+            "means the empty owner password grants full authority, silently bypassing the user password");
+        QpdfReferenceTool.RequiresPassword(path, User).Should().Be(QpdfPasswordStatus.PasswordCorrect,
+            "the user password must still open its own file");
+    }
+
+    [Theory]
+    [MemberData(nameof(BothAlgorithms))]
+    public void Pdftoppm_UserPasswordOnly_NoPasswordProducesNoRendering(PdfEncryptionAlgorithm algorithm)
+    {
+        // Renderer-side pin of the empty-owner bypass (see
+        // Qpdf_UserPasswordOnly_NoPasswordIsStillRejected): pdftoppm
+        // rendered the user-password-only fixture passwordless before the
+        // CreateR6 fallback landed.
+        Assert.SkipUnless(PdftoppmReferenceRenderer.IsAvailable, "pdftoppm not on PATH");
+        var path = _fx.UserOnlyEncryptedPath(algorithm);
+
+        var noPassword = PdftoppmReferenceRenderer.TryRenderPage(path, 1, 72);
+        noPassword.Bitmap.Should().BeNull(
+            "a user-password-only file must not render without a password " +
+            $"(status: {noPassword.Status})");
+
+        var withPassword = PdftoppmReferenceRenderer.TryRenderPage(path, 1, 72, 30_000, userPassword: User);
+        withPassword.Bitmap.Should().NotBeNull("the user password must still render its own file");
+    }
+
+    [Theory]
+    [MemberData(nameof(BothAlgorithms))]
     public void Qpdf_PermissionsMask_ReportedSemanticallyExactlyAsSet(PdfEncryptionAlgorithm algorithm)
     {
         Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not on PATH");
@@ -453,6 +498,7 @@ public sealed class EncryptionGateFixtures : IDisposable
 
     private readonly string _tempDir;
     private readonly Dictionary<PdfEncryptionAlgorithm, string> _encrypted = new();
+    private readonly Dictionary<PdfEncryptionAlgorithm, string> _userOnly = new();
 
     public string PlainPath { get; }
 
@@ -467,23 +513,49 @@ public sealed class EncryptionGateFixtures : IDisposable
 
         foreach (var algorithm in new[] { PdfEncryptionAlgorithm.Aes256, PdfEncryptionAlgorithm.Aes128 })
         {
-            using var doc = PdfDocument.Open(documentBytes);
-            var path = Path.Combine(_tempDir, $"encrypted-{algorithm}.pdf");
-            using (var fs = new FileStream(path, FileMode.Create, FileAccess.Write))
+            using (var doc = PdfDocument.Open(documentBytes))
             {
-                new PdfDocumentWriter(doc, new PdfEncryptionOptions
+                var path = Path.Combine(_tempDir, $"encrypted-{algorithm}.pdf");
+                using (var fs = new FileStream(path, FileMode.Create, FileAccess.Write))
                 {
-                    Algorithm = algorithm,
-                    UserPassword = UserPassword,
-                    OwnerPassword = OwnerPassword,
-                    Permissions = RestrictivePermissions,
-                }).Write(fs);
+                    new PdfDocumentWriter(doc, new PdfEncryptionOptions
+                    {
+                        Algorithm = algorithm,
+                        UserPassword = UserPassword,
+                        OwnerPassword = OwnerPassword,
+                        Permissions = RestrictivePermissions,
+                    }).Write(fs);
+                }
+                _encrypted[algorithm] = path;
             }
-            _encrypted[algorithm] = path;
+
+            // User-password-only fixture: no owner password supplied. The
+            // empty-owner bypass (an /O//OE pair validating against the
+            // EMPTY password grants passwordless FULL authority in qpdf,
+            // Ghostscript, and pdftoppm) shipped exactly this configuration
+            // and was invisible to the dual-password matrix above — see
+            // Qpdf_UserPasswordOnly_NoPasswordIsStillRejected.
+            using (var doc = PdfDocument.Open(documentBytes))
+            {
+                var path = Path.Combine(_tempDir, $"encrypted-useronly-{algorithm}.pdf");
+                using (var fs = new FileStream(path, FileMode.Create, FileAccess.Write))
+                {
+                    new PdfDocumentWriter(doc, new PdfEncryptionOptions
+                    {
+                        Algorithm = algorithm,
+                        UserPassword = UserPassword,
+                        OwnerPassword = null,
+                        Permissions = RestrictivePermissions,
+                    }).Write(fs);
+                }
+                _userOnly[algorithm] = path;
+            }
         }
     }
 
     public string EncryptedPath(PdfEncryptionAlgorithm algorithm) => _encrypted[algorithm];
+
+    public string UserOnlyEncryptedPath(PdfEncryptionAlgorithm algorithm) => _userOnly[algorithm];
 
     public void Dispose()
     {

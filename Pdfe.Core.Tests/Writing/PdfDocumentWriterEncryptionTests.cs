@@ -337,6 +337,39 @@ public class PdfDocumentWriterEncryptionTests
     }
 
     [Fact]
+    public void Write_UserPasswordOnly_OwnerEntriesDoNotValidateAgainstTheEmptyPassword()
+    {
+        // SECURITY REGRESSION PIN: a user password with no owner password
+        // must NOT produce /O//OE entries that validate against the EMPTY
+        // password — the owner password confers full authority, so an
+        // empty-owner file opens passwordless in qpdf/gs/pdftoppm, silently
+        // bypassing the user password. CreateR6 (like CreateR4's Algorithm 3
+        // step (a) always did) now falls back to the user password as the
+        // owner password. Found via a no-password qpdf probe after #644's
+        // gate landed (the gate matrix only covered dual-password files);
+        // the qpdf/gs/pdftoppm side is pinned in
+        // EncryptionInteropGateTests' user-password-only cases.
+        foreach (var algorithm in new[] { PdfEncryptionAlgorithm.Aes256, PdfEncryptionAlgorithm.Aes128 })
+        {
+            using var doc = PdfDocument.Open(CreateSimplePdf("User Only Secret"));
+            var bytes = SaveEncrypted(doc, new PdfEncryptionOptions
+            {
+                Algorithm = algorithm,
+                UserPassword = "the-only-password",
+                OwnerPassword = null,
+            });
+
+            var openEmpty = () => PdfDocument.Open(bytes);
+            openEmpty.Should().Throw<Pdfe.Core.Parsing.PdfEncryptionNotSupportedException>(
+                $"[{algorithm}] a user-password-only file must reject the empty password — " +
+                "an empty owner password would be a silent full-authority bypass");
+
+            using var viaUser = PdfDocument.Open(bytes, userPassword: "the-only-password");
+            viaUser.GetPage(1).Text.Should().Contain("User Only Secret");
+        }
+    }
+
+    [Fact]
     public void RoundTrip_Aes128_DifferentUserAndOwnerPasswords_UserPasswordOpensTheFile()
     {
         using var doc = PdfDocument.Open(CreateSimplePdf("R4 Dual Password Text"));
