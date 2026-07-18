@@ -584,3 +584,39 @@ jobs:
             **/TestResults/
             **/*.trx
           retention-days: 7
+
+  # ── Native AOT release lane (#590) ───────────────────────────────────────
+  #    Publishes Excise.App with NativeAOT and packages the macOS .app, so an
+  #    AOT-compile regression fails CI. First-party Excise.* code is AOT-clean
+  #    (source-gen JSON, no reflection-based ReactiveUI WhenAnyValue); the only
+  #    remaining warnings are third-party GUI-framework roll-ups, suppressed in
+  #    Excise.App.csproj and tracked in #593. Runtime GUI validation is covered
+  #    by scripts/run-aot-smoke.sh --gui-smoke locally / release-smoke --aot.
+  #    osx-arm64 is validated; other RIDs are #595.
+  aot-macos:
+    name: Native AOT (macOS)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache nuget
+        uses: actions/cache@v5
+        with:
+          path: ~/.nuget/packages
+          key: nuget-macos-aot-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-macos-aot-
+
+      - name: AOT publish + macOS .app package
+        run: scripts/run-aot-smoke.sh --output logs/aot-ci
+
+      - name: Upload AOT evidence on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: aot-evidence
+          path: logs/aot-ci/
+          retention-days: 7

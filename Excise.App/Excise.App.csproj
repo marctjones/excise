@@ -24,6 +24,9 @@
        runtime C# compiler. Builders can opt in with -p:EnableScripting=true.
        Tracked in #341 / #342. -->
   <PropertyGroup>
+    <!-- Roslyn scripting embeds a runtime C# compiler that NativeAOT cannot
+         compile — force it off for any AOT publish regardless of configuration. -->
+    <EnableScripting Condition="'$(EnableScripting)' == '' and '$(PublishAot)' == 'true'">false</EnableScripting>
     <EnableScripting Condition="'$(EnableScripting)' == '' and '$(Configuration)' == 'Release'">false</EnableScripting>
     <EnableScripting Condition="'$(EnableScripting)' == ''">true</EnableScripting>
     <IncludeTessdataInApp Condition="'$(IncludeTessdataInApp)' == ''">false</IncludeTessdataInApp>
@@ -33,10 +36,9 @@
   <!-- Release startup/responsiveness tuning (#339). These only take effect for
        Release builds; PublishReadyToRun additionally only activates on a
        `dotnet publish -r <rid>`, so a plain `dotnet build` is unaffected.
-       NativeAOT and full trimming are deliberately NOT enabled here; Roslyn
-       scripting is no longer a default Release blocker, but ReactiveUI and
-       preview UI controls still need dedicated AOT validation (#342 / #343).
-       Workstation (not Server)
+       NativeAOT is not the default Release publish mode (ReadyToRun above is),
+       but it is now a validated opt-in lane — see the `PublishAot` PropertyGroup
+       below and #590. Workstation (not Server)
        GC with concurrent collection is the right tradeoff for a desktop UI:
        it minimises pause times so the window never hitches. -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
@@ -49,6 +51,25 @@
     <!-- Low-pause GC for a responsive UI thread. -->
     <ServerGarbageCollection>false</ServerGarbageCollection>
     <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+  </PropertyGroup>
+
+  <!-- Native AOT publish lane (#590). Enable with `dotnet publish -p:PublishAot=true
+       -r <rid>` (or scripts/run-aot-smoke.sh). Validated: the GUI AOT-compiles and
+       passes the packaged GUI smoke on osx-arm64. First-party Excise.* code is
+       AOT-clean (source-generated JSON via ExciseJsonContext, no reflection-based
+       ReactiveUI WhenAnyValue). The only remaining warnings are assembly-level
+       roll-ups (IL2104 trim / IL3053 AOT) from third-party GUI frameworks that are
+       not AOT-annotated but function under AOT as the smoke confirms —
+       ReactiveUI.Avalonia, FluentAvalonia, Avalonia.Controls.DataGrid, CSJ2K.
+       They are acknowledged here so the AOT build meets the project's zero-warning
+       bar; per-assembly triage is tracked in #593. -->
+  <PropertyGroup Condition="'$(PublishAot)' == 'true'">
+    <!-- ReadyToRun and NativeAOT are mutually exclusive publish modes; the
+         Release block above turns R2R on, so it must be turned back off here. -->
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <!-- PDF text handling needs culture data; do NOT trim globalization. -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <NoWarn>$(NoWarn);IL2104;IL3053</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
