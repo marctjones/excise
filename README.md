@@ -609,7 +609,7 @@ Contributions welcome. The biggest open areas tracked in GitHub Issues:
 - In-place text editing (change text inside a paragraph with reflow)
 - Annotation authoring (highlight / underline / sticky-note / freehand drawing)
 - E-signature workflow (click-to-sign + multi-party + audit trail)
-- PDF encryption authoring (we read encrypted PDFs but can't write them)
+- PDF encryption round-tripping (reading and writing AES-256/AES-128 encrypted PDFs landed with #639-#642; preserving a source document's encryption across redact/edit saves is #643, and the multi-reader interop gate is #644)
 - PDF → DOCX conversion
 - PDF compare / diff
 - Field-properties dialog for AcroForm authoring (rename, /Q alignment, JS actions, validation)
