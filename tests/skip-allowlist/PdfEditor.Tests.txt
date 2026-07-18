@@ -41,3 +41,5 @@ PdfEditor.Tests.UI.DocumentPermissionEnforcementTests.ToggleFormAuthoringMode_Mo
 PdfEditor.Tests.UI.DocumentPermissionEnforcementTests.ToggleTypewriterMode_ModifyForbidden_StaysOff_WithToast   # needs gitignored poppler copy-forbidden fixture (#642)
 PdfEditor.Tests.UI.EncryptedDocumentSaveWarningTests.SaveDocument_EncryptedSource_PreservesPermissionsMask   # needs gitignored encrypted corpus fixture (#643 preservation)
 PdfEditor.Tests.UI.EncryptedDocumentSaveWarningTests.SaveFileAsAsync_EncryptedSource_SavesEncrypted_WithoutAskingAnything   # needs gitignored encrypted corpus fixture (#643 preservation; replaces the deleted #638-era confirmation tests)
+PdfEditor.Tests.UI.ContinuousLinkInteractionTests.ClickOnTocLink_InContinuousMode_NavigatesToDestinationPage   # needs gitignored local-real-world book fixture with a TOC (#667 continuous-mode link tests)
+PdfEditor.Tests.UI.ContinuousLinkInteractionTests.HoverOverTocLink_InContinuousMode_ShowsHandCursorAndRaisesLinkHovered   # needs gitignored local-real-world book fixture with a TOC (#667 continuous-mode link tests)

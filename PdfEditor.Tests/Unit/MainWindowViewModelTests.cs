@@ -153,7 +153,6 @@ public class MainWindowViewModelTests
             loadedDuringAction.Add(e.LoadedAssembly.GetName().Name ?? "");
         AppDomain.CurrentDomain.AssemblyLoad += handler;
 
-        bool wasAlreadyLoaded = IsAssemblyLoaded("Pdfe.Ocr");
         try
         {
             _viewModel.RevealHiddenText = true;
@@ -169,16 +168,15 @@ public class MainWindowViewModelTests
             "OCR shells out to an external tesseract binary and must stay behind an " +
             "explicit rasterized-scan request");
 
-        // (1) — the strong check, only meaningful in a process that has not
-        // already loaded OCR. The skip is allow-listed, so it cannot disappear
-        // unnoticed (scripts/check-skip-budget.sh).
-        Assert.SkipWhen(wasAlreadyLoaded,
-            "Pdfe.Ocr was already loaded by an earlier test in this process — the " +
-            "absolute check cannot distinguish 'we loaded it' from 'it was here'. " +
-            "This skip is allow-listed and budget-enforced (#619).");
-
-        IsAssemblyLoaded("Pdfe.Ocr").Should().BeFalse(
-            "ordinary hidden-text reveal should stay structural-only until rasterized OCR is explicitly requested");
+        // The former "absolute" companion check (SkipWhen an earlier test
+        // had already loaded OCR, then IsAssemblyLoaded false) is GONE on
+        // purpose: its skip depended on suite composition/order, so the
+        // #619 skip budget flip-flopped whenever unrelated tests were added
+        // or removed — it broke CI in BOTH directions across consecutive
+        // pushes. The order-independent watch above asserts the same
+        // property (this toggle does not pull OCR in) deterministically in
+        // every run; an absolute cold-process proof would need a dedicated
+        // test process, not worth a budget-unstable sometimes-skip.
     }
 
     [Fact]
