@@ -164,7 +164,10 @@ public class RedactionService
             }
 
             int totalMatches = doc.RedactText(textToRedact, caseSensitive);
-            doc.Save(outputPath);
+            // #643: this path opens without a password, so only empty-user-
+            // password encrypted sources reach here — their redacted output
+            // stays encrypted with the same parameters.
+            doc.Save(outputPath, doc.GetReEncryptionOptions(userPassword: null));
 
             if (totalMatches > 0)
                 _redactedTerms.Add(textToRedact);

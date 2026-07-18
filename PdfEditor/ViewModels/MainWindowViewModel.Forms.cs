@@ -284,17 +284,14 @@ public partial class MainWindowViewModel
         if (document == null)
             return;
 
-        if (!await ConfirmEncryptionLossIfNeededAsync(document.IsEncrypted))
-        {
-            _logger.LogInformation("User declined to save a copy that would drop source encryption");
-            return;
-        }
-
         SyncAllFormFieldValuesToServiceDocument();
         using var flattenedCopy = PdfDocument.Open(document.SaveToBytes());
         ApplyPendingTypewriterText(flattenedCopy);
         flattenedCopy.FlattenAcroForm();
-        flattenedCopy.Save(filePath);
+        // #643: an encrypted source's flattened copy stays encrypted with the
+        // same parameters and password. (The in-memory round-trip above is
+        // plaintext by design; encryption is re-applied on the final write.)
+        flattenedCopy.Save(filePath, _documentService.GetReEncryptionOptions());
         ClearPendingTypewriterText();
         FileState.MarkSaved();
 

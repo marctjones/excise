@@ -572,12 +572,16 @@ namespace Pdfe.Core.Document
         public Pdfe.Core.Document.PdfPage GetPage(int pageNumber) { }
         public string? GetPageLabel(int pageNumber) { }
         public System.Collections.Generic.IEnumerable<Pdfe.Core.Document.PdfPage> GetPages() { }
+        public Pdfe.Core.Security.PdfEncryptionOptions? GetReEncryptionOptions(string? userPassword) { }
         public Pdfe.Core.Document.PdfStructElement? GetStructureTree() { }
         public byte[]? GetXmpMetadata() { }
         public Pdfe.Core.Primitives.PdfObject Resolve(Pdfe.Core.Primitives.PdfObject obj) { }
         public void Save(System.IO.Stream outputStream) { }
         public void Save(string path) { }
+        public void Save(System.IO.Stream outputStream, Pdfe.Core.Security.PdfEncryptionOptions? encryptionOptions) { }
+        public void Save(string path, Pdfe.Core.Security.PdfEncryptionOptions? encryptionOptions) { }
         public byte[] SaveToBytes() { }
+        public byte[] SaveToBytes(Pdfe.Core.Security.PdfEncryptionOptions? encryptionOptions) { }
         public void ScrubEmbeddedFiles() { }
         public void ScrubInfoKeys(params string[] keys) { }
         public void ScrubMetadata(bool scrubAttachments = true) { }
@@ -1583,6 +1587,7 @@ namespace Pdfe.Core.Security
     }
     public sealed class PdfStandardSecurityHandler
     {
+        public bool EncryptMetadata { get; }
         public int KeyLengthBytes { get; }
         public int R { get; }
         public bool UsesAes { get; }

@@ -357,7 +357,10 @@ public partial class MainWindowViewModel
                     var report = _redactedCopySafetyService.PrepareRedactedCopy(
                         redactedDocument,
                         requestedRedactions);
-                    redactedDocument.Save(filePath);
+                    // #643: keep an encrypted source's protection on the final
+                    // scripted output (the intermediate files carried it too —
+                    // see RedactionService.RedactText).
+                    redactedDocument.Save(filePath, _documentService.GetReEncryptionOptions());
 
                     _logger.LogInformation(
                         "[SCRIPT] Safe-share scrub and verification completed for text redaction output; warnings: {HasWarnings}",
@@ -399,7 +402,9 @@ public partial class MainWindowViewModel
                 }
 
                 _logger.LogInformation("[SCRIPT] Saving PDF to: {Path}", filePath);
-                document.Save(filePath);
+                // #643: an encrypted source saves encrypted with the same
+                // parameters and password.
+                document.Save(filePath, _documentService.GetReEncryptionOptions());
             }
 
             // Update current file path to point to the saved file

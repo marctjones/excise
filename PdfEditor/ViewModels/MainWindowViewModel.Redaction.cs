@@ -146,12 +146,6 @@ public partial class MainWindowViewModel
                 return;
             }
 
-            if (!await ConfirmEncryptionLossIfNeededAsync(document.IsEncrypted))
-            {
-                _logger.LogInformation("User declined to save a copy that would drop source encryption");
-                return;
-            }
-
             var requestedRedactions = RedactionWorkflow.PendingRedactions.ToList();
             var skippedRedactionCount = ApplyPendingAreaRedactions(document);
             ApplyPendingTypewriterText(document);
@@ -161,7 +155,9 @@ public partial class MainWindowViewModel
                 skippedRedactionCount);
 
             _logger.LogInformation("Saving redacted PDF to: {Path}", saveFilePath);
-            document.Save(saveFilePath);
+            // #643: the redacted copy of an encrypted source stays encrypted
+            // with the same parameters and password.
+            document.Save(saveFilePath, _documentService.GetReEncryptionOptions());
             _hasInMemoryModifications = false;
 
             RedactionWorkflow.MoveToApplied();

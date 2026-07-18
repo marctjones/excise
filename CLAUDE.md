@@ -651,13 +651,24 @@ and cost real planning time.
    display polish — #513 must not start until this gate is green on its
    changes.
 2. **Font Metrics**: approximation, not full font dictionaries (#512, #513).
-3. **Encryption is decrypt-only** (#624) — the writer emits no `/Encrypt`, so
-   redacting a password-protected PDF still returns an **unprotected** copy.
-   As of #638 this is no longer silent: the GUI asks for explicit
-   confirmation before any save that would drop source encryption, and the
-   CLI/batch-automation paths hard-fail unless `--allow-decrypt` /
-   `allowDecrypt: true` is passed. The capability gap (#624) is unchanged —
-   only the silence is fixed.
+3. **Encryption round-trips, with an upgrade-only caveat** (#639/#640/#643;
+   umbrella #624) — the writer emits AES-256 (V5 R6) and AES-128 (V4 R4
+   AESV2) `/Encrypt`, and since #643 a document opened encrypted SAVES
+   encrypted by default on every mutating path (GUI save/redact/flatten,
+   scripting, CLI `redact`/`fill-form`/`add-field`/`autodetect-fields
+   --apply`/`make-searchable`, batch `redaction.apply`): same algorithm,
+   same `/P`, same `/EncryptMetadata`, same password
+   (`PdfDocument.GetReEncryptionOptions` + the `Save(path, options)`
+   overloads; plain `Save()` stays plaintext by design). Caveats: RC4
+   sources (V1/V2, V4 CFM=V2) re-encrypt **upgraded to AES-256** — the
+   writer never emits RC4; the source's distinct *owner* password is
+   unrecoverable from a user open (#324) so the user password is reused for
+   both; and `--allow-decrypt` / `allowDecrypt: true` now means the explicit
+   opt-OUT to write plaintext (#638's fail-closed gate and its
+   `DECRYPT_CONFIRMATION_REQUIRED` batch error are gone — there is no
+   forced loss left to confirm). GUI-side, dropping protection is only
+   reachable via the Security dialog's Remove Protection (#641). The
+   multi-reader interop gate is #644.
 4. **`/P` permissions enforced at the action layer only** (#642) — the decoded
    mask is `document.Permissions` / `EffectivePermissions`
    (`Pdfe.Core/Security/PdfPermissions.cs`, bit meanings qpdf-verified).

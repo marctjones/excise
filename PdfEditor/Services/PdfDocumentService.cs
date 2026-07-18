@@ -24,12 +24,33 @@ public class PdfDocumentService
     public bool IsDocumentLoaded => _currentDocument != null;
 
     /// <summary>
-    /// Whether the currently-loaded document's source was encrypted. pdfe's
-    /// writer cannot emit <c>/Encrypt</c> (#624), so any save of this
-    /// document produces an unprotected copy — callers must warn before
-    /// saving when this is true (#638).
+    /// Whether the currently-loaded document's source was encrypted. When
+    /// true, <see cref="SaveDocument"/> re-encrypts the output with the same
+    /// algorithm/permissions and the password the document was opened with
+    /// (#643) — dropping protection is only done via the explicit Security
+    /// dialog "Remove Protection" action (#641).
     /// </summary>
     public bool IsEncrypted => _currentDocument?.IsEncrypted ?? false;
+
+    /// <summary>
+    /// Encryption options that preserve the current document's source
+    /// protection on save (#643): same algorithm (RC4 sources upgraded to
+    /// AES-256), same permissions, same metadata-coverage choice, and the
+    /// password the document was opened with. Null when no document is
+    /// loaded or the source was not encrypted — safe to pass straight to
+    /// <see cref="PdfDocument.Save(string, Pdfe.Core.Security.PdfEncryptionOptions?)"/>.
+    /// </summary>
+    public Pdfe.Core.Security.PdfEncryptionOptions? GetReEncryptionOptions()
+        => _currentDocument?.GetReEncryptionOptions(_currentUserPassword);
+
+    /// <summary>
+    /// The password the current document was successfully opened with
+    /// (null for none/empty). Needed since #643 because a preserving save
+    /// writes ENCRYPTED output, so the app's own post-save reload paths
+    /// must reopen that output with the same password instead of failing
+    /// or re-prompting the user for a password they already entered.
+    /// </summary>
+    public string? CurrentUserPassword => _currentUserPassword;
 
     /// <summary>
     /// Current document's declared PDF version (e.g. "1.7"). Empty when
@@ -81,7 +102,9 @@ public class PdfDocumentService
 
     /// <summary>
     /// Save the current document. If <paramref name="filePath"/> is null,
-    /// saves back to the file the document was loaded from.
+    /// saves back to the file the document was loaded from. An
+    /// encrypted-source document saves encrypted with the same parameters
+    /// and password it was opened with (#643).
     /// </summary>
     public void SaveDocument(string? filePath = null)
     {
@@ -91,7 +114,7 @@ public class PdfDocumentService
         var savePath = filePath ?? _currentFilePath
             ?? throw new ArgumentException("File path is required");
 
-        _currentDocument.Save(savePath);
+        _currentDocument.Save(savePath, GetReEncryptionOptions());
         _logger.LogInformation("PDF saved to: {FilePath}", savePath);
 
         // Reload to reset in-memory state from the persisted bytes.

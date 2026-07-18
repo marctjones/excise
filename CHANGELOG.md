@@ -7,6 +7,26 @@ semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **Encryption is preserved across redact/edit/save round-trips** (#643, part
+  of the #624 encryption epic). A document opened encrypted now SAVES
+  encrypted by default on every mutating path — GUI save/save-as, redacted
+  copy, flattened-form copy, scripting, CLI `redact` / `fill-form` /
+  `add-field` / `autodetect-fields --apply` / `make-searchable`, and batch
+  `redaction.apply` — with the same algorithm, the same `/P` permission mask,
+  the same `/EncryptMetadata` choice, and the same password it was opened
+  with. Core API: `PdfDocument.GetReEncryptionOptions(password)` plus
+  explicit `Save`/`SaveToBytes` overloads taking `PdfEncryptionOptions?`
+  (the parameterless `Save()` still writes plaintext so nothing re-encrypts
+  by surprise). RC4 sources (V1/V2, V4 CFM=V2) are re-encrypted **upgraded
+  to AES-256** — never downgraded, never silently decrypted. `pdfe redact`
+  gained `--password`; `--allow-decrypt` / batch `allowDecrypt: true`
+  flipped meaning from #638's "opt in to proceed at all" to the explicit
+  opt-OUT that writes an unprotected copy, and the GUI's "Encryption Will Be
+  Removed" confirmation is gone — dropping protection now happens only via
+  the Security dialog's Remove Protection (#641). Verified with independent
+  oracles (qpdf structure/permissions/decrypt, mutool extraction), including
+  a ciphertext-aware redaction-leak scan over qpdf's decrypted,
+  uncompressed serialization of the re-encrypted output.
 - **Document permissions (`/P`) are surfaced and enforced** (#642, part of the
   #624 encryption epic). `PdfDocument.Permissions` /
   `EffectivePermissions` decode the ISO 32000-2 Table 22 bitmask

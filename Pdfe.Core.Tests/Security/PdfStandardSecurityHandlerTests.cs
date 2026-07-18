@@ -619,7 +619,7 @@ public class PdfStandardSecurityHandlerTests
         ).First();
 
         return (PdfStandardSecurityHandler)constructor.Invoke(
-            new object[] { 2, 3, keyLength, fileKey, usesAes }
+            new object[] { 2, 3, keyLength, fileKey, usesAes, /* encryptMetadata */ true }
         );
     }
 }

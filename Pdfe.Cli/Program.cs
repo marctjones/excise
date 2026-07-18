@@ -542,11 +542,17 @@ partial class Program
             Description = "Match case exactly (default: case-insensitive)",
             DefaultValueFactory = _ => false,
         };
+        var passwordOption = new Option<string?>("--password")
+        {
+            Description = "User password for encrypted PDFs. The output is re-encrypted with this " +
+                "password by default (see --allow-decrypt).",
+        };
         var allowDecryptOption = new Option<bool>("--allow-decrypt")
         {
-            Description = "Required when the source PDF is encrypted: pdfe cannot write encrypted " +
-                "output (see #624), so redacting an encrypted PDF would otherwise silently produce " +
-                "an unprotected copy. Without this flag, redacting an encrypted source fails closed.",
+            Description = "Write UNENCRYPTED output from an encrypted source. By default (#643) an " +
+                "encrypted source is re-encrypted with the same algorithm and permissions (RC4 " +
+                "sources are upgraded to AES-256) and the same password it was opened with; this " +
+                "flag is the explicit opt-out that drops the protection instead.",
             DefaultValueFactory = _ => false,
         };
         var strictOption = new Option<bool>("--strict")
@@ -568,7 +574,7 @@ partial class Program
             "redact",
             "Remove text from a PDF (glyph-level removal; text extraction will not find it)")
         {
-            inputArg, outputArg, textArg, caseSensitiveOption, allowDecryptOption, strictOption, allowLowConfidenceOption
+            inputArg, outputArg, textArg, caseSensitiveOption, passwordOption, allowDecryptOption, strictOption, allowLowConfidenceOption
         };
 
         command.SetAction(parseResult =>
@@ -577,6 +583,7 @@ partial class Program
             var output = parseResult.GetValue(outputArg)!;
             var text = parseResult.GetValue(textArg)!;
             var caseSensitive = parseResult.GetValue(caseSensitiveOption);
+            var password = parseResult.GetValue(passwordOption);
             var allowDecrypt = parseResult.GetValue(allowDecryptOption);
             var strict = parseResult.GetValue(strictOption);
             var allowLowConfidence = parseResult.GetValue(allowLowConfidenceOption);
@@ -595,7 +602,7 @@ partial class Program
 
             try
             {
-                int count = RunRedact(input.FullName, output.FullName, text, caseSensitive, allowDecrypt, strict, allowLowConfidence);
+                int count = RunRedact(input.FullName, output.FullName, text, caseSensitive, allowDecrypt, strict, allowLowConfidence, password);
                 Console.WriteLine($"Redacted {count} occurrence(s) of '{text}'");
                 Console.WriteLine($"Output: {output.FullName}");
             }
@@ -610,47 +617,50 @@ partial class Program
     }
 
     /// <summary>
-    /// Thrown when the source PDF is encrypted and the caller did not pass
-    /// <c>--allow-decrypt</c> (CLI) / <c>allowDecrypt: true</c> (batch
-    /// automation). pdfe's writer cannot emit <c>/Encrypt</c> (#624), so
-    /// proceeding would silently produce an unprotected copy (#638). A
-    /// dedicated type — rather than a bare <see cref="InvalidOperationException"/>
-    /// with a matched message — lets callers like <c>AutomationBatch</c>
-    /// catch this specific failure and translate it into their own error
-    /// contract.
-    /// </summary>
-    internal sealed class PdfWouldLoseEncryptionException(string message) : InvalidOperationException(message);
-
-    /// <summary>
     /// Thrown when the #650 extraction-confidence check refuses: either the
     /// oracle disagreed severely with pdfe's own extraction (same signature
     /// as a real redaction leak) and <c>--allow-low-confidence</c> wasn't
     /// passed, or <c>--strict</c> was passed and no oracle was available at
-    /// all to check against. Same shape as <see cref="PdfWouldLoseEncryptionException"/>.
+    /// all to check against. A dedicated type — rather than a bare
+    /// <see cref="InvalidOperationException"/> with a matched message — lets
+    /// callers like <c>AutomationBatch</c> catch this specific failure and
+    /// translate it into their own error contract.
     /// </summary>
     internal sealed class LowConfidenceExtractionException(string message) : InvalidOperationException(message);
 
     /// <summary>
     /// Core redact-a-file operation — open, call Pdfe.Core's text
     /// redaction, save. Exposed internally for tests.
+    ///
+    /// Encrypted sources (#643): the DEFAULT is to re-encrypt the output
+    /// with the same algorithm and permissions the source was opened with
+    /// (RC4 sources are upgraded to AES-256 — see
+    /// <see cref="PdfDocument.GetReEncryptionOptions"/>) and the supplied
+    /// <paramref name="password"/>. <paramref name="allowDecrypt"/> is the
+    /// explicit opt-out that writes an unprotected copy instead — under
+    /// #638 it was the opt-in to proceed at all; with re-encryption as the
+    /// default there is no longer a fail-closed case here.
     /// </summary>
     internal static int RunRedact(
         string inputPath, string outputPath, string text, bool caseSensitive,
-        bool allowDecrypt = false, bool strict = false, bool allowLowConfidence = false)
+        bool allowDecrypt = false, bool strict = false, bool allowLowConfidence = false,
+        string? password = null)
     {
         var bytes = File.ReadAllBytes(inputPath);
-        using var doc = PdfDocument.Open(bytes);
-        if (doc.IsEncrypted && !allowDecrypt)
-        {
-            throw new PdfWouldLoseEncryptionException(
-                "Source PDF is encrypted. pdfe cannot write encrypted output (#624), so saving " +
-                "would silently produce an UNPROTECTED copy. Pass --allow-decrypt to proceed anyway.");
-        }
-        if (doc.IsEncrypted)
+        using var doc = PdfDocument.Open(bytes, password);
+
+        var reEncryption = allowDecrypt ? null : doc.GetReEncryptionOptions(password);
+        if (doc.IsEncrypted && allowDecrypt)
         {
             Console.Error.WriteLine(
-                "Warning: output will NOT be encrypted (source was encrypted; pdfe cannot write " +
-                "encrypted PDFs yet, see #624).");
+                "Warning: --allow-decrypt was passed — output will NOT be encrypted, even though " +
+                "the source was. Anyone with the file can read it without a password.");
+        }
+        else if (reEncryption != null)
+        {
+            Console.Error.WriteLine(
+                "Note: source is encrypted; output is re-encrypted with the same permissions and " +
+                "the same password (#643). Pass --allow-decrypt to write an unprotected copy instead.");
         }
 
         var confidence = new Pdfe.Ocr.RedactionConfidenceChecker().CheckDocument(doc, sourceFilePath: inputPath);
@@ -658,7 +668,7 @@ partial class Program
             Console.Error.WriteLine(line);
 
         var count = doc.RedactText(text, caseSensitive);
-        doc.Save(outputPath);
+        doc.Save(outputPath, reEncryption);
         return count;
     }
 
@@ -1070,7 +1080,9 @@ partial class Program
         if (flatten)
             doc.FlattenAcroForm();
 
-        doc.Save(outputPath);
+        // #643: an encrypted source (empty user password — this command opens
+        // without a password) saves encrypted with the same parameters.
+        doc.Save(outputPath, doc.GetReEncryptionOptions(userPassword: null));
         return set;
     }
 
@@ -1193,7 +1205,8 @@ partial class Program
                     $"Unknown field type '{type}'. Use Text, Checkbox, Choice, or Signature.");
         }
 
-        doc.Save(outputPath);
+        // #643: preserve source encryption (empty-password sources only here).
+        doc.Save(outputPath, doc.GetReEncryptionOptions(userPassword: null));
     }
 
     private static Pdfe.Core.Document.PdfRectangle ParseRect(string s)
@@ -1280,7 +1293,8 @@ partial class Program
                 if (apply)
                 {
                     var n = PdfFormAutoDetector.Apply(doc, sugg);
-                    doc.Save(output!.FullName);
+                    // #643: preserve source encryption (empty-password sources only here).
+                    doc.Save(output!.FullName, doc.GetReEncryptionOptions(userPassword: null));
                     Console.WriteLine($"Applied {n} field(s); wrote {output.FullName}");
                 }
             }
@@ -1644,7 +1658,8 @@ partial class Program
                     }
                 }
 
-                doc.Save(output.FullName);
+                // #643: preserve source encryption (empty-password sources only here).
+                doc.Save(output.FullName, doc.GetReEncryptionOptions(userPassword: null));
 
                 Console.WriteLine($"Processed {pagesProcessed} page(s), skipped {pagesSkipped}, wrote {wordsWritten} word(s).");
                 Console.WriteLine($"Output: {output.FullName}");

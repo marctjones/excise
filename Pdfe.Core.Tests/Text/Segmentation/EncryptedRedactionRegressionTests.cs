@@ -37,14 +37,30 @@ public sealed class EncryptedRedactionRegressionTests
 
         doc.RedactText(secret, drawBlackRect: false).Should().Be(1);
 
-        var saved = doc.SaveToBytes();
-        Encoding.Latin1.GetString(saved).Should().NotContain(secret);
+        // #643: the redacted copy of an encrypted source saves ENCRYPTED —
+        // same permissions, same password (these RC4 fixtures upgrade to
+        // AES-256, the documented upgrade-only policy).
+        var saved = doc.SaveToBytes(doc.GetReEncryptionOptions(password));
 
-        using var reopened = PdfDocument.Open(saved);
-        reopened.IsEncrypted.Should().BeFalse(
-            "redacted output is written as an unencrypted copy until #624 adds an encryption " +
-            "writer; the GUI/CLI now warn before this happens (#638)");
+        var withoutPassword = () => PdfDocument.Open(saved);
+        withoutPassword.Should().Throw<PdfEncryptionNotSupportedException>(
+            "the redacted output must still require the source's password (#643)");
+
+        using var reopened = PdfDocument.Open(saved, password);
+        reopened.IsEncrypted.Should().BeTrue(
+            "redacting a password-protected PDF must yield a password-protected PDF (#643)");
+        reopened.Permissions.RawValue.Should().Be(doc.Permissions.RawValue,
+            "the source /P permission mask must survive the redaction round-trip");
         string.Concat(reopened.GetPage(1).Letters.Select(l => l.Value)).Should().NotContain(secret);
+
+        // The saved bytes are ciphertext, so a raw byte-scan of them proves
+        // nothing about the secret. Scan the DECRYPTED serialization instead
+        // (carrier-agnostic; the independent qpdf/mutool equivalent lives in
+        // Pdfe.Rendering.Tests/Differential/EncryptionPreservationInteropTests.cs).
+        var decrypted = reopened.SaveToBytes();
+        (Encoding.Latin1.GetString(decrypted) + Encoding.BigEndianUnicode.GetString(decrypted))
+            .Should().NotContain(secret,
+                "the secret must not survive in ANY carrier of the decrypted output");
     }
 
     [Theory]

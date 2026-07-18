@@ -111,9 +111,17 @@ public static class QpdfReferenceTool
     /// key and recover the original bytes. Returns false (not an
     /// exception) on any failure so callers can assert on it directly.
     /// </summary>
-    public static bool Decrypt(string pdfPath, string outputPath, string? password = null, int timeoutMs = 30_000)
+    /// <param name="uncompressStreams">
+    /// Also pass <c>--stream-data=uncompress</c> so every stream in the
+    /// output is stored raw. Redaction-leak byte scans need this: without it
+    /// a Flate-compressed content stream would hide a leaked secret from a
+    /// substring search over the decrypted bytes (#643).
+    /// </param>
+    public static bool Decrypt(string pdfPath, string outputPath, string? password = null, int timeoutMs = 30_000,
+        bool uncompressStreams = false)
     {
         var args = new System.Collections.Generic.List<string> { "--decrypt" };
+        if (uncompressStreams) args.Add("--stream-data=uncompress");
         if (!string.IsNullOrEmpty(password)) args.Add($"--password={password}");
         args.Add(pdfPath);
         args.Add(outputPath);

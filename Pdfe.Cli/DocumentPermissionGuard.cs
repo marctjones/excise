@@ -39,7 +39,7 @@ partial class Program
     /// <summary>
     /// Thrown when a document's /P permissions deny the requested action and
     /// no override was supplied. Same shape as
-    /// <see cref="PdfWouldLoseEncryptionException"/>: verbs' generic catch
+    /// <see cref="LowConfidenceExtractionException"/>: verbs' generic catch
     /// prints the message on stderr and fails with a non-zero exit code.
     /// </summary>
     internal sealed class PdfPermissionDeniedException(string message) : InvalidOperationException(message);

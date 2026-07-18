@@ -940,16 +940,39 @@ public partial class MainWindowViewModel : ViewModelBase
             }
             catch (Pdfe.Core.Parsing.PdfEncryptionNotSupportedException ex) when (IsPasswordVerificationFailure(ex))
             {
-                OperationStatus = "Password required…";
-                var password = await _dialogService.PromptPasswordAsync(
-                    "Password Required",
-                    "Enter the user password for this PDF.");
-                if (password == null)
-                    throw new Pdfe.Core.Parsing.PdfEncryptionNotSupportedException(
-                        "Password is required to open this PDF.");
+                // #643: a preserving save writes encrypted output, and flows
+                // like "apply redactions → reload the redacted copy" land
+                // here. Try the password the previous document was opened
+                // with before bothering the user for it again.
+                var rememberedPassword = _documentService.CurrentUserPassword;
+                var openedWithRememberedPassword = false;
+                if (!string.IsNullOrEmpty(rememberedPassword))
+                {
+                    try
+                    {
+                        PdfCoreDocument = await LoadDocumentInstancesAsync(filePath, rememberedPassword);
+                        openedWithRememberedPassword = true;
+                    }
+                    catch (Pdfe.Core.Parsing.PdfEncryptionNotSupportedException ex2) when (IsPasswordVerificationFailure(ex2))
+                    {
+                        // Different document, different password — fall
+                        // through to the prompt.
+                    }
+                }
 
-                OperationStatus = "Opening PDF…";
-                PdfCoreDocument = await LoadDocumentInstancesAsync(filePath, password);
+                if (!openedWithRememberedPassword)
+                {
+                    OperationStatus = "Password required…";
+                    var password = await _dialogService.PromptPasswordAsync(
+                        "Password Required",
+                        "Enter the user password for this PDF.");
+                    if (password == null)
+                        throw new Pdfe.Core.Parsing.PdfEncryptionNotSupportedException(
+                            "Password is required to open this PDF.");
+
+                    OperationStatus = "Opening PDF…";
+                    PdfCoreDocument = await LoadDocumentInstancesAsync(filePath, password);
+                }
             }
             _logger.LogInformation(">>> STEP 5: Both document instances loaded");
             documentInstancesLoadedElapsedMs = openSw.ElapsedMilliseconds;
@@ -1179,23 +1202,12 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    /// <summary>
-    /// Gate before any save that could produce output from a possibly-
-    /// encrypted source document. pdfe's writer cannot emit /Encrypt (#624),
-    /// so saving an encrypted-source document always drops its protection —
-    /// the user must explicitly acknowledge that before it happens (#638).
-    /// Returns true when it's safe to proceed (source wasn't encrypted, or
-    /// the user confirmed anyway).
-    /// </summary>
-    private async Task<bool> ConfirmEncryptionLossIfNeededAsync(bool sourceIsEncrypted)
-    {
-        if (!sourceIsEncrypted) return true;
-
-        return await _dialogService.ShowConfirmAsync(
-            "Encryption Will Be Removed",
-            "This document is password-protected. The redacted copy will be saved " +
-            "WITHOUT encryption. Continue?");
-    }
+    // #638's "Encryption Will Be Removed" confirmation gate used to live
+    // here. It is gone on purpose: since #643, every save path preserves the
+    // source's encryption (same algorithm/permissions, same password) via
+    // PdfDocumentService.GetReEncryptionOptions(), so there is no loss to
+    // confirm. Dropping protection is only possible through the Security
+    // dialog's explicit Remove Protection action (#641).
 
     private async Task SaveFileAsync()
     {
@@ -1229,12 +1241,6 @@ public partial class MainWindowViewModel : ViewModelBase
         // Safe to save directly - either redacted version or no changes
         try
         {
-            if (!await ConfirmEncryptionLossIfNeededAsync(_documentService.IsEncrypted))
-            {
-                _logger.LogInformation("User declined to save a copy that would drop source encryption");
-                return;
-            }
-
             SyncAllFormFieldValuesToServiceDocument();
             var document = _documentService.GetCurrentDocument();
             var flattenedTypewriter = document != null && ApplyPendingTypewriterText(document);
@@ -2741,12 +2747,6 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            if (!await ConfirmEncryptionLossIfNeededAsync(_documentService.IsEncrypted))
-            {
-                _logger.LogInformation("User declined to save a copy that would drop source encryption");
-                return;
-            }
-
             SyncAllFormFieldValuesToServiceDocument();
             var document = _documentService.GetCurrentDocument();
             var flattenedTypewriter = document != null && ApplyPendingTypewriterText(document);

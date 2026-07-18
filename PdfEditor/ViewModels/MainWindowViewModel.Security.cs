@@ -19,19 +19,19 @@ namespace PdfEditor.ViewModels;
 ///
 /// Deliberately writes to a NEW file the user picks (Save-As semantics),
 /// rather than mutating the live in-memory document and deferring to the
-/// app's normal Save command. <see cref="PdfDocumentService.SaveDocument"/>
-/// always writes unencrypted (it has no <see cref="PdfEncryptionOptions"/>
-/// parameter) and is shared by the redact/edit save path's existing #638
-/// confirmation gate — routing this feature through it would mean either
-/// threading encryption intent through that shared, unrelated save path
-/// (risking #638's gate) or duplicating it. Save-As avoids both: it mirrors
-/// the established pattern for operations that produce a new PDF from the
-/// current in-memory state (see <c>CombineDocumentsAsync</c>/
-/// <c>SplitDocumentAsync</c>), needs no live-document swap, and needs no
-/// "reload with the new password" step — see <see cref="ApplySecurity"/>/
-/// <see cref="RemoveProtection"/>, which write straight from the
-/// already-open (already-decrypted) <see cref="Pdfe.Core.Document.PdfDocument"/>
-/// obtained via <see cref="PdfDocumentService.GetCurrentDocument"/>.
+/// app's normal Save command. Since #643 the normal save path *preserves*
+/// the source's existing protection (<see cref="PdfDocumentService.SaveDocument"/>
+/// re-encrypts via <see cref="PdfDocumentService.GetReEncryptionOptions"/>);
+/// this dialog remains the one place that *changes* it — sets, replaces, or
+/// removes protection — and Save-As keeps that intent separate from the
+/// shared save path. It mirrors the established pattern for operations that
+/// produce a new PDF from the current in-memory state (see
+/// <c>CombineDocumentsAsync</c>/<c>SplitDocumentAsync</c>), needs no
+/// live-document swap, and needs no "reload with the new password" step —
+/// see <see cref="ApplySecurity"/>/<see cref="RemoveProtection"/>, which
+/// write straight from the already-open (already-decrypted)
+/// <see cref="Pdfe.Core.Document.PdfDocument"/> obtained via
+/// <see cref="PdfDocumentService.GetCurrentDocument"/>.
 /// </summary>
 public partial class MainWindowViewModel
 {
@@ -174,8 +174,7 @@ public partial class MainWindowViewModel
             Algorithm = algorithm,
         };
 
-        using var stream = new FileStream(outputPath, FileMode.Create, FileAccess.Write);
-        new PdfDocumentWriter(document, options).Write(stream);
+        document.Save(outputPath, options);
         _logger.LogInformation("Document Security: wrote protected copy to {OutputPath}", outputPath);
     }
 
@@ -189,8 +188,7 @@ public partial class MainWindowViewModel
         var document = _documentService.GetCurrentDocument()
             ?? throw new InvalidOperationException("No document loaded.");
 
-        using var stream = new FileStream(outputPath, FileMode.Create, FileAccess.Write);
-        new PdfDocumentWriter(document, encryptionOptions: null).Write(stream);
+        document.Save(outputPath, encryptionOptions: null);
         _logger.LogInformation("Document Security: wrote unprotected copy to {OutputPath}", outputPath);
     }
 }

@@ -319,8 +319,9 @@ public class PermissionEnforcementTests : IDisposable
     {
         // Redaction is deliberately NOT gated on /P (#642): it is pdfe's
         // core security purpose, and a document author's no-modify bit must
-        // not prevent a user redacting their own copy. (#643 owns the
-        // encrypted-source redaction flow; --allow-decrypt is #638's gate.)
+        // not prevent a user redacting their own copy. (Since #643 an
+        // encrypted source re-encrypts by default; --allow-decrypt is the
+        // explicit opt-out that writes plaintext.)
         var pdf = RestrictedFixture(DenyCopyAndAccessibilityMask, text: "REDACTME NOW");
         var output = TempPath(".pdf");
 

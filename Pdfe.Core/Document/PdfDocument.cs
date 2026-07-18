@@ -1259,33 +1259,117 @@ public class PdfDocument : IDisposable
     }
 
     /// <summary>
-    /// Save the document to a stream.
+    /// Save the document to a stream. Writes an unencrypted file — even when
+    /// the source was opened encrypted (see <see cref="IsEncrypted"/>). To
+    /// keep an encrypted source encrypted, pass
+    /// <see cref="GetReEncryptionOptions"/>'s result to
+    /// <see cref="Save(Stream, Pdfe.Core.Security.PdfEncryptionOptions?)"/> (#643).
+    /// The plaintext default is deliberate: dozens of flows (rendering,
+    /// splitting, extraction) rely on "save = decrypt" being explicit, so
+    /// nothing re-encrypts by surprise.
     /// </summary>
-    public void Save(Stream outputStream)
+    public void Save(Stream outputStream) => Save(outputStream, encryptionOptions: null);
+
+    /// <summary>
+    /// Save the document to a stream, optionally encrypting the output with
+    /// the PDF Standard Security Handler. <paramref name="encryptionOptions"/>
+    /// of <c>null</c> writes plaintext (identical to <see cref="Save(Stream)"/>).
+    /// Combine with <see cref="GetReEncryptionOptions"/> to preserve an
+    /// encrypted source's protection across a redact/edit round-trip (#643).
+    /// </summary>
+    public void Save(Stream outputStream, Pdfe.Core.Security.PdfEncryptionOptions? encryptionOptions)
     {
         foreach (var action in _preSaveActions)
             action();
-        var writer = new PdfDocumentWriter(this);
+        var writer = new PdfDocumentWriter(this, encryptionOptions);
         writer.Write(outputStream);
     }
 
     /// <summary>
-    /// Save the document to a byte array.
+    /// Save the document to a byte array. Plaintext output — see
+    /// <see cref="Save(Stream)"/>'s remarks.
     /// </summary>
-    public byte[] SaveToBytes()
+    public byte[] SaveToBytes() => SaveToBytes(encryptionOptions: null);
+
+    /// <summary>
+    /// Save the document to a byte array, optionally encrypted — see
+    /// <see cref="Save(Stream, Pdfe.Core.Security.PdfEncryptionOptions?)"/>.
+    /// </summary>
+    public byte[] SaveToBytes(Pdfe.Core.Security.PdfEncryptionOptions? encryptionOptions)
     {
         using var ms = new MemoryStream();
-        Save(ms);
+        Save(ms, encryptionOptions);
         return ms.ToArray();
     }
 
     /// <summary>
-    /// Save the document to a file.
+    /// Save the document to a file. Plaintext output — see
+    /// <see cref="Save(Stream)"/>'s remarks.
     /// </summary>
-    public void Save(string path)
+    public void Save(string path) => Save(path, encryptionOptions: null);
+
+    /// <summary>
+    /// Save the document to a file, optionally encrypted — see
+    /// <see cref="Save(Stream, Pdfe.Core.Security.PdfEncryptionOptions?)"/>.
+    /// </summary>
+    public void Save(string path, Pdfe.Core.Security.PdfEncryptionOptions? encryptionOptions)
     {
         using var fs = new FileStream(path, FileMode.Create, FileAccess.Write);
-        Save(fs);
+        Save(fs, encryptionOptions);
+    }
+
+    /// <summary>
+    /// Encryption options that re-encrypt a save of this document with the
+    /// same protection its source was opened with (#643): same algorithm
+    /// where the writer supports it, same <c>/P</c> permission mask, same
+    /// <c>/EncryptMetadata</c> choice. Returns <c>null</c> when the source
+    /// was not encrypted — so <c>doc.Save(path, doc.GetReEncryptionOptions(pw))</c>
+    /// is always safe: unencrypted sources stay unencrypted.
+    /// </summary>
+    /// <remarks>
+    /// Algorithm mapping: V=5 R=6 sources round-trip as
+    /// <see cref="Pdfe.Core.Security.PdfEncryptionAlgorithm.Aes256"/>; V=4 R=4
+    /// AESV2 sources as <see cref="Pdfe.Core.Security.PdfEncryptionAlgorithm.Aes128"/>.
+    /// Sources pdfe can decrypt but whose algorithm the writer does not emit
+    /// (RC4: V=1 R=2, V=2 R=3, and V=4 R=4 with CFM=V2) are re-encrypted as
+    /// AES-256 — always an upgrade, never a downgrade. The same upgrade
+    /// applies when the source's /Encrypt could not be fully parsed but the
+    /// trailer says the file is encrypted.
+    ///
+    /// The owner password of the source cannot be recovered from a
+    /// user-password open (#324 — pdfe verifies user passwords only), so the
+    /// returned options reuse <paramref name="userPassword"/> as the owner
+    /// password: nobody gains authority they did not already have, and the
+    /// legitimate holder of the user password is not locked out of their own
+    /// re-saved file. A source opened with the empty password re-encrypts
+    /// with the empty password.
+    /// </remarks>
+    /// <param name="userPassword">
+    /// The password this document was opened with (<c>null</c>/empty for the
+    /// empty user password — the common case). The caller supplies it because
+    /// the document does not retain the password text after open.
+    /// </param>
+    public Pdfe.Core.Security.PdfEncryptionOptions? GetReEncryptionOptions(string? userPassword)
+    {
+        if (!IsEncrypted) return null;
+
+        var algorithm = _securityHandler switch
+        {
+            { V: 5, R: 6 } => Pdfe.Core.Security.PdfEncryptionAlgorithm.Aes256,
+            { V: 4, R: 4, UsesAes: true } => Pdfe.Core.Security.PdfEncryptionAlgorithm.Aes128,
+            // RC4 variants (V=1/2, V=4 CFM=V2) and unparseable /Encrypt:
+            // upgrade to the PDF 2.0 native algorithm.
+            _ => Pdfe.Core.Security.PdfEncryptionAlgorithm.Aes256,
+        };
+
+        return new Pdfe.Core.Security.PdfEncryptionOptions
+        {
+            UserPassword = userPassword,
+            OwnerPassword = userPassword,
+            Permissions = Permissions.RawValue,
+            EncryptMetadata = _securityHandler?.EncryptMetadata ?? true,
+            Algorithm = algorithm,
+        };
     }
 
     /// <summary>

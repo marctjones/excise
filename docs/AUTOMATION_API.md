@@ -26,9 +26,9 @@ pdfe render input.pdf --output page-1.png --page 1 --dpi 150 --json
 pdfe batch workflow.json --json --progress --output report.json
 ```
 
-`--password` is supported by `info`, `text`, `render`, and batch workflow
-document-open steps. Password values are accepted as inputs but are not written
-to JSON reports or progress events.
+`--password` is supported by `info`, `text`, `render`, `redact`, and batch
+workflow document-open steps. Password values are accepted as inputs but are
+not written to JSON reports or progress events.
 
 ## Batch Workflow Schema
 
@@ -162,6 +162,14 @@ Rules enforced by the batch contract:
 - Mutating commands must write to an explicit output path.
 - Mutating commands refuse to overwrite their input file.
 - `redaction.apply` requires `confirmDestructive: true`.
+- `redaction.apply` on an encrypted source re-encrypts the output by default
+  (#643): same algorithm and permissions (RC4 sources are upgraded to
+  AES-256), protected by the step's `password` (or the empty password).
+  `allowDecrypt: true` is the explicit opt-out that writes an unprotected
+  copy instead. (Before #643 this step failed closed with
+  `DECRYPT_CONFIRMATION_REQUIRED` unless `allowDecrypt: true` was supplied,
+  because pdfe could not write encrypted output; that error code no longer
+  occurs.)
 - Document `/P` permissions are enforced (#642): `text.extract` and
   `render.page` require the document's copy/extract permission, `form.fillForm`
   requires the form fill-in permission, and `form.addField` requires the modify

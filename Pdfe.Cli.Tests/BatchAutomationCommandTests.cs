@@ -3,6 +3,7 @@ using System.Text.Json;
 using AwesomeAssertions;
 using Pdfe.Cli;
 using Pdfe.Core.Automation;
+using Pdfe.Core.Document;
 using Xunit;
 
 namespace Pdfe.Cli.Tests;
@@ -94,19 +95,20 @@ public class BatchAutomationCommandTests : IDisposable
     }
 
     /// <summary>
-    /// #638: redacting an encrypted source through a batch workflow must
-    /// require explicit acknowledgement (allowDecrypt: true), the same
-    /// contract-violation shape as confirmDestructive, since batch/CI
-    /// callers won't see a GUI dialog or read stderr.
+    /// #643 (superseding #638's fail-closed gate): redacting an encrypted
+    /// source through a batch workflow succeeds by DEFAULT and re-encrypts
+    /// the output with the same parameters and the step's password (here:
+    /// the empty password). DECRYPT_CONFIRMATION_REQUIRED is gone — there
+    /// is no longer an encryption loss to confirm.
     /// </summary>
     [Fact]
-    public async Task RunAsync_BatchRedaction_EncryptedSource_RequiresAllowDecrypt()
+    public async Task RunAsync_BatchRedaction_EncryptedSource_ReEncryptsByDefault()
     {
         var directory = TempDirectory();
         var input = Path.Combine(directory, "input.pdf");
         var output = Path.Combine(directory, "redacted.pdf");
         var workflow = Path.Combine(directory, "workflow.json");
-        File.WriteAllBytes(input, TestPdfBuilder.EncryptedSinglePageEmptyPassword());
+        WriteWriterEncryptedFixture(input, "SECRET DATA", password: null);
         File.WriteAllText(workflow, JsonSerializer.Serialize(new
         {
             schemaVersion = 1,
@@ -126,19 +128,28 @@ public class BatchAutomationCommandTests : IDisposable
 
         var result = await RunCliCaptureAsync(["batch", workflow, "--json", "--progress"]);
 
-        result.ExitCode.Should().Be(2);
-        File.Exists(output).Should().BeFalse();
-        result.StdOut.Should().Contain("DECRYPT_CONFIRMATION_REQUIRED");
+        result.ExitCode.Should().Be(0);
+        result.StdOut.Should().NotContain("DECRYPT_CONFIRMATION_REQUIRED");
+        File.Exists(output).Should().BeTrue();
+
+        using var reopened = PdfDocument.Open(File.ReadAllBytes(output));
+        reopened.IsEncrypted.Should().BeTrue(
+            "an encrypted batch source must produce an encrypted output by default (#643)");
     }
 
+    /// <summary>
+    /// #643 flipped allowDecrypt's meaning: it is now the explicit opt-OUT
+    /// that writes an unprotected copy (under #638 it was the opt-in
+    /// required for the step to run at all).
+    /// </summary>
     [Fact]
-    public async Task RunAsync_BatchRedaction_EncryptedSource_WithAllowDecrypt_Proceeds()
+    public async Task RunAsync_BatchRedaction_EncryptedSource_WithAllowDecrypt_WritesPlaintext()
     {
         var directory = TempDirectory();
         var input = Path.Combine(directory, "input.pdf");
         var output = Path.Combine(directory, "redacted.pdf");
         var workflow = Path.Combine(directory, "workflow.json");
-        File.WriteAllBytes(input, TestPdfBuilder.EncryptedSinglePageEmptyPassword());
+        WriteWriterEncryptedFixture(input, "SECRET DATA", password: null);
         File.WriteAllText(workflow, JsonSerializer.Serialize(new
         {
             schemaVersion = 1,
@@ -161,7 +172,64 @@ public class BatchAutomationCommandTests : IDisposable
 
         result.ExitCode.Should().Be(0);
         File.Exists(output).Should().BeTrue();
-        result.StdOut.Should().NotContain("DECRYPT_CONFIRMATION_REQUIRED");
+
+        using var reopened = PdfDocument.Open(File.ReadAllBytes(output));
+        reopened.IsEncrypted.Should().BeFalse("allowDecrypt: true is the explicit opt-out that drops protection");
+    }
+
+    /// <summary>
+    /// #643: the redaction step honors the workflow's password field — a
+    /// password-protected source opens with it and the output is
+    /// re-encrypted with the same password.
+    /// </summary>
+    [Fact]
+    public async Task RunAsync_BatchRedaction_PasswordProtectedSource_UsesStepPassword()
+    {
+        var directory = TempDirectory();
+        var input = Path.Combine(directory, "input.pdf");
+        var output = Path.Combine(directory, "redacted.pdf");
+        var workflow = Path.Combine(directory, "workflow.json");
+        WriteWriterEncryptedFixture(input, "SECRET DATA", password: "pw123");
+        File.WriteAllText(workflow, JsonSerializer.Serialize(new
+        {
+            schemaVersion = 1,
+            steps = new object[]
+            {
+                new
+                {
+                    id = "redact",
+                    command = PdfCommandIds.ApplyRedaction,
+                    input = "input.pdf",
+                    output = "redacted.pdf",
+                    text = "SECRET",
+                    password = "pw123",
+                    confirmDestructive = true,
+                },
+            },
+        }));
+
+        var result = await RunCliCaptureAsync(["batch", workflow, "--json", "--progress"]);
+
+        result.ExitCode.Should().Be(0);
+        File.Exists(output).Should().BeTrue();
+
+        using var reopened = PdfDocument.Open(File.ReadAllBytes(output), "pw123");
+        reopened.IsEncrypted.Should().BeTrue("the output must stay protected by the same password (#643)");
+    }
+
+    /// <summary>
+    /// A REAL pdfe-writer-encrypted one-page fixture (unlike
+    /// <see cref="TestPdfBuilder.EncryptedSinglePageEmptyPassword"/>, whose
+    /// content stream is not actually per-object encrypted).
+    /// </summary>
+    private static void WriteWriterEncryptedFixture(string path, string text, string? password)
+    {
+        using var doc = PdfDocument.Open(TestPdfBuilder.SinglePage(text));
+        File.WriteAllBytes(path, doc.SaveToBytes(new Pdfe.Core.Security.PdfEncryptionOptions
+        {
+            UserPassword = password,
+            OwnerPassword = password,
+        }));
     }
 
     [Fact]

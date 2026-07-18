@@ -424,15 +424,13 @@ partial class Program
         EnsureMutationWritesCopy(input, output);
         EnsureOutputParent(output);
 
-        int count;
-        try
-        {
-            count = RunRedact(input, output, step.Text!, step.CaseSensitive ?? false, step.AllowDecrypt ?? false);
-        }
-        catch (PdfWouldLoseEncryptionException ex)
-        {
-            throw new AutomationContractException("DECRYPT_CONFIRMATION_REQUIRED", ex.Message, "SECURITY");
-        }
+        // #643: encrypted sources re-encrypt by default with the same
+        // parameters and the step's password; allowDecrypt: true is now the
+        // explicit opt-OUT that writes an unprotected copy (it was the #638
+        // opt-in to proceed at all, back when pdfe could not write /Encrypt).
+        int count = RunRedact(
+            input, output, step.Text!, step.CaseSensitive ?? false, step.AllowDecrypt ?? false,
+            password: step.Password);
         return new
         {
             inputPath = input,

@@ -53,13 +53,24 @@ public sealed class PdfStandardSecurityHandler
     /// <summary>True if streams/strings use AES (V=4 with CFM=AESV2 or V=5).</summary>
     public bool UsesAes { get; }
 
-    private PdfStandardSecurityHandler(int v, int r, int keyLengthBytes, byte[] fileKey, bool usesAes)
+    /// <summary>
+    /// The source's <c>/EncryptMetadata</c> value (default <c>true</c> when
+    /// absent, per spec). Retained so that saving an opened-encrypted
+    /// document can round-trip the same metadata-coverage choice (#643) —
+    /// the trailer's /Encrypt dictionary itself is excluded on save, so
+    /// this cannot be re-read later.
+    /// </summary>
+    public bool EncryptMetadata { get; }
+
+    private PdfStandardSecurityHandler(int v, int r, int keyLengthBytes, byte[] fileKey, bool usesAes,
+        bool encryptMetadata)
     {
         V = v;
         R = r;
         KeyLengthBytes = keyLengthBytes;
         _fileEncryptionKey = fileKey;
         UsesAes = usesAes;
+        EncryptMetadata = encryptMetadata;
     }
 
     /// <summary>
@@ -142,7 +153,7 @@ public sealed class PdfStandardSecurityHandler
             keyBytes = 16;
         }
 
-        return new PdfStandardSecurityHandler(v, r, keyBytes, fileKey, usesAes);
+        return new PdfStandardSecurityHandler(v, r, keyBytes, fileKey, usesAes, encryptMetadata);
     }
 
     /// <summary>
@@ -452,7 +463,9 @@ public sealed class PdfStandardSecurityHandler
             throw new PdfParseException(
                 $"Decrypted /UE produced {fileKey.Length} bytes; expected 32 for AES-256.");
 
-        return new PdfStandardSecurityHandler(5, 6, 32, fileKey, usesAes: true);
+        bool encryptMetadata = !encryptDict.ContainsKey("EncryptMetadata") ||
+                               encryptDict.GetBool("EncryptMetadata");
+        return new PdfStandardSecurityHandler(5, 6, 32, fileKey, usesAes: true, encryptMetadata);
     }
 
     /// <summary>

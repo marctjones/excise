@@ -72,7 +72,7 @@ namespace Pdfe.Rendering.Differential
                 "Success",
                 "Output"})]
         public static System.ValueTuple<bool, string>? Check(string pdfPath, string? password = null, int timeoutMs = 30000) { }
-        public static bool Decrypt(string pdfPath, string outputPath, string? password = null, int timeoutMs = 30000) { }
+        public static bool Decrypt(string pdfPath, string outputPath, string? password = null, int timeoutMs = 30000, bool uncompressStreams = false) { }
         public static bool EncryptR4(string inputPath, string outputPath, string userPassword, string ownerPassword, int timeoutMs = 30000) { }
         public static bool? IsEncrypted(string pdfPath, int timeoutMs = 10000) { }
         public static string? ShowEncryption(string pdfPath, string? password = null, int timeoutMs = 15000) { }

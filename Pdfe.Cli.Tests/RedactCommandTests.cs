@@ -159,9 +159,9 @@ public class RedactCommandTests : IDisposable
     }
 
     /// <summary>
-    /// #638: --allow-decrypt defaults to false but must never block a
-    /// redaction of an unencrypted source — the flag only matters when
-    /// pdfe would otherwise silently drop the source's encryption.
+    /// --allow-decrypt defaults to false and must never affect a redaction
+    /// of an unencrypted source — the flag only matters when the source
+    /// carries encryption to preserve or drop (#638/#643).
     /// </summary>
     [Fact]
     public void RunRedact_UnencryptedSource_AllowDecryptFalse_StillSucceeds()
@@ -174,55 +174,87 @@ public class RedactCommandTests : IDisposable
 
         count.Should().Be(1);
         File.Exists(outputPath).Should().BeTrue();
+
+        using var reopened = PdfDocument.Open(File.ReadAllBytes(outputPath));
+        reopened.IsEncrypted.Should().BeFalse("an unencrypted source must stay unencrypted");
     }
 
     /// <summary>
-    /// #638's actual security property: an encrypted source must not be
-    /// silently redacted into an unprotected copy. Uses a hand-built
-    /// empty-password-encrypted fixture (see
-    /// <see cref="TestPdfBuilder.EncryptedSinglePageEmptyPassword"/>) since
-    /// no such fixture exists in the checked-in corpus and pdfe cannot
-    /// write one itself (#624).
+    /// #643's security property, replacing #638's fail-closed gate: an
+    /// encrypted source redacts into an ENCRYPTED copy by default — same
+    /// permissions, same (here: empty) password — instead of failing until
+    /// the caller opts into decryption.
     /// </summary>
     [Fact]
-    public void RunRedact_EncryptedSource_WithoutAllowDecrypt_ThrowsAndWritesNoOutput()
+    public void RunRedact_EncryptedSource_Default_ReEncryptsWithSamePermissions()
     {
-        var inputPath = TempPath(".pdf");
+        var inputPath = WriteEncryptedFixture("HELLO WORLD", password: null, permissions: -3392);
         var outputPath = TempPath(".pdf");
-        File.WriteAllBytes(inputPath, TestPdfBuilder.EncryptedSinglePageEmptyPassword());
 
-        var act = () => Program.RunRedact(inputPath, outputPath, "SECRET", caseSensitive: false, allowDecrypt: false);
+        var prevErr = Console.Error;
+        var capturedErr = new StringWriter();
+        Console.SetError(capturedErr);
+        int count;
+        try
+        {
+            count = Program.RunRedact(inputPath, outputPath, "WORLD", caseSensitive: false);
+        }
+        finally
+        {
+            Console.SetError(prevErr);
+        }
 
-        act.Should().Throw<Program.PdfWouldLoseEncryptionException>()
-            .WithMessage("*--allow-decrypt*");
-        File.Exists(outputPath).Should().BeFalse("no output must be written when the encryption-loss guard fires");
+        count.Should().Be(1);
+        capturedErr.ToString().Should().Contain("re-encrypted",
+            "the default preservation behavior should be stated, not silent");
+
+        using var reopened = PdfDocument.Open(File.ReadAllBytes(outputPath));
+        reopened.IsEncrypted.Should().BeTrue(
+            "redacting a password-protected PDF must yield a password-protected PDF (#643)");
+        reopened.Permissions.RawValue.Should().Be(-3392, "the source /P mask must survive");
+        string.Concat(reopened.GetPage(1).Letters.Select(l => l.Value)).Should().NotContain("WORLD");
     }
 
     /// <summary>
-    /// With --allow-decrypt, the guard must not fire — RunRedact proceeds
-    /// to open/redact/save rather than throwing before it gets there. The
-    /// fixture's content stream is plaintext (see
-    /// <see cref="TestPdfBuilder.EncryptedSinglePageEmptyPassword"/>'s
-    /// remarks — building genuinely per-object-encrypted content is #624's
-    /// concern, not this guard's), so pdfe's decrypt-on-read pass garbles it
-    /// and the match count is not asserted here; what this proves is that
-    /// allowDecrypt:true reaches RedactText/Save at all instead of throwing.
+    /// #643: a non-empty-password source needs --password to open at all;
+    /// the output is then re-encrypted with that same password.
     /// </summary>
     [Fact]
-    public void RunRedact_EncryptedSource_WithAllowDecrypt_ProceedsAndWarns()
+    public void RunRedact_EncryptedSource_WithPassword_ReEncryptsWithThatPassword()
     {
-        var inputPath = TempPath(".pdf");
+        var inputPath = WriteEncryptedFixture("HELLO WORLD", password: "pw123");
         var outputPath = TempPath(".pdf");
-        File.WriteAllBytes(inputPath, TestPdfBuilder.EncryptedSinglePageEmptyPassword());
+
+        int count = Program.RunRedact(inputPath, outputPath, "WORLD", caseSensitive: false, password: "pw123");
+
+        count.Should().Be(1);
+
+        var withoutPassword = () => PdfDocument.Open(File.ReadAllBytes(outputPath));
+        withoutPassword.Should().Throw<Pdfe.Core.Parsing.PdfEncryptionNotSupportedException>(
+            "the redacted output must still require the source's password");
+
+        using var reopened = PdfDocument.Open(File.ReadAllBytes(outputPath), "pw123");
+        reopened.IsEncrypted.Should().BeTrue();
+        string.Concat(reopened.GetPage(1).Letters.Select(l => l.Value)).Should().NotContain("WORLD");
+    }
+
+    /// <summary>
+    /// #643 flipped --allow-decrypt's meaning: preservation is the default,
+    /// so the flag is now the explicit opt-OUT that writes an unprotected
+    /// copy (under #638 it was the opt-in required to proceed at all).
+    /// </summary>
+    [Fact]
+    public void RunRedact_EncryptedSource_WithAllowDecrypt_WritesPlaintextAndWarns()
+    {
+        var inputPath = WriteEncryptedFixture("HELLO WORLD", password: null);
+        var outputPath = TempPath(".pdf");
 
         var prevErr = Console.Error;
         var capturedErr = new StringWriter();
         Console.SetError(capturedErr);
         try
         {
-            var act = () => Program.RunRedact(inputPath, outputPath, "SECRET", caseSensitive: false, allowDecrypt: true);
-            act.Should().NotThrow<Program.PdfWouldLoseEncryptionException>(
-                "allowDecrypt:true must bypass the encryption-loss guard");
+            Program.RunRedact(inputPath, outputPath, "WORLD", caseSensitive: false, allowDecrypt: true);
         }
         finally
         {
@@ -233,7 +265,26 @@ public class RedactCommandTests : IDisposable
         capturedErr.ToString().Should().Contain("output will NOT be encrypted");
 
         using var reopened = PdfDocument.Open(File.ReadAllBytes(outputPath));
-        reopened.IsEncrypted.Should().BeFalse("--allow-decrypt proceeds, and pdfe cannot write encrypted output (#624)");
+        reopened.IsEncrypted.Should().BeFalse("--allow-decrypt is the explicit opt-out that drops protection");
+    }
+
+    /// <summary>
+    /// Writes a REAL pdfe-writer-encrypted copy of a simple one-page fixture
+    /// (unlike <see cref="TestPdfBuilder.EncryptedSinglePageEmptyPassword"/>,
+    /// whose content stream is not actually per-object encrypted), so
+    /// redaction, re-encryption, and reopening all behave like production.
+    /// </summary>
+    private string WriteEncryptedFixture(string text, string? password, long permissions = -4)
+    {
+        var path = TempPath(".pdf");
+        using var doc = PdfDocument.Open(TestPdfBuilder.SinglePage(text));
+        File.WriteAllBytes(path, doc.SaveToBytes(new Pdfe.Core.Security.PdfEncryptionOptions
+        {
+            UserPassword = password,
+            OwnerPassword = password,
+            Permissions = permissions,
+        }));
+        return path;
     }
 
     [Fact]
@@ -266,6 +317,44 @@ public class RedactCommandTests : IDisposable
         exitCode.Should().Be(0);
         capturedOut.ToString().Should().Contain("Redacted 1 occurrence(s) of 'SECRET'");
         File.Exists(outputPath).Should().BeTrue();
+    }
+
+    /// <summary>
+    /// #643: `pdfe redact --password` end-to-end — opens a
+    /// password-protected source and re-encrypts the output with the same
+    /// password by default.
+    /// </summary>
+    [Fact]
+    public async Task RunAsync_RedactSubcommand_PasswordOption_OpensAndReEncrypts()
+    {
+        var inputPath = WriteEncryptedFixture("SECRET DATA", password: "pw123");
+        var outputPath = TempPath(".pdf");
+
+        var prevOut = Console.Out;
+        var prevErr = Console.Error;
+        var capturedOut = new StringWriter();
+        Console.SetOut(capturedOut);
+        Console.SetError(new StringWriter());
+        int exitCode;
+        try
+        {
+            exitCode = await Program.RunAsync(new[]
+            {
+                "redact", inputPath, outputPath, "SECRET", "--password", "pw123"
+            });
+        }
+        finally
+        {
+            Console.SetOut(prevOut);
+            Console.SetError(prevErr);
+        }
+
+        exitCode.Should().Be(0);
+        capturedOut.ToString().Should().Contain("Redacted 1 occurrence(s) of 'SECRET'");
+
+        using var reopened = PdfDocument.Open(File.ReadAllBytes(outputPath), "pw123");
+        reopened.IsEncrypted.Should().BeTrue("the output must stay protected by the same password (#643)");
+        string.Concat(reopened.GetPage(1).Letters.Select(l => l.Value)).Should().NotContain("SECRET");
     }
 
     [Fact]

@@ -153,7 +153,9 @@ public partial class MainWindowViewModel
         var pageIndex = Math.Clamp(CurrentPageIndex, 0, Math.Max(0, _documentService.PageCount - 1));
 
         PdfCoreDocument?.Dispose();
-        PdfCoreDocument = PdfDocument.Open(filePath);
+        // #643: a preserving save writes encrypted output; reopen it with the
+        // password the document was opened with (null = empty password).
+        PdfCoreDocument = PdfDocument.Open(filePath, _documentService.CurrentUserPassword);
         CurrentPageIndex = pageIndex;
         _hasInMemoryModifications = false;
         _renderService.ClearCache();
