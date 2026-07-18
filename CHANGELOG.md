@@ -4,9 +4,72 @@ All notable changes to pdfe are documented here. Format roughly follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 semantic versioning.
 
-## [Unreleased]
+## [2.30.0] - 2026-07-17
+
+The encryption release: pdfe now WRITES password-protected PDFs — the full
+#624 epic (#639–#644) landed and closed in one pass, every piece verified
+against independent readers (qpdf, mutool, Ghostscript, pdftoppm), never
+against pdfe itself. Alongside it: a sweep of redaction-trust extraction
+fixes that emptied the #651 adversarial-corpus allowlist, the "Make
+Searchable" OCR feature reached the GUI, and a rendering positioning bug
+that had been misattributed to font scaling for months was root-caused and
+fixed.
+
+Note: the `[2.29.0]` section below was documented on 2026-07-13 but never
+tagged — v2.30.0 is the first tagged release containing those changes too.
+
+### Security
+- **Empty owner password no longer grants passwordless full authority**
+  (found and fixed pre-release, during #644 verification — no released
+  build was ever affected). AES-256/R6 files written with a user password
+  but no owner password derived `/O`/`/OE` from the empty owner password,
+  which qpdf, Ghostscript, and pdftoppm all accepted as the full-authority
+  owner password with NO password supplied — silently bypassing the user
+  password. `CreateR6` now falls back to the user password as the owner
+  password, exactly as R4's Algorithm 3 always did; the interop gate,
+  the core writer suite, and a rebuilt-binary falsifiability drill all pin
+  the user-password-only configuration for both algorithms.
 
 ### Added
+- **Encryption writer: AES-256 (V5 R6, PDF 2.0 native) and AES-128
+  (V4 R4, CFM=AESV2)** (#639, #640, part of the #624 encryption epic).
+  `new PdfDocumentWriter(document, new PdfEncryptionOptions { ... })`
+  emits a spec-correct `/Encrypt` dictionary (Algorithms 8/9/10 for R6;
+  Algorithms 3/5 plus per-object Algorithm 1 key derivation for R4), with
+  fresh random-IV AES-CBC per stream/string and correct exemptions for the
+  `/Encrypt` dictionary itself, the trailer `/ID`, and (when
+  `EncryptMetadata=false`) the XMP metadata stream. Building R4 exposed and
+  fixed a real ordering bug: the trailer `/ID` was generated AFTER key
+  derivation, which would have silently produced undecryptable R4 files.
+  Verified per algorithm against qpdf (structure, permissions, both
+  passwords, `--decrypt` round-trip), mutool (content extraction), and
+  Ghostscript (pixel-identical renders) — including a reverse-direction
+  oracle where pdfe independently decrypts a file qpdf itself encrypted.
+- **Password management: Document > Security dialog and `pdfe encrypt` /
+  `pdfe decrypt`** (#641). Set a user (open) and/or owner (permissions)
+  password, choose AES-256 (default) or AES-128, change a password (gated
+  on re-entering the current one), or remove protection — removal is a
+  distinct, confirmation-gated action, so clearing the password fields and
+  clicking Apply on an encrypted document can never silently strip
+  protection. Change-password on the CLI is the documented two-step
+  `pdfe decrypt` → `pdfe encrypt`.
+- **Multi-reader encryption interop gate** (#644). 37 assertions covering
+  both algorithms × four independent tools (mutool, qpdf, Ghostscript, and
+  a new pdftoppm oracle) × correct/owner/wrong/absent password, plus
+  semantic `/P` verification via qpdf and an anti-vacuity guard
+  (`PDFE_REQUIRE_ENCRYPTION_INTEROP_TOOLS=1` makes an all-tools-missing run
+  a hard failure). Wired into tier T1 and `docs/RELEASE_CHECKLIST.md` as
+  the release's encryption evidence, with Adobe Acrobat as a documented
+  manual step. Falsifiability-drilled: ignoring the `/Encrypt` dictionary
+  flips 28 of 33 original assertions red.
+- **Make Searchable in the GUI** (#658, completing #627). Tools > Make
+  Searchable OCRs pages without a text layer and writes the recognized
+  words back as an invisible, searchable text layer — with language
+  selection, progress, cancellation, and a result summary. The #627 engine
+  (`PdfSearchableConverter`) and `pdfe make-searchable` CLI shipped
+  earlier in this cycle; redaction of a made-searchable scan removes both
+  the invisible text and the raster ink (verified via independent
+  extractor + ink differential).
 - **Encryption is preserved across redact/edit/save round-trips** (#643, part
   of the #624 encryption epic). A document opened encrypted now SAVES
   encrypted by default on every mutating path — GUI save/save-as, redacted
@@ -44,6 +107,59 @@ semantic versioning.
   (`--for-accessibility`; search, rendering, and the accessibility/automation
   tree are never permission-gated). Redaction is deliberately not gated:
   removing sensitive content from your own copy is pdfe's core purpose.
+
+### Fixed
+- **Redaction-trust extraction sweep — the #651 adversarial-corpus
+  allowlist is now empty.** The #648 gate's original finding (11 pdf.js
+  fixtures where pdfe catastrophically under-extracted vs. mutool) is fully
+  resolved: off-page metadata pollution filtered by crop-box bounds (#649);
+  Type0/CID fonts with 1-byte codespaces decode correctly, which also
+  surfaced and fixed a raw-byte corruption in `ContentStreamWriter` and an
+  incorrect CID-font inference in redaction reconstruction (#659); FreeText
+  annotation content is extractable AND removable by `RedactText` (#660);
+  list-box widgets emit their full `/Opt` option list (#661);
+  `/Differences`-encoded simple fonts without `/ToUnicode` decode via the
+  Adobe glyph list (#662); signature widget `/AP` appearance text is
+  extracted and removable (#669); orphaned merged field/widgets outside
+  `/AcroForm/Fields` are surfaced (#670); widgets without the optional `/P`
+  key resolve their page via the page's own `/Annots` (#671); multiline
+  field values are no longer truncated to one line (#672). Every fix
+  verified against mutool, and every new extraction carrier proven
+  REMOVABLE via saved-bytes redaction round-trips — findable-but-not-
+  removable is a leak, not a feature.
+- **Embedded-CFF text ignored character/word spacing when drawing** (#652).
+  The glyph-run draw path applied `Tc`/`Tw` only to the tracked text
+  cursor, not the drawn glyphs, so justified lines drifted until glyphs
+  visually collided (the "em-dash strikethrough" report — the issue's
+  FontMatrix hypothesis was refuted at the byte level). Page 36 of the
+  local book fixture: 9.55% → 0.59% pixel diff vs. mutool.
+- **Trust PDF `/Widths` over embedded-font `hmtx` for inter-glyph
+  advance** (#584) and **ShadingType 5/7 wired into pattern-fill
+  dispatch** (#633).
+- **PDF string-literal line-continuation escape handled** (#637).
+- **Continuous-view cache is byte-budgeted** (#615): the page cache is
+  bounded by memory (200 MB) instead of a flat page count, so mixed-size
+  documents can't blow past intended memory use.
+- **Four flaky/incorrect UI tests root-caused** (#653): a view-mode
+  default mismatch, not layout timing — and the investigation found link
+  click/hover has no continuous-mode implementation at all (filed #667).
+- Test-infrastructure hardening: skip-budget gates extended to every test
+  project with real CI-log-verified allowlists (#655, #663, #664, #654);
+  corpus-resilience and adversarial-extraction gates (#648) plus the
+  corpus-wide extraction-parity floor gate (#645); test tiers T0–T3 with
+  one entry point (#646); per-OS CI jobs (#647); Pdfe.Core coverage gate
+  restored to 93% (#603); font-parser fuzzing closed a real hang and crash
+  (#648).
+
+### Changed
+- **`--allow-decrypt` flipped meaning** with #643 (see Added): #638 had
+  made "saving an encrypted document decrypts it" loud and fail-closed
+  because pdfe could not write encryption; now that it can, preservation is
+  the default and `--allow-decrypt` is the explicit plaintext opt-out. The
+  #638-era `PdfWouldLoseEncryptionException` and batch
+  `DECRYPT_CONFIRMATION_REQUIRED` error code are gone.
+- Printing removed from the roadmap as an intentional decision (#621,
+  #622).
 
 ## [2.29.0] - 2026-07-13
 
