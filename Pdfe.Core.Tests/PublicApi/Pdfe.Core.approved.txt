@@ -543,6 +543,7 @@ namespace Pdfe.Core.Document
         public string? Author { get; }
         public Pdfe.Core.Primitives.PdfDictionary Catalog { get; }
         public string? Creator { get; }
+        public Pdfe.Core.Security.PdfPermissions EffectivePermissions { get; }
         public bool HasEmbeddedFiles { get; }
         public Pdfe.Core.Primitives.PdfDictionary? Info { get; }
         public bool IsDecrypting { get; }
@@ -550,8 +551,10 @@ namespace Pdfe.Core.Document
         public bool IsTaggedPdf { get; }
         public string? Keywords { get; }
         public string? Language { get; set; }
+        public bool OpenedWithOwnerPassword { get; }
         public int PageCount { get; }
         public Pdfe.Core.Document.PageCollection Pages { get; }
+        public Pdfe.Core.Security.PdfPermissions Permissions { get; }
         public string? Producer { get; }
         public string? Subject { get; }
         public string? Title { get; }
@@ -1557,6 +1560,26 @@ namespace Pdfe.Core.Security
         public string? OwnerPassword { get; init; }
         public long Permissions { get; init; }
         public string? UserPassword { get; init; }
+    }
+    public readonly struct PdfPermissions : System.IEquatable<Pdfe.Core.Security.PdfPermissions>
+    {
+        public PdfPermissions(long rawValue) { }
+        public bool CanAnnotate { get; }
+        public bool CanAssemble { get; }
+        public bool CanCopy { get; }
+        public bool CanExtractForAccessibility { get; }
+        public bool CanFillForms { get; }
+        public bool CanModify { get; }
+        public bool CanPrint { get; }
+        public bool CanPrintHighQuality { get; }
+        public int RawValue { get; }
+        public static Pdfe.Core.Security.PdfPermissions AllAllowed { get; }
+        public bool Equals(Pdfe.Core.Security.PdfPermissions other) { }
+        public override bool Equals(object? obj) { }
+        public override int GetHashCode() { }
+        public override string ToString() { }
+        public static bool operator !=(Pdfe.Core.Security.PdfPermissions left, Pdfe.Core.Security.PdfPermissions right) { }
+        public static bool operator ==(Pdfe.Core.Security.PdfPermissions left, Pdfe.Core.Security.PdfPermissions right) { }
     }
     public sealed class PdfStandardSecurityHandler
     {

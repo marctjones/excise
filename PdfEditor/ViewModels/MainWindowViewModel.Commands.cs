@@ -126,7 +126,18 @@ public partial class MainWindowViewModel
             _logger.LogError(ex, "ApplyRedactionCommand threw exception"));
 
         ToggleTextSelectionModeCommand = ReactiveCommand.Create(ToggleTextSelectionMode);
-        ToggleFormAuthoringModeCommand = ReactiveCommand.Create(() => { IsFormAuthoringMode = !IsFormAuthoringMode; });
+        ToggleFormAuthoringModeCommand = ReactiveCommand.Create(() =>
+        {
+            // #642: authoring fields modifies the document — /P bit 4.
+            // Block on entering the mode; leaving it is free.
+            if (!IsFormAuthoringMode && !EnsureDocumentPermission(p => p.CanModify,
+                "Form authoring", "modifying the document (/P bit 4)"))
+            {
+                return;
+            }
+
+            IsFormAuthoringMode = !IsFormAuthoringMode;
+        });
         ToggleTypewriterModeCommand = ReactiveCommand.Create(ToggleTypewriterMode);
         AddHighlightAnnotationFromSelectionCommand = ReactiveCommand.CreateFromTask(AddHighlightAnnotationFromSelectionAsync);
         AddStickyNoteAnnotationCommand = ReactiveCommand.CreateFromTask(() => AddStickyNoteAnnotationAsync());

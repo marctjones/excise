@@ -6,6 +6,25 @@ semantic versioning.
 
 ## [Unreleased]
 
+### Added
+- **Document permissions (`/P`) are surfaced and enforced** (#642, part of the
+  #624 encryption epic). `PdfDocument.Permissions` /
+  `EffectivePermissions` decode the ISO 32000-2 Table 22 bitmask
+  (bit meanings verified against qpdf's `--show-encryption`). Enforcement is
+  at the action layer: GUI copy, text-selection copy, and page-image export
+  refuse (with a visible toast) on copy-forbidden documents; typewriter and
+  form authoring require the modify permission, annotations the annotate
+  permission, and form fill the fill-forms permission. The CLI gates
+  `text`/`letters`/`render`/`ocr` (copy/extract), `fill-form`,
+  `add-field`/`autodetect-fields --apply`, and the batch-automation steps,
+  each failing closed with an explicit override (`--ignore-permissions` /
+  `ignorePermissions: true` / scripting `IgnoreDocumentPermissions`) for
+  document owners, since owner-password opening is not yet supported (#324).
+  The bit 10 extract-for-accessibility carve-out is honoured
+  (`--for-accessibility`; search, rendering, and the accessibility/automation
+  tree are never permission-gated). Redaction is deliberately not gated:
+  removing sensitive content from your own copy is pdfe's core purpose.
+
 ## [2.29.0] - 2026-07-13
 
 User-facing: continuous scroll is the default again, and "go to page N" now

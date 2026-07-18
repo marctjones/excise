@@ -261,6 +261,27 @@ partial class Program
         AutomationBatchStep step,
         string baseDirectory)
     {
+        try
+        {
+            return ExecuteAutomationStepCore(command, step, baseDirectory);
+        }
+        catch (PdfPermissionDeniedException ex)
+        {
+            // #642: document /P permissions denied the step and the step
+            // didn't set ignorePermissions: true. Same SECURITY category
+            // as the #638 decrypt confirmation.
+            var message = ex.Message.Contains("ignorePermissions", StringComparison.Ordinal)
+                ? ex.Message
+                : ex.Message + " (In batch workflows, the override is ignorePermissions: true on this step.)";
+            throw new AutomationContractException("PERMISSION_DENIED", message, "SECURITY");
+        }
+    }
+
+    private static object ExecuteAutomationStepCore(
+        string command,
+        AutomationBatchStep step,
+        string baseDirectory)
+    {
         return command switch
         {
             PdfCommandIds.DocumentInfo => ExecuteInfoStep(step, baseDirectory),
@@ -299,6 +320,9 @@ partial class Program
     {
         var input = ResolveRequiredInputPath(step.Input, baseDirectory);
         using var doc = OpenPdfDocument(input, step.Password);
+        RequireDocumentPermission(doc, DocumentAction.Extract, "text extraction",
+            step.IgnorePermissions ?? false, step.ForAccessibility ?? false,
+            accessibilityHint: "forAccessibility: true", overrideHint: "ignorePermissions: true on this step");
         var pages = ReadTextPages(doc, step.Page);
         return new
         {
@@ -313,6 +337,8 @@ partial class Program
         var input = ResolveRequiredInputPath(step.Input, baseDirectory);
         var output = ResolveRequiredOutputPath(step.Output, baseDirectory);
         using var doc = OpenPdfDocument(input, step.Password);
+        RequireDocumentPermission(doc, DocumentAction.Extract, "page image export (render)",
+            step.IgnorePermissions ?? false, overrideHint: "ignorePermissions: true on this step");
         var page = step.Page ?? 1;
         var dpi = step.Dpi ?? 150;
         ValidatePageNumber(doc, page);
@@ -339,7 +365,8 @@ partial class Program
             throw new AutomationContractException("MISSING_FIELDS", "form.fillForm requires fields or field assignments.");
 
         EnsureOutputParent(output);
-        var updated = RunFillForm(input, output, fields, step.Flatten ?? false);
+        var updated = RunFillForm(input, output, fields, step.Flatten ?? false,
+            step.IgnorePermissions ?? false);
         return new
         {
             inputPath = input,
@@ -368,7 +395,8 @@ partial class Program
             step.Page ?? 1,
             step.Rect!,
             step.Value,
-            step.Option ?? Array.Empty<string>());
+            step.Option ?? Array.Empty<string>(),
+            step.IgnorePermissions ?? false);
 
         return new
         {
@@ -643,7 +671,9 @@ partial class Program
         string? Rect,
         string? Value,
         string[]? Option,
-        bool? AllowFindings);
+        bool? AllowFindings,
+        bool? IgnorePermissions,
+        bool? ForAccessibility);
 
     private sealed record AutomationBatchReport(
         int SchemaVersion,

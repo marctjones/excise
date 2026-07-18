@@ -75,8 +75,15 @@ public partial class MainWindowViewModel
     /// <summary>
     /// Extract all text from the currently loaded PDF (for Roslyn scripts).
     /// Returns a string containing all text from all pages concatenated.
+    ///
+    /// #642: gated on the document's /P copy/extract permission (bit 5).
+    /// Pass <paramref name="forAccessibility"/> = true to invoke the bit 10
+    /// extract-for-accessibility carve-out (honoured when bit 5 is denied
+    /// but bit 10 is granted), or set
+    /// <see cref="IgnoreDocumentPermissions"/> for the unconditional
+    /// override (mirrors the CLI's <c>--ignore-permissions</c>).
     /// </summary>
-    public string ExtractAllText() => ExtractAllTextViaScript();
+    public string ExtractAllText(bool forAccessibility = false) => ExtractAllTextViaScript(forAccessibility);
 
     /// <summary>
     /// Initialize scripting commands (call from main constructor)
@@ -416,7 +423,7 @@ public partial class MainWindowViewModel
     /// <summary>
     /// Extract all text from the currently loaded PDF (for Roslyn scripts).
     /// </summary>
-    private string ExtractAllTextViaScript()
+    private string ExtractAllTextViaScript(bool forAccessibility = false)
     {
         _logger.LogInformation("[SCRIPT] ExtractAllText()");
 
@@ -424,6 +431,35 @@ public partial class MainWindowViewModel
         {
             _logger.LogError("[SCRIPT] ExtractAllText: No document loaded");
             throw new InvalidOperationException("No document loaded. Call LoadDocumentCommand first.");
+        }
+
+        // #642: scripted extraction is user-initiated export — gate on /P
+        // bit 5 with the bit 10 accessibility carve-out, like the CLI.
+        var permissions = CurrentDocumentPermissions;
+        var extractionAllowed = permissions.CanCopy
+            || (forAccessibility && permissions.CanExtractForAccessibility);
+        if (!extractionAllowed && !IgnoreDocumentPermissions)
+        {
+            _logger.LogWarning("[SCRIPT] ExtractAllText blocked by document permissions ({Permissions})", permissions);
+            var accessibilityHint = permissions.CanExtractForAccessibility && !forAccessibility
+                ? " Extraction in support of accessibility is permitted (/P bit 10): call ExtractAllText(forAccessibility: true)."
+                : string.Empty;
+            throw new InvalidOperationException(
+                "Blocked by document permissions: text extraction requires copy/extract permission " +
+                $"(/P bit 5), which this document denies ({permissions}).{accessibilityHint} If you are " +
+                "the document owner, set IgnoreDocumentPermissions = true to override — permissions bind " +
+                "user-password opens only, and pdfe cannot yet verify owner passwords (#324).");
+        }
+        if (!extractionAllowed && IgnoreDocumentPermissions)
+        {
+            _logger.LogWarning(
+                "[SCRIPT] Overriding document permissions ({Permissions}): ExtractAllText proceeds " +
+                "because IgnoreDocumentPermissions is set", permissions);
+        }
+        else if (!permissions.CanCopy && forAccessibility)
+        {
+            _logger.LogInformation(
+                "[SCRIPT] ExtractAllText proceeding under the extract-for-accessibility permission (/P bit 10)");
         }
 
         try

@@ -658,8 +658,23 @@ and cost real planning time.
    CLI/batch-automation paths hard-fail unless `--allow-decrypt` /
    `allowDecrypt: true` is passed. The capability gap (#624) is unchanged —
    only the silence is fixed.
-4. **`/P` permissions parsed but never enforced** (#642) — pdfe will copy text
-   out of a copy-forbidden document.
+4. **`/P` permissions enforced at the action layer only** (#642) — the decoded
+   mask is `document.Permissions` / `EffectivePermissions`
+   (`Pdfe.Core/Security/PdfPermissions.cs`, bit meanings qpdf-verified).
+   Enforced: GUI copy/selection-copy/page-image-export (bit 5), typewriter and
+   form authoring (bit 4), annotations (bit 6), form fill (bit 6 or 9); CLI
+   `text`/`letters`/`render`/`ocr` (bit 5), `fill-form` (6/9),
+   `add-field`/`autodetect-fields --apply` (bit 4); batch steps and the
+   scripting `ExtractAllText` likewise. Deliberately NOT gated: the engine
+   (`page.Text`, search, rendering — it stays permission-blind by design),
+   and **redaction** (core purpose; #643 owns the encrypted-redact flow).
+   Caveats: bit 10 accessibility carve-out via `--for-accessibility` /
+   `ExtractAllText(forAccessibility: true)`; explicit overrides
+   (`--ignore-permissions`, batch `ignorePermissions: true`, scripting
+   `IgnoreDocumentPermissions`) exist because owner-password opening is #324
+   — every open today is user-level, so restrictions always apply. Not yet
+   gated anywhere: printing (doesn't exist, #621/#622 dropped it), page
+   assembly (bit 11) on merge/split/page-manipulation.
 
 **Previously listed here and now FIXED — do not re-add:**
 - ~~Inline images `BI...ID...EI` not handled~~ → handled (`ContentStreamWriter.cs:39-81`).
@@ -698,7 +713,7 @@ Pdfe.Core/                          # the PDF engine — parser, writer, redacti
 │   └── PdfDocumentSanitizer.cs     # /Info, XMP, outlines, annots (#608)
 ├── Document/                       # PdfDocument, PdfPage, PdfPageRect, coords
 ├── Fonts/                          # CFF, TrueType parse + subset (see #512-#515)
-└── Security/                       # decrypt only — no encrypt-on-save (#624)
+└── Security/                       # decrypt + encrypt writers (#639-#641), /P permissions (#642)
 
 Pdfe.Rendering/                     # SkiaSharp renderer
 └── Differential/                   # ← REFERENCE ORACLES. Use these, don't build new ones.

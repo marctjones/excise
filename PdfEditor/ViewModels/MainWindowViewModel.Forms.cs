@@ -98,6 +98,14 @@ public partial class MainWindowViewModel
     public void OnFormFieldEdited(string fieldName, string? newValue)
     {
         if (_pdfCoreDocument == null) return;
+
+        // #642: /P bit 6 or 9 gates filling interactive form fields.
+        if (!EnsureDocumentPermission(p => p.CanFillForms,
+            "Filling form fields", "filling in form fields (/P bit 6 or 9)"))
+        {
+            return;
+        }
+
         SyncFormFieldValueToServiceDocument(fieldName, newValue);
         FileState.FormFieldEditsCount++;
         NotifyFormDirtyStateChanged();
@@ -113,6 +121,14 @@ public partial class MainWindowViewModel
     public void OnFormFieldRectDrawn(PdfRectangle rect, int pageNumber)
     {
         if (_pdfCoreDocument == null) return;
+
+        // #642: creating new form fields modifies the document — /P bit 4.
+        if (!EnsureDocumentPermission(p => p.CanModify,
+            "Adding a form field", "modifying the document (/P bit 4)"))
+        {
+            return;
+        }
+
         try
         {
             var name = NextUniqueFieldName(_pdfCoreDocument, FormAuthoringFieldType);
@@ -138,6 +154,14 @@ public partial class MainWindowViewModel
     public int AutoDetectAndApplyFormFields()
     {
         if (_pdfCoreDocument == null) return 0;
+
+        // #642: applying detected fields modifies the document — /P bit 4.
+        if (!EnsureDocumentPermission(p => p.CanModify,
+            "Adding auto-detected form fields", "modifying the document (/P bit 4)"))
+        {
+            return 0;
+        }
+
         var suggestions = PdfFormAutoDetector.Scan(_pdfCoreDocument);
         if (suggestions.Count == 0) return 0;
 

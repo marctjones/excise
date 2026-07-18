@@ -252,6 +252,8 @@ partial class Program
         {
             Description = "User password for encrypted PDFs",
         };
+        var ignorePermissionsOption = CreateIgnorePermissionsOption();
+        var forAccessibilityOption = CreateForAccessibilityOption();
 
         var command = new Command("text", "Extract text from PDF")
         {
@@ -259,6 +261,8 @@ partial class Program
             pageOption,
             jsonOption,
             passwordOption,
+            ignorePermissionsOption,
+            forAccessibilityOption,
         };
 
         command.SetAction(parseResult =>
@@ -267,6 +271,8 @@ partial class Program
             var page = parseResult.GetValue(pageOption);
             var json = parseResult.GetValue(jsonOption);
             var password = parseResult.GetValue(passwordOption);
+            var ignorePermissions = parseResult.GetValue(ignorePermissionsOption);
+            var forAccessibility = parseResult.GetValue(forAccessibilityOption);
             if (!file.Exists)
             {
                 Console.Error.WriteLine($"File not found: {file.FullName}");
@@ -277,6 +283,8 @@ partial class Program
             try
             {
                 using var doc = OpenPdfDocument(file.FullName, password);
+                RequireDocumentPermission(doc, DocumentAction.Extract, "text extraction",
+                    ignorePermissions, forAccessibility, accessibilityHint: "--for-accessibility");
 
                 if (page.HasValue)
                 {
@@ -344,11 +352,16 @@ partial class Program
             DefaultValueFactory = _ => 50,
         };
 
+        var ignorePermissionsOption = CreateIgnorePermissionsOption();
+        var forAccessibilityOption = CreateForAccessibilityOption();
+
         var command = new Command("letters", "Show letters with position information")
         {
             fileArg,
             pageOption,
-            limitOption
+            limitOption,
+            ignorePermissionsOption,
+            forAccessibilityOption,
         };
 
         command.SetAction(parseResult =>
@@ -356,6 +369,8 @@ partial class Program
             var file = parseResult.GetValue(fileArg)!;
             var page = parseResult.GetValue(pageOption);
             var limit = parseResult.GetValue(limitOption);
+            var ignorePermissions = parseResult.GetValue(ignorePermissionsOption);
+            var forAccessibility = parseResult.GetValue(forAccessibilityOption);
             if (!file.Exists)
             {
                 Console.Error.WriteLine($"File not found: {file.FullName}");
@@ -365,6 +380,8 @@ partial class Program
             try
             {
                 using var doc = PdfDocument.Open(file.FullName);
+                RequireDocumentPermission(doc, DocumentAction.Extract, "letter/text extraction",
+                    ignorePermissions, forAccessibility, accessibilityHint: "--for-accessibility");
 
                 if (page < 1 || page > doc.PageCount)
                 {
@@ -394,6 +411,7 @@ partial class Program
             catch (Exception ex)
             {
                 Console.Error.WriteLine($"Error: {ex.Message}");
+                Environment.ExitCode = 1;
             }
         });
 
@@ -431,6 +449,8 @@ partial class Program
             DefaultValueFactory = _ => false,
         };
 
+        var ignorePermissionsOption = CreateIgnorePermissionsOption();
+
         var command = new Command("render", "Render PDF page to image")
         {
             fileArg,
@@ -439,6 +459,7 @@ partial class Program
             dpiOption,
             passwordOption,
             jsonOption,
+            ignorePermissionsOption,
         };
 
         command.SetAction(parseResult =>
@@ -449,6 +470,7 @@ partial class Program
             var dpi = parseResult.GetValue(dpiOption);
             var password = parseResult.GetValue(passwordOption);
             var json = parseResult.GetValue(jsonOption);
+            var ignorePermissions = parseResult.GetValue(ignorePermissionsOption);
             if (!file.Exists)
             {
                 Console.Error.WriteLine($"File not found: {file.FullName}");
@@ -459,6 +481,8 @@ partial class Program
             try
             {
                 using var doc = OpenPdfDocument(file.FullName, password);
+                RequireDocumentPermission(doc, DocumentAction.Extract,
+                    "page image export (render)", ignorePermissions);
 
                 if (page < 1 || page > doc.PageCount)
                 {
@@ -965,11 +989,13 @@ partial class Program
             DefaultValueFactory = _ => false,
         };
 
+        var ignorePermissionsOption = CreateIgnorePermissionsOption();
+
         var command = new Command(
             "fill-form",
             "Set AcroForm field values and save (optionally flatten to baked content)")
         {
-            inputArg, outputArg, fieldOption, flattenOption
+            inputArg, outputArg, fieldOption, flattenOption, ignorePermissionsOption
         };
 
         command.SetAction(parseResult =>
@@ -978,6 +1004,7 @@ partial class Program
             var output = parseResult.GetValue(outputArg)!;
             var fields = parseResult.GetValue(fieldOption);
             var flatten = parseResult.GetValue(flattenOption);
+            var ignorePermissions = parseResult.GetValue(ignorePermissionsOption);
             if (!input.Exists)
             {
                 Console.Error.WriteLine($"File not found: {input.FullName}");
@@ -994,7 +1021,7 @@ partial class Program
 
             try
             {
-                int set = RunFillForm(input.FullName, output.FullName, fields, flatten);
+                int set = RunFillForm(input.FullName, output.FullName, fields, flatten, ignorePermissions);
                 Console.WriteLine($"Set {set} field value(s){(flatten ? " (flattened)" : "")}");
                 Console.WriteLine($"Output: {output.FullName}");
             }
@@ -1014,10 +1041,12 @@ partial class Program
     /// document has no AcroForm or any --field token is malformed; throws
     /// KeyNotFoundException for an unknown field name.
     /// </summary>
-    internal static int RunFillForm(string inputPath, string outputPath, string[] fields, bool flatten)
+    internal static int RunFillForm(string inputPath, string outputPath, string[] fields, bool flatten,
+        bool ignorePermissions = false)
     {
         var bytes = File.ReadAllBytes(inputPath);
         using var doc = PdfDocument.Open(bytes);
+        RequireDocumentPermission(doc, DocumentAction.FillForms, "filling form fields", ignorePermissions);
 
         var form = doc.GetAcroForm()
             ?? throw new InvalidOperationException("Document has no /AcroForm — nothing to fill.");
@@ -1083,10 +1112,13 @@ partial class Program
             AllowMultipleArgumentsPerToken = false,
         };
 
+        var ignorePermissionsOption = CreateIgnorePermissionsOption();
+
         var command = new Command("add-field",
             "Add a new AcroForm field (Text/Checkbox/Choice/Signature) to a PDF")
         {
-            inputArg, outputArg, typeOption, nameOption, pageOption, rectOption, valueOption, optionsOption
+            inputArg, outputArg, typeOption, nameOption, pageOption, rectOption, valueOption, optionsOption,
+            ignorePermissionsOption
         };
 
         command.SetAction(parseResult =>
@@ -1109,7 +1141,8 @@ partial class Program
 
             try
             {
-                RunAddField(input.FullName, output.FullName, type, name, page, rectStr, value, options);
+                RunAddField(input.FullName, output.FullName, type, name, page, rectStr, value, options,
+                    parseResult.GetValue(ignorePermissionsOption));
                 Console.WriteLine($"Added {type} field '{name}' to page {page}");
                 Console.WriteLine($"Output: {output.FullName}");
             }
@@ -1125,11 +1158,13 @@ partial class Program
 
     internal static void RunAddField(string inputPath, string outputPath,
         string type, string name, int page, string rectStr,
-        string? value, string[] options)
+        string? value, string[] options, bool ignorePermissions = false)
     {
         var rect = ParseRect(rectStr);
         var bytes = File.ReadAllBytes(inputPath);
         using var doc = PdfDocument.Open(bytes);
+        RequireDocumentPermission(doc, DocumentAction.ModifyContents,
+            "adding form fields", ignorePermissions);
 
         switch (type.ToLowerInvariant())
         {
@@ -1195,10 +1230,12 @@ partial class Program
             DefaultValueFactory = _ => false,
         };
 
+        var ignorePermissionsOption = CreateIgnorePermissionsOption();
+
         var command = new Command("autodetect-fields",
             "Heuristically detect likely form-field locations on each page")
         {
-            inputArg, outputArg, applyOption
+            inputArg, outputArg, applyOption, ignorePermissionsOption
         };
 
         command.SetAction(parseResult =>
@@ -1206,6 +1243,7 @@ partial class Program
             var input = parseResult.GetValue(inputArg)!;
             var output = parseResult.GetValue(outputArg);
             var apply = parseResult.GetValue(applyOption);
+            var ignorePermissions = parseResult.GetValue(ignorePermissionsOption);
             if (!input.Exists)
             {
                 Console.Error.WriteLine($"File not found: {input.FullName}");
@@ -1223,6 +1261,13 @@ partial class Program
             {
                 var bytes = File.ReadAllBytes(input.FullName);
                 using var doc = PdfDocument.Open(bytes);
+                if (apply)
+                {
+                    // Detection alone is read-only analysis; only --apply
+                    // modifies the document and needs /P bit 4 (#642).
+                    RequireDocumentPermission(doc, DocumentAction.ModifyContents,
+                        "adding detected form fields (--apply)", ignorePermissions);
+                }
                 var sugg = PdfFormAutoDetector.Scan(doc);
 
                 Console.WriteLine($"Detected {sugg.Count} field candidate(s):");
@@ -1436,9 +1481,13 @@ partial class Program
             Description = "Path to a directory containing <lang>.traineddata. Defaults to TESSDATA_PREFIX.",
         };
 
+        var ignorePermissionsOption = CreateIgnorePermissionsOption();
+        var forAccessibilityOption = CreateForAccessibilityOption();
+
         var command = new Command("ocr", "Render and OCR a PDF page via tesseract")
         {
             fileArg, pageOption, dpiOption, langOption, tessdataOption,
+            ignorePermissionsOption, forAccessibilityOption,
         };
 
         command.SetAction(parseResult =>
@@ -1448,6 +1497,8 @@ partial class Program
             var dpi = parseResult.GetValue(dpiOption);
             var lang = parseResult.GetValue(langOption)!;
             var tessdata = parseResult.GetValue(tessdataOption);
+            var ignorePermissions = parseResult.GetValue(ignorePermissionsOption);
+            var forAccessibility = parseResult.GetValue(forAccessibilityOption);
             if (!file.Exists)
             {
                 Console.Error.WriteLine($"File not found: {file.FullName}");
@@ -1468,6 +1519,8 @@ partial class Program
             try
             {
                 using var doc = PdfDocument.Open(File.ReadAllBytes(file.FullName));
+                RequireDocumentPermission(doc, DocumentAction.Extract, "OCR text extraction",
+                    ignorePermissions, forAccessibility, accessibilityHint: "--for-accessibility");
                 int from = page.GetValueOrDefault(1);
                 int to   = page.HasValue ? page.Value : doc.PageCount;
 

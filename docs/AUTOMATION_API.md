@@ -162,6 +162,15 @@ Rules enforced by the batch contract:
 - Mutating commands must write to an explicit output path.
 - Mutating commands refuse to overwrite their input file.
 - `redaction.apply` requires `confirmDestructive: true`.
+- Document `/P` permissions are enforced (#642): `text.extract` and
+  `render.page` require the document's copy/extract permission, `form.fillForm`
+  requires the form fill-in permission, and `form.addField` requires the modify
+  permission. A denied step fails with error code `PERMISSION_DENIED`
+  (category `SECURITY`). Overrides are per step and explicit:
+  `ignorePermissions: true` proceeds anyway (for document owners — pdfe cannot
+  yet verify owner passwords, #324), and `forAccessibility: true` on
+  `text.extract` invokes the ISO 32000-2 bit 10 extract-for-accessibility
+  carve-out. `redaction.apply` is deliberately not permission-gated.
 - Hidden-text audit fails the workflow when findings are present unless
   `allowFindings: true` is supplied.
 

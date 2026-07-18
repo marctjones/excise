@@ -190,6 +190,48 @@ public class PdfDocument : IDisposable
     public bool IsEncrypted => Trailer.ContainsKey("Encrypt");
 
     /// <summary>
+    /// The document's decoded <c>/P</c> permission flags (ISO 32000-2
+    /// Table 22) — issue #642. Always non-null:
+    /// <see cref="Pdfe.Core.Security.PdfPermissions.AllAllowed"/> for
+    /// unencrypted documents (an unencrypted document genuinely has no
+    /// restrictions, and callers at the action layer shouldn't have to
+    /// null-check), and the decoded <c>/P</c> value for encrypted ones.
+    /// A malformed encrypted document with an unreadable /Encrypt or /P
+    /// also decodes as all-allowed — /P is advisory metadata, and failing
+    /// open on a broken mask matches every mainstream reader.
+    ///
+    /// This is the raw document policy; enforcement points should consult
+    /// <see cref="EffectivePermissions"/>, which additionally accounts for
+    /// owner-password authority. See <see cref="Pdfe.Core.Security.PdfPermissions"/>
+    /// for the full enforcement policy (action-layer only, accessibility
+    /// carve-out, explicit overrides).
+    /// </summary>
+    public Pdfe.Core.Security.PdfPermissions Permissions { get; }
+
+    /// <summary>
+    /// Whether the document was opened with the OWNER password. Per spec
+    /// the owner password confers full permissions, so enforcement only
+    /// applies to user-password (including empty-password) opens. pdfe's
+    /// decrypt path currently verifies only the USER password —
+    /// owner-password-only opening is #324 and unsupported — so this is
+    /// always <c>false</c> today; #324's owner-open path is expected to
+    /// set it, which flips <see cref="EffectivePermissions"/> to
+    /// all-allowed without any enforcement-point changes.
+    /// </summary>
+    public bool OpenedWithOwnerPassword { get; }
+
+    /// <summary>
+    /// The permissions that apply to THIS open of the document: the
+    /// decoded <see cref="Permissions"/> for a user-password open, or
+    /// <see cref="Pdfe.Core.Security.PdfPermissions.AllAllowed"/> when the
+    /// document is unencrypted or was opened with the owner password.
+    /// GUI/CLI/scripting enforcement points consult this, not
+    /// <see cref="Permissions"/>.
+    /// </summary>
+    public Pdfe.Core.Security.PdfPermissions EffectivePermissions =>
+        OpenedWithOwnerPassword ? Pdfe.Core.Security.PdfPermissions.AllAllowed : Permissions;
+
+    /// <summary>
     /// Information dictionary (metadata). Publicly read-only; created on demand
     /// by the metadata setters (<see cref="SetTitle"/> etc.) when absent.
     /// </summary>
@@ -270,7 +312,8 @@ public class PdfDocument : IDisposable
         Dictionary<int, XRefEntry> xref,
         PdfDictionary trailer,
         string version,
-        Pdfe.Core.Security.PdfStandardSecurityHandler? securityHandler = null)
+        Pdfe.Core.Security.PdfStandardSecurityHandler? securityHandler = null,
+        Pdfe.Core.Security.PdfPermissions? permissions = null)
     {
         _stream = stream;
         _ownsStream = ownsStream;
@@ -279,6 +322,10 @@ public class PdfDocument : IDisposable
         _parser = new PdfParser(new PdfLexer(stream, ownsStream: false));
         _decompressor = new StreamDecompressor();
         _securityHandler = securityHandler;
+        Permissions = permissions ?? Pdfe.Core.Security.PdfPermissions.AllAllowed;
+        // Owner-password opening is #324 (unsupported): every successful
+        // open today verifies the USER password, so permissions apply.
+        OpenedWithOwnerPassword = false;
 
         // Let the parser resolve indirect /Length refs on stream dicts by
         // calling back into our object cache — needed for PDFs (notably
@@ -422,6 +469,7 @@ public class PdfDocument : IDisposable
         // wrong password), we honour `allowEncrypted` — true keeps
         // returning ciphertext for inspection; false (default) throws.
         Pdfe.Core.Security.PdfStandardSecurityHandler? handler = null;
+        Pdfe.Core.Security.PdfPermissions? permissions = null;
         if (trailer.ContainsKey("Encrypt"))
         {
             try
@@ -447,6 +495,10 @@ public class PdfDocument : IDisposable
                 {
                     if (encryptObj is not PdfDictionary encryptDict)
                         throw new Pdfe.Core.Parsing.PdfParseException("/Encrypt is not a dictionary");
+
+                    // Surface /P (#642) regardless of whether the security
+                    // handler can be built — it's plain-integer metadata.
+                    permissions = ReadPermissions(encryptDict);
 
                     // Some PDF 2.0 files encrypt only embedded-file streams
                     // (/EFF) while leaving normal document streams and strings
@@ -484,7 +536,28 @@ public class PdfDocument : IDisposable
         }
 
         // Create document (loads catalog internally)
-        return new PdfDocument(stream, ownsStream, fullXRef, trailer, version, handler);
+        return new PdfDocument(stream, ownsStream, fullXRef, trailer, version, handler, permissions);
+    }
+
+    /// <summary>
+    /// Decode /P from the /Encrypt dictionary (#642). Missing or
+    /// non-numeric /P (malformed — /P is required for the Standard
+    /// handler) fails open to all-allowed: /P is advisory policy metadata
+    /// and mainstream readers treat a broken mask the same way.
+    /// </summary>
+    private static Pdfe.Core.Security.PdfPermissions ReadPermissions(PdfDictionary encryptDict)
+    {
+        try
+        {
+            var p = encryptDict.GetOptional("P");
+            if (p is PdfInteger or PdfReal)
+                return new Pdfe.Core.Security.PdfPermissions(p.GetLong());
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            // fall through to all-allowed
+        }
+        return Pdfe.Core.Security.PdfPermissions.AllAllowed;
     }
 
     private static bool UsesIdentityCryptFiltersForDocumentContent(PdfDictionary encryptDict)

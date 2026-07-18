@@ -17,6 +17,13 @@ public partial class MainWindowViewModel
         if (!_documentService.IsDocumentLoaded)
             return;
 
+        // #642: /P bit 6 gates adding/modifying annotations.
+        if (!EnsureDocumentPermission(p => p.CanAnnotate,
+            "Adding a highlight annotation", "adding or modifying annotations (/P bit 6)"))
+        {
+            return;
+        }
+
         if (!TryGetCurrentTextSelectionContentRect(out var pageNumber, out var contentRect))
         {
             await _dialogService.ShowMessageAsync(
@@ -46,6 +53,13 @@ public partial class MainWindowViewModel
     {
         if (!_documentService.IsDocumentLoaded)
             return;
+
+        // #642: /P bit 6 gates adding/modifying annotations.
+        if (!EnsureDocumentPermission(p => p.CanAnnotate,
+            "Adding a sticky note", "adding or modifying annotations (/P bit 6)"))
+        {
+            return;
+        }
 
         var contents = contentsOverride;
         if (contents == null)

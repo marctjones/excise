@@ -41,13 +41,30 @@ public partial class MainWindowViewModel
         }
     }
 
-    private void ToggleTypewriterMode() =>
+    private void ToggleTypewriterMode()
+    {
+        // #642: adding text modifies the document — /P bit 4. Block on
+        // entering the mode (clear feedback up front); leaving it is free.
+        if (!IsTypewriterMode && !EnsureDocumentPermission(p => p.CanModify,
+            "Adding text (typewriter)", "modifying the document (/P bit 4)"))
+        {
+            return;
+        }
+
         IsTypewriterMode = !IsTypewriterMode;
+    }
 
     public void OnTypewriterTextCreated(PdfRectangle rect, int pageNumber)
     {
         if (_pdfCoreDocument == null)
             return;
+
+        // Defence in depth for callers that bypass the mode toggle (#642).
+        if (!EnsureDocumentPermission(p => p.CanModify,
+            "Adding text (typewriter)", "modifying the document (/P bit 4)"))
+        {
+            return;
+        }
 
         TypewriterTextOperations.Add(PdfTypewriterTextOperation.Create(
             pageNumber,
