@@ -14,26 +14,29 @@ public class FilenameSuggestionServiceTests
     public void SuggestRedactedFilename_AppendsRedacted()
     {
         // Arrange
-        var originalPath = "/documents/contract.pdf";
+        // Platform-agnostic: on Windows Path.Combine emits '\\', so the
+        // expectation must be built the same way the service builds it.
+        var originalPath = Path.Combine("documents", "contract.pdf");
 
         // Act
         var suggested = _service.SuggestRedactedFilename(originalPath);
 
         // Assert
-        suggested.Should().Be("/documents/contract_REDACTED.pdf");
+        suggested.Should().Be(Path.Combine("documents", "contract_REDACTED.pdf"));
     }
 
     [Fact]
     public void SuggestRedactedFilename_PreservesDirectory()
     {
         // Arrange
-        var originalPath = "/very/deep/folder/structure/document.pdf";
+        var dir = Path.Combine("very", "deep", "folder", "structure");
+        var originalPath = Path.Combine(dir, "document.pdf");
 
         // Act
         var suggested = _service.SuggestRedactedFilename(originalPath);
 
         // Assert
-        suggested.Should().StartWith("/very/deep/folder/structure/");
+        suggested.Should().StartWith(dir + Path.DirectorySeparatorChar);
         suggested.Should().EndWith("_REDACTED.pdf");
     }
 
@@ -78,26 +81,26 @@ public class FilenameSuggestionServiceTests
     public void SuggestPageSubsetFilename_AddsPageRange()
     {
         // Arrange
-        var originalPath = "/documents/report.pdf";
+        var originalPath = Path.Combine("documents", "report.pdf");
 
         // Act
         var suggested = _service.SuggestPageSubsetFilename(originalPath, "1-5");
 
         // Assert
-        suggested.Should().Be("/documents/report_pages_1-5.pdf");
+        suggested.Should().Be(Path.Combine("documents", "report_pages_1-5.pdf"));
     }
 
     [Fact]
     public void SuggestPageSubsetFilename_HandlesComplexRanges()
     {
         // Arrange
-        var originalPath = "/documents/report.pdf";
+        var originalPath = Path.Combine("documents", "report.pdf");
 
         // Act
         var suggested = _service.SuggestPageSubsetFilename(originalPath, "3,7,9-12");
 
         // Assert
-        suggested.Should().Be("/documents/report_pages_3,7,9-12.pdf");
+        suggested.Should().Be(Path.Combine("documents", "report_pages_3,7,9-12.pdf"));
     }
 
     [Fact]

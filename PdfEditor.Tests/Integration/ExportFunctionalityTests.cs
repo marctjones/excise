@@ -106,8 +106,14 @@ public class ExportFunctionalityTests : IDisposable
         
         using var image = SKImage.FromBitmap(bitmap);
         using var encodedData = image.Encode(SKEncodedImageFormat.Png, 100);
-        using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write);
-        encodedData.SaveTo(fileStream);
+        // Block-scoped (not `using var`): the write stream must be CLOSED
+        // before the re-read below — on Windows, File.OpenRead on a file
+        // still held open for writing throws IOException (found by the
+        // first CI Windows leg to ever get this far, after #647).
+        using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+        {
+            encodedData.SaveTo(fileStream);
+        }
 
         // Assert
         File.Exists(filePath).Should().BeTrue();

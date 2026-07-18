@@ -660,19 +660,22 @@ public class PdfViewerControlTests
     [FixedAvaloniaFact]
     public void ContinuousMode_BuildsOneSlotPerPage()
     {
+        // Open from bytes and delete the temp file up front: opening by
+        // path keeps a live file stream, and deleting a still-open file
+        // throws IOException on Windows (fine on Unix — which is why this
+        // only surfaced when #647's Windows CI leg first got this far).
         var path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"pdfe_cont_{Guid.NewGuid():N}.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 3);
-        try
-        {
-            var control = new PdfViewerControl { Document = PdfCoreDocument.Open(path) };
-            control.ViewMode = PdfViewMode.Continuous;
+        var bytes = System.IO.File.ReadAllBytes(path);
+        System.IO.File.Delete(path);
 
-            var items = control.FindControl<ItemsControl>("ContinuousItems")!;
-            items.ItemsSource.Should().NotBeNull();
-            items.ItemsSource!.Cast<PdfPageSlot>().Select(s => s.PageNumber)
-                .Should().Equal(1, 2, 3);
-        }
-        finally { System.IO.File.Delete(path); }
+        var control = new PdfViewerControl { Document = PdfCoreDocument.Open(bytes) };
+        control.ViewMode = PdfViewMode.Continuous;
+
+        var items = control.FindControl<ItemsControl>("ContinuousItems")!;
+        items.ItemsSource.Should().NotBeNull();
+        items.ItemsSource!.Cast<PdfPageSlot>().Select(s => s.PageNumber)
+            .Should().Equal(1, 2, 3);
     }
 
     [FixedAvaloniaFact]
@@ -695,25 +698,25 @@ public class PdfViewerControlTests
     [FixedAvaloniaFact]
     public void ContinuousMode_CachesSlotTopOffsetsForScrollLookup()
     {
+        // Bytes-based open + upfront delete: see ContinuousMode_BuildsOneSlotPerPage.
         var path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"pdfe_cont_offsets_{Guid.NewGuid():N}.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 3);
-        try
-        {
-            var control = new PdfViewerControl { Document = PdfCoreDocument.Open(path) };
-            control.ViewMode = PdfViewMode.Continuous;
+        var bytes = System.IO.File.ReadAllBytes(path);
+        System.IO.File.Delete(path);
 
-            var slots = control.FindControl<ItemsControl>("ContinuousItems")!
-                .ItemsSource!.Cast<PdfPageSlot>().ToArray();
+        var control = new PdfViewerControl { Document = PdfCoreDocument.Open(bytes) };
+        control.ViewMode = PdfViewMode.Continuous;
 
-            slots[0].TopDip.Should().Be(0);
-            slots[1].TopDip.Should().BeApproximately(
-                slots[0].DisplayHeight + 12.0,
-                0.01,
-                "slot offsets should be precomputed once instead of summed on every scroll event");
-            PdfViewerControl.FindTopVisibleContinuousPage(slots, slots[1].TopDip + 1)
-                .Should().Be(2);
-        }
-        finally { System.IO.File.Delete(path); }
+        var slots = control.FindControl<ItemsControl>("ContinuousItems")!
+            .ItemsSource!.Cast<PdfPageSlot>().ToArray();
+
+        slots[0].TopDip.Should().Be(0);
+        slots[1].TopDip.Should().BeApproximately(
+            slots[0].DisplayHeight + 12.0,
+            0.01,
+            "slot offsets should be precomputed once instead of summed on every scroll event");
+        PdfViewerControl.FindTopVisibleContinuousPage(slots, slots[1].TopDip + 1)
+            .Should().Be(2);
     }
 
     [FixedAvaloniaFact]
