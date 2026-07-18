@@ -3255,7 +3255,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 // Fallback to GitHub repository
                 var psi = new System.Diagnostics.ProcessStartInfo
                 {
-                    FileName = "https://github.com/marctjones/pdfe",
+                    FileName = "https://github.com/marctjones/excise",
                     UseShellExecute = true
                 };
                 System.Diagnostics.Process.Start(psi);

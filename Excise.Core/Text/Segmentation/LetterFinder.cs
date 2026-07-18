@@ -25,7 +25,7 @@ namespace Excise.Core.Text.Segmentation;
 /// <para>
 /// Ported from Excise.App.Redaction.GlyphLevel.LetterFinder. The CJK /
 /// per-glyph-byte tracking branches are deferred until
-/// <see href="https://github.com/marctjones/pdfe/issues/281"/> lands a
+/// <see href="https://github.com/marctjones/excise/issues/281"/> lands a
 /// richer text-operation representation; simple fonts with one byte per
 /// character work with the current shape.
 /// </para>

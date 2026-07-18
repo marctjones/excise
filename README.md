@@ -6,7 +6,7 @@
 
 A cross-platform PDF editor and pure-.NET PDF framework, built with **C# + .NET 10 + Avalonia UI** and shipped with **true content-level redaction**, **page organization**, **flat typewriter text editing**, **AcroForm editing/authoring**, highlight/sticky-note annotation authoring, and **PDF 2.0 conformance**.
 
-[![Release](https://img.shields.io/github/v/release/marctjones/pdfe)](https://github.com/marctjones/pdfe/releases)
+[![Release](https://img.shields.io/github/v/release/marctjones/excise)](https://github.com/marctjones/excise/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-7000%2B%20passing-brightgreen)](Excise.Core.Tests)
 [![Build](https://img.shields.io/badge/build-0%20warnings-brightgreen)](Excise.Core)
@@ -239,12 +239,12 @@ All 15 conformance phases shipped:
 
 ### From releases
 
-Download the latest from [GitHub Releases](https://github.com/marctjones/pdfe/releases) and run the executable for your platform.
+Download the latest from [GitHub Releases](https://github.com/marctjones/excise/releases) and run the executable for your platform.
 
 ### From source
 
 ```bash
-git clone https://github.com/marctjones/pdfe.git
+git clone https://github.com/marctjones/excise.git
 cd excise
 dotnet restore
 dotnet run --project Excise.App
@@ -593,12 +593,12 @@ What counts as the supported public contract:
 - The high-level authoring surface — `Excise.Core.Authoring.*` (`PdfDocumentBuilder`, `TextStyle`, `PageSize`, `PageMargins`, `FontFamily`, `LayoutContext`) — is the recommended, stable entry point for *writing* PDFs. The low-level `PdfGraphics` / `AcroFormAuthoring` API remains available as an escape hatch.
 - The public API is **gated in CI**: `PublicApiApprovalTests` snapshots the full public surface of `Excise.Core` against a committed baseline (`Excise.Core.Tests/PublicApi/Excise.Core.approved.txt`). Any addition, removal, or signature change fails the build until the baseline is intentionally regenerated (`APPROVE_PUBLIC_API=1`) and committed — so every public-API change is a deliberate, reviewable SemVer decision.
 
-**Distribution:** packages ship as `.nupkg` + `.snupkg` (symbols) with [SourceLink](https://github.com/dotnet/sourcelink) for step-into debugging, attached to each [GitHub Release](https://github.com/marctjones/pdfe/releases). They are **not published to nuget.org** — consume them via a local/private feed or a project reference. See issues #383 (writer DX) and #384 (viewer/render DX).
+**Distribution:** packages ship as `.nupkg` + `.snupkg` (symbols) with [SourceLink](https://github.com/dotnet/sourcelink) for step-into debugging, attached to each [GitHub Release](https://github.com/marctjones/excise/releases). They are **not published to nuget.org** — consume them via a local/private feed or a project reference. See issues #383 (writer DX) and #384 (viewer/render DX).
 
 ## Documentation
 
 - **[CHANGELOG.md](CHANGELOG.md)** — release notes
-- **[GitHub Wiki](https://github.com/marctjones/pdfe/wiki)** — Architecture, redaction engine internals, PDF spec reference
+- **[GitHub Wiki](https://github.com/marctjones/excise/wiki)** — Architecture, redaction engine internals, PDF spec reference
 - **[CLAUDE.md](CLAUDE.md)** — Development guidelines (also for AI-assisted contributions)
 - **[REDACTION_AI_GUIDELINES.md](REDACTION_AI_GUIDELINES.md)** — Critical safety rules for redaction-code changes
 

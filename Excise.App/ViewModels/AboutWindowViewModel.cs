@@ -30,7 +30,7 @@ public sealed class AboutWindowViewModel
     public string Copyright { get; } =
         "Copyright © 2024–2026 Marc Jones · MIT License";
 
-    public string ProjectUrl { get; } = "https://github.com/marctjones/pdfe";
+    public string ProjectUrl { get; } = "https://github.com/marctjones/excise";
 
     public LicenseManifest Manifest { get; }
 

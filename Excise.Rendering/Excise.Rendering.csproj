@@ -15,9 +15,9 @@
     <Authors>Marc Jones</Authors>
     <Description>Pure-managed, SkiaSharp-based PDF render API for .NET. Render pages to SKBitmap or PNG with DPI/clip/rotation support and cancellable rendering. Framework-neutral engine behind Excise.Avalonia; no native PDFium. Cross-platform, trim/AOT-friendlier.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/marctjones/pdfe</RepositoryUrl>
+    <RepositoryUrl>https://github.com/marctjones/excise</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageProjectUrl>https://github.com/marctjones/pdfe</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/marctjones/excise</PackageProjectUrl>
     <PackageTags>pdf;render;skiasharp;rasterize;cross-platform;managed</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>

@@ -18,7 +18,7 @@ namespace Excise.Demo;
 
 public partial class SpecCoverageWindow : Window
 {
-    private const string WikiBaseUrl = "https://github.com/marctjones/pdfe/wiki";
+    private const string WikiBaseUrl = "https://github.com/marctjones/excise/wiki";
     private const string PdfSpecBaseUrl = "https://pdfa.org/resource/pdf-specification-index/"; // PDF 2.0 spec reference
 
     private int _dpi = 150;

@@ -14,9 +14,9 @@
     <Authors>Marc Jones</Authors>
     <Description>Pure-managed PDF parser, document model, and writer for .NET. Open/edit/save PDFs, extract text/links/annotations/forms, and perform true glyph-level redaction. No native dependencies; cross-platform and trim/AOT-friendlier.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/marctjones/pdfe</RepositoryUrl>
+    <RepositoryUrl>https://github.com/marctjones/excise</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageProjectUrl>https://github.com/marctjones/pdfe</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/marctjones/excise</PackageProjectUrl>
     <PackageTags>pdf;parser;redaction;text-extraction;cross-platform;managed</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>

@@ -659,7 +659,7 @@ public class PdfEncryptionNotSupportedException : Exception
 {
     public PdfEncryptionNotSupportedException()
         : base("This PDF is encrypted and excise does not yet support decryption. " +
-               "See https://github.com/marctjones/pdfe/issues/324. " +
+               "See https://github.com/marctjones/excise/issues/324. " +
                "Pass allowEncrypted: true to Open() to bypass this check (returns garbage for encrypted streams).")
     {
     }

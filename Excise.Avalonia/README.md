@@ -55,7 +55,7 @@ Viewer.ZoomToActualSize();
 
 ## Sample
 
-See `Excise.Avalonia.Sample` in the [repository](https://github.com/marctjones/pdfe) for a minimal
+See `Excise.Avalonia.Sample` in the [repository](https://github.com/marctjones/excise) for a minimal
 open-and-view app, and the `Excise.App` app for a full-featured reference (redaction, search, forms).
 
 ## Notes
@@ -64,4 +64,4 @@ open-and-view app, and the `Excise.App` app for a full-featured reference (redac
 - The control uses an `unsafe` pixel copy (`SKBitmap` → Avalonia `WriteableBitmap`) for speed.
 - Rendering engine gaps are tracked in the excise issue tracker (e.g. JBIG2/JPX image filters).
 
-MIT licensed. Part of the [excise](https://github.com/marctjones/pdfe) project.
+MIT licensed. Part of the [excise](https://github.com/marctjones/excise) project.

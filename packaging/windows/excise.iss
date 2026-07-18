@@ -25,7 +25,7 @@
 
 #define MyAppName        "excise"
 #define MyAppPublisher   "Marc Jones"
-#define MyAppURL         "https://github.com/marctjones/pdfe"
+#define MyAppURL         "https://github.com/marctjones/excise"
 #define MyAppExeName     "Excise.App.exe"
 #define MyAppCliExeName  "excise.exe"
 #define MyAppId          "{{C9F5B5E1-1A2D-4E5A-9C7E-6B5C4A1D2E3F}}"

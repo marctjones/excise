@@ -1420,4 +1420,4 @@ glyph-level redaction** — content removed from the PDF structure, not just
 visually covered. Built on PdfPig + PDFsharp + PDFtoImage + Tesseract.NET.
 
 See the GitHub release for full v1.0.0 notes:
-https://github.com/marctjones/pdfe/releases/tag/v1.0.0
+https://github.com/marctjones/excise/releases/tag/v1.0.0

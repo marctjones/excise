@@ -62,7 +62,7 @@ returned `SKBitmap`.
 
 ## Known engine gaps
 
-Tracked in the [excise](https://github.com/marctjones/pdfe) issue tracker:
+Tracked in the [excise](https://github.com/marctjones/excise) issue tracker:
 remaining JBIG2 edge cases, advanced shading precision, annotation appearance
 fidelity, malformed/fuzzed PDFs, encrypted PDFs requiring non-empty passwords,
 and large-file performance. Release-quality rendering checks use the pdf.js
@@ -88,4 +88,4 @@ remaining tracked color work is not a blanket "ICC missing" gap; it is limited
 to specific reference-disagreement and prepress-fidelity cases tracked through
 the #491 quality dashboard and focused renderer issues.
 
-MIT licensed. Part of the [excise](https://github.com/marctjones/pdfe) project.
+MIT licensed. Part of the [excise](https://github.com/marctjones/excise) project.

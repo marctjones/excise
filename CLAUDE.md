@@ -927,7 +927,7 @@ gh issue list --label "track: daily-driver"    --state open   # usability second
 The roadmap lives in the named-track milestones (`1. Redaction Trust (blocking)`
 … `8. Deferred / Future`), ordered by the sequence they should be done in. Do not
 hard-code the full milestone list here either — query it live:
-`gh api repos/marctjones/pdfe/milestones --jq '.[] | "\(.number)\t\(.title)"'`.
+`gh api repos/marctjones/excise/milestones --jq '.[] | "\(.number)\t\(.title)"'`.
 
 View all: `gh issue list --label "priority: high,priority: critical"`
 

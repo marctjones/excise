@@ -166,7 +166,7 @@ Package: $PACKAGE
 Version: $VERSION
 Architecture: $ARCH
 Maintainer: Marc Jones <marc.t.jones@gmail.com>
-Homepage: https://github.com/marctjones/pdfe
+Homepage: https://github.com/marctjones/excise
 Section: graphics
 Priority: optional
 Installed-Size: $INSTALLED_SIZE

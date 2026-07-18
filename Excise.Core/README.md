@@ -46,4 +46,4 @@ metadata, embedded-file extraction, and a broad content-stream operator set.
 Hostile input fails with typed `PdfParseException`s rather than CLR crashes
 (fuzz-tested), with recursion-depth and cancellation guards.
 
-MIT licensed. Part of the [excise](https://github.com/marctjones/pdfe) project.
+MIT licensed. Part of the [excise](https://github.com/marctjones/excise) project.

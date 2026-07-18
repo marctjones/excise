@@ -25,11 +25,11 @@
     <Authors>Marc Jones</Authors>
     <Description>A reusable, pure-managed PDF viewer control for Avalonia. Renders with SkiaSharp (no native PDFium), supports zoom/pan, page navigation, text selection, search highlights, annotations, links, and form-field overlays. Built on Excise.Core + Excise.Rendering.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/marctjones/pdfe</RepositoryUrl>
+    <RepositoryUrl>https://github.com/marctjones/excise</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>pdf;avalonia;viewer;control;skiasharp;render;cross-platform</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageProjectUrl>https://github.com/marctjones/pdfe</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/marctjones/excise</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>

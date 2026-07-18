@@ -1,7 +1,7 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: excise
 Upstream-Contact: Marc Jones <marc.t.jones@gmail.com>
-Source: https://github.com/marctjones/pdfe
+Source: https://github.com/marctjones/excise
 
 Files: *
 Copyright: 2024-2026 Marc Jones
