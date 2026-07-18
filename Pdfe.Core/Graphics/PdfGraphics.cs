@@ -53,6 +53,22 @@ public class PdfGraphics : IDisposable
     private bool _disposed;
 
     /// <summary>
+    /// Append one content-stream operator line with a deterministic '\n'
+    /// terminator. StringBuilder.AppendLine uses Environment.NewLine, which
+    /// is "\r\n" on Windows — that made pdfe-authored content streams
+    /// byte-different across platforms (same document, different saved
+    /// bytes) and broke line-based tooling that splits on '\n'. PDF treats
+    /// both as whitespace, but deterministic output is strictly better for
+    /// reproducible saves, hashing, and tests. Always use this instead of
+    /// _operators.AppendLine.
+    /// </summary>
+    private void EmitLine(string line)
+    {
+        _operators.Append(line);
+        _operators.Append('\n');
+    }
+
+    /// <summary>
     /// Creates a graphics context for the specified page.
     /// </summary>
     internal PdfGraphics(PdfPage page)
@@ -69,7 +85,7 @@ public class PdfGraphics : IDisposable
     public void SaveState()
     {
         ThrowIfDisposed();
-        _operators.AppendLine("q");
+        EmitLine("q");
     }
 
     /// <summary>
@@ -78,7 +94,7 @@ public class PdfGraphics : IDisposable
     public void RestoreState()
     {
         ThrowIfDisposed();
-        _operators.AppendLine("Q");
+        EmitLine("Q");
     }
 
     #endregion
@@ -93,7 +109,7 @@ public class PdfGraphics : IDisposable
     public void BeginMarkedContent(string tag, int mcid)
     {
         ThrowIfDisposed();
-        _operators.AppendLine($"/{tag} <</MCID {mcid}>> BDC");
+        EmitLine($"/{tag} <</MCID {mcid}>> BDC");
     }
 
     /// <summary>
@@ -106,14 +122,14 @@ public class PdfGraphics : IDisposable
     {
         ThrowIfDisposed();
         // BMC (not BDC) — a property-less artifact takes no properties operand.
-        _operators.AppendLine("/Artifact BMC");
+        EmitLine("/Artifact BMC");
     }
 
     /// <summary>Close the most recent marked-content sequence (<c>EMC</c>).</summary>
     public void EndMarkedContent()
     {
         ThrowIfDisposed();
-        _operators.AppendLine("EMC");
+        EmitLine("EMC");
     }
 
     #endregion
@@ -127,7 +143,7 @@ public class PdfGraphics : IDisposable
     {
         ThrowIfDisposed();
         // Translation matrix: [1 0 0 1 tx ty]
-        _operators.AppendLine($"1 0 0 1 {Fmt(tx)} {Fmt(ty)} cm");
+        EmitLine($"1 0 0 1 {Fmt(tx)} {Fmt(ty)} cm");
     }
 
     /// <summary>
@@ -137,7 +153,7 @@ public class PdfGraphics : IDisposable
     {
         ThrowIfDisposed();
         // Scale matrix: [sx 0 0 sy 0 0]
-        _operators.AppendLine($"{Fmt(sx)} 0 0 {Fmt(sy)} 0 0 cm");
+        EmitLine($"{Fmt(sx)} 0 0 {Fmt(sy)} 0 0 cm");
     }
 
     /// <summary>
@@ -150,7 +166,7 @@ public class PdfGraphics : IDisposable
         var cos = Math.Cos(radians);
         var sin = Math.Sin(radians);
         // Rotation matrix: [cos sin -sin cos 0 0]
-        _operators.AppendLine($"{Fmt(cos)} {Fmt(sin)} {Fmt(-sin)} {Fmt(cos)} 0 0 cm");
+        EmitLine($"{Fmt(cos)} {Fmt(sin)} {Fmt(-sin)} {Fmt(cos)} 0 0 cm");
     }
 
     /// <summary>
@@ -159,7 +175,7 @@ public class PdfGraphics : IDisposable
     public void Transform(double a, double b, double c, double d, double e, double f)
     {
         ThrowIfDisposed();
-        _operators.AppendLine($"{Fmt(a)} {Fmt(b)} {Fmt(c)} {Fmt(d)} {Fmt(e)} {Fmt(f)} cm");
+        EmitLine($"{Fmt(a)} {Fmt(b)} {Fmt(c)} {Fmt(d)} {Fmt(e)} {Fmt(f)} cm");
     }
 
     #endregion
@@ -184,30 +200,30 @@ public class PdfGraphics : IDisposable
         // Set colors
         if (fill != null)
         {
-            _operators.AppendLine(fill.GetFillColorOperator());
+            EmitLine(fill.GetFillColorOperator());
         }
 
         if (stroke != null)
         {
-            _operators.AppendLine(stroke.GetStrokeColorOperator());
-            _operators.AppendLine(stroke.GetLineWidthOperator());
+            EmitLine(stroke.GetStrokeColorOperator());
+            EmitLine(stroke.GetLineWidthOperator());
         }
 
         // Draw rectangle path
-        _operators.AppendLine($"{Fmt(x)} {Fmt(y)} {Fmt(width)} {Fmt(height)} re");
+        EmitLine($"{Fmt(x)} {Fmt(y)} {Fmt(width)} {Fmt(height)} re");
 
         // Fill and/or stroke
         if (fill != null && stroke != null)
         {
-            _operators.AppendLine("B"); // Fill and stroke
+            EmitLine("B"); // Fill and stroke
         }
         else if (fill != null)
         {
-            _operators.AppendLine("f"); // Fill only
+            EmitLine("f"); // Fill only
         }
         else if (stroke != null)
         {
-            _operators.AppendLine("S"); // Stroke only
+            EmitLine("S"); // Stroke only
         }
     }
 
@@ -222,11 +238,11 @@ public class PdfGraphics : IDisposable
     {
         ThrowIfDisposed();
 
-        _operators.AppendLine(pen.GetStrokeColorOperator());
-        _operators.AppendLine(pen.GetLineWidthOperator());
-        _operators.AppendLine($"{Fmt(x1)} {Fmt(y1)} m");
-        _operators.AppendLine($"{Fmt(x2)} {Fmt(y2)} l");
-        _operators.AppendLine("S");
+        EmitLine(pen.GetStrokeColorOperator());
+        EmitLine(pen.GetLineWidthOperator());
+        EmitLine($"{Fmt(x1)} {Fmt(y1)} m");
+        EmitLine($"{Fmt(x2)} {Fmt(y2)} l");
+        EmitLine("S");
     }
 
     #endregion
@@ -248,7 +264,7 @@ public class PdfGraphics : IDisposable
     public void MoveTo(double x, double y)
     {
         ThrowIfDisposed();
-        _operators.AppendLine($"{Fmt(x)} {Fmt(y)} m");
+        EmitLine($"{Fmt(x)} {Fmt(y)} m");
     }
 
     /// <summary>
@@ -257,7 +273,7 @@ public class PdfGraphics : IDisposable
     public void LineTo(double x, double y)
     {
         ThrowIfDisposed();
-        _operators.AppendLine($"{Fmt(x)} {Fmt(y)} l");
+        EmitLine($"{Fmt(x)} {Fmt(y)} l");
     }
 
     /// <summary>
@@ -272,7 +288,7 @@ public class PdfGraphics : IDisposable
     public void CurveTo(double x1, double y1, double x2, double y2, double x3, double y3)
     {
         ThrowIfDisposed();
-        _operators.AppendLine($"{Fmt(x1)} {Fmt(y1)} {Fmt(x2)} {Fmt(y2)} {Fmt(x3)} {Fmt(y3)} c");
+        EmitLine($"{Fmt(x1)} {Fmt(y1)} {Fmt(x2)} {Fmt(y2)} {Fmt(x3)} {Fmt(y3)} c");
     }
 
     /// <summary>
@@ -281,7 +297,7 @@ public class PdfGraphics : IDisposable
     public void ClosePath()
     {
         ThrowIfDisposed();
-        _operators.AppendLine("h");
+        EmitLine("h");
     }
 
     /// <summary>
@@ -290,9 +306,9 @@ public class PdfGraphics : IDisposable
     public void Stroke(PdfPen pen)
     {
         ThrowIfDisposed();
-        _operators.AppendLine(pen.GetStrokeColorOperator());
-        _operators.AppendLine(pen.GetLineWidthOperator());
-        _operators.AppendLine("S");
+        EmitLine(pen.GetStrokeColorOperator());
+        EmitLine(pen.GetLineWidthOperator());
+        EmitLine("S");
     }
 
     /// <summary>
@@ -301,8 +317,8 @@ public class PdfGraphics : IDisposable
     public void Fill(PdfBrush brush)
     {
         ThrowIfDisposed();
-        _operators.AppendLine(brush.GetFillColorOperator());
-        _operators.AppendLine("f");
+        EmitLine(brush.GetFillColorOperator());
+        EmitLine("f");
     }
 
     /// <summary>
@@ -311,10 +327,10 @@ public class PdfGraphics : IDisposable
     public void FillAndStroke(PdfBrush brush, PdfPen pen)
     {
         ThrowIfDisposed();
-        _operators.AppendLine(brush.GetFillColorOperator());
-        _operators.AppendLine(pen.GetStrokeColorOperator());
-        _operators.AppendLine(pen.GetLineWidthOperator());
-        _operators.AppendLine("B");
+        EmitLine(brush.GetFillColorOperator());
+        EmitLine(pen.GetStrokeColorOperator());
+        EmitLine(pen.GetLineWidthOperator());
+        EmitLine("B");
     }
 
     #endregion
@@ -340,22 +356,22 @@ public class PdfGraphics : IDisposable
         var fontName = _page.AddFont(font);
 
         // Set fill color
-        _operators.AppendLine(brush.GetFillColorOperator());
+        EmitLine(brush.GetFillColorOperator());
 
         // Begin text block
-        _operators.AppendLine("BT");
+        EmitLine("BT");
 
         // Set font and size
-        _operators.AppendLine($"/{fontName} {Fmt(font.Size)} Tf");
+        EmitLine($"/{fontName} {Fmt(font.Size)} Tf");
 
         // Position text (Td moves from current position)
-        _operators.AppendLine($"{Fmt(x)} {Fmt(y)} Td");
+        EmitLine($"{Fmt(x)} {Fmt(y)} Td");
 
         // Draw the text
-        _operators.AppendLine($"{font.EncodeString(text)} Tj");
+        EmitLine($"{font.EncodeString(text)} Tj");
 
         // End text block
-        _operators.AppendLine("ET");
+        EmitLine("ET");
     }
 
     /// <summary>
@@ -408,18 +424,18 @@ public class PdfGraphics : IDisposable
 
         var fontName = _page.AddFont(font);
 
-        _operators.AppendLine("BT");
-        _operators.AppendLine($"/{fontName} {Fmt(font.Size)} Tf");
-        _operators.AppendLine("3 Tr");
-        _operators.AppendLine($"{Fmt(scale)} Tz");
-        _operators.AppendLine($"{Fmt(x)} {Fmt(y)} Td");
-        _operators.AppendLine($"{font.EncodeString(text)} Tj");
+        EmitLine("BT");
+        EmitLine($"/{fontName} {Fmt(font.Size)} Tf");
+        EmitLine("3 Tr");
+        EmitLine($"{Fmt(scale)} Tz");
+        EmitLine($"{Fmt(x)} {Fmt(y)} Td");
+        EmitLine($"{font.EncodeString(text)} Tj");
         // Tr/Tz are text state, not part of the q/Q graphics-state stack —
         // they'd otherwise leak into any later DrawString/DrawText call in
         // this (or a future) PdfGraphics session on the same content stream.
-        _operators.AppendLine("0 Tr");
-        _operators.AppendLine("100 Tz");
-        _operators.AppendLine("ET");
+        EmitLine("0 Tr");
+        EmitLine("100 Tz");
+        EmitLine("ET");
     }
 
     /// <summary>
