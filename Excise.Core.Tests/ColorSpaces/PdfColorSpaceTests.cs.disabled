@@ -1,0 +1,443 @@
+using FluentAssertions;
+using Excise.Core.ColorSpaces;
+using Excise.Core.Document;
+using Excise.Core.Primitives;
+using Xunit;
+
+namespace Excise.Core.Tests.ColorSpaces;
+
+public class PdfColorSpaceTests
+{
+    [Fact]
+    public void DeviceRgb_ToRgb_IdentityMapping()
+    {
+        var cs = PdfColorSpace.DeviceRGB;
+        var (r, g, b) = cs.ToRgb(new[] { 0.5, 0.5, 0.5 });
+        r.Should().Be(0.5);
+        g.Should().Be(0.5);
+        b.Should().Be(0.5);
+    }
+
+    [Fact]
+    public void DeviceCmyk_Black_ConvertsToBlack()
+    {
+        var cs = PdfColorSpace.DeviceCMYK;
+        var (r, g, b) = cs.ToRgb(new[] { 0.0, 0.0, 0.0, 1.0 });
+        r.Should().Be(0.0);
+        g.Should().Be(0.0);
+        b.Should().Be(0.0);
+    }
+
+    [Fact]
+    public void DeviceCmyk_White_ConvertsToWhite()
+    {
+        var cs = PdfColorSpace.DeviceCMYK;
+        var (r, g, b) = cs.ToRgb(new[] { 0.0, 0.0, 0.0, 0.0 });
+        r.Should().Be(1.0);
+        g.Should().Be(1.0);
+        b.Should().Be(1.0);
+    }
+
+    [Fact]
+    public void DeviceCmyk_Yellow_ConvertsCorrectly()
+    {
+        var cs = PdfColorSpace.DeviceCMYK;
+        var (r, g, b) = cs.ToRgb(new[] { 0.0, 0.0, 1.0, 0.0 });
+        r.Should().BeApproximately(1.0, 0.01);
+        g.Should().BeApproximately(1.0, 0.01);
+        b.Should().BeApproximately(0.0, 0.01);
+    }
+
+    [Fact]
+    public void DeviceGray_Half_ConvertsToDarkGray()
+    {
+        var cs = PdfColorSpace.DeviceGray;
+        var (r, g, b) = cs.ToRgb(new[] { 0.5 });
+        r.Should().Be(0.5);
+        g.Should().Be(0.5);
+        b.Should().Be(0.5);
+    }
+
+    [Fact]
+    public void FromName_DeviceRgb_ReturnsRgbColorSpace()
+    {
+        var cs = PdfColorSpace.FromName("DeviceRGB");
+        cs.Type.Should().Be(PdfColorSpaceType.DeviceRGB);
+        cs.Components.Should().Be(3);
+    }
+
+    [Fact]
+    public void FromName_DeviceGray_ReturnsGrayColorSpace()
+    {
+        var cs = PdfColorSpace.FromName("DeviceGray");
+        cs.Type.Should().Be(PdfColorSpaceType.DeviceGray);
+        cs.Components.Should().Be(1);
+    }
+
+    [Fact]
+    public void FromName_DeviceCmyk_ReturnsCmykColorSpace()
+    {
+        var cs = PdfColorSpace.FromName("DeviceCMYK");
+        cs.Type.Should().Be(PdfColorSpaceType.DeviceCMYK);
+        cs.Components.Should().Be(4);
+    }
+
+    [Fact]
+    public void FromName_UnknownName_ReturnsUnknownColorSpace()
+    {
+        var cs = PdfColorSpace.FromName("UnknownColorSpace");
+        cs.Type.Should().Be(PdfColorSpaceType.Unknown);
+        cs.Components.Should().Be(1);
+    }
+
+    [Fact]
+    public void DeviceGray_Zero_ConvertsToBlack()
+    {
+        var cs = PdfColorSpace.DeviceGray;
+        var (r, g, b) = cs.ToRgb(new[] { 0.0 });
+        r.Should().Be(0.0);
+        g.Should().Be(0.0);
+        b.Should().Be(0.0);
+    }
+
+    [Fact]
+    public void DeviceGray_One_ConvertsToWhite()
+    {
+        var cs = PdfColorSpace.DeviceGray;
+        var (r, g, b) = cs.ToRgb(new[] { 1.0 });
+        r.Should().Be(1.0);
+        g.Should().Be(1.0);
+        b.Should().Be(1.0);
+    }
+
+    [Fact]
+    public void ToRgb_EmptyArray_ReturnsBlack()
+    {
+        var cs = PdfColorSpace.DeviceRGB;
+        var (r, g, b) = cs.ToRgb(Array.Empty<double>());
+        r.Should().Be(0);
+        g.Should().Be(0);
+        b.Should().Be(0);
+    }
+
+    [Fact]
+    public void ToRgb_InsufficientComponents_UsesAvailable()
+    {
+        var cs = PdfColorSpace.DeviceRGB;
+        var (r, g, b) = cs.ToRgb(new[] { 0.8 });
+        r.Should().Be(0.8);
+        g.Should().Be(0.8);
+        b.Should().Be(0.8);
+    }
+
+    [Fact]
+    public void CalGray_ToRgb_ConvertsLikeDeviceGray()
+    {
+        var calGray = PdfColorSpace.FromName("CalGray");
+        calGray.Type.Should().Be(PdfColorSpaceType.CalGray);
+        var (r, g, b) = calGray.ToRgb(new[] { 0.75 });
+        r.Should().Be(0.75);
+        g.Should().Be(0.75);
+        b.Should().Be(0.75);
+    }
+
+    [Fact]
+    public void FromName_Separation_ReturnsSeparationColorSpace()
+    {
+        var cs = PdfColorSpace.FromName("Separation");
+        cs.Type.Should().Be(PdfColorSpaceType.Separation);
+        cs.Components.Should().Be(1);
+    }
+
+    [Fact]
+    public void DeviceRgb_ExtraComponents_UsesFirst3()
+    {
+        var cs = PdfColorSpace.DeviceRGB;
+        var (r, g, b) = cs.ToRgb(new[] { 0.2, 0.4, 0.6, 0.8, 1.0 });
+        r.Should().Be(0.2);
+        g.Should().Be(0.4);
+        b.Should().Be(0.6);
+    }
+
+    [Fact]
+    public void Separation_ToRgb_ApproximatesAsGrayscaleTint()
+    {
+        var sep = PdfColorSpace.FromName("Separation");
+        sep.Type.Should().Be(PdfColorSpaceType.Separation);
+        sep.Components.Should().Be(1);
+
+        var (r, g, b) = sep.ToRgb(new[] { 0.5 });
+        // Separation uses (1 - tint, 1 - tint, 1 - tint) formula
+        r.Should().Be(0.5);
+        g.Should().Be(0.5);
+        b.Should().Be(0.5);
+    }
+
+    [Fact]
+    public void Separation_ZeroTint_FullColor()
+    {
+        var sep = PdfColorSpace.FromName("Separation");
+        var (r, g, b) = sep.ToRgb(new[] { 0.0 });
+        r.Should().Be(1.0);
+        g.Should().Be(1.0);
+        b.Should().Be(1.0);
+    }
+
+    [Fact]
+    public void Separation_FullTint_Black()
+    {
+        var sep = PdfColorSpace.FromName("Separation");
+        var (r, g, b) = sep.ToRgb(new[] { 1.0 });
+        r.Should().Be(0.0);
+        g.Should().Be(0.0);
+        b.Should().Be(0.0);
+    }
+
+    [Fact]
+    public void DeviceN_Parse_MultipleComponents()
+    {
+        var doc = new PdfDocument();
+        var arr = new PdfArray(
+            new PdfName("DeviceN"),
+            new PdfArray(new PdfName("Cyan"), new PdfName("Magenta")),
+            new PdfName("DeviceRGB"),
+            new PdfStream()
+        );
+
+        var cs = PdfColorSpace.Parse(arr, doc);
+        cs.Type.Should().Be(PdfColorSpaceType.DeviceN);
+        cs.Components.Should().Be(2);
+    }
+
+    [Fact]
+    public void Lab_FromName_ThreeComponents()
+    {
+        var lab = PdfColorSpace.FromName("Lab");
+        lab.Type.Should().Be(PdfColorSpaceType.Lab);
+        lab.Components.Should().Be(3);
+    }
+
+    [Fact]
+    public void Lab_ToRgb_Mid_GrayValue()
+    {
+        var lab = PdfColorSpace.FromName("Lab");
+        var (r, g, b) = lab.ToRgb(new[] { 50.0, 0.0, 0.0 });
+        // L*=50 should be middle gray (around 0.2-0.3 in linear RGB)
+        r.Should().BeGreaterThan(0);
+        g.Should().BeGreaterThan(0);
+        b.Should().BeGreaterThan(0);
+        r.Should().BeLessThan(1);
+        g.Should().BeLessThan(1);
+        b.Should().BeLessThan(1);
+    }
+
+    [Fact]
+    public void Lab_ToRgb_Low_AlmostBlack()
+    {
+        var lab = PdfColorSpace.FromName("Lab");
+        var (r, g, b) = lab.ToRgb(new[] { 10.0, 0.0, 0.0 });
+        // Very low L* should be very dark
+        r.Should().BeLessThan(0.1);
+        g.Should().BeLessThan(0.1);
+        b.Should().BeLessThan(0.1);
+    }
+
+    [Fact]
+    public void Lab_ToRgb_High_AlmostWhite()
+    {
+        var lab = PdfColorSpace.FromName("Lab");
+        var (r, g, b) = lab.ToRgb(new[] { 95.0, 0.0, 0.0 });
+        // Very high L* should be very bright
+        r.Should().BeGreaterThan(0.9);
+        g.Should().BeGreaterThan(0.9);
+        b.Should().BeGreaterThan(0.9);
+    }
+
+    [Fact]
+    public void ICCBased_N4_CMYK_ReturnsCMYKColorSpace()
+    {
+        var doc = new PdfDocument();
+        var iccDict = new PdfDictionary();
+        iccDict[new PdfName("N")] = new PdfInteger(4);
+        var iccStream = new PdfStream(iccDict, Array.Empty<byte>());
+
+        var arr = new PdfArray(new PdfName("ICCBased"), iccStream);
+        var cs = PdfColorSpace.Parse(arr, doc);
+        cs.Type.Should().Be(PdfColorSpaceType.ICCBased);
+        cs.Components.Should().Be(4);
+    }
+
+    [Fact]
+    public void ICCBased_N4_CMYK_ToRgb_Black()
+    {
+        var doc = new PdfDocument();
+        var iccDict = new PdfDictionary();
+        iccDict[new PdfName("N")] = new PdfInteger(4);
+        var iccStream = new PdfStream(iccDict, Array.Empty<byte>());
+
+        var arr = new PdfArray(new PdfName("ICCBased"), iccStream);
+        var cs = PdfColorSpace.Parse(arr, doc);
+
+        var (r, g, b) = cs.ToRgb(new[] { 0.0, 0.0, 0.0, 1.0 });
+        r.Should().Be(0.0);
+        g.Should().Be(0.0);
+        b.Should().Be(0.0);
+    }
+
+    [Fact]
+    public void ICCBased_N4_CMYK_ToRgb_White()
+    {
+        var doc = new PdfDocument();
+        var iccDict = new PdfDictionary();
+        iccDict[new PdfName("N")] = new PdfInteger(4);
+        var iccStream = new PdfStream(iccDict, Array.Empty<byte>());
+
+        var arr = new PdfArray(new PdfName("ICCBased"), iccStream);
+        var cs = PdfColorSpace.Parse(arr, doc);
+
+        var (r, g, b) = cs.ToRgb(new[] { 0.0, 0.0, 0.0, 0.0 });
+        r.Should().Be(1.0);
+        g.Should().Be(1.0);
+        b.Should().Be(1.0);
+    }
+
+    [Fact]
+    public void ICCBased_N1_Gray()
+    {
+        var doc = new PdfDocument();
+        var iccDict = new PdfDictionary();
+        iccDict[new PdfName("N")] = new PdfInteger(1);
+        var iccStream = new PdfStream(iccDict, Array.Empty<byte>());
+
+        var arr = new PdfArray(new PdfName("ICCBased"), iccStream);
+        var cs = PdfColorSpace.Parse(arr, doc);
+        cs.Type.Should().Be(PdfColorSpaceType.ICCBased);
+        cs.Components.Should().Be(1);
+    }
+
+    [Fact]
+    public void Indexed_LookupTable_BlueAndRed()
+    {
+        var doc = new PdfDocument();
+        // Indexed color space with 2-entry lookup: [blue, red]
+        // Base is DeviceRGB, hival=1, lookup="0000FF FF0000"
+        byte[] lookupData = new byte[] { 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00 };
+        var lookupString = new PdfString(System.Text.Encoding.Latin1.GetString(lookupData));
+
+        var arr = new PdfArray(
+            new PdfName("Indexed"),
+            new PdfName("DeviceRGB"),
+            new PdfInteger(1),
+            lookupString
+        );
+
+        var cs = PdfColorSpace.Parse(arr, doc);
+        cs.Type.Should().Be(PdfColorSpaceType.Indexed);
+        cs.Components.Should().Be(1);
+
+        var (r0, g0, b0) = cs.LookupIndexed(0);
+        r0.Should().BeApproximately(0.0, 0.01);  // blue
+        g0.Should().BeApproximately(0.0, 0.01);
+        b0.Should().BeApproximately(1.0, 0.01);
+
+        var (r1, g1, b1) = cs.LookupIndexed(1);
+        r1.Should().BeApproximately(1.0, 0.01);  // red
+        g1.Should().BeApproximately(0.0, 0.01);
+        b1.Should().BeApproximately(0.0, 0.01);
+    }
+
+    [Fact]
+    public void Indexed_ToRgb_UsesLookup()
+    {
+        var doc = new PdfDocument();
+        byte[] lookupData = new byte[] { 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00 };
+        var lookupString = new PdfString(System.Text.Encoding.Latin1.GetString(lookupData));
+
+        var arr = new PdfArray(
+            new PdfName("Indexed"),
+            new PdfName("DeviceRGB"),
+            new PdfInteger(1),
+            lookupString
+        );
+
+        var cs = PdfColorSpace.Parse(arr, doc);
+        var (r, g, b) = cs.ToRgb(new[] { 1.0 });
+        r.Should().BeApproximately(1.0, 0.01);
+        g.Should().BeApproximately(0.0, 0.01);
+        b.Should().BeApproximately(0.0, 0.01);
+    }
+
+    [Fact]
+    public void Indexed_OutOfBounds_ReturnsBlack()
+    {
+        var doc = new PdfDocument();
+        byte[] lookupData = new byte[] { 0x00, 0x00, 0xFF };
+        var lookupString = new PdfString(System.Text.Encoding.Latin1.GetString(lookupData));
+
+        var arr = new PdfArray(
+            new PdfName("Indexed"),
+            new PdfName("DeviceRGB"),
+            new PdfInteger(0),
+            lookupString
+        );
+
+        var cs = PdfColorSpace.Parse(arr, doc);
+        var (r, g, b) = cs.LookupIndexed(999);  // Out of range
+        r.Should().Be(0.0);
+        g.Should().Be(0.0);
+        b.Should().Be(0.0);
+    }
+
+    [Fact]
+    public void Pattern_FromName_ZeroComponents()
+    {
+        var pattern = PdfColorSpace.FromName("Pattern");
+        pattern.Type.Should().Be(PdfColorSpaceType.Pattern);
+        pattern.Components.Should().Be(0);
+    }
+
+    [Fact]
+    public void Unknown_FromName_Returns1Component()
+    {
+        var unknown = PdfColorSpace.FromName("Bogus");
+        unknown.Type.Should().Be(PdfColorSpaceType.Unknown);
+        unknown.Components.Should().Be(1);
+    }
+
+    [Fact]
+    public void Parse_DirectName_CallsFromName()
+    {
+        var doc = new PdfDocument();
+        var cs = PdfColorSpace.Parse(new PdfName("Lab"), doc);
+        cs.Type.Should().Be(PdfColorSpaceType.Lab);
+    }
+
+    [Fact]
+    public void Parse_ArrayUnknownType_ReturnsUnknown()
+    {
+        var doc = new PdfDocument();
+        var arr = new PdfArray(new PdfName("UnknownCS"));
+        var cs = PdfColorSpace.Parse(arr, doc);
+        cs.Type.Should().Be(PdfColorSpaceType.Unknown);
+    }
+
+    [Fact]
+    public void CMYK_Magenta()
+    {
+        var cs = PdfColorSpace.DeviceCMYK;
+        var (r, g, b) = cs.ToRgb(new[] { 0.0, 1.0, 0.0, 0.0 });
+        r.Should().BeApproximately(1.0, 0.01);
+        g.Should().BeApproximately(0.0, 0.01);
+        b.Should().BeApproximately(1.0, 0.01);
+    }
+
+    [Fact]
+    public void CMYK_InsufficientComponents_ReturnsBlack()
+    {
+        var cs = PdfColorSpace.DeviceCMYK;
+        var (r, g, b) = cs.ToRgb(new[] { 0.5, 0.5 });
+        r.Should().Be(0.0);
+        g.Should().Be(0.0);
+        b.Should().Be(0.0);
+    }
+}

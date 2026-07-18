@@ -1,5 +1,5 @@
 #!/bin/bash
-# Build pdfe projects
+# Build excise projects
 # Usage: ./build.sh [OPTIONS] [PROJECT...]
 #
 # Projects: editor, tests, demo, all (default: all)
@@ -106,10 +106,10 @@ cd "$PROJECT_ROOT"
 
 # Build functions
 build_editor() {
-    log_section "Building PdfEditor"
+    log_section "Building Excise.App"
 
-    if [ ! -d "PdfEditor" ]; then
-        log_error "PdfEditor directory not found"
+    if [ ! -d "Excise.App" ]; then
+        log_error "Excise.App directory not found"
         return 1
     fi
 
@@ -118,17 +118,17 @@ build_editor() {
         build_args="$build_args -v detailed"
     fi
 
-    run_cmd "Restoring packages..." $DOTNET_CMD restore PdfEditor/PdfEditor.csproj
-    run_cmd "Building..." $DOTNET_CMD build PdfEditor/PdfEditor.csproj $build_args
+    run_cmd "Restoring packages..." $DOTNET_CMD restore Excise.App/Excise.App.csproj
+    run_cmd "Building..." $DOTNET_CMD build Excise.App/Excise.App.csproj $build_args
 
-    log_success "PdfEditor built successfully"
+    log_success "Excise.App built successfully"
 }
 
 build_tests() {
-    log_section "Building PdfEditor.Tests"
+    log_section "Building Excise.App.Tests"
 
-    if [ ! -d "PdfEditor.Tests" ]; then
-        log_error "PdfEditor.Tests directory not found"
+    if [ ! -d "Excise.App.Tests" ]; then
+        log_error "Excise.App.Tests directory not found"
         return 1
     fi
 
@@ -137,17 +137,17 @@ build_tests() {
         build_args="$build_args -v detailed"
     fi
 
-    run_cmd "Restoring packages..." $DOTNET_CMD restore PdfEditor.Tests/PdfEditor.Tests.csproj
-    run_cmd "Building..." $DOTNET_CMD build PdfEditor.Tests/PdfEditor.Tests.csproj $build_args
+    run_cmd "Restoring packages..." $DOTNET_CMD restore Excise.App.Tests/Excise.App.Tests.csproj
+    run_cmd "Building..." $DOTNET_CMD build Excise.App.Tests/Excise.App.Tests.csproj $build_args
 
-    log_success "PdfEditor.Tests built successfully"
+    log_success "Excise.App.Tests built successfully"
 }
 
 build_demo() {
-    log_section "Building PdfEditor.Demo"
+    log_section "Building Excise.App.Demo"
 
-    if [ ! -d "PdfEditor.Demo" ]; then
-        log_warning "PdfEditor.Demo directory not found, skipping"
+    if [ ! -d "Excise.App.Demo" ]; then
+        log_warning "Excise.App.Demo directory not found, skipping"
         return 0
     fi
 
@@ -156,14 +156,14 @@ build_demo() {
         build_args="$build_args -v detailed"
     fi
 
-    run_cmd "Restoring packages..." $DOTNET_CMD restore PdfEditor.Demo/PdfEditor.Demo.csproj
-    run_cmd "Building..." $DOTNET_CMD build PdfEditor.Demo/PdfEditor.Demo.csproj $build_args
+    run_cmd "Restoring packages..." $DOTNET_CMD restore Excise.App.Demo/Excise.App.Demo.csproj
+    run_cmd "Building..." $DOTNET_CMD build Excise.App.Demo/Excise.App.Demo.csproj $build_args
 
-    log_success "PdfEditor.Demo built successfully"
+    log_success "Excise.App.Demo built successfully"
 }
 
 publish_editor() {
-    log_section "Publishing PdfEditor"
+    log_section "Publishing Excise.App"
 
     # Determine runtime
     local runtime="$RUNTIME"
@@ -179,9 +179,9 @@ publish_editor() {
 
     local publish_args="-c $BUILD_CONFIG -r $runtime --self-contained true -p:PublishSingleFile=true"
 
-    run_cmd "Publishing..." $DOTNET_CMD publish PdfEditor/PdfEditor.csproj $publish_args
+    run_cmd "Publishing..." $DOTNET_CMD publish Excise.App/Excise.App.csproj $publish_args
 
-    local output_dir="PdfEditor/bin/$BUILD_CONFIG/net8.0/$runtime/publish"
+    local output_dir="Excise.App/bin/$BUILD_CONFIG/net8.0/$runtime/publish"
     log_success "Published to: $output_dir"
 
     if [ -d "$output_dir" ]; then
@@ -226,7 +226,7 @@ main() {
     print_summary "build" "success"
 
     log "To run the application:"
-    log "  $DOTNET_CMD run --project PdfEditor -c $BUILD_CONFIG"
+    log "  $DOTNET_CMD run --project Excise.App -c $BUILD_CONFIG"
     log ""
 }
 

@@ -10,11 +10,11 @@
 # That is not hypothetical:
 #
 #   MainWindowViewModelTests.HiddenTextToggles_DoNotLoadOcrAssemblyBeforeRasterizedScan
-#     Assert.SkipWhen(IsAssemblyLoaded("Pdfe.Ocr"), ...)
+#     Assert.SkipWhen(IsAssemblyLoaded("Excise.Ocr"), ...)
 #
 #   It asserts that ordinary hidden-text reveal does NOT drag in the OCR
 #   assembly — a real privacy/dependency property. Whether it runs depends on
-#   which tests loaded Pdfe.Ocr earlier in the same process. On 2026-07-13,
+#   which tests loaded Excise.Ocr earlier in the same process. On 2026-07-13,
 #   adding unrelated tests to that class silently turned it off. The suite went
 #   from 1 skip to 2 and stayed green.
 #

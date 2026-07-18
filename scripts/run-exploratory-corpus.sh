@@ -25,11 +25,11 @@
 #   scripts/run-exploratory-corpus.sh --extra-oracles all                  # add Ghostscript/PDFBox/PDFium where available
 #   scripts/run-exploratory-corpus.sh --password-manifest path/to/passwords.tsv
 #   scripts/run-exploratory-corpus.sh --no-page-shards                     # keep legacy PDF-level chunking
-#   scripts/run-exploratory-corpus.sh --resume-pdfe-render-cache           # reuse pdfe cache from a prior interrupted run
+#   scripts/run-exploratory-corpus.sh --resume-excise-render-cache           # reuse excise cache from a prior interrupted run
 #   scripts/run-exploratory-corpus.sh --chunks 14 --tiny                    # 10-PDF smoke run
 #   scripts/run-exploratory-corpus.sh --log-dir logs/run                    # keep chunk logs
 #
-# Output: Pdfe.Rendering.Tests/bin/Debug/net10.0/exploratory-report-<mode>.json
+# Output: Excise.Rendering.Tests/bin/Debug/net10.0/exploratory-report-<mode>.json
 
 set -euo pipefail
 
@@ -40,9 +40,9 @@ cd "$ROOT"
 CHUNKS=14
 CONFIG="Debug"
 TINY=0
-PER_CHUNK_PARALLEL="0"        # 0 = pdfe auto-picks (ProcessorCount/2)
+PER_CHUNK_PARALLEL="0"        # 0 = excise auto-picks (ProcessorCount/2)
 PDF_TIMEOUT_MS="15000"        # mutool per-page timeout
-PROCESS_TIMEOUT_SECONDS="600" # whole Pdfe.RenderTools corpus-scan process timeout
+PROCESS_TIMEOUT_SECONDS="600" # whole Excise.RenderTools corpus-scan process timeout
 CHUNK_PARALLEL="4"            # how many chunks to run concurrently
 PAGE_MODE="first"             # first | sample | all
 EXTRA_ORACLES="ghostscript"   # none | ghostscript | pdfbox | pdfium | all
@@ -55,9 +55,9 @@ EXPECTATION_MANIFEST=""
 PAGE_SHARDS="auto"            # auto | off
 LARGE_PDF_PAGE_THRESHOLD="250"
 PAGE_RANGE_SIZE="100"
-PDFE_RENDER_CACHE="auto"      # auto | off
-PDFE_RENDER_CACHE_DIR=""
-RESUME_PDFE_RENDER_CACHE="0"
+EXCISE_RENDER_CACHE="auto"      # auto | off
+EXCISE_RENDER_CACHE_DIR=""
+RESUME_EXCISE_RENDER_CACHE="0"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -87,10 +87,10 @@ while [[ $# -gt 0 ]]; do
         --large-pdf-page-threshold=*) LARGE_PDF_PAGE_THRESHOLD="${1#*=}"; shift ;;
         --page-range-size)   PAGE_RANGE_SIZE="$2"; shift 2 ;;
         --page-range-size=*) PAGE_RANGE_SIZE="${1#*=}"; shift ;;
-        --pdfe-render-cache-dir) PDFE_RENDER_CACHE_DIR="$2"; shift 2 ;;
-        --pdfe-render-cache-dir=*) PDFE_RENDER_CACHE_DIR="${1#*=}"; shift ;;
-        --no-pdfe-render-cache) PDFE_RENDER_CACHE="off"; shift ;;
-        --resume-pdfe-render-cache) RESUME_PDFE_RENDER_CACHE="1"; shift ;;
+        --excise-render-cache-dir) EXCISE_RENDER_CACHE_DIR="$2"; shift 2 ;;
+        --excise-render-cache-dir=*) EXCISE_RENDER_CACHE_DIR="${1#*=}"; shift ;;
+        --no-excise-render-cache) EXCISE_RENDER_CACHE="off"; shift ;;
+        --resume-excise-render-cache) RESUME_EXCISE_RENDER_CACHE="1"; shift ;;
         --help|-h)
             sed -n '2,28p' "$0"; exit 0 ;;
         *)
@@ -170,7 +170,7 @@ fi
 # the real corpus is never swapped, moved, or modified.
 TINY_DIR=""
 if [[ "$TINY" == "1" ]]; then
-    TINY_DIR="$(mktemp -d /tmp/pdfe-tiny-pdfjs.XXXXXX)"
+    TINY_DIR="$(mktemp -d /tmp/excise-tiny-pdfjs.XXXXXX)"
     trap 'rm -rf "$TINY_DIR"' EXIT
     python3 - "$CORPUS" "$TINY_DIR" <<'PY'
 import os, shutil, sys
@@ -197,18 +197,18 @@ PY
     echo "▶ tiny mode: corpus symlinked to $TINY_DIR ($tiny_count PDFs)"
 fi
 
-echo "▶ Building Pdfe.RenderTools ($CONFIG)"
+echo "▶ Building Excise.RenderTools ($CONFIG)"
 # Build once. Each chunk then runs the published binary directly,
 # avoiding the ~3-min `dotnet test` VSTest startup tax per invocation.
 # Net effect: 14 chunks now take ~2 min total instead of 65+.
-dotnet build -c "$CONFIG" tools/Pdfe.RenderTools/Pdfe.RenderTools.csproj >/dev/null
-PDFE_RENDER_TOOLS_BIN="$ROOT/tools/Pdfe.RenderTools/bin/$CONFIG/net10.0/Pdfe.RenderTools"
-if [[ ! -x "$PDFE_RENDER_TOOLS_BIN" ]]; then
-    echo "✗ Pdfe.RenderTools binary not found at $PDFE_RENDER_TOOLS_BIN" >&2
+dotnet build -c "$CONFIG" tools/Excise.RenderTools/Excise.RenderTools.csproj >/dev/null
+EXCISE_RENDER_TOOLS_BIN="$ROOT/tools/Excise.RenderTools/bin/$CONFIG/net10.0/Excise.RenderTools"
+if [[ ! -x "$EXCISE_RENDER_TOOLS_BIN" ]]; then
+    echo "✗ Excise.RenderTools binary not found at $EXCISE_RENDER_TOOLS_BIN" >&2
     exit 1
 fi
 
-BIN_DIR="$ROOT/Pdfe.Rendering.Tests/bin/$CONFIG/net10.0"
+BIN_DIR="$ROOT/Excise.Rendering.Tests/bin/$CONFIG/net10.0"
 REPORT_STEM="${REPORT_NAME%.json}"
 SLICE_DIR="$BIN_DIR/exploratory-slices-$REPORT_STEM-$$"
 mkdir -p "$BIN_DIR"
@@ -219,21 +219,21 @@ if [[ "$PAGE_MODE" == "first" && "$CORPUS_LABEL" == "test-pdfs/pdfjs" ]]; then
     rm -f "$BIN_DIR/exploratory-report.json"
 fi
 
-PDFE_RENDER_CACHE_ENABLED="0"
-PDFE_CACHE_ARG=()
-if [[ "$PDFE_RENDER_CACHE" != "off" && "$PAGE_MODE" == "all" ]]; then
-    if [[ -z "$PDFE_RENDER_CACHE_DIR" ]]; then
-        PDFE_RENDER_CACHE_DIR="$CHUNK_LOG_DIR/pdfe-render-cache"
-    elif [[ "$PDFE_RENDER_CACHE_DIR" != /* ]]; then
-        PDFE_RENDER_CACHE_DIR="$ROOT/$PDFE_RENDER_CACHE_DIR"
+EXCISE_RENDER_CACHE_ENABLED="0"
+EXCISE_CACHE_ARG=()
+if [[ "$EXCISE_RENDER_CACHE" != "off" && "$PAGE_MODE" == "all" ]]; then
+    if [[ -z "$EXCISE_RENDER_CACHE_DIR" ]]; then
+        EXCISE_RENDER_CACHE_DIR="$CHUNK_LOG_DIR/excise-render-cache"
+    elif [[ "$EXCISE_RENDER_CACHE_DIR" != /* ]]; then
+        EXCISE_RENDER_CACHE_DIR="$ROOT/$EXCISE_RENDER_CACHE_DIR"
     fi
 
-    if [[ "$RESUME_PDFE_RENDER_CACHE" != "1" ]]; then
-        rm -rf "$PDFE_RENDER_CACHE_DIR"
+    if [[ "$RESUME_EXCISE_RENDER_CACHE" != "1" ]]; then
+        rm -rf "$EXCISE_RENDER_CACHE_DIR"
     fi
-    mkdir -p "$PDFE_RENDER_CACHE_DIR"
-    PDFE_RENDER_CACHE_ENABLED="1"
-    PDFE_CACHE_ARG=(--pdfe-render-cache-dir "$PDFE_RENDER_CACHE_DIR")
+    mkdir -p "$EXCISE_RENDER_CACHE_DIR"
+    EXCISE_RENDER_CACHE_ENABLED="1"
+    EXCISE_CACHE_ARG=(--excise-render-cache-dir "$EXCISE_RENDER_CACHE_DIR")
 fi
 
 PAGE_SHARD_DIR=""
@@ -367,8 +367,8 @@ fi
 if [[ ${#EXPECTATION_ARGS[@]} -gt 0 ]]; then
     echo "  expectation manifest: $EXPECTATION_MANIFEST"
 fi
-if [[ ${#PDFE_CACHE_ARG[@]} -gt 0 ]]; then
-    echo "  pdfe render cache: $PDFE_RENDER_CACHE_DIR ($(if [[ "$RESUME_PDFE_RENDER_CACHE" == "1" ]]; then echo resume; else echo fresh; fi))"
+if [[ ${#EXCISE_CACHE_ARG[@]} -gt 0 ]]; then
+    echo "  excise render cache: $EXCISE_RENDER_CACHE_DIR ($(if [[ "$RESUME_EXCISE_RENDER_CACHE" == "1" ]]; then echo resume; else echo fresh; fi))"
 fi
 chunk_failures=0
 chunk_start=$(date +%s)
@@ -383,7 +383,7 @@ run_one_chunk() {
     local manifest_args=()
     local password_args=()
     local expectation_args=()
-    local pdfe_cache_args=()
+    local excise_cache_args=()
     if [[ -n "${PAGE_SHARD_DIR:-}" ]]; then
         manifest_args=(--page-manifest "$(printf '%s/chunk-%03d.tsv' "$PAGE_SHARD_DIR" "$i")")
         scan_chunk="0"
@@ -395,8 +395,8 @@ run_one_chunk() {
     if [[ -n "${EXPECTATION_MANIFEST:-}" ]]; then
         expectation_args=(--expectation-manifest "$EXPECTATION_MANIFEST")
     fi
-    if [[ "${PDFE_RENDER_CACHE_ENABLED:-0}" == "1" ]]; then
-        pdfe_cache_args=(--pdfe-render-cache-dir "$PDFE_RENDER_CACHE_DIR")
+    if [[ "${EXCISE_RENDER_CACHE_ENABLED:-0}" == "1" ]]; then
+        excise_cache_args=(--excise-render-cache-dir "$EXCISE_RENDER_CACHE_DIR")
     fi
     local runner=()
     if command -v timeout >/dev/null 2>&1; then
@@ -405,7 +405,7 @@ run_one_chunk() {
         runner=(gtimeout --kill-after=10s "$PROCESS_TIMEOUT_SECONDS")
     fi
 
-    local command=("$PDFE_RENDER_TOOLS_BIN" corpus-scan "$CORPUS"
+    local command=("$EXCISE_RENDER_TOOLS_BIN" corpus-scan "$CORPUS"
         --output "$slice_path"
         --chunk "$scan_chunk"
         --total "$scan_total"
@@ -416,7 +416,7 @@ run_one_chunk() {
     if (( ${#manifest_args[@]} > 0 )); then command+=("${manifest_args[@]}"); fi
     if (( ${#password_args[@]} > 0 )); then command+=("${password_args[@]}"); fi
     if (( ${#expectation_args[@]} > 0 )); then command+=("${expectation_args[@]}"); fi
-    if (( ${#pdfe_cache_args[@]} > 0 )); then command+=("${pdfe_cache_args[@]}"); fi
+    if (( ${#excise_cache_args[@]} > 0 )); then command+=("${excise_cache_args[@]}"); fi
 
     if (( ${#runner[@]} > 0 )); then
         "${runner[@]}" "${command[@]}" > "$CHUNK_LOG_DIR/exploratory-chunk-$i.log" 2>&1
@@ -439,8 +439,8 @@ print(f'{d[\"total\"]} page results, peak {d[\"peakRssBytes\"]//1024//1024} MB')
     fi
 }
 export -f run_one_chunk
-export PDFE_RENDER_TOOLS_BIN CORPUS CORPUS_LABEL BIN_DIR SLICE_DIR CHUNKS PER_CHUNK_PARALLEL PDF_TIMEOUT_MS PROCESS_TIMEOUT_SECONDS PAGE_MODE EXTRA_ORACLES CHUNK_LOG_DIR
-export PAGE_SHARD_DIR PASSWORD_MANIFEST EXPECTATION_MANIFEST PDFE_RENDER_CACHE_ENABLED PDFE_RENDER_CACHE_DIR
+export EXCISE_RENDER_TOOLS_BIN CORPUS CORPUS_LABEL BIN_DIR SLICE_DIR CHUNKS PER_CHUNK_PARALLEL PDF_TIMEOUT_MS PROCESS_TIMEOUT_SECONDS PAGE_MODE EXTRA_ORACLES CHUNK_LOG_DIR
+export PAGE_SHARD_DIR PASSWORD_MANIFEST EXPECTATION_MANIFEST EXCISE_RENDER_CACHE_ENABLED EXCISE_RENDER_CACHE_DIR
 
 recover_one_page_shard_chunk_isolated() {
     local i="$1"
@@ -479,7 +479,7 @@ recover_one_page_shard_chunk_isolated() {
             runner=(gtimeout --kill-after=10s "$PROCESS_TIMEOUT_SECONDS")
         fi
 
-        local pdfe_cache_args=()
+        local excise_cache_args=()
         local password_args=()
         local expectation_args=()
         if [[ -n "${PASSWORD_MANIFEST:-}" ]]; then
@@ -488,11 +488,11 @@ recover_one_page_shard_chunk_isolated() {
         if [[ -n "${EXPECTATION_MANIFEST:-}" ]]; then
             expectation_args=(--expectation-manifest "$EXPECTATION_MANIFEST")
         fi
-        if [[ "${PDFE_RENDER_CACHE_ENABLED:-0}" == "1" ]]; then
-            pdfe_cache_args=(--pdfe-render-cache-dir "$PDFE_RENDER_CACHE_DIR")
+        if [[ "${EXCISE_RENDER_CACHE_ENABLED:-0}" == "1" ]]; then
+            excise_cache_args=(--excise-render-cache-dir "$EXCISE_RENDER_CACHE_DIR")
         fi
 
-        local command=("$PDFE_RENDER_TOOLS_BIN" corpus-scan "$CORPUS"
+        local command=("$EXCISE_RENDER_TOOLS_BIN" corpus-scan "$CORPUS"
             --output "$single_json"
             --chunk 0
             --total 1
@@ -503,7 +503,7 @@ recover_one_page_shard_chunk_isolated() {
             --page-manifest "$single_manifest")
         if (( ${#password_args[@]} > 0 )); then command+=("${password_args[@]}"); fi
         if (( ${#expectation_args[@]} > 0 )); then command+=("${expectation_args[@]}"); fi
-        if (( ${#pdfe_cache_args[@]} > 0 )); then command+=("${pdfe_cache_args[@]}"); fi
+        if (( ${#excise_cache_args[@]} > 0 )); then command+=("${excise_cache_args[@]}"); fi
 
         local rc=0
         if (( ${#runner[@]} > 0 )); then
@@ -530,7 +530,7 @@ entry = {
     "status": status,
     "errorPhase": "scan",
     "errorType": error_type,
-    "errorMessage": f"Pdfe.RenderTools corpus-scan exited {rc} before writing a single-page report",
+    "errorMessage": f"Excise.RenderTools corpus-scan exited {rc} before writing a single-page report",
 }
 report = {
     "generatedUtc": datetime.datetime.utcnow().isoformat() + "Z",
@@ -644,7 +644,7 @@ PY
             runner=(gtimeout --kill-after=10s "$PROCESS_TIMEOUT_SECONDS")
         fi
 
-        local pdfe_cache_args=()
+        local excise_cache_args=()
         local password_args=()
         local expectation_args=()
         if [[ -n "${PASSWORD_MANIFEST:-}" ]]; then
@@ -653,11 +653,11 @@ PY
         if [[ -n "${EXPECTATION_MANIFEST:-}" ]]; then
             expectation_args=(--expectation-manifest "$EXPECTATION_MANIFEST")
         fi
-        if [[ "${PDFE_RENDER_CACHE_ENABLED:-0}" == "1" ]]; then
-            pdfe_cache_args=(--pdfe-render-cache-dir "$PDFE_RENDER_CACHE_DIR")
+        if [[ "${EXCISE_RENDER_CACHE_ENABLED:-0}" == "1" ]]; then
+            excise_cache_args=(--excise-render-cache-dir "$EXCISE_RENDER_CACHE_DIR")
         fi
 
-        local command=("$PDFE_RENDER_TOOLS_BIN" corpus-scan "$item_dir"
+        local command=("$EXCISE_RENDER_TOOLS_BIN" corpus-scan "$item_dir"
             --output "$single_json"
             --chunk 0
             --total 1
@@ -667,7 +667,7 @@ PY
             --extra-oracles "$EXTRA_ORACLES")
         if (( ${#password_args[@]} > 0 )); then command+=("${password_args[@]}"); fi
         if (( ${#expectation_args[@]} > 0 )); then command+=("${expectation_args[@]}"); fi
-        if (( ${#pdfe_cache_args[@]} > 0 )); then command+=("${pdfe_cache_args[@]}"); fi
+        if (( ${#excise_cache_args[@]} > 0 )); then command+=("${excise_cache_args[@]}"); fi
 
         local rc=0
         if (( ${#runner[@]} > 0 )); then
@@ -693,7 +693,7 @@ entry = {
     "status": status,
     "errorPhase": "scan",
     "errorType": error_type,
-    "errorMessage": f"Pdfe.RenderTools corpus-scan exited {rc} before writing a single-PDF report",
+    "errorMessage": f"Excise.RenderTools corpus-scan exited {rc} before writing a single-PDF report",
 }
 report = {
     "generatedUtc": datetime.datetime.utcnow().isoformat() + "Z",
@@ -812,9 +812,9 @@ echo "  total chunk runtime: ${chunk_elapsed}s"
 
 echo
 echo "▶ Merging $CHUNKS chunk reports → $REPORT_NAME"
-python3 - "$BIN_DIR" "$SLICE_DIR" "$CHUNKS" "$PAGE_MODE" "$REPORT_NAME" "$CORPUS_LABEL" "$EXTRA_ORACLES" "$PAGE_SHARD_SUMMARY" "$PDFE_RENDER_CACHE_DIR" "$PDFE_RENDER_CACHE_ENABLED" <<'PY'
+python3 - "$BIN_DIR" "$SLICE_DIR" "$CHUNKS" "$PAGE_MODE" "$REPORT_NAME" "$CORPUS_LABEL" "$EXTRA_ORACLES" "$PAGE_SHARD_SUMMARY" "$EXCISE_RENDER_CACHE_DIR" "$EXCISE_RENDER_CACHE_ENABLED" <<'PY'
 import json, os, sys, glob
-bin_dir, slice_dir, expected, page_mode, report_name, corpus_label, extra_oracles, page_shard_summary, pdfe_cache_dir, pdfe_cache_enabled = sys.argv[1], sys.argv[2], int(sys.argv[3]), sys.argv[4], sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9], sys.argv[10]
+bin_dir, slice_dir, expected, page_mode, report_name, corpus_label, extra_oracles, page_shard_summary, excise_cache_dir, excise_cache_enabled = sys.argv[1], sys.argv[2], int(sys.argv[3]), sys.argv[4], sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9], sys.argv[10]
 slices = sorted(glob.glob(os.path.join(slice_dir, "exploratory-chunk-*.json")))
 print(f"  found {len(slices)} slice file(s) (expected {expected})")
 
@@ -862,9 +862,9 @@ out = {
     "pageMode": page_mode,
     "extraOracles": extra_oracles,
     "pageShardSummary": page_shard_summary or None,
-    "pdfeRenderCache": {
-        "enabled": pdfe_cache_enabled == "1",
-        "directory": pdfe_cache_dir or None,
+    "exciseRenderCache": {
+        "enabled": excise_cache_enabled == "1",
+        "directory": excise_cache_dir or None,
     },
     "expectationManifest": {"entries": expectation_manifest_entries} if expectation_manifest_entries else None,
     "chunksMerged": len(slices),

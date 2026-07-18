@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Run pdfe performance/hotspot benchmarks without linking copyleft renderers.
+# Run excise performance/hotspot benchmarks without linking copyleft renderers.
 #
-# This wrapper intentionally uses Pdfe.RenderTools and existing JSON reports.
+# This wrapper intentionally uses Excise.RenderTools and existing JSON reports.
 # External reference renderers remain external CLI tools; this script does not
 # add reference libraries to the shippable dependency graph.
 
@@ -12,13 +12,13 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$ROOT"
 
 CONFIG="${CONFIG:-Release}"
-OUTPUT_DIR="${PDFE_BENCHMARK_OUTPUT_DIR:-logs/benchmarks}"
-RENDER_TOOLS_PROJECT="tools/Pdfe.RenderTools/Pdfe.RenderTools.csproj"
-BENCHMARK_DOTNET_PROJECT="Pdfe.Benchmarks/Pdfe.Benchmarks.csproj"
+OUTPUT_DIR="${EXCISE_BENCHMARK_OUTPUT_DIR:-logs/benchmarks}"
+RENDER_TOOLS_PROJECT="tools/Excise.RenderTools/Excise.RenderTools.csproj"
+BENCHMARK_DOTNET_PROJECT="Excise.Benchmarks/Excise.Benchmarks.csproj"
 
 usage() {
     cat <<'EOF'
-Run pdfe performance/hotspot benchmark reports.
+Run excise performance/hotspot benchmark reports.
 
 Usage:
   scripts/run-benchmarks.sh
@@ -27,28 +27,28 @@ Usage:
       write latest-performance-baseline.{json,md}.
 
   scripts/run-benchmarks.sh suite <benchmark-suite args...>
-      Run Pdfe.RenderTools benchmark-suite directly.
+      Run Excise.RenderTools benchmark-suite directly.
 
   scripts/run-benchmarks.sh corpus-hotspots <corpus-scan.json>... [--output out.json]
   scripts/run-benchmarks.sh gui-display-hotspots <gui-display.json>... [--output out.json]
   scripts/run-benchmarks.sh gui-display-hotspots <gui-workflow.json>... [--output out.json]
-      Pass explicit hotspot inputs through to Pdfe.RenderTools.
+      Pass explicit hotspot inputs through to Excise.RenderTools.
 
   scripts/run-benchmarks.sh benchmarkdotnet <BenchmarkDotNet args...>
-      Run the isolated Pdfe.Benchmarks project for pdfe-vs-pdfe microbenchmarks.
+      Run the isolated Excise.Benchmarks project for excise-vs-excise microbenchmarks.
 
-  scripts/run-benchmarks.sh render-tools <Pdfe.RenderTools args...>
-      Run any Pdfe.RenderTools command directly.
+  scripts/run-benchmarks.sh render-tools <Excise.RenderTools args...>
+      Run any Excise.RenderTools command directly.
 
 Environment:
   CONFIG=Release|Debug
-  PDFE_BENCHMARK_OUTPUT_DIR=logs/benchmarks
-  PDFE_BENCHMARK_CORPUS_DIR=<optional corpus dir>
-  PDFE_BENCHMARK_PAGE_LIMIT=8
-  PDFE_BENCHMARK_DPI=96
-  PDFE_BENCHMARK_TIMEOUT_MS=20000
-  PDFE_BENCHMARK_ORACLES=all
-  PDFE_BENCHMARK_CLI_RENDER=0
+  EXCISE_BENCHMARK_OUTPUT_DIR=logs/benchmarks
+  EXCISE_BENCHMARK_CORPUS_DIR=<optional corpus dir>
+  EXCISE_BENCHMARK_PAGE_LIMIT=8
+  EXCISE_BENCHMARK_DPI=96
+  EXCISE_BENCHMARK_TIMEOUT_MS=20000
+  EXCISE_BENCHMARK_ORACLES=all
+  EXCISE_BENCHMARK_CLI_RENDER=0
 
 Notes:
   - Copyleft/AGPL renderers remain external subprocesses; no reference
@@ -105,7 +105,7 @@ write_performance_baseline_summary() {
         printf '  "schemaVersion": 1,\n'
         printf '  "issues": ["#596", "#597", "#601", "#602"],\n'
         printf '  "generatedUtc": "%s",\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-        printf '  "policy": "Benchmark and hotspot evidence is grouped by pdfe-owned workload/code-path area; reference renderer timing is evidence only and is not an optimization target.",\n'
+        printf '  "policy": "Benchmark and hotspot evidence is grouped by excise-owned workload/code-path area; reference renderer timing is evidence only and is not an optimization target.",\n'
         printf '  "artifacts": [\n'
         artifact_json "benchmark-report" "$suite_output/benchmark-report.json" "#596 #597 #602"; printf ',\n'
         artifact_json "benchmark-pages" "$suite_output/benchmark-pages.csv" "#596 #597 #602"; printf ',\n'
@@ -119,9 +119,9 @@ write_performance_baseline_summary() {
     } > "$baseline_json"
 
     {
-        printf '# pdfe Performance Baseline\n\n'
+        printf '# excise Performance Baseline\n\n'
         printf -- '- Issues: #596, #597, #601, #602\n'
-        printf -- '- Policy: benchmark and hotspot evidence is grouped by pdfe-owned workload/code-path area; reference renderer timing is evidence only.\n\n'
+        printf -- '- Policy: benchmark and hotspot evidence is grouped by excise-owned workload/code-path area; reference renderer timing is evidence only.\n\n'
         printf '| Artifact | Exists | Path | Issues |\n'
         printf '| --- | --- | --- | --- |\n'
         for row in \
@@ -147,11 +147,11 @@ default_benchmarks() {
     mkdir -p "$OUTPUT_DIR"
 
     local suite_output="$OUTPUT_DIR/latest-suite"
-    local page_limit="${PDFE_BENCHMARK_PAGE_LIMIT:-8}"
-    local dpi="${PDFE_BENCHMARK_DPI:-96}"
-    local timeout_ms="${PDFE_BENCHMARK_TIMEOUT_MS:-20000}"
-    local oracles="${PDFE_BENCHMARK_ORACLES:-all}"
-    local cli_render="${PDFE_BENCHMARK_CLI_RENDER:-0}"
+    local page_limit="${EXCISE_BENCHMARK_PAGE_LIMIT:-8}"
+    local dpi="${EXCISE_BENCHMARK_DPI:-96}"
+    local timeout_ms="${EXCISE_BENCHMARK_TIMEOUT_MS:-20000}"
+    local oracles="${EXCISE_BENCHMARK_ORACLES:-all}"
+    local cli_render="${EXCISE_BENCHMARK_CLI_RENDER:-0}"
     local suite_args=(
         benchmark-suite
         --output-dir "$suite_output"
@@ -162,8 +162,8 @@ default_benchmarks() {
         --fail-on-regression
     )
 
-    if [ -n "${PDFE_BENCHMARK_CORPUS_DIR:-}" ]; then
-        suite_args+=(--corpus "$PDFE_BENCHMARK_CORPUS_DIR")
+    if [ -n "${EXCISE_BENCHMARK_CORPUS_DIR:-}" ]; then
+        suite_args+=(--corpus "$EXCISE_BENCHMARK_CORPUS_DIR")
     fi
     if [ "$cli_render" = "1" ] || [ "$cli_render" = "true" ]; then
         suite_args+=(--include-cli-render)
@@ -189,7 +189,7 @@ default_benchmarks() {
     while IFS= read -r gui_report; do
         gui_reports+=("$gui_report")
     done < <(
-        find PdfEditor.Tests/bin -path "*/UI/test-output/gui-display-suite-*.json" -type f -print 2>/dev/null |
+        find Excise.App.Tests/bin -path "*/UI/test-output/gui-display-suite-*.json" -type f -print 2>/dev/null |
             sort
     )
     if [ "${#gui_reports[@]}" -gt 0 ]; then
@@ -199,14 +199,14 @@ default_benchmarks() {
             --output "$OUTPUT_DIR/latest-gui-codepath-hotspots.json"
         ran=1
     else
-        echo "No GUI display reports found under PdfEditor.Tests/bin/*/UI/test-output/" >&2
+        echo "No GUI display reports found under Excise.App.Tests/bin/*/UI/test-output/" >&2
     fi
 
     local gui_workflow_reports=()
     while IFS= read -r gui_report; do
         gui_workflow_reports+=("$gui_report")
     done < <(
-        find PdfEditor.Tests/bin -path "*/UI/test-output/gui-workflow-suite-*.json" -type f -print 2>/dev/null |
+        find Excise.App.Tests/bin -path "*/UI/test-output/gui-workflow-suite-*.json" -type f -print 2>/dev/null |
             sort
     )
     if [ "${#gui_workflow_reports[@]}" -gt 0 ]; then
@@ -216,7 +216,7 @@ default_benchmarks() {
             --output "$OUTPUT_DIR/latest-gui-workflow-hotspots.json"
         ran=1
     else
-        echo "No GUI workflow reports found under PdfEditor.Tests/bin/*/UI/test-output/" >&2
+        echo "No GUI workflow reports found under Excise.App.Tests/bin/*/UI/test-output/" >&2
     fi
 
     if [ "$ran" = "0" ]; then

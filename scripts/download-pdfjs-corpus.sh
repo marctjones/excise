@@ -148,4 +148,4 @@ echo "  total in corpus  : $((ok + skipped))"
 echo "  manifest         : $MANIFEST"
 echo
 echo "Run the differential harness over them with:"
-echo "  dotnet test Pdfe.Rendering.Tests --filter \"FullyQualifiedName~Differential\""
+echo "  dotnet test Excise.Rendering.Tests --filter \"FullyQualifiedName~Differential\""

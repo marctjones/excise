@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Build a macOS .app bundle for pdfe (the PdfEditor GUI), self-contained.
-# Produces dist/pdfe-<version>-macos-<arch>.zip (+ .sha256).
+# Build a macOS .app bundle for excise (the Excise.App GUI), self-contained.
+# Produces dist/excise-<version>-macos-<arch>.zip (+ .sha256).
 #
 # Must run on macOS (uses sips / iconutil / ditto). The .app is AD-HOC
 # SIGNED (#635, codesign --sign -) for a stable local app identity across
 # rebuilds — that is not the same as being signed for distribution.
 # Gatekeeper will still quarantine it; users open via right-click → Open or
-# `xattr -dr com.apple.quarantine pdfe.app`. Real signing/notarization needs
+# `xattr -dr com.apple.quarantine excise.app`. Real signing/notarization needs
 # an Apple Developer cert (not configured, tracked separately as #629).
 #
 # Usage:
@@ -35,7 +35,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 ARCH="${RID#osx-}"            # arm64 | x64
-APP_NAME="pdfe"
+APP_NAME="excise"
 BUNDLE="$OUT/${APP_NAME}.app"
 PUBLISH_DIR="$ROOT/artifacts/macos-publish"
 SYMBOLS_OUT="${SYMBOLS_OUT:-$OUT/symbols/${APP_NAME}-${VERSION}-macos-${ARCH}}"
@@ -43,9 +43,9 @@ SYMBOLS_OUT="${SYMBOLS_OUT:-$OUT/symbols/${APP_NAME}-${VERSION}-macos-${ARCH}}"
 rm -rf "$BUNDLE" "$PUBLISH_DIR"
 mkdir -p "$OUT"
 
-echo "▶ Publishing PdfEditor ($RID, self-contained$([ "$AOT" = "1" ] && printf ', Native AOT'))"
+echo "▶ Publishing Excise.App ($RID, self-contained$([ "$AOT" = "1" ] && printf ', Native AOT'))"
 PUBLISH_ARGS=(
-    "$ROOT/PdfEditor/PdfEditor.csproj"
+    "$ROOT/Excise.App/Excise.App.csproj"
     -c Release -r "$RID" --self-contained true
     -p:PublishSingleFile=false
     -o "$PUBLISH_DIR"
@@ -78,15 +78,15 @@ fi
 echo "▶ Assembling $BUNDLE"
 mkdir -p "$BUNDLE/Contents/MacOS" "$BUNDLE/Contents/Resources"
 cp -R "$PUBLISH_DIR/." "$BUNDLE/Contents/MacOS/"
-chmod +x "$BUNDLE/Contents/MacOS/PdfEditor" || true
+chmod +x "$BUNDLE/Contents/MacOS/Excise.App" || true
 
 # ── Icon (best-effort): SVG/PNG -> 1024 PNG -> .iconset/.icns ───────────────
 # Render the master PNG with rsvg-convert (librsvg) if present — it's the most
 # reliable SVG rasterizer on macOS — else ImageMagick. If no SVG rasterizer is
 # available, upscale the checked-in PNG fallback so local builds still produce a
 # normal macOS Dock icon.
-ICON_SVG="$ROOT/PdfEditor/Assets/pdfe_logo.svg"
-ICON_PNG="$ROOT/PdfEditor/Assets/pdfe_logo_256.png"
+ICON_SVG="$ROOT/Excise.App/Assets/excise_logo.svg"
+ICON_PNG="$ROOT/Excise.App/Assets/excise_logo_256.png"
 ICON_PLIST=""
 MASTER_PNG="$PUBLISH_DIR/icon_1024.png"
 rendered=0
@@ -105,7 +105,7 @@ if [[ "$rendered" == "0" && -f "$ICON_PNG" ]]; then
     sips -z 1024 1024 "$ICON_PNG" --out "$MASTER_PNG" >/dev/null 2>&1 && rendered=1 || true
 fi
 if [[ "$rendered" == "1" && -f "$MASTER_PNG" ]]; then
-    ICON_SET="$PUBLISH_DIR/pdfe.iconset"
+    ICON_SET="$PUBLISH_DIR/excise.iconset"
     mkdir -p "$ICON_SET"
     sips -z 16 16     "$MASTER_PNG" --out "$ICON_SET/icon_16x16.png"      >/dev/null 2>&1 || true
     sips -z 32 32     "$MASTER_PNG" --out "$ICON_SET/icon_16x16@2x.png"   >/dev/null 2>&1 || true
@@ -117,13 +117,13 @@ if [[ "$rendered" == "1" && -f "$MASTER_PNG" ]]; then
     sips -z 512 512   "$MASTER_PNG" --out "$ICON_SET/icon_256x256@2x.png" >/dev/null 2>&1 || true
     sips -z 512 512   "$MASTER_PNG" --out "$ICON_SET/icon_512x512.png"    >/dev/null 2>&1 || true
     cp "$MASTER_PNG" "$ICON_SET/icon_512x512@2x.png" 2>/dev/null || true
-    if iconutil -c icns "$ICON_SET" -o "$BUNDLE/Contents/Resources/pdfe.icns"; then
-        ICON_PLIST=$'    <key>CFBundleIconFile</key>\n    <string>pdfe</string>'
+    if iconutil -c icns "$ICON_SET" -o "$BUNDLE/Contents/Resources/excise.icns"; then
+        ICON_PLIST=$'    <key>CFBundleIconFile</key>\n    <string>excise</string>'
     elif command -v tiff2icns >/dev/null 2>&1; then
-        ICON_TIFF="$PUBLISH_DIR/pdfe-icon.tiff"
+        ICON_TIFF="$PUBLISH_DIR/excise-icon.tiff"
         if sips -z 1024 1024 -s format tiff "$MASTER_PNG" --out "$ICON_TIFF" >/dev/null 2>&1 \
-            && tiff2icns "$ICON_TIFF" "$BUNDLE/Contents/Resources/pdfe.icns"; then
-            ICON_PLIST=$'    <key>CFBundleIconFile</key>\n    <string>pdfe</string>'
+            && tiff2icns "$ICON_TIFF" "$BUNDLE/Contents/Resources/excise.icns"; then
+            ICON_PLIST=$'    <key>CFBundleIconFile</key>\n    <string>excise</string>'
         fi
     fi
 else
@@ -137,11 +137,11 @@ cat > "$BUNDLE/Contents/Info.plist" <<PLIST
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>pdfe</string>
+    <string>Excise</string>
     <key>CFBundleDisplayName</key>
-    <string>pdfe</string>
+    <string>Excise</string>
     <key>CFBundleIdentifier</key>
-    <string>cl.skpt.pdfe</string>
+    <string>cl.skpt.excise</string>
     <key>CFBundleVersion</key>
     <string>${VERSION}</string>
     <key>CFBundleShortVersionString</key>
@@ -149,7 +149,7 @@ cat > "$BUNDLE/Contents/Info.plist" <<PLIST
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleExecutable</key>
-    <string>PdfEditor</string>
+    <string>Excise.App</string>
 ${ICON_PLIST}
     <key>LSMinimumSystemVersion</key>
     <string>11.0</string>
@@ -181,7 +181,7 @@ echo "▶ Ad-hoc signing bundle for stable app identity (#635)"
 # and is not about Gatekeeper — the bundle is still unsigned-for-distribution
 # and still gets quarantined on download (see the header comment above).
 # What it buys: a stable code identity so macOS treats every local rebuild
-# of pdfe.app as the *same* app. Without it, each rebuild is a fresh
+# of excise.app as the *same* app. Without it, each rebuild is a fresh
 # identity, so TCC grants (Files & Folders, Full Disk Access, Automation)
 # and Keychain ACLs get re-prompted or silently dropped on every rebuild —
 # a constant papercut for an app you build and run daily. --deep signs the
@@ -192,13 +192,13 @@ echo "▶ Ad-hoc signing bundle for stable app identity (#635)"
 if command -v codesign >/dev/null 2>&1; then
     codesign --force --deep --sign - "$BUNDLE"
 else
-    echo "::warning::codesign not found; pdfe.app will not have a stable identity across rebuilds (#635)"
+    echo "::warning::codesign not found; excise.app will not have a stable identity across rebuilds (#635)"
 fi
 
 ZIP="${APP_NAME}-${VERSION}-macos-${ARCH}.zip"
 echo "▶ Zipping $OUT/$ZIP"
 rm -f "$OUT/$ZIP"
-# ditto preserves bundle structure + resource forks; keepParent zips pdfe.app/.
+# ditto preserves bundle structure + resource forks; keepParent zips excise.app/.
 ( cd "$OUT" && /usr/bin/ditto -c -k --sequesterRsrc --keepParent "${APP_NAME}.app" "$ZIP" )
 ( cd "$OUT" && shasum -a 256 "$ZIP" > "$ZIP.sha256" )
 

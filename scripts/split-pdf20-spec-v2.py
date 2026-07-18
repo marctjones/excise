@@ -6,8 +6,8 @@ Version 2: Handle Chapters 7, 8, 9, 12, 13, 14.
 
 import os
 
-WIKI_DIR = "/home/marc/pdfe/wiki"
-INPUT_FILE = "/home/marc/pdfe/ISO-32000-2-2020.md"
+WIKI_DIR = "/home/marc/excise/wiki"
+INPUT_FILE = "/home/marc/excise/ISO-32000-2-2020.md"
 
 def read_lines(filepath):
     with open(filepath, 'r', encoding='utf-8') as f:

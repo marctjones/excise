@@ -3,7 +3,7 @@
 //
 // Usage:
 //   From code: await scriptingService.ExecuteFileAsync("scripts/example-redact-birth-certificate.csx");
-//   From CLI:  ./PdfEditor --script scripts/example-redact-birth-certificate.csx
+//   From CLI:  ./Excise.App --script scripts/example-redact-birth-certificate.csx
 
 using System;
 using System.IO;

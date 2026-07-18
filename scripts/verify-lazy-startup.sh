@@ -2,19 +2,19 @@
 # Verify the default Release package keeps heavy optional subsystems out of the
 # normal startup path (#341): Roslyn scripting is not shipped unless explicitly
 # enabled, repo-local tessdata is not bundled unless requested, and the GUI
-# hidden-text toggle does not load Pdfe.Ocr before the user asks for raster OCR.
+# hidden-text toggle does not load Excise.Ocr before the user asks for raster OCR.
 
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-PUBLISH_DIR="${1:-/tmp/pdfe-release-lazy-startup}"
+PUBLISH_DIR="${1:-/tmp/excise-release-lazy-startup}"
 
 cd "$ROOT"
 rm -rf "$PUBLISH_DIR"
 mkdir -p "$PUBLISH_DIR"
 
 echo "==> Publishing default Release GUI to $PUBLISH_DIR"
-dotnet publish PdfEditor/PdfEditor.csproj \
+dotnet publish Excise.App/Excise.App.csproj \
     -c Release \
     -o "$PUBLISH_DIR" \
     -p:DebugType=None \
@@ -27,9 +27,9 @@ if find "$PUBLISH_DIR" -name 'Microsoft.CodeAnalysis*.dll' -print -quit | grep -
     exit 1
 fi
 
-deps="$PUBLISH_DIR/PdfEditor.deps.json"
+deps="$PUBLISH_DIR/Excise.App.deps.json"
 if [[ -f "$deps" ]] && grep -q 'Microsoft.CodeAnalysis.CSharp.Scripting' "$deps"; then
-    echo "ERROR: PdfEditor.deps.json contains Microsoft.CodeAnalysis.CSharp.Scripting" >&2
+    echo "ERROR: Excise.App.deps.json contains Microsoft.CodeAnalysis.CSharp.Scripting" >&2
     exit 1
 fi
 
@@ -40,8 +40,8 @@ if find "$PUBLISH_DIR" \( -path '*/tessdata/*' -o -name '*.traineddata' \) -prin
     exit 1
 fi
 
-echo "==> Checking normal hidden-text toggles do not load Pdfe.Ocr"
-dotnet test PdfEditor.Tests/PdfEditor.Tests.csproj \
+echo "==> Checking normal hidden-text toggles do not load Excise.Ocr"
+dotnet test Excise.App.Tests/Excise.App.Tests.csproj \
     --filter "FullyQualifiedName~HiddenTextToggles_DoNotLoadOcrAssemblyBeforeRasterizedScan" \
     --logger "console;verbosity=minimal"
 

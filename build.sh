@@ -20,7 +20,7 @@ echo "✓ .NET SDK found: $(dotnet --version)"
 echo ""
 
 # Navigate to project directory
-cd "$(dirname "$0")/PdfEditor"
+cd "$(dirname "$0")/Excise.App"
 
 echo "Restoring NuGet packages..."
 dotnet restore
@@ -45,7 +45,7 @@ echo "✓ Build successful!"
 echo "=================================="
 echo ""
 echo "To run the application:"
-echo "  dotnet run --project PdfEditor"
+echo "  dotnet run --project Excise.App"
 echo ""
 echo "To publish a standalone executable:"
 echo "  Linux:   dotnet publish -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true"
@@ -53,7 +53,7 @@ echo "  macOS:   dotnet publish -c Release -r osx-x64 --self-contained true -p:P
 echo "  Windows: dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true"
 echo ""
 echo "To build CLI with ReadyToRun (R2R) compilation for faster cold-start:"
-echo "  dotnet publish Pdfe.Cli/Pdfe.Cli.csproj -c Release -r linux-x64 --self-contained true"
-echo "  Binaries will be in: Pdfe.Cli/bin/Release/net10.0/linux-x64/publish/"
+echo "  dotnet publish Excise.Cli/Excise.Cli.csproj -c Release -r linux-x64 --self-contained true"
+echo "  Binaries will be in: Excise.Cli/bin/Release/net10.0/linux-x64/publish/"
 echo "  (R2R is auto-enabled in csproj)"
 echo ""

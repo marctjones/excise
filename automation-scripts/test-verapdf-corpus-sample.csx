@@ -33,7 +33,7 @@ if (repoRoot == null)
 
 var corpusRoot = Path.Combine(repoRoot, "test-pdfs", "verapdf-corpus");
 var sampleSize = 20; // Test with 20 random PDFs
-var outputDir = "/tmp/pdfe-corpus-test";
+var outputDir = "/tmp/excise-corpus-test";
 
 Directory.CreateDirectory(outputDir);
 

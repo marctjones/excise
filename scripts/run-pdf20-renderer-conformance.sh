@@ -107,7 +107,7 @@ echo "auditing PDF 2.0 renderer coverage"
 
 if [[ "$RUN_TESTS" == "1" ]]; then
     echo "running focused PDF 2.0 matrix tests"
-    dotnet test Pdfe.Core.Tests/Pdfe.Core.Tests.csproj \
+    dotnet test Excise.Core.Tests/Excise.Core.Tests.csproj \
         --filter "FullyQualifiedName~Pdf20RendererRequirementMatrixTests" \
         --logger "console;verbosity=minimal"
 fi

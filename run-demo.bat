@@ -17,7 +17,7 @@ echo ✓ .NET SDK found: %DOTNET_VERSION%
 echo.
 
 REM Build and run the demo
-cd PdfEditor.Demo
+cd Excise.App.Demo
 
 echo Building demo program...
 dotnet build

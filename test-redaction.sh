@@ -83,7 +83,7 @@ run_demo() {
 
     # Build demo project
     echo "Building demo program..."
-    cd PdfEditor.Demo
+    cd Excise.App.Demo
 
     if [ "$VERBOSE" = true ]; then
         $DOTNET_CMD build -c Release
@@ -127,7 +127,7 @@ run_tests() {
 
     # Build test project
     echo "Building test project..."
-    cd PdfEditor.Tests
+    cd Excise.App.Tests
 
     if [ "$VERBOSE" = true ]; then
         $DOTNET_CMD build -c Release
@@ -173,7 +173,7 @@ run_integration_tests() {
 
     # Build test project
     echo "Building test project..."
-    cd PdfEditor.Tests
+    cd Excise.App.Tests
 
     if [ "$VERBOSE" = true ]; then
         $DOTNET_CMD build -c Release

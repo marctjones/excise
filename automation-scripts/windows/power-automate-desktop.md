@@ -7,11 +7,11 @@ Use Power Automate Desktop to run PowerShell, not GUI clicks.
 3. Call the command and parse the returned object.
 
 ```powershell
-Import-Module "C:\path\to\Pdfe.Automation.psm1" -Force
+Import-Module "C:\path\to\Excise.Automation.psm1" -Force
 
-$result = Export-PdfePageImage `
+$result = Export-ExcisePageImage `
   -Path "C:\Docs\input.pdf" `
-  -Output "$env:TEMP\pdfe-page-1.png" `
+  -Output "$env:TEMP\excise-page-1.png" `
   -Page 1 `
   -Dpi 150
 
@@ -21,9 +21,9 @@ $result | ConvertTo-Json -Depth 8
 For redaction:
 
 ```powershell
-Import-Module "C:\path\to\Pdfe.Automation.psm1" -Force
+Import-Module "C:\path\to\Excise.Automation.psm1" -Force
 
-Invoke-PdfeRedaction `
+Invoke-ExciseRedaction `
   -Input "C:\Docs\input.pdf" `
   -Output "C:\Docs\input.redacted.pdf" `
   -Text "SECRET"

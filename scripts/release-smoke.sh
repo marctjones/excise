@@ -143,7 +143,7 @@ run_packaged_gui_gate() {
         return
     fi
 
-    local app="$ROOT/dist/pdfe.app"
+    local app="$ROOT/dist/excise.app"
     local pdf="$ROOT/test-pdfs/smoke/irs-w9.pdf"
     local out="$LOG_DIR/packaged-gui"
     local -a args=("--app" "$app" "--pdf" "$pdf" "--output" "$out" "--mode" "$PACKAGED_GUI_MODE")
@@ -267,12 +267,12 @@ run_dotnet_test_step() {
     return "$rc"
 }
 
-run_pdfeditor_gui_display_step() {
+run_exciseditor_gui_display_step() {
     local log="$1"
-    local label="PdfEditor.Tests GUI display sweep"
-    local project="PdfEditor.Tests/PdfEditor.Tests.csproj"
+    local label="Excise.App.Tests GUI display sweep"
+    local project="Excise.App.Tests/Excise.App.Tests.csproj"
     local filter="FullyQualifiedName~PdfViewerHeadlessRenderTests.PdfViewer_RenderingQualitySuite_DisplayBitmapsMatchRenderer"
-    local report="PdfEditor.Tests/bin/$CONFIG/net10.0/UI/test-output/gui-display-suite-renderer-contracts-representative-pages.json"
+    local report="Excise.App.Tests/bin/$CONFIG/net10.0/UI/test-output/gui-display-suite-renderer-contracts-representative-pages.json"
     local last_progress=""
 
     say "  -> $label"
@@ -335,11 +335,11 @@ run_full_tests_gate() {
     local rc=0
     local project
     local -a test_projects=(
-        "Pdfe.Avalonia.Tests/Pdfe.Avalonia.Tests.csproj"
-        "Pdfe.Cli.Tests/Pdfe.Cli.Tests.csproj"
-        "Pdfe.Core.Tests/Pdfe.Core.Tests.csproj"
-        "Pdfe.Ocr.Tests/Pdfe.Ocr.Tests.csproj"
-        "Pdfe.Rendering.Tests/Pdfe.Rendering.Tests.csproj"
+        "Excise.Avalonia.Tests/Excise.Avalonia.Tests.csproj"
+        "Excise.Cli.Tests/Excise.Cli.Tests.csproj"
+        "Excise.Core.Tests/Excise.Core.Tests.csproj"
+        "Excise.Ocr.Tests/Excise.Ocr.Tests.csproj"
+        "Excise.Rendering.Tests/Excise.Rendering.Tests.csproj"
     )
 
     say "${B}[tests]${N} sequential project tests with hang diagnostics"
@@ -349,19 +349,19 @@ run_full_tests_gate() {
     done
 
     if [ "$rc" = "0" ]; then
-        run_dotnet_test_step "$log" "PdfEditor.Tests ordinary slice" \
-            "PdfEditor.Tests/PdfEditor.Tests.csproj" \
+        run_dotnet_test_step "$log" "Excise.App.Tests ordinary slice" \
+            "Excise.App.Tests/Excise.App.Tests.csproj" \
             "FullyQualifiedName!~KeyboardShortcutTests.CtrlW_ClosesDocument&FullyQualifiedName!~PdfViewerHeadlessRenderTests.PdfViewer_RenderingQualitySuite_DisplayBitmapsMatchRenderer" \
             "5m" || rc=$?
     fi
     if [ "$rc" = "0" ]; then
-        run_dotnet_test_step "$log" "PdfEditor.Tests Ctrl+W shortcut" \
-            "PdfEditor.Tests/PdfEditor.Tests.csproj" \
+        run_dotnet_test_step "$log" "Excise.App.Tests Ctrl+W shortcut" \
+            "Excise.App.Tests/Excise.App.Tests.csproj" \
             "FullyQualifiedName~KeyboardShortcutTests.CtrlW_ClosesDocument" \
             "2m" || rc=$?
     fi
     if [ "$rc" = "0" ]; then
-        run_pdfeditor_gui_display_step "$log" || rc=$?
+        run_exciseditor_gui_display_step "$log" || rc=$?
     fi
 
     local dur=$(( $(date +%s) - start ))
@@ -376,7 +376,7 @@ run_full_tests_gate() {
 }
 
 say "${B}=================================================${N}"
-say "${B} pdfe release smoke${N}"
+say "${B} excise release smoke${N}"
 say "${B}=================================================${N}"
 say "Started : $(date)"
 say "Test config : $CONFIG"
@@ -388,12 +388,12 @@ say ""
 run_gate "docs" scripts/verify-doc-claims.sh
 
 if [ "$NO_BUILD" != "1" ]; then
-    run_gate "build" dotnet build pdfe.sln -c "$CONFIG"
+    run_gate "build" dotnet build excise.sln -c "$CONFIG"
 fi
 
 run_gate "redaction" dotnet test --no-build -c "$CONFIG" --filter "FullyQualifiedName~Redaction" --logger "console;verbosity=normal"
-run_gate "signature" dotnet test PdfEditor.Tests --no-build -c "$CONFIG" --filter "FullyQualifiedName~SignatureVerification" --logger "console;verbosity=normal"
-run_gate "ui" dotnet test PdfEditor.Tests --no-build -c "$CONFIG" --filter "FullyQualifiedName~GuiWorkflowCoverageMatrix|FullyQualifiedName~GoldenPath|FullyQualifiedName~Workflow" --logger "console;verbosity=normal"
+run_gate "signature" dotnet test Excise.App.Tests --no-build -c "$CONFIG" --filter "FullyQualifiedName~SignatureVerification" --logger "console;verbosity=normal"
+run_gate "ui" dotnet test Excise.App.Tests --no-build -c "$CONFIG" --filter "FullyQualifiedName~GuiWorkflowCoverageMatrix|FullyQualifiedName~GoldenPath|FullyQualifiedName~Workflow" --logger "console;verbosity=normal"
 run_gate "accessibility" scripts/run-accessibility-smoke.sh --config "$CONFIG" --output "$LOG_DIR/accessibility"
 run_gate "automation" scripts/run-automation-smoke.sh --config "$CONFIG" --output "$LOG_DIR/automation"
 run_gate "ux" scripts/run-ux-icon-audit.sh --config "$CONFIG" --output "$LOG_DIR/ux-icon-audit"
@@ -407,8 +407,8 @@ run_gate "pdf20" scripts/run-pdf20-renderer-conformance.sh --run-tests
 # is a hard-fail release gate specifically because it's the one place #619's
 # skip-budget concern was found being violated; these two don't have that
 # history yet, so they follow the existing local convention here).
-run_gate "corpus-resilience" dotnet test Pdfe.Core.Tests --no-build -c "$CONFIG" --filter "FullyQualifiedName~Corpus" --logger "console;verbosity=normal"
-run_gate "adversarial-extraction" dotnet test Pdfe.Rendering.Tests --no-build -c "$CONFIG" --filter "FullyQualifiedName~AdversarialCorpus" --logger "console;verbosity=normal"
+run_gate "corpus-resilience" dotnet test Excise.Core.Tests --no-build -c "$CONFIG" --filter "FullyQualifiedName~Corpus" --logger "console;verbosity=normal"
+run_gate "adversarial-extraction" dotnet test Excise.Rendering.Tests --no-build -c "$CONFIG" --filter "FullyQualifiedName~AdversarialCorpus" --logger "console;verbosity=normal"
 
 run_full_tests_gate
 

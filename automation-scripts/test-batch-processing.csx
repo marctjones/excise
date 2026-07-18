@@ -31,7 +31,7 @@ if (repoRoot == null)
 }
 
 var inputDir = Path.Combine(repoRoot, "test-pdfs", "verapdf-corpus", "veraPDF-corpus-master", "PDF-A");
-var outputDir = "/tmp/pdfe-batch-output";
+var outputDir = "/tmp/excise-batch-output";
 var maxFiles = 10;
 
 var termsToRedact = new[] { "test", "sample", "example", "data" };

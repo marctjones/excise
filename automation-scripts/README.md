@@ -2,7 +2,7 @@
 
 For end-user and CI automation, use the stable CLI contract documented in
 [`docs/AUTOMATION_API.md`](../docs/AUTOMATION_API.md). The platform examples in
-`macos/`, `windows/`, and `linux/` call `pdfe` or `pdfe batch` and return
+`macos/`, `windows/`, and `linux/` call `excise` or `excise batch` and return
 structured JSON without taking GUI focus.
 
 The `.csx` files in this directory are developer/test GUI automation scripts.
@@ -39,7 +39,7 @@ Tests that documents can be loaded via the GUI.
 dotnet test --filter "AutomationScript_LoadDocument"
 
 # Manually (future - after GUI integration)
-./PdfEditor --script automation-scripts/test-load-document.csx
+./Excise.App --script automation-scripts/test-load-document.csx
 ```
 
 **Expected result:** Exit code 0 (success)
@@ -57,10 +57,10 @@ Tests the complete redaction workflow: load → redact → apply → save → ve
 **Usage:**
 ```bash
 # Default (uses birth certificate)
-./PdfEditor --script automation-scripts/test-redact-text.csx
+./Excise.App --script automation-scripts/test-redact-text.csx
 
 # Custom PDF
-./PdfEditor --script automation-scripts/test-redact-text.csx \
+./Excise.App --script automation-scripts/test-redact-text.csx \
   --script-arg source=/path/to/input.pdf \
   --script-arg output=/tmp/redacted.pdf \
   --script-arg text="SECRET"
@@ -87,7 +87,7 @@ Tests redaction of the real-world birth certificate request form PDF.
 dotnet test --filter "AutomationScript_BirthCertificate"
 
 # Manually
-./PdfEditor --script automation-scripts/test-birth-certificate.csx
+./Excise.App --script automation-scripts/test-birth-certificate.csx
 ```
 
 **Expected result:** Exit code 0, ≥50% of terms successfully redacted
@@ -118,7 +118,7 @@ Tests GUI redaction against a diverse sample of PDFs from the veraPDF corpus.
 dotnet test --filter "AutomationScript_VeraPdfCorpusSample"
 
 # Manually
-./PdfEditor --script automation-scripts/test-verapdf-corpus-sample.csx
+./Excise.App --script automation-scripts/test-verapdf-corpus-sample.csx
 ```
 
 **Expected result:** ≥70% success rate across diverse PDF structures
@@ -144,7 +144,7 @@ Stress test: Processes 100 diverse PDFs sequentially.
 dotnet test --filter "AutomationScript_StressDiversePdfs"
 
 # Manually
-./PdfEditor --script automation-scripts/test-stress-diverse-pdfs.csx
+./Excise.App --script automation-scripts/test-stress-diverse-pdfs.csx
 ```
 
 **Expected result:** ≥80% success rate, stable performance
@@ -167,10 +167,10 @@ Tests realistic batch processing workflow for production use.
 **Usage:**
 ```bash
 # Default (processes 10 PDFs from veraPDF corpus)
-./PdfEditor --script automation-scripts/test-batch-processing.csx
+./Excise.App --script automation-scripts/test-batch-processing.csx
 
 # Custom directory
-./PdfEditor --script automation-scripts/test-batch-processing.csx \
+./Excise.App --script automation-scripts/test-batch-processing.csx \
   --script-arg input=/path/to/pdfs \
   --script-arg output=/path/to/output \
   --script-arg maxFiles=50
@@ -246,7 +246,7 @@ When scripts execute, they have access to:
 **Namespaces:**
 - `System`, `System.IO`, `System.Linq`
 - `System.Threading.Tasks`, `System.Diagnostics`
-- `PdfEditor.ViewModels`, `PdfEditor.Services`, `PdfEditor.Models`
+- `Excise.App.ViewModels`, `Excise.App.Services`, `Excise.App.Models`
 
 ## Return Codes
 
@@ -300,10 +300,10 @@ Once GUI integration (#59) is complete, scripts can run in headless mode:
 
 ```bash
 # Run without showing GUI window
-./PdfEditor --headless --script automation-scripts/test-birth-certificate.csx
+./Excise.App --headless --script automation-scripts/test-birth-certificate.csx
 
 # Run in CI/CD pipeline
-./PdfEditor --headless --script automation-scripts/test-birth-certificate.csx
+./Excise.App --headless --script automation-scripts/test-birth-certificate.csx
 if [ $? -eq 0 ]; then
     echo "✅ Birth certificate test PASSED"
 else
@@ -356,7 +356,7 @@ catch (Exception ex)
 
 Then add the test:
 ```csharp
-// PdfEditor.Tests/UI/AutomationScriptTests.cs
+// Excise.App.Tests/UI/AutomationScriptTests.cs
 [Fact]
 public async Task AutomationScript_MyFeature_ExecutesSuccessfully()
 {

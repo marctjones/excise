@@ -84,7 +84,7 @@ extract_zip() {
 
 write_manifest() {
     local corpus_dir="$1"
-    local manifest="$corpus_dir/.pdfe-manifest.tsv"
+    local manifest="$corpus_dir/.excise-manifest.tsv"
     [[ -d "$corpus_dir" ]] || return 0
 
     python3 - "$corpus_dir" "$manifest" <<'PY'

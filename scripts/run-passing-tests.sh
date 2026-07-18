@@ -27,7 +27,7 @@ exec > >(tee "$LOG_FILE")
 exec 2>&1
 
 echo "================================================="
-echo "pdfe Passing Tests Only"
+echo "excise Passing Tests Only"
 echo "================================================="
 echo ""
 echo "Excluding known broken tests:"
@@ -35,7 +35,7 @@ echo "  - Character-level redaction (not implemented - #98)"
 echo "  - Metadata sanitization (#99)"
 echo "  - Render integration (#100)"
 echo "  - Scripted GUI invalid syntax (#101)"
-echo "  - Automation scripts with known pdfe bugs (#95, #97)"
+echo "  - Automation scripts with known excise bugs (#95, #97)"
 echo ""
 echo "Log file: $LOG_FILE"
 echo ""
@@ -45,7 +45,7 @@ cd "$PROJECT_ROOT"
 # Build if needed
 if [ "$SKIP_BUILD" = false ]; then
     echo "Building tests..."
-    dotnet build PdfEditor.Tests/PdfEditor.Tests.csproj --nologo -v quiet
+    dotnet build Excise.App.Tests/Excise.App.Tests.csproj --nologo -v quiet
     echo "✅ Build successful"
     echo ""
 fi
@@ -54,7 +54,7 @@ fi
 echo "Running passing tests..."
 echo ""
 
-dotnet test PdfEditor.Tests/PdfEditor.Tests.csproj \
+dotnet test Excise.App.Tests/Excise.App.Tests.csproj \
     --filter "FullyQualifiedName!~CharacterLevel & FullyQualifiedName!~CharacterMatcher & FullyQualifiedName!~MetadataRedaction & FullyQualifiedName!~RenderIntegration & FullyQualifiedName!~Script_InvalidSyntax & FullyQualifiedName!~AutomationScript_VeraPdfCorpusSample & FullyQualifiedName!~AutomationScript_BirthCertificateSpecificWords & FullyQualifiedName!~AutomationScript_RedactText" \
     --logger "console;verbosity=normal" \
     --no-build

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Publish/package the PdfEditor GUI with Native AOT and write durable evidence.
+# Publish/package the Excise.App GUI with Native AOT and write durable evidence.
 
 set -uo pipefail
 
@@ -18,7 +18,7 @@ GUI_TIMEOUT=30
 
 usage() {
     cat <<'EOF'
-Publish/package PdfEditor with Native AOT and write JSON/markdown evidence.
+Publish/package Excise.App with Native AOT and write JSON/markdown evidence.
 
 Usage:
   scripts/run-aot-smoke.sh [options]
@@ -128,7 +128,7 @@ MD_REPORT="$OUTPUT/aot-smoke.md"
 PUBLISH_DIR="$OUTPUT/publish"
 DIST_DIR="$OUTPUT/dist"
 SYMBOLS_DIR="$OUTPUT/symbols"
-APP_PATH="$DIST_DIR/pdfe.app"
+APP_PATH="$DIST_DIR/excise.app"
 GUI_OUTPUT="$OUTPUT/gui-smoke"
 overall=0
 build_rc=0
@@ -150,13 +150,13 @@ if [ "$PACKAGE" = "1" ] && [ "$(uname -s)" = "Darwin" ]; then
         --aot \
         --symbols-output "$SYMBOLS_DIR" >> "$BUILD_LOG" 2>&1 || build_rc=$?
     arch="${RID#osx-}"
-    package_path="$DIST_DIR/pdfe-${VERSION}-macos-${arch}.zip"
-    binary_path="$APP_PATH/Contents/MacOS/PdfEditor"
+    package_path="$DIST_DIR/excise-${VERSION}-macos-${arch}.zip"
+    binary_path="$APP_PATH/Contents/MacOS/Excise.App"
 else
     PACKAGE=0
     echo "[aot] raw publish for $RID" | tee -a "$BUILD_LOG"
     rm -rf "$PUBLISH_DIR"
-    dotnet publish PdfEditor/PdfEditor.csproj \
+    dotnet publish Excise.App/Excise.App.csproj \
         -c "$CONFIG" \
         -r "$RID" \
         --self-contained true \
@@ -165,8 +165,8 @@ else
         -p:EnableScripting=false \
         -p:IncludeTessdataInApp=false \
         -o "$PUBLISH_DIR" >> "$BUILD_LOG" 2>&1 || build_rc=$?
-    binary_path="$PUBLISH_DIR/PdfEditor"
-    [ -f "$PUBLISH_DIR/PdfEditor.exe" ] && binary_path="$PUBLISH_DIR/PdfEditor.exe"
+    binary_path="$PUBLISH_DIR/Excise.App"
+    [ -f "$PUBLISH_DIR/Excise.App.exe" ] && binary_path="$PUBLISH_DIR/Excise.App.exe"
 fi
 
 grep -E 'warning (IL[0-9]+|[A-Z]+[0-9]+):' "$BUILD_LOG" > "$WARNINGS_TXT" 2>/dev/null || true

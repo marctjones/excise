@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate pdfe-authored renderer regression PDFs.
+"""Generate excise-authored renderer regression PDFs.
 
 These fixtures are intentionally small and synthetic. They capture hypotheses
 from renderer debugging sessions so fixes can later be guarded by the regular

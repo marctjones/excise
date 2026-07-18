@@ -1,0 +1,1771 @@
+namespace Excise.Core.Authoring
+{
+    public enum FillableCellKind
+    {
+        Text = 0,
+        CheckBox = 1,
+        Choice = 2,
+    }
+    public sealed class FillableTableCell : System.IEquatable<Excise.Core.Authoring.FillableTableCell>
+    {
+        public FillableTableCell(string FieldName, Excise.Core.Authoring.FillableCellKind Kind = 0, string? Value = null, System.Collections.Generic.IReadOnlyList<string>? Options = null, string? Tooltip = null) { }
+        public string FieldName { get; init; }
+        public Excise.Core.Authoring.FillableCellKind Kind { get; init; }
+        public System.Collections.Generic.IReadOnlyList<string>? Options { get; init; }
+        public string? Tooltip { get; init; }
+        public string? Value { get; init; }
+    }
+    public sealed class FillableTableRow : System.IEquatable<Excise.Core.Authoring.FillableTableRow>
+    {
+        public FillableTableRow(string Label, System.Collections.Generic.IReadOnlyList<Excise.Core.Authoring.FillableTableCell> Cells) { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Authoring.FillableTableCell> Cells { get; init; }
+        public string Label { get; init; }
+    }
+    public enum FontFamily
+    {
+        SansSerif = 0,
+        Serif = 1,
+        Monospace = 2,
+    }
+    public readonly struct LayoutContext : System.IEquatable<Excise.Core.Authoring.LayoutContext>
+    {
+        public LayoutContext(double Left, double Top, double Width, double RemainingHeight, int PageNumber) { }
+        public double Left { get; init; }
+        public int PageNumber { get; init; }
+        public double RemainingHeight { get; init; }
+        public double Top { get; init; }
+        public double Width { get; init; }
+    }
+    public readonly struct PageMargins : System.IEquatable<Excise.Core.Authoring.PageMargins>
+    {
+        public PageMargins(double Left, double Top, double Right, double Bottom) { }
+        public double Bottom { get; init; }
+        public double Left { get; init; }
+        public double Right { get; init; }
+        public double Top { get; init; }
+        public static Excise.Core.Authoring.PageMargins Default { get; }
+        public static Excise.Core.Authoring.PageMargins All(double points) { }
+        public static Excise.Core.Authoring.PageMargins Symmetric(double horizontal, double vertical) { }
+    }
+    public readonly struct PageSize : System.IEquatable<Excise.Core.Authoring.PageSize>
+    {
+        public PageSize(double Width, double Height) { }
+        public double Height { get; init; }
+        public double Width { get; init; }
+        public static Excise.Core.Authoring.PageSize A3 { get; }
+        public static Excise.Core.Authoring.PageSize A4 { get; }
+        public static Excise.Core.Authoring.PageSize A5 { get; }
+        public static Excise.Core.Authoring.PageSize Legal { get; }
+        public static Excise.Core.Authoring.PageSize Letter { get; }
+        public Excise.Core.Authoring.PageSize Landscape() { }
+        public Excise.Core.Authoring.PageSize Portrait() { }
+    }
+    public enum PdfAConformance
+    {
+        PdfA2B = 0,
+        PdfA1B = 1,
+    }
+    public sealed class PdfDocumentBuilder
+    {
+        public double ContentLeft { get; }
+        public double ContentWidth { get; }
+        public int PageCount { get; }
+        public Excise.Core.Authoring.PdfDocumentBuilder Author(string author) { }
+        public Excise.Core.Document.PdfDocument Build() { }
+        public Excise.Core.Authoring.PdfDocumentBuilder BulletList(System.Collections.Generic.IEnumerable<string> items, string bullet = "•", Excise.Core.Authoring.TextStyle? style = null) { }
+        public Excise.Core.Authoring.PdfDocumentBuilder CheckBox(string label, string? fieldName = null, bool checkedByDefault = false, string? tooltip = null) { }
+        public Excise.Core.Authoring.PdfDocumentBuilder Custom(System.Action<Excise.Core.Graphics.PdfGraphics, Excise.Core.Authoring.LayoutContext> draw) { }
+        public Excise.Core.Authoring.PdfDocumentBuilder DateField(string label, string? fieldName = null, string format = "yyyy-mm-dd", bool required = false, string? tooltip = null) { }
+        public Excise.Core.Authoring.PdfDocumentBuilder DefaultFont(Excise.Core.Graphics.PdfFont font) { }
+        public Excise.Core.Authoring.PdfDocumentBuilder Dropdown(string label, System.Collections.Generic.IEnumerable<string> options, string? fieldName = null, string? defaultValue = null, string? tooltip = null) { }
+        public Excise.Core.Authoring.PdfDocumentBuilder FillableTable(System.Collections.Generic.IReadOnlyList<string> columnHeaders, System.Collections.Generic.IReadOnlyList<Excise.Core.Authoring.FillableTableRow> rows, double[]? columnWeights = null, double labelColumnWeight = 1) { }
+        public Excise.Core.Authoring.PdfDocumentBuilder Heading(string text, int level = 1, Excise.Core.Authoring.TextStyle? style = null) { }
+        public Excise.Core.Authoring.PdfDocumentBuilder HorizontalRule(double thickness = 0.5, Excise.Core.Graphics.PdfColor? color = default) { }
+        public Excise.Core.Authoring.PdfDocumentBuilder KeyValue(string label, string value, double labelWidth = 0.3) { }
+        public Excise.Core.Authoring.PdfDocumentBuilder Keywords(string keywords) { }
+        public Excise.Core.Authoring.PdfDocumentBuilder Language(string bcp47) { }
+        public Excise.Core.Authoring.PdfDocumentBuilder NumberedList(System.Collections.Generic.IEnumerable<string> items, Excise.Core.Authoring.TextStyle? style = null) { }
+        public Excise.Core.Authoring.PdfDocumentBuilder PageBreak() { }
+        public Excise.Core.Authoring.PdfDocumentBuilder Paragraph(string text, Excise.Core.Authoring.TextStyle? style = null) { }
+        public Excise.Core.Authoring.PdfDocumentBuilder PdfA(Excise.Core.Authoring.PdfAConformance conformance = 0) { }
+        public void Save(System.IO.Stream stream) { }
+        public void Save(string path) { }
+        public byte[] SaveToBytes() { }
+        public Excise.Core.Authoring.PdfDocumentBuilder Spacer(double points) { }
+        public Excise.Core.Authoring.PdfDocumentBuilder Subject(string subject) { }
+        public Excise.Core.Authoring.PdfDocumentBuilder Table(System.Collections.Generic.IEnumerable<System.Collections.Generic.IReadOnlyList<string>> rows, double[]? columnWeights = null, bool headerRow = false, bool gridLines = true) { }
+        public Excise.Core.Authoring.PdfDocumentBuilder Tagged() { }
+        public Excise.Core.Authoring.PdfDocumentBuilder TextField(string label, string? fieldName = null, bool multiline = false, bool required = false, int lines = 1, string? defaultValue = null, string? tooltip = null, int? maxLength = default, bool comb = false) { }
+        public Excise.Core.Authoring.PdfDocumentBuilder Title(string title) { }
+        public static Excise.Core.Authoring.PdfDocumentBuilder Create(Excise.Core.Authoring.PageSize? pageSize = default, Excise.Core.Authoring.PageMargins? margins = default) { }
+    }
+    public sealed class TextStyle : System.IEquatable<Excise.Core.Authoring.TextStyle>
+    {
+        public TextStyle() { }
+        public Excise.Core.Graphics.TextAlignment Alignment { get; init; }
+        public bool Bold { get; init; }
+        public Excise.Core.Graphics.PdfColor Color { get; init; }
+        public Excise.Core.Authoring.FontFamily Family { get; init; }
+        public Excise.Core.Graphics.PdfFont? Font { get; init; }
+        public bool Italic { get; init; }
+        public double LineHeight { get; }
+        public double LineSpacing { get; init; }
+        public double Size { get; init; }
+        public double SpaceAfter { get; init; }
+        public static Excise.Core.Authoring.TextStyle Body { get; }
+        public Excise.Core.Authoring.TextStyle AsBold() { }
+        public Excise.Core.Authoring.TextStyle AsItalic() { }
+        public Excise.Core.Graphics.PdfBrush ResolveBrush() { }
+        public Excise.Core.Graphics.PdfFont ResolveFont() { }
+        public Excise.Core.Authoring.TextStyle WithAlignment(Excise.Core.Graphics.TextAlignment alignment) { }
+        public Excise.Core.Authoring.TextStyle WithColor(Excise.Core.Graphics.PdfColor color) { }
+        public Excise.Core.Authoring.TextStyle WithFont(Excise.Core.Graphics.PdfFont font) { }
+        public Excise.Core.Authoring.TextStyle WithSize(double size) { }
+        public Excise.Core.Authoring.TextStyle WithSpaceAfter(double points) { }
+    }
+}
+namespace Excise.Core.Automation
+{
+    public static class PdfCommandIds
+    {
+        public const string About = "app.about";
+        public const string AddFormField = "form.addField";
+        public const string AddHighlight = "annotation.addHighlight";
+        public const string AddPages = "document.addPages";
+        public const string AddStickyNote = "annotation.addStickyNote";
+        public const string ApplyAllRedactions = "redaction.applyAll";
+        public const string ApplyRedaction = "redaction.apply";
+        public const string AuditHiddenText = "audit.hiddenText";
+        public const string AutoDetectFields = "form.autoDetectFields";
+        public const string BatchWorkflow = "automation.batch";
+        public const string ClearAllRedactions = "redaction.clearAll";
+        public const string ClearPageSelection = "document.clearPageSelection";
+        public const string CloseDocument = "app.closeDocument";
+        public const string CombineDocuments = "document.combine";
+        public const string CopyText = "edit.copyText";
+        public const string DocumentInfo = "document.info";
+        public const string Documentation = "app.documentation";
+        public const string ExportAllPages = "document.exportAllPages";
+        public const string ExportCurrentPage = "document.exportCurrentPage";
+        public const string ExtractCurrentPage = "document.extractCurrentPage";
+        public const string ExtractSelectedPages = "document.extractSelectedPages";
+        public const string ExtractText = "text.extract";
+        public const string FillForm = "form.fillForm";
+        public const string GoToPage = "view.goToPage";
+        public const string InsertPagesAfter = "document.insertPagesAfter";
+        public const string InsertPagesBefore = "document.insertPagesBefore";
+        public const string KeyboardShortcuts = "app.keyboardShortcuts";
+        public const string MakeSearchable = "tools.makeSearchable";
+        public const string MoveCurrentPageEarlier = "document.moveCurrentPageEarlier";
+        public const string MoveCurrentPageLater = "document.moveCurrentPageLater";
+        public const string MoveSelectedPagesEarlier = "document.moveSelectedPagesEarlier";
+        public const string MoveSelectedPagesLater = "document.moveSelectedPagesLater";
+        public const string NextPage = "view.nextPage";
+        public const string OcrPage = "ocr.page";
+        public const string Open = "app.open";
+        public const string Preferences = "app.preferences";
+        public const string PreviousPage = "view.previousPage";
+        public const string Print = "document.print";
+        public const string RemoveCurrentPage = "document.removeCurrentPage";
+        public const string RemovePendingRedaction = "redaction.removePending";
+        public const string RemoveSelectedPages = "document.removeSelectedPages";
+        public const string RenderPage = "render.page";
+        public const string RevealHiddenText = "tools.revealHiddenText";
+        public const string RevealRasterizedHiddenText = "tools.revealRasterizedHiddenText";
+        public const string Rotate180 = "document.rotate180";
+        public const string RotateLeft = "document.rotateLeft";
+        public const string RotateRight = "document.rotateRight";
+        public const string Save = "app.save";
+        public const string SaveAs = "app.saveAs";
+        public const string SaveFlattenedFormCopy = "form.saveFlattenedCopy";
+        public const string SearchClose = "search.close";
+        public const string SearchFind = "search.find";
+        public const string SearchNext = "search.next";
+        public const string SearchOpen = "search.open";
+        public const string SearchPrevious = "search.previous";
+        public const string Security = "document.security";
+        public const string SelectTextMode = "edit.selectTextMode";
+        public const string ShowLetters = "text.letters";
+        public const string SplitDocument = "document.split";
+        public const string ToggleClipboardHistory = "view.toggleClipboardHistory";
+        public const string ToggleContinuousView = "view.toggleContinuous";
+        public const string ToggleFormAuthoring = "form.toggleAuthoring";
+        public const string ToggleOutline = "view.toggleOutline";
+        public const string ToggleRedactionMode = "redaction.toggleMode";
+        public const string ToggleThumbnails = "view.toggleThumbnails";
+        public const string TypewriterMode = "edit.typewriterMode";
+        public const string VerifySignatures = "tools.verifySignatures";
+        public const string ZoomActualSize = "view.zoomActualSize";
+        public const string ZoomFitPage = "view.zoomFitPage";
+        public const string ZoomFitWidth = "view.zoomFitWidth";
+        public const string ZoomIn = "view.zoomIn";
+        public const string ZoomOut = "view.zoomOut";
+    }
+    public sealed class PdfCommandMetadata
+    {
+        public PdfCommandMetadata(string id, string label, string description, string category, string? shortcut = null, string? cliCommand = null, bool requiresDocument = false, bool isDestructive = false, bool isSecuritySensitive = false, string? disabledReason = null, System.Collections.Generic.IReadOnlyList<Excise.Core.Automation.PdfCommandParameterMetadata>? parameters = null, System.Collections.Generic.IReadOnlyList<string>? resultFields = null) { }
+        public string Category { get; }
+        public string? CliCommand { get; }
+        public string Description { get; }
+        public string DisabledReason { get; }
+        public string Id { get; }
+        public bool IsDestructive { get; }
+        public bool IsSecuritySensitive { get; }
+        public string Label { get; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Automation.PdfCommandParameterMetadata> Parameters { get; }
+        public bool RequiresDocument { get; }
+        public System.Collections.Generic.IReadOnlyList<string> ResultFields { get; }
+        public string? Shortcut { get; }
+    }
+    public sealed class PdfCommandParameterMetadata
+    {
+        public PdfCommandParameterMetadata(string name, string description, string type, bool required = false) { }
+        public string Description { get; }
+        public string Name { get; }
+        public bool Required { get; }
+        public string Type { get; }
+    }
+    public static class PdfCommandRegistry
+    {
+        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Automation.PdfCommandMetadata> All { get; }
+        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Automation.PdfCommandMetadata> ForCliCommand(string cliCommand) { }
+        public static Excise.Core.Automation.PdfCommandMetadata Get(string id) { }
+        public static bool TryGet(string id, out Excise.Core.Automation.PdfCommandMetadata command) { }
+    }
+}
+namespace Excise.Core.ColorSpaces
+{
+    public sealed class PdfColorSpace
+    {
+        public static readonly Excise.Core.ColorSpaces.PdfColorSpace DeviceCMYK;
+        public static readonly Excise.Core.ColorSpaces.PdfColorSpace DeviceGray;
+        public static readonly Excise.Core.ColorSpaces.PdfColorSpace DeviceRGB;
+        public int Components { get; }
+        public Excise.Core.ColorSpaces.PdfColorSpaceType Type { get; }
+        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "R",
+                "G",
+                "B"})]
+        public System.ValueTuple<double, double, double> LookupIndexed(int index) { }
+        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "R",
+                "G",
+                "B"})]
+        public System.ValueTuple<double, double, double> ToRgb(double[] values) { }
+        public static Excise.Core.ColorSpaces.PdfColorSpace FromName(string name) { }
+        public static Excise.Core.ColorSpaces.PdfColorSpace Parse(Excise.Core.Primitives.PdfObject csObj, Excise.Core.Document.PdfDocument doc) { }
+    }
+    public enum PdfColorSpaceType
+    {
+        DeviceGray = 0,
+        DeviceRGB = 1,
+        DeviceCMYK = 2,
+        CalGray = 3,
+        CalRGB = 4,
+        Lab = 5,
+        ICCBased = 6,
+        Indexed = 7,
+        Separation = 8,
+        DeviceN = 9,
+        Pattern = 10,
+        Unknown = 11,
+    }
+}
+namespace Excise.Core.Content
+{
+    public class ContentOperator
+    {
+        public ContentOperator(string name) { }
+        public ContentOperator(string name, System.Collections.Generic.IReadOnlyList<Excise.Core.Primitives.PdfObject> operands) { }
+        public Excise.Core.Document.PdfRectangle? BoundingBox { get; }
+        public Excise.Core.Content.OperatorCategory Category { get; }
+        public byte[]? InlineImageData { get; }
+        public string Name { get; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Primitives.PdfObject> Operands { get; }
+        public string? TextContent { get; }
+        public Excise.Core.Primitives.PdfArray? GetArray(int index) { }
+        public string GetName(int index) { }
+        public double GetNumber(int index) { }
+        public string GetString(int index) { }
+        public bool IntersectsWith(Excise.Core.Document.PdfRectangle rect) { }
+        public bool IsContainedIn(Excise.Core.Document.PdfRectangle rect) { }
+        public override string ToString() { }
+        public static Excise.Core.Content.ContentOperator BeginText() { }
+        public static Excise.Core.Content.ContentOperator CloseAndStroke() { }
+        public static Excise.Core.Content.ContentOperator ClosePath() { }
+        public static Excise.Core.Content.ContentOperator CurveTo(double x1, double y1, double x2, double y2, double x3, double y3) { }
+        public static Excise.Core.Content.ContentOperator EndPath() { }
+        public static Excise.Core.Content.ContentOperator EndText() { }
+        public static Excise.Core.Content.ContentOperator Fill() { }
+        public static Excise.Core.Content.ContentOperator FillAndStroke() { }
+        public static Excise.Core.Content.ContentOperator FillEvenOdd() { }
+        public static Excise.Core.Content.ContentOperator InvokeXObject(string name) { }
+        public static Excise.Core.Content.ContentOperator LineTo(double x, double y) { }
+        public static Excise.Core.Content.ContentOperator MoveTo(double x, double y) { }
+        public static Excise.Core.Content.ContentOperator Rectangle(Excise.Core.Document.PdfRectangle rect) { }
+        public static Excise.Core.Content.ContentOperator Rectangle(double x, double y, double width, double height) { }
+        public static Excise.Core.Content.ContentOperator RestoreState() { }
+        public static Excise.Core.Content.ContentOperator SaveState() { }
+        public static Excise.Core.Content.ContentOperator SetFillBlack() { }
+        public static Excise.Core.Content.ContentOperator SetFillGray(double gray) { }
+        public static Excise.Core.Content.ContentOperator SetFillRgb(double r, double g, double b) { }
+        public static Excise.Core.Content.ContentOperator SetFillWhite() { }
+        public static Excise.Core.Content.ContentOperator SetFont(string fontName, double size) { }
+        public static Excise.Core.Content.ContentOperator SetLineWidth(double width) { }
+        public static Excise.Core.Content.ContentOperator SetStrokeGray(double gray) { }
+        public static Excise.Core.Content.ContentOperator SetStrokeRgb(double r, double g, double b) { }
+        public static Excise.Core.Content.ContentOperator ShowText(string text) { }
+        public static Excise.Core.Content.ContentOperator Stroke() { }
+        public static Excise.Core.Content.ContentOperator TextMatrix(double a, double b, double c, double d, double e, double f) { }
+        public static Excise.Core.Content.ContentOperator TextPosition(double tx, double ty) { }
+        public static Excise.Core.Content.ContentOperator Transform(double a, double b, double c, double d, double e, double f) { }
+    }
+    public class ContentStream
+    {
+        public ContentStream() { }
+        public ContentStream(System.Collections.Generic.IEnumerable<Excise.Core.Content.ContentOperator> operators) { }
+        public int Count { get; }
+        public Excise.Core.Content.ContentOperator this[int index] { get; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Content.ContentOperator> Operators { get; }
+        public System.Collections.Generic.IEnumerable<Excise.Core.Content.ContentOperator> PathOperators { get; }
+        public System.Collections.Generic.IEnumerable<Excise.Core.Content.ContentOperator> TextOperators { get; }
+        public System.Collections.Generic.IEnumerable<Excise.Core.Content.ContentOperator> XObjectOperators { get; }
+        public Excise.Core.Content.ContentStream Append(Excise.Core.Content.ContentOperator op) { }
+        public Excise.Core.Content.ContentStream Append(System.Collections.Generic.IEnumerable<Excise.Core.Content.ContentOperator> ops) { }
+        public Excise.Core.Content.ContentStream Concat(Excise.Core.Content.ContentStream other) { }
+        public Excise.Core.Content.ContentStream Filter(System.Func<Excise.Core.Content.ContentOperator, bool> predicate) { }
+        public System.Collections.Generic.IEnumerable<Excise.Core.Content.ContentOperator> FindText(string searchText, System.StringComparison comparison = 4) { }
+        public System.Collections.Generic.IEnumerator<Excise.Core.Content.ContentOperator> GetEnumerator() { }
+        public Excise.Core.Content.ContentStream Insert(int index, Excise.Core.Content.ContentOperator op) { }
+        public System.Collections.Generic.IEnumerable<Excise.Core.Content.ContentOperator> OfCategory(Excise.Core.Content.OperatorCategory category) { }
+        public Excise.Core.Content.ContentStream Prepend(Excise.Core.Content.ContentOperator op) { }
+        public Excise.Core.Content.ContentStream Prepend(System.Collections.Generic.IEnumerable<Excise.Core.Content.ContentOperator> ops) { }
+        public Excise.Core.Content.ContentStream Redact(Excise.Core.Document.PdfRectangle area, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "R",
+                "G",
+                "B"})] System.ValueTuple<double, double, double>? markerColor = default) { }
+        public Excise.Core.Content.ContentStream RedactWithBlackMarker(Excise.Core.Document.PdfRectangle area) { }
+        public Excise.Core.Content.ContentStream RemoveCategory(Excise.Core.Content.OperatorCategory category) { }
+        public Excise.Core.Content.ContentStream RemoveContainedIn(Excise.Core.Document.PdfRectangle area) { }
+        public Excise.Core.Content.ContentStream RemoveIntersecting(Excise.Core.Document.PdfRectangle area) { }
+        public Excise.Core.Content.ContentStream Replace(int index, Excise.Core.Content.ContentOperator op) { }
+        public override string ToString() { }
+        public Excise.Core.Content.ContentStream Transform(System.Func<Excise.Core.Content.ContentOperator, Excise.Core.Content.ContentOperator> transformer) { }
+        public Excise.Core.Content.ContentStream Where(System.Func<Excise.Core.Content.ContentOperator, bool> predicate) { }
+    }
+    public class ContentStreamParser
+    {
+        public ContentStreamParser(byte[] content, Excise.Core.Document.PdfPage? page = null) { }
+        public int MaxNestingDepth { get; set; }
+        public Excise.Core.Content.ContentStream Parse(System.Threading.CancellationToken cancellationToken = default) { }
+    }
+    public class ContentStreamWriter
+    {
+        public ContentStreamWriter() { }
+        public byte[] Write(Excise.Core.Content.ContentStream content) { }
+    }
+    public enum OperatorCategory
+    {
+        Unknown = 0,
+        GraphicsState = 1,
+        PathConstruction = 2,
+        PathPainting = 3,
+        Clipping = 4,
+        TextState = 5,
+        TextPositioning = 6,
+        TextShowing = 7,
+        TextObject = 8,
+        Color = 9,
+        Shading = 10,
+        XObject = 11,
+        MarkedContent = 12,
+        Compatibility = 13,
+    }
+}
+namespace Excise.Core.Document
+{
+    public static class AcroFormAuthoring
+    {
+        public static Excise.Core.Document.PdfField AddCheckBox(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string fieldName, bool defaultChecked = false, bool readOnly = false, string? tooltip = null) { }
+        public static Excise.Core.Document.PdfField AddChoiceField(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string fieldName, System.Collections.Generic.IEnumerable<string> options, string? defaultValue = null, bool readOnly = false, string? tooltip = null) { }
+        public static Excise.Core.Document.PdfField AddDateField(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string fieldName, string format = "yyyy-mm-dd", string? defaultValue = null, bool required = false, string? tooltip = null) { }
+        public static Excise.Core.Document.PdfField AddSignatureField(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string fieldName, string? tooltip = null) { }
+        public static Excise.Core.Document.PdfField AddTextField(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string fieldName, string? defaultValue = null, bool multiline = false, bool readOnly = false, bool required = false, string? tooltip = null, int? maxLength = default, bool comb = false) { }
+        public static void SetTabOrder(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.AcroFormAuthoring.TabOrder order) { }
+        public enum TabOrder
+        {
+            Row = 0,
+            Column = 1,
+            Structure = 2,
+        }
+    }
+    public sealed class NamedDestination : System.IEquatable<Excise.Core.Document.NamedDestination>
+    {
+        public NamedDestination(string Name, int? PageNumber, double? X = default, double? Y = default, double? Zoom = default, string FitMode = "XYZ") { }
+        public string FitMode { get; init; }
+        public string Name { get; init; }
+        public int? PageNumber { get; init; }
+        public double? X { get; init; }
+        public double? Y { get; init; }
+        public double? Zoom { get; init; }
+    }
+    public class PageCollection : System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfPage>, System.Collections.Generic.IReadOnlyCollection<Excise.Core.Document.PdfPage>, System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfPage>, System.Collections.IEnumerable
+    {
+        public int Count { get; }
+        public Excise.Core.Document.PdfPage this[int index] { get; }
+        public void Add(Excise.Core.Document.PdfPage page) { }
+        public Excise.Core.Document.PdfPage AddBlank(double widthPoints = 612, double heightPoints = 792) { }
+        public System.Collections.Generic.IEnumerator<Excise.Core.Document.PdfPage> GetEnumerator() { }
+        public void Insert(int index, Excise.Core.Document.PdfPage page) { }
+        public void Move(int fromIndex, int toIndex) { }
+        public void RemoveAt(int index) { }
+    }
+    public sealed class PdfAcroForm
+    {
+        public PdfAcroForm(System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfField> fields, bool needsAppearances) { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfField> Fields { get; }
+        public bool NeedsAppearances { get; }
+        public Excise.Core.Document.PdfField? FindField(string fullName) { }
+        public System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfField> GetButtonFields() { }
+        public System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfField> GetChoiceFields() { }
+        public System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfField> GetFields(Excise.Core.Document.PdfFieldType type) { }
+        public System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfField> GetSignatureFields() { }
+        public System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfField> GetTextFields() { }
+    }
+    public sealed class PdfAnnotation
+    {
+        public byte[]? AttachmentBytes { get; }
+        public string? AttachmentFileName { get; }
+        public string? AttachmentMimeType { get; }
+        public string? Author { get; }
+        public System.Collections.Generic.IReadOnlyList<double>? BorderDashPattern { get; }
+        public string? BorderStyle { get; }
+        public double? BorderWidth { get; }
+        [System.Runtime.CompilerServices.TupleElementNames(new string?[]?[] {
+                "R",
+                "G",
+                "B"})]
+        public System.ValueTuple<double, double, double>? Color { get; }
+        public string? Contents { get; }
+        public System.DateTimeOffset? CreationDate { get; }
+        public int? DestinationPage { get; }
+        public Excise.Core.Document.PdfAnnotationFlags Flags { get; }
+        public bool HasAppearance { get; }
+        public string? IconName { get; }
+        [System.Runtime.CompilerServices.TupleElementNames(new string?[]?[] {
+                "X",
+                "Y"})]
+        public System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<System.ValueTuple<double, double>>>? InkStrokes { get; }
+        public bool IsOpen { get; }
+        public bool IsTextMarkup { get; }
+        [System.Runtime.CompilerServices.TupleElementNames(new string?[]?[] {
+                "X1",
+                "Y1",
+                "X2",
+                "Y2"})]
+        public System.ValueTuple<double, double, double, double>? LineEndpoints { get; }
+        public System.DateTimeOffset? ModDate { get; }
+        public string? Name { get; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfRectangle>? QuadPoints { get; }
+        public Excise.Core.Primitives.PdfDictionary RawDictionary { get; }
+        public Excise.Core.Document.PdfRectangle Rect { get; }
+        public Excise.Core.Document.PdfAnnotationSubtype Subtype { get; }
+        public string? Uri { get; }
+        [System.Runtime.CompilerServices.TupleElementNames(new string?[]?[] {
+                "X",
+                "Y"})]
+        public System.Collections.Generic.IReadOnlyList<System.ValueTuple<double, double>>? Vertices { get; }
+        public override string ToString() { }
+    }
+    public static class PdfAnnotationAuthoring
+    {
+        public static Excise.Core.Document.PdfAnnotation AddHighlightAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string? contents = null, string? author = null, double red = 1, double green = 1, double blue = 0) { }
+        public static Excise.Core.Document.PdfAnnotation AddTextAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string contents, string? author = null, bool open = false, string iconName = "Note") { }
+    }
+    [System.Flags]
+    public enum PdfAnnotationFlags
+    {
+        None = 0,
+        Invisible = 1,
+        Hidden = 2,
+        Print = 4,
+        NoZoom = 8,
+        NoRotate = 16,
+        NoView = 32,
+        ReadOnly = 64,
+        Locked = 128,
+        ToggleNoView = 256,
+        LockedContents = 512,
+    }
+    public enum PdfAnnotationSubtype
+    {
+        Unknown = 0,
+        Text = 1,
+        Link = 2,
+        FreeText = 3,
+        Line = 4,
+        Square = 5,
+        Circle = 6,
+        Polygon = 7,
+        PolyLine = 8,
+        Highlight = 9,
+        Underline = 10,
+        Squiggly = 11,
+        StrikeOut = 12,
+        Stamp = 13,
+        Caret = 14,
+        Ink = 15,
+        Popup = 16,
+        FileAttachment = 17,
+        Sound = 18,
+        Movie = 19,
+        Widget = 20,
+        Screen = 21,
+        Watermark = 22,
+        Redact = 23,
+    }
+    public static class PdfCoordinateMapper
+    {
+        public static Excise.Core.Document.PdfPageRect ToContentPoints(Excise.Core.Document.PdfPage page, Excise.Core.Document.PdfPageRect rect) { }
+        public static Excise.Core.Document.PdfPageRect ToContinuousDips(Excise.Core.Document.PdfPage page, Excise.Core.Document.PdfPageRect rect, double unitsPerPoint) { }
+        public static Excise.Core.Document.PdfPageRect ToViewerDips(Excise.Core.Document.PdfPage page, Excise.Core.Document.PdfPageRect rect, double renderDpi) { }
+        public static Excise.Core.Document.PdfPageRect ToVisualPoints(Excise.Core.Document.PdfPage page, Excise.Core.Document.PdfPageRect rect) { }
+    }
+    public enum PdfCoordinateSpace
+    {
+        ContentPoints = 0,
+        VisualPoints = 1,
+        ViewerDips = 2,
+        ContinuousDips = 3,
+    }
+    public class PdfDocument : System.IDisposable
+    {
+        public string? Author { get; }
+        public Excise.Core.Primitives.PdfDictionary Catalog { get; }
+        public string? Creator { get; }
+        public Excise.Core.Security.PdfPermissions EffectivePermissions { get; }
+        public bool HasEmbeddedFiles { get; }
+        public Excise.Core.Primitives.PdfDictionary? Info { get; }
+        public bool IsDecrypting { get; }
+        public bool IsEncrypted { get; }
+        public bool IsTaggedPdf { get; }
+        public string? Keywords { get; }
+        public string? Language { get; set; }
+        public bool OpenedWithOwnerPassword { get; }
+        public int PageCount { get; }
+        public Excise.Core.Document.PageCollection Pages { get; }
+        public Excise.Core.Security.PdfPermissions Permissions { get; }
+        public string? Producer { get; }
+        public string? Subject { get; }
+        public string? Title { get; }
+        public Excise.Core.Primitives.PdfDictionary Trailer { get; }
+        public string Version { get; }
+        public void Dispose() { }
+        public void FlattenAcroForm() { }
+        public Excise.Core.Document.PdfAcroForm? GetAcroForm() { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfEmbeddedFile> GetEmbeddedFiles() { }
+        public System.Collections.Generic.IReadOnlyDictionary<string, Excise.Core.Document.NamedDestination> GetNamedDestinations() { }
+        public Excise.Core.Primitives.PdfObject GetObject(Excise.Core.Primitives.PdfReference reference) { }
+        public Excise.Core.Primitives.PdfObject GetObject(int objectNumber) { }
+        public Excise.Core.Document.PdfOcgConfig GetOptionalContentGroupConfig() { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfOcg> GetOptionalContentGroups() { }
+        public Excise.Core.Document.PdfPage GetPage(int pageNumber) { }
+        public string? GetPageLabel(int pageNumber) { }
+        public System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfPage> GetPages() { }
+        public Excise.Core.Security.PdfEncryptionOptions? GetReEncryptionOptions(string? userPassword) { }
+        public Excise.Core.Document.PdfStructElement? GetStructureTree() { }
+        public byte[]? GetXmpMetadata() { }
+        public Excise.Core.Primitives.PdfObject Resolve(Excise.Core.Primitives.PdfObject obj) { }
+        public void Save(System.IO.Stream outputStream) { }
+        public void Save(string path) { }
+        public void Save(System.IO.Stream outputStream, Excise.Core.Security.PdfEncryptionOptions? encryptionOptions) { }
+        public void Save(string path, Excise.Core.Security.PdfEncryptionOptions? encryptionOptions) { }
+        public byte[] SaveToBytes() { }
+        public byte[] SaveToBytes(Excise.Core.Security.PdfEncryptionOptions? encryptionOptions) { }
+        public void ScrubEmbeddedFiles() { }
+        public void ScrubInfoKeys(params string[] keys) { }
+        public void ScrubMetadata(bool scrubAttachments = true) { }
+        public void SetAcroFormNeedAppearances() { }
+        public void SetAuthor(string author) { }
+        public void SetCreator(string creator) { }
+        public void SetKeywords(string keywords) { }
+        public void SetProducer(string producer) { }
+        public void SetSubject(string subject) { }
+        public void SetTitle(string title) { }
+        public static Excise.Core.Document.PdfDocument CreateNew(string version = "1.7") { }
+        public static Excise.Core.Document.PdfDocument Open(byte[] data, bool allowEncrypted = false) { }
+        public static Excise.Core.Document.PdfDocument Open(string path, bool allowEncrypted = false) { }
+        public static Excise.Core.Document.PdfDocument Open(System.IO.Stream stream, bool ownsStream = false, bool allowEncrypted = false) { }
+        public static Excise.Core.Document.PdfDocument Open(byte[] data, string? userPassword, bool allowEncrypted = false) { }
+        public static Excise.Core.Document.PdfDocument Open(string path, string? userPassword, bool allowEncrypted = false) { }
+        public static Excise.Core.Document.PdfDocument Open(System.IO.Stream stream, string? userPassword, bool ownsStream = false, bool allowEncrypted = false) { }
+    }
+    public sealed class PdfEmbeddedFile : System.IEquatable<Excise.Core.Document.PdfEmbeddedFile>
+    {
+        public PdfEmbeddedFile(string name, string? fileName, string? description, byte[]? bytes, string? mimeType, System.DateTimeOffset? creationDate, System.DateTimeOffset? modDate, Excise.Core.Primitives.PdfDictionary rawDictionary) { }
+        public byte[]? Bytes { get; init; }
+        public System.DateTimeOffset? CreationDate { get; init; }
+        public string? Description { get; init; }
+        public string? FileName { get; init; }
+        public string? MimeType { get; init; }
+        public System.DateTimeOffset? ModDate { get; init; }
+        public string Name { get; init; }
+        public Excise.Core.Primitives.PdfDictionary RawDictionary { get; init; }
+    }
+    public sealed class PdfField
+    {
+        public PdfField(Excise.Core.Document.PdfDocument document, string fullName, string partialName, Excise.Core.Document.PdfFieldType fieldType, System.Collections.Generic.IReadOnlyList<string>? options, Excise.Core.Document.PdfRectangle? rect, int? pageNumber, bool isReadOnly, bool isRequired, bool isMultiline, Excise.Core.Primitives.PdfDictionary rawDictionary, System.Collections.Generic.IReadOnlyList<Excise.Core.Primitives.PdfDictionary> widgetDictionaries) { }
+        public PdfField(Excise.Core.Document.PdfDocument document, string fullName, string partialName, Excise.Core.Document.PdfFieldType fieldType, System.Collections.Generic.IReadOnlyList<string>? options, Excise.Core.Document.PdfRectangle? rect, int? pageNumber, bool isReadOnly, bool isRequired, bool isMultiline, Excise.Core.Primitives.PdfDictionary rawDictionary, System.Collections.Generic.IReadOnlyList<Excise.Core.Primitives.PdfDictionary> widgetDictionaries, int flags, System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfFieldWidget> widgets) { }
+        public System.Collections.Generic.IReadOnlyList<string> ButtonExportValues { get; }
+        public string? DefaultValue { get; }
+        public Excise.Core.Document.PdfFieldType FieldType { get; }
+        public int Flags { get; }
+        public string FullName { get; }
+        public bool IsComboBox { get; }
+        public bool IsMultiline { get; }
+        public bool IsPushButton { get; }
+        public bool IsRadioButton { get; }
+        public bool IsReadOnly { get; }
+        public bool IsRequired { get; }
+        public System.Collections.Generic.IReadOnlyList<string>? Options { get; }
+        public int? PageNumber { get; }
+        public string PartialName { get; }
+        public Excise.Core.Primitives.PdfDictionary RawDictionary { get; }
+        public Excise.Core.Document.PdfRectangle? Rect { get; }
+        public string? Value { get; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfFieldWidget> Widgets { get; }
+        public void SetValue(string? value) { }
+        public override string ToString() { }
+    }
+    public enum PdfFieldType
+    {
+        Unknown = 0,
+        Button = 1,
+        Text = 2,
+        Choice = 3,
+        Signature = 4,
+    }
+    public sealed class PdfFieldWidget
+    {
+        public PdfFieldWidget(Excise.Core.Document.PdfRectangle rect, int? pageNumber, string? exportValue) { }
+        public string? ExportValue { get; }
+        public int? PageNumber { get; }
+        public Excise.Core.Document.PdfRectangle Rect { get; }
+    }
+    public static class PdfFormAutoDetector
+    {
+        public static int Apply(Excise.Core.Document.PdfDocument document, System.Collections.Generic.IEnumerable<Excise.Core.Document.SuggestedField> suggestions) { }
+        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Document.SuggestedField> Scan(Excise.Core.Document.PdfDocument doc) { }
+        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Document.SuggestedField> ScanPage(Excise.Core.Document.PdfPage page, int pageNumber = 1) { }
+    }
+    public sealed class PdfLink
+    {
+        public PdfLink(Excise.Core.Document.PdfRectangle rect, int destinationPage) { }
+        public string? DangerousActionType { get; }
+        public int DestinationPage { get; }
+        public Excise.Core.Document.PdfLinkKind Kind { get; }
+        public Excise.Core.Document.PdfRectangle Rect { get; }
+        public string? Uri { get; }
+        public static Excise.Core.Document.PdfLink DangerousLink(Excise.Core.Document.PdfRectangle rect, string actionType) { }
+        public static Excise.Core.Document.PdfLink ExternalLink(Excise.Core.Document.PdfRectangle rect, string uri) { }
+    }
+    public enum PdfLinkKind
+    {
+        InternalDestination = 0,
+        ExternalUri = 1,
+        Dangerous = 2,
+    }
+    public static class PdfLinkParser
+    {
+        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfLink> Parse(Excise.Core.Document.PdfDocument doc, Excise.Core.Primitives.PdfDictionary pageDict, System.Collections.Generic.Dictionary<System.ValueTuple<int, int>, int> pageRefToNumber, System.Collections.Generic.Dictionary<string, Excise.Core.Primitives.PdfObject>? namedDests) { }
+    }
+    public sealed class PdfOcg : System.IEquatable<Excise.Core.Document.PdfOcg>
+    {
+        public PdfOcg(string Name, bool IsVisibleByDefault, Excise.Core.Primitives.PdfDictionary RawDictionary) { }
+        public bool IsVisibleByDefault { get; init; }
+        public string Name { get; init; }
+        public Excise.Core.Primitives.PdfDictionary RawDictionary { get; init; }
+    }
+    public sealed class PdfOcgConfig
+    {
+        public PdfOcgConfig(System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfOcg> allOcgs, System.Collections.Generic.IReadOnlySet<string> offByDefault, string intent = "View", string baseState = "ON", Excise.Core.Primitives.PdfObject? layerOrder = null) { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfOcg> AllOcgs { get; }
+        public string BaseState { get; }
+        public string Intent { get; }
+        public Excise.Core.Primitives.PdfObject? LayerOrder { get; }
+        public System.Collections.Generic.IReadOnlySet<string> OffByDefault { get; }
+        public bool IsVisibleByDefault(string ocgName) { }
+    }
+    public sealed class PdfOutlineItem
+    {
+        public PdfOutlineItem(string title, int? pageNumber, System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfOutlineItem> children) { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfOutlineItem> Children { get; }
+        public int? PageNumber { get; }
+        public string Title { get; }
+    }
+    public static class PdfOutlineParser
+    {
+        public static System.Collections.Generic.Dictionary<string, Excise.Core.Primitives.PdfObject>? BuildNamedDestinations(Excise.Core.Document.PdfDocument doc) { }
+        public static System.Collections.Generic.Dictionary<System.ValueTuple<int, int>, int> BuildPageRefMap(Excise.Core.Document.PdfDocument doc) { }
+        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfOutlineItem> Parse(Excise.Core.Document.PdfDocument doc) { }
+    }
+    public class PdfPage
+    {
+        public Excise.Core.Document.PdfRectangle ArtBox { get; }
+        public Excise.Core.Document.PdfRectangle BleedBox { get; }
+        public Excise.Core.Document.PdfRectangle CropBox { get; }
+        public Excise.Core.Primitives.PdfDictionary Dictionary { get; }
+        public Excise.Core.Document.PdfDocument Document { get; }
+        public double Height { get; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> Letters { get; }
+        public Excise.Core.Document.PdfRectangle MediaBox { get; }
+        public int PageNumber { get; }
+        public Excise.Core.Primitives.PdfDictionary? Resources { get; }
+        public int Rotation { get; set; }
+        public string Text { get; }
+        public Excise.Core.Document.PdfRectangle TrimBox { get; }
+        public double VisualHeight { get; }
+        public double VisualWidth { get; }
+        public double Width { get; }
+        public string AddFont(Excise.Core.Graphics.PdfFont font) { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfAnnotation> GetAnnotations() { }
+        public Excise.Core.Primitives.PdfObject? GetColorSpaceObject(string name) { }
+        public Excise.Core.Content.ContentStream GetContentStream() { }
+        public byte[] GetContentStreamBytes() { }
+        public Excise.Core.Primitives.PdfDictionary? GetExtGState(string name) { }
+        public Excise.Core.Primitives.PdfDictionary? GetFont(string fontName) { }
+        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "Name",
+                "Font"})]
+        public System.Collections.Generic.IEnumerable<System.ValueTuple<string, Excise.Core.Primitives.PdfDictionary>> GetFonts() { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfField> GetFormFields() { }
+        public Excise.Core.Graphics.PdfGraphics GetGraphics() { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfLink> GetLinks() { }
+        public Excise.Core.Primitives.PdfDictionary? GetShading(string name) { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Word> GetWords() { }
+        public Excise.Core.Primitives.PdfObject? GetXObject(string name) { }
+        public void SetContentStream(Excise.Core.Content.ContentStream content) { }
+        public void SetContentStreamBytes(byte[] data) { }
+        public Excise.Core.Document.PdfRectangle ToContentStreamCoordinates(Excise.Core.Document.PdfRectangle visualRect) { }
+        public override string ToString() { }
+    }
+    public sealed class PdfPageLabel : System.IEquatable<Excise.Core.Document.PdfPageLabel>
+    {
+        public PdfPageLabel(string? Prefix = null, Excise.Core.Document.PdfPageLabelStyle Style = 5, int StartNumber = 1) { }
+        public string? Prefix { get; init; }
+        public int StartNumber { get; init; }
+        public Excise.Core.Document.PdfPageLabelStyle Style { get; init; }
+        public string Format(int pageOffset) { }
+    }
+    public enum PdfPageLabelStyle
+    {
+        Decimal = 0,
+        UppercaseRoman = 1,
+        LowercaseRoman = 2,
+        UppercaseLetters = 3,
+        LowercaseLetters = 4,
+        None = 5,
+    }
+    public readonly struct PdfPageRect : System.IEquatable<Excise.Core.Document.PdfPageRect>
+    {
+        public const double PdfPointsPerInch = 72D;
+        public PdfPageRect(int pageNumber, double x, double y, double width, double height, Excise.Core.Document.PdfCoordinateSpace space, double unitsPerPoint = 1) { }
+        public double Dpi { get; }
+        public double Height { get; }
+        public int PageNumber { get; }
+        public double Right { get; }
+        public Excise.Core.Document.PdfCoordinateSpace Space { get; }
+        public double UnitsPerPoint { get; }
+        public double Width { get; }
+        public double X { get; }
+        public double Y { get; }
+        public double Y2 { get; }
+        public Excise.Core.Document.PdfRectangle ToPdfRectangle() { }
+        public override string ToString() { }
+        public Excise.Core.Document.PdfPageRect WithSpace(Excise.Core.Document.PdfCoordinateSpace space, double unitsPerPoint = 1) { }
+        public static Excise.Core.Document.PdfPageRect FromContentPoints(int pageNumber, Excise.Core.Document.PdfRectangle rect) { }
+        public static Excise.Core.Document.PdfPageRect FromPdfRectangle(int pageNumber, Excise.Core.Document.PdfRectangle rect, Excise.Core.Document.PdfCoordinateSpace space, double unitsPerPoint = 1) { }
+        public static Excise.Core.Document.PdfPageRect ViewerDips(int pageNumber, double x, double y, double width, double height, double renderDpi) { }
+        public static Excise.Core.Document.PdfPageRect VisualPoints(int pageNumber, double x, double y, double width, double height) { }
+    }
+    public readonly struct PdfPoint : System.IEquatable<Excise.Core.Document.PdfPoint>
+    {
+        public PdfPoint(double X, double Y) { }
+        public double X { get; init; }
+        public double Y { get; init; }
+        public override string ToString() { }
+    }
+    public readonly struct PdfRectangle : System.IEquatable<Excise.Core.Document.PdfRectangle>
+    {
+        public PdfRectangle(double Left, double Bottom, double Right, double Top) { }
+        public double Bottom { get; init; }
+        public double Height { get; }
+        public double Left { get; init; }
+        public double Right { get; init; }
+        public double Top { get; init; }
+        public double Width { get; }
+        public bool Contains(double x, double y) { }
+        public bool IntersectsWith(Excise.Core.Document.PdfRectangle other) { }
+        public Excise.Core.Document.PdfRectangle Normalize() { }
+        public override string ToString() { }
+        public static Excise.Core.Document.PdfRectangle FromArray(Excise.Core.Primitives.PdfArray arr) { }
+    }
+    public sealed class PdfStructElement
+    {
+        public PdfStructElement(string type, string? altText = null, string? actualText = null, string? language = null, int? pageNumber = default, System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfStructElement>? children = null, System.Collections.Generic.IReadOnlyList<int>? markedContentIds = null, Excise.Core.Primitives.PdfDictionary? rawDictionary = null) { }
+        public string? ActualText { get; }
+        public string? AltText { get; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfStructElement> Children { get; }
+        public string? Language { get; }
+        public System.Collections.Generic.IReadOnlyList<int> MarkedContentIds { get; }
+        public int? PageNumber { get; }
+        public Excise.Core.Primitives.PdfDictionary RawDictionary { get; }
+        public string Type { get; }
+        public override string ToString() { }
+    }
+    public sealed class SuggestedField : System.IEquatable<Excise.Core.Document.SuggestedField>
+    {
+        public SuggestedField(Excise.Core.Document.PdfFieldType FieldType, Excise.Core.Document.PdfRectangle Rect, int PageNumber, string SuggestedName, string Reason) { }
+        public Excise.Core.Document.PdfFieldType FieldType { get; init; }
+        public int PageNumber { get; init; }
+        public string Reason { get; init; }
+        public Excise.Core.Document.PdfRectangle Rect { get; init; }
+        public string SuggestedName { get; init; }
+    }
+}
+namespace Excise.Core.Editing
+{
+    public sealed class PdfEditOperation : System.IEquatable<Excise.Core.Editing.PdfEditOperation>
+    {
+        public Excise.Core.Document.PdfRectangle Bounds { get; }
+        public bool CanFlatten { get; }
+        public string? Description { get; }
+        public System.Guid Id { get; }
+        public bool IsPending { get; }
+        public Excise.Core.Editing.PdfEditOperationKind Kind { get; }
+        public int PageNumber { get; }
+        public Excise.Core.Editing.PdfEditOperationStatus Status { get; }
+        public Excise.Core.Editing.PdfEditOperation WithBounds(Excise.Core.Document.PdfRectangle bounds) { }
+        public Excise.Core.Editing.PdfEditOperation WithPageAndBounds(int pageNumber, Excise.Core.Document.PdfRectangle bounds) { }
+        public Excise.Core.Editing.PdfEditOperation WithStatus(Excise.Core.Editing.PdfEditOperationStatus status) { }
+        public static Excise.Core.Editing.PdfEditOperation Create(Excise.Core.Editing.PdfEditOperationKind kind, int pageNumber, Excise.Core.Document.PdfRectangle bounds, bool canFlatten = true, string? description = null) { }
+    }
+    public enum PdfEditOperationKind
+    {
+        Unknown = 0,
+        FormFill = 1,
+        TypewriterText = 2,
+        PageOrganization = 3,
+        Redaction = 4,
+        Annotation = 5,
+    }
+    public enum PdfEditOperationStatus
+    {
+        Pending = 0,
+        Applied = 1,
+        Discarded = 2,
+    }
+    public static class PdfTypewriterTextApplier
+    {
+        public static Excise.Core.Editing.PdfTypewriterTextOperation Apply(Excise.Core.Document.PdfDocument document, Excise.Core.Editing.PdfTypewriterTextOperation operation) { }
+        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Editing.PdfTypewriterTextOperation> Apply(Excise.Core.Document.PdfDocument document, System.Collections.Generic.IEnumerable<Excise.Core.Editing.PdfTypewriterTextOperation> operations) { }
+    }
+    public sealed class PdfTypewriterTextOperation : System.IEquatable<Excise.Core.Editing.PdfTypewriterTextOperation>
+    {
+        public Excise.Core.Document.PdfRectangle Bounds { get; }
+        public Excise.Core.Editing.PdfEditOperation EditOperation { get; }
+        public bool HasText { get; }
+        public System.Guid Id { get; }
+        public bool IsPending { get; }
+        public int PageNumber { get; }
+        public Excise.Core.Editing.PdfEditOperationStatus Status { get; }
+        public Excise.Core.Editing.PdfTypewriterTextStyle Style { get; }
+        public string Text { get; }
+        public Excise.Core.Editing.PdfTypewriterTextOperation WithBounds(Excise.Core.Document.PdfRectangle bounds) { }
+        public Excise.Core.Editing.PdfTypewriterTextOperation WithPageAndBounds(int pageNumber, Excise.Core.Document.PdfRectangle bounds) { }
+        public Excise.Core.Editing.PdfTypewriterTextOperation WithStatus(Excise.Core.Editing.PdfEditOperationStatus status) { }
+        public Excise.Core.Editing.PdfTypewriterTextOperation WithStyle(Excise.Core.Editing.PdfTypewriterTextStyle style) { }
+        public Excise.Core.Editing.PdfTypewriterTextOperation WithText(string text) { }
+        public static Excise.Core.Editing.PdfTypewriterTextOperation Create(int pageNumber, Excise.Core.Document.PdfRectangle bounds, string text, Excise.Core.Editing.PdfTypewriterTextStyle? style = null) { }
+    }
+    public sealed class PdfTypewriterTextStyle : System.IEquatable<Excise.Core.Editing.PdfTypewriterTextStyle>
+    {
+        public PdfTypewriterTextStyle(string fontName = "Helvetica", double fontSize = 12, Excise.Core.Graphics.PdfColor? color = default, Excise.Core.Graphics.TextAlignment alignment = 0, double lineSpacing = 1.2) { }
+        public Excise.Core.Graphics.TextAlignment Alignment { get; }
+        public Excise.Core.Graphics.PdfColor Color { get; }
+        public string FontName { get; }
+        public double FontSize { get; }
+        public double LineSpacing { get; }
+        public static Excise.Core.Editing.PdfTypewriterTextStyle Default { get; }
+    }
+}
+namespace Excise.Core.Fonts
+{
+    public static class CffSubsetter
+    {
+        public static byte[] Subset(byte[] originalCff, System.Collections.Generic.IReadOnlySet<int> usedGlyphIds) { }
+    }
+}
+namespace Excise.Core.Graphics
+{
+    public class PdfBrush
+    {
+        public static readonly Excise.Core.Graphics.PdfBrush Black;
+        public static readonly Excise.Core.Graphics.PdfBrush Blue;
+        public static readonly Excise.Core.Graphics.PdfBrush Green;
+        public static readonly Excise.Core.Graphics.PdfBrush Red;
+        public static readonly Excise.Core.Graphics.PdfBrush White;
+        public PdfBrush(Excise.Core.Graphics.PdfColor color) { }
+        public Excise.Core.Graphics.PdfColor Color { get; }
+    }
+    public readonly struct PdfColor : System.IEquatable<Excise.Core.Graphics.PdfColor>
+    {
+        public static readonly Excise.Core.Graphics.PdfColor Black;
+        public static readonly Excise.Core.Graphics.PdfColor Blue;
+        public static readonly Excise.Core.Graphics.PdfColor Cyan;
+        public static readonly Excise.Core.Graphics.PdfColor Green;
+        public static readonly Excise.Core.Graphics.PdfColor Magenta;
+        public static readonly Excise.Core.Graphics.PdfColor Red;
+        public static readonly Excise.Core.Graphics.PdfColor White;
+        public static readonly Excise.Core.Graphics.PdfColor Yellow;
+        public PdfColor(double r, double g, double b) { }
+        public double B { get; }
+        public double G { get; }
+        public bool IsGrayscale { get; }
+        public double R { get; }
+        public bool Equals(Excise.Core.Graphics.PdfColor other) { }
+        public override bool Equals(object? obj) { }
+        public override int GetHashCode() { }
+        public override string ToString() { }
+        public static Excise.Core.Graphics.PdfColor FromGray(double gray) { }
+        public static Excise.Core.Graphics.PdfColor FromRgb(byte r, byte g, byte b) { }
+        public static bool operator !=(Excise.Core.Graphics.PdfColor left, Excise.Core.Graphics.PdfColor right) { }
+        public static bool operator ==(Excise.Core.Graphics.PdfColor left, Excise.Core.Graphics.PdfColor right) { }
+    }
+    public class PdfFont
+    {
+        public PdfFont(string name, string baseFont, double size) { }
+        public virtual double Ascender { get; }
+        public string BaseFont { get; }
+        public virtual double Descender { get; }
+        public bool IsStandard14 { get; }
+        public virtual double LineHeight { get; }
+        public string Name { get; }
+        public double Size { get; }
+        public virtual bool CanEncodeFully(string text) { }
+        public Excise.Core.Primitives.PdfDictionary CreateFontDictionary() { }
+        public virtual string EncodeString(string text) { }
+        public virtual double MeasureWidth(string text) { }
+        public override string ToString() { }
+        public Excise.Core.Graphics.PdfFont WithName(string name) { }
+        public virtual Excise.Core.Graphics.PdfFont WithSize(double size) { }
+        public static Excise.Core.Graphics.PdfFont Courier(double size) { }
+        public static Excise.Core.Graphics.PdfFont CourierBold(double size) { }
+        public static Excise.Core.Graphics.PdfFont CourierOblique(double size) { }
+        public static Excise.Core.Graphics.PdfFont FromFile(string path, double size) { }
+        public static Excise.Core.Graphics.PdfFont FromTrueType(System.IO.Stream fontStream, double size) { }
+        public static Excise.Core.Graphics.PdfFont FromTrueType(byte[] fontData, double size) { }
+        public static Excise.Core.Graphics.PdfFont Helvetica(double size) { }
+        public static Excise.Core.Graphics.PdfFont HelveticaBold(double size) { }
+        public static Excise.Core.Graphics.PdfFont HelveticaOblique(double size) { }
+        public static Excise.Core.Graphics.PdfFont TimesBold(double size) { }
+        public static Excise.Core.Graphics.PdfFont TimesItalic(double size) { }
+        public static Excise.Core.Graphics.PdfFont TimesRoman(double size) { }
+        public static class StandardFonts
+        {
+            public const string Courier = "Courier";
+            public const string CourierBold = "Courier-Bold";
+            public const string CourierBoldOblique = "Courier-BoldOblique";
+            public const string CourierOblique = "Courier-Oblique";
+            public const string Helvetica = "Helvetica";
+            public const string HelveticaBold = "Helvetica-Bold";
+            public const string HelveticaBoldOblique = "Helvetica-BoldOblique";
+            public const string HelveticaOblique = "Helvetica-Oblique";
+            public const string Symbol = "Symbol";
+            public const string TimesBold = "Times-Bold";
+            public const string TimesBoldItalic = "Times-BoldItalic";
+            public const string TimesItalic = "Times-Italic";
+            public const string TimesRoman = "Times-Roman";
+            public const string ZapfDingbats = "ZapfDingbats";
+        }
+    }
+    public class PdfGraphics : System.IDisposable
+    {
+        public void BeginArtifact() { }
+        public void BeginMarkedContent(string tag, int mcid) { }
+        public void BeginPath() { }
+        public void ClosePath() { }
+        public void CurveTo(double x1, double y1, double x2, double y2, double x3, double y3) { }
+        public void Dispose() { }
+        public void DrawInvisibleText(string text, Excise.Core.Graphics.PdfFont font, double x, double y, double targetWidth) { }
+        public void DrawLine(double x1, double y1, double x2, double y2, Excise.Core.Graphics.PdfPen pen) { }
+        public void DrawRectangle(double x, double y, double width, double height, Excise.Core.Graphics.PdfBrush fill) { }
+        public void DrawRectangle(double x, double y, double width, double height, Excise.Core.Graphics.PdfBrush? fill, Excise.Core.Graphics.PdfPen? stroke) { }
+        public void DrawString(string text, Excise.Core.Graphics.PdfFont font, Excise.Core.Graphics.PdfBrush brush, double x, double y) { }
+        public void DrawString(string text, Excise.Core.Graphics.PdfFont font, Excise.Core.Graphics.PdfBrush brush, double x, double y, Excise.Core.Graphics.TextAlignment alignment) { }
+        public Excise.Core.Graphics.TextLayoutResult DrawText(string text, Excise.Core.Graphics.PdfFont font, Excise.Core.Graphics.PdfBrush brush, Excise.Core.Document.PdfRectangle bounds, Excise.Core.Graphics.TextAlignment alignment = 0, double lineSpacing = 1.2) { }
+        public void EndMarkedContent() { }
+        public void Fill(Excise.Core.Graphics.PdfBrush brush) { }
+        public void FillAndStroke(Excise.Core.Graphics.PdfBrush brush, Excise.Core.Graphics.PdfPen pen) { }
+        public void Flush() { }
+        public string GetOperators() { }
+        public void LineTo(double x, double y) { }
+        public void MoveTo(double x, double y) { }
+        public void RestoreState() { }
+        public void Rotate(double degrees) { }
+        public void SaveState() { }
+        public void Scale(double sx, double sy) { }
+        public void Stroke(Excise.Core.Graphics.PdfPen pen) { }
+        public void Transform(double a, double b, double c, double d, double e, double f) { }
+        public void Translate(double tx, double ty) { }
+        public static Excise.Core.Graphics.PdfSize MeasureString(string text, Excise.Core.Graphics.PdfFont font) { }
+        public static Excise.Core.Graphics.PdfSize MeasureText(string text, Excise.Core.Graphics.PdfFont font, double maxWidth, double lineSpacing = 1.2) { }
+    }
+    public class PdfPen
+    {
+        public static readonly Excise.Core.Graphics.PdfPen Black;
+        public static readonly Excise.Core.Graphics.PdfPen Red;
+        public static readonly Excise.Core.Graphics.PdfPen White;
+        public PdfPen(Excise.Core.Graphics.PdfColor color, double width = 1) { }
+        public Excise.Core.Graphics.PdfColor Color { get; }
+        public double Width { get; }
+    }
+    public readonly struct PdfSize : System.IEquatable<Excise.Core.Graphics.PdfSize>
+    {
+        public static readonly Excise.Core.Graphics.PdfSize Empty;
+        public PdfSize(double Width, double Height) { }
+        public double Height { get; init; }
+        public double Width { get; init; }
+        public override string ToString() { }
+    }
+    public enum TextAlignment
+    {
+        Left = 0,
+        Center = 1,
+        Right = 2,
+    }
+    public readonly struct TextLayoutResult : System.IEquatable<Excise.Core.Graphics.TextLayoutResult>
+    {
+        public TextLayoutResult(double UsedHeight, string? Overflow) { }
+        public bool HasOverflow { get; }
+        public string? Overflow { get; init; }
+        public double UsedHeight { get; init; }
+    }
+}
+namespace Excise.Core.Operations
+{
+    public static class PdfDocumentMerger
+    {
+        public static Excise.Core.Document.PdfDocument Merge([System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "Document",
+                "PageIndices"})] System.Collections.Generic.IReadOnlyList<System.ValueTuple<Excise.Core.Document.PdfDocument, System.Collections.Generic.IReadOnlyList<int>>> sources) { }
+    }
+    public static class PdfDocumentSanitizer
+    {
+        public static bool ScrubTerms(Excise.Core.Document.PdfDocument document, System.Collections.Generic.IEnumerable<string> terms) { }
+    }
+    public static class PdfDocumentSplitter
+    {
+        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfDocument> SplitAtBookmarks(Excise.Core.Document.PdfDocument source) { }
+        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfDocument> SplitAtPageBoundaries(Excise.Core.Document.PdfDocument source, System.Collections.Generic.IReadOnlyList<int> startIndices) { }
+        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfDocument> SplitEveryNPages(Excise.Core.Document.PdfDocument source, int pagesPerChunk) { }
+        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfDocument> SplitToSinglePages(Excise.Core.Document.PdfDocument source) { }
+    }
+    public class PdfRedaction
+    {
+        public Excise.Core.Operations.PdfRedaction AllText() { }
+        public Excise.Core.Operations.RedactionResult Apply() { }
+        public Excise.Core.Operations.PdfRedaction Area(Excise.Core.Document.PdfRectangle rect) { }
+        public Excise.Core.Operations.PdfRedaction Area(double left, double bottom, double right, double top) { }
+        public Excise.Core.Operations.PdfRedaction BlackMarkers() { }
+        public Excise.Core.Operations.PdfRedaction Category(Excise.Core.Content.OperatorCategory category) { }
+        public Excise.Core.Operations.PdfRedaction Letters(System.Func<Excise.Core.Text.Letter, bool> predicate) { }
+        public Excise.Core.Operations.PdfRedaction MarkerColor(double r, double g, double b) { }
+        public Excise.Core.Operations.PdfRedaction Text(string searchText) { }
+        public Excise.Core.Operations.PdfRedaction WhiteMarkers() { }
+        public Excise.Core.Operations.PdfRedaction WithMarkers(bool draw = true) { }
+        public static Excise.Core.Operations.PdfRedaction OnPage(Excise.Core.Document.PdfPage page) { }
+    }
+    public class RedactionResult
+    {
+        public RedactionResult() { }
+        public bool AllTextRemoved { get; set; }
+        public int AreasRedacted { get; set; }
+        public int CategoriesRemoved { get; set; }
+        public int LettersRedacted { get; set; }
+        public int OperatorsRemoved { get; set; }
+        public int TextOccurrencesRedacted { get; set; }
+        public bool WasRedacted { get; }
+        public override string ToString() { }
+    }
+    public class TextRedactor
+    {
+        public TextRedactor() { }
+        public void RedactArea(Excise.Core.Document.PdfPage page, Excise.Core.Document.PdfRectangle area, bool drawMarker = true, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "R",
+                "G",
+                "B"})] System.ValueTuple<double, double, double>? markerColor = default) { }
+        public int RedactLetters(Excise.Core.Document.PdfPage page, System.Func<Excise.Core.Text.Letter, bool> letterPredicate, bool drawMarker = true, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "R",
+                "G",
+                "B"})] System.ValueTuple<double, double, double>? markerColor = default) { }
+        public int RedactText(Excise.Core.Document.PdfPage page, string searchText, bool drawMarker = true, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "R",
+                "G",
+                "B"})] System.ValueTuple<double, double, double>? markerColor = default) { }
+    }
+}
+namespace Excise.Core.Parsing
+{
+    public class PdfEncryptionNotSupportedException : System.Exception
+    {
+        public PdfEncryptionNotSupportedException() { }
+        public PdfEncryptionNotSupportedException(string message) { }
+    }
+    public class PdfLexer : System.IDisposable
+    {
+        public PdfLexer(byte[] data) { }
+        public PdfLexer(System.IO.Stream stream, bool ownsStream = false) { }
+        public long Position { get; }
+        public void Dispose() { }
+        public Excise.Core.Parsing.PdfToken NextToken() { }
+        public Excise.Core.Parsing.PdfToken PeekToken() { }
+        public byte[] ReadStreamData(int length) { }
+        public void Seek(long position) { }
+    }
+    public class PdfParseException : System.Exception
+    {
+        public PdfParseException(string message) { }
+        public PdfParseException(string message, System.Exception inner) { }
+    }
+    public class PdfParser : System.IDisposable
+    {
+        public PdfParser(System.IO.Stream stream) { }
+        public PdfParser(byte[] data) { }
+        public PdfParser(Excise.Core.Parsing.PdfLexer lexer, bool ownsLexer = false) { }
+        public System.Threading.CancellationToken CancellationToken { get; set; }
+        public System.Func<int, Excise.Core.Primitives.PdfObject?>? IndirectObjectResolver { get; set; }
+        public Excise.Core.Parsing.PdfLexer Lexer { get; }
+        public int MaxNestingDepth { get; set; }
+        public long Position { get; }
+        public void Dispose() { }
+        public Excise.Core.Primitives.PdfIndirectObject ParseIndirectObject() { }
+        public Excise.Core.Primitives.PdfObject ParseObject() { }
+        public void Seek(long position) { }
+        public Excise.Core.Primitives.PdfIndirectObject? TryParseIndirectObject() { }
+    }
+    public readonly struct PdfToken
+    {
+        public PdfToken(Excise.Core.Parsing.PdfTokenType type, string value, long position) { }
+        public bool IsEof { get; }
+        public bool IsNumber { get; }
+        public long Position { get; }
+        public Excise.Core.Parsing.PdfTokenType Type { get; }
+        public string Value { get; }
+        public bool IsKeyword(string keyword) { }
+        public override string ToString() { }
+    }
+    public enum PdfTokenType
+    {
+        Eof = 0,
+        Integer = 1,
+        Real = 2,
+        LiteralString = 3,
+        HexString = 4,
+        Name = 5,
+        Keyword = 6,
+        ArrayStart = 7,
+        ArrayEnd = 8,
+        DictionaryStart = 9,
+        DictionaryEnd = 10,
+        Comment = 11,
+    }
+    public class StreamDecompressor
+    {
+        public StreamDecompressor() { }
+        public byte[] ApplyFilter(string filterName, byte[] data, Excise.Core.Primitives.PdfDictionary? parms) { }
+        public void Decompress(Excise.Core.Primitives.PdfStream stream) { }
+    }
+    public class XRefEntry
+    {
+        public XRefEntry() { }
+        public int Generation { get; init; }
+        public bool InUse { get; init; }
+        public int? IndexInStream { get; init; }
+        public bool IsCompressed { get; }
+        public int? ObjectStreamNumber { get; init; }
+        public long Offset { get; init; }
+        public override string ToString() { }
+    }
+    public class XRefParser
+    {
+        public XRefParser(System.IO.Stream stream) { }
+        public long FindStartXRef() { }
+        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "Trailer",
+                "XRef"})]
+        public System.ValueTuple<Excise.Core.Primitives.PdfDictionary, System.Collections.Generic.Dictionary<int, Excise.Core.Parsing.XRefEntry>> ParseXRef(long position) { }
+    }
+}
+namespace Excise.Core.Primitives
+{
+    public sealed class PdfArray : Excise.Core.Primitives.PdfObject, System.Collections.Generic.ICollection<Excise.Core.Primitives.PdfObject>, System.Collections.Generic.IEnumerable<Excise.Core.Primitives.PdfObject>, System.Collections.Generic.IList<Excise.Core.Primitives.PdfObject>, System.Collections.IEnumerable
+    {
+        public PdfArray() { }
+        public PdfArray(params Excise.Core.Primitives.PdfObject[] items) { }
+        public PdfArray(System.Collections.Generic.IEnumerable<Excise.Core.Primitives.PdfObject> items) { }
+        public int Count { get; }
+        public bool IsReadOnly { get; }
+        public Excise.Core.Primitives.PdfObject this[int index] { get; set; }
+        public override Excise.Core.Primitives.PdfObjectType ObjectType { get; }
+        public void Add(Excise.Core.Primitives.PdfObject item) { }
+        public void Add(double value) { }
+        public void Add(int value) { }
+        public void Add(string value) { }
+        public void Clear() { }
+        public bool Contains(Excise.Core.Primitives.PdfObject item) { }
+        public void CopyTo(Excise.Core.Primitives.PdfObject[] array, int arrayIndex) { }
+        public T Get<T>(int index)
+            where T : Excise.Core.Primitives.PdfObject { }
+        public System.Collections.Generic.IEnumerator<Excise.Core.Primitives.PdfObject> GetEnumerator() { }
+        public int GetInt(int index) { }
+        public string GetName(int index) { }
+        public double GetNumber(int index) { }
+        public string GetString(int index) { }
+        public int IndexOf(Excise.Core.Primitives.PdfObject item) { }
+        public void Insert(int index, Excise.Core.Primitives.PdfObject item) { }
+        public bool Remove(Excise.Core.Primitives.PdfObject item) { }
+        public void RemoveAt(int index) { }
+        public double[] ToDoubleArray() { }
+        public int[] ToIntArray() { }
+        public override string ToString() { }
+        public T? TryGet<T>(int index)
+            where T : Excise.Core.Primitives.PdfObject { }
+        public static Excise.Core.Primitives.PdfArray FromMatrix(double a, double b, double c, double d, double e, double f) { }
+        public static Excise.Core.Primitives.PdfArray FromRectangle(double left, double bottom, double right, double top) { }
+    }
+    public sealed class PdfBoolean : Excise.Core.Primitives.PdfObject
+    {
+        public static readonly Excise.Core.Primitives.PdfBoolean False;
+        public static readonly Excise.Core.Primitives.PdfBoolean True;
+        public override Excise.Core.Primitives.PdfObjectType ObjectType { get; }
+        public bool Value { get; }
+        public override string ToString() { }
+        public static Excise.Core.Primitives.PdfBoolean Get(bool value) { }
+        public static bool op_Implicit(Excise.Core.Primitives.PdfBoolean b) { }
+        public static Excise.Core.Primitives.PdfBoolean op_Implicit(bool b) { }
+    }
+    public class PdfDictionary : Excise.Core.Primitives.PdfObject, System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<Excise.Core.Primitives.PdfName, Excise.Core.Primitives.PdfObject>>, System.Collections.Generic.IDictionary<Excise.Core.Primitives.PdfName, Excise.Core.Primitives.PdfObject>, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<Excise.Core.Primitives.PdfName, Excise.Core.Primitives.PdfObject>>, System.Collections.IEnumerable
+    {
+        public PdfDictionary() { }
+        public PdfDictionary(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<Excise.Core.Primitives.PdfName, Excise.Core.Primitives.PdfObject>> entries) { }
+        public int Count { get; }
+        public bool IsReadOnly { get; }
+        public Excise.Core.Primitives.PdfObject this[Excise.Core.Primitives.PdfName key] { get; set; }
+        public Excise.Core.Primitives.PdfObject this[string key] { get; set; }
+        public System.Collections.Generic.ICollection<Excise.Core.Primitives.PdfName> Keys { get; }
+        public override Excise.Core.Primitives.PdfObjectType ObjectType { get; }
+        public System.Collections.Generic.ICollection<Excise.Core.Primitives.PdfObject> Values { get; }
+        public void Add(Excise.Core.Primitives.PdfName key, Excise.Core.Primitives.PdfObject value) { }
+        public void Add(string key, Excise.Core.Primitives.PdfObject value) { }
+        public void Clear() { }
+        public Excise.Core.Primitives.PdfDictionary Clone() { }
+        public bool ContainsKey(Excise.Core.Primitives.PdfName key) { }
+        public bool ContainsKey(string key) { }
+        public T Get<T>(string key)
+            where T : Excise.Core.Primitives.PdfObject { }
+        public Excise.Core.Primitives.PdfArray GetArray(string key) { }
+        public Excise.Core.Primitives.PdfArray? GetArrayOrNull(string key) { }
+        public bool GetBool(string key, bool defaultValue = false) { }
+        public Excise.Core.Primitives.PdfDictionary GetDictionary(string key) { }
+        public Excise.Core.Primitives.PdfDictionary? GetDictionaryOrNull(string key) { }
+        public System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<Excise.Core.Primitives.PdfName, Excise.Core.Primitives.PdfObject>> GetEnumerator() { }
+        public int GetInt(string key) { }
+        public int GetInt(string key, int defaultValue) { }
+        public string GetName(string key) { }
+        public string? GetNameOrNull(string key) { }
+        public double GetNumber(string key) { }
+        public double GetNumber(string key, double defaultValue) { }
+        public Excise.Core.Primitives.PdfObject? GetOptional(string key) { }
+        public Excise.Core.Primitives.PdfReference GetReference(string key) { }
+        public Excise.Core.Primitives.PdfReference? GetReferenceOrNull(string key) { }
+        public string GetString(string key) { }
+        public string? GetStringOrNull(string key) { }
+        public bool Remove(Excise.Core.Primitives.PdfName key) { }
+        public bool Remove(string key) { }
+        public void Set(string key, Excise.Core.Primitives.PdfObject value) { }
+        public void SetBool(string key, bool value) { }
+        public void SetInt(string key, int value) { }
+        public void SetName(string key, string value) { }
+        public void SetNumber(string key, double value) { }
+        public void SetString(string key, string value) { }
+        public override string ToString() { }
+        public T? TryGet<T>(string key)
+            where T : Excise.Core.Primitives.PdfObject { }
+        public bool TryGetArray(string key, out Excise.Core.Primitives.PdfArray value) { }
+        public bool TryGetString(string key, out string value) { }
+        public bool TryGetValue(Excise.Core.Primitives.PdfName key, out Excise.Core.Primitives.PdfObject value) { }
+        public bool TryGetValue(string key, out Excise.Core.Primitives.PdfObject value) { }
+    }
+    public sealed class PdfIndirectObject
+    {
+        public PdfIndirectObject(int objectNumber, int generation, Excise.Core.Primitives.PdfObject value) { }
+        public int Generation { get; }
+        public int ObjectNumber { get; }
+        public Excise.Core.Primitives.PdfReference Reference { get; }
+        public Excise.Core.Primitives.PdfObject Value { get; }
+        public override string ToString() { }
+    }
+    public sealed class PdfInteger : Excise.Core.Primitives.PdfObject
+    {
+        public PdfInteger(long value) { }
+        public override Excise.Core.Primitives.PdfObjectType ObjectType { get; }
+        public long Value { get; }
+        public override bool Equals(object? obj) { }
+        public override int GetHashCode() { }
+        public override string ToString() { }
+        public static long op_Implicit(Excise.Core.Primitives.PdfInteger i) { }
+        public static int op_Implicit(Excise.Core.Primitives.PdfInteger i) { }
+        public static double op_Implicit(Excise.Core.Primitives.PdfInteger i) { }
+        public static Excise.Core.Primitives.PdfInteger op_Implicit(int i) { }
+        public static Excise.Core.Primitives.PdfInteger op_Implicit(long l) { }
+    }
+    public sealed class PdfName : Excise.Core.Primitives.PdfObject, System.IEquatable<Excise.Core.Primitives.PdfName>
+    {
+        public static readonly Excise.Core.Primitives.PdfName AIS;
+        public static readonly Excise.Core.Primitives.PdfName ASCII85Decode;
+        public static readonly Excise.Core.Primitives.PdfName ASCIIHexDecode;
+        public static readonly Excise.Core.Primitives.PdfName ArtBox;
+        public static readonly Excise.Core.Primitives.PdfName Author;
+        public static readonly Excise.Core.Primitives.PdfName BM;
+        public static readonly Excise.Core.Primitives.PdfName BaseFont;
+        public static readonly Excise.Core.Primitives.PdfName BitsPerComponent;
+        public static readonly Excise.Core.Primitives.PdfName BleedBox;
+        public static readonly Excise.Core.Primitives.PdfName CA;
+        public static readonly Excise.Core.Primitives.PdfName CCITTFaxDecode;
+        public static readonly Excise.Core.Primitives.PdfName CF;
+        public static readonly Excise.Core.Primitives.PdfName CIDFontType0;
+        public static readonly Excise.Core.Primitives.PdfName CIDFontType2;
+        public static readonly Excise.Core.Primitives.PdfName CIDSystemInfo;
+        public static readonly Excise.Core.Primitives.PdfName CalGray;
+        public static readonly Excise.Core.Primitives.PdfName CalRGB;
+        public static readonly Excise.Core.Primitives.PdfName Catalog;
+        public static readonly Excise.Core.Primitives.PdfName ColorSpace;
+        public static readonly Excise.Core.Primitives.PdfName Contents;
+        public static readonly Excise.Core.Primitives.PdfName Count;
+        public static readonly Excise.Core.Primitives.PdfName CreationDate;
+        public static readonly Excise.Core.Primitives.PdfName Creator;
+        public static readonly Excise.Core.Primitives.PdfName CropBox;
+        public static readonly Excise.Core.Primitives.PdfName Crypt;
+        public static readonly Excise.Core.Primitives.PdfName DCTDecode;
+        public static readonly Excise.Core.Primitives.PdfName DW;
+        public static readonly Excise.Core.Primitives.PdfName DecodeArray;
+        public static readonly Excise.Core.Primitives.PdfName DecodeParms;
+        public static readonly Excise.Core.Primitives.PdfName DescendantFonts;
+        public static readonly Excise.Core.Primitives.PdfName DeviceCMYK;
+        public static readonly Excise.Core.Primitives.PdfName DeviceGray;
+        public static readonly Excise.Core.Primitives.PdfName DeviceN;
+        public static readonly Excise.Core.Primitives.PdfName DeviceRGB;
+        public static readonly Excise.Core.Primitives.PdfName Encoding;
+        public static readonly Excise.Core.Primitives.PdfName Encrypt;
+        public static readonly Excise.Core.Primitives.PdfName ExtGState;
+        public static readonly Excise.Core.Primitives.PdfName Filter;
+        public static readonly Excise.Core.Primitives.PdfName FirstChar;
+        public static readonly Excise.Core.Primitives.PdfName FlateDecode;
+        public static readonly Excise.Core.Primitives.PdfName Font;
+        public static readonly Excise.Core.Primitives.PdfName FontDescriptor;
+        public static readonly Excise.Core.Primitives.PdfName Form;
+        public static readonly Excise.Core.Primitives.PdfName Height;
+        public static readonly Excise.Core.Primitives.PdfName ICCBased;
+        public static readonly Excise.Core.Primitives.PdfName ID;
+        public static readonly Excise.Core.Primitives.PdfName Image;
+        public static readonly Excise.Core.Primitives.PdfName ImageMask;
+        public static readonly Excise.Core.Primitives.PdfName Index;
+        public static readonly Excise.Core.Primitives.PdfName Indexed;
+        public static readonly Excise.Core.Primitives.PdfName Info;
+        public static readonly Excise.Core.Primitives.PdfName Interpolate;
+        public static readonly Excise.Core.Primitives.PdfName JBIG2Decode;
+        public static readonly Excise.Core.Primitives.PdfName JPXDecode;
+        public static readonly Excise.Core.Primitives.PdfName Keywords;
+        public static readonly Excise.Core.Primitives.PdfName Kids;
+        public static readonly Excise.Core.Primitives.PdfName LZWDecode;
+        public static readonly Excise.Core.Primitives.PdfName Lab;
+        public static readonly Excise.Core.Primitives.PdfName LastChar;
+        public static readonly Excise.Core.Primitives.PdfName Length;
+        public static readonly Excise.Core.Primitives.PdfName Mask;
+        public static readonly Excise.Core.Primitives.PdfName MediaBox;
+        public static readonly Excise.Core.Primitives.PdfName Metadata;
+        public static readonly Excise.Core.Primitives.PdfName ModDate;
+        public static readonly Excise.Core.Primitives.PdfName O;
+        public static readonly Excise.Core.Primitives.PdfName P;
+        public static readonly Excise.Core.Primitives.PdfName Page;
+        public static readonly Excise.Core.Primitives.PdfName Pages;
+        public static readonly Excise.Core.Primitives.PdfName Parent;
+        public static readonly Excise.Core.Primitives.PdfName Pattern;
+        public static readonly Excise.Core.Primitives.PdfName Prev;
+        public static readonly Excise.Core.Primitives.PdfName ProcSet;
+        public static readonly Excise.Core.Primitives.PdfName Producer;
+        public static readonly Excise.Core.Primitives.PdfName Properties;
+        public static readonly Excise.Core.Primitives.PdfName R;
+        public static readonly Excise.Core.Primitives.PdfName Resources;
+        public static readonly Excise.Core.Primitives.PdfName Root;
+        public static readonly Excise.Core.Primitives.PdfName Rotate;
+        public static readonly Excise.Core.Primitives.PdfName RunLengthDecode;
+        public static readonly Excise.Core.Primitives.PdfName SMask;
+        public static readonly Excise.Core.Primitives.PdfName Separation;
+        public static readonly Excise.Core.Primitives.PdfName Shading;
+        public static readonly Excise.Core.Primitives.PdfName Size;
+        public static readonly Excise.Core.Primitives.PdfName StmF;
+        public static readonly Excise.Core.Primitives.PdfName StrF;
+        public static readonly Excise.Core.Primitives.PdfName Subject;
+        public static readonly Excise.Core.Primitives.PdfName Subtype;
+        public static readonly Excise.Core.Primitives.PdfName TK;
+        public static readonly Excise.Core.Primitives.PdfName Title;
+        public static readonly Excise.Core.Primitives.PdfName ToUnicode;
+        public static readonly Excise.Core.Primitives.PdfName TrimBox;
+        public static readonly Excise.Core.Primitives.PdfName TrueType;
+        public static readonly Excise.Core.Primitives.PdfName Type;
+        public static readonly Excise.Core.Primitives.PdfName Type0;
+        public static readonly Excise.Core.Primitives.PdfName Type1;
+        public static readonly Excise.Core.Primitives.PdfName U;
+        public static readonly Excise.Core.Primitives.PdfName V;
+        public static readonly Excise.Core.Primitives.PdfName W;
+        public static readonly Excise.Core.Primitives.PdfName Width;
+        public static readonly Excise.Core.Primitives.PdfName Widths;
+        public static readonly Excise.Core.Primitives.PdfName XObject;
+        public static readonly Excise.Core.Primitives.PdfName XRef;
+        public static readonly Excise.Core.Primitives.PdfName ca;
+        public PdfName(string value) { }
+        public override Excise.Core.Primitives.PdfObjectType ObjectType { get; }
+        public string Value { get; }
+        public bool Equals(Excise.Core.Primitives.PdfName? other) { }
+        public override bool Equals(object? obj) { }
+        public override int GetHashCode() { }
+        public string ToEncodedString() { }
+        public override string ToString() { }
+        public static string Decode(string encoded) { }
+        public static string op_Implicit(Excise.Core.Primitives.PdfName n) { }
+        public static Excise.Core.Primitives.PdfName op_Implicit(string s) { }
+        public static bool operator !=(Excise.Core.Primitives.PdfName? left, Excise.Core.Primitives.PdfName? right) { }
+        public static bool operator ==(Excise.Core.Primitives.PdfName? left, Excise.Core.Primitives.PdfName? right) { }
+    }
+    public sealed class PdfNull : Excise.Core.Primitives.PdfObject
+    {
+        public static readonly Excise.Core.Primitives.PdfNull Instance;
+        public override Excise.Core.Primitives.PdfObjectType ObjectType { get; }
+        public override string ToString() { }
+    }
+    public static class PdfNumberExtensions
+    {
+        public static int GetInt(this Excise.Core.Primitives.PdfObject obj) { }
+        public static long GetLong(this Excise.Core.Primitives.PdfObject obj) { }
+        public static double GetNumber(this Excise.Core.Primitives.PdfObject obj) { }
+        public static bool TryGetNumber(this Excise.Core.Primitives.PdfObject? obj, out double value) { }
+    }
+    public abstract class PdfObject
+    {
+        protected PdfObject() { }
+        public int? GenerationNumber { get; set; }
+        public bool IsIndirect { get; }
+        public int? ObjectNumber { get; set; }
+        public abstract Excise.Core.Primitives.PdfObjectType ObjectType { get; }
+        public T? As<T>()
+            where T : Excise.Core.Primitives.PdfObject { }
+        public T Expect<T>()
+            where T : Excise.Core.Primitives.PdfObject { }
+    }
+    public enum PdfObjectType
+    {
+        Null = 0,
+        Boolean = 1,
+        Integer = 2,
+        Real = 3,
+        String = 4,
+        Name = 5,
+        Array = 6,
+        Dictionary = 7,
+        Stream = 8,
+        Reference = 9,
+    }
+    public sealed class PdfReal : Excise.Core.Primitives.PdfObject
+    {
+        public PdfReal(double value) { }
+        public override Excise.Core.Primitives.PdfObjectType ObjectType { get; }
+        public double Value { get; }
+        public override bool Equals(object? obj) { }
+        public override int GetHashCode() { }
+        public override string ToString() { }
+        public static double op_Implicit(Excise.Core.Primitives.PdfReal r) { }
+        public static Excise.Core.Primitives.PdfReal op_Implicit(double d) { }
+    }
+    public sealed class PdfReference : Excise.Core.Primitives.PdfObject, System.IEquatable<Excise.Core.Primitives.PdfReference>
+    {
+        public PdfReference(int objectNum, int generation = 0) { }
+        public int Generation { get; }
+        public int ObjectNum { get; }
+        public override Excise.Core.Primitives.PdfObjectType ObjectType { get; }
+        public bool Equals(Excise.Core.Primitives.PdfReference? other) { }
+        public override bool Equals(object? obj) { }
+        public override int GetHashCode() { }
+        public override string ToString() { }
+        public static Excise.Core.Primitives.PdfReference Parse(string s) { }
+        public static bool operator !=(Excise.Core.Primitives.PdfReference? left, Excise.Core.Primitives.PdfReference? right) { }
+        public static bool operator ==(Excise.Core.Primitives.PdfReference? left, Excise.Core.Primitives.PdfReference? right) { }
+    }
+    public class PdfStream : Excise.Core.Primitives.PdfDictionary
+    {
+        public PdfStream() { }
+        public PdfStream(byte[] data) { }
+        public PdfStream(Excise.Core.Primitives.PdfDictionary dictionary, byte[] encodedData) { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Primitives.PdfDictionary?> DecodeParams { get; }
+        public byte[] DecodedData { get; set; }
+        public byte[] EncodedData { get; }
+        public System.Collections.Generic.IReadOnlyList<string> Filters { get; }
+        public bool IsDecoded { get; }
+        public bool IsFiltered { get; }
+        public int Length { get; }
+        public override Excise.Core.Primitives.PdfObjectType ObjectType { get; }
+        public string GetDecodedString() { }
+        public string GetDecodedString(System.Text.Encoding encoding) { }
+        public override string ToString() { }
+    }
+    public sealed class PdfString : Excise.Core.Primitives.PdfObject, System.IEquatable<Excise.Core.Primitives.PdfString>
+    {
+        public PdfString(byte[] bytes, bool isHex = false) { }
+        public PdfString(string text, bool isHex = false) { }
+        public byte[] Bytes { get; }
+        public bool IsHex { get; }
+        public override Excise.Core.Primitives.PdfObjectType ObjectType { get; }
+        public string Value { get; }
+        public bool Equals(Excise.Core.Primitives.PdfString? other) { }
+        public override bool Equals(object? obj) { }
+        public override int GetHashCode() { }
+        public string ToHexString() { }
+        public string ToLiteralString() { }
+        public override string ToString() { }
+        public static Excise.Core.Primitives.PdfString FromHex(string hex) { }
+        public static Excise.Core.Primitives.PdfString FromText(string text) { }
+        public static string op_Implicit(Excise.Core.Primitives.PdfString s) { }
+        public static Excise.Core.Primitives.PdfString op_Implicit(string s) { }
+    }
+}
+namespace Excise.Core.Security
+{
+    public enum PdfEncryptionAlgorithm
+    {
+        Aes256 = 0,
+        Aes128 = 1,
+    }
+    public sealed class PdfEncryptionOptions
+    {
+        public PdfEncryptionOptions() { }
+        public Excise.Core.Security.PdfEncryptionAlgorithm Algorithm { get; init; }
+        public bool EncryptMetadata { get; init; }
+        public string? OwnerPassword { get; init; }
+        public long Permissions { get; init; }
+        public string? UserPassword { get; init; }
+    }
+    public readonly struct PdfPermissions : System.IEquatable<Excise.Core.Security.PdfPermissions>
+    {
+        public PdfPermissions(long rawValue) { }
+        public bool CanAnnotate { get; }
+        public bool CanAssemble { get; }
+        public bool CanCopy { get; }
+        public bool CanExtractForAccessibility { get; }
+        public bool CanFillForms { get; }
+        public bool CanModify { get; }
+        public bool CanPrint { get; }
+        public bool CanPrintHighQuality { get; }
+        public int RawValue { get; }
+        public static Excise.Core.Security.PdfPermissions AllAllowed { get; }
+        public bool Equals(Excise.Core.Security.PdfPermissions other) { }
+        public override bool Equals(object? obj) { }
+        public override int GetHashCode() { }
+        public override string ToString() { }
+        public static bool operator !=(Excise.Core.Security.PdfPermissions left, Excise.Core.Security.PdfPermissions right) { }
+        public static bool operator ==(Excise.Core.Security.PdfPermissions left, Excise.Core.Security.PdfPermissions right) { }
+    }
+    public sealed class PdfStandardSecurityHandler
+    {
+        public bool EncryptMetadata { get; }
+        public int KeyLengthBytes { get; }
+        public int R { get; }
+        public bool UsesAes { get; }
+        public int V { get; }
+        public byte[] DecryptStream(int objNum, int gen, byte[] cipherBytes) { }
+        public byte[] DecryptString(int objNum, int gen, byte[] cipherBytes) { }
+        public static Excise.Core.Security.PdfStandardSecurityHandler Build(Excise.Core.Primitives.PdfDictionary encryptDict, byte[] firstId, byte[] userPassword) { }
+        public static Excise.Core.Security.PdfStandardSecurityHandler Build(Excise.Core.Primitives.PdfDictionary encryptDict, byte[] firstId, string? userPassword) { }
+    }
+}
+namespace Excise.Core.Text
+{
+    public class Letter
+    {
+        public Letter(string value, Excise.Core.Document.PdfRectangle glyphRectangle, double fontSize, string fontName, double startX, double startY, double width, int characterCode, int codeByteLength = 1) { }
+        public int CharacterCode { get; }
+        public int CodeByteLength { get; }
+        public Excise.Core.Document.PdfPoint EndBaseLine { get; }
+        public string FontName { get; }
+        public double FontSize { get; }
+        public Excise.Core.Document.PdfRectangle GlyphRectangle { get; }
+        public bool IsCidFont { get; set; }
+        public bool IsInHiddenOptionalContent { get; set; }
+        public Excise.Core.Document.PdfPoint StartBaseLine { get; }
+        public double StartX { get; }
+        public double StartY { get; }
+        public string Value { get; }
+        public double Width { get; }
+        public override string ToString() { }
+    }
+    public class TextExtractor
+    {
+        public TextExtractor(Excise.Core.Document.PdfPage page) { }
+        public bool IncludeFormFieldValues { get; set; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> ExtractLetters() { }
+        public string ExtractText() { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Word> ExtractWords() { }
+    }
+    public class ToUnicodeCMapParser
+    {
+        public ToUnicodeCMapParser() { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.ToUnicodeCMapParser.CodespaceRange> CodespaceRanges { get; }
+        public System.Collections.Generic.IReadOnlyDictionary<int, string> Mapping { get; }
+        public int MaxCodeBytes { get; }
+        public static System.Collections.Generic.Dictionary<int, string> Parse(byte[] cmapData) { }
+        public static System.Collections.Generic.Dictionary<int, string> Parse(string cmapContent) { }
+        public static Excise.Core.Text.ToUnicodeCMapParser ParseDetailed(byte[] cmapData) { }
+        public readonly struct CodespaceRange : System.IEquatable<Excise.Core.Text.ToUnicodeCMapParser.CodespaceRange>
+        {
+            public CodespaceRange(int Low, int High, int Bytes) { }
+            public int Bytes { get; init; }
+            public int High { get; init; }
+            public int Low { get; init; }
+        }
+    }
+    public class Word
+    {
+        public Word(System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> letters) { }
+        public Excise.Core.Document.PdfRectangle BoundingBox { get; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> Letters { get; }
+        public string Text { get; }
+        public override string ToString() { }
+    }
+}
+namespace Excise.Core.Text.Segmentation
+{
+    public enum GlyphOverlapType
+    {
+        None = 0,
+        Full = 1,
+        Partial = 2,
+    }
+    public enum GlyphRemovalStrategy
+    {
+        AnyOverlap = 0,
+        FullyContained = 1,
+        CenterPoint = 2,
+    }
+    public class GlyphRemover
+    {
+        public GlyphRemover() { }
+        public GlyphRemover(Excise.Core.Text.Segmentation.LetterFinder letterFinder, Excise.Core.Text.Segmentation.TextSegmenter textSegmenter, Excise.Core.Text.Segmentation.OperationReconstructor reconstructor) { }
+        public System.Collections.Generic.List<Excise.Core.Content.ContentOperator> ProcessOperations(System.Collections.Generic.IReadOnlyList<Excise.Core.Content.ContentOperator> operations, System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> letters, Excise.Core.Document.PdfRectangle redactionArea, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0) { }
+    }
+    public static class HiddenTextDetector
+    {
+        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.HiddenTextRecord> Scan(Excise.Core.Document.PdfDocument document) { }
+        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.HiddenTextRecord> ScanPage(Excise.Core.Document.PdfPage page, int pageNumber = 1) { }
+    }
+    public sealed class HiddenTextRecord : System.IEquatable<Excise.Core.Text.Segmentation.HiddenTextRecord>
+    {
+        public HiddenTextRecord(int PageNumber, string Text, Excise.Core.Document.PdfRectangle BoundingBox, string HiddenBy) { }
+        public Excise.Core.Document.PdfRectangle BoundingBox { get; init; }
+        public string HiddenBy { get; init; }
+        public int PageNumber { get; init; }
+        public string Text { get; init; }
+    }
+    public class LetterFinder
+    {
+        public LetterFinder() { }
+        public System.Collections.Generic.List<Excise.Core.Text.Segmentation.LetterMatch> FindOperationLetters(string operationText, System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> allLetters) { }
+    }
+    public class LetterMatch
+    {
+        public LetterMatch() { }
+        public required int CharacterIndex { get; init; }
+        public required Excise.Core.Text.Letter Letter { get; init; }
+        public byte[]? RawBytes { get; set; }
+        public object? SourceOperation { get; set; }
+    }
+    public static class ObstructionStripper
+    {
+        public static void StripObstructions(Excise.Core.Document.PdfPage page) { }
+    }
+    public class OperationReconstructor
+    {
+        public OperationReconstructor() { }
+        public System.Collections.Generic.List<Excise.Core.Content.ContentOperator> ReconstructWithPositioning(System.Collections.Generic.List<Excise.Core.Text.Segmentation.TextSegment> segments, Excise.Core.Text.Segmentation.OperationReconstructor.Context context) { }
+        public sealed class Context
+        {
+            public Context() { }
+            public double CharacterSpacing { get; init; }
+            public required string FontName { get; init; }
+            public required double FontSize { get; init; }
+            public double HorizontalScaling { get; init; }
+            public double TextLeading { get; init; }
+            public int TextRenderingMode { get; init; }
+            public double TextRise { get; init; }
+            public double WordSpacing { get; init; }
+        }
+    }
+    public static class PdfDocumentRedactionExtensions
+    {
+        public static int RedactText(this Excise.Core.Document.PdfDocument document, string text, bool caseSensitive = false, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool drawBlackRect = true, bool includeHiddenLayers = true) { }
+    }
+    public static class PdfPageRedactionExtensions
+    {
+        public static void RedactArea(this Excise.Core.Document.PdfPage page, Excise.Core.Document.PdfRectangle area, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0) { }
+        public static void RedactAreas(this Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfRectangle> areas, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0) { }
+    }
+    public class TextSegment
+    {
+        public TextSegment() { }
+        public Excise.Core.Document.PdfRectangle BoundingBox { get; }
+        public int EndIndex { get; set; }
+        public bool HasToUnicode { get; set; }
+        public required double Height { get; set; }
+        public bool IsCidFont { get; set; }
+        public bool IsPartialOverlap { get; }
+        public required bool Keep { get; init; }
+        public System.Collections.Generic.List<Excise.Core.Text.Segmentation.LetterMatch> LetterMatches { get; set; }
+        public required string OriginalText { get; init; }
+        public Excise.Core.Text.Segmentation.GlyphOverlapType OverlapType { get; set; }
+        public required int StartIndex { get; init; }
+        public required double StartX { get; init; }
+        public required double StartY { get; init; }
+        public string Text { get; }
+        public bool WasHexString { get; set; }
+        public double Width { get; set; }
+        public byte[] GetRawBytes() { }
+    }
+    public class TextSegmenter
+    {
+        public TextSegmenter() { }
+        public System.Collections.Generic.List<Excise.Core.Text.Segmentation.TextSegment> BuildSegments(string text, Excise.Core.Document.PdfRectangle operationBounds, System.Collections.Generic.List<Excise.Core.Text.Segmentation.LetterMatch> letterMatches, Excise.Core.Document.PdfRectangle redactionArea, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0) { }
+    }
+}
+namespace Excise.Core.Writing
+{
+    public class PdfDocumentWriter
+    {
+        public PdfDocumentWriter(Excise.Core.Document.PdfDocument document, Excise.Core.Security.PdfEncryptionOptions? encryptionOptions = null) { }
+        public void Write(System.IO.Stream stream) { }
+    }
+    public static class PdfObjectWriter
+    {
+        public static string Serialize(Excise.Core.Primitives.PdfObject obj) { }
+        public static void SerializeObject(Excise.Core.Primitives.PdfObject obj, System.Text.StringBuilder sb) { }
+        public static void SerializeStreamDictionary(Excise.Core.Primitives.PdfStream stream, System.Text.StringBuilder sb) { }
+    }
+}

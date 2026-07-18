@@ -64,16 +64,16 @@ say() { echo -e "$1"; echo -e "$(echo -e "$1" | sed 's/\x1b\[[0-9;]*m//g')" >> "
 # needs: ""=none, xvfb=needs a display, mutool=needs mutool, tess=needs tesseract,
 #        corpus=needs test-pdfs/
 SUITES=(
-  "Core|Pdfe.Core.Tests||"
-  "Core-RealPdf|Pdfe.Core.Tests|FullyQualifiedName~RealPdf|FullyQualifiedName~CorpusConformance|corpus"
-  "Cli|Pdfe.Cli.Tests||"
-  "Ocr|Pdfe.Ocr.Tests||tess"
-  "Render-Deterministic|Pdfe.Rendering.Tests|FullyQualifiedName!~Corpus&FullyQualifiedName!~Differential&FullyQualifiedName!~Visual&FullyQualifiedName!~Benchmark|"
-  "Render-Visual|Pdfe.Rendering.Tests|FullyQualifiedName~Visual|"
-  "Render-Benchmark|Pdfe.Rendering.Tests|FullyQualifiedName~Benchmark|"
-  "Render-Differential|Pdfe.Rendering.Tests|FullyQualifiedName~Differential|mutool"
-  "Render-Corpus|Pdfe.Rendering.Tests|FullyQualifiedName~Corpus|corpus"
-  "GUI|PdfEditor.Tests||xvfb"
+  "Core|Excise.Core.Tests||"
+  "Core-RealPdf|Excise.Core.Tests|FullyQualifiedName~RealPdf|FullyQualifiedName~CorpusConformance|corpus"
+  "Cli|Excise.Cli.Tests||"
+  "Ocr|Excise.Ocr.Tests||tess"
+  "Render-Deterministic|Excise.Rendering.Tests|FullyQualifiedName!~Corpus&FullyQualifiedName!~Differential&FullyQualifiedName!~Visual&FullyQualifiedName!~Benchmark|"
+  "Render-Visual|Excise.Rendering.Tests|FullyQualifiedName~Visual|"
+  "Render-Benchmark|Excise.Rendering.Tests|FullyQualifiedName~Benchmark|"
+  "Render-Differential|Excise.Rendering.Tests|FullyQualifiedName~Differential|mutool"
+  "Render-Corpus|Excise.Rendering.Tests|FullyQualifiedName~Corpus|corpus"
+  "GUI|Excise.App.Tests||xvfb"
 )
 
 if [ "${LIST_ONLY:-0}" = "1" ]; then
@@ -87,7 +87,7 @@ HAVE_XVFB=0;   command -v xvfb-run >/dev/null 2>&1 && HAVE_XVFB=1
 HAVE_CORPUS=0; [ -d "$PROJECT_ROOT/test-pdfs" ] && HAVE_CORPUS=1
 
 say "${B}=================================================${N}"
-say "${B} pdfe long-running test runner${N}"
+say "${B} excise long-running test runner${N}"
 say "${B}=================================================${N}"
 say "Started : $(date)"
 say "Config  : $CONFIG"
@@ -98,8 +98,8 @@ say "Deps    : mutool=$HAVE_MUTOOL tesseract=$HAVE_TESS xvfb-run=$HAVE_XVFB test
 say ""
 
 if [ "$DO_BUILD" = "1" ]; then
-    say "${B}[build]${N} dotnet build pdfe.sln -c $CONFIG ..."
-    if dotnet build pdfe.sln -c "$CONFIG" > "$GROUP_DIR/_build.log" 2>&1; then
+    say "${B}[build]${N} dotnet build excise.sln -c $CONFIG ..."
+    if dotnet build excise.sln -c "$CONFIG" > "$GROUP_DIR/_build.log" 2>&1; then
         say "${G}[build] OK${N}"
     else
         say "${R}[build] FAILED — see $GROUP_DIR/_build.log. Aborting.${N}"

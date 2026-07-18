@@ -8,8 +8,8 @@
 # from concurrent test runs, once from ~900MB of accumulated logs/ + artifacts/),
 # each time with zero page failures.
 #
-# The test already supports sharding via PDFE_GUI_DISPLAY_SHARD_COUNT /
-# PDFE_GUI_DISPLAY_SHARD_INDEX. Nothing used them. This does.
+# The test already supports sharding via EXCISE_GUI_DISPLAY_SHARD_COUNT /
+# EXCISE_GUI_DISPLAY_SHARD_INDEX. Nothing used them. This does.
 #
 # Each shard is a separate `dotnet test` process, so a shard that is slow or
 # wedged cannot drag the others down, and each gets the full deadline budget.
@@ -27,7 +27,7 @@ LOGDIR="$ROOT/logs/gui-display-sweep"
 mkdir -p "$LOGDIR"
 
 echo "==> building once (shards reuse it)"
-dotnet build PdfEditor.Tests/PdfEditor.Tests.csproj -v q --nologo >/dev/null
+dotnet build Excise.App.Tests/Excise.App.Tests.csproj -v q --nologo >/dev/null
 
 FAILED=0
 for ((i = 0; i < SHARDS; i++)); do
@@ -36,11 +36,11 @@ for ((i = 0; i < SHARDS; i++)); do
 
   # Shards run SEQUENTIALLY on purpose. Running them in parallel would recreate
   # exactly the CPU contention that makes this sweep produce false failures —
-  # and PdfEditor.Tests is serial by design anyway (SkiaSharp's process-wide
+  # and Excise.App.Tests is serial by design anyway (SkiaSharp's process-wide
   # native font manager; see #363 / CLAUDE.md).
-  if PDFE_GUI_DISPLAY_SHARD_COUNT="$SHARDS" \
-     PDFE_GUI_DISPLAY_SHARD_INDEX="$i" \
-     dotnet test PdfEditor.Tests/PdfEditor.Tests.csproj \
+  if EXCISE_GUI_DISPLAY_SHARD_COUNT="$SHARDS" \
+     EXCISE_GUI_DISPLAY_SHARD_INDEX="$i" \
+     dotnet test Excise.App.Tests/Excise.App.Tests.csproj \
        --no-build --nologo --filter "$FILTER" >"$LOG" 2>&1
   then
     echo "    PASS  ($(grep -oE 'elapsed [0-9:]+' "$LOG" | tail -1 || echo 'n/a'))"

@@ -15,7 +15,7 @@ echo "✓ .NET SDK found: $(dotnet --version)"
 echo ""
 
 # Build and run the demo
-cd PdfEditor.Demo
+cd Excise.App.Demo
 
 echo "Building demo program..."
 dotnet build

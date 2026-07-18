@@ -31,7 +31,7 @@ if (repoRoot == null)
 
 var corpusRoot = Path.Combine(repoRoot, "test-pdfs", "verapdf-corpus");
 var testCount = 50; // Reduced from 100 - 50 is sufficient for stress testing
-var outputDir = "/tmp/pdfe-stress-test";
+var outputDir = "/tmp/excise-stress-test";
 
 Directory.CreateDirectory(outputDir);
 

@@ -1,0 +1,207 @@
+namespace Excise.Avalonia.Controls
+{
+    public class DangerousLinkClickedEventArgs : System.EventArgs
+    {
+        public DangerousLinkClickedEventArgs(string actionType) { }
+        public string ActionType { get; }
+    }
+    public class ExternalLinkClickedEventArgs : System.EventArgs
+    {
+        public ExternalLinkClickedEventArgs(string uri) { }
+        public string Uri { get; }
+    }
+    public class FormFieldEditedEventArgs : System.EventArgs
+    {
+        public FormFieldEditedEventArgs(string fieldName, string? newValue, int pageNumber) { }
+        public string FieldName { get; }
+        public string? NewValue { get; }
+        public int PageNumber { get; }
+    }
+    public class FormFieldRectDrawnEventArgs : System.EventArgs
+    {
+        public FormFieldRectDrawnEventArgs(Excise.Core.Document.PdfRectangle rect, int pageNumber) { }
+        public int PageNumber { get; }
+        public Excise.Core.Document.PdfRectangle Rect { get; }
+    }
+    public sealed class HiddenTextHighlight : System.IEquatable<Excise.Avalonia.Controls.HiddenTextHighlight>
+    {
+        public HiddenTextHighlight(string Text, Excise.Core.Document.PdfPageRect Bounds, string HiddenBy, Excise.Avalonia.Controls.HiddenTextSource Source = 0) { }
+        public Excise.Core.Document.PdfPageRect Bounds { get; init; }
+        public string HiddenBy { get; init; }
+        public Avalonia.Rect ScreenBounds { get; }
+        public Excise.Avalonia.Controls.HiddenTextSource Source { get; init; }
+        public string Text { get; init; }
+    }
+    public enum HiddenTextSource
+    {
+        Structural = 0,
+        DifferentialOcr = 1,
+    }
+    public enum InteractionMode
+    {
+        None = 0,
+        Redaction = 1,
+        TextSelection = 2,
+        Pan = 3,
+        FormAuthoring = 4,
+        Typewriter = 5,
+    }
+    public class LinkClickedEventArgs : System.EventArgs
+    {
+        public LinkClickedEventArgs(int pageNumber) { }
+        public int PageNumber { get; }
+    }
+    public class LinkHoveredEventArgs : System.EventArgs
+    {
+        public LinkHoveredEventArgs(string? displayText) { }
+        public string? DisplayText { get; }
+    }
+    public class PageChangedEventArgs : System.EventArgs
+    {
+        public PageChangedEventArgs(int pageNumber) { }
+        public int PageNumber { get; }
+    }
+    public sealed class PdfPageSlot : System.ComponentModel.INotifyPropertyChanged
+    {
+        public Avalonia.Media.Imaging.WriteableBitmap? Bitmap { get; set; }
+        public double DisplayHeight { get; }
+        public double DisplayWidth { get; }
+        public double HeightPt { get; }
+        public int PageNumber { get; }
+        public double TileDisplayHeight { get; }
+        public double TileDisplayWidth { get; }
+        public double TileDisplayX { get; }
+        public double TileDisplayY { get; }
+        public double WidthPt { get; }
+        public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+    }
+    public enum PdfViewMode
+    {
+        SinglePage = 0,
+        Continuous = 1,
+    }
+    public class PdfViewerControl : Avalonia.Controls.UserControl
+    {
+        public static readonly Avalonia.StyledProperty<System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfAnnotation>?> AnnotationsProperty;
+        public static readonly Avalonia.StyledProperty<int> CurrentPageProperty;
+        public static readonly Avalonia.StyledProperty<Excise.Core.Document.PdfDocument?> DocumentProperty;
+        public static readonly Avalonia.StyledProperty<string?> ErrorMessageProperty;
+        public static readonly Avalonia.StyledProperty<System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfField>?> FormFieldsProperty;
+        public static readonly Avalonia.StyledProperty<bool> HasErrorProperty;
+        public static readonly Avalonia.StyledProperty<System.Collections.Generic.IEnumerable<Excise.Avalonia.Controls.HiddenTextHighlight>?> HiddenTextHighlightsProperty;
+        public static readonly Avalonia.StyledProperty<Excise.Avalonia.Controls.InteractionMode> InteractionModeProperty;
+        public static readonly Avalonia.StyledProperty<bool> IsLoadingProperty;
+        public static readonly Avalonia.StyledProperty<long> RenderVersionProperty;
+        public static readonly Avalonia.StyledProperty<System.Collections.Generic.IEnumerable<Excise.Core.Editing.PdfTypewriterTextOperation>?> TypewriterTextOperationsProperty;
+        public static readonly Avalonia.StyledProperty<Excise.Avalonia.Controls.PdfViewMode> ViewModeProperty;
+        public static readonly Avalonia.StyledProperty<double> ZoomLevelProperty;
+        public PdfViewerControl() { }
+        public System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfAnnotation>? Annotations { get; set; }
+        public int CurrentPage { get; set; }
+        public Excise.Core.Document.PdfDocument? Document { get; set; }
+        public string? ErrorMessage { get; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfField>? FormFields { get; set; }
+        public bool HasError { get; }
+        public System.Collections.Generic.IEnumerable<Excise.Avalonia.Controls.HiddenTextHighlight>? HiddenTextHighlights { get; set; }
+        public Excise.Avalonia.Controls.InteractionMode InteractionMode { get; set; }
+        public bool IsLoading { get; }
+        public long RenderVersion { get; set; }
+        public System.Collections.Generic.IEnumerable<Excise.Core.Editing.PdfTypewriterTextOperation>? TypewriterTextOperations { get; set; }
+        public Excise.Avalonia.Controls.PdfViewMode ViewMode { get; set; }
+        public double ZoomLevel { get; set; }
+        public event System.EventHandler<Excise.Avalonia.Controls.DangerousLinkClickedEventArgs>? DangerousLinkClicked;
+        public event System.EventHandler<Excise.Avalonia.Controls.ExternalLinkClickedEventArgs>? ExternalLinkClicked;
+        public event System.EventHandler<Excise.Avalonia.Controls.FormFieldEditedEventArgs>? FormFieldEdited;
+        public event System.EventHandler<Excise.Avalonia.Controls.FormFieldRectDrawnEventArgs>? FormFieldRectDrawn;
+        public event System.EventHandler<Excise.Avalonia.Controls.LinkClickedEventArgs>? LinkClicked;
+        public event System.EventHandler<Excise.Avalonia.Controls.LinkHoveredEventArgs>? LinkHovered;
+        public event System.EventHandler<Excise.Avalonia.Controls.PageChangedEventArgs>? PageChanged;
+        public event System.EventHandler<Excise.Avalonia.Controls.RedactionDrawnEventArgs>? RedactionDrawn;
+        public event System.EventHandler<Excise.Avalonia.Controls.TextSelectedEventArgs>? TextSelected;
+        public event System.EventHandler<Excise.Avalonia.Controls.TypewriterTextBoundsChangedEventArgs>? TypewriterTextBoundsChanged;
+        public event System.EventHandler<Excise.Avalonia.Controls.TypewriterTextCreatedEventArgs>? TypewriterTextCreated;
+        public event System.EventHandler<Excise.Avalonia.Controls.TypewriterTextDeletedEventArgs>? TypewriterTextDeleted;
+        public event System.EventHandler<Excise.Avalonia.Controls.TypewriterTextEditedEventArgs>? TypewriterTextEdited;
+        public event System.EventHandler<Avalonia.Size>? VisibleViewportChanged;
+        public void AddAppliedRedaction(Avalonia.Rect area) { }
+        public void AddAppliedRedaction(Excise.Core.Document.PdfPageRect area) { }
+        public void AddPendingRedaction(Avalonia.Rect area) { }
+        public void AddPendingRedaction(Excise.Core.Document.PdfPageRect area) { }
+        public void AddSearchHighlight(Avalonia.Rect area) { }
+        public void AddSearchHighlight(Excise.Core.Document.PdfPageRect area) { }
+        public void ClearAllOverlays() { }
+        public void ClearAppliedRedactions() { }
+        public void ClearPendingRedactions() { }
+        public void ClearSearchHighlights() { }
+        public void ClearSelectionHighlight() { }
+        public Avalonia.Size GetVisibleViewportSize() { }
+        [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+        public void InitializeComponent(bool loadXaml = true) { }
+        public void InvalidatePageCache() { }
+        public void NextPage() { }
+        public void PreviousPage() { }
+        public void ZoomIn() { }
+        public void ZoomOut() { }
+        public void ZoomToActualSize() { }
+    }
+    public class RedactionDrawnEventArgs : System.EventArgs
+    {
+        public RedactionDrawnEventArgs(Avalonia.Rect area) { }
+        public RedactionDrawnEventArgs(Excise.Core.Document.PdfPageRect pageArea) { }
+        public RedactionDrawnEventArgs(Avalonia.Rect area, int renderDpi) { }
+        public Avalonia.Rect Area { get; }
+        public Excise.Core.Document.PdfPageRect PageArea { get; }
+        public int RenderDpi { get; }
+    }
+    public class TextSelectedEventArgs : System.EventArgs
+    {
+        public TextSelectedEventArgs(Avalonia.Rect area) { }
+        public TextSelectedEventArgs(Avalonia.Rect area, string text, System.Collections.Generic.IReadOnlyList<Avalonia.Rect> letterBoundsDips) { }
+        public Avalonia.Rect Area { get; }
+        public System.Collections.Generic.IReadOnlyList<Avalonia.Rect> LetterBoundsDips { get; }
+        public string Text { get; }
+    }
+    public class TypewriterTextBoundsChangedEventArgs : System.EventArgs
+    {
+        public TypewriterTextBoundsChangedEventArgs(System.Guid operationId, Excise.Core.Document.PdfRectangle rect, int pageNumber) { }
+        public System.Guid OperationId { get; }
+        public int PageNumber { get; }
+        public Excise.Core.Document.PdfRectangle Rect { get; }
+    }
+    public class TypewriterTextCreatedEventArgs : System.EventArgs
+    {
+        public TypewriterTextCreatedEventArgs(Excise.Core.Document.PdfRectangle rect, int pageNumber) { }
+        public int PageNumber { get; }
+        public Excise.Core.Document.PdfRectangle Rect { get; }
+    }
+    public class TypewriterTextDeletedEventArgs : System.EventArgs
+    {
+        public TypewriterTextDeletedEventArgs(System.Guid operationId, int pageNumber) { }
+        public System.Guid OperationId { get; }
+        public int PageNumber { get; }
+    }
+    public class TypewriterTextEditedEventArgs : System.EventArgs
+    {
+        public TypewriterTextEditedEventArgs(System.Guid operationId, string text, int pageNumber) { }
+        public System.Guid OperationId { get; }
+        public int PageNumber { get; }
+        public string Text { get; }
+    }
+}
+namespace Excise.Avalonia.Imaging
+{
+    public static class SkiaInterop
+    {
+        public static Avalonia.Media.Imaging.WriteableBitmap? ToAvaloniaBitmap(SkiaSharp.SKBitmap? skBitmap) { }
+    }
+}
+namespace Excise.Avalonia.Services
+{
+    public static class TextSelectionEngine
+    {
+        public static Excise.Core.Text.Letter? HitTest(System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> letters, double pdfX, double pdfY) { }
+        public static string JoinText(System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> letters) { }
+        public static System.Collections.Generic.List<Excise.Core.Text.Letter> RangeBetween(System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> ordered, Excise.Core.Text.Letter anchor, Excise.Core.Text.Letter focus) { }
+        public static System.Collections.Generic.List<Excise.Core.Text.Letter> SortReadingOrder(System.Collections.Generic.IEnumerable<Excise.Core.Text.Letter> letters) { }
+    }
+}

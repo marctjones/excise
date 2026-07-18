@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Excise Automation Wrapper
+Comment=Open PDFs with excise; use excise batch for headless automation
+Exec=excise %F
+Terminal=false
+MimeType=application/pdf;
+Categories=Office;Viewer;

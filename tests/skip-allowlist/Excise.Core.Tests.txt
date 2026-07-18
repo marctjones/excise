@@ -1,0 +1,44 @@
+# Skips allow-listed for Excise.Core.Tests. See scripts/check-skip-budget.sh (#619).
+# Every line is coverage we are NOT getting. Justify it or delete it.
+# Format:  TestName   # why
+#
+# (The two veraPDF-gated conformance tests that used to sit here now RUN on
+# CI — coverage came back with the trx-based enumeration + CI's veraPDF
+# availability, so their entries were removed per the gate's instruction.
+# They still skip on local machines without veraPDF installed; the
+# allowlist's reference environment is CI, not any one dev machine.)
+#
+# Fixture/tool-gated skips visible to the trx-based enumeration (#619 gate
+# reading coverage/core.trx since 46d484a). All gate on gitignored,
+# on-demand-downloaded corpus fixtures (scripts/download-test-pdfs.sh /
+# download-pdfjs-corpus.sh / download-poppler-corpus.sh) or on external
+# decode tools (opj_decompress) that ci.yml's test-linux job does not
+# install. Each is a real regression fixture that runs and asserts when its
+# prerequisite is present (verified locally with the corpus downloaded).
+Excise.Core.Tests.ColorSpaces.PdfColorSpaceTests.Indexed_AltonaWideGamutPalette_DoesNotMapDarkBrushEntriesToWhite   # needs Altona corpus fixture (scripts/download-test-pdfs.sh)
+Excise.Core.Tests.ColorSpaces.PdfColorSpaceTests.Parse_ReferenceToNamedColorSpace_ResolvesName   # needs corpus fixture (scripts/download-test-pdfs.sh)
+Excise.Core.Tests.Filters.Jpx.CodestreamParserTests.ReadInfo_Jp2ContainerWithJp2cBox_ExtractsMetadata   # needs JPX corpus fixture (scripts/download-test-pdfs.sh)
+Excise.Core.Tests.Filters.Jpx.CodestreamParserTests.TryDecodeJpx_AltonaGrayJpxDecodesSingleColorPlane   # needs Altona JPX fixture (scripts/download-test-pdfs.sh)
+Excise.Core.Tests.Filters.Jpx.CodestreamParserTests.TryDecodeManaged_AltonaIndexedJpxDecodesSingleIndexPlane   # needs Altona JPX fixture (scripts/download-test-pdfs.sh)
+Excise.Core.Tests.Filters.Jpx.CodestreamParserTests.TryDecodeManaged_Jp2ContainerFallbackExtractsCodestream   # needs JPX corpus fixture (scripts/download-test-pdfs.sh)
+Excise.Core.Tests.Filters.Jpx.CodestreamParserTests.TryDecodeManaged_Jp2GrayWithOpacityCanDecodeFirstColorComponent   # needs JPX corpus fixture (scripts/download-test-pdfs.sh)
+Excise.Core.Tests.Filters.Jpx.CodestreamParserTests.TryDecodeOpenJpeg_Jp2RgbaPamOutputParsesHeader   # needs opj_decompress (OpenJPEG tools), not installed on CI
+Excise.Core.Tests.Parsing.StreamDecompressorTests.ApplyFilter_CCITTFax_Group4_PopplerImageRetrieveFixture_DecodesFullImage   # needs test-pdfs/poppler fixture (scripts/download-poppler-corpus.sh)
+Excise.Core.Tests.Security.EncryptionPreservationTests.GetReEncryptionOptions_Rc4Source_UpgradesToAes256   # needs test-pdfs/pdfjs/issue15893_reduced.pdf RC4 fixture (scripts/download-pdfjs-corpus.sh)
+Excise.Core.Tests.Security.PdfPermissionsTests.RealWorldEncryptedFixtures_SurfaceQpdfConfirmedPermissions   # needs test-pdfs/poppler encrypted fixtures (scripts/download-poppler-corpus.sh)
+#
+# Below (#664): 7 skips that gate on gitignored, on-demand-downloaded fixtures
+# under test-pdfs/ (scripts/download-test-pdfs.sh, download-pdfjs-corpus.sh,
+# download-poppler-corpus.sh). None of these directories exist on a
+# from-scratch checkout, and ci.yml's test-linux job never runs any of the
+# three download scripts, so these are the correct, legitimate skip set on
+# CI and on a fresh clone alike. Not lazy skips: each is a real regression
+# fixture and the test would run and assert against it if the file were
+# present (verified locally with the fixtures downloaded).
+Excise.Core.Tests.Document.RealPdfTests.Open_VeraPdfCorpusFile_ParsesSuccessfully   # needs test-pdfs/verapdf-corpus/veraPDF-corpus-master/PDF_A-1b/*.pdf (scripts/download-test-pdfs.sh)
+Excise.Core.Tests.Document.RealPdfTests.GetContentStreamBytes_VeraPdfCorpusFile_ReturnsContent   # same veraPDF corpus/gate as Open_VeraPdfCorpusFile_ParsesSuccessfully
+Excise.Core.Tests.Parsing.RecoverablePdfRegressionTests.Open_InvalidHeaderWithRecoverableXref_UsesUnknownVersionAndLoadsPage   # needs test-pdfs/pdfjs/bug1606566.pdf (scripts/download-pdfjs-corpus.sh)
+Excise.Core.Tests.Parsing.RecoverablePdfRegressionTests.GetPage_CircularPagesSubtree_ExposesDeclaredPageAndThrowsTypedCycleError   # needs test-pdfs/pdfjs/Pages-tree-refs.pdf (scripts/download-pdfjs-corpus.sh)
+Excise.Core.Tests.Parsing.RecoverablePdfRegressionTests.Open_AcrobatCompatibleV4R4ShortKeyPadding_DecodesFirstPage   # Theory over test-pdfs/pdfjs/issue19484_1.pdf + issue19484_2.pdf (scripts/download-pdfjs-corpus.sh)
+Excise.Core.Tests.Text.Segmentation.EncryptedRedactionRegressionTests.OpenEncryptedPdf_WithoutDocumentedPassword_FailsClosed   # Theory over test-pdfs/pdfjs/issue15893_reduced.pdf + test-pdfs/poppler/unittestcases/PasswordEncryptedReconstructed.pdf (download-pdfjs-corpus.sh + download-poppler-corpus.sh)
+Excise.Core.Tests.Text.Segmentation.EncryptedRedactionRegressionTests.RedactText_WithDocumentedPassword_RemovesRecoverableText   # same encrypted fixtures/gate as OpenEncryptedPdf_WithoutDocumentedPassword_FailsClosed

@@ -12,7 +12,7 @@ OUTPUT_DIR=""
 
 usage() {
     cat <<'EOF'
-Run pdfe accessibility smoke checks.
+Run excise accessibility smoke checks.
 
 Usage:
   scripts/run-accessibility-smoke.sh [--config Debug|Release] [--output dir]
@@ -20,7 +20,7 @@ Usage:
 The default gate is background-safe: it runs headless command metadata,
 accessible-name/help-text, status-announcement, and keyboard reachability tests.
 Platform accessibility-tree probes are recorded in JSON as PASS, SKIP, or
-MANUAL_REQUIRED. Set PDFE_ACCESSIBILITY_ALLOW_PLATFORM_PROBE=1 on a dedicated
+MANUAL_REQUIRED. Set EXCISE_ACCESSIBILITY_ALLOW_PLATFORM_PROBE=1 on a dedicated
 runner to allow focus/permission-sensitive platform probes.
 EOF
 }
@@ -78,19 +78,19 @@ run_test() {
 
 overall="PASS"
 if ! run_test "Core semantic command registry" \
-    "Pdfe.Core.Tests/Pdfe.Core.Tests.csproj" \
+    "Excise.Core.Tests/Excise.Core.Tests.csproj" \
     "FullyQualifiedName~PdfCommandRegistryTests"; then
     overall="FAIL"
 fi
 
 if ! run_test "CLI command metadata" \
-    "Pdfe.Cli.Tests/Pdfe.Cli.Tests.csproj" \
+    "Excise.Cli.Tests/Excise.Cli.Tests.csproj" \
     "FullyQualifiedName~CommandMetadataCommandTests"; then
     overall="FAIL"
 fi
 
 if ! run_test "GUI accessibility regression checks" \
-    "PdfEditor.Tests/PdfEditor.Tests.csproj" \
+    "Excise.App.Tests/Excise.App.Tests.csproj" \
     "FullyQualifiedName~AccessibilityRegressionTests|FullyQualifiedName~GuiWorkflowCoverageMatrixTests"; then
     overall="FAIL"
 fi
@@ -101,7 +101,7 @@ probe_detail="Platform accessibility-tree inspection requires a dedicated runner
 
 case "$platform" in
     Darwin)
-        if [ "${PDFE_ACCESSIBILITY_ALLOW_PLATFORM_PROBE:-0}" = "1" ] && command -v osascript >/dev/null 2>&1; then
+        if [ "${EXCISE_ACCESSIBILITY_ALLOW_PLATFORM_PROBE:-0}" = "1" ] && command -v osascript >/dev/null 2>&1; then
             if osascript -e 'tell application "System Events" to get UI elements enabled' >/dev/null 2>&1; then
                 probe_status="PASS"
                 probe_detail="macOS System Events accessibility probe is available on this runner."
@@ -139,8 +139,8 @@ cat > "$REPORT" <<EOF
   "config": "$CONFIG",
   "testLog": "$escaped_log",
   "automatedChecks": [
-    "Pdfe.Core semantic command registry",
-    "Pdfe.Cli command metadata surface",
+    "Excise.Core semantic command registry",
+    "Excise.Cli command metadata surface",
     "GUI accessible names/help text/tooltips/status",
     "GUI keyboard-only reachability"
   ],

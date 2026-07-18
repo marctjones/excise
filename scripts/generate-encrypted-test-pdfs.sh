@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Regenerate the encrypted test PDFs used by the Pdfe.Core encryption tests.
+# Regenerate the encrypted test PDFs used by the Excise.Core encryption tests.
 # These files are deliberately gitignored — they're reproducible from the
 # (committed) scrambled birth certificate source.
 #
-# Tests under Pdfe.Core.Tests/Parsing/ObjectStreamResolutionTests.cs early-
+# Tests under Excise.Core.Tests/Parsing/ObjectStreamResolutionTests.cs early-
 # return when the files are missing, so this script is only needed to
 # exercise the RC4 decryption assertions locally.
 #

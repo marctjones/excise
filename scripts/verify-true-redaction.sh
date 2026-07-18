@@ -5,8 +5,8 @@
 # simplified or removed (which would silently downgrade redaction to
 # visual-only black boxes — a security vulnerability).
 #
-# As of v2.0 the redaction engine is pure-.NET and owned by Pdfe.Core
-# (Pdfe.Core/Text/Segmentation/*, Pdfe.Core/Content/*). The GUI's
+# As of v2.0 the redaction engine is pure-.NET and owned by Excise.Core
+# (Excise.Core/Text/Segmentation/*, Excise.Core/Content/*). The GUI's
 # RedactionService is a thin orchestrator that calls page.RedactArea(...).
 # This script verifies that architecture is intact.
 #
@@ -18,15 +18,15 @@ set -uo pipefail
 echo "🔍 Verifying TRUE content-level redaction implementation..."
 
 # --- Files that make up the TRUE-redaction pipeline ---
-REDACTION_SERVICE="PdfEditor/Services/RedactionService.cs"     # GUI orchestrator
-CORE_API="Pdfe.Core/Operations/PdfRedaction.cs"                # public redaction API/result
-CORE_EXT="Pdfe.Core/Text/Segmentation/PdfPageRedactionExtensions.cs"  # page.RedactArea entry
-CORE_GLYPH="Pdfe.Core/Text/Segmentation/GlyphRemover.cs"       # glyph-level removal
-CORE_IMAGE="Pdfe.Core/Text/Segmentation/ImageRedactor.cs"      # image removal
-CORE_RECON="Pdfe.Core/Text/Segmentation/OperationReconstructor.cs"  # rebuild BT/Tf/Tj
-CORE_PARSER="Pdfe.Core/Content/ContentStreamParser.cs"         # parse operators
-CORE_WRITER="Pdfe.Core/Content/ContentStreamWriter.cs"         # serialize operators
-SECURITY_TEST="Pdfe.Core.Tests/Text/Segmentation/PdfPageRedactionEndToEndTests.cs"
+REDACTION_SERVICE="Excise.App/Services/RedactionService.cs"     # GUI orchestrator
+CORE_API="Excise.Core/Operations/PdfRedaction.cs"                # public redaction API/result
+CORE_EXT="Excise.Core/Text/Segmentation/PdfPageRedactionExtensions.cs"  # page.RedactArea entry
+CORE_GLYPH="Excise.Core/Text/Segmentation/GlyphRemover.cs"       # glyph-level removal
+CORE_IMAGE="Excise.Core/Text/Segmentation/ImageRedactor.cs"      # image removal
+CORE_RECON="Excise.Core/Text/Segmentation/OperationReconstructor.cs"  # rebuild BT/Tf/Tj
+CORE_PARSER="Excise.Core/Content/ContentStreamParser.cs"         # parse operators
+CORE_WRITER="Excise.Core/Content/ContentStreamWriter.cs"         # serialize operators
+SECURITY_TEST="Excise.Core.Tests/Text/Segmentation/PdfPageRedactionEndToEndTests.cs"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
 ERRORS=0
@@ -56,7 +56,7 @@ require_grep() {
     fi
 }
 
-# Check 1: the public redaction API/result still live in Pdfe.Core.
+# Check 1: the public redaction API/result still live in Excise.Core.
 require_file "Core redaction API exists" "$CORE_API"
 require_grep "Core RedactionResult model present" "class RedactionResult" "$CORE_API" \
     "SECURITY: RedactionResult is missing from $CORE_API."
@@ -113,7 +113,7 @@ else
     echo ""
     echo "CRITICAL: the redaction implementation may have been changed in a way"
     echo "that compromises TRUE content-level removal (text still extractable)."
-    echo "Review the pipeline (Pdfe.Core/Text/Segmentation + Pdfe.Core/Content)"
+    echo "Review the pipeline (Excise.Core/Text/Segmentation + Excise.Core/Content)"
     echo "and ensure glyph-level removal is maintained. DO NOT DEPLOY this build."
     exit 1
 fi

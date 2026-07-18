@@ -102,7 +102,7 @@ echo =========================================
 echo.
 
 echo Building demo program...
-cd PdfEditor.Demo
+cd Excise.App.Demo
 
 if "%VERBOSE%"=="true" (
     dotnet build -c Release
@@ -145,7 +145,7 @@ echo =========================================
 echo.
 
 echo Building test project...
-cd PdfEditor.Tests
+cd Excise.App.Tests
 
 if "%VERBOSE%"=="true" (
     dotnet build -c Release
@@ -189,7 +189,7 @@ echo =========================================
 echo.
 
 echo Building test project...
-cd PdfEditor.Tests
+cd Excise.App.Tests
 
 if "%VERBOSE%"=="true" (
     dotnet build -c Release

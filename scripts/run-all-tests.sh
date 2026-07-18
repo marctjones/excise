@@ -23,15 +23,15 @@ for arg in "$@"; do
     esac
 done
 
-echo "pdfe Test Suite"
+echo "excise Test Suite"
 echo "==============="
 
 # Build if needed
 if [[ -z "$NO_BUILD_ARG" ]]; then
     printf "Building... "
-    dotnet build PdfEditor.Tests --nologo -v quiet >/dev/null 2>&1
-    dotnet build Pdfe.Core.Tests --nologo -v quiet >/dev/null 2>&1
-    dotnet build Pdfe.Rendering.Tests --nologo -v quiet >/dev/null 2>&1
+    dotnet build Excise.App.Tests --nologo -v quiet >/dev/null 2>&1
+    dotnet build Excise.Core.Tests --nologo -v quiet >/dev/null 2>&1
+    dotnet build Excise.Rendering.Tests --nologo -v quiet >/dev/null 2>&1
     echo "done"
     NO_BUILD_ARG="--no-build"
 fi
@@ -148,9 +148,9 @@ run_tests() {
     fi
 }
 
-run_tests "PdfEditor.Tests" "PdfEditor.Tests"
-run_tests "Pdfe.Core.Tests" "Pdfe.Core.Tests"
-run_tests "Pdfe.Rendering.Tests" "Pdfe.Rendering.Tests"
+run_tests "Excise.App.Tests" "Excise.App.Tests"
+run_tests "Excise.Core.Tests" "Excise.Core.Tests"
+run_tests "Excise.Rendering.Tests" "Excise.Rendering.Tests"
 
 echo ""
 echo "═══════════════════════════════"

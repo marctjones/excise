@@ -27,13 +27,13 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      # Detect whether GUI-relevant code changed. The headless PdfEditor.Tests
+      # Detect whether GUI-relevant code changed. The headless Excise.App.Tests
       # suite is slow and Avalonia-dispatcher-sensitive; there's no need to run
-      # it for library-only changes (e.g. a Pdfe.Core-only PR). It still always
+      # it for library-only changes (e.g. a Excise.Core-only PR). It still always
       # runs on pushes to main as a post-merge integration safety net.
       #
       # Only the Linux job honours this conditional: macOS and Windows always
-      # run PdfEditor.Tests unconditionally (see those jobs below) because
+      # run Excise.App.Tests unconditionally (see those jobs below) because
       # #612's MacNativeMenuBuilder regression was itself platform-specific
       # and not a GUI-code-path change that this filter would have caught.
       - name: Detect changed areas
@@ -42,8 +42,8 @@ jobs:
         with:
           filters: |
             gui:
-              - 'PdfEditor/**'
-              - 'PdfEditor.Tests/**'
+              - 'Excise.App/**'
+              - 'Excise.App.Tests/**'
 
       - uses: actions/setup-dotnet@v5
         with:
@@ -139,11 +139,11 @@ jobs:
         run: ./scripts/check-gate-asymmetry.sh origin/${{ github.base_ref || 'main' }}
 
       - name: Build (Debug)
-        run: dotnet build pdfe.sln -c Debug
+        run: dotnet build excise.sln -c Debug
 
-      - name: Run Pdfe.Core.Tests with coverage
+      - name: Run Excise.Core.Tests with coverage
         run: |
-          dotnet test Pdfe.Core.Tests --no-build -c Debug \
+          dotnet test Excise.Core.Tests --no-build -c Debug \
             --collect:"XPlat Code Coverage" \
             --results-directory coverage/ \
             --logger "console;verbosity=normal" \
@@ -158,8 +158,8 @@ jobs:
       #
       # Reads the trx from the run above rather than executing the suite a second
       # time — a gate should not double the CI bill to count skips.
-      - name: Skip budget (Pdfe.Core.Tests)
-        run: ./scripts/check-skip-budget.sh Pdfe.Core.Tests/Pdfe.Core.Tests.csproj --trx coverage/core.trx
+      - name: Skip budget (Excise.Core.Tests)
+        run: ./scripts/check-skip-budget.sh Excise.Core.Tests/Excise.Core.Tests.csproj --trx coverage/core.trx
 
       - name: Install reportgenerator
         run: mkdir -p tools && dotnet tool install --tool-path ./tools dotnet-reportgenerator-globaltool
@@ -171,7 +171,7 @@ jobs:
             -targetdir:coverage/report \
             -reporttypes:Cobertura
 
-      - name: Coverage Gate (Pdfe.Core >= 93%)
+      - name: Coverage Gate (Excise.Core >= 93%)
         # Restored to the 93% ratchet (#603) — the branch had drifted to
         # 89.78% not because coverage was genuinely hard to reach, but
         # because six test files hard-coded a Linux-only system font path
@@ -179,7 +179,7 @@ jobs:
         # skipped on every macOS/Windows dev machine (a real instance of the
         # #619 "invisible coverage loss" pattern, just not one the skip-
         # budget gate happened to be watching). Fixed by bundling the fonts
-        # as embedded test resources (Pdfe.Core.Tests/Fixtures/Fonts/,
+        # as embedded test resources (Excise.Core.Tests/Fixtures/Fonts/,
         # NOTICE.md) instead of depending on system fonts, plus focused
         # tests for the previously-untested PdfIccProfile matrix/lut16 paths.
         # Measured 93.01% locally after the fix — keep this at exactly 93%,
@@ -187,23 +187,23 @@ jobs:
         #
         # reportgenerator's Cobertura output is named Cobertura.xml (not
         # coverage.cobertura.xml — that's coverlet's raw collector name).
-        run: scripts/check-coverage.sh coverage/report/Cobertura.xml 0.93 Pdfe.Core
+        run: scripts/check-coverage.sh coverage/report/Cobertura.xml 0.93 Excise.Core
 
-      - name: Run Pdfe.Cli.Tests
+      - name: Run Excise.Cli.Tests
         run: |
-          dotnet test Pdfe.Cli.Tests --no-build -c Debug \
+          dotnet test Excise.Cli.Tests --no-build -c Debug \
             --logger "console;verbosity=normal"
 
-      - name: Run Pdfe.Avalonia.Tests
+      - name: Run Excise.Avalonia.Tests
         # Lightweight, non-GUI tests for the viewer libraries (API gates, pure
         # logic). Deliberately separate from the heavy, flaky headless
-        # PdfEditor.Tests suite so viewer-library changes get reliable coverage
+        # Excise.App.Tests suite so viewer-library changes get reliable coverage
         # on every PR. (#363, #384)
         run: |
-          dotnet test Pdfe.Avalonia.Tests --no-build -c Debug \
+          dotnet test Excise.Avalonia.Tests --no-build -c Debug \
             --logger "console;verbosity=normal"
 
-      - name: Run Pdfe.Rendering.Tests (deterministic only)
+      - name: Run Excise.Rendering.Tests (deterministic only)
         run: |
           # The PR gate runs only environment-independent rendering tests
           # (root SkiaRenderer "renders without error", string-escape, Fonts
@@ -217,13 +217,13 @@ jobs:
           #   full parallel suite (pass in isolation).
           # - Visual: pixel-baseline comparisons that differ with CI's fonts /
           #   Skia/freetype build.
-          dotnet test Pdfe.Rendering.Tests --no-build -c Debug \
+          dotnet test Excise.Rendering.Tests --no-build -c Debug \
             --filter "FullyQualifiedName!~Corpus&FullyQualifiedName!~Differential&FullyQualifiedName!~Benchmark&FullyQualifiedName!~Visual" \
             --logger "console;verbosity=normal"
 
-      # Skip budget (#619, #655): Pdfe.Rendering.Tests has ~114
+      # Skip budget (#619, #655): Excise.Rendering.Tests has ~114
       # Assert.SkipWhen/SkipUnless call sites and had no gate watching them —
-      # only Pdfe.Core.Tests was covered. Can't reuse the "deterministic
+      # only Excise.Core.Tests was covered. Can't reuse the "deterministic
       # only" run's trx above: that step deliberately excludes Corpus/
       # Differential/Benchmark/Visual (see its own comment), which is most of
       # the skip population, so its trx would silently omit them from the
@@ -235,8 +235,8 @@ jobs:
       # gates on Assert.SkipUnless/SkipWhen and returns in seconds —
       # confirmed locally by hiding those tools from PATH and the untracked
       # corpus dirs, which is materially what this runner already is.
-      - name: Skip budget (Pdfe.Rendering.Tests)
-        run: ./scripts/check-skip-budget.sh Pdfe.Rendering.Tests/Pdfe.Rendering.Tests.csproj
+      - name: Skip budget (Excise.Rendering.Tests)
+        run: ./scripts/check-skip-budget.sh Excise.Rendering.Tests/Excise.Rendering.Tests.csproj
 
       - name: PDF 2.0 Renderer Conformance Gate
         run: scripts/run-pdf20-renderer-conformance.sh --run-tests
@@ -246,14 +246,14 @@ jobs:
         # visibility but don't fail the gate. Release candidates should run the
         # local long/visual suites on a known developer machine.
         run: |
-          dotnet test Pdfe.Rendering.Tests --no-build -c Debug \
+          dotnet test Excise.Rendering.Tests --no-build -c Debug \
             --filter "FullyQualifiedName~PerformanceBenchmark|FullyQualifiedName~MemoryBenchmark" \
             --logger "console;verbosity=normal" || true
 
       - name: Run Benchmark Suite Regression Gate
         # Deterministic synthetic benchmark gate for #344/#357. The no-oracle
         # mode keeps CI independent of MuPDF/Poppler/Ghostscript availability
-        # while still failing on pdfe parser/render/redaction regressions and
+        # while still failing on excise parser/render/redaction regressions and
         # verifying the benchmark report contract.
         run: |
           CONFIG=Debug scripts/run-benchmarks.sh suite \
@@ -263,12 +263,12 @@ jobs:
             --include-cli-render \
             --fail-on-regression
 
-      - name: Run Pdfe.Ocr.Tests
+      - name: Run Excise.Ocr.Tests
         run: |
-          dotnet test Pdfe.Ocr.Tests --no-build -c Debug \
+          dotnet test Excise.Ocr.Tests --no-build -c Debug \
             --logger "console;verbosity=normal" || true
 
-      - name: Run PdfEditor.Tests (headless with xvfb)
+      - name: Run Excise.App.Tests (headless with xvfb)
         # Skipped for library-only changes (see "Detect changed areas"); always
         # runs on main. Library changes that affect the GUI are caught by the
         # main run before any release is cut.
@@ -279,29 +279,29 @@ jobs:
         # process-wide native font manager (the GUI tests render with real Skia,
         # UseHeadlessDrawing=false). The suite is now serialized via
         # [assembly: CollectionBehavior(DisableTestParallelization = true)] in
-        # PdfEditor.Tests/AssemblyInfo.cs, which eliminates the concurrent native
+        # Excise.App.Tests/AssemblyInfo.cs, which eliminates the concurrent native
         # font access; the full suite (incl. *_MatchesBaseline) was validated
         # crash-free across repeated runs. The earlier *_MatchesBaseline
         # exclusion (a workaround) is therefore removed.
         if: steps.changes.outputs.gui == 'true' || github.ref == 'refs/heads/main'
         run: |
-          xvfb-run -a dotnet test PdfEditor.Tests --no-build -c Debug \
+          xvfb-run -a dotnet test Excise.App.Tests --no-build -c Debug \
             --logger "console;verbosity=normal" \
-            --logger "trx;LogFileName=pdfeditor.trx" \
-            --results-directory PdfEditor.Tests/TestResults \
+            --logger "trx;LogFileName=exciseditor.trx" \
+            --results-directory Excise.App.Tests/TestResults \
             --blame-hang-timeout 120000
 
-      # Skip budget (#619, #655): tests/skip-allowlist/PdfEditor.Tests.txt
+      # Skip budget (#619, #655): tests/skip-allowlist/Excise.App.Tests.txt
       # already existed (from earlier ad-hoc bookkeeping) but nothing ever
       # invoked check-skip-budget.sh against it — dead weight, not an
       # enforced gate. Same condition as the run above: this step reads that
-      # run's trx (PdfEditor.Tests is the full, unfiltered, serial ~17-minute
+      # run's trx (Excise.App.Tests is the full, unfiltered, serial ~17-minute
       # suite — reusing its trx instead of a second run is the same
-      # "don't double the CI bill" reasoning as the Pdfe.Core.Tests step),
+      # "don't double the CI bill" reasoning as the Excise.Core.Tests step),
       # so it must not run on a job where the suite above didn't.
-      - name: Skip budget (PdfEditor.Tests)
+      - name: Skip budget (Excise.App.Tests)
         if: steps.changes.outputs.gui == 'true' || github.ref == 'refs/heads/main'
-        run: ./scripts/check-skip-budget.sh PdfEditor.Tests/PdfEditor.Tests.csproj --trx PdfEditor.Tests/TestResults/pdfeditor.trx
+        run: ./scripts/check-skip-budget.sh Excise.App.Tests/Excise.App.Tests.csproj --trx Excise.App.Tests/TestResults/exciseditor.trx
 
       - name: Upload coverage report as artifact
         if: always()
@@ -321,7 +321,7 @@ jobs:
             **/*.trx
           retention-days: 7
 
-  # ── 2. macOS: T1 gate, always including PdfEditor.Tests unconditionally.
+  # ── 2. macOS: T1 gate, always including Excise.App.Tests unconditionally.
   #        #647 exists because #612 (a MacNativeMenuBuilder checkmark-state
   #        regression) shipped silently — no CI job ran on macOS at all, so
   #        the GUI-changed-files conditional the Linux job uses is
@@ -404,44 +404,44 @@ jobs:
         run: ./scripts/check-gate-asymmetry.sh origin/${{ github.base_ref || 'main' }}
 
       - name: Build (Debug)
-        run: dotnet build pdfe.sln -c Debug
+        run: dotnet build excise.sln -c Debug
 
-      - name: Run Pdfe.Core.Tests
+      - name: Run Excise.Core.Tests
         # No coverage collection here — the coverage gate is Linux-only
         # (one definition, avoids threshold drift between platforms); font
         # fixtures are embedded resources (#603) so this needs no system
         # font install to pass identically to Linux.
         run: |
-          dotnet test Pdfe.Core.Tests --no-build -c Debug \
+          dotnet test Excise.Core.Tests --no-build -c Debug \
             --logger "console;verbosity=normal"
 
-      - name: Run Pdfe.Cli.Tests
+      - name: Run Excise.Cli.Tests
         run: |
-          dotnet test Pdfe.Cli.Tests --no-build -c Debug \
+          dotnet test Excise.Cli.Tests --no-build -c Debug \
             --logger "console;verbosity=normal"
 
-      - name: Run Pdfe.Avalonia.Tests
+      - name: Run Excise.Avalonia.Tests
         run: |
-          dotnet test Pdfe.Avalonia.Tests --no-build -c Debug \
+          dotnet test Excise.Avalonia.Tests --no-build -c Debug \
             --logger "console;verbosity=normal"
 
-      - name: Run Pdfe.Rendering.Tests (deterministic only)
+      - name: Run Excise.Rendering.Tests (deterministic only)
         # Same filter rationale as the Linux job — see that job's comment.
         run: |
-          dotnet test Pdfe.Rendering.Tests --no-build -c Debug \
+          dotnet test Excise.Rendering.Tests --no-build -c Debug \
             --filter "FullyQualifiedName!~Corpus&FullyQualifiedName!~Differential&FullyQualifiedName!~Benchmark&FullyQualifiedName!~Visual" \
             --logger "console;verbosity=normal"
 
-      - name: Run PdfEditor.Tests
+      - name: Run Excise.App.Tests
         # Unconditional (see job comment) and no xvfb wrapper: Avalonia's
         # headless platform (UseHeadless, UseHeadlessDrawing=false in
-        # PdfEditor.Tests/UI/TestAppBuilder.cs) renders through real Skia
+        # Excise.App.Tests/UI/TestAppBuilder.cs) renders through real Skia
         # without needing an X server, so it needs no display-server shim on
         # macOS. *_MatchesBaseline visual-pixel tests are excluded: they're
         # calibrated to Linux CI's specific Skia/freetype/font build, exactly
         # as noted for the equivalent Linux exclusions elsewhere in this file.
         run: |
-          dotnet test PdfEditor.Tests --no-build -c Debug \
+          dotnet test Excise.App.Tests --no-build -c Debug \
             --filter "FullyQualifiedName!~MatchesBaseline" \
             --logger "console;verbosity=normal" \
             --blame-hang-timeout 120000
@@ -456,7 +456,7 @@ jobs:
             **/*.trx
           retention-days: 7
 
-  # ── 3. Windows: T1 gate, always including PdfEditor.Tests unconditionally
+  # ── 3. Windows: T1 gate, always including Excise.App.Tests unconditionally
   #        (same rationale as macOS above). Default shell is pwsh, matching
   #        release.yml's windows-exe job; bash scripts are invoked through
   #        Git Bash (always present on windows-latest) rather than ported to
@@ -540,37 +540,37 @@ jobs:
           & "C:\Program Files\Git\bin\bash.exe" ./scripts/check-gate-asymmetry.sh "origin/${{ github.base_ref || 'main' }}"
 
       - name: Build (Debug)
-        run: dotnet build pdfe.sln -c Debug
+        run: dotnet build excise.sln -c Debug
 
-      - name: Run Pdfe.Core.Tests
+      - name: Run Excise.Core.Tests
         # No coverage collection — see the macOS job's identical note.
         run: |
-          dotnet test Pdfe.Core.Tests --no-build -c Debug `
+          dotnet test Excise.Core.Tests --no-build -c Debug `
             --logger "console;verbosity=normal"
 
-      - name: Run Pdfe.Cli.Tests
+      - name: Run Excise.Cli.Tests
         run: |
-          dotnet test Pdfe.Cli.Tests --no-build -c Debug `
+          dotnet test Excise.Cli.Tests --no-build -c Debug `
             --logger "console;verbosity=normal"
 
-      - name: Run Pdfe.Avalonia.Tests
+      - name: Run Excise.Avalonia.Tests
         run: |
-          dotnet test Pdfe.Avalonia.Tests --no-build -c Debug `
+          dotnet test Excise.Avalonia.Tests --no-build -c Debug `
             --logger "console;verbosity=normal"
 
-      - name: Run Pdfe.Rendering.Tests (deterministic only)
+      - name: Run Excise.Rendering.Tests (deterministic only)
         # Same filter rationale as the Linux job — see that job's comment.
         run: |
-          dotnet test Pdfe.Rendering.Tests --no-build -c Debug `
+          dotnet test Excise.Rendering.Tests --no-build -c Debug `
             --filter "FullyQualifiedName!~Corpus&FullyQualifiedName!~Differential&FullyQualifiedName!~Benchmark&FullyQualifiedName!~Visual" `
             --logger "console;verbosity=normal"
 
-      - name: Run PdfEditor.Tests
+      - name: Run Excise.App.Tests
         # Unconditional, no display-server shim needed — same rationale as
         # the macOS job's identical step. *_MatchesBaseline excluded for the
         # same Linux-Skia-baseline reason.
         run: |
-          dotnet test PdfEditor.Tests --no-build -c Debug `
+          dotnet test Excise.App.Tests --no-build -c Debug `
             --filter "FullyQualifiedName!~MatchesBaseline" `
             --logger "console;verbosity=normal" `
             --blame-hang-timeout 120000

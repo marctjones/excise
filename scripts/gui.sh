@@ -92,10 +92,10 @@ if [ "$BUILD_FIRST" = true ]; then
     log_section "Building PDF Editor"
 
     if [ "$VERBOSE" = true ]; then
-        run_cmd "Building..." $DOTNET_CMD build PdfEditor/PdfEditor.csproj -c "$BUILD_CONFIG"
+        run_cmd "Building..." $DOTNET_CMD build Excise.App/Excise.App.csproj -c "$BUILD_CONFIG"
     else
         log_info "Building..."
-        $DOTNET_CMD build PdfEditor/PdfEditor.csproj -c "$BUILD_CONFIG" >> "$LOG_FILE" 2>&1
+        $DOTNET_CMD build Excise.App/Excise.App.csproj -c "$BUILD_CONFIG" >> "$LOG_FILE" 2>&1
         if [ $? -eq 0 ]; then
             log_success "Build successful"
         else
@@ -117,7 +117,7 @@ if [ "$WATCH_MODE" = true ]; then
     log ""
 
     # Run with watch
-    cd PdfEditor
+    cd Excise.App
     $DOTNET_CMD watch run -c "$BUILD_CONFIG" 2>&1 | tee -a "$LOG_FILE"
 else
     log_info "Starting application..."
@@ -125,9 +125,9 @@ else
 
     # Run normally
     if [ "$VERBOSE" = true ]; then
-        $DOTNET_CMD run --project PdfEditor -c "$BUILD_CONFIG" --no-build 2>&1 | tee -a "$LOG_FILE"
+        $DOTNET_CMD run --project Excise.App -c "$BUILD_CONFIG" --no-build 2>&1 | tee -a "$LOG_FILE"
     else
-        $DOTNET_CMD run --project PdfEditor -c "$BUILD_CONFIG" --no-build 2>&1 | tee -a "$LOG_FILE"
+        $DOTNET_CMD run --project Excise.App -c "$BUILD_CONFIG" --no-build 2>&1 | tee -a "$LOG_FILE"
     fi
 fi
 

@@ -57,7 +57,7 @@ HAVE_XVFB=0; command -v xvfb-run >/dev/null 2>&1 && HAVE_XVFB=1
 HAVE_SMOKE=0; [ -d "$ROOT/test-pdfs/smoke" ] && HAVE_SMOKE=1
 
 say "${B}=================================================${N}"
-say "${B} pdfe local visual-regression runner${N}"
+say "${B} excise local visual-regression runner${N}"
 say "${B}=================================================${N}"
 say "Started : $(date)"
 say "Config  : $CONFIG"
@@ -66,8 +66,8 @@ say "Deps    : mutool=$HAVE_MUTOOL pdftocairo=$HAVE_PDFTOCAIRO gs=$HAVE_GS xvfb-
 say ""
 
 if [ "$DO_BUILD" = "1" ]; then
-    say "${B}[build]${N} dotnet build pdfe.sln -c $CONFIG"
-    if dotnet build pdfe.sln -c "$CONFIG" > "$LOG_DIR/build.log" 2>&1; then
+    say "${B}[build]${N} dotnet build excise.sln -c $CONFIG"
+    if dotnet build excise.sln -c "$CONFIG" > "$LOG_DIR/build.log" 2>&1; then
         say "${G}[build] OK${N}"
     else
         say "${R}[build] FAILED${N} -> $LOG_DIR/build.log"
@@ -108,14 +108,14 @@ run_group() {
 }
 
 run_group "render-visual-baselines" \
-    dotnet test Pdfe.Rendering.Tests -c "$CONFIG" --no-build \
+    dotnet test Excise.Rendering.Tests -c "$CONFIG" --no-build \
         --filter "FullyQualifiedName~Visual" \
         --blame-hang-timeout "$PER_TEST_TIMEOUT_MS" \
         --logger "console;verbosity=normal"
 
 if [ "$HAVE_MUTOOL" = "1" ] && [ "$HAVE_SMOKE" = "1" ]; then
     run_group "render-differential-smoke" \
-        dotnet test Pdfe.Rendering.Tests -c "$CONFIG" --no-build \
+        dotnet test Excise.Rendering.Tests -c "$CONFIG" --no-build \
             --filter "FullyQualifiedName~DifferentialRenderingTests|FullyQualifiedName~TextExtractionDifferentialTests|FullyQualifiedName~RedactionRoundTripTests" \
             --blame-hang-timeout "$PER_TEST_TIMEOUT_MS" \
             --logger "console;verbosity=normal"
@@ -126,7 +126,7 @@ else
     say ""
 fi
 
-gui_cmd=(dotnet test PdfEditor.Tests -c "$CONFIG" --no-build
+gui_cmd=(dotnet test Excise.App.Tests -c "$CONFIG" --no-build
     --filter "FullyQualifiedName~MatchesBaseline"
     --blame-hang-timeout "$PER_TEST_TIMEOUT_MS"
     --logger "console;verbosity=normal")

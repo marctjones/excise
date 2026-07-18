@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Build the Windows installer for pdfe (Inno Setup .exe).
+    Build the Windows installer for excise (Inno Setup .exe).
 
 .DESCRIPTION
     Runs dotnet publish in self-contained single-file mode for win-x64,
@@ -42,7 +42,7 @@ if (-not $Version) {
     } catch { }
     if (-not $Version) { $Version = "0.0.0" }
 }
-Write-Host "▶ Building Windows installer for pdfe $Version"
+Write-Host "▶ Building Windows installer for excise $Version"
 
 # ── Locate Inno Setup compiler ────────────────────────────────────────
 # Order: PATH, Program Files, choco-installed location.
@@ -69,8 +69,8 @@ $publishDir = Join-Path $RepoRoot "artifacts\publish\win-x64\gui"
 if (Test-Path $publishDir) { Remove-Item -Recurse -Force $publishDir }
 New-Item -ItemType Directory -Force -Path $publishDir | Out-Null
 
-Write-Host "▶ dotnet publish PdfEditor → $publishDir"
-& dotnet publish "$RepoRoot\PdfEditor\PdfEditor.csproj" `
+Write-Host "▶ dotnet publish Excise.App → $publishDir"
+& dotnet publish "$RepoRoot\Excise.App\Excise.App.csproj" `
     -c Release `
     -r win-x64 `
     --self-contained true `
@@ -81,9 +81,9 @@ Write-Host "▶ dotnet publish PdfEditor → $publishDir"
 if ($LASTEXITCODE -ne 0) { Write-Error "dotnet publish (GUI) failed"; exit 1 }
 
 # Also publish the CLI, dropped alongside in the same install dir so
-# the optional "Add to PATH" task makes `pdfe.exe` available in cmd.
-Write-Host "▶ dotnet publish Pdfe.Cli → $publishDir"
-& dotnet publish "$RepoRoot\Pdfe.Cli\Pdfe.Cli.csproj" `
+# the optional "Add to PATH" task makes `excise.exe` available in cmd.
+Write-Host "▶ dotnet publish Excise.Cli → $publishDir"
+& dotnet publish "$RepoRoot\Excise.Cli\Excise.Cli.csproj" `
     -c Release `
     -r win-x64 `
     --self-contained true `
@@ -93,11 +93,11 @@ Write-Host "▶ dotnet publish Pdfe.Cli → $publishDir"
     -o $publishDir | Out-Host
 if ($LASTEXITCODE -ne 0) { Write-Error "dotnet publish (CLI) failed"; exit 1 }
 
-if (-not (Test-Path "$publishDir\PdfEditor.exe")) { Write-Error "PdfEditor.exe missing from publish output"; exit 1 }
-if (-not (Test-Path "$publishDir\pdfe.exe"))      { Write-Error "pdfe.exe missing from publish output"; exit 1 }
+if (-not (Test-Path "$publishDir\Excise.App.exe")) { Write-Error "Excise.App.exe missing from publish output"; exit 1 }
+if (-not (Test-Path "$publishDir\excise.exe"))      { Write-Error "excise.exe missing from publish output"; exit 1 }
 
 # ── Run Inno Setup ────────────────────────────────────────────────────
-$issPath = Join-Path $RepoRoot "packaging\windows\pdfe.iss"
+$issPath = Join-Path $RepoRoot "packaging\windows\excise.iss"
 $issOut  = Join-Path $RepoRoot "packaging\windows\Output"
 if (Test-Path $issOut) { Remove-Item -Recurse -Force $issOut }
 
@@ -110,7 +110,7 @@ if (Test-Path $issOut) { Remove-Item -Recurse -Force $issOut }
 if ($LASTEXITCODE -ne 0) { Write-Error "iscc failed"; exit 1 }
 
 # ── Copy result to dist\ + checksum ───────────────────────────────────
-$expected = "pdfe-$Version-win-x64-setup.exe"
+$expected = "excise-$Version-win-x64-setup.exe"
 $builtPath = Join-Path $issOut $expected
 if (-not (Test-Path $builtPath)) { Write-Error "Inno Setup output not found at $builtPath"; exit 1 }
 

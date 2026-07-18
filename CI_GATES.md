@@ -1,6 +1,6 @@
-# CI Gates for pdfe
+# CI Gates for excise
 
-This document describes the automated CI gates that protect the quality and performance of the pdfe project.
+This document describes the automated CI gates that protect the quality and performance of the excise project.
 
 ## Overview
 
@@ -8,7 +8,7 @@ Every push to `main` or `develop` and every pull request is subject to automated
 
 1. **Build Gate** - All projects must build with zero errors (warnings are tolerated)
 2. **Test Gates** - All unit and integration tests must pass
-3. **Coverage Gate** - Pdfe.Core must maintain the line-coverage threshold set in `.github/workflows/ci.yml`'s "Coverage Gate" step. Don't hard-code the percentage here — it ratchets over time (most recently tracked in #603) and this doc goes stale; that file does not.
+3. **Coverage Gate** - Excise.Core must maintain the line-coverage threshold set in `.github/workflows/ci.yml`'s "Coverage Gate" step. Don't hard-code the percentage here — it ratchets over time (most recently tracked in #603) and this doc goes stale; that file does not.
 4. **Performance Signal** - Performance benchmarks run for visibility; release candidates use local long-running gates
 
 ## CI Workflows
@@ -27,7 +27,7 @@ now a thin wrapper around `test-tier.sh t1`, not a second hand-maintained
 copy). See `CLAUDE.md`'s "Test Tiers" section for the full T0-T3 table.
 
 CI currently runs on Linux only (`ubuntu-latest`) — macOS- and Windows-specific
-code (`PdfEditor/Views/MacNativeMenuBuilder.cs`, `.app` bundle behavior,
+code (`Excise.App/Views/MacNativeMenuBuilder.cs`, `.app` bundle behavior,
 Windows installer/file associations) is untested in CI (#647, tracked and
 in progress). Check `.github/workflows/ci.yml`'s `jobs:` keys for the
 current, authoritative platform coverage rather than trusting this note.
@@ -61,9 +61,9 @@ scripts/run-pdf20-renderer-conformance.sh --include-base-image-inventory
 
 **Steps**:
 1. Build locally in Debug by default, or Release with `--release`
-2. Run Pdfe.Rendering.Tests with filter `FullyQualifiedName~Visual`
+2. Run Excise.Rendering.Tests with filter `FullyQualifiedName~Visual`
 3. Run differential smoke tests when `mutool` and `test-pdfs/smoke` are present
-4. Run PdfEditor.Tests baseline tests with filter `FullyQualifiedName~MatchesBaseline`
+4. Run Excise.App.Tests baseline tests with filter `FullyQualifiedName~MatchesBaseline`
 5. Collect PNG artifacts (`*-actual.png`, `*-diff.png`, `*-triptych.png`)
 6. Write logs and copied artifacts under `logs/visual-regression_<timestamp>/`
 
@@ -91,7 +91,7 @@ To check coverage for a specific package (substitute the threshold from
 
 ```bash
 # Run tests and collect coverage
-dotnet test Pdfe.Core.Tests --collect:"XPlat Code Coverage" --results-directory coverage/
+dotnet test Excise.Core.Tests --collect:"XPlat Code Coverage" --results-directory coverage/
 
 # Install reportgenerator if not already done
 dotnet tool install --tool-path ./tools dotnet-reportgenerator-globaltool
@@ -104,15 +104,15 @@ dotnet tool install --tool-path ./tools dotnet-reportgenerator-globaltool
 
 # Check coverage (reportgenerator's Cobertura output; note the filename is
 # Cobertura.xml, not coverlet's raw coverage.cobertura.xml)
-scripts/check-coverage.sh coverage/report/Cobertura.xml <threshold-from-ci.yml> Pdfe.Core
+scripts/check-coverage.sh coverage/report/Cobertura.xml <threshold-from-ci.yml> Excise.Core
 ```
 
 ## Coverage Gate
 
-The gate targets `Pdfe.Core` specifically (the core PDF parsing and
+The gate targets `Excise.Core` specifically (the core PDF parsing and
 redaction engine), not the whole solution, because:
 - It's the security-critical component.
-- Pdfe.Cli, PdfEditor, and other components have different coverage profiles.
+- Excise.Cli, Excise.App, and other components have different coverage profiles.
 - New features may add untested code; coverage is a project-level metric, not a per-component lock.
 
 The enforced threshold ratchets over time (most recently #603) — read it
@@ -121,7 +121,7 @@ a number in this doc; every prior version of this section has gone stale.
 
 ## Performance Benchmarks
 
-The `PerformanceBenchmarkTests` class in `Pdfe.Rendering.Tests` defines performance thresholds for rendering operations:
+The `PerformanceBenchmarkTests` class in `Excise.Rendering.Tests` defines performance thresholds for rendering operations:
 
 ```csharp
 [Theory]
@@ -143,10 +143,10 @@ If CI performance tests fail unexpectedly:
 
 ## Headless GUI Testing
 
-PdfEditor.Tests uses Avalonia UI and requires a display. On headless CI:
+Excise.App.Tests uses Avalonia UI and requires a display. On headless CI:
 
 ```bash
-xvfb-run -a dotnet test PdfEditor.Tests --no-build -c Debug
+xvfb-run -a dotnet test Excise.App.Tests --no-build -c Debug
 ```
 
 **Installation requirement for local testing**:
@@ -157,24 +157,24 @@ sudo apt-get install -y xvfb
 # Or use a virtual framebuffer directly
 Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
 export DISPLAY=:99
-dotnet test PdfEditor.Tests --no-build -c Debug
+dotnet test Excise.App.Tests --no-build -c Debug
 ```
 
 ## Test Project Summary
 
 Don't hard-code test counts here — they go stale immediately (this table
-previously said "~2400" for Pdfe.Core.Tests and "~600+" for PdfEditor.Tests;
+previously said "~2400" for Excise.Core.Tests and "~600+" for Excise.App.Tests;
 both are now off by hundreds of tests). Run the suites, or see
 `CLAUDE.md`'s "Test Infrastructure" section, which carries the same warning
 rather than a number that will be wrong by the time you read it.
 
 | Project | Purpose | CI Behavior |
 |---------|---------|-------------|
-| Pdfe.Core.Tests | Core PDF parsing, redaction | Full run, coverage collected |
-| Pdfe.Cli.Tests | CLI application | Full run |
-| Pdfe.Rendering.Tests | PDF rendering (Skia) | Deterministic filter only (Corpus/Differential/Benchmark/Visual excluded — see `ci.yml`'s comment for why) |
-| Pdfe.Ocr.Tests | OCR integration (Tesseract) | Non-blocking |
-| PdfEditor.Tests | GUI and integration tests | Headless via xvfb; serial by design (#363), skipped for library-only PRs, always run on `main` |
+| Excise.Core.Tests | Core PDF parsing, redaction | Full run, coverage collected |
+| Excise.Cli.Tests | CLI application | Full run |
+| Excise.Rendering.Tests | PDF rendering (Skia) | Deterministic filter only (Corpus/Differential/Benchmark/Visual excluded — see `ci.yml`'s comment for why) |
+| Excise.Ocr.Tests | OCR integration (Tesseract) | Non-blocking |
+| Excise.App.Tests | GUI and integration tests | Headless via xvfb; serial by design (#363), skipped for library-only PRs, always run on `main` |
 
 ## Failure Diagnosis
 
@@ -185,7 +185,7 @@ rather than a number that will be wrong by the time you read it.
 
 ### Coverage gate fails
 - Coverage dropped below the threshold set in `.github/workflows/ci.yml`'s "Coverage Gate" step
-- Check which files lost coverage with: `scripts/check-coverage.sh coverage/report/Cobertura.xml <threshold> Pdfe.Core`
+- Check which files lost coverage with: `scripts/check-coverage.sh coverage/report/Cobertura.xml <threshold> Excise.Core`
 - May need to add tests to new code or remove untested dead code
 
 ### Performance benchmarks fail
@@ -194,10 +194,10 @@ rather than a number that will be wrong by the time you read it.
 - Increase threshold if intentional (with justification)
 - Or optimize the code path to stay within threshold
 
-### GUI tests fail (PdfEditor.Tests)
+### GUI tests fail (Excise.App.Tests)
 - May be display/threading issues in headless environment
 - Check test output for "X11 connection refused" or "cannot open display"
-- Try running locally with: `xvfb-run -a dotnet test PdfEditor.Tests --no-build -c Debug`
+- Try running locally with: `xvfb-run -a dotnet test Excise.App.Tests --no-build -c Debug`
 
 ### Local visual regression fails
 - A rendering output changed (possible regression)
@@ -227,8 +227,8 @@ Parses a Cobertura XML coverage report and verifies line coverage meets a minimu
 ```bash
 scripts/check-coverage.sh <path-to-Cobertura.xml> <min-line-rate> [package-filter]
 
-# e.g. check Pdfe.Core against whatever ci.yml currently enforces
-scripts/check-coverage.sh coverage/report/Cobertura.xml 0.93 Pdfe.Core
+# e.g. check Excise.Core against whatever ci.yml currently enforces
+scripts/check-coverage.sh coverage/report/Cobertura.xml 0.93 Excise.Core
 ```
 
 Exit codes:

@@ -1,8 +1,8 @@
-# pdfe Automation API
+# excise Automation API
 
-pdfe automation is CLI-first. AppleScript, Shortcuts, PowerShell, Power
+excise automation is CLI-first. AppleScript, Shortcuts, PowerShell, Power
 Automate Desktop, Linux shells, GNOME launchers, CI jobs, and future OS-specific
-bridges should call the stable `pdfe` command contract rather than click the
+bridges should call the stable `excise` command contract rather than click the
 GUI.
 
 This document covers the v2.23 automation issues #561, #564, #565, #567, #568,
@@ -13,17 +13,17 @@ and #574.
 The semantic command registry is available through:
 
 ```bash
-pdfe commands --json
-pdfe commands render.page --json
+excise commands --json
+excise commands render.page --json
 ```
 
 The following CLI commands now have stable machine-readable output:
 
 ```bash
-pdfe info input.pdf --json
-pdfe text input.pdf --page 1 --json
-pdfe render input.pdf --output page-1.png --page 1 --dpi 150 --json
-pdfe batch workflow.json --json --progress --output report.json
+excise info input.pdf --json
+excise text input.pdf --page 1 --json
+excise render input.pdf --output page-1.png --page 1 --dpi 150 --json
+excise batch workflow.json --json --progress --output report.json
 ```
 
 `--password` is supported by `info`, `text`, `render`, `redact`, and batch
@@ -33,7 +33,7 @@ or progress events.
 
 ## Batch Workflow Schema
 
-Batch workflows use semantic command IDs from `pdfe commands --json`.
+Batch workflows use semantic command IDs from `excise commands --json`.
 Relative paths resolve against the workflow JSON file location.
 
 ```json
@@ -82,7 +82,7 @@ preferred for long-lived automation.
 
 ## Batch Report
 
-`pdfe batch --json` prints the final report to stdout. `--output report.json`
+`excise batch --json` prints the final report to stdout. `--output report.json`
 writes the same report to disk.
 
 ```json
@@ -153,7 +153,7 @@ Exit codes:
 
 ## Security Boundary
 
-The default automation surface is process-local CLI execution. pdfe does not
+The default automation surface is process-local CLI execution. excise does not
 start a background automation listener or unauthenticated GUI control service in
 v2.23.
 
@@ -169,14 +169,14 @@ Rules enforced by the batch contract:
   `allowDecrypt: true` is the explicit opt-out that writes an unprotected
   copy instead. (Before #643 this step failed closed with
   `DECRYPT_CONFIRMATION_REQUIRED` unless `allowDecrypt: true` was supplied,
-  because pdfe could not write encrypted output; that error code no longer
+  because excise could not write encrypted output; that error code no longer
   occurs.)
 - Document `/P` permissions are enforced (#642): `text.extract` and
   `render.page` require the document's copy/extract permission, `form.fillForm`
   requires the form fill-in permission, and `form.addField` requires the modify
   permission. A denied step fails with error code `PERMISSION_DENIED`
   (category `SECURITY`). Overrides are per step and explicit:
-  `ignorePermissions: true` proceeds anyway (for document owners — pdfe cannot
+  `ignorePermissions: true` proceeds anyway (for document owners — excise cannot
   yet verify owner passwords, #324), and `forAccessibility: true` on
   `text.extract` invokes the ISO 32000-2 bit 10 extract-for-accessibility
   carve-out. `redaction.apply` is deliberately not permission-gated.
@@ -199,11 +199,11 @@ token or equivalent capability.
 - macOS Shortcuts:
   `automation-scripts/macos/shortcuts-render-page.md`
 - Windows PowerShell module:
-  `automation-scripts/windows/Pdfe.Automation.psm1`
+  `automation-scripts/windows/Excise.Automation.psm1`
 - Power Automate Desktop:
   `automation-scripts/windows/power-automate-desktop.md`
 - Linux/GNOME shell wrapper:
-  `automation-scripts/linux/pdfe-automation.sh`
+  `automation-scripts/linux/excise-automation.sh`
 - GNOME/Wayland and D-Bus evaluation:
   `automation-scripts/linux/gnome-dbus-evaluation.md`
 
@@ -214,5 +214,5 @@ scripts/release-smoke.sh --quick --only=automation
 ```
 
 That delegates to `scripts/run-automation-smoke.sh`, runs the focused CLI tests,
-then executes a real `pdfe batch` workflow against `test-pdfs/smoke/irs-w9.pdf`
+then executes a real `excise batch` workflow against `test-pdfs/smoke/irs-w9.pdf`
 and records final JSON, progress NDJSON, and a report file.

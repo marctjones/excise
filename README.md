@@ -1,51 +1,55 @@
 <p align="center">
-  <img src="PdfEditor/Assets/pdfe_logo.svg" alt="PDFE Logo" width="128" height="128">
+  <img src="Excise.App/Assets/excise_logo.svg" alt="EXCISE Logo" width="128" height="128">
 </p>
 
-# pdfe
+# excise
 
 A cross-platform PDF editor and pure-.NET PDF framework, built with **C# + .NET 10 + Avalonia UI** and shipped with **true content-level redaction**, **page organization**, **flat typewriter text editing**, **AcroForm editing/authoring**, highlight/sticky-note annotation authoring, and **PDF 2.0 conformance**.
 
 [![Release](https://img.shields.io/github/v/release/marctjones/pdfe)](https://github.com/marctjones/pdfe/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-7000%2B%20passing-brightgreen)](Pdfe.Core.Tests)
-[![Build](https://img.shields.io/badge/build-0%20warnings-brightgreen)](Pdfe.Core)
+[![Tests](https://img.shields.io/badge/tests-7000%2B%20passing-brightgreen)](Excise.Core.Tests)
+[![Build](https://img.shields.io/badge/build-0%20warnings-brightgreen)](Excise.Core)
 
-> The current release line has completed the everyday PDF workbench gate:
+> The current release line has completed the two blocking tracks — **redaction
+> trust** (glyph-level removal plus metadata and structure-tree scrubbing,
+> verified against independent extractors and ink differentials, never excise
+> itself) and **document security** (read + write of AES-256/AES-128 encryption,
+> preserved across every mutating save) — and the everyday PDF workbench gate:
 > renderer and GUI display evidence are issue-linked, PDF 2.0 renderer
 > coverage is tracked by contract, and remaining advanced renderer/font work is
 > explicitly deferred rather than implied as shipped. The PDF stack is
-> pdfe-owned end-to-end — `Pdfe.Core` (parser/writer), `Pdfe.Rendering` (Skia),
-> and `Pdfe.Ocr` (system tesseract shell) — with no third-party PDF
+> excise-owned end-to-end — `Excise.Core` (parser/writer), `Excise.Rendering` (Skia),
+> and `Excise.Ocr` (system tesseract shell) — with no third-party PDF
 > dependencies. See [CHANGELOG.md](CHANGELOG.md) for full release notes.
 
 ## What's in the box
 
 ```
-Pdfe.Core/             Pure-.NET PDF parser, writer, content-stream library
-Pdfe.Rendering/        SkiaSharp-based renderer (text, images, paths, transparency)
-Pdfe.Avalonia/         Reusable Avalonia PDF viewer control (PdfViewerControl)
-Pdfe.Avalonia.Sample/  Minimal "open and view" sample app for the control
-Pdfe.Ocr/              OCR via the system `tesseract` CLI + differential-OCR auditor
-Pdfe.Cli/              `pdfe` command-line tool
-PdfEditor/             Cross-platform Avalonia desktop app (reference consumer)
+Excise.Core/             Pure-.NET PDF parser, writer, content-stream library
+Excise.Rendering/        SkiaSharp-based renderer (text, images, paths, transparency)
+Excise.Avalonia/         Reusable Avalonia PDF viewer control (PdfViewerControl)
+Excise.Avalonia.Sample/  Minimal "open and view" sample app for the control
+Excise.Ocr/              OCR via the system `tesseract` CLI + differential-OCR auditor
+Excise.Cli/              `excise` command-line tool
+Excise.App/             Cross-platform Avalonia desktop app (reference consumer)
 ```
 
-The libraries are usable independently — embed `Pdfe.Core` if you only need parsing and redaction, `Pdfe.Rendering` if you need page rasterization, or `Pdfe.Avalonia` to drop a PDF viewer into any Avalonia app.
+The libraries are usable independently — embed `Excise.Core` if you only need parsing and redaction, `Excise.Rendering` if you need page rasterization, or `Excise.Avalonia` to drop a PDF viewer into any Avalonia app.
 
 ### Reusable libraries (NuGet-packable)
 
-`Pdfe.Core`, `Pdfe.Rendering`, and `Pdfe.Avalonia` are packable as a dependency-light,
+`Excise.Core`, `Excise.Rendering`, and `Excise.Avalonia` are packable as a dependency-light,
 pure-managed, MIT-licensed stack — a niche the .NET/Avalonia ecosystem largely lacks (the
 alternatives are native PDFium or commercial SDKs):
 
-- **`Pdfe.Avalonia`** — `<pdf:PdfViewerControl Document="…" CurrentPage="…" ZoomLevel="…" />`.
-  Depends only on `Pdfe.Core` + `Pdfe.Rendering` + Avalonia + SkiaSharp. See
-  [`Pdfe.Avalonia/README.md`](Pdfe.Avalonia/README.md) and `Pdfe.Avalonia.Sample`.
-- **`Pdfe.Rendering`** — framework-neutral render API: `RenderPage(page, options[, ct]) → SKBitmap`
+- **`Excise.Avalonia`** — `<pdf:PdfViewerControl Document="…" CurrentPage="…" ZoomLevel="…" />`.
+  Depends only on `Excise.Core` + `Excise.Rendering` + Avalonia + SkiaSharp. See
+  [`Excise.Avalonia/README.md`](Excise.Avalonia/README.md) and `Excise.Avalonia.Sample`.
+- **`Excise.Rendering`** — framework-neutral render API: `RenderPage(page, options[, ct]) → SKBitmap`
   and `RenderPageToPng(…)`. Pair with any UI (WPF/MAUI/Blazor/Uno) or a headless service. See
-  [`Pdfe.Rendering/README.md`](Pdfe.Rendering/README.md).
-- **`Pdfe.Core`** — parser/model/redaction. See [`Pdfe.Core/README.md`](Pdfe.Core/README.md).
+  [`Excise.Rendering/README.md`](Excise.Rendering/README.md).
+- **`Excise.Core`** — parser/model/redaction. See [`Excise.Core/README.md`](Excise.Core/README.md).
 
 Build the packages locally with `dotnet pack -c Release` (they are also attached to releases).
 
@@ -93,22 +97,22 @@ Build the packages locally with `dotnet pack -c Release` (they are also attached
 - Page organization is supported in the desktop app and service layer: append/insert pages from another PDF, extract the current page or selected pages, remove current or selected pages, move current or selected pages earlier/later, and rotate pages. Page-owned streams/resources/annotations are cloned into copied pages; the app warns when document-level structures such as outlines, named destinations, or AcroForm metadata may need review.
 - The desktop app can highlight selected text and add sticky notes as real PDF annotations. `PdfAnnotationAuthoring` extension methods expose the same common review workflows in code: `AddTextAnnotation` for sticky notes and `AddHighlightAnnotation` for text markup highlights.
 
-### CLI (`pdfe`)
+### CLI (`excise`)
 ```bash
-pdfe info              <file>           [--json] [--password P]
-pdfe text              <file>           [--json] [--password P]
-pdfe letters           <file>
-pdfe render            <file>           -o out.png  [--page N] [--dpi N] [--password P] [--json]
-pdfe commands          [id]             [--json]
-pdfe batch             <workflow.json>  [--json] [--progress] [--output report.json]
-pdfe draw              <file>                                 # graphics-API demo
-pdfe redact            <input> <output> <text>  [--case-sensitive]
-pdfe fill-form         <input> <output> --field Name=Value [...] [--flatten]
-pdfe add-field         <input> <output> --type T --name N --page P --rect "l,b,r,t" [--value v] [--option o]...
-pdfe autodetect-fields <input> [output] [--apply]
-pdfe audit             <file>           [--deep] [--json]
-pdfe ocr               <file>
-pdfe demo
+excise info              <file>           [--json] [--password P]
+excise text              <file>           [--json] [--password P]
+excise letters           <file>
+excise render            <file>           -o out.png  [--page N] [--dpi N] [--password P] [--json]
+excise commands          [id]             [--json]
+excise batch             <workflow.json>  [--json] [--progress] [--output report.json]
+excise draw              <file>                                 # graphics-API demo
+excise redact            <input> <output> <text>  [--case-sensitive]
+excise fill-form         <input> <output> --field Name=Value [...] [--flatten]
+excise add-field         <input> <output> --type T --name N --page P --rect "l,b,r,t" [--value v] [--option o]...
+excise autodetect-fields <input> [output] [--apply]
+excise audit             <file>           [--deep] [--json]
+excise ocr               <file>
+excise demo
 ```
 
 `audit --deep` runs differential OCR — renders the page twice (once with overlays stripped) and diffs the OCR text — to catch words hidden inside rasterized images by an opaque overlay (the rasterized analogue of a black-box redaction).
@@ -121,7 +125,7 @@ not enable a background GUI automation listener.
 ### Renderer coverage
 The Skia renderer has been smoke-tested against a real-world corpus and is validated with a MuPDF-first differential harness. When MuPDF disagrees, the test suite escalates to Poppler and Ghostscript for second and third opinions. Known divergences are issue-linked allowlist entries; new unclassified divergences fail the differential slice.
 
-For release-quality rendering work, pdfe also has an exploratory all-pages
+For release-quality rendering work, excise also has an exploratory all-pages
 corpus scanner for the pdf.js corpus. The report separates visual fidelity
 results (`PASS`, `PASS_ONE`, `DIFF`) from semantic release-gate results
 (`resultStatus`, `resultCategory`, and `resultReason`) and bounded non-fidelity
@@ -142,11 +146,11 @@ exceptions.
 | Pragmatic Bookshelf books (XEP) | 455-page multi-font CFF subsets, ZapfDingbats |
 | Multilingual CJK | zh-Hans, zh-Hant, ja, ko via Noto Serif CJK |
 
-See [`Pdfe.Rendering.Tests/Visual/`](Pdfe.Rendering.Tests/Visual) and [`PdfEditor.Tests/UI/baselines/`](PdfEditor.Tests/UI/baselines) for the regression baselines.
+See [`Excise.Rendering.Tests/Visual/`](Excise.Rendering.Tests/Visual) and [`Excise.App.Tests/UI/baselines/`](Excise.App.Tests/UI/baselines) for the regression baselines.
 
 ### Release scope and known limitations
 
-pdfe targets an everyday PDF workbench: open, read, search/copy, annotate,
+excise targets an everyday PDF workbench: open, read, search/copy, annotate,
 organize pages, fill/flatten forms, add flat typewriter text, audit hidden
 content, and perform true content-level redaction. It is not an Acrobat Pro
 replacement for prepress, color-managed print production, JavaScript workflows,
@@ -156,7 +160,7 @@ Current release-quality limitations are tracked in GitHub Issues and surfaced in
 release notes:
 
 - **Printing — intentionally not implemented (#621, closed as won't-fix).**
-  Avalonia (pdfe's UI framework) ships no print API at all, so shipping this
+  Avalonia (excise's UI framework) ships no print API at all, so shipping this
   would mean building and maintaining three separate platform pipelines from
   scratch (CUPS shell-out on macOS/Linux, `System.Drawing.Printing` on
   Windows) plus a print-options dialog, for a workflow most users reach a
@@ -166,7 +170,7 @@ release notes:
   that image from your OS's own viewer, which already has a real, tested
   print pipeline. Revisit only if real user demand shows up — see #621 for
   the full reasoning.
-- **Digital signatures** — pdfe checks ByteRange structure and verifies the
+- **Digital signatures** — excise checks ByteRange structure and verifies the
   detached CMS signature/digest over the signed bytes, but does not evaluate the
   signer certificate chain against the OS trust store yet (#466).
 - **Rendering fidelity** — the current release dashboard classifies every
@@ -175,7 +179,7 @@ release notes:
   accepted limitations rather than unclassified `DIFF` blockers (#491).
   Niche color/shading residuals and deeper font-model work remain tracked for
   future releases (#512, #513, #514, #515, #532).
-- **Color-managed print preview** — pdfe renders DeviceCMYK through a
+- **Color-managed print preview** — excise renders DeviceCMYK through a
   deterministic screen-preview conversion, resolves `/DefaultCMYK` and ICCBased
   CMYK through managed ICC preview support, and uses document output-intent data
   in the CMYK transparency-preview paths covered by the release corpus. It is
@@ -186,10 +190,10 @@ release notes:
   geometry, and intentionally malformed xref/stream structures are classified by
   the corpus scanner rather than treated as everyday-release blockers.
 - **Text-extraction parity** — redaction completeness is bounded by extraction
-  coverage: `RedactText` cannot remove what pdfe cannot read, and reports
+  coverage: `RedactText` cannot remove what excise cannot read, and reports
   success anyway (#637). Measured against `mutool` across 332 pages / 12
   fixtures (10 real-world government PDFs plus checked-in edge-case fixtures
-  covering CJK/Type0 text and scrambled glyph order), pdfe currently extracts
+  covering CJK/Type0 text and scrambled glyph order), excise currently extracts
   **102.6%** of mutool's Unicode letter/digit count in aggregate — counted
   per-script, not ASCII-folded, so CJK/accented-text loss would show up here
   rather than cancel out on both sides. Both blind spots #645 was written to
@@ -241,9 +245,9 @@ Download the latest from [GitHub Releases](https://github.com/marctjones/pdfe/re
 
 ```bash
 git clone https://github.com/marctjones/pdfe.git
-cd pdfe
+cd excise
 dotnet restore
-dotnet run --project PdfEditor
+dotnet run --project Excise.App
 ```
 
 `dotnet 10.0` SDK required. No additional native dependencies — the renderer is pure SkiaSharp, the OCR auditor shells out to the system `tesseract` binary if installed (skipped gracefully if not).
@@ -266,7 +270,7 @@ Multiple areas across multiple pages can be marked and applied as a single batch
 1. Click **✎ Type** in the toolbar.
 2. Click or drag on the page to place a text box.
 3. Type, move, resize, or delete the pending box before saving.
-4. Save to flatten the text into the PDF page content. When the open file is still the original, pdfe routes the save through **Save a Copy** so the original is preserved.
+4. Save to flatten the text into the PDF page content. When the open file is still the original, excise routes the save through **Save a Copy** so the original is preserved.
 
 ### Form fill (existing AcroForm)
 
@@ -284,13 +288,13 @@ Multiple areas across multiple pages can be marked and applied as a single batch
 
 ### Authoring PDFs from scratch (high-level)
 
-`Pdfe.Core.Authoring.PdfDocumentBuilder` is a friendly, flow-layout writer that
+`Excise.Core.Authoring.PdfDocumentBuilder` is a friendly, flow-layout writer that
 handles word-wrap, pagination, and field placement so you never touch raw
 coordinates. It sits on top of the low-level `PdfGraphics` / `AcroFormAuthoring`
 API (drop down to those any time via `.Custom(...)` or `.Build()`).
 
 ```csharp
-using Pdfe.Core.Authoring;
+using Excise.Core.Authoring;
 
 byte[] pdf = PdfDocumentBuilder.Create()           // US Letter, 1-inch margins
     .Heading("Membership Application")
@@ -318,8 +322,8 @@ alignment); page size/margins via `PageSize` and `PageMargins`. See issue #383.
 
 `Tools → Reveal Hidden Text` finds text that's been visually hidden by overlays:
 
-- **Yellow boxes** — structural detections from `Pdfe.Core.Text.Segmentation.HiddenTextDetector` (text covered by later filled rectangles, the classic bad-redaction pattern)
-- **Orange boxes** — differential-OCR recoveries (`Pdfe.Ocr.DifferentialOcrAuditor`) for text hidden inside rasterized images by an opaque overlay
+- **Yellow boxes** — structural detections from `Excise.Core.Text.Segmentation.HiddenTextDetector` (text covered by later filled rectangles, the classic bad-redaction pattern)
+- **Orange boxes** — differential-OCR recoveries (`Excise.Ocr.DifferentialOcrAuditor`) for text hidden inside rasterized images by an opaque overlay
 
 Useful for auditing third-party redactions before relying on them.
 
@@ -340,26 +344,26 @@ Press **F1** to view all in-app.
 
 ```bash
 # Render page 1 of a PDF at 200 DPI
-pdfe render report.pdf -o report-p1.png --page 1 --dpi 200
+excise render report.pdf -o report-p1.png --page 1 --dpi 200
 
 # Glyph-level redact a phrase
-pdfe redact report.pdf report-redacted.pdf "ACCOUNT 9876"
+excise redact report.pdf report-redacted.pdf "ACCOUNT 9876"
 
 # Audit a "redacted" PDF for hidden text leftovers — both structural and rasterized
-pdfe audit purportedly-redacted.pdf --deep --json
+excise audit purportedly-redacted.pdf --deep --json
 
 # Fill an AcroForm and flatten so the result is no longer interactive
-pdfe fill-form blank-w9.pdf w9-filled.pdf --field Name=Acme --field EIN=12-3456789 --flatten
+excise fill-form blank-w9.pdf w9-filled.pdf --field Name=Acme --field EIN=12-3456789 --flatten
 
 # Add a text field to an existing PDF
-pdfe add-field invoice.pdf invoice-with-form.pdf \
+excise add-field invoice.pdf invoice-with-form.pdf \
   --type Text --name CustomerNote --page 1 --rect "72,200,540,260"
 
 # Auto-detect form fields on a Word-exported PDF and apply them
-pdfe autodetect-fields exported-from-word.pdf form-ready.pdf --apply
+excise autodetect-fields exported-from-word.pdf form-ready.pdf --apply
 
 # Extract text from a scanned PDF (requires system tesseract)
-pdfe ocr scan.pdf
+excise ocr scan.pdf
 ```
 
 ## Technology stack
@@ -369,10 +373,10 @@ pdfe ocr scan.pdf
 - **Avalonia UI 12.x** (MIT) — Cross-platform XAML UI
 - **ReactiveUI** (MIT) — MVVM framework
 
-### Pdfe libraries (this repo)
-- **Pdfe.Core** — Pure-.NET PDF parser, writer, content streams, glyph-level redaction, text extraction with letter positions, hidden-text detection, AcroForm read/fill/flatten/author, OCG + structure tree (read-only), embedded files (read + scrub), page labels, named destinations, document authoring
-- **Pdfe.Rendering** — SkiaSharp renderer with embedded TrueType + raw-CFF/Type1C support, Type0/CID composite fonts, /Differences-aware encoding, image XObjects (DCT/Flate/JPX/CCITTFax), inline images, transparency, clipping paths, color spaces (DeviceRGB/CMYK/Gray, ICCBased, Indexed, CalRGB, Lab)
-- **Pdfe.Ocr** — Wrapper around the system `tesseract` CLI + a differential-OCR auditor
+### Excise libraries (this repo)
+- **Excise.Core** — Pure-.NET PDF parser, writer, content streams, glyph-level redaction, text extraction with letter positions, hidden-text detection, AcroForm read/fill/flatten/author, OCG + structure tree (read-only), embedded files (read + scrub), page labels, named destinations, document authoring
+- **Excise.Rendering** — SkiaSharp renderer with embedded TrueType + raw-CFF/Type1C support, Type0/CID composite fonts, /Differences-aware encoding, image XObjects (DCT/Flate/JPX/CCITTFax), inline images, transparency, clipping paths, color spaces (DeviceRGB/CMYK/Gray, ICCBased, Indexed, CalRGB, Lab)
+- **Excise.Ocr** — Wrapper around the system `tesseract` CLI + a differential-OCR auditor
 
 ### Permissive third-party deps
 - **SkiaSharp 3.119.x** (MIT) — 2D graphics
@@ -386,8 +390,8 @@ No copyleft obligations. No PDFium / PDFsharp / PdfPig / Tesseract.NET — all d
 ## Project structure
 
 ```
-pdfe/
-├── Pdfe.Core/                       # PDF parser, writer, content streams, redaction, AcroForm
+excise/
+├── Excise.Core/                       # PDF parser, writer, content streams, redaction, AcroForm
 │   ├── Parsing/                     # Lexer, parser, xref
 │   ├── Document/                    # PdfDocument, PdfPage, AcroForm (parse/edit/flatten/author/autodetect),
 │   │                                # OCG, structure tree, embedded files, page labels
@@ -398,31 +402,31 @@ pdfe/
 │   ├── Graphics/                    # PdfGraphics API (paths, text, images)
 │   └── Writing/                     # Save, incremental update
 │
-├── Pdfe.Rendering/                  # Skia-based renderer
+├── Excise.Rendering/                  # Skia-based renderer
 │   ├── SkiaRenderer.cs              # Content-stream → SKBitmap
 │   ├── Fonts/                       # OpenType wrapper, AGL
 │   └── ColorSpaces/                 # DeviceRGB/CMYK/Gray, ICCBased, Indexed, CalRGB
 │
-├── Pdfe.Ocr/                        # OCR shim
+├── Excise.Ocr/                        # OCR shim
 │   ├── PdfOcrService.cs             # tesseract CLI invocation
 │   └── DifferentialOcrAuditor.cs    # render-twice-and-diff hidden-text finder
 │
-├── Pdfe.Cli/                        # `pdfe` CLI
+├── Excise.Cli/                        # `excise` CLI
 │   └── Program.cs                   # 12 subcommands
 │
-├── PdfEditor/                       # Desktop GUI
+├── Excise.App/                       # Desktop GUI
 │   ├── Controls/PdfViewerControl    # Reusable Avalonia PDF viewer (annotations, links, form/typewriter overlays)
 │   ├── Models/                      # HiddenTextHighlight, etc.
-│   ├── Services/                    # App services on Pdfe.Core / Pdfe.Rendering
+│   ├── Services/                    # App services on Excise.Core / Excise.Rendering
 │   ├── ViewModels/
 │   └── Views/
 │
-├── Pdfe.Core.Tests/                 # ~2880 tests
-├── Pdfe.Rendering.Tests/            # ~287 tests, including visual baselines + corpus
-├── Pdfe.Avalonia.Tests/             # public API and viewer utility tests
-├── Pdfe.Cli.Tests/                  # 22 tests
-├── Pdfe.Ocr.Tests/                  # 41 tests (some require tesseract)
-├── PdfEditor.Tests/                 # ~775 tests, including headless GUI
+├── Excise.Core.Tests/                 # ~2880 tests
+├── Excise.Rendering.Tests/            # ~287 tests, including visual baselines + corpus
+├── Excise.Avalonia.Tests/             # public API and viewer utility tests
+├── Excise.Cli.Tests/                  # 22 tests
+├── Excise.Ocr.Tests/                  # 41 tests (some require tesseract)
+├── Excise.App.Tests/                 # ~775 tests, including headless GUI
 └── test-pdfs/                       # Smoke corpus + sample PDFs
 ```
 
@@ -433,8 +437,8 @@ pdfe/
 dotnet test
 
 # Single project
-dotnet test Pdfe.Rendering.Tests
-dotnet test Pdfe.Core.Tests --filter "Redaction"
+dotnet test Excise.Rendering.Tests
+dotnet test Excise.Core.Tests --filter "Redaction"
 
 # With detailed output
 dotnet test --logger "console;verbosity=detailed"
@@ -456,14 +460,14 @@ The PDF Association corpora are downloaded on demand with `scripts/download-test
 
 ```bash
 # Linux
-dotnet publish PdfEditor -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true
+dotnet publish Excise.App -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true
 
 # Windows
-dotnet publish PdfEditor -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
+dotnet publish Excise.App -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
 
 # macOS Intel / Apple Silicon
-dotnet publish PdfEditor -c Release -r osx-x64    --self-contained true -p:PublishSingleFile=true
-dotnet publish PdfEditor -c Release -r osx-arm64  --self-contained true -p:PublishSingleFile=true
+dotnet publish Excise.App -c Release -r osx-x64    --self-contained true -p:PublishSingleFile=true
+dotnet publish Excise.App -c Release -r osx-arm64  --self-contained true -p:PublishSingleFile=true
 ```
 
 Published binaries land in `bin/Release/net10.0/<runtime>/publish/`.
@@ -474,7 +478,7 @@ GUI scripting service included, add `-p:EnableScripting=true` to the publish
 command.
 
 Repo-local `tessdata/*.traineddata` files are also excluded from app packages by
-default; pdfe uses the system `tesseract` installation when differential OCR is
+default; excise uses the system `tesseract` installation when differential OCR is
 requested. To bundle local language data for an offline/developer package, add
 `-p:IncludeTessdataInApp=true`.
 
@@ -482,15 +486,15 @@ requested. To bundle local language data for an offline/developer package, add
 
 ```bash
 # Ubuntu / Debian .deb (requires dpkg-deb; preinstalled on Ubuntu)
-scripts/build-deb.sh                          # → dist/pdfe_<version>_amd64.deb
+scripts/build-deb.sh                          # → dist/excise_<version>_amd64.deb
 scripts/build-deb.sh --arch arm64             # arm64 variant
 scripts/build-deb.sh --version 2.1.0-rc8      # explicit version
 
 # Windows .exe (requires Inno Setup 6: choco install innosetup)
-pwsh scripts/build-windows-installer.ps1      # → dist/pdfe-<version>-win-x64-setup.exe
+pwsh scripts/build-windows-installer.ps1      # → dist/excise-<version>-win-x64-setup.exe
 
 # macOS .app bundle (Apple Silicon by default; Intel via --rid osx-x64)
-scripts/build-macos-app.sh --version <version>            # → dist/pdfe-<version>-macos-arm64.zip
+scripts/build-macos-app.sh --version <version>            # → dist/excise-<version>-macos-arm64.zip
 scripts/build-macos-app.sh --version <version> --rid osx-x64
 ```
 
@@ -511,7 +515,7 @@ Use `scripts/run-aot-smoke.sh --gui-smoke` on an interactive macOS runner when
 validating the AOT app against packaged GUI launch/open/render evidence. ReadyToRun
 remains the fallback artifact until AOT passes the same release gates.
 
-### Using pdfe as a PDF reader on macOS
+### Using excise as a PDF reader on macOS
 
 The `.app` bundle declares itself a handler for PDF files (`CFBundleDocumentTypes`)
 and opens documents passed by Finder, the Dock, or `open -a` — so it can be used
@@ -520,27 +524,27 @@ as a regular reader, not just launched empty.
 ```bash
 # First launch: the build is not notarized, so clear the Gatekeeper quarantine
 # (one time, see issue #421 for signing/notarization tracking):
-xattr -dr com.apple.quarantine /Applications/pdfe.app
+xattr -dr com.apple.quarantine /Applications/excise.app
 
-# Open a PDF in pdfe:
-open -a pdfe ~/Documents/example.pdf
+# Open a PDF in excise:
+open -a excise ~/Documents/example.pdf
 ```
 
-To make pdfe the **default** PDF app: select any `.pdf` in Finder → **⌘I** (Get
-Info) → **Open with** → choose *pdfe* → **Change All…**. Double-clicking PDFs
-then opens them in pdfe.
+To make excise the **default** PDF app: select any `.pdf` in Finder → **⌘I** (Get
+Info) → **Open with** → choose *excise* → **Change All…**. Double-clicking PDFs
+then opens them in excise.
 
-### Using pdfe as a PDF reader on Windows
+### Using excise as a PDF reader on Windows
 
-The Windows installer registers pdfe as a PDF-capable app in the per-user
+The Windows installer registers excise as a PDF-capable app in the per-user
 `Default apps` / `Open with` registry metadata. During install, select
-**Associate pdfe with .pdf files** to add the `pdfe.pdf` ProgID. Windows 10/11
+**Associate excise with .pdf files** to add the `excise.pdf` ProgID. Windows 10/11
 still require the user to choose the default handler: Settings → Apps →
-Default apps → choose defaults by file type → `.pdf` → **pdfe**.
+Default apps → choose defaults by file type → `.pdf` → **excise**.
 
 The portable `.zip` does not write registry entries. For portable installs, use
 Explorer → right-click a PDF → **Open with** → **Choose another app** → browse to
-`PdfEditor.exe`; selected PDFs are passed to pdfe and opened on launch.
+`Excise.App.exe`; selected PDFs are passed to excise and opened on launch.
 
 ### Release automation
 
@@ -548,8 +552,8 @@ Explorer → right-click a PDF → **Open with** → **Choose another app** → 
 to a GitHub Release whenever a `v*` tag is pushed (or a release is published
 manually):
 
-1. `linux-deb` job (ubuntu-latest) → `pdfe_<version>_amd64.deb` + portable `.tar.gz`
-2. `windows-exe` job (windows-latest) → `pdfe-<version>-win-x64-setup.exe` + portable `.zip`
+1. `linux-deb` job (ubuntu-latest) → `excise_<version>_amd64.deb` + portable `.tar.gz`
+2. `windows-exe` job (windows-latest) → `excise-<version>-win-x64-setup.exe` + portable `.zip`
 3. `macos-app` job (macos-latest) → arm64 `.app` bundle `.zip`
 4. `publish` job uploads all artifacts with `.sha256` files; tags containing `-rc`/`-beta`/`-alpha` are flagged as pre-releases.
 
@@ -570,14 +574,14 @@ and writes logs under `logs/release-smoke_*`.
 
 ```bash
 # Cut a new release
-git tag -a v2.27.1 -m "pdfe v2.27.1"
+git tag -a v2.27.1 -m "excise v2.27.1"
 git push origin v2.27.1          # workflow runs, attaches release artifacts
 # Or via the GitHub UI: Releases → Draft a new release → choose tag
 ```
 
 ## Versioning & API stability
 
-The publishable libraries — **`Pdfe.Core`**, **`Pdfe.Rendering`**, **`Pdfe.Avalonia`** — follow [Semantic Versioning](https://semver.org/) on their **public** API:
+The publishable libraries — **`Excise.Core`**, **`Excise.Rendering`**, **`Excise.Avalonia`** — follow [Semantic Versioning](https://semver.org/) on their **public** API:
 
 - **MAJOR** — a breaking change to a public type/member.
 - **MINOR** — backward-compatible additions (new types/members/overloads).
@@ -586,8 +590,8 @@ The publishable libraries — **`Pdfe.Core`**, **`Pdfe.Rendering`**, **`Pdfe.Ava
 What counts as the supported public contract:
 
 - Public types and members of the three libraries are the contract. Anything marked `internal` (or excluded from the public surface) may change in any release.
-- The high-level authoring surface — `Pdfe.Core.Authoring.*` (`PdfDocumentBuilder`, `TextStyle`, `PageSize`, `PageMargins`, `FontFamily`, `LayoutContext`) — is the recommended, stable entry point for *writing* PDFs. The low-level `PdfGraphics` / `AcroFormAuthoring` API remains available as an escape hatch.
-- The public API is **gated in CI**: `PublicApiApprovalTests` snapshots the full public surface of `Pdfe.Core` against a committed baseline (`Pdfe.Core.Tests/PublicApi/Pdfe.Core.approved.txt`). Any addition, removal, or signature change fails the build until the baseline is intentionally regenerated (`APPROVE_PUBLIC_API=1`) and committed — so every public-API change is a deliberate, reviewable SemVer decision.
+- The high-level authoring surface — `Excise.Core.Authoring.*` (`PdfDocumentBuilder`, `TextStyle`, `PageSize`, `PageMargins`, `FontFamily`, `LayoutContext`) — is the recommended, stable entry point for *writing* PDFs. The low-level `PdfGraphics` / `AcroFormAuthoring` API remains available as an escape hatch.
+- The public API is **gated in CI**: `PublicApiApprovalTests` snapshots the full public surface of `Excise.Core` against a committed baseline (`Excise.Core.Tests/PublicApi/Excise.Core.approved.txt`). Any addition, removal, or signature change fails the build until the baseline is intentionally regenerated (`APPROVE_PUBLIC_API=1`) and committed — so every public-API change is a deliberate, reviewable SemVer decision.
 
 **Distribution:** packages ship as `.nupkg` + `.snupkg` (symbols) with [SourceLink](https://github.com/dotnet/sourcelink) for step-into debugging, attached to each [GitHub Release](https://github.com/marctjones/pdfe/releases). They are **not published to nuget.org** — consume them via a local/private feed or a project reference. See issues #383 (writer DX) and #384 (viewer/render DX).
 
@@ -604,16 +608,21 @@ MIT License. See [LICENSES.md](LICENSES.md) for the complete dependency-license 
 
 ## Contributing
 
-Contributions welcome. The biggest open areas tracked in GitHub Issues:
+Contributions welcome. The redaction-trust and document-security tracks are
+complete and released (glyph-level redaction with metadata/structure-tree
+scrubbing; read + write of AES-256/AES-128 encryption with encryption preserved
+across every mutating save). The biggest remaining open areas tracked in GitHub
+Issues, roughly in roadmap order:
 
-- In-place text editing (change text inside a paragraph with reflow)
-- Annotation authoring (highlight / underline / sticky-note / freehand drawing)
-- E-signature workflow (click-to-sign + multi-party + audit trail)
-- PDF encryption round-tripping (reading and writing AES-256/AES-128 encrypted PDFs landed with #639-#642, and #643 made every mutating save preserve the source's encryption by default — same algorithm and permissions, RC4 sources upgraded to AES-256; the multi-reader interop gate is #644)
-- PDF → DOCX conversion
-- PDF compare / diff
-- Field-properties dialog for AcroForm authoring (rename, /Q alignment, JS actions, validation)
-- Radio-button groups (parent + /Kids on different /AS names)
-- Tab-order management
+- Renderer font-model completeness — full CMap/CID coverage, Type 3 charprocs,
+  encoding/metrics residuals (#512–#515, #532, #584); this is redaction
+  security, not display polish (excise cannot redact what it cannot read)
+- Performance and Native AOT release lane (#590–#601)
+- Interop — RTL/bidi, accessibility/PDF/UA exposure, FDF/XFDF annotation
+  round-trip, self-signed signing (#623, #626, #631, #632)
+- Edited-output fidelity against reference renderers (#605, #610, #611)
+- In-place text editing with paragraph reflow, PDF → DOCX, PDF compare / diff
+- Signing/notarization and auto-update so security fixes reach installed users
+  (#629, #630)
 
 Smaller-scope improvements (additional operator coverage, performance, accessibility, CFF charstring rewriting) are good first issues.

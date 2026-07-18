@@ -79,7 +79,7 @@ cd "$PROJECT_ROOT"
 
 # Build the test project first
 echo "Building test project..."
-if ! dotnet build Pdfe.Rendering.Tests/Pdfe.Rendering.Tests.csproj -c Debug > /dev/null 2>&1; then
+if ! dotnet build Excise.Rendering.Tests/Excise.Rendering.Tests.csproj -c Debug > /dev/null 2>&1; then
     echo "ERROR: Build failed"
     exit 1
 fi
@@ -105,7 +105,7 @@ echo ""
     echo "   (8 real-world US government PDFs, ~10 seconds)"
     echo ""
 
-    if dotnet test Pdfe.Rendering.Tests \
+    if dotnet test Excise.Rendering.Tests \
         --filter "FullyQualifiedName~ConformanceTests_SmokeCorpus" \
         --no-build -c Debug \
         --logger "console;verbosity=minimal" 2>&1; then
@@ -119,7 +119,7 @@ echo ""
     echo "   (Load → Save → Reload verification, smoke corpus only)"
     echo ""
 
-    if dotnet test Pdfe.Rendering.Tests \
+    if dotnet test Excise.Rendering.Tests \
         --filter "FullyQualifiedName~RoundTrip_LoadSaveReload" \
         --no-build -c Debug \
         --logger "console;verbosity=minimal" 2>&1; then
@@ -133,7 +133,7 @@ echo ""
     echo "   (Glyph-level removal verification, smoke corpus only)"
     echo ""
 
-    if dotnet test Pdfe.Rendering.Tests \
+    if dotnet test Excise.Rendering.Tests \
         --filter "FullyQualifiedName~RedactionRegression" \
         --no-build -c Debug \
         --logger "console;verbosity=minimal" 2>&1; then
@@ -155,7 +155,7 @@ echo ""
         CONFORMANCE_VERAPDF_PASS=0
         CONFORMANCE_VERAPDF_FAIL=0
 
-        if SKIP_LARGE_CORPUS=0 dotnet test Pdfe.Rendering.Tests \
+        if SKIP_LARGE_CORPUS=0 dotnet test Excise.Rendering.Tests \
             --filter "FullyQualifiedName~ConformanceTests_VeraPdfCorpus" \
             --no-build -c Debug \
             --logger "console;verbosity=minimal" 2>&1; then

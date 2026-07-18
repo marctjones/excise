@@ -1,4 +1,4 @@
-property pdfePath : "/usr/local/bin/pdfe"
+property excisePath : "/usr/local/bin/excise"
 
 on run argv
     if (count of argv) < 2 then
@@ -13,6 +13,6 @@ on run argv
     if (count of argv) >= 3 then set pageNumber to item 3 of argv
     if (count of argv) >= 4 then set renderDpi to item 4 of argv
 
-    set commandLine to quoted form of pdfePath & " render " & quoted form of inputPdf & " --output " & quoted form of outputPng & " --page " & pageNumber & " --dpi " & renderDpi & " --json"
+    set commandLine to quoted form of excisePath & " render " & quoted form of inputPdf & " --output " & quoted form of outputPng & " --page " & pageNumber & " --dpi " & renderDpi & " --json"
     return do shell script commandLine
 end run

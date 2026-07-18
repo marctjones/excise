@@ -1,10 +1,10 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-    Download and install PdfEditor from GitHub releases.
+    Download and install Excise.App from GitHub releases.
 
 .DESCRIPTION
-    Downloads the latest release of PdfEditor from GitHub,
+    Downloads the latest release of Excise.App from GitHub,
     extracts it, and creates shortcuts. No .NET SDK required.
 
 .PARAMETER Version
@@ -23,15 +23,15 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$AppName = "PdfEditor"
+$AppName = "Excise.App"
 $AppDisplayName = "PDF Editor"
 $RepoOwner = "marctjones"
-$RepoName = "pdfe"
+$RepoName = "excise"
 $InstallDir = Join-Path $env:LOCALAPPDATA $AppName
 $StartMenuDir = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs"
-$TempDir = Join-Path $env:TEMP "PdfEditor-Install"
+$TempDir = Join-Path $env:TEMP "Excise.App-Install"
 
-Write-Host "=== PdfEditor Installation from GitHub ===" -ForegroundColor Cyan
+Write-Host "=== Excise.App Installation from GitHub ===" -ForegroundColor Cyan
 Write-Host ""
 
 # Create temp directory
@@ -50,7 +50,7 @@ if ($Version -eq "latest") {
 }
 
 try {
-    $Release = Invoke-RestMethod -Uri $ApiUrl -Headers @{ "User-Agent" = "PdfEditor-Installer" }
+    $Release = Invoke-RestMethod -Uri $ApiUrl -Headers @{ "User-Agent" = "Excise.App-Installer" }
     $TagName = $Release.tag_name
     Write-Host "  Found release: $TagName" -ForegroundColor Green
 } catch {
@@ -100,7 +100,7 @@ if (Test-Path $InstallDir) {
 Expand-Archive -Path $ZipFile -DestinationPath $TempDir -Force
 
 # Find extracted folder and move contents
-$ExtractedFolder = Get-ChildItem -Path $TempDir -Directory | Where-Object { $_.Name -like "PdfEditor-*" } | Select-Object -First 1
+$ExtractedFolder = Get-ChildItem -Path $TempDir -Directory | Where-Object { $_.Name -like "Excise.App-*" } | Select-Object -First 1
 if ($ExtractedFolder) {
     Move-Item -Path $ExtractedFolder.FullName -Destination $InstallDir -Force
 } else {
@@ -112,14 +112,14 @@ if ($ExtractedFolder) {
 Write-Host "  Installed to: $InstallDir" -ForegroundColor Green
 
 # Verify executable exists
-$ExePath = Join-Path $InstallDir "PdfEditor.exe"
+$ExePath = Join-Path $InstallDir "Excise.App.exe"
 if (-not (Test-Path $ExePath)) {
     # Try to find it in subdirectory
-    $ExePath = Get-ChildItem -Path $InstallDir -Recurse -Filter "PdfEditor.exe" | Select-Object -First 1 -ExpandProperty FullName
+    $ExePath = Get-ChildItem -Path $InstallDir -Recurse -Filter "Excise.App.exe" | Select-Object -First 1 -ExpandProperty FullName
 }
 
 if (-not $ExePath -or -not (Test-Path $ExePath)) {
-    Write-Host "Error: Could not find PdfEditor.exe after extraction" -ForegroundColor Red
+    Write-Host "Error: Could not find Excise.App.exe after extraction" -ForegroundColor Red
     exit 1
 }
 

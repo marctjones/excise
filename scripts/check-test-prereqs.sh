@@ -50,42 +50,42 @@ check_dir() {
 }
 
 echo "================================================="
-echo "PdfEditor test prereq check"
+echo "Excise.App test prereq check"
 echo "================================================="
 echo
 echo "External tools:"
-check_bin tesseract  "apt install tesseract-ocr"  "Pdfe.Ocr.Tests + RevealRasterizedHidden"
-check_bin mutool     "apt install mupdf-tools"    "Pdfe.Rendering differential vs MuPDF oracle"
-check_bin pdftocairo "apt install poppler-utils"  "Pdfe.Rendering differential vs Poppler oracle"
+check_bin tesseract  "apt install tesseract-ocr"  "Excise.Ocr.Tests + RevealRasterizedHidden"
+check_bin mutool     "apt install mupdf-tools"    "Excise.Rendering differential vs MuPDF oracle"
+check_bin pdftocairo "apt install poppler-utils"  "Excise.Rendering differential vs Poppler oracle"
 check_bin gs         "brew install ghostscript"    "Optional third rendering oracle for unsettled corpus DIFFs"
-if [[ -n "${PDFE_PDFBOX_JAR:-}" && -f "${PDFE_PDFBOX_JAR:-}" ]]; then
-    printf "  %s✓%s %-12s %s(found: %s)%s\n" "$GREEN" "$RESET" "pdfbox" "$DIM" "$PDFE_PDFBOX_JAR" "$RESET"
+if [[ -n "${EXCISE_PDFBOX_JAR:-}" && -f "${EXCISE_PDFBOX_JAR:-}" ]]; then
+    printf "  %s✓%s %-12s %s(found: %s)%s\n" "$GREEN" "$RESET" "pdfbox" "$DIM" "$EXCISE_PDFBOX_JAR" "$RESET"
     ok=$((ok+1))
 elif command -v pdfbox >/dev/null 2>&1; then
     printf "  %s✓%s %-12s %s(found: %s)%s\n" "$GREEN" "$RESET" "pdfbox" "$DIM" "$(command -v pdfbox)" "$RESET"
     ok=$((ok+1))
 else
-    printf "  %s✗%s %-12s %sset PDFE_PDFBOX_JAR=/path/to/pdfbox-app.jar%s\n" "$RED" "$RESET" "pdfbox" "$YELLOW" "$RESET"
+    printf "  %s✗%s %-12s %sset EXCISE_PDFBOX_JAR=/path/to/pdfbox-app.jar%s\n" "$RED" "$RESET" "pdfbox" "$YELLOW" "$RESET"
     printf "                 unlocks: Optional Apache PDFBox diagnostic oracle for corpus DIFF triage\n"
     missing=$((missing+1))
 fi
-if [[ -n "${PDFE_PDFIUM_TEST:-}" && -x "${PDFE_PDFIUM_TEST:-}" ]]; then
-    printf "  %s✓%s %-12s %s(found: %s)%s\n" "$GREEN" "$RESET" "pdfium_test" "$DIM" "$PDFE_PDFIUM_TEST" "$RESET"
+if [[ -n "${EXCISE_PDFIUM_TEST:-}" && -x "${EXCISE_PDFIUM_TEST:-}" ]]; then
+    printf "  %s✓%s %-12s %s(found: %s)%s\n" "$GREEN" "$RESET" "pdfium_test" "$DIM" "$EXCISE_PDFIUM_TEST" "$RESET"
     ok=$((ok+1))
 elif command -v pdfium_test >/dev/null 2>&1; then
     printf "  %s✓%s %-12s %s(found: %s)%s\n" "$GREEN" "$RESET" "pdfium_test" "$DIM" "$(command -v pdfium_test)" "$RESET"
     ok=$((ok+1))
 else
-    printf "  %s✗%s %-12s %sset PDFE_PDFIUM_TEST=/path/to/pdfium_test%s\n" "$RED" "$RESET" "pdfium_test" "$YELLOW" "$RESET"
+    printf "  %s✗%s %-12s %sset EXCISE_PDFIUM_TEST=/path/to/pdfium_test%s\n" "$RED" "$RESET" "pdfium_test" "$YELLOW" "$RESET"
     printf "                 unlocks: Optional Chrome/PDFium diagnostic oracle for corpus DIFF triage\n"
     missing=$((missing+1))
 fi
 
 echo
 echo "Test corpora (under $TEST_PDF_DIR):"
-check_dir "smoke"          "scripts/download-smoke-corpus.sh" "Pdfe.Rendering smoke + redaction round-trip"
-check_dir "verapdf-corpus" "scripts/download-test-pdfs.sh"    "Pdfe.Core RealPdfTests + AutomationScript_VeraPdfCorpusSample"
-check_dir "isartor"        "scripts/download-test-pdfs.sh"    "Pdfe.Rendering Isartor PDF/A round-trip"
+check_dir "smoke"          "scripts/download-smoke-corpus.sh" "Excise.Rendering smoke + redaction round-trip"
+check_dir "verapdf-corpus" "scripts/download-test-pdfs.sh"    "Excise.Core RealPdfTests + AutomationScript_VeraPdfCorpusSample"
+check_dir "isartor"        "scripts/download-test-pdfs.sh"    "Excise.Rendering Isartor PDF/A round-trip"
 check_dir "pdfjs"          "scripts/download-pdfjs-corpus.sh" "ExploratoryDifferentialTests (Trait=Exploratory only)"
 check_dir "poppler"        "scripts/download-poppler-corpus.sh" "Poppler regression corpus exploratory rendering"
 

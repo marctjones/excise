@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Lightweight, NON-GUI test project for the viewer libraries (Excise.Avalonia /
+    Excise.Rendering). It deliberately does NOT reference the Excise.App app and is
+    NOT part of the `gui` paths-filter, so it runs on every PR without dragging in
+    the heavy, flaky headless Excise.App.Tests suite. Keep tests here lightweight
+    (reflection/API gates, pure logic) — anything that drives many real-Skia
+    renders belongs in Excise.App.Tests / the nightly job. (#363, #384)
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);xUnit1051</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Excise.Avalonia\Excise.Avalonia.csproj" />
+    <ProjectReference Include="..\Excise.Rendering\Excise.Rendering.csproj" />
+    <ProjectReference Include="..\Excise.Core\Excise.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AwesomeAssertions" Version="9.4.0" />
+    <PackageReference Include="PublicApiGenerator" Version="11.5.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
+    <PackageReference Include="xunit.v3" Version="3.2.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

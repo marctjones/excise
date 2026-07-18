@@ -1,8 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=pdfe Automation Wrapper
-Comment=Open PDFs with pdfe; use pdfe batch for headless automation
-Exec=pdfe %F
-Terminal=false
-MimeType=application/pdf;
-Categories=Office;Viewer;

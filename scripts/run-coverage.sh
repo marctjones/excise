@@ -6,7 +6,7 @@ cd "$ROOT_DIR"
 
 mkdir -p coverage
 
-dotnet test PdfEditor.Tests/PdfEditor.Tests.csproj \
+dotnet test Excise.App.Tests/Excise.App.Tests.csproj \
   /p:CollectCoverage=true \
   /p:CoverletOutput=../coverage/coverage \
   /p:CoverletOutputFormat=lcov \

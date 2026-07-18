@@ -78,7 +78,7 @@ mkdir -p "$(dirname "$OUTPUT")"
 if [[ "$INCREMENTAL_RAW_OUTPUT" == "1" && -z "$RAW_OUTPUT" ]]; then
     RAW_OUTPUT="${OUTPUT%.json}.raw-corpus-scan.json"
 fi
-CMD=(dotnet run --project tools/Pdfe.RenderTools/Pdfe.RenderTools.csproj -c "$CONFIG" -- \
+CMD=(dotnet run --project tools/Excise.RenderTools/Excise.RenderTools.csproj -c "$CONFIG" -- \
     render-quality-scan "$CORPUS" \
     --contracts "$CONTRACTS" \
     --output "$OUTPUT")

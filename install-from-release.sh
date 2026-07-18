@@ -1,21 +1,21 @@
 #!/bin/bash
 #
-# Download and install PdfEditor from GitHub releases
+# Download and install Excise.App from GitHub releases
 # No .NET SDK required - downloads pre-built binary
 #
 
 set -e
 
-APP_NAME="PdfEditor"
-APP_ID="com.pdfeditor.PdfEditor"
+APP_NAME="Excise.App"
+APP_ID="com.exciseditor.Excise.App"
 REPO_OWNER="marctjones"
-REPO_NAME="pdfe"
-INSTALL_DIR="$HOME/.local/share/PdfEditor"
+REPO_NAME="excise"
+INSTALL_DIR="$HOME/.local/share/Excise.App"
 DESKTOP_FILE="$HOME/.local/share/applications/${APP_ID}.desktop"
 ICON_DIR="$HOME/.local/share/icons/hicolor/256x256/apps"
 VERSION="${1:-latest}"
 
-echo "=== PdfEditor Installation from GitHub ==="
+echo "=== Excise.App Installation from GitHub ==="
 echo ""
 
 # Detect architecture
@@ -94,16 +94,16 @@ mkdir -p "$INSTALL_DIR"
 tar -xzf "$TARBALL" -C "$TEMP_DIR"
 
 # Find and move extracted contents
-EXTRACTED_DIR=$(find "$TEMP_DIR" -maxdepth 1 -type d -name "PdfEditor-*" | head -1)
+EXTRACTED_DIR=$(find "$TEMP_DIR" -maxdepth 1 -type d -name "Excise.App-*" | head -1)
 if [ -n "$EXTRACTED_DIR" ]; then
     mv "$EXTRACTED_DIR"/* "$INSTALL_DIR/"
 else
     # Files might be directly extracted
-    mv "$TEMP_DIR"/PdfEditor "$INSTALL_DIR/" 2>/dev/null || true
+    mv "$TEMP_DIR"/Excise.App "$INSTALL_DIR/" 2>/dev/null || true
 fi
 
 # Make executable
-chmod +x "$INSTALL_DIR/PdfEditor"
+chmod +x "$INSTALL_DIR/Excise.App"
 
 echo "  Installed to: $INSTALL_DIR"
 
@@ -147,14 +147,14 @@ Type=Application
 Name=PDF Editor
 GenericName=PDF Editor
 Comment=PDF viewer and editor with TRUE redaction capabilities
-Exec=$INSTALL_DIR/PdfEditor %f
+Exec=$INSTALL_DIR/Excise.App %f
 Icon=$ICON_PATH
 Terminal=false
 Categories=Office;Viewer;Graphics;
 MimeType=application/pdf;
 Keywords=pdf;redact;redaction;edit;view;
 StartupNotify=true
-StartupWMClass=PdfEditor
+StartupWMClass=Excise.App
 EOF
 
 echo "  Created: $DESKTOP_FILE"
@@ -179,7 +179,7 @@ echo ""
 echo "You can now:"
 echo "  1. Find 'PDF Editor' in your application menu"
 echo "  2. Right-click a PDF and 'Open With' PDF Editor"
-echo "  3. Run from terminal: $INSTALL_DIR/PdfEditor"
+echo "  3. Run from terminal: $INSTALL_DIR/Excise.App"
 echo ""
 echo "To uninstall:"
 echo "  rm -rf $INSTALL_DIR"

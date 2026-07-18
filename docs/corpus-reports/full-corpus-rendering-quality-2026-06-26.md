@@ -1,16 +1,16 @@
 # Full Corpus Rendering Quality Snapshot - 2026-06-26
 
 Source raw report:
-`Pdfe.Rendering.Tests/bin/Debug/net10.0/exploratory-report-test-pdfs-all-20260622-passone-sharded-coverage.json`
+`Excise.Rendering.Tests/bin/Debug/net10.0/exploratory-report-test-pdfs-all-20260622-passone-sharded-coverage.json`
 
 Classification command:
 
 ```bash
-dotnet run --project Pdfe.Cli/Pdfe.Cli.csproj -- \
+dotnet run --project Excise.Cli/Excise.Cli.csproj -- \
   render-quality-classify \
-  Pdfe.Rendering.Tests/bin/Debug/net10.0/exploratory-report-test-pdfs-all-20260622-passone-sharded-coverage.json \
+  Excise.Rendering.Tests/bin/Debug/net10.0/exploratory-report-test-pdfs-all-20260622-passone-sharded-coverage.json \
   --contracts test-pdfs/rendering-contracts \
-  --output /tmp/pdfe-full-corpus-quality.json \
+  --output /tmp/excise-full-corpus-quality.json \
   --strict-contracts
 ```
 
@@ -36,10 +36,10 @@ and should be promoted to reviewed contracts when triaged.
 |---|---:|
 | All pages pixel-exact against the required reference set | 3,569 |
 | Reference renderers disagree on at least one page | 80 |
-| pdfe matches exactly one reference renderer on at least one page | 19 |
-| pdfe is classified higher quality than the references on at least one page | 4 |
-| pdfe has a rendering failure or raw `DIFF` on at least one page | 2 |
-| pdfe is lower quality but acceptable on at least one page | 41 |
+| excise matches exactly one reference renderer on at least one page | 19 |
+| excise is classified higher quality than the references on at least one page | 4 |
+| excise has a rendering failure or raw `DIFF` on at least one page | 2 |
+| excise is lower quality but acceptable on at least one page | 41 |
 
 ## Page-Level Quality
 
@@ -48,7 +48,7 @@ and should be promoted to reviewed contracts when triaged.
 | `PIXEL_EXACT` | 14,503 |
 | `MATCHES_ACCEPTED_REFERENCE` | 330 |
 | `GOOD_ENOUGH` | 46 |
-| `PDFE_BETTER_THAN_REFS` | 28 |
+| `EXCISE_BETTER_THAN_REFS` | 28 |
 | `NON_RENDERABLE_ACCEPTED` | 26 |
 | `ACCEPTED_LIMITATION` | 1 |
 | `FAIL` | 2 |

@@ -7,7 +7,7 @@
 #
 # Output:
 #   test-pdfs/poppler/...
-#   test-pdfs/poppler/.pdfe-manifest.tsv  (sha256<TAB>relative-path<TAB>size)
+#   test-pdfs/poppler/.excise-manifest.tsv  (sha256<TAB>relative-path<TAB>size)
 
 set -euo pipefail
 
@@ -73,7 +73,7 @@ echo "Target: $TARGET"
 echo ""
 
 if [[ -d "$TARGET/.git" ]]; then
-    local_changes="$(git -C "$TARGET" status --porcelain | grep -v -E '^\?\? \.pdfe-manifest\.tsv$' || true)"
+    local_changes="$(git -C "$TARGET" status --porcelain | grep -v -E '^\?\? \.excise-manifest\.tsv$' || true)"
     if [[ -n "$local_changes" ]]; then
         echo "Existing Poppler corpus checkout has local changes:" >&2
         printf '%s\n' "$local_changes" >&2
@@ -91,7 +91,7 @@ else
     git clone --depth 1 --branch "$REF" "$REPO_URL" "$TARGET"
 fi
 
-MANIFEST="$TARGET/.pdfe-manifest.tsv"
+MANIFEST="$TARGET/.excise-manifest.tsv"
 python3 - "$TARGET" "$MANIFEST" <<'PY'
 import hashlib
 import os

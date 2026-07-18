@@ -1,0 +1,33 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sty="using:FluentAvalonia.Styling"
+             xmlns:local="using:Excise.App"
+             x:Class="Excise.App.App"
+             Name="excise"
+             RequestedThemeVariant="Light">
+
+    <!-- Application Resources -->
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Custom Color and Brush Resources -->
+                <ResourceInclude Source="/Styles/Colors.axaml"/>
+                <ResourceInclude Source="/Styles/Brushes.axaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Converters -->
+            <local:BooleanToBrushConverter x:Key="BooleanToBrushConverter"/>
+        </ResourceDictionary>
+    </Application.Resources>
+
+    <!-- Application Styles -->
+    <Application.Styles>
+        <!-- FluentAvalonia Theme - Modern Fluent Design System -->
+        <sty:FluentAvaloniaTheme PreferSystemTheme="False"
+                                  PreferUserAccentColor="False"
+                                  CustomAccentColor="#0078D4"/>
+
+        <!-- Custom Control Styles -->
+        <StyleInclude Source="/Styles/Controls.axaml"/>
+    </Application.Styles>
+</Application>

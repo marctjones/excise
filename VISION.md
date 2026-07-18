@@ -1,4 +1,4 @@
-# pdfe Vision
+# excise Vision
 
 ## Purpose
 A cross-platform PDF editor focused on **true content-level redaction** for privacy and security.
@@ -11,12 +11,12 @@ A cross-platform PDF editor focused on **true content-level redaction** for priv
 
 3. **Permissive Licensing** - All dependencies use MIT, Apache 2.0, or BSD-3 licenses. No copyleft restrictions.
 
-4. **Self-Contained** - As of v2.0, zero external *PDF* library dependencies: Pdfe.Core (parsing/writing) and Pdfe.Rendering (SkiaSharp-based rendering) replace PdfPig/PDFsharp/PDFtoImage. SkiaSharp (rasterization) and BouncyCastle (crypto) remain as permissively-licensed support libraries.
+4. **Self-Contained** - As of v2.0, zero external *PDF* library dependencies: Excise.Core (parsing/writing) and Excise.Rendering (SkiaSharp-based rendering) replace PdfPig/PDFsharp/PDFtoImage. SkiaSharp (rasterization) and BouncyCastle (crypto) remain as permissively-licensed support libraries.
 
 ## v2.0 Goals
 
-- **Pdfe.Core**: Pure .NET PDF parser/writer supporting PDF 1.4-2.0
-- **Pdfe.Rendering**: SkiaSharp-based renderer replacing PDFium dependency
+- **Excise.Core**: Pure .NET PDF parser/writer supporting PDF 1.4-2.0
+- **Excise.Rendering**: SkiaSharp-based renderer replacing PDFium dependency
 - **Glyph-Level Redaction**: Surgical removal of individual characters
 - **veraPDF Compliance**: Pass validation on all saved files
 

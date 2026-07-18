@@ -1,7 +1,7 @@
 #!/bin/bash
-cd /home/marc/pdfe/PdfEditor
+cd /home/marc/excise/Excise.App
 echo "========================================="
-echo "Starting PdfEditor with full logging..."
+echo "Starting Excise.App with full logging..."
 echo "========================================="
 echo ""
 echo "Please:"
@@ -13,4 +13,4 @@ echo ""
 echo "========================================="
 echo "Log output:"
 echo "========================================="
-dotnet run 2>&1 | tee /tmp/pdfe_crash_log.txt
+dotnet run 2>&1 | tee /tmp/excise_crash_log.txt

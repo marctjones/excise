@@ -1,7 +1,7 @@
 <Project>
   <!--
-    Shared packaging settings for the publishable Pdfe libraries
-    (Pdfe.Core, Pdfe.Rendering, Pdfe.Avalonia). Imported explicitly by each
+    Shared packaging settings for the publishable Excise libraries
+    (Excise.Core, Excise.Rendering, Excise.Avalonia). Imported explicitly by each
     packable .csproj — NOT a Directory.Build.props, so it never touches the
     app/test/CLI projects.
 

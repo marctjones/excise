@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Focused release gate for the stable pdfe CLI automation contract.
+# Focused release gate for the stable excise CLI automation contract.
 
 set -uo pipefail
 
@@ -13,7 +13,7 @@ NO_BUILD=0
 
 usage() {
     cat <<'EOF'
-Run the stable pdfe automation smoke.
+Run the stable excise automation smoke.
 
 Usage:
   scripts/run-automation-smoke.sh [options]
@@ -78,10 +78,10 @@ run_step() {
 }
 
 if [ "$NO_BUILD" != "1" ]; then
-    run_step "build" dotnet build Pdfe.Cli.Tests/Pdfe.Cli.Tests.csproj -c "$CONFIG"
+    run_step "build" dotnet build Excise.Cli.Tests/Excise.Cli.Tests.csproj -c "$CONFIG"
 fi
 
-run_step "cli-tests" dotnet test Pdfe.Cli.Tests/Pdfe.Cli.Tests.csproj --no-build -c "$CONFIG" \
+run_step "cli-tests" dotnet test Excise.Cli.Tests/Excise.Cli.Tests.csproj --no-build -c "$CONFIG" \
     --filter "FullyQualifiedName~BatchAutomationCommandTests|FullyQualifiedName~CommandMetadataCommandTests" \
     --logger "console;verbosity=minimal"
 
@@ -103,9 +103,9 @@ JSON
 BATCH_STDOUT="$OUTPUT/batch-stdout.json"
 BATCH_PROGRESS="$OUTPUT/batch-progress.ndjson"
 BATCH_REPORT="$OUTPUT/batch-report.json"
-echo "[batch-artifacts] dotnet run --project Pdfe.Cli/Pdfe.Cli.csproj -c $CONFIG -- batch $WORKFLOW --json --progress --output $BATCH_REPORT"
+echo "[batch-artifacts] dotnet run --project Excise.Cli/Excise.Cli.csproj -c $CONFIG -- batch $WORKFLOW --json --progress --output $BATCH_REPORT"
 batch_start="$(date +%s)"
-dotnet run --project Pdfe.Cli/Pdfe.Cli.csproj -c "$CONFIG" -- \
+dotnet run --project Excise.Cli/Excise.Cli.csproj -c "$CONFIG" -- \
     batch "$WORKFLOW" --json --progress --output "$BATCH_REPORT" \
     > "$BATCH_STDOUT" 2> "$BATCH_PROGRESS"
 batch_rc=$?

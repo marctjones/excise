@@ -10,7 +10,7 @@ if [[ -z "$LOG_DIR" || ! -d "$LOG_DIR" ]]; then
     exit 2
 fi
 
-interval="${PDFE_MONITOR_INTERVAL:-15}"
+interval="${EXCISE_MONITOR_INTERVAL:-15}"
 
 while true; do
     clear 2>/dev/null || true
@@ -23,11 +23,11 @@ while true; do
     if [[ -z "$current_report" && -f "$LOG_DIR/args.txt" ]]; then
         report_name="$(awk 'previous { print; exit } $0 == "--report-name" { previous=1 }' "$LOG_DIR/args.txt")"
         if [[ -n "$report_name" ]]; then
-            current_report="Pdfe.Rendering.Tests/bin/Debug/net10.0/$report_name"
+            current_report="Excise.Rendering.Tests/bin/Debug/net10.0/$report_name"
         fi
     fi
 
-    echo "pdfe exploratory corpus monitor"
+    echo "excise exploratory corpus monitor"
     echo "time: $(date)"
     echo "logs: $LOG_DIR"
     echo
@@ -49,7 +49,7 @@ while true; do
     echo "active render/reference processes:"
     if ps_output=$(ps -axo pid,ppid,%cpu,rss,etime,command 2>&1); then
         printf '%s\n' "$ps_output" |
-            awk 'NR == 1 || /Pdfe\.Cli|\/pdfe( |$)|mutool|pdftocairo|dotnet build/ { print }' |
+            awk 'NR == 1 || /Excise\.Cli|\/excise( |$)|mutool|pdftocairo|dotnet build/ { print }' |
             head -30
     else
         echo "  unavailable: $ps_output"

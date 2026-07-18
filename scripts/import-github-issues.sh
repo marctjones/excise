@@ -112,10 +112,10 @@ create_issue \
 - [ ] User can save redacted PDF
 
 **Related Files:**
-- \`PdfEditor/ViewModels/MainWindowViewModel.cs\`
-- \`PdfEditor/Views/MainWindow.axaml\`
-- \`PdfEditor/Services/RedactionService.cs\`
-- \`PdfEditor/ViewModels/RedactionWorkflowManager.cs\`" \
+- \`Excise.App/ViewModels/MainWindowViewModel.cs\`
+- \`Excise.App/Views/MainWindow.axaml\`
+- \`Excise.App/Services/RedactionService.cs\`
+- \`Excise.App/ViewModels/RedactionWorkflowManager.cs\`" \
     "enhancement,component: redaction-engine,component: ui-framework,priority: critical,effort: medium"
 
 # Issue 4: Remove debug logging after Recent Files verification
@@ -151,7 +151,7 @@ create_issue \
     "Logging level was changed to DEBUG (commit e3760dc) to diagnose Recent Files menu issues. This produces excessive console output and should be restored to INFO after debugging is complete.
 
 **Changes Needed:**
-- \`PdfEditor/App.axaml.cs\` line 64: Change \`LogLevel.Debug\` back to \`LogLevel.Information\`
+- \`Excise.App/App.axaml.cs\` line 64: Change \`LogLevel.Debug\` back to \`LogLevel.Information\`
 - Update log message on line 99: \"Logging level set to: INFO\"
 
 **Depends On:** #1, #4
@@ -195,7 +195,7 @@ create_issue \
 **Desired Behavior:**
 - Save window position, size, and state on close
 - Restore on next launch
-- Use platform-standard config location (already using \`Environment.SpecialFolder.ApplicationData/PdfEditor/\`)
+- Use platform-standard config location (already using \`Environment.SpecialFolder.ApplicationData/Excise.App/\`)
 
 **Implementation Approach:**
 1. Create \`WindowSettings.json\` in app data folder
@@ -204,8 +204,8 @@ create_issue \
 4. Handle multi-monitor scenarios (window off-screen)
 
 **Files to Modify:**
-- \`PdfEditor/Views/MainWindow.axaml.cs\` - Add save/restore logic
-- \`PdfEditor/Models/WindowSettings.cs\` - New model class
+- \`Excise.App/Views/MainWindow.axaml.cs\` - Add save/restore logic
+- \`Excise.App/Models/WindowSettings.cs\` - New model class
 
 **Acceptance Criteria:**
 - [ ] Window size/position saved on close
@@ -267,7 +267,7 @@ create_issue \
 4. Consider compression for cached PNG data
 
 **Files:**
-- \`PdfEditor/Services/PdfRenderService.cs\`
+- \`Excise.App/Services/PdfRenderService.cs\`
 
 **Acceptance Criteria:**
 - [ ] Cache has configurable memory limit
@@ -291,7 +291,7 @@ create_issue \
 8. Property change notifications
 
 **Files:**
-- \`PdfEditor.Tests/Unit/RedactionWorkflowManagerTests.cs\` (new file)
+- \`Excise.App.Tests/Unit/RedactionWorkflowManagerTests.cs\` (new file)
 
 **Acceptance Criteria:**
 - [ ] All public methods have unit tests
@@ -319,7 +319,7 @@ create_issue \
 - \`GuiRedactionSimulationTests.cs\` - simulates GUI workflow
 
 **Files:**
-- \`PdfEditor.Tests/Integration/MarkThenApplyWorkflowTests.cs\` (new file)
+- \`Excise.App.Tests/Integration/MarkThenApplyWorkflowTests.cs\` (new file)
 
 **Acceptance Criteria:**
 - [ ] Test covers complete mark-then-apply flow
@@ -343,8 +343,8 @@ create_issue \
 4. Set up analyzer rules to catch these proactively
 
 **Files:**
-- \`PdfEditor/ViewModels/MainWindowViewModel.cs\`
-- \`PdfEditor/.editorconfig\` (optional - add analyzer rules)
+- \`Excise.App/ViewModels/MainWindowViewModel.cs\`
+- \`Excise.App/.editorconfig\` (optional - add analyzer rules)
 
 **Acceptance Criteria:**
 - [ ] All command properties have null-forgiving operator
@@ -365,8 +365,8 @@ create_issue \
 5. Verify resulting PDF conforms to PDF 2.0 spec
 
 **Existing Tests to Reference:**
-- \`PdfEditor.Tests/Integration/PdfConformanceTests.cs\`
-- \`PdfEditor.Tests/Integration/VeraPdfConformanceTests.cs\`
+- \`Excise.App.Tests/Integration/PdfConformanceTests.cs\`
+- \`Excise.App.Tests/Integration/VeraPdfConformanceTests.cs\`
 
 **Acceptance Criteria:**
 - [ ] Mark-then-apply produces valid PDF 1.7 documents
@@ -408,8 +408,8 @@ create_issue \
 - Could be global preference or per-document
 
 **Implementation Options:**
-1. Global preference: Save to \`ApplicationData/PdfEditor/settings.json\`
-2. Per-document: Save to \`ApplicationData/PdfEditor/document-state.json\` with file path as key
+1. Global preference: Save to \`ApplicationData/Excise.App/settings.json\`
+2. Per-document: Save to \`ApplicationData/Excise.App/document-state.json\` with file path as key
 
 **Related:** #7 (window settings)
 
@@ -431,8 +431,8 @@ create_issue \
 4. Show tip: \"Click and drag to mark areas for redaction\"
 
 **Files:**
-- \`PdfEditor/Views/MainWindow.axaml\`
-- \`PdfEditor/Views/MainWindow.axaml.cs\`
+- \`Excise.App/Views/MainWindow.axaml\`
+- \`Excise.App/Views/MainWindow.axaml.cs\`
 
 **Acceptance Criteria:**
 - [ ] Visual indicator clearly shows redaction mode is active

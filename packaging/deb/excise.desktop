@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=Excise
+GenericName=PDF Editor
+Comment=Cross-platform PDF editor with true content-level redaction
+Exec=/usr/lib/excise/Excise.App %F
+Icon=excise
+Terminal=false
+Categories=Office;Graphics;Viewer;
+MimeType=application/pdf;
+Keywords=pdf;editor;redact;redaction;form;acroform;
+StartupNotify=true
+StartupWMClass=Excise.App

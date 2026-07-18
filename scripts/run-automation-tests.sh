@@ -42,7 +42,7 @@ cd "$PROJECT_ROOT"
 # Build tests first (unless --no-build specified)
 if [ "$SKIP_BUILD" = false ]; then
     echo "Building tests to pick up latest code changes..."
-    dotnet build PdfEditor.Tests/PdfEditor.Tests.csproj --nologo -v quiet
+    dotnet build Excise.App.Tests/Excise.App.Tests.csproj --nologo -v quiet
     if [ $? -eq 0 ]; then
         echo "✅ Build successful"
     else
@@ -59,7 +59,7 @@ echo "Live output below:"
 echo "================================================="
 echo ""
 
-dotnet test PdfEditor.Tests/PdfEditor.Tests.csproj \
+dotnet test Excise.App.Tests/Excise.App.Tests.csproj \
     --filter "AutomationScript" \
     --logger "console;verbosity=normal" \
     --no-build
@@ -121,7 +121,7 @@ else
 
     echo ""
     echo "Failed test names:"
-    grep -oE "PdfEditor\.Tests\.UI\.AutomationScriptTests\.[A-Za-z_]+" "$LOG_FILE" | \
+    grep -oE "Excise.App\.Tests\.UI\.AutomationScriptTests\.[A-Za-z_]+" "$LOG_FILE" | \
         grep -v "ExecutesSuccessfully" | head -5
 fi
 

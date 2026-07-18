@@ -1,5 +1,5 @@
 #!/bin/bash
-# Common functions for all pdfe scripts
+# Common functions for all excise scripts
 # Source this file in other scripts: source "$(dirname "$0")/common.sh"
 
 # Colors for terminal output

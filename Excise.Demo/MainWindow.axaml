@@ -1,0 +1,42 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+        x:Class="Excise.Demo.MainWindow"
+        Title="Excise.Core Rendering Demo"
+        Width="1000" Height="700">
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        <!-- Toolbar -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10" Spacing="10">
+            <Button x:Name="OpenButton" Content="Open PDF" Click="OpenButton_Click"/>
+            <Button x:Name="PrevPageButton" Content="&lt; Previous" Click="PrevPage_Click" IsEnabled="False"/>
+            <TextBlock x:Name="PageLabel" Text="No document" VerticalAlignment="Center" Margin="10,0"/>
+            <Button x:Name="NextPageButton" Content="Next &gt;" Click="NextPage_Click" IsEnabled="False"/>
+            <Separator/>
+            <TextBlock Text="DPI:" VerticalAlignment="Center"/>
+            <ComboBox x:Name="DpiComboBox" SelectedIndex="1" SelectionChanged="DpiComboBox_SelectionChanged">
+                <ComboBoxItem Content="72"/>
+                <ComboBoxItem Content="150"/>
+                <ComboBoxItem Content="300"/>
+            </ComboBox>
+            <Separator/>
+            <Button x:Name="DemoButton" Content="Run Demo" Click="DemoButton_Click"/>
+        </StackPanel>
+
+        <!-- PDF Viewer -->
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+            <Border BorderBrush="Gray" BorderThickness="1" Margin="10">
+                <Image x:Name="PageImage" Stretch="None"/>
+            </Border>
+        </ScrollViewer>
+
+        <!-- Status Bar -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="10" Spacing="20">
+            <TextBlock x:Name="FileLabel" Text="No file loaded"/>
+            <TextBlock x:Name="SizeLabel" Text=""/>
+            <TextBlock x:Name="RenderTimeLabel" Text=""/>
+        </StackPanel>
+    </Grid>
+</Window>

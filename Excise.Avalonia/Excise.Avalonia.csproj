@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\Packaging.props" />
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!-- SkiaInterop copies pixels via an unsafe block (SKBitmap -> WriteableBitmap). -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <!-- Expose internals to the non-GUI viewer-lib test project so pure helpers
+       (e.g. the zoom-aware DPI selection) can be unit-tested without enlarging
+       the public API. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="Excise.Avalonia.Tests" />
+  </ItemGroup>
+
+  <!-- NuGet package metadata (packed explicitly via `dotnet pack`, not on build). -->
+  <PropertyGroup>
+    <PackageId>Excise.Avalonia</PackageId>
+    <Version>2.19.0</Version>
+    <Authors>Marc Jones</Authors>
+    <Description>A reusable, pure-managed PDF viewer control for Avalonia. Renders with SkiaSharp (no native PDFium), supports zoom/pan, page navigation, text selection, search highlights, annotations, links, and form-field overlays. Built on Excise.Core + Excise.Rendering.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/marctjones/pdfe</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>pdf;avalonia;viewer;control;skiasharp;render;cross-platform</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageProjectUrl>https://github.com/marctjones/pdfe</PackageProjectUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.0.5" />
+    <PackageReference Include="SkiaSharp" Version="3.119.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Excise.Core\Excise.Core.csproj" />
+    <ProjectReference Include="..\Excise.Rendering\Excise.Rendering.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Excise.App.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>

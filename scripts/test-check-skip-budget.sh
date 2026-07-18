@@ -16,7 +16,7 @@
 # asserts the ORIGINAL reason text is still present verbatim afterward.
 #
 # Also covers a second bug found while verifying the #663 fix against the
-# real tests/skip-allowlist/PdfEditor.Tests.txt: the reason-extraction sed
+# real tests/skip-allowlist/Excise.App.Tests.txt: the reason-extraction sed
 # (`s/.*#.../`) is greedy and matches through to the LAST `#` on the line,
 # so a reason that itself references another issue number (a documented
 # convention in this codebase's justifications, e.g. "#653: ...") had

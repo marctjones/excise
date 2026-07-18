@@ -4,13 +4,13 @@
 # touches the font resolver both the renderer and the text extractor share.
 #
 # Redaction completeness is bounded by extraction coverage: RedactText cannot
-# remove what pdfe cannot read, and reports success anyway (#637). Two
+# remove what excise cannot read, and reports success anyway (#637). Two
 # anecdotes (#636, #608, #637) each passed a fully green suite over a leaking
 # document. This script is the corpus-wide measurement that replaces
 # anecdote with a number, and a gate that fails when the number gets worse.
 #
 # WHY THIS IS A SEPARATE SCRIPT AND NOT JUST `dotnet test`:
-# ExtractionParityTests (Pdfe.Rendering.Tests/Differential/) requires mutool
+# ExtractionParityTests (Excise.Rendering.Tests/Differential/) requires mutool
 # and the smoke corpus (test-pdfs/smoke/, gitignored, downloaded on demand).
 # Both are ABSENT on GitHub-hosted PR runners, so `dotnet test` filters the
 # Differential category OUT of PR CI (see .github/workflows/ci.yml) — the
@@ -57,8 +57,8 @@ if [[ ! -d test-pdfs/smoke ]] || [[ -z "$(ls -A test-pdfs/smoke/*.pdf 2>/dev/nul
   exit 1
 fi
 
-echo "==> generating extraction parity report (mutool + pdfe over test-pdfs/smoke + test-pdfs/sample-pdfs)"
-dotnet test Pdfe.Rendering.Tests -c Debug \
+echo "==> generating extraction parity report (mutool + excise over test-pdfs/smoke + test-pdfs/sample-pdfs)"
+dotnet test Excise.Rendering.Tests -c Debug \
   --filter "FullyQualifiedName~ExtractionParityTests.GenerateExtractionParityReport" \
   --logger "console;verbosity=normal"
 

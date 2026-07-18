@@ -9,7 +9,7 @@ import re
 import os
 from collections import defaultdict
 
-WIKI_DIR = "/home/marc/pdfe/wiki"
+WIKI_DIR = "/home/marc/excise/wiki"
 
 # Key concepts to cross-reference (concept -> wiki page)
 CONCEPTS = {
@@ -313,7 +313,7 @@ def update_index_page():
 6. **Rebuild content stream** → [[PDF-Spec-07-Content-Streams]]
 
 ### See Also
-- [[Redaction-Engine]] - How pdfe implements redaction
+- [[Redaction-Engine]] - How excise implements redaction
 - [[PDF-Content-Streams]] - Our content stream documentation
 - [[PDF-Text-Operators]] - Our text operator guide
 """

@@ -5,7 +5,7 @@
 
 set -e
 
-cd /home/marc/pdfe/PdfEditor.Tests
+cd /home/marc/excise/Excise.App.Tests
 
 echo "Fixing remaining Red
 

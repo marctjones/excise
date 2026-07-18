@@ -87,7 +87,7 @@ fully handled.
 
 These files contain the core glyph removal logic. **DO NOT** replace their functionality with simpler visual-only solutions:
 
-### 1. `PdfEditor/Services/RedactionService.cs`
+### 1. `Excise.App/Services/RedactionService.cs`
 
 **Critical Method: `RemoveContentInArea()`** (lines 127-244)
 ```csharp
@@ -113,19 +113,19 @@ ReplacePageContent(page, newContentBytes);
 
 **WHY THIS MATTERS:** This is the actual glyph removal. Without it, text is just hidden, not removed.
 
-### 2. `PdfEditor/Services/Redaction/ContentStreamParser.cs`
+### 2. `Excise.App/Services/Redaction/ContentStreamParser.cs`
 
 Parses PDF content streams into structured operations with bounding boxes. This enables accurate intersection detection for text operations.
 
 **DO NOT** remove or simplify the text operation parsing.
 
-### 3. `PdfEditor/Services/Redaction/ContentStreamBuilder.cs`
+### 3. `Excise.App/Services/Redaction/ContentStreamBuilder.cs`
 
 Rebuilds PDF content streams from filtered operations. This creates the new content stream without removed text.
 
 **DO NOT** remove or simplify - this is essential for glyph removal.
 
-### 4. `PdfEditor/Services/Redaction/TextBoundsCalculator.cs`
+### 4. `Excise.App/Services/Redaction/TextBoundsCalculator.cs`
 
 Calculates accurate bounding boxes for text operations. Enables precise intersection detection.
 
@@ -218,7 +218,7 @@ public void RedactText_ShouldPassIndependentVerification()
 ### Test File Locations
 
 ```
-PdfEditor.Tests/Integration/
+Excise.App.Tests/Integration/
 ├── BlackBoxRedactionTests.cs      ← Primary glyph removal tests
 ├── ComprehensiveRedactionTests.cs ← Complex scenarios
 ├── RedactionIntegrationTests.cs   ← Full workflow tests
@@ -303,7 +303,7 @@ public void RedactArea(PdfPage page, Rect area)
 
 ### Method 1: Run the Test Suite
 ```bash
-cd PdfEditor.Tests
+cd Excise.App.Tests
 dotnet test --filter "FullyQualifiedName~Redaction"
 ```
 
@@ -408,17 +408,17 @@ When working on this codebase:
 
 ### File Locations
 ```
-PdfEditor/Services/RedactionService.cs           ← Main entry point
-PdfEditor/Services/Redaction/ContentStreamParser.cs  ← Parses PDF operations
-PdfEditor/Services/Redaction/ContentStreamBuilder.cs ← Rebuilds PDF content
-PdfEditor/Services/Redaction/TextBoundsCalculator.cs ← Text positioning
+Excise.App/Services/RedactionService.cs           ← Main entry point
+Excise.App/Services/Redaction/ContentStreamParser.cs  ← Parses PDF operations
+Excise.App/Services/Redaction/ContentStreamBuilder.cs ← Rebuilds PDF content
+Excise.App/Services/Redaction/TextBoundsCalculator.cs ← Text positioning
 ```
 
 ### Test Locations
 ```
-PdfEditor.Tests/Integration/BlackBoxRedactionTests.cs
-PdfEditor.Tests/Integration/ComprehensiveRedactionTests.cs
-PdfEditor.Tests/Integration/RedactionIntegrationTests.cs
+Excise.App.Tests/Integration/BlackBoxRedactionTests.cs
+Excise.App.Tests/Integration/ComprehensiveRedactionTests.cs
+Excise.App.Tests/Integration/RedactionIntegrationTests.cs
 ```
 
 ### Commands
@@ -430,7 +430,7 @@ dotnet build
 dotnet test --filter "FullyQualifiedName~Redaction"
 
 # Run demo
-dotnet run --project PdfEditor.Demo
+dotnet run --project Excise.App.Demo
 ```
 
 ### Key Assertion

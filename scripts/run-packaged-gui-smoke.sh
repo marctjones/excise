@@ -10,7 +10,7 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-APP="$ROOT/dist/pdfe.app"
+APP="$ROOT/dist/excise.app"
 PDF="$ROOT/test-pdfs/smoke/irs-w9.pdf"
 OUT="$ROOT/logs/packaged-gui-smoke_$(date +%Y%m%d_%H%M%S)"
 TIMEOUT_SECONDS=20
@@ -19,13 +19,13 @@ ALLOW_FOCUS_INPUT=0
 
 usage() {
     cat <<'EOF'
-Run a packaged pdfe GUI smoke and write JSON/markdown evidence.
+Run a packaged excise GUI smoke and write JSON/markdown evidence.
 
 Usage:
   scripts/run-packaged-gui-smoke.sh [options]
 
 Options:
-  --app <path>           Path to pdfe.app. Default: dist/pdfe.app.
+  --app <path>           Path to excise.app. Default: dist/excise.app.
   --pdf <path>           PDF to open. Default: test-pdfs/smoke/irs-w9.pdf.
   --output <dir>         Evidence directory. Default: logs/packaged-gui-smoke_<timestamp>.
   --timeout <seconds>    App startup timeout. Default: 20.
@@ -67,7 +67,7 @@ LAUNCH_LOG="$OUT/launch.log"
 INPUT_LOG="$OUT/native-input.log"
 SCREENSHOT="$OUT/startup-screen.png"
 APP_RESPONSIVENESS_REPORT="$OUT/app-responsiveness.json"
-RESPONSIVENESS_REQUEST_FILE="$HOME/Library/Application Support/PdfEditor/responsiveness-report-request.txt"
+RESPONSIVENESS_REQUEST_FILE="$HOME/Library/Application Support/Excise.App/responsiveness-report-request.txt"
 : > "$MATRIX_TSV"
 : > "$APP_LOG"
 : > "$LAUNCH_LOG"
@@ -133,7 +133,7 @@ budget_status() {
 
 APP="$(canonical_existing_path "$APP")"
 PDF="$(canonical_existing_path "$PDF")"
-APP_EXEC="$APP/Contents/MacOS/PdfEditor"
+APP_EXEC="$APP/Contents/MacOS/Excise.App"
 
 record_row() {
     local workflow="$1"
@@ -204,7 +204,7 @@ latest_crash_report_since_launch() {
     local latest=""
     local latest_mtime=0
     local report
-    for report in "$HOME/Library/Logs/DiagnosticReports"/PdfEditor-*.ips; do
+    for report in "$HOME/Library/Logs/DiagnosticReports"/Excise.App-*.ips; do
         [ -e "$report" ] || continue
         local mtime
         mtime="$(stat -f %m "$report" 2>/dev/null || printf '0')"
@@ -234,13 +234,13 @@ quit_app() {
         sleep 2
         kill -KILL "$app_pid" 2>/dev/null || true
     else
-        osascript -e 'tell application id "cl.skpt.pdfe" to quit' >/dev/null 2>&1 || true
+        osascript -e 'tell application id "cl.skpt.excise" to quit' >/dev/null 2>&1 || true
     fi
 }
 
 clear_launch_environment() {
     if [ "$launchctl_env_set" = "1" ] && command -v launchctl >/dev/null 2>&1; then
-        launchctl unsetenv PDFE_RESPONSIVENESS_REPORT >/dev/null 2>&1 || true
+        launchctl unsetenv EXCISE_RESPONSIVENESS_REPORT >/dev/null 2>&1 || true
         launchctl_env_set=0
     fi
     if [ -n "$caffeinate_pid" ] && kill -0 "$caffeinate_pid" 2>/dev/null; then
@@ -410,11 +410,11 @@ printf '%s\n' "$APP_RESPONSIVENESS_REPORT" > "$RESPONSIVENESS_REQUEST_FILE"
 case "$MODE" in
     background-open)
         if command -v launchctl >/dev/null 2>&1; then
-            launchctl setenv PDFE_RESPONSIVENESS_REPORT "$APP_RESPONSIVENESS_REPORT" >> "$LAUNCH_LOG" 2>&1 && launchctl_env_set=1
+            launchctl setenv EXCISE_RESPONSIVENESS_REPORT "$APP_RESPONSIVENESS_REPORT" >> "$LAUNCH_LOG" 2>&1 && launchctl_env_set=1
         fi
         {
             echo "Launching with: open -g -n -a $APP $PDF --args --responsiveness-report $APP_RESPONSIVENESS_REPORT"
-            PDFE_RESPONSIVENESS_REPORT="$APP_RESPONSIVENESS_REPORT" \
+            EXCISE_RESPONSIVENESS_REPORT="$APP_RESPONSIVENESS_REPORT" \
                 open -g -n -a "$APP" "$PDF" --args --responsiveness-report "$APP_RESPONSIVENESS_REPORT"
         } > "$LAUNCH_LOG" 2>&1
         launch_rc=$?
@@ -422,7 +422,7 @@ case "$MODE" in
     direct-exec)
         {
             echo "Launching with: $APP_EXEC --responsiveness-report $APP_RESPONSIVENESS_REPORT $PDF"
-            PDFE_RESPONSIVENESS_REPORT="$APP_RESPONSIVENESS_REPORT" \
+            EXCISE_RESPONSIVENESS_REPORT="$APP_RESPONSIVENESS_REPORT" \
                 "$APP_EXEC" --responsiveness-report "$APP_RESPONSIVENESS_REPORT" "$PDF"
         } > "$APP_LOG" 2>&1 &
         app_pid=$!
@@ -512,12 +512,12 @@ if [ "$ALLOW_FOCUS_INPUT" = "1" ]; then
         "SearchTextBox" 1000 3000 <<'APPLESCRIPT'
 tell application "System Events"
     set targetName to ""
-    if exists process "pdfe" then
-        set targetName to "pdfe"
-    else if exists process "PdfEditor" then
-        set targetName to "PdfEditor"
+    if exists process "excise" then
+        set targetName to "excise"
+    else if exists process "Excise.App" then
+        set targetName to "Excise.App"
     else
-        error "pdfe/PdfEditor process is not visible to System Events"
+        error "excise/Excise.App process is not visible to System Events"
     end if
 
     tell process targetName
@@ -542,12 +542,12 @@ APPLESCRIPT
         "front window" 1000 3000 <<'APPLESCRIPT'
 tell application "System Events"
     set targetName to ""
-    if exists process "pdfe" then
-        set targetName to "pdfe"
-    else if exists process "PdfEditor" then
-        set targetName to "PdfEditor"
+    if exists process "excise" then
+        set targetName to "excise"
+    else if exists process "Excise.App" then
+        set targetName to "Excise.App"
     else
-        error "pdfe/PdfEditor process is not visible to System Events"
+        error "excise/Excise.App process is not visible to System Events"
     end if
 
     tell process targetName
@@ -565,12 +565,12 @@ APPLESCRIPT
         "front window" 1000 3000 <<'APPLESCRIPT'
 tell application "System Events"
     set targetName to ""
-    if exists process "pdfe" then
-        set targetName to "pdfe"
-    else if exists process "PdfEditor" then
-        set targetName to "PdfEditor"
+    if exists process "excise" then
+        set targetName to "excise"
+    else if exists process "Excise.App" then
+        set targetName to "Excise.App"
     else
-        error "pdfe/PdfEditor process is not visible to System Events"
+        error "excise/Excise.App process is not visible to System Events"
     end if
 
     tell process targetName
@@ -588,12 +588,12 @@ APPLESCRIPT
         "front window" 1500 5000 <<'APPLESCRIPT'
 tell application "System Events"
     set targetName to ""
-    if exists process "pdfe" then
-        set targetName to "pdfe"
-    else if exists process "PdfEditor" then
-        set targetName to "PdfEditor"
+    if exists process "excise" then
+        set targetName to "excise"
+    else if exists process "Excise.App" then
+        set targetName to "Excise.App"
     else
-        error "pdfe/PdfEditor process is not visible to System Events"
+        error "excise/Excise.App process is not visible to System Events"
     end if
 
     tell process targetName

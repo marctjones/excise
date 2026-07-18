@@ -24,7 +24,7 @@ if (repoRoot == null)
 }
 
 var sourcePdf = Path.Combine(repoRoot, "test-pdfs", "sample-pdfs", "birth-certificate-request-scrambled.pdf");
-var outputPdf = "/tmp/pdfe-test-redacted.pdf";
+var outputPdf = "/tmp/excise-test-redacted.pdf";
 var textToRedact = "CITY";
 
 // Clean up previous test output

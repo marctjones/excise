@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Run a focused image/filter rendering conformance scan. This script ties the
-# feature inventory to Pdfe.RenderTools corpus-scan and rendering-quality
+# feature inventory to Excise.RenderTools corpus-scan and rendering-quality
 # classification commands.
 
 set -euo pipefail
@@ -36,7 +36,7 @@ Options:
                          Omit to scan every PDF with any image stream.
   --page-mode <mode>     first, sample, or all. Default: sample.
   --oracles <set>        none, ghostscript, pdfbox, pdfium, all. Default: all.
-  --parallel <n>         Pdfe.RenderTools corpus-scan parallelism. Default: 0 auto.
+  --parallel <n>         Excise.RenderTools corpus-scan parallelism. Default: 0 auto.
   --pdf-timeout-ms <n>   Per-PDF oracle timeout. Default: 120000.
   --release              Use Release build.
   -h, --help             Show this help.
@@ -137,9 +137,9 @@ if ! awk 'NR > 1 { found=1; exit } END { exit found ? 0 : 1 }' "$PAGE_MANIFEST";
     exit 1
 fi
 
-echo "building Pdfe.RenderTools ($CONFIG)"
-dotnet build -c "$CONFIG" tools/Pdfe.RenderTools/Pdfe.RenderTools.csproj >/dev/null
-RENDER_TOOLS_BIN="$ROOT/tools/Pdfe.RenderTools/bin/$CONFIG/net10.0/Pdfe.RenderTools"
+echo "building Excise.RenderTools ($CONFIG)"
+dotnet build -c "$CONFIG" tools/Excise.RenderTools/Excise.RenderTools.csproj >/dev/null
+RENDER_TOOLS_BIN="$ROOT/tools/Excise.RenderTools/bin/$CONFIG/net10.0/Excise.RenderTools"
 
 if [[ -z "$FEATURE" || "$FEATURE" == "filter:JBIG2Decode" ]]; then
     echo "classifying JBIG2 requirements"

@@ -11,15 +11,15 @@ Use Shortcuts to call the CLI contract rather than click the GUI.
 set -euo pipefail
 PDF="$1"
 PAGE="${2:-1}"
-OUT="${TMPDIR:-/tmp}/pdfe-page-${PAGE}.png"
-pdfe render "$PDF" --output "$OUT" --page "$PAGE" --dpi 150 --json
+OUT="${TMPDIR:-/tmp}/excise-page-${PAGE}.png"
+excise render "$PDF" --output "$OUT" --page "$PAGE" --dpi 150 --json
 open -R "$OUT"
 ```
 
 For multi-step workflows, write a workflow JSON file and run:
 
 ```bash
-pdfe batch workflow.json --json --progress --output report.json
+excise batch workflow.json --json --progress --output report.json
 ```
 
 Shortcuts receives structured JSON on stdout and does not need Accessibility

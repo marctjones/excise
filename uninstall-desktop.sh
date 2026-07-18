@@ -1,14 +1,14 @@
 #!/bin/bash
 #
-# Uninstall PdfEditor desktop application
+# Uninstall Excise.App desktop application
 #
 
-APP_ID="com.pdfeditor.PdfEditor"
-INSTALL_DIR="$HOME/.local/share/PdfEditor"
+APP_ID="com.exciseditor.Excise.App"
+INSTALL_DIR="$HOME/.local/share/Excise.App"
 DESKTOP_FILE="$HOME/.local/share/applications/${APP_ID}.desktop"
 ICON_PATH="$HOME/.local/share/icons/hicolor/256x256/apps/${APP_ID}.svg"
 
-echo "=== PdfEditor Desktop Uninstallation ==="
+echo "=== Excise.App Desktop Uninstallation ==="
 echo ""
 
 if [ -d "$INSTALL_DIR" ]; then

@@ -6,7 +6,7 @@ Version 3: Handle Chapters 10-14 and Annexes.
 
 import os
 
-WIKI_DIR = "/home/marc/pdfe/wiki"
+WIKI_DIR = "/home/marc/excise/wiki"
 
 def read_file(filepath):
     with open(filepath, 'r', encoding='utf-8') as f:

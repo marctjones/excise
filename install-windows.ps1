@@ -1,17 +1,17 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-    Install PdfEditor as a Windows application for the current user.
+    Install Excise.App as a Windows application for the current user.
 
 .DESCRIPTION
-    Builds and installs PdfEditor to the user's local AppData folder,
+    Builds and installs Excise.App to the user's local AppData folder,
     creates Start Menu shortcuts, and optionally registers as PDF handler.
 
 .PARAMETER NoBuild
     Skip building and use existing published files.
 
 .PARAMETER RegisterPdfHandler
-    Register PdfEditor as an option for opening PDF files.
+    Register Excise.App as an option for opening PDF files.
 
 .EXAMPLE
     .\install-windows.ps1
@@ -27,16 +27,16 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$AppName = "PdfEditor"
+$AppName = "Excise.App"
 $AppDisplayName = "PDF Editor"
-$Publisher = "PdfEditor"
+$Publisher = "Excise.App"
 $InstallDir = Join-Path $env:LOCALAPPDATA $AppName
 $StartMenuDir = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs"
 $ShortcutPath = Join-Path $StartMenuDir "$AppDisplayName.lnk"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$ProjectDir = Join-Path $ScriptDir "PdfEditor"
+$ProjectDir = Join-Path $ScriptDir "Excise.App"
 
-Write-Host "=== PdfEditor Windows Installation ===" -ForegroundColor Cyan
+Write-Host "=== Excise.App Windows Installation ===" -ForegroundColor Cyan
 Write-Host ""
 
 # Check for .NET SDK
@@ -52,8 +52,8 @@ if (-not $NoBuild) {
 }
 
 # Verify project exists
-if (-not (Test-Path (Join-Path $ProjectDir "PdfEditor.csproj"))) {
-    Write-Host "Error: Cannot find PdfEditor.csproj in $ProjectDir" -ForegroundColor Red
+if (-not (Test-Path (Join-Path $ProjectDir "Excise.App.csproj"))) {
+    Write-Host "Error: Cannot find Excise.App.csproj in $ProjectDir" -ForegroundColor Red
     exit 1
 }
 
@@ -78,7 +78,7 @@ if (-not $NoBuild) {
 Write-Host ""
 Write-Host "Step 2: Creating Start Menu shortcut..." -ForegroundColor Yellow
 
-$ExePath = Join-Path $InstallDir "PdfEditor.exe"
+$ExePath = Join-Path $InstallDir "Excise.App.exe"
 
 if (-not (Test-Path $ExePath)) {
     Write-Host "Error: Executable not found at $ExePath" -ForegroundColor Red
@@ -110,12 +110,12 @@ if ($RegisterPdfHandler) {
     Write-Host ""
     Write-Host "Step 3: Registering as PDF handler..." -ForegroundColor Yellow
 
-    $RegPath = "HKCU:\Software\Classes\PdfEditor.pdf"
+    $RegPath = "HKCU:\Software\Classes\Excise.App.pdf"
     $RegPathOpen = "$RegPath\shell\open\command"
 
     # Create file type association
     New-Item -Path $RegPath -Force | Out-Null
-    Set-ItemProperty -Path $RegPath -Name "(Default)" -Value "PDF Document (PdfEditor)"
+    Set-ItemProperty -Path $RegPath -Name "(Default)" -Value "PDF Document (Excise.App)"
 
     New-Item -Path "$RegPath\shell\open\command" -Force | Out-Null
     Set-ItemProperty -Path $RegPathOpen -Name "(Default)" -Value "`"$ExePath`" `"%1`""
@@ -125,7 +125,7 @@ if ($RegisterPdfHandler) {
     if (-not (Test-Path $OpenWithPath)) {
         New-Item -Path $OpenWithPath -Force | Out-Null
     }
-    Set-ItemProperty -Path $OpenWithPath -Name "PdfEditor.pdf" -Value "" -Type String
+    Set-ItemProperty -Path $OpenWithPath -Name "Excise.App.pdf" -Value "" -Type String
 
     Write-Host "  Registered PDF handler in registry" -ForegroundColor Green
     Write-Host "  Right-click a PDF -> Open with -> Choose another app -> PDF Editor" -ForegroundColor Gray
@@ -134,10 +134,10 @@ if ($RegisterPdfHandler) {
 # Create uninstaller script in install directory
 $UninstallerPath = Join-Path $InstallDir "Uninstall.ps1"
 @"
-# PdfEditor Uninstaller
+# Excise.App Uninstaller
 `$ErrorActionPreference = "Stop"
 
-Write-Host "Uninstalling PdfEditor..." -ForegroundColor Yellow
+Write-Host "Uninstalling Excise.App..." -ForegroundColor Yellow
 
 # Remove shortcuts
 `$StartMenuShortcut = Join-Path `$env:APPDATA "Microsoft\Windows\Start Menu\Programs\PDF Editor.lnk"
@@ -147,12 +147,12 @@ if (Test-Path `$StartMenuShortcut) { Remove-Item `$StartMenuShortcut -Force }
 if (Test-Path `$DesktopShortcut) { Remove-Item `$DesktopShortcut -Force }
 
 # Remove registry entries
-Remove-Item -Path "HKCU:\Software\Classes\PdfEditor.pdf" -Recurse -ErrorAction SilentlyContinue
-Remove-ItemProperty -Path "HKCU:\Software\Classes\.pdf\OpenWithProgids" -Name "PdfEditor.pdf" -ErrorAction SilentlyContinue
+Remove-Item -Path "HKCU:\Software\Classes\Excise.App.pdf" -Recurse -ErrorAction SilentlyContinue
+Remove-ItemProperty -Path "HKCU:\Software\Classes\.pdf\OpenWithProgids" -Name "Excise.App.pdf" -ErrorAction SilentlyContinue
 
 Write-Host "Removing application files..." -ForegroundColor Yellow
 Write-Host "Please close this window and delete the folder:" -ForegroundColor Cyan
-Write-Host "  `$env:LOCALAPPDATA\PdfEditor" -ForegroundColor White
+Write-Host "  `$env:LOCALAPPDATA\Excise.App" -ForegroundColor White
 
 Write-Host ""
 Write-Host "Uninstallation complete!" -ForegroundColor Green

@@ -28,7 +28,7 @@ where the user may still be using the machine. The release wrapper uses
 `--mode direct-exec` by default because it reliably captures app stdout/stderr
 and app-internal first-page timing even when Launch Services is constrained by a
 locked session. The script sets a temporary
-`PDFE_RESPONSIVENESS_REPORT` Launch Services environment value so the packaged
+`EXCISE_RESPONSIVENESS_REPORT` Launch Services environment value so the packaged
 app can write `app-responsiveness.json`, also writes a one-shot request file for
 Launch Services runs that do not inherit environment values, then unsets and
 removes that state during cleanup. Before launch it also starts a bounded

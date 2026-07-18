@@ -85,7 +85,7 @@ public void Verify_90Degree_WorksDespiteNegativeY()
 
 ### Step 2.1: Add Rotation Context to TextSegment
 
-**File**: `PdfEditor.Redaction/GlyphLevel/TextSegmenter.cs`
+**File**: `Excise.App.Redaction/GlyphLevel/TextSegmenter.cs`
 
 The `TextSegment` class currently stores visual coordinates. We need to either:
 - **Option A**: Store both visual AND content stream coordinates
@@ -99,7 +99,7 @@ The `TextSegment` class currently stores visual coordinates. We need to either:
 
 ### Step 2.2: Pass Rotation Info Through the Pipeline
 
-**File**: `PdfEditor.Redaction/GlyphLevel/GlyphRemover.cs`
+**File**: `Excise.App.Redaction/GlyphLevel/GlyphRemover.cs`
 
 Current signature:
 ```csharp
@@ -122,7 +122,7 @@ public List<PdfOperation> ProcessOperations(
 
 ### Step 2.3: Pass to OperationReconstructor
 
-**File**: `PdfEditor.Redaction/GlyphLevel/OperationReconstructor.cs`
+**File**: `Excise.App.Redaction/GlyphLevel/OperationReconstructor.cs`
 
 Current signature:
 ```csharp
@@ -143,7 +143,7 @@ public List<PdfOperation> ReconstructWithPositioning(
 
 ### Step 2.4: Transform Coordinates in CreatePositioningOperation
 
-**File**: `PdfEditor.Redaction/GlyphLevel/OperationReconstructor.cs`
+**File**: `Excise.App.Redaction/GlyphLevel/OperationReconstructor.cs`
 
 Current code (lines 87-112):
 ```csharp
@@ -196,7 +196,7 @@ public TextStateOperation CreatePositioningOperation(
 
 ### Step 2.5: Update ContentStreamRedactor to Pass Rotation
 
-**File**: `PdfEditor.Redaction/ContentStream/ContentStreamRedactor.cs`
+**File**: `Excise.App.Redaction/ContentStream/ContentStreamRedactor.cs`
 
 Current call (line 114):
 ```csharp
@@ -224,7 +224,7 @@ public (byte[] modifiedContent, List<RedactionDetail> details) RedactContentStre
 
 ### Step 2.6: Update TextRedactor to Pass Rotation
 
-**File**: `PdfEditor.Redaction/TextRedactor.cs`
+**File**: `Excise.App.Redaction/TextRedactor.cs`
 
 Current call (lines 488-495):
 ```csharp

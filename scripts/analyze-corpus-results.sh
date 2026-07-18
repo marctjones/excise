@@ -159,7 +159,7 @@ Gradually expand PDF format support:
 dotnet test --filter "FullyQualifiedName~Redaction"
 
 # Run current redaction verification tests
-dotnet test PdfEditor.Tests --filter "FullyQualifiedName~Redaction"
+dotnet test Excise.App.Tests --filter "FullyQualifiedName~Redaction"
 ```
 
 ## Next Steps

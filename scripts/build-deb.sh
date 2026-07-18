@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# Build a Debian/Ubuntu .deb installer for pdfe.
+# Build a Debian/Ubuntu .deb installer for excise.
 #
 # Produces a self-contained single-file package — no .NET runtime required
 # on the target machine. Bundles the GUI editor and the CLI together.
 #
 # Layout:
-#   /usr/lib/pdfe/PdfEditor          GUI binary
-#   /usr/lib/pdfe/pdfe               CLI binary
-#   /usr/bin/pdfe                    symlink → /usr/lib/pdfe/pdfe
-#   /usr/share/applications/pdfe.desktop
-#   /usr/share/icons/hicolor/<size>/apps/pdfe.png
-#   /usr/share/icons/hicolor/scalable/apps/pdfe.svg
-#   /usr/share/doc/pdfe/{README.md,CHANGELOG.md,copyright}
+#   /usr/lib/excise/Excise.App          GUI binary
+#   /usr/lib/excise/excise               CLI binary
+#   /usr/bin/excise                    symlink → /usr/lib/excise/excise
+#   /usr/share/applications/excise.desktop
+#   /usr/share/icons/hicolor/<size>/apps/excise.png
+#   /usr/share/icons/hicolor/scalable/apps/excise.svg
+#   /usr/share/doc/excise/{README.md,CHANGELOG.md,copyright}
 #
 # Usage:
 #   scripts/build-deb.sh [--version 2.1.0~rc8] [--arch amd64|arm64]
@@ -74,7 +74,7 @@ if [[ -z "$VERSION" ]]; then
     fi
 fi
 
-PACKAGE="pdfe"
+PACKAGE="excise"
 DEB_NAME="${PACKAGE}_${VERSION}_${ARCH}.deb"
 
 echo "▶ Building $DEB_NAME"
@@ -101,21 +101,21 @@ publish() {
         -o "$outdir" >/dev/null
 }
 
-publish "PdfEditor/PdfEditor.csproj"     "PdfEditor (GUI)" "$PUBLISH_BASE/gui"
-publish "Pdfe.Cli/Pdfe.Cli.csproj"       "pdfe (CLI)"      "$PUBLISH_BASE/cli"
+publish "Excise.App/Excise.App.csproj"     "Excise.App (GUI)" "$PUBLISH_BASE/gui"
+publish "Excise.Cli/Excise.Cli.csproj"       "excise (CLI)"      "$PUBLISH_BASE/cli"
 
 # Sanity-check the binaries we expect.
-[[ -x "$PUBLISH_BASE/gui/PdfEditor" ]] || { echo "GUI binary missing"; exit 1; }
-[[ -x "$PUBLISH_BASE/cli/pdfe"      ]] || { echo "CLI binary missing"; exit 1; }
+[[ -x "$PUBLISH_BASE/gui/Excise.App" ]] || { echo "GUI binary missing"; exit 1; }
+[[ -x "$PUBLISH_BASE/cli/excise"      ]] || { echo "CLI binary missing"; exit 1; }
 
 # ── stage Debian tree ──────────────────────────────────────────────────
 STAGE="$ROOT/artifacts/deb-stage/$ARCH"
 rm -rf "$STAGE"
 mkdir -p "$STAGE/DEBIAN"
-mkdir -p "$STAGE/usr/lib/pdfe"
+mkdir -p "$STAGE/usr/lib/excise"
 mkdir -p "$STAGE/usr/bin"
 mkdir -p "$STAGE/usr/share/applications"
-mkdir -p "$STAGE/usr/share/doc/pdfe"
+mkdir -p "$STAGE/usr/share/doc/excise"
 for s in 16 32 64 128 256; do
     mkdir -p "$STAGE/usr/share/icons/hicolor/${s}x${s}/apps"
 done
@@ -124,38 +124,38 @@ mkdir -p "$STAGE/usr/share/icons/hicolor/scalable/apps"
 # Binaries: copy the entire publish output (single-file extracts native
 # libs at runtime into ~/.cache, and a few .pak/.so files still ship as
 # siblings — copy everything so we don't miss any).
-cp -a "$PUBLISH_BASE/gui/." "$STAGE/usr/lib/pdfe/"
-cp -a "$PUBLISH_BASE/cli/." "$STAGE/usr/lib/pdfe/"
+cp -a "$PUBLISH_BASE/gui/." "$STAGE/usr/lib/excise/"
+cp -a "$PUBLISH_BASE/cli/." "$STAGE/usr/lib/excise/"
 
-# Symlink the CLI into /usr/bin so `pdfe` is on PATH after install.
-ln -sf "/usr/lib/pdfe/pdfe" "$STAGE/usr/bin/pdfe"
+# Symlink the CLI into /usr/bin so `excise` is on PATH after install.
+ln -sf "/usr/lib/excise/excise" "$STAGE/usr/bin/excise"
 
 # Desktop entry, icons, docs.
-install -m 0644 "$ROOT/packaging/deb/pdfe.desktop" \
-    "$STAGE/usr/share/applications/pdfe.desktop"
-install -m 0644 "$ROOT/PdfEditor/Assets/pdfe_logo.svg" \
-    "$STAGE/usr/share/icons/hicolor/scalable/apps/pdfe.svg"
+install -m 0644 "$ROOT/packaging/deb/excise.desktop" \
+    "$STAGE/usr/share/applications/excise.desktop"
+install -m 0644 "$ROOT/Excise.App/Assets/excise_logo.svg" \
+    "$STAGE/usr/share/icons/hicolor/scalable/apps/excise.svg"
 for s in 16 32 64 128 256; do
-    install -m 0644 "$ROOT/PdfEditor/Assets/pdfe_logo_${s}.png" \
-        "$STAGE/usr/share/icons/hicolor/${s}x${s}/apps/pdfe.png"
+    install -m 0644 "$ROOT/Excise.App/Assets/excise_logo_${s}.png" \
+        "$STAGE/usr/share/icons/hicolor/${s}x${s}/apps/excise.png"
 done
-install -m 0644 "$ROOT/README.md"        "$STAGE/usr/share/doc/pdfe/README.md"
-install -m 0644 "$ROOT/CHANGELOG.md"     "$STAGE/usr/share/doc/pdfe/CHANGELOG.md" 2>/dev/null || true
-install -m 0644 "$ROOT/LICENSES.md"      "$STAGE/usr/share/doc/pdfe/LICENSES.md" 2>/dev/null || true
+install -m 0644 "$ROOT/README.md"        "$STAGE/usr/share/doc/excise/README.md"
+install -m 0644 "$ROOT/CHANGELOG.md"     "$STAGE/usr/share/doc/excise/CHANGELOG.md" 2>/dev/null || true
+install -m 0644 "$ROOT/LICENSES.md"      "$STAGE/usr/share/doc/excise/LICENSES.md" 2>/dev/null || true
 install -m 0644 "$ROOT/packaging/deb/copyright" \
-    "$STAGE/usr/share/doc/pdfe/copyright"
+    "$STAGE/usr/share/doc/excise/copyright"
 
 # Ship the third-party license manifest alongside the binary so it can be
 # inspected without launching the GUI. The same JSON is also embedded in
 # the executable for the in-app About dialog.
-if [[ -f "$ROOT/PdfEditor/Assets/third-party-licenses.json" ]]; then
-    install -m 0644 "$ROOT/PdfEditor/Assets/third-party-licenses.json" \
-        "$STAGE/usr/share/doc/pdfe/third-party-licenses.json"
+if [[ -f "$ROOT/Excise.App/Assets/third-party-licenses.json" ]]; then
+    install -m 0644 "$ROOT/Excise.App/Assets/third-party-licenses.json" \
+        "$STAGE/usr/share/doc/excise/third-party-licenses.json"
 fi
 
 # Permissions: binaries 0755, everything else 0644.
-chmod 0755 "$STAGE/usr/lib/pdfe/PdfEditor" "$STAGE/usr/lib/pdfe/pdfe"
-find "$STAGE/usr/lib/pdfe" -type f \! \( -name PdfEditor -o -name pdfe \) -exec chmod 0644 {} +
+chmod 0755 "$STAGE/usr/lib/excise/Excise.App" "$STAGE/usr/lib/excise/excise"
+find "$STAGE/usr/lib/excise" -type f \! \( -name Excise.App -o -name excise \) -exec chmod 0644 {} +
 
 # Compute installed-size in KB for the control file (Debian convention).
 INSTALLED_SIZE="$(du -ks "$STAGE/usr" | cut -f1)"
@@ -173,12 +173,12 @@ Installed-Size: $INSTALLED_SIZE
 Depends: libc6, libgcc-s1, libstdc++6, libfontconfig1, libice6, libsm6, libx11-6, libicu70 | libicu72 | libicu74
 Recommends: tesseract-ocr
 Description: Cross-platform PDF editor with true content-level redaction
- pdfe is a PDF editor focused on glyph-level redaction — content is
+ excise is a PDF editor focused on glyph-level redaction — content is
  actually removed from the PDF structure, not just visually covered —
  plus AcroForm read/fill/flatten/author and a pure-.NET PDF
  parser/writer/renderer.
  .
- Includes the desktop GUI editor and the 'pdfe' command-line toolkit
+ Includes the desktop GUI editor and the 'excise' command-line toolkit
  (info, text, letters, render, redact, audit, fill-form, add-field,
  autodetect-fields, ocr).
  .

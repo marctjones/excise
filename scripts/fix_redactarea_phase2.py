@@ -10,7 +10,7 @@ from pathlib import Path
 from datetime import datetime
 
 PROJECT_ROOT = Path(__file__).parent.parent
-TEST_DIR = PROJECT_ROOT / "PdfEditor.Tests"
+TEST_DIR = PROJECT_ROOT / "Excise.App.Tests"
 LOG_DIR = PROJECT_ROOT / "logs"
 TIMESTAMP = datetime.now().strftime("%Y%m%d_%H%M%S")
 LOG_FILE = LOG_DIR / f"fix_redactarea_phase2_{TIMESTAMP}.log"

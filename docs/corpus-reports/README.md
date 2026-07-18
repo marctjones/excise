@@ -1,7 +1,7 @@
 # Rendering Quality Reports
 
 The preferred rendering gate is the contract-driven quality scanner. It runs
-real-world corpus PDFs through pdfe plus reference oracles (`mutool draw`,
+real-world corpus PDFs through excise plus reference oracles (`mutool draw`,
 `pdftocairo`, Ghostscript/GhostPDF, Apache PDFBox, and PDFium's `pdfium_test`
 where configured), then evaluates the result against per-PDF JSON contracts in
 `test-pdfs/rendering-contracts/`.
@@ -17,8 +17,8 @@ decision:
 |---|---|
 | `rawStatus` | Mechanical oracle comparison: `PASS`, `PASS_ONE`, `DIFF`, or a non-rendering status. |
 | `releaseStatus` | Release gate result: `PASS`, `BLOCKED`, or `NEEDS_REVIEW`. |
-| `qualityStatus` | Rendering-quality judgment: `PIXEL_EXACT`, `TARGET_MATCH`, `MATCHES_ACCEPTED_REFERENCE`, `REFERENCE_REFUSAL_ACCEPTED`, `PDFE_BETTER_THAN_REFS`, `ACCEPTED_LIMITATION`, `NON_RENDERABLE_ACCEPTED`, `FAIL`, or `NEEDS_REVIEW`. |
-| `pixelAgreement` | Whether pdfe matched all required references, the chosen target, some references, no references, or the page is not comparable. |
+| `qualityStatus` | Rendering-quality judgment: `PIXEL_EXACT`, `TARGET_MATCH`, `MATCHES_ACCEPTED_REFERENCE`, `REFERENCE_REFUSAL_ACCEPTED`, `EXCISE_BETTER_THAN_REFS`, `ACCEPTED_LIMITATION`, `NON_RENDERABLE_ACCEPTED`, `FAIL`, or `NEEDS_REVIEW`. |
+| `pixelAgreement` | Whether excise matched all required references, the chosen target, some references, no references, or the page is not comparable. |
 | `referenceSituation` | Whether references agree, disagree, refuse, are incomplete, are known lossy/wrong, or are not applicable. |
 | `targetBasis` | Why the page is judged this way: reference renderer, reference consensus, PDF spec, semantic quality standard, resource policy, or malformed-input policy. |
 | `targetRenderer` | Chosen reference renderer when one renderer is the documented target. |
@@ -35,7 +35,7 @@ release but still lower quality than the best renderer.”
 Known corpus passwords belong in the per-PDF rendering contract as the top-level
 `Password` field. The contract-driven scanner loads those values into an
 in-memory password manifest before opening the PDF, then passes the same user
-password to pdfe and each configured reference oracle. This keeps encrypted
+password to excise and each configured reference oracle. This keeps encrypted
 fixtures in normal page-rendering comparison instead of classifying them as
 `PASSWORD_REQUIRED`.
 
@@ -58,13 +58,13 @@ classification stay together.
 
 ## Legacy Raw Scanner
 
-`pdfe corpus-scan` and `scripts/run-exploratory-corpus.sh` still exist for raw
+`excise corpus-scan` and `scripts/run-exploratory-corpus.sh` still exist for raw
 oracle exploration and sharded long runs. They can emit `PASS` / `PASS_ONE` /
 `DIFF` reports, and the shell driver still supports TSV page, password, and
 expectation manifests for compatibility. New release-quality rendering status
 should use `render-quality-scan` and JSON contracts instead.
 
-Each raw scanner entry records pdfe's render result for one page, plus the
+Each raw scanner entry records excise's render result for one page, plus the
 per-oracle diff metrics and oracle statuses. Page-1 reports therefore have one
 entry per PDF; sampled and exhaustive reports have multiple entries per PDF.
 
@@ -78,7 +78,7 @@ prints the slowest pages and failure diagnostics into the run log.
 
 Use aggregate hotspot reports when deciding what to optimize. Slow PDF/page
 names are reproduction evidence, not the priority list. The corpus hotspot
-command rolls raw scan entries up by shared code path: pdfe render/cache read,
+command rolls raw scan entries up by shared code path: excise render/cache read,
 reference render/cache read, and compare/classify overhead. For release
 benchmarking, the `benchmark-suite` command also emits speed, reference
 fidelity, text extraction, RMSE/SSIM, and redaction-completeness reports while
@@ -111,7 +111,7 @@ none` is used for the deterministic synthetic gate; local release runs use
 installed reference CLIs when present.
 
 ```bash
-dotnet run --project tools/Pdfe.RenderTools/Pdfe.RenderTools.csproj -c Debug -- \
+dotnet run --project tools/Excise.RenderTools/Excise.RenderTools.csproj -c Debug -- \
     corpus-hotspots logs/render-quality/local-real-world-books.raw-corpus-scan.json \
     --output logs/render-quality/local-real-world-corpus-codepath-hotspots.json
 ```
@@ -122,8 +122,8 @@ viewer render/capture, image-source diff, opacity checks, and visual-surface
 checks across all pages.
 
 ```bash
-dotnet run --project tools/Pdfe.RenderTools/Pdfe.RenderTools.csproj -c Debug -- \
-    gui-display-hotspots PdfEditor.Tests/bin/Debug/net10.0/UI/test-output/gui-display-suite-*.json \
+dotnet run --project tools/Excise.RenderTools/Excise.RenderTools.csproj -c Debug -- \
+    gui-display-hotspots Excise.App.Tests/bin/Debug/net10.0/UI/test-output/gui-display-suite-*.json \
     --output logs/render-quality/gui-display-codepath-hotspots.json
 ```
 
@@ -133,21 +133,21 @@ publication in `gui-workflow-suite-*.json`. The same phase-hotspot aggregator
 can rank those workflow phases.
 
 ```bash
-dotnet run --project tools/Pdfe.RenderTools/Pdfe.RenderTools.csproj -c Debug -- \
-    gui-display-hotspots PdfEditor.Tests/bin/Debug/net10.0/UI/test-output/gui-workflow-suite-*.json \
+dotnet run --project tools/Excise.RenderTools/Excise.RenderTools.csproj -c Debug -- \
+    gui-display-hotspots Excise.App.Tests/bin/Debug/net10.0/UI/test-output/gui-workflow-suite-*.json \
     --output logs/render-quality/gui-workflow-codepath-hotspots.json
 ```
 
 | Status | Meaning |
 |---|---|
-| `PASS` | pdfe matches both mutool and pdftocairo within thresholds |
-| `PASS_ONE` | pdfe matches at least one available oracle, but not both primary oracles (engine-specific quirk or unsettled reference split, not a clear pdfe bug) |
-| `DIFF` | pdfe disagrees with every available rendered oracle |
-| `PARSE_ERROR` | pdfe can't open the PDF (parser limitation) |
-| `DECODE_ERROR` | pdfe opened the PDF but a stream, image, or content decode path failed during rendering |
+| `PASS` | excise matches both mutool and pdftocairo within thresholds |
+| `PASS_ONE` | excise matches at least one available oracle, but not both primary oracles (engine-specific quirk or unsettled reference split, not a clear excise bug) |
+| `DIFF` | excise disagrees with every available rendered oracle |
+| `PARSE_ERROR` | excise can't open the PDF (parser limitation) |
+| `DECODE_ERROR` | excise opened the PDF but a stream, image, or content decode path failed during rendering |
 | `TIMEOUT` | per-PDF wall-clock budget exceeded |
 | `ALL_ORACLES_REFUSED` | reference engines cannot render the page |
-| `RECOVERED_MALFORMED_CONTENT` | pdfe rendered bounded valid content after skipping malformed page-content streams; tracked as robustness coverage, not focused visual-fidelity work |
+| `RECOVERED_MALFORMED_CONTENT` | excise rendered bounded valid content after skipping malformed page-content streams; tracked as robustness coverage, not focused visual-fidelity work |
 | `EMPTY_DOC` | 0 pages |
 | `COMPARE_ERROR` | bitmap-comparison crashed |
 | `SCANNER_CRASH` | a one-PDF recovery subprocess exited before writing a report |
@@ -177,8 +177,8 @@ quality classifications, and reference-target metadata.
 `--extra-oracles ghostscript` is the default. Use `--extra-oracles none` to
 reproduce the older MuPDF+Poppler-only reports, or `--extra-oracles all` to add
 Ghostscript, PDFBox, and PDFium where locally configured. PDFBox can be enabled
-with `PDFE_PDFBOX_JAR=/path/to/pdfbox-app.jar`; PDFium can be enabled with
-`PDFE_PDFIUM_TEST=/path/to/pdfium_test`.
+with `EXCISE_PDFBOX_JAR=/path/to/pdfbox-app.jar`; PDFium can be enabled with
+`EXCISE_PDFIUM_TEST=/path/to/pdfium_test`.
 
 ## Corpus Tiers
 
@@ -189,7 +189,7 @@ with `PDFE_PDFBOX_JAR=/path/to/pdfbox-app.jar`; PDFium can be enabled with
 | Optional local real-world books | `scripts/setup-local-real-world-corpus.sh` | `test-pdfs/local-real-world` | Local personal/reference reading PDFs such as OSS books. PDFs stay ignored by git; committed manifests/contracts let Marc's machine run every-page renderer and GUI display checks without redistributing the documents. |
 | pdf.js corpus | `scripts/download-pdfjs-corpus.sh` | `test-pdfs/pdfjs` | Broad bug-reproduction corpus for exploratory fidelity scans. |
 | Poppler corpus | `scripts/download-poppler-corpus.sh` | `test-pdfs/poppler` | Poppler's public regression test-data repository, including rendering fixtures and reference assets. |
-| Generated implementation regressions | `scripts/generate-rendering-regression-fixtures.py` | `test-pdfs/generated-regressions` | Small pdfe-authored PDFs generated from focused debugging hypotheses. These are checked in and contract-covered so future fixes cannot regress known-good simplified cases. |
+| Generated implementation regressions | `scripts/generate-rendering-regression-fixtures.py` | `test-pdfs/generated-regressions` | Small excise-authored PDFs generated from focused debugging hypotheses. These are checked in and contract-covered so future fixes cannot regress known-good simplified cases. |
 | Standards image/filter corpus set | `scripts/download-standards-image-corpora.sh` | `test-pdfs` | Meta-downloader for pdf.js, Poppler, veraPDF, Isartor, smoke/federal, and Altona print/color PDFs. Ghent is registered as a manual source because the public page does not expose a stable direct archive URL. |
 
 The federal everyday corpus manifest lives at
@@ -242,7 +242,7 @@ scripts/run-local-real-world-gui-display.sh
 Tune chunk size when working on slower machines or while doing other local work:
 
 ```bash
-PDFE_LOCAL_REAL_WORLD_GUI_CHUNK_SIZE=75 \
+EXCISE_LOCAL_REAL_WORLD_GUI_CHUNK_SIZE=75 \
     scripts/run-local-real-world-gui-display.sh
 ```
 
@@ -250,7 +250,7 @@ For release-candidate rendering checks against this tier, run the CLI scanner
 directly so the output path and timeout are explicit:
 
 ```bash
-dotnet run --project Pdfe.Cli/Pdfe.Cli.csproj -c Debug -- \
+dotnet run --project Excise.Cli/Excise.Cli.csproj -c Debug -- \
     corpus-scan test-pdfs/federal \
     --output logs/federal-corpus-report.json \
     --page-mode sample \
@@ -305,7 +305,7 @@ capability metadata under `logs/image-conformance/`.
 
 ## Latest snapshot
 
-See `Pdfe.Rendering.Tests/bin/Debug/net10.0/exploratory-report-all.json` for
+See `Excise.Rendering.Tests/bin/Debug/net10.0/exploratory-report-all.json` for
 the full current data; below is the headline breakdown from the 2026-06-18
 release-quality run against the current pdf.js corpus download. This snapshot
 used `--page-mode all`, so the count is one result per rendered page.
@@ -313,7 +313,7 @@ used `--page-mode all`, so the count is one result per rendered page.
 Command:
 
 ```bash
-scripts/run-exploratory-corpus-tmux.sh --session pdfe-corpus-release-20260618-cff-all -- \
+scripts/run-exploratory-corpus-tmux.sh --session excise-corpus-release-20260618-cff-all -- \
     --page-mode all \
     --pdf-timeout-ms 120000 \
     --chunk-parallel 2 \
@@ -412,14 +412,14 @@ chunk crashes:
   input reader.
 * 1 each: `RESOURCE_LIMIT` and `INVALID_PAGE_GEOMETRY`. The previous
   `ALL_ORACLES_REFUSED` entry (`bomb_giant.pdf`) is now classified as
-  `RECOVERED_MALFORMED_CONTENT`: pdfe renders the valid prefix and skips the
+  `RECOVERED_MALFORMED_CONTENT`: excise renders the valid prefix and skips the
   malformed JBIG2 page-content streams.
 
-**`PASS_ONE` (353) — pdfe sides with one oracle:**
+**`PASS_ONE` (353) — excise sides with one oracle:**
 
-These are **not clear pdfe bugs** — they're cases where the two
+These are **not clear excise bugs** — they're cases where the two
 reference engines disagree among themselves, or one reference renderer
-refuses while pdfe can still be compared against the other.
+refuses while excise can still be compared against the other.
 
 ## Re-running
 
@@ -441,7 +441,7 @@ process exits as `SCANNER_CRASH` entries instead of silently dropping the
 slice.
 
 The merge step at the end produces a fresh
-`Pdfe.Rendering.Tests/bin/Debug/net10.0/exploratory-report-<mode>.json`.
+`Excise.Rendering.Tests/bin/Debug/net10.0/exploratory-report-<mode>.json`.
 For compatibility, `--page-mode first` also writes
 `exploratory-report.json`, which can be copied here to track progress
 over time.

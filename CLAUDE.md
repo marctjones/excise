@@ -27,7 +27,7 @@ See [Knowledge Management Strategy](#knowledge-management-strategy) section belo
 
 ## Project Overview
 
-This is a cross-platform PDF editor built with **C# + .NET 10 + Avalonia UI** (MVVM architecture). The application runs on Windows, Linux, and macOS, providing PDF viewing, page manipulation, and content-level redaction capabilities. As of v2.0 the PDF stack is pure-.NET and pdfe-owned (Pdfe.Core parser/writer, Pdfe.Rendering SkiaSharp renderer, Pdfe.Ocr); the legacy PdfPig/PDFsharp/PDFtoImage dependencies have been removed.
+This is a cross-platform PDF editor built with **C# + .NET 10 + Avalonia UI** (MVVM architecture). The application runs on Windows, Linux, and macOS, providing PDF viewing, page manipulation, and content-level redaction capabilities. As of v2.0 the PDF stack is pure-.NET and excise-owned (Excise.Core parser/writer, Excise.Rendering SkiaSharp renderer, Excise.Ocr); the legacy PdfPig/PDFsharp/PDFtoImage dependencies have been removed.
 
 **Key Features:**
 - Open/view PDFs with zoom and pan controls
@@ -62,12 +62,12 @@ This project implements **TRUE glyph-level removal** for PDF redaction. This is 
 ### Critical Files - DO NOT SIMPLIFY
 
 ```
-Pdfe.Core/Text/Segmentation/GlyphRemover.cs            ← orchestrates glyph-level removal
-Pdfe.Core/Text/Segmentation/LetterFinder.cs            ← text-based letter matching (issue #90)
-Pdfe.Core/Text/Segmentation/OperationReconstructor.cs  ← rebuilds BT/Tf/Tj blocks without removed glyphs
-Pdfe.Core/Content/ContentStreamParser.cs               ← parses content-stream operators
-Pdfe.Core/Content/ContentStreamWriter.cs               ← serializes operators back to bytes
-PdfEditor/Services/RedactionService.cs                 ← GUI orchestration; mirrors the rewrite onto the page
+Excise.Core/Text/Segmentation/GlyphRemover.cs            ← orchestrates glyph-level removal
+Excise.Core/Text/Segmentation/LetterFinder.cs            ← text-based letter matching (issue #90)
+Excise.Core/Text/Segmentation/OperationReconstructor.cs  ← rebuilds BT/Tf/Tj blocks without removed glyphs
+Excise.Core/Content/ContentStreamParser.cs               ← parses content-stream operators
+Excise.Core/Content/ContentStreamWriter.cs               ← serializes operators back to bytes
+Excise.App/Services/RedactionService.cs                 ← GUI orchestration; mirrors the rewrite onto the page
 ```
 
 ### Required Test Assertions
@@ -90,11 +90,11 @@ shipped a green suite over a leaking file:
 |------|------------------------|-------------------------|
 | #636 | `/ActualText`, `/Alt` in the structure tree | ✅ clean |
 | #608 | XMP `/Metadata`, outline titles, annotation `/Contents` | ✅ clean |
-| #637 | A page our own **extractor cannot read** (IRS 1040 p47: pdfe sees 471 chars, mutool sees 3192) | ✅ clean |
+| #637 | A page our own **extractor cannot read** (IRS 1040 p47: excise sees 471 chars, mutool sees 3192) | ✅ clean |
 
 The third is the general case, and the rule to remember:
 
-*(The #637 p47 anecdote no longer reproduces — pdfe now extracts 3233 chars
+*(The #637 p47 anecdote no longer reproduces — excise now extracts 3233 chars
 there vs. mutool's 3192 — but the general failure mode is not fixed, it's now
 **measured**: #645's corpus-wide gate (332 pages / 12 fixtures, including the
 checked-in CJK Type0 fixture that names #645's second blind spot) shows no
@@ -109,8 +109,8 @@ font-resolution bug). See `tests/extraction-parity/baseline.json` and
 `scripts/check-extraction-parity.sh`. Anecdote → measurement is the point of
 #645: don't restate a specific number here without re-running the gate.)
 
-> **Redaction completeness is bounded by extraction coverage. pdfe cannot redact
-> what pdfe cannot read — and it will report success anyway.**
+> **Redaction completeness is bounded by extraction coverage. excise cannot redact
+> what excise cannot read — and it will report success anyway.**
 
 So a redaction test MUST also assert at least one of:
 
@@ -121,7 +121,7 @@ var saved = SaveToBytes(redactedPdf);
 (Encoding.ASCII.GetString(saved) + Encoding.BigEndianUnicode.GetString(saved))
     .Should().NotContain("REDACTED_TEXT");
 
-// 2. INDEPENDENT EXTRACTOR — a tool that is not pdfe.
+// 2. INDEPENDENT EXTRACTOR — a tool that is not excise.
 MutoolTextExtractor.ExtractPage(path, page).Should().NotContain("REDACTED_TEXT");
 
 // 3. INDEPENDENT RENDERER — an ink differential over the redacted region.
@@ -133,13 +133,13 @@ InkFractionIn(after, box).Should().BeLessThan(0.001);   // was > 0.02 before
 **The principle, learned the hard way:**
 
 > **A tool must not be its own oracle for the property it exists to guarantee.**
-> pdfe confirming that pdfe removed the text proves only that its bugs are
+> excise confirming that excise removed the text proves only that its bugs are
 > self-consistent.
 
 Working examples of all three:
-- `Pdfe.Core.Tests/Text/Segmentation/StructureTreeRedactionLeakTests.cs` (saved bytes)
-- `Pdfe.Rendering.Tests/Differential/RedactionReferenceVerificationTests.cs` (independent extractor + ink differential)
-- `Pdfe.Rendering.Tests/Differential/RedactionRoundTripTests.cs` (corpus, both ways)
+- `Excise.Core.Tests/Text/Segmentation/StructureTreeRedactionLeakTests.cs` (saved bytes)
+- `Excise.Rendering.Tests/Differential/RedactionReferenceVerificationTests.cs` (independent extractor + ink differential)
+- `Excise.Rendering.Tests/Differential/RedactionRoundTripTests.cs` (corpus, both ways)
 
 **See `REDACTION_AI_GUIDELINES.md` for complete documentation.**
 
@@ -149,7 +149,7 @@ Working examples of all three:
 
 ```bash
 # Restore packages (required after cloning or adding dependencies)
-cd PdfEditor
+cd Excise.App
 dotnet restore
 
 # Build the project
@@ -166,7 +166,7 @@ dotnet run -c Release
 
 ```bash
 # Run all tests
-cd PdfEditor.Tests
+cd Excise.App.Tests
 dotnet test
 
 # Run tests with detailed output
@@ -228,7 +228,7 @@ The codebase follows strict MVVM separation:
 
 **Service Layer** (`Services/`):
 - `PdfDocumentService.cs` - PDF loading, saving, page add/remove
-- `PdfRenderService.cs` - PDF-to-image rendering (uses Pdfe.Rendering / SkiaSharp)
+- `PdfRenderService.cs` - PDF-to-image rendering (uses Excise.Rendering / SkiaSharp)
 - `RedactionService.cs` - Orchestrates content-level redaction
 - `PdfTextExtractionService.cs` - Text extraction from PDFs
 - `PdfSearchService.cs` - Search functionality
@@ -243,7 +243,7 @@ ViewModel (MainWindowViewModel)
     ↓ Calls Services
 Service Layer (PdfDocumentService, RedactionService, etc.)
     ↓ Uses Libraries
-PDF Libraries (Pdfe.Core for parsing/redaction/save, Pdfe.Rendering for Skia render, Pdfe.Ocr for OCR)
+PDF Libraries (Excise.Core for parsing/redaction/save, Excise.Rendering for Skia render, Excise.Ocr for OCR)
 ```
 
 When modifying the UI, update the XAML and bind to ViewModel properties. Never put business logic in code-behind.
@@ -251,17 +251,17 @@ When modifying the UI, update the XAML and bind to ViewModel properties. Never p
 ## Redaction Engine Architecture
 
 This is the most complex part of the codebase. As of v2.0 the redaction engine
-lives in **`Pdfe.Core`** (pure .NET), not the GUI project. The authoritative
-glyph-level pipeline is in `Pdfe.Core/Text/Segmentation/` (GlyphRemover,
+lives in **`Excise.Core`** (pure .NET), not the GUI project. The authoritative
+glyph-level pipeline is in `Excise.Core/Text/Segmentation/` (GlyphRemover,
 LetterFinder, OperationReconstructor) and the content-stream machinery in
-`Pdfe.Core/Content/` (ContentStreamParser, ContentStreamWriter). The GUI's
-`PdfEditor/Services/RedactionService.cs` only orchestrates and mirrors the
+`Excise.Core/Content/` (ContentStreamParser, ContentStreamWriter). The GUI's
+`Excise.App/Services/RedactionService.cs` only orchestrates and mirrors the
 rewrite onto the rendered page — see the "Critical Files" box at the top of
 this document for the canonical paths.
 
 The component descriptions below are kept as a conceptual reference for the
 parse → filter → rebuild → replace → draw flow; the class names map onto the
-`Pdfe.Core` types above (e.g. ContentStreamBuilder → ContentStreamWriter).
+`Excise.Core` types above (e.g. ContentStreamBuilder → ContentStreamWriter).
 
 ### Components
 
@@ -326,17 +326,17 @@ This conversion happens in `TextBoundsCalculator` and when drawing redaction rec
 
 ## Key Dependencies
 
-Located in `PdfEditor/PdfEditor.csproj`:
+Located in `Excise.App/Excise.App.csproj`:
 
 **UI Framework:**
 - Avalonia 12.0.4 (cross-platform XAML UI)
 - ReactiveUI 23.2.27 (MVVM framework)
 - FluentAvaloniaUI 3.0.0-preview2 (Fluent theme/controls)
 
-**PDF Stack (pdfe-owned, pure .NET):**
-- Pdfe.Core - parser, writer, content streams, fonts, encryption, glyph-level redaction
-- Pdfe.Rendering - SkiaSharp-based renderer (replaces PDFium)
-- Pdfe.Ocr - shells out to system tesseract
+**PDF Stack (excise-owned, pure .NET):**
+- Excise.Core - parser, writer, content streams, fonts, encryption, glyph-level redaction
+- Excise.Rendering - SkiaSharp-based renderer (replaces PDFium)
+- Excise.Ocr - shells out to system tesseract
 
 **Supporting:**
 - SkiaSharp 3.119.4 (MIT) - 2D graphics / rasterization
@@ -348,15 +348,15 @@ SkiaSharp ships a native component but is MIT-licensed.
 
 ## Test Infrastructure
 
-Located in `PdfEditor.Tests/`:
+Located in `Excise.App.Tests/`:
 
 **Framework**: xUnit 2.5.3 with FluentAssertions 6.12.0
 
-**Test Count** (2026-07-13): ~7,600 across five suites — Pdfe.Core ~3,180,
-Pdfe.Rendering ~3,420, PdfEditor ~905, Pdfe.Cli 86, Pdfe.Avalonia 10.
+**Test Count** (2026-07-13): ~7,600 across five suites — Excise.Core ~3,180,
+Excise.Rendering ~3,420, Excise.App ~905, Excise.Cli 86, Excise.Avalonia 10.
 Don't hard-code a number here; it goes stale. Run the suites.
 
-⚠️ **`PdfEditor.Tests` is SERIAL BY DESIGN** — `[assembly: CollectionBehavior(
+⚠️ **`Excise.App.Tests` is SERIAL BY DESIGN** — `[assembly: CollectionBehavior(
 DisableTestParallelization = true)]` in `AssemblyInfo.cs`. xunit's parallelism
 races SkiaSharp's **process-wide native font manager** and crashes the test host
 (#363). **Do not re-enable parallelism.** The natural instinct on seeing a
@@ -395,8 +395,8 @@ most of the time.
 
 | Tier | Cost | What | When |
 |------|------|------|------|
-| `t0` | ~30s | Build + Pdfe.Core/Cli/Avalonia tests + `verify-doc-claims.sh` + `check-gate-asymmetry.sh` + `verify-true-redaction.sh` | Before every push. No excuse not to run it — `scripts/test-tier.sh --install-hook` installs it as `.git/hooks/pre-push`. |
-| `t1` | ~10m | `t0` + the full redaction test suites + `Pdfe.Rendering.Tests` (deterministic) + `check-skip-budget.sh` | What CI blocks a PR on. `scripts/ci-test.sh` is now a thin wrapper around this. |
+| `t0` | ~30s | Build + Excise.Core/Cli/Avalonia tests + `verify-doc-claims.sh` + `check-gate-asymmetry.sh` + `verify-true-redaction.sh` | Before every push. No excuse not to run it — `scripts/test-tier.sh --install-hook` installs it as `.git/hooks/pre-push`. |
+| `t1` | ~10m | `t0` + the full redaction test suites + `Excise.Rendering.Tests` (deterministic) + `check-skip-budget.sh` | What CI blocks a PR on. `scripts/ci-test.sh` is now a thin wrapper around this. |
 | `t2` | ~30m | `scripts/release-smoke.sh --release-tests` | Release candidate. |
 | `t3` | — | `t2` plus the same on macOS and Windows (#647) | Before tagging a release. |
 
@@ -404,7 +404,7 @@ most of the time.
 convenience.** Pick the tier that matches what the change touches, not the
 tier that's fastest to run.
 
-**pdfe-specific rule: you are your own third party.** A local build you
+**excise-specific rule: you are your own third party.** A local build you
 redact a real document with is a binary whose failure hurts someone, and the
 failure is silent — no crash, no error, the name is just still in the file.
 The redaction gate is therefore non-negotiable at every tier that produces a
@@ -435,7 +435,7 @@ and there is no flag to skip them.
 1. Create service class in `Services/`
 2. Inject into `MainWindowViewModel` constructor
 3. Call service methods from ViewModel commands
-4. Add corresponding tests in `PdfEditor.Tests/`
+4. Add corresponding tests in `Excise.App.Tests/`
 
 ## Debugging Notes
 
@@ -448,8 +448,8 @@ and there is no flag to skip them.
 
 ### PDF Rendering Issues
 
-- Rendering goes through Pdfe.Rendering (SkiaSharp); SkiaSharp carries its own native component
-- Check `PdfRenderService.cs` (GUI) and `Pdfe.Rendering/SkiaRenderer.cs` for rendering code
+- Rendering goes through Excise.Rendering (SkiaSharp); SkiaSharp carries its own native component
+- Check `PdfRenderService.cs` (GUI) and `Excise.Rendering/SkiaRenderer.cs` for rendering code
 
 ### Build Failures
 
@@ -619,7 +619,7 @@ checking it is still true — several entries in this list were stale for months
 and cost real planning time.
 
 1. **Text extraction coverage bounds redaction completeness** (#637, gated by
-   #645) — ⚠️ the most important entry in this file. Where pdfe's extractor
+   #645) — ⚠️ the most important entry in this file. Where excise's extractor
    cannot read text, `RedactText` cannot match it, does not remove it, **and
    reports success**. Corpus-wide measurement (332 pages / 12 fixtures —
    10 real-world government PDFs plus checked-in CJK/Type0 and
@@ -671,7 +671,7 @@ and cost real planning time.
    multi-reader interop gate is #644.
 4. **`/P` permissions enforced at the action layer only** (#642) — the decoded
    mask is `document.Permissions` / `EffectivePermissions`
-   (`Pdfe.Core/Security/PdfPermissions.cs`, bit meanings qpdf-verified).
+   (`Excise.Core/Security/PdfPermissions.cs`, bit meanings qpdf-verified).
    Enforced: GUI copy/selection-copy/page-image-export (bit 5), typewriter and
    form authoring (bit 4), annotations (bit 6), form fill (bit 6 or 9); CLI
    `text`/`letters`/`render`/`ocr` (bit 5), `fill-form` (6/9),
@@ -699,13 +699,13 @@ See GitHub issues labeled `component: redaction-engine` for enhancement tracking
 ## File Locations Quick Reference
 
 ⚠️ This map was wrong for months: it pointed redaction at
-`PdfEditor/Services/Redaction/*` (ContentStreamBuilder, PdfOperation,
+`Excise.App/Services/Redaction/*` (ContentStreamBuilder, PdfOperation,
 TextBoundsCalculator, PdfGraphicsState…). **That directory does not exist.** It
-all moved to `Pdfe.Core` in v2.0. If you are looking for the redaction engine,
-it is in `Pdfe.Core`, not in the GUI project.
+all moved to `Excise.Core` in v2.0. If you are looking for the redaction engine,
+it is in `Excise.Core`, not in the GUI project.
 
 ```
-Pdfe.Core/                          # the PDF engine — parser, writer, redaction
+Excise.Core/                          # the PDF engine — parser, writer, redaction
 ├── Text/Segmentation/              # ← THE REDACTION ENGINE
 │   ├── GlyphRemover.cs             # orchestrates glyph-level removal
 │   ├── LetterFinder.cs             # text-based letter matching
@@ -726,7 +726,7 @@ Pdfe.Core/                          # the PDF engine — parser, writer, redacti
 ├── Fonts/                          # CFF, TrueType parse + subset (see #512-#515)
 └── Security/                       # decrypt + encrypt writers (#639-#641), /P permissions (#642)
 
-Pdfe.Rendering/                     # SkiaSharp renderer
+Excise.Rendering/                     # SkiaSharp renderer
 └── Differential/                   # ← REFERENCE ORACLES. Use these, don't build new ones.
     ├── GhostscriptReferenceRenderer.cs
     ├── MutoolReferenceRenderer.cs
@@ -734,19 +734,19 @@ Pdfe.Rendering/                     # SkiaSharp renderer
     ├── PdftocairoReferenceRenderer.cs
     └── PdfBoxReferenceRenderer.cs
 
-PdfEditor/                          # the Avalonia GUI (orchestration only)
+Excise.App/                          # the Avalonia GUI (orchestration only)
 ├── Services/
 │   ├── PdfDocumentService.cs       # load/save/page manipulation
 │   ├── PdfRenderService.cs         # render to image
-│   └── RedactionService.cs         # ORCHESTRATES Pdfe.Core; owns no engine logic
+│   └── RedactionService.cs         # ORCHESTRATES Excise.Core; owns no engine logic
 ├── ViewModels/MainWindowViewModel.cs   # (partial: .Commands/.Search/.Forms/…)
 ├── Views/MainWindow.axaml(.cs)
 └── Automation/CommandAccessibility.cs
 
-Pdfe.Avalonia/                      # reusable viewer control
+Excise.Avalonia/                      # reusable viewer control
 └── Controls/PdfViewerControl*.cs   # incl. .Continuous.cs (continuous scroll)
 
-PdfEditor.Tests/
+Excise.App.Tests/
 ├── Integration/
 │   ├── GuiRedactionSimulationTests.cs  # GUI workflow simulation
 │   ├── ComprehensiveRedactionTests.cs  # Full redaction tests
@@ -761,7 +761,7 @@ PdfEditor.Tests/
 ├── Utilities/
 │   ├── TestPdfGenerator.cs
 │   └── PdfTestHelpers.cs
-└── PdfEditor.Tests.csproj
+└── Excise.App.Tests.csproj
 
 Documentation:
 ├── README.md                       # User-facing documentation
@@ -775,17 +775,23 @@ Documentation:
 This redaction implementation:
 - ✅ Removes content from PDF structure (not just visual covering)
 - ✅ Handles text, graphics, and images
-- ❌ Does NOT remove PDF metadata (XMP, Info dict)
-- ❌ Does NOT handle PDF revision history
+- ✅ Scrubs document-level text carriers by default — `/Info`, XMP `/Metadata`,
+  `/Outlines` bookmark titles, annotation `/Contents` (#608,
+  `PdfDocumentSanitizer`, `SanitizeMetadata = true`); `RemoveAllMetadata`
+  strips them wholesale
+- ✅ Scrubs the structure tree (`/ActualText`, `/Alt`) (#636)
+- ❌ Does NOT handle PDF revision history (incremental-update prior revisions)
 - ❌ Does NOT remove embedded files/attachments
 
-For maximum security, also remove metadata and flatten the PDF after redaction.
+Redaction is written to a fresh, fully-rewritten file (not an incremental
+update), so prior-revision recovery does not apply to a excise-redacted copy.
+For scorched-earth output, set `RemoveAllMetadata` and flatten forms first.
 
 ## Current Status
 
 For the authoritative, version-by-version status see `CHANGELOG.md` and the
 GitHub Releases page (`gh release list`). The current line is **v2.x**: the PDF
-stack is pure-.NET and pdfe-owned (Pdfe.Core / Pdfe.Rendering / Pdfe.Ocr) and
+stack is pure-.NET and excise-owned (Excise.Core / Excise.Rendering / Excise.Ocr) and
 the legacy PdfPig/PDFsharp/PDFtoImage dependencies were removed in v2.0. Do not
 hard-code a "current release" version into this file — it goes stale; check the
 changelog instead.
@@ -794,20 +800,20 @@ changelog instead.
 
 #### Implementation Files
 
-**Glyph-Level Redaction** (`Pdfe.Core/Text/Segmentation/`):
+**Glyph-Level Redaction** (`Excise.Core/Text/Segmentation/`):
 - ✅ `GlyphRemover.cs` - Orchestrates glyph-level redaction
 - ✅ `LetterFinder.cs` - Text-based letter matching (issue #90 fix)
 - ✅ `OperationReconstructor.cs` - Rebuilds BT/Tf/Tj blocks with positioning
 - ✅ `PdfPageRedactionExtensions.cs` - `page.RedactArea(rect)` / `RedactAreas(rects)` entry points
 
-**GUI Integration** (`PdfEditor/`):
+**GUI Integration** (`Excise.App/`):
 - ✅ `Services/RedactionService.cs` - Unified area + text redaction; mirrors the
   rewritten content stream onto the rendered page
 - ✅ `ViewModels/MainWindowViewModel.Scripting.cs` - Scripting surface
 
-The separate `PdfEditor.Redaction` library (the PdfPig/PDFsharp-based
-`TextRedactor` engine and its `pdfer` CLI) was removed once both the
-area-click and scripting paths were unified onto Pdfe.Core.
+The separate `Excise.App.Redaction` library (the PdfPig/PDFsharp-based
+`TextRedactor` engine and its `exciser` CLI) was removed once both the
+area-click and scripting paths were unified onto Excise.Core.
 
 ## Task Tracking and GitHub Issues
 
@@ -960,7 +966,7 @@ Scripts are available for managing issues:
 
 ## Knowledge Management Strategy
 
-**IMPORTANT**: pdfe uses a four-tier content organization system across Wiki, Discussions, Issues, and Markdown files.
+**IMPORTANT**: excise uses a four-tier content organization system across Wiki, Discussions, Issues, and Markdown files.
 
 ### The Four-Tier System
 
@@ -1098,12 +1104,12 @@ Files are stored in `test-pdfs/` which is gitignored.
 
 ### Running Corpus Tests
 
-Corpus coverage now lives under `Pdfe.Rendering.Tests/Corpus/` (smoke
-corpus of real-world government PDFs) and the Pdfe.Core test suite.
+Corpus coverage now lives under `Excise.Rendering.Tests/Corpus/` (smoke
+corpus of real-world government PDFs) and the Excise.Core test suite.
 
 ```bash
 # Download corpus first (if not already done)
 ./scripts/download-test-pdfs.sh
 
-dotnet test Pdfe.Rendering.Tests --filter "FullyQualifiedName~Corpus"
+dotnet test Excise.Rendering.Tests --filter "FullyQualifiedName~Corpus"
 ```

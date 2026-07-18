@@ -6,8 +6,8 @@ Creates pages with navigation and cross-references.
 
 import os
 
-WIKI_DIR = "/home/marc/pdfe/wiki"
-INPUT_FILE = "/home/marc/pdfe/ISO-32000-2-2020.md"
+WIKI_DIR = "/home/marc/excise/wiki"
+INPUT_FILE = "/home/marc/excise/ISO-32000-2-2020.md"
 
 def read_lines(filepath):
     with open(filepath, 'r', encoding='utf-8') as f:
@@ -243,7 +243,7 @@ Key changes from PDF 1.7:
 ## See Also
 
 - [[PDF-Spec-Index]] - PDF 1.7 Specification (ISO 32000-1:2008)
-- [[Redaction-Engine]] - How pdfe implements redaction
+- [[Redaction-Engine]] - How excise implements redaction
 - [[PDF-Content-Streams]] - Content stream documentation
 
 ---

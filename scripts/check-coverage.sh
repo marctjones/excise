@@ -2,14 +2,14 @@
 # check-coverage.sh: Verify that a Cobertura coverage report meets a minimum line coverage threshold
 # Usage: scripts/check-coverage.sh <cobertura.xml> <minLineRate> [packageFilter]
 #   minLineRate: decimal between 0.0 and 1.0 (e.g., 0.94 for 94%)
-#   packageFilter: optional package name to filter to (e.g., "Pdfe.Core")
+#   packageFilter: optional package name to filter to (e.g., "Excise.Core")
 
 set -euo pipefail
 
 if [[ $# -lt 2 ]]; then
     echo "Usage: $0 <cobertura.xml> <minLineRate> [packageFilter]"
     echo "  Example: $0 coverage/report/coverage.cobertura.xml 0.94"
-    echo "  Example: $0 coverage/report/coverage.cobertura.xml 0.94 Pdfe.Core"
+    echo "  Example: $0 coverage/report/coverage.cobertura.xml 0.94 Excise.Core"
     exit 1
 fi
 

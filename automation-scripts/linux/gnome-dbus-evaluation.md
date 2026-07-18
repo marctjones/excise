@@ -5,7 +5,7 @@ surface. This works under GNOME, KDE, Wayland, X11, SSH, containers, and CI
 without relying on `xdotool`, focus changes, or pointer injection.
 
 The repository already ships a desktop entry for normal PDF activation:
-`packaging/deb/pdfe.desktop`. The example `pdfe-automation.desktop` shows the
+`packaging/deb/excise.desktop`. The example `excise-automation.desktop` shows the
 same MIME/open-with shape for local automation experiments.
 
 ## D-Bus Decision
@@ -13,16 +13,16 @@ same MIME/open-with shape for local automation experiments.
 A D-Bus interface is not shipped in v2.23 because the current accepted
 automation workflows are document operations that do not require controlling an
 already-running GUI instance. Adding D-Bus now would create a persistent local
-control surface without a clear command set beyond what `pdfe batch` already
+control surface without a clear command set beyond what `excise batch` already
 does.
 
 If a future D-Bus bridge is added, keep it narrow and typed:
 
 ```text
-org.pdfe.Application.OpenDocument(path: s) -> handle: s
-org.pdfe.Application.CurrentPage(handle: s) -> page: i
-org.pdfe.Application.Search(handle: s, query: s) -> matches: i
-org.pdfe.Application.Status(handle: s) -> json: s
+org.excise.Application.OpenDocument(path: s) -> handle: s
+org.excise.Application.CurrentPage(handle: s) -> page: i
+org.excise.Application.Search(handle: s, query: s) -> matches: i
+org.excise.Application.Status(handle: s) -> json: s
 ```
 
 Security requirements for any future D-Bus bridge:

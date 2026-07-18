@@ -55,10 +55,10 @@ cd "$PROJECT_ROOT"
     echo "=========================================="
     echo ""
     echo "PDF Count: $PDF_COUNT"
-    echo "Test Project: Pdfe.Rendering.Tests"
+    echo "Test Project: Excise.Rendering.Tests"
     echo ""
 
-    dotnet test Pdfe.Rendering.Tests --filter "FullyQualifiedName~Corpus" --logger "console;verbosity=detailed" 2>&1
+    dotnet test Excise.Rendering.Tests --filter "FullyQualifiedName~Corpus" --logger "console;verbosity=detailed" 2>&1
 
     echo ""
     echo "=========================================="

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Setup complete development environment for pdfe
+# Setup complete development environment for excise
 # This script requires no user interaction
 
 set -e
@@ -175,17 +175,17 @@ restore_packages() {
     cd "$PROJECT_ROOT"
 
     # Restore main project
-    log_info "Restoring PdfEditor packages..."
-    $DOTNET_CMD restore PdfEditor/PdfEditor.csproj >> "$LOG_FILE" 2>&1
+    log_info "Restoring Excise.App packages..."
+    $DOTNET_CMD restore Excise.App/Excise.App.csproj >> "$LOG_FILE" 2>&1
 
     # Restore test project
-    log_info "Restoring PdfEditor.Tests packages..."
-    $DOTNET_CMD restore PdfEditor.Tests/PdfEditor.Tests.csproj >> "$LOG_FILE" 2>&1
+    log_info "Restoring Excise.App.Tests packages..."
+    $DOTNET_CMD restore Excise.App.Tests/Excise.App.Tests.csproj >> "$LOG_FILE" 2>&1
 
     # Restore demo project if it exists
-    if [ -d "PdfEditor.Demo" ]; then
-        log_info "Restoring PdfEditor.Demo packages..."
-        $DOTNET_CMD restore PdfEditor.Demo/PdfEditor.Demo.csproj >> "$LOG_FILE" 2>&1
+    if [ -d "Excise.App.Demo" ]; then
+        log_info "Restoring Excise.App.Demo packages..."
+        $DOTNET_CMD restore Excise.App.Demo/Excise.App.Demo.csproj >> "$LOG_FILE" 2>&1
     fi
 
     log_success "All packages restored"
@@ -275,7 +275,7 @@ main() {
     log "Next steps:"
     log "  1. Build the project:    ./scripts/build.sh"
     log "  2. Run tests:            ./scripts/test.sh"
-    log "  3. Run CLI demo:         ./scripts/demo-pdfe-cli.sh"
+    log "  3. Run CLI demo:         ./scripts/demo-excise-cli.sh"
     log "  4. Launch GUI:           ./scripts/gui.sh"
     log ""
 }

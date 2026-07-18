@@ -3,8 +3,8 @@ set -e
 
 # Target directories (Both Main App and Tests)
 # We need to target the runtime-specific native folder where .NET looks
-APP_DIR="PdfEditor/bin/Debug/net8.0/runtimes/linux-x64/native"
-TEST_DIR="PdfEditor.Tests/bin/Debug/net8.0/runtimes/linux-x64/native"
+APP_DIR="Excise.App/bin/Debug/net8.0/runtimes/linux-x64/native"
+TEST_DIR="Excise.App.Tests/bin/Debug/net8.0/runtimes/linux-x64/native"
 
 echo "Fixing OCR library links..."
 

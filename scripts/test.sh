@@ -1,5 +1,5 @@
 #!/bin/bash
-# Run pdfe test suites
+# Run excise test suites
 # Usage: ./test.sh [OPTIONS] [SUITE...]
 #
 # Suites: all, integration, redaction, metadata, forensic, external, unit
@@ -101,7 +101,7 @@ cd "$PROJECT_ROOT"
 if [ "$LIST_ONLY" = true ]; then
     log_section "Available Test Classes"
 
-    cd PdfEditor.Tests
+    cd Excise.App.Tests
 
     # Build if needed
     if [ "$BUILD_FIRST" = true ]; then
@@ -119,7 +119,7 @@ fi
 # Build tests first
 if [ "$BUILD_FIRST" = true ]; then
     log_section "Building Test Project"
-    run_cmd "Building..." $DOTNET_CMD build PdfEditor.Tests/PdfEditor.Tests.csproj -c Release
+    run_cmd "Building..." $DOTNET_CMD build Excise.App.Tests/Excise.App.Tests.csproj -c Release
 fi
 
 # Map suite names to filters
@@ -179,7 +179,7 @@ run_suite() {
         test_args="$test_args --logger \"console;verbosity=normal\""
     fi
 
-    cd "$PROJECT_ROOT/PdfEditor.Tests"
+    cd "$PROJECT_ROOT/Excise.App.Tests"
 
     # Run tests
     local exit_code=0
@@ -216,7 +216,7 @@ main() {
             test_args="$test_args --logger \"console;verbosity=normal\""
         fi
 
-        cd "$PROJECT_ROOT/PdfEditor.Tests"
+        cd "$PROJECT_ROOT/Excise.App.Tests"
 
         if eval "$DOTNET_CMD test $test_args" 2>&1 | tee -a "$LOG_FILE"; then
             passed_suites+=("custom")

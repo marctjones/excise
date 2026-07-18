@@ -5791,7 +5791,7 @@
       "diagnostic": null,
       "errorPhase": "open",
       "errorType": "PdfEncryptionNotSupportedException",
-      "errorMessage": "Password verification failed. The file requires a non-empty user password, which pdfe doesn't yet prompt for. Pass allowEncrypted: true to inspect the encryption dict, or open the file in a tool that \u2026"
+      "errorMessage": "Password verification failed. The file requires a non-empty user password, which excise doesn't yet prompt for. Pass allowEncrypted: true to inspect the encryption dict, or open the file in a tool that \u2026"
     },
     {
       "path": "bug1782564.pdf",
@@ -7735,10 +7735,10 @@
       "cairoMs": 98,
       "mutoolStatus": "EXIT_CODE",
       "cairoStatus": "EXIT_CODE",
-      "mutoolError": "mutool exited 139: page /Users/marc/Documents/GitHub/pdfe/test-pdfs/pdfjs/bug_jpx.pdf 1",
+      "mutoolError": "mutool exited 139: page /Users/marc/Documents/GitHub/excise/test-pdfs/pdfjs/bug_jpx.pdf 1",
       "cairoError": "pdftocairo exited 134: Syntax Error: Malformed JP2 file format: first box must be JPEG 2000 signature box<0a>\nSyntax Warning: Unable to read header\nSyntax Warning: Did no succeed opening JPX Stream as\u2026",
       "timeoutMs": null,
-      "diagnostic": "mutool=EXIT_CODE (mutool exited 139: page /Users/marc/Documents/GitHub/pdfe/test-pdfs/pdfjs/bug_jpx.pdf 1); pdftocairo=EXIT_CODE (pdftocairo exited 134: Syntax Error: Malformed JP2 file format: first box must be JPEG 2000 signature box<0a>\nSyntax Warning: Unable to read header\nSyntax Warning: Did no succeed opening JPX Stream as\u2026)",
+      "diagnostic": "mutool=EXIT_CODE (mutool exited 139: page /Users/marc/Documents/GitHub/excise/test-pdfs/pdfjs/bug_jpx.pdf 1); pdftocairo=EXIT_CODE (pdftocairo exited 134: Syntax Error: Malformed JP2 file format: first box must be JPEG 2000 signature box<0a>\nSyntax Warning: Unable to read header\nSyntax Warning: Did no succeed opening JPX Stream as\u2026)",
       "errorPhase": "oracle",
       "errorType": "AllOraclesRefused",
       "errorMessage": null
@@ -16159,7 +16159,7 @@
       "cairoMs": 20,
       "mutoolStatus": "EXIT_CODE",
       "cairoStatus": "OK",
-      "mutoolError": "mutool exited 1: argument error: invalid page number: -1\ncannot draw '/Users/marc/Documents/GitHub/pdfe/test-pdfs/pdfjs/issue21436.pdf'",
+      "mutoolError": "mutool exited 1: argument error: invalid page number: -1\ncannot draw '/Users/marc/Documents/GitHub/excise/test-pdfs/pdfjs/issue21436.pdf'",
       "cairoError": null,
       "timeoutMs": null,
       "diagnostic": null,
@@ -16263,7 +16263,7 @@
       "cairoMs": 111,
       "mutoolStatus": "EXIT_CODE",
       "cairoStatus": "OK",
-      "mutoolError": "mutool exited 1: syntax error: unknown keyword: 'undefined'\nwarning: encountered syntax errors; page may not be correct\npage /Users/marc/Documents/GitHub/pdfe/test-pdfs/pdfjs/issue2391-1.pdf 1",
+      "mutoolError": "mutool exited 1: syntax error: unknown keyword: 'undefined'\nwarning: encountered syntax errors; page may not be correct\npage /Users/marc/Documents/GitHub/excise/test-pdfs/pdfjs/issue2391-1.pdf 1",
       "cairoError": null,
       "timeoutMs": null,
       "diagnostic": null,
@@ -16815,7 +16815,7 @@
       "diagnostic": null,
       "errorPhase": "open",
       "errorType": "PdfEncryptionNotSupportedException",
-      "errorMessage": "Password verification failed. The file requires a non-empty user password, which pdfe doesn't yet prompt for. Pass allowEncrypted: true to inspect the encryption dict, or open the file in a tool that \u2026"
+      "errorMessage": "Password verification failed. The file requires a non-empty user password, which excise doesn't yet prompt for. Pass allowEncrypted: true to inspect the encryption dict, or open the file in a tool that \u2026"
     },
     {
       "path": "issue3405r.pdf",
@@ -17381,7 +17381,7 @@
       "cairoMs": 52,
       "mutoolStatus": "EXIT_CODE",
       "cairoStatus": "OK",
-      "mutoolError": "mutool exited 1: syntax error: image width is zero (or less)\nwarning: encountered syntax errors; page may not be correct\npage /Users/marc/Documents/GitHub/pdfe/test-pdfs/pdfjs/issue4575.pdf 1",
+      "mutoolError": "mutool exited 1: syntax error: image width is zero (or less)\nwarning: encountered syntax errors; page may not be correct\npage /Users/marc/Documents/GitHub/excise/test-pdfs/pdfjs/issue4575.pdf 1",
       "cairoError": null,
       "timeoutMs": null,
       "diagnostic": null,

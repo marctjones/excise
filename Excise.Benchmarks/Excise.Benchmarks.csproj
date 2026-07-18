@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    excise performance benchmarks (#344/#357). BenchmarkDotNet (MIT). Deliberately
+    NOT part of excise.sln / the shippable graph — it's dev tooling. This first cut
+    tracks excise-vs-excise (regression tracking): parse, render, and text-extract on
+    a generated document. Cross-library comparison (PdfPig/PDFsharp/PDFium
+    in-process; Poppler/MuPDF/Ghostscript as external processes only, per the
+    permissive-license guardrail) is the documented next step.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.14.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Excise.Core\Excise.Core.csproj" />
+    <ProjectReference Include="..\Excise.Rendering\Excise.Rendering.csproj" />
+  </ItemGroup>
+
+</Project>

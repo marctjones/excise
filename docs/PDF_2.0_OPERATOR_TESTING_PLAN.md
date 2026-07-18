@@ -189,9 +189,9 @@ as defined in ISO 32000-2:2020 (PDF 2.0). The testing covers four key capabiliti
 
 | Component | Operators Implemented | Operators Needed | Coverage |
 |-----------|----------------------|------------------|----------|
-| Pdfe.Core Parser | 35 | 73 | 48% |
-| Pdfe.Rendering | 38 | 73 | 52% |
-| PdfEditor.Redaction | 32 | 73 | 44% |
+| Excise.Core Parser | 35 | 73 | 48% |
+| Excise.Rendering | 38 | 73 | 52% |
+| Excise.App.Redaction | 32 | 73 | 44% |
 | Content Stream Writer | 25 | 73 | 34% |
 
 ### Critical Gaps
@@ -260,7 +260,7 @@ Color: g, G, rg, RG
 
 **Test Class Structure**:
 ```
-Pdfe.Core.Tests/
+Excise.Core.Tests/
   Content/
     Operators/
       GraphicsStateOperatorTests.cs      - q, Q, cm
@@ -376,7 +376,7 @@ test-pdfs/operators/
 ### Example 1: Graphics State Operator Test
 
 ```csharp
-namespace Pdfe.Core.Tests.Content.Operators;
+namespace Excise.Core.Tests.Content.Operators;
 
 public class GraphicsStateOperatorTests
 {
@@ -576,7 +576,7 @@ public class OperatorRenderingTests
 
 ### Immediate Actions (This Sprint)
 
-- [ ] Create `Pdfe.Core.Tests/Content/Operators/` test folder structure
+- [ ] Create `Excise.Core.Tests/Content/Operators/` test folder structure
 - [ ] Implement `GraphicsStateOperatorTests.cs`
 - [ ] Implement `PathOperatorTests.cs` (construction + painting)
 - [ ] Implement `TextOperatorTests.cs` (all text operators)

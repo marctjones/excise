@@ -4,13 +4,13 @@
 rm -f /tmp/crash_log.txt
 
 echo "========================================="
-echo " PdfEditor Debug Session"
+echo " Excise.App Debug Session"
 echo "========================================="
 echo ""
 echo "Building the latest version..."
 echo ""
 
-cd /home/marc/pdfe/PdfEditor
+cd /home/marc/excise/Excise.App
 
 # Build the application to ensure we have the latest code
 if ! dotnet build --no-restore 2>&1 | tee -a /tmp/crash_log.txt; then

@@ -52,7 +52,7 @@ while [[ $# -gt 0 ]]; do
             echo "Examples:"
             echo "  $0                              # Run all tests"
             echo "  $0 --filter Redaction           # Run tests matching 'Redaction'"
-            echo "  $0 --project PdfEditor.Tests    # Run specific project"
+            echo "  $0 --project Excise.App.Tests    # Run specific project"
             echo "  $0 --verbose                    # Detailed output"
             exit 0
             ;;

@@ -83,12 +83,12 @@ jobs:
         run: |
           set -e
           srcdir="artifacts/publish/linux-x64"
-          out="dist/pdfe-${{ steps.ver.outputs.version }}-linux-x64.tar.gz"
-          mkdir -p stage/pdfe
-          cp -a "$srcdir/gui/." stage/pdfe/
-          cp -a "$srcdir/cli/." stage/pdfe/
-          cp README.md LICENSE LICENSES.md stage/pdfe/ 2>/dev/null || true
-          tar -C stage -czf "$out" pdfe
+          out="dist/excise-${{ steps.ver.outputs.version }}-linux-x64.tar.gz"
+          mkdir -p stage/excise
+          cp -a "$srcdir/gui/." stage/excise/
+          cp -a "$srcdir/cli/." stage/excise/
+          cp README.md LICENSE LICENSES.md stage/excise/ 2>/dev/null || true
+          tar -C stage -czf "$out" excise
           rm -rf stage
           ls -lh "$out"
 
@@ -166,13 +166,13 @@ jobs:
         run: |
           $v = "${{ steps.ver.outputs.version }}"
           $src = "artifacts\publish\win-x64\gui"
-          $stage = "stage\pdfe"
+          $stage = "stage\excise"
           New-Item -ItemType Directory -Force -Path $stage | Out-Null
           Copy-Item "$src\*" $stage -Recurse -Force
           Copy-Item README.md, LICENSE, LICENSES.md $stage -ErrorAction SilentlyContinue
-          $zip = "dist\pdfe-$v-win-x64.zip"
+          $zip = "dist\excise-$v-win-x64.zip"
           if (Test-Path $zip) { Remove-Item $zip }
-          Compress-Archive -Path stage\pdfe -DestinationPath $zip
+          Compress-Archive -Path stage\excise -DestinationPath $zip
           $sha = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
           "$sha  $(Split-Path $zip -Leaf)" | Out-File -Encoding ascii "$zip.sha256"
           Get-ChildItem dist | Format-Table
@@ -289,9 +289,9 @@ jobs:
 
             | Platform        | Installer                                      |
             |-----------------|------------------------------------------------|
-            | Ubuntu / Debian | `pdfe_<version>_amd64.deb`                     |
-            | Windows 10/11   | `pdfe-<version>-win-x64-setup.exe`             |
-            | macOS (Apple Silicon) | `pdfe-<version>-macos-arm64.zip`         |
+            | Ubuntu / Debian | `excise_<version>_amd64.deb`                     |
+            | Windows 10/11   | `excise-<version>-win-x64-setup.exe`             |
+            | macOS (Apple Silicon) | `excise-<version>-macos-arm64.zip`         |
 
             Portable archives (`*.tar.gz`, `*.zip`) are also attached
             for users who prefer to extract and run the binary directly.
@@ -301,29 +301,29 @@ jobs:
 
             **Ubuntu**
             ```bash
-            sudo apt install ./pdfe_<version>_amd64.deb
+            sudo apt install ./excise_<version>_amd64.deb
             ```
 
             **Windows**
-            Run `pdfe-<version>-win-x64-setup.exe` and follow the wizard,
+            Run `excise-<version>-win-x64-setup.exe` and follow the wizard,
             or silently:
             ```powershell
-            pdfe-<version>-win-x64-setup.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
+            excise-<version>-win-x64-setup.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
             ```
 
             **macOS (Apple Silicon)**
-            Unzip and move `pdfe.app` to `/Applications`. The bundle is
+            Unzip and move `excise.app` to `/Applications`. The bundle is
             **unsigned**, so Gatekeeper quarantines it — open it the first
             time via right-click → Open, or clear the quarantine flag:
             ```bash
-            xattr -dr com.apple.quarantine /Applications/pdfe.app
+            xattr -dr com.apple.quarantine /Applications/excise.app
             ```
 
             ### Verification
 
             All packages are self-contained — no .NET 10 runtime needed
             on the target. The installer bundles the GUI editor
-            (`PdfEditor`) and the `pdfe` CLI. Third-party license
+            (`Excise.App`) and the `excise` CLI. Third-party license
             notices are visible in **Help → About PDF Editor** and at
-            `/usr/share/doc/pdfe/third-party-licenses.json` (Debian) or
+            `/usr/share/doc/excise/third-party-licenses.json` (Debian) or
             inside the install directory (Windows).

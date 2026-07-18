@@ -33,7 +33,7 @@ if (repoRoot == null)
 }
 
 var sourcePdf = Path.Combine(repoRoot, "test-pdfs", "sample-pdfs", "birth-certificate-request-scrambled.pdf");
-var outputDir = "/tmp/pdfe-birth-cert-specific";
+var outputDir = "/tmp/excise-birth-cert-specific";
 
 Directory.CreateDirectory(outputDir);
 

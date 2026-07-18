@@ -13,7 +13,7 @@ NO_BUILD=0
 
 usage() {
     cat <<'EOF'
-Run the pdfe UX/icon audit.
+Run the excise UX/icon audit.
 
 Usage:
   scripts/run-ux-icon-audit.sh [options]
@@ -55,8 +55,8 @@ OUTPUT="$(cd "$OUTPUT" && pwd)"
 overall=0
 
 if [ "$NO_BUILD" != "1" ]; then
-    echo "[build] dotnet build PdfEditor.Tests/PdfEditor.Tests.csproj -c $CONFIG"
-    dotnet build PdfEditor.Tests/PdfEditor.Tests.csproj -c "$CONFIG" > "$OUTPUT/build.log" 2>&1
+    echo "[build] dotnet build Excise.App.Tests/Excise.App.Tests.csproj -c $CONFIG"
+    dotnet build Excise.App.Tests/Excise.App.Tests.csproj -c "$CONFIG" > "$OUTPUT/build.log" 2>&1
     rc=$?
     if [ "$rc" != "0" ]; then
         echo "  FAIL rc=$rc -> $OUTPUT/build.log"
@@ -67,7 +67,7 @@ if [ "$NO_BUILD" != "1" ]; then
 fi
 
 echo "[ux-icon-audit] VisualPolishAuditTests"
-PDFE_UX_AUDIT_OUTPUT="$OUTPUT" dotnet test PdfEditor.Tests/PdfEditor.Tests.csproj \
+EXCISE_UX_AUDIT_OUTPUT="$OUTPUT" dotnet test Excise.App.Tests/Excise.App.Tests.csproj \
     --no-build -c "$CONFIG" \
     --filter "FullyQualifiedName~VisualPolishAuditTests" \
     --logger "console;verbosity=normal" \
@@ -87,7 +87,7 @@ if [ ! -f "$OUTPUT/ux-icon-audit.json" ]; then
 fi
 
 cat > "$OUTPUT/ux-icon-audit.md" <<EOF
-# pdfe UX/Icon Audit
+# excise UX/Icon Audit
 
 - Status: $([ "$overall" = "0" ] && echo "PASS" || echo "FAIL")
 - Generated: $(date -u +%Y-%m-%dT%H:%M:%SZ)

@@ -12,8 +12,8 @@ scripts/run-accessibility-smoke.sh --config Debug
 
 This gate verifies:
 
-- shared semantic command metadata in `Pdfe.Core.Automation`;
-- CLI command metadata through `pdfe commands`;
+- shared semantic command metadata in `Excise.Core.Automation`;
+- CLI command metadata through `excise commands`;
 - GUI controls with command IDs expose accessible names, descriptions,
   shortcuts, unavailable reasons, and matching tooltips;
 - search controls, status text, operation status, current mode, and the PDF
@@ -36,9 +36,9 @@ The automated gate does not take keyboard or mouse focus. Platform
 accessibility-tree checks may require a dedicated interactive runner:
 
 - **macOS AX / VoiceOver:** grant Accessibility permission to the terminal or
-  runner app, launch pdfe with a representative PDF, and inspect menus, toolbar
+  runner app, launch excise with a representative PDF, and inspect menus, toolbar
   buttons, search controls, status text, dialogs, and the PDF viewer through
-  VoiceOver or System Events. Set `PDFE_ACCESSIBILITY_ALLOW_PLATFORM_PROBE=1`
+  VoiceOver or System Events. Set `EXCISE_ACCESSIBILITY_ALLOW_PLATFORM_PROBE=1`
   only on a dedicated runner.
 - **Windows UI Automation:** use Inspect.exe or an equivalent UIA client on a
   Windows desktop runner. Verify names, roles, enabled states, shortcut text,

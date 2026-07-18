@@ -11,7 +11,7 @@
 #
 #   8a8e661 ("perf: coalesce continuous-scroll tile renders") changed the tile
 #   quantization constants AND, in the same commit, rewrote the expected values
-#   of Pdfe.Avalonia.Tests/ContinuousDpiTests — a 400x600 viewport that asserted
+#   of Excise.Avalonia.Tests/ContinuousDpiTests — a 400x600 viewport that asserted
 #   a precise clip rect now asserted a 1280x1280 tile with entirely different
 #   numbers. The edit was legitimate; the MECHANISM is not. A perf optimization
 #   was able to redefine what a correctness test considered correct, with no
@@ -50,12 +50,12 @@ RANGE="$BASE...HEAD"
 # (a) Performance-sensitive paths: the render/scroll/tile hot paths and anything
 #     under a benchmarks/hotspot tree.
 PERF_PATHS='
-Pdfe.Rendering/
-Pdfe.Avalonia/Controls/PdfViewerControl
-Pdfe.Core/Content/ContentStreamParser
-Pdfe.Core/Fonts/
-tools/Pdfe.RenderTools/
-Pdfe.Benchmarks/
+Excise.Rendering/
+Excise.Avalonia/Controls/PdfViewerControl
+Excise.Core/Content/ContentStreamParser
+Excise.Core/Fonts/
+tools/Excise.RenderTools/
+Excise.Benchmarks/
 '
 
 perf_hits=""
@@ -128,7 +128,7 @@ Do ONE of these:
   1. PREFERRED — restate the test as an INVARIANT rather than pinned numbers
      (#617). An invariant survives a legal optimization and still fails an
      illegal one, so it never needs rewriting. See
-     Pdfe.Avalonia.Tests/ContinuousDpiTests.ContinuousTileRequest_SatisfiesItsContract.
+     Excise.Avalonia.Tests/ContinuousDpiTests.ContinuousTileRequest_SatisfiesItsContract.
 
   2. If the contract genuinely changed, say so out loud. Add to the commit body:
 

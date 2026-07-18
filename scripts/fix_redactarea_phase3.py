@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).parent.parent
-TEST_DIR = PROJECT_ROOT / "PdfEditor.Tests"
+TEST_DIR = PROJECT_ROOT / "Excise.App.Tests"
 
 def find_path_var(content):
     """Find the file path variable."""

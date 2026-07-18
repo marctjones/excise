@@ -7,8 +7,8 @@ Creates cross-references between pages.
 import re
 import os
 
-INPUT_FILE = "/home/marc/pdfe/PDF32000_2008.md"
-WIKI_DIR = "/home/marc/pdfe/wiki"
+INPUT_FILE = "/home/marc/excise/PDF32000_2008.md"
+WIKI_DIR = "/home/marc/excise/wiki"
 
 # Chapter definitions: (start_line, end_line_exclusive, filename, title)
 # Line numbers are 1-indexed from grep output

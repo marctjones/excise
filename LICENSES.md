@@ -1,15 +1,15 @@
 # Third-Party Licenses
 
-pdfe ships several third-party libraries. The complete list — with each
+excise ships several third-party libraries. The complete list — with each
 package's name, version, license, copyright, and verbatim license text —
 is available three ways:
 
 1. **In-app**: open the GUI and choose **Help → About PDF Editor**.
    The About dialog reads the same manifest used to generate this file.
-2. **As JSON**: see [`PdfEditor/Assets/third-party-licenses.json`](PdfEditor/Assets/third-party-licenses.json).
+2. **As JSON**: see [`Excise.App/Assets/third-party-licenses.json`](Excise.App/Assets/third-party-licenses.json).
    Regenerate via `scripts/generate-license-manifest.sh [--scancode]`.
-3. **In a published `.deb`**: `/usr/share/doc/pdfe/copyright` lists the
-   primary `pdfe` license; the manifest is embedded in the binary.
+3. **In a published `.deb`**: `/usr/share/doc/excise/copyright` lists the
+   primary `excise` license; the manifest is embedded in the binary.
 
 ## License summary
 
@@ -45,11 +45,11 @@ scripts/generate-license-manifest.sh
 scripts/generate-license-manifest.sh --scancode
 
 # Both write to:
-#   PdfEditor/Assets/third-party-licenses.json  (embedded into the GUI)
+#   Excise.App/Assets/third-party-licenses.json  (embedded into the GUI)
 #   artifacts/scancode/<package>.json           (per-package scancode runs)
 ```
 
-## pdfe itself
+## excise itself
 
-The pdfe source is MIT-licensed. See [LICENSE](LICENSE) for the full
+The excise source is MIT-licensed. See [LICENSE](LICENSE) for the full
 text.

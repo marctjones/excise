@@ -1,25 +1,25 @@
 #!/bin/bash
 #
-# Install PdfEditor as a desktop application for the current user
+# Install Excise.App as a desktop application for the current user
 #
 
 set -e
 
-APP_NAME="PdfEditor"
-APP_ID="com.pdfeditor.PdfEditor"
-INSTALL_DIR="$HOME/.local/share/PdfEditor"
+APP_NAME="Excise.App"
+APP_ID="com.exciseditor.Excise.App"
+INSTALL_DIR="$HOME/.local/share/Excise.App"
 DESKTOP_FILE="$HOME/.local/share/applications/${APP_ID}.desktop"
 ICON_DIR="$HOME/.local/share/icons/hicolor/256x256/apps"
 
-echo "=== PdfEditor Desktop Installation ==="
+echo "=== Excise.App Desktop Installation ==="
 echo ""
 
 # Get the script directory (where the source code is)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_DIR="$SCRIPT_DIR/PdfEditor"
+PROJECT_DIR="$SCRIPT_DIR/Excise.App"
 
-if [ ! -f "$PROJECT_DIR/PdfEditor.csproj" ]; then
-    echo "Error: Cannot find PdfEditor.csproj in $PROJECT_DIR"
+if [ ! -f "$PROJECT_DIR/Excise.App.csproj" ]; then
+    echo "Error: Cannot find Excise.App.csproj in $PROJECT_DIR"
     exit 1
 fi
 
@@ -76,14 +76,14 @@ Type=Application
 Name=PDF Editor
 GenericName=PDF Editor
 Comment=PDF viewer and editor with TRUE redaction capabilities
-Exec=$INSTALL_DIR/PdfEditor %f
+Exec=$INSTALL_DIR/Excise.App %f
 Icon=$ICON_PATH
 Terminal=false
 Categories=Office;Viewer;Graphics;
 MimeType=application/pdf;
 Keywords=pdf;redact;redaction;edit;view;
 StartupNotify=true
-StartupWMClass=PdfEditor
+StartupWMClass=Excise.App
 EOF
 
 echo "Step 5: Updating desktop database..."
@@ -92,13 +92,13 @@ update-desktop-database "$HOME/.local/share/applications" 2>/dev/null || true
 echo ""
 echo "=== Installation Complete ==="
 echo ""
-echo "Location: $INSTALL_DIR/PdfEditor"
+echo "Location: $INSTALL_DIR/Excise.App"
 echo "Desktop entry: $DESKTOP_FILE"
 echo "Icon: $ICON_PATH"
 echo ""
 echo "You can now:"
 echo "  1. Find 'PDF Editor' in your application menu"
 echo "  2. Right-click a PDF and 'Open With' PDF Editor"
-echo "  3. Run from terminal: $INSTALL_DIR/PdfEditor"
+echo "  3. Run from terminal: $INSTALL_DIR/Excise.App"
 echo ""
 echo "To uninstall, run: ./uninstall-desktop.sh"

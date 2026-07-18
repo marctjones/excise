@@ -6,7 +6,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-TEST_DIR="$PROJECT_ROOT/PdfEditor.Tests"
+TEST_DIR="$PROJECT_ROOT/Excise.App.Tests"
 LOG_DIR="$PROJECT_ROOT/logs"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 LOG_FILE="$LOG_DIR/fix_redactarea_${TIMESTAMP}.log"

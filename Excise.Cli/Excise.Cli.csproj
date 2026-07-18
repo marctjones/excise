@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>excise</AssemblyName>
+    <!-- ReadyToRun compilation: pre-JIT compile IL at publish time for faster cold-start -->
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <!-- Composite R2R: bundle all dependencies into single R2R image for ~40% better cold-start -->
+    <PublishReadyToRunComposite>true</PublishReadyToRunComposite>
+    <!-- Tiered compilation: helps R2R by deferring optimization to runtime for hot paths -->
+    <TieredCompilation>true</TieredCompilation>
+    <!-- Native AOT: EXPERIMENTAL - uncomment below to test (builds successfully) -->
+    <!-- <PublishAot>true</PublishAot> -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Excise.Core\Excise.Core.csproj" />
+    <ProjectReference Include="..\Excise.Rendering\Excise.Rendering.csproj" />
+    <ProjectReference Include="..\Excise.Ocr\Excise.Ocr.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- System.CommandLine 2.0.0 GA was a substantial API rewrite vs the
+         beta4 build (handlers → SetAction(parseResult), Argument/Option
+         description and default moved to property-initializers, IsRequired
+         renamed to Required). Migration done in Program.cs. -->
+    <PackageReference Include="System.CommandLine" Version="2.0.9" />
+    <PackageReference Include="SkiaSharp" Version="3.119.4" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.4" />
+  </ItemGroup>
+
+</Project>

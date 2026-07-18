@@ -61,7 +61,7 @@ test-pdfs/*
 # But do commit generated PDF 2.0 conformance fixtures
 !test-pdfs/pdf20/
 !test-pdfs/pdf20/**
-# But do commit pdfe-authored generated implementation-regression fixtures
+# But do commit excise-authored generated implementation-regression fixtures
 !test-pdfs/generated-regressions/
 !test-pdfs/generated-regressions/**
 
@@ -96,7 +96,7 @@ coverage/
 dist/
 .claude/worktrees/
 .wiki/
-pdfe.sh
+excise.sh
 
 # Auto-generated test JSON
 **/*.cs.json
@@ -117,3 +117,7 @@ __pycache__/
 
 # Git history-rewrite backup bundles
 *.bundle
+
+# Locally-installed dotnet global tools — never commit (arm64 binary + 18MB tool store)
+/tools/.store/
+/tools/reportgenerator

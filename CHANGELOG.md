@@ -1,15 +1,15 @@
 # Changelog
 
-All notable changes to pdfe are documented here. Format roughly follows
+All notable changes to excise are documented here. Format roughly follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 semantic versioning.
 
 ## [2.30.0] - 2026-07-17
 
-The encryption release: pdfe now WRITES password-protected PDFs — the full
+The encryption release: excise now WRITES password-protected PDFs — the full
 #624 epic (#639–#644) landed and closed in one pass, every piece verified
 against independent readers (qpdf, mutool, Ghostscript, pdftoppm), never
-against pdfe itself. Alongside it: a sweep of redaction-trust extraction
+against excise itself. Alongside it: a sweep of redaction-trust extraction
 fixes that emptied the #651 adversarial-corpus allowlist, the "Make
 Searchable" OCR feature reached the GUI, and a rendering positioning bug
 that had been misattributed to font scaling for months was root-caused and
@@ -44,20 +44,20 @@ tagged — v2.30.0 is the first tagged release containing those changes too.
   Verified per algorithm against qpdf (structure, permissions, both
   passwords, `--decrypt` round-trip), mutool (content extraction), and
   Ghostscript (pixel-identical renders) — including a reverse-direction
-  oracle where pdfe independently decrypts a file qpdf itself encrypted.
-- **Password management: Document > Security dialog and `pdfe encrypt` /
-  `pdfe decrypt`** (#641). Set a user (open) and/or owner (permissions)
+  oracle where excise independently decrypts a file qpdf itself encrypted.
+- **Password management: Document > Security dialog and `excise encrypt` /
+  `excise decrypt`** (#641). Set a user (open) and/or owner (permissions)
   password, choose AES-256 (default) or AES-128, change a password (gated
   on re-entering the current one), or remove protection — removal is a
   distinct, confirmation-gated action, so clearing the password fields and
   clicking Apply on an encrypted document can never silently strip
   protection. Change-password on the CLI is the documented two-step
-  `pdfe decrypt` → `pdfe encrypt`.
+  `excise decrypt` → `excise encrypt`.
 - **Multi-reader encryption interop gate** (#644). 37 assertions covering
   both algorithms × four independent tools (mutool, qpdf, Ghostscript, and
   a new pdftoppm oracle) × correct/owner/wrong/absent password, plus
   semantic `/P` verification via qpdf and an anti-vacuity guard
-  (`PDFE_REQUIRE_ENCRYPTION_INTEROP_TOOLS=1` makes an all-tools-missing run
+  (`EXCISE_REQUIRE_ENCRYPTION_INTEROP_TOOLS=1` makes an all-tools-missing run
   a hard failure). Wired into tier T1 and `docs/RELEASE_CHECKLIST.md` as
   the release's encryption evidence, with Adobe Acrobat as a documented
   manual step. Falsifiability-drilled: ignoring the `/Encrypt` dictionary
@@ -66,7 +66,7 @@ tagged — v2.30.0 is the first tagged release containing those changes too.
   Searchable OCRs pages without a text layer and writes the recognized
   words back as an invisible, searchable text layer — with language
   selection, progress, cancellation, and a result summary. The #627 engine
-  (`PdfSearchableConverter`) and `pdfe make-searchable` CLI shipped
+  (`PdfSearchableConverter`) and `excise make-searchable` CLI shipped
   earlier in this cycle; redaction of a made-searchable scan removes both
   the invisible text and the raster ink (verified via independent
   extractor + ink differential).
@@ -81,7 +81,7 @@ tagged — v2.30.0 is the first tagged release containing those changes too.
   explicit `Save`/`SaveToBytes` overloads taking `PdfEncryptionOptions?`
   (the parameterless `Save()` still writes plaintext so nothing re-encrypts
   by surprise). RC4 sources (V1/V2, V4 CFM=V2) are re-encrypted **upgraded
-  to AES-256** — never downgraded, never silently decrypted. `pdfe redact`
+  to AES-256** — never downgraded, never silently decrypted. `excise redact`
   gained `--password`; `--allow-decrypt` / batch `allowDecrypt: true`
   flipped meaning from #638's "opt in to proceed at all" to the explicit
   opt-OUT that writes an unprotected copy, and the GUI's "Encryption Will Be
@@ -106,12 +106,12 @@ tagged — v2.30.0 is the first tagged release containing those changes too.
   The bit 10 extract-for-accessibility carve-out is honoured
   (`--for-accessibility`; search, rendering, and the accessibility/automation
   tree are never permission-gated). Redaction is deliberately not gated:
-  removing sensitive content from your own copy is pdfe's core purpose.
+  removing sensitive content from your own copy is excise's core purpose.
 
 ### Fixed
 - **Redaction-trust extraction sweep — the #651 adversarial-corpus
   allowlist is now empty.** The #648 gate's original finding (11 pdf.js
-  fixtures where pdfe catastrophically under-extracted vs. mutool) is fully
+  fixtures where excise catastrophically under-extracted vs. mutool) is fully
   resolved: off-page metadata pollution filtered by crop-box bounds (#649);
   Type0/CID fonts with 1-byte codespaces decode correctly, which also
   surfaced and fixed a raw-byte corruption in `ContentStreamWriter` and an
@@ -147,14 +147,14 @@ tagged — v2.30.0 is the first tagged release containing those changes too.
   project with real CI-log-verified allowlists (#655, #663, #664, #654);
   corpus-resilience and adversarial-extraction gates (#648) plus the
   corpus-wide extraction-parity floor gate (#645); test tiers T0–T3 with
-  one entry point (#646); per-OS CI jobs (#647); Pdfe.Core coverage gate
+  one entry point (#646); per-OS CI jobs (#647); Excise.Core coverage gate
   restored to 93% (#603); font-parser fuzzing closed a real hang and crash
   (#648).
 
 ### Changed
 - **`--allow-decrypt` flipped meaning** with #643 (see Added): #638 had
   made "saving an encrypted document decrypts it" loud and fail-closed
-  because pdfe could not write encryption; now that it can, preservation is
+  because excise could not write encryption; now that it can, preservation is
   the default and `--allow-decrypt` is the explicit plaintext opt-out. The
   #638-era `PdfWouldLoseEncryptionException` and batch
   `DECRYPT_CONFIRMATION_REQUIRED` error code are gone.
@@ -184,7 +184,7 @@ correctness test considers correct.
 ### Test integrity (#617, #618, #619, #620)
 - **Coverage can no longer vanish silently.** `scripts/check-skip-budget.sh` fails
   the build when the set of skipped tests changes in either direction. Seeding it
-  found **33 skipped tests in Pdfe.Core alone** — including rotation tests in code
+  found **33 skipped tests in Excise.Core alone** — including rotation tests in code
   v2.28.0 had just touched. A security-relevant assertion (does hidden-text reveal
   avoid loading OCR?) had already stopped running unnoticed.
 - **A perf change can no longer rewrite a correctness assertion quietly.**
@@ -205,10 +205,10 @@ correctness test considers correct.
 ## [2.28.0] - 2026-07-13
 
 **Security release. Two redaction leaks are fixed. Upgrading is recommended for
-anyone using pdfe to redact sensitive documents.**
+anyone using excise to redact sensitive documents.**
 
-Both fixed leaks share one root cause: redaction was verified by asking pdfe's
-own text extractor whether pdfe had removed the text. That extractor reads the
+Both fixed leaks share one root cause: redaction was verified by asking excise's
+own text extractor whether excise had removed the text. That extractor reads the
 content stream and nothing else, so text surviving in any other carrier was
 reported as a clean redaction — by a fully green test suite.
 
@@ -228,7 +228,7 @@ reported as a clean redaction — by a fully green test suite.
 - **Verified (was only asserted in a comment): a full save garbage-collects the
   previous revision**, so an incremental-update PDF cannot retain the
   un-redacted page. Now proven by test rather than believed.
-- **New: redaction is now verified by tools that are not pdfe** (#606, #607,
+- **New: redaction is now verified by tools that are not excise** (#606, #607,
   #609) — independent extraction (mutool), independent rendering (Ghostscript)
   as a before/after ink differential, and the full corpus. Ink absence is the
   stronger claim: extraction cannot see text rendered as vector paths or raster
@@ -237,8 +237,8 @@ reported as a clean redaction — by a fully green test suite.
 ### Known security limitations (unchanged from 2.27.1 — not introduced here)
 
 - **Redaction is silently incomplete where text extraction is blind (#637).**
-  Where pdfe cannot read text, it cannot redact it, and it reports success
-  anyway. Measured on `irs-1040-instructions.pdf` page 47: pdfe extracts 471
+  Where excise cannot read text, it cannot redact it, and it reports success
+  anyway. Measured on `irs-1040-instructions.pdf` page 47: excise extracts 471
   characters, mutool extracts 3,192. **Verify redactions of unfamiliar documents
   with an independent tool.** This is pre-existing; it is disclosed here because
   the new independent-verification suite is what found it.
@@ -290,9 +290,9 @@ reported as a clean redaction — by a fully green test suite.
 macOS bundle identity correction release. No intended public API break.
 
 ### Changed
-- Changed the macOS app bundle identifier from `com.marcjones.pdfe` to
-  `cl.skpt.pdfe` so LaunchServices, Finder/Open With, and packaged GUI smoke
-  target the skpt-owned pdfe app identity.
+- Changed the macOS app bundle identifier from `com.marcjones.excise` to
+  `cl.skpt.excise` so LaunchServices, Finder/Open With, and packaged GUI smoke
+  target the skpt-owned excise app identity.
 - Updated packaged GUI smoke shutdown to address the new bundle identifier.
 
 ### Tests
@@ -338,7 +338,7 @@ public API break.
 ## [2.26.0] - 2026-07-07
 
 Native AOT and GUI hot-path responsiveness release. Additive public API change
-in `Pdfe.Avalonia`; no intended breaking change.
+in `Excise.Avalonia`; no intended breaking change.
 
 ### Added
 - **Native AOT release lane (#590-#595).** Added
@@ -361,7 +361,7 @@ in `Pdfe.Avalonia`; no intended breaking change.
   and optimized visible-page lookup for long-document scrolling.
 
 ### Tests
-- Regenerated the `Pdfe.Avalonia` public API approval baseline for the
+- Regenerated the `Excise.Avalonia` public API approval baseline for the
   intentional `RenderVersion` addition.
 - Redaction gates remain required for this release line:
   `dotnet test ... --filter "FullyQualifiedName~Redaction"`.
@@ -371,23 +371,23 @@ in `Pdfe.Avalonia`; no intended breaking change.
 Benchmarking and renderer-performance release. No intended public API break.
 
 ### Added
-- **Benchmark suite (#344, #357).** Added `Pdfe.RenderTools benchmark-suite`
+- **Benchmark suite (#344, #357).** Added `Excise.RenderTools benchmark-suite`
   and wired `scripts/run-benchmarks.sh` so one command emits
   `benchmark-report.json`, `benchmark-pages.csv`, and `benchmark-report.md`
-  covering pdfe parse/text/render speed, external-reference fidelity,
+  covering excise parse/text/render speed, external-reference fidelity,
   RMSE/SSIM metrics, tool availability, and subprocess-only license isolation.
 - **Benchmark regression gate (#344, #357).** Added a release-smoke benchmark
   gate plus a deterministic CI gate that runs the benchmark suite in synthetic
-  no-oracle mode and fails on pdfe parse/render/redaction regressions.
+  no-oracle mode and fails on excise parse/render/redaction regressions.
 - **Redaction-completeness signal (#357).** The benchmark report now includes a
   synthetic glyph-level redaction check so speed reporting does not drift away
-  from pdfe's security-critical differentiator.
+  from excise's security-critical differentiator.
 
 ### Changed
 - **Benchmark wrapper (#344).** `scripts/run-benchmarks.sh` now runs the
   benchmark suite by default, keeps `corpus-hotspots` and
   `gui-display-hotspots`, and exposes `benchmarkdotnet` for the isolated
-  `Pdfe.Benchmarks` microbenchmark project.
+  `Excise.Benchmarks` microbenchmark project.
 - **RenderTools exit codes (#344).** Utility commands now normalize handler
   `Environment.ExitCode` the same way the public CLI does, so failed benchmark
   gates return a non-zero process exit.
@@ -426,20 +426,20 @@ UX, icon, and visual-polish audit release. No intended public API break.
 - v2.24 UX/icon audit passed:
   `logs/ux-icon-audit/v2.24-local` (`VisualPolishAuditTests`, screenshots, and
   manifest).
-- Full Debug build passed: `dotnet build pdfe.sln -c Debug`.
+- Full Debug build passed: `dotnet build excise.sln -c Debug`.
 
 ## [2.23.0] - 2026-07-04
 
 Automation API and platform integration release. Additive public API change in
-`Pdfe.Core.Automation`; no intended breaking change.
+`Excise.Core.Automation`; no intended breaking change.
 
 ### Added
-- **Stable CLI automation contract (#561).** Added `pdfe batch` for JSON
+- **Stable CLI automation contract (#561).** Added `excise batch` for JSON
   workflows with structured final reports, optional report files, progress
   NDJSON on stderr, documented exit codes, relative-path resolution, and
   password-aware document open without writing passwords to reports.
-- **JSON CLI output (#561).** Added `--json` output to `pdfe info`,
-  `pdfe text`, and `pdfe render`, and added `--password` handling to
+- **JSON CLI output (#561).** Added `--json` output to `excise info`,
+  `excise text`, and `excise render`, and added `--password` handling to
   `info` and `text` to match the render command.
 - **Automation command metadata (#561).** Added `automation.batch` to the
   shared command registry and corrected hidden-text audit metadata to point at
@@ -462,19 +462,19 @@ Automation API and platform integration release. Additive public API change in
 - Focused gates passed:
   `BatchAutomationCommandTests`, `CommandMetadataCommandTests`,
   `PdfCommandRegistryTests`, and `PublicApiApprovalTests`.
-- Full Debug build passed: `dotnet build pdfe.sln -c Debug`.
+- Full Debug build passed: `dotnet build excise.sln -c Debug`.
 
 ## [2.22.0] - 2026-07-04
 
 Accessibility and assistive-technology readiness release. Additive public API
-change in `Pdfe.Core.Automation`; no intended breaking change.
+change in `Excise.Core.Automation`; no intended breaking change.
 
 ### Added
-- **Shared semantic command metadata (#562).** Added `Pdfe.Core.Automation`
+- **Shared semantic command metadata (#562).** Added `Excise.Core.Automation`
   with stable command IDs, labels, descriptions, shortcuts, CLI verbs,
   parameters, result fields, disabled reasons, and destructive/security flags.
-- **CLI command metadata (#562).** Added `pdfe commands` and
-  `pdfe commands <id> --json` so automation and batch workflows can query the
+- **CLI command metadata (#562).** Added `excise commands` and
+  `excise commands <id> --json` so automation and batch workflows can query the
   same command model used by the GUI.
 - **Accessibility command binding (#569).** Added the Avalonia
   `CommandAccessibility.CommandId` attached property, binding command metadata
@@ -505,7 +505,7 @@ change in `Pdfe.Core.Automation`; no intended breaking change.
   `PdfCommandRegistryTests`, `CommandMetadataCommandTests`,
   `AccessibilityRegressionTests`, `GuiWorkflowCoverageMatrixTests`,
   `DocumentationClaimTests`, and `PublicApiApprovalTests`.
-- Full Debug build passed: `dotnet build pdfe.sln -c Debug`.
+- Full Debug build passed: `dotnet build excise.sln -c Debug`.
 
 ## [2.21.0] - 2026-07-04
 
@@ -537,11 +537,11 @@ API break.
   packages were updated from 12.0.4 to 12.0.5.
 - **Benchmark wrapper cleanup (#536).** `scripts/run-benchmarks.sh` now routes
   through the maintained render-tooling entry points so corpus hotspot reports
-  can separate pdfe render cost from reference-render and comparison overhead.
+  can separate excise render cost from reference-render and comparison overhead.
 
 ### Tests
 - Focused responsiveness and scheduling gate passed:
-  `dotnet test PdfEditor.Tests/PdfEditor.Tests.csproj -c Debug --filter "FullyQualifiedName~GuiResponsivenessBudgetTests|FullyQualifiedName~MainWindowRenderSchedulingTests|FullyQualifiedName~PdfRenderServiceCacheTests|FullyQualifiedName~ResponsivenessReportTests|FullyQualifiedName~GuiWorkflowCoverageMatrixTests"`.
+  `dotnet test Excise.App.Tests/Excise.App.Tests.csproj -c Debug --filter "FullyQualifiedName~GuiResponsivenessBudgetTests|FullyQualifiedName~MainWindowRenderSchedulingTests|FullyQualifiedName~PdfRenderServiceCacheTests|FullyQualifiedName~ResponsivenessReportTests|FullyQualifiedName~GuiWorkflowCoverageMatrixTests"`.
 - Packaged release smoke passed:
   `logs/release-smoke_20260704_133123` (package and packaged-GUI direct-exec
   gate; app first-page visible in `108ms` on the generated six-page smoke PDF).
@@ -623,7 +623,7 @@ Everyday PDF workbench final release gate. No intended API break.
 - Rendering quality reclassification:
   `logs/render-quality/release-prep-20260704/full-current-quality.json`
   reports `14,979 PASS`, `0` missing contracts, and `14,979` expectation passes.
-- `dotnet test Pdfe.Cli.Tests/Pdfe.Cli.Tests.csproj --filter "FullyQualifiedName~CorpusScanClassificationTests"`
+- `dotnet test Excise.Cli.Tests/Excise.Cli.Tests.csproj --filter "FullyQualifiedName~CorpusScanClassificationTests"`
   passed: `42` passed, `0` failed.
 - Release smoke evidence:
   - `logs/release-smoke_20260704_035730`: docs, build, redaction,
@@ -768,7 +768,7 @@ Archival conformance + viewer-quality release. Additive; no breaking changes.
   refinement.)
 
 ### Developer tooling
-- **`Pdfe.Benchmarks` (#344).** A BenchmarkDotNet project measuring parse /
+- **`Excise.Benchmarks` (#344).** A BenchmarkDotNet project measuring parse /
   render / text-extract (replacing the orphaned `run-benchmarks.sh` target);
   kept out of the shippable graph.
 
@@ -779,9 +779,9 @@ Library DX + authoring-correctness release. Additive; no breaking changes
 
 ### Added
 - **Public-API gate for the viewer libraries (#384).** A new lightweight,
-  non-GUI `Pdfe.Avalonia.Tests` project snapshots the public surface of
-  `Pdfe.Avalonia` and `Pdfe.Rendering` against committed baselines (same
-  treatment `Pdfe.Core` got in #383) — any API change now fails CI until the
+  non-GUI `Excise.Avalonia.Tests` project snapshots the public surface of
+  `Excise.Avalonia` and `Excise.Rendering` against committed baselines (same
+  treatment `Excise.Core` got in #383) — any API change now fails CI until the
   baseline is intentionally regenerated. It is deliberately separate from the
   heavy headless GUI suite, so viewer-library changes get reliable per-PR
   coverage.
@@ -802,10 +802,10 @@ Library DX + authoring-correctness release. Additive; no breaking changes
 ## [2.9.0] — 2026-06-08
 
 Viewer + macOS-reader + archival release. Additive; no breaking changes
-(public-API gate confirmed for `Pdfe.Core`).
+(public-API gate confirmed for `Excise.Core`).
 
 ### Added
-- **Continuous (reading) view mode for `Pdfe.Avalonia` (#371).** New
+- **Continuous (reading) view mode for `Excise.Avalonia` (#371).** New
   `PdfViewerControl.ViewMode` (`PdfViewMode.SinglePage` default | `Continuous`).
   Continuous shows every page in a vertically-scrolling, **render-virtualized**
   list — only pages near the viewport render, bitmaps are bounded by an LRU
@@ -817,7 +817,7 @@ Viewer + macOS-reader + archival release. Additive; no breaking changes
 - **macOS: open PDFs from Finder / be a default reader (#420).** The app handles
   the macOS file-activation event (Finder double-click, Dock, `open -a`), and the
   generated `.app` `Info.plist` declares `CFBundleDocumentTypes` for
-  `com.adobe.pdf` so pdfe registers as a PDF handler. README documents setting it
+  `com.adobe.pdf` so excise registers as a PDF handler. README documents setting it
   as the default reader and the one-time Gatekeeper unquarantine.
 - **PDF/A archival output.** `PdfDocumentBuilder.PdfA(PdfAConformance.PdfA2B)`
   adds the document structures PDF/A requires at save time — an XMP metadata
@@ -917,7 +917,7 @@ gate confirms no breaking changes.
 
 ## [2.5.0] — 2026-06-06
 
-Completes the **PromptResponse writer epic (#382)** — pdfe can now author
+Completes the **PromptResponse writer epic (#382)** — excise can now author
 accessible, fillable, Unicode PDFs from structured content. All additive; the
 public-API gate confirms no breaking changes.
 
@@ -927,7 +927,7 @@ public-API gate confirms no breaking changes.
   Identity-H composite font with a ToUnicode CMap, so arbitrary Unicode (CJK,
   Arabic, accented Latin, Greek, Cyrillic, …) both renders and stays
   extractable. Backed by a new dependency-free sfnt reader
-  (`Pdfe.Core.Fonts.TrueTypeFontFile`). Full-font embedding; subsetting and CFF
+  (`Excise.Core.Fonts.TrueTypeFontFile`). Full-font embedding; subsetting and CFF
   ('OTTO') are tracked in #393.
 - **High-level text layout (#379).** `PdfGraphics.DrawText(text, font, brush,
   PdfRectangle, …)` word-wraps into a box and returns a `TextLayoutResult`
@@ -950,7 +950,7 @@ public-API gate confirms no breaking changes.
   de-preview is blocked on an upstream FluentAvalonia 3.x stable for Avalonia 12).
 
 ### Tests / CI
-- Raised `Pdfe.Core` CI line coverage to ~93% and ratcheted the gate to 92.5%
+- Raised `Excise.Core` CI line coverage to ~93% and ratcheted the gate to 92.5%
   (#351); CI installs `fonts-dejavu-core` so the embedding tests run
   deterministically. The macOS `.app` is now built and attached by CI.
 
@@ -961,16 +961,16 @@ changes (enforced by the new gate) — a pure patch.
 
 ### Added
 - **Public-API gate (#383).** `PublicApiApprovalTests` snapshots the full
-  `Pdfe.Core` public surface against a committed baseline
-  (`Pdfe.Core.Tests/PublicApi/Pdfe.Core.approved.txt`); any public-API change
+  `Excise.Core` public surface against a committed baseline
+  (`Excise.Core.Tests/PublicApi/Excise.Core.approved.txt`); any public-API change
   fails CI until intentionally re-approved (`APPROVE_PUBLIC_API=1`). Makes every
   API change a deliberate SemVer decision.
-- **SourceLink + symbols.** The three publishable libraries (`Pdfe.Core`,
-  `Pdfe.Rendering`, `Pdfe.Avalonia`) now ship portable `.snupkg` symbol packages
+- **SourceLink + symbols.** The three publishable libraries (`Excise.Core`,
+  `Excise.Rendering`, `Excise.Avalonia`) now ship portable `.snupkg` symbol packages
   with SourceLink and deterministic CI builds (shared `Packaging.props`), so
   consumers can step into the source while debugging.
 - README "Versioning & API stability" section documenting the SemVer policy,
-  the `Pdfe.Core.Authoring.*` stable writer surface, and local-feed (not
+  the `Excise.Core.Authoring.*` stable writer surface, and local-feed (not
   nuget.org) distribution.
 
 ### Fixed
@@ -983,7 +983,7 @@ changes (enforced by the new gate) — a pure patch.
   no longer suppresses restore output.
 
 ### CI / dev
-- Headless GUI tests (`PdfEditor.Tests`) now run only when GUI-relevant paths
+- Headless GUI tests (`Excise.App.Tests`) now run only when GUI-relevant paths
   change (or on `main`), so library-only PRs aren't gated on the slow GUI suite.
 - Quarantined the flaky `KeyboardShortcutTests.CtrlS_SavesFile` on headless CI
   (#363) — it intermittently deadlocked the Avalonia dispatcher and crashed the
@@ -996,7 +996,7 @@ generate PDFs from structured content without touching coordinates — the
 writer-side facade tracked by #383 (PromptResponse writer epic #382).
 
 ### Added
-- **`Pdfe.Core.Authoring.PdfDocumentBuilder` — high-level writer facade (#383).**
+- **`Excise.Core.Authoring.PdfDocumentBuilder` — high-level writer facade (#383).**
   A fluent, flow-layout builder over the existing `PdfGraphics` /
   `AcroFormAuthoring` API. Content flows top-to-bottom inside the page's content
   area with automatic word-wrap and pagination, so callers never compute
@@ -1022,7 +1022,7 @@ writer-side facade tracked by #383 (PromptResponse writer epic #382).
   field options (#380), and document metadata setters (#381) extend the facade.
 - Verified against external readers: generated forms pass `qpdf --check`,
   `pdfinfo` reports a live `AcroForm`, content auto-paginates, and `pdftotext`
-  extracts all text. 17 new tests; full `Pdfe.Core` suite green (2744 passing).
+  extracts all text. 17 new tests; full `Excise.Core` suite green (2744 passing).
 
 ## [2.3.1] — 2026-06-04
 
@@ -1035,31 +1035,31 @@ writer-side facade tracked by #383 (PromptResponse writer epic #382).
   `GetObject` now serializes seek/parse + cache mutation behind a reentrant
   lock. Verified on a large real document: 8 threads reading every page
   produced 729 errors before and 0 after. Matters especially now that
-  `Pdfe.Core` ships as a NuGet package.
+  `Excise.Core` ships as a NuGet package.
 
 ## [2.3.0] — 2026-06-04
 
-Turns pdfe's engine into reusable libraries for the wider .NET/Avalonia ecosystem.
+Turns excise's engine into reusable libraries for the wider .NET/Avalonia ecosystem.
 
 ### Added
-- **`Pdfe.Avalonia` — reusable Avalonia PDF viewer control (#365).** The
+- **`Excise.Avalonia` — reusable Avalonia PDF viewer control (#365).** The
   `PdfViewerControl` (zoom/pan, navigation, text selection, search highlights,
-  annotations, links, form-field overlays) is extracted from the `PdfEditor`
-  app into a standalone, dependency-light library (depends only on `Pdfe.Core`
-  + `Pdfe.Rendering` + Avalonia + SkiaSharp). Any Avalonia app can now drop in a
+  annotations, links, form-field overlays) is extracted from the `Excise.App`
+  app into a standalone, dependency-light library (depends only on `Excise.Core`
+  + `Excise.Rendering` + Avalonia + SkiaSharp). Any Avalonia app can now drop in a
   pure-managed, SkiaSharp-based PDF viewer — a gap the ecosystem lacked. The
-  app consumes it as the reference implementation; a minimal `Pdfe.Avalonia.Sample`
+  app consumes it as the reference implementation; a minimal `Excise.Avalonia.Sample`
   shows the dependency-light usage.
-- **Framework-neutral render API (#366).** `Pdfe.Rendering.SkiaRenderer` gains
+- **Framework-neutral render API (#366).** `Excise.Rendering.SkiaRenderer` gains
   `RenderPage(page, options, CancellationToken)` (cancellable between
   content-stream operators, companion to #346) and `RenderPageToPng(page, Stream, …)`
   for non-Skia consumers.
-- **NuGet-packable trio.** `Pdfe.Core`, `Pdfe.Rendering`, and `Pdfe.Avalonia`
+- **NuGet-packable trio.** `Excise.Core`, `Excise.Rendering`, and `Excise.Avalonia`
   carry package metadata + per-package READMEs; `dotnet pack` produces three
   valid `.nupkg`s (attached to this release; not pushed to nuget.org).
 
 ### Changed
-- `PdfEditor` now consumes `Pdfe.Avalonia` rather than embedding the control;
+- `Excise.App` now consumes `Excise.Avalonia` rather than embedding the control;
   behavior is unchanged.
 
 ## [2.2.2] — 2026-06-03
@@ -1122,7 +1122,7 @@ parser-hardening / known-issues batch that landed afterward).
 
 ### Docs
 - Refreshed stale `CLAUDE.md` notes: the redaction-engine architecture now
-  points at `Pdfe.Core` (not the removed `PdfEditor/Services/Redaction/`), and
+  points at `Excise.Core` (not the removed `Excise.App/Services/Redaction/`), and
   the frozen "Current Status (v1.4.0)" block now points at `CHANGELOG.md` /
   GitHub Releases so the version no longer goes stale in-file. (#349)
 
@@ -1131,7 +1131,7 @@ parser-hardening / known-issues batch that landed afterward).
 Redaction-security release: closes the remaining content-type and
 coordinate gaps so redaction reliably removes — not merely covers — every
 way content can land under the redaction area. Also restores a working CI
-gate (it had been silently broken) and raises Pdfe.Core coverage.
+gate (it had been silently broken) and raises Excise.Core coverage.
 
 ### Added / Security
 - **Inline-image redaction** (`BI…ID…EI`) — the parser now retains the
@@ -1159,7 +1159,7 @@ gate (it had been silently broken) and raises Pdfe.Core coverage.
   check, and fixed the coverage-report path. The PR gate now runs the
   deterministic test set (environment-dependent visual/corpus/differential/
   benchmark tests are owned by the nightly job). (#351)
-- Raised Pdfe.Core coverage and set the enforced gate to the level CI meets.
+- Raised Excise.Core coverage and set the enforced gate to the level CI meets.
 
 ## [2.1.0] — 2026-06-01
 
@@ -1181,7 +1181,7 @@ hardening.
 
 ### Changed / Performance
 - GUI **Release startup profile** — ReadyToRun + TieredPGO + concurrent GC; **~36% faster cold start** (1.18 s → 0.75 s). (#339)
-- ReadyToRun for `Pdfe.Cli`. (#334)
+- ReadyToRun for `Excise.Cli`. (#334)
 - Moved off preview packages and bumped to latest stable: **Avalonia 12.0.4, ReactiveUI 23.2.27, SkiaSharp 3.119.4, .NET 10.0.8**. (#340)
 - Removed the IdlerGear integration; refreshed stale docs (versions/architecture) and archived obsolete plan docs. (#349)
 
@@ -1193,7 +1193,7 @@ hardening.
 - Headless test harness wires ReactiveUI to the Avalonia dispatcher — fixes a cross-thread `CanExecute` crash. (#358)
 
 ### Tests
-- +18 tests: parser recursion limits, inline-image `/L`, CID-redaction pipeline, and previously-untested operators (`sh`, marked content, `BX`/`EX`, `d0`/`d1`). Full Pdfe.Core suite: 2562 passing.
+- +18 tests: parser recursion limits, inline-image `/L`, CID-redaction pipeline, and previously-untested operators (`sh`, marked content, `BX`/`EX`, `d0`/`d1`). Full Excise.Core suite: 2562 passing.
 
 ### Known limitations / deferred
 - Inline-image redaction round-trip (#354), Form XObject redaction (#355, flatten-then-redact), and rotated-page redaction (#356) remain open.
@@ -1202,15 +1202,15 @@ hardening.
 
 The headline of v2.0 is **a complete rewrite of the PDF stack**. v1.0 sat on
 top of PdfPig + PDFsharp + PDFtoImage (PDFium) + Tesseract.NET; v2.0 ships a
-pure-.NET stack of pdfe-owned libraries — Pdfe.Core (parser/writer),
-Pdfe.Rendering (SkiaSharp renderer), and Pdfe.Ocr (system tesseract shell) —
+pure-.NET stack of excise-owned libraries — Excise.Core (parser/writer),
+Excise.Rendering (SkiaSharp renderer), and Excise.Ocr (system tesseract shell) —
 with no external PDF dependencies remaining. Same redaction guarantee, same
 GUI, fewer moving parts, and the renderer now handles real-world PDFs from
 WeasyPrint, Word, XEP, and CJK toolchains without falling back to garbage.
 
 ### Added
 
-#### Pdfe.Core — pure-.NET PDF parser, writer, and content-stream library
+#### Excise.Core — pure-.NET PDF parser, writer, and content-stream library
 - M1: parser for objects, indirect references, xref, encrypted streams. Plus
   tolerant recovery for the off-by-one /Length and stale-startxref errors
   that are common in real PDFs.
@@ -1235,7 +1235,7 @@ WeasyPrint, Word, XEP, and CJK toolchains without falling back to garbage.
 - `PdfPage.GetFont` resolves indirect /Font references (WeasyPrint, Word,
   Office, and almost every browser-derived PDF).
 
-#### Pdfe.Rendering — SkiaSharp-based renderer
+#### Excise.Rendering — SkiaSharp-based renderer
 - M5: full renderer covering text, paths, images, transparency, clipping
   paths, soft masks, ExtGState, color spaces, shading, and inline images.
 - Embedded font support:
@@ -1264,7 +1264,7 @@ WeasyPrint, Word, XEP, and CJK toolchains without falling back to garbage.
 - Visual regression test infrastructure with PNG baselines.
 - Dropped `PDFtoImage` / `PDFium` native dependency.
 
-#### Pdfe.Ocr — OCR via system `tesseract` CLI
+#### Excise.Ocr — OCR via system `tesseract` CLI
 - New project. Shells out to the system tesseract binary, parses TSV
   output, returns `OcrResult` with per-word bounding boxes.
 - Differential OCR auditor: render the page twice (once with overlays
@@ -1274,14 +1274,14 @@ WeasyPrint, Word, XEP, and CJK toolchains without falling back to garbage.
 - Replaces the previous Tesseract.NET nuget binding (which pinned to a
   leptonica version no longer shipping on modern Linux).
 
-#### Pdfe.Cli — `pdfe` command-line tool
-- `pdfe render <file> -o out.png [--page N] [--dpi N]`
-- `pdfe redact <file> -o out.pdf --text "PHRASE"` — glyph-level removal.
-- `pdfe audit <file> [--deep] [--json]` — structural and (with `--deep`)
+#### Excise.Cli — `excise` command-line tool
+- `excise render <file> -o out.png [--page N] [--dpi N]`
+- `excise redact <file> -o out.pdf --text "PHRASE"` — glyph-level removal.
+- `excise audit <file> [--deep] [--json]` — structural and (with `--deep`)
   differential-OCR audit of hidden text.
-- `pdfe ocr <file>` — OCR the page and emit TSV.
+- `excise ocr <file>` — OCR the page and emit TSV.
 
-#### GUI — PdfEditor
+#### GUI — Excise.App
 - New reusable `PdfViewerControl` (Avalonia UserControl) with overlay layers
   for selection, search highlights, redaction marquee, and hidden-text
   reveal. Replaces the bespoke MainWindow rendering.
@@ -1294,15 +1294,15 @@ WeasyPrint, Word, XEP, and CJK toolchains without falling back to garbage.
 ### Changed
 
 - All seven GUI services migrated from PdfPig / PDFsharp / PDFtoImage to
-  Pdfe.Core / Pdfe.Rendering: `PdfRenderService`, `PdfTextExtractionService`,
+  Excise.Core / Excise.Rendering: `PdfRenderService`, `PdfTextExtractionService`,
   `PdfSearchService`, `SignatureVerificationService`, `PdfDocumentService`,
   `BatesNumberingService`, `RedactionService`.
 - `RedactionService` unified — `RedactArea` (mouse marquee) and `RedactText`
-  (find-and-redact) now share a single Pdfe.Core pipeline; the previous
+  (find-and-redact) now share a single Excise.Core pipeline; the previous
   parallel PdfSharp+PdfPig path is gone.
-- The legacy `PdfEditor.Redaction` library (and its `pdfer` CLI) deleted —
-  glyph-level redaction lives in Pdfe.Core; the Pdfe.Cli `redact` command
-  replaces `pdfer`.
+- The legacy `Excise.App.Redaction` library (and its `exciser` CLI) deleted —
+  glyph-level redaction lives in Excise.Core; the Excise.Cli `redact` command
+  replaces `exciser`.
 - System-font fallback widened: strip the 6-letter PDF subset prefix,
   match by family prefix instead of exact name, and recognize Semibold /
   Medium as Bold. `TimesNewRomanPS-BoldMT` now correctly maps to Times New
@@ -1312,13 +1312,13 @@ WeasyPrint, Word, XEP, and CJK toolchains without falling back to garbage.
 
 ### Removed
 
-- **PdfPig 0.1.11** — replaced by `Pdfe.Core.Text`.
-- **PDFsharp 6.2.2** — replaced by `Pdfe.Core.Document` + `Pdfe.Core.Writing`.
-- **PDFtoImage 4.0.2** + native PDFium — replaced by `Pdfe.Rendering` (Skia).
-- **Tesseract.NET nuget** — replaced by `Pdfe.Ocr` (CLI shell).
-- **PdfEditor.Redaction** project + **`pdfer` CLI** — replaced by
-  Pdfe.Core glyph-level redaction + `pdfe redact`.
-- **PdfEditor.Demo** + Validator tools — superseded by Pdfe.Cli + the new
+- **PdfPig 0.1.11** — replaced by `Excise.Core.Text`.
+- **PDFsharp 6.2.2** — replaced by `Excise.Core.Document` + `Excise.Core.Writing`.
+- **PDFtoImage 4.0.2** + native PDFium — replaced by `Excise.Rendering` (Skia).
+- **Tesseract.NET nuget** — replaced by `Excise.Ocr` (CLI shell).
+- **Excise.App.Redaction** project + **`exciser` CLI** — replaced by
+  Excise.Core glyph-level redaction + `excise redact`.
+- **Excise.App.Demo** + Validator tools — superseded by Excise.Cli + the new
   visual regression suite.
 
 ### Fixed
@@ -1371,7 +1371,7 @@ The new renderer has been smoke-tested against a real-world corpus:
 | Multilingual CJK fixture | WeasyPrint + Noto CJK | zh-Hans, zh-Hant, ja, ko |
 
 All render essentially identically to mutool / Acrobat at the structural
-level. `Pdfe.Rendering.Tests/Visual/` and `PdfEditor.Tests/UI/baselines/`
+level. `Excise.Rendering.Tests/Visual/` and `Excise.App.Tests/UI/baselines/`
 keep PNG baselines for regression detection.
 
 ### Migration
@@ -1380,17 +1380,17 @@ The architectural change is mostly transparent for end users — the desktop
 app, the redaction guarantee, and the file format are unchanged. For
 embedders moving off the v1.0 surface:
 
-- `PdfEditor.Redaction` (library) → `Pdfe.Core.Text.Segmentation` —
+- `Excise.App.Redaction` (library) → `Excise.Core.Text.Segmentation` —
   use `page.RedactArea(rect)` / `page.RedactAreas(rects)` /
   `document.RedactText("phrase")` from `PdfPageRedactionExtensions` /
   `PdfDocumentRedactionExtensions`.
-- `pdfer` CLI → `pdfe redact` — same options.
-- PdfPig text extraction → `Pdfe.Core.Text` — `PdfDocument.GetText(page)`
+- `exciser` CLI → `excise redact` — same options.
+- PdfPig text extraction → `Excise.Core.Text` — `PdfDocument.GetText(page)`
   and `PdfDocument.GetLetters(page)`.
-- PDFsharp `PdfDocument` → `Pdfe.Core.Document.PdfDocument` — note that
+- PDFsharp `PdfDocument` → `Excise.Core.Document.PdfDocument` — note that
   `PdfDocument.Open(stream)` now takes ownership semantics via
   `Open(stream, ownsStream)`.
-- PDFtoImage → `Pdfe.Rendering.SkiaRenderer.RenderPage(page, options)`.
+- PDFtoImage → `Excise.Rendering.SkiaRenderer.RenderPage(page, options)`.
 
 ### Known gaps deferred to v2.1+
 
@@ -1404,10 +1404,10 @@ embedders moving off the v1.0 surface:
 
 ### Test counts at release
 
-- Pdfe.Core.Tests: 442 passing, 2 skipped
-- Pdfe.Rendering.Tests: 175 passing
-- Pdfe.Cli.Tests: 7 passing
-- PdfEditor.Tests: 221 passing, 2 skipped (require Tesseract installed)
+- Excise.Core.Tests: 442 passing, 2 skipped
+- Excise.Rendering.Tests: 175 passing
+- Excise.Cli.Tests: 7 passing
+- Excise.App.Tests: 221 passing, 2 skipped (require Tesseract installed)
 
 **Total: 845 tests, 0 failing**
 

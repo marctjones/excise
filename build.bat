@@ -20,7 +20,7 @@ dotnet --version
 echo.
 
 REM Navigate to project directory
-cd /d "%~dp0\PdfEditor"
+cd /d "%~dp0\Excise.App"
 
 echo Restoring NuGet packages...
 dotnet restore
@@ -45,14 +45,14 @@ echo [OK] Build successful!
 echo ==================================
 echo.
 echo To run the application:
-echo   dotnet run --project PdfEditor
+echo   dotnet run --project Excise.App
 echo.
 echo To publish a standalone executable:
 echo   dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
 echo.
 echo To build CLI with ReadyToRun (R2R) compilation for faster cold-start:
-echo   dotnet publish Pdfe.Cli\Pdfe.Cli.csproj -c Release -r win-x64 --self-contained true
-echo   Binaries will be in: Pdfe.Cli\bin\Release\net10.0\win-x64\publish\
+echo   dotnet publish Excise.Cli\Excise.Cli.csproj -c Release -r win-x64 --self-contained true
+echo   Binaries will be in: Excise.Cli\bin\Release\net10.0\win-x64\publish\
 echo   (R2R is auto-enabled in csproj)
 echo.
 pause

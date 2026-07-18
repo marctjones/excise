@@ -13,7 +13,7 @@
 #
 # Attach later with:
 #
-#   tmux attach -t pdfe-corpus
+#   tmux attach -t excise-corpus
 
 set -euo pipefail
 
@@ -21,8 +21,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$ROOT"
 
-SESSION="pdfe-corpus"
-TMUX_SOCKET="${PDFE_TMUX_SOCKET:-}"
+SESSION="excise-corpus"
+TMUX_SOCKET="${EXCISE_TMUX_SOCKET:-}"
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --session) SESSION="$2"; shift 2 ;;
@@ -66,7 +66,7 @@ mkdir -p "$LOG_DIR"
 printf '%s\n' "${RUN_ARGS[@]}" > "$LOG_DIR/args.txt"
 
 RUN_ENV=()
-for name in PDFE_PDFBOX_JAR PDFE_PDFBOX_COMMAND PDFE_PDFIUM_TEST PDFE_JAVA_COMMAND; do
+for name in EXCISE_PDFBOX_JAR EXCISE_PDFBOX_COMMAND EXCISE_PDFIUM_TEST EXCISE_JAVA_COMMAND; do
     if [[ -n "${!name:-}" ]]; then
         RUN_ENV+=("$name=${!name}")
     fi

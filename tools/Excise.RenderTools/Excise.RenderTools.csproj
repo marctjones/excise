@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Excise.RenderTools</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Excise.Core\Excise.Core.csproj" />
+    <ProjectReference Include="..\..\Excise.Rendering\Excise.Rendering.csproj" />
+    <ProjectReference Include="..\Excise.ImageInspection\Excise.ImageInspection.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" Version="2.0.9" />
+    <PackageReference Include="SkiaSharp" Version="3.119.4" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.4" />
+    <PackageReference Include="SkiaSharp.NativeAssets.macOS" Version="3.119.4" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\Packaging.props" />
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Excise.Core</PackageId>
+    <Version>2.19.0</Version>
+    <Authors>Marc Jones</Authors>
+    <Description>Pure-managed PDF parser, document model, and writer for .NET. Open/edit/save PDFs, extract text/links/annotations/forms, and perform true glyph-level redaction. No native dependencies; cross-platform and trim/AOT-friendlier.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/marctjones/pdfe</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/marctjones/pdfe</PackageProjectUrl>
+    <PackageTags>pdf;parser;redaction;text-extraction;cross-platform;managed</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CSJ2K" Version="3.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Excise.Core.Tests" />
+    <InternalsVisibleTo Include="excise" />
+    <InternalsVisibleTo Include="Excise.RenderTools" />
+    <InternalsVisibleTo Include="Excise.Rendering" />
+    <InternalsVisibleTo Include="Excise.Rendering.Tests" />
+  </ItemGroup>
+
+</Project>

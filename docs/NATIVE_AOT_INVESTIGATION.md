@@ -5,7 +5,7 @@ Date: 2026-06-08
 Host: macOS 15 (Darwin 25.5.0), Apple Silicon (arm64), .NET SDK 10.0.300
 
 Update: 2026-06-13 — Release builds now default `EnableScripting=false`, so
-`PdfEditor` excludes `Services/ScriptingService.cs` and the
+`Excise.App` excludes `Services/ScriptingService.cs` and the
 `Microsoft.CodeAnalysis.CSharp.Scripting` package unless a builder explicitly
 opts back in with `-p:EnableScripting=true`. Debug/test builds continue to keep
 the scripting surface enabled.
@@ -24,7 +24,7 @@ optionally runs packaged GUI smoke with `scripts/run-aot-smoke.sh --gui-smoke`.
 
 ## TL;DR
 
-The long-standing assumption (recorded in `PdfEditor.csproj` and tied to issues
+The long-standing assumption (recorded in `Excise.App.csproj` and tied to issues
 **#342 / #343**) that NativeAOT is *blocked* by the Roslyn scripting engine and
 ReactiveUI reflection **does not hold as a hard block**.
 
@@ -51,7 +51,7 @@ correctness risks that must be closed before AOT could ship.
 
 Notes:
 - Trimming *alone* (no AOT) already takes 206 MB → **87 MB** and removes Roslyn.
-- The 92 MB `PdfEditor.dSYM` produced by the AOT build is debug symbols and is
+- The 92 MB `Excise.App.dSYM` produced by the AOT build is debug symbols and is
   **not** part of the distributable.
 - First-ever R2R launch measured 26.7 s — that is one-time Gatekeeper
   verification of the unsigned binary, not startup cost; discarded.
@@ -102,7 +102,7 @@ The original June 2026 probe produced 22 warnings in **three small buckets**:
    (manifest). Reflection-based (de)serialization is unsupported under AOT and
    can throw `NotSupportedException` at runtime (it happened to survive the smoke
    test because the types are simple and rooted — fragile, not safe).
-   **Status:** fixed. The app now uses `PdfEditor/Services/PdfeJsonContext.cs`
+   **Status:** fixed. The app now uses `Excise.App/Services/ExciseJsonContext.cs`
    for persisted window settings, recent files, the license manifest, and
    responsiveness reports.
 
@@ -132,9 +132,9 @@ The original June 2026 probe produced 22 warnings in **three small buckets**:
 ```bash
 git checkout investigate/native-aot
 # baseline R2R
-dotnet publish PdfEditor/PdfEditor.csproj -c Release -r osx-arm64 --self-contained true -o artifacts/macos-publish
+dotnet publish Excise.App/Excise.App.csproj -c Release -r osx-arm64 --self-contained true -o artifacts/macos-publish
 # trim probe
-dotnet publish PdfEditor/PdfEditor.csproj -c Release -r osx-arm64 --self-contained true -p:PublishTrimmed=true -o artifacts/trim-probe
+dotnet publish Excise.App/Excise.App.csproj -c Release -r osx-arm64 --self-contained true -p:PublishTrimmed=true -o artifacts/trim-probe
 # AOT probe
-dotnet publish PdfEditor/PdfEditor.csproj -c Release -r osx-arm64 -p:PublishAot=true -o artifacts/aot-probe
+dotnet publish Excise.App/Excise.App.csproj -c Release -r osx-arm64 -p:PublishAot=true -o artifacts/aot-probe
 ```

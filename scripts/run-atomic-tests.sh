@@ -28,7 +28,7 @@ cd "$PROJECT_DIR"
 # Build first (quiet)
 echo -n "Building... "
 BUILD_START=$SECONDS
-if dotnet build PdfEditor.Redaction.Tests --no-restore -v q > "$LOG_FILE" 2>&1; then
+if dotnet build Excise.App.Redaction.Tests --no-restore -v q > "$LOG_FILE" 2>&1; then
     echo "OK ($(($SECONDS - $BUILD_START))s)"
 else
     echo "FAILED (see log)"
@@ -49,7 +49,7 @@ run_test() {
     # Run with minimal verbosity, capture output
     local output
     local exit_code
-    output=$(timeout $PHASE_TIMEOUT dotnet test PdfEditor.Redaction.Tests \
+    output=$(timeout $PHASE_TIMEOUT dotnet test Excise.App.Redaction.Tests \
         --filter "FullyQualifiedName~$filter" \
         --no-build \
         --verbosity minimal 2>&1) || exit_code=$?

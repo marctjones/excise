@@ -13,9 +13,9 @@ from typing import Any
 
 
 DEFAULT_TEXT_EVIDENCE_ROOTS = [
-    "Pdfe.Core.Tests",
-    "Pdfe.Rendering.Tests",
-    "Pdfe.Cli.Tests",
+    "Excise.Core.Tests",
+    "Excise.Rendering.Tests",
+    "Excise.Cli.Tests",
     "scripts",
 ]
 DEFAULT_CONTRACT_ROOTS = ["test-pdfs/rendering-contracts"]

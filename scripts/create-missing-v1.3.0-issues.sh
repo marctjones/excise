@@ -34,7 +34,7 @@ Implement a service that suggests filenames for redacted PDFs following standard
 - Auto-increment if file exists: `filename_REDACTED_2.pdf`
 
 ## Implementation
-Create `PdfEditor/Services/FilenameSuggestionService.cs`:
+Create `Excise.App/Services/FilenameSuggestionService.cs`:
 - `SuggestRedactedFilename(string originalPath)` → returns `filename_REDACTED.pdf`
 - `SuggestPageSubsetFilename(string originalPath, string pageRange)` → returns `filename_pages_1-5.pdf`
 - `SuggestWithAutoIncrement(string path)` → returns numbered variant if exists
@@ -42,7 +42,7 @@ Create `PdfEditor/Services/FilenameSuggestionService.cs`:
 Register service in DI container and inject into MainWindowViewModel.
 
 ## Tests
-Unit tests in `PdfEditor.Tests/Unit/FilenameSuggestionServiceTests.cs`:
+Unit tests in `Excise.App.Tests/Unit/FilenameSuggestionServiceTests.cs`:
 - Test appends `_REDACTED` suffix
 - Test preserves directory and extension
 - Test auto-increment when file exists
@@ -79,7 +79,7 @@ Draw different overlay styles to distinguish pending redactions (not yet applied
 - Reduces "did it work?" questions
 
 ## Tests
-Integration tests in `PdfEditor.Tests/Integration/VisualRedactionIndicatorsTests.cs`:
+Integration tests in `Excise.App.Tests/Integration/VisualRedactionIndicatorsTests.cs`:
 - Pending redaction shows red dashed border
 - Applied redaction shows black solid box
 - Both types visible simultaneously
@@ -117,13 +117,13 @@ Save as: [filename_REDACTED.pdf] [Browse...]
 ```
 
 ## Implementation
-- Create `PdfEditor/Views/SaveRedactedVersionDialog.axaml`
-- Create `PdfEditor/ViewModels/SaveRedactedVersionDialogViewModel.cs`
+- Create `Excise.App/Views/SaveRedactedVersionDialog.axaml`
+- Create `Excise.App/ViewModels/SaveRedactedVersionDialogViewModel.cs`
 - Called from ApplyAllRedactionsCommand when working on original file
 - Returns null if cancelled, filepath if saved
 
 ## Tests
-UI tests in `PdfEditor.Tests/UI/SaveRedactedVersionDialogTests.cs`:
+UI tests in `Excise.App.Tests/UI/SaveRedactedVersionDialogTests.cs`:
 - Dialog shows suggested filename
 - Dialog shows pending count
 - Browse button opens file picker
@@ -180,7 +180,7 @@ Bind in XAML:
 ```
 
 ## Tests
-Unit tests in `PdfEditor.Tests/Unit/MainWindowViewModelTests.cs`:
+Unit tests in `Excise.App.Tests/Unit/MainWindowViewModelTests.cs`:
 - Original + changes → "Save Redacted Version"
 - Redacted + changes → "Save"
 - No changes → "Save" (disabled)
@@ -228,7 +228,7 @@ private async Task SaveFileAsync()
 ```
 
 ## Tests
-Integration tests in `PdfEditor.Tests/Integration/ContextAwareSaveTests.cs`:
+Integration tests in `Excise.App.Tests/Integration/ContextAwareSaveTests.cs`:
 - Save on original → shows Save As dialog
 - Save on original → cannot overwrite
 - Save on redacted → updates directly
@@ -287,7 +287,7 @@ public async Task TextExtraction_AfterApply_TextNotExtractable()
 ```
 
 ## Implementation
-Create `PdfEditor.Tests/Integration/TextExtractionAfterRedactionTests.cs` with comprehensive scenarios.
+Create `Excise.App.Tests/Integration/TextExtractionAfterRedactionTests.cs` with comprehensive scenarios.
 
 ## Related
 Part of v1.3.0 implementation plan, Phase 5, Step 5.2
@@ -333,7 +333,7 @@ public void CannotOverwriteOriginal_ThroughNormalSave()
 ```
 
 ## Implementation
-Create `PdfEditor.Tests/Integration/OriginalFileProtectionTests.cs` with comprehensive safety checks.
+Create `Excise.App.Tests/Integration/OriginalFileProtectionTests.cs` with comprehensive safety checks.
 
 ## User Benefit
 **Zero data loss** from accidental overwrites. Original files always preserved.

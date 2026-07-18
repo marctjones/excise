@@ -3,7 +3,7 @@
 # the LICENSES.md doc.
 #
 # Approach:
-#   1. Resolve the runtime dependency graph for PdfEditor (the GUI app
+#   1. Resolve the runtime dependency graph for Excise.App (the GUI app
 #      that ships in the .deb / installers).
 #   2. For each package, locate the extracted .nuget cache folder and
 #      the .nuspec inside it. Pull the declared license expression and
@@ -12,17 +12,17 @@
 #   3. Run scancode on every package folder so we have an independent
 #      reading of the actual license text — not just what the .nuspec
 #      claims. Disagreements are flagged.
-#   4. Write a JSON manifest at PdfEditor/Assets/third-party-licenses.json
+#   4. Write a JSON manifest at Excise.App/Assets/third-party-licenses.json
 #      that the AboutWindow loads at runtime as an embedded resource.
 #
 # Usage:
-#   scripts/generate-license-manifest.sh [--scancode] [--project PdfEditor]
+#   scripts/generate-license-manifest.sh [--scancode] [--project Excise.App]
 #
 #   --scancode      run scancode-toolkit cross-check (slow, ~3-5 min)
-#   --project P     project to resolve deps from (default PdfEditor)
+#   --project P     project to resolve deps from (default Excise.App)
 #
 # Outputs:
-#   PdfEditor/Assets/third-party-licenses.json
+#   Excise.App/Assets/third-party-licenses.json
 #   artifacts/scancode/<package>.json (when --scancode)
 
 set -euo pipefail
@@ -31,7 +31,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$ROOT"
 
-PROJECT="PdfEditor/PdfEditor.csproj"
+PROJECT="Excise.App/Excise.App.csproj"
 RUN_SCANCODE=0
 
 while [[ $# -gt 0 ]]; do
@@ -49,7 +49,7 @@ NUGET_DIR="${NUGET_PACKAGES:-$HOME/.nuget/packages}"
 # misses the cache and the dir may not exist yet — that's fine, restore fills it.
 mkdir -p "$NUGET_DIR"
 
-OUT="$ROOT/PdfEditor/Assets/third-party-licenses.json"
+OUT="$ROOT/Excise.App/Assets/third-party-licenses.json"
 SCANCODE_DIR="$ROOT/artifacts/scancode"
 mkdir -p "$(dirname "$OUT")"
 [[ "$RUN_SCANCODE" == "1" ]] && mkdir -p "$SCANCODE_DIR"
