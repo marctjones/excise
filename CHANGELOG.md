@@ -4,6 +4,46 @@ All notable changes to excise are documented here. Format roughly follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 semantic versioning.
 
+## [3.0.0] - 2026-07-18
+
+**The project is renamed from `pdfe` to `Excise`.** Same engine, same
+philosophy (a tool must not be its own oracle for the property it exists to
+guarantee) — new name, chosen to say what the product does: content isn't
+covered, it's *excised*, and the removal is proven against independent tools.
+
+This is the first tagged release since 2.28.0, so it also carries the changes
+documented in the (never-tagged) **[2.29.0]** (test-integrity gates) and
+**[2.30.0]** (the AES-256/AES-128 encryption epic, #624/#639–#644, and the
+Make Searchable GUI) sections below.
+
+### Changed — BREAKING (why this is a major version)
+- **CLI command `pdfe` → `excise`.** `excise redact in.pdf out.pdf "secret"`,
+  `excise info`, `excise render`, … — same commands, same flags.
+- **Library namespaces / assemblies / NuGet ids `Pdfe.*` → `Excise.*`**:
+  `Excise.Core`, `Excise.Rendering`, `Excise.Avalonia`, `Excise.Ocr`,
+  `Excise.Cli`; the desktop app is `Excise.App`. Any code referencing the
+  old `Pdfe.*` types must update its `using` directives and package references.
+- **App identity**: window title, macOS bundle (`cl.skpt.excise`), and Linux
+  desktop id updated to Excise. Internal `PDFE_*` environment toggles are now
+  `EXCISE_*`.
+- **Repository** renamed `github.com/marctjones/pdfe` → `.../excise`
+  (old URLs redirect).
+
+### Added
+- **New document-first app icon.** A PDF page with a cleanly *excised* line —
+  a see-through slot where text was, not a black bar hiding it — expressing the
+  product in one mark. Vector master plus a regenerated 16–256px raster set.
+- **First-class in-page links in continuous view** (#667) — click-to-follow and
+  hover affordance for internal/GoTo and URI link annotations while scrolling.
+
+### Notes
+- No engine behavior changed in the rename; the redaction, encryption, and
+  rendering pipelines are byte-for-byte the 2.30.0 code under new names.
+- The two blocking roadmap tracks — **Redaction Trust** and **Document
+  Security** — are complete and closed. Remaining work (fonts, performance/AOT,
+  interop, editing fidelity) is enhancement, tracked in the named-track
+  milestones.
+
 ## [2.30.0] - 2026-07-17
 
 The encryption release: excise now WRITES password-protected PDFs — the full
