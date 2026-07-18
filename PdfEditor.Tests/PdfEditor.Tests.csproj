@@ -14,7 +14,25 @@
 
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+
+    <!-- Mirror PdfEditor.csproj's EnableScripting default (#341/#342):
+         Roslyn scripting is compiled out of Release builds, so the tests
+         that exercise ScriptingService/ScriptExecutionResult must be
+         excluded from Release too — otherwise `dotnet build pdfe.sln -c
+         Release` (the release smoke's build gate under - -release-tests)
+         fails on types the referenced Release PdfEditor assembly doesn't
+         contain. This was a latent gap: T2 as defined by #646 was never
+         actually green in Release config, at v2.28.0 or since. -->
+    <EnableScripting Condition="'$(EnableScripting)' == '' and '$(Configuration)' == 'Release'">false</EnableScripting>
+    <EnableScripting Condition="'$(EnableScripting)' == ''">true</EnableScripting>
+    <DefineConstants Condition="'$(EnableScripting)' == 'true'">$(DefineConstants);PDFE_SCRIPTING</DefineConstants>
   </PropertyGroup>
+
+  <ItemGroup Condition="'$(EnableScripting)' != 'true'">
+    <Compile Remove="UI\AutomationScriptTests.cs" />
+    <Compile Remove="UI\ScriptedGuiTests.cs" />
+    <Compile Remove="Unit\ScriptingServiceTests.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <!-- Testing Framework -->

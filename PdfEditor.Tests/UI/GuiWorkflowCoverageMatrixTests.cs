@@ -62,7 +62,11 @@ public class GuiWorkflowCoverageMatrixTests
         new("Full GUI responsiveness under long documents and broad workflows", typeof(GuiFullResponsivenessCoverageTests)),
         new("Accessibility metadata, keyboard-only reachability, and status announcements", typeof(AccessibilityRegressionTests)),
         new("UX/icon polish screenshots and toolbar/menu affordance audit", typeof(VisualPolishAuditTests)),
+#if PDFE_SCRIPTING
+        // Scripting (and its tests) are compiled out of Release builds —
+        // see PdfEditor.Tests.csproj's EnableScripting mirror of #341/#342.
         new("Scripted GUI automation entry points", typeof(ScriptedGuiTests)),
+#endif
     ];
 
     private sealed record CoverageRow(string Workflow, Type TestClass);
