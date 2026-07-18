@@ -43,7 +43,7 @@
         ],
         "Reason": "Poppler, MuPDF, and Ghostscript preserve the same semantic content and cluster more closely with each other than with pdfe. Current pdfe output is semantically intact but renders the embedded Type 1C/CFF text darker/heavier over the full text page."
       },
-      "ImprovementPriority": "P3",
+      "ImprovementPriority": "P2",
       "Confidence": "MEDIUM",
       "QualityReason": "#652 fixed a missing-Tc/Tw-in-glyph-positioning bug that was the dominant remaining contributor on this page (mutool pixel diff at 150 DPI: 9.55% -> 0.59%; see top-level Notes for the mechanism). The residual ~0.6% is the pre-existing #584 CFF rasterization weight difference (darker/heavier strokes than the pdftocairo/mutool/ghostscript consensus) — visible content is present and readable, not pixel-exact, but no longer causing visual collisions between glyphs."
     },
