@@ -127,6 +127,12 @@ run_t0() {
     # github.base_ref-driven choice in a real PR targeting develop.
     run_step "gate-asymmetry" scripts/check-gate-asymmetry.sh "origin/develop"
     run_step "redaction-architecture" scripts/verify-true-redaction.sh
+    # #678: project-authored test data (manifests) references source paths that
+    # aren't compile-checked; catch drift (e.g. a rename) before it rots.
+    run_step "testdata-sync" scripts/check-testdata-sync.sh
+    # #663/#665/#668: the skip-budget --update self-test (justification,
+    # inner-'#' reasons, and hand-written comment-block preservation).
+    run_step "skip-budget-selftest" scripts/test-check-skip-budget.sh
 }
 
 run_t1() {
