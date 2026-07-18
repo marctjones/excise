@@ -157,7 +157,13 @@ public class GuiFullResponsivenessCoverageTests
             var slots = items!.ItemsSource!.Cast<PdfPageSlot>().ToArray();
             slots.Should().HaveCount(24);
 
-            await WaitForContinuousPageBitmapAsync(window, items, pageNumber: 1, TimeSpan.FromSeconds(10));
+            // SETUP wait, not a measurement: this is the cold first render
+            // (JIT + first Skia rasterization + xvfb on Linux CI), which on
+            // shared CI runners has blown a 10s budget on all three OSes in
+            // separate runs while the actual measured phases below stayed
+            // green. Generous on purpose — the responsiveness verdicts are
+            // the graded AddResult phases, not this warm-up.
+            await WaitForContinuousPageBitmapAsync(window, items, pageNumber: 1, TimeSpan.FromSeconds(60));
             var initialStarts = viewer.ContinuousRenderStartCount;
             var initialCancellations = viewer.ContinuousRenderCancellationCount;
 
@@ -175,8 +181,12 @@ public class GuiFullResponsivenessCoverageTests
                 warnMs: 500,
                 phase: "gui.input.acc-compensation-continuous-scroll-schedule");
 
+            // Hard timeout ABOVE warnMs (15s) so the graded thresholds below
+            // (pass 8s / warn 15s / FAIL beyond) are what judge a slow
+            // settle — previously this threw TimeoutException at 12s, below
+            // the measurement's own warn line, bypassing the grading.
             var settleElapsedMs = await MeasureAsync(() =>
-                WaitForContinuousPageBitmapAsync(window, items, pageNumber: targetPages[^1], TimeSpan.FromSeconds(12)));
+                WaitForContinuousPageBitmapAsync(window, items, pageNumber: targetPages[^1], TimeSpan.FromSeconds(30)));
             AddResult(
                 results,
                 "acc-compensation-continuous-scroll-render-settle",
