@@ -500,10 +500,17 @@ scripts/build-macos-app.sh --version <version> --rid osx-x64
 
 ### Native AOT release lane
 
-Native AOT is an explicit release lane, not the default package until its GUI
-smoke and warning budget are green for the target platform. The local gate
-publishes/packages the AOT app, captures IL/AOT warning output, separates
-debug symbols from the user-facing artifact, and writes JSON/markdown evidence:
+Native AOT is an explicit release lane, not the default package. It is
+**validated on `osx-arm64`**: the GUI AOT-compiles with a zero warning budget
+(first-party `Excise.*` code is AOT-clean — source-generated JSON, no
+reflection-based ReactiveUI `WhenAnyValue`; the residual IL2104/IL3053 roll-ups
+are from third-party GUI frameworks, suppressed and tracked in #593), and it
+passes the packaged GUI smoke. A CI job (**Native AOT (macOS)**) keeps the
+AOT publish from regressing. Other RIDs await per-platform probes (#595), and
+ReadyToRun remains the default release artifact until AOT clears the same
+release gates on every target. The local gate publishes/packages the AOT app,
+captures IL/AOT warning output, separates debug symbols from the user-facing
+artifact, and writes JSON/markdown evidence:
 
 ```bash
 scripts/release-smoke.sh --quick --only=aot
