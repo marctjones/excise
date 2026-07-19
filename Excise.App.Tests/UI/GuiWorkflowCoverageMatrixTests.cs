@@ -52,6 +52,7 @@ public class GuiWorkflowCoverageMatrixTests
         new("Audit signatures with clear user-facing states", typeof(SignatureVerificationWorkflowServiceTests)),
         new("Toolbar and menu command bindings", typeof(CommandBindingSweepTests)),
         new("Interaction-mode toolbar buttons: display invariants across modes and device pixel ratios", typeof(ModeSwitchDisplayTests)),
+        new("Interaction-mode toolbar buttons: pixel-level displayed-text verification", typeof(ModeSwitchVisualTests)),
         new("Keyboard shortcuts", typeof(KeyboardShortcutTests)),
         new("Mouse link activation", typeof(InPageLinkClickTests)),
         new("Outline tree navigation", typeof(OutlineTreeNavigationTests)),
