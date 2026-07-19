@@ -103,7 +103,7 @@ public class ContinuousCacheMemoryTests
                         slot, new Vector(offsetX, offsetY), new Size(vp.Width, vp.Height), 0, zoom, out var request);
                     if (!ok) continue;
 
-                    int dpi = PdfViewerControl.EffectiveContinuousDpi(BaseRenderDpi, zoom, PdfViewerControl.MaxContinuousDpi);
+                    int dpi = PdfViewerControl.EffectiveContinuousDpi(BaseRenderDpi, zoom, PdfViewerControl.MaxContinuousDpi, renderScaling: 1.0);
 
                     // Reproduces SkiaRenderer.RenderPage's own device-pixel sizing:
                     // scale = dpi/72, pixel width/height = ceil(clipRect dimension * scale).

@@ -91,11 +91,33 @@ public partial class PdfViewerControl
     // through RenderOptions.ClipRect rather than allocating a full-page bitmap.
     internal const int MaxContinuousDpi = 240;
     private int ContinuousRenderDpi =>
-        (int)Math.Clamp(Math.Round(DefaultRenderDpi * ZoomLevel), DefaultRenderDpi, MaxContinuousDpi);
+        EffectiveContinuousDpi(DefaultRenderDpi, ZoomLevel, MaxContinuousDpi, EffectiveRenderScaling);
 
-    /// <summary>The render DPI chosen for a given zoom (pure; unit-tested).</summary>
-    internal static int EffectiveContinuousDpi(int baseDpi, double zoom, int maxDpi) =>
-        (int)Math.Clamp(Math.Round(baseDpi * zoom), baseDpi, maxDpi);
+    /// <summary>
+    /// The render DPI chosen for a given zoom and display device-pixel-ratio
+    /// (pure; unit-tested). Multiplying by <paramref name="renderScaling"/> makes
+    /// text crisp on HiDPI/Retina displays (#682): at 100% zoom on a 2× display,
+    /// a page point occupies ~2.67 device pixels, so a 120-DPI raster upscales and
+    /// softens — rendering at baseDpi×dpr gives the pixels the display actually has.
+    /// The tile is laid out by its DIP dimensions, so more render pixels change
+    /// only sharpness, never geometry. The cap scales with dpr too, so zoom stays
+    /// crisp to the same *visual* zoom on every display (#683); the byte-budgeted
+    /// tile cache (#615) absorbs the larger tiles.
+    /// </summary>
+    internal static int EffectiveContinuousDpi(int baseDpi, double zoom, int maxDpi, double renderScaling)
+    {
+        double dpr = Math.Clamp(renderScaling <= 0 ? 1.0 : renderScaling, 1.0, 4.0);
+        return (int)Math.Clamp(
+            Math.Round(baseDpi * zoom * dpr),
+            Math.Round(baseDpi * dpr),
+            Math.Round(maxDpi * dpr));
+    }
+
+    /// <summary>
+    /// The display's device-pixel-ratio (2.0 on a Retina/HiDPI screen, 1.0 on a
+    /// standard one), or 1.0 before the control is attached to a visual root.
+    /// </summary>
+    private double EffectiveRenderScaling => TopLevel.GetTopLevel(this)?.RenderScaling ?? 1.0;
 
     // Guards the scroll -> CurrentPage -> scroll feedback loop.
     private bool _syncingPageFromScroll;
