@@ -117,7 +117,16 @@ public partial class PdfViewerControl
     /// The display's device-pixel-ratio (2.0 on a Retina/HiDPI screen, 1.0 on a
     /// standard one), or 1.0 before the control is attached to a visual root.
     /// </summary>
-    private double EffectiveRenderScaling => TopLevel.GetTopLevel(this)?.RenderScaling ?? 1.0;
+    private double EffectiveRenderScaling =>
+        RenderScalingOverride ?? TopLevel.GetTopLevel(this)?.RenderScaling ?? 1.0;
+
+    /// <summary>
+    /// Test hook: simulate a HiDPI display in the headless test host (which
+    /// always reports RenderScaling 1.0). The #682/#683 device-resolution
+    /// paths are a functional no-op at dpr=1, so without this override no
+    /// automated test can exercise the code Retina users actually run.
+    /// </summary>
+    internal double? RenderScalingOverride { get; set; }
 
     // Guards the scroll -> CurrentPage -> scroll feedback loop.
     private bool _syncingPageFromScroll;
