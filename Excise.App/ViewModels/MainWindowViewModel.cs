@@ -1006,6 +1006,13 @@ public partial class MainWindowViewModel : ViewModelBase
             await LoadPageThumbnailsAsync();
             thumbnailPlaceholdersReadyElapsedMs = openSw.ElapsedMilliseconds;
 
+            // Idle pre-warm (#689): populate the disk cache for every page in
+            // the background so the first full sidebar scroll (and every
+            // future open of this file) is all cache hits. First-open only —
+            // the mutation path re-keys its cache per edit, and re-sweeping
+            // every page after every redaction would be wasted work.
+            QueueThumbnailPrewarm(_thumbnailCache);
+
             // Parse the document's table-of-contents outline (if any).
             // Cheap — just a tree walk over the catalog's /Outlines, no
             // text extraction needed. Populates the left-sidebar tree.
@@ -2606,6 +2613,9 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             _thumbnailLoadTasks.Clear();
         }
+        // Stop viewport-window work targeting the outgoing document/state
+        // (prefetch chain, idle pre-warm, visible-set tracking — #687/#688/#689).
+        CancelThumbnailWindowWork();
     }
 
     /// <summary>

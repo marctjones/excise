@@ -5,6 +5,7 @@ using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -56,9 +57,82 @@ public sealed class ThumbnailCacheService : IDisposable
         _logger = logger;
         _thumbnailDpi = thumbnailDpi;
         var identity = BuildCacheIdentity(pdfPath, thumbnailDpi, RendererCacheIdentity, cacheSalt);
-        _cacheDir = Path.Combine(GetCacheRoot(), "thumbnails", "v3", identity);
+        var versionRoot = Path.Combine(GetCacheRoot(), "thumbnails", "v3");
+        _cacheDir = Path.Combine(versionRoot, identity);
         _logger.LogInformation("Thumbnail cache for {File} → {Dir}",
             Path.GetFileName(pdfPath), _cacheDir);
+
+        // LRU trim (#690): the cache grows across every file ever opened, and
+        // until now nothing ever deleted anything (reads touch mtimes for
+        // exactly this). Best-effort, off the open path, never touching the
+        // document we just opened.
+        var protectDir = identity;
+        _ = Task.Run(() => TrimCacheRoot(versionRoot, DefaultCacheCapBytes, protectDir, _logger));
+    }
+
+    /// <summary>Disk budget for the whole thumbnail cache across all files (#690).</summary>
+    internal const long DefaultCacheCapBytes = 500L * 1024 * 1024;
+
+    /// <summary>
+    /// Delete least-recently-used per-file cache directories until the version
+    /// root is under <paramref name="capBytes"/> (#690). Recency is the newest
+    /// last-access/mtime of any file in the directory — reads touch mtimes for
+    /// exactly this purpose. <paramref name="protectDirName"/> (the currently
+    /// open document) is never deleted. Best-effort: IO races with another
+    /// instance are swallowed; a trimmed file simply re-renders on next open.
+    /// </summary>
+    internal static void TrimCacheRoot(string versionRoot, long capBytes, string? protectDirName, ILogger? logger = null)
+    {
+        try
+        {
+            if (!Directory.Exists(versionRoot)) return;
+
+            var entries = new List<(string Dir, long Bytes, DateTime LastUsed)>();
+            foreach (var dir in Directory.EnumerateDirectories(versionRoot))
+            {
+                long bytes = 0;
+                var lastUsed = DateTime.MinValue;
+                try
+                {
+                    foreach (var file in Directory.EnumerateFiles(dir))
+                    {
+                        var info = new FileInfo(file);
+                        bytes += info.Length;
+                        var used = info.LastAccessTimeUtc > info.LastWriteTimeUtc
+                            ? info.LastAccessTimeUtc : info.LastWriteTimeUtc;
+                        if (used > lastUsed) lastUsed = used;
+                    }
+                }
+                catch { continue; }
+                entries.Add((dir, bytes, lastUsed));
+            }
+
+            var total = entries.Sum(e => e.Bytes);
+            if (total <= capBytes) return;
+
+            foreach (var entry in entries.OrderBy(e => e.LastUsed))
+            {
+                if (total <= capBytes) break;
+                if (protectDirName != null &&
+                    string.Equals(Path.GetFileName(entry.Dir), protectDirName, StringComparison.Ordinal))
+                    continue;
+                try
+                {
+                    Directory.Delete(entry.Dir, recursive: true);
+                    total -= entry.Bytes;
+                    logger?.LogInformation("Thumbnail cache trim: removed {Dir} ({Bytes} bytes)",
+                        Path.GetFileName(entry.Dir), entry.Bytes);
+                }
+                catch (Exception ex)
+                {
+                    logger?.LogDebug(ex, "Thumbnail cache trim: could not remove {Dir}", entry.Dir);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            logger?.LogDebug(ex, "Thumbnail cache trim failed (best-effort)");
+        }
     }
 
     /// <summary>Path on disk where this document's thumbnails are stored.</summary>
