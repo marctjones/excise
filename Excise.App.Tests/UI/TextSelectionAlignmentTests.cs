@@ -249,4 +249,99 @@ public class TextSelectionAlignmentTests
             window.UpdateLayout();
         }
     }
+
+    /// <summary>
+    /// Exact choreography of the live automated repro that showed orphaned
+    /// highlights over blank space after Fit (screenshots diag-after-fit /
+    /// safe-C): continuous -> zoom to 42% -> enter select-text -> drag-select
+    /// -> Fit Width. Asserts the display stays coherent: the single-page
+    /// scroller is the visible one, and the page image under the selection
+    /// highlights actually contains text ink.
+    /// </summary>
+    [FixedAvaloniaTheory]
+    [InlineData(2.0)]
+    [InlineData(1.0)]
+    public async Task FitAfterSelection_KeepsHighlightsOnRenderedText(double dpr)
+    {
+        var book = FindBook();
+        Assert.SkipWhen(book == null, "local real-world book corpus not present");
+
+        var vm = new MainWindowViewModel { ThumbnailPrewarmEnabled = false };
+        var window = new MainWindow { DataContext = vm, Width = 1400, Height = 900 };
+        window.Show();
+        try
+        {
+            await vm.LoadDocumentAsync(book!);
+            var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
+            viewer.RenderScalingOverride = dpr;
+
+            // live sequence: zoom out in CONTINUOUS first, then enter the mode
+            vm.CurrentPageIndex = 16;
+            vm.ZoomLevel = 0.42;
+            await Task.Delay(400); window.UpdateLayout();
+            vm.ToggleTextSelectionModeCommand.Execute().Subscribe();
+            await PumpUntilAsync(window, () =>
+                viewer.FindControl<Image>("PdfImage")?.Source != null && !viewer.IsLoading);
+            await SettleAsync(window, viewer, viewer.ZoomLevel, dpr);
+
+            // drag across the page middle to build a selection
+            using (var pre = Capture(viewer))
+            {
+                var ink = InkBounds(pre);
+                var origin = viewer.TranslatePoint(new Point(0, 0), window)!.Value;
+                var y = origin.Y + ink.Top + ink.Height * 0.4;
+                window.MouseDown(new Point(origin.X + ink.Left + 4, y), MouseButton.Left);
+                window.MouseMove(new Point(origin.X + ink.Right - 4, y));
+                window.MouseUp(new Point(origin.X + ink.Right - 4, y), MouseButton.Left);
+            }
+            await PumpUntilAsync(window, () =>
+                (viewer.FindControl<Canvas>("TextSelectionLayer")?.Children.Count ?? 0) > 0);
+
+            // FIT — the live-repro trigger
+            vm.ZoomFitWidthCommand.Execute().Subscribe();
+            await Task.Delay(300); window.UpdateLayout();
+            await SettleAsync(window, viewer, viewer.ZoomLevel, dpr);
+            await Task.Delay(200); window.UpdateLayout();
+
+            // 1) only the single-page scroller may be visible in an editing mode
+            var single = viewer.FindControl<ScrollViewer>("PdfScrollViewer")!;
+            var continuous = viewer.FindControl<ScrollViewer>("ContinuousScrollViewer")!;
+            single.IsVisible.Should().BeTrue("select-text mode displays the single-page scroller");
+            continuous.IsVisible.Should().BeFalse(
+                "the continuous scroller must be hidden in an editing mode — a visible one paints stale tiles over/under the page");
+
+            // 2) the highlight rects must sit on ink (text), not blank space
+            var layer = viewer.FindControl<Canvas>("TextSelectionLayer")!;
+            layer.Children.Count.Should().BeGreaterThan(0, "the selection must survive the fit");
+            using var after = Capture(viewer);
+            var rect0 = layer.Children.OfType<global::Avalonia.Controls.Shapes.Rectangle>().First();
+            var tl = layer.TranslatePoint(new Point(Canvas.GetLeft(rect0), Canvas.GetTop(rect0)), viewer)!.Value;
+            var zoom = viewer.ZoomLevel;
+            var probe = new SKRectI(
+                Math.Max(0, (int)(tl.X - 30)), Math.Max(0, (int)(tl.Y - 10)),
+                Math.Min(after.Width, (int)(tl.X + rect0.Width * zoom + 60)),
+                Math.Min(after.Height, (int)(tl.Y + rect0.Height * zoom + 30)));
+            var inkNearHighlight = RegionInk(after, probe);
+            inkNearHighlight.Should().BeGreaterThan(0,
+                $"after Fit the highlight (viewer {tl}) must still sit on rendered text, " +
+                "not float over blank space (live repro: diag-after-fit.png)");
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    private static int RegionInk(SKBitmap bmp, SKRectI r)
+    {
+        int count = 0;
+        for (int y = r.Top; y < r.Bottom; y++)
+        for (int x = r.Left; x < r.Right; x++)
+        {
+            var c = bmp.GetPixel(x, y);
+            if (c.Alpha > 128 && c.Red + c.Green + c.Blue < 384) count++;
+        }
+        return count;
+    }
+
 }

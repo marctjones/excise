@@ -1244,6 +1244,7 @@ public partial class PdfViewerControl : UserControl
                 _pdfImage.Width = cachedBitmap.Size.Width;
                 _pdfImage.Height = cachedBitmap.Size.Height;
                 _pdfImage.Source = cachedBitmap;
+                Trace($"ImageSet(cache) page={pageNumber} imgWidth={_pdfImage.Width:F0} srcDip={cachedBitmap.Size.Width:F0} srcPx={cachedBitmap.PixelSize.Width} zoom={ZoomLevel:F3}");
             }
             HasError = false;
             ErrorMessage = null;
@@ -1286,6 +1287,8 @@ public partial class PdfViewerControl : UserControl
                 {
                     Trace($"SinglePageRender page={pageNumber} RENDERED px={bitmap.PixelSize.Width}x{bitmap.PixelSize.Height} dip={bitmap.Size.Width:F0}x{bitmap.Size.Height:F0}");
                     AddToCache(pageNumber, renderDpi, bitmap);
+                    Trace($"ContVis={_continuousScrollViewer?.IsVisible} SingleVis={_scrollViewer?.IsVisible}");
+                    Trace($"ImageSet page={pageNumber} imgWidth={_pdfImage?.Width:F0} srcDip={bitmap.Size.Width:F0}x{bitmap.Size.Height:F0} srcPx={bitmap.PixelSize.Width} zoom={ZoomLevel:F3}");
                     if (_pdfImage != null)
                     {
                         _pdfImage.Width = bitmap.Size.Width;

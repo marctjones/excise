@@ -554,6 +554,7 @@ public partial class PdfViewerControl
                 {
                     AddToContinuousCache(key, bitmap);
                     slot.ApplyTile(request, key);
+                    Trace($"TileSet page={pageNumber} slotW={slot.DisplayWidth:F0} bmpDip={bitmap.Size.Width:F0} bmpPx={bitmap.PixelSize.Width} dpi={dpi} zoom={ZoomLevel:F3} contVis={_continuousScrollViewer?.IsVisible}");
                     slot.Bitmap = bitmap;
                 }
             }

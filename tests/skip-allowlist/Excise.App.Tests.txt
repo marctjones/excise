@@ -43,3 +43,7 @@ Excise.App.Tests.UI.EncryptedDocumentSaveWarningTests.SaveDocument_EncryptedSour
 Excise.App.Tests.UI.EncryptedDocumentSaveWarningTests.SaveFileAsAsync_EncryptedSource_SavesEncrypted_WithoutAskingAnything   # needs gitignored encrypted corpus fixture (#643 preservation; replaces the deleted #638-era confirmation tests)
 Excise.App.Tests.UI.ContinuousLinkInteractionTests.ClickOnTocLink_InContinuousMode_NavigatesToDestinationPage   # needs gitignored local-real-world book fixture with a TOC (#667 continuous-mode link tests)
 Excise.App.Tests.UI.ContinuousLinkInteractionTests.HoverOverTocLink_InContinuousMode_ShowsHandCursorAndRaisesLinkHovered   # needs gitignored local-real-world book fixture with a TOC (#667 continuous-mode link tests)
+# --- #693 live-repro battery: requires the gitignored local-real-world book corpus ---
+Excise.App.Tests.UI.TextSelectionAlignmentTests.DragSelection_HighlightCoversTheSelectedText   # corpus-gated: local-real-world book absent on CI
+Excise.App.Tests.UI.TextSelectionAlignmentTests.FitWidth_InsideSelectTextMode_ActuallyFitsTheViewport   # corpus-gated: local-real-world book absent on CI
+Excise.App.Tests.UI.TextSelectionAlignmentTests.FitAfterSelection_KeepsHighlightsOnRenderedText   # corpus-gated: local-real-world book absent on CI
