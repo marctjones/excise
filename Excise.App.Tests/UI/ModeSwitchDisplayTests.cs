@@ -82,12 +82,28 @@ public class ModeSwitchDisplayTests
             // CRISPNESS: the backing pixels match the on-screen magnification —
             // the app enters modes at its current (often fit-width) zoom, so the
             // device scale is zoom × dpr, floored at 1 (never below base render).
-            var deviceScale = Math.Max(1.0, viewer.ZoomLevel * dpr);
-            var pixelWidth = ((global::Avalonia.Media.Imaging.Bitmap)source).PixelSize.Width;
-            pixelWidth.Should().BeCloseTo((int)Math.Round(expectedDipWidth * deviceScale), 8,
-                $"the raster must carry zoom×dpr pixels (zoom={viewer.ZoomLevel:F2}, dpr={dpr}) so text is crisp");
+            //
+            // The zoom-triggered re-render (#686) is async: right after the mode
+            // switch the Image may briefly hold the PREVIOUS zoom's raster while
+            // fit-width settles. Asserting instantly raced that re-render and
+            // flaked on macOS/Windows CI (found 2040 = zoom 1.0 raster while
+            // live zoom was already 0.79). Pump until the raster corresponds to
+            // the CURRENT zoom, then assert with the settled values.
+            int ExpectedPx() => (int)Math.Round(
+                expectedDipWidth * Math.Max(1.0, viewer.ZoomLevel * dpr));
+            int PixelWidth() => (SinglePageImage(viewer)?.Source as
+                global::Avalonia.Media.Imaging.Bitmap)?.PixelSize.Width ?? -1;
+            var settleDeadline = Environment.TickCount64 + 20000;
+            while (Math.Abs(PixelWidth() - ExpectedPx()) > 8 &&
+                   Environment.TickCount64 < settleDeadline)
+            {
+                await Task.Delay(50);
+                window.UpdateLayout();
+            }
+            PixelWidth().Should().BeCloseTo(ExpectedPx(), 8,
+                $"the raster must settle to zoom×dpr pixels (zoom={viewer.ZoomLevel:F2}, dpr={dpr}) so text is crisp");
             if (dpr > 1)
-                pixelWidth.Should().BeGreaterThan((int)expectedDipWidth,
+                PixelWidth().Should().BeGreaterThan((int)expectedDipWidth,
                     "on HiDPI the raster must exceed the logical size — otherwise it upscales and softens");
 
             // Only this mode is active.
