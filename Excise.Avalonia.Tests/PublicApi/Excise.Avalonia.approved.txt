@@ -192,7 +192,7 @@ namespace Excise.Avalonia.Imaging
 {
     public static class SkiaInterop
     {
-        public static Avalonia.Media.Imaging.WriteableBitmap? ToAvaloniaBitmap(SkiaSharp.SKBitmap? skBitmap) { }
+        public static Avalonia.Media.Imaging.WriteableBitmap? ToAvaloniaBitmap(SkiaSharp.SKBitmap? skBitmap, double bitmapDpi = 96) { }
     }
 }
 namespace Excise.Avalonia.Services
