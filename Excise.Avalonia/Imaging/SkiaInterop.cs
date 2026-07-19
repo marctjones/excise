@@ -24,7 +24,17 @@ public static class SkiaInterop
     /// Convert an SKBitmap to a displayable Avalonia <see cref="WriteableBitmap"/>
     /// by copying pixels directly. The caller still owns the input SKBitmap.
     /// </summary>
-    public static WriteableBitmap? ToAvaloniaBitmap(SKBitmap? skBitmap)
+    /// <param name="bitmapDpi">
+    /// The DPI to stamp on the <see cref="WriteableBitmap"/>. The default 96
+    /// makes one bitmap pixel one device-independent pixel (the continuous-view
+    /// path, which sizes tiles by explicit DIP dimensions, relies on this). The
+    /// single-page path renders at the display's *device* resolution
+    /// (logicalDpi × devicePixelRatio) and stamps <c>96 × devicePixelRatio</c>
+    /// here, so the bitmap's DIP <see cref="Bitmap.Size"/> — and therefore the
+    /// Image's layout size and all coordinate mapping — stay identical while the
+    /// raster carries the extra pixels a HiDPI display actually has (#682).
+    /// </param>
+    public static WriteableBitmap? ToAvaloniaBitmap(SKBitmap? skBitmap, double bitmapDpi = 96.0)
     {
         if (skBitmap == null || skBitmap.Width <= 0 || skBitmap.Height <= 0)
             return null;
@@ -47,10 +57,12 @@ public static class SkiaInterop
             }
 
             var size = new PixelSize(source.Width, source.Height);
-            // 96 DPI matches Avalonia's default device-independent unit; the
-            // viewer scales the image with a ScaleTransform regardless, so
-            // baking a higher DPI into the bitmap metadata is purely cosmetic.
-            var dpi = new Vector(96, 96);
+            // The stamped DPI decides how many bitmap pixels map to one DIP.
+            // 96 (default) = 1:1. The single-page path renders at device
+            // resolution and passes 96×devicePixelRatio so the raster is crisp
+            // on HiDPI while its DIP Size — and thus layout/coordinates — is
+            // unchanged (#682).
+            var dpi = new Vector(bitmapDpi, bitmapDpi);
             var wb = new WriteableBitmap(size, dpi,
                 PixelFormat.Bgra8888, AlphaFormat.Premul);
 
