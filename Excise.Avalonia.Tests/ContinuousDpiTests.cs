@@ -13,13 +13,21 @@ namespace Excise.Avalonia.Tests;
 public class ContinuousDpiTests
 {
     [Theory]
-    [InlineData(1.0, 120)]   // at 100% zoom, render at the base DPI
-    [InlineData(1.5, 180)]   // scales with zoom -> crisper
-    [InlineData(2.0, 240)]   // at the cap
-    [InlineData(4.0, 240)]   // deep zoom is clamped to the cap (bounds memory)
-    [InlineData(0.5, 120)]   // never below the base DPI
-    public void EffectiveContinuousDpi_ScalesWithZoom_AndClamps(double zoom, int expected)
-        => PdfViewerControl.EffectiveContinuousDpi(120, zoom, PdfViewerControl.MaxContinuousDpi)
+    // zoom, renderScaling (device-pixel-ratio), expected DPI
+    // --- standard display (dpr 1.0): behaviour is unchanged from before #682 ---
+    [InlineData(1.0, 1.0, 120)]   // at 100% zoom, render at the base DPI
+    [InlineData(1.5, 1.0, 180)]   // scales with zoom -> crisper
+    [InlineData(2.0, 1.0, 240)]   // at the cap
+    [InlineData(4.0, 1.0, 240)]   // deep zoom is clamped to the cap (bounds memory)
+    [InlineData(0.5, 1.0, 120)]   // never below the base DPI
+    // --- HiDPI / Retina (dpr 2.0): render scales with the device pixel ratio (#682/#683) ---
+    [InlineData(1.0, 2.0, 240)]   // 100% on a 2x display -> 2x pixels = crisp, not upscaled
+    [InlineData(1.5, 2.0, 360)]
+    [InlineData(2.0, 2.0, 480)]   // the cap scales with dpr, so the same *visual* zoom stays crisp
+    [InlineData(4.0, 2.0, 480)]   // clamped to the dpr-scaled cap
+    [InlineData(0.5, 2.0, 240)]   // floor also scales with dpr
+    public void EffectiveContinuousDpi_ScalesWithZoomAndDpr_AndClamps(double zoom, double dpr, int expected)
+        => PdfViewerControl.EffectiveContinuousDpi(120, zoom, PdfViewerControl.MaxContinuousDpi, dpr)
             .Should().Be(expected);
 
     [Fact]
