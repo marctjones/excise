@@ -51,6 +51,7 @@ public class GuiWorkflowCoverageMatrixTests
         new("Audit hidden text with clear user-facing states", typeof(RevealHiddenTextTests)),
         new("Audit signatures with clear user-facing states", typeof(SignatureVerificationWorkflowServiceTests)),
         new("Toolbar and menu command bindings", typeof(CommandBindingSweepTests)),
+        new("Interaction-mode toolbar buttons: display invariants across modes and device pixel ratios", typeof(ModeSwitchDisplayTests)),
         new("Keyboard shortcuts", typeof(KeyboardShortcutTests)),
         new("Mouse link activation", typeof(InPageLinkClickTests)),
         new("Outline tree navigation", typeof(OutlineTreeNavigationTests)),
@@ -73,7 +74,9 @@ public class GuiWorkflowCoverageMatrixTests
 
     private static bool IsRunnableFact(Attribute attr)
     {
-        if (attr.GetType().Name is not ("FactAttribute" or "FixedAvaloniaFactAttribute"))
+        if (attr.GetType().Name is not (
+            "FactAttribute" or "FixedAvaloniaFactAttribute" or
+            "TheoryAttribute" or "FixedAvaloniaTheoryAttribute"))
         {
             return false;
         }
