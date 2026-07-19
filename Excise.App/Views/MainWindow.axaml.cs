@@ -222,7 +222,14 @@ public partial class MainWindow : Window
         if (sender is not Image img) return;
         if (DataContext is not MainWindowViewModel vm) return;
         if (img.Tag is not int pageIndex) return;
-        if (e.EffectiveViewport.Width <= 0 || e.EffectiveViewport.Height <= 0) return;
+
+        var visible = e.EffectiveViewport.Width > 0 && e.EffectiveViewport.Height > 0;
+
+        // Both transitions feed the VM's viewport window: visible items anchor
+        // the ±prefetch window (#688), items scrolled far out get their decoded
+        // bitmap released (#687).
+        vm.NotifyThumbnailViewport(pageIndex, visible);
+        if (!visible) return;
 
         // Fire-and-forget — VM handles its own dispatching to the UI thread.
         _ = vm.EnsureThumbnailLoadedAsync(pageIndex);
