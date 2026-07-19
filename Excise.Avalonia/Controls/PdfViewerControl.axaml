@@ -24,7 +24,18 @@
                  react correctly. The Image and OverlayCanvas live inside the
                  same wrapper so they always share one transform — no chance
                  of dual-transform drift. -->
-            <LayoutTransformControl Name="ZoomHost">
+            <!-- Center (not Stretch) alignment is load-bearing (#693 live trace):
+                 with Stretch, the ScrollViewer's presenter widens this wrapper to
+                 the viewport whenever the scaled page is narrower — the Image
+                 then CENTERS inside the widened ContentGrid while every overlay
+                 canvas stays anchored at the grid's left edge, so highlights,
+                 form boxes, and redaction previews land (gridW-imageW)/2 dips
+                 left of the text (≈400 dips at 52% zoom: 'highlight very far to
+                 the left'). Centering the wrapper makes it size to content, so
+                 grid == image == overlay origin at every zoom. -->
+            <LayoutTransformControl Name="ZoomHost"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
                 <LayoutTransformControl.LayoutTransform>
                     <ScaleTransform ScaleX="1" ScaleY="1" />
                 </LayoutTransformControl.LayoutTransform>

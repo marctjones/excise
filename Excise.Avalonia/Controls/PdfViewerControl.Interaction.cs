@@ -238,9 +238,27 @@ public partial class PdfViewerControl
     /// </summary>
     private Point GetPressPoint(PointerEventArgs e)
     {
-        if (_overlayCanvas != null) return e.GetPosition(_overlayCanvas);
-        if (_pdfImage != null) return e.GetPosition(_pdfImage);
-        return e.GetPosition(this);
+        // The overlay canvas is the correct basis: it shares the ZoomHost
+        // transform, so GetPosition inverts the zoom. The fallbacks do NOT
+        // share that transform at the same offset — if one is ever taken at
+        // zoom != 1, every mapped point is off by the zoom factor. Trace which
+        // basis served the point so a live 'overlay way off' report can be
+        // pinned to its source (#693 investigation).
+        if (_overlayCanvas != null)
+        {
+            var p = e.GetPosition(_overlayCanvas);
+            Trace($"PressPoint basis=overlay p=({p.X:F0},{p.Y:F0}) zoom={ZoomLevel:F3}");
+            return p;
+        }
+        if (_pdfImage != null)
+        {
+            var p = e.GetPosition(_pdfImage);
+            Trace($"PressPoint basis=IMAGE-FALLBACK p=({p.X:F0},{p.Y:F0}) zoom={ZoomLevel:F3}");
+            return p;
+        }
+        var root = e.GetPosition(this);
+        Trace($"PressPoint basis=ROOT-FALLBACK p=({root.X:F0},{root.Y:F0}) zoom={ZoomLevel:F3}");
+        return root;
     }
 
     private void EnsurePageLinksLoaded()
@@ -433,6 +451,19 @@ public partial class PdfViewerControl
         var layer = this.FindControl<Canvas>("TextSelectionLayer");
         if (layer == null) return;
         layer.Children.Clear();
+        if (letters.Count > 0)
+        {
+            var first = PdfRectangleToDips(letters[0].GlyphRectangle);
+            // The origin probe: if the highlight canvas and the page image do
+            // not share an origin in viewer space, every highlight is offset by
+            // the delta — the live 'highlight far to the left' report.
+            var imgO = _pdfImage?.TranslatePoint(new Point(0, 0), this);
+            var layO = layer.TranslatePoint(new Point(0, 0), this);
+            Trace($"DrawSelection n={letters.Count} first=({first.X:F0},{first.Y:F0} {first.Width:F0}x{first.Height:F0}) " +
+                  $"page={CurrentPage} zoom={ZoomLevel:F3} " +
+                  $"imgOrigin=({imgO?.X:F0},{imgO?.Y:F0}) layerOrigin=({layO?.X:F0},{layO?.Y:F0}) " +
+                  $"imgW={_pdfImage?.Width:F0} layerW={layer.Bounds.Width:F0}");
+        }
         var fill = new SolidColorBrush(Color.FromArgb(0x60, 0x33, 0x99, 0xFF));
         foreach (var l in letters)
         {

@@ -197,7 +197,12 @@ public partial class App : Application
         {
             builder.AddConsole();
             builder.AddDebug();
-            builder.SetMinimumLevel(LogLevel.Information);
+            // EXCISE_LOG_LEVEL=Debug|Trace|Information… overrides the minimum
+            // level — used for live execution-path tracing of GUI sessions.
+            builder.SetMinimumLevel(
+                Enum.TryParse<LogLevel>(
+                    Environment.GetEnvironmentVariable("EXCISE_LOG_LEVEL"), true, out var lvl)
+                    ? lvl : LogLevel.Information);
 
             // Configure console formatter for better readability
             builder.AddSimpleConsole(options =>

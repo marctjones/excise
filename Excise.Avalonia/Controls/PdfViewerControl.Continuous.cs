@@ -175,6 +175,9 @@ public partial class PdfViewerControl
     private void OnViewModeChanged()
     {
         bool continuous = ViewMode == PdfViewMode.Continuous;
+        Trace($"ViewMode -> {ViewMode} page={CurrentPage} zoom={ZoomLevel:F3} " +
+              $"contOffset={_continuousScrollViewer?.Offset.Y:F0}/{_continuousScrollViewer?.Extent.Height:F0} " +
+              $"singleOffset={_scrollViewer?.Offset.Y:F0}/{_scrollViewer?.Extent.Height:F0}");
         if (_continuousScrollViewer != null) _continuousScrollViewer.IsVisible = continuous;
         if (_scrollViewer != null) _scrollViewer.IsVisible = !continuous;
 
