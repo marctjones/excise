@@ -1020,7 +1020,18 @@ public partial class PdfViewerControl : UserControl
             _zoomScaleTransform.ScaleY = ZoomLevel;
         }
         if (ViewMode == PdfViewMode.Continuous)
+        {
             ApplyContinuousZoom();
+        }
+        else
+        {
+            // Single-page: the ScaleTransform above gives instant visual zoom;
+            // re-render at the new zoom's device resolution so text re-crisps
+            // instead of upscaling the previous raster (#683). RenderCurrentPageAsync
+            // cancels any in-flight render, so a fast zoom coalesces to the last
+            // level; a cache hit at an already-seen zoom is instant.
+            _ = RenderCurrentPageAsync();
+        }
         UpdateViewerAutomationProperties();
     }
 
@@ -1198,11 +1209,18 @@ public partial class PdfViewerControl : UserControl
         var doc = Document;
         var pageNumber = CurrentPage;
         var page = doc.GetPage(pageNumber);
-        // Logical DPI drives layout and coordinate mapping (unchanged); device
-        // DPI is what we actually rasterize at so text is crisp on HiDPI (#682).
+        // Logical DPI drives layout and coordinate mapping (unchanged); the
+        // raster is produced at the on-screen magnification (device-pixel-ratio ×
+        // zoom) so text is crisp on HiDPI (#682) AND when zoomed in (#683),
+        // bounded by the single-page memory budget.
         var logicalDpi = EffectiveSinglePageRenderDpi(page);
         _currentSinglePageRenderDpi = logicalDpi;
-        var (renderDpi, bitmapDpi) = SinglePageRenderPlan(logicalDpi, EffectiveRenderScaling);
+        var box = page.CropBox.Normalize();
+        var widthPt = page.Rotation is 90 or 270 ? box.Height : box.Width;
+        var heightPt = page.Rotation is 90 or 270 ? box.Width : box.Height;
+        double scale = ZoomLevel * EffectiveRenderScaling;
+        double maxScale = MaxSinglePageRenderScale(widthPt, heightPt, logicalDpi);
+        var (renderDpi, bitmapDpi) = SinglePageRenderPlan(logicalDpi, scale, maxScale);
         // MaxSinglePagePreviewPixels is a DEVICE-pixel (memory) ceiling, so it is
         // NOT scaled by the device-pixel-ratio: a normal page at device resolution
         // stays far under it (crisp), while a very large page is still capped at
@@ -1315,20 +1333,37 @@ public partial class PdfViewerControl : UserControl
 
     /// <summary>
     /// Device-resolution render plan for a single page (pure; unit-tested).
-    /// Given the logical render DPI (which drives layout and coordinate mapping)
-    /// and the display device-pixel-ratio, returns the DPI to rasterize at
-    /// (device resolution) and the DPI to stamp on the resulting bitmap so its
-    /// DIP size equals the logical size. This makes the fix invariant: display
-    /// size and every coordinate mapping are unchanged, only sharpness improves
-    /// (#682). At dpr=1 it is an exact no-op (device == logical, stamp == 96).
-    /// The invariant callers rely on: <c>deviceDpi / (bitmapDpi / 96) == logicalDpi</c>.
+    /// <paramref name="scale"/> is the on-screen magnification the raster must
+    /// resolve — the display device-pixel-ratio times the zoom level — so text
+    /// stays crisp both on HiDPI displays (#682) and when zoomed in (#683). It
+    /// returns the DPI to rasterize at (device resolution) and the DPI to stamp
+    /// on the resulting bitmap so its DIP size equals the *logical* size. That
+    /// invariant — <c>deviceDpi / (bitmapDpi / 96) == logicalDpi</c> — is what
+    /// keeps the Image layout size, the ScaleTransform, and every coordinate
+    /// mapping unchanged; only pixel density changes. <paramref name="maxScale"/>
+    /// caps the raster at the single-page memory budget: beyond it the
+    /// ScaleTransform upscales (soft at extreme zoom) rather than allocating an
+    /// unbounded bitmap. At scale=1 it is an exact no-op (device == logical,
+    /// stamp == 96).
     /// </summary>
-    internal static (int DeviceDpi, double BitmapDpi) SinglePageRenderPlan(int logicalDpi, double devicePixelRatio)
+    internal static (int DeviceDpi, double BitmapDpi) SinglePageRenderPlan(int logicalDpi, double scale, double maxScale)
     {
-        double dpr = Math.Clamp(devicePixelRatio <= 0 ? 1.0 : devicePixelRatio, 1.0, 4.0);
-        int deviceDpi = (int)Math.Round(logicalDpi * dpr);
-        double bitmapDpi = 96.0 * dpr;
+        double s = Math.Clamp(scale <= 0 ? 1.0 : scale, 1.0, Math.Max(1.0, maxScale));
+        int deviceDpi = (int)Math.Round(logicalDpi * s);
+        double bitmapDpi = 96.0 * s;
         return (deviceDpi, bitmapDpi);
+    }
+
+    /// <summary>
+    /// The largest render scale that keeps a single page's raster within the
+    /// device-pixel (memory) budget (pure; unit-tested). Always ≥ 1.
+    /// </summary>
+    internal static double MaxSinglePageRenderScale(double widthPt, double heightPt, int logicalDpi)
+    {
+        double logicalPixels = (widthPt * logicalDpi / PdfPageRect.PdfPointsPerInch) *
+                               (heightPt * logicalDpi / PdfPageRect.PdfPointsPerInch);
+        if (logicalPixels <= 0) return 1.0;
+        return Math.Max(1.0, Math.Sqrt(MaxSinglePagePreviewPixels / logicalPixels));
     }
 
     private bool TryGetCached(int page, int dpi, out WriteableBitmap? bmp)
