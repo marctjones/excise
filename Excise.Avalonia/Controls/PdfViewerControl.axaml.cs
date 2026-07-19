@@ -1198,13 +1198,22 @@ public partial class PdfViewerControl : UserControl
         var doc = Document;
         var pageNumber = CurrentPage;
         var page = doc.GetPage(pageNumber);
-        var renderDpi = EffectiveSinglePageRenderDpi(page);
-        _currentSinglePageRenderDpi = renderDpi;
+        // Logical DPI drives layout and coordinate mapping (unchanged); device
+        // DPI is what we actually rasterize at so text is crisp on HiDPI (#682).
+        var logicalDpi = EffectiveSinglePageRenderDpi(page);
+        _currentSinglePageRenderDpi = logicalDpi;
+        var (renderDpi, bitmapDpi) = SinglePageRenderPlan(logicalDpi, EffectiveRenderScaling);
+        // MaxSinglePagePreviewPixels is a DEVICE-pixel (memory) ceiling, so it is
+        // NOT scaled by the device-pixel-ratio: a normal page at device resolution
+        // stays far under it (crisp), while a very large page is still capped at
+        // the same memory bound (it simply doesn't gain the HiDPI sharpening).
+        long maxPixels = MaxSinglePagePreviewPixels;
 
         // Cache hit short-circuits the renderer entirely — this is the
         // common case for backwards-paging, undoing redactions, and
         // toggling overlays. Set Image.Source immediately so the user
-        // doesn't even see a loading flicker.
+        // doesn't even see a loading flicker. The cache is keyed by the
+        // DEVICE render DPI so a monitor change (dpr) re-renders.
         if (TryGetCached(pageNumber, renderDpi, out var cached))
         {
             if (_pdfImage != null)
@@ -1238,7 +1247,7 @@ public partial class PdfViewerControl : UserControl
                 var options = new Excise.Rendering.RenderOptions
                 {
                     Dpi = renderDpi,
-                    MaxPixelCount = MaxSinglePagePreviewPixels
+                    MaxPixelCount = maxPixels
                 };
                 return _renderer.RenderPage(page, options);
             }, token);
@@ -1250,7 +1259,7 @@ public partial class PdfViewerControl : UserControl
                 // freshly-rendered new page with the stale one.
                 if (token.IsCancellationRequested) return;
 
-                var bitmap = SkiaInterop.ToAvaloniaBitmap(skBitmap);
+                var bitmap = SkiaInterop.ToAvaloniaBitmap(skBitmap, bitmapDpi);
                 if (bitmap != null)
                 {
                     AddToCache(pageNumber, renderDpi, bitmap);
@@ -1302,6 +1311,24 @@ public partial class PdfViewerControl : UserControl
         var dpi = (int)Math.Floor(Math.Sqrt(MaxSinglePagePreviewPixels / (widthPt * heightPt)) *
                                   PdfPageRect.PdfPointsPerInch);
         return Math.Clamp(dpi, MinSinglePageRenderDpi, DefaultRenderDpi);
+    }
+
+    /// <summary>
+    /// Device-resolution render plan for a single page (pure; unit-tested).
+    /// Given the logical render DPI (which drives layout and coordinate mapping)
+    /// and the display device-pixel-ratio, returns the DPI to rasterize at
+    /// (device resolution) and the DPI to stamp on the resulting bitmap so its
+    /// DIP size equals the logical size. This makes the fix invariant: display
+    /// size and every coordinate mapping are unchanged, only sharpness improves
+    /// (#682). At dpr=1 it is an exact no-op (device == logical, stamp == 96).
+    /// The invariant callers rely on: <c>deviceDpi / (bitmapDpi / 96) == logicalDpi</c>.
+    /// </summary>
+    internal static (int DeviceDpi, double BitmapDpi) SinglePageRenderPlan(int logicalDpi, double devicePixelRatio)
+    {
+        double dpr = Math.Clamp(devicePixelRatio <= 0 ? 1.0 : devicePixelRatio, 1.0, 4.0);
+        int deviceDpi = (int)Math.Round(logicalDpi * dpr);
+        double bitmapDpi = 96.0 * dpr;
+        return (deviceDpi, bitmapDpi);
     }
 
     private bool TryGetCached(int page, int dpi, out WriteableBitmap? bmp)
