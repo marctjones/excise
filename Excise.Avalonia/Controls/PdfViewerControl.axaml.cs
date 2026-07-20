@@ -1016,6 +1016,7 @@ public partial class PdfViewerControl : UserControl
     {
         if (_zoomScaleTransform != null)
         {
+            Trace($"Zoom -> {ZoomLevel:F3} mode={ViewMode} page={CurrentPage}");
             _zoomScaleTransform.ScaleX = ZoomLevel;
             _zoomScaleTransform.ScaleY = ZoomLevel;
         }
@@ -1221,6 +1222,8 @@ public partial class PdfViewerControl : UserControl
         double scale = ZoomLevel * EffectiveRenderScaling;
         double maxScale = MaxSinglePageRenderScale(widthPt, heightPt, logicalDpi);
         var (renderDpi, bitmapDpi) = SinglePageRenderPlan(logicalDpi, scale, maxScale);
+        Trace($"SinglePageRender page={pageNumber} logicalDpi={logicalDpi} deviceDpi={renderDpi} " +
+              $"bitmapDpi={bitmapDpi:F0} zoom={ZoomLevel:F3} dpr={EffectiveRenderScaling:F2} maxScale={maxScale:F2}");
         // MaxSinglePagePreviewPixels is a DEVICE-pixel (memory) ceiling, so it is
         // NOT scaled by the device-pixel-ratio: a normal page at device resolution
         // stays far under it (crisp), while a very large page is still capped at
@@ -1234,12 +1237,14 @@ public partial class PdfViewerControl : UserControl
         // DEVICE render DPI so a monitor change (dpr) re-renders.
         if (TryGetCached(pageNumber, renderDpi, out var cached))
         {
+            Trace($"SinglePageRender page={pageNumber} CACHE-HIT dpi={renderDpi}");
             if (_pdfImage != null)
             {
                 var cachedBitmap = cached!;
                 _pdfImage.Width = cachedBitmap.Size.Width;
                 _pdfImage.Height = cachedBitmap.Size.Height;
                 _pdfImage.Source = cachedBitmap;
+                Trace($"ImageSet(cache) page={pageNumber} imgWidth={_pdfImage.Width:F0} srcDip={cachedBitmap.Size.Width:F0} srcPx={cachedBitmap.PixelSize.Width} zoom={ZoomLevel:F3}");
             }
             HasError = false;
             ErrorMessage = null;
@@ -1280,7 +1285,10 @@ public partial class PdfViewerControl : UserControl
                 var bitmap = SkiaInterop.ToAvaloniaBitmap(skBitmap, bitmapDpi);
                 if (bitmap != null)
                 {
+                    Trace($"SinglePageRender page={pageNumber} RENDERED px={bitmap.PixelSize.Width}x{bitmap.PixelSize.Height} dip={bitmap.Size.Width:F0}x{bitmap.Size.Height:F0}");
                     AddToCache(pageNumber, renderDpi, bitmap);
+                    Trace($"ContVis={_continuousScrollViewer?.IsVisible} SingleVis={_scrollViewer?.IsVisible}");
+                    Trace($"ImageSet page={pageNumber} imgWidth={_pdfImage?.Width:F0} srcDip={bitmap.Size.Width:F0}x{bitmap.Size.Height:F0} srcPx={bitmap.PixelSize.Width} zoom={ZoomLevel:F3}");
                     if (_pdfImage != null)
                     {
                         _pdfImage.Width = bitmap.Size.Width;
