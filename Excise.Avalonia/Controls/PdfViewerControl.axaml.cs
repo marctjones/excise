@@ -297,7 +297,11 @@ public partial class PdfViewerControl : UserControl
     // instant. Capped small — bitmaps for a 200-page book can be ~6 MB
     // each in BGRA, so we trade a few tens of MB for snappy navigation.
     private const int PageCacheCapacity = 6;
-    private readonly LinkedList<(int Page, int Dpi, WriteableBitmap Bmp)> _pageCache = new();
+    // Dip is the Image's LAYOUT size for the entry (logical page dips). It is
+    // carried separately because the bitmap itself is stamped 96 DPI —
+    // Avalonia's Image mispaints non-96-stamped bitmaps as a magnified
+    // top-left pixel crop (#697; DpiStampedBitmapPaintProbeTests).
+    private readonly LinkedList<(int Page, int Dpi, WriteableBitmap Bmp, Size Dip)> _pageCache = new();
 
     // Tracks the in-flight render so rapid paging cancels stale work.
     private CancellationTokenSource? _renderCts;
@@ -1235,16 +1239,16 @@ public partial class PdfViewerControl : UserControl
         // toggling overlays. Set Image.Source immediately so the user
         // doesn't even see a loading flicker. The cache is keyed by the
         // DEVICE render DPI so a monitor change (dpr) re-renders.
-        if (TryGetCached(pageNumber, renderDpi, out var cached))
+        if (TryGetCached(pageNumber, renderDpi, out var cached, out var cachedDip))
         {
             Trace($"SinglePageRender page={pageNumber} CACHE-HIT dpi={renderDpi}");
             if (_pdfImage != null)
             {
                 var cachedBitmap = cached!;
-                _pdfImage.Width = cachedBitmap.Size.Width;
-                _pdfImage.Height = cachedBitmap.Size.Height;
+                _pdfImage.Width = cachedDip.Width;
+                _pdfImage.Height = cachedDip.Height;
                 _pdfImage.Source = cachedBitmap;
-                Trace($"ImageSet(cache) page={pageNumber} imgWidth={_pdfImage.Width:F0} srcDip={cachedBitmap.Size.Width:F0} srcPx={cachedBitmap.PixelSize.Width} zoom={ZoomLevel:F3}");
+                Trace($"ImageSet(cache) page={pageNumber} imgWidth={_pdfImage.Width:F0} srcDip={cachedDip.Width:F0} srcPx={cachedBitmap.PixelSize.Width} zoom={ZoomLevel:F3}");
             }
             HasError = false;
             ErrorMessage = null;
@@ -1282,17 +1286,25 @@ public partial class PdfViewerControl : UserControl
                 // freshly-rendered new page with the stale one.
                 if (token.IsCancellationRequested) return;
 
-                var bitmap = SkiaInterop.ToAvaloniaBitmap(skBitmap, bitmapDpi);
+                // Stamp 96 (dip Size == PixelSize) and carry the layout size
+                // separately: Avalonia's Image paints a non-96-stamped bitmap
+                // as a top-left pixel crop magnified by stamp/96 (#697;
+                // DpiStampedBitmapPaintProbeTests). The plan's invariant
+                // px × 96 / bitmapDpi == logical page dips still sizes the
+                // layout, so coordinates and the ScaleTransform are unchanged.
+                var bitmap = SkiaInterop.ToAvaloniaBitmap(skBitmap);
                 if (bitmap != null)
                 {
-                    Trace($"SinglePageRender page={pageNumber} RENDERED px={bitmap.PixelSize.Width}x{bitmap.PixelSize.Height} dip={bitmap.Size.Width:F0}x{bitmap.Size.Height:F0}");
-                    AddToCache(pageNumber, renderDpi, bitmap);
+                    var dip = new Size(bitmap.PixelSize.Width * 96.0 / bitmapDpi,
+                                       bitmap.PixelSize.Height * 96.0 / bitmapDpi);
+                    Trace($"SinglePageRender page={pageNumber} RENDERED px={bitmap.PixelSize.Width}x{bitmap.PixelSize.Height} dip={dip.Width:F0}x{dip.Height:F0}");
+                    AddToCache(pageNumber, renderDpi, bitmap, dip);
                     Trace($"ContVis={_continuousScrollViewer?.IsVisible} SingleVis={_scrollViewer?.IsVisible}");
-                    Trace($"ImageSet page={pageNumber} imgWidth={_pdfImage?.Width:F0} srcDip={bitmap.Size.Width:F0}x{bitmap.Size.Height:F0} srcPx={bitmap.PixelSize.Width} zoom={ZoomLevel:F3}");
+                    Trace($"ImageSet page={pageNumber} imgWidth={_pdfImage?.Width:F0} srcDip={dip.Width:F0}x{dip.Height:F0} srcPx={bitmap.PixelSize.Width} zoom={ZoomLevel:F3}");
                     if (_pdfImage != null)
                     {
-                        _pdfImage.Width = bitmap.Size.Width;
-                        _pdfImage.Height = bitmap.Size.Height;
+                        _pdfImage.Width = dip.Width;
+                        _pdfImage.Height = dip.Height;
                         _pdfImage.Source = bitmap;
                     }
                 }
@@ -1344,11 +1356,16 @@ public partial class PdfViewerControl : UserControl
     /// <paramref name="scale"/> is the on-screen magnification the raster must
     /// resolve — the display device-pixel-ratio times the zoom level — so text
     /// stays crisp both on HiDPI displays (#682) and when zoomed in (#683). It
-    /// returns the DPI to rasterize at (device resolution) and the DPI to stamp
-    /// on the resulting bitmap so its DIP size equals the *logical* size. That
-    /// invariant — <c>deviceDpi / (bitmapDpi / 96) == logicalDpi</c> — is what
-    /// keeps the Image layout size, the ScaleTransform, and every coordinate
-    /// mapping unchanged; only pixel density changes. <paramref name="maxScale"/>
+    /// returns the DPI to rasterize at (device resolution) and the BitmapDpi
+    /// divisor that maps the raster back to the *logical* layout size
+    /// (px × 96 / bitmapDpi). That invariant —
+    /// <c>deviceDpi / (bitmapDpi / 96) == logicalDpi</c> — is what keeps the
+    /// Image layout size, the ScaleTransform, and every coordinate mapping
+    /// unchanged; only pixel density changes. BitmapDpi is NOT stamped on the
+    /// bitmap: Avalonia's Image mispaints non-96-stamped bitmaps as a magnified
+    /// top-left pixel crop (#697; DpiStampedBitmapPaintProbeTests) — the bitmap
+    /// stays 96-stamped and the Image's Width/Height carry the layout size
+    /// instead. <paramref name="maxScale"/>
     /// caps the raster at the single-page memory budget: beyond it the
     /// ScaleTransform upscales (soft at extreme zoom) rather than allocating an
     /// unbounded bitmap. At scale=1 it is an exact no-op (device == logical,
@@ -1374,7 +1391,7 @@ public partial class PdfViewerControl : UserControl
         return Math.Max(1.0, Math.Sqrt(MaxSinglePagePreviewPixels / logicalPixels));
     }
 
-    private bool TryGetCached(int page, int dpi, out WriteableBitmap? bmp)
+    private bool TryGetCached(int page, int dpi, out WriteableBitmap? bmp, out Size dip)
     {
         for (var node = _pageCache.First; node != null; node = node.Next)
         {
@@ -1384,14 +1401,16 @@ public partial class PdfViewerControl : UserControl
                 _pageCache.Remove(node);
                 _pageCache.AddFirst(node);
                 bmp = node.Value.Bmp;
+                dip = node.Value.Dip;
                 return true;
             }
         }
         bmp = null;
+        dip = default;
         return false;
     }
 
-    private void AddToCache(int page, int dpi, WriteableBitmap bmp)
+    private void AddToCache(int page, int dpi, WriteableBitmap bmp, Size dip)
     {
         // Replace existing entry for same key (e.g. re-render after edit).
         for (var node = _pageCache.First; node != null; node = node.Next)
@@ -1403,7 +1422,7 @@ public partial class PdfViewerControl : UserControl
                 break;
             }
         }
-        _pageCache.AddFirst((page, dpi, bmp));
+        _pageCache.AddFirst((page, dpi, bmp, dip));
         while (_pageCache.Count > PageCacheCapacity)
         {
             var last = _pageCache.Last!;

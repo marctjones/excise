@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Reactive.Linq;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using AwesomeAssertions;
@@ -76,8 +75,11 @@ public class ModeSwitchDisplayTests
             var expectedDipWidth = LetterWidthPt * logicalDpi / 72.0;
             img.Width.Should().BeApproximately(expectedDipWidth, 2.0,
                 "the page's on-screen size must not depend on the device pixel ratio");
-            source.Size.Width.Should().BeApproximately(expectedDipWidth, 2.0,
-                "the bitmap's DIP size must equal the logical page size");
+            (source as global::Avalonia.Media.Imaging.Bitmap)!.Size.Width.Should().BeApproximately(
+                (source as global::Avalonia.Media.Imaging.Bitmap)!.PixelSize.Width, 0.5,
+                "the bitmap must be 96-dpi-stamped (Size == PixelSize) — Avalonia's Image " +
+                "mispaints non-96-stamped bitmaps as a magnified top-left crop (#697); " +
+                "the logical page size lives on the Image's Width instead");
 
             // CRISPNESS: the backing pixels match the on-screen magnification —
             // the app enters modes at its current (often fit-width) zoom, so the

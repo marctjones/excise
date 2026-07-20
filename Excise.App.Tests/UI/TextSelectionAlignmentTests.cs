@@ -193,11 +193,13 @@ public class TextSelectionAlignmentTests
         var deadline = Environment.TickCount64 + 20000;
         while (Environment.TickCount64 < deadline)
         {
-            var src = viewer.FindControl<Image>("PdfImage")?.Source as Bitmap;
-            if (src != null)
+            var img = viewer.FindControl<Image>("PdfImage");
+            if (img?.Source is Bitmap src && !double.IsNaN(img.Width))
             {
                 var scale = Math.Max(1.0, zoom * dpr);
-                var expected = src.Size.Width * scale; // dip × scale = device px
+                // The bitmap is 96-stamped (#697), so the layout dip size lives
+                // on the Image's Width; the raster is that × zoom × dpr.
+                var expected = img.Width * scale;
                 if (Math.Abs(src.PixelSize.Width - expected) <= 10) return;
             }
             await Task.Delay(50);
@@ -325,6 +327,25 @@ public class TextSelectionAlignmentTests
             inkNearHighlight.Should().BeGreaterThan(0,
                 $"after Fit the highlight (viewer {tl}) must still sit on rendered text, " +
                 "not float over blank space (live repro: diag-after-fit.png)");
+
+            // 3) the displayed page must be the WHOLE page, not a magnified
+            // top-left pixel crop (#697: Avalonia's Image mispaints dpi-stamped
+            // bitmaps; at dpr 2 post-fit the crop-zoom is ~2×, live screenshot
+            // step4_postfit). Discriminators: the book page's ink must start
+            // near the top of the displayed image (crop pushes it ~halfway
+            // down) and must leave the page's right margin visible (crop fills
+            // ink to the image's right edge).
+            var img = viewer.FindControl<Image>("PdfImage")!;
+            var imgTopLeft = img.TranslatePoint(new Point(0, 0), viewer)!.Value;
+            var displayedW = img.Width * zoom;
+            var displayedH = img.Height * zoom;
+            var pageInk = InkBounds(after);
+            (pageInk.Top - imgTopLeft.Y).Should().BeLessThan(displayedH * 0.35,
+                $"page ink must start in the top third of the displayed image (dpr={dpr}); " +
+                "starting halfway down means a magnified top-left crop is being painted (#697)");
+            pageInk.Right.Should().BeLessThan(imgTopLeft.X + displayedW * 0.97,
+                $"the page's right margin must be visible inside the displayed image (dpr={dpr}); " +
+                "ink flush to the image edge means a magnified crop is being painted (#697)");
         }
         finally
         {
