@@ -172,6 +172,18 @@ public partial class PdfViewerControl
             _continuousViewportSubscription = _continuousScrollViewer
                 .GetObservable(ScrollViewer.ViewportProperty)
                 .Subscribe(new AnonymousObserver<Size>(OnContinuousViewportChanged));
+            // Permanent: re-apply a pending zoom anchor once layout gives the
+            // ScrollViewer its post-re-layout extent. POSTED, not applied
+            // synchronously — an Offset write inside the extent-change
+            // notification is re-clamped by the ScrollViewer's own layout
+            // coercion and silently lost (#700).
+            _continuousExtentSubscription = _continuousScrollViewer
+                .GetObservable(ScrollViewer.ExtentProperty)
+                .Subscribe(new AnonymousObserver<Size>(_ =>
+                {
+                    if (_pendingZoomAnchorPage > 0)
+                        Dispatcher.UIThread.Post(ApplyPendingZoomAnchor, DispatcherPriority.Loaded);
+                }));
         }
     }
 
@@ -255,7 +267,26 @@ public partial class PdfViewerControl
     /// the Extent property itself and apply the carried fraction the moment
     /// the content gets a real size.
     /// </summary>
+    private bool _applyingSingleFraction;
+
     private void ApplyPendingSingleFraction()
+    {
+        // Same re-entrancy guard as ApplyPendingZoomAnchor: GetObservable
+        // emits the current value synchronously on subscribe, which would
+        // re-enter here before the subscription field is assigned.
+        if (_applyingSingleFraction) return;
+        _applyingSingleFraction = true;
+        try
+        {
+            ApplyPendingSingleFractionCore();
+        }
+        finally
+        {
+            _applyingSingleFraction = false;
+        }
+    }
+
+    private void ApplyPendingSingleFractionCore()
     {
         if (_pendingSingleFraction < 0 || _scrollViewer == null)
         {
@@ -335,9 +366,92 @@ public partial class PdfViewerControl
     private void ApplyContinuousZoom()
     {
         if (_continuousSlots == null) return;
+
+        // Anchor the viewport across the re-layout (#700). Re-laying the
+        // slots at a new zoom while keeping the NUMERIC scroll offset slides
+        // the viewport pages away from what the user was reading — and since
+        // Offset never changes, no scroll event fires and the scroll→
+        // CurrentPage sync silently freezes (live trace: four zoom-outs left
+        // the label on page 17 while the screen showed page ~22). Capture
+        // page + intra-page fraction at the viewport top against the OLD
+        // layout, re-layout, then restore that reading position — the offset
+        // assignment also fires the sync. A pending programmatic navigation
+        // wins over anchoring.
+        int anchorPage = 0;
+        double anchorFraction = 0;
+        if (_continuousScrollViewer != null && _pendingContinuousPage == null)
+        {
+            var y = _continuousScrollViewer.Offset.Y;
+            for (int i = 0; i < _continuousSlots.Count; i++)
+            {
+                var s = _continuousSlots[i];
+                if (y < s.TopDip + s.DisplayHeight + PageGapDip || i == _continuousSlots.Count - 1)
+                {
+                    anchorPage = i + 1;
+                    anchorFraction = s.DisplayHeight > 0
+                        ? Math.Clamp((y - s.TopDip) / s.DisplayHeight, 0, 1)
+                        : 0;
+                    break;
+                }
+            }
+        }
+
         ApplyContinuousSlotLayout(_continuousSlots);
 
+        if (anchorPage > 0 && _continuousScrollViewer != null)
+        {
+            // The ScrollViewer clamps Offset against the PRE-layout extent
+            // until the next layout pass, so a zoom-IN target (which grows)
+            // would silently clamp short — and dispatcher-post retries drain
+            // before layout ever runs (the #693 lesson). Apply via the
+            // Extent observable instead.
+            _pendingZoomAnchorPage = anchorPage;
+            _pendingZoomAnchorFraction = anchorFraction;
+            ApplyPendingZoomAnchor();
+        }
+
         RenderVisibleContinuousTiles();
+    }
+
+    private int _pendingZoomAnchorPage;
+    private double _pendingZoomAnchorFraction;
+
+
+    private void ApplyPendingZoomAnchor()
+    {
+        if (_pendingZoomAnchorPage <= 0 || _continuousScrollViewer == null || _continuousSlots == null ||
+            _pendingZoomAnchorPage > _continuousSlots.Count)
+        {
+            return;
+        }
+
+        var slot = _continuousSlots[_pendingZoomAnchorPage - 1];
+        var target = slot.TopDip + _pendingZoomAnchorFraction * slot.DisplayHeight;
+        // The reachable maximum. If the target lies beyond it (deep zoom-out
+        // near the end of the document), pinning to the max IS the anchor —
+        // the viewport now covers proportionally more document.
+        var max = Math.Max(0, _continuousScrollViewer.Extent.Height - _continuousScrollViewer.Viewport.Height);
+        var reachable = Math.Min(target, max);
+        _continuousScrollViewer.Offset = new Vector(_continuousScrollViewer.Offset.X, reachable);
+
+        if (Math.Abs(_continuousScrollViewer.Offset.Y - target) <= 1.0 ||
+            (reachable < target && Math.Abs(_continuousScrollViewer.Offset.Y - reachable) <= 1.0 && ExtentReflectsSlots()))
+        {
+            // Anchored (or correctly pinned at the true max). Done — the
+            // permanent extent subscription stops re-posting once this is 0.
+            _pendingZoomAnchorPage = 0;
+        }
+        // else: the extent still reflects the pre-re-layout world; the extent
+        // subscription in InitializeContinuous posts us again when it updates.
+    }
+
+    /// <summary>The ScrollViewer's extent matches the freshly-laid-out slots.</summary>
+    private bool ExtentReflectsSlots()
+    {
+        if (_continuousScrollViewer == null || _continuousSlots == null || _continuousSlots.Count == 0)
+            return true;
+        var last = _continuousSlots[^1];
+        return Math.Abs(_continuousScrollViewer.Extent.Height - (last.TopDip + last.DisplayHeight + PageGapDip)) < 2.0;
     }
 
     private void ApplyContinuousSlotLayout(IReadOnlyList<PdfPageSlot> slots)

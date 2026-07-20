@@ -215,6 +215,7 @@ public class MouseInputTests
         var interaction = FindNamedDescendant<Canvas>(viewer!, "InteractionLayer");
         interaction.Should().NotBeNull("InteractionLayer must exist");
         var page = vm.PdfCoreDocument!.GetPage(linkPage);
+        await ScrollContentRectIntoView(window, scrollViewer!, viewer!, targetLink.Rect, page);
         var pointInWindow = ToWindowPoint(targetLink.Rect, page, interaction!, window);
 
         bool linkFired = false;
@@ -716,6 +717,7 @@ public class MouseInputTests
         var interaction = FindNamedDescendant<Canvas>(viewer!, "InteractionLayer");
         interaction.Should().NotBeNull("InteractionLayer must exist");
         var page = vm.PdfCoreDocument!.GetPage(linkPage);
+        await ScrollContentRectIntoView(window, scrollViewer!, viewer!, targetLink.Rect, page);
         var hoverPoint = ToWindowPoint(targetLink.Rect, page, interaction!, window);
 
         // Simulate hover (MouseMove without click).
@@ -818,6 +820,27 @@ public class MouseInputTests
     #endregion
 
     #region Helpers
+
+    /// <summary>
+    /// Scroll the single-page viewport so the given content rect is visible.
+    /// Since the #693 display unification made fit-width actually fill the
+    /// viewport, a link deep in the page can lie below the fold — a
+    /// click/hover point translated to window coordinates would then land
+    /// outside the viewer entirely and the event never reaches it.
+    /// </summary>
+    private static async Task ScrollContentRectIntoView(
+        Window window, ScrollViewer scroller, PdfViewerControl viewer,
+        PdfRectangle contentRect, PdfPage page)
+    {
+        var viewerRect = PdfCoordinateMapper.ToViewerDips(
+            page, PdfPageRect.FromContentPoints(page.PageNumber, contentRect), RenderDpi);
+        // Displayed position = viewer dips x zoom x 96/renderDpi (#693).
+        var displayScale = viewer.ZoomLevel * 96.0 / 120.0;
+        var targetY = Math.Max(0, viewerRect.Y * displayScale - scroller.Viewport.Height / 2);
+        scroller.Offset = new Vector(scroller.Offset.X, targetY);
+        await Task.Delay(100);
+        window.UpdateLayout();
+    }
 
     private static Point ToWindowPoint(Letter l, PdfPage page, Canvas overlay, Window window)
     {

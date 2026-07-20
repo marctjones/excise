@@ -333,8 +333,21 @@ public partial class PdfViewerControl : UserControl
         Focusable = true;
         UpdateViewerAutomationProperties();
         DetachedFromVisualTree += OnDetachedFromVisualTreeHandler;
+    }
 
-        // Subscribe to property changes
+    /// <summary>
+    /// ⚠️ Class handlers are STATIC scope — one registration fires for every
+    /// instance of the control. These lived in the instance constructor for a
+    /// long time, which meant every constructed viewer added a duplicate
+    /// handler set: with N viewers ever created in the process, one property
+    /// change invoked each handler N times. The app creates a single viewer
+    /// so it never noticed; the test host creates dozens, and the duplicate
+    /// OnZoomLevelChanged invocations re-entered ApplyContinuousZoom and
+    /// destroyed the #700 zoom anchor mid-flight (plus N-fold duplicate
+    /// renders everywhere else). Register once, in the static constructor.
+    /// </summary>
+    static PdfViewerControl()
+    {
         DocumentProperty.Changed.AddClassHandler<PdfViewerControl>((control, e) =>
             control.OnDocumentChanged());
         CurrentPageProperty.Changed.AddClassHandler<PdfViewerControl>((control, e) =>
@@ -387,6 +400,8 @@ public partial class PdfViewerControl : UserControl
         _continuousOffsetSubscription = null;
         _continuousViewportSubscription?.Dispose();
         _continuousViewportSubscription = null;
+        _continuousExtentSubscription?.Dispose();
+        _continuousExtentSubscription = null;
 
         if (_continuousItems != null)
         {
@@ -883,6 +898,7 @@ public partial class PdfViewerControl : UserControl
     private IDisposable? _viewportSubscription;
     private IDisposable? _continuousOffsetSubscription;
     private IDisposable? _continuousViewportSubscription;
+    private IDisposable? _continuousExtentSubscription;
 
     private void OnScrollViewerViewportChanged(Size newViewport)
     {
