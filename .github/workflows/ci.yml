@@ -482,43 +482,55 @@ jobs:
 
       - name: Install veraPDF
         # A hard prerequisite, not best-effort — see the Linux job's install
-        # step for the full rationale (#666, PR #673).
-        shell: pwsh
+        # step for the full rationale (#666, PR #673). Runs under Git Bash
+        # directly: the previous pwsh-wrapped variant was never valid — pwsh
+        # expanded \$(find ...) as its own subexpression and the step failed
+        # on EVERY run, silently, behind continue-on-error (the exact
+        # pathology #666 is about). izpack gets a Windows-style install path
+        # ($USERPROFILE); git-bash's /c/... $HOME is not a valid Java path.
+        # Windows installs a verapdf.bat launcher; the *nix script may be
+        # absent, so verification accepts either.
+        shell: bash
         run: |
-          & "C:\Program Files\Git\bin\bash.exe" -c "
-            set -euo pipefail
-            curl -fSL --retry 3 --connect-timeout 30 \
-              https://software.verapdf.org/releases/verapdf-installer.zip \
-              -o /tmp/verapdf.zip
-            unzip -q /tmp/verapdf.zip -d /tmp/verapdf-installer
-            cat > /tmp/auto-install.xml << EOF
-          <?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>
-          <AutomatedInstallation langpack=\"eng\">
-              <com.izforge.izpack.panels.htmlhello.HTMLHelloPanel id=\"welcome\"/>
-              <com.izforge.izpack.panels.target.TargetPanel id=\"install_dir\">
-                  <installpath>\$HOME/verapdf</installpath>
+          set -euo pipefail
+          curl -fSL --retry 3 --connect-timeout 30 \
+            https://software.verapdf.org/releases/verapdf-installer.zip \
+            -o /tmp/verapdf.zip
+          unzip -q /tmp/verapdf.zip -d /tmp/verapdf-installer
+
+          cat > /tmp/auto-install.xml << EOF
+          <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+          <AutomatedInstallation langpack="eng">
+              <com.izforge.izpack.panels.htmlhello.HTMLHelloPanel id="welcome"/>
+              <com.izforge.izpack.panels.target.TargetPanel id="install_dir">
+                  <installpath>$USERPROFILE/verapdf</installpath>
               </com.izforge.izpack.panels.target.TargetPanel>
-              <com.izforge.izpack.panels.packs.PacksPanel id=\"sdk_pack_select\">
-                  <pack index=\"0\" name=\"veraPDF GUI\" selected=\"false\"/>
-                  <pack index=\"1\" name=\"veraPDF Mac and *nix Scripts\" selected=\"true\"/>
-                  <pack index=\"2\" name=\"veraPDF Validation model\" selected=\"true\"/>
-                  <pack index=\"3\" name=\"veraPDF Documentation\" selected=\"false\"/>
-                  <pack index=\"4\" name=\"veraPDF Sample Plugins\" selected=\"false\"/>
+              <com.izforge.izpack.panels.packs.PacksPanel id="sdk_pack_select">
+                  <pack index="0" name="veraPDF GUI" selected="false"/>
+                  <pack index="1" name="veraPDF Mac and *nix Scripts" selected="true"/>
+                  <pack index="2" name="veraPDF Validation model" selected="true"/>
+                  <pack index="3" name="veraPDF Documentation" selected="false"/>
+                  <pack index="4" name="veraPDF Sample Plugins" selected="false"/>
               </com.izforge.izpack.panels.packs.PacksPanel>
-              <com.izforge.izpack.panels.install.InstallPanel id=\"install\"/>
-              <com.izforge.izpack.panels.finish.FinishPanel id=\"finish\"/>
+              <com.izforge.izpack.panels.install.InstallPanel id="install"/>
+              <com.izforge.izpack.panels.finish.FinishPanel id="finish"/>
           </AutomatedInstallation>
           EOF
-            cd /tmp/verapdf-installer
-            INSTALLER=\$(find . \( -name 'verapdf-izpack-installer-*.jar' -o -name 'verapdf-greenfield-*.jar' -o -name 'verapdf-*installer*.jar' \) | head -1)
-            if [ -z \"\$INSTALLER\" ]; then
-              echo 'veraPDF installer jar not found' >&2
-              exit 1
-            fi
-            java -jar \"\$INSTALLER\" /tmp/auto-install.xml
-            ~/verapdf/verapdf --version
-          "
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          cd /tmp/verapdf-installer
+          INSTALLER=$(find . \( -name "verapdf-izpack-installer-*.jar" -o -name "verapdf-greenfield-*.jar" -o -name "verapdf-*installer*.jar" \) | head -1)
+          if [ -z "$INSTALLER" ]; then
+            echo "veraPDF installer jar not found" >&2
+            exit 1
+          fi
+          java -jar "$INSTALLER" /tmp/auto-install.xml
+
+          # Verify that a validator launcher is available.
+          if [ -f "$USERPROFILE/verapdf/verapdf.bat" ]; then
+            "$USERPROFILE/verapdf/verapdf.bat" --version
+          else
+            "$USERPROFILE/verapdf/verapdf" --version
+          fi
 
       - name: Restore packages
         run: dotnet restore
