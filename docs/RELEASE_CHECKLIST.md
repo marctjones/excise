@@ -82,6 +82,16 @@ Use this checklist before tagging any `v*` release.
   symbols from the user-facing macOS app bundle, and write `aot-smoke.json` plus
   `aot-smoke.md`. Use `scripts/run-aot-smoke.sh --gui-smoke` on an interactive
   macOS runner for packaged AOT launch/open/render evidence.
+- **AOT support matrix (#595, decided 2026-07-20)** — release notes and docs
+  must not claim AOT targets beyond this table; update the table (and file the
+  probe evidence) before promoting any RID:
+
+  | RID | Status | Reason |
+  |-----|--------|--------|
+  | `osx-arm64` | **Shipped** | Validated by the per-PR Native AOT CI lane and `run-aot-smoke.sh` evidence. |
+  | `win-x64` | Deferred (#703) | Not yet probed; needs a Windows-runner publish + native-asset load check. |
+  | `linux-x64` | Deferred (#704) | Not yet probed; needs a Linux-runner publish + native-asset load check. |
+  | `osx-x64` | Deferred (#705) | Not yet probed; needs an Intel-mac (or Rosetta-verified) publish + smoke. |
 - Run packaged-app GUI evidence when validating desktop packages:
   `scripts/release-smoke.sh --quick --package --packaged-gui --version <version>`.
   This writes JSON/markdown evidence for #558/#571 and responsiveness timing
