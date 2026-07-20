@@ -58,10 +58,12 @@ public static class SkiaInterop
 
             var size = new PixelSize(source.Width, source.Height);
             // The stamped DPI decides how many bitmap pixels map to one DIP.
-            // 96 (default) = 1:1. The single-page path renders at device
-            // resolution and passes 96×devicePixelRatio so the raster is crisp
-            // on HiDPI while its DIP Size — and thus layout/coordinates — is
-            // unchanged (#682).
+            // 96 (default) = 1:1. ⚠️ Avalonia's Image control mispaints bitmaps
+            // stamped at any other DPI — it takes the dip-sized source rect in
+            // PIXEL units, painting only a magnified top-left crop (#697;
+            // DpiStampedBitmapPaintProbeTests). Callers that render at device
+            // resolution must keep the 96 stamp and set the Image's
+            // Width/Height to the logical dip size instead.
             var dpi = new Vector(bitmapDpi, bitmapDpi);
             var wb = new WriteableBitmap(size, dpi,
                 PixelFormat.Bgra8888, AlphaFormat.Premul);
