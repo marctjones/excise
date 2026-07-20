@@ -64,21 +64,19 @@ jobs:
 
       - name: Install veraPDF
         # veraPDF drives the PDF/UA-1 conformance gate (PdfUaConformanceTests,
-        # #413) and the corpus tests. The UA test skips gracefully if veraPDF is
-        # absent, so a download/installer outage must not fail the whole job —
-        # keep the install best-effort. (The old pinned 1.28.1 URL 404'd; use the
-        # versionless latest installer.)
-        continue-on-error: true
+        # #413) and the corpus tests. Treat it as a CI prerequisite so the
+        # validator tests either run or the setup failure is reported directly;
+        # best-effort installation made their skip state depend on network luck
+        # and flipped the skip-budget gate red/green (#666, PR #673).
+        # The old pinned 1.28.1 URL 404'd; use the versionless latest installer.
         run: |
-          set -uo pipefail
+          set -euo pipefail
           # Download veraPDF. curl -f fails on HTTP errors (so we never unzip an
           # error page), with retries for transient flakiness.
           curl -fSL --retry 3 --connect-timeout 30 \
             https://software.verapdf.org/releases/verapdf-installer.zip \
-            -o /tmp/verapdf.zip \
-            || { echo "::warning::veraPDF download failed; skipping veraPDF setup"; exit 0; }
-          unzip -q /tmp/verapdf.zip -d /tmp/verapdf-installer \
-            || { echo "::warning::veraPDF archive invalid; skipping veraPDF setup"; exit 0; }
+            -o /tmp/verapdf.zip
+          unzip -q /tmp/verapdf.zip -d /tmp/verapdf-installer
 
           # Create installation response file for silent install.
           # Unquoted heredoc so $HOME expands (izpack doesn't expand env vars; a
@@ -106,14 +104,13 @@ jobs:
           cd /tmp/verapdf-installer
           INSTALLER=$(find . \( -name "verapdf-izpack-installer-*.jar" -o -name "verapdf-greenfield-*.jar" -o -name "verapdf-*installer*.jar" \) | head -1)
           if [ -z "$INSTALLER" ]; then
-            echo "::warning::veraPDF installer jar not found; skipping veraPDF setup"
-            exit 0
+            echo "veraPDF installer jar not found" >&2
+            exit 1
           fi
-          java -jar "$INSTALLER" /tmp/auto-install.xml || \
-            { echo "::warning::veraPDF install failed; continuing without it"; exit 0; }
+          java -jar "$INSTALLER" /tmp/auto-install.xml
 
-          # Verify installation (non-fatal)
-          ~/verapdf/verapdf --version || true
+          # Verify that the validator is available for the conformance tests.
+          ~/verapdf/verapdf --version
 
       - name: Install xvfb for headless UI tests
         if: steps.changes.outputs.gui == 'true' || github.ref == 'refs/heads/main'
@@ -352,17 +349,14 @@ jobs:
 
       - name: Install veraPDF
         # Same izpack installer as Linux; the jar is cross-platform and Java
-        # is already set up above. Best-effort — see the Linux job's install
-        # step for the full rationale.
-        continue-on-error: true
+        # is already set up above. A hard prerequisite, not best-effort — see
+        # the Linux job's install step for the full rationale (#666, PR #673).
         run: |
-          set -uo pipefail
+          set -euo pipefail
           curl -fSL --retry 3 --connect-timeout 30 \
             https://software.verapdf.org/releases/verapdf-installer.zip \
-            -o /tmp/verapdf.zip \
-            || { echo "::warning::veraPDF download failed; skipping veraPDF setup"; exit 0; }
-          unzip -q /tmp/verapdf.zip -d /tmp/verapdf-installer \
-            || { echo "::warning::veraPDF archive invalid; skipping veraPDF setup"; exit 0; }
+            -o /tmp/verapdf.zip
+          unzip -q /tmp/verapdf.zip -d /tmp/verapdf-installer
 
           cat > /tmp/auto-install.xml << EOF
           <?xml version="1.0" encoding="UTF-8" standalone="no"?>
@@ -386,13 +380,13 @@ jobs:
           cd /tmp/verapdf-installer
           INSTALLER=$(find . \( -name "verapdf-izpack-installer-*.jar" -o -name "verapdf-greenfield-*.jar" -o -name "verapdf-*installer*.jar" \) | head -1)
           if [ -z "$INSTALLER" ]; then
-            echo "::warning::veraPDF installer jar not found; skipping veraPDF setup"
-            exit 0
+            echo "veraPDF installer jar not found" >&2
+            exit 1
           fi
-          java -jar "$INSTALLER" /tmp/auto-install.xml || \
-            { echo "::warning::veraPDF install failed; continuing without it"; exit 0; }
+          java -jar "$INSTALLER" /tmp/auto-install.xml
 
-          ~/verapdf/verapdf --version || true
+          # Verify that the validator is available for the conformance tests.
+          ~/verapdf/verapdf --version
 
       - name: Restore packages
         run: dotnet restore
@@ -486,17 +480,16 @@ jobs:
           java-version: '17'
 
       - name: Install veraPDF
+        # A hard prerequisite, not best-effort — see the Linux job's install
+        # step for the full rationale (#666, PR #673).
         shell: pwsh
-        continue-on-error: true
         run: |
           & "C:\Program Files\Git\bin\bash.exe" -c "
-            set -uo pipefail
+            set -euo pipefail
             curl -fSL --retry 3 --connect-timeout 30 \
               https://software.verapdf.org/releases/verapdf-installer.zip \
-              -o /tmp/verapdf.zip \
-              || { echo '::warning::veraPDF download failed; skipping veraPDF setup'; exit 0; }
-            unzip -q /tmp/verapdf.zip -d /tmp/verapdf-installer \
-              || { echo '::warning::veraPDF archive invalid; skipping veraPDF setup'; exit 0; }
+              -o /tmp/verapdf.zip
+            unzip -q /tmp/verapdf.zip -d /tmp/verapdf-installer
             cat > /tmp/auto-install.xml << EOF
           <?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>
           <AutomatedInstallation langpack=\"eng\">
@@ -518,13 +511,13 @@ jobs:
             cd /tmp/verapdf-installer
             INSTALLER=\$(find . \( -name 'verapdf-izpack-installer-*.jar' -o -name 'verapdf-greenfield-*.jar' -o -name 'verapdf-*installer*.jar' \) | head -1)
             if [ -z \"\$INSTALLER\" ]; then
-              echo '::warning::veraPDF installer jar not found; skipping veraPDF setup'
-              exit 0
+              echo 'veraPDF installer jar not found' >&2
+              exit 1
             fi
-            java -jar \"\$INSTALLER\" /tmp/auto-install.xml || \
-              { echo '::warning::veraPDF install failed; continuing without it'; exit 0; }
-            ~/verapdf/verapdf --version || true
+            java -jar \"\$INSTALLER\" /tmp/auto-install.xml
+            ~/verapdf/verapdf --version
           "
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Restore packages
         run: dotnet restore
