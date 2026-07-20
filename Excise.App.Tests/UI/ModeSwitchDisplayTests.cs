@@ -233,6 +233,91 @@ public class ModeSwitchDisplayTests
     }
 
     /// <summary>
+    /// #700: zooming in continuous view must anchor the viewport. Before the
+    /// fix, a re-layout kept the numeric scroll offset while every slot
+    /// changed size — zooming out slid the viewport pages away from the
+    /// reading position, and because Offset never changed, no scroll event
+    /// fired and CurrentPage silently froze (live: four zoom-outs left the
+    /// label on page 17 while the screen showed page ~22). Correct anchoring
+    /// preserves the offset/extent RATIO (slots scale uniformly) and keeps
+    /// CurrentPage truthful.
+    /// </summary>
+    [FixedAvaloniaTheory]
+    [InlineData(0.5)]
+    [InlineData(2.0)]
+    public async Task ContinuousZoom_AnchorsTheViewportAndKeepsPageSync(double zoomFactor)
+    {
+        var (vm, window, viewer, path) = await OpenTestDocumentAsync();
+        try
+        {
+            var cont = viewer.FindControl<ScrollViewer>("ContinuousScrollViewer")!;
+            await PumpUntilAsync(window, () => cont.Extent.Height > cont.Viewport.Height + 100);
+
+            // Scroll mid-document, then nudge to land mid-page (see the
+            // reading-position test for why the two-step dance).
+            cont.Offset = new global::Avalonia.Vector(cont.Offset.X, cont.Extent.Height * 0.45);
+            await Task.Delay(150); window.UpdateLayout();
+            cont.Offset = new global::Avalonia.Vector(cont.Offset.X, cont.Offset.Y + cont.Extent.Height / 3 * 0.4);
+            await Task.Delay(150); window.UpdateLayout();
+
+            var pageBefore = vm.CurrentPageIndex;
+            var ratioBefore = cont.Offset.Y / cont.Extent.Height;
+            ratioBefore.Should().BeGreaterThan(0.1, "the test must start scrolled into the document");
+
+            var zoomBefore = viewer.ZoomLevel;
+            var extentBefore = cont.Extent.Height;
+            var offsetAtZoom = cont.Offset.Y;
+            vm.SetManualZoom(viewer.ZoomLevel * zoomFactor);
+            // The anchored offset is applied once layout gives the
+            // ScrollViewer its new extent — wait for convergence rather
+            // than a fixed delay.
+            // Correct anchoring preserves the offset/extent ratio, EXCEPT
+            // when the position is no longer reachable (deep zoom-out near
+            // the document end: the viewport covers proportionally more, so
+            // the max scroll ratio shrinks) — then pinning at max IS the
+            // anchor.
+            double ExpectedRatio() => Math.Min(ratioBefore,
+                Math.Max(0, cont.Extent.Height - cont.Viewport.Height) / cont.Extent.Height);
+            try
+            {
+                await PumpUntilAsync(window, () =>
+                    Math.Abs(cont.Offset.Y / cont.Extent.Height - ExpectedRatio()) <= 0.03,
+                    timeoutMs: 10000);
+            }
+            catch (TimeoutException)
+            {
+                throw new Xunit.Sdk.XunitException(
+                    $"anchor never converged: offset {offsetAtZoom:F0}->{cont.Offset.Y:F0} " +
+                    $"extent {extentBefore:F0}->{cont.Extent.Height:F0} " +
+                    $"ratio {ratioBefore:F3}->{cont.Offset.Y / cont.Extent.Height:F3} " +
+                    $"(expected {ExpectedRatio():F3}) " +
+                    $"zoom {zoomBefore:F3}->{viewer.ZoomLevel:F3} page={vm.CurrentPageIndex} " +
+                    $"viewport={cont.Viewport.Height:F0}");
+            }
+
+            var ratioAfter = cont.Offset.Y / cont.Extent.Height;
+            ratioAfter.Should().BeApproximately(ExpectedRatio(), 0.03,
+                $"zooming ×{zoomFactor} must keep the same document position at the viewport top " +
+                $"(offset/extent ratio {ratioBefore:F3} → {ratioAfter:F3}); a drift means the " +
+                "re-layout kept the numeric offset and slid the reader pages away (#700)");
+            // The page label must stay truthful across the re-layout: it must
+            // equal the page actually at the viewport top now (for reachable
+            // anchors that is the page we were on; when pinned at max the
+            // sync may legitimately land later in the document).
+            var pageAfter = vm.CurrentPageIndex;
+            if (Math.Abs(ratioAfter - ratioBefore) <= 0.03)
+                pageAfter.Should().Be(pageBefore,
+                    "the page label must stay truthful across a zoom re-layout — a frozen sync " +
+                    "reports a page the user is no longer looking at (#700)");
+        }
+        finally
+        {
+            window.Close();
+            TestPdfGenerator.CleanupTestFile(path);
+        }
+    }
+
+    /// <summary>
     /// #693 (scroll half): the reading position must survive the mode switch.
     /// Before the fix, entering an editing mode dropped the reader at the top
     /// of the page (singleOffset 0/…) and switching back re-anchored to the
