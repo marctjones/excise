@@ -11,7 +11,7 @@
 
   <PropertyGroup>
     <PackageId>Excise.Rendering</PackageId>
-    <Version>3.0.0</Version>
+    <Version>3.1.0</Version>
     <Authors>Marc Jones</Authors>
     <Description>Pure-managed, SkiaSharp-based PDF render API for .NET. Render pages to SKBitmap or PNG with DPI/clip/rotation support and cancellable rendering. Framework-neutral engine behind Excise.Avalonia; no native PDFium. Cross-platform, trim/AOT-friendlier.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

@@ -4,6 +4,49 @@ All notable changes to excise are documented here. Format roughly follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 semantic versioning.
 
+## [3.1.0] - 2026-07-20
+
+A display-correctness release: text is now crisp on HiDPI displays and at any
+zoom, and two live-reproduced selection/zoom display bugs are root-caused and
+fixed with pixel-level regression batteries.
+
+### Fixed
+- **Crisp text on HiDPI and when zoomed** (#682, #683) — both the continuous
+  and single-page viewers render at device-pixel resolution (zoom ×
+  device-pixel-ratio), re-rendering as you zoom instead of upscaling a 96-DPI
+  raster. Layout sizes, coordinates, and overlays are unchanged.
+- **Selection highlights no longer drift left** (#693) — overlay canvases are
+  pinned to the page image's origin; at narrow zooms the highlight previously
+  landed up to ~400 dips left of the selected text.
+- **Fit-after-selection display corruption** (#697) — pressing Fit in
+  select-text mode at HiDPI showed ~2× oversized text over blank space with
+  seemingly orphaned highlights. Root cause: Avalonia's `Image` mispaints any
+  bitmap stamped at a DPI other than 96 as a magnified top-left pixel crop
+  (pinned by `DpiStampedBitmapPaintProbeTests`). Single-page bitmaps are now
+  always 96-stamped, with the logical layout size carried explicitly.
+- **Quick-win batch** (#675, #674, #668, #665) — in-page links no longer
+  dispatch double click events; a flaky AES round-trip test stabilized;
+  skip-budget comment hygiene.
+
+### Added
+- **Thumbnail viewport window** (#687–#690) — thumbnails are evicted,
+  prefetched, and pre-warmed around the visible window with a disk-cache trim,
+  keeping the sidebar responsive on large documents.
+- **Page-assembly permission enforcement on CLI merge/split** (#677) —
+  `/P` bit 11 now gates `excise merge`/`excise split`
+  (`DocumentAction.AssembleDocument`).
+- **Native AOT release lane for Excise.App** (#590), validated on osx-arm64.
+- Deterministic SVG→raster icon generation script (#679).
+
+### Tests / infrastructure
+- Mode-switch display invariants across modes and device pixel ratios,
+  pixel-level displayed-text verification for mode buttons, and a
+  fit-after-selection live-repro battery (red-checked at dpr 2).
+- Project-authored test-data drift gate and the skip-budget self-test wired
+  into tier t0 (#678).
+- `EXCISE_TRACE_VIEWER=1` viewer-state probes (ViewMode/render plans/overlay
+  origins) used for the live #697 diagnosis.
+
 ## [3.0.0] - 2026-07-18
 
 **The project is renamed from `pdfe` to `Excise`.** Same engine, same
