@@ -30,7 +30,8 @@ jobs:
       # Detect whether GUI-relevant code changed. The headless Excise.App.Tests
       # suite is slow and Avalonia-dispatcher-sensitive; there's no need to run
       # it for library-only changes (e.g. a Excise.Core-only PR). It still always
-      # runs on pushes to main as a post-merge integration safety net.
+      # runs on pushes to develop (the default branch) as a post-merge
+      # integration safety net; main is only a release pointer.
       #
       # Only the Linux job honours this conditional: macOS and Windows always
       # run Excise.App.Tests unconditionally (see those jobs below) because
@@ -113,7 +114,7 @@ jobs:
           ~/verapdf/verapdf --version
 
       - name: Install xvfb for headless UI tests
-        if: steps.changes.outputs.gui == 'true' || github.ref == 'refs/heads/main'
+        if: steps.changes.outputs.gui == 'true' || github.ref == 'refs/heads/develop'
         run: sudo apt-get install -y xvfb
 
       - name: Restore packages
@@ -133,7 +134,7 @@ jobs:
       # edit, unacceptable mechanism — nothing signalled that an optimization had
       # just redefined "correct".
       - name: Gate asymmetry (correctness cannot be weakened by perf)
-        run: ./scripts/check-gate-asymmetry.sh origin/${{ github.base_ref || 'main' }}
+        run: ./scripts/check-gate-asymmetry.sh origin/${{ github.base_ref || 'develop' }}
 
       - name: Build (Debug)
         run: dotnet build excise.sln -c Debug
@@ -280,7 +281,7 @@ jobs:
         # font access; the full suite (incl. *_MatchesBaseline) was validated
         # crash-free across repeated runs. The earlier *_MatchesBaseline
         # exclusion (a workaround) is therefore removed.
-        if: steps.changes.outputs.gui == 'true' || github.ref == 'refs/heads/main'
+        if: steps.changes.outputs.gui == 'true' || github.ref == 'refs/heads/develop'
         run: |
           xvfb-run -a dotnet test Excise.App.Tests --no-build -c Debug \
             --logger "console;verbosity=normal" \
@@ -297,7 +298,7 @@ jobs:
       # "don't double the CI bill" reasoning as the Excise.Core.Tests step),
       # so it must not run on a job where the suite above didn't.
       - name: Skip budget (Excise.App.Tests)
-        if: steps.changes.outputs.gui == 'true' || github.ref == 'refs/heads/main'
+        if: steps.changes.outputs.gui == 'true' || github.ref == 'refs/heads/develop'
         run: ./scripts/check-skip-budget.sh Excise.App.Tests/Excise.App.Tests.csproj --trx Excise.App.Tests/TestResults/excise-app.trx
 
       - name: Upload coverage report as artifact
@@ -395,7 +396,7 @@ jobs:
         run: ./scripts/verify-true-redaction.sh
 
       - name: Gate asymmetry (correctness cannot be weakened by perf)
-        run: ./scripts/check-gate-asymmetry.sh origin/${{ github.base_ref || 'main' }}
+        run: ./scripts/check-gate-asymmetry.sh origin/${{ github.base_ref || 'develop' }}
 
       - name: Build (Debug)
         run: dotnet build excise.sln -c Debug
@@ -530,7 +531,7 @@ jobs:
       - name: Gate asymmetry (correctness cannot be weakened by perf)
         shell: pwsh
         run: |
-          & "C:\Program Files\Git\bin\bash.exe" ./scripts/check-gate-asymmetry.sh "origin/${{ github.base_ref || 'main' }}"
+          & "C:\Program Files\Git\bin\bash.exe" ./scripts/check-gate-asymmetry.sh "origin/${{ github.base_ref || 'develop' }}"
 
       - name: Build (Debug)
         run: dotnet build excise.sln -c Debug
