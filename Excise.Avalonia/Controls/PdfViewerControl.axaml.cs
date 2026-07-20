@@ -797,6 +797,10 @@ public partial class PdfViewerControl : UserControl
         if (_zoomHost != null)
         {
             _zoomScaleTransform = _zoomHost.LayoutTransform as ScaleTransform;
+            // The XAML default is ScaleX/Y=1; apply the display-scale
+            // correction (see SinglePageDisplayScale) from the start so the
+            // first single-page view is already at pt × 96/72 × zoom.
+            UpdateZoomTransform();
         }
 
         // Pointer handlers — attached at the UserControl root level using
@@ -1016,13 +1020,32 @@ public partial class PdfViewerControl : UserControl
     private static string ViewModeDescription(PdfViewMode mode) =>
         mode == PdfViewMode.Continuous ? "continuous reading view" : "single-page editing view";
 
+    /// <summary>
+    /// The single-page layout is in logical-render-DPI dips (a 540pt page is
+    /// 900 dips at the default 120), while the continuous view lays out at
+    /// 96-dpi dips (PointsToDip: the same page is 720 dips). Without
+    /// correction the same ZoomLevel displays 25% larger in single-page —
+    /// the mode-entry size jump of #693. This factor makes the DISPLAYED
+    /// size pt × 96/72 × zoom in both modes, without touching the internal
+    /// 120-dpi coordinate space the overlays and hit-testing use.
+    /// </summary>
+    private double SinglePageDisplayScale =>
+        96.0 / Math.Max(1, _currentSinglePageRenderDpi);
+
+    private void UpdateZoomTransform()
+    {
+        if (_zoomScaleTransform == null) return;
+        var scale = ZoomLevel * SinglePageDisplayScale;
+        _zoomScaleTransform.ScaleX = scale;
+        _zoomScaleTransform.ScaleY = scale;
+    }
+
     private void OnZoomLevelChanged()
     {
         if (_zoomScaleTransform != null)
         {
-            Trace($"Zoom -> {ZoomLevel:F3} mode={ViewMode} page={CurrentPage}");
-            _zoomScaleTransform.ScaleX = ZoomLevel;
-            _zoomScaleTransform.ScaleY = ZoomLevel;
+            Trace($"Zoom -> {ZoomLevel:F3} mode={ViewMode} page={CurrentPage} displayScale={SinglePageDisplayScale:F3}");
+            UpdateZoomTransform();
         }
         if (ViewMode == PdfViewMode.Continuous)
         {
@@ -1219,7 +1242,15 @@ public partial class PdfViewerControl : UserControl
         // zoom) so text is crisp on HiDPI (#682) AND when zoomed in (#683),
         // bounded by the single-page memory budget.
         var logicalDpi = EffectiveSinglePageRenderDpi(page);
-        _currentSinglePageRenderDpi = logicalDpi;
+        if (logicalDpi != _currentSinglePageRenderDpi)
+        {
+            // The display-scale correction depends on the logical DPI, which
+            // can differ per page (huge pages clamp down) — keep the
+            // ZoomHost transform in sync so the on-screen size stays
+            // pt × 96/72 × zoom regardless.
+            _currentSinglePageRenderDpi = logicalDpi;
+            UpdateZoomTransform();
+        }
         var box = page.CropBox.Normalize();
         var widthPt = page.Rotation is 90 or 270 ? box.Height : box.Width;
         var heightPt = page.Rotation is 90 or 270 ? box.Width : box.Height;
@@ -1249,6 +1280,11 @@ public partial class PdfViewerControl : UserControl
                 _pdfImage.Height = cachedDip.Height;
                 _pdfImage.Source = cachedBitmap;
                 Trace($"ImageSet(cache) page={pageNumber} imgWidth={_pdfImage.Width:F0} srcDip={cachedDip.Width:F0} srcPx={cachedBitmap.PixelSize.Width} zoom={ZoomLevel:F3}");
+                if (_pendingSingleFraction >= 0)
+                {
+                    // Mode switch waiting to restore the reading position (#693).
+                    Dispatcher.UIThread.Post(ApplyPendingSingleFraction, DispatcherPriority.Loaded);
+                }
             }
             HasError = false;
             ErrorMessage = null;
@@ -1307,6 +1343,12 @@ public partial class PdfViewerControl : UserControl
                         _pdfImage.Height = dip.Height;
                         _pdfImage.Source = bitmap;
                     }
+                    // A mode switch may be waiting to restore the carried
+                    // reading position (#693); the ScrollViewer only gets a
+                    // real extent after THIS render lands, so re-arm the
+                    // bounded retry from here (Loaded runs post-layout).
+                    if (_pendingSingleFraction >= 0)
+                        Dispatcher.UIThread.Post(ApplyPendingSingleFraction, DispatcherPriority.Loaded);
                 }
             }
             finally

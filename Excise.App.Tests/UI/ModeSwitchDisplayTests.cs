@@ -192,6 +192,117 @@ public class ModeSwitchDisplayTests
         }
     }
 
+    /// <summary>
+    /// #693 (size half): entering an editing mode must not change the page's
+    /// on-screen size. Continuous lays out at 96-dpi dips (pt × 96/72 × zoom);
+    /// before the fix, single-page displayed its 120-dpi layout at raw zoom —
+    /// the same page appeared 25% larger the moment a mode button was clicked.
+    /// The ZoomHost's transformed bounds ARE the displayed size.
+    /// </summary>
+    [FixedAvaloniaTheory]
+    [InlineData(1.0, 1.0)]
+    [InlineData(1.0, 2.0)]
+    [InlineData(0.6, 1.0)]
+    [InlineData(0.6, 2.0)]
+    public async Task ModeEntry_PreservesDisplayedPageSize(double zoom, double dpr)
+    {
+        var (vm, window, viewer, path) = await OpenTestDocumentAsync();
+        try
+        {
+            viewer.RenderScalingOverride = dpr;
+            vm.SetManualZoom(zoom);
+            await Task.Delay(200); window.UpdateLayout();
+
+            ModeCommand(vm, "select-text").Execute().Subscribe();
+            await PumpUntilAsync(window, () => SinglePageImage(viewer)?.Source != null);
+            window.UpdateLayout();
+
+            var zoomHost = viewer.FindControl<global::Avalonia.Controls.LayoutTransformControl>("ZoomHost")!;
+            var displayed = zoomHost.Bounds.Width;
+            var continuousEquivalent = LetterWidthPt * (96.0 / 72.0) * viewer.ZoomLevel;
+            displayed.Should().BeApproximately(continuousEquivalent, 3.0,
+                $"the single-page displayed width must equal the continuous layout width " +
+                $"(pt × 96/72 × zoom) — a jump means the mode switch rescales the page (#693); " +
+                $"zoom={viewer.ZoomLevel:F3} dpr={dpr}");
+        }
+        finally
+        {
+            window.Close();
+            TestPdfGenerator.CleanupTestFile(path);
+        }
+    }
+
+    /// <summary>
+    /// #693 (scroll half): the reading position must survive the mode switch.
+    /// Before the fix, entering an editing mode dropped the reader at the top
+    /// of the page (singleOffset 0/…) and switching back re-anchored to the
+    /// page top. Round-trip: continuous → select-text → continuous must come
+    /// back to (about) the same scroll offset, and the intermediate
+    /// single-page view must be scrolled into the page, not at its top.
+    /// </summary>
+    [FixedAvaloniaTheory]
+    [InlineData(1.0)]
+    [InlineData(2.0)]
+    public async Task ModeSwitch_PreservesReadingPosition(double dpr)
+    {
+        var (vm, window, viewer, path) = await OpenTestDocumentAsync();
+        try
+        {
+            viewer.RenderScalingOverride = dpr;
+            var cont = viewer.FindControl<ScrollViewer>("ContinuousScrollViewer")!;
+            await PumpUntilAsync(window, () => cont.Extent.Height > cont.Viewport.Height + 100);
+
+            // Scroll mid-document. A page-crossing scroll can settle snapped
+            // to the new page's top, so nudge a second time — WITHOUT
+            // crossing a page — to land mid-page, then read the settled
+            // position.
+            var target = cont.Extent.Height * 0.45;
+            cont.Offset = new global::Avalonia.Vector(cont.Offset.X, target);
+            await Task.Delay(150); window.UpdateLayout();
+            var pageHeight = cont.Extent.Height / 3; // 3-page test doc
+            cont.Offset = new global::Avalonia.Vector(cont.Offset.X, cont.Offset.Y + pageHeight * 0.4);
+            await Task.Delay(150); window.UpdateLayout();
+            var offBefore = cont.Offset.Y;
+            var pageBefore = vm.CurrentPageIndex;
+            offBefore.Should().BeGreaterThan(100, "the test must start scrolled into the document");
+
+            ModeCommand(vm, "select-text").Execute().Subscribe();
+            await PumpUntilAsync(window, () => SinglePageImage(viewer)?.Source != null);
+            var single = viewer.FindControl<ScrollViewer>("PdfScrollViewer")!;
+            // The carried fraction applies via bounded deferred retries once
+            // the freshly-rendered page has an extent — wait for it.
+            try
+            {
+                await PumpUntilAsync(window, () => single.Extent.Height > 1 && single.Offset.Y > 1,
+                    timeoutMs: 5000);
+            }
+            catch (TimeoutException)
+            {
+                var img = SinglePageImage(viewer);
+                throw new Xunit.Sdk.XunitException(
+                    "the carried reading position was not applied to the single-page scroller — " +
+                    $"extent={single.Extent} offset={single.Offset} viewport={single.Viewport} " +
+                    $"visible={single.IsVisible} page={vm.CurrentPageIndex} zoom={viewer.ZoomLevel:F3} " +
+                    $"imgW={img?.Width} imgSrc={(img?.Source != null)} offBefore={offBefore:F0} " +
+                    $"contExtent={cont.Extent.Height:F0}");
+            }
+
+            vm.CurrentPageIndex.Should().Be(pageBefore, "the mode switch must stay on the same page");
+            (single.Offset.Y / single.Extent.Height).Should().BeGreaterThan(0.05,
+                "the single-page view must open at the carried reading position, not the page top (#693)");
+
+            ModeCommand(vm, "select-text").Execute().Subscribe();
+            await PumpUntilAsync(window, () => cont.IsVisible);
+            await PumpUntilAsync(window, () => Math.Abs(cont.Offset.Y - offBefore) < 40,
+                timeoutMs: 10000);
+        }
+        finally
+        {
+            window.Close();
+            TestPdfGenerator.CleanupTestFile(path);
+        }
+    }
+
     // ── harness ─────────────────────────────────────────────────────────────
 
     private static async Task<(MainWindowViewModel vm, MainWindow window, PdfViewerControl viewer, string path)>

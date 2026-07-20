@@ -2035,6 +2035,20 @@ public partial class MainWindowViewModel : ViewModelBase
         this.RaisePropertyChanged(nameof(StatusText));
     }
 
+    /// <summary>
+    /// Set an explicit zoom level through the same path every user-initiated
+    /// zoom takes: latch <see cref="ZoomFitMode.Manual"/> so a latched
+    /// auto-fit (the default is FitWidth) cannot asynchronously re-apply
+    /// over it on the next viewport change. Tests that assign
+    /// <see cref="ZoomLevel"/> directly bypass the latch and race the refit.
+    /// </summary>
+    internal void SetManualZoom(double zoom)
+    {
+        _zoomFitMode = ZoomFitMode.Manual;
+        ZoomLevel = Math.Clamp(zoom, 0.25, 5.0);
+        this.RaisePropertyChanged(nameof(StatusText));
+    }
+
     private void ZoomFitWidth() => ZoomFitWidthInternal(latch: true);
     private void ZoomFitPage() => ZoomFitPageInternal(latch: true);
 
@@ -2092,12 +2106,15 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Page dimensions in viewer DIPs at zoom 1.0. Reads page size from
-    /// the parsed PdfCoreDocument (in PDF points) so we don't depend on
-    /// the legacy <c>_currentPageImage</c> being populated, and converts
-    /// to DIPs at the viewer's render DPI (the bitmap is tagged 96 DPI
-    /// in WriteableBitmap so 1 bitmap-pixel = 1 DIP, and 1 page-point at
-    /// our render DPI = render-DPI/72 bitmap-pixels).
+    /// Page dimensions in DISPLAYED dips at zoom 1.0. Since the #693 fix,
+    /// both view modes show a page at pt × 96/72 × zoom on screen — the
+    /// continuous slots lay out at 96-dpi dips, and the single-page
+    /// ZoomHost applies a 96/renderDpi correction to its 120-dpi layout.
+    /// Fit-width/fit-page therefore compute zoom against 96-dpi dips;
+    /// using the 120-dpi internal size here made continuous fit-width
+    /// silently underfill the viewport by 20%. Reads page size from the
+    /// parsed PdfCoreDocument so we don't depend on the legacy
+    /// <c>_currentPageImage</c> being populated.
     /// </summary>
     private bool TryGetPageDimensionsInViewerDips(out double widthDip, out double heightDip)
     {
@@ -2110,7 +2127,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var viewerRect = PdfCoordinateMapper.ToViewerDips(
             page,
             PdfPageRect.VisualPoints(pageNumber, 0, 0, page.VisualWidth, page.VisualHeight),
-            DefaultViewerRenderDpi);
+            96);
         widthDip = viewerRect.Width;
         heightDip = viewerRect.Height;
         return widthDip > 0 && heightDip > 0;

@@ -70,7 +70,7 @@ public class TextSelectionAlignmentTests
                 viewer.FindControl<Image>("PdfImage")?.Source != null && !viewer.IsLoading);
 
             // Set the zoom under test and wait for the raster to settle to it.
-            vm.ZoomLevel = zoom;
+            vm.SetManualZoom(zoom);
             await SettleAsync(window, viewer, zoom, dpr);
 
             // Find the text ink in VIEWER coordinates from a clean capture.
@@ -99,9 +99,14 @@ public class TextSelectionAlignmentTests
             var rects = layer.Children.OfType<Rectangle>()
                 .Select(r =>
                 {
+                    // Translate BOTH corners so the ZoomHost transform (zoom ×
+                    // display-scale, #693) is applied exactly rather than
+                    // approximated with a manual × zoom.
                     var tl = layer.TranslatePoint(
                         new Point(Canvas.GetLeft(r), Canvas.GetTop(r)), viewer)!.Value;
-                    return new Rect(tl.X, tl.Y, r.Width * ZoomOf(viewer), r.Height * ZoomOf(viewer));
+                    var br = layer.TranslatePoint(
+                        new Point(Canvas.GetLeft(r) + r.Width, Canvas.GetTop(r) + r.Height), viewer)!.Value;
+                    return new Rect(tl, br);
                 })
                 .ToList();
             rects.Should().NotBeEmpty();
@@ -146,7 +151,7 @@ public class TextSelectionAlignmentTests
                 viewer.FindControl<Image>("PdfImage")?.Source != null && !viewer.IsLoading);
 
             // Churn the zoom the way the live session did, then press Fit Width.
-            vm.ZoomLevel = 0.525;
+            vm.SetManualZoom(0.525);
             await SettleAsync(window, viewer, 0.525, dpr);
             vm.ZoomFitWidthCommand.Execute().Subscribe();
             await Task.Delay(200);
@@ -154,11 +159,13 @@ public class TextSelectionAlignmentTests
             var zoom = ZoomOf(viewer);
             await SettleAsync(window, viewer, zoom, dpr);
 
-            // The page's DISPLAYED width (image dip × zoom) must fit the
-            // single-page scroll viewport, and use most of it.
-            var img = viewer.FindControl<Image>("PdfImage")!;
+            // The page's DISPLAYED width must fit the single-page scroll
+            // viewport, and use most of it. The ZoomHost's transformed bounds
+            // ARE the displayed size (its scale is zoom × 96/renderDpi since
+            // the #693 display-scale unification — img.Width × zoom would
+            // overestimate by 25%).
             var scroller = viewer.FindControl<ScrollViewer>("PdfScrollViewer")!;
-            var displayedWidth = img.Width * zoom;
+            var displayedWidth = viewer.FindControl<global::Avalonia.Controls.LayoutTransformControl>("ZoomHost")!.Bounds.Width;
             var viewport = scroller.Viewport.Width;
             viewport.Should().BeGreaterThan(100, "single-page scroller must have a real viewport");
             displayedWidth.Should().BeLessThanOrEqualTo(viewport + 1,
@@ -193,17 +200,25 @@ public class TextSelectionAlignmentTests
         var deadline = Environment.TickCount64 + 20000;
         while (Environment.TickCount64 < deadline)
         {
+            window.UpdateLayout();
             var img = viewer.FindControl<Image>("PdfImage");
-            if (img?.Source is Bitmap src && !double.IsNaN(img.Width))
+            var host = viewer.FindControl<global::Avalonia.Controls.LayoutTransformControl>("ZoomHost");
+            if (img?.Source is Bitmap src && !double.IsNaN(img.Width) && host != null)
             {
                 var scale = Math.Max(1.0, zoom * dpr);
                 // The bitmap is 96-stamped (#697), so the layout dip size lives
                 // on the Image's Width; the raster is that × zoom × dpr.
-                var expected = img.Width * scale;
-                if (Math.Abs(src.PixelSize.Width - expected) <= 10) return;
+                var pxOk = Math.Abs(src.PixelSize.Width - img.Width * scale) <= 10;
+                // The raster alone cannot distinguish two zooms whose device
+                // scale clamps to the same value (e.g. fit≈0.98 and 0.6 at
+                // dpr 1 both floor to scale 1 → 900 px): also require the
+                // LAYOUT to reflect the requested zoom. Displayed width =
+                // img dips × zoom × 96/renderDpi (#693 display unification;
+                // 120 = DefaultRenderDpi for these pages).
+                var layoutOk = Math.Abs(host.Bounds.Width - img.Width * zoom * (96.0 / 120.0)) <= 2;
+                if (pxOk && layoutOk) return;
             }
             await Task.Delay(50);
-            window.UpdateLayout();
         }
     }
 
@@ -279,7 +294,7 @@ public class TextSelectionAlignmentTests
 
             // live sequence: zoom out in CONTINUOUS first, then enter the mode
             vm.CurrentPageIndex = 16;
-            vm.ZoomLevel = 0.42;
+            vm.SetManualZoom(0.42);
             await Task.Delay(400); window.UpdateLayout();
             vm.ToggleTextSelectionModeCommand.Execute().Subscribe();
             await PumpUntilAsync(window, () =>
@@ -337,8 +352,11 @@ public class TextSelectionAlignmentTests
             // ink to the image's right edge).
             var img = viewer.FindControl<Image>("PdfImage")!;
             var imgTopLeft = img.TranslatePoint(new Point(0, 0), viewer)!.Value;
-            var displayedW = img.Width * zoom;
-            var displayedH = img.Height * zoom;
+            // ZoomHost bounds = true displayed size (scale is zoom × 96/renderDpi
+            // since the #693 display-scale unification).
+            var zoomHostBounds = viewer.FindControl<global::Avalonia.Controls.LayoutTransformControl>("ZoomHost")!.Bounds;
+            var displayedW = zoomHostBounds.Width;
+            var displayedH = zoomHostBounds.Height;
             var pageInk = InkBounds(after);
             (pageInk.Top - imgTopLeft.Y).Should().BeLessThan(displayedH * 0.35,
                 $"page ink must start in the top third of the displayed image (dpr={dpr}); " +

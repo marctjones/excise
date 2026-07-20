@@ -529,16 +529,26 @@ public class PdfViewerHeadlessRenderTests
         var imageSource = (Bitmap)pdfImage!.Source!;
         var displayed = DecodeAvaloniaBitmap(imageSource);
 
-        viewer.Width = displayed.Width;
-        viewer.Height = displayed.Height;
-        window.Width = displayed.Width;
-        window.Height = displayed.Height;
-        viewer.Measure(new Size(displayed.Width, displayed.Height));
-        viewer.Arrange(new Rect(0, 0, displayed.Width, displayed.Height));
+        // Since the #693 display unification the page shows at
+        // imgDip × 96/renderDpi on screen (0.8 at the default 120), so a
+        // 96-dpi surface can never be 1:1 with the bitmap's pixels. Size the
+        // viewer to the DISPLAYED dips and sample the surface at the render
+        // DPI instead: 0.8 × (120/96) = 1.0 — the comparison stays
+        // pixel-exact with the bitmap.
+        const double displayScale = 96.0 / 120.0;
+        var dipW = displayed.Width * displayScale;
+        var dipH = displayed.Height * displayScale;
+        viewer.Width = dipW;
+        viewer.Height = dipH;
+        window.Width = dipW;
+        window.Height = dipH;
+        viewer.Measure(new Size(dipW, dipH));
+        viewer.Arrange(new Rect(0, 0, dipW, dipH));
         Dispatcher.UIThread.RunJobs();
         await Task.Delay(50);
 
-        using var renderTarget = new RenderTargetBitmap(new PixelSize(displayed.Width, displayed.Height));
+        using var renderTarget = new RenderTargetBitmap(
+            new PixelSize(displayed.Width, displayed.Height), new Vector(120, 120));
         renderTarget.Render(viewer);
         var visualSurface = DecodeAvaloniaBitmap(renderTarget);
 

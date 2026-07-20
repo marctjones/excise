@@ -140,6 +140,15 @@ public partial class PdfViewerControl
     private int _pendingContinuousAttempts;
     private bool _continuousRenderPassScheduled;
 
+    // Intra-page position carried across a view-mode switch (#693): the
+    // fraction of the current page sitting at the viewport top. Continuous
+    // uses it inside the pending-scroll retry; single-page has its own
+    // bounded retry because a ScrollViewer clamps Offset to a zero extent
+    // before layout.
+    private double _pendingContinuousFraction;
+    private double _pendingSingleFraction = -1;
+    private IDisposable? _pendingSingleFractionSub;
+
     internal int ContinuousRenderStartCount { get; private set; }
     internal int ContinuousRenderCancellationCount { get; private set; }
     internal int ContinuousRenderCacheHitCount { get; private set; }
@@ -178,6 +187,12 @@ public partial class PdfViewerControl
         Trace($"ViewMode -> {ViewMode} page={CurrentPage} zoom={ZoomLevel:F3} " +
               $"contOffset={_continuousScrollViewer?.Offset.Y:F0}/{_continuousScrollViewer?.Extent.Height:F0} " +
               $"singleOffset={_scrollViewer?.Offset.Y:F0}/{_scrollViewer?.Extent.Height:F0}");
+
+        // Capture the reader's intra-page position BEFORE flipping
+        // visibility — a hidden ScrollViewer's offset is not trustworthy.
+        // Applied to the destination view once it has laid out (#693).
+        double fraction = continuous ? SingleIntraPageFraction() : ContinuousIntraPageFraction();
+
         if (_continuousScrollViewer != null) _continuousScrollViewer.IsVisible = continuous;
         if (_scrollViewer != null) _scrollViewer.IsVisible = !continuous;
 
@@ -194,16 +209,72 @@ public partial class PdfViewerControl
             // overwritten by this deferred scroll dragging the user back to
             // wherever they were when the view mode flipped. Switching to
             // continuous and immediately jumping to a page did exactly that.
-            Dispatcher.UIThread.Post(() => ScrollToPageContinuous(CurrentPage), DispatcherPriority.Background);
+            Dispatcher.UIThread.Post(() => ScrollToPageContinuous(CurrentPage, fraction), DispatcherPriority.Background);
         }
         else
         {
             ReportActiveViewport();
             // Back to single-page: make sure the current page is rendered.
+            // The carried fraction is applied from the render-completion
+            // paths, NOT posted here: a post now would burn all its retries
+            // through the dispatcher before the async render gives the
+            // ScrollViewer a real extent, then give up.
+            _pendingSingleFraction = fraction;
             _ = RenderCurrentPageAsync();
         }
 
         UpdateViewerAutomationProperties();
+    }
+
+    /// <summary>Fraction of the current page above the viewport top in continuous view.</summary>
+    private double ContinuousIntraPageFraction()
+    {
+        if (_continuousScrollViewer == null || _continuousSlots == null) return 0;
+        int idx = CurrentPage - 1;
+        if (idx < 0 || idx >= _continuousSlots.Count) return 0;
+        var slot = _continuousSlots[idx];
+        if (slot.DisplayHeight <= 0) return 0;
+        return Math.Clamp(
+            (_continuousScrollViewer.Offset.Y - slot.TopDip) / slot.DisplayHeight, 0, 0.99);
+    }
+
+    /// <summary>Fraction of the page above the viewport top in single-page view.</summary>
+    private double SingleIntraPageFraction()
+    {
+        if (_scrollViewer == null) return 0;
+        var extent = _scrollViewer.Extent.Height;
+        if (extent <= 1) return 0;
+        return Math.Clamp(_scrollViewer.Offset.Y / extent, 0, 0.99);
+    }
+
+    /// <summary>
+    /// The single-page ScrollViewer clamps Offset to a zero extent until the
+    /// freshly-rendered page has laid out — and layout may be arbitrarily far
+    /// away (headless hosts only lay out on explicit pumps), so
+    /// dispatcher-post retries drain uselessly before it. Instead, wait on
+    /// the Extent property itself and apply the carried fraction the moment
+    /// the content gets a real size.
+    /// </summary>
+    private void ApplyPendingSingleFraction()
+    {
+        if (_pendingSingleFraction < 0 || _scrollViewer == null)
+        {
+            _pendingSingleFractionSub?.Dispose();
+            _pendingSingleFractionSub = null;
+            return;
+        }
+        var extent = _scrollViewer.Extent.Height;
+        if (extent <= 1)
+        {
+            _pendingSingleFractionSub ??= _scrollViewer
+                .GetObservable(ScrollViewer.ExtentProperty)
+                .Subscribe(new AnonymousObserver<Size>(_ => ApplyPendingSingleFraction()));
+            return;
+        }
+        _pendingSingleFractionSub?.Dispose();
+        _pendingSingleFractionSub = null;
+        _scrollViewer.Offset = new Vector(_scrollViewer.Offset.X, _pendingSingleFraction * extent);
+        _pendingSingleFraction = -1;
     }
 
     /// <summary>(Re)build the per-page slots from the current document.</summary>
@@ -281,9 +352,15 @@ public partial class PdfViewerControl
 
     // ---- Scroll <-> CurrentPage sync -----------------------------------
 
-    private void ScrollToPageContinuous(int pageNumber)
+    private void ScrollToPageContinuous(int pageNumber) => ScrollToPageContinuous(pageNumber, 0);
+
+    /// <param name="intraPageFraction">Fraction of the page to place above the
+    /// viewport top — 0 for plain navigation (outline, page number, search);
+    /// the mode switch passes the carried reading position (#693).</param>
+    private void ScrollToPageContinuous(int pageNumber, double intraPageFraction)
     {
         if (pageNumber < 1) return;
+        _pendingContinuousFraction = intraPageFraction;
 
         // The slots may not exist yet: the document has loaded but the items panel
         // has not measured. Dropping the navigation here (the old early return) is
@@ -300,7 +377,8 @@ public partial class PdfViewerControl
 
         if (pageNumber > _continuousSlots.Count) return;
 
-        var targetY = _continuousSlots[pageNumber - 1].TopDip;
+        var slot = _continuousSlots[pageNumber - 1];
+        var targetY = slot.TopDip + intraPageFraction * slot.DisplayHeight;
         var x = _continuousScrollViewer.Offset.X;
         _continuousScrollViewer.Offset = new Vector(x, targetY);
 
@@ -356,7 +434,8 @@ public partial class PdfViewerControl
 
         if (page < 1 || page > _continuousSlots.Count) { _pendingContinuousPage = null; return; }
 
-        var targetY = _continuousSlots[page - 1].TopDip;
+        var slot = _continuousSlots[page - 1];
+        var targetY = slot.TopDip + _pendingContinuousFraction * slot.DisplayHeight;
         if (ReachedContinuousTarget(targetY))
         {
             _pendingContinuousPage = null;
