@@ -1,6 +1,6 @@
 using Avalonia;
 using Avalonia.Headless;
-using ReactiveUI.Avalonia;
+using ReactiveUI;
 
 // Registers the headless app builder used by [FixedAvaloniaFact] tests across the
 // assembly. Required for UseHeadlessDrawing=false to take effect so that
@@ -20,12 +20,14 @@ public class TestAppBuilder
     public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<TestApp>()
         .UseSkia()
         // Wire ReactiveUI to the Avalonia (headless) dispatcher exactly as the
-        // real app does in Program.cs. Without this, RxApp.MainThreadScheduler
-        // is not the UI dispatcher, so a CreateFromTask command's IsExecuting/
-        // CanExecute notifications fire on the thread-pool continuation and
-        // Button/MenuItem.get_Command() throws a cross-thread InvalidOperation
-        // exception during/after the test. (Issue #358)
-        .UseReactiveUI(b => b.WithAvalonia())
+        // real app does in Program.cs (vendored scheduler, #593). Without
+        // this, RxApp.MainThreadScheduler is not the UI dispatcher, so a
+        // CreateFromTask command's IsExecuting/CanExecute notifications fire
+        // on the thread-pool continuation and Button/MenuItem.get_Command()
+        // throws a cross-thread InvalidOperation exception during/after the
+        // test. (Issue #358)
+        .AfterSetup(_ =>
+            RxSchedulers.MainThreadScheduler = Excise.App.Threading.AvaloniaDispatcherScheduler.Instance)
         .UseHeadless(new AvaloniaHeadlessPlatformOptions
         {
             // Route drawing through the real Skia backend so that Bitmap(stream)

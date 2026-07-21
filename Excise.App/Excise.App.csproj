@@ -57,19 +57,26 @@
        -r <rid>` (or scripts/run-aot-smoke.sh). Validated: the GUI AOT-compiles and
        passes the packaged GUI smoke on osx-arm64. First-party Excise.* code is
        AOT-clean (source-generated JSON via ExciseJsonContext, no reflection-based
-       ReactiveUI WhenAnyValue). The only remaining warnings are assembly-level
-       roll-ups (IL2104 trim / IL3053 AOT) from third-party GUI frameworks that are
-       not AOT-annotated but function under AOT as the smoke confirms —
-       ReactiveUI.Avalonia, FluentAvalonia, Avalonia.Controls.DataGrid, CSJ2K.
-       They are acknowledged here so the AOT build meets the project's zero-warning
-       bar; per-assembly triage is tracked in #593. -->
+       ReactiveUI WhenAnyValue). #593 eliminated the third-party warning roll-ups
+       at the source instead of suppressing them wholesale:
+       ReactiveUI.Avalonia dropped (scheduler vendored —
+       Threading/AvaloniaDispatcherScheduler.cs); Avalonia.Controls.DataGrid
+       excluded below (unused transitive of FluentAvaloniaUI — removing it also
+       removes FluentAvalonia's IL2104+IL3053, which lived entirely in its
+       DataGrid integration). The ONE remaining roll-up is CSJ2K's IL2104: its
+       J2kSetup platform probe runs Assembly.DefinedTypes scans from static
+       constructors, unfixable from outside the package. It scans only CSJ2K's
+       own (untrimmed-because-reachable) assembly, and the AOT packaged-GUI
+       smoke confirms JPX decode works; the terminal fix is the native JPX
+       decoder (#403), which removes the package. -->
   <PropertyGroup Condition="'$(PublishAot)' == 'true'">
     <!-- ReadyToRun and NativeAOT are mutually exclusive publish modes; the
          Release block above turns R2R on, so it must be turned back off here. -->
     <PublishReadyToRun>false</PublishReadyToRun>
     <!-- PDF text handling needs culture data; do NOT trim globalization. -->
     <InvariantGlobalization>false</InvariantGlobalization>
-    <NoWarn>$(NoWarn);IL2104;IL3053</NoWarn>
+    <!-- CSJ2K only — see the #593 note above. IL3053 no longer fires at all. -->
+    <NoWarn>$(NoWarn);IL2104</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -78,15 +85,22 @@
 
   <ItemGroup>
     <!-- Avalonia UI Framework (MIT License), on the 12.0.x line.
-         ReactiveUI.Avalonia provides the ReactiveUI integration; it is held
-         at 12.0.1 deliberately (14.x is a major jump that shifts the
-         Avalonia/ReactiveUI floors — see #340). -->
+         ReactiveUI.Avalonia was dropped in #593: its only load-bearing piece
+         was the main-thread scheduler wiring, now vendored at
+         Threading/AvaloniaDispatcherScheduler.cs (wired in Program.cs), and
+         the package ships without trim annotations (IL2104). -->
     <PackageReference Include="Avalonia" Version="12.0.5" />
     <PackageReference Include="Avalonia.Desktop" Version="12.0.5" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.5" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.5" />
-    <PackageReference Include="ReactiveUI.Avalonia" Version="12.0.3" />
     <PackageReference Include="FluentAvaloniaUI" Version="3.0.0-preview4" />
+    <!-- Unused transitive of FluentAvaloniaUI, excluded (#593): nothing in
+         the app or in our use of FluentAvalonia touches DataGrid, and its
+         assembly (plus FluentAvalonia's DataGrid integration, the sole
+         source of FluentAvalonia's IL2104/IL3053) carried four of the six
+         AOT warning roll-ups. If a DataGrid is ever wanted, delete this
+         line. -->
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="12.0.0" ExcludeAssets="all" />
     <!-- FluentIcons.Avalonia.Fluent dropped: not referenced anywhere
          in source/axaml. Shell icons use local vector StreamGeometry resources
          instead of the FluentIcons component library. Removing unblocks
@@ -100,8 +114,8 @@
     <PackageReference Include="BouncyCastle.Cryptography" Version="2.6.2" />
     <PackageReference Include="SkiaSharp" Version="3.119.4" /> <!-- MIT License -->
 
-    <!-- MVVM and Utilities. ReactiveUI on the 23.2.x line, compatible with
-         the ReactiveUI.Avalonia 12.0.x integration glue above. -->
+    <!-- MVVM and Utilities. ReactiveUI on the 23.2.x line; the Avalonia
+         scheduler glue is vendored (see the #593 note above). -->
     <PackageReference Include="ReactiveUI" Version="23.2.28" />
     <!-- ReactiveUI.Fody dropped: no [Reactive] attribute or
          `using ReactiveUI.Fody;` anywhere — viewmodels expose
