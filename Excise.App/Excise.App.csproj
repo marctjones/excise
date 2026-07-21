@@ -57,26 +57,30 @@
        -r <rid>` (or scripts/run-aot-smoke.sh). Validated: the GUI AOT-compiles and
        passes the packaged GUI smoke on osx-arm64. First-party Excise.* code is
        AOT-clean (source-generated JSON via ExciseJsonContext, no reflection-based
-       ReactiveUI WhenAnyValue). #593 eliminated the third-party warning roll-ups
-       at the source instead of suppressing them wholesale:
-       ReactiveUI.Avalonia dropped (scheduler vendored —
-       Threading/AvaloniaDispatcherScheduler.cs); Avalonia.Controls.DataGrid
-       excluded below (unused transitive of FluentAvaloniaUI — removing it also
-       removes FluentAvalonia's IL2104+IL3053, which lived entirely in its
-       DataGrid integration). The ONE remaining roll-up is CSJ2K's IL2104: its
-       J2kSetup platform probe runs Assembly.DefinedTypes scans from static
-       constructors, unfixable from outside the package. It scans only CSJ2K's
-       own (untrimmed-because-reachable) assembly, and the AOT packaged-GUI
-       smoke confirms JPX decode works; the terminal fix is the native JPX
-       decoder (#403), which removes the package. -->
+       ReactiveUI WhenAnyValue). #593 outcome: ReactiveUI.Avalonia's roll-up is
+       ELIMINATED (package dropped; scheduler vendored at
+       Threading/AvaloniaDispatcherScheduler.cs). The remaining roll-ups are
+       structural and stay suppressed with reasons:
+       - FluentAvalonia + Avalonia.Controls.DataGrid (IL2104/IL3053 each):
+         FluentAvaloniaTheme's compiled XAML hard-references DataGrid control
+         themes in its constructor, so the assembly cannot be excluded — the
+         app crashes at startup without it (see the DataGrid PackageReference
+         note below). Functionality under AOT is covered by the packaged GUI
+         smoke.
+       - CSJ2K (IL2104): its J2kSetup platform probe runs
+         Assembly.DefinedTypes scans from static constructors, unfixable from
+         outside the package. It scans only CSJ2K's own
+         untrimmed-because-reachable assembly; JPX decode is covered by the
+         Core filter tests. Terminal fix: the native JPX decoder (#403),
+         which removes the package. -->
   <PropertyGroup Condition="'$(PublishAot)' == 'true'">
     <!-- ReadyToRun and NativeAOT are mutually exclusive publish modes; the
          Release block above turns R2R on, so it must be turned back off here. -->
     <PublishReadyToRun>false</PublishReadyToRun>
     <!-- PDF text handling needs culture data; do NOT trim globalization. -->
     <InvariantGlobalization>false</InvariantGlobalization>
-    <!-- CSJ2K only — see the #593 note above. IL3053 no longer fires at all. -->
-    <NoWarn>$(NoWarn);IL2104</NoWarn>
+    <!-- FluentAvalonia/DataGrid/CSJ2K only — see the #593 note above. -->
+    <NoWarn>$(NoWarn);IL2104;IL3053</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -94,13 +98,17 @@
     <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.5" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.5" />
     <PackageReference Include="FluentAvaloniaUI" Version="3.0.0-preview4" />
-    <!-- Unused transitive of FluentAvaloniaUI, excluded (#593): nothing in
-         the app or in our use of FluentAvalonia touches DataGrid, and its
-         assembly (plus FluentAvalonia's DataGrid integration, the sole
-         source of FluentAvalonia's IL2104/IL3053) carried four of the six
-         AOT warning roll-ups. If a DataGrid is ever wanted, delete this
-         line. -->
-    <PackageReference Include="Avalonia.Controls.DataGrid" Version="12.0.0" ExcludeAssets="all" />
+    <!-- ⚠️ Avalonia.Controls.DataGrid MUST ship even though nothing in the
+         app uses a DataGrid: FluentAvaloniaTheme's compiled XAML
+         (Styling/ControlThemes/Controls.axaml) hard-references DataGrid
+         control themes in its CONSTRUCTOR, so the app dies at startup with
+         FileNotFoundException without the assembly. #593 briefly excluded it
+         (ExcludeAssets="all") to kill its AOT warning roll-ups — every
+         headless test stayed green because the test host's TestApp never
+         loads FluentAvaloniaTheme, and the live launch crash only surfaced
+         afterwards. AppThemeCanaryTests constructs the real theme so this
+         class of exclusion can never pass the suite again. -->
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="12.0.0" />
     <!-- FluentIcons.Avalonia.Fluent dropped: not referenced anywhere
          in source/axaml. Shell icons use local vector StreamGeometry resources
          instead of the FluentIcons component library. Removing unblocks
