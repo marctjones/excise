@@ -4,6 +4,61 @@ All notable changes to excise are documented here. Format roughly follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 semantic versioning.
 
+## [3.2.0] - 2026-07-22
+
+A stabilization release: viewport continuity is preserved across zoom and
+view-mode changes, the Native AOT release lane publishes with zero warnings,
+and saved editing output (typewriter, forms) is now verified against
+independent reference renderers.
+
+### Fixed
+- **Continuous viewport anchoring across zoom** (#700) — zooming in the
+  continuous viewer now keeps the page under the viewport centre in place and
+  the page-number label live, instead of jumping to the top and freezing the
+  label. The current page and intra-page fraction are captured before the
+  re-layout and restored through a permanent scroll-extent subscription.
+- **View-mode switch visual continuity** (#693) — switching between
+  single-page and continuous modes carries the reading position over and uses
+  a unified display scale, so text no longer jumps or changes size across the
+  switch.
+- **Duplicate class-handler registration** (#700) — viewer input class handlers
+  were registered in the instance constructor, so every constructed viewer
+  added another static handler (N-plicated event dispatch, a source of
+  UI-test flakiness). Moved to the static constructor.
+- **Packaged/AOT startup crash** (#593) — `FluentAvaloniaTheme`'s compiled-XAML
+  constructor hard-references the DataGrid themes at startup; an over-eager
+  assembly trim broke app launch in the published bundle. DataGrid is restored
+  and guarded by `AppThemeCanaryTests` asserting on the app's build output.
+
+### Changed
+- **Native AOT publishes with zero warnings** (#593) — `ReactiveUI.Avalonia`
+  was dropped (the main-thread scheduler is vendored as
+  `RxSchedulers.MainThreadScheduler`; `RxApp` is gone in ReactiveUI 23), and
+  third-party AOT/IL warning roll-ups were eliminated at the source. The lone
+  survivor (CSJ2K `IL2104`, a terminal cctor assembly-scan) is narrowly
+  suppressed; unsuppressed AOT publish now reports 0 warnings.
+- **AOT support matrix documented** (#595) — `osx-arm64` is shipped and
+  validated by the AOT CI lane and `run-aot-smoke.sh`; `win-x64`, `linux-x64`,
+  and `osx-x64` are explicitly deferred with probe issues. Release notes and
+  docs must not claim AOT targets beyond this table.
+
+### Added
+- **Editing-output fidelity gates** (#610, #611) — typewriter and interactive
+  form saves are now verified against mutool/Ghostscript reference renders, so
+  regressions in what excise writes are caught by independent tools. Interactive
+  form saves are documented as `/NeedAppearances`-dependent (excise generates no
+  appearance stream on fill). Closes epic #605.
+
+### CI / Infrastructure
+- **Windows veraPDF install fixed** (#666) — it had never actually run (a
+  pwsh-wrapped bash string expanded `$(find …)` as its own subexpression behind
+  `continue-on-error`); veraPDF setup failures are now explicit on all three OS
+  jobs, and veraPDF prints its version on Windows for the first time.
+- **Branch model** — `develop` is the default branch where work lands; `main`
+  is a stable release pointer that only ever advances to release tags.
+- Removed the never-configured Gemini workflows that reported red on every PR
+  (#699).
+
 ## [3.1.0] - 2026-07-20
 
 A display-correctness release: text is now crisp on HiDPI displays and at any
