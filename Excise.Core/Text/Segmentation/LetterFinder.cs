@@ -71,6 +71,22 @@ public class LetterFinder
             }
         }
 
+        // RTL bridge (#632): the extractor reorders visual-order Arabic/Hebrew
+        // runs into LOGICAL order, while the operator's decoded text stays in
+        // raw content-stream (visual) order. When the raw text contains
+        // strong-RTL characters and the direct search failed, search for the
+        // logically-reordered form and pair each operation character with the
+        // letter it moved to under the same permutation.
+        int[]? rtlPermutation = null;
+        if (foundIndices.Count == 0 && BidiReorderer.ContainsStrongRtl(operationText))
+        {
+            var permutation = BidiReorderer.BuildRtlRunPermutation(operationText);
+            var logicalText = BidiReorderer.ReverseRtlRunsInString(operationText);
+            foundIndices = FindAllTextOccurrences(fullPageText, logicalText);
+            if (foundIndices.Count > 0)
+                rtlPermutation = permutation;
+        }
+
         if (foundIndices.Count == 0)
             return matches;
 
@@ -84,7 +100,12 @@ public class LetterFinder
         int count = Math.Min(operationText.Length, allLetters.Count - matchIndex);
         for (int i = 0; i < count; i++)
         {
-            var letter = allLetters[matchIndex + i];
+            // Under an RTL permutation, operation character i landed at page-
+            // letter offset permutation[i]; identity otherwise.
+            int offset = rtlPermutation != null && rtlPermutation[i] < count
+                ? rtlPermutation[i]
+                : i;
+            var letter = allLetters[matchIndex + offset];
             matches.Add(new LetterMatch
             {
                 CharacterIndex = i,

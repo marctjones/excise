@@ -165,13 +165,24 @@ public static class PdfDocumentRedactionExtensions
         var removed = 0;
         var kept = new List<ContentOperator>(content.Operators.Count);
 
+        // Operator text is raw content-stream order; RTL documents usually
+        // store Arabic/Hebrew in VISUAL (reversed) order, so a logical-order
+        // needle must also be checked in its visual form (#632).
+        var visualNeedle = BidiReorderer.ContainsStrongRtl(searchText)
+            ? BidiReorderer.ReverseRtlRunsInString(searchText)
+            : null;
+
         foreach (var op in content.Operators)
         {
-            if (op.Category == OperatorCategory.TextShowing &&
-                (op.TextContent ?? string.Empty).IndexOf(searchText, comparison) >= 0)
+            if (op.Category == OperatorCategory.TextShowing)
             {
-                removed++;
-                continue;
+                var opText = op.TextContent ?? string.Empty;
+                if (opText.IndexOf(searchText, comparison) >= 0 ||
+                    (visualNeedle != null && opText.IndexOf(visualNeedle, comparison) >= 0))
+                {
+                    removed++;
+                    continue;
+                }
             }
 
             kept.Add(op);
