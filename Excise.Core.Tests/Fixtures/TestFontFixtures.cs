@@ -19,6 +19,9 @@ internal static class TestFontFixtures
     /// <summary>A CFF-flavored OpenType ('OTTO') fixture — Libertinus Serif, SIL OFL 1.1.</summary>
     public static byte[] LoadLibertinusSerifCffBytes() => LoadEmbedded("LibertinusSerif-Regular.otf");
 
+    /// <summary>A raw (unwrapped, name-keyed) CFF fixture — Inconsolata, SIL OFL 1.1.</summary>
+    public static byte[] LoadInconsolataCffBytes() => LoadEmbedded("Inconsolata.cff");
+
     private static byte[] LoadEmbedded(string fileName)
     {
         var asm = Assembly.GetExecutingAssembly();

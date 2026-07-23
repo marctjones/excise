@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Text;
 using Excise.Core.Document;
+using Excise.Core.Fonts;
 using Excise.Core.Primitives;
 
 namespace Excise.Core.Text;
@@ -29,6 +30,18 @@ public class TextExtractor
     // program the only GID→Unicode bridge is the standard Macintosh glyph order
     // (#532; see DecodeCharacter). Recomputed on each /Tf.
     private bool _useStandardMacGlyphOrder;
+    // For an EMBEDDED Type0 font with Identity-H/V encoding and no /ToUnicode
+    // (#515 slice 3): code (CID) → Unicode recovered by reading the embedded
+    // font program's own character map in REVERSE (Unicode→GID becomes
+    // GID→Unicode; CIDToGIDMap applied first when present). Embedded subset
+    // glyph orders are arbitrary, so #532's standard-Mac-order guess is
+    // deliberately scoped to NON-embedded fonts — without this map, embedded
+    // Identity-H text fell through to DecodeWinAnsi(rawGID) = garbage, which
+    // is a silent redaction failure (excise cannot redact what it cannot
+    // read). Null when the current font is out of scope or the embedded
+    // program yields nothing. Recomputed on each /Tf (cached per font dict).
+    private Dictionary<int, string>? _embeddedCidToUnicode;
+    private readonly Dictionary<PdfDictionary, Dictionary<int, string>?> _embeddedCidToUnicodeCache = new(ReferenceEqualityComparer.Instance);
     // True when /ToUnicode is the predefined-CMap NAME /Identity-H or /Identity-V
     // (not a stream): the 2-byte code IS the UTF-16BE Unicode scalar, so it must
     // be decoded directly rather than left to the WinAnsi fallback (which is only
@@ -858,6 +871,7 @@ public class TextExtractor
                     (_differencesGlyphNames, _differencesBaseEncoding) = LoadDifferencesEncoding(_currentFont);
                     _toUnicodeIdentity = _toUnicodeMap == null && ToUnicodeIsIdentity(_currentFont);
                     _useStandardMacGlyphOrder = _toUnicodeMap == null && UsesStandardMacGlyphOrderFallback(_currentFont);
+                    _embeddedCidToUnicode = _toUnicodeMap == null ? LoadEmbeddedCidToUnicodeMap(_currentFont) : null;
                     LoadFontGeometry();
                 }
                 break;
@@ -1490,6 +1504,18 @@ public class TextExtractor
             return ((char)charCode).ToString();
         }
 
+        // Embedded Type0 + Identity-H/V + no /ToUnicode (#515 slice 3): the
+        // 2-byte code is a CID whose GID lives in the EMBEDDED font program,
+        // so the program's own cmap/charset — read in reverse — is the
+        // authoritative GID→Unicode source (higher priority than any
+        // glyph-order guess; #532's Mac-order fallback stays scoped to
+        // non-embedded fonts). Codes the embedded map doesn't cover fall
+        // through to the existing behavior rather than inventing a mapping.
+        if (_embeddedCidToUnicode != null && _embeddedCidToUnicode.TryGetValue(charCode, out var embeddedUnicode))
+        {
+            return embeddedUnicode;
+        }
+
         // /Encoding << /Differences [...] >> (#662): a Differences entry for
         // this exact code overrides everything below it — the glyph name it
         // assigns takes priority over both /BaseEncoding and the bare-name
@@ -1606,6 +1632,256 @@ public class TextExtractor
             || fd.GetOptional("FontFile") != null;
         return !embedded;
     }
+
+    /// <summary>
+    /// For an EMBEDDED Type0 font with Identity-H/V encoding and no
+    /// <c>/ToUnicode</c> (#515 slice 3), builds a code (CID) → Unicode map by
+    /// reading the embedded font program's own character map in REVERSE:
+    /// <list type="bullet">
+    /// <item><c>/FontFile2</c> (CIDFontType2 TrueType): the font's cmap table is
+    /// Unicode→GID; reversed it is GID→Unicode. <c>/CIDToGIDMap</c> is honored —
+    /// for a stream, code→CID→GID first; for <c>/Identity</c> (or absent),
+    /// CID == GID.</item>
+    /// <item><c>/FontFile3</c> (CIDFontType0 CFF): a non-CID-keyed CFF names its
+    /// glyphs, so GID→name→Unicode via the Adobe Glyph List (per §9.7.4.2 the CID
+    /// is the glyph index directly); a CID-keyed CFF has no glyph names, so
+    /// Unicode is only recoverable from an OpenType wrapper's sfnt cmap
+    /// (charset gives CID→GID).</item>
+    /// </list>
+    /// Returns null when the font is out of scope (non-Type0, has /ToUnicode,
+    /// non-Identity encoding, not embedded) or the embedded program yields no
+    /// mappings — callers then fall through to the pre-existing behavior.
+    /// Scope mirrors #532's guards exactly, on the opposite (embedded) side.
+    /// </summary>
+    private Dictionary<int, string>? LoadEmbeddedCidToUnicodeMap(PdfDictionary? font)
+    {
+        if (font == null || font.GetNameOrNull("Subtype") != "Type0")
+            return null;
+
+        // A present /ToUnicode (stream or predefined name) is the producer's
+        // declared map and wins; this path is only for fonts with none at all.
+        if (font.GetOptional("ToUnicode") != null)
+            return null;
+
+        var enc = _page.Document.Resolve(font.GetOptional("Encoding") ?? PdfNull.Instance);
+        if (enc is not PdfName encName || (encName.Value != "Identity-H" && encName.Value != "Identity-V"))
+            return null;
+
+        if (_embeddedCidToUnicodeCache.TryGetValue(font, out var cached))
+            return cached;
+
+        Dictionary<int, string>? map = null;
+        try
+        {
+            var descObj = _page.Document.Resolve(font.GetOptional("DescendantFonts") ?? PdfNull.Instance);
+            var descendant = descObj switch
+            {
+                PdfArray arr when arr.Count > 0 => _page.Document.Resolve(arr[0]) as PdfDictionary,
+                PdfDictionary d => d,
+                _ => null,
+            };
+            if (descendant != null
+                && _page.Document.Resolve(descendant.GetOptional("FontDescriptor") ?? PdfNull.Instance)
+                    is PdfDictionary fd)
+            {
+                if (_page.Document.Resolve(fd.GetOptional("FontFile2") ?? PdfNull.Instance) is PdfStream ff2)
+                    map = BuildCidToUnicodeFromTrueType(ff2.DecodedData, descendant);
+                else if (_page.Document.Resolve(fd.GetOptional("FontFile3") ?? PdfNull.Instance) is PdfStream ff3)
+                    map = BuildCidToUnicodeFromCff(ff3.DecodedData);
+            }
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            // Malformed/truncated embedded program — fall back to existing
+            // behavior rather than failing extraction.
+            map = null;
+        }
+
+        if (map is { Count: 0 })
+            map = null;
+        _embeddedCidToUnicodeCache[font] = map;
+        return map;
+    }
+
+    /// <summary>
+    /// GID→Unicode for an embedded TrueType program (reverse of its cmap),
+    /// re-keyed by CID through <c>/CIDToGIDMap</c> when that is a stream.
+    /// Returns null when the program has no usable cmap (common for subsets
+    /// that drop it — exactly the case where no mapping should be invented).
+    /// </summary>
+    private Dictionary<int, string>? BuildCidToUnicodeFromTrueType(byte[] fontData, PdfDictionary descendant)
+    {
+        TrueTypeFontFile ttf;
+        try
+        {
+            ttf = TrueTypeFontFile.Parse(fontData);
+        }
+        catch (NotSupportedException)
+        {
+            return null; // no cmap table / unsupported flavor
+        }
+
+        var gidToCodepoint = ReverseCmap(ttf.Cmap);
+        if (gidToCodepoint.Count == 0)
+            return null;
+
+        // /CIDToGIDMap stream: 2 bytes per CID, big-endian GID. Map
+        // code→CID→GID before the reverse-cmap lookup. /Identity or absent
+        // means CID == GID.
+        var cidToGidObj = descendant.GetOptional("CIDToGIDMap");
+        if (cidToGidObj != null && _page.Document.Resolve(cidToGidObj) is PdfStream cidToGidStream)
+        {
+            var data = cidToGidStream.DecodedData;
+            var byCid = new Dictionary<int, string>();
+            int count = data.Length / 2;
+            for (int cid = 0; cid < count; cid++)
+            {
+                int gid = (data[cid * 2] << 8) | data[cid * 2 + 1];
+                if (gid != 0 && gidToCodepoint.TryGetValue(gid, out var cp))
+                    byCid[cid] = char.ConvertFromUtf32(cp);
+            }
+            return byCid;
+        }
+
+        var byGid = new Dictionary<int, string>(gidToCodepoint.Count);
+        foreach (var (gid, cp) in gidToCodepoint)
+            byGid[gid] = char.ConvertFromUtf32(cp);
+        return byGid;
+    }
+
+    /// <summary>
+    /// CID→Unicode for an embedded /FontFile3 program: raw CFF (Subtype
+    /// /Type1C or /CIDFontType0C) or OpenType-wrapped CFF (Subtype /OpenType).
+    /// </summary>
+    private static Dictionary<int, string>? BuildCidToUnicodeFromCff(byte[] fontData)
+    {
+        // OpenType wrapper: its sfnt cmap is a direct Unicode→GID map (reverse
+        // it), and the raw CFF table inside carries the charset/CID data.
+        Dictionary<int, int>? gidToCodepoint = null;
+        byte[]? cff = fontData;
+        if (fontData.Length >= 4 && IsSfnt(ReadU32(fontData, 0)))
+        {
+            try
+            {
+                gidToCodepoint = ReverseCmap(TrueTypeFontFile.Parse(fontData).Cmap);
+            }
+            catch (NotSupportedException)
+            {
+                gidToCodepoint = null;
+            }
+            cff = ExtractSfntTable(fontData, "CFF ");
+        }
+
+        var info = cff != null ? CffParser.Parse(cff) : null;
+        var result = new Dictionary<int, string>();
+
+        if (info is { IsCidKeyed: true })
+        {
+            // CID-keyed CFF: charset gives CID→GID, but glyphs have no names —
+            // Unicode is only recoverable via an sfnt cmap (OpenType wrapper).
+            if (gidToCodepoint == null || info.CidToGlyph == null)
+                return null;
+            foreach (var (cid, gid) in info.CidToGlyph)
+            {
+                if (gid != 0 && gidToCodepoint.TryGetValue(gid, out var cp))
+                    result[cid] = char.ConvertFromUtf32(cp);
+            }
+            return result;
+        }
+
+        if (info != null && info.GlyphNames.Length > 0)
+        {
+            // Non-CID-keyed CFF as a CIDFontType0 descendant: per §9.7.4.2 the
+            // CID is used directly as the glyph index. GID→name→Unicode via
+            // the AGL / uniXXXX convention; sfnt cmap as a secondary source.
+            for (int gid = 1; gid < info.GlyphNames.Length; gid++)
+            {
+                var name = info.GlyphNames[gid];
+                if (!string.IsNullOrEmpty(name))
+                {
+                    var unicode = GlyphNameToUnicode(name);
+                    if (unicode != null)
+                    {
+                        result[gid] = unicode;
+                        continue;
+                    }
+                }
+                if (gidToCodepoint != null && gidToCodepoint.TryGetValue(gid, out var cp))
+                    result[gid] = char.ConvertFromUtf32(cp);
+            }
+            return result;
+        }
+
+        // No usable CFF info; fall back to the sfnt cmap alone (CID == GID).
+        if (gidToCodepoint != null)
+        {
+            foreach (var (gid, cp) in gidToCodepoint)
+                result[gid] = char.ConvertFromUtf32(cp);
+            return result;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Reverses a font cmap (Unicode codepoint → GID) into GID → codepoint.
+    /// When several codepoints share a GID, a non-Private-Use codepoint beats a
+    /// Private-Use one, then the smaller codepoint wins — deterministic, and
+    /// avoids emitting PUA garbage when a subset also maps a real character.
+    /// </summary>
+    private static Dictionary<int, int> ReverseCmap(IReadOnlyDictionary<int, int> unicodeToGid)
+    {
+        var gidToCodepoint = new Dictionary<int, int>();
+        foreach (var (cp, gid) in unicodeToGid)
+        {
+            if (gid == 0 || cp <= 0 || cp > 0x10FFFF || (cp >= 0xD800 && cp <= 0xDFFF))
+                continue;
+            if (!gidToCodepoint.TryGetValue(gid, out var existing) || PreferCodepoint(cp, existing))
+                gidToCodepoint[gid] = cp;
+        }
+        return gidToCodepoint;
+    }
+
+    private static bool PreferCodepoint(int candidate, int existing)
+    {
+        bool candidatePua = IsPrivateUse(candidate);
+        bool existingPua = IsPrivateUse(existing);
+        if (candidatePua != existingPua)
+            return existingPua; // prefer the non-PUA codepoint
+        return candidate < existing;
+    }
+
+    private static bool IsPrivateUse(int cp) =>
+        (cp >= 0xE000 && cp <= 0xF8FF) || cp >= 0xF0000;
+
+    private static bool IsSfnt(int sfntVersion) =>
+        sfntVersion == 0x4F54544F   // 'OTTO' (CFF-based OpenType)
+        || sfntVersion == 0x00010000
+        || sfntVersion == 0x74727565; // 'true'
+
+    /// <summary>Extracts a table's bytes from an sfnt (OpenType) container, or null.</summary>
+    private static byte[]? ExtractSfntTable(byte[] data, string tag)
+    {
+        if (data.Length < 12 || tag.Length != 4)
+            return null;
+        int numTables = (data[4] << 8) | data[5];
+        for (int i = 0, p = 12; i < numTables && p + 16 <= data.Length; i++, p += 16)
+        {
+            if (data[p] == tag[0] && data[p + 1] == tag[1] && data[p + 2] == tag[2] && data[p + 3] == tag[3])
+            {
+                int offset = ReadU32(data, p + 8);
+                int length = ReadU32(data, p + 12);
+                if (offset < 0 || length <= 0 || (long)offset + length > data.Length)
+                    return null;
+                var table = new byte[length];
+                Array.Copy(data, offset, table, 0, length);
+                return table;
+            }
+        }
+        return null;
+    }
+
+    private static int ReadU32(byte[] data, int offset) =>
+        (data[offset] << 24) | (data[offset + 1] << 16) | (data[offset + 2] << 8) | data[offset + 3];
 
     /// <summary>
     /// Loads a simple font's <c>/Encoding &lt;&lt; /BaseEncoding ... /Differences [...] &gt;&gt;</c>
