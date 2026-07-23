@@ -90,6 +90,13 @@ public class TextExtractor
     {
         _letters.Clear();
         ParseContentStream();
+        // Restore logical character order for RTL (Arabic/Hebrew) runs (#632).
+        // Content streams usually carry RTL text in VISUAL order (reversed);
+        // stream-order extraction would make a logical-order search string —
+        // and therefore RedactText — silently miss the word. Applied only to
+        // content-stream letters: the synthetic AcroForm/annotation letters
+        // emitted below are laid out from logical-order source strings.
+        BidiReorderer.ReorderVisualRtlRuns(_letters);
         if (IncludeFormFieldValues)
         {
             EmitFormFieldLetters();
