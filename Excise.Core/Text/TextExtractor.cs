@@ -24,6 +24,11 @@ public class TextExtractor
     // overrides; codes not present fall back to _differencesBaseEncoding.
     private Dictionary<int, string>? _differencesGlyphNames;
     private string? _differencesBaseEncoding;
+    // True for a non-embedded Type0/CIDFontType2 with Identity-H/V encoding and
+    // no /ToUnicode: the 2-byte codes are CIDs = GIDs, and with no embedded font
+    // program the only GID→Unicode bridge is the standard Macintosh glyph order
+    // (#532; see DecodeCharacter). Recomputed on each /Tf.
+    private bool _useStandardMacGlyphOrder;
     private double _textLeading = 0;
     private double _charSpacing = 0;
     private double _wordSpacing = 0;
@@ -839,6 +844,7 @@ public class TextExtractor
                     _currentFont = ResolveFontFromActiveResources(_fontName);
                     _toUnicodeMap = LoadToUnicodeMap(_currentFont);
                     (_differencesGlyphNames, _differencesBaseEncoding) = LoadDifferencesEncoding(_currentFont);
+                    _useStandardMacGlyphOrder = _toUnicodeMap == null && UsesStandardMacGlyphOrderFallback(_currentFont);
                     LoadFontGeometry();
                 }
                 break;
@@ -1499,8 +1505,70 @@ public class TextExtractor
             }
         }
 
+        // Non-embedded Type0/CIDFontType2, Identity-H/V, no /ToUnicode (#532):
+        // the 2-byte charCode is the CID = GID (Identity), and with no embedded
+        // font program there is no cmap to give GID→Unicode. Reading the GID as
+        // a Latin-1 code point (the default below) garbles the text — e.g.
+        // issue4722.pdf's "DESCRIPTION" came out "'(6&5,37,21" (a fixed −29
+        // shift). The producing app laid the text out against a TrueType font in
+        // the standard Macintosh order, so GID→name→Unicode recovers it, matching
+        // mutool/pdf.js. Scoped to non-embedded so it never overrides an embedded
+        // font's real (possibly subset-reordered) glyph mapping.
+        if (_useStandardMacGlyphOrder && StandardMacGlyphOrder.TryGetName(charCode, out var macName))
+        {
+            var macUnicode = GlyphNameToUnicode(macName);
+            if (macUnicode != null)
+                return macUnicode;
+        }
+
         // Default: assume WinAnsiEncoding for Type1 fonts with standard base fonts
         return DecodeWinAnsi(charCode);
+    }
+
+    /// <summary>
+    /// True when <paramref name="font"/> is a non-embedded Type0 font with
+    /// Identity-H/V encoding — the class for which the standard Macintosh glyph
+    /// order is the correct GID→Unicode fallback when there is no <c>/ToUnicode</c>
+    /// CMap (see <see cref="DecodeCharacter"/>). Embedded descendants are excluded
+    /// because their (often subset-reordered) glyph order is authoritative and a
+    /// standard-order guess would corrupt correct output. #532.
+    /// </summary>
+    private bool UsesStandardMacGlyphOrderFallback(PdfDictionary? font)
+    {
+        if (font == null || font.GetNameOrNull("Subtype") != "Type0")
+            return false;
+
+        // A present /ToUnicode is the producer's own declared code→Unicode map —
+        // even a predefined-CMap NAME like /Identity-H (which we don't build a
+        // lookup table from) means "code == Unicode" and must not be overridden
+        // by a standard-glyph-order guess. issue12418_reduced.pdf uses
+        // /ToUnicode /Identity-H and extracts correctly without this fallback;
+        // only fonts with no /ToUnicode at all are in scope. #532.
+        if (font.GetOptional("ToUnicode") != null)
+            return false;
+
+        var enc = _page.Document.Resolve(font.GetOptional("Encoding") ?? PdfNull.Instance);
+        if (enc is not PdfName encName || (encName.Value != "Identity-H" && encName.Value != "Identity-V"))
+            return false;
+
+        var descObj = _page.Document.Resolve(font.GetOptional("DescendantFonts") ?? PdfNull.Instance);
+        var descendant = descObj switch
+        {
+            PdfArray arr when arr.Count > 0 => _page.Document.Resolve(arr[0]) as PdfDictionary,
+            PdfDictionary d => d,
+            _ => null,
+        };
+        if (descendant == null)
+            return false;
+
+        if (_page.Document.Resolve(descendant.GetOptional("FontDescriptor") ?? PdfNull.Instance)
+            is not PdfDictionary fd)
+            return true; // no descriptor → treat as non-embedded
+
+        var embedded = fd.GetOptional("FontFile2") != null
+            || fd.GetOptional("FontFile3") != null
+            || fd.GetOptional("FontFile") != null;
+        return !embedded;
     }
 
     /// <summary>
