@@ -92,6 +92,12 @@ public class EncodingResidualClassificationTests
         // reference to match against. This test documents the classification
         // (not a correctness assertion) — full CMap/CID coverage is tracked in
         // #515. It must at least not crash or return empty.
+        //
+        // #515 slice 3 (embedded-cmap reverse lookup) verified this fixture
+        // contains ZERO embedded font programs (no /FontFile* anywhere), so it
+        // is permanently outside that fix's scope: with neither a /ToUnicode
+        // nor an embedded program, the GID→Unicode bridge simply does not
+        // exist in the file. Extraction is byte-identical before/after slice 3.
         Extract("issue13916.pdf").Should().NotBeNullOrEmpty(
             "extraction must still produce output (routing to #515 for correct decoding)");
     }
