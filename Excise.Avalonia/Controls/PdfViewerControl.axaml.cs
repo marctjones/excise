@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Automation;
+using Avalonia.Automation.Peers;
 using Avalonia.Collections;
 using Avalonia.Reactive;
 using Avalonia.Controls;
@@ -999,6 +1000,74 @@ public partial class PdfViewerControl : UserControl
         AutomationProperties.SetItemStatus(this, status);
 
         AutomationProperties.SetHelpText(this, BuildViewerAutomationHelpText());
+
+        NotifyAutomationPageTextChangedIfNeeded();
+    }
+
+    /// <summary>
+    /// Expose the document content to the platform accessibility tree via a
+    /// custom peer that carries the current page's text (issue #631). The
+    /// rendered page is otherwise an opaque bitmap to screen readers.
+    /// </summary>
+    protected override AutomationPeer OnCreateAutomationPeer() =>
+        new Excise.Avalonia.Automation.PdfViewerAutomationPeer(this);
+
+    // Content identity last announced to the automation tree; used to raise a
+    // Name change on the synthetic page-text peer only when the page's text
+    // could actually have changed (page/document/content-rewrite), not on
+    // zoom or view-mode churn that also refreshes automation properties.
+    private object? _announcedTextDocument;
+    private int _announcedTextPage = -1;
+    private long _announcedTextRenderVersion = -1;
+
+    private void NotifyAutomationPageTextChangedIfNeeded()
+    {
+        if (ReferenceEquals(_announcedTextDocument, Document)
+            && _announcedTextPage == CurrentPage
+            && _announcedTextRenderVersion == RenderVersion)
+            return;
+
+        _announcedTextDocument = Document;
+        _announcedTextPage = CurrentPage;
+        _announcedTextRenderVersion = RenderVersion;
+
+        // FromElement returns null until some automation client materialized
+        // the peer — no screen reader, no cost.
+        (ControlAutomationPeer.FromElement(this) as Excise.Avalonia.Automation.PdfViewerAutomationPeer)
+            ?.NotifyPageTextChanged();
+    }
+
+    // Cache for the joined accessible page text. Keyed by reference identity
+    // of the reading-ordered letter list: every invalidation path (page
+    // change, document change, content rewrite via RenderVersion) replaces
+    // _readingOrderedLetters, so a stale join can never be returned.
+    private List<Letter>? _accessibleTextSource;
+    private string? _accessibleTextCache;
+
+    /// <summary>
+    /// The current page's extractable text in reading order, for the
+    /// accessibility tree (issue #631). Uses the same letter pipeline as
+    /// text-selection copy: geometric reading order (top-to-bottom lines,
+    /// left-to-right in a line) joined with word/line breaks. Empty when no
+    /// document is loaded or the page has no extractable text.
+    /// </summary>
+    internal string GetAccessiblePageText()
+    {
+        if (Document == null || CurrentPage < 1 || CurrentPage > Document.PageCount)
+            return string.Empty;
+
+        EnsurePageLettersLoaded();
+        var source = _readingOrderedLetters;
+        if (source == null || source.Count == 0)
+            return string.Empty;
+
+        if (!ReferenceEquals(source, _accessibleTextSource) || _accessibleTextCache == null)
+        {
+            _accessibleTextCache = TextSelectionEngine.JoinText(source);
+            _accessibleTextSource = source;
+        }
+
+        return _accessibleTextCache;
     }
 
     private string BuildViewerAutomationHelpText()
@@ -1225,6 +1294,11 @@ public partial class PdfViewerControl : UserControl
         {
             _ = RenderCurrentPageAsync();
         }
+
+        // A RenderVersion bump means the page content was rewritten (e.g. a
+        // redaction was applied) — the accessible page text must follow
+        // (issue #631).
+        NotifyAutomationPageTextChangedIfNeeded();
     }
 
     private void RefreshPageAnnotations()
