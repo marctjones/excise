@@ -2173,11 +2173,14 @@ internal partial class RenderContext
         var savedCurrentPath = _currentPath;
         var savedPendingClipEvenOdd = _pendingClipEvenOdd;
         var savedPendingTextClipPath = _pendingTextClipPath;
+        var savedColorLocked = _type3GlyphColorLocked;
 
         _currentPath = null;
         _pendingClipEvenOdd = null;
         _pendingTextClipPath = null;
         _inTextBlock = false;
+        // Each glyph starts colored; its own d1 operator (if present) re-locks.
+        _type3GlyphColorLocked = false;
         _canvas.Save();
         _resourcesStack.Push(fontResources);
 
@@ -2212,6 +2215,7 @@ internal partial class RenderContext
             _currentPath = savedCurrentPath;
             _pendingClipEvenOdd = savedPendingClipEvenOdd;
             _pendingTextClipPath = savedPendingTextClipPath;
+            _type3GlyphColorLocked = savedColorLocked;
             _resourcesStack.Pop();
             _canvas.RestoreToCount(savedCanvasCount);
             _type3GlyphStack.Remove(charProc);

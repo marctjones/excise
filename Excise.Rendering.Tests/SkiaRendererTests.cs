@@ -4670,45 +4670,44 @@ public class SkiaRendererTests
     }
 
     [Fact]
-    public void RenderPage_Type3Font_d0_SetsGlyphWidth()
+    public void RenderPage_Type3Font_d0ColoredGlyph_HonorsCharProcColor()
     {
-        // Arrange - d0 operator sets glyph width for Type 3 fonts
-        // Format: wx wy d0 (width in x and y directions)
-        // Type 3 fonts define glyphs as content streams
-        var content = @"
-            BT /F1 24 Tf 100 700 Td (Type3) Tj ET
-        ";
-        var pdfData = CreatePdfWithContent(content);
+        // A d0 (colored) glyph description supplies its own colour: the CharProc's
+        // colour operators apply (ISO 32000-1 §9.6.5). The page sets blue text,
+        // but the CharProc sets red, so the glyph must render RED.
+        var pdfData = CreatePdfWithType3Glyph(
+            pageContent: "0 0 1 rg BT /F1 24 Tf 100 120 Td <41> Tj ET",
+            charProcContent: "500 0 d0 1 0 0 rg 0 0 500 700 re f");
         using var doc = PdfDocument.Open(pdfData);
-        var renderer = new SkiaRenderer();
 
-        // Act
-        using var bitmap = renderer.RenderPage(doc.GetPage(1));
+        using var bitmap = new SkiaRenderer().RenderPage(doc.GetPage(1));
 
-        // Assert - d0 would be in glyph definition, not page content
-        bitmap.Should().NotBeNull();
-        bitmap.Width.Should().BeGreaterThan(0);
+        var pixel = bitmap.GetPixel((int)(106 * 150 / 72), bitmap.Height - (int)(128 * 150 / 72));
+        pixel.Red.Should().BeGreaterThan(180,
+            "a colored (d0) Type 3 glyph must honour its own CharProc colour operators");
+        pixel.Blue.Should().BeLessThan(80);
     }
 
     [Fact]
-    public void RenderPage_Type3Font_d1_SetsGlyphWidthAndBBox()
+    public void RenderPage_Type3Font_d1UncoloredGlyph_IgnoresCharProcColor_PaintsInTextColor()
     {
-        // Arrange - d1 operator sets glyph width and bounding box
-        // Format: wx wy llx lly urx ury d1
-        // Used for Type 3 fonts with bounding box info
-        var content = @"
-            BT /F1 18 Tf 100 650 Td (Custom glyphs) Tj ET
-        ";
-        var pdfData = CreatePdfWithContent(content);
+        // A d1 (uncolored) glyph description is a shape/mask only: colour operators
+        // inside the CharProc are IGNORED and the glyph is painted with the fill
+        // colour in effect in the text object (ISO 32000-1 §9.6.5, Table 113).
+        // The page sets blue text; the CharProc tries to set red — the glyph must
+        // render BLUE, not red. (Without the d1 colour-lock this renders red.)
+        var pdfData = CreatePdfWithType3Glyph(
+            pageContent: "0 0 1 rg BT /F1 24 Tf 100 120 Td <41> Tj ET",
+            charProcContent: "500 0 0 0 500 700 d1 1 0 0 rg 0 0 500 700 re f");
         using var doc = PdfDocument.Open(pdfData);
-        var renderer = new SkiaRenderer();
 
-        // Act
-        using var bitmap = renderer.RenderPage(doc.GetPage(1));
+        using var bitmap = new SkiaRenderer().RenderPage(doc.GetPage(1));
 
-        // Assert - d1 would be in glyph definition
-        bitmap.Should().NotBeNull();
-        bitmap.Width.Should().BeGreaterThan(0);
+        var pixel = bitmap.GetPixel((int)(106 * 150 / 72), bitmap.Height - (int)(128 * 150 / 72));
+        pixel.Blue.Should().BeGreaterThan(180,
+            "an uncolored (d1) Type 3 glyph must paint in the text object's fill colour");
+        pixel.Red.Should().BeLessThan(80,
+            "the CharProc's own colour operator must be ignored for a d1 glyph");
     }
 
     #endregion

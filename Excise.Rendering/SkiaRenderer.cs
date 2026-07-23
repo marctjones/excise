@@ -409,6 +409,11 @@ internal partial class RenderContext
     private readonly Dictionary<Excise.Core.Primitives.PdfDictionary, Dictionary<int, int>?> _embeddedCffCidToGlyph = new();
     private readonly Dictionary<Excise.Core.Primitives.PdfDictionary, CidCMap?> _type0EncodingCMaps = new();
     private readonly HashSet<Excise.Core.Primitives.PdfStream> _type3GlyphStack = new();
+    // True while executing an UNCOLORED (d1) Type 3 glyph CharProc. Colour
+    // operators in the CharProc are suppressed and the glyph paints in the
+    // text object's fill colour (ISO 32000-1 §9.6.5). Reset per glyph in
+    // RenderType3Glyph; set by the d1 operator.
+    private bool _type3GlyphColorLocked;
     private readonly Dictionary<(int ObjectNumber, int Generation, int TargetWidth, int TargetHeight), SoftMaskAlpha?> _softMaskAlphaByReference = new();
     private readonly Dictionary<Excise.Core.Primitives.PdfStream, Dictionary<(int TargetWidth, int TargetHeight), SoftMaskAlpha?>> _softMaskAlphaByStream =
         new(ReferenceEqualityComparer.Instance);
@@ -507,6 +512,13 @@ internal partial class RenderContext
         }
 
         if (IsOptionalContentSuppressed && SuppressHiddenOptionalContentPaint(op.Name))
+            return;
+
+        // Inside an uncolored (d1) Type 3 glyph, colour-setting operators are
+        // ignored so the glyph is painted with the fill colour in effect in the
+        // text object (ISO 32000-1 §9.6.5, Table 113). d0 (colored) glyphs are
+        // unaffected because the lock is only set by the d1 operator.
+        if (_type3GlyphColorLocked && IsColorSettingOperator(op.Name))
             return;
 
         switch (op.Name)
@@ -738,7 +750,12 @@ internal partial class RenderContext
                 // Set glyph width - only affects metrics, not rendering
                 break;
             case "d1":
-                // Set glyph width and bounding box - only affects metrics
+                // d1 declares an UNCOLORED glyph description: the CharProc paints
+                // only a shape/mask, colour operators in the rest of it are
+                // ignored, and the glyph is filled with the text object's current
+                // colour (ISO 32000-1 §9.6.5, Table 113). The wx/wy/bbox operands
+                // only affect metrics, which come from /Widths.
+                _type3GlyphColorLocked = true;
                 break;
 
             // Color space operators
@@ -854,6 +871,15 @@ internal partial class RenderContext
                 break;
         }
     }
+
+    // Colour-setting operators (ISO 32000-1 Table 74). Suppressed inside an
+    // uncolored (d1) Type 3 glyph CharProc so it paints in the text colour.
+    private static bool IsColorSettingOperator(string op) => op switch
+    {
+        "g" or "G" or "rg" or "RG" or "k" or "K" or
+        "cs" or "CS" or "sc" or "scn" or "SC" or "SCN" => true,
+        _ => false,
+    };
 
     private void AddDiagnostics(IEnumerable<ContentStreamReadWarning> warnings)
     {
