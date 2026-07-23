@@ -1338,7 +1338,13 @@ public class SkiaRendererTests
 
         var textRegion = new SKRectI(0, 20, bitmap.Width, 80);
         var darkPixels = CountDarkPixels(bitmap, textRegion);
-        darkPixels.Should().BeGreaterThan(1_800,
+        // Floor recalibrated for #710: text fills now come from Skia's
+        // analytic outline fill instead of platform (CoreText) glyph masks,
+        // which shaved the artificial ~+0.45px-per-stem inflation — this
+        // fixture's region dropped from ~2,000 to ~1,790 dark pixels while
+        // remaining fully legible. 1,500 still fails hard on the blank-page
+        // and .notdef regressions this floor exists to catch.
+        darkPixels.Should().BeGreaterThan(1_500,
             "the substituted Type1 text should still be visible");
         darkPixels.Should().BeLessThan(4_800,
             "fallback glyphs should be horizontally condensed to the PDF /Widths instead of overprinting into an unreadable blob");

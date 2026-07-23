@@ -4,6 +4,21 @@ All notable changes to excise are documented here. Format roughly follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 semantic versioning.
 
+## [Unreleased]
+
+### Fixed
+- **Text no longer renders heavier than reference renderers** (#710, root
+  cause of #584) — fill-mode text was rasterized through `SKCanvas.DrawText`,
+  whose glyph masks come from the platform scaler (CoreText on macOS, hinted
+  FreeType on Linux, DirectWrite on Windows); on macOS that added ~+0.45px of
+  width to every stem at body-text sizes (~17% more ink on an identical
+  embedded Type 1C outline vs mutool/pdftocairo). Text fills now draw the
+  glyph outline path through Skia's own analytic scan converter — exact area
+  coverage, platform-independent, within ~0.1% ink of mutool on the same
+  outline — with a DrawText fallback for bitmap-only faces (color emoji).
+  Gated by `TextRasterInkParityTests` against mutool on an embedded-CFF
+  fixture.
+
 ## [3.2.0] - 2026-07-22
 
 A stabilization release: viewport continuity is preserved across zoom and
