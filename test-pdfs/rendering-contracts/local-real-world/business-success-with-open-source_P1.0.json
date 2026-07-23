@@ -6,7 +6,7 @@
   "ImprovementPriority": "NONE",
   "Confidence": "MEDIUM",
   "QualityReason": "Every-page local book fixture for long-form text, headings, running headers, vector rules, and book-layout PDF display confidence. The PDF is ignored by git and populated locally from test-pdfs/manifests/local-real-world-books.json.",
-  "Notes": "Focused all-pages scan logs/render-quality/local-real-world-books.json verified 454/455 pages as raw PASS. Page 36 is an explicit lower-quality text rasterization follow-up tracked by #584. #652 investigated a further page-36 symptom (em-dash visually colliding with the preceding word) hypothesized to be a CFF FontMatrix bug; that hypothesis was refuted at the byte level (Top DICT has no FontMatrix operator in either font resource involved, both share a byte-identical embedded CFF program). The actual cause: RenderText's embedded/byte-to-glyph glyph-ID draw path (SkiaRenderer.Text.cs) dispatched glyph runs via SKTextBlobBuilder.AddRun with Skia's default (hmtx-only) positioning, which has no notion of PDF Tc/Tw (character/word spacing) — those were only applied to the *tracked cursor* used for the next Tj/Tf's position, not to the actual on-canvas glyph layout. With Tw=-0.588 over 10 spaces in the \"Supporters of Free Software maintain that the goals of their movement\" run, the drawn glyphs (unaware of Tw) landed ~6pt further right than the Tw-adjusted cursor, so \"movement\"'s trailing \"t\" visually merged with the em-dash that correctly started at the Tw-adjusted position. Fixed by explicitly positioning glyphs (AddPositionedRun) using the same /Widths+Tc+Tw cumulative formula already used by the non-embedded fallback path, whenever Tc or Tw is non-zero. Page 36 mutool-diff (DifferentialMetrics.Compare, 150 DPI): 9.55% -> 0.59% differing pixels.",
+  "Notes": "Focused all-pages scan logs/render-quality/local-real-world-books.json verified 454/455 pages as raw PASS. Page 36 formerly carried a lower-quality text-rasterization exception (#584); #710 root-caused it to platform (CoreText) glyph-mask coverage in DrawText and fixed it with outline-path text fills - the full-book rescan (logs/render-quality/book-after-710.json) is 455/455 raw PASS with page 36 matching all required references. #652 investigated a further page-36 symptom (em-dash visually colliding with the preceding word) hypothesized to be a CFF FontMatrix bug; that hypothesis was refuted at the byte level (Top DICT has no FontMatrix operator in either font resource involved, both share a byte-identical embedded CFF program). The actual cause: RenderText's embedded/byte-to-glyph glyph-ID draw path (SkiaRenderer.Text.cs) dispatched glyph runs via SKTextBlobBuilder.AddRun with Skia's default (hmtx-only) positioning, which has no notion of PDF Tc/Tw (character/word spacing) — those were only applied to the *tracked cursor* used for the next Tj/Tf's position, not to the actual on-canvas glyph layout. With Tw=-0.588 over 10 spaces in the \"Supporters of Free Software maintain that the goals of their movement\" run, the drawn glyphs (unaware of Tw) landed ~6pt further right than the Tw-adjusted cursor, so \"movement\"'s trailing \"t\" visually merged with the em-dash that correctly started at the Tw-adjusted position. Fixed by explicitly positioning glyphs (AddPositionedRun) using the same /Widths+Tc+Tw cumulative formula already used by the non-embedded fallback path, whenever Tc or Tw is non-zero. Page 36 mutool-diff (DifferentialMetrics.Compare, 150 DPI): 9.55% -> 0.59% differing pixels.",
   "Pages": {
     "1-35": {
       "ExpectedRawStatus": "PASS",
@@ -25,27 +25,21 @@
       "QualityReason": "Long-form local reading PDF page raw-passes against the reference renderer set."
     },
     "36": {
-      "ExpectedRawStatus": "PASS_ONE",
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "LOWER_QUALITY_ACCEPTABLE",
-      "PixelAgreement": "MATCHES_ONE_REFERENCE",
+      "QualityStatus": "PIXEL_EXACT",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
       "ReferenceSituation": "REFS_AGREE",
-      "RootCause": "EMBEDDED_CFF_TEXT_RASTERIZATION_DARKER_THAN_REFERENCE_CONSENSUS",
+      "RootCause": "LOCAL_REAL_WORLD_BOOK_BASELINE",
       "ReviewStatus": "REVIEWED",
-      "Issue": 584,
-      "FollowUpIssue": 652,
+      "Issue": 710,
       "Target": {
-        "Mode": "REFERENCE_CONSENSUS",
-        "Primary": "pdftocairo",
-        "AcceptableAlternates": [
-          "mutool",
-          "ghostscript"
-        ],
-        "Reason": "Poppler, MuPDF, and Ghostscript preserve the same semantic content and cluster more closely with each other than with pdfe. Current pdfe output is semantically intact but renders the embedded Type 1C/CFF text darker/heavier over the full text page."
+        "Mode": "REFERENCE_CONSENSUS_FIXED",
+        "Reason": "Raw PASS against the full reference set after #710: fill text is rasterized from the glyph outline path (Skia analytic scan converter) instead of platform (CoreText) glyph masks, removing the ~+0.45px-per-stem weight inflation on this embedded Type 1C page. Focused all-pages rescan logs/render-quality/book-after-710.json: 455/455 raw PASS, page 36 MATCHES_ALL_REQUIRED (mutool diff 9.55% -> 4.1%; pdftocairo diff 1.4%)."
       },
-      "ImprovementPriority": "P2",
-      "Confidence": "MEDIUM",
-      "QualityReason": "#652 fixed a missing-Tc/Tw-in-glyph-positioning bug that was the dominant remaining contributor on this page (mutool pixel diff at 150 DPI: 9.55% -> 0.59%; see top-level Notes for the mechanism). The residual ~0.6% is the pre-existing #584 CFF rasterization weight difference (darker/heavier strokes than the pdftocairo/mutool/ghostscript consensus) — visible content is present and readable, not pixel-exact, but no longer causing visual collisions between glyphs."
+      "ImprovementPriority": "NONE",
+      "Confidence": "HIGH",
+      "QualityReason": "Formerly the #584 'embedded Type 1C text renders darker/heavier' page (EMBEDDED_CFF_TEXT_RASTERIZATION_DARKER_THAN_REFERENCE_CONSENSUS, PASS_ONE vs pdftocairo). Root-caused in #710 as platform glyph-mask coverage, not CFF handling and not Skia scan conversion; fixed by outline-path text fills, gated by TextRasterInkParityTests."
     },
     "37-455": {
       "ExpectedRawStatus": "PASS",

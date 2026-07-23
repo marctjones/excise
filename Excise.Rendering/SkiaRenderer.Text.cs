@@ -1536,9 +1536,12 @@ internal partial class RenderContext
                         }
                         else
                         {
-                            RenderWithCurrentSoftMask(
-                                () => DrawFallbackGlyph(glyphText, cursor, fallbackGlyphScale, font, fillPaint),
-                                fillPaint);
+                            // #710: fill from the outline path, not the
+                            // platform glyph mask (see FillTextUsingGlyphPath).
+                            using var fillGlyphPath = BuildScaledGlyphPath(font, glyphText, cursor, fallbackGlyphScale);
+                            FillTextUsingGlyphPath(
+                                fillGlyphPath, fillPaint,
+                                () => DrawFallbackGlyph(glyphText, cursor, fallbackGlyphScale, font, fillPaint));
                         }
                     }
                     if (strokeText)
@@ -1646,9 +1649,15 @@ internal partial class RenderContext
                     }
                     else if (fillText)
                     {
-                        RenderWithCurrentSoftMask(
-                            () => _canvas.DrawText(blob, 0, 0, fillPaint),
-                            fillPaint);
+                        // #710: fill from the outline path, not the platform
+                        // glyph mask (see FillTextUsingGlyphPath).
+                        using var fillGlyphPath = positions != null
+                            ? BuildGlyphIdTextPath(gids, positions, font)
+                            : BuildGlyphIdTextPath(gids, font, measurePaint);
+                        var blobToFill = blob;
+                        FillTextUsingGlyphPath(
+                            fillGlyphPath, fillPaint,
+                            () => _canvas.DrawText(blobToFill, 0, 0, fillPaint));
                     }
                     if (strokeText)
                         RenderWithCurrentSoftMask(
@@ -1674,9 +1683,12 @@ internal partial class RenderContext
                 }
                 else if (fillText)
                 {
-                    RenderWithCurrentSoftMask(
-                        () => _canvas.DrawText(text, 0, 0, font, fillPaint),
-                        fillPaint);
+                    // #710: fill from the outline path, not the platform
+                    // glyph mask (see FillTextUsingGlyphPath).
+                    using var fillGlyphPath = font.GetTextPath(text, SKPoint.Empty);
+                    FillTextUsingGlyphPath(
+                        fillGlyphPath, fillPaint,
+                        () => _canvas.DrawText(text, 0, 0, font, fillPaint));
                 }
                 if (strokeText)
                     RenderWithCurrentSoftMask(
@@ -1803,6 +1815,61 @@ internal partial class RenderContext
         {
             _canvas.Restore();
         }
+    }
+
+    /// <summary>
+    /// Fill a text run from its glyph <b>outline path</b> instead of
+    /// <c>SKCanvas.DrawText</c>. DrawText rasterizes glyph masks through
+    /// the platform scaler behind Skia's glyph cache (CoreText/CoreGraphics
+    /// on macOS, hinted FreeType on Linux, DirectWrite on Windows); those
+    /// coverage curves are platform-dependent and measurably different
+    /// from the unhinted-FreeType coverage every PDF reference renderer
+    /// (mutool / pdftocairo / Ghostscript) produces. Measured on an
+    /// identical embedded Type 1C outline at 10–20pt/150dpi on macOS,
+    /// CoreText masks carried ~17% more ink (~+0.45px of stem width, the
+    /// #710/#584 "excise text renders heavier" root cause) with
+    /// Hinting=Normal, and ~11% less with Hinting=None — neither matches.
+    /// Filling the outline path uses Skia's own analytic scan converter:
+    /// exact area coverage of the true outline, identical on every
+    /// platform, and within ~0.1% ink of mutool on the same outline.
+    ///
+    /// <paramref name="fallbackDraw"/> runs when the run yields no outline
+    /// geometry: bitmap-only faces (e.g. color emoji) have no outlines but
+    /// do render via DrawText, and an all-whitespace run is a harmless
+    /// no-op either way. See issue #710.
+    /// </summary>
+    private void FillTextUsingGlyphPath(SKPath? glyphRunPath, SKPaint fillPaint, Action fallbackDraw)
+    {
+        if (glyphRunPath != null && !glyphRunPath.IsEmpty)
+        {
+            RenderWithCurrentSoftMask(() => _canvas.DrawPath(glyphRunPath, fillPaint), fillPaint);
+            return;
+        }
+
+        RenderWithCurrentSoftMask(fallbackDraw, fillPaint);
+    }
+
+    /// <summary>
+    /// Outline-path equivalent of <see cref="DrawFallbackGlyph"/> for fill
+    /// mode (see <see cref="FillTextUsingGlyphPath"/> for why fills avoid
+    /// DrawText). Returns the glyph positioned at <paramref name="cursor"/>
+    /// with the fallback horizontal squeeze applied, or null when the glyph
+    /// has no outline (bitmap-only face) and the caller must fall back to
+    /// <see cref="DrawFallbackGlyph"/>.
+    /// </summary>
+    private static SKPath? BuildScaledGlyphPath(SKFont font, string glyphText, float cursor, float horizontalScale)
+    {
+        using var glyphPath = font.GetTextPath(glyphText, SKPoint.Empty);
+        if (glyphPath == null || glyphPath.IsEmpty)
+            return null;
+
+        var positioned = new SKPath();
+        var glyphMatrix = new SKMatrix(
+            horizontalScale, 0, cursor,
+            0, 1, 0,
+            0, 0, 1);
+        glyphPath.Transform(glyphMatrix, positioned);
+        return positioned;
     }
 
     private SKPaint CreateTextPaint(SKPaintStyle style, SKColor color, float alpha)
@@ -2330,9 +2397,12 @@ internal partial class RenderContext
                 }
                 else if (fillText)
                 {
-                    RenderWithCurrentSoftMask(
-                        () => DrawPositionedGlyphIds(gids, positions, fallbackGlyphScales, font, fillPaint),
-                        fillPaint);
+                    // #710: fill from the outline path, not the platform
+                    // glyph mask (see FillTextUsingGlyphPath).
+                    using var fillGlyphPath = BuildGlyphIdTextPath(gids, positions, fallbackGlyphScales, font);
+                    FillTextUsingGlyphPath(
+                        fillGlyphPath, fillPaint,
+                        () => DrawPositionedGlyphIds(gids, positions, fallbackGlyphScales, font, fillPaint));
                 }
                 if (strokeText)
                     RenderWithCurrentSoftMask(
@@ -2352,9 +2422,13 @@ internal partial class RenderContext
                     }
                     else if (fillText)
                     {
-                        RenderWithCurrentSoftMask(
-                            () => _canvas.DrawText(blob, 0, 0, fillPaint),
-                            fillPaint);
+                        // #710: fill from the outline path, not the platform
+                        // glyph mask (see FillTextUsingGlyphPath).
+                        using var fillGlyphPath = BuildGlyphIdTextPath(gids, positions, font);
+                        var blobToFill = blob;
+                        FillTextUsingGlyphPath(
+                            fillGlyphPath, fillPaint,
+                            () => _canvas.DrawText(blobToFill, 0, 0, fillPaint));
                     }
                     if (strokeText)
                         RenderWithCurrentSoftMask(
