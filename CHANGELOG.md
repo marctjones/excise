@@ -6,7 +6,33 @@ semantic versioning.
 
 ## [Unreleased]
 
+### Added
+- **Registered (predefined) CJK CMap support in text extraction and
+  redaction** (#515 slice 2; the CJK half of #715) — a Type0 font whose
+  `/Encoding` is a registered CMap NAME (`/UniGB-UCS2-H`, `/UniCNS-UCS2-H`,
+  `/UniJIS-UCS2-H`, `/UniKS-UCS2-H`, `/90ms-RKSJ-H`, and their vertical `-V`
+  variants) now decodes code→CID through the actual Adobe CMap data, and —
+  when there is no embedded `/ToUnicode` — CID→Unicode through the
+  `Adobe-<Ordering>-UCS2` CMap selected from the descendant's
+  `/CIDSystemInfo` (PDF §9.10.2 method (b)). The ordering path also fires
+  for `Identity-H/V` fonts whose CIDSystemInfo names a known ordering, and
+  for a registered-CMap-name `/ToUnicode` (#715). Mixed 1/2-byte codespaces
+  (Shift-JIS) segment per the CMap's codespace ranges instead of a fixed
+  2-byte stride, and `/W` width lookups are now CID-keyed under these
+  encodings. Previously such text extracted as garbage, which made
+  `RedactText` silently fail on it (CLAUDE.md limitation #1). The CMap data
+  (15 files, ~750KB gzipped) is embedded from Adobe's cmap-resources /
+  mapping-resources-pdf repositories (BSD-3-Clause, see
+  `Excise.Core/Resources/CMaps/LICENSE.md`).
+
 ### Fixed
+- **Content-stream parser no longer mangles multi-byte text operands**
+  (#515) — `ContentStreamParser` round-tripped `Tj`/`TJ` string operands
+  through `PdfString.Value`'s document-string decode heuristics and Latin-1,
+  clamping any byte the heuristic mapped above U+00FF to `?`. It now reads
+  the raw font-encoded bytes. This is what let glyph-level redaction match
+  CJK operator text against extracted letters instead of degrading to
+  whole-operator removal.
 - **Text no longer renders heavier than reference renderers** (#710, root
   cause of #584) — fill-mode text was rasterized through `SKCanvas.DrawText`,
   whose glyph masks come from the platform scaler (CoreText on macOS, hinted

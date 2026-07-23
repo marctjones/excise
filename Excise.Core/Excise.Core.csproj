@@ -25,6 +25,12 @@
     <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
+  <!-- Predefined (registered) CJK CMaps — Adobe cmap-resources / mapping-resources-pdf,
+       BSD-3-Clause (see Resources/CMaps/LICENSE.md). Loaded by PredefinedCMapProvider. #515 -->
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\CMaps\*.gz" LogicalName="CMaps/%(Filename)%(Extension)" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="CSJ2K" Version="3.0.0" />
   </ItemGroup>

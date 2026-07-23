@@ -45,6 +45,13 @@ public class ContentStreamParser
     private bool _is2ByteFont = false;
     private PdfDictionary? _cidFontDict;
     private Dictionary<int, double>? _cidWidths;
+    // Registered (predefined) CJK CMap support (#515), mirroring
+    // TextExtractor exactly — this parser feeds redaction's glyph removal, and
+    // its operator text must decode the same way TextExtractor decodes page
+    // letters or LetterFinder cannot match them and glyph-level redaction
+    // silently degrades to whole-operator removal.
+    private Text.CidCMap? _registeredEncodingCMap;
+    private IReadOnlyDictionary<int, string>? _registeredCidToUnicode;
     private double _textLeading;
     private double _charSpacing;
     private double _wordSpacing;
@@ -577,13 +584,15 @@ public class ContentStreamParser
 
     private (string text, PdfRectangle? bounds) ProcessTextString(PdfObject obj)
     {
-        byte[] bytes;
+        // Use the RAW string bytes. Text-showing operands are font-encoded
+        // byte codes, not PDFDoc/UTF-16 text — round-tripping through
+        // PdfString.Value's document-string decode heuristics and Latin-1
+        // mangles any byte the heuristic maps above U+00FF (Latin-1 clamps it
+        // to '?'), which garbled every multi-byte CJK code (#515).
         if (obj is PdfString ps)
-            bytes = Encoding.Latin1.GetBytes(ps.Value);
-        else
-            return ("", null);
+            return ProcessTextBytes(ps.Bytes);
 
-        return ProcessTextBytes(bytes);
+        return ("", null);
     }
 
     private (string text, PdfRectangle? bounds) ProcessTextArray(PdfArray arr)
@@ -597,8 +606,8 @@ public class ContentStreamParser
         {
             if (item is PdfString ps)
             {
-                var bytes = Encoding.Latin1.GetBytes(ps.Value);
-                var (text, bounds) = ProcessTextBytes(bytes);
+                // Raw font-encoded bytes — see ProcessTextString (#515).
+                var (text, bounds) = ProcessTextBytes(ps.Bytes);
                 sb.Append(text);
 
                 if (bounds.HasValue)
@@ -634,15 +643,12 @@ public class ContentStreamParser
         double minX = double.MaxValue, minY = double.MaxValue;
         double maxX = double.MinValue, maxY = double.MinValue;
 
-        int stride = _is2ByteFont ? 2 : 1;
-        for (int i = 0; i + stride <= bytes.Length; i += stride)
+        // Emits one glyph for a decoded source code. cid == charCode except
+        // under a registered encoding CMap (#515); widths are CID-keyed.
+        void EmitGlyph(int charCode, int cid)
         {
-            int charCode = _is2ByteFont
-                ? (bytes[i] << 8) | bytes[i + 1]
-                : bytes[i];
-
-            var unicode = DecodeCharacter(charCode);
-            var charWidth = GetCharWidth(charCode);
+            var unicode = DecodeCharacter(charCode, cid);
+            var charWidth = GetCharWidth(cid);
 
             // Transform position — text rise shifts the baseline vertically (§9.3.7)
             var (x, y) = TransformTextPoint(_tm_e, _tm_f + _textRise);
@@ -666,6 +672,25 @@ public class ContentStreamParser
 
             _tm_e += tx * _tm_a;
             _tm_f += tx * _tm_b;
+        }
+
+        if (_registeredEncodingCMap != null)
+        {
+            // Registered CMap codespaces drive segmentation — mixed 1/2-byte
+            // codes (90ms-RKSJ-H) would be garbled by a fixed stride (#515).
+            foreach (var (code, cid, _) in _registeredEncodingCMap.DecodeDetailed(bytes))
+                EmitGlyph(code, cid);
+        }
+        else
+        {
+            int stride = _is2ByteFont ? 2 : 1;
+            for (int i = 0; i + stride <= bytes.Length; i += stride)
+            {
+                int charCode = _is2ByteFont
+                    ? (bytes[i] << 8) | bytes[i + 1]
+                    : bytes[i];
+                EmitGlyph(charCode, charCode);
+            }
         }
 
         if (bytes.Length == 0)
@@ -938,6 +963,8 @@ public class ContentStreamParser
         _is2ByteFont = false;
         _cidFontDict = null;
         _cidWidths = null;
+        _registeredEncodingCMap = null;
+        _registeredCidToUnicode = null;
 
         if (_currentFont != null)
         {
@@ -962,6 +989,17 @@ public class ContentStreamParser
                     var detail = Text.ToUnicodeCMapParser.ParseDetailed(encStream.DecodedData);
                     if (detail.CodespaceRanges.Count > 0 && detail.MaxCodeBytes == 1)
                         _is2ByteFont = false;
+                }
+
+                // Registered (predefined) CMap NAME as /Encoding (#515):
+                // its codespaces drive byte segmentation (90ms-RKSJ-H mixes
+                // 1- and 2-byte codes) and its mapping gives the CID for
+                // width lookup and CID→Unicode decoding.
+                if (encObj is PdfName registeredName
+                    && registeredName.Value is not ("Identity-H" or "Identity-V")
+                    && Text.PredefinedCMapProvider.TryGetEncodingCMap(registeredName.Value) is { } registeredCMap)
+                {
+                    _registeredEncodingCMap = registeredCMap;
                 }
             }
 
@@ -1001,8 +1039,56 @@ public class ContentStreamParser
                     }
                 }
             }
+
+            // Registered CID→Unicode via the descendant's /CIDSystemInfo
+            // ordering (#515), mirroring TextExtractor.LoadFontGeometry: a
+            // /ToUnicode STREAM wins outright; /ToUnicode /Identity-H|V means
+            // code == Unicode (which the WinAnsi fallback reproduces for the
+            // codes CJK text uses); a registered-CMap-name /ToUnicode (#715)
+            // contributes its ordering. First signal with a shipped map wins.
+            if (_is2ByteFont && _toUnicodeMap == null && !ToUnicodeIsIdentityName())
+            {
+                _registeredCidToUnicode =
+                    TryLoadOrderingMap(GetCidSystemInfoOrdering())
+                    ?? TryLoadOrderingMap(GetEncodingNameOrdering())
+                    ?? TryLoadOrderingMap(GetToUnicodeRegisteredOrdering());
+            }
         }
     }
+
+    private bool ToUnicodeIsIdentityName()
+    {
+        if (_currentFont == null || _page == null) return false;
+        var toUnicode = _page.Document.Resolve(_currentFont.GetOptional("ToUnicode") ?? PdfNull.Instance);
+        return toUnicode is PdfName name && (name.Value == "Identity-H" || name.Value == "Identity-V");
+    }
+
+    private string? GetCidSystemInfoOrdering()
+    {
+        if (_cidFontDict == null || _page == null) return null;
+        if (_page.Document.Resolve(_cidFontDict.GetOptional("CIDSystemInfo") ?? PdfNull.Instance)
+            is not PdfDictionary systemInfo)
+            return null;
+        return _page.Document.Resolve(systemInfo.GetOptional("Ordering") ?? PdfNull.Instance)
+            is PdfString ordering ? ordering.Value : null;
+    }
+
+    private string? GetEncodingNameOrdering()
+    {
+        if (_currentFont == null || _page == null) return null;
+        return _page.Document.Resolve(_currentFont.GetOptional("Encoding") ?? PdfNull.Instance)
+            is PdfName encName ? Text.PredefinedCMapProvider.GetOrderingForEncodingCMap(encName.Value) : null;
+    }
+
+    private string? GetToUnicodeRegisteredOrdering()
+    {
+        if (_currentFont == null || _page == null) return null;
+        return _page.Document.Resolve(_currentFont.GetOptional("ToUnicode") ?? PdfNull.Instance)
+            is PdfName name ? Text.PredefinedCMapProvider.GetOrderingForEncodingCMap(name.Value) : null;
+    }
+
+    private static IReadOnlyDictionary<int, string>? TryLoadOrderingMap(string? ordering)
+        => ordering == null ? null : Text.PredefinedCMapProvider.TryGetCidToUnicodeMap(ordering);
 
     private void ParseCidWidths()
     {
@@ -1058,10 +1144,16 @@ public class ContentStreamParser
         }
     }
 
-    private string DecodeCharacter(int charCode)
+    private string DecodeCharacter(int charCode, int cid)
     {
         if (_toUnicodeMap != null && _toUnicodeMap.TryGetValue(charCode, out var unicode))
             return unicode;
+
+        // Registered CID→Unicode (#515): the Adobe-<Ordering>-UCS2 CMap for
+        // the font's /CIDSystemInfo ordering, keyed by CID. Mirrors
+        // TextExtractor.DecodeCharacter so operator text matches page letters.
+        if (_registeredCidToUnicode != null && _registeredCidToUnicode.TryGetValue(cid, out var orderingUnicode))
+            return orderingUnicode;
 
         // Fall back to WinAnsi encoding
         if (charCode < 128 || charCode >= 160)
