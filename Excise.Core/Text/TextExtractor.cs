@@ -29,6 +29,11 @@ public class TextExtractor
     // program the only GID→Unicode bridge is the standard Macintosh glyph order
     // (#532; see DecodeCharacter). Recomputed on each /Tf.
     private bool _useStandardMacGlyphOrder;
+    // True when /ToUnicode is the predefined-CMap NAME /Identity-H or /Identity-V
+    // (not a stream): the 2-byte code IS the UTF-16BE Unicode scalar, so it must
+    // be decoded directly rather than left to the WinAnsi fallback (which is only
+    // correct by coincidence and mis-maps codes 128–159). #715 / #515.
+    private bool _toUnicodeIdentity;
     private double _textLeading = 0;
     private double _charSpacing = 0;
     private double _wordSpacing = 0;
@@ -844,6 +849,7 @@ public class TextExtractor
                     _currentFont = ResolveFontFromActiveResources(_fontName);
                     _toUnicodeMap = LoadToUnicodeMap(_currentFont);
                     (_differencesGlyphNames, _differencesBaseEncoding) = LoadDifferencesEncoding(_currentFont);
+                    _toUnicodeIdentity = _toUnicodeMap == null && ToUnicodeIsIdentity(_currentFont);
                     _useStandardMacGlyphOrder = _toUnicodeMap == null && UsesStandardMacGlyphOrderFallback(_currentFont);
                     LoadFontGeometry();
                 }
@@ -1468,6 +1474,15 @@ public class TextExtractor
             return unicode;
         }
 
+        // Predefined /ToUnicode /Identity-H|/Identity-V (a CMap NAME, so no map
+        // was built above): the 2-byte code IS the UTF-16BE Unicode scalar.
+        // Decode it directly — the WinAnsi default below is only identity by
+        // coincidence and mis-maps codes 128–159 (#715 / #515).
+        if (_toUnicodeIdentity && charCode is >= 0 and <= 0xFFFF && !char.IsSurrogate((char)charCode))
+        {
+            return ((char)charCode).ToString();
+        }
+
         // /Encoding << /Differences [...] >> (#662): a Differences entry for
         // this exact code overrides everything below it — the glyph name it
         // assigns takes priority over both /BaseEncoding and the bare-name
@@ -1533,6 +1548,20 @@ public class TextExtractor
     /// because their (often subset-reordered) glyph order is authoritative and a
     /// standard-order guess would corrupt correct output. #532.
     /// </summary>
+    /// <summary>
+    /// True when the font's <c>/ToUnicode</c> is the predefined-CMap name
+    /// <c>/Identity-H</c> or <c>/Identity-V</c> (as opposed to a stream). Such a
+    /// ToUnicode declares code == Unicode (UTF-16BE); see <see cref="DecodeCharacter"/>.
+    /// #715 / #515.
+    /// </summary>
+    private bool ToUnicodeIsIdentity(PdfDictionary? font)
+    {
+        if (font == null)
+            return false;
+        var toUnicode = _page.Document.Resolve(font.GetOptional("ToUnicode") ?? PdfNull.Instance);
+        return toUnicode is PdfName name && (name.Value == "Identity-H" || name.Value == "Identity-V");
+    }
+
     private bool UsesStandardMacGlyphOrderFallback(PdfDictionary? font)
     {
         if (font == null || font.GetNameOrNull("Subtype") != "Type0")
