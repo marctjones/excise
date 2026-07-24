@@ -70,16 +70,86 @@ public class RtlRedactionDifferentialTests : IDisposable
             "the word must not survive in visual (reversed) order either");
     }
 
+    [Fact]
+    public void PresentationFormFixture_OracleSanity_CarriesTheWordShaped()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        var path = WriteTemp(VisualOrderPresentationFormPdf());
+
+        var mutoolText = MutoolTextExtractor.ExtractPage(path, 1);
+        mutoolText.Should().NotBeNull("mutool must read the fixture");
+
+        // Anti-vacuity, independent of excise: the word IS in the file before
+        // redaction. mutool may report the shaped characters or fold them —
+        // either way, the framework's own NFKC (the Unicode compatibility
+        // decomposition, our deterministic ground truth for the fold — NOT
+        // excise code) reduces its reading to the base-letter word.
+        mutoolText!.Normalize(NormalizationForm.FormKC).Should().Contain(ArabicWord,
+            "oracle sanity: an independent extractor must recover the word " +
+            "(modulo Unicode compatibility decomposition) from the unredacted fixture");
+    }
+
+    [Fact]
+    public void RedactedPresentationFormWord_IsNotRecoverableByAnIndependentExtractor()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        // The user types BASE letters; the file stores shaped presentation
+        // forms (#632). Before the presentation-form fold, RedactText
+        // returned 0 here and reported success while mutool still read the
+        // word out of the "redacted" output.
+        var shapedWord = new string(new[] { (char)0xFEB3, (char)0xFEFC, (char)0xFEE1 });
+
+        using var doc = PdfDocument.Open(VisualOrderPresentationFormPdf());
+        var removed = doc.RedactText(ArabicWord);
+        removed.Should().BeGreaterThan(0,
+            "a base-letter needle must match the shaped glyph run via " +
+            "compatibility-decomposition folding");
+
+        var path = WriteTemp(doc.SaveToBytes());
+
+        var extracted = MutoolTextExtractor.ExtractPage(path, 1);
+        extracted.Should().NotBeNull("mutool must be able to read the redacted file at all");
+        extracted!.Should().NotContain(shapedWord,
+            "the shaped word must not survive in any text carrier mutool can read");
+        extracted.Should().NotContain(Reverse(shapedWord),
+            "nor in visual (reversed) order");
+        extracted.Normalize(NormalizationForm.FormKC).Should().NotContain(ArabicWord,
+            "nor in any form that folds back to the base-letter word");
+    }
+
     /// <summary>
     /// Minimal PDF: Arabic word carried as codes 'DCBA' (visual order — the
     /// common producer encoding) with a /ToUnicode CMap mapping codes
     /// 0x41..0x44 to the logical-order scalars U+0633 U+0644 U+0627 U+0645.
     /// Same shape as Excise.Core.Tests.Text.RtlPdfFixtures.SingleTj.
     /// </summary>
-    private static byte[] VisualOrderArabicPdf()
+    private static byte[] VisualOrderArabicPdf() =>
+        BuildVisualOrderPdf(new[] { 0x0633, 0x0644, 0x0627, 0x0645 });
+
+    /// <summary>
+    /// The same word carried as shaped PRESENTATION FORMS — seen-initial
+    /// U+FEB3, lam-alef-final ligature U+FEFC, meem-isolated U+FEE1 — the
+    /// other way real producers encode Arabic (#632).
+    /// </summary>
+    private static byte[] VisualOrderPresentationFormPdf() =>
+        BuildVisualOrderPdf(new[] { 0xFEB3, 0xFEFC, 0xFEE1 });
+
+    private static byte[] BuildVisualOrderPdf(int[] logicalScalars)
     {
-        const string content = "BT /F1 24 Tf 100 700 Td (DCBA) Tj ET";
-        const string cmap =
+        // Codes 0x41.. map to the scalars in LOGICAL order; the stream paints
+        // them reversed (visual order) left-to-right.
+        var codes = new char[logicalScalars.Length];
+        for (int i = 0; i < codes.Length; i++) codes[i] = (char)(0x41 + i);
+        Array.Reverse(codes);
+        var content = $"BT /F1 24 Tf 100 700 Td ({new string(codes)}) Tj ET";
+
+        var bfchars = new StringBuilder();
+        for (int i = 0; i < logicalScalars.Length; i++)
+            bfchars.Append($"<{0x41 + i:X2}> <{logicalScalars[i]:X4}>\n");
+
+        var cmap =
             "/CIDInit /ProcSet findresource begin\n" +
             "12 dict begin\n" +
             "begincmap\n" +
@@ -87,9 +157,7 @@ public class RtlRedactionDifferentialTests : IDisposable
             "/CMapName /Adobe-Identity-UCS def\n" +
             "/CMapType 2 def\n" +
             "1 begincodespacerange\n<00> <FF>\nendcodespacerange\n" +
-            "4 beginbfchar\n" +
-            "<41> <0633>\n<42> <0644>\n<43> <0627>\n<44> <0645>\n" +
-            "endbfchar\n" +
+            $"{logicalScalars.Length} beginbfchar\n{bfchars}endbfchar\n" +
             "endcmap\nCMapName currentdict /CMap defineresource pop\nend\nend";
 
         using var ms = new MemoryStream();

@@ -155,12 +155,22 @@ public class TextRedactor
     {
         var results = new List<List<Letter>>();
 
+        // Fold Arabic presentation forms to base letters on BOTH sides so a
+        // base-letter needle matches shaped text (#632). All index arithmetic
+        // below is done consistently in folded space: the per-letter folded
+        // values (a lam-alef ligature folds 1 char → 2) drive the mapping
+        // from folded string positions back to letters.
+        var needle = ArabicPresentationForms.Fold(searchText);
+        var foldedValues = new string[letters.Count];
+        for (int i = 0; i < letters.Count; i++)
+            foldedValues[i] = ArabicPresentationForms.Fold(letters[i].Value);
+
         // Build a string from all letters for searching
-        var fullText = string.Concat(letters.Select(l => l.Value));
+        var fullText = string.Concat(foldedValues);
 
         // Find all start positions of the search text
         var pos = 0;
-        while ((pos = fullText.IndexOf(searchText, pos, StringComparison.Ordinal)) >= 0)
+        while ((pos = fullText.IndexOf(needle, pos, StringComparison.Ordinal)) >= 0)
         {
             // Map back to letters
             var match = new List<Letter>();
@@ -170,16 +180,16 @@ public class TextRedactor
             // Skip to position
             while (charIndex < pos && letterIndex < letters.Count)
             {
-                charIndex += letters[letterIndex].Value.Length;
+                charIndex += foldedValues[letterIndex].Length;
                 letterIndex++;
             }
 
             // Collect letters that make up the match
             var matchChars = 0;
-            while (matchChars < searchText.Length && letterIndex < letters.Count)
+            while (matchChars < needle.Length && letterIndex < letters.Count)
             {
                 match.Add(letters[letterIndex]);
-                matchChars += letters[letterIndex].Value.Length;
+                matchChars += foldedValues[letterIndex].Length;
                 letterIndex++;
             }
 
