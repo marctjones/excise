@@ -7,6 +7,17 @@ semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **Type 3 d0/d1 glyph metrics and d1 bounding-box clipping** (#514) — the
+  renderer now honors the metrics a Type 3 CharProc declares: when the font
+  has no `/Widths` entry covering a code, the advance falls back to the `wx`
+  operand of the glyph's leading `d0`/`d1` operator (`/Widths` still overrides
+  an inconsistent `wx`, per §9.6.5); glyph-space advances map through
+  `/FontMatrix` as a displacement vector, so rotated matrices no longer drift
+  glyphs apart by a bogus 1/1000 scale; and the glyph bounding box declared by
+  `d1` clips the glyph description (an all-zero box declares no bounds).
+  A stray `d0`/`d1` in an ordinary content stream is now ignored instead of
+  colour-locking the rest of the page. Corroborated against live pdftocairo
+  and Ghostscript renders of generated fixtures.
 - **Vertical writing mode for Type0/CID fonts** (#515) — the `/W2` and `/DW2`
   vertical metric tables (PDF §9.7.4.3) are now parsed and honored across the
   extractor, the redaction content-stream parser, and the renderer. Vertical
