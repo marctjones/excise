@@ -44,7 +44,8 @@ public class ContentStreamParser
     private Dictionary<int, string>? _toUnicodeMap;
     private bool _is2ByteFont = false;
     private PdfDictionary? _cidFontDict;
-    private Dictionary<int, double>? _cidWidths;
+    private Fonts.CidFontWidths? _cidMetrics;
+    private bool _isVerticalWriting;
     // Registered (predefined) CJK CMap support (#515), mirroring
     // TextExtractor exactly — this parser feeds redaction's glyph removal, and
     // its operator text must decode the same way TextExtractor decodes page
@@ -622,14 +623,11 @@ public class ContentStreamParser
             }
             else if (item is PdfInteger pi)
             {
-                // Adjust position (negative = move right)
-                var adj = pi.Value;
-                _tm_e -= (adj / 1000.0) * _fontSize * (_horizontalScaling / 100.0);
+                ApplyTjAdjustment(pi.Value);
             }
             else if (item is PdfReal pr)
             {
-                var adj = pr.Value;
-                _tm_e -= (adj / 1000.0) * _fontSize * (_horizontalScaling / 100.0);
+                ApplyTjAdjustment(pr.Value);
             }
         }
 
@@ -645,7 +643,7 @@ public class ContentStreamParser
 
         // Emits one glyph for a decoded source code. cid == charCode except
         // under a registered encoding CMap (#515); widths are CID-keyed.
-        void EmitGlyph(int charCode, int cid)
+        void EmitGlyph(int charCode, int cid, int byteLength)
         {
             var unicode = DecodeCharacter(charCode, cid);
             var charWidth = GetCharWidth(cid);
@@ -653,33 +651,66 @@ public class ContentStreamParser
             // Transform position — text rise shifts the baseline vertically (§9.3.7)
             var (x, y) = TransformTextPoint(_tm_e, _tm_f + _textRise);
 
-            // Calculate glyph dimensions
-            var glyphWidth = charWidth * _fontSize * (_horizontalScaling / 100.0) / 1000.0;
+            // Calculate glyph dimensions. Th (horizontal scaling) applies
+            // only in horizontal writing (§9.2.4/§9.4.4).
+            var glyphWidth = _isVerticalWriting
+                ? charWidth * _fontSize / 1000.0
+                : charWidth * _fontSize * (_horizontalScaling / 100.0) / 1000.0;
             var glyphHeight = _fontSize;
 
-            // Update bounds
-            minX = Math.Min(minX, x);
-            minY = Math.Min(minY, y);
-            maxX = Math.Max(maxX, x + glyphWidth);
-            maxY = Math.Max(maxY, y + glyphHeight);
+            // Update bounds. Vertical writing (§9.7.4.3): the pen is the
+            // VERTICAL origin — the cell is centered on it via the /W2
+            // position vector (default vx = w0/2) and spans DOWN by the
+            // vertical displacement w1y. Mirrors TextExtractor.ShowGlyph so
+            // redaction area-intersection sees the same glyph cells.
+            if (_isVerticalWriting)
+            {
+                var vm = GetVerticalMetrics(cid);
+                var vxScaled = vm.Vx * _fontSize / 1000.0;
+                var cellHeight = Math.Abs(vm.W1Y) * _fontSize / 1000.0;
+                if (cellHeight <= 0) cellHeight = _fontSize;
+                minX = Math.Min(minX, x - vxScaled);
+                minY = Math.Min(minY, y - cellHeight);
+                maxX = Math.Max(maxX, x - vxScaled + glyphWidth);
+                maxY = Math.Max(maxY, y);
+            }
+            else
+            {
+                minX = Math.Min(minX, x);
+                minY = Math.Min(minY, y);
+                maxX = Math.Max(maxX, x + glyphWidth);
+                maxY = Math.Max(maxY, y + glyphHeight);
+            }
 
             sb.Append(unicode);
 
-            // Advance text position
-            var tx = (charWidth / 1000.0) * _fontSize * (_horizontalScaling / 100.0);
-            tx += _charSpacing;
-            if (charCode == 32) tx += _wordSpacing;
+            // Advance text position (§9.4.4). Word spacing fires only on the
+            // SINGLE-BYTE code 32 (§9.3.3). Vertical: ty = w1y·Tfs + Tc + Tw
+            // from /W2 (else /DW2, default −1000 → down the page), no Th.
+            var spacing = _charSpacing;
+            if (byteLength == 1 && charCode == 32) spacing += _wordSpacing;
 
-            _tm_e += tx * _tm_a;
-            _tm_f += tx * _tm_b;
+            if (_isVerticalWriting)
+            {
+                var vm = GetVerticalMetrics(cid);
+                var ty = (vm.W1Y / 1000.0) * _fontSize + spacing;
+                _tm_e += ty * _tm_c;
+                _tm_f += ty * _tm_d;
+            }
+            else
+            {
+                var tx = (charWidth / 1000.0) * _fontSize * (_horizontalScaling / 100.0) + spacing;
+                _tm_e += tx * _tm_a;
+                _tm_f += tx * _tm_b;
+            }
         }
 
         if (_registeredEncodingCMap != null)
         {
             // Registered CMap codespaces drive segmentation — mixed 1/2-byte
             // codes (90ms-RKSJ-H) would be garbled by a fixed stride (#515).
-            foreach (var (code, cid, _) in _registeredEncodingCMap.DecodeDetailed(bytes))
-                EmitGlyph(code, cid);
+            foreach (var (code, cid, byteLength) in _registeredEncodingCMap.DecodeDetailed(bytes))
+                EmitGlyph(code, cid, byteLength);
         }
         else
         {
@@ -689,7 +720,7 @@ public class ContentStreamParser
                 int charCode = _is2ByteFont
                     ? (bytes[i] << 8) | bytes[i + 1]
                     : bytes[i];
-                EmitGlyph(charCode, charCode);
+                EmitGlyph(charCode, charCode, stride);
             }
         }
 
@@ -698,6 +729,36 @@ public class ContentStreamParser
 
         return (sb.ToString(), new PdfRectangle(minX, minY, maxX, maxY));
     }
+
+    /// <summary>
+    /// TJ position adjustment, subtracted from the coordinate of the WRITING
+    /// direction (§9.4.3): horizontal → tx (scaled by Th), vertical → ty
+    /// (no Th). Mirrors TextExtractor. #515
+    /// </summary>
+    private void ApplyTjAdjustment(double adj)
+    {
+        if (_isVerticalWriting)
+        {
+            var ty = -(adj / 1000.0) * _fontSize;
+            _tm_e += ty * _tm_c;
+            _tm_f += ty * _tm_d;
+        }
+        else
+        {
+            _tm_e -= (adj / 1000.0) * _fontSize * (_horizontalScaling / 100.0);
+        }
+    }
+
+    /// <summary>
+    /// Vertical metrics for <paramref name="cid"/> — /W2, else the §9.7.4.3
+    /// defaults (w1y from /DW2, v = (w0∕2, DW2[0])). Mirrors TextExtractor.
+    /// </summary>
+    private Fonts.CidVerticalMetrics GetVerticalMetrics(int cid)
+        => _cidMetrics?.GetVerticalMetrics(cid)
+            ?? new Fonts.CidVerticalMetrics(
+                Fonts.CidFontWidths.SpecDefaultVerticalDisplacement,
+                GetCharWidth(cid) / 2,
+                Fonts.CidFontWidths.SpecDefaultVerticalOriginY);
 
     private (double x, double y) TransformTextPoint(double tx, double ty)
     {
@@ -962,7 +1023,8 @@ public class ContentStreamParser
         _toUnicodeMap = null;
         _is2ByteFont = false;
         _cidFontDict = null;
-        _cidWidths = null;
+        _cidMetrics = null;
+        _isVerticalWriting = false;
         _registeredEncodingCMap = null;
         _registeredCidToUnicode = null;
 
@@ -989,6 +1051,27 @@ public class ContentStreamParser
                     var detail = Text.ToUnicodeCMapParser.ParseDetailed(encStream.DecodedData);
                     if (detail.CodespaceRanges.Count > 0 && detail.MaxCodeBytes == 1)
                         _is2ByteFont = false;
+
+                    // /WMode 1 in the embedded CMap means vertical writing
+                    // (§9.7.5.2) — mirrors TextExtractor.LoadFontGeometry. #515
+                    try
+                    {
+                        if (Text.CidCMap.Parse(encStream.DecodedData).WMode == 1)
+                            _isVerticalWriting = true;
+                    }
+                    catch (Exception ex) when (ex is not OutOfMemoryException)
+                    {
+                        // Best-effort: unreadable CMap keeps horizontal default.
+                    }
+                }
+
+                // Identity-V / registered -V CMap names mean vertical
+                // writing mode, matching TextExtractor. #515
+                if (encObj is PdfName encName
+                    && (encName.Value == "Identity-V"
+                        || Text.PredefinedCMapProvider.IsVertical(encName.Value)))
+                {
+                    _isVerticalWriting = true;
                 }
 
                 // Registered (predefined) CMap NAME as /Encoding (#515):
@@ -1094,54 +1177,12 @@ public class ContentStreamParser
     {
         if (_cidFontDict == null) return;
 
-        _cidWidths = new Dictionary<int, double>();
-        var widthsObj = _cidFontDict.GetOptional("W");
-
-        if (widthsObj is PdfArray widths)
-        {
-            int i = 0;
-            while (i < widths.Count)
-            {
-                var first = widths[i];
-                if (first is not (PdfInteger or PdfReal)) { i++; continue; }
-
-                var firstCid = (int)GetNumber(first);
-                i++;
-
-                if (i >= widths.Count) break;
-
-                var second = widths[i];
-
-                if (second is PdfArray cidWidthArray)
-                {
-                    // Format: c [w1 w2 w3 ...]
-                    for (int j = 0; j < cidWidthArray.Count; j++)
-                    {
-                        _cidWidths[firstCid + j] = GetNumber(cidWidthArray[j]);
-                    }
-                    i++;
-                }
-                else if (second is PdfInteger or PdfReal)
-                {
-                    // Format: c1 c2 w
-                    var lastCid = (int)GetNumber(second);
-                    i++;
-
-                    if (i >= widths.Count) break;
-
-                    var width = GetNumber(widths[i]);
-                    for (int cid = firstCid; cid <= lastCid; cid++)
-                    {
-                        _cidWidths[cid] = width;
-                    }
-                    i++;
-                }
-                else
-                {
-                    i++;
-                }
-            }
-        }
+        // /DW, /W, /DW2, /W2 via the shared hardened parser (§9.7.4.3, #515)
+        // — the same tables TextExtractor loads, so redaction bounds and
+        // extraction letters stay in the same geometry.
+        _cidMetrics = Fonts.CidFontWidths.Parse(
+            _cidFontDict,
+            _page != null ? _page.Document.Resolve : null);
     }
 
     private string DecodeCharacter(int charCode, int cid)
@@ -1174,12 +1215,9 @@ public class ContentStreamParser
 
     private double GetCharWidth(int charCode)
     {
-        // Check CID width table for Type0 fonts first
-        if (_cidWidths != null && _cidWidths.TryGetValue(charCode, out var cidWidth))
-            return cidWidth;
-
-        if (_cidFontDict != null)
-            return _cidFontDict.GetNumber("DW", 1000);
+        // CID width table (/W with /DW fallback) for Type0 fonts first
+        if (_cidMetrics != null && _cidFontDict != null)
+            return _cidMetrics.GetWidth(charCode);
 
         if (_currentFont != null)
         {
