@@ -56,6 +56,7 @@ public class ResolvedRenderFontTests
             Typeface: null,
             ByteToGlyph: null,
             HasEmbeddedProgram: false,
+            HasRawType1Program: false,
             CidWidths: null,
             CidDefaultWidth: 1000f,
             CidUseUnicodeCmap: false,
@@ -77,10 +78,10 @@ public class ResolvedRenderFontTests
     public void ForwardingProperties_ReflectType0AndType3Subtypes()
     {
         var type0 = new ResolvedRenderFont(
-            MakePdfFont(subtype: "Type0"), null, null, null, null, null, false,
+            MakePdfFont(subtype: "Type0"), null, null, null, null, null, false, false,
             null, 1000f, false, null, null, null, Array.Empty<string>());
         var type3 = new ResolvedRenderFont(
-            MakePdfFont(subtype: "Type3"), null, null, null, null, null, false,
+            MakePdfFont(subtype: "Type3"), null, null, null, null, null, false, false,
             null, 1000f, false, null, null, null, Array.Empty<string>());
 
         type0.IsType0.Should().BeTrue();
@@ -98,7 +99,7 @@ public class ResolvedRenderFontTests
         };
 
         var resolved = new ResolvedRenderFont(
-            MakePdfFont(), null, null, null, null, null, false,
+            MakePdfFont(), null, null, null, null, null, false, false,
             null, 1000f, false, null, null, null, diagnostics);
 
         resolved.Diagnostics.Should().ContainSingle()
@@ -109,7 +110,7 @@ public class ResolvedRenderFontTests
     public void Diagnostics_DefaultsToEmpty_NotNull_WhenFontResolvesCleanly()
     {
         var resolved = new ResolvedRenderFont(
-            MakePdfFont(), null, null, null, null, null, false,
+            MakePdfFont(), null, null, null, null, null, false, false,
             null, 1000f, false, null, null, null, Array.Empty<string>());
 
         resolved.Diagnostics.Should().NotBeNull();
@@ -129,7 +130,7 @@ public class ResolvedRenderFontTests
     public void With_ProducesANewInstance_OriginalIsUnaffected()
     {
         var original = new ResolvedRenderFont(
-            MakePdfFont(), null, null, null, null, null, HasEmbeddedProgram: false,
+            MakePdfFont(), null, null, null, null, null, HasEmbeddedProgram: false, HasRawType1Program: false,
             null, 1000f, false, null, null, null, Array.Empty<string>());
 
         var modified = original with { HasEmbeddedProgram = true };

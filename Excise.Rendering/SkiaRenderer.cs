@@ -384,6 +384,13 @@ internal partial class RenderContext
     // independent byte-cmap probes.
     private readonly Dictionary<Excise.Core.Primitives.PdfDictionary, ushort[]?> _embeddedTypefaceByteToGlyph = new();
 
+    // Font dicts whose embedded program is a raw Type 1 /FontFile (PFA/PFB),
+    // as opposed to /FontFile2 TrueType or /FontFile3 CFF/OpenType. Fill-mode
+    // text for these faces must keep the pre-#710 DrawText (glyph mask) path:
+    // scoping check for FillTextUsingGlyphPath — see the comment there.
+    // Keyed by the same fontDict reference as _embeddedTypefaces.
+    private readonly HashSet<Excise.Core.Primitives.PdfDictionary> _embeddedRawType1FontDicts = new();
+
     // Stack of /Resources dictionaries currently active. The page's own
     // /Resources is the bottom; entering a Form XObject pushes its own
     // /Resources (or null when absent — we still push so push/pop pair).

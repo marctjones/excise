@@ -102,6 +102,8 @@ internal partial class RenderContext
             fontDict, toUnicodeMap, codeToGlyphName, codeToUnicode, encodingName,
             fontWidths, firstChar, diagnostics);
         var hasEmbeddedProgram = embedded != null;
+        var hasRawType1Program = embedded != null && fontDict != null
+            && _embeddedRawType1FontDicts.Contains(fontDict);
         var typeface = embedded ?? GetTypeface(
             resolvedFont.BaseFont,
             suppressSyntheticStyleForMissingType0: resolvedFont.IsType0);
@@ -177,6 +179,7 @@ internal partial class RenderContext
             typeface,
             byteToGlyph,
             hasEmbeddedProgram,
+            hasRawType1Program,
             cidWidths,
             cidDefaultWidth,
             cidUseUnicodeCmap,
@@ -451,6 +454,8 @@ internal partial class RenderContext
         }
 
         _embeddedTypefaces[fontDict] = typeface;
+        if (isType1)
+            _embeddedRawType1FontDicts.Add(fontDict);
         _embeddedTypefaceByteToGlyph[fontDict] = cffByteToGlyph
             ?? type1ByteToGlyph
             ?? ResolveByteCodeCmap(typeface, fontDict, toUnicodeMap);
@@ -1851,9 +1856,33 @@ internal partial class RenderContext
     /// geometry: bitmap-only faces (e.g. color emoji) have no outlines but
     /// do render via DrawText, and an all-whitespace run is a harmless
     /// no-op either way. See issue #710.
+    ///
+    /// <b>Scope (#710 regression fix):</b> the outline-path fill applies to
+    /// the font programs where it measurably closes the gap to the
+    /// references — embedded CFF/Type1C, TrueType, OpenType, and
+    /// system-substituted faces. Embedded <b>raw Type 1 (/FontFile)</b>
+    /// faces keep the DrawText glyph-mask path: for those faces the
+    /// platform masks already match mutool almost exactly
+    /// (highlights.pdf p5 @72dpi: DrawText diffFraction 0.00067 vs
+    /// DrawPath 0.0152 against mutool, with pdftocairo agreeing), while
+    /// the analytic outline fill of the very same outlines lands
+    /// symmetrically darker AND lighter on nearly every small-size glyph
+    /// edge — a per-edge coverage disagreement, not a weight or geometry
+    /// error (glyph paths are scale-invariant and identical at 9.5pt and
+    /// 100pt). The #710 CFF stem-darkening mismatch that motivated the
+    /// outline fill does not occur on the platform's raw-Type1 raster
+    /// path, so switching those faces to DrawPath only ADDED error.
+    /// Verified both ways: PdfJsFontFallbackDifferentialTests (raw Type 1
+    /// vs mutool) and TextRasterInkParityTests (embedded CFF ink parity).
     /// </summary>
     private void FillTextUsingGlyphPath(SKPath? glyphRunPath, SKPaint fillPaint, Action fallbackDraw)
     {
+        if (_currentFont?.HasRawType1Program == true)
+        {
+            RenderWithCurrentSoftMask(fallbackDraw, fillPaint);
+            return;
+        }
+
         if (glyphRunPath != null && !glyphRunPath.IsEmpty)
         {
             RenderWithCurrentSoftMask(() => _canvas.DrawPath(glyphRunPath, fillPaint), fillPaint);
