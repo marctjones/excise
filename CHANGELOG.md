@@ -84,6 +84,17 @@ now extracts *and* renders, and page content is exposed to screen readers.
   outline — with a DrawText fallback for bitmap-only faces (color emoji).
   Gated by `TextRasterInkParityTests` against mutool on an embedded-CFF
   fixture.
+- **Raw Type 1 (`/FontFile`) text keeps the platform glyph-mask fill**
+  (#710 regression fix) — the outline-path fill above made embedded raw
+  Type 1 faces render *worse* against the references (highlights.pdf p5,
+  URW Nimbus Roman: DifferingPixelFraction vs mutool 0.00067 → 0.0152),
+  because the platform's raw-Type1 raster path never applied the CFF
+  stem darkening the outline fill was fixing — DrawText already matched
+  mutool almost exactly there. Outline fill is now scoped to embedded
+  CFF/Type1C, TrueType, OpenType, and system-substituted faces
+  (`ResolvedRenderFont.HasRawType1Program` gate in
+  `FillTextUsingGlyphPath`); both directions are test-gated
+  (`PdfJsFontFallbackDifferentialTests` + `TextRasterInkParityTests`).
 - **Type 3 uncolored-glyph (d1) colour semantics** (#514) — a d1 CharProc's
   own colour operators are now ignored so the glyph paints in the text
   object's fill colour, per ISO 32000-1 §9.6.5.
