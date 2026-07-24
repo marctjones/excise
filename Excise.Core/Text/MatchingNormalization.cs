@@ -27,6 +27,12 @@ namespace Excise.Core.Text;
 /// marks ONLY: Latin combining accents are canonically meaningful and kept,
 /// and the Hebrew PUNCTUATION sharing the block (maqaf U+05BE, paseq
 /// U+05C0, sof pasuq U+05C3, nun hafukha U+05C6) is untouched.</item>
+/// <item>Invisible/optional separator folding (#726) — soft hyphen U+00AD
+/// and the zero-width characters U+200B–U+200D and U+FEFF are removed, and
+/// non-breaking space U+00A0 becomes a plain space, so "secret" matches
+/// "se&#173;cret" in justified text and "top secret" matches
+/// "top&#160;secret". Exactly those five-plus-one code points — real
+/// hyphens, spaces, and other format characters keep their identity.</item>
 /// </list>
 /// </summary>
 /// <remarks>
@@ -64,7 +70,8 @@ public static class MatchingNormalization
 
         var folded = PresentationFormFolding.Fold(text);
         folded = CanonicalCompose(folded);
-        return StripSemiticVocalization(folded);
+        folded = StripSemiticVocalization(folded);
+        return FoldSeparators(folded);
     }
 
     /// <summary>
@@ -180,6 +187,47 @@ public static class MatchingNormalization
         for (int i = first; i < text.Length; i++)
         {
             if (!IsSemiticVocalizationMark(text[i])) sb.Append(text[i]);
+        }
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// True when <paramref name="c"/> is an invisible/optional separator
+    /// removed for matching (#726): soft hyphen U+00AD (a line-break
+    /// OPPORTUNITY the layout engine may or may not render), zero-width
+    /// space/non-joiner/joiner U+200B–U+200D, and zero-width no-break
+    /// space / BOM U+FEFF. Exactly these code points — a real hyphen
+    /// (U+002D) is visible content and keeps its identity, as do all other
+    /// format characters (bidi marks are handled by
+    /// <see cref="BidiReorderer"/>, not stripped here).
+    /// </summary>
+    public static bool IsIgnorableSeparator(char c) =>
+        c is '\u00AD' or '\u200B' or '\u200C' or '\u200D' or '\uFEFF';
+
+    /// <summary>
+    /// Remove every <see cref="IsIgnorableSeparator"/> character and map
+    /// non-breaking space U+00A0 to a plain space; returns the original
+    /// string instance when neither occurs.
+    /// </summary>
+    private static string FoldSeparators(string text)
+    {
+        int first = -1;
+        for (int i = 0; i < text.Length; i++)
+        {
+            var c = text[i];
+            if (IsIgnorableSeparator(c) || c == '\u00A0') { first = i; break; }
+        }
+
+        if (first < 0) return text;
+
+        var sb = new StringBuilder(text.Length);
+        sb.Append(text, 0, first);
+        for (int i = first; i < text.Length; i++)
+        {
+            var c = text[i];
+            if (IsIgnorableSeparator(c)) continue;
+            sb.Append(c == '\u00A0' ? ' ' : c);
         }
 
         return sb.ToString();
