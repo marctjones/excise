@@ -155,16 +155,22 @@ public class TextRedactor
     {
         var results = new List<List<Letter>>();
 
-        // Fold Arabic presentation forms (#632) and Latin ligatures (#722) to
-        // plain letters on BOTH sides so a plain-letter needle matches
-        // shaped/ligated text. All index arithmetic below is done
-        // consistently in folded space: the per-letter folded values (a
-        // lam-alef ligature folds 1 char → 2, ﬃ folds 1 → 3) drive the
-        // mapping from folded string positions back to letters.
-        var needle = PresentationFormFolding.Fold(searchText);
-        var foldedValues = new string[letters.Count];
+        // Fold BOTH sides into the canonical matching space — presentation
+        // forms/ligatures to plain letters (#632, #722) and canonical NFC
+        // composition (#724) — so a plain-letter or precomposed needle
+        // matches shaped, ligated, or decomposed text. All index arithmetic
+        // below is done consistently in folded space: the per-letter folded
+        // values (a lam-alef ligature folds 1 char → 2, ﬃ folds 1 → 3, a
+        // combining-accent letter folds to "" after merging into its base's
+        // cluster) drive the mapping from folded string positions back to
+        // letters.
+        var needle = MatchingNormalization.Fold(searchText);
+        if (needle.Length == 0)
+            return results;
+        var rawValues = new string[letters.Count];
         for (int i = 0; i < letters.Count; i++)
-            foldedValues[i] = PresentationFormFolding.Fold(letters[i].Value);
+            rawValues[i] = letters[i].Value;
+        var foldedValues = MatchingNormalization.FoldAll(rawValues);
 
         // Build a string from all letters for searching
         var fullText = string.Concat(foldedValues);
@@ -185,12 +191,27 @@ public class TextRedactor
                 letterIndex++;
             }
 
+            // Letters at the boundary with zero-length folded values belong
+            // to the PREVIOUS cluster (e.g. a combining accent merged into
+            // the base letter before the match) — skip them.
+            while (letterIndex < letters.Count && foldedValues[letterIndex].Length == 0)
+                letterIndex++;
+
             // Collect letters that make up the match
             var matchChars = 0;
             while (matchChars < needle.Length && letterIndex < letters.Count)
             {
                 match.Add(letters[letterIndex]);
                 matchChars += foldedValues[letterIndex].Length;
+                letterIndex++;
+            }
+
+            // Absorb trailing letters whose folded values are empty — they
+            // are part of the last matched cluster (its combining marks) and
+            // must be removed with it.
+            while (letterIndex < letters.Count && foldedValues[letterIndex].Length == 0)
+            {
+                match.Add(letters[letterIndex]);
                 letterIndex++;
             }
 
