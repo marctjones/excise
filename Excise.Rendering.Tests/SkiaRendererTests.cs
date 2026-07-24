@@ -4716,6 +4716,179 @@ public class SkiaRendererTests
             "the CharProc's own colour operator must be ignored for a d1 glyph");
     }
 
+    [Fact]
+    public void RenderPage_Type3Font_d1BBox_ClipsGlyphDescription()
+    {
+        // ISO 32000-1 §9.6.5, Table 113: d1's llx/lly/urx/ury declare the glyph
+        // bounding box, which must enclose the entire glyph — marks outside it
+        // are undefined, and reference renderers (pdftocairo, Ghostscript) clip
+        // to it. Here the bbox is 300x300 glyph units (7.2pt at 24pt font) but
+        // the CharProc paints a 500x700 rect (12 x 16.8pt): everything outside
+        // the declared box must be clipped away.
+        var pdfData = CreatePdfWithType3Glyph(
+            pageContent: "0 0 0 rg BT /F1 24 Tf 100 120 Td <41> Tj ET",
+            charProcContent: "500 0 0 0 300 300 d1 0 0 500 700 re f");
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(doc.GetPage(1));
+
+        var inside = bitmap.GetPixel((int)(103 * 150 / 72), bitmap.Height - (int)(123 * 150 / 72));
+        inside.Red.Should().BeLessThan(100,
+            "the glyph must still paint inside its declared d1 bounding box");
+        var aboveBox = bitmap.GetPixel((int)(104 * 150 / 72), bitmap.Height - (int)(132 * 150 / 72));
+        aboveBox.Red.Should().BeGreaterThan(200,
+            "marks above the declared d1 bounding box must be clipped away");
+        var rightOfBox = bitmap.GetPixel((int)(110 * 150 / 72), bitmap.Height - (int)(123 * 150 / 72));
+        rightOfBox.Red.Should().BeGreaterThan(200,
+            "marks right of the declared d1 bounding box must be clipped away");
+    }
+
+    [Fact]
+    public void RenderPage_Type3Font_d1AllZeroBBox_DoesNotClip()
+    {
+        // An all-zero d1 bounding box declares no bounds (poppler and mutool
+        // render the glyph in full; treating it as a real box would blank every
+        // glyph). The full 500x700 rect must survive.
+        var pdfData = CreatePdfWithType3Glyph(
+            pageContent: "0 0 0 rg BT /F1 24 Tf 100 120 Td <41> Tj ET",
+            charProcContent: "500 0 0 0 0 0 d1 0 0 500 700 re f");
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(doc.GetPage(1));
+
+        var topOfRect = bitmap.GetPixel((int)(104 * 150 / 72), bitmap.Height - (int)(132 * 150 / 72));
+        topOfRect.Red.Should().BeLessThan(100,
+            "an all-zero d1 bbox declares no bounds and must not clip the glyph");
+    }
+
+    [Fact]
+    public void RenderPage_Type3Font_MissingWidths_AdvancesByCharProcWx()
+    {
+        // No /Widths at all: the advance must come from the CharProc's leading
+        // d0 operator (wx = 500 glyph units = 12pt at 24pt font). The glyph
+        // paints a 400-unit (9.6pt) wide rect, so two 'A's must sit at
+        // x [100..109.6] and [112..121.6] with a clean gap between them.
+        // (Ghostscript advances by wx here; poppler and mutool substitute
+        // other fallbacks — wx is the glyph's declared metric per §9.6.5.)
+        var pdfData = CreateType3FixturePdf(
+            "0 0 0 rg BT /F1 24 Tf 100 120 Td <4141> Tj ET",
+            new[] { ("A", "500 0 d0 0 0 400 700 re f") },
+            encodingDifferences: "65 /A",
+            widthsClause: "");
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(doc.GetPage(1));
+
+        var secondGlyph = bitmap.GetPixel((int)(116 * 150 / 72), bitmap.Height - (int)(128 * 150 / 72));
+        secondGlyph.Red.Should().BeLessThan(100,
+            "without /Widths the second glyph must advance by the d0 wx metric (500 units = 12pt)");
+        var gap = bitmap.GetPixel((int)(110.8 * 150 / 72), bitmap.Height - (int)(128 * 150 / 72));
+        gap.Red.Should().BeGreaterThan(200,
+            "the 2.4pt gap between wx-advanced glyphs must stay unpainted (a zero advance would overlap them)");
+        var beyond = bitmap.GetPixel((int)(124 * 150 / 72), bitmap.Height - (int)(128 * 150 / 72));
+        beyond.Red.Should().BeGreaterThan(200,
+            "the advance must be wx (500), not a larger bbox-derived fallback");
+    }
+
+    [Fact]
+    public void RenderPage_Type3Font_WidthsOverridesCharProcWx()
+    {
+        // /Widths [250] disagrees with the CharProc's d0 wx (500). ISO 32000-1
+        // §9.6.5: when the two are inconsistent, /Widths shall be used. The
+        // glyph paints a 200-unit (4.8pt) rect; with the 250-unit (6pt)
+        // advance the second 'A' spans x [106..110.8]. A wx-based advance
+        // would put it at [112..116.8] instead. pdftocairo and Ghostscript
+        // both take /Widths here.
+        var pdfData = CreateType3FixturePdf(
+            "0 0 0 rg BT /F1 24 Tf 100 120 Td <4141> Tj ET",
+            new[] { ("A", "500 0 d0 0 0 200 700 re f") },
+            encodingDifferences: "65 /A",
+            widthsClause: "/FirstChar 65 /LastChar 65 /Widths [250] ");
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(doc.GetPage(1));
+
+        var secondGlyph = bitmap.GetPixel((int)(108 * 150 / 72), bitmap.Height - (int)(128 * 150 / 72));
+        secondGlyph.Red.Should().BeLessThan(100,
+            "/Widths (250) must supply the advance when it covers the code");
+        var wxPosition = bitmap.GetPixel((int)(114 * 150 / 72), bitmap.Height - (int)(128 * 150 / 72));
+        wxPosition.Red.Should().BeGreaterThan(200,
+            "/Widths overrides an inconsistent d0 wx (500) — nothing may paint at the wx-advanced position");
+    }
+
+    [Fact]
+    public void RenderPage_Type3Font_MissingCharProc_SkipsGlyphButStillAdvances()
+    {
+        // Code 65 ('A') is mapped by /Encoding but has no /CharProcs entry:
+        // the glyph paints nothing, but the /Widths advance still applies so
+        // the following 'B' lands at its correct position (x = 112pt).
+        var pdfData = CreateType3FixturePdf(
+            "0 0 0 rg BT /F1 24 Tf 100 120 Td <4142> Tj ET",
+            new[] { ("B", "500 0 d0 0 0 400 700 re f") },
+            encodingDifferences: "65 /A 66 /B",
+            widthsClause: "/FirstChar 65 /LastChar 66 /Widths [500 500] ");
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(doc.GetPage(1));
+
+        var missingGlyphArea = bitmap.GetPixel((int)(105 * 150 / 72), bitmap.Height - (int)(128 * 150 / 72));
+        missingGlyphArea.Red.Should().BeGreaterThan(200,
+            "a code with no CharProc entry must paint nothing");
+        var secondGlyph = bitmap.GetPixel((int)(116 * 150 / 72), bitmap.Height - (int)(128 * 150 / 72));
+        secondGlyph.Red.Should().BeLessThan(100,
+            "the missing glyph must still consume its /Widths advance so following glyphs stay positioned");
+    }
+
+    [Fact]
+    public void RenderPage_Type3Font_RotatedFontMatrix_AdvanceIsMappedXComponent()
+    {
+        // FontMatrix [0 0.001 -0.001 0 0 0] rotates glyph space 90°. The
+        // horizontal advance is the x-component of the FontMatrix-mapped
+        // displacement vector (wx, 0) → (0, wx·b), i.e. ZERO — both glyphs
+        // stack on the same spot (pdftocairo and mutool agree; the old code
+        // substituted a bogus 1/1000 scale and drifted the second glyph
+        // 12pt right). The painted 400x700 rect maps to x [183.2..200],
+        // y [120..129.6] around Td 200 120.
+        var pdfData = CreateType3FixturePdf(
+            "0 0 0 rg BT /F1 24 Tf 200 120 Td <4141> Tj ET",
+            new[] { ("A", "500 0 d0 0 0 400 700 re f") },
+            encodingDifferences: "65 /A",
+            widthsClause: "/FirstChar 65 /LastChar 65 /Widths [500] ",
+            fontMatrix: "[0 0.001 -0.001 0 0 0]");
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(doc.GetPage(1));
+
+        var rotatedGlyph = bitmap.GetPixel((int)(190 * 150 / 72), bitmap.Height - (int)(124 * 150 / 72));
+        rotatedGlyph.Red.Should().BeLessThan(100,
+            "the rotated glyph must paint at the FontMatrix-mapped position");
+        var bogusAdvance = bitmap.GetPixel((int)(206 * 150 / 72), bitmap.Height - (int)(124 * 150 / 72));
+        bogusAdvance.Red.Should().BeGreaterThan(200,
+            "a rotated FontMatrix maps the advance vector to x = 0 — the second glyph must stack, not drift right");
+    }
+
+    [Fact]
+    public void RenderPage_StrayD1InPageStream_DoesNotLockColorOrClipPage()
+    {
+        // d0/d1 are only legal as the first operator of a Type 3 glyph
+        // description (ISO 32000-1 §9.6.5). A stray d1 in an ordinary page
+        // stream must be ignored: it must neither colour-lock the rest of the
+        // page (the rg after it must apply) nor install its bbox as a clip
+        // (the rect must still paint far outside [0 0 5 5]).
+        var pdfData = CreatePdfWithType3Glyph(
+            pageContent: "500 0 0 0 5 5 d1 1 0 0 rg 100 100 200 200 re f",
+            charProcContent: "500 0 d0 0 0 400 700 re f");
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(doc.GetPage(1));
+
+        var pixel = bitmap.GetPixel((int)(150 * 150 / 72), bitmap.Height - (int)(150 * 150 / 72));
+        pixel.Red.Should().BeGreaterThan(180,
+            "a stray d1 must not colour-lock the page — the rg that follows it must take effect");
+        pixel.Green.Should().BeLessThan(80,
+            "the fill must be red, not the default black (which would mean d1 locked the colour)");
+    }
+
     #endregion
 
     #region Compatibility Operators (BX, EX)
@@ -5623,6 +5796,28 @@ public class SkiaRendererTests
         string charProcContent,
         string fontMatrix = "[0.001 0 0 0.001 0 0]",
         string fontResources = "<< >>")
+        => CreateType3FixturePdf(
+            pageContent,
+            new[] { ("A", charProcContent) },
+            encodingDifferences: "65 /A",
+            widthsClause: "/FirstChar 65 /LastChar 65 /Widths [500] ",
+            fontMatrix: fontMatrix,
+            fontResources: fontResources);
+
+    /// <summary>
+    /// Generated Type 3 fixture with an arbitrary CharProc set, /Encoding
+    /// Differences, and an optional /Widths clause (pass "" to omit /Widths
+    /// entirely — the d0/d1 metrics fallback case, #514). Internal so the
+    /// Type3RenderingDifferentialTests can corroborate the same fixtures
+    /// against reference renderers.
+    /// </summary>
+    internal static byte[] CreateType3FixturePdf(
+        string pageContent,
+        (string Name, string Content)[] charProcs,
+        string encodingDifferences,
+        string widthsClause,
+        string fontMatrix = "[0.001 0 0 0.001 0 0]",
+        string fontResources = "<< >>")
     {
         using var ms = new MemoryStream();
         using var writer = new StreamWriter(ms, System.Text.Encoding.ASCII, leaveOpen: true);
@@ -5631,7 +5826,8 @@ public class SkiaRendererTests
         writer.WriteLine("%PDF-1.4");
         writer.Flush();
 
-        var offsets = new long[7];
+        var objectCount = 5 + charProcs.Length;
+        var offsets = new long[objectCount + 1];
 
         offsets[1] = ms.Position;
         writer.WriteLine("1 0 obj");
@@ -5661,32 +5857,41 @@ public class SkiaRendererTests
         writer.WriteLine("endobj");
         writer.Flush();
 
+        var charProcRefs = string.Join(" ",
+            charProcs.Select((cp, i) => $"/{cp.Name} {6 + i} 0 R"));
         offsets[5] = ms.Position;
         writer.WriteLine("5 0 obj");
-        writer.WriteLine($"<< /Type /Font /Subtype /Type3 /Name /F1 /FontBBox [0 0 500 700] /FontMatrix {fontMatrix} /CharProcs << /A 6 0 R >> /Encoding << /Type /Encoding /Differences [65 /A] >> /FirstChar 65 /LastChar 65 /Widths [500] /Resources {fontResources} >>");
+        writer.WriteLine(
+            $"<< /Type /Font /Subtype /Type3 /Name /F1 /FontBBox [0 0 500 700] " +
+            $"/FontMatrix {fontMatrix} /CharProcs << {charProcRefs} >> " +
+            $"/Encoding << /Type /Encoding /Differences [{encodingDifferences}] >> " +
+            $"{widthsClause}/Resources {fontResources} >>");
         writer.WriteLine("endobj");
         writer.Flush();
 
-        offsets[6] = ms.Position;
-        writer.WriteLine("6 0 obj");
-        writer.WriteLine($"<< /Length {charProcContent.Length} >>");
-        writer.WriteLine("stream");
-        writer.Write(charProcContent);
-        writer.WriteLine();
-        writer.WriteLine("endstream");
-        writer.WriteLine("endobj");
-        writer.Flush();
+        for (int i = 0; i < charProcs.Length; i++)
+        {
+            offsets[6 + i] = ms.Position;
+            writer.WriteLine($"{6 + i} 0 obj");
+            writer.WriteLine($"<< /Length {charProcs[i].Content.Length} >>");
+            writer.WriteLine("stream");
+            writer.Write(charProcs[i].Content);
+            writer.WriteLine();
+            writer.WriteLine("endstream");
+            writer.WriteLine("endobj");
+            writer.Flush();
+        }
 
         long xrefPos = ms.Position;
         writer.WriteLine("xref");
-        writer.WriteLine("0 7");
+        writer.WriteLine($"0 {objectCount + 1}");
         writer.WriteLine("0000000000 65535 f ");
-        for (int i = 1; i <= 6; i++)
+        for (int i = 1; i <= objectCount; i++)
             writer.WriteLine($"{offsets[i]:D10} 00000 n ");
         writer.Flush();
 
         writer.WriteLine("trailer");
-        writer.WriteLine("<< /Root 1 0 R /Size 7 >>");
+        writer.WriteLine($"<< /Root 1 0 R /Size {objectCount + 1} >>");
         writer.WriteLine("startxref");
         writer.WriteLine(xrefPos.ToString());
         writer.WriteLine("%%EOF");

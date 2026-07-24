@@ -2180,14 +2180,18 @@ internal partial class RenderContext
 
         foreach (var code in bytes)
         {
-            if (canPaint &&
-                charProcs != null &&
-                TryResolveType3CharProc(charProcs, code, out var charProc))
-            {
-                RenderType3Glyph(charProc, fontResources, fontMatrix, cursorTextUnits, th);
-            }
+            // Resolve the CharProc even when not painting (Tr 3 invisible
+            // text, hidden optional content): its leading d0/d1 operator is
+            // the metrics fallback when /Widths does not cover the code, and
+            // invisible text still advances the text matrix.
+            PdfStream? charProc = null;
+            if (charProcs != null && TryResolveType3CharProc(charProcs, code, out var resolved))
+                charProc = resolved;
 
-            cursorTextUnits += GetType3TextSpaceAdvance(code, fontMatrix);
+            if (canPaint && charProc != null)
+                RenderType3Glyph(charProc, fontResources, fontMatrix, cursorTextUnits, th);
+
+            cursorTextUnits += GetType3TextSpaceAdvance(code, charProc, fontMatrix);
             cursorTextUnits += _textState.CharSpacing;
             if (code == 0x20)
                 cursorTextUnits += _textState.WordSpacing;
@@ -2231,6 +2235,37 @@ internal partial class RenderContext
             : null;
     }
 
+    // Applies the glyph bounding box declared by a d1 operator as a clip on
+    // the glyph description (ISO 32000-1 §9.6.5, Table 113: wx wy llx lly urx
+    // ury d1). The declared box must enclose the entire glyph — marks outside
+    // it are undefined, and reference renderers (poppler, Ghostscript's glyph
+    // cache) clip to it. An all-zero box declares no bounds, so no clip is
+    // applied. Runs inside RenderType3Glyph's canvas save, so the clip cannot
+    // outlive the glyph; applied before any q in the CharProc, so an interior
+    // Q cannot pop it either.
+    private void ApplyType3GlyphBBoxClip(ContentOperator op)
+    {
+        if (op.Operands.Count < 6)
+            return;
+
+        var llx = (float)op.GetNumber(2);
+        var lly = (float)op.GetNumber(3);
+        var urx = (float)op.GetNumber(4);
+        var ury = (float)op.GetNumber(5);
+        if (llx == 0f && lly == 0f && urx == 0f && ury == 0f)
+            return;
+
+        var rect = new SKRect(
+            Math.Min(llx, urx),
+            Math.Min(lly, ury),
+            Math.Max(llx, urx),
+            Math.Max(lly, ury));
+        if (rect.Width <= 0f || rect.Height <= 0f)
+            return;
+
+        _canvas.ClipRect(rect);
+    }
+
     private SKMatrix GetType3FontMatrix(Excise.Core.Primitives.PdfDictionary fontDict)
     {
         var matrixArray = ResolveArray(fontDict, "FontMatrix");
@@ -2239,24 +2274,69 @@ internal partial class RenderContext
             : new SKMatrix(0.001f, 0, 0, 0, 0.001f, 0, 0, 0, 1);
     }
 
-    private float GetType3TextSpaceAdvance(byte code, SKMatrix fontMatrix)
+    // Advance width for one Type 3 glyph, in text-space units. The width
+    // source follows ISO 32000-1 §9.6.5: the font dictionary's /Widths entry
+    // shall be used when it covers the code (it overrides d0/d1 when the two
+    // are inconsistent); otherwise the wx operand declared by the CharProc's
+    // leading d0/d1 operator is the glyph's horizontal displacement. Both are
+    // glyph-space values mapped to text space through /FontMatrix.
+    private float GetType3TextSpaceAdvance(byte code, PdfStream? charProc, SKMatrix fontMatrix)
     {
-        var rawWidth = GetSimpleFontWidth(code);
-        var fontMatrixX = Math.Abs(fontMatrix.ScaleX) > 1e-9f ? fontMatrix.ScaleX : 0.001f;
-        return rawWidth * fontMatrixX;
+        float rawWidth;
+        var widths = _currentFont?.Widths;
+        var index = code - (_currentFont?.FirstChar ?? 0);
+        if (widths is { Length: > 0 } && index >= 0 && index < widths.Length)
+            rawWidth = widths[index];
+        else if (charProc != null && PeekType3CharProcWx(charProc) is { } wx)
+            rawWidth = wx;
+        else
+            rawWidth = _currentFont?.MissingWidth ?? 0f;
+
+        return MapType3GlyphSpaceAdvance(rawWidth, fontMatrix);
     }
 
-    private float GetSimpleFontWidth(byte code)
+    // Maps a glyph-space horizontal displacement to text space via the Type 3
+    // /FontMatrix (ISO 32000-1 §9.2.4, §9.6.5). Horizontal writing advances
+    // by the x-component of the mapped displacement vector — using ScaleX
+    // alone substitutes a bogus 1/1000 scale when the matrix is rotated
+    // (ScaleX == 0), separating glyphs that should stack. The 1/1000 default
+    // is kept only for a fully degenerate (all-zero) matrix.
+    private static float MapType3GlyphSpaceAdvance(float rawWidth, SKMatrix fontMatrix)
     {
-        var widths = _currentFont?.Widths;
-        var missingWidth = _currentFont?.MissingWidth ?? 0f;
-        if (widths == null || widths.Length == 0)
-            return missingWidth;
+        if (IsDegenerateFontMatrix(fontMatrix))
+            return rawWidth * 0.001f;
+        return fontMatrix.MapVector(rawWidth, 0f).X;
+    }
 
-        var index = code - _currentFont!.FirstChar;
-        return index >= 0 && index < widths.Length
-            ? widths[index]
-            : missingWidth;
+    private static bool IsDegenerateFontMatrix(SKMatrix m) =>
+        Math.Abs(m.ScaleX) < 1e-9f && Math.Abs(m.SkewY) < 1e-9f &&
+        Math.Abs(m.SkewX) < 1e-9f && Math.Abs(m.ScaleY) < 1e-9f;
+
+    // Peeks the wx metric declared by a CharProc's leading d0/d1 operator
+    // (ISO 32000-1 §9.6.5 requires d0 or d1 to be the FIRST operator of a
+    // glyph description). Used as the advance fallback when /Widths does not
+    // cover a code; cached per stream so each CharProc is scanned once.
+    private float? PeekType3CharProcWx(PdfStream charProc)
+    {
+        if (_type3CharProcWx.TryGetValue(charProc, out var cached))
+            return cached;
+
+        float? wx = null;
+        try
+        {
+            var content = new ContentStreamParser(charProc.DecodedData, _page)
+                .Parse(_cancellationToken);
+            var first = content.Operators.Count > 0 ? content.Operators[0] : null;
+            if (first is { Name: "d0" or "d1" } && first.Operands.Count >= 1)
+                wx = (float)first.GetNumber(0);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // Malformed CharProc: fall back to /MissingWidth like before.
+        }
+
+        _type3CharProcWx[charProc] = wx;
+        return wx;
     }
 
     private void RenderType3Glyph(

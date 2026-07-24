@@ -416,6 +416,11 @@ internal partial class RenderContext
     private readonly Dictionary<Excise.Core.Primitives.PdfDictionary, Dictionary<int, int>?> _embeddedCffCidToGlyph = new();
     private readonly Dictionary<Excise.Core.Primitives.PdfDictionary, CidCMap?> _type0EncodingCMaps = new();
     private readonly HashSet<Excise.Core.Primitives.PdfStream> _type3GlyphStack = new();
+    // wx metric declared by each CharProc's leading d0/d1 operator, peeked
+    // once per stream (see PeekType3CharProcWx). Reference-keyed like the
+    // other per-stream caches.
+    private readonly Dictionary<Excise.Core.Primitives.PdfStream, float?> _type3CharProcWx =
+        new(ReferenceEqualityComparer.Instance);
     // True while executing an UNCOLORED (d1) Type 3 glyph CharProc. Colour
     // operators in the CharProc are suppressed and the glyph paints in the
     // text object's fill colour (ISO 32000-1 §9.6.5). Reset per glyph in
@@ -752,17 +757,25 @@ internal partial class RenderContext
                     RenderShading(Name(operands, 0));
                 break;
 
-            // Type 3 font operators (#301)
+            // Type 3 font operators (#301, #514). d0/d1 are only legal as the
+            // first operator of a glyph description (ISO 32000-1 §9.6.5); a
+            // stray d0/d1 in an ordinary content stream is ignored so it can
+            // neither colour-lock nor clip the rest of the page.
             case "d0":
-                // Set glyph width - only affects metrics, not rendering
+                // Colored glyph description. The wx metric is consumed by
+                // PeekType3CharProcWx when /Widths doesn't cover the code.
                 break;
             case "d1":
+                if (_type3GlyphStack.Count == 0)
+                    break;
                 // d1 declares an UNCOLORED glyph description: the CharProc paints
                 // only a shape/mask, colour operators in the rest of it are
                 // ignored, and the glyph is filled with the text object's current
-                // colour (ISO 32000-1 §9.6.5, Table 113). The wx/wy/bbox operands
-                // only affect metrics, which come from /Widths.
+                // colour (ISO 32000-1 §9.6.5, Table 113). Its llx/lly/urx/ury
+                // operands declare the glyph bounding box, which clips the glyph
+                // description (an all-zero box declares no bounds).
                 _type3GlyphColorLocked = true;
+                ApplyType3GlyphBBoxClip(op);
                 break;
 
             // Color space operators
