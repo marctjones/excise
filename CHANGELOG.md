@@ -4,9 +4,40 @@ All notable changes to excise are documented here. Format roughly follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 semantic versioning.
 
-## [Unreleased]
+## [3.2.1] - 2026-07-24
+
+A redaction-trust release. Search and redaction now match a word regardless of
+how the PDF happens to store it — several of these were **silent redaction
+failures** (the tool reported success and left the word in the file). CJK text
+now extracts *and* renders, and page content is exposed to screen readers.
+
+### Fixed — silent redaction failures (search/redaction now matches however text is stored)
+- **Right-to-left text is matched in logical order** (#632) — Arabic/Hebrew
+  stored in visual order (the common single-`Tj` encoding) extracted reversed,
+  so `RedactText` matched 0 and reported success. Now reversed at the source
+  (`BidiReorderer`) for `page.Text`, search, and redaction.
+- **Arabic presentation forms fold to base letters for matching** (#632) — a
+  base-letter search now matches text stored as shaped forms / lam-alef
+  ligatures (U+FB50–FDFF, U+FE70–FEFF).
+- **Latin ligatures fold for matching** (#722) — a search for "office"/"final"
+  now matches text stored with `ﬃ`/`ﬁ` (U+FB00–FB06).
+- **Canonical (NFC) accents match** (#724) — precomposed "café" and decomposed
+  `cafe`+U+0301 now match.
+- **Arabic harakat / Hebrew niqqud are matched insensitively** (#725) — a
+  bare-letter needle finds vocalized/pointed text.
+- **Invisible separators no longer break matching** (#726) — soft hyphen
+  (U+00AD), zero-width characters, and non-breaking spaces.
+- **Fullwidth ↔ halfwidth forms match** (#727) — a keyboard "ABC"/"123" finds
+  `ＡＢＣ`/`１２３` and halfwidth katakana.
+  (All folds are matching-only via `MatchingNormalization`; extraction stays
+  raw so glyph-level removal still targets the original glyphs.)
 
 ### Added
+- **Text extraction for Type0 CJK / CID fonts** (#715, #515) — `/ToUnicode`
+  `/Identity-H|V` (name form), non-embedded Identity-H CID fonts via the
+  standard Macintosh glyph order (#532), and embedded fonts via reverse-cmap
+  GID→Unicode now decode correctly instead of garbling (which previously made
+  `RedactText` silently fail on CJK).
 - **Registered (predefined) CJK CMap support in text extraction and
   redaction** (#515 slice 2; the CJK half of #715) — a Type0 font whose
   `/Encoding` is a registered CMap NAME (`/UniGB-UCS2-H`, `/UniCNS-UCS2-H`,
@@ -53,6 +84,19 @@ semantic versioning.
   outline — with a DrawText fallback for bitmap-only faces (color emoji).
   Gated by `TextRasterInkParityTests` against mutool on an embedded-CFF
   fixture.
+- **Type 3 uncolored-glyph (d1) colour semantics** (#514) — a d1 CharProc's
+  own colour operators are now ignored so the glyph paints in the text
+  object's fill colour, per ISO 32000-1 §9.6.5.
+
+### Added
+- **PDF page text is exposed to the platform accessibility tree** (#631,
+  first slice) — a screen reader entering the viewer now reaches the current
+  page's text in reading order (via a `PdfViewerAutomationPeer`), updating on
+  page navigation and content changes. Struct-tree reading order and PDF/UA
+  validation remain follow-ups.
+- **Direct per-font-class rendering test matrix** (#512) — embedded
+  TrueType/CFF/OpenType, base-14, encoding, render-mode, and Type0/CID paths
+  are now covered by focused render tests independent of complex corpus PDFs.
 
 ## [3.2.0] - 2026-07-22
 
