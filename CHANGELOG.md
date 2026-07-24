@@ -26,6 +26,15 @@ semantic versioning.
   `Excise.Core/Resources/CMaps/LICENSE.md`).
 
 ### Fixed
+- **Renderer now selects glyphs through registered CMap names** (#515
+  renderer slice) — `SkiaRenderer`'s Type0 path only honored an embedded
+  `/Encoding` CMap *stream*; a registered CMap NAME fell through to
+  identity decoding, so 2-byte character codes were misread as CIDs and
+  CJK pages rendered as .notdef tofu even though extraction (above) read
+  them fine. Glyph selection now loads the same predefined Adobe CMap for
+  code→CID; unknown names keep the identity fallback, and Identity-H/V and
+  embedded-stream behavior is unchanged. Verified against pdftocairo and
+  Ghostscript (`RegisteredCMapRenderingTests`, 2%-differing-pixel gate).
 - **Content-stream parser no longer mangles multi-byte text operands**
   (#515) — `ContentStreamParser` round-tripped `Tj`/`TJ` string operands
   through `PdfString.Value`'s document-string decode heuristics and Latin-1,

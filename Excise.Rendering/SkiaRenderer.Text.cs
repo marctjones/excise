@@ -195,10 +195,24 @@ internal partial class RenderContext
         try
         {
             var encodingObj = fontDict.GetOptional("Encoding");
-            if (encodingObj != null &&
-                _page.Document.Resolve(encodingObj) is Excise.Core.Primitives.PdfStream stream)
+            if (encodingObj != null)
             {
-                cmap = CidCMap.Parse(stream.DecodedData);
+                var resolved = _page.Document.Resolve(encodingObj);
+                if (resolved is Excise.Core.Primitives.PdfStream stream)
+                {
+                    cmap = CidCMap.Parse(stream.DecodedData);
+                }
+                else if (resolved is Excise.Core.Primitives.PdfName name
+                         && name.Value is not ("Identity-H" or "Identity-V"))
+                {
+                    // Registered (predefined) CMap NAME as /Encoding (#515), e.g.
+                    // /UniGB-UCS2-H or /90ms-RKSJ-H: load the same embedded Adobe
+                    // CMap the extractor uses so glyph selection goes through
+                    // code → CID (honoring the CMap's mixed 1/2-byte codespaces)
+                    // instead of misreading the bytes as 2-byte identity CIDs.
+                    // Unknown names return null and keep the identity fallback.
+                    cmap = PredefinedCMapProvider.TryGetEncodingCMap(name.Value);
+                }
             }
         }
         catch
