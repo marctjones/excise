@@ -38,6 +38,7 @@ internal sealed record ResolvedRenderFont(
     SKTypeface? Typeface,
     ushort[]? ByteToGlyph,
     bool HasEmbeddedProgram,
+    bool HasRawType1Program,
     Dictionary<int, float>? CidWidths,
     float CidDefaultWidth,
     bool CidUseUnicodeCmap,
