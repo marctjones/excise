@@ -22,20 +22,30 @@ internal sealed class CidCMap
 
     public IReadOnlyList<CodespaceRange> CodespaceRanges => _codespaces;
 
-    public static CidCMap Parse(byte[] cmapData)
-        => Parse(Encoding.UTF8.GetString(cmapData));
+    public static CidCMap Parse(byte[] cmapData, Func<string, CidCMap?>? usecmapResolver = null)
+        => Parse(Encoding.UTF8.GetString(cmapData), usecmapResolver);
 
-    public static CidCMap Parse(string cmapContent)
+    public static CidCMap Parse(string cmapContent, Func<string, CidCMap?>? usecmapResolver = null)
     {
-        var parser = new Parser(cmapContent);
+        var parser = new Parser(cmapContent, usecmapResolver);
         parser.Parse();
         return new CidCMap(parser.Mapping, parser.Codespaces);
     }
 
     public int[] Decode(byte[] bytes)
+        => DecodeDetailed(bytes).Select(d => d.Cid).ToArray();
+
+    /// <summary>
+    /// Decodes <paramref name="bytes"/> against this CMap's codespace ranges,
+    /// returning for each decoded source code the mapped CID and the number of
+    /// bytes the code occupied. Mixed-width codespaces (e.g. 90ms-RKSJ-H's
+    /// 1-byte + 2-byte ranges) yield per-code byte lengths. Codes with no
+    /// explicit mapping pass through as their own CID (Identity behavior). #515
+    /// </summary>
+    public IReadOnlyList<(int Code, int Cid, int ByteLength)> DecodeDetailed(byte[] bytes)
     {
         if (bytes.Length == 0)
-            return Array.Empty<int>();
+            return Array.Empty<(int, int, int)>();
 
         var codespaces = _codespaces.Count == 0
             ? [new CodespaceRange(0, 0xffff, 2)]
@@ -44,7 +54,7 @@ internal sealed class CidCMap
                 .ThenBy(r => r.Low)
                 .ToArray();
 
-        var cids = new List<int>(bytes.Length / 2);
+        var result = new List<(int Code, int Cid, int ByteLength)>(bytes.Length / 2);
         var offset = 0;
         while (offset < bytes.Length)
         {
@@ -58,7 +68,7 @@ internal sealed class CidCMap
                 if (code < codespace.Low || code > codespace.High)
                     continue;
 
-                cids.Add(_codeToCid.TryGetValue(code, out var mappedCid) ? mappedCid : code);
+                result.Add((code, _codeToCid.TryGetValue(code, out var mappedCid) ? mappedCid : code, codespace.Bytes));
                 offset += codespace.Bytes;
                 matched = true;
                 break;
@@ -70,11 +80,11 @@ internal sealed class CidCMap
             var remaining = bytes.Length - offset;
             var fallbackBytes = remaining >= 2 ? 2 : 1;
             var fallbackCode = ReadBigEndian(bytes, offset, fallbackBytes);
-            cids.Add(_codeToCid.TryGetValue(fallbackCode, out var fallbackCid) ? fallbackCid : fallbackCode);
+            result.Add((fallbackCode, _codeToCid.TryGetValue(fallbackCode, out var fallbackCid) ? fallbackCid : fallbackCode, fallbackBytes));
             offset += fallbackBytes;
         }
 
-        return cids.ToArray();
+        return result;
     }
 
     private static int ReadBigEndian(byte[] bytes, int offset, int length)
@@ -88,10 +98,12 @@ internal sealed class CidCMap
     private sealed class Parser
     {
         private readonly List<Token> _tokens;
+        private readonly Func<string, CidCMap?>? _usecmapResolver;
 
-        public Parser(string content)
+        public Parser(string content, Func<string, CidCMap?>? usecmapResolver = null)
         {
             _tokens = Tokenize(content);
+            _usecmapResolver = usecmapResolver;
         }
 
         public Dictionary<int, int> Mapping { get; } = new();
@@ -252,7 +264,25 @@ internal sealed class CidCMap
         private void AddPredefinedCMap(string name)
         {
             if (name is "Identity-H" or "Identity-V")
+            {
                 AddCodespaceIfMissing(new CodespaceRange(0x0000, 0xffff, 2));
+                return;
+            }
+
+            // usecmap of a non-Identity CMap: inherit the referenced CMap's
+            // codespaces and mappings (per PostScript CMap semantics the using
+            // CMap's own entries, which appear after usecmap, override). The
+            // resolver — when provided — loads registered CMaps such as
+            // /UniJIS-UCS2-H or /90ms-RKSJ-H by name (#515); cycle protection
+            // lives in the resolver (PredefinedCMapProvider).
+            var parent = _usecmapResolver?.Invoke(name);
+            if (parent == null)
+                return;
+
+            foreach (var range in parent.CodespaceRanges)
+                AddCodespaceIfMissing(range);
+            foreach (var (code, cid) in parent.Mapping)
+                Mapping.TryAdd(code, cid);
         }
 
         private void AddCodespaceIfMissing(CodespaceRange range)

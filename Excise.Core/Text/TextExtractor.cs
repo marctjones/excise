@@ -47,6 +47,19 @@ public class TextExtractor
     // be decoded directly rather than left to the WinAnsi fallback (which is only
     // correct by coincidence and mis-maps codes 128–159). #715 / #515.
     private bool _toUnicodeIdentity;
+    // Registered (predefined) CJK CMap support (#515 slice 2). When the Type0
+    // font's /Encoding is a registered CMap NAME this build ships (e.g.
+    // /UniGB-UCS2-H, /90ms-RKSJ-H), _registeredEncodingCMap decodes the raw
+    // string bytes into (code, CID, byteLength) triples — including mixed
+    // 1/2-byte codespaces — replacing the fixed 2-byte stride.
+    // _registeredCidToUnicode is the Adobe-<Ordering>-UCS2 CID→Unicode map
+    // selected from the descendant's /CIDSystemInfo (PDF §9.10.2 method (b));
+    // it also fires for /Encoding /Identity-H|V fonts whose CIDSystemInfo names
+    // a known ordering (there code == CID), and when /ToUnicode is a registered
+    // CMap NAME (#715: the name declares the ordering; the CID comes from the
+    // font's encoding). Both null whenever out of scope; recomputed on each /Tf.
+    private CidCMap? _registeredEncodingCMap;
+    private IReadOnlyDictionary<int, string>? _registeredCidToUnicode;
     private double _textLeading = 0;
     private double _charSpacing = 0;
     private double _wordSpacing = 0;
@@ -1283,6 +1296,18 @@ public class TextExtractor
 
     private void ShowText(byte[] bytes)
     {
+        // Registered (predefined) encoding CMap (#515): the CMap's own
+        // codespace ranges drive the byte segmentation — 90ms-RKSJ-H mixes
+        // 1-byte and 2-byte codes, which a fixed stride would garble by
+        // pairing unrelated bytes — and each code maps to its CID for width
+        // lookup and CID→Unicode decoding.
+        if (_registeredEncodingCMap != null)
+        {
+            foreach (var (code, cid, byteLength) in _registeredEncodingCMap.DecodeDetailed(bytes))
+                ShowGlyph(code, cid, byteLength);
+            return;
+        }
+
         // Type 0 / composite fonts use multi-byte source codes. The descendant
         // CIDFont's encoding (or the outer ToUnicode CMap) tells us how many
         // bytes per code; in practice every modern producer uses 2 bytes for
@@ -1297,55 +1322,70 @@ public class TextExtractor
                 ? (bytes[i] << 8) | bytes[i + 1]
                 : bytes[i];
 
-            var unicode = DecodeCharacter(charCode);
-            var charWidth = GetCharWidth(charCode);
+            // Outside a registered CMap, the source code doubles as the CID
+            // (Identity-H/V and simple fonts alike).
+            ShowGlyph(charCode, charCode, stride);
+        }
+    }
 
-            // Calculate position in user space
-            var (x, y) = TransformPoint(_tm_e, _tm_f);
+    /// <summary>
+    /// Emits one letter for a decoded source <paramref name="charCode"/> and
+    /// advances the text matrix. <paramref name="cid"/> is the CID the code
+    /// maps to (equal to the code except under a registered encoding CMap);
+    /// widths are CID-keyed per §9.7.4.3. <paramref name="byteLength"/> is the
+    /// number of content-stream bytes the code occupied, preserved on the
+    /// Letter so redaction can re-encode kept glyphs byte-exactly.
+    /// </summary>
+    private void ShowGlyph(int charCode, int cid, int byteLength)
+    {
+        var unicode = DecodeCharacter(charCode, cid);
+        var charWidth = GetCharWidth(cid);
 
-            // Estimate glyph dimensions
-            var glyphWidth = charWidth * _fontSize * (_horizontalScaling / 100.0) / 1000.0;
-            var glyphHeight = _fontSize;
+        // Calculate position in user space
+        var (x, y) = TransformPoint(_tm_e, _tm_f);
 
-            // Create bounding box
-            var bbox = new PdfRectangle(x, y, x + glyphWidth, y + glyphHeight);
+        // Estimate glyph dimensions
+        var glyphWidth = charWidth * _fontSize * (_horizontalScaling / 100.0) / 1000.0;
+        var glyphHeight = _fontSize;
 
-            var letter = new Letter(
-                unicode,
-                bbox,
-                _fontSize,
-                _fontName,
-                x,
-                y,
-                glyphWidth,
-                charCode,
-                stride // 1 for simple fonts and 1-byte-codespace Type0 (#659), 2 for Identity-H/V and other 2-byte Type0
-            )
-            {
-                IsInHiddenOptionalContent = _optionalContentHiddenStack.Any(hidden => hidden),
-                IsCidFont = _isCidFont
-            };
-            _letters.Add(letter);
+        // Create bounding box
+        var bbox = new PdfRectangle(x, y, x + glyphWidth, y + glyphHeight);
 
-            // Advance text position. For vertical writing (WMode 1) the
-            // displacement is along the y-axis; horizontal is along x. We don't
-            // model glyph-specific vertical metrics yet, so vertical advance
-            // uses the same width-as-displacement assumption.
-            var displacement = (charWidth / 1000.0) * _fontSize * (_horizontalScaling / 100.0);
-            displacement += _charSpacing;
-            if (charCode == 32) // Space — also fire wordSpacing per §9.3.3
-                displacement += _wordSpacing;
+        var letter = new Letter(
+            unicode,
+            bbox,
+            _fontSize,
+            _fontName,
+            x,
+            y,
+            glyphWidth,
+            charCode,
+            byteLength // 1 for simple fonts and 1-byte-codespace Type0 (#659), 2 for Identity-H/V; per-code under a mixed-width registered CMap (#515)
+        )
+        {
+            IsInHiddenOptionalContent = _optionalContentHiddenStack.Any(hidden => hidden),
+            IsCidFont = _isCidFont
+        };
+        _letters.Add(letter);
 
-            if (_isVerticalWriting)
-            {
-                _tm_e += displacement * _tm_c;
-                _tm_f += displacement * _tm_d;
-            }
-            else
-            {
-                _tm_e += displacement * _tm_a;
-                _tm_f += displacement * _tm_b;
-            }
+        // Advance text position. For vertical writing (WMode 1) the
+        // displacement is along the y-axis; horizontal is along x. We don't
+        // model glyph-specific vertical metrics yet, so vertical advance
+        // uses the same width-as-displacement assumption.
+        var displacement = (charWidth / 1000.0) * _fontSize * (_horizontalScaling / 100.0);
+        displacement += _charSpacing;
+        if (charCode == 32) // Space — also fire wordSpacing per §9.3.3
+            displacement += _wordSpacing;
+
+        if (_isVerticalWriting)
+        {
+            _tm_e += displacement * _tm_c;
+            _tm_f += displacement * _tm_d;
+        }
+        else
+        {
+            _tm_e += displacement * _tm_a;
+            _tm_f += displacement * _tm_b;
         }
     }
 
@@ -1360,6 +1400,8 @@ public class TextExtractor
         _isVerticalWriting = false;
         _cidWidths = null;
         _cidDefaultWidth = 1000;
+        _registeredEncodingCMap = null;
+        _registeredCidToUnicode = null;
 
         if (_currentFont == null) return;
 
@@ -1374,6 +1416,18 @@ public class TextExtractor
         var encObj = _page.Document.Resolve(_currentFont.GetOptional("Encoding") ?? PdfNull.Instance);
         if (encObj is PdfName encName && encName.Value == "Identity-V")
             _isVerticalWriting = true;
+
+        // Registered (predefined) CMap NAME as /Encoding (#515 slice 2), e.g.
+        // /UniGB-UCS2-H or /90ms-RKSJ-H: load the embedded code→CID CMap. The
+        // vertical -V variants set writing mode 1 like Identity-V does.
+        if (encObj is PdfName registeredName
+            && registeredName.Value is not ("Identity-H" or "Identity-V")
+            && PredefinedCMapProvider.TryGetEncodingCMap(registeredName.Value) is { } registeredCMap)
+        {
+            _registeredEncodingCMap = registeredCMap;
+            if (PredefinedCMapProvider.IsVertical(registeredName.Value))
+                _isVerticalWriting = true;
+        }
 
         // A Type0 font is not guaranteed to use Identity-H/V's 2-byte codes —
         // that's just what every mainstream producer emits. A font can wrap
@@ -1399,6 +1453,26 @@ public class TextExtractor
 
         var firstResolved = _page.Document.Resolve(descendants[0]);
         if (firstResolved is not PdfDictionary cidFont) return;
+
+        // CID→Unicode via the registered Adobe-<Ordering>-UCS2 CMap selected
+        // from the descendant's /CIDSystemInfo (PDF §9.10.2 method (b)); #515.
+        // Fires for registered encoding CMaps AND for Identity-H/V fonts whose
+        // CIDSystemInfo names a known ordering (there code == CID). A
+        // /ToUnicode STREAM built _toUnicodeMap and wins outright; a
+        // /ToUnicode /Identity-H|V name is fully handled by _toUnicodeIdentity;
+        // a /ToUnicode that is a REGISTERED CMap name (#715) contributes its
+        // ordering here instead — treating it as a code-keyed map would be
+        // wrong whenever the font's encoding is not that same CMap.
+        if (_toUnicodeMap == null && !_toUnicodeIdentity)
+        {
+            // First signal that yields a shipped map wins — an Ordering with no
+            // companion CMap (notably "Identity") must not mask a later signal.
+            _registeredCidToUnicode =
+                TryLoadOrderingMap(GetCidSystemInfoOrdering(cidFont))
+                ?? TryLoadOrderingMap(encObj is PdfName n
+                    ? PredefinedCMapProvider.GetOrderingForEncodingCMap(n.Value) : null)
+                ?? TryLoadOrderingMap(GetToUnicodeRegisteredOrdering(_currentFont));
+        }
 
         // Default width (DW) — applied to any CID not in the W table (§9.7.4.3).
         if (cidFont.GetOptional("DW") is { } dwObj && TryNumber(dwObj, out var dwVal))
@@ -1437,6 +1511,41 @@ public class TextExtractor
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// The /Ordering string of the descendant CIDFont's /CIDSystemInfo (e.g.
+    /// "Japan1", "GB1"), or null when absent/unreadable. Identifies which
+    /// registered character collection the font's CIDs index — the key that
+    /// selects the Adobe-&lt;Ordering&gt;-UCS2 CID→Unicode CMap (§9.10.2). #515
+    /// </summary>
+    private static IReadOnlyDictionary<int, string>? TryLoadOrderingMap(string? ordering)
+        => ordering == null ? null : PredefinedCMapProvider.TryGetCidToUnicodeMap(ordering);
+
+    private string? GetCidSystemInfoOrdering(PdfDictionary cidFont)
+    {
+        if (_page.Document.Resolve(cidFont.GetOptional("CIDSystemInfo") ?? PdfNull.Instance)
+            is not PdfDictionary systemInfo)
+            return null;
+
+        return _page.Document.Resolve(systemInfo.GetOptional("Ordering") ?? PdfNull.Instance)
+            is PdfString ordering ? ordering.Value : null;
+    }
+
+    /// <summary>
+    /// When /ToUnicode is a registered encoding-CMap NAME (a producer quirk;
+    /// #715), the name still identifies the ordering (UniGB-UCS2-H → GB1),
+    /// which is the only reliable information it carries — the CIDs to decode
+    /// come from the font's own /Encoding, not from this CMap's code space.
+    /// </summary>
+    private string? GetToUnicodeRegisteredOrdering(PdfDictionary? font)
+    {
+        if (font == null)
+            return null;
+        var toUnicode = _page.Document.Resolve(font.GetOptional("ToUnicode") ?? PdfNull.Instance);
+        return toUnicode is PdfName name
+            ? PredefinedCMapProvider.GetOrderingForEncodingCMap(name.Value)
+            : null;
     }
 
     private static bool TryNumber(PdfObject? obj, out double v)
@@ -1488,6 +1597,13 @@ public class TextExtractor
     }
 
     private string DecodeCharacter(int charCode)
+        => DecodeCharacter(charCode, charCode);
+
+    /// <param name="charCode">The source character code from the content stream.</param>
+    /// <param name="cid">The CID <paramref name="charCode"/> maps to — differs
+    /// from the code only under a registered encoding CMap (#515); everywhere
+    /// else callers pass the code itself.</param>
+    private string DecodeCharacter(int charCode, int cid)
     {
         // First, check ToUnicode map (highest priority)
         if (_toUnicodeMap != null && _toUnicodeMap.TryGetValue(charCode, out var unicode))
@@ -1502,6 +1618,17 @@ public class TextExtractor
         if (_toUnicodeIdentity && charCode is >= 0 and <= 0xFFFF && !char.IsSurrogate((char)charCode))
         {
             return ((char)charCode).ToString();
+        }
+
+        // Registered CID→Unicode (#515 slice 2): the Adobe-<Ordering>-UCS2 CMap
+        // for the font's /CIDSystemInfo ordering, keyed by CID (== code for
+        // Identity-H/V; mapped through the registered encoding CMap otherwise).
+        // Spec-defined (§9.10.2 method (b)), so it outranks the embedded
+        // reverse-cmap and Mac-glyph-order heuristics below; CIDs the ordering
+        // map doesn't cover fall through rather than inventing a mapping.
+        if (_registeredCidToUnicode != null && _registeredCidToUnicode.TryGetValue(cid, out var orderingUnicode))
+        {
+            return orderingUnicode;
         }
 
         // Embedded Type0 + Identity-H/V + no /ToUnicode (#515 slice 3): the

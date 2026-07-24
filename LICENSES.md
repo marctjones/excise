@@ -23,6 +23,20 @@ license texts actually shipped in the package files. Discrepancies are
 flagged in the JSON manifest as `scancodeMismatch: true` and surfaced
 in the About dialog with a warning banner.
 
+## Vendored data files
+
+Beyond NuGet packages, excise embeds a bounded set of **Adobe CMap resource
+files** (registered CJK CMaps: `UniGB-UCS2-H/V`, `UniCNS-UCS2-H/V`,
+`UniJIS-UCS2-H/V`, `UniKS-UCS2-H/V`, `90ms-RKSJ-H/V`, and the
+`Adobe-{GB1,CNS1,Japan1,Korea1,KR}-UCS2` CID→Unicode maps) into
+`Excise.Core` for Type0 font text extraction (#515). They are unmodified
+copies from
+[adobe-type-tools/cmap-resources](https://github.com/adobe-type-tools/cmap-resources)
+and
+[adobe-type-tools/mapping-resources-pdf](https://github.com/adobe-type-tools/mapping-resources-pdf),
+both **BSD-3-Clause**. The verbatim license text and per-file provenance are
+in [`Excise.Core/Resources/CMaps/LICENSE.md`](Excise.Core/Resources/CMaps/LICENSE.md).
+
 ## Why permissive only
 
 You can:
