@@ -19,6 +19,14 @@ namespace Excise.Core.Text;
 /// ("cafe" + combining acute U+0301) and vice versa. Canonical ONLY — this
 /// is deliberately not NFKC, which would rewrite unrelated compatibility
 /// characters and loosen matching.</item>
+/// <item>Arabic harakat / Hebrew niqqud stripping (#725) — the optional
+/// vocalization marks of the two scripts (Arabic U+064B–U+065F, U+0670,
+/// Koranic U+06D6–U+06ED; Hebrew combining points/cantillation in
+/// U+0591–U+05C7) are removed, so a bare needle ("كتب", "שלום") matches
+/// vocalized storage ("كَتَبَ", "שָׁלוֹם"). Scoped to those scripts' combining
+/// marks ONLY: Latin combining accents are canonically meaningful and kept,
+/// and the Hebrew PUNCTUATION sharing the block (maqaf U+05BE, paseq
+/// U+05C0, sof pasuq U+05C3, nun hafukha U+05C6) is untouched.</item>
 /// </list>
 /// </summary>
 /// <remarks>
@@ -45,16 +53,18 @@ public static class MatchingNormalization
 {
     /// <summary>
     /// Fold <paramref name="text"/> into the canonical matching space:
-    /// presentation forms/ligatures decomposed to plain letters, then the
-    /// whole string composed to Unicode NFC. Returns the original string
-    /// instance when nothing changes.
+    /// presentation forms/ligatures decomposed to plain letters, the whole
+    /// string composed to Unicode NFC, then optional Arabic/Hebrew
+    /// vocalization marks stripped. Returns the original string instance
+    /// when nothing changes.
     /// </summary>
     public static string Fold(string text)
     {
         if (string.IsNullOrEmpty(text)) return text;
 
         var folded = PresentationFormFolding.Fold(text);
-        return CanonicalCompose(folded);
+        folded = CanonicalCompose(folded);
+        return StripSemiticVocalization(folded);
     }
 
     /// <summary>
@@ -106,6 +116,73 @@ public static class MatchingNormalization
         return category is UnicodeCategory.NonSpacingMark
             or UnicodeCategory.SpacingCombiningMark
             or UnicodeCategory.EnclosingMark;
+    }
+
+    /// <summary>
+    /// True when <paramref name="c"/> is an optional Arabic or Hebrew
+    /// vocalization mark stripped for matching (#725): Arabic harakat and
+    /// annotation signs — U+064B–U+065F (incl. shadda/sukun), U+0670
+    /// (superscript alef), U+06D6–U+06DC, U+06DF–U+06E4, U+06E7–U+06E8,
+    /// U+06EA–U+06ED (Koranic marks) — and the Hebrew combining marks of
+    /// U+0591–U+05C7: U+0591–U+05BD (cantillation + points), U+05BF (rafe),
+    /// U+05C1–U+05C2 (shin/sin dots), U+05C4–U+05C5, U+05C7. The
+    /// non-combining PUNCTUATION interleaved in that Hebrew range — maqaf
+    /// U+05BE, paseq U+05C0, sof pasuq U+05C3, nun hafukha U+05C6 — is
+    /// deliberately NOT included. Runs AFTER canonical composition, so
+    /// marks that canonically compose into a distinct letter (alef + madda
+    /// U+0653 → U+0622, alef + hamza U+0654 → U+0623) are preserved inside
+    /// the composed letter and only truly optional marks are stripped.
+    /// </summary>
+    public static bool IsSemiticVocalizationMark(char c)
+    {
+        if (c < '\u0591' || c > '\u06ED') return false;
+
+        return c switch
+        {
+            // Hebrew: combining marks only, skipping the block's punctuation.
+            >= '\u0591' and <= '\u05BD' => true,
+            '\u05BF' => true,
+            '\u05C1' or '\u05C2' => true,
+            '\u05C4' or '\u05C5' => true,
+            '\u05C7' => true,
+
+            // Arabic: harakat, tanween, shadda, sukun; superscript alef.
+            >= '\u064B' and <= '\u065F' => true,
+            '\u0670' => true,
+
+            // Arabic: Koranic annotation signs (the combining subranges).
+            >= '\u06D6' and <= '\u06DC' => true,
+            >= '\u06DF' and <= '\u06E4' => true,
+            '\u06E7' or '\u06E8' => true,
+            >= '\u06EA' and <= '\u06ED' => true,
+
+            _ => false,
+        };
+    }
+
+    /// <summary>
+    /// Remove every character matched by
+    /// <see cref="IsSemiticVocalizationMark"/>; returns the original string
+    /// instance when none is present.
+    /// </summary>
+    private static string StripSemiticVocalization(string text)
+    {
+        int first = -1;
+        for (int i = 0; i < text.Length; i++)
+        {
+            if (IsSemiticVocalizationMark(text[i])) { first = i; break; }
+        }
+
+        if (first < 0) return text;
+
+        var sb = new StringBuilder(text.Length);
+        sb.Append(text, 0, first);
+        for (int i = first; i < text.Length; i++)
+        {
+            if (!IsSemiticVocalizationMark(text[i])) sb.Append(text[i]);
+        }
+
+        return sb.ToString();
     }
 
     /// <summary>

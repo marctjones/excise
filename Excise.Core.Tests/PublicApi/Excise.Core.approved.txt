@@ -1635,6 +1635,7 @@ namespace Excise.Core.Text
         public static string Fold(string text) { }
         public static string[] FoldAll(System.Collections.Generic.IReadOnlyList<string> values) { }
         public static bool IsCombiningMark(char c) { }
+        public static bool IsSemiticVocalizationMark(char c) { }
     }
     public static class PresentationFormFolding
     {
