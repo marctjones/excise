@@ -172,13 +172,14 @@ public static class PdfDocumentRedactionExtensions
             ? BidiReorderer.ReverseRtlRunsInString(searchText)
             : null;
 
-        // The stream may also carry Arabic as shaped presentation forms while
-        // the needle is base letters (#632). Fold the needle once; each RTL
+        // The stream may also carry Arabic as shaped presentation forms
+        // (#632) or Latin ligature code points like ﬃ (#722) while the
+        // needle is plain/base letters. Fold the needle once; each
         // operator's text is checked folded — both as stored and with its RTL
         // runs reversed to logical order FIRST (reversing must happen on the
         // raw shaped chars: a lam-alef ligature is one char before folding
         // but two after, and reversing the folded string would scramble it).
-        var foldedNeedle = ArabicPresentationForms.Fold(searchText);
+        var foldedNeedle = PresentationFormFolding.Fold(searchText);
 
         foreach (var op in content.Operators)
         {
@@ -205,24 +206,25 @@ public static class PdfDocumentRedactionExtensions
 
     /// <summary>
     /// True when <paramref name="opText"/>, folded from Arabic presentation
-    /// forms to base letters, contains <paramref name="foldedNeedle"/> —
-    /// checked in stored order and, for strong-RTL content, with its RTL runs
-    /// reversed to logical order before folding (visual-order streams).
+    /// forms / Latin ligatures to plain letters, contains
+    /// <paramref name="foldedNeedle"/> — checked in stored order and, for
+    /// strong-RTL content, with its RTL runs reversed to logical order
+    /// before folding (visual-order streams).
     /// </summary>
     private static bool ContainsFolded(
         string opText, string foldedNeedle, StringComparison comparison)
     {
         if (foldedNeedle.Length == 0 ||
-            !ArabicPresentationForms.ContainsPresentationForms(opText))
+            !PresentationFormFolding.ContainsFoldable(opText))
         {
             return false;
         }
 
-        if (ArabicPresentationForms.Fold(opText).IndexOf(foldedNeedle, comparison) >= 0)
+        if (PresentationFormFolding.Fold(opText).IndexOf(foldedNeedle, comparison) >= 0)
             return true;
 
         return BidiReorderer.ContainsStrongRtl(opText) &&
-               ArabicPresentationForms.Fold(BidiReorderer.ReverseRtlRunsInString(opText))
+               PresentationFormFolding.Fold(BidiReorderer.ReverseRtlRunsInString(opText))
                    .IndexOf(foldedNeedle, comparison) >= 0;
     }
 
@@ -367,11 +369,13 @@ public static class PdfDocumentRedactionExtensions
         if (string.IsNullOrEmpty(text)) return text;
 
         // Arabic can be stored as shaped presentation forms (U+FB50–U+FDFF,
-        // U+FE70–U+FEFF) while the user types base letters; fold both sides
-        // of the comparison to the base-letter decomposition (#632). Note
-        // lam-alef ligatures EXPAND (1 char → 2), so normalized length may
-        // exceed raw length — FindTextMatches accounts for that.
-        var normalized = ArabicPresentationForms.Fold(text)
+        // U+FE70–U+FEFF — #632) and Latin text as ligature code points
+        // (U+FB00–U+FB06, e.g. "oﬃce" — #722) while the user types plain
+        // letters; fold both sides of the comparison to the plain-letter
+        // decomposition. Note the fold EXPANDS (lam-alef 1 char → 2,
+        // ﬃ 1 → 3), so normalized length may exceed raw length —
+        // FindTextMatches accounts for that.
+        var normalized = PresentationFormFolding.Fold(text)
             .Replace('’', '\'')  // right single quote
             .Replace('‘', '\'')  // left single quote
             .Replace('ʼ', '\'')  // modifier letter apostrophe
