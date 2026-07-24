@@ -341,10 +341,11 @@ public class PdfSearchService
             ? StringComparison.Ordinal
             : StringComparison.OrdinalIgnoreCase;
 
-        // Fold Arabic presentation forms on both sides (#632); identity for
-        // non-Arabic text. Indices below are all within the folded string.
-        text = ArabicPresentationForms.Fold(text);
-        searchTerm = ArabicPresentationForms.Fold(searchTerm);
+        // Fold Arabic presentation forms (#632) and Latin ligatures (#722)
+        // on both sides; identity for other text. Indices below are all
+        // within the folded string.
+        text = PresentationFormFolding.Fold(text);
+        searchTerm = PresentationFormFolding.Fold(searchTerm);
 
         if (useRegex)
         {
@@ -425,12 +426,13 @@ public class PdfSearchService
     {
         var matches = new List<SearchMatch>();
 
-        // Arabic can be stored as shaped presentation forms while the user
-        // types base letters; fold both sides so matching sees base letters
-        // (#632). All index arithmetic below (word spans, contexts) is done
-        // consistently in folded space.
-        pageText = ArabicPresentationForms.Fold(pageText);
-        pattern = ArabicPresentationForms.Fold(pattern);
+        // Arabic can be stored as shaped presentation forms (#632) and Latin
+        // text as ligature code points (#722) while the user types plain
+        // letters; fold both sides so matching sees plain letters. All index
+        // arithmetic below (word spans, contexts) is done consistently in
+        // folded space.
+        pageText = PresentationFormFolding.Fold(pageText);
+        pattern = PresentationFormFolding.Fold(pattern);
 
         try
         {
@@ -481,12 +483,13 @@ public class PdfSearchService
         var matches = new List<SearchMatch>();
         var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
 
-        // Fold Arabic presentation forms on both sides (#632).
-        searchTerm = ArabicPresentationForms.Fold(searchTerm);
+        // Fold Arabic presentation forms (#632) and Latin ligatures (#722)
+        // on both sides.
+        searchTerm = PresentationFormFolding.Fold(searchTerm);
 
         foreach (var word in words)
         {
-            if (ArabicPresentationForms.Fold(word.Text).Equals(searchTerm, comparison))
+            if (PresentationFormFolding.Fold(word.Text).Equals(searchTerm, comparison))
             {
                 matches.Add(new SearchMatch
                 {
@@ -517,12 +520,13 @@ public class PdfSearchService
         var matches = new List<SearchMatch>();
         var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
 
-        // Arabic can be stored as shaped presentation forms while the user
-        // types base letters; fold both sides so matching sees base letters
-        // (#632). Word spans and context are computed in the same folded
-        // space, so all index arithmetic stays consistent.
-        pageText = ArabicPresentationForms.Fold(pageText);
-        searchTerm = ArabicPresentationForms.Fold(searchTerm);
+        // Arabic can be stored as shaped presentation forms (#632) and Latin
+        // text as ligature code points (#722) while the user types plain
+        // letters; fold both sides so matching sees plain letters. Word
+        // spans and context are computed in the same folded space, so all
+        // index arithmetic stays consistent.
+        pageText = PresentationFormFolding.Fold(pageText);
+        searchTerm = PresentationFormFolding.Fold(searchTerm);
 
         var wordSpans = BuildWordSpans(words, pageText);
 
@@ -572,9 +576,10 @@ public class PdfSearchService
 
         foreach (var word in words)
         {
-            // Word text is folded the same way callers fold pageText (#632) —
-            // identity for non-Arabic text — so spans line up either way.
-            var wordText = ArabicPresentationForms.Fold(word.Text);
+            // Word text is folded the same way callers fold pageText
+            // (#632, #722) — identity for unaffected text — so spans line
+            // up either way.
+            var wordText = PresentationFormFolding.Fold(word.Text);
 
             // Find next occurrence of this word's text starting from current position
             // This handles duplicates correctly by advancing position after each match

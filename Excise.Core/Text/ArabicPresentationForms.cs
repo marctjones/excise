@@ -98,7 +98,7 @@ public static class ArabicPresentationForms
         return sb.ToString();
     }
 
-    private static string FoldChar(char c)
+    internal static string FoldChar(char c)
     {
         int index = c <= (char)0xFDFF
             ? c - BlockAStart

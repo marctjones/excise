@@ -155,15 +155,16 @@ public class TextRedactor
     {
         var results = new List<List<Letter>>();
 
-        // Fold Arabic presentation forms to base letters on BOTH sides so a
-        // base-letter needle matches shaped text (#632). All index arithmetic
-        // below is done consistently in folded space: the per-letter folded
-        // values (a lam-alef ligature folds 1 char → 2) drive the mapping
-        // from folded string positions back to letters.
-        var needle = ArabicPresentationForms.Fold(searchText);
+        // Fold Arabic presentation forms (#632) and Latin ligatures (#722) to
+        // plain letters on BOTH sides so a plain-letter needle matches
+        // shaped/ligated text. All index arithmetic below is done
+        // consistently in folded space: the per-letter folded values (a
+        // lam-alef ligature folds 1 char → 2, ﬃ folds 1 → 3) drive the
+        // mapping from folded string positions back to letters.
+        var needle = PresentationFormFolding.Fold(searchText);
         var foldedValues = new string[letters.Count];
         for (int i = 0; i < letters.Count; i++)
-            foldedValues[i] = ArabicPresentationForms.Fold(letters[i].Value);
+            foldedValues[i] = PresentationFormFolding.Fold(letters[i].Value);
 
         // Build a string from all letters for searching
         var fullText = string.Concat(foldedValues);

@@ -1606,6 +1606,12 @@ namespace Excise.Core.Text
         public static string Fold(string text) { }
         public static bool IsPresentationForm(char c) { }
     }
+    public static class LatinLigatures
+    {
+        public static bool ContainsLigatures(string? text) { }
+        public static string Fold(string text) { }
+        public static bool IsLigature(char c) { }
+    }
     public class Letter
     {
         public Letter(string value, Excise.Core.Document.PdfRectangle glyphRectangle, double fontSize, string fontName, double startX, double startY, double width, int characterCode, int codeByteLength = 1) { }
@@ -1623,6 +1629,12 @@ namespace Excise.Core.Text
         public string Value { get; }
         public double Width { get; }
         public override string ToString() { }
+    }
+    public static class PresentationFormFolding
+    {
+        public static bool ContainsFoldable(string? text) { }
+        public static string Fold(string text) { }
+        public static bool IsFoldable(char c) { }
     }
     public class TextExtractor
     {

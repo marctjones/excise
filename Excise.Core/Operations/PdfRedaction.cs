@@ -222,14 +222,14 @@ public class PdfRedaction
     {
         var results = new List<List<Letter>>();
 
-        // Fold Arabic presentation forms on both sides so a base-letter
-        // needle matches shaped text (#632); index arithmetic stays in
-        // folded space via the per-letter folded values (lam-alef folds
-        // 1 char → 2).
-        var needle = ArabicPresentationForms.Fold(searchText);
+        // Fold Arabic presentation forms (#632) and Latin ligatures (#722)
+        // on both sides so a plain-letter needle matches shaped/ligated
+        // text; index arithmetic stays in folded space via the per-letter
+        // folded values (lam-alef folds 1 char → 2, ﬃ folds 1 → 3).
+        var needle = PresentationFormFolding.Fold(searchText);
         var foldedValues = new string[letters.Count];
         for (int i = 0; i < letters.Count; i++)
-            foldedValues[i] = ArabicPresentationForms.Fold(letters[i].Value);
+            foldedValues[i] = PresentationFormFolding.Fold(letters[i].Value);
 
         var fullText = string.Concat(foldedValues);
 
