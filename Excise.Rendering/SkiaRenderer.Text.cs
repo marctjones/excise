@@ -2337,18 +2337,35 @@ internal partial class RenderContext
             return;
         var currentFont = _currentFont!;
 
-        // DecodeDetailed keeps the per-code byte length: vertical spacing
-        // needs it because word spacing fires only on the SINGLE-byte code 32
-        // (§9.3.3), never on a 2-byte <0020>. #515
-        var decoded = currentFont.CidEncodingCMap?.DecodeDetailed(bytes)
-            ?? DecodeIdentityCidBytesDetailed(bytes);
-        if (decoded.Count == 0)
+        // DecodeDetailed keeps the per-code byte length, which vertical
+        // spacing needs: word spacing fires only on the SINGLE-byte code 32
+        // (§9.3.3), never on a 2-byte <0020>. The horizontal identity path
+        // keeps the flat int[] decode — it's the hot path for all CJK text
+        // and the detailed tuples measurably regress per-page allocations.
+        IReadOnlyList<(int Code, int Cid, int ByteLength)>? decoded = null;
+        int[] cids;
+        if (currentFont.CidEncodingCMap != null)
+        {
+            decoded = currentFont.CidEncodingCMap.DecodeDetailed(bytes);
+            cids = new int[decoded.Count];
+            for (int i = 0; i < decoded.Count; i++)
+                cids[i] = decoded[i].Cid;
+        }
+        else if (currentFont.CidIsVertical)
+        {
+            decoded = DecodeIdentityCidBytesDetailed(bytes);
+            cids = new int[decoded.Count];
+            for (int i = 0; i < decoded.Count; i++)
+                cids[i] = decoded[i].Cid;
+        }
+        else
+        {
+            cids = DecodeIdentityCidBytes(bytes);
+        }
+        if (cids.Length == 0)
             return;
 
-        var count = decoded.Count;
-        var cids = new int[count];
-        for (int i = 0; i < count; i++)
-            cids[i] = decoded[i].Cid;
+        var count = cids.Length;
         var effectiveSize = GetEffectiveFontSize();
 
         var isVertical = currentFont.CidIsVertical;
@@ -2402,7 +2419,7 @@ internal partial class RenderContext
 
                 var ty = (float)(vm.W1Y * effectiveSize / 1000.0);
                 var spacing = _textState.CharSpacing;
-                if (decoded[i].ByteLength == 1 && decoded[i].Code == 32)
+                if (decoded![i].ByteLength == 1 && decoded[i].Code == 32)
                     spacing += _textState.WordSpacing;
                 cursor += -(ty + spacing * spacingScale);
             }
@@ -2548,6 +2565,18 @@ internal partial class RenderContext
             width *= _textState.HorizontalScale / 100.0f;
             AdvanceTextMatrixX(width);
         }
+    }
+
+    private static int[] DecodeIdentityCidBytes(byte[] bytes)
+    {
+        var count = bytes.Length / 2;
+        if (count == 0)
+            return Array.Empty<int>();
+
+        var cids = new int[count];
+        for (var i = 0; i < count; i++)
+            cids[i] = (bytes[i * 2] << 8) | bytes[i * 2 + 1];
+        return cids;
     }
 
     private static IReadOnlyList<(int Code, int Cid, int ByteLength)> DecodeIdentityCidBytesDetailed(byte[] bytes)

@@ -155,8 +155,12 @@ internal sealed class CidFontWidths
         // Shared walk for the two /W-family layouts (§9.7.4.3):
         //   c [v v v ...]            → per-CID groups of valuesPerEntry numbers
         //   cFirst cLast v (…)       → one group of valuesPerEntry for a range
+        // `emit` must copy out of `values` — the buffer is reused per group
+        // (this parser runs per Tf on the render path; a per-CID allocation
+        // here is a measurable per-page allocation regression).
         void ParseWidthArray(PdfArray array, int valuesPerEntry, Action<int, double[]> emit)
         {
+            var values = new double[valuesPerEntry];
             int i = 0;
             while (i < array.Count)
             {
@@ -173,7 +177,6 @@ internal sealed class CidFontWidths
                     {
                         var cid = firstCid + g;
                         if (cid < 0 || cid > MaxCid) continue;
-                        var values = new double[valuesPerEntry];
                         var ok = true;
                         for (int k = 0; k < valuesPerEntry; k++)
                             ok &= TryNumber(inner[g * valuesPerEntry + k], out values[k]);
@@ -186,7 +189,6 @@ internal sealed class CidFontWidths
                 {
                     var lastCid = (int)lastNum;
                     i++;
-                    var values = new double[valuesPerEntry];
                     var ok = true;
                     for (int k = 0; k < valuesPerEntry; k++)
                         ok &= TryNumber(array[i + k], out values[k]);
