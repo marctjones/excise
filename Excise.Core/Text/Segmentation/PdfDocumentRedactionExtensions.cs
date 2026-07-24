@@ -173,13 +173,14 @@ public static class PdfDocumentRedactionExtensions
             : null;
 
         // The stream may also carry Arabic as shaped presentation forms
-        // (#632) or Latin ligature code points like ﬃ (#722) while the
-        // needle is plain/base letters. Fold the needle once; each
-        // operator's text is checked folded — both as stored and with its RTL
-        // runs reversed to logical order FIRST (reversing must happen on the
-        // raw shaped chars: a lam-alef ligature is one char before folding
-        // but two after, and reversing the folded string would scramble it).
-        var foldedNeedle = PresentationFormFolding.Fold(searchText);
+        // (#632), Latin ligature code points like ﬃ (#722), or decomposed
+        // accents (e + U+0301 for é, #724) while the needle is typed in
+        // plain/precomposed letters. Fold the needle once; each operator's
+        // text is checked folded — both as stored and with its RTL runs
+        // reversed to logical order FIRST (reversing must happen on the raw
+        // shaped chars: a lam-alef ligature is one char before folding but
+        // two after, and reversing the folded string would scramble it).
+        var foldedNeedle = MatchingNormalization.Fold(searchText);
 
         foreach (var op in content.Operators)
         {
@@ -205,26 +206,27 @@ public static class PdfDocumentRedactionExtensions
     }
 
     /// <summary>
-    /// True when <paramref name="opText"/>, folded from Arabic presentation
-    /// forms / Latin ligatures to plain letters, contains
-    /// <paramref name="foldedNeedle"/> — checked in stored order and, for
-    /// strong-RTL content, with its RTL runs reversed to logical order
-    /// before folding (visual-order streams).
+    /// True when <paramref name="opText"/>, folded into the canonical
+    /// matching space (presentation forms / ligatures to plain letters,
+    /// canonical NFC composition), contains <paramref name="foldedNeedle"/>
+    /// — checked in stored order and, for strong-RTL content, with its RTL
+    /// runs reversed to logical order before folding (visual-order streams).
     /// </summary>
     private static bool ContainsFolded(
         string opText, string foldedNeedle, StringComparison comparison)
     {
-        if (foldedNeedle.Length == 0 ||
-            !PresentationFormFolding.ContainsFoldable(opText))
-        {
+        if (foldedNeedle.Length == 0)
             return false;
-        }
 
-        if (PresentationFormFolding.Fold(opText).IndexOf(foldedNeedle, comparison) >= 0)
+        // Fold is identity (same instance) for unaffected text, so this is
+        // cheap; no pre-gate on "contains foldable chars" — the needle side
+        // alone can differ from its raw form (a decomposed needle against
+        // precomposed operator text), which a haystack-only gate would miss.
+        if (MatchingNormalization.Fold(opText).IndexOf(foldedNeedle, comparison) >= 0)
             return true;
 
         return BidiReorderer.ContainsStrongRtl(opText) &&
-               PresentationFormFolding.Fold(BidiReorderer.ReverseRtlRunsInString(opText))
+               MatchingNormalization.Fold(BidiReorderer.ReverseRtlRunsInString(opText))
                    .IndexOf(foldedNeedle, comparison) >= 0;
     }
 
@@ -320,10 +322,11 @@ public static class PdfDocumentRedactionExtensions
         int i = 0;
         while (i < fullText.Length)
         {
-            // Normalize may collapse whitespace, so a window of 2× needle
-            // length is a safe upper bound on "does the text here start with
-            // needle?"
-            var windowLen = Math.Min(needle.Length * 2, fullText.Length - i);
+            // Normalize may collapse whitespace and SHRINK raw text
+            // (decomposed accents compose: e + U+0301 → é, up to several raw
+            // marks per folded char), so a window of 4× needle length is the
+            // safe upper bound on "does the text here start with needle?"
+            var windowLen = Math.Min(needle.Length * 4, fullText.Length - i);
             var normWindow = NormalizeText(fullText.Substring(i, windowLen));
 
             if (normWindow.StartsWith(needle, comparison))
@@ -337,6 +340,18 @@ public static class PdfDocumentRedactionExtensions
                     var cur = NormalizeText(fullText.Substring(i, endIndex - i + 1));
                     if (cur.Equals(needle, comparison)) break;
                     if (cur.Length >= needle.Length) break;
+                    endIndex++;
+                }
+
+                // Absorb trailing raw combining marks: the last matched
+                // letter's canonical cluster may continue past the minimal
+                // span (needle "café" against raw "cafe" + U+0301 — the
+                // expansion stops at the 'e' when the raw length reaches the
+                // needle length, but the accent belongs to the matched
+                // cluster and must be removed with it).
+                while (endIndex + 1 < fullText.Length &&
+                       MatchingNormalization.IsCombiningMark(fullText[endIndex + 1]))
+                {
                     endIndex++;
                 }
 
@@ -369,13 +384,16 @@ public static class PdfDocumentRedactionExtensions
         if (string.IsNullOrEmpty(text)) return text;
 
         // Arabic can be stored as shaped presentation forms (U+FB50–U+FDFF,
-        // U+FE70–U+FEFF — #632) and Latin text as ligature code points
-        // (U+FB00–U+FB06, e.g. "oﬃce" — #722) while the user types plain
-        // letters; fold both sides of the comparison to the plain-letter
-        // decomposition. Note the fold EXPANDS (lam-alef 1 char → 2,
-        // ﬃ 1 → 3), so normalized length may exceed raw length —
-        // FindTextMatches accounts for that.
-        var normalized = PresentationFormFolding.Fold(text)
+        // U+FE70–U+FEFF — #632), Latin text as ligature code points
+        // (U+FB00–U+FB06, e.g. "oﬃce" — #722), and accented text in either
+        // canonical spelling ("café" vs "cafe" + U+0301 — #724) while the
+        // user types plain/precomposed letters; fold both sides of the
+        // comparison into the canonical matching space. Note the fold can
+        // change length in BOTH directions (lam-alef 1 char → 2, ﬃ 1 → 3
+        // expand; e + U+0301 → é shrinks 2 → 1), so normalized length may
+        // differ from raw length either way — FindTextMatches accounts for
+        // that.
+        var normalized = MatchingNormalization.Fold(text)
             .Replace('’', '\'')  // right single quote
             .Replace('‘', '\'')  // left single quote
             .Replace('ʼ', '\'')  // modifier letter apostrophe

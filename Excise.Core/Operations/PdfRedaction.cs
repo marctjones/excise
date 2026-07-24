@@ -222,14 +222,20 @@ public class PdfRedaction
     {
         var results = new List<List<Letter>>();
 
-        // Fold Arabic presentation forms (#632) and Latin ligatures (#722)
-        // on both sides so a plain-letter needle matches shaped/ligated
-        // text; index arithmetic stays in folded space via the per-letter
-        // folded values (lam-alef folds 1 char → 2, ﬃ folds 1 → 3).
-        var needle = PresentationFormFolding.Fold(searchText);
-        var foldedValues = new string[letters.Count];
+        // Fold BOTH sides into the canonical matching space — presentation
+        // forms/ligatures to plain letters (#632, #722), canonical NFC
+        // composition (#724) — so a plain-letter or precomposed needle
+        // matches shaped, ligated, or decomposed text; index arithmetic
+        // stays in folded space via the per-letter folded values (lam-alef
+        // folds 1 char → 2, ﬃ folds 1 → 3, a combining-accent letter folds
+        // to "" after merging into its base's cluster).
+        var needle = MatchingNormalization.Fold(searchText);
+        if (needle.Length == 0)
+            return results;
+        var rawValues = new string[letters.Count];
         for (int i = 0; i < letters.Count; i++)
-            foldedValues[i] = PresentationFormFolding.Fold(letters[i].Value);
+            rawValues[i] = letters[i].Value;
+        var foldedValues = MatchingNormalization.FoldAll(rawValues);
 
         var fullText = string.Concat(foldedValues);
 
@@ -246,11 +252,23 @@ public class PdfRedaction
                 letterIndex++;
             }
 
+            // Zero-length folded values at the boundary belong to the
+            // previous cluster — skip before, absorb after (see
+            // TextRedactor.FindTextOccurrences).
+            while (letterIndex < letters.Count && foldedValues[letterIndex].Length == 0)
+                letterIndex++;
+
             var matchChars = 0;
             while (matchChars < needle.Length && letterIndex < letters.Count)
             {
                 match.Add(letters[letterIndex]);
                 matchChars += foldedValues[letterIndex].Length;
+                letterIndex++;
+            }
+
+            while (letterIndex < letters.Count && foldedValues[letterIndex].Length == 0)
+            {
+                match.Add(letters[letterIndex]);
                 letterIndex++;
             }
 

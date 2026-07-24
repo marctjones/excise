@@ -1630,6 +1630,15 @@ namespace Excise.Core.Text
         public double Width { get; }
         public override string ToString() { }
     }
+    public static class MatchingNormalization
+    {
+        public static string Fold(string text) { }
+        public static string[] FoldAll(System.Collections.Generic.IReadOnlyList<string> values) { }
+        public static bool IsCombiningMark(char c) { }
+        public static bool IsIgnorableSeparator(char c) { }
+        public static bool IsSemiticVocalizationMark(char c) { }
+        public static bool IsWidthForm(char c) { }
+    }
     public static class PresentationFormFolding
     {
         public static bool ContainsFoldable(string? text) { }
