@@ -68,8 +68,7 @@ public class TextExtractor
     private bool _is2ByteFont;
     private bool _isCidFont;
     private bool _isVerticalWriting;
-    private Dictionary<int, double>? _cidWidths;
-    private double _cidDefaultWidth = 1000;
+    private Fonts.CidFontWidths? _cidMetrics;
 
     // Text matrix (position + transformation)
     private double _tm_a = 1, _tm_b = 0, _tm_c = 0, _tm_d = 1, _tm_e = 0, _tm_f = 0;
@@ -975,9 +974,20 @@ public class TextExtractor
                             ShowText(bytes);
                         else if (item is int or double)
                         {
-                            // Adjust position: negative = move right, positive = move left
+                            // TJ adjustment is subtracted from the coordinate of
+                            // the WRITING direction (§9.4.3): horizontal → tx
+                            // (scaled by Th), vertical → ty (no Th). #515
                             var adj = ToDouble(item);
-                            _tm_e -= (adj / 1000.0) * _fontSize * (_horizontalScaling / 100.0);
+                            if (_isVerticalWriting)
+                            {
+                                var ty = -(adj / 1000.0) * _fontSize;
+                                _tm_e += ty * _tm_c;
+                                _tm_f += ty * _tm_d;
+                            }
+                            else
+                            {
+                                _tm_e -= (adj / 1000.0) * _fontSize * (_horizontalScaling / 100.0);
+                            }
                         }
                     }
                 }
@@ -1178,8 +1188,7 @@ public class TextExtractor
             _horizontalScaling,
             _is2ByteFont,
             _isVerticalWriting,
-            _cidWidths,
-            _cidDefaultWidth,
+            _cidMetrics,
             _tm_a,
             _tm_b,
             _tm_c,
@@ -1221,8 +1230,7 @@ public class TextExtractor
                 _horizontalScaling,
                 _is2ByteFont,
                 _isVerticalWriting,
-                _cidWidths,
-                _cidDefaultWidth,
+                _cidMetrics,
                 _tm_a,
                 _tm_b,
                 _tm_c,
@@ -1344,12 +1352,35 @@ public class TextExtractor
         // Calculate position in user space
         var (x, y) = TransformPoint(_tm_e, _tm_f);
 
-        // Estimate glyph dimensions
-        var glyphWidth = charWidth * _fontSize * (_horizontalScaling / 100.0) / 1000.0;
+        // Estimate glyph dimensions. Th (horizontal scaling) applies only in
+        // horizontal writing (§9.2.4/§9.4.4).
+        var glyphWidth = _isVerticalWriting
+            ? charWidth * _fontSize / 1000.0
+            : charWidth * _fontSize * (_horizontalScaling / 100.0) / 1000.0;
         var glyphHeight = _fontSize;
 
-        // Create bounding box
-        var bbox = new PdfRectangle(x, y, x + glyphWidth, y + glyphHeight);
+        // Create bounding box. Horizontal: the glyph cell grows right from
+        // the pen. Vertical (§9.7.4.3): the pen is the VERTICAL origin; the
+        // position vector v = (vx, vy) from /W2 (default (w0/2, DW2[0]))
+        // locates the horizontal origin at pen − v, so the cell is centered
+        // on the pen when vx = w0/2 and spans DOWN by the vertical
+        // displacement w1y (negative).
+        PdfRectangle bbox;
+        double vertX = x, vertY = y;
+        if (_isVerticalWriting)
+        {
+            var vm = GetVerticalMetrics(cid);
+            var vxScaled = vm.Vx * _fontSize / 1000.0;
+            var cellHeight = Math.Abs(vm.W1Y) * _fontSize / 1000.0;
+            if (cellHeight <= 0) cellHeight = _fontSize;
+            vertX = x - vxScaled;
+            vertY = y - cellHeight;
+            bbox = new PdfRectangle(vertX, vertY, vertX + glyphWidth, y);
+        }
+        else
+        {
+            bbox = new PdfRectangle(x, y, x + glyphWidth, y + glyphHeight);
+        }
 
         var letter = new Letter(
             unicode,
@@ -1368,26 +1399,42 @@ public class TextExtractor
         };
         _letters.Add(letter);
 
-        // Advance text position. For vertical writing (WMode 1) the
-        // displacement is along the y-axis; horizontal is along x. We don't
-        // model glyph-specific vertical metrics yet, so vertical advance
-        // uses the same width-as-displacement assumption.
-        var displacement = (charWidth / 1000.0) * _fontSize * (_horizontalScaling / 100.0);
-        displacement += _charSpacing;
-        if (charCode == 32) // Space — also fire wordSpacing per §9.3.3
-            displacement += _wordSpacing;
+        // Advance text position (§9.4.4). Word spacing applies only to the
+        // SINGLE-BYTE code 32 — a 2-byte <0020> in a CID font must not fire
+        // it (§9.3.3).
+        var spacing = _charSpacing;
+        if (byteLength == 1 && charCode == 32)
+            spacing += _wordSpacing;
 
         if (_isVerticalWriting)
         {
-            _tm_e += displacement * _tm_c;
-            _tm_f += displacement * _tm_d;
+            // ty = w1y·Tfs + Tc + Tw — the per-CID vertical displacement from
+            // /W2, else /DW2 (default −1000 → down the page). No Th: horizontal
+            // scaling applies only to horizontal displacement (§9.4.4). #515
+            var vm = GetVerticalMetrics(cid);
+            var ty = (vm.W1Y / 1000.0) * _fontSize + spacing;
+            _tm_e += ty * _tm_c;
+            _tm_f += ty * _tm_d;
         }
         else
         {
-            _tm_e += displacement * _tm_a;
-            _tm_f += displacement * _tm_b;
+            var tx = (charWidth / 1000.0) * _fontSize * (_horizontalScaling / 100.0) + spacing;
+            _tm_e += tx * _tm_a;
+            _tm_f += tx * _tm_b;
         }
     }
+
+    /// <summary>
+    /// Vertical metrics for <paramref name="cid"/> — the /W2 entry, else the
+    /// §9.7.4.3 defaults (w1y from /DW2, v = (w0∕2, DW2[0])). A Type0 font
+    /// with no descendant metrics at all gets the spec defaults.
+    /// </summary>
+    private Fonts.CidVerticalMetrics GetVerticalMetrics(int cid)
+        => _cidMetrics?.GetVerticalMetrics(cid)
+            ?? new Fonts.CidVerticalMetrics(
+                Fonts.CidFontWidths.SpecDefaultVerticalDisplacement,
+                GetCharWidth(cid) / 2,
+                Fonts.CidFontWidths.SpecDefaultVerticalOriginY);
 
     /// <summary>
     /// After Tf loads a font, update Type 0 / CID-specific state: 2-byte stride,
@@ -1398,8 +1445,7 @@ public class TextExtractor
         _is2ByteFont = false;
         _isCidFont = false;
         _isVerticalWriting = false;
-        _cidWidths = null;
-        _cidDefaultWidth = 1000;
+        _cidMetrics = null;
         _registeredEncodingCMap = null;
         _registeredCidToUnicode = null;
 
@@ -1443,6 +1489,19 @@ public class TextExtractor
             var detail = ToUnicodeCMapParser.ParseDetailed(encStream.DecodedData);
             if (detail.CodespaceRanges.Count > 0 && detail.MaxCodeBytes == 1)
                 _is2ByteFont = false;
+
+            // An embedded CMap stream declares its own writing mode via
+            // /WMode 1 (§9.7.5.2) — Identity-V isn't the only vertical
+            // signal. Malformed streams keep horizontal. #515
+            try
+            {
+                if (CidCMap.Parse(encStream.DecodedData).WMode == 1)
+                    _isVerticalWriting = true;
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException)
+            {
+                // Best-effort: an unreadable CMap keeps the horizontal default.
+            }
         }
 
         // Resolve descendant CIDFont (always exactly one entry, per §9.7.6.1).
@@ -1474,43 +1533,9 @@ public class TextExtractor
                 ?? TryLoadOrderingMap(GetToUnicodeRegisteredOrdering(_currentFont));
         }
 
-        // Default width (DW) — applied to any CID not in the W table (§9.7.4.3).
-        if (cidFont.GetOptional("DW") is { } dwObj && TryNumber(dwObj, out var dwVal))
-            _cidDefaultWidth = dwVal;
-
-        // /W = [c [w1 w2 …]] | [c1 c2 w] mixed array
-        if (cidFont.GetOptional("W") is { } wObj &&
-            _page.Document.Resolve(wObj) is PdfArray w)
-        {
-            _cidWidths = new Dictionary<int, double>();
-            int idx = 0;
-            while (idx < w.Count)
-            {
-                if (!TryNumber(w[idx], out var firstNum)) { idx++; continue; }
-                int firstCid = (int)firstNum;
-
-                if (idx + 1 < w.Count && _page.Document.Resolve(w[idx + 1]) is PdfArray inner)
-                {
-                    for (int k = 0; k < inner.Count; k++)
-                        if (TryNumber(inner[k], out var width))
-                            _cidWidths[firstCid + k] = width;
-                    idx += 2;
-                }
-                else if (idx + 2 < w.Count
-                         && TryNumber(w[idx + 1], out var lastNum)
-                         && TryNumber(w[idx + 2], out var widthAll))
-                {
-                    int lastCid = (int)lastNum;
-                    for (int c = firstCid; c <= lastCid; c++)
-                        _cidWidths[c] = widthAll;
-                    idx += 3;
-                }
-                else
-                {
-                    idx++;
-                }
-            }
-        }
+        // /DW, /W, /DW2, /W2 — the CID-keyed metrics tables (§9.7.4.3),
+        // parsed by the shared hardened parser (#515).
+        _cidMetrics = Fonts.CidFontWidths.Parse(cidFont, _page.Document.Resolve);
     }
 
     /// <summary>
@@ -2212,11 +2237,7 @@ public class TextExtractor
         // Type 0 / CIDFont: width comes from the /W table on the descendant font,
         // falling back to /DW when the CID is unlisted (§9.7.4.3).
         if (_is2ByteFont)
-        {
-            if (_cidWidths != null && _cidWidths.TryGetValue(charCode, out var w))
-                return w;
-            return _cidDefaultWidth;
-        }
+            return _cidMetrics?.GetWidth(charCode) ?? Fonts.CidFontWidths.SpecDefaultWidth;
 
         // Try to get width from font dictionary
         if (_currentFont != null)

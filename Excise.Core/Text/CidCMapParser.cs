@@ -10,10 +10,11 @@ internal sealed class CidCMap
     private readonly Dictionary<int, int> _codeToCid;
     private readonly List<CodespaceRange> _codespaces;
 
-    private CidCMap(Dictionary<int, int> codeToCid, List<CodespaceRange> codespaces)
+    private CidCMap(Dictionary<int, int> codeToCid, List<CodespaceRange> codespaces, int wMode)
     {
         _codeToCid = codeToCid;
         _codespaces = codespaces;
+        WMode = wMode;
     }
 
     internal readonly record struct CodespaceRange(int Low, int High, int Bytes);
@@ -22,6 +23,14 @@ internal sealed class CidCMap
 
     public IReadOnlyList<CodespaceRange> CodespaceRanges => _codespaces;
 
+    /// <summary>
+    /// The CMap's <c>/WMode</c> (PDF §9.7.5.2): 0 = horizontal (default),
+    /// 1 = vertical writing. Read from the CMap's own <c>/WMode n def</c>
+    /// entry; not inherited through <c>usecmap</c> (each CMap declares its
+    /// own writing mode — the -V variants carry their own WMode 1). #515
+    /// </summary>
+    public int WMode { get; }
+
     public static CidCMap Parse(byte[] cmapData, Func<string, CidCMap?>? usecmapResolver = null)
         => Parse(Encoding.UTF8.GetString(cmapData), usecmapResolver);
 
@@ -29,7 +38,7 @@ internal sealed class CidCMap
     {
         var parser = new Parser(cmapContent, usecmapResolver);
         parser.Parse();
-        return new CidCMap(parser.Mapping, parser.Codespaces);
+        return new CidCMap(parser.Mapping, parser.Codespaces, parser.WMode);
     }
 
     public int[] Decode(byte[] bytes)
@@ -110,6 +119,8 @@ internal sealed class CidCMap
 
         public List<CodespaceRange> Codespaces { get; } = new();
 
+        public int WMode { get; private set; }
+
         public void Parse()
         {
             var i = 0;
@@ -141,6 +152,17 @@ internal sealed class CidCMap
                             i++;
                             continue;
                     }
+                }
+                else if (token.Type == TokenType.Name && token.Text == "WMode"
+                         && i + 1 < _tokens.Count
+                         && _tokens[i + 1].Type == TokenType.Number
+                         && int.TryParse(_tokens[i + 1].Text, out var wMode))
+                {
+                    // /WMode 1 def — vertical writing (§9.7.5.2). Any value
+                    // other than 1 is treated as horizontal.
+                    WMode = wMode == 1 ? 1 : 0;
+                    i += 2;
+                    continue;
                 }
 
                 i++;
