@@ -33,6 +33,16 @@ namespace Excise.Core.Text;
 /// "se&#173;cret" in justified text and "top secret" matches
 /// "top&#160;secret". Exactly those five-plus-one code points — real
 /// hyphens, spaces, and other format characters keep their identity.</item>
+/// <item>Halfwidth/fullwidth form folding (#727) — every character of the
+/// Halfwidth and Fullwidth Forms block U+FF00–U+FFEF folds to its
+/// compatibility decomposition, so an ASCII needle ("ABC", "123") matches
+/// fullwidth storage ("ＡＢＣ", "１２３") and a regular-katakana needle
+/// matches halfwidth katakana ("ｶﾀｶﾅ"). Scoped to THAT BLOCK only —
+/// deliberately not whole-string NFKC, which would also rewrite
+/// superscripts, circled numbers and other compatibility characters. A
+/// width fold can surface combining marks (halfwidth voiced ﾞ → U+3099),
+/// so the result is canonically re-composed to keep the NFC invariant
+/// (ｶ + ﾞ ends as ガ).</item>
 /// </list>
 /// </summary>
 /// <remarks>
@@ -60,9 +70,10 @@ public static class MatchingNormalization
     /// <summary>
     /// Fold <paramref name="text"/> into the canonical matching space:
     /// presentation forms/ligatures decomposed to plain letters, the whole
-    /// string composed to Unicode NFC, then optional Arabic/Hebrew
-    /// vocalization marks stripped. Returns the original string instance
-    /// when nothing changes.
+    /// string composed to Unicode NFC, optional Arabic/Hebrew vocalization
+    /// marks stripped, invisible separators removed (NBSP → space), and
+    /// halfwidth/fullwidth forms folded. Returns the original string
+    /// instance when nothing changes.
     /// </summary>
     public static string Fold(string text)
     {
@@ -71,7 +82,8 @@ public static class MatchingNormalization
         var folded = PresentationFormFolding.Fold(text);
         folded = CanonicalCompose(folded);
         folded = StripSemiticVocalization(folded);
-        return FoldSeparators(folded);
+        folded = FoldSeparators(folded);
+        return FoldWidthForms(folded);
     }
 
     /// <summary>
@@ -231,6 +243,82 @@ public static class MatchingNormalization
         }
 
         return sb.ToString();
+    }
+
+    private const char WidthBlockStart = '\uFF00';
+    private const char WidthBlockEnd = '\uFFEF';
+
+    /// <summary>
+    /// Per-character fold cache for the Halfwidth and Fullwidth Forms
+    /// block. Index 0 corresponds to U+FF00.
+    /// </summary>
+    private static readonly string?[] WidthFoldCache =
+        new string?[WidthBlockEnd - WidthBlockStart + 1];
+
+    /// <summary>
+    /// True when <paramref name="c"/> is in the Halfwidth and Fullwidth
+    /// Forms block (U+FF00–U+FFEF) folded for matching (#727). U+FEFF is
+    /// just below the block and is handled by
+    /// <see cref="IsIgnorableSeparator"/> instead.
+    /// </summary>
+    public static bool IsWidthForm(char c) =>
+        c >= WidthBlockStart && c <= WidthBlockEnd;
+
+    /// <summary>
+    /// Replace every Halfwidth and Fullwidth Forms character with its
+    /// compatibility decomposition (U+FF21 → "A", U+FF76 → "カ", U+FF9E →
+    /// combining U+3099) and canonically re-compose the result so surfaced
+    /// combining marks join their base (ｶ + ﾞ → ガ), keeping the pipeline's
+    /// NFC invariant. Returns the original string instance when the block
+    /// does not occur.
+    /// </summary>
+    private static string FoldWidthForms(string text)
+    {
+        int first = -1;
+        for (int i = 0; i < text.Length; i++)
+        {
+            if (IsWidthForm(text[i])) { first = i; break; }
+        }
+
+        if (first < 0) return text;
+
+        var sb = new StringBuilder(text.Length + 8);
+        sb.Append(text, 0, first);
+        for (int i = first; i < text.Length; i++)
+        {
+            var c = text[i];
+            if (IsWidthForm(c)) sb.Append(FoldWidthChar(c));
+            else sb.Append(c);
+        }
+
+        return CanonicalCompose(sb.ToString());
+    }
+
+    /// <summary>
+    /// The NFKC decomposition of a single character in U+FF00–U+FFEF —
+    /// per-character, so nothing outside the block is ever rewritten.
+    /// Unassigned code points inside the block have no decomposition and
+    /// can make Normalize throw; they fold to themselves (same guard as
+    /// <see cref="ArabicPresentationForms"/>).
+    /// </summary>
+    private static string FoldWidthChar(char c)
+    {
+        int index = c - WidthBlockStart;
+        var cached = WidthFoldCache[index];
+        if (cached != null) return cached;
+
+        string folded;
+        try
+        {
+            folded = c.ToString().Normalize(NormalizationForm.FormKC);
+        }
+        catch (ArgumentException)
+        {
+            folded = c.ToString();
+        }
+
+        WidthFoldCache[index] = folded;
+        return folded;
     }
 
     /// <summary>

@@ -1637,6 +1637,7 @@ namespace Excise.Core.Text
         public static bool IsCombiningMark(char c) { }
         public static bool IsIgnorableSeparator(char c) { }
         public static bool IsSemiticVocalizationMark(char c) { }
+        public static bool IsWidthForm(char c) { }
     }
     public static class PresentationFormFolding
     {
