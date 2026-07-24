@@ -181,8 +181,7 @@ internal sealed class CidFontWidths
                     }
                     i++;
                 }
-                else if (i + valuesPerEntry < array.Count + 0
-                         && TryNumber(array[i], out var lastNum)
+                else if (TryNumber(array[i], out var lastNum)
                          && IsRangeForm(array, i, valuesPerEntry))
                 {
                     var lastCid = (int)lastNum;
@@ -212,9 +211,6 @@ internal sealed class CidFontWidths
         // A range entry needs cLast plus valuesPerEntry numbers after it.
         bool IsRangeForm(PdfArray array, int lastCidIndex, int valuesPerEntry)
         {
-            if (lastCidIndex + valuesPerEntry >= array.Count + 1
-                && lastCidIndex + valuesPerEntry > array.Count - 1)
-                return false;
             for (int k = 1; k <= valuesPerEntry; k++)
             {
                 if (lastCidIndex + k >= array.Count) return false;
