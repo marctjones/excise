@@ -1600,6 +1600,12 @@ namespace Excise.Core.Security
 }
 namespace Excise.Core.Text
 {
+    public static class ArabicPresentationForms
+    {
+        public static bool ContainsPresentationForms(string? text) { }
+        public static string Fold(string text) { }
+        public static bool IsPresentationForm(char c) { }
+    }
     public class Letter
     {
         public Letter(string value, Excise.Core.Document.PdfRectangle glyphRectangle, double fontSize, string fontName, double startX, double startY, double width, int characterCode, int codeByteLength = 1) { }

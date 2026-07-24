@@ -221,10 +221,20 @@ public class PdfRedaction
     private List<List<Letter>> FindTextOccurrences(IReadOnlyList<Letter> letters, string searchText)
     {
         var results = new List<List<Letter>>();
-        var fullText = string.Concat(letters.Select(l => l.Value));
+
+        // Fold Arabic presentation forms on both sides so a base-letter
+        // needle matches shaped text (#632); index arithmetic stays in
+        // folded space via the per-letter folded values (lam-alef folds
+        // 1 char → 2).
+        var needle = ArabicPresentationForms.Fold(searchText);
+        var foldedValues = new string[letters.Count];
+        for (int i = 0; i < letters.Count; i++)
+            foldedValues[i] = ArabicPresentationForms.Fold(letters[i].Value);
+
+        var fullText = string.Concat(foldedValues);
 
         var pos = 0;
-        while ((pos = fullText.IndexOf(searchText, pos, StringComparison.Ordinal)) >= 0)
+        while ((pos = fullText.IndexOf(needle, pos, StringComparison.Ordinal)) >= 0)
         {
             var match = new List<Letter>();
             var charIndex = 0;
@@ -232,15 +242,15 @@ public class PdfRedaction
 
             while (charIndex < pos && letterIndex < letters.Count)
             {
-                charIndex += letters[letterIndex].Value.Length;
+                charIndex += foldedValues[letterIndex].Length;
                 letterIndex++;
             }
 
             var matchChars = 0;
-            while (matchChars < searchText.Length && letterIndex < letters.Count)
+            while (matchChars < needle.Length && letterIndex < letters.Count)
             {
                 match.Add(letters[letterIndex]);
-                matchChars += letters[letterIndex].Value.Length;
+                matchChars += foldedValues[letterIndex].Length;
                 letterIndex++;
             }
 

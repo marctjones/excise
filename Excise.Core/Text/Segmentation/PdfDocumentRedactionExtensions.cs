@@ -172,13 +172,22 @@ public static class PdfDocumentRedactionExtensions
             ? BidiReorderer.ReverseRtlRunsInString(searchText)
             : null;
 
+        // The stream may also carry Arabic as shaped presentation forms while
+        // the needle is base letters (#632). Fold the needle once; each RTL
+        // operator's text is checked folded — both as stored and with its RTL
+        // runs reversed to logical order FIRST (reversing must happen on the
+        // raw shaped chars: a lam-alef ligature is one char before folding
+        // but two after, and reversing the folded string would scramble it).
+        var foldedNeedle = ArabicPresentationForms.Fold(searchText);
+
         foreach (var op in content.Operators)
         {
             if (op.Category == OperatorCategory.TextShowing)
             {
                 var opText = op.TextContent ?? string.Empty;
                 if (opText.IndexOf(searchText, comparison) >= 0 ||
-                    (visualNeedle != null && opText.IndexOf(visualNeedle, comparison) >= 0))
+                    (visualNeedle != null && opText.IndexOf(visualNeedle, comparison) >= 0) ||
+                    ContainsFolded(opText, foldedNeedle, comparison))
                 {
                     removed++;
                     continue;
@@ -192,6 +201,29 @@ public static class PdfDocumentRedactionExtensions
             page.SetContentStream(new ContentStream(kept));
 
         return removed;
+    }
+
+    /// <summary>
+    /// True when <paramref name="opText"/>, folded from Arabic presentation
+    /// forms to base letters, contains <paramref name="foldedNeedle"/> —
+    /// checked in stored order and, for strong-RTL content, with its RTL runs
+    /// reversed to logical order before folding (visual-order streams).
+    /// </summary>
+    private static bool ContainsFolded(
+        string opText, string foldedNeedle, StringComparison comparison)
+    {
+        if (foldedNeedle.Length == 0 ||
+            !ArabicPresentationForms.ContainsPresentationForms(opText))
+        {
+            return false;
+        }
+
+        if (ArabicPresentationForms.Fold(opText).IndexOf(foldedNeedle, comparison) >= 0)
+            return true;
+
+        return BidiReorderer.ContainsStrongRtl(opText) &&
+               ArabicPresentationForms.Fold(BidiReorderer.ReverseRtlRunsInString(opText))
+                   .IndexOf(foldedNeedle, comparison) >= 0;
     }
 
     private static int RemoveTextLinesStillContaining(
@@ -280,8 +312,11 @@ public static class PdfDocumentRedactionExtensions
         var needle = NormalizeText(searchText);
         if (needle.Length == 0) return matches;
 
+        // NOTE: not `i <= fullText.Length - needle.Length` — normalization can
+        // EXPAND raw text (a lam-alef ligature is one raw char but two needle
+        // chars), so a raw window shorter than the needle can still match.
         int i = 0;
-        while (i <= fullText.Length - needle.Length)
+        while (i < fullText.Length)
         {
             // Normalize may collapse whitespace, so a window of 2× needle
             // length is a safe upper bound on "does the text here start with
@@ -322,16 +357,21 @@ public static class PdfDocumentRedactionExtensions
     }
 
     /// <summary>
-    /// Normalize typographic variants (curly quotes, en/em dashes) and
-    /// collapse whitespace so that string comparison isn't defeated by
-    /// inconsequential differences between the search term and the text
-    /// as encoded in the PDF.
+    /// Normalize typographic variants (curly quotes, en/em dashes), fold
+    /// Arabic presentation forms to base letters, and collapse whitespace so
+    /// that string comparison isn't defeated by inconsequential differences
+    /// between the search term and the text as encoded in the PDF.
     /// </summary>
     private static string NormalizeText(string text)
     {
         if (string.IsNullOrEmpty(text)) return text;
 
-        var normalized = text
+        // Arabic can be stored as shaped presentation forms (U+FB50–U+FDFF,
+        // U+FE70–U+FEFF) while the user types base letters; fold both sides
+        // of the comparison to the base-letter decomposition (#632). Note
+        // lam-alef ligatures EXPAND (1 char → 2), so normalized length may
+        // exceed raw length — FindTextMatches accounts for that.
+        var normalized = ArabicPresentationForms.Fold(text)
             .Replace('’', '\'')  // right single quote
             .Replace('‘', '\'')  // left single quote
             .Replace('ʼ', '\'')  // modifier letter apostrophe
