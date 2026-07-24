@@ -116,8 +116,8 @@ internal partial class RenderContext
 
         // Type0 (composite CID) fonts need a completely different content-stream
         // parse (2 bytes per character, widths indexed via /W not /Widths).
-        Dictionary<int, float>? cidWidths = null;
-        var cidDefaultWidth = 1000f;
+        Excise.Core.Fonts.CidFontWidths? cidMetrics = null;
+        var cidIsVertical = false;
         ushort[]? cidToGidMap = null;
         var cidUseUnicodeCmap = false;
         CidCMap? cidEncodingCMap = null;
@@ -125,13 +125,19 @@ internal partial class RenderContext
         {
             cidEncodingCMap = TryGetType0EncodingCMap(fontDict);
 
+            // Vertical writing mode (§9.7.5.2): /Identity-V, a registered -V
+            // CMap name, or an embedded CMap stream declaring /WMode 1. #515
+            var type0EncodingName = fontDict.GetNameOrNull("Encoding");
+            cidIsVertical =
+                type0EncodingName == "Identity-V"
+                || (type0EncodingName != null && PredefinedCMapProvider.IsVertical(type0EncodingName))
+                || cidEncodingCMap?.WMode == 1;
+
             var cidFont = PdfFontResolver.ResolveDescendantFont(resolvedFont, _page.Document);
             if (cidFont != null)
             {
-                cidDefaultWidth = (float)cidFont.GetNumber("DW", 1000);
-                var w = ResolveArray(cidFont, "W");
-                if (w != null)
-                    cidWidths = ParseWArray(w);
+                // /DW, /W, /DW2, /W2 via the shared hardened parser (§9.7.4.3, #515).
+                cidMetrics = Excise.Core.Fonts.CidFontWidths.Parse(cidFont, _page.Document.Resolve);
 
                 // /CIDToGIDMap is /Identity (or absent) for most modern Type0
                 // fonts and CID == GID. Subset CIDFontType2 fonts produced by
@@ -180,8 +186,8 @@ internal partial class RenderContext
             byteToGlyph,
             hasEmbeddedProgram,
             hasRawType1Program,
-            cidWidths,
-            cidDefaultWidth,
+            cidMetrics,
+            cidIsVertical,
             cidUseUnicodeCmap,
             cidEncodingCMap,
             cidToGidMap,
@@ -295,47 +301,6 @@ internal partial class RenderContext
             0,
             1);
     }
-
-    // Parse the /W array of a CIDFont (PDF spec 9.7.4.3). Two forms are
-    // interleaved in a single array:
-    //   cid [w1 w2 w3 ...]     → assigns w1..wN to cid, cid+1, cid+2, ...
-    //   cid_start cid_end w    → assigns w to every CID in [cid_start, cid_end]
-    // Widths are in glyph units (1/1000 of the designed em).
-    private static Dictionary<int, float> ParseWArray(Excise.Core.Primitives.PdfArray w)
-    {
-        var map = new Dictionary<int, float>();
-        int i = 0;
-        while (i < w.Count)
-        {
-            if (!IsNumber(w[i])) { i++; continue; }
-            int cid = (int)w.GetNumber(i);
-            i++;
-            if (i >= w.Count) break;
-
-            if (w[i] is Excise.Core.Primitives.PdfArray inner)
-            {
-                for (int j = 0; j < inner.Count; j++)
-                    map[cid + j] = (float)inner.GetNumber(j);
-                i++;
-            }
-            else if (IsNumber(w[i]) && i + 1 < w.Count && IsNumber(w[i + 1]))
-            {
-                int endCid = (int)w.GetNumber(i);
-                float width = (float)w.GetNumber(i + 1);
-                for (int c = cid; c <= endCid; c++)
-                    map[c] = width;
-                i += 2;
-            }
-            else
-            {
-                i++; // Malformed — skip and recover.
-            }
-        }
-        return map;
-    }
-
-    private static bool IsNumber(Excise.Core.Primitives.PdfObject o) =>
-        o is Excise.Core.Primitives.PdfInteger || o is Excise.Core.Primitives.PdfReal;
 
     // Load the font's embedded file (TrueType or OpenType/CFF) as an SKTypeface
     // so glyphs render in the face the PDF actually specifies, with the widths
@@ -1229,6 +1194,25 @@ internal partial class RenderContext
         _textState.TextMatrixF += distance * (b / xScale);
     }
 
+    // Vertical-writing counterpart of AdvanceTextMatrixX: moves the pen along
+    // the text matrix's normalized Y basis (c, d). Distances are already
+    // scaled by effectiveSize (which carries the Tm Y scale), matching how
+    // AdvanceTextMatrixX receives X-basis distances. #515
+    private void AdvanceTextMatrixY(float distance)
+    {
+        var c = _textState.TextMatrixC;
+        var d = _textState.TextMatrixD;
+        var yScale = (float)Math.Sqrt(c * c + d * d);
+        if (yScale < 1e-6f)
+        {
+            _textState.TextMatrixF += distance;
+            return;
+        }
+
+        _textState.TextMatrixE += distance * (c / yScale);
+        _textState.TextMatrixF += distance * (d / yScale);
+    }
+
     private SKTypeface GetTypeface(string baseFont, bool suppressSyntheticStyleForMissingType0 = false)
     {
         // PDF subset fonts wear a 6-letter+'+' prefix (e.g. GFEDCB+MyriadPro-Semibold).
@@ -1423,15 +1407,26 @@ internal partial class RenderContext
             }
             else if (operand.TryGetNumber(out var adjustment))
             {
-                // TJ position adjustment is in thousandths of text-space units,
-                // which map to device-space X via the text matrix's X-scale
-                // (not Y-scale). For non-uniform Tm (e.g. SCOTUS "SUPREME COURT"
-                // with 14.2001/15 ratio), using yScale instead of xScale
-                // compounds a ~6% per-glyph error into visible mid-word gaps.
                 var effectiveSize = GetEffectiveFontSize();
-                var xyRatio = GetTextMatrixXYRatio();
-                var xOffset = (float)(-adjustment * effectiveSize / 1000.0) * xyRatio;
-                AdvanceTextMatrixX(xOffset * _textState.HorizontalScale / 100.0f);
+                if (_currentFont?.IsType0 == true && _currentFont.CidIsVertical)
+                {
+                    // Vertical writing: the TJ number is subtracted from the
+                    // VERTICAL coordinate (§9.4.3), with no Th. effectiveSize
+                    // already carries the Tm Y scale AdvanceTextMatrixY expects.
+                    var yOffset = (float)(-adjustment * effectiveSize / 1000.0);
+                    AdvanceTextMatrixY(yOffset);
+                }
+                else
+                {
+                    // TJ position adjustment is in thousandths of text-space units,
+                    // which map to device-space X via the text matrix's X-scale
+                    // (not Y-scale). For non-uniform Tm (e.g. SCOTUS "SUPREME COURT"
+                    // with 14.2001/15 ratio), using yScale instead of xScale
+                    // compounds a ~6% per-glyph error into visible mid-word gaps.
+                    var xyRatio = GetTextMatrixXYRatio();
+                    var xOffset = (float)(-adjustment * effectiveSize / 1000.0) * xyRatio;
+                    AdvanceTextMatrixX(xOffset * _textState.HorizontalScale / 100.0f);
+                }
             }
         }
     }
@@ -2342,12 +2337,24 @@ internal partial class RenderContext
             return;
         var currentFont = _currentFont!;
 
-        var cids = currentFont.CidEncodingCMap?.Decode(bytes) ?? DecodeIdentityCidBytes(bytes);
-        if (cids.Length == 0)
+        // DecodeDetailed keeps the per-code byte length: vertical spacing
+        // needs it because word spacing fires only on the SINGLE-byte code 32
+        // (§9.3.3), never on a 2-byte <0020>. #515
+        var decoded = currentFont.CidEncodingCMap?.DecodeDetailed(bytes)
+            ?? DecodeIdentityCidBytesDetailed(bytes);
+        if (decoded.Count == 0)
             return;
 
-        var count = cids.Length;
+        var count = decoded.Count;
+        var cids = new int[count];
+        for (int i = 0; i < count; i++)
+            cids[i] = decoded[i].Cid;
         var effectiveSize = GetEffectiveFontSize();
+
+        var isVertical = currentFont.CidIsVertical;
+        // Tc/Tw are unscaled text-space units; local blob units carry the
+        // text matrix's Y scale (effectiveSize = Tfs·yScale), so convert.
+        var spacingScale = _textState.FontSize != 0f ? effectiveSize / _textState.FontSize : 1f;
         using var font = CreateTextFont(currentFont.Typeface!, effectiveSize);
         // Two parallel arrays: CIDs (used for /W width lookup, which is
         // keyed by CID per spec) and GIDs (what Skia actually draws). The
@@ -2380,8 +2387,30 @@ internal partial class RenderContext
                 gid = ToGlyphId(cid);
             gids[i] = gid;
 
-            positions[i] = new SKPoint(cursor, 0);
             var pdfGlyphWidth = GetCidWidthThousandths(cid) * effectiveSize / 1000f;
+            if (isVertical)
+            {
+                // Vertical writing (§9.7.4.3): the pen is the glyph's VERTICAL
+                // origin; the outline's horizontal origin sits at pen − v.
+                // In this local frame +y is down the page, so the glyph draws
+                // at (−vx, cursor + vy) and the pen then advances by
+                // −w1y (w1y is negative = downwards) plus Tc/Tw (§9.4.4).
+                var vm = GetCidVerticalMetrics(cid);
+                var vxScaled = (float)(vm.Vx * effectiveSize / 1000.0);
+                var vyScaled = (float)(vm.Vy * effectiveSize / 1000.0);
+                positions[i] = new SKPoint(-vxScaled, cursor + vyScaled);
+
+                var ty = (float)(vm.W1Y * effectiveSize / 1000.0);
+                var spacing = _textState.CharSpacing;
+                if (decoded[i].ByteLength == 1 && decoded[i].Code == 32)
+                    spacing += _textState.WordSpacing;
+                cursor += -(ty + spacing * spacingScale);
+            }
+            else
+            {
+                positions[i] = new SKPoint(cursor, 0);
+            }
+
             if (fallbackGlyphScales != null)
             {
                 using var glyphPath = font.GetGlyphPath(gid);
@@ -2393,7 +2422,8 @@ internal partial class RenderContext
                     : 1f;
             }
 
-            cursor += pdfGlyphWidth;
+            if (!isVertical)
+                cursor += pdfGlyphWidth;
         }
 
         var xyRatio = GetTextMatrixXYRatio();
@@ -2418,12 +2448,14 @@ internal partial class RenderContext
         // and any other content authored with a browser-style flipped Tm
         // (`1 0 0 -1`) renders upside-down.
         float ySign = _textState.TextMatrixD >= 0 ? -1f : 1f;
+        // Th (horizontal scaling) applies only in horizontal writing (§9.2.4).
+        float drawHScale = isVertical ? 1f : _textState.HorizontalScale / 100.0f;
         float x = _textState.TextMatrixE;
         float y = _textState.TextMatrixF + _textState.TextRise;
         if (!IsOptionalContentSuppressed)
         {
             _canvas.Save();
-            var textMatrix = CreateTextRenderingMatrix(x, y, _textState.HorizontalScale / 100.0f, ySign);
+            var textMatrix = CreateTextRenderingMatrix(x, y, drawHScale, ySign);
             _canvas.Concat(in textMatrix);
 
             // Build a glyph-id text blob — SkiaSharp 3 routes glyph IDs
@@ -2485,7 +2517,7 @@ internal partial class RenderContext
                 using var localClipPath = fallbackGlyphScales != null
                     ? BuildGlyphIdTextPath(gids, positions, fallbackGlyphScales, font)
                     : BuildGlyphIdTextPath(gids, positions, font);
-                AddPendingTextClipPath(localClipPath, x, y, _textState.HorizontalScale / 100.0f, ySign);
+                AddPendingTextClipPath(localClipPath, x, y, drawHScale, ySign);
             }
 
             _canvas.Restore();
@@ -2493,40 +2525,62 @@ internal partial class RenderContext
                 localFillPatternPath,
                 x,
                 y,
-                _textState.HorizontalScale / 100.0f,
+                drawHScale,
                 ySign);
         }
 
         localFillPatternPath?.Dispose();
 
-        // Advance by summed widths from /W (with /DW as fallback per CID).
-        float sumThousandthsOfEm = 0f;
-        foreach (var cid in cids)
-            sumThousandthsOfEm += GetCidWidthThousandths(cid);
-        var width = sumThousandthsOfEm * effectiveSize / 1000f * xyRatio;
-        width *= _textState.HorizontalScale / 100.0f;
-        AdvanceTextMatrixX(width);
+        if (isVertical)
+        {
+            // Vertical: `cursor` accumulated the full downward displacement
+            // (−Σ(w1y + Tc + Tw)) in device-scaled units — move the text
+            // matrix down its Y basis by it. No Th in vertical mode (§9.4.4).
+            AdvanceTextMatrixY(-cursor);
+        }
+        else
+        {
+            // Advance by summed widths from /W (with /DW as fallback per CID).
+            float sumThousandthsOfEm = 0f;
+            foreach (var cid in cids)
+                sumThousandthsOfEm += GetCidWidthThousandths(cid);
+            var width = sumThousandthsOfEm * effectiveSize / 1000f * xyRatio;
+            width *= _textState.HorizontalScale / 100.0f;
+            AdvanceTextMatrixX(width);
+        }
     }
 
-    private static int[] DecodeIdentityCidBytes(byte[] bytes)
+    private static IReadOnlyList<(int Code, int Cid, int ByteLength)> DecodeIdentityCidBytesDetailed(byte[] bytes)
     {
         var count = bytes.Length / 2;
         if (count == 0)
-            return Array.Empty<int>();
+            return Array.Empty<(int, int, int)>();
 
-        var cids = new int[count];
+        var decoded = new (int Code, int Cid, int ByteLength)[count];
         for (var i = 0; i < count; i++)
-            cids[i] = (bytes[i * 2] << 8) | bytes[i * 2 + 1];
-        return cids;
+        {
+            var code = (bytes[i * 2] << 8) | bytes[i * 2 + 1];
+            decoded[i] = (code, code, 2);
+        }
+        return decoded;
     }
 
     private static ushort ToGlyphId(int cid)
         => cid is >= 0 and <= ushort.MaxValue ? (ushort)cid : (ushort)0;
 
     private float GetCidWidthThousandths(int cid)
-        => (_currentFont?.CidWidths != null && _currentFont.CidWidths.TryGetValue(cid, out var width))
-            ? width
-            : _currentFont?.CidDefaultWidth ?? 1000f;
+        => (float)(_currentFont?.CidMetrics?.GetWidth(cid)
+            ?? Excise.Core.Fonts.CidFontWidths.SpecDefaultWidth);
+
+    // Vertical metrics for a CID (§9.7.4.3): the /W2 entry, else the spec
+    // defaults — w1y from /DW2 (default −1000, down the page) and position
+    // vector v = (w0/2, DW2[0]). #515
+    private Excise.Core.Fonts.CidVerticalMetrics GetCidVerticalMetrics(int cid)
+        => _currentFont?.CidMetrics?.GetVerticalMetrics(cid)
+            ?? new Excise.Core.Fonts.CidVerticalMetrics(
+                Excise.Core.Fonts.CidFontWidths.SpecDefaultVerticalDisplacement,
+                GetCidWidthThousandths(cid) / 2.0,
+                Excise.Core.Fonts.CidFontWidths.SpecDefaultVerticalOriginY);
 
     // Returns the raw PDF string bytes WITHOUT decoding via encoding. Simple
     // fonts route these through DecodeTextBytes → Unicode → RenderText; Type0
