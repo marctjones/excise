@@ -341,6 +341,11 @@ public class PdfSearchService
             ? StringComparison.Ordinal
             : StringComparison.OrdinalIgnoreCase;
 
+        // Fold Arabic presentation forms on both sides (#632); identity for
+        // non-Arabic text. Indices below are all within the folded string.
+        text = ArabicPresentationForms.Fold(text);
+        searchTerm = ArabicPresentationForms.Fold(searchTerm);
+
         if (useRegex)
         {
             Regex regex;
@@ -420,6 +425,13 @@ public class PdfSearchService
     {
         var matches = new List<SearchMatch>();
 
+        // Arabic can be stored as shaped presentation forms while the user
+        // types base letters; fold both sides so matching sees base letters
+        // (#632). All index arithmetic below (word spans, contexts) is done
+        // consistently in folded space.
+        pageText = ArabicPresentationForms.Fold(pageText);
+        pattern = ArabicPresentationForms.Fold(pattern);
+
         try
         {
             var options = caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase;
@@ -469,9 +481,12 @@ public class PdfSearchService
         var matches = new List<SearchMatch>();
         var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
 
+        // Fold Arabic presentation forms on both sides (#632).
+        searchTerm = ArabicPresentationForms.Fold(searchTerm);
+
         foreach (var word in words)
         {
-            if (word.Text.Equals(searchTerm, comparison))
+            if (ArabicPresentationForms.Fold(word.Text).Equals(searchTerm, comparison))
             {
                 matches.Add(new SearchMatch
                 {
@@ -501,6 +516,14 @@ public class PdfSearchService
     {
         var matches = new List<SearchMatch>();
         var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+
+        // Arabic can be stored as shaped presentation forms while the user
+        // types base letters; fold both sides so matching sees base letters
+        // (#632). Word spans and context are computed in the same folded
+        // space, so all index arithmetic stays consistent.
+        pageText = ArabicPresentationForms.Fold(pageText);
+        searchTerm = ArabicPresentationForms.Fold(searchTerm);
+
         var wordSpans = BuildWordSpans(words, pageText);
 
         int index = 0;
@@ -549,16 +572,20 @@ public class PdfSearchService
 
         foreach (var word in words)
         {
+            // Word text is folded the same way callers fold pageText (#632) —
+            // identity for non-Arabic text — so spans line up either way.
+            var wordText = ArabicPresentationForms.Fold(word.Text);
+
             // Find next occurrence of this word's text starting from current position
             // This handles duplicates correctly by advancing position after each match
-            int wordPos = pageText.IndexOf(word.Text, charIndex, StringComparison.Ordinal);
+            int wordPos = pageText.IndexOf(wordText, charIndex, StringComparison.Ordinal);
 
             if (wordPos != -1)
             {
-                spans.Add(new WordSpan(wordPos, wordPos + word.Text.Length, word));
+                spans.Add(new WordSpan(wordPos, wordPos + wordText.Length, word));
 
                 // Advance past this word (+ any whitespace/separator)
-                charIndex = wordPos + word.Text.Length;
+                charIndex = wordPos + wordText.Length;
             }
         }
 
