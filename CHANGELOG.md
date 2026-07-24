@@ -4,6 +4,32 @@ All notable changes to excise are documented here. Format roughly follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 semantic versioning.
 
+## [Unreleased]
+
+### Added
+- **Vertical writing mode for Type0/CID fonts** (#515) — the `/W2` and `/DW2`
+  vertical metric tables (PDF §9.7.4.3) are now parsed and honored across the
+  extractor, the redaction content-stream parser, and the renderer. Vertical
+  (`/Identity-V`, registered `-V` CMaps, or embedded CMap streams declaring
+  `/WMode 1`) text now advances DOWN the page by the per-CID vertical
+  displacement (previously: up, by the horizontal width), glyphs are placed
+  via the `/W2` position vector (default centered, `v = (w0/2, 880)`), TJ
+  adjustments move the vertical coordinate, and `Tz` horizontal scaling no
+  longer applies vertically. Letter bounding boxes follow, so area redaction
+  and `RedactText` target the correct region on vertical text (verified by a
+  vertical redaction round-trip test with carrier-agnostic saved-bytes
+  assertions, plus live pdftocairo/Ghostscript render differentials).
+
+### Fixed
+- **Word spacing (`Tw`) no longer fires on 2-byte character code `<0020>`**
+  in CID fonts — per §9.3.3 it applies only to the single-byte code 32
+  (e.g. 90ms-RKSJ's 1-byte space still gets it).
+- **CID width tables are parsed by one shared, hardened parser**
+  (`CidFontWidths`) instead of three divergent `/W` walks: indirect
+  references are resolved at every level, junk tokens are skipped, reversed
+  ranges are dropped, and hostile ranges like `[0 999999999 500]` are clamped
+  to the valid CID space instead of allocating billions of entries.
+
 ## [3.2.1] - 2026-07-24
 
 A redaction-trust release. Search and redaction now match a word regardless of
