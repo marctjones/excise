@@ -261,6 +261,18 @@ jobs:
             --include-cli-render \
             --fail-on-regression
 
+      - name: Performance budget check (warn-only; #602)
+        # Focused workflow perf budgets (scripts/check-perf-budgets.sh vs
+        # tests/perf-budgets/workflow-budgets.json). WARN-ONLY here by design:
+        # shared runners are far too wall-time-variable for a blocking perf
+        # gate, and this runner has no smoke corpus (see the note above), so
+        # the script SKIPs cleanly. Hard enforcement is local
+        # (scripts/check-perf-budgets.sh, default --mode fail) and in
+        # release-smoke's perf-budget gate on a known developer machine.
+        # A perf budget breach is a performance signal, never a correctness
+        # failure - it must not block a PR from a noisy runner.
+        run: scripts/check-perf-budgets.sh --mode warn || true
+
       - name: Run Excise.Ocr.Tests
         run: |
           dotnet test Excise.Ocr.Tests --no-build -c Debug \
