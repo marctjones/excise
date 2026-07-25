@@ -82,6 +82,13 @@ public class ContentStreamParser
     private double _tm_a = 1, _tm_b, _tm_c, _tm_d = 1, _tm_e, _tm_f;
     private double _tlm_e, _tlm_f;
 
+    // Per-text-showing-op pen advance in TJ-adjustment units (#758) —
+    // reset before each Tj/TJ/'/" string is processed, accumulated by
+    // EmitGlyph/ApplyTjAdjustment, then stored on the operator so redaction
+    // can replay a removed op's advance as a numeric TJ adjustment.
+    private double _opAdvanceThousandths;
+    private bool _opAdvanceExpressible;
+
     // Current path for bounds calculation
     private double _pathMinX, _pathMinY, _pathMaxX, _pathMaxY;
     private bool _pathStarted;
@@ -445,9 +452,11 @@ public class ContentStreamParser
             case "TJ":
                 if (operands.Count >= 1 && operands[0] is PdfArray arr)
                 {
+                    BeginOpAdvanceTracking();
                     var (text, bounds) = ProcessTextArray(arr);
                     op.TextContent = text;
                     op.BoundingBox = bounds;
+                    EndOpAdvanceTracking(op);
                 }
                 return true;
 
@@ -595,9 +604,57 @@ public class ContentStreamParser
 
     private void SetTextOperatorResult(PdfObject textObject, ContentOperator op)
     {
+        BeginOpAdvanceTracking();
         var (text, bounds) = ProcessTextString(textObject);
         op.TextContent = text;
         op.BoundingBox = bounds;
+        EndOpAdvanceTracking(op);
+    }
+
+    /// <summary>
+    /// Start accumulating the pen advance of one text-showing operator
+    /// (#758). Called after any implicit T*/Tw/Tc side effects of '/" have
+    /// been applied — those are line-matrix/state moves, not pen advance.
+    /// </summary>
+    private void BeginOpAdvanceTracking()
+    {
+        _opAdvanceThousandths = 0;
+        _opAdvanceExpressible = true;
+    }
+
+    /// <summary>
+    /// Store the accumulated pen advance on the operator, in TJ-adjustment
+    /// units (see <see cref="ContentOperator.TextAdvanceThousandths"/>).
+    /// </summary>
+    private void EndOpAdvanceTracking(ContentOperator op)
+    {
+        op.TextAdvanceThousandths =
+            _opAdvanceExpressible ? _opAdvanceThousandths : null;
+    }
+
+    /// <summary>
+    /// Accumulate one glyph's pen displacement into the current op's advance
+    /// (#758). <paramref name="displacementThousandths"/> is the glyph-space
+    /// displacement along the writing direction (horizontal: w0; vertical:
+    /// w1y) and <paramref name="spacing"/> the active Tc(+Tw) contribution in
+    /// text-space units, converted here into the same thousandths-of-Tfs
+    /// units a TJ number uses — mirroring exactly the §9.4.4 advance the
+    /// caller applies to the text matrix, with the shared Th factor cancelled.
+    /// </summary>
+    private void AccumulateOpAdvance(double displacementThousandths, double spacing)
+    {
+        if (spacing != 0)
+        {
+            if (Math.Abs(_fontSize) < 1e-9)
+            {
+                // tx = spacing·Th with Tfs = 0 — no TJ number can reproduce
+                // it (the number is multiplied by Tfs). Mark inexpressible.
+                _opAdvanceExpressible = false;
+                return;
+            }
+            displacementThousandths += spacing * 1000.0 / _fontSize;
+        }
+        _opAdvanceThousandths += displacementThousandths;
     }
 
     #region Text Processing
@@ -715,6 +772,7 @@ public class ContentStreamParser
                 var ty = (vm.W1Y / 1000.0) * _fontSize + spacing;
                 _tm_e += ty * _tm_c;
                 _tm_f += ty * _tm_d;
+                AccumulateOpAdvance(vm.W1Y, spacing);
             }
             else
             {
@@ -725,6 +783,7 @@ public class ContentStreamParser
                 var tx = ((charWidth / 1000.0) * _fontSize + spacing) * (_horizontalScaling / 100.0);
                 _tm_e += tx * _tm_a;
                 _tm_f += tx * _tm_b;
+                AccumulateOpAdvance(charWidth, spacing);
             }
         }
 
@@ -770,6 +829,10 @@ public class ContentStreamParser
         {
             _tm_e -= (adj / 1000.0) * _fontSize * (_horizontalScaling / 100.0);
         }
+
+        // A TJ number already IS a TJ-adjustment-unit displacement: it moves
+        // the pen by −adj thousandths along the writing direction. #758
+        _opAdvanceThousandths -= adj;
     }
 
     /// <summary>
