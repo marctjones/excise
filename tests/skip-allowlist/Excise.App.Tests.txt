@@ -47,3 +47,4 @@ Excise.App.Tests.UI.ContinuousLinkInteractionTests.HoverOverTocLink_InContinuous
 Excise.App.Tests.UI.TextSelectionAlignmentTests.DragSelection_HighlightCoversTheSelectedText   # corpus-gated: local-real-world book absent on CI
 Excise.App.Tests.UI.TextSelectionAlignmentTests.FitWidth_InsideSelectTextMode_ActuallyFitsTheViewport   # corpus-gated: local-real-world book absent on CI
 Excise.App.Tests.UI.TextSelectionAlignmentTests.FitAfterSelection_KeepsHighlightsOnRenderedText   # corpus-gated: local-real-world book absent on CI
+Excise.App.Tests.Unit.SignatureApplicationServiceTests.SignDocument_ExternalOracle_PdfsigReportsValidUntrustedSignature   # #623 external oracle: needs poppler pdfsig, absent in CI. Runs on dev machines with poppler installed; the #466 verifier round-trip tests above it always run.
