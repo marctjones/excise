@@ -191,6 +191,100 @@ public class RegisteredCMapRenderingTests
         }
     }
 
+    // ==== legacy mixed-width CMap (GBK-EUC-H, added with the Table 118 set) ====
+
+    // Verified against the shipped Adobe GBK-EUC-H CMap resource: the 1-byte
+    // codespace <00><80> maps 'A' 0x41 → GB1 CID 846, 'B' 0x42 → CID 847.
+    private const int GbkCidA = 846;
+    private const int GbkCidB = 847;
+
+    [Fact] // pre-slice: GBK-EUC-H was an UNKNOWN name → <4142> misread as ONE identity CID
+    public void LegacyCMap_GbkEucH_SelectsGlyphsViaMixedWidthCidMapping()
+    {
+        var ttf = LoadFixtureFont("DejaVuSans.ttf");
+        Assert.SkipWhen(ttf == null, "DejaVuSans.ttf fixture missing.");
+
+        // /CIDToGIDMap (1000 CIDs) has real glyphs ONLY at 846/847. The
+        // pre-slice identity misreading turned <4142> into the single CID
+        // 0x4142 = 16706 — outside the map — and rendered nothing.
+        var pdf = RegisteredCMapPdf(ttf!, "/GBK-EUC-H",
+            cidToGid: new Dictionary<int, ushort> { [GbkCidA] = GidA, [GbkCidB] = GidB },
+            codesHex: "4142", wEntry: $"{GbkCidA} [684 686]", mapCids: 1000);
+        using var bmp = Render(pdf);
+
+        InkFraction(bmp).Should().BeGreaterThan(0.02,
+            "the bytes 41 42 must decode through GBK-EUC-H's 1-byte codespace to CIDs " +
+            "846/847 and draw the embedded 'A'/'B' glyphs — a blank page means the " +
+            "legacy CMap fell through to the 2-byte identity misreading (#515)");
+
+        // Same layout as the UCS2 fixture: 72pt "AB" at Td 20 30.
+        var bounds = InkBounds(bmp);
+        bounds.Left.Should().BeInRange(30, 60);
+        bounds.Top.Should().BeInRange(60, 100);
+        bounds.Right.Should().BeInRange(215, 260);
+        bounds.Bottom.Should().BeInRange(170, 205);
+    }
+
+    [Fact]
+    public void LegacyCMap_GbkEucH_MatchesLivePdftocairo()
+    {
+        Assert.SkipUnless(PdftocairoReferenceRenderer.IsAvailable, "pdftocairo not installed.");
+        var ttf = LoadFixtureFont("DejaVuSans.ttf");
+        Assert.SkipWhen(ttf == null, "DejaVuSans.ttf fixture missing.");
+
+        var pdf = RegisteredCMapPdf(ttf!, "/GBK-EUC-H",
+            cidToGid: new Dictionary<int, ushort> { [GbkCidA] = GidA, [GbkCidB] = GidB },
+            codesHex: "4142", wEntry: $"{GbkCidA} [684 686]", mapCids: 1000);
+        var path = WriteTemp(pdf);
+        try
+        {
+            using var excise = Render(pdf);
+            using var reference = PdftocairoReferenceRenderer.RenderPage(path, 1, Dpi);
+            Assert.SkipWhen(reference == null, "pdftocairo declined to render the fixture.");
+
+            using var aligned = DifferentialMetrics.ResizeMatch(excise, reference!.Width, reference.Height);
+            var report = DifferentialMetrics.Compare(aligned, reference);
+            report.DifferingPixelFraction.Should().BeLessThan(MaxDifferingPixelFraction,
+                "excise's GBK-EUC-H render must draw the same 'AB' glyphs poppler draws " +
+                $"(differing={report.DifferingPixelFraction:P2}, MAE={report.MeanAbsoluteError:F1})");
+            report.MeanAbsoluteError.Should().BeLessThan(MaxMeanAbsoluteError);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void LegacyCMap_GbkEucH_MatchesLiveGhostscript()
+    {
+        Assert.SkipUnless(GhostscriptReferenceRenderer.IsAvailable, "ghostscript not installed.");
+        var ttf = LoadFixtureFont("DejaVuSans.ttf");
+        Assert.SkipWhen(ttf == null, "DejaVuSans.ttf fixture missing.");
+
+        var pdf = RegisteredCMapPdf(ttf!, "/GBK-EUC-H",
+            cidToGid: new Dictionary<int, ushort> { [GbkCidA] = GidA, [GbkCidB] = GidB },
+            codesHex: "4142", wEntry: $"{GbkCidA} [684 686]", mapCids: 1000);
+        var path = WriteTemp(pdf);
+        try
+        {
+            using var excise = Render(pdf);
+            using var reference = GhostscriptReferenceRenderer.RenderPage(path, 1, Dpi);
+            Assert.SkipWhen(reference == null, "ghostscript declined to render the fixture.");
+
+            using var aligned = DifferentialMetrics.ResizeMatch(excise, reference!.Width, reference.Height);
+            var report = DifferentialMetrics.Compare(aligned, reference);
+            report.DifferingPixelFraction.Should().BeLessThan(MaxDifferingPixelFraction,
+                "excise's GBK-EUC-H render must draw the same 'AB' glyphs Ghostscript draws " +
+                $"(differing={report.DifferingPixelFraction:P2}, MAE={report.MeanAbsoluteError:F1})");
+            report.MeanAbsoluteError.Should().BeLessThan(MaxMeanAbsoluteError);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
     // ==== fixture =============================================================
 
     /// <summary>
@@ -200,14 +294,17 @@ public class RegisteredCMapRenderingTests
     /// stream (100 CIDs, all other entries .notdef).
     /// </summary>
     private static byte[] RegisteredCMapPdf(
-        byte[] ttf, string encoding, Dictionary<int, ushort> cidToGid)
+        byte[] ttf, string encoding, Dictionary<int, ushort> cidToGid,
+        string codesHex = "00410042", string? wEntry = null, int mapCids = 100)
     {
-        var map = new byte[200]; // CIDs 0..99, big-endian uint16 per CID
+        var map = new byte[mapCids * 2]; // big-endian uint16 per CID
         foreach (var (cid, gid) in cidToGid)
         {
             map[cid * 2] = (byte)(gid >> 8);
             map[cid * 2 + 1] = (byte)gid;
         }
+
+        wEntry ??= $"{CidA} [684 686]";
 
         // DejaVuSans advances: 'A' 1401/2048 em ≈ 684, 'B' 1405/2048 em ≈ 686.
         var pdf = new MinimalPdf();
@@ -215,12 +312,12 @@ public class RegisteredCMapRenderingTests
         pdf.Add("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");                                // 2
         pdf.Add("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 120] /Contents 4 0 R "
               + "/Resources << /Font << /F1 5 0 R >> >> >>");                                // 3
-        pdf.Add("<< >>", Encoding.ASCII.GetBytes("BT /F1 72 Tf 20 30 Td <00410042> Tj ET")); // 4
+        pdf.Add("<< >>", Encoding.ASCII.GetBytes($"BT /F1 72 Tf 20 30 Td <{codesHex}> Tj ET")); // 4
         pdf.Add("<< /Type /Font /Subtype /Type0 /BaseFont /TestFont-GB "
               + $"/Encoding {encoding} /DescendantFonts [6 0 R] >>");                        // 5
         pdf.Add("<< /Type /Font /Subtype /CIDFontType2 /BaseFont /TestFont "
               + "/CIDSystemInfo << /Registry (Adobe) /Ordering (GB1) /Supplement 2 >> "
-              + $"/FontDescriptor 7 0 R /CIDToGIDMap 9 0 R /DW 1000 /W [{CidA} [684 686]] >>"); // 6
+              + $"/FontDescriptor 7 0 R /CIDToGIDMap 9 0 R /DW 1000 /W [{wEntry}] >>");      // 6
         pdf.Add("<< /Type /FontDescriptor /FontName /TestFont /Flags 4 "
               + "/FontBBox [-1200 -500 2500 1200] /ItalicAngle 0 /Ascent 900 /Descent -250 "
               + "/CapHeight 700 /StemV 90 /FontFile2 8 0 R >>");                             // 7
