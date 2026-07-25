@@ -204,9 +204,20 @@ jobs:
         # HeadlessUnitTestSession app lifecycle, which crashed the test host on
         # the displayless Linux runner (killing the whole assembly with no
         # captured output). Same precedent as the Excise.App.Tests step below.
+        #
+        # TRX tolerance, Linux-only (#752): with xvfb + HeadlessSessionGuard the
+        # suite runs fully green here (62/62 on PR #764), but the test host
+        # still exits 1 on native teardown — Avalonia/SkiaSharp headless
+        # cleanup segfaults on process shutdown AFTER every test has passed,
+        # and the guard cannot intercept a native crash. The helper script
+        # runs the suite with a TRX logger and, on a non-zero exit, passes
+        # only if the TRX positively confirms >0 passed and 0 failed — a
+        # genuinely failing test still fails this step. It self-tests that
+        # verdict logic against synthetic green/failed TRX fixtures on every
+        # run before trusting it. macOS and Windows exit cleanly and keep the
+        # strict raw exit code.
         run: |
-          xvfb-run -a dotnet test Excise.Avalonia.Tests --no-build -c Debug \
-            --logger "console;verbosity=normal"
+          xvfb-run -a scripts/run-avalonia-tests-linux.sh
 
       - name: Run Excise.Rendering.Tests (deterministic only)
         run: |
