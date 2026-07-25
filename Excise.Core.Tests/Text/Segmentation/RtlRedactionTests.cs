@@ -99,12 +99,127 @@ public class RtlRedactionTests
     /// <summary>
     /// Carrier-agnostic view of the saved file, per the redaction test rules:
     /// ASCII (name-tree strings, raw codes, hex-encoded carriers stay visible)
-    /// concatenated with UTF-16BE (how PDF text strings carry Unicode).
+    /// concatenated with UTF-16BE (how PDF text strings carry Unicode) and
+    /// UTF-8 (metadata streams).
     /// </summary>
     private static string SearchableTextOf(byte[] saved) =>
-        Encoding.ASCII.GetString(saved) + Encoding.BigEndianUnicode.GetString(saved);
+        Encoding.ASCII.GetString(saved) +
+        Encoding.BigEndianUnicode.GetString(saved) +
+        Encoding.UTF8.GetString(saved);
 
     private static string Reverse(string s)
+    {
+        var chars = s.ToCharArray();
+        System.Array.Reverse(chars);
+        return new string(chars);
+    }
+}
+
+/// <summary>
+/// RedactText on phrases that SPAN A NUMBER inside an RTL line (#632,
+/// digit-island slice) — the ID-line / date-line / phone-number case that is
+/// the redaction-relevant content of Arabic and Hebrew government documents.
+///
+/// Before the digit-island reorder, each RTL word extracted logically but the
+/// word order ACROSS the number stayed visual ("عمر 30 سنة" extracted as
+/// "سنة 30 عمر"), so a logical-order phrase needle matched nothing and
+/// RedactText returned 0 while reporting success — the silent-failure mode
+/// this suite exists to prevent.
+///
+/// Assertions follow the redaction test rules: the saved BYTES are searched
+/// (ASCII, UTF-16BE and UTF-8) for the phrase in logical order, fully
+/// reversed visual order, per-run reversed order, and the fixture's known
+/// raw character-code carrier.
+/// </summary>
+public class RtlDigitIslandRedactionTests
+{
+    // Logical "عمر 30 سنة"; the fixture stores it in visual order (see
+    // RtlDigitIslandExtractionTests for the UBA derivation). Stream codes are
+    // 'A'..'J' assigned positionally, so the raw-code carrier of the full
+    // line is "ABCDEFGHIJ".
+    private static readonly int[] MixedVisual =
+        { 0x0629, 0x0646, 0x0633, 0x0020, '3', '0', 0x0020, 0x0631, 0x0645, 0x0639 };
+
+    private const string LogicalPhrase = "عمر 30 سنة";
+
+    [Fact]
+    public void RedactText_LogicalPhraseSpanningNumber_RemovesVisualOrderLine()
+    {
+        var pdf = RtlPdfFixtures.SingleTjScalarStream(MixedVisual);
+        using var doc = PdfDocument.Open(pdf);
+
+        // Sanity: extraction must read the phrase logically, and the raw-code
+        // carrier must be present, or the absence assertions prove nothing.
+        doc.GetPage(1).Text.Should().Contain(LogicalPhrase);
+        SearchableTextOf(doc.SaveToBytes()).Should().Contain("ABCDEFGHIJ");
+
+        var removed = doc.RedactText(LogicalPhrase);
+
+        removed.Should().BeGreaterThan(0,
+            "a logical-order phrase spanning a number must match the visual-order line; " +
+            "0 matches is the silent-failure mode this test exists to prevent");
+
+        var searchable = SearchableTextOf(doc.SaveToBytes());
+        searchable.Should().NotContain(LogicalPhrase, "the phrase must not survive in logical order");
+        searchable.Should().NotContain(ReverseString(LogicalPhrase), "nor fully reversed");
+        searchable.Should().NotContainAny("سنة", "عمر", "ةنس", "رمع");
+        searchable.Should().NotContain("ABCDEFGHIJ", "nor as its raw character codes");
+        searchable.Should().NotContain("JIHGFEDCBA");
+
+        using var reopened = PdfDocument.Open(doc.SaveToBytes());
+        reopened.GetPage(1).Text.Should().NotContainAny(LogicalPhrase, ReverseString(LogicalPhrase));
+    }
+
+    [Fact]
+    public void RedactText_NumberOnly_RemovesTheNumberAndKeepsTheWords()
+    {
+        var pdf = RtlPdfFixtures.SingleTjScalarStream(MixedVisual);
+        using var doc = PdfDocument.Open(pdf);
+
+        // The number's stream codes are 'E' ('3') and 'F' ('0').
+        SearchableTextOf(doc.SaveToBytes()).Should().Contain("DEF");
+
+        var removed = doc.RedactText("30");
+
+        removed.Should().BeGreaterThan(0);
+
+        var searchable = SearchableTextOf(doc.SaveToBytes());
+        searchable.Should().NotContain("DEF",
+            "the number's raw character codes must be gone from the saved bytes");
+
+        using var reopened = PdfDocument.Open(doc.SaveToBytes());
+        reopened.GetPage(1).Text.Should().NotContain("30");
+    }
+
+    [Fact]
+    public void RedactText_HebrewPhraseWithTrailingNumber_RemovesVisualOrderLine()
+    {
+        // Logical "טלפון 123" (phone 123): trailing number ⇒ the digits are
+        // the FIRST glyphs of the visual stream (leading digit island).
+        int[] visual = { '1', '2', '3', 0x0020, 0x05DF, 0x05D5, 0x05E4, 0x05DC, 0x05D8 };
+        const string logicalPhrase = "טלפון 123";
+        var pdf = RtlPdfFixtures.SingleTjScalarStream(visual);
+        using var doc = PdfDocument.Open(pdf);
+
+        doc.GetPage(1).Text.Should().Contain(logicalPhrase);
+
+        var removed = doc.RedactText(logicalPhrase);
+
+        removed.Should().BeGreaterThan(0);
+
+        var searchable = SearchableTextOf(doc.SaveToBytes());
+        searchable.Should().NotContain(logicalPhrase);
+        searchable.Should().NotContain(ReverseString(logicalPhrase));
+        searchable.Should().NotContain("טלפון");
+        searchable.Should().NotContain("ABCDEFGHI", "nor as its raw character codes");
+    }
+
+    private static string SearchableTextOf(byte[] saved) =>
+        Encoding.ASCII.GetString(saved) +
+        Encoding.BigEndianUnicode.GetString(saved) +
+        Encoding.UTF8.GetString(saved);
+
+    private static string ReverseString(string s)
     {
         var chars = s.ToCharArray();
         System.Array.Reverse(chars);
