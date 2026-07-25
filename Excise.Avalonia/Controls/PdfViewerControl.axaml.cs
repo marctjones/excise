@@ -977,6 +977,15 @@ public partial class PdfViewerControl : UserControl
                         handled = true;
                     }
                     break;
+                case Key.H:
+                    // Structure navigation (#631): H jumps to the next heading,
+                    // Shift+H to the previous — the screen-reader convention —
+                    // crossing pages as needed. No-op (unhandled) on untagged
+                    // documents so the key stays available to other handlers.
+                    handled = MoveToNextStructure(
+                        backward: e.KeyModifiers.HasFlag(KeyModifiers.Shift),
+                        headingsOnly: true);
+                    break;
             }
         }
 

@@ -72,6 +72,17 @@ semantic versioning.
   pdftocairo/Ghostscript differentials pinning the out-of-range fallback.
 
 ### Added
+- **Tagged-PDF structure accessibility layer** (#631) — the Avalonia viewer's
+  automation peer tree now exposes the tagged-PDF structure tree to screen
+  readers: the page's accessible text is ordered by the structure tree when a
+  tagged document supplies orderable `/ActualText` (falling back to geometric
+  reading order otherwise), structure elements are surfaced as role peers
+  (headings H1–H6, lists and list items, tables/rows/cells; figures continue
+  to come through as `/Alt` image peers), and `H` / `Shift+H` navigate to the
+  next/previous heading across page boundaries. Reading a heading's body glyphs
+  in struct order still awaits MCID-to-letter mapping from Excise.Core (a
+  follow-up slice of #631); untagged reading-order heuristics (#773) and
+  PDF/UA conformance validation (#772) are out of scope.
 - **Remaining #626 annotation subtypes: markup, shapes, stamps, edit/reply**
   (#626) — `PdfAnnotationAuthoring` now covers the rest of ISO 32000-2
   §12.5.6's programmatic authoring surface, each with a baked, self-contained
