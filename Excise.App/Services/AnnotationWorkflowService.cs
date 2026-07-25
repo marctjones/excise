@@ -75,6 +75,23 @@ public sealed class AnnotationWorkflowService
         return annotation;
     }
 
+    /// <summary>
+    /// Add an Ink (freehand) annotation with a baked appearance stream (#626).
+    /// Each stroke is a polyline of at least two (x, y) points in PDF page
+    /// coordinates (Y-up).
+    /// </summary>
+    public PdfAnnotation AddInk(
+        int pageNumber,
+        IReadOnlyList<IReadOnlyList<(double X, double Y)>> strokes,
+        string? contents = null)
+    {
+        var document = GetLoadedDocument();
+        var annotation = document.AddInkAnnotation(pageNumber, strokes, contents);
+
+        _logger.LogInformation("Added ink annotation to page {PageNumber}", pageNumber);
+        return annotation;
+    }
+
     private PdfDocument GetLoadedDocument() =>
         _documentService.GetCurrentDocument()
         ?? throw new InvalidOperationException("No document loaded");

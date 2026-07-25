@@ -286,6 +286,168 @@ public static class PdfAnnotationAuthoring
     }
 
     /// <summary>
+    /// Add an Ink (freehand) annotation — one or more hand-drawn polylines
+    /// (ISO 32000-2:2020 §12.5.6.13, Table 182). Each stroke is a list of
+    /// (x, y) points in PDF page coordinates (Y-up); consecutive points are
+    /// connected with straight lines.
+    /// </summary>
+    /// <remarks>
+    /// The annotation carries the machine-readable entries — /InkList (an
+    /// array of arrays of alternating x/y numbers, one inner array per
+    /// stroke), /C stroke color, /BS border width — and a baked normal
+    /// appearance stream (<c>/AP /N</c>) that strokes each polyline with
+    /// m/l…S in the annotation color at the /BS width, so every
+    /// ISO-conforming viewer renders the same pixels (#626). /Rect is the
+    /// bounding box of all points, expanded by half the stroke width so
+    /// round line caps at the extreme points are not clipped. The appearance
+    /// is fully self-contained (paths only, no fonts or images).
+    /// </remarks>
+    /// <param name="document">Target document.</param>
+    /// <param name="pageNumber">1-based page number.</param>
+    /// <param name="strokes">One or more polylines; each needs at least two
+    /// points, in PDF page coordinates (Y-up).</param>
+    /// <param name="contents">Optional pop-up comment text (/Contents).</param>
+    /// <param name="author">Optional author (/T).</param>
+    /// <param name="red">Stroke color red component, 0–1 (/C).</param>
+    /// <param name="green">Stroke color green component, 0–1 (/C).</param>
+    /// <param name="blue">Stroke color blue component, 0–1 (/C).</param>
+    /// <param name="borderWidth">Stroke (pen) width in points (/BS /W). Must
+    /// be positive — a zero-width ink annotation would be invisible.</param>
+    public static PdfAnnotation AddInkAnnotation(
+        this PdfDocument document,
+        int pageNumber,
+        IReadOnlyList<IReadOnlyList<(double X, double Y)>> strokes,
+        string? contents = null,
+        string? author = null,
+        double red = 0,
+        double green = 0,
+        double blue = 0,
+        double borderWidth = 2)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(strokes);
+
+        if (strokes.Count == 0)
+            throw new ArgumentException(
+                "An ink annotation needs at least one stroke.", nameof(strokes));
+        foreach (var stroke in strokes)
+        {
+            if (stroke is null || stroke.Count < 2)
+                throw new ArgumentException(
+                    "Each ink stroke needs at least two points.", nameof(strokes));
+            foreach (var (x, y) in stroke)
+                if (double.IsNaN(x) || double.IsInfinity(x) ||
+                    double.IsNaN(y) || double.IsInfinity(y))
+                    throw new ArgumentException(
+                        "Ink stroke coordinates must be finite numbers.", nameof(strokes));
+        }
+
+        ValidateColor(red, nameof(red));
+        ValidateColor(green, nameof(green));
+        ValidateColor(blue, nameof(blue));
+        if (double.IsNaN(borderWidth) || double.IsInfinity(borderWidth) || borderWidth <= 0)
+            throw new ArgumentOutOfRangeException(nameof(borderWidth),
+                "Ink stroke width must be a finite, positive number of points — " +
+                "a zero-width ink annotation would be invisible.");
+
+        // /Rect: bounding box of every point, padded by half the stroke width
+        // so the round line caps at the extreme points stay inside the BBox.
+        double minX = double.MaxValue, minY = double.MaxValue;
+        double maxX = double.MinValue, maxY = double.MinValue;
+        foreach (var stroke in strokes)
+        foreach (var (x, y) in stroke)
+        {
+            minX = Math.Min(minX, x); maxX = Math.Max(maxX, x);
+            minY = Math.Min(minY, y); maxY = Math.Max(maxY, y);
+        }
+        double pad = borderWidth / 2;
+        var rect = new PdfRectangle(minX - pad, minY - pad, maxX + pad, maxY + pad);
+
+        var annot = NewAnnotationDict("Ink", rect);
+
+        if (!string.IsNullOrWhiteSpace(contents))
+            annot.SetString("Contents", contents);
+        if (!string.IsNullOrWhiteSpace(author))
+            annot.SetString("T", author);
+
+        // Markup annotations carry /CreationDate (§12.5.6.2 Table 172).
+        annot.SetString("CreationDate", PdfDate(DateTimeOffset.UtcNow));
+
+        // /InkList — Table 182: an array of arrays; each inner array holds
+        // alternating x/y page-space coordinates for one stroke.
+        var inkList = new PdfArray();
+        foreach (var stroke in strokes)
+        {
+            var points = new PdfArray();
+            foreach (var (x, y) in stroke)
+            {
+                points.Add(x);
+                points.Add(y);
+            }
+            inkList.Add(points);
+        }
+        annot["InkList"] = inkList;
+
+        annot["C"] = new PdfArray(
+            new PdfReal(red), new PdfReal(green), new PdfReal(blue));
+
+        var bs = new PdfDictionary();
+        bs.SetName("Type", "Border");
+        bs.SetNumber("W", borderWidth);
+        bs.SetName("S", "S");
+        annot["BS"] = bs;
+
+        // Baked normal appearance so third-party viewers draw the same pixels.
+        var apStream = BuildInkAppearanceStream(
+            rect, strokes, (red, green, blue), borderWidth);
+        var ap = new PdfDictionary();
+        ap["N"] = document.AddIndirectObject(apStream);
+        annot["AP"] = ap;
+
+        return AttachAnnotation(document, pageNumber, annot);
+    }
+
+    /// <summary>
+    /// Build the <c>/AP /N</c> Form XObject for an Ink annotation
+    /// (§12.5.5 appearance streams). Each polyline is stroked with
+    /// m/l…S in the annotation color at the /BS width, with round line
+    /// caps and joins — the conventional freehand-pen look. The stream
+    /// draws in a local space whose <c>/BBox</c> is <c>[0 0 w h]</c>
+    /// (points translated by the /Rect origin); viewers map that box onto
+    /// the annotation's <c>/Rect</c>. Fully self-contained: paths only.
+    /// </summary>
+    private static PdfStream BuildInkAppearanceStream(
+        PdfRectangle rect,
+        IReadOnlyList<IReadOnlyList<(double X, double Y)>> strokes,
+        (double R, double G, double B) stroke,
+        double borderWidth)
+    {
+        double ox = rect.Left;
+        double oy = rect.Bottom;
+
+        var sb = new StringBuilder();
+        sb.Append($"{Num(stroke.R)} {Num(stroke.G)} {Num(stroke.B)} RG\n");
+        sb.Append($"{Num(borderWidth)} w\n");
+        sb.Append("1 J\n1 j\n"); // round caps and joins — freehand pen look
+
+        foreach (var polyline in strokes)
+        {
+            sb.Append($"{Num(polyline[0].X - ox)} {Num(polyline[0].Y - oy)} m\n");
+            for (int i = 1; i < polyline.Count; i++)
+                sb.Append($"{Num(polyline[i].X - ox)} {Num(polyline[i].Y - oy)} l\n");
+            sb.Append("S\n");
+        }
+
+        var streamObj = new PdfStream(Encoding.ASCII.GetBytes(sb.ToString()));
+        streamObj.SetName("Type", "XObject");
+        streamObj.SetName("Subtype", "Form");
+        streamObj.SetInt("FormType", 1);
+        streamObj["BBox"] = PdfArray.FromRectangle(0, 0, rect.Width, rect.Height);
+        streamObj["Resources"] = new PdfDictionary();
+        return streamObj;
+    }
+
+    /// <summary>
     /// Build the <c>/AP /N</c> Form XObject for a FreeText annotation
     /// (§12.5.5 appearance streams). Draws, in order: the /C background fill,
     /// the border (stroked in the text color at /BS /W), then the text as

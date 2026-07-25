@@ -143,6 +143,37 @@ public class AnnotationAuthoringWorkflowTests : IDisposable
         freeText.RawDictionary.GetStringOrNull("DA").Should().Contain("/Helv 14 Tf");
     }
 
+    [Fact]
+    public void AnnotationWorkflowService_AddInk_CreatesPersistableFreehandStrokesWithAppearance()
+    {
+        var filePath = CreateBlankPdf("ink-source.pdf");
+        var outputPath = Path.Combine(_tempDir, "ink-output.pdf");
+        var documentService = CreateLoadedDocumentService(filePath);
+        var workflow = new AnnotationWorkflowService(
+            documentService, NullLogger<AnnotationWorkflowService>.Instance);
+
+        workflow.AddInk(1,
+            new[]
+            {
+                new[] { (100.0, 700.0), (200.0, 720.0), (300.0, 700.0) },
+                new[] { (120.0, 650.0), (280.0, 650.0) }
+            },
+            "Freehand note");
+
+        documentService.SaveDocument(outputPath);
+        using var reopened = PdfDocument.Open(File.ReadAllBytes(outputPath));
+        var annotations = reopened.GetPage(1).GetAnnotations();
+
+        var ink = annotations.Should().ContainSingle(a =>
+            a.Subtype == PdfAnnotationSubtype.Ink).Subject;
+        ink.Contents.Should().Be("Freehand note");
+        ink.HasAppearance.Should().BeTrue(
+            "the workflow surface must produce the baked /AP /N appearance (#626)");
+        ink.InkStrokes.Should().NotBeNull();
+        ink.InkStrokes!.Count.Should().Be(2);
+        ink.InkStrokes[0].Should().Equal((100.0, 700.0), (200.0, 720.0), (300.0, 700.0));
+    }
+
     public void Dispose()
     {
         try
