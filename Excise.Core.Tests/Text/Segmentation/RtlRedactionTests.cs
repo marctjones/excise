@@ -29,6 +29,21 @@ public class RtlRedactionTests
     private const string ArabicWord = "سلام";
     private const string HebrewWord = "שלום";
 
+    /// <summary>
+    /// Pin the trailer /ID so SaveToBytes is deterministic. Without an
+    /// existing /ID the writer mints a random 16-byte one serialized as
+    /// UPPERCASE HEX — random A–F runs that can coincidentally contain the
+    /// short letter needles these byte-checks assert against ("DEF",
+    /// "ABCD", "DCBA"), failing the suite spuriously (~1% of runs). Same
+    /// byte-check-collision family as the float-noise coordinates of #762.
+    /// All-zero ID bytes serialize as "000…0", which contains no letters.
+    /// </summary>
+    internal static void PinDeterministicId(PdfDocument doc)
+    {
+        var zeroId = new Excise.Core.Primitives.PdfString(new byte[16], isHex: true);
+        doc.Trailer["ID"] = new Excise.Core.Primitives.PdfArray(zeroId, zeroId);
+    }
+
     private static readonly int[] ArabicScalars = { 0x0633, 0x0644, 0x0627, 0x0645 };
     private static readonly int[] HebrewScalars = { 0x05E9, 0x05DC, 0x05D5, 0x05DD };
 
@@ -37,6 +52,7 @@ public class RtlRedactionTests
     {
         var pdf = RtlPdfFixtures.SingleTj(ArabicScalars, visualOrder: true);
         using var doc = PdfDocument.Open(pdf);
+        RtlRedactionTests.PinDeterministicId(doc);
 
         // Sanity: the unredacted document must carry the word's glyph codes in
         // the saved bytes, or the "gone afterwards" assertions below prove
@@ -66,6 +82,7 @@ public class RtlRedactionTests
     {
         var pdf = RtlPdfFixtures.SingleTj(HebrewScalars, visualOrder: true);
         using var doc = PdfDocument.Open(pdf);
+        RtlRedactionTests.PinDeterministicId(doc);
 
         var removed = doc.RedactText(HebrewWord);
 
@@ -86,6 +103,7 @@ public class RtlRedactionTests
         // against the fix breaking the already-correct path.
         var pdf = RtlPdfFixtures.PerGlyphDecreasingX(ArabicScalars);
         using var doc = PdfDocument.Open(pdf);
+        RtlRedactionTests.PinDeterministicId(doc);
 
         var removed = doc.RedactText(ArabicWord);
 
@@ -147,6 +165,7 @@ public class RtlDigitIslandRedactionTests
     {
         var pdf = RtlPdfFixtures.SingleTjScalarStream(MixedVisual);
         using var doc = PdfDocument.Open(pdf);
+        RtlRedactionTests.PinDeterministicId(doc);
 
         // Sanity: extraction must read the phrase logically, and the raw-code
         // carrier must be present, or the absence assertions prove nothing.
@@ -175,6 +194,7 @@ public class RtlDigitIslandRedactionTests
     {
         var pdf = RtlPdfFixtures.SingleTjScalarStream(MixedVisual);
         using var doc = PdfDocument.Open(pdf);
+        RtlRedactionTests.PinDeterministicId(doc);
 
         // The number's stream codes are 'E' ('3') and 'F' ('0').
         SearchableTextOf(doc.SaveToBytes()).Should().Contain("DEF");
@@ -200,6 +220,7 @@ public class RtlDigitIslandRedactionTests
         const string logicalPhrase = "טלפון 123";
         var pdf = RtlPdfFixtures.SingleTjScalarStream(visual);
         using var doc = PdfDocument.Open(pdf);
+        RtlRedactionTests.PinDeterministicId(doc);
 
         doc.GetPage(1).Text.Should().Contain(logicalPhrase);
 
