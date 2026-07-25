@@ -1,0 +1,31 @@
+Top 30 Functions (Exclusive)                                                  Inclusive           Exclusive           
+1.  Thread.<PollGC>g__PollGCWorker|67_0()                                     60.39%              60.39%              
+2.  Monitor.Enter_Slowpath(class System.Object)                               5.33%               5.33%               
+3.  Missing Symbol                                                            3.79%               3.79%               
+4.  PdfLexer.ReadNumberOrKeyword(int64)                                       2.54%               2.07%               
+5.  OSFileStreamStrategy.Read(value class System.Span`1<unsigned int8>)       3.38%               1.7%                
+6.  Int64].Resize(int32,bool)                                                 1.89%               1.7%                
+7.  CoreLib!Interop+Sys.PRead(class System.Runtime.InteropServices.SafeHan    1.68%               1.68%               
+8.  GC.<AllocateUninitializedArray>g__AllocateNewArrayWorker|77_0(int32,bo    1.48%               1.48%               
+9.  PdfObjectWriter.SerializeDictionary(class Excise.Core.Primitives.PdfDi    4.56%               1.06%               
+10. FileStream.get_Length()                                                   1.03%               1.03%               
+11. CoreLib!Interop+Sys.FStat(class System.Runtime.InteropServices.SafeHan    0.93%               0.93%               
+12. Int32].PickPivotAndPartition(value class System.Span`1<!0>,class Syste    1.34%               0.87%               
+13. PdfDocumentWriter.WriteObjects(class System.IO.BinaryWriter)              90.24%              0.87%               
+14. PdfObjectWriter.SerializeObject(class Excise.Core.Primitives.PdfObject    5.25%               0.58%               
+15. Int32].CompareAnyKeys_DefaultComparer_NoNext_Ascending(int32,int32)       0.57%               0.57%               
+16. CastHelpers.IsInstanceOfClass(void*,class System.Object)                  0.49%               0.49%               
+17. SpanHelpers.Memmove(unsigned int8&,unsigned int8&,unsigned int)           0.48%               0.48%               
+18. Int64.ToString(class System.IFormatProvider)                              0.47%               0.47%               
+19. StringBuilder.ToString()                                                  0.47%               0.47%               
+20. Array.Copy(class System.Array,class System.Array,int32)                   29.68%              0.47%               
+21. StringBuilder+AppendInterpolatedStringHandler.AppendFormatted(!!0)        0.69%               0.4%                
+22. XRefParser.ParseXRefStream()                                              1.14%               0.39%               
+23. PdfDocumentWriter.WriteXRef(class System.IO.BinaryWriter)                 0.87%               0.38%               
+24. ZLibNative+ZLibStreamHandle.InflateInit2_(int32)                          0.37%               0.37%               
+25. PdfDictionary+<GetEnumerator>d__59.MoveNext()                             0.32%               0.32%               
+26. PdfDocument.OpenCore(class System.IO.Stream,bool,bool,class System.Str    4.26%               0.29%               
+27. Program.RunWorkflowProfile(class System.String,class System.String,int    98.96%              0.28%               
+28. ZLibNative+ZLibStreamHandle.InflateEnd()                                  0.28%               0.28%               
+29. PdfDocument.GetObjectFromStream(int32,int32)                              67.29%              0.28%               
+30. Ascii.WidenAsciiToUtf16(unsigned int8*,wchar*,unsigned int)               0.28%               0.28%               
