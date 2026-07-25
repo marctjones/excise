@@ -72,6 +72,43 @@ semantic versioning.
   pdftocairo/Ghostscript differentials pinning the out-of-range fallback.
 
 ### Added
+- **Remaining #626 annotation subtypes: markup, shapes, stamps, edit/reply**
+  (#626) — `PdfAnnotationAuthoring` now covers the rest of ISO 32000-2
+  §12.5.6's programmatic authoring surface, each with a baked, self-contained
+  `/AP /N` appearance stream so third-party viewers render the same pixels
+  (excise cannot be its own oracle for this — see below):
+  - **Text markup**: `AddUnderlineAnnotation`, `AddStrikeOutAnnotation`,
+    `AddSquigglyAnnotation` (§12.5.6.10) mirror `AddHighlightAnnotation`'s
+    single-quad shape but bake a stroked line/zig-zag appearance, since
+    (unlike Highlight) most viewers do not synthesize one for these subtypes.
+  - **Line/Arrow/Polygon/PolyLine** (§12.5.6.7, §12.5.6.9): `AddLineAnnotation`
+    and `AddArrowAnnotation` write `/L` plus `/LE` line-endings (`None`,
+    `OpenArrow`, `ClosedArrow`) with a matching baked triangular arrowhead;
+    `AddPolygonAnnotation` (closed, optional `/IC` fill) and
+    `AddPolyLineAnnotation` (always open, stroke-only) write `/Vertices`.
+  - **Stamp** (§12.5.6.12): `AddStampAnnotation` renders one of the 15
+    standard rubber-stamp names (`PdfAnnotationAuthoring.StandardStampNames`)
+    as a bordered, colored, bold-labeled box — excise has no bundled Acrobat
+    icon artwork, so this trades exact icon fidelity for guaranteed
+    cross-viewer pixel identity. `AddImageStampAnnotation` embeds a
+    caller-supplied raw RGB24 image as an uncompressed DeviceRGB Image
+    XObject for a custom/logo stamp, with no dependency on a JPEG/PNG codec.
+  - **Edit and delete**: `SetAnnotationContents`, `SetAnnotationColor`,
+    `SetAnnotationOpacity` mutate `/Contents`, `/C`, `/CA` on an existing
+    annotation in place (refreshing `/M`); `RemoveAnnotation` detaches an
+    annotation from a page's `/Annots` array.
+  - **Reply threads** (§12.5.6.2): `SetReplyTo` sets `/IRT` (an indirect
+    reference to the parent annotation) and `/RT` (`R` or `Group`).
+  - `XfdfSerializer`/`FdfSerializer` gained a `stamp`/`Stamp` import case
+    (previously exported but not re-importable) and now carry `/IC` through
+    generic Polygon imports (a pre-existing round-trip gap this work
+    surfaced); every new subtype round-trips position, color, `/T` author,
+    `/Contents` and `/CA` opacity through both formats.
+  - Verified with an independent-renderer gate, not excise reading its own
+    output: mutool and pdftocairo render every new appearance stream
+    (ink-region assertions on the saved file), and a third test confirms
+    excise's own `SkiaRenderer` agrees with mutool on the same pixels
+    (`Excise.Rendering.Tests/Differential/RemainingAnnotationSubtypesDifferentialTests.cs`).
 - **FDF annotation import/export round-trip** (#626) — `Excise.Core.Forms.FdfSerializer`
   reads and writes the PDF-syntax `/FDF` annotation interchange format (the
   counterpart to XFDF), so annotations round-trip with tools that prefer FDF.
