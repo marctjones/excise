@@ -440,6 +440,16 @@ internal partial class RenderContext
     private readonly Dictionary<(int ObjectNumber, int Generation, int TargetWidth, int TargetHeight), SoftMaskAlpha?> _softMaskAlphaByReference = new();
     private readonly Dictionary<Excise.Core.Primitives.PdfStream, Dictionary<(int TargetWidth, int TargetHeight), SoftMaskAlpha?>> _softMaskAlphaByStream =
         new(ReferenceEqualityComparer.Instance);
+    // Parsed content-stream operators per source byte[] instance (#598) — see
+    // ExecuteContentBytes. Reference-keyed like the other per-stream caches;
+    // lifetime is this RenderContext (a single page render).
+    private readonly Dictionary<byte[], Excise.Core.Content.ContentStream> _parsedContentByBytes =
+        new(ReferenceEqualityComparer.Instance);
+    // Observability hook for tests: parse-cache hits on the current thread
+    // (rendering executes synchronously on the calling thread). Thread-static
+    // so parallel test collections cannot interfere with each other's counts.
+    [ThreadStatic]
+    internal static long ContentStreamParseCacheHits;
     private readonly Dictionary<(int ObjectNumber, int Generation, ImageBitmapCacheKey Key), SKBitmap?> _imageBitmapByReference = new();
     private readonly Dictionary<Excise.Core.Primitives.PdfStream, Dictionary<ImageBitmapCacheKey, SKBitmap?>> _imageBitmapByStream =
         new(ReferenceEqualityComparer.Instance);
@@ -940,8 +950,38 @@ internal partial class RenderContext
 
     private void ExecuteContentBytes(byte[] contentBytes)
     {
-        var content = new ContentStreamParser(contentBytes, _page)
-            .Parse(_cancellationToken);
+        // Parsed-operator cache for repeatedly executed content streams (#598).
+        // A Form XObject invoked N times on a page, a Type 3 CharProc executed
+        // per glyph occurrence, and a tiling pattern cell stamped per tile all
+        // hand this method the SAME byte[] instance (PdfStream caches its
+        // decoded bytes), and re-parsing it per execution was the tractable
+        // share of the form-execution hot path in the #597 render trace.
+        // This caches the PARSE only — never the drawn result: the cached
+        // ContentOperator list is immutable data the renderer only reads, and
+        // every execution still runs the full operator interpreter under the
+        // invocation's own graphics state / CTM / clip / resource scope.
+        // Keying by byte[] REFERENCE gives natural invalidation (replacing a
+        // stream's data via SetDecodedData/SetEncodedData or the DecodedData
+        // setter produces a new array instance and therefore a cache miss),
+        // and the cache lives only for this RenderContext (one page render),
+        // so a stream mutated between renders can never serve stale operators.
+        if (!_parsedContentByBytes.TryGetValue(contentBytes, out var content))
+        {
+            // Metadata-free parse (#598): the renderer re-executes every
+            // operator under its own graphics/text state machine and never
+            // reads the parser-computed BoundingBox/TextContent, so skip the
+            // parser's own state-tracking pass (font resolution, ToUnicode
+            // CMaps, glyph-width advances, bounds accumulation).
+            content = new ContentStreamParser(contentBytes, _page)
+                { ComputeOperatorMetadata = false }
+                .Parse(_cancellationToken);
+            _parsedContentByBytes[contentBytes] = content;
+        }
+        else
+        {
+            ContentStreamParseCacheHits++;
+        }
+
         ExecuteContentOperators(content.Operators);
     }
 
