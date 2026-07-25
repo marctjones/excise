@@ -120,8 +120,11 @@ public partial class PdfViewerControl
             // Re-draw only when focus actually moves to a different letter.
             if (ReferenceEquals(hit, _selectionFocus)) return;
             _selectionFocus = hit;
-            var range = TextSelectionEngine.RangeBetween(
-                _readingOrderedLetters, _selectionAnchor, _selectionFocus);
+            // Column-gutter aware so a drag inside one column doesn't vacuum up
+            // an adjacent column sharing a Y-band (#373). Highlight follows
+            // visual order — DrawSelectionRange paints each glyph rect.
+            var range = TextSelectionEngine.ColumnAwareRange(
+                _readingOrderedLetters, _selectionAnchor, _selectionFocus, _columnGapThreshold);
             DrawSelectionRange(range);
         }
 
@@ -183,10 +186,16 @@ public partial class PdfViewerControl
                  _selectionAnchor != null && _selectionFocus != null &&
                  _readingOrderedLetters != null)
         {
-            var range = TextSelectionEngine.RangeBetween(
-                _readingOrderedLetters, _selectionAnchor, _selectionFocus);
-            var text = TextSelectionEngine.JoinText(range);
-            var letterDips = range
+            // Highlight rects follow visual order (contiguous glyphs, incl.
+            // within an RTL run); the copied text is re-ordered to logical
+            // reading order so Arabic/Hebrew reads correctly (#373). Column
+            // gutters are respected so a column-local drag stays in-column.
+            var selection = TextSelectionEngine.BuildSelection(
+                _readingOrderedLetters,
+                _currentPageLetters ?? _readingOrderedLetters,
+                _selectionAnchor, _selectionFocus, _columnGapThreshold);
+            var text = selection.Text;
+            var letterDips = selection.VisualRange
                 .Select(l => PdfRectangleToDips(l.GlyphRectangle))
                 .ToList();
             // Bounding box of the whole run — keeps backwards compat with
@@ -219,12 +228,16 @@ public partial class PdfViewerControl
             var page = Document.GetPage(CurrentPage);
             _currentPageLetters = page.Letters?.ToList() ?? new List<Letter>();
             _readingOrderedLetters = TextSelectionEngine.SortReadingOrder(_currentPageLetters);
+            // Column-gutter width depends only on the page's glyph metrics, so
+            // compute it once here rather than on every pointer-move (#373).
+            _columnGapThreshold = TextSelectionEngine.EstimateColumnGap(_readingOrderedLetters);
             _lettersPageNumber = CurrentPage;
         }
         catch
         {
             _currentPageLetters = new List<Letter>();
             _readingOrderedLetters = new List<Letter>();
+            _columnGapThreshold = double.PositiveInfinity;
             _lettersPageNumber = CurrentPage;
         }
     }

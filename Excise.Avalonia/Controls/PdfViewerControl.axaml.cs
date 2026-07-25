@@ -313,6 +313,7 @@ public partial class PdfViewerControl : UserControl
     private int _lettersPageNumber = -1;
     private List<Letter>? _currentPageLetters; // raw glyph order
     private List<Letter>? _readingOrderedLetters; // for range slicing
+    private double _columnGapThreshold = double.PositiveInfinity; // cached per page (#373)
     private Letter? _selectionAnchor;
     private Letter? _selectionFocus;
 
