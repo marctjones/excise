@@ -7,6 +7,22 @@ semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **Complete predefined CJK CMap coverage — the full PDF 32000 Table 118 set**
+  (#515) — 50 more registered encoding CMaps ship embedded (Adobe
+  cmap-resources, BSD-3), covering every predefined name a conforming reader
+  must support: the legacy national encodings (GBK-EUC, GB-EUC, GBpc-EUC,
+  GBK2K, Big5 `B5pc`/`ETen`/`ETenms`/`HKscs`, CNS-EUC, EUC-JP, the RKSJ
+  Shift-JIS family, ISO-2022 `H`/`V`, KSC-EUC, KSCms-UHC, KSCpc-EUC) and the
+  PDF 1.5+ `Uni*-UTF16` encodings including Adobe-KR's `UniAKR-UTF16-H`
+  (ISO 32000-2). Previously only the `Uni*-UCS2` and `90ms-RKSJ` CMaps
+  shipped; a Type0 font using any other predefined name fell through to the
+  2-byte identity fallback — bytes misread as CIDs, extraction garbled, and
+  `RedactText` **silently unable to match** the text (extraction coverage
+  bounds redaction, CLAUDE.md limitation #1). UTF-16 surrogate-pair
+  codespaces decode as single 4-byte codes and re-encode byte-exactly through
+  redaction, so plane-2 CJK survives a round trip. Vertical writing is now
+  detected from each CMap's own parsed `/WMode` rather than the `-V` name
+  suffix, which the one-letter vertical CMap `V` does not carry.
 - **Type 3 d0/d1 glyph metrics and d1 bounding-box clipping** (#514) — the
   renderer now honors the metrics a Type 3 CharProc declares: when the font
   has no `/Widths` entry covering a code, the advance falls back to the `wx`
