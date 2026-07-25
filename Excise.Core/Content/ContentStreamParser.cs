@@ -27,6 +27,24 @@ public class ContentStreamParser
     public int MaxNestingDepth { get; set; } = 256;
 
     /// <summary>
+    /// When false, the parser skips the state-tracking pass that annotates
+    /// each operator with <see cref="ContentOperator.BoundingBox"/> and the
+    /// decoded <see cref="ContentOperator.TextContent"/> — the font
+    /// resolution, ToUnicode CMap parsing, glyph-width advances, graphics
+    /// state cloning and path-bounds accumulation that exist only to compute
+    /// that metadata. Operator names, operands, and inline-image data are
+    /// byte-for-byte identical either way. Intended for callers that
+    /// re-execute the operators under their own full state machine and never
+    /// read the metadata (Excise.Rendering does this — see #598).
+    /// ⚠️ Redaction and text extraction rely on the metadata pass and MUST
+    /// keep the default (true): LetterFinder/GlyphRemover match on the
+    /// decoded operator text and bounds this pass produces.
+    /// Internal — a parser tuning option, not a public SemVer commitment;
+    /// Excise.Rendering reaches it via InternalsVisibleTo (see #598).
+    /// </summary>
+    internal bool ComputeOperatorMetadata { get; set; } = true;
+
+    /// <summary>
     /// Upper bound on an inline image's data scan when no <c>/L</c> length is
     /// declared (#347). Inline images are meant to be small (§8.9.7); this is
     /// far larger than any legitimate one and just bounds malicious input.
@@ -143,7 +161,8 @@ public class ContentStreamParser
         var op = new ContentOperator(name, operands.ToList());
 
         // Execute operator to update state and calculate bounds
-        ExecuteOperator(name, operands, op);
+        if (ComputeOperatorMetadata)
+            ExecuteOperator(name, operands, op);
 
         return op;
     }
@@ -969,10 +988,12 @@ public class ContentStreamParser
         }
 
         // Compute operator bounds from current CTM (inline image fills the unit square
-        // mapped through the CTM, i.e. the four corners (0,0),(1,0),(1,1),(0,1))
-        var b = TransformBounds(0, 0, 1, 1);
+        // mapped through the CTM, i.e. the four corners (0,0),(1,0),(1,1),(0,1)).
+        // Skipped in metadata-free mode — the CTM is not tracked there, so a
+        // computed box would be wrong rather than merely absent.
         var op = new ContentOperator("BI", new PdfObject[] { imageParams });
-        op.BoundingBox = b;
+        if (ComputeOperatorMetadata)
+            op.BoundingBox = TransformBounds(0, 0, 1, 1);
         op.InlineImageData = imageData;
         return op;
     }
