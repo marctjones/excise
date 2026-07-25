@@ -967,7 +967,13 @@ internal partial class RenderContext
         // so a stream mutated between renders can never serve stale operators.
         if (!_parsedContentByBytes.TryGetValue(contentBytes, out var content))
         {
+            // Metadata-free parse (#598): the renderer re-executes every
+            // operator under its own graphics/text state machine and never
+            // reads the parser-computed BoundingBox/TextContent, so skip the
+            // parser's own state-tracking pass (font resolution, ToUnicode
+            // CMaps, glyph-width advances, bounds accumulation).
             content = new ContentStreamParser(contentBytes, _page)
+                { ComputeOperatorMetadata = false }
                 .Parse(_cancellationToken);
             _parsedContentByBytes[contentBytes] = content;
         }
