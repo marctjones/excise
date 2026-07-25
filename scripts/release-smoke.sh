@@ -51,7 +51,7 @@ Options:
   --packaged-gui-focus-input
                       Also run focus-taking native key/mouse smoke.
   --no-build          Skip the initial build gate.
-  --only=a,b          Run only named gates: docs,build,redaction,signature,ui,accessibility,automation,ux,benchmark,aot,pdf20,corpus-resilience,adversarial-extraction,tests,visual,package,packaged-gui,diffcheck.
+  --only=a,b          Run only named gates: docs,build,redaction,signature,ui,accessibility,automation,ux,benchmark,perf-budget,aot,pdf20,corpus-resilience,adversarial-extraction,tests,visual,package,packaged-gui,diffcheck.
   -h, --help          Show this help.
 EOF
 }
@@ -398,6 +398,13 @@ run_gate "accessibility" scripts/run-accessibility-smoke.sh --config "$CONFIG" -
 run_gate "automation" scripts/run-automation-smoke.sh --config "$CONFIG" --output "$LOG_DIR/automation"
 run_gate "ux" scripts/run-ux-icon-audit.sh --config "$CONFIG" --output "$LOG_DIR/ux-icon-audit"
 run_gate "benchmark" env CONFIG="$CONFIG" scripts/run-benchmarks.sh suite --output-dir "$LOG_DIR/benchmarks" --page-limit 2 --dpi 96 --timeout-ms 20000 --oracles all --fail-on-regression
+# #602: focused workflow performance budgets (allocation-anchored hard gate,
+# time gated too on this known machine class). A distinct PERFORMANCE gate,
+# reported separately from the correctness/quality gates above; silently SKIPs
+# (exit 0) when test-pdfs/smoke is absent, like the other corpus gates here.
+# Always measures a Release build regardless of $CONFIG (budgets are
+# Release-anchored). Output: logs/perf-budgets/latest/perf-budget-report.json.
+run_gate "perf-budget" env CONFIG=Release EXCISE_PERF_OUTPUT_DIR="$LOG_DIR/perf-budgets" scripts/check-perf-budgets.sh --time-gate fail
 run_aot_gate
 run_gate "pdf20" scripts/run-pdf20-renderer-conformance.sh --run-tests
 
