@@ -26,6 +26,7 @@ namespace Excise.Rendering.Differential
         public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword) { }
         public static Excise.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
         public static Excise.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword) { }
+        public static Excise.Rendering.Differential.ReferenceRenderResult TryRenderPageWithOverprintSimulation(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
     }
     public static class MutoolReferenceRenderer
     {

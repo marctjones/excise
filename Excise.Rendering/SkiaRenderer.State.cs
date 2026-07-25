@@ -21,6 +21,14 @@ internal class GraphicsState
     public string FillColorSpace { get; set; } = "DeviceGray";
     public string StrokeColorSpace { get; set; } = "DeviceGray";
     public string? FillPatternName { get; set; }
+    // Overprint control (ISO 32000-1 §8.6.7, ExtGState /OP, /op, /OPM — #634).
+    // OP gates strokes, op gates fills; OPM 1 ("nonzero overprint mode") makes
+    // a zero DeviceCMYK source component leave that colorant of the backdrop
+    // unchanged instead of painting 0. Defaults per Table 58: both flags
+    // false, OPM 0.
+    public bool StrokeOverprint { get; set; }
+    public bool FillOverprint { get; set; }
+    public int OverprintMode { get; set; }
     public SKBlendMode BlendMode { get; set; } = SKBlendMode.SrcOver;
     public Excise.Core.Primitives.PdfObject? SoftMask { get; set; }
     public SKMatrix CurrentTransform { get; set; } = new(1, 0, 0, 0, 1, 0, 0, 0, 1);
@@ -46,6 +54,9 @@ internal class GraphicsState
             FillColorSpace = FillColorSpace,
             StrokeColorSpace = StrokeColorSpace,
             FillPatternName = FillPatternName,
+            StrokeOverprint = StrokeOverprint,
+            FillOverprint = FillOverprint,
+            OverprintMode = OverprintMode,
             BlendMode = BlendMode,
             CurrentTransform = CurrentTransform,
             DashArray = DashArray,            // replaced wholesale by `d`, never mutated in place -> safe to share

@@ -88,4 +88,30 @@ remaining tracked color work is not a blanket "ICC missing" gap; it is limited
 to specific reference-disagreement and prepress-fidelity cases tracked through
 the #491 quality dashboard and focused renderer issues.
 
+## Overprint (#634)
+
+The graphics state tracks `/OP`, `/op`, and `/OPM` from ExtGState dictionaries
+(ISO 32000-1 §8.6.7, Table 58 — including the "/OP without /op sets both" rule
+and OPM persistence across `gs` operators that omit it). What is simulated:
+
+- **DeviceCMYK fills and strokes under OPM 1** ("nonzero overprint mode"): a
+  zero source component leaves that colorant of the backdrop unchanged instead
+  of knocking it out. Inside a DeviceCMYK transparency group this merges
+  against the true per-pixel CMYK backdrop and is exact; outside a group the
+  backdrop colorants are estimated by inverting the preview conversion, which
+  is exact for the common prepress pairing (both objects DeviceCMYK with a
+  zero component) and approximate for mixed backdrops. OPM 0 zero components
+  paint (knock out), per spec.
+- The spec oracle is Ghostscript `-dOverprint=/simulate`
+  (`GhostscriptReferenceRenderer.TryRenderPageWithOverprintSimulation`) — the
+  only reference renderer in the harness that simulates overprint on RGB
+  output; mutool and pdftocairo apply overprint only on CMYK/spot targets.
+
+Not yet simulated (remaining #634 scope): Separation/DeviceN overprint (leave
+every colorant *outside* the space unchanged, regardless of OPM), ICCBased
+CMYK overprint, overprint for text and image painting, and a real
+colour-managed CMYK page buffer with rendering intents. Tint-transformed
+Separation/DeviceN components are deliberately excluded from the OPM 1
+zero-component skip — applying it there would over-apply overprint.
+
 MIT licensed. Part of the [excise](https://github.com/marctjones/excise) project.

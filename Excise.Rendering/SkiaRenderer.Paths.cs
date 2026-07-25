@@ -1,3 +1,4 @@
+using Excise.Core.ColorSpaces;
 using Excise.Core.Primitives;
 using Excise.Rendering.Transparency;
 using SkiaSharp;
@@ -298,6 +299,22 @@ internal partial class RenderContext
             return;
         }
 
+        if (TryPaintDeviceCmykOverprintPath(
+                _currentPath,
+                _state.StrokeDeviceCmyk,
+                _state.StrokeAlpha,
+                SKPaintStyle.Stroke,
+                ResolvePathStrokeWidth(),
+                _state.LineCap,
+                _state.LineJoin,
+                _state.MiterLimit,
+                dash))
+        {
+            _currentPath.Dispose();
+            _currentPath = null;
+            return;
+        }
+
         RenderWithCurrentSoftMask(
             () => _canvas.DrawPath(_currentPath, paint),
             paint);
@@ -327,7 +344,8 @@ internal partial class RenderContext
             return;
         }
 
-        if (TryPaintDeviceCmykBlendPath(_currentPath, _state.FillDeviceCmyk, _state.FillAlpha))
+        if (TryPaintDeviceCmykBlendPath(_currentPath, _state.FillDeviceCmyk, _state.FillAlpha) ||
+            TryPaintDeviceCmykOverprintPath(_currentPath, _state.FillDeviceCmyk, _state.FillAlpha))
         {
             _currentPath.Dispose();
             _currentPath = null;
@@ -373,10 +391,15 @@ internal partial class RenderContext
         {
             if (_state.FillPatternName == null)
             {
-                var filledWithDeviceCmykBlend = TryPaintDeviceCmykBlendPath(
-                    _currentPath,
-                    _state.FillDeviceCmyk,
-                    _state.FillAlpha);
+                var filledWithDeviceCmykBlend =
+                    TryPaintDeviceCmykBlendPath(
+                        _currentPath,
+                        _state.FillDeviceCmyk,
+                        _state.FillAlpha) ||
+                    TryPaintDeviceCmykOverprintPath(
+                        _currentPath,
+                        _state.FillDeviceCmyk,
+                        _state.FillAlpha);
                 if (!filledWithDeviceCmykBlend)
                 {
                     using var fillPaint = new SKPaint
@@ -418,9 +441,21 @@ internal partial class RenderContext
         using (var dash = CreateDashEffect())
         {
             if (dash != null) strokePaint.PathEffect = dash;
-            RenderWithCurrentSoftMask(
-                () => _canvas.DrawPath(_currentPath, strokePaint),
-                strokePaint);
+            if (!TryPaintDeviceCmykOverprintPath(
+                    _currentPath,
+                    _state.StrokeDeviceCmyk,
+                    _state.StrokeAlpha,
+                    SKPaintStyle.Stroke,
+                    ResolvePathStrokeWidth(),
+                    _state.LineCap,
+                    _state.LineJoin,
+                    _state.MiterLimit,
+                    dash))
+            {
+                RenderWithCurrentSoftMask(
+                    () => _canvas.DrawPath(_currentPath, strokePaint),
+                    strokePaint);
+            }
         }
 
         _currentPath.Dispose();
@@ -485,6 +520,12 @@ internal partial class RenderContext
         if (!isNormalBlend && !TryMapSkiaBlendToPdfBlend(_state.BlendMode, out blend))
             return false;
 
+        // #634: OPM 1 overprint against the group's true CMYK backdrop —
+        // zero source components leave that colorant unchanged (see
+        // IsDeviceCmykOverprintActive; requires Normal blend, so this never
+        // interacts with the blend-mode branches below).
+        var overprintActive = IsDeviceCmykOverprintActive(style);
+
         var matrix = _canvas.TotalMatrix;
         var bounds = matrix.MapRect(path.Bounds);
         var left = Math.Clamp((int)Math.Floor(bounds.Left) - 1, 0, _rootBitmap.Width);
@@ -494,70 +535,9 @@ internal partial class RenderContext
         if (right <= left || bottom <= top)
             return true;
 
-        // Rasterize path coverage into a mask bounded to the path's device-space
-        // bounds (the only pixels the loop below ever reads), not the full page.
-        // The mask canvas gets the same total matrix post-translated by the
-        // integer offset (-left, -top); an integer pixel translation leaves
-        // Skia's antialiased fill coverage of every in-window pixel
-        // byte-identical to the previous full-page mask. Deliberately NOT
-        // intersected with the canvas clip: the previous full-page mask ignored
-        // the clip too, and shrinking to the clip would change which pixels
-        // composite.
-        //
-        // Strokes keep the full root-bitmap surface: Skia's dash path effect
-        // consumes the surface cull rect while segmenting the dash, so a
-        // smaller surface changes dash phase accumulation and thus coverage
-        // (observed as pixel diffs on dashed DeviceCMYK strokes). They still
-        // benefit from mask reuse, the window-only clear, and the bulk span
-        // read below.
-        var boundMaskToWindow = style == SKPaintStyle.Fill && pathEffect == null;
-        var maskOriginX = boundMaskToWindow ? left : 0;
-        var maskOriginY = boundMaskToWindow ? top : 0;
-        var maskWidth = boundMaskToWindow ? right - left : _rootBitmap.Width;
-        var maskHeight = boundMaskToWindow ? bottom - top : _rootBitmap.Height;
-        var mask = GetDeviceCmykBlendMask(maskWidth, maskHeight);
-        var maskMatrix = matrix;
-        maskMatrix.TransX -= maskOriginX;
-        maskMatrix.TransY -= maskOriginY;
-        using (var maskCanvas = new SKCanvas(mask))
-        using (var maskPaint = new SKPaint
-        {
-            Style = style,
-            Color = SKColors.White,
-            StrokeWidth = strokeWidth,
-            StrokeCap = lineCap switch
-            {
-                1 => SKStrokeCap.Round,
-                2 => SKStrokeCap.Square,
-                _ => SKStrokeCap.Butt
-            },
-            StrokeJoin = lineJoin switch
-            {
-                1 => SKStrokeJoin.Round,
-                2 => SKStrokeJoin.Bevel,
-                _ => SKStrokeJoin.Miter
-            },
-            StrokeMiter = miterLimit,
-            IsAntialias = _options.AntiAlias
-        })
-        {
-            if (pathEffect != null)
-                maskPaint.PathEffect = pathEffect;
-
-            // Clear only the pixels the loop below reads. The draw itself stays
-            // unclipped so the surface-wide cull rect (and therefore dash
-            // segmentation) is untouched; stale pixels the path may repaint
-            // outside the window are never read.
-            maskCanvas.Save();
-            maskCanvas.ClipRect(
-                SKRect.Create(left - maskOriginX, top - maskOriginY, right - left, bottom - top),
-                SKClipOperation.Intersect,
-                antialias: false);
-            maskCanvas.Clear(SKColors.Transparent);
-            maskCanvas.Restore();
-            maskCanvas.SetMatrix(maskMatrix);
-            maskCanvas.DrawPath(path, maskPaint);
-        }
+        var (mask, maskOriginX, maskOriginY) = RasterizeDeviceCmykCoverageMask(
+            path, matrix, left, top, right, bottom,
+            style, strokeWidth, lineCap, lineJoin, miterLimit, pathEffect);
 
         _canvas.Flush();
         var source = sourceCmyk.Value;
@@ -644,7 +624,7 @@ internal partial class RenderContext
                 }
 
                 var blended = isNormalBlend
-                    ? source
+                    ? (overprintActive ? MergeOverprintZeroComponents(backdrop, source) : source)
                     : BlendDeviceCmykWithBackdropAlpha(
                         backdrop,
                         source,
@@ -669,6 +649,269 @@ internal partial class RenderContext
         // SetPixel bumped the bitmap's generation per write; raw span writes do
         // not, so invalidate once for any downstream consumer that snapshots
         // the root bitmap (e.g. transparency-group backdrop seeding).
+        _rootBitmap.NotifyPixelsChanged();
+        return true;
+    }
+
+    /// <summary>
+    /// Rasterizes path coverage into a reusable alpha mask for the DeviceCMYK
+    /// per-pixel paint loops. The mask is bounded to the path's device-space
+    /// bounds (the only pixels those loops ever read), not the full page.
+    /// The mask canvas gets the same total matrix post-translated by the
+    /// integer offset (-left, -top); an integer pixel translation leaves
+    /// Skia's antialiased fill coverage of every in-window pixel
+    /// byte-identical to a full-page mask. Deliberately NOT intersected with
+    /// the canvas clip: the previous full-page mask ignored the clip too, and
+    /// shrinking to the clip would change which pixels composite.
+    ///
+    /// Strokes keep the full root-bitmap surface: Skia's dash path effect
+    /// consumes the surface cull rect while segmenting the dash, so a
+    /// smaller surface changes dash phase accumulation and thus coverage
+    /// (observed as pixel diffs on dashed DeviceCMYK strokes). They still
+    /// benefit from mask reuse, the window-only clear, and the bulk span
+    /// reads in the callers.
+    /// </summary>
+    private (SKBitmap Mask, int MaskOriginX, int MaskOriginY) RasterizeDeviceCmykCoverageMask(
+        SKPath path,
+        SKMatrix matrix,
+        int left,
+        int top,
+        int right,
+        int bottom,
+        SKPaintStyle style,
+        float strokeWidth,
+        int lineCap,
+        int lineJoin,
+        float miterLimit,
+        SKPathEffect? pathEffect)
+    {
+        var boundMaskToWindow = style == SKPaintStyle.Fill && pathEffect == null;
+        var maskOriginX = boundMaskToWindow ? left : 0;
+        var maskOriginY = boundMaskToWindow ? top : 0;
+        var maskWidth = boundMaskToWindow ? right - left : _rootBitmap!.Width;
+        var maskHeight = boundMaskToWindow ? bottom - top : _rootBitmap!.Height;
+        var mask = GetDeviceCmykBlendMask(maskWidth, maskHeight);
+        var maskMatrix = matrix;
+        maskMatrix.TransX -= maskOriginX;
+        maskMatrix.TransY -= maskOriginY;
+        using (var maskCanvas = new SKCanvas(mask))
+        using (var maskPaint = new SKPaint
+        {
+            Style = style,
+            Color = SKColors.White,
+            StrokeWidth = strokeWidth,
+            StrokeCap = lineCap switch
+            {
+                1 => SKStrokeCap.Round,
+                2 => SKStrokeCap.Square,
+                _ => SKStrokeCap.Butt
+            },
+            StrokeJoin = lineJoin switch
+            {
+                1 => SKStrokeJoin.Round,
+                2 => SKStrokeJoin.Bevel,
+                _ => SKStrokeJoin.Miter
+            },
+            StrokeMiter = miterLimit,
+            IsAntialias = _options.AntiAlias
+        })
+        {
+            if (pathEffect != null)
+                maskPaint.PathEffect = pathEffect;
+
+            // Clear only the pixels the paint loops read. The draw itself
+            // stays unclipped so the surface-wide cull rect (and therefore
+            // dash segmentation) is untouched; stale pixels the path may
+            // repaint outside the window are never read.
+            maskCanvas.Save();
+            maskCanvas.ClipRect(
+                SKRect.Create(left - maskOriginX, top - maskOriginY, right - left, bottom - top),
+                SKClipOperation.Intersect,
+                antialias: false);
+            maskCanvas.Clear(SKColors.Transparent);
+            maskCanvas.Restore();
+            maskCanvas.SetMatrix(maskMatrix);
+            maskCanvas.DrawPath(path, maskPaint);
+        }
+
+        return (mask, maskOriginX, maskOriginY);
+    }
+
+    /// <summary>
+    /// True when overprint applies to the given paint style for a DeviceCMYK
+    /// colour under nonzero overprint mode (#634, ISO 32000-1 §8.6.7 +
+    /// Table 58): /OP (strokes) or /op (fills) is set, /OPM is 1, the blend
+    /// mode is Normal (overprint belongs to the opaque imaging model; PDF
+    /// consumers apply it only under Normal blending), and the current colour
+    /// space really is DeviceCMYK. Separation/DeviceN colours — whose
+    /// overprint rule is "leave every colorant OUTSIDE the space unchanged,
+    /// regardless of OPM" — and ICCBased CMYK are remaining #634 work; their
+    /// tint-transformed CMYK components must NOT get the zero-component skip,
+    /// so this deliberately resolves the actual colour space type.
+    /// </summary>
+    private bool IsDeviceCmykOverprintActive(SKPaintStyle style)
+    {
+        if (_state.OverprintMode != 1)
+            return false;
+        if (!(style == SKPaintStyle.Stroke ? _state.StrokeOverprint : _state.FillOverprint))
+            return false;
+        if (_state.BlendMode != SKBlendMode.SrcOver)
+            return false;
+
+        var colorSpaceName = style == SKPaintStyle.Stroke
+            ? _state.StrokeColorSpace
+            : _state.FillColorSpace;
+        // "DeviceCMYK" is what the k/K operators and `/DeviceCMYK cs` store;
+        // it stays DeviceCMYK for overprint purposes even when a /DefaultCMYK
+        // preview remap is installed. Resource names are resolved so a named
+        // colour space that IS DeviceCMYK still participates.
+        if (string.Equals(colorSpaceName, "DeviceCMYK", StringComparison.Ordinal))
+            return true;
+        return ResolveColorSpace(colorSpaceName)?.Type == PdfColorSpaceType.DeviceCMYK;
+    }
+
+    /// <summary>
+    /// OPM 1 colorant merge: components the source specifies as exactly zero
+    /// leave the backdrop's colorant unchanged; nonzero components paint
+    /// (replace) as usual. ISO 32000-1 §8.6.7, "nonzero overprint mode".
+    /// </summary>
+    private static DeviceCmykColor MergeOverprintZeroComponents(
+        DeviceCmykColor backdrop,
+        DeviceCmykColor source)
+        => new(
+            Math.Abs(source.C) < 1e-9 ? backdrop.C : source.C,
+            Math.Abs(source.M) < 1e-9 ? backdrop.M : source.M,
+            Math.Abs(source.Y) < 1e-9 ? backdrop.Y : source.Y,
+            Math.Abs(source.K) < 1e-9 ? backdrop.K : source.K);
+
+    private static bool HasZeroCmykComponent(DeviceCmykColor color)
+        => Math.Abs(color.C) < 1e-9 ||
+           Math.Abs(color.M) < 1e-9 ||
+           Math.Abs(color.Y) < 1e-9 ||
+           Math.Abs(color.K) < 1e-9;
+
+    private bool TryPaintDeviceCmykOverprintPath(SKPath path, DeviceCmykColor? sourceCmyk, float alpha)
+        => TryPaintDeviceCmykOverprintPath(
+            path,
+            sourceCmyk,
+            alpha,
+            SKPaintStyle.Fill,
+            strokeWidth: 1,
+            lineCap: 0,
+            lineJoin: 0,
+            miterLimit: 10,
+            pathEffect: null);
+
+    /// <summary>
+    /// Overprint simulation for DeviceCMYK fills/strokes OUTSIDE a DeviceCMYK
+    /// transparency group (#634). Inside a group, TryPaintDeviceCmykBlendPath
+    /// owns compositing and applies overprint against the true per-pixel CMYK
+    /// backdrop; out here the page only has RGB pixels, so the backdrop's
+    /// colorants are estimated by inverting the DeviceCMYK→RGB preview
+    /// conversion. The estimate is exact whenever the backdrop pixel was
+    /// itself painted from DeviceCMYK with some component zero (the common
+    /// prepress overprint pairing); for mixed backdrops the residual error is
+    /// bounded by the black-generation ambiguity of the round trip. A real
+    /// colour-managed CMYK page buffer is the remaining #634 work.
+    /// Only engages when overprint can actually change output (OPM 1, op/OP
+    /// set, DeviceCMYK colour with at least one zero component, Normal blend,
+    /// no soft mask), so every other fill/stroke keeps the untouched fast
+    /// Skia path.
+    /// </summary>
+    private bool TryPaintDeviceCmykOverprintPath(
+        SKPath path,
+        DeviceCmykColor? sourceCmyk,
+        float alpha,
+        SKPaintStyle style,
+        float strokeWidth,
+        int lineCap,
+        int lineJoin,
+        float miterLimit,
+        SKPathEffect? pathEffect)
+    {
+        if (_rootBitmap == null ||
+            sourceCmyk == null ||
+            _state.SoftMask != null ||
+            _deviceCmykTransparencyGroupDepth > 0 ||
+            _deviceCmykKnockoutGroupDepth > 0)
+        {
+            return false;
+        }
+
+        if (!IsDeviceCmykOverprintActive(style))
+            return false;
+
+        var source = sourceCmyk.Value;
+        if (!HasZeroCmykComponent(source))
+            return false; // no zero component → overprint output == normal paint
+
+        var matrix = _canvas.TotalMatrix;
+        var bounds = matrix.MapRect(path.Bounds);
+        var left = Math.Clamp((int)Math.Floor(bounds.Left) - 1, 0, _rootBitmap.Width);
+        var top = Math.Clamp((int)Math.Floor(bounds.Top) - 1, 0, _rootBitmap.Height);
+        var right = Math.Clamp((int)Math.Ceiling(bounds.Right) + 1, 0, _rootBitmap.Width);
+        var bottom = Math.Clamp((int)Math.Ceiling(bounds.Bottom) + 1, 0, _rootBitmap.Height);
+        if (right <= left || bottom <= top)
+            return true;
+
+        var (mask, maskOriginX, maskOriginY) = RasterizeDeviceCmykCoverageMask(
+            path, matrix, left, top, right, bottom,
+            style, strokeWidth, lineCap, lineJoin, miterLimit, pathEffect);
+
+        _canvas.Flush();
+
+        var maskRowBytes = mask.RowBytes;
+        var maskPixels = mask.GetPixelSpan();
+        var rootRowBytes = _rootBitmap.RowBytes;
+        var rootPixels = GetRootPixelSpan();
+        for (var y = top; y < bottom; y++)
+        {
+            var maskRowStart = (y - maskOriginY) * maskRowBytes;
+            for (var x = left; x < right; x++)
+            {
+                var maskAlpha = maskPixels[maskRowStart + ((x - maskOriginX) * 4) + 3];
+                if (maskAlpha == 0)
+                    continue;
+
+                var effectiveAlpha = Math.Clamp(alpha * (maskAlpha / 255.0), 0, 1);
+                if (effectiveAlpha <= 0)
+                    continue;
+
+                var rootOffset = (y * rootRowBytes) + (x * 4);
+                var dstAlphaByte = rootPixels[rootOffset + 3];
+                var dstAlpha = dstAlphaByte / 255.0;
+
+                // Estimate the backdrop's colorants from the RGB pixel. A
+                // fully transparent destination carries no ink at all.
+                var backdrop = dstAlphaByte == 0
+                    ? new DeviceCmykColor(0, 0, 0, 0)
+                    : RgbToDeviceCmyk(
+                        rootPixels[rootOffset] / (double)dstAlphaByte,
+                        rootPixels[rootOffset + 1] / (double)dstAlphaByte,
+                        rootPixels[rootOffset + 2] / (double)dstAlphaByte);
+
+                var merged = MergeOverprintZeroComponents(backdrop, source);
+                var (r, g, b) = DeviceCmykToRgb(merged);
+
+                var outAlpha = effectiveAlpha + (dstAlpha * (1 - effectiveAlpha));
+                if (outAlpha <= 1e-9)
+                    continue;
+
+                // Source-over in unpremultiplied space; the destination's
+                // premultiplied channels already carry dstAlpha.
+                var outR = ((r * effectiveAlpha) + (rootPixels[rootOffset] / 255.0 * (1 - effectiveAlpha))) / outAlpha;
+                var outG = ((g * effectiveAlpha) + (rootPixels[rootOffset + 1] / 255.0 * (1 - effectiveAlpha))) / outAlpha;
+                var outB = ((b * effectiveAlpha) + (rootPixels[rootOffset + 2] / 255.0 * (1 - effectiveAlpha))) / outAlpha;
+                WritePremulRgba(
+                    rootPixels,
+                    rootOffset,
+                    ToByte(outR),
+                    ToByte(outG),
+                    ToByte(outB),
+                    ToByte(outAlpha));
+            }
+        }
+
         _rootBitmap.NotifyPixelsChanged();
         return true;
     }

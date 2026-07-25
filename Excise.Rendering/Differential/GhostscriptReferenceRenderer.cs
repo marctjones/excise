@@ -74,6 +74,33 @@ public static class GhostscriptReferenceRenderer
         int dpi,
         int timeoutMs,
         string? userPassword)
+        => TryRenderPage(pdfPath, pageNumber, dpi, timeoutMs, userPassword, overprintSimulate: false);
+
+    /// <summary>
+    /// Same as <see cref="TryRenderPage(string,int,int,int,string?)"/> but with
+    /// <c>-dOverprint=/simulate</c> (Ghostscript ≥ 9.54), which makes Ghostscript
+    /// simulate PDF overprint (/OP, /op, /OPM — ISO 32000-1 §8.6.7) on the RGB
+    /// output device. This is the only reference renderer in the differential
+    /// harness that simulates overprint in RGB output at all (mutool and
+    /// pdftocairo only apply overprint when rendering to CMYK/spot targets), so
+    /// it is the spec oracle for excise's overprint work (#634). Older
+    /// Ghostscript versions reject the flag; callers get an EXIT_CODE failure
+    /// and should skip.
+    /// </summary>
+    public static ReferenceRenderResult TryRenderPageWithOverprintSimulation(
+        string pdfPath,
+        int pageNumber,
+        int dpi,
+        int timeoutMs = 30_000)
+        => TryRenderPage(pdfPath, pageNumber, dpi, timeoutMs, userPassword: null, overprintSimulate: true);
+
+    private static ReferenceRenderResult TryRenderPage(
+        string pdfPath,
+        int pageNumber,
+        int dpi,
+        int timeoutMs,
+        string? userPassword,
+        bool overprintSimulate)
     {
         var sw = Stopwatch.StartNew();
         var command = _commandName.Value;
@@ -101,6 +128,8 @@ public static class GhostscriptReferenceRenderer
             psi.ArgumentList.Add("-sDEVICE=png16m");
             psi.ArgumentList.Add("-dTextAlphaBits=4");
             psi.ArgumentList.Add("-dGraphicsAlphaBits=4");
+            if (overprintSimulate)
+                psi.ArgumentList.Add("-dOverprint=/simulate");
             psi.ArgumentList.Add($"-r{dpi.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
             psi.ArgumentList.Add($"-dFirstPage={pageNumber.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
             psi.ArgumentList.Add($"-dLastPage={pageNumber.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
