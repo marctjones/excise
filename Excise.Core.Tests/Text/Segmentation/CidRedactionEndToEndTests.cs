@@ -92,6 +92,111 @@ public class CidRedactionEndToEndTests
         content.Should().NotContain("Y", "the redacted glyph's Unicode value must not appear either");
     }
 
+    [Fact]
+    public void RedactText_Type0WithCharSpacingAndHorizontalScaling_RemovesSecret_KeepsRestInPlace()
+    {
+        // #734: horizontal Type0 advance is tx = (w0·Tfs + Tc + Tw)·Th
+        // (§9.4.4). Under the pre-fix formula (Tc added OUTSIDE the Th
+        // factor) every glyph after the first drifted right, so letter
+        // bounds — and the redaction match/bounds derived from them — sat
+        // off the §9.4.4 truth on any Type0 text combining Tz ≠ 100 with
+        // non-zero Tc. This pins the whole RedactText round trip on exactly
+        // that shape, with hand-computed spec positions as the oracle.
+        //
+        // Layout: Tfs=12, w0=500/1000, Tc=4, Th=0.5 → per-glyph
+        // tx = (6 + 4)·0.5 = 5. "KEEP" = CIDs 0x11..0x14 from x=72;
+        // "SECRET" = CIDs 1..6 follows in the same block, so its 'S' pen
+        // sits at 72 + 4·5 = 92. (The SECRET run comes SECOND so removing
+        // it cannot disturb the kept run's pen position — a removed run's
+        // lost advance shifts only what FOLLOWS it in the block; that
+        // follower-drift is a separate pre-existing defect, issue #758.)
+        var pdf = BuildSpacedSecretPdf();
+        using var doc = PdfDocument.Open(pdf);
+        var page = doc.GetPage(1);
+
+        page.Text.Should().Contain("KEEP").And.Contain("SECRET");
+        var kBefore = page.Letters.First(l => l.Value == "K");
+        kBefore.StartX.Should().BeApproximately(72.0, 1e-9);
+        var sBefore = page.Letters.First(l => l.Value == "S");
+        sBefore.StartX.Should().BeApproximately(92.0, 1e-9,
+            "the §9.4.4 advance places 'S' after four (w0·Tfs + Tc)·Th steps");
+
+        doc.RedactText("SECRET", drawBlackRect: false).Should().Be(1);
+
+        // CARRIER-AGNOSTIC: the secret must be nowhere in the SAVED BYTES,
+        // in any text carrier, ASCII or UTF-16BE.
+        var saved = doc.SaveToBytes();
+        (Encoding.ASCII.GetString(saved) + Encoding.BigEndianUnicode.GetString(saved))
+            .Should().NotContain("SECRET",
+                "the redacted text must be gone from every carrier in the saved file");
+
+        // The kept run must survive with its original bytes at its original
+        // §9.4.4 position.
+        var reopened = PdfDocument.Open(saved);
+        var reopenedPage = reopened.GetPage(1);
+        reopenedPage.Text.Should().Contain("KEEP").And.NotContain("SECRET");
+        var kAfter = reopenedPage.Letters.First(l => l.Value == "K");
+        kAfter.StartX.Should().BeApproximately(72.0, 0.5,
+            "kept glyphs must stay where they were before redaction");
+    }
+
+    /// <summary>
+    /// Identity-H Type0 page drawing "KEEP" (CIDs 0x11..0x14) then "SECRET"
+    /// (CIDs 1..6) in one Tj each inside one BT block, with 50 Tz and 4 Tc
+    /// active — the combination whose advance the pre-#734 formula got
+    /// wrong. All CIDs have /W width 500; ToUnicode maps them to the ASCII
+    /// letters.
+    /// </summary>
+    private static byte[] BuildSpacedSecretPdf()
+    {
+        // CID → Unicode: 1..6 → S,E,C,R,E,T; 0x11..0x14 → K,E,E,P.
+        var cmap =
+            "/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n" +
+            "1 begincodespacerange\n<0000> <FFFF>\nendcodespacerange\n" +
+            "10 beginbfchar\n" +
+            "<0001> <0053>\n<0002> <0045>\n<0003> <0043>\n<0004> <0052>\n" +
+            "<0005> <0045>\n<0006> <0054>\n" +
+            "<0011> <004B>\n<0012> <0045>\n<0013> <0045>\n<0014> <0050>\n" +
+            "endbfchar\nendcmap\nCMapName currentdict /CMap defineresource pop\nend\nend\n";
+
+        var content =
+            "BT /F1 12 Tf 50 Tz 4 Tc 72 700 Td " +
+            "<0011001200130014> Tj <000100020003000400050006> Tj ET";
+
+        var bodies = new[]
+        {
+            "<< /Type /Catalog /Pages 2 0 R >>",
+            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R " +
+                "/Resources << /Font << /F1 5 0 R >> >> >>",
+            StreamBody("", content),
+            "<< /Type /Font /Subtype /Type0 /BaseFont /Test /Encoding /Identity-H " +
+                "/DescendantFonts [6 0 R] /ToUnicode 7 0 R >>",
+            "<< /Type /Font /Subtype /CIDFontType2 /BaseFont /Test " +
+                "/CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> " +
+                "/FontDescriptor 8 0 R /CIDToGIDMap /Identity /DW 1000 " +
+                "/W [ 1 6 500 17 20 500 ] >>",
+            StreamBody("", cmap),
+            "<< /Type /FontDescriptor /FontName /Test /Flags 4 /FontBBox [0 0 1000 1000] " +
+                "/ItalicAngle 0 /Ascent 1000 /Descent 0 /CapHeight 1000 /StemV 80 >>",
+        };
+
+        using var ms = new MemoryStream();
+        void W(string s) { var b = Encoding.Latin1.GetBytes(s); ms.Write(b, 0, b.Length); }
+        W("%PDF-1.5\n");
+        var off = new long[bodies.Length + 1];
+        for (int i = 0; i < bodies.Length; i++)
+        {
+            off[i + 1] = ms.Position;
+            W($"{i + 1} 0 obj\n{bodies[i]}\nendobj\n");
+        }
+        long xref = ms.Position;
+        W($"xref\n0 {bodies.Length + 1}\n0000000000 65535 f \n");
+        for (int i = 1; i <= bodies.Length; i++) W($"{off[i]:D10} 00000 n \n");
+        W($"trailer\n<< /Root 1 0 R /Size {bodies.Length + 1} >>\nstartxref\n{xref}\n%%EOF");
+        return ms.ToArray();
+    }
+
     /// <summary>
     /// Minimal one-page PDF: a Type0 font whose /Encoding is an embedded
     /// CMap stream declaring a 1-byte codespace (`&lt;00&gt; &lt;FF&gt;`), the
