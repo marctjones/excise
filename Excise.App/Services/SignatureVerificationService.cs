@@ -10,6 +10,29 @@ using System.Linq;
 
 namespace Excise.App.Services;
 
+/// <summary>
+/// Consolidated per-signature verdict combining cryptographic validity and
+/// signer trust. Derived from the underlying check fields so the UI and tests
+/// consume the same structured state and cannot disagree (#466).
+/// </summary>
+public enum SignatureVerificationState
+{
+    /// <summary>The signature could not be parsed or verified (malformed object, missing data, engine error).</summary>
+    Indeterminate = 0,
+
+    /// <summary>Verification ran and FAILED: the signed bytes do not match the signature, or the ByteRange does not cover the document correctly. Treat as modified-after-signing or a broken signature.</summary>
+    Invalid,
+
+    /// <summary>Cryptographically valid signature, but the signer certificate does NOT chain to a trusted root.</summary>
+    ValidUntrusted,
+
+    /// <summary>Cryptographically valid signature; signer trust was not evaluated or could not be determined.</summary>
+    ValidTrustUnknown,
+
+    /// <summary>Cryptographically valid signature AND the signer chains to a trusted root.</summary>
+    ValidTrusted
+}
+
 public class SignatureVerificationResult
 {
     public string SignatureName { get; set; } = string.Empty;
@@ -23,6 +46,45 @@ public class SignatureVerificationResult
     public string ByteRangeStructureMessage { get; set; } = string.Empty;
     public bool ByteRangeIntegrityChecked { get; set; }
     public bool ByteRangeIntegrityValid { get; set; }
+
+    /// <summary>Signer certificate chain trust. Independent of, and additional to, cryptographic validity (#466).</summary>
+    public SignatureTrustStatus TrustStatus { get; set; } = SignatureTrustStatus.NotEvaluated;
+    public string TrustDetails { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Consolidated verdict. Computed from the check fields (never stored) so a
+    /// "trusted" state is impossible unless the signature is also
+    /// cryptographically valid over the correct byte range.
+    /// </summary>
+    public SignatureVerificationState State
+    {
+        get
+        {
+            if (IsValid)
+            {
+                return TrustStatus switch
+                {
+                    SignatureTrustStatus.Trusted => SignatureVerificationState.ValidTrusted,
+                    SignatureTrustStatus.Untrusted => SignatureVerificationState.ValidUntrusted,
+                    _ => SignatureVerificationState.ValidTrustUnknown
+                };
+            }
+
+            // Not valid: distinguish "verification ran and failed" (tampering /
+            // broken signature) from "could not verify at all".
+            if (ByteRangeIntegrityChecked && !ByteRangeIntegrityValid)
+            {
+                return SignatureVerificationState.Invalid;
+            }
+
+            if (ByteRangeStructureChecked && !ByteRangeStructureValid)
+            {
+                return SignatureVerificationState.Invalid;
+            }
+
+            return SignatureVerificationState.Indeterminate;
+        }
+    }
 }
 
 /// <summary>
@@ -32,11 +94,20 @@ public class SignatureVerificationResult
 public class SignatureVerificationService
 {
     private readonly ILogger<SignatureVerificationService> _logger;
+    private readonly SignatureTrustEvaluator _trustEvaluator;
 
     public SignatureVerificationService(ILogger<SignatureVerificationService> logger)
+        : this(logger, trustEvaluator: null)
+    {
+    }
+
+    public SignatureVerificationService(
+        ILogger<SignatureVerificationService> logger,
+        SignatureTrustEvaluator? trustEvaluator)
     {
         ArgumentNullException.ThrowIfNull(logger);
         _logger = logger;
+        _trustEvaluator = trustEvaluator ?? new SignatureTrustEvaluator();
     }
 
     public List<SignatureVerificationResult> VerifySignatures(string pdfPath)
@@ -237,6 +308,13 @@ public class SignatureVerificationService
                         result.ByteRangeIntegrityChecked = true;
                         result.ByteRangeIntegrityValid = true;
                         result.StatusMessage = "Signature is cryptographically valid and ByteRange digest matches";
+                        ExtractSigningTime(signer, result);
+
+                        // Trust is ADDITIONAL to validity, never a replacement:
+                        // only a cryptographically valid signature earns a trust
+                        // evaluation, and the consolidated State can only reach
+                        // ValidTrusted through both checks (#466).
+                        EvaluateTrust(cert, store, result);
                     }
                     else
                     {
@@ -262,6 +340,48 @@ public class SignatureVerificationService
         catch (Exception ex)
         {
             throw new Exception("BouncyCastle verification failed", ex);
+        }
+    }
+
+    private void EvaluateTrust(
+        X509Certificate signerCertificate,
+        Org.BouncyCastle.Utilities.Collections.IStore<X509Certificate> certificateStore,
+        SignatureVerificationResult result)
+    {
+        try
+        {
+            // Hand the evaluator every certificate embedded in the CMS bundle
+            // so intermediates resolve without any network access.
+            var candidates = certificateStore.EnumerateMatches(null)
+                .Select(c => c.GetEncoded())
+                .ToList();
+            var trust = _trustEvaluator.Evaluate(signerCertificate.GetEncoded(), candidates);
+            result.TrustStatus = trust.Status;
+            result.TrustDetails = trust.Details;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Trust-chain evaluation failed for signer {Signer}", result.SignedBy);
+            result.TrustStatus = SignatureTrustStatus.Indeterminate;
+            result.TrustDetails = $"trust evaluation failed: {ex.Message}";
+        }
+    }
+
+    private void ExtractSigningTime(SignerInformation signer, SignatureVerificationResult result)
+    {
+        try
+        {
+            var attribute = signer.SignedAttributes?[Org.BouncyCastle.Asn1.Cms.CmsAttributes.SigningTime];
+            if (attribute is { AttrValues.Count: > 0 })
+            {
+                result.SigningTime = Org.BouncyCastle.Asn1.Cms.Time
+                    .GetInstance(attribute.AttrValues[0])
+                    .ToDateTime();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Could not extract signing time for {Signer}", result.SignedBy);
         }
     }
 
