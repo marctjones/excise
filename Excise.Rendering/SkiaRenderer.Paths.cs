@@ -176,20 +176,27 @@ internal partial class RenderContext
             if (deviceSpace.IsEmpty)
                 return;
 
-            // The collector holds shapes from many operations under a single
-            // winding fill (matching ApplyPendingTextClipPath). Resolve
-            // even-odd geometry to explicit contours first, or its holes
-            // would fill in when appended.
-            if (deviceSpace.FillType is SKPathFillType.EvenOdd or SKPathFillType.InverseEvenOdd)
+            // Painting inside the CharProc is bounded by the clip in effect
+            // there — most importantly the d1 bbox clip — so the glyph's clip
+            // contribution must be bounded the same way. Intersecting via Op
+            // also resolves even-odd fill semantics into plain contours: the
+            // collector holds shapes from many operations under a single
+            // winding fill (matching ApplyPendingTextClipPath), where raw
+            // even-odd contours would have their holes fill back in.
+            var clipBounds = _canvas.DeviceClipBounds;
+            using var clipRectPath = new SKPath();
+            clipRectPath.AddRect(SKRect.Create(
+                clipBounds.Left, clipBounds.Top, clipBounds.Width, clipBounds.Height));
+            using var bounded = deviceSpace.Op(clipRectPath, SKPathOp.Intersect);
+            if (bounded != null)
             {
-                using var simplified = deviceSpace.Simplify();
-                if (simplified != null && !simplified.IsEmpty)
-                {
-                    _type3ClipCollector.AddPath(simplified, SKPathAddMode.Append);
-                    return;
-                }
+                if (!bounded.IsEmpty)
+                    _type3ClipCollector.AddPath(bounded, SKPathAddMode.Append);
+                return;
             }
 
+            // Op failed (degenerate geometry): keep the unbounded shape —
+            // over-inclusive clip coverage is the safe fallback.
             _type3ClipCollector.AddPath(deviceSpace, SKPathAddMode.Append);
         }
         finally
