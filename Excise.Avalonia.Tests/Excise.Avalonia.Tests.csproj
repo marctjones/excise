@@ -23,6 +23,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Headless Avalonia platform for automation-peer tests (#631). Only the
+         base package: tests dispatch through HeadlessUnitTestSession from
+         plain [Fact]s, deliberately avoiding Avalonia.Headless.XUnit's
+         [AvaloniaFact] and its xunit.v3 TestContext bug (#337). -->
+    <PackageReference Include="Avalonia.Headless" Version="12.0.5" />
     <PackageReference Include="AwesomeAssertions" Version="9.4.0" />
     <PackageReference Include="PublicApiGenerator" Version="11.5.4" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
