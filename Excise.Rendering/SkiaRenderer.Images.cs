@@ -569,6 +569,8 @@ internal partial class RenderContext
         foreach (var typeface in _embeddedTypefaces.Values)
             typeface.Dispose();
         _embeddedTypefaces.Clear();
+        _deviceCmykBlendMask?.Dispose();
+        _deviceCmykBlendMask = null;
     }
 
     private static bool TryGetImageReferenceKey(

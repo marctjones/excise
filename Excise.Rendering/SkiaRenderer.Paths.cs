@@ -427,6 +427,27 @@ internal partial class RenderContext
         _currentPath = null;
     }
 
+    // Reusable coverage mask for TryPaintDeviceCmykBlendPath (#599). Grows to
+    // the largest path bounds seen during this context's render and is cleared
+    // before each use, so per-path work is a bounded memset + one rasterization
+    // instead of a full-page bitmap allocation per painted path. Disposed in
+    // DisposeOwnedResources.
+    private SKBitmap? _deviceCmykBlendMask;
+
+    private SKBitmap GetDeviceCmykBlendMask(int width, int height)
+    {
+        var existing = _deviceCmykBlendMask;
+        if (existing != null && existing.Width >= width && existing.Height >= height)
+            return existing;
+
+        // Grow-only: never shrink below a size already needed this render.
+        var newWidth = Math.Max(width, existing?.Width ?? 0);
+        var newHeight = Math.Max(height, existing?.Height ?? 0);
+        existing?.Dispose();
+        _deviceCmykBlendMask = new SKBitmap(newWidth, newHeight, SKColorType.Rgba8888, SKAlphaType.Premul);
+        return _deviceCmykBlendMask;
+    }
+
     private bool TryPaintDeviceCmykBlendPath(SKPath path, DeviceCmykColor? sourceCmyk, float alpha)
         => TryPaintDeviceCmykBlendPath(
             path,
@@ -473,7 +494,31 @@ internal partial class RenderContext
         if (right <= left || bottom <= top)
             return true;
 
-        using var mask = new SKBitmap(_rootBitmap.Width, _rootBitmap.Height, SKColorType.Rgba8888, SKAlphaType.Premul);
+        // Rasterize path coverage into a mask bounded to the path's device-space
+        // bounds (the only pixels the loop below ever reads), not the full page.
+        // The mask canvas gets the same total matrix post-translated by the
+        // integer offset (-left, -top); an integer pixel translation leaves
+        // Skia's antialiased fill coverage of every in-window pixel
+        // byte-identical to the previous full-page mask. Deliberately NOT
+        // intersected with the canvas clip: the previous full-page mask ignored
+        // the clip too, and shrinking to the clip would change which pixels
+        // composite.
+        //
+        // Strokes keep the full root-bitmap surface: Skia's dash path effect
+        // consumes the surface cull rect while segmenting the dash, so a
+        // smaller surface changes dash phase accumulation and thus coverage
+        // (observed as pixel diffs on dashed DeviceCMYK strokes). They still
+        // benefit from mask reuse, the window-only clear, and the bulk span
+        // read below.
+        var boundMaskToWindow = style == SKPaintStyle.Fill && pathEffect == null;
+        var maskOriginX = boundMaskToWindow ? left : 0;
+        var maskOriginY = boundMaskToWindow ? top : 0;
+        var maskWidth = boundMaskToWindow ? right - left : _rootBitmap.Width;
+        var maskHeight = boundMaskToWindow ? bottom - top : _rootBitmap.Height;
+        var mask = GetDeviceCmykBlendMask(maskWidth, maskHeight);
+        var maskMatrix = matrix;
+        maskMatrix.TransX -= maskOriginX;
+        maskMatrix.TransY -= maskOriginY;
         using (var maskCanvas = new SKCanvas(mask))
         using (var maskPaint = new SKPaint
         {
@@ -498,28 +543,57 @@ internal partial class RenderContext
         {
             if (pathEffect != null)
                 maskPaint.PathEffect = pathEffect;
+
+            // Clear only the pixels the loop below reads. The draw itself stays
+            // unclipped so the surface-wide cull rect (and therefore dash
+            // segmentation) is untouched; stale pixels the path may repaint
+            // outside the window are never read.
+            maskCanvas.Save();
+            maskCanvas.ClipRect(
+                SKRect.Create(left - maskOriginX, top - maskOriginY, right - left, bottom - top),
+                SKClipOperation.Intersect,
+                antialias: false);
             maskCanvas.Clear(SKColors.Transparent);
-            maskCanvas.SetMatrix(matrix);
+            maskCanvas.Restore();
+            maskCanvas.SetMatrix(maskMatrix);
             maskCanvas.DrawPath(path, maskPaint);
         }
 
         _canvas.Flush();
         var source = sourceCmyk.Value;
+
+        // Bulk pixel access: one managed span over the mask (and one over the
+        // root bitmap) instead of a GetPixel/SetPixel P/Invoke per pixel.
+        // Both bitmaps are premultiplied Rgba8888 with no color space:
+        //   - reading: premultiplication never changes the alpha byte, so byte
+        //     offset 3 yields exactly what GetPixel(x, y).Alpha returned — and
+        //     alpha is the only channel this loop ever reads;
+        //   - writing: SetPixel on such a bitmap stores round(channel*alpha/255)
+        //     per channel with the alpha byte unchanged, replicated bit-exactly
+        //     by WritePremulRgba (pinned exhaustively over all 256x256
+        //     (alpha, channel) pairs by DeviceCmykBlendPixelContractTests).
+        var maskRowBytes = mask.RowBytes;
+        var maskPixels = mask.GetPixelSpan();
+        var rootRowBytes = _rootBitmap.RowBytes;
+        var rootPixels = GetRootPixelSpan();
         for (var y = top; y < bottom; y++)
         {
+            var maskRowStart = (y - maskOriginY) * maskRowBytes;
             for (var x = left; x < right; x++)
             {
-                var coverage = mask.GetPixel(x, y).Alpha / 255.0;
-                if (coverage <= 0)
+                var maskAlpha = maskPixels[maskRowStart + ((x - maskOriginX) * 4) + 3];
+                if (maskAlpha == 0)
                     continue;
+
+                var coverage = maskAlpha / 255.0;
 
                 var effectiveAlpha = Math.Clamp(alpha * coverage, 0, 1);
                 if (effectiveAlpha <= 0)
                 {
                     if (_deviceCmykKnockoutGroupDepth > 0)
-                        ResetDeviceCmykKnockoutPixel(x, y, 0);
+                        ResetDeviceCmykKnockoutPixel(rootPixels, rootRowBytes, x, y, 0);
                     else if (_deviceCmykPreserveZeroAlphaShape)
-                        PreserveDeviceCmykShapePixel(x, y, coverage);
+                        PreserveDeviceCmykShapePixel(rootPixels, rootRowBytes, x, y, coverage);
                     continue;
                 }
 
@@ -557,10 +631,15 @@ internal partial class RenderContext
                     continue;
                 }
 
-                var dst = _rootBitmap.GetPixel(x, y);
+                var rootOffset = (y * rootRowBytes) + (x * 4);
+                var dstAlphaByte = rootPixels[rootOffset + 3];
                 if (_deviceCmykKnockoutGroupDepth > 0)
                 {
-                    dst = ResetDeviceCmykKnockoutPixel(x, y, 0);
+                    // The reset writes alpha 0, so the destination alpha the
+                    // final composite sees is 0 (previously dst.Alpha of the
+                    // SKColor returned by the reset — always its alpha arg).
+                    ResetDeviceCmykKnockoutPixel(rootPixels, rootRowBytes, x, y, 0);
+                    dstAlphaByte = 0;
                     backdrop = _deviceCmykBackdrop.Get(x, y);
                 }
 
@@ -575,48 +654,83 @@ internal partial class RenderContext
                 _deviceCmykBackdrop.CompositeSourceOver(x, y, blended, effectiveAlpha);
                 var output = _deviceCmykBackdrop.Get(x, y);
                 var (r, g, b) = DeviceCmykToRgb(output);
-                var dstAlpha = dst.Alpha / 255.0;
+                var dstAlpha = dstAlphaByte / 255.0;
                 var outAlpha = effectiveAlpha + (dstAlpha * (1 - effectiveAlpha));
-                var outColor = new SKColor(
+                WritePremulRgba(
+                    rootPixels,
+                    rootOffset,
                     ToByte(r),
                     ToByte(g),
                     ToByte(b),
                     ToByte(outAlpha));
-                _rootBitmap.SetPixel(x, y, outColor);
             }
         }
 
+        // SetPixel bumped the bitmap's generation per write; raw span writes do
+        // not, so invalidate once for any downstream consumer that snapshots
+        // the root bitmap (e.g. transparency-group backdrop seeding).
+        _rootBitmap.NotifyPixelsChanged();
         return true;
     }
 
-    private SKColor ResetDeviceCmykKnockoutPixel(int x, int y, byte alpha)
+    private unsafe Span<byte> GetRootPixelSpan()
+        => new((void*)_rootBitmap!.GetPixels(), _rootBitmap.RowBytes * _rootBitmap.Height);
+
+    /// <summary>
+    /// Premultiplies one channel exactly as Skia's SetPixel/erase does for a
+    /// premul bitmap: round(value * alpha / 255) via the SkMulDiv255Round
+    /// integer identity. Internal so DeviceCmykBlendPixelContractTests can pin
+    /// the equivalence against SKBitmap.SetPixel exhaustively.
+    /// </summary>
+    internal static byte PremulChannel(byte value, byte alpha)
+    {
+        var prod = (alpha * value) + 128;
+        return (byte)((prod + (prod >> 8)) >> 8);
+    }
+
+    /// <summary>
+    /// Byte-exact replacement for SKBitmap.SetPixel on a premultiplied
+    /// Rgba8888 bitmap with no color space (see
+    /// DeviceCmykBlendPixelContractTests for the exhaustive equivalence pin).
+    /// </summary>
+    internal static void WritePremulRgba(Span<byte> pixels, int offset, byte r, byte g, byte b, byte a)
+    {
+        pixels[offset] = PremulChannel(r, a);
+        pixels[offset + 1] = PremulChannel(g, a);
+        pixels[offset + 2] = PremulChannel(b, a);
+        pixels[offset + 3] = a;
+    }
+
+    private void ResetDeviceCmykKnockoutPixel(Span<byte> rootPixels, int rootRowBytes, int x, int y, byte alpha)
     {
         var initialBackdrop = _deviceCmykKnockoutInitialBackdrop?.Get(x, y)
                               ?? new DeviceCmykColor(0, 0, 0, 0);
         var initialAlpha = _deviceCmykKnockoutInitialBackdrop?.GetAlpha(x, y) ?? (alpha / 255.0);
         _deviceCmykBackdrop!.Set(x, y, initialBackdrop, initialAlpha);
         var (initialR, initialG, initialB) = DeviceCmykToRgb(initialBackdrop);
-        var dst = new SKColor(
+        WritePremulRgba(
+            rootPixels,
+            (y * rootRowBytes) + (x * 4),
             ToByte(initialR),
             ToByte(initialG),
             ToByte(initialB),
             alpha);
-        _rootBitmap!.SetPixel(x, y, dst);
-        return dst;
     }
 
-    private void PreserveDeviceCmykShapePixel(int x, int y, double coverage)
+    private void PreserveDeviceCmykShapePixel(Span<byte> rootPixels, int rootRowBytes, int x, int y, double coverage)
     {
         var backdrop = _deviceCmykBackdrop!.Get(x, y);
         var (r, g, b) = DeviceCmykToRgb(backdrop);
-        var dst = _rootBitmap!.GetPixel(x, y);
-        var dstAlpha = dst.Alpha / 255.0;
+        var offset = (y * rootRowBytes) + (x * 4);
+        var dstAlpha = rootPixels[offset + 3] / 255.0;
         var outAlpha = Math.Clamp(coverage, 0, 1) + (dstAlpha * (1 - Math.Clamp(coverage, 0, 1)));
-        _rootBitmap.SetPixel(x, y, new SKColor(
+        WritePremulRgba(
+            rootPixels,
+            offset,
             ToByte(r),
             ToByte(g),
             ToByte(b),
-            ToByte(outAlpha)));
+            ToByte(outAlpha));
     }
 
     private enum PdfSeparableBlendMode
