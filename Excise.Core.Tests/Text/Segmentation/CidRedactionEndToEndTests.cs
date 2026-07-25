@@ -106,10 +106,12 @@ public class CidRedactionEndToEndTests
         // Layout: Tfs=12, w0=500/1000, Tc=4, Th=0.5 → per-glyph
         // tx = (6 + 4)·0.5 = 5. "KEEP" = CIDs 0x11..0x14 from x=72;
         // "SECRET" = CIDs 1..6 follows in the same block, so its 'S' pen
-        // sits at 72 + 4·5 = 92. (The SECRET run comes SECOND so removing
-        // it cannot disturb the kept run's pen position — a removed run's
-        // lost advance shifts only what FOLLOWS it in the block; that
-        // follower-drift is a separate pre-existing defect, issue #758.)
+        // sits at 72 + 4·5 = 92. (The SECRET run comes SECOND so this test
+        // isolates the #734 advance formula from follower positioning — a
+        // removed run's lost advance shifts only what FOLLOWS it in the
+        // block; that follower-drift was issue #758, fixed by the keep-as-is
+        // TJ advance compensation and pinned by
+        // RedactText_MiddleRunOfMultiRunBtBlock_FollowingKeptRunStaysPut.)
         var pdf = BuildSpacedSecretPdf();
         using var doc = PdfDocument.Open(pdf);
         var page = doc.GetPage(1);
@@ -138,6 +140,109 @@ public class CidRedactionEndToEndTests
         var kAfter = reopenedPage.Letters.First(l => l.Value == "K");
         kAfter.StartX.Should().BeApproximately(72.0, 0.5,
             "kept glyphs must stay where they were before redaction");
+    }
+
+    [Fact]
+    public void RedactText_MiddleRunOfMultiRunBtBlock_FollowingKeptRunStaysPut()
+    {
+        // #758: when the keep-as-is path removes a Tj from a multi-run BT
+        // block, the removed run's §9.4.4 pen advance must still be consumed
+        // (replayed as a numeric TJ adjustment) — otherwise every following
+        // kept run collapses back to the last explicit positioning operator.
+        //
+        // Same layout as the #734 fixture (Tfs=12, w0=500/1000, Tc=4,
+        // Th=0.5 → 5pt per glyph), but with a THIRD run after the secret:
+        // one BT block "KEEP" (from x=72) + "SECRET" (x=92) + "DONE"
+        // (x=92 + 6·5 = 122). Redacting the middle run must leave "DONE"
+        // exactly at its hand-computed spec position; pre-fix it shifted
+        // 30pt left onto the redacted gap.
+        var pdf = BuildThreeRunPdf();
+        using var doc = PdfDocument.Open(pdf);
+        var page = doc.GetPage(1);
+
+        page.Text.Should().Contain("KEEP").And.Contain("SECRET").And.Contain("DONE");
+        page.Letters.First(l => l.Value == "K").StartX.Should().BeApproximately(72.0, 1e-9);
+        page.Letters.First(l => l.Value == "S").StartX.Should().BeApproximately(92.0, 1e-9);
+        page.Letters.First(l => l.Value == "D").StartX.Should().BeApproximately(122.0, 1e-9,
+            "hand-computed §9.4.4: 72 + 10 glyphs × (w0·Tfs + Tc)·Th");
+
+        doc.RedactText("SECRET", drawBlackRect: false).Should().Be(1);
+
+        // CARRIER-AGNOSTIC: the secret must be nowhere in the SAVED BYTES,
+        // in any carrier — ASCII, UTF-16BE, or UTF-8.
+        var saved = doc.SaveToBytes();
+        (Encoding.ASCII.GetString(saved)
+         + Encoding.BigEndianUnicode.GetString(saved)
+         + Encoding.UTF8.GetString(saved))
+            .Should().NotContain("SECRET",
+                "the redacted text must be gone from every carrier in the saved file");
+
+        // Kept runs — BOTH sides of the removed run — must re-extract at
+        // their original, hand-computed spec positions.
+        var reopenedPage = PdfDocument.Open(saved).GetPage(1);
+        reopenedPage.Text.Should().Contain("KEEP").And.Contain("DONE").And.NotContain("SECRET");
+        reopenedPage.Letters.First(l => l.Value == "K").StartX.Should().BeApproximately(72.0, 0.5,
+            "a kept run BEFORE the redacted run was never at risk and must stay put");
+        reopenedPage.Letters.First(l => l.Value == "D").StartX.Should().BeApproximately(122.0, 0.5,
+            "the kept run FOLLOWING the redacted middle run must not shift left (#758)");
+    }
+
+    /// <summary>
+    /// Identity-H Type0 page drawing "KEEP" (CIDs 0x11..0x14), "SECRET"
+    /// (CIDs 1..6), then "DONE" (CIDs 0x21..0x24) in one Tj each inside a
+    /// single BT block, with 50 Tz and 4 Tc active — the #758 follower-drift
+    /// shape. All CIDs have /W width 500.
+    /// </summary>
+    private static byte[] BuildThreeRunPdf()
+    {
+        // CID → Unicode: 1..6 → S,E,C,R,E,T; 0x11..0x14 → K,E,E,P;
+        // 0x21..0x24 → D,O,N,E.
+        var cmap =
+            "/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n" +
+            "1 begincodespacerange\n<0000> <FFFF>\nendcodespacerange\n" +
+            "14 beginbfchar\n" +
+            "<0001> <0053>\n<0002> <0045>\n<0003> <0043>\n<0004> <0052>\n" +
+            "<0005> <0045>\n<0006> <0054>\n" +
+            "<0011> <004B>\n<0012> <0045>\n<0013> <0045>\n<0014> <0050>\n" +
+            "<0021> <0044>\n<0022> <004F>\n<0023> <004E>\n<0024> <0045>\n" +
+            "endbfchar\nendcmap\nCMapName currentdict /CMap defineresource pop\nend\nend\n";
+
+        var content =
+            "BT /F1 12 Tf 50 Tz 4 Tc 72 700 Td " +
+            "<0011001200130014> Tj <000100020003000400050006> Tj <0021002200230024> Tj ET";
+
+        var bodies = new[]
+        {
+            "<< /Type /Catalog /Pages 2 0 R >>",
+            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R " +
+                "/Resources << /Font << /F1 5 0 R >> >> >>",
+            StreamBody("", content),
+            "<< /Type /Font /Subtype /Type0 /BaseFont /Test /Encoding /Identity-H " +
+                "/DescendantFonts [6 0 R] /ToUnicode 7 0 R >>",
+            "<< /Type /Font /Subtype /CIDFontType2 /BaseFont /Test " +
+                "/CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> " +
+                "/FontDescriptor 8 0 R /CIDToGIDMap /Identity /DW 1000 " +
+                "/W [ 1 6 500 17 20 500 33 36 500 ] >>",
+            StreamBody("", cmap),
+            "<< /Type /FontDescriptor /FontName /Test /Flags 4 /FontBBox [0 0 1000 1000] " +
+                "/ItalicAngle 0 /Ascent 1000 /Descent 0 /CapHeight 1000 /StemV 80 >>",
+        };
+
+        using var ms = new MemoryStream();
+        void W(string s) { var b = Encoding.Latin1.GetBytes(s); ms.Write(b, 0, b.Length); }
+        W("%PDF-1.5\n");
+        var off = new long[bodies.Length + 1];
+        for (int i = 0; i < bodies.Length; i++)
+        {
+            off[i + 1] = ms.Position;
+            W($"{i + 1} 0 obj\n{bodies[i]}\nendobj\n");
+        }
+        long xref = ms.Position;
+        W($"xref\n0 {bodies.Length + 1}\n0000000000 65535 f \n");
+        for (int i = 1; i <= bodies.Length; i++) W($"{off[i]:D10} 00000 n \n");
+        W($"trailer\n<< /Root 1 0 R /Size {bodies.Length + 1} >>\nstartxref\n{xref}\n%%EOF");
+        return ms.ToArray();
     }
 
     /// <summary>
