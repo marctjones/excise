@@ -1,17 +1,14 @@
 using AwesomeAssertions;
 using Microsoft.Extensions.Logging;
 using Org.BouncyCastle.Cms;
-using Org.BouncyCastle.Crypto;
-using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Operators;
-using Org.BouncyCastle.Crypto.Parameters;
-using Org.BouncyCastle.Math;
 using Org.BouncyCastle.Security;
-using Org.BouncyCastle.X509;
-using Org.BouncyCastle.Asn1.X509;
 using Excise.App.Services;
+using Excise.App.Tests.Utilities;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using Xunit;
 
@@ -610,6 +607,255 @@ public class SignatureVerificationServiceTests
     }
 
     // ========================================================================
+    // TRUST-CHAIN VALIDATION AND CONSOLIDATED STATES (#466)
+    // All trust anchors are generated in-process and injected via
+    // SignatureTrustEvaluator's custom trust store, so these assertions are
+    // deterministic and never depend on the machine trust store or network.
+    // ========================================================================
+
+    private static SignatureVerificationService CreateServiceWithTrustAnchors(
+        params Org.BouncyCastle.X509.X509Certificate[] anchors)
+    {
+        var anchorCertificates = new List<X509Certificate2>();
+        foreach (var anchor in anchors)
+        {
+            anchorCertificates.Add(X509CertificateLoader.LoadCertificate(anchor.GetEncoded()));
+        }
+
+        return new SignatureVerificationService(
+            new Microsoft.Extensions.Logging.Abstractions.NullLogger<SignatureVerificationService>(),
+            new SignatureTrustEvaluator(anchorCertificates));
+    }
+
+    [Fact]
+    public void VerifySignatures_ValidSelfSignedSignature_EmptyTrustStore_IsValidButUntrusted()
+    {
+        var pdfBytes = MakePdfWithValidDetachedCmsSignature(TestCertificateFactory.CreateSelfSigned());
+        var pdfPath = WriteTempPdf(pdfBytes);
+        var service = CreateServiceWithTrustAnchors(); // custom trust store with no anchors
+
+        try
+        {
+            var results = service.VerifySignatures(pdfPath);
+
+            results.Should().HaveCount(1);
+            results[0].IsValid.Should().BeTrue("the CMS signature itself is cryptographically valid");
+            results[0].ByteRangeIntegrityValid.Should().BeTrue();
+            results[0].TrustStatus.Should().Be(SignatureTrustStatus.Untrusted,
+                "a self-signed certificate must not be reported as trusted");
+            results[0].State.Should().Be(SignatureVerificationState.ValidUntrusted);
+        }
+        finally
+        {
+            File.Delete(pdfPath);
+        }
+    }
+
+    [Fact]
+    public void VerifySignatures_ValidSignatureChainedToConfiguredRoot_IsValidAndTrusted()
+    {
+        var identity = TestCertificateFactory.CreateChainedToRoot();
+        var pdfBytes = MakePdfWithValidDetachedCmsSignature(identity);
+        var pdfPath = WriteTempPdf(pdfBytes);
+        var service = CreateServiceWithTrustAnchors(identity.TrustAnchor!);
+
+        try
+        {
+            var results = service.VerifySignatures(pdfPath);
+
+            results.Should().HaveCount(1);
+            results[0].IsValid.Should().BeTrue();
+            results[0].SignedBy.Should().Contain("PDFe Test Chained Signer");
+            results[0].TrustStatus.Should().Be(SignatureTrustStatus.Trusted);
+            results[0].TrustDetails.Should().Contain("PDFe Test Root CA");
+            results[0].State.Should().Be(SignatureVerificationState.ValidTrusted);
+        }
+        finally
+        {
+            File.Delete(pdfPath);
+        }
+    }
+
+    [Fact]
+    public void VerifySignatures_ChainedSignature_RootNotInTrustStore_IsValidButUntrusted()
+    {
+        var identity = TestCertificateFactory.CreateChainedToRoot();
+        var unrelatedRoot = TestCertificateFactory.CreateChainedToRoot("CN=Unrelated Root").TrustAnchor!;
+        var pdfBytes = MakePdfWithValidDetachedCmsSignature(identity);
+        var pdfPath = WriteTempPdf(pdfBytes);
+        var service = CreateServiceWithTrustAnchors(unrelatedRoot);
+
+        try
+        {
+            var results = service.VerifySignatures(pdfPath);
+
+            results.Should().HaveCount(1);
+            results[0].IsValid.Should().BeTrue();
+            results[0].TrustStatus.Should().Be(SignatureTrustStatus.Untrusted,
+                "the chain roots in a CA that is not a configured trust anchor");
+            results[0].State.Should().Be(SignatureVerificationState.ValidUntrusted);
+        }
+        finally
+        {
+            File.Delete(pdfPath);
+        }
+    }
+
+    [Fact]
+    public void VerifySignatures_TamperedDocument_StateIsInvalid_TrustNotEvaluated()
+    {
+        var pdfBytes = MakePdfWithValidDetachedCmsSignature();
+        ReplaceAsciiMarker(pdfBytes, "ORIGINAL", "TAMPERED");
+        var pdfPath = WriteTempPdf(pdfBytes);
+        var service = CreateServiceWithTrustAnchors();
+
+        try
+        {
+            var results = service.VerifySignatures(pdfPath);
+
+            results.Should().HaveCount(1);
+            results[0].IsValid.Should().BeFalse();
+            results[0].State.Should().Be(SignatureVerificationState.Invalid,
+                "a digest mismatch is proven tampering, not an indeterminate result");
+            results[0].TrustStatus.Should().Be(SignatureTrustStatus.NotEvaluated,
+                "trust must not be evaluated (or reported) for a signature that failed verification");
+        }
+        finally
+        {
+            File.Delete(pdfPath);
+        }
+    }
+
+    [Fact]
+    public void VerifySignatures_MalformedSignatureBytes_StateIsIndeterminate()
+    {
+        var pdfBytes = MakePdfWithInvalidSignatureBytes();
+        var pdfPath = WriteTempPdf(pdfBytes);
+
+        try
+        {
+            var results = _service.VerifySignatures(pdfPath);
+
+            results.Should().HaveCount(1);
+            results[0].IsValid.Should().BeFalse();
+            results[0].State.Should().Be(SignatureVerificationState.Indeterminate,
+                "an unparseable signature is 'could not verify', not proven tampering");
+            results[0].TrustStatus.Should().Be(SignatureTrustStatus.NotEvaluated);
+        }
+        finally
+        {
+            File.Delete(pdfPath);
+        }
+    }
+
+    [Fact]
+    public void VerifySignatures_InvalidByteRangeStructure_StateIsInvalid()
+    {
+        var pdfText = MakePdfWithInvalidByteRangeGap();
+        var pdfPath = WriteTempPdf(Encoding.Latin1.GetBytes(pdfText));
+
+        try
+        {
+            var results = _service.VerifySignatures(pdfPath);
+
+            results.Should().HaveCount(1);
+            results[0].State.Should().Be(SignatureVerificationState.Invalid,
+                "a ByteRange that leaves unsigned gaps fails verification rather than being indeterminate");
+        }
+        finally
+        {
+            File.Delete(pdfPath);
+        }
+    }
+
+    [Fact]
+    public void VerifySignatures_DefaultSystemTrustEvaluator_NeverTrustsAFreshSelfSignedCertificate()
+    {
+        // Machine-independent even against the real OS store: the certificate
+        // was generated seconds ago from a random key, so no trust store can
+        // contain it. Asserts trust was evaluated and did NOT come back trusted.
+        var pdfBytes = MakePdfWithValidDetachedCmsSignature();
+        var pdfPath = WriteTempPdf(pdfBytes);
+
+        try
+        {
+            var results = _service.VerifySignatures(pdfPath);
+
+            results.Should().HaveCount(1);
+            results[0].IsValid.Should().BeTrue();
+            results[0].TrustStatus.Should().NotBe(SignatureTrustStatus.NotEvaluated,
+                "a valid signature must get a trust evaluation");
+            results[0].TrustStatus.Should().NotBe(SignatureTrustStatus.Trusted,
+                "a just-generated self-signed certificate cannot chain to any trusted root");
+            results[0].State.Should().NotBe(SignatureVerificationState.ValidTrusted);
+        }
+        finally
+        {
+            File.Delete(pdfPath);
+        }
+    }
+
+    [Fact]
+    public void VerifySignatures_ValidSignature_ExtractsSigningTimeFromSignedAttributes()
+    {
+        var pdfBytes = MakePdfWithValidDetachedCmsSignature();
+        var pdfPath = WriteTempPdf(pdfBytes);
+
+        try
+        {
+            var results = _service.VerifySignatures(pdfPath);
+
+            results.Should().HaveCount(1);
+            results[0].SigningTime.Should().NotBe(default(DateTime),
+                "BouncyCastle's default signed attributes include pkcs#9 signingTime");
+            results[0].SigningTime.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromMinutes(10));
+        }
+        finally
+        {
+            File.Delete(pdfPath);
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // Consolidated state model (pure, no I/O)
+    // ------------------------------------------------------------------------
+
+    [Fact]
+    public void State_DefaultResult_IsIndeterminate()
+    {
+        new SignatureVerificationResult().State
+            .Should().Be(SignatureVerificationState.Indeterminate);
+    }
+
+    [Theory]
+    [InlineData(SignatureTrustStatus.Trusted, SignatureVerificationState.ValidTrusted)]
+    [InlineData(SignatureTrustStatus.Untrusted, SignatureVerificationState.ValidUntrusted)]
+    [InlineData(SignatureTrustStatus.NotEvaluated, SignatureVerificationState.ValidTrustUnknown)]
+    [InlineData(SignatureTrustStatus.Indeterminate, SignatureVerificationState.ValidTrustUnknown)]
+    public void State_ValidSignature_MapsTrustStatusToState(
+        SignatureTrustStatus trustStatus, SignatureVerificationState expected)
+    {
+        var result = new SignatureVerificationResult { IsValid = true, TrustStatus = trustStatus };
+        result.State.Should().Be(expected);
+    }
+
+    [Fact]
+    public void State_TrustedStatusOnInvalidSignature_NeverReportsValidTrusted()
+    {
+        // Defensive invariant: even if a bug set TrustStatus on an invalid
+        // signature, the consolidated state must not overclaim.
+        var result = new SignatureVerificationResult
+        {
+            IsValid = false,
+            ByteRangeIntegrityChecked = true,
+            ByteRangeIntegrityValid = false,
+            TrustStatus = SignatureTrustStatus.Trusted
+        };
+
+        result.State.Should().Be(SignatureVerificationState.Invalid);
+    }
+
+    // ========================================================================
     // PDF BUILDER HELPERS
     // ========================================================================
 
@@ -970,11 +1216,14 @@ public class SignatureVerificationServiceTests
         return Encoding.Latin1.GetBytes(FillByteRange(sb.ToString()));
     }
 
-    private static byte[] MakePdfWithValidDetachedCmsSignature()
+    private static byte[] MakePdfWithValidDetachedCmsSignature() =>
+        MakePdfWithValidDetachedCmsSignature(TestCertificateFactory.CreateSelfSigned());
+
+    private static byte[] MakePdfWithValidDetachedCmsSignature(TestSigningIdentity identity)
     {
         var pdfWithByteRange = FillByteRange(MakePdfWithSignaturePlaceholder());
         var signedContent = ExtractSignedContent(Encoding.Latin1.GetBytes(pdfWithByteRange));
-        var cmsSignature = CreateDetachedCmsSignature(signedContent);
+        var cmsSignature = CreateDetachedCmsSignature(signedContent, identity);
         var signatureHex = Convert.ToHexString(cmsSignature);
         signatureHex.Length.Should().BeLessThan(SignaturePlaceholderHexLength);
 
@@ -1083,43 +1332,25 @@ public class SignatureVerificationServiceTests
         return signedContent;
     }
 
-    private static byte[] CreateDetachedCmsSignature(byte[] signedContent)
+    private static byte[] CreateDetachedCmsSignature(byte[] signedContent, TestSigningIdentity identity)
     {
         var random = new SecureRandom();
-        var keyPair = GenerateKeyPair(random);
-        var certificate = GenerateSelfSignedCertificate(keyPair, random);
 
         var signerInfoGenerator = new SignerInfoGeneratorBuilder()
-            .Build(new Asn1SignatureFactory("SHA256WITHRSA", keyPair.Private, random), certificate);
+            .Build(
+                new Asn1SignatureFactory("SHA256WITHRSA", identity.KeyPair.Private, random),
+                identity.Certificate);
 
         var generator = new CmsSignedDataGenerator();
         generator.AddSignerInfoGenerator(signerInfoGenerator);
-        generator.AddCertificate(certificate);
+        generator.AddCertificate(identity.Certificate);
+        foreach (var chainCertificate in identity.ChainCertificates)
+        {
+            generator.AddCertificate(chainCertificate);
+        }
 
         var cms = generator.Generate(new CmsProcessableByteArray(signedContent), encapsulate: false);
         return cms.GetEncoded();
-    }
-
-    private static AsymmetricCipherKeyPair GenerateKeyPair(SecureRandom random)
-    {
-        var keyGenerator = new RsaKeyPairGenerator();
-        keyGenerator.Init(new KeyGenerationParameters(random, 2048));
-        return keyGenerator.GenerateKeyPair();
-    }
-
-    private static X509Certificate GenerateSelfSignedCertificate(AsymmetricCipherKeyPair keyPair, SecureRandom random)
-    {
-        var certificateGenerator = new X509V3CertificateGenerator();
-        var subject = new X509Name("CN=PDFe Test Signer");
-        certificateGenerator.SetSerialNumber(BigInteger.ProbablePrime(128, random));
-        certificateGenerator.SetIssuerDN(subject);
-        certificateGenerator.SetSubjectDN(subject);
-        certificateGenerator.SetNotBefore(DateTime.UtcNow.AddDays(-1));
-        certificateGenerator.SetNotAfter(DateTime.UtcNow.AddDays(1));
-        certificateGenerator.SetPublicKey(keyPair.Public);
-
-        return certificateGenerator.Generate(
-            new Asn1SignatureFactory("SHA256WITHRSA", keyPair.Private, random));
     }
 
     private static string FillByteRange(string pdf)
