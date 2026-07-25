@@ -230,6 +230,33 @@ public class SignatureApplicationServiceTests : IDisposable
                 "a full-rewrite save would silently invalidate the existing signature");
     }
 
+    [Fact]
+    public void SignDocument_EncryptedSource_FailsClosed()
+    {
+        // Signing serializes through the plaintext save path; silently writing
+        // an encrypted source back without its protection is the loss
+        // #638/#641 guard against, so signing must refuse instead.
+        var basePath = CreateBasePdf();
+        var encryptedPath = basePath + ".enc.pdf";
+        _tempFiles.Add(encryptedPath);
+        using (var plain = PdfDocument.Open(basePath))
+        {
+            plain.Save(encryptedPath, new Excise.Core.Security.PdfEncryptionOptions
+            {
+                UserPassword = "user-pw",
+                OwnerPassword = "owner-pw"
+            });
+        }
+
+        using var certificate = SigningCertificateFactory.CreateSelfSigned("Encrypted Source");
+        using var encrypted = PdfDocument.Open(encryptedPath, "user-pw");
+
+        var act = () => _signer.SignDocument(encrypted, certificate);
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*encrypted*", "signing must not silently strip document protection");
+    }
+
     // ── signing time ────────────────────────────────────────────────────────
 
     [Fact]

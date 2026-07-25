@@ -146,6 +146,20 @@ public class SignatureApplicationService
                 nameof(options));
         }
 
+        // Fail closed on encrypted sources: signing serializes via the plain
+        // (plaintext-by-design) save path, which would silently strip the
+        // document's protection — the exact loss #638/#641 exist to prevent.
+        // Signing while preserving encryption needs writer support for an
+        // unencrypted /Contents inside an otherwise-encrypted file (spec
+        // §7.6.2) and is a follow-up on #623.
+        if (document.IsEncrypted)
+        {
+            throw new InvalidOperationException(
+                "Signing an encrypted document is not supported yet: the signed file would be " +
+                "written without its encryption. Remove protection explicitly first if that is " +
+                "intended (issue #623).");
+        }
+
         // Convert the identity up front so a certificate without a usable
         // private key fails before the document is mutated.
         var (privateKey, bouncyCertificate, signatureAlgorithm) = ConvertIdentity(certificate);
