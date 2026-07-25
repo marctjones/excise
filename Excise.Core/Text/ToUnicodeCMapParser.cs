@@ -332,16 +332,18 @@ public class ToUnicodeCMapParser
         if (hex.Length == 0) return 0;
         if ((hex.Length & 1) != 0) hex = "0" + hex; // odd-length → left-pad
 
-        // Codes are at most 4 bytes (8 hex digits) per the CMap spec. A
-        // malformed longer string must not overflow the shifts into garbage
-        // (or a negative value): keep the leading 4 bytes and clamp. #515
+        // Codes are at most 4 bytes (8 hex digits) per the CMap spec — a
+        // malformed longer string must not keep shifting bytes out: keep the
+        // leading 4 bytes only. The raw 32-bit bit pattern is preserved
+        // (4-byte codes can wrap negative as ints), matching how decoded
+        // source codes are assembled elsewhere. #515
         int digits = Math.Min(hex.Length, 8);
-        long v = 0;
+        int v = 0;
         for (int i = 0; i < digits; i++)
         {
-            v = (v << 4) | (uint)HexDigit(hex[i]);
+            v = (v << 4) | HexDigit(hex[i]);
         }
-        return v > int.MaxValue ? int.MaxValue : (int)v;
+        return v;
     }
 
     private static int HexDigit(char c) =>

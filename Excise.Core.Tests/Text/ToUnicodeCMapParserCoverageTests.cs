@@ -756,8 +756,10 @@ public class ToUnicodeCMapParserCoverageTests
     [Fact]
     public void Parse_OverlongHexBounds_DoNotOverflow()
     {
-        // >8-digit hex must not overflow into negative codes; the leading
-        // 4 bytes win and the parse stays usable.
+        // >8-digit hex must not keep shifting bytes out of the int; the
+        // leading 4 bytes win and the parse stays usable. (4-byte codes may
+        // legitimately wrap negative as ints — UTF-16 surrogate-pair
+        // codespaces do — so no sign restriction here.)
         var parser = ToUnicodeCMapParser.ParseDetailed(Encoding.ASCII.GetBytes(@"
             1 begincodespacerange
             <00112233445566> <FFFFFFFFFFFFFF>
@@ -768,7 +770,9 @@ public class ToUnicodeCMapParserCoverageTests
         "));
 
         parser.MaxCodeBytes.Should().BeLessThanOrEqualTo(4);
-        parser.CodespaceRanges.Should().OnlyContain(r => r.Low >= 0 && r.High >= 0 && r.Bytes <= 4);
+        parser.CodespaceRanges.Should().OnlyContain(r => r.Bytes <= 4);
+        parser.CodespaceRanges[0].Low.Should().Be(0x00112233,
+            "the leading 4 bytes of an over-long bound are kept");
         parser.Mapping[0x41].Should().Be("A");
     }
 }
