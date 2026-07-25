@@ -679,9 +679,10 @@ internal partial class RenderContext
     /// <summary>
     /// Premultiplies one channel exactly as Skia's SetPixel/erase does for a
     /// premul bitmap: round(value * alpha / 255) via the SkMulDiv255Round
-    /// integer identity.
+    /// integer identity. Internal so DeviceCmykBlendPixelContractTests can pin
+    /// the equivalence against SKBitmap.SetPixel exhaustively.
     /// </summary>
-    private static byte PremulChannel(byte value, byte alpha)
+    internal static byte PremulChannel(byte value, byte alpha)
     {
         var prod = (alpha * value) + 128;
         return (byte)((prod + (prod >> 8)) >> 8);
@@ -692,7 +693,7 @@ internal partial class RenderContext
     /// Rgba8888 bitmap with no color space (see
     /// DeviceCmykBlendPixelContractTests for the exhaustive equivalence pin).
     /// </summary>
-    private static void WritePremulRgba(Span<byte> pixels, int offset, byte r, byte g, byte b, byte a)
+    internal static void WritePremulRgba(Span<byte> pixels, int offset, byte r, byte g, byte b, byte a)
     {
         pixels[offset] = PremulChannel(r, a);
         pixels[offset + 1] = PremulChannel(g, a);
