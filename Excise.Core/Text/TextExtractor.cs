@@ -87,6 +87,68 @@ public class TextExtractor
 
     private readonly List<Letter> _letters = new();
 
+    // Marked-content nesting depth of /OC spans that are hidden. Maintained in
+    // lock-step with _optionalContentHiddenStack (BDC/BMC push, EMC pop) so the
+    // per-glyph "am I inside any hidden span?" check in ShowGlyph is O(1)
+    // instead of a per-letter LINQ Any() over the stack (#600).
+    private int _hiddenOptionalContentDepth;
+
+    // Scratch byte buffer reused by ParseStringLiteral/ParseHexString across
+    // calls (#600): each call resets the length, appends its decoded bytes and
+    // copies them into an exact-size result array before returning, so nothing
+    // aliases the scratch. String/hex token parses never nest inside one
+    // another, and a TextExtractor instance is single-threaded by construction
+    // (all parse state already lives in instance fields), so instance-level
+    // reuse is safe.
+    private byte[] _stringScratch = new byte[128];
+    private int _stringScratchLen;
+
+    private void ScratchAdd(byte b)
+    {
+        if (_stringScratchLen == _stringScratch.Length)
+            Array.Resize(ref _stringScratch, _stringScratch.Length * 2);
+        _stringScratch[_stringScratchLen++] = b;
+    }
+
+    // Boxed-int cache for ParseNumber (#600): content streams carry huge
+    // volumes of small integer operands (TJ kern values, Td/Tm coordinates);
+    // boxing each one separately was a measurable share of extraction
+    // allocation. Boxes are immutable and only ever read back via pattern
+    // matching / ToDouble, so sharing instances is observably identical.
+    private const int SmallIntBoxMin = -1024;
+    private const int SmallIntBoxMax = 1024;
+    private static readonly object[] SmallIntBoxes = CreateSmallIntBoxes();
+
+    private static object[] CreateSmallIntBoxes()
+    {
+        var boxes = new object[SmallIntBoxMax - SmallIntBoxMin + 1];
+        for (int i = 0; i < boxes.Length; i++)
+            boxes[i] = SmallIntBoxMin + i;
+        return boxes;
+    }
+
+    private static object BoxInt(int value) =>
+        value >= SmallIntBoxMin && value <= SmallIntBoxMax
+            ? SmallIntBoxes[value - SmallIntBoxMin]
+            : value;
+
+    // Single-character string cache for the Latin-1 range (#600): the decode
+    // fallbacks (DecodeWinAnsi/DecodeMacRoman/identity) allocated a fresh
+    // one-char string per glyph. Cached instances are value-equal to what
+    // ToString() produced; Letter.Value is only ever compared by value.
+    private static readonly string[] Latin1CharStrings = CreateLatin1CharStrings();
+
+    private static string[] CreateLatin1CharStrings()
+    {
+        var strings = new string[256];
+        for (int i = 0; i < strings.Length; i++)
+            strings[i] = ((char)i).ToString();
+        return strings;
+    }
+
+    private static string CharToString(char c) =>
+        c <= '\u00FF' ? Latin1CharStrings[c] : c.ToString();
+
     public TextExtractor(PdfPage page)
     {
         _page = page;
@@ -412,7 +474,7 @@ public class TextExtractor
     public string ExtractText()
     {
         var letters = ExtractLetters();
-        var sb = new StringBuilder();
+        var sb = new StringBuilder(letters.Count + 16); // most letters are 1 char (#600)
         foreach (var letter in letters)
         {
             sb.Append(letter.Value);
@@ -610,7 +672,7 @@ public class TextExtractor
 
     private byte[] ParseStringLiteral(string content, ref int pos)
     {
-        var bytes = new List<byte>();
+        _stringScratchLen = 0; // reuse the scratch buffer across calls (#600)
         pos++; // Skip opening '('
         int parenDepth = 1;
 
@@ -624,14 +686,14 @@ public class TextExtractor
                 var escaped = content[pos];
                 switch (escaped)
                 {
-                    case 'n': bytes.Add((byte)'\n'); break;
-                    case 'r': bytes.Add((byte)'\r'); break;
-                    case 't': bytes.Add((byte)'\t'); break;
-                    case 'b': bytes.Add((byte)'\b'); break;
-                    case 'f': bytes.Add((byte)'\f'); break;
-                    case '(': bytes.Add((byte)'('); break;
-                    case ')': bytes.Add((byte)')'); break;
-                    case '\\': bytes.Add((byte)'\\'); break;
+                    case 'n': ScratchAdd((byte)'\n'); break;
+                    case 'r': ScratchAdd((byte)'\r'); break;
+                    case 't': ScratchAdd((byte)'\t'); break;
+                    case 'b': ScratchAdd((byte)'\b'); break;
+                    case 'f': ScratchAdd((byte)'\f'); break;
+                    case '(': ScratchAdd((byte)'('); break;
+                    case ')': ScratchAdd((byte)')'); break;
+                    case '\\': ScratchAdd((byte)'\\'); break;
                     // REVERSE SOLIDUS followed by an end-of-line marker is a
                     // line-continuation: it produces NO character (PDF32000-1
                     // §7.3.4.2 Table 3). CRLF is one marker, not two — consume
@@ -645,22 +707,25 @@ public class TextExtractor
                     case '\n':
                         break;
                     default:
-                        // Octal escape
+                        // Octal escape: up to 3 octal digits, value truncated
+                        // to a byte exactly like the previous
+                        // (byte)Convert.ToInt32(..., 8) implementation.
                         if (escaped >= '0' && escaped <= '7')
                         {
-                            var octal = new StringBuilder();
-                            octal.Append(escaped);
-                            while (octal.Length < 3 && pos + 1 < content.Length &&
+                            int value = escaped - '0';
+                            int digits = 1;
+                            while (digits < 3 && pos + 1 < content.Length &&
                                    content[pos + 1] >= '0' && content[pos + 1] <= '7')
                             {
                                 pos++;
-                                octal.Append(content[pos]);
+                                value = value * 8 + (content[pos] - '0');
+                                digits++;
                             }
-                            bytes.Add((byte)Convert.ToInt32(octal.ToString(), 8));
+                            ScratchAdd(unchecked((byte)value));
                         }
                         else
                         {
-                            bytes.Add((byte)escaped);
+                            ScratchAdd((byte)escaped);
                         }
                         break;
                 }
@@ -668,53 +733,74 @@ public class TextExtractor
             else if (c == '(')
             {
                 parenDepth++;
-                bytes.Add((byte)c);
+                ScratchAdd((byte)c);
             }
             else if (c == ')')
             {
                 parenDepth--;
                 if (parenDepth > 0)
-                    bytes.Add((byte)c);
+                    ScratchAdd((byte)c);
             }
             else
             {
-                bytes.Add((byte)c);
+                ScratchAdd((byte)c);
             }
             pos++;
         }
 
-        return bytes.ToArray();
+        return _stringScratch.AsSpan(0, _stringScratchLen).ToArray();
     }
 
     private byte[] ParseHexString(string content, ref int pos)
     {
         pos++; // Skip '<'
-        var hex = new StringBuilder();
+        _stringScratchLen = 0; // reuse the scratch buffer across calls (#600)
+        int pendingNibble = -1;
 
         while (pos < content.Length && content[pos] != '>')
         {
             var c = content[pos];
             if (char.IsLetterOrDigit(c))
-                hex.Append(c);
+            {
+                // Same accept-set as before (letter-or-digit collected, all
+                // else skipped); a collected non-hex character still throws
+                // FormatException, as Convert.ToByte(..., 16) previously did.
+                var nibble = HexDigitValue(c);
+                if (nibble < 0)
+                    throw new FormatException($"Invalid hex digit '{c}' in hex string.");
+                if (pendingNibble < 0)
+                {
+                    pendingNibble = nibble;
+                }
+                else
+                {
+                    ScratchAdd((byte)((pendingNibble << 4) | nibble));
+                    pendingNibble = -1;
+                }
+            }
             pos++;
         }
         pos++; // Skip '>'
 
-        var hexStr = hex.ToString();
-        if (hexStr.Length % 2 == 1)
-            hexStr += "0"; // Pad with 0 if odd length
+        if (pendingNibble >= 0)
+            ScratchAdd((byte)(pendingNibble << 4)); // Pad with 0 if odd length
 
-        var bytes = new byte[hexStr.Length / 2];
-        for (int i = 0; i < bytes.Length; i++)
-        {
-            bytes[i] = Convert.ToByte(hexStr.Substring(i * 2, 2), 16);
-        }
-        return bytes;
+        return _stringScratch.AsSpan(0, _stringScratchLen).ToArray();
     }
+
+    private static int HexDigitValue(char c) => c switch
+    {
+        >= '0' and <= '9' => c - '0',
+        >= 'a' and <= 'f' => c - 'a' + 10,
+        >= 'A' and <= 'F' => c - 'A' + 10,
+        _ => -1
+    };
 
     private List<object> ParseArray(string content, ref int pos)
     {
-        var result = new List<object>();
+        // Presized for the typical TJ show-array shape (alternating strings
+        // and kern adjustments) instead of growing from the default 4 (#600).
+        var result = new List<object>(16);
         pos++; // Skip '['
 
         while (pos < content.Length)
@@ -737,7 +823,8 @@ public class TextExtractor
     private string ParseName(string content, ref int pos)
     {
         pos++; // Skip '/'
-        var sb = new StringBuilder();
+        int segStart = pos;
+        StringBuilder? sb = null; // only needed when a #XX escape occurs (rare)
 
         while (pos < content.Length)
         {
@@ -747,34 +834,39 @@ public class TextExtractor
                 break;
 
             // Handle #XX hex escape
-            if (c == '#' && pos + 2 < content.Length)
+            if (c == '#' && pos + 2 < content.Length &&
+                int.TryParse(content.AsSpan(pos + 1, 2),
+                    System.Globalization.NumberStyles.HexNumber, null, out var code))
             {
-                var hex = content.Substring(pos + 1, 2);
-                if (int.TryParse(hex, System.Globalization.NumberStyles.HexNumber, null, out var code))
-                {
-                    sb.Append((char)code);
-                    pos += 3;
-                    continue;
-                }
+                sb ??= new StringBuilder();
+                sb.Append(content, segStart, pos - segStart);
+                sb.Append((char)code);
+                pos += 3;
+                segStart = pos;
+                continue;
             }
 
-            sb.Append(c);
             pos++;
         }
 
+        if (sb == null)
+            return string.Concat("/", content.AsSpan(segStart, pos - segStart));
+
+        sb.Append(content, segStart, pos - segStart);
         return "/" + sb.ToString();
     }
 
     private object ParseNumber(string content, ref int pos)
     {
-        var sb = new StringBuilder();
+        int start = pos;
+        bool hasDot = false;
 
         while (pos < content.Length)
         {
             var c = content[pos];
             if (char.IsDigit(c) || c == '-' || c == '+' || c == '.')
             {
-                sb.Append(c);
+                if (c == '.') hasDot = true;
                 pos++;
             }
             else
@@ -783,34 +875,34 @@ public class TextExtractor
             }
         }
 
-        var str = sb.ToString();
-        if (str.Contains('.'))
+        var span = content.AsSpan(start, pos - start);
+        if (hasDot)
         {
-            return double.TryParse(str, System.Globalization.NumberStyles.Float,
+            return double.TryParse(span, System.Globalization.NumberStyles.Float,
                 System.Globalization.CultureInfo.InvariantCulture, out var d) ? d : 0.0;
         }
-        return int.TryParse(str, out var i) ? i : 0;
+        return BoxInt(int.TryParse(span, out var i) ? i : 0);
     }
 
     private string ParseKeyword(string content, ref int pos)
     {
-        var sb = new StringBuilder();
+        int start = pos;
 
         while (pos < content.Length)
         {
             var c = content[pos];
             if (char.IsLetterOrDigit(c) || c == '\'' || c == '"' || c == '*')
-            {
-                sb.Append(c);
                 pos++;
-            }
             else
-            {
                 break;
-            }
         }
 
-        return sb.ToString();
+        // Return the cached instance for known tokens (operators and common
+        // keywords) — value-identical to the substring, but allocation-free
+        // for the overwhelmingly common case (#600).
+        return KnownKeywordLookup.TryGetValue(content.AsSpan(start, pos - start), out var known)
+            ? known
+            : content.Substring(start, pos - start);
     }
 
     private void SkipDictionary(string content, ref int pos)
@@ -860,6 +952,16 @@ public class TextExtractor
     {
         return Operators.Contains(token);
     }
+
+    // Span-keyed lookup returning the cached string instance for known content
+    // stream tokens, so ParseKeyword does not allocate a fresh string per
+    // operator (#600). Covers every operator plus the non-operator keywords
+    // that commonly appear as operands.
+    private static readonly HashSet<string> KnownKeywords =
+        new(Operators.Concat(new[] { "true", "false", "null" }));
+
+    private static readonly HashSet<string>.AlternateLookup<ReadOnlySpan<char>> KnownKeywordLookup =
+        KnownKeywords.GetAlternateLookup<ReadOnlySpan<char>>();
 
     private void ExecuteOperator(string op, List<object> operands)
     {
@@ -1056,7 +1158,12 @@ public class TextExtractor
                 break;
 
             case "BDC":
-                _optionalContentHiddenStack.Push(IsHiddenOptionalContentSpan(operands));
+                {
+                    var hidden = IsHiddenOptionalContentSpan(operands);
+                    _optionalContentHiddenStack.Push(hidden);
+                    if (hidden)
+                        _hiddenOptionalContentDepth++;
+                }
                 break;
 
             case "BMC":
@@ -1064,8 +1171,8 @@ public class TextExtractor
                 break;
 
             case "EMC":
-                if (_optionalContentHiddenStack.Count > 0)
-                    _optionalContentHiddenStack.Pop();
+                if (_optionalContentHiddenStack.Count > 0 && _optionalContentHiddenStack.Pop())
+                    _hiddenOptionalContentDepth--;
                 break;
         }
     }
@@ -1394,7 +1501,10 @@ public class TextExtractor
             byteLength // 1 for simple fonts and 1-byte-codespace Type0 (#659), 2 for Identity-H/V; per-code under a mixed-width registered CMap (#515)
         )
         {
-            IsInHiddenOptionalContent = _optionalContentHiddenStack.Any(hidden => hidden),
+            // O(1) counter kept in lock-step with _optionalContentHiddenStack;
+            // equivalent to _optionalContentHiddenStack.Any(hidden => hidden)
+            // without the per-letter enumeration (#600).
+            IsInHiddenOptionalContent = _hiddenOptionalContentDepth > 0,
             IsCidFont = _isCidFont
         };
         _letters.Add(letter);
@@ -1650,7 +1760,7 @@ public class TextExtractor
         // coincidence and mis-maps codes 128–159 (#715 / #515).
         if (_toUnicodeIdentity && charCode is >= 0 and <= 0xFFFF && !char.IsSurrogate((char)charCode))
         {
-            return ((char)charCode).ToString();
+            return CharToString((char)charCode);
         }
 
         // Registered CID→Unicode (#515 slice 2): the Adobe-<Ordering>-UCS2 CMap
@@ -2159,7 +2269,7 @@ public class TextExtractor
         // WinAnsiEncoding (Windows Code Page 1252)
         // Most chars map directly, special handling for 128-159
         if (charCode < 128 || charCode >= 160)
-            return ((char)charCode).ToString();
+            return CharToString((char)charCode);
 
         // Special mappings for 128-159
         return charCode switch
@@ -2191,7 +2301,7 @@ public class TextExtractor
             156 => "\u0153", // Latin small ligature oe
             158 => "\u017E", // Latin small letter z with caron
             159 => "\u0178", // Latin capital letter Y with diaeresis
-            _ => ((char)charCode).ToString()
+            _ => CharToString((char)charCode)
         };
     }
 
@@ -2199,7 +2309,7 @@ public class TextExtractor
     {
         // MacRomanEncoding - simplified, handle special chars 128-255
         if (charCode < 128)
-            return ((char)charCode).ToString();
+            return CharToString((char)charCode);
 
         // Mac Roman special characters (subset)
         return charCode switch
@@ -2236,7 +2346,7 @@ public class TextExtractor
             157 => "\u00F9", // ù
             158 => "\u00FB", // û
             159 => "\u00FC", // ü
-            _ => ((char)charCode).ToString()
+            _ => CharToString((char)charCode)
         };
     }
 
