@@ -141,6 +141,47 @@ If CI performance tests fail unexpectedly:
 2. Check if hardware has changed
 3. Adjust thresholds in the test file if needed (with justification in commit message)
 
+### Workflow Performance Budgets (#602)
+
+`scripts/check-perf-budgets.sh` is the focused regression gate that locks in
+the #596 hot-path wins (#743 save/redaction-save, #598/#599 render, #600
+extraction). It runs `Excise.RenderTools profile-workflows` over the smoke
+corpus (`scripts/download-smoke-corpus.sh`) min-of-N times and compares each
+workflow against the checked-in budgets in
+`tests/perf-budgets/workflow-budgets.json`.
+
+Design decisions (the reasoning matters more than the numbers — read the
+budgets file's `policy`/`machineCaveat` fields for the current values):
+
+- **Allocation is the hard gate; time is advisory.** Managed allocation is
+  nearly run- and machine-invariant, so a modest band over baseline is a
+  reliable regression signal. Wall time varies 5–15% run-to-run and far more
+  across machine classes, so it only warns by default; `--time-gate fail`
+  turns the 2× time band into a failure on a known machine class
+  (release-smoke does this).
+- **It is a PERFORMANCE gate, never a correctness gate.** It has its own
+  distinct gate name (`perf-budget` in release-smoke), its own report
+  (`perf-budget-report.json`, `"kind": "performance-budget"`), and it SKIPs
+  (exit 0) when the corpus or budgets are absent instead of pretending to be
+  a quality failure.
+- **CI is warn-only** (`--mode warn || true` in `ci.yml`): shared runners are
+  too wall-time-variable for a blocking perf gate, and they have no smoke
+  corpus anyway. Hard enforcement is local (`scripts/check-perf-budgets.sh`,
+  default `--mode fail`) and in release-smoke's `perf-budget` gate on a known
+  developer machine. A dedicated stable perf lane can flip CI to blocking
+  later.
+- **A regression report names the workflow and its owning hot path**
+  (writer/object store, redaction pipeline + scrubber, renderer, text
+  extractor), the metric that breached (allocation vs time), and the worst
+  per-PDF contributor.
+- **Partial runs stay useful**: each pass writes incremental NDJSON, and the
+  aggregate report is rewritten after every pass; a partial corpus gates the
+  intersection of budgeted and measured PDFs and reports what was skipped.
+
+Re-baselining after an intentional perf change:
+`scripts/check-perf-budgets.sh --update` on a quiet machine, Release build,
+then commit the rewritten budgets file with the justification.
+
 ## Headless GUI Testing
 
 Excise.App.Tests uses Avalonia UI and requires a display. On headless CI:
