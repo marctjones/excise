@@ -5,6 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!-- xUnit1051 (prefer TestContext.Current.CancellationToken) is a style
          suggestion; several tests deliberately pass their own tokens (e.g. the
          cancellation tests). Suppressed to match Excise.Core.Tests. -->
