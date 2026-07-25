@@ -4889,6 +4889,230 @@ public class SkiaRendererTests
             "the fill must be red, not the default black (which would mean d1 locked the colour)");
     }
 
+    // ---- Type 3 clipping text render modes Tr 4-7 (#514) ----
+    // The glyph shapes a Type 3 CharProc paints must join the text object's
+    // accumulated clip exactly like simple-font glyph outlines do: applied
+    // at ET, masking everything painted after the text object.
+    //
+    // Shared fixture geometry: 48pt Type 3 glyph at Td 100 400 whose
+    // CharProc fills a 400x700-unit rect -> glyph ink spans x [100..119.2],
+    // y [400..433.6] pt. The follow-up red rect 90 380 -> 230 470 covers the
+    // glyph and a wide margin around it.
+
+    private static SKColor Type3PixelAtPt(SKBitmap bitmap, double xPt, double yPt)
+        => bitmap.GetPixel((int)(xPt * 150 / 72), bitmap.Height - (int)(yPt * 150 / 72));
+
+    private static void AssertRed(SKColor p, string because)
+    {
+        p.Red.Should().BeGreaterThan(180, because);
+        p.Green.Should().BeLessThan(80, because);
+    }
+
+    private static void AssertWhite(SKColor p, string because)
+    {
+        p.Red.Should().BeGreaterThan(200, because);
+        p.Green.Should().BeGreaterThan(200, because);
+        p.Blue.Should().BeGreaterThan(200, because);
+    }
+
+    [Fact]
+    public void RenderPage_Type3Font_Tr7_ClipsSubsequentPaintToGlyphShape()
+    {
+        var pdfData = CreateType3FixturePdf(
+            "0 0 0 rg BT /F1 48 Tf 7 Tr 100 400 Td <41> Tj ET 1 0 0 rg 90 380 140 90 re f",
+            new[] { ("A", "500 0 d0 0 0 400 700 re f") },
+            encodingDifferences: "65 /A",
+            widthsClause: "/FirstChar 65 /LastChar 65 /Widths [500] ");
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(doc.GetPage(1));
+
+        AssertRed(Type3PixelAtPt(bitmap, 105, 410),
+            "inside the Tr 7 glyph shape the subsequent red fill must show through the clip");
+        AssertWhite(Type3PixelAtPt(bitmap, 150, 410),
+            "outside the glyph shape the red rect must be clipped away (Tr 7 adds the glyph to the clip)");
+        AssertWhite(Type3PixelAtPt(bitmap, 95, 410),
+            "left of the glyph shape the red rect must be clipped away");
+        AssertWhite(Type3PixelAtPt(bitmap, 105, 450),
+            "above the glyph shape the red rect must be clipped away");
+    }
+
+    [Fact]
+    public void RenderPage_Type3Font_Tr7_GlyphItselfPaintsNothing()
+    {
+        // Clip-only: with no subsequent paint, the page stays blank — the
+        // CharProc's fill must not mark the page.
+        var pdfData = CreateType3FixturePdf(
+            "0 0 0 rg BT /F1 48 Tf 7 Tr 100 400 Td <41> Tj ET",
+            new[] { ("A", "500 0 d0 0 0 400 700 re f") },
+            encodingDifferences: "65 /A",
+            widthsClause: "/FirstChar 65 /LastChar 65 /Widths [500] ");
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(doc.GetPage(1));
+
+        AssertWhite(Type3PixelAtPt(bitmap, 105, 410),
+            "a Tr 7 (clip-only) Type 3 glyph must not paint its own shape");
+        AssertWhite(Type3PixelAtPt(bitmap, 110, 425),
+            "a Tr 7 (clip-only) Type 3 glyph must not paint anywhere in its box");
+    }
+
+    [Fact]
+    public void RenderPage_Type3Font_Tr4_FillsGlyphAndClipsSubsequentPaint()
+    {
+        // Tr 4 = fill + clip. The red rect starts at x=110, so the glyph's
+        // left part [100..110] stays its own black fill while the overlap
+        // [110..119.2] turns red — and the rect is clipped outside the glyph.
+        var pdfData = CreateType3FixturePdf(
+            "0 0 0 rg BT /F1 48 Tf 4 Tr 100 400 Td <41> Tj ET 1 0 0 rg 110 380 120 90 re f",
+            new[] { ("A", "500 0 d0 0 0 400 700 re f") },
+            encodingDifferences: "65 /A",
+            widthsClause: "/FirstChar 65 /LastChar 65 /Widths [500] ");
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(doc.GetPage(1));
+
+        var black = Type3PixelAtPt(bitmap, 104, 410);
+        black.Red.Should().BeLessThan(100,
+            "Tr 4 must still FILL the Type 3 glyph (left of the red rect it stays black)");
+        AssertRed(Type3PixelAtPt(bitmap, 115, 410),
+            "inside glyph-and-rect overlap the later red fill paints over the glyph");
+        AssertWhite(Type3PixelAtPt(bitmap, 150, 410),
+            "outside the glyph shape the red rect must be clipped away (Tr 4 adds the glyph to the clip)");
+    }
+
+    [Fact]
+    public void RenderPage_Type3Font_Tr0_DoesNotClipSubsequentPaint()
+    {
+        // Negative control: without a clipping render mode the red rect must
+        // paint in full.
+        var pdfData = CreateType3FixturePdf(
+            "0 0 0 rg BT /F1 48 Tf 0 Tr 100 400 Td <41> Tj ET 1 0 0 rg 110 380 120 90 re f",
+            new[] { ("A", "500 0 d0 0 0 400 700 re f") },
+            encodingDifferences: "65 /A",
+            widthsClause: "/FirstChar 65 /LastChar 65 /Widths [500] ");
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(doc.GetPage(1));
+
+        AssertRed(Type3PixelAtPt(bitmap, 150, 410),
+            "with Tr 0 nothing may clip the subsequent red rect");
+        Type3PixelAtPt(bitmap, 104, 410).Red.Should().BeLessThan(100,
+            "the Tr 0 glyph fill itself must render");
+    }
+
+    [Fact]
+    public void RenderPage_Type3Font_Tr7_ClipAccumulatesAcrossGlyphs()
+    {
+        // Two glyphs, /Widths 500 -> 24pt advance at 48pt: shapes span
+        // x [100..119.2] and [124..143.2]. The clip is the UNION of both;
+        // the 4.8pt gap between them stays clipped out.
+        var pdfData = CreateType3FixturePdf(
+            "0 0 0 rg BT /F1 48 Tf 7 Tr 100 400 Td <4141> Tj ET 1 0 0 rg 90 380 140 90 re f",
+            new[] { ("A", "500 0 d0 0 0 400 700 re f") },
+            encodingDifferences: "65 /A",
+            widthsClause: "/FirstChar 65 /LastChar 65 /Widths [500] ");
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(doc.GetPage(1));
+
+        AssertRed(Type3PixelAtPt(bitmap, 105, 410),
+            "the first Tr 7 glyph shape must admit the subsequent fill");
+        AssertRed(Type3PixelAtPt(bitmap, 130, 410),
+            "the second Tr 7 glyph shape must ALSO admit the fill — text clips accumulate across the text object");
+        AssertWhite(Type3PixelAtPt(bitmap, 121.5, 410),
+            "the gap between the two glyph shapes stays clipped out");
+    }
+
+    [Fact]
+    public void RenderPage_Type3Font_Tr7_InternalCmShapesClipCoverage()
+    {
+        // The CharProc transforms its own space (cm doubling X) before
+        // filling a 200x700 rect — the clip contribution must be the
+        // TRANSFORMED shape (400 units wide -> x [100..119.2]), proving the
+        // coverage respects the glyph's internal q/cm/Q without leaking it.
+        var pdfData = CreateType3FixturePdf(
+            "0 0 0 rg BT /F1 48 Tf 7 Tr 100 400 Td <41> Tj ET " +
+            "1 0 0 rg 90 380 140 90 re f",
+            new[] { ("A", "500 0 d0 q 2 0 0 1 0 0 cm 0 0 200 700 re f Q") },
+            encodingDifferences: "65 /A",
+            widthsClause: "/FirstChar 65 /LastChar 65 /Widths [500] ");
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(doc.GetPage(1));
+
+        AssertRed(Type3PixelAtPt(bitmap, 115, 410),
+            "the clip shape must reflect the CharProc's internal cm (200 units doubled to 400)");
+        AssertWhite(Type3PixelAtPt(bitmap, 125, 410),
+            "beyond the cm-transformed shape the fill is clipped away");
+    }
+
+    [Fact]
+    public void RenderPage_Type3Font_Tr7_StrokedCharProcClipsToStrokeOutline()
+    {
+        // The CharProc STROKES a horizontal 50-unit-wide line at y=350
+        // (glyph space) -> a 2.4pt-tall band centred on y=416.8pt. The clip
+        // must be the stroke outline, not the path's fill or the glyph bbox.
+        var pdfData = CreateType3FixturePdf(
+            "0 0 0 rg BT /F1 48 Tf 7 Tr 100 400 Td <41> Tj ET 1 0 0 rg 90 380 140 90 re f",
+            new[] { ("A", "500 0 d0 50 w 0 350 m 400 350 l S") },
+            encodingDifferences: "65 /A",
+            widthsClause: "/FirstChar 65 /LastChar 65 /Widths [500] ");
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(doc.GetPage(1));
+
+        AssertRed(Type3PixelAtPt(bitmap, 110, 416.8),
+            "inside the stroke outline the subsequent fill shows through");
+        AssertWhite(Type3PixelAtPt(bitmap, 110, 405),
+            "below the stroke band (but inside the glyph bbox) the fill is clipped away");
+        AssertWhite(Type3PixelAtPt(bitmap, 110, 428),
+            "above the stroke band the fill is clipped away");
+    }
+
+    [Fact]
+    public void RenderPage_Type3Font_Tr7_D1BBoxBoundsClipContribution()
+    {
+        // d1 declares a 200x350-unit bbox (4.8 x 16.8pt at 48pt) but the
+        // CharProc fills 400x700. The bbox clips the glyph description, so
+        // the clip contribution must be bounded by it too: red shows only in
+        // x [100..109.6], y [400..416.8].
+        var pdfData = CreateType3FixturePdf(
+            "0 0 0 rg BT /F1 48 Tf 7 Tr 100 400 Td <41> Tj ET 1 0 0 rg 90 380 140 90 re f",
+            new[] { ("A", "400 0 0 0 200 350 d1 0 0 400 700 re f") },
+            encodingDifferences: "65 /A",
+            widthsClause: "/FirstChar 65 /LastChar 65 /Widths [400] ");
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(doc.GetPage(1));
+
+        AssertRed(Type3PixelAtPt(bitmap, 105, 408),
+            "inside the d1 bbox the clip admits the subsequent fill");
+        AssertWhite(Type3PixelAtPt(bitmap, 114, 408),
+            "right of the d1 bbox the clip contribution is cut off even though the CharProc painted there");
+        AssertWhite(Type3PixelAtPt(bitmap, 105, 422),
+            "above the d1 bbox the clip contribution is cut off");
+    }
+
+    [Fact]
+    public void RenderPage_Type3Font_Tr7_ImageGlyphContributesItsBounds()
+    {
+        // An image-XObject glyph (24pt font, 500x500-unit image -> 12x12pt
+        // at Td 100 120) contributes its unit-square bounds to the clip.
+        var pdfData = CreatePdfWithType3ImageGlyph(
+            "BT /F1 24 Tf 7 Tr 100 120 Td <41> Tj ET 1 0 0 rg 90 110 60 40 re f");
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(doc.GetPage(1));
+
+        AssertRed(Type3PixelAtPt(bitmap, 106, 126),
+            "inside the image glyph's bounds the subsequent fill shows through");
+        AssertWhite(Type3PixelAtPt(bitmap, 120, 126),
+            "outside the image glyph's bounds the fill is clipped away");
+        AssertWhite(Type3PixelAtPt(bitmap, 95, 126),
+            "left of the image glyph's bounds the fill is clipped away");
+    }
+
     #endregion
 
     #region Compatibility Operators (BX, EX)
@@ -5900,9 +6124,9 @@ public class SkiaRendererTests
         return ms.ToArray();
     }
 
-    private static byte[] CreatePdfWithType3ImageGlyph()
+    private static byte[] CreatePdfWithType3ImageGlyph(
+        string pageContent = "BT /F1 24 Tf 100 120 Td <41> Tj ET")
     {
-        const string pageContent = "BT /F1 24 Tf 100 120 Td <41> Tj ET";
         const string charProcContent = "500 0 0 0 500 500 d1 q 500 0 0 500 0 0 cm /Im1 Do Q";
         using var ms = new MemoryStream();
         using var writer = new StreamWriter(ms, System.Text.Encoding.ASCII, leaveOpen: true);
