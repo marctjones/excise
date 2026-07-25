@@ -108,7 +108,9 @@ public class ToUnicodeCMapParser
             var hiTok = tokens[i + 1];
             if (loTok.Type != TokenType.HexString || hiTok.Type != TokenType.HexString) break;
 
-            int bytes = (loTok.Text.Length + 1) / 2;
+            // Codes are at most 4 bytes per the CMap spec; clamp malformed
+            // over-long bounds so MaxCodeBytes stays meaningful. #515
+            int bytes = Math.Min(4, Math.Max(1, (loTok.Text.Length + 1) / 2));
             if (bytes > _maxCodeBytes) _maxCodeBytes = bytes;
             int lo = HexToInt(loTok.Text);
             int hi = HexToInt(hiTok.Text);
@@ -158,6 +160,13 @@ public class ToUnicodeCMapParser
             int srcLo = HexToInt(lo.Text);
             int srcHi = HexToInt(hi.Text);
 
+            // Cap the incrementing expansion: a malformed range like
+            // <0000> <7FFFFFFF> must not hang the parser or exhaust memory.
+            // Spec-conforming bfranges vary only in the last byte (≤ 256
+            // codes); a 64K cap keeps even a full 2-byte range intact. #515
+            if ((long)srcHi - srcLo > 0xFFFF)
+                srcHi = srcLo + 0xFFFF;
+
             if (dst.Type == TokenType.HexString)
             {
                 // <lo> <hi> <dstLo> — incrementing destination.
@@ -183,7 +192,16 @@ public class ToUnicodeCMapParser
 
                         var prefix = dstStr.Substring(0, lastIdx);
                         int lastCp = char.ConvertToUtf32(dstStr, lastIdx);
-                        _mapping[code] = prefix + char.ConvertFromUtf32(lastCp + offset);
+                        int nextCp = lastCp + offset;
+
+                        // Incrementing past the Unicode range (or into the
+                        // surrogate block) can only happen in a malformed
+                        // range — stop rather than throw away the whole
+                        // CMap on ConvertFromUtf32's exception. #515
+                        if (nextCp > 0x10FFFF || (nextCp >= 0xD800 && nextCp <= 0xDFFF))
+                            break;
+
+                        _mapping[code] = prefix + char.ConvertFromUtf32(nextCp);
                     }
                 }
                 i += 3;
@@ -313,12 +331,17 @@ public class ToUnicodeCMapParser
     {
         if (hex.Length == 0) return 0;
         if ((hex.Length & 1) != 0) hex = "0" + hex; // odd-length → left-pad
-        int v = 0;
-        foreach (char c in hex)
+
+        // Codes are at most 4 bytes (8 hex digits) per the CMap spec. A
+        // malformed longer string must not overflow the shifts into garbage
+        // (or a negative value): keep the leading 4 bytes and clamp. #515
+        int digits = Math.Min(hex.Length, 8);
+        long v = 0;
+        for (int i = 0; i < digits; i++)
         {
-            v = (v << 4) | HexDigit(c);
+            v = (v << 4) | (uint)HexDigit(hex[i]);
         }
-        return v;
+        return v > int.MaxValue ? int.MaxValue : (int)v;
     }
 
     private static int HexDigit(char c) =>

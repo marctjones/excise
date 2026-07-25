@@ -1034,34 +1034,44 @@ public class ContentStreamParser
             var subtype = _currentFont.GetNameOrNull("Subtype");
             _is2ByteFont = subtype == "Type0";
 
-            // A Type0 font isn't guaranteed to use Identity-H/V's 2-byte
-            // codes — a font can wrap an embedded CMap declaring a narrower
-            // codespace (#659). Only switch to 1-byte on an EXPLICITLY
-            // UNIFORM 1-byte codespace; keep the safe 2-byte default for
-            // Identity-H/V and any 2-byte/mixed-width codespace. Mirrors the
-            // identical fix in TextExtractor.LoadFontGeometry — this parser
-            // feeds redaction's glyph removal, and it must decode the same
-            // bytes the same way TextExtractor does or redaction can target
-            // the wrong glyphs.
+            // Embedded /Encoding CMap streams and registered CMap names both
+            // drive byte segmentation through the parsed CMap's codespace
+            // ranges (mixed 1/2-byte widths, per-byte-range matched) and map
+            // code→CID for width lookup. Mirrors TextExtractor.LoadFontGeometry
+            // EXACTLY — this parser feeds redaction's glyph removal, and it
+            // must decode the same bytes the same way TextExtractor does or
+            // redaction can target the wrong glyphs. #515 #659
             if (_is2ByteFont)
             {
                 var encObj = _page.Document.Resolve(_currentFont.GetOptional("Encoding") ?? PdfNull.Instance);
                 if (encObj is PdfStream encStream)
                 {
-                    var detail = Text.ToUnicodeCMapParser.ParseDetailed(encStream.DecodedData);
-                    if (detail.CodespaceRanges.Count > 0 && detail.MaxCodeBytes == 1)
-                        _is2ByteFont = false;
-
-                    // /WMode 1 in the embedded CMap means vertical writing
-                    // (§9.7.5.2) — mirrors TextExtractor.LoadFontGeometry. #515
                     try
                     {
-                        if (Text.CidCMap.Parse(encStream.DecodedData).WMode == 1)
+                        var embedded = Text.CidCMap.Parse(encStream.DecodedData,
+                            static name => Text.PredefinedCMapProvider.TryGetEncodingCMap(name));
+
+                        // /WMode 1 in the embedded CMap means vertical
+                        // writing (§9.7.5.2). #515
+                        if (embedded.WMode == 1)
                             _isVerticalWriting = true;
+                        if (embedded.CodespaceRanges.Count > 0 || embedded.Mapping.Count > 0)
+                            _registeredEncodingCMap = embedded;
                     }
                     catch (Exception ex) when (ex is not OutOfMemoryException)
                     {
-                        // Best-effort: unreadable CMap keeps horizontal default.
+                        // Best-effort: unreadable CMap keeps identity defaults.
+                    }
+
+                    // Stride fallback for streams the CMap parser could not
+                    // read (#659): an EXPLICITLY UNIFORM 1-byte codespace
+                    // decodes one byte at a time; anything else keeps the
+                    // safe 2-byte default.
+                    if (_registeredEncodingCMap == null)
+                    {
+                        var detail = Text.ToUnicodeCMapParser.ParseDetailed(encStream.DecodedData);
+                        if (detail.CodespaceRanges.Count > 0 && detail.MaxCodeBytes == 1)
+                            _is2ByteFont = false;
                     }
                 }
 

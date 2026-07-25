@@ -113,16 +113,18 @@ public class CidCMapParserTests
     [Fact]
     public void Decode_ByteOutsideEveryCodespace_FallsBackWithoutLosingData()
     {
-        // 0xFF is outside the declared 1-byte <00> <7f> codespace; the
-        // decoder's fallback must still consume input (2 bytes when
-        // available) instead of looping or dropping bytes.
+        // 0xFF is outside the declared 1-byte <00> <7f> codespace AND no
+        // codespace's lead-byte range claims it, so the invalid code
+        // consumes exactly ONE byte (Adobe TN #5014 undefined-code
+        // handling, matching mutool/pdf.js) — the decoder must not pair it
+        // with the following valid byte, and must not loop or drop input.
         var cmap = CidCMap.Parse("""
             1 begincodespacerange
             <00> <7f>
             endcodespacerange
             """);
 
-        cmap.Decode([0x41, 0xFF, 0x41]).Should().Equal(0x41, 0xFF41);
+        cmap.Decode([0x41, 0xFF, 0x41]).Should().Equal(0x41, 0xFF, 0x41);
         // Trailing single out-of-space byte: 1-byte fallback.
         cmap.Decode([0xFF]).Should().Equal(0xFF);
     }
@@ -232,5 +234,165 @@ public class CidCMapParserTests
 
         var truncatedCodespace = CidCMap.Parse("1 begincodespacerange <00>");
         truncatedCodespace.CodespaceRanges.Should().BeEmpty();
+    }
+
+    // ── #515 slice 4: per-byte-range codespace matching (§9.7.6.2) ──────────
+    //
+    // Expected sequences below are computed from the CMap spec by hand, not
+    // from excise: a codespace <lo> <hi> contains a code only when EVERY byte
+    // lies within the corresponding byte range of the bounds — NOT when the
+    // code's scalar value lies within [lo, hi].
+
+    [Fact]
+    public void Decode_CodespaceMatchIsByteWise_NotScalar()
+    {
+        // GBK-EUC-H-shaped mixed-width codespaces, plus a crafted 1-byte
+        // space wide enough to catch what the 2-byte space rejects.
+        var cmap = CidCMap.Parse("""
+            2 begincodespacerange
+            <00> <FF>
+            <8140> <FEFE>
+            endcodespacerange
+            2 begincidchar
+            <81> 900
+            <FF> 901
+            endcidchar
+            1 begincidrange
+            <8141> <8149> 100
+            endcidrange
+            """);
+
+        // <8141>: byte 0 ∈ [81,FE], byte 1 ∈ [40,FE] → one 2-byte code.
+        cmap.DecodeDetailed([0x81, 0x41]).Should().Equal((0x8141, 100, 2));
+
+        // <81FF>: scalar-wise inside [0x8140, 0xFEFE] — the historical bug —
+        // but byte 1 (0xFF) is OUTSIDE [0x40, 0xFE], so the 2-byte space
+        // must NOT claim it. Both bytes fall to the 1-byte codespace and hit
+        // their cidchar mappings.
+        cmap.DecodeDetailed([0x81, 0xFF]).Should().Equal((0x81, 900, 1), (0xFF, 901, 1));
+
+        // Mixed stream around the invalid pair keeps byte-exact segmentation.
+        cmap.DecodeDetailed([0x81, 0x41, 0x81, 0xFF, 0x81, 0x49])
+            .Should().Equal((0x8141, 100, 2), (0x81, 900, 1), (0xFF, 901, 1), (0x8149, 108, 2));
+    }
+
+    [Fact]
+    public void Decode_ByteWiseInvalidCode_ConsumesLeadByteCodespaceWidth()
+    {
+        // Only a 2-byte codespace: an invalid code whose LEAD byte the
+        // codespace claims consumes the codespace's full width (Adobe TN
+        // #5014 undefined-code handling); a lead byte nothing claims
+        // consumes exactly one byte.
+        var cmap = CidCMap.Parse("""
+            1 begincodespacerange
+            <8140> <FEFE>
+            endcodespacerange
+            """);
+
+        // 0x81 ∈ [81,FE] → the invalid pair <81FF> is consumed as 2 bytes.
+        cmap.DecodeDetailed([0x81, 0xFF, 0x81, 0x41])
+            .Should().Equal((0x81FF, 0x81FF, 2), (0x8141, 0x8141, 2));
+
+        // 0xFF ∉ [81,FE] → single-byte consumption, and the following byte
+        // is re-examined on its own instead of being swallowed.
+        cmap.DecodeDetailed([0xFF, 0x41])
+            .Should().Equal((0xFF, 0xFF, 1), (0x41, 0x41, 1));
+    }
+
+    [Fact]
+    public void Decode_TruncatedTrailingCode_ConsumesRemainingByte()
+    {
+        var cmap = CidCMap.Parse("""
+            1 begincodespacerange
+            <8140> <FEFE>
+            endcodespacerange
+            """);
+
+        // A dangling lead byte at end-of-input cannot form a 2-byte code;
+        // it must be consumed as a 1-byte fallback, not dropped.
+        cmap.DecodeDetailed([0x81, 0x41, 0x81])
+            .Should().Equal((0x8141, 0x8141, 2), (0x81, 0x81, 1));
+    }
+
+    [Fact]
+    public void Decode_RealRksjCMap_RejectsByteWiseInvalidTrailByte()
+    {
+        // The shipped 90ms-RKSJ-H declares <8140> <9FFC> / <E040> <FCFC>
+        // 2-byte spaces. <81FF> is scalar-inside [0x8140, 0x9FFC] but its
+        // trail byte 0xFF exceeds 0xFC — per-byte matching must treat it as
+        // an invalid code (2 bytes via the lead), NOT as a valid member
+        // eligible for cidrange mapping.
+        var cmap = PredefinedCMapProvider.TryGetEncodingCMap("90ms-RKSJ-H");
+        cmap.Should().NotBeNull();
+
+        var decoded = cmap!.DecodeDetailed([0x81, 0xFF, 0x41]);
+        decoded.Should().HaveCount(2);
+        decoded[0].ByteLength.Should().Be(2, "the lead byte 0x81 claims the 2-byte width");
+        decoded[0].Code.Should().Be(0x81FF);
+        decoded[1].Should().Be((0x41, 264, 1), "the following ASCII byte decodes normally");
+    }
+
+    // ── #515 slice 4: malformed-CMap resilience ─────────────────────────────
+
+    [Fact(Timeout = 30000)]
+    public void Parse_HugeCidRange_IsCappedWithoutHangingOrExhaustingMemory()
+    {
+        // A hostile range spanning the whole positive int space: a naive
+        // scalar expansion would insert 2^31 entries (OOM) — and with
+        // <FFFFFFFF> as the bound an int loop counter would wrap and never
+        // terminate. The parser must cap the expansion and keep working.
+        var cmap = CidCMap.Parse("""
+            1 begincodespacerange
+            <00000000> <FFFFFFFF>
+            endcodespacerange
+            1 begincidrange
+            <00000000> <7FFFFFFF> 5
+            endcidrange
+            """);
+
+        cmap.Mapping.Count.Should().BeLessThanOrEqualTo(65536);
+        cmap.Mapping[0].Should().Be(5);
+        cmap.Mapping[0xFFFF].Should().Be(5 + 0xFFFF, "the cap keeps a full 64K prefix intact");
+    }
+
+    [Fact(Timeout = 30000)]
+    public void Parse_FullTwoByteRange_SurvivesTheCapIntact()
+    {
+        // The largest legitimate incrementing range must not be truncated.
+        var cmap = CidCMap.Parse("""
+            1 begincodespacerange
+            <0000> <FFFF>
+            endcodespacerange
+            1 begincidrange
+            <0000> <FFFF> 0
+            endcidrange
+            """);
+
+        cmap.Mapping.Count.Should().Be(65536);
+        cmap.Mapping[0xFFFF].Should().Be(0xFFFF);
+    }
+
+    [Fact(Timeout = 30000)]
+    public void Parse_JunkContent_DoesNotThrowOrHang()
+    {
+        // Assorted garbage: binary noise, over-long hex bounds, dangling
+        // delimiters, an unterminated string literal. Graceful no-crash
+        // parsing is all that is required.
+        var junk = new[]
+        {
+            " <<<<>>>>[[[]]]",
+            "1 begincodespacerange <112233445566778899AABB> <FFFFFFFFFFFFFFFFFFFFFF> endcodespacerange",
+            "1 begincidrange <41> <40> 7 endcidrange",   // hi < lo
+            "begincmap endcmap (unterminated literal",
+            "/ /// %%% < > <zz> begincidchar",
+            "1 beginbfrange <0000> <FFFFFFFF> <0041> endbfrange",
+        };
+
+        foreach (var content in junk)
+        {
+            var cmap = CidCMap.Parse(content);
+            // Decoding arbitrary bytes over whatever survived must also work.
+            cmap.Decode([0x41, 0xFF, 0x00]).Should().NotBeNull();
+        }
     }
 }
