@@ -718,7 +718,11 @@ public class ContentStreamParser
             }
             else
             {
-                var tx = (charWidth / 1000.0) * _fontSize * (_horizontalScaling / 100.0) + spacing;
+                // tx = (w0·Tfs + Tc + Tw)·Th — the spacing terms sit INSIDE
+                // the horizontal-scaling factor (§9.4.4). Mirrors
+                // TextExtractor.ShowGlyph exactly so redaction bounds stay in
+                // lock-step with extracted letters. #734
+                var tx = ((charWidth / 1000.0) * _fontSize + spacing) * (_horizontalScaling / 100.0);
                 _tm_e += tx * _tm_a;
                 _tm_f += tx * _tm_b;
             }
