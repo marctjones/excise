@@ -4717,6 +4717,96 @@ public class SkiaRendererTests
     }
 
     [Fact]
+    public void RenderPage_Type3Font_d1ImageMaskXObjectGlyph_PaintsInTextFillColor()
+    {
+        // ISO 32000-1 §9.6.5: an uncolored (d1) glyph description may paint an
+        // /ImageMask image, and the mask must be painted with the fill colour
+        // in effect in the TEXT object — the d1 colour-lock applies to image
+        // paint exactly as it does to path paint. The page sets red text; the
+        // CharProc tries to switch to blue before painting the mask — the
+        // glyph must render RED.
+        var pdfData = CreatePdfWithType3ImageGlyph(
+            pageContent: "0.9 0 0 rg BT /F1 24 Tf 100 120 Td <41> Tj ET",
+            charProcContent: "500 0 0 0 500 500 d1 0 0 1 rg q 500 0 0 500 0 0 cm /Im1 Do Q",
+            imageDict: "<< /Type /XObject /Subtype /Image /Width 1 /Height 1 /ImageMask true /BitsPerComponent 1 /Length 1 >>",
+            imageByte: 0x00);
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(doc.GetPage(1));
+
+        var pixel = Type3PixelAtPt(bitmap, 106, 126);
+        pixel.Red.Should().BeGreaterThan(180,
+            "an ImageMask painted by a d1 glyph must use the text object's fill colour");
+        pixel.Blue.Should().BeLessThan(80,
+            "the CharProc's own colour operator must stay suppressed for image paint under d1");
+    }
+
+    [Fact]
+    public void RenderPage_Type3Font_d1InlineImageMaskGlyph_PaintsInTextFillColor()
+    {
+        // Same d1 colour-lock, but through the classic Type 3 bitmap-font
+        // carrier: an INLINE image mask (BI /IM true ... ID ... EI) in the
+        // CharProc. Sample bit 0 paints under the default /Decode [0 1], so
+        // the single 0x00 byte inks the whole unit square.
+        var pdfData = CreateType3FixturePdf(
+            pageContent: "0.9 0 0 rg BT /F1 24 Tf 100 120 Td <41> Tj ET",
+            charProcs: new[] { ("A",
+                "500 0 0 0 500 700 d1 0 0 1 rg q 500 0 0 700 0 0 cm BI /IM true /W 1 /H 1 /BPC 1 ID \0 EI Q") },
+            encodingDifferences: "65 /A",
+            widthsClause: "/FirstChar 65 /LastChar 65 /Widths [500] ");
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(doc.GetPage(1));
+
+        var pixel = Type3PixelAtPt(bitmap, 106, 128);
+        pixel.Red.Should().BeGreaterThan(180,
+            "an inline image mask painted by a d1 glyph must use the text object's fill colour");
+        pixel.Blue.Should().BeLessThan(80,
+            "the CharProc's own colour operator must stay suppressed for inline image paint under d1");
+    }
+
+    [Fact]
+    public void RenderPage_Type3Font_d0ImageMaskGlyph_HonorsCharProcColor()
+    {
+        // d0 control: a COLORED glyph description's colour operators apply, so
+        // the same ImageMask paints in the CharProc's own colour (blue), not
+        // the page's red text colour.
+        var pdfData = CreatePdfWithType3ImageGlyph(
+            pageContent: "0.9 0 0 rg BT /F1 24 Tf 100 120 Td <41> Tj ET",
+            charProcContent: "500 0 d0 0 0 1 rg q 500 0 0 500 0 0 cm /Im1 Do Q",
+            imageDict: "<< /Type /XObject /Subtype /Image /Width 1 /Height 1 /ImageMask true /BitsPerComponent 1 /Length 1 >>",
+            imageByte: 0x00);
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(doc.GetPage(1));
+
+        var pixel = Type3PixelAtPt(bitmap, 106, 126);
+        pixel.Blue.Should().BeGreaterThan(180,
+            "a colored (d0) glyph's ImageMask paints in the CharProc's own colour");
+        pixel.Red.Should().BeLessThan(80);
+    }
+
+    [Fact]
+    public void RenderPage_Type3Font_d0ColoredImageGlyph_KeepsImageOwnColor()
+    {
+        // d0 control with a real (non-mask) image: the image's own samples are
+        // painted as-is — a DeviceGray black pixel stays black even though the
+        // page's text fill colour is red.
+        var pdfData = CreatePdfWithType3ImageGlyph(
+            pageContent: "0.9 0 0 rg BT /F1 24 Tf 100 120 Td <41> Tj ET",
+            charProcContent: "500 0 d0 q 500 0 0 500 0 0 cm /Im1 Do Q");
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(doc.GetPage(1));
+
+        var pixel = Type3PixelAtPt(bitmap, 106, 126);
+        pixel.Red.Should().BeLessThan(80,
+            "a colored (d0) glyph's non-mask image keeps its own sample colours");
+        pixel.Green.Should().BeLessThan(80);
+        pixel.Blue.Should().BeLessThan(80);
+    }
+
+    [Fact]
     public void RenderPage_Type3Font_d1BBox_ClipsGlyphDescription()
     {
         // ISO 32000-1 §9.6.5, Table 113: d1's llx/lly/urx/ury declare the glyph
@@ -4788,6 +4878,37 @@ public class SkiaRendererTests
         var beyond = bitmap.GetPixel((int)(124 * 150 / 72), bitmap.Height - (int)(128 * 150 / 72));
         beyond.Red.Should().BeGreaterThan(200,
             "the advance must be wx (500), not a larger bbox-derived fallback");
+    }
+
+    [Fact]
+    public void RenderPage_Type3Font_NonzeroWyOperand_IsIgnored_GlyphsStayOnBaseline()
+    {
+        // ISO 32000-1 Table 113: d0/d1's wy operand "shall be 0" — Type 3
+        // fonts are simple fonts, always written horizontally (vertical
+        // writing exists only through Type 0 composite fonts, and Table 117
+        // limits CIDFont subtypes to CIDFontType0/2, so a Type 3 font can
+        // never be a vertical descendant). A nonzero wy is therefore
+        // spec-invalid dead weight: with the required /Widths present,
+        // pdftocairo, Ghostscript AND mutool all keep the second glyph on
+        // the baseline (probed 2026-07; only gs's PostScript setcharwidth
+        // heritage consumes wy, and only in the doubly-malformed
+        // missing-/Widths case where the three references already disagree
+        // with each other). excise ignores wy and advances by wx alone.
+        var pdfData = CreateType3FixturePdf(
+            "0 0 0 rg BT /F1 24 Tf 100 120 Td <4141> Tj ET",
+            new[] { ("A", "500 300 d0 0 0 400 700 re f") },
+            encodingDifferences: "65 /A",
+            widthsClause: "/FirstChar 65 /LastChar 65 /Widths [500] ");
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(doc.GetPage(1));
+
+        var secondGlyphBaseline = Type3PixelAtPt(bitmap, 116, 121.5);
+        secondGlyphBaseline.Red.Should().BeLessThan(100,
+            "a nonzero (spec-invalid) wy must not lift the second glyph off the baseline");
+        var raisedPosition = Type3PixelAtPt(bitmap, 116, 139);
+        raisedPosition.Red.Should().BeGreaterThan(200,
+            "nothing may paint where a wy-advanced (raised) second glyph would sit");
     }
 
     [Fact]
@@ -6125,9 +6246,11 @@ public class SkiaRendererTests
     }
 
     private static byte[] CreatePdfWithType3ImageGlyph(
-        string pageContent = "BT /F1 24 Tf 100 120 Td <41> Tj ET")
+        string pageContent = "BT /F1 24 Tf 100 120 Td <41> Tj ET",
+        string charProcContent = "500 0 0 0 500 500 d1 q 500 0 0 500 0 0 cm /Im1 Do Q",
+        string imageDict = "<< /Type /XObject /Subtype /Image /Width 1 /Height 1 /ColorSpace /DeviceGray /BitsPerComponent 8 /Length 1 >>",
+        byte imageByte = 0x00)
     {
-        const string charProcContent = "500 0 0 0 500 500 d1 q 500 0 0 500 0 0 cm /Im1 Do Q";
         using var ms = new MemoryStream();
         using var writer = new StreamWriter(ms, System.Text.Encoding.ASCII, leaveOpen: true);
         writer.NewLine = "\n";
@@ -6183,10 +6306,10 @@ public class SkiaRendererTests
 
         offsets[7] = ms.Position;
         writer.WriteLine("7 0 obj");
-        writer.WriteLine("<< /Type /XObject /Subtype /Image /Width 1 /Height 1 /ColorSpace /DeviceGray /BitsPerComponent 8 /Length 1 >>");
+        writer.WriteLine(imageDict);
         writer.WriteLine("stream");
         writer.Flush();
-        ms.WriteByte(0x00);
+        ms.WriteByte(imageByte);
         writer.WriteLine();
         writer.WriteLine("endstream");
         writer.WriteLine("endobj");
