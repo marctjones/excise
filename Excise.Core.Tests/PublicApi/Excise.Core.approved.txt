@@ -479,14 +479,33 @@ namespace Excise.Core.Document
     }
     public static class PdfAnnotationAuthoring
     {
+        public static System.Collections.Generic.IReadOnlyList<string> StandardStampNames { get; }
+        public static Excise.Core.Document.PdfAnnotation AddArrowAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, double x1, double y1, double x2, double y2, string? contents = null, string? author = null, double red = 0, double green = 0, double blue = 0, double lineWidth = 1, string startLineEnding = "None", string endLineEnding = "ClosedArrow") { }
         public static Excise.Core.Document.PdfAnnotation AddCircleAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string? contents = null, string? author = null, double red = 1, double green = 0, double blue = 0, double borderWidth = 1, double? interiorRed = default, double? interiorGreen = default, double? interiorBlue = default) { }
         public static Excise.Core.Document.PdfAnnotation AddFreeTextAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string text, string? author = null, double fontSize = 12, double textRed = 0, double textGreen = 0, double textBlue = 0, Excise.Core.Document.PdfFreeTextQuadding quadding = 0, double borderWidth = 0, double? backgroundRed = default, double? backgroundGreen = default, double? backgroundBlue = default) { }
         public static Excise.Core.Document.PdfAnnotation AddHighlightAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string? contents = null, string? author = null, double red = 1, double green = 1, double blue = 0) { }
+        public static Excise.Core.Document.PdfAnnotation AddImageStampAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, byte[] rgbPixels, int pixelWidth, int pixelHeight, string? contents = null, string? author = null) { }
         public static Excise.Core.Document.PdfAnnotation AddInkAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
                 "X",
                 "Y"})] System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<System.ValueTuple<double, double>>> strokes, string? contents = null, string? author = null, double red = 0, double green = 0, double blue = 0, double borderWidth = 2) { }
+        public static Excise.Core.Document.PdfAnnotation AddLineAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, double x1, double y1, double x2, double y2, string? contents = null, string? author = null, double red = 0, double green = 0, double blue = 0, double lineWidth = 1) { }
+        public static Excise.Core.Document.PdfAnnotation AddPolyLineAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "X",
+                "Y"})] System.Collections.Generic.IReadOnlyList<System.ValueTuple<double, double>> vertices, string? contents = null, string? author = null, double red = 0, double green = 0, double blue = 0, double borderWidth = 1) { }
+        public static Excise.Core.Document.PdfAnnotation AddPolygonAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "X",
+                "Y"})] System.Collections.Generic.IReadOnlyList<System.ValueTuple<double, double>> vertices, string? contents = null, string? author = null, double red = 0, double green = 0, double blue = 0, double borderWidth = 1, double? interiorRed = default, double? interiorGreen = default, double? interiorBlue = default) { }
         public static Excise.Core.Document.PdfAnnotation AddSquareAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string? contents = null, string? author = null, double red = 1, double green = 0, double blue = 0, double borderWidth = 1, double? interiorRed = default, double? interiorGreen = default, double? interiorBlue = default) { }
+        public static Excise.Core.Document.PdfAnnotation AddSquigglyAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string? contents = null, string? author = null, double red = 1, double green = 0, double blue = 0) { }
+        public static Excise.Core.Document.PdfAnnotation AddStampAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string stampName, string? contents = null, string? author = null) { }
+        public static Excise.Core.Document.PdfAnnotation AddStrikeOutAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string? contents = null, string? author = null, double red = 1, double green = 0, double blue = 0) { }
         public static Excise.Core.Document.PdfAnnotation AddTextAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string contents, string? author = null, bool open = false, string iconName = "Note") { }
+        public static Excise.Core.Document.PdfAnnotation AddUnderlineAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string? contents = null, string? author = null, double red = 1, double green = 0, double blue = 0) { }
+        public static bool RemoveAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfAnnotation annotation) { }
+        public static void SetAnnotationColor(this Excise.Core.Document.PdfAnnotation annotation, double red, double green, double blue) { }
+        public static void SetAnnotationContents(this Excise.Core.Document.PdfAnnotation annotation, string? contents) { }
+        public static void SetAnnotationOpacity(this Excise.Core.Document.PdfAnnotation annotation, double opacity) { }
+        public static void SetReplyTo(this Excise.Core.Document.PdfAnnotation reply, Excise.Core.Document.PdfDocument document, Excise.Core.Document.PdfAnnotation parent, string replyType = "R") { }
     }
     [System.Flags]
     public enum PdfAnnotationFlags

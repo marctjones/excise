@@ -51,13 +51,15 @@ public sealed class XfdfImportResult
 /// </para>
 /// <para>
 /// <b>Import</b> supports text, freetext, line, square, circle, polygon,
-/// polyline, highlight, underline, squiggly, strikeout, caret and ink
+/// polyline, highlight, underline, squiggly, strikeout, stamp, caret and ink
 /// elements. Subtypes with an authoring method
 /// (<see cref="PdfAnnotationAuthoring"/>) are created through it so they get
-/// a baked <c>/AP</c> appearance stream; the remainder are written as
-/// spec-correct dictionaries without an appearance (viewers synthesize one,
-/// as they do for Acrobat's own AP-less markup). Unknown elements are
-/// reported in <see cref="XfdfImportResult.Skipped"/>, never an error.
+/// a baked <c>/AP</c> appearance stream (a stamp element's <c>icon</c> must
+/// be one of <see cref="PdfAnnotationAuthoring.StandardStampNames"/> to
+/// qualify); the remainder are written as spec-correct dictionaries without
+/// an appearance (viewers synthesize one, as they do for Acrobat's own
+/// AP-less markup). Unknown elements are reported in
+/// <see cref="XfdfImportResult.Skipped"/>, never an error.
 /// </para>
 /// </remarks>
 public static class XfdfSerializer
@@ -493,6 +495,11 @@ public static class XfdfSerializer
                 dict["Vertices"] = vertices;
                 if (color is { } pc)
                     dict["C"] = ColorArray(pc);
+                // Interior fill (/IC) applies to Polygon only — PolyLine has
+                // no fill per §12.5.6.9 — but must not be dropped for Polygon
+                // just because it went through the generic-dictionary path.
+                if (localName == "polygon" && interior is { } pic)
+                    dict["IC"] = ColorArray(pic);
                 created = PdfAnnotationAuthoring.AttachImported(document, pageNumber, dict);
                 break;
             }
@@ -504,6 +511,30 @@ public static class XfdfSerializer
                 if (color is { } cc)
                     dict["C"] = ColorArray(cc);
                 created = PdfAnnotationAuthoring.AttachImported(document, pageNumber, dict);
+                break;
+            }
+
+            case "stamp":
+            {
+                var r = RequireRect(rect);
+                var icon = el.Attribute("icon")?.Value;
+                if (!string.IsNullOrWhiteSpace(icon) &&
+                    PdfAnnotationAuthoring.StandardStampNames.Contains(icon))
+                {
+                    created = document.AddStampAnnotation(pageNumber, r, icon, contents, author);
+                }
+                else
+                {
+                    // Not one of the standard #626 names (custom/unknown icon,
+                    // e.g. a viewer-specific or image stamp): keep the data
+                    // without a baked appearance rather than reject it.
+                    var dict = NewImportDict("Stamp", r);
+                    if (!string.IsNullOrWhiteSpace(icon))
+                        dict.SetName("Name", icon);
+                    if (color is { } sc)
+                        dict["C"] = ColorArray(sc);
+                    created = PdfAnnotationAuthoring.AttachImported(document, pageNumber, dict);
+                }
                 break;
             }
 
