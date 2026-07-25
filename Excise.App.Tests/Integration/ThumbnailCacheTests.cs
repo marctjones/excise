@@ -49,6 +49,8 @@ public class ThumbnailCacheTests
 
                 bmp.Should().NotBeNull("first call must produce a thumbnail");
                 bmp!.Width.Should().BeGreaterThan(50);
+                svc1.RenderCount.Should().Be(1,
+                    "the first call over an empty cache must render the page");
 
                 var cacheFile = await WaitForCacheFileAsync(svc1.CacheDir, "p00002.webp");
                 cacheFile.Should().NotBeNull(
@@ -57,6 +59,10 @@ public class ThumbnailCacheTests
 
             // Second service instance over the same file — the same hash
             // dir is already populated, so this must NOT need to render.
+            // Asserted via the renderer-invocation counter, not wall-clock:
+            // an absolute timing threshold raced render time on loaded CI
+            // runners and flaked (#733). The counter asserts the intent
+            // ("no re-render") deterministically.
             using (var svc2 = new ThumbnailCacheService(pdfPath, doc, NullLogger.Instance))
             {
                 var sw = Stopwatch.StartNew();
@@ -66,13 +72,9 @@ public class ThumbnailCacheTests
 
                 bmp.Should().NotBeNull();
                 bmp!.Width.Should().BeGreaterThan(50);
-
-                // Cache hit should be at least an order of magnitude faster
-                // than rendering. Ballpark: render ~50-200ms, decode ~1-10ms.
-                // Keep the threshold generous so test isn't flaky.
-                sw.ElapsedMilliseconds.Should().BeLessThan(100,
-                    "cache hit should be a sub-100ms WebP decode rather than " +
-                    "a full re-render of the page");
+                svc2.RenderCount.Should().Be(0,
+                    "the second instance must serve the thumbnail from the " +
+                    "disk cache without invoking the renderer (#733)");
             }
         }
         finally

@@ -46,6 +46,17 @@ public sealed class ThumbnailCacheService : IDisposable
     private readonly int _thumbnailDpi;
     private bool _disposed;
 
+    // Test seam (#733): counts renderer invocations so tests can assert
+    // "cache hit did not re-render" directly instead of via a flaky
+    // wall-clock threshold. Interlocked because renders run on the pool.
+    private int _renderCount;
+
+    /// <summary>
+    /// Number of times this instance invoked the renderer (as opposed to
+    /// serving a disk-cache hit). Test observability only — see issue #733.
+    /// </summary>
+    internal int RenderCount => Volatile.Read(ref _renderCount);
+
     private static readonly string RendererCacheIdentity =
         typeof(SkiaRenderer).Module.ModuleVersionId.ToString("N");
 
@@ -236,6 +247,7 @@ public sealed class ThumbnailCacheService : IDisposable
                 ct.ThrowIfCancellationRequested();
                 if (pageIndex < 0 || pageIndex >= _doc.PageCount) return null;
                 var page = _doc.GetPage(pageIndex + 1);
+                Interlocked.Increment(ref _renderCount);
                 var bmp = _renderer.RenderPage(page,
                     new RenderOptions { Dpi = _thumbnailDpi });
                 if (bmp == null) return null;
