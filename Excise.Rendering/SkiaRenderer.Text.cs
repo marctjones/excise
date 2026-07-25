@@ -1494,7 +1494,9 @@ internal partial class RenderContext
         // count on TWG A001 / 6-1-12-t02 fixtures).
         float ySign = _textState.TextMatrixD >= 0 ? -1f : 1f;
         float th = _textState.HorizontalScale / 100.0f;
-        if (!IsOptionalContentSuppressed)
+        // A clip-only Type 3 glyph pass (Tr 7, #514) executes the CharProc
+        // for coverage only — nested text it shows must not mark the page.
+        if (!IsOptionalContentSuppressed && !_type3ClipOnlyPass)
         {
             _canvas.Save();
             var textMatrix = CreateTextRenderingMatrix(x, y, th, ySign);
@@ -2186,7 +2188,14 @@ internal partial class RenderContext
         var charProcs = ResolveDict(fontDict, "CharProcs");
         var fontResources = ResolveDict(fontDict, "Resources");
         var fontMatrix = GetType3FontMatrix(fontDict);
-        var canPaint = !IsOptionalContentSuppressed && _textState.RenderMode is not (3 or 7);
+        // A clip-only pass for an OUTER Type 3 glyph suppresses nested glyph
+        // painting the same way hidden optional content does.
+        var visible = !IsOptionalContentSuppressed && !_type3ClipOnlyPass;
+        var canPaint = visible && _textState.RenderMode is not (3 or 7);
+        // Clipping text render modes (Tr 4-7) add the glyph's painted shape
+        // to the text object's accumulated clip (#514). Tr 7 collects the
+        // clip without painting; Tr 4-6 paint AND collect in one execution.
+        var collectClip = visible && TextRenderModeAddsClip(_textState.RenderMode);
         var cursorTextUnits = 0f;
         var th = _textState.HorizontalScale / 100.0f;
 
@@ -2200,8 +2209,9 @@ internal partial class RenderContext
             if (charProcs != null && TryResolveType3CharProc(charProcs, code, out var resolved))
                 charProc = resolved;
 
-            if (canPaint && charProc != null)
-                RenderType3Glyph(charProc, fontResources, fontMatrix, cursorTextUnits, th);
+            if ((canPaint || collectClip) && charProc != null)
+                RenderType3Glyph(charProc, fontResources, fontMatrix, cursorTextUnits, th,
+                    paint: canPaint, collectClip: collectClip);
 
             cursorTextUnits += GetType3TextSpaceAdvance(code, charProc, fontMatrix);
             cursorTextUnits += _textState.CharSpacing;
@@ -2356,7 +2366,9 @@ internal partial class RenderContext
         Excise.Core.Primitives.PdfDictionary? fontResources,
         SKMatrix fontMatrix,
         float cursorTextUnits,
-        float horizontalScale)
+        float horizontalScale,
+        bool paint = true,
+        bool collectClip = false)
     {
         if (!_type3GlyphStack.Add(charProc))
             return;
@@ -2371,6 +2383,22 @@ internal partial class RenderContext
         var savedPendingClipEvenOdd = _pendingClipEvenOdd;
         var savedPendingTextClipPath = _pendingTextClipPath;
         var savedColorLocked = _type3GlyphColorLocked;
+        var savedClipCollector = _type3ClipCollector;
+        var savedClipOnlyPass = _type3ClipOnlyPass;
+
+        // Clipping text render modes (Tr 4-7, #514): collect the DEVICE-space
+        // coverage the CharProc paints, then fold it into the text object's
+        // pending clip after every piece of glyph state has been restored.
+        // Device space is the one frame indifferent to the glyph's internal
+        // q/Q/cm churn, and mapping it back through the post-restore CTM
+        // lands the shape in exactly the space AddPendingTextClipPath uses
+        // for simple-font glyphs.
+        var ownClipCollector = collectClip ? new SKPath() : null;
+        if (ownClipCollector != null)
+        {
+            _type3ClipCollector = ownClipCollector;
+            _type3ClipOnlyPass = !paint;
+        }
 
         _currentPath = null;
         _pendingClipEvenOdd = null;
@@ -2413,10 +2441,37 @@ internal partial class RenderContext
             _pendingClipEvenOdd = savedPendingClipEvenOdd;
             _pendingTextClipPath = savedPendingTextClipPath;
             _type3GlyphColorLocked = savedColorLocked;
+            _type3ClipCollector = savedClipCollector;
+            _type3ClipOnlyPass = savedClipOnlyPass;
             _resourcesStack.Pop();
             _canvas.RestoreToCount(savedCanvasCount);
             _type3GlyphStack.Remove(charProc);
+
+            if (ownClipCollector != null)
+            {
+                AppendType3ClipContribution(ownClipCollector);
+                ownClipCollector.Dispose();
+            }
         }
+    }
+
+    // Folds one Type 3 glyph's collected device-space coverage into the text
+    // object's pending clip. Runs AFTER the glyph's canvas save has been
+    // restored, so _canvas.TotalMatrix is the same user space in which
+    // AddPendingTextClipPath expresses simple-font clip glyphs — the space
+    // ApplyPendingTextClipPath clips at ET.
+    private void AppendType3ClipContribution(SKPath deviceSpaceCoverage)
+    {
+        if (deviceSpaceCoverage.IsEmpty || !_canvas.TotalMatrix.TryInvert(out var deviceToUser))
+            return;
+
+        using var userSpace = new SKPath();
+        deviceSpaceCoverage.Transform(deviceToUser, userSpace);
+        if (userSpace.IsEmpty)
+            return;
+
+        _pendingTextClipPath ??= new SKPath();
+        _pendingTextClipPath.AddPath(userSpace, SKPathAddMode.Append);
     }
 
     // Type0 rendering path. Content-stream bytes are character codes; the
@@ -2579,7 +2634,8 @@ internal partial class RenderContext
         float drawHScale = isVertical ? 1f : _textState.HorizontalScale / 100.0f;
         float x = _textState.TextMatrixE;
         float y = _textState.TextMatrixF + _textState.TextRise;
-        if (!IsOptionalContentSuppressed)
+        // Clip-only Type 3 glyph pass: coverage only, no page marks (#514).
+        if (!IsOptionalContentSuppressed && !_type3ClipOnlyPass)
         {
             _canvas.Save();
             var textMatrix = CreateTextRenderingMatrix(x, y, drawHScale, ySign);

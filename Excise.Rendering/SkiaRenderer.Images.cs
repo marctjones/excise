@@ -16,6 +16,22 @@ internal partial class RenderContext
         if (width <= 0 || height <= 0)
             return;
 
+        // Type 3 clipping text render modes (Tr 4-7, #514): an image painted
+        // by the CharProc contributes its unit-square bounds to the glyph's
+        // clip shape. This is a bbox approximation — for an /ImageMask glyph
+        // the reference behaviour clips to the mask's inked pixels, which a
+        // path-based clip cannot express; the declared d1 box (applied as a
+        // clip on the glyph) still bounds it. Exact raster-mask clip
+        // contribution is a documented follow-up on #514.
+        if (_type3ClipCollector != null)
+        {
+            using var unitSquare = new SKPath();
+            unitSquare.AddRect(new SKRect(0, 0, 1, 1));
+            CollectType3ClipCoverage(unitSquare, null);
+        }
+        if (_type3ClipOnlyPass)
+            return;
+
         if (imageStream.GetBool("ImageMask") &&
             _state.FillPatternName != null &&
             TryDrawImageMaskWithPattern(imageStream, width, height))
