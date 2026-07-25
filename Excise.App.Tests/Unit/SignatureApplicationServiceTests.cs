@@ -272,6 +272,71 @@ public class SignatureApplicationServiceTests : IDisposable
         results[0].CoversWholeDocument.Should().BeTrue();
     }
 
+    // ── external oracle: poppler pdfsig ─────────────────────────────────────
+
+    /// <summary>
+    /// The #466 verifier shares this repo; poppler's pdfsig shares nothing.
+    /// "A tool must not be its own oracle for the property it exists to
+    /// guarantee" — this asserts a third-party reader sees exactly what the
+    /// issue #623 acceptance criteria demand: signature valid, total document
+    /// signed, issuer unknown (self-signed ⇒ valid-but-untrusted, not corrupt).
+    /// </summary>
+    [Fact]
+    public void SignDocument_ExternalOracle_PdfsigReportsValidUntrustedSignature()
+    {
+        var pdfsig = FindPdfsig();
+        Assert.SkipWhen(pdfsig == null, "poppler pdfsig not installed on this machine");
+
+        using var certificate = SigningCertificateFactory.CreateSelfSigned("External Oracle Signer");
+        var signedPath = SignSamplePdf(certificate);
+
+        var startInfo = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = pdfsig,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
+        startInfo.ArgumentList.Add(signedPath);
+        using var process = System.Diagnostics.Process.Start(startInfo)!;
+        var output = process.StandardOutput.ReadToEnd();
+        process.WaitForExit(30_000).Should().BeTrue("pdfsig must terminate");
+
+        output.Should().Contain("Signature is Valid.",
+            "an independent reader must accept the CMS signature and digest");
+        output.Should().Contain("Total document signed",
+            "the two-pass ByteRange must cover the whole file except the /Contents hole");
+        output.Should().Contain("Certificate issuer is unknown",
+            "self-signed must be valid-but-untrusted, never trusted, never corrupt");
+        output.Should().Contain("adbe.pkcs7.detached");
+        output.Should().Contain("External Oracle Signer");
+    }
+
+    private static string? FindPdfsig()
+    {
+        var pathDirs = (Environment.GetEnvironmentVariable("PATH") ?? string.Empty)
+            .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries);
+        var candidates = new List<string>();
+        foreach (var dir in pathDirs)
+        {
+            candidates.Add(Path.Combine(dir, "pdfsig"));
+        }
+        // Common install locations not always on the test host's PATH.
+        candidates.Add("/opt/homebrew/bin/pdfsig");
+        candidates.Add("/usr/local/bin/pdfsig");
+        candidates.Add("/usr/bin/pdfsig");
+
+        foreach (var candidate in candidates)
+        {
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        return null;
+    }
+
     // ── argument validation ─────────────────────────────────────────────────
 
     [Fact]
