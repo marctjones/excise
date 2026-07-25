@@ -498,16 +498,27 @@ internal partial class RenderContext
         // bounds (the only pixels the loop below ever reads), not the full page.
         // The mask canvas gets the same total matrix post-translated by the
         // integer offset (-left, -top); an integer pixel translation leaves
-        // Skia's antialiased coverage of every in-window pixel byte-identical
-        // to the previous full-page mask. Deliberately NOT intersected with the
-        // canvas clip: the previous full-page mask ignored the clip too, and
-        // shrinking to the clip would change which pixels composite.
-        var maskWidth = right - left;
-        var maskHeight = bottom - top;
+        // Skia's antialiased fill coverage of every in-window pixel
+        // byte-identical to the previous full-page mask. Deliberately NOT
+        // intersected with the canvas clip: the previous full-page mask ignored
+        // the clip too, and shrinking to the clip would change which pixels
+        // composite.
+        //
+        // Strokes keep the full root-bitmap surface: Skia's dash path effect
+        // consumes the surface cull rect while segmenting the dash, so a
+        // smaller surface changes dash phase accumulation and thus coverage
+        // (observed as pixel diffs on dashed DeviceCMYK strokes). They still
+        // benefit from mask reuse, the window-only clear, and the bulk span
+        // read below.
+        var boundMaskToWindow = style == SKPaintStyle.Fill && pathEffect == null;
+        var maskOriginX = boundMaskToWindow ? left : 0;
+        var maskOriginY = boundMaskToWindow ? top : 0;
+        var maskWidth = boundMaskToWindow ? right - left : _rootBitmap.Width;
+        var maskHeight = boundMaskToWindow ? bottom - top : _rootBitmap.Height;
         var mask = GetDeviceCmykBlendMask(maskWidth, maskHeight);
         var maskMatrix = matrix;
-        maskMatrix.TransX -= left;
-        maskMatrix.TransY -= top;
+        maskMatrix.TransX -= maskOriginX;
+        maskMatrix.TransY -= maskOriginY;
         using (var maskCanvas = new SKCanvas(mask))
         using (var maskPaint = new SKPaint
         {
@@ -532,7 +543,18 @@ internal partial class RenderContext
         {
             if (pathEffect != null)
                 maskPaint.PathEffect = pathEffect;
+
+            // Clear only the pixels the loop below reads. The draw itself stays
+            // unclipped so the surface-wide cull rect (and therefore dash
+            // segmentation) is untouched; stale pixels the path may repaint
+            // outside the window are never read.
+            maskCanvas.Save();
+            maskCanvas.ClipRect(
+                SKRect.Create(left - maskOriginX, top - maskOriginY, right - left, bottom - top),
+                SKClipOperation.Intersect,
+                antialias: false);
             maskCanvas.Clear(SKColors.Transparent);
+            maskCanvas.Restore();
             maskCanvas.SetMatrix(maskMatrix);
             maskCanvas.DrawPath(path, maskPaint);
         }
@@ -556,10 +578,10 @@ internal partial class RenderContext
         var rootPixels = GetRootPixelSpan();
         for (var y = top; y < bottom; y++)
         {
-            var maskRowStart = (y - top) * maskRowBytes;
+            var maskRowStart = (y - maskOriginY) * maskRowBytes;
             for (var x = left; x < right; x++)
             {
-                var maskAlpha = maskPixels[maskRowStart + ((x - left) * 4) + 3];
+                var maskAlpha = maskPixels[maskRowStart + ((x - maskOriginX) * 4) + 3];
                 if (maskAlpha == 0)
                     continue;
 
