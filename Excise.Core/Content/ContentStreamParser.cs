@@ -39,8 +39,10 @@ public class ContentStreamParser
     /// ⚠️ Redaction and text extraction rely on the metadata pass and MUST
     /// keep the default (true): LetterFinder/GlyphRemover match on the
     /// decoded operator text and bounds this pass produces.
+    /// Internal — a parser tuning option, not a public SemVer commitment;
+    /// Excise.Rendering reaches it via InternalsVisibleTo (see #598).
     /// </summary>
-    public bool ComputeOperatorMetadata { get; set; } = true;
+    internal bool ComputeOperatorMetadata { get; set; } = true;
 
     /// <summary>
     /// Upper bound on an inline image's data scan when no <c>/L</c> length is
