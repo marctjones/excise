@@ -4881,6 +4881,37 @@ public class SkiaRendererTests
     }
 
     [Fact]
+    public void RenderPage_Type3Font_NonzeroWyOperand_IsIgnored_GlyphsStayOnBaseline()
+    {
+        // ISO 32000-1 Table 113: d0/d1's wy operand "shall be 0" — Type 3
+        // fonts are simple fonts, always written horizontally (vertical
+        // writing exists only through Type 0 composite fonts, and Table 117
+        // limits CIDFont subtypes to CIDFontType0/2, so a Type 3 font can
+        // never be a vertical descendant). A nonzero wy is therefore
+        // spec-invalid dead weight: with the required /Widths present,
+        // pdftocairo, Ghostscript AND mutool all keep the second glyph on
+        // the baseline (probed 2026-07; only gs's PostScript setcharwidth
+        // heritage consumes wy, and only in the doubly-malformed
+        // missing-/Widths case where the three references already disagree
+        // with each other). excise ignores wy and advances by wx alone.
+        var pdfData = CreateType3FixturePdf(
+            "0 0 0 rg BT /F1 24 Tf 100 120 Td <4141> Tj ET",
+            new[] { ("A", "500 300 d0 0 0 400 700 re f") },
+            encodingDifferences: "65 /A",
+            widthsClause: "/FirstChar 65 /LastChar 65 /Widths [500] ");
+        using var doc = PdfDocument.Open(pdfData);
+
+        using var bitmap = new SkiaRenderer().RenderPage(doc.GetPage(1));
+
+        var secondGlyphBaseline = Type3PixelAtPt(bitmap, 116, 121.5);
+        secondGlyphBaseline.Red.Should().BeLessThan(100,
+            "a nonzero (spec-invalid) wy must not lift the second glyph off the baseline");
+        var raisedPosition = Type3PixelAtPt(bitmap, 116, 139);
+        raisedPosition.Red.Should().BeGreaterThan(200,
+            "nothing may paint where a wy-advanced (raised) second glyph would sit");
+    }
+
+    [Fact]
     public void RenderPage_Type3Font_WidthsOverridesCharProcWx()
     {
         // /Widths [250] disagrees with the CharProc's d0 wx (500). ISO 32000-1
