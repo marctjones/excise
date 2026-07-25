@@ -40,6 +40,21 @@ public class ContentOperator
     public string? TextContent { get; internal set; }
 
     /// <summary>
+    /// For text-showing operators (Tj/TJ/'/") parsed with operator metadata:
+    /// the total pen displacement this operator produced along the writing
+    /// direction, in TJ-adjustment units (thousandths of the active font
+    /// size, §9.4.3; horizontal scaling excluded because a TJ number is
+    /// itself scaled by Th at execution, so the factor cancels). Positive =
+    /// forward advance. Under the same ambient text state, <c>[-value] TJ</c>
+    /// replays the advance exactly — which is how a redaction that removes
+    /// this operator keeps later runs in the same BT block from shifting
+    /// (issue #758). Null when unknown: metadata pass disabled, operator
+    /// built synthetically, or a degenerate zero font size makes the
+    /// spacing terms inexpressible as a TJ number.
+    /// </summary>
+    internal double? TextAdvanceThousandths { get; set; }
+
+    /// <summary>
     /// For inline-image operators (<c>BI</c>), the raw binary image data
     /// that appeared between <c>ID</c> and <c>EI</c> in the source content
     /// stream. The single <see cref="Operands"/> entry holds the image

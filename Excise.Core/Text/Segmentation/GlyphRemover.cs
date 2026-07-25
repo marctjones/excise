@@ -192,13 +192,88 @@ public class GlyphRemover
             // survive so the kept-as-is text-ops keep their positioning.
             for (int idx = block.BtIndex; idx <= block.EtIndex; idx++)
             {
-                if (intersectingTextOpIndices.Contains(idx)) continue;
+                if (intersectingTextOpIndices.Contains(idx))
+                {
+                    // #758: a removed text-op's pen advance (and, for '/",
+                    // its line-move/spacing side effects) must still be
+                    // consumed, or every later run in this block that relies
+                    // on the accumulated §9.4.4 pen position collapses back
+                    // to the last explicit positioning operator. Emits ONLY
+                    // geometry/state operators — never text.
+                    EmitRemovedOperatorCompensation(operations, block, idx, output);
+                    continue;
+                }
                 output.Add(operations[idx]);
             }
         }
         // else: whole original block is dropped; reconstructed ops replace it.
 
         output.AddRange(reconstructed);
+    }
+
+    /// <summary>
+    /// Replace a removed text-showing operator with the non-text side effects
+    /// it had on the block (#758): the pen advance of the glyphs it drew, and
+    /// for <c>'</c>/<c>"</c> the implicit next-line move (and <c>"</c>'s
+    /// Tw/Tc settings) that later operators in the block depend on. The
+    /// advance is replayed as a numeric-only TJ adjustment — under the same
+    /// ambient Tf/Tz state (which the keep-as-is branch preserves) a TJ
+    /// number of −advance reproduces the removed op's §9.4.4 displacement
+    /// exactly, moves only the text matrix (not the line matrix), and draws
+    /// nothing. The removed text itself is NEVER re-emitted in any form.
+    /// </summary>
+    private static void EmitRemovedOperatorCompensation(
+        IReadOnlyList<ContentOperator> operations,
+        BlockInfo block,
+        int removedIndex,
+        List<ContentOperator> output)
+    {
+        var removed = operations[removedIndex];
+
+        // " sets word spacing and character spacing before showing text
+        // (§9.4.3) — text state that persists past the operator.
+        if (removed.Name == "\"" && removed.Operands.Count >= 3)
+        {
+            output.Add(new ContentOperator("Tw", new[] { removed.Operands[0] }));
+            output.Add(new ContentOperator("Tc", new[] { removed.Operands[1] }));
+        }
+
+        // ' and " both move to the next line (equivalent to T*) before
+        // showing text — a line-matrix move every subsequent operator in the
+        // block builds on.
+        if (removed.Name == "'" || removed.Name == "\"")
+            output.Add(new ContentOperator("T*"));
+
+        // Pen-advance compensation. Null means the parser couldn't express
+        // the advance (metadata pass off, synthetic op, degenerate state) —
+        // in that case fall back to today's behavior rather than guessing.
+        if (removed.TextAdvanceThousandths is not double advance) return;
+        if (Math.Abs(advance) < 1e-6) return;
+        if (!PenPositionMattersAfter(operations, block, removedIndex)) return;
+
+        output.Add(new ContentOperator("TJ", new PdfObject[]
+        {
+            new PdfArray(new PdfObject[] { new PdfReal(-advance) }),
+        }));
+    }
+
+    /// <summary>
+    /// True when some Tj/TJ after <paramref name="removedIndex"/> in the
+    /// block still depends on the accumulated pen position — i.e. appears
+    /// before any operator that resets the pen from the line matrix
+    /// (Td/TD/Tm/T*, or the implicit T* of '/").
+    /// </summary>
+    private static bool PenPositionMattersAfter(
+        IReadOnlyList<ContentOperator> operations, BlockInfo block, int removedIndex)
+    {
+        for (int i = removedIndex + 1; i <= block.EtIndex; i++)
+        {
+            var op = operations[i];
+            if (op.Name == "Tj" || op.Name == "TJ") return true;
+            if (op.Category == OperatorCategory.TextPositioning) return false;
+            if (op.Name == "'" || op.Name == "\"") return false;
+        }
+        return false;
     }
 
     private List<ContentOperator> BuildReconstructedOps(
