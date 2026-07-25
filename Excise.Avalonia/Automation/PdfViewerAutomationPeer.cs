@@ -29,6 +29,7 @@ internal sealed class PdfViewerAutomationPeer : ControlAutomationPeer
     private PdfPageTextAutomationPeer? _textPeer;
     private List<PdfAltTextAutomationPeer> _altPeers = new();
     private List<PdfActualTextAutomationPeer> _actualTextPeers = new();
+    private List<PdfStructRoleAutomationPeer> _rolePeers = new();
 
     public PdfViewerAutomationPeer(PdfViewerControl viewer)
         : base(viewer)
@@ -47,6 +48,7 @@ internal sealed class PdfViewerAutomationPeer : ControlAutomationPeer
         var result = new List<AutomationPeer> { _textPeer };
         result.AddRange(_altPeers);
         result.AddRange(_actualTextPeers);
+        result.AddRange(_rolePeers);
         var baseChildren = base.GetChildrenCore();
         if (baseChildren != null)
             result.AddRange(baseChildren);
@@ -62,11 +64,43 @@ internal sealed class PdfViewerAutomationPeer : ControlAutomationPeer
     /// </summary>
     private bool SyncDescriptionPeers()
     {
-        // Non-short-circuit: both sets must be brought current.
+        // Non-short-circuit: all sets must be brought current.
         return SyncPeerList(_viewer.GetAccessibleAltTexts(), ref _altPeers,
                    static (text, i) => new PdfAltTextAutomationPeer(text, i))
              | SyncPeerList(_viewer.GetAccessibleActualTexts(), ref _actualTextPeers,
-                   static (text, i) => new PdfActualTextAutomationPeer(text, i));
+                   static (text, i) => new PdfActualTextAutomationPeer(text, i))
+             | SyncRolePeers();
+    }
+
+    /// <summary>
+    /// Rebuild the structure-role children (headings, lists, tables) if the
+    /// current page's role set changed. Keyed on role + heading level + text
+    /// so a page change that swaps one heading for another of the same text
+    /// but a different level is still detected. Returns true when they changed.
+    /// </summary>
+    private bool SyncRolePeers()
+    {
+        var nodes = _viewer.GetAccessibleStructRoleNodes();
+        if (nodes.Count == _rolePeers.Count)
+        {
+            bool same = true;
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                if (!_rolePeers[i].Matches(nodes[i]))
+                {
+                    same = false;
+                    break;
+                }
+            }
+            if (same)
+                return false;
+        }
+
+        var replacement = new List<PdfStructRoleAutomationPeer>(nodes.Count);
+        for (int i = 0; i < nodes.Count; i++)
+            replacement.Add(new PdfStructRoleAutomationPeer(nodes[i], i));
+        _rolePeers = replacement;
+        return true;
     }
 
     private static bool SyncPeerList<TPeer>(
@@ -145,7 +179,7 @@ internal sealed class PdfPageTextAutomationPeer : UnrealizedElementAutomationPee
         _viewer = viewer;
     }
 
-    protected override string? GetNameCore() => _viewer.GetAccessiblePageText();
+    protected override string? GetNameCore() => _viewer.GetAccessibleReadingOrderText();
 
     protected override AutomationControlType GetAutomationControlTypeCore() =>
         AutomationControlType.Text;
@@ -283,4 +317,92 @@ internal sealed class PdfActualTextAutomationPeer : PdfStructTextAutomationPeer
     protected override string GetAutomationIdCore() => $"PdfActualText{_index}";
 
     protected override string GetLocalizedControlTypeCore() => "replacement text";
+}
+
+/// <summary>
+/// Synthetic peer for one structurally significant tagged-PDF element on the
+/// current page — a heading, list, list item, table, row, or cell (issue
+/// #631). It maps the PDF structure role to the nearest Avalonia
+/// <see cref="AutomationControlType"/> and a spoken localized control type, so
+/// a screen reader can enumerate the document's structure and jump between
+/// headings. The element's text (<c>/ActualText</c> then <c>/Alt</c>) is the
+/// Name; it is empty for a tagged PDF that supplies neither, in which case the
+/// role alone is announced (the body glyphs need MCID-to-letter mapping to
+/// reach, a follow-up slice of #631).
+/// </summary>
+internal sealed class PdfStructRoleAutomationPeer : UnrealizedElementAutomationPeer
+{
+    private readonly AccessibleStructNode _node;
+    private readonly int _index;
+    private AutomationPeer? _parent;
+
+    public PdfStructRoleAutomationPeer(AccessibleStructNode node, int index)
+    {
+        _node = node;
+        _index = index;
+    }
+
+    /// <summary>True when this peer already represents the given node.</summary>
+    public bool Matches(AccessibleStructNode node) =>
+        _node.Role == node.Role
+        && _node.HeadingLevel == node.HeadingLevel
+        && string.Equals(_node.Text, node.Text, StringComparison.Ordinal);
+
+    protected override string? GetNameCore() => _node.Text;
+
+    protected override AutomationControlType GetAutomationControlTypeCore() =>
+        _node.Role switch
+        {
+            AccessibleStructRole.Heading => AutomationControlType.Text,
+            AccessibleStructRole.List => AutomationControlType.List,
+            AccessibleStructRole.ListItem => AutomationControlType.ListItem,
+            AccessibleStructRole.Table => AutomationControlType.Table,
+            AccessibleStructRole.TableRow => AutomationControlType.DataItem,
+            AccessibleStructRole.TableHeaderCell => AutomationControlType.Header,
+            AccessibleStructRole.TableCell => AutomationControlType.Text,
+            _ => AutomationControlType.Text,
+        };
+
+    protected override string GetLocalizedControlTypeCore() =>
+        _node.Role switch
+        {
+            AccessibleStructRole.Heading =>
+                _node.HeadingLevel >= 1 ? $"heading level {_node.HeadingLevel}" : "heading",
+            AccessibleStructRole.List => "list",
+            AccessibleStructRole.ListItem => "list item",
+            AccessibleStructRole.Table => "table",
+            AccessibleStructRole.TableRow => "table row",
+            AccessibleStructRole.TableHeaderCell => "table header cell",
+            AccessibleStructRole.TableCell => "table cell",
+            _ => "content",
+        };
+
+    /// <summary>The structure role this peer exposes. Used by tests.</summary>
+    public AccessibleStructRole Role => _node.Role;
+
+    /// <summary>The heading level (1–6), or 0 for non-headings. Used by tests.</summary>
+    public int HeadingLevel => _node.HeadingLevel;
+
+    protected override string GetClassNameCore() => "PdfStructRole";
+
+    protected override string GetAutomationIdCore() => $"PdfStructRole{_index}";
+
+    protected override string? GetAcceleratorKeyCore() => null;
+
+    protected override string? GetAccessKeyCore() => null;
+
+    protected override AutomationPeer? GetLabeledByCore() => null;
+
+    protected override AutomationPeer? GetParentCore() => _parent;
+
+    // Same synthetic-node parenting contract as the other peers: accepting the
+    // parent set by ControlAutomationPeer's child wiring links this node in.
+    protected override bool TrySetParent(AutomationPeer? parent)
+    {
+        _parent = parent;
+        return true;
+    }
+
+    protected override bool IsContentElementCore() => true;
+    protected override bool IsControlElementCore() => true;
 }
