@@ -94,6 +94,32 @@ public class AnnotationAuthoringWorkflowTests : IDisposable
             .Should().Contain(a => a.Subtype == PdfAnnotationSubtype.Text && a.Contents == "Office review note");
     }
 
+    [Fact]
+    public void AnnotationWorkflowService_AddSquareAndCircle_CreatePersistableShapesWithAppearance()
+    {
+        var filePath = CreateBlankPdf("shape-source.pdf");
+        var outputPath = Path.Combine(_tempDir, "shape-output.pdf");
+        var documentService = CreateLoadedDocumentService(filePath);
+        var workflow = new AnnotationWorkflowService(
+            documentService, NullLogger<AnnotationWorkflowService>.Instance);
+
+        workflow.AddSquare(1, new PdfRectangle(100, 500, 300, 600), "Square note");
+        workflow.AddCircle(1, new PdfRectangle(360, 300, 440, 360), "Circle note");
+
+        documentService.SaveDocument(outputPath);
+        using var reopened = PdfDocument.Open(File.ReadAllBytes(outputPath));
+        var annotations = reopened.GetPage(1).GetAnnotations();
+
+        annotations.Should().Contain(a =>
+            a.Subtype == PdfAnnotationSubtype.Square &&
+            a.Contents == "Square note" &&
+            a.HasAppearance);
+        annotations.Should().Contain(a =>
+            a.Subtype == PdfAnnotationSubtype.Circle &&
+            a.Contents == "Circle note" &&
+            a.HasAppearance);
+    }
+
     public void Dispose()
     {
         try
