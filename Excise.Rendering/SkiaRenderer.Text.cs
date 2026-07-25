@@ -145,7 +145,14 @@ internal partial class RenderContext
                 // (2-byte big-endian uint16 per CID); without applying it,
                 // glyph IDs miss every glyph in the subset and pages render
                 // .notdef-only blanks.
-                var cidToGidObj = cidFont.GetOptional("CIDToGIDMap");
+                // §9.7.4.2: /CIDToGIDMap "shall be used only with
+                // CIDFontType2". On a CIDFontType0 descendant the embedded
+                // CFF charset governs glyph selection (CffCidToGlyph below);
+                // honoring a bogus map here would override the correct
+                // charset mapping with producer garbage. #515
+                var cidToGidObj = cidFont.GetNameOrNull("Subtype") == "CIDFontType0"
+                    ? null
+                    : cidFont.GetOptional("CIDToGIDMap");
                 if (cidToGidObj != null)
                 {
                     var resolved = _page.Document.Resolve(cidToGidObj);
@@ -2479,10 +2486,28 @@ internal partial class RenderContext
             var cid = cids[i];
             ushort gid;
             if (currentFont.CidToGidMap != null && cid >= 0 && cid < currentFont.CidToGidMap.Length)
+            {
+                // In-range entries of a /CIDToGIDMap stream define the
+                // mapping (§9.7.4.2) — including explicit 0 (.notdef).
+                // A CID BEYOND the stream's extent falls through to the
+                // identity fallback below: that is the unanimous reference
+                // behavior (mutool, poppler AND Ghostscript all render an
+                // out-of-range CID as GID == CID — verified empirically on
+                // the CidGlyphSelectionMatrixTests truncated-map fixture,
+                // where all three draw the real glyph, not .notdef). #515
                 gid = currentFont.CidToGidMap[cid];
-            else if (currentFont.CffCidToGlyph != null
-                     && currentFont.CffCidToGlyph.TryGetValue(cid, out var cffGid))
-                gid = (ushort)cffGid;
+            }
+            else if (currentFont.CffCidToGlyph != null)
+            {
+                // CID-keyed CFF: the embedded charset DEFINES the mapping.
+                // A CID absent from the charset has no glyph — .notdef, as
+                // FreeType-based references resolve it. Identity fall-through
+                // would index the CFF's glyph order with a CID from an
+                // unrelated space and draw an arbitrary wrong glyph. #515
+                gid = currentFont.CffCidToGlyph.TryGetValue(cid, out var cffGid)
+                    ? (ushort)cffGid
+                    : (ushort)0;
+            }
             else if (currentFont.CidUseUnicodeCmap)
                 gid = (ushort)(font.GetGlyph(cid) is var unicodeGid && unicodeGid != 0 ? unicodeGid : cid);
             else
