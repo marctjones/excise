@@ -247,6 +247,53 @@ public class RegisteredCMapTests
         }
     }
 
+    [Fact] // #715 redaction-security proof: if excise now READS a registered-name
+           // /ToUnicode font, it must also REDACT it (CLAUDE.md limitation #1).
+    public void ToUnicodeRegisteredName_RedactText_RemovesTargetAndKeepsRest()
+    {
+        // Same configuration as ToUnicodeRegisteredName_DecodesViaThatOrdering:
+        // /Encoding /Identity-H, /CIDSystemInfo Ordering (Identity), and the
+        // registered NAME /UniJIS-UCS2-H as /ToUnicode — the only ordering
+        // signal. Codes = CIDs 843/845/847/849/851, which Adobe-Japan1-UCS2
+        // maps (bfrange <034a> <039c> <3041>) to あ/い/う/え/お.
+        var pdf = BuildType0Pdf("Identity-H", "Identity", "034B034D034F03510353",
+            toUnicodeNameOrRef: "/UniJIS-UCS2-H");
+        var input = Path.Combine(Path.GetTempPath(), $"rcm-touni-{Guid.NewGuid():N}.pdf");
+        var output = Path.Combine(Path.GetTempPath(), $"rcm-touni-red-{Guid.NewGuid():N}.pdf");
+        try
+        {
+            File.WriteAllBytes(input, pdf);
+            using (var doc = PdfDocument.Open(input))
+            {
+                doc.RedactText("あい").Should().Be(1,
+                    "pre-#715 the name /ToUnicode was ignored, extraction was garbage, and " +
+                    "RedactText silently matched nothing — extraction coverage bounds redaction");
+                doc.Save(output);
+            }
+
+            using var redacted = PdfDocument.Open(output);
+            var text = new TextExtractor(redacted.GetPage(1)).ExtractText();
+            text.Should().NotContain("あ").And.NotContain("い",
+                "the redacted glyphs must be gone from the content stream");
+            text.Should().Contain("うえお",
+                "adjacent kept glyphs must survive with their original Identity-H code bytes");
+
+            // Carrier-agnostic saved-bytes check (CLAUDE.md): the secret must
+            // not appear in ANY uncompressed carrier, in any of the encodings
+            // a PDF can restate text in.
+            var saved = File.ReadAllBytes(output);
+            var haystack = Encoding.ASCII.GetString(saved)
+                + Encoding.BigEndianUnicode.GetString(saved)
+                + Encoding.UTF8.GetString(saved);
+            haystack.Should().NotContain("あい");
+        }
+        finally
+        {
+            File.Delete(input);
+            File.Delete(output);
+        }
+    }
+
     // ---------- corpus ----------
 
     [Fact] // real-world fixture: /Encoding /90ms-RKSJ-H, no /ToUnicode, non-embedded
