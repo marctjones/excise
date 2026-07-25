@@ -1047,7 +1047,10 @@ public class MainWindowViewModelTests
         summary.Should().Contain("ByteRange structure: passed");
         summary.Should().Contain("Signed byte-range digest: passed");
         summary.Should().Contain("Covers whole document: yes");
-        summary.Should().Contain("Certificate trust chain: not evaluated by the OS trust store.");
+        // Trust chain is a separate, explicit line (#466); revocation stays a
+        // stated limitation because CRL/OCSP would require network access.
+        summary.Should().Contain("Certificate trust chain: not evaluated");
+        summary.Should().Contain("certificate revocation (CRL/OCSP) is not checked");
     }
 
     [Fact]
