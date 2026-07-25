@@ -37,6 +37,7 @@ partial class Program
             CreateGuiDisplayHotspotsCommand(),
             CreateCorpusHotspotsCommand(),
             CreateBenchmarkSuiteCommand(),
+            CreateProfileWorkflowsCommand(),
         };
 
         var parserExitCode = rootCommand.Parse(args).Invoke();

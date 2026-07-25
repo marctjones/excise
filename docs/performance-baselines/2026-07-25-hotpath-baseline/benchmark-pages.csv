@@ -1,0 +1,9 @@
+path,page,status,exciseRenderMs,exciseTextExtractMs,cliRenderStatus,cliRenderMs,cliRenderPass,cliDiffFraction,referenceCount,passingReferenceCount,bestReference,bestDiffFraction,bestMae,bestRmse,bestSsim
+"cdc-vis-covid-19.pdf",1,"PASS_REFERENCE",82,15,"",,,,3,3,"pdftocairo",0.005464,2.619025,12.01081,0.978839
+"cdc-vis-covid-19.pdf",2,"PASS_REFERENCE",28,7,"",,,,3,3,"pdftocairo",0.004199,2.673642,10.590342,0.982883
+"irs-1040-instructions.pdf",1,"PASS_REFERENCE",33,60,"",,,,3,3,"pdftocairo",0.011476,5.852318,18.728253,0.967249
+"irs-1040-instructions.pdf",2,"PASS_REFERENCE",6,3,"",,,,3,3,"pdftocairo",0.002955,0.812866,6.880201,0.972109
+"irs-1040-instructions.pdf",3,"PASS_REFERENCE",8,0,"",,,,3,3,"pdftocairo",0.000028,1.225389,5.368618,0.994155
+"irs-1040-instructions.pdf",4,"PASS_REFERENCE",13,5,"",,,,3,3,"mutool",0.004331,2.866996,10.278011,0.965822
+"irs-1040-instructions.pdf",5,"PASS_REFERENCE",6,0,"",,,,3,3,"pdftocairo",0.034397,6.293837,28.284358,0.789895
+"irs-1040-instructions.pdf",6,"PASS_REFERENCE",15,2,"",,,,3,3,"pdftocairo",0.003381,2.979394,9.659946,0.981426

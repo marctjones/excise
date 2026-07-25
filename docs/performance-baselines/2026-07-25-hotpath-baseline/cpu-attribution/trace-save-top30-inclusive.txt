@@ -1,0 +1,31 @@
+Top 30 Functions (Inclusive)                                                  Inclusive           Exclusive           
+1.  (Non-Activities)                                                          100%                0%                  
+2.  Threads                                                                   100%                0%                  
+3.  Program.<Main>(class System.String[])                                     100%                0%                  
+4.  Program.Main(class System.String[])                                       100%                0%                  
+5.  Program.RunAsync(class System.String[])                                   100%                0.19%               
+6.  Program+<>c__DisplayClass229_0.<CreateProfileWorkflowsCommand>b__0(cla    99.05%              0%                  
+7.  AnonymousSynchronousCommandLineAction.Invoke(class System.CommandLine.    99.05%              0%                  
+8.  Command+<>c__DisplayClass30_0.<SetAction>b__0(class System.CommandLine    99.05%              0%                  
+9.  ParseResult.Invoke(class System.CommandLine.InvocationConfiguration)      99.05%              0%                  
+10. InvocationPipeline.Invoke(class System.CommandLine.ParseResult)           99.05%              0%                  
+11. Program.RunWorkflowProfile(class System.String,class System.String,int    98.96%              0.28%               
+12. Program.ProfilePdfWorkflows(class System.String,class System.String,in    96.78%              0%                  
+13. Program+<>c__DisplayClass232_0.<ProfilePdfWorkflows>g__Measure|0(class    96.78%              0%                  
+14. Program+<>c__DisplayClass232_0.<ProfilePdfWorkflows>b__2()                92.43%              0%                  
+15. PdfDocument.SaveToBytes()                                                 91.3%               0%                  
+16. PdfDocument.SaveToBytes(class Excise.Core.Security.PdfEncryptionOption    91.3%               0%                  
+17. PdfDocument.Save(class System.IO.Stream,class Excise.Core.Security.Pdf    91.3%               0%                  
+18. PdfDocumentWriter.Write(class System.IO.Stream)                           91.3%               0.09%               
+19. PdfDocumentWriter.WriteObjects(class System.IO.BinaryWriter)              90.24%              0.87%               
+20. PdfDocument.GetObject(int32)                                              80.19%              0.09%               
+21. PdfDocument.ComputeReachableObjectsFrom(class System.Collections.Gener    78.97%              0.19%               
+22. PdfDocument.ComputeSaveReachableObjects()                                 78.97%              0%                  
+23. PdfDocument.GetObjectFromStream(int32,int32)                              67.29%              0.28%               
+24. PdfParser.ParseObjectFromToken(value class Excise.Core.Parsing.PdfToke    65.75%              0.19%               
+25. PdfParser.ParseDictionaryOrStream()                                       64.81%              0%                  
+26. PdfParser.ParseDictionaryContents()                                       64.62%              0.28%               
+27. Thread.<PollGC>g__PollGCWorker|67_0()                                     60.39%              60.39%              
+28. Array.Copy(class System.Array,class System.Array,int32)                   29.68%              0.47%               
+29. PdfParser.ParseObject()                                                   25.52%              0%                  
+30. PdfDictionary.set_Item(class Excise.Core.Primitives.PdfName,class Exci    18.86%              0%                  
