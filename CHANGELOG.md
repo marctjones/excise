@@ -34,6 +34,30 @@ semantic versioning.
   pdftocairo/Ghostscript differentials pinning the out-of-range fallback.
 
 ### Added
+- **XFDF annotation import/export round-trip** (#626, final headline slice) —
+  `Excise.Core.Forms.XfdfSerializer` speaks Adobe XFDF 3.0, the interchange
+  dialect behind Acrobat/Foxit "Export comments as data file" review
+  workflows. `ExportAnnotations` serializes every markup/geometry subtype the
+  reader surfaces (text, freetext, line, square, circle, polygon, polyline,
+  highlight, underline, squiggly, strikeout, stamp, caret, ink, watermark,
+  redact) with the spec's attributes — page, rect, `#RRGGBB` color,
+  interior-color, flags, name/title/subject, PDF-format dates, opacity,
+  border width/style/dashes — and subtype geometry (raw 8-number `coords`
+  quads, line `start`/`end`, `vertices`, `inklist`/`gesture` strokes,
+  freetext `justification` + `defaultappearance`). `ImportAnnotations` adds
+  the described annotations to a document: subtypes with an authoring method
+  are created through `PdfAnnotationAuthoring` so they carry baked `/AP`
+  appearance streams; text-markup/line/polygon/polyline/caret become
+  spec-correct dictionaries; XFDF identity (name, dates, flags, subject,
+  opacity) overrides authoring defaults so a round-trip preserves it, and
+  unimportable elements are reported in `XfdfImportResult.Skipped` rather
+  than failing the import. Round-trip is the proof: authored annotations
+  export → re-import into a fresh document and match on subtype, rect,
+  geometry, color, contents, author and `/NM`; the interop gate parses a
+  spec-derived Acrobat-dialect fixture (multi-quad `coords`,
+  `contents-richtext`, `f`/`ids` elements, timezone dates) — not
+  excise-as-oracle. Widget form data (`<fields>`) and the PDF-syntax FDF
+  container remain out of scope.
 - **Apply self-signed PDF signatures — PKCS#7/CMS detached** (#623, first
   slice) — `SignatureApplicationService` signs a document with a self-signed
   or locally-held certificate: `/Sig` dictionary (`/Filter /Adobe.PPKLite`,
