@@ -34,6 +34,16 @@ semantic versioning.
   pdftocairo/Ghostscript differentials pinning the out-of-range fallback.
 
 ### Added
+- **FreeText annotation authoring** (#626) — `AddFreeTextAnnotation` writes
+  ISO 32000-2 §12.5.6.6 text-box annotations: `/Contents`, a `/DA` default
+  appearance string (color + base-14 Helvetica + size), `/Q` quadding
+  (left/center/right via the new `PdfFreeTextQuadding` enum), optional border
+  (`/BS`) and background fill (`/C`) — plus a baked, self-contained `/AP /N`
+  appearance stream that draws the text (word-wrapped with real Helvetica
+  advance widths, quadding-aware) so the box renders identically in excise,
+  Acrobat, mutool, and pdftocairo (verified by independent-renderer
+  differential tests). Surfaced in the app as
+  `AnnotationWorkflowService.AddFreeText`.
 - **Square and Circle annotation authoring** (#626, first slice of #271) —
   `AddSquareAnnotation` / `AddCircleAnnotation` write ISO 32000-2 §12.5.6.8
   shape annotations with border color (`/C`), optional interior fill (`/IC`),
