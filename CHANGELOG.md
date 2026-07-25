@@ -34,6 +34,15 @@ semantic versioning.
   pdftocairo/Ghostscript differentials pinning the out-of-range fallback.
 
 ### Added
+- **Ink (freehand) annotation authoring** (#626) — `AddInkAnnotation` writes
+  ISO 32000-2 §12.5.6.13 ink annotations from one or more polylines:
+  `/InkList` (one inner array of x/y pairs per stroke), `/Rect` (the bounding
+  box of every point, padded by half the pen width), stroke color (`/C`) and
+  pen width (`/BS`) — plus a baked, self-contained `/AP /N` appearance stream
+  that strokes each polyline with round caps and joins, so the drawing
+  renders identically in excise, Acrobat, mutool, and pdftocairo (verified by
+  independent-renderer differential tests). Surfaced in the app as
+  `AnnotationWorkflowService.AddInk`.
 - **FreeText annotation authoring** (#626) — `AddFreeTextAnnotation` writes
   ISO 32000-2 §12.5.6.6 text-box annotations: `/Contents`, a `/DA` default
   appearance string (color + base-14 Helvetica + size), `/Q` quadding
