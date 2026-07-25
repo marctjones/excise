@@ -426,6 +426,17 @@ internal partial class RenderContext
     // text object's fill colour (ISO 32000-1 §9.6.5). Reset per glyph in
     // RenderType3Glyph; set by the d1 operator.
     private bool _type3GlyphColorLocked;
+    // Device-space accumulator for the painted coverage of the Type 3 glyph
+    // currently executing under a clipping text render mode (Tr 4-7, #514).
+    // Type 3 glyphs have no outline to hand the text-clip machinery, so the
+    // shapes their CharProcs paint (path fills, stroke outlines, image
+    // bounds) are collected here and folded into _pendingTextClipPath when
+    // the glyph finishes. Null whenever no clipping Type 3 glyph is running.
+    private SKPath? _type3ClipCollector;
+    // True while a CharProc is executed ONLY for its clip contribution
+    // (Tr 7, clip-without-paint). Painting operators still contribute their
+    // geometry to _type3ClipCollector but must not mark the page.
+    private bool _type3ClipOnlyPass;
     private readonly Dictionary<(int ObjectNumber, int Generation, int TargetWidth, int TargetHeight), SoftMaskAlpha?> _softMaskAlphaByReference = new();
     private readonly Dictionary<Excise.Core.Primitives.PdfStream, Dictionary<(int TargetWidth, int TargetHeight), SoftMaskAlpha?>> _softMaskAlphaByStream =
         new(ReferenceEqualityComparer.Instance);
@@ -524,6 +535,14 @@ internal partial class RenderContext
         }
 
         if (IsOptionalContentSuppressed && SuppressHiddenOptionalContentPaint(op.Name))
+            return;
+
+        // Clip-only Type 3 glyph pass (Tr 7, #514): path-painting and image
+        // operators fall through — their handlers collect clip coverage
+        // before skipping the actual draw. A shading fills the whole current
+        // clip region rather than a describable shape, so it is dropped here
+        // (its coverage is not collected; see RenderType3Glyph).
+        if (_type3ClipOnlyPass && op.Name == "sh")
             return;
 
         // Inside an uncolored (d1) Type 3 glyph, colour-setting operators are
