@@ -199,6 +199,103 @@ public class Type3RenderingDifferentialTests
         });
     }
 
+    // ---- #514 Tr 4-7 text clipping: generated spec fixtures ----
+    // Primary evidence is the spec-fixture unit tests in SkiaRendererTests
+    // (RenderPage_Type3Font_Tr*); the tests below corroborate the same
+    // fixtures against reference renderers that are not excise.
+    //
+    // Reference agreement, probed before implementation — the oracles
+    // DISAGREE three ways on Type 3 text clipping, so each test asserts only
+    // what its reference actually corroborates:
+    //   - pdftocairo (poppler): Tr 7 clips subsequent paint to the Type 3
+    //     glyph shape and paints no glyph ink — full spec behaviour, matches
+    //     excise. On Tr 4 poppler fills the glyph but does NOT install the
+    //     clip (the clip-away half is asserted only in the unit tests).
+    //   - mutool: fills on Tr 4 (corroborating the paint half) but ignores
+    //     the Type 3 clip contribution in every mode.
+    //   - Ghostscript: non-spec twice over — it paints the glyph even under
+    //     Tr 7 (clip-only must be invisible) and then installs an EMPTY
+    //     clip, erasing all subsequent paint. No gs test for these fixtures.
+
+    [Fact]
+    public void Type3_Tr7ClipOnly_MatchesPdftocairo()
+    {
+        Assert.SkipUnless(PdftocairoReferenceRenderer.IsAvailable, "pdftocairo not installed.");
+
+        // 48pt Type 3 glyph at (100,400) under Tr 7 (clip-only): the CharProc
+        // fills a 400x700-unit rect -> clip shape x [100..119.2],
+        // y [400..433.6]. The red rect painted after the text object covers
+        // 90..230 x 380..470 and must survive ONLY inside the glyph shape.
+        var pdfData = SkiaRendererTests.CreateType3FixturePdf(
+            "0 0 0 rg BT /F1 48 Tf 7 Tr 100 400 Td <41> Tj ET 1 0 0 rg 90 380 140 90 re f",
+            new[] { ("A", "500 0 d0 0 0 400 700 re f") },
+            encodingDifferences: "65 /A",
+            widthsClause: "/FirstChar 65 /LastChar 65 /Widths [500] ");
+
+        WithTempPdf(pdfData, path =>
+        {
+            using var reference = PdftocairoReferenceRenderer.RenderPage(path, 1, Dpi);
+            Assert.SkipWhen(reference == null, "pdftocairo declined to render the fixture.");
+
+            using var doc = PdfDocument.Open(pdfData);
+            using var excise = new SkiaRenderer().RenderPage(
+                doc.GetPage(1),
+                new RenderOptions { Dpi = Dpi, BackgroundColor = SKColors.White });
+
+            foreach (var (bitmap, who) in new[] { (reference!, "pdftocairo"), (excise, "excise") })
+            {
+                RedPixelsInPtRect(bitmap, 101f, 401f, 118f, 432.5f).Should().BeGreaterThan(100,
+                    $"{who} must let the subsequent red fill through inside the Tr 7 glyph shape");
+                RedPixelsInPtRect(bitmap, 125f, 385f, 225f, 465f).Should().BeLessThan(20,
+                    $"{who} must clip the red fill away right of the glyph shape");
+                RedPixelsInPtRect(bitmap, 91f, 385f, 98.5f, 465f).Should().BeLessThan(10,
+                    $"{who} must clip the red fill away left of the glyph shape");
+                DarkPixelsInPtRect(bitmap, 101f, 401f, 118f, 432.5f).Should().BeLessThan(10,
+                    $"{who} must not paint the Tr 7 glyph itself (clip-only, invisible)");
+            }
+        });
+    }
+
+    [Fact]
+    public void Type3_Tr4PaintsGlyphAndOverlay_MatchesPdftocairoAndMutool()
+    {
+        Assert.SkipUnless(PdftocairoReferenceRenderer.IsAvailable, "pdftocairo not installed.");
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed.");
+
+        // Tr 4 = fill + clip. Both references corroborate the PAINT half:
+        // the glyph keeps its own black fill left of the red rect
+        // ([100..110]) and the later red fill covers the overlap
+        // ([110..119.2]). The clip-away half is excise-vs-spec only (see the
+        // probe notes above) and lives in the unit tests.
+        var pdfData = SkiaRendererTests.CreateType3FixturePdf(
+            "0 0 0 rg BT /F1 48 Tf 4 Tr 100 400 Td <41> Tj ET 1 0 0 rg 110 380 120 90 re f",
+            new[] { ("A", "500 0 d0 0 0 400 700 re f") },
+            encodingDifferences: "65 /A",
+            widthsClause: "/FirstChar 65 /LastChar 65 /Widths [500] ");
+
+        WithTempPdf(pdfData, path =>
+        {
+            using var cairo = PdftocairoReferenceRenderer.RenderPage(path, 1, Dpi);
+            Assert.SkipWhen(cairo == null, "pdftocairo declined to render the fixture.");
+            using var mutool = MutoolReferenceRenderer.RenderPage(path, 1, Dpi);
+            Assert.SkipWhen(mutool == null, "mutool declined to render the fixture.");
+
+            using var doc = PdfDocument.Open(pdfData);
+            using var excise = new SkiaRenderer().RenderPage(
+                doc.GetPage(1),
+                new RenderOptions { Dpi = Dpi, BackgroundColor = SKColors.White });
+
+            foreach (var (bitmap, who) in new[]
+                     { (cairo!, "pdftocairo"), (mutool!, "mutool"), (excise, "excise") })
+            {
+                DarkPixelsInPtRect(bitmap, 101f, 401f, 108.5f, 432.5f).Should().BeGreaterThan(50,
+                    $"{who} must still FILL the Tr 4 glyph left of the red rect");
+                RedPixelsInPtRect(bitmap, 111.5f, 401f, 118f, 432.5f).Should().BeGreaterThan(50,
+                    $"{who} must paint the later red fill over the glyph inside the overlap");
+            }
+        });
+    }
+
     private static void WithTempPdf(byte[] pdfData, Action<string> body)
     {
         // Unique path per call — Excise.Rendering.Tests runs 4-way parallel.
@@ -232,6 +329,28 @@ public class Type3RenderingDifferentialTests
             {
                 var p = bitmap.GetPixel(x, y);
                 if (p.Red < 128 && p.Green < 128 && p.Blue < 128)
+                    count++;
+            }
+        return count;
+    }
+
+    // Counts red pixels (red fill visible through a clip) inside a PDF-point
+    // rectangle, same coordinate handling as DarkPixelsInPtRect.
+    private static int RedPixelsInPtRect(
+        SKBitmap bitmap, float x0Pt, float y0Pt, float x1Pt, float y1Pt)
+    {
+        var scale = Dpi / 72f;
+        var left = Math.Max(0, (int)(x0Pt * scale));
+        var right = Math.Min(bitmap.Width, (int)Math.Ceiling(x1Pt * scale));
+        var top = Math.Max(0, bitmap.Height - (int)Math.Ceiling(y1Pt * scale));
+        var bottom = Math.Min(bitmap.Height, bitmap.Height - (int)(y0Pt * scale));
+
+        var count = 0;
+        for (int y = top; y < bottom; y++)
+            for (int x = left; x < right; x++)
+            {
+                var p = bitmap.GetPixel(x, y);
+                if (p.Red > 180 && p.Green < 100 && p.Blue < 100)
                     count++;
             }
         return count;

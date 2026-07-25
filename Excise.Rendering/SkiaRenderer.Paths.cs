@@ -145,11 +145,116 @@ internal partial class RenderContext
         catch { return null; }   // never let a degenerate dash array abort rendering
     }
 
+    /// <summary>
+    /// Adds the device-space coverage of a path about to be painted inside a
+    /// Type 3 CharProc to the active text-clip collector (Tr 4-7, #514).
+    /// Fill coverage is the path itself; stroke coverage is the stroke's
+    /// fill outline. Device space makes the collected shape indifferent to
+    /// the CharProc's internal q/Q/cm churn — RenderType3Glyph maps it back
+    /// to the text object's user space once the glyph state is restored.
+    /// </summary>
+    private void CollectType3ClipCoverage(SKPath path, SKPaint? strokeGeometry)
+    {
+        if (_type3ClipCollector == null)
+            return;
+
+        SKPath? outline = null;
+        try
+        {
+            var source = path;
+            if (strokeGeometry != null)
+            {
+                outline = new SKPath();
+                if (!strokeGeometry.GetFillPath(path, outline))
+                    return;
+                source = outline;
+            }
+
+            using var deviceSpace = new SKPath();
+            source.Transform(_canvas.TotalMatrix, deviceSpace);
+            deviceSpace.FillType = source.FillType;
+            if (deviceSpace.IsEmpty)
+                return;
+
+            // Painting inside the CharProc is bounded by the clip in effect
+            // there — most importantly the d1 bbox clip — so the glyph's clip
+            // contribution must be bounded the same way. Intersecting via Op
+            // also resolves even-odd fill semantics into plain contours: the
+            // collector holds shapes from many operations under a single
+            // winding fill (matching ApplyPendingTextClipPath), where raw
+            // even-odd contours would have their holes fill back in.
+            var clipBounds = _canvas.DeviceClipBounds;
+            using var clipRectPath = new SKPath();
+            clipRectPath.AddRect(SKRect.Create(
+                clipBounds.Left, clipBounds.Top, clipBounds.Width, clipBounds.Height));
+            using var bounded = deviceSpace.Op(clipRectPath, SKPathOp.Intersect);
+            if (bounded != null)
+            {
+                if (!bounded.IsEmpty)
+                    _type3ClipCollector.AddPath(bounded, SKPathAddMode.Append);
+                return;
+            }
+
+            // Op failed (degenerate geometry): keep the unbounded shape —
+            // over-inclusive clip coverage is the safe fallback.
+            _type3ClipCollector.AddPath(deviceSpace, SKPathAddMode.Append);
+        }
+        finally
+        {
+            outline?.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Stroke parameters only, for computing stroke COVERAGE geometry via
+    /// GetFillPath — no color/blend, and deliberately no dash effect: a
+    /// dashed stroke's coverage is a subset of the solid outline, and an
+    /// over-inclusive clip shape is the safe approximation for the (already
+    /// pathological) dashed-stroke-inside-a-clipping-Type 3-glyph case.
+    /// </summary>
+    private SKPaint CreateStrokeGeometryPaint() => new()
+    {
+        Style = SKPaintStyle.Stroke,
+        StrokeWidth = ResolvePathStrokeWidth(),
+        StrokeCap = _state.LineCap switch
+        {
+            1 => SKStrokeCap.Round,
+            2 => SKStrokeCap.Square,
+            _ => SKStrokeCap.Butt
+        },
+        StrokeJoin = _state.LineJoin switch
+        {
+            1 => SKStrokeJoin.Round,
+            2 => SKStrokeJoin.Bevel,
+            _ => SKStrokeJoin.Miter
+        },
+        StrokeMiter = _state.MiterLimit
+    };
+
+    // Consumes _currentPath without painting — the tail of a clip-only
+    // Type 3 glyph pass (Tr 7) after its coverage has been collected.
+    private void DropCurrentPathUnpainted()
+    {
+        _currentPath?.Dispose();
+        _currentPath = null;
+    }
+
     private void StrokePath()
     {
         if (_currentPath == null) return;
 
         ApplyPendingClipToCurrentPath();
+
+        if (_type3ClipCollector != null)
+        {
+            using var geometry = CreateStrokeGeometryPaint();
+            CollectType3ClipCoverage(_currentPath, geometry);
+        }
+        if (_type3ClipOnlyPass)
+        {
+            DropCurrentPathUnpainted();
+            return;
+        }
 
         using var paint = new SKPaint
         {
@@ -207,6 +312,13 @@ internal partial class RenderContext
         ApplyPendingClipToCurrentPath();
         _currentPath.FillType = evenOdd ? SKPathFillType.EvenOdd : SKPathFillType.Winding;
 
+        CollectType3ClipCoverage(_currentPath, null);
+        if (_type3ClipOnlyPass)
+        {
+            DropCurrentPathUnpainted();
+            return;
+        }
+
         if (_state.FillPatternName != null)
         {
             RenderFillPattern(_currentPath);
@@ -243,6 +355,18 @@ internal partial class RenderContext
 
         ApplyPendingClipToCurrentPath();
         _currentPath.FillType = evenOdd ? SKPathFillType.EvenOdd : SKPathFillType.Winding;
+
+        if (_type3ClipCollector != null)
+        {
+            CollectType3ClipCoverage(_currentPath, null);
+            using var geometry = CreateStrokeGeometryPaint();
+            CollectType3ClipCoverage(_currentPath, geometry);
+        }
+        if (_type3ClipOnlyPass)
+        {
+            DropCurrentPathUnpainted();
+            return;
+        }
 
         // Fill first
         if (_state.FillPatternName == null || !RenderFillPattern(_currentPath))
