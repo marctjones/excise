@@ -657,4 +657,147 @@ public class FdfSerializerTests
         square.Color!.Value.R.Should().BeApproximately(0.2, 0.0001);
         square.BorderWidth.Should().Be(2);
     }
+
+    // ── #626 "remaining subtypes": round-trip position/color/author/contents/opacity ──
+
+    [Fact]
+    public void RoundTrip_NewlyAuthoredSubtypes_SurviveExportAndImport()
+    {
+        using var source = PdfDocument.CreateNew();
+        source.Pages.AddBlank();
+
+        source.AddUnderlineAnnotation(1, new PdfRectangle(72, 700, 220, 715),
+            contents: "underlined", author: "Alice", red: 1, green: 0, blue: 0);
+        source.AddStrikeOutAnnotation(1, new PdfRectangle(72, 650, 220, 665),
+            contents: "struck", author: "Bob", red: 0.2, green: 0.2, blue: 0.2);
+        source.AddSquigglyAnnotation(1, new PdfRectangle(72, 600, 220, 615),
+            contents: "squiggled", author: "Carol", red: 0, green: 0, blue: 1);
+        source.AddLineAnnotation(1, 72, 550, 220, 560,
+            contents: "line note", author: "Dave", red: 0, green: 0.5, blue: 0, lineWidth: 2);
+        source.AddArrowAnnotation(1, 72, 500, 220, 500,
+            contents: "arrow note", author: "Eve", red: 1, green: 0, blue: 0,
+            endLineEnding: "ClosedArrow");
+        source.AddPolygonAnnotation(1,
+            new (double X, double Y)[] { (72, 400), (150, 400), (110, 450) },
+            contents: "polygon note", author: "Frank",
+            red: 0, green: 0, blue: 0, borderWidth: 1,
+            interiorRed: 1, interiorGreen: 1, interiorBlue: 0);
+        source.AddPolyLineAnnotation(1,
+            new (double X, double Y)[] { (200, 400), (240, 440), (280, 400) },
+            contents: "polyline note", author: "Grace", red: 0.5, green: 0, blue: 0.5);
+        source.AddStampAnnotation(1, new PdfRectangle(72, 300, 200, 340), "Approved",
+            contents: "stamped", author: "Heidi");
+
+        var fdf = FdfSerializer.ExportAnnotations(source);
+
+        using var target = PdfDocument.CreateNew();
+        target.Pages.AddBlank();
+        var result = FdfSerializer.ImportAnnotations(target, fdf);
+
+        result.Skipped.Should().BeEmpty("every subtype above has export+import support");
+        result.Imported.Should().HaveCount(8);
+
+        var sourceAnnotations = source.GetPage(1).GetAnnotations();
+        var importedAnnotations = target.GetPage(1).GetAnnotations();
+        foreach (var expected in sourceAnnotations)
+        {
+            // Match by /Contents, not /Subtype — Line and Arrow both carry
+            // PdfAnnotationSubtype.Line (an Arrow *is* a Line with /LE), so
+            // subtype alone isn't unique across this fixture's eight annotations.
+            var actual = importedAnnotations.Single(a => a.Contents == expected.Contents);
+            actual.Subtype.Should().Be(expected.Subtype);
+
+            actual.Rect.Left.Should().BeApproximately(expected.Rect.Left, 0.5);
+            actual.Rect.Bottom.Should().BeApproximately(expected.Rect.Bottom, 0.5);
+            actual.Rect.Right.Should().BeApproximately(expected.Rect.Right, 0.5);
+            actual.Rect.Top.Should().BeApproximately(expected.Rect.Top, 0.5);
+            actual.Author.Should().Be(expected.Author);
+
+            if (expected.Color is { } c)
+            {
+                actual.Color.Should().NotBeNull();
+                actual.Color!.Value.R.Should().BeApproximately(c.R, 0.01);
+                actual.Color.Value.G.Should().BeApproximately(c.G, 0.01);
+                actual.Color.Value.B.Should().BeApproximately(c.B, 0.01);
+            }
+        }
+
+        var stamp = importedAnnotations.Single(a => a.Subtype == PdfAnnotationSubtype.Stamp);
+        stamp.IconName.Should().Be("Approved",
+            "a standard #626 stamp name must round-trip and re-attach through AddStampAnnotation");
+        stamp.HasAppearance.Should().BeTrue("the stamp must be re-authored (baked /AP), not a bare dictionary");
+
+        var polygon = importedAnnotations.Single(a => a.Subtype == PdfAnnotationSubtype.Polygon);
+        polygon.RawDictionary.GetArrayOrNull("IC").Should().NotBeNull("polygon interior fill must survive");
+
+        importedAnnotations.Count(a => a.Subtype == PdfAnnotationSubtype.Line).Should().Be(2);
+    }
+
+    [Fact]
+    public void RoundTrip_StampAnnotation_PreservesIconAndIsReauthored()
+    {
+        using var source = PdfDocument.CreateNew();
+        source.Pages.AddBlank();
+        source.AddStampAnnotation(1, new PdfRectangle(100, 600, 260, 650), "Confidential",
+            contents: "handle with care", author: "Reviewer");
+
+        var fdf = FdfSerializer.ExportAnnotations(source);
+        fdf.Should().Contain("/Subtype /Stamp").And.Contain("/Name /Confidential");
+
+        using var target = PdfDocument.CreateNew();
+        target.Pages.AddBlank();
+        var imported = FdfSerializer.ImportAnnotations(target, fdf).Imported.Single();
+
+        imported.Subtype.Should().Be(PdfAnnotationSubtype.Stamp);
+        imported.IconName.Should().Be("Confidential");
+        imported.Contents.Should().Be("handle with care");
+        imported.Author.Should().Be("Reviewer");
+        imported.HasAppearance.Should().BeTrue();
+    }
+
+    [Fact]
+    public void RoundTrip_NonStandardStampIcon_KeepsDataWithoutRejecting()
+    {
+        const string fdf = """
+            %FDF-1.2
+            1 0 obj
+            << /FDF << /Annots [2 0 R] >> >>
+            endobj
+            2 0 obj
+            << /Type /Annot /Subtype /Stamp /Page 0 /Rect [10 10 110 60]
+               /Name /CompanyLogo /C [0.1 0.2 0.3] /NM (custom-stamp) >>
+            endobj
+            trailer
+            << /Root 1 0 R >>
+            %%EOF
+            """;
+
+        using var doc = PdfDocument.CreateNew();
+        doc.Pages.AddBlank();
+        var result = FdfSerializer.ImportAnnotations(doc, fdf);
+
+        result.Skipped.Should().BeEmpty();
+        var stamp = result.Imported.Should().ContainSingle().Subject;
+        stamp.Subtype.Should().Be(PdfAnnotationSubtype.Stamp);
+        stamp.IconName.Should().Be("CompanyLogo");
+        stamp.HasAppearance.Should().BeFalse("a non-standard icon has no bundled #626 artwork to bake");
+    }
+
+    [Fact]
+    public void RoundTrip_Opacity_SurvivesExportAndImport()
+    {
+        using var source = PdfDocument.CreateNew();
+        source.Pages.AddBlank();
+        var annotation = source.AddSquareAnnotation(1, new PdfRectangle(10, 10, 60, 60), borderWidth: 1);
+        annotation.SetAnnotationOpacity(0.4);
+
+        var fdf = FdfSerializer.ExportAnnotations(source);
+        fdf.Should().Contain("/CA 0.4");
+
+        using var target = PdfDocument.CreateNew();
+        target.Pages.AddBlank();
+        var imported = FdfSerializer.ImportAnnotations(target, fdf).Imported.Single();
+
+        imported.RawDictionary.GetNumber("CA", -1).Should().BeApproximately(0.4, 0.001);
+    }
 }
