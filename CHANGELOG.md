@@ -6,6 +6,33 @@ semantic versioning.
 
 ## [Unreleased]
 
+### Fixed
+- **CID glyph-selection matrix: deterministic handling of missing maps**
+  (#515, final slice) — the renderer's CID→GID resolution for Type0 fonts now
+  handles every cell of the matrix the way the reference renderers do, each
+  behavior verified empirically against poppler/Ghostscript (and mutool where
+  it has CMap resources) rather than assumed:
+  - A CID **absent from a CID-keyed CFF charset** selects GID 0 (.notdef)
+    instead of falling through to identity — which indexed the CFF's
+    unrelated glyph order with the CID and **drew an arbitrary wrong glyph**.
+  - `/CIDToGIDMap` on a **CIDFontType0** descendant is ignored (§9.7.4.2:
+    CIDFontType2 only); the embedded CFF charset governs, matching poppler.
+  - A CID **beyond a `/CIDToGIDMap` stream's extent** keeps the identity
+    fallback — the unanimous mutool/poppler/Ghostscript behavior — while
+    in-range zero entries still mean an explicit .notdef.
+  - A **CID-keyed CFF with a predefined/absent charset offset** now maps
+    Identity over all glyphs; previously it fell into the IsoAdobe table,
+    which is accidentally identity up to glyph 228 and silently unmapped
+    (.notdef) above.
+  In every case layout comes from `/W`/`/DW` keyed by CID, so a missing
+  glyph still consumes its full advance and neighbouring positions (and the
+  redaction bounds derived from them) never drift. Covered by the new
+  `CidGlyphSelectionMatrixTests` — CIDFontType2 fixtures over DejaVuSans
+  (explicit/identity/absent/truncated/all-zero/odd-length maps, GID beyond
+  glyph count) plus a synthetic CID-keyed CFF (CIDFontType0C with a
+  non-identity charset, charset misses, bogus map) — with live
+  pdftocairo/Ghostscript differentials pinning the out-of-range fallback.
+
 ### Added
 - **Complete predefined CJK CMap coverage — the full PDF 32000 Table 118 set**
   (#515) — 50 more registered encoding CMaps ship embedded (Adobe

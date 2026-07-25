@@ -91,12 +91,20 @@ internal static class CffParser
 
             var charsetByGlyph = new int[numGlyphs];
             charsetByGlyph[0] = 0; // .notdef is always glyph 0
-            if (charsetOffset == 0)
+            if (isCidKeyed && charsetOffset is 0 or 1 or 2)
             {
-                // For CID-keyed fonts the predefined charset 0 is documented
-                // as "Identity" — glyph index N → CID N — but in practice
-                // CID-keyed CFFs always supply a custom charset, so this
-                // branch only matters for simple SID-based CFFs.
+                // CID-keyed fonts cannot use the predefined SID charsets; a
+                // predefined/absent charset offset means the Identity mapping
+                // (glyph index N → CID N), which is also how FreeType resolves
+                // it. Before #515 this fell into the IsoAdobe branch below —
+                // accidentally identity for glyphs ≤ 228 (IsoAdobe SIDs are
+                // sequential) but unmapped for every glyph above, so large
+                // identity-charset CID fonts lost all high glyphs.
+                for (int g = 1; g < numGlyphs; g++)
+                    charsetByGlyph[g] = g;
+            }
+            else if (charsetOffset == 0)
+            {
                 for (int g = 1; g < numGlyphs && g < IsoAdobeCharset.Length; g++)
                     charsetByGlyph[g] = IsoAdobeCharset[g];
             }
