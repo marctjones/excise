@@ -2346,7 +2346,10 @@ internal partial class RenderContext
         float? wx = null;
         try
         {
+            // Metadata-free parse (#598): only the first operator's
+            // name/operands are read here.
             var content = new ContentStreamParser(charProc.DecodedData, _page)
+                { ComputeOperatorMetadata = false }
                 .Parse(_cancellationToken);
             var first = content.Operators.Count > 0 ? content.Operators[0] : null;
             if (first is { Name: "d0" or "d1" } && first.Operands.Count >= 1)
