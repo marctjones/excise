@@ -72,6 +72,15 @@ semantic versioning.
   pdftocairo/Ghostscript differentials pinning the out-of-range fallback.
 
 ### Added
+- **Right-to-left text selection in the viewer** (#373) — selecting a line that
+  contains Arabic/Hebrew now copies the text in logical reading order (the way
+  it is read) rather than the visual order it is painted in, reusing the same
+  bidi ordering the extractor already applies (#632) instead of a second bidi
+  pass. The on-screen highlight still follows visual order, so each glyph
+  rectangle — including within an RTL run — is drawn where the user sees it. A
+  bounded multi-column improvement also keeps a column-local drag from vacuuming
+  up an adjacent column that shares a Y-band; full multi-column and CJK
+  selection correctness remain deferred (#774).
 - **Tagged-PDF structure accessibility layer** (#631) — the Avalonia viewer's
   automation peer tree now exposes the tagged-PDF structure tree to screen
   readers: the page's accessible text is ordered by the structure tree when a
