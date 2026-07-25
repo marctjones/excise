@@ -79,6 +79,105 @@ public class AnnotationAuthoringDifferentialTests : IDisposable
         InkFraction(reference!, emptyArea).Should().Be(0, "mutool: no ink outside the annotations");
     }
 
+    // ── FreeText (#626, §12.5.6.6) ──────────────────────────────────────────
+
+    [Fact]
+    public void AuthoredFreeText_IsDrawnByMutool_WithTextInkInsideTheRect()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        var path = SaveFreeTextPdf();
+        using var rendered = MutoolReferenceRenderer.RenderPage(path, 1, Dpi);
+        rendered.Should().NotBeNull("mutool must be able to open and render the authored file");
+
+        AssertFreeTextPixels(rendered!, "mutool");
+    }
+
+    [Fact]
+    public void AuthoredFreeText_IsDrawnByPdftocairo_WithTextInkInsideTheRect()
+    {
+        Assert.SkipUnless(PdftocairoReferenceRenderer.IsAvailable, "pdftocairo not installed");
+
+        var path = SaveFreeTextPdf();
+        using var rendered = PdftocairoReferenceRenderer.RenderPage(path, 1, Dpi);
+        rendered.Should().NotBeNull("pdftocairo must be able to open and render the authored file");
+
+        AssertFreeTextPixels(rendered!, "pdftocairo");
+    }
+
+    [Fact]
+    public void ExciseAndReferenceRenderer_AgreeOnAuthoredFreeTextInk()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        var path = SaveFreeTextPdf();
+
+        using var reference = MutoolReferenceRenderer.RenderPage(path, 1, Dpi);
+        reference.Should().NotBeNull();
+
+        using var reopened = PdfDocument.Open(path);
+        using var excise = new SkiaRenderer().RenderPage(
+            reopened.GetPage(1),
+            new RenderOptions { Dpi = Dpi, AntiAlias = false, BackgroundColor = SKColors.White });
+
+        // Glyph rasterization legitimately differs between engines (hinting,
+        // AA, base-14 substitute fonts), so no tight pixel agreement — but
+        // both must put real text ink in the first-line band and leave the
+        // page outside the annotation blank.
+        var textBand = Box(104, 520, 300, 548);
+        var emptyArea = Box(420, 480, 560, 560);
+
+        InkFraction(excise, textBand).Should().BeGreaterThan(0.05,
+            "excise must draw the authored FreeText glyphs");
+        InkFraction(reference!, textBand).Should().BeGreaterThan(0.05,
+            "mutool must draw the authored FreeText glyphs from the /AP stream");
+
+        InkFraction(excise, emptyArea).Should().Be(0, "excise: no ink outside the annotation");
+        InkFraction(reference!, emptyArea).Should().Be(0, "mutool: no ink outside the annotation");
+    }
+
+    private void AssertFreeTextPixels(SKBitmap bmp, string tool)
+    {
+        // Text ink where the first wrapped line ("REVIEW REVIEW", 24pt from
+        // x=104, baseline pdfY 536.8) puts its glyphs.
+        InkFraction(bmp, Box(104, 520, 300, 548)).Should().BeGreaterThan(0.05,
+            $"{tool} must draw the FreeText glyphs from the authored /AP stream");
+
+        // Border stroke on the left edge of the rect.
+        InkFraction(bmp, Box(98, 500, 102, 540)).Should().BeGreaterThan(0.3,
+            $"{tool} must stroke the FreeText border from the authored /AP stream");
+
+        // Nothing outside the annotation rect.
+        InkFraction(bmp, Box(420, 480, 560, 560)).Should().Be(0,
+            $"{tool}: the authored FreeText must not spill ink outside its /Rect");
+        InkFraction(bmp, Box(60, 60, 560, 180)).Should().Be(0,
+            $"{tool}: the rest of the page must stay blank");
+    }
+
+    /// <summary>
+    /// One blank page carrying an authored FreeText:
+    ///   /Rect [100 480 400 560], "REVIEW REVIEW REVIEW" at 24pt black,
+    ///   2pt border — wraps to two lines, first baseline at pdfY 536.8.
+    /// Saved, reopened from bytes, and written to a temp file — the file the
+    /// reference tools see is a genuine save/reload product, not in-memory state.
+    /// </summary>
+    private string SaveFreeTextPdf()
+    {
+        byte[] saved;
+        using (var doc = PdfDocument.CreateNew())
+        {
+            doc.Pages.AddBlank();
+            doc.AddFreeTextAnnotation(1, new PdfRectangle(100, 480, 400, 560),
+                text: "REVIEW REVIEW REVIEW", fontSize: 24, borderWidth: 2);
+            saved = doc.SaveToBytes();
+        }
+
+        var path = Path.Combine(Path.GetTempPath(), $"excise-annot-freetext-{Guid.NewGuid():N}.pdf");
+        File.WriteAllBytes(path, saved);
+        _temp.Add(path);
+        return path;
+    }
+
     private void AssertShapePixels(SKBitmap bmp, string tool)
     {
         // Filled square: interior carries the red /IC fill.

@@ -62,6 +62,19 @@ public sealed class AnnotationWorkflowService
         return annotation;
     }
 
+    /// <summary>
+    /// Add a FreeText (text box) annotation with a baked appearance stream (#626).
+    /// </summary>
+    public PdfAnnotation AddFreeText(
+        int pageNumber, PdfRectangle rect, string text, double fontSize = 12)
+    {
+        var document = GetLoadedDocument();
+        var annotation = document.AddFreeTextAnnotation(pageNumber, rect, text, fontSize: fontSize);
+
+        _logger.LogInformation("Added free-text annotation to page {PageNumber}", pageNumber);
+        return annotation;
+    }
+
     private PdfDocument GetLoadedDocument() =>
         _documentService.GetCurrentDocument()
         ?? throw new InvalidOperationException("No document loaded");

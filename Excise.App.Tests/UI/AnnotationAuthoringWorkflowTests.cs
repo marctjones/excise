@@ -120,6 +120,29 @@ public class AnnotationAuthoringWorkflowTests : IDisposable
             a.HasAppearance);
     }
 
+    [Fact]
+    public void AnnotationWorkflowService_AddFreeText_CreatesPersistableTextBoxWithAppearance()
+    {
+        var filePath = CreateBlankPdf("freetext-source.pdf");
+        var outputPath = Path.Combine(_tempDir, "freetext-output.pdf");
+        var documentService = CreateLoadedDocumentService(filePath);
+        var workflow = new AnnotationWorkflowService(
+            documentService, NullLogger<AnnotationWorkflowService>.Instance);
+
+        workflow.AddFreeText(1, new PdfRectangle(100, 500, 400, 560), "Review this box", fontSize: 14);
+
+        documentService.SaveDocument(outputPath);
+        using var reopened = PdfDocument.Open(File.ReadAllBytes(outputPath));
+        var annotations = reopened.GetPage(1).GetAnnotations();
+
+        var freeText = annotations.Should().ContainSingle(a =>
+            a.Subtype == PdfAnnotationSubtype.FreeText).Subject;
+        freeText.Contents.Should().Be("Review this box");
+        freeText.HasAppearance.Should().BeTrue(
+            "the workflow surface must produce the baked /AP /N appearance (#626)");
+        freeText.RawDictionary.GetStringOrNull("DA").Should().Contain("/Helv 14 Tf");
+    }
+
     public void Dispose()
     {
         try
