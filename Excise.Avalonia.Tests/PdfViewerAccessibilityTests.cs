@@ -32,14 +32,16 @@ namespace Excise.Avalonia.Tests;
 public class PdfViewerAccessibilityTests
 {
     // ── harness ──────────────────────────────────────────────────────────
+    // Session access goes through HeadlessSessionGuard (#752): if the shared
+    // headless session cannot start on this platform, these tests skip with
+    // the startup failure as the reason instead of crashing the test host
+    // (which would take the assembly's unrelated tests down with them).
 
     private static Task<T> OnUiThread<T>(Func<T> body) =>
-        HeadlessUnitTestSession.GetOrStartForAssembly(typeof(HeadlessTestApp).Assembly)
-            .Dispatch(body, CancellationToken.None);
+        HeadlessSessionGuard.Session().Dispatch(body, CancellationToken.None);
 
     private static Task<T> OnUiThread<T>(Func<Task<T>> body) =>
-        HeadlessUnitTestSession.GetOrStartForAssembly(typeof(HeadlessTestApp).Assembly)
-            .Dispatch(body, CancellationToken.None);
+        HeadlessSessionGuard.Session().Dispatch(body, CancellationToken.None);
 
     /// <summary>
     /// Wait (bounded) for the viewer's asynchronous page-change pipeline to
