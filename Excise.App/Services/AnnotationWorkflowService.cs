@@ -38,6 +38,30 @@ public sealed class AnnotationWorkflowService
         return annotation;
     }
 
+    /// <summary>
+    /// Add a Square shape annotation with a baked appearance stream (#626).
+    /// </summary>
+    public PdfAnnotation AddSquare(int pageNumber, PdfRectangle rect, string? contents = null)
+    {
+        var document = GetLoadedDocument();
+        var annotation = document.AddSquareAnnotation(pageNumber, rect, contents);
+
+        _logger.LogInformation("Added square annotation to page {PageNumber}", pageNumber);
+        return annotation;
+    }
+
+    /// <summary>
+    /// Add a Circle shape annotation with a baked appearance stream (#626).
+    /// </summary>
+    public PdfAnnotation AddCircle(int pageNumber, PdfRectangle rect, string? contents = null)
+    {
+        var document = GetLoadedDocument();
+        var annotation = document.AddCircleAnnotation(pageNumber, rect, contents);
+
+        _logger.LogInformation("Added circle annotation to page {PageNumber}", pageNumber);
+        return annotation;
+    }
+
     private PdfDocument GetLoadedDocument() =>
         _documentService.GetCurrentDocument()
         ?? throw new InvalidOperationException("No document loaded");
