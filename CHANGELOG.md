@@ -44,6 +44,18 @@ semantic versioning.
   Acrobat, mutool, and pdftocairo (verified by independent-renderer
   differential tests). Surfaced in the app as
   `AnnotationWorkflowService.AddFreeText`.
+- **Signature trust-chain validation and consolidated result states** (#466) —
+  signature verification now evaluates the signer certificate chain (OS trust
+  store by default; an explicit trust-anchor policy is injectable) in addition
+  to the existing ByteRange/CMS checks, and reports a consolidated state:
+  valid+trusted, valid-but-untrusted, invalid (modified after signing / broken
+  signature), or indeterminate (could not verify). Trust is additional to
+  cryptographic validity, never a replacement: the "trusted" state is
+  unreachable unless the signature is also cryptographically valid over the
+  correct byte range, and the summary text can only claim a trusted signer in
+  that state. Signing time is now extracted from the CMS signed attributes.
+  Certificate revocation (CRL/OCSP) remains deliberately unchecked (offline by
+  design) and is stated in the summary.
 - **Square and Circle annotation authoring** (#626, first slice of #271) —
   `AddSquareAnnotation` / `AddCircleAnnotation` write ISO 32000-2 §12.5.6.8
   shape annotations with border color (`/C`), optional interior fill (`/IC`),

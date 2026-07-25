@@ -67,7 +67,7 @@ Build the packages locally with `dotnet pack -c Release` (they are also attached
 - **AcroForm authoring** — drag-rect on a page to create new fields (Text / Checkbox / Choice / Signature); auto-detect underline placeholders and empty squares as fields
 - **Annotation review tools** — highlight selected text and add sticky notes as real PDF annotations
 - Reveal Hidden Text — yellow highlights for structural detections (text covered by rectangles), orange for differential-OCR recoveries (text inside rasterized images)
-- Digital signature inspection — checks ByteRange structure, verifies the detached CMS digest/signature over the signed bytes, and clearly reports current OS trust-chain validation limitations
+- Digital signature inspection — checks ByteRange structure, verifies the detached CMS digest/signature over the signed bytes, validates the signer certificate chain against the OS trust store (distinguishing valid-and-trusted from valid-but-untrusted, modified, and unverifiable signatures), and clearly reports remaining OS trust-chain validation limitations (revocation is not checked)
 - Bates numbering
 - CLI-first automation with stable JSON, batch workflows, progress NDJSON, and
   AppleScript/Shortcuts, PowerShell/Power Automate, and Linux/GNOME examples
@@ -170,9 +170,13 @@ release notes:
   that image from your OS's own viewer, which already has a real, tested
   print pipeline. Revisit only if real user demand shows up — see #621 for
   the full reasoning.
-- **Digital signatures** — excise checks ByteRange structure and verifies the
-  detached CMS signature/digest over the signed bytes, but does not evaluate the
-  signer certificate chain against the OS trust store yet (#466).
+- **Digital signatures** — excise checks ByteRange structure, verifies the
+  detached CMS signature/digest over the signed bytes, and evaluates the signer
+  certificate chain against the OS trust store, reporting a consolidated state
+  (valid+trusted / valid-but-untrusted / invalid / indeterminate). Certificate
+  revocation (CRL/OCSP) is deliberately not checked — it would require network
+  access — and timestamp/LTV (long-term validation) material is not evaluated
+  (#466).
 - **Rendering fidelity** — the current release dashboard classifies every
   contracted page as release `PASS`. Remaining non-exact rows are issue-linked
   accepted-reference matches, malformed-input/refusal classifications, or named
