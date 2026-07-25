@@ -34,6 +34,25 @@ semantic versioning.
   pdftocairo/Ghostscript differentials pinning the out-of-range fallback.
 
 ### Added
+- **Apply self-signed PDF signatures — PKCS#7/CMS detached** (#623, first
+  slice) — `SignatureApplicationService` signs a document with a self-signed
+  or locally-held certificate: `/Sig` dictionary (`/Filter /Adobe.PPKLite`,
+  `/SubFilter /adbe.pkcs7.detached`), correct two-pass `/ByteRange` (a
+  fixed-capacity zero-filled `/Contents` hex hole plus a fixed-width
+  ByteRange placeholder patched in place after serialization, so no byte
+  offset shifts), and a BouncyCastle detached CMS SignedData backfilled into
+  the hole. `SigningCertificateFactory` generates an in-process self-signed
+  RSA-2048 identity or loads a PKCS#12 from disk — no CA account, no paid
+  service, no network, per the issue's deliberate constraint. Signing an
+  already-authored empty signature field is supported; signing a document
+  that already carries a signature is refused (excise saves are full
+  rewrites, which would silently invalidate it). Round-trip proven against
+  the independent #466 verifier (valid + byte-exact ByteRange coverage,
+  tamper ⇒ Invalid, self-signed ⇒ ValidUntrusted, pinned anchor ⇒
+  ValidTrusted) and against poppler `pdfsig` as an out-of-repo oracle
+  ("Signature is Valid / Total document signed / Certificate issuer is
+  unknown"). Still open on #623: visible signature appearance, GUI/CLI
+  surface, and multi-signature incremental-update saves.
 - **FreeText annotation authoring** (#626) — `AddFreeTextAnnotation` writes
   ISO 32000-2 §12.5.6.6 text-box annotations: `/Contents`, a `/DA` default
   appearance string (color + base-14 Helvetica + size), `/Q` quadding
