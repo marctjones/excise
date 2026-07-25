@@ -624,6 +624,15 @@ public static class PdfAnnotationAuthoring
         return sb.ToString();
     }
 
+    /// <summary>
+    /// Attach a fully-built annotation dictionary to a page — the shared
+    /// /P + /Annots plumbing, reused by the XFDF importer
+    /// (<c>Excise.Core.Forms.XfdfSerializer</c>) for subtypes that have no
+    /// dedicated authoring method (#626).
+    /// </summary>
+    internal static PdfAnnotation AttachImported(PdfDocument document, int pageNumber, PdfDictionary annot)
+        => AttachAnnotation(document, pageNumber, annot);
+
     private static PdfAnnotation AddShapeAnnotation(
         PdfDocument document,
         int pageNumber,

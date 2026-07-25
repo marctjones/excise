@@ -918,6 +918,22 @@ namespace Excise.Core.Fonts
         public static byte[] Subset(byte[] originalCff, System.Collections.Generic.IReadOnlySet<int> usedGlyphIds) { }
     }
 }
+namespace Excise.Core.Forms
+{
+    public sealed class XfdfImportResult
+    {
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfAnnotation> Imported { get; }
+        public System.Collections.Generic.IReadOnlyList<string> Skipped { get; }
+    }
+    public static class XfdfSerializer
+    {
+        public const string XfdfNamespace = "http://ns.adobe.com/xfdf/";
+        public static string ExportAnnotations(Excise.Core.Document.PdfDocument document) { }
+        public static void ExportAnnotations(Excise.Core.Document.PdfDocument document, System.IO.Stream output) { }
+        public static Excise.Core.Forms.XfdfImportResult ImportAnnotations(Excise.Core.Document.PdfDocument document, System.IO.Stream input) { }
+        public static Excise.Core.Forms.XfdfImportResult ImportAnnotations(Excise.Core.Document.PdfDocument document, string xfdf) { }
+    }
+}
 namespace Excise.Core.Graphics
 {
     public class PdfBrush
