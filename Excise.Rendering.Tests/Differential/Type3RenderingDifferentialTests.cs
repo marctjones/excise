@@ -296,6 +296,75 @@ public class Type3RenderingDifferentialTests
         });
     }
 
+    // ---- #514 d1 uncolored ImageMask glyphs: generated spec fixtures ----
+    // Primary evidence is the spec-fixture unit tests in SkiaRendererTests
+    // (RenderPage_Type3Font_d1ImageMask* / d0ImageMask*); the tests below
+    // corroborate the same behaviour against reference renderers that are
+    // not excise. Reference agreement, probed before writing the asserts:
+    // pdftocairo, Ghostscript AND mutool all paint a d1 glyph's inline
+    // image mask in the TEXT fill colour, with the CharProc's own colour
+    // operator suppressed — unanimous, so all three are asserted.
+
+    [Fact]
+    public void Type3_d1InlineImageMaskPaintsInTextColor_MatchesPdftocairo()
+    {
+        Assert.SkipUnless(PdftocairoReferenceRenderer.IsAvailable, "pdftocairo not installed.");
+        AssertD1ImageMaskTextColorAgainstReference(
+            path => PdftocairoReferenceRenderer.RenderPage(path, 1, Dpi), "pdftocairo");
+    }
+
+    [Fact]
+    public void Type3_d1InlineImageMaskPaintsInTextColor_MatchesGhostscript()
+    {
+        Assert.SkipUnless(GhostscriptReferenceRenderer.IsAvailable, "Ghostscript not installed.");
+        AssertD1ImageMaskTextColorAgainstReference(
+            path => GhostscriptReferenceRenderer.RenderPage(path, 1, Dpi), "Ghostscript");
+    }
+
+    [Fact]
+    public void Type3_d1InlineImageMaskPaintsInTextColor_MatchesMutool()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed.");
+        AssertD1ImageMaskTextColorAgainstReference(
+            path => MutoolReferenceRenderer.RenderPage(path, 1, Dpi), "mutool");
+    }
+
+    private static void AssertD1ImageMaskTextColorAgainstReference(
+        Func<string, SKBitmap?> renderReference, string referenceName)
+    {
+        // 48pt Type 3 glyph at (100,400): the page sets RED text fill, the
+        // d1 CharProc tries to switch to blue, then paints a full-coverage
+        // inline image mask (single 0x00 byte inks the whole unit square
+        // under the default /Decode [0 1]) over 500x700 glyph units
+        // -> x [100..124], y [400..433.6]. ISO 32000-1 §9.6.5: the mask
+        // must paint RED (text fill colour), never the CharProc's blue.
+        var pdfData = SkiaRendererTests.CreateType3FixturePdf(
+            "1 0 0 rg BT /F1 48 Tf 100 400 Td <41> Tj ET",
+            new[] { ("A",
+                "500 0 0 0 500 700 d1 0 0 1 rg q 500 0 0 700 0 0 cm BI /IM true /W 1 /H 1 /BPC 1 ID \0 EI Q") },
+            encodingDifferences: "65 /A",
+            widthsClause: "/FirstChar 65 /LastChar 65 /Widths [500] ");
+
+        WithTempPdf(pdfData, path =>
+        {
+            using var reference = renderReference(path);
+            Assert.SkipWhen(reference == null, $"{referenceName} declined to render the fixture.");
+
+            using var doc = PdfDocument.Open(pdfData);
+            using var excise = new SkiaRenderer().RenderPage(
+                doc.GetPage(1),
+                new RenderOptions { Dpi = Dpi, BackgroundColor = SKColors.White });
+
+            foreach (var (bitmap, who) in new[] { (reference!, referenceName), (excise, "excise") })
+            {
+                RedPixelsInPtRect(bitmap, 101f, 401f, 123f, 432.5f).Should().BeGreaterThan(200,
+                    $"{who} must paint the d1 glyph's image mask in the text object's RED fill colour");
+                BluePixelsInPtRect(bitmap, 101f, 401f, 123f, 432.5f).Should().BeLessThan(10,
+                    $"{who} must suppress the CharProc's own blue colour operator under d1");
+            }
+        });
+    }
+
     private static void WithTempPdf(byte[] pdfData, Action<string> body)
     {
         // Unique path per call — Excise.Rendering.Tests runs 4-way parallel.
@@ -351,6 +420,26 @@ public class Type3RenderingDifferentialTests
             {
                 var p = bitmap.GetPixel(x, y);
                 if (p.Red > 180 && p.Green < 100 && p.Blue < 100)
+                    count++;
+            }
+        return count;
+    }
+
+    private static int BluePixelsInPtRect(
+        SKBitmap bitmap, float x0Pt, float y0Pt, float x1Pt, float y1Pt)
+    {
+        var scale = Dpi / 72f;
+        var left = Math.Max(0, (int)(x0Pt * scale));
+        var right = Math.Min(bitmap.Width, (int)Math.Ceiling(x1Pt * scale));
+        var top = Math.Max(0, bitmap.Height - (int)Math.Ceiling(y1Pt * scale));
+        var bottom = Math.Min(bitmap.Height, bitmap.Height - (int)(y0Pt * scale));
+
+        var count = 0;
+        for (int y = top; y < bottom; y++)
+            for (int x = left; x < right; x++)
+            {
+                var p = bitmap.GetPixel(x, y);
+                if (p.Blue > 180 && p.Red < 100 && p.Green < 100)
                     count++;
             }
         return count;
