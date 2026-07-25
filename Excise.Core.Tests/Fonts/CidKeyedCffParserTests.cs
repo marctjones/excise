@@ -63,6 +63,102 @@ public class CidKeyedCffParserTests
         info.GlyphNames.Should().NotBeEmpty("simple CFFs carry PostScript glyph names");
     }
 
+    [Fact]
+    public void Parse_CidKeyedWithPredefinedCharsetOffset_MapsIdentityForAllGlyphs()
+    {
+        // A CID-keyed CFF whose Top DICT omits the charset operator (offset
+        // 0). Predefined SID charsets don't apply to CIDFonts; the mapping
+        // is Identity (glyph i → CID i), which is also how FreeType resolves
+        // it. 240 glyphs on purpose: the pre-#515 code fell into the
+        // IsoAdobe branch, which is ACCIDENTALLY identity for glyphs ≤ 228
+        // (IsoAdobe SIDs are sequential) but leaves every glyph above 228
+        // unmapped — so only a font bigger than the IsoAdobe table
+        // distinguishes the bug from the fix.
+        const int numGlyphs = 240;
+        var cff = BuildCidKeyedCffWithoutCharset(numGlyphs);
+
+        var info = CffParser.Parse(cff);
+        info.Should().NotBeNull();
+        info!.IsCidKeyed.Should().BeTrue();
+        info.NumGlyphs.Should().Be(numGlyphs);
+        info.CidToGlyph.Should().NotBeNull();
+        info.CidToGlyph![0].Should().Be(0);
+        info.CidToGlyph[100].Should().Be(100, "identity below the IsoAdobe boundary");
+        info.CidToGlyph[228].Should().Be(228, "identity at the IsoAdobe boundary");
+        info.CidToGlyph.Should().ContainKey(235,
+            "glyphs above the 228-entry IsoAdobe table must still be mapped — before #515 " +
+            "they were silently dropped and every high CID rendered .notdef");
+        info.CidToGlyph[235].Should().Be(235);
+        info.CidToGlyph[numGlyphs - 1].Should().Be(numGlyphs - 1);
+    }
+
+    /// <summary>
+    /// Minimal CID-keyed CFF exercising only what <see cref="CffParser"/>
+    /// reads: header, Name INDEX, Top DICT (ROS + CharStrings offset, NO
+    /// charset operator), String INDEX, GSubr INDEX, CharStrings INDEX of
+    /// <paramref name="numGlyphs"/> one-byte (endchar) charstrings.
+    /// </summary>
+    private static byte[] BuildCidKeyedCffWithoutCharset(int numGlyphs)
+    {
+        static byte[] Int5(int v) => new byte[]
+        {
+            0x1D, (byte)(v >> 24), (byte)(v >> 16), (byte)(v >> 8), (byte)v,
+        };
+
+        static byte[] Index1(params byte[][] items)
+        {
+            using var ms = new MemoryStream();
+            ms.WriteByte((byte)(items.Length >> 8));
+            ms.WriteByte((byte)items.Length);
+            ms.WriteByte(0x01); // offSize 1 — payloads here stay < 255 bytes
+            int offset = 1;
+            ms.WriteByte((byte)offset);
+            foreach (var item in items)
+            {
+                offset += item.Length;
+                ms.WriteByte((byte)offset);
+            }
+            foreach (var item in items)
+                ms.Write(item, 0, item.Length);
+            return ms.ToArray();
+        }
+
+        byte[] header = { 0x01, 0x00, 0x04, 0x04 };
+        byte[] nameIndex = Index1(System.Text.Encoding.ASCII.GetBytes("T"));
+        byte[] emptyIndex = { 0x00, 0x00 };
+
+        // Top DICT: ROS (0 0 0) + CharStrings offset — fixed 5-byte operands
+        // so the layout is computable before the offset is known.
+        static byte[] TopDict(int charStringsOffset) =>
+            Int5(0).Concat(Int5(0)).Concat(Int5(0)).Concat(new byte[] { 0x0C, 0x1E })
+                .Concat(Int5(charStringsOffset)).Concat(new byte[] { 0x11 })
+                .ToArray();
+        int topDictIndexLen = Index1(TopDict(0)).Length;
+
+        int charStringsOffset = header.Length + nameIndex.Length + topDictIndexLen
+            + emptyIndex.Length /* String INDEX */ + emptyIndex.Length /* GSubr INDEX */;
+        var topDictIndex = Index1(TopDict(charStringsOffset));
+
+        // CharStrings INDEX: numGlyphs one-byte endchar charstrings. offSize 1
+        // holds while 1 + numGlyphs <= 255.
+        using var cs = new MemoryStream();
+        cs.WriteByte((byte)(numGlyphs >> 8));
+        cs.WriteByte((byte)numGlyphs);
+        cs.WriteByte(0x01);
+        for (int i = 0; i <= numGlyphs; i++)
+            cs.WriteByte((byte)(1 + i));
+        for (int i = 0; i < numGlyphs; i++)
+            cs.WriteByte(0x0E); // endchar
+
+        return header
+            .Concat(nameIndex)
+            .Concat(topDictIndex)
+            .Concat(emptyIndex)
+            .Concat(emptyIndex)
+            .Concat(cs.ToArray())
+            .ToArray();
+    }
+
     private static byte[]? TryLoadKozMinProCff()
     {
         // Find a fixture from the verapdf corpus that embeds a
