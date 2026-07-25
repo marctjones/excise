@@ -136,6 +136,119 @@ public class AnnotationAuthoringDifferentialTests : IDisposable
         InkFraction(reference!, emptyArea).Should().Be(0, "mutool: no ink outside the annotation");
     }
 
+    // ── Ink (#626, §12.5.6.13) ──────────────────────────────────────────────
+
+    [Fact]
+    public void AuthoredInk_IsDrawnByMutool_WithStrokeInkAlongThePolyline()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        var path = SaveInkPdf();
+        using var rendered = MutoolReferenceRenderer.RenderPage(path, 1, Dpi);
+        rendered.Should().NotBeNull("mutool must be able to open and render the authored file");
+
+        AssertInkPixels(rendered!, "mutool");
+    }
+
+    [Fact]
+    public void AuthoredInk_IsDrawnByPdftocairo_WithStrokeInkAlongThePolyline()
+    {
+        Assert.SkipUnless(PdftocairoReferenceRenderer.IsAvailable, "pdftocairo not installed");
+
+        var path = SaveInkPdf();
+        using var rendered = PdftocairoReferenceRenderer.RenderPage(path, 1, Dpi);
+        rendered.Should().NotBeNull("pdftocairo must be able to open and render the authored file");
+
+        AssertInkPixels(rendered!, "pdftocairo");
+    }
+
+    [Fact]
+    public void ExciseAndReferenceRenderer_AgreeOnAuthoredInkStrokes()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        var path = SaveInkPdf();
+
+        using var reference = MutoolReferenceRenderer.RenderPage(path, 1, Dpi);
+        reference.Should().NotBeNull();
+
+        using var reopened = PdfDocument.Open(path);
+        using var excise = new SkiaRenderer().RenderPage(
+            reopened.GetPage(1),
+            new RenderOptions { Dpi = Dpi, AntiAlias = false, BackgroundColor = SKColors.White });
+
+        // Stroke rasterization legitimately differs (AA, cap rendering), so no
+        // tight pixel agreement — but both must put stroke ink along the
+        // horizontal polyline band and leave the page off the path blank.
+        var lineBand = Box(120, 695, 280, 705);
+        var betweenStrokes = Box(120, 662, 280, 690);
+        var emptyArea = Box(350, 300, 560, 500);
+
+        InkFraction(excise, lineBand).Should().BeGreaterThan(0.2,
+            "excise must stroke the authored ink polyline");
+        InkFraction(reference!, lineBand).Should().BeGreaterThan(0.2,
+            "mutool must stroke the authored ink polyline from the /AP stream");
+
+        InkFraction(excise, betweenStrokes).Should().Be(0,
+            "excise: no ink between the two strokes");
+        InkFraction(reference!, betweenStrokes).Should().Be(0,
+            "mutool: no ink between the two strokes");
+        InkFraction(excise, emptyArea).Should().Be(0, "excise: no ink outside the annotation");
+        InkFraction(reference!, emptyArea).Should().Be(0, "mutool: no ink outside the annotation");
+    }
+
+    private void AssertInkPixels(SKBitmap bmp, string tool)
+    {
+        // Stroke ink along the horizontal polyline (y=700, 4pt pen).
+        InkFraction(bmp, Box(120, 695, 280, 705)).Should().BeGreaterThan(0.2,
+            $"{tool} must stroke the ink polyline from the authored /AP stream");
+        RedFraction(bmp, Box(120, 695, 280, 705)).Should().BeGreaterThan(0.2,
+            $"{tool} must use the authored red /C stroke color");
+
+        // Stroke ink at the V-vertex of the second polyline (200,600).
+        InkFraction(bmp, Box(190, 594, 210, 610)).Should().BeGreaterThan(0.05,
+            $"{tool} must stroke the second polyline through its vertex");
+
+        // No ink between the two strokes (inside the /Rect but off the path)...
+        InkFraction(bmp, Box(120, 662, 280, 690)).Should().Be(0,
+            $"{tool}: the ink annotation must not fill its /Rect, only stroke the path");
+
+        // ...and nothing anywhere else on the page.
+        InkFraction(bmp, Box(350, 300, 560, 500)).Should().Be(0,
+            $"{tool}: the authored ink must not spill outside its strokes");
+        InkFraction(bmp, Box(60, 60, 560, 180)).Should().Be(0,
+            $"{tool}: the rest of the page must stay blank");
+    }
+
+    /// <summary>
+    /// One blank page carrying an authored Ink annotation with two strokes:
+    ///   horizontal (100,700)→(300,700) and a V (100,650)→(200,600)→(300,650),
+    ///   red, 4pt pen. Saved, reopened from bytes, and written to a temp file —
+    /// the file the reference tools see is a genuine save/reload product, not
+    /// in-memory state.
+    /// </summary>
+    private string SaveInkPdf()
+    {
+        byte[] saved;
+        using (var doc = PdfDocument.CreateNew())
+        {
+            doc.Pages.AddBlank();
+            doc.AddInkAnnotation(1,
+                new[]
+                {
+                    new[] { (100.0, 700.0), (300.0, 700.0) },
+                    new[] { (100.0, 650.0), (200.0, 600.0), (300.0, 650.0) }
+                },
+                contents: "freehand", red: 1, green: 0, blue: 0, borderWidth: 4);
+            saved = doc.SaveToBytes();
+        }
+
+        var path = Path.Combine(Path.GetTempPath(), $"excise-annot-ink-{Guid.NewGuid():N}.pdf");
+        File.WriteAllBytes(path, saved);
+        _temp.Add(path);
+        return path;
+    }
+
     private void AssertFreeTextPixels(SKBitmap bmp, string tool)
     {
         // Text ink where the first wrapped line ("REVIEW REVIEW", 24pt from

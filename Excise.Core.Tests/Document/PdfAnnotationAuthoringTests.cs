@@ -404,6 +404,170 @@ public class PdfAnnotationAuthoringTests
         partialBackground.Should().Throw<ArgumentException>();
     }
 
+    // ── Ink annotations (#626, ISO 32000-2 §12.5.6.13) ──────────────────────
+
+    [Fact]
+    public void AddInkAnnotation_WritesSpecCorrectDictionaryAndAppearance()
+    {
+        using var doc = PdfDocument.CreateNew();
+        doc.Pages.AddBlank();
+
+        var strokes = new[]
+        {
+            new[] { (100.0, 700.0), (200.0, 720.0), (300.0, 700.0) },
+            new[] { (120.0, 650.0), (280.0, 650.0) }
+        };
+
+        var annotation = doc.AddInkAnnotation(
+            pageNumber: 1,
+            strokes: strokes,
+            contents: "Signed here",
+            author: "EXCISE",
+            red: 0, green: 0, blue: 0.8,
+            borderWidth: 3);
+
+        annotation.Subtype.Should().Be(PdfAnnotationSubtype.Ink);
+        annotation.Contents.Should().Be("Signed here");
+        annotation.Author.Should().Be("EXCISE");
+        annotation.HasAppearance.Should().BeTrue(
+            "Ink annotations must ship a baked /AP /N so third-party viewers " +
+            "render identical pixels (#626)");
+        annotation.CreationDate.Should().NotBeNull("markup annotations carry /CreationDate (Table 172)");
+        annotation.Flags.Should().HaveFlag(PdfAnnotationFlags.Print);
+        annotation.BorderWidth.Should().Be(3);
+
+        // The reader model must round-trip every authored stroke point.
+        annotation.InkStrokes.Should().NotBeNull();
+        annotation.InkStrokes!.Count.Should().Be(2);
+        annotation.InkStrokes[0].Should().Equal((100.0, 700.0), (200.0, 720.0), (300.0, 700.0));
+        annotation.InkStrokes[1].Should().Equal((120.0, 650.0), (280.0, 650.0));
+
+        // Raw dictionary spec checks (Table 182).
+        var raw = annotation.RawDictionary;
+        raw.GetNameOrNull("Subtype").Should().Be("Ink");
+        var inkList = doc.Resolve(raw.GetOptional("InkList")!) as Excise.Core.Primitives.PdfArray;
+        inkList.Should().NotBeNull("/InkList is required by Table 182");
+        inkList!.Count.Should().Be(2, "one inner array per stroke");
+        (doc.Resolve(inkList[0]) as Excise.Core.Primitives.PdfArray)!.Count
+            .Should().Be(6, "three points = six alternating x/y numbers");
+        (doc.Resolve(inkList[1]) as Excise.Core.Primitives.PdfArray)!.Count.Should().Be(4);
+
+        // /Rect: bounding box of all points padded by half the stroke width.
+        var rect = annotation.Rect.Normalize();
+        rect.Left.Should().BeApproximately(98.5, 0.01);
+        rect.Bottom.Should().BeApproximately(648.5, 0.01);
+        rect.Right.Should().BeApproximately(301.5, 0.01);
+        rect.Top.Should().BeApproximately(721.5, 0.01);
+
+        var ap = doc.Resolve(raw.GetOptional("AP")!) as Excise.Core.Primitives.PdfDictionary;
+        ap.Should().NotBeNull();
+        var n = doc.Resolve(ap!.GetOptional("N")!) as Excise.Core.Primitives.PdfStream;
+        n.Should().NotBeNull("/AP /N must resolve to a Form XObject stream");
+        n!.GetNameOrNull("Subtype").Should().Be("Form");
+        var bbox = n.GetOptional("BBox") as Excise.Core.Primitives.PdfArray;
+        bbox.Should().NotBeNull();
+        bbox!.GetNumber(2).Should().BeApproximately(203, 0.01, "BBox width must match /Rect width");
+        bbox.GetNumber(3).Should().BeApproximately(73, 0.01, "BBox height must match /Rect height");
+
+        // The appearance must actually stroke both polylines in the authored
+        // color and width, translated into BBox-local coordinates.
+        var ops = n.GetDecodedString();
+        ops.Should().Contain("0 0 0.8 RG", "the /C color must be what the appearance strokes with");
+        ops.Should().Contain("3 w", "the /BS /W width must be what the appearance strokes with");
+        ops.Should().Contain("1 J", "round caps give the freehand pen look");
+        ops.Should().Contain("1.5 51.5 m", "first stroke starts at (100,700) - rect origin (98.5,648.5)");
+        ops.Should().Contain("101.5 71.5 l");
+        ops.Should().Contain("201.5 51.5 l");
+        ops.Should().Contain("21.5 1.5 m", "second stroke starts at (120,650) - rect origin");
+        System.Text.RegularExpressions.Regex.Matches(ops, @"(^|\n)S(\n|$)").Count
+            .Should().Be(2, "each polyline is stroked independently");
+    }
+
+    [Fact]
+    public void AddInkAnnotation_SurvivesSaveAndReload_WithAppearanceIntact()
+    {
+        var strokes = new[]
+        {
+            new[] { (100.0, 700.0), (300.0, 700.0) },
+            new[] { (100.0, 650.0), (200.0, 600.0), (300.0, 650.0) }
+        };
+
+        byte[] saved;
+        using (var doc = PdfDocument.CreateNew())
+        {
+            doc.Pages.AddBlank();
+            doc.AddInkAnnotation(1, strokes, contents: "Persisted ink",
+                author: "EXCISE", red: 1, green: 0, blue: 0, borderWidth: 4);
+            saved = doc.SaveToBytes();
+        }
+
+        using var reopened = PdfDocument.Open(saved);
+        var ink = reopened.GetPage(1).GetAnnotations().Should()
+            .ContainSingle(a => a.Subtype == PdfAnnotationSubtype.Ink).Subject;
+
+        ink.Contents.Should().Be("Persisted ink");
+        ink.Author.Should().Be("EXCISE");
+        ink.HasAppearance.Should().BeTrue("/AP must survive the save/reload round-trip");
+        ink.BorderWidth.Should().Be(4);
+
+        // /InkList must round-trip point-for-point through the writer.
+        ink.InkStrokes.Should().NotBeNull();
+        ink.InkStrokes!.Count.Should().Be(2);
+        ink.InkStrokes[0].Should().Equal((100.0, 700.0), (300.0, 700.0));
+        ink.InkStrokes[1].Should().Equal((100.0, 650.0), (200.0, 600.0), (300.0, 650.0));
+
+        // The reloaded appearance must still be a decodable Form XObject that
+        // strokes the polylines — this is what viewers actually paint.
+        var raw = ink.RawDictionary;
+        var ap = reopened.Resolve(raw.GetOptional("AP")!)
+            as Excise.Core.Primitives.PdfDictionary;
+        var n = reopened.Resolve(ap!.GetOptional("N")!)
+            as Excise.Core.Primitives.PdfStream;
+        n.Should().NotBeNull();
+        n!.GetNameOrNull("Subtype").Should().Be("Form");
+        var ops = n.GetDecodedString();
+        ops.Should().Contain("1 0 0 RG");
+        ops.Should().Contain("4 w");
+        ops.Should().Contain(" m\n");
+        ops.Should().Contain(" l\n");
+        ops.Should().Contain("S\n");
+    }
+
+    [Fact]
+    public void AddInkAnnotation_RejectsBadArguments()
+    {
+        using var doc = PdfDocument.CreateNew();
+        doc.Pages.AddBlank();
+        var goodStroke = new[] { new[] { (100.0, 100.0), (200.0, 200.0) } };
+
+        var nullStrokes = () => doc.AddInkAnnotation(
+            1, (IReadOnlyList<IReadOnlyList<(double, double)>>)null!);
+        nullStrokes.Should().Throw<ArgumentNullException>();
+
+        var noStrokes = () => doc.AddInkAnnotation(
+            1, Array.Empty<IReadOnlyList<(double, double)>>());
+        noStrokes.Should().Throw<ArgumentException>();
+
+        var singlePoint = () => doc.AddInkAnnotation(
+            1, new[] { new[] { (100.0, 100.0) } });
+        singlePoint.Should().Throw<ArgumentException>(
+            "a stroke needs at least two points to draw anything");
+
+        var nanPoint = () => doc.AddInkAnnotation(
+            1, new[] { new[] { (double.NaN, 100.0), (200.0, 200.0) } });
+        nanPoint.Should().Throw<ArgumentException>();
+
+        var badColor = () => doc.AddInkAnnotation(1, goodStroke, red: 1.5);
+        badColor.Should().Throw<ArgumentOutOfRangeException>();
+
+        var zeroWidth = () => doc.AddInkAnnotation(1, goodStroke, borderWidth: 0);
+        zeroWidth.Should().Throw<ArgumentOutOfRangeException>(
+            "a zero-width ink annotation would be invisible");
+
+        var negativeWidth = () => doc.AddInkAnnotation(1, goodStroke, borderWidth: -1);
+        negativeWidth.Should().Throw<ArgumentOutOfRangeException>();
+    }
+
     [Fact]
     public void AddHighlightAnnotation_RejectsInvalidColor()
     {
