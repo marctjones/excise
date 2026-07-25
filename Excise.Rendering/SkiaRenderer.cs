@@ -1363,6 +1363,30 @@ internal partial class RenderContext
             _state.MiterLimit = (float)extGState.GetNumber("ML", 10.0);
         }
 
+        // OP / op / OPM - overprint control (ISO 32000-1 Table 58, #634).
+        // A dictionary that sets /OP without /op sets BOTH flags: op's
+        // default is OP's value when only OP is present in the same dict.
+        // OPM persists across gs operators that omit it (like every other
+        // ExtGState entry), which real prepress fixtures rely on (Ghent
+        // GWG011 sets /OPM 1 in one ExtGState and toggles /OP in the next).
+        if (extGState.ContainsKey("OP"))
+        {
+            var strokeOverprint = extGState.GetBool("OP");
+            _state.StrokeOverprint = strokeOverprint;
+            if (!extGState.ContainsKey("op"))
+                _state.FillOverprint = strokeOverprint;
+        }
+
+        if (extGState.ContainsKey("op"))
+        {
+            _state.FillOverprint = extGState.GetBool("op");
+        }
+
+        if (extGState.ContainsKey("OPM"))
+        {
+            _state.OverprintMode = (int)extGState.GetNumber("OPM", 0);
+        }
+
         if (extGState.ContainsKey("BM"))
         {
             var bm = extGState.GetNameOrNull("BM") ?? "Normal";
