@@ -516,15 +516,18 @@ internal sealed class CidCMap
         if ((hex.Length & 1) != 0)
             hex = "0" + hex;
 
-        // Codes are at most 4 bytes (8 hex digits) per the CMap spec. A
-        // malformed longer string must not overflow the shifts into garbage
-        // (or a negative value that breaks byte-wise comparisons): keep the
-        // leading 4 bytes and clamp to int.MaxValue. #515
+        // Codes are at most 4 bytes (8 hex digits) per the CMap spec — a
+        // malformed longer string must not keep shifting bytes out: keep the
+        // leading 4 bytes only. The raw 32-bit BIT PATTERN is preserved (a
+        // 4-byte code like UniGB-UTF16-H's <D800DC00> wraps negative as an
+        // int) because ReadBigEndian produces the identical wrap for decoded
+        // codes, and the byte-wise codespace comparison is bit-pattern-based
+        // — clamping would destroy the per-byte bounds. #515
         var digits = Math.Min(hex.Length, 8);
-        long value = 0;
+        var value = 0;
         for (var i = 0; i < digits; i++)
-            value = (value << 4) | (uint)HexDigit(hex[i]);
-        return value > int.MaxValue ? int.MaxValue : (int)value;
+            value = (value << 4) | HexDigit(hex[i]);
+        return value;
     }
 
     private static int HexDigit(char c)
