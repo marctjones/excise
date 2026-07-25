@@ -624,6 +624,897 @@ public static class PdfAnnotationAuthoring
         return sb.ToString();
     }
 
+    // ── Text markup: Underline / StrikeOut / Squiggly (#626, ISO 32000-2 §12.5.6.10) ──
+
+    /// <summary>
+    /// Add an Underline text-markup annotation — a straight line drawn under
+    /// the marked text (ISO 32000-2:2020 §12.5.6.10, Table 179). Mirrors
+    /// <see cref="AddHighlightAnnotation"/>'s shape: a single axis-aligned
+    /// <paramref name="rect"/> becomes one /QuadPoints quad. Unlike Highlight
+    /// (which most viewers synthesize an appearance for), Underline carries a
+    /// baked <c>/AP /N</c> stroke so every viewer draws the same line (#626).
+    /// </summary>
+    public static PdfAnnotation AddUnderlineAnnotation(
+        this PdfDocument document,
+        int pageNumber,
+        PdfRectangle rect,
+        string? contents = null,
+        string? author = null,
+        double red = 1,
+        double green = 0,
+        double blue = 0)
+        => AddTextMarkupAnnotation(document, pageNumber, rect, "Underline", contents, author, red, green, blue);
+
+    /// <summary>
+    /// Add a StrikeOut text-markup annotation — a line through the middle of
+    /// the marked text (ISO 32000-2:2020 §12.5.6.10, Table 179). See
+    /// <see cref="AddUnderlineAnnotation"/> for shared parameter semantics.
+    /// </summary>
+    public static PdfAnnotation AddStrikeOutAnnotation(
+        this PdfDocument document,
+        int pageNumber,
+        PdfRectangle rect,
+        string? contents = null,
+        string? author = null,
+        double red = 1,
+        double green = 0,
+        double blue = 0)
+        => AddTextMarkupAnnotation(document, pageNumber, rect, "StrikeOut", contents, author, red, green, blue);
+
+    /// <summary>
+    /// Add a Squiggly text-markup annotation — a wavy underline (ISO
+    /// 32000-2:2020 §12.5.6.10, Table 179). See
+    /// <see cref="AddUnderlineAnnotation"/> for shared parameter semantics.
+    /// </summary>
+    public static PdfAnnotation AddSquigglyAnnotation(
+        this PdfDocument document,
+        int pageNumber,
+        PdfRectangle rect,
+        string? contents = null,
+        string? author = null,
+        double red = 1,
+        double green = 0,
+        double blue = 0)
+        => AddTextMarkupAnnotation(document, pageNumber, rect, "Squiggly", contents, author, red, green, blue);
+
+    private static PdfAnnotation AddTextMarkupAnnotation(
+        PdfDocument document,
+        int pageNumber,
+        PdfRectangle rect,
+        string subtype,
+        string? contents,
+        string? author,
+        double red,
+        double green,
+        double blue)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ValidateRect(rect);
+        ValidateColor(red, nameof(red));
+        ValidateColor(green, nameof(green));
+        ValidateColor(blue, nameof(blue));
+
+        var normalized = rect.Normalize();
+        var annot = NewAnnotationDict(subtype, normalized);
+
+        if (!string.IsNullOrWhiteSpace(contents))
+            annot.SetString("Contents", contents);
+        if (!string.IsNullOrWhiteSpace(author))
+            annot.SetString("T", author);
+
+        // Markup annotations carry /CreationDate (§12.5.6.2 Table 172).
+        annot.SetString("CreationDate", PdfDate(DateTimeOffset.UtcNow));
+
+        annot["C"] = new PdfArray(new PdfReal(red), new PdfReal(green), new PdfReal(blue));
+
+        annot["QuadPoints"] = new PdfArray(
+            new PdfReal(normalized.Left), new PdfReal(normalized.Top),
+            new PdfReal(normalized.Right), new PdfReal(normalized.Top),
+            new PdfReal(normalized.Left), new PdfReal(normalized.Bottom),
+            new PdfReal(normalized.Right), new PdfReal(normalized.Bottom));
+
+        // Baked normal appearance so third-party viewers draw the same pixels.
+        var apStream = BuildTextMarkupAppearanceStream(normalized, subtype, (red, green, blue));
+        var ap = new PdfDictionary();
+        ap["N"] = document.AddIndirectObject(apStream);
+        annot["AP"] = ap;
+
+        return AttachAnnotation(document, pageNumber, annot);
+    }
+
+    /// <summary>
+    /// Build the <c>/AP /N</c> Form XObject for an Underline/StrikeOut/Squiggly
+    /// markup annotation. Draws a single stroked line (Underline/StrikeOut) or
+    /// a zig-zag (Squiggly) across the local BBox width, positioned per
+    /// conventional placement: underline near the baseline (~12% up from the
+    /// bottom), strikeout through the visual middle (~45% up), squiggly at the
+    /// underline height.
+    /// </summary>
+    private static PdfStream BuildTextMarkupAppearanceStream(
+        PdfRectangle rect, string subtype, (double R, double G, double B) color)
+    {
+        double w = rect.Width;
+        double h = rect.Height;
+        double lineWidth = Math.Max(0.5, h * 0.06);
+
+        var sb = new StringBuilder();
+        sb.Append($"{Num(color.R)} {Num(color.G)} {Num(color.B)} RG\n");
+        sb.Append($"{Num(lineWidth)} w\n");
+
+        if (subtype == "Squiggly")
+        {
+            double baseline = h * 0.12;
+            double amplitude = Math.Max(1, h * 0.06);
+            double period = Math.Max(2, h * 0.18);
+            sb.Append($"0 {Num(baseline)} m\n");
+            bool up = true;
+            int emitted = 0;
+            for (double x = period; x <= w + period && emitted < 200; x += period, emitted++)
+            {
+                double y = baseline + (up ? amplitude : -amplitude);
+                sb.Append($"{Num(Math.Min(x, w))} {Num(y)} l\n");
+                up = !up;
+            }
+            if (emitted == 0)
+                sb.Append($"{Num(w)} {Num(baseline)} l\n");
+            sb.Append("S\n");
+        }
+        else
+        {
+            double y = subtype == "StrikeOut" ? h * 0.45 : h * 0.12;
+            sb.Append($"0 {Num(y)} m\n{Num(w)} {Num(y)} l\nS\n");
+        }
+
+        var stream = new PdfStream(Encoding.ASCII.GetBytes(sb.ToString()));
+        stream.SetName("Type", "XObject");
+        stream.SetName("Subtype", "Form");
+        stream.SetInt("FormType", 1);
+        stream["BBox"] = PdfArray.FromRectangle(0, 0, w, h);
+        stream["Resources"] = new PdfDictionary();
+        return stream;
+    }
+
+    // ── Line / Arrow (#626, ISO 32000-2 §12.5.6.7) ───────────────────────────
+
+    /// <summary>
+    /// Add a Line annotation — a straight line between two points (ISO
+    /// 32000-2:2020 §12.5.6.7, Table 178).
+    /// </summary>
+    /// <remarks>
+    /// Carries <c>/L</c> (the two absolute-page-space endpoints) and a baked
+    /// <c>/AP /N</c> stroke so every viewer draws the same line (#626).
+    /// <c>/Rect</c> is the line's bounding box, padded by half the stroke
+    /// width so the stroke isn't clipped.
+    /// </remarks>
+    public static PdfAnnotation AddLineAnnotation(
+        this PdfDocument document,
+        int pageNumber,
+        double x1, double y1, double x2, double y2,
+        string? contents = null,
+        string? author = null,
+        double red = 0,
+        double green = 0,
+        double blue = 0,
+        double lineWidth = 1)
+        => AddLineOrArrowAnnotation(
+            document, pageNumber, x1, y1, x2, y2, contents, author,
+            red, green, blue, lineWidth, startLineEnding: "None", endLineEnding: "None");
+
+    /// <summary>
+    /// Add an Arrow annotation — a Line annotation whose <c>/LE</c> entry
+    /// gives one or both ends an arrowhead (ISO 32000-2:2020 §12.5.6.7,
+    /// Table 178, <c>/LE</c> line-ending styles per Table 179). The default
+    /// draws a closed arrowhead at the end point only — the common "points at
+    /// X" review mark.
+    /// </summary>
+    /// <param name="startLineEnding">Line-ending style at (x1,y1): "None",
+    /// "OpenArrow" or "ClosedArrow".</param>
+    /// <param name="endLineEnding">Line-ending style at (x2,y2): "None",
+    /// "OpenArrow" or "ClosedArrow".</param>
+    public static PdfAnnotation AddArrowAnnotation(
+        this PdfDocument document,
+        int pageNumber,
+        double x1, double y1, double x2, double y2,
+        string? contents = null,
+        string? author = null,
+        double red = 0,
+        double green = 0,
+        double blue = 0,
+        double lineWidth = 1,
+        string startLineEnding = "None",
+        string endLineEnding = "ClosedArrow")
+        => AddLineOrArrowAnnotation(
+            document, pageNumber, x1, y1, x2, y2, contents, author,
+            red, green, blue, lineWidth, startLineEnding, endLineEnding);
+
+    private static readonly HashSet<string> SupportedLineEndings =
+        new(StringComparer.Ordinal) { "None", "OpenArrow", "ClosedArrow" };
+
+    private static PdfAnnotation AddLineOrArrowAnnotation(
+        PdfDocument document,
+        int pageNumber,
+        double x1, double y1, double x2, double y2,
+        string? contents,
+        string? author,
+        double red, double green, double blue,
+        double lineWidth,
+        string startLineEnding,
+        string endLineEnding)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        if (double.IsNaN(x1) || double.IsInfinity(x1) || double.IsNaN(y1) || double.IsInfinity(y1) ||
+            double.IsNaN(x2) || double.IsInfinity(x2) || double.IsNaN(y2) || double.IsInfinity(y2))
+            throw new ArgumentException("Line endpoints must be finite numbers.");
+        if (x1 == x2 && y1 == y2)
+            throw new ArgumentException("A line annotation needs two distinct endpoints.");
+
+        ValidateColor(red, nameof(red));
+        ValidateColor(green, nameof(green));
+        ValidateColor(blue, nameof(blue));
+        if (double.IsNaN(lineWidth) || double.IsInfinity(lineWidth) || lineWidth <= 0)
+            throw new ArgumentOutOfRangeException(nameof(lineWidth),
+                "Line width must be a finite, positive number of points.");
+        if (!SupportedLineEndings.Contains(startLineEnding))
+            throw new ArgumentException(
+                $"Unsupported start line ending \"{startLineEnding}\". Supported: " +
+                string.Join(", ", SupportedLineEndings) + ".",
+                nameof(startLineEnding));
+        if (!SupportedLineEndings.Contains(endLineEnding))
+            throw new ArgumentException(
+                $"Unsupported end line ending \"{endLineEnding}\". Supported: " +
+                string.Join(", ", SupportedLineEndings) + ".",
+                nameof(endLineEnding));
+
+        // Arrowheads extend past the endpoint; pad the rect enough to contain them.
+        double headSize = Math.Max(6, lineWidth * 4);
+        bool hasHead = startLineEnding != "None" || endLineEnding != "None";
+        double pad = lineWidth / 2 + (hasHead ? headSize : 0);
+        var rect = new PdfRectangle(
+            Math.Min(x1, x2) - pad, Math.Min(y1, y2) - pad,
+            Math.Max(x1, x2) + pad, Math.Max(y1, y2) + pad);
+
+        var annot = NewAnnotationDict("Line", rect);
+
+        if (!string.IsNullOrWhiteSpace(contents))
+            annot.SetString("Contents", contents);
+        if (!string.IsNullOrWhiteSpace(author))
+            annot.SetString("T", author);
+        annot.SetString("CreationDate", PdfDate(DateTimeOffset.UtcNow));
+
+        annot["L"] = new PdfArray(new PdfReal(x1), new PdfReal(y1), new PdfReal(x2), new PdfReal(y2));
+        annot["C"] = new PdfArray(new PdfReal(red), new PdfReal(green), new PdfReal(blue));
+        annot["LE"] = new PdfArray(new PdfName(startLineEnding), new PdfName(endLineEnding));
+
+        var bs = new PdfDictionary();
+        bs.SetName("Type", "Border");
+        bs.SetNumber("W", lineWidth);
+        bs.SetName("S", "S");
+        annot["BS"] = bs;
+
+        // Baked normal appearance so third-party viewers draw the same pixels.
+        var apStream = BuildLineAppearanceStream(
+            rect, x1, y1, x2, y2, (red, green, blue), lineWidth, startLineEnding, endLineEnding, headSize);
+        var ap = new PdfDictionary();
+        ap["N"] = document.AddIndirectObject(apStream);
+        annot["AP"] = ap;
+
+        return AttachAnnotation(document, pageNumber, annot);
+    }
+
+    /// <summary>
+    /// Build the <c>/AP /N</c> Form XObject for a Line/Arrow annotation. The
+    /// stream draws in a local space whose <c>/BBox</c> is <c>[0 0 w h]</c>
+    /// (points translated by the /Rect origin), strokes the line itself, then
+    /// appends a triangular arrowhead at each end whose <c>/LE</c> style is
+    /// not "None".
+    /// </summary>
+    private static PdfStream BuildLineAppearanceStream(
+        PdfRectangle rect,
+        double x1, double y1, double x2, double y2,
+        (double R, double G, double B) color,
+        double lineWidth,
+        string startLineEnding,
+        string endLineEnding,
+        double headSize)
+    {
+        double ox = rect.Left, oy = rect.Bottom;
+        double lx1 = x1 - ox, ly1 = y1 - oy, lx2 = x2 - ox, ly2 = y2 - oy;
+
+        var sb = new StringBuilder();
+        sb.Append($"{Num(color.R)} {Num(color.G)} {Num(color.B)} RG\n");
+        sb.Append($"{Num(color.R)} {Num(color.G)} {Num(color.B)} rg\n");
+        sb.Append($"{Num(lineWidth)} w\n1 J\n");
+        sb.Append($"{Num(lx1)} {Num(ly1)} m\n{Num(lx2)} {Num(ly2)} l\nS\n");
+
+        double dx = lx2 - lx1, dy = ly2 - ly1;
+        double len = Math.Sqrt(dx * dx + dy * dy);
+        double ux = len > 0 ? dx / len : 1, uy = len > 0 ? dy / len : 0;
+
+        if (endLineEnding != "None")
+            AppendArrowHead(sb, lx2, ly2, ux, uy, endLineEnding, headSize);
+        if (startLineEnding != "None")
+            AppendArrowHead(sb, lx1, ly1, -ux, -uy, startLineEnding, headSize);
+
+        var stream = new PdfStream(Encoding.ASCII.GetBytes(sb.ToString()));
+        stream.SetName("Type", "XObject");
+        stream.SetName("Subtype", "Form");
+        stream.SetInt("FormType", 1);
+        stream["BBox"] = PdfArray.FromRectangle(0, 0, rect.Width, rect.Height);
+        stream["Resources"] = new PdfDictionary();
+        return stream;
+    }
+
+    /// <summary>
+    /// Append a triangular arrowhead at (tipX,tipY) pointing along the unit
+    /// direction (dirX,dirY) — the line's own direction for an end-of-line
+    /// head, or its negation for a start-of-line head. "ClosedArrow" fills
+    /// the triangle; "OpenArrow" strokes just the two wings (open at the
+    /// base, per the ISO 32000-2 Table 179 line-ending gallery).
+    /// </summary>
+    private static void AppendArrowHead(
+        StringBuilder sb, double tipX, double tipY, double dirX, double dirY, string style, double size)
+    {
+        double px = -dirY, py = dirX; // perpendicular to the direction
+        double wingSpread = size * 0.4;
+
+        double baseX = tipX - dirX * size, baseY = tipY - dirY * size;
+        double leftX = baseX + px * wingSpread, leftY = baseY + py * wingSpread;
+        double rightX = baseX - px * wingSpread, rightY = baseY - py * wingSpread;
+
+        if (style == "ClosedArrow")
+        {
+            sb.Append($"{Num(tipX)} {Num(tipY)} m\n");
+            sb.Append($"{Num(leftX)} {Num(leftY)} l\n");
+            sb.Append($"{Num(rightX)} {Num(rightY)} l\n");
+            sb.Append("h\nB\n");
+        }
+        else // OpenArrow
+        {
+            sb.Append($"{Num(leftX)} {Num(leftY)} m\n");
+            sb.Append($"{Num(tipX)} {Num(tipY)} l\n");
+            sb.Append($"{Num(rightX)} {Num(rightY)} l\nS\n");
+        }
+    }
+
+    // ── Polygon / PolyLine (#626, ISO 32000-2 §12.5.6.9) ─────────────────────
+
+    /// <summary>
+    /// Add a Polygon annotation — a closed multi-sided shape (ISO
+    /// 32000-2:2020 §12.5.6.9, Table 178). See <see cref="AddSquareAnnotation"/>
+    /// for the shared border/interior-fill parameter semantics.
+    /// </summary>
+    public static PdfAnnotation AddPolygonAnnotation(
+        this PdfDocument document,
+        int pageNumber,
+        IReadOnlyList<(double X, double Y)> vertices,
+        string? contents = null,
+        string? author = null,
+        double red = 0,
+        double green = 0,
+        double blue = 0,
+        double borderWidth = 1,
+        double? interiorRed = null,
+        double? interiorGreen = null,
+        double? interiorBlue = null)
+        => AddPolyAnnotation(
+            document, pageNumber, vertices, isClosed: true, contents, author,
+            red, green, blue, borderWidth, interiorRed, interiorGreen, interiorBlue);
+
+    /// <summary>
+    /// Add a PolyLine annotation — an open multi-segment line (ISO
+    /// 32000-2:2020 §12.5.6.9, Table 178). Unlike Polygon, PolyLine has no
+    /// interior fill — it is always stroke-only.
+    /// </summary>
+    public static PdfAnnotation AddPolyLineAnnotation(
+        this PdfDocument document,
+        int pageNumber,
+        IReadOnlyList<(double X, double Y)> vertices,
+        string? contents = null,
+        string? author = null,
+        double red = 0,
+        double green = 0,
+        double blue = 0,
+        double borderWidth = 1)
+        => AddPolyAnnotation(
+            document, pageNumber, vertices, isClosed: false, contents, author,
+            red, green, blue, borderWidth, null, null, null);
+
+    private static PdfAnnotation AddPolyAnnotation(
+        PdfDocument document,
+        int pageNumber,
+        IReadOnlyList<(double X, double Y)> vertices,
+        bool isClosed,
+        string? contents,
+        string? author,
+        double red, double green, double blue,
+        double borderWidth,
+        double? interiorRed, double? interiorGreen, double? interiorBlue)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(vertices);
+
+        int minVertices = isClosed ? 3 : 2;
+        if (vertices.Count < minVertices)
+            throw new ArgumentException(
+                $"A {(isClosed ? "Polygon" : "PolyLine")} annotation needs at least {minVertices} vertices.",
+                nameof(vertices));
+        foreach (var (x, y) in vertices)
+            if (double.IsNaN(x) || double.IsInfinity(x) || double.IsNaN(y) || double.IsInfinity(y))
+                throw new ArgumentException("Vertex coordinates must be finite numbers.", nameof(vertices));
+
+        ValidateColor(red, nameof(red));
+        ValidateColor(green, nameof(green));
+        ValidateColor(blue, nameof(blue));
+        if (double.IsNaN(borderWidth) || double.IsInfinity(borderWidth) || borderWidth < 0)
+            throw new ArgumentOutOfRangeException(nameof(borderWidth),
+                "Border width must be a finite, non-negative number of points.");
+
+        var interiorSet = new[] { interiorRed, interiorGreen, interiorBlue }.Count(c => c.HasValue);
+        if (interiorSet is not (0 or 3))
+            throw new ArgumentException(
+                "Interior color requires all three of interiorRed, interiorGreen " +
+                "and interiorBlue, or none.", nameof(interiorRed));
+
+        (double R, double G, double B)? interior = null;
+        if (interiorSet == 3)
+        {
+            ValidateColor(interiorRed!.Value, nameof(interiorRed));
+            ValidateColor(interiorGreen!.Value, nameof(interiorGreen));
+            ValidateColor(interiorBlue!.Value, nameof(interiorBlue));
+            interior = (interiorRed.Value, interiorGreen.Value, interiorBlue.Value);
+        }
+
+        if (borderWidth == 0 && interior == null)
+            throw new ArgumentException(
+                $"A {(isClosed ? "polygon" : "polyline")} with zero border width and no interior " +
+                "color would be invisible. Give it a border, a fill, or both.",
+                nameof(borderWidth));
+
+        double minX = double.MaxValue, minY = double.MaxValue;
+        double maxX = double.MinValue, maxY = double.MinValue;
+        foreach (var (x, y) in vertices)
+        {
+            minX = Math.Min(minX, x); maxX = Math.Max(maxX, x);
+            minY = Math.Min(minY, y); maxY = Math.Max(maxY, y);
+        }
+        double pad = borderWidth / 2;
+        var rect = new PdfRectangle(minX - pad, minY - pad, maxX + pad, maxY + pad);
+
+        var annot = NewAnnotationDict(isClosed ? "Polygon" : "PolyLine", rect);
+
+        if (!string.IsNullOrWhiteSpace(contents))
+            annot.SetString("Contents", contents);
+        if (!string.IsNullOrWhiteSpace(author))
+            annot.SetString("T", author);
+        annot.SetString("CreationDate", PdfDate(DateTimeOffset.UtcNow));
+
+        var verticesArr = new PdfArray();
+        foreach (var (x, y) in vertices)
+        {
+            verticesArr.Add(x);
+            verticesArr.Add(y);
+        }
+        annot["Vertices"] = verticesArr;
+
+        annot["C"] = new PdfArray(new PdfReal(red), new PdfReal(green), new PdfReal(blue));
+        if (interior is { } ic)
+            annot["IC"] = new PdfArray(new PdfReal(ic.R), new PdfReal(ic.G), new PdfReal(ic.B));
+
+        var bs = new PdfDictionary();
+        bs.SetName("Type", "Border");
+        bs.SetNumber("W", borderWidth);
+        bs.SetName("S", "S");
+        annot["BS"] = bs;
+
+        // Baked normal appearance so third-party viewers draw the same pixels.
+        var apStream = BuildPolyAppearanceStream(rect, vertices, isClosed, (red, green, blue), interior, borderWidth);
+        var ap = new PdfDictionary();
+        ap["N"] = document.AddIndirectObject(apStream);
+        annot["AP"] = ap;
+
+        return AttachAnnotation(document, pageNumber, annot);
+    }
+
+    /// <summary>
+    /// Build the <c>/AP /N</c> Form XObject for a Polygon/PolyLine annotation
+    /// — a single path visiting every vertex in order, closed with <c>h</c>
+    /// for Polygon, left open for PolyLine.
+    /// </summary>
+    private static PdfStream BuildPolyAppearanceStream(
+        PdfRectangle rect,
+        IReadOnlyList<(double X, double Y)> vertices,
+        bool isClosed,
+        (double R, double G, double B) stroke,
+        (double R, double G, double B)? interior,
+        double borderWidth)
+    {
+        double ox = rect.Left, oy = rect.Bottom;
+        var sb = new StringBuilder();
+        if (interior is { } ic)
+            sb.Append($"{Num(ic.R)} {Num(ic.G)} {Num(ic.B)} rg\n");
+        if (borderWidth > 0)
+        {
+            sb.Append($"{Num(stroke.R)} {Num(stroke.G)} {Num(stroke.B)} RG\n");
+            sb.Append($"{Num(borderWidth)} w\n1 j\n");
+        }
+
+        sb.Append($"{Num(vertices[0].X - ox)} {Num(vertices[0].Y - oy)} m\n");
+        for (int i = 1; i < vertices.Count; i++)
+            sb.Append($"{Num(vertices[i].X - ox)} {Num(vertices[i].Y - oy)} l\n");
+        if (isClosed)
+            sb.Append("h\n");
+
+        sb.Append(interior != null
+            ? (borderWidth > 0 ? "B\n" : "f\n")
+            : "S\n");
+
+        var stream = new PdfStream(Encoding.ASCII.GetBytes(sb.ToString()));
+        stream.SetName("Type", "XObject");
+        stream.SetName("Subtype", "Form");
+        stream.SetInt("FormType", 1);
+        stream["BBox"] = PdfArray.FromRectangle(0, 0, rect.Width, rect.Height);
+        stream["Resources"] = new PdfDictionary();
+        return stream;
+    }
+
+    // ── Stamp (#626, ISO 32000-2 §12.5.6.12) ─────────────────────────────────
+
+    /// <summary>
+    /// The standard rubber-stamp names defined in ISO 32000-2:2020 §12.5.6.12
+    /// (Table 181) that <see cref="AddStampAnnotation"/> accepts for
+    /// <c>stampName</c>.
+    /// </summary>
+    public static IReadOnlyList<string> StandardStampNames { get; } =
+    [
+        "Approved", "Experimental", "NotApproved", "AsIs", "Expired",
+        "NotForPublicRelease", "Confidential", "Sold", "Departmental",
+        "TopSecret", "Draft", "ForComment", "Final", "ForPublicRelease",
+        "InformationOnly"
+    ];
+
+    private static readonly HashSet<string> StandardStampNameSet =
+        new(StandardStampNames, StringComparer.Ordinal);
+
+    private static readonly HashSet<string> NegativeStampNames = new(StringComparer.Ordinal)
+        { "NotApproved", "Expired", "NotForPublicRelease", "Confidential", "TopSecret", "Draft" };
+
+    private static readonly HashSet<string> PositiveStampNames = new(StringComparer.Ordinal)
+        { "Approved", "Final", "Sold", "ForPublicRelease" };
+
+    /// <summary>
+    /// Add a Stamp annotation using one of the standard rubber-stamp names
+    /// (ISO 32000-2:2020 §12.5.6.12, Table 181).
+    /// </summary>
+    /// <remarks>
+    /// excise has no bundled stamp icon artwork, so the baked <c>/AP /N</c>
+    /// appearance draws a bordered box with the stamp name as bold, centered
+    /// text in a color matching common reviewer convention (red for
+    /// negative/urgent stamps such as "Confidential"/"Draft"/"Expired", green
+    /// for positive ones such as "Approved"/"Final", blue otherwise) — not
+    /// Acrobat's own icon artwork, but every ISO-conforming viewer renders the
+    /// exact same pixels, which is the property #626 cares about. For a
+    /// company logo or other custom artwork use
+    /// <see cref="AddImageStampAnnotation"/> instead.
+    /// </remarks>
+    /// <param name="stampName">One of <see cref="StandardStampNames"/>.</param>
+    public static PdfAnnotation AddStampAnnotation(
+        this PdfDocument document,
+        int pageNumber,
+        PdfRectangle rect,
+        string stampName,
+        string? contents = null,
+        string? author = null)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ValidateRect(rect);
+        if (string.IsNullOrWhiteSpace(stampName) || !StandardStampNameSet.Contains(stampName))
+            throw new ArgumentException(
+                $"\"{stampName}\" is not a standard stamp name. Supported: " +
+                string.Join(", ", StandardStampNames) + ".",
+                nameof(stampName));
+
+        var normalized = rect.Normalize();
+        var annot = NewAnnotationDict("Stamp", normalized);
+        annot.SetName("Name", stampName);
+
+        if (!string.IsNullOrWhiteSpace(contents))
+            annot.SetString("Contents", contents);
+        if (!string.IsNullOrWhiteSpace(author))
+            annot.SetString("T", author);
+        annot.SetString("CreationDate", PdfDate(DateTimeOffset.UtcNow));
+
+        var color = StampColor(stampName);
+        annot["C"] = new PdfArray(new PdfReal(color.R), new PdfReal(color.G), new PdfReal(color.B));
+
+        var apStream = BuildStampAppearanceStream(document, normalized, stampName, color);
+        var ap = new PdfDictionary();
+        ap["N"] = document.AddIndirectObject(apStream);
+        annot["AP"] = ap;
+
+        return AttachAnnotation(document, pageNumber, annot);
+    }
+
+    private static (double R, double G, double B) StampColor(string stampName) =>
+        NegativeStampNames.Contains(stampName) ? (0.8, 0, 0) :
+        PositiveStampNames.Contains(stampName) ? (0, 0.55, 0) :
+        (0, 0.3, 0.7);
+
+    /// <summary>
+    /// Build the <c>/AP /N</c> Form XObject for a standard-name Stamp: a
+    /// stroked border plus the stamp name as bold Helvetica, sized to fit the
+    /// box (bounded by both width and height) and centered.
+    /// </summary>
+    private static PdfStream BuildStampAppearanceStream(
+        PdfDocument document, PdfRectangle rect, string label, (double R, double G, double B) color)
+    {
+        double w = rect.Width, h = rect.Height;
+        double borderWidth = Math.Max(1, Math.Min(w, h) * 0.04);
+        double inset = borderWidth / 2;
+
+        var sb = new StringBuilder();
+        sb.Append($"{Num(color.R)} {Num(color.G)} {Num(color.B)} RG\n");
+        sb.Append($"{Num(borderWidth)} w\n");
+        sb.Append($"{Num(inset)} {Num(inset)} {Num(w - 2 * inset)} {Num(h - 2 * inset)} re S\n");
+
+        var unitFont = PdfFont.HelveticaBold(1);
+        double widthAt1 = Math.Max(0.001, unitFont.MeasureWidth(label));
+        double fontSizeByWidth = (w * 0.85) / widthAt1;
+        double fontSizeByHeight = h * 0.4;
+        double fontSize = Math.Max(4, Math.Min(fontSizeByWidth, fontSizeByHeight));
+        var sized = PdfFont.HelveticaBold(fontSize);
+        double textWidth = sized.MeasureWidth(label);
+        double x = Math.Max(0, (w - textWidth) / 2);
+        double y = h / 2 - fontSize * 0.35;
+
+        sb.Append("BT\n");
+        sb.Append($"/HelvB {Num(fontSize)} Tf\n");
+        sb.Append($"{Num(color.R)} {Num(color.G)} {Num(color.B)} rg\n");
+        sb.Append($"{Num(x)} {Num(y)} Td\n");
+        sb.Append('(').Append(EscapePdfTextString(label)).Append(") Tj\n");
+        sb.Append("ET\n");
+
+        var stream = new PdfStream(Encoding.ASCII.GetBytes(sb.ToString()));
+        stream.SetName("Type", "XObject");
+        stream.SetName("Subtype", "Form");
+        stream.SetInt("FormType", 1);
+        stream["BBox"] = PdfArray.FromRectangle(0, 0, w, h);
+
+        var helvBold = new PdfDictionary();
+        helvBold.SetName("Type", "Font");
+        helvBold.SetName("Subtype", "Type1");
+        helvBold.SetName("BaseFont", "Helvetica-Bold");
+        helvBold.SetName("Encoding", "WinAnsiEncoding");
+
+        var fonts = new PdfDictionary();
+        fonts["HelvB"] = document.AddIndirectObject(helvBold);
+        var resources = new PdfDictionary();
+        resources["Font"] = fonts;
+        stream["Resources"] = resources;
+
+        return stream;
+    }
+
+    /// <summary>
+    /// Add a Stamp annotation whose appearance is a caller-supplied raster
+    /// image (e.g. a company logo) rather than one of the standard names
+    /// (ISO 32000-2:2020 §12.5.6.12).
+    /// </summary>
+    /// <remarks>
+    /// The image is embedded as an uncompressed DeviceRGB Image XObject
+    /// referenced from the baked <c>/AP /N</c> Form XObject, so every
+    /// ISO-conforming viewer draws the exact same pixels (#626) — deliberately
+    /// no dependency on an external image codec (JPEG/PNG decoding); callers
+    /// that already have decoded pixels (e.g. from SkiaSharp in the GUI layer)
+    /// can pass them straight through.
+    /// </remarks>
+    /// <param name="document">Target document.</param>
+    /// <param name="pageNumber">1-based page number.</param>
+    /// <param name="rect">Annotation rectangle in PDF points (Y-up); the
+    /// image is stretched to fill it.</param>
+    /// <param name="rgbPixels">Top-down, row-major RGB24 pixel data: exactly
+    /// <c>pixelWidth * pixelHeight * 3</c> bytes, 3 bytes (R,G,B) per pixel,
+    /// no padding between rows.</param>
+    /// <param name="pixelWidth">Image width in pixels.</param>
+    /// <param name="pixelHeight">Image height in pixels.</param>
+    public static PdfAnnotation AddImageStampAnnotation(
+        this PdfDocument document,
+        int pageNumber,
+        PdfRectangle rect,
+        byte[] rgbPixels,
+        int pixelWidth,
+        int pixelHeight,
+        string? contents = null,
+        string? author = null)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(rgbPixels);
+        ValidateRect(rect);
+
+        if (pixelWidth <= 0 || pixelHeight <= 0)
+            throw new ArgumentException("Image dimensions must be positive.", nameof(pixelWidth));
+        long expected = (long)pixelWidth * pixelHeight * 3;
+        if (rgbPixels.LongLength != expected)
+            throw new ArgumentException(
+                $"rgbPixels must be exactly pixelWidth*pixelHeight*3 bytes ({expected}), " +
+                $"got {rgbPixels.LongLength}.",
+                nameof(rgbPixels));
+
+        var normalized = rect.Normalize();
+        var annot = NewAnnotationDict("Stamp", normalized);
+
+        if (!string.IsNullOrWhiteSpace(contents))
+            annot.SetString("Contents", contents);
+        if (!string.IsNullOrWhiteSpace(author))
+            annot.SetString("T", author);
+        annot.SetString("CreationDate", PdfDate(DateTimeOffset.UtcNow));
+
+        var apStream = BuildImageStampAppearanceStream(document, normalized, rgbPixels, pixelWidth, pixelHeight);
+        var ap = new PdfDictionary();
+        ap["N"] = document.AddIndirectObject(apStream);
+        annot["AP"] = ap;
+
+        return AttachAnnotation(document, pageNumber, annot);
+    }
+
+    /// <summary>
+    /// Build the <c>/AP /N</c> Form XObject for a custom image Stamp: an
+    /// uncompressed DeviceRGB Image XObject, drawn full-bleed into the
+    /// <c>/BBox</c> via the standard <c>cx 0 0 cy 0 0 cm /Im0 Do</c> unit-square
+    /// mapping (§8.9.5.2).
+    /// </summary>
+    private static PdfStream BuildImageStampAppearanceStream(
+        PdfDocument document, PdfRectangle rect, byte[] rgbPixels, int pixelWidth, int pixelHeight)
+    {
+        double w = rect.Width, h = rect.Height;
+
+        var image = new PdfStream(rgbPixels);
+        image.SetName("Type", "XObject");
+        image.SetName("Subtype", "Image");
+        image.SetInt("Width", pixelWidth);
+        image.SetInt("Height", pixelHeight);
+        image.SetName("ColorSpace", "DeviceRGB");
+        image.SetInt("BitsPerComponent", 8);
+        var imageRef = document.AddIndirectObject(image);
+
+        var sb = new StringBuilder();
+        sb.Append("q\n");
+        sb.Append($"{Num(w)} 0 0 {Num(h)} 0 0 cm\n");
+        sb.Append("/Im0 Do\n");
+        sb.Append("Q\n");
+
+        var stream = new PdfStream(Encoding.ASCII.GetBytes(sb.ToString()));
+        stream.SetName("Type", "XObject");
+        stream.SetName("Subtype", "Form");
+        stream.SetInt("FormType", 1);
+        stream["BBox"] = PdfArray.FromRectangle(0, 0, w, h);
+
+        var xobjects = new PdfDictionary();
+        xobjects["Im0"] = imageRef;
+        var resources = new PdfDictionary();
+        resources["XObject"] = xobjects;
+        stream["Resources"] = resources;
+
+        return stream;
+    }
+
+    // ── Edit / delete existing annotations (#626) ────────────────────────────
+
+    /// <summary>
+    /// Update an existing annotation's <c>/Contents</c> (comment/body text) in
+    /// place. Pass <c>null</c> to remove the entry. Also refreshes <c>/M</c>
+    /// (last-modified date, §12.5.2 Table 164's edit-tracking convention).
+    /// </summary>
+    public static void SetAnnotationContents(this PdfAnnotation annotation, string? contents)
+    {
+        ArgumentNullException.ThrowIfNull(annotation);
+        if (contents == null)
+            annotation.RawDictionary.Remove("Contents");
+        else
+            annotation.RawDictionary.SetString("Contents", contents);
+        annotation.RawDictionary.SetString("M", PdfDate(DateTimeOffset.UtcNow));
+    }
+
+    /// <summary>
+    /// Update an existing annotation's <c>/C</c> color in place (border/stroke
+    /// color for shapes and lines, icon color for Text, background for
+    /// FreeText). Does not touch <c>/IC</c> (interior fill) or repaint any
+    /// existing <c>/AP</c> appearance stream — callers that need the baked
+    /// pixels to match should re-author the annotation instead.
+    /// </summary>
+    public static void SetAnnotationColor(this PdfAnnotation annotation, double red, double green, double blue)
+    {
+        ArgumentNullException.ThrowIfNull(annotation);
+        ValidateColor(red, nameof(red));
+        ValidateColor(green, nameof(green));
+        ValidateColor(blue, nameof(blue));
+        annotation.RawDictionary["C"] = new PdfArray(new PdfReal(red), new PdfReal(green), new PdfReal(blue));
+        annotation.RawDictionary.SetString("M", PdfDate(DateTimeOffset.UtcNow));
+    }
+
+    /// <summary>
+    /// Update an existing annotation's <c>/CA</c> constant opacity in place
+    /// (ISO 32000-2:2020 §12.5.2 Table 164). 0 is fully transparent, 1 (the
+    /// default when absent) is fully opaque.
+    /// </summary>
+    public static void SetAnnotationOpacity(this PdfAnnotation annotation, double opacity)
+    {
+        ArgumentNullException.ThrowIfNull(annotation);
+        if (double.IsNaN(opacity) || opacity < 0 || opacity > 1)
+            throw new ArgumentOutOfRangeException(nameof(opacity), "Opacity must be between 0 and 1.");
+        annotation.RawDictionary.SetNumber("CA", opacity);
+        annotation.RawDictionary.SetString("M", PdfDate(DateTimeOffset.UtcNow));
+    }
+
+    /// <summary>
+    /// Remove an annotation from a page's <c>/Annots</c> array.
+    /// </summary>
+    /// <remarks>
+    /// The underlying indirect object is left in the xref (unreachable, and
+    /// garbage-collected on the next full rewrite by whatever wrote the file)
+    /// — this only detaches it from the page, matching how every other
+    /// mutation in this class works on the in-memory object graph.
+    /// </remarks>
+    /// <returns><c>true</c> if the annotation was found and removed;
+    /// <c>false</c> if it wasn't on that page's /Annots array (already
+    /// removed, or belongs to a different page).</returns>
+    public static bool RemoveAnnotation(this PdfDocument document, int pageNumber, PdfAnnotation annotation)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(annotation);
+
+        var page = document.GetPage(pageNumber);
+        var annotsObj = page.Dictionary.GetOptional("Annots");
+        if (annotsObj == null || document.Resolve(annotsObj) is not PdfArray annots)
+            return false;
+
+        for (int i = 0; i < annots.Count; i++)
+        {
+            if (document.Resolve(annots[i]) is PdfDictionary d && ReferenceEquals(d, annotation.RawDictionary))
+            {
+                annots.RemoveAt(i);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // ── Reply threads (#626, ISO 32000-2 §12.5.6.2 — /IRT and /RT) ───────────
+
+    /// <summary>
+    /// Turn <paramref name="reply"/> into a reply to <paramref name="parent"/>
+    /// by setting <c>/IRT</c> (in-reply-to — an indirect reference to the
+    /// parent annotation) and <c>/RT</c> (reply type).
+    /// </summary>
+    /// <remarks>
+    /// Both annotations must already be attached to <paramref name="document"/>
+    /// (created through one of the <c>Add*Annotation</c> methods, or
+    /// imported) — <c>/IRT</c> needs the parent's real indirect object
+    /// reference, which only exists once it has been written into the
+    /// document.
+    /// </remarks>
+    /// <param name="replyType">"R" (the default — a visible threaded reply)
+    /// or "Group" (groups the annotations without implying a reply
+    /// relationship, per Table 173).</param>
+    /// <exception cref="InvalidOperationException"><paramref name="parent"/>
+    /// is not a top-level indirect object of <paramref name="document"/>.</exception>
+    public static void SetReplyTo(
+        this PdfAnnotation reply, PdfDocument document, PdfAnnotation parent, string replyType = "R")
+    {
+        ArgumentNullException.ThrowIfNull(reply);
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(parent);
+        if (replyType is not ("R" or "Group"))
+            throw new ArgumentException("Reply type must be \"R\" or \"Group\".", nameof(replyType));
+
+        var parentRef = document.GetReferenceTo(parent.RawDictionary)
+            ?? throw new InvalidOperationException(
+                "The parent annotation is not an indirect object of this document yet " +
+                "— attach it first (Add*Annotation, or an XFDF/FDF import).");
+
+        reply.RawDictionary["IRT"] = parentRef;
+        reply.RawDictionary.SetName("RT", replyType);
+    }
+
     /// <summary>
     /// Attach a fully-built annotation dictionary to a page — the shared
     /// /P + /Annots plumbing, reused by the XFDF importer
