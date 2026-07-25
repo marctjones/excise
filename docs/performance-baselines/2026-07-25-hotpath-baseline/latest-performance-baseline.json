@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "issues": ["#596", "#597", "#601", "#602"],
+  "generatedUtc": "2026-07-25T06:29:24Z",
+  "policy": "Benchmark and hotspot evidence is grouped by excise-owned workload/code-path area; reference renderer timing is evidence only and is not an optimization target.",
+  "artifacts": [
+    {"name":"benchmark-report","path":"logs/benchmarks/597-baseline/latest-suite/benchmark-report.json","exists":true,"issueRefs":"#596 #597 #602"},
+    {"name":"benchmark-pages","path":"logs/benchmarks/597-baseline/latest-suite/benchmark-pages.csv","exists":true,"issueRefs":"#596 #597 #602"},
+    {"name":"benchmark-hotpaths","path":"logs/benchmarks/597-baseline/latest-suite/benchmark-hotpaths.json","exists":true,"issueRefs":"#596 #597 #598 #599 #600"},
+    {"name":"benchmark-markdown","path":"logs/benchmarks/597-baseline/latest-suite/benchmark-report.md","exists":true,"issueRefs":"#596 #597"},
+    {"name":"corpus-codepath-hotspots","path":"logs/benchmarks/597-baseline/latest-corpus-codepath-hotspots.json","exists":false,"issueRefs":"#597 #598 #599"},
+    {"name":"gui-codepath-hotspots","path":"logs/benchmarks/597-baseline/latest-gui-codepath-hotspots.json","exists":false,"issueRefs":"#597 #601"},
+    {"name":"gui-workflow-hotspots","path":"logs/benchmarks/597-baseline/latest-gui-workflow-hotspots.json","exists":false,"issueRefs":"#601"}
+  ]
+}

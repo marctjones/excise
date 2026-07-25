@@ -1,0 +1,31 @@
+Top 30 Functions (Exclusive)                                                  Inclusive           Exclusive           
+1.  Thread.<PollGC>g__PollGCWorker|67_0()                                     41.21%              41.21%              
+2.  Monitor.Enter_Slowpath(class System.Object)                               10.29%              10.29%              
+3.  TextExtractor.ParseContentBytes(unsigned int8[])                          62.31%              7.09%               
+4.  StringBuilder.ToString()                                                  3.33%               2.92%               
+5.  Number.TryParseNumber(!!0*&,!!0*,value class System.Globalization.Numb    2.79%               2.19%               
+6.  TextExtractor.LoadFontGeometry()                                          15.51%              2.14%               
+7.  Double].Resize(int32,bool)                                                5.82%               1.92%               
+8.  Missing Symbol                                                            1.76%               1.76%               
+9.  TextExtractor.ParseNumber(class System.String,int32&)                     6.94%               1.42%               
+10. .ctor()                                                                   1.35%               1.35%               
+11. CoreLib!Interop+Sys.PRead(class System.Runtime.InteropServices.SafeHan    1.35%               1.35%               
+12. CoreLib!Interop+Sys.FStat(class System.Runtime.InteropServices.SafeHan    1.15%               1.15%               
+13. XRefParser.ParseXRefStream()                                              1.16%               0.97%               
+14. Program+<>c__DisplayClass232_1.<ProfilePdfWorkflows>b__9()                4.29%               0.79%               
+15. PdfDocument.OpenCore(class System.IO.Stream,bool,bool,class System.Str    4.46%               0.79%               
+16. ToUnicodeCMapParser.Tokenize(class System.String)                         3.12%               0.79%               
+17. Number.MatchChars(!!0*,!!0*,value class System.ReadOnlySpan`1<!!0>)       0.6%                0.6%                
+18. SpanHelpers.Memmove(unsigned int8&,unsigned int8&,unsigned int)           0.6%                0.6%                
+19. ZLibNative+ZLibStreamHandle.InflateInit2_(int32)                          0.59%               0.59%               
+20. Array.Copy(class System.Array,class System.Array,int32)                   42.17%              0.59%               
+21. ZLibNative+ZLibStreamHandle.InflateEnd()                                  0.59%               0.59%               
+22. CodestreamParser.ExtractMetadata()                                        0.57%               0.57%               
+23. Int32.TryParse(class System.String,int32&)                                0.81%               0.4%                
+24. InitHelpers.InitClassSlow(value class System.Runtime.CompilerServices.    0.59%               0.39%               
+25. GC.<AllocateUninitializedArray>g__AllocateNewArrayWorker|77_0(int32,bo    0.39%               0.39%               
+26. Monitor.Enter(class System.Object,bool&)                                  10.68%              0.39%               
+27. __Canon].<GetOrAdd>b__6_0(!0,class System.Func`2<!0,!1>)                  0.39%               0.39%               
+28. Buffer.BulkMoveWithWriteBarrierBatch(unsigned int8&,unsigned int8&,uns    0.39%               0.39%               
+29. RuntimeHelpers.<GetHashCode>g__GetHashCodeWorker|15_0(class System.Obj    0.39%               0.39%               
+30. TextExtractor.ExecuteOperator(class System.String,class System.Collect    47.31%              0.39%               
