@@ -209,7 +209,12 @@ internal partial class RenderContext
                 var resolved = _page.Document.Resolve(encodingObj);
                 if (resolved is Excise.Core.Primitives.PdfStream stream)
                 {
-                    cmap = CidCMap.Parse(stream.DecodedData);
+                    // Pass the predefined-CMap resolver so an embedded CMap
+                    // that references a registered base via `usecmap` inherits
+                    // its codespaces and mappings — the same wiring the
+                    // extractor and redaction parser use. #515
+                    cmap = CidCMap.Parse(stream.DecodedData,
+                        static name => PredefinedCMapProvider.TryGetEncodingCMap(name));
                 }
                 else if (resolved is Excise.Core.Primitives.PdfName name
                          && name.Value is not ("Identity-H" or "Identity-V"))

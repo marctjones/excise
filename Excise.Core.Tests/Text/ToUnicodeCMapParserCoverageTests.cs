@@ -709,4 +709,70 @@ public class ToUnicodeCMapParserCoverageTests
         result[0x0011].Should().Be("Q");
         result[0x0012].Should().Be("R");
     }
+
+    // ── #515 slice 4: malformed-CMap resilience ─────────────────────────────
+
+    [Fact(Timeout = 30000)]
+    public void Parse_HugeBfRange_IsCappedWithoutHangingOrExhaustingMemory()
+    {
+        // A hostile incrementing range across the whole positive int space:
+        // a naive expansion would insert 2^31 entries (OOM), and with
+        // <FFFFFFFF> as the bound an int loop counter would wrap and never
+        // terminate. The parser must cap the expansion and keep working.
+        var result = ToUnicodeCMapParser.Parse(@"
+            1 begincodespacerange
+            <00000000> <FFFFFFFF>
+            endcodespacerange
+            1 beginbfrange
+            <00000000> <7FFFFFFF> <0041>
+            endbfrange
+        ");
+
+        result.Count.Should().BeLessThanOrEqualTo(65536);
+        result[0].Should().Be("A");
+    }
+
+    [Fact]
+    public void Parse_BfRangeIncrementingPastUnicode_StopsGracefully()
+    {
+        // Incrementing the destination past U+10FFFF (or into the surrogate
+        // block) can only happen in a malformed range; it must not throw
+        // away the whole CMap via ConvertFromUtf32's exception.
+        var result = ToUnicodeCMapParser.Parse(@"
+            1 begincodespacerange
+            <0000> <FFFF>
+            endcodespacerange
+            1 beginbfrange
+            <0000> <00FF> <D7FE>
+            endbfrange
+        ");
+
+        result[0x0000].Should().Be("\uD7FE");
+        result[0x0001].Should().Be("\uD7FF", "still below the surrogate block");
+        result.Should().NotContainKey(0x0002,
+            "U+D800 is a surrogate — the malformed remainder of the range is dropped, not thrown");
+    }
+
+    [Fact]
+    public void Parse_OverlongHexBounds_DoNotOverflow()
+    {
+        // >8-digit hex must not keep shifting bytes out of the int; the
+        // leading 4 bytes win and the parse stays usable. (4-byte codes may
+        // legitimately wrap negative as ints — UTF-16 surrogate-pair
+        // codespaces do — so no sign restriction here.)
+        var parser = ToUnicodeCMapParser.ParseDetailed(Encoding.ASCII.GetBytes(@"
+            1 begincodespacerange
+            <00112233445566> <FFFFFFFFFFFFFF>
+            endcodespacerange
+            1 beginbfchar
+            <41> <0041>
+            endbfchar
+        "));
+
+        parser.MaxCodeBytes.Should().BeLessThanOrEqualTo(4);
+        parser.CodespaceRanges.Should().OnlyContain(r => r.Bytes <= 4);
+        parser.CodespaceRanges[0].Low.Should().Be(0x00112233,
+            "the leading 4 bytes of an over-long bound are kept");
+        parser.Mapping[0x41].Should().Be("A");
+    }
 }

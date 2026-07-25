@@ -73,10 +73,18 @@ internal sealed class CidCMap
                 if (codespace.Bytes <= 0 || offset + codespace.Bytes > bytes.Length)
                     continue;
 
-                var code = ReadBigEndian(bytes, offset, codespace.Bytes);
-                if (code < codespace.Low || code > codespace.High)
+                // Byte-wise containment (PDF 32000 §9.7.6.2 / Adobe TN #5014):
+                // a code is inside a codespace range only when EVERY byte lies
+                // within the corresponding byte range of the low/high bounds.
+                // A scalar compare wrongly accepts e.g. <81FF> for
+                // <8140> <FEFE> (0x8140 ≤ 0x81FF ≤ 0xFEFE scalar-wise, but
+                // 0xFF is outside the trailing-byte range [0x40,0xFE]),
+                // stealing bytes that belong to another codespace and
+                // mis-segmenting everything after them. #515
+                if (!ContainsByteWise(codespace, bytes, offset))
                     continue;
 
+                var code = ReadBigEndian(bytes, offset, codespace.Bytes);
                 result.Add((code, _codeToCid.TryGetValue(code, out var mappedCid) ? mappedCid : code, codespace.Bytes));
                 offset += codespace.Bytes;
                 matched = true;
@@ -86,14 +94,47 @@ internal sealed class CidCMap
             if (matched)
                 continue;
 
-            var remaining = bytes.Length - offset;
-            var fallbackBytes = remaining >= 2 ? 2 : 1;
+            // Invalid code — no codespace matches byte-wise. Per Adobe TN
+            // #5014's undefined-code handling the LEAD byte determines how
+            // many bytes the invalid code consumes: the (longest) codespace
+            // whose first-byte range contains it claims its full width; a
+            // lead byte no codespace claims consumes a single byte
+            // (mirroring mutool / pdf.js). #515
+            var fallbackBytes = 1;
+            foreach (var codespace in codespaces)
+            {
+                if (codespace.Bytes <= 0)
+                    continue;
+
+                var shift = 8 * (codespace.Bytes - 1);
+                var leadLow = (codespace.Low >> shift) & 0xFF;
+                var leadHigh = (codespace.High >> shift) & 0xFF;
+                if (bytes[offset] >= leadLow && bytes[offset] <= leadHigh)
+                {
+                    fallbackBytes = Math.Min(codespace.Bytes, bytes.Length - offset);
+                    break;
+                }
+            }
+
             var fallbackCode = ReadBigEndian(bytes, offset, fallbackBytes);
             result.Add((fallbackCode, _codeToCid.TryGetValue(fallbackCode, out var fallbackCid) ? fallbackCid : fallbackCode, fallbackBytes));
             offset += fallbackBytes;
         }
 
         return result;
+    }
+
+    private static bool ContainsByteWise(in CodespaceRange range, byte[] bytes, int offset)
+    {
+        for (var i = 0; i < range.Bytes; i++)
+        {
+            var shift = 8 * (range.Bytes - 1 - i);
+            var b = bytes[offset + i];
+            if (b < ((range.Low >> shift) & 0xFF) || b > ((range.High >> shift) & 0xFF))
+                return false;
+        }
+
+        return true;
     }
 
     private static int ReadBigEndian(byte[] bytes, int offset, int length)
@@ -181,7 +222,10 @@ internal sealed class CidCMap
                 if (low.Type != TokenType.HexString || high.Type != TokenType.HexString)
                     break;
 
-                var bytes = Math.Max(1, (low.Text.Length + 1) / 2);
+                // Codes are at most 4 bytes per the CMap spec; clamp so a
+                // malformed over-long hex bound cannot declare a code width
+                // wider than the int the code is read into. #515
+                var bytes = Math.Min(4, Math.Max(1, (low.Text.Length + 1) / 2));
                 Codespaces.Add(new CodespaceRange(HexToInt(low.Text), HexToInt(high.Text), bytes));
                 i += 2;
             }
@@ -279,8 +323,16 @@ internal sealed class CidCMap
             if (highCode < lowCode)
                 return;
 
-            for (var code = lowCode; code <= highCode; code++)
-                Mapping[code] = firstCid + code - lowCode;
+            // Cap the expansion so a malformed range like
+            // <00000000> <7FFFFFFF> cannot hang the parser or exhaust memory
+            // (a naive int loop would also wrap at int.MaxValue and never
+            // terminate). Real CMap ranges vary only in their final byte; the
+            // largest legitimate full range (<0000> <FFFF> N) still fits the
+            // cap exactly. #515
+            const long MaxRangeEntries = 65536;
+            var end = Math.Min(highCode, (long)lowCode + MaxRangeEntries - 1);
+            for (var code = (long)lowCode; code <= end; code++)
+                Mapping[(int)code] = firstCid + (int)(code - lowCode);
         }
 
         private void AddPredefinedCMap(string name)
@@ -464,9 +516,17 @@ internal sealed class CidCMap
         if ((hex.Length & 1) != 0)
             hex = "0" + hex;
 
+        // Codes are at most 4 bytes (8 hex digits) per the CMap spec — a
+        // malformed longer string must not keep shifting bytes out: keep the
+        // leading 4 bytes only. The raw 32-bit BIT PATTERN is preserved (a
+        // 4-byte code like UniGB-UTF16-H's <D800DC00> wraps negative as an
+        // int) because ReadBigEndian produces the identical wrap for decoded
+        // codes, and the byte-wise codespace comparison is bit-pattern-based
+        // — clamping would destroy the per-byte bounds. #515
+        var digits = Math.Min(hex.Length, 8);
         var value = 0;
-        foreach (var c in hex)
-            value = (value << 4) | HexDigit(c);
+        for (var i = 0; i < digits; i++)
+            value = (value << 4) | HexDigit(hex[i]);
         return value;
     }
 
