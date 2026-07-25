@@ -2,6 +2,7 @@ using System.Text;
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text;
+using Excise.Core.Text.Segmentation;
 using Xunit;
 
 namespace Excise.Core.Tests.Text;
@@ -28,7 +29,63 @@ public class PredefinedToUnicodeCMapTests
         text.Should().NotContain("’", "code 0x91 must decode as U+0091 (Identity), not the WinAnsi ’");
     }
 
-    private static byte[] BuildType0IdentityToUnicodePdf(string content)
+    [Fact] // the vertical twin: /ToUnicode /Identity-V declares the same identity
+    public void IdentityVToUnicode_DecodesTwoByteCodesAsUtf16BeUnicode()
+    {
+        var pdf = BuildType0IdentityToUnicodePdf(
+            "BT /F0 12 Tf 100 700 Td <004100910042> Tj ET", identityName: "Identity-V");
+        using var doc = PdfDocument.Open(pdf);
+        var letters = new TextExtractor(doc.GetPage(1)).ExtractLetters();
+
+        letters.Select(l => l.Value).Should().Contain("A").And.Contain("B");
+        letters.Select(l => l.Value).Should().NotContain("’",
+            "code 0x91 must decode as U+0091 (Identity), not the WinAnsi ’ — " +
+            "Identity-V is the same identity map as Identity-H, plus vertical writing");
+    }
+
+    [Fact] // #715 redaction-security proof: if excise now READS an Identity-name
+           // /ToUnicode font, it must also REDACT it (CLAUDE.md limitation #1).
+    public void IdentityHToUnicode_RedactText_RemovesTargetAndKeepsRest()
+    {
+        // Codes ARE the UTF-16BE Unicode: "SECRET KEEP".
+        var pdf = BuildType0IdentityToUnicodePdf(
+            "BT /F0 12 Tf 100 700 Td <0053004500430052004500540020004B004500450050> Tj ET");
+        var input = Path.Combine(Path.GetTempPath(), $"idtu-{Guid.NewGuid():N}.pdf");
+        var output = Path.Combine(Path.GetTempPath(), $"idtu-red-{Guid.NewGuid():N}.pdf");
+        try
+        {
+            File.WriteAllBytes(input, pdf);
+            using (var doc = PdfDocument.Open(input))
+            {
+                doc.RedactText("SECRET").Should().Be(1,
+                    "extraction through the /Identity-H name /ToUnicode must let " +
+                    "RedactText find the word — extraction coverage bounds redaction");
+                doc.Save(output);
+            }
+
+            using var redacted = PdfDocument.Open(output);
+            var text = new TextExtractor(redacted.GetPage(1)).ExtractText();
+            text.Should().NotContain("SECRET", "the redacted glyphs must be gone");
+            text.Should().Contain("KEEP",
+                "adjacent kept glyphs must survive with their original 2-byte codes");
+
+            // Carrier-agnostic saved-bytes check (CLAUDE.md): the secret must not
+            // appear in ANY uncompressed carrier, in any restatement encoding —
+            // including UTF-16BE, which is exactly what these raw code bytes are.
+            var saved = File.ReadAllBytes(output);
+            var haystack = Encoding.ASCII.GetString(saved)
+                + Encoding.BigEndianUnicode.GetString(saved)
+                + Encoding.UTF8.GetString(saved);
+            haystack.Should().NotContain("SECRET");
+        }
+        finally
+        {
+            File.Delete(input);
+            File.Delete(output);
+        }
+    }
+
+    private static byte[] BuildType0IdentityToUnicodePdf(string content, string identityName = "Identity-H")
     {
         var sb = new StringBuilder();
         var off = new long[8];
@@ -39,9 +96,9 @@ public class PredefinedToUnicodeCMapTests
         Mark(2); sb.Append("2 0 obj <</Type/Pages/Count 1/Kids[3 0 R]>> endobj\n");
         Mark(3); sb.Append("3 0 obj <</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]"
                          + "/Resources<</Font<</F0 4 0 R>>>>/Contents 7 0 R>> endobj\n");
-        // Type0 with predefined-NAME /ToUnicode /Identity-H (not a stream).
+        // Type0 with a predefined-NAME /ToUnicode (not a stream).
         Mark(4); sb.Append("4 0 obj <</Type/Font/Subtype/Type0/BaseFont/Test"
-                         + "/Encoding/Identity-H/ToUnicode/Identity-H/DescendantFonts[5 0 R]>> endobj\n");
+                         + $"/Encoding/{identityName}/ToUnicode/{identityName}/DescendantFonts[5 0 R]>> endobj\n");
         Mark(5); sb.Append("5 0 obj <</Type/Font/Subtype/CIDFontType2/BaseFont/Test"
                          + "/CIDSystemInfo<</Registry(Adobe)/Ordering(Identity)/Supplement 0>>"
                          + "/FontDescriptor 6 0 R/CIDToGIDMap/Identity/DW 1000>> endobj\n");
