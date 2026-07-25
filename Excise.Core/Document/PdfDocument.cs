@@ -893,6 +893,37 @@ public class PdfDocument : IDisposable
       }
     }
 
+    // ── Object-stream materialization cache (#743, epic #596) ───────────────
+    // GetObjectFromStream used to re-parse the full N-pair /ObjStm index and
+    // construct a fresh PdfParser + PdfLexer + MemoryStream for EVERY
+    // contained-object fetch — 76,233 parser instantiations + index re-parses
+    // on one save of irs-1040-instructions.pdf (785 streams), 67% of the save
+    // workflow and ~3.2 GB of managed allocation (#597 baseline, see
+    // docs/performance-baselines/2026-07-25-hotpath-baseline/). Instead, the
+    // first touch of an object stream parses the index once and batch-parses
+    // all N contained objects in a single pass; subsequent fetches are O(1)
+    // array lookups. Results are keyed by (stream, index) exactly like the
+    // old per-fetch path — the same byte offsets are parsed with the same
+    // parser configuration, just once instead of once per fetch — so object
+    // resolution is value-identical. This is caching only.
+    //
+    // Thread-safety: read and mutated only inside GetObjectFromStream, which
+    // is reachable only from GetObject under _parseLock (same discipline as
+    // _objectCache). Invalidation: an entry is keyed to the container
+    // PdfStream instance and its decoded buffer; if the container object or
+    // its decoded bytes are ever replaced (e.g. RemoveObject then re-parse),
+    // the identity check misses and the index is rebuilt from the new bytes.
+    private sealed class ObjectStreamCacheEntry
+    {
+        public required PdfStream Source { get; init; }
+        public required byte[] Data { get; init; }
+        public required int First { get; init; }
+        public required (int ObjNum, int Offset)[] Offsets { get; init; }
+        public required PdfObject?[] Objects { get; init; }
+    }
+
+    private readonly Dictionary<int, ObjectStreamCacheEntry> _objectStreamCache = new();
+
     /// <summary>
     /// Get an object from an object stream.
     /// </summary>
@@ -909,6 +940,42 @@ public class PdfDocument : IDisposable
         }
 
         var data = streamObj.DecodedData;
+
+        // Parse the index and batch-materialize on first touch (#743).
+        if (!_objectStreamCache.TryGetValue(streamNumber, out var cached)
+            || !ReferenceEquals(cached.Source, streamObj)
+            || !ReferenceEquals(cached.Data, data))
+        {
+            cached = MaterializeObjectStream(streamObj, data);
+            _objectStreamCache[streamNumber] = cached;
+        }
+
+        if (index < 0 || index >= cached.Offsets.Length)
+            throw new PdfParseException($"Index {index} out of range in object stream {streamNumber}");
+
+        // The batch pass already parsed this slot; a null slot means that one
+        // object failed to parse — retry it here so the caller sees the same
+        // exception the old per-fetch path would have thrown.
+        var obj = cached.Objects[index];
+        if (obj != null)
+            return obj;
+
+        using var retryParser = new PdfParser(data);
+        retryParser.Seek(cached.First + cached.Offsets[index].Offset);
+        obj = retryParser.ParseObject();
+        cached.Objects[index] = obj;
+        return obj;
+    }
+
+    /// <summary>
+    /// Parse an /ObjStm's N-pair index once and batch-parse all N contained
+    /// objects with a single parser pass (#743). Per-object parse failures
+    /// leave the slot null; the failure is surfaced only if that specific
+    /// object is requested, matching the old lazy per-fetch behavior on
+    /// malformed streams.
+    /// </summary>
+    private static ObjectStreamCacheEntry MaterializeObjectStream(PdfStream streamObj, byte[] data)
+    {
         int n = streamObj.GetInt("N"); // Number of objects
         int first = streamObj.GetInt("First"); // Offset to first object
 
@@ -930,13 +997,28 @@ public class PdfDocument : IDisposable
             );
         }
 
-        // Find and parse the requested object
-        if (index < 0 || index >= n)
-            throw new PdfParseException($"Index {index} out of range in object stream {streamNumber}");
+        var objects = new PdfObject?[n];
+        for (int i = 0; i < n; i++)
+        {
+            try
+            {
+                parser.Seek(first + offsets[i].Offset);
+                objects[i] = parser.ParseObject();
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException)
+            {
+                // Leave the slot null; surfaced on direct request.
+            }
+        }
 
-        int offset = first + offsets[index].Offset;
-        parser.Seek(offset);
-        return parser.ParseObject();
+        return new ObjectStreamCacheEntry
+        {
+            Source = streamObj,
+            Data = data,
+            First = first,
+            Offsets = offsets,
+            Objects = objects,
+        };
     }
 
     /// <summary>
