@@ -427,6 +427,27 @@ internal partial class RenderContext
         _currentPath = null;
     }
 
+    // Reusable coverage mask for TryPaintDeviceCmykBlendPath (#599). Grows to
+    // the largest path bounds seen during this context's render and is cleared
+    // before each use, so per-path work is a bounded memset + one rasterization
+    // instead of a full-page bitmap allocation per painted path. Disposed in
+    // DisposeOwnedResources.
+    private SKBitmap? _deviceCmykBlendMask;
+
+    private SKBitmap GetDeviceCmykBlendMask(int width, int height)
+    {
+        var existing = _deviceCmykBlendMask;
+        if (existing != null && existing.Width >= width && existing.Height >= height)
+            return existing;
+
+        // Grow-only: never shrink below a size already needed this render.
+        var newWidth = Math.Max(width, existing?.Width ?? 0);
+        var newHeight = Math.Max(height, existing?.Height ?? 0);
+        existing?.Dispose();
+        _deviceCmykBlendMask = new SKBitmap(newWidth, newHeight, SKColorType.Rgba8888, SKAlphaType.Premul);
+        return _deviceCmykBlendMask;
+    }
+
     private bool TryPaintDeviceCmykBlendPath(SKPath path, DeviceCmykColor? sourceCmyk, float alpha)
         => TryPaintDeviceCmykBlendPath(
             path,
@@ -473,7 +494,20 @@ internal partial class RenderContext
         if (right <= left || bottom <= top)
             return true;
 
-        using var mask = new SKBitmap(_rootBitmap.Width, _rootBitmap.Height, SKColorType.Rgba8888, SKAlphaType.Premul);
+        // Rasterize path coverage into a mask bounded to the path's device-space
+        // bounds (the only pixels the loop below ever reads), not the full page.
+        // The mask canvas gets the same total matrix post-translated by the
+        // integer offset (-left, -top); an integer pixel translation leaves
+        // Skia's antialiased coverage of every in-window pixel byte-identical
+        // to the previous full-page mask. Deliberately NOT intersected with the
+        // canvas clip: the previous full-page mask ignored the clip too, and
+        // shrinking to the clip would change which pixels composite.
+        var maskWidth = right - left;
+        var maskHeight = bottom - top;
+        var mask = GetDeviceCmykBlendMask(maskWidth, maskHeight);
+        var maskMatrix = matrix;
+        maskMatrix.TransX -= left;
+        maskMatrix.TransY -= top;
         using (var maskCanvas = new SKCanvas(mask))
         using (var maskPaint = new SKPaint
         {
@@ -499,19 +533,29 @@ internal partial class RenderContext
             if (pathEffect != null)
                 maskPaint.PathEffect = pathEffect;
             maskCanvas.Clear(SKColors.Transparent);
-            maskCanvas.SetMatrix(matrix);
+            maskCanvas.SetMatrix(maskMatrix);
             maskCanvas.DrawPath(path, maskPaint);
         }
 
         _canvas.Flush();
         var source = sourceCmyk.Value;
+
+        // Bulk pixel access: one managed span over the mask instead of a
+        // GetPixel P/Invoke per scanned pixel. The mask is premultiplied
+        // Rgba8888; premultiplication never changes the alpha byte, so reading
+        // byte offset 3 yields exactly what GetPixel(x, y).Alpha returned.
+        var maskRowBytes = mask.RowBytes;
+        var maskPixels = mask.GetPixelSpan();
         for (var y = top; y < bottom; y++)
         {
+            var maskRowStart = (y - top) * maskRowBytes;
             for (var x = left; x < right; x++)
             {
-                var coverage = mask.GetPixel(x, y).Alpha / 255.0;
-                if (coverage <= 0)
+                var maskAlpha = maskPixels[maskRowStart + ((x - left) * 4) + 3];
+                if (maskAlpha == 0)
                     continue;
+
+                var coverage = maskAlpha / 255.0;
 
                 var effectiveAlpha = Math.Clamp(alpha * coverage, 0, 1);
                 if (effectiveAlpha <= 0)
