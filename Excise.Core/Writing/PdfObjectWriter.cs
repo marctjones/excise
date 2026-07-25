@@ -71,7 +71,9 @@ public static class PdfObjectWriter
                 if (Math.Abs(value - Math.Round(value)) < 1e-10)
                     sb.Append(((long)value).ToString(CultureInfo.InvariantCulture));
                 else
-                    sb.Append(value.ToString("G", CultureInfo.InvariantCulture));
+                    // Deterministic fixed-precision format — "G" reproduces
+                    // platform-dependent float noise in the bytes (#762).
+                    sb.Append(PdfNumberFormatter.Format(value));
                 break;
 
             case PdfName n:
