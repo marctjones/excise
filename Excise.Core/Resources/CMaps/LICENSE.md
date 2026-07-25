@@ -3,8 +3,11 @@
 The CMap files in this directory (gzipped, embedded into Excise.Core as
 resources) are unmodified copies from Adobe's CMap resource repositories:
 
-- Encoding CMaps (`UniGB-UCS2-*`, `UniCNS-UCS2-*`, `UniJIS-UCS2-*`,
-  `UniKS-UCS2-*`, `90ms-RKSJ-*`):
+- Encoding CMaps (the PDF 32000 Table 118 predefined set for Adobe-GB1,
+  Adobe-CNS1, Adobe-Japan1 and Adobe-Korea1 — `GB*-*`, `GBK*`, `B5pc-*`,
+  `HKscs-B5-*`, `ETen*-B5-*`, `CNS-EUC-*`, `*-RKSJ-*`, `EUC-*`, `Ext-RKSJ-*`,
+  `H`, `V`, `KSC*`, and the `Uni*-UCS2*`/`Uni*-UTF16*` variants — plus
+  Adobe-KR's `UniAKR-UTF16-H` from ISO 32000-2):
   https://github.com/adobe-type-tools/cmap-resources
 - CID→Unicode mapping CMaps (`Adobe-GB1-UCS2`, `Adobe-CNS1-UCS2`,
   `Adobe-Japan1-UCS2`, `Adobe-Korea1-UCS2`, `Adobe-KR-UCS2`, from

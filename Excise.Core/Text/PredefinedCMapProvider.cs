@@ -35,16 +35,76 @@ internal static class PredefinedCMapProvider
     /// </summary>
     private static readonly Dictionary<string, string> EncodingCMapOrdering = new(StringComparer.Ordinal)
     {
+        // Adobe-GB1 (Simplified Chinese) — PDF 32000-1 Table 118.
+        ["GB-EUC-H"] = "GB1",
+        ["GB-EUC-V"] = "GB1",
+        ["GBpc-EUC-H"] = "GB1",
+        ["GBpc-EUC-V"] = "GB1",
+        ["GBK-EUC-H"] = "GB1",
+        ["GBK-EUC-V"] = "GB1",
+        ["GBKp-EUC-H"] = "GB1",
+        ["GBKp-EUC-V"] = "GB1",
+        ["GBK2K-H"] = "GB1",
+        ["GBK2K-V"] = "GB1",
         ["UniGB-UCS2-H"] = "GB1",
         ["UniGB-UCS2-V"] = "GB1",
+        ["UniGB-UTF16-H"] = "GB1",
+        ["UniGB-UTF16-V"] = "GB1",
+
+        // Adobe-CNS1 (Traditional Chinese).
+        ["B5pc-H"] = "CNS1",
+        ["B5pc-V"] = "CNS1",
+        ["HKscs-B5-H"] = "CNS1",
+        ["HKscs-B5-V"] = "CNS1",
+        ["ETen-B5-H"] = "CNS1",
+        ["ETen-B5-V"] = "CNS1",
+        ["ETenms-B5-H"] = "CNS1",
+        ["ETenms-B5-V"] = "CNS1",
+        ["CNS-EUC-H"] = "CNS1",
+        ["CNS-EUC-V"] = "CNS1",
         ["UniCNS-UCS2-H"] = "CNS1",
         ["UniCNS-UCS2-V"] = "CNS1",
-        ["UniJIS-UCS2-H"] = "Japan1",
-        ["UniJIS-UCS2-V"] = "Japan1",
-        ["UniKS-UCS2-H"] = "Korea1",
-        ["UniKS-UCS2-V"] = "Korea1",
+        ["UniCNS-UTF16-H"] = "CNS1",
+        ["UniCNS-UTF16-V"] = "CNS1",
+
+        // Adobe-Japan1. "H"/"V" are the JIS X 0208 ISO-2022 CMaps' registered
+        // names — one-letter, but names like any other.
+        ["83pv-RKSJ-H"] = "Japan1",
         ["90ms-RKSJ-H"] = "Japan1",
         ["90ms-RKSJ-V"] = "Japan1",
+        ["90msp-RKSJ-H"] = "Japan1",
+        ["90msp-RKSJ-V"] = "Japan1",
+        ["90pv-RKSJ-H"] = "Japan1",
+        ["Add-RKSJ-H"] = "Japan1",
+        ["Add-RKSJ-V"] = "Japan1",
+        ["EUC-H"] = "Japan1",
+        ["EUC-V"] = "Japan1",
+        ["Ext-RKSJ-H"] = "Japan1",
+        ["Ext-RKSJ-V"] = "Japan1",
+        ["H"] = "Japan1",
+        ["V"] = "Japan1",
+        ["UniJIS-UCS2-H"] = "Japan1",
+        ["UniJIS-UCS2-V"] = "Japan1",
+        ["UniJIS-UCS2-HW-H"] = "Japan1",
+        ["UniJIS-UCS2-HW-V"] = "Japan1",
+        ["UniJIS-UTF16-H"] = "Japan1",
+        ["UniJIS-UTF16-V"] = "Japan1",
+
+        // Adobe-Korea1.
+        ["KSC-EUC-H"] = "Korea1",
+        ["KSC-EUC-V"] = "Korea1",
+        ["KSCms-UHC-H"] = "Korea1",
+        ["KSCms-UHC-V"] = "Korea1",
+        ["KSCms-UHC-HW-H"] = "Korea1",
+        ["KSCms-UHC-HW-V"] = "Korea1",
+        ["KSCpc-EUC-H"] = "Korea1",
+        ["UniKS-UCS2-H"] = "Korea1",
+        ["UniKS-UCS2-V"] = "Korea1",
+        ["UniKS-UTF16-H"] = "Korea1",
+        ["UniKS-UTF16-V"] = "Korea1",
+
+        // Adobe-KR (PDF 2.0, ISO 32000-2 §9.7.5.2).
+        ["UniAKR-UTF16-H"] = "KR",
     };
 
     /// <summary>Orderings with an embedded Adobe-&lt;Ordering&gt;-UCS2 CID→Unicode CMap.</summary>
@@ -59,8 +119,17 @@ internal static class PredefinedCMapProvider
     /// <summary>True when <paramref name="name"/> is a registered encoding CMap this build ships.</summary>
     public static bool IsKnownEncodingCMap(string name) => EncodingCMapOrdering.ContainsKey(name);
 
-    /// <summary>Registered vertical CMaps are the <c>-V</c> variants.</summary>
-    public static bool IsVertical(string name) => name.EndsWith("-V", StringComparison.Ordinal);
+    /// <summary>
+    /// Whether the named registered CMap selects vertical writing. Shipped
+    /// CMaps answer from their own parsed <c>/WMode</c> (§9.7.5.2) — which is
+    /// what makes the one-letter Adobe-Japan1 name <c>V</c> (no "-V" suffix)
+    /// vertical. The suffix check remains for names not shipped here, notably
+    /// <c>Identity-V</c>.
+    /// </summary>
+    public static bool IsVertical(string name)
+        => IsKnownEncodingCMap(name)
+            ? TryGetEncodingCMap(name)?.WMode == 1
+            : name.EndsWith("-V", StringComparison.Ordinal);
 
     /// <summary>
     /// The CIDSystemInfo /Ordering the named encoding CMap's CIDs belong to,
