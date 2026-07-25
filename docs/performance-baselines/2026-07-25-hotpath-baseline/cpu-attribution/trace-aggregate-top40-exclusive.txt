@@ -1,0 +1,41 @@
+Top 40 Functions (Exclusive)                                                  Inclusive           Exclusive           
+1.  Thread.<PollGC>g__PollGCWorker|67_0()                                     40.97%              40.97%              
+2.  SKCanvas.DrawPath(class SkiaSharp.SKPath,class SkiaSharp.SKPaint)         6.67%               6.67%               
+3.  Monitor.Enter_Slowpath(class System.Object)                               6.21%               6.21%               
+4.  RenderContext.TryPaintDeviceCmykBlendPath(class SkiaSharp.SKPath,value    7.64%               3.53%               
+5.  Missing Symbol                                                            2.34%               2.34%               
+6.  SKCanvas.Clear(value class SkiaSharp.SKColor)                             2.19%               2.19%               
+7.  RenderContext.FillTextUsingGlyphPath(class SkiaSharp.SKPath,class Skia    8.73%               1.77%               
+8.  PdfLexer.ReadNumberOrKeyword(int64)                                       2.44%               1.76%               
+9.  .ctor()                                                                   1.23%               1.23%               
+10. SKCodec.GetPixels(value class SkiaSharp.SKImageInfo,int,int32,value cl    1.08%               1.08%               
+11. RenderContext.RenderWithCurrentSoftMask(class System.Action,class Skia    7.8%                1.01%               
+12. WaitHandle.WaitOneNoCheck(int32,bool,class System.Object,value class W    0.95%               0.95%               
+13. StringBuilder.ToString()                                                  0.98%               0.94%               
+14. .ctor(class SkiaSharp.SKTypeface,float32,float32,float32)                 0.83%               0.83%               
+15. SkiaApi.sk_font_get_path(int,unsigned int16,int)                          0.78%               0.78%               
+16. SKTypeface.FromData(class SkiaSharp.SKData,int32)                         0.62%               0.62%               
+17. SKFont.GetTextPath(void*,int32,value class SkiaSharp.SKTextEncoding,va    0.61%               0.61%               
+18. .cctor()                                                                  0.57%               0.57%               
+19. TextExtractor.ParseContentBytes(unsigned int8[])                          4.84%               0.55%               
+20. CoreLib!Interop+Sys.PRead(class System.Runtime.InteropServices.SafeHan    0.52%               0.52%               
+21. ContentStreamParser.Parse(value class System.Threading.CancellationTok    8.3%                0.5%                
+22. PdfDocument.GetObjectFromStream(int32,int32)                              32.21%              0.5%                
+23. XRefParser.ParseXRefStream()                                              0.64%               0.47%               
+24. TextExtractor.LoadFontGeometry()                                          0.87%               0.47%               
+25. PdfObjectWriter.SerializeDictionary(class Excise.Core.Primitives.PdfDi    2.01%               0.47%               
+26. String.Concat(class System.Collections.Generic.IEnumerable`1<class Sys    0.89%               0.46%               
+27. Int32].CompareAnyKeys_DefaultComparer_NoNext_Ascending(int32,int32)       0.46%               0.46%               
+28. CastHelpers.IsInstanceOfClass(void*,class System.Object)                  0.44%               0.44%               
+29. CoreLib!Interop+Sys.MkDir(value class System.ReadOnlySpan`1<wchar>,int    0.41%               0.41%               
+30. RenderContext.RenderCidBytes(unsigned int8[])                             7.07%               0.4%                
+31. SkiaApi.sk_bitmap_try_alloc_pixels(int,value class SkiaSharp.SKImageIn    0.38%               0.38%               
+32. FileStream.get_Length()                                                   0.38%               0.38%               
+33. PdfObjectWriter.SerializeObject(class Excise.Core.Primitives.PdfObject    2.28%               0.37%               
+34. .ctor(value class SkiaSharp.SKImageInfo,int32)                            1.22%               0.36%               
+35. OSFileStreamStrategy.Read(value class System.Span`1<unsigned int8>)       0.78%               0.35%               
+36. ContentStreamParser.ParseNumber()                                         0.35%               0.35%               
+37. RenderContext.BuildGlyphIdTextPath(unsigned int16[],value class SkiaSh    1.71%               0.35%               
+38. GC.<AllocateUninitializedArray>g__AllocateNewArrayWorker|77_0(int32,bo    0.34%               0.34%               
+39. PdfDocumentWriter.WriteObjects(class System.IO.BinaryWriter)              24.87%              0.33%               
+40. .ctor()                                                                   0.33%               0.33%               

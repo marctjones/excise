@@ -1,0 +1,672 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-07-25T06:29:24.8277530\u002B00:00",
+  "issues": [
+    "#344",
+    "#357",
+    "#536",
+    "#596",
+    "#597",
+    "#602"
+  ],
+  "licenseIsolation": {
+    "policy": "Copyleft or AGPL/GPL reference renderers are invoked only as external CLI subprocesses; no MuPDF, Poppler, Ghostscript, or PDFBox libraries are referenced by excise.",
+    "shippableGraph": "The benchmark suite lives under tools/Excise.RenderTools and scripts/run-benchmarks.sh, outside the desktop app dependency graph.",
+    "permissiveInProcess": "excise\u0027s own parser/renderer run in-process. Optional permissive library benchmarks remain isolated to dev tooling."
+  },
+  "configuration": {
+    "outputDir": "/Users/marc/Documents/GitHub/pdfe/.claude/worktrees/agent-aba082db918296248/logs/benchmarks/597-baseline/latest-suite",
+    "corpusDir": "/Users/marc/Documents/GitHub/pdfe/test-pdfs/smoke",
+    "pageLimit": 8,
+    "dpi": 96,
+    "timeoutMs": 20000,
+    "selectedOracles": [
+      "mutool",
+      "pdftocairo",
+      "ghostscript"
+    ],
+    "includeCliRender": false
+  },
+  "tools": [
+    {
+      "name": "excise",
+      "kind": "in-process",
+      "available": true,
+      "selected": true,
+      "licensePolicy": "MIT project code"
+    },
+    {
+      "name": "excise-cli",
+      "kind": "external-subprocess",
+      "available": true,
+      "selected": false,
+      "licensePolicy": "excise CLI invoked as a subprocess to test the shipped command route"
+    },
+    {
+      "name": "mutool",
+      "kind": "external-cli",
+      "available": true,
+      "selected": true,
+      "licensePolicy": "AGPL/GPL-family renderer invoked only as subprocess"
+    },
+    {
+      "name": "pdftocairo",
+      "kind": "external-cli",
+      "available": true,
+      "selected": true,
+      "licensePolicy": "GPL Poppler renderer invoked only as subprocess"
+    },
+    {
+      "name": "ghostscript",
+      "kind": "external-cli",
+      "available": true,
+      "selected": true,
+      "licensePolicy": "AGPL Ghostscript renderer invoked only as subprocess"
+    },
+    {
+      "name": "pdfbox",
+      "kind": "external-cli",
+      "available": false,
+      "selected": false,
+      "licensePolicy": "Apache PDFBox command invoked only as subprocess"
+    },
+    {
+      "name": "pdfium",
+      "kind": "external-cli",
+      "available": false,
+      "selected": false,
+      "licensePolicy": "BSD PDFium pdfium_test invoked only as subprocess"
+    }
+  ],
+  "summary": {
+    "pdfCount": 2,
+    "pageCount": 8,
+    "comparedPageCount": 8,
+    "statusCounts": {
+      "PASS_REFERENCE": 8
+    },
+    "exciseParseAverageMs": 20.5,
+    "exciseParseP95Ms": 25,
+    "exciseRenderAverageMs": 23.875,
+    "exciseRenderP50Ms": 13,
+    "exciseRenderP95Ms": 82,
+    "exciseTextExtractAverageMs": 11.5,
+    "cliRenderAverageMs": 0,
+    "cliRenderP95Ms": 0,
+    "referenceRenderAverageMs": 122.25,
+    "referencePassRate": 1,
+    "averageRmse": 19.034457861822858,
+    "averageSsim": 0.9074988590301457,
+    "redactionStatus": "PASS"
+  },
+  "hotPaths": [
+    {
+      "name": "renderer.page-render",
+      "workloadId": "renderer.page-render",
+      "component": "Excise.Rendering",
+      "route": "library",
+      "category": "render",
+      "description": "Excise.Rendering page rasterization",
+      "scope": "excise-owned",
+      "regressionPolicy": "gate",
+      "issueRefs": "#598 #599",
+      "count": 8,
+      "totalMs": 191,
+      "averageMs": 23.875,
+      "p50Ms": 13,
+      "p95Ms": 82,
+      "maxMs": 82
+    },
+    {
+      "name": "text.extract-search-input",
+      "workloadId": "core.text-extract",
+      "component": "Excise.Core",
+      "route": "library",
+      "category": "text",
+      "description": "Excise.Core text extraction and text-path preparation",
+      "scope": "excise-owned",
+      "regressionPolicy": "gate",
+      "issueRefs": "#600",
+      "count": 8,
+      "totalMs": 92,
+      "averageMs": 11.5,
+      "p50Ms": 3,
+      "p95Ms": 60,
+      "maxMs": 60
+    },
+    {
+      "name": "parser.document-open",
+      "workloadId": "core.document-open",
+      "component": "Excise.Core",
+      "route": "library",
+      "category": "open",
+      "description": "Excise.Core document open/parse time",
+      "scope": "excise-owned",
+      "regressionPolicy": "gate",
+      "issueRefs": "#597",
+      "count": 2,
+      "totalMs": 32,
+      "averageMs": 16,
+      "p50Ms": 7,
+      "p95Ms": 25,
+      "maxMs": 25
+    },
+    {
+      "name": "redaction.synthetic-save",
+      "workloadId": "redaction.synthetic-save",
+      "component": "Excise.Core",
+      "route": "library",
+      "category": "security-redaction",
+      "description": "Synthetic glyph-level redaction and save/reopen verification",
+      "scope": "excise-owned-security-critical",
+      "regressionPolicy": "gate",
+      "issueRefs": "#597 #602",
+      "count": 1,
+      "totalMs": 11,
+      "averageMs": 11,
+      "p50Ms": 11,
+      "p95Ms": 11,
+      "maxMs": 11
+    },
+    {
+      "name": "reference.external-render",
+      "workloadId": "reference.external-render",
+      "component": "ExternalReference",
+      "route": "external-cli",
+      "category": "render",
+      "description": "External reference renderer subprocess time; reported for comparison, not optimized by excise",
+      "scope": "external-reference",
+      "regressionPolicy": "compare-only",
+      "issueRefs": "#597",
+      "count": 24,
+      "totalMs": 2934,
+      "averageMs": 122.25,
+      "p50Ms": 110,
+      "p95Ms": 217,
+      "maxMs": 304
+    }
+  ],
+  "regressionGate": {
+    "passed": true,
+    "checks": [
+      {
+        "name": "excise-render-average",
+        "actual": 23.875,
+        "threshold": 2500,
+        "passed": true,
+        "unit": "ms"
+      },
+      {
+        "name": "excise-parse-average",
+        "actual": 20.5,
+        "threshold": 750,
+        "passed": true,
+        "unit": "ms"
+      },
+      {
+        "name": "synthetic-redaction-completeness",
+        "actual": 1,
+        "threshold": 1,
+        "passed": true,
+        "unit": "pass"
+      },
+      {
+        "name": "reference-fidelity-pass-rate",
+        "actual": 1,
+        "threshold": 0.6,
+        "passed": true,
+        "unit": "ratio"
+      }
+    ]
+  },
+  "pages": [
+    {
+      "path": "cdc-vis-covid-19.pdf",
+      "pageNumber": 1,
+      "source": "corpus",
+      "status": "PASS_REFERENCE",
+      "parseMs": 7,
+      "exciseRenderMs": 82,
+      "exciseTextExtractMs": 15,
+      "exciseTextLength": 3490,
+      "exciseWidth": 816,
+      "exciseHeight": 1056,
+      "referenceCount": 3,
+      "passingReferenceCount": 3,
+      "references": [
+        {
+          "name": "mutool",
+          "kind": "external-cli",
+          "status": "OK",
+          "elapsedMs": 98,
+          "width": 816,
+          "height": 1056,
+          "diffFraction": 0.02368700794711824,
+          "meanAbsoluteError": 5.318131916592394,
+          "rmse": 18.806915179440555,
+          "ssim": 0.9500426924420222,
+          "pass": true
+        },
+        {
+          "name": "pdftocairo",
+          "kind": "external-cli",
+          "status": "OK",
+          "elapsedMs": 209,
+          "width": 816,
+          "height": 1056,
+          "diffFraction": 0.005463643790849673,
+          "meanAbsoluteError": 2.619024574792038,
+          "rmse": 12.010810059357436,
+          "ssim": 0.9788387612010947,
+          "pass": true
+        },
+        {
+          "name": "ghostscript",
+          "kind": "external-cli",
+          "status": "OK",
+          "elapsedMs": 105,
+          "width": 816,
+          "height": 1056,
+          "diffFraction": 0.04450061274509804,
+          "meanAbsoluteError": 7.169971776589423,
+          "rmse": 24.859842389338414,
+          "ssim": 0.9109176110632545,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "path": "cdc-vis-covid-19.pdf",
+      "pageNumber": 2,
+      "source": "corpus",
+      "status": "PASS_REFERENCE",
+      "parseMs": 7,
+      "exciseRenderMs": 28,
+      "exciseTextExtractMs": 7,
+      "exciseTextLength": 3869,
+      "exciseWidth": 816,
+      "exciseHeight": 1056,
+      "referenceCount": 3,
+      "passingReferenceCount": 3,
+      "references": [
+        {
+          "name": "mutool",
+          "kind": "external-cli",
+          "status": "OK",
+          "elapsedMs": 54,
+          "width": 816,
+          "height": 1056,
+          "diffFraction": 0.02105150772430184,
+          "meanAbsoluteError": 5.303855033174886,
+          "rmse": 17.590750160380928,
+          "ssim": 0.9547149594294702,
+          "pass": true
+        },
+        {
+          "name": "pdftocairo",
+          "kind": "external-cli",
+          "status": "OK",
+          "elapsedMs": 181,
+          "width": 816,
+          "height": 1056,
+          "diffFraction": 0.004198696524064171,
+          "meanAbsoluteError": 2.673642444667261,
+          "rmse": 10.590342363897228,
+          "ssim": 0.9828826870469313,
+          "pass": true
+        },
+        {
+          "name": "ghostscript",
+          "kind": "external-cli",
+          "status": "OK",
+          "elapsedMs": 79,
+          "width": 816,
+          "height": 1056,
+          "diffFraction": 0.04623208184789067,
+          "meanAbsoluteError": 7.3907445317142,
+          "rmse": 24.018922464988094,
+          "ssim": 0.913261296507315,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "path": "irs-1040-instructions.pdf",
+      "pageNumber": 1,
+      "source": "corpus",
+      "status": "PASS_REFERENCE",
+      "parseMs": 25,
+      "exciseRenderMs": 33,
+      "exciseTextExtractMs": 60,
+      "exciseTextLength": 682,
+      "exciseWidth": 816,
+      "exciseHeight": 1056,
+      "referenceCount": 3,
+      "passingReferenceCount": 3,
+      "references": [
+        {
+          "name": "mutool",
+          "kind": "external-cli",
+          "status": "OK",
+          "elapsedMs": 110,
+          "width": 816,
+          "height": 1056,
+          "diffFraction": 0.027107007575757576,
+          "meanAbsoluteError": 8.222069809615766,
+          "rmse": 23.791989003589634,
+          "ssim": 0.9456613098634963,
+          "pass": true
+        },
+        {
+          "name": "pdftocairo",
+          "kind": "external-cli",
+          "status": "OK",
+          "elapsedMs": 304,
+          "width": 816,
+          "height": 1056,
+          "diffFraction": 0.011476205065359478,
+          "meanAbsoluteError": 5.852317986853833,
+          "rmse": 18.728252669587917,
+          "ssim": 0.9672491446477375,
+          "pass": true
+        },
+        {
+          "name": "ghostscript",
+          "kind": "external-cli",
+          "status": "OK",
+          "elapsedMs": 154,
+          "width": 816,
+          "height": 1056,
+          "diffFraction": 0.014169730392156863,
+          "meanAbsoluteError": 6.988705220093088,
+          "rmse": 21.056236370394117,
+          "ssim": 0.9580643550304995,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "path": "irs-1040-instructions.pdf",
+      "pageNumber": 2,
+      "source": "corpus",
+      "status": "PASS_REFERENCE",
+      "parseMs": 25,
+      "exciseRenderMs": 6,
+      "exciseTextExtractMs": 3,
+      "exciseTextLength": 1289,
+      "exciseWidth": 816,
+      "exciseHeight": 1056,
+      "referenceCount": 3,
+      "passingReferenceCount": 3,
+      "references": [
+        {
+          "name": "mutool",
+          "kind": "external-cli",
+          "status": "OK",
+          "elapsedMs": 45,
+          "width": 816,
+          "height": 1056,
+          "diffFraction": 0.0046269217914438505,
+          "meanAbsoluteError": 1.125717190285205,
+          "rmse": 8.599879934876183,
+          "ssim": 0.9574500566868775,
+          "pass": true
+        },
+        {
+          "name": "pdftocairo",
+          "kind": "external-cli",
+          "status": "OK",
+          "elapsedMs": 85,
+          "width": 816,
+          "height": 1056,
+          "diffFraction": 0.0029546382947118243,
+          "meanAbsoluteError": 0.8128655581550802,
+          "rmse": 6.880200992560774,
+          "ssim": 0.9721092244308466,
+          "pass": true
+        },
+        {
+          "name": "ghostscript",
+          "kind": "external-cli",
+          "status": "OK",
+          "elapsedMs": 102,
+          "width": 816,
+          "height": 1056,
+          "diffFraction": 0.017614100564468212,
+          "meanAbsoluteError": 2.7621697984749454,
+          "rmse": 18.1527244105861,
+          "ssim": 0.8332911865235934,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "path": "irs-1040-instructions.pdf",
+      "pageNumber": 3,
+      "source": "corpus",
+      "status": "PASS_REFERENCE",
+      "parseMs": 25,
+      "exciseRenderMs": 8,
+      "exciseTextExtractMs": 0,
+      "exciseTextLength": 1953,
+      "exciseWidth": 816,
+      "exciseHeight": 1056,
+      "referenceCount": 3,
+      "passingReferenceCount": 3,
+      "references": [
+        {
+          "name": "mutool",
+          "kind": "external-cli",
+          "status": "OK",
+          "elapsedMs": 69,
+          "width": 816,
+          "height": 1056,
+          "diffFraction": 0.010878546494355318,
+          "meanAbsoluteError": 2.9888792954050305,
+          "rmse": 12.015083237044491,
+          "ssim": 0.9721820163966277,
+          "pass": true
+        },
+        {
+          "name": "pdftocairo",
+          "kind": "external-cli",
+          "status": "OK",
+          "elapsedMs": 139,
+          "width": 816,
+          "height": 1056,
+          "diffFraction": 2.785204991087344E-05,
+          "meanAbsoluteError": 1.2253892323975044,
+          "rmse": 5.368617695548605,
+          "ssim": 0.9941553946597975,
+          "pass": true
+        },
+        {
+          "name": "ghostscript",
+          "kind": "external-cli",
+          "status": "OK",
+          "elapsedMs": 115,
+          "width": 816,
+          "height": 1056,
+          "diffFraction": 0.01732861705288176,
+          "meanAbsoluteError": 4.137659530352545,
+          "rmse": 16.227528282771598,
+          "ssim": 0.9471524610652434,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "path": "irs-1040-instructions.pdf",
+      "pageNumber": 4,
+      "source": "corpus",
+      "status": "PASS_REFERENCE",
+      "parseMs": 25,
+      "exciseRenderMs": 13,
+      "exciseTextExtractMs": 5,
+      "exciseTextLength": 3443,
+      "exciseWidth": 816,
+      "exciseHeight": 1056,
+      "referenceCount": 3,
+      "passingReferenceCount": 3,
+      "references": [
+        {
+          "name": "mutool",
+          "kind": "external-cli",
+          "status": "OK",
+          "elapsedMs": 62,
+          "width": 816,
+          "height": 1056,
+          "diffFraction": 0.00433099376114082,
+          "meanAbsoluteError": 2.866996403990889,
+          "rmse": 10.278011343418083,
+          "ssim": 0.9658215648849938,
+          "pass": true
+        },
+        {
+          "name": "pdftocairo",
+          "kind": "external-cli",
+          "status": "OK",
+          "elapsedMs": 159,
+          "width": 816,
+          "height": 1056,
+          "diffFraction": 0.014493510472370767,
+          "meanAbsoluteError": 2.7518297249455337,
+          "rmse": 13.434106025804875,
+          "ssim": 0.94555894597218,
+          "pass": true
+        },
+        {
+          "name": "ghostscript",
+          "kind": "external-cli",
+          "status": "OK",
+          "elapsedMs": 128,
+          "width": 816,
+          "height": 1056,
+          "diffFraction": 0.05469562351455734,
+          "meanAbsoluteError": 9.09856066795405,
+          "rmse": 32.66256801355259,
+          "ssim": 0.7368014957368721,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "path": "irs-1040-instructions.pdf",
+      "pageNumber": 5,
+      "source": "corpus",
+      "status": "PASS_REFERENCE",
+      "parseMs": 25,
+      "exciseRenderMs": 6,
+      "exciseTextExtractMs": 0,
+      "exciseTextLength": 2188,
+      "exciseWidth": 816,
+      "exciseHeight": 1056,
+      "referenceCount": 3,
+      "passingReferenceCount": 3,
+      "references": [
+        {
+          "name": "mutool",
+          "kind": "external-cli",
+          "status": "OK",
+          "elapsedMs": 62,
+          "width": 816,
+          "height": 1056,
+          "diffFraction": 0.039723986185383246,
+          "meanAbsoluteError": 7.006514285006932,
+          "rmse": 29.792354455036772,
+          "ssim": 0.7713497240414826,
+          "pass": true
+        },
+        {
+          "name": "pdftocairo",
+          "kind": "external-cli",
+          "status": "OK",
+          "elapsedMs": 146,
+          "width": 816,
+          "height": 1056,
+          "diffFraction": 0.0343972816399287,
+          "meanAbsoluteError": 6.293837192389582,
+          "rmse": 28.284357909410254,
+          "ssim": 0.7898953255856451,
+          "pass": true
+        },
+        {
+          "name": "ghostscript",
+          "kind": "external-cli",
+          "status": "OK",
+          "elapsedMs": 117,
+          "width": 816,
+          "height": 1056,
+          "diffFraction": 0.050806781045751634,
+          "meanAbsoluteError": 8.93683155080214,
+          "rmse": 35.97357167353597,
+          "ssim": 0.6776083763826192,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "path": "irs-1040-instructions.pdf",
+      "pageNumber": 6,
+      "source": "corpus",
+      "status": "PASS_REFERENCE",
+      "parseMs": 25,
+      "exciseRenderMs": 15,
+      "exciseTextExtractMs": 2,
+      "exciseTextLength": 5788,
+      "exciseWidth": 816,
+      "exciseHeight": 1056,
+      "referenceCount": 3,
+      "passingReferenceCount": 3,
+      "references": [
+        {
+          "name": "mutool",
+          "kind": "external-cli",
+          "status": "OK",
+          "elapsedMs": 56,
+          "width": 816,
+          "height": 1056,
+          "diffFraction": 0.015288454396910279,
+          "meanAbsoluteError": 5.185765823059022,
+          "rmse": 15.48842306250978,
+          "ssim": 0.9532008194457906,
+          "pass": true
+        },
+        {
+          "name": "pdftocairo",
+          "kind": "external-cli",
+          "status": "OK",
+          "elapsedMs": 217,
+          "width": 816,
+          "height": 1056,
+          "diffFraction": 0.003380542557932264,
+          "meanAbsoluteError": 2.979394125074272,
+          "rmse": 9.659945783561357,
+          "ssim": 0.9814263909980294,
+          "pass": true
+        },
+        {
+          "name": "ghostscript",
+          "kind": "external-cli",
+          "status": "OK",
+          "elapsedMs": 138,
+          "width": 816,
+          "height": 1056,
+          "diffFraction": 0.09194657976827095,
+          "meanAbsoluteError": 14.870882925455536,
+          "rmse": 42.55555520255688,
+          "ssim": 0.7203368166810749,
+          "pass": true
+        }
+      ]
+    }
+  ],
+  "redactionCompleteness": {
+    "status": "PASS",
+    "elapsedMs": 11,
+    "target": "Excise.Core",
+    "textBeforeLength": 23,
+    "textAfterLength": 10,
+    "reason": "Synthetic glyph-level redaction removed the target from extracted text."
+  }
+}
