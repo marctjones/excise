@@ -114,7 +114,9 @@ jobs:
           ~/verapdf/verapdf --version
 
       - name: Install xvfb for headless UI tests
-        if: steps.changes.outputs.gui == 'true' || github.ref == 'refs/heads/develop'
+        # Unconditional (was gated on the gui paths-filter): the always-run
+        # Excise.Avalonia.Tests step below also needs xvfb since the #631
+        # HeadlessUnitTestSession accessibility tests joined it (#752).
         run: sudo apt-get install -y xvfb
 
       - name: Restore packages
@@ -197,8 +199,13 @@ jobs:
         # logic). Deliberately separate from the heavy, flaky headless
         # Excise.App.Tests suite so viewer-library changes get reliable coverage
         # on every PR. (#363, #384)
+        #
+        # xvfb-run (#752): the #631 accessibility tests drive a real
+        # HeadlessUnitTestSession app lifecycle, which crashed the test host on
+        # the displayless Linux runner (killing the whole assembly with no
+        # captured output). Same precedent as the Excise.App.Tests step below.
         run: |
-          dotnet test Excise.Avalonia.Tests --no-build -c Debug \
+          xvfb-run -a dotnet test Excise.Avalonia.Tests --no-build -c Debug \
             --logger "console;verbosity=normal"
 
       - name: Run Excise.Rendering.Tests (deterministic only)
