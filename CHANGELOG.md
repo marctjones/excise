@@ -72,6 +72,19 @@ semantic versioning.
   pdftocairo/Ghostscript differentials pinning the out-of-range fallback.
 
 ### Added
+- **Visible signature appearance** (#623, last remaining bullet) — a signed
+  signature field whose widget `/Rect` has non-zero area now gets a baked
+  `/AP /N` appearance stream (`SignatureAppearanceAuthoring` in
+  `Excise.Core`, mirroring the annotation-authoring baked-appearance pattern
+  from #626): a bordered box with "Digitally signed by {name}", the signing
+  date, and any `/Reason`/`/Location` the caller supplied. `SignFile`/
+  `SignDocument` wire this in automatically after the field is signed, and it
+  touches only the widget's appearance — the CMS/ByteRange machinery is
+  unchanged. A zero-size (or absent) `/Rect` — the default for a
+  freshly-authored field — stays untouched: invisible signatures remain
+  fully valid, as before. Verified with an independent renderer (mutool) so
+  excise is not its own oracle for whether a third-party viewer actually
+  draws the appearance.
 - **Tagged-PDF structure accessibility layer** (#631) — the Avalonia viewer's
   automation peer tree now exposes the tagged-PDF structure tree to screen
   readers: the page's accessible text is ordered by the structure tree when a

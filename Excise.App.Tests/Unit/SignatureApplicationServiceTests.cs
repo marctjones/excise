@@ -3,6 +3,8 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Excise.App.Services;
 using Excise.App.Tests.Utilities;
 using Excise.Core.Document;
+using Excise.Rendering.Differential;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -190,6 +192,116 @@ public class SignatureApplicationServiceTests : IDisposable
         results[0].SignatureName.Should().Be("ApproverSignature");
         results[0].IsValid.Should().BeTrue();
         results[0].CoversWholeDocument.Should().BeTrue();
+    }
+
+    // ── visible signature appearance (#623, last bullet) ────────────────────
+    //
+    // No-self-oracle: excise reading its own /AP stream and declaring it
+    // present proves nothing about whether a real viewer draws it. These
+    // assertions render the signed page with mutool — an implementation we
+    // do not own — and measure ink in the widget rectangle.
+
+    [Fact]
+    public void SignDocument_VisibleRect_IndependentRendererShowsInkInSignatureRect_AndStillVerifies()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        // CreateSimpleTextPdf's own text sits near the top of the page
+        // (pdfY ~= 692), so the widget goes in an otherwise-empty region
+        // near the bottom — any ink measured there can only be the baked
+        // appearance, not the base document's own content.
+        var rect = new PdfRectangle(72, 100, 300, 160);
+        var basePath = CreateBasePdf();
+
+        // Baseline: confirm the region is genuinely blank *before* signing,
+        // so a positive result after signing can't be attributed to
+        // pre-existing content in that rectangle.
+        using (var unsigned = MutoolReferenceRenderer.RenderPage(basePath, 1, dpi: 150))
+        {
+            unsigned.Should().NotBeNull();
+            InkFractionIn(unsigned!, rect, pageHeight: 792, dpi: 150).Should().BeLessThan(0.001,
+                "fixture sanity — the measurement rectangle must be blank before signing, or a " +
+                "positive ink reading after signing would prove nothing about the appearance");
+        }
+
+        using var certificate = SigningCertificateFactory.CreateSelfSigned("Visible Signer");
+
+        // Author the field and sign it on the SAME open document instance —
+        // signing reopens nothing, so the field must exist on the instance
+        // SignDocument receives (mirrors SignDocument_ExistingEmptySignatureField_SignsThatField).
+        using var document = PdfDocument.Open(basePath);
+        document.AddSignatureField(pageNumber: 1, rect: rect, fieldName: "VisibleSignature");
+
+        var signedBytes = _signer.SignDocument(document, certificate, new SignatureApplicationOptions
+        {
+            FieldName = "VisibleSignature",
+            Reason = "Approval",
+            Location = "Remote"
+        });
+        var signedPath = WriteTempFile(signedBytes);
+
+        // The appearance must not corrupt the CMS/ByteRange it sits beside.
+        var results = CreateVerifier().VerifySignatures(signedPath);
+        results.Should().HaveCount(1);
+        results[0].IsValid.Should().BeTrue(
+            "baking a visible appearance stream must not disturb the signed ByteRange or CMS");
+        results[0].CoversWholeDocument.Should().BeTrue();
+
+        using var rendered = MutoolReferenceRenderer.RenderPage(signedPath, 1, dpi: 150);
+        rendered.Should().NotBeNull("mutool must be able to render the signed page at all");
+
+        var ink = InkFractionIn(rendered!, rect, pageHeight: 792, dpi: 150);
+        ink.Should().BeGreaterThan(0.005,
+            "an independent renderer must draw *something* inside the signature widget's /Rect — " +
+            "the whole point of a baked /AP /N is that a third-party viewer honors it without " +
+            "excise's own rendering code in the loop. The region was confirmed blank before signing.");
+    }
+
+    [Fact]
+    public void SignDocument_DefaultZeroRectField_StaysAppearanceLess()
+    {
+        // FindOrCreateSignatureField authors a fresh field at Rect(0,0,0,0)
+        // when none exists (the invisible-signature default). That must
+        // remain untouched — invisible signatures are still fully valid
+        // per #623's acceptance criteria — not retrofitted with an /AP.
+        using var certificate = SigningCertificateFactory.CreateSelfSigned("Invisible Signer");
+        var signedPath = SignSamplePdf(certificate);
+
+        using var reopened = PdfDocument.Open(signedPath);
+        var field = reopened.GetAcroForm()?.FindField("Signature1");
+        field.Should().NotBeNull();
+        field!.RawDictionary.GetOptional("AP").Should().BeNull(
+            "a zero-size /Rect signature field must stay appearance-less, not gain a baked /AP");
+    }
+
+    /// <summary>
+    /// Fraction of non-white pixels inside <paramref name="box"/> (PDF content
+    /// coordinates, bottom-left origin) of a page rendered at <paramref name="dpi"/>.
+    /// Mirrors RedactionReferenceVerificationTests's InkFractionIn — the same
+    /// "is there ink here" measurement, applied to a signature widget instead
+    /// of a redaction target.
+    /// </summary>
+    private static double InkFractionIn(SKBitmap bmp, PdfRectangle box, double pageHeight, int dpi)
+    {
+        double scale = dpi / 72.0;
+
+        int x0 = Math.Max(0, (int)(box.Left * scale));
+        int x1 = Math.Min(bmp.Width - 1, (int)(box.Right * scale));
+        int y0 = Math.Max(0, (int)((pageHeight - box.Top) * scale));
+        int y1 = Math.Min(bmp.Height - 1, (int)((pageHeight - box.Bottom) * scale));
+
+        if (x1 <= x0 || y1 <= y0) return 0;
+
+        int ink = 0, total = 0;
+        for (int y = y0; y <= y1; y++)
+        for (int x = x0; x <= x1; x++)
+        {
+            var p = bmp.GetPixel(x, y);
+            total++;
+            if (p.Red < 200 || p.Green < 200 || p.Blue < 200) ink++;
+        }
+
+        return total == 0 ? 0 : (double)ink / total;
     }
 
     [Fact]
