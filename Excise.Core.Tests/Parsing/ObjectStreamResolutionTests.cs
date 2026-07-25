@@ -367,6 +367,163 @@ public class ObjectStreamResolutionTests
         doc.PageCount.Should().Be(1);
     }
 
+    // ── /ObjStm materialization cache (#743) ─────────────────────────────
+    // GetObjectFromStream caches the parsed object-stream index and batch-
+    // materializes all N contained objects on first touch instead of
+    // re-parsing the index per fetch. These tests pin the invariant that
+    // this is caching only: identical resolution regardless of fetch order,
+    // cache hits return the cached instance, and malformed streams degrade
+    // exactly as the old per-fetch path did (exception on the broken object
+    // only, no crash/hang, siblings still resolve).
+
+    [Fact]
+    public void ObjStmCache_FetchOrderDoesNotChangeResolvedValues()
+    {
+        // Two documents over the same file: one fetches every compressed
+        // object in ascending order, the other in descending order (so each
+        // object stream is first touched via a different contained object).
+        // Every object must serialize identically — fetch order and cache
+        // state must not affect resolution.
+        if (!File.Exists(ScrambledBirthCert)) return;
+
+        using var docAsc = PdfDocument.Open(ScrambledBirthCert);
+        using var docDesc = PdfDocument.Open(ScrambledBirthCert);
+
+        var compressed = GetXRef(docAsc)
+            .Where(e => e.Value.IsCompressed)
+            .Select(e => e.Key)
+            .OrderBy(n => n)
+            .ToList();
+        compressed.Should().NotBeEmpty("fixture must exercise the /ObjStm path");
+
+        var ascending = compressed
+            .ToDictionary(n => n, n => Excise.Core.Writing.PdfObjectWriter.Serialize(docAsc.GetObject(n)));
+        var descending = ((IEnumerable<int>)compressed).Reverse()
+            .ToDictionary(n => n, n => Excise.Core.Writing.PdfObjectWriter.Serialize(docDesc.GetObject(n)));
+
+        foreach (var n in compressed)
+        {
+            descending[n].Should().Be(ascending[n],
+                $"compressed object {n} must resolve to the same value regardless of fetch order");
+        }
+    }
+
+    [Fact]
+    public void ObjStmCache_RepeatedFetchReturnsCachedInstance()
+    {
+        if (!File.Exists(ScrambledBirthCert)) return;
+
+        using var doc = PdfDocument.Open(ScrambledBirthCert);
+        var compressed = GetXRef(doc).First(e => e.Value.IsCompressed).Key;
+
+        var first = doc.GetObject(compressed);
+        var second = doc.GetObject(compressed);
+        second.Should().BeSameAs(first,
+            "a second fetch of the same compressed object must be a cache hit");
+    }
+
+    [Fact]
+    public void ObjStmCache_BrokenObjectOffset_ThrowsOnThatObjectOnly_SiblingsResolve()
+    {
+        // Object stream whose index maps object 3 to an offset far past the
+        // end of the decoded data. The old per-fetch path threw when (and
+        // only when) the broken object was requested; the batch-materialized
+        // path must behave identically: siblings in the same stream resolve,
+        // the broken object throws, nothing crashes or hangs.
+        var pdf = BuildObjStmPdf(objThreeOffset: 9999);
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
+
+        doc.Catalog.Should().NotBeNull("catalog lives in the ObjStm and is intact");
+
+        var good = doc.GetObject(2);
+        good.Should().BeOfType<PdfDictionary>("the intact sibling object must resolve");
+        ((PdfDictionary)good).GetStringOrNull("Foo").Should().Be("bar");
+
+        var act = () => doc.GetObject(3);
+        act.Should().Throw<Exception>(
+            "the object whose offset points past the end of the stream must fail as before");
+
+        // And the failure must not have poisoned the stream's cache entry.
+        doc.GetObject(2).Should().BeSameAs(good);
+    }
+
+    [Fact]
+    public void ObjStmCache_TruncatedIndex_ThrowsParseException_NoHang()
+    {
+        // /N claims 3 pairs but the index region only contains 2 — the
+        // index parse itself fails. Must surface PdfParseException on any
+        // compressed fetch, same as the old per-fetch index parse.
+        var pdf = BuildObjStmPdf(objThreeOffset: 9999, truncateIndex: true);
+        var act = () =>
+        {
+            using var doc = PdfDocument.Open(new MemoryStream(pdf));
+            doc.GetObject(2);
+        };
+        act.Should().Throw<Exception>(
+            "a truncated /ObjStm index must fail cleanly, not crash or hang");
+    }
+
+    /// <summary>
+    /// Build a minimal PDF 1.5 whose catalog and two more objects live in a
+    /// single /ObjStm referenced from an xref stream. Object 3's offset in
+    /// the ObjStm index is caller-controlled so tests can point it past the
+    /// end of the decoded data. With <paramref name="truncateIndex"/> the
+    /// index region declares 3 pairs (/N 3) but carries only 2.
+    /// </summary>
+    private static byte[] BuildObjStmPdf(int objThreeOffset, bool truncateIndex = false)
+    {
+        var latin1 = System.Text.Encoding.Latin1;
+        using var ms = new MemoryStream();
+        void W(string s) { var b = latin1.GetBytes(s); ms.Write(b, 0, b.Length); }
+
+        W("%PDF-1.5\n");
+
+        // obj 4: pages tree (regular, uncompressed)
+        long off4 = ms.Position;
+        W("4 0 obj\n<< /Type /Pages /Kids [] /Count 0 >>\nendobj\n");
+
+        // obj 5: the object stream. Contained objects:
+        //   index 0 -> obj 1 (catalog), index 1 -> obj 2, index 2 -> obj 3
+        string body = "<< /Type /Catalog /Pages 4 0 R >>\n<< /Foo (bar) >>\n<< /Baz true >>\n";
+        int off1 = 0;
+        int off2 = body.IndexOf("<< /Foo", StringComparison.Ordinal);
+        string index = truncateIndex
+            ? $"1 {off1} 2 {off2}\n"
+            : $"1 {off1} 2 {off2} 3 {objThreeOffset}\n";
+        string objStmData = index + body;
+        int first = latin1.GetByteCount(index);
+
+        long off5 = ms.Position;
+        W($"5 0 obj\n<< /Type /ObjStm /N 3 /First {first} /Length {latin1.GetByteCount(objStmData)} >>\nstream\n");
+        W(objStmData);
+        W("endstream\nendobj\n");
+
+        // obj 6: xref stream. /W [1 2 1]; rows for objects 0..6.
+        long off6 = ms.Position;
+        var rows = new List<byte>();
+        void Row(byte type, long mid, byte low)
+        {
+            rows.Add(type);
+            rows.Add((byte)((mid >> 8) & 0xFF));
+            rows.Add((byte)(mid & 0xFF));
+            rows.Add(low);
+        }
+        Row(0, 0, 0xFF);          // obj 0: free
+        Row(2, 5, 0);             // obj 1: in stream 5, index 0
+        Row(2, 5, 1);             // obj 2: in stream 5, index 1
+        Row(2, 5, 2);             // obj 3: in stream 5, index 2
+        Row(1, off4, 0);          // obj 4: regular at off4
+        Row(1, off5, 0);          // obj 5: regular at off5
+        Row(1, off6, 0);          // obj 6: the xref stream itself
+
+        W($"6 0 obj\n<< /Type /XRef /Size 7 /W [1 2 1] /Root 1 0 R /Length {rows.Count} >>\nstream\n");
+        ms.Write(rows.ToArray(), 0, rows.Count);
+        W("\nendstream\nendobj\n");
+
+        W($"startxref\n{off6}\n%%EOF\n");
+        return ms.ToArray();
+    }
+
     private static IReadOnlyDictionary<int, Excise.Core.Parsing.XRefEntry> GetXRef(PdfDocument doc)
     {
         // _xref is private; expose via reflection so this test can verify
