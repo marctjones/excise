@@ -167,10 +167,20 @@ public static class PdfDocumentRedactionExtensions
 
         // Operator text is raw content-stream order; RTL documents usually
         // store Arabic/Hebrew in VISUAL (reversed) order, so a logical-order
-        // needle must also be checked in its visual form (#632).
-        var visualNeedle = BidiReorderer.ContainsStrongRtl(searchText)
-            ? BidiReorderer.ReverseRtlRunsInString(searchText)
-            : null;
+        // needle must also be checked in its visual form (#632). Both visual
+        // forms are tried: with digit islands travelling with the RTL
+        // segments (RTL-directed line) and with digits left in place
+        // (strong-LTR elsewhere on the line) — the operator's own text
+        // cannot know which layout the page used.
+        string? visualNeedle = null;
+        string? visualNeedleDigitsApart = null;
+        if (BidiReorderer.ContainsStrongRtl(searchText))
+        {
+            visualNeedle = BidiReorderer.ReverseRtlRunsInString(searchText);
+            var alt = BidiReorderer.ReverseRtlRunsInStringWithoutDigitJoining(searchText);
+            if (alt != visualNeedle)
+                visualNeedleDigitsApart = alt;
+        }
 
         // The stream may also carry Arabic as shaped presentation forms
         // (#632), Latin ligature code points like ﬃ (#722), or decomposed
@@ -189,6 +199,8 @@ public static class PdfDocumentRedactionExtensions
                 var opText = op.TextContent ?? string.Empty;
                 if (opText.IndexOf(searchText, comparison) >= 0 ||
                     (visualNeedle != null && opText.IndexOf(visualNeedle, comparison) >= 0) ||
+                    (visualNeedleDigitsApart != null &&
+                     opText.IndexOf(visualNeedleDigitsApart, comparison) >= 0) ||
                     ContainsFolded(opText, foldedNeedle, comparison))
                 {
                     removed++;
@@ -225,8 +237,19 @@ public static class PdfDocumentRedactionExtensions
         if (MatchingNormalization.Fold(opText).IndexOf(foldedNeedle, comparison) >= 0)
             return true;
 
-        return BidiReorderer.ContainsStrongRtl(opText) &&
-               MatchingNormalization.Fold(BidiReorderer.ReverseRtlRunsInString(opText))
+        if (!BidiReorderer.ContainsStrongRtl(opText))
+            return false;
+
+        var logical = BidiReorderer.ReverseRtlRunsInString(opText);
+        if (MatchingNormalization.Fold(logical).IndexOf(foldedNeedle, comparison) >= 0)
+            return true;
+
+        // Second reading with digits left in place (see the visual-needle
+        // comment in RemoveTextShowingOperatorsContaining).
+        var logicalDigitsApart =
+            BidiReorderer.ReverseRtlRunsInStringWithoutDigitJoining(opText);
+        return logicalDigitsApart != logical &&
+               MatchingNormalization.Fold(logicalDigitsApart)
                    .IndexOf(foldedNeedle, comparison) >= 0;
     }
 

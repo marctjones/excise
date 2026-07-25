@@ -84,7 +84,26 @@ public class LetterFinder
             var logicalText = BidiReorderer.ReverseRtlRunsInString(operationText);
             foundIndices = FindAllTextOccurrences(fullPageText, logicalText);
             if (foundIndices.Count > 0)
+            {
                 rtlPermutation = permutation;
+            }
+            else
+            {
+                // The primary permutation joins digit islands to RTL runs
+                // (#632); the letter-side reorder decides that from the WHOLE
+                // line, which this operator's text alone cannot see (strong-
+                // LTR in another operator on the same line, split operators).
+                // Fall back to the digits-stay-put permutation.
+                var conservative =
+                    BidiReorderer.ReverseRtlRunsInStringWithoutDigitJoining(operationText);
+                if (conservative != logicalText)
+                {
+                    foundIndices = FindAllTextOccurrences(fullPageText, conservative);
+                    if (foundIndices.Count > 0)
+                        rtlPermutation = BidiReorderer
+                            .BuildRtlRunPermutationWithoutDigitJoining(operationText);
+                }
+            }
         }
 
         if (foundIndices.Count == 0)
