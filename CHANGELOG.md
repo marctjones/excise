@@ -7,6 +7,23 @@ semantic versioning.
 ## [Unreleased]
 
 ### Fixed
+- **Deterministic real-number formatting in the PDF writer** (#762) — every
+  real-number emit site (content-stream operands in `ContentStreamWriter`,
+  object serialization in `PdfObjectWriter`, `ContentOperator.ToString`) now
+  formats through a shared `PdfNumberFormatter`: invariant culture, at most
+  six decimal places, trailing zeros trimmed, never exponent notation. The
+  previous `"G"` (shortest-round-trip) format faithfully reproduced
+  accumulated float noise (`216.01600000000002`, `49.343999999999994`),
+  making saved bytes differ across platforms — and on Windows a noisy
+  coordinate's digit run coincidentally matched a redacted number, tripping
+  the carrier-agnostic saved-bytes redaction check (a byte-check false
+  positive, not a leak). Six decimals bounds any coordinate perturbation at
+  5e-7 pt — far below a rendered pixel — so redaction bounds, extraction
+  parity, and visual baselines are unchanged, while files get slightly
+  smaller and byte-identical cross-platform. The RTL saved-bytes redaction
+  tests additionally pin the trailer `/ID` (normally random bytes serialized
+  as uppercase hex) so their short A–F raw-code needles can't collide with
+  it either.
 - **CID glyph-selection matrix: deterministic handling of missing maps**
   (#515, final slice) — the renderer's CID→GID resolution for Type0 fonts now
   handles every cell of the matrix the way the reference renderers do, each

@@ -117,7 +117,9 @@ public class ContentStreamWriter
                 }
                 else
                 {
-                    _sb.Append(value.ToString("G", CultureInfo.InvariantCulture));
+                    // Deterministic fixed-precision format — "G" reproduces
+                    // platform-dependent float noise in the bytes (#762).
+                    _sb.Append(Writing.PdfNumberFormatter.Format(value));
                 }
                 break;
 
