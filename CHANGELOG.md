@@ -7,6 +7,27 @@ semantic versioning.
 ## [Unreleased]
 
 ### Fixed
+- **RTL redaction: numbers inside right-to-left lines no longer evade
+  removal** (#632) — a number embedded in an Arabic/Hebrew line (an ID, date,
+  or phone number) kept its surrounding words in visual order, so a
+  phrase-spanning-a-number search matched nothing and `RedactText` silently
+  removed nothing while reporting success. Digit "islands" now reorder to
+  logical order (segments reverse, the number stays put), so RTL content that
+  contains numbers is searchable and redactable. Verified against the Unicode
+  Bidi Algorithm (UAX #9) reference, not against excise itself.
+- **Type0/CID horizontal advance now scales `Tc`/`Tw` by `Th`** (#734) — for
+  Type0 fonts the character/word-spacing contributions were applied outside the
+  horizontal-scaling factor (`Th`), drifting extracted glyph positions on text
+  that combines Type0 fonts with non-default horizontal scaling and non-zero
+  spacing (ISO 32000-1 §9.4.4). Applied identically in the text extractor and
+  the redaction content-stream parser so redaction bounds track letters. The
+  renderer half remains tracked under #734.
+- **Redaction on a multi-run line no longer shifts the kept text** (#758) —
+  when `GlyphRemover` removed a text-showing operator from a multi-run `BT`
+  block, it dropped that operator's pen advance, so kept runs after the
+  redaction on the same line shifted left. The removed run's advance is now
+  consumed, so following kept text stays in place (the removed content is still
+  gone from every carrier).
 - **Deterministic real-number formatting in the PDF writer** (#762) — every
   real-number emit site (content-stream operands in `ContentStreamWriter`,
   object serialization in `PdfObjectWriter`, `ContentOperator.ToString`) now
@@ -51,6 +72,21 @@ semantic versioning.
   pdftocairo/Ghostscript differentials pinning the out-of-range fallback.
 
 ### Added
+- **FDF annotation import/export round-trip** (#626) — `Excise.Core.Forms.FdfSerializer`
+  reads and writes the PDF-syntax `/FDF` annotation interchange format (the
+  counterpart to XFDF), so annotations round-trip with tools that prefer FDF.
+- **DeviceCMYK overprint rendering** (#634) — the renderer now honours `/OP`,
+  `/op`, and `/OPM` overprint state for DeviceCMYK fills and strokes (ISO
+  32000-1 §8.6.7): with overprint on, a zero colorant no longer knocks out the
+  underlying separation. Conservatively scoped to literal DeviceCMYK
+  (Separation/DeviceN tracked under #634); verified against Ghostscript's
+  `-dOverprint=/simulate` oracle on the Ghent GWG overprint fixtures, with the
+  OPM-0 trap patch confirmed unchanged (no over-application).
+- **Screen readers announce tagged-PDF `/ActualText`** (#631) — replacement
+  text (`/ActualText`, ISO 32000-2 §14.9.4) is exposed to assistive technology
+  through the viewer's automation tree, so hyphenation rejoins, ligature/symbol
+  substitutions, and pages where glyph extraction fails are read correctly.
+  De-duplicated against the page-text so content is never announced twice.
 - **XFDF annotation import/export round-trip** (#626, final headline slice) —
   `Excise.Core.Forms.XfdfSerializer` speaks Adobe XFDF 3.0, the interchange
   dialect behind Acrobat/Foxit "Export comments as data file" review
