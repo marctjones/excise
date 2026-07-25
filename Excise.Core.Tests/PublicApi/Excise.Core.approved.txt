@@ -479,7 +479,9 @@ namespace Excise.Core.Document
     }
     public static class PdfAnnotationAuthoring
     {
+        public static Excise.Core.Document.PdfAnnotation AddCircleAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string? contents = null, string? author = null, double red = 1, double green = 0, double blue = 0, double borderWidth = 1, double? interiorRed = default, double? interiorGreen = default, double? interiorBlue = default) { }
         public static Excise.Core.Document.PdfAnnotation AddHighlightAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string? contents = null, string? author = null, double red = 1, double green = 1, double blue = 0) { }
+        public static Excise.Core.Document.PdfAnnotation AddSquareAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string? contents = null, string? author = null, double red = 1, double green = 0, double blue = 0, double borderWidth = 1, double? interiorRed = default, double? interiorGreen = default, double? interiorBlue = default) { }
         public static Excise.Core.Document.PdfAnnotation AddTextAnnotation(this Excise.Core.Document.PdfDocument document, int pageNumber, Excise.Core.Document.PdfRectangle rect, string contents, string? author = null, bool open = false, string iconName = "Note") { }
     }
     [System.Flags]
