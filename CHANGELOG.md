@@ -34,6 +34,13 @@ semantic versioning.
   pdftocairo/Ghostscript differentials pinning the out-of-range fallback.
 
 ### Added
+- **Square and Circle annotation authoring** (#626, first slice of #271) —
+  `AddSquareAnnotation` / `AddCircleAnnotation` write ISO 32000-2 §12.5.6.8
+  shape annotations with border color (`/C`), optional interior fill (`/IC`),
+  border width (`/BS`), and — unlike the earlier sticky-note/highlight
+  authoring — a baked normal appearance stream (`/AP /N`), so the authored
+  shape renders identically in excise, Acrobat, mutool, and pdftocairo
+  (verified by independent-renderer differential tests).
 - **Complete predefined CJK CMap coverage — the full PDF 32000 Table 118 set**
   (#515) — 50 more registered encoding CMaps ship embedded (Adobe
   cmap-resources, BSD-3), covering every predefined name a conforming reader
