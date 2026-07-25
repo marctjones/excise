@@ -1,0 +1,487 @@
+{
+  "schemaVersion": 1,
+  "issues": [
+    "#596",
+    "#602"
+  ],
+  "capturedUtc": "2026-07-25T09:30:45Z",
+  "commit": "f694d9a",
+  "machine": "arm64 / macOS-26.5.2-arm64-arm-64bit-Mach-O / .NET SDK 10.0.300",
+  "reproduce": "scripts/download-smoke-corpus.sh && scripts/check-perf-budgets.sh --update (Release build, quiet machine; page-limit 8, dpi 96, zoom-dpi 192, search-term 'the', min of 3 passes per (pdf,step))",
+  "machineCaveat": "Time baselines (ms) are only comparable on this machine class; re-baseline with --update on a different class, or gate time as warn. Allocation baselines (MB) are machine-stable and are the hard gate.",
+  "config": {
+    "pageLimit": 8,
+    "dpi": 96,
+    "zoomDpi": 192,
+    "searchTerm": "the",
+    "runs": 3,
+    "buildConfig": "Release",
+    "aggregation": "min per (pdf,step) across runs; gate compares sums over the intersection of budgeted and measured PDFs"
+  },
+  "policy": {
+    "allocation": {
+      "warnRatio": 1.15,
+      "failRatio": 1.3,
+      "minDeltaMB": 10,
+      "note": "managed GC bytes, driver thread; machine-stable => HARD gate; deltas under minDeltaMB never warn/fail (micro-noise floor)"
+    },
+    "time": {
+      "warnRatio": 1.5,
+      "failRatio": 2.0,
+      "minDeltaMs": 100,
+      "note": "wall ms, min-of-N; machine-variable => advisory unless --time-gate fail; deltas under minDeltaMs never warn/fail (fixed-overhead noise floor)"
+    }
+  },
+  "workflows": {
+    "save-roundtrip": {
+      "gate": "hard",
+      "hotPath": "Excise.Core writer/object store: PdfDocument.SaveToBytes -> WriteObjects -> GetObject/GetObjectFromStream object-stream materialization (#743; #597 report s3.1)",
+      "baseline": {
+        "totalMs": 801.0,
+        "totalAllocatedMB": 804.0
+      },
+      "perPdf": {
+        "cdc-vis-covid-19.pdf": {
+          "ms": 10.68,
+          "mb": 3.047
+        },
+        "irs-1040-instructions.pdf": {
+          "ms": 612.49,
+          "mb": 561.962
+        },
+        "irs-1040.pdf": {
+          "ms": 20.99,
+          "mb": 22.079
+        },
+        "irs-pub509-2026.pdf": {
+          "ms": 25.89,
+          "mb": 31.527
+        },
+        "irs-w4.pdf": {
+          "ms": 17.61,
+          "mb": 26.149
+        },
+        "irs-w9.pdf": {
+          "ms": 6.07,
+          "mb": 9.583
+        },
+        "scotus-trump-v-anderson.pdf": {
+          "ms": 7.86,
+          "mb": 7.817
+        },
+        "scotus-trump-v-us.pdf": {
+          "ms": 33.6,
+          "mb": 40.485
+        },
+        "state-ds11-passport.pdf": {
+          "ms": 35.25,
+          "mb": 57.366
+        },
+        "state-ds82-passport-renewal.pdf": {
+          "ms": 30.55,
+          "mb": 43.948
+        }
+      }
+    },
+    "redaction-save": {
+      "gate": "hard",
+      "hotPath": "Excise.Core redaction pipeline + writer: RedactArea + StructureTreeRedactionScrubber tree walk + SaveToBytes (#743; #597 report s3.4). SECURITY-CRITICAL: never win this budget by short-cutting the glyph-removal pipeline - see CLAUDE.md redaction rules.",
+      "baseline": {
+        "totalMs": 1126.6,
+        "totalAllocatedMB": 1212.8
+      },
+      "perPdf": {
+        "cdc-vis-covid-19.pdf": {
+          "ms": 31.63,
+          "mb": 15.924
+        },
+        "irs-1040-instructions.pdf": {
+          "ms": 439.26,
+          "mb": 575.894
+        },
+        "irs-1040.pdf": {
+          "ms": 102.43,
+          "mb": 50.762
+        },
+        "irs-pub509-2026.pdf": {
+          "ms": 80.8,
+          "mb": 63.874
+        },
+        "irs-w4.pdf": {
+          "ms": 51.68,
+          "mb": 34.744
+        },
+        "irs-w9.pdf": {
+          "ms": 32.66,
+          "mb": 16.543
+        },
+        "scotus-trump-v-anderson.pdf": {
+          "ms": 17.89,
+          "mb": 10.873
+        },
+        "scotus-trump-v-us.pdf": {
+          "ms": 49.22,
+          "mb": 46.885
+        },
+        "state-ds11-passport.pdf": {
+          "ms": 245.77,
+          "mb": 281.726
+        },
+        "state-ds82-passport-renewal.pdf": {
+          "ms": 75.27,
+          "mb": 115.619
+        }
+      }
+    },
+    "all-page-render": {
+      "gate": "hard",
+      "hotPath": "Excise.Rendering SkiaRenderer: form-XObject execution (#598), DeviceCMYK blend + soft-mask compositing (#599), glyph-path text (#600); #597 report s3.2",
+      "baseline": {
+        "totalMs": 1265.9,
+        "totalAllocatedMB": 954.2
+      },
+      "perPdf": {
+        "cdc-vis-covid-19.pdf": {
+          "ms": 37.77,
+          "mb": 15.261
+        },
+        "irs-1040-instructions.pdf": {
+          "ms": 99.4,
+          "mb": 31.87
+        },
+        "irs-1040.pdf": {
+          "ms": 26.84,
+          "mb": 12.286
+        },
+        "irs-pub509-2026.pdf": {
+          "ms": 148.31,
+          "mb": 74.838
+        },
+        "irs-w4.pdf": {
+          "ms": 63.45,
+          "mb": 30.674
+        },
+        "irs-w9.pdf": {
+          "ms": 51.68,
+          "mb": 6.056
+        },
+        "scotus-trump-v-anderson.pdf": {
+          "ms": 44.2,
+          "mb": 14.102
+        },
+        "scotus-trump-v-us.pdf": {
+          "ms": 63.41,
+          "mb": 20.621
+        },
+        "state-ds11-passport.pdf": {
+          "ms": 452.58,
+          "mb": 431.288
+        },
+        "state-ds82-passport-renewal.pdf": {
+          "ms": 278.28,
+          "mb": 317.175
+        }
+      }
+    },
+    "text-extract": {
+      "gate": "hard",
+      "hotPath": "Excise.Core TextExtractor: content parse + letter accumulators + font/XObject resource materialization (#600; #597 report s3.3)",
+      "baseline": {
+        "totalMs": 198.2,
+        "totalAllocatedMB": 389.4
+      },
+      "perPdf": {
+        "cdc-vis-covid-19.pdf": {
+          "ms": 10.09,
+          "mb": 4.152
+        },
+        "irs-1040-instructions.pdf": {
+          "ms": 18.1,
+          "mb": 17.5
+        },
+        "irs-1040.pdf": {
+          "ms": 5.58,
+          "mb": 2.492
+        },
+        "irs-pub509-2026.pdf": {
+          "ms": 32.01,
+          "mb": 40.895
+        },
+        "irs-w4.pdf": {
+          "ms": 6.76,
+          "mb": 4.435
+        },
+        "irs-w9.pdf": {
+          "ms": 6.58,
+          "mb": 5.392
+        },
+        "scotus-trump-v-anderson.pdf": {
+          "ms": 7.17,
+          "mb": 10.565
+        },
+        "scotus-trump-v-us.pdf": {
+          "ms": 8.76,
+          "mb": 12.26
+        },
+        "state-ds11-passport.pdf": {
+          "ms": 65.13,
+          "mb": 179.188
+        },
+        "state-ds82-passport-renewal.pdf": {
+          "ms": 37.99,
+          "mb": 112.489
+        }
+      }
+    },
+    "first-page-render": {
+      "gate": "advisory",
+      "hotPath": "Excise.Rendering SkiaRenderer first-page latency (#598/#599)",
+      "baseline": {
+        "totalMs": 321.0,
+        "totalAllocatedMB": 179.2
+      },
+      "perPdf": {
+        "cdc-vis-covid-19.pdf": {
+          "ms": 63.7,
+          "mb": 6.973
+        },
+        "irs-1040-instructions.pdf": {
+          "ms": 36.0,
+          "mb": 8.466
+        },
+        "irs-1040.pdf": {
+          "ms": 19.01,
+          "mb": 10.965
+        },
+        "irs-pub509-2026.pdf": {
+          "ms": 20.7,
+          "mb": 14.146
+        },
+        "irs-w4.pdf": {
+          "ms": 12.08,
+          "mb": 4.149
+        },
+        "irs-w9.pdf": {
+          "ms": 11.06,
+          "mb": 3.056
+        },
+        "scotus-trump-v-anderson.pdf": {
+          "ms": 6.6,
+          "mb": 1.542
+        },
+        "scotus-trump-v-us.pdf": {
+          "ms": 7.26,
+          "mb": 2.81
+        },
+        "state-ds11-passport.pdf": {
+          "ms": 107.53,
+          "mb": 87.983
+        },
+        "state-ds82-passport-renewal.pdf": {
+          "ms": 37.09,
+          "mb": 39.111
+        }
+      }
+    },
+    "navigation-rerender": {
+      "gate": "advisory",
+      "hotPath": "Excise.Rendering re-render on navigation (#598/#601)",
+      "baseline": {
+        "totalMs": 385.9,
+        "totalAllocatedMB": 293.5
+      },
+      "perPdf": {
+        "cdc-vis-covid-19.pdf": {
+          "ms": 32.65,
+          "mb": 14.933
+        },
+        "irs-1040-instructions.pdf": {
+          "ms": 23.47,
+          "mb": 6.816
+        },
+        "irs-1040.pdf": {
+          "ms": 22.73,
+          "mb": 11.31
+        },
+        "irs-pub509-2026.pdf": {
+          "ms": 36.64,
+          "mb": 22.206
+        },
+        "irs-w4.pdf": {
+          "ms": 20.85,
+          "mb": 3.241
+        },
+        "irs-w9.pdf": {
+          "ms": 18.75,
+          "mb": 2.429
+        },
+        "scotus-trump-v-anderson.pdf": {
+          "ms": 9.79,
+          "mb": 1.933
+        },
+        "scotus-trump-v-us.pdf": {
+          "ms": 14.7,
+          "mb": 5.756
+        },
+        "state-ds11-passport.pdf": {
+          "ms": 124.41,
+          "mb": 126.644
+        },
+        "state-ds82-passport-renewal.pdf": {
+          "ms": 81.96,
+          "mb": 98.198
+        }
+      }
+    },
+    "zoom-rerender": {
+      "gate": "advisory",
+      "hotPath": "Excise.Rendering re-render at zoom DPI (#598/#599/#601)",
+      "baseline": {
+        "totalMs": 231.0,
+        "totalAllocatedMB": 164.8
+      },
+      "perPdf": {
+        "cdc-vis-covid-19.pdf": {
+          "ms": 18.03,
+          "mb": 5.818
+        },
+        "irs-1040-instructions.pdf": {
+          "ms": 18.4,
+          "mb": 1.928
+        },
+        "irs-1040.pdf": {
+          "ms": 17.38,
+          "mb": 6.709
+        },
+        "irs-pub509-2026.pdf": {
+          "ms": 18.83,
+          "mb": 10.52
+        },
+        "irs-w4.pdf": {
+          "ms": 11.58,
+          "mb": 1.974
+        },
+        "irs-w9.pdf": {
+          "ms": 12.02,
+          "mb": 1.472
+        },
+        "scotus-trump-v-anderson.pdf": {
+          "ms": 6.14,
+          "mb": 1.14
+        },
+        "scotus-trump-v-us.pdf": {
+          "ms": 9.08,
+          "mb": 2.375
+        },
+        "state-ds11-passport.pdf": {
+          "ms": 76.9,
+          "mb": 91.425
+        },
+        "state-ds82-passport-renewal.pdf": {
+          "ms": 42.61,
+          "mb": 41.478
+        }
+      }
+    },
+    "open": {
+      "gate": "advisory",
+      "hotPath": "Excise.Core parser: open to first structural access (#597)",
+      "baseline": {
+        "totalMs": 36.3,
+        "totalAllocatedMB": 36.1
+      },
+      "perPdf": {
+        "cdc-vis-covid-19.pdf": {
+          "ms": 6.65,
+          "mb": 0.553
+        },
+        "irs-1040-instructions.pdf": {
+          "ms": 22.18,
+          "mb": 26.378
+        },
+        "irs-1040.pdf": {
+          "ms": 0.82,
+          "mb": 0.987
+        },
+        "irs-pub509-2026.pdf": {
+          "ms": 0.97,
+          "mb": 1.416
+        },
+        "irs-w4.pdf": {
+          "ms": 0.61,
+          "mb": 1.128
+        },
+        "irs-w9.pdf": {
+          "ms": 0.53,
+          "mb": 0.683
+        },
+        "scotus-trump-v-anderson.pdf": {
+          "ms": 0.65,
+          "mb": 0.718
+        },
+        "scotus-trump-v-us.pdf": {
+          "ms": 2.57,
+          "mb": 2.971
+        },
+        "state-ds11-passport.pdf": {
+          "ms": 0.63,
+          "mb": 0.666
+        },
+        "state-ds82-passport-renewal.pdf": {
+          "ms": 0.7,
+          "mb": 0.627
+        }
+      }
+    },
+    "search": {
+      "gate": "advisory",
+      "hotPath": "Excise.Core word segmentation + term scan over cached letters (#600)",
+      "baseline": {
+        "totalMs": 32.1,
+        "totalAllocatedMB": 22.1
+      },
+      "perPdf": {
+        "cdc-vis-covid-19.pdf": {
+          "ms": 2.72,
+          "mb": 1.039
+        },
+        "irs-1040-instructions.pdf": {
+          "ms": 6.21,
+          "mb": 1.648
+        },
+        "irs-1040.pdf": {
+          "ms": 1.09,
+          "mb": 1.049
+        },
+        "irs-pub509-2026.pdf": {
+          "ms": 3.51,
+          "mb": 2.392
+        },
+        "irs-w4.pdf": {
+          "ms": 4.58,
+          "mb": 3.02
+        },
+        "irs-w9.pdf": {
+          "ms": 4.29,
+          "mb": 4.685
+        },
+        "scotus-trump-v-anderson.pdf": {
+          "ms": 2.29,
+          "mb": 2.444
+        },
+        "scotus-trump-v-us.pdf": {
+          "ms": 3.32,
+          "mb": 3.157
+        },
+        "state-ds11-passport.pdf": {
+          "ms": 0.81,
+          "mb": 1.341
+        },
+        "state-ds82-passport-renewal.pdf": {
+          "ms": 3.32,
+          "mb": 1.357
+        }
+      }
+    }
+  }
+}
