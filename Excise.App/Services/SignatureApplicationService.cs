@@ -102,8 +102,10 @@ public sealed class SignatureApplicationOptions
 /// <para>Signing rewrites the whole file (excise saves are full rewrites, not
 /// incremental updates), so it must be the last operation: any existing signed
 /// signature would be invalidated, and the service refuses to sign a document
-/// that already carries one. Timestamping (RFC3161), LTV and visible signature
-/// appearances are out of scope per #623.</para>
+/// that already carries one. Timestamping (RFC3161) and LTV remain out of
+/// scope per #623; a visible appearance (<c>/AP /N</c>) is baked onto the
+/// widget when its <c>/Rect</c> has non-zero area — see
+/// <see cref="SignatureAppearanceAuthoring"/>.</para>
 /// </summary>
 public class SignatureApplicationService
 {
@@ -166,9 +168,22 @@ public class SignatureApplicationService
 
         GuardNoExistingSignedSignature(document);
 
+        var signingTime = options.SigningTime ?? DateTimeOffset.UtcNow;
+        var signerName = ResolveSignerName(options, certificate);
+
         var fieldDictionary = FindOrCreateSignatureField(document, options.FieldName);
-        fieldDictionary["V"] = BuildSignatureDictionary(options, certificate);
+        fieldDictionary["V"] = BuildSignatureDictionary(options, signerName, signingTime);
         SetSigFlags(document);
+
+        // Visible signature appearance (#623, last bullet): a baked /AP /N
+        // is only added when the widget's /Rect has non-zero area. A
+        // zero-size /Rect (the default for a freshly-created field, see
+        // FindOrCreateSignatureField) stays invisible — still a fully valid
+        // signature. See SignatureAppearanceAuthoring for the appearance
+        // stream itself; it mirrors PdfAnnotationAuthoring's baked-appearance
+        // pattern (#626) and does not touch the CMS/ByteRange machinery below.
+        SignatureAppearanceAuthoring.ApplyVisibleAppearance(
+            document, fieldDictionary, BuildAppearanceLines(options, signerName, signingTime));
 
         _logger.LogInformation(
             "Signing document as {Subject} into field {Field}",
@@ -274,7 +289,8 @@ public class SignatureApplicationService
 
     private static PdfDictionary BuildSignatureDictionary(
         SignatureApplicationOptions options,
-        X509Certificate2 certificate)
+        string? signerName,
+        DateTimeOffset signingTime)
     {
         var signature = new PdfDictionary();
         signature.SetName("Type", "Sig");
@@ -291,7 +307,6 @@ public class SignatureApplicationService
         signature["ByteRange"] = byteRange;
         signature["Contents"] = new PdfString(new byte[options.SignatureCapacityBytes], isHex: true);
 
-        var signerName = options.SignerName ?? certificate.GetNameInfo(X509NameType.SimpleName, forIssuer: false);
         if (!string.IsNullOrEmpty(signerName))
         {
             signature.SetString("Name", signerName);
@@ -312,8 +327,44 @@ public class SignatureApplicationService
             signature.SetString("ContactInfo", options.ContactInfo);
         }
 
-        signature.SetString("M", FormatPdfDate(options.SigningTime ?? DateTimeOffset.UtcNow));
+        signature.SetString("M", FormatPdfDate(signingTime));
         return signature;
+    }
+
+    /// <summary>
+    /// Resolve the human-readable signer name used both in the signature
+    /// dictionary's <c>/Name</c> and in the visible appearance text.
+    /// </summary>
+    private static string? ResolveSignerName(SignatureApplicationOptions options, X509Certificate2 certificate) =>
+        options.SignerName ?? certificate.GetNameInfo(X509NameType.SimpleName, forIssuer: false);
+
+    /// <summary>
+    /// Build the text lines drawn into the visible signature appearance
+    /// (see <see cref="SignatureAppearanceAuthoring"/>): signer identity,
+    /// date, and any optional reason/location the caller supplied.
+    /// </summary>
+    private static IReadOnlyList<string> BuildAppearanceLines(
+        SignatureApplicationOptions options, string? signerName, DateTimeOffset signingTime)
+    {
+        var lines = new List<string>
+        {
+            string.IsNullOrEmpty(signerName)
+                ? "Digitally signed"
+                : $"Digitally signed by {signerName}",
+            $"Date: {signingTime:yyyy-MM-dd HH:mm:ss zzz}"
+        };
+
+        if (!string.IsNullOrEmpty(options.Reason))
+        {
+            lines.Add($"Reason: {options.Reason}");
+        }
+
+        if (!string.IsNullOrEmpty(options.Location))
+        {
+            lines.Add($"Location: {options.Location}");
+        }
+
+        return lines;
     }
 
     private static void SetSigFlags(PdfDocument document)
