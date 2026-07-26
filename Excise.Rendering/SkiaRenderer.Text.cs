@@ -2608,7 +2608,18 @@ internal partial class RenderContext
             }
 
             if (!isVertical)
-                cursor += pdfGlyphWidth;
+            {
+                // §9.4.4/#734: horizontal advance also gets Tc (every glyph)
+                // and Tw (single-byte code 32 only, §9.3.3 — mirrors the
+                // vertical branch above, which already applies this; the
+                // horizontal path previously advanced by /W width alone).
+                // spacingScale converts the unscaled Tc/Tw text-space units
+                // into this loop's yScale-scaled local frame, same as vertical.
+                var spacing = _textState.CharSpacing;
+                if (decoded != null && decoded[i].ByteLength == 1 && decoded[i].Code == 32)
+                    spacing += _textState.WordSpacing;
+                cursor += pdfGlyphWidth + spacing * spacingScale;
+            }
         }
 
         var xyRatio = GetTextMatrixXYRatio();
@@ -2726,11 +2737,14 @@ internal partial class RenderContext
         }
         else
         {
-            // Advance by summed widths from /W (with /DW as fallback per CID).
-            float sumThousandthsOfEm = 0f;
-            foreach (var cid in cids)
-                sumThousandthsOfEm += GetCidWidthThousandths(cid);
-            var width = sumThousandthsOfEm * effectiveSize / 1000f * xyRatio;
+            // Advance by the SAME cursor accumulated while positioning glyphs
+            // above — Σ(/W width + Tc + single-byte-code-32 Tw) in the local
+            // yScale-scaled frame — converted to the text matrix's X-basis via
+            // xyRatio (X/Y aspect of a non-uniform Tm) and Th (§9.4.4:
+            // tx = ((w0/1000)·Tfs + Tc + Tw)·Th). Reusing cursor instead of
+            // re-summing /W widths keeps drawn glyph positions and the pen
+            // advance provably in sync. #734
+            var width = cursor * xyRatio;
             width *= _textState.HorizontalScale / 100.0f;
             AdvanceTextMatrixX(width);
         }
