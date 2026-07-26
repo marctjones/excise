@@ -88,6 +88,17 @@
                         <TextBlock Text="✓" IsVisible="{Binding IsTypewriterMode}"/>
                     </MenuItem.Icon>
                 </MenuItem>
+                <!-- #780: pending type-over edits flatten on save even after leaving
+                     typewriter mode. These affordances make them impossible to lose
+                     silently: reach every off-page edit, or explicitly discard. -->
+                <MenuItem Header="Go to Next Pending Type-over Edit"
+                          Command="{Binding GoToNextPendingTypewriterEditCommand}"
+                          IsEnabled="{Binding HasPendingTypewriterEdits}"
+                          AutomationProperties.Name="Go to next pending type-over edit"/>
+                <MenuItem Header="Discard Pending Type-over Edits"
+                          Command="{Binding DiscardPendingTypewriterEditsCommand}"
+                          IsEnabled="{Binding HasPendingTypewriterEdits}"
+                          AutomationProperties.Name="Discard pending type-over edits"/>
                 <MenuItem Header="_Copy Selected Text" Command="{Binding CopyTextCommand}" InputGesture="Ctrl+C"
                           IsEnabled="{Binding IsTextSelectionMode}"
                           access:CommandAccessibility.CommandId="edit.copyText"/>
