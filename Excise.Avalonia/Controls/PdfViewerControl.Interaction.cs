@@ -172,15 +172,14 @@ public partial class PdfViewerControl
         else if (InteractionMode == InteractionMode.Typewriter)
         {
             var endPoint = GetPressPoint(e);
-            var dipRect = NormalizeTypewriterDipRect(CreateRect(_dragStart, endPoint));
             ClearTemporaryDrawings();
-
-            if (Document != null && dipRect.Width > 4 && dipRect.Height > 4)
-            {
-                var pdfRect = ViewerDipsToPdfRect(dipRect, CurrentPage);
-                TypewriterTextCreated?.Invoke(this,
-                    new TypewriterTextCreatedEventArgs(pdfRect, CurrentPage));
-            }
+            // Click-to-place OR drag-to-size — both land here (#780). A plain
+            // click (start == end) yields a default-sized box at the point;
+            // a real drag yields a box sized to the gesture. The old
+            // `Width > 4 && Height > 4` gate was dead: it ran on the
+            // post-normalize rect, which is never sub-4, so a click already
+            // slipped through — now it is an intentional, documented path.
+            CreateTypewriterTextFromPointer(_dragStart, endPoint);
         }
         else if (InteractionMode == InteractionMode.TextSelection &&
                  _selectionAnchor != null && _selectionFocus != null &&

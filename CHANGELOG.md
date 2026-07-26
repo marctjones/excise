@@ -7,6 +7,19 @@ semantic versioning.
 ## [Unreleased]
 
 ### Fixed
+- **Typewriter (type-over) workflow: pending edits can no longer be lost or
+  flattened unseen** (#780) — pending type-over edits used to persist silently
+  after leaving typewriter mode and bake into the PDF on the next save with no
+  signal, off-page edits were never shown yet still flattened, and a plain
+  click placed nothing. Now: mode-exit is non-destructive and the pending-edit
+  count stays visible in the status bar; an explicit "Discard Pending Type-over
+  Edits" command is the only non-saving way to clear them; "Go to Next Pending
+  Type-over Edit" navigates to off-page edits before they commit; `Esc` removes
+  an empty active box and keeps typed text in a non-empty one; and a click now
+  places a default-sized box (drag still sizes it). Added GUI/headless coverage
+  for the pointer-driven creation path, DIP↔PDF round-trips (incl. `/Rotate`
+  90/180/270 and page clamp), the on-create permission re-check, and mode-exit
+  non-loss / discard verified by reopening the saved PDF.
 - **RTL redaction: numbers inside right-to-left lines no longer evade
   removal** (#632) — a number embedded in an Arabic/Hebrew line (an ID, date,
   or phone number) kept its surrounding words in visual order, so a

@@ -138,11 +138,61 @@ public partial class MainWindowViewModel
         RefreshTypewriterEditState();
     }
 
+    /// <summary>
+    /// True while any type-over edit is pending (with text). Drives the
+    /// discard / next-edit affordances so a user can never lose track of
+    /// edits that would otherwise flatten silently on the next save (#780).
+    /// </summary>
+    public bool HasPendingTypewriterEdits => FileState.TypewriterEditsCount > 0;
+
+    /// <summary>
+    /// The ONLY non-saving way to clear pending type-over edits (#780).
+    /// Exiting typewriter mode deliberately does NOT discard — that was the
+    /// surprising silent-loss path — so this explicit, user-invoked command
+    /// is the sanctioned "I changed my mind" exit.
+    /// </summary>
+    public void DiscardPendingTypewriterEdits()
+    {
+        if (TypewriterTextOperations.Count == 0)
+            return;
+
+        var discarded = TypewriterTextOperations.Count;
+        ClearPendingTypewriterText();
+        _logger.LogInformation("Discarded {Count} pending typewriter edit(s)", discarded);
+    }
+
+    /// <summary>
+    /// Navigate to the next page that carries a pending type-over edit (#780).
+    /// Off-page pending edits are otherwise invisible — the layer only renders
+    /// ops on the current page — yet they still flatten on save. This lets a
+    /// user reach every one before committing. Cyclic, starting after the
+    /// current page.
+    /// </summary>
+    public void GoToNextPendingTypewriterEdit()
+    {
+        var pages = TypewriterTextOperations
+            .Where(o => o.IsPending && o.HasText)
+            .Select(o => o.PageNumber)
+            .Distinct()
+            .OrderBy(p => p)
+            .ToList();
+        if (pages.Count == 0)
+            return;
+
+        var current = CurrentPage; // 1-based
+        var next = pages.FirstOrDefault(p => p > current);
+        if (next == 0)
+            next = pages[0]; // wrap around
+
+        CurrentPageIndex = Math.Clamp(next - 1, 0, Math.Max(0, TotalPages - 1));
+    }
+
     private void RefreshTypewriterEditState()
     {
         FileState.TypewriterEditsCount = TypewriterTextOperations.Count(o => o.IsPending && o.HasText);
         this.RaisePropertyChanged(nameof(SaveButtonText));
         this.RaisePropertyChanged(nameof(StatusBarText));
+        this.RaisePropertyChanged(nameof(HasPendingTypewriterEdits));
     }
 
     private async Task ReloadPdfCoreDocumentAfterSaveAsync(string filePath)
