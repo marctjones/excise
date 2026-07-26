@@ -28,6 +28,24 @@ semantic versioning.
   logical order (segments reverse, the number stays put), so RTL content that
   contains numbers is searchable and redactable. Verified against the Unicode
   Bidi Algorithm (UAX #9) reference, not against excise itself.
+
+### Security
+- **RTL redaction in Type0/Identity-H (CID) Arabic/Hebrew fonts verified with
+  independent oracles** (#632) — the redaction-critical case where the content
+  stream carries the word only as 2-byte CIDs (glyph indices), so the Unicode
+  string never appears in the file and a saved-bytes search — even UTF-16BE —
+  is structurally blind to it. Added fixtures embedding a real font that paint
+  the word in visual (reversed) order and drive `RedactText` with a
+  logical-order needle, asserted with the two mandated non-excise oracles:
+  mutool independent extraction (word present before, unrecoverable after) and
+  a Ghostscript ink differential over the word's region (blank after removal,
+  not merely covered). Confirms logical→visual matching and true glyph removal
+  in the CID path; a keep-word guards against blanking the page. Also pins, as
+  a measured limitation, the whole-line bidi gap for mixed-direction lines
+  (per-word RTL redaction works; a phrase spanning a direction change on an
+  RTL-base line is not matched) — split to #785. No engine behaviour changed;
+  the existing bidi reorder already covered these cases and this locks them
+  under independent verification.
 - **Type0/CID horizontal advance now scales `Tc`/`Tw` by `Th`** (#734) — for
   Type0 fonts the character/word-spacing contributions were applied outside the
   horizontal-scaling factor (`Th`), drifting extracted glyph positions on text
