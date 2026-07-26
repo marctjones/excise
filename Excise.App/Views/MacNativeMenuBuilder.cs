@@ -53,6 +53,8 @@ internal static class MacNativeMenuBuilder
         private readonly NativeMenuItem _recentFilesItem;
         private readonly NativeMenuItem _selectTextItem;
         private readonly NativeMenuItem _typewriterItem;
+        private readonly NativeMenuItem _typewriterNextEditItem;
+        private readonly NativeMenuItem _typewriterDiscardItem;
         private readonly NativeMenuItem _redactionModeItem;
         private readonly NativeMenuItem _viewClipboardItem;
         private readonly NativeMenuItem _redactionClipboardItem;
@@ -70,6 +72,10 @@ internal static class MacNativeMenuBuilder
             _recentFilesItem = Submenu("Open Recent");
             _selectTextItem = CommandItem("Select Text Mode", _viewModel.ToggleTextSelectionModeCommand, Key.T);
             _typewriterItem = CommandItem("Typewriter Mode", _viewModel.ToggleTypewriterModeCommand);
+            // #780: keep the discard / next-pending-edit affordances reachable on
+            // macOS's native menu, not just the in-window AXAML menu.
+            _typewriterNextEditItem = CommandItem("Go to Next Pending Type-over Edit", _viewModel.GoToNextPendingTypewriterEditCommand);
+            _typewriterDiscardItem = CommandItem("Discard Pending Type-over Edits", _viewModel.DiscardPendingTypewriterEditsCommand);
             _redactionModeItem = CommandItem("Redaction Mode", _viewModel.ToggleRedactionModeCommand, Key.R, modifiers: KeyModifiers.None);
             _viewClipboardItem = ToggleItem("Show Clipboard History", _viewModel.ToggleClipboardSidebarCommand);
             _redactionClipboardItem = ToggleItem("Show Clipboard History", _viewModel.ToggleClipboardSidebarCommand);
@@ -103,6 +109,8 @@ internal static class MacNativeMenuBuilder
                     Separator(),
                     TrackDocumentItem(_selectTextItem),
                     TrackDocumentItem(_typewriterItem),
+                    _typewriterNextEditItem,
+                    _typewriterDiscardItem,
                     TrackTextSelectionItem(CommandItem("Copy Selected Text", _viewModel.CopyTextCommand, Key.C))));
 
             Add(menu,
@@ -199,6 +207,7 @@ internal static class MacNativeMenuBuilder
             or nameof(MainWindowViewModel.CanMoveSelectedPagesLater)
             or nameof(MainWindowViewModel.IsTextSelectionMode)
             or nameof(MainWindowViewModel.IsTypewriterMode)
+            or nameof(MainWindowViewModel.HasPendingTypewriterEdits)
             or nameof(MainWindowViewModel.HasTextSelection)
             or nameof(MainWindowViewModel.IsRedactionMode)
             or nameof(MainWindowViewModel.IsContinuousView)
@@ -233,6 +242,8 @@ internal static class MacNativeMenuBuilder
             _selectTextItem.IsChecked = _viewModel.IsTextSelectionMode;
             _typewriterItem.ToggleType = MenuItemToggleType.CheckBox;
             _typewriterItem.IsChecked = _viewModel.IsTypewriterMode;
+            _typewriterNextEditItem.IsEnabled = isDocumentLoaded && _viewModel.HasPendingTypewriterEdits;
+            _typewriterDiscardItem.IsEnabled = isDocumentLoaded && _viewModel.HasPendingTypewriterEdits;
             _redactionModeItem.ToggleType = MenuItemToggleType.CheckBox;
             _redactionModeItem.IsChecked = _viewModel.IsRedactionMode;
             _continuousScrollItem.ToggleType = MenuItemToggleType.CheckBox;

@@ -105,6 +105,27 @@ public partial class PdfViewerControl
                     textBox.Text ?? string.Empty,
                     operation.PageNumber));
         };
+        // Esc on the active box (#780). An EMPTY box is removed — the user
+        // backed out before typing, so nothing is lost. A NON-empty box keeps
+        // its typed text (already committed via TextChanged) and only exits
+        // editing focus: Esc must never silently drop text the user entered.
+        textBox.KeyDown += (_, e) =>
+        {
+            if (e.Key != Key.Escape)
+                return;
+
+            if (string.IsNullOrEmpty(textBox.Text))
+            {
+                TypewriterTextDeleted?.Invoke(this,
+                    new TypewriterTextDeletedEventArgs(operation.Id, operation.PageNumber));
+            }
+            else
+            {
+                Focus(); // blur the editor, keep the text
+            }
+
+            e.Handled = true;
+        };
         Grid.SetRow(textBox, 1);
         shell.Children.Add(textBox);
 
@@ -317,7 +338,29 @@ public partial class PdfViewerControl
         return false;
     }
 
-    private Rect NormalizeTypewriterDipRect(Rect rect)
+    /// <summary>
+    /// Places a pending type-over box from a pointer gesture and raises
+    /// <see cref="TypewriterTextCreated"/>. A plain click (start == end, or a
+    /// sub-4-DIP drag) places a DEFAULT-sized box at the press point; a larger
+    /// drag places a box sized to the drag (#780). <see
+    /// cref="NormalizeTypewriterDipRect"/> substitutes the default size for
+    /// sub-4 dimensions and clamps the box onto the page, so there is no
+    /// "drag &gt; 4 DIPs" gate here — click-to-place is a first-class path.
+    /// Internal so the pointer-driven creation path is unit-testable without
+    /// synthesising raw pointer events (#780 test gap).
+    /// </summary>
+    internal void CreateTypewriterTextFromPointer(Point start, Point end)
+    {
+        if (Document == null)
+            return;
+
+        var dipRect = NormalizeTypewriterDipRect(CreateRect(start, end));
+        var pdfRect = ViewerDipsToPdfRect(dipRect, CurrentPage);
+        TypewriterTextCreated?.Invoke(this,
+            new TypewriterTextCreatedEventArgs(pdfRect, CurrentPage));
+    }
+
+    internal Rect NormalizeTypewriterDipRect(Rect rect)
     {
         if (Document == null || CurrentPage < 1 || CurrentPage > Document.PageCount)
         {
@@ -342,7 +385,7 @@ public partial class PdfViewerControl
         return new Rect(left, top, width, height);
     }
 
-    private PdfRectangle ViewerDipsToPdfRect(Rect dipRect, int pageNumber)
+    internal PdfRectangle ViewerDipsToPdfRect(Rect dipRect, int pageNumber)
     {
         if (Document == null || pageNumber < 1 || pageNumber > Document.PageCount)
             return new PdfRectangle(0, 0, 0, 0);
@@ -354,7 +397,7 @@ public partial class PdfViewerControl
             .Normalize();
     }
 
-    private Rect PdfRectToViewerDips(PdfRectangle pdfRect, int pageNumber)
+    internal Rect PdfRectToViewerDips(PdfRectangle pdfRect, int pageNumber)
     {
         if (Document == null || pageNumber < 1 || pageNumber > Document.PageCount)
             return default;

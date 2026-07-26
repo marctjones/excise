@@ -44,6 +44,8 @@ public partial class MainWindowViewModel
     public ReactiveCommand<Unit, Unit> ToggleTextSelectionModeCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleFormAuthoringModeCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleTypewriterModeCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> DiscardPendingTypewriterEditsCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> GoToNextPendingTypewriterEditCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> AddHighlightAnnotationFromSelectionCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> AddStickyNoteAnnotationCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleOutlineCommand { get; private set; } = null!;
@@ -139,6 +141,8 @@ public partial class MainWindowViewModel
             IsFormAuthoringMode = !IsFormAuthoringMode;
         });
         ToggleTypewriterModeCommand = ReactiveCommand.Create(ToggleTypewriterMode);
+        DiscardPendingTypewriterEditsCommand = ReactiveCommand.Create(DiscardPendingTypewriterEdits);
+        GoToNextPendingTypewriterEditCommand = ReactiveCommand.Create(GoToNextPendingTypewriterEdit);
         AddHighlightAnnotationFromSelectionCommand = ReactiveCommand.CreateFromTask(AddHighlightAnnotationFromSelectionAsync);
         AddStickyNoteAnnotationCommand = ReactiveCommand.CreateFromTask(() => AddStickyNoteAnnotationAsync());
         ToggleOutlineCommand = ReactiveCommand.Create(ToggleOutlineSidebar);
