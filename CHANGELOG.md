@@ -6,6 +6,19 @@ semantic versioning.
 
 ## [Unreleased]
 
+### Added
+- **Type-over tool: move/resize-handle and wrap-parity test coverage** (#780) —
+  closed the two coverage gaps left after the type-over workflow work. A
+  control-level headless test drives a real routed pointer gesture
+  (press → move → release) on the editor's move handle and resize grip and
+  asserts the `TypewriterTextBoundsChanged` PDF bounds reflect the drag (move:
+  position shifts, size preserved; resize: size grows, the anchored corner is
+  fixed). A wrap-parity test compares the on-screen editor `TextBox` wrapping
+  (Avalonia `TextWrapping.Wrap`) against the flattened PDF output (Skia +
+  base-14 metrics) via save/reopen/extract, asserting both wrap to multiple
+  lines, all words survive in reading order, and the line counts agree within
+  ±1 (observed 4 vs 4 exactly).
+
 ### Fixed
 - **Typewriter (type-over) workflow: pending edits can no longer be lost or
   flattened unseen** (#780) — pending type-over edits used to persist silently
