@@ -33,8 +33,21 @@ semantic versioning.
   horizontal-scaling factor (`Th`), drifting extracted glyph positions on text
   that combines Type0 fonts with non-default horizontal scaling and non-zero
   spacing (ISO 32000-1 §9.4.4). Applied identically in the text extractor and
-  the redaction content-stream parser so redaction bounds track letters. The
-  renderer half remains tracked under #734.
+  the redaction content-stream parser so redaction bounds track letters.
+- **Renderer: horizontal Type0/CID glyph advance now applies `Tc`/`Tw`**
+  (#734) — `SkiaRenderer.RenderCidBytes` advanced the horizontal text matrix
+  by summed `/W` glyph widths only, never adding character spacing (`Tc`) or
+  word spacing (`Tw`, single-byte code 32 only per §9.3.3), unlike the
+  simple-font path and the #515 vertical Type0 path, which both already
+  applied them. On CJK/Type0 pages with non-zero `Tc`, rendered glyphs
+  progressively fell behind where extraction and reference renderers placed
+  them. Fixed per §9.4.4 (`tx = ((w0/1000)·Tfs + Tc + Tw)·Th`), mirroring the
+  #515 vertical path: Tc/Tw now accumulate into the same per-glyph cursor
+  used to position and advance the text matrix, so drawn positions and pen
+  advance cannot drift apart. Verified against live pdftocairo/Ghostscript
+  (not excise's own extractor): a synthetic Type0 fixture with `Tc`/`Tw` that
+  diverged from both references by 1.8%-2.0% differing pixels before the fix
+  now agrees within 0.25%.
 - **Redaction on a multi-run line no longer shifts the kept text** (#758) —
   when `GlyphRemover` removed a text-showing operator from a multi-run `BT`
   block, it dropped that operator's pen advance, so kept runs after the
