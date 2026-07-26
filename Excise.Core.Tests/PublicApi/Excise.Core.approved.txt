@@ -854,6 +854,10 @@ namespace Excise.Core.Document
         public string Type { get; }
         public override string ToString() { }
     }
+    public static class SignatureAppearanceAuthoring
+    {
+        public static void ApplyVisibleAppearance(Excise.Core.Document.PdfDocument document, Excise.Core.Primitives.PdfDictionary widget, System.Collections.Generic.IReadOnlyList<string> lines) { }
+    }
     public sealed class SuggestedField : System.IEquatable<Excise.Core.Document.SuggestedField>
     {
         public SuggestedField(Excise.Core.Document.PdfFieldType FieldType, Excise.Core.Document.PdfRectangle Rect, int PageNumber, string SuggestedName, string Reason) { }
