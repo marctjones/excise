@@ -168,6 +168,168 @@ public class PdfViewerControlTypewriterTests
         await RunEscapeCase(initialText: "typed content", expectDeleted: false);
     }
 
+    // #780: the move-handle and resize-grip pointer gestures raise
+    // TypewriterTextBoundsChanged with PDF-mapped bounds, but the whole
+    // handler → RaiseTypewriterBoundsChanged → DIP↔PDF path had no coverage.
+    // These drive a real routed pointer gesture (press → move → release) on the
+    // handle Border found in the visual tree and assert the reported PDF bounds
+    // reflect the drag. The move/resize handlers report pointer positions
+    // relative to the TypewriterLayer, so we raise the events with
+    // rootVisual == that same Canvas: GetPosition(layer) is then an identity
+    // transform and the handlers observe exactly the delta we inject. The
+    // control must be hosted in a shown Window first — an identity transform
+    // still requires the Canvas to be attached to a visual root, or
+    // GetPosition collapses to (0,0) and no gesture is seen.
+    [FixedAvaloniaFact]
+    public async Task DragMoveHandle_ShiftsPdfPosition_AndPreservesSize()
+    {
+        // Drag the move handle by (+30, +24) DIP. The exact DIP→PDF scale
+        // depends on the preview render DPI/zoom the control chose for the host
+        // window, so the precise magnitude is checked against `expected` —
+        // computed at gesture time by mapping the shell's actual moved DIP
+        // position through the same conversion the event uses. Independently, we
+        // assert the box really shifted (right + down, PDF Y flipped) and kept
+        // its size — neither of which depends on the scale.
+        var (original, changed, expected) = await RunHandleDragCase(
+            pick: shell => FindBorder(shell, b => Math.Abs(b.Height - 10) < 0.5),
+            deltaDip: new Point(30, 24));
+
+        changed.Should().NotBeNull("releasing the move handle must raise TypewriterTextBoundsChanged");
+        var r = changed!.Rect;
+
+        r.Width.Should().BeApproximately(original.Width, 2.0, "a move preserves the box size");
+        r.Height.Should().BeApproximately(original.Height, 2.0);
+        r.Left.Should().BeGreaterThan(original.Left + 10, "a rightward drag moves the PDF box right");
+        r.Bottom.Should().BeLessThan(original.Bottom - 8, "a downward DIP drag lowers PDF Y (flip)");
+        r.Left.Should().BeApproximately(expected.Left, 1.0, "the reported bounds equal the mapped moved position");
+        r.Bottom.Should().BeApproximately(expected.Bottom, 1.0);
+    }
+
+    [FixedAvaloniaFact]
+    public async Task DragResizeGrip_ChangesPdfSize_AndPreservesAnchoredCorner()
+    {
+        // Grow via the bottom-right grip by (+40, +40) DIP = (+24, +24) PDF pts.
+        // The DIP top-left corner is anchored, which in PDF is (Left, Top).
+        var (original, changed, expected) = await RunHandleDragCase(
+            pick: shell => FindBorder(shell, b => Math.Abs(b.Width - 12) < 0.5 && Math.Abs(b.Height - 12) < 0.5),
+            deltaDip: new Point(40, 40));
+
+        changed.Should().NotBeNull("releasing the resize grip must raise TypewriterTextBoundsChanged");
+        var r = changed!.Rect;
+
+        r.Left.Should().BeApproximately(original.Left, 3.0, "the anchored top-left corner's Left is fixed");
+        r.Top.Should().BeApproximately(original.Top, 3.0, "the anchored top-left corner's Top is fixed");
+        r.Width.Should().BeGreaterThan(original.Width + 15, "growing the grip widens the PDF box");
+        r.Height.Should().BeGreaterThan(original.Height + 15, "growing the grip heightens the PDF box");
+        r.Width.Should().BeApproximately(expected.Width, 1.0, "the reported bounds equal the mapped resized box");
+        r.Height.Should().BeApproximately(expected.Height, 1.0);
+    }
+
+    // Hosts the control in a shown Window (so the overlay Canvas is attached and
+    // GetPosition resolves), seeds one on-page pending box, runs the pointer
+    // gesture on the picked handle, and returns the seeded bounds plus the
+    // bounds-changed event raised on release.
+    private static async Task<(PdfRectangle original, TypewriterTextBoundsChangedEventArgs? changed, PdfRectangle expected)> RunHandleDragCase(
+        Func<Control, Border> pick, Point deltaDip)
+    {
+        var original = new PdfRectangle(60, 150, 200, 250); // w=140, h=100, on a 300x400 page
+        PdfCoreDocument? doc = null;
+        PdfViewerControl control = null!;
+        Window window = null!;
+        TypewriterTextBoundsChangedEventArgs? changed = null;
+        PdfRectangle expected = default;
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            doc = NewSinglePage(300, 400);
+            control = NewTypewriterControl(doc);
+            control.TypewriterTextBoundsChanged += (_, e) => changed = e;
+            window = new Window { Content = control, Width = 700, Height = 800 };
+            window.Show();
+        });
+
+        // Wait for the overlay Canvas to attach and lay out before injecting the
+        // gesture (the identity transform needs a live visual root).
+        Canvas? layer = null;
+        var deadline = DateTime.UtcNow.AddSeconds(10);
+        while (DateTime.UtcNow < deadline)
+        {
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                window.UpdateLayout();
+                layer = control.FindControl<Canvas>("TypewriterLayer");
+            });
+            if (layer is not null && layer.IsAttachedToVisualTree())
+                break;
+            await Task.Delay(100);
+        }
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            control.TypewriterTextOperations = new[]
+            {
+                PdfTypewriterTextOperation.Create(1, original, "handle"),
+            };
+            window.UpdateLayout();
+
+            var currentLayer = control.FindControl<Canvas>("TypewriterLayer")!;
+            currentLayer.IsAttachedToVisualTree().Should().BeTrue("the overlay must be attached for the gesture");
+
+            var shell = currentLayer.GetVisualDescendants().OfType<Grid>().First();
+            var handle = pick(shell);
+            RaiseHandleDrag(currentLayer, handle, deltaDip);
+
+            // The gesture leaves the shell at its final DIP geometry; map it the
+            // same way RaiseTypewriterBoundsChanged does so the reported bounds
+            // can be checked without hard-coding the preview DPI/zoom scale.
+            var finalRect = new Rect(
+                Canvas.GetLeft(shell), Canvas.GetTop(shell), shell.Width, shell.Height);
+            expected = control.ViewerDipsToPdfRect(
+                control.NormalizeTypewriterDipRect(finalRect), 1);
+        });
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            window.Close();
+            doc?.Dispose();
+        });
+
+        return (original, changed, expected);
+    }
+
+    private static Border FindBorder(Control shell, Func<Border, bool> predicate)
+    {
+        var border = shell.GetVisualDescendants().OfType<Border>().FirstOrDefault(predicate);
+        border.Should().NotBeNull("the target handle Border must be in the editor visual tree");
+        return border!;
+    }
+
+    // Press → move → release on <paramref name="handle"/>, reporting pointer
+    // positions relative to <paramref name="layer"/>. rootVisual == layer makes
+    // GetPosition(layer) an identity, so the injected delta is exactly what the
+    // move/resize handlers observe (they are delta-based off the press point, so
+    // the absolute press position is irrelevant).
+    private static void RaiseHandleDrag(Canvas layer, Border handle, Point deltaDip)
+    {
+        var pointer = new Pointer(Pointer.GetNextFreeId(), PointerType.Mouse, isPrimary: true);
+        var pressProps = new PointerPointProperties(RawInputModifiers.LeftMouseButton, PointerUpdateKind.LeftButtonPressed);
+        var start = new Point(100, 100);
+        var end = start + deltaDip;
+
+        handle.RaiseEvent(new PointerPressedEventArgs(
+            handle, pointer, layer, start, 0, pressProps, KeyModifiers.None));
+
+        handle.RaiseEvent(new PointerEventArgs(
+            InputElement.PointerMovedEvent, handle, pointer, layer, end, 0,
+            new PointerPointProperties(RawInputModifiers.LeftMouseButton, PointerUpdateKind.Other),
+            KeyModifiers.None));
+
+        handle.RaiseEvent(new PointerReleasedEventArgs(
+            handle, pointer, layer, end, 0,
+            new PointerPointProperties(RawInputModifiers.None, PointerUpdateKind.LeftButtonReleased),
+            KeyModifiers.None, MouseButton.Left));
+    }
+
     private static async Task RunEscapeCase(string initialText, bool expectDeleted)
     {
         PdfCoreDocument? doc = null;
