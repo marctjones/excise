@@ -43,6 +43,20 @@ semantic versioning.
   found already correct; the tests lock it in and cover the new continuous view.
 
 ## [3.4.0] - 2026-07-27
+- **Interactive GUI-command coverage for redaction and search (#816, batch 3)**
+  — `RedactionAndSearchCommandTests` executes the real ReactiveCommands behind
+  the redaction buttons and search bar (`ApplyAllRedactionsCommand`,
+  `ApplyRedactionCommand`, `ClearAllRedactionsCommand`,
+  `RemovePendingRedactionCommand`, `FindCommand`, `FindNextCommand`,
+  `FindPreviousCommand`, `JumpToSearchMatchCommand`, `CloseSearchCommand`) and
+  asserts their real effects — closing a gap where redaction removal had only
+  been proven through the scripting path / "doc still open", never by executing
+  the actual Apply command. `ApplyAllRedactionsCommand` now runs end-to-end in
+  headless tests via a small test-only save-path seam
+  (`SetRedactedSavePathProviderForTests`), and removal is verified with
+  independent oracles per the no-self-oracle rule: a carrier-agnostic saved-bytes
+  scan (ASCII + UTF-16BE) with an in-file negative control, plus an independent
+  mutool extraction (skips cleanly on tool-less CI, allow-listed).
 
 ### Added
 - **PDF/UA-1 and PDF/A conformance checker** (#772) — a new
