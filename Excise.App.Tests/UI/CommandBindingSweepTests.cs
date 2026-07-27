@@ -74,7 +74,13 @@ public class CommandBindingSweepTests
                               (mic.Items.Count > 0 || mic.ItemsSource != null);
             var isToggle = host is ToggleButton // CheckBox/RadioButton inherit
                           || (host is MenuItem mit && mit.ToggleType != MenuItemToggleType.None);
-            if (isContainer || isToggle)
+            // A Button that opens a Flyout (e.g. the #781 type-over colour
+            // swatch picker) activates through its Flyout, not a Command —
+            // null Command is expected, like a submenu container. Its
+            // in-flyout leaves carry the real commands and are swept when
+            // realised.
+            var isFlyoutHost = host is Button fb && fb.Flyout != null;
+            if (isContainer || isToggle || isFlyoutHost)
             {
                 containerCount++;
                 continue;
