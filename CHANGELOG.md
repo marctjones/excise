@@ -6,7 +6,25 @@ semantic versioning.
 
 ## [Unreleased]
 
-## [3.3.1] - 2026-07-26
+### Performance
+- **GUI interaction latency: per-page search-highlight index (#601).** Page
+  navigation recomputed the current page's search highlights with a linear
+  `O(total matches)` scan over every match on *every* page flip, so the cost
+  grew with document size (a dense search on a large book — thousands of
+  matches — made each page change scan all of them). Matches are now indexed by
+  page once when results publish, making the per-navigation lookup
+  `O(matches on the target page)`. Measured (new `GuiLatencyBenchmarkTests`,
+  400-page document, 2,000-match active search, 2 runs): the per-navigation
+  match lookup dropped from **~22 µs to ~0.05 µs** (~400×), and — being now
+  independent of match count — no longer scales with the document (the old scan
+  was linear in total matches, so ~2 ms at 200k matches).
+  **User-visible latency was already sub-frame and is unchanged within
+  measurement noise** — every direct interaction averaged well under one 60 Hz
+  input frame both before and after (end-to-end page navigation ≈ 0.5–0.7 ms,
+  its run-to-run baseline jitter larger than the change). The value is removing
+  the one per-interaction cost that scaled with document content, plus the new
+  benchmark that gates each profiled interaction under a 16 ms budget going
+  forward.
 
 ### Fixed
 - **Symbolic TrueType with a (3,0) symbol cmap: text extraction mis-decode**
