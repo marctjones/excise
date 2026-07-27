@@ -6,6 +6,26 @@ semantic versioning.
 
 ## [Unreleased]
 
+### Performance
+- **Renderer glyph-outline caching on the text hot path** (#598) — glyph
+  outlines are now tessellated once per (typeface, size, glyph) and reused for
+  the rest of the page instead of re-decoding the same outline on every draw.
+  The dominant win is the embedded-subset-font path (Type0/CID and byte-cmap
+  simple fonts drawn glyph-by-glyph via `SKFont.GetGlyphPath` in
+  `BuildGlyphIdTextPath`), where real-world body text recurs the same glyph IDs
+  thousands of times per page: on the smoke corpus the outline cache serves
+  94.6% of glyph lookups (≈917k hits / 970k lookups; ≈561k avoided
+  tessellations on `irs-1040-instructions.pdf` alone). Measured back-to-back in
+  Release on the smoke corpus (`scripts/check-perf-budgets.sh`, min-of-3, with
+  the non-rendering `text-extract` workflow flat as a machine-stability
+  control): `all-page-render` managed allocation 206→197 MB (-4.4%) and render
+  time 794→749 ms (-5.7%); `navigation-rerender` 271→258 ms (-4.8%). The caches
+  hold only the UNPOSITIONED outline; every draw still transforms a fresh copy
+  to its own cursor/scale, so output is byte-identical — verified by the Visual
+  PNG baselines (63/0 unchanged) and the mutool differential smoke suite (49/0)
+  on the embedded-font corpus. Cache lifetime is one page render; keys compare
+  the typeface by reference.
+
 ## [3.3.1] - 2026-07-26
 
 ### Fixed

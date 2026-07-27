@@ -450,12 +450,77 @@ internal partial class RenderContext
     // so parallel test collections cannot interfere with each other's counts.
     [ThreadStatic]
     internal static long ContentStreamParseCacheHits;
+    [ThreadStatic]
+    internal static long GlyphOutlineCacheHits;
+    [ThreadStatic]
+    internal static long GlyphOutlineCacheMisses;
     private readonly Dictionary<(int ObjectNumber, int Generation, ImageBitmapCacheKey Key), SKBitmap?> _imageBitmapByReference = new();
     private readonly Dictionary<Excise.Core.Primitives.PdfStream, Dictionary<ImageBitmapCacheKey, SKBitmap?>> _imageBitmapByStream =
         new(ReferenceEqualityComparer.Instance);
     private readonly List<SKBitmap> _cachedImageBitmaps = new();
+    // Tessellated glyph outlines keyed by (typeface, font-size bits, glyph
+    // string) — see GetCachedGlyphOutline (#598). SKFont.GetTextPath drives the
+    // platform font scaler to build the outline on every call; body text
+    // repeats the same glyph at one size thousands of times per page, so the
+    // uncached path re-tessellates identical geometry. The cache stores the
+    // UNPOSITIONED outline at origin; callers transform a fresh copy per draw
+    // (cursor + horizontal squeeze) and never mutate the cached path, so the
+    // geometry handed to DrawPath is byte-identical to the uncached path.
+    // CreateTextFont is a fixed-property constructor, so any two SKFonts for the
+    // same (typeface, size) yield identical outlines — that is what makes the
+    // key exact. Lifetime is this RenderContext (one page render); disposed in
+    // DisposeOwnedResources. Typeface is compared by reference.
+    private readonly Dictionary<(SKTypeface Typeface, int SizeBits, string Text), SKPath?> _glyphOutlineCache =
+        new(GlyphOutlineKeyComparer.Instance);
+    // The glyph-ID variant of the outline cache (#598). Embedded subset fonts
+    // (Type0/CID and byte-cmap simple fonts) are drawn glyph-by-glyph via
+    // SKFont.GetGlyphPath in BuildGlyphIdTextPath — this is the tessellation
+    // hot path for real-world body text, where the same glyph ID recurs
+    // thousands of times per page at one size. Same immutability/lifetime rules
+    // as _glyphOutlineCache; the key is the glyph ID, so no per-glyph string is
+    // allocated. Typeface is compared by reference.
+    private readonly Dictionary<(SKTypeface Typeface, int SizeBits, ushort Gid), SKPath?> _glyphOutlineByIdCache =
+        new(GlyphIdOutlineKeyComparer.Instance);
     private DeviceCmykBackdrop? _deviceCmykKnockoutInitialBackdrop;
     private int _tilingPatternDepth;
+
+    private sealed class GlyphOutlineKeyComparer
+        : IEqualityComparer<(SKTypeface Typeface, int SizeBits, string Text)>
+    {
+        public static readonly GlyphOutlineKeyComparer Instance = new();
+
+        public bool Equals(
+            (SKTypeface Typeface, int SizeBits, string Text) x,
+            (SKTypeface Typeface, int SizeBits, string Text) y)
+            => ReferenceEquals(x.Typeface, y.Typeface)
+               && x.SizeBits == y.SizeBits
+               && string.Equals(x.Text, y.Text, StringComparison.Ordinal);
+
+        public int GetHashCode((SKTypeface Typeface, int SizeBits, string Text) key)
+            => HashCode.Combine(
+                System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(key.Typeface),
+                key.SizeBits,
+                StringComparer.Ordinal.GetHashCode(key.Text));
+    }
+
+    private sealed class GlyphIdOutlineKeyComparer
+        : IEqualityComparer<(SKTypeface Typeface, int SizeBits, ushort Gid)>
+    {
+        public static readonly GlyphIdOutlineKeyComparer Instance = new();
+
+        public bool Equals(
+            (SKTypeface Typeface, int SizeBits, ushort Gid) x,
+            (SKTypeface Typeface, int SizeBits, ushort Gid) y)
+            => ReferenceEquals(x.Typeface, y.Typeface)
+               && x.SizeBits == y.SizeBits
+               && x.Gid == y.Gid;
+
+        public int GetHashCode((SKTypeface Typeface, int SizeBits, ushort Gid) key)
+            => HashCode.Combine(
+                System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(key.Typeface),
+                key.SizeBits,
+                key.Gid);
+    }
 
     private readonly CancellationToken _cancellationToken;
 
