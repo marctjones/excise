@@ -102,6 +102,21 @@ public class TextExtractor
     // instead of a per-letter LINQ Any() over the stack (#600).
     private int _hiddenOptionalContentDepth;
 
+    // Marked-content ID (/MCID) tracking for the accessibility MCID→letter
+    // bridge (#776). Pushed/popped in lock-step with _optionalContentHiddenStack
+    // (every BDC/BMC pushes, every EMC pops) so the nesting matches exactly.
+    // Each entry is the EFFECTIVE MCID at that nesting level: a span carrying its
+    // own /MCID sets it; a span without one inherits the enclosing level's value.
+    // _currentMcid mirrors the top of the stack for O(1) per-glyph tagging.
+    private readonly Stack<int?> _mcidStack = new();
+    private int? _currentMcid;
+
+    // The /MCID value found in the most recently parsed inline properties
+    // dictionary (a BDC operand like /Span <</MCID 3>> BDC), or null. Reset
+    // after every operator so a later property-less span (BMC, or a named-
+    // property BDC) never inherits a stale id.
+    private int? _lastDictMcid;
+
     // Scratch byte buffer reused by ParseStringLiteral/ParseHexString across
     // calls (#600): each call resets the length, appends its decoded bytes and
     // copies them into an exact-size result array before returning, so nothing
@@ -598,6 +613,7 @@ public class TextExtractor
             {
                 ExecuteOperator(op, operands);
                 operands.Clear();
+                _lastDictMcid = null; // consumed by the operator just executed (#776)
             }
             else
             {
@@ -965,6 +981,11 @@ public class TextExtractor
 
     private void SkipDictionary(string content, ref int pos)
     {
+        // Advance pos EXACTLY as before (byte-identical bracket counting): the
+        // parity gate relies on the fact that MCID capture never perturbs where
+        // pos lands. MCID is read from the skipped [start, pos) span afterwards,
+        // never interleaved with the walk (#776).
+        int start = pos;
         int depth = 1;
         while (pos < content.Length && depth > 0)
         {
@@ -985,6 +1006,28 @@ public class TextExtractor
             }
             pos++;
         }
+
+        _lastDictMcid = ScanForMcid(content, start, pos);
+    }
+
+    // Read the /MCID integer from an already-skipped dictionary span
+    // [start, end) of the content string, or null if the dictionary carries no
+    // /MCID (e.g. an /OC optional-content property dict). Pure lookahead over a
+    // fixed span — advances nothing the caller sees (#776).
+    private static int? ScanForMcid(string content, int start, int end)
+    {
+        int i = content.IndexOf("/MCID", start, System.Math.Max(0, end - start), System.StringComparison.Ordinal);
+        if (i < 0)
+            return null;
+        i += 5; // past "/MCID"
+        while (i < end && char.IsWhiteSpace(content[i]))
+            i++;
+        int numStart = i;
+        while (i < end && content[i] >= '0' && content[i] <= '9')
+            i++;
+        if (i == numStart)
+            return null;
+        return int.TryParse(content.AsSpan(numStart, i - numStart), out int mcid) ? mcid : null;
     }
 
     private static readonly HashSet<string> Operators = new()
@@ -1216,18 +1259,74 @@ public class TextExtractor
                     _optionalContentHiddenStack.Push(hidden);
                     if (hidden)
                         _hiddenOptionalContentDepth++;
+                    // #776: a BDC's /MCID comes from an inline properties dict
+                    // (captured into _lastDictMcid while skipping it) or a named
+                    // /Properties reference. Either sets this span's MCID; else
+                    // it inherits the enclosing level's.
+                    PushMcid(_lastDictMcid ?? ResolveNamedPropertyMcid(operands));
                 }
                 break;
 
             case "BMC":
                 _optionalContentHiddenStack.Push(false);
+                PushMcid(null); // tag-only span carries no /MCID
                 break;
 
             case "EMC":
-                if (_optionalContentHiddenStack.Count > 0 && _optionalContentHiddenStack.Pop())
-                    _hiddenOptionalContentDepth--;
+                if (_optionalContentHiddenStack.Count > 0)
+                {
+                    if (_optionalContentHiddenStack.Pop())
+                        _hiddenOptionalContentDepth--;
+                    PopMcid();
+                }
                 break;
         }
+    }
+
+    // Push the effective MCID for a newly-opened marked-content span (#776):
+    // its own /MCID when it has one, else it inherits the enclosing level's so
+    // nested untagged spans (e.g. a /OC toggle inside a tagged paragraph) do not
+    // orphan the glyphs from their structure element.
+    private void PushMcid(int? spanMcid)
+    {
+        int? effective = spanMcid ?? _currentMcid;
+        _mcidStack.Push(effective);
+        _currentMcid = effective;
+    }
+
+    private void PopMcid()
+    {
+        if (_mcidStack.Count > 0)
+            _mcidStack.Pop();
+        _currentMcid = _mcidStack.Count > 0 ? _mcidStack.Peek() : null;
+    }
+
+    // Resolve a BDC whose properties operand is a NAME referencing an entry in
+    // the resource dictionary's /Properties (§14.6.2), returning that entry's
+    // /MCID. Inline-dict MCIDs are handled earlier via _lastDictMcid; this
+    // covers the indirect form /Tag /P1 BDC. Returns null when absent.
+    private int? ResolveNamedPropertyMcid(List<object> operands)
+    {
+        if (operands.Count < 2 || operands[1] is not string propertyName)
+            return null;
+
+        string name = propertyName.TrimStart('/');
+        foreach (var resources in _resourcesStack)
+        {
+            var propertiesObj = resources.GetOptional("Properties");
+            if (propertiesObj == null)
+                continue;
+            if (_page.Document.Resolve(propertiesObj) is not PdfDictionary properties)
+                continue;
+            var propObj = properties.GetOptional(name);
+            if (propObj == null)
+                continue;
+            if (_page.Document.Resolve(propObj) is PdfDictionary propDict
+                && propDict.GetOptional("MCID") is { } mcidObj
+                && _page.Document.Resolve(mcidObj) is PdfInteger mcidInt)
+                return (int)mcidInt.Value;
+        }
+        return null;
     }
 
     private bool IsHiddenOptionalContentSpan(List<object> operands)
@@ -1542,7 +1641,9 @@ public class TextExtractor
             // equivalent to _optionalContentHiddenStack.Any(hidden => hidden)
             // without the per-letter enumeration (#600).
             IsInHiddenOptionalContent = _hiddenOptionalContentDepth > 0,
-            IsCidFont = _isCidFont
+            IsCidFont = _isCidFont,
+            // #776: the innermost enclosing /MCID span, for the a11y bridge.
+            MarkedContentId = _currentMcid
         };
         _letters.Add(letter);
 

@@ -72,6 +72,18 @@ public class Letter
     public bool IsCidFont { get; set; }
 
     /// <summary>
+    /// The marked-content ID (/MCID) of the innermost marked-content sequence
+    /// this glyph was drawn inside, or null if it was not inside any MCID-tagged
+    /// span. Set during extraction from the enclosing <c>BDC ... EMC</c> nesting
+    /// (§14.6). Lets a tagged-PDF structure element resolve its real body glyphs
+    /// in reading order by matching its /MCID references against the page's
+    /// letters (#776 — the accessibility MCID→letter bridge). Additive: it does
+    /// not affect <see cref="Value"/>, letter order, or which letters are
+    /// emitted, so it is invisible to text extraction output.
+    /// </summary>
+    public int? MarkedContentId { get; set; }
+
+    /// <summary>
     /// Whether this letter was rendered inside an Optional Content Group (OCG)
     /// that is OFF by default (hidden). This is a security concern: while invisible
     /// in the default viewer, the text is fully extractable via the structure tree
