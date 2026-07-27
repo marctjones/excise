@@ -356,6 +356,14 @@ public partial class PdfViewerControl
         foreach (var entry in _continuousCache) entry.Bitmap.Dispose();
         _continuousCache.Clear();
         _continuousPageLinks.Clear();
+        // Selection state is per-document/page; drop the letter cache and any
+        // in-flight selection so a document or render change can't reuse stale
+        // glyphs (#815). Highlight rects live on the slots and are discarded when
+        // the slots are rebuilt.
+        _continuousPageLetterCache.Clear();
+        _continuousSelectionAnchor = null;
+        _continuousSelectionFocus = null;
+        _continuousSelectionPage = 0;
     }
 
     /// <summary>
@@ -994,6 +1002,14 @@ public sealed class PdfPageSlot : INotifyPropertyChanged
     public int PageNumber { get; }
     public double WidthPt { get; }
     public double HeightPt { get; }
+
+    /// <summary>
+    /// Text-selection highlight rectangles for this page, in page-local DIPs
+    /// (the Border's own coordinate space), bound by the continuous-view
+    /// DataTemplate to a Canvas overlay (#815). Populated by the continuous
+    /// selection gesture; empty when nothing on this page is selected.
+    /// </summary>
+    internal System.Collections.ObjectModel.ObservableCollection<PdfSelectionHighlight> SelectionRects { get; } = new();
 
     internal double TopDip { get => _topDip; private set => Set(ref _topDip, value); }
     public double DisplayWidth { get => _displayWidth; private set => Set(ref _displayWidth, value); }

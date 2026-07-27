@@ -59,15 +59,24 @@ public partial class PdfViewerControl
 
         if (InteractionMode == InteractionMode.TextSelection)
         {
-            // Text-selection mode: hit-test letters instead of drawing a
-            // 2-D rectangle. Anchor is the letter under (or nearest to)
-            // the press point; focus tracks pointer-moved.
-            EnsurePageLettersLoaded();
-            _selectionAnchor = HitTestLetterAt(point);
-            _selectionFocus = _selectionAnchor;
-            ClearSelectionHighlight();
-            if (_selectionAnchor != null)
-                DrawSelectionRange(new[] { _selectionAnchor });
+            if (ViewMode == PdfViewMode.Continuous)
+            {
+                // Continuous reading view: select on the page under the pointer,
+                // drawing onto that page's own overlay (#815).
+                BeginContinuousTextSelection(e);
+            }
+            else
+            {
+                // Single-page: hit-test letters instead of drawing a 2-D
+                // rectangle. Anchor is the letter under (or nearest to) the press
+                // point; focus tracks pointer-moved.
+                EnsurePageLettersLoaded();
+                _selectionAnchor = HitTestLetterAt(point);
+                _selectionFocus = _selectionAnchor;
+                ClearSelectionHighlight();
+                if (_selectionAnchor != null)
+                    DrawSelectionRange(new[] { _selectionAnchor });
+            }
         }
 
         e.Handled = true;
@@ -110,6 +119,11 @@ public partial class PdfViewerControl
         else if (InteractionMode == InteractionMode.Typewriter)
         {
             DrawTemporaryTypewriterRectangle(_dragStart, currentPoint);
+        }
+        else if (InteractionMode == InteractionMode.TextSelection && ViewMode == PdfViewMode.Continuous)
+        {
+            // Continuous reading view: extend the per-page highlight (#815).
+            UpdateContinuousTextSelection(e);
         }
         else if (InteractionMode == InteractionMode.TextSelection)
         {
@@ -180,6 +194,11 @@ public partial class PdfViewerControl
             // post-normalize rect, which is never sub-4, so a click already
             // slipped through — now it is an intentional, documented path.
             CreateTypewriterTextFromPointer(_dragStart, endPoint);
+        }
+        else if (InteractionMode == InteractionMode.TextSelection && ViewMode == PdfViewMode.Continuous)
+        {
+            // Continuous reading view: finalize the per-page selection (#815).
+            EndContinuousTextSelection();
         }
         else if (InteractionMode == InteractionMode.TextSelection &&
                  _selectionAnchor != null && _selectionFocus != null &&
@@ -443,6 +462,16 @@ public partial class PdfViewerControl
         var page = Document.GetPage(CurrentPage);
         return ToAvaloniaRect(ToViewerDips(PdfPageRect.FromContentPoints(page.PageNumber, r)));
     }
+
+    /// <summary>
+    /// Test seam (#815): the single-page content-points → viewer-DIP mapping used
+    /// to position a glyph's selection highlight. Exposed so a GUI test can compute
+    /// the pointer position of a known glyph to drive a real selection gesture. It
+    /// is deliberately NOT the on-screen-position oracle — the test verifies the
+    /// drawn highlight's real layout geometry (origin share + MediaBox fraction in
+    /// the page image), which this method cannot vouch for.
+    /// </summary>
+    internal Rect GlyphRectToViewerDipsForTest(PdfRectangle glyphRect) => PdfRectangleToDips(glyphRect);
 
     private static Rect UnionRects(IReadOnlyList<Rect> rects)
     {

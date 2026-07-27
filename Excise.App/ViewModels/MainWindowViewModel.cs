@@ -296,8 +296,9 @@ public partial class MainWindowViewModel : ViewModelBase
             this.RaiseAndSetIfChanged(ref _viewMode, value);
             if (value == PdfViewMode.Continuous)
             {
+                // Text selection survives the switch to continuous (#815): it now
+                // works in the reading view. The draw/edit modes still do not.
                 if (_isRedactionMode) IsRedactionMode = false;
-                if (_isTextSelectionMode) IsTextSelectionMode = false;
                 if (_isFormAuthoringMode) IsFormAuthoringMode = false;
                 if (_isTypewriterMode) IsTypewriterMode = false;
             }
@@ -323,11 +324,13 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// True while an editing mode owns the viewport. These modes are single-page
+    /// True while a draw/edit mode owns the viewport. These modes are single-page
     /// only, so each one forces <see cref="PdfViewMode.SinglePage"/> on entry.
+    /// Text selection is excluded (#815): it now works in the continuous reading
+    /// view, so it neither forces single-page nor blocks restoring continuous.
     /// </summary>
     private bool IsEditingModeActive =>
-        _isRedactionMode || _isTextSelectionMode || _isFormAuthoringMode || _isTypewriterMode;
+        _isRedactionMode || _isFormAuthoringMode || _isTypewriterMode;
 
     /// <summary>
     /// Re-applies the saved continuous-scroll preference once the last editing mode
@@ -636,15 +639,10 @@ public partial class MainWindowViewModel : ViewModelBase
         set
         {
             this.RaiseAndSetIfChanged(ref _isTextSelectionMode, value);
-            if (value)
-            {
-                ViewMode = PdfViewMode.SinglePage;
-            }
-            else
-            {
-                RestoreViewModeFromPreference();
-            }
-            // Turn off redaction mode when entering text selection mode
+            // Text selection does NOT change the view mode (#815): it works in
+            // both single-page and the continuous reading view. Turning off the
+            // draw/edit modes below may restore continuous via their own setters.
+            // Turn off the draw/edit modes when entering text selection mode.
             if (value && _isRedactionMode)
                 IsRedactionMode = false;
             if (value && _isFormAuthoringMode)
