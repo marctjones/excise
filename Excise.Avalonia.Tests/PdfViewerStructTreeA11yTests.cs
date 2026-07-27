@@ -242,6 +242,25 @@ public class PdfViewerStructTreeA11yTests
     }
 
     [Fact]
+    public async Task HeadingRolePeer_ExposesRealBodyText_ViaMcid()
+    {
+        // #776: the heading in BuilderTaggedRichDoc carries NO /ActualText — its
+        // text lives only in MCID marked content. Before the MCID→letter bridge
+        // its role peer read as role-only (empty name); now it must expose the
+        // real glyphs "Quarterly Report".
+        await OnUiThread(() =>
+        {
+            var (_, peer) = CreateViewerWithPeer(BuilderTaggedRichDoc());
+
+            var heading = RolePeers(peer).First(r => r.Role == AccessibleStructRole.Heading);
+            Normalized(heading.GetName())
+                .Should().Be("Quarterly Report",
+                    "a screen reader must read the heading's real body text, not just its role");
+            return true;
+        });
+    }
+
+    [Fact]
     public async Task UntaggedDocument_HasNoStructRolePeers()
     {
         await OnUiThread(() =>
