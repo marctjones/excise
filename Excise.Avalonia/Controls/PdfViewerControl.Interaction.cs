@@ -22,6 +22,11 @@ public partial class PdfViewerControl
         if (IsTypewriterOverlayEvent(e))
             return;
 
+        // Middle-button is reserved for pan (#827, handled in the dedicated pan
+        // handlers). Never let it start a redaction/selection drag.
+        if (e.GetCurrentPoint(this).Properties.IsMiddleButtonPressed)
+            return;
+
         // First chance: internal-link click in any mode (including None).
         // Links are treated as ambient affordances — like a browser, not
         // a drawing tool — so the redaction/text-selection mode shouldn't

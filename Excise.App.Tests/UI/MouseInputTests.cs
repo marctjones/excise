@@ -343,6 +343,194 @@ public class MouseInputTests
             "Ctrl+scroll up must increase zoom level");
     }
 
+    // ---- #827 batch C: real gesture wheel/pan/zoom coverage --------------
+    // MouseWheelScrollDown / CtrlWheelZoom above are the legacy command-invoke
+    // (LineDown / ZoomInCommand) versions kept for history. The ones below
+    // drive REAL wheel/pointer gestures via window.MouseWheel / MouseDown so
+    // they exercise the viewer's PointerWheelChanged and middle-button pan
+    // handlers added for #827. Confirmed headless: window.MouseWheel routes to
+    // our Tunnel handler, plain wheel drives native ScrollViewer scroll, and
+    // window.MouseDown(Middle)+MouseMove delivers the pan drag — no raised-event
+    // fallback was needed.
+
+    private static readonly Point ViewerCenter = new(640, 450);
+
+    private static async Task<(MainWindowViewModel vm, MainWindow window, PdfViewerControl viewer)>
+        OpenBookAsync()
+    {
+        var vm = new MainWindowViewModel();
+        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+        window.Show();
+        await Task.Delay(200);
+        await vm.LoadDocumentAsync(PragmaticBook!);
+        await Task.Delay(300);
+        window.UpdateLayout();
+        var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
+        viewer.Should().NotBeNull();
+        return (vm, window, viewer!);
+    }
+
+    private static async Task<ScrollViewer> WaitForContinuousLaidOutAsync(
+        MainWindow window, PdfViewerControl viewer)
+    {
+        var sv = FindNamedDescendant<ScrollViewer>(viewer, "ContinuousScrollViewer");
+        sv.Should().NotBeNull();
+        var deadline = DateTime.UtcNow.AddSeconds(30);
+        while (DateTime.UtcNow < deadline && sv!.Extent.Height <= 0)
+        {
+            await Task.Delay(150);
+            window.UpdateLayout();
+        }
+        sv!.Extent.Height.Should().BeGreaterThan(0, "continuous content must be laid out");
+        return sv;
+    }
+
+    [FixedAvaloniaFact]
+    public async Task CtrlWheelUp_RealGesture_ZoomsIn()
+    {
+        Assert.SkipWhen(!File.Exists(PragmaticBook), "Pragmatic book corpus fixture not available locally.");
+        var (_, window, viewer) = await OpenBookAsync();
+
+        var before = viewer.ZoomLevel;
+        await Dispatcher.UIThread.InvokeAsync(() =>
+            window.MouseWheel(ViewerCenter, new Vector(0, 1), RawInputModifiers.Control));
+        await Task.Delay(150);
+        window.UpdateLayout();
+
+        _out.WriteLine($"CtrlWheelUp zoom {before} -> {viewer.ZoomLevel}");
+        viewer.ZoomLevel.Should().BeGreaterThan(before,
+            "a real Ctrl+wheel-up gesture must route to PointerWheelChanged and zoom in");
+    }
+
+    [FixedAvaloniaFact]
+    public async Task CtrlWheelDown_RealGesture_ZoomsOut()
+    {
+        Assert.SkipWhen(!File.Exists(PragmaticBook), "Pragmatic book corpus fixture not available locally.");
+        var (_, window, viewer) = await OpenBookAsync();
+
+        // Zoom in first so there is room to zoom back out (fit-width may start low).
+        await Dispatcher.UIThread.InvokeAsync(() =>
+            window.MouseWheel(ViewerCenter, new Vector(0, 1), RawInputModifiers.Control));
+        await Task.Delay(150);
+        window.UpdateLayout();
+        var mid = viewer.ZoomLevel;
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+            window.MouseWheel(ViewerCenter, new Vector(0, -1), RawInputModifiers.Control));
+        await Task.Delay(150);
+        window.UpdateLayout();
+
+        _out.WriteLine($"CtrlWheelDown zoom {mid} -> {viewer.ZoomLevel}");
+        viewer.ZoomLevel.Should().BeLessThan(mid,
+            "a real Ctrl+wheel-down gesture must zoom out");
+    }
+
+    [FixedAvaloniaFact]
+    public async Task PlainWheel_RealGesture_ScrollsAndDoesNotZoom()
+    {
+        Assert.SkipWhen(!File.Exists(PragmaticBook), "Pragmatic book corpus fixture not available locally.");
+        var (vm, window, viewer) = await OpenBookAsync();
+        vm.IsContinuousView.Should().BeTrue("continuous scroll is the app's default view mode");
+        var sv = await WaitForContinuousLaidOutAsync(window, viewer);
+
+        var zoomBefore = viewer.ZoomLevel;
+        var offsetBefore = sv.Offset;
+
+        // Plain wheel (no modifier) scrolling down must move the ScrollViewer
+        // offset and must NOT change zoom.
+        for (int i = 0; i < 3; i++)
+        {
+            await Dispatcher.UIThread.InvokeAsync(() =>
+                window.MouseWheel(ViewerCenter, new Vector(0, -1), RawInputModifiers.None));
+            await Task.Delay(80);
+            window.UpdateLayout();
+        }
+
+        _out.WriteLine($"PlainWheel offset {offsetBefore} -> {sv.Offset}, zoom {zoomBefore} -> {viewer.ZoomLevel}");
+        sv.Offset.Y.Should().BeGreaterThan(offsetBefore.Y,
+            "a plain wheel gesture must scroll natively (offset increases), not be consumed by zoom");
+        viewer.ZoomLevel.Should().Be(zoomBefore,
+            "a plain (no-Ctrl) wheel gesture must not change zoom");
+    }
+
+    [FixedAvaloniaFact]
+    public async Task ContinuousScrollPastPageBoundary_UpdatesCurrentPage()
+    {
+        Assert.SkipWhen(!File.Exists(PragmaticBook), "Pragmatic book corpus fixture not available locally.");
+        var (_, window, viewer) = await OpenBookAsync();
+        var sv = await WaitForContinuousLaidOutAsync(window, viewer);
+
+        viewer.CurrentPage.Should().Be(1);
+
+        // Drive a real scroll offset well past the first page boundary. Setting
+        // Offset is the same mechanism the scrollbar/wheel drive; it fires the
+        // OffsetProperty subscription that syncs CurrentPage.
+        await Dispatcher.UIThread.InvokeAsync(() =>
+            sv.Offset = new Vector(sv.Offset.X, 2000));
+        var deadline = DateTime.UtcNow.AddSeconds(10);
+        while (DateTime.UtcNow < deadline && viewer.CurrentPage == 1)
+        {
+            await Task.Delay(120);
+            window.UpdateLayout();
+        }
+
+        _out.WriteLine($"After scroll past boundary CurrentPage={viewer.CurrentPage}");
+        viewer.CurrentPage.Should().BeGreaterThan(1,
+            "scrolling the continuous offset past a page boundary must advance CurrentPage");
+    }
+
+    [FixedAvaloniaFact]
+    public async Task MiddleButtonDrag_RealGesture_PansScrollOffset()
+    {
+        Assert.SkipWhen(!File.Exists(PragmaticBook), "Pragmatic book corpus fixture not available locally.");
+        var (_, window, viewer) = await OpenBookAsync();
+        var sv = await WaitForContinuousLaidOutAsync(window, viewer);
+
+        var before = sv.Offset;
+
+        // Middle-button press, drag the pointer UP, release. Grabbing and
+        // dragging up reveals content below, so the offset increases.
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            window.MouseDown(ViewerCenter, MouseButton.Middle);
+            window.MouseMove(new Point(ViewerCenter.X, ViewerCenter.Y - 120),
+                RawInputModifiers.MiddleMouseButton);
+            window.MouseMove(new Point(ViewerCenter.X, ViewerCenter.Y - 250),
+                RawInputModifiers.MiddleMouseButton);
+            window.MouseUp(new Point(ViewerCenter.X, ViewerCenter.Y - 250), MouseButton.Middle);
+        });
+        await Task.Delay(150);
+        window.UpdateLayout();
+
+        _out.WriteLine($"MiddleDrag offset {before} -> {sv.Offset}");
+        sv.Offset.Y.Should().BeGreaterThan(before.Y,
+            "a middle-button drag upward must pan the ScrollViewer offset down");
+    }
+
+    [FixedAvaloniaFact]
+    public async Task FitOnResize_RecomputesZoom()
+    {
+        Assert.SkipWhen(!File.Exists(PragmaticBook), "Pragmatic book corpus fixture not available locally.");
+        var vm = new MainWindowViewModel();
+        await vm.LoadDocumentAsync(PragmaticBook!);
+        await Task.Delay(200);
+
+        // Default fit mode is FitWidth. Setting the viewport width drives
+        // ReapplyFitModeIfNeeded, which recomputes ZoomLevel from the width.
+        vm.ViewportHeight = 900;
+        vm.ViewportWidth = 700;
+        await Task.Delay(50);
+        var zoomNarrow = vm.ZoomLevel;
+
+        vm.ViewportWidth = 1300;
+        await Task.Delay(50);
+        var zoomWide = vm.ZoomLevel;
+
+        _out.WriteLine($"FitOnResize zoom@700={zoomNarrow} zoom@1300={zoomWide}");
+        zoomWide.Should().BeGreaterThan(zoomNarrow,
+            "a wider viewport under an active FitWidth mode must recompute a larger zoom via ReapplyFitModeIfNeeded");
+    }
+
     #endregion
 
     #region Drag Operations
