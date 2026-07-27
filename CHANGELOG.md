@@ -6,6 +6,8 @@ semantic versioning.
 
 ## [Unreleased]
 
+## [3.3.0] - 2026-07-26
+
 ### Added
 - **Type-over tool: GUI-save independent-oracle test coverage** (#780) — closed
   a no-self-oracle gap in type-over save verification. The existing GUI-save
