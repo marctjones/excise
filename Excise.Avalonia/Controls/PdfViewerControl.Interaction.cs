@@ -211,7 +211,7 @@ public partial class PdfViewerControl
             var selection = TextSelectionEngine.BuildSelection(
                 _readingOrderedLetters,
                 _currentPageLetters ?? _readingOrderedLetters,
-                _selectionAnchor, _selectionFocus, _columnGapThreshold);
+                _selectionAnchor, _selectionFocus, _columnGapThreshold, WhitespaceMode);
             var text = selection.Text;
             var letterDips = selection.VisualRange
                 .Select(l => PdfRectangleToDips(l.GlyphRectangle))

@@ -16,6 +16,8 @@ public class PreferencesViewModel : ViewModelBase
     private int _renderCacheMax = 20;
     private Excise.Avalonia.Services.ReadingOrderStrategy _readingOrderStrategy =
         Excise.Avalonia.Services.ReadingOrderStrategy.ColumnAware;
+    private Excise.Avalonia.Services.WhitespaceMode _whitespaceMode =
+        Excise.Avalonia.Services.WhitespaceMode.Smart;
 
     public PreferencesViewModel()
     {
@@ -85,6 +87,17 @@ public class PreferencesViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _readingOrderStrategy, value);
     }
 
+    // Copied-text whitespace mode (paragraph/list-aware Smart vs LineFaithful).
+    public Excise.Avalonia.Services.WhitespaceMode[] WhitespaceModeOptions { get; } =
+        (Excise.Avalonia.Services.WhitespaceMode[])
+            System.Enum.GetValues(typeof(Excise.Avalonia.Services.WhitespaceMode));
+
+    public Excise.Avalonia.Services.WhitespaceMode SelectedWhitespaceMode
+    {
+        get => _whitespaceMode;
+        set => this.RaiseAndSetIfChanged(ref _whitespaceMode, value);
+    }
+
     // Commands
     public ReactiveCommand<Unit, Unit> SaveCommand { get; }
     public ReactiveCommand<Unit, Unit> CancelCommand { get; }
@@ -115,6 +128,7 @@ public class PreferencesViewModel : ViewModelBase
         OcrDenoiseRadius = 0.8;
         RenderCacheMax = 20;
         SelectedReadingOrderStrategy = Excise.Avalonia.Services.ReadingOrderStrategy.ColumnAware;
+        SelectedWhitespaceMode = Excise.Avalonia.Services.WhitespaceMode.Smart;
     }
 
     private void CloseWindow()
@@ -126,11 +140,13 @@ public class PreferencesViewModel : ViewModelBase
     {
         RenderCacheMax = mainViewModel.RenderCacheMax;
         SelectedReadingOrderStrategy = mainViewModel.ReadingOrderStrategy;
+        SelectedWhitespaceMode = mainViewModel.WhitespaceMode;
     }
 
     public void SaveToMainViewModel(MainWindowViewModel mainViewModel)
     {
         mainViewModel.RenderCacheMax = RenderCacheMax;
         mainViewModel.ReadingOrderStrategy = SelectedReadingOrderStrategy;
+        mainViewModel.WhitespaceMode = SelectedWhitespaceMode;
     }
 }
