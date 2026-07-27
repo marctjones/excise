@@ -38,9 +38,11 @@ public partial class MainWindowViewModel
 
         try
         {
-            _annotationWorkflow.AddHighlight(pageNumber, contentRect, contents);
+            var annotation = _annotationWorkflow.AddHighlight(pageNumber, contentRect, contents);
             AddHighlightToViewerDocument(pageNumber, contentRect, contents);
             await MarkAnnotationChangedAsync("Highlight added");
+            RecordAnnotationAdd("Add highlight", pageNumber, annotation,
+                () => _annotationWorkflow.AddHighlight(pageNumber, contentRect, contents));
         }
         catch (Exception ex)
         {
@@ -88,9 +90,13 @@ public partial class MainWindowViewModel
                 pageNumber = selectionPageNumber;
 
             var trimmedContents = contents.Trim();
-            _annotationWorkflow.AddTextNote(pageNumber, contentRect, trimmedContents);
-            AddTextNoteToViewerDocument(pageNumber, contentRect, trimmedContents);
+            var notePageNumber = pageNumber;
+            var noteRect = contentRect;
+            var annotation = _annotationWorkflow.AddTextNote(notePageNumber, noteRect, trimmedContents);
+            AddTextNoteToViewerDocument(notePageNumber, noteRect, trimmedContents);
             await MarkAnnotationChangedAsync("Sticky note added");
+            RecordAnnotationAdd("Add sticky note", notePageNumber, annotation,
+                () => _annotationWorkflow.AddTextNote(notePageNumber, noteRect, trimmedContents));
         }
         catch (Exception ex)
         {

@@ -67,6 +67,13 @@
 
             <!-- EDIT MENU -->
             <MenuItem Header="_Edit">
+                <MenuItem Header="{Binding UndoMenuHeader}" Command="{Binding UndoCommand}" InputGesture="Ctrl+Z"
+                          IsEnabled="{Binding CanUndo}"
+                          AutomationProperties.Name="Undo"/>
+                <MenuItem Header="{Binding RedoMenuHeader}" Command="{Binding RedoCommand}" InputGesture="Ctrl+Y"
+                          IsEnabled="{Binding CanRedo}"
+                          AutomationProperties.Name="Redo"/>
+                <Separator/>
                 <MenuItem Header="_Find..." Command="{Binding ToggleSearchCommand}" InputGesture="Ctrl+F"
                           access:CommandAccessibility.CommandId="search.open">
                     <MenuItem.Icon><PathIcon Classes="menu-icon" Data="{StaticResource IconSearch}"/></MenuItem.Icon>
