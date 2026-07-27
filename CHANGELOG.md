@@ -127,6 +127,48 @@ semantic versioning.
   coverage loss). Clears the existing 93% gate (measured 93.27% locally, up from
   the 92.39% that had reddened `develop`; the Linux CI coverage job is the
   authority); the threshold itself is unchanged.
+- **`Excise.Cli.Tests` wall-clock cut ~93% (72s → 5s measured, `-c Release`
+  only) by removing an accidental full rebuild** (#731). Root cause:
+  `BenchmarkSuite.ResolveExciseCliInvocation()` (`tools/Excise.RenderTools/`
+  — the shared implementation behind the shipping `benchmark-suite` CLI
+  command, not test-only code) picked which `Excise.Cli/bin/<config>/`
+  directory to look in via this assembly's own `#if DEBUG`/`#else "Release"`
+  compile-time symbol. `Excise.RenderTools` is a tool project outside
+  `excise.sln`, so it always builds Debug regardless of what configuration
+  the CLI or the calling process used. `run-benchmarks.sh`,
+  `check-perf-budgets.sh`, and every `release-smoke.sh`/`ci.yml` caller
+  already set the `CONFIG` env var explicitly and were never affected by the
+  symbol; only `BenchmarkSuiteTests`, which calls `RenderProgram.RunAsync`
+  in-process with no `CONFIG` set, hit the bug. Any `-c Release`
+  `Excise.Cli.Tests` run (`release-smoke.sh --release-tests`, or a
+  maintainer running `dotnet test -c Release` directly) looked for a Debug
+  binary a Release-only build never produces, silently fell through to
+  `dotnet run -c Debug --`, and paid for a from-scratch Debug build of
+  `Excise.Cli` + `Excise.Core` + `Excise.Rendering` + `Excise.Ocr` inside a
+  single test (`BenchmarkSuite_WritesJsonCsvMarkdownAndPassesSyntheticGate`,
+  measured 68 of the suite's 72s). Fixed by probing the filesystem for an
+  already-built `excise`/`excise.dll` under both `Release` and `Debug`
+  before ever falling back to `dotnet run` — same CLI binary invoked, same
+  assertions, same 126 tests (125 passed / 1 skipped, unchanged) — a
+  redundant-build removal, not a coverage or behavior change. Verified `-c
+  Debug` (CI's PR gate, `t0`/`t1`) is unaffected either way: 865ms before and
+  after, with only a Debug build on disk (simulating a fresh CI checkout) —
+  RenderTools' Debug default already matched, so this fix saves nothing on
+  the PR gate; the win applies to `t2`/`release-smoke.sh --release-tests`
+  and any local `-c Release` run. Measured this session on a 10-core Apple
+  Silicon machine, Release build, all five suites run individually:
+  `Excise.Core.Tests` 4s (3755 tests), `Excise.Rendering.Tests` 32s (3420
+  tests, already 4-way parallel per #732), `Excise.App.Tests` 226s (1098
+  tests, serial by design — #363), `Excise.Avalonia.Tests` 2s (86 tests),
+  `Excise.Cli.Tests` 72s→5s (126 tests). Investigated and explicitly NOT
+  pursued this pass, per the #731 analysis already on the issue: overlapping
+  `Excise.Core.Tests` with the now-4-way-parallel `Excise.Rendering.Tests` in
+  `release-smoke.sh`, and sharding `Excise.App.Tests` across concurrent
+  local processes — both reintroduce the CPU-contention false-red class #619
+  exists to prevent (wall-clock-budgeted tests reading as hangs under
+  contention), for a smaller, single-machine-only saving than this fix.
+  `Excise.App.Tests` stays serial (#363 SkiaSharp native font-manager crash)
+  and untouched.
 
 ## [3.3.1] - 2026-07-26
 - **GUI interaction latency: per-page search-highlight index (#601).** Page
