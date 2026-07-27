@@ -679,9 +679,28 @@ public class KeyboardShortcutTests
         await window.PressKeyAsync(Key.D1, RawInputModifiers.Control);
         await KeyboardTestHelpers.FlushDispatcherAsync();
         await Task.Delay(100);
+        var fitWidthZoom = vm.ZoomLevel;
 
-        // Assert: ZoomLevel should be set (exact value depends on page dimensions)
-        vm.ZoomLevel.Should().BeGreaterThan(0, "Ctrl+1 should fit page to width");
+        // Assert: `BeGreaterThan(0)` alone was vacuous — ZoomLevel is >0 by
+        // construction in every zoom path, so it couldn't tell a real fit-WIDTH
+        // ratio apart from a no-op or a fit-page ratio landing here by mistake
+        // (#827). Ground it against the real fit-width command, then prove it is
+        // genuinely fit-WIDTH by contrasting with fit-page on this non-square
+        // (portrait page / landscape viewport) combination. The exact ratio math
+        // is covered by AnnotateAndDialogCommandTests.ZoomFitPageCommand_*.
+        fitWidthZoom.Should().BeGreaterThan(0, "Ctrl+1 should fit page to width");
+
+        vm.ZoomFitWidthCommand.Execute().Subscribe();
+        await KeyboardTestHelpers.FlushDispatcherAsync();
+        await Task.Delay(100);
+        vm.ZoomLevel.Should().BeApproximately(fitWidthZoom, 0.01,
+            "Ctrl+1 must produce the same zoom as the fit-width command");
+
+        vm.ZoomFitPageCommand.Execute().Subscribe();
+        await KeyboardTestHelpers.FlushDispatcherAsync();
+        await Task.Delay(100);
+        Math.Abs(fitWidthZoom - vm.ZoomLevel).Should().BeGreaterThan(0.01,
+            "Ctrl+1 must route to fit-WIDTH, distinct from fit-page on this non-square page — not merely leave ZoomLevel > 0");
     }
 
     /// <summary>
