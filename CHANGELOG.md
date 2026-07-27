@@ -7,6 +7,29 @@ semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **PDF 2.0 page-level and document-level structural features: parse, model,
+  round-trip** (#331) — page transitions (`/Trans`, all twelve ISO
+  32000-2:2020 §12.4.4 styles: Split/Blinds/Box/Wipe/Dissolve/Glitter/R
+  ("Replace")/Fly/Push/Cover/Uncover/Fade, plus duration/dimension/motion/
+  direction/fly-scale/fly-rectangle) via `PdfPage.Transition`; page display
+  duration (`/Dur`) via `PdfPage.Duration`; embedded page thumbnails (`/Thumb`)
+  via `PdfPage.ThumbnailStream` (parsed and preserved, deliberately not
+  decoded/rendered — a thumbnail strip should fall back to the renderer when
+  null); and document/page actions (`/OpenAction` — both the modern action-
+  dictionary form and the legacy bare-destination-array form —, `/AA` on both
+  document and page, and the `/Names/JavaScript` name tree) via the new
+  `PdfAction` model (`PdfDocument.OpenAction`/`.AdditionalActions`/
+  `.DocumentJavaScriptActions`, `PdfPage.AdditionalActions`). `PdfAction`
+  never executes anything it parses — `JavaScriptSource` decodes `/JS`
+  (string or stream form) purely as inert data for inspection/audit, and
+  `/Next` action chains are followed (depth-capped) without evaluation. Page
+  labels (`/PageLabels` → `PdfDocument.GetPageLabel`) and named destinations
+  (`/Dests` and `/Names/Dests`, both forms → `PdfDocument.GetNamedDestinations`)
+  were already implemented; this issue added save/reopen round-trip coverage
+  for both. All of the above are purely additive parse-side properties — no
+  writer changes — so save output for documents that don't use these features
+  is unaffected. UI integration (presentation-mode playback, thumbnail-strip
+  wiring, page-label status bar) is explicitly deferred, per the issue.
 - **Accessibility MCID→letter bridge: screen readers read tagged elements'
   real body text (#776).** Follow-up to the tagged-PDF structure layer (#631,
   PR #775). Text extraction now tags each `Letter` with the marked-content ID
