@@ -123,6 +123,9 @@ public partial class MainWindowViewModel
                 return;
 
             _hasInMemoryModifications = true;
+            // A baked text layer structurally rewrites the document; prior
+            // undo entries no longer apply cleanly (#782).
+            ClearEditHistory();
             this.RaisePropertyChanged(nameof(SaveButtonText));
             this.RaisePropertyChanged(nameof(StatusBarText));
 
