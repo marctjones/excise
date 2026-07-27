@@ -645,7 +645,9 @@ public class PdfViewerControlTests
     [FixedAvaloniaFact]
     public void EnteringEditingMode_InContinuous_AutoSwitchesToSinglePage()
     {
-        foreach (var editing in new[] { InteractionMode.Redaction, InteractionMode.TextSelection, InteractionMode.FormAuthoring })
+        // Text selection is deliberately excluded (#815): it is a read affordance
+        // that now works in the continuous view, so it must NOT force single-page.
+        foreach (var editing in new[] { InteractionMode.Redaction, InteractionMode.FormAuthoring, InteractionMode.Typewriter })
         {
             var control = new PdfViewerControl { ViewMode = PdfViewMode.Continuous };
             control.ViewMode.Should().Be(PdfViewMode.Continuous);
@@ -655,6 +657,20 @@ public class PdfViewerControlTests
             control.ViewMode.Should().Be(PdfViewMode.SinglePage,
                 $"{editing} is an editing interaction and must force single-page");
         }
+    }
+
+    [FixedAvaloniaFact]
+    public void EnteringTextSelection_InContinuous_StaysInContinuous()
+    {
+        // #815: selecting text is a reading-view affordance, not an edit. Entering
+        // it must keep the continuous reading view rather than snapping to
+        // single-page (which is what made it undiscoverable).
+        var control = new PdfViewerControl { ViewMode = PdfViewMode.Continuous };
+
+        control.InteractionMode = InteractionMode.TextSelection;
+
+        control.ViewMode.Should().Be(PdfViewMode.Continuous,
+            "text selection works in the continuous view and must not force single-page");
     }
 
     [FixedAvaloniaFact]
