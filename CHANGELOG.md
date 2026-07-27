@@ -7,6 +7,24 @@ semantic versioning.
 ## [Unreleased]
 
 ### Performance
+- **Renderer image decode / colour-conversion allocation cuts** (#599) — the
+  image decode path no longer stages a large transient managed pixel buffer per
+  image. The raw, DCT-RGB, and fast Gray/RGB/CMYK decoders now fill the final
+  `SKBitmap`'s pixel store directly (via a writable span) instead of allocating
+  a `width*height*4` byte[] and `Marshal.Copy`-ing it in, and the fast CMYK
+  decoder reuses one CMYK sample buffer instead of allocating a `double[4]` per
+  pixel — that per-pixel array was the dominant allocator on colour-heavy CMYK
+  pages. The `/Decode`-array lookup and max-sample constant are hoisted out of
+  the per-pixel loop. Decoded images are also cached across child render
+  contexts (transparency groups / tiling patterns / soft masks), so an image
+  reused inside a group or pattern decodes once per page, not once per context;
+  only the owning context disposes the shared cache. Measured in Release on the
+  colour-heavy Altona visual suite (`altona_visual_1v2a_x3.pdf` p1, min-of-4):
+  managed allocation 2473.7 → 2028.1 MB (-18%) with render time flat; the
+  remaining per-pixel cost is the ICC CMYK→RGB conversion in `Excise.Core`
+  (out of scope here). Output is byte-identical — verified by the Visual PNG
+  baselines (63/0 unchanged) and the full `Excise.Rendering.Tests` differential
+  suite (3463/0). The decoded-image cache lifetime is one page render.
 - **Renderer glyph-outline caching on the text hot path** (#598) — glyph
   outlines are now tessellated once per (typeface, size, glyph) and reused for
   the rest of the page instead of re-decoding the same outline on every draw.
