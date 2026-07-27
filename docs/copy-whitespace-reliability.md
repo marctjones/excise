@@ -83,7 +83,9 @@ whitespace feature can only be as good as the lines it is handed:
 
 - **producingoss.pdf** — clean single-column prose. Word agreement 87% (the
   residual is hyphenation: excise keeps `unfamil-`/`iar`, pdftotext dehyphenates)
-  and paragraph blank lines land where the oracle's do. This is the case the
+  and, on manual spot-check (not a counted metric here — the counted
+  paragraph/list grade is the synthetic fixtures), paragraph blank lines land
+  where the oracle's do. This is the case the
   feature is *for*, and it works.
 - **foss-primer.pdf** — a table-of-contents page with dotted leaders. excise
   **drops the space between adjacent words** (`DesigningAround`,
@@ -115,7 +117,7 @@ checks. "Heuristic where it breaks" is the concrete failure mode.
 |----------|-------------|---------------------------------|
 | **Word spacing** (same line) | **Solid on clean fonts** — 87% on prose; unchanged from the shipped baseline (verbatim rule). | Breaks when the underlying glyph gaps are unusual: dotted-leader TOCs fuse words (foss 6.6%); very tight or very loose tracking can add/drop a space. Not a Smart-mode behaviour — the rule is shared with LineFaithful. |
 | **Line breaks** | **Solid** — one break per visual line, deterministic. | The break *decision* is faithful; whether a wrapped line "should" have been joined is a separate (unreliable) question we do not attempt. |
-| **Paragraph separation** | **Good on clean single-column prose** — synthetic fixtures pass; producingoss matches the oracle's blank lines. | Fixed factor (gap > 1.6× median leading). **Tight leading** can read a paragraph break as one paragraph; a **heading or figure gap** can read as a spurious paragraph break. Not adaptive per block. |
+| **Paragraph separation** | **Good on clean single-column prose** — counted grade is the synthetic fixtures (all pass); producingoss agreement is spot-checked, not counted. | Fixed factor (gap > 1.6× median leading). **Tight leading** can read a paragraph break as one paragraph; a **heading or figure gap** can read as a spurious paragraph break. Not adaptive per block. |
 | **Simple bullet lists** | **Good** — markers (•, -, –, *, ·, ‣, ◦) detected, items kept tight on their own lines; synthetic fixtures pass. | A sentence that *opens* with a hyphen/asterisk is mis-tagged as a list item (kept narrow: marker must be followed by a space). |
 | **Numbered lists** | **Good** — `N.` / `N)` / `a.` / `a)` detected; fixtures pass. | A line that legitimately starts `1998 was...` is safe (no `.`/`)`), but `1. ` inside running prose (e.g. a footnote ref) is mis-tagged. Roman numerals only as a single letter. |
 | **Nested / indented lists** | **Heuristic** — indentation preserved as 2 spaces/level (capped at 4). | Depth is quantised from the left-edge offset; uneven or deep nesting mis-levels. **Continuation lines** of a wrapped list item are not indented under the marker — they fall back to a plain line break. Deferred: #825. |
