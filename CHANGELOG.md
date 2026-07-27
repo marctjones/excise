@@ -26,6 +26,38 @@ semantic versioning.
   redaction-relevance made concrete — that excise now removes the text and
   mutool confirms it is gone.
 
+### Investigated (no code change)
+- **Symbolic TrueType with a (3,0) symbol cmap AND `/Encoding` present**
+  (#794) — the sibling case of #791 was measured and found **not to reproduce**
+  as a excise-specific mis-decode, so no extraction/precedence change was made.
+  #791 fixed the **no-`/Encoding`** shape (where mutool recovers the intended
+  text from the `post` glyph names, so excise was made to match). #794 asked
+  whether the same font **with `/Encoding /WinAnsiEncoding`** (or a
+  `/Differences` dict) still mis-decodes. Controlled measurement against two
+  independent oracles (fixture: `SymbolCmapTtfBuilder` + non-ASCII codes
+  0xA1..0xA9 so WinAnsi(code) != the intended letter):
+
+  | fixture | excise | mutool | poppler |
+  |---|---|---|---|
+  | NO `/Encoding` (#791 shape) | Redaction | Redaction | ¡¢£… |
+  | `/Encoding /WinAnsiEncoding` | ¡¢£… | ¡¢£… | ¡¢£… |
+  | `/Encoding <<WinAnsi base + Differences>>` | ¡¢£… | ¡¢£… | ¡¢£… |
+  | `/Encoding /WinAnsiEncoding`, WinAnsi-undef codes | ••• | ••• | ••• |
+
+  The only variable that flips mutool off `(3,0)`/`post` recovery is the
+  presence of `/Encoding`: with it, **both mutool AND poppler honour WinAnsi
+  and never consult the `(3,0)` cmap** — even for codes WinAnsi leaves
+  undefined (they emit bullets, not the cmap glyph). excise already agrees with
+  both oracles, so preferring the `(3,0)` cmap here would make excise the sole
+  tool emitting "Redaction" — the no-self-oracle violation CLAUDE.md forbids.
+  (Spec tension noted for a human call: ISO 32000-2 §9.6.6.4 says a symbolic
+  TrueType ignores `/Encoding`, so the oracles are arguably non-compliant.)
+  Characterization tests
+  (`SymbolicTrueTypeSymbolCmapWithEncodingExtractionTests`) pin that excise
+  matches the independent oracle for each shape, that redaction removes the
+  extracted text with mutool confirming removal, and that an explicit
+  `/Differences` per-code name is honoured (§9.6.6.2 precedence).
+
 ## [3.3.0] - 2026-07-26
 
 ### Added
