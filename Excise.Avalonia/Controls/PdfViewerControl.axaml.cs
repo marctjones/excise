@@ -99,6 +99,22 @@ public partial class PdfViewerControl : UserControl
     }
 
     /// <summary>
+    /// How selected/copied text is linearised into reading order (#774).
+    /// Defaults to <see cref="Services.ReadingOrderStrategy.ColumnAware"/> — the
+    /// highest-quality multi-column copy. Changing it drops the cached
+    /// per-page letter ordering so the next selection uses the new strategy.
+    /// </summary>
+    public static readonly StyledProperty<Services.ReadingOrderStrategy> ReadingOrderStrategyProperty =
+        AvaloniaProperty.Register<PdfViewerControl, Services.ReadingOrderStrategy>(
+            nameof(ReadingOrderStrategy), defaultValue: Services.ReadingOrderStrategy.ColumnAware);
+
+    public Services.ReadingOrderStrategy ReadingOrderStrategy
+    {
+        get => GetValue(ReadingOrderStrategyProperty);
+        set => SetValue(ReadingOrderStrategyProperty, value);
+    }
+
+    /// <summary>
     /// Monotonic host-provided content version. Increment when the same
     /// document instance has visually changed and the viewer should invalidate
     /// page caches and render the current view again.
@@ -378,6 +394,8 @@ public partial class PdfViewerControl : UserControl
             control.OnViewModeChanged());
         RenderVersionProperty.Changed.AddClassHandler<PdfViewerControl>((control, _) =>
             control.OnRenderVersionChanged());
+        ReadingOrderStrategyProperty.Changed.AddClassHandler<PdfViewerControl>((control, _) =>
+            control.OnReadingOrderStrategyChanged());
         // Editing interactions are single-page only. If the host turns on an
         // editing mode while we're in the continuous reading view, switch back
         // to single-page (at the current page) so the editing overlays line up
@@ -1282,6 +1300,21 @@ public partial class PdfViewerControl : UserControl
             if (ViewMode == PdfViewMode.Continuous && !_syncingPageFromScroll)
                 ScrollToPageContinuous(CurrentPage);
         }
+    }
+
+    /// <summary>
+    /// The reading-order strategy changed (#774): drop the cached per-page
+    /// letter ordering (single-page and continuous) so the next selection
+    /// re-sorts with the new strategy. Any in-flight selection endpoints are
+    /// cleared because they reference letters from the stale ordering.
+    /// </summary>
+    private void OnReadingOrderStrategyChanged()
+    {
+        _readingOrderedLetters = null;
+        _lettersPageNumber = -1;
+        _selectionAnchor = null;
+        _selectionFocus = null;
+        InvalidateContinuousCache();
     }
 
     private void OnRenderVersionChanged()

@@ -59,7 +59,10 @@ public partial class MainWindow : Window
         this.Closing += (s, e) =>
         {
             if (DataContext is MainWindowViewModel viewModel)
+            {
                 _windowSettings.ContinuousScrollEnabled = viewModel.ContinuousScrollPreference;
+                _windowSettings.ReadingOrderStrategy = viewModel.ReadingOrderStrategy.ToString();
+            }
             _windowSettings.CaptureFrom(this);
             _windowSettings.Save();
             // Cancel any pending toast auto-dismiss so nothing is left queued on
@@ -87,6 +90,9 @@ public partial class MainWindow : Window
         if (DataContext is MainWindowViewModel viewModel)
         {
             viewModel.ApplyContinuousScrollPreference(_windowSettings.ContinuousScrollEnabled);
+            if (Enum.TryParse<Excise.Avalonia.Services.ReadingOrderStrategy>(
+                    _windowSettings.ReadingOrderStrategy, out var strategy))
+                viewModel.ApplyReadingOrderStrategyPreference(strategy);
             SchedulePlatformMenuConfigure();
 
             // Subscribe to toast notifications

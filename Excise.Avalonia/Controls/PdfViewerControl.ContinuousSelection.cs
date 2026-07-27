@@ -56,7 +56,7 @@ public partial class PdfViewerControl
         {
             var page = Document!.GetPage(pageNumber);
             var raw = page.Letters?.ToList() ?? new List<Letter>();
-            var reading = TextSelectionEngine.SortReadingOrder(raw);
+            var reading = TextSelectionEngine.SortReadingOrder(raw, ReadingOrderStrategy);
             var gap = TextSelectionEngine.EstimateColumnGap(reading);
             result = new ContinuousPageLetters(raw, reading, gap);
         }

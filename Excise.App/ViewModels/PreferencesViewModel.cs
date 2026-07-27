@@ -14,6 +14,8 @@ public class PreferencesViewModel : ViewModelBase
     private bool _ocrBinarize = true;
     private double _ocrDenoiseRadius = 0.8;
     private int _renderCacheMax = 20;
+    private Excise.Avalonia.Services.ReadingOrderStrategy _readingOrderStrategy =
+        Excise.Avalonia.Services.ReadingOrderStrategy.ColumnAware;
 
     public PreferencesViewModel()
     {
@@ -72,6 +74,17 @@ public class PreferencesViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _renderCacheMax, value);
     }
 
+    // Text-selection reading-order strategy (#774).
+    public Excise.Avalonia.Services.ReadingOrderStrategy[] ReadingOrderStrategyOptions { get; } =
+        (Excise.Avalonia.Services.ReadingOrderStrategy[])
+            System.Enum.GetValues(typeof(Excise.Avalonia.Services.ReadingOrderStrategy));
+
+    public Excise.Avalonia.Services.ReadingOrderStrategy SelectedReadingOrderStrategy
+    {
+        get => _readingOrderStrategy;
+        set => this.RaiseAndSetIfChanged(ref _readingOrderStrategy, value);
+    }
+
     // Commands
     public ReactiveCommand<Unit, Unit> SaveCommand { get; }
     public ReactiveCommand<Unit, Unit> CancelCommand { get; }
@@ -101,6 +114,7 @@ public class PreferencesViewModel : ViewModelBase
         OcrBinarize = true;
         OcrDenoiseRadius = 0.8;
         RenderCacheMax = 20;
+        SelectedReadingOrderStrategy = Excise.Avalonia.Services.ReadingOrderStrategy.ColumnAware;
     }
 
     private void CloseWindow()
@@ -111,10 +125,12 @@ public class PreferencesViewModel : ViewModelBase
     public void LoadFromMainViewModel(MainWindowViewModel mainViewModel)
     {
         RenderCacheMax = mainViewModel.RenderCacheMax;
+        SelectedReadingOrderStrategy = mainViewModel.ReadingOrderStrategy;
     }
 
     public void SaveToMainViewModel(MainWindowViewModel mainViewModel)
     {
         mainViewModel.RenderCacheMax = RenderCacheMax;
+        mainViewModel.ReadingOrderStrategy = SelectedReadingOrderStrategy;
     }
 }

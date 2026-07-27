@@ -27,6 +27,14 @@ public class WindowSettings
     public bool ContinuousScrollEnabled { get; set; } = true;
 
     /// <summary>
+    /// Text-selection reading-order strategy (#774). Persisted as a string so
+    /// the source-generated JSON stays simple; parsed back to
+    /// <see cref="Excise.Avalonia.Services.ReadingOrderStrategy"/> on load.
+    /// Defaults to the highest-quality multi-column behaviour.
+    /// </summary>
+    public string ReadingOrderStrategy { get; set; } = "ColumnAware";
+
+    /// <summary>
     /// Per-document state: file path -> (zoom level, last page index, timestamp).
     /// Limited to 50 most recent documents to avoid unbounded growth.
     /// </summary>
