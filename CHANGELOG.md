@@ -6,6 +6,8 @@ semantic versioning.
 
 ## [Unreleased]
 
+## [3.4.0] - 2026-07-27
+
 ### Added
 - **PDF/UA-1 and PDF/A conformance checker** (#772) — a new
   `Excise.Core.Validation` namespace adds a *checker* (not an emitter):
