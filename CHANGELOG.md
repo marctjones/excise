@@ -7,6 +7,18 @@ semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **Accessibility MCID→letter bridge: screen readers read tagged elements'
+  real body text (#776).** Follow-up to the tagged-PDF structure layer (#631,
+  PR #775). Text extraction now tags each `Letter` with the marked-content ID
+  (`/MCID`) of the `BDC ... EMC` span it was drawn inside, and
+  `PdfDocument.ResolveStructElementText` gathers a structure element's glyphs by
+  matching its `/MCID` references (both `/K` integers and `/MCR` child
+  dictionaries, each honouring its `/Pg`) in reading order. The
+  `Excise.Avalonia` accessibility peers use this so a heading, list item, or
+  table cell with no `/ActualText` carrier now exposes its real body text to a
+  screen reader instead of a role-only peer. The MCID tagging is additive: it
+  does not change extraction output (verified by the extraction-parity gate,
+  still 98.7% / 332 pages).
 - **App-wide in-session undo/redo** (#782) — a single edit-history stack
   (command pattern with per-operation inverse closures, plus a collection
   snapshot for type-over edits) now covers the reversible, pre-flatten editing
