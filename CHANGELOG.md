@@ -7,6 +7,17 @@ semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **Type-over (typewriter) styling UI** (#781) — the type-over engine already
+  supported font size, colour, and text alignment
+  (`PdfTypewriterTextStyle`/`PdfTypewriterTextOperation.WithStyle`), but nothing
+  in the GUI called it, so every box was Helvetica 12pt black left-aligned. A
+  small style inspector now sits in the toolbar (font-size stepper, alignment
+  Left/Center/Right, and a colour swatch flyout) and is shown only in
+  typewriter mode when a box is active. Changes route through `WithStyle` onto
+  the active `PdfTypewriterTextOperation` (immutably, as one undo step each), so
+  the on-screen editor and the flattened saved PDF both reflect the chosen
+  style; a new box inherits the last-used style. The active box is the one the
+  user last created, typed into, or moved (no separate select gesture).
 - **PDF 2.0 page-level and document-level structural features: parse, model,
   round-trip** (#331) — page transitions (`/Trans`, all twelve ISO
   32000-2:2020 §12.4.4 styles: Split/Blinds/Box/Wipe/Dissolve/Glitter/R
