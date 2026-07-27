@@ -143,10 +143,41 @@ public partial class MainWindowViewModel
         });
     }
 
+    // Per-page index of the current SearchMatches, rebuilt whenever the
+    // collection is reassigned. UpdateSearchHighlights runs on every page
+    // navigation; a linear SearchMatches.Where(m => m.PageIndex == ...) scan
+    // there is O(total matches) per page flip, which grows with document size
+    // (a dense search on a large book — thousands of matches — turns each page
+    // flip into a scan of all of them). The index makes the per-navigation
+    // lookup O(matches on the target page). See #601.
+    private readonly System.Collections.Generic.Dictionary<int, System.Collections.Generic.List<PdfSearchService.SearchMatch>> _matchesByPage = new();
+
     public ObservableCollection<PdfSearchService.SearchMatch> SearchMatches
     {
         get => _searchMatches;
-        set => this.RaiseAndSetIfChanged(ref _searchMatches, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _searchMatches, value);
+            RebuildMatchesByPageIndex();
+        }
+    }
+
+    /// <summary>Test hook (#601 benchmark): the per-page match index.</summary>
+    internal System.Collections.Generic.IReadOnlyDictionary<int, System.Collections.Generic.List<PdfSearchService.SearchMatch>> MatchesByPageIndexForBenchmark
+        => _matchesByPage;
+
+    private void RebuildMatchesByPageIndex()
+    {
+        _matchesByPage.Clear();
+        foreach (var match in _searchMatches)
+        {
+            if (!_matchesByPage.TryGetValue(match.PageIndex, out var list))
+            {
+                list = new System.Collections.Generic.List<PdfSearchService.SearchMatch>();
+                _matchesByPage[match.PageIndex] = list;
+            }
+            list.Add(match);
+        }
     }
 
     public int CurrentSearchMatchIndex
@@ -488,10 +519,10 @@ public partial class MainWindowViewModel
             if (SearchMatches.Count == 0 || _documentService == null)
                 return;
 
-            // Get matches for current page
-            var pageMatches = SearchMatches.Where(m => m.PageIndex == CurrentPageIndex).ToList();
-
-            if (pageMatches.Count == 0)
+            // Get matches for current page from the per-page index (#601):
+            // O(matches on this page) rather than an O(total matches) scan on
+            // every page navigation.
+            if (!_matchesByPage.TryGetValue(CurrentPageIndex, out var pageMatches) || pageMatches.Count == 0)
                 return;
 
             foreach (var match in pageMatches)
@@ -516,6 +547,7 @@ public partial class MainWindowViewModel
     private void ClearSearch()
     {
         SearchMatches.Clear();
+        _matchesByPage.Clear();
         CurrentSearchMatchIndex = -1;
         ClearSearchStatus();
         this.RaisePropertyChanged(nameof(SearchResultText));
