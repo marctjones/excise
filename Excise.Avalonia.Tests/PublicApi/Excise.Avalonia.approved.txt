@@ -91,6 +91,7 @@ namespace Excise.Avalonia.Controls
         public static readonly Avalonia.StyledProperty<System.Collections.Generic.IEnumerable<Excise.Avalonia.Controls.HiddenTextHighlight>?> HiddenTextHighlightsProperty;
         public static readonly Avalonia.StyledProperty<Excise.Avalonia.Controls.InteractionMode> InteractionModeProperty;
         public static readonly Avalonia.StyledProperty<bool> IsLoadingProperty;
+        public static readonly Avalonia.StyledProperty<Excise.Avalonia.Services.ReadingOrderStrategy> ReadingOrderStrategyProperty;
         public static readonly Avalonia.StyledProperty<long> RenderVersionProperty;
         public static readonly Avalonia.StyledProperty<System.Collections.Generic.IEnumerable<Excise.Core.Editing.PdfTypewriterTextOperation>?> TypewriterTextOperationsProperty;
         public static readonly Avalonia.StyledProperty<Excise.Avalonia.Controls.PdfViewMode> ViewModeProperty;
@@ -105,6 +106,7 @@ namespace Excise.Avalonia.Controls
         public System.Collections.Generic.IEnumerable<Excise.Avalonia.Controls.HiddenTextHighlight>? HiddenTextHighlights { get; set; }
         public Excise.Avalonia.Controls.InteractionMode InteractionMode { get; set; }
         public bool IsLoading { get; }
+        public Excise.Avalonia.Services.ReadingOrderStrategy ReadingOrderStrategy { get; set; }
         public long RenderVersion { get; set; }
         public System.Collections.Generic.IEnumerable<Excise.Core.Editing.PdfTypewriterTextOperation>? TypewriterTextOperations { get; set; }
         public Excise.Avalonia.Controls.PdfViewMode ViewMode { get; set; }
@@ -199,11 +201,18 @@ namespace Excise.Avalonia.Imaging
 }
 namespace Excise.Avalonia.Services
 {
+    public enum ReadingOrderStrategy
+    {
+        ColumnAware = 0,
+        Simple = 1,
+        RawStream = 2,
+    }
     public static class TextSelectionEngine
     {
         public static Excise.Core.Text.Letter? HitTest(System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> letters, double pdfX, double pdfY) { }
         public static string JoinText(System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> letters) { }
         public static System.Collections.Generic.List<Excise.Core.Text.Letter> RangeBetween(System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> ordered, Excise.Core.Text.Letter anchor, Excise.Core.Text.Letter focus) { }
         public static System.Collections.Generic.List<Excise.Core.Text.Letter> SortReadingOrder(System.Collections.Generic.IEnumerable<Excise.Core.Text.Letter> letters) { }
+        public static System.Collections.Generic.List<Excise.Core.Text.Letter> SortReadingOrder(System.Collections.Generic.IEnumerable<Excise.Core.Text.Letter> letters, Excise.Avalonia.Services.ReadingOrderStrategy strategy) { }
     }
 }

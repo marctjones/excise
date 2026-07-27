@@ -245,7 +245,7 @@ public partial class PdfViewerControl
         {
             var page = Document.GetPage(CurrentPage);
             _currentPageLetters = page.Letters?.ToList() ?? new List<Letter>();
-            _readingOrderedLetters = TextSelectionEngine.SortReadingOrder(_currentPageLetters);
+            _readingOrderedLetters = TextSelectionEngine.SortReadingOrder(_currentPageLetters, ReadingOrderStrategy);
             // Column-gutter width depends only on the page's glyph metrics, so
             // compute it once here rather than on every pointer-move (#373).
             _columnGapThreshold = TextSelectionEngine.EstimateColumnGap(_readingOrderedLetters);
