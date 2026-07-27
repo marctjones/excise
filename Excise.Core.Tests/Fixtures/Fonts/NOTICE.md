@@ -34,6 +34,23 @@ fixture removes the dependency on a Linux-only system font path that made
 these tests silently skip on macOS and Windows dev machines (discovered
 while restoring the coverage gate, #603).
 
+## SymbolDejaVu30.ttf
+
+A **derivative** of DejaVu Sans (above), generated as a test fixture for the
+symbolic-TrueType `(3,0)` "Microsoft Symbol" cmap glyph-selection path
+(ISO 32000-1 §9.6.6.4, epic #512). Built by subsetting DejaVu Sans to the
+glyphs `A`–`F` and replacing its cmap with a single platform-`(3,0)` format-4
+subtable that maps the classic PUA symbol range `0xF041`–`0xF046` to those
+glyph outlines (via `fontTools`). No other checked-in fixture carries a
+`(3,0)` subtable, so this exercises the required `0xF000`-offset lookup for
+simple symbolic fonts.
+
+Because the DejaVu modifications are released into the **public domain** (see
+above) and the underlying Bitstream Vera license permits modification,
+embedding, and redistribution, this derivative may be bundled and
+redistributed. It is a modified derivative and is not the original DejaVu font
+data.
+
 ## LibertinusSerif-Regular.otf
 
 **Libertinus Serif** (Regular), a CFF-flavored OpenType (`OTTO`) font — used
