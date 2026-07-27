@@ -6,6 +6,31 @@ semantic versioning.
 
 ## [Unreleased]
 
+### Added
+- **Text selection works in the continuous reading view** (#815) — text
+  selection used to be a mode toggle that forced single-page layout, so the
+  default continuous reading view had no way to drag-to-select and showed no
+  highlight. Selecting text is now treated as a read affordance (like clicking a
+  link), not a draw/edit mode: entering it keeps the continuous view, and a drag
+  paints a per-page semi-transparent highlight over the selected glyphs on that
+  page's overlay. Each `PdfPageSlot` carries the highlight rectangles bound to a
+  Canvas overlay in the reading-view page template; the gesture reuses the exact
+  single-page selection engine and the continuous pointer→page mapping the link
+  hit-test already uses. Bounded first version: a selection lives on the single
+  page the press landed on — a drag onto another page is clamped rather than
+  drawing a cross-page range (cross-page selection deferred).
+
+### Fixed
+- **Text-selection highlight now has automated GUI coverage** (#815) — the
+  single-page "selection box" drawing was untested at the GUI level, so any
+  coordinate/z-order regression (e.g. the historic "highlight far to the left"
+  origin offset) could ship silently. New headless-Avalonia tests drive a real
+  pointer press→drag and assert the highlight rectangles land on the selected
+  glyphs, verified against an independent layout-geometry oracle (overlay/page
+  image share an origin; each rect sits at its glyph's MediaBox fraction) rather
+  than the coordinate mapper vouching for itself. Single-page rendering was
+  found already correct; the tests lock it in and cover the new continuous view.
+
 ## [3.4.0] - 2026-07-27
 
 ### Added
