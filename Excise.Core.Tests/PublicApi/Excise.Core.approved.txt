@@ -616,6 +616,7 @@ namespace Excise.Core.Document
         public Excise.Core.Document.PdfStructElement? GetStructureTree() { }
         public byte[]? GetXmpMetadata() { }
         public Excise.Core.Primitives.PdfObject Resolve(Excise.Core.Primitives.PdfObject obj) { }
+        public string ResolveStructElementText(Excise.Core.Document.PdfStructElement element, int? inheritedPageNumber = default) { }
         public void Save(System.IO.Stream outputStream) { }
         public void Save(string path) { }
         public void Save(System.IO.Stream outputStream, Excise.Core.Security.PdfEncryptionOptions? encryptionOptions) { }
@@ -1732,6 +1733,7 @@ namespace Excise.Core.Text
         public Excise.Core.Document.PdfRectangle GlyphRectangle { get; }
         public bool IsCidFont { get; set; }
         public bool IsInHiddenOptionalContent { get; set; }
+        public int? MarkedContentId { get; set; }
         public Excise.Core.Document.PdfPoint StartBaseLine { get; }
         public double StartX { get; }
         public double StartY { get; }

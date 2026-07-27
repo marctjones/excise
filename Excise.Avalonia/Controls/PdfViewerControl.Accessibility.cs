@@ -451,17 +451,41 @@ public partial class PdfViewerControl
             var (role, headingLevel) = ClassifyStructRole(element.Type);
             if (role != AccessibleStructRole.Generic)
             {
+                // /ActualText (author's replacement) wins, then /Alt (image
+                // description). With neither, resolve the element's REAL body
+                // glyphs from its /MCID marked-content references so a screen
+                // reader reads the actual heading/cell text instead of a
+                // role-only peer — the MCID→letter bridge (#776).
                 string text = !string.IsNullOrWhiteSpace(element.ActualText)
                     ? element.ActualText!.Trim()
                     : (!string.IsNullOrWhiteSpace(element.AltText)
                         ? element.AltText!.Trim()
-                        : string.Empty);
+                        : ResolveMcidText(doc, element, page));
                 nodes.Add(new AccessibleStructNode(role, headingLevel, text, effectivePage));
             }
         }
 
         foreach (var child in element.Children)
             WalkModel(doc, child, page, pagesByDict, reading, nodes, depth + 1);
+    }
+
+    /// <summary>
+    /// Resolve a structure element's real body text from its /MCID marked-content
+    /// references (#776), returning it whitespace-trimmed, or empty on failure.
+    /// A malformed structure tree or extraction hiccup must never take down the
+    /// accessibility walk, so this is defensive: any failure degrades the node to
+    /// role-only, exactly as before the bridge existed.
+    /// </summary>
+    private static string ResolveMcidText(PdfDocument doc, PdfStructElement element, int? inheritedPage)
+    {
+        try
+        {
+            return doc.ResolveStructElementText(element, inheritedPage).Trim();
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            return string.Empty;
+        }
     }
 
     /// <summary>

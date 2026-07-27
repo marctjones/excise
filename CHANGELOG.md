@@ -30,6 +30,49 @@ semantic versioning.
   writer changes — so save output for documents that don't use these features
   is unaffected. UI integration (presentation-mode playback, thumbnail-strip
   wiring, page-label status bar) is explicitly deferred, per the issue.
+- **Accessibility MCID→letter bridge: screen readers read tagged elements'
+  real body text (#776).** Follow-up to the tagged-PDF structure layer (#631,
+  PR #775). Text extraction now tags each `Letter` with the marked-content ID
+  (`/MCID`) of the `BDC ... EMC` span it was drawn inside, and
+  `PdfDocument.ResolveStructElementText` gathers a structure element's glyphs by
+  matching its `/MCID` references (both `/K` integers and `/MCR` child
+  dictionaries, each honouring its `/Pg`) in reading order. The
+  `Excise.Avalonia` accessibility peers use this so a heading, list item, or
+  table cell with no `/ActualText` carrier now exposes its real body text to a
+  screen reader instead of a role-only peer. The MCID tagging is additive: it
+  does not change extraction output (verified by the extraction-parity gate,
+  which is unchanged).
+- **OCG-aware text extraction now resolves OCMD membership and visibility
+  expressions** (#336) — the per-letter hidden-layer flag
+  (`Letter.IsInHiddenOptionalContent`) previously identified only content
+  inside a directly-referenced Optional Content Group named in the catalog
+  `/OCProperties /D /OFF` array, matched by name. It now resolves the full
+  default-configuration visibility of a marked-content `/OC` span through a
+  shared resolver (`Excise.Core/Document/OptionalContentVisibility.cs`):
+  Optional Content Membership Dictionaries (`/Type /OCMD`) with a `/P` policy
+  (AnyOn/AllOn/AnyOff/AllOff) or a `/VE` And/Or/Not visibility expression, OCG
+  membership matched by object reference (so two OCGs sharing a `/Name` are
+  distinguished), `/ON` arrays, and `/BaseState /OFF`. This makes hidden-layer
+  content in those carriers precisely identifiable for audit and for the
+  `RedactText(includeHiddenLayers: false)` opt-out (which now correctly skips
+  them). Default redaction is unaffected: `RedactText` includes hidden layers
+  by default and already reached this content — the flag governs identification
+  and the opt-out, not the default removal path. Default extraction output is
+  likewise unchanged (hidden layers are still extracted; only the flag differs)
+  — the extraction-parity gate holds at 98.7% / 332 pages. The SkiaSharp
+  renderer already suppressed paint for default-off optional content (Part C);
+  this brings the text extractor's OCG resolution to parity with it.
+  Structure-tree mutation on redaction (Part B) shipped earlier as #636.
+- **ICCBased-CMYK (N=4) overprint participation** (#803, follow-up to #634) —
+  a fill or stroke whose colour space is an ICCBased space with four
+  components now takes part in overprint simulation, treated as DeviceCMYK
+  under the same nonzero-overprint-mode (`/OPM 1`) gating: a component that is
+  exactly zero leaves that colorant of the backdrop unchanged instead of
+  knocking it out. Previously such a colour knocked out even under `/OP`
+  `/op` `/OPM 1`. Participation is preview-grade only — the raw four
+  components drive the zero-component merge; there is still no colour-managed
+  ICC CMM. Verified against the `gs -dOverprint=/simulate` oracle and by
+  spec-driven relative tests inside a DeviceCMYK transparency group.
 - **App-wide in-session undo/redo** (#782) — a single edit-history stack
   (command pattern with per-operation inverse closures, plus a collection
   snapshot for type-over edits) now covers the reversible, pre-flatten editing

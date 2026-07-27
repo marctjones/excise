@@ -107,9 +107,14 @@ and OPM persistence across `gs` operators that omit it). What is simulated:
   only reference renderer in the harness that simulates overprint on RGB
   output; mutool and pdftocairo apply overprint only on CMYK/spot targets.
 
-Not yet simulated (remaining #634 scope): Separation/DeviceN overprint (leave
-every colorant *outside* the space unchanged, regardless of OPM), ICCBased
-CMYK overprint, overprint for text and image painting, and a real
+Also simulated: Separation/DeviceN overprint (leave every colorant *outside*
+the space unchanged, regardless of OPM — via the space's DeviceCMYK
+tint-transform alternate) and, as of #803, ICCBased CMYK (N=4) overprint,
+treated as DeviceCMYK under the same /OPM 1 gating. ICCBased participation is
+preview-grade — the raw four components drive the merge, there is no real ICC
+CMM.
+
+Not yet simulated: overprint for text and image painting, and a real
 colour-managed CMYK page buffer with rendering intents. Tint-transformed
 Separation/DeviceN components are deliberately excluded from the OPM 1
 zero-component skip — applying it there would over-apply overprint.

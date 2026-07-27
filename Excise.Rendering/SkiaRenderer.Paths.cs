@@ -759,11 +759,13 @@ internal partial class RenderContext
     /// the identical overprinted result for /OPM 0 and /OPM 1 on a Separation
     /// fill (green overlap over a cyan backdrop) versus a plain-yellow knockout
     /// with overprint off.</item>
+    /// <item><b>ICCBased with N=4</b> (#803): treated as DeviceCMYK for
+    /// overprint — same /OPM 1 gating; the raw four components drive the merge.
+    /// Preview-grade participation only, not a colour-managed CMM.</item>
     /// </list>
     /// A Separation/DeviceN whose alternate is not DeviceCMYK leaves
     /// <c>FillDeviceCmyk</c>/<c>StrokeDeviceCmyk</c> null, so the paint loops
     /// fall through to the normal Skia path (no CMYK backdrop to merge with).
-    /// ICCBased-CMYK overprint remains unhandled and is tracked as #803.
     /// </summary>
     private bool IsOverprintActive(SKPaintStyle style)
     {
@@ -783,7 +785,14 @@ internal partial class RenderContext
 
         // Resource names are resolved so a named colour space participates
         // under the rule for its underlying family.
-        return ResolveColorSpace(colorSpaceName)?.Type switch
+        var cs = ResolveColorSpace(colorSpaceName);
+        // An ICCBased space with N=4 is CMYK; #803 lets it overprint under the
+        // same nonzero-overprint-mode rule as DeviceCMYK (its four components
+        // are populated as FillDeviceCmyk/StrokeDeviceCmyk by
+        // TryParseDeviceCmykOperands). Preview-grade only, no ICC CMM.
+        if (cs?.Type == PdfColorSpaceType.ICCBased && cs.Components == 4)
+            return _state.OverprintMode == 1;
+        return cs?.Type switch
         {
             PdfColorSpaceType.DeviceCMYK => _state.OverprintMode == 1,
             PdfColorSpaceType.Separation or PdfColorSpaceType.DeviceN => true,
