@@ -454,10 +454,24 @@ internal partial class RenderContext
     internal static long GlyphOutlineCacheHits;
     [ThreadStatic]
     internal static long GlyphOutlineCacheMisses;
-    private readonly Dictionary<(int ObjectNumber, int Generation, ImageBitmapCacheKey Key), SKBitmap?> _imageBitmapByReference = new();
-    private readonly Dictionary<Excise.Core.Primitives.PdfStream, Dictionary<ImageBitmapCacheKey, SKBitmap?>> _imageBitmapByStream =
-        new(ReferenceEqualityComparer.Instance);
-    private readonly List<SKBitmap> _cachedImageBitmaps = new();
+    // Decoded-image cache observability (#599). A hit means a repeated image
+    // XObject (logo, background, tiled-pattern cell, form-invoked art) reused an
+    // already-decoded SKBitmap instead of re-running the SKCodec decode + color
+    // conversion. Counted across the whole page render, including child
+    // transparency-group / pattern contexts, which share the root cache.
+    // Thread-static for the same reason as the glyph counters above.
+    [ThreadStatic]
+    internal static long ImageBitmapCacheHits;
+    [ThreadStatic]
+    internal static long ImageBitmapCacheMisses;
+    // Decoded-image caches. Shared with child transparency-group / tiling-pattern
+    // contexts via the shared-scope constructor so a repeated image decodes once
+    // per page, not once per context (#599). Only the owning (root) context
+    // disposes them — see _ownsImageBitmapCache / DisposeImageBitmapCache.
+    private readonly Dictionary<(int ObjectNumber, int Generation, ImageBitmapCacheKey Key), SKBitmap?> _imageBitmapByReference;
+    private readonly Dictionary<Excise.Core.Primitives.PdfStream, Dictionary<ImageBitmapCacheKey, SKBitmap?>> _imageBitmapByStream;
+    private readonly List<SKBitmap> _cachedImageBitmaps;
+    private readonly bool _ownsImageBitmapCache;
     // Tessellated glyph outlines keyed by (typeface, font-size bits, glyph
     // string) — see GetCachedGlyphOutline (#598). SKFont.GetTextPath drives the
     // platform font scaler to build the outline on every call; body text
@@ -542,13 +556,31 @@ internal partial class RenderContext
     public RenderContext(SKCanvas canvas, PdfPage page, RenderOptions options,
         CancellationToken cancellationToken = default,
         SKBitmap? rootBitmap = null,
-        bool startsInDeviceCmykTransparencyGroup = false)
+        bool startsInDeviceCmykTransparencyGroup = false,
+        RenderContext? imageCacheOwner = null)
     {
         _canvas = canvas;
         _rootBitmap = rootBitmap;
         _page = page;
         _options = options;
         _cancellationToken = cancellationToken;
+        if (imageCacheOwner != null)
+        {
+            // Share the decoded-image cache with the owning context so an image
+            // reused across a transparency group / tiling pattern decodes once
+            // per page (#599). The owner disposes; this context does not.
+            _imageBitmapByReference = imageCacheOwner._imageBitmapByReference;
+            _imageBitmapByStream = imageCacheOwner._imageBitmapByStream;
+            _cachedImageBitmaps = imageCacheOwner._cachedImageBitmaps;
+            _ownsImageBitmapCache = false;
+        }
+        else
+        {
+            _imageBitmapByReference = new();
+            _imageBitmapByStream = new(ReferenceEqualityComparer.Instance);
+            _cachedImageBitmaps = new();
+            _ownsImageBitmapCache = true;
+        }
         _deviceCmykPreviewColorSpace = PdfColorSpace.Parse(PdfName.DeviceCMYK, page.Document);
         _deviceCmykTransparencyGroupDepth = startsInDeviceCmykTransparencyGroup ? 1 : 0;
         _deviceCmykBackdrop = startsInDeviceCmykTransparencyGroup && rootBitmap != null

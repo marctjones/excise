@@ -431,9 +431,14 @@ internal partial class RenderContext
             var cacheKey = (referenceKey.ObjectNumber, referenceKey.Generation, key);
             if (!_imageBitmapByReference.TryGetValue(cacheKey, out var bitmap))
             {
+                ImageBitmapCacheMisses++;
                 bitmap = DecodeImageBitmap(imageStream, width, height, bitsPerComponent, colorSpace);
                 TrackCachedImageBitmap(bitmap);
                 _imageBitmapByReference[cacheKey] = bitmap;
+            }
+            else
+            {
+                ImageBitmapCacheHits++;
             }
 
             return bitmap;
@@ -447,9 +452,14 @@ internal partial class RenderContext
 
         if (!streamCache.TryGetValue(key, out var streamBitmap))
         {
+            ImageBitmapCacheMisses++;
             streamBitmap = DecodeImageBitmap(imageStream, width, height, bitsPerComponent, colorSpace);
             TrackCachedImageBitmap(streamBitmap);
             streamCache[key] = streamBitmap;
+        }
+        else
+        {
+            ImageBitmapCacheHits++;
         }
 
         return streamBitmap;
@@ -556,6 +566,11 @@ internal partial class RenderContext
 
     private void DisposeImageBitmapCache()
     {
+        // Child transparency-group / pattern contexts share the root's decoded
+        // images (#599); only the owner disposes, or a shared bitmap would be
+        // freed while a sibling context still holds it.
+        if (!_ownsImageBitmapCache)
+            return;
         foreach (var bitmap in _cachedImageBitmaps)
             bitmap.Dispose();
         _cachedImageBitmaps.Clear();
@@ -981,7 +996,7 @@ internal partial class RenderContext
                 0,
                 1));
 
-            var child = new RenderContext(canvas, _page, _options, _cancellationToken);
+            var child = new RenderContext(canvas, _page, _options, _cancellationToken, imageCacheOwner: this);
             child._resourcesStack.Push(_page.Resources);
             child._state = _state.Clone();
             child._state.SoftMask = null;
@@ -1622,7 +1637,14 @@ internal partial class RenderContext
             if (cinfo.Output_components != 3)
                 return null;
 
-            var pixels = new byte[checked(width * height * 4)];
+            var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
+            var pixels = GetWritablePixelSpan(bitmap);
+            if (pixels.IsEmpty)
+            {
+                bitmap.Dispose();
+                return null;
+            }
+
             var scanline = new[] { new byte[checked(width * cinfo.Output_components)] };
             var dst = 0;
             while (cinfo.Output_scanline < cinfo.Output_height)
@@ -1639,9 +1661,6 @@ internal partial class RenderContext
             }
 
             cinfo.jpeg_finish_decompress();
-            var bitmap = CreateBitmapFromRgbaBytes(width, height, pixels);
-            if (bitmap == null)
-                return null;
 
             return ResizeDecodedBitmap(
                 bitmap,
@@ -2011,7 +2030,15 @@ internal partial class RenderContext
             return fastBitmap;
 
         var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
-        var pixels = new byte[width * height * 4];
+        // Fill the bitmap's pixel store directly (#599): every pixel below writes
+        // all four RGBA bytes unconditionally, so there is no reliance on the
+        // buffer being pre-zeroed and no large transient byte[] / Marshal.Copy.
+        var pixels = GetWritablePixelSpan(bitmap);
+        if (pixels.IsEmpty)
+        {
+            bitmap.Dispose();
+            return null;
+        }
 
         try
         {
@@ -2021,6 +2048,13 @@ internal partial class RenderContext
             var imageMaskPaintBits = isImageMask
                 ? ResolveImageMaskPaintBits(stream)
                 : default;
+            // Hoist the /Decode lookup and max-sample constant out of the
+            // per-pixel loop (#599): DecodeImageSample was resolving the stream
+            // dictionary and calling Math.Pow once per component per pixel —
+            // millions of redundant lookups on a large image. Both are image-wide
+            // invariants; the arithmetic is otherwise identical.
+            var decodeArray = stream.GetOptional("Decode") as Excise.Core.Primitives.PdfArray;
+            var maxSample = Math.Pow(2, bitsPerComponent) - 1;
 
             for (int y = 0; y < height; y++)
             {
@@ -2034,11 +2068,11 @@ internal partial class RenderContext
                         {
                             for (int i = 0; i < componentsPerPixel; i++)
                                 pixelValues[i] = DecodeImageSample(
-                                    stream,
+                                    decodeArray,
                                     pdfColorSpace,
                                     i,
                                     data[srcIndex + i],
-                                    bitsPerComponent);
+                                    maxSample);
                             srcIndex += componentsPerPixel;
 
                             var (rd, gd, bd) = pdfColorSpace.ToRgb(pixelValues);
@@ -2060,11 +2094,11 @@ internal partial class RenderContext
                                         bitOffset + (i * bitsPerComponent),
                                         bitsPerComponent);
                                     pixelValues[i] = DecodeImageSample(
-                                        stream,
+                                        decodeArray,
                                         pdfColorSpace,
                                         i,
                                         sample,
-                                        bitsPerComponent);
+                                        maxSample);
                                 }
 
                                 var (rd, gd, bd) = pdfColorSpace.ToRgb(pixelValues);
@@ -2118,15 +2152,6 @@ internal partial class RenderContext
                     srcIndex = ((srcIndex + 7) / 8) * 8; // Align to byte boundary
                 }
             }
-
-            var destination = bitmap.GetPixels();
-            if (destination == IntPtr.Zero)
-            {
-                bitmap.Dispose();
-                return null;
-            }
-
-            System.Runtime.InteropServices.Marshal.Copy(pixels, 0, destination, pixels.Length);
         }
         catch
         {
@@ -2174,7 +2199,14 @@ internal partial class RenderContext
 
     private static SKBitmap? CreateFastGrayBitmap(byte[] data, int width, int height)
     {
-        var pixels = new byte[width * height * 4];
+        var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
+        var pixels = GetWritablePixelSpan(bitmap);
+        if (pixels.IsEmpty)
+        {
+            bitmap.Dispose();
+            return null;
+        }
+
         var src = 0;
         var dst = 0;
         for (var i = 0; i < width * height; i++)
@@ -2186,12 +2218,19 @@ internal partial class RenderContext
             pixels[dst++] = 255;
         }
 
-        return CreateBitmapFromRgbaBytes(width, height, pixels);
+        return bitmap;
     }
 
     private static SKBitmap? CreateFastRgbBitmap(byte[] data, int width, int height)
     {
-        var pixels = new byte[width * height * 4];
+        var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
+        var pixels = GetWritablePixelSpan(bitmap);
+        if (pixels.IsEmpty)
+        {
+            bitmap.Dispose();
+            return null;
+        }
+
         var src = 0;
         var dst = 0;
         for (var i = 0; i < width * height; i++)
@@ -2202,28 +2241,52 @@ internal partial class RenderContext
             pixels[dst++] = 255;
         }
 
-        return CreateBitmapFromRgbaBytes(width, height, pixels);
+        return bitmap;
     }
 
     private static SKBitmap? CreateFastCmykBitmap(byte[] data, int width, int height, PdfColorSpace colorSpace)
     {
-        var pixels = new byte[width * height * 4];
+        var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
+        var pixels = GetWritablePixelSpan(bitmap);
+        if (pixels.IsEmpty)
+        {
+            bitmap.Dispose();
+            return null;
+        }
+
+        // One reused CMYK buffer instead of a fresh double[4] per pixel (#599):
+        // ToRgb reads the array by index and never retains it, so reuse is
+        // behaviour-identical while removing width*height allocations per image.
+        var cmyk = new double[4];
         var src = 0;
         var dst = 0;
         for (var i = 0; i < width * height; i++)
         {
-            var c = data[src++] / 255.0;
-            var m = data[src++] / 255.0;
-            var y = data[src++] / 255.0;
-            var k = data[src++] / 255.0;
-            var (r, g, b) = colorSpace.ToRgb(new[] { c, m, y, k });
+            cmyk[0] = data[src++] / 255.0;
+            cmyk[1] = data[src++] / 255.0;
+            cmyk[2] = data[src++] / 255.0;
+            cmyk[3] = data[src++] / 255.0;
+            var (r, g, b) = colorSpace.ToRgb(cmyk);
             pixels[dst++] = (byte)Math.Clamp(r * 255, 0, 255);
             pixels[dst++] = (byte)Math.Clamp(g * 255, 0, 255);
             pixels[dst++] = (byte)Math.Clamp(b * 255, 0, 255);
             pixels[dst++] = 255;
         }
 
-        return CreateBitmapFromRgbaBytes(width, height, pixels);
+        return bitmap;
+    }
+
+    // Writable view over an SKBitmap's contiguous pixel store, so a decode can
+    // fill the final bitmap directly instead of allocating a large transient
+    // managed byte[] and Marshal.Copy-ing it in (#599). Rgba8888 with no row
+    // padding gives RowBytes == Width*4, so the span is Width*Height*4 bytes —
+    // the same length the transient buffer had. Byte-for-byte identical output.
+    private static unsafe Span<byte> GetWritablePixelSpan(SKBitmap bitmap)
+    {
+        var ptr = bitmap.GetPixels();
+        return ptr == IntPtr.Zero
+            ? Span<byte>.Empty
+            : new Span<byte>((void*)ptr, bitmap.RowBytes * bitmap.Height);
     }
 
     private static SKBitmap? CreateBitmapFromRgbaBytes(
@@ -2396,10 +2459,24 @@ internal partial class RenderContext
         int componentIndex,
         int sample,
         int bitsPerComponent)
+        => DecodeImageSample(
+            stream.GetOptional("Decode") as Excise.Core.Primitives.PdfArray,
+            colorSpace,
+            componentIndex,
+            sample,
+            Math.Pow(2, bitsPerComponent) - 1);
+
+    // Hoisted variant used by the raw-image fill loop: the caller resolves the
+    // /Decode array and max-sample constant once per image instead of once per
+    // component per pixel (#599). Arithmetic is identical to the overload above.
+    private static double DecodeImageSample(
+        Excise.Core.Primitives.PdfArray? decode,
+        PdfColorSpace colorSpace,
+        int componentIndex,
+        int sample,
+        double maxSample)
     {
-        var decode = stream.GetOptional("Decode") as Excise.Core.Primitives.PdfArray;
         var offset = componentIndex * 2;
-        var maxSample = Math.Pow(2, bitsPerComponent) - 1;
         if (decode != null && decode.Count >= offset + 2)
         {
             var d0 = decode.GetNumber(offset);
