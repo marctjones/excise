@@ -62,6 +62,23 @@ public class AboutWindowTests
         detail!.Children.Count.Should().BeGreaterThan(1,
             "selecting a package must repaint the detail pane (header + license text at minimum)");
 
+        // Compliance needs the verbatim license TEXT reachable in the dialog,
+        // not merely present in the ViewModel. Select a package that bundles
+        // license text and assert the detail pane surfaces it in a (copyable)
+        // TextBox.
+        var vm = (AboutWindowViewModel)window.DataContext!;
+        var withText = vm.Packages.FirstOrDefault(p => !string.IsNullOrWhiteSpace(p.LicenseText));
+        withText.Should().NotBeNull(
+            "at least one shipped package must carry embedded verbatim license text");
+
+        list.SelectedItem = withText;
+        var licenseBox = detail.Children.OfType<TextBox>().LastOrDefault();
+        licenseBox.Should().NotBeNull("the detail pane must render the license text in a TextBox");
+        licenseBox!.Text.Should().Be(withText!.LicenseText,
+            "the rendered license text must be the package's verbatim notice");
+        licenseBox.Text!.Length.Should().BeGreaterThan(100,
+            "a bundled license notice is substantial text, not a stub");
+
         window.Close();
     }
 }
