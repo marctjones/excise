@@ -303,6 +303,104 @@ public class TypewriterWorkflowTests
         window.Close();
     }
 
+    // #781: the style inspector is visible only in typewriter mode AND only
+    // when a box is active, so it never floats with nothing to style.
+    [FixedAvaloniaFact]
+    public async Task StyleInspector_IsVisibleOnlyWhenTypewriterBoxIsActive()
+    {
+        var (source, _, dir) = MakePaths();
+        TestPdfGenerator.CreateSimpleTextPdf(source, "Original text");
+
+        var vm = new MainWindowViewModel();
+        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+        window.Show();
+        await vm.LoadDocumentAsync(source);
+
+        vm.IsTypewriterStyleInspectorVisible.Should().BeFalse("no mode, no box");
+
+        vm.IsTypewriterMode = true;
+        vm.IsTypewriterStyleInspectorVisible.Should().BeFalse("in mode but no active box yet");
+
+        vm.OnTypewriterTextCreated(new PdfRectangle(72, 620, 300, 660), 1);
+        vm.IsTypewriterStyleInspectorVisible.Should().BeTrue("a box is now active");
+
+        vm.IsTypewriterMode = false;
+        vm.IsTypewriterStyleInspectorVisible.Should().BeFalse("leaving the mode hides the inspector");
+
+        window.Close();
+        Cleanup(dir);
+    }
+
+    // #781: changing size/color/alignment on the active box must route through
+    // WithStyle onto that box's immutable Style.
+    [FixedAvaloniaFact]
+    public async Task StyleChanges_UpdateTheActiveBoxStyle()
+    {
+        var (source, _, dir) = MakePaths();
+        TestPdfGenerator.CreateSimpleTextPdf(source, "Original text");
+
+        var vm = new MainWindowViewModel();
+        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+        window.Show();
+        await vm.LoadDocumentAsync(source);
+
+        vm.IsTypewriterMode = true;
+        vm.OnTypewriterTextCreated(new PdfRectangle(72, 620, 300, 660), 1);
+        var id = vm.TypewriterTextOperations.Single().Id;
+        vm.OnTypewriterTextEdited(id, "Styled note", 1);
+
+        vm.TypewriterFontSize = 28;
+        vm.SetTypewriterColor("#FF0000");
+        vm.TypewriterAlignmentIndex = 1; // Center
+
+        var op = vm.TypewriterTextOperations.Single();
+        op.Style.FontSize.Should().Be(28);
+        op.Style.Color.R.Should().BeApproximately(1.0, 0.001);
+        op.Style.Color.G.Should().BeApproximately(0.0, 0.001);
+        op.Style.Color.B.Should().BeApproximately(0.0, 0.001);
+        op.Style.Alignment.Should().Be(Excise.Core.Graphics.TextAlignment.Center);
+
+        window.Close();
+        Cleanup(dir);
+    }
+
+    // #781: the chosen style must survive the real GUI save → the flattened
+    // page content stream carries the size (Tf) and colour (rg) operators.
+    // Byte-level assertion (raw operators), not excise's text interpretation,
+    // so it isn't a self-oracle for the style property.
+    [FixedAvaloniaFact]
+    public async Task StyledTypewriterText_RoundTripsIntoSavedPdf()
+    {
+        var (source, output, dir) = MakePaths();
+        TestPdfGenerator.CreateSimpleTextPdf(source, "Original text");
+
+        var vm = new MainWindowViewModel();
+        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+        window.Show();
+        await vm.LoadDocumentAsync(source);
+
+        vm.IsTypewriterMode = true;
+        vm.OnTypewriterTextCreated(new PdfRectangle(72, 620, 300, 660), 1);
+        var id = vm.TypewriterTextOperations.Single().Id;
+        vm.OnTypewriterTextEdited(id, "STYLED781", 1);
+        vm.TypewriterFontSize = 29;      // distinctive, not used by the base PDF
+        vm.SetTypewriterColor("#FF0000"); // red -> "1 0 0 rg" (base text is black)
+        vm.TypewriterAlignmentIndex = 2;  // Right
+
+        await vm.SaveFileAsAsync(output);
+
+        using var saved = PdfDocument.Open(output);
+        var page = saved.GetPage(1);
+        var content = System.Text.Encoding.Latin1.GetString(page.GetContentStreamBytes());
+
+        content.Should().Contain("29 Tf", "the flattened text must carry the chosen font size");
+        content.Should().Contain("1 0 0 rg", "the flattened text must carry the chosen red colour");
+        page.Text.Should().Contain("STYLED781", "the typed text must be present");
+
+        window.Close();
+        Cleanup(dir);
+    }
+
     private static string? RestrictedFixturePathOrNull()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);

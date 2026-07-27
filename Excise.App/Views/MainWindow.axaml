@@ -457,6 +457,108 @@
                         </StackPanel>
                     </Button>
 
+                    <!-- #781: style inspector for the ACTIVE type-over box.
+                         Visible only in typewriter mode with a box active.
+                         Every control routes through WithStyle on the active
+                         PdfTypewriterTextOperation (MainWindowViewModel.TypewriterStyle.cs). -->
+                    <StackPanel Orientation="Horizontal" Spacing="6"
+                                VerticalAlignment="Center"
+                                IsVisible="{Binding IsTypewriterStyleInspectorVisible}">
+                        <TextBlock Text="Size" VerticalAlignment="Center" FontSize="11"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <NumericUpDown Value="{Binding TypewriterFontSize}"
+                                       Minimum="4" Maximum="96" Increment="1"
+                                       FormatString="0" Width="104"
+                                       VerticalAlignment="Center"
+                                       AutomationProperties.Name="Typewriter Font Size"
+                                       AutomationProperties.HelpText="Font size of the active type-over text box"
+                                       ToolTip.Tip="Font size of the active text box"/>
+
+                        <ComboBox SelectedIndex="{Binding TypewriterAlignmentIndex}"
+                                  MinWidth="92" VerticalAlignment="Center"
+                                  AutomationProperties.Name="Typewriter Text Alignment"
+                                  AutomationProperties.HelpText="Text alignment of the active type-over text box"
+                                  ToolTip.Tip="Text alignment of the active text box">
+                            <ComboBoxItem Content="Left"/>
+                            <ComboBoxItem Content="Center"/>
+                            <ComboBoxItem Content="Right"/>
+                        </ComboBox>
+
+                        <Button Classes="modern-button" Padding="8,6"
+                                VerticalAlignment="Center"
+                                AutomationProperties.Name="Typewriter Text Color"
+                                AutomationProperties.HelpText="Text colour of the active type-over text box"
+                                ToolTip.Tip="Text color of the active text box">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Border Width="16" Height="16" CornerRadius="2"
+                                        BorderThickness="1"
+                                        BorderBrush="{DynamicResource DividerBrush}"
+                                        Background="{Binding TypewriterColorBrush}"/>
+                                <TextBlock Text="Color" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <Button.Flyout>
+                                <Flyout>
+                                    <StackPanel Spacing="6" Width="152">
+                                        <TextBlock Text="Text color" FontWeight="Medium" FontSize="11"/>
+                                        <WrapPanel>
+                                            <Button Width="28" Height="28" Padding="2" Margin="2"
+                                                    Command="{Binding SetTypewriterColorCommand}"
+                                                    CommandParameter="#000000"
+                                                    ToolTip.Tip="Black">
+                                                <Border Background="#000000" CornerRadius="2"/>
+                                            </Button>
+                                            <Button Width="28" Height="28" Padding="2" Margin="2"
+                                                    Command="{Binding SetTypewriterColorCommand}"
+                                                    CommandParameter="#555555"
+                                                    ToolTip.Tip="Gray">
+                                                <Border Background="#555555" CornerRadius="2"/>
+                                            </Button>
+                                            <Button Width="28" Height="28" Padding="2" Margin="2"
+                                                    Command="{Binding SetTypewriterColorCommand}"
+                                                    CommandParameter="#D0021B"
+                                                    ToolTip.Tip="Red">
+                                                <Border Background="#D0021B" CornerRadius="2"/>
+                                            </Button>
+                                            <Button Width="28" Height="28" Padding="2" Margin="2"
+                                                    Command="{Binding SetTypewriterColorCommand}"
+                                                    CommandParameter="#F5A623"
+                                                    ToolTip.Tip="Orange">
+                                                <Border Background="#F5A623" CornerRadius="2"/>
+                                            </Button>
+                                            <Button Width="28" Height="28" Padding="2" Margin="2"
+                                                    Command="{Binding SetTypewriterColorCommand}"
+                                                    CommandParameter="#2E7D32"
+                                                    ToolTip.Tip="Green">
+                                                <Border Background="#2E7D32" CornerRadius="2"/>
+                                            </Button>
+                                            <Button Width="28" Height="28" Padding="2" Margin="2"
+                                                    Command="{Binding SetTypewriterColorCommand}"
+                                                    CommandParameter="#1565C0"
+                                                    ToolTip.Tip="Blue">
+                                                <Border Background="#1565C0" CornerRadius="2"/>
+                                            </Button>
+                                            <Button Width="28" Height="28" Padding="2" Margin="2"
+                                                    Command="{Binding SetTypewriterColorCommand}"
+                                                    CommandParameter="#6A1B9A"
+                                                    ToolTip.Tip="Purple">
+                                                <Border Background="#6A1B9A" CornerRadius="2"/>
+                                            </Button>
+                                            <Button Width="28" Height="28" Padding="2" Margin="2"
+                                                    Command="{Binding SetTypewriterColorCommand}"
+                                                    CommandParameter="#FFFFFF"
+                                                    ToolTip.Tip="White">
+                                                <Border Background="#FFFFFF" CornerRadius="2"/>
+                                            </Button>
+                                        </WrapPanel>
+                                    </StackPanel>
+                                </Flyout>
+                            </Button.Flyout>
+                        </Button>
+
+                        <Border Width="1" Height="24" Margin="6,0"
+                                Background="{DynamicResource DividerBrush}"/>
+                    </StackPanel>
+
                     <Button Command="{Binding AddHighlightAnnotationFromSelectionCommand}"
                             Classes="modern-button"
                             Padding="10,6"

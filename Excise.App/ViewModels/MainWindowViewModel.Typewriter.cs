@@ -35,10 +35,12 @@ public partial class MainWindowViewModel
             else
             {
                 RestoreViewModeFromPreference();
+                ClearActiveTypewriterOperation(); // #781: hide the style inspector on exit
             }
 
             this.RaisePropertyChanged(nameof(CurrentModeText));
             this.RaisePropertyChanged(nameof(InteractionMode));
+            this.RaisePropertyChanged(nameof(IsTypewriterStyleInspectorVisible));
         }
     }
 
@@ -67,14 +69,21 @@ public partial class MainWindowViewModel
             return;
         }
 
+        // #781: seed the box with the current inspector style so "set the
+        // style, then draw" carries the chosen look onto the new box, and make
+        // the fresh box the inspector's active target.
+        var created = PdfTypewriterTextOperation.Create(
+            pageNumber,
+            rect,
+            string.Empty,
+            BuildInspectorStyle());
+
         RecordTypewriterEdit("Add text box", () =>
         {
-            TypewriterTextOperations.Add(PdfTypewriterTextOperation.Create(
-                pageNumber,
-                rect,
-                string.Empty));
+            TypewriterTextOperations.Add(created);
             RefreshTypewriterEditState();
         });
+        SetActiveTypewriterOperation(created.Id);
         _logger.LogInformation("Added typewriter text box on page {Page}", pageNumber);
     }
 
@@ -91,6 +100,7 @@ public partial class MainWindowViewModel
             TypewriterTextOperations[index] = TypewriterTextOperations[index].WithText(text);
             RefreshTypewriterEditState();
         });
+        SetActiveTypewriterOperation(operationId); // #781: typing targets the inspector
         _logger.LogDebug("Edited typewriter text on page {Page}", pageNumber);
     }
 
@@ -107,6 +117,7 @@ public partial class MainWindowViewModel
             TypewriterTextOperations[index] = TypewriterTextOperations[index].WithPageAndBounds(pageNumber, rect);
             RefreshTypewriterEditState();
         });
+        SetActiveTypewriterOperation(operationId); // #781: moving targets the inspector
         _logger.LogDebug("Moved/resized typewriter text on page {Page}", pageNumber);
     }
 
@@ -123,6 +134,8 @@ public partial class MainWindowViewModel
             TypewriterTextOperations.RemoveAt(index);
             RefreshTypewriterEditState();
         });
+        if (_activeTypewriterOperationId == operationId)
+            ClearActiveTypewriterOperation(); // #781: don't point the inspector at a dead box
         _logger.LogInformation("Deleted pending typewriter text");
     }
 
@@ -180,6 +193,7 @@ public partial class MainWindowViewModel
     {
         if (TypewriterTextOperations.Count > 0)
             TypewriterTextOperations.Clear();
+        ClearActiveTypewriterOperation(); // #781
         RefreshTypewriterEditState();
     }
 
