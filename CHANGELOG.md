@@ -6,6 +6,34 @@ semantic versioning.
 
 ## [Unreleased]
 
+### Added
+- **GUI test coverage: annotate/style + dialog/misc commands, batch 4 (#816)**
+  — `AnnotateAndDialogCommandTests.cs` executes the real `ReactiveCommand`
+  behind ten toolbar/menu entries and asserts the real effect, closing a
+  false-coverage gap where these were previously proven only by calling the
+  underlying viewmodel method directly or by a `NotBeNull` wiring check (the
+  same pattern that hid #815's bug): `AddHighlightAnnotationFromSelectionCommand`
+  and `AddStickyNoteAnnotationCommand` now assert a real annotation lands on
+  the saved page's `/Annots`; `SetTypewriterColorCommand` asserts the active
+  box's `Style.Color` changes; `VerifySignaturesCommand` asserts the
+  verification summary is actually surfaced; `SecurityCommand`,
+  `ShowPreferencesCommand`, and `AboutCommand` assert the real dialog/window
+  opens; `ShowDocumentationCommand` and `ShowShortcutsCommand` assert the
+  real open/show path fires without launching a real external app or driving
+  headless overlay internals; `GoToPageCommand` asserts `CurrentPageIndex`
+  actually moves. `KeyboardShortcutTests.Ctrl2_FitsEntirePage`'s vacuous
+  `ZoomLevel > 0` assertion is replaced with a real fit-page-vs-fit-width
+  distinction, and a new `ZoomFitPageCommand` test asserts the exact computed
+  fit-page ratio on a non-square page. Two of these commands had no
+  observable test seam at all — `ShowDocumentationCommand` shelled out to
+  `Process.Start` directly, and `GetMainWindow()` resolved
+  `Application.Current.ApplicationLifetime`, which the headless test host
+  never sets (and which Avalonia refuses to set a second time, so a test
+  can't stand one up itself) — so `MainWindowViewModel` gains three small
+  internal test seams (`DocumentationOpener`, `MainWindowResolver`,
+  `KeyboardShortcutsDialogRequested`), each defaulting to the real production
+  path.
+
 ## [3.4.0] - 2026-07-27
 
 ### Added
