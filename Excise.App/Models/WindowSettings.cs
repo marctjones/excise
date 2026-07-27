@@ -35,6 +35,13 @@ public class WindowSettings
     public string ReadingOrderStrategy { get; set; } = "ColumnAware";
 
     /// <summary>
+    /// Copied-text whitespace mode. Persisted as a string; parsed back to
+    /// <see cref="Excise.Avalonia.Services.WhitespaceMode"/> on load. Defaults to
+    /// paragraph/list-aware <c>Smart</c>.
+    /// </summary>
+    public string WhitespaceMode { get; set; } = "Smart";
+
+    /// <summary>
     /// Per-document state: file path -> (zoom level, last page index, timestamp).
     /// Limited to 50 most recent documents to avoid unbounded growth.
     /// </summary>

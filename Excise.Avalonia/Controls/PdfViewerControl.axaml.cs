@@ -115,6 +115,24 @@ public partial class PdfViewerControl : UserControl
     }
 
     /// <summary>
+    /// How copied text is whitespaced between lines — paragraph/list-aware
+    /// <see cref="Services.WhitespaceMode.Smart"/> (default) or the older
+    /// line-faithful mode. Independent of reading order: this only affects the
+    /// separators <see cref="TextSelectionEngine.JoinText(System.Collections.Generic.IReadOnlyList{Excise.Core.Text.Letter}, Services.WhitespaceMode)"/>
+    /// inserts, so changing it needs no re-sort — only the accessible-text cache
+    /// is dropped.
+    /// </summary>
+    public static readonly StyledProperty<Services.WhitespaceMode> WhitespaceModeProperty =
+        AvaloniaProperty.Register<PdfViewerControl, Services.WhitespaceMode>(
+            nameof(WhitespaceMode), defaultValue: Services.WhitespaceMode.Smart);
+
+    public Services.WhitespaceMode WhitespaceMode
+    {
+        get => GetValue(WhitespaceModeProperty);
+        set => SetValue(WhitespaceModeProperty, value);
+    }
+
+    /// <summary>
     /// Monotonic host-provided content version. Increment when the same
     /// document instance has visually changed and the viewer should invalidate
     /// page caches and render the current view again.
@@ -396,6 +414,8 @@ public partial class PdfViewerControl : UserControl
             control.OnRenderVersionChanged());
         ReadingOrderStrategyProperty.Changed.AddClassHandler<PdfViewerControl>((control, _) =>
             control.OnReadingOrderStrategyChanged());
+        WhitespaceModeProperty.Changed.AddClassHandler<PdfViewerControl>((control, _) =>
+            control.OnWhitespaceModeChanged());
         // Editing interactions are single-page only. If the host turns on an
         // editing mode while we're in the continuous reading view, switch back
         // to single-page (at the current page) so the editing overlays line up
@@ -1098,7 +1118,7 @@ public partial class PdfViewerControl : UserControl
 
         if (!ReferenceEquals(source, _accessibleTextSource) || _accessibleTextCache == null)
         {
-            _accessibleTextCache = TextSelectionEngine.JoinText(source);
+            _accessibleTextCache = TextSelectionEngine.JoinText(source, WhitespaceMode);
             _accessibleTextSource = source;
         }
 
@@ -1315,6 +1335,17 @@ public partial class PdfViewerControl : UserControl
         _selectionAnchor = null;
         _selectionFocus = null;
         InvalidateContinuousCache();
+    }
+
+    /// <summary>
+    /// The whitespace mode changed: only the accessible-text cache depends on
+    /// it (reading order is unaffected), so drop that cache and leave the
+    /// letter ordering and any live selection intact.
+    /// </summary>
+    private void OnWhitespaceModeChanged()
+    {
+        _accessibleTextCache = null;
+        _accessibleTextSource = null;
     }
 
     private void OnRenderVersionChanged()

@@ -7,6 +7,25 @@ semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **Copied-text whitespace fidelity: paragraph + list awareness, as the default**
+  — copying text now inserts a blank line at detected **paragraph** breaks (a
+  vertical gap meaningfully larger than the block's typical leading) and keeps
+  **bullet/numbered lists** (•, -, –, *, `N.`, `N)`) on tight, own-line items
+  with their indentation preserved, so a copied list still reads as a list. This
+  is a new user setting (Preferences → Text Selection → **Whitespace**):
+  **Smart** (default, paragraph/list-aware) or **LineFaithful** (the prior
+  behaviour — one line break per visual line, no detection), persisted with the
+  window settings. `TextSelectionEngine.JoinText` gained a `WhitespaceMode`
+  overload; word spacing, reading order (#774/#824) and RTL (#373) are
+  unchanged. **Reliability is measured, not asserted** — a per-category
+  solid-vs-heuristic assessment against an independent oracle (poppler
+  `pdftotext`) plus construction-known synthetic fixtures lives in
+  `docs/copy-whitespace-reliability.md` (harness:
+  `scripts/copy-whitespace-parity.sh`). The honest headline: strong on clean
+  single-column prose (~87% word agreement); bounded by the reading-order layer
+  on multi-column government forms and graphical pages, where the copy path
+  scrambles regardless of whitespace policy. Deferred cases (wrap-reflow, nested
+  lists, table-vs-list, the reading-order ceiling) are tracked in #825.
 - **Column-aware reading order for text copy, as the default** (#774) — copying
   a selection that spans a multi-column layout (or a whole multi-column page)
   now yields all of column 1 top-to-bottom, then column 2, instead of

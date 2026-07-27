@@ -160,7 +160,7 @@ public partial class PdfViewerControl
         var letters = GetContinuousPageLetters(_continuousSelectionPage);
         var selection = TextSelectionEngine.BuildSelection(
             letters.Reading, letters.Raw,
-            _continuousSelectionAnchor, _continuousSelectionFocus, letters.ColumnGap);
+            _continuousSelectionAnchor, _continuousSelectionFocus, letters.ColumnGap, WhitespaceMode);
 
         var page = Document.GetPage(_continuousSelectionPage);
         var dipRects = selection.VisualRange

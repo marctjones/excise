@@ -99,6 +99,19 @@
                                        Foreground="{DynamicResource TextTertiaryBrush}"
                                        TextWrapping="Wrap"/>
                         </StackPanel>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Whitespace" FontWeight="Medium"/>
+                            <ComboBox ItemsSource="{Binding WhitespaceModeOptions}"
+                                      SelectedItem="{Binding SelectedWhitespaceMode}"
+                                      HorizontalAlignment="Stretch"
+                                      AutomationProperties.Name="Copy Whitespace Mode"
+                                      AutomationProperties.HelpText="How blank lines and list indentation are added to copied text."/>
+                            <TextBlock Text="Smart (default): inserts a blank line at detected paragraph breaks and keeps bullet/numbered lists indented. LineFaithful: one line break per visual line, no paragraph or list detection."
+                                       FontSize="10"
+                                       Foreground="{DynamicResource TextTertiaryBrush}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
 

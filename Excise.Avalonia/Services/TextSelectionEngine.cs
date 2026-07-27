@@ -325,14 +325,40 @@ public static class TextSelectionEngine
     }
 
     /// <summary>
-    /// Joined text of a letter run. Inserts a single space when the gap
-    /// between consecutive letters on the same line exceeds half the
-    /// glyph height (typical word boundary), and a newline when crossing
-    /// to a different line.
+    /// Joined text of a letter run in the pre-existing line-faithful mode
+    /// (<see cref="WhitespaceMode.LineFaithful"/>). Kept as the parameterless
+    /// entry point so every existing call site and test is byte-identical;
+    /// callers that want paragraph/list-aware output pass a
+    /// <see cref="WhitespaceMode"/>.
     /// </summary>
     public static string JoinText(IReadOnlyList<Letter> letters)
+        => JoinText(letters, WhitespaceMode.LineFaithful);
+
+    /// <summary>
+    /// Joined text of a letter run per the chosen <paramref name="mode"/>.
+    /// Word spacing is identical in both modes: a single space is inserted when
+    /// the same-line gap between consecutive glyphs exceeds half the glyph
+    /// height (a word boundary, measured direction-agnostically for RTL, #373).
+    /// The modes differ only in the vertical dimension —
+    /// <see cref="WhitespaceMode.LineFaithful"/> emits one <c>\n</c> per visual
+    /// line change; <see cref="WhitespaceMode.Smart"/> adds heuristic paragraph
+    /// blank lines and bullet/number list indentation. See
+    /// <c>docs/copy-whitespace-reliability.md</c> for measured reliability.
+    /// </summary>
+    public static string JoinText(IReadOnlyList<Letter> letters, WhitespaceMode mode)
     {
         if (letters.Count == 0) return string.Empty;
+        return mode == WhitespaceMode.Smart
+            ? JoinSmart(letters)
+            : JoinLineFaithful(letters);
+    }
+
+    /// <summary>
+    /// Pre-existing behaviour, preserved verbatim: single space on a same-line
+    /// word gap, single <c>\n</c> on every visual line change.
+    /// </summary>
+    private static string JoinLineFaithful(IReadOnlyList<Letter> letters)
+    {
         var sb = new System.Text.StringBuilder(letters.Count);
         sb.Append(letters[0].Value);
         for (int i = 1; i < letters.Count; i++)
@@ -361,6 +387,217 @@ public static class TextSelectionEngine
         return sb.ToString();
     }
 
+    // ── Smart whitespace: paragraph + list awareness ─────────────────────────
+
+    /// <summary>Paragraph break when the inter-line gap exceeds this multiple of
+    /// the block's typical (median) leading. Conservative on purpose — a value
+    /// near 1.0 would split every slightly-loose line.</summary>
+    private const double ParagraphGapFactor = 1.6;
+
+    /// <summary>An indent is only recognised (for list nesting) when the line's
+    /// left edge sits this many median-glyph-widths right of the block's left
+    /// margin. Keeps ordinary ragged left edges from reading as nesting.</summary>
+    private const double IndentUnitFactor = 2.0;
+
+    /// <summary>
+    /// One visual line distilled from the letter run: its joined text (built
+    /// with the same word-spacing rule as line-faithful mode, so word spacing
+    /// never regresses), left edge, vertical centre and glyph height.
+    /// </summary>
+    private readonly record struct JoinLine(string Text, double Left, double CentreY, double Height);
+
+    /// <summary>
+    /// <see cref="WhitespaceMode.Smart"/>: line-faithful word spacing, plus a
+    /// blank line at detected paragraph breaks and preserved indentation for
+    /// bullet/number list items. Wrapped lines are NOT reflowed. The heuristics
+    /// and their failure modes are documented and measured in
+    /// <c>docs/copy-whitespace-reliability.md</c>.
+    /// </summary>
+    private static string JoinSmart(IReadOnlyList<Letter> letters)
+    {
+        var lines = BuildLines(letters);
+        if (lines.Count <= 1)
+            return lines.Count == 0 ? string.Empty : lines[0].Text;
+
+        // Typical leading = median of consecutive line-centre deltas (PDF Y-up:
+        // reading order runs top→bottom, so centres descend and deltas are
+        // positive). Robust to the odd large gap.
+        var deltas = new List<double>(lines.Count - 1);
+        for (int i = 1; i < lines.Count; i++)
+        {
+            var d = lines[i - 1].CentreY - lines[i].CentreY;
+            if (d > 0) deltas.Add(d);
+        }
+        double medianLeading = Median(deltas);
+
+        // Block left margin = the smallest left edge; indentation is measured
+        // relative to it. Indent unit derives from the median glyph height as a
+        // stand-in for character width (avoids a second pass over glyphs).
+        double leftMargin = double.PositiveInfinity;
+        double medianHeight = Median(lines.Select(l => l.Height).ToList());
+        foreach (var l in lines)
+            if (l.Left < leftMargin) leftMargin = l.Left;
+        double indentUnit = Math.Max(medianHeight * 0.5, 1.0);
+
+        var sb = new System.Text.StringBuilder();
+        AppendLine(sb, lines[0], leftMargin, indentUnit);
+        for (int i = 1; i < lines.Count; i++)
+        {
+            var prev = lines[i - 1];
+            var cur = lines[i];
+            bool curIsList = TryGetListMarker(cur.Text, out _);
+            var gap = prev.CentreY - cur.CentreY;
+
+            // List items stay tight on their own lines (never blank-separated),
+            // so a multi-item list copies as a contiguous list. Otherwise a gap
+            // meaningfully larger than the typical leading is a paragraph break.
+            if (curIsList)
+                sb.Append('\n');
+            else if (medianLeading > 0 && gap > medianLeading * ParagraphGapFactor)
+                sb.Append("\n\n");
+            else
+                sb.Append('\n');
+
+            AppendLine(sb, cur, leftMargin, indentUnit);
+        }
+        return sb.ToString();
+    }
+
+    /// <summary>Append one line's text, prefixing preserved indentation (two
+    /// spaces per indent level) when the line is a list item sitting right of
+    /// the block margin. Non-list lines are emitted flush so ordinary prose is
+    /// unindented.</summary>
+    private static void AppendLine(
+        System.Text.StringBuilder sb, JoinLine line, double leftMargin, double indentUnit)
+    {
+        if (TryGetListMarker(line.Text, out _))
+        {
+            int level = (int)Math.Round((line.Left - leftMargin) / (indentUnit * IndentUnitFactor));
+            if (level < 0) level = 0;
+            if (level > 4) level = 4;
+            if (level > 0) sb.Append(' ', level * 2);
+        }
+        sb.Append(line.Text);
+    }
+
+    /// <summary>
+    /// Group a reading-ordered letter run into visual lines, joining glyphs
+    /// within a line with the line-faithful word-spacing rule. A new line begins
+    /// on the same vertical-centre change line-faithful mode breaks on, so the
+    /// line segmentation is identical — Smart mode only decides the SEPARATOR
+    /// between these lines.
+    /// </summary>
+    private static List<JoinLine> BuildLines(IReadOnlyList<Letter> letters)
+    {
+        var result = new List<JoinLine>();
+        var sb = new System.Text.StringBuilder();
+        double left = double.PositiveInfinity;
+        double sumCy = 0, sumH = 0;
+        int count = 0;
+
+        void Flush()
+        {
+            if (count == 0) return;
+            result.Add(new JoinLine(sb.ToString(), left, sumCy / count, sumH / count));
+            sb.Clear();
+            left = double.PositiveInfinity;
+            sumCy = 0; sumH = 0; count = 0;
+        }
+
+        for (int i = 0; i < letters.Count; i++)
+        {
+            var cur = letters[i].GlyphRectangle;
+            var curCy = (cur.Bottom + cur.Top) * 0.5;
+            var curH = cur.Top - cur.Bottom;
+            if (i > 0)
+            {
+                var prev = letters[i - 1].GlyphRectangle;
+                var prevCy = (prev.Bottom + prev.Top) * 0.5;
+                var lineHeight = Math.Min(prev.Top - prev.Bottom, cur.Top - cur.Bottom);
+                if (Math.Abs(prevCy - curCy) > 0.5 * lineHeight)
+                {
+                    Flush();
+                }
+                else
+                {
+                    var gap = Math.Max(cur.Left - prev.Right, prev.Left - cur.Right);
+                    if (gap > 0.5 * lineHeight) sb.Append(' ');
+                }
+            }
+            sb.Append(letters[i].Value);
+            if (cur.Left < left) left = cur.Left;
+            sumCy += curCy; sumH += curH; count++;
+        }
+        Flush();
+        return result;
+    }
+
+    /// <summary>
+    /// True when <paramref name="text"/> begins (after leading spaces) with a
+    /// recognised list marker: a bullet (•, ·, ‣, ◦, -, –, —, *) or an ordinal
+    /// (<c>N.</c>, <c>N)</c>, <c>a.</c>, <c>a)</c>) followed by whitespace. The
+    /// matched marker is returned. This is a lexical guess — see the reliability
+    /// doc for where it mis-fires (e.g. a sentence opening with a hyphen, a
+    /// table cell that starts with a number).
+    /// </summary>
+    internal static bool TryGetListMarker(string text, out string marker)
+    {
+        marker = string.Empty;
+        if (string.IsNullOrEmpty(text)) return false;
+        int i = 0;
+        while (i < text.Length && text[i] == ' ') i++;
+        if (i >= text.Length) return false;
+
+        char c = text[i];
+        // Single-glyph bullet markers, must be followed by a space/end.
+        const string bullets = "•·‣◦*⁃∙-–—";
+        if (bullets.IndexOf(c) >= 0)
+        {
+            if (i + 1 >= text.Length || text[i + 1] == ' ')
+            {
+                marker = c.ToString();
+                return true;
+            }
+            return false;
+        }
+
+        // Ordinal markers: 1-3 digits or a single letter, then '.' or ')' then
+        // whitespace/end. "1." / "12)" / "a." / "iv)" (roman falls under letters
+        // only as a single char — kept deliberately narrow).
+        int start = i;
+        if (char.IsDigit(c))
+        {
+            int digits = 0;
+            while (i < text.Length && char.IsDigit(text[i]) && digits < 3) { i++; digits++; }
+        }
+        else if (char.IsLetter(c) && (i + 1 < text.Length && (text[i + 1] == '.' || text[i + 1] == ')')))
+        {
+            i++; // single-letter ordinal
+        }
+        else
+        {
+            return false;
+        }
+        if (i < text.Length && (text[i] == '.' || text[i] == ')'))
+        {
+            i++;
+            if (i >= text.Length || text[i] == ' ')
+            {
+                marker = text.Substring(start, i - start);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// <summary>Median of a value list (0 when empty). Sorts a copy.</summary>
+    private static double Median(List<double> values)
+    {
+        if (values.Count == 0) return 0;
+        var sorted = values.OrderBy(v => v).ToList();
+        return sorted[sorted.Count / 2];
+    }
+
     // ── RTL selection + multi-column awareness (#373) ────────────────────────
 
     /// <summary>
@@ -385,11 +622,12 @@ public static class TextSelectionEngine
         IReadOnlyList<Letter> readingOrdered,
         IReadOnlyList<Letter> logicalPageLetters,
         Letter anchor, Letter focus,
-        double columnGapThreshold)
+        double columnGapThreshold,
+        WhitespaceMode whitespaceMode = WhitespaceMode.Smart)
     {
         var visualRange = ColumnAwareRange(readingOrdered, anchor, focus, columnGapThreshold);
         var logical = ToLogicalOrder(visualRange, logicalPageLetters);
-        return new SelectionResult(visualRange, JoinText(logical));
+        return new SelectionResult(visualRange, JoinText(logical, whitespaceMode));
     }
 
     /// <summary>
