@@ -131,6 +131,7 @@ namespace Excise.Avalonia.Controls
         public void AddSearchHighlight(Excise.Core.Document.PdfPageRect area) { }
         public void ClearAllOverlays() { }
         public void ClearAppliedRedactions() { }
+        public void ClearContinuousSelectionHighlight() { }
         public void ClearPendingRedactions() { }
         public void ClearSearchHighlights() { }
         public void ClearSelectionHighlight() { }

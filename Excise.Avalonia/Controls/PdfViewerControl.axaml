@@ -91,16 +91,49 @@
                                 HorizontalAlignment="Center"
                                 BorderBrush="#40000000"
                                 BorderThickness="1">
-                            <Canvas Width="{Binding DisplayWidth}"
-                                    Height="{Binding DisplayHeight}"
-                                    ClipToBounds="True">
-                                <Image Source="{Binding Bitmap}"
-                                       Stretch="Fill"
-                                       Width="{Binding TileDisplayWidth}"
-                                       Height="{Binding TileDisplayHeight}"
-                                       Canvas.Left="{Binding TileDisplayX}"
-                                       Canvas.Top="{Binding TileDisplayY}" />
-                            </Canvas>
+                            <Panel ClipToBounds="True">
+                                <Canvas Width="{Binding DisplayWidth}"
+                                        Height="{Binding DisplayHeight}">
+                                    <Image Source="{Binding Bitmap}"
+                                           Stretch="Fill"
+                                           Width="{Binding TileDisplayWidth}"
+                                           Height="{Binding TileDisplayHeight}"
+                                           Canvas.Left="{Binding TileDisplayX}"
+                                           Canvas.Top="{Binding TileDisplayY}" />
+                                </Canvas>
+                                <!-- Text-selection highlight overlay (#815): one
+                                     semi-transparent blue rect per selected glyph,
+                                     positioned in page-local DIPs on a Canvas
+                                     panel. Hit-test-transparent so it never eats
+                                     the selection/link pointer gestures. -->
+                                <ItemsControl ItemsSource="{Binding SelectionRects}"
+                                              IsHitTestVisible="False">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <Canvas />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.Styles>
+                                        <!-- Position each item's container in
+                                             page-local DIPs. ReflectionBinding
+                                             (not compiled) so X/Y resolve against
+                                             the item (PdfSelectionHighlight), not
+                                             the outer PdfPageSlot compiled-binding
+                                             scope this Style sits in. -->
+                                        <Style Selector="ItemsControl > ContentPresenter">
+                                            <Setter Property="Canvas.Left" Value="{ReflectionBinding X}" />
+                                            <Setter Property="Canvas.Top" Value="{ReflectionBinding Y}" />
+                                        </Style>
+                                    </ItemsControl.Styles>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="controls:PdfSelectionHighlight">
+                                            <Rectangle Width="{Binding Width}"
+                                                       Height="{Binding Height}"
+                                                       Fill="#603399FF" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Panel>
                         </Border>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>

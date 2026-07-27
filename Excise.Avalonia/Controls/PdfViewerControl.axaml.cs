@@ -412,9 +412,16 @@ public partial class PdfViewerControl : UserControl
         }
     }
 
-    /// <summary>An interaction mode that draws/edits and therefore needs single-page layout.</summary>
+    /// <summary>
+    /// An interaction mode that DRAWS/EDITS onto a single rendered page and
+    /// therefore needs single-page layout, so entering it in the continuous
+    /// reading view auto-switches back to single-page. Text selection is
+    /// deliberately excluded (#815): it is a read affordance like link clicking,
+    /// not an edit, and now works in the continuous view via a per-page selection
+    /// overlay — so it must NOT force single-page.
+    /// </summary>
     private static bool IsEditingMode(InteractionMode m) =>
-        m is InteractionMode.Redaction or InteractionMode.TextSelection or InteractionMode.FormAuthoring or InteractionMode.Typewriter;
+        m is InteractionMode.Redaction or InteractionMode.FormAuthoring or InteractionMode.Typewriter;
 
     private System.Collections.Specialized.INotifyCollectionChanged? _watchedHighlights;
     private System.Collections.Specialized.INotifyCollectionChanged? _watchedTypewriterTextOperations;
