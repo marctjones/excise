@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-07-04T08:38:11.783700Z",
+  "generatedAt": "2026-07-27T21:31:13.406266Z",
   "project": "Excise.App/Excise.App.csproj",
   "packages": [
     {
       "id": "Avalonia",
-      "version": "12.0.4",
+      "version": "12.0.5",
       "authors": "Avalonia Team",
       "copyright": "Copyright 2013-2026 \u00a9 The AvaloniaUI Project",
       "projectUrl": "https://avaloniaui.net/?utm_source=nuget&utm_medium=referral&utm_content=project_homepage_link",
@@ -14,7 +14,7 @@
       "licenseValue": "MIT",
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "nugetId": "Avalonia",
-      "nugetVersion": "12.0.4",
+      "nugetVersion": "12.0.5",
       "spdx": "MIT",
       "licenseName": "MIT License",
       "licenseSpdxUrl": "https://spdx.org/licenses/MIT.html"
@@ -73,7 +73,7 @@
     },
     {
       "id": "Avalonia.Desktop",
-      "version": "12.0.4",
+      "version": "12.0.5",
       "authors": "Avalonia Team",
       "copyright": "Copyright 2013-2026 \u00a9 The AvaloniaUI Project",
       "projectUrl": "https://avaloniaui.net/?utm_source=nuget&utm_medium=referral&utm_content=project_homepage_link",
@@ -83,14 +83,14 @@
       "licenseValue": "MIT",
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "nugetId": "Avalonia.Desktop",
-      "nugetVersion": "12.0.4",
+      "nugetVersion": "12.0.5",
       "spdx": "MIT",
       "licenseName": "MIT License",
       "licenseSpdxUrl": "https://spdx.org/licenses/MIT.html"
     },
     {
       "id": "Avalonia.Fonts.Inter",
-      "version": "12.0.4",
+      "version": "12.0.5",
       "authors": "Avalonia Team",
       "copyright": "Copyright 2013-2026 \u00a9 The AvaloniaUI Project",
       "projectUrl": "https://avaloniaui.net/?utm_source=nuget&utm_medium=referral&utm_content=project_homepage_link",
@@ -100,14 +100,14 @@
       "licenseValue": "MIT",
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "nugetId": "Avalonia.Fonts.Inter",
-      "nugetVersion": "12.0.4",
+      "nugetVersion": "12.0.5",
       "spdx": "MIT",
       "licenseName": "MIT License",
       "licenseSpdxUrl": "https://spdx.org/licenses/MIT.html"
     },
     {
       "id": "Avalonia.FreeDesktop",
-      "version": "12.0.4",
+      "version": "12.0.5",
       "authors": "Avalonia Team",
       "copyright": "Copyright 2013-2026 \u00a9 The AvaloniaUI Project",
       "projectUrl": "https://avaloniaui.net/?utm_source=nuget&utm_medium=referral&utm_content=project_homepage_link",
@@ -117,14 +117,14 @@
       "licenseValue": "MIT",
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "nugetId": "Avalonia.FreeDesktop",
-      "nugetVersion": "12.0.4",
+      "nugetVersion": "12.0.5",
       "spdx": "MIT",
       "licenseName": "MIT License",
       "licenseSpdxUrl": "https://spdx.org/licenses/MIT.html"
     },
     {
       "id": "Avalonia.FreeDesktop.AtSpi",
-      "version": "12.0.4",
+      "version": "12.0.5",
       "authors": "Avalonia Team",
       "copyright": "Copyright 2013-2026 \u00a9 The AvaloniaUI Project",
       "projectUrl": "https://avaloniaui.net/?utm_source=nuget&utm_medium=referral&utm_content=project_homepage_link",
@@ -134,14 +134,14 @@
       "licenseValue": "MIT",
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "nugetId": "Avalonia.FreeDesktop.AtSpi",
-      "nugetVersion": "12.0.4",
+      "nugetVersion": "12.0.5",
       "spdx": "MIT",
       "licenseName": "MIT License",
       "licenseSpdxUrl": "https://spdx.org/licenses/MIT.html"
     },
     {
       "id": "Avalonia.HarfBuzz",
-      "version": "12.0.4",
+      "version": "12.0.5",
       "authors": "Avalonia Team",
       "copyright": "Copyright 2013-2026 \u00a9 The AvaloniaUI Project",
       "projectUrl": "https://avaloniaui.net/?utm_source=nuget&utm_medium=referral&utm_content=project_homepage_link",
@@ -151,14 +151,14 @@
       "licenseValue": "MIT",
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "nugetId": "Avalonia.HarfBuzz",
-      "nugetVersion": "12.0.4",
+      "nugetVersion": "12.0.5",
       "spdx": "MIT",
       "licenseName": "MIT License",
       "licenseSpdxUrl": "https://spdx.org/licenses/MIT.html"
     },
     {
       "id": "Avalonia.Native",
-      "version": "12.0.4",
+      "version": "12.0.5",
       "authors": "Avalonia Team",
       "copyright": "Copyright 2013-2026 \u00a9 The AvaloniaUI Project",
       "projectUrl": "https://avaloniaui.net/?utm_source=nuget&utm_medium=referral&utm_content=project_homepage_link",
@@ -168,14 +168,14 @@
       "licenseValue": "MIT",
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "nugetId": "Avalonia.Native",
-      "nugetVersion": "12.0.4",
+      "nugetVersion": "12.0.5",
       "spdx": "MIT",
       "licenseName": "MIT License",
       "licenseSpdxUrl": "https://spdx.org/licenses/MIT.html"
     },
     {
       "id": "Avalonia.Remote.Protocol",
-      "version": "12.0.4",
+      "version": "12.0.5",
       "authors": "Avalonia Team",
       "copyright": "Copyright 2013-2026 \u00a9 The AvaloniaUI Project",
       "projectUrl": "https://avaloniaui.net/?utm_source=nuget&utm_medium=referral&utm_content=project_homepage_link",
@@ -185,14 +185,14 @@
       "licenseValue": "MIT",
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "nugetId": "Avalonia.Remote.Protocol",
-      "nugetVersion": "12.0.4",
+      "nugetVersion": "12.0.5",
       "spdx": "MIT",
       "licenseName": "MIT License",
       "licenseSpdxUrl": "https://spdx.org/licenses/MIT.html"
     },
     {
       "id": "Avalonia.Skia",
-      "version": "12.0.4",
+      "version": "12.0.5",
       "authors": "Avalonia Team",
       "copyright": "Copyright 2013-2026 \u00a9 The AvaloniaUI Project",
       "projectUrl": "https://avaloniaui.net/?utm_source=nuget&utm_medium=referral&utm_content=project_homepage_link",
@@ -202,14 +202,14 @@
       "licenseValue": "MIT",
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "nugetId": "Avalonia.Skia",
-      "nugetVersion": "12.0.4",
+      "nugetVersion": "12.0.5",
       "spdx": "MIT",
       "licenseName": "MIT License",
       "licenseSpdxUrl": "https://spdx.org/licenses/MIT.html"
     },
     {
       "id": "Avalonia.Themes.Fluent",
-      "version": "12.0.4",
+      "version": "12.0.5",
       "authors": "Avalonia Team",
       "copyright": "Copyright 2013-2026 \u00a9 The AvaloniaUI Project",
       "projectUrl": "https://avaloniaui.net/?utm_source=nuget&utm_medium=referral&utm_content=project_homepage_link",
@@ -219,14 +219,14 @@
       "licenseValue": "MIT",
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "nugetId": "Avalonia.Themes.Fluent",
-      "nugetVersion": "12.0.4",
+      "nugetVersion": "12.0.5",
       "spdx": "MIT",
       "licenseName": "MIT License",
       "licenseSpdxUrl": "https://spdx.org/licenses/MIT.html"
     },
     {
       "id": "Avalonia.Win32",
-      "version": "12.0.4",
+      "version": "12.0.5",
       "authors": "Avalonia Team",
       "copyright": "Copyright 2013-2026 \u00a9 The AvaloniaUI Project",
       "projectUrl": "https://avaloniaui.net/?utm_source=nuget&utm_medium=referral&utm_content=project_homepage_link",
@@ -236,14 +236,14 @@
       "licenseValue": "MIT",
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "nugetId": "Avalonia.Win32",
-      "nugetVersion": "12.0.4",
+      "nugetVersion": "12.0.5",
       "spdx": "MIT",
       "licenseName": "MIT License",
       "licenseSpdxUrl": "https://spdx.org/licenses/MIT.html"
     },
     {
       "id": "Avalonia.X11",
-      "version": "12.0.4",
+      "version": "12.0.5",
       "authors": "Avalonia Team",
       "copyright": "Copyright 2013-2026 \u00a9 The AvaloniaUI Project",
       "projectUrl": "https://avaloniaui.net/?utm_source=nuget&utm_medium=referral&utm_content=project_homepage_link",
@@ -253,7 +253,7 @@
       "licenseValue": "MIT",
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "nugetId": "Avalonia.X11",
-      "nugetVersion": "12.0.4",
+      "nugetVersion": "12.0.5",
       "spdx": "MIT",
       "licenseName": "MIT License",
       "licenseSpdxUrl": "https://spdx.org/licenses/MIT.html"
@@ -274,7 +274,9 @@
       "licenseFileName": "LICENSE.txt",
       "licenseFileSha1": "7dd2a42ee1d6593623b9e7ffadb48b7b9aabd9c5",
       "licenseText": "**LibJpeg.Net**\n\nCopyright (c) 2008-2020, Bit Miracle\n\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met: \n\n* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer. \n* Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution. \n* Neither the name of the Bit Miracle nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission. \n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL BIT MIRACLE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. \n\n---\n**NOTE**\n\nThis software is based in part on the\n\nThe Independent JPEG Group's JPEG software\n\nhttp://www.ijg.org/\n\nCopyright (C) 1991-1998, Thomas G. Lane.\n\n---",
-      "licenseName": "(see licenseUrl)"
+      "licenseName": "BSD 3-Clause License",
+      "spdx": "BSD-3-Clause",
+      "licenseSpdxUrl": "https://spdx.org/licenses/BSD-3-Clause.html"
     },
     {
       "id": "BouncyCastle.Cryptography",
@@ -309,7 +311,8 @@
       "licenseUrl": "http://www.opensource.org/licenses/bsd-license.php",
       "nugetId": "CSJ2K",
       "nugetVersion": "3.0.0",
-      "licenseName": "(see licenseUrl)"
+      "licenseName": "BSD License (CSJ2K / JJ2000)",
+      "licenseText": "CSJ2K is licensed under the BSD License.\n\nCopyright (c) 1999-2000 JJ2000 Partners; original C# port (c) 2007-2012\nJason S. Clary; C# encoding and adaptation to Portable Class Library with\nplatform specific support (c) 2013-2018 Anders Gustafsson, Cureos AB.\n\nLicensed and distributable under the terms of the BSD license:\nhttp://www.opensource.org/licenses/bsd-license.php\n\n----------------------------------------------------------------------\nThe JPEG 2000 core (JJ2000) carries the following copyright notice, which\nmust be included in all copies or derivative works of this software module:\n\nCOPYRIGHT:\n\nThis software module was originally developed by Rapha\u00ebl Grosbois and\nDiego Santa Cruz (Swiss Federal Institute of Technology-EPFL); Joel\nAskel\u00f6f (Ericsson Radio Systems AB); and Bertrand Berthelot, David\nBouchard, F\u00e9lix Henry, Gerard Mozelle and Patrice Onno (Canon Research\nCentre France S.A) in the course of development of the JPEG2000 standard\nas specified by ISO/IEC 15444 (JPEG 2000 Standard). This software module\nis an implementation of a part of the JPEG 2000 Standard. Swiss Federal\nInstitute of Technology-EPFL, Ericsson Radio Systems AB and Canon Research\nCentre France S.A (collectively JJ2000 Partners) agree not to assert\nagainst ISO/IEC and users of the JPEG 2000 Standard (Users) any of their\nrights under the copyright, not including other intellectual property\nrights, for this software module with respect to the usage by ISO/IEC and\nUsers of this software module or modifications thereof for use in hardware\nor software products claiming conformance to the JPEG 2000 Standard. Those\nintending to use this software module in hardware or software products are\nadvised that their use may infringe existing patents. The original\ndevelopers of this software module, JJ2000 Partners and ISO/IEC assume no\nliability for use of this software module or modifications thereof. No\nlicense or right to this software module is granted for non JPEG 2000\nStandard conforming products. JJ2000 Partners have full right to use this\nsoftware module for his/her own purpose, assign or donate this software\nmodule to any third party and to inhibit third parties from using this\nsoftware module for non JPEG 2000 Standard conforming products. This\ncopyright notice must be included in all copies or derivative works of\nthis software module.\n\nCopyright (c) 1999/2000 JJ2000 Partners."
     },
     {
       "id": "DynamicData",
@@ -752,36 +755,6 @@
       "licenseSpdxUrl": "https://spdx.org/licenses/MIT.html"
     },
     {
-      "id": "Microsoft.NETCore.Platforms",
-      "version": "1.1.0",
-      "authors": "Microsoft",
-      "copyright": "\u00a9 Microsoft Corporation.  All rights reserved.",
-      "projectUrl": "https://dot.net/",
-      "repositoryUrl": null,
-      "description": "Provides runtime information required to resolve target framework, platform, and runtime specific implementations of .NETCore packages. \nWhen using NuGet 3.x this package requires at least version 3.4.",
-      "licenseKind": null,
-      "licenseValue": null,
-      "licenseUrl": "http://go.microsoft.com/fwlink/?LinkId=329770",
-      "nugetId": "Microsoft.NETCore.Platforms",
-      "nugetVersion": "1.1.0",
-      "licenseName": "(see licenseUrl)"
-    },
-    {
-      "id": "NETStandard.Library",
-      "version": "1.6.1",
-      "authors": "Microsoft",
-      "copyright": "\u00a9 Microsoft Corporation.  All rights reserved.",
-      "projectUrl": "https://dot.net/",
-      "repositoryUrl": null,
-      "description": "A set of standard .NET APIs that are prescribed to be used and supported together. This includes all of the APIs in the NETStandard.Platform package plus additional libraries that are core to .NET but built on top of NETStandard.Platform. \nWhen using NuGet 3.x this package requires at least version 3.4.",
-      "licenseKind": null,
-      "licenseValue": null,
-      "licenseUrl": "http://go.microsoft.com/fwlink/?LinkId=329770",
-      "nugetId": "NETStandard.Library",
-      "nugetVersion": "1.6.1",
-      "licenseName": "(see licenseUrl)"
-    },
-    {
       "id": "ReactiveUI",
       "version": "23.2.28",
       "authors": ".NET Foundation and Contributors",
@@ -794,23 +767,6 @@
       "licenseUrl": "https://licenses.nuget.org/MIT",
       "nugetId": "ReactiveUI",
       "nugetVersion": "23.2.28",
-      "spdx": "MIT",
-      "licenseName": "MIT License",
-      "licenseSpdxUrl": "https://spdx.org/licenses/MIT.html"
-    },
-    {
-      "id": "ReactiveUI.Avalonia",
-      "version": "12.0.3",
-      "authors": "ReactiveUI and Avalonia Teams, and Contributors",
-      "copyright": "Copyright (c) 2019-2026 ReactiveUI and Avalonia Teams, and Contributors",
-      "projectUrl": "https://reactiveui.net/",
-      "repositoryUrl": "https://github.com/reactiveui/reactiveui",
-      "description": "Contains the ReactiveUI platform specific extensions for Avalonia",
-      "licenseKind": "expression",
-      "licenseValue": "MIT",
-      "licenseUrl": "https://licenses.nuget.org/MIT",
-      "nugetId": "ReactiveUI.Avalonia",
-      "nugetVersion": "12.0.3",
       "spdx": "MIT",
       "licenseName": "MIT License",
       "licenseSpdxUrl": "https://spdx.org/licenses/MIT.html"
