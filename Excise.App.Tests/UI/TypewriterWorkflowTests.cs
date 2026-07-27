@@ -11,6 +11,7 @@ using Avalonia.Threading;
 using AwesomeAssertions;
 using Excise.Avalonia.Controls;
 using Excise.Core.Document;
+using Excise.Rendering.Differential;
 using Excise.App.Tests.Utilities;
 using Excise.App.ViewModels;
 using Excise.App.Views;
@@ -47,6 +48,60 @@ public class TypewriterWorkflowTests
         vm.FileState.TypewriterEditsCount.Should().Be(0);
 
         window.Close();
+    }
+
+    // #780: no-self-oracle. SaveFileAsAsync_Flattens... above verifies the saved
+    // file with excise's OWN extractor (saved.GetPage(1).Text) — excise vouching
+    // for excise. The engine-path fidelity suite (Excise.Rendering.Tests'
+    // TypewriterOutputFidelityTests) does ask an INDEPENDENT tool, but it goes
+    // through PdfTypewriterTextApplier/ApplyAndSave, NOT the GUI save command.
+    // So nothing covered: REAL GUI save command → disk → independent extractor.
+    // This closes that gap: an independent tool (mutool) must read the typed
+    // text back out of the bytes the GUI save command wrote, and the
+    // pre-existing page text must survive (typing is an overlay, not a redaction).
+    [FixedAvaloniaFact]
+    public async Task SaveFileAsAsync_TypedText_IsReadBackByAnIndependentExtractor()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        var tempDir = Path.Combine(Path.GetTempPath(), "Excise.AppTypewriterTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+        var sourcePath = Path.Combine(tempDir, "source.pdf");
+        var outputPath = Path.Combine(tempDir, "output.pdf");
+
+        // Single-token strings so a mutool space/word-break cannot fail Contain.
+        const string preExisting = "PREEXISTING780";
+        const string typed = "TYPEDNOTE780";
+        TestPdfGenerator.CreateSimpleTextPdf(sourcePath, preExisting);
+
+        var vm = new MainWindowViewModel();
+        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+        window.Show();
+
+        await vm.LoadDocumentAsync(sourcePath);
+        vm.OnTypewriterTextCreated(new PdfRectangle(72, 620, 300, 660), 1);
+        var operationId = vm.TypewriterTextOperations.Single().Id;
+        vm.OnTypewriterTextEdited(operationId, typed, 1);
+
+        // The REAL GUI save command writes the file to disk (and reloads it).
+        await vm.SaveFileAsAsync(outputPath);
+        vm.TypewriterTextOperations.Should().BeEmpty("the pending edit must have flattened on save");
+
+        // Free the file: nothing holds an exclusive handle here (the save path's
+        // reload is internal), so an external process can read the saved bytes.
+        window.Close();
+
+        // INDEPENDENT ORACLE — mutool, not excise's own .Text. If the typed text
+        // is only in a carrier excise can read but an independent tool cannot,
+        // this fails where saved.GetPage(1).Text would pass.
+        var extracted = MutoolTextExtractor.ExtractPage(outputPath, 1);
+        extracted.Should().NotBeNull("mutool must be able to read the GUI-saved file");
+        extracted!.Should().Contain(typed,
+            "the typed note must be real text an independent tool can read out of the bytes the " +
+            "GUI save command wrote — not just text excise's own extractor vouches for");
+        extracted.Should().Contain(preExisting,
+            "the GUI save must not destroy pre-existing page text — typewriter is an overlay, " +
+            "not a redaction");
     }
 
     // #780: exiting typewriter mode must NOT discard pending edits, but the user
