@@ -188,48 +188,48 @@
       "hotPath": "Excise.Core TextExtractor: content parse + letter accumulators + font/XObject resource materialization (#600; #597 report s3.3)",
       "baseline": {
         "totalMs": 198.2,
-        "totalAllocatedMB": 389.4
+        "totalAllocatedMB": 160.7
       },
       "perPdf": {
         "cdc-vis-covid-19.pdf": {
           "ms": 10.09,
-          "mb": 4.152
+          "mb": 2.117
         },
         "irs-1040-instructions.pdf": {
           "ms": 18.1,
-          "mb": 17.5
+          "mb": 8.625
         },
         "irs-1040.pdf": {
           "ms": 5.58,
-          "mb": 2.492
+          "mb": 2.511
         },
         "irs-pub509-2026.pdf": {
           "ms": 32.01,
-          "mb": 40.895
+          "mb": 12.488
         },
         "irs-w4.pdf": {
           "ms": 6.76,
-          "mb": 4.435
+          "mb": 4.471
         },
         "irs-w9.pdf": {
           "ms": 6.58,
-          "mb": 5.392
+          "mb": 5.438
         },
         "scotus-trump-v-anderson.pdf": {
           "ms": 7.17,
-          "mb": 10.565
+          "mb": 3.72
         },
         "scotus-trump-v-us.pdf": {
           "ms": 8.76,
-          "mb": 12.26
+          "mb": 4.865
         },
         "state-ds11-passport.pdf": {
           "ms": 65.13,
-          "mb": 179.188
+          "mb": 58.857
         },
         "state-ds82-passport-renewal.pdf": {
           "ms": 37.99,
-          "mb": 112.489
+          "mb": 57.636
         }
       }
     },
