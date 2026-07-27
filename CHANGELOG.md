@@ -18,7 +18,7 @@ semantic versioning.
   table cell with no `/ActualText` carrier now exposes its real body text to a
   screen reader instead of a role-only peer. The MCID tagging is additive: it
   does not change extraction output (verified by the extraction-parity gate,
-  still 98.7% / 332 pages).
+  which is unchanged).
 - **App-wide in-session undo/redo** (#782) — a single edit-history stack
   (command pattern with per-operation inverse closures, plus a collection
   snapshot for type-over edits) now covers the reversible, pre-flatten editing
