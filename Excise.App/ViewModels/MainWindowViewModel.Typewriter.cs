@@ -4,6 +4,7 @@ using Excise.Core.Document;
 using Excise.Core.Editing;
 using ReactiveUI;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -66,45 +67,89 @@ public partial class MainWindowViewModel
             return;
         }
 
-        TypewriterTextOperations.Add(PdfTypewriterTextOperation.Create(
-            pageNumber,
-            rect,
-            string.Empty));
-        RefreshTypewriterEditState();
+        RecordTypewriterEdit("Add text box", () =>
+        {
+            TypewriterTextOperations.Add(PdfTypewriterTextOperation.Create(
+                pageNumber,
+                rect,
+                string.Empty));
+            RefreshTypewriterEditState();
+        });
         _logger.LogInformation("Added typewriter text box on page {Page}", pageNumber);
     }
 
     public void OnTypewriterTextEdited(Guid operationId, string text, int pageNumber)
     {
-        var index = IndexOfTypewriterOperation(operationId);
-        if (index < 0)
+        if (IndexOfTypewriterOperation(operationId) < 0)
             return;
 
-        TypewriterTextOperations[index] = TypewriterTextOperations[index].WithText(text);
-        RefreshTypewriterEditState();
+        RecordTypewriterEdit("Edit text", () =>
+        {
+            var index = IndexOfTypewriterOperation(operationId);
+            if (index < 0)
+                return;
+            TypewriterTextOperations[index] = TypewriterTextOperations[index].WithText(text);
+            RefreshTypewriterEditState();
+        });
         _logger.LogDebug("Edited typewriter text on page {Page}", pageNumber);
     }
 
     public void OnTypewriterTextBoundsChanged(Guid operationId, PdfRectangle rect, int pageNumber)
     {
-        var index = IndexOfTypewriterOperation(operationId);
-        if (index < 0)
+        if (IndexOfTypewriterOperation(operationId) < 0)
             return;
 
-        TypewriterTextOperations[index] = TypewriterTextOperations[index].WithPageAndBounds(pageNumber, rect);
-        RefreshTypewriterEditState();
+        RecordTypewriterEdit("Move text box", () =>
+        {
+            var index = IndexOfTypewriterOperation(operationId);
+            if (index < 0)
+                return;
+            TypewriterTextOperations[index] = TypewriterTextOperations[index].WithPageAndBounds(pageNumber, rect);
+            RefreshTypewriterEditState();
+        });
         _logger.LogDebug("Moved/resized typewriter text on page {Page}", pageNumber);
     }
 
     public void OnTypewriterTextDeleted(Guid operationId)
     {
-        var index = IndexOfTypewriterOperation(operationId);
-        if (index < 0)
+        if (IndexOfTypewriterOperation(operationId) < 0)
             return;
 
-        TypewriterTextOperations.RemoveAt(index);
-        RefreshTypewriterEditState();
+        RecordTypewriterEdit("Delete text box", () =>
+        {
+            var index = IndexOfTypewriterOperation(operationId);
+            if (index < 0)
+                return;
+            TypewriterTextOperations.RemoveAt(index);
+            RefreshTypewriterEditState();
+        });
         _logger.LogInformation("Deleted pending typewriter text");
+    }
+
+    /// <summary>
+    /// Run a mutation of the pending type-over collection and record a snapshot
+    /// memento (#782). The ops are immutable records, so a shallow before/after
+    /// copy of the collection is a complete, exact reversal. Undo/redo restore
+    /// the collection directly — never through the OnTypewriter* handlers — so
+    /// replay cannot re-enter the history.
+    /// </summary>
+    private void RecordTypewriterEdit(string description, Action mutate)
+    {
+        var before = TypewriterTextOperations.ToList();
+        mutate();
+        var after = TypewriterTextOperations.ToList();
+        _history.Push(
+            description,
+            () => RestoreTypewriterOperations(before),
+            () => RestoreTypewriterOperations(after));
+    }
+
+    private void RestoreTypewriterOperations(List<PdfTypewriterTextOperation> snapshot)
+    {
+        TypewriterTextOperations.Clear();
+        foreach (var operation in snapshot)
+            TypewriterTextOperations.Add(operation);
+        RefreshTypewriterEditState();
     }
 
     private int IndexOfTypewriterOperation(Guid operationId)

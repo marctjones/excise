@@ -898,6 +898,7 @@ public partial class MainWindowViewModel : ViewModelBase
             ClearCurrentTextSelection();
             RedactionWorkflow.Reset();
             ClearPendingTypewriterText();
+            ClearEditHistory();
             ClipboardHistory.Clear();
             ResetThumbnailLoadTracking();
             PageThumbnails.Clear();
@@ -1260,6 +1261,9 @@ public partial class MainWindowViewModel : ViewModelBase
                 if (!string.IsNullOrWhiteSpace(_currentFilePath))
                     await ReloadPdfCoreDocumentAfterSaveAsync(_currentFilePath);
             }
+            // Saved edits are committed to the file; nothing before this point
+            // remains reversible in-session (#782).
+            ClearEditHistory();
             FileState.MarkSaved();
             this.RaisePropertyChanged(nameof(SaveButtonText));
             this.RaisePropertyChanged(nameof(StatusBarText));
@@ -1288,11 +1292,16 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            var result = await _pageOrganizationWorkflow.RemovePageAsync(CurrentPageIndex);
+            var removedIndex = CurrentPageIndex;
+            var capturedPages = CapturePages(new[] { removedIndex });
+            var result = await _pageOrganizationWorkflow.RemovePageAsync(removedIndex);
             if (!result.DidChange)
                 return;
 
             MarkPageOrganizationChanged(removedPage: true);
+            _history.Push("Remove page",
+                () => ReinsertPagesAsync(capturedPages),
+                () => RemovePagesInternalAsync(new[] { removedIndex }));
 
             if (result.CurrentPageIndex.HasValue)
             {
@@ -1681,6 +1690,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
+            var removedIndices = selected.OrderBy(i => i).ToList();
+            var capturedPages = CapturePages(removedIndices);
             var result = await _pageOrganizationWorkflow.RemovePagesAsync(selected, CurrentPageIndex);
             if (!result.DidChange)
                 return;
@@ -1691,6 +1702,9 @@ public partial class MainWindowViewModel : ViewModelBase
                 CurrentPageIndex = result.CurrentPageIndex.Value;
 
             await RefreshAfterDocumentMutationAsync();
+            _history.Push("Remove pages",
+                () => ReinsertPagesAsync(capturedPages),
+                () => RemovePagesInternalAsync(removedIndices));
             _toastService.ShowSuccess($"{selected.Count} page(s) removed");
         }
         catch (Exception ex)
@@ -1736,6 +1750,9 @@ public partial class MainWindowViewModel : ViewModelBase
             CurrentPageIndex = newCurrentPageIndex;
             MarkPageOrganizationChanged();
             await RefreshAfterDocumentMutationAsync();
+            _history.Push("Reorder page",
+                () => MovePageInternalAsync(toIndex, fromIndex),
+                () => MovePageInternalAsync(fromIndex, toIndex));
         }
         catch (Exception ex)
         {
@@ -1773,6 +1790,12 @@ public partial class MainWindowViewModel : ViewModelBase
             MarkPageOrganizationChanged();
             await RefreshAfterDocumentMutationAsync();
             RestoreSelectedPages(result.SelectedPageIndices);
+
+            var movedFrom = selected;
+            var movedTo = result.SelectedPageIndices;
+            _history.Push("Reorder pages",
+                () => MoveSelectedPagesInternalAsync(movedTo, -delta),
+                () => MoveSelectedPagesInternalAsync(movedFrom, delta));
         }
         catch (Exception ex)
         {
@@ -2177,9 +2200,13 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            _documentService.RotatePageLeft(CurrentPageIndex);
+            var rotatedIndex = CurrentPageIndex;
+            _documentService.RotatePageLeft(rotatedIndex);
             MarkPageOrganizationChanged();
-            _logger.LogInformation("Page {PageIndex} rotated left successfully", CurrentPageIndex);
+            _history.Push("Rotate page left",
+                () => ApplyPageRotationAsync(rotatedIndex, 90),
+                () => ApplyPageRotationAsync(rotatedIndex, 270));
+            _logger.LogInformation("Page {PageIndex} rotated left successfully", rotatedIndex);
 
             await RefreshAfterDocumentMutationAsync();
         }
@@ -2201,9 +2228,13 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            _documentService.RotatePageRight(CurrentPageIndex);
+            var rotatedIndex = CurrentPageIndex;
+            _documentService.RotatePageRight(rotatedIndex);
             MarkPageOrganizationChanged();
-            _logger.LogInformation("Page {PageIndex} rotated right successfully", CurrentPageIndex);
+            _history.Push("Rotate page right",
+                () => ApplyPageRotationAsync(rotatedIndex, 270),
+                () => ApplyPageRotationAsync(rotatedIndex, 90));
+            _logger.LogInformation("Page {PageIndex} rotated right successfully", rotatedIndex);
 
             await RefreshAfterDocumentMutationAsync();
         }
@@ -2225,9 +2256,13 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            _documentService.RotatePage180(CurrentPageIndex);
+            var rotatedIndex = CurrentPageIndex;
+            _documentService.RotatePage180(rotatedIndex);
             MarkPageOrganizationChanged();
-            _logger.LogInformation("Page {PageIndex} rotated 180 degrees successfully", CurrentPageIndex);
+            _history.Push("Rotate page 180°",
+                () => ApplyPageRotationAsync(rotatedIndex, 180),
+                () => ApplyPageRotationAsync(rotatedIndex, 180));
+            _logger.LogInformation("Page {PageIndex} rotated 180 degrees successfully", rotatedIndex);
 
             await RefreshAfterDocumentMutationAsync();
         }
@@ -2784,6 +2819,7 @@ public partial class MainWindowViewModel : ViewModelBase
             FileState.UpdateCurrentPath(filePath);
             if (flattenedTypewriter)
                 ClearPendingTypewriterText();
+            ClearEditHistory();
             FileState.MarkSaved();
             this.RaisePropertyChanged(nameof(DocumentName));
             this.RaisePropertyChanged(nameof(SaveButtonText));
@@ -2834,6 +2870,7 @@ public partial class MainWindowViewModel : ViewModelBase
             ClearCurrentTextSelection();
             RedactionWorkflow.Reset();
             ClearPendingTypewriterText();
+            ClearEditHistory();
             ClipboardHistory.Clear();
             _hasInMemoryModifications = false;
 

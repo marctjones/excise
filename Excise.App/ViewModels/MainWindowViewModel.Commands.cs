@@ -193,5 +193,6 @@ public partial class MainWindowViewModel
 
         InitializeSearchCommands();
         InitializeScriptingCommands();
+        InitializeHistory();
     }
 }
