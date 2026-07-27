@@ -7,6 +7,16 @@ semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **Type-over tool: GUI-save independent-oracle test coverage** (#780) — closed
+  a no-self-oracle gap in type-over save verification. The existing GUI-save
+  test reopened the file and verified with excise's own extractor
+  (`saved.GetPage(1).Text` — excise vouching for excise), and the independent
+  extractor check lived only in the engine-path fidelity suite
+  (`PdfTypewriterTextApplier`, not the GUI save command). A new headless test
+  now drives the REAL `SaveFileAsAsync` command → disk → an INDEPENDENT
+  extractor (`MutoolTextExtractor.ExtractPage`), asserting the typed note reads
+  back and the pre-existing page text survives. Skips gracefully where mutool
+  is absent.
 - **Type-over tool: move/resize-handle and wrap-parity test coverage** (#780) —
   closed the two coverage gaps left after the type-over workflow work. A
   control-level headless test drives a real routed pointer gesture
