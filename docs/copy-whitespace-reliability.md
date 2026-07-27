@@ -70,7 +70,16 @@ Real PDFs from `test-pdfs/`, sampled pages, the **whole** copy path
 
 **Read this table honestly.** The aggregate is *low*, and most of the loss is
 **not** the whitespace layer — it is the reading-order/extraction layer beneath
-it. The whitespace feature can only be as good as the lines it is handed:
+it.
+
+**This is true by construction, not by assertion.** The word-token metric folds
+all newlines to spaces and strips non-alphanumerics before comparing, so Smart
+mode's only outputs — inserted `\n\n` paragraph breaks and leading indent spaces
+— *cannot move these numbers at all*. Whatever Smart vs LineFaithful does, the
+word-token and (after `\n\n` folding) line columns are identical. So the low
+scores measure the shared reading-order/word-spacing layer (#774/#824), which
+this change does not touch; they are the pre-existing ceiling, now measured. The
+whitespace feature can only be as good as the lines it is handed:
 
 - **producingoss.pdf** — clean single-column prose. Word agreement 87% (the
   residual is hyphenation: excise keeps `unfamil-`/`iar`, pdftotext dehyphenates)
@@ -82,10 +91,13 @@ it. The whitespace feature can only be as good as the lines it is handed:
   That is a word-spacing gap in the layer below, exposed — not caused — by this
   work.
 - **scotus-trump-v-us.pdf** / **irs-pub509-2026.pdf** — two/multi-column pages.
-  `ColumnAware` (#774/#824) falls back to interleaved order when a full-width
-  line (running header, page number) spans the gutter, so the copy **scrambles**
-  at the line level (`"C i t e a 3 s"`, two columns interleaved). No whitespace
-  policy recovers scrambled input.
+  The copy **scrambles** here for *two* independent upstream reasons, neither in
+  the whitespace layer: (a) a per-glyph spacing symptom (`"C i t e a 3 s"` — a
+  space between nearly every glyph, i.e. a glyph advance-width / word-boundary
+  problem in the layer that spaces a line), and (b) line-level **interleave**
+  (`"vlJ la io rn n"` = two lines woven together) — `ColumnAware` (#774/#824)
+  falls back to interleaved order when a full-width line (running header, page
+  number) spans the gutter. No whitespace policy recovers either.
 - **cdc-vis-covid-19.pdf** — a large-type graphical notice; extraction is
   near-empty (`"XC WW 1"`). Nothing to whitespace.
 

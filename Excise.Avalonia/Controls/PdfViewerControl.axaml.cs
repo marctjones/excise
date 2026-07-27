@@ -414,8 +414,6 @@ public partial class PdfViewerControl : UserControl
             control.OnRenderVersionChanged());
         ReadingOrderStrategyProperty.Changed.AddClassHandler<PdfViewerControl>((control, _) =>
             control.OnReadingOrderStrategyChanged());
-        WhitespaceModeProperty.Changed.AddClassHandler<PdfViewerControl>((control, _) =>
-            control.OnWhitespaceModeChanged());
         // Editing interactions are single-page only. If the host turns on an
         // editing mode while we're in the continuous reading view, switch back
         // to single-page (at the current page) so the editing overlays line up
@@ -1118,7 +1116,11 @@ public partial class PdfViewerControl : UserControl
 
         if (!ReferenceEquals(source, _accessibleTextSource) || _accessibleTextCache == null)
         {
-            _accessibleTextCache = TextSelectionEngine.JoinText(source, WhitespaceMode);
+            // Accessible text stays LineFaithful on purpose: WhitespaceMode is a
+            // COPY preference. Smart mode's paragraph blank lines and list
+            // indentation would change what a screen reader announces (spoken
+            // pauses/indentation) — out of scope for this feature.
+            _accessibleTextCache = TextSelectionEngine.JoinText(source);
             _accessibleTextSource = source;
         }
 
@@ -1335,17 +1337,6 @@ public partial class PdfViewerControl : UserControl
         _selectionAnchor = null;
         _selectionFocus = null;
         InvalidateContinuousCache();
-    }
-
-    /// <summary>
-    /// The whitespace mode changed: only the accessible-text cache depends on
-    /// it (reading order is unaffected), so drop that cache and leave the
-    /// letter ordering and any live selection intact.
-    /// </summary>
-    private void OnWhitespaceModeChanged()
-    {
-        _accessibleTextCache = null;
-        _accessibleTextSource = null;
     }
 
     private void OnRenderVersionChanged()
