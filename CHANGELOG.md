@@ -46,6 +46,47 @@ semantic versioning.
   (and therefore redaction reach) did not move. The text-extract allocation
   budget was tightened to the new floor to lock in the win.
 
+### Fixed
+- **Flaky redaction test: `FullwidthFormsRedactionTests` collided with the
+  random `/ID`** (#771, #800) — the fullwidth-forms redaction test intermittently
+  failed on macOS and Windows CI (same commit could pass on Linux and fail on
+  macOS — definitionally non-deterministic, and it was a false red, never a real
+  leak). Root cause, measured directly: the test's carrier-agnostic saved-bytes
+  oracle searched the WHOLE file for a short ASCII needle (`"123"`, `"ABC"`),
+  which collided with the trailer `/ID` — a random 16-byte file identifier
+  written twice as 32 hex characters and regenerated on every save. Over 20,000
+  saves the needle appeared inside `/ID` 139–143 times and in NO real carrier
+  even once; lowercase `"abc"` never collided because hex is uppercase, which is
+  exactly why only the ABC and 123 cases were ever reported. #771's font-metric
+  guess and #800's parallelism guess were both wrong: the redaction box width is
+  the platform-independent constant `49.344` (Helvetica AFM advances A=667, B=667,
+  C=722, ×24/1000 — identical on every platform, and identical across all three
+  cases since the fixture always emits codes A/B/C), so parallel CI only raised
+  the number of draws on a ~0.7%-per-needle random `/ID` collision. Fixed by excising
+  the `/ID` array from the searchable view before the needle check (a lossless
+  Latin1 round-trip that keeps every real text carrier — content streams,
+  ToUnicode, `/ActualText`, XMP, annotations, hex text strings — in the search).
+  The redaction guarantee is unchanged: no redaction code path writes page text
+  into `/ID`, so removing a random identifier eliminates a false-positive source,
+  not a leak-detection surface. The other redaction assertions (independent
+  saved-bytes carrier search, extractor-agnostic, plus the removed>0 and reopened
+  checks) are intact.
+
+### Changed
+- **Linux coverage gate restored to green** (R6 CI health) — `Excise.Core` line
+  coverage had drifted to 92.39% on `develop`, below the 93% ratchet, reddening
+  every merge. Added targeted unit tests for the least-covered recently-added
+  Core code: `SignatureAppearanceAuthoring` (#623 baked `/AP /N` signature
+  appearance, previously 0% covered), the `TrueTypeFontFile` symbolic `(3,0)`
+  cmap parse + `post`-glyph-name path (#791, driven by an in-assembly symbol-cmap
+  font builder), and deterministic `PdfOutlineParser` destination resolution
+  (direct `/Dest`, `/A` GoTo, `/Names/Dests` name tree, and legacy
+  `/Catalog/Dests`) — the pre-existing outline tests silently no-op'd on CI
+  because they load a book from a hard-coded local path (a #619-style invisible
+  coverage loss). Clears the existing 93% gate (measured 93.27% locally, up from
+  the 92.39% that had reddened `develop`; the Linux CI coverage job is the
+  authority); the threshold itself is unchanged.
+
 ## [3.3.1] - 2026-07-26
 - **GUI interaction latency: per-page search-highlight index (#601).** Page
   navigation recomputed the current page's search highlights with a linear
