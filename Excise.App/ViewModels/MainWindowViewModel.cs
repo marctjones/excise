@@ -1331,40 +1331,14 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var storageProvider = GetStorageProvider();
-        if (storageProvider == null)
-        {
-            _logger.LogWarning("Storage provider unavailable, cannot show Add Pages dialog");
-            return;
-        }
-
-        var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            Title = "Select PDF to Add Pages From",
-            AllowMultiple = false,
-            FileTypeFilter = new[]
-            {
-                new FilePickerFileType("PDF Files")
-                {
-                    Patterns = new[] { "*.pdf" }
-                }
-            }
-        });
-
+        var files = await PickPdfFilesAsync("Select PDF to Add Pages From", allowMultiple: false);
         if (files.Count == 0)
         {
             _logger.LogInformation("Add pages dialog cancelled");
             return;
         }
 
-        var filePath = files[0].Path.LocalPath;
-        if (string.IsNullOrWhiteSpace(filePath))
-        {
-            _logger.LogWarning("Selected file has no local path");
-            return;
-        }
-
-        await AddPagesFromFileAsync(filePath);
+        await AddPagesFromFileAsync(files[0]);
     }
 
     public async Task AddPagesFromFileAsync(string sourcePdfPath)
@@ -1414,61 +1388,14 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _logger.LogInformation("Combine documents command triggered");
 
-        var storageProvider = GetStorageProvider();
-        if (storageProvider == null)
-        {
-            _logger.LogWarning("Storage provider unavailable, cannot show Combine Documents dialog");
-            return;
-        }
-
-        var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            Title = "Select PDFs to Combine",
-            AllowMultiple = true,
-            FileTypeFilter = new[]
-            {
-                new FilePickerFileType("PDF Files")
-                {
-                    Patterns = new[] { "*.pdf" }
-                }
-            }
-        });
-
-        if (files.Count == 0)
+        var sourcePaths = await PickPdfFilesAsync("Select PDFs to Combine", allowMultiple: true);
+        if (sourcePaths.Count == 0)
         {
             _logger.LogInformation("Combine Documents dialog cancelled");
             return;
         }
 
-        var sourcePaths = files
-            .Select(f => f.Path.LocalPath)
-            .Where(p => !string.IsNullOrWhiteSpace(p))
-            .ToList();
-
-        if (sourcePaths.Count == 0)
-        {
-            _logger.LogWarning("No selected files have a local path");
-            return;
-        }
-
-        var outputFile = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
-        {
-            Title = "Save Combined PDF",
-            DefaultExtension = "pdf",
-            SuggestedFileName = "combined.pdf",
-            FileTypeChoices = new[]
-            {
-                new FilePickerFileType("PDF Files")
-                {
-                    Patterns = new[] { "*.pdf" }
-                }
-            }
-        });
-
-        if (outputFile == null)
-            return;
-
-        var outputPath = outputFile.Path.LocalPath;
+        var outputPath = await PickSavePdfPathAsync("Save Combined PDF", "combined.pdf");
         if (string.IsNullOrWhiteSpace(outputPath))
             return;
 
@@ -1491,13 +1418,6 @@ public partial class MainWindowViewModel : ViewModelBase
         if (!_documentService.IsDocumentLoaded)
         {
             _logger.LogWarning("Cannot split: No document loaded");
-            return;
-        }
-
-        var storageProvider = GetStorageProvider();
-        if (storageProvider == null)
-        {
-            _logger.LogWarning("Storage provider unavailable, cannot show Split Document dialog");
             return;
         }
 
@@ -1555,22 +1475,10 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var folder = await storageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
-        {
-            Title = "Select Folder for Split PDFs",
-            AllowMultiple = false
-        });
-
-        if (folder.Count == 0)
-        {
-            _logger.LogInformation("Split Document dialog cancelled");
-            return;
-        }
-
-        var folderPath = folder[0].Path.LocalPath;
+        var folderPath = await PickFolderAsync("Select Folder for Split PDFs");
         if (string.IsNullOrWhiteSpace(folderPath))
         {
-            _logger.LogWarning("Split target folder has no local path");
+            _logger.LogInformation("Split Document dialog cancelled");
             return;
         }
 
@@ -1591,35 +1499,11 @@ public partial class MainWindowViewModel : ViewModelBase
         if (!_documentService.IsDocumentLoaded)
             return;
 
-        var storageProvider = GetStorageProvider();
-        if (storageProvider == null)
-        {
-            _logger.LogWarning("Storage provider unavailable, cannot show Extract Page dialog");
-            return;
-        }
-
         var suggestedName = string.IsNullOrWhiteSpace(DocumentName)
             ? $"page-{DisplayPageNumber}.pdf"
             : $"{Path.GetFileNameWithoutExtension(DocumentName)}_page{DisplayPageNumber}.pdf";
 
-        var file = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
-        {
-            Title = "Extract Current Page",
-            DefaultExtension = "pdf",
-            SuggestedFileName = suggestedName,
-            FileTypeChoices = new[]
-            {
-                new FilePickerFileType("PDF Files")
-                {
-                    Patterns = new[] { "*.pdf" }
-                }
-            }
-        });
-
-        if (file == null)
-            return;
-
-        var path = file.Path.LocalPath;
+        var path = await PickSavePdfPathAsync("Extract Current Page", suggestedName);
         if (!string.IsNullOrWhiteSpace(path))
             await ExtractPagesToFileAsync(path, new[] { CurrentPageIndex });
     }
@@ -1647,35 +1531,11 @@ public partial class MainWindowViewModel : ViewModelBase
         if (!_documentService.IsDocumentLoaded || selected.Count == 0)
             return;
 
-        var storageProvider = GetStorageProvider();
-        if (storageProvider == null)
-        {
-            _logger.LogWarning("Storage provider unavailable, cannot show Extract Selected Pages dialog");
-            return;
-        }
-
         var suggestedName = string.IsNullOrWhiteSpace(DocumentName)
             ? "selected-pages.pdf"
             : $"{Path.GetFileNameWithoutExtension(DocumentName)}_selected_pages.pdf";
 
-        var file = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
-        {
-            Title = "Extract Selected Pages",
-            DefaultExtension = "pdf",
-            SuggestedFileName = suggestedName,
-            FileTypeChoices = new[]
-            {
-                new FilePickerFileType("PDF Files")
-                {
-                    Patterns = new[] { "*.pdf" }
-                }
-            }
-        });
-
-        if (file == null)
-            return;
-
-        var path = file.Path.LocalPath;
+        var path = await PickSavePdfPathAsync("Extract Selected Pages", suggestedName);
         if (!string.IsNullOrWhiteSpace(path))
             await ExtractPagesToFileAsync(path, selected);
     }
@@ -1804,27 +1664,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private async Task<string?> PickPdfForPageInsertionAsync(string title)
     {
-        var storageProvider = GetStorageProvider();
-        if (storageProvider == null)
-        {
-            _logger.LogWarning("Storage provider unavailable, cannot show page insertion dialog");
-            return null;
-        }
-
-        var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            Title = title,
-            AllowMultiple = false,
-            FileTypeFilter = new[]
-            {
-                new FilePickerFileType("PDF Files")
-                {
-                    Patterns = new[] { "*.pdf" }
-                }
-            }
-        });
-
-        return files.Count == 0 ? null : files[0].Path.LocalPath;
+        var files = await PickPdfFilesAsync(title, allowMultiple: false);
+        return files.Count == 0 ? null : files[0];
     }
 
     private void MarkPageOrganizationChanged(bool removedPage = false, int removedPageCount = 1)
@@ -3352,6 +3193,118 @@ public partial class MainWindowViewModel : ViewModelBase
     private IStorageProvider? GetStorageProvider()
     {
         return StorageProviderOverride ?? GetMainWindow()?.StorageProvider;
+    }
+
+    // ── Test seams for the file/folder-picker page-organization commands (#816).
+    //    Headless tests have no desktop ApplicationLifetime (GetMainWindow →
+    //    null) AND Avalonia's IStorageProvider/IStorageFile are sealed against
+    //    user implementation, so a fake provider is impossible. Instead these
+    //    delegates intercept at the picked-PATH boundary: when set, the picker
+    //    helpers below return the injected paths and skip the real dialog,
+    //    letting a test drive the actual COMMAND end-to-end. All null in
+    //    production — the real storage provider is always used. ────────────────
+    internal Func<bool, Task<IReadOnlyList<string>>>? PickPdfFilesOverride { get; set; }
+    internal Func<Task<string?>>? PickSavePdfPathOverride { get; set; }
+    internal Func<Task<string?>>? PickFolderOverride { get; set; }
+
+    /// <summary>
+    /// Shows the "open PDF(s)" picker and returns the selected local paths, or
+    /// an empty list if cancelled / unavailable. Honors
+    /// <see cref="PickPdfFilesOverride"/> in tests.
+    /// </summary>
+    private async Task<IReadOnlyList<string>> PickPdfFilesAsync(string title, bool allowMultiple)
+    {
+        if (PickPdfFilesOverride != null)
+            return await PickPdfFilesOverride(allowMultiple);
+
+        var storageProvider = GetStorageProvider();
+        if (storageProvider == null)
+        {
+            _logger.LogWarning("Storage provider unavailable, cannot show open-PDF dialog");
+            return Array.Empty<string>();
+        }
+
+        var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = title,
+            AllowMultiple = allowMultiple,
+            FileTypeFilter = new[]
+            {
+                new FilePickerFileType("PDF Files")
+                {
+                    Patterns = new[] { "*.pdf" }
+                }
+            }
+        });
+
+        return files
+            .Select(f => f.Path.LocalPath)
+            .Where(p => !string.IsNullOrWhiteSpace(p))
+            .ToList();
+    }
+
+    /// <summary>
+    /// Shows the "save PDF as" picker and returns the chosen local path, or
+    /// null if cancelled / unavailable. Honors
+    /// <see cref="PickSavePdfPathOverride"/> in tests.
+    /// </summary>
+    private async Task<string?> PickSavePdfPathAsync(string title, string suggestedName)
+    {
+        if (PickSavePdfPathOverride != null)
+            return await PickSavePdfPathOverride();
+
+        var storageProvider = GetStorageProvider();
+        if (storageProvider == null)
+        {
+            _logger.LogWarning("Storage provider unavailable, cannot show save-PDF dialog");
+            return null;
+        }
+
+        var file = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = title,
+            DefaultExtension = "pdf",
+            SuggestedFileName = suggestedName,
+            FileTypeChoices = new[]
+            {
+                new FilePickerFileType("PDF Files")
+                {
+                    Patterns = new[] { "*.pdf" }
+                }
+            }
+        });
+
+        var path = file?.Path.LocalPath;
+        return string.IsNullOrWhiteSpace(path) ? null : path;
+    }
+
+    /// <summary>
+    /// Shows the folder picker and returns the chosen local path, or null if
+    /// cancelled / unavailable. Honors <see cref="PickFolderOverride"/> in tests.
+    /// </summary>
+    private async Task<string?> PickFolderAsync(string title)
+    {
+        if (PickFolderOverride != null)
+            return await PickFolderOverride();
+
+        var storageProvider = GetStorageProvider();
+        if (storageProvider == null)
+        {
+            _logger.LogWarning("Storage provider unavailable, cannot show folder dialog");
+            return null;
+        }
+
+        var folder = await storageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = title,
+            AllowMultiple = false
+        });
+
+        if (folder.Count == 0)
+            return null;
+
+        var path = folder[0].Path.LocalPath;
+        return string.IsNullOrWhiteSpace(path) ? null : path;
     }
 
     private async Task<IStorageFile?> ShowSaveRedactedFileDialog(global::Avalonia.Controls.Window mainWindow, string suggestedPath)
