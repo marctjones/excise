@@ -16,6 +16,17 @@ is available three ways:
 All runtime dependencies use **permissive** licenses (MIT, Apache-2.0,
 BSD-3-Clause, OFL-1.1). No copyleft (GPL/LGPL/AGPL).
 
+Completeness is enforced in CI:
+`Excise.App.Tests/Unit/ThirdPartyLicenseCompletenessTests.cs` re-enumerates the
+actual restored package closure (`dotnet list package --include-transitive`)
+and fails the build if any shipped package is missing an attribution or carries
+an unresolved license — so a new dependency cannot ship without appearing in the
+About dialog. Build-time tooling and reference-only packages that carry no
+runtime DLL (`Microsoft.NETCore.Platforms`, `NETStandard.Library`,
+`Avalonia.Diagnostics`, `Microsoft.CodeAnalysis.Analyzers`,
+`Avalonia.BuildServices`, `Fody`) are excluded as non-redistributed, in both
+the generator and the completeness gate.
+
 The script `scripts/generate-license-manifest.sh --scancode` cross-checks
 each package against [scancode-toolkit](https://scancode-toolkit.readthedocs.io/)
 to verify that the license declared in the package metadata matches the
@@ -55,7 +66,7 @@ scripts/generate-license-manifest.sh
 
 # Verified: also runs scancode-toolkit to cross-check the declared
 # license against the actual license text in each package. Slower
-# (~10 minutes for 54 packages) but produces evidence-backed results.
+# (~10 minutes for the full package set) but produces evidence-backed results.
 scripts/generate-license-manifest.sh --scancode
 
 # Both write to:
