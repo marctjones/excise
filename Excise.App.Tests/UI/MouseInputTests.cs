@@ -378,6 +378,7 @@ public class MouseInputTests
         var focus = ordered[4];
 
         vm.CurrentPageIndex = targetPageNumber - 1;
+        vm.ViewMode = PdfViewMode.SinglePage; // #815: selection no longer forces single-page; these exercise the single-page path
         vm.IsTextSelectionMode = true;
         for (int i = 0; i < 10; i++) { await Task.Delay(150); window.UpdateLayout(); }
 
@@ -496,6 +497,7 @@ public class MouseInputTests
         var focus = ordered[9];
 
         vm.CurrentPageIndex = targetPageNumber - 1;
+        vm.ViewMode = PdfViewMode.SinglePage; // #815: selection no longer forces single-page; these exercise the single-page path
         vm.IsTextSelectionMode = true;
         for (int i = 0; i < 10; i++) { await Task.Delay(150); window.UpdateLayout(); }
 
@@ -566,6 +568,7 @@ public class MouseInputTests
         var singleLetter = ordered[0];
 
         vm.CurrentPageIndex = targetPageNumber - 1;
+        vm.ViewMode = PdfViewMode.SinglePage; // #815: selection no longer forces single-page; these exercise the single-page path
         vm.IsTextSelectionMode = true;
         for (int i = 0; i < 10; i++) { await Task.Delay(150); window.UpdateLayout(); }
 
@@ -617,6 +620,7 @@ public class MouseInputTests
         var clickLetter = ordered[2]; // Middle of a word
 
         vm.CurrentPageIndex = targetPageNumber - 1;
+        vm.ViewMode = PdfViewMode.SinglePage; // #815: selection no longer forces single-page; these exercise the single-page path
         vm.IsTextSelectionMode = true;
         for (int i = 0; i < 10; i++) { await Task.Delay(150); window.UpdateLayout(); }
 
@@ -781,6 +785,7 @@ public class MouseInputTests
         vm.CurrentPageIndex = targetPageNumber - 1;
 
         // Step 3: Enable text-selection mode
+        vm.ViewMode = PdfViewMode.SinglePage; // #815: selection no longer forces single-page; these exercise the single-page path
         vm.IsTextSelectionMode = true;
         for (int i = 0; i < 10; i++) { await Task.Delay(150); window.UpdateLayout(); }
 

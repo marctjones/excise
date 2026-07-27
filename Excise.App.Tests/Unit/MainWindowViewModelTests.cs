@@ -957,15 +957,16 @@ public class MainWindowViewModelTests
 
     [Theory]
     [InlineData(EditingMode.Redaction)]
-    [InlineData(EditingMode.TextSelection)]
     [InlineData(EditingMode.FormAuthoring)]
     [InlineData(EditingMode.Typewriter)]
     public void ExitingEditingMode_RestoresSavedContinuousScrollPreference(EditingMode mode)
     {
+        // Text selection is excluded (#815): it no longer forces single-page, so
+        // it never "exits" back to continuous — see TextSelection_StaysInContinuous.
         _viewModel.ApplyContinuousScrollPreference(true);
 
         SetEditingMode(mode, true);
-        _viewModel.IsContinuousView.Should().BeFalse("editing modes are single-page only");
+        _viewModel.IsContinuousView.Should().BeFalse("draw/edit modes are single-page only");
 
         SetEditingMode(mode, false);
 
@@ -977,7 +978,6 @@ public class MainWindowViewModelTests
 
     [Theory]
     [InlineData(EditingMode.Redaction)]
-    [InlineData(EditingMode.TextSelection)]
     [InlineData(EditingMode.FormAuthoring)]
     [InlineData(EditingMode.Typewriter)]
     public void ExitingEditingMode_DoesNotForceContinuousWhenPreferenceIsSinglePage(EditingMode mode)
@@ -990,6 +990,26 @@ public class MainWindowViewModelTests
         _viewModel.ViewMode.Should().Be(PdfViewMode.SinglePage);
         _viewModel.IsContinuousView.Should().BeFalse(
             "restoring must honour the saved preference, not unconditionally switch to continuous");
+    }
+
+    [Fact]
+    public void EnteringTextSelection_KeepsContinuousReadingView()
+    {
+        // #815: text selection is a read affordance, not a draw/edit mode, so it
+        // must NOT force single-page — that is what made selecting undiscoverable
+        // in the default continuous view.
+        _viewModel.ApplyContinuousScrollPreference(true);
+        _viewModel.ViewMode.Should().Be(PdfViewMode.Continuous);
+
+        _viewModel.IsTextSelectionMode = true;
+
+        _viewModel.ViewMode.Should().Be(PdfViewMode.Continuous,
+            "entering text selection stays in the continuous reading view");
+        _viewModel.IsContinuousView.Should().BeTrue();
+
+        _viewModel.IsTextSelectionMode = false;
+        _viewModel.ViewMode.Should().Be(PdfViewMode.Continuous,
+            "leaving text selection also leaves the reading view untouched");
     }
 
     public enum EditingMode
