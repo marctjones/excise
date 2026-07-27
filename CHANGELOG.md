@@ -7,6 +7,17 @@ semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **Interactive GUI tests for file-ops toolbar/menu commands** (#816 batch 2)
+  — `Excise.App.Tests/UI/FileOpsCommandTests.cs` executes the real
+  `ReactiveCommand` behind Save/SaveAs/SaveFlattenedFormCopy/Open/LoadRecent/
+  ExportCurrentPage/ExportPages/Print and asserts the effect (bytes on disk,
+  loaded-document state, exported PNGs, or the shown dialog message), closing
+  a false-coverage gap where these were previously only exercised via their
+  underlying async method with an already-known path — a mis-wired command
+  would have passed every existing test. `MainWindowViewModel` gained a small
+  test seam, `StorageProviderOverride`, since the headless test host runs
+  with no desktop lifetime and `GetStorageProvider()` otherwise always
+  resolves to null.
 - **Text selection works in the continuous reading view** (#815) — text
   selection used to be a mode toggle that forced single-page layout, so the
   default continuous reading view had no way to drag-to-select and showed no
@@ -30,8 +41,62 @@ semantic versioning.
   image share an origin; each rect sits at its glyph's MediaBox fraction) rather
   than the coordinate mapper vouching for itself. Single-page rendering was
   found already correct; the tests lock it in and cover the new continuous view.
+- **Interactive GUI tests for page-organization toolbar/menu commands** (#816)
+  — a new `PageOrganizationCommandTests` suite executes the real
+  `MainWindowViewModel` commands a user clicks (Combine, Split, Add/Insert
+  Before/After, Extract Current/Selected, Remove/Move/Clear Selected, Move
+  Current Earlier/Later, Rotate Left/180) and asserts the resulting page
+  order, count, rotation, or saved-file content — closing an audit gap where
+  these effects were proven only by calling the underlying async methods, so a
+  button mis-wired to the wrong method would have passed. To make the
+  file/folder-picker commands drivable headlessly (no desktop lifetime, and
+  Avalonia's storage interfaces are sealed against user implementation), the
+  view-model gained internal picked-path test seams (`PickPdfFilesOverride`,
+  `PickSavePdfPathOverride`, `PickFolderOverride`) that the picker helpers
+  honor; all null in production, so the real storage provider is always used.
+  No command mis-wiring was found.
+- **GUI test coverage: annotate/style + dialog/misc commands, batch 4 (#816)**
+  — `AnnotateAndDialogCommandTests.cs` executes the real `ReactiveCommand`
+  behind ten toolbar/menu entries and asserts the real effect, closing a
+  false-coverage gap where these were previously proven only by calling the
+  underlying viewmodel method directly or by a `NotBeNull` wiring check (the
+  same pattern that hid #815's bug): `AddHighlightAnnotationFromSelectionCommand`
+  and `AddStickyNoteAnnotationCommand` now assert a real annotation lands on
+  the saved page's `/Annots`; `SetTypewriterColorCommand` asserts the active
+  box's `Style.Color` changes; `VerifySignaturesCommand` asserts the
+  verification summary is actually surfaced; `SecurityCommand`,
+  `ShowPreferencesCommand`, and `AboutCommand` assert the real dialog/window
+  opens; `ShowDocumentationCommand` and `ShowShortcutsCommand` assert the
+  real open/show path fires without launching a real external app or driving
+  headless overlay internals; `GoToPageCommand` asserts `CurrentPageIndex`
+  actually moves. `KeyboardShortcutTests.Ctrl2_FitsEntirePage`'s vacuous
+  `ZoomLevel > 0` assertion is replaced with a real fit-page-vs-fit-width
+  distinction, and a new `ZoomFitPageCommand` test asserts the exact computed
+  fit-page ratio on a non-square page. Two of these commands had no
+  observable test seam at all — `ShowDocumentationCommand` shelled out to
+  `Process.Start` directly, and `GetMainWindow()` resolved
+  `Application.Current.ApplicationLifetime`, which the headless test host
+  never sets (and which Avalonia refuses to set a second time, so a test
+  can't stand one up itself) — so `MainWindowViewModel` gains three small
+  internal test seams (`DocumentationOpener`, `MainWindowResolver`,
+  `KeyboardShortcutsDialogRequested`), each defaulting to the real production
+  path.
 
 ## [3.4.0] - 2026-07-27
+- **Interactive GUI-command coverage for redaction and search (#816, batch 3)**
+  — `RedactionAndSearchCommandTests` executes the real ReactiveCommands behind
+  the redaction buttons and search bar (`ApplyAllRedactionsCommand`,
+  `ApplyRedactionCommand`, `ClearAllRedactionsCommand`,
+  `RemovePendingRedactionCommand`, `FindCommand`, `FindNextCommand`,
+  `FindPreviousCommand`, `JumpToSearchMatchCommand`, `CloseSearchCommand`) and
+  asserts their real effects — closing a gap where redaction removal had only
+  been proven through the scripting path / "doc still open", never by executing
+  the actual Apply command. `ApplyAllRedactionsCommand` now runs end-to-end in
+  headless tests via a small test-only save-path seam
+  (`SetRedactedSavePathProviderForTests`), and removal is verified with
+  independent oracles per the no-self-oracle rule: a carrier-agnostic saved-bytes
+  scan (ASCII + UTF-16BE) with an in-file negative control, plus an independent
+  mutool extraction (skips cleanly on tool-less CI, allow-listed).
 
 ### Added
 - **PDF/UA-1 and PDF/A conformance checker** (#772) — a new
