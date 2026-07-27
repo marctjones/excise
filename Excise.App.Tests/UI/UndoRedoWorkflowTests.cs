@@ -159,6 +159,42 @@ public class UndoRedoWorkflowTests
         Cleanup(tempDir);
     }
 
+    // ── Page delete: undo re-inserts the captured page (RemoveAt keeps the
+    //    object graph; Insert clones it back), redo removes it again. This
+    //    exercises CapturePages / ReinsertPagesAsync / RemovePagesInternalAsync,
+    //    the same helpers the selected-delete path reuses.
+    [FixedAvaloniaFact]
+    public async Task PageDelete_UndoReinsertsPage_RedoRemovesItAgain()
+    {
+        var (sourcePath, _, tempDir) = MakePaths();
+        TestPdfGenerator.CreateMultiPagePdf(sourcePath, pageCount: 4);
+
+        var vm = new MainWindowViewModel();
+        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+        window.Show();
+
+        await vm.LoadDocumentAsync(sourcePath);
+        vm.CurrentPageIndex = 0; // remove page 1
+        vm.TotalPages.Should().Be(4);
+        FirstPageText(vm).Should().Contain("Page 1 Content");
+
+        await vm.RemoveCurrentPageCommand.Execute();
+        vm.TotalPages.Should().Be(3);
+        FirstPageText(vm).Should().Contain("Page 2 Content", "page 1 is gone; page 2 is now first");
+        vm.CanUndo.Should().BeTrue();
+
+        await vm.UndoCommand.Execute();
+        vm.TotalPages.Should().Be(4, "undo must re-insert the removed page");
+        FirstPageText(vm).Should().Contain("Page 1 Content", "the re-inserted page must carry its original content, at its original index");
+
+        await vm.RedoCommand.Execute();
+        vm.TotalPages.Should().Be(3, "redo must remove the page again");
+        FirstPageText(vm).Should().Contain("Page 2 Content");
+
+        window.Close();
+        Cleanup(tempDir);
+    }
+
     // ── Save flattens; nothing before the save remains undoable, and the
     //    flattened content is in the file (irreversible by design). ──────────
     [FixedAvaloniaFact]
