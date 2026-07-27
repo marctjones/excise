@@ -6,6 +6,22 @@ semantic versioning.
 
 ## [Unreleased]
 
+### Added
+- **Interactive GUI tests for page-organization toolbar/menu commands** (#816)
+  — a new `PageOrganizationCommandTests` suite executes the real
+  `MainWindowViewModel` commands a user clicks (Combine, Split, Add/Insert
+  Before/After, Extract Current/Selected, Remove/Move/Clear Selected, Move
+  Current Earlier/Later, Rotate Left/180) and asserts the resulting page
+  order, count, rotation, or saved-file content — closing an audit gap where
+  these effects were proven only by calling the underlying async methods, so a
+  button mis-wired to the wrong method would have passed. To make the
+  file/folder-picker commands drivable headlessly (no desktop lifetime, and
+  Avalonia's storage interfaces are sealed against user implementation), the
+  view-model gained internal picked-path test seams (`PickPdfFilesOverride`,
+  `PickSavePdfPathOverride`, `PickFolderOverride`) that the picker helpers
+  honor; all null in production, so the real storage provider is always used.
+  No command mis-wiring was found.
+
 ## [3.4.0] - 2026-07-27
 
 ### Added
