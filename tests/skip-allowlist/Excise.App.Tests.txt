@@ -54,3 +54,5 @@ Excise.App.Tests.Unit.SignatureApplicationServiceTests.SignDocument_VisibleRect_
 Excise.App.Tests.UI.RedactionAndSearchCommandTests.ApplyAllRedactionsCommand_RedactedSecret_NotReadableByIndependentExtractor   # #816: mutool independent-extractor oracle for ApplyAllRedactionsCommand. The always-on SavedBytesOracle sibling test (carrier-agnostic byte scan + in-file negative control) still runs on CI, so removal is still independently verified without mutool.
 # Permission-gated test needing a restricted fixture absent on Linux CI.
 Excise.App.Tests.UI.TypewriterWorkflowTests.OnTypewriterTextCreated_ModifyForbidden_AddsNothing
+# Independent-oracle copy-order test gated on poppler pdftotext (absent on Linux CI); runs on macOS. The construction-known column-major sibling test (TwoColumn_ColumnAware_ReadsEachColumnTopToBottom) always runs on CI, so the fix is still verified without poppler. (#774)
+Excise.App.Tests.Unit.CopyReadingOrderTests.TwoColumn_ColumnAware_MatchesIndependentPdftotextOracle
