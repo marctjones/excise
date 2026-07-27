@@ -425,6 +425,24 @@ public partial class MainWindow : Window
             return;
         }
 
+        // Ctrl+E: Export current page (menu advertises InputGesture="Ctrl+E"; the
+        // key was previously unwired — display-only — so it did nothing). (#827)
+        if (e.Key == Key.E && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        {
+            viewModel.ExportCurrentPageCommand?.Execute().Subscribe();
+            e.Handled = true;
+            return;
+        }
+
+        // Ctrl+, : Preferences (menu advertises InputGesture="Ctrl+,"; the key was
+        // previously unwired — display-only — so it did nothing). (#827)
+        if (e.Key == Key.OemComma && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        {
+            viewModel.ShowPreferencesCommand?.Execute().Subscribe();
+            e.Handled = true;
+            return;
+        }
+
         // F1: Show keyboard shortcuts
         if (e.Key == Key.F1)
         {
@@ -476,6 +494,26 @@ public partial class MainWindow : Window
         if (e.Key == Key.Escape && viewModel.IsSearchVisible)
         {
             viewModel.CloseSearchCommand?.Execute().Subscribe();
+            e.Handled = true;
+            return;
+        }
+
+        // Enter: Apply (mark) the current redaction (menu advertises
+        // InputGesture="Enter"; the key was previously unwired — ApplyRedaction
+        // only ever fired from a pointer draw). Guarded so it never steals Enter
+        // from text entry (search box, form fields set Handled first, but a
+        // focused editor here is a hard skip) and only acts in redaction mode,
+        // keeping Enter a no-op everywhere else. (#827)
+        if ((e.Key == Key.Enter || e.Key == Key.Return) &&
+            !e.KeyModifiers.HasFlag(KeyModifiers.Control) &&
+            !e.KeyModifiers.HasFlag(KeyModifiers.Shift) &&
+            !e.KeyModifiers.HasFlag(KeyModifiers.Alt) &&
+            viewModel.IsRedactionMode)
+        {
+            if (FocusManager.GetFocusedElement() is TextBox or ComboBox)
+                return;
+
+            viewModel.ApplyRedactionCommand?.Execute().Subscribe();
             e.Handled = true;
             return;
         }
