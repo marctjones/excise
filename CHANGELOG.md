@@ -6,6 +6,28 @@ semantic versioning.
 
 ## [Unreleased]
 
+### Performance
+- **Text-extraction hot path: fewer allocations, less CPU** (#600) — the
+  `TextExtractor` content-stream parse now caches all per-font derived state
+  (ToUnicode map, `/Differences`, the Identity / Mac-glyph-order /
+  embedded-CID / symbol-cmap decode tables, and the CID/CMap/`/W` width
+  geometry) keyed by the resolved font dictionary, instead of re-parsing those
+  streams on every `Tf` operator — the dominant repeated cost, since every
+  text block re-issues `Tf`. `ParseNumber` gained an exact inline integer
+  parser for the common operand (TJ kerns, `Td`/`Tm`/`cm` coordinates) that
+  bypasses `int.TryParse`'s culture machinery, and the operand list is
+  pre-sized. Measured over `test-pdfs/smoke` (min-of-3, Release,
+  `scripts/check-perf-budgets.sh`): text-extract allocation **389.7 → 160.7 MB
+  (-59%)** and wall time **230.2 → 164.7 ms (-29%)**; redaction-save
+  allocation also fell ~8% (it shares the extractor). Every change is
+  behavior-preserving: the font cache re-assigns all derived fields on each
+  `Tf` (a snapshot, never a skip-if-same short-circuit, so it still heals the
+  partial state restore in form-XObject parsing) and the integer parser falls
+  back to `int.TryParse` for any non-trivial span. The 332-page
+  extraction-parity gate is **unchanged at 98.7%** — proving extraction output
+  (and therefore redaction reach) did not move. The text-extract allocation
+  budget was tightened to the new floor to lock in the win.
+
 ## [3.3.1] - 2026-07-26
 
 ### Fixed
