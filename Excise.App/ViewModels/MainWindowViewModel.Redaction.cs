@@ -122,21 +122,13 @@ public partial class MainWindowViewModel
         {
             var suggestedPath = _filenameSuggestionService.SuggestRedactedFilename(_currentFilePath);
 
-            var mainWindow = GetMainWindow();
-            if (mainWindow == null)
+            var saveFilePath = await ResolveRedactedSavePathAsync(suggestedPath);
+            if (saveFilePath == null)
             {
-                _logger.LogError("Could not get main window for dialog");
+                _logger.LogInformation("User cancelled save file picker (or no destination available)");
                 return;
             }
 
-            var saveFile = await ShowSaveRedactedFileDialog(mainWindow, suggestedPath);
-            if (saveFile == null)
-            {
-                _logger.LogInformation("User cancelled save file picker");
-                return;
-            }
-
-            var saveFilePath = saveFile.Path.LocalPath;
             _logger.LogInformation("Applying {Count} redactions to create: {Path}", RedactionWorkflow.PendingCount, saveFilePath);
 
             var document = _documentService.GetCurrentDocument();
@@ -283,6 +275,35 @@ public partial class MainWindowViewModel
             CurrentRedactionPageArea = null;
             _logger.LogInformation("<<< ApplyRedactionAsync END. Selection cleared, ready for next redaction.");
         }
+    }
+
+    // Test seam mirroring AppPaths.OverrideForTests: headless UI tests have no
+    // desktop-lifetime MainWindow and no interactive save picker, so the real
+    // ApplyAllRedactionsCommand cannot resolve a destination and would bail
+    // before the redaction pipeline runs. When set, this supplies the save
+    // destination directly (return null to model a cancelled picker). Every
+    // step after path resolution — PrepareRedactedCopy, document.Save,
+    // MoveToApplied, reload — runs unchanged. Unset in production, so behaviour
+    // is identical to the real save dialog. See RedactionAndSearchCommandTests.
+    private Func<string, Task<string?>>? _redactedSavePathProviderForTests;
+
+    internal void SetRedactedSavePathProviderForTests(Func<string, Task<string?>>? provider)
+        => _redactedSavePathProviderForTests = provider;
+
+    private async Task<string?> ResolveRedactedSavePathAsync(string suggestedPath)
+    {
+        if (_redactedSavePathProviderForTests != null)
+            return await _redactedSavePathProviderForTests(suggestedPath);
+
+        var mainWindow = GetMainWindow();
+        if (mainWindow == null)
+        {
+            _logger.LogError("Could not get main window for dialog");
+            return null;
+        }
+
+        var saveFile = await ShowSaveRedactedFileDialog(mainWindow, suggestedPath);
+        return saveFile?.Path.LocalPath;
     }
 
     private int ApplyPendingAreaRedactions(Excise.Core.Document.PdfDocument document)
