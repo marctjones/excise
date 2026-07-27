@@ -7,6 +7,18 @@ semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **Ctrl+wheel zoom and middle-button pan in the PDF viewer** (#827) — the viewer
+  now handles the mouse wheel directly: **Ctrl (or ⌘) + wheel** zooms in/out
+  (reusing the existing 25%-step, min/max-clamped zoom), while a **plain wheel**
+  still scrolls natively and is never consumed. **Middle-button drag** pans the
+  active ScrollViewer (single-page or continuous) grab-and-drag style, available
+  in any interaction mode. Previously no `PointerWheelChanged` handler existed
+  (Ctrl+wheel was unimplemented) and `InteractionMode.Pan` was dead. New
+  real-gesture tests drive `window.MouseWheel` / middle-button `MouseDown`+drag
+  and assert `ZoomLevel`, scroll offset, and continuous page-boundary sync — the
+  legacy `LineDown()`/`ZoomInCommand`-invoke tests are superseded. Handlers are
+  registered on the Tunnel pass so Ctrl+wheel can suppress the native scroll;
+  plain scrolling, existing zoom shortcuts, and fit-on-resize are unchanged.
 - **Copied-text whitespace fidelity: paragraph + list awareness, as the default**
   — copying text now inserts a blank line at detected **paragraph** breaks (a
   vertical gap meaningfully larger than the block's typical leading) and keeps
