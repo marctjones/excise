@@ -6,6 +6,26 @@ semantic versioning.
 
 ## [Unreleased]
 
+### Fixed
+- **Symbolic TrueType with a (3,0) symbol cmap: text extraction mis-decode**
+  (#791) — a simple (non-Type0) symbolic TrueType font that carries a
+  Microsoft-Symbol `(3,0)` cmap subtable and ships no `/ToUnicode` addresses
+  glyphs through an F000-based Private Use offset. excise rendered such fonts
+  correctly but text EXTRACTION echoed the raw content byte through
+  WinAnsi — e.g. a page reading "Redaction" extracted as `¡¢£¤¥¦§¨©`. Because
+  extraction bounds redaction, `RedactText` then removed **0** occurrences and
+  reported success: a silent redaction leak (CLAUDE.md, #637/#645). Extraction
+  now resolves such fonts through the embedded program's `(3,0)` cmap
+  (code→glyph, ISO 32000-2 §9.6.6.4) and recovers Unicode from the program's
+  `post` glyph names (or a Unicode cmap subtable), matching the independent
+  oracle (mutool). Scoped strictly to symbolic simple TrueType with an embedded
+  `(3,0)` cmap and no `/ToUnicode` / no `/Encoding`, so every other simple font
+  keeps its existing decode — the 332-page extraction-parity gate stays at
+  98.7%. A purpose-built fixture (`SymbolCmapTtfBuilder`, patches DejaVu Sans to
+  a `(3,0)` symbol cmap) proves render parity, extraction parity, and — the
+  redaction-relevance made concrete — that excise now removes the text and
+  mutool confirms it is gone.
+
 ## [3.3.0] - 2026-07-26
 
 ### Added
