@@ -1723,7 +1723,16 @@ internal partial class RenderContext
             .ToArray();
 
         var cs = ResolveColorSpace(colorSpace);
-        if (cs?.Type == PdfColorSpaceType.DeviceCMYK)
+        // DeviceCMYK and an ICCBased space with N=4 both carry raw CMYK
+        // component values in the operands. #803 treats ICCBased-CMYK as
+        // DeviceCMYK for OVERPRINT purposes only — the four components drive
+        // the zero-component knockout/merge exactly as DeviceCMYK does. This
+        // is not a colour-managed CMM (rendered colour still goes through the
+        // ICC preview conversion); it only lets the fill/stroke participate in
+        // overprint. An unparseable N=4 ICCBased profile already resolves to
+        // DeviceCMYK type upstream, so this branch matches the parseable case.
+        if (cs?.Type == PdfColorSpaceType.DeviceCMYK ||
+            (cs?.Type == PdfColorSpaceType.ICCBased && cs.Components == 4))
         {
             return values.Length >= 4
             ? new DeviceCmykColor(values[0], values[1], values[2], values[3])
