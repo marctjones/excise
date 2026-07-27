@@ -48,3 +48,8 @@ Excise.App.Tests.UI.TextSelectionAlignmentTests.DragSelection_HighlightCoversThe
 Excise.App.Tests.UI.TextSelectionAlignmentTests.FitWidth_InsideSelectTextMode_ActuallyFitsTheViewport   # corpus-gated: local-real-world book absent on CI
 Excise.App.Tests.UI.TextSelectionAlignmentTests.FitAfterSelection_KeepsHighlightsOnRenderedText   # corpus-gated: local-real-world book absent on CI
 Excise.App.Tests.Unit.SignatureApplicationServiceTests.SignDocument_ExternalOracle_PdfsigReportsValidUntrustedSignature   # #623 external oracle: needs poppler pdfsig, absent in CI. Runs on dev machines with poppler installed; the #466 verifier round-trip tests above it always run.
+# Independent-oracle GUI tests gated on mutool (absent on Linux CI); they run on macOS.
+Excise.App.Tests.UI.TypewriterWorkflowTests.SaveFileAsAsync_TypedText_IsReadBackByAnIndependentExtractor
+Excise.App.Tests.Unit.SignatureApplicationServiceTests.SignDocument_VisibleRect_IndependentRendererShowsInkInSignatureRect_AndStillVerifies
+# Permission-gated test needing a restricted fixture absent on Linux CI.
+Excise.App.Tests.UI.TypewriterWorkflowTests.OnTypewriterTextCreated_ModifyForbidden_AddsNothing
