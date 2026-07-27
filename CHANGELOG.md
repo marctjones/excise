@@ -7,6 +7,15 @@ semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **App-wide in-session undo/redo** (#782) — a single edit-history stack
+  (command pattern with per-operation inverse closures, plus a collection
+  snapshot for type-over edits) now covers the reversible, pre-flatten editing
+  state: type-over create/edit/move/delete, annotation authoring (highlight and
+  sticky-note add), and page reorder/rotate/delete. Wired to Ctrl+Z / Ctrl+Y
+  (Cmd+Z / Cmd+Shift+Z on macOS) and the Edit menu, with live `Undo`/`Redo`
+  labels that name the pending action. The stack clears on document open, close,
+  and save — content already flattened into the PDF content stream on save is
+  irreversible by design and is never recorded.
 - **Audit flag for symbolic (3,0) glyphs no extractor recovers** (#796) — a
   simple symbolic TrueType with a Microsoft-Symbol `(3,0)` cmap AND an
   `/Encoding` renders meaningful text through its `(3,0)` glyphs, but every
