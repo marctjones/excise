@@ -6,6 +6,8 @@ semantic versioning.
 
 ## [Unreleased]
 
+## [3.3.1] - 2026-07-26
+
 ### Fixed
 - **Symbolic TrueType with a (3,0) symbol cmap: text extraction mis-decode**
   (#791) — a simple (non-Type0) symbolic TrueType font that carries a
