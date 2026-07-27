@@ -183,9 +183,32 @@ public class FullwidthFormsRedactionTests
     /// Carrier-agnostic view of the saved file, per the redaction test rules:
     /// ASCII (raw codes, hex carriers) + UTF-16BE (PDF Unicode text strings)
     /// + UTF-8 (XMP metadata).
+    ///
+    /// The trailer <c>/ID</c> array is excised first. It is a random 16-byte
+    /// file identifier written twice as 32-hex-char strings and regenerated on
+    /// every save — content-independent, and no redaction code path can write
+    /// page text into it. A short ASCII needle made of hex-valid characters
+    /// ("123", "ABC") therefore collides with it ~0.7% of saves, which was the
+    /// SOLE source of this test's historical cross-platform flake (#771/#800):
+    /// over 20,000 saves the needle appeared inside <c>/ID</c> 139–143 times
+    /// and NOWHERE else (0 collisions in any real carrier). Lowercase "abc"
+    /// never collided — hex is uppercase — which is exactly why only the ABC
+    /// and 123 cases were ever reported. Excising this one random identifier
+    /// removes a false-positive source, not a leak-detection surface: every
+    /// real text carrier (content streams, ToUnicode, /ActualText, XMP,
+    /// annotations, hex text strings) is still searched in full. The Latin1
+    /// round-trip is a lossless byte↔char mapping, so the UTF-16BE and UTF-8
+    /// views still see every non-ASCII byte (e.g. fullwidth text stored as a
+    /// UTF-16BE PDF string).
     /// </summary>
-    private static string SearchableTextOf(byte[] saved) =>
-        Encoding.ASCII.GetString(saved) +
-        Encoding.BigEndianUnicode.GetString(saved) +
-        Encoding.UTF8.GetString(saved);
+    private static string SearchableTextOf(byte[] saved)
+    {
+        var raw = Encoding.Latin1.GetString(saved);
+        var scrubbed = System.Text.RegularExpressions.Regex.Replace(
+            raw, @"/ID\s*\[[^\]]*\]", "/ID []");
+        var bytes = Encoding.Latin1.GetBytes(scrubbed);
+        return Encoding.ASCII.GetString(bytes) +
+            Encoding.BigEndianUnicode.GetString(bytes) +
+            Encoding.UTF8.GetString(bytes);
+    }
 }
