@@ -432,6 +432,18 @@ namespace Excise.Core.Document
         public System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfField> GetSignatureFields() { }
         public System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfField> GetTextFields() { }
     }
+    public sealed class PdfAction : System.IEquatable<Excise.Core.Document.PdfAction>
+    {
+        public PdfAction(string Type, string? Uri = null, string? JavaScriptSource = null, string? NamedActionName = null, int? DestinationPage = default, System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfAction>? Next = null) { }
+        public int? DestinationPage { get; init; }
+        public bool IsJavaScript { get; }
+        public string? JavaScriptSource { get; init; }
+        public string? NamedActionName { get; init; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfAction>? Next { get; init; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfAction> NextActions { get; }
+        public string Type { get; init; }
+        public string? Uri { get; init; }
+    }
     public sealed class PdfAnnotation
     {
         public byte[]? AttachmentBytes { get; }
@@ -565,9 +577,11 @@ namespace Excise.Core.Document
     }
     public class PdfDocument : System.IDisposable
     {
+        public System.Collections.Generic.IReadOnlyDictionary<string, Excise.Core.Document.PdfAction> AdditionalActions { get; }
         public string? Author { get; }
         public Excise.Core.Primitives.PdfDictionary Catalog { get; }
         public string? Creator { get; }
+        public System.Collections.Generic.IReadOnlyDictionary<string, Excise.Core.Document.PdfAction> DocumentJavaScriptActions { get; }
         public Excise.Core.Security.PdfPermissions EffectivePermissions { get; }
         public bool HasEmbeddedFiles { get; }
         public Excise.Core.Primitives.PdfDictionary? Info { get; }
@@ -576,6 +590,7 @@ namespace Excise.Core.Document
         public bool IsTaggedPdf { get; }
         public string? Keywords { get; }
         public string? Language { get; set; }
+        public Excise.Core.Document.PdfAction? OpenAction { get; }
         public bool OpenedWithOwnerPassword { get; }
         public int PageCount { get; }
         public Excise.Core.Document.PageCollection Pages { get; }
@@ -743,11 +758,13 @@ namespace Excise.Core.Document
     }
     public class PdfPage
     {
+        public System.Collections.Generic.IReadOnlyDictionary<string, Excise.Core.Document.PdfAction> AdditionalActions { get; }
         public Excise.Core.Document.PdfRectangle ArtBox { get; }
         public Excise.Core.Document.PdfRectangle BleedBox { get; }
         public Excise.Core.Document.PdfRectangle CropBox { get; }
         public Excise.Core.Primitives.PdfDictionary Dictionary { get; }
         public Excise.Core.Document.PdfDocument Document { get; }
+        public double? Duration { get; }
         public double Height { get; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> Letters { get; }
         public Excise.Core.Document.PdfRectangle MediaBox { get; }
@@ -755,6 +772,8 @@ namespace Excise.Core.Document
         public Excise.Core.Primitives.PdfDictionary? Resources { get; }
         public int Rotation { get; set; }
         public string Text { get; }
+        public Excise.Core.Primitives.PdfStream? ThumbnailStream { get; }
+        public Excise.Core.Document.PdfPageTransition? Transition { get; }
         public Excise.Core.Document.PdfRectangle TrimBox { get; }
         public double VisualHeight { get; }
         public double VisualWidth { get; }
@@ -820,6 +839,17 @@ namespace Excise.Core.Document
         public static Excise.Core.Document.PdfPageRect ViewerDips(int pageNumber, double x, double y, double width, double height, double renderDpi) { }
         public static Excise.Core.Document.PdfPageRect VisualPoints(int pageNumber, double x, double y, double width, double height) { }
     }
+    public sealed class PdfPageTransition : System.IEquatable<Excise.Core.Document.PdfPageTransition>
+    {
+        public PdfPageTransition(Excise.Core.Document.PdfTransitionStyle Style = 6, double Duration = 1, string? Dimension = null, string? Motion = null, int Direction = 0, double? FlyScale = default, bool FlyOpaqueRectangle = false) { }
+        public string? Dimension { get; init; }
+        public int Direction { get; init; }
+        public double Duration { get; init; }
+        public bool FlyOpaqueRectangle { get; init; }
+        public double? FlyScale { get; init; }
+        public string? Motion { get; init; }
+        public Excise.Core.Document.PdfTransitionStyle Style { get; init; }
+    }
     public readonly struct PdfPoint : System.IEquatable<Excise.Core.Document.PdfPoint>
     {
         public PdfPoint(double X, double Y) { }
@@ -854,6 +884,21 @@ namespace Excise.Core.Document
         public Excise.Core.Primitives.PdfDictionary RawDictionary { get; }
         public string Type { get; }
         public override string ToString() { }
+    }
+    public enum PdfTransitionStyle
+    {
+        Split = 0,
+        Blinds = 1,
+        Box = 2,
+        Wipe = 3,
+        Dissolve = 4,
+        Glitter = 5,
+        Replace = 6,
+        Fly = 7,
+        Push = 8,
+        Cover = 9,
+        Uncover = 10,
+        Fade = 11,
     }
     public static class SignatureAppearanceAuthoring
     {

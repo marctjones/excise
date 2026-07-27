@@ -1779,6 +1779,105 @@ public class PdfDocument : IDisposable
     /// </summary>
     private Dictionary<string, NamedDestination>? _namedDestinationsCache;
 
+    /// <summary>
+    /// The document-open action (/Catalog/OpenAction, ISO 32000-2:2020 §12.3.2 / §12.6).
+    /// May be an action dictionary (e.g. a GoTo, or a JavaScript action run on open —
+    /// never executed by excise) or, in legacy documents, a bare destination array.
+    /// Null if the catalog has no /OpenAction.
+    /// </summary>
+    public PdfAction? OpenAction
+    {
+        get
+        {
+            if (!_openActionParsed)
+            {
+                _openActionCache = PdfActionParser.Parse(this, Catalog.GetOptional("OpenAction"));
+                _openActionParsed = true;
+            }
+            return _openActionCache;
+        }
+    }
+    private PdfAction? _openActionCache;
+    private bool _openActionParsed;
+
+    /// <summary>
+    /// Document-level additional actions (/Catalog/AA, ISO 32000-2:2020 §12.6.3, Table 204).
+    /// Keys are trigger names: "WC" (before close), "WS" (before save), "DS" (after save),
+    /// "WP" (before print), "DP" (after print). Empty if the catalog has no /AA.
+    /// Never executed by excise — parsed for round-trip and inspection only.
+    /// </summary>
+    public IReadOnlyDictionary<string, PdfAction> AdditionalActions
+    {
+        get
+        {
+            _additionalActionsCache ??= PdfActionParser.ParseAdditionalActions(this, Catalog.GetOptional("AA"));
+            return _additionalActionsCache;
+        }
+    }
+    private Dictionary<string, PdfAction>? _additionalActionsCache;
+
+    /// <summary>
+    /// Document-level JavaScript actions from the /Catalog/Names/JavaScript name tree
+    /// (ISO 32000-2:2020 §7.7.4.3) — scripts a conforming viewer would run once, when
+    /// the document is opened. Keyed by script name. Never executed by excise;
+    /// <see cref="PdfAction.JavaScriptSource"/> exposes the decoded source for
+    /// inspection/auditing only. Empty if the catalog has no such name tree.
+    /// </summary>
+    public IReadOnlyDictionary<string, PdfAction> DocumentJavaScriptActions
+    {
+        get
+        {
+            _documentJavaScriptCache ??= BuildDocumentJavaScriptActions();
+            return _documentJavaScriptCache;
+        }
+    }
+    private Dictionary<string, PdfAction>? _documentJavaScriptCache;
+
+    private Dictionary<string, PdfAction> BuildDocumentJavaScriptActions()
+    {
+        var result = new Dictionary<string, PdfAction>();
+
+        var namesObj = Catalog.GetOptional("Names");
+        if (namesObj == null || Resolve(namesObj) is not PdfDictionary namesDict)
+            return result;
+
+        var jsObj = namesDict.GetOptional("JavaScript");
+        if (jsObj == null || Resolve(jsObj) is not PdfDictionary jsRoot)
+            return result;
+
+        WalkJavaScriptNameTree(jsRoot, result);
+        return result;
+    }
+
+    /// <summary>
+    /// Walk a PDF name tree (§7.9.6) of JavaScript actions. Leaves have a /Names
+    /// array of [name action name action ...] pairs; branches have /Kids subtrees.
+    /// </summary>
+    private void WalkJavaScriptNameTree(PdfDictionary node, Dictionary<string, PdfAction> result)
+    {
+        var namesArrObj = node.GetOptional("Names");
+        if (namesArrObj != null && Resolve(namesArrObj) is PdfArray namesArr)
+        {
+            for (int i = 0; i + 1 < namesArr.Count; i += 2)
+            {
+                if (namesArr[i] is not PdfString nameStr) continue;
+                var action = PdfActionParser.Parse(this, namesArr[i + 1]);
+                if (action != null)
+                    result[nameStr.Value] = action;
+            }
+        }
+
+        var kidsObj = node.GetOptional("Kids");
+        if (kidsObj != null && Resolve(kidsObj) is PdfArray kidsArr)
+        {
+            foreach (var kidObj in kidsArr)
+            {
+                if (Resolve(kidObj) is PdfDictionary kidDict)
+                    WalkJavaScriptNameTree(kidDict, result);
+            }
+        }
+    }
+
     /// <inheritdoc />
     public void Dispose()
     {

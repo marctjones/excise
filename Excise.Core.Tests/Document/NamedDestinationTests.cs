@@ -250,6 +250,53 @@ public class NamedDestinationTests
         ReferenceEquals(dests1, dests2).Should().BeTrue();
     }
 
+    // ─── Round-trip: parse → save → reopen → still resolves ────────────────
+
+    [Fact]
+    public void GetNamedDestinations_RoundTrip_LegacyDests_SurvivesSaveAndReopen()
+    {
+        var pdf = MakePdfWithNamedDestinations(
+            "/Dests << /FirstSection [3 0 R /XYZ 0 0 1] /SecondSection [4 0 R /FitH 100] >>");
+        using var doc = PdfDocument.Open(pdf);
+
+        var saved = doc.SaveToBytes();
+        using var reopened = PdfDocument.Open(saved);
+
+        var dests = reopened.GetNamedDestinations();
+        dests.Should().HaveCount(2);
+        dests["FirstSection"].PageNumber.Should().Be(1);
+        dests["FirstSection"].FitMode.Should().Be("XYZ");
+        dests["SecondSection"].PageNumber.Should().Be(2);
+        dests["SecondSection"].FitMode.Should().Be("FitH");
+    }
+
+    [Fact]
+    public void GetNamedDestinations_RoundTrip_ModernNamesTree_SurvivesSaveAndReopen()
+    {
+        var pdf = MakePdfWithNamedDestinations(
+            "/Names << /Dests << /Names [(Cached) [3 0 R /XYZ 0 0 1]] >> >>");
+        using var doc = PdfDocument.Open(pdf);
+
+        var saved = doc.SaveToBytes();
+        using var reopened = PdfDocument.Open(saved);
+
+        var dests = reopened.GetNamedDestinations();
+        dests.Should().ContainKey("Cached");
+        dests["Cached"].PageNumber.Should().Be(1);
+    }
+
+    [Fact]
+    public void GetNamedDestinations_RoundTrip_DoesNotAppearOnPlainDocument()
+    {
+        var pdf = MakePdfWithNamedDestinations(null);
+        using var doc = PdfDocument.Open(pdf);
+
+        var saved = doc.SaveToBytes();
+        using var reopened = PdfDocument.Open(saved);
+
+        reopened.GetNamedDestinations().Should().BeEmpty();
+    }
+
     // ─── Helper: PDF builder ───────────────────────────────────────────────
 
     /// <summary>
