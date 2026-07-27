@@ -6,6 +6,25 @@ semantic versioning.
 
 ## [Unreleased]
 
+### Added
+- **Audit flag for symbolic (3,0) glyphs no extractor recovers** (#796) — a
+  simple symbolic TrueType with a Microsoft-Symbol `(3,0)` cmap AND an
+  `/Encoding` renders meaningful text through its `(3,0)` glyphs, but every
+  extractor (excise, mutool, poppler — established by #794/#795) honours
+  `/Encoding` and extracts the WinAnsi interpretation instead. The visible text
+  is therefore unrecoverable and `RedactText` cannot reach it. excise
+  deliberately matches the reference tools rather than diverging (no
+  self-oracle), so #796 is the conservative response: `HiddenTextDetector` now
+  DETECTS this class — it decodes each such font's `(3,0)`/`post` glyph names
+  (reusing #791's `TrueTypeFontFile.GidForSymbolByte`/`GlyphName`) and, where
+  that spells real text that DIVERGES from what extraction yielded, emits a
+  finding ("visible text via (3,0) symbol cmap not recoverable by extraction —
+  redaction may not reach it") through the same audit surface as every other
+  hidden-text finding (CLI, GUI reveal, redacted-copy safety check). Detection
+  only — no change to extraction decoding, and no false flag for a normal
+  WinAnsi font, a `(3,0)` font WITHOUT `/Encoding` (#791 already extracts it),
+  or a `(3,0)`+`/Encoding` font whose decode already equals the extracted text.
+
 ### Performance
 - **Renderer image decode / colour-conversion allocation cuts** (#599) — the
   image decode path no longer stages a large transient managed pixel buffer per
