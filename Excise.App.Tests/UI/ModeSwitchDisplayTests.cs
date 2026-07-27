@@ -15,10 +15,12 @@ namespace Excise.App.Tests.UI;
 
 /// <summary>
 /// Display-state invariants for the interaction-mode toolbar buttons
-/// (Redact / Select Text / Typewriter / Form Authoring). Prompted by a live
-/// report of "something weird happens to the display" when clicking these.
+/// (Redact / Typewriter / Form Authoring). Prompted by a live report of
+/// "something weird happens to the display" when clicking these. (Select Text is
+/// excluded since #815: it is a read affordance that works in the continuous
+/// reading view and no longer forces single-page — see PdfViewerSelectionTests.)
 ///
-/// Every editing mode forces the viewer from the default Continuous view into
+/// Every draw/edit mode forces the viewer from the default Continuous view into
 /// SinglePage — which is exactly the render path reworked for device-resolution
 /// output (#682/#683/#685/#686). Those changes are a functional no-op at
 /// devicePixelRatio 1 (all the headless test host reports), so this battery
@@ -40,7 +42,11 @@ public class ModeSwitchDisplayTests
     public static TheoryData<string, double> ModeByDpr()
     {
         var data = new TheoryData<string, double>();
-        foreach (var mode in new[] { "redact", "select-text", "typewriter", "form-authoring" })
+        // select-text is intentionally absent (#815): text selection is a read
+        // affordance that now works in the continuous reading view and no longer
+        // forces single-page, so it does not belong in this single-page battery.
+        // Its continuous behavior is covered in PdfViewerSelectionTests.
+        foreach (var mode in new[] { "redact", "typewriter", "form-authoring" })
         foreach (var dpr in new[] { 1.0, 2.0 })
             data.Add(mode, dpr);
         return data;
@@ -140,7 +146,8 @@ public class ModeSwitchDisplayTests
             var widthInRedact = SinglePageImage(viewer)!.Width;
 
             // Hop directly between editing modes — no bounce through continuous.
-            foreach (var next in new[] { "select-text", "typewriter", "form-authoring", "redact" })
+            // (select-text excluded — it is no longer single-page, #815.)
+            foreach (var next in new[] { "typewriter", "form-authoring", "redact" })
             {
                 ModeCommand(vm, next).Execute().Subscribe();
                 await PumpUntilAsync(window, () => ModeFlag(vm, next));
@@ -213,7 +220,9 @@ public class ModeSwitchDisplayTests
             vm.SetManualZoom(zoom);
             await Task.Delay(200); window.UpdateLayout();
 
-            ModeCommand(vm, "select-text").Execute().Subscribe();
+            // redact is the single-page vehicle here (was select-text, which is
+            // no longer single-page — #815).
+            ModeCommand(vm, "redact").Execute().Subscribe();
             await PumpUntilAsync(window, () => SinglePageImage(viewer)?.Source != null);
             window.UpdateLayout();
 
@@ -321,7 +330,7 @@ public class ModeSwitchDisplayTests
     /// #693 (scroll half): the reading position must survive the mode switch.
     /// Before the fix, entering an editing mode dropped the reader at the top
     /// of the page (singleOffset 0/…) and switching back re-anchored to the
-    /// page top. Round-trip: continuous → select-text → continuous must come
+    /// page top. Round-trip: continuous → an editing mode → continuous must come
     /// back to (about) the same scroll offset, and the intermediate
     /// single-page view must be scrolled into the page, not at its top.
     /// </summary>
@@ -351,7 +360,9 @@ public class ModeSwitchDisplayTests
             var pageBefore = vm.CurrentPageIndex;
             offBefore.Should().BeGreaterThan(100, "the test must start scrolled into the document");
 
-            ModeCommand(vm, "select-text").Execute().Subscribe();
+            // redact is the single-page editing-mode vehicle (was select-text,
+            // which no longer forces single-page — #815).
+            ModeCommand(vm, "redact").Execute().Subscribe();
             await PumpUntilAsync(window, () => SinglePageImage(viewer)?.Source != null);
             var single = viewer.FindControl<ScrollViewer>("PdfScrollViewer")!;
             // The carried fraction applies via bounded deferred retries once
@@ -376,7 +387,7 @@ public class ModeSwitchDisplayTests
             (single.Offset.Y / single.Extent.Height).Should().BeGreaterThan(0.05,
                 "the single-page view must open at the carried reading position, not the page top (#693)");
 
-            ModeCommand(vm, "select-text").Execute().Subscribe();
+            ModeCommand(vm, "redact").Execute().Subscribe();
             await PumpUntilAsync(window, () => cont.IsVisible);
             await PumpUntilAsync(window, () => Math.Abs(cont.Offset.Y - offBefore) < 40,
                 timeoutMs: 10000);
