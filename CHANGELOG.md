@@ -7,6 +7,30 @@ semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **PDF/UA-1 and PDF/A conformance checker** (#772) — a new
+  `Excise.Core.Validation` namespace adds a *checker* (not an emitter):
+  `PdfUaValidator.Validate(document)` reports a bounded, honestly-scoped subset
+  of PDF/UA-1 (ISO 14289-1) rules that are decidable from what excise already
+  parses — document is tagged (`/MarkInfo /Marked`), has a `/StructTreeRoot`,
+  declares `/Lang`, has a title (Info `/Title` or XMP `dc:title`) with
+  `/ViewerPreferences /DisplayDocTitle true`, custom structure types are
+  role-mapped (`/RoleMap`) to standard ones, figures carry `/Alt` or
+  `/ActualText`, heading levels don't skip, tables use `TR`/`TH`/`TD`, lists use
+  `L`/`LI`/`LBody`, and real page text is either inside the structure tree or
+  marked `/Artifact`. `PdfAStructuralValidator.Validate(document, conformance)`
+  structurally checks the PDF/A markers excise itself emits (XMP `pdfaid`
+  part/level, sRGB OutputIntent, trailer `/ID`). Each rule reports
+  pass/fail/not-applicable/not-checked with a severity and a location, and every
+  `ValidationReport` carries an explicit `UncoveredCheckpoints` list plus a
+  deliberately-named `CheckedSubsetConformant` flag so a green result can never
+  be mistaken for full ISO conformance. The content-tagging rule re-walks the
+  page content stream itself (honoring `/Artifact` and `/MCID`) rather than
+  going through the text extractor, so it distinguishes an artifact from
+  untagged content and touches nothing on the extraction path. A small
+  `excise validate <file> [--pdfa 1b|2b] [--json]` CLI command surfaces the
+  report. Tests drive per-rule pass/fail fixtures whose verdict is known by
+  construction and, where veraPDF is installed, cross-check excise's verdict
+  against it.
 - **Type-over (typewriter) styling UI** (#781) — the type-over engine already
   supported font size, colour, and text alignment
   (`PdfTypewriterTextStyle`/`PdfTypewriterTextOperation.WithStyle`), but nothing
