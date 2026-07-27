@@ -42,6 +42,15 @@ public class TextExtractor
     // program yields nothing. Recomputed on each /Tf (cached per font dict).
     private Dictionary<int, string>? _embeddedCidToUnicode;
     private readonly Dictionary<PdfDictionary, Dictionary<int, string>?> _embeddedCidToUnicodeCache = new(ReferenceEqualityComparer.Instance);
+    // #791: simple (non-Type0) SYMBOLIC TrueType with a Microsoft-Symbol (3,0)
+    // cmap subtable and no /ToUnicode / no /Encoding. Such fonts address glyphs
+    // through an F000-based PUA offset; without this map extraction echoes the
+    // raw content byte through WinAnsi (¡¢£… for R,e,d…) — the silent mis-decode
+    // that bounds redaction (excise cannot redact what it cannot read). Built
+    // from the embedded program's (3,0) cmap (code→gid) + post glyph names /
+    // Unicode cmap (gid→Unicode). Null when out of scope; cached per font dict.
+    private Dictionary<int, string>? _simpleSymbolCodeToUnicode;
+    private readonly Dictionary<PdfDictionary, Dictionary<int, string>?> _simpleSymbolCodeToUnicodeCache = new(ReferenceEqualityComparer.Instance);
     // True when /ToUnicode is the predefined-CMap NAME /Identity-H or /Identity-V
     // (not a stream): the 2-byte code IS the UTF-16BE Unicode scalar, so it must
     // be decoded directly rather than left to the WinAnsi fallback (which is only
@@ -986,6 +995,7 @@ public class TextExtractor
                     _toUnicodeIdentity = _toUnicodeMap == null && ToUnicodeIsIdentity(_currentFont);
                     _useStandardMacGlyphOrder = _toUnicodeMap == null && UsesStandardMacGlyphOrderFallback(_currentFont);
                     _embeddedCidToUnicode = _toUnicodeMap == null ? LoadEmbeddedCidToUnicodeMap(_currentFont) : null;
+                    _simpleSymbolCodeToUnicode = _toUnicodeMap == null ? LoadSimpleSymbolTrueTypeMap(_currentFont) : null;
                     LoadFontGeometry();
                 }
                 break;
@@ -1842,6 +1852,19 @@ public class TextExtractor
                 return macUnicode;
         }
 
+        // Simple symbolic TrueType with a (3,0) symbol cmap and no ToUnicode/no
+        // Encoding (#791): the content byte selects a glyph through the embedded
+        // font's (3,0)/F000 cmap, and that glyph's Unicode is recovered from its
+        // post name / Unicode cmap. Consulted last so any explicit encoding above
+        // still wins; only fires when the embedded program actually resolves this
+        // code to a real (non-PUA) Unicode. Without it the byte is echoed through
+        // WinAnsi below — the silent mis-decode that bounds redaction.
+        if (_simpleSymbolCodeToUnicode != null
+            && _simpleSymbolCodeToUnicode.TryGetValue(charCode, out var symbolUnicode))
+        {
+            return symbolUnicode;
+        }
+
         // Default: assume WinAnsiEncoding for Type1 fonts with standard base fonts
         return DecodeWinAnsi(charCode);
     }
@@ -1974,6 +1997,84 @@ public class TextExtractor
             map = null;
         _embeddedCidToUnicodeCache[font] = map;
         return map;
+    }
+
+    /// <summary>
+    /// Builds code→Unicode for a SIMPLE (non-Type0) SYMBOLIC TrueType font that
+    /// carries a Microsoft-Symbol <c>(3,0)</c> cmap subtable and no
+    /// <c>/ToUnicode</c> / no <c>/Encoding</c> (#791). The content byte selects a
+    /// glyph through the embedded program's (3,0) cmap (F000-offset per ISO
+    /// 32000-2 §9.6.6.4); that glyph's Unicode is recovered from the program's
+    /// <c>post</c> glyph names (or a Unicode cmap subtable, if present). Returns
+    /// null when out of scope, so the existing WinAnsi fallback is untouched for
+    /// every other simple font — keeping the change off the extraction-parity
+    /// corpus except where a real (3,0) symbol font would otherwise mis-decode.
+    /// </summary>
+    private Dictionary<int, string>? LoadSimpleSymbolTrueTypeMap(PdfDictionary? font)
+    {
+        if (font == null || font.GetNameOrNull("Subtype") != "TrueType")
+            return null;
+        // Scope to symbolic fonts with no producer-declared encoding — those are
+        // the fonts the WinAnsi fallback silently mis-decodes. A present
+        // /ToUnicode or /Encoding is the producer's own map and is handled above.
+        if (font.GetOptional("ToUnicode") != null || font.GetOptional("Encoding") != null)
+            return null;
+
+        if (_simpleSymbolCodeToUnicodeCache.TryGetValue(font, out var cached))
+            return cached;
+
+        Dictionary<int, string>? map = null;
+        try
+        {
+            if (_page.Document.Resolve(font.GetOptional("FontDescriptor") ?? PdfNull.Instance)
+                    is PdfDictionary fd
+                && (fd.GetInt("Flags", 0) & 0x4) != 0 // bit 3: Symbolic
+                && _page.Document.Resolve(fd.GetOptional("FontFile2") ?? PdfNull.Instance) is PdfStream ff2)
+            {
+                var ttf = TrueTypeFontFile.Parse(ff2.DecodedData);
+                if (ttf.HasSymbolCmap)
+                    map = BuildSymbolCodeToUnicode(ttf);
+            }
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            map = null; // malformed embedded program — keep existing behavior
+        }
+
+        if (map is { Count: 0 })
+            map = null;
+        _simpleSymbolCodeToUnicodeCache[font] = map;
+        return map;
+    }
+
+    /// <summary>
+    /// code (0..255) → Unicode for a symbolic TrueType: symbol-cmap code→gid, then
+    /// gid→Unicode from the program's own Unicode cmap (non-PUA) or post glyph
+    /// names. Skips codes whose only recovery is a Private-Use scalar — those are
+    /// genuinely unrecoverable and must fall through rather than emit PUA garbage.
+    /// </summary>
+    private static Dictionary<int, string> BuildSymbolCodeToUnicode(TrueTypeFontFile ttf)
+    {
+        // gid → non-PUA Unicode from a Unicode cmap subtable, if the font has one.
+        var gidToCp = ReverseCmap(ttf.Cmap);
+        var result = new Dictionary<int, string>();
+        for (int code = 0; code <= 0xFF; code++)
+        {
+            int gid = ttf.GidForSymbolByte(code);
+            if (gid == 0) continue;
+
+            string? unicode = null;
+            if (gidToCp.TryGetValue(gid, out var cp) && !IsPrivateUse(cp))
+                unicode = char.ConvertFromUtf32(cp);
+            if (unicode == null)
+            {
+                var name = ttf.GlyphName(gid);
+                if (name != null) unicode = GlyphNameToUnicode(name);
+            }
+            if (unicode is { Length: > 0 } && !IsPrivateUse(char.ConvertToUtf32(unicode, 0)))
+                result[code] = unicode;
+        }
+        return result;
     }
 
     /// <summary>
