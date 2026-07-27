@@ -1559,14 +1559,14 @@ internal partial class RenderContext
                     {
                         if (fillWithPattern)
                         {
-                            using var glyphPath = font.GetTextPath(glyphText, SKPoint.Empty);
+                            var glyphPath = GetCachedGlyphOutline(font, currentFont.Typeface!, glyphText);
                             AddScaledGlyphPath(localFillPatternPath, glyphPath, cursor, fallbackGlyphScale);
                         }
                         else
                         {
                             // #710: fill from the outline path, not the
                             // platform glyph mask (see FillTextUsingGlyphPath).
-                            using var fillGlyphPath = BuildScaledGlyphPath(font, glyphText, cursor, fallbackGlyphScale);
+                            using var fillGlyphPath = BuildScaledGlyphPath(font, currentFont.Typeface!, glyphText, cursor, fallbackGlyphScale);
                             FillTextUsingGlyphPath(
                                 fillGlyphPath, fillPaint,
                                 () => DrawFallbackGlyph(glyphText, cursor, fallbackGlyphScale, font, fillPaint));
@@ -1578,7 +1578,7 @@ internal partial class RenderContext
                             strokePaint);
                     if (localClipPath != null)
                     {
-                        using var glyphPath = font.GetTextPath(glyphText, SKPoint.Empty);
+                        var glyphPath = GetCachedGlyphOutline(font, currentFont.Typeface!, glyphText);
                         if (glyphPath != null && !glyphPath.IsEmpty)
                         {
                             using var transformedGlyphPath = new SKPath();
@@ -1670,8 +1670,8 @@ internal partial class RenderContext
                     if (fillText && fillWithPattern)
                     {
                         using var localPath = positions != null
-                            ? BuildGlyphIdTextPath(gids, positions, font)
-                            : BuildGlyphIdTextPath(gids, font, measurePaint);
+                            ? BuildGlyphIdTextPath(gids, positions, currentFont.Typeface!, font)
+                            : BuildGlyphIdTextPath(gids, currentFont.Typeface!, font, measurePaint);
                         if (localPath != null && !localPath.IsEmpty)
                             localFillPatternPath!.AddPath(localPath, SKPathAddMode.Append);
                     }
@@ -1680,8 +1680,8 @@ internal partial class RenderContext
                         // #710: fill from the outline path, not the platform
                         // glyph mask (see FillTextUsingGlyphPath).
                         using var fillGlyphPath = positions != null
-                            ? BuildGlyphIdTextPath(gids, positions, font)
-                            : BuildGlyphIdTextPath(gids, font, measurePaint);
+                            ? BuildGlyphIdTextPath(gids, positions, currentFont.Typeface!, font)
+                            : BuildGlyphIdTextPath(gids, currentFont.Typeface!, font, measurePaint);
                         var blobToFill = blob;
                         FillTextUsingGlyphPath(
                             fillGlyphPath, fillPaint,
@@ -1696,8 +1696,8 @@ internal partial class RenderContext
                 if (clipText)
                 {
                     using var localClipPath = positions != null
-                        ? BuildGlyphIdTextPath(gids, positions, font)
-                        : BuildGlyphIdTextPath(gids, font, measurePaint);
+                        ? BuildGlyphIdTextPath(gids, positions, currentFont.Typeface!, font)
+                        : BuildGlyphIdTextPath(gids, currentFont.Typeface!, font, measurePaint);
                     AddPendingTextClipPath(localClipPath, x, y, th, ySign);
                 }
             }
@@ -1705,7 +1705,7 @@ internal partial class RenderContext
             {
                 if (fillText && fillWithPattern)
                 {
-                    using var localPath = font.GetTextPath(text, SKPoint.Empty);
+                    var localPath = GetCachedGlyphOutline(font, currentFont.Typeface!, text);
                     if (localPath != null && !localPath.IsEmpty)
                         localFillPatternPath!.AddPath(localPath, SKPathAddMode.Append);
                 }
@@ -1713,7 +1713,7 @@ internal partial class RenderContext
                 {
                     // #710: fill from the outline path, not the platform
                     // glyph mask (see FillTextUsingGlyphPath).
-                    using var fillGlyphPath = font.GetTextPath(text, SKPoint.Empty);
+                    var fillGlyphPath = GetCachedGlyphOutline(font, currentFont.Typeface!, text);
                     FillTextUsingGlyphPath(
                         fillGlyphPath, fillPaint,
                         () => _canvas.DrawText(text, 0, 0, font, fillPaint));
@@ -1724,7 +1724,7 @@ internal partial class RenderContext
                         strokePaint);
                 if (clipText)
                 {
-                    using var localClipPath = font.GetTextPath(text, SKPoint.Empty);
+                    var localClipPath = GetCachedGlyphOutline(font, currentFont.Typeface!, text);
                     AddPendingTextClipPath(localClipPath, x, y, th, ySign);
                 }
             }
@@ -1909,12 +1909,14 @@ internal partial class RenderContext
     /// has no outline (bitmap-only face) and the caller must fall back to
     /// <see cref="DrawFallbackGlyph"/>.
     /// </summary>
-    private static SKPath? BuildScaledGlyphPath(SKFont font, string glyphText, float cursor, float horizontalScale)
+    private SKPath? BuildScaledGlyphPath(SKFont font, SKTypeface typeface, string glyphText, float cursor, float horizontalScale)
     {
-        using var glyphPath = font.GetTextPath(glyphText, SKPoint.Empty);
+        var glyphPath = GetCachedGlyphOutline(font, typeface, glyphText);
         if (glyphPath == null || glyphPath.IsEmpty)
             return null;
 
+        // Two-arg Transform reads the cached outline and writes a fresh path;
+        // the cached path is never mutated (#598).
         var positioned = new SKPath();
         var glyphMatrix = new SKMatrix(
             horizontalScale, 0, cursor,
@@ -1922,6 +1924,31 @@ internal partial class RenderContext
             0, 0, 1);
         glyphPath.Transform(glyphMatrix, positioned);
         return positioned;
+    }
+
+    /// <summary>
+    /// Return the UNPOSITIONED glyph outline for <paramref name="glyphText"/>
+    /// at the current font size, reusing a cached <see cref="SKPath"/> when the
+    /// same (typeface, size, text) has been tessellated before on this page
+    /// (#598). The returned path is owned by <see cref="_glyphOutlineCache"/>
+    /// and disposed in DisposeOwnedResources — callers must treat it as
+    /// immutable and only ever use the two-arg <c>Transform(matrix, dest)</c>
+    /// or <c>dest.AddPath(cached)</c> forms, never an in-place transform. May
+    /// be null (whitespace / bitmap-only faces), matching SKFont.GetTextPath.
+    /// </summary>
+    private SKPath? GetCachedGlyphOutline(SKFont font, SKTypeface typeface, string glyphText)
+    {
+        var key = (typeface, BitConverter.SingleToInt32Bits(font.Size), glyphText);
+        if (_glyphOutlineCache.TryGetValue(key, out var cached))
+        {
+            GlyphOutlineCacheHits++;
+            return cached;
+        }
+
+        GlyphOutlineCacheMisses++;
+        var path = font.GetTextPath(glyphText, SKPoint.Empty);
+        _glyphOutlineCache[key] = path;
+        return path;
     }
 
     private SKPaint CreateTextPaint(SKPaintStyle style, SKColor color, float alpha)
@@ -2015,7 +2042,31 @@ internal partial class RenderContext
         _pendingTextClipPath = null;
     }
 
-    private static SKPath BuildGlyphIdTextPath(ushort[] gids, SKFont font, SKPaint measurePaint)
+    /// <summary>
+    /// Glyph-ID counterpart of <see cref="GetCachedGlyphOutline"/> (#598):
+    /// returns the UNPOSITIONED outline for a single glyph ID at the current
+    /// font size, reusing a cached <see cref="SKPath"/> across the page. The
+    /// returned path is owned by <see cref="_glyphOutlineByIdCache"/> and must
+    /// be treated as immutable — callers only ever use the offset/scale
+    /// <c>AddPath</c> or two-arg <c>Transform</c> forms. May be null for glyphs
+    /// with no outline, matching SKFont.GetGlyphPath.
+    /// </summary>
+    private SKPath? GetCachedGlyphOutlineById(SKFont font, SKTypeface typeface, ushort gid)
+    {
+        var key = (typeface, BitConverter.SingleToInt32Bits(font.Size), gid);
+        if (_glyphOutlineByIdCache.TryGetValue(key, out var cached))
+        {
+            GlyphOutlineCacheHits++;
+            return cached;
+        }
+
+        GlyphOutlineCacheMisses++;
+        var path = font.GetGlyphPath(gid);
+        _glyphOutlineByIdCache[key] = path;
+        return path;
+    }
+
+    private SKPath BuildGlyphIdTextPath(ushort[] gids, SKTypeface typeface, SKFont font, SKPaint measurePaint)
     {
         var path = new SKPath();
         if (gids.Length == 0)
@@ -2025,7 +2076,7 @@ internal partial class RenderContext
         float cursor = 0f;
         for (int i = 0; i < gids.Length; i++)
         {
-            using var glyphPath = font.GetGlyphPath(gids[i]);
+            var glyphPath = GetCachedGlyphOutlineById(font, typeface, gids[i]);
             if (glyphPath != null && !glyphPath.IsEmpty)
                 path.AddPath(glyphPath, cursor, 0, SKPathAddMode.Append);
             if (i < widths.Length)
@@ -2035,13 +2086,13 @@ internal partial class RenderContext
         return path;
     }
 
-    private static SKPath BuildGlyphIdTextPath(ushort[] gids, SKPoint[] positions, SKFont font)
+    private SKPath BuildGlyphIdTextPath(ushort[] gids, SKPoint[] positions, SKTypeface typeface, SKFont font)
     {
         var path = new SKPath();
         var count = Math.Min(gids.Length, positions.Length);
         for (int i = 0; i < count; i++)
         {
-            using var glyphPath = font.GetGlyphPath(gids[i]);
+            var glyphPath = GetCachedGlyphOutlineById(font, typeface, gids[i]);
             if (glyphPath != null && !glyphPath.IsEmpty)
                 path.AddPath(glyphPath, positions[i].X, positions[i].Y, SKPathAddMode.Append);
         }
@@ -2049,13 +2100,13 @@ internal partial class RenderContext
         return path;
     }
 
-    private static SKPath BuildGlyphIdTextPath(ushort[] gids, SKPoint[] positions, float[] horizontalScales, SKFont font)
+    private SKPath BuildGlyphIdTextPath(ushort[] gids, SKPoint[] positions, float[] horizontalScales, SKTypeface typeface, SKFont font)
     {
         var path = new SKPath();
         var count = Math.Min(Math.Min(gids.Length, positions.Length), horizontalScales.Length);
         for (int i = 0; i < count; i++)
         {
-            using var glyphPath = font.GetGlyphPath(gids[i]);
+            var glyphPath = GetCachedGlyphOutlineById(font, typeface, gids[i]);
             if (glyphPath == null || glyphPath.IsEmpty)
                 continue;
 
@@ -2663,7 +2714,7 @@ internal partial class RenderContext
             {
                 if (fillText && fillWithPattern)
                 {
-                    using var localPath = BuildGlyphIdTextPath(gids, positions, fallbackGlyphScales, font);
+                    using var localPath = BuildGlyphIdTextPath(gids, positions, fallbackGlyphScales, currentFont.Typeface!, font);
                     if (localPath != null && !localPath.IsEmpty)
                         localFillPatternPath!.AddPath(localPath, SKPathAddMode.Append);
                 }
@@ -2671,7 +2722,7 @@ internal partial class RenderContext
                 {
                     // #710: fill from the outline path, not the platform
                     // glyph mask (see FillTextUsingGlyphPath).
-                    using var fillGlyphPath = BuildGlyphIdTextPath(gids, positions, fallbackGlyphScales, font);
+                    using var fillGlyphPath = BuildGlyphIdTextPath(gids, positions, fallbackGlyphScales, currentFont.Typeface!, font);
                     FillTextUsingGlyphPath(
                         fillGlyphPath, fillPaint,
                         () => DrawPositionedGlyphIds(gids, positions, fallbackGlyphScales, font, fillPaint));
@@ -2688,7 +2739,7 @@ internal partial class RenderContext
                 {
                     if (fillText && fillWithPattern)
                     {
-                        using var localPath = BuildGlyphIdTextPath(gids, positions, font);
+                        using var localPath = BuildGlyphIdTextPath(gids, positions, currentFont.Typeface!, font);
                         if (localPath != null && !localPath.IsEmpty)
                             localFillPatternPath!.AddPath(localPath, SKPathAddMode.Append);
                     }
@@ -2696,7 +2747,7 @@ internal partial class RenderContext
                     {
                         // #710: fill from the outline path, not the platform
                         // glyph mask (see FillTextUsingGlyphPath).
-                        using var fillGlyphPath = BuildGlyphIdTextPath(gids, positions, font);
+                        using var fillGlyphPath = BuildGlyphIdTextPath(gids, positions, currentFont.Typeface!, font);
                         var blobToFill = blob;
                         FillTextUsingGlyphPath(
                             fillGlyphPath, fillPaint,
@@ -2712,8 +2763,8 @@ internal partial class RenderContext
             if (clipText)
             {
                 using var localClipPath = fallbackGlyphScales != null
-                    ? BuildGlyphIdTextPath(gids, positions, fallbackGlyphScales, font)
-                    : BuildGlyphIdTextPath(gids, positions, font);
+                    ? BuildGlyphIdTextPath(gids, positions, fallbackGlyphScales, currentFont.Typeface!, font)
+                    : BuildGlyphIdTextPath(gids, positions, currentFont.Typeface!, font);
                 AddPendingTextClipPath(localClipPath, x, y, drawHScale, ySign);
             }
 
