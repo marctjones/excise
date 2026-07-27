@@ -1,4 +1,5 @@
 using System.Text;
+using Excise.Core.Text;
 
 namespace Excise.Core.Fonts;
 
@@ -30,18 +31,50 @@ internal sealed class TrueTypeFontFile
 
     private readonly ushort[] _advanceWidths;          // per glyph id, font units
     private readonly Dictionary<int, int> _cmap;       // unicode codepoint -> gid
+    // Microsoft-Symbol (3,0) subtable, RAW keys (0xF0NN), or null when absent.
+    private readonly Dictionary<int, int>? _symbolCmap;
+    // Macintosh (1,0) subtable, RAW keys (0xNN), or null when absent.
+    private readonly Dictionary<int, int>? _macCmap;
+    // gid -> PostScript glyph name (from the 'post' table), or empty.
+    private readonly Dictionary<int, string> _glyphNames;
 
     private TrueTypeFontFile(byte[] data, ushort unitsPerEm, int glyphCount, string psName,
         short xMin, short yMin, short xMax, short yMax, short ascent, short descent,
-        bool bold, bool italic, bool isCff, ushort[] advanceWidths, Dictionary<int, int> cmap)
+        bool bold, bool italic, bool isCff, ushort[] advanceWidths, Dictionary<int, int> cmap,
+        Dictionary<int, int>? symbolCmap, Dictionary<int, int>? macCmap, Dictionary<int, string> glyphNames)
     {
         Data = data; UnitsPerEm = unitsPerEm; GlyphCount = glyphCount; PostScriptName = psName;
         XMin = xMin; YMin = yMin; XMax = xMax; YMax = yMax; Ascent = ascent; Descent = descent;
         IsBold = bold; IsItalic = italic; IsCff = isCff; _advanceWidths = advanceWidths; _cmap = cmap;
+        _symbolCmap = symbolCmap; _macCmap = macCmap; _glyphNames = glyphNames;
     }
 
     /// <summary>Glyph id for a Unicode codepoint, or 0 (.notdef) if unmapped.</summary>
     public int GidForCodepoint(int codepoint) => _cmap.TryGetValue(codepoint, out var g) ? g : 0;
+
+    /// <summary>True when the font carries a Microsoft-Symbol <c>(3,0)</c> cmap subtable.</summary>
+    public bool HasSymbolCmap => _symbolCmap != null;
+
+    /// <summary>
+    /// Glyph id for a one-byte content code under the symbolic-TrueType cmap
+    /// selection order (ISO 32000-2 §9.6.6.4): the Microsoft-Symbol <c>(3,0)</c>
+    /// subtable first — trying the F000-offset key (<c>0xF000 | code</c>) then the
+    /// bare code — then the Macintosh <c>(1,0)</c> subtable. Returns 0 (.notdef)
+    /// when no symbolic subtable resolves the code.
+    /// </summary>
+    public int GidForSymbolByte(int code)
+    {
+        if (_symbolCmap != null)
+        {
+            if (_symbolCmap.TryGetValue(0xF000 | (code & 0xFF), out var g) && g != 0) return g;
+            if (_symbolCmap.TryGetValue(code & 0xFF, out g) && g != 0) return g;
+        }
+        if (_macCmap != null && _macCmap.TryGetValue(code & 0xFF, out var mg) && mg != 0) return mg;
+        return 0;
+    }
+
+    /// <summary>PostScript glyph name for a gid (from the 'post' table), or null.</summary>
+    public string? GlyphName(int gid) => _glyphNames.TryGetValue(gid, out var n) ? n : null;
 
     /// <summary>Advance width of a glyph in font units (clamped to the table).</summary>
     public int AdvanceWidth(int gid)
@@ -122,14 +155,105 @@ internal sealed class TrueTypeFontFile
             adv[i] = last;
         }
 
-        var cmap = ParseCmap(r, Req("cmap").off);
+        int cmapOff = Req("cmap").off;
+        var cmap = ParseCmap(r, cmapOff);
+        // Symbolic-TrueType extraction (#791) needs the raw (3,0)/(1,0) subtables
+        // and the 'post' glyph names, which the best-scored Unicode cmap discards.
+        // These run for EVERY font load (rendering included), so a malformed post
+        // or subtable must NOT fail the whole parse — it degrades to an empty map,
+        // leaving a font that previously parsed fine unaffected.
+        Dictionary<int, int>? symbolCmap = null, macCmap = null;
+        var glyphNames = new Dictionary<int, string>();
+        try
+        {
+            symbolCmap = ParseSubtableByPlatform(r, cmapOff, 3, 0);
+            macCmap = ParseSubtableByPlatform(r, cmapOff, 1, 0);
+            if (tables.TryGetValue("post", out var postTbl))
+                glyphNames = ParsePostGlyphNames(r, postTbl.off, postTbl.len, numGlyphs);
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            symbolCmap = null; macCmap = null; glyphNames = new Dictionary<int, string>();
+        }
         string psName = tables.TryGetValue("name", out var nameTbl)
             ? (ReadPostScriptName(r, nameTbl.off) ?? "EmbeddedFont")
             : "EmbeddedFont";
 
         return new TrueTypeFontFile(data, unitsPerEm, numGlyphs, psName,
             xMin, yMin, xMax, yMax, ascent, descent,
-            (macStyle & 0x1) != 0, (macStyle & 0x2) != 0, isCff, adv, cmap);
+            (macStyle & 0x1) != 0, (macStyle & 0x2) != 0, isCff, adv, cmap,
+            symbolCmap, macCmap, glyphNames);
+    }
+
+    /// <summary>
+    /// Parses the cmap subtable for an exact (platformID, encodingID), returning
+    /// its RAW code→gid map (no F000 offset stripped), or null when absent.
+    /// Used for symbolic-TrueType code resolution where the (3,0)/(1,0) subtable
+    /// — not the best-scored Unicode one — is authoritative (#791).
+    /// </summary>
+    private static Dictionary<int, int>? ParseSubtableByPlatform(BE r, int cmapOff, int wantPlat, int wantEnc)
+    {
+        ushort numSub = r.U16(cmapOff + 2);
+        for (int i = 0; i < numSub; i++)
+        {
+            int rec = cmapOff + 4 + i * 8;
+            if (r.U16(rec) != wantPlat || r.U16(rec + 2) != wantEnc) continue;
+            int sub = cmapOff + (int)r.U32(rec + 4);
+            var map = new Dictionary<int, int>();
+            ParseSubtableInto(r, sub, map);
+            return map.Count > 0 ? map : null;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Reads the 'post' table (format 1.0 / 2.0) into gid→glyph-name. Format 3.0
+    /// (and anything else) carries no names and yields an empty map. Names bridge
+    /// gid→Unicode via the Adobe Glyph List for symbolic fonts with no /ToUnicode.
+    /// </summary>
+    private static Dictionary<int, string> ParsePostGlyphNames(BE r, int postOff, int postLen, int numGlyphs)
+    {
+        var names = new Dictionary<int, string>();
+        if (postLen < 4) return names;
+        uint version = r.U32(postOff);
+        if (version == 0x00010000) // 1.0: the 258 standard Macintosh names, in order
+        {
+            for (int gid = 0; gid < numGlyphs && gid < 258; gid++)
+                if (StandardMacGlyphOrder.TryGetName(gid, out var n)) names[gid] = n;
+            return names;
+        }
+        if (version != 0x00020000) return names; // 2.5/3.0/unknown: no usable names
+
+        int p = postOff + 32;
+        int count = r.U16(p);
+        p += 2;
+        if (count > numGlyphs) count = numGlyphs;
+        var indices = new int[count];
+        for (int i = 0; i < count; i++, p += 2) indices[i] = r.U16(p);
+
+        // Custom Pascal-string names follow the index array (for indices >= 258).
+        var custom = new List<string>();
+        int end = postOff + postLen;
+        while (p < end)
+        {
+            int slen = r.Data[p++];
+            if (p + slen > end) break;
+            custom.Add(Encoding.ASCII.GetString(r.Data, p, slen));
+            p += slen;
+        }
+        for (int gid = 0; gid < count; gid++)
+        {
+            int idx = indices[gid];
+            if (idx < 258)
+            {
+                if (StandardMacGlyphOrder.TryGetName(idx, out var n)) names[gid] = n;
+            }
+            else if (idx - 258 < custom.Count)
+            {
+                names[gid] = custom[idx - 258];
+            }
+        }
+        return names;
     }
 
     private static Dictionary<int, int> ParseCmap(BE r, int cmapOff)
@@ -223,6 +347,74 @@ internal sealed class TrueTypeFontFile
             }
         }
         return map;
+    }
+
+    /// <summary>
+    /// Parses a single cmap subtable (format 0/4/6/12) at <paramref name="sub"/>
+    /// into <paramref name="map"/> with its RAW code keys — no platform-specific
+    /// offset applied. Shares the decode with <see cref="ParseCmap"/> but keeps
+    /// the raw keys the symbolic path needs.
+    /// </summary>
+    private static void ParseSubtableInto(BE r, int sub, Dictionary<int, int> map)
+    {
+        ushort format = r.U16(sub);
+        if (format == 4)
+        {
+            ushort segX2 = r.U16(sub + 6);
+            int segCount = segX2 / 2;
+            int endP = sub + 14;
+            int startP = endP + segX2 + 2;
+            int deltaP = startP + segX2;
+            int rangeP = deltaP + segX2;
+            for (int s = 0; s < segCount; s++)
+            {
+                ushort end = r.U16(endP + s * 2);
+                ushort start = r.U16(startP + s * 2);
+                short delta = r.S16(deltaP + s * 2);
+                ushort rangeOff = r.U16(rangeP + s * 2);
+                for (int c = start; c <= end && c != 0xFFFF; c++)
+                {
+                    int gid;
+                    if (rangeOff == 0) gid = (c + delta) & 0xFFFF;
+                    else
+                    {
+                        int giAddr = rangeP + s * 2 + rangeOff + (c - start) * 2;
+                        ushort g = r.U16(giAddr);
+                        gid = g == 0 ? 0 : (g + delta) & 0xFFFF;
+                    }
+                    if (gid != 0) map[c] = gid;
+                }
+            }
+        }
+        else if (format == 6)
+        {
+            ushort first = r.U16(sub + 6), count = r.U16(sub + 8);
+            for (int i = 0; i < count; i++)
+            {
+                int gid = r.U16(sub + 10 + i * 2);
+                if (gid != 0) map[first + i] = gid;
+            }
+        }
+        else if (format == 0)
+        {
+            for (int c = 0; c < 256; c++)
+            {
+                int gid = r.Data[sub + 6 + c];
+                if (gid != 0) map[c] = gid;
+            }
+        }
+        else if (format == 12)
+        {
+            uint nGroups = r.U32(sub + 12);
+            int gp = sub + 16;
+            for (uint g = 0; g < nGroups; g++, gp += 12)
+            {
+                uint startC = r.U32(gp), endC = r.U32(gp + 4), startG = r.U32(gp + 8);
+                if (endC < startC || endC - startC > 0x10FFFF) continue;
+                for (uint c = startC; c <= endC; c++)
+                    map[(int)c] = (int)(startG + (c - startC));
+            }
+        }
     }
 
     private static string? ReadPostScriptName(BE r, int nameOff)
