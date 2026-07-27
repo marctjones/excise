@@ -999,11 +999,19 @@ public partial class PdfViewerControl : UserControl
             {
                 case Key.PageDown:
                 case Key.Right:
+                case Key.Down:
+                    // Down joins PageDown/Right as next-page nav. The window-level
+                    // MainWindow_KeyDown maps Down→next page too, but arrow keys
+                    // never reach that BUBBLING handler as unhandled (Avalonia's
+                    // input pipeline consumes them first), so the viewer's TUNNEL
+                    // handler is the only place Down actually routes. This mirrors
+                    // Left/Right, which already page-navigate here. (#827)
                     NextPage();
                     handled = true;
                     break;
                 case Key.PageUp:
                 case Key.Left:
+                case Key.Up:
                     PreviousPage();
                     handled = true;
                     break;
