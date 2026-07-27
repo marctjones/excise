@@ -52,10 +52,9 @@ public sealed class OcgMembershipExtractionTests
     [Fact]
     public void Ocmd_AllOffPolicy_AllMembersOff_IsHidden()
     {
-        // Both members OFF; policy AllOff is satisfied -> content shown only when
-        // all are off, i.e. visible... but redaction cares about the /default/
-        // hidden state. AllOff visible == all members off. Here both off => visible.
-        // So assert NOT hidden to pin the policy direction.
+        // Policy AllOff makes content visible when all member OCGs are off.
+        // Both members are off here, so the span is visible -> NOT flagged
+        // hidden. Pins the AllOff direction (opposite of AnyOn above).
         var pdf = BuildOcPdf(
             ocProperties: "<< /OCGs [6 0 R 8 0 R] /D << /OFF [6 0 R 8 0 R] >> >>",
             propertyObjectNumber: 7,
