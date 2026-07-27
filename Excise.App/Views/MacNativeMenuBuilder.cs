@@ -50,6 +50,8 @@ internal static class MacNativeMenuBuilder
         private readonly List<NativeMenuItem> _annotationSelectionItems = new();
         private readonly List<NativeMenuItem> _redactionItems = new();
         private readonly NativeMenuItem _saveItem;
+        private readonly NativeMenuItem _undoItem;
+        private readonly NativeMenuItem _redoItem;
         private readonly NativeMenuItem _recentFilesItem;
         private readonly NativeMenuItem _selectTextItem;
         private readonly NativeMenuItem _typewriterItem;
@@ -69,6 +71,9 @@ internal static class MacNativeMenuBuilder
         {
             _viewModel = viewModel;
             _saveItem = CommandItem("Save", _viewModel.SaveFileCommand, Key.S);
+            // #782: Cmd+Z / Cmd+Shift+Z app-wide undo/redo.
+            _undoItem = CommandItem("Undo", _viewModel.UndoCommand, Key.Z);
+            _redoItem = CommandItem("Redo", _viewModel.RedoCommand, Key.Z, KeyModifiers.Meta | KeyModifiers.Shift);
             _recentFilesItem = Submenu("Open Recent");
             _selectTextItem = CommandItem("Select Text Mode", _viewModel.ToggleTextSelectionModeCommand, Key.T);
             _typewriterItem = CommandItem("Typewriter Mode", _viewModel.ToggleTypewriterModeCommand);
@@ -103,6 +108,9 @@ internal static class MacNativeMenuBuilder
 
             Add(menu,
                 Submenu("Edit",
+                    _undoItem,
+                    _redoItem,
+                    Separator(),
                     TrackDocumentItem(CommandItem("Find...", _viewModel.ToggleSearchCommand, Key.F)),
                     TrackDocumentItem(CommandItem("Find Next", _viewModel.FindNextCommand, Key.F3, KeyModifiers.None)),
                     TrackDocumentItem(CommandItem("Find Previous", _viewModel.FindPreviousCommand, Key.F3, KeyModifiers.Shift)),
@@ -200,6 +208,10 @@ internal static class MacNativeMenuBuilder
         private static bool ShouldRefreshFor(string? propertyName) =>
             propertyName is null
             or nameof(MainWindowViewModel.SaveButtonText)
+            or nameof(MainWindowViewModel.CanUndo)
+            or nameof(MainWindowViewModel.CanRedo)
+            or nameof(MainWindowViewModel.UndoMenuHeader)
+            or nameof(MainWindowViewModel.RedoMenuHeader)
             or nameof(MainWindowViewModel.IsDocumentLoaded)
             or nameof(MainWindowViewModel.HasSelectedPages)
             or nameof(MainWindowViewModel.CanRemoveSelectedPages)
@@ -220,6 +232,10 @@ internal static class MacNativeMenuBuilder
         private void Refresh()
         {
             _saveItem.Header = _viewModel.SaveButtonText;
+            _undoItem.Header = _viewModel.UndoMenuHeader.TrimStart('_');
+            _undoItem.IsEnabled = _viewModel.CanUndo;
+            _redoItem.Header = _viewModel.RedoMenuHeader.TrimStart('_');
+            _redoItem.IsEnabled = _viewModel.CanRedo;
 
             var isDocumentLoaded = _viewModel.IsDocumentLoaded;
             foreach (var item in _documentItems)

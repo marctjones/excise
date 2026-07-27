@@ -163,6 +163,7 @@ public partial class MainWindowViewModel
             RedactionWorkflow.MoveToApplied();
             FileState.PendingRedactionsCount = 0;
             ClearPendingTypewriterText();
+            ClearEditHistory();
             this.RaisePropertyChanged(nameof(SaveButtonText));
             this.RaisePropertyChanged(nameof(StatusBarText));
 
@@ -239,6 +240,10 @@ public partial class MainWindowViewModel
             var page = document.Pages[CurrentPageIndex];
             _redactionService.RedactArea(page, areaToRedact);
             _hasInMemoryModifications = true;
+            // Redaction bakes glyph removal into the content stream — it is
+            // irreversible, and any pending undo entry now references a
+            // structurally-rewritten document (#782).
+            ClearEditHistory();
 
             if (!string.IsNullOrWhiteSpace(redactedText))
             {
