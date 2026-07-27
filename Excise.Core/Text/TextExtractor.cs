@@ -580,7 +580,10 @@ public class TextExtractor
     {
         var content = Encoding.Latin1.GetString(contentBytes);
         var pos = 0;
-        var operands = new List<object>();
+        // Presized: content-stream operators rarely take more than a handful of
+        // operands (Tm's 6 is the common max), so start past the default 4 to
+        // avoid the first grow-and-copy on nearly every operator (#600).
+        var operands = new List<object>(8);
 
         while (pos < content.Length)
         {
@@ -890,7 +893,53 @@ public class TextExtractor
             return double.TryParse(span, System.Globalization.NumberStyles.Float,
                 System.Globalization.CultureInfo.InvariantCulture, out var d) ? d : 0.0;
         }
+        // Fast, exact integer parse for the common operand (TJ kerns, Td/Tm/cm
+        // coordinates): a leading optional sign then ASCII digits. Avoids the
+        // culture/NumberStyles machinery of int.TryParse (System.Number) on the
+        // hot loop (#600). Bit-identical to the previous int.TryParse: a
+        // sign-only, empty, embedded-sign, or out-of-int-range span reports
+        // failure and falls through to int.TryParse (which returns 0), exactly
+        // as before.
+        if (TryParseAsciiInt(span, out var fast))
+            return BoxInt(fast);
         return BoxInt(int.TryParse(span, out var i) ? i : 0);
+    }
+
+    private static bool TryParseAsciiInt(ReadOnlySpan<char> span, out int value)
+    {
+        value = 0;
+        if (span.Length == 0)
+            return false;
+
+        int idx = 0;
+        bool negative = false;
+        var first = span[0];
+        if (first == '+' || first == '-')
+        {
+            negative = first == '-';
+            idx = 1;
+        }
+        if (idx == span.Length)
+            return false; // sign with no digits
+
+        long acc = 0;
+        for (; idx < span.Length; idx++)
+        {
+            uint digit = (uint)(span[idx] - '0');
+            if (digit > 9)
+                return false; // embedded '-', '+', '.', etc. — let int.TryParse decide
+            acc = acc * 10 + digit;
+            if (acc > (long)int.MaxValue + 1)
+                return false; // overflow — fall back (int.TryParse yields 0)
+        }
+
+        if (negative)
+            acc = -acc;
+        if (acc < int.MinValue || acc > int.MaxValue)
+            return false;
+
+        value = (int)acc;
+        return true;
     }
 
     private string ParseKeyword(string content, ref int pos)
@@ -990,13 +1039,7 @@ public class TextExtractor
                     _fontName = operands[0] is string name ? name.TrimStart('/') : "";
                     _fontSize = ToDouble(operands[1]);
                     _currentFont = ResolveFontFromActiveResources(_fontName);
-                    _toUnicodeMap = LoadToUnicodeMap(_currentFont);
-                    (_differencesGlyphNames, _differencesBaseEncoding) = LoadDifferencesEncoding(_currentFont);
-                    _toUnicodeIdentity = _toUnicodeMap == null && ToUnicodeIsIdentity(_currentFont);
-                    _useStandardMacGlyphOrder = _toUnicodeMap == null && UsesStandardMacGlyphOrderFallback(_currentFont);
-                    _embeddedCidToUnicode = _toUnicodeMap == null ? LoadEmbeddedCidToUnicodeMap(_currentFont) : null;
-                    _simpleSymbolCodeToUnicode = _toUnicodeMap == null ? LoadSimpleSymbolTrueTypeMap(_currentFont) : null;
-                    LoadFontGeometry();
+                    LoadFontDerivedState();
                 }
                 break;
 
@@ -1558,6 +1601,100 @@ public class TextExtractor
                 Fonts.CidFontWidths.SpecDefaultVerticalDisplacement,
                 GetCharWidth(cid) / 2,
                 Fonts.CidFontWidths.SpecDefaultVerticalOriginY);
+
+    // Every derived field below (ToUnicode map, /Differences, the Identity /
+    // Mac-order / embedded-CID / symbol flags, and all of LoadFontGeometry's
+    // CID/CMap/width state) is a pure function of the resolved font dictionary.
+    // But Tf recurs constantly — every text block re-issues it — so
+    // recomputing them per call (re-parsing ToUnicode/CMap streams and the /W
+    // width table, which is the LoadFontGeometry inclusive hotspot and the
+    // source of the Double[] growth inside those parsers) was a large share of
+    // extraction cost. Cache the computed state keyed by font-dict reference —
+    // PdfDocument.Resolve returns a stable instance per object number, so the
+    // same font hits — and re-ASSIGN every field on each Tf via a snapshot.
+    //
+    // Deliberately a snapshot/restore, NOT a "skip reload if same font"
+    // short-circuit: ExtractFormXObjectContent saves/restores only a SUBSET of
+    // these fields (not /Differences, the Identity/Mac-order/embedded/symbol
+    // flags, _isCidFont, or the registered CMap/CID→Unicode maps), and the
+    // unconditional reload at the next Tf is what HEALS that partial restore.
+    // Re-assigning all fields from the cached snapshot reproduces that exactly;
+    // a skip-if-same would leave the un-restored fields stale after any form
+    // XObject and change output. #600.
+    private readonly Dictionary<PdfDictionary, FontState> _fontStateCache =
+        new(ReferenceEqualityComparer.Instance);
+
+    private void LoadFontDerivedState()
+    {
+        if (_currentFont != null && _fontStateCache.TryGetValue(_currentFont, out var cached))
+        {
+            ApplyFontState(cached);
+            return;
+        }
+
+        // Cache miss (or a null font, which is never cached): run the exact
+        // original compute sequence, writing the instance fields directly.
+        _toUnicodeMap = LoadToUnicodeMap(_currentFont);
+        (_differencesGlyphNames, _differencesBaseEncoding) = LoadDifferencesEncoding(_currentFont);
+        _toUnicodeIdentity = _toUnicodeMap == null && ToUnicodeIsIdentity(_currentFont);
+        _useStandardMacGlyphOrder = _toUnicodeMap == null && UsesStandardMacGlyphOrderFallback(_currentFont);
+        _embeddedCidToUnicode = _toUnicodeMap == null ? LoadEmbeddedCidToUnicodeMap(_currentFont) : null;
+        _simpleSymbolCodeToUnicode = _toUnicodeMap == null ? LoadSimpleSymbolTrueTypeMap(_currentFont) : null;
+        LoadFontGeometry();
+
+        if (_currentFont != null)
+            _fontStateCache[_currentFont] = CaptureFontState();
+    }
+
+    private FontState CaptureFontState() => new(
+        _toUnicodeMap,
+        _differencesGlyphNames,
+        _differencesBaseEncoding,
+        _toUnicodeIdentity,
+        _useStandardMacGlyphOrder,
+        _embeddedCidToUnicode,
+        _simpleSymbolCodeToUnicode,
+        _is2ByteFont,
+        _isCidFont,
+        _isVerticalWriting,
+        _cidMetrics,
+        _registeredEncodingCMap,
+        _registeredCidToUnicode);
+
+    private void ApplyFontState(in FontState s)
+    {
+        _toUnicodeMap = s.ToUnicodeMap;
+        _differencesGlyphNames = s.DifferencesGlyphNames;
+        _differencesBaseEncoding = s.DifferencesBaseEncoding;
+        _toUnicodeIdentity = s.ToUnicodeIdentity;
+        _useStandardMacGlyphOrder = s.UseStandardMacGlyphOrder;
+        _embeddedCidToUnicode = s.EmbeddedCidToUnicode;
+        _simpleSymbolCodeToUnicode = s.SimpleSymbolCodeToUnicode;
+        _is2ByteFont = s.Is2ByteFont;
+        _isCidFont = s.IsCidFont;
+        _isVerticalWriting = s.IsVerticalWriting;
+        _cidMetrics = s.CidMetrics;
+        _registeredEncodingCMap = s.RegisteredEncodingCMap;
+        _registeredCidToUnicode = s.RegisteredCidToUnicode;
+    }
+
+    // Snapshot of the size-independent per-font state derived from one font
+    // dictionary (#600). _fontName/_fontSize are the only genuinely per-Tf
+    // fields and are set by the Tf handler, not stored here.
+    private readonly record struct FontState(
+        Dictionary<int, string>? ToUnicodeMap,
+        Dictionary<int, string>? DifferencesGlyphNames,
+        string? DifferencesBaseEncoding,
+        bool ToUnicodeIdentity,
+        bool UseStandardMacGlyphOrder,
+        Dictionary<int, string>? EmbeddedCidToUnicode,
+        Dictionary<int, string>? SimpleSymbolCodeToUnicode,
+        bool Is2ByteFont,
+        bool IsCidFont,
+        bool IsVerticalWriting,
+        Fonts.CidFontWidths? CidMetrics,
+        CidCMap? RegisteredEncodingCMap,
+        IReadOnlyDictionary<int, string>? RegisteredCidToUnicode);
 
     /// <summary>
     /// After Tf loads a font, update Type 0 / CID-specific state: 2-byte stride,
