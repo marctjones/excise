@@ -101,20 +101,60 @@ public class SeparationOverprintDifferentialTests
         }
     }
 
+    [Fact(Timeout = 60000)]
+    public void DeviceNOverprintFixture_LandsOnGhostscriptSimulateSideOfTheKnockout()
+    {
+        Assert.SkipWhen(!GhostscriptReferenceRenderer.IsAvailable,
+            "Ghostscript is not installed; the overprint-simulate oracle is unavailable.");
+
+        var overprintPdf = WriteTempPdf(DevNOverprintContent);
+        var knockoutPdf = WriteTempPdf(DevNKnockoutContent);
+        try
+        {
+            using var gsOverprint = RenderWithSimulate(overprintPdf);
+            using var gsKnockout = RenderWithSimulate(knockoutPdf);
+            Assert.SkipWhen(gsOverprint == null || gsKnockout == null,
+                "Ghostscript rejected -dOverprint=/simulate (needs gs >= 9.54).");
+
+            var gsOverprintOverlap = gsOverprint!.GetPixel(100, 200);
+            var gsKnockoutOverlap = gsKnockout!.GetPixel(100, 200);
+            ChannelDistance(gsOverprintOverlap, gsKnockoutOverlap).Should().BeGreaterThan(100,
+                "the oracle must discriminate DeviceN overprint from knockout before it can judge excise");
+
+            var exciseOverlap = RenderExciseOverlap(overprintPdf);
+            var toOverprint = ChannelDistance(exciseOverlap, gsOverprintOverlap);
+            var toKnockout = ChannelDistance(exciseOverlap, gsKnockoutOverlap);
+            toOverprint.Should().BeLessThan(toKnockout / 2,
+                $"excise DeviceN overlap {exciseOverlap} must sit on the overprint side " +
+                $"(gs overprint {gsOverprintOverlap}, gs knockout {gsKnockoutOverlap})");
+        }
+        finally
+        {
+            TryDelete(overprintPdf);
+            TryDelete(knockoutPdf);
+        }
+    }
+
     // ------------------------------------------------------------------
 
     private const string Background = "1 0 0 0 k 20 20 160 160 re f\n";
     private const string SepOverprintContent = Background + "/GSop gs /CSsep cs 1 scn 60 60 80 80 re f\n";
     private const string SepOverprintOpm0Content = Background + "/GSop0 gs /CSsep cs 1 scn 60 60 80 80 re f\n";
     private const string SepKnockoutContent = Background + "/CSsep cs 1 scn 60 60 80 80 re f\n";
+    private const string DevNOverprintContent = Background + "/GSop gs /CSdevn cs 1 scn 60 60 80 80 re f\n";
+    private const string DevNKnockoutContent = Background + "/CSdevn cs 1 scn 60 60 80 80 re f\n";
 
     private const string Resources =
         "/ExtGState << " +
         "/GSop << /Type /ExtGState /OP true /op true /OPM 1 >> " +
         "/GSop0 << /Type /ExtGState /OP true /op true /OPM 0 >> " +
         ">> " +
-        "/ColorSpace << /CSsep [ /Separation /MyYellow /DeviceCMYK " +
-        "<< /FunctionType 2 /Domain [0 1] /C0 [0 0 0 0] /C1 [0 0 1 0] /N 1 >> ] >>";
+        "/ColorSpace << " +
+        "/CSsep [ /Separation /MyYellow /DeviceCMYK " +
+        "<< /FunctionType 2 /Domain [0 1] /C0 [0 0 0 0] /C1 [0 0 1 0] /N 1 >> ] " +
+        "/CSdevn [ /DeviceN [ /MySpot ] /DeviceCMYK " +
+        "<< /FunctionType 2 /Domain [0 1] /C0 [0 0 0 0] /C1 [0 0 1 0] /N 1 >> ] " +
+        ">>";
 
     private static SKColor RenderExciseOverlap(string pdfPath)
     {
