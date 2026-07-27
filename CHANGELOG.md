@@ -7,6 +7,16 @@ semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **ICCBased-CMYK (N=4) overprint participation** (#803, follow-up to #634) —
+  a fill or stroke whose colour space is an ICCBased space with four
+  components now takes part in overprint simulation, treated as DeviceCMYK
+  under the same nonzero-overprint-mode (`/OPM 1`) gating: a component that is
+  exactly zero leaves that colorant of the backdrop unchanged instead of
+  knocking it out. Previously such a colour knocked out even under `/OP`
+  `/op` `/OPM 1`. Participation is preview-grade only — the raw four
+  components drive the zero-component merge; there is still no colour-managed
+  ICC CMM. Verified against the `gs -dOverprint=/simulate` oracle and by
+  spec-driven relative tests inside a DeviceCMYK transparency group.
 - **App-wide in-session undo/redo** (#782) — a single edit-history stack
   (command pattern with per-operation inverse closures, plus a collection
   snapshot for type-over edits) now covers the reversible, pre-flatten editing
