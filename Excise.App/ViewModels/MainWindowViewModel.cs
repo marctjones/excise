@@ -3261,40 +3261,65 @@ public partial class MainWindowViewModel : ViewModelBase
         _ = dialog.ShowDialog(owner);
     }
 
-    private async void ShowKeyboardShortcuts()
+    /// <summary>
+    /// Seam for #816: the real path calls <c>FAContentDialog.ShowAsync()</c>,
+    /// which is not a <see cref="global::Avalonia.Controls.Window"/> (it
+    /// renders into an overlay layer rather than
+    /// <c>Window.OwnedWindows</c>) and awaits until the user dismisses it —
+    /// there is no way for a headless test to observe or close it without
+    /// driving overlay/adorner internals that no other test in this suite
+    /// touches. Test-settable so <see cref="ShowShortcutsCommand"/> can be
+    /// executed for real and the constructed dialog inspected without
+    /// actually presenting/blocking on the overlay. Defaults to the real
+    /// show so production behaviour is unchanged.
+    /// </summary>
+    internal Action<FluentAvalonia.UI.Controls.FAContentDialog> KeyboardShortcutsDialogRequested { get; set; } =
+        dialog => _ = dialog.ShowAsync();
+
+    private void ShowKeyboardShortcuts()
     {
         _logger.LogInformation("Keyboard shortcuts dialog requested");
 
         var window = GetMainWindow();
-        if (window != null)
-        {
-            var messageBox = new FluentAvalonia.UI.Controls.FAContentDialog
-            {
-                Title = "Keyboard Shortcuts",
-                Content = "File:\n" +
-                          "  Ctrl+O - Open PDF\n" +
-                          "  Ctrl+S - Save\n" +
-                          "  Ctrl+Shift+S - Save As\n" +
-                          "  Ctrl+W - Close Document\n\n" +
-                          "Edit:\n" +
-                          "  Ctrl+F - Find\n" +
-                          "  F3 - Find Next\n" +
-                          "  Shift+F3 - Find Previous\n" +
-                          "  T - Toggle Text Selection Mode\n" +
-                          "  R - Toggle Redaction Mode\n\n" +
-                          "View:\n" +
-                          "  Ctrl++ - Zoom In\n" +
-                          "  Ctrl+- - Zoom Out\n" +
-                          "  Ctrl+0 - Actual Size\n\n" +
-                          "Navigation:\n" +
-                          "  PgUp/PgDn - Previous/Next Page",
-                CloseButtonText = "Close",
-                DefaultButton = FluentAvalonia.UI.Controls.FAContentDialogButton.Close
-            };
+        if (window == null) return;
 
-            await messageBox.ShowAsync();
-        }
+        var messageBox = new FluentAvalonia.UI.Controls.FAContentDialog
+        {
+            Title = "Keyboard Shortcuts",
+            Content = "File:\n" +
+                      "  Ctrl+O - Open PDF\n" +
+                      "  Ctrl+S - Save\n" +
+                      "  Ctrl+Shift+S - Save As\n" +
+                      "  Ctrl+W - Close Document\n\n" +
+                      "Edit:\n" +
+                      "  Ctrl+F - Find\n" +
+                      "  F3 - Find Next\n" +
+                      "  Shift+F3 - Find Previous\n" +
+                      "  T - Toggle Text Selection Mode\n" +
+                      "  R - Toggle Redaction Mode\n\n" +
+                      "View:\n" +
+                      "  Ctrl++ - Zoom In\n" +
+                      "  Ctrl+- - Zoom Out\n" +
+                      "  Ctrl+0 - Actual Size\n\n" +
+                      "Navigation:\n" +
+                      "  PgUp/PgDn - Previous/Next Page",
+            CloseButtonText = "Close",
+            DefaultButton = FluentAvalonia.UI.Controls.FAContentDialogButton.Close
+        };
+
+        KeyboardShortcutsDialogRequested(messageBox);
     }
+
+    /// <summary>
+    /// Seam for #816: the real path shells out to the OS default handler
+    /// (via <see cref="Services.UrlOpener"/>), which is not an observable
+    /// effect a headless test can assert on without actually launching a
+    /// real external app/browser. Test-settable so
+    /// <see cref="ShowDocumentationCommand"/> can be executed for real and
+    /// the open request asserted without that side effect. Defaults to the
+    /// real opener so production behaviour is unchanged.
+    /// </summary>
+    internal Action<string> DocumentationOpener { get; set; } = Services.UrlOpener.Open;
 
     private void ShowDocumentation()
     {
@@ -3304,26 +3329,9 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             var readmePath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "README.md");
 
-            if (System.IO.File.Exists(readmePath))
-            {
-                // Open README.md with default application
-                var psi = new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = readmePath,
-                    UseShellExecute = true
-                };
-                System.Diagnostics.Process.Start(psi);
-            }
-            else
-            {
-                // Fallback to GitHub repository
-                var psi = new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = "https://github.com/marctjones/excise",
-                    UseShellExecute = true
-                };
-                System.Diagnostics.Process.Start(psi);
-            }
+            DocumentationOpener(System.IO.File.Exists(readmePath)
+                ? readmePath
+                : "https://github.com/marctjones/excise");
         }
         catch (Exception ex)
         {
@@ -3331,13 +3339,32 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    private global::Avalonia.Controls.Window? GetMainWindow()
+    /// <summary>
+    /// Seam for #816: dialog commands (Security/Preferences/About/…) resolve
+    /// their owner window through this, normally reading
+    /// <c>Application.Current.ApplicationLifetime</c>. Avalonia allows
+    /// <c>ApplicationLifetime</c> to be set exactly once — a headless test
+    /// cannot stand up a desktop lifetime after <c>SetupWithoutStarting</c>
+    /// has already initialized the app (attempting it throws
+    /// <see cref="InvalidOperationException"/>) — so without this seam the
+    /// real owner-window path is unreachable from a test and these
+    /// commands' dialogs go untested (see <see cref="GetMainWindow"/>'s
+    /// previous no-desktop-lifetime-in-headless-tests comment history).
+    /// Test-settable so the real command can be executed and the real
+    /// dialog window observed. Defaults to the real lookup so production
+    /// behaviour is unchanged.
+    /// </summary>
+    internal Func<global::Avalonia.Controls.Window?> MainWindowResolver { get; set; } = DefaultMainWindowResolver;
+
+    private static global::Avalonia.Controls.Window? DefaultMainWindowResolver()
     {
         var lifetime = global::Avalonia.Application.Current?.ApplicationLifetime
             as IClassicDesktopStyleApplicationLifetime;
 
         return lifetime?.MainWindow;
     }
+
+    private global::Avalonia.Controls.Window? GetMainWindow() => MainWindowResolver();
 
     private IStorageProvider? GetStorageProvider()
     {
