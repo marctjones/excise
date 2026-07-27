@@ -55,6 +55,13 @@ public sealed class IccBasedCmykOverprintTests
         "1 0 0 0 k 20 20 160 160 re f\n" +
         "1 0 1 0 k 60 60 80 80 re f\n";
 
+    // A zero-C ICCBased-CMYK STROKE (via /ICCCS CS + SCN) over the cyan
+    // backdrop, with overprint on. The stroke runs along pdf y=100
+    // (device y=200), x 60..140, so it passes through the Overlap probe.
+    private const string OverprintStroke =
+        "1 0 0 0 k 20 20 160 160 re f\n" +
+        "/ICCCS CS /GSop gs 0 0 1 0 SCN 20 w 60 100 m 140 100 l S\n";
+
     [Fact]
     public void Fixture_ColorSpaceResolvesToIccBasedN4()
     {
@@ -98,6 +105,20 @@ public sealed class IccBasedCmykOverprintTests
         overlap.Red.Should().BeLessThan(100,
             "the cyan colorant under a zero-C ICCBased-CMYK overprint fill must survive (knockout leaves red ≈ 255)");
         overlap.Green.Should().BeGreaterThan(100, "cyan + yellow reads green");
+    }
+
+    [Fact]
+    public void PlainPage_StrokeOverprint_PreservesUnderlyingColorant()
+    {
+        // Parity with #634's stroke coverage: the ICCBased-CMYK stroke path
+        // runs through the same TryParseDeviceCmykOperands + IsOverprintActive
+        // (style-aware) mechanism as the fill.
+        using var bitmap = RenderVariant(OverprintStroke, deviceCmykGroup: false);
+        var onStroke = Probe(bitmap, Overlap);
+
+        onStroke.Red.Should().BeLessThan(100,
+            "a zero-C ICCBased-CMYK overprint STROKE must keep the cyan colorant underneath");
+        onStroke.Green.Should().BeGreaterThan(100, "cyan + yellow reads green");
     }
 
     // ------------------------------------------------------------------
