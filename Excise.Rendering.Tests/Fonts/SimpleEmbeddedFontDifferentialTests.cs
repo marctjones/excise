@@ -126,7 +126,8 @@ public sealed class SimpleEmbeddedFontDifferentialTests
     // on whether the glyph PAINTS; it does NOT assert a Unicode extraction,
     // because symbolic fonts without /ToUnicode have none to guarantee. A
     // font that actually ships a (3,0) symbol cmap subtable (DejaVu does not)
-    // is a distinct, deeper fixture — see the proposed child issue.
+    // is the distinct, deeper case covered by
+    // SymbolicTrueType_30CmapSubtable_F000Offset_MatchesReference below.
     [Fact]
     public void SymbolicSimpleTrueType_Flags4_BothRenderVisibleInk()
     {
@@ -136,6 +137,55 @@ public sealed class SimpleEmbeddedFontDifferentialTests
         AssertBothRenderInk(SimpleEmbeddedFontPdf(ttf!, FontFileKind.TrueType,
             "BT /F1 48 Tf 20 40 Td (Abc) Tj ET", encoding: null, flags: 4),
             "symbolic simple TrueType (/Flags 4)");
+    }
+
+    // ---- TRUE symbolic (3,0) cmap subtable glyph selection ------------------
+    // The real symbolic-font case (Wingdings / dingbat / checkbox fonts):
+    // SymbolDejaVu30.ttf carries a SINGLE cmap subtable, platform (3,0)
+    // "Microsoft Symbol", mapping the classic 0xF0xx PUA range (0xF041->'A'
+    // .. 0xF046->'F'). Per ISO 32000-1 §9.6.6.4 a simple symbolic TrueType
+    // with content byte 0x41 must be resolved by ADDING the 0xF000 offset
+    // before the (3,0) lookup. If excise skips the offset it finds no glyph
+    // and paints .notdef (blank) while a correct renderer paints 'A'..'F' —
+    // a measurable, redaction-relevant divergence. Compared against an
+    // independent renderer, not excise's own output. (Measured result:
+    // excise applies the offset correctly and matches the reference.)
+    [Fact]
+    public void SymbolicTrueType_30CmapSubtable_F000Offset_MatchesReference()
+    {
+        var ttf = LoadFixtureFont("SymbolDejaVu30.ttf");
+        Assert.SkipWhen(ttf == null, "SymbolDejaVu30.ttf fixture missing.");
+        // Content bytes 0x41..0x46 ('A'..'F'); /Flags 4 (Symbolic), NO /Encoding.
+        var pdf = SimpleEmbeddedFontPdf(ttf!, FontFileKind.TrueType,
+            "BT /F1 48 Tf 20 40 Td (ABCDEF) Tj ET", encoding: null, flags: 4);
+
+        double exciseInk;
+        using (var doc = PdfDocument.Open(pdf))
+        using (var bmp = new SkiaRenderer().RenderPage(
+                   doc.GetPage(1), new RenderOptions { Dpi = Dpi, BackgroundColor = SKColors.White }))
+            exciseInk = InkFraction(bmp);
+        _out.WriteLine($"[symbolic (3,0) F000] excise ink = {exciseInk:P3}");
+
+        WithTempPdf(pdf, path =>
+        {
+            var (refBmp, who) = RenderWithAnyReference(path);
+            Assert.SkipWhen(refBmp == null, "no independent renderer available or willing.");
+            using (refBmp)
+            {
+                var refInk = InkFraction(refBmp!);
+                _out.WriteLine($"[symbolic (3,0) F000] {who} ink = {refInk:P3}");
+                // The reference must paint the six letters — proves the fixture
+                // is a valid (3,0) symbolic font, not a degenerate one (#619).
+                refInk.Should().BeGreaterThan(0.01,
+                    $"the independent renderer {who} must paint the six (3,0) symbol glyphs");
+                // Redaction-relevant: excise must ALSO resolve them (F000 offset),
+                // not paint blank .notdef. A blank excise render would be ~0.
+                exciseInk.Should().BeGreaterThan(refInk * 0.5,
+                    $"excise must apply the 0xF000 offset for the (3,0) symbol cmap and paint the " +
+                    $"glyphs (excise={exciseInk:P3} vs {who}={refInk:P3}); a near-blank excise render " +
+                    "means the symbolic (3,0) glyph-selection path is broken");
+            }
+        });
     }
 
     // ---- MMType1 fallback (acceptance-criterion, non-embedded) --------------
