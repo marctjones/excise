@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Excise.Core.Content;
 using Excise.Core.Document;
+using Excise.Core.Fonts;
 using Excise.Core.Primitives;
 
 namespace Excise.Core.Text.Segmentation;
@@ -50,6 +52,17 @@ public sealed record HiddenTextRecord(
 /// </remarks>
 public static class HiddenTextDetector
 {
+    /// <summary>
+    /// <see cref="HiddenTextRecord.HiddenBy"/> value for the #796 class: a
+    /// symbolic simple TrueType whose <c>(3,0)</c> symbol-cmap glyphs spell
+    /// real text, but which carries an <c>/Encoding</c> so every extractor
+    /// (excise, mutool, poppler — #794/#795) decodes the WinAnsi interpretation
+    /// instead. The visible text is not recoverable by extraction, so
+    /// <see cref="PdfDocumentRedactionExtensions.RedactText"/> cannot match it.
+    /// </summary>
+    internal const string SymbolCmapUnrecoverable =
+        "visible text via (3,0) symbol cmap not recoverable by extraction — redaction may not reach it";
+
     /// <summary>Scan every page of <paramref name="document"/>.</summary>
     public static IReadOnlyList<HiddenTextRecord> Scan(PdfDocument document)
     {
@@ -78,6 +91,13 @@ public static class HiddenTextDetector
         var fillRgb = new Rgb(1, 1, 1); // white — default non-obstructive
         var currentPath = new List<PdfRectangle>();
         var finder = new LetterFinder();
+
+        // #796: the active simple-TrueType (3,0)+/Encoding symbol map, tracked
+        // via Tf. Non-null only for the font class whose visible glyphs spell
+        // text extraction cannot recover; null for every other font.
+        IReadOnlyDictionary<int, string>? symbolMap = null;
+        var symbolMapCache = new Dictionary<PdfDictionary, IReadOnlyDictionary<int, string>?>(
+            ReferenceEqualityComparer.Instance);
 
         for (int i = 0; i < ops.Count; i++)
         {
@@ -158,6 +178,14 @@ public static class HiddenTextDetector
                     currentPath.Clear();
                     break;
 
+                case "Tf":
+                    // Track the active font so a text-showing op can be tested
+                    // against the #796 symbolic (3,0)+/Encoding class.
+                    symbolMap = op.Operands.Count >= 1
+                        ? ResolveSymbolDivergenceMap(page, page.GetFont(op.GetName(0)), symbolMapCache)
+                        : null;
+                    break;
+
                 case "Tj":
                 case "TJ":
                 case "'":
@@ -168,6 +196,22 @@ public static class HiddenTextDetector
                     var matches = finder.FindOperationLetters(text, letters);
                     if (matches.Count == 0) break;
                     textEntries.Add(new TextEntry(i, text, BoundingBoxOf(matches)));
+
+                    // #796: does the active (3,0) symbol cmap spell text that
+                    // extraction (honouring /Encoding) does NOT recover? Compare
+                    // the (3,0)/post decode against what extraction ACTUALLY
+                    // yielded for this op — the matched page.Letters values, i.e.
+                    // TextExtractor's output, not this parser's decode. If they
+                    // diverge, the visible text is beyond redaction's reach.
+                    if (symbolMap != null
+                        && TrySymbolCmapDivergence(
+                            ExtractText(op), symbolMap,
+                            string.Concat(matches.Select(m => m.Letter.Value)),
+                            out var visible))
+                    {
+                        records.Add(new HiddenTextRecord(
+                            pageNumber, visible, BoundingBoxOf(matches), SymbolCmapUnrecoverable));
+                    }
                     break;
                 }
 
@@ -276,6 +320,82 @@ public static class HiddenTextDetector
             return sb.ToString();
         }
         return "";
+    }
+
+    /// <summary>
+    /// Returns the symbolic (3,0) symbol-cmap code→Unicode map for
+    /// <paramref name="font"/> when it is the #796 class that renders text no
+    /// extractor recovers — a simple TrueType that is symbolic (FontDescriptor
+    /// /Flags bit 3), carries a Microsoft-Symbol <c>(3,0)</c> cmap, AND has an
+    /// <c>/Encoding</c> (which makes extraction honour WinAnsi and ignore the
+    /// (3,0) glyphs, #794/#795). Returns <c>null</c> for every other font,
+    /// including a (3,0) font WITHOUT <c>/Encoding</c> (which #791 already
+    /// extracts correctly, so there is no redaction gap to flag). Cached per
+    /// font dictionary.
+    /// </summary>
+    private static IReadOnlyDictionary<int, string>? ResolveSymbolDivergenceMap(
+        PdfPage page,
+        PdfDictionary? font,
+        Dictionary<PdfDictionary, IReadOnlyDictionary<int, string>?> cache)
+    {
+        if (font == null) return null;
+        if (cache.TryGetValue(font, out var cached)) return cached;
+
+        IReadOnlyDictionary<int, string>? map = null;
+        try
+        {
+            if (font.GetNameOrNull("Subtype") == "TrueType"
+                && font.GetOptional("Encoding") != null
+                && page.Document.Resolve(font.GetOptional("FontDescriptor") ?? PdfNull.Instance)
+                    is PdfDictionary fd
+                && (fd.GetInt("Flags", 0) & 0x4) != 0 // bit 3: Symbolic
+                && page.Document.Resolve(fd.GetOptional("FontFile2") ?? PdfNull.Instance)
+                    is PdfStream ff2)
+            {
+                var ttf = TrueTypeFontFile.Parse(ff2.DecodedData);
+                if (ttf.HasSymbolCmap)
+                {
+                    var built = SymbolCmapDecoder.BuildCodeToText(ttf);
+                    if (built.Count > 0) map = built;
+                }
+            }
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            map = null; // malformed embedded program — no audit signal
+        }
+
+        cache[font] = map;
+        return map;
+    }
+
+    /// <summary>
+    /// True when the (3,0) symbol-cmap decode of <paramref name="rawCodes"/>
+    /// (the raw one-byte content codes) spells real text (contains a letter or
+    /// digit) that DIVERGES from <paramref name="extracted"/> (what extraction
+    /// yielded for the same op). Equal decodes — e.g. ASCII codes where
+    /// WinAnsi(code) already equals the symbol glyph — are NOT a divergence and
+    /// return false, so a recoverable font is never falsely flagged.
+    /// </summary>
+    private static bool TrySymbolCmapDivergence(
+        string rawCodes,
+        IReadOnlyDictionary<int, string> symbolMap,
+        string extracted,
+        out string visible)
+    {
+        var sb = new StringBuilder();
+        bool hasRealText = false;
+        foreach (var ch in rawCodes)
+        {
+            if (!symbolMap.TryGetValue(ch & 0xFF, out var u)) continue;
+            sb.Append(u);
+            foreach (var r in u)
+                if (char.IsLetterOrDigit(r)) hasRealText = true;
+        }
+
+        visible = sb.ToString();
+        if (!hasRealText) return false;
+        return !string.Equals(visible.Trim(), (extracted ?? string.Empty).Trim(), StringComparison.Ordinal);
     }
 
     /// <summary>

@@ -418,38 +418,61 @@ partial class Program
         if (root is null)
             return null;
 
-        var configuration = Environment.GetEnvironmentVariable("CONFIG") ??
-#if DEBUG
-            "Debug";
-#else
-            "Release";
-#endif
-        var outputDir = Path.Combine(root, "Excise.Cli", "bin", configuration, "net10.0");
-        var executable = Path.Combine(outputDir, OperatingSystem.IsWindows() ? "excise.exe" : "excise");
-        if (File.Exists(executable))
-            return (executable, Array.Empty<string>());
+        var explicitConfiguration = Environment.GetEnvironmentVariable("CONFIG");
 
-        foreach (var candidate in new[]
-                 {
-                     Path.Combine(outputDir, "excise.dll"),
-                     Path.Combine(outputDir, "Excise.Cli.dll"),
-                 })
+        // Probe on-disk build output for an already-built excise CLI before
+        // ever falling back to `dotnet run` (which performs a full build).
+        // Don't trust this assembly's own #if DEBUG/#else symbol to pick the
+        // configuration to look for: Excise.RenderTools is a tool project
+        // outside excise.sln, so it builds Debug by default regardless of
+        // what configuration the CLI (or the test host calling this method)
+        // was actually built in. Trusting #if DEBUG here made every
+        // Excise.Cli.Tests run under `-c Release` look for a Debug binary
+        // that a Release-only build never produces, silently falling back to
+        // `dotnet run -c Debug` — a full from-scratch Debug build of
+        // Excise.Cli + Excise.Core + Excise.Rendering + Excise.Ocr on every
+        // single test run (~68s of Excise.Cli.Tests' ~72s wall-clock,
+        // measured — see #731). Checking the filesystem for either
+        // configuration's output is just as cheap and can't be wrong.
+        var searchOrder = string.IsNullOrWhiteSpace(explicitConfiguration)
+            ? new[] { "Release", "Debug" }
+            : new[] { explicitConfiguration };
+
+        foreach (var configuration in searchOrder)
         {
-            if (File.Exists(candidate))
-                return ("dotnet", new[] { candidate });
+            var outputDir = Path.Combine(root, "Excise.Cli", "bin", configuration, "net10.0");
+            var executable = Path.Combine(outputDir, OperatingSystem.IsWindows() ? "excise.exe" : "excise");
+            if (File.Exists(executable))
+                return (executable, Array.Empty<string>());
+
+            foreach (var candidate in new[]
+                     {
+                         Path.Combine(outputDir, "excise.dll"),
+                         Path.Combine(outputDir, "Excise.Cli.dll"),
+                     })
+            {
+                if (File.Exists(candidate))
+                    return ("dotnet", new[] { candidate });
+            }
         }
 
         var project = Path.Combine(root, "Excise.Cli", "Excise.Cli.csproj");
         if (!File.Exists(project))
             return null;
 
+        var fallbackConfiguration = explicitConfiguration ??
+#if DEBUG
+            "Debug";
+#else
+            "Release";
+#endif
         return ("dotnet", new[]
         {
             "run",
             "--project",
             project,
             "-c",
-            configuration,
+            fallbackConfiguration,
             "--",
         });
     }
