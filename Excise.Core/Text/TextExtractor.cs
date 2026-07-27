@@ -1365,30 +1365,14 @@ public class TextExtractor
         return false;
     }
 
+    // Resolve default-configuration visibility of an /OC property object via the
+    // shared resolver so extraction agrees with the renderer on hidden layers.
+    // Handles OCG (reference-based OFF/ON/BaseState), OCMD (/P policy and /VE
+    // And/Or/Not visibility expressions), and nested /OC. See issue #336.
+    // The property object is passed un-resolved so reference identity is
+    // preserved for /OFF and /ON array matching.
     private bool IsHiddenOptionalContentObject(PdfObject obj)
-    {
-        PdfObject resolved;
-        try { resolved = _page.Document.Resolve(obj); }
-        catch (Exception ex) when (ex is not OutOfMemoryException) { return false; }
-
-        if (resolved is PdfDictionary dict && dict.GetNameOrNull("Type") == "OCG")
-        {
-            var name = dict.GetOptional("Name") switch
-            {
-                PdfString s => s.Value,
-                PdfName n => n.Value,
-                _ => null
-            };
-
-            return !string.IsNullOrEmpty(name) &&
-                   _page.Document.GetOptionalContentGroupConfig().OffByDefault.Contains(name);
-        }
-
-        if (resolved is PdfName directName)
-            return _page.Document.GetOptionalContentGroupConfig().OffByDefault.Contains(directName.Value);
-
-        return false;
-    }
+        => !Excise.Core.Document.OptionalContentVisibility.IsVisibleByDefault(_page.Document, obj);
 
     private void ConcatenateCtm(double a, double b, double c, double d, double e, double f)
     {
