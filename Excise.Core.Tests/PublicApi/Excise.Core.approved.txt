@@ -1893,6 +1893,59 @@ namespace Excise.Core.Text.Segmentation
         public System.Collections.Generic.List<Excise.Core.Text.Segmentation.TextSegment> BuildSegments(string text, Excise.Core.Document.PdfRectangle operationBounds, System.Collections.Generic.List<Excise.Core.Text.Segmentation.LetterMatch> letterMatches, Excise.Core.Document.PdfRectangle redactionArea, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0) { }
     }
 }
+namespace Excise.Core.Validation
+{
+    public enum ConformanceStandard
+    {
+        PdfUA1 = 0,
+        PdfA1B = 1,
+        PdfA2B = 2,
+    }
+    public static class PdfAStructuralValidator
+    {
+        public static Excise.Core.Validation.ValidationReport Validate(Excise.Core.Document.PdfDocument document, Excise.Core.Authoring.PdfAConformance conformance) { }
+    }
+    public static class PdfUaValidator
+    {
+        public static Excise.Core.Validation.ValidationReport Validate(Excise.Core.Document.PdfDocument document) { }
+    }
+    public enum RuleSeverity
+    {
+        Error = 0,
+        Warning = 1,
+        Info = 2,
+    }
+    public enum RuleStatus
+    {
+        Pass = 0,
+        Fail = 1,
+        NotApplicable = 2,
+        NotChecked = 3,
+    }
+    public sealed class ValidationReport
+    {
+        public ValidationReport(Excise.Core.Validation.ConformanceStandard standard, System.Collections.Generic.IReadOnlyList<Excise.Core.Validation.ValidationResult> results, System.Collections.Generic.IReadOnlyList<string> uncoveredCheckpoints) { }
+        public bool CheckedSubsetConformant { get; }
+        public System.Collections.Generic.IEnumerable<Excise.Core.Validation.ValidationResult> Errors { get; }
+        public System.Collections.Generic.IEnumerable<Excise.Core.Validation.ValidationResult> Failures { get; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Validation.ValidationResult> Results { get; }
+        public Excise.Core.Validation.ConformanceStandard Standard { get; }
+        public System.Collections.Generic.IReadOnlyList<string> UncoveredCheckpoints { get; }
+        public System.Collections.Generic.IEnumerable<Excise.Core.Validation.ValidationResult> Warnings { get; }
+        public override string ToString() { }
+    }
+    public sealed class ValidationResult
+    {
+        public ValidationResult(string ruleId, string description, Excise.Core.Validation.RuleSeverity severity, Excise.Core.Validation.RuleStatus status, string? location = null, string? reference = null) { }
+        public string Description { get; }
+        public string? Location { get; }
+        public string? Reference { get; }
+        public string RuleId { get; }
+        public Excise.Core.Validation.RuleSeverity Severity { get; }
+        public Excise.Core.Validation.RuleStatus Status { get; }
+        public override string ToString() { }
+    }
+}
 namespace Excise.Core.Writing
 {
     public class PdfDocumentWriter
