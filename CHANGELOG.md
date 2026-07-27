@@ -7,6 +7,23 @@ semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **About dialog now carries a completeness-gated third-party license
+  manifest** — the About dialog already listed every shipped NuGet package
+  (name, version, SPDX id, copyright, verbatim license text) from the embedded
+  `Excise.App/Assets/third-party-licenses.json`, but nothing guaranteed the
+  list stayed complete. A new compliance gate
+  (`Excise.App.Tests/Unit/ThirdPartyLicenseCompletenessTests.cs`) enumerates
+  the actual restored package closure via
+  `dotnet list package --include-transitive` — an independent source, so the
+  manifest cannot vouch for its own completeness — and fails the build if any
+  shipped package is missing an attribution or carries an unresolved license.
+  Two previously-unresolved licenses were filled: `BitMiracle.LibJpeg.NET`
+  (BSD-3-Clause, from its bundled `license.txt`) and `CSJ2K` (BSD, with the
+  JJ2000 copyright notice embedded verbatim). Two reference-only packages that
+  ship no runtime DLL (`Microsoft.NETCore.Platforms`, `NETStandard.Library`)
+  are excluded as non-redistributed, in both the generator and the gate. The
+  headless About-window test now also asserts the verbatim license text is
+  reachable in the dialog, not just present in the ViewModel.
 - **Interactive GUI tests for file-ops toolbar/menu commands** (#816 batch 2)
   — `Excise.App.Tests/UI/FileOpsCommandTests.cs` executes the real
   `ReactiveCommand` behind Save/SaveAs/SaveFlattenedFormCopy/Open/LoadRecent/
