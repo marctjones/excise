@@ -3339,9 +3339,21 @@ public partial class MainWindowViewModel : ViewModelBase
         return lifetime?.MainWindow;
     }
 
+    /// <summary>
+    /// Test seam (#816): the headless test host runs with no classic desktop
+    /// lifetime (<c>SetupWithoutStarting</c>), so <see cref="GetMainWindow"/>
+    /// always returns null and every file/save/export command that goes
+    /// through <see cref="GetStorageProvider"/> was previously untestable via
+    /// its actual command — only via the underlying method it eventually
+    /// calls with an already-known path. Setting this lets a test execute the
+    /// real ReactiveCommand end to end. Production code never sets it; the
+    /// real <see cref="GetMainWindow"/> path is used unless a test overrides it.
+    /// </summary>
+    public IStorageProvider? StorageProviderOverride { get; set; }
+
     private IStorageProvider? GetStorageProvider()
     {
-        return GetMainWindow()?.StorageProvider;
+        return StorageProviderOverride ?? GetMainWindow()?.StorageProvider;
     }
 
     private async Task<IStorageFile?> ShowSaveRedactedFileDialog(global::Avalonia.Controls.Window mainWindow, string suggestedPath)

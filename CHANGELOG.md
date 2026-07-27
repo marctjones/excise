@@ -6,6 +6,19 @@ semantic versioning.
 
 ## [Unreleased]
 
+### Added
+- **Interactive GUI tests for file-ops toolbar/menu commands** (#816 batch 2)
+  — `Excise.App.Tests/UI/FileOpsCommandTests.cs` executes the real
+  `ReactiveCommand` behind Save/SaveAs/SaveFlattenedFormCopy/Open/LoadRecent/
+  ExportCurrentPage/ExportPages/Print and asserts the effect (bytes on disk,
+  loaded-document state, exported PNGs, or the shown dialog message), closing
+  a false-coverage gap where these were previously only exercised via their
+  underlying async method with an already-known path — a mis-wired command
+  would have passed every existing test. `MainWindowViewModel` gained a small
+  test seam, `StorageProviderOverride`, since the headless test host runs
+  with no desktop lifetime and `GetStorageProvider()` otherwise always
+  resolves to null.
+
 ## [3.4.0] - 2026-07-27
 
 ### Added
