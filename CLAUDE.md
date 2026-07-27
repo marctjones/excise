@@ -782,12 +782,25 @@ This redaction implementation:
   `PdfDocumentSanitizer`, `SanitizeMetadata = true`); `RemoveAllMetadata`
   strips them wholesale
 - ✅ Scrubs the structure tree (`/ActualText`, `/Alt`) (#636)
-- ❌ Does NOT handle PDF revision history (incremental-update prior revisions)
-- ❌ Does NOT remove embedded files/attachments
+- ✅ Scrubs embedded files/attachments **by default** in the GUI redaction-copy
+  flow — `RedactedCopySafetyService` (`ScrubAttachments = true`) →
+  `PdfDocument.ScrubMetadata(scrubAttachments: true)` /
+  `ScrubEmbeddedFiles()` removes `/Catalog/Names/EmbeddedFiles` and the `/AF`
+  associated-files arrays (#467). At the lower `RedactionService` level the
+  same wholesale strip is under `RemoveAllMetadata`; the default there is the
+  targeted `SanitizeMetadata` term scrub.
+- ✅ Leaves no recoverable prior revisions in the redacted **output** — it is a
+  fresh, fully-rewritten file (not an incremental update), so incremental-update
+  prior-revision recovery does not apply to a excise-redacted copy. Verified by
+  #586's previous-revision recovery tests.
+- ❌ The **viewer** does not expose or roll back prior revisions of an
+  incrementally-updated *input* (a viewing-feature gap, not a redaction leak).
 
-Redaction is written to a fresh, fully-rewritten file (not an incremental
-update), so prior-revision recovery does not apply to a excise-redacted copy.
 For scorched-earth output, set `RemoveAllMetadata` and flatten forms first.
+(Historical note: the old "does NOT remove attachments / does NOT handle
+revision history" bullets here were stale — attachment scrub shipped in #467
+and redacted output is fresh-rewrite; corrected 2026-07 after a doc-accuracy
+audit.)
 
 ## Current Status
 
