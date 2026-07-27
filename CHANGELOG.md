@@ -7,6 +7,26 @@ semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **Column-aware reading order for text copy, as the default** (#774) — copying
+  a selection that spans a multi-column layout (or a whole multi-column page)
+  now yields all of column 1 top-to-bottom, then column 2, instead of
+  interleaving the columns line-by-line across the gutter. The selection engine
+  (`Excise.Avalonia/Services/TextSelectionEngine.cs`) gained a bounded
+  column-gutter detector: an interior vertical gap wider than the page's
+  gutter threshold that has a genuine multi-line text block on both sides,
+  running in parallel down most of the page. Single-column pages are byte-
+  identical to the old order (the detector finds no gutter and falls through).
+  The copy order is now a user setting (Preferences → Text Selection →
+  Reading Order): **ColumnAware** (default, best quality), **Simple** (the old
+  geometric top-to-bottom/left-to-right), and **RawStream** (the PDF's stored
+  content-stream order). The choice persists in the window settings and is
+  bound to the viewer control's new `ReadingOrderStrategy` property. Bounded
+  scope (the remainder of #774 stays deferred): a full-width line spanning the
+  gutter, baseline-aligned wide-gap tables, nested/uneven columns, and text
+  wrapping around figures degrade to the old geometric order rather than
+  splitting. Verified against an independent oracle (poppler `pdftotext`
+  reading-order mode) plus construction-known fixtures in
+  `Excise.App.Tests/Unit/CopyReadingOrderTests.cs`.
 - **About dialog now carries a completeness-gated third-party license
   manifest** — the About dialog already listed every shipped NuGet package
   (name, version, SPDX id, copyright, verbatim license text) from the embedded

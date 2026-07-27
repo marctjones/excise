@@ -1090,6 +1090,7 @@
                                                Document="{Binding PdfCoreDocument}"
                                                CurrentPage="{Binding CurrentPage}"
                                                ViewMode="{Binding ViewMode, Mode=TwoWay}"
+                                               ReadingOrderStrategy="{Binding ReadingOrderStrategy, Mode=TwoWay}"
                                                RenderVersion="{Binding RenderVersion}"
                                                ZoomLevel="{Binding ZoomLevel}"
                                                InteractionMode="{Binding InteractionMode}"

@@ -60,12 +60,45 @@ public static class TextSelectionEngine
 
     /// <summary>
     /// Letters are returned by Excise.Core.Text in glyph-emit order. To
-    /// produce a meaningful selection range we re-sort into reading
-    /// order: top-to-bottom by line, then left-to-right within line.
-    /// Two letters share a line if their vertical centres differ by
-    /// less than half the smaller font size.
+    /// produce a meaningful selection range we re-sort into reading order.
+    /// Uses the <see cref="ReadingOrderStrategy.ColumnAware"/> strategy — the
+    /// highest-quality copy default (#774). Overload kept parameterless so
+    /// every existing call site inherits the new default.
     /// </summary>
     public static List<Letter> SortReadingOrder(IEnumerable<Letter> letters)
+        => SortReadingOrder(letters, ReadingOrderStrategy.ColumnAware);
+
+    /// <summary>
+    /// Re-sort a page's glyphs into the linear sequence used for selection and
+    /// copy, per the chosen <paramref name="strategy"/> (#774):
+    /// <list type="bullet">
+    /// <item><see cref="ReadingOrderStrategy.RawStream"/> — the order Excise.Core
+    /// emitted (content-stream / logical order), untouched.</item>
+    /// <item><see cref="ReadingOrderStrategy.Simple"/> — geometric: lines
+    /// top-to-bottom, glyphs left-to-right within a line. Interleaves columns
+    /// that share a vertical band.</item>
+    /// <item><see cref="ReadingOrderStrategy.ColumnAware"/> (default) — detect
+    /// vertical column gutters and emit each column top-to-bottom before the
+    /// next, so a whole-page/cross-column copy reads column-by-column.
+    /// Single-column pages fall through to identical <c>Simple</c> output.</item>
+    /// </list>
+    /// </summary>
+    public static List<Letter> SortReadingOrder(IEnumerable<Letter> letters, ReadingOrderStrategy strategy)
+    {
+        return strategy switch
+        {
+            ReadingOrderStrategy.RawStream => letters.ToList(),
+            ReadingOrderStrategy.Simple => SortSimple(letters),
+            _ => SortColumnAware(letters),
+        };
+    }
+
+    /// <summary>
+    /// Geometric reading order: lines top-to-bottom, glyphs left-to-right.
+    /// This is the pre-#774 behaviour, preserved verbatim so single-column
+    /// output is byte-identical.
+    /// </summary>
+    private static List<Letter> SortSimple(IEnumerable<Letter> letters)
     {
         var lines = GroupIntoLines(letters);
 
@@ -77,6 +110,153 @@ public static class TextSelectionEngine
         lines.Sort((a, b) => LineCentreY(b).CompareTo(LineCentreY(a)));
 
         return lines.SelectMany(l => l).ToList();
+    }
+
+    /// <summary>
+    /// Column-aware reading order (#774): partition the page into left-to-right
+    /// column bands separated by detected vertical gutters, then emit each band
+    /// top-to-bottom/left-to-right (<see cref="SortSimple"/>) before the next.
+    /// When no gutter qualifies (single-column, or a full-width line spans the
+    /// page) this is exactly <see cref="SortSimple"/> — so single-column copy is
+    /// byte-identical and the change is provably scoped to genuine columns.
+    /// </summary>
+    private static List<Letter> SortColumnAware(IEnumerable<Letter> letters)
+    {
+        var all = letters as IReadOnlyList<Letter> ?? letters.ToList();
+        var boundaries = DetectColumnBoundaries(all);
+        if (boundaries.Count == 0)
+            return SortSimple(all);
+
+        // Bucket letters by which column their horizontal centre falls in.
+        var buckets = new List<Letter>[boundaries.Count + 1];
+        for (int i = 0; i < buckets.Length; i++) buckets[i] = new List<Letter>();
+        foreach (var l in all)
+        {
+            var r = l.GlyphRectangle;
+            var cx = (r.Left + r.Right) * 0.5;
+            int col = 0;
+            while (col < boundaries.Count && cx > boundaries[col]) col++;
+            buckets[col].Add(l);
+        }
+
+        // Each column internally uses the simple geometric order; columns are
+        // concatenated left-to-right.
+        var result = new List<Letter>(all.Count);
+        foreach (var bucket in buckets)
+            result.AddRange(SortSimple(bucket));
+        return result;
+    }
+
+    /// <summary>
+    /// Detect vertical column-gutter X positions, ordered left-to-right. A
+    /// gutter is an interior X-interval wide enough to be a column separator
+    /// (wider than <see cref="EstimateColumnGap"/>) that has a genuine
+    /// multi-line text block on <em>both</em> sides, the two blocks running in
+    /// parallel down most of the page (see <see cref="IsColumnGutter"/>). That
+    /// two-tall-blocks test is what distinguishes a real column boundary from a
+    /// wide word space, an indent, or a ragged margin, so <c>hello[ ]world</c>
+    /// never splits. Returns an empty list (→ single column) when nothing
+    /// qualifies.
+    ///
+    /// Bounded on purpose (#774): detection is global, so a full-width line
+    /// (banner heading, footer) spanning the gutter defeats it and the page
+    /// falls back to single-column order. Baseline-aligned wide-gap tables,
+    /// nested/uneven columns, and text wrapping around figures are out of
+    /// scope — the conservative bar means those degrade to the old geometric
+    /// order rather than mis-splitting (a narrow-gap table never produces a
+    /// candidate gutter at all).
+    /// </summary>
+    internal static List<double> DetectColumnBoundaries(IReadOnlyList<Letter> letters)
+    {
+        var empty = new List<double>();
+        if (letters.Count < 8) return empty;
+
+        var lines = GroupIntoLines(letters);
+        if (lines.Count < 4) return empty;
+
+        var gutterThreshold = EstimateColumnGap(letters);
+        if (double.IsInfinity(gutterThreshold)) return empty;
+
+        // Vertical content extent (by line centre) — a real gutter must run
+        // down most of it.
+        double minY = double.PositiveInfinity, maxY = double.NegativeInfinity;
+        foreach (var line in lines)
+        {
+            var cy = LineCentreY(line);
+            if (cy < minY) minY = cy;
+            if (cy > maxY) maxY = cy;
+        }
+        var contentHeight = maxY - minY;
+        if (contentHeight <= 0) return empty;
+
+        // Candidate interior gaps: sweep glyphs by X and record maximal
+        // uncovered X-intervals wider than the gutter threshold. Columns are
+        // horizontally disjoint, so their separating gutter shows up as a gap
+        // where the running right edge never reaches the next glyph's left.
+        var sorted = letters.OrderBy(l => l.GlyphRectangle.Left).ToList();
+        double runningRight = double.NegativeInfinity;
+        var boundaries = new List<double>();
+        foreach (var l in sorted)
+        {
+            var r = l.GlyphRectangle;
+            if (!double.IsNegativeInfinity(runningRight) &&
+                r.Left - runningRight > gutterThreshold)
+            {
+                var gutterCentre = (runningRight + r.Left) * 0.5;
+                if (IsColumnGutter(letters, gutterCentre, contentHeight))
+                    boundaries.Add(gutterCentre);
+            }
+            runningRight = Math.Max(runningRight, r.Right);
+        }
+
+        boundaries.Sort();
+        return boundaries;
+    }
+
+    /// <summary>
+    /// True when <paramref name="gutterCentre"/> separates two genuine column
+    /// blocks: the glyphs whose centre falls left of it and those to its right
+    /// each form a block of at least three text lines, and the two blocks'
+    /// vertical extents overlap over at least half the page's content height
+    /// (they run in parallel down the page). Real columns have <em>staggered</em>
+    /// baselines across the gutter — so a per-line "same line straddles the
+    /// gap" test fails on exactly the layout we want to split; measuring each
+    /// side as its own block sidesteps that. A lone wide gap on one ragged line
+    /// (<c>hello[ ]world</c>) has a one-line right block and is rejected.
+    /// </summary>
+    private static bool IsColumnGutter(
+        IReadOnlyList<Letter> letters, double gutterCentre, double contentHeight)
+    {
+        var leftSide = new List<Letter>();
+        var rightSide = new List<Letter>();
+        foreach (var l in letters)
+        {
+            var cx = (l.GlyphRectangle.Left + l.GlyphRectangle.Right) * 0.5;
+            if (cx < gutterCentre) leftSide.Add(l);
+            else rightSide.Add(l);
+        }
+
+        var leftLines = GroupIntoLines(leftSide);
+        var rightLines = GroupIntoLines(rightSide);
+        if (leftLines.Count < 3 || rightLines.Count < 3) return false;
+
+        var (lMin, lMax) = VerticalExtent(leftLines);
+        var (rMin, rMax) = VerticalExtent(rightLines);
+        var overlap = Math.Min(lMax, rMax) - Math.Max(lMin, rMin);
+        return overlap >= 0.5 * contentHeight;
+    }
+
+    /// <summary>Min/max line-centre Y across a set of lines.</summary>
+    private static (double Min, double Max) VerticalExtent(List<List<Letter>> lines)
+    {
+        double min = double.PositiveInfinity, max = double.NegativeInfinity;
+        foreach (var line in lines)
+        {
+            var cy = LineCentreY(line);
+            if (cy < min) min = cy;
+            if (cy > max) max = cy;
+        }
+        return (min, max);
     }
 
     /// <summary>

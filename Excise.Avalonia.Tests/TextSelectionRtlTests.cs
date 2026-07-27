@@ -147,6 +147,24 @@ public class TextSelectionRtlTests
             "a wide RTL gap (prev to the right of cur) still marks a word break");
     }
 
+    // ── column-aware default does not regress single-line RTL (#774) ─────────
+
+    [Fact]
+    public void ColumnAwareStrategy_SingleRtlLine_IsIdenticalToSimple()
+    {
+        using var doc = PdfDocument.Open(RtlFixtures.SingleTj(ArabicScalars, visualOrder: true));
+        var letters = doc.GetPage(1).Letters;
+
+        // A single line has too few rows to be multi-column, so the new
+        // ColumnAware default must fall through to the old geometric order.
+        var simple = TextSelectionEngine.SortReadingOrder(letters, ReadingOrderStrategy.Simple);
+        var columnAware = TextSelectionEngine.SortReadingOrder(letters, ReadingOrderStrategy.ColumnAware);
+        Concat(columnAware).Should().Be(Concat(simple),
+            "column-aware must not reorder a single RTL line");
+        Concat(columnAware).Should().Be(Reverse(ArabicWord),
+            "visual (painted) order is preserved for the highlight run");
+    }
+
     // ── control smoke test (headless) ────────────────────────────────────────
 
     [Fact]

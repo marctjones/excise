@@ -68,6 +68,40 @@
                     </StackPanel>
                 </Border>
 
+                <!-- Text Selection Settings Section (#774) -->
+                <Border Background="{DynamicResource CardBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="20">
+                    <StackPanel Spacing="15">
+                        <TextBlock Text="Text Selection"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+
+                        <TextBlock Text="How copied text is ordered when you select across the page"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   TextWrapping="Wrap"/>
+
+                        <Separator/>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Reading Order" FontWeight="Medium"/>
+                            <ComboBox ItemsSource="{Binding ReadingOrderStrategyOptions}"
+                                      SelectedItem="{Binding SelectedReadingOrderStrategy}"
+                                      HorizontalAlignment="Stretch"
+                                      AutomationProperties.Name="Reading Order Strategy"
+                                      AutomationProperties.HelpText="How selected text is ordered when copied."/>
+                            <TextBlock Text="ColumnAware (default): reads each column top-to-bottom before the next. Simple: geometric top-to-bottom, left-to-right (interleaves columns). RawStream: the PDF's stored text order."
+                                       FontSize="10"
+                                       Foreground="{DynamicResource TextTertiaryBrush}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
             </StackPanel>
         </ScrollViewer>
 
