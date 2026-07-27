@@ -115,6 +115,24 @@ public partial class PdfViewerControl : UserControl
     }
 
     /// <summary>
+    /// How copied text is whitespaced between lines — paragraph/list-aware
+    /// <see cref="Services.WhitespaceMode.Smart"/> (default) or the older
+    /// line-faithful mode. Independent of reading order: this only affects the
+    /// separators <see cref="TextSelectionEngine.JoinText(System.Collections.Generic.IReadOnlyList{Excise.Core.Text.Letter}, Services.WhitespaceMode)"/>
+    /// inserts, so changing it needs no re-sort — only the accessible-text cache
+    /// is dropped.
+    /// </summary>
+    public static readonly StyledProperty<Services.WhitespaceMode> WhitespaceModeProperty =
+        AvaloniaProperty.Register<PdfViewerControl, Services.WhitespaceMode>(
+            nameof(WhitespaceMode), defaultValue: Services.WhitespaceMode.Smart);
+
+    public Services.WhitespaceMode WhitespaceMode
+    {
+        get => GetValue(WhitespaceModeProperty);
+        set => SetValue(WhitespaceModeProperty, value);
+    }
+
+    /// <summary>
     /// Monotonic host-provided content version. Increment when the same
     /// document instance has visually changed and the viewer should invalidate
     /// page caches and render the current view again.
@@ -1098,6 +1116,10 @@ public partial class PdfViewerControl : UserControl
 
         if (!ReferenceEquals(source, _accessibleTextSource) || _accessibleTextCache == null)
         {
+            // Accessible text stays LineFaithful on purpose: WhitespaceMode is a
+            // COPY preference. Smart mode's paragraph blank lines and list
+            // indentation would change what a screen reader announces (spoken
+            // pauses/indentation) — out of scope for this feature.
             _accessibleTextCache = TextSelectionEngine.JoinText(source);
             _accessibleTextSource = source;
         }
