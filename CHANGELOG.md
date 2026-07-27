@@ -25,8 +25,46 @@ semantic versioning.
   PNG baselines (63/0 unchanged) and the mutool differential smoke suite (49/0)
   on the embedded-font corpus. Cache lifetime is one page render; keys compare
   the typeface by reference.
+- **Text-extraction hot path: fewer allocations, less CPU** (#600) — the
+  `TextExtractor` content-stream parse now caches all per-font derived state
+  (ToUnicode map, `/Differences`, the Identity / Mac-glyph-order /
+  embedded-CID / symbol-cmap decode tables, and the CID/CMap/`/W` width
+  geometry) keyed by the resolved font dictionary, instead of re-parsing those
+  streams on every `Tf` operator — the dominant repeated cost, since every
+  text block re-issues `Tf`. `ParseNumber` gained an exact inline integer
+  parser for the common operand (TJ kerns, `Td`/`Tm`/`cm` coordinates) that
+  bypasses `int.TryParse`'s culture machinery, and the operand list is
+  pre-sized. Measured over `test-pdfs/smoke` (min-of-3, Release,
+  `scripts/check-perf-budgets.sh`): text-extract allocation **389.7 → 160.7 MB
+  (-59%)** and wall time **230.2 → 164.7 ms (-29%)**; redaction-save
+  allocation also fell ~8% (it shares the extractor). Every change is
+  behavior-preserving: the font cache re-assigns all derived fields on each
+  `Tf` (a snapshot, never a skip-if-same short-circuit, so it still heals the
+  partial state restore in form-XObject parsing) and the integer parser falls
+  back to `int.TryParse` for any non-trivial span. The 332-page
+  extraction-parity gate is **unchanged at 98.7%** — proving extraction output
+  (and therefore redaction reach) did not move. The text-extract allocation
+  budget was tightened to the new floor to lock in the win.
 
 ## [3.3.1] - 2026-07-26
+- **GUI interaction latency: per-page search-highlight index (#601).** Page
+  navigation recomputed the current page's search highlights with a linear
+  `O(total matches)` scan over every match on *every* page flip, so the cost
+  grew with document size (a dense search on a large book — thousands of
+  matches — made each page change scan all of them). Matches are now indexed by
+  page once when results publish, making the per-navigation lookup
+  `O(matches on the target page)`. Measured (new `GuiLatencyBenchmarkTests`,
+  400-page document, 2,000-match active search, 2 runs): the per-navigation
+  match lookup dropped from **~22 µs to ~0.05 µs** (~400×), and — being now
+  independent of match count — no longer scales with the document (the old scan
+  was linear in total matches, so ~2 ms at 200k matches).
+  **User-visible latency was already sub-frame and is unchanged within
+  measurement noise** — every direct interaction averaged well under one 60 Hz
+  input frame both before and after (end-to-end page navigation ≈ 0.5–0.7 ms,
+  its run-to-run baseline jitter larger than the change). The value is removing
+  the one per-interaction cost that scaled with document content, plus the new
+  benchmark that gates each profiled interaction under a 16 ms budget going
+  forward.
 
 ### Fixed
 - **Symbolic TrueType with a (3,0) symbol cmap: text extraction mis-decode**
