@@ -520,11 +520,12 @@ internal partial class RenderContext
         if (!isNormalBlend && !TryMapSkiaBlendToPdfBlend(_state.BlendMode, out blend))
             return false;
 
-        // #634: OPM 1 overprint against the group's true CMYK backdrop —
-        // zero source components leave that colorant unchanged (see
-        // IsDeviceCmykOverprintActive; requires Normal blend, so this never
-        // interacts with the blend-mode branches below).
-        var overprintActive = IsDeviceCmykOverprintActive(style);
+        // #634: overprint against the group's true CMYK backdrop — zero source
+        // components leave that colorant unchanged (see IsOverprintActive:
+        // DeviceCMYK under OPM 1, or any Separation/DeviceN colour regardless
+        // of OPM; requires Normal blend, so this never interacts with the
+        // blend-mode branches below).
+        var overprintActive = IsOverprintActive(style);
 
         var matrix = _canvas.TotalMatrix;
         var bounds = matrix.MapRect(path.Bounds);
@@ -738,21 +739,34 @@ internal partial class RenderContext
     }
 
     /// <summary>
-    /// True when overprint applies to the given paint style for a DeviceCMYK
-    /// colour under nonzero overprint mode (#634, ISO 32000-1 §8.6.7 +
-    /// Table 58): /OP (strokes) or /op (fills) is set, /OPM is 1, the blend
-    /// mode is Normal (overprint belongs to the opaque imaging model; PDF
-    /// consumers apply it only under Normal blending), and the current colour
-    /// space really is DeviceCMYK. Separation/DeviceN colours — whose
-    /// overprint rule is "leave every colorant OUTSIDE the space unchanged,
-    /// regardless of OPM" — and ICCBased CMYK are remaining #634 work; their
-    /// tint-transformed CMYK components must NOT get the zero-component skip,
-    /// so this deliberately resolves the actual colour space type.
+    /// True when overprint's "zero component leaves the backdrop colorant
+    /// unchanged" rule applies to the given paint style (#634, ISO 32000-1
+    /// §8.6.7 + Table 58). In every case /OP (strokes) or /op (fills) must be
+    /// set and the blend mode must be Normal (overprint belongs to the opaque
+    /// imaging model; PDF consumers apply it only under Normal blending). The
+    /// colour space then decides the mode:
+    /// <list type="bullet">
+    /// <item><b>DeviceCMYK</b> (incl. a named space that resolves to it):
+    /// the component skip applies only under nonzero overprint mode (/OPM 1).
+    /// Under /OPM 0 every DeviceCMYK component — zeros included — paints, i.e.
+    /// knocks out.</item>
+    /// <item><b>Separation / DeviceN</b>: the colorants the space does not
+    /// name are left unchanged whenever overprint is on, INDEPENDENT of /OPM.
+    /// The tint transform has already mapped the colour into the alternate
+    /// DeviceCMYK (see TryEvaluateTintTransformToDeviceCmyk); the same
+    /// zero-component merge then reproduces "unnamed process colorants stay
+    /// put". Confirmed against <c>gs -dOverprint=/simulate</c>, which renders
+    /// the identical overprinted result for /OPM 0 and /OPM 1 on a Separation
+    /// fill (green overlap over a cyan backdrop) versus a plain-yellow knockout
+    /// with overprint off.</item>
+    /// </list>
+    /// A Separation/DeviceN whose alternate is not DeviceCMYK leaves
+    /// <c>FillDeviceCmyk</c>/<c>StrokeDeviceCmyk</c> null, so the paint loops
+    /// fall through to the normal Skia path (no CMYK backdrop to merge with).
+    /// ICCBased-CMYK overprint remains unhandled and is tracked as #803.
     /// </summary>
-    private bool IsDeviceCmykOverprintActive(SKPaintStyle style)
+    private bool IsOverprintActive(SKPaintStyle style)
     {
-        if (_state.OverprintMode != 1)
-            return false;
         if (!(style == SKPaintStyle.Stroke ? _state.StrokeOverprint : _state.FillOverprint))
             return false;
         if (_state.BlendMode != SKBlendMode.SrcOver)
@@ -763,11 +777,18 @@ internal partial class RenderContext
             : _state.FillColorSpace;
         // "DeviceCMYK" is what the k/K operators and `/DeviceCMYK cs` store;
         // it stays DeviceCMYK for overprint purposes even when a /DefaultCMYK
-        // preview remap is installed. Resource names are resolved so a named
-        // colour space that IS DeviceCMYK still participates.
+        // preview remap is installed.
         if (string.Equals(colorSpaceName, "DeviceCMYK", StringComparison.Ordinal))
-            return true;
-        return ResolveColorSpace(colorSpaceName)?.Type == PdfColorSpaceType.DeviceCMYK;
+            return _state.OverprintMode == 1;
+
+        // Resource names are resolved so a named colour space participates
+        // under the rule for its underlying family.
+        return ResolveColorSpace(colorSpaceName)?.Type switch
+        {
+            PdfColorSpaceType.DeviceCMYK => _state.OverprintMode == 1,
+            PdfColorSpaceType.Separation or PdfColorSpaceType.DeviceN => true,
+            _ => false,
+        };
     }
 
     /// <summary>
@@ -803,8 +824,9 @@ internal partial class RenderContext
             pathEffect: null);
 
     /// <summary>
-    /// Overprint simulation for DeviceCMYK fills/strokes OUTSIDE a DeviceCMYK
-    /// transparency group (#634). Inside a group, TryPaintDeviceCmykBlendPath
+    /// Overprint simulation for DeviceCMYK — and tint-transformed
+    /// Separation/DeviceN (see IsOverprintActive) — fills/strokes OUTSIDE a
+    /// DeviceCMYK transparency group (#634). Inside a group, TryPaintDeviceCmykBlendPath
     /// owns compositing and applies overprint against the true per-pixel CMYK
     /// backdrop; out here the page only has RGB pixels, so the backdrop's
     /// colorants are estimated by inverting the DeviceCMYK→RGB preview
@@ -838,7 +860,7 @@ internal partial class RenderContext
             return false;
         }
 
-        if (!IsDeviceCmykOverprintActive(style))
+        if (!IsOverprintActive(style))
             return false;
 
         var source = sourceCmyk.Value;
