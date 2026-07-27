@@ -704,9 +704,29 @@ public class KeyboardShortcutTests
         await window.PressKeyAsync(Key.D2, RawInputModifiers.Control);
         await KeyboardTestHelpers.FlushDispatcherAsync();
         await Task.Delay(100);
+        var fitPageZoom = vm.ZoomLevel;
 
-        // Assert
-        vm.ZoomLevel.Should().BeGreaterThan(0, "Ctrl+2 should fit entire page");
+        // Assert: `BeGreaterThan(0)` alone is vacuous — ZoomLevel is >0 by
+        // construction/clamping in every zoom path, so it can't tell a
+        // correctly-computed fit-page ratio apart from a no-op or a
+        // fit-WIDTH ratio landing here by mistake (#816). The default
+        // multi-page fixture's page is portrait (non-square), so on a
+        // non-square viewport fit-page (constrained by height too) must
+        // differ from fit-width (constrained by width alone) — assert that
+        // distinction directly using the real ZoomFitWidthCommand as the
+        // comparison, not a hard-coded geometry recomputation (the exact
+        // ratio math is covered independently by
+        // AnnotateAndDialogCommandTests.ZoomFitPageCommand_ComputesTheFitPageRatio_DistinctFromFitWidth).
+        fitPageZoom.Should().BeGreaterThan(0, "Ctrl+2 should fit entire page");
+
+        vm.ZoomFitWidthCommand.Execute().Subscribe();
+        await KeyboardTestHelpers.FlushDispatcherAsync();
+        await Task.Delay(100);
+        var fitWidthZoom = vm.ZoomLevel;
+
+        Math.Abs(fitPageZoom - fitWidthZoom).Should().BeGreaterThan(0.01,
+            "Ctrl+2 must route to the fit-PAGE ratio, which is distinct from fit-width on this non-square page — " +
+            "not merely leave ZoomLevel at some positive value");
     }
 
     #endregion
