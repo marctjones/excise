@@ -710,6 +710,58 @@ public class KeyboardShortcutEffectTests
     }
 
     // ==============================================================
+    // Down / Up arrow — real key ROUTING (was reflection-only, #827)
+    // ==============================================================
+
+    // FINDING (#827): KeyboardShortcutTests drove Down/Up by REFLECTION-invoking
+    // MainWindow_KeyDown, which proves the handler body but NOT that a real Down
+    // keypress reaches it. It does not: a real Down/Up press never bubbles to the
+    // window's KeyDown handler as unhandled (Avalonia's input pipeline consumes
+    // arrow keys first), so the MainWindow_KeyDown Down/Up branch was dead for
+    // real input. The reachable, deterministic route is the viewer's TUNNEL
+    // handler (OnViewerKeyDown) — the same one Left/Right already page-navigate
+    // through. Down/Up were added there so a real arrow press now navigates
+    // pages, verified below via real routed KeyDown on the viewer.
+
+    [FixedAvaloniaFact(Timeout = 20000)]
+    public async Task ViewerDownArrow_RealDispatch_AdvancesPage()
+    {
+        var path = Temp("down_route.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 5);
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            var control = new PdfViewerControl { Document = PdfCoreDocument.Open(path) };
+            control.CurrentPage.Should().Be(1);
+
+            RaiseViewerKey(control, Key.Down);
+            control.CurrentPage.Should().Be(2,
+                "a real Down keypress must route to the viewer handler and advance the page");
+
+            control.Document?.Dispose();
+        });
+    }
+
+    [FixedAvaloniaFact(Timeout = 20000)]
+    public async Task ViewerUpArrow_RealDispatch_ReturnsToPreviousPage()
+    {
+        var path = Temp("up_route.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 5);
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            var control = new PdfViewerControl { Document = PdfCoreDocument.Open(path) };
+            control.CurrentPage = 3;
+
+            RaiseViewerKey(control, Key.Up);
+            control.CurrentPage.Should().Be(2,
+                "a real Up keypress must route to the viewer handler and return to the previous page");
+
+            control.Document?.Dispose();
+        });
+    }
+
+    // ==============================================================
     // Dispatch helpers
     // ==============================================================
 
