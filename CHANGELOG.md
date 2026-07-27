@@ -6,6 +6,29 @@ semantic versioning.
 
 ## [Unreleased]
 
+### Added
+- **Overprint simulation for Separation and DeviceN colours (#634).** Overprint
+  (ISO 32000-1 §8.6.7) previously engaged only for DeviceCMYK fills/strokes;
+  it now also engages for Separation and DeviceN colours whose tint transform
+  resolves to a DeviceCMYK alternate. Such a colour is tint-transformed to
+  DeviceCMYK (already done for display), and overprint then leaves the process
+  colorants the transform outputs as zero unchanged in the backdrop instead of
+  knocking them out. Per the spec this "unnamed colorants stay put" rule applies
+  whenever `/OP`/`/op` is set **regardless of `/OPM`** — unlike DeviceCMYK,
+  which still requires `/OPM 1`. Verified against Ghostscript's overprint
+  simulation (`gs -dOverprint=/simulate`, the only harness reference renderer
+  that simulates overprint on an RGB device): a spot colour mapping to yellow
+  over a cyan backdrop keeps the cyan (green overlap) under both `/OPM 0` and
+  `/OPM 1`, matching the oracle, versus a plain-yellow knockout with overprint
+  off (`SeparationOverprintDifferentialTests`, plus relative
+  `SeparationOverprintRenderingTests`). Works both outside and inside a
+  DeviceCMYK transparency group. DeviceCMYK `/OPM 0`/`/OPM 1` behaviour is
+  unchanged (the existing Ghent GWG011 OPM-mode traps still pass). ICC colour
+  management remains preview-grade with no real CMM (matrix/TRC and lut16 A2B
+  tables are genuine transforms; there are no rendering intents, black-point
+  compensation, or gamut mapping), and ICCBased-CMYK overprint is not yet
+  handled — tracked as #803.
+
 ### Performance
 - **Renderer image decode / colour-conversion allocation cuts** (#599) — the
   image decode path no longer stages a large transient managed pixel buffer per
