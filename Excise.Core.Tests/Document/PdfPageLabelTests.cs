@@ -281,6 +281,41 @@ public class PdfPageLabelTests
         doc.GetPageLabel(4).Should().Be("2");
     }
 
+    // ─── Round-trip: parse → save → reopen → GetPageLabel still resolves ───
+
+    [Fact]
+    public void GetPageLabel_RoundTrip_SurvivesSaveAndReopen()
+    {
+        // Front-matter roman numerals then arabic body pages — the canonical
+        // "Page iii of 432"-style case called out in issue #331.
+        var pdf = MakePdfWithPageLabels(
+            "/PageLabels << /Nums [0 << /S /r >> 2 << /S /D /P (Chapter ) >>] >>");
+        using var doc = PdfDocument.Open(pdf);
+
+        var saved = doc.SaveToBytes();
+        using var reopened = PdfDocument.Open(saved);
+
+        reopened.GetPageLabel(1).Should().Be("i");
+        reopened.GetPageLabel(2).Should().Be("ii");
+        reopened.GetPageLabel(3).Should().Be("Chapter 1");
+    }
+
+    [Fact]
+    public void GetPageLabel_RoundTrip_DoesNotAppearOnPlainDocument()
+    {
+        // Additive guarantee: a document with no /PageLabels must not gain one
+        // after a save/reopen cycle.
+        var pdf = MakePdfWithPageLabels(null);
+        using var doc = PdfDocument.Open(pdf);
+
+        var saved = doc.SaveToBytes();
+        using var reopened = PdfDocument.Open(saved);
+
+        reopened.GetPageLabel(1).Should().BeNull();
+        reopened.GetPageLabel(2).Should().BeNull();
+        reopened.GetPageLabel(3).Should().BeNull();
+    }
+
     // ─── Helper: PDF builder ───────────────────────────────────────────────
 
     /// <summary>

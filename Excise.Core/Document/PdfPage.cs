@@ -329,6 +329,45 @@ public class PdfPage
     }
 
     /// <summary>
+    /// This page's presentation transition effect (/Trans, ISO 32000-2:2020 §12.4.4),
+    /// used by presentation-mode viewers when navigating to this page. /Trans is a
+    /// direct (non-inheritable) page entry. Null if the page has no /Trans.
+    /// excise parses and round-trips this dictionary; it does not implement
+    /// presentation-mode playback (issue #331 — UI integration deferred).
+    /// </summary>
+    public PdfPageTransition? Transition => PdfPageTransitionParser.Parse(_document, _pageDict);
+
+    /// <summary>
+    /// The page's display duration in seconds (/Dur, ISO 32000-2:2020 §12.4.4) —
+    /// how long a full-screen presentation-mode viewer should show this page
+    /// before automatically advancing. /Dur is a direct (non-inheritable) page
+    /// entry. Null if the page has no /Dur.
+    /// </summary>
+    public double? Duration => _pageDict.TryGetValue("Dur", out var durObj) && durObj.TryGetNumber(out var dur)
+        ? dur
+        : null;
+
+    /// <summary>
+    /// This page's additional actions (/AA, ISO 32000-2:2020 §12.6.3, Table 203).
+    /// Keys are trigger names: "O" (page opened / becomes visible), "C" (page closed /
+    /// no longer visible). Empty if the page has no /AA. Never executed by excise —
+    /// parsed for round-trip and inspection only.
+    /// </summary>
+    public IReadOnlyDictionary<string, PdfAction> AdditionalActions =>
+        PdfActionParser.ParseAdditionalActions(_document, _pageDict.GetOptional("AA"));
+
+    /// <summary>
+    /// This page's embedded thumbnail image stream (/Thumb, ISO 32000-2:2020 §12.3.4),
+    /// if present. The stream is a small preview image (typically DeviceGray or
+    /// DeviceRGB, possibly DCT- or Flate-encoded) that a viewer may show in a
+    /// thumbnail panel instead of rendering the full page. excise parses and
+    /// preserves this stream on save but does not decode/render it — a thumbnail
+    /// strip should fall back to the renderer when this is null (issue #331).
+    /// </summary>
+    public PdfStream? ThumbnailStream => _document.Resolve(
+        _pageDict.GetOptional("Thumb") ?? (PdfObject)PdfNull.Instance) as PdfStream;
+
+    /// <summary>
     /// Get the page resources dictionary.
     /// </summary>
     public PdfDictionary? Resources => GetInheritedDictionary("Resources");
