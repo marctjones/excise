@@ -62,6 +62,7 @@ public partial class MainWindow : Window
             {
                 _windowSettings.ContinuousScrollEnabled = viewModel.ContinuousScrollPreference;
                 _windowSettings.ReadingOrderStrategy = viewModel.ReadingOrderStrategy.ToString();
+                _windowSettings.WhitespaceMode = viewModel.WhitespaceMode.ToString();
             }
             _windowSettings.CaptureFrom(this);
             _windowSettings.Save();
@@ -93,6 +94,9 @@ public partial class MainWindow : Window
             if (Enum.TryParse<Excise.Avalonia.Services.ReadingOrderStrategy>(
                     _windowSettings.ReadingOrderStrategy, out var strategy))
                 viewModel.ApplyReadingOrderStrategyPreference(strategy);
+            if (Enum.TryParse<Excise.Avalonia.Services.WhitespaceMode>(
+                    _windowSettings.WhitespaceMode, out var whitespaceMode))
+                viewModel.ApplyWhitespaceModePreference(whitespaceMode);
             SchedulePlatformMenuConfigure();
 
             // Subscribe to toast notifications
