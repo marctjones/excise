@@ -302,7 +302,7 @@
                 <MenuItem Header="_Documentation" Command="{Binding ShowDocumentationCommand}"
                           access:CommandAccessibility.CommandId="app.documentation"/>
                 <Separator/>
-                <MenuItem Header="_About PDF Editor" Command="{Binding AboutCommand}"
+                <MenuItem Header="_About Excise" Command="{Binding AboutCommand}"
                           access:CommandAccessibility.CommandId="app.about"/>
             </MenuItem>
         </Menu>
@@ -319,7 +319,7 @@
                         Orientation="Horizontal"
                         Spacing="10"
                         Margin="10,0">
-                <TextBlock Text="PDF Editor"
+                <TextBlock Text="Excise"
                            FontSize="13"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource TextPrimaryBrush}"

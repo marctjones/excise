@@ -25,7 +25,6 @@ public partial class MainWindow : Window
     private readonly WindowSettings _windowSettings;
     private object? _nativeMenuDataContext;
     private NativeMenu? _nativeMenu;
-    private NativeMenu? _nativeApplicationMenu;
     private bool _isNativeWindowOpened;
     private bool _nativeMenuAttachScheduled;
     private int _nativeMenuAttachAttempts;
@@ -187,13 +186,14 @@ public partial class MainWindow : Window
         if (!ReferenceEquals(_nativeMenuDataContext, viewModel) || _nativeMenu is null)
         {
             _nativeMenu = MacNativeMenuBuilder.Create(viewModel);
-            _nativeApplicationMenu = MacNativeMenuBuilder.CreateApplicationMenu(viewModel);
             _nativeMenuDataContext = viewModel;
         }
 
-        if (_nativeApplicationMenu is not null && Application.Current is { } application)
-            NativeMenu.SetMenu(application, _nativeApplicationMenu);
-
+        // The application (app-name) menu is owned by App and set on the
+        // Application before the first window exists (#833) — it must precede
+        // Avalonia's one-shot app-menu exporter, which a window-side set cannot.
+        // Here we only attach the window (menu-bar) menu; the TopLevel exporter
+        // does subscribe to changes, so setting it after the window opens works.
         NativeMenu.SetMenu(this, _nativeMenu);
     }
 

@@ -19,25 +19,6 @@ internal static class MacNativeMenuBuilder
         return state.Create();
     }
 
-    public static NativeMenu CreateApplicationMenu(MainWindowViewModel viewModel)
-    {
-        ArgumentNullException.ThrowIfNull(viewModel);
-
-        var menu = new NativeMenu();
-        menu.Add(new NativeMenuItem("About excise")
-        {
-            Command = viewModel.AboutCommand
-        });
-        menu.Add(new NativeMenuItemSeparator());
-        menu.Add(new NativeMenuItem("Preferences...")
-        {
-            Command = viewModel.ShowPreferencesCommand,
-            Gesture = new KeyGesture(Key.OemComma, KeyModifiers.Meta)
-        });
-
-        return menu;
-    }
-
     private sealed class MenuState
     {
         private readonly MainWindowViewModel _viewModel;
