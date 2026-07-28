@@ -63,14 +63,24 @@ Real PDFs from `test-pdfs/`, sampled pages, the **whole** copy path
 |------|------|------:|---------------------:|---------------------:|
 | producingoss.pdf | multi-paragraph prose | 8 | 87.3% | 40.3% |
 | foss-primer.pdf | prose + dotted-leader TOC | 6 | 6.6% | 49.1% |
-| scotus-trump-v-us.pdf | two-column legal prose | 8 | 1.4% | 8.2% |
-| irs-pub509-2026.pdf | multi-column instructions | 6 | 64.3% | 6.3% |
-| cdc-vis-covid-19.pdf | graphical health notice | 2 | 0.8% | 25.0% |
-| **AGGREGATE** | — | 30 | **37.9%** | **25.7%** |
+| scotus-trump-v-us.pdf | two-column legal prose | 8 | 35.4% | 8.2% |
+| irs-pub509-2026.pdf | multi-column instructions | 6 | 59.1% | 6.3% |
+| cdc-vis-covid-19.pdf | graphical health notice | 2 | 73.6% | 25.0% |
+| **AGGREGATE** | — | 30 | **50.8%** | **25.7%** |
 
-**Read this table honestly.** The aggregate is *low*, and most of the loss is
-**not** the whitespace layer — it is the reading-order/extraction layer beneath
-it.
+**#833 update — degenerate glyph widths no longer over-space.** The aggregate
+rose from 37.9% to 50.8%. Some fonts report a near-zero glyph advance width
+(e.g. `TT0` in scotus), which made the old width-based gap
+(`cur.Left − prev.Right`) fire a space between *every* glyph (`"C i t e a 3 s"`).
+Two targeted changes: (1) on lines that already carry real space glyphs the
+word-space heuristic stays OUT of the way (real spaces do the separating), and
+(2) when a line's glyph widths are degenerate (~0) the heuristic switches to a
+width-independent advance-vs-median rule. Normal-width documents keep the
+original width-based rule unchanged. Result: scotus 1.4%→35.4%, cdc 0.8%→73.6%,
+with clean prose (producingoss 87.3%) unchanged. The residual loss is **not**
+the whitespace layer — it is the reading-order/extraction layer beneath it
+(multi-column interleave, #774/#824; and foss's dotted-leader word *fusion*),
+which this change does not touch.
 
 **This is true by construction, not by assertion.** The word-token metric folds
 all newlines to spaces and strips non-alphanumerics before comparing, so Smart
@@ -88,20 +98,20 @@ whitespace feature can only be as good as the lines it is handed:
   where the oracle's do. This is the case the
   feature is *for*, and it works.
 - **foss-primer.pdf** — a table-of-contents page with dotted leaders. excise
-  **drops the space between adjacent words** (`DesigningAround`,
-  `ShouldFOSSDevelopersApplyforPatents`), collapsing token agreement to 6.6%.
-  That is a word-spacing gap in the layer below, exposed — not caused — by this
-  work.
+  **drops the space between adjacent words** (`DesigningAround`), collapsing
+  token agreement to 6.6%. That is a word-*fusion* gap in the layer below —
+  separate from the #833 over-spacing and not addressed by it.
 - **scotus-trump-v-us.pdf** / **irs-pub509-2026.pdf** — two/multi-column pages.
-  The copy **scrambles** here for *two* independent upstream reasons, neither in
-  the whitespace layer: (a) a per-glyph spacing symptom (`"C i t e a 3 s"` — a
-  space between nearly every glyph, i.e. a glyph advance-width / word-boundary
-  problem in the layer that spaces a line), and (b) line-level **interleave**
-  (`"vlJ la io rn n"` = two lines woven together) — `ColumnAware` (#774/#824)
-  falls back to interleaved order when a full-width line (running header, page
-  number) spans the gutter. No whitespace policy recovers either.
-- **cdc-vis-covid-19.pdf** — a large-type graphical notice; extraction is
-  near-empty (`"XC WW 1"`). Nothing to whitespace.
+  The **per-glyph spacing symptom** (`"C i t e a 3 s"` — a space between nearly
+  every glyph, from a near-zero glyph advance-width, #833) is now **fixed**: on
+  degenerate-width lines the word-space rule compares origin-to-origin advances
+  to the line median instead of the width-based gap. What remains is line-level
+  **interleave** (`"vlJ la io rn n"` = two lines woven together) — `ColumnAware`
+  (#774/#824) falls back to interleaved order when a full-width line (running
+  header, page number) spans the gutter. No whitespace policy recovers that; it
+  is why scotus (35.4%) and irs (59.1%) are still bounded.
+- **cdc-vis-covid-19.pdf** — a large-type graphical notice; word agreement rose
+  to 73.6% once the degenerate-width over-spacing was fixed (#833).
 
 The line-break agreement column is low across the board even where words match,
 because `pdftotext`'s line segmentation and excise's frequently differ on
@@ -115,7 +125,7 @@ checks. "Heuristic where it breaks" is the concrete failure mode.
 
 | Category | Reliability | How heuristic / where it breaks |
 |----------|-------------|---------------------------------|
-| **Word spacing** (same line) | **Solid on clean fonts** — 87% on prose; unchanged from the shipped baseline (verbatim rule). | Breaks when the underlying glyph gaps are unusual: dotted-leader TOCs fuse words (foss 6.6%); very tight or very loose tracking can add/drop a space. Not a Smart-mode behaviour — the rule is shared with LineFaithful. |
+| **Word spacing** (same line) | **Solid on clean fonts** — 87% on prose. **Degenerate widths handled (#833):** defers to real space glyphs, and on ~0-width fonts switches to an advance-vs-median rule, so those no longer over-space (scotus 1.4%→35.4%, cdc 0.8%→73.6%); normal-width docs keep the original rule. | Still misses spaces on lines that lack real space glyphs *and* have unusual tracking (dotted-leader TOCs fuse words). Not a Smart-mode behaviour — the rule is shared with LineFaithful. |
 | **Line breaks** | **Solid** — one break per visual line, deterministic. | The break *decision* is faithful; whether a wrapped line "should" have been joined is a separate (unreliable) question we do not attempt. |
 | **Paragraph separation** | **Good on clean single-column prose** — counted grade is the synthetic fixtures (all pass); producingoss agreement is spot-checked, not counted. | Fixed factor (gap > 1.6× median leading). **Tight leading** can read a paragraph break as one paragraph; a **heading or figure gap** can read as a spurious paragraph break. Not adaptive per block. |
 | **Simple bullet lists** | **Good** — markers (•, -, –, *, ·, ‣, ◦) detected, items kept tight on their own lines; synthetic fixtures pass. | A sentence that *opens* with a hyphen/asterisk is mis-tagged as a list item (kept narrow: marker must be followed by a space). |
