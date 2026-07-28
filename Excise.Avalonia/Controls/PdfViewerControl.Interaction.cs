@@ -421,8 +421,14 @@ public partial class PdfViewerControl
     /// last hover target so this is a no-op while the pointer sits still or
     /// moves within the same link's rect, and only fires on genuine enter/exit.
     /// </summary>
-    private static readonly Cursor IbeamCursor = new(StandardCursorType.Ibeam);
-    private static readonly Cursor HandCursor = new(StandardCursorType.Hand);
+    // Cursor instances are created LAZILY on first use, never in a static/field
+    // initializer: constructing a Cursor needs Avalonia's platform cursor
+    // factory, which does not exist at type-initialization time (#831 — a static
+    // readonly here crashed PdfViewerControl's static ctor under the test host).
+    private Cursor? _ibeamCursor;
+    private Cursor? _handCursor;
+    private Cursor IbeamCursor => _ibeamCursor ??= new Cursor(StandardCursorType.Ibeam);
+    private Cursor HandCursor => _handCursor ??= new Cursor(StandardCursorType.Hand);
 
     private void UpdateLinkHoverState(PdfLink? link)
     {
