@@ -7,6 +7,29 @@ semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **Pointer-interaction test coverage + thumbnail drag-reorder fix** (#827,
+  batch A) — new headless-Avalonia suite `PointerInteractionTests` that drives
+  the *real* pointer/keyboard gesture on the *real* control and asserts the
+  downstream effect (never the VM method directly) for eight surfaces that had
+  only command-level or no coverage: external-link click (fires
+  `ExternalLinkClicked` + runs the confirm dialog), dangerous `/Launch` link
+  click (fires `DangerousLinkClicked` + runs the refusal), FormAuthoring
+  drag-to-create (fires `FormFieldRectDrawn` with a Y-flipped PDF-point rect on
+  the correct page), form-field checkbox toggle (fires `FormFieldEdited`, mutates
+  the `PdfField`, marks the document dirty), thumbnail drag-reorder (+ the
+  `from == to` no-op), thumbnail click-navigate, thumbnail batch-select
+  checkbox, and search-result row click. The form-field text-field and
+  choice-combo commits already had real-element coverage in
+  `FormFieldsOverlayTests`. Driving these gestures surfaced a real bug, now
+  fixed: **thumbnail drag-to-reorder never worked** — the drop handlers were
+  XAML event attributes on the thumbnail `Button`, whose own class handler marks
+  `PointerReleased` handled before a normal instance handler runs, so
+  `OnThumbnailPointerReleased` was silently skipped and every drag was a no-op
+  (`toIndex == fromIndex`). The handlers are now attached in code-behind on the
+  thumbnails `ItemsControl` with `handledEventsToo: true`, and the drop target is
+  resolved by hit-testing the pointer-release position (a `Button` captures the
+  pointer on press, so `sender` is always the source thumbnail). Click-to-navigate
+  is unchanged (still the `Button`'s `Command`).
 - **Copied-text whitespace fidelity: paragraph + list awareness, as the default**
   — copying text now inserts a blank line at detected **paragraph** breaks (a
   vertical gap meaningfully larger than the block's typical leading) and keeps
