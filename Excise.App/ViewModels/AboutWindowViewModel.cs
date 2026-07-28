@@ -101,4 +101,16 @@ public sealed class ThirdPartyPackage
 
     /// <summary>Whichever URL is most useful: project, repo, or SPDX.</summary>
     public string? PrimaryUrl => ProjectUrl ?? RepositoryUrl ?? LicenseSpdxUrl ?? LicenseUrl;
+
+    /// <summary>
+    /// The verbatim license text to display for this package (#831): the license
+    /// file bundled by the package if present, otherwise the canonical text for
+    /// its SPDX id (e.g. the MIT permission notice), with this package's own
+    /// copyright woven in. Null only when neither is available — which the
+    /// About-dialog completeness gate forbids for a shipped package.
+    /// </summary>
+    public string? EffectiveLicenseText =>
+        !string.IsNullOrWhiteSpace(LicenseText)
+            ? LicenseText
+            : SpdxLicenseTexts.ForSpdx(Spdx, Copyright);
 }

@@ -87,6 +87,38 @@ public class ThirdPartyLicenseCompletenessTests
             string.Join(", ", unresolved));
     }
 
+    [Fact]
+    public void EveryShippedPackage_HasVerbatimLicenseText()
+    {
+        var closure = ResolvePackageClosure();
+        closure.Should().NotBeEmpty();
+
+        var vm = new AboutWindowViewModel();
+        var byId = vm.Packages
+            .Where(p => !string.IsNullOrEmpty(p.Id))
+            .GroupBy(p => p.Id!, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+
+        // For every shipped package that IS in the manifest, the About dialog
+        // must be able to show verbatim license text — a bundled license file
+        // or the canonical SPDX body (MIT/BSD permission notice). A bare SPDX id
+        // + URL is not enough: permissive licenses require the notice text to
+        // travel with the redistribution. (Absence from the manifest entirely is
+        // the other gate's job, so only packages present-but-textless fail here.)
+        var textless = closure
+            .Where(id => !ExcludedPackages.Contains(id))
+            .Where(id => byId.TryGetValue(id, out var p)
+                         && string.IsNullOrWhiteSpace(p.EffectiveLicenseText))
+            .OrderBy(id => id, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        textless.Should().BeEmpty(
+            "every shipped package must display verbatim license text in the About dialog — embed the " +
+            "license file (LICENSE_OVERRIDES in scripts/generate-license-manifest.sh) or add its SPDX id " +
+            "to SpdxLicenseTexts. Packages showing only a link, not the text: {0}",
+            string.Join(", ", textless));
+    }
+
     /// <summary>
     /// A license is "resolved" when the entry names a license the user can
     /// act on: an SPDX id, or a human-readable license name that is not the
