@@ -31,6 +31,18 @@ semantic versioning.
   cdc 73.9%→**94.4%**; clean prose unchanged.
 
 ### Added
+- **Redaction/extraction geometry now has two independent-oracle regression
+  gates** (#842, #839) — both guard the glyph-box path the #833/#843 fixes
+  touch, and neither lets excise grade its own homework. `#842`
+  (`AreaRedactionDegenerateWidthTests`) draws an area over only the **top half**
+  of unit-Tf glyph ink — a region a baseline-pinned degenerate box (the #833
+  leak) could not intersect — and verifies with mutool *and* ghostscript that
+  the glyphs are gone, catching area-redaction under-inclusion. `#839`
+  (`GlyphWidthAccuracyTests`) compares excise glyph box widths to mutool's stext
+  quads over real corpus pages at the distribution level: the **median** ratio
+  must sit near 1 (catches #833's global shrink) and the width **spread** must
+  track the oracle (catches #843's flat-600 collapse). Both skip loudly when
+  mutool/ghostscript are absent.
 - **Copy-whitespace parity is now a ratcheting CI gate** (#837) — the harness
   that measures copied-text word/line agreement against poppler `pdftotext`
   (`CopyWhitespaceParityHarness`) now enforces per-document floors from
