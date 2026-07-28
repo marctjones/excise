@@ -12,7 +12,7 @@ using Xunit;
 namespace Excise.App.Tests.UI;
 
 /// <summary>
-/// #833 — the macOS application (app-name) menu. Regression guard for the bug
+/// #834 — the macOS application (app-name) menu. Regression guard for the bug
 /// where the bold app menu showed Avalonia's built-in "About Avalonia" (opening
 /// AboutAvaloniaDialog) instead of the app's own About. These tests assert the
 /// menu MODEL that <see cref="App"/> installs on the Application during
@@ -59,7 +59,7 @@ public class MacApplicationMenuTests
 
         var aboutWindow = window.OwnedWindows.OfType<AboutWindow>().SingleOrDefault();
         aboutWindow.Should().NotBeNull(
-            "clicking \"About Excise\" must open the app's own About window — the #833 bug opened Avalonia's dialog");
+            "clicking \"About Excise\" must open the app's own About window — the #834 bug opened Avalonia's dialog");
 
         aboutWindow!.Title.Should().Be("About Excise");
 

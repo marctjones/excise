@@ -14,7 +14,7 @@ namespace Excise.App.Views;
 /// This menu MUST be set on the Application during <see cref="App.Initialize"/>,
 /// before Avalonia constructs its one-shot <c>MenuTarget.Application</c> exporter
 /// — otherwise the exporter installs its built-in default ("About Avalonia" →
-/// AboutAvaloniaDialog) and never re-reads (#833). Because that is earlier than
+/// AboutAvaloniaDialog) and never re-reads (#834). Because that is earlier than
 /// any window, the items cannot capture a view-model; they resolve the current
 /// main window's view-model lazily at click time via <paramref name="currentViewModel"/>.
 /// </summary>

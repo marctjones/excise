@@ -6,11 +6,27 @@ semantic versioning.
 
 ## [Unreleased]
 
+### Fixed
+- **Degenerate glyph widths no longer break copy spacing or hide selection
+  highlights** (#833) — some TrueType-subset fonts (e.g. `TT0` in
+  `scotus-trump-v-us.pdf`) report a near-zero glyph advance width while glyph
+  *positions* are correct. That inserted a space between every letter on copy
+  ("w o r r y") and drew ~0-wide, invisible selection highlights in the reading
+  view. Both are fixed in the GUI selection engine from ground-truth positions,
+  without touching the redaction-critical Core width path (filed as a follow-up
+  under #833): the word-space rule defers to real space glyphs and, on
+  degenerate-width lines only, switches to a width-independent advance-vs-median
+  rule (normal-width documents are unchanged); and highlight rects widen a
+  degenerate glyph to its advance. Verified non-leaking (mutool + render/OCR
+  both show the redacted word gone on the affected font) and against poppler
+  `pdftotext` (aggregate word agreement 37.9%→50.8%, scotus 1.4%→35.4%).
+  Regression-guarded by `DegenerateGlyphWidthTests`.
+
 ## [3.5.1] - 2026-07-28
 
 ### Fixed
 - **macOS app menu now shows "About Excise" and opens the app's own About
-  dialog** (#833) — the bold app-name menu was showing Avalonia's built-in
+  dialog** (#834) — the bold app-name menu was showing Avalonia's built-in
   default "About Avalonia" (which opened the framework's `AboutAvaloniaDialog`),
   not Excise's. Root cause, traced through Avalonia's decompiled source: the
   `MenuTarget.Application` menu exporter runs a **one-shot** layout reset when it

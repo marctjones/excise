@@ -190,7 +190,7 @@ public partial class MainWindow : Window
         }
 
         // The application (app-name) menu is owned by App and set on the
-        // Application before the first window exists (#833) — it must precede
+        // Application before the first window exists (#834) — it must precede
         // Avalonia's one-shot app-menu exporter, which a window-side set cannot.
         // Here we only attach the window (menu-bar) menu; the TopLevel exporter
         // does subscribe to changes, so setting it after the window opens works.

@@ -25,7 +25,7 @@ public partial class App : Application
     {
         AvaloniaXamlLoader.Load(this);
 
-        // #833: set the macOS application menu here, during Initialize — BEFORE
+        // #834: set the macOS application menu here, during Initialize — BEFORE
         // Avalonia constructs its MenuTarget.Application exporter, whose one-shot
         // DoLayoutReset installs the default "About Avalonia" if no app menu is
         // present yet and never re-reads. Setting it in OnFrameworkInitialization-
