@@ -61,26 +61,28 @@ Real PDFs from `test-pdfs/`, sampled pages, the **whole** copy path
 
 | File | Kind | Pages | Word-token agreement | Line-break agreement |
 |------|------|------:|---------------------:|---------------------:|
-| producingoss.pdf | multi-paragraph prose | 8 | 87.3% | 40.3% |
-| foss-primer.pdf | prose + dotted-leader TOC | 6 | 6.6% | 49.1% |
-| scotus-trump-v-us.pdf | two-column legal prose | 8 | 35.4% | 8.2% |
-| irs-pub509-2026.pdf | multi-column instructions | 6 | 59.1% | 6.3% |
-| cdc-vis-covid-19.pdf | graphical health notice | 2 | 73.6% | 25.0% |
-| **AGGREGATE** | — | 30 | **50.8%** | **25.7%** |
+| producingoss.pdf | multi-paragraph prose | 8 | 91.0% | 67.3% |
+| foss-primer.pdf | prose + dotted-leader TOC | 6 | 77.9% | 55.9% |
+| scotus-trump-v-us.pdf | two-column legal prose | 8 | 38.6% | 0.7% |
+| irs-pub509-2026.pdf | multi-column instructions | 6 | 58.8% | 6.1% |
+| cdc-vis-covid-19.pdf | graphical health notice | 2 | 94.4% | 58.4% |
+| **AGGREGATE** | — | 30 | **68.2%** | **34.4%** |
 
-**#833 update — degenerate glyph widths no longer over-space.** The aggregate
-rose from 37.9% to 50.8%. Some fonts report a near-zero glyph advance width
-(e.g. `TT0` in scotus), which made the old width-based gap
-(`cur.Left − prev.Right`) fire a space between *every* glyph (`"C i t e a 3 s"`).
-Two targeted changes: (1) on lines that already carry real space glyphs the
-word-space heuristic stays OUT of the way (real spaces do the separating), and
-(2) when a line's glyph widths are degenerate (~0) the heuristic switches to a
-width-independent advance-vs-median rule. Normal-width documents keep the
-original width-based rule unchanged. Result: scotus 1.4%→35.4%, cdc 0.8%→73.6%,
-with clean prose (producingoss 87.3%) unchanged. The residual loss is **not**
-the whitespace layer — it is the reading-order/extraction layer beneath it
-(multi-column interleave, #774/#824; and foss's dotted-leader word *fusion*),
-which this change does not touch.
+**#833/#843/#835 update — glyph geometry fixed at the root + horizontal word bar.**
+The aggregate rose 37.9% → 50.8% → **68.2%** across three passes. The root cause
+of the over-spacing turned out to be extraction geometry, not the copy layer:
+glyph bbox width/height were unscaled by the text matrix (#833) and `/Widths`
+indirect references were unresolved (#843), so glyph rects were degenerate. With
+correct rects, plus a **horizontal** word-space bar (`~0.25·fontSize` instead of
+`0.5·lineHeight`, #835), fusion is fixed at the source: foss 6.6%→**77.9%**,
+cdc 73.6%→**94.4%**, producingoss 91.0%, with clean prose unchanged. **One
+deliberate trade-off:** scotus line-break agreement dropped 8.2%→0.7% because the
+now-correct glyph *heights* change line grouping on that page — but scotus is a
+pathological *extraction-interleave* doc (its glyphs are woven at the same
+baseline, an issue reading order cannot fix), so its line metric was already
+meaningless; every other document's line agreement *rose* (producingoss 40→67,
+cdc 25→58). The residual scotus/irs word loss is the multi-column
+interleave/extraction layer (#774/#824), not whitespace.
 
 **This is true by construction, not by assertion.** The word-token metric folds
 all newlines to spaces and strips non-alphanumerics before comparing, so Smart

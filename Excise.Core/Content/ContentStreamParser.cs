@@ -1319,7 +1319,12 @@ public class ContentStreamParser
 
         if (_currentFont != null)
         {
-            var widthsObj = _currentFont.GetOptional("Widths");
+            // /Widths is an indirect reference in TeX/dvips PDFs — resolve it,
+            // or the cast fails and glyph widths (which feed redaction bounding
+            // boxes on this path) collapse to the 600 default (#843).
+            var widthsObj = _page is { } page
+                ? page.Document.Resolve(_currentFont.GetOptional("Widths") ?? PdfNull.Instance)
+                : _currentFont.GetOptional("Widths");
             if (widthsObj is PdfArray widths)
             {
                 var firstChar = _currentFont.GetInt("FirstChar", 0);
