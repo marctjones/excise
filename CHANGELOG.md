@@ -7,6 +7,41 @@ semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **Pointer-interaction test coverage + thumbnail drag-reorder fix** (#827,
+  batch A) — new headless-Avalonia suite `PointerInteractionTests` that drives
+  the *real* pointer/keyboard gesture on the *real* control and asserts the
+  downstream effect (never the VM method directly) for eight surfaces that had
+  only command-level or no coverage: external-link click (fires
+  `ExternalLinkClicked` + runs the confirm dialog), dangerous `/Launch` link
+  click (fires `DangerousLinkClicked` + runs the refusal), FormAuthoring
+  drag-to-create (fires `FormFieldRectDrawn` with a Y-flipped PDF-point rect on
+  the correct page), form-field checkbox toggle (fires `FormFieldEdited`, mutates
+  the `PdfField`, marks the document dirty), thumbnail drag-reorder (+ the
+  `from == to` no-op), thumbnail click-navigate, thumbnail batch-select
+  checkbox, and search-result row click. The form-field text-field and
+  choice-combo commits already had real-element coverage in
+  `FormFieldsOverlayTests`. Driving these gestures surfaced a real bug, now
+  fixed: **thumbnail drag-to-reorder never worked** — the drop handlers were
+  XAML event attributes on the thumbnail `Button`, whose own class handler marks
+  `PointerReleased` handled before a normal instance handler runs, so
+  `OnThumbnailPointerReleased` was silently skipped and every drag was a no-op
+  (`toIndex == fromIndex`). The handlers are now attached in code-behind on the
+  thumbnails `ItemsControl` with `handledEventsToo: true`, and the drop target is
+  resolved by hit-testing the pointer-release position (a `Button` captures the
+  pointer on press, so `sender` is always the source thumbnail). Click-to-navigate
+  is unchanged (still the `Button`'s `Command`).
+- **Ctrl+wheel zoom and middle-button pan in the PDF viewer** (#827) — the viewer
+  now handles the mouse wheel directly: **Ctrl (or ⌘) + wheel** zooms in/out
+  (reusing the existing 25%-step, min/max-clamped zoom), while a **plain wheel**
+  still scrolls natively and is never consumed. **Middle-button drag** pans the
+  active ScrollViewer (single-page or continuous) grab-and-drag style, available
+  in any interaction mode. Previously no `PointerWheelChanged` handler existed
+  (Ctrl+wheel was unimplemented) and `InteractionMode.Pan` was dead. New
+  real-gesture tests drive `window.MouseWheel` / middle-button `MouseDown`+drag
+  and assert `ZoomLevel`, scroll offset, and continuous page-boundary sync — the
+  legacy `LineDown()`/`ZoomInCommand`-invoke tests are superseded. Handlers are
+  registered on the Tunnel pass so Ctrl+wheel can suppress the native scroll;
+  plain scrolling, existing zoom shortcuts, and fit-on-resize are unchanged.
 - **Copied-text whitespace fidelity: paragraph + list awareness, as the default**
   — copying text now inserts a blank line at detected **paragraph** breaks (a
   vertical gap meaningfully larger than the block's typical leading) and keeps

@@ -4,9 +4,11 @@ using Avalonia.Controls;
 using Avalonia.Controls.Platform;
 using Avalonia.Controls.Shapes;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Excise.Avalonia.Controls;
 using Excise.Core.Document;
 using Excise.App.Models;
@@ -44,6 +46,29 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+
+        // Thumbnail drag-to-reorder is driven from the thumbnails ItemsControl,
+        // not from per-item Button event attributes: a Button marks its
+        // PointerPressed/Released Handled, which would skip a normal instance
+        // handler. handledEventsToo:true lets these observe the events anyway
+        // so a drag actually reorders (#827). Click-to-navigate remains on the
+        // Button's Command binding.
+        //
+        // Tunnel is load-bearing here (do NOT reduce to Bubble): on Tunnel the
+        // drop runs and sets e.Handled BEFORE the Button's bubble class handler
+        // raises Click, so a real drag reorders WITHOUT also navigating. On
+        // Bubble-only the Button would Click first, so every drop would both
+        // navigate and reorder. A test can't cleanly guard this — after a 0→1
+        // move RemapCurrentPageAfterSingleMove sets CurrentPageIndex to 1, the
+        // same index a stray navigate would produce — so this comment is the guard.
+        var thumbStrip = this.FindControl<ItemsControl>("ThumbnailsItemsControl");
+        if (thumbStrip != null)
+        {
+            thumbStrip.AddHandler(PointerPressedEvent, OnThumbnailPointerPressed,
+                RoutingStrategies.Tunnel | RoutingStrategies.Bubble, handledEventsToo: true);
+            thumbStrip.AddHandler(PointerReleasedEvent, OnThumbnailPointerReleased,
+                RoutingStrategies.Tunnel | RoutingStrategies.Bubble, handledEventsToo: true);
+        }
 
         if (OperatingSystem.IsMacOS())
         {
@@ -247,14 +272,17 @@ public partial class MainWindow : Window
 
     private void OnThumbnailPointerPressed(object? sender, PointerPressedEventArgs e)
     {
+        // The batch-select CheckBox lives inside the thumbnail — a press there
+        // toggles selection and must not start a page drag.
         if (e.Source is CheckBox)
-            return;
-        if (sender is not Control { DataContext: PageThumbnail thumbnail })
             return;
         if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
             return;
 
-        _draggedThumbnailPageIndex = thumbnail.PageIndex;
+        // sender is the thumbnails ItemsControl (handlers are attached there,
+        // see the constructor), so resolve the pressed thumbnail from the
+        // pointer position rather than from sender's DataContext.
+        _draggedThumbnailPageIndex = ThumbnailUnderPointer(e)?.PageIndex;
     }
 
     private void OnThumbnailPointerReleased(object? sender, PointerReleasedEventArgs e)
@@ -264,17 +292,42 @@ public partial class MainWindow : Window
 
         _draggedThumbnailPageIndex = null;
 
-        if (sender is not Control { DataContext: PageThumbnail thumbnail })
-            return;
         if (DataContext is not MainWindowViewModel vm)
             return;
 
-        var toIndex = thumbnail.PageIndex;
+        // Resolve the DROP target from where the pointer actually came up, not
+        // from `sender`: a Button captures the pointer on PointerPressed, so the
+        // PointerReleased is routed back to the SOURCE thumbnail's Button. Using
+        // `sender` therefore made toIndex == fromIndex on every real drag, so
+        // drag-to-reorder silently did nothing. Hit-test the release position
+        // instead. See #827.
+        var dropThumbnail = ThumbnailUnderPointer(e);
+        if (dropThumbnail is null)
+            return;
+
+        var toIndex = dropThumbnail.PageIndex;
         if (fromIndex == toIndex)
             return;
 
         e.Handled = true;
         _ = vm.MovePageAsync(fromIndex, toIndex);
+    }
+
+    /// <summary>
+    /// The <see cref="PageThumbnail"/> whose visual sits under the pointer, or
+    /// null if the release landed outside the thumbnail strip. Used so a drag's
+    /// drop target follows the pointer even though the source Button captured it.
+    /// </summary>
+    private PageThumbnail? ThumbnailUnderPointer(PointerEventArgs e)
+    {
+        var hit = this.InputHitTest(e.GetPosition(this)) as Visual;
+        while (hit is not null)
+        {
+            if (hit is Control { DataContext: PageThumbnail thumbnail })
+                return thumbnail;
+            hit = hit.GetVisualParent();
+        }
+        return null;
     }
 
     /// <summary>

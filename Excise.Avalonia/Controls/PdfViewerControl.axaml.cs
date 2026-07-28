@@ -891,6 +891,24 @@ public partial class PdfViewerControl : UserControl
             global::Avalonia.Interactivity.RoutingStrategies.Tunnel | global::Avalonia.Interactivity.RoutingStrategies.Bubble,
             handledEventsToo: false);
 
+        // Wheel-zoom and middle-button pan (#827). Registered on Tunnel ONLY so
+        // the root sees the gesture before the inner ScrollViewer's own bubble
+        // handler — letting us suppress native scroll for Ctrl+wheel by marking
+        // the event Handled. Tunnel-only (not Tunnel|Bubble) deliberately: the
+        // #675 double-fire came from registering both passes.
+        AddHandler(PointerWheelChangedEvent, OnViewerPointerWheelChanged,
+            global::Avalonia.Interactivity.RoutingStrategies.Tunnel,
+            handledEventsToo: true);
+        AddHandler(PointerPressedEvent, OnPanPointerPressed,
+            global::Avalonia.Interactivity.RoutingStrategies.Tunnel,
+            handledEventsToo: true);
+        AddHandler(PointerMovedEvent, OnPanPointerMoved,
+            global::Avalonia.Interactivity.RoutingStrategies.Tunnel,
+            handledEventsToo: true);
+        AddHandler(PointerReleasedEvent, OnPanPointerReleased,
+            global::Avalonia.Interactivity.RoutingStrategies.Tunnel,
+            handledEventsToo: true);
+
         // Surface viewport changes (scrollbars appearing/disappearing,
         // sidebars toggling, window resizes). Subscribe directly to the
         // ScrollViewer's Viewport AvaloniaProperty — it raises only on
