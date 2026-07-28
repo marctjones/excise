@@ -112,7 +112,14 @@ semantic versioning.
   ship no runtime DLL (`Microsoft.NETCore.Platforms`, `NETStandard.Library`)
   are excluded as non-redistributed, in both the generator and the gate. The
   headless About-window test now also asserts the verbatim license text is
-  reachable in the dialog, not just present in the ViewModel.
+  reachable in the dialog, not just present in the ViewModel. **Verbatim text
+  now covers every shipped package** (#831): packages that declare an SPDX
+  *expression* (e.g. `MIT`) and bundle no license file on NuGet — 41 of the 55,
+  all MIT — previously showed only the SPDX id and a link. They now render the
+  canonical license body (MIT/BSD/0BSD permission notice) with the package's own
+  copyright woven in, via `SpdxLicenseTexts`, and a second gate
+  (`EveryShippedPackage_HasVerbatimLicenseText`) fails the build if any shipped
+  package would show only a link instead of the full notice.
 - **Interactive GUI tests for file-ops toolbar/menu commands** (#816 batch 2)
   — `Excise.App.Tests/UI/FileOpsCommandTests.cs` executes the real
   `ReactiveCommand` behind Save/SaveAs/SaveFlattenedFormCopy/Open/LoadRecent/
