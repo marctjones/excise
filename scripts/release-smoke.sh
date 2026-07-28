@@ -51,7 +51,7 @@ Options:
   --packaged-gui-focus-input
                       Also run focus-taking native key/mouse smoke.
   --no-build          Skip the initial build gate.
-  --only=a,b          Run only named gates: docs,build,redaction,signature,ui,accessibility,automation,ux,benchmark,perf-budget,aot,pdf20,corpus-resilience,adversarial-extraction,tests,visual,package,packaged-gui,diffcheck.
+  --only=a,b          Run only named gates: docs,build,redaction,signature,ui,accessibility,automation,ux,benchmark,perf-budget,aot,pdf20,corpus-resilience,adversarial-extraction,copy-parity,tests,visual,package,packaged-gui,diffcheck.
   -h, --help          Show this help.
 EOF
 }
@@ -416,6 +416,14 @@ run_gate "pdf20" scripts/run-pdf20-renderer-conformance.sh --run-tests
 # history yet, so they follow the existing local convention here).
 run_gate "corpus-resilience" dotnet test Excise.Core.Tests --no-build -c "$CONFIG" --filter "FullyQualifiedName~Corpus" --logger "console;verbosity=normal"
 run_gate "adversarial-extraction" dotnet test Excise.Rendering.Tests --no-build -c "$CONFIG" --filter "FullyQualifiedName~AdversarialCorpus" --logger "console;verbosity=normal"
+
+# #837/#838/#841: copy-whitespace parity ratchet (word/line/sequence-order vs
+# poppler pdftotext). Run NON-strict here so a release box without poppler or
+# the corpus skips cleanly, matching the corpus gates above. The STRICT
+# guarantee (EXCISE_REQUIRE_PARITY_TOOLS=1 — a tools-missing run is a hard
+# failure) is the manual release-evidence step in docs/RELEASE_CHECKLIST.md,
+# same split as the encryption interop gate.
+run_gate "copy-parity" scripts/check-copy-whitespace-parity.sh
 
 run_full_tests_gate
 
