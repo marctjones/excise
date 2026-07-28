@@ -151,6 +151,11 @@ run_t1() {
     run_step "rendering-deterministic" dotnet test Excise.Rendering.Tests --no-build -c Debug \
         --filter "FullyQualifiedName!~Corpus&FullyQualifiedName!~Differential&FullyQualifiedName!~Benchmark&FullyQualifiedName!~Visual" \
         --logger "console;verbosity=normal"
+    # Copy-whitespace parity ratchet (#837): fails if copied-text word/line
+    # agreement vs poppler pdftotext drops below tests/copy-whitespace/floors.json.
+    # Skips loudly (exit 0) when pdftotext or the corpus is absent, like the
+    # extraction-parity gate.
+    run_step "copy-whitespace-parity" scripts/check-copy-whitespace-parity.sh
     run_step "skip-budget-core" scripts/check-skip-budget.sh Excise.Core.Tests/Excise.Core.Tests.csproj
     # #655: Excise.Core.Tests was the only project this gate watched — Excise.
     # Rendering.Tests (~114 Assert.SkipWhen/SkipUnless call sites) and
