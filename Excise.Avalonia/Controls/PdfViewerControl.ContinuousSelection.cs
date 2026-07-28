@@ -24,16 +24,22 @@ namespace Excise.Avalonia.Controls;
 /// <see cref="PdfCoordinateMapper"/>'s ContinuousDips space). Nothing is
 /// duplicated.
 ///
-/// Bounded, correct first version (#815): a selection lives on a SINGLE page —
-/// the page the press landed on. A drag that wanders onto another page is
-/// clamped (moves that map to a different page are ignored) rather than drawing a
-/// broken cross-page range the engine cannot express. Cross-page selection is
-/// deferred.
+/// Cross-page selection (#832): the anchor (press) and focus (drag) may sit on
+/// DIFFERENT pages. The span is decomposed per page — the anchor page from the
+/// anchor glyph to its last reading-order glyph, every intervening page in full,
+/// the focus page from its first glyph to the focus glyph (direction-aware) —
+/// and each page's slot is highlighted independently via the same per-slot
+/// SelectionRects overlay. The combined copied text joins the pages in reading
+/// (page-number) order. Per-page reading order and word spacing still come from
+/// <see cref="TextSelectionEngine"/>; a paragraph that flows across a page break
+/// gets a hard line break at the boundary (the whitespace layer, #824/#826, does
+/// not reflow across pages — a documented limit, not a regression).
 /// </summary>
 public partial class PdfViewerControl
 {
-    private int _continuousSelectionPage;
+    private int _continuousSelectionPage;        // anchor (press) page, 1-based
     private Letter? _continuousSelectionAnchor;
+    private int _continuousSelectionFocusPage;   // focus (current drag) page, 1-based
     private Letter? _continuousSelectionFocus;
 
     /// <summary>Per-page letter caches for continuous selection, cleared with the tile cache.</summary>
@@ -109,45 +115,85 @@ public partial class PdfViewerControl
         _continuousSelectionAnchor = null;
         _continuousSelectionFocus = null;
         _continuousSelectionPage = 0;
+        _continuousSelectionFocusPage = 0;
 
         if (!TryContinuousPointToLetter(e, out var page, out var letter, out _))
             return;
 
         // Remember the page even if the press missed a glyph, so a drag that
-        // starts in a margin and moves onto text on the SAME page can still begin.
+        // starts in a margin and moves onto text can still begin.
         _continuousSelectionPage = page;
+        _continuousSelectionFocusPage = page;
         if (letter == null) return;
 
         _continuousSelectionAnchor = letter;
         _continuousSelectionFocus = letter;
-        DrawContinuousSelection(page, new[] { letter });
+        DrawContinuousSelectionSpan();
     }
 
     private void UpdateContinuousTextSelection(PointerEventArgs e)
     {
-        if (!TryContinuousPointToLetter(e, out var page, out var letter, out var letters))
+        if (!TryContinuousPointToLetter(e, out var page, out var letter, out _))
             return;
 
-        // Bounded to the anchor page (#815). A move onto a different page is
-        // ignored rather than drawing a cross-page range.
         if (_continuousSelectionAnchor == null)
         {
-            // The press missed a glyph but latched the page; adopt the first
-            // glyph the drag reaches on that same page as the anchor.
-            if (page != _continuousSelectionPage || letter == null) return;
+            // The press missed a glyph but latched a page; adopt the first glyph
+            // the drag reaches (on ANY page, #832) as the anchor.
+            if (letter == null) return;
+            _continuousSelectionPage = page;
             _continuousSelectionAnchor = letter;
+            _continuousSelectionFocusPage = page;
             _continuousSelectionFocus = letter;
-            DrawContinuousSelection(page, new[] { letter });
+            DrawContinuousSelectionSpan();
             return;
         }
 
-        if (page != _continuousSelectionPage || letter == null) return;
-        if (ReferenceEquals(letter, _continuousSelectionFocus)) return;
+        // A move over a gap/margin (no glyph) keeps the current selection rather
+        // than collapsing it — avoids flicker while crossing a page boundary.
+        if (letter == null) return;
+        if (page == _continuousSelectionFocusPage && ReferenceEquals(letter, _continuousSelectionFocus)) return;
 
+        _continuousSelectionFocusPage = page;
         _continuousSelectionFocus = letter;
-        var range = TextSelectionEngine.ColumnAwareRange(
-            letters.Reading, _continuousSelectionAnchor, _continuousSelectionFocus, letters.ColumnGap);
-        DrawContinuousSelection(page, range);
+        DrawContinuousSelectionSpan();
+    }
+
+    /// <summary>
+    /// Decompose the current anchor→focus selection into per-page (from, to)
+    /// reading-order endpoints, in page order (#832). Same page → a single
+    /// entry; a span → anchor-page tail, whole intervening pages, focus-page head
+    /// (ordered so the lower page number is the start regardless of drag
+    /// direction). Empty pages are skipped.
+    /// </summary>
+    private List<(int Page, Letter From, Letter To)> ComputeContinuousSpanEndpoints()
+    {
+        var result = new List<(int, Letter, Letter)>();
+        if (_continuousSelectionAnchor == null || _continuousSelectionFocus == null)
+            return result;
+
+        int aPage = _continuousSelectionPage, fPage = _continuousSelectionFocusPage;
+        Letter a = _continuousSelectionAnchor, f = _continuousSelectionFocus;
+
+        if (aPage == fPage)
+        {
+            result.Add((aPage, a, f));
+            return result;
+        }
+
+        int startPage; Letter startLet; int endPage; Letter endLet;
+        if (aPage < fPage) { startPage = aPage; startLet = a; endPage = fPage; endLet = f; }
+        else { startPage = fPage; startLet = f; endPage = aPage; endLet = a; }
+
+        for (int p = startPage; p <= endPage; p++)
+        {
+            var lp = GetContinuousPageLetters(p);
+            if (lp.Reading.Count == 0) continue;
+            Letter from = p == startPage ? startLet : lp.Reading[0];
+            Letter to = p == endPage ? endLet : lp.Reading[lp.Reading.Count - 1];
+            result.Add((p, from, to));
+        }
+        return result;
     }
 
     private void EndContinuousTextSelection()
@@ -157,29 +203,61 @@ public partial class PdfViewerControl
             _continuousSelectionPage < 1)
             return;
 
-        var letters = GetContinuousPageLetters(_continuousSelectionPage);
-        var selection = TextSelectionEngine.BuildSelection(
-            letters.Reading, letters.Raw,
-            _continuousSelectionAnchor, _continuousSelectionFocus, letters.ColumnGap, WhitespaceMode);
+        var endpoints = ComputeContinuousSpanEndpoints();
+        if (endpoints.Count == 0) return;
 
-        var page = Document.GetPage(_continuousSelectionPage);
-        var dipRects = selection.VisualRange
-            .Select(l => ContinuousGlyphToPageLocalRect(page, l.GlyphRectangle))
-            .ToList();
-        Rect? bbox = dipRects.Count > 0 ? UnionRects(dipRects) : null;
-        TextSelected?.Invoke(this, new TextSelectedEventArgs(bbox ?? new Rect(), selection.Text, dipRects));
+        var parts = new List<string>(endpoints.Count);
+        var singlePageRects = new List<Rect>();
+
+        foreach (var (p, from, to) in endpoints)
+        {
+            var lp = GetContinuousPageLetters(p);
+            var selection = TextSelectionEngine.BuildSelection(
+                lp.Reading, lp.Raw, from, to, lp.ColumnGap, WhitespaceMode);
+            if (!string.IsNullOrEmpty(selection.Text)) parts.Add(selection.Text);
+
+            // The event's Area/rects are page-local, so they are only meaningful
+            // for a single-page selection (they drive CurrentTextSelectionPageArea,
+            // which is bound to one page). For a cross-page span leave them empty —
+            // the highlight lives in the per-slot overlay, and the copied Text is
+            // what a multi-page selection is for.
+            if (endpoints.Count == 1)
+            {
+                var page = Document.GetPage(p);
+                singlePageRects = selection.VisualRange
+                    .Select(l => ContinuousGlyphToPageLocalRect(page, l.GlyphRectangle))
+                    .ToList();
+            }
+        }
+
+        var text = string.Join("\n", parts);
+        Rect? bbox = singlePageRects.Count > 0 ? UnionRects(singlePageRects) : null;
+        TextSelected?.Invoke(this, new TextSelectedEventArgs(bbox ?? new Rect(), text, singlePageRects));
     }
 
-    private void DrawContinuousSelection(int pageNumber, IReadOnlyList<Letter> letters)
+    /// <summary>Redraw the whole anchor→focus span, clearing every page first.</summary>
+    private void DrawContinuousSelectionSpan()
     {
         ClearContinuousSelectionHighlight();
-        if (Document == null || _continuousSlots == null ||
-            pageNumber < 1 || pageNumber > _continuousSlots.Count)
+        if (Document == null || _continuousSlots == null) return;
+
+        foreach (var (p, from, to) in ComputeContinuousSpanEndpoints())
+        {
+            var lp = GetContinuousPageLetters(p);
+            var range = TextSelectionEngine.ColumnAwareRange(lp.Reading, from, to, lp.ColumnGap);
+            AddContinuousPageHighlights(p, range);
+        }
+    }
+
+    /// <summary>Append highlight rects for one page's selected letters (no clear).</summary>
+    private void AddContinuousPageHighlights(int pageNumber, IReadOnlyList<Letter> letters)
+    {
+        if (_continuousSlots == null || pageNumber < 1 || pageNumber > _continuousSlots.Count)
             return;
 
         var slot = _continuousSlots[pageNumber - 1];
         PdfPage page;
-        try { page = Document.GetPage(pageNumber); }
+        try { page = Document!.GetPage(pageNumber); }
         catch { return; }
 
         for (int i = 0; i < letters.Count; i++)

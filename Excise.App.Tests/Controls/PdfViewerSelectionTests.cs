@@ -402,10 +402,11 @@ public class PdfViewerSelectionTests
     }
 
     [FixedAvaloniaFact]
-    public async Task ContinuousViewSelection_DoesNotForceSinglePage_AndStaysOnAnchorPageAcrossPages()
+    public async Task ContinuousViewSelection_SpansPages_HighlightsBothAndCopiesCombinedText()
     {
-        // A two-page doc; dragging from page 1 into page 2 must not throw and the
-        // bounded first version keeps the selection on the anchor (press) page.
+        // #832: a two-page doc; dragging from a glyph on page 1 to a glyph on
+        // page 2 must highlight BOTH pages and copy the combined text — no longer
+        // clamped to the anchor page.
         var path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"excise_sel_{Guid.NewGuid():N}.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 2);
         var bytes = System.IO.File.ReadAllBytes(path);
@@ -414,12 +415,14 @@ public class PdfViewerSelectionTests
         PdfCoreDocument doc = null!;
         PdfViewerControl control = null!;
         Window window = null!;
+        string? copiedText = null;
 
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
             doc = PdfCoreDocument.Open(bytes);
             control = new PdfViewerControl { Document = doc };
             control.ViewMode = PdfViewMode.Continuous;
+            control.TextSelected += (_, e) => copiedText = e.Text;
             window = new Window { Content = control, Width = 900, Height = 1100 };
             window.Show();
         });
@@ -433,11 +436,46 @@ public class PdfViewerSelectionTests
             {
                 window.UpdateLayout();
                 items = control.FindControl<ItemsControl>("ContinuousItems")!;
-                ready = items.ItemsSource?.Cast<PdfPageSlot>().Count() == 2 && items.Bounds.Width > 1;
+                ready = items.ItemsSource?.Cast<PdfPageSlot>().Count() == 2 && items.Bounds.Width > 1
+                        && doc.GetPage(2).Letters.Count > 0;
             });
             if (ready) break;
             await Task.Delay(100);
         }
+
+        var p1Letters = doc.GetPage(1).Letters;
+        var p2Letters = doc.GetPage(2).Letters;
+        p1Letters.Should().NotBeEmpty();
+        p2Letters.Should().NotBeEmpty();
+
+        double zoom = 0, itemsWidth = 0;
+        PdfPageSlot slot1 = null!, slot2 = null!;
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            zoom = control.ZoomLevel;
+            itemsWidth = items.Bounds.Width;
+            var slots = items.ItemsSource!.Cast<PdfPageSlot>().ToList();
+            slot1 = slots[0];
+            slot2 = slots[1];
+        });
+
+        double upp = PdfViewerControl.PointsToDip * zoom;
+
+        // Items-space center of a glyph on a given page slot (rotation-0).
+        Point ItemsCenter(PdfPageSlot s, Excise.Core.Document.PdfPage pg, Excise.Core.Text.Letter l)
+        {
+            var mb = pg.MediaBox.Normalize();
+            var g = l.GlyphRectangle;
+            double localX = ((g.Left + g.Right) / 2 - mb.Left) * upp;
+            double localY = (mb.Top - (g.Top + g.Bottom) / 2) * upp;
+            double xOffset = Math.Max(0, (itemsWidth - s.DisplayWidth) / 2);
+            return new Point(xOffset + localX, s.TopDip + localY);
+        }
+
+        var page1 = doc.GetPage(1);
+        var page2 = doc.GetPage(2);
+        var startGlyph = p1Letters.OrderBy(l => l.GlyphRectangle.Left).First();   // start of page 1
+        var endGlyph = p2Letters.OrderByDescending(l => l.GlyphRectangle.Right).First(); // end of page 2
 
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
@@ -445,22 +483,19 @@ public class PdfViewerSelectionTests
             control.ViewMode.Should().Be(PdfViewMode.Continuous,
                 "entering text selection must NOT force single-page in the reading view (#815)");
 
-            var slots = items.ItemsSource!.Cast<PdfPageSlot>().ToList();
-            var p1 = slots[0];
-            var p2 = slots[1];
-            double margin1 = Math.Max(0, (items.Bounds.Width - p1.DisplayWidth) / 2);
+            RaiseSelectionDrag(items, ItemsCenter(slot1, page1, startGlyph), ItemsCenter(slot2, page2, endGlyph));
+        });
 
-            // Press near the top of page 1, drag down into page 2's area. Should
-            // not throw; the selection stays bounded to page 1 (or is empty), and
-            // page 2 is never highlighted.
-            var start = new Point(margin1 + p1.DisplayWidth / 2, p1.TopDip + 20);
-            var end = new Point(margin1 + p2.DisplayWidth / 2, p2.TopDip + p2.DisplayHeight / 2);
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            slot1.SelectionRects.Count.Should().BeGreaterThan(0,
+                "the anchor page is highlighted from the anchor glyph onward");
+            slot2.SelectionRects.Count.Should().BeGreaterThan(0,
+                "#832: the focus page is highlighted too — selection is no longer clamped to the anchor page");
 
-            System.Action drag = () => RaiseSelectionDrag(items, start, end);
-            drag.Should().NotThrow("a cross-page drag must not crash the reading view");
-
-            p2.SelectionRects.Count.Should().Be(0,
-                "the bounded first version keeps a selection on its anchor page; page 2 is never highlighted");
+            copiedText.Should().NotBeNull("releasing the drag copies the selection");
+            copiedText!.Should().Contain("Page 1", "the combined text includes the anchor page");
+            copiedText.Should().Contain("Page 2", "the combined text spans into the focus page");
         });
 
         await Dispatcher.UIThread.InvokeAsync(() =>
@@ -468,6 +503,165 @@ public class PdfViewerSelectionTests
             window.Close();
             doc.Dispose();
         });
+    }
+
+    /// <summary>
+    /// #840 — regression guard for the invisible-sliver highlight (#833). The
+    /// existing continuous-drag test asserts the drawn highlight Rectangles' COUNT
+    /// and X-POSITION but never their WIDTH, which is exactly how #833 shipped: on
+    /// a font that reports ~0 glyph width the highlights rendered as zero-width
+    /// slivers over visible text. This drives the full pipeline — degenerate-width
+    /// extraction → <c>EffectiveHighlightRect</c> widening → per-slot SelectionRects
+    /// → bound, laid-out <c>Rectangle</c> visuals — on a page whose font has an
+    /// all-zero <c>/Widths</c> array, and asserts the RENDERED rectangles are at
+    /// least half a glyph-advance wide, not slivers.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task ContinuousViewDrag_DegenerateWidthFont_RendersHighlightsAtRealWidth_NotSlivers()
+    {
+        const double advance = 16, fontSize = 24;
+        var bytes = DegenerateWidthPdf("HIGHZERO", x: 120, y: 560, fontSize: fontSize, advance: advance);
+
+        PdfCoreDocument doc = null!;
+        PdfViewerControl control = null!;
+        Window window = null!;
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            doc = PdfCoreDocument.Open(bytes);
+            control = new PdfViewerControl { Document = doc, CurrentPage = 1 };
+            control.ViewMode = PdfViewMode.Continuous;
+            window = new Window { Content = control, Width = 900, Height = 1100 };
+            window.Show();
+        });
+
+        ItemsControl items = null!;
+        PdfPageSlot slot = null!;
+        var deadline = DateTime.UtcNow.AddSeconds(15);
+        while (DateTime.UtcNow < deadline)
+        {
+            bool ready = false;
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                window.UpdateLayout();
+                items = control.FindControl<ItemsControl>("ContinuousItems")!;
+                slot = items.ItemsSource?.Cast<PdfPageSlot>().FirstOrDefault()!;
+                ready = slot != null && items.Bounds.Width > 1 && slot.DisplayWidth > 1
+                        && doc.GetPage(1).Letters.Count > 0;
+            });
+            if (ready) break;
+            await Task.Delay(100);
+        }
+
+        var letters = doc.GetPage(1).Letters;
+        letters.Should().NotBeEmpty();
+
+        // Fixture sanity: the font really reports degenerate glyph widths — this is
+        // the state EffectiveHighlightRect exists to rescue. If excise ever grows an
+        // AFM-fallback that fills these in, this fails loudly and the test is
+        // measuring the wrong thing.
+        letters.Should().Contain(l => l.GlyphRectangle.Width < 0.2 * l.FontSize,
+            "the all-zero /Widths font must extract as ~0-width glyphs, or this test does not exercise the sliver path");
+
+        double zoom = 0, itemsWidth = 0, topDip = 0, dispW = 0;
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            zoom = control.ZoomLevel;
+            itemsWidth = items.Bounds.Width;
+            topDip = slot.TopDip;
+            dispW = slot.DisplayWidth;
+        });
+
+        var page = doc.GetPage(1);
+        var mb = page.MediaBox.Normalize();
+        double upp = PdfViewerControl.PointsToDip * zoom;
+        double xOffset = Math.Max(0, (itemsWidth - dispW) / 2);
+
+        Point ItemsCenter(Excise.Core.Text.Letter l)
+        {
+            var g = l.GlyphRectangle;
+            double localX = ((g.Left + g.Right) / 2 - mb.Left) * upp;
+            double localY = (mb.Top - (g.Top + g.Bottom) / 2) * upp;
+            return new Point(xOffset + localX, topDip + localY);
+        }
+
+        var leftmost = letters.OrderBy(l => l.GlyphRectangle.Left).First();
+        var rightmost = letters.OrderByDescending(l => l.GlyphRectangle.Right).First();
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            control.InteractionMode = InteractionMode.TextSelection;
+            RaiseSelectionDrag(items, ItemsCenter(leftmost), ItemsCenter(rightmost));
+        });
+
+        await Dispatcher.UIThread.InvokeAsync(() => window.UpdateLayout());
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            var target = items.ItemsSource!.Cast<PdfPageSlot>().Single(s => s.PageNumber == 1);
+            target.SelectionRects.Count.Should().BeGreaterThanOrEqualTo(2,
+                "the drag across the degenerate-width line must highlight several glyphs");
+
+            // Model: every highlight rect was widened off the sliver.
+            double minModelWidth = 0.5 * advance * upp;
+            target.SelectionRects.Should().OnlyContain(r => r.Width >= minModelWidth,
+                "EffectiveHighlightRect must widen ~0-width glyphs to ~their advance, not leave slivers");
+
+            // Rendered: the widened width survives binding + layout into the drawn
+            // Rectangle visuals (the assertion #833's test was missing).
+            var container = items.GetRealizedContainers()
+                .FirstOrDefault(c => (c.DataContext as PdfPageSlot)?.PageNumber == 1);
+            container.Should().NotBeNull();
+            var drawn = container!.GetVisualDescendants().OfType<Rectangle>().ToList();
+            drawn.Count.Should().Be(target.SelectionRects.Count, "every bound highlight becomes a Rectangle");
+            drawn.Should().OnlyContain(r => r.Bounds.Width >= minModelWidth,
+                "rendered highlight Rectangles must be at least half a glyph-advance wide — a sliver here is the #833 leak");
+        });
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            window.Close();
+            doc.Dispose();
+        });
+    }
+
+    /// <summary>
+    /// A single-page PDF whose font declares an all-zero <c>/Widths</c> array, so
+    /// excise extracts ~0-width glyphs (positions still correct — each glyph is
+    /// placed with an explicit <c>Td</c> advance). This is the real-PDF form of
+    /// <c>DegenerateGlyphWidthTests.WorryAs()</c>: the exact input
+    /// <c>EffectiveHighlightRect</c> (#833) must widen so selection highlights are
+    /// visible rather than sliver-thin.
+    /// </summary>
+    private static byte[] DegenerateWidthPdf(string text, double x, double y, double fontSize, double advance)
+    {
+        var widths = string.Join(" ", Enumerable.Repeat("0", 95)); // chars 32..126
+
+        var sb = new System.Text.StringBuilder();
+        sb.Append($"BT /F1 {fontSize:0} Tf {x:0} {y:0} Td ");
+        foreach (var c in text)
+            sb.Append($"({c}) Tj {advance:0} 0 Td ");
+        sb.Append("ET");
+        var content = sb.ToString();
+
+        var outSb = new System.Text.StringBuilder();
+        var offsets = new System.Collections.Generic.List<int>();
+        void Obj(string s) { offsets.Add(outSb.Length); outSb.Append(s); }
+
+        outSb.Append("%PDF-1.7\n");
+        Obj("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
+        Obj("2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n");
+        Obj("3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] " +
+            "/Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>\nendobj\n");
+        Obj($"4 0 obj\n<< /Length {content.Length} >>\nstream\n{content}\nendstream\nendobj\n");
+        Obj("5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica " +
+            $"/FirstChar 32 /LastChar 126 /Widths [{widths}] >>\nendobj\n");
+
+        int xref = outSb.Length;
+        outSb.Append("xref\n0 6\n0000000000 65535 f \n");
+        foreach (var o in offsets) outSb.Append(o.ToString("D10")).Append(" 00000 n \n");
+        outSb.Append("trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n").Append(xref).Append("\n%%EOF");
+
+        return System.Text.Encoding.ASCII.GetBytes(outSb.ToString());
     }
 
     /// <summary>
