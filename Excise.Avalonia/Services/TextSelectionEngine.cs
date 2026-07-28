@@ -127,23 +127,50 @@ public static class TextSelectionEngine
         if (boundaries.Count == 0)
             return SortSimple(all);
 
-        // Bucket letters by which column their horizontal centre falls in.
-        var buckets = new List<Letter>[boundaries.Count + 1];
-        for (int i = 0; i < buckets.Length; i++) buckets[i] = new List<Letter>();
-        foreach (var l in all)
+        // Band-segment (#774/#824): walk visual lines top-to-bottom. A continuous
+        // full-width line (running header/footer/title/page number) SEPARATES the
+        // column bands — flush the current band column-by-column, then emit the
+        // spanning line in place. Without this, a header's own glyphs get bucketed
+        // into both columns and the header is torn apart.
+        double minX = all.Min(l => l.GlyphRectangle.Left);
+        double maxX = all.Max(l => l.GlyphRectangle.Right);
+        var gutterThreshold = EstimateColumnGap(all);
+        var lines = GroupIntoLines(all).OrderByDescending(LineCentreY).ToList(); // top→bottom (PDF Y-up)
+        var spanning = FindSpanningLineGlyphs(lines, minX, maxX, gutterThreshold);
+
+        var result = new List<Letter>(all.Count);
+        var band = new List<Letter>();
+
+        void FlushBand()
         {
-            var r = l.GlyphRectangle;
-            var cx = (r.Left + r.Right) * 0.5;
-            int col = 0;
-            while (col < boundaries.Count && cx > boundaries[col]) col++;
-            buckets[col].Add(l);
+            if (band.Count == 0) return;
+            var buckets = new List<Letter>[boundaries.Count + 1];
+            for (int i = 0; i < buckets.Length; i++) buckets[i] = new List<Letter>();
+            foreach (var l in band)
+            {
+                var cx = (l.GlyphRectangle.Left + l.GlyphRectangle.Right) * 0.5;
+                int col = 0;
+                while (col < boundaries.Count && cx > boundaries[col]) col++;
+                buckets[col].Add(l);
+            }
+            foreach (var bucket in buckets)
+                result.AddRange(SortSimple(bucket));
+            band.Clear();
         }
 
-        // Each column internally uses the simple geometric order; columns are
-        // concatenated left-to-right.
-        var result = new List<Letter>(all.Count);
-        foreach (var bucket in buckets)
-            result.AddRange(SortSimple(bucket));
+        foreach (var line in lines)
+        {
+            if (line.Count > 0 && spanning.Contains(line[0]))
+            {
+                FlushBand();
+                result.AddRange(SortSimple(line));
+            }
+            else
+            {
+                band.AddRange(line);
+            }
+        }
+        FlushBand();
         return result;
     }
 
@@ -189,11 +216,24 @@ public static class TextSelectionEngine
         var contentHeight = maxY - minY;
         if (contentHeight <= 0) return empty;
 
+        // Exclude CONTINUOUS full-width lines (running headers/footers/titles/
+        // page numbers) from the sweep (#774/#824). Their glyphs cover the gutter
+        // X-range, so the cumulative sweep never sees a gap and the whole page
+        // falls back to woven row-major order. A two-column BODY line also spans
+        // the width but has an internal gap ≥ the gutter threshold, so it is kept
+        // — that gap is exactly the gutter we want to find. (On a genuine single-
+        // column page every line is continuous-full-width and gets excluded, so
+        // no gutter is found and the caller stays on SortSimple — unchanged.)
+        var spanning = FindSpanningLineGlyphs(lines, minX: letters.Min(l => l.GlyphRectangle.Left),
+            maxX: letters.Max(l => l.GlyphRectangle.Right), gutterThreshold);
+
         // Candidate interior gaps: sweep glyphs by X and record maximal
         // uncovered X-intervals wider than the gutter threshold. Columns are
         // horizontally disjoint, so their separating gutter shows up as a gap
         // where the running right edge never reaches the next glyph's left.
-        var sorted = letters.OrderBy(l => l.GlyphRectangle.Left).ToList();
+        var sorted = letters.Where(l => !spanning.Contains(l))
+            .OrderBy(l => l.GlyphRectangle.Left).ToList();
+        if (sorted.Count == 0) return empty;
         double runningRight = double.NegativeInfinity;
         var boundaries = new List<double>();
         foreach (var l in sorted)
@@ -246,6 +286,42 @@ public static class TextSelectionEngine
         return overlap >= 0.5 * contentHeight;
     }
 
+    /// <summary>
+    /// Glyphs of CONTINUOUS full-width lines — a line spanning most of the page
+    /// width with NO internal horizontal gap ≥ <paramref name="gutterThreshold"/>
+    /// (a running header/footer/title/page number). A two-column BODY line also
+    /// spans the width but has the gutter gap, so it is NOT flagged. #774/#824.
+    /// </summary>
+    private static HashSet<Letter> FindSpanningLineGlyphs(
+        List<List<Letter>> lines, double minX, double maxX, double gutterThreshold)
+    {
+        var result = new HashSet<Letter>();
+        double pageW = maxX - minX;
+        if (pageW <= 0 || double.IsInfinity(gutterThreshold)) return result;
+
+        foreach (var line in lines)
+        {
+            double lMin = double.PositiveInfinity, lMax = double.NegativeInfinity;
+            foreach (var l in line)
+            {
+                lMin = Math.Min(lMin, l.GlyphRectangle.Left);
+                lMax = Math.Max(lMax, l.GlyphRectangle.Right);
+            }
+            if (lMax - lMin < 0.6 * pageW) continue; // not full-width
+
+            double maxGap = 0, rr = double.NegativeInfinity;
+            foreach (var l in line.OrderBy(l => l.GlyphRectangle.Left))
+            {
+                if (!double.IsNegativeInfinity(rr))
+                    maxGap = Math.Max(maxGap, l.GlyphRectangle.Left - rr);
+                rr = Math.Max(rr, l.GlyphRectangle.Right);
+            }
+            if (maxGap < gutterThreshold) // continuous → header/footer, not columns
+                foreach (var l in line) result.Add(l);
+        }
+        return result;
+    }
+
     /// <summary>Min/max line-centre Y across a set of lines.</summary>
     private static (double Min, double Max) VerticalExtent(List<List<Letter>> lines)
     {
@@ -267,7 +343,7 @@ public static class TextSelectionEngine
     /// callers sort as they need (visual L-R for selection ranges, logical
     /// page order for copied text). Lines themselves are unsorted.
     /// </summary>
-    private static List<List<Letter>> GroupIntoLines(IEnumerable<Letter> letters)
+    internal static List<List<Letter>> GroupIntoLines(IEnumerable<Letter> letters)
     {
         var ordered = letters
             .OrderByDescending(l => l.GlyphRectangle.Top)  // PDF Y-up: higher Top = earlier
