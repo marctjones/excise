@@ -182,9 +182,12 @@ public partial class PdfViewerControl
         try { page = Document.GetPage(pageNumber); }
         catch { return; }
 
-        foreach (var l in letters)
+        for (int i = 0; i < letters.Count; i++)
         {
-            var r = ContinuousGlyphToPageLocalRect(page, l.GlyphRectangle);
+            // #833: widen degenerate ~0-width glyphs to their advance so the
+            // highlight is visible on fonts that report no glyph width.
+            var glyph = TextSelectionEngine.EffectiveHighlightRect(letters, i);
+            var r = ContinuousGlyphToPageLocalRect(page, glyph);
             slot.SelectionRects.Add(new PdfSelectionHighlight(r.X, r.Y, r.Width, r.Height));
         }
     }
