@@ -31,6 +31,24 @@ semantic versioning.
   cdc 73.9%→**94.4%**; clean prose unchanged.
 
 ### Added
+- **Copy-parity now measures reading ORDER, not just token sets** (#838) — the
+  copy-whitespace gate scored word/line agreement with **order-insensitive**
+  multiset Jaccard, so a reading-order regression (multi-column scramble) was
+  invisible — the #774/#824 fix did not move the numbers at all. A third,
+  order-**sensitive** metric (normalized longest-common-subsequence of excise's
+  token stream vs poppler `pdftotext`) is added, with its own per-doc floor in
+  `tests/copy-whitespace/floors.json`. It immediately exposes what Jaccard hid:
+  irs-pub509 reads 58.8% word agreement but only **22.2%** sequence agreement —
+  right tokens, wrong order. Two construction-known self-tests (no corpus) prove
+  the metric drops on a scramble while Jaccard stays flat.
+- **Parity gates can no longer green vacuously on a tool-less runner** (#841) —
+  `check-copy-whitespace-parity.sh` skipped (exit 0) when poppler or the corpus
+  was absent, so on CI it measured nothing while reporting success. It now honors
+  `EXCISE_REQUIRE_PARITY_TOOLS=1` (mirrors `EXCISE_REQUIRE_ENCRYPTION_INTEROP_TOOLS`):
+  a missing tool or an incomplete required corpus becomes a hard FAIL. Wired into
+  the release-evidence path (`RELEASE_CHECKLIST.md`, pinned by
+  `verify-doc-claims.sh`) and run non-strict in `release-smoke.sh`. The live-.gov
+  corpus-on-CI half is drift-fragile and deferred to #844.
 - **Redaction/extraction geometry now has two independent-oracle regression
   gates** (#842, #839) — both guard the glyph-box path the #833/#843 fixes
   touch, and neither lets excise grade its own homework. `#842`

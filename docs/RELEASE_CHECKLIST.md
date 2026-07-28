@@ -35,6 +35,20 @@ Use this checklist before tagging any `v*` release.
   font-resolver change either improves the parity delta or it is rejected.
   `--update` rewrites the baseline from the current measurement; review the
   diff before committing.
+- **Run the copy-whitespace parity gate**:
+  `EXCISE_REQUIRE_PARITY_TOOLS=1 scripts/check-copy-whitespace-parity.sh`
+  (requires `pdftotext` on `PATH` and the federal parity corpus —
+  `scripts/download-federal-corpus.sh`). The COPY-path sibling of the
+  extraction-parity gate: it compares excise's copied-text word, line, and
+  (since #838) reading-order **sequence** agreement against poppler `pdftotext`
+  over the corpus and fails when any score drops below
+  `tests/copy-whitespace/floors.json`. `EXCISE_REQUIRE_PARITY_TOOLS=1` makes a
+  tools-or-corpus-missing (vacuously green) run a hard failure — the same
+  release-evidence posture as `EXCISE_REQUIRE_ENCRYPTION_INTEROP_TOOLS`, closing
+  the "gate silently measured nothing on a runner without poppler" hole (#841).
+  The 3 federal docs (public-domain .gov, fetchable) are required; the 2
+  redistribution-restricted local books (producingoss, foss-primer) are measured
+  only when a maintainer box already has them.
 - **Run the skip budget** for every suite you touched:
   `scripts/check-skip-budget.sh <project>.csproj`
   A test that silently stops running is coverage loss you cannot see — this is
