@@ -64,7 +64,7 @@ public class TextSelectionAlignmentTests
             viewer.RenderScalingOverride = dpr;
 
             // Enter select-text mode (forces single-page) on a body-text page.
-            vm.ToggleTextSelectionModeCommand.Execute().Subscribe();
+            vm.IsTextSelectionMode = true; // #831: selection is default-on; set explicitly (toggling would turn it OFF)
             vm.ViewMode = PdfViewMode.SinglePage; // #815: selection no longer forces single-page; this battery covers the single-page highlight
             vm.CurrentPageIndex = 19; // page 20: paragraphs of body text
             await PumpUntilAsync(window, () =>
@@ -146,7 +146,7 @@ public class TextSelectionAlignmentTests
             var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
             viewer.RenderScalingOverride = dpr;
 
-            vm.ToggleTextSelectionModeCommand.Execute().Subscribe();
+            vm.IsTextSelectionMode = true; // #831: selection is default-on; set explicitly (toggling would turn it OFF)
             vm.ViewMode = PdfViewMode.SinglePage; // #815: selection no longer forces single-page; this battery covers the single-page highlight
             vm.CurrentPageIndex = 19;
             await PumpUntilAsync(window, () =>
@@ -298,7 +298,7 @@ public class TextSelectionAlignmentTests
             vm.CurrentPageIndex = 16;
             vm.SetManualZoom(0.42);
             await Task.Delay(400); window.UpdateLayout();
-            vm.ToggleTextSelectionModeCommand.Execute().Subscribe();
+            vm.IsTextSelectionMode = true; // #831: selection is default-on; set explicitly (toggling would turn it OFF)
             vm.ViewMode = PdfViewMode.SinglePage; // #815: selection no longer forces single-page; this battery covers the single-page highlight
             await PumpUntilAsync(window, () =>
                 viewer.FindControl<Image>("PdfImage")?.Source != null && !viewer.IsLoading);

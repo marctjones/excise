@@ -252,9 +252,13 @@ public class AccessibilityRegressionTests
             await KeyboardTestHelpers.FlushDispatcherAsync();
             vm.CurrentPageIndex.Should().BeGreaterThan(0, "keyboard navigation should reach later pages");
 
+            // #831: selection is on by default, so assert T flips the state
+            // (proves the keyboard reaches the toggle) rather than a fixed value.
+            var selectionBeforeT = vm.IsTextSelectionMode;
             await window.PressKeyAsync(global::Avalonia.Input.Key.T);
             await KeyboardTestHelpers.FlushDispatcherAsync();
-            vm.IsTextSelectionMode.Should().BeTrue("T should toggle text selection without a mouse");
+            vm.IsTextSelectionMode.Should().Be(!selectionBeforeT,
+                "T should toggle text selection without a mouse");
 
             await window.PressKeyAsync(global::Avalonia.Input.Key.R);
             await KeyboardTestHelpers.FlushDispatcherAsync();

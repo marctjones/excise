@@ -13,8 +13,9 @@ public partial class MainWindowViewModel
         get
         {
             if (IsRedactionMode) return "Redaction Mode";
-            if (IsTextSelectionMode) return "Text Selection Mode";
             if (IsTypewriterMode) return "✎ Typewriter Mode";
+            // #831: text selection is the resting default, not a special mode, so
+            // it is no longer announced here — the view mode is more informative.
             if (IsContinuousView) return "Continuous Scroll";
             return "View Mode";
         }

@@ -318,7 +318,10 @@ public class KeyboardShortcutEffectTests
         window.Show();
         await vm.LoadDocumentAsync(path);
 
-        vm.ToggleTextSelectionModeCommand?.Execute().Subscribe();
+        // Selection is the default resting mode (#831); set it explicitly so the
+        // test states its precondition rather than toggling (which would now
+        // turn the default-on mode OFF).
+        vm.IsTextSelectionMode = true;
         await KeyboardTestHelpers.FlushDispatcherAsync();
         vm.SelectedText = "Page 1 Content";        // stand in for a letter-walk selection
 

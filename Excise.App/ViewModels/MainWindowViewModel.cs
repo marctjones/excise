@@ -82,7 +82,10 @@ public partial class MainWindowViewModel : ViewModelBase
     private bool _skipZoomSave; // Flag to skip zoom save during auto-reset
     private bool _isRedactionMode;
     private PdfPageRect? _currentRedactionPageArea;
-    private bool _isTextSelectionMode;
+    // Text selection is the resting affordance of the reading view (#831):
+    // like every PDF reader, a drag selects text by default — no mode toggle
+    // needed. Editing modes turn it off on entry and restore it on exit.
+    private bool _isTextSelectionMode = true;
     private Rect _currentTextSelectionArea;
     private PdfPageRect? _currentTextSelectionPageArea;
     private string _selectedText = string.Empty;
@@ -581,6 +584,12 @@ public partial class MainWindowViewModel : ViewModelBase
             else
             {
                 RestoreViewModeFromPreference();
+                // #831: selection is the resting mode — but only restore it when
+                // we're truly returning to reading, NOT when this exit is part of
+                // switching INTO another editing mode (which sets its flag first,
+                // then turns this one off). Restoring then would cascade through
+                // the selection setter and disable the mode being entered.
+                if (!IsEditingModeActive) IsTextSelectionMode = true;
             }
             this.RaisePropertyChanged(nameof(CurrentModeText));
             this.RaisePropertyChanged(nameof(InteractionMode));

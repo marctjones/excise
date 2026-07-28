@@ -7,6 +7,21 @@ semantic versioning.
 ## [Unreleased]
 
 ### Added
+- **Text selection is on by default in the reading view** (#831) — selecting
+  text is now the resting affordance of the viewer: open a document and drag,
+  and it selects, exactly like every other PDF reader — no "Select Text" mode
+  to hunt for first. Previously the viewer opened in no interaction mode, so a
+  drag did nothing until you toggled selection on, which read as "selection is
+  broken / there's no blue highlight." An **I-beam cursor** now appears over the
+  page whenever selection is active, so it is discoverable that a drag selects.
+  The editing modes (redaction, typewriter, form authoring) still suspend
+  selection while active and now **restore it on exit** (you return to reading,
+  not to a dead no-interaction state); the "Select Text" toggle remains as an
+  explicit on/off. The whole default→binding→viewer→highlight path is locked in
+  by a new end-to-end test (`DefaultTextSelectionTests`) that drives a real
+  window mouse drag with no mode toggled and asserts both the rendered blue
+  rectangles and the copied text — the exact seam a control-only test had been
+  skipping.
 - **Pointer-interaction test coverage + thumbnail drag-reorder fix** (#827,
   batch A) — new headless-Avalonia suite `PointerInteractionTests` that drives
   the *real* pointer/keyboard gesture on the *real* control and asserts the
@@ -97,7 +112,14 @@ semantic versioning.
   ship no runtime DLL (`Microsoft.NETCore.Platforms`, `NETStandard.Library`)
   are excluded as non-redistributed, in both the generator and the gate. The
   headless About-window test now also asserts the verbatim license text is
-  reachable in the dialog, not just present in the ViewModel.
+  reachable in the dialog, not just present in the ViewModel. **Verbatim text
+  now covers every shipped package** (#831): packages that declare an SPDX
+  *expression* (e.g. `MIT`) and bundle no license file on NuGet — 41 of the 55,
+  all MIT — previously showed only the SPDX id and a link. They now render the
+  canonical license body (MIT/BSD/0BSD permission notice) with the package's own
+  copyright woven in, via `SpdxLicenseTexts`, and a second gate
+  (`EveryShippedPackage_HasVerbatimLicenseText`) fails the build if any shipped
+  package would show only a link instead of the full notice.
 - **Interactive GUI tests for file-ops toolbar/menu commands** (#816 batch 2)
   — `Excise.App.Tests/UI/FileOpsCommandTests.cs` executes the real
   `ReactiveCommand` behind Save/SaveAs/SaveFlattenedFormCopy/Open/LoadRecent/
