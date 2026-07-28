@@ -47,6 +47,9 @@ public partial class MainWindowViewModel
             else
             {
                 RestoreViewModeFromPreference();
+                // #831: restore selection only when returning to reading, not
+                // when switching into another editing mode (see IsRedactionMode).
+                if (!IsEditingModeActive) IsTextSelectionMode = true;
             }
 
             this.RaisePropertyChanged(nameof(InteractionMode));

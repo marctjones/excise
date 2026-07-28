@@ -96,12 +96,17 @@ public partial class AboutWindow : Window
             detail.Children.Add(btn);
         }
 
-        var hasText = !string.IsNullOrEmpty(pkg.LicenseText);
+        // #831: show verbatim license text for EVERY package — the bundled
+        // license file if present, otherwise the canonical SPDX body (e.g. the
+        // MIT permission notice) with this package's copyright. Only fall back
+        // to a URL reference when neither exists (the completeness gate forbids
+        // that for a shipped package).
+        var effectiveText = pkg.EffectiveLicenseText;
         var box = new TextBox
         {
-            Text = hasText
-                ? pkg.LicenseText
-                : $"No verbatim license text was bundled with this package on NuGet.\n\n" +
+            Text = !string.IsNullOrEmpty(effectiveText)
+                ? effectiveText
+                : $"No verbatim license text is available for this package.\n\n" +
                   (pkg.LicenseUrl != null
                     ? $"License URL declared by the package: {pkg.LicenseUrl}\n"
                     : "") +

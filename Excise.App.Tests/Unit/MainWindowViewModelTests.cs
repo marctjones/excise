@@ -109,9 +109,11 @@ public class MainWindowViewModelTests
     }
 
     [Fact]
-    public void IsTextSelectionMode_InitiallyFalse()
+    public void IsTextSelectionMode_InitiallyTrue()
     {
-        _viewModel.IsTextSelectionMode.Should().BeFalse();
+        // #831: text selection is the resting affordance — on by default so a
+        // drag selects text like every other PDF reader, no mode toggle needed.
+        _viewModel.IsTextSelectionMode.Should().BeTrue();
     }
 
     [Fact]
