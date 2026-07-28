@@ -31,6 +31,20 @@ semantic versioning.
   cdc 73.9%→**94.4%**; clean prose unchanged.
 
 ### Added
+- **Text selection spans pages in the continuous reading view** (#832) — a drag
+  that starts on one page and ends on another now selects across the boundary
+  instead of being clamped to the anchor page. The span is decomposed per page
+  (anchor page from the anchor glyph onward, whole intervening pages, focus page
+  up to the focus glyph — direction-aware), each page's slot highlighted via the
+  same per-slot overlay, and the copied text joins the pages in reading order.
+  Known limit: a paragraph flowing across a page break gets a hard line break at
+  the boundary (the whitespace layer does not reflow across pages, #824/#826).
+- **Selection highlights are guarded against the invisible-sliver regression**
+  (#840) — a headless test drives the full continuous-view pipeline on a font
+  with an all-zero `/Widths` array (glyphs extract at ~0 width) and asserts the
+  RENDERED highlight `Rectangle` visuals are at least half a glyph-advance wide,
+  not slivers. The prior test asserted only rect count and position — exactly the
+  blind spot that let the #833 sliver bug ship.
 - **Copy-parity now measures reading ORDER, not just token sets** (#838) — the
   copy-whitespace gate scored word/line agreement with **order-insensitive**
   multiset Jaccard, so a reading-order regression (multi-column scramble) was
