@@ -983,16 +983,21 @@
                         </Grid>
                     </Border>
                     <ScrollViewer Grid.Row="1">
-                    <ItemsControl ItemsSource="{Binding PageThumbnails}">
+                    <ItemsControl x:Name="ThumbnailsItemsControl" ItemsSource="{Binding PageThumbnails}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
+                                    <!-- Drag-to-reorder pointer handlers are attached in
+                                         code-behind on the ItemsControl with handledEventsToo:true.
+                                         They cannot be XAML event attributes on this Button: the
+                                         Button's own class handler marks PointerPressed/Released
+                                         Handled, so a normal (handledEventsToo:false) instance
+                                         handler here never runs and reorder silently did nothing
+                                         (#827). Click-to-navigate stays on the Button's Command. -->
                                     <Button Margin="6" Padding="0" Background="Transparent"
                                             BorderThickness="0"
                                             Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).GoToPageCommand}"
                                             CommandParameter="{Binding PageIndex}"
                                             access:CommandAccessibility.CommandId="view.goToPage"
-                                            PointerPressed="OnThumbnailPointerPressed"
-                                            PointerReleased="OnThumbnailPointerReleased"
                                             Cursor="Hand"
                                             Classes.selected="{Binding IsSelected}">
                                     <Border Padding="6"
