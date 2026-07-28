@@ -16,6 +16,18 @@ semantic versioning.
   extraction-parity gate. Ratchet the floors with `--update`.
 
 ### Fixed
+- **Full-width headers/footers no longer scramble two-column copy** (#774/#824)
+  — a continuous full-width running header, footer, title, or page-number line
+  spanning the column gutter used to fill the horizontal sweep, so column
+  detection found no gutter and the page copied in woven row-major order
+  ("colA-line1 colB-line1 colA-line2 …"). Such lines are now excluded from
+  gutter detection and emitted in place, band-separating the columns, so a
+  two-column page with a header/footer reads header → column 1 (top-to-bottom)
+  → column 2 → footer. Proven by a construction-known fixture
+  (`TwoColumnHeaderReadingOrderTests`). Conservative and bounded: single-column
+  pages stay byte-identical, and narrow gutters, 3+ columns, tables, and pages
+  whose extraction interleaves glyphs at the same baseline (an extraction issue,
+  not reading order) still degrade to geometric order rather than mis-split.
 - **Copied text rejoins soft (line-break) hyphens** (#836) — in Smart mode
   (the reader-friendly default), a hyphen at a line end followed by a lowercase
   continuation is rejoined (`unfamil-\niar` → `unfamiliar`), matching
