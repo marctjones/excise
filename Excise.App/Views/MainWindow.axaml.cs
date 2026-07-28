@@ -53,6 +53,14 @@ public partial class MainWindow : Window
         // handler. handledEventsToo:true lets these observe the events anyway
         // so a drag actually reorders (#827). Click-to-navigate remains on the
         // Button's Command binding.
+        //
+        // Tunnel is load-bearing here (do NOT reduce to Bubble): on Tunnel the
+        // drop runs and sets e.Handled BEFORE the Button's bubble class handler
+        // raises Click, so a real drag reorders WITHOUT also navigating. On
+        // Bubble-only the Button would Click first, so every drop would both
+        // navigate and reorder. A test can't cleanly guard this — after a 0→1
+        // move RemapCurrentPageAfterSingleMove sets CurrentPageIndex to 1, the
+        // same index a stray navigate would produce — so this comment is the guard.
         var thumbStrip = this.FindControl<ItemsControl>("ThumbnailsItemsControl");
         if (thumbStrip != null)
         {
