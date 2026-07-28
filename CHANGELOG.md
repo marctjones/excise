@@ -6,7 +6,22 @@ semantic versioning.
 
 ## [Unreleased]
 
+### Added
+- **Copy-whitespace parity is now a ratcheting CI gate** (#837) — the harness
+  that measures copied-text word/line agreement against poppler `pdftotext`
+  (`CopyWhitespaceParityHarness`) now enforces per-document floors from
+  `tests/copy-whitespace/floors.json` and fails when a score regresses;
+  `scripts/check-copy-whitespace-parity.sh` (wired into tier `t1`) runs it and
+  skips loudly when `pdftotext`/corpus are absent, mirroring the
+  extraction-parity gate. Ratchet the floors with `--update`.
+
 ### Fixed
+- **Copied text rejoins soft (line-break) hyphens** (#836) — in Smart mode
+  (the reader-friendly default), a hyphen at a line end followed by a lowercase
+  continuation is rejoined (`unfamil-\niar` → `unfamiliar`), matching
+  `pdftotext` and most readers; guarded so ranges, capitalised continuations and
+  paragraph-break hyphens stay intact. LineFaithful stays verbatim. Lifts
+  producingoss parity to 91.0% word / 67.3% line.
 - **Degenerate glyph widths no longer break copy spacing or hide selection
   highlights** (#833) — some TrueType-subset fonts (e.g. `TT0` in
   `scotus-trump-v-us.pdf`) report a near-zero glyph advance width while glyph
