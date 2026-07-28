@@ -6,6 +6,27 @@ semantic versioning.
 
 ## [Unreleased]
 
+## [3.5.1] - 2026-07-28
+
+### Fixed
+- **macOS app menu now shows "About Excise" and opens the app's own About
+  dialog** (#833) — the bold app-name menu was showing Avalonia's built-in
+  default "About Avalonia" (which opened the framework's `AboutAvaloniaDialog`),
+  not Excise's. Root cause, traced through Avalonia's decompiled source: the
+  `MenuTarget.Application` menu exporter runs a **one-shot** layout reset when it
+  is constructed and installs its built-in default if no application menu is set
+  on the `Application` at that instant — and, having no property-change
+  subscription, never re-reads. The existing window-side
+  `NativeMenu.SetMenu(Application, …)` therefore ran too late. The application
+  menu ("About Excise", "Preferences…") is now set on the `Application` in
+  `App.Initialize` (during XAML load, before that exporter is constructed);
+  Avalonia still appends the standard Services / Hide / Quit items. Verified on
+  the live macOS global menu bar via UI automation and by new headless tests
+  (`MacApplicationMenuTests`): the menu's first item is "About Excise" (not
+  "About Avalonia"), and clicking it opens the real About window. The brand is
+  also capitalized to **Excise** across the app-name menu, Hide/Quit, the
+  in-window title-bar label, the Help menu item, and the About window.
+
 ## [3.5.0] - 2026-07-27
 
 ### Added
