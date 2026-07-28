@@ -530,9 +530,12 @@ public partial class PdfViewerControl
                   $"imgW={_pdfImage?.Width:F0} layerW={layer.Bounds.Width:F0}");
         }
         var fill = new SolidColorBrush(Color.FromArgb(0x60, 0x33, 0x99, 0xFF));
-        foreach (var l in letters)
+        for (int i = 0; i < letters.Count; i++)
         {
-            var r = PdfRectangleToDips(l.GlyphRectangle);
+            // #833: widen degenerate ~0-width glyphs to their advance so the
+            // highlight is visible on fonts that report no glyph width.
+            var glyph = Services.TextSelectionEngine.EffectiveHighlightRect(letters, i);
+            var r = PdfRectangleToDips(glyph);
             var rect = new Rectangle
             {
                 Fill = fill,
