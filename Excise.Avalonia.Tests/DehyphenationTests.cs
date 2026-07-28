@@ -15,9 +15,11 @@ public class DehyphenationTests
 {
     private const double FontSize = 10;
 
+    // Letters advance by 10 and are ~9 wide, so consecutive glyphs of a word
+    // nearly abut (intra-letter gap ~1pt ≪ a word space) — realistic spacing.
     private static Letter G(string v, double x, double baseline) =>
-        new(v, new PdfRectangle(x, baseline, x + 6, baseline + FontSize), FontSize,
-            "F", x, baseline, 6, v.Length > 0 ? v[0] : ' ');
+        new(v, new PdfRectangle(x, baseline, x + 9, baseline + FontSize), FontSize,
+            "F", x, baseline, 9, v.Length > 0 ? v[0] : ' ');
 
     // Two visual lines: "unfamil-" then "iar" one line below.
     private static List<Letter> BrokenWord(char continuationFirst = 'i')

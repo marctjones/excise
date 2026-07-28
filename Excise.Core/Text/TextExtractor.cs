@@ -1595,34 +1595,42 @@ public class TextExtractor
         // Calculate position in user space
         var (x, y) = TransformPoint(_tm_e, _tm_f);
 
-        // Estimate glyph dimensions. Th (horizontal scaling) applies only in
-        // horizontal writing (§9.2.4/§9.4.4).
-        var glyphWidth = _isVerticalWriting
+        // Glyph advance & ascent in TEXT space. Th (horizontal scaling) applies
+        // only in horizontal writing (§9.2.4/§9.4.4).
+        var advanceTextSpace = _isVerticalWriting
             ? charWidth * _fontSize / 1000.0
             : charWidth * _fontSize * (_horizontalScaling / 100.0) / 1000.0;
-        var glyphHeight = _fontSize;
+        var ascentTextSpace = _fontSize;
 
-        // Create bounding box. Horizontal: the glyph cell grows right from
-        // the pen. Vertical (§9.7.4.3): the pen is the VERTICAL origin; the
-        // position vector v = (vx, vy) from /W2 (default (w0/2, DW2[0]))
-        // locates the horizontal origin at pen − v, so the cell is centered
-        // on the pen when vx = w0/2 and spans DOWN by the vertical
-        // displacement w1y (negative).
+        // #833: map width & height VECTORS through the text-matrix × CTM linear
+        // parts, then take the axis-aligned extent. The old code added the raw
+        // TEXT-space scalars onto the USER-space corner, dropping the matrix
+        // scale — so the ubiquitous `1 Tf … s 0 0 s Tm` producer idiom (unit font
+        // size, size carried by the text matrix) yielded ~0-size boxes while the
+        // pen advance (which DOES apply the matrix) kept positions correct. For
+        // ordinary `s Tf … 1 0 0 1 Tm` text (tm_a=1, ctm_a=1) this is a no-op.
+        var (wx, wy) = TransformVector(advanceTextSpace, 0);
+        var (hx, hy) = TransformVector(0, ascentTextSpace);
+        var glyphWidth = Math.Sqrt(wx * wx + wy * wy);
+
         PdfRectangle bbox;
-        double vertX = x, vertY = y;
         if (_isVerticalWriting)
         {
+            // §9.7.4.3: the pen is the VERTICAL origin; v = (vx, vy) from /W2
+            // locates the horizontal origin at pen − v and the cell spans DOWN
+            // by w1y. Dimensions now carry the matrix scale (#833).
             var vm = GetVerticalMetrics(cid);
-            var vxScaled = vm.Vx * _fontSize / 1000.0;
-            var cellHeight = Math.Abs(vm.W1Y) * _fontSize / 1000.0;
-            if (cellHeight <= 0) cellHeight = _fontSize;
-            vertX = x - vxScaled;
-            vertY = y - cellHeight;
-            bbox = new PdfRectangle(vertX, vertY, vertX + glyphWidth, y);
+            var (vxx, _) = TransformVector(vm.Vx * _fontSize / 1000.0, 0);
+            var (chx, chy) = TransformVector(0, Math.Abs(vm.W1Y) * _fontSize / 1000.0);
+            var cellHeight = Math.Sqrt(chx * chx + chy * chy);
+            if (cellHeight <= 0) cellHeight = Math.Abs(hy) > 0 ? Math.Abs(hy) : glyphWidth;
+            var vX = x - vxx;
+            var vY = y - cellHeight;
+            bbox = new PdfRectangle(vX, vY, vX + glyphWidth, y);
         }
         else
         {
-            bbox = new PdfRectangle(x, y, x + glyphWidth, y + glyphHeight);
+            bbox = AxisAlignedBox(x, y, wx, wy, hx, hy);
         }
 
         var letter = new Letter(
@@ -1947,6 +1955,38 @@ public class TextExtractor
         var y2 = x1 * _ctm_b + y1 * _ctm_d + _ctm_f;
 
         return (x2, y2);
+    }
+
+    /// <summary>
+    /// Map a text-space DISPLACEMENT vector (vx, vy) into user space through the
+    /// LINEAR part of the text matrix and then the CTM (no translation). Glyph
+    /// width/height are displacements, not points, so they must go through this —
+    /// not be added raw onto a user-space corner (#833). Consistent with the pen
+    /// advance, which already applies the text-matrix linear part.
+    /// </summary>
+    private (double dx, double dy) TransformVector(double vx, double vy)
+    {
+        var tx = vx * _tm_a + vy * _tm_c;
+        var ty = vx * _tm_b + vy * _tm_d;
+        return (tx * _ctm_a + ty * _ctm_c, tx * _ctm_b + ty * _ctm_d);
+    }
+
+    /// <summary>
+    /// Axis-aligned bounding box of the parallelogram spanned from origin
+    /// (<paramref name="ox"/>,<paramref name="oy"/>) by the width vector
+    /// (wx, wy) and height vector (hx, hy). For axis-aligned text (wy = hx = 0)
+    /// this is exactly (ox, oy, ox+wx, oy+hy); for rotated/skewed runs it is the
+    /// tight AABB of the rotated glyph cell.
+    /// </summary>
+    private static PdfRectangle AxisAlignedBox(double ox, double oy, double wx, double wy, double hx, double hy)
+    {
+        double x2 = ox + wx, x3 = ox + hx, x4 = ox + wx + hx;
+        double y2 = oy + wy, y3 = oy + hy, y4 = oy + wy + hy;
+        double left = Math.Min(Math.Min(ox, x2), Math.Min(x3, x4));
+        double right = Math.Max(Math.Max(ox, x2), Math.Max(x3, x4));
+        double bottom = Math.Min(Math.Min(oy, y2), Math.Min(y3, y4));
+        double top = Math.Max(Math.Max(oy, y2), Math.Max(y3, y4));
+        return new PdfRectangle(left, bottom, right, top);
     }
 
     private Dictionary<int, string>? LoadToUnicodeMap(PdfDictionary? font)
@@ -2686,8 +2726,11 @@ public class TextExtractor
         // Try to get width from font dictionary
         if (_currentFont != null)
         {
-            // Check if font has Widths array
-            var widthsObj = _currentFont.GetOptional("Widths");
+            // Check if font has Widths array. /Widths is an INDIRECT reference in
+            // every TeX/dvips PDF, so it must be resolved — a bare `is PdfArray`
+            // cast on the raw value fails there and silently falls through to the
+            // 600 default, giving every glyph one flat width (#843).
+            var widthsObj = _page.Document.Resolve(_currentFont.GetOptional("Widths") ?? PdfNull.Instance);
             if (widthsObj is PdfArray widths)
             {
                 var firstChar = _currentFont.GetInt("FirstChar", 0);
