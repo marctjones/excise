@@ -57,4 +57,11 @@ require_file_text docs/RELEASE_CHECKLIST.md "EXCISE_REQUIRE_ENCRYPTION_INTEROP_T
 require_code_text Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs "EXCISE_REQUIRE_ENCRYPTION_INTEROP_TOOLS"
 require_code_text Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs "AtLeastOneIndependentToolIsAvailable_GateIsNotVacuous"
 
+# #841: the release checklist names the copy-whitespace parity gate as required
+# evidence with a strict tool/corpus-presence guard — the gate script must
+# actually honor that env var, or the checklist promises a guarantee the code
+# does not deliver (the exact drift verify-doc-claims exists to catch).
+require_file_text docs/RELEASE_CHECKLIST.md "EXCISE_REQUIRE_PARITY_TOOLS"
+require_code_text scripts/check-copy-whitespace-parity.sh "EXCISE_REQUIRE_PARITY_TOOLS"
+
 echo "doc-claim check passed"
