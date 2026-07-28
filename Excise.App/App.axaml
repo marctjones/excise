@@ -3,7 +3,7 @@
              xmlns:sty="using:FluentAvalonia.Styling"
              xmlns:local="using:Excise.App"
              x:Class="Excise.App.App"
-             Name="excise"
+             Name="Excise"
              RequestedThemeVariant="Light">
 
     <!-- Application Resources -->
