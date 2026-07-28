@@ -123,6 +123,31 @@ semantic versioning.
   drawing a cross-page range (cross-page selection deferred).
 
 ### Fixed
+- **Three menu keyboard shortcuts were advertised but did nothing** (#827) —
+  `Ctrl+E` (Export Current Page), `Ctrl+,` (Preferences), and `Enter` (Apply
+  Redaction) each showed an `InputGesture` in the menu but had no key handler
+  behind them (Avalonia's `InputGesture` is display-only — every *working*
+  shortcut is explicitly duplicated in `MainWindow_KeyDown`). Pressing them was
+  a silent no-op; only the menu-item click worked. All three are now wired in
+  `MainWindow_KeyDown`; the `Enter`→apply-redaction handler is guarded on
+  redaction mode and skips when a text/combo editor is focused so it never
+  steals Enter from the search box or form fields. Found and fixed under the
+  #827 keyboard-shortcut effect-coverage pass below.
+- **Keyboard shortcuts now have effect-asserting GUI coverage** (#827) — the
+  new `KeyboardShortcutEffectTests` suite dispatches the REAL key (raw headless
+  input for window shortcuts; routed `KeyDownEvent` for viewer/search controls)
+  and asserts the RESULTING EFFECT — loaded/closed document, advanced search
+  index (`CurrentSearchMatchIndex` F3/Shift+F3), rotated page (Ctrl+L/R exact
+  angle), toggled sidebars (Ctrl+Shift+O/T), clipboard-history copy (Ctrl+C),
+  print-explanation dialog (Ctrl+P, #621), preferences/shortcuts dialogs
+  (Ctrl+,/F1), pending-redaction apply (Enter), viewer page nav (Left/Right)
+  and tagged-heading nav (H/Shift+H) — rather than the old
+  `Command.Should().NotBeNull()`, which passed even when a key was unwired (see
+  the three-bug fix above). The vacuous `Ctrl+1` fit-width assertion
+  (`ZoomLevel > 0`) was upgraded to prove it lands on the fit-WIDTH ratio,
+  distinct from fit-page. Unhandled keys (Ctrl+A, Space, Tab) are asserted as
+  intended no-ops. Form-field Enter/Ctrl+Enter/Esc commit was already covered
+  by `FormFieldsOverlayTests` and is cross-referenced, not duplicated.
 - **Text-selection highlight now has automated GUI coverage** (#815) — the
   single-page "selection box" drawing was untested at the GUI level, so any
   coordinate/z-order regression (e.g. the historic "highlight far to the left"
