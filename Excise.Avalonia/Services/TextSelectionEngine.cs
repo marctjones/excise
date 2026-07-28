@@ -359,6 +359,7 @@ public static class TextSelectionEngine
     /// </summary>
     private static string JoinLineFaithful(IReadOnlyList<Letter> letters)
     {
+        var spaceBefore = ComputeWordSpaces(letters);
         var sb = new System.Text.StringBuilder(letters.Count);
         sb.Append(letters[0].Value);
         for (int i = 1; i < letters.Count; i++)
@@ -369,22 +370,138 @@ public static class TextSelectionEngine
             var curCy = (cur.Bottom + cur.Top) * 0.5;
             var lineHeight = Math.Min(prev.Top - prev.Bottom, cur.Top - cur.Bottom);
             if (Math.Abs(prevCy - curCy) > 0.5 * lineHeight)
-            {
                 sb.Append('\n');
-            }
-            else
-            {
-                // Horizontal gap, measured direction-agnostically so a word
-                // break is detected whether the run reads left-to-right (LTR,
-                // prev on the left) or right-to-left (RTL logical order, prev
-                // on the right). For every existing ascending-X caller this is
-                // identical to the old `cur.Left - prev.Right` (#373).
-                var gap = Math.Max(cur.Left - prev.Right, prev.Left - cur.Right);
-                if (gap > 0.5 * lineHeight) sb.Append(' ');
-            }
+            else if (spaceBefore[i])
+                sb.Append(' ');
             sb.Append(letters[i].Value);
         }
         return sb.ToString();
+    }
+
+    /// <summary>Word-space threshold: a same-line origin-to-origin advance this
+    /// many times the line's typical advance reads as a word break.</summary>
+    private const double WordGapAdvanceFactor = 1.5;
+
+    /// <summary>
+    /// Decide, for each letter, whether a same-line word space should precede it.
+    ///
+    /// This is <b>width-independent</b> on purpose: it compares the glyph's
+    /// origin-to-origin ADVANCE (from the content stream, always correct) to the
+    /// line's median advance, rather than the width-based gap
+    /// <c>cur.Left − prev.Right</c>. Some fonts report a near-zero glyph advance
+    /// width (#833), which makes the width-based gap ≈ the full advance and fires
+    /// a space between <i>every</i> letter ("w o r r y"). Comparing advances to a
+    /// per-line median avoids that entirely: ordinary letters advance by ~the
+    /// median (no space), a genuine word gap advances markedly more (space). A
+    /// pair where either glyph is already whitespace is skipped — the real space
+    /// glyph, appended verbatim, does the separating.
+    /// </summary>
+    private static bool[] ComputeWordSpaces(IReadOnlyList<Letter> letters)
+    {
+        var result = new bool[letters.Count];
+        var advances = new List<double>();
+        var widths = new List<double>();
+        int i = 0;
+        while (i < letters.Count)
+        {
+            // Extent of the current visual line (same segmentation as the callers).
+            int end = i + 1;
+            advances.Clear();
+            widths.Clear();
+            widths.Add(GlyphWidth(letters[i]));
+            bool lineHasWhitespace = IsSpaceGlyph(letters[i].Value);
+            while (end < letters.Count && SameLine(letters[end - 1], letters[end]))
+            {
+                advances.Add(Advance(letters[end - 1], letters[end]));
+                widths.Add(GlyphWidth(letters[end]));
+                if (IsSpaceGlyph(letters[end].Value)) lineHasWhitespace = true;
+                end++;
+            }
+
+            // If the line already carries real whitespace glyphs, the PDF is
+            // separating words with actual spaces (appended verbatim); the
+            // heuristic must stay OUT of the way, or it stacks extra spaces onto
+            // width variation ("w orry", "dam ages"). #833.
+            if (!lineHasWhitespace)
+            {
+                double medianWidth = Median(widths);
+                double medianAdvance = Median(advances);
+                double fontSize = letters[i].FontSize > 0
+                    ? letters[i].FontSize
+                    : Math.Abs(letters[i].GlyphRectangle.Top - letters[i].GlyphRectangle.Bottom);
+
+                // When the font reports usable glyph widths, keep the original
+                // width-based gap rule (unchanged for normal documents). Only
+                // when widths are DEGENERATE (~0, #833) fall back to the
+                // width-independent advance-vs-median rule.
+                bool degenerateWidths = fontSize > 0 && medianWidth < 0.2 * fontSize;
+                for (int k = i + 1; k < end; k++)
+                {
+                    var pr = letters[k - 1].GlyphRectangle;
+                    var cr = letters[k].GlyphRectangle;
+                    if (degenerateWidths && medianAdvance > 0)
+                    {
+                        result[k] = Advance(letters[k - 1], letters[k]) > medianAdvance * WordGapAdvanceFactor;
+                    }
+                    else
+                    {
+                        var lineHeight = Math.Min(pr.Top - pr.Bottom, cr.Top - cr.Bottom);
+                        var gap = Math.Max(cr.Left - pr.Right, pr.Left - cr.Right);
+                        result[k] = gap > 0.5 * lineHeight;
+                    }
+                }
+            }
+            i = end;
+        }
+        return result;
+    }
+
+    private static double Advance(Letter a, Letter b) =>
+        Math.Abs(b.GlyphRectangle.Left - a.GlyphRectangle.Left);
+
+    private static double GlyphWidth(Letter l) =>
+        Math.Abs(l.GlyphRectangle.Right - l.GlyphRectangle.Left);
+
+    private static bool SameLine(Letter a, Letter b)
+    {
+        var ar = a.GlyphRectangle;
+        var br = b.GlyphRectangle;
+        var aCy = (ar.Bottom + ar.Top) * 0.5;
+        var bCy = (br.Bottom + br.Top) * 0.5;
+        var lineHeight = Math.Min(ar.Top - ar.Bottom, br.Top - br.Bottom);
+        return Math.Abs(aCy - bCy) <= 0.5 * lineHeight;
+    }
+
+    private static bool IsSpaceGlyph(string v) =>
+        string.IsNullOrEmpty(v) || char.IsWhiteSpace(v[0]);
+
+    /// <summary>
+    /// The glyph rectangle to DRAW A SELECTION HIGHLIGHT with — widened to the
+    /// glyph's advance when the reported width is degenerate (#833). Some fonts
+    /// report a near-zero glyph advance width, which would paint an invisible
+    /// ~0-wide sliver; the origin-to-origin advance to the next same-line glyph
+    /// (ground-truth position, always correct) is the real visual extent. Only
+    /// degenerate widths are overridden — a normal width passes through
+    /// unchanged — and the substitute is capped at the font size so a trailing
+    /// word gap or line end does not over-paint. Reading direction is preserved.
+    /// </summary>
+    internal static PdfRectangle EffectiveHighlightRect(IReadOnlyList<Letter> letters, int i)
+    {
+        var l = letters[i];
+        var g = l.GlyphRectangle;
+        double width = Math.Abs(g.Right - g.Left);
+        double fontSize = l.FontSize > 0 ? l.FontSize : Math.Abs(g.Top - g.Bottom);
+
+        if (fontSize <= 0 || width >= 0.2 * fontSize)
+            return g; // width looks real — leave it alone
+
+        double advance = 0;
+        if (i + 1 < letters.Count && SameLine(l, letters[i + 1]))
+            advance = Math.Abs(letters[i + 1].GlyphRectangle.Left - g.Left);
+
+        double effective = advance > 0 ? Math.Min(advance, fontSize) : Math.Max(fontSize * 0.5, width);
+        double right = g.Right >= g.Left ? g.Left + effective : g.Left - effective;
+        return new PdfRectangle(g.Left, g.Bottom, right, g.Top);
     }
 
     // ── Smart whitespace: paragraph + list awareness ─────────────────────────
@@ -504,6 +621,7 @@ public static class TextSelectionEngine
             sumCy = 0; sumH = 0; count = 0;
         }
 
+        var spaceBefore = ComputeWordSpaces(letters);
         for (int i = 0; i < letters.Count; i++)
         {
             var cur = letters[i].GlyphRectangle;
@@ -515,14 +633,9 @@ public static class TextSelectionEngine
                 var prevCy = (prev.Bottom + prev.Top) * 0.5;
                 var lineHeight = Math.Min(prev.Top - prev.Bottom, cur.Top - cur.Bottom);
                 if (Math.Abs(prevCy - curCy) > 0.5 * lineHeight)
-                {
                     Flush();
-                }
-                else
-                {
-                    var gap = Math.Max(cur.Left - prev.Right, prev.Left - cur.Right);
-                    if (gap > 0.5 * lineHeight) sb.Append(' ');
-                }
+                else if (spaceBefore[i])
+                    sb.Append(' ');
             }
             sb.Append(letters[i].Value);
             if (cur.Left < left) left = cur.Left;
