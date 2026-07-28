@@ -15,7 +15,7 @@ namespace Excise.App.ViewModels;
 /// </summary>
 public sealed class AboutWindowViewModel
 {
-    public string AppName { get; } = "excise";
+    public string AppName { get; } = "Excise";
 
     public string AppVersion { get; } =
         Assembly.GetExecutingAssembly()

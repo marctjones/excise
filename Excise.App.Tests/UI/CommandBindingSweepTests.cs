@@ -125,10 +125,11 @@ public class CommandBindingSweepTests
     {
         var vm = new MainWindowViewModel();
         var menu = MacNativeMenuBuilder.Create(vm);
-        var applicationMenu = MacNativeMenuBuilder.CreateApplicationMenu(vm);
+        // The macOS application (app-name) menu — About / Preferences — is owned
+        // by App and dispatches via Click handlers, not Command bindings (#833);
+        // it is covered by MacApplicationMenuTests. This sweep covers the
+        // command-backed window menu bar.
         var commandLeaves = CollectNativeMenuLeaves(menu).ToList();
-        var applicationCommandLeaves = CollectNativeMenuLeaves(applicationMenu).ToList();
-        commandLeaves.AddRange(applicationCommandLeaves);
 
         commandLeaves.Should().NotBeEmpty("the macOS native menu should expose command-backed leaf items");
 
@@ -161,8 +162,6 @@ public class CommandBindingSweepTests
 
         headers.Should().Contain(new[]
         {
-            "About excise",
-            "Preferences...",
             "Open...",
             "Save As...",
             "Find...",
