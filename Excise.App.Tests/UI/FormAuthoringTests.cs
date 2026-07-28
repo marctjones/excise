@@ -82,7 +82,8 @@ public class FormAuthoringTests
             await Task.Delay(100);
             await vm.LoadDocumentAsync(path);
 
-            vm.InteractionMode.Should().Be(InteractionMode.None);
+            // #831: a freshly-loaded document rests in text-selection mode.
+            vm.InteractionMode.Should().Be(InteractionMode.TextSelection);
 
             vm.ToggleFormAuthoringModeCommand.Execute().Subscribe();
             await Task.Delay(50);

@@ -421,20 +421,33 @@ public partial class PdfViewerControl
     /// last hover target so this is a no-op while the pointer sits still or
     /// moves within the same link's rect, and only fires on genuine enter/exit.
     /// </summary>
+    private static readonly Cursor IbeamCursor = new(StandardCursorType.Ibeam);
+    private static readonly Cursor HandCursor = new(StandardCursorType.Hand);
+
     private void UpdateLinkHoverState(PdfLink? link)
     {
+        // Cursor reflects the affordance under the pointer on EVERY move: Hand
+        // over a link, I-beam when text selection is active (#831), else the
+        // default arrow. This must run every move, not only on link enter/exit,
+        // so a link-less page (the common case) still shows the I-beam. Cursor
+        // instances are cached; setting the same value is a no-op in Avalonia.
+        Cursor = link != null
+            ? HandCursor
+            : InteractionMode == InteractionMode.TextSelection
+                ? IbeamCursor
+                : Cursor.Default;
+
+        // The LinkHovered STATUS event only fires on a genuine enter/exit.
         if (ReferenceEquals(link, _lastHoveredLink))
             return;
         _lastHoveredLink = link;
 
         if (link == null)
         {
-            Cursor = Cursor.Default;
             LinkHovered?.Invoke(this, new LinkHoveredEventArgs(null));
             return;
         }
 
-        Cursor = new Cursor(StandardCursorType.Hand);
         var displayText = link.Kind switch
         {
             PdfLinkKind.ExternalUri => link.Uri,
