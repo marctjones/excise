@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
@@ -23,7 +24,21 @@ public partial class App : Application
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
+
+        // #833: set the macOS application menu here, during Initialize — BEFORE
+        // Avalonia constructs its MenuTarget.Application exporter, whose one-shot
+        // DoLayoutReset installs the default "About Avalonia" if no app menu is
+        // present yet and never re-reads. Setting it in OnFrameworkInitialization-
+        // Completed (even before the first window) is already too late. The items
+        // dispatch to the current main window's view-model at click time, so no
+        // view-model is needed this early.
+        if (OperatingSystem.IsMacOS())
+            NativeMenu.SetMenu(this, Views.MacApplicationMenu.Build(() => CurrentMainViewModel));
     }
+
+    private MainWindowViewModel? CurrentMainViewModel =>
+        (ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow?.DataContext
+            as MainWindowViewModel;
 
     public override void OnFrameworkInitializationCompleted()
     {

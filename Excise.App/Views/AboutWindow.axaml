@@ -6,7 +6,7 @@
         mc:Ignorable="d" d:DesignWidth="780" d:DesignHeight="560"
         x:Class="Excise.App.Views.AboutWindow"
         x:DataType="vm:AboutWindowViewModel"
-        Title="About excise"
+        Title="About Excise"
         Width="780" Height="560"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
