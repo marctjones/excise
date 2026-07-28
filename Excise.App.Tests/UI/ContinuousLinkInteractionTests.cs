@@ -301,6 +301,11 @@ public class ContinuousLinkInteractionTests
         }
 
         lastHoverText.Should().BeNull("moving off the link must clear the hover feedback");
-        viewer.Cursor.Should().Be(Cursor.Default, "moving off the link must restore the default cursor");
+        // #831: text selection is the default resting mode, so moving off the
+        // link no longer restores the arrow — over selectable page text the
+        // cursor is the I-beam. What must change is that the HAND cursor is gone.
+        viewer.Cursor.Should().NotBeNull();
+        viewer.Cursor.Should().NotBe(Cursor.Default,
+            "over selectable text (selection is the default mode) the cursor is the I-beam, not the arrow");
     }
 }
