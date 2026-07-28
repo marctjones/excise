@@ -36,6 +36,9 @@ public partial class MainWindowViewModel
             {
                 RestoreViewModeFromPreference();
                 ClearActiveTypewriterOperation(); // #781: hide the style inspector on exit
+                // #831: restore selection only when returning to reading, not
+                // when switching into another editing mode (see IsRedactionMode).
+                if (!IsEditingModeActive) IsTextSelectionMode = true;
             }
 
             this.RaisePropertyChanged(nameof(CurrentModeText));
