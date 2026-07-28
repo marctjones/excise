@@ -59,14 +59,27 @@ Real PDFs from `test-pdfs/`, sampled pages, the **whole** copy path
 `scripts/copy-whitespace-parity.sh`; the raw numbers are regenerated into
 `tests/copy-whitespace/parity-results.md`.
 
-| File | Kind | Pages | Word-token agreement | Line-break agreement |
-|------|------|------:|---------------------:|---------------------:|
-| producingoss.pdf | multi-paragraph prose | 8 | 91.0% | 67.3% |
-| foss-primer.pdf | prose + dotted-leader TOC | 6 | 77.9% | 55.9% |
-| scotus-trump-v-us.pdf | two-column legal prose | 8 | 38.6% | 0.7% |
-| irs-pub509-2026.pdf | multi-column instructions | 6 | 58.8% | 6.1% |
-| cdc-vis-covid-19.pdf | graphical health notice | 2 | 94.4% | 58.4% |
-| **AGGREGATE** | — | 30 | **68.2%** | **34.4%** |
+| File | Kind | Pages | Word-token agreement | Line-break agreement | Sequence-order agreement |
+|------|------|------:|---------------------:|---------------------:|-------------------------:|
+| producingoss.pdf | multi-paragraph prose | 8 | 91.0% | 67.3% | 95.0% |
+| foss-primer.pdf | prose + dotted-leader TOC | 6 | 77.9% | 55.9% | 76.3% |
+| scotus-trump-v-us.pdf | two-column legal prose | 8 | 38.6% | 0.7% | 51.6% |
+| irs-pub509-2026.pdf | multi-column instructions | 6 | 58.8% | 6.1% | 22.2% |
+| cdc-vis-covid-19.pdf | graphical health notice | 2 | 94.4% | 58.4% | 79.0% |
+| **AGGREGATE** | — | 30 | **68.2%** | **34.4%** | **64.0%** |
+
+**Why three columns, not two (#838).** The word- and line-agreement columns are
+**order-insensitive** (multiset Jaccard): they compare the *set* of tokens/lines,
+so re-ordering the very same tokens leaves them unchanged. That is a real blind
+spot — the #774/#824 reading-order fix did not move them at all. The
+**sequence-order** column (normalized longest-common-subsequence of excise's
+token stream vs pdftotext's) is the order-sensitive complement: a multi-column
+scramble shortens the common subsequence and drops it. The gap between the two
+is the diagnosis — irs-pub509 reads 58.8% word agreement but only **22.2%**
+sequence agreement, i.e. excise recovers most of the right *tokens* but in the
+wrong *order* on those multi-column instruction pages. All three columns now
+carry per-document floors in `tests/copy-whitespace/floors.json` and fail CI on
+regression.
 
 **#833/#843/#835 update — glyph geometry fixed at the root + horizontal word bar.**
 The aggregate rose 37.9% → 50.8% → **68.2%** across three passes. The root cause
