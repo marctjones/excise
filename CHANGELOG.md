@@ -6,7 +6,43 @@ semantic versioning.
 
 ## [Unreleased]
 
+### Fixed
+- **Glyph rectangles: correct width/height (matrix scale) and resolved `/Widths`**
+  (#833, #843) — two independent extraction-geometry bugs that gave wrong glyph
+  bounding boxes (feeding copy spacing, selection highlights, and redaction
+  boxes). (1) `#833`: the glyph bbox width/height were computed in text space
+  and stored into a user-space box **without the text-matrix/CTM scale**, so the
+  ubiquitous `1 Tf … s 0 0 s Tm` producer idiom (unit font size carried by the
+  matrix — ~58/60 corpus PDFs) yielded ~0-size boxes while positions stayed
+  correct; width/height are now transformed as vectors through the matrix
+  (ordinary `s Tf … 1 0 0 1 Tm` text is a byte-for-byte no-op). (2) `#843`:
+  `/Widths` is an indirect reference in every TeX/dvips PDF; it was read without
+  resolving the reference, so the cast failed and every glyph got the flat 600
+  default — now resolved (in both `TextExtractor` and the redaction-path
+  `ContentStreamParser`). Verified non-leaking (redaction round-trip +
+  ink-differential, full Core suite, extraction-parity all green) and against
+  poppler `pdftotext`.
+- **Copied text no longer fuses words on tight-tracking lines** (#835) — the
+  word-space heuristic judged the horizontal gap against the glyph *height*
+  (`0.5·lineHeight ≈ 0.5em`), a bar above a normal word space, so lines that
+  position words with small gaps and no real space glyph fused
+  (`ForewordItisagreat…`). It now judges against a horizontal `~0.25·fontSize`
+  (poppler's ~0.1–0.3em band). foss-primer copy word agreement 6.6%→**77.9%**,
+  cdc 73.9%→**94.4%**; clean prose unchanged.
+
 ### Added
+- **Redaction/extraction geometry now has two independent-oracle regression
+  gates** (#842, #839) — both guard the glyph-box path the #833/#843 fixes
+  touch, and neither lets excise grade its own homework. `#842`
+  (`AreaRedactionDegenerateWidthTests`) draws an area over only the **top half**
+  of unit-Tf glyph ink — a region a baseline-pinned degenerate box (the #833
+  leak) could not intersect — and verifies with mutool *and* ghostscript that
+  the glyphs are gone, catching area-redaction under-inclusion. `#839`
+  (`GlyphWidthAccuracyTests`) compares excise glyph box widths to mutool's stext
+  quads over real corpus pages at the distribution level: the **median** ratio
+  must sit near 1 (catches #833's global shrink) and the width **spread** must
+  track the oracle (catches #843's flat-600 collapse). Both skip loudly when
+  mutool/ghostscript are absent.
 - **Copy-whitespace parity is now a ratcheting CI gate** (#837) — the harness
   that measures copied-text word/line agreement against poppler `pdftotext`
   (`CopyWhitespaceParityHarness`) now enforces per-document floors from

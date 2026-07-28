@@ -521,9 +521,15 @@ public static class TextSelectionEngine
                     }
                     else
                     {
-                        var lineHeight = Math.Min(pr.Top - pr.Bottom, cr.Top - cr.Bottom);
+                        // #835: a word space is a HORIZONTAL quantity, so judge the
+                        // gap against a fraction of the font size (~0.25em, poppler's
+                        // ~0.1–0.3em band), not against the glyph HEIGHT. The old
+                        // `0.5·lineHeight` bar (≈0.5em) sat above a normal word space,
+                        // so tight-tracking lines with no real space glyph fused
+                        // ("ForewordItisagreat"). Wide letters keep gap≈0 (their real
+                        // rect abuts the next glyph), so this does not over-space.
                         var gap = Math.Max(cr.Left - pr.Right, pr.Left - cr.Right);
-                        result[k] = gap > 0.5 * lineHeight;
+                        result[k] = fontSize > 0 && gap > 0.25 * fontSize;
                     }
                 }
             }
