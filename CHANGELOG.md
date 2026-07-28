@@ -6,6 +6,8 @@ semantic versioning.
 
 ## [Unreleased]
 
+## [3.5.0] - 2026-07-27
+
 ### Added
 - **Text selection is on by default in the reading view** (#831) — selecting
   text is now the resting affordance of the viewer: open a document and drag,
