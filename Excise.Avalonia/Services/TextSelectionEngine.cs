@@ -577,6 +577,35 @@ public static class TextSelectionEngine
 
             AppendLine(sb, cur, leftMargin, indentUnit);
         }
+        return Dehyphenate(sb.ToString());
+    }
+
+    /// <summary>
+    /// Join words broken across a line by a soft hyphen (#836): a hyphen at the
+    /// end of a line immediately followed by a newline and a LOWERCASE-letter
+    /// continuation is rejoined (<c>unfamil-\niar</c> → <c>unfamiliar</c>), the
+    /// behaviour poppler <c>pdftotext</c> and most readers exhibit. Guarded so
+    /// it never eats a real hyphen: the character before the hyphen must be a
+    /// letter, the continuation must start LOWERCASE (so ranges, a capitalised
+    /// next word, or a hyphen before a paragraph break <c>-\n\n</c> are left
+    /// intact). Smart mode only — LineFaithful stays verbatim.
+    /// </summary>
+    private static string Dehyphenate(string text)
+    {
+        if (text.IndexOf('-') < 0) return text;
+        var sb = new System.Text.StringBuilder(text.Length);
+        for (int i = 0; i < text.Length; i++)
+        {
+            if (text[i] == '-'
+                && i > 0 && char.IsLetter(text[i - 1])
+                && i + 2 < text.Length && text[i + 1] == '\n' && char.IsLower(text[i + 2]))
+            {
+                // Drop the hyphen AND the newline; resume at the continuation.
+                i++; // skip the '\n' (the for-loop i++ then lands on the letter)
+                continue;
+            }
+            sb.Append(text[i]);
+        }
         return sb.ToString();
     }
 
