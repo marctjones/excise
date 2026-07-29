@@ -446,6 +446,10 @@ public partial class PdfViewerControl : UserControl
             _continuousItems.ContainerPrepared -= OnContinuousContainerPrepared;
             _continuousItems.ContainerClearing -= OnContinuousContainerClearing;
         }
+
+        // Cancel in-flight grid-cell renders for the now-detached control and
+        // start a fresh generation, so a re-attach renders cleanly (#848).
+        CancelContinuousCellRenders();
     }
 
     /// <summary>

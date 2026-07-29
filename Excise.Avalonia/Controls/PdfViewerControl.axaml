@@ -81,9 +81,10 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="controls:PdfPageSlot">
                         <!-- Border is sized to the (zoomed) page via bindings on
-                             the PageSlot VM. The child Canvas is full page size,
-                             while the Image is positioned over the currently
-                             visible tile rendered via RenderOptions.ClipRect. -->
+                             the PageSlot VM. The child Canvas is full page size;
+                             the Tiles ItemsControl paints the content-addressed
+                             grid of rendered cells (#848), each Image positioned
+                             at its own page-local DIP rect. -->
                         <Border Width="{Binding DisplayWidth}"
                                 Height="{Binding DisplayHeight}"
                                 Background="White"
@@ -92,6 +93,13 @@
                                 BorderBrush="#40000000"
                                 BorderThickness="1">
                             <Panel ClipToBounds="True">
+                                <!-- One composited bitmap per page (#848). The grid
+                                     of cells is rendered/cached per cell, but blitted
+                                     into this single band bitmap so there is exactly
+                                     ONE Image per page — no inter-tile seams. It sits
+                                     over the visible band (viewport + overscan),
+                                     positioned in page-local DIPs; the ScrollViewer
+                                     moves it with the page between recomposites. -->
                                 <Canvas Width="{Binding DisplayWidth}"
                                         Height="{Binding DisplayHeight}">
                                     <Image Source="{Binding Bitmap}"
