@@ -126,6 +126,22 @@ public static class VisualTraceRunner
 
     private static void InvokeAction(MainWindowViewModel vm, string action)
     {
+        // "rotate-all" rotates EVERY page (uniform landscape) — the discriminator
+        // for #846: if the post-mutation scroll bounce appears only for a MIXED
+        // (one-page-rotated) document and not a uniform one, the defect is the
+        // mixed-width horizontal layout, not the vertical scroll-anchor.
+        if (action == "rotate-all")
+        {
+            int pages = vm.TotalPages;
+            for (int p = 0; p < pages; p++)
+            {
+                vm.CurrentPageIndex = p;
+                (vm.RotatePageRightCommand as System.Windows.Input.ICommand)?.Execute(null);
+            }
+            vm.CurrentPageIndex = Math.Min(2, Math.Max(0, pages - 1));
+            return;
+        }
+
         // Fire (don't await) — we want to observe the frames WHILE the mutation
         // and its re-render/re-anchor settle, which is where the bounce lives.
         System.Windows.Input.ICommand cmd = action switch
