@@ -369,6 +369,7 @@ public partial class PdfViewerControl : UserControl
         Focusable = true;
         UpdateViewerAutomationProperties();
         DetachedFromVisualTree += OnDetachedFromVisualTreeHandler;
+        AttachedToVisualTree += (_, _) => _continuousDetached = false;
     }
 
     /// <summary>
@@ -432,6 +433,12 @@ public partial class PdfViewerControl : UserControl
 
     private void OnDetachedFromVisualTreeHandler(object? sender, VisualTreeAttachmentEventArgs e)
     {
+        // A detached viewer (e.g. a closed window during a test) must do NO more
+        // continuous rendering: a queued render pass / in-flight cell completion
+        // touching the now-disposed document would throw and destabilise the
+        // shared dispatcher (observed as a cross-test ObjectDisposedException
+        // cleanup-failure cascade). This flag hard-stops all continuous work.
+        _continuousDetached = true;
         _viewportSubscription?.Dispose();
         _viewportSubscription = null;
         _continuousOffsetSubscription?.Dispose();
@@ -446,6 +453,10 @@ public partial class PdfViewerControl : UserControl
             _continuousItems.ContainerPrepared -= OnContinuousContainerPrepared;
             _continuousItems.ContainerClearing -= OnContinuousContainerClearing;
         }
+
+        // Cancel in-flight grid-cell renders for the now-detached control and
+        // start a fresh generation, so a re-attach renders cleanly (#848).
+        CancelContinuousCellRenders();
     }
 
     /// <summary>

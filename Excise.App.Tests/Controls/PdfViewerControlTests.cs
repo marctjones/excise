@@ -736,29 +736,74 @@ public class PdfViewerControlTests
     }
 
     [FixedAvaloniaFact]
-    public void ContinuousTileRequest_ExpandsAndQuantizesViewportForScrollCoalescing()
+    public void ContinuousGrid_AlignsToQuantumAndExpandsBeyondViewportForScrollCoalescing()
     {
+        // #848: the single sliding band was replaced by a grid of quantum-aligned
+        // cells. Overscan + quantum alignment still hold, now per cell: nearby
+        // scroll offsets require the same (Col, Row) cells → same cache keys.
         var slot = new PdfPageSlot(pageNumber: 1, widthPt: 612, heightPt: 792, zoom: 2.0);
 
-        var created = PdfViewerControl.TryCreateContinuousTileRequest(
-            slot,
-            viewportOffset: new Vector(0, 600),
-            viewport: new Size(900, 500),
-            pageTop: 0,
-            zoom: 2.0,
-            rotation: 0,
-            contentBox: new Excise.Core.Document.PdfRectangle(0, 0, slot.WidthPt, slot.HeightPt),
-            out var request);
+        var cells = PdfViewerControl.RequiredTileCells(
+            slot.DisplayWidth, slot.DisplayHeight, pageTopDip: 0,
+            viewportOffset: new Vector(0, 600), viewport: new Size(900, 500),
+            PdfViewerControl.ContinuousTileQuantumDip, PdfViewerControl.ContinuousTileOverscanDip);
 
-        created.Should().BeTrue();
-        request.YDip.Should().BeLessThanOrEqualTo(600,
-            "the rendered tile should start before the visible viewport to absorb small scroll deltas");
-        (request.YDip % PdfViewerControl.ContinuousTileQuantumDip).Should().Be(0,
-            "tile starts should be aligned so nearby scroll offsets reuse the same cache key");
-        (request.YDip + request.HeightDip).Should().BeGreaterThanOrEqualTo(1_100,
-            "the rendered tile should cover the visible viewport plus overscan");
-        request.HeightDip.Should().BeGreaterThan(500,
-            "continuous mode should render ahead of the exact viewport instead of rerendering every scroll pixel");
+        cells.Should().NotBeEmpty();
+
+        foreach (var c in cells)
+        {
+            (c.XDip % PdfViewerControl.ContinuousTileQuantumDip).Should().Be(0,
+                "cell starts are on the quantum lattice so nearby scroll offsets reuse the same cache key");
+            (c.YDip % PdfViewerControl.ContinuousTileQuantumDip).Should().Be(0);
+        }
+
+        double coverTop = cells.Min(c => c.YDip);
+        double coverBottom = cells.Max(c => c.YDip + c.HeightDip);
+        coverTop.Should().BeLessThanOrEqualTo(600,
+            "the grid should extend before the visible viewport to absorb small scroll deltas");
+        coverBottom.Should().BeGreaterThanOrEqualTo(1_100,
+            "the grid should cover the visible viewport plus overscan");
+    }
+
+    [Fact]
+    public void ContinuousMosaic_TilesCellsEdgeToEdge_NoGapNoOverlap()
+    {
+        // #848 seam fix: cells are composited into ONE bitmap by laying them out
+        // edge-to-edge at cumulative integer pixel offsets. This pins that the
+        // mosaic tiles the buffer exactly — every cell abuts its neighbours with no
+        // gap (which would be a seam) and no overlap, and the total equals the sum
+        // of column widths / row heights. A 2x3 grid with uneven (edge) cell sizes.
+        var cells = new[]
+        {
+            (Col: 0, Row: 0, PxW: 640, PxH: 640),
+            (Col: 1, Row: 0, PxW: 640, PxH: 640),
+            (Col: 2, Row: 0, PxW: 385, PxH: 640),  // right edge column: narrower
+            (Col: 0, Row: 1, PxW: 640, PxH: 206),  // bottom edge row: shorter
+            (Col: 1, Row: 1, PxW: 640, PxH: 206),
+            (Col: 2, Row: 1, PxW: 385, PxH: 206),
+        };
+
+        var (totalW, totalH, offsets) = PdfViewerControl.ComputeMosaic(cells);
+
+        totalW.Should().Be(640 + 640 + 385, "columns tile the full width with no gap/overlap");
+        totalH.Should().Be(640 + 206, "rows tile the full height with no gap/overlap");
+
+        // Every cell's rect stays inside the buffer and abuts its right/bottom
+        // neighbour exactly (this cell's right edge == next column's left edge).
+        var byCell = cells.ToDictionary(c => (c.Col, c.Row));
+        foreach (var c in cells)
+        {
+            var (x, y) = offsets[(c.Col, c.Row)];
+            (x + c.PxW).Should().BeLessThanOrEqualTo(totalW);
+            (y + c.PxH).Should().BeLessThanOrEqualTo(totalH);
+
+            if (byCell.TryGetValue((c.Col + 1, c.Row), out var right))
+                offsets[(right.Col, right.Row)].Item1.Should().Be(x + c.PxW,
+                    "the right neighbour starts exactly where this cell ends — no seam, no overlap");
+            if (byCell.TryGetValue((c.Col, c.Row + 1), out var below))
+                offsets[(below.Col, below.Row)].Item2.Should().Be(y + c.PxH,
+                    "the cell below starts exactly where this cell ends — no seam, no overlap");
+        }
     }
 
     #endregion

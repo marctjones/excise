@@ -20,27 +20,20 @@ namespace Excise.Avalonia.Tests;
 /// <c>Bgra8888</c>/<c>Premul</c> for anything Skia hands back;
 /// <see cref="PdfViewerControl.ContinuousTileByteSize"/> encodes that same
 /// constant and is the exact function production code uses to size the LRU
-/// eviction). A tile's pixel size is NOT the dip tile size from
-/// <see cref="PdfViewerControl.TryCreateContinuousTileRequest"/> — it is that
-/// tile rendered at <see cref="PdfViewerControl.EffectiveContinuousDpi"/>. This
-/// test reproduces the exact scale <c>SkiaRenderer</c> applies
-/// (<c>scale = dpi / 72.0</c>, then <c>pixelWidth = ceil(clipRect.Width * scale)</c>
-/// — see <c>SkiaRenderer.cs</c> lines ~47 and ~84) applied to the REAL
-/// <see cref="PdfViewerControl.ContinuousTileRequest.ClipRect"/> produced by the
-/// real tile-request function, rather than re-deriving the dip-to-point-to-pixel
-/// algebra by hand.
+/// eviction).
 /// </para>
 /// <para>
-/// Measurement approach (reproducible without a live memory profiler, per #615):
-/// for a representative matrix of page sizes x viewport sizes x zoom levels, call
-/// the real <see cref="PdfViewerControl.TryCreateContinuousTileRequest"/> to get
-/// the actual overscanned/quantized tile geometry, convert its <c>ClipRect</c>
-/// (PDF points) to device pixels using the renderer's own DPI scale, and run that
-/// through <see cref="PdfViewerControl.ContinuousTileByteSize"/> — the same byte
-/// accounting the production eviction loop uses. That is a tile's true resident
-/// cost. The worst observed tile, and the budget it must fit under alongside a
-/// few neighbours, is exactly the number this issue asked to be measured before
-/// sizing the cache.
+/// Under the content-addressed grid (#848), tiles are UNIFORM: every interior
+/// cell is a full <see cref="PdfViewerControl.ContinuousTileQuantumDip"/> square,
+/// edge cells smaller. So the worst-case resident tile is simply a full-quantum
+/// interior cell rendered at the (dpr-scaled) DPI cap. This test builds that cell
+/// through the REAL <see cref="PdfViewerControl.RequiredTileCells"/> +
+/// <see cref="PdfViewerControl.CellToRequest"/> code paths, converts its
+/// <c>ClipRect</c> (PDF points) to device pixels using the renderer's own DPI
+/// scale (<c>scale = dpi / 72.0</c>, <c>pixelWidth = ceil(clipRect.Width * scale)</c>
+/// — see <c>SkiaRenderer.cs</c>), and runs that through
+/// <see cref="PdfViewerControl.ContinuousTileByteSize"/> — the same byte
+/// accounting the production eviction loop uses.
 /// </para>
 /// </remarks>
 public class ContinuousCacheMemoryTests
@@ -56,101 +49,86 @@ public class ContinuousCacheMemoryTests
     // public/internal symbol.
     private const int BaseRenderDpi = 120;
 
-    private static readonly (string Name, double WidthPt, double HeightPt)[] Documents =
-    [
-        ("US Letter (typical short doc)", 612, 792),
-        ("D-size scan, 36x48in (large-format long doc)", 2592, 3456),
-    ];
-
-    private static readonly (string Name, double Width, double Height)[] Viewports =
-    [
-        ("1280x800 laptop", 1280, 800),
-        ("1920x1080 desktop", 1920, 1080),
-        ("2560x1440 large monitor", 2560, 1440),
-    ];
-
     private static readonly double[] ZoomLevels = [1.0, 1.5, 2.0, 4.0];
+    // Device-pixel ratios: standard and Retina/HiDPI. The DPI cap scales with dpr
+    // (#682/#683), so a HiDPI display is where a single grid tile is largest.
+    private static readonly double[] DevicePixelRatios = [1.0, 2.0];
 
     /// <summary>
-    /// The actual measurement (#615): walks the document x viewport x zoom matrix,
-    /// finds the single largest resident tile, and reports what a full cache
-    /// budget of ~4x that tile means for both large-format and ordinary
-    /// documents. Run with
+    /// The measurement (#615/#848): the worst single resident grid tile is a
+    /// full-quantum interior cell at the dpr-scaled DPI cap. Sweeps zoom x dpr,
+    /// finds that tile, and confirms the byte budget holds it many times over
+    /// (uniform tiles ⇒ generous scroll-back buffer). Run with
     /// <c>dotnet test --filter ContinuousCacheMemory --logger "console;verbosity=detailed"</c>
     /// to see the table.
     /// </summary>
     [Fact]
-    public void MeasureContinuousTileCache_AcrossDocumentViewportZoomMatrix()
+    public void MeasureContinuousTileCache_WorstCaseGridCell()
     {
-        var rows = new List<(string Doc, string Viewport, double Zoom, int WidthPx, int HeightPx, long Bytes)>();
+        // A page comfortably larger than a quantum + overscan in both dimensions,
+        // so an interior full-quantum cell exists. Large-format D-size scan.
+        const double widthPt = 2592, heightPt = 3456;
+        var contentBox = new Excise.Core.Document.PdfRectangle(0, 0, widthPt, heightPt);
+        int q = PdfViewerControl.ContinuousTileQuantumDip;
 
-        foreach (var doc in Documents)
+        var rows = new List<(double Zoom, double Dpr, int WidthPx, int HeightPx, long Bytes)>();
+
+        foreach (var zoom in ZoomLevels)
         {
-            foreach (var vp in Viewports)
+            foreach (var dpr in DevicePixelRatios)
             {
-                foreach (var zoom in ZoomLevels)
-                {
-                    var slot = new PdfPageSlot(1, doc.WidthPt, doc.HeightPt, zoom);
+                var slot = new PdfPageSlot(1, widthPt, heightPt, zoom);
+                int dpi = PdfViewerControl.EffectiveContinuousDpi(
+                    BaseRenderDpi, zoom, PdfViewerControl.MaxContinuousDpi, renderScaling: dpr);
 
-                    // Position the viewport away from the page edges (when the page
-                    // is large enough) so overscan is not clipped by page bounds —
-                    // the worst-case, memory-maximizing position for a reader
-                    // mid-document.
-                    double offsetX = Math.Max(0, (slot.DisplayWidth - vp.Width) / 2);
-                    double offsetY = Math.Max(0, (slot.DisplayHeight - vp.Height) / 2);
+                // Middle of the page so a full interior quantum cell is required.
+                double offsetX = Math.Max(0, (slot.DisplayWidth - 800) / 2);
+                double offsetY = Math.Max(0, (slot.DisplayHeight - 600) / 2);
+                var cells = PdfViewerControl.RequiredTileCells(
+                    slot.DisplayWidth, slot.DisplayHeight, 0,
+                    new Vector(offsetX, offsetY), new Size(800, 600), q,
+                    PdfViewerControl.ContinuousTileOverscanDip);
 
-                    var ok = PdfViewerControl.TryCreateContinuousTileRequest(
-                        slot, new Vector(offsetX, offsetY), new Size(vp.Width, vp.Height), 0, zoom,
-                        rotation: 0, contentBox: new Excise.Core.Document.PdfRectangle(0, 0, slot.WidthPt, slot.HeightPt), out var request);
-                    if (!ok) continue;
+                // The largest cell is a full quantum square.
+                var cell = cells
+                    .Where(c => c.WidthDip >= q - 0.5 && c.HeightDip >= q - 0.5)
+                    .OrderByDescending(c => c.WidthDip * c.HeightDip)
+                    .First();
 
-                    int dpi = PdfViewerControl.EffectiveContinuousDpi(BaseRenderDpi, zoom, PdfViewerControl.MaxContinuousDpi, renderScaling: 1.0);
+                var request = PdfViewerControl.CellToRequest(cell, zoom, rotation: 0, contentBox);
 
-                    // Reproduces SkiaRenderer.RenderPage's own device-pixel sizing:
-                    // scale = dpi/72, pixel width/height = ceil(clipRect dimension * scale).
-                    double scale = dpi / 72.0;
-                    int pixelWidth = (int)Math.Ceiling((request.ClipRect.Right - request.ClipRect.Left) * scale);
-                    int pixelHeight = (int)Math.Ceiling((request.ClipRect.Bottom - request.ClipRect.Top) * scale);
-                    long bytes = PdfViewerControl.ContinuousTileByteSize(pixelWidth, pixelHeight);
+                double scale = dpi / 72.0;
+                int pixelWidth = (int)Math.Ceiling(request.ClipRect.Width * scale);
+                int pixelHeight = (int)Math.Ceiling(request.ClipRect.Height * scale);
+                long bytes = PdfViewerControl.ContinuousTileByteSize(pixelWidth, pixelHeight);
 
-                    rows.Add((doc.Name, vp.Name, zoom, pixelWidth, pixelHeight, bytes));
-                }
+                rows.Add((zoom, dpr, pixelWidth, pixelHeight, bytes));
             }
         }
 
         rows.Should().NotBeEmpty();
 
-        _output.WriteLine($"{"Document",-46} {"Viewport",-20} {"Zoom",6} {"PxW",6} {"PxH",6} {"MB",8}");
+        _output.WriteLine($"{"Zoom",6} {"Dpr",5} {"PxW",6} {"PxH",6} {"MB",8}");
         foreach (var r in rows.OrderByDescending(r => r.Bytes))
-        {
-            _output.WriteLine($"{r.Doc,-46} {r.Viewport,-20} {r.Zoom,6:0.0} {r.WidthPx,6} {r.HeightPx,6} {r.Bytes / 1024.0 / 1024.0,8:0.00}");
-        }
+            _output.WriteLine($"{r.Zoom,6:0.0} {r.Dpr,5:0.0} {r.WidthPx,6} {r.HeightPx,6} {r.Bytes / 1024.0 / 1024.0,8:0.00}");
 
         var worst = rows.MaxBy(r => r.Bytes);
         long worstTileBytes = worst.Bytes;
         double worstTileMb = worstTileBytes / 1024.0 / 1024.0;
 
-        const int oldFlatCapacity = 10;
-
         _output.WriteLine("");
-        _output.WriteLine($"Worst single tile: {worst.Doc} / {worst.Viewport} @ {worst.Zoom:0.0}x " +
+        _output.WriteLine($"Worst single grid tile: zoom {worst.Zoom:0.0}x dpr {worst.Dpr:0.0} " +
                            $"= {worst.WidthPx}x{worst.HeightPx}px = {worstTileMb:0.00} MB");
-        _output.WriteLine($"Full cache @ OLD flat count ({oldFlatCapacity}): {worstTileMb * oldFlatCapacity:0.0} MB (unmeasured, unbounded across doc sizes)");
-        _output.WriteLine($"NEW byte budget: {ContinuousCacheByteBudgetForTest / 1024.0 / 1024.0:0} MB " +
-                           $"(~{ContinuousCacheByteBudgetForTest / (double)worstTileBytes:0.0}x the worst measured tile)");
+        _output.WriteLine($"Byte budget: {ContinuousCacheByteBudgetForTest / 1024.0 / 1024.0:0} MB " +
+                           $"(~{ContinuousCacheByteBudgetForTest / (double)worstTileBytes:0.0} worst-case tiles)");
 
-        // The invariant this issue asked for: the cache's memory ceiling must be
-        // sized against a measured worst-case tile, not picked by intuition.
-        // Budget: keep the worst-observed tile fitting at least
-        // ContinuousCacheMinEntries times over inside the byte budget, so the
-        // worst case (large-format doc, large monitor, mid-zoom) still gets a
-        // small amount of scroll-buffer headroom rather than being reduced to a
-        // single resident tile. If tile geometry changes (quantum, overscan, DPI
-        // cap) and this starts failing, that is the signal to re-derive the
-        // budget, not to raise it blindly.
-        (ContinuousCacheByteBudgetForTest / worstTileBytes).Should().BeGreaterThanOrEqualTo(2,
-            $"worst tile is {worstTileMb:0.00} MB; the byte budget must comfortably fit at least a couple of " +
-            "worst-case tiles so a large-format document isn't reduced to a single-tile cache");
+        // Uniform tiles mean the budget holds many of them — a generous scroll-back
+        // buffer so scrolling away and back is a cache hit, not a re-render (#848).
+        // If tile geometry changes (quantum, overscan, DPI cap) and this starts
+        // failing, re-derive the budget rather than raising it blindly.
+        (ContinuousCacheByteBudgetForTest / worstTileBytes).Should().BeGreaterThanOrEqualTo(8,
+            $"worst uniform tile is {worstTileMb:0.00} MB; the byte budget should hold many, " +
+            "giving the visible grid plus a generous scroll-back buffer");
     }
 
     // Mirrors PdfViewerControl.ContinuousCacheByteBudget (private const) so this

@@ -197,10 +197,24 @@ public class GuiFullResponsivenessCoverageTests
 
             var renderStarts = viewer.ContinuousRenderStartCount - initialStarts;
             var renderCancellations = viewer.ContinuousRenderCancellationCount - initialCancellations;
-            renderStarts.Should().BeLessThanOrEqualTo(4,
-                "rapid continuous scrolling should coalesce stale ACC report tile renders instead of rendering each intermediate page");
-            renderCancellations.Should().BeLessThanOrEqualTo(1,
-                "rapid continuous scrolling should not churn cancelled ACC report renders");
+            // #848: renders are now per grid CELL, not per page, so the count
+            // scales with cells-per-viewport rather than pages. The coalescing
+            // guarantee still holds and is what this bounds: a rapid 7-page scroll
+            // must render only the FINAL viewport's grid (a couple dozen cells at
+            // most), NOT all seven intermediate pages' grids (~100+ cells). The
+            // pass-scheduling coalesce + the required-key skip after the gate are
+            // what keep it there.
+            // Actual renders (SkiaRenderer.RenderPage calls) stay tiny — only the
+            // final viewport's cells (observed ~2 headless). Cancellations here are
+            // CHEAP skips: a cell that waited for the gate then found itself no
+            // longer required (scrolled past) and bailed WITHOUT rendering. That
+            // start-then-skip IS the coalescing that keeps renderStarts tiny, so it
+            // is bounded loosely (observed ~13) — a tight bound on a timing- and
+            // load-sensitive skip count would only be flaky.
+            renderStarts.Should().BeLessThanOrEqualTo(40,
+                "rapid continuous scrolling should render only the final viewport's grid cells, not every intermediate page");
+            renderCancellations.Should().BeLessThanOrEqualTo(60,
+                "cancelled (skipped-before-render) cells are cheap, but should not churn without bound");
 
             AssertNoHardFailures(results);
             WriteReport("gui-workflow-suite-acc-compensation-continuous-scroll.json", "gui-workflow-acc-compensation-continuous-scroll", results);
