@@ -145,6 +145,7 @@ namespace Excise.Avalonia.Controls
         public void InvalidatePageCache() { }
         public void NextPage() { }
         protected override Avalonia.Automation.Peers.AutomationPeer OnCreateAutomationPeer() { }
+        public void PreserveContinuousReadingPositionOnNextRebuild() { }
         public void PreviousPage() { }
         public void ZoomIn() { }
         public void ZoomOut() { }
