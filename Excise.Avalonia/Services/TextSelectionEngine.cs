@@ -46,13 +46,22 @@ public static class TextSelectionEngine
         {
             var r = l.GlyphRectangle;
             var cy = (r.Bottom + r.Top) * 0.5;
-            // Penalise vertical distance heavily so we anchor to the
-            // pointer's *line* and only pick X-closest within it.
+            // Penalise vertical distance heavily so we anchor to the pointer's
+            // *line* and only pick X-closest within it. The weight must exceed
+            // the widest realistic horizontal gap between a pointer and its
+            // line's nearest glyph (dragging past a SHORT line's end can be
+            // 100s of pt), or an adjacent line's glyph that happens to be
+            // X-closer wins and the selection jumps a line. That mis-pick is
+            // also what let sub-pixel rounding at fractional zoom flip the drag
+            // focus between lines and over-span the highlight (#845). A generous
+            // weight keeps a point on a line's Y-band anchored to that line;
+            // dragging ONTO another line (pointer on its band, dy≈0) is
+            // unaffected.
             var dy = Math.Abs(pdfY - cy);
             var dx = pdfX < r.Left ? r.Left - pdfX
                    : pdfX > r.Right ? pdfX - r.Right
                    : 0;
-            var dist = dy * 4.0 + dx;
+            var dist = dy * 40.0 + dx;
             if (dist < bestDist) { bestDist = dist; best = l; }
         }
         return best;
