@@ -2083,6 +2083,19 @@ public partial class MainWindowViewModel : ViewModelBase
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Raised by a structural page mutation, BEFORE the document is reloaded, so
+    /// the continuous view can snapshot the reader's position (page + intra-page
+    /// fraction) and restore it after the rebuild rather than jumping to the top of
+    /// the page (#846). Opening/closing a document does NOT raise it — those
+    /// intentionally reset the reading position. Currently raised by rotate;
+    /// remove/move are a follow-up once their page-identity handling is verified.
+    /// </summary>
+    public event EventHandler? PreserveReadingPositionRequested;
+
+    private void RequestPreserveReadingPosition() =>
+        PreserveReadingPositionRequested?.Invoke(this, EventArgs.Empty);
+
     private async Task RotatePageLeftAsync()
     {
         _logger.LogInformation("Rotating current page left (counter-clockwise)");
@@ -2103,6 +2116,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 () => ApplyPageRotationAsync(rotatedIndex, 270));
             _logger.LogInformation("Page {PageIndex} rotated left successfully", rotatedIndex);
 
+            RequestPreserveReadingPosition();
             await RefreshAfterDocumentMutationAsync();
         }
         catch (Exception ex)
@@ -2131,6 +2145,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 () => ApplyPageRotationAsync(rotatedIndex, 90));
             _logger.LogInformation("Page {PageIndex} rotated right successfully", rotatedIndex);
 
+            RequestPreserveReadingPosition();
             await RefreshAfterDocumentMutationAsync();
         }
         catch (Exception ex)
@@ -2159,6 +2174,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 () => ApplyPageRotationAsync(rotatedIndex, 180));
             _logger.LogInformation("Page {PageIndex} rotated 180 degrees successfully", rotatedIndex);
 
+            RequestPreserveReadingPosition();
             await RefreshAfterDocumentMutationAsync();
         }
         catch (Exception ex)

@@ -337,7 +337,27 @@ public partial class PdfViewerControl
         // So don't depend on the latch surviving a document change. The viewer's
         // CurrentPage IS the request; once slots exist, honour it. If it is
         // already page 1 this is a no-op.
-        Dispatcher.UIThread.Post(() => ScrollToPageContinuous(CurrentPage), DispatcherPriority.Loaded);
+        if (_preserveReadingOnNextRebuild)
+        {
+            // #846: a structural mutation (rotate) asked to keep the reader in
+            // place. Restore CurrentPage + the snapshotted fraction through the
+            // ROBUST extent-settle anchor loop (the mechanism the zoom path uses),
+            // not the one-shot below — the one-shot lands once against a
+            // not-yet-settled extent and is then displaced as tiles render, which
+            // is the #846 "former top off-screen / bounce".
+            _preserveReadingOnNextRebuild = false;
+            // Anchor to CurrentPage (VM identity-tracked across rotate/remove/move)
+            // at the fraction snapshotted pre-mutation. Because the fraction is
+            // page-relative and the VM keeps CurrentPage on the reader's content,
+            // it transfers to the page's new number for free.
+            _pendingZoomAnchorPage = CurrentPage;
+            _pendingZoomAnchorFraction = _preservedReadingFraction;
+            ApplyPendingZoomAnchor();
+        }
+        else
+        {
+            Dispatcher.UIThread.Post(() => ScrollToPageContinuous(CurrentPage), DispatcherPriority.Loaded);
+        }
     }
 
     private void ClearContinuous()
@@ -414,6 +434,29 @@ public partial class PdfViewerControl
 
     private int _pendingZoomAnchorPage;
     private double _pendingZoomAnchorFraction;
+
+    private bool _preserveReadingOnNextRebuild;
+    private double _preservedReadingFraction;
+
+    /// <summary>
+    /// #846: snapshot the reader's current intra-page position so the NEXT
+    /// <see cref="RebuildContinuous"/> (triggered by a structural mutation
+    /// reloading the document) restores it via the robust extent-settle anchor
+    /// loop, instead of the default jump to the top of the current page. Called
+    /// from the mutation path BEFORE the document swaps, while the current slots
+    /// and offset are still valid. No-op outside the continuous view.
+    /// </summary>
+    public void PreserveContinuousReadingPositionOnNextRebuild()
+    {
+        if (ViewMode != PdfViewMode.Continuous || _continuousScrollViewer == null || _continuousSlots == null)
+            return;
+        // Snapshot the fraction of the reader's page (CurrentPage) NOW, while slots
+        // and CurrentPage still describe the pre-mutation world. RebuildContinuous
+        // re-applies it against the post-mutation CurrentPage, so page identity is
+        // handled by the VM's CurrentPage tracking rather than inferred here.
+        _preservedReadingFraction = ContinuousIntraPageFraction();
+        _preserveReadingOnNextRebuild = true;
+    }
 
     /// <summary>Project the live slots onto the pure vertical geometry the reading-anchor math uses.</summary>
     private static IReadOnlyList<SlotBox> SlotBoxes(IReadOnlyList<PdfPageSlot> slots)
