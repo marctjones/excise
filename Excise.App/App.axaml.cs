@@ -138,6 +138,23 @@ public partial class App : Application
                         TimeSpan.FromMilliseconds(250),
                         DispatcherPriority.Background);
                 };
+
+                // #846/#695: live visual-stability trace. Gated behind
+                // EXCISE_VISUAL_TRACE_OUT — a no-op in normal use. Runs a
+                // page-mutation in the REAL app (compositor drives the continuous
+                // re-render the headless host cannot) and records the ink-centroid
+                // trajectory so the shell harness can detect the post-mutation bounce.
+                if (Automation.VisualTraceRunner.IsRequested)
+                {
+                    logger.LogInformation("Visual trace requested; running after document load");
+                    desktop.Startup += (_, _) =>
+                    {
+                        DispatcherTimer.RunOnce(
+                            () => _ = Automation.VisualTraceRunner.RunAsync(desktop.MainWindow!, vm),
+                            TimeSpan.FromMilliseconds(1200),
+                            DispatcherPriority.Background);
+                    };
+                }
             }
 
             if (pendingActivationPath != null)
