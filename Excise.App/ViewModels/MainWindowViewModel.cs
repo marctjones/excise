@@ -1338,6 +1338,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
+            RequestPreserveReadingPosition(); // #846: snapshot reading position before the page count/order changes
             var removedIndex = CurrentPageIndex;
             var capturedPages = CapturePages(new[] { removedIndex });
             var result = await _pageOrganizationWorkflow.RemovePageAsync(removedIndex);
@@ -1596,6 +1597,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
+            RequestPreserveReadingPosition(); // #846
             var removedIndices = selected.OrderBy(i => i).ToList();
             var capturedPages = CapturePages(removedIndices);
             var result = await _pageOrganizationWorkflow.RemovePagesAsync(selected, CurrentPageIndex);
@@ -1648,6 +1650,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
+            RequestPreserveReadingPosition(); // #846
             var newCurrentPageIndex = RemapCurrentPageAfterSingleMove(CurrentPageIndex, fromIndex, toIndex);
             var result = await _pageOrganizationWorkflow.MovePageAsync(fromIndex, toIndex);
             if (!result.DidChange)
@@ -1686,6 +1689,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         try
         {
+            RequestPreserveReadingPosition(); // #846
             var result = await _pageOrganizationWorkflow.MovePagesAsync(selected, delta, CurrentPageIndex);
             if (!result.DidChange)
                 return;
@@ -2083,6 +2087,20 @@ public partial class MainWindowViewModel : ViewModelBase
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Raised by a structural page mutation, BEFORE the document is reloaded, so
+    /// the continuous view can snapshot the reader's position (page + intra-page
+    /// fraction) and restore it after the rebuild rather than jumping to the top of
+    /// the page (#846). Opening/closing a document does NOT raise it — those
+    /// intentionally reset the reading position. Raised by rotate, remove, and
+    /// move; page identity across remove/move is handled by anchoring to
+    /// CurrentPage (which the VM already remaps for the reader's content).
+    /// </summary>
+    public event EventHandler? PreserveReadingPositionRequested;
+
+    private void RequestPreserveReadingPosition() =>
+        PreserveReadingPositionRequested?.Invoke(this, EventArgs.Empty);
+
     private async Task RotatePageLeftAsync()
     {
         _logger.LogInformation("Rotating current page left (counter-clockwise)");
@@ -2103,6 +2121,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 () => ApplyPageRotationAsync(rotatedIndex, 270));
             _logger.LogInformation("Page {PageIndex} rotated left successfully", rotatedIndex);
 
+            RequestPreserveReadingPosition();
             await RefreshAfterDocumentMutationAsync();
         }
         catch (Exception ex)
@@ -2131,6 +2150,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 () => ApplyPageRotationAsync(rotatedIndex, 90));
             _logger.LogInformation("Page {PageIndex} rotated right successfully", rotatedIndex);
 
+            RequestPreserveReadingPosition();
             await RefreshAfterDocumentMutationAsync();
         }
         catch (Exception ex)
@@ -2159,6 +2179,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 () => ApplyPageRotationAsync(rotatedIndex, 180));
             _logger.LogInformation("Page {PageIndex} rotated 180 degrees successfully", rotatedIndex);
 
+            RequestPreserveReadingPosition();
             await RefreshAfterDocumentMutationAsync();
         }
         catch (Exception ex)
