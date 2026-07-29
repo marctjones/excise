@@ -136,6 +136,9 @@ public partial class PdfViewerControl
     private int? _pendingContinuousPage;
     private int _pendingContinuousAttempts;
     private bool _continuousRenderPassScheduled;
+    // True once the control has left the visual tree — hard-stops all continuous
+    // rendering so a closed viewer can't touch a disposed document (#848).
+    private bool _continuousDetached;
 
     // Intra-page position carried across a view-mode switch (#693): the
     // fraction of the current page sitting at the viewport top. Continuous
@@ -368,8 +371,8 @@ public partial class PdfViewerControl
     // render observes the cancelled token and bails.
     private void CancelContinuousCellRenders()
     {
-        _continuousDocCts.Cancel();
-        _continuousDocCts.Dispose();
+        try { _continuousDocCts.Cancel(); } catch (ObjectDisposedException) { }
+        try { _continuousDocCts.Dispose(); } catch (ObjectDisposedException) { }
         _continuousDocCts = new CancellationTokenSource();
         _continuousInFlight.Clear();
         _continuousRequiredKeys = new HashSet<ContinuousTileKey>();
@@ -718,7 +721,7 @@ public partial class PdfViewerControl
 
     private void RenderVisibleContinuousTiles()
     {
-        if (_continuousItems == null || _continuousRenderPassScheduled)
+        if (_continuousDetached || _continuousItems == null || _continuousRenderPassScheduled)
             return;
 
         _continuousRenderPassScheduled = true;
@@ -739,7 +742,7 @@ public partial class PdfViewerControl
 
     private void RenderVisibleContinuousTilesNowCore()
     {
-        if (_continuousItems == null || _continuousScrollViewer == null) return;
+        if (_continuousDetached || _continuousItems == null || _continuousScrollViewer == null) return;
 
         var viewport = _continuousScrollViewer.Viewport;
         var offset = _continuousScrollViewer.Offset;
@@ -793,6 +796,7 @@ public partial class PdfViewerControl
 
     private async Task RenderContinuousCellAsync(PdfPageSlot slot, GridCell cell, ContinuousTileKey key)
     {
+        if (_continuousDetached) return;
         // This is fire-and-forget (`_ = RenderContinuousCellAsync(...)`). An
         // unobserved exception here — e.g. the document being disposed mid-render
         // during teardown — must never surface: it would destabilise the whole
@@ -981,7 +985,7 @@ public partial class PdfViewerControl
 
     private void RecomposeSlotCore(PdfPageSlot slot)
     {
-        if (_continuousScrollViewer == null || _continuousDocCts.IsCancellationRequested) return;
+        if (_continuousDetached || _continuousScrollViewer == null || _continuousDocCts.IsCancellationRequested) return;
         var doc = Document;
         if (doc == null || slot.PageNumber < 1 || slot.PageNumber > doc.PageCount) return;
         var viewport = _continuousScrollViewer.Viewport;
