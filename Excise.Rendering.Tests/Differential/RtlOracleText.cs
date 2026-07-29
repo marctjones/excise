@@ -62,4 +62,20 @@ internal static class RtlOracleText
                 return false;
         return true;
     }
+
+    /// <summary>
+    /// NFKC fold + drop whitespace, joiners and the BOM while PRESERVING order.
+    /// For strict post-redaction LEAK scans: the Linux mupdf build inserts
+    /// spaces between glyphs of the Type0 CID fixture ("K E E P"), so a surviving
+    /// "س ل ا م" would slip past a plain NotContain("سلام"). Scanning the
+    /// space-stripped reading makes the leak check STRONGER, not weaker — and it
+    /// still distinguishes logical order from its reverse, so NotContain(word)
+    /// and NotContain(Reverse(word)) both remain meaningful.
+    /// </summary>
+    internal static string StripSpacing(string? s)
+        => s is null
+            ? string.Empty
+            : new string(s.Normalize(NormalizationForm.FormKC)
+                .Where(c => !char.IsWhiteSpace(c) && c != '\u200C' && c != '\u200D' && c != '\uFEFF')
+                .ToArray());
 }
