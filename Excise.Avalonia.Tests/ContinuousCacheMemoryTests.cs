@@ -100,7 +100,8 @@ public class ContinuousCacheMemoryTests
                     double offsetY = Math.Max(0, (slot.DisplayHeight - vp.Height) / 2);
 
                     var ok = PdfViewerControl.TryCreateContinuousTileRequest(
-                        slot, new Vector(offsetX, offsetY), new Size(vp.Width, vp.Height), 0, zoom, out var request);
+                        slot, new Vector(offsetX, offsetY), new Size(vp.Width, vp.Height), 0, zoom,
+                        rotation: 0, contentBox: new Excise.Core.Document.PdfRectangle(0, 0, slot.WidthPt, slot.HeightPt), out var request);
                     if (!ok) continue;
 
                     int dpi = PdfViewerControl.EffectiveContinuousDpi(BaseRenderDpi, zoom, PdfViewerControl.MaxContinuousDpi, renderScaling: 1.0);

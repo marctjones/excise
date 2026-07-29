@@ -1,3 +1,47 @@
+namespace Excise.Rendering
+{
+    public static class ContinuousTileClip
+    {
+        public static SkiaSharp.SKRect VisualBandToContentClip(int rotation, Excise.Core.Document.PdfRectangle contentBox, double vx, double vy, double vw, double vh) { }
+    }
+    public sealed class InvalidPageGeometryException : System.InvalidOperationException
+    {
+        public InvalidPageGeometryException(string message) { }
+    }
+    public class RenderOptions : System.IEquatable<Excise.Rendering.RenderOptions>
+    {
+        public const long DefaultMaxPixelCount = 268435456;
+        public RenderOptions() { }
+        public bool AntiAlias { get; init; }
+        public SkiaSharp.SKColor BackgroundColor { get; init; }
+        public SkiaSharp.SKRect? ClipRect { get; init; }
+        public int Dpi { get; init; }
+        public long MaxPixelCount { get; init; }
+    }
+    public sealed class RenderResourceLimitException : System.InvalidOperationException
+    {
+        public RenderResourceLimitException(string message) { }
+    }
+    public class SKBitmapPool : System.IDisposable
+    {
+        public SKBitmapPool() { }
+        public long CurrentMemoryUsage { get; }
+        public void Dispose() { }
+        public int GetPoolCountForSize(int width, int height) { }
+        public int GetTotalPoolCount() { }
+        public SkiaSharp.SKBitmap Rent(int width, int height) { }
+        public void Return(SkiaSharp.SKBitmap bitmap) { }
+    }
+    public class SkiaRenderer
+    {
+        public SkiaRenderer() { }
+        public SkiaSharp.SKBitmap RenderPage(Excise.Core.Document.PdfPage page) { }
+        public SkiaSharp.SKBitmap RenderPage(Excise.Core.Document.PdfPage page, Excise.Rendering.RenderOptions options) { }
+        public SkiaSharp.SKBitmap RenderPage(Excise.Core.Document.PdfPage page, Excise.Rendering.RenderOptions options, System.Threading.CancellationToken cancellationToken) { }
+        public void RenderPageToPng(Excise.Core.Document.PdfPage page, System.IO.Stream destination, Excise.Rendering.RenderOptions? options = null, System.Threading.CancellationToken cancellationToken = default) { }
+        public static Excise.Core.Document.PdfRectangle ResolveEffectiveRenderBox(Excise.Core.Document.PdfPage page) { }
+    }
+}
 namespace Excise.Rendering.Differential
 {
     public static class DifferentialMetrics
@@ -106,44 +150,5 @@ namespace Excise.Rendering.Differential
         public static double BigramJaccard(string exciseText, string oracleText) { }
         public static double CoverageRatio(string exciseText, string oracleText) { }
         public static string Normalize(string s) { }
-    }
-}
-namespace Excise.Rendering
-{
-    public sealed class InvalidPageGeometryException : System.InvalidOperationException
-    {
-        public InvalidPageGeometryException(string message) { }
-    }
-    public class RenderOptions : System.IEquatable<Excise.Rendering.RenderOptions>
-    {
-        public const long DefaultMaxPixelCount = 268435456;
-        public RenderOptions() { }
-        public bool AntiAlias { get; init; }
-        public SkiaSharp.SKColor BackgroundColor { get; init; }
-        public SkiaSharp.SKRect? ClipRect { get; init; }
-        public int Dpi { get; init; }
-        public long MaxPixelCount { get; init; }
-    }
-    public sealed class RenderResourceLimitException : System.InvalidOperationException
-    {
-        public RenderResourceLimitException(string message) { }
-    }
-    public class SKBitmapPool : System.IDisposable
-    {
-        public SKBitmapPool() { }
-        public long CurrentMemoryUsage { get; }
-        public void Dispose() { }
-        public int GetPoolCountForSize(int width, int height) { }
-        public int GetTotalPoolCount() { }
-        public SkiaSharp.SKBitmap Rent(int width, int height) { }
-        public void Return(SkiaSharp.SKBitmap bitmap) { }
-    }
-    public class SkiaRenderer
-    {
-        public SkiaRenderer() { }
-        public SkiaSharp.SKBitmap RenderPage(Excise.Core.Document.PdfPage page) { }
-        public SkiaSharp.SKBitmap RenderPage(Excise.Core.Document.PdfPage page, Excise.Rendering.RenderOptions options) { }
-        public SkiaSharp.SKBitmap RenderPage(Excise.Core.Document.PdfPage page, Excise.Rendering.RenderOptions options, System.Threading.CancellationToken cancellationToken) { }
-        public void RenderPageToPng(Excise.Core.Document.PdfPage page, System.IO.Stream destination, Excise.Rendering.RenderOptions? options = null, System.Threading.CancellationToken cancellationToken = default) { }
     }
 }

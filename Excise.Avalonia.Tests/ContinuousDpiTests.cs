@@ -41,6 +41,8 @@ public class ContinuousDpiTests
             viewport: new Size(500, 500),
             pageTop: 0,
             zoom: 1.0,
+            rotation: 0,
+            contentBox: new Excise.Core.Document.PdfRectangle(0, 0, slot.WidthPt, slot.HeightPt),
             out var request);
 
         ok.Should().BeTrue();
@@ -90,6 +92,8 @@ public class ContinuousDpiTests
             viewport: new Size(viewW, viewH),
             pageTop: pageTop,
             zoom: zoom,
+            rotation: 0,
+            contentBox: new Excise.Core.Document.PdfRectangle(0, 0, slot.WidthPt, slot.HeightPt),
             out var request);
 
         ok.Should().BeTrue("the viewport intersects the page in every case here");
@@ -149,6 +153,8 @@ public class ContinuousDpiTests
             viewport: new Size(100, 100),
             pageTop: 500,
             zoom: 1.0,
+            rotation: 0,
+            contentBox: new Excise.Core.Document.PdfRectangle(0, 0, slot.WidthPt, slot.HeightPt),
             out _);
 
         ok.Should().BeFalse();
