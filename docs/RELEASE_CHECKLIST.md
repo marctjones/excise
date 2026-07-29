@@ -55,6 +55,15 @@ Use this checklist before tagging any `v*` release.
   how a security-relevant assertion (`HiddenTextToggles_DoNotLoadOcrAssembly…`)
   quietly stopped executing while the suite stayed green (#619).
 - Run `dotnet build excise.sln --no-restore`.
+- **Confirm the Linux rendering-oracle gate is green.** The release workflow's
+  `rendering-gate` job (`.github/workflows/rendering-linux.yml`, also run on
+  every push by `ci.yml`) installs `mutool`/`gs`/`pdftocairo`/`tesseract` and
+  runs the rendering `Differential` + `Corpus` tests that the fast tool-less PR
+  gate skips — it is the only CI check of excise's renderer/extractor against an
+  independent oracle, and `publish` depends on it, so a tag cannot ship
+  installers if it is red. It covers the self-generating and ~32 checked-in
+  fixtures; the licensed real-world corpus is still measured only by the local
+  T2 `release-smoke.sh --release-tests` step below.
 - Run `dotnet test --no-build --filter "FullyQualifiedName~Redaction"` after any redaction-adjacent change.
 - Run the signature verification and UI workflow gates in `scripts/release-smoke.sh`.
 - Run the dedicated accessibility gate:

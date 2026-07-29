@@ -1,0 +1,103 @@
+name: Rendering (Linux, with reference tools)
+
+# Reusable job: install the reference-renderer tools and run the rendering
+# Differential + Corpus tests that the fast tool-less PR gate deliberately
+# SKIPS (see the "deterministic only" step in ci.yml). This is the only place
+# in CI where excise's renderer/extractor is checked against an INDEPENDENT
+# oracle (mutool / ghostscript / pdftocairo) rather than against itself.
+#
+# Why a separate, tool-installing job instead of turning tools on in the main
+# Linux gate: the fast gate is intentionally tool-independent so a MuPDF /
+# Poppler / Ghostscript apt outage can't block every PR. This job accepts that
+# dependency in exchange for real oracle coverage, and is called from:
+#   • ci.yml       — on every push/PR, so develop stays green here continuously
+#   • release.yml  — as a hard prerequisite of `publish`, so a tag cannot ship
+#                    installers with red (or silently un-run) rendering tests.
+#
+# Coverage boundary (honest): the high-value real-world corpus
+# (test-pdfs/local-real-world, /federal, /smoke, ...) is gitignored for
+# licensing and is NOT present in CI, so tests keyed to those fixtures still
+# SkipUnless(File.Exists). What runs here is every Differential/Corpus test
+# that self-generates its PDF or uses one of the ~32 checked-in fixtures
+# (test-pdfs/pdf20, /generated-regressions, /sample-pdfs). Full-corpus
+# coverage remains a local `scripts/release-smoke.sh --release-tests` step on
+# a developer machine that has the licensed corpus (tier t2).
+
+on:
+  workflow_call:
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  DOTNET_NUGET_SIGNATURE_VERIFICATION: false
+
+jobs:
+  rendering-linux:
+    name: Rendering Differential + Corpus (tools)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache nuget
+        uses: actions/cache@v5
+        with:
+          path: ~/.nuget/packages
+          key: nuget-linux-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-linux-
+
+      - name: Install reference-renderer tools
+        run: |
+          sudo apt-get update
+          # mupdf-tools → mutool, ghostscript → gs, poppler-utils →
+          # pdftocairo/pdftotext, tesseract-ocr → tesseract. These are exactly
+          # the binaries the *ReferenceRenderer.IsAvailable checks resolve on
+          # PATH via ProcessStartInfo.
+          sudo apt-get install -y --no-install-recommends \
+            mupdf-tools ghostscript poppler-utils tesseract-ocr
+
+      - name: Assert tools are on PATH (no silent self-oracle)
+        # If apt silently failed to provide a tool, every differential test
+        # gated on it would Assert.SkipUnless(IsAvailable) and the job would go
+        # GREEN while covering nothing — the exact "a tool must not be its own
+        # oracle" trap this whole job exists to avoid. Fail loudly instead.
+        run: |
+          missing=0
+          for t in mutool gs pdftocairo pdftotext tesseract; do
+            if command -v "$t" >/dev/null; then
+              echo "  ✓ $t → $(command -v "$t")"
+            else
+              echo "::error::reference tool '$t' not found after apt install"
+              missing=1
+            fi
+          done
+          test "$missing" -eq 0
+
+      - name: Build (Debug)
+        run: dotnet build Excise.Rendering.Tests -c Debug
+
+      - name: Run rendering Differential + Corpus (against independent oracles)
+        run: |
+          mkdir -p trx
+          dotnet test Excise.Rendering.Tests --no-build -c Debug \
+            --filter "FullyQualifiedName~Differential|FullyQualifiedName~Corpus" \
+            --logger "trx;LogFileName=rendering.trx" \
+            --logger "console;verbosity=normal" \
+            --results-directory ./trx
+
+      - name: Assert the oracle tests actually executed (not silently all-skipped)
+        # Green-because-everything-skipped is indistinguishable from
+        # green-because-everything-passed to `dotnet test`. With the tools
+        # present plus the checked-in fixtures and self-generating tests, well
+        # over 100 differential/corpus tests execute locally; require a
+        # conservative floor so a future environment regression that quietly
+        # turns them all back into skips fails this job instead of passing it.
+        run: |
+          passed=$(grep -o 'outcome="Passed"' trx/rendering.trx | wc -l | tr -d ' ')
+          echo "rendering oracle tests passed: $passed"
+          if [ "$passed" -lt 60 ]; then
+            echo "::error::only $passed rendering oracle tests passed — the reference tools or fixtures likely did not resolve, so this green is a self-oracle, not real coverage"
+            exit 1
+          fi
