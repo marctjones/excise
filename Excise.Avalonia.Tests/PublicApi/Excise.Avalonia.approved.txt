@@ -63,7 +63,7 @@ namespace Excise.Avalonia.Controls
     }
     public sealed class PdfPageSlot : System.ComponentModel.INotifyPropertyChanged
     {
-        public Avalonia.Media.Imaging.WriteableBitmap? Bitmap { get; set; }
+        public Avalonia.Media.Imaging.WriteableBitmap? Bitmap { get; }
         public double DisplayHeight { get; }
         public double DisplayWidth { get; }
         public double HeightPt { get; }

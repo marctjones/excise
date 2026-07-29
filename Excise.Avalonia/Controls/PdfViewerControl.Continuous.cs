@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using global::Avalonia;
 using global::Avalonia.Controls;
 using global::Avalonia.Media.Imaging;
+using global::Avalonia.Platform;
 using global::Avalonia.Reactive;
 using global::Avalonia.Threading;
 using Excise.Rendering;
@@ -40,39 +41,35 @@ public partial class PdfViewerControl
     // (#667). Populated lazily by GetContinuousPageLinks (Interaction partial);
     // cleared alongside the tile cache on document change / RenderVersion bump.
     private readonly Dictionary<int, IReadOnlyList<Excise.Core.Document.PdfLink>> _continuousPageLinks = new();
-    private readonly Dictionary<int, CancellationTokenSource> _continuousRenderCts = new();
-    private readonly Dictionary<int, ContinuousTileKey> _continuousRenderKeys = new();
-    // #615: this used to be a flat COUNT (`ContinuousCacheCapacity = 10`), unchanged
-    // since before tile quantization (256 dip grid) + overscan (256 dip margin) were
-    // added. Those made cached tiles both bigger AND wildly variable in size — a
-    // fixed count is the wrong lever once tile bytes range 10x across ordinary
-    // scenarios, so the cache now bounds total resident BYTES instead.
+
+    // #848 grid render state. One document-wide CTS cancels every in-flight cell
+    // render on a document/cache invalidation. In-flight keys coalesce duplicate
+    // requests for the same cell; the required-key set (rebuilt each pass) lets a
+    // queued render notice it has been scrolled past and bail before rendering.
+    private CancellationTokenSource _continuousDocCts = new();
+    private readonly HashSet<ContinuousTileKey> _continuousInFlight = new();
+    private IReadOnlySet<ContinuousTileKey> _continuousRequiredKeys = new HashSet<ContinuousTileKey>();
+    // Cap concurrent cell renders: a grid multiplies the old per-page fan-out by
+    // the visible cell count, and SkiaRenderer serializes typeface acquisition
+    // process-wide (_typefaceLoadLock) — unbounded Task.Run just thrashes.
+    private readonly SemaphoreSlim _continuousRenderGate =
+        new(Math.Clamp(Environment.ProcessorCount - 1, 2, 6));
+    // #615/#848: the cache bounds total resident BYTES, not a flat entry count.
+    // Under the content-addressed grid (#848), tiles are now UNIFORM — every
+    // interior cell is a full ContinuousTileQuantumDip square, edge cells smaller
+    // — so the old 10x per-tile spread is gone. A worst-case tile is a full
+    // quantum cell rendered at the (dpr-scaled) MaxContinuousDpi cap: at
+    // ContinuousTileQuantumDip=256 that is ~1.6MB (dpr 1) up to ~6.5MB (dpr 2),
+    // Bgra8888 4 bytes/px (see SkiaInterop.ToAvaloniaBitmap). Measurement lives in
+    // Excise.Avalonia.Tests/ContinuousCacheMemoryTests.cs, which drives the real
+    // CellToRequest + EffectiveContinuousDpi + ContinuousTileByteSize code paths.
     //
-    // Measurement (reproducible via
-    // Excise.Avalonia.Tests/ContinuousCacheMemoryTests.cs, which calls the real
-    // TryCreateContinuousTileRequest + EffectiveContinuousDpi code paths rather
-    // than hand-deriving the dip -> point -> pixel algebra): for a matrix of
-    // {US Letter, a 36x48in large-format scan} x {1280x800, 1920x1080, 2560x1440
-    // dip viewports} x {1.0, 1.5, 2.0, 4.0 zoom}, per-tile bytes (Bgra8888, 4
-    // bytes/px — see SkiaInterop.ToAvaloniaBitmap) range from ~4.7MB (Letter page,
-    // small viewport, deep zoom, where the DPI cap shrinks the tile) up to
-    // ~45.7MB (the large-format page, 2560x1440 viewport, 1.5x zoom — the point
-    // where render DPI has scaled up with zoom but the tile hasn't yet shrunk
-    // from the deep-zoom 1/zoom pixel-density falloff). At the OLD flat count of
-    // 10, that worst tile alone priced the cache at 457MB, unmeasured, for a
-    // single large-format document on a large monitor -- versus ~51MB for the
-    // same count of ordinary Letter-page tiles. That 10x spread is exactly why a
-    // tile COUNT cannot be sized correctly: any fixed number is either wasteful
-    // for common documents or unbounded for uncommon ones.
-    //
-    // Budget: ~200MB peak resident bytes for this cache. That is a little over
-    // 4x the single worst measured tile (45.7MB) -- room for the current page
-    // plus a couple of scroll-buffered neighbours even in the worst-observed
-    // scenario -- while for an ordinary Letter document (5-20MB/tile) the same
-    // budget holds 10-40 tiles, comfortably more scroll buffer than the old flat
-    // cap of 10 ever gave. If tile geometry changes (quantum, overscan, or the
-    // DPI cap) re-run ContinuousCacheMemoryTests and reconsider this number --
-    // don't just restate it.
+    // Budget: ~200MB peak resident bytes. That comfortably holds many uniform
+    // tiles (dozens to ~120), i.e. the visible grid of the current page plus a
+    // generous scroll-back buffer, so scrolling away and back is a cache hit
+    // rather than a re-render — the reuse the grid was designed to make free. If
+    // tile geometry changes (quantum, overscan, or the DPI cap) re-run
+    // ContinuousCacheMemoryTests and reconsider this number -- don't just restate it.
     private const long ContinuousCacheByteBudget = 200L * 1024 * 1024;
 
     // Always keep at least this many entries, even if a single tile alone
@@ -139,6 +136,9 @@ public partial class PdfViewerControl
     private int? _pendingContinuousPage;
     private int _pendingContinuousAttempts;
     private bool _continuousRenderPassScheduled;
+    // True once the control has left the visual tree — hard-stops all continuous
+    // rendering so a closed viewer can't touch a disposed document (#848).
+    private bool _continuousDetached;
 
     // Intra-page position carried across a view-mode switch (#693): the
     // fraction of the current page sitting at the viewport top. Continuous
@@ -366,13 +366,27 @@ public partial class PdfViewerControl
         _continuousSlots = null;
     }
 
+    // Cancel every in-flight grid-cell render and start a fresh generation. Safe
+    // to call repeatedly (detach, document change, cache invalidation) — a queued
+    // render observes the cancelled token and bails.
+    private void CancelContinuousCellRenders()
+    {
+        try { _continuousDocCts.Cancel(); } catch (ObjectDisposedException) { }
+        try { _continuousDocCts.Dispose(); } catch (ObjectDisposedException) { }
+        _continuousDocCts = new CancellationTokenSource();
+        _continuousInFlight.Clear();
+        _continuousRequiredKeys = new HashSet<ContinuousTileKey>();
+    }
+
     private void InvalidateContinuousCache()
     {
-        foreach (var cts in _continuousRenderCts.Values) cts.Cancel();
-        _continuousRenderCts.Clear();
-        _continuousRenderKeys.Clear();
+        CancelContinuousCellRenders();
         _continuousRenderPassScheduled = false;
         _pendingContinuousPage = null;
+        // Drop each slot's live tile references so their bitmaps aren't retained
+        // past the cache. The slots themselves are rebuilt by RebuildContinuous.
+        if (_continuousSlots != null)
+            foreach (var slot in _continuousSlots) slot.ClearComposite();
         foreach (var entry in _continuousCache) entry.Bitmap.Dispose();
         _continuousCache.Clear();
         _continuousPageLinks.Clear();
@@ -691,28 +705,23 @@ public partial class PdfViewerControl
 
     private void OnContinuousContainerPrepared(object? sender, ContainerPreparedEventArgs e)
     {
-        if (e.Container.DataContext is PdfPageSlot slot)
-            _ = RenderContinuousTileAsync(slot);
+        if (e.Container.DataContext is PdfPageSlot)
+            RenderVisibleContinuousTiles();
     }
 
     private void OnContinuousContainerClearing(object? sender, ContainerClearingEventArgs e)
     {
+        // A page scrolled out of the realized window: release its live tile
+        // references so their bitmaps aren't retained beyond the LRU cache. The
+        // bitmaps stay in the byte-budgeted cache for a quick, re-render-free
+        // return when the page scrolls back (#848 makes that a cache hit).
         if (e.Container.DataContext is PdfPageSlot slot)
-        {
-            // Cancel an in-flight render for a page scrolled away before it
-            // finished; keep the bitmap in the LRU cache for a quick return.
-            if (_continuousRenderCts.TryGetValue(slot.PageNumber, out var cts))
-            {
-                cts.Cancel();
-                _continuousRenderCts.Remove(slot.PageNumber);
-                _continuousRenderKeys.Remove(slot.PageNumber);
-            }
-        }
+            slot.ClearComposite();
     }
 
     private void RenderVisibleContinuousTiles()
     {
-        if (_continuousItems == null || _continuousRenderPassScheduled)
+        if (_continuousDetached || _continuousItems == null || _continuousRenderPassScheduled)
             return;
 
         _continuousRenderPassScheduled = true;
@@ -725,130 +734,172 @@ public partial class PdfViewerControl
 
     private void RenderVisibleContinuousTilesNow()
     {
-        if (_continuousItems == null) return;
+        // Runs from a Dispatcher.Post callback — an exception here (e.g. the
+        // document being torn down mid-pass) is unhandled and destabilises the
+        // dispatcher, so the whole pass is guarded.
+        try { RenderVisibleContinuousTilesNowCore(); } catch { }
+    }
+
+    private void RenderVisibleContinuousTilesNowCore()
+    {
+        if (_continuousDetached || _continuousItems == null || _continuousScrollViewer == null) return;
+
+        var viewport = _continuousScrollViewer.Viewport;
+        var offset = _continuousScrollViewer.Offset;
+        if (viewport.Width <= 0 || viewport.Height <= 0 || ZoomLevel <= 0) return;
+        var doc = Document;
+        if (doc == null) return;
+        int dpi = ContinuousRenderDpi;
+
+        // Pass 1: compute the required grid cells for every realized page and the
+        // union of their keys, so a queued cell render can tell whether it is
+        // still needed after it clears the concurrency gate.
+        var perSlot = new List<(PdfPageSlot Slot, List<(GridCell Cell, ContinuousTileKey Key)> Cells)>();
+        var required = new HashSet<ContinuousTileKey>();
 
         foreach (var container in _continuousItems.GetRealizedContainers())
         {
-            if (container.DataContext is PdfPageSlot slot)
-                _ = RenderContinuousTileAsync(slot);
+            if (container.DataContext is not PdfPageSlot slot) continue;
+            if (slot.PageNumber < 1 || slot.PageNumber > doc.PageCount) continue;
+
+            var cells = RequiredTileCells(
+                slot.DisplayWidth, slot.DisplayHeight, slot.TopDip,
+                offset, viewport, ContinuousTileQuantumDip, ContinuousTileOverscanDip);
+
+            var keyed = new List<(GridCell, ContinuousTileKey)>(cells.Count);
+            foreach (var cell in cells)
+            {
+                var key = CellKey(slot.PageNumber, dpi, slot.DisplayWidth, slot.DisplayHeight, cell);
+                keyed.Add((cell, key));
+                required.Add(key);
+            }
+            perSlot.Add((slot, keyed));
+        }
+
+        _continuousRequiredKeys = required;
+
+        // Pass 2: schedule renders for cells not yet cached, then (re)composite the
+        // page from its cached cells. RecomposeSlot only swaps in a new band bitmap
+        // once every covering cell is available, so the previous composite (which
+        // covers the old band + overscan) stays on screen during a scroll until the
+        // new one is ready — no blank strip (#848), and one bitmap means no seams.
+        foreach (var (slot, cells) in perSlot)
+        {
+            foreach (var (cell, key) in cells)
+            {
+                if (TryGetContinuousCached(key, out var c) && c != null) continue;
+                _ = RenderContinuousCellAsync(slot, cell, key);
+            }
+            RecomposeSlot(slot);
         }
     }
 
-    private async Task RenderContinuousTileAsync(PdfPageSlot slot)
+    private async Task RenderContinuousCellAsync(PdfPageSlot slot, GridCell cell, ContinuousTileKey key)
     {
+        if (_continuousDetached) return;
+        // This is fire-and-forget (`_ = RenderContinuousCellAsync(...)`). An
+        // unobserved exception here — e.g. the document being disposed mid-render
+        // during teardown — must never surface: it would destabilise the whole
+        // dispatcher (observed as cross-test dispatcher-pump timeouts / null
+        // ItemsSource). Everything below the in-flight bookkeeping is guarded.
         var doc = Document;
         if (doc == null || slot.PageNumber < 1 || slot.PageNumber > doc.PageCount) return;
 
-        if (!TryCreateVisibleTileRequest(slot, out var request))
-            return;
-
-        int dpi = ContinuousRenderDpi;
-        var key = new ContinuousTileKey(slot.PageNumber, dpi, request.XDip, request.YDip, request.WidthDip, request.HeightDip);
-        if (slot.CurrentTileKey.Equals(key) && slot.Bitmap != null)
-            return;
-
-        if (TryGetContinuousCached(key, out var cached))
+        ContinuousTileRequest request;
+        int pageNumber = slot.PageNumber;
+        int dpi = key.Dpi;
+        Excise.Core.Document.PdfPage page;
+        try
         {
-            ContinuousRenderCacheHitCount++;
-            slot.ApplyTile(request, key);
-            slot.Bitmap = cached;
+            // Cache hit — nothing to render; a recompose will pick it up.
+            if (TryGetContinuousCached(key, out var cached) && cached != null)
+            {
+                ContinuousRenderCacheHitCount++;
+                RecomposeSlot(slot);
+                return;
+            }
+
+            // Coalesce duplicate requests for the same cell.
+            if (!_continuousInFlight.Add(key))
+            {
+                ContinuousRenderCoalescedRequestCount++;
+                return;
+            }
+
+            page = doc.GetPage(pageNumber);
+            int rotation = page.Rotation;
+            var contentBox = SkiaRenderer.ResolveEffectiveRenderBox(page).Normalize();
+            request = CellToRequest(cell, ZoomLevel, rotation, contentBox);
+        }
+        catch
+        {
+            _continuousInFlight.Remove(key);
             return;
         }
 
-        if (_continuousRenderKeys.TryGetValue(slot.PageNumber, out var inFlightKey) && inFlightKey.Equals(key))
-        {
-            ContinuousRenderCoalescedRequestCount++;
-            return;
-        }
-
-        // Cancel any prior in-flight render for this same page.
-        if (_continuousRenderCts.TryGetValue(slot.PageNumber, out var prior))
-        {
-            prior.Cancel();
-            ContinuousRenderCancellationCount++;
-        }
-        var cts = new CancellationTokenSource();
-        _continuousRenderCts[slot.PageNumber] = cts;
-        _continuousRenderKeys[slot.PageNumber] = key;
-        var token = cts.Token;
-        var pageNumber = slot.PageNumber;
+        var token = _continuousDocCts.Token;
 
         try
         {
-            ContinuousRenderStartCount++;
-            var skBitmap = await Task.Run(() =>
-            {
-                token.ThrowIfCancellationRequested();
-                var page = doc.GetPage(pageNumber);
-                // A fresh renderer per page: SkiaRenderer carries per-render
-                // instance state and is not reentrant, and continuous mode may
-                // render several pages around the viewport concurrently.
-                var renderer = new SkiaRenderer();
-                return renderer.RenderPage(page, new RenderOptions
-                {
-                    Dpi = dpi,
-                    ClipRect = request.ClipRect
-                });
-            }, token);
-
+            await _continuousRenderGate.WaitAsync(token);
             try
             {
-                if (token.IsCancellationRequested) return;
-                var bitmap = Imaging.SkiaInterop.ToAvaloniaBitmap(skBitmap);
-                if (bitmap != null)
+                // Scrolled past this cell while it waited for the gate — drop it.
+                if (token.IsCancellationRequested || !_continuousRequiredKeys.Contains(key))
                 {
-                    AddToContinuousCache(key, bitmap);
-                    slot.ApplyTile(request, key);
-                    Trace($"TileSet page={pageNumber} slotW={slot.DisplayWidth:F0} bmpDip={bitmap.Size.Width:F0} bmpPx={bitmap.PixelSize.Width} dpi={dpi} zoom={ZoomLevel:F3} contVis={_continuousScrollViewer?.IsVisible}");
-                    slot.Bitmap = bitmap;
+                    ContinuousRenderCancellationCount++;
+                    return;
+                }
+
+                ContinuousRenderStartCount++;
+                var skBitmap = await Task.Run(() =>
+                {
+                    token.ThrowIfCancellationRequested();
+                    // A fresh renderer per cell: SkiaRenderer carries per-render
+                    // instance state and is not reentrant, and the grid renders
+                    // several cells around the viewport concurrently.
+                    var renderer = new SkiaRenderer();
+                    return renderer.RenderPage(page, new RenderOptions
+                    {
+                        Dpi = dpi,
+                        ClipRect = request.ClipRect
+                    });
+                }, token);
+
+                try
+                {
+                    if (token.IsCancellationRequested || !_continuousRequiredKeys.Contains(key))
+                        return;
+                    var bitmap = Imaging.SkiaInterop.ToAvaloniaBitmap(skBitmap);
+                    if (bitmap != null)
+                    {
+                        AddToContinuousCache(key, bitmap);
+                        Trace($"CellRendered page={pageNumber} col={cell.Col} row={cell.Row} tileDip={cell.WidthDip:F0}x{cell.HeightDip:F0} bmpPx={bitmap.PixelSize.Width}x{bitmap.PixelSize.Height} dpi={dpi} zoom={ZoomLevel:F3}");
+                        RecomposeSlot(slot);
+                    }
+                }
+                finally
+                {
+                    skBitmap?.Dispose();
                 }
             }
             finally
             {
-                skBitmap?.Dispose();
+                _continuousRenderGate.Release();
             }
         }
         catch (OperationCanceledException)
         {
-            // Scrolled away before the render finished — drop it silently.
+            // Scrolled away / document changed before the render finished.
         }
         catch
         {
-            // A single bad page must not break the reading scroll.
+            // A single bad cell must not break the reading scroll.
         }
         finally
         {
-            if (_continuousRenderCts.TryGetValue(pageNumber, out var mine) && mine == cts)
-                _continuousRenderCts.Remove(pageNumber);
-            if (_continuousRenderKeys.TryGetValue(pageNumber, out var mineKey) && mineKey.Equals(key))
-                _continuousRenderKeys.Remove(pageNumber);
+            _continuousInFlight.Remove(key);
         }
-    }
-
-    private bool TryCreateVisibleTileRequest(PdfPageSlot slot, out ContinuousTileRequest request)
-    {
-        request = default;
-        if (_continuousScrollViewer == null || _continuousSlots == null)
-            return false;
-
-        var viewport = _continuousScrollViewer.Viewport;
-        if (viewport.Width <= 0 || viewport.Height <= 0 || ZoomLevel <= 0)
-            return false;
-
-        var doc = Document;
-        if (doc == null || slot.PageNumber < 1 || slot.PageNumber > doc.PageCount)
-            return false;
-        var page = doc.GetPage(slot.PageNumber);
-
-        return TryCreateContinuousTileRequest(
-            slot,
-            _continuousScrollViewer.Offset,
-            viewport,
-            slot.TopDip,
-            ZoomLevel,
-            page.Rotation,
-            Excise.Rendering.SkiaRenderer.ResolveEffectiveRenderBox(page).Normalize(),
-            out request);
     }
 
     internal static int FindTopVisibleContinuousPage(IReadOnlyList<PdfPageSlot> slots, double offsetY)
@@ -915,58 +966,160 @@ public partial class PdfViewerControl
         return true;
     }
 
-    internal static bool TryCreateContinuousTileRequest(
-        PdfPageSlot slot,
-        Vector viewportOffset,
-        Size viewport,
-        double pageTop,
-        double zoom,
-        int rotation,
-        Excise.Core.Document.PdfRectangle contentBox,
-        out ContinuousTileRequest request)
+    /// <summary>
+    /// Rebuild a page's single displayed bitmap by compositing its cached grid
+    /// cells into one buffer (#848). The band is the required cells' bounding box.
+    /// If any covering cell is not cached yet, the current composite is kept (it
+    /// still covers the previous band + overscan) so nothing blanks; the pending
+    /// renders trigger another recompose when they land. Emitting ONE bitmap is
+    /// what eliminates the inter-tile seams that many separate tile Images had —
+    /// the cells are blitted edge-to-edge at integer pixel offsets into one buffer
+    /// that is then displayed (and downscaled) as a single Image.
+    /// </summary>
+    private void RecomposeSlot(PdfPageSlot slot)
     {
-        request = default;
-        if (viewport.Width <= 0 || viewport.Height <= 0 || zoom <= 0)
-            return false;
-
-        double visibleLeft = Math.Clamp(viewportOffset.X, 0, slot.DisplayWidth);
-        double visibleTop = Math.Clamp(viewportOffset.Y - pageTop, 0, slot.DisplayHeight);
-        double visibleRight = Math.Clamp(viewportOffset.X + viewport.Width, 0, slot.DisplayWidth);
-        double visibleBottom = Math.Clamp(viewportOffset.Y + viewport.Height - pageTop, 0, slot.DisplayHeight);
-
-        if (visibleRight <= visibleLeft || visibleBottom <= visibleTop)
-            return false;
-
-        visibleLeft = AlignTileDown(Math.Max(0, visibleLeft - ContinuousTileOverscanDip));
-        visibleTop = AlignTileDown(Math.Max(0, visibleTop - ContinuousTileOverscanDip));
-        visibleRight = Math.Min(slot.DisplayWidth, AlignTileUp(visibleRight + ContinuousTileOverscanDip));
-        visibleBottom = Math.Min(slot.DisplayHeight, AlignTileUp(visibleBottom + ContinuousTileOverscanDip));
-
-        // The visible band above is in VISUAL (as-displayed, post-rotation) space.
-        // The renderer clips in CONTENT (unrotated) space — for 90°/270° the axes
-        // swap — so map the band through the page rotation (#846 tile-clip).
-        double dipPerPoint = PointsToDip * zoom;
-        var clip = Excise.Rendering.ContinuousTileClip.VisualBandToContentClip(
-            rotation, contentBox,
-            visibleLeft / dipPerPoint,
-            visibleTop / dipPerPoint,
-            (visibleRight - visibleLeft) / dipPerPoint,
-            (visibleBottom - visibleTop) / dipPerPoint);
-
-        request = new ContinuousTileRequest(
-            clip,
-            (int)Math.Floor(visibleLeft),
-            (int)Math.Floor(visibleTop),
-            Math.Max(1, (int)Math.Ceiling(visibleRight - visibleLeft)),
-            Math.Max(1, (int)Math.Ceiling(visibleBottom - visibleTop)));
-        return true;
+        // Called from fire-and-forget cell renders too; must never throw (a
+        // disposed document during teardown would otherwise surface unobserved).
+        try { RecomposeSlotCore(slot); } catch { }
     }
 
-    private static double AlignTileDown(double value) =>
-        Math.Floor(value / ContinuousTileQuantumDip) * ContinuousTileQuantumDip;
+    private void RecomposeSlotCore(PdfPageSlot slot)
+    {
+        if (_continuousDetached || _continuousScrollViewer == null || _continuousDocCts.IsCancellationRequested) return;
+        var doc = Document;
+        if (doc == null || slot.PageNumber < 1 || slot.PageNumber > doc.PageCount) return;
+        var viewport = _continuousScrollViewer.Viewport;
+        var offset = _continuousScrollViewer.Offset;
+        if (viewport.Width <= 0 || viewport.Height <= 0 || ZoomLevel <= 0) return;
+        int dpi = ContinuousRenderDpi;
 
-    private static double AlignTileUp(double value) =>
-        Math.Ceiling(value / ContinuousTileQuantumDip) * ContinuousTileQuantumDip;
+        var cells = RequiredTileCells(slot.DisplayWidth, slot.DisplayHeight, slot.TopDip,
+            offset, viewport, ContinuousTileQuantumDip, ContinuousTileOverscanDip);
+        if (cells.Count == 0) return; // page not visible — keep the last composite
+
+        // Gather cached bitmaps for every required cell; bail (keep current
+        // composite) if any is missing. Each cell is laid out and blitted by its
+        // CONTENT pixel size (floored), NOT its bitmap's ceil'd size: a cell's
+        // bitmap is ceil(content) px, so its last row/column is the empty
+        // sub-pixel ceil overhang — tiling by the ceil'd size would leave those
+        // empty edges between cells as seams. Flooring to content makes cells abut
+        // at true content boundaries (a <1px content shift per cell, invisible in
+        // one downscaled bitmap).
+        double pxPerDip = dpi / (96.0 * ZoomLevel);
+        var parts = new (GridCell Cell, WriteableBitmap Bmp, int PxW, int PxH)[cells.Count];
+        int minCol = int.MaxValue, minRow = int.MaxValue;
+        double bandX = double.MaxValue, bandY = double.MaxValue, bandRight = 0, bandBottom = 0;
+        for (int i = 0; i < cells.Count; i++)
+        {
+            var cell = cells[i];
+            var key = CellKey(slot.PageNumber, dpi, slot.DisplayWidth, slot.DisplayHeight, cell);
+            var bmp = PeekContinuousCached(key);
+            if (bmp == null) return; // incomplete — leave the previous composite up
+            int pxW = Math.Min(bmp.PixelSize.Width, Math.Max(1, (int)Math.Floor(cell.WidthDip * pxPerDip)));
+            int pxH = Math.Min(bmp.PixelSize.Height, Math.Max(1, (int)Math.Floor(cell.HeightDip * pxPerDip)));
+            parts[i] = (cell, bmp, pxW, pxH);
+            minCol = Math.Min(minCol, cell.Col);
+            minRow = Math.Min(minRow, cell.Row);
+            bandX = Math.Min(bandX, cell.XDip);
+            bandY = Math.Min(bandY, cell.YDip);
+            bandRight = Math.Max(bandRight, cell.XDip + cell.WidthDip);
+            bandBottom = Math.Max(bandBottom, cell.YDip + cell.HeightDip);
+        }
+        double bandW = bandRight - bandX, bandH = bandBottom - bandY;
+
+        // Skip if this exact band (origin + extent + zoom/dpi) is already composited.
+        var compositeKey = new ContinuousTileKey(slot.PageNumber, dpi,
+            (int)Math.Round(slot.DisplayWidth), (int)Math.Round(slot.DisplayHeight), minCol, minRow);
+        if (slot.Bitmap != null && slot.CompositeKey.Equals(compositeKey)
+            && Math.Abs(slot.TileDisplayWidth - bandW) < 0.5
+            && Math.Abs(slot.TileDisplayHeight - bandH) < 0.5)
+            return;
+
+        var (totalW, totalH, offsets) = ComputeMosaic(
+            System.Linq.Enumerable.Select(parts, p => (p.Cell.Col, p.Cell.Row, p.PxW, p.PxH)));
+        if (totalW <= 0 || totalH <= 0) return;
+
+        var composite = new WriteableBitmap(new PixelSize(totalW, totalH),
+            new Vector(96, 96), PixelFormat.Bgra8888, AlphaFormat.Premul);
+        using (var dst = composite.Lock())
+        {
+            foreach (var (cell, bmp, pxW, pxH) in parts)
+            {
+                var (x, y) = offsets[(cell.Col, cell.Row)];
+                BlitCell(dst, bmp, x, y, pxW, pxH);
+            }
+        }
+
+        slot.SetComposite(composite, compositeKey, bandX, bandY, bandW, bandH);
+        Trace($"Composite page={slot.PageNumber} band={bandX:F0},{bandY:F0} {bandW:F0}x{bandH:F0} px={totalW}x{totalH} cells={parts.Length} dpi={dpi} zoom={ZoomLevel:F3}");
+    }
+
+    /// <summary>
+    /// Lay out a set of grid cells (given each cell's pixel size) into one mosaic:
+    /// columns are placed left-to-right by ascending Col, rows top-to-bottom by
+    /// ascending Row, each at the cumulative sum of prior column widths / row
+    /// heights. Pure — no rendering — so the "cells tile with no gap and no
+    /// overlap" invariant is unit-tested (ContinuousTileGridTests). All cells in a
+    /// column share a width and in a row share a height (same cell dip size at the
+    /// same dpi), so the result is a clean rectangular tiling.
+    /// </summary>
+    internal static (int TotalW, int TotalH, Dictionary<(int Col, int Row), (int X, int Y)> Offsets)
+        ComputeMosaic(IEnumerable<(int Col, int Row, int PxW, int PxH)> cells)
+    {
+        var colW = new SortedDictionary<int, int>();
+        var rowH = new SortedDictionary<int, int>();
+        var list = new List<(int Col, int Row)>();
+        foreach (var c in cells)
+        {
+            colW[c.Col] = c.PxW;
+            rowH[c.Row] = c.PxH;
+            list.Add((c.Col, c.Row));
+        }
+
+        var xOff = new Dictionary<int, int>();
+        int ax = 0;
+        foreach (var kv in colW) { xOff[kv.Key] = ax; ax += kv.Value; }
+        var yOff = new Dictionary<int, int>();
+        int ay = 0;
+        foreach (var kv in rowH) { yOff[kv.Key] = ay; ay += kv.Value; }
+
+        var offsets = new Dictionary<(int, int), (int, int)>();
+        foreach (var (col, row) in list) offsets[(col, row)] = (xOff[col], yOff[row]);
+        return (ax, ay, offsets);
+    }
+
+    private WriteableBitmap? PeekContinuousCached(ContinuousTileKey key)
+    {
+        for (var node = _continuousCache.First; node != null; node = node.Next)
+            if (node.Value.Key.Equals(key)) return node.Value.Bitmap;
+        return null;
+    }
+
+    // Copy the top-left copyW x copyH pixels of one cell into the composite buffer
+    // at an integer pixel offset (copyW/copyH = the cell's CONTENT size, dropping
+    // the empty ceil-overhang edge). Bgra8888, 4 bytes/px, row by row.
+    // Bounds-clamped defensively though the mosaic offsets are exact by construction.
+    private static unsafe void BlitCell(global::Avalonia.Platform.ILockedFramebuffer dst,
+        WriteableBitmap src, int xPx, int yPx, int copyW, int copyH)
+    {
+        using var s = src.Lock();
+        const int bpp = 4;
+        int dstW = dst.Size.Width, dstH = dst.Size.Height;
+        copyW = Math.Min(copyW, Math.Min(src.PixelSize.Width, Math.Max(0, dstW - xPx)));
+        copyH = Math.Min(copyH, src.PixelSize.Height);
+        int copyBytes = copyW * bpp;
+        if (copyBytes <= 0) return;
+        byte* dstBase = (byte*)dst.Address;
+        byte* srcBase = (byte*)s.Address;
+        for (int row = 0; row < copyH; row++)
+        {
+            int dy = yPx + row;
+            if (dy < 0 || dy >= dstH) continue;
+            byte* d = dstBase + (long)dy * dst.RowBytes + (long)xPx * bpp;
+            byte* sp = srcBase + (long)row * s.RowBytes;
+            System.Buffer.MemoryCopy(sp, d, copyBytes, copyBytes);
+        }
+    }
 
     private bool TryGetContinuousCached(ContinuousTileKey key, out WriteableBitmap? bmp)
     {
@@ -1018,7 +1171,11 @@ public partial class PdfViewerControl
     internal static long ContinuousTileByteSize(int pixelWidth, int pixelHeight) =>
         (long)pixelWidth * pixelHeight * 4;
 
-    internal readonly record struct ContinuousTileKey(int Page, int Dpi, int XDip, int YDip, int WidthDip, int HeightDip);
+    // Stable, content-addressed grid-cell key (#848). Two cells collide iff they
+    // show the same content at the same pixel density: same page, same render DPI,
+    // same page DIP dimensions (which encode zoom — see CellKey), same grid cell.
+    internal readonly record struct ContinuousTileKey(
+        int Page, int Dpi, int PageWidthDip, int PageHeightDip, int Col, int Row);
 
     internal readonly record struct ContinuousTileRequest(
         SKRect ClipRect,
@@ -1029,8 +1186,19 @@ public partial class PdfViewerControl
 }
 
 /// <summary>
+/// One rendered grid cell of a continuous-view page (#848), in page-local DIPs
+/// (the Border's own coordinate space). Immutable: a tile is created only once
+/// its bitmap is ready, and its grid position never changes — the whole point of
+/// the content-addressed grid is that a cell painted at its position is always
+/// correct for that position. Bound one-per-Image by the DataTemplate.
+/// </summary>
+/// <summary>
 /// One page in the continuous (reading) view. Observable so the data-template's
-/// Border size and Image source update as zoom changes and the page renders.
+/// Border size and single displayed <see cref="Bitmap"/> update as zoom changes
+/// and the page renders. The grid of tiles is rendered and cached per cell
+/// (bounded memory, never-stale coverage — #848), but they are COMPOSITED into
+/// this one bitmap for display, so there is exactly one Image per page and hence
+/// no inter-tile seams.
 /// </summary>
 public sealed class PdfPageSlot : INotifyPropertyChanged
 {
@@ -1066,12 +1234,20 @@ public sealed class PdfPageSlot : INotifyPropertyChanged
     internal double TopDip { get => _topDip; private set => Set(ref _topDip, value); }
     public double DisplayWidth { get => _displayWidth; private set => Set(ref _displayWidth, value); }
     public double DisplayHeight { get => _displayHeight; private set => Set(ref _displayHeight, value); }
+
+    /// <summary>The composited band bitmap and where it sits in page-local DIPs.</summary>
+    public WriteableBitmap? Bitmap { get => _bitmap; private set => Set(ref _bitmap, value); }
     public double TileDisplayX { get => _tileDisplayX; private set => Set(ref _tileDisplayX, value); }
     public double TileDisplayY { get => _tileDisplayY; private set => Set(ref _tileDisplayY, value); }
     public double TileDisplayWidth { get => _tileDisplayWidth; private set => Set(ref _tileDisplayWidth, value); }
     public double TileDisplayHeight { get => _tileDisplayHeight; private set => Set(ref _tileDisplayHeight, value); }
-    public WriteableBitmap? Bitmap { get => _bitmap; set => Set(ref _bitmap, value); }
-    internal PdfViewerControl.ContinuousTileKey CurrentTileKey { get; private set; }
+
+    /// <summary>
+    /// Full tile key of the band the current <see cref="Bitmap"/> was composited
+    /// for (the top-left cell's key stands in for the band + zoom). Lets the
+    /// recompose skip rebuilding an identical band.
+    /// </summary>
+    internal PdfViewerControl.ContinuousTileKey CompositeKey { get; private set; }
 
     internal void ApplyZoom(double zoom)
     {
@@ -1085,13 +1261,22 @@ public sealed class PdfPageSlot : INotifyPropertyChanged
         ApplyZoom(zoom);
     }
 
-    internal void ApplyTile(PdfViewerControl.ContinuousTileRequest request, PdfViewerControl.ContinuousTileKey key)
+    /// <summary>Publish a freshly composited band bitmap and its page-local DIP placement.</summary>
+    internal void SetComposite(WriteableBitmap bitmap, PdfViewerControl.ContinuousTileKey compositeKey,
+        double xDip, double yDip, double widthDip, double heightDip)
     {
-        TileDisplayX = request.XDip;
-        TileDisplayY = request.YDip;
-        TileDisplayWidth = request.WidthDip;
-        TileDisplayHeight = request.HeightDip;
-        CurrentTileKey = key;
+        CompositeKey = compositeKey;
+        TileDisplayX = xDip;
+        TileDisplayY = yDip;
+        TileDisplayWidth = widthDip;
+        TileDisplayHeight = heightDip;
+        Bitmap = bitmap;
+    }
+
+    internal void ClearComposite()
+    {
+        Bitmap = null;
+        CompositeKey = default;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
