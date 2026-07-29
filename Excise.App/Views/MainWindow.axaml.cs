@@ -134,6 +134,12 @@ public partial class MainWindow : Window
             viewModel.RedactionWorkflow.AppliedRedactions.CollectionChanged += OnRedactionsChanged;
             viewModel.AnnotationsChanged += OnAnnotationsChanged;
 
+            // #846: before a structural mutation reloads the document, let the
+            // continuous view snapshot the reader's position so the rebuild
+            // restores it instead of jumping to the top of the page.
+            viewModel.PreserveReadingPositionRequested += (_, _) =>
+                _pdfViewerControl?.PreserveContinuousReadingPositionOnNextRebuild();
+
             // Subscribe to page changes to update redaction overlays
             viewModel.PropertyChanged += (s, args) =>
             {
