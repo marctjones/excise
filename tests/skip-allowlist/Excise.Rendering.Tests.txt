@@ -247,3 +247,11 @@ Excise.Rendering.Tests.Differential.RemainingAnnotationSubtypesDifferentialTests
 Excise.Rendering.Tests.Differential.RemainingAnnotationSubtypesDifferentialTests.ExciseAndReferenceRenderer_AgreeOnAuthoredStampInk
 Excise.Rendering.Tests.Differential.RemainingAnnotationSubtypesDifferentialTests.ExciseAndReferenceRenderer_AgreeOnAuthoredTextMarkupInk
 Excise.Rendering.Tests.Differential.RtlType0RedactionDifferentialTests.Type0Rtl_Redaction_LeavesNoTextForAnIndependentExtractor
+# Degenerate-width area redaction + glyph-width accuracy differentials — verify
+# excise output against an independent extractor / oracle (mutool). Run + pass
+# locally where the tools are installed; SkipUnless-gated so they skip on the
+# tool-less CI runner. Added to the budget (they were skipping un-allow-listed,
+# failing the Linux gate).
+Excise.Rendering.Tests.Differential.AreaRedactionDegenerateWidthTests.TopHalfArea_OverUnitTfGlyphs_RemovesTheInk_NotJustCoversIt
+Excise.Rendering.Tests.Differential.AreaRedactionDegenerateWidthTests.TopHalfArea_OverUnitTfGlyphs_RemovesThemForAnIndependentExtractor
+Excise.Rendering.Tests.Differential.GlyphWidthAccuracyTests.ExciseGlyphWidths_MatchAnIndependentOracle_InMedianAndSpread
