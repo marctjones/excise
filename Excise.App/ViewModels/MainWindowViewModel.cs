@@ -1971,7 +1971,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _logger.LogInformation("Setting zoom to fit width");
         if (latch) _zoomFitMode = ZoomFitMode.FitWidth;
-        if (TryGetPageDimensionsInViewerDips(out var pageW, out _) &&
+        if (TryGetMaxPageDimensionsInViewerDips(out var pageW, out _) &&
             ViewportWidth > 0)
         {
             // Tiny gutter so the page edge doesn't kiss the scrollbar /
@@ -1995,7 +1995,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _logger.LogInformation("Setting zoom to fit page");
         if (latch) _zoomFitMode = ZoomFitMode.FitPage;
-        if (TryGetPageDimensionsInViewerDips(out var pageW, out var pageH) &&
+        if (TryGetMaxPageDimensionsInViewerDips(out var pageW, out var pageH) &&
             ViewportWidth > 0 && ViewportHeight > 0)
         {
             const double marginH = 8;
@@ -2026,20 +2026,28 @@ public partial class MainWindowViewModel : ViewModelBase
     /// parsed PdfCoreDocument so we don't depend on the legacy
     /// <c>_currentPageImage</c> being populated.
     /// </summary>
-    private bool TryGetPageDimensionsInViewerDips(out double widthDip, out double heightDip)
+    private bool TryGetMaxPageDimensionsInViewerDips(out double widthDip, out double heightDip)
     {
+        // Largest page width/height across the WHOLE document (rotation-aware via
+        // VisualWidth/VisualHeight). Fit-Width / Fit-Page use the MAX, not the
+        // current page: the continuous view shares one zoom across all pages and
+        // centres each page horizontally, so fitting only the current page left
+        // any wider page (e.g. a landscape/rotated page in an otherwise portrait
+        // document) overflowing the viewport and shifted off-centre. Fitting the
+        // widest page makes every page fit and centre consistently (#847).
         widthDip = 0; heightDip = 0;
         var doc = PdfCoreDocument;
-        if (doc == null) return false;
-        var pageNumber = CurrentPageIndex + 1;
-        if (pageNumber < 1 || pageNumber > doc.PageCount) return false;
-        var page = doc.GetPage(pageNumber);
-        var viewerRect = PdfCoordinateMapper.ToViewerDips(
-            page,
-            PdfPageRect.VisualPoints(pageNumber, 0, 0, page.VisualWidth, page.VisualHeight),
-            96);
-        widthDip = viewerRect.Width;
-        heightDip = viewerRect.Height;
+        if (doc == null || doc.PageCount < 1) return false;
+        for (int pageNumber = 1; pageNumber <= doc.PageCount; pageNumber++)
+        {
+            var page = doc.GetPage(pageNumber);
+            var viewerRect = PdfCoordinateMapper.ToViewerDips(
+                page,
+                PdfPageRect.VisualPoints(pageNumber, 0, 0, page.VisualWidth, page.VisualHeight),
+                96);
+            if (viewerRect.Width > widthDip) widthDip = viewerRect.Width;
+            if (viewerRect.Height > heightDip) heightDip = viewerRect.Height;
+        }
         return widthDip > 0 && heightDip > 0;
     }
 
