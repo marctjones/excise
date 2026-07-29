@@ -52,11 +52,12 @@ jobs:
         run: |
           sudo apt-get update
           # mupdf-tools → mutool, ghostscript → gs, poppler-utils →
-          # pdftocairo/pdftotext, tesseract-ocr → tesseract. These are exactly
+          # pdftocairo/pdftotext, tesseract-ocr → tesseract, qpdf → qpdf (the
+          # EncryptionInteropGate independent-tool checks). These are exactly
           # the binaries the *ReferenceRenderer.IsAvailable checks resolve on
           # PATH via ProcessStartInfo.
           sudo apt-get install -y --no-install-recommends \
-            mupdf-tools ghostscript poppler-utils tesseract-ocr
+            mupdf-tools ghostscript poppler-utils tesseract-ocr qpdf
 
       - name: Assert tools are on PATH (no silent self-oracle)
         # If apt silently failed to provide a tool, every differential test
@@ -65,7 +66,7 @@ jobs:
         # oracle" trap this whole job exists to avoid. Fail loudly instead.
         run: |
           missing=0
-          for t in mutool gs pdftocairo pdftotext tesseract; do
+          for t in mutool gs pdftocairo pdftotext tesseract qpdf; do
             if command -v "$t" >/dev/null; then
               echo "  ✓ $t → $(command -v "$t")"
             else

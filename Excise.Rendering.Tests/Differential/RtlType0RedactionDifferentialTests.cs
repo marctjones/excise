@@ -62,9 +62,12 @@ public class RtlType0RedactionDifferentialTests : IDisposable
         // fixture BEFORE we redact — so its absence afterwards means something.
         var before = MutoolTextExtractor.ExtractPage(beforePath, 1);
         before.Should().NotBeNull("mutool must read the fixture");
-        before!.Should().Contain(word,
-            "anti-vacuity: an independent extractor recovers the word from the unredacted CID fixture");
-        before.Should().Contain(Keep, "the keep word is present too");
+        // Order-independent: mupdf reads RTL in logical order on macOS and visual
+        // (reversed) order on Linux — both recover the word. See RtlOracleText.
+        RtlOracleText.Recovered(before, word).Should().BeTrue(
+            "anti-vacuity: an independent extractor recovers the word from the unredacted CID " +
+            "fixture (in logical or visual order — mupdf's RTL bidi direction is build-dependent)");
+        before!.Should().Contain(Keep, "the keep word is present too");
 
         using var doc = PdfDocument.Open(Type0RtlFixture.VisualOrderWithKeep(scalars));
         var removed = doc.RedactText(word, drawBlackRect: false);
