@@ -656,3 +656,12 @@ jobs:
           name: aot-evidence
           path: logs/aot-ci/
           retention-days: 7
+
+  # ── Rendering vs independent oracles (mutool/gs/pdftocairo). The fast Linux
+  #    gate above runs rendering "deterministic only" and SKIPS Differential/
+  #    Corpus; this job installs the tools and actually runs them, so develop
+  #    stays continuously green on real oracle coverage — the state a release
+  #    is cut from. Same reusable job release.yml gates `publish` on. ────────
+  rendering-linux:
+    name: Rendering (Linux, with tools)
+    uses: ./.github/workflows/rendering-linux.yml
