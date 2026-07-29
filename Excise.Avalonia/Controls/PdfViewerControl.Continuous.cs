@@ -389,19 +389,10 @@ public partial class PdfViewerControl
         double anchorFraction = 0;
         if (_continuousScrollViewer != null && _pendingContinuousPage == null)
         {
-            var y = _continuousScrollViewer.Offset.Y;
-            for (int i = 0; i < _continuousSlots.Count; i++)
-            {
-                var s = _continuousSlots[i];
-                if (y < s.TopDip + s.DisplayHeight + PageGapDip || i == _continuousSlots.Count - 1)
-                {
-                    anchorPage = i + 1;
-                    anchorFraction = s.DisplayHeight > 0
-                        ? Math.Clamp((y - s.TopDip) / s.DisplayHeight, 0, 1)
-                        : 0;
-                    break;
-                }
-            }
+            var anchor = ContinuousReadingAnchor.Capture(
+                SlotBoxes(_continuousSlots), _continuousScrollViewer.Offset.Y, PageGapDip);
+            anchorPage = anchor.Page;
+            anchorFraction = anchor.Fraction;
         }
 
         ApplyContinuousSlotLayout(_continuousSlots);
@@ -424,6 +415,15 @@ public partial class PdfViewerControl
     private int _pendingZoomAnchorPage;
     private double _pendingZoomAnchorFraction;
 
+    /// <summary>Project the live slots onto the pure vertical geometry the reading-anchor math uses.</summary>
+    private static IReadOnlyList<SlotBox> SlotBoxes(IReadOnlyList<PdfPageSlot> slots)
+    {
+        var boxes = new SlotBox[slots.Count];
+        for (int i = 0; i < slots.Count; i++)
+            boxes[i] = new SlotBox(slots[i].TopDip, slots[i].DisplayHeight);
+        return boxes;
+    }
+
 
     private void ApplyPendingZoomAnchor()
     {
@@ -433,13 +433,14 @@ public partial class PdfViewerControl
             return;
         }
 
-        var slot = _continuousSlots[_pendingZoomAnchorPage - 1];
-        var target = slot.TopDip + _pendingZoomAnchorFraction * slot.DisplayHeight;
-        // The reachable maximum. If the target lies beyond it (deep zoom-out
-        // near the end of the document), pinning to the max IS the anchor —
-        // the viewport now covers proportionally more document.
-        var max = Math.Max(0, _continuousScrollViewer.Extent.Height - _continuousScrollViewer.Viewport.Height);
-        var reachable = Math.Min(target, max);
+        var boxes = SlotBoxes(_continuousSlots);
+        var anchor = new ReadingAnchor(_pendingZoomAnchorPage, _pendingZoomAnchorFraction);
+        var target = ContinuousReadingAnchor.ResolveTarget(boxes, anchor);
+        // Clamp to the reachable maximum. If the target lies beyond it (deep
+        // zoom-out near the end of the document), pinning to the max IS the anchor
+        // — the viewport now covers proportionally more document.
+        var reachable = ContinuousReadingAnchor.ClampToExtent(
+            target, _continuousScrollViewer.Extent.Height, _continuousScrollViewer.Viewport.Height);
         _continuousScrollViewer.Offset = new Vector(_continuousScrollViewer.Offset.X, reachable);
 
         if (Math.Abs(_continuousScrollViewer.Offset.Y - target) <= 1.0 ||
