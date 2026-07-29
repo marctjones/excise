@@ -31,6 +31,16 @@ semantic versioning.
   cdc 73.9%→**94.4%**; clean prose unchanged.
 
 ### Added
+- **Universal GUI click-safety sweep** (#695 Phase 1) — a headless test enumerates
+  every command-backed leaf Button/MenuItem in a real MainWindow with a document
+  loaded and *invokes* each one (40 commands today), asserting none throws and the
+  app still renders a document afterward. Catches the whole class of "a menu item's
+  handler explodes on click" / "a command wedges rendering" regressions that the
+  binding-only sweep (`CommandBindingSweepTests`, CanExecute only) cannot. Dialog /
+  file-picker / OS-shell / lifecycle commands (24) are skipped by name and the skip
+  list is logged every run so removed coverage is never silent. Per-command
+  expected-effect verification and multi-step workflow drivers remain (#695 Phases
+  2–3). Set `EXCISE_DUMP_CLICK_CAPTURES=dir` to archive an after-click PNG per command.
 - **Text selection spans pages in the continuous reading view** (#832) — a drag
   that starts on one page and ends on another now selects across the boundary
   instead of being clamped to the anchor page. The span is decomposed per page
