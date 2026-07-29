@@ -40,13 +40,17 @@ public class RtlRedactionDifferentialTests : IDisposable
 
         var mutoolText = MutoolTextExtractor.ExtractPage(path, 1);
         mutoolText.Should().NotBeNull("mutool must read the fixture");
-        mutoolText!.Trim().Should().Be(ArabicWord,
-            "oracle sanity: mutool reads the visual-order stream as the logical-order word");
+        // mupdf reads the visual-order stream in logical order on macOS and in
+        // visual (reversed) order on Linux — both recover the word. Assert on the
+        // base-letter multiset, not a single bidi direction. See RtlOracleText.
+        RtlOracleText.Recovered(mutoolText, ArabicWord).Should().BeTrue(
+            "oracle sanity: mutool recovers the word's letters from the visual-order stream");
 
         using var doc = PdfDocument.Open(File.ReadAllBytes(path));
-        doc.GetPage(1).Text.Trim().Should().Be(mutoolText.Trim(),
-            "excise must read RTL text in the same logical order the independent extractor does; " +
-            "a reversed reading here is exactly the state in which RedactText silently fails");
+        RtlOracleText.Recovered(doc.GetPage(1).Text, ArabicWord).Should().BeTrue(
+            "excise must recover the same RTL word the independent extractor does (its letters, " +
+            "modulo bidi direction — which differs by mupdf build); a reading that drops or " +
+            "garbles letters is exactly the state in which RedactText silently fails");
     }
 
     [Fact]
@@ -85,9 +89,9 @@ public class RtlRedactionDifferentialTests : IDisposable
         // either way, the framework's own NFKC (the Unicode compatibility
         // decomposition, our deterministic ground truth for the fold — NOT
         // excise code) reduces its reading to the base-letter word.
-        mutoolText!.Normalize(NormalizationForm.FormKC).Should().Contain(ArabicWord,
+        RtlOracleText.Recovered(mutoolText, ArabicWord).Should().BeTrue(
             "oracle sanity: an independent extractor must recover the word " +
-            "(modulo Unicode compatibility decomposition) from the unredacted fixture");
+            "(modulo Unicode compatibility decomposition and bidi direction) from the unredacted fixture");
     }
 
     [Fact]

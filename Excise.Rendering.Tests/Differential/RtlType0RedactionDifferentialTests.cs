@@ -62,9 +62,13 @@ public class RtlType0RedactionDifferentialTests : IDisposable
         // fixture BEFORE we redact — so its absence afterwards means something.
         var before = MutoolTextExtractor.ExtractPage(beforePath, 1);
         before.Should().NotBeNull("mutool must read the fixture");
-        before!.Should().Contain(word,
-            "anti-vacuity: an independent extractor recovers the word from the unredacted CID fixture");
-        before.Should().Contain(Keep, "the keep word is present too");
+        // Order-independent: mupdf reads RTL in logical order on macOS and visual
+        // (reversed) order on Linux — both recover the word. See RtlOracleText.
+        RtlOracleText.Recovered(before, word).Should().BeTrue(
+            "anti-vacuity: an independent extractor recovers the word from the unredacted CID " +
+            "fixture (in logical or visual order — mupdf's RTL bidi direction is build-dependent)");
+        // Linux mupdf spaces out CID glyphs ("K E E P"); match on letters, not the raw run.
+        RtlOracleText.Recovered(before, Keep).Should().BeTrue("the keep word is present too");
 
         using var doc = PdfDocument.Open(Type0RtlFixture.VisualOrderWithKeep(scalars));
         var removed = doc.RedactText(word, drawBlackRect: false);
@@ -74,9 +78,14 @@ public class RtlType0RedactionDifferentialTests : IDisposable
         var afterPath = SaveTemp(doc.SaveToBytes());
         var after = MutoolTextExtractor.ExtractPage(afterPath, 1);
         after.Should().NotBeNull("mutool must still read the redacted file");
-        after!.Should().NotContain(word, "the word must be gone from every text carrier mutool reads");
-        after.Should().NotContain(Reverse(word), "nor in visual (reversed) order");
-        after.Should().Contain(Keep, "only the targeted word may be removed, not the whole page");
+        // Space-immune leak scan: strip the glyph-spacing mupdf injects so a
+        // surviving "س ل ا م" cannot slip past NotContain — this is stricter than
+        // scanning the raw run, and still distinguishes logical from visual order.
+        var afterScan = RtlOracleText.StripSpacing(after);
+        afterScan.Should().NotContain(word, "the word must be gone from every text carrier mutool reads");
+        afterScan.Should().NotContain(Reverse(word), "nor in visual (reversed) order");
+        RtlOracleText.Recovered(after, Keep).Should().BeTrue(
+            "only the targeted word may be removed, not the whole page");
     }
 
     [Theory]

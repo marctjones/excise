@@ -30,6 +30,15 @@ permissions:
   contents: write
 
 jobs:
+  # ── 0. Release gate: run the rendering Differential + Corpus tests against
+  #       independent oracles (mutool/gs/pdftocairo) on Linux. `publish`
+  #       depends on this, so a tag cannot ship installers if excise's
+  #       renderer/extractor has regressed against a non-excise reference.
+  #       Same reusable job ci.yml runs on every push. ─────────────────────
+  rendering-gate:
+    name: Rendering gate (Linux, with tools)
+    uses: ./.github/workflows/rendering-linux.yml
+
   # ── 1. Build the Ubuntu .deb installer ───────────────────────────────
   linux-deb:
     name: Linux .deb (x64)
@@ -241,7 +250,7 @@ jobs:
   # ── 4. Attach installers to the GitHub release ──────────────────────
   publish:
     name: Attach to GitHub release
-    needs: [linux-deb, windows-exe, macos-app]
+    needs: [rendering-gate, linux-deb, windows-exe, macos-app]
     runs-on: ubuntu-latest
     # Only auto-create a release when the trigger was a tag push or a
     # release event. workflow_dispatch reruns just produce artifacts you
