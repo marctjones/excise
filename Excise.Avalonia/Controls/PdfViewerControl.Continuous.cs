@@ -835,12 +835,19 @@ public partial class PdfViewerControl
         if (viewport.Width <= 0 || viewport.Height <= 0 || ZoomLevel <= 0)
             return false;
 
+        var doc = Document;
+        if (doc == null || slot.PageNumber < 1 || slot.PageNumber > doc.PageCount)
+            return false;
+        var page = doc.GetPage(slot.PageNumber);
+
         return TryCreateContinuousTileRequest(
             slot,
             _continuousScrollViewer.Offset,
             viewport,
             slot.TopDip,
             ZoomLevel,
+            page.Rotation,
+            Excise.Rendering.SkiaRenderer.ResolveEffectiveRenderBox(page).Normalize(),
             out request);
     }
 
@@ -914,6 +921,8 @@ public partial class PdfViewerControl
         Size viewport,
         double pageTop,
         double zoom,
+        int rotation,
+        Excise.Core.Document.PdfRectangle contentBox,
         out ContinuousTileRequest request)
     {
         request = default;
@@ -933,17 +942,16 @@ public partial class PdfViewerControl
         visibleRight = Math.Min(slot.DisplayWidth, AlignTileUp(visibleRight + ContinuousTileOverscanDip));
         visibleBottom = Math.Min(slot.DisplayHeight, AlignTileUp(visibleBottom + ContinuousTileOverscanDip));
 
+        // The visible band above is in VISUAL (as-displayed, post-rotation) space.
+        // The renderer clips in CONTENT (unrotated) space — for 90°/270° the axes
+        // swap — so map the band through the page rotation (#846 tile-clip).
         double dipPerPoint = PointsToDip * zoom;
-        double leftPt = visibleLeft / dipPerPoint;
-        double rightPt = visibleRight / dipPerPoint;
-        double contentTopPt = slot.HeightPt - (visibleTop / dipPerPoint);
-        double contentBottomPt = slot.HeightPt - (visibleBottom / dipPerPoint);
-
-        var clip = new SKRect(
-            (float)leftPt,
-            (float)Math.Max(0, contentBottomPt),
-            (float)Math.Min(slot.WidthPt, rightPt),
-            (float)Math.Min(slot.HeightPt, contentTopPt));
+        var clip = Excise.Rendering.ContinuousTileClip.VisualBandToContentClip(
+            rotation, contentBox,
+            visibleLeft / dipPerPoint,
+            visibleTop / dipPerPoint,
+            (visibleRight - visibleLeft) / dipPerPoint,
+            (visibleBottom - visibleTop) / dipPerPoint);
 
         request = new ContinuousTileRequest(
             clip,
