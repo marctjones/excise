@@ -1735,6 +1735,13 @@ public partial class MainWindowViewModel : ViewModelBase
     private async Task RefreshAfterDocumentMutationAsync()
     {
         await ReloadPdfCoreDocumentFromCurrentDocumentAsync();
+        // #846: a rotate can change which page is WIDEST (portrait->landscape),
+        // so a latched fit is now stale — the rotated page overflows the viewport,
+        // a horizontal scrollbar appears, and mixed-width pages (each centered
+        // within the now-wider stack) shift horizontally as the reader scrolls
+        // past them ("the center of the content shifts on the visible page").
+        // Re-fit against the new widest page (#847) so every page fits and centres.
+        ReapplyFitModeIfNeeded();
         await LoadPageThumbnailsAsync();
         this.RaisePropertyChanged(nameof(TotalPages));
         this.RaisePropertyChanged(nameof(StatusText));
