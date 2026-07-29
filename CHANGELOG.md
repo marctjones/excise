@@ -7,6 +7,14 @@ semantic versioning.
 ## [Unreleased]
 
 ### Fixed
+- **Fit-Width / Fit-Page now handle mixed portrait+landscape documents** (#847) —
+  the "Fit" toolbar button fitted only the *current* page's width, so in a
+  document mixing portrait and rotated/landscape pages (which share one zoom in
+  the continuous view) a wider page overflowed the viewport and pages shifted
+  off-center. Fit now targets the **widest/tallest page across the document**
+  (`TryGetMaxPageDimensionsInViewerDips`), so every page fits and centers
+  consistently. Uniform documents are unaffected. The fit math was already
+  rotation-aware (`VisualWidth`/`VisualHeight`); this fixes the mixed-width target.
 - **Glyph rectangles: correct width/height (matrix scale) and resolved `/Widths`**
   (#833, #843) — two independent extraction-geometry bugs that gave wrong glyph
   bounding boxes (feeding copy spacing, selection highlights, and redaction
