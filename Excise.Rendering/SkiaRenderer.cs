@@ -166,7 +166,7 @@ public class SkiaRenderer
         }
     }
 
-    internal static PdfRectangle ResolveEffectiveRenderBox(PdfPage page)
+    public static PdfRectangle ResolveEffectiveRenderBox(PdfPage page)
     {
         var mediaBox = page.MediaBox.Normalize();
         var cropBox = page.CropBox.Normalize();
