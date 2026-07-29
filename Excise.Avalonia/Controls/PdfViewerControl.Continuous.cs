@@ -731,6 +731,14 @@ public partial class PdfViewerControl
 
     private void RenderVisibleContinuousTilesNow()
     {
+        // Runs from a Dispatcher.Post callback — an exception here (e.g. the
+        // document being torn down mid-pass) is unhandled and destabilises the
+        // dispatcher, so the whole pass is guarded.
+        try { RenderVisibleContinuousTilesNowCore(); } catch { }
+    }
+
+    private void RenderVisibleContinuousTilesNowCore()
+    {
         if (_continuousItems == null || _continuousScrollViewer == null) return;
 
         var viewport = _continuousScrollViewer.Viewport;
@@ -785,31 +793,47 @@ public partial class PdfViewerControl
 
     private async Task RenderContinuousCellAsync(PdfPageSlot slot, GridCell cell, ContinuousTileKey key)
     {
+        // This is fire-and-forget (`_ = RenderContinuousCellAsync(...)`). An
+        // unobserved exception here — e.g. the document being disposed mid-render
+        // during teardown — must never surface: it would destabilise the whole
+        // dispatcher (observed as cross-test dispatcher-pump timeouts / null
+        // ItemsSource). Everything below the in-flight bookkeeping is guarded.
         var doc = Document;
         if (doc == null || slot.PageNumber < 1 || slot.PageNumber > doc.PageCount) return;
 
-        // Cache hit — nothing to render; a recompose will pick it up.
-        if (TryGetContinuousCached(key, out var cached) && cached != null)
+        ContinuousTileRequest request;
+        int pageNumber = slot.PageNumber;
+        int dpi = key.Dpi;
+        Excise.Core.Document.PdfPage page;
+        try
         {
-            ContinuousRenderCacheHitCount++;
-            RecomposeSlot(slot);
-            return;
-        }
+            // Cache hit — nothing to render; a recompose will pick it up.
+            if (TryGetContinuousCached(key, out var cached) && cached != null)
+            {
+                ContinuousRenderCacheHitCount++;
+                RecomposeSlot(slot);
+                return;
+            }
 
-        // Coalesce duplicate requests for the same cell.
-        if (!_continuousInFlight.Add(key))
+            // Coalesce duplicate requests for the same cell.
+            if (!_continuousInFlight.Add(key))
+            {
+                ContinuousRenderCoalescedRequestCount++;
+                return;
+            }
+
+            page = doc.GetPage(pageNumber);
+            int rotation = page.Rotation;
+            var contentBox = SkiaRenderer.ResolveEffectiveRenderBox(page).Normalize();
+            request = CellToRequest(cell, ZoomLevel, rotation, contentBox);
+        }
+        catch
         {
-            ContinuousRenderCoalescedRequestCount++;
+            _continuousInFlight.Remove(key);
             return;
         }
 
         var token = _continuousDocCts.Token;
-        int pageNumber = slot.PageNumber;
-        int dpi = key.Dpi;
-        var page = doc.GetPage(pageNumber);
-        int rotation = page.Rotation;
-        var contentBox = SkiaRenderer.ResolveEffectiveRenderBox(page).Normalize();
-        var request = CellToRequest(cell, ZoomLevel, rotation, contentBox);
 
         try
         {
@@ -950,7 +974,14 @@ public partial class PdfViewerControl
     /// </summary>
     private void RecomposeSlot(PdfPageSlot slot)
     {
-        if (_continuousScrollViewer == null) return;
+        // Called from fire-and-forget cell renders too; must never throw (a
+        // disposed document during teardown would otherwise surface unobserved).
+        try { RecomposeSlotCore(slot); } catch { }
+    }
+
+    private void RecomposeSlotCore(PdfPageSlot slot)
+    {
+        if (_continuousScrollViewer == null || _continuousDocCts.IsCancellationRequested) return;
         var doc = Document;
         if (doc == null || slot.PageNumber < 1 || slot.PageNumber > doc.PageCount) return;
         var viewport = _continuousScrollViewer.Viewport;
