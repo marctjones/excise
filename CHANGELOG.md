@@ -39,6 +39,15 @@ semantic versioning.
   cdc 73.9%→**94.4%**; clean prose unchanged.
 
 ### Added
+- **Live visual-mutation trace harness** (#695 Phase 3 / #846) — `scripts/run-visual-mutation-trace.sh`
+  drives a page mutation (rotate/remove/move/zoom) then a scroll sweep, zoom, and
+  save in the **real running app** (where the compositor re-renders the continuous
+  view, unlike the headless host), capturing a PNG per frame plus an ink-centroid
+  trajectory and a per-phase stability summary. Gated behind `EXCISE_VISUAL_TRACE_OUT`
+  (`Excise.App/Automation/VisualTraceRunner.cs`) — a no-op in normal use. Reliably
+  verifies save round-trip and zoom/settle stability; the scroll-bounce (#846) is
+  a human-inspection artifact (the ink centroid legitimately moves when a page
+  rotates to landscape, so an automatic bounce verdict is not asserted).
 - **GUI expected-effect registry** (#695 Phase 2) — builds on the Phase 1 sweep
   with a per-command contract: for 16 view/zoom/navigation/mode/panel-toggle
   commands, clicking must keep the page surface inked, flip exactly its declared
