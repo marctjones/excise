@@ -121,6 +121,91 @@ public class ContinuousRotateReadingAnchorTests
         TestPdfGenerator.CleanupTestFile(path);
     }
 
+    [FixedAvaloniaFact]
+    public async Task MovingAnEarlierPage_KeepsReaderOnTheirContentAndFraction()
+    {
+        // #846 identity case: the reader is mid page 5; an EARLIER page is moved to
+        // after them, so their content shifts to page 4. Anchoring to CurrentPage
+        // (which the VM remaps to the reader's content) must keep them on that
+        // content at the same fraction — not stranded on a stale page number.
+        var path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"excise-movanchor-{Guid.NewGuid():N}.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 8);
+
+        Excise.App.ViewModels.MainWindowViewModel vm = null!;
+        Excise.App.Views.MainWindow window = null!;
+        PdfViewerControl viewer = null!;
+        ScrollViewer sv = null!;
+        ItemsControl items = null!;
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            vm = new Excise.App.ViewModels.MainWindowViewModel { ThumbnailPrewarmEnabled = false };
+            window = new Excise.App.Views.MainWindow { DataContext = vm, Width = 1100, Height = 900 };
+            window.Show();
+        });
+        await Dispatcher.UIThread.InvokeAsync(async () => await vm.LoadDocumentAsync(path));
+
+        var deadline = DateTime.UtcNow.AddSeconds(20);
+        while (DateTime.UtcNow < deadline)
+        {
+            bool ready = false;
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                window.UpdateLayout();
+                viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
+                items = viewer?.FindControl<ItemsControl>("ContinuousItems")!;
+                sv = viewer?.FindControl<ScrollViewer>("ContinuousScrollViewer")!;
+                ready = sv != null && items?.ItemsSource != null
+                        && items.ItemsSource.Cast<PdfPageSlot>().Count() == 8
+                        && sv.Extent.Height > sv.Viewport.Height * 1.5;
+            });
+            if (ready) break;
+            await Task.Delay(100);
+        }
+
+        (int Page, double Frac) TopAnchor()
+        {
+            var slots = items.ItemsSource!.Cast<PdfPageSlot>().OrderBy(s => s.PageNumber).ToList();
+            double y = sv.Offset.Y;
+            foreach (var s in slots)
+                if (y >= s.TopDip && y <= s.TopDip + s.DisplayHeight)
+                    return (s.PageNumber, s.DisplayHeight > 0 ? (y - s.TopDip) / s.DisplayHeight : 0);
+            return (slots[0].PageNumber, 0);
+        }
+        string PageText(int p) => new Excise.Core.Text.TextExtractor(vm.PdfCoreDocument!.GetPage(p)).ExtractText();
+
+        // Sit mid page 5.
+        double frac = 0;
+        await Dispatcher.UIThread.InvokeAsync(() => vm.CurrentPageIndex = 4);
+        await Pump(window, 10);
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            var p5 = items.ItemsSource!.Cast<PdfPageSlot>().Single(s => s.PageNumber == 5);
+            sv.Offset = new Vector(0, p5.TopDip + 0.4 * p5.DisplayHeight);
+        });
+        await Pump(window, 4);
+        int page = 0;
+        await Dispatcher.UIThread.InvokeAsync(() => (page, frac) = TopAnchor());
+        page.Should().Be(5);
+        frac.Should().BeApproximately(0.4, 0.06);
+        PageText(5).Should().Contain("Page 5", "fixture: the reader's content is page 5");
+
+        // Move page 2 (index 1) to after page 6 (index 6) — an earlier page relocates.
+        await Dispatcher.UIThread.InvokeAsync(async () => await vm.MovePageAsync(1, 6));
+        await Pump(window, 30);
+
+        int pageAfter = 0; double fracAfter = 0;
+        await Dispatcher.UIThread.InvokeAsync(() => (pageAfter, fracAfter) = TopAnchor());
+
+        PageText(pageAfter).Should().Contain("Page 5",
+            "the reader must stay on their CONTENT (old page 5, now shifted to a new page number) after an earlier page moves");
+        fracAfter.Should().BeApproximately(frac, 0.06,
+            "and at the same intra-page fraction, not reset to the top");
+
+        await Dispatcher.UIThread.InvokeAsync(() => { window.Close(); vm.PdfCoreDocument?.Dispose(); });
+        TestPdfGenerator.CleanupTestFile(path);
+    }
+
     private static async Task Pump(Window window, int cycles)
     {
         for (int i = 0; i < cycles; i++)
