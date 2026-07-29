@@ -31,6 +31,16 @@ semantic versioning.
   cdc 73.9%→**94.4%**; clean prose unchanged.
 
 ### Added
+- **GUI expected-effect registry** (#695 Phase 2) — builds on the Phase 1 sweep
+  with a per-command contract: for 16 view/zoom/navigation/mode/panel-toggle
+  commands, clicking must keep the page surface inked, flip exactly its declared
+  panel (Outline / Thumbnails / Clipboard / Search), and leave every OTHER panel's
+  visibility unchanged — the "a click changed the wrong region" guard Phase 1 is
+  blind to. Verified structurally (page-surface ink + panel effective-visibility,
+  at dpr 1 and 2), not with brittle pixel goldens. Building it surfaced #846
+  (continuous view may not repaint after a Document-swapping mutation like rotate
+  in the headless harness); those page-mutation commands are excluded from the
+  page-ink contract pending live-GUI confirmation and remain covered by Phase 1.
 - **Universal GUI click-safety sweep** (#695 Phase 1) — a headless test enumerates
   every command-backed leaf Button/MenuItem in a real MainWindow with a document
   loaded and *invokes* each one (40 commands today), asserting none throws and the
