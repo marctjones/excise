@@ -746,6 +746,8 @@ public class PdfViewerControlTests
             viewport: new Size(900, 500),
             pageTop: 0,
             zoom: 2.0,
+            rotation: 0,
+            contentBox: new Excise.Core.Document.PdfRectangle(0, 0, slot.WidthPt, slot.HeightPt),
             out var request);
 
         created.Should().BeTrue();
