@@ -383,11 +383,27 @@ run_one() {
 
     # A test step that matched NOTHING exits 0. Checkpointing that is exactly
     # the failure mode this repo is built to prevent: a green that proves
-    # nothing, then permanently skipped on every resume. Treat "no test
-    # matches" as a hard failure of the step, not a pass.
+    # nothing, then permanently skipped on every resume.
+    #
+    # The signal is ZERO EXECUTED TESTS, *not* the presence of "No test matches
+    # the given testcase filter". A solution-wide filter (the redaction gate
+    # runs against excise.sln) legitimately prints that line for every assembly
+    # holding none of the targeted tests, while the others run thousands. The
+    # first version of this guard grepped for the string and so reported the
+    # redaction gate as FAIL on a run where it had actually passed 393 tests
+    # across 5 assemblies — with only Excise.Avalonia.Tests, which contains no
+    # Redaction tests, producing the line. Fail-safe direction, but it cried
+    # wolf on the one gate that must never be ignored.
     if [ "$kind" = "test" ] && [ "$rc" = "0" ]; then
-        if grep -q "No test matches the given testcase filter" "$log" 2>/dev/null; then
-            say "  ${R}FAIL${N} (${dur}s) — matched ZERO tests; refusing to checkpoint a vacuous pass"
+        local executed
+        executed="$(grep -oE 'Total: *[0-9]+' "$log" 2>/dev/null | grep -oE '[0-9]+' \
+                    | awk '{s+=$1} END {print s+0}')"
+        if [ "${executed:-0}" = "0" ]; then
+            executed="$(grep -oE 'Total tests: *[0-9]+' "$log" 2>/dev/null | grep -oE '[0-9]+' \
+                        | awk '{s+=$1} END {print s+0}')"
+        fi
+        if [ "${executed:-0}" = "0" ]; then
+            say "  ${R}FAIL${N} (${dur}s) — ZERO tests executed; refusing to checkpoint a vacuous pass"
             say "       filter: $filter"
             RESULTS+=("$name|FAIL|zero-tests-matched")
             OVERALL=1
