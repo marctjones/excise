@@ -13,9 +13,10 @@
 #      after each such event means it never finishes.
 #   2. Aggregate memory load, not any single test process, is what killed the
 #      box: five Claude sessions plus concurrent `dotnet test` runs on a 24GB
-#      machine with a 91%-full disk (macOS grows swap there). A single testhost
-#      peaks at only ~450MB (Core) to ~700MB (a Rendering chunk) — MEASURED,
-#      see below.
+#      machine with a 91%-full disk (macOS grows swap there). Footprint varies
+#      hugely by project: Excise.Core.Tests stays under 450MB, but
+#      Excise.App.Tests peaks at ~8.5GB in one process (#861) — measured by the
+#      per-step instrumentation below.
 #
 # So: every unit of work is checkpointed to disk the moment it passes, the big
 # suites are split into chunks so a crash costs one chunk instead of 17
@@ -25,8 +26,8 @@
 #
 # NOTE: GC-flag tuning was tried and MEASURED NOT TO HELP (it made peak RSS
 # ~24% worse). See runner_export_lean_env in scripts/lib-runner.sh for the
-# numbers. Peak RSS is ~450MB-700MB per testhost; the aggregate load of many
-# concurrent processes is what hurts, not any single test run.
+# numbers. Peak RSS ranges from <450MB (Core) to ~8.5GB (App.Tests, #861), so
+# both a single heavy test run AND aggregate concurrent load can hurt.
 #
 # HOW TO RUN IT (in your own terminal, not through an agent — CLAUDE.md)
 #
