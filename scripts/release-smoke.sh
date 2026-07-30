@@ -23,6 +23,13 @@ RUN_AOT_GUI_SMOKE=0
 NO_BUILD=0
 VERSION=""
 ONLY=""
+# Opt-in crash-resumable mode (#853 follow-up). Default 0 keeps this script's
+# behaviour byte-identical to before, so nothing that already invokes it
+# changes; --resume is only for a human re-running a ~30-minute gate set after
+# an interruption.
+RESUME=0
+
+source "$SCRIPT_DIR/lib-runner.sh"
 
 usage() {
     cat <<'EOF'
@@ -51,6 +58,8 @@ Options:
   --packaged-gui-focus-input
                       Also run focus-taking native key/mouse smoke.
   --no-build          Skip the initial build gate.
+  --resume            Skip gates that already passed for this commit (crash-resumable).
+                      Redaction gates always re-run; see scripts/lib-runner.sh.
   --only=a,b          Run only named gates: docs,build,redaction,signature,ui,accessibility,automation,ux,benchmark,perf-budget,aot,pdf20,corpus-resilience,adversarial-extraction,copy-parity,tests,visual,package,packaged-gui,diffcheck.
   -h, --help          Show this help.
 EOF
@@ -94,6 +103,7 @@ while [ "$#" -gt 0 ]; do
             shift
             ;;
         --no-build) NO_BUILD=1; shift ;;
+        --resume) RESUME=1; shift ;;
         --only=*) ONLY="${1#*=}"; shift ;;
         --only)
             ONLY="${2:-}"
@@ -124,6 +134,15 @@ else
 fi
 
 say() { echo -e "$1"; }
+
+if [ "$RESUME" = "1" ]; then
+    runner_state_init "release-smoke" "$CONFIG"
+    # Deliberately NOT calling runner_export_lean_env here: this script runs the
+    # benchmark and perf-budget gates, whose budgets are allocation-anchored on
+    # a known machine class. Changing the GC mode under them would move those
+    # numbers and manufacture regressions. Memory tuning lives in
+    # run-full-suite.sh, which runs no benchmark gate.
+fi
 
 should_run() {
     local name="$1"
@@ -165,6 +184,17 @@ run_gate() {
         return
     fi
 
+    # --resume: skip gates with a valid checkpoint for this exact commit. The
+    # redaction gates are excluded from checkpointing in lib-runner.sh, so they
+    # re-run here even on a resume — CLAUDE.md allows no flag that skips them.
+    if [ "$RESUME" = "1" ] && ! runner_step_should_run "$name"; then
+        say "${B}[$name]${N} SKIP - already passed for $(git rev-parse --short HEAD)"
+        RESULTS+=("$name|SKIP|checkpointed")
+        say ""
+        return
+    fi
+    [ "$RESUME" = "1" ] && runner_mem_guard "$name"
+
     say "${B}[$name]${N} $*"
     local start
     start="$(date +%s)"
@@ -173,6 +203,7 @@ run_gate() {
     local dur=$(( $(date +%s) - start ))
 
     if [ "$rc" = "0" ]; then
+        [ "$RESUME" = "1" ] && runner_step_mark "$name" "$rc" "$dur"
         say "  ${G}PASS${N} (${dur}s) -> $log"
         RESULTS+=("$name|PASS|${dur}s")
     else

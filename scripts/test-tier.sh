@@ -42,10 +42,16 @@ fi
 
 say() { echo -e "$1"; }
 
+source "$ROOT/scripts/lib-runner.sh"
+
 TIER="${1:-}"
 INSTALL_HOOK=0
+# Opt-in crash-resumable mode. Default 0 keeps this script's behaviour
+# unchanged for the pre-push hook and CI, which should never skip anything.
+RESUME=0
 for arg in "$@"; do
     [ "$arg" = "--install-hook" ] && INSTALL_HOOK=1
+    [ "$arg" = "--resume" ] && RESUME=1
 done
 
 usage() {
@@ -64,6 +70,11 @@ Usage: scripts/test-tier.sh {t0|t1|t2|t3} [--install-hook]
              it cannot itself execute another platform's job).
 
   --install-hook   install t0 as .git/hooks/pre-push and exit.
+  --resume         skip steps that already passed for this exact commit, so an
+                   interrupted long run (crash, Ctrl-C, panic) picks up where it
+                   stopped instead of restarting. Redaction steps always re-run.
+                   For the whole suite chunked and memory-bounded, prefer
+                   scripts/run-full-suite.sh.
 EOF
 }
 
@@ -91,10 +102,26 @@ mkdir -p "$LOG_DIR"
 OVERALL=0
 RESULTS=()
 
+if [ "$RESUME" = "1" ]; then
+    runner_state_init "test-tier-$TIER" "Debug"
+    runner_export_lean_env
+fi
+
 run_step() {
     local name="$1"
     shift
     local log="$LOG_DIR/$name.log"
+
+    # --resume: skip steps that already passed for this exact commit. The
+    # redaction steps are never checkpointed (lib-runner.sh), so they re-run
+    # even on a resume — t1 accepts no flag that skips them.
+    if [ "$RESUME" = "1" ] && ! runner_step_should_run "$name"; then
+        say "${B}[$name]${N} ${G}SKIP${N} - already passed for $(git rev-parse --short HEAD)"
+        RESULTS+=("$name|SKIP|checkpointed")
+        say ""
+        return
+    fi
+    [ "$RESUME" = "1" ] && runner_mem_guard "$name"
 
     say "${B}[$name]${N} $*"
     local start
@@ -104,6 +131,7 @@ run_step() {
     local dur=$(( $(date +%s) - start ))
 
     if [ "$rc" = "0" ]; then
+        [ "$RESUME" = "1" ] && runner_step_mark "$name" "$rc" "$dur"
         say "  ${G}PASS${N} (${dur}s) -> $log"
         RESULTS+=("$name|PASS|${dur}s")
     else
@@ -186,12 +214,24 @@ case "$TIER" in
         run_t1
         ;;
     t2)
+        # Branch explicitly rather than expanding a possibly-empty array: under
+        # bash 3.2 (macOS /bin/bash) "${arr[@]:-}" on an empty array yields one
+        # empty-string argument, which release-smoke.sh rejects as unknown.
         say "${B}[t2]${N} delegating to scripts/release-smoke.sh --release-tests"
-        exec scripts/release-smoke.sh --release-tests
+        if [ "$RESUME" = "1" ]; then
+            exec scripts/release-smoke.sh --release-tests --resume
+        else
+            exec scripts/release-smoke.sh --release-tests
+        fi
         ;;
     t3)
         say "${B}[t3]${N} running t2 locally (this machine's platform only)"
-        if ! scripts/release-smoke.sh --release-tests; then
+        if [ "$RESUME" = "1" ]; then
+            RS_OK=0; scripts/release-smoke.sh --release-tests --resume || RS_OK=1
+        else
+            RS_OK=0; scripts/release-smoke.sh --release-tests || RS_OK=1
+        fi
+        if [ "$RS_OK" != "0" ]; then
             OVERALL=1
         fi
         say ""
