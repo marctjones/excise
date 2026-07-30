@@ -23,10 +23,28 @@
 # skipping must be removed from here — that is coverage coming BACK, and the
 # allowlist should not quietly hide it.
 #
+# Entries may declare what they depend on, so the same allowlist is correct both
+# on a corpus-less CI runner and on a corpus-equipped dev machine (#854):
+#
+#   Some.Test.Name   # needs the poppler corpus [requires: corpus:poppler]
+#
+#   tool:NAME    NAME on PATH        corpus:NAME  test-pdfs/NAME non-empty
+#   env:NAME     $NAME set non-empty
+#
+# All listed specs must be present. Present => the test is expected to RUN here,
+# so the reverse check stays silent for it. Absent, or no marker at all, => the
+# original behaviour. The FORWARD check is never relaxed.
+#
 # Usage:
 #   scripts/check-skip-budget.sh <project.csproj> [--update]
 #
 #   --update   rewrite the allowlist from the current run (review the diff!)
+#              Keeps conditioned entries whose prerequisites are satisfied, so
+#              running it on a dev machine cannot strip the entries CI needs.
+#
+# Environment:
+#   SKIP_BUDGET_FORCE_ABSENT=spec[,spec]   force specs to resolve absent
+#                                          (used by test-check-skip-budget.sh)
 set -euo pipefail
 
 PROJECT="${1:?usage: check-skip-budget.sh <project.csproj> [--update] [--trx <file>]}"
@@ -86,7 +104,83 @@ grep -vE '^\s*(#|$)' "$ALLOWLIST" \
 # as both added AND removed. Force C collation on both sides.
 LC_ALL=C sort -u "$TMP/actual.txt" -o "$TMP/actual.txt"
 
+# ---------------------------------------------------------------------------
+# Per-entry prerequisite conditioning (#854)
+# ---------------------------------------------------------------------------
+# Most entries here are gated on something the CI runner does not have: a
+# gitignored corpus, or an optional external tool. Those tests skip on CI and
+# RUN on a corpus-equipped dev machine. With an unconditional allowlist that
+# made this gate un-greenable outside CI — it failed the reverse check on every
+# local run, on all three projects, in both directions. A gate that always fails
+# is a gate people stop reading, which is exactly how six un-allow-listed skips
+# reddened test-linux for 8+ consecutive runs.
+#
+# So an entry may declare what it needs, INSIDE its justification:
+#
+#   Some.Test.Name   # needs the poppler corpus [requires: corpus:poppler]
+#
+# The marker lives inside the reason deliberately: name extraction and
+# --update's reason preservation are untouched, and the marker travels with the
+# reason for free (#663/#665/#668 keep passing unmodified).
+#
+# Specs:  tool:NAME    -> NAME is on PATH
+#         corpus:NAME  -> test-pdfs/NAME exists and is non-empty
+#         env:NAME     -> environment variable NAME is set and non-empty
+# Multiple specs are space-separated and ALL must be present.
+#
+# Semantics — the FORWARD check is untouched. A skip that is not allow-listed
+# still fails, always. Only the REVERSE check ("allow-listed but no longer
+# skipping") is conditioned: if an entry declares prerequisites and they are
+# all present, the test is EXPECTED to run here, so its running is not a
+# finding. An entry with NO marker keeps today's exact behaviour, which makes
+# "unconditioned" the safe default for any entry whose gate is unclear.
+#
+# Map lines: NAME<TAB>spec spec ...
+grep -vE '^\s*(#|$)' "$ALLOWLIST" \
+  | sed -n 's/^\([^[:space:]#]*\).*\[requires:[[:space:]]*\([^]]*\)\].*$/\1\t\2/p' \
+  | LC_ALL=C sort -u > "$TMP/conditioned.txt" || true
+
+# SKIP_BUDGET_FORCE_ABSENT lets the selftest exercise the absent-prerequisite
+# branch deterministically. The CI environment cannot be simulated by hiding
+# 888MB of corpora, and testing the resolver beats testing the filesystem.
+spec_present() {
+  local spec="$1"
+  case ",${SKIP_BUDGET_FORCE_ABSENT:-}," in *",$spec,"*) return 1 ;; esac
+  local kind="${spec%%:*}" val="${spec#*:}"
+  case "$kind" in
+    tool)   command -v "$val" >/dev/null 2>&1 ;;
+    corpus) [[ -d "$ROOT/test-pdfs/$val" ]] && [[ -n "$(ls -A "$ROOT/test-pdfs/$val" 2>/dev/null)" ]] ;;
+    env)    [[ -n "${!val:-}" ]] ;;
+    # Unknown spec kind resolves ABSENT on purpose: a typo must not silently
+    # disable the reverse check for that entry.
+    *)      return 1 ;;
+  esac
+}
+
+# 0 (true) only if the entry declares prerequisites AND every one is present.
+entry_prereqs_present() {
+  local name="$1" specs spec
+  specs="$(awk -F'\t' -v n="$name" '$1 == n { print $2; exit }' "$TMP/conditioned.txt")"
+  [[ -n "$specs" ]] || return 1
+  for spec in $specs; do
+    spec_present "$spec" || return 1
+  done
+  return 0
+}
+
 if [[ "$UPDATE" == "--update" ]]; then
+  # --update writes the tests that are skipping NOW. On a machine where a
+  # conditioned entry's prerequisite is PRESENT, that test is running, so a
+  # naive rewrite would DELETE a correct CI entry — turning this flag from
+  # "won't add the skip you need" into "removes the ones you had". Keep any
+  # conditioned entry whose prerequisites are satisfied here (#854).
+  while IFS=$'\t' read -r cname _; do
+    [[ -n "$cname" ]] || continue
+    entry_prereqs_present "$cname" || continue
+    grep -qxF "$cname" "$TMP/actual.txt" || echo "$cname" >> "$TMP/actual.txt"
+  done < "$TMP/conditioned.txt"
+  LC_ALL=C sort -u "$TMP/actual.txt" -o "$TMP/actual.txt"
+
   # Capture the OLD allowlist contents BEFORE opening the `> "$ALLOWLIST"`
   # redirection below. Bash sets up a compound command's output redirection
   # (which truncates $ALLOWLIST) before running any of the command's body, so
@@ -157,12 +251,36 @@ if [[ -n "$NEW" ]]; then
   STATUS=1
 fi
 
+# Split the reverse check: an entry whose declared prerequisites are all
+# present here is EXPECTED to run, so it is reported as satisfied, not failed
+# (#854). Entries with no marker fall through to the original failure.
+GONE_REAL=""
+GONE_EXPECTED=""
 if [[ -n "$GONE" ]]; then
+  while IFS= read -r name; do
+    [[ -n "$name" ]] || continue
+    if entry_prereqs_present "$name"; then
+      GONE_EXPECTED+="$name"$'\n'
+    else
+      GONE_REAL+="$name"$'\n'
+    fi
+  done <<< "$GONE"
+fi
+
+if [[ -n "${GONE_EXPECTED//[$'\n']/}" ]]; then
+  echo
+  echo "==> $(printf '%s' "$GONE_EXPECTED" | grep -c .) allow-listed skip(s) are running here because their"
+  echo "    declared prerequisites are present. Expected — not a finding (#854)."
+fi
+
+if [[ -n "${GONE_REAL//[$'\n']/}" ]]; then
   echo
   echo "FAIL: allow-listed skips are no longer skipping."
   echo "      That is coverage coming BACK — good. Remove them from the allowlist"
   echo "      so it cannot hide a future regression."
-  echo "$GONE" | sed 's/^/        - /'
+  echo "      (If instead this is environment-dependent, declare what it needs:"
+  echo "       Test.Name   # why [requires: corpus:NAME] — see the header.)"
+  printf '%s' "$GONE_REAL" | sed 's/^/        - /'
   STATUS=1
 fi
 

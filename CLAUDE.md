@@ -479,6 +479,43 @@ feedback; the unchunked `app-tests-unchunked-evidence` step is what counts as
 evidence. `check-skip-budget.sh` likewise needs whole-project runs and keeps
 its own unchunked steps.
 
+### The skip allowlist is environment-conditioned (#854)
+
+`tests/skip-allowlist/*.txt` entries may declare what a test needs in order to
+run, inside the justification:
+
+```
+Some.Test.Name   # needs the poppler corpus [requires: corpus:poppler]
+```
+
+`tool:NAME` (on PATH), `corpus:NAME` (`test-pdfs/NAME` non-empty), `env:NAME`.
+All listed specs must be present.
+
+This exists because the allowlist is calibrated for a corpus-**less** CI runner.
+Most entries gate on a gitignored corpus or an optional tool, so on a
+corpus-equipped dev machine those tests *run* — and the reverse check
+("allow-listed skips are no longer skipping") fired on every local run, on all
+three projects. `t1` and `run-full-suite.sh` inherited a guaranteed failure. A
+gate that always fails locally is a gate people stop reading, and that is
+precisely how six un-allow-listed skips reddened `test-linux` for 8+ consecutive
+runs before anyone looked.
+
+Two invariants, both pinned by `scripts/test-check-skip-budget.sh`:
+
+- **The forward check is never relaxed.** A skip that is not allow-listed fails,
+  always, conditioning or not.
+- **Conditioning is not unconditional.** When a declared prerequisite is
+  *absent*, the reverse check fires exactly as before. The selftest forces a
+  spec absent (`SKIP_BUDGET_FORCE_ABSENT`) to prove this, because the CI-side
+  branch cannot be reproduced on a machine that has every corpus — and must not
+  be tested by moving 888 MB of fixtures around.
+
+`--update` keeps conditioned entries whose prerequisites are satisfied. Without
+that it would *delete* the entries CI depends on when run from a dev machine,
+turning the flag from "won't add the skip you need" into "removes the ones you
+had". An entry with no marker keeps the original unconditional behaviour, so
+"unconditioned" stays the safe default when a test's gate is unclear.
+
 ## Common Development Workflows
 
 ### Adding a New PDF Operation Type
