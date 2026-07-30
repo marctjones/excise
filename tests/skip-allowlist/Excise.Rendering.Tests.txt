@@ -264,3 +264,15 @@ Excise.Rendering.Tests.Differential.RtlType0RedactionDifferentialTests.Type0Rtl_
 Excise.Rendering.Tests.Differential.AreaRedactionDegenerateWidthTests.TopHalfArea_OverUnitTfGlyphs_RemovesTheInk_NotJustCoversIt   # independent-oracle differential; Assert.Skip* on the oracle's IsAvailable [requires: tool:gs]
 Excise.Rendering.Tests.Differential.AreaRedactionDegenerateWidthTests.TopHalfArea_OverUnitTfGlyphs_RemovesThemForAnIndependentExtractor   # independent-oracle differential; Assert.Skip* on the oracle's IsAvailable [requires: tool:mutool]
 Excise.Rendering.Tests.Differential.GlyphWidthAccuracyTests.ExciseGlyphWidths_MatchAnIndependentOracle_InMedianAndSpread   # independent-oracle differential; Assert.Skip* on the oracle's IsAvailable [requires: tool:mutool]
+# Independent-oracle page-organization checks (add/insert/remove/move). Page
+# COUNT comes from qpdf --show-npages and page IDENTITY from a mutool render,
+# so the four below need BOTH tools; the structural one needs only qpdf. Neither
+# is installed in the test-linux job. Written because page manipulation had ~49
+# tests across four layers and every assertion was excise reading back its own
+# output — a page tree excise's own parser tolerates would have passed the
+# entire suite.
+Excise.Rendering.Tests.Differential.PageOrganizationDifferentialTests.Move_ReordersPagesAndKeepsContentWithItsPage_PerIndependentRenderer   # needs qpdf (page count) + mutool (page identity) [requires: tool:qpdf tool:mutool]
+Excise.Rendering.Tests.Differential.PageOrganizationDifferentialTests.RemoveAt_DropsTheRequestedPageAndNoOther_PerIndependentRenderer   # needs qpdf (page count) + mutool (page identity) [requires: tool:qpdf tool:mutool]
+Excise.Rendering.Tests.Differential.PageOrganizationDifferentialTests.Insert_PlacesTheNewPageAtTheRequestedIndex_PerIndependentRenderer   # needs qpdf (page count) + mutool (page identity) [requires: tool:qpdf tool:mutool]
+Excise.Rendering.Tests.Differential.PageOrganizationDifferentialTests.AddBlank_AppendsAPageOfTheRequestedSize_PerIndependentRenderer   # needs qpdf (page count) + mutool (page identity) [requires: tool:qpdf tool:mutool]
+Excise.Rendering.Tests.Differential.PageOrganizationDifferentialTests.PageMutations_LeaveAStructurallyValidPdf_PerQpdf   # qpdf --check only; calls no renderer [requires: tool:qpdf]
