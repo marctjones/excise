@@ -115,6 +115,11 @@ TS="$(date +%Y%m%d_%H%M%S)"
 LOG_DIR="$ROOT/logs/full-suite_${CONFIG}_$TS"
 mkdir -p "$LOG_DIR"
 
+# BSD (macOS) time uses -l; GNU time uses -v.
+if /usr/bin/time -l true >/dev/null 2>&1; then TIME_FLAG="-l"; else TIME_FLAG="-v"; fi
+RUSAGE_TSV="$LOG_DIR/resources.tsv"
+: > "$RUSAGE_TSV"
+
 runner_state_init "full-suite" "$CONFIG"
 [ "$FRESH" = "1" ] && runner_state_reset
 runner_export_lean_env
@@ -366,6 +371,62 @@ OVERALL=0
 RESULTS=()
 IDX=0
 
+# ---------------------------------------------------------------------------
+# Per-step resource measurement
+# ---------------------------------------------------------------------------
+# Runs a step under time(1) and records peak RSS + CPU seconds alongside wall
+# time. This is OBSERVATION, not a gate, and deliberately so:
+#
+#   * a test host's peak RSS mixes the product with xunit, fixtures and the
+#     harness, so it is not a clean product measurement, and
+#   * wall time on a contended machine is noisy enough that CLAUDE.md already
+#     records it producing FALSE REDS in this suite.
+#
+# The gate for real regressions is tests/perf-budgets/workflow-budgets.json,
+# which anchors on managed ALLOCATION (machine-invariant) rather than RSS or
+# time — see scripts/check-perf-budgets.sh. What this adds is a cheap
+# anomaly detector over a run that is happening anyway: if a step's footprint
+# jumps, it shows up in the summary instead of going unnoticed until a user's
+# machine swaps.
+#
+# time(1) differs across platforms: BSD/macOS reports "maximum resident set
+# size" in BYTES with -l; GNU reports "Maximum resident set size (kbytes)"
+# with -v. Handle both, and degrade to wall-time-only if neither works.
+# (RUSAGE_TSV is set earlier, next to LOG_DIR — do NOT re-declare it here; an
+# assignment at this point in the file runs AFTER that one and clobbers it.)
+
+measure_step() {
+    local name="$1" log="$2" cmdline="$3"
+    local rusage="$LOG_DIR/$name.rusage"
+    local rc=0
+
+    # Inner redirection keeps the STEP's stdout+stderr in $log and leaves
+    # time(1)'s own report — written to its stderr — alone in $rusage.
+    if [ -x /usr/bin/time ]; then
+        /usr/bin/time $TIME_FLAG sh -c "{ $cmdline ; } > \"$log\" 2>&1" 2>"$rusage" || rc=$?
+    else
+        sh -c "{ $cmdline ; } > \"$log\" 2>&1" || rc=$?
+        : > "$rusage"
+    fi
+
+    # Peak RSS: BSD prints bytes, GNU prints kbytes.
+    local rss_mb="" cpu_s=""
+    if [ -s "$rusage" ]; then
+        local bsd_bytes gnu_kb
+        bsd_bytes="$(awk '/maximum resident set size/ { print $1; exit }' "$rusage" 2>/dev/null)"
+        gnu_kb="$(awk -F: '/Maximum resident set size/ { gsub(/ /,"",$2); print $2; exit }' "$rusage" 2>/dev/null)"
+        if [ -n "$bsd_bytes" ]; then
+            rss_mb="$(awk -v b="$bsd_bytes" 'BEGIN { printf "%.0f", b/1048576 }')"
+        elif [ -n "$gnu_kb" ]; then
+            rss_mb="$(awk -v k="$gnu_kb" 'BEGIN { printf "%.0f", k/1024 }')"
+        fi
+        cpu_s="$(awk '/ user / && / sys/ { u=$1; for(i=1;i<=NF;i++) if($i=="user") u=$(i-1); for(i=1;i<=NF;i++) if($i=="sys") s=$(i-1); printf "%.0f", u+s; exit }' "$rusage" 2>/dev/null)"
+    fi
+
+    printf '%s\t%s\t%s\n' "$name" "${rss_mb:-}" "${cpu_s:-}" >> "$RUSAGE_TSV"
+    return $rc
+}
+
 run_one() {
     local name="$1" kind="$2" target="$3" filter="${4:--}"
     IDX=$(( IDX + 1 ))
@@ -385,19 +446,19 @@ run_one() {
 
     say "${B}[$IDX/$TOTAL] $name${N}"
 
+    # Build the step's command line, then run it under measure_step so every
+    # step reports peak RSS and CPU. excise is meant to be lean; a suite run we
+    # are doing anyway is free telemetry for spotting bloat.
+    local cmdline
     if [ "$kind" = "script" ]; then
-        # shellcheck disable=SC2086
-        eval $target > "$log" 2>&1
-        rc=$?
+        cmdline="$target"
     elif [ "$filter" = "-" ]; then
-        dotnet test "$target" --no-build -c "$CONFIG" \
-            --logger "console;verbosity=minimal" > "$log" 2>&1
-        rc=$?
+        cmdline="dotnet test \"$target\" --no-build -c \"$CONFIG\" --logger \"console;verbosity=minimal\""
     else
-        dotnet test "$target" --no-build -c "$CONFIG" \
-            --filter "$filter" --logger "console;verbosity=minimal" > "$log" 2>&1
-        rc=$?
+        cmdline="dotnet test \"$target\" --no-build -c \"$CONFIG\" --filter \"$filter\" --logger \"console;verbosity=minimal\""
     fi
+    measure_step "$name" "$log" "$cmdline"
+    rc=$?
 
     dur=$(( $(date +%s) - start ))
 
@@ -475,6 +536,26 @@ for r in "${RESULTS[@]:-}"; do
         SKIP) nskip=$(( nskip + 1 )) ;;
     esac
 done
+# --- resource hotspots ---------------------------------------------------
+# Ranked, not gated. A step at the top of this list is a question ("why does
+# that need 2GB?"), not a failure. Real enforcement lives in
+# tests/perf-budgets/workflow-budgets.json (allocation-anchored).
+if [ -s "$RUSAGE_TSV" ]; then
+    say ""
+    say "${B}Resource hotspots${N} ${D}(observation only — the gate is check-perf-budgets.sh)${N}"
+    say "  top peak RSS:"
+    sort -t"$(printf '\t')" -k2,2nr "$RUSAGE_TSV" 2>/dev/null | head -5 \
+      | while IFS="$(printf '\t')" read -r n rss cpu; do
+            [ -n "${rss:-}" ] && say "    $(printf '%6s MB  %s' "$rss" "$n")"
+        done
+    say "  top CPU seconds:"
+    sort -t"$(printf '\t')" -k3,3nr "$RUSAGE_TSV" 2>/dev/null | head -5 \
+      | while IFS="$(printf '\t')" read -r n rss cpu; do
+            [ -n "${cpu:-}" ] && say "    $(printf '%6s s   %s' "$cpu" "$n")"
+        done
+    say "  full per-step data: $RUSAGE_TSV"
+fi
+
 say ""
 say "pass=$npass fail=$nfail skipped-as-checkpointed=$nskip total=$TOTAL"
 say "Resources: $(runner_resource_report)"
