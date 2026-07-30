@@ -67,6 +67,7 @@ FRESH=0
 # per testhost, at ~2s of process-start overhead per extra chunk.
 CHUNK_CLASSES="${CHUNK_CLASSES:-12}"
 SKIP_CHUNKING=0
+EVERYTHING=0
 
 usage() {
     cat <<'EOF'
@@ -79,6 +80,10 @@ Usage: scripts/run-full-suite.sh [options]
   --status           Print per-step done/pending state and exit.
   --release          Build and test in Release (default: Debug).
   --only <pattern>   Only steps whose name matches this grep -E pattern.
+  --everything       Also run the release-only gates (accessibility, automation,
+                     ux, benchmark, perf-budget, aot, pdf20) by delegating to
+                     release-smoke.sh. Without this, run-full-suite covers every
+                     TEST PROJECT but not those script gates.
   --no-chunking      One dotnet process per project instead of per class group.
   --chunk-size <n>   Test classes per chunk (default 12).
 
@@ -98,6 +103,7 @@ while [ $# -gt 0 ]; do
         --status) MODE="status"; shift ;;
         --release) CONFIG="Release"; shift ;;
         --only) ONLY="${2:-}"; shift 2 ;;
+        --everything) EVERYTHING=1; shift ;;
         --no-chunking) SKIP_CHUNKING=1; shift ;;
         --chunk-size) CHUNK_CLASSES="${2:-20}"; shift 2 ;;
         -h|--help) usage; exit 0 ;;
@@ -280,6 +286,20 @@ emit "skip-budget-rendering" script "scripts/check-skip-budget.sh Excise.Renderi
 emit "skip-budget-app"       script "scripts/check-skip-budget.sh Excise.App.Tests/Excise.App.Tests.csproj" "-"
 emit "extraction-parity"     script "scripts/check-extraction-parity.sh" "-"
 emit "copy-whitespace-parity" script "scripts/check-copy-whitespace-parity.sh" "-"
+
+# --- Phase 5b: release-only gates (--everything) --------------------------
+# Delegated to release-smoke.sh rather than re-listed here, so the gate set
+# cannot drift from the canonical definition. --quick skips its own full test
+# pass (every project already ran above) and --no-build reuses this run's build.
+#
+# Deliberately NOT included even under --everything: `package`, `packaged-gui`
+# and `visual`. Those need built platform artifacts, a real app bundle, and (on
+# macOS) an Accessibility permission grant for the focus-taking input smoke —
+# they cannot run unattended from one command. docs/RELEASE_CHECKLIST.md owns
+# them.
+if [ "$EVERYTHING" = "1" ]; then
+    emit "release-gates" script "scripts/release-smoke.sh --no-build --quick --resume --only=accessibility,automation,ux,benchmark,perf-budget,aot,pdf20" "-"
+fi
 
 # --- Phase 6: unchunked App.Tests as the release evidence -----------------
 # Chunking changes which tests share a process. That can hide OR manufacture
