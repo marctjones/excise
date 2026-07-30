@@ -143,18 +143,47 @@ grep -vE '^\s*(#|$)' "$ALLOWLIST" \
 # SKIP_BUDGET_FORCE_ABSENT lets the selftest exercise the absent-prerequisite
 # branch deterministically. The CI environment cannot be simulated by hiding
 # 888MB of corpora, and testing the resolver beats testing the filesystem.
+# Resolution is MEMOISED in $TMP/spec-cache. Without it this is called once per
+# allow-listed entry — 200+ times on Excise.Rendering.Tests — and each corpus
+# check hit the filesystem again. The first version also used
+# `[[ -n "$(ls -A DIR)" ]]`, which slurps an entire directory listing into a
+# string; against test-pdfs/ghent (308MB) and altona (268MB), a few hundred
+# times over, that alone took the gate from ~6 minutes to 30+. Use a
+# short-circuiting find instead, and resolve each distinct spec exactly once.
+SPEC_CACHE_DIR="$TMP/spec-cache"
+mkdir -p "$SPEC_CACHE_DIR"
+
 spec_present() {
   local spec="$1"
   case ",${SKIP_BUDGET_FORCE_ABSENT:-}," in *",$spec,"*) return 1 ;; esac
-  local kind="${spec%%:*}" val="${spec#*:}"
+
+  # No forks on the cache-hit path: bash-native slug (specs are ~20 chars, far
+  # short of where 3.2's substitution gets slow) and `read < file`, a builtin.
+  # This runs once per allow-listed entry — 200+ times on Rendering — so
+  # $(printf|tr) plus $(cat) per call was ~1700 needless processes.
+  local key="$SPEC_CACHE_DIR/${spec//[^A-Za-z0-9._-]/_}"
+  if [[ -f "$key" ]]; then
+    local cached
+    read -r cached < "$key"
+    [[ "$cached" == "1" ]]
+    return
+  fi
+
+  local kind="${spec%%:*}" val="${spec#*:}" ok=1
   case "$kind" in
-    tool)   command -v "$val" >/dev/null 2>&1 ;;
-    corpus) [[ -d "$ROOT/test-pdfs/$val" ]] && [[ -n "$(ls -A "$ROOT/test-pdfs/$val" 2>/dev/null)" ]] ;;
-    env)    [[ -n "${!val:-}" ]] ;;
+    tool)   command -v "$val" >/dev/null 2>&1 || ok=0 ;;
+    # -print -quit stops at the FIRST entry instead of listing the directory.
+    corpus) if [[ -d "$ROOT/test-pdfs/$val" ]] &&
+                 [[ -n "$(find "$ROOT/test-pdfs/$val" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null)" ]]
+            then ok=1; else ok=0; fi ;;
+    env)    [[ -n "${!val:-}" ]] || ok=0 ;;
     # Unknown spec kind resolves ABSENT on purpose: a typo must not silently
     # disable the reverse check for that entry.
-    *)      return 1 ;;
+    *)      ok=0 ;;
   esac
+
+  printf '%s' "$ok" > "$key"
+  [[ "$ok" == "1" ]]
 }
 
 # 0 (true) only if the entry declares prerequisites AND every one is present.
@@ -254,33 +283,41 @@ fi
 # Split the reverse check: an entry whose declared prerequisites are all
 # present here is EXPECTED to run, so it is reported as satisfied, not failed
 # (#854). Entries with no marker fall through to the original failure.
-GONE_REAL=""
-GONE_EXPECTED=""
+# Accumulate into FILES, not shell strings. macOS ships bash 3.2, whose
+# ${var//pattern/} is pathologically slow on large values: stripping newlines
+# from the ~20KB accumulated list of 218 Rendering entries measured at 7m57s
+# on this machine (bash 3.2.57, arm64). Two such expansions turned a ~5-minute
+# gate into a ~20-minute one that looked like a hang. Files keep it O(n) and
+# make the "is it empty" test a stat instead of a full-string rewrite.
+GONE_REAL_FILE="$TMP/gone-real.txt"
+GONE_EXPECTED_FILE="$TMP/gone-expected.txt"
+: > "$GONE_REAL_FILE"
+: > "$GONE_EXPECTED_FILE"
 if [[ -n "$GONE" ]]; then
   while IFS= read -r name; do
     [[ -n "$name" ]] || continue
     if entry_prereqs_present "$name"; then
-      GONE_EXPECTED+="$name"$'\n'
+      echo "$name" >> "$GONE_EXPECTED_FILE"
     else
-      GONE_REAL+="$name"$'\n'
+      echo "$name" >> "$GONE_REAL_FILE"
     fi
   done <<< "$GONE"
 fi
 
-if [[ -n "${GONE_EXPECTED//[$'\n']/}" ]]; then
+if [[ -s "$GONE_EXPECTED_FILE" ]]; then
   echo
-  echo "==> $(printf '%s' "$GONE_EXPECTED" | grep -c .) allow-listed skip(s) are running here because their"
+  echo "==> $(wc -l < "$GONE_EXPECTED_FILE" | tr -d ' ') allow-listed skip(s) are running here because their"
   echo "    declared prerequisites are present. Expected — not a finding (#854)."
 fi
 
-if [[ -n "${GONE_REAL//[$'\n']/}" ]]; then
+if [[ -s "$GONE_REAL_FILE" ]]; then
   echo
   echo "FAIL: allow-listed skips are no longer skipping."
   echo "      That is coverage coming BACK — good. Remove them from the allowlist"
   echo "      so it cannot hide a future regression."
   echo "      (If instead this is environment-dependent, declare what it needs:"
   echo "       Test.Name   # why [requires: corpus:NAME] — see the header.)"
-  printf '%s' "$GONE_REAL" | sed 's/^/        - /'
+  sed 's/^/        - /' "$GONE_REAL_FILE"
   STATUS=1
 fi
 

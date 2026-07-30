@@ -110,6 +110,25 @@ public static class QpdfReferenceTool
     }
 
     /// <summary>
+    /// Page count according to qpdf's own parser (<c>--show-npages</c>).
+    /// Returns null when qpdf is unavailable, times out, or the output is not
+    /// a bare integer.
+    ///
+    /// This is the ONLY trustworthy independent page-count signal we have, and
+    /// the reason it exists: <c>mutool draw</c> CLAMPS an out-of-range page to
+    /// the last page and exits 0 (verified — asking for page 99999 of a 2-page
+    /// file renders page 2 and succeeds). So "render pages until one fails" can
+    /// never establish how many pages a file has, and any page-organization
+    /// test built on that idea silently over-counts. Use this instead.
+    /// </summary>
+    public static int? PageCount(string pdfPath, string? password = null, int timeoutMs = 15_000)
+    {
+        var result = Run(BuildArgs("--show-npages", pdfPath, password), timeoutMs);
+        if (result == null || result.ExitCode != 0) return null;
+        return int.TryParse(result.Output.Trim(), out var n) ? n : null;
+    }
+
+    /// <summary>
     /// Silently tests whether qpdf's independent parser considers the file
     /// encrypted at all (<c>--is-encrypted</c>, exit code only — no
     /// stdout to parse). Returns null when qpdf is unavailable.
