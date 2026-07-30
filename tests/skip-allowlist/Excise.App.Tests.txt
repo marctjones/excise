@@ -56,3 +56,18 @@ Excise.App.Tests.UI.RedactionAndSearchCommandTests.ApplyAllRedactionsCommand_Red
 Excise.App.Tests.UI.TypewriterWorkflowTests.OnTypewriterTextCreated_ModifyForbidden_AddsNothing
 # Independent-oracle copy-order test gated on poppler pdftotext (absent on Linux CI); runs on macOS. The construction-known column-major sibling test (TwoColumn_ColumnAware_ReadsEachColumnTopToBottom) always runs on CI, so the fix is still verified without poppler. (#774)
 Excise.App.Tests.Unit.CopyReadingOrderTests.TwoColumn_ColumnAware_MatchesIndependentPdftotextOracle
+# Gesture/zoom tests added by #827 batch C (Ctrl+wheel zoom, middle-button pan)
+# and the #846/#847 continuous-view work. All six gate on the same gitignored
+# real-book fixture as the TextSelectionAlignmentTests block above
+# (test-pdfs/local-real-world/business-success-with-open-source_P1.0.pdf), so
+# they skip on CI and run on a corpus-equipped dev machine — verified passing
+# locally with the fixture present. They were the sole cause of test-linux
+# being red for 8+ consecutive runs: the skip-budget gate runs ONLY in
+# test-linux, so macOS/Windows green hid it. NOTE: --update cannot generate
+# these from a corpus-equipped machine (they don't skip there); hand-edited.
+Excise.App.Tests.UI.MouseInputTests.CtrlWheelUp_RealGesture_ZoomsIn   # corpus-gated: local-real-world book absent on CI (#827)
+Excise.App.Tests.UI.MouseInputTests.CtrlWheelDown_RealGesture_ZoomsOut   # corpus-gated: local-real-world book absent on CI (#827)
+Excise.App.Tests.UI.MouseInputTests.PlainWheel_RealGesture_ScrollsAndDoesNotZoom   # corpus-gated: local-real-world book absent on CI (#827). Guards the regression where a plain wheel scroll also zoomed.
+Excise.App.Tests.UI.MouseInputTests.MiddleButtonDrag_RealGesture_PansScrollOffset   # corpus-gated: local-real-world book absent on CI (#827)
+Excise.App.Tests.UI.MouseInputTests.ContinuousScrollPastPageBoundary_UpdatesCurrentPage   # corpus-gated: local-real-world book absent on CI (#846)
+Excise.App.Tests.UI.MouseInputTests.FitOnResize_RecomputesZoom   # corpus-gated: local-real-world book absent on CI (#847)
