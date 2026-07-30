@@ -2689,37 +2689,23 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
-        var storageProvider = GetStorageProvider();
-        if (storageProvider == null)
-        {
-            _logger.LogWarning("Storage provider unavailable, cannot show Save As dialog");
-            return;
-        }
+        // Route through the shared picker helper rather than reaching for the
+        // storage provider inline. It is behaviourally identical (same title,
+        // extension, file-type patterns) but honours PickSavePdfPathOverride,
+        // the #816 test seam that Combine/Extract already use.
+        //
+        // Without this, SaveAsCommand — the Save As a user actually clicks —
+        // was unreachable from a headless test: GetStorageProvider() returns
+        // null there, so the command returned having written nothing. Every GUI
+        // test that wanted to save therefore called SaveFileAsAsync(path)
+        // directly, which cannot catch the command being mis-wired.
+        var filePath = await PickSavePdfPathAsync(
+            "Save PDF As",
+            string.IsNullOrWhiteSpace(DocumentName) ? "document.pdf" : DocumentName);
 
-        var file = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
-        {
-            Title = "Save PDF As",
-            DefaultExtension = "pdf",
-            SuggestedFileName = string.IsNullOrWhiteSpace(DocumentName) ? "document.pdf" : DocumentName,
-            FileTypeChoices = new[]
-            {
-                new FilePickerFileType("PDF Files")
-                {
-                    Patterns = new[] { "*.pdf" }
-                }
-            }
-        });
-
-        if (file == null)
-        {
-            _logger.LogInformation("Save As dialog cancelled");
-            return;
-        }
-
-        var filePath = file.Path.LocalPath;
         if (string.IsNullOrWhiteSpace(filePath))
         {
-            _logger.LogWarning("Save As target has no local path");
+            _logger.LogInformation("Save As dialog cancelled or unavailable");
             return;
         }
 
