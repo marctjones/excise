@@ -413,6 +413,72 @@ includes the near-free static redaction-architecture guard
 (`verify-true-redaction.sh`); `t1`'s redaction test suites run unconditionally
 and there is no flag to skip them.
 
+### Restartable full runs — `scripts/run-full-suite.sh`
+
+A tier that takes 30+ minutes will get interrupted, and restarting from zero
+each time means it never finishes. On 2026-07-29 a kernel panic (`watchdog
+timeout: no checkins from watchdogd in 91 seconds`, 17 swapfiles, LOW swap
+space) killed five concurrent sessions mid-run — the machine went down at
+18:07 and rebooted at 18:12:13.
+
+```bash
+caffeinate -i scripts/run-full-suite.sh --resume 2>&1 | tee -a logs/full-suite.log
+scripts/run-full-suite.sh --status    # what's done / what's left
+scripts/run-full-suite.sh --list      # the plan, runs nothing
+```
+
+Re-running after any interruption skips what already passed. `--resume` also
+exists on `test-tier.sh` (all tiers) and `release-smoke.sh`; both default to
+OFF so the pre-push hook and CI keep skipping nothing.
+
+Three properties worth not breaking:
+
+1. **Checkpoints fail toward re-running, never toward skipping.** A panic loses
+   buffered writes, so a naive marker file can survive as zero-length metadata
+   and read back as "passed" for a step that never ran. Markers are
+   sync-then-atomic-rename and validated on read (non-empty + terminal
+   `--CKPT-OK--` sentinel + recorded commit == HEAD). Anything torn, truncated,
+   or stale re-runs. See `scripts/lib-runner.sh`.
+2. **The redaction gates are never checkpointed.** They re-run on every
+   invocation including resumes — a checkpoint that skipped them would be
+   precisely the flag the rule above says does not exist
+   (`RUNNER_NEVER_CHECKPOINT`).
+3. **A step matching zero tests is a FAILURE, not a pass.** `dotnet test`
+   exits 0 when a `--filter` matches nothing; checkpointing that would bake a
+   vacuous green in permanently. The runner greps for `No test matches the
+   given testcase filter` and fails the step. (This is not hypothetical — the
+   first draft of the runner had exactly this bug.)
+
+Memory posture, and **what was measured rather than assumed**: GC-flag tuning
+(`DOTNET_gcServer=0` + `GCConserveMemory` + a heap cap) was tried and made peak
+RSS ~24% **worse** on `Excise.Core.Tests` — 552 MB vs 446 MB stock. testhost
+already runs Workstation GC here, so `gcServer=0` is a no-op. Both knobs are
+therefore **off by default** (`RUNNER_TUNE_GC=0`, `RUNNER_HEAP_CAP_GIB=0`) and
+kept only so the measurement stays reproducible. Do not re-enable them on the
+"Server GC reserves per-core heaps" theory — it was checked and it is not what
+costs memory in this repo.
+
+A single testhost peaks at ~450 MB (Core) to ~700 MB (a Rendering chunk).
+Nothing about one `dotnet test` endangers a 24 GB machine; **aggregate**
+concurrent load does. So what actually bounds memory here is structural:
+exactly one dotnet process at a time (this runner is strictly serial),
+short-lived testhosts via chunking so nothing accumulates over a 30-minute run,
+and a guard that waits out `kern.memorystatus_vm_pressure_level` and aborts with
+exit 75 if the data volume falls below `RUNNER_MIN_FREE_GIB` (macOS grows swap
+there; starving it turns a memory spike into a panic rather than an OOM).
+
+`release-smoke.sh --resume` gets checkpointing only, never the GC knobs: its
+benchmark and perf-budget gates are allocation-anchored and would read any GC
+change as a regression.
+
+Chunking caveat: it changes which tests share a process, so it can hide or
+manufacture cross-test contamination (a real one existed — a shared
+`window.json` view-mode preference leaking between continuous-view tests, which
+only reproduced in a full-suite run). The chunks are for fast resumable
+feedback; the unchunked `app-tests-unchunked-evidence` step is what counts as
+evidence. `check-skip-budget.sh` likewise needs whole-project runs and keeps
+its own unchunked steps.
+
 ## Common Development Workflows
 
 ### Adding a New PDF Operation Type
