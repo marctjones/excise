@@ -458,9 +458,22 @@ kept only so the measurement stays reproducible. Do not re-enable them on the
 "Server GC reserves per-core heaps" theory — it was checked and it is not what
 costs memory in this repo.
 
-A single testhost peaks at ~450 MB (Core) to ~700 MB (a Rendering chunk).
-Nothing about one `dotnet test` endangers a 24 GB machine; **aggregate**
-concurrent load does. So what actually bounds memory here is structural:
+Peak RSS per testhost varies enormously by project, and an early note here
+claimed it did not — that claim was made from a partial sample (Core and one
+Rendering chunk) and was **wrong**. Measured over a full run:
+
+| step | peak RSS |
+|---|---:|
+| `Excise.App.Tests` unchunked (one process) | **8536 MB** |
+| `Excise.App.Tests.chunk05` (render-heavy GUI classes) | 6576 MB |
+| `Excise.Rendering.Tests.chunk02` | 2389 MB |
+| `Excise.Core.Tests.*` (all 17 chunks) | ≤ 450 MB |
+
+So a single `dotnet test` **can** take a third of a 24 GB machine — App.Tests
+does. Do not run it alongside other heavy work (which is also why it is serial
+by design and why CPU contention produces false reds here). Tracked as #861.
+
+What bounds memory during a suite run is therefore structural:
 exactly one dotnet process at a time (this runner is strictly serial),
 short-lived testhosts via chunking so nothing accumulates over a 30-minute run,
 and a guard that waits out `kern.memorystatus_vm_pressure_level` and aborts with
