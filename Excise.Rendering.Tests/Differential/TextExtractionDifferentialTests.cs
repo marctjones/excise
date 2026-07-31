@@ -58,7 +58,7 @@ public sealed class TextExtractionDifferentialTests
     /// Every corpus listed here gates the build. The pdf.js corpus is
     /// intentionally NOT included — it surfaces real disagreements we
     /// haven't fixed yet, and listing it here would either block CI or
-    /// require ~250 allowlist entries. Use <see cref="ExploratoryDifferentialTests"/>
+    /// require ~250 allowlist entries. Use scripts/run-exploratory-corpus.sh
     /// to run it on demand.
     /// </summary>
     private static readonly string[] GatingCorpusDirectories =
