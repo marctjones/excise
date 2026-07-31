@@ -1,0 +1,86 @@
+name: Perf Budgets (nightly)
+
+# Restores teeth to the allocation budgets (#860).
+#
+# tests/perf-budgets/workflow-budgets.json defines HARD allocation budgets for
+# the four hot workflows (redaction-save 1213 MB, all-page-render 954 MB,
+# save-roundtrip 804 MB, text-extract 161 MB). Until now nothing enforced them
+# automatically:
+#
+#   * ci.yml runs `check-perf-budgets.sh --mode warn || true` — deliberately
+#     non-blocking, and rightly so: shared runners are far too wall-time-variable
+#     to fail a PR on, and a perf breach is a performance signal, not a
+#     correctness failure.
+#   * That same job has no smoke corpus, so the script SKIPS cleanly and the
+#     step is green having measured nothing.
+#   * scripts/run-full-suite.sh only includes it under --everything.
+#
+# Net effect: an allocation regression could land on develop with nothing
+# failing anywhere. redaction-save is budgeted at 1.2 GB and was 3+ GB before
+# #743 cut it 72%; a slide back toward that would have gone unnoticed.
+#
+# This job blocks nothing on a PR. It runs nightly, downloads the corpus so it
+# cannot skip vacuously, and gates on ALLOCATION only — which is nearly machine-
+# and run-invariant, and therefore the one signal here that survives a shared
+# runner. Wall time stays advisory (no --time-gate fail) precisely because it
+# does not.
+
+on:
+  schedule:
+    # 05:20 UTC daily — off the hour to avoid GitHub's scheduling pileup.
+    - cron: '20 5 * * *'
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  DOTNET_NUGET_SIGNATURE_VERIFICATION: false
+
+jobs:
+  perf-budgets:
+    name: Allocation budgets (hard gate)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Download smoke corpus
+        run: ./scripts/download-smoke-corpus.sh
+
+      # A missing corpus makes check-perf-budgets.sh exit 0 with "SKIPPED",
+      # which is correct for a dev machine and useless for a gate. Fail here
+      # instead, so this job can never be green without having measured
+      # anything — the exact way the existing CI step became decorative.
+      - name: Verify the corpus is actually present
+        run: |
+          if [ ! -d test-pdfs/smoke ] || [ -z "$(ls -A test-pdfs/smoke 2>/dev/null)" ]; then
+            echo "::error::smoke corpus missing after download — this gate would SKIP and report success"
+            exit 1
+          fi
+          echo "smoke corpus: $(ls test-pdfs/smoke/*.pdf 2>/dev/null | wc -l) PDFs"
+
+      - name: Build (Release)
+        run: dotnet build excise.sln -c Release
+
+      # CONFIG=Release is required for gating; the script forces warn mode
+      # otherwise. Default --mode fail. No --time-gate: wall time on a shared
+      # runner is not trustworthy enough to fail on, and the allocation numbers
+      # are the point.
+      - name: Check allocation budgets
+        env:
+          CONFIG: Release
+          EXCISE_PERF_OUTPUT_DIR: perf-budgets
+        run: scripts/check-perf-budgets.sh
+
+      - name: Upload perf report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: perf-budget-report
+          path: perf-budgets/
+          retention-days: 14
+          if-no-files-found: warn

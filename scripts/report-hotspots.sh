@@ -70,7 +70,12 @@ while [ $# -gt 0 ]; do
 done
 
 if [ -z "$RUN_DIR" ]; then
-    RUN_DIR="$(ls -td "$ROOT"/logs/full-suite_* 2>/dev/null | head -1)"
+    # Newest run WITH DATA, not merely newest. `--list` and `--status`
+    # invocations create a LOG_DIR and execute nothing, leaving an empty
+    # resources.tsv that would otherwise shadow the last real run.
+    for candidate in $(ls -td "$ROOT"/logs/full-suite_* 2>/dev/null); do
+        if [ -s "$candidate/resources.tsv" ]; then RUN_DIR="$candidate"; break; fi
+    done
 fi
 RESOURCES="$RUN_DIR/resources.tsv"
 

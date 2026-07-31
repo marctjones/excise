@@ -121,3 +121,6 @@ __pycache__/
 # Locally-installed dotnet global tools — never commit (arm64 binary + 18MB tool store)
 /tools/.store/
 /tools/reportgenerator
+
+# Downloaded build inputs (scripts/download-pdfbox.sh) — not source.
+tools/vendor/
