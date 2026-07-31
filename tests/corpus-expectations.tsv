@@ -1,34 +1,36 @@
 # Expected corpus-scan status per page (#862).
 #
 # Format:  path <TAB> pageNumber <TAB> expectedStatus   (no header row:
-#          the loader only skips a header on line 1, and the comments above
+#          the loader only skips a header on line 1, and these comments
 #          push it past that)
 # Used by: scripts/run-exploratory-corpus.sh --expectation-manifest
 #
-# This is a RATCHET, not an aspiration. It records what each page does
-# today so a regression fails loudly. It is NOT a claim that every page
-# should be PASS:
-#   PASS_ONE  - agrees with one reference renderer but not both. The
-#               oracles disagree with EACH OTHER on these; expecting
-#               unanimity would be expecting something untrue.
-#   MALFORMED_PDF / EMPTY_DOC / ALL_ORACLES_REFUSED - the fixture is
-#               broken on purpose, or no oracle could produce ground
-#               truth. Refusing is CORRECT behaviour, not a defect.
+# A RATCHET, not an aspiration. It records what each page does today so a
+# regression fails loudly. It is NOT a claim every page should be PASS:
+#   PASS_ONE   - only ONE oracle corroborated. Since #865, PASS means a
+#                MAJORITY of the oracles that rendered agree, so PASS_ONE
+#                now genuinely means single-source evidence.
+#   EXCISE_ONLY- excise rendered and no oracle could (#867). Coverage
+#                without corroboration, not a defect: issue19484_1/2 are
+#                encrypted files mutool cannot read and excise decrypts.
+#   MALFORMED_PDF / EMPTY_DOC / RECOVERED_MALFORMED_CONTENT - the fixture
+#                is broken on purpose. Refusing it is CORRECT.
 #
-# Regenerate after a deliberate improvement; review the diff, because a
-# status moving the RIGHT way still needs a human to confirm it is real.
+# Regenerate after a deliberate improvement and review the diff: a status
+# moving the RIGHT way still needs a human to confirm it is real.
 #
-# Generated 2026-07-31 from a run with tests/corpus-passwords.tsv.
-# Baseline: PASS=623, PASS_ONE=55, MALFORMED_PDF=3, ALL_ORACLES_REFUSED=2, RECOVERED_MALFORMED_CONTENT=1, EMPTY_DOC=1
+# Generated 2026-07-31 with tests/corpus-passwords.tsv and the #865
+# oracle-majority rule.
+# Baseline: PASS=658, PASS_ONE=20, MALFORMED_PDF=3, EXCISE_ONLY=2, RECOVERED_MALFORMED_CONTENT=1, EMPTY_DOC=1
 160F-2019.pdf	1	PASS
 22060_A1_01_Plans.pdf	1	PASS
 90ms_rksj_h_sample.pdf	1	PASS
 ArabicCIDTrueType.pdf	1	PASS
-Brotli-Prototype-FileA.pdf	1	PASS_ONE
-ContentStreamCycleType3insideType3.pdf	1	PASS_ONE
+Brotli-Prototype-FileA.pdf	1	PASS
+ContentStreamCycleType3insideType3.pdf	1	PASS
 ContentStreamNoCycleType3insideType3.pdf	1	PASS
 Embedded_font.pdf	1	PASS
-GHOSTSCRIPT-698804-1-fuzzed.pdf	1	PASS_ONE
+GHOSTSCRIPT-698804-1-fuzzed.pdf	1	PASS
 IdentityToUnicodeMap_charCodeOf.pdf	1	PASS
 IndexedCS_negative_and_high.pdf	1	PASS
 PDFBOX-3148-2-fuzzed.pdf	1	PASS
@@ -90,11 +92,11 @@ bad-PageLabels.pdf	1	PASS
 basicapi.pdf	1	PASS
 bigboundingbox.pdf	1	PASS
 bitmap-composite-and-xnor-halftone.pdf	1	PASS
-bitmap-composite-and-xnor-refine.pdf	1	PASS_ONE
+bitmap-composite-and-xnor-refine.pdf	1	PASS
 bitmap-composite-and-xnor-text.pdf	1	PASS
 bitmap-composite-and-xnor.pdf	1	PASS
 bitmap-composite-or-xor-replace-halftone.pdf	1	PASS
-bitmap-composite-or-xor-replace-refine.pdf	1	PASS_ONE
+bitmap-composite-or-xor-replace-refine.pdf	1	PASS
 bitmap-composite-or-xor-replace-text.pdf	1	PASS
 bitmap-composite-or-xor-replace.pdf	1	PASS
 bitmap-customat-tpgdon.pdf	1	PASS
@@ -103,7 +105,7 @@ bitmap-halftone-10bpp-mmr.pdf	1	PASS
 bitmap-halftone-10bpp.pdf	1	PASS
 bitmap-halftone-composite.pdf	1	PASS
 bitmap-halftone-grid.pdf	1	PASS
-bitmap-halftone-refine.pdf	1	PASS_ONE
+bitmap-halftone-refine.pdf	1	PASS
 bitmap-halftone-skip-dummy.pdf	1	PASS
 bitmap-halftone-skip-grid-template1.pdf	1	PASS
 bitmap-halftone-skip-grid-template2.pdf	1	PASS
@@ -117,16 +119,16 @@ bitmap-initially-unknown-size.pdf	1	PASS
 bitmap-mmr.pdf	1	PASS
 bitmap-p32-eof.pdf	1	PASS
 bitmap-randomaccess.pdf	1	PASS
-bitmap-refine-customat-tpgron.pdf	1	PASS_ONE
-bitmap-refine-customat.pdf	1	PASS_ONE
-bitmap-refine-lossless.pdf	1	PASS_ONE
+bitmap-refine-customat-tpgron.pdf	1	PASS
+bitmap-refine-customat.pdf	1	PASS
+bitmap-refine-lossless.pdf	1	PASS
 bitmap-refine-page-subrect.pdf	1	PASS
 bitmap-refine-page.pdf	1	PASS
-bitmap-refine-refine.pdf	1	PASS_ONE
+bitmap-refine-refine.pdf	1	PASS
 bitmap-refine-template1-tpgron.pdf	1	PASS_ONE
-bitmap-refine-template1.pdf	1	PASS_ONE
+bitmap-refine-template1.pdf	1	PASS
 bitmap-refine-tpgron.pdf	1	PASS_ONE
-bitmap-refine.pdf	1	PASS_ONE
+bitmap-refine.pdf	1	PASS
 bitmap-stripe-initially-unknown-height.pdf	1	PASS
 bitmap-stripe-last-implicit.pdf	1	PASS
 bitmap-stripe-single-no-end-of-stripe.pdf	1	PASS
@@ -146,22 +148,22 @@ bitmap-symbol-symhuff-texthuff.pdf	1	PASS
 bitmap-symbol-symhuff-texthuffB10B13.pdf	1	PASS
 bitmap-symbol-symhuffB5B3-texthuffB7B9B12.pdf	1	PASS
 bitmap-symbol-symhuffcustom-texthuffcustom.pdf	1	PASS
-bitmap-symbol-symhuffrefine-textrefine.pdf	1	PASS_ONE
+bitmap-symbol-symhuffrefine-textrefine.pdf	1	PASS
 bitmap-symbol-symhuffrefineone.pdf	1	PASS
-bitmap-symbol-symhuffrefineseveral.pdf	1	PASS_ONE
+bitmap-symbol-symhuffrefineseveral.pdf	1	PASS
 bitmap-symbol-symhuffuncompressed-texthuff.pdf	1	PASS
 bitmap-symbol-textbottomleft.pdf	1	PASS
 bitmap-symbol-textbottomlefttranspose.pdf	1	PASS
 bitmap-symbol-textbottomright.pdf	1	PASS
 bitmap-symbol-textbottomrighttranspose.pdf	1	PASS
 bitmap-symbol-textcomposite.pdf	1	PASS
-bitmap-symbol-texthuffrefine.pdf	1	PASS_ONE
-bitmap-symbol-texthuffrefineB15.pdf	1	PASS_ONE
+bitmap-symbol-texthuffrefine.pdf	1	PASS
+bitmap-symbol-texthuffrefineB15.pdf	1	PASS
 bitmap-symbol-texthuffrefinecustom.pdf	1	PASS
-bitmap-symbol-texthuffrefinecustomdims.pdf	1	PASS_ONE
-bitmap-symbol-texthuffrefinecustompos.pdf	1	PASS_ONE
+bitmap-symbol-texthuffrefinecustomdims.pdf	1	PASS
+bitmap-symbol-texthuffrefinecustompos.pdf	1	PASS
 bitmap-symbol-texthuffrefinecustomposdims.pdf	1	PASS
-bitmap-symbol-texthuffrefinecustomsize.pdf	1	PASS_ONE
+bitmap-symbol-texthuffrefinecustomsize.pdf	1	PASS
 bitmap-symbol-textrefine-customat.pdf	1	PASS
 bitmap-symbol-textrefine-negative-delta-width.pdf	1	PASS
 bitmap-symbol-textrefine.pdf	1	PASS
@@ -182,7 +184,7 @@ bitmap-template3-customat.pdf	1	PASS
 bitmap-template3-tpgdon.pdf	1	PASS
 bitmap-template3.pdf	1	PASS
 bitmap-tpgdon.pdf	1	PASS
-bitmap-trailing-7fff-stripped-harder-refine.pdf	1	PASS_ONE
+bitmap-trailing-7fff-stripped-harder-refine.pdf	1	PASS
 bitmap-trailing-7fff-stripped-harder.pdf	1	PASS
 bitmap-trailing-7fff-stripped.pdf	1	PASS
 blendmode.pdf	1	PASS
@@ -222,7 +224,7 @@ bug1529502.pdf	1	PASS
 bug1538111.pdf	1	PASS
 bug1539074.1.pdf	1	PASS
 bug1539074.pdf	1	PASS
-bug1552113.pdf	1	PASS_ONE
+bug1552113.pdf	1	PASS
 bug1606566.pdf	1	PASS
 bug1627427_reduced.pdf	1	PASS
 bug1650302_reduced.pdf	1	PASS
@@ -314,7 +316,7 @@ bug898853.pdf	1	PASS
 bug900822.pdf	1	PASS
 bug903856.pdf	1	PASS
 bug911034.pdf	1	PASS
-bug920426.pdf	1	PASS_ONE
+bug920426.pdf	1	PASS
 bug921409.pdf	1	PASS
 bug946506.pdf	1	PASS
 bug_jpx.pdf	1	PASS
@@ -333,9 +335,9 @@ close-path-bug.pdf	1	PASS
 cmykjpeg.pdf	1	PASS
 colorkeymask.pdf	1	PASS
 colors.pdf	1	PASS
-colorspace_atan.pdf	1	PASS_ONE
-colorspace_cos.pdf	1	PASS_ONE
-colorspace_sin.pdf	1	PASS_ONE
+colorspace_atan.pdf	1	PASS
+colorspace_cos.pdf	1	PASS
+colorspace_sin.pdf	1	PASS
 comments.pdf	1	PASS
 complex_ttf_font.pdf	1	PASS
 coons-allflags-withfunction.pdf	1	PASS
@@ -352,7 +354,7 @@ empty#hash.pdf	1	PASS
 empty.pdf	1	PASS
 empty_protected.pdf	1	PASS
 encrypted-attachment.pdf	1	PASS_ONE
-endchar.pdf	1	PASS_ONE
+endchar.pdf	1	PASS
 evaljs.pdf	1	PASS
 extgstate.pdf	1	PASS
 extractPages_null_in_array.pdf	1	PASS
@@ -429,7 +431,7 @@ issue11713.pdf	1	PASS
 issue11718_reduced.pdf	1	PASS
 issue11740_reduced.pdf	1	PASS
 issue11768_reduced.pdf	1	PASS
-issue11878_reduced.pdf	1	PASS_ONE
+issue11878_reduced.pdf	1	PASS
 issue11913.pdf	1	PASS
 issue11915.pdf	1	PASS
 issue11922_reduced.pdf	1	PASS
@@ -552,14 +554,14 @@ issue16633.pdf	1	PASS
 issue16742.pdf	1	PASS
 issue17056.pdf	1	PASS
 issue17064_readonly.pdf	1	PASS
-issue17065.pdf	1	PASS_ONE
+issue17065.pdf	1	PASS
 issue17069.pdf	1	PASS
 issue17147.pdf	1	PASS
 issue17215.pdf	1	PASS
 issue17333.pdf	1	PASS
 issue17492.pdf	1	PASS
 issue17540.pdf	1	PASS
-issue17554.pdf	1	PASS_ONE
+issue17554.pdf	1	PASS
 issue17671.pdf	1	PASS
 issue17679.pdf	1	PASS
 issue17679_2.pdf	1	PASS
@@ -583,7 +585,7 @@ issue18117.pdf	1	PASS
 issue18305.pdf	1	PASS
 issue18360.pdf	1	PASS
 issue18408_reduced.pdf	1	PASS
-issue18529.pdf	1	PASS_ONE
+issue18529.pdf	1	PASS
 issue18536.pdf	1	PASS
 issue18548_reduced.pdf	1	PASS
 issue18561.pdf	1	PASS
@@ -595,7 +597,7 @@ issue18823.pdf	1	PASS
 issue18894.pdf	1	PASS
 issue18911.pdf	1	PASS
 issue18956.pdf	1	PASS
-issue18986.pdf	1	PASS_ONE
+issue18986.pdf	1	PASS
 issue1905.pdf	1	PASS
 issue19083.pdf	1	PASS
 issue19120.pdf	1	PASS
@@ -608,10 +610,10 @@ issue19360.pdf	1	PASS
 issue19389.pdf	1	PASS
 issue19424.pdf	1	PASS
 issue19474.pdf	1	PASS
-issue19484_1.pdf	1	ALL_ORACLES_REFUSED
-issue19484_2.pdf	1	ALL_ORACLES_REFUSED
+issue19484_1.pdf	1	EXCISE_ONLY
+issue19484_2.pdf	1	EXCISE_ONLY
 issue19505.pdf	1	PASS
-issue19517.pdf	1	PASS_ONE
+issue19517.pdf	1	PASS
 issue19532.pdf	1	PASS
 issue19550.pdf	1	PASS
 issue19633.pdf	1	PASS
@@ -643,11 +645,11 @@ issue21068.pdf	1	PASS_ONE
 issue21126.pdf	1	PASS
 issue2128r.pdf	1	PASS
 issue21346.pdf	1	PASS
-issue21436.pdf	1	PASS_ONE
+issue21436.pdf	1	PASS
 issue215.pdf	1	PASS
 issue2176.pdf	1	PASS
 issue2177.pdf	1	PASS_ONE
-issue2391-1.pdf	1	PASS_ONE
+issue2391-1.pdf	1	PASS
 issue2391-2.pdf	1	PASS
 issue2462.pdf	1	PASS
 issue2537r.pdf	1	PASS
@@ -690,7 +692,7 @@ issue4436r.pdf	1	PASS
 issue4461.pdf	1	PASS
 issue4550.pdf	1	PASS
 issue4573.pdf	1	PASS
-issue4575.pdf	1	PASS_ONE
+issue4575.pdf	1	PASS
 issue4630.pdf	1	PASS
 issue4650.pdf	1	PASS
 issue4665.pdf	1	PASS
