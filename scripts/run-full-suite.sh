@@ -305,15 +305,48 @@ emit "copy-whitespace-parity" script "scripts/check-copy-whitespace-parity.sh" "
 # them.
 if [ "$EVERYTHING" = "1" ]; then
     emit "release-gates" script "scripts/release-smoke.sh --no-build --quick --resume --only=accessibility,automation,ux,benchmark,perf-budget,aot,pdf20" "-"
-    # Corpus rendering scan (#862). Classifies every pdf.js page PASS /
-    # PASS_ONE / DIFF / MALFORMED_PDF / ... and fails when a page's status
-    # departs from tests/corpus-expectations.tsv. Uses the checked-in password
-    # manifest by default (#864), so encrypted fixtures are actually decrypted
+    # Corpus rendering scans (#862). Each page is classified PASS / PASS_ONE /
+    # DIFF / MALFORMED_PDF / ... and the run fails when a status departs from
+    # that corpus's expectation manifest. The checked-in password manifest
+    # (#864) is used by default, so encrypted fixtures are actually decrypted
     # rather than written off as unsupported.
     #
-    # Under --everything rather than the default run: it renders ~685 pages
-    # against mutool/pdftocairo/ghostscript and takes several minutes.
-    emit "corpus-scan" script "scripts/run-exploratory-corpus.sh --expectation-manifest tests/corpus-expectations.tsv" "-"
+    # FOUR CORPORA, not one — 3,915 pages. Each is adversarial in a different
+    # way, and the spread is the point:
+    #
+    #   pdf.js   685 pages, 96.1% PASS  Mozilla's regression history
+    #   veraPDF 2694 pages, 99.7% PASS  PDF Association PDF/A + PDF/UA suite
+    #   Isartor  205 pages,  100% PASS  PDF Association PDF/A-1 violations
+    #   PDFium   331 pages,  74.6% PASS Chrome's regression history
+    #
+    # PDFium's set is by far the harshest, which is exactly why it earns its
+    # place: it is the only corpus here assembled from crashes in the most
+    # widely deployed PDF renderer there is.
+    #
+    # --extra-oracles all adds PDFBox and PDFium to the default Ghostscript
+    # escalation. This is close to free: extra oracles only run on pages where
+    # mutool and pdftocairo have ALREADY disagreed, so the cost lands only
+    # where a tie-break is actually needed — which is also where a single
+    # oracle is least trustworthy.
+    #
+    # Under --everything rather than the default run: these take tens of
+    # minutes together.
+    for _corpus_spec in \
+        "corpus-scan-pdfjs:test-pdfs/pdfjs:tests/corpus-expectations.tsv" \
+        "corpus-scan-verapdf:test-pdfs/verapdf-corpus:tests/corpus-expectations-verapdf.tsv" \
+        "corpus-scan-isartor:test-pdfs/isartor:tests/corpus-expectations-isartor.tsv" \
+        "corpus-scan-pdfium:test-pdfs/pdfium:tests/corpus-expectations-pdfium.tsv"
+    do
+        _cs_name="${_corpus_spec%%:*}"; _cs_rest="${_corpus_spec#*:}"
+        _cs_dir="${_cs_rest%%:*}"; _cs_manifest="${_cs_rest#*:}"
+        # Skip a corpus that has not been downloaded rather than failing the
+        # whole suite: they are gitignored mirrors, and scripts/download-*.sh
+        # fetches them. check-test-prereqs.sh is what reports them missing.
+        if [ -d "$ROOT/$_cs_dir" ]; then
+            emit "$_cs_name" script \
+                "scripts/run-exploratory-corpus.sh --corpus $_cs_dir --page-mode first --extra-oracles all --expectation-manifest $_cs_manifest" "-"
+        fi
+    done
 fi
 
 # --- Phase 6: unchunked App.Tests as the release evidence -----------------

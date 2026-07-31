@@ -357,8 +357,21 @@ public class XRefParser
 
         foreach (Match match in IndirectObjectHeaderRegex.Matches(content))
         {
-            var objectNumber = int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
-            var generation = int.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture);
+            // TryParse, not Parse. This is the best-effort xref RECONSTRUCTION
+            // path, reached only for files whose xref is already broken, so the
+            // digits matched here are untrusted: a header like "99999999999 0 obj"
+            // parses as a regex match and overflows Int32
+            // (pdfium bug_455199.pdf). An object number that does not fit in an
+            // Int32 cannot be referenced by any valid indirect reference anyway,
+            // so skipping the entry loses nothing — whereas throwing turns a
+            // repairable file into an unhandled OverflowException, which is the
+            // DoS shape #648 exists to close.
+            if (!int.TryParse(match.Groups[1].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var objectNumber) ||
+                !int.TryParse(match.Groups[2].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var generation))
+            {
+                continue;
+            }
+
             var offset = match.Groups[1].Index;
 
             xref[objectNumber] = new XRefEntry

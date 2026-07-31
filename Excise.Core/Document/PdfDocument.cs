@@ -615,8 +615,14 @@ public class PdfDocument : IDisposable
                     if (!UsesIdentityCryptFiltersForDocumentContent(encryptDict))
                     {
                         // /ID is required; first element is what the security handler hashes.
-                        var idArr = trailer.GetArray("ID");
-                        if (idArr.Count == 0 || idArr[0] is not PdfString idStr)
+                        // GetArrayOrNull, not GetArray: an encrypted file with no
+                        // /ID at all is malformed and must refuse as the typed
+                        // PdfParseException below, not as a raw
+                        // KeyNotFoundException from the dictionary accessor. The
+                        // "missing or empty" check under it was already written
+                        // for this case but could never be reached (bug_644.pdf).
+                        var idArr = trailer.GetArrayOrNull("ID");
+                        if (idArr is null || idArr.Count == 0 || idArr[0] is not PdfString idStr)
                             throw new Excise.Core.Parsing.PdfParseException("/ID array missing or empty");
                         var firstId = idStr.Bytes;
 

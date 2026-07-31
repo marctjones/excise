@@ -98,9 +98,10 @@ fi
 echo
 echo "Test corpora (under $TEST_PDF_DIR):"
 check_dir "smoke"          "scripts/download-smoke-corpus.sh" "Excise.Rendering smoke + redaction round-trip"
-check_dir "verapdf-corpus" "scripts/download-test-pdfs.sh"    "Excise.Core RealPdfTests + AutomationScript_VeraPdfCorpusSample"
-check_dir "isartor"        "scripts/download-test-pdfs.sh"    "Excise.Rendering Isartor PDF/A round-trip"
-check_dir "pdfjs"          "scripts/download-pdfjs-corpus.sh" "ExploratoryDifferentialTests (Trait=Exploratory only)"
+check_dir "verapdf-corpus" "scripts/download-test-pdfs.sh"    "Excise.Core RealPdfTests + corpus rendering scan (2694 pages)"
+check_dir "isartor"        "scripts/download-test-pdfs.sh"    "Isartor PDF/A round-trip + corpus rendering scan (205 pages)"
+check_dir "pdfjs"          "scripts/download-pdfjs-corpus.sh" "corpus rendering scan (685 pages)"
+check_dir "pdfium"         "scripts/download-pdfium-corpus.sh" "corpus rendering scan (331 pages) — the harshest of the four"
 check_dir "poppler"        "scripts/download-poppler-corpus.sh" "Poppler regression corpus exploratory rendering"
 
 echo

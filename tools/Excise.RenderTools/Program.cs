@@ -1995,11 +1995,19 @@ partial class Program
 
             if (shouldEscalate && extraOracles.HasFlag(CorpusExtraOracles.Pdfium))
             {
-                progress?.Update("pdfium", pageNumber, $"pdfium_test render page {pageNumber}/{doc.PageCount}");
+                progress?.Update("pdfium", pageNumber, $"pdfium render page {pageNumber}/{doc.PageCount}");
+                // PdfiumNativeReferenceRenderer, NOT PdfiumReferenceRenderer.
+                // The latter shells out to `pdfium_test`, which is not
+                // distributed by anyone — it only exists if you build Chromium's
+                // pdfium tree with depot_tools/gn/ninja. So this oracle reported
+                // TOOL_UNAVAILABLE on every page of every corpus while appearing
+                // in the oracle list, and --extra-oracles all silently bought
+                // four oracles rather than five. The native renderer P/Invokes
+                // libpdfium, which scripts/download-pdfium.sh can actually fetch.
                 var pdfiumOutcome = RenderOracleWithCache(
                     oracleCache, "pdfium", pdfPath, pageNumber, comparisonDpi, userPassword,
-                    () => PdfiumReferenceRenderer.TryRenderPage(
-                        pdfPath, pageNumber, comparisonDpi, oracleTimeoutMs, userPassword));
+                    () => PdfiumNativeReferenceRenderer.TryRenderPage(
+                        pdfPath, pageNumber, comparisonDpi, userPassword));
                 var pdfiumResult = pdfiumOutcome.Result;
                 pdfiumBmp = pdfiumResult.Bitmap;
                 entry.pdfiumMs = pdfiumResult.ElapsedMs;

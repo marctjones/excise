@@ -1,27 +1,21 @@
-# Expected corpus-scan status per page (#862).
+# Expected corpus-scan status per page for the pdfjs corpus (#862).
 #
-# Format:  path <TAB> pageNumber <TAB> expectedStatus   (no header row:
-#          the loader only skips a header on line 1, and these comments
-#          push it past that)
-# Used by: scripts/run-exploratory-corpus.sh --expectation-manifest
+# Format:  corpus-relative-path <TAB> pageNumber <TAB> expectedStatus
+#          (no header row: the loader only skips one on line 1, and these
+#          comments push it past that)
+# Regenerate: scripts/update-corpus-expectations.sh pdfjs
 #
-# A RATCHET, not an aspiration. It records what each page does today so a
-# regression fails loudly. It is NOT a claim every page should be PASS:
-#   PASS_ONE   - only ONE oracle corroborated. Since #865, PASS means a
-#                MAJORITY of the oracles that rendered agree, so PASS_ONE
-#                now genuinely means single-source evidence.
-#   EXCISE_ONLY- excise rendered and no oracle could (#867). Coverage
-#                without corroboration, not a defect: issue19484_1/2 are
-#                encrypted files mutool cannot read and excise decrypts.
-#   MALFORMED_PDF / EMPTY_DOC / RECOVERED_MALFORMED_CONTENT - the fixture
-#                is broken on purpose. Refusing it is CORRECT.
+# A RATCHET, not an aspiration — it records what each page does today so a
+# regression fails loudly. Several statuses are CORRECT outcomes:
+#   PASS_ONE     only one oracle corroborated (they disagree with each other)
+#   EXCISE_ONLY  excise rendered and no oracle could — coverage without
+#                corroboration, not a defect
+#   MALFORMED_PDF / EMPTY_DOC / TIMEOUT  the fixture is broken or hostile
+#                on purpose; refusing it is correct
 #
-# Regenerate after a deliberate improvement and review the diff: a status
-# moving the RIGHT way still needs a human to confirm it is real.
-#
-# Generated 2026-07-31 with tests/corpus-passwords.tsv and the #865
-# oracle-majority rule.
-# Baseline: PASS=658, PASS_ONE=20, MALFORMED_PDF=3, EXCISE_ONLY=2, RECOVERED_MALFORMED_CONTENT=1, EMPTY_DOC=1
+# Keys are corpus-relative PATHS, not basenames: this corpus may have
+# subdirectories and duplicate filenames.
+# Baseline: PASS=666, PASS_ONE=12, MALFORMED_PDF=3, EXCISE_ONLY=2, RECOVERED_MALFORMED_CONTENT=1, EMPTY_DOC=1
 160F-2019.pdf	1	PASS
 22060_A1_01_Plans.pdf	1	PASS
 90ms_rksj_h_sample.pdf	1	PASS
@@ -86,7 +80,7 @@ arial_unicode_ab_cidfont.pdf	1	PASS
 arial_unicode_en_cidfont.pdf	1	PASS
 asciihexdecode.pdf	1	PASS
 attachment.pdf	1	PASS
-auth-event-ef-open.pdf	1	PASS_ONE
+auth-event-ef-open.pdf	1	PASS
 autoprint.pdf	1	PASS
 bad-PageLabels.pdf	1	PASS
 basicapi.pdf	1	PASS
@@ -127,7 +121,7 @@ bitmap-refine-page.pdf	1	PASS
 bitmap-refine-refine.pdf	1	PASS
 bitmap-refine-template1-tpgron.pdf	1	PASS_ONE
 bitmap-refine-template1.pdf	1	PASS
-bitmap-refine-tpgron.pdf	1	PASS_ONE
+bitmap-refine-tpgron.pdf	1	PASS
 bitmap-refine.pdf	1	PASS
 bitmap-stripe-initially-unknown-height.pdf	1	PASS
 bitmap-stripe-last-implicit.pdf	1	PASS
@@ -284,7 +278,7 @@ bug1953099.pdf	1	PASS
 bug1963407.pdf	1	PASS
 bug1974436.pdf	1	PASS
 bug1978317.pdf	1	MALFORMED_PDF
-bug1980958.pdf	1	PASS_ONE
+bug1980958.pdf	1	PASS
 bug1989304.pdf	1	PASS
 bug1992868.pdf	1	PASS
 bug1997343.pdf	1	PASS
@@ -353,8 +347,8 @@ doc_actions.pdf	1	PASS
 empty#hash.pdf	1	PASS
 empty.pdf	1	PASS
 empty_protected.pdf	1	PASS
-encrypted-attachment.pdf	1	PASS_ONE
-endchar.pdf	1	PASS
+encrypted-attachment.pdf	1	PASS
+endchar.pdf	1	PASS_ONE
 evaljs.pdf	1	PASS
 extgstate.pdf	1	PASS
 extractPages_null_in_array.pdf	1	PASS
@@ -372,7 +366,7 @@ form_two_pages.pdf	1	PASS
 fraction-highlight.pdf	1	PASS
 franz.pdf	1	PASS
 franz_2.pdf	1	PASS
-freeculture.pdf	1	PASS_ONE
+freeculture.pdf	1	PASS
 freetext_no_appearance.pdf	1	PASS
 freetexts.pdf	1	PASS
 french_diacritics.pdf	1	PASS
@@ -443,7 +437,7 @@ issue12213.pdf	1	PASS
 issue12295.pdf	1	PASS
 issue12337.pdf	1	PASS
 issue12399_reduced.pdf	1	PASS
-issue12418_reduced.pdf	1	PASS_ONE
+issue12418_reduced.pdf	1	PASS
 issue1249.pdf	1	PASS
 issue12504.pdf	1	PASS
 issue12705.pdf	1	PASS
@@ -471,7 +465,7 @@ issue13343.pdf	1	PASS
 issue13372.pdf	1	PASS
 issue13447.pdf	1	PASS
 issue1350.pdf	1	PASS
-issue13520.pdf	1	PASS_ONE
+issue13520.pdf	1	PASS
 issue13561_reduced.pdf	1	PASS
 issue13916.pdf	1	PASS
 issue13931.pdf	1	PASS
@@ -641,7 +635,7 @@ issue20516.pdf	1	PASS
 issue2074.pdf	1	PASS
 issue20930.pdf	1	PASS
 issue2099-1.pdf	1	PASS
-issue21068.pdf	1	PASS_ONE
+issue21068.pdf	1	PASS
 issue21126.pdf	1	PASS
 issue2128r.pdf	1	PASS
 issue21346.pdf	1	PASS
@@ -677,7 +671,7 @@ issue3458.pdf	1	PASS
 issue3521.pdf	1	PASS
 issue3566.pdf	1	PASS
 issue3584.pdf	1	PASS
-issue3694_reduced.pdf	1	PASS_ONE
+issue3694_reduced.pdf	1	PASS
 issue3879r.pdf	1	PASS
 issue3885.pdf	1	PASS
 issue3928.pdf	1	PASS
