@@ -171,6 +171,57 @@ public class EncryptedCorpusPasswordCoverageTests
             string.Join(", ", failures));
     }
 
+    /// <summary>
+    /// No manifest entry may match more than one file across the corpora.
+    ///
+    /// WHY
+    /// ---
+    /// The manifest is keyed by BASENAME (`Path.GetFileName`), and the entries
+    /// added for PDFium include `encrypted.pdf` — about as generic a filename as
+    /// exists. Four corpora now sit side by side, so a second `encrypted.pdf`
+    /// appearing in any of them would silently hand PDFium's password to an
+    /// unrelated file. The failure is quiet in the worst way: the wrong password
+    /// does not decrypt, the page is classified as if it were a rendering
+    /// failure, and the credential looks like coverage.
+    ///
+    /// The corpora are downloaded mirrors that change when upstream changes, so
+    /// this cannot be established once by inspection — it has to be re-checked.
+    /// </summary>
+    [Fact]
+    public void NoManifestEntry_MatchesMoreThanOneCorpusFile()
+    {
+        var root = FindRepoRoot();
+        Assert.SkipWhen(root == null, "could not locate repo root");
+
+        var known = LoadPasswordManifest(Path.Combine(root!, "tests", "corpus-passwords.tsv"));
+        Assert.SkipWhen(known.Count == 0, "no password manifest entries");
+
+        var present = CorpusDirs
+            .Select(d => Path.Combine(root!, d))
+            .Where(Directory.Exists)
+            .ToList();
+        Assert.SkipWhen(present.Count == 0, "no corpora present");
+
+        var ambiguous = new List<string>();
+        foreach (var name in known.Keys)
+        {
+            var matches = present
+                .SelectMany(d => Directory.EnumerateFiles(d, name, SearchOption.AllDirectories))
+                .ToList();
+            if (matches.Count > 1)
+            {
+                ambiguous.Add($"{name} matches {matches.Count}: " +
+                              string.Join(", ", matches.Select(m => Path.GetRelativePath(root!, m))));
+            }
+        }
+
+        ambiguous.Should().BeEmpty(
+            "the password manifest is keyed by basename, so an entry matching two corpus files " +
+            "applies one file's password to the other — which fails to decrypt and is then " +
+            "indistinguishable from a rendering failure. Disambiguate by corpus-relative path. " +
+            string.Join(" | ", ambiguous));
+    }
+
     // ---------------------------------------------------------------- helpers --
 
     /// <summary>
