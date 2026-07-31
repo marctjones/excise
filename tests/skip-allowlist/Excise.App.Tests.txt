@@ -87,3 +87,11 @@ Excise.App.Tests.UI.MouseInputTests.FitOnResize_RecomputesZoom   # corpus-gated:
 # file. Two of them need tools/corpora the test-linux job does not have.
 Excise.App.Tests.UI.PageOrganizationSavePersistenceTests.RemoveSelectedPagesCommand_ThenSaveAs_RemovedPageIsGoneAccordingToAnIndependentExtractor   # independent re-read of the saved bytes: qpdf page count + mutool text [requires: tool:mutool tool:qpdf]
 Excise.App.Tests.UI.PageOrganizationSavePersistenceTests.RealWorldForm_RemoveThenSaveAs_DropsThePageAndKeepsTheAcroFormIntact   # real government form (irs-w9.pdf) + qpdf structural check [requires: corpus:smoke tool:qpdf]
+# Independent-oracle siblings for the file-writing page commands (#856). Each
+# re-reads a write that an always-on sibling above already checked with excise,
+# using qpdf (page count + structural validity) and mutool (per-page text), so
+# coverage never depends on the tools being present.
+Excise.App.Tests.UI.PageOrganizationCommandTests.ExtractCurrentPageCommand_WrittenFile_IsVerifiedByIndependentTools   # qpdf + mutool re-read of the extract (#856) [requires: tool:qpdf tool:mutool]
+Excise.App.Tests.UI.PageOrganizationCommandTests.ExtractSelectedPagesCommand_WrittenFile_IsVerifiedByIndependentTools   # qpdf + mutool re-read of the extract (#856) [requires: tool:qpdf tool:mutool]
+Excise.App.Tests.UI.PageOrganizationCommandTests.CombineDocumentsCommand_WrittenFile_IsVerifiedByIndependentTools   # qpdf + mutool re-read of the merged file (#856) [requires: tool:qpdf tool:mutool]
+Excise.App.Tests.UI.PageOrganizationCommandTests.SplitDocumentCommand_WrittenFiles_AreVerifiedByIndependentTools   # qpdf + mutool re-read of every split fragment (#856) [requires: tool:qpdf tool:mutool]

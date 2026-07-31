@@ -566,4 +566,14 @@ if [ "$OVERALL" != "0" ]; then
     say ""
     say "${Y}Re-run the same command to retry only the failed/pending steps.${N}"
 fi
+
+# Tidy up after ourselves (#858). --blame hang dumps under TestResults reached
+# 36 GB on a maintainer machine because nothing ever pruned them, on a volume
+# that macOS also grows swap on. Keeps the newest few runs so a failure is
+# still diagnosable. Set EXCISE_NO_ARTIFACT_PRUNE=1 to keep everything.
+if [ "${EXCISE_NO_ARTIFACT_PRUNE:-0}" != "1" ] && [ -x scripts/clean-test-artifacts.sh ]; then
+    say ""
+    scripts/clean-test-artifacts.sh --keep 5 2>/dev/null | tail -2
+fi
+
 exit $OVERALL
