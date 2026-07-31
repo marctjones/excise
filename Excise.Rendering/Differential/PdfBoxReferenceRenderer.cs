@@ -138,7 +138,14 @@ public static class PdfBoxReferenceRenderer
             return new Invocation(explicitCommand, Array.Empty<string>(), explicitCommand);
 
         var jarPath = Environment.GetEnvironmentVariable("EXCISE_PDFBOX_JAR")
-            ?? Environment.GetEnvironmentVariable("PDFBOX_APP_JAR");
+            ?? Environment.GetEnvironmentVariable("PDFBOX_APP_JAR")
+            // Fall back to the jar scripts/download-pdfbox.sh drops in
+            // tools/vendor/. Without this, running that script was not enough:
+            // the tests still skipped unless the caller also exported
+            // EXCISE_PDFBOX_JAR, which is the kind of hidden second step that
+            // leaves a suite quietly skipping (see the zero-skip work in
+            // ca82e76a). Explicit env vars still win.
+            ?? FindVendoredPdfBoxJar();
         var javaCommand = ResolveJavaCommand();
         if (!string.IsNullOrWhiteSpace(jarPath) && File.Exists(jarPath) && javaCommand != null)
             return new Invocation(javaCommand, new[] { "-Djava.awt.headless=true", "-jar", jarPath }, $"PDFBox {Path.GetFileName(jarPath)}");
@@ -243,4 +250,28 @@ public static class PdfBoxReferenceRenderer
 
     private static string Trunc(string value, int length)
         => value.Length <= length ? value : value.Substring(0, length) + "…";
+
+    /// <summary>
+    /// Locates tools/vendor/pdfbox-app-*.jar by walking up from the test
+    /// assembly. Returns the highest version present so a stale jar left behind
+    /// by an older download does not shadow a newer one.
+    /// </summary>
+    private static string? FindVendoredPdfBoxJar()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null)
+        {
+            var vendor = Path.Combine(dir.FullName, "tools", "vendor");
+            if (Directory.Exists(vendor))
+            {
+                var jar = Directory
+                    .EnumerateFiles(vendor, "pdfbox-app-*.jar", SearchOption.TopDirectoryOnly)
+                    .OrderByDescending(f => f, StringComparer.Ordinal)
+                    .FirstOrDefault();
+                if (jar != null) return jar;
+            }
+            dir = dir.Parent;
+        }
+        return null;
+    }
 }
