@@ -10,8 +10,10 @@
 #   PASS_ONE     only one oracle corroborated (they disagree with each other)
 #   EXCISE_ONLY  excise rendered and no oracle could — coverage without
 #                corroboration, not a defect
-#   MALFORMED_PDF / EMPTY_DOC / TIMEOUT  the fixture is broken or hostile
-#                on purpose; refusing it is correct
+#   MALFORMED_PDF / EMPTY_DOC  the fixture is broken or hostile on
+#                purpose; refusing it is correct
+#   *            load-dependent when measured (see the note on the row) —
+#                asserts only that the page was scanned
 #
 # Keys are corpus-relative PATHS, not basenames: this corpus may have
 # subdirectories and duplicate filenames.

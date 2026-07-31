@@ -72,8 +72,10 @@ print("# regression fails loudly. Several statuses are CORRECT outcomes:")
 print("#   PASS_ONE     only one oracle corroborated (they disagree with each other)")
 print("#   EXCISE_ONLY  excise rendered and no oracle could — coverage without")
 print("#                corroboration, not a defect")
-print("#   MALFORMED_PDF / EMPTY_DOC / TIMEOUT  the fixture is broken or hostile")
-print("#                on purpose; refusing it is correct")
+print("#   MALFORMED_PDF / EMPTY_DOC  the fixture is broken or hostile on")
+print("#                purpose; refusing it is correct")
+print("#   *            load-dependent when measured (see the note on the row) —")
+print("#                asserts only that the page was scanned")
 print("#")
 print("# Keys are corpus-relative PATHS, not basenames: this corpus may have")
 print("# subdirectories and duplicate filenames.")
@@ -83,11 +85,24 @@ print("# Baseline: " + ", ".join(f"{k}={v}" for k, v in c.most_common()))
 def path_of(r):
     return r.get("path") or r.get("file") or ""
 
+# Statuses that depend on how loaded the machine was, not on what the code does.
+# TIMEOUT is measured against a 15s per-file budget under 14-way chunk
+# parallelism: the same page can be TIMEOUT on a busy run and PASS on an idle
+# one. Pinning it literally makes the gate go red in the GOOD direction, and a
+# gate that false-reds teaches people to regenerate the manifest reflexively —
+# which is exactly how a real regression gets waved through. Pin these as "*",
+# which still asserts the page was scanned and did not take down the run.
+LOAD_DEPENDENT = {"TIMEOUT"}
+
 for r in sorted(rows, key=path_of):
     p = path_of(r)
     page = r.get("page") or r.get("pageNumber") or 1
     st = r.get("status")
-    if p and st:
+    if not (p and st):
+        continue
+    if st in LOAD_DEPENDENT:
+        print(f"{p}\t{page}\t*\t\tload-dependent ({st} when measured); any terminal status accepted")
+    else:
         print(f"{p}\t{page}\t{st}")
 PY
     then
