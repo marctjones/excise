@@ -275,3 +275,9 @@ Excise.Rendering.Tests.Differential.PageOrganizationDifferentialTests.RemoveAt_D
 Excise.Rendering.Tests.Differential.PageOrganizationDifferentialTests.Insert_PlacesTheNewPageAtTheRequestedIndex_PerIndependentRenderer   # needs qpdf (page count) + mutool (page identity) [requires: tool:qpdf tool:mutool]
 Excise.Rendering.Tests.Differential.PageOrganizationDifferentialTests.AddBlank_AppendsAPageOfTheRequestedSize_PerIndependentRenderer   # needs qpdf (page count) + mutool (page identity) [requires: tool:qpdf tool:mutool]
 Excise.Rendering.Tests.Differential.PageOrganizationDifferentialTests.PageMutations_LeaveAStructurallyValidPdf_PerQpdf   # qpdf --check only; calls no renderer [requires: tool:qpdf]
+# PDFBox oracle (#857/#868). The only non-C-lineage reference renderer we have,
+# so it catches classes of bug mutool/pdftocairo/ghostscript can share. Needs
+# scripts/download-pdfbox.sh plus a JDK; neither is present on the test-linux
+# job, so these skip there and run wherever EXCISE_PDFBOX_JAR is set.
+Excise.Rendering.Tests.Differential.PdfBoxOracleDifferentialTests.ExciseAndPdfBox_PutTheSameInkOnPageOne   # needs the PDFBox jar + a JDK [requires: env:EXCISE_PDFBOX_JAR corpus:smoke]
+Excise.Rendering.Tests.Differential.PdfBoxOracleDifferentialTests.PdfBoxRenderPage_ReturnsTheRequestedPage_NotTheLastOne   # #868 regression guard; needs the PDFBox jar + a JDK [requires: env:EXCISE_PDFBOX_JAR corpus:smoke]
