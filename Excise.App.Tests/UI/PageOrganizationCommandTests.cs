@@ -10,6 +10,7 @@ using Excise.App.Tests.Utilities;
 using Excise.App.ViewModels;
 using Excise.App.Views;
 using Excise.Core.Document;
+using Excise.Rendering.Differential;
 using Xunit;
 
 namespace Excise.App.Tests.UI;
@@ -326,6 +327,139 @@ public class PageOrganizationCommandTests
         }
         allText.Should().Contain("Page 1 Content");
         allText.Should().Contain("Page 4 Content");
+
+        Close(window, dir);
+    }
+
+    // ── Independent-oracle siblings (#856) ───────────────────────────────────
+    // The four command tests above reopen their written file with
+    // PdfDocument.Open — excise reading its own output, which per CLAUDE.md
+    // proves only that its bugs are self-consistent. An extract that writes a
+    // page tree only excise's parser tolerates passes all of them.
+    //
+    // These re-read the SAME writes with tools that are not excise: qpdf for
+    // page count and structural validity, mutool for per-page text. They are
+    // siblings, not replacements — the always-on assertions above keep running
+    // when the tools are absent (CI), so coverage never depends on them.
+
+    private static void RequireOracles()
+    {
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not installed");
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+    }
+
+    /// mutool's text output carries layout whitespace; fixture markers are single tokens.
+    private static string StripWs(string? text) =>
+        new string((text ?? string.Empty).Where(ch => !char.IsWhiteSpace(ch)).ToArray());
+
+    private static void AssertStructurallyValid(string path)
+    {
+        var check = QpdfReferenceTool.Check(path);
+        check.Should().NotBeNull("qpdf reported IsAvailable but produced no result");
+        check!.Value.Success.Should().BeTrue(
+            $"{Path.GetFileName(path)} must satisfy an independent structural check. qpdf said:\n{check.Value.Output}");
+    }
+
+    [FixedAvaloniaFact]
+    public async Task ExtractCurrentPageCommand_WrittenFile_IsVerifiedByIndependentTools()
+    {
+        RequireOracles();
+        var (dir, src) = NewDir("extract-current-oracle");
+        TestPdfGenerator.CreateMultiPagePdf(src, pageCount: 3);
+        var outPath = Path.Combine(dir, "extracted.pdf");
+        var (vm, window) = await OpenAsync(src);
+        vm.CurrentPageIndex = 1; // Page 2
+        vm.PickSavePdfPathOverride = () => Task.FromResult<string?>(outPath);
+
+        await vm.ExtractCurrentPageCommand.Execute();
+
+        QpdfReferenceTool.PageCount(outPath).Should().Be(1,
+            "an independent parser must agree the extract is a one-page document");
+        StripWs(MutoolTextExtractor.ExtractPage(outPath, 1)).Should().Contain("Page2Content");
+        StripWs(MutoolTextExtractor.ExtractPage(outPath, 1)).Should().NotContain("Page1Content",
+            "extracting page 2 must not smuggle page 1's content along with it");
+        AssertStructurallyValid(outPath);
+
+        Close(window, dir);
+    }
+
+    [FixedAvaloniaFact]
+    public async Task ExtractSelectedPagesCommand_WrittenFile_IsVerifiedByIndependentTools()
+    {
+        RequireOracles();
+        var (dir, src) = NewDir("extract-selected-oracle");
+        TestPdfGenerator.CreateMultiPagePdf(src, pageCount: 4);
+        var outPath = Path.Combine(dir, "extracted.pdf");
+        var (vm, window) = await OpenAsync(src);
+        Select(vm, 0); // Page 1
+        Select(vm, 2); // Page 3
+        vm.PickSavePdfPathOverride = () => Task.FromResult<string?>(outPath);
+
+        await vm.ExtractSelectedPagesCommand.Execute();
+
+        QpdfReferenceTool.PageCount(outPath).Should().Be(2);
+        // Order matters: marked pages must land in document order, not selection order.
+        StripWs(MutoolTextExtractor.ExtractPage(outPath, 1)).Should().Contain("Page1Content");
+        StripWs(MutoolTextExtractor.ExtractPage(outPath, 2)).Should().Contain("Page3Content");
+        var both = StripWs(MutoolTextExtractor.ExtractPage(outPath, 1))
+                 + StripWs(MutoolTextExtractor.ExtractPage(outPath, 2));
+        both.Should().NotContain("Page2Content", "an unmarked page must not be written");
+        AssertStructurallyValid(outPath);
+
+        Close(window, dir);
+    }
+
+    [FixedAvaloniaFact]
+    public async Task CombineDocumentsCommand_WrittenFile_IsVerifiedByIndependentTools()
+    {
+        RequireOracles();
+        var (dir, _) = NewDir("combine-oracle");
+        var a = Path.Combine(dir, "a.pdf");
+        var b = Path.Combine(dir, "b.pdf");
+        TestPdfGenerator.CreateTextOnlyPdf(a, "ALPHA_DOC");
+        TestPdfGenerator.CreateTextOnlyPdf(b, "BRAVO_DOC");
+        var outPath = Path.Combine(dir, "combined.pdf");
+
+        var vm = new MainWindowViewModel();
+        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+        window.Show();
+        vm.PickPdfFilesOverride = _ => Task.FromResult<IReadOnlyList<string>>(new[] { a, b });
+        vm.PickSavePdfPathOverride = () => Task.FromResult<string?>(outPath);
+
+        await vm.CombineDocumentsCommand.Execute();
+
+        QpdfReferenceTool.PageCount(outPath).Should().Be(2);
+        StripWs(MutoolTextExtractor.ExtractPage(outPath, 1)).Should().Contain("ALPHA_DOC");
+        StripWs(MutoolTextExtractor.ExtractPage(outPath, 2)).Should().Contain("BRAVO_DOC");
+        AssertStructurallyValid(outPath);
+
+        Close(window, dir);
+    }
+
+    [FixedAvaloniaFact]
+    public async Task SplitDocumentCommand_WrittenFiles_AreVerifiedByIndependentTools()
+    {
+        RequireOracles();
+        var (dir, src) = NewDir("split-oracle");
+        TestPdfGenerator.CreateMultiPagePdf(src, pageCount: 4);
+        var outFolder = Path.Combine(dir, "out");
+        Directory.CreateDirectory(outFolder);
+        var (vm, window) = await OpenAsync(src);
+        vm.PickFolderOverride = () => Task.FromResult<string?>(outFolder);
+
+        await vm.SplitDocumentCommand.Execute();
+
+        var files = Directory.GetFiles(outFolder, "*.pdf").OrderBy(f => f).ToList();
+        files.Should().HaveCount(4);
+        for (int i = 0; i < files.Count; i++)
+        {
+            QpdfReferenceTool.PageCount(files[i]).Should().Be(1,
+                $"fragment {i + 1} must hold exactly one page according to an independent parser");
+            StripWs(MutoolTextExtractor.ExtractPage(files[i], 1)).Should().Contain($"Page{i + 1}Content",
+                $"fragment {i + 1} must carry source page {i + 1} — a burst producing the right " +
+                "number of one-page files with the wrong content in them is what a count-only check misses");
+            AssertStructurallyValid(files[i]);
+        }
 
         Close(window, dir);
     }

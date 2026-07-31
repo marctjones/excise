@@ -846,11 +846,14 @@ Excise.Core/                          # the PDF engine — parser, writer, redac
 
 Excise.Rendering/                     # SkiaSharp renderer
 └── Differential/                   # ← REFERENCE ORACLES. Use these, don't build new ones.
-    ├── GhostscriptReferenceRenderer.cs
-    ├── MutoolReferenceRenderer.cs
-    ├── PdfiumReferenceRenderer.cs
-    ├── PdftocairoReferenceRenderer.cs
-    └── PdfBoxReferenceRenderer.cs
+    ├── MutoolReferenceRenderer.cs        # 104 uses in Differential tests
+    ├── GhostscriptReferenceRenderer.cs   #  50
+    ├── PdftocairoReferenceRenderer.cs    #  26
+    ├── PdftoppmReferenceRenderer.cs      #  14
+    ├── MutoolTextExtractor.cs            # independent TEXT oracle
+    ├── QpdfReferenceTool.cs              # structure: --check, --show-npages
+    ├── PdfiumReferenceRenderer.cs        # 0 real uses - see note below the map
+    └── PdfBoxReferenceRenderer.cs        # 0 uses      - see note below the map
 
 Excise.App/                          # the Avalonia GUI (orchestration only)
 ├── Services/
@@ -887,6 +890,23 @@ Documentation:
 ├── REDACTION_AI_GUIDELINES.md      # AI safety guidelines for redaction
 └── LICENSES.md                     # Dependency licenses
 ```
+
+**The test suite uses FOUR of those renderers, not six (#857).** It is easy to read
+"six reference renderers" as "six independent oracles corroborate our rendering."
+Two of them corroborate nothing today:
+
+- **PdfBoxReferenceRenderer** — referenced by **zero** test files. Only
+  `tools/Excise.RenderTools` (benchmark/corpus reporting) uses it.
+- **PdfiumReferenceRenderer** — referenced only by `PdfiumReferenceRendererTests`,
+  whose two `[Fact]`s assert on `BuildPdfiumTestArguments`, i.e. pure
+  argument-string construction. **No pdfium binary is ever invoked by a test.**
+
+So setting `EXCISE_PDFIUM_TEST` / `EXCISE_PDFBOX_JAR` changes nothing for the test
+suite — it only affects `Excise.RenderTools`. Neither is trivially installable
+either: `pdfium_test` has no Homebrew formula (it needs a Chromium-side build or a
+prebuilt binary), and PDFBox needs a manually fetched jar. Plan work against the
+four that actually run, and don't assume rendering has six-way corroboration.
+
 
 ## Security Notes
 
