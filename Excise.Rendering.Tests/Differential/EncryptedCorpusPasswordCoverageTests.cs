@@ -43,14 +43,47 @@ public class EncryptedCorpusPasswordCoverageTests
             "poppler fixture; upstream publishes no password and none of the obvious candidates verified",
         ["encrypted-256.pdf"] =
             "poppler AES-256 (V=5 R=6) fixture; upstream publishes no password",
+        ["encrypted_hello_world_r5.pdf"] =
+            "pdfium AES-256 fixture; only the OWNER password ('âge') is recoverable and excise " +
+            "opens user-password-only (#324). Additionally V=5 R=5, a transitional Adobe " +
+            "extension excise does not implement",
+        ["encrypted_hello_world_r6.pdf"] =
+            "pdfium AES-256 (V=5 R=6) fixture; only the OWNER password ('âge') is recoverable. " +
+            "qpdf prints an empty user password, which for AES-256 means 'not recoverable' " +
+            "rather than 'empty' — the empty password does not open it in mutool either",
+
+        // pdfium NEGATIVE fixtures: these are supposed to be unopenable. They
+        // exist to prove a reader rejects them, so "no password works" is the
+        // fixture working, not a gap. Verified 2026-07-31: neither qpdf nor
+        // mutool opens them with empty / hôtel / âge / 1234 / 5678.
+        ["encrypted_hello_world_r2_bad_okey.pdf"] =
+            "pdfium negative fixture — the owner key is deliberately corrupt ('bad_okey'), so " +
+            "no password authenticates in any reader. Refusing it is the correct behaviour",
+        ["encrypted_hello_world_r3_bad_okey.pdf"] =
+            "pdfium negative fixture — deliberately corrupt owner key, as _r2_bad_okey above",
+        ["bug_644.pdf"] =
+            "pdfium fixture that is both damaged (no xref, invalid /ID in trailer) and R=5 " +
+            "encrypted; qpdf reconstructs the xref and still reports 'invalid password', and " +
+            "mutool cannot open it either. No credential is recoverable",
     };
 
+    /// <summary>
     /// Corpus directories to sweep, relative to the repo root.
+    ///
+    /// Must list EVERY corpus the rendering scan covers. When pdfium and
+    /// verapdf-corpus were added to the scan but not here, the scan pinned 6
+    /// password-blocked pdfium pages as expected outcomes while the test whose
+    /// whole job is to notice missing credentials was not looking at that
+    /// directory — the exact silence this class was written to end, recreated
+    /// one corpus over.
+    /// </summary>
     private static readonly string[] CorpusDirs =
     {
         "test-pdfs/pdfjs",
         "test-pdfs/poppler",
         "test-pdfs/isartor",
+        "test-pdfs/pdfium",
+        "test-pdfs/verapdf-corpus",
     };
 
     [Fact]

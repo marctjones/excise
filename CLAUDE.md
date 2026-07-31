@@ -1246,21 +1246,54 @@ Run the download script to fetch test PDFs locally:
 ./scripts/download-test-pdfs.sh
 ```
 
-This downloads:
-- **veraPDF Corpus** - 2,694 PDF/A test files covering PDF/A-1a/1b/2a/2b/2u/3b/4/4e/4f, PDF/UA-1/2
-- **Isartor Test Suite** - PDF/A-1 conformance tests
-- **Sample PDFs** - Additional challenging test cases
+That script fetches the two PDF Association corpora. **The corpus rendering
+scan covers four**, and each has its own script — `download-test-pdfs.sh` alone
+leaves you with half the coverage:
 
-Files are stored in `test-pdfs/` which is gitignored.
+| corpus | files | script | what it is |
+|---|---|---|---|
+| veraPDF | 2694 | `download-test-pdfs.sh` | PDF Association PDF/A + PDF/UA conformance |
+| pdf.js | 685 | `download-pdfjs-corpus.sh` | Mozilla's renderer regression history |
+| PDFium | 331 | `download-pdfium-corpus.sh` | Chrome's renderer regression history |
+| Isartor | 205 | `download-test-pdfs.sh` | PDF Association PDF/A-1 violation suite |
+
+`./scripts/check-test-prereqs.sh` reports which are present. Files land in
+`test-pdfs/`, which is gitignored.
 
 ### Running Corpus Tests
 
-Corpus coverage now lives under `Excise.Rendering.Tests/Corpus/` (smoke
-corpus of real-world government PDFs) and the Excise.Core test suite.
+Two different things share the word "corpus":
+
+**1. The xunit corpus tests** — smoke corpus of real-world government PDFs:
 
 ```bash
-# Download corpus first (if not already done)
-./scripts/download-test-pdfs.sh
-
 dotnet test Excise.Rendering.Tests --filter "FullyQualifiedName~Corpus"
 ```
+
+**2. The corpus rendering scan (#862)** — renders page 1 of all 3,915
+documents and classifies each PASS / PASS_ONE / DIFF / MALFORMED_PDF / …
+against up to five independent oracles, then fails when a page departs from
+its checked-in expectation manifest:
+
+```bash
+./scripts/run-exploratory-corpus.sh --corpus test-pdfs/pdfium \
+    --page-mode first --extra-oracles all \
+    --expectation-manifest tests/corpus-expectations-pdfium.tsv
+```
+
+All four run under `scripts/run-full-suite.sh --everything`.
+
+**Do not pin a scan result without triaging it.** The manifests are generated
+by `scripts/update-corpus-expectations.sh`, which writes every status verbatim
+— including statuses that record an excise bug. Run
+`scripts/triage-corpus-nonpass.sh <corpus>` first: it splits non-PASS pages
+into "excise rendered" (an agreement question), "corroborated refusal" (no
+renderer managed it, so refusing is correct), and "excise-side gap" (an oracle
+rendered it and excise did not — a defect that must be filed, not pinned).
+It also flags credential-blocked pages, where "no oracle rendered either" only
+means nobody had the password (see `tests/corpus-passwords.tsv`).
+
+`--extra-oracles all` is close to free: PDFBox and PDFium only run on pages
+where mutool and pdftocairo have already disagreed. Use it — a second opinion
+costs nothing on the 97% of pages that pass, and the escalation lands exactly
+where a single oracle is least trustworthy.

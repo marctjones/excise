@@ -1006,7 +1006,7 @@ PYEXP
         echo "⚠ could not read $BIN_DIR/$REPORT_NAME to check expectations" >&2
     elif (( EXP_FAILS > 0 )); then
         echo
-        echo "✗ $EXP_FAILS page(s) did not match tests/corpus-expectations.tsv"
+        echo "✗ $EXP_FAILS page(s) did not match $EXPECTATION_MANIFEST"
         echo "  A status change is not automatically bad — a page moving DIFF -> PASS is"
         echo "  an improvement. Review, then regenerate the manifest to accept it."
         exit 1

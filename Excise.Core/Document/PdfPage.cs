@@ -243,8 +243,18 @@ public class PdfPage
     /// <summary>
     /// The media box (page boundaries).
     /// </summary>
+    /// <remarks>
+    /// A page with no /MediaBox anywhere in its inheritance chain is malformed:
+    /// the PDF spec makes it a required inheritable page attribute. Refusing is
+    /// correct — no reference renderer (mutool, pdftocairo, Ghostscript, PDFBox,
+    /// PDFium) renders any of the pdfium-corpus fixtures that hit this — but it
+    /// must refuse as a TYPED parse failure, not an unhandled
+    /// InvalidOperationException. Nine corpus files reached this line and were
+    /// counted as crashes by #648's DoS gate, which is exactly the
+    /// unhandled-exception-on-untrusted-input shape that gate exists to close.
+    /// </remarks>
     public PdfRectangle MediaBox => GetInheritedRectangle("MediaBox")
-        ?? throw new InvalidOperationException("Page has no MediaBox");
+        ?? throw new Excise.Core.Parsing.PdfParseException("Page has no MediaBox");
 
     /// <summary>
     /// The crop box (visible area). Falls back to MediaBox if not specified.
