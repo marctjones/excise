@@ -2026,6 +2026,19 @@ partial class Program
                     entry.errorPhase = "render";
                     entry.errorType = "RecoveredMalformedContent";
                 }
+                else if (exciseBmp != null)
+                {
+                    // excise rendered; no oracle did. That is NOT an excise
+                    // failure — it is coverage without corroboration, and
+                    // filing it beside genuine failures made excise look worse
+                    // than the references when it had just outperformed them
+                    // (#867). issue19484_1/2 are the case in point: mutool dies
+                    // with a zlib error while excise decrypts and renders them,
+                    // and Excise.Core.Tests has a regression test proving it.
+                    entry.status = "EXCISE_ONLY";
+                    entry.errorPhase = "oracle";
+                    entry.errorType = "NoOracleRendered";
+                }
                 else
                 {
                     entry.status = "ALL_ORACLES_REFUSED";
@@ -2076,7 +2089,23 @@ partial class Program
                 + (passGhostscript ? 1 : 0)
                 + (passPdfBox ? 1 : 0)
                 + (passPdfium ? 1 : 0);
-            if (!(passMutool && passCairo))
+            // PASS used to require mutool AND pdftocairo by name. That let a
+            // single deficient oracle veto agreement: 19 JBIG2-refinement pages
+            // sat at PASS_ONE with mutool at diffFraction 0.93 / MAE 237-of-255
+            // (identical on all 19 — the signature of one renderer emitting the
+            // same degenerate output) while excise matched BOTH pdftocairo and
+            // ghostscript. No amount of excise improvement could move them
+            // (#865).
+            //
+            // Now: PASS when excise agrees with a MAJORITY of the oracles that
+            // actually rendered. A lone corroborating oracle stays PASS_ONE —
+            // single-source agreement is genuinely weaker evidence, which is
+            // the distinction PASS_ONE exists to carry.
+            var agreeingCount = entry.agreeingOracles.GetValueOrDefault();
+            var comparedCount = entry.comparedOracles.GetValueOrDefault();
+            var majorityAgrees = comparedCount >= 2 && agreeingCount * 2 > comparedCount;
+
+            if (!majorityAgrees)
             {
                 ApplyReferenceCenterMetrics(
                     entry,
@@ -2093,9 +2122,9 @@ partial class Program
                     maxMae);
             }
 
-            if (passMutool && passCairo)        entry.status = "PASS";
-            else if (entry.agreeingOracles.GetValueOrDefault() > 0 ||
-                     entry.referenceCenterAgreement == true) entry.status = "PASS_ONE";  // partial agreement
+            if (majorityAgrees)                 entry.status = "PASS";
+            else if (agreeingCount > 0 ||
+                     entry.referenceCenterAgreement == true) entry.status = "PASS_ONE";  // single-source agreement
             else                                entry.status = "DIFF";
             pageStopwatch.Stop();
             entry.elapsedMs = pageStopwatch.ElapsedMilliseconds;
