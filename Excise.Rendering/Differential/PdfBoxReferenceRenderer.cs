@@ -54,7 +54,12 @@ public static class PdfBoxReferenceRenderer
                 "render",
                 "-format=png",
                 $"-dpi={dpi}",
+                // -page alone does NOT restrict PDFBox 3.x output: it still
+                // renders every page. Bound the range as well, or a 6-page PDF
+                // yields six PNGs and the selection below has to guess.
                 $"-page={pageNumber}",
+                $"-startPage={pageNumber}",
+                $"-endPage={pageNumber}",
                 $"-i={pdfPath}",
                 $"-prefix={outPrefix}",
             });
@@ -89,10 +94,19 @@ public static class PdfBoxReferenceRenderer
                     sw.ElapsedMilliseconds);
             }
 
-            var outPath = Directory
+            // Pick the file for the page we ASKED for, not the newest one.
+            // PDFBox writes pages in order, so "most recently written" is the
+            // LAST page — asking for page 1 of irs-w9.pdf returned page 6
+            // (ink 0.0360 instead of 0.0780). Because the renderer was
+            // referenced by zero tests, that silently wrong page went unnoticed
+            // (#868).
+            var candidates = Directory
                 .EnumerateFiles(outDir, outName + "*.png", SearchOption.TopDirectoryOnly)
-                .OrderByDescending(File.GetLastWriteTimeUtc)
-                .FirstOrDefault();
+                .ToList();
+            var outPath = candidates.FirstOrDefault(f =>
+                    Path.GetFileNameWithoutExtension(f)
+                        .EndsWith($"-{pageNumber}", StringComparison.Ordinal))
+                ?? (candidates.Count == 1 ? candidates[0] : null);
             if (outPath == null)
                 return new ReferenceRenderResult(null, "MISSING_OUTPUT",
                     AppendDetail($"{invocation.Description} did not write an output PNG", capturedOutput),
