@@ -110,6 +110,15 @@ if [[ ! -d "$CORPUS" ]]; then
     exit 1
 fi
 
+# "auto" was declared but never read, so a plain run supplied NO passwords and
+# classified encrypted fixtures as unsupported — measuring nothing, since we
+# know their passwords (#864). Auto now resolves the checked-in manifest when it
+# exists; --no-password-manifest still opts out, and --password-manifest still
+# wins.
+DEFAULT_PASSWORD_MANIFEST="$ROOT/tests/corpus-passwords.tsv"
+if [[ "$PASSWORD_MANIFEST_MODE" == "auto" && -f "$DEFAULT_PASSWORD_MANIFEST" ]]; then
+    PASSWORD_MANIFEST="$DEFAULT_PASSWORD_MANIFEST"
+fi
 if [[ "$PASSWORD_MANIFEST_MODE" == "explicit" && "$PASSWORD_MANIFEST" != /* ]]; then
     PASSWORD_MANIFEST="$ROOT/$PASSWORD_MANIFEST"
 fi
@@ -972,4 +981,37 @@ if (( chunk_failures > 0 )); then
     echo "⚠ $chunk_failures chunk(s) failed — merged report may be partial"
     exit 1
 fi
+
+# Expectation gate (#862). ApplyCorpusExpectations already compares each page
+# against the manifest and records expectationResult=FAIL, but nothing acted on
+# it: a page could regress PASS -> DIFF and the run still exited 0. Verified by
+# flipping an expectation and watching a --tiny run pass regardless.
+if [[ -n "$EXPECTATION_MANIFEST" && -f "$BIN_DIR/$REPORT_NAME" ]]; then
+    EXP_FAILS=$(python3 - "$BIN_DIR/$REPORT_NAME" <<'PYEXP'
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+except Exception:
+    print(-1); raise SystemExit
+rows = d if isinstance(d, list) else (d.get("results") or d.get("entries") or [])
+bad = [r for r in rows if r.get("expectationResult") == "FAIL"]
+for r in bad[:20]:
+    f = (r.get("file") or r.get("pdf") or r.get("path") or "?").split("/")[-1]
+    print(f"    {f}#p{r.get('page', r.get('pageNumber', 1))}  {r.get('expectationFailure','')}",
+          file=sys.stderr)
+print(len(bad))
+PYEXP
+)
+    if [[ "$EXP_FAILS" == "-1" ]]; then
+        echo "⚠ could not read $BIN_DIR/$REPORT_NAME to check expectations" >&2
+    elif (( EXP_FAILS > 0 )); then
+        echo
+        echo "✗ $EXP_FAILS page(s) did not match tests/corpus-expectations.tsv"
+        echo "  A status change is not automatically bad — a page moving DIFF -> PASS is"
+        echo "  an improvement. Review, then regenerate the manifest to accept it."
+        exit 1
+    fi
+    echo "  expectations: all pages matched"
+fi
+
 echo "✓ done"
