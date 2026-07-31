@@ -305,6 +305,15 @@ emit "copy-whitespace-parity" script "scripts/check-copy-whitespace-parity.sh" "
 # them.
 if [ "$EVERYTHING" = "1" ]; then
     emit "release-gates" script "scripts/release-smoke.sh --no-build --quick --resume --only=accessibility,automation,ux,benchmark,perf-budget,aot,pdf20" "-"
+    # Corpus rendering scan (#862). Classifies every pdf.js page PASS /
+    # PASS_ONE / DIFF / MALFORMED_PDF / ... and fails when a page's status
+    # departs from tests/corpus-expectations.tsv. Uses the checked-in password
+    # manifest by default (#864), so encrypted fixtures are actually decrypted
+    # rather than written off as unsupported.
+    #
+    # Under --everything rather than the default run: it renders ~685 pages
+    # against mutool/pdftocairo/ghostscript and takes several minutes.
+    emit "corpus-scan" script "scripts/run-exploratory-corpus.sh --expectation-manifest tests/corpus-expectations.tsv" "-"
 fi
 
 # --- Phase 6: unchunked App.Tests as the release evidence -----------------
