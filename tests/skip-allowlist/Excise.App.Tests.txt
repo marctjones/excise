@@ -22,7 +22,6 @@
 # which had ever actually been exercised against a from-scratch CI checkout
 # before this pass. Added below with the same scrutiny the original 6 got.
 #
-Excise.App.Tests.Integration.SearchPerformanceTests.Search_OnSyntheticDoc_CompletesInReasonableTime   # perf assertion; skips when the synthetic fixture is absent. Timing test, not correctness.
 Excise.App.Tests.UI.InPageLinkClickTests.ClickOnTocLink_NavigatesToDestinationPage   # #653: this test's real-book fixture path was a stale hardcoded personal path and had never actually run; now that it's fixed, it reveals a pre-existing (not #625-related) headless-layout timing issue against that specific 455-page book. Tracked, not yet root-caused. [requires: corpus:local-real-world]
 Excise.App.Tests.UI.MouseInputTests.ClickOnLinkAnnotation_FiresLinkClickedEvent   # #653: same pre-existing real-book layout-timing issue as InPageLinkClickTests above. [requires: corpus:local-real-world]
 Excise.App.Tests.UI.MouseInputTests.HoverOverLinkAnnotation_IndicatesInteractivity   # #653: same pre-existing real-book layout-timing issue. [requires: corpus:local-real-world]

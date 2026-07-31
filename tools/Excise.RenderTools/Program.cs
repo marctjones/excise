@@ -1359,9 +1359,10 @@ partial class Program
 
     /// <summary>
     /// Walk the corpus's chunk-slice, render each PDF with excise and
-    /// mutool, diff, and write a single JSON file. Mirrors
-    /// ExploratoryDifferentialTests.GenerateCorpusReportChunk minus
-    /// xunit overhead.
+    /// mutool, diff, and write a single JSON file. This is the supported
+    /// path (driven by scripts/run-exploratory-corpus.sh); the xunit
+    /// ExploratoryDifferentialTests.GenerateCorpusReportChunk it replaced
+    /// was deleted once it was permanently skipped and fully mirrored here.
     /// </summary>
     internal static bool RunCorpusScan(
         string corpusDir, string outputPath,

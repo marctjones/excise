@@ -82,7 +82,7 @@ public sealed class DifferentialRenderingTests
     /// The pdf.js corpus is intentionally NOT included here — it
     /// surfaces ~250+ disagreements that would block CI today. Run it
     /// explicitly via <c>dotnet test --filter "Trait=Exploratory"</c>
-    /// (see <see cref="ExploratoryDifferentialTests"/>).
+    /// (see scripts/run-exploratory-corpus.sh, which drives Excise.RenderTools' corpus scan).
     /// </summary>
     private static readonly string[] GatingCorpusDirectories =
     {

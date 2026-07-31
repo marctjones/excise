@@ -53,16 +53,17 @@ public sealed class IsartorRoundTripTests
     /// </summary>
     private static readonly Dictionary<string, string> KnownRoundTripFailures = new()
     {
-        // 6.1.7-t01-fail-a contains an invalid 0x01 control character
-        // inside a stream object — the file is *intentionally*
-        // malformed (it tests that PDF/A validators reject this kind of
-        // corruption). Our writer's stream-traversal triggers a parse
-        // failure on the bad byte, which is the correct response: a
-        // valid writer can't safely re-emit a structurally-invalid
-        // input. Round-trip fidelity is not meaningful for files where
-        // the original is deliberately broken.
-        ["test-pdfs/isartor/Isartor testsuite/PDFA-1b/6.1 File structure/6.1.7 Stream objects/isartor-6-1-7-t01-fail-a.pdf"] =
-            "Original contains an invalid 0x01 byte in a stream object (intentional violation; see Isartor 6.1.7 test plan). Writer correctly refuses to re-emit corruption.",
+        // EMPTY, and that is the point: every Isartor fixture round-trips today.
+        //
+        // This held one entry for isartor-6-1-7-t01-fail-a.pdf, justified as
+        // "writer correctly refuses to re-emit corruption". That stopped being
+        // true — excise now opens, saves and re-opens that file cleanly, and the
+        // full round-trip passes. The entry was suppressing a test that had
+        // started working, which is coverage lost for no reason.
+        //
+        // Removed 2026-07-31 after verifying all 205 fixtures pass with no
+        // exclusions. Adding an entry here silently disables a case, so an entry
+        // needs a reason that is re-checked, not inherited.
     };
 
     public static IEnumerable<object[]> IsartorPdfs() => Discover();
@@ -225,4 +226,5 @@ public sealed class IsartorRoundTripTests
     }
 
     private const string SentinelNoCorpus = "<no-corpus-downloaded>";
+
 }

@@ -55,7 +55,7 @@ public sealed class RedactionRoundTripTests
 
     /// <summary>
     /// Every corpus listed here gates the build. pdf.js is excluded —
-    /// see <see cref="ExploratoryDifferentialTests"/> for on-demand runs.
+    /// see scripts/run-exploratory-corpus.sh for on-demand runs.
     /// </summary>
     private static readonly string[] GatingCorpusDirectories =
     {
