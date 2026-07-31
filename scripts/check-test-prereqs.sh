@@ -58,18 +58,32 @@ check_bin tesseract  "apt install tesseract-ocr"  "Excise.Ocr.Tests + RevealRast
 check_bin mutool     "apt install mupdf-tools"    "Excise.Rendering differential vs MuPDF oracle"
 check_bin pdftocairo "apt install poppler-utils"  "Excise.Rendering differential vs Poppler oracle"
 check_bin gs         "brew install ghostscript"    "Optional third rendering oracle for unsettled corpus DIFFs"
-if [[ -n "${EXCISE_PDFBOX_JAR:-}" && -f "${EXCISE_PDFBOX_JAR:-}" ]]; then
+VENDORED_PDFBOX="$(ls "$PROJECT_ROOT"/tools/vendor/pdfbox-app-*.jar 2>/dev/null | tail -1)"
+if [[ -n "$VENDORED_PDFBOX" ]]; then
+    printf "  %s✓%s %-12s %s(vendored: %s)%s\n" "$GREEN" "$RESET" "pdfbox" "$DIM" "$(basename "$VENDORED_PDFBOX")" "$RESET"
+    ok=$((ok+1))
+elif [[ -n "${EXCISE_PDFBOX_JAR:-}" && -f "${EXCISE_PDFBOX_JAR:-}" ]]; then
     printf "  %s✓%s %-12s %s(found: %s)%s\n" "$GREEN" "$RESET" "pdfbox" "$DIM" "$EXCISE_PDFBOX_JAR" "$RESET"
     ok=$((ok+1))
 elif command -v pdfbox >/dev/null 2>&1; then
     printf "  %s✓%s %-12s %s(found: %s)%s\n" "$GREEN" "$RESET" "pdfbox" "$DIM" "$(command -v pdfbox)" "$RESET"
     ok=$((ok+1))
 else
-    printf "  %s✗%s %-12s %sset EXCISE_PDFBOX_JAR=/path/to/pdfbox-app.jar%s\n" "$RED" "$RESET" "pdfbox" "$YELLOW" "$RESET"
+    printf "  %s✗%s %-12s %srun ./scripts/download-pdfbox.sh%s\n" "$RED" "$RESET" "pdfbox" "$YELLOW" "$RESET"
     printf "                 unlocks: Optional Apache PDFBox diagnostic oracle for corpus DIFF triage\n"
     missing=$((missing+1))
 fi
-if [[ -n "${EXCISE_PDFIUM_TEST:-}" && -x "${EXCISE_PDFIUM_TEST:-}" ]]; then
+# PdfiumNativeReferenceRenderer drives libpdfium directly; pdfium_test is not
+# distributed anywhere (it needs a Chromium build), so the LIBRARY is what
+# actually enables the oracle.
+VENDORED_PDFIUM="$(ls "$PROJECT_ROOT"/tools/vendor/pdfium/lib/libpdfium.* 2>/dev/null | tail -1)"
+if [[ -n "$VENDORED_PDFIUM" ]]; then
+    printf "  %s✓%s %-12s %s(vendored: %s)%s\n" "$GREEN" "$RESET" "pdfium" "$DIM" "$(basename "$VENDORED_PDFIUM")" "$RESET"
+    ok=$((ok+1))
+elif [[ -n "${EXCISE_PDFIUM_LIB:-}" && -f "${EXCISE_PDFIUM_LIB:-}" ]]; then
+    printf "  %s✓%s %-12s %s(found: %s)%s\n" "$GREEN" "$RESET" "pdfium" "$DIM" "$EXCISE_PDFIUM_LIB" "$RESET"
+    ok=$((ok+1))
+elif [[ -n "${EXCISE_PDFIUM_TEST:-}" && -x "${EXCISE_PDFIUM_TEST:-}" ]]; then
     printf "  %s✓%s %-12s %s(found: %s)%s\n" "$GREEN" "$RESET" "pdfium_test" "$DIM" "$EXCISE_PDFIUM_TEST" "$RESET"
     ok=$((ok+1))
 elif command -v pdfium_test >/dev/null 2>&1; then
@@ -77,7 +91,7 @@ elif command -v pdfium_test >/dev/null 2>&1; then
     ok=$((ok+1))
 else
     printf "  %s✗%s %-12s %sset EXCISE_PDFIUM_TEST=/path/to/pdfium_test%s\n" "$RED" "$RESET" "pdfium_test" "$YELLOW" "$RESET"
-    printf "                 unlocks: Optional Chrome/PDFium diagnostic oracle for corpus DIFF triage\n"
+    printf "                 run ./scripts/download-pdfium.sh (pdfium_test itself is not distributed)\n"
     missing=$((missing+1))
 fi
 

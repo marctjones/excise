@@ -285,3 +285,8 @@ Excise.Rendering.Tests.Differential.PdfBoxOracleDifferentialTests.PdfBoxRenderPa
 # and the gitignored corpora to have anything to check; both absent on CI.
 Excise.Rendering.Tests.Differential.EncryptedCorpusPasswordCoverageTests.EveryEncryptedFixture_EitherOpensFreely_OrHasAKnownPassword   # needs qpdf + the pdfjs/poppler corpora [requires: tool:qpdf corpus:pdfjs corpus:poppler]
 Excise.Rendering.Tests.Differential.EncryptedCorpusPasswordCoverageTests.EveryManifestPassword_ActuallyDecryptsItsFixture   # needs the pdfjs/poppler corpora [requires: corpus:pdfjs corpus:poppler]
+# PDFium oracle (#857). Chrome/Foxit lineage — independent of MuPDF, Poppler,
+# Ghostscript and PDFBox. Driven through libpdfium directly because pdfium_test
+# is not distributed anywhere; scripts/download-pdfium.sh fetches the library.
+Excise.Rendering.Tests.Differential.PdfiumOracleSmokeTests.ExciseAndPdfium_PutTheSameInkOnPageOne   # needs the vendored libpdfium [requires: file:tools/vendor/pdfium/lib/libpdfium.* corpus:smoke]
+Excise.Rendering.Tests.Differential.PdfiumOracleSmokeTests.PdfiumRenderPage_ReturnsTheRequestedPage   # needs the vendored libpdfium [requires: file:tools/vendor/pdfium/lib/libpdfium.* corpus:smoke]
