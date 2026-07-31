@@ -29,7 +29,7 @@
 #   Some.Test.Name   # needs the poppler corpus [requires: corpus:poppler]
 #
 #   tool:NAME    NAME on PATH        corpus:NAME  test-pdfs/NAME non-empty
-#   env:NAME     $NAME set non-empty
+#   env:NAME     $NAME set non-empty  file:GLOB    repo-relative path/glob exists
 #
 # All listed specs must be present. Present => the test is expected to RUN here,
 # so the reverse check stays silent for it. Absent, or no marker at all, => the
@@ -126,6 +126,10 @@ LC_ALL=C sort -u "$TMP/actual.txt" -o "$TMP/actual.txt"
 # Specs:  tool:NAME    -> NAME is on PATH
 #         corpus:NAME  -> test-pdfs/NAME exists and is non-empty
 #         env:NAME     -> environment variable NAME is set and non-empty
+#         file:GLOB    -> a repo-relative path (glob allowed) exists. Needed for
+#                         dependencies that are a downloaded FILE rather than a
+#                         tool on PATH or an env var -- e.g. the PDFBox jar,
+#                         which the renderer auto-discovers in tools/vendor/.
 # Multiple specs are space-separated and ALL must be present.
 #
 # Semantics — the FORWARD check is untouched. A skip that is not allow-listed
@@ -177,6 +181,9 @@ spec_present() {
                  [[ -n "$(find "$ROOT/test-pdfs/$val" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null)" ]]
             then ok=1; else ok=0; fi ;;
     env)    [[ -n "${!val:-}" ]] || ok=0 ;;
+    # Glob, so a version-pinned filename does not have to be restated here
+    # every time the vendored dependency is bumped.
+    file)   compgen -G "$ROOT/$val" >/dev/null 2>&1 || ok=0 ;;
     # Unknown spec kind resolves ABSENT on purpose: a typo must not silently
     # disable the reverse check for that entry.
     *)      ok=0 ;;
