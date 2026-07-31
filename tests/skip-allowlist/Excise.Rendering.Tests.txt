@@ -281,3 +281,7 @@ Excise.Rendering.Tests.Differential.PageOrganizationDifferentialTests.PageMutati
 # job, so these skip there and run wherever EXCISE_PDFBOX_JAR is set.
 Excise.Rendering.Tests.Differential.PdfBoxOracleDifferentialTests.ExciseAndPdfBox_PutTheSameInkOnPageOne   # needs the PDFBox jar + a JDK [requires: env:EXCISE_PDFBOX_JAR corpus:smoke]
 Excise.Rendering.Tests.Differential.PdfBoxOracleDifferentialTests.PdfBoxRenderPage_ReturnsTheRequestedPage_NotTheLastOne   # #868 regression guard; needs the PDFBox jar + a JDK [requires: env:EXCISE_PDFBOX_JAR corpus:smoke]
+# Encrypted-corpus password coverage. Needs qpdf to identify encrypted files
+# and the gitignored corpora to have anything to check; both absent on CI.
+Excise.Rendering.Tests.Differential.EncryptedCorpusPasswordCoverageTests.EveryEncryptedFixture_EitherOpensFreely_OrHasAKnownPassword   # needs qpdf + the pdfjs/poppler corpora [requires: tool:qpdf corpus:pdfjs corpus:poppler]
+Excise.Rendering.Tests.Differential.EncryptedCorpusPasswordCoverageTests.EveryManifestPassword_ActuallyDecryptsItsFixture   # needs the pdfjs/poppler corpora [requires: corpus:pdfjs corpus:poppler]
