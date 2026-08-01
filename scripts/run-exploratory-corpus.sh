@@ -49,7 +49,7 @@ SECONDS_PER_PAGE_BUDGET="3"    # per-page allowance when scaling a chunk's timeo
 CHUNK_PARALLEL="4"            # how many chunks to run concurrently
 PAGE_MODE="first"             # first | sample | all
 EXTRA_ORACLES="ghostscript"   # none | ghostscript | pdfbox | pdfium | all
-CHUNK_LOG_DIR="/tmp"
+CHUNK_LOG_DIR=""              # defaults to a RUN-SCOPED dir under SLICE_DIR (#880)
 CORPUS=""
 REPORT_NAME=""
 PASSWORD_MANIFEST=""
@@ -229,6 +229,24 @@ REPORT_STEM="${REPORT_NAME%.json}"
 SLICE_DIR="$BIN_DIR/exploratory-slices-$REPORT_STEM-$$"
 mkdir -p "$BIN_DIR"
 mkdir -p "$SLICE_DIR"
+
+# Chunk logs and the excise render cache used to live at fixed /tmp paths
+# (/tmp/exploratory-chunk-N.log, /tmp/excise-render-cache), so two scans running
+# at once wrote to the same files (#880). Two ways that hurt:
+#
+#   - a failed chunk's "see .../exploratory-chunk-N.log" pointer could describe
+#     a DIFFERENT run's corpus, which is how this was found;
+#   - far worse, the render cache is keyed by content hash but was shared
+#     across checkouts that may contain DIFFERENT renderer code, so a scan
+#     validating a rendering fix could be served bitmaps from a build without
+#     it. A differential harness exists precisely to rule that out.
+#
+# SLICE_DIR already carries the report name and PID, so scoping under it makes
+# both per-run automatically. --log-dir still overrides for anyone who wants a
+# stable location.
+if [[ -z "$CHUNK_LOG_DIR" ]]; then
+    CHUNK_LOG_DIR="$SLICE_DIR/logs"
+fi
 mkdir -p "$CHUNK_LOG_DIR"
 rm -f "$BIN_DIR/$REPORT_NAME"
 if [[ "$PAGE_MODE" == "first" && "$CORPUS_LABEL" == "test-pdfs/pdfjs" ]]; then
@@ -960,6 +978,69 @@ if chunk_pdf_visits != out["pdfs"]:
     print(f"  chunk PDF visits: {chunk_pdf_visits}")
 for k in sorted(counts, key=counts.get, reverse=True):
     print(f"    {counts[k]:4d}  {k}")
+
+# ---- agreement classification (#877) -------------------------------------
+# `status` answers "what happened to this page". It does NOT answer "was excise
+# right", and reading it as though it did understates the result badly: a file
+# that mutool, pdftocairo, Ghostscript, PDFBox and PDFium all refuse is scored
+# identically to a crash. On the PDFium corpus that turned ~96% correct into a
+# reported 76% PASS.
+#
+# This is deliberately ADDITIVE — no status is rewritten, so every
+# tests/corpus-expectations*.tsv stays valid. It only reports a second, honest
+# number alongside the first.
+ORACLE_STATUS_KEYS = ("mutoolStatus", "cairoStatus", "ghostscriptStatus",
+                      "pdfboxStatus", "pdfiumStatus")
+CREDENTIAL_STATUSES = {"PASSWORD_REQUIRED", "UNSUPPORTED_ENCRYPTED"}
+
+def agreement_class(e):
+    st = get(e, "status")
+    if st == "PASS":
+        return "PASS"
+    if st == "PASS_ONE":
+        return "ORACLE_SPLIT"
+    if st == "DIFF":
+        return "DIFF"
+    any_oracle_ok = any(get(e, k) == "OK" for k in ORACLE_STATUS_KEYS)
+    excise_rendered = get(e, "renderMs") is not None
+    if excise_rendered:
+        return "EXCISE_ONLY" if not any_oracle_ok else "RENDERED"
+    if st in CREDENTIAL_STATUSES:
+        # NOT corroboration: everyone was locked out equally, which says
+        # nothing about whether the page is renderable.
+        return "CREDENTIAL_BLOCKED"
+    if any_oracle_ok:
+        # An oracle rendered it and excise did not. The only class here that
+        # is unambiguously an excise defect.
+        return "EXCISE_SIDE_GAP"
+    return "AGREED_REFUSAL"
+
+agreement = {}
+for e in merged_entries:
+    a = agreement_class(e)
+    agreement[a] = agreement.get(a, 0) + 1
+out["agreementCounts"] = agreement
+
+correct_classes = ("PASS", "AGREED_REFUSAL", "EXCISE_ONLY")
+correct = sum(agreement.get(c, 0) for c in correct_classes)
+total_entries = len(merged_entries) or 1
+print()
+print("  agreement (excise vs the reference renderers):")
+for k in ("PASS", "AGREED_REFUSAL", "EXCISE_ONLY", "ORACLE_SPLIT",
+          "CREDENTIAL_BLOCKED", "DIFF", "EXCISE_SIDE_GAP", "RENDERED"):
+    if agreement.get(k):
+        note = {
+            "AGREED_REFUSAL": "no renderer managed it — refusing is correct",
+            "EXCISE_ONLY": "excise rendered where no oracle could",
+            "ORACLE_SPLIT": "oracles disagree among themselves",
+            "CREDENTIAL_BLOCKED": "nobody had the password — proves nothing",
+            "EXCISE_SIDE_GAP": "an oracle rendered and excise did not — DEFECT",
+        }.get(k, "")
+        print(f"    {agreement[k]:4d}  {k:20} {note}")
+print(f"  excise behaves correctly on {correct}/{total_entries} "
+      f"({100.0 * correct / total_entries:.1f}%) — PASS + agreed refusal + excise-only")
+if agreement.get("EXCISE_SIDE_GAP"):
+    print(f"  ⚠ {agreement['EXCISE_SIDE_GAP']} page(s) an oracle rendered and excise did not")
 
 def elapsed(e):
     v = get(e, "elapsedMs")
