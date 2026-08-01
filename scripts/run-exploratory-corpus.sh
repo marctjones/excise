@@ -446,7 +446,7 @@ run_one_chunk() {
             # SECONDS_PER_PAGE is deliberately generous: the cost is one oracle
             # render per extra oracle, and the point of the cap is to catch a
             # hang, not to police throughput.
-            local scaled=$(( shard_pages * SECONDS_PER_PAGE_BUDGET ))
+            local scaled=$(( shard_pages * ${SECONDS_PER_PAGE_BUDGET:-3} ))
             (( scaled > chunk_timeout )) && chunk_timeout="$scaled"
         fi
     fi
@@ -474,7 +474,7 @@ run_one_chunk() {
         --page-mode "$PAGE_MODE"
         --extra-oracles "$EXTRA_ORACLES"
         --incremental-output
-        --progress-interval-seconds "$INCREMENTAL_FLUSH_SECONDS")
+        --progress-interval-seconds "${INCREMENTAL_FLUSH_SECONDS:-20}")
     if (( ${#manifest_args[@]} > 0 )); then command+=("${manifest_args[@]}"); fi
     if (( ${#password_args[@]} > 0 )); then command+=("${password_args[@]}"); fi
     if (( ${#expectation_args[@]} > 0 )); then command+=("${expectation_args[@]}"); fi
@@ -501,7 +501,17 @@ print(f'{d[\"total\"]} page results, peak {d[\"peakRssBytes\"]//1024//1024} MB')
     fi
 }
 export -f run_one_chunk
+# Parallel chunks run in a SEPARATE bash, so anything run_chunk reads must be
+# exported here. A variable missing from this list is empty over there, and an
+# empty value becomes an empty command-line argument rather than an error:
+# `--progress-interval-seconds ""` is a parse failure that exits 1 while the
+# chunk itself is perfectly fine. That is exactly what happened when
+# INCREMENTAL_FLUSH_SECONDS and SECONDS_PER_PAGE_BUDGET were added and not
+# exported — every parallel chunk failed rc=1 and the run fell back to a serial
+# retry, which succeeded because the retry path runs in THIS shell where the
+# variables are set. The scan looked merely slow rather than broken.
 export EXCISE_RENDER_TOOLS_BIN CORPUS CORPUS_LABEL BIN_DIR SLICE_DIR CHUNKS PER_CHUNK_PARALLEL PDF_TIMEOUT_MS PROCESS_TIMEOUT_SECONDS PAGE_MODE EXTRA_ORACLES CHUNK_LOG_DIR
+export INCREMENTAL_FLUSH_SECONDS SECONDS_PER_PAGE_BUDGET PAGE_SHARD_SUMMARY
 export PAGE_SHARD_DIR PASSWORD_MANIFEST EXPECTATION_MANIFEST EXCISE_RENDER_CACHE_ENABLED EXCISE_RENDER_CACHE_DIR
 
 recover_one_page_shard_chunk_isolated() {
