@@ -43,6 +43,9 @@ TINY=0
 PER_CHUNK_PARALLEL="0"        # 0 = excise auto-picks (ProcessorCount/2)
 PDF_TIMEOUT_MS="15000"        # mutool per-page timeout
 PROCESS_TIMEOUT_SECONDS="600" # whole Excise.RenderTools corpus-scan process timeout
+                              # (auto-scaled by page count for --page-mode all, see below)
+INCREMENTAL_FLUSH_SECONDS="20" # how often a chunk makes its completed pages durable (#879)
+SECONDS_PER_PAGE_BUDGET="3"    # per-page allowance when scaling a chunk's timeout
 CHUNK_PARALLEL="4"            # how many chunks to run concurrently
 PAGE_MODE="first"             # first | sample | all
 EXTRA_ORACLES="ghostscript"   # none | ghostscript | pdfbox | pdfium | all
@@ -53,8 +56,12 @@ PASSWORD_MANIFEST=""
 PASSWORD_MANIFEST_MODE="auto" # auto | explicit | off
 EXPECTATION_MANIFEST=""
 PAGE_SHARDS="auto"            # auto | off
-LARGE_PDF_PAGE_THRESHOLD="250"
-PAGE_RANGE_SIZE="100"
+LARGE_PDF_PAGE_THRESHOLD="100"  # shard any PDF larger than this into page ranges
+PAGE_RANGE_SIZE="50"            # ...of this many pages (#879)
+# Both were 250/100. At those values a 240-page PDF was one indivisible work
+# item, and a chunk could be handed 800 pages of a 10,000-page fixture — which
+# cannot finish inside any fixed per-chunk timeout. Smaller ranges also mean a
+# lost or retried unit costs less.
 EXCISE_RENDER_CACHE="auto"      # auto | off
 EXCISE_RENDER_CACHE_DIR=""
 RESUME_EXCISE_RENDER_CACHE="0"
@@ -407,13 +414,39 @@ run_one_chunk() {
     if [[ "${EXCISE_RENDER_CACHE_ENABLED:-0}" == "1" ]]; then
         excise_cache_args=(--excise-render-cache-dir "$EXCISE_RENDER_CACHE_DIR")
     fi
-    local runner=()
-    if command -v timeout >/dev/null 2>&1; then
-        runner=(timeout --kill-after=10s "$PROCESS_TIMEOUT_SECONDS")
-    elif command -v gtimeout >/dev/null 2>&1; then
-        runner=(gtimeout --kill-after=10s "$PROCESS_TIMEOUT_SECONDS")
+    # Scale the timeout to the work actually assigned (#879). A fixed 600s cap
+    # is fine for a page-1 scan, where a chunk holds a few hundred single-page
+    # PDFs, and impossible for an all-pages scan, where the shard summary can
+    # hand one chunk 800 pages that each need an excise render plus up to five
+    # oracle renders. The cap then fires by construction rather than because
+    # anything is wrong.
+    local chunk_timeout="$PROCESS_TIMEOUT_SECONDS"
+    if [[ -n "${PAGE_SHARD_SUMMARY:-}" && -f "$PAGE_SHARD_SUMMARY" ]]; then
+        local shard_pages
+        shard_pages=$(awk -F'\t' -v c="$i" 'NR>1 && $1==c {print $3; exit}' "$PAGE_SHARD_SUMMARY")
+        if [[ "$shard_pages" =~ ^[0-9]+$ ]] && (( shard_pages > 0 )); then
+            # SECONDS_PER_PAGE is deliberately generous: the cost is one oracle
+            # render per extra oracle, and the point of the cap is to catch a
+            # hang, not to police throughput.
+            local scaled=$(( shard_pages * SECONDS_PER_PAGE_BUDGET ))
+            (( scaled > chunk_timeout )) && chunk_timeout="$scaled"
+        fi
     fi
 
+    local runner=()
+    if command -v timeout >/dev/null 2>&1; then
+        runner=(timeout --kill-after=10s "$chunk_timeout")
+    elif command -v gtimeout >/dev/null 2>&1; then
+        runner=(gtimeout --kill-after=10s "$chunk_timeout")
+    fi
+
+    # --incremental-output makes the slice file durable WHILE the chunk runs
+    # (#879). Without it a chunk writes its slice only on completion, so a
+    # SIGKILL from the timeout below discards every page it had already
+    # rendered and compared — observed losing ~7,200 completed pages of a
+    # 10,000-page fixture in a single chunk. The tool writes the partial report
+    # to the same --output path via temp-file-plus-atomic-rename, so a partial
+    # slice is never torn and the final write simply supersedes it.
     local command=("$EXCISE_RENDER_TOOLS_BIN" corpus-scan "$CORPUS"
         --output "$slice_path"
         --chunk "$scan_chunk"
@@ -421,7 +454,9 @@ run_one_chunk() {
         --parallel "$PER_CHUNK_PARALLEL"
         --pdf-timeout-ms "$PDF_TIMEOUT_MS"
         --page-mode "$PAGE_MODE"
-        --extra-oracles "$EXTRA_ORACLES")
+        --extra-oracles "$EXTRA_ORACLES"
+        --incremental-output
+        --progress-interval-seconds "$INCREMENTAL_FLUSH_SECONDS")
     if (( ${#manifest_args[@]} > 0 )); then command+=("${manifest_args[@]}"); fi
     if (( ${#password_args[@]} > 0 )); then command+=("${password_args[@]}"); fi
     if (( ${#expectation_args[@]} > 0 )); then command+=("${expectation_args[@]}"); fi
@@ -836,9 +871,17 @@ chunk_pdf_visits = 0
 generated_utcs = []
 recoveries = []
 expectation_manifest_entries = 0
+partial_slices = []
 for path in slices:
     with open(path) as f:
         d = json.load(f)
+    # A slice written by the incremental writer carries partial=true until the
+    # chunk finishes and overwrites it (#879). Its entries are real, completed
+    # pages and are worth keeping — that is the entire point of making them
+    # durable — but the merged report must NOT claim full coverage, or a run
+    # that lost a chunk to a timeout reads exactly like a clean one.
+    if d.get("partial") is True:
+        partial_slices.append((os.path.basename(path), len(d.get("entries", []))))
     merged_entries.extend(d.get("entries", []))
     for k, v in d.get("counts", {}).items():
         counts[k] = counts.get(k, 0) + v
@@ -878,6 +921,11 @@ out = {
     "expectationManifest": {"entries": expectation_manifest_entries} if expectation_manifest_entries else None,
     "chunksMerged": len(slices),
     "expectedChunks": expected,
+    # Coverage honesty (#879): true only when every chunk ran to completion.
+    # A merged report built from an incremental slice still contains real
+    # results, but it does not cover every page it was asked to.
+    "partial": bool(partial_slices) or len(slices) < expected,
+    "partialSlices": [{"slice": n, "entries": c} for n, c in partial_slices] or None,
     "recoverySummary": {
         "recoveredChunks": len(recoveries),
         "recoveries": recoveries,
@@ -900,6 +948,14 @@ with open(out_path, "w") as f:
 print(f"  wrote {out_path}")
 print(f"  total page results: {out['total']}")
 print(f"  unique PDFs scanned: {out['pdfs']}")
+if partial_slices:
+    kept = sum(c for _, c in partial_slices)
+    print(f"  ⚠ PARTIAL: {len(partial_slices)} chunk(s) did not finish; kept {kept} "
+          f"page result(s) they had already completed")
+    for n, c in partial_slices:
+        print(f"      {n}: {c} entries")
+    print("    Before #879 these pages were discarded entirely. They are kept now,")
+    print("    but the report is marked partial=true — do NOT pin a manifest from it.")
 if chunk_pdf_visits != out["pdfs"]:
     print(f"  chunk PDF visits: {chunk_pdf_visits}")
 for k in sorted(counts, key=counts.get, reverse=True):

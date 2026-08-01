@@ -58,6 +58,22 @@ for spec in "${CORPORA[@]}"; do
 import json, sys, collections
 src, key = sys.argv[1], sys.argv[2]
 d = json.load(open(src))
+
+# Refuse to pin a baseline from a run that did not cover everything (#879).
+# A partial report contains real results, so it looks perfectly usable — but
+# every page a lost chunk never reached would simply be ABSENT from the
+# manifest, and an absent page is not gated at all. The failure is silent in
+# exactly the direction that matters: coverage quietly shrinks and the gate
+# still reports green.
+if isinstance(d, dict) and d.get("partial"):
+    ps = d.get("partialSlices") or []
+    sys.stderr.write(
+        f"REFUSING to generate from a PARTIAL report: {src}\n"
+        f"  {len(ps)} chunk(s) did not finish; pages they never reached would be\n"
+        f"  missing from the manifest and therefore ungated.\n"
+        f"  Re-run the scan to completion first.\n")
+    raise SystemExit(2)
+
 rows = d if isinstance(d, list) else (d.get("results") or d.get("entries") or [])
 
 print(f"# Expected corpus-scan status per page for the {key} corpus (#862).")
