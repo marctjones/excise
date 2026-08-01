@@ -525,6 +525,77 @@ public class PdfDocument : IDisposable
     public static PdfDocument Open(Stream stream, string? userPassword, bool ownsStream = false, bool allowEncrypted = false)
         => OpenCore(stream, ownsStream, allowEncrypted, userPassword);
 
+    /// <summary>
+    /// Merge the cross-reference stream named by a classic trailer's /XRefStm
+    /// (a "hybrid-reference file", PDF 32000-1 §7.5.8.4).
+    /// </summary>
+    /// <remarks>
+    /// A hybrid-reference file carries BOTH a classic xref table and a
+    /// cross-reference stream for the same revision. The classic table lists
+    /// only what a pre-PDF-1.5 reader can use; objects living inside object
+    /// streams can only be expressed in the stream, so the table simply omits
+    /// them and the trailer points at the stream via /XRefStm.
+    ///
+    /// Ignoring the key does not produce a parse error — it produces a
+    /// SUCCESSFUL parse of the wrong revision. The reader falls through to
+    /// /Prev and resolves superseded definitions as current, silently (#872).
+    /// For a redaction tool that is a document-identity bug: the reviewer sees
+    /// content the author replaced, and redaction decisions are made against
+    /// it.
+    ///
+    /// Precedence follows the same rule as the /Prev walk — an entry already
+    /// established by a newer section is never overwritten. Within one hybrid
+    /// section the classic table is merged first and the stream fills the gaps
+    /// it structurally cannot express, which is what the spec's compatibility
+    /// scheme intends and what other readers do.
+    ///
+    /// The stream's own /Prev is deliberately NOT followed: the containing
+    /// classic trailer owns the chaining, and following both would walk the
+    /// history twice.
+    /// </remarks>
+    private static void MergeHybridXRefStream(
+        XRefParser xrefParser,
+        Stream stream,
+        PdfDictionary sectionTrailer,
+        Dictionary<int, XRefEntry> fullXRef,
+        HashSet<long> parsedHybridXRefStreams)
+    {
+        var xrefStmObj = sectionTrailer.GetOptional("XRefStm");
+        if (xrefStmObj == null)
+            return;
+
+        long offset;
+        try
+        {
+            offset = xrefStmObj.GetLong();
+        }
+        catch
+        {
+            return;   // a malformed /XRefStm is not worth failing the open over
+        }
+
+        if (offset <= 0 || offset >= stream.Length || !parsedHybridXRefStreams.Add(offset))
+            return;
+
+        Dictionary<int, XRefEntry> entries;
+        try
+        {
+            entries = xrefParser.ParseDocumentXRef(offset).XRef;
+        }
+        catch (Exception ex) when (IsRecoverableIncrementalXRefException(ex))
+        {
+            // Best-effort: a broken hybrid stream leaves us exactly where we
+            // were before this method existed, rather than failing the open.
+            return;
+        }
+
+        foreach (var kvp in entries)
+        {
+            if (!fullXRef.ContainsKey(kvp.Key))
+                fullXRef[kvp.Key] = kvp.Value;
+        }
+    }
+
     private static PdfDocument OpenCore(Stream stream, bool ownsStream, bool allowEncrypted, string? userPassword)
     {
         // Read PDF version from header
@@ -538,6 +609,11 @@ public class PdfDocument : IDisposable
         var fullXRef = new Dictionary<int, XRefEntry>(xref);
         var currentTrailer = trailer;
         var parsedPreviousXRefs = new HashSet<long>();
+        var parsedHybridXRefStreams = new HashSet<long>();
+
+        // Hybrid-reference files (#872): the ROOT section may itself carry
+        // /XRefStm, so this has to run before the /Prev walk, not just inside it.
+        MergeHybridXRefStream(xrefParser, stream, trailer, fullXRef, parsedHybridXRefStreams);
 
         while (currentTrailer.GetReferenceOrNull("Prev") != null || currentTrailer.ContainsKey("Prev"))
         {
@@ -564,6 +640,10 @@ public class PdfDocument : IDisposable
                 if (!fullXRef.ContainsKey(kvp.Key))
                     fullXRef[kvp.Key] = kvp.Value;
             }
+
+            // Each section in the chain may be hybrid-reference too.
+            MergeHybridXRefStream(
+                xrefParser, stream, previous.prevTrailer, fullXRef, parsedHybridXRefStreams);
 
             currentTrailer = previous.prevTrailer;
         }
