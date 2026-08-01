@@ -2018,14 +2018,34 @@ internal partial class RenderContext
         if (componentsPerPixel == 0)
             componentsPerPixel = 3;
 
-        var fastBitmap = TryCreateFast8BitBitmapFromRawData(
-            data,
-            width,
-            height,
-            bitsPerComponent,
-            pdfColorSpace,
-            componentsPerPixel,
-            stream);
+        // Colour-key masking (#873, PDF 32000-1 §8.9.6.4): /Mask as an ARRAY of
+        // integer ranges makes source samples inside those ranges transparent.
+        // This is distinct from the stencil form (/Mask as a stream), which
+        // TryDrawImageWithExplicitMask handles; that method type-checks for a
+        // PdfStream and previously let the array form fall through silently, so
+        // the image was drawn fully opaque and ink appeared that the document
+        // says is not there.
+        //
+        // It must be evaluated on the RAW SAMPLE values, before the colour
+        // space is applied — for an Indexed space the range is an index range,
+        // not an RGB one. Testing decoded RGB instead would happen to work on
+        // simple palettes and quietly mask the wrong pixels whenever two
+        // palette entries share a colour.
+        var colorKeyMask = TryGetColorKeyMask(stream, componentsPerPixel);
+
+        // The fast path writes samples straight through without exposing them,
+        // so it cannot evaluate the key. Fall back to the general loop when a
+        // colour-key mask is present.
+        var fastBitmap = colorKeyMask != null
+            ? null
+            : TryCreateFast8BitBitmapFromRawData(
+                data,
+                width,
+                height,
+                bitsPerComponent,
+                pdfColorSpace,
+                componentsPerPixel,
+                stream);
         if (fastBitmap != null)
             return fastBitmap;
 
@@ -2055,6 +2075,8 @@ internal partial class RenderContext
             // invariants; the arithmetic is otherwise identical.
             var decodeArray = stream.GetOptional("Decode") as Excise.Core.Primitives.PdfArray;
             var maxSample = Math.Pow(2, bitsPerComponent) - 1;
+            // Raw (pre-colour-space) samples for the colour-key test above.
+            var rawSamples = colorKeyMask != null ? new int[componentsPerPixel] : null;
 
             for (int y = 0; y < height; y++)
             {
@@ -2067,13 +2089,20 @@ internal partial class RenderContext
                         if (bitsPerComponent == 8 && srcIndex + componentsPerPixel <= data.Length)
                         {
                             for (int i = 0; i < componentsPerPixel; i++)
+                            {
+                                if (rawSamples != null)
+                                    rawSamples[i] = data[srcIndex + i];
                                 pixelValues[i] = DecodeImageSample(
                                     decodeArray,
                                     pdfColorSpace,
                                     i,
                                     data[srcIndex + i],
                                     maxSample);
+                            }
                             srcIndex += componentsPerPixel;
+
+                            if (rawSamples != null && IsColorKeyMasked(rawSamples, colorKeyMask!))
+                                a = 0;
 
                             var (rd, gd, bd) = pdfColorSpace.ToRgb(pixelValues);
                             r = (byte)Math.Clamp(rd * 255, 0, 255);
@@ -2093,6 +2122,8 @@ internal partial class RenderContext
                                         data,
                                         bitOffset + (i * bitsPerComponent),
                                         bitsPerComponent);
+                                    if (rawSamples != null)
+                                        rawSamples[i] = sample;
                                     pixelValues[i] = DecodeImageSample(
                                         decodeArray,
                                         pdfColorSpace,
@@ -2100,6 +2131,9 @@ internal partial class RenderContext
                                         sample,
                                         maxSample);
                                 }
+
+                                if (rawSamples != null && IsColorKeyMasked(rawSamples, colorKeyMask!))
+                                    a = 0;
 
                                 var (rd, gd, bd) = pdfColorSpace.ToRgb(pixelValues);
                                 r = (byte)Math.Clamp(rd * 255, 0, 255);
@@ -2135,6 +2169,13 @@ internal partial class RenderContext
                             r = (byte)Math.Clamp(rd * 255, 0, 255);
                             g = (byte)Math.Clamp(gd * 255, 0, 255);
                             b = (byte)Math.Clamp(bd * 255, 0, 255);
+
+                            if (rawSamples != null)
+                            {
+                                rawSamples[0] = bit;
+                                if (IsColorKeyMasked(rawSamples, colorKeyMask!))
+                                    a = 0;
+                            }
                         }
                         srcIndex++;
                     }
@@ -2493,6 +2534,69 @@ internal partial class RenderContext
             ? (byte)Math.Clamp((int)Math.Round(sample * (255.0 / maxSample)), 0, 255)
             : (byte)0;
         return colorSpace.DecodeSampleByte(componentIndex, normalizedByte);
+    }
+
+    /// <summary>
+    /// Parse /Mask in its colour-key form: an array of 2 x n integers giving an
+    /// inclusive [min max] range per colour component (PDF 32000-1 §8.9.6.4).
+    /// Returns null when /Mask is absent or is the stencil (stream) form.
+    /// </summary>
+    /// <remarks>
+    /// The component-count mismatch is handled deliberately rather than by
+    /// accident. pdfium's bug_343075986.pdf carries <c>/Mask [0 0 0 0 0 0]</c>
+    /// — six entries — against a 1-component /Indexed colour space, where the
+    /// spec calls for two. Probing that mismatch is part of what the fixture is
+    /// for. We use as many leading pairs as the image actually has components
+    /// and ignore the surplus, which masks the intended index (0, "mask out
+    /// black" per the fixture's own comment) instead of discarding the mask.
+    ///
+    /// Too FEW pairs is the dangerous direction and is rejected outright:
+    /// silently masking on a subset of components would make unrelated pixels
+    /// transparent, and for a redaction tool dropping ink that should be
+    /// visible is worse than keeping ink that should not.
+    /// </remarks>
+    private static int[]? TryGetColorKeyMask(Excise.Core.Primitives.PdfStream stream, int componentsPerPixel)
+    {
+        if (componentsPerPixel <= 0)
+            return null;
+        if (stream.GetOptional("Mask") is not Excise.Core.Primitives.PdfArray maskArray)
+            return null;
+        if (maskArray.Count < componentsPerPixel * 2)
+            return null;
+
+        var ranges = new int[componentsPerPixel * 2];
+        for (int i = 0; i < ranges.Length; i++)
+        {
+            try
+            {
+                ranges[i] = (int)maskArray.GetNumber(i);
+            }
+            catch
+            {
+                return null;   // a non-numeric entry means this is not a usable colour key
+            }
+        }
+
+        return ranges;
+    }
+
+    /// <summary>
+    /// A pixel is masked only when EVERY component falls inside its range —
+    /// the ranges are a conjunction, not a union (§8.9.6.4).
+    /// </summary>
+    private static bool IsColorKeyMasked(int[] rawSamples, int[] ranges)
+    {
+        for (int i = 0; i < rawSamples.Length; i++)
+        {
+            var min = ranges[i * 2];
+            var max = ranges[(i * 2) + 1];
+            if (min > max)
+                (min, max) = (max, min);
+            if (rawSamples[i] < min || rawSamples[i] > max)
+                return false;
+        }
+
+        return true;
     }
 
     private static bool DecodeImageMaskBit(Excise.Core.Primitives.PdfStream stream, int bit)
