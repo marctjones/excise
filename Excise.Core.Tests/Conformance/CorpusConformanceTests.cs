@@ -94,6 +94,16 @@ public class CorpusConformanceTests
                     var page = doc.GetPage(p);
                     _ = page.Width;
                     _ = page.Height;
+                    // Width/Height come from /MediaBox, which is very often on
+                    // the page dictionary itself and so never walks /Parent.
+                    // The INHERITED lookups are the ones that can loop on a
+                    // cyclic page tree: bug_517126568.pdf sailed through this
+                    // gate for exactly that reason while costing 120s of CPU on
+                    // /Rotate (#881). Touch the inherited paths too, or this
+                    // certifies "parses without hanging" while an infinite loop
+                    // sits one property away.
+                    _ = page.Rotation;
+                    _ = page.Resources;
                 }
             });
 

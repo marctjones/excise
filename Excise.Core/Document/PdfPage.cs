@@ -767,16 +767,49 @@ public class PdfPage
     private int GetInheritedInt(string key, int defaultValue)
     {
         var current = _pageDict;
+        var visited = NewAncestorVisitedSet();
         while (current != null)
         {
             if (current.ContainsKey(key))
                 return current.GetInt(key, defaultValue);
 
-            var parentRef = current.GetReferenceOrNull("Parent");
-            current = parentRef != null ? _document.GetObject(parentRef) as PdfDictionary : null;
+            current = NextPageTreeAncestor(current, visited);
         }
         return defaultValue;
     }
+
+    /// <summary>
+    /// Step to the next ancestor in the page tree, refusing to revisit a node.
+    /// </summary>
+    /// <remarks>
+    /// A /Parent chain is attacker-controlled data and is not guaranteed to be
+    /// acyclic. Without this guard a node whose /Parent points at itself makes
+    /// every inherited-attribute lookup spin forever — pdfium's
+    /// bug_517126568.pdf is 577 bytes, draws one blue rectangle, and cost
+    /// excise over 120 seconds of CPU while pdftocairo and Ghostscript both
+    /// render it immediately (#881).
+    ///
+    /// That is a denial-of-service primitive for a tool whose entire input is
+    /// documents someone else produced, and the file does not even look
+    /// malformed. Descent through /Kids already had cycle detection; the
+    /// ascent through /Parent did not.
+    /// </remarks>
+    private PdfDictionary? NextPageTreeAncestor(PdfDictionary current, HashSet<PdfDictionary> visited)
+    {
+        var parentRef = current.GetReferenceOrNull("Parent");
+        if (parentRef == null)
+            return null;
+
+        if (_document.GetObject(parentRef) is not PdfDictionary parent)
+            return null;
+
+        // Already seen: the chain loops. Stop as though the tree ended, which
+        // yields the same answer an acyclic tree would for an absent key.
+        return visited.Add(parent) ? parent : null;
+    }
+
+    private HashSet<PdfDictionary> NewAncestorVisitedSet()
+        => new(ReferenceEqualityComparer.Instance) { _pageDict };
 
     /// <summary>
     /// Get an inherited dictionary value (walks up page tree).
@@ -784,6 +817,7 @@ public class PdfPage
     private PdfDictionary? GetInheritedDictionary(string key)
     {
         var current = _pageDict;
+        var visited = NewAncestorVisitedSet();
         while (current != null)
         {
             var obj = current.GetOptional(key);
@@ -794,8 +828,7 @@ public class PdfPage
                     return dict;
             }
 
-            var parentRef = current.GetReferenceOrNull("Parent");
-            current = parentRef != null ? _document.GetObject(parentRef) as PdfDictionary : null;
+            current = NextPageTreeAncestor(current, visited);
         }
         return null;
     }
@@ -806,14 +839,14 @@ public class PdfPage
     private PdfRectangle? GetInheritedRectangle(string key)
     {
         var current = _pageDict;
+        var visited = NewAncestorVisitedSet();
         while (current != null)
         {
             var rect = GetRectangleFromDict(current, key);
             if (rect.HasValue)
                 return rect;
 
-            var parentRef = current.GetReferenceOrNull("Parent");
-            current = parentRef != null ? _document.GetObject(parentRef) as PdfDictionary : null;
+            current = NextPageTreeAncestor(current, visited);
         }
         return null;
     }
