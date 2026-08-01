@@ -1455,11 +1455,16 @@ partial class Program
                         TryGetCorpusPassword(passwordManifest, rel, out userPassword);
                     var wallBudgetMs = ComputeCorpusScanWallBudgetMs(
                         pdfTimeoutMs, pageMode, extraOracles, selectedPages);
+                    // Pages land in `entries` as they complete, so a timeout or
+                    // kill below keeps everything already finished (#879).
                     var task = Task.Run(() => ScanOnePdf(rel, pdf, dpi, maxDiffFraction, maxMae, pdfTimeoutMs,
-                        pageMode, extraOracles, selectedPages, progress, userPassword, oracleCache, exciseRenderCache));
+                        pageMode, extraOracles, selectedPages, progress, userPassword, oracleCache, exciseRenderCache,
+                        publish: e => entries.Add(e)));
                     if (task.Wait(wallBudgetMs))
                     {
-                        pdfEntries = task.Result;
+                        // Already published page by page — re-adding would
+                        // duplicate every entry.
+                        pdfEntries = Array.Empty<CorpusScanEntry>();
                     }
                     else
                     {
@@ -1683,8 +1688,30 @@ partial class Program
         CorpusScanProgress? progress = null,
         string? userPassword = null,
         OracleRenderCache? oracleCache = null,
-        ExciseRenderCache? exciseRenderCache = null)
+        ExciseRenderCache? exciseRenderCache = null,
+        Action<CorpusScanEntry>? publish = null)
     {
+        // `publish` makes each page durable AS IT COMPLETES (#879).
+        //
+        // Without it this method returns its whole list only when the entire
+        // PDF is done, so the shared collection the incremental writer
+        // snapshots stays EMPTY for the duration. On a work item covering ~730
+        // pages of the 10,000-page Isartor fixture that meant a chunk could
+        // reach page 4,209 and still have "0 page results" durable — the exact
+        // shape the incremental writer was added to prevent, one level further
+        // in. Publishing per page is what actually delivers "an error on a
+        // later page must not hide the results of the earlier ones".
+        // EVERY entry this method produces must go through `publish`, because
+        // the caller now treats the published stream as the record and ignores
+        // the returned list. An early-return path that skipped it would drop
+        // those entries entirely.
+        IReadOnlyList<CorpusScanEntry> PublishAll(CorpusScanEntry[] produced)
+        {
+            foreach (var e in produced)
+                publish?.Invoke(e);
+            return produced;
+        }
+
         PdfDocument? doc = null;
         int pageCount;
         var pdfStopwatch = Stopwatch.StartNew();
@@ -1698,7 +1725,7 @@ partial class Program
             if (pageCount == 0)
             {
                 pdfStopwatch.Stop();
-                return new[]
+                return PublishAll(new[]
                 {
                     new CorpusScanEntry
                     {
@@ -1708,12 +1735,12 @@ partial class Program
                         status = "EMPTY_DOC",
                         elapsedMs = pdfStopwatch.ElapsedMilliseconds,
                     },
-                };
+                });
             }
         }
         catch (Exception ex)
         {
-            return new[]
+            return PublishAll(new[]
             {
                 new CorpusScanEntry
                 {
@@ -1725,7 +1752,7 @@ partial class Program
                     errorMessage = Trunc(ex.Message, 200),
                     elapsedMs = pdfStopwatch.ElapsedMilliseconds,
                 },
-            };
+            });
         }
 
         using (doc)
@@ -1736,7 +1763,7 @@ partial class Program
             {
                 foreach (var invalidPage in selectedPages.Where(page => page > pageCount).OrderBy(page => page))
                 {
-                    entries.Add(new CorpusScanEntry
+                    var outOfRange = new CorpusScanEntry
                     {
                         path = relPath,
                         pageNumber = invalidPage,
@@ -1746,16 +1773,21 @@ partial class Program
                         errorType = "ManifestPageOutOfRange",
                         errorMessage =
                             $"Page manifest requested page {invalidPage}, but the document has {pageCount} page(s).",
-                    });
+                    };
+                    entries.Add(outOfRange);
+                    publish?.Invoke(outOfRange);
                 }
             }
 
             foreach (var pageNumber in SelectCorpusPages(pageCount, pageMode, selectedPages))
             {
                 progress?.Update("page", pageNumber, $"page {pageNumber}/{pageCount}");
-                entries.Add(ScanOnePage(relPath, pdfPath, doc, renderer, pageNumber, dpi,
+                var pageEntry = ScanOnePage(relPath, pdfPath, doc, renderer, pageNumber, dpi,
                     maxDiffFraction, maxMae, oracleTimeoutMs, extraOracles, progress, userPassword, oracleCache,
-                    exciseRenderCache));
+                    exciseRenderCache);
+                entries.Add(pageEntry);
+                // Durable immediately, not when the whole document finishes.
+                publish?.Invoke(pageEntry);
             }
             pdfStopwatch.Stop();
             foreach (var entry in entries)
