@@ -17,7 +17,7 @@
 #
 # Keys are corpus-relative PATHS, not basenames: this corpus may have
 # subdirectories and duplicate filenames.
-# Baseline: PASS=250, MALFORMED_PDF=39, DECODE_ERROR=11, RENDER_ERROR=9, PASS_ONE=8, DIFF=5, EMPTY_DOC=5, TIMEOUT=1, PARSE_ERROR=1, UNSUPPORTED_ENCRYPTED=1, PASSWORD_REQUIRED=1
+# Baseline: PASS=250, MALFORMED_PDF=40, DECODE_ERROR=20, PASS_ONE=8, DIFF=5, EMPTY_DOC=5, TIMEOUT=1, UNSUPPORTED_ENCRYPTED=1, PASSWORD_REQUIRED=1
 344775293.pdf	1	PASS
 363015187.pdf	1	PASS
 about_blank.pdf	1	PASS
@@ -32,7 +32,7 @@ annotation_markup_multiline_no_ap.pdf	1	PASS
 annotation_stamp_with_ap.pdf	1	PASS
 annotiter.pdf	1	PASS
 annots.pdf	1	PASS
-annots_action_handling.pdf	1	RENDER_ERROR
+annots_action_handling.pdf	1	DECODE_ERROR
 bad_annots_entry.pdf	1	PASS
 bad_dict_keys.pdf	1	PASS
 bad_page_type.pdf	1	PASS
@@ -101,9 +101,9 @@ bug_424613308.pdf	1	MALFORMED_PDF
 bug_425244539.pdf	1	PASS
 bug_431824298.pdf	1	PASS
 bug_444176962.pdf	1	PASS
-bug_451265.pdf	1	RENDER_ERROR
+bug_451265.pdf	1	DECODE_ERROR
 bug_451830.pdf	1	MALFORMED_PDF
-bug_452455.pdf	1	RENDER_ERROR
+bug_452455.pdf	1	DECODE_ERROR
 bug_454695.pdf	1	MALFORMED_PDF
 bug_455199.pdf	1	MALFORMED_PDF
 bug_457855936.pdf	1	MALFORMED_PDF
@@ -118,7 +118,7 @@ bug_498010830_shared_annots.pdf	1	PASS
 bug_498010830_shared_widget.pdf	1	PASS
 bug_504416752.pdf	1	PASS
 bug_507316.pdf	1	PASS
-bug_509964646.pdf	1	RENDER_ERROR
+bug_509964646.pdf	1	DECODE_ERROR
 bug_517126568.pdf	1	*		load-dependent (TIMEOUT when measured); any terminal status accepted
 bug_544880.pdf	1	DECODE_ERROR
 bug_547706.pdf	1	EMPTY_DOC
@@ -136,7 +136,7 @@ bug_631912.pdf	1	DIFF
 bug_634394.pdf	1	PASS
 bug_634716.pdf	1	PASS
 bug_642.pdf	1	PASS
-bug_644.pdf	1	PARSE_ERROR
+bug_644.pdf	1	MALFORMED_PDF
 bug_650.pdf	1	PASS
 bug_664284.pdf	1	PASS
 bug_674771.pdf	1	PASS
@@ -147,9 +147,9 @@ bug_709793.pdf	1	EMPTY_DOC
 bug_713197.pdf	1	PASS
 bug_717.pdf	1	PASS
 bug_750568.pdf	1	PASS
-bug_757705.pdf	1	RENDER_ERROR
-bug_765384.pdf	1	RENDER_ERROR
-bug_773229.pdf	1	RENDER_ERROR
+bug_757705.pdf	1	DECODE_ERROR
+bug_765384.pdf	1	DECODE_ERROR
+bug_773229.pdf	1	DECODE_ERROR
 bug_779.pdf	1	DECODE_ERROR
 bug_781804.pdf	1	PASS
 bug_782596.pdf	1	MALFORMED_PDF
@@ -270,7 +270,7 @@ pixel/bug_828206.pdf	1	MALFORMED_PDF
 pixel/bug_830221.pdf	1	MALFORMED_PDF
 pixel/bug_867501.pdf	1	DECODE_ERROR
 pixel/bug_925736.pdf	1	PASS
-pixel/direct_content_stream.pdf	1	RENDER_ERROR
+pixel/direct_content_stream.pdf	1	DECODE_ERROR
 pixel/freetext_annotation_without_da.pdf	1	PASS
 pixel/generation_numbers1.pdf	1	PASS
 pixel/generation_numbers2.pdf	1	PASS
@@ -337,7 +337,7 @@ use_outlines.pdf	1	PASS
 utf-8.pdf	1	PASS
 version_in_catalog.pdf	1	PASS
 vertical_text.pdf	1	PASS
-viewer_pref_types.pdf	1	RENDER_ERROR
+viewer_pref_types.pdf	1	DECODE_ERROR
 viewer_ref.pdf	1	PASS
 weblinks.pdf	1	PASS
 weblinks_across_lines.pdf	1	PASS
