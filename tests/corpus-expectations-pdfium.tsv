@@ -17,7 +17,7 @@
 #
 # Keys are corpus-relative PATHS, not basenames: this corpus may have
 # subdirectories and duplicate filenames.
-# Baseline: PASS=250, MALFORMED_PDF=40, DECODE_ERROR=20, PASS_ONE=8, DIFF=5, EMPTY_DOC=5, TIMEOUT=1, UNSUPPORTED_ENCRYPTED=1, PASSWORD_REQUIRED=1
+# Baseline: PASS=252, MALFORMED_PDF=40, DECODE_ERROR=20, PASS_ONE=8, EMPTY_DOC=5, DIFF=3, TIMEOUT=1, UNSUPPORTED_ENCRYPTED=1, PASSWORD_REQUIRED=1
 344775293.pdf	1	PASS
 363015187.pdf	1	PASS
 about_blank.pdf	1	PASS
@@ -84,7 +84,7 @@ bug_306123.pdf	1	PASS
 bug_325_a.pdf	1	MALFORMED_PDF
 bug_325_b.pdf	1	MALFORMED_PDF
 bug_343.pdf	1	MALFORMED_PDF
-bug_343075986.pdf	1	DIFF
+bug_343075986.pdf	1	PASS
 bug_344.pdf	1	MALFORMED_PDF
 bug_355.pdf	1	MALFORMED_PDF
 bug_360.pdf	1	MALFORMED_PDF
@@ -253,7 +253,7 @@ parser_rebuildxref_error_notrailer.pdf	1	MALFORMED_PDF
 pixel/bug_1087.pdf	1	DECODE_ERROR
 pixel/bug_1287409.pdf	1	PASS
 pixel/bug_1308.pdf	1	PASS
-pixel/bug_1484283.pdf	1	DIFF
+pixel/bug_1484283.pdf	1	PASS
 pixel/bug_2122.pdf	1	PASS
 pixel/bug_2123.pdf	1	PASS
 pixel/bug_2152.pdf	1	PASS
