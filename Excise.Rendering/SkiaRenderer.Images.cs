@@ -2018,6 +2018,45 @@ internal partial class RenderContext
         if (componentsPerPixel == 0)
             componentsPerPixel = 3;
 
+        // Refuse to paint a sample buffer that cannot possibly be this image
+        // (#878).
+        //
+        // The per-pixel loop below substitutes 0 for any sample past the end of
+        // `data`. In 1-bpc /DeviceGray a sample of 0 is BLACK, so a buffer that
+        // stops early does not produce a short image — it produces a full page
+        // of fabricated ink, with no error and nothing to look at that says so.
+        //
+        // Reachable whenever a filter cannot decode and falls back to handing
+        // back its RAW ENCODED bytes. pdfium's bug_631912.pdf is the worked
+        // example, and the arithmetic is exact:
+        //
+        //     /JBIG2Decode stream       189 bytes
+        //     1152 x 720 at 1 bpc   103,680 bytes required
+        //     one row                   144 bytes
+        //
+        // Those 189 bytes painted row 0 as noise — measured, every stray white
+        // pixel sat on y=0 — and the remaining 899 rows came out solid black.
+        //
+        // Why this matters more here than in a viewer: excise is a redaction
+        // tool. A page rendered as a solid black rectangle is indistinguishable
+        // from a page that was successfully redacted, so the failure mimics
+        // success for the exact operation the tool exists to perform.
+        //
+        // The threshold is deliberately loose. Genuinely truncated-but-usable
+        // images are common and still worth drawing; what is never worth
+        // drawing is a buffer supplying a small fraction of the samples, where
+        // most of the output would be invented. Half is the line.
+        if (!isImageMask && bitsPerComponent > 0)
+        {
+            long rowBytes = ((long)width * componentsPerPixel * bitsPerComponent + 7) / 8;
+            long requiredBytes = rowBytes * height;
+            if (requiredBytes > 0 && data.LongLength * 2 < requiredBytes)
+            {
+                // Draw nothing. A missing image is honest; an invented one is not.
+                return null;
+            }
+        }
+
         // Colour-key masking (#873, PDF 32000-1 §8.9.6.4): /Mask as an ARRAY of
         // integer ranges makes source samples inside those ranges transparent.
         // This is distinct from the stencil form (/Mask as a stream), which
