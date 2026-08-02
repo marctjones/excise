@@ -1973,6 +1973,7 @@ partial class Program
             entry.cairoError = TruncNullable(cairoResult.ErrorMessage, 200);
             ApplyOracleCacheFields(entry, "pdftocairo", cairoOutcome);
 
+
             var metrics = new List<(string Name, double Diff, double Mae)>();
 
             (double diff, double mae)? mutoolMetrics = null;
@@ -2000,10 +2001,72 @@ partial class Program
                 metrics.Add(("pdftocairo", a, b));
             }
 
+            // THIRD PRIMARY (promoted from escalation).
+            //
+            // mutool (MuPDF) and pdftocairo (Poppler) are two independent
+            // engines, but a majority of two is 2-of-2: any shared blind spot
+            // between them passes unchallenged, and 91.8% of PASS verdicts
+            // rested on exactly that pair. PDFium is a third lineage entirely
+            // (Chrome/Foxit) and costs ~13ms mean — it is IN-PROCESS via
+            // P/Invoke, unlike Ghostscript (59ms, subprocess) and PDFBox (80ms,
+            // JVM launch), which stay on escalation.
+            //
+            // So the majority rule becomes 2-of-3 for the price of the cheapest
+            // oracle available. Measured first: forcing all five on every page
+            // changed ZERO of 616 two-oracle PASS verdicts, so this is not
+            // expected to move results — it removes a structural single point
+            // of agreement rather than fixing an observed error.
+            //
+            // Runs regardless of --extra-oracles, like the other primaries.
+            // When the libpdfium binary is absent it reports UNAVAILABLE and is
+            // simply not counted, exactly as before.
+
+            progress?.Update("pdfium", pageNumber, $"pdfium render page {pageNumber}/{doc.PageCount}");
+            // PdfiumNativeReferenceRenderer, NOT PdfiumReferenceRenderer.
+            // The latter shells out to `pdfium_test`, which is not
+            // distributed by anyone — it only exists if you build Chromium's
+            // pdfium tree with depot_tools/gn/ninja. So this oracle reported
+            // TOOL_UNAVAILABLE on every page of every corpus while appearing
+            // in the oracle list, and --extra-oracles all silently bought
+            // four oracles rather than five. The native renderer P/Invokes
+            // libpdfium, which scripts/download-pdfium.sh can actually fetch.
+            var pdfiumOutcome = RenderOracleWithCache(
+                oracleCache, "pdfium", pdfPath, pageNumber, comparisonDpi, userPassword,
+                () => PdfiumNativeReferenceRenderer.TryRenderPage(
+                    pdfPath, pageNumber, comparisonDpi, userPassword));
+            var pdfiumResult = pdfiumOutcome.Result;
+            pdfiumBmp = pdfiumResult.Bitmap;
+            entry.pdfiumMs = pdfiumResult.ElapsedMs;
+            entry.pdfiumStatus = pdfiumResult.Status;
+            entry.pdfiumError = TruncNullable(pdfiumResult.ErrorMessage, 200);
+            ApplyOracleCacheFields(entry, "pdfium", pdfiumOutcome);
+            if (pdfiumBmp != null)
+            {
+                progress?.Update("compare", pageNumber, $"compare excise vs pdfium page {pageNumber}/{doc.PageCount}");
+                var (a, b) = MatchAndCompare(exciseBmp, pdfiumBmp);
+                pdfiumMetrics = (a, b);
+                entry.diffFractionPdfium = a;
+                entry.maePdfium = b;
+                metrics.Add(("pdfium", a, b));
+            }
+            
+
             bool passMutool = IsPassing(mutoolMetrics, maxDiffFraction, maxMae);
             bool passCairo = IsPassing(cairoMetrics, maxDiffFraction, maxMae);
+            bool passPdfiumPrimary = IsPassing(pdfiumMetrics, maxDiffFraction, maxMae);
+
+            // Escalate to Ghostscript/PDFBox unless all THREE primaries agree.
+            // pdfium joined the primaries above, so a page that needed the
+            // expensive oracles because one of two disagreed may now be settled
+            // 3-of-3 for ~13ms instead — the promotion should, if anything,
+            // reduce how often the 59ms and 80ms oracles run.
+            //
+            // A primary that could not run at all (pdfium UNAVAILABLE when the
+            // library is absent) yields false here and therefore still
+            // escalates, which is the safe direction: fewer oracles available
+            // means MORE corroboration is wanted, not less.
             var shouldEscalate = extraOracles != CorpusExtraOracles.None &&
-                (AlwaysRunAllOracles || !(passMutool && passCairo));
+                (AlwaysRunAllOracles || !(passMutool && passCairo && passPdfiumPrimary));
 
             if (shouldEscalate && extraOracles.HasFlag(CorpusExtraOracles.Ghostscript))
             {
@@ -2050,38 +2113,6 @@ partial class Program
                     entry.diffFractionPdfBox = a;
                     entry.maePdfBox = b;
                     metrics.Add(("pdfbox", a, b));
-                }
-            }
-
-            if (shouldEscalate && extraOracles.HasFlag(CorpusExtraOracles.Pdfium))
-            {
-                progress?.Update("pdfium", pageNumber, $"pdfium render page {pageNumber}/{doc.PageCount}");
-                // PdfiumNativeReferenceRenderer, NOT PdfiumReferenceRenderer.
-                // The latter shells out to `pdfium_test`, which is not
-                // distributed by anyone — it only exists if you build Chromium's
-                // pdfium tree with depot_tools/gn/ninja. So this oracle reported
-                // TOOL_UNAVAILABLE on every page of every corpus while appearing
-                // in the oracle list, and --extra-oracles all silently bought
-                // four oracles rather than five. The native renderer P/Invokes
-                // libpdfium, which scripts/download-pdfium.sh can actually fetch.
-                var pdfiumOutcome = RenderOracleWithCache(
-                    oracleCache, "pdfium", pdfPath, pageNumber, comparisonDpi, userPassword,
-                    () => PdfiumNativeReferenceRenderer.TryRenderPage(
-                        pdfPath, pageNumber, comparisonDpi, userPassword));
-                var pdfiumResult = pdfiumOutcome.Result;
-                pdfiumBmp = pdfiumResult.Bitmap;
-                entry.pdfiumMs = pdfiumResult.ElapsedMs;
-                entry.pdfiumStatus = pdfiumResult.Status;
-                entry.pdfiumError = TruncNullable(pdfiumResult.ErrorMessage, 200);
-                ApplyOracleCacheFields(entry, "pdfium", pdfiumOutcome);
-                if (pdfiumBmp != null)
-                {
-                    progress?.Update("compare", pageNumber, $"compare excise vs pdfium page {pageNumber}/{doc.PageCount}");
-                    var (a, b) = MatchAndCompare(exciseBmp, pdfiumBmp);
-                    pdfiumMetrics = (a, b);
-                    entry.diffFractionPdfium = a;
-                    entry.maePdfium = b;
-                    metrics.Add(("pdfium", a, b));
                 }
             }
 
