@@ -1231,6 +1231,11 @@ partial class Program
         {
             Description = "Optional TSV of expected corpus outcomes. Columns: path<TAB>pageNumber<TAB>expectedStatus<TAB>expectedErrorContains<TAB>note[<TAB>resultStatus<TAB>resultCategory<TAB>resultReason].",
         };
+        var oraclePolicyOption = new Option<string>("--oracle-policy")
+        {
+            Description = "escalate (default: extra oracles only on primary disagreement) or always (every oracle on every page).",
+            DefaultValueFactory = _ => "escalate",
+        };
         var extraOraclesOption = new Option<string>("--extra-oracles")
         {
             Description = "Optional escalation oracles: none, ghostscript, pdfbox, pdfium, or all (comma-separated).",
@@ -1274,7 +1279,7 @@ partial class Program
         {
             corpusArg, outputOption, chunkOption, totalOption,
             dpiOption, diffPctOption, maxMaeOption, parallelOption, perPdfTimeoutOption, pageModeOption,
-            pageManifestOption, passwordManifestOption, expectationManifestOption, extraOraclesOption,
+            pageManifestOption, passwordManifestOption, expectationManifestOption, extraOraclesOption, oraclePolicyOption,
             oracleCacheDirOption, noOracleCacheOption, exciseRenderCacheDirOption,
             progressIntervalOption, progressOutputOption, incrementalOutputOption, largePdfShardPagesOption,
         };
@@ -1295,6 +1300,8 @@ partial class Program
             var passwordManifestFile = parseResult.GetValue(passwordManifestOption);
             var expectationManifestFile = parseResult.GetValue(expectationManifestOption);
             var extraOraclesRaw = parseResult.GetValue(extraOraclesOption) ?? "ghostscript";
+            AlwaysRunAllOracles = string.Equals(
+                parseResult.GetValue(oraclePolicyOption), "always", StringComparison.OrdinalIgnoreCase);
             var oracleCacheDir = parseResult.GetValue(oracleCacheDirOption);
             var noOracleCache = parseResult.GetValue(noOracleCacheOption);
             var exciseRenderCacheDir = parseResult.GetValue(exciseRenderCacheDirOption);
@@ -1995,7 +2002,8 @@ partial class Program
 
             bool passMutool = IsPassing(mutoolMetrics, maxDiffFraction, maxMae);
             bool passCairo = IsPassing(cairoMetrics, maxDiffFraction, maxMae);
-            var shouldEscalate = extraOracles != CorpusExtraOracles.None && !(passMutool && passCairo);
+            var shouldEscalate = extraOracles != CorpusExtraOracles.None &&
+                (AlwaysRunAllOracles || !(passMutool && passCairo));
 
             if (shouldEscalate && extraOracles.HasFlag(CorpusExtraOracles.Ghostscript))
             {
@@ -2188,14 +2196,43 @@ partial class Program
             else                                entry.status = "DIFF";
 
             // Ink LOCALITY, which the page-wide averages above cannot see
-            // (#883). Compared against bestReference — the oracle closest to
-            // excise — deliberately: that is the most conservative choice, the
-            // one least likely to report a difference, so a missing tile
-            // against it is not an artifact of picking an unlucky oracle.
-            if (exciseBmp != null && bestReference != null)
+            // (#883).
+            //
+            // Compared against the oracle that rendered the MOST content, not
+            // the one closest to excise. Using the closest was the first
+            // implementation and it is precisely backwards: "closest to excise"
+            // selects the oracle most likely to share excise's omission —
+            // including one that rendered nothing at all, which reports zero
+            // inked tiles and therefore zero missing.
+            //
+            // Measured, not theorised. Running every oracle on every page
+            // (--oracle-policy always) made three pages go MISSING_CONTENT ->
+            // PASS purely because a blanker oracle became "best":
+            //
+            //   issue20062.pdf   vs mutool      115/115 tiles missing
+            //                    vs ghostscript   0/0   (ghostscript is blank too)
+            //
+            // Adding evidence must not weaken a verdict. The question this
+            // check asks is "did ANY renderer draw content excise did not",
+            // so the reference has to be whichever one saw the most.
+            //
+            // The strict all-tiles rule keeps this safe: an oracle drawing
+            // spurious extra content cannot trigger it, because excise would
+            // still have ink in the tiles they share.
+            var localityReference = SelectMostInkedReference(
+                new (string Name, SkiaSharp.SKBitmap? Bitmap)[]
+                {
+                    ("mutool", mutoolBmp),
+                    ("pdftocairo", cairoBmp),
+                    ("ghostscript", ghostscriptBmp),
+                    ("pdfbox", pdfboxBmp),
+                    ("pdfium", pdfiumBmp),
+                });
+
+            if (exciseBmp != null && localityReference.Bitmap != null)
             {
                 var (missingTiles, extraTiles, inkedTiles) =
-                    CompareInkLocality(exciseBmp, bestReference);
+                    CompareInkLocality(exciseBmp, localityReference.Bitmap);
                 entry.missingInkTiles = missingTiles;
                 entry.extraInkTiles = extraTiles;
                 entry.referenceInkedTiles = inkedTiles;
@@ -2229,7 +2266,7 @@ partial class Program
                     entry.status = "MISSING_CONTENT";
                     entry.diagnostic = AppendDiagnostic(entry.diagnostic,
                         $"excise rendered no ink in any of the {inkedTiles} tile(s) " +
-                        $"{best.Name} inked — the page is blank where the reference has content");
+                        $"{localityReference.Name} inked — the page is blank where the reference has content");
                 }
             }
             pageStopwatch.Stop();
@@ -3387,6 +3424,58 @@ partial class Program
             entry.diagnostic = AppendDiagnostic(entry.diagnostic,
                 $"oracle refusal-probe failed: {Trunc(ex.Message, 120)}");
         }
+    }
+
+    /// <summary>
+    /// When true, every configured oracle runs on every page instead of only
+    /// escalating on primary disagreement.
+    ///
+    /// Set once from the command line before any scanning starts and read-only
+    /// afterwards, so the parallel scan sees a stable value. It exists because
+    /// the default escalate-only rule is ASYMMETRIC: it consults the extra
+    /// oracles only when the primaries disagree — that is, only when the
+    /// verdict might IMPROVE — and never when it might worsen. 91.8% of PASS
+    /// verdicts therefore rest on exactly two oracles that were never
+    /// challenged.
+    /// </summary>
+    private static bool AlwaysRunAllOracles;
+
+    /// <summary>
+    /// Of the oracles that rendered, the one whose page carries the most ink.
+    ///
+    /// This is the reference for the missing-content check (#883): the question
+    /// is "did any renderer draw content excise did not", so the answer must
+    /// come from whichever renderer saw the most, not from whichever most
+    /// resembles excise.
+    /// </summary>
+    private static (string Name, SkiaSharp.SKBitmap? Bitmap) SelectMostInkedReference(
+        (string Name, SkiaSharp.SKBitmap? Bitmap)[] candidates)
+    {
+        (string Name, SkiaSharp.SKBitmap? Bitmap) best = (string.Empty, null);
+        double bestInk = -1;
+        foreach (var c in candidates)
+        {
+            if (c.Bitmap == null) continue;
+            var ink = InkFraction(c.Bitmap);
+            if (ink > bestInk) { bestInk = ink; best = c; }
+        }
+        return best;
+    }
+
+    private static double InkFraction(SkiaSharp.SKBitmap bmp)
+    {
+        long inked = 0, total = 0;
+        // Sampled rather than exhaustive: this only ranks oracles against each
+        // other, and a stride keeps it cheap on large pages.
+        for (int y = 0; y < bmp.Height; y += 4)
+        {
+            for (int x = 0; x < bmp.Width; x += 4)
+            {
+                total++;
+                if (IsInkPixel(bmp.GetPixel(x, y))) inked++;
+            }
+        }
+        return total == 0 ? 0 : (double)inked / total;
     }
 
     private const int InkTileGrid = 32;
