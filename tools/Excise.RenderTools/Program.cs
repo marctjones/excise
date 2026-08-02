@@ -1457,9 +1457,21 @@ partial class Program
                         pdfTimeoutMs, pageMode, extraOracles, selectedPages);
                     // Pages land in `entries` as they complete, so a timeout or
                     // kill below keeps everything already finished (#879).
+                    // Probe the oracles on any page excise refused, BEFORE it is
+                    // published (#882). The failure paths inside ScanOnePdf all
+                    // return before the comparison block, so without this every
+                    // refusal carries null oracle statuses and the agreement
+                    // classifier cannot tell "nobody could render it" from
+                    // "only excise could not".
                     var task = Task.Run(() => ScanOnePdf(rel, pdf, dpi, maxDiffFraction, maxMae, pdfTimeoutMs,
                         pageMode, extraOracles, selectedPages, progress, userPassword, oracleCache, exciseRenderCache,
-                        publish: e => entries.Add(e)));
+                        publish: e =>
+                        {
+                            if (NeedsRefusalProbe(e))
+                                ProbeOraclesForRefusal(e, pdf, e.pageNumber, dpi, pdfTimeoutMs,
+                                    userPassword, oracleCache);
+                            entries.Add(e);
+                        }));
                     if (task.Wait(wallBudgetMs))
                     {
                         // Already published page by page — re-adding would
@@ -1491,7 +1503,15 @@ partial class Program
                         // end reaps the orphan.
                     }
                     foreach (var entry in pdfEntries)
+                    {
+                        // The TIMEOUT entry is synthesized here rather than by
+                        // ScanOnePdf, so it needs the same probe (#882) — it is
+                        // the page that exposed this whole gap.
+                        if (NeedsRefusalProbe(entry))
+                            ProbeOraclesForRefusal(entry, pdf, entry.pageNumber, dpi, pdfTimeoutMs,
+                                userPassword, oracleCache);
                         entries.Add(entry);
+                    }
                     int n = System.Threading.Interlocked.Increment(ref processed);
 
                     // Cheap RSS sample.
@@ -2166,6 +2186,52 @@ partial class Program
             else if (agreeingCount > 0 ||
                      entry.referenceCenterAgreement == true) entry.status = "PASS_ONE";  // single-source agreement
             else                                entry.status = "DIFF";
+
+            // Ink LOCALITY, which the page-wide averages above cannot see
+            // (#883). Compared against bestReference — the oracle closest to
+            // excise — deliberately: that is the most conservative choice, the
+            // one least likely to report a difference, so a missing tile
+            // against it is not an artifact of picking an unlucky oracle.
+            if (exciseBmp != null && bestReference != null)
+            {
+                var (missingTiles, extraTiles, inkedTiles) =
+                    CompareInkLocality(exciseBmp, bestReference);
+                entry.missingInkTiles = missingTiles;
+                entry.extraInkTiles = extraTiles;
+                entry.referenceInkedTiles = inkedTiles;
+
+                // GATE ON THE UNAMBIGUOUS SIGNAL ONLY: every tile the reference
+                // inked is blank in excise, i.e. excise drew nothing at all
+                // where the oracle drew content.
+                //
+                // Measured, because the obvious rule ("any missing tile")
+                // is far too sensitive: it flagged 160 of 685 pdf.js pages.
+                // Almost all were a single tile out of hundreds
+                // (missing=1/254, diffFraction 0.0000) — sub-pixel position
+                // differences between renderers move edge ink across a tile
+                // boundary, and no amount of tile-size tuning removes that.
+                //
+                // The all-tiles case has no such ambiguity, and it is not
+                // hypothetical: five pages hit it, and rendering each with
+                // excise confirms ink coverage of exactly 0.00000 while the
+                // oracles draw content. Those are five pages the gate used to
+                // PASS while excise showed the user a blank sheet.
+                //
+                // Partial loss — excise drops a paragraph but renders the rest
+                // — is NOT gated here. Distinguishing it from position drift
+                // needs more than tile occupancy, so the counts are recorded on
+                // every entry for follow-up rather than guessed at.
+                const int MinInkedTilesForBlankVerdict = 3;
+                if (entry.status == "PASS" &&
+                    inkedTiles >= MinInkedTilesForBlankVerdict &&
+                    missingTiles == inkedTiles)
+                {
+                    entry.status = "MISSING_CONTENT";
+                    entry.diagnostic = AppendDiagnostic(entry.diagnostic,
+                        $"excise rendered no ink in any of the {inkedTiles} tile(s) " +
+                        $"{best.Name} inked — the page is blank where the reference has content");
+                }
+            }
             pageStopwatch.Stop();
             entry.elapsedMs = pageStopwatch.ElapsedMilliseconds;
         }
@@ -3249,6 +3315,168 @@ partial class Program
     /// disagree) and compute the diff metrics. Returns
     /// (differingPixelFraction, meanAbsoluteError).
     /// </summary>
+    /// <summary>
+    /// Number of tiles per axis for the ink-locality comparison (#883).
+    /// 32 gives ~1500 tiles on a letter page — small enough that a word lands
+    /// inside one or two, large enough that antialiasing never fills one alone.
+    /// </summary>
+    /// <summary>
+    /// Ask the primary oracles whether THEY can render a page excise refused
+    /// (#882).
+    ///
+    /// Without this the scan never invoked an oracle on any failure path —
+    /// MALFORMED_PDF, DECODE_ERROR, EMPTY_DOC and the encryption statuses all
+    /// returned before the comparison block. Every refusal therefore carried
+    /// five null oracle statuses, and null is indistinguishable from "tried and
+    /// failed" unless you look for it. The agreement classifier read that as
+    /// "nobody else could render it either" and counted 64 of 65 PDFium
+    /// refusals as correct behaviour on evidence that was never gathered.
+    ///
+    /// That is the project's own rule being broken in the harness: excise
+    /// refusing, and excise being the only thing consulted about whether
+    /// refusing was right.
+    ///
+    /// Only the two primaries run. They are independent engines (MuPDF and
+    /// Poppler), which is enough to tell "corroborated refusal" from
+    /// "excise-only failure", and a refusal is cheap for them too — these are
+    /// files that fail fast.
+    /// </summary>
+    /// <summary>
+    /// True when this entry records a refusal that no oracle has been asked
+    /// about. `renderMs == null` means excise produced no bitmap; null primary
+    /// statuses mean the comparison block was never reached.
+    /// </summary>
+    private static bool NeedsRefusalProbe(CorpusScanEntry e)
+        => e.renderMs == null && e.mutoolStatus == null && e.cairoStatus == null;
+
+    private static void ProbeOraclesForRefusal(
+        CorpusScanEntry entry,
+        string pdfPath,
+        int pageNumber,
+        int dpi,
+        int oracleTimeoutMs,
+        string? userPassword,
+        OracleRenderCache? oracleCache)
+    {
+        // Page 0 is the document-level failure sentinel; probe page 1 instead.
+        var probePage = pageNumber <= 0 ? 1 : pageNumber;
+        try
+        {
+            var mutool = RenderOracleWithCache(
+                oracleCache, "mutool", pdfPath, probePage, dpi, userPassword,
+                () => MutoolReferenceRenderer.TryRenderPage(
+                    pdfPath, probePage, dpi, oracleTimeoutMs, userPassword));
+            entry.mutoolStatus = mutool.Result.Status;
+            entry.mutoolMs = mutool.Result.ElapsedMs;
+            entry.mutoolError = TruncNullable(mutool.Result.ErrorMessage, 200);
+            mutool.Result.Bitmap?.Dispose();
+
+            var cairo = RenderOracleWithCache(
+                oracleCache, "pdftocairo", pdfPath, probePage, dpi, userPassword,
+                () => PdftocairoReferenceRenderer.TryRenderPage(
+                    pdfPath, probePage, dpi, oracleTimeoutMs, userPassword));
+            entry.cairoStatus = cairo.Result.Status;
+            entry.cairoMs = cairo.Result.ElapsedMs;
+            entry.cairoError = TruncNullable(cairo.Result.ErrorMessage, 200);
+            cairo.Result.Bitmap?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            // Probing is best-effort: it exists to add evidence to a page that
+            // already failed, and must never turn that into a different error.
+            entry.diagnostic = AppendDiagnostic(entry.diagnostic,
+                $"oracle refusal-probe failed: {Trunc(ex.Message, 120)}");
+        }
+    }
+
+    private const int InkTileGrid = 32;
+
+    /// <summary>
+    /// A tile counts as inked when this fraction of its pixels are dark. Above
+    /// antialiasing fringe, below a single glyph stroke.
+    /// </summary>
+    private const double InkTileThreshold = 0.005;
+
+    /// <summary>
+    /// Compare WHERE the ink is, not just how much (#883).
+    ///
+    /// diffFraction and ink coverage are both whole-page aggregates, so content
+    /// that is small but meaningful is invisible to them. The worked case:
+    /// bug_631912.pdf reported PASS at diffFraction 0.0012 while excise rendered
+    /// the page BLANK and every oracle rendered the word "Test" — 760 dark
+    /// pixels out of ~1.3 million, 0.06% of the page. No threshold on a
+    /// page-wide average can separate that from antialiasing noise, because it
+    /// IS smaller than antialiasing noise.
+    ///
+    /// Locality separates them. Tile the page; a tile where the oracle has real
+    /// ink and excise has essentially none means content was dropped, however
+    /// little of the page it occupies. Antialiasing cannot produce that — it
+    /// perturbs edges of ink that is present in both.
+    ///
+    /// For a redaction tool the missing direction is the dangerous one: a
+    /// reviewer cannot redact what they were never shown. The extra direction
+    /// (excise has ink the oracle does not) catches the fabrication class from
+    /// #878.
+    /// </summary>
+    private static (int missingTiles, int extraTiles, int inkedTiles) CompareInkLocality(
+        SkiaSharp.SKBitmap exciseBmp, SkiaSharp.SKBitmap reference)
+    {
+        SkiaSharp.SKBitmap probe = exciseBmp;
+        bool needDispose = false;
+        if (exciseBmp.Width != reference.Width || exciseBmp.Height != reference.Height)
+        {
+            probe = Excise.Rendering.Differential.DifferentialMetrics
+                .ResizeMatch(exciseBmp, reference.Width, reference.Height);
+            needDispose = true;
+        }
+
+        try
+        {
+            int w = reference.Width, h = reference.Height;
+            if (w <= 0 || h <= 0) return (0, 0, 0);
+
+            int tw = Math.Max(1, w / InkTileGrid), th = Math.Max(1, h / InkTileGrid);
+            int missing = 0, extra = 0, inked = 0;
+
+            for (int ty = 0; ty < h; ty += th)
+            {
+                for (int tx = 0; tx < w; tx += tw)
+                {
+                    int x1 = Math.Min(tx + tw, w), y1 = Math.Min(ty + th, h);
+                    long total = 0, refDark = 0, mineDark = 0;
+                    for (int y = ty; y < y1; y++)
+                    {
+                        for (int x = tx; x < x1; x++)
+                        {
+                            total++;
+                            if (IsInkPixel(reference.GetPixel(x, y))) refDark++;
+                            if (IsInkPixel(probe.GetPixel(x, y))) mineDark++;
+                        }
+                    }
+                    if (total == 0) continue;
+
+                    bool refInked = refDark / (double)total >= InkTileThreshold;
+                    bool mineInked = mineDark / (double)total >= InkTileThreshold;
+                    if (refInked) inked++;
+                    // "Essentially none" rather than "exactly none": a stray
+                    // resample artifact should not count as having rendered the
+                    // content.
+                    if (refInked && !mineInked && mineDark * 10 < refDark) missing++;
+                    if (mineInked && !refInked && refDark * 10 < mineDark) extra++;
+                }
+            }
+
+            return (missing, extra, inked);
+        }
+        finally
+        {
+            if (needDispose) probe.Dispose();
+        }
+    }
+
+    private static bool IsInkPixel(SkiaSharp.SKColor p)
+        => p.Alpha > 16 && (p.Red < 200 || p.Green < 200 || p.Blue < 200);
+
     private static (double diffFraction, double mae) MatchAndCompare(
         SkiaSharp.SKBitmap exciseBmp, SkiaSharp.SKBitmap reference)
     {
@@ -4398,6 +4626,11 @@ partial class Program
         public IReadOnlyList<VisualDiffRegion>? visualTopRegions { get; set; }
         public int? comparedOracles { get; set; }
         public int? agreeingOracles { get; set; }
+        // Ink-locality comparison against bestOracle (#883). missingInkTiles>0
+        // means the oracle drew content in a region excise left blank.
+        public int? missingInkTiles { get; set; }
+        public int? extraInkTiles { get; set; }
+        public int? referenceInkedTiles { get; set; }
         public int? oracleComparisonPairs { get; set; }
         public int? oracleDisagreeingPairs { get; set; }
         public double? oracleMaxDiffFraction { get; set; }
