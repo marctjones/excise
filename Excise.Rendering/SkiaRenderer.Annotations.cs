@@ -221,6 +221,118 @@ internal partial class RenderContext
             case Excise.Core.Document.PdfAnnotationSubtype.StrikeOut:
                 RenderTextMarkupDefault(annot, rect);
                 break;
+
+            // Geometry annotations (#885). These declare their shape
+            // explicitly — /L, /Vertices, /InkList — and PdfAnnotationParser
+            // already extracts all three into LineEndpoints, Vertices and
+            // InkStrokes. The geometry was sitting there unused: the renderer
+            // simply had no case for these subtypes, so the page came out
+            // blank while mutool and pdftocairo drew the shape.
+            //
+            // Nothing is being invented here. Unlike FreeText (which needs text
+            // layout) or Stamp/Text (which need viewer-specific icon art), the
+            // annotation states exactly what to draw, so synthesising it is
+            // reading the file rather than guessing at it.
+            case Excise.Core.Document.PdfAnnotationSubtype.Line:
+                RenderLineDefault(annot);
+                break;
+            case Excise.Core.Document.PdfAnnotationSubtype.Polygon:
+                RenderVertexShapeDefault(annot, close: true);
+                break;
+            case Excise.Core.Document.PdfAnnotationSubtype.PolyLine:
+                RenderVertexShapeDefault(annot, close: false);
+                break;
+            case Excise.Core.Document.PdfAnnotationSubtype.Ink:
+                RenderInkDefault(annot);
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Stroke paint shared by the geometry annotations, built from the
+    /// annotation's own /C colour and /BS width.
+    /// </summary>
+    /// <remarks>
+    /// Returns null when /C is absent. That is deliberate: with no colour the
+    /// spec gives nothing to draw with, and picking one would be inventing
+    /// content — the failure mode #878 exists to prevent. Viewers differ here
+    /// and none of the corpus fixtures omit /C.
+    /// </remarks>
+    private SKPaint? CreateAnnotationStrokePaint(Excise.Core.Document.PdfAnnotation annot)
+    {
+        if (annot.Color is not { } color) return null;
+        var (r, g, b) = color;
+        // A zero or missing /BS /W means "no border" for some subtypes, but for
+        // Line/Polygon/Ink it is routinely absent and 1.0 is the spec default.
+        var width = (float)(annot.BorderWidth ?? 1.0);
+        if (width <= 0) width = 1.0f;
+        return new SKPaint
+        {
+            IsAntialias = _options.AntiAlias,
+            Style = SKPaintStyle.Stroke,
+            StrokeWidth = width,
+            StrokeCap = SKStrokeCap.Round,
+            StrokeJoin = SKStrokeJoin.Round,
+            Color = RgbToColor(r, g, b),
+        };
+    }
+
+    /// <summary>Line annotation (§12.5.6.7): draw /L as a segment.</summary>
+    private void RenderLineDefault(Excise.Core.Document.PdfAnnotation annot)
+    {
+        if (annot.LineEndpoints is not { } l) return;
+        using var paint = CreateAnnotationStrokePaint(annot);
+        if (paint == null) return;
+        _canvas.DrawLine((float)l.X1, (float)l.Y1, (float)l.X2, (float)l.Y2, paint);
+    }
+
+    /// <summary>
+    /// Polygon and PolyLine (§12.5.6.9): the same /Vertices list, closed or
+    /// open. Interior colour (/IC) is not filled — the parser does not surface
+    /// it, and stroking alone matches what viewers show for these without an
+    /// /AP stream.
+    /// </summary>
+    private void RenderVertexShapeDefault(Excise.Core.Document.PdfAnnotation annot, bool close)
+    {
+        if (annot.Vertices is not { Count: >= 2 } verts) return;
+        using var paint = CreateAnnotationStrokePaint(annot);
+        if (paint == null) return;
+
+        using var path = new SKPath();
+        path.MoveTo((float)verts[0].X, (float)verts[0].Y);
+        for (int i = 1; i < verts.Count; i++)
+            path.LineTo((float)verts[i].X, (float)verts[i].Y);
+        if (close) path.Close();
+        _canvas.DrawPath(path, paint);
+    }
+
+    /// <summary>
+    /// Ink annotation (§12.5.6.13): /InkList is a list of strokes, each a flat
+    /// list of points. Drawn as polylines rather than smoothed curves — the
+    /// spec describes interpolation as producer-defined, and a polyline through
+    /// the declared points is the reading that invents least.
+    /// </summary>
+    private void RenderInkDefault(Excise.Core.Document.PdfAnnotation annot)
+    {
+        if (annot.InkStrokes is not { Count: > 0 } strokes) return;
+        using var paint = CreateAnnotationStrokePaint(annot);
+        if (paint == null) return;
+
+        foreach (var stroke in strokes)
+        {
+            if (stroke.Count == 0) continue;
+            if (stroke.Count == 1)
+            {
+                // A single point still marks the page in every viewer that
+                // renders Ink at all; a zero-length polyline would not.
+                _canvas.DrawPoint((float)stroke[0].X, (float)stroke[0].Y, paint);
+                continue;
+            }
+            using var path = new SKPath();
+            path.MoveTo((float)stroke[0].X, (float)stroke[0].Y);
+            for (int i = 1; i < stroke.Count; i++)
+                path.LineTo((float)stroke[i].X, (float)stroke[i].Y);
+            _canvas.DrawPath(path, paint);
         }
     }
 
