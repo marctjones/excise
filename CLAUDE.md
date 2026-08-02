@@ -806,7 +806,12 @@ and cost real planning time.
    printing (doesn't exist, #621/#622 dropped it).
 
 **Previously listed here and now FIXED — do not re-add:**
-- ~~Inline images `BI...ID...EI` not handled~~ → handled (`ContentStreamWriter.cs:39-81`).
+- ~~Inline images `BI...ID...EI` not handled~~ → **parsed and re-serialised**
+  (`ContentStreamWriter.cs:39-81`), so redaction round-trips them. They are NOT
+  fully rendered: 3 corpus pages carrying `BI/ID/EI` images render blank while
+  the reference renderers draw them (#887). Narrowed 2026-08-02 — the original
+  wording read as "inline images work", which is true of the content-stream
+  path and not of the raster path.
 - ~~Clipping paths `W`, `W*` not tracked~~ → tracked (`ContentStreamParser.cs:448`).
 - ~~Rotated pages not supported~~ → `/Rotate` 0/90/180/270 and inherited rotation
   are honoured end-to-end (`PdfPage.ToContentStreamCoordinates`), covered by
