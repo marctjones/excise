@@ -162,9 +162,13 @@ def ClassifyMissingContent(label, x):
             return 'XObject invoked, nothing drawn'
         if re.search(rb'\bre\b.*\b[fFbB]\b', inflated, re.S):
             return 'vector fill present, nothing drawn'
-    if has(ANNOTS_FALLBACK) or (inflated and re.search(ANNOTS_FALLBACK, inflated)):
-        return ('annotation WITH /AP (#885)' if has(rb'/AP\s*<<')
-                else 'annotation WITHOUT /AP (#885)')
+    # The /Annots fallback is REMOVED. It was wrong in exactly the way a weak
+    # signal is wrong: 29 of the 35 pages it labelled "annotation" carry no
+    # annotation /Subtype anywhere, compressed or not. A page merely having an
+    # /Annots array says nothing about what failed to draw, and the inflated
+    # count would have sent appearance-synthesis work after a cluster five times
+    # larger than it is. Pages that reach here are genuinely unattributed and
+    # should say so.
     return 'unclassified — needs manual inspection'
 
 
