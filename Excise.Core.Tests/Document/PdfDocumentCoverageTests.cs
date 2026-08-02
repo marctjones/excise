@@ -1531,9 +1531,11 @@ public class PdfDocumentCoverageTests
 
         doc.RemoveObject(reference.ObjectNum);
 
-        // Trying to get removed object should throw
-        var act = () => doc.GetObject(reference.ObjectNum);
-        act.Should().Throw<PdfParseException>();
+        // The object is gone — which the spec expresses as null, not as an
+        // error (§7.3.10). This assertion changed with #884; what it is
+        // testing, that RemoveObject actually removes, is unchanged.
+        doc.GetObject(reference.ObjectNum).Should().BeSameAs(PdfNull.Instance,
+            "a removed object is undefined, and an undefined reference resolves to null");
     }
 
     /// <summary>
@@ -1863,14 +1865,18 @@ public class PdfDocumentCoverageTests
     /// Should throw PdfParseException.
     /// </summary>
     [Fact]
-    public void GetObject_WithInvalidObjectNumber_ThrowsPdfParseException()
+    public void GetObject_WithUndefinedObjectNumber_ReturnsNull()
     {
         var pdfData = CreatePdfWithCustomTrailer();
 
         using var doc = PdfDocument.Open(new MemoryStream(pdfData));
 
-        var act = () => doc.GetObject(9999);
-
-        act.Should().Throw<PdfParseException>();
+        // Changed deliberately (#884): this used to throw. PDF 32000-1 §7.3.10
+        // says an indirect reference to an undefined object "shall not be
+        // considered an error by a conforming reader; it shall be treated as a
+        // reference to the null object". Throwing condemned whole documents at
+        // open time over an omission the spec explicitly permits.
+        doc.GetObject(9999).Should().BeSameAs(PdfNull.Instance,
+            "§7.3.10 makes an undefined indirect reference a null object, not an error");
     }
 }

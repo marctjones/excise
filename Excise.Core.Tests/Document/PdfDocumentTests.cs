@@ -503,15 +503,15 @@ public class PdfDocumentTests
     }
 
     [Fact]
-    public void GetObject_WithInvalidObjectNumber_ThrowsException()
+    public void GetObject_WithUndefinedObjectNumber_ResolvesToNull()
     {
         var pdfData = CreateMinimalPdf();
 
         using var doc = PdfDocument.Open(pdfData);
 
-        var act = () => doc.GetObject(9999);
-
-        act.Should().Throw<Excise.Core.Parsing.PdfParseException>();
+        // #884: PDF 32000-1 §7.3.10 — an indirect reference to an undefined
+        // object is not an error; it resolves to null. This used to throw.
+        doc.GetObject(9999).Should().BeSameAs(Excise.Core.Primitives.PdfNull.Instance);
     }
 
     [Fact]
@@ -701,16 +701,15 @@ public class PdfDocumentTests
     }
 
     [Fact]
-    public void GetObject_NonexistentObjectNumber_ThrowsException()
+    public void GetObject_NonexistentObjectNumber_ResolvesToNull()
     {
         var pdfData = CreateMinimalPdf();
 
         using var doc = PdfDocument.Open(pdfData);
 
-        // Try to get an object that doesn't exist
-        var action = () => doc.GetObject(9999);
-
-        action.Should().Throw<PdfParseException>();
+        // #884: PDF 32000-1 §7.3.10 — an indirect reference to an undefined
+        // object is not an error; it resolves to null. This used to throw.
+        doc.GetObject(9999).Should().BeSameAs(Excise.Core.Primitives.PdfNull.Instance);
     }
 
     [Fact]
@@ -1048,15 +1047,16 @@ public class PdfDocumentTests
     }
 
     [Fact]
-    public void GetObject_InvalidObjectNumber_ThrowsCorrectException()
+    public void GetObject_UndefinedObjectNumber_ResolvesToNull()
     {
         var pdfData = CreateMinimalPdf();
 
         using var doc = PdfDocument.Open(pdfData);
 
-        var act = () => doc.GetObject(99999);
-
-        act.Should().Throw<PdfParseException>().WithMessage("*not found in xref*");
+        // See #884: PDF 32000-1 §7.3.10. An object number absent from the xref
+        // is the same condition as a FREE entry, which this reader already
+        // resolved to null two lines further down — the two are now consistent.
+        doc.GetObject(99999).Should().BeSameAs(Excise.Core.Primitives.PdfNull.Instance);
     }
 
     #endregion

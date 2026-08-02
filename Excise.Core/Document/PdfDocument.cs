@@ -1021,9 +1021,25 @@ public class PdfDocument : IDisposable
         if (_objectCache.TryGetValue(objectNumber, out var cached))
             return cached;
 
-        // Find in xref
+        // Find in xref.
+        //
+        // An object number with no xref entry is NOT an error. PDF 32000-1
+        // §7.3.10: "An indirect reference to an undefined object shall not be
+        // considered an error by a conforming reader; it shall be treated as a
+        // reference to the null object."
+        //
+        // So throwing here was spec-incorrect, and the inconsistency was
+        // visible two lines down — a FREE entry (the same condition, just
+        // recorded rather than omitted) already returned null. Files whose xref
+        // omits an object were condemned at open while mutool and pdftocairo
+        // read them (#884).
+        //
+        // Returning null can turn a hard failure into a page that renders
+        // without some content. That is the better failure: the
+        // missing-content gate (#883) catches a blank region, whereas a refused
+        // document produces nothing to inspect at all.
         if (!_xref.TryGetValue(objectNumber, out var entry))
-            throw new PdfParseException($"Object {objectNumber} not found in xref");
+            return PdfNull.Instance;
 
         if (!entry.InUse)
             return PdfNull.Instance;

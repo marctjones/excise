@@ -174,12 +174,38 @@ public class PdfLexer : IDisposable
         }
 
         // Read remaining directly from stream
+        bool truncated = false;
         while (totalRead < length)
         {
             int read = _stream.Read(data, totalRead, length - totalRead);
             if (read == 0)
-                throw new PdfParseException($"Unexpected end of stream data, expected {length} bytes but got {totalRead}");
+            {
+                // The declared /Length overruns the file. Return what is
+                // actually there rather than failing (#884).
+                //
+                // A wrong /Length is one of the most common forms of PDF damage,
+                // and throwing here turned it into a whole-document failure at
+                // OPEN time — the file could not be viewed at all. Other readers
+                // take the bytes that exist and let the filter deal with the
+                // shortfall.
+                //
+                // Truncating keeps the failure LOCAL: this one stream decodes
+                // partially or not at all, while the rest of the document is
+                // still readable. It also hands the shortfall to the layer that
+                // can judge it — a truncated content stream renders what it can,
+                // and a truncated image is caught by the sample-count guard in
+                // #878 rather than being painted as fabricated ink.
+                truncated = true;
+                break;
+            }
             totalRead += read;
+        }
+
+        if (truncated)
+        {
+            var actual = new byte[totalRead];
+            Array.Copy(data, actual, totalRead);
+            data = actual;
         }
 
         // If we consumed all buffered data, clear buffer for fresh reading
