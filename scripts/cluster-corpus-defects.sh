@@ -66,6 +66,108 @@ def classify(x):
     if ok:                     return 'EXCISE_SIDE_GAP'
     return 'AGREED_REFUSAL' if attempted else 'UNCORROBORATED'
 
+
+CORPUS_DIR = {'pdf.js': 'test-pdfs/pdfjs', 'veraPDF': 'test-pdfs/verapdf-corpus',
+              'Isartor': 'test-pdfs/isartor', 'PDFium': 'test-pdfs/pdfium'}
+
+def ClassifyMissingContent(label, x):
+    """What does this page use that excise drew nothing for?
+
+    Ordered most-specific first, because a page can carry several of these and
+    the first match is the one worth filing against. Streams are inflated when
+    the raw bytes give nothing away — an earlier version of this only regexed
+    the compressed file and dumped 15 pages into 'other', which is a statement
+    about the detector rather than about the pages.
+    """
+    import zlib
+    rel = x.get('path') or ''
+    path = os.path.join(CORPUS_DIR.get(label, ''), rel)
+    if not os.path.exists(path):
+        return 'file not found'
+    d = open(path, 'rb').read()
+
+    def has(pat):
+        return re.search(pat, d) is not None
+
+    if has(rb'/JBIG2Decode'):
+        return 'JBIG2Decode (#874)'
+    # The annotation subtypes are a long list (PDF 32000-1 Table 169) and an
+    # incomplete one silently mislabels pages: RichMedia/3D/Screen were missing
+    # here and sent a 10.8 MB veraPDF rich-media fixture to "needs manual
+    # inspection". /Annots is the reliable signal that a page HAS annotations at
+    # all, so fall back to it rather than enumerating forever.
+    ANNOT_SUBTYPES = (rb'/Subtype\s*/(Widget|Ink|Line|Polygon|PolyLine|Square|Circle|FreeText'
+                      rb'|Highlight|Stamp|Popup|RichMedia|3D|Screen|Movie|Sound|FileAttachment'
+                      rb'|Caret|StrikeOut|Underline|Squiggly|Text|Redact|Watermark|PrinterMark)')
+    if has(ANNOT_SUBTYPES):
+        return ('annotation WITH /AP (#885)' if has(rb'/AP\s*<<')
+                else 'annotation WITHOUT /AP (#885)')
+    if has(rb'/Subtype\s*/Type3'):
+        return 'Type3 font'
+    if has(rb'/FontFile2|/FontFile3|/FontFile[^0-9]'):
+        return 'embedded font, glyphs not rasterised (#886)'
+    if has(rb'/JPXDecode'):
+        return 'JPXDecode (JPEG 2000)'
+    if has(rb'/CCITTFaxDecode'):
+        return 'CCITTFaxDecode'
+    if has(rb'/SMask'):
+        return 'SMask / soft mask'
+    if has(rb'/ShadingType|/PatternType'):
+        return 'shading or pattern'
+    if has(rb'/DCTDecode'):
+        return 'DCTDecode image'
+
+    # WEAK SIGNAL, deliberately last of the raw checks: a page merely HAVING
+    # /Annots does not mean the annotation is what failed to draw. Everything
+    # more specific — JBIG2, a named annotation subtype, Type3, an embedded font
+    # — has already had its chance above, so reaching here means annotations are
+    # the only distinguishing feature left.
+    ANNOTS_FALLBACK = rb'/Annots'
+
+    # INLINE IMAGES use abbreviated keys (BI ... ID ... EI, PDF 32000-1 §8.9.7)
+    # and share none of the spellings above: /BPC not /BitsPerComponent, /CS not
+    # /ColorSpace, /DCT not /DCTDecode. Checked before inflation because the
+    # abbreviations sit in the raw content stream.
+    if has(rb'\bBI\b[^\n]{0,200}?\bID\b') or (has(rb'/BPC') and has(rb'/CS')):
+        return 'inline image (BI/ID/EI)'
+
+    # Nothing obvious in the raw bytes. Inflate every stream and look again —
+    # content and resources are routinely Flate-compressed, and object streams
+    # (/Type /ObjStm, betrayed by /First) hide the page and annotation
+    # dictionaries entirely. The earlier version decompressed one fixed-size
+    # slice per stream and therefore missed both, which is how 22 pages ended up
+    # labelled "needs manual inspection" when the file said what they were.
+    inflated = b''
+    for m in re.finditer(rb'stream\r?\n', d):
+        chunk = d[m.end():]
+        try:
+            inflated += zlib.decompressobj().decompress(chunk)
+        except Exception:
+            pass
+    if inflated:
+        if re.search(ANNOT_SUBTYPES, inflated) or re.search(rb'/Annots', inflated):
+            return ('annotation WITH /AP (#885)'
+                    if re.search(rb'/AP\s*<<', inflated) or has(rb'/AP\s*<<')
+                    else 'annotation WITHOUT /AP (#885)')
+    if inflated:
+        if re.search(rb'/Subtype\s*/Type3', inflated):
+            return 'Type3 font (in compressed object)'
+        if re.search(rb'/FontFile', inflated):
+            return 'embedded font, glyphs not rasterised (#886)'
+        if re.search(rb'/ShadingType|/PatternType', inflated):
+            return 'shading or pattern (in compressed object)'
+        if re.search(rb'\bTj\b|\bTJ\b|\bTf\b', inflated):
+            return 'text operators present, no glyphs drawn'
+        if re.search(rb'\bDo\b', inflated):
+            return 'XObject invoked, nothing drawn'
+        if re.search(rb'\bre\b.*\b[fFbB]\b', inflated, re.S):
+            return 'vector fill present, nothing drawn'
+    if has(ANNOTS_FALLBACK) or (inflated and re.search(ANNOTS_FALLBACK, inflated)):
+        return ('annotation WITH /AP (#885)' if has(rb'/AP\s*<<')
+                else 'annotation WITHOUT /AP (#885)')
+    return 'unclassified — needs manual inspection'
+
+
 rows, total = [], 0
 for label, f in files:
     p = os.path.join(bin_dir, f)
@@ -94,10 +196,10 @@ for cls in ('EXCISE_SIDE_GAP', 'MISSING_CONTENT', 'DIFF'):
         if cls == 'EXCISE_SIDE_GAP':
             key = re.sub(r'\d+', 'N', (x.get('errorMessage') or '').strip())[:66] or x.get('status')
         elif cls == 'MISSING_CONTENT':
-            # No exception here — excise rendered. Group by what the page uses,
-            # which is the actionable axis.
-            key = f"blank page ({x.get('referenceInkedTiles')} reference tiles)"
-            key = "excise rendered no ink at all"
+            # No exception to group by — excise rendered, it just drew nothing.
+            # "The page is blank" is the symptom; the actionable axis is what
+            # the page actually uses, so inspect the file.
+            key = ClassifyMissingContent(label, x)
         else:
             key = f"rank {x.get('exciseReferenceCenterRank')} of {(x.get('comparedOracles') or 0)+1}, oracles split {x.get('oracleDisagreeingPairs')}/{x.get('oracleComparisonPairs')}"
         groups[key].append((label, x))
