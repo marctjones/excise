@@ -1011,7 +1011,19 @@ def agreement_class(e):
         return "ORACLE_SPLIT"
     if st == "DIFF":
         return "DIFF"
-    any_oracle_ok = any(get(e, k) == "OK" for k in ORACLE_STATUS_KEYS)
+    if st == "MISSING_CONTENT":
+        # excise drew nothing where the reference drew content (#883).
+        return "MISSING_CONTENT"
+    oracle_states = [get(e, k) for k in ORACLE_STATUS_KEYS]
+    any_oracle_ok = any(s == "OK" for s in oracle_states)
+    # A status of None means the oracle was never INVOKED, which is different
+    # from having been invoked and failed (#882). Distinguishing them matters:
+    # when excise's own render hits the wall budget the comparison never runs,
+    # so all five come back None — and treating that as "nobody could render
+    # it" filed a page pdftocairo and Ghostscript both render fine into the
+    # bucket meaning "refusing is correct". That page was the #881 DoS: the
+    # classification meant to surface defects concealed one.
+    any_oracle_attempted = any(s is not None for s in oracle_states)
     excise_rendered = get(e, "renderMs") is not None
     if excise_rendered:
         return "EXCISE_ONLY" if not any_oracle_ok else "RENDERED"
@@ -1023,6 +1035,11 @@ def agreement_class(e):
         # An oracle rendered it and excise did not. The only class here that
         # is unambiguously an excise defect.
         return "EXCISE_SIDE_GAP"
+    if not any_oracle_attempted:
+        # The harness formed no opinion. Counts as neither correct nor
+        # incorrect, and is reported loudly rather than folded into a
+        # correct-looking bucket.
+        return "UNCORROBORATED"
     return "AGREED_REFUSAL"
 
 agreement = {}
@@ -1037,13 +1054,16 @@ total_entries = len(merged_entries) or 1
 print()
 print("  agreement (excise vs the reference renderers):")
 for k in ("PASS", "AGREED_REFUSAL", "EXCISE_ONLY", "ORACLE_SPLIT",
-          "CREDENTIAL_BLOCKED", "DIFF", "EXCISE_SIDE_GAP", "RENDERED"):
+          "CREDENTIAL_BLOCKED", "UNCORROBORATED", "MISSING_CONTENT",
+          "DIFF", "EXCISE_SIDE_GAP", "RENDERED"):
     if agreement.get(k):
         note = {
             "AGREED_REFUSAL": "no renderer managed it — refusing is correct",
             "EXCISE_ONLY": "excise rendered where no oracle could",
             "ORACLE_SPLIT": "oracles disagree among themselves",
             "CREDENTIAL_BLOCKED": "nobody had the password — proves nothing",
+            "UNCORROBORATED": "oracles never ran — no opinion formed, NOT corroboration",
+            "MISSING_CONTENT": "excise blank where the reference has content — DEFECT",
             "EXCISE_SIDE_GAP": "an oracle rendered and excise did not — DEFECT",
         }.get(k, "")
         print(f"    {agreement[k]:4d}  {k:20} {note}")
@@ -1051,6 +1071,10 @@ print(f"  excise behaves correctly on {correct}/{total_entries} "
       f"({100.0 * correct / total_entries:.1f}%) — PASS + agreed refusal + excise-only")
 if agreement.get("EXCISE_SIDE_GAP"):
     print(f"  ⚠ {agreement['EXCISE_SIDE_GAP']} page(s) an oracle rendered and excise did not")
+if agreement.get("MISSING_CONTENT"):
+    print(f"  ⚠ {agreement['MISSING_CONTENT']} page(s) excise rendered blank where the reference has content")
+if agreement.get("UNCORROBORATED"):
+    print(f"  ⚠ {agreement['UNCORROBORATED']} page(s) had NO oracle invoked — not corroboration, no opinion")
 
 def elapsed(e):
     v = get(e, "elapsedMs")
