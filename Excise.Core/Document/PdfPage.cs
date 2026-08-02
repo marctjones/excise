@@ -253,8 +253,33 @@ public class PdfPage
     /// counted as crashes by #648's DoS gate, which is exactly the
     /// unhandled-exception-on-untrusted-input shape that gate exists to close.
     /// </remarks>
-    public PdfRectangle MediaBox => GetInheritedRectangle("MediaBox")
-        ?? throw new Excise.Core.Parsing.PdfParseException("Page has no MediaBox");
+    public PdfRectangle MediaBox => GetInheritedRectangle("MediaBox") ?? DefaultMediaBox;
+
+    /// <summary>
+    /// US Letter, used when a malformed page has no /MediaBox anywhere in its
+    /// inheritance chain.
+    /// </summary>
+    /// <remarks>
+    /// /MediaBox is a required inheritable page attribute, so a page without one
+    /// is malformed — but refusing it is not what other readers do, and for a
+    /// redaction tool showing the page beats showing nothing. Measured:
+    /// pdftocairo renders these at exactly 612x792 (checked against
+    /// pdfium/bug_451265.pdf at 72dpi), and mutool renders them too. Ten corpus
+    /// pages were being refused here while both of those displayed them (#884).
+    ///
+    /// This supersedes the reasoning in #871, which hardened the same line from
+    /// an untyped InvalidOperationException to a typed PdfParseException and
+    /// justified refusing by claiming no reference renderer handled these
+    /// either. That claim was read off oracle statuses that meant "never asked"
+    /// (#882). The typed exception was the right fix for the crash; refusing was
+    /// not the right end state.
+    ///
+    /// The size is a guess, and a guess is the honest position: the document
+    /// does not say. Anything derived from it — redaction coordinates, page
+    /// geometry — is as trustworthy as the guess, which is why this is a named
+    /// constant rather than an inline literal.
+    /// </remarks>
+    internal static readonly PdfRectangle DefaultMediaBox = new(0, 0, 612, 792);
 
     /// <summary>
     /// The crop box (visible area). Falls back to MediaBox if not specified.
