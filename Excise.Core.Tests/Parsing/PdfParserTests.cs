@@ -455,14 +455,22 @@ public class PdfParserTests
     }
 
     [Fact]
-    public void ParseIndirectObject_MissingEndobjKeyword_ThrowsException()
+    public void ParseIndirectObject_MissingEndobjKeyword_KeepsTheParsedValue()
     {
         using var parser = new PdfParser(Encoding.ASCII.GetBytes("5 0 obj\n123\nnotendobj"));
 
-        Action act = () => parser.ParseIndirectObject();
+        var obj = parser.ParseIndirectObject();
 
-        act.Should().Throw<PdfParseException>()
-            .WithMessage("*Expected 'endobj'*");
+        // Changed deliberately (#884): this used to throw. By the time the
+        // 'endobj' check runs the VALUE has already parsed successfully, so a
+        // missing delimiter is not a reason to discard it — and because this
+        // reader seeks to each object's own xref offset rather than scanning
+        // sequentially, a stray trailing token cannot desync the next object.
+        // Throwing here condemned 13 corpus documents that mutool and
+        // pdftocairo both render.
+        obj.ObjectNumber.Should().Be(5);
+        obj.Value.Should().BeOfType<PdfInteger>()
+            .Which.Value.Should().Be(123, "the value parsed fine; only the delimiter was missing");
     }
 
     [Fact]

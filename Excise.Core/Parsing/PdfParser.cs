@@ -418,10 +418,28 @@ public class PdfParser : IDisposable
             {
                 value = ParseBareDictionaryObject(firstBareKey, endObjToken);
             }
-            else
-            {
-                throw new PdfParseException($"Expected 'endobj', got '{endObjToken.Value}' at position {endObjToken.Position}");
-            }
+            // Otherwise: KEEP THE VALUE. A missing or malformed 'endobj' is a
+            // trailing-delimiter problem, not a value problem — ParseObject has
+            // already succeeded by the time we get here (#884).
+            //
+            // Throwing here discarded a successfully-parsed object and, because
+            // this runs during document open, took the whole file with it: 13
+            // corpus pages reported MALFORMED_PDF while mutool and pdftocairo
+            // rendered them, making it the single largest EXCISE_SIDE_GAP
+            // cluster.
+            //
+            // Tolerating it is safe because this reader is OFFSET-DRIVEN, not
+            // sequential. Both callers Seek() to the object's own xref offset
+            // before parsing (PdfDocument.ReadIndirectObjectAt and the
+            // GetObject path), so a stray token after a value cannot desync the
+            // next object — the next read starts from its own offset. 'endobj'
+            // is a delimiter for a scan this parser does not perform.
+            //
+            // The risk this accepts is the opposite one: if ParseObject went
+            // wrong and swallowed too much, we now keep a wrong value instead of
+            // failing loudly. That trade is worth taking because the failure was
+            // not local — it condemned the entire document, and every other
+            // reader accepts these files.
         }
 
         return new PdfIndirectObject(objNum, genNum, value);
