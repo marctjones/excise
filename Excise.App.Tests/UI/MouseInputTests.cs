@@ -27,8 +27,18 @@ namespace Excise.App.Tests.UI;
 /// operations, and compound workflows.
 /// </summary>
 [Collection("AvaloniaTests")]
-public class MouseInputTests
+public class MouseInputTests : IDisposable
 {
+    /// <summary>
+    /// Every window this class shows is closed after the test, including
+    /// when it fails (#706). These tests previously showed windows and never
+    /// closed them, so they accumulated for the whole run and perturbed
+    /// pointer routing and focus for every later test.
+    /// </summary>
+    private readonly ShownWindowTracker _windows = new();
+
+    public void Dispose() => _windows.Dispose();
+
     private readonly ITestOutputHelper _out;
     public MouseInputTests(ITestOutputHelper o) { _out = o; }
 
@@ -74,7 +84,7 @@ public class MouseInputTests
 
         var vm = new MainWindowViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
         await Task.Delay(200);
 
         await vm.LoadDocumentAsync(PragmaticBook);
@@ -108,7 +118,7 @@ public class MouseInputTests
 
         var vm = new MainWindowViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
         await Task.Delay(200);
 
         await vm.LoadDocumentAsync(PragmaticBook);
@@ -169,7 +179,7 @@ public class MouseInputTests
         // — this test's scope stays single-page, forced explicitly here.
         var vm = new MainWindowViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
         await Task.Delay(200);
         vm.ViewMode = PdfViewMode.SinglePage;
 
@@ -263,7 +273,7 @@ public class MouseInputTests
         // ceiling) rather than a fixed delay/iteration count.
         var vm = new MainWindowViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
         await Task.Delay(200);
 
         await vm.LoadDocumentAsync(PragmaticBook);
@@ -318,7 +328,7 @@ public class MouseInputTests
 
         var vm = new MainWindowViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
         await Task.Delay(200);
 
         await vm.LoadDocumentAsync(PragmaticBook);
@@ -355,12 +365,14 @@ public class MouseInputTests
 
     private static readonly Point ViewerCenter = new(640, 450);
 
-    private static async Task<(MainWindowViewModel vm, MainWindow window, PdfViewerControl viewer)>
+    // Instance rather than static: it shows a window, and the window tracker
+    // that guarantees the window is closed is per-test-instance (#706).
+    private async Task<(MainWindowViewModel vm, MainWindow window, PdfViewerControl viewer)>
         OpenBookAsync()
     {
         var vm = new MainWindowViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
         await Task.Delay(200);
         await vm.LoadDocumentAsync(PragmaticBook!);
         await Task.Delay(300);
@@ -546,7 +558,7 @@ public class MouseInputTests
 
         var vm = new MainWindowViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
         await Task.Delay(200);
 
         await vm.LoadDocumentAsync(PragmaticBook);
@@ -608,7 +620,7 @@ public class MouseInputTests
 
         var vm = new MainWindowViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
         await Task.Delay(200);
 
         await vm.LoadDocumentAsync(pdfPath);
@@ -664,7 +676,7 @@ public class MouseInputTests
 
         var vm = new MainWindowViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
         await Task.Delay(200);
 
         await vm.LoadDocumentAsync(PragmaticBook);
@@ -737,7 +749,7 @@ public class MouseInputTests
 
         var vm = new MainWindowViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
         await Task.Delay(200);
 
         await vm.LoadDocumentAsync(PragmaticBook);
@@ -789,7 +801,7 @@ public class MouseInputTests
 
         var vm = new MainWindowViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
         await Task.Delay(200);
 
         await vm.LoadDocumentAsync(PragmaticBook);
@@ -863,7 +875,7 @@ public class MouseInputTests
         // test's scope stays single-page, forced here.
         var vm = new MainWindowViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
         await Task.Delay(200);
         vm.ViewMode = PdfViewMode.SinglePage;
 
@@ -949,7 +961,7 @@ public class MouseInputTests
 
         var vm = new MainWindowViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-        window.Show();
+        _windows.Show(window);
         await Task.Delay(200);
 
         // Step 1: Load document
