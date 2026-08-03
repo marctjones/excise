@@ -11,8 +11,9 @@ semantic versioning.
 This release is dominated by one thing: excise's renderer and parser were
 measured, page by page, against independent renderers across all four test
 corpora (3,915 documents), and the defects that measurement exposed were fixed
-at the root. Nine parser/renderer correctness fixes below were found that way,
-not by a user report.
+at the root. Seven of the parser/renderer fixes below (#871, #872, #873, #878,
+#881, #884, #885) were found that way, not by a user report — as was a bug in
+one of the reference oracles itself (#868).
 
 **What the corpus gate does and does not claim.** The checked-in expectation
 manifests (`tests/corpus-expectations*.tsv`) are a **ratchet recording each
@@ -73,8 +74,9 @@ refusals), #885/#888 (annotation appearances), #886 (embedded-subset code→GID)
   anchors to the pointer's own line rather than an X-closer neighbour on an
   adjacent line.
 - **GUI tests leaked every window they opened** (#706) — `MouseInputTests`
-  called `Show()` thirteen times and `Close()` zero times; `PointerInteraction
-  Tests`, eight and zero. xUnit builds a fresh test-class instance per test but
+  called `Show()` thirteen times and `Close()` zero times;
+  `PointerInteractionTests`, eight and zero. xUnit builds a fresh test-class
+  instance per test but
   the Avalonia application is process-wide, so those windows accumulated for
   the rest of the run and perturbed pointer routing, hover hit-testing and
   focus — the order-dependent flake that reddened T2. `ShownWindowTracker`
