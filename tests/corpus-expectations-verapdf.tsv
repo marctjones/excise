@@ -17,7 +17,7 @@
 #
 # Keys are corpus-relative PATHS, not basenames: this corpus may have
 # subdirectories and duplicate filenames.
-# Baseline: PASS=2689, PASS_ONE=5
+# Baseline: PASS=2659, MISSING_CONTENT=30, PASS_ONE=5
 veraPDF-corpus-master/ISO 32000-1/veraPDF test suite 6-2-2-t01-fail-a.pdf	1	PASS
 veraPDF-corpus-master/ISO 32000-1/veraPDF test suite 6-2-3-2-t01-fail-b.pdf	1	PASS
 veraPDF-corpus-master/ISO 32000-1/veraPDF test suite 6-8-2-2-t01-fail-d.pdf	1	PASS
@@ -64,16 +64,16 @@ veraPDF-corpus-master/PDF_A-1b/6.1 File structure/6.1.10 Filters/veraPDF test su
 veraPDF-corpus-master/PDF_A-1b/6.1 File structure/6.1.10 Filters/veraPDF test suite 6-1-10-t01-fail-d.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-1b/6.1 File structure/6.1.12 Implementation limits/veraPDF test suite 6-1-12-t01-fail-a.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-1b/6.1 File structure/6.1.12 Implementation limits/veraPDF test suite 6-1-12-t02-fail-c.pdf	1	PASS
-veraPDF-corpus-master/PDF_A-1b/6.1 File structure/6.1.12 Implementation limits/veraPDF test suite 6-1-12-t02-fail-d.pdf	1	PASS
+veraPDF-corpus-master/PDF_A-1b/6.1 File structure/6.1.12 Implementation limits/veraPDF test suite 6-1-12-t02-fail-d.pdf	1	MISSING_CONTENT
 veraPDF-corpus-master/PDF_A-1b/6.1 File structure/6.1.12 Implementation limits/veraPDF test suite 6-1-12-t02-fail-e.pdf	1	PASS
-veraPDF-corpus-master/PDF_A-1b/6.1 File structure/6.1.12 Implementation limits/veraPDF test suite 6-1-12-t02-fail-f.pdf	1	PASS
+veraPDF-corpus-master/PDF_A-1b/6.1 File structure/6.1.12 Implementation limits/veraPDF test suite 6-1-12-t02-fail-f.pdf	1	MISSING_CONTENT
 veraPDF-corpus-master/PDF_A-1b/6.1 File structure/6.1.12 Implementation limits/veraPDF test suite 6-1-12-t02-fail-l.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-1b/6.1 File structure/6.1.12 Implementation limits/veraPDF test suite 6-1-12-t02-pass-g.pdf	1	PASS
-veraPDF-corpus-master/PDF_A-1b/6.1 File structure/6.1.12 Implementation limits/veraPDF test suite 6-1-12-t02-pass-h.pdf	1	PASS
+veraPDF-corpus-master/PDF_A-1b/6.1 File structure/6.1.12 Implementation limits/veraPDF test suite 6-1-12-t02-pass-h.pdf	1	MISSING_CONTENT
 veraPDF-corpus-master/PDF_A-1b/6.1 File structure/6.1.12 Implementation limits/veraPDF test suite 6-1-12-t02-pass-i.pdf	1	PASS
-veraPDF-corpus-master/PDF_A-1b/6.1 File structure/6.1.12 Implementation limits/veraPDF test suite 6-1-12-t02-pass-j.pdf	1	PASS
+veraPDF-corpus-master/PDF_A-1b/6.1 File structure/6.1.12 Implementation limits/veraPDF test suite 6-1-12-t02-pass-j.pdf	1	MISSING_CONTENT
 veraPDF-corpus-master/PDF_A-1b/6.1 File structure/6.1.12 Implementation limits/veraPDF test suite 6-1-12-t02-pass-k.pdf	1	PASS
-veraPDF-corpus-master/PDF_A-1b/6.1 File structure/6.1.12 Implementation limits/veraPDF test suite 6-1-12-t02-pass-l.pdf	1	PASS
+veraPDF-corpus-master/PDF_A-1b/6.1 File structure/6.1.12 Implementation limits/veraPDF test suite 6-1-12-t02-pass-l.pdf	1	MISSING_CONTENT
 veraPDF-corpus-master/PDF_A-1b/6.1 File structure/6.1.12 Implementation limits/veraPDF test suite 6-1-12-t03-fail-a.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-1b/6.1 File structure/6.1.12 Implementation limits/veraPDF test suite 6-1-12-t03-fail-b.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-1b/6.1 File structure/6.1.12 Implementation limits/veraPDF test suite 6-1-12-t03-fail-c.pdf	1	PASS
@@ -737,7 +737,7 @@ veraPDF-corpus-master/PDF_A-2b/6.2 Graphics/6.2.10 Transparency/veraPDF test sui
 veraPDF-corpus-master/PDF_A-2b/6.2 Graphics/6.2.10 Transparency/veraPDF test suite 6-2-10-t03-fail-h.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-2b/6.2 Graphics/6.2.10 Transparency/veraPDF test suite 6-2-10-t03-pass-a.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-2b/6.2 Graphics/6.2.10 Transparency/veraPDF test suite 6-2-10-t04-fail-a.pdf	1	PASS
-veraPDF-corpus-master/PDF_A-2b/6.2 Graphics/6.2.10 Transparency/veraPDF test suite 6-2-10-t04-fail-b.pdf	1	PASS
+veraPDF-corpus-master/PDF_A-2b/6.2 Graphics/6.2.10 Transparency/veraPDF test suite 6-2-10-t04-fail-b.pdf	1	MISSING_CONTENT
 veraPDF-corpus-master/PDF_A-2b/6.2 Graphics/6.2.10 Transparency/veraPDF test suite 6-2-10-t04-fail-c.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-2b/6.2 Graphics/6.2.10 Transparency/veraPDF test suite 6-2-10-t04-fail-d.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-2b/6.2 Graphics/6.2.10 Transparency/veraPDF test suite 6-2-10-t04-fail-e.pdf	1	PASS
@@ -893,7 +893,7 @@ veraPDF-corpus-master/PDF_A-2b/6.2 Graphics/6.2.4.3 Uncalibrated -Device colour 
 veraPDF-corpus-master/PDF_A-2b/6.2 Graphics/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t02-pass-f.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-2b/6.2 Graphics/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t03-fail-a.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-2b/6.2 Graphics/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t03-fail-b.pdf	1	PASS
-veraPDF-corpus-master/PDF_A-2b/6.2 Graphics/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t03-fail-c.pdf	1	PASS
+veraPDF-corpus-master/PDF_A-2b/6.2 Graphics/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t03-fail-c.pdf	1	MISSING_CONTENT
 veraPDF-corpus-master/PDF_A-2b/6.2 Graphics/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t03-fail-d.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-2b/6.2 Graphics/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t03-pass-a.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-2b/6.2 Graphics/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t03-pass-b.pdf	1	PASS
@@ -993,22 +993,22 @@ veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.2 Annotation dictionaries/ver
 veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.2 Annotation dictionaries/veraPDF test suite 6-3-2-t01-pass-a.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.2 Annotation dictionaries/veraPDF test suite 6-3-2-t01-pass-b.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-a.pdf	1	PASS
-veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-b.pdf	1	PASS
+veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-b.pdf	1	MISSING_CONTENT
 veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-c.pdf	1	PASS
-veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-d.pdf	1	PASS
+veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-d.pdf	1	MISSING_CONTENT
 veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-e.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-f.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-g.pdf	1	PASS
-veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-h.pdf	1	PASS
+veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-h.pdf	1	MISSING_CONTENT
 veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-i.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-j.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-k.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-l.pdf	1	PASS
-veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-m.pdf	1	PASS
+veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-m.pdf	1	MISSING_CONTENT
 veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-n.pdf	1	PASS
-veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-o.pdf	1	PASS
-veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-p.pdf	1	PASS
-veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-q.pdf	1	PASS
+veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-o.pdf	1	MISSING_CONTENT
+veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-p.pdf	1	MISSING_CONTENT
+veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-q.pdf	1	MISSING_CONTENT
 veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-r.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-s.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-t.pdf	1	PASS
@@ -1016,7 +1016,7 @@ veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/vera
 veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-v.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-w.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-x.pdf	1	PASS
-veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-pass-a.pdf	1	PASS
+veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-pass-a.pdf	1	MISSING_CONTENT
 veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-pass-b.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-pass-c.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-2b/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t02-fail-a.pdf	1	PASS
@@ -1726,7 +1726,7 @@ veraPDF-corpus-master/PDF_A-4/6.1 File structure/6.1.8 Indirect objects/veraPDF 
 veraPDF-corpus-master/PDF_A-4/6.1 File structure/6.1.8 Indirect objects/veraPDF test suite 6-1-8-t01-fail-g.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.1 File structure/6.1.9 Inline image dictionaries/veraPDF test suite 6-1-9-t01-fail-a.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.1 File structure/6.1.9 Inline image dictionaries/veraPDF test suite 6-1-9-t01-fail-b.pdf	1	PASS
-veraPDF-corpus-master/PDF_A-4/6.1 File structure/6.1.9 Inline image dictionaries/veraPDF test suite 6-1-9-t01-fail-c.pdf	1	PASS
+veraPDF-corpus-master/PDF_A-4/6.1 File structure/6.1.9 Inline image dictionaries/veraPDF test suite 6-1-9-t01-fail-c.pdf	1	MISSING_CONTENT
 veraPDF-corpus-master/PDF_A-4/6.1 File structure/6.1.9 Inline image dictionaries/veraPDF test suite 6-1-9-t01-fail-d.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.10 Optional content/veraPDF test suite 6-10-t01-fail-b.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.10 Optional content/veraPDF test suite 6-10-t01-fail-c.pdf	1	PASS
@@ -1885,7 +1885,7 @@ veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.4 Colour spaces/6.2.4.3 Uncalibra
 veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.4 Colour spaces/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t02-pass-g.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.4 Colour spaces/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t03-fail-a.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.4 Colour spaces/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t03-fail-b.pdf	1	PASS
-veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.4 Colour spaces/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t03-fail-c.pdf	1	PASS
+veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.4 Colour spaces/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t03-fail-c.pdf	1	MISSING_CONTENT
 veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.4 Colour spaces/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t03-fail-d.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.4 Colour spaces/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t03-pass-a.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.4 Colour spaces/6.2.4.3 Uncalibrated -Device colour spaces/veraPDF test suite 6-2-4-3-t03-pass-b.pdf	1	PASS
@@ -2006,7 +2006,7 @@ veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.9 Transparency/veraPDF test suite
 veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.9 Transparency/veraPDF test suite 6-2-9-t03-fail-h.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.9 Transparency/veraPDF test suite 6-2-9-t03-pass-a.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.9 Transparency/veraPDF test suite 6-2-9-t04-fail-a.pdf	1	PASS
-veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.9 Transparency/veraPDF test suite 6-2-9-t04-fail-b.pdf	1	PASS
+veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.9 Transparency/veraPDF test suite 6-2-9-t04-fail-b.pdf	1	MISSING_CONTENT
 veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.9 Transparency/veraPDF test suite 6-2-9-t04-fail-c.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.9 Transparency/veraPDF test suite 6-2-9-t04-fail-d.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.2 Graphics/6.2.9 Transparency/veraPDF test suite 6-2-9-t04-fail-e.pdf	1	PASS
@@ -2071,31 +2071,31 @@ veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.2 Annotation dictionaries/vera
 veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.2 Annotation dictionaries/veraPDF test suite 6-3-2-t01-fail-u.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.2 Annotation dictionaries/veraPDF test suite 6-3-2-t01-pass-a.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.2 Annotation dictionaries/veraPDF test suite 6-3-2-t01-pass-b.pdf	1	PASS
-veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.2 Annotation dictionaries/veraPDF test suite 6-3-2-t02-fail-a.pdf	1	PASS
+veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.2 Annotation dictionaries/veraPDF test suite 6-3-2-t02-fail-a.pdf	1	MISSING_CONTENT
 veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.2 Annotation dictionaries/veraPDF test suite 6-3-2-t02-fail-b.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.2 Annotation dictionaries/veraPDF test suite 6-3-2-t02-fail-c.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.2 Annotation dictionaries/veraPDF test suite 6-3-2-t02-fail-d.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.2 Annotation dictionaries/veraPDF test suite 6-3-2-t02-fail-e.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-a.pdf	1	PASS
-veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-b.pdf	1	PASS
+veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-b.pdf	1	MISSING_CONTENT
 veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-c.pdf	1	PASS
-veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-d.pdf	1	PASS
+veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-d.pdf	1	MISSING_CONTENT
 veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-e.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-f.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-g.pdf	1	PASS
-veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-h.pdf	1	PASS
+veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-h.pdf	1	MISSING_CONTENT
 veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-i.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-j.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-k.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-l.pdf	1	PASS
-veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-m.pdf	1	PASS
+veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-m.pdf	1	MISSING_CONTENT
 veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-n.pdf	1	PASS
-veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-o.pdf	1	PASS
+veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-o.pdf	1	MISSING_CONTENT
 veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-p.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-q.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-r.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-fail-s.pdf	1	PASS
-veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-pass-a.pdf	1	PASS
+veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-pass-a.pdf	1	MISSING_CONTENT
 veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-pass-b.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-pass-c.pdf	1	PASS
 veraPDF-corpus-master/PDF_A-4/6.3 Annotations/6.3.3 Annotation appearances/veraPDF test suite 6-3-3-t01-pass-d.pdf	1	PASS
@@ -2618,14 +2618,14 @@ veraPDF-corpus-master/PDF_UA-2/8.8 Intra-document destinations/8.8-t02-fail-a.pd
 veraPDF-corpus-master/PDF_UA-2/8.9 Annotations/8.9.2 Semantics and content/8.9.2.2 Annotations as artifacts/8.9.2.2-t01-fail-a.pdf	1	PASS
 veraPDF-corpus-master/PDF_UA-2/8.9 Annotations/8.9.2 Semantics and content/8.9.2.4 Annotation types/8.9.2.4.10 File attachment/8.9.2.4.10-t01-fail-a.pdf	1	PASS
 veraPDF-corpus-master/TWG test files/TWG test suite A001-pdfa1-fail-a.pdf	1	PASS
-veraPDF-corpus-master/TWG test files/TWG test suite A001-pdfa1-fail-b.pdf	1	PASS
+veraPDF-corpus-master/TWG test files/TWG test suite A001-pdfa1-fail-b.pdf	1	MISSING_CONTENT
 veraPDF-corpus-master/TWG test files/TWG test suite A001-pdfa1-fail-c.pdf	1	PASS
-veraPDF-corpus-master/TWG test files/TWG test suite A001-pdfa1-fail-d.pdf	1	PASS
+veraPDF-corpus-master/TWG test files/TWG test suite A001-pdfa1-fail-d.pdf	1	MISSING_CONTENT
 veraPDF-corpus-master/TWG test files/TWG test suite A001-pdfa1-fail-e.pdf	1	PASS
 veraPDF-corpus-master/TWG test files/TWG test suite A001-pdfa1-pass-a.pdf	1	PASS
-veraPDF-corpus-master/TWG test files/TWG test suite A001-pdfa1-pass-b.pdf	1	PASS
+veraPDF-corpus-master/TWG test files/TWG test suite A001-pdfa1-pass-b.pdf	1	MISSING_CONTENT
 veraPDF-corpus-master/TWG test files/TWG test suite A001-pdfa1-pass-c.pdf	1	PASS
-veraPDF-corpus-master/TWG test files/TWG test suite A001-pdfa1-pass-d.pdf	1	PASS
+veraPDF-corpus-master/TWG test files/TWG test suite A001-pdfa1-pass-d.pdf	1	MISSING_CONTENT
 veraPDF-corpus-master/TWG test files/TWG test suite A002-pdfa2-fail-a.pdf	1	PASS
 veraPDF-corpus-master/TWG test files/TWG test suite A002-pdfa2-fail-b.pdf	1	PASS
 veraPDF-corpus-master/TWG test files/TWG test suite A002-pdfa2-fail-c.pdf	1	PASS
@@ -2665,7 +2665,7 @@ veraPDF-corpus-master/TWG test files/TWG test suite A018-pdfa2-fail-b.pdf	1	PASS
 veraPDF-corpus-master/TWG test files/TWG test suite A018-pdfa2-pass-a.pdf	1	PASS
 veraPDF-corpus-master/TWG test files/TWG test suite A018-pdfa2-pass-b.pdf	1	PASS
 veraPDF-corpus-master/TWG test files/TWG test suite A019-pdfa2-pass-a.pdf	1	PASS
-veraPDF-corpus-master/TWG test files/TWG test suite A019-pdfa2-pass-b.pdf	1	PASS
+veraPDF-corpus-master/TWG test files/TWG test suite A019-pdfa2-pass-b.pdf	1	MISSING_CONTENT
 veraPDF-corpus-master/TWG test files/TWG test suite A020-pdfa1-pass-a.pdf	1	PASS
 veraPDF-corpus-master/TWG test files/TWG test suite A020-pdfa1-pass-b.pdf	1	PASS
 veraPDF-corpus-master/TWG test files/TWG test suite A021-pdfa2-pass-a.pdf	1	PASS

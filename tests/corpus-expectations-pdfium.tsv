@@ -17,9 +17,9 @@
 #
 # Keys are corpus-relative PATHS, not basenames: this corpus may have
 # subdirectories and duplicate filenames.
-# Baseline: PASS=252, MALFORMED_PDF=40, DECODE_ERROR=20, PASS_ONE=8, EMPTY_DOC=5, DIFF=3, TIMEOUT=1, UNSUPPORTED_ENCRYPTED=1, PASSWORD_REQUIRED=1
+# Baseline: PASS=261, MALFORMED_PDF=29, MISSING_CONTENT=14, DECODE_ERROR=10, PASS_ONE=8, EMPTY_DOC=5, DIFF=2, UNSUPPORTED_ENCRYPTED=1, PASSWORD_REQUIRED=1
 344775293.pdf	1	PASS
-363015187.pdf	1	PASS
+363015187.pdf	1	MISSING_CONTENT
 about_blank.pdf	1	PASS
 actual_text_rtl.pdf	1	PASS
 annot_javascript.pdf	1	PASS
@@ -32,7 +32,7 @@ annotation_markup_multiline_no_ap.pdf	1	PASS
 annotation_stamp_with_ap.pdf	1	PASS
 annotiter.pdf	1	PASS
 annots.pdf	1	PASS
-annots_action_handling.pdf	1	DECODE_ERROR
+annots_action_handling.pdf	1	MISSING_CONTENT
 bad_annots_entry.pdf	1	PASS
 bad_dict_keys.pdf	1	PASS
 bad_page_type.pdf	1	PASS
@@ -52,7 +52,7 @@ bug_1229106.pdf	1	PASS
 bug_1265.pdf	1	PASS
 bug_1296920.pdf	1	PASS
 bug_1301.pdf	1	PASS
-bug_1302355.pdf	1	PASS
+bug_1302355.pdf	1	MISSING_CONTENT
 bug_1302455.pdf	1	PASS
 bug_1324189.pdf	1	MALFORMED_PDF
 bug_1324503.pdf	1	MALFORMED_PDF
@@ -69,14 +69,14 @@ bug_1558.pdf	1	PASS
 bug_1574.pdf	1	PASS
 bug_1591.pdf	1	PASS
 bug_1646.pdf	1	PASS
-bug_1658.pdf	1	PASS
+bug_1658.pdf	1	MISSING_CONTENT
 bug_1768.pdf	1	PASS
 bug_1769.pdf	1	PASS
 bug_182.pdf	1	PASS
 bug_1893.pdf	1	DECODE_ERROR
 bug_1919.pdf	1	PASS
 bug_2034.pdf	1	PASS
-bug_213.pdf	1	MALFORMED_PDF
+bug_213.pdf	1	PASS
 bug_2132.pdf	1	PASS
 bug_216.pdf	1	DECODE_ERROR
 bug_298.pdf	1	MALFORMED_PDF
@@ -101,13 +101,13 @@ bug_424613308.pdf	1	MALFORMED_PDF
 bug_425244539.pdf	1	PASS
 bug_431824298.pdf	1	PASS
 bug_444176962.pdf	1	PASS
-bug_451265.pdf	1	DECODE_ERROR
+bug_451265.pdf	1	PASS
 bug_451830.pdf	1	MALFORMED_PDF
 bug_452455.pdf	1	DECODE_ERROR
 bug_454695.pdf	1	MALFORMED_PDF
-bug_455199.pdf	1	MALFORMED_PDF
+bug_455199.pdf	1	PASS
 bug_457855936.pdf	1	MALFORMED_PDF
-bug_459580.pdf	1	MALFORMED_PDF
+bug_459580.pdf	1	PASS
 bug_461845674.pdf	1	PASS
 bug_481363.pdf	1	MALFORMED_PDF
 bug_487928.pdf	1	PASS
@@ -118,21 +118,21 @@ bug_498010830_shared_annots.pdf	1	PASS
 bug_498010830_shared_widget.pdf	1	PASS
 bug_504416752.pdf	1	PASS
 bug_507316.pdf	1	PASS
-bug_509964646.pdf	1	DECODE_ERROR
-bug_517126568.pdf	1	*		load-dependent (TIMEOUT when measured); any terminal status accepted
+bug_509964646.pdf	1	PASS
+bug_517126568.pdf	1	PASS
 bug_544880.pdf	1	DECODE_ERROR
 bug_547706.pdf	1	EMPTY_DOC
 bug_551248.pdf	1	PASS
 bug_551460.pdf	1	EMPTY_DOC
 bug_552046.pdf	1	EMPTY_DOC
 bug_555784.pdf	1	EMPTY_DOC
-bug_57.pdf	1	MALFORMED_PDF
+bug_57.pdf	1	PASS
 bug_572871.pdf	1	PASS
 bug_583.pdf	1	PASS
 bug_601362.pdf	1	PASS
-bug_602650.pdf	1	DECODE_ERROR
+bug_602650.pdf	1	MISSING_CONTENT
 bug_620428.pdf	1	PASS
-bug_631912.pdf	1	DIFF
+bug_631912.pdf	1	MISSING_CONTENT
 bug_634394.pdf	1	PASS
 bug_634716.pdf	1	PASS
 bug_642.pdf	1	PASS
@@ -141,33 +141,33 @@ bug_650.pdf	1	PASS
 bug_664284.pdf	1	PASS
 bug_674771.pdf	1	PASS
 bug_679649.pdf	1	PASS
-bug_680376.pdf	1	MALFORMED_PDF
+bug_680376.pdf	1	PASS
 bug_707673.pdf	1	PASS
 bug_709793.pdf	1	EMPTY_DOC
 bug_713197.pdf	1	PASS
 bug_717.pdf	1	PASS
 bug_750568.pdf	1	PASS
-bug_757705.pdf	1	DECODE_ERROR
-bug_765384.pdf	1	DECODE_ERROR
-bug_773229.pdf	1	DECODE_ERROR
-bug_779.pdf	1	DECODE_ERROR
+bug_757705.pdf	1	PASS
+bug_765384.pdf	1	PASS
+bug_773229.pdf	1	PASS
+bug_779.pdf	1	PASS
 bug_781804.pdf	1	PASS
 bug_782596.pdf	1	MALFORMED_PDF
-bug_821454.pdf	1	PASS
+bug_821454.pdf	1	MISSING_CONTENT
 bug_828049.pdf	1	MALFORMED_PDF
-bug_861842.pdf	1	PASS
+bug_861842.pdf	1	MISSING_CONTENT
 bug_889099.pdf	1	PASS
 bug_890322.pdf	1	PASS
-bug_896366.pdf	1	PASS
-bug_900552.pdf	1	MALFORMED_PDF
-bug_901654.pdf	1	MALFORMED_PDF
-bug_901654_2.pdf	1	MALFORMED_PDF
+bug_896366.pdf	1	MISSING_CONTENT
+bug_900552.pdf	1	DECODE_ERROR
+bug_901654.pdf	1	DECODE_ERROR
+bug_901654_2.pdf	1	DECODE_ERROR
 bug_905142.pdf	1	PASS
 bug_921.pdf	1	PASS
 bug_925981.pdf	1	PASS
 bug_972518.pdf	1	PASS
 bug_xrefv4_loop.pdf	1	PASS
-calculate.pdf	1	PASS
+calculate.pdf	1	MISSING_CONTENT
 circular_viewer_ref.pdf	1	MALFORMED_PDF
 click_form.pdf	1	PASS
 clip_path.pdf	1	PASS
@@ -199,7 +199,7 @@ form_object.pdf	1	PASS
 form_object_with_image.pdf	1	PASS
 form_object_with_path.pdf	1	PASS
 form_object_with_text.pdf	1	PASS
-freetext_annotation_without_da.pdf	1	PASS
+freetext_annotation_without_da.pdf	1	MISSING_CONTENT
 get_page_aaction.pdf	1	PASS
 goto_action.pdf	1	PASS
 gotoe_action.pdf	1	PASS
@@ -208,7 +208,7 @@ hello_world.pdf	1	PASS
 hello_world_2_pages.pdf	1	PASS
 hello_world_2_pages_custom_object.pdf	1	PASS
 hello_world_2_pages_shared_resources_dict.pdf	1	PASS
-hello_world_2_pages_split_streams.pdf	1	DECODE_ERROR
+hello_world_2_pages_split_streams.pdf	1	PASS
 hello_world_brotli.pdf	1	PASS
 hello_world_brotli_with_length1.pdf	1	PASS
 hello_world_compressed_stream.pdf	1	PASS
@@ -229,7 +229,7 @@ jpeg_unaligned_no_reduce.pdf	1	PASS
 jpx_lzw.pdf	1	PASS_ONE
 js.pdf	1	PASS
 latin_extended.pdf	1	PASS
-launch_action.pdf	1	DECODE_ERROR
+launch_action.pdf	1	PASS
 line_annot.pdf	1	PASS
 linearized.pdf	1	PASS
 linearized_bug_1055.pdf	1	DECODE_ERROR
@@ -248,9 +248,9 @@ non_hex_file_id.pdf	1	PASS
 nonesuch_action.pdf	1	PASS
 page_labels.pdf	1	PASS
 page_tree_empty_node.pdf	1	PASS_ONE
-parser_rebuildxref_correct.pdf	1	MALFORMED_PDF
-parser_rebuildxref_error_notrailer.pdf	1	MALFORMED_PDF
-pixel/bug_1087.pdf	1	DECODE_ERROR
+parser_rebuildxref_correct.pdf	1	PASS
+parser_rebuildxref_error_notrailer.pdf	1	PASS
+pixel/bug_1087.pdf	1	MISSING_CONTENT
 pixel/bug_1287409.pdf	1	PASS
 pixel/bug_1308.pdf	1	PASS
 pixel/bug_1484283.pdf	1	PASS
@@ -270,8 +270,8 @@ pixel/bug_828206.pdf	1	MALFORMED_PDF
 pixel/bug_830221.pdf	1	MALFORMED_PDF
 pixel/bug_867501.pdf	1	DECODE_ERROR
 pixel/bug_925736.pdf	1	PASS
-pixel/direct_content_stream.pdf	1	DECODE_ERROR
-pixel/freetext_annotation_without_da.pdf	1	PASS
+pixel/direct_content_stream.pdf	1	PASS
+pixel/freetext_annotation_without_da.pdf	1	MISSING_CONTENT
 pixel/generation_numbers1.pdf	1	PASS
 pixel/generation_numbers2.pdf	1	PASS
 pixel/xfa_specific/barcode_test.pdf	1	PASS
@@ -291,7 +291,7 @@ rectangles_multi_page_xfa.pdf	1	PASS
 rectangles_multi_pages.pdf	1	PASS
 rectangles_object_zero.pdf	1	PASS
 rectangles_with_leaky_ctm.pdf	1	PASS
-redact_annot.pdf	1	PASS
+redact_annot.pdf	1	MISSING_CONTENT
 redirect.pdf	1	PASS
 repeat_viewer_ref.pdf	1	MALFORMED_PDF
 rotated_image.pdf	1	PASS
@@ -337,7 +337,7 @@ use_outlines.pdf	1	PASS
 utf-8.pdf	1	PASS
 version_in_catalog.pdf	1	PASS
 vertical_text.pdf	1	PASS
-viewer_pref_types.pdf	1	DECODE_ERROR
+viewer_pref_types.pdf	1	PASS
 viewer_ref.pdf	1	PASS
 weblinks.pdf	1	PASS
 weblinks_across_lines.pdf	1	PASS
@@ -348,4 +348,4 @@ xfa/xfa_combobox.pdf	1	PASS
 xfa/xfa_date_time_edit.pdf	1	PASS
 xfa/xfa_image_edit.pdf	1	PASS
 xfa/xfa_multiline_textfield.pdf	1	PASS
-zero_length_stream.pdf	1	MALFORMED_PDF
+zero_length_stream.pdf	1	PASS
