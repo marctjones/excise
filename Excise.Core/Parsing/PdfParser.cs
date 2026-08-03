@@ -258,6 +258,7 @@ public class PdfParser : IDisposable
             while (true)
             {
                 CancellationToken.ThrowIfCancellationRequested();
+                long tokenStart = _lexer.Position;
                 var token = _lexer.NextToken();
 
                 if (token.Type == PdfTokenType.DictionaryEnd)
@@ -266,18 +267,72 @@ public class PdfParser : IDisposable
                 if (token.Type == PdfTokenType.Eof)
                     throw new PdfParseException("Unterminated dictionary");
 
-                // Key must be a name. A small number of real-world PDFs lose
-                // the leading slash on an otherwise standard dictionary key
-                // (for example "ToUnicode 37 0 R"). Recover only known keys so
-                // arbitrary content tokens do not get accepted as dictionary
-                // structure.
-                if (token.Type != PdfTokenType.Name
-                    && (token.Type != PdfTokenType.Keyword || !KnownDictionaryKeysWithoutSlash.Contains(token.Value)))
+                // RECOVERY (#884): the dictionary is never closed, and an
+                // object-boundary keyword shows up where `>>` or a key belongs.
+                // pdfium bug_1893.pdf ends an object `/BaseFont /Times-Roman`
+                // then goes straight to `endobj`. Rewind so the CALLER still
+                // sees the keyword — ParseDictionaryOrStream needs to spot
+                // `stream`, and the indirect-object parser needs `endobj`.
+                if (token.Type == PdfTokenType.Keyword && IsObjectBoundaryKeyword(token.Value))
                 {
-                    if (IsRecoverableStrayDictionaryKeyword(token))
-                        continue;
+                    _lexer.Seek(tokenStart);
+                    break;
+                }
 
-                    throw new PdfParseException($"Expected name in dictionary, got {token.Type} at position {token.Position}");
+                // RECOVERY (#884): a doubled `<<`, i.e. a dictionary opening
+                // where a key belongs. pdfium bug_481363.pdf and
+                // bug_488948351.pdf both write `N 0 obj << << /Type /Page …`.
+                // Parse the inner dictionary and fold it into this one rather
+                // than discarding it — it holds the object's real content, and
+                // in bug_488948351 only ONE `>>` follows, so treating the inner
+                // as the object's own body is what lets the trailing `stream`
+                // attach to a dictionary that still has its /Length.
+                if (token.Type == PdfTokenType.DictionaryStart)
+                {
+                    var inner = ParseDictionaryContents();
+                    foreach (var kvp in inner)
+                        if (!dict.ContainsKey(kvp.Key))
+                            dict[kvp.Key] = kvp.Value;
+                    continue;
+                }
+
+                // Key must be a name. Real-world PDFs lose the leading slash:
+                // known structural keys ("ToUnicode 37 0 R"), and also
+                // arbitrary RESOURCE names — pdfium bug_900552.pdf writes
+                // `/Font <<F1 7 0 R>>` while its content stream selects `/F1`,
+                // so the bare keyword IS the intended key and dropping the
+                // entry loses the font. Resource names cannot be allow-listed,
+                // so a name-shaped keyword is accepted as a key; reserved words
+                // are excluded so content tokens still cannot pose as dictionary
+                // structure, which is what the allow-list was guarding.
+                if (token.Type != PdfTokenType.Name)
+                {
+                    // Known structural keys keep their original precedence.
+                    bool knownKey = token.Type == PdfTokenType.Keyword
+                                    && KnownDictionaryKeysWithoutSlash.Contains(token.Value);
+                    if (!knownKey)
+                    {
+                        // ORDER MATTERS. A bare keyword is ambiguous, and what
+                        // disambiguates it is what comes NEXT:
+                        //
+                        //   "/BaseFont /Arial,Unicode MS /ToUnicode 37 0 R"
+                        //        `MS` is debris from a split font name, and the
+                        //        next token is a NAME — the real next key.
+                        //   "/Font <<F1 7 0 R>>"
+                        //        `F1` is a genuine key, and the next token
+                        //        begins its VALUE.
+                        //
+                        // So the stray-fragment test has to run BEFORE accepting
+                        // a name-shaped keyword as a key. Checking them the other
+                        // way round swallows the following key as the debris's
+                        // value and silently drops it — which is exactly what
+                        // ParserHardeningTests caught when this landed reversed.
+                        if (IsRecoverableStrayDictionaryKeyword(token))
+                            continue;
+
+                        if (token.Type != PdfTokenType.Keyword || !IsNameShapedKeyword(token.Value))
+                            throw new PdfParseException($"Expected name in dictionary, got {token.Type} at position {token.Position}");
+                    }
                 }
 
                 var key = new PdfName(token.Value);
@@ -289,6 +344,41 @@ public class PdfParser : IDisposable
             return dict;
         }
         finally { _depth--; }
+    }
+
+    /// <summary>
+    /// Keywords that end an indirect object or begin the next syntactic region.
+    /// Seeing one inside a dictionary means the dictionary was never closed.
+    /// </summary>
+    private static bool IsObjectBoundaryKeyword(string value) => value is
+        "endobj" or "stream" or "endstream" or "xref" or "trailer" or "startxref" or "obj";
+
+    /// <summary>
+    /// Could this bare keyword be a dictionary key that lost its leading slash?
+    ///
+    /// Reserved words are excluded: `true`/`false`/`null` are VALUES, and `R`
+    /// is the reference marker — accepting any of those as a key would let a
+    /// malformed value cascade into inventing dictionary structure, which is
+    /// exactly what the original known-keys allow-list existed to prevent.
+    /// Object-boundary keywords are handled earlier and never reach here.
+    /// </summary>
+    private static bool IsNameShapedKeyword(string value)
+    {
+        if (string.IsNullOrEmpty(value) || value.Length > 127) return false;
+        if (value is "true" or "false" or "null" or "R") return false;
+        if (IsObjectBoundaryKeyword(value)) return false;
+
+        foreach (var c in value)
+        {
+            bool ok = (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')
+                      || (c >= '0' && c <= '9') || c == '_' || c == '.' || c == '-' || c == '+';
+            if (!ok) return false;
+        }
+        // A key that is only digits is far more likely to be a stray number
+        // than a name; require at least one letter or underscore.
+        foreach (var c in value)
+            if (char.IsLetter(c) || c == '_') return true;
+        return false;
     }
 
     private bool IsRecoverableStrayDictionaryKeyword(PdfToken token)
