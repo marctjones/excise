@@ -269,6 +269,9 @@ internal partial class RenderContext
             case Excise.Core.Document.PdfAnnotationSubtype.Circle:
                 RenderShapeDefault(annot, rect, isEllipse: true);
                 break;
+            case Excise.Core.Document.PdfAnnotationSubtype.FreeText:
+                RenderFreeTextDefault(annot, rect);
+                break;
             case Excise.Core.Document.PdfAnnotationSubtype.Highlight:
             case Excise.Core.Document.PdfAnnotationSubtype.Underline:
             case Excise.Core.Document.PdfAnnotationSubtype.Squiggly:
@@ -464,12 +467,23 @@ internal partial class RenderContext
             }
         }
 
-        // Only signature fields get a synthesized "sign here" placeholder
-        // border. Text / button / choice widgets in unfilled forms are
-        // routinely emitted without /AP and are intentionally invisible
-        // until filled — mutool, Poppler and Foxit all leave them blank
-        // unless the author opted into /MK styling.
-        if (!isSignature && !hasExplicitStyle) return;
+        // Signature fields get a "sign here" placeholder border, and so do
+        // BUTTON fields (checkbox / radio / pushbutton).
+        //
+        // This used to be signature-only, justified as "mutool, Poppler and
+        // Foxit all leave them blank unless the author opted into /MK
+        // styling". That is true of an EMPTY TEXT field and false of a button.
+        // Measured on pdf.js checkbox_no_appearance.pdf — two /FT /Btn widgets,
+        // no /MK anywhere in the file:
+        //
+        //     mutool 233 inked px, pdftocairo 229, excise 0
+        //
+        // A checkbox is a control the reader is meant to see the state of, so
+        // both reference renderers draw its box even with nothing to style it
+        // from. An empty text field genuinely is invisible until filled, and
+        // that half of the old rule is kept.
+        bool isButton = fieldType == "Btn";
+        if (!isSignature && !isButton && !hasExplicitStyle) return;
 
         float borderWidth = (float)(annot.BorderWidth ?? 1.0);
         _canvas.Save();
@@ -505,6 +519,48 @@ internal partial class RenderContext
     /// authoring tools bake an appearance — but the few that don't
     /// fall back here.
     /// </summary>
+    /// <summary>
+    /// Minimum-viable appearance for a /FreeText note that ships no /AP
+    /// (§12.5.6.6). FreeText had no case at all, so these pages came out
+    /// blank while both reference renderers drew them.
+    ///
+    /// Measured, rather than assumed, on the corpus fixtures:
+    ///
+    ///   pdfium freetext_annotation_without_da.pdf  (/C present, /Rect 50x25)
+    ///       mutool 1250 px, pdftocairo 1250 px — exactly the whole rectangle,
+    ///       i.e. both FILL it with /C.
+    ///   pdf.js bug1865341.pdf                      (no /C, /DA present)
+    ///       mutool 212, pdftocairo 161 — an outline, not a fill.
+    ///
+    /// So: fill with /C when the annotation supplies one, otherwise outline.
+    /// The note's TEXT is deliberately not laid out here — that needs full /DA
+    /// + /RC variable-text handling, and the oracles disagree sharply about it
+    /// (on freetext_no_appearance.pdf mutool inks 6067 px and pdftocairo 24),
+    /// so there is no agreed answer to copy. Showing the reviewer that an
+    /// annotation is THERE is the property that matters for redaction; what it
+    /// says is already reachable through /Contents.
+    /// </summary>
+    private void RenderFreeTextDefault(Excise.Core.Document.PdfAnnotation annot, SKRect rect)
+    {
+        float borderWidth = (float)(annot.BorderWidth ?? 1.0);
+        if (borderWidth <= 0) borderWidth = 1.0f;
+
+        using var paint = new SKPaint { IsAntialias = _options.AntiAlias };
+        if (annot.Color is { } color)
+        {
+            var (r, g, b) = color;
+            paint.Style = SKPaintStyle.Fill;
+            paint.Color = RgbToColor(r, g, b);
+            _canvas.DrawRect(rect, paint);
+            return;
+        }
+
+        paint.Style = SKPaintStyle.Stroke;
+        paint.StrokeWidth = borderWidth;
+        paint.Color = SKColors.Black;
+        _canvas.DrawRect(rect, paint);
+    }
+
     private void RenderShapeDefault(
         Excise.Core.Document.PdfAnnotation annot, SKRect rect, bool isEllipse)
     {
