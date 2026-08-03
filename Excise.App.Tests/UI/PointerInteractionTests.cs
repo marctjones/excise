@@ -43,8 +43,18 @@ namespace Excise.App.Tests.UI;
 /// added here.
 /// </summary>
 [Collection("AvaloniaTests")]
-public class PointerInteractionTests
+public class PointerInteractionTests : IDisposable
 {
+    /// <summary>
+    /// Every window this class shows is closed after the test, including
+    /// when it fails (#706). These tests previously showed windows and never
+    /// closed them, so they accumulated for the whole run and perturbed
+    /// pointer routing and focus for every later test.
+    /// </summary>
+    private readonly ShownWindowTracker _windows = new();
+
+    public void Dispose() => _windows.Dispose();
+
     private readonly ITestOutputHelper _out;
     public PointerInteractionTests(ITestOutputHelper o) { _out = o; }
 
@@ -63,7 +73,7 @@ public class PointerInteractionTests
             var (vm, dialog) = CreateViewModelWithDialog();
             dialog.ConfirmResult = false; // decline — never reaches a real browser open
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-            window.Show();
+            _windows.Show(window);
             await Task.Delay(150);
             vm.ViewMode = PdfViewMode.SinglePage;
 
@@ -95,7 +105,7 @@ public class PointerInteractionTests
         {
             var (vm, dialog) = CreateViewModelWithDialog();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-            window.Show();
+            _windows.Show(window);
             await Task.Delay(150);
             vm.ViewMode = PdfViewMode.SinglePage;
 
@@ -129,7 +139,7 @@ public class PointerInteractionTests
         {
             var vm = new MainWindowViewModel();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-            window.Show();
+            _windows.Show(window);
             await Task.Delay(150);
 
             await vm.LoadDocumentAsync(path);
@@ -186,7 +196,7 @@ public class PointerInteractionTests
         {
             var vm = new MainWindowViewModel();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
-            window.Show();
+            _windows.Show(window);
             await Task.Delay(150);
             // Single-page so the form-field overlay (single-page FormFieldsLayer)
             // is the laid-out surface and its inputs get real, clickable bounds.
@@ -240,7 +250,7 @@ public class PointerInteractionTests
         {
             var vm = new MainWindowViewModel();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 1400 };
-            window.Show();
+            _windows.Show(window);
             await Task.Delay(150);
 
             await vm.LoadDocumentAsync(path);
@@ -282,7 +292,7 @@ public class PointerInteractionTests
         {
             var vm = new MainWindowViewModel();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 1400 };
-            window.Show();
+            _windows.Show(window);
             await Task.Delay(150);
 
             await vm.LoadDocumentAsync(path);
@@ -313,7 +323,7 @@ public class PointerInteractionTests
         {
             var vm = new MainWindowViewModel();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 1400 };
-            window.Show();
+            _windows.Show(window);
             await Task.Delay(150);
 
             await vm.LoadDocumentAsync(path);
@@ -343,7 +353,7 @@ public class PointerInteractionTests
         {
             var vm = new MainWindowViewModel();
             var window = new MainWindow { DataContext = vm, Width = 1280, Height = 1400 };
-            window.Show();
+            _windows.Show(window);
             await Task.Delay(150);
 
             await vm.LoadDocumentAsync(path);
