@@ -54,24 +54,80 @@ internal partial class RenderContext
                 continue;
             }
 
-            // Appearance bbox + matrix.
-            if (appearance.GetOptional("BBox") is not Excise.Core.Primitives.PdfArray bboxArr ||
-                bboxArr.Count < 4) continue;
-            if (!TryGetArrayNumber(bboxArr, 0, out var bx1Value) ||
+            // Annotation /Rect (PDF stores [llx lly urx ury], but some
+            // producers swap pairs — normalize both ways). Resolved BEFORE the
+            // appearance /BBox because it is also the fallback for a form that
+            // declares no usable one.
+            float rx1 = (float)Math.Min(annot.Rect.Left, annot.Rect.Right);
+            float ry1 = (float)Math.Min(annot.Rect.Bottom, annot.Rect.Top);
+            float rx2 = (float)Math.Max(annot.Rect.Left, annot.Rect.Right);
+            float ry2 = (float)Math.Max(annot.Rect.Bottom, annot.Rect.Top);
+            if (rx2 <= rx1 || ry2 <= ry1)
+            {
+                _options.Diagnostics?.Add(
+                    $"Annotation /{annot.Subtype} has a degenerate /Rect; appearance not drawn.");
+                continue;
+            }
+
+            // Appearance /BBox.
+            //
+            // Two shapes used to hit a silent `continue` here, dropping the
+            // annotation with no diagnostic at all (#888):
+            //
+            //   • /BBox is an INDIRECT REFERENCE (pdfium bug_1658.pdf). The
+            //     old `is not PdfArray` test inspected the reference object
+            //     itself and failed. RenderFormXObjectInner — one call away,
+            //     on the very same stream — already resolved this key through
+            //     ResolveArray; only this path did not. That asymmetry is the
+            //     whole bug.
+            //   • /BBox is ABSENT (pdfium bug_861842.pdf). §8.10.2 makes it
+            //     REQUIRED on a form XObject, so such a form is invalid and
+            //     there is no geometry to honour.
+            //
+            // The second case was first "fixed" here by synthesising a /BBox
+            // from the annotation /Rect. That was wrong, and the oracles said
+            // so: on a hand-authored BBox-less form both mutool and pdftocairo
+            // draw NOTHING, pdftocairo reporting "Syntax Error: Bad form
+            // bounding box". They still show bug_861842 because they fall back
+            // to the WIDGET's own chrome — border, background, /MK — not
+            // because they repair the form.
+            //
+            // So: do not invent geometry. Fall back to the same default
+            // appearance synthesis used when there is no /AP at all, which is
+            // what actually makes the annotation visible in other readers.
+            // Silently dropping it remains the one unacceptable option — excise
+            // is a redaction tool, and an annotation the reviewer never sees is
+            // content they cannot decide about while it still reaches the
+            // recipient.
+            var bboxArr = ResolveArray(appearance, "BBox");
+            if (bboxArr == null || bboxArr.Count < 4 ||
+                !TryGetArrayNumber(bboxArr, 0, out var bx1Value) ||
                 !TryGetArrayNumber(bboxArr, 1, out var by1Value) ||
                 !TryGetArrayNumber(bboxArr, 2, out var bx2Value) ||
-                !TryGetArrayNumber(bboxArr, 3, out var by2Value)) continue;
-            float bx1 = (float)bx1Value;
-            float by1 = (float)by1Value;
-            float bx2 = (float)bx2Value;
-            float by2 = (float)by2Value;
-            float bMinX = Math.Min(bx1, bx2);
-            float bMinY = Math.Min(by1, by2);
-            float bMaxX = Math.Max(bx1, bx2);
-            float bMaxY = Math.Max(by1, by2);
+                !TryGetArrayNumber(bboxArr, 3, out var by2Value))
+            {
+                _options.Diagnostics?.Add(
+                    $"Annotation /{annot.Subtype} appearance has no usable /BBox " +
+                    "(required by §8.10.2); drawing the default appearance instead.");
+                RenderDefaultAppearance(annot);
+                continue;
+            }
+            float bMinX = (float)Math.Min(bx1Value, bx2Value);
+            float bMinY = (float)Math.Min(by1Value, by2Value);
+            float bMaxX = (float)Math.Max(bx1Value, bx2Value);
+            float bMaxY = (float)Math.Max(by1Value, by2Value);
+            if (bMaxX <= bMinX || bMaxY <= bMinY)
+            {
+                _options.Diagnostics?.Add(
+                    $"Annotation /{annot.Subtype} appearance /BBox is degenerate; " +
+                    "drawing the default appearance instead.");
+                RenderDefaultAppearance(annot);
+                continue;
+            }
 
+            // /Matrix may be indirect for the same reason /BBox may be.
             var formMatrix = SKMatrix.Identity;
-            if (appearance.GetOptional("Matrix") is Excise.Core.Primitives.PdfArray mArr && mArr.Count >= 6)
+            if (ResolveArray(appearance, "Matrix") is { Count: >= 6 } mArr)
             {
                 formMatrix = GetMatrix(mArr);
             }
@@ -89,15 +145,13 @@ internal partial class RenderContext
             float bbMinY = Math.Min(Math.Min(p1.Y, p2.Y), Math.Min(p3.Y, p4.Y));
             float bbMaxX = Math.Max(Math.Max(p1.X, p2.X), Math.Max(p3.X, p4.X));
             float bbMaxY = Math.Max(Math.Max(p1.Y, p2.Y), Math.Max(p3.Y, p4.Y));
-            if (bbMaxX <= bbMinX || bbMaxY <= bbMinY) continue;
-
-            // Annotation /Rect (PDF stores [llx lly urx ury], but some
-            // producers swap pairs — normalize both ways).
-            float rx1 = (float)Math.Min(annot.Rect.Left, annot.Rect.Right);
-            float ry1 = (float)Math.Min(annot.Rect.Bottom, annot.Rect.Top);
-            float rx2 = (float)Math.Max(annot.Rect.Left, annot.Rect.Right);
-            float ry2 = (float)Math.Max(annot.Rect.Bottom, annot.Rect.Top);
-            if (rx2 <= rx1 || ry2 <= ry1) continue;
+            if (bbMaxX <= bbMinX || bbMaxY <= bbMinY)
+            {
+                _options.Diagnostics?.Add(
+                    $"Annotation /{annot.Subtype} appearance /BBox collapses to zero area " +
+                    "once /Matrix is applied; nothing drawn.");
+                continue;
+            }
 
             // A = scale + translate that maps the AABB of the transformed
             // bbox onto Rect. RenderFormXObject will additionally concat

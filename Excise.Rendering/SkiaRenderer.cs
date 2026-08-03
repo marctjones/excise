@@ -607,8 +607,45 @@ internal partial class RenderContext
 
             _page.TryGetContentStreamBytes(out var contentBytes, out var contentWarnings);
             AddDiagnostics(contentWarnings);
-            if (contentBytes.Length > 0)
-                ExecuteContentBytes(contentBytes);
+
+            // Execute page content inside its own save/restore.
+            //
+            // A content stream is NOT required to leave the graphics state as
+            // it found it, and real files don't. pdfium's bug_896366.pdf is
+            // exactly one operator long:
+            //
+            //     1 0 0 -1 0 792 cm
+            //
+            // — a Y-flip concatenated onto the CTM with no enclosing q/Q. Any
+            // unbalanced `q` or trailing `cm` has the same effect.
+            //
+            // Annotation appearances are positioned by their /Rect in DEFAULT
+            // user space (§12.5.5); they do not inherit whatever transform the
+            // content stream happened to finish with. Without this bracket the
+            // leftover CTM silently relocated every annotation on the page —
+            // on bug_896366 excise drew the widget at raster y80..119 while
+            // mutool and pdftocairo both drew it at y672..711, mirrored about
+            // the page centre.
+            // _state.CurrentTransform is a parallel CTM the image and shading
+            // paths read, so restoring only the canvas matrix would leave the
+            // two disagreeing. Reset both, the same way RenderFormXObjectInner
+            // brackets a nested form.
+            var baseState = _state.Clone();
+            var baseTextState = _textState.Clone();
+            _canvas.Save();
+            try
+            {
+                if (contentBytes.Length > 0)
+                    ExecuteContentBytes(contentBytes);
+            }
+            finally
+            {
+                _canvas.Restore();
+                _stateStack.Clear();
+                _state = baseState;
+                _textState = baseTextState;
+                _inTextBlock = false;
+            }
 
             // Annotations render on top of page content — sticky notes,
             // FreeText callouts, Widget appearances, etc. live in the
