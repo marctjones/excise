@@ -6,7 +6,91 @@ semantic versioning.
 
 ## [Unreleased]
 
+## [3.6.0] - 2026-08-03
+
+This release is dominated by one thing: excise's renderer and parser were
+measured, page by page, against independent renderers across all four test
+corpora (3,915 documents), and the defects that measurement exposed were fixed
+at the root. Nine parser/renderer correctness fixes below were found that way,
+not by a user report.
+
+**What the corpus gate does and does not claim.** The checked-in expectation
+manifests (`tests/corpus-expectations*.tsv`) are a **ratchet recording each
+page's current status**, not a quality result — `update-corpus-expectations.sh`
+writes every status verbatim, including statuses that encode an excise defect.
+A green gate means "nothing regressed", not "every page is correct". The
+remaining known gaps are tracked and still open: #874 (JBIG2), #884 (14 parser
+refusals), #885/#888 (annotation appearances), #886 (embedded-subset code→GID),
+#887 (a 14-page blank tail), #875 (one ambiguous page).
+
 ### Fixed
+- **Hybrid-reference files resolved to a SUPERSEDED revision** (#872) — a PDF
+  written with both a classic xref table and a cross-reference stream (PDF
+  32000-1 §7.5.8.4) points at the stream from its trailer's `/XRefStm`, which
+  must be consulted *before* `/Prev`. excise ignored `/XRefStm` entirely and
+  fell through to `/Prev`, so any object the incremental update relocated into
+  an object stream resolved to its **old** value — silently rendering an
+  outdated revision of the document as if it were current. Now merged for the
+  root trailer and every `/Prev` section. Regression-pinned by a checked-in
+  899-byte generated fixture whose page height is a single-number oracle (350 =
+  honoured, 300 = fell through), so the gate runs on CI without the gitignored
+  corpus.
+- **Colour-key `/Mask` was silently ignored** (#873) — an image declaring a
+  colour-key mask (§8.9.6.4: an array of sample ranges that must not paint)
+  had every masked sample painted opaque, so pages that use it to knock out a
+  background rendered with solid blocks over content.
+- **A failed image decode fabricated a uniform fill instead of failing
+  visibly** (#878) — when a decoder returned fewer bytes than the image
+  geometry requires, the renderer painted the undersized buffer anyway,
+  producing a plausible-looking flat colour where the real image should be.
+  A fabricated image is worse than a missing one: it looks like content. The
+  renderer now refuses the buffer.
+- **A self-referencing `/Parent` hung inherited-attribute lookup** (#881) — a
+  page whose parent chain cycles made the `/Resources`, `/MediaBox` and
+  `/Rotate` inheritance walks loop forever on untrusted input. All three walks
+  are now bounded by a shared visited-set guard.
+- **Four parser refusals that condemned whole documents** (#884, partial —
+  36 pages → 14) — each was excise refusing a file that Poppler and MuPDF read
+  without complaint: an undefined indirect reference now resolves to null per
+  §7.3.10 (a free xref entry already did); a missing `endobj` keeps the object
+  it already parsed; a `/Length` that overruns the file yields truncated stream
+  data rather than throwing; and a page with no `/MediaBox` anywhere in its
+  ancestry defaults to US Letter (measured from pdftocairo) instead of being
+  refused. Pinned non-leaking: `TolerantParsePathRedactionTests` proves a
+  document recovered by these paths still redacts completely.
+- **11 unhandled parser exceptions on untrusted input** (#871) — including an
+  `OverflowException` from an out-of-range object number in an xref header
+  scan. All now recover or refuse cleanly.
+- **Line, Polygon, PolyLine and Ink annotations were invisible without an
+  `/AP`** (#885, partial) — §12.5.5 lets a viewer synthesise an appearance when
+  the annotation carries none; excise drew nothing. These four subtypes now
+  render a default appearance from their geometry. FreeText, Widget and icon
+  annotations remain unsynthesised (#885), and annotations that *do* carry an
+  `/AP` stream are a separate gap (#888).
+- **Continuous view: a page's top strip stayed blank while scrolling** (#848,
+  #849) — content-addressed tiles are now composited into one bitmap per page.
+- **Selection drag jumped to the wrong line** (#845, #850) — the drag hit-test
+  anchors to the pointer's own line rather than an X-closer neighbour on an
+  adjacent line.
+- **GUI tests leaked every window they opened** (#706) — `MouseInputTests`
+  called `Show()` thirteen times and `Close()` zero times; `PointerInteraction
+  Tests`, eight and zero. xUnit builds a fresh test-class instance per test but
+  the Avalonia application is process-wide, so those windows accumulated for
+  the rest of the run and perturbed pointer routing, hover hit-testing and
+  focus — the order-dependent flake that reddened T2. `ShownWindowTracker`
+  closes them from `IDisposable`, so cleanup survives a *failing* test, which
+  an inline `Close()` on the last line does not. Combined-class failure rate
+  1-in-3 → 0-in-8.
+- **Binary fixtures were being corrupted on Windows checkouts** — the repo had
+  no `.gitattributes`, so `core.autocrlf` rewrote LF to CRLF inside files git
+  guessed were text. For a PDF that is fatal and quiet: the xref stores
+  **absolute byte offsets**, so a one-byte-per-line shift invalidates every
+  entry, and a fixture written to exercise a precise structural path silently
+  stops exercising it. Caught by Test (Windows) on a new fixture; `git ls-files
+  --eol` showed 17 of 34 checked-in PDFs were exposed.
+- **PdfBoxReferenceRenderer returned the wrong page** (#868) — it matched no
+  shipping PDFBox version, so an oracle the suite was about to start trusting
+  would have corroborated the wrong thing.
 - **Fit-Width / Fit-Page now handle mixed portrait+landscape documents** (#847) —
   the "Fit" toolbar button fitted only the *current* page's width, so in a
   document mixing portrait and rotated/landscape pages (which share one zoom in
@@ -39,6 +123,62 @@ semantic versioning.
   cdc 73.9%→**94.4%**; clean prose unchanged.
 
 ### Added
+- **The corpus rendering scan is now a gate** (#862) — page 1 of all 3,915
+  documents across four corpora (veraPDF 2694, pdf.js 685, Isartor 205, PDFium
+  331) is rendered and classified against up to five independent oracles, then
+  checked against a per-corpus expectation manifest. Keys are corpus-relative
+  *paths*, not basenames: PDFium's corpus has subdirectories and duplicate
+  filenames that basename keys would silently merge. See the ratchet caveat at
+  the top of this release.
+- **PDFium and PDFBox are real oracles now, not decorative ones** (#857) — the
+  file map advertised six reference renderers; two were referenced by zero
+  tests (PDFBox) or only by argument-string unit tests that never invoke a
+  binary (PDFium). PDFium is now driven through `libpdfium` and promoted to a
+  third primary; PDFBox is auto-discovered from the vendored jar. Escalation is
+  close to free: the extra oracles run only where the primaries already
+  disagree.
+- **Refusals are corroborated instead of assumed** (#882, #877) — the scan
+  reported `AGREED_REFUSAL` on pages where **the oracles were never invoked**,
+  so "no renderer could open this" was an assumption, not a measurement, and
+  it masked excise-only failures. It also filed pages excise rendered *and no
+  oracle could* as failures. Both are fixed, and the scan now reports an
+  agreement classification (`PASS` / `AGREED_REFUSAL` / `EXCISE_ONLY` /
+  `ORACLE_SPLIT` / `EXCISE_SIDE_GAP` / …) rather than a bare status. On the
+  informative corpora this moved real defects 99 → 75 and `EXCISE_SIDE_GAP`
+  36 → 14 — by correcting the classification, not by fixing those pages.
+- **The gate can detect small missing content** (#883) — it previously compared
+  excise against whichever oracle was *closest* to excise, which is backwards:
+  adding oracles made it detect **less** (three genuinely-missing-content pages
+  flipped to PASS). It now compares against the most-inked oracle, over 32×32
+  ink-locality tiles rather than a whole-page aggregate, so a page that drops a
+  single word or figure fails instead of averaging out.
+- **A restartable, memory-bounded full-suite runner** —
+  `scripts/run-full-suite.sh --resume` checkpoints per step so a 30-minute run
+  survives interruption. Checkpoints fail toward re-running: markers are
+  sync-then-atomic-rename and validated on read, a step matching zero tests is
+  a failure rather than a vacuous pass, and the redaction gates are never
+  checkpointed at all.
+- **The skip allow-list is environment-conditioned** (#854) — entries may
+  declare `[requires: tool:NAME corpus:NAME env:NAME]`. The allow-list is
+  calibrated for a corpus-less CI runner, so on a corpus-equipped dev machine
+  the reverse check ("allow-listed skips are no longer skipping") fired on
+  every local run, making `t1` a guaranteed local failure — and a gate that
+  always fails locally is a gate people stop reading. The forward check is
+  never relaxed, and a selftest forces a prerequisite absent to prove the
+  conditioning is not unconditional.
+- **Bomb and implementation-limit fixtures are tested for what they are FOR** —
+  Isartor's 10,223 pages were 69% of every page in every corpus and almost
+  entirely one PDF/A-1b implementation-limits *violation* fixture whose 10,000
+  pages are near-identical by construction. Scanning them wholesale measured
+  repetition, not conformance. Sampled appropriately: 10,223 pages / 96 min →
+  723 pages / 5.6 min, testing the same property.
+- **Corpus scans no longer lose work or collide** (#879, #880) — a chunk
+  timeout discarded every page it had already completed; pages are now
+  published as they finish. Two concurrent scans corrupted each other through
+  shared `/tmp` paths; artifacts are run-scoped. Generating a manifest from a
+  *partial* report is now refused outright — a partial report looks perfectly
+  usable, but pages a lost chunk never reached would simply be absent from the
+  manifest and therefore ungated.
 - **Live visual-mutation trace harness** (#695 Phase 3 / #846) — `scripts/run-visual-mutation-trace.sh`
   drives a page mutation (rotate/remove/move/zoom) then a scroll sweep, zoom, and
   save in the **real running app** (where the compositor re-renders the continuous
