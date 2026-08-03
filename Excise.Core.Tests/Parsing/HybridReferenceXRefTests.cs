@@ -86,6 +86,51 @@ public class HybridReferenceXRefTests
             "0 0 1 rg (blue) belongs to the superseded content stream only");
     }
 
+    /// <summary>
+    /// The same property against a CHECKED-IN fixture, so CI covers it.
+    ///
+    /// The two tests above need the PDFium corpus, which is a gitignored
+    /// mirror — on CI they skip, and a #872 regression would sail through the
+    /// gate that exists to catch it. Allow-listing that skip would have made
+    /// the gate green while removing the coverage; generating a fixture keeps
+    /// both.
+    ///
+    /// test-pdfs/generated-regressions/hybrid-xrefstm-revision-probe.pdf is
+    /// built by scripts/generate-hybrid-xrefstm-fixture.py and has the same
+    /// shape as the PDFium case: a classic xref table, then an incremental
+    /// update whose trailer carries /XRefStm pointing at a cross-reference
+    /// stream, which relocates object 2 (the /Pages node, /MediaBox 300 -> 350)
+    /// into an ObjStm. Height is a single-number oracle: 350 means /XRefStm was
+    /// honoured, 300 means the superseded revision was served.
+    /// </summary>
+    [Fact]
+    public void CheckedInHybridReferenceFixture_ResolvesTheCurrentRevision()
+    {
+        var path = FindGeneratedFixture("hybrid-xrefstm-revision-probe.pdf");
+        path.Should().NotBeNull(
+            "this fixture is checked in precisely so the /XRefStm path is covered without a corpus");
+
+        using var doc = PdfDocument.Open(File.ReadAllBytes(path!));
+        var page = doc.GetPage(1);
+
+        page.Height.Should().Be(350,
+            "object 2 is relocated into an ObjStm reachable only through /XRefStm; a height of " +
+            "300 means the parser fell through to /Prev and served the superseded revision");
+        page.Width.Should().Be(200, "the width is unchanged by the update");
+    }
+
+    private static string? FindGeneratedFixture(string fileName)
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null)
+        {
+            var candidate = Path.Combine(dir.FullName, "test-pdfs", "generated-regressions", fileName);
+            if (File.Exists(candidate)) return candidate;
+            dir = dir.Parent;
+        }
+        return null;
+    }
+
     private static string? FindFixture(string relative)
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
