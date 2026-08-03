@@ -167,9 +167,10 @@ refusals), #885/#888 (annotation appearances), #886 (embedded-subset code→GID)
   never relaxed, and a selftest forces a prerequisite absent to prove the
   conditioning is not unconditional.
 - **Bomb and implementation-limit fixtures are tested for what they are FOR** —
-  Isartor's 10,223 pages were 69% of every page in every corpus and almost
-  entirely one PDF/A-1b implementation-limits *violation* fixture whose 10,000
-  pages are near-identical by construction. Scanning them wholesale measured
+  Isartor contributed 10,223 of the 14,589 pages across all four corpora, and
+  almost all of them are a single PDF/A-1b implementation-limits *violation*
+  fixture — one file whose 10,000 near-identical-by-construction pages are 69%
+  of every page in every corpus. Scanning them wholesale measured
   repetition, not conformance. Sampled appropriately: 10,223 pages / 96 min →
   723 pages / 5.6 min, testing the same property.
 - **Corpus scans no longer lose work or collide** (#879, #880) — a chunk
