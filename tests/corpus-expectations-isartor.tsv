@@ -17,9 +17,9 @@
 #
 # Keys are corpus-relative PATHS, not basenames: this corpus may have
 # subdirectories and duplicate filenames.
-# Baseline: PASS=205
-Isartor testsuite/PDFA-1b/6.1 File structure/6.1.10 Filters/isartor-6-1-10-t01-fail-a.pdf	1	PASS
-Isartor testsuite/PDFA-1b/6.1 File structure/6.1.10 Filters/isartor-6-1-10-t01-fail-b.pdf	1	PASS
+# Baseline: PASS=193, MISSING_CONTENT=12
+Isartor testsuite/PDFA-1b/6.1 File structure/6.1.10 Filters/isartor-6-1-10-t01-fail-a.pdf	1	MISSING_CONTENT
+Isartor testsuite/PDFA-1b/6.1 File structure/6.1.10 Filters/isartor-6-1-10-t01-fail-b.pdf	1	MISSING_CONTENT
 Isartor testsuite/PDFA-1b/6.1 File structure/6.1.10 Filters/isartor-6-1-10-t01-fail-c.pdf	1	PASS
 Isartor testsuite/PDFA-1b/6.1 File structure/6.1.11 Embedded Files/isartor-6-1-11-t01-fail-a.pdf	1	PASS
 Isartor testsuite/PDFA-1b/6.1 File structure/6.1.11 Embedded Files/isartor-6-1-11-t02-fail-a.pdf	1	PASS
@@ -145,7 +145,7 @@ Isartor testsuite/PDFA-1b/6.5 Annotations/6.5.3 Annotation dictionaries/isartor-
 Isartor testsuite/PDFA-1b/6.5 Annotations/6.5.3 Annotation dictionaries/isartor-6-5-3-t02-fail-a.pdf	1	PASS
 Isartor testsuite/PDFA-1b/6.5 Annotations/6.5.3 Annotation dictionaries/isartor-6-5-3-t02-fail-b.pdf	1	PASS
 Isartor testsuite/PDFA-1b/6.5 Annotations/6.5.3 Annotation dictionaries/isartor-6-5-3-t02-fail-c.pdf	1	PASS
-Isartor testsuite/PDFA-1b/6.5 Annotations/6.5.3 Annotation dictionaries/isartor-6-5-3-t02-fail-d.pdf	1	PASS
+Isartor testsuite/PDFA-1b/6.5 Annotations/6.5.3 Annotation dictionaries/isartor-6-5-3-t02-fail-d.pdf	1	MISSING_CONTENT
 Isartor testsuite/PDFA-1b/6.5 Annotations/6.5.3 Annotation dictionaries/isartor-6-5-3-t02-fail-e.pdf	1	PASS
 Isartor testsuite/PDFA-1b/6.5 Annotations/6.5.3 Annotation dictionaries/isartor-6-5-3-t03-fail-a.pdf	1	PASS
 Isartor testsuite/PDFA-1b/6.5 Annotations/6.5.3 Annotation dictionaries/isartor-6-5-3-t03-fail-b.pdf	1	PASS
@@ -155,15 +155,15 @@ Isartor testsuite/PDFA-1b/6.5 Annotations/6.5.3 Annotation dictionaries/isartor-
 Isartor testsuite/PDFA-1b/6.5 Annotations/6.5.3 Annotation dictionaries/isartor-6-5-3-t04-fail-b.pdf	1	PASS
 Isartor testsuite/PDFA-1b/6.5 Annotations/6.5.3 Annotation dictionaries/isartor-6-5-3-t04-fail-c.pdf	1	PASS
 Isartor testsuite/PDFA-1b/6.5 Annotations/6.5.3 Annotation dictionaries/isartor-6-5-3-t04-fail-d.pdf	1	PASS
-Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-a.pdf	1	PASS
-Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-b.pdf	1	PASS
-Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-c.pdf	1	PASS
-Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-d.pdf	1	PASS
-Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-e.pdf	1	PASS
-Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-f.pdf	1	PASS
-Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-g.pdf	1	PASS
-Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-h.pdf	1	PASS
-Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-i.pdf	1	PASS
+Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-a.pdf	1	MISSING_CONTENT
+Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-b.pdf	1	MISSING_CONTENT
+Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-c.pdf	1	MISSING_CONTENT
+Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-d.pdf	1	MISSING_CONTENT
+Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-e.pdf	1	MISSING_CONTENT
+Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-f.pdf	1	MISSING_CONTENT
+Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-g.pdf	1	MISSING_CONTENT
+Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-h.pdf	1	MISSING_CONTENT
+Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-i.pdf	1	MISSING_CONTENT
 Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t02-fail-a.pdf	1	PASS
 Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t02-fail-b.pdf	1	PASS
 Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t02-fail-c.pdf	1	PASS

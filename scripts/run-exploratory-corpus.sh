@@ -925,7 +925,12 @@ echo "▶ Merging $CHUNKS chunk reports → $REPORT_NAME"
 python3 - "$BIN_DIR" "$SLICE_DIR" "$CHUNKS" "$PAGE_MODE" "$REPORT_NAME" "$CORPUS_LABEL" "$EXTRA_ORACLES" "$PAGE_SHARD_SUMMARY" "$EXCISE_RENDER_CACHE_DIR" "$EXCISE_RENDER_CACHE_ENABLED" <<'PY'
 import json, os, sys, glob
 bin_dir, slice_dir, expected, page_mode, report_name, corpus_label, extra_oracles, page_shard_summary, excise_cache_dir, excise_cache_enabled = sys.argv[1], sys.argv[2], int(sys.argv[3]), sys.argv[4], sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9], sys.argv[10]
-slices = sorted(glob.glob(os.path.join(slice_dir, "exploratory-chunk-*.json")))
+# Exclude the heartbeat files: "exploratory-chunk-008-of-014.json.progress.json"
+# also ends in .json and was being merged as if it were a slice, inflating
+# chunksMerged past expectedChunks (15 of 14) and contributing a zero-entry
+# "slice" to every run.
+slices = sorted(f for f in glob.glob(os.path.join(slice_dir, "exploratory-chunk-*.json"))
+                if not f.endswith(".progress.json"))
 print(f"  found {len(slices)} slice file(s) (expected {expected})")
 
 merged_entries = []

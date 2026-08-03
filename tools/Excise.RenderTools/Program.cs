@@ -4131,11 +4131,45 @@ partial class Program
             }
         }
 
-        return new System.Threading.Timer(
+        var timer = new System.Threading.Timer(
             _ => Tick(),
             null,
             TimeSpan.FromSeconds(intervalSeconds),
             TimeSpan.FromSeconds(intervalSeconds));
+
+        // Disposing a Timer does NOT wait for a tick that is already running,
+        // so a late tick could write its partial snapshot AFTER the final,
+        // complete report had been written — leaving a finished chunk's slice
+        // marked partial=true with all its entries present. Observed on
+        // pdfium chunk 8: 24 entries, same as its complete siblings, yet
+        // flagged partial, which then made update-corpus-expectations.sh
+        // refuse the whole report.
+        //
+        // Taking the same gate the tick holds guarantees any in-flight write
+        // has finished before Dispose returns.
+        return new ProgressReporterHandle(timer, gate);
+    }
+
+    /// <summary>
+    /// Stops the heartbeat and waits for any in-flight tick, so the final
+    /// report cannot be clobbered by a late partial write.
+    /// </summary>
+    private sealed class ProgressReporterHandle : IDisposable
+    {
+        private readonly System.Threading.Timer _timer;
+        private readonly object _gate;
+
+        public ProgressReporterHandle(System.Threading.Timer timer, object gate)
+        {
+            _timer = timer;
+            _gate = gate;
+        }
+
+        public void Dispose()
+        {
+            _timer.Dispose();
+            lock (_gate) { }   // barrier: returns only once no tick is running
+        }
     }
 
     private static void WriteCorpusScanProgressSnapshot(
