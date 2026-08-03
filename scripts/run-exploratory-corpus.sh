@@ -58,6 +58,22 @@ EXPECTATION_MANIFEST=""
 PAGE_SHARDS="auto"            # auto | off
 LARGE_PDF_PAGE_THRESHOLD="100"  # shard any PDF larger than this into page ranges
 PAGE_RANGE_SIZE="50"            # ...of this many pages (#879)
+MAX_PAGES_PER_PDF="500"         # sample-cap for pathologically large documents (see below)
+# WHY A CAP, AND WHY 500.
+# One fixture dominates the entire corpus: Isartor
+# "6.1 File structure/6.1.12 Implementation Limits/isartor-6-1-12-t01-fail-a.pdf"
+# has 10,000 pages — 69% of every page in all four corpora, and 96 minutes of
+# every full run. The next largest Isartor file has 20.
+#
+# Its PURPOSE is to violate a PDF/A-1b implementation limit so a VALIDATOR flags
+# it. Rendering 10,000 near-identical pages tests nothing about rendering, and
+# the robustness property it does test — that excise does not hang, crash or
+# exhaust memory on it — is already covered by #648's conformance sweep, which
+# opens every corpus file.
+#
+# 500 is chosen so it bites ONLY the pathological case: the largest genuine
+# document in any corpus is freeculture.pdf at 352 pages, which stays whole.
+# Set to 0 to disable.
 # Both were 250/100. At those values a 240-page PDF was one indivisible work
 # item, and a chunk could be handed 800 pages of a 10,000-page fixture — which
 # cannot finish inside any fixed per-chunk timeout. Smaller ranges also mean a
@@ -92,6 +108,8 @@ while [[ $# -gt 0 ]]; do
         --no-page-shards)    PAGE_SHARDS="off"; shift ;;
         --large-pdf-page-threshold) LARGE_PDF_PAGE_THRESHOLD="$2"; shift 2 ;;
         --large-pdf-page-threshold=*) LARGE_PDF_PAGE_THRESHOLD="${1#*=}"; shift ;;
+        --max-pages-per-pdf) MAX_PAGES_PER_PDF="$2"; shift 2 ;;
+        --max-pages-per-pdf=*) MAX_PAGES_PER_PDF="${1#*=}"; shift ;;
         --page-range-size)   PAGE_RANGE_SIZE="$2"; shift 2 ;;
         --page-range-size=*) PAGE_RANGE_SIZE="${1#*=}"; shift ;;
         --excise-render-cache-dir) EXCISE_RENDER_CACHE_DIR="$2"; shift 2 ;;
@@ -277,7 +295,7 @@ if [[ "$PAGE_MODE" == "all" && "$PAGE_SHARDS" != "off" ]]; then
     PAGE_SHARD_SUMMARY="$SLICE_DIR/page-shards-summary.tsv"
     mkdir -p "$PAGE_SHARD_DIR"
     echo "▶ Building page-shard manifests (threshold=$LARGE_PDF_PAGE_THRESHOLD pages, range=$PAGE_RANGE_SIZE pages)"
-    python3 - "$CORPUS" "$CHUNKS" "$PAGE_SHARD_DIR" "$PAGE_SHARD_SUMMARY" "$LARGE_PDF_PAGE_THRESHOLD" "$PAGE_RANGE_SIZE" <<'PY'
+    python3 - "$CORPUS" "$CHUNKS" "$PAGE_SHARD_DIR" "$PAGE_SHARD_SUMMARY" "$LARGE_PDF_PAGE_THRESHOLD" "$PAGE_RANGE_SIZE" "$MAX_PAGES_PER_PDF" <<'PY'
 import heapq
 import os
 import re
@@ -291,6 +309,7 @@ manifest_dir = Path(sys.argv[3])
 summary_path = Path(sys.argv[4])
 threshold = int(sys.argv[5])
 range_size = int(sys.argv[6])
+max_pages = int(sys.argv[7]) if len(sys.argv) > 7 else 0
 
 if chunks < 1:
     raise SystemExit("chunks must be >= 1")
@@ -327,11 +346,25 @@ def page_count(pdf: Path) -> int:
 units = []
 large = []
 unknown = []
+sampled_pdfs = []
 for rel, pdf in pdfs:
     count = page_count(pdf)
     if count <= 0:
         units.append((1, rel, 0, 0))
         unknown.append(rel)
+        continue
+
+    # Cap pathologically large documents to an EVENLY SPREAD sample rather than
+    # the first N pages. An implementation-limits fixture is uniform, but a real
+    # document is not, and page 9,999 is exactly where a late-revision or
+    # deep-page-tree defect would hide — taking only the front would trade one
+    # blind spot for another.
+    if max_pages > 0 and count > max_pages:
+        step = count / max_pages
+        sampled = sorted({min(count, max(1, int(i * step) + 1)) for i in range(max_pages)})
+        sampled_pdfs.append((rel, count, len(sampled)))
+        for pg in sampled:
+            units.append((1, rel, pg, pg))
         continue
 
     if count > threshold:
@@ -382,6 +415,11 @@ print(f"  PDFs: {len(pdfs)}")
 print(f"  work units: {len(units)}")
 print(f"  manifest page rows: {total_pages}")
 print(f"  split large PDFs: {len(large)}")
+# NEVER SILENT. A cap that is not announced reads as full coverage, which is the
+# same failure shape as a partial report claiming completeness (#879).
+for rel, total_pages_in_pdf, taken in sampled_pdfs:
+    print(f"  ⚠ SAMPLED {rel}: {total_pages_in_pdf} pages -> {taken} evenly spread "
+          f"(exceeds --max-pages-per-pdf)")
 print(f"  unknown page-count PDFs: {len(unknown)}")
 print(f"  pages per chunk: min={min_pages}, max={max_pages}")
 print(f"  summary: {summary_path}")
@@ -1014,6 +1052,13 @@ def agreement_class(e):
     if st == "MISSING_CONTENT":
         # excise drew nothing where the reference drew content (#883).
         return "MISSING_CONTENT"
+    if st == "RECOVERED_MALFORMED_CONTENT":
+        # excise met damaged content and RECOVERED instead of crashing, hanging
+        # or exhausting memory. For a decompression bomb (bomb_giant.pdf: 123 KB
+        # on disk, one page, expands enormously) that is precisely the property
+        # the fixture exists to test — surviving it is the fixture PASSING.
+        # Counting it as non-PASS made a success look like a defect every run.
+        return "RECOVERED"
     oracle_states = [get(e, k) for k in ORACLE_STATUS_KEYS]
     any_oracle_ok = any(s == "OK" for s in oracle_states)
     # A status of None means the oracle was never INVOKED, which is different
@@ -1048,18 +1093,19 @@ for e in merged_entries:
     agreement[a] = agreement.get(a, 0) + 1
 out["agreementCounts"] = agreement
 
-correct_classes = ("PASS", "AGREED_REFUSAL", "EXCISE_ONLY")
+correct_classes = ("PASS", "AGREED_REFUSAL", "EXCISE_ONLY", "RECOVERED")
 correct = sum(agreement.get(c, 0) for c in correct_classes)
 total_entries = len(merged_entries) or 1
 print()
 print("  agreement (excise vs the reference renderers):")
-for k in ("PASS", "AGREED_REFUSAL", "EXCISE_ONLY", "ORACLE_SPLIT",
+for k in ("PASS", "AGREED_REFUSAL", "EXCISE_ONLY", "RECOVERED", "ORACLE_SPLIT",
           "CREDENTIAL_BLOCKED", "UNCORROBORATED", "MISSING_CONTENT",
           "DIFF", "EXCISE_SIDE_GAP", "RENDERED"):
     if agreement.get(k):
         note = {
             "AGREED_REFUSAL": "no renderer managed it — refusing is correct",
             "EXCISE_ONLY": "excise rendered where no oracle could",
+            "RECOVERED": "survived damaged/bomb content — the fixture's point",
             "ORACLE_SPLIT": "oracles disagree among themselves",
             "CREDENTIAL_BLOCKED": "nobody had the password — proves nothing",
             "UNCORROBORATED": "oracles never ran — no opinion formed, NOT corroboration",
