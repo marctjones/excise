@@ -1,0 +1,43 @@
+# Binary fixtures must never have their line endings rewritten.
+#
+# WHY THIS FILE EXISTS
+# --------------------
+# Without it, git applies text normalisation by guess, and Windows checkouts
+# (core.autocrlf=true, the default on the GitHub Windows runner) rewrite LF to
+# CRLF inside files it decides are text.
+#
+# For a PDF that is fatal in a specific, quiet way: the cross-reference table
+# stores ABSOLUTE BYTE OFFSETS. Inserting one byte per line shifts every object
+# in the file, so every offset in the xref becomes wrong. The document either
+# fails to open or opens only because the parser reconstructs the xref — which
+# means a fixture written to exercise a precise structural path silently stops
+# exercising it.
+#
+# Found by Test (Windows) on 2026-08-03: hybrid-xrefstm-revision-probe.pdf, a
+# fixture built to pin #872 (/XRefStm hybrid-reference handling), passed on
+# macOS and Linux and failed on Windows. 33 other checked-in PDFs were exposed
+# to the same corruption; they had not failed visibly, which is worse rather
+# than better — a corpus fixture that quietly stops testing what it was written
+# for is coverage loss you cannot see.
+
+*.pdf   binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.icc   binary
+*.gz    binary
+*.zip   binary
+*.jar   binary
+*.ttf   binary
+*.otf   binary
+*.woff  binary
+*.woff2 binary
+*.dylib binary
+*.so    binary
+*.dll   binary
+
+# Shell scripts must keep LF even on Windows checkouts — a CRLF shebang line
+# makes the interpreter fail with a confusing "bad interpreter" error.
+*.sh    text eol=lf
