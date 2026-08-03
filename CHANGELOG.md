@@ -143,9 +143,13 @@ refusals), #885/#888 (annotation appearances), #886 (embedded-subset code→GID)
   it masked excise-only failures. It also filed pages excise rendered *and no
   oracle could* as failures. Both are fixed, and the scan now reports an
   agreement classification (`PASS` / `AGREED_REFUSAL` / `EXCISE_ONLY` /
-  `ORACLE_SPLIT` / `EXCISE_SIDE_GAP` / …) rather than a bare status. On the
-  informative corpora this moved real defects 99 → 75 and `EXCISE_SIDE_GAP`
-  36 → 14 — by correcting the classification, not by fixing those pages.
+  `ORACLE_SPLIT` / `EXCISE_SIDE_GAP` / …) rather than a bare status. The
+  classification fix does not repair any page — it **exposes** them: 36
+  `EXCISE_SIDE_GAP` pages (an oracle rendered it, excise did not) had been
+  sitting inside the bucket labelled "no renderer managed it, so refusing is
+  correct". One of them was #881's unbounded `/Parent` walk. The parser work
+  above then took that 36 to 14 (#884); the remainder of the drop from 99 to
+  75 defects on the informative corpora is the other fixes in this release.
 - **The gate can detect small missing content** (#883) — it previously compared
   excise against whichever oracle was *closest* to excise, which is backwards:
   adding oracles made it detect **less** (three genuinely-missing-content pages
