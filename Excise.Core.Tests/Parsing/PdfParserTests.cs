@@ -663,17 +663,30 @@ public class PdfParserTests
     }
 
     [Fact]
-    public void ParseIndirectObject_WrongTokenAfterData_ThrowsException()
+    public void ParseIndirectObject_WrongTokenAfterData_KeepsTheDeclaredLengthData()
     {
-        // Negative test: invalid token instead of endstream
+        // Was ParseIndirectObject_WrongTokenAfterData_ThrowsException, and the
+        // change of expectation is deliberate (#884). A missing 'endstream'
+        // used to throw, which does not stay local: this runs during document
+        // open, so one unterminated stream condemned the entire file — the
+        // largest EXCISE_SIDE_GAP cluster in the corpus scan, on pages mutool
+        // and pdftocairo render.
+        //
+        // What the parser must NOT do is guess wildly. Here /Length 4 is
+        // perfectly good evidence ("test") and there is no 'endstream' anywhere
+        // to contradict it, so the declared extent wins and the trailing
+        // 'garbage' is left out of the stream. The opposite case —
+        // pdfium/bug_452455.pdf, /Length 536870911 in a 1 KB file — is where the
+        // resynchronised scan wins instead. Shorter of the two guesses, and both
+        // sides of that are pinned in XRefRecoveryRegressionTests.
         var pdfData = "1 0 obj\n<< /Length 4 >>\nstream\ntest\ngarbage\nendobj";
 
         using var parser = new PdfParser(Encoding.ASCII.GetBytes(pdfData));
 
-        var action = () => parser.ParseIndirectObject();
+        var stream = parser.ParseIndirectObject().Value.Should().BeOfType<PdfStream>().Subject;
 
-        action.Should().Throw<PdfParseException>()
-            .WithMessage("*endstream*");
+        Encoding.ASCII.GetString(stream.EncodedData).Should().Be("test",
+            "the declared length is the only usable delimiter this file has");
     }
 
     #endregion

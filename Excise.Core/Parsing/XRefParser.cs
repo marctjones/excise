@@ -232,6 +232,31 @@ public class XRefParser
         return false;
     }
 
+    /// <summary>
+    /// Rebuild the cross-reference table by scanning the file for indirect
+    /// object headers, for callers that only discover the parsed xref is
+    /// unusable after assembling it (see PdfDocument.OpenCore's /Root
+    /// reachability check, #884). Returns false rather than throwing when the
+    /// file yields nothing to rebuild from — the caller already has a failure
+    /// to report and a reconstruction error would only mask it.
+    /// </summary>
+    internal bool TryReconstructXRef(
+        out PdfDictionary trailer,
+        out Dictionary<int, XRefEntry> xref)
+    {
+        try
+        {
+            (trailer, xref) = ReconstructXRefFromIndirectObjects();
+            return true;
+        }
+        catch (Exception ex) when (IsRecoverableXRefParseException(ex))
+        {
+            trailer = new PdfDictionary();
+            xref = new Dictionary<int, XRefEntry>();
+            return false;
+        }
+    }
+
     private (PdfDictionary Trailer, Dictionary<int, XRefEntry> XRef) ReconstructXRefFromIndirectObjects()
     {
         var content = ReadRepairContent();
