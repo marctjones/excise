@@ -972,6 +972,30 @@ public class ContentStreamParser
         // the single whitespace following ID, already consumed above).
         // dataEnd is the exclusive end of that data; the slice in between is
         // captured verbatim so the round-trip (rewrite) is lossless. (#354)
+        //
+        // §8.9.7 says ID is followed by EXACTLY ONE whitespace byte, and the
+        // byte after it is data. Producers write CRLF anyway. pdf.js
+        // bug1065245.pdf ends every one of its three inline images' ID with
+        // `0d 0a` before the JPEG SOI:
+        //
+        //     ... I D 0d 0a ff d8 ff e0 ...
+        //
+        // Consuming only the `\r` left the data starting on `\n`, so the JPEG
+        // decoder never found ffd8 at offset 0, returned null, and the page
+        // rendered blank — while mutool and pdftocairo both draw it. Treat a
+        // CRLF PAIR as the single separator, which is what they do.
+        //
+        // Deliberately narrow: only the exact `\r\n` pair, never a general
+        // "skip all whitespace". For unfiltered inline image data the first
+        // real byte can legitimately BE 0x0A or 0x20, and skipping those would
+        // shift every sample by one — corrupting the image instead of failing
+        // to draw it, which is the worse outcome.
+        if (_pos > 0 && _pos < _content.Length &&
+            _content[_pos - 1] == (byte)'\r' && _content[_pos] == (byte)'\n')
+        {
+            _pos++;
+        }
+
         int dataStart = _pos;
         int dataEnd;
         bool consumed = false;
