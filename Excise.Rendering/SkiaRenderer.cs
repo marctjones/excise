@@ -1527,6 +1527,32 @@ internal partial class RenderContext
             _state.BlendMode = MapBlendMode(bm);
         }
 
+        // /Font — §8.4.5 Table 58: [ fontRef size ]. Equivalent to Tf, except
+        // the font arrives as a DIRECT REFERENCE to a font dictionary rather
+        // than as a name to look up in /Resources /Font.
+        //
+        // Nine corpus pages (veraPDF 6-1-12-t02 x5, TWG A001 x4) rendered blank
+        // because of this. Their content streams carry no Tf at all and their
+        // pages carry no /Font resource — the font and its size come solely
+        // from the ExtGState. Nothing was missing from the font machinery:
+        // their subsets have an ordinary (3,1) cmap that resolves the glyph
+        // with an outline. The state key was simply never read, so the text
+        // had no font and drew nothing.
+        //
+        // Those nine were filed under #886 ("code->GID mapping fails on
+        // embedded subsets") because the clustering script matched /FontFile in
+        // the document. They are not font-program bugs.
+        if (extGState.ContainsKey("Font") &&
+            ResolveArray(extGState, "Font") is { Count: >= 2 } fontEntry)
+        {
+            if (_page.Document.Resolve(fontEntry[0]) is Excise.Core.Primitives.PdfDictionary gsFontDict &&
+                TryGetResolvedNumber(_page.Document.Resolve(fontEntry[1]), out var gsFontSize))
+            {
+                _textState.FontSize = (float)gsFontSize;
+                _currentFont = ResolveRenderFont(_textState.FontName ?? string.Empty, gsFontDict);
+            }
+        }
+
         if (extGState.ContainsKey("SMask"))
         {
             var smaskObj = extGState.GetOptional("SMask");
