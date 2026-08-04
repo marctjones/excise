@@ -444,7 +444,22 @@ public class PdfParser : IDisposable
                 // endstream, re-read from the actual stream-data start and
                 // recover by marker scan.
                 _lexer.Seek(streamDataStart);
-                data = _lexer.ReadStreamDataUntilEndstream();
+                var recovered = _lexer.ReadStreamDataUntilEndstream(out var foundEndstream);
+
+                // When a real 'endstream' was found it is a delimiter and wins
+                // outright. When it was NOT — no marker anywhere before EOF —
+                // both extents are guesses, so take the shorter one (#884).
+                //
+                // Both directions of that occur in the wild. A stream declaring
+                // /Length 4 over "test" whose 'endstream' is simply missing is
+                // best served by its length; pdfium/bug_452455.pdf, declaring
+                // /Length 536870911 in a 1 KB file, is best served by the
+                // resynchronised scan. Shorter is also the safer bias for a
+                // redaction tool: an over-long extent absorbs the bytes of the
+                // objects that follow, which is how a stream ends up carrying a
+                // second copy of text that redaction removed from its owner.
+                if (foundEndstream || recovered.Length < data.Length)
+                    data = recovered;
             }
         }
 

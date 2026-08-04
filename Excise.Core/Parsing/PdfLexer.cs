@@ -160,14 +160,33 @@ public class PdfLexer : IDisposable
 
         SkipStreamDataLineEnding();
 
-        var data = new byte[length];
+        // Size the buffer by the bytes that ACTUALLY REMAIN, never by the
+        // declared /Length (#884). /Length is attacker- and
+        // producer-controlled: pdfium/bug_452455.pdf is 1,082 bytes and declares
+        // /Length 536870911, which allocated 512 MB before reading a single
+        // byte. The truncation path below already returned the short data, so
+        // the allocation bought nothing but a memory-exhaustion lever on a file
+        // small enough to arrive over any channel.
+        //
+        // Position accounts for the unread portion of the lexer buffer
+        // (_stream.Position - _bufferLen + _bufferPos), so `available` is the
+        // real distance to EOF from the first stream byte, not from wherever the
+        // underlying stream's cursor happens to sit. Getting that wrong by the
+        // buffered amount would silently return SHORT data on a healthy stream —
+        // a redaction leak, not a perf bug — which is why
+        // ReadStreamData_LargeStreamAfterBufferedTokens_ReturnsExactBytes pins
+        // it.
+        long available = Math.Max(0, _stream.Length - Position);
+        int toRead = available < length ? (int)available : length;
+
+        var data = new byte[toRead];
         int totalRead = 0;
 
         // First, consume buffered data
         if (_bufferLen > _bufferPos)
         {
             int bufferedAvailable = _bufferLen - _bufferPos;
-            int toCopy = Math.Min(bufferedAvailable, length);
+            int toCopy = Math.Min(bufferedAvailable, toRead);
             Array.Copy(_buffer, _bufferPos, data, 0, toCopy);
             _bufferPos += toCopy;
             totalRead = toCopy;
@@ -175,9 +194,9 @@ public class PdfLexer : IDisposable
 
         // Read remaining directly from stream
         bool truncated = false;
-        while (totalRead < length)
+        while (totalRead < toRead)
         {
-            int read = _stream.Read(data, totalRead, length - totalRead);
+            int read = _stream.Read(data, totalRead, toRead - totalRead);
             if (read == 0)
             {
                 // The declared /Length overruns the file. Return what is
@@ -201,7 +220,7 @@ public class PdfLexer : IDisposable
             totalRead += read;
         }
 
-        if (truncated)
+        if (truncated || totalRead != data.Length)
         {
             var actual = new byte[totalRead];
             Array.Copy(data, actual, totalRead);
@@ -226,7 +245,20 @@ public class PdfLexer : IDisposable
     /// governed by the declared length, as the PDF spec intends.
     /// </summary>
     internal byte[] ReadStreamDataUntilEndstream(int maxBytes = DefaultMaxRecoveredStreamBytes)
+        => ReadStreamDataUntilEndstream(out _, maxBytes);
+
+    /// <inheritdoc cref="ReadStreamDataUntilEndstream(int)"/>
+    /// <param name="foundEndstream">
+    /// False when EOF was reached without a marker, i.e. the returned extent is a
+    /// resynchronisation guess rather than a delimiter. Callers that also have a
+    /// declared /Length use this to decide which of the two guesses to trust.
+    /// </param>
+    /// <param name="maxBytes">Recovery ceiling.</param>
+    internal byte[] ReadStreamDataUntilEndstream(
+        out bool foundEndstream,
+        int maxBytes = DefaultMaxRecoveredStreamBytes)
     {
+        foundEndstream = false;
         SkipStreamDataLineEnding();
 
         var output = new MemoryStream();
@@ -237,7 +269,32 @@ public class PdfLexer : IDisposable
         {
             int c = ReadByte();
             if (c == -1)
-                throw new PdfParseException("Unexpected end of file while scanning for endstream");
+            {
+                // EOF with no 'endstream' anywhere ahead: the stream is
+                // unterminated. Return what was scanned, resynchronised at the
+                // next object boundary, instead of throwing (#884).
+                //
+                // Throwing here condemned the whole document at open time over a
+                // single unterminated stream — pdfium/bug_452455.pdf declares
+                // /Length 536870911 on an object with no 'endstream' anywhere,
+                // and "Unexpected end of file while scanning for endstream" was
+                // the verbatim message. Recovering keeps the failure LOCAL: this
+                // one stream decodes partially or not at all while the rest of
+                // the document stays readable, the same trade as the
+                // declared-length overrun in ReadStreamData.
+                //
+                // The resync bound is not cosmetic, and it is the part to keep.
+                // Taking everything to EOF would fold the bytes of every FOLLOWING
+                // object into this stream — including their text. For a REDACTION
+                // tool that is a leak with a name: redaction removes a word from
+                // the object that owns it, the swallowed second copy inside this
+                // stream is a different object that no glyph pass ever looked at,
+                // and the word ships in the saved file while excise reports
+                // success. Stopping at the next 'endobj' or 'N M obj' header is
+                // what a resynchronising reader does anyway, and it is what keeps
+                // the recovered stream to its own body.
+                return TrimAtObjectBoundary(output.ToArray());
+            }
 
             output.WriteByte((byte)c);
             if (output.Length > maxBytes)
@@ -249,6 +306,7 @@ public class PdfLexer : IDisposable
                 matched++;
                 if (matched == marker.Length)
                 {
+                    foundEndstream = true;
                     var bytes = output.ToArray();
                     int dataLength = bytes.Length - marker.Length;
 
@@ -267,6 +325,94 @@ public class PdfLexer : IDisposable
                 matched = (byte)c == marker[0] ? 1 : 0;
             }
         }
+    }
+
+    /// <summary>
+    /// Cut recovered stream bytes at the first following object boundary — a
+    /// token-delimited <c>endobj</c>, or an <c>N M obj</c> indirect-object
+    /// header. Used only when an unterminated stream was scanned all the way to
+    /// EOF, so the alternative is keeping the remainder of the file as this
+    /// stream's data. Returns the input unchanged when no boundary is found.
+    ///
+    /// This is a heuristic and it can fire early: binary stream data containing
+    /// the bytes "endobj" or "7 0 obj" at a token boundary will be cut there,
+    /// yielding a SHORT stream. That is accepted deliberately and only here —
+    /// this path is reached only when the file contains no <c>endstream</c> at
+    /// all, so there is no delimiter to be short of and every candidate extent
+    /// is a guess. The alternative guess, taking everything to EOF, is worse for
+    /// a redaction tool: it absorbs the following objects' text into a stream
+    /// that no glyph pass examines. Short loses content that is visibly missing;
+    /// long duplicates content that is invisibly present.
+    /// </summary>
+    private static byte[] TrimAtObjectBoundary(byte[] bytes)
+    {
+        for (int i = 0; i < bytes.Length; i++)
+        {
+            if (i > 0 && !IsTokenBoundaryByte(bytes[i - 1]))
+                continue;
+
+            if (!MatchesKeywordAt(bytes, i, "endobj"u8) && !IsIndirectObjectHeaderAt(bytes, i))
+                continue;
+
+            var end = i;
+            while (end > 0 && (bytes[end - 1] == '\n' || bytes[end - 1] == '\r'))
+                end--;
+
+            var trimmed = new byte[end];
+            Array.Copy(bytes, trimmed, end);
+            return trimmed;
+        }
+
+        return bytes;
+    }
+
+    private static bool IsTokenBoundaryByte(byte b)
+        => Whitespace.Contains(b) || Delimiters.Contains(b);
+
+    private static bool MatchesKeywordAt(byte[] bytes, int index, ReadOnlySpan<byte> keyword)
+    {
+        if (index + keyword.Length > bytes.Length)
+            return false;
+
+        for (int i = 0; i < keyword.Length; i++)
+        {
+            if (bytes[index + i] != keyword[i])
+                return false;
+        }
+
+        var after = index + keyword.Length;
+        return after == bytes.Length || IsTokenBoundaryByte(bytes[after]);
+    }
+
+    private static bool IsIndirectObjectHeaderAt(byte[] bytes, int index)
+    {
+        var pos = index;
+
+        if (!ScanUnsignedInteger(bytes, ref pos) || !ScanWhitespace(bytes, ref pos))
+            return false;
+        if (!ScanUnsignedInteger(bytes, ref pos) || !ScanWhitespace(bytes, ref pos))
+            return false;
+
+        return MatchesKeywordAt(bytes, pos, "obj"u8);
+    }
+
+    private static bool ScanUnsignedInteger(byte[] bytes, ref int pos)
+    {
+        var start = pos;
+        while (pos < bytes.Length && bytes[pos] is >= (byte)'0' and <= (byte)'9')
+            pos++;
+
+        // A plausible object number, not an arbitrary run of digits inside
+        // binary data.
+        return pos > start && pos - start <= 10;
+    }
+
+    private static bool ScanWhitespace(byte[] bytes, ref int pos)
+    {
+        var start = pos;
+        while (pos < bytes.Length && Whitespace.Contains(bytes[pos]))
+            pos++;
+        return pos > start;
     }
 
     private void SkipStreamDataLineEnding()
