@@ -175,9 +175,47 @@ public class CcittCapabilityClassifierTests
             ("EncodedByteAlign", PdfBoolean.True)));
 
         report.UnsupportedFeatures.Should().BeEmpty(
-            "every one of these is read and honoured by CcittFaxDecoder");
+            "every one of these is read and honoured by CcittFaxDecoder for K < 0");
         report.Features.Should().Contain("Group4").And.Contain("BlackIs1")
             .And.Contain("EncodedByteAlign").And.Contain("Rows");
+    }
+
+    /// <summary>
+    /// /EncodedByteAlign is honoured for GROUP 4 ONLY. DecodeGroup3_1D and
+    /// DecodeGroup3_2D do not take the parameter at all — it is dropped at the
+    /// call site — so for every K >= 0, including the DEFAULT K = 0, the flag
+    /// does nothing.
+    ///
+    /// This is the classifier catching its own overclaim: its first version
+    /// reported the flag supported unconditionally. Reported rather than fixed,
+    /// because no file in any of the four corpora sets it and no synthetic
+    /// fixture could be made to discriminate (a mutation test passed with the
+    /// candidate fix disabled). See #893.
+    /// </summary>
+    [Theory]
+    [InlineData(0)]   // Group 3 1-D — the default
+    [InlineData(4)]   // Group 3 2-D
+    public void EncodedByteAlign_IsReportedUnsupportedForGroup3(int k)
+    {
+        var report = Excise.Core.Filters.Ccitt.CcittCapabilityClassifier.Analyze(Parms(
+            ("K", new PdfInteger(k)),
+            ("EncodedByteAlign", PdfBoolean.True)));
+
+        report.UnsupportedFeatures.Should().Contain("EncodedByteAlign",
+            $"K={k} takes a Group 3 path, and neither Group 3 decoder receives the flag");
+        report.FullySupported.Should().BeFalse();
+    }
+
+    [Fact]
+    public void EncodedByteAlign_IsReportedSupportedForGroup4()
+    {
+        var report = Excise.Core.Filters.Ccitt.CcittCapabilityClassifier.Analyze(Parms(
+            ("K", new PdfInteger(-1)),
+            ("EncodedByteAlign", PdfBoolean.True)));
+
+        report.UnsupportedFeatures.Should().NotContain("EncodedByteAlign",
+            "DecodeGroup4 passes the flag to a per-row AlignToByte() — the classifier must " +
+            "not report a capability excise DOES have as missing");
     }
 
     [Fact]
