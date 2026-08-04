@@ -156,7 +156,85 @@ public class AnnotationAppearanceDrawnTests : IDisposable
         InkFraction(excise, correct).Should().BeGreaterThan(0.9);
     }
 
+    // ── 4. the Invisible flag is narrower than its name ──────────────────────
+
+    /// <summary>
+    /// §12.5.3 Table 165 on bit 1 (Invisible):
+    ///
+    ///   "If set, do not display the annotation if it does not belong to one of
+    ///    the standard annotation types AND no annotation handler is available.
+    ///    If clear, display such an unsupported annotation using an appearance
+    ///    stream specified by its appearance dictionary, if any."
+    ///
+    /// The flag governs UNSUPPORTED subtypes only. On a standard subtype it has
+    /// no effect whatever, so an /AP present there must still be drawn. Reading
+    /// it as an unconditional skip blanked two conformance fixtures written to
+    /// test exactly this — veraPDF 6-3-2-t02-fail-a (/Line) and
+    /// isartor-6-5-3-t02-fail-d (/Circle), both Invisible+Print with an /AP,
+    /// both drawn by mutool and pdftocairo.
+    /// </summary>
+    [Fact]
+    public void InvisibleFlag_OnAStandardSubtype_DoesNotSuppressTheAppearance()
+    {
+        var path = WriteTemp(FlaggedAnnotPdf("/Square", invisible: true));
+        using var bmp = RenderWithExcise(path);
+
+        InkFraction(bmp, new SKRectI(50, 50, 150, 150)).Should().BeGreaterThan(0.9,
+            "/Square is a standard annotation type, so the Invisible flag does not " +
+            "apply to it and its /AP must still be drawn");
+    }
+
+    /// <summary>
+    /// The other half: on a subtype excise has no handler for, Invisible does
+    /// exactly what it says. Without this the fix would just be "ignore the
+    /// flag", which is a different bug.
+    /// </summary>
+    [Fact]
+    public void InvisibleFlag_OnAnUnsupportedSubtype_StillSuppresses()
+    {
+        var path = WriteTemp(FlaggedAnnotPdf("/Frobnicate", invisible: true));
+        using var bmp = RenderWithExcise(path);
+
+        InkFraction(bmp, new SKRectI(50, 50, 150, 150)).Should().BeLessThan(0.01,
+            "an annotation of a non-standard subtype with no handler is precisely " +
+            "what the Invisible flag is for");
+    }
+
+    /// <summary>
+    /// Hidden (bit 2) is the unconditional one and must keep suppressing
+    /// everything, standard subtype or not.
+    /// </summary>
+    [Fact]
+    public void HiddenFlag_StillSuppressesEvenAStandardSubtype()
+    {
+        var path = WriteTemp(FlaggedAnnotPdf("/Square", invisible: false, hidden: true));
+        using var bmp = RenderWithExcise(path);
+
+        InkFraction(bmp, new SKRectI(50, 50, 150, 150)).Should().BeLessThan(0.01,
+            "Hidden means hidden for every subtype — narrowing Invisible must not " +
+            "have widened anything else");
+    }
+
     // ── fixtures ─────────────────────────────────────────────────────────────
+
+    /// <summary>An annotation with a valid /AP and the given flag bits set.</summary>
+    private static byte[] FlaggedAnnotPdf(string subtype, bool invisible, bool hidden = false)
+    {
+        const string ap = "0 0 1 rg 50 50 100 100 re f";
+        int flags = 4 | (invisible ? 1 : 0) | (hidden ? 2 : 0); // Print + requested
+        return Assemble(new[]
+        {
+            "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n",
+            $"2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 /MediaBox [0 0 {PageSize} {PageSize}] >>\nendobj\n",
+            "3 0 obj\n<< /Type /Page /Parent 2 0 R /Annots [4 0 R] >>\nendobj\n",
+            $"4 0 obj\n<< /Type /Annot /Subtype {subtype} /F {flags} /Rect [50 50 150 150] " +
+            "/AP << /N 5 0 R >> >>\nendobj\n",
+            $"5 0 obj\n<< /Type /XObject /Subtype /Form /FormType 1 /BBox [50 50 150 150] " +
+            $"/Length {ap.Length} >>\nstream\n{ap}\nendstream\nendobj\n",
+        });
+    }
+
+    // ── original fixtures ────────────────────────────────────────────────────
 
     /// <summary>/AP /N form whose /BBox is `7 0 R`, not a direct array.</summary>
     private static byte[] IndirectBBoxPdf()

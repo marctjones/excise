@@ -32,9 +32,38 @@ internal partial class RenderContext
             // the annotation in printed output, not a "screen only" flag.
             var f = annot.Flags;
             if ((f & (Excise.Core.Document.PdfAnnotationFlags.Hidden
-                    | Excise.Core.Document.PdfAnnotationFlags.NoView
-                    | Excise.Core.Document.PdfAnnotationFlags.Invisible)) != 0)
+                    | Excise.Core.Document.PdfAnnotationFlags.NoView)) != 0)
                 continue;
+
+            // Invisible (bit 1) is NARROWER than its name, and reading it as
+            // "never draw" is wrong. §12.5.3 Table 165:
+            //
+            //   "If set, do not display the annotation if it does not belong to
+            //    one of the standard annotation types AND no annotation handler
+            //    is available. If clear, display such an unsupported annotation
+            //    using an appearance stream specified by its appearance
+            //    dictionary, if any."
+            //
+            // So the flag only ever governs annotations of a NON-STANDARD
+            // subtype. For a standard one — /Line, /Circle, /Square … — it has
+            // no effect at all, and an /AP present on such an annotation must
+            // still be drawn.
+            //
+            // Treating it as an unconditional skip blanked two conformance
+            // fixtures that exist to test exactly this: veraPDF 6-3-2-t02-fail-a
+            // (/Line, Invisible+Print, /AP /N present) and isartor-6-5-3-t02-fail-d
+            // (/Circle, same shape). mutool and pdftocairo both draw them.
+            //
+            // PdfAnnotationSubtype.Unknown is precisely "not one of the standard
+            // types", so it is the only case where the flag applies.
+            if ((f & Excise.Core.Document.PdfAnnotationFlags.Invisible) != 0 &&
+                annot.Subtype == Excise.Core.Document.PdfAnnotationSubtype.Unknown)
+            {
+                _options.Diagnostics?.Add(
+                    "Annotation of a non-standard subtype has the Invisible flag and no " +
+                    "handler; not drawn (§12.5.3).");
+                continue;
+            }
 
             var appearance = ResolveAppearanceN(annot);
             if (appearance == null)
