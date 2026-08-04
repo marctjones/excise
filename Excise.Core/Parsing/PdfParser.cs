@@ -338,8 +338,25 @@ public class PdfParser : IDisposable
         // Read stream data
         var data = _lexer.ReadStreamData(declaredLength);
 
-        // Expect 'endstream' keyword
-        var token = _lexer.NextToken();
+        // Expect 'endstream' keyword. A wrong /Length can land the lexer on a
+        // byte that cannot BEGIN any token at all, in which case NextToken
+        // throws instead of returning a wrong token. That is the same producer
+        // bug as landing on a wrong-but-tokenizable byte, so it must reach the
+        // same marker-scan recovery below rather than fail the object.
+        // Worked example (#874): pdfium's pixel/bug_1087.pdf declares
+        // /Length 89 (indirect, via 10 0 R) on a 94-byte CCITT stream; byte 89
+        // of the payload is '^' (0x5E), so the old code threw
+        // "Unexpected character '^'" and the recovery was unreachable.
+        PdfToken token;
+        try
+        {
+            token = _lexer.NextToken();
+        }
+        catch (PdfParseException)
+        {
+            token = default; // Eof-typed placeholder; never a keyword.
+        }
+
         if (!token.IsKeyword("endstream"))
         {
             // Some PDFs have off-by-one length, try to recover
