@@ -31,14 +31,27 @@ public class RefusedImageDiagnosticTests
 {
     /// <summary>
     /// The RAW-SAMPLE path: a decoder returns fewer than half the bytes the
-    /// image geometry requires. Pinned on the real JBIG2 fixture, since that is
-    /// where the numbers come from.
+    /// image geometry requires.
+    ///
+    /// ⚠️ THIS TEST MOVED FIXTURES BECAUSE THE BUG IT DOCUMENTED WAS FIXED.
+    /// It was pinned on pdfium bug_631912.pdf, whose /JBIG2Decode returned
+    /// 83 of 103,680 bytes. #874 resolved the always-indirect /JBIG2Globals
+    /// reference, that image now decodes (286 inked px, no diagnostic), and
+    /// this test went red — which is exactly what it was built to do. A
+    /// regression test pinned on a ROOT CAUSE fails loudly when the cause is
+    /// removed, instead of silently continuing to pass on a stale premise.
+    ///
+    /// It now uses pdf.js bitmap-symbol-context-reuse.pdf, which still short-
+    /// decodes (454 of 20,000 bytes) because JBIG2 retained symbol-dictionary
+    /// coding contexts are genuinely unimplemented — #656, deliberately out of
+    /// #874's scope. When #656 lands, this test should go red again and want a
+    /// new fixture, or the guard has no witness left and should be reconsidered.
     /// </summary>
     [Fact]
     public void ShortSampleBuffer_ReportsTheShortfallAndTheFilter()
     {
-        var path = FindCorpusFile("pdfium", "bug_631912.pdf");
-        Assert.SkipWhen(path == null, "gitignored PDFium corpus fixture not present (scripts/download-pdfium-corpus.sh)."); // [requires: corpus:pdfium]
+        var path = FindCorpusFile("pdfjs", "bitmap-symbol-context-reuse.pdf");
+        Assert.SkipWhen(path == null, "gitignored pdf.js corpus fixture not present (scripts/download-pdfjs-corpus.sh)."); // [requires: corpus:pdfjs]
 
         var diagnostics = new List<string>();
         using var doc = PdfDocument.Open(path!);
@@ -52,7 +65,7 @@ public class RefusedImageDiagnosticTests
 
         message.Should().Contain("JBIG2Decode",
             "the FILTER is the actionable part: 'an image failed' does not locate a bug, " +
-            "'/JBIG2Decode returned 83 of 103680 bytes' does");
+            "'/JBIG2Decode returned 454 of 20000 bytes' does");
         message.Should().MatchRegex(@"\d+ of \d+",
             "the shortfall must be quantified, not merely asserted");
     }
