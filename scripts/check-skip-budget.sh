@@ -140,8 +140,21 @@ LC_ALL=C sort -u "$TMP/actual.txt" -o "$TMP/actual.txt"
 # "unconditioned" the safe default for any entry whose gate is unclear.
 #
 # Map lines: NAME<TAB>spec spec ...
+#
+# The name capture MUST match the forward check's above (line ~98), which
+# strips from the first `#` and trims. It previously used `[^[:space:]#]*` —
+# everything up to the first SPACE — so any name containing one could be
+# allow-listed but never conditioned. That is every `[Theory]` case, whose
+# display name is `Method(param: "value")`.
+#
+# The failure was silent and permanent in the worst direction: the forward
+# check accepted the entry, the reverse check could not read its `[requires:]`
+# marker, so on any machine where the prerequisites WERE present the entry
+# reported "allow-listed skips are no longer skipping" on every single run.
+# A gate that always fails locally is a gate people stop reading — the exact
+# rot #854 was written to stop.
 grep -vE '^\s*(#|$)' "$ALLOWLIST" \
-  | sed -n 's/^\([^[:space:]#]*\).*\[requires:[[:space:]]*\([^]]*\)\].*$/\1\t\2/p' \
+  | sed -n 's/^\([^#]*[^[:space:]#]\)[[:space:]]*#.*\[requires:[[:space:]]*\([^]]*\)\].*$/\1\t\2/p' \
   | LC_ALL=C sort -u > "$TMP/conditioned.txt" || true
 
 # SKIP_BUDGET_FORCE_ABSENT lets the selftest exercise the absent-prerequisite

@@ -173,6 +173,7 @@ cat > "$AL2" <<'EOF'
 Demo2.Tests.A.CondPresent   # #999: needs a tool that exists [requires: tool:ls]
 Demo2.Tests.A.CondAbsent   # needs a tool that does not [requires: tool:excise-no-such-tool-xyz]
 Demo2.Tests.A.Uncond   # no marker at all
+Demo2.Tests.A.Theory(fixture: "a.pdf")   # a [Theory] display name CONTAINS A SPACE [requires: tool:ls]
 EOF
 
 OUT2="$WORK/cond.log"
@@ -185,6 +186,15 @@ grep -qF -- '- Demo2.Tests.A.CondAbsent' "$OUT2" || { echo "FAIL(#854): conditio
 grep -qF -- '- Demo2.Tests.A.Uncond' "$OUT2" || { echo "FAIL(#854): unconditioned entry was not reported by the reverse check"; F2=1; }
 if grep -qF -- '- Demo2.Tests.A.CondPresent' "$OUT2"; then
   echo "FAIL(#854): conditioned entry whose prereq is PRESENT was reported as a failure"; F2=1
+fi
+# A [Theory] display name contains a space. The requires-parser used to capture
+# the name as "everything up to the first space", so such an entry could be
+# allow-listed (the forward check strips from '#') but NEVER conditioned —
+# reporting "no longer skipping" on every run of any machine that had the
+# prerequisite. Silent, permanent, and in the direction that rots the gate.
+if grep -qF -- '- Demo2.Tests.A.Theory(fixture: "a.pdf")' "$OUT2"; then
+  echo "FAIL(#854): a conditioned [Theory] entry (name contains a space) was reported"
+  echo "            as a failure despite its prerequisite being present"; F2=1
 fi
 
 # Same allowlist, but force the present tool to resolve absent: now ALL THREE
