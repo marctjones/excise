@@ -281,6 +281,22 @@ internal partial class RenderContext
         float ry1 = (float)Math.Min(annot.Rect.Bottom, annot.Rect.Top);
         float rx2 = (float)Math.Max(annot.Rect.Left, annot.Rect.Right);
         float ry2 = (float)Math.Max(annot.Rect.Bottom, annot.Rect.Top);
+        // /Text is drawn at a FIXED size and its /Rect is ignored for sizing
+        // (§12.5.6.4: "the annotation shall be drawn at a fixed size regardless
+        // of the magnification"). Producers therefore write a degenerate rect
+        // and mean it — veraPDF 6-3-3-t01-pass-a.pdf has /Rect [50 110 50 110],
+        // zero by zero. The guard below rejected that before anything could
+        // draw, while mutool (495 inked px), pdftocairo (917) and Ghostscript
+        // (1388) all place a ~16pt icon anchored at that point. This is the
+        // one subtype where a zero-size rect is normal rather than malformed,
+        // so it is normalised before the guard rather than exempted from it.
+        if (annot.Subtype == Excise.Core.Document.PdfAnnotationSubtype.Text)
+        {
+            const float noteSize = 17f; // oracles measure 16.3-18pt
+            rx2 = rx1 + noteSize;
+            ry1 = ry2 - noteSize;
+        }
+
         if (rx2 - rx1 < 0.5f || ry2 - ry1 < 0.5f) return;
 
         var rect = new SKRect(rx1, ry1, rx2, ry2);
@@ -291,6 +307,10 @@ internal partial class RenderContext
                 RenderWidgetDefault(annot, rect);
                 break;
             case Excise.Core.Document.PdfAnnotationSubtype.Link:
+                RenderLinkDefault(annot, rect);
+                break;
+            case Excise.Core.Document.PdfAnnotationSubtype.Text:
+                RenderStickyNoteDefault(annot, rect);
                 break;
             case Excise.Core.Document.PdfAnnotationSubtype.Square:
                 RenderShapeDefault(annot, rect, isEllipse: false);
@@ -588,6 +608,142 @@ internal partial class RenderContext
         paint.StrokeWidth = borderWidth;
         paint.Color = SKColors.Black;
         _canvas.DrawRect(rect, paint);
+    }
+
+    /// <summary>
+    /// Border for a /Link that ships no /AP (§12.5.6.5), drawn ONLY when the
+    /// file states a border width explicitly and it is greater than zero.
+    /// </summary>
+    /// <remarks>
+    /// Link previously had an empty case, justified as "links without /C are
+    /// intentionally invisible in print, matching every commercial viewer",
+    /// with the concern that synthesising borders would obscure page content
+    /// when a producer writes a large /Border width.
+    ///
+    /// The first half is measurably wrong. On isartor-6-6-1-t01-fail-a.pdf —
+    /// a /Link with /BS &lt;&lt; /W 2 &gt;&gt;, /Border [0 0 2] and NO /C —
+    /// at the scan's own 150 dpi:
+    ///
+    ///     pdftocairo  5973 inked px, black, bbox x81..626 y231..297
+    ///     ghostscript 5950 inked px, black, bbox x83..624 y233..295
+    ///     mutool         0
+    ///     excise         0
+    ///
+    /// Both drawing renderers stroke a black 2pt rectangle on the annotation
+    /// /Rect, matching /BS /W exactly. Two of three is a basis; the earlier
+    /// two-oracle reading that called Link a mere renderer split was taken at
+    /// 72 dpi WITHOUT Ghostscript, and adding the third opinion flipped it.
+    ///
+    /// The second half of the old concern is respected, and is why this keys on
+    /// PdfAnnotation.BorderWidth being NON-NULL rather than on its value: the
+    /// property is null when neither /Border nor /BS states a width. The
+    /// overwhelming majority of links either omit /Border or set [0 0 0], and
+    /// none of those draw anything here. Only a file that explicitly asks for a
+    /// visible border gets one — which is also the only case the oracles were
+    /// observed drawing.
+    /// </remarks>
+    private void RenderLinkDefault(Excise.Core.Document.PdfAnnotation annot, SKRect rect)
+    {
+        if (annot.BorderWidth is not { } width || width <= 0)
+            return;
+
+        // The border must FIT the rectangle it borders. This is not a tidiness
+        // rule — it is where the oracles part company, measured at 150 dpi:
+        //
+        //   isartor-6-6-1-t01-fail-a   /Border [0 0 2]   on a 260x30 rect
+        //       mutool 0, pdftocairo 5973, ghostscript 5950   -> 2 of 3 DRAW
+        //   pdf.js bug1552113          /Border [0 0 112] on a 150x20 rect
+        //       mutool 0, pdftocairo 45659, ghostscript 0     -> 1 of 3
+        //
+        // Ghostscript draws a sane border and refuses an absurd one, and that
+        // is the whole difference between the two cases. A 112pt border on a
+        // 20pt-tall annotation is not a border, it is a 45,000-pixel blue slab
+        // over the page — exactly the "producer writes a large /Border width"
+        // hazard that kept Link unimplemented in the first place. That concern
+        // was right; it just was not a reason to skip EVERY link.
+        //
+        // Half the smaller side is the limit: a stroke wider than that has
+        // already swallowed the annotation it is supposed to outline.
+        float limit = Math.Min(rect.Width, rect.Height) / 2f;
+        if (limit <= 0 || width > limit)
+        {
+            _options.Diagnostics?.Add(
+                $"Link border width {width} exceeds half the annotation's smaller side " +
+                $"({limit:0.#}); not drawn — it would cover the page rather than outline the link.");
+            return;
+        }
+
+        using var paint = new SKPaint
+        {
+            IsAntialias = _options.AntiAlias,
+            Style = SKPaintStyle.Stroke,
+            StrokeWidth = (float)width,
+        };
+
+        if (annot.Color is { } color)
+        {
+            var (r, g, b) = color;
+            paint.Color = RgbToColor(r, g, b);
+        }
+        else
+        {
+            // Both oracles draw black when /C is absent.
+            paint.Color = SKColors.Black;
+        }
+
+        _canvas.DrawRect(rect, paint);
+    }
+
+    /// <summary>
+    /// Sticky-note icon for a /Text annotation with no /AP (§12.5.6.4).
+    /// </summary>
+    /// <remarks>
+    /// All three reference renderers draw one, which is what makes this a
+    /// defect rather than a matter of taste — measured at 150 dpi on veraPDF
+    /// 6-3-3-t01-pass-a.pdf: mutool 495 inked px, pdftocairo 917, Ghostscript
+    /// 1388, excise 0.
+    ///
+    /// They emphatically do NOT agree on the ARTWORK: mutool draws black
+    /// strokes, pdftocairo a grey-green (186,189,182) fill, Ghostscript grey
+    /// plus black. So no attempt is made to reproduce any one of them. What
+    /// they agree on — and all this draws — is that a ~16pt marker appears at
+    /// the annotation's anchor point.
+    ///
+    /// That is the property that matters here: excise is a redaction tool, and
+    /// a note the reviewer never sees is a note they cannot decide about, while
+    /// its /Contents still ships to the recipient. Showing THAT one is present
+    /// is the job; reproducing Acrobat's icon is not.
+    /// </remarks>
+    private void RenderStickyNoteDefault(Excise.Core.Document.PdfAnnotation annot, SKRect rect)
+    {
+        var fill = annot.Color is { } c
+            ? RgbToColor(c.Item1, c.Item2, c.Item3)
+            : new SKColor(0xFF, 0xE1, 0x6B); // the usual note yellow
+
+        using var body = new SKPaint
+        {
+            IsAntialias = _options.AntiAlias,
+            Style = SKPaintStyle.Fill,
+            Color = fill,
+        };
+        using var border = new SKPaint
+        {
+            IsAntialias = _options.AntiAlias,
+            Style = SKPaintStyle.Stroke,
+            StrokeWidth = 1f,
+            Color = SKColors.Black,
+        };
+
+        var round = new SKRoundRect(rect, rect.Width * 0.15f, rect.Height * 0.15f);
+        _canvas.DrawRoundRect(round, body);
+        _canvas.DrawRoundRect(round, border);
+
+        // Two rules, so the marker reads as a note rather than a plain swatch.
+        float inset = rect.Width * 0.22f;
+        float y1 = rect.Top + rect.Height * 0.38f;
+        float y2 = rect.Top + rect.Height * 0.60f;
+        _canvas.DrawLine(rect.Left + inset, y1, rect.Right - inset, y1, border);
+        _canvas.DrawLine(rect.Left + inset, y2, rect.Right - inset, y2, border);
     }
 
     private void RenderShapeDefault(
