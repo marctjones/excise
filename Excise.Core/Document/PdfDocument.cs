@@ -1144,6 +1144,13 @@ public class PdfDocument : IDisposable
             // Decompress streams
             if (obj is PdfStream s && s.IsFiltered)
             {
+                // §7.3.8 makes every PDF stream an indirect object, so a
+                // conforming /DecodeParms << /JBIG2Globals n 0 R >> is ALWAYS
+                // a reference — resolve it before the filter pipeline runs, or
+                // the JBIG2 decoder never sees its shared symbol dictionary
+                // (#874).
+                ResolveJbig2GlobalsReferences(s);
+
                 try
                 {
                     _decompressor.Decompress(s);
@@ -1329,6 +1336,49 @@ public class PdfDocument : IDisposable
             Objects = objects,
             SlotByObjectNumber = slotByObjectNumber,
         };
+    }
+
+    // Guard against a hostile /JBIG2Globals reference cycle (an image whose
+    // globals point back at an object currently being materialized would
+    // otherwise recurse without limit). Keys are the TARGET object numbers of
+    // resolutions currently in flight. Touched only under _parseLock.
+    private readonly HashSet<int> _jbig2GlobalsResolutionsInFlight = new();
+
+    /// <summary>
+    /// Resolves an indirect <c>/DecodeParms /JBIG2Globals</c> reference on a
+    /// stream into the referenced <see cref="PdfStream"/>, in place, so the
+    /// /JBIG2Decode filter can hand the shared segments to the decoder (#874).
+    /// ISO 32000-2 §7.3.8 requires streams to be indirect objects, so on any
+    /// conforming file this entry is a <see cref="PdfReference"/>, never an
+    /// inline stream. Runs after the owning object has fully parsed, so the
+    /// re-entrant <see cref="GetObject(int)"/> seek cannot desync the shared
+    /// lexer for the object being read.
+    /// </summary>
+    private void ResolveJbig2GlobalsReferences(PdfStream stream)
+    {
+        foreach (var parms in stream.DecodeParams)
+        {
+            if (parms?.GetOptional("JBIG2Globals") is not PdfReference reference)
+                continue;
+
+            if (!_jbig2GlobalsResolutionsInFlight.Add(reference.ObjectNum))
+                continue;
+
+            try
+            {
+                if (GetObject(reference.ObjectNum) is PdfStream globals)
+                    parms["JBIG2Globals"] = globals;
+            }
+            catch (Exception __ex) when (__ex is not OutOfMemoryException)
+            {
+                // Leave the reference unresolved; the JBIG2 decode then fails
+                // the same way it would on a file with no usable globals.
+            }
+            finally
+            {
+                _jbig2GlobalsResolutionsInFlight.Remove(reference.ObjectNum);
+            }
+        }
     }
 
     /// <summary>

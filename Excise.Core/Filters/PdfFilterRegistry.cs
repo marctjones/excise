@@ -162,25 +162,28 @@ internal sealed class Jbig2FilterDecoder : AliasedFilterDecoder
         }
     }
 
+    // The /JBIG2Globals entry is written as an indirect reference on every
+    // conforming file (§7.3.8 makes streams indirect objects); PdfDocument
+    // resolves it to the referenced PdfStream before the filter pipeline runs
+    // (#874). A still-unresolved reference means no document context was
+    // available, and the decode proceeds without globals as before.
     private static byte[]? TryGetGlobals(PdfDictionary? decodeParms)
     {
         if (decodeParms?.GetOptional("JBIG2Globals") is not PdfStream globals)
             return null;
 
-        // Prefer DECODED bytes. EncodedData is decrypted but still compressed,
-        // so a Flate'd globals stream would have fed the segment parser
-        // garbage. DecodedData returns EncodedData unchanged when the stream
-        // carries no filter (the common case — globals are usually raw), and
-        // throws only when a filtered stream has not been decoded yet, which
-        // is exactly when EncodedData is the better of two bad options.
-        try
-        {
-            return globals.DecodedData;
-        }
-        catch (InvalidOperationException)
-        {
-            return globals.EncodedData;
-        }
+        // A globals stream may itself be Flate-compressed. Prefer the DECODED
+        // bytes: EncodedData is decrypted but still compressed, so a Flate'd
+        // globals stream would feed the segment parser garbage.
+        //
+        // Checked with a predicate rather than by catching the exception
+        // DecodedData throws on a filtered-but-undecoded stream — an explicit
+        // condition beats exception-driven control flow, and PdfDocument
+        // decodes every filtered stream it materialises so the fallback is
+        // rare.
+        return globals.IsFiltered && !globals.IsDecoded
+            ? globals.EncodedData
+            : globals.DecodedData;
     }
 
     private static bool IsExpectedCodecFallback(Exception ex)
