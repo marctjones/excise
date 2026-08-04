@@ -154,6 +154,41 @@ public partial class PdfViewerControl
     internal int ContinuousRenderCacheHitCount { get; private set; }
     internal int ContinuousRenderCoalescedRequestCount { get; private set; }
 
+    // #855 diagnostics. A continuous-render wait that fails on CI reports only
+    // "did not render within Ns", which cannot distinguish "genuinely slow" from
+    // "waiting on something that will never arrive" — the two have completely
+    // different fixes, and the first read of #855 guessed wrong. These make the
+    // NEXT failure legible from the CI log alone (no Windows machine required).
+    internal int ContinuousRenderCompletedCount { get; private set; }
+    internal long ContinuousRenderWallMs { get; private set; }
+    internal int ContinuousRequiredCellCount => _continuousRequiredKeys.Count;
+    internal int ContinuousInFlightCount => _continuousInFlight.Count;
+    internal int ContinuousEffectiveRenderDpi => ContinuousRenderDpi;
+
+    /// <summary>
+    /// One-line snapshot of the continuous render pipeline, for embedding in a
+    /// test's timeout message (#855). Names the two things a wall-clock timeout
+    /// cannot tell apart: how much work the pass demanded (cells/inflight) and
+    /// how much of it actually ran (starts/completed/wall).
+    /// </summary>
+    internal string ContinuousDiagnostics()
+    {
+        var vp = _continuousScrollViewer?.Viewport ?? default;
+        var off = _continuousScrollViewer?.Offset ?? default;
+        int slots = _continuousSlots?.Count ?? -1;
+        long perCell = ContinuousRenderCompletedCount > 0
+            ? ContinuousRenderWallMs / ContinuousRenderCompletedCount
+            : -1;
+        return $"cellsRequired={ContinuousRequiredCellCount} inFlight={ContinuousInFlightCount} " +
+               $"starts={ContinuousRenderStartCount} completed={ContinuousRenderCompletedCount} " +
+               $"cacheHits={ContinuousRenderCacheHitCount} coalesced={ContinuousRenderCoalescedRequestCount} " +
+               $"cancelled={ContinuousRenderCancellationCount} renderWallMs={ContinuousRenderWallMs} " +
+               $"perCellMs={perCell} gate={_continuousRenderGate.CurrentCount} " +
+               $"passScheduled={_continuousRenderPassScheduled} detached={_continuousDetached} " +
+               $"viewMode={ViewMode} zoom={ZoomLevel:F2} dpi={ContinuousEffectiveRenderDpi} " +
+               $"viewport={vp.Width:F0}x{vp.Height:F0} offsetY={off.Y:F0} slots={slots}";
+    }
+
     private void InitializeContinuous()
     {
         _continuousScrollViewer = this.FindControl<ScrollViewer>("ContinuousScrollViewer");
@@ -785,55 +820,124 @@ public partial class PdfViewerControl
         // new one is ready — no blank strip (#848), and one bitmap means no seams.
         foreach (var (slot, cells) in perSlot)
         {
+            // #855: schedule the page's missing cells as ONE batch. A cell render
+            // costs a WHOLE-page content-stream execution (RenderOptions.ClipRect
+            // only shrinks the output bitmap and sets a canvas clip — every
+            // operator still runs), so scheduling them individually made first
+            // paint cost cells x full-page-render: 20 renders of the same page for
+            // a 1280x900 window. See RenderContinuousCellsAsync.
+            var pending = new List<(GridCell Cell, ContinuousTileKey Key)>();
             foreach (var (cell, key) in cells)
             {
                 if (TryGetContinuousCached(key, out var c) && c != null) continue;
-                _ = RenderContinuousCellAsync(slot, cell, key);
+                if (_continuousInFlight.Contains(key))
+                {
+                    ContinuousRenderCoalescedRequestCount++;
+                    continue;
+                }
+                pending.Add((cell, key));
             }
+            if (pending.Count > 0)
+                _ = RenderContinuousCellsAsync(slot, pending);
             RecomposeSlot(slot);
         }
     }
 
-    private async Task RenderContinuousCellAsync(PdfPageSlot slot, GridCell cell, ContinuousTileKey key)
+    /// <summary>
+    /// Renders every missing grid cell of one page in a SINGLE render pass and
+    /// slices the result into the per-cell cache (#855).
+    ///
+    /// WHY THIS IS NOT A LOOP OVER CELLS
+    /// ---------------------------------
+    /// <see cref="RenderOptions.ClipRect"/> makes a render's OUTPUT smaller; it
+    /// does not make the render cheaper. <c>RenderPage</c> maps the clip to device
+    /// bounds, allocates that bitmap and then executes the entire content stream
+    /// against it. So a cell costs what the whole page costs. Under the #848 grid
+    /// the first paint of a page needs its whole visible band — 20 cells for a
+    /// 1280x900 window at 100% — which meant twenty full renders of the same page
+    /// to produce one page. Measured on the ACC compensation report (page 1,
+    /// 120 DPI, ~1.9s per full render): first paint took 35-50s, which is what
+    /// made the #855 CI gate a coin flip against its 60s budget.
+    ///
+    /// Batching does not weaken the #848 guarantee: cells are still keyed, cached
+    /// and composited exactly as before, so a cached cell is still always correct
+    /// for its grid position. The slice offsets are the SAME cumulative-floor
+    /// arithmetic <see cref="ComputeMosaic"/> uses to lay the cells back out, so
+    /// the composite is a contiguous crop of one render rather than a mosaic of
+    /// independently-clipped ones — if anything less seam-prone.
+    /// </summary>
+    private async Task RenderContinuousCellsAsync(
+        PdfPageSlot slot, List<(GridCell Cell, ContinuousTileKey Key)> batch)
     {
-        if (_continuousDetached) return;
-        // This is fire-and-forget (`_ = RenderContinuousCellAsync(...)`). An
-        // unobserved exception here — e.g. the document being disposed mid-render
-        // during teardown — must never surface: it would destabilise the whole
+        if (_continuousDetached || batch.Count == 0) return;
+        // Fire-and-forget (`_ = RenderContinuousCellsAsync(...)`). An unobserved
+        // exception here — e.g. the document being disposed mid-render during
+        // teardown — must never surface: it would destabilise the whole
         // dispatcher (observed as cross-test dispatcher-pump timeouts / null
         // ItemsSource). Everything below the in-flight bookkeeping is guarded.
         var doc = Document;
         if (doc == null || slot.PageNumber < 1 || slot.PageNumber > doc.PageCount) return;
 
-        ContinuousTileRequest request;
         int pageNumber = slot.PageNumber;
-        int dpi = key.Dpi;
+        int dpi = batch[0].Key.Dpi;
+        double zoom = ZoomLevel;
+        if (zoom <= 0) return;
+        double pxPerDip = dpi / (96.0 * zoom);
+
+        var claimed = new List<(GridCell Cell, ContinuousTileKey Key)>(batch.Count);
         Excise.Core.Document.PdfPage page;
+        SKRect clip;
+        double bandXDip, bandYDip;
         try
         {
-            // Cache hit — nothing to render; a recompose will pick it up.
-            if (TryGetContinuousCached(key, out var cached) && cached != null)
+            foreach (var entry in batch)
             {
-                ContinuousRenderCacheHitCount++;
+                if (TryGetContinuousCached(entry.Key, out var cached) && cached != null)
+                {
+                    ContinuousRenderCacheHitCount++;
+                    continue;
+                }
+                if (!_continuousInFlight.Add(entry.Key))
+                {
+                    ContinuousRenderCoalescedRequestCount++;
+                    continue;
+                }
+                claimed.Add(entry);
+            }
+            if (claimed.Count == 0)
+            {
                 RecomposeSlot(slot);
                 return;
             }
 
-            // Coalesce duplicate requests for the same cell.
-            if (!_continuousInFlight.Add(key))
+            // Bounding box of the claimed cells, in page-local DIPs. The cells of
+            // one pass form a rectangular block, so this is normally exactly their
+            // union; when earlier cells are already cached it can cover a little
+            // more, which costs nothing — it is one render either way.
+            bandXDip = double.MaxValue; bandYDip = double.MaxValue;
+            double bandRight = 0, bandBottom = 0;
+            foreach (var (cell, _) in claimed)
             {
-                ContinuousRenderCoalescedRequestCount++;
-                return;
+                bandXDip = Math.Min(bandXDip, cell.XDip);
+                bandYDip = Math.Min(bandYDip, cell.YDip);
+                bandRight = Math.Max(bandRight, cell.XDip + cell.WidthDip);
+                bandBottom = Math.Max(bandBottom, cell.YDip + cell.HeightDip);
             }
 
             page = doc.GetPage(pageNumber);
             int rotation = page.Rotation;
             var contentBox = SkiaRenderer.ResolveEffectiveRenderBox(page).Normalize();
-            request = CellToRequest(cell, ZoomLevel, rotation, contentBox);
+            // The band is mapped to a content-space clip by the same
+            // (rotation-aware) helper a single cell uses — a batch of one is
+            // byte-for-byte the render the per-cell path used to issue.
+            var bandCell = new GridCell(
+                claimed[0].Cell.Col, claimed[0].Cell.Row,
+                bandXDip, bandYDip, bandRight - bandXDip, bandBottom - bandYDip);
+            clip = CellToRequest(bandCell, zoom, rotation, contentBox).ClipRect;
         }
         catch
         {
-            _continuousInFlight.Remove(key);
+            foreach (var (_, key) in claimed) _continuousInFlight.Remove(key);
             return;
         }
 
@@ -844,37 +948,47 @@ public partial class PdfViewerControl
             await _continuousRenderGate.WaitAsync(token);
             try
             {
-                // Scrolled past this cell while it waited for the gate — drop it.
-                if (token.IsCancellationRequested || !_continuousRequiredKeys.Contains(key))
+                // Scrolled past while this batch waited for the gate — drop the
+                // cells that are no longer required. A batch whose cells are ALL
+                // stale is dropped without rendering (the cheap skip that keeps
+                // rapid scrolling from rendering every intermediate viewport).
+                if (token.IsCancellationRequested)
                 {
-                    ContinuousRenderCancellationCount++;
+                    ContinuousRenderCancellationCount += claimed.Count;
                     return;
                 }
+                int stale = claimed.RemoveAll(e => !_continuousRequiredKeys.Contains(e.Key));
+                ContinuousRenderCancellationCount += stale;
+                if (claimed.Count == 0) return;
 
                 ContinuousRenderStartCount++;
+                var renderWatch = System.Diagnostics.Stopwatch.StartNew();
                 var skBitmap = await Task.Run(() =>
                 {
                     token.ThrowIfCancellationRequested();
-                    // A fresh renderer per cell: SkiaRenderer carries per-render
-                    // instance state and is not reentrant, and the grid renders
-                    // several cells around the viewport concurrently.
+                    // A fresh renderer per pass: SkiaRenderer carries per-render
+                    // instance state and is not reentrant, and several pages'
+                    // bands may render concurrently.
                     var renderer = new SkiaRenderer();
                     return renderer.RenderPage(page, new RenderOptions
                     {
                         Dpi = dpi,
-                        ClipRect = request.ClipRect
+                        ClipRect = clip
                     });
                 }, token);
+                renderWatch.Stop();
+                ContinuousRenderCompletedCount++;
+                ContinuousRenderWallMs += renderWatch.ElapsedMilliseconds;
 
                 try
                 {
-                    if (token.IsCancellationRequested || !_continuousRequiredKeys.Contains(key))
-                        return;
-                    var bitmap = Imaging.SkiaInterop.ToAvaloniaBitmap(skBitmap);
-                    if (bitmap != null)
+                    if (token.IsCancellationRequested) return;
+                    int cached = SliceBandIntoCells(skBitmap, claimed, bandXDip, bandYDip, pxPerDip);
+                    if (cached > 0)
                     {
-                        AddToContinuousCache(key, bitmap);
-                        Trace($"CellRendered page={pageNumber} col={cell.Col} row={cell.Row} tileDip={cell.WidthDip:F0}x{cell.HeightDip:F0} bmpPx={bitmap.PixelSize.Width}x{bitmap.PixelSize.Height} dpi={dpi} zoom={ZoomLevel:F3}");
+                        Trace($"BandRendered page={pageNumber} cells={cached} " +
+                              $"band={bandXDip:F0},{bandYDip:F0} bmpPx={skBitmap?.Width}x{skBitmap?.Height} " +
+                              $"dpi={dpi} zoom={zoom:F3} ms={renderWatch.ElapsedMilliseconds}");
                         RecomposeSlot(slot);
                     }
                 }
@@ -894,12 +1008,71 @@ public partial class PdfViewerControl
         }
         catch
         {
-            // A single bad cell must not break the reading scroll.
+            // A single bad band must not break the reading scroll.
         }
         finally
         {
-            _continuousInFlight.Remove(key);
+            foreach (var (_, key) in claimed) _continuousInFlight.Remove(key);
         }
+    }
+
+    /// <summary>
+    /// Cuts the band bitmap into its constituent grid cells and caches each under
+    /// its own key. Offsets are cumulative sums of the FLOORED per-cell pixel
+    /// sizes — identical to <see cref="ComputeMosaic"/>'s layout — so slicing and
+    /// re-compositing round-trips the band exactly. Returns how many cells were
+    /// cached; 0 means the band did not match the expected geometry and the caller
+    /// should leave the cells to be rendered individually next pass.
+    /// </summary>
+    private int SliceBandIntoCells(
+        SKBitmap? band,
+        List<(GridCell Cell, ContinuousTileKey Key)> cells,
+        double bandXDip, double bandYDip, double pxPerDip)
+    {
+        if (band == null || band.Width <= 0 || band.Height <= 0) return 0;
+
+        // Column/row pixel offsets within the band, from the same floored widths
+        // the compositor lays cells out with.
+        var colX = new SortedDictionary<int, int>();
+        var rowY = new SortedDictionary<int, int>();
+        var colW = new SortedDictionary<int, int>();
+        var rowH = new SortedDictionary<int, int>();
+        foreach (var (cell, _) in cells)
+        {
+            colW[cell.Col] = Math.Max(1, (int)Math.Floor(cell.WidthDip * pxPerDip));
+            rowH[cell.Row] = Math.Max(1, (int)Math.Floor(cell.HeightDip * pxPerDip));
+        }
+        int ax = 0;
+        foreach (var kv in colW) { colX[kv.Key] = ax; ax += kv.Value; }
+        int ay = 0;
+        foreach (var kv in rowH) { rowY[kv.Key] = ay; ay += kv.Value; }
+
+        // The band render is ceil(bandDip * pxPerDip) px; the floored cell sums are
+        // at most one pixel per row/column short of that. Anything further apart
+        // means the geometry assumption does not hold (an unexpected clamp inside
+        // the renderer) — refuse to slice rather than cache misaligned tiles.
+        if (ax > band.Width || ay > band.Height ||
+            band.Width - ax > colW.Count + 1 || band.Height - ay > rowH.Count + 1)
+            return 0;
+
+        int cachedCount = 0;
+        foreach (var (cell, key) in cells)
+        {
+            int x = colX[cell.Col], y = rowY[cell.Row];
+            int w = colW[cell.Col], h = rowH[cell.Row];
+            if (x + w > band.Width) w = band.Width - x;
+            if (y + h > band.Height) h = band.Height - y;
+            if (w <= 0 || h <= 0) continue;
+
+            using var sub = new SKBitmap();
+            if (!band.ExtractSubset(sub, new SKRectI(x, y, x + w, y + h))) continue;
+            var bitmap = Imaging.SkiaInterop.ToAvaloniaBitmap(sub);
+            if (bitmap == null) continue;
+            AddToContinuousCache(key, bitmap);
+            cachedCount++;
+        }
+
+        return cachedCount;
     }
 
     internal static int FindTopVisibleContinuousPage(IReadOnlyList<PdfPageSlot> slots, double offsetY)
