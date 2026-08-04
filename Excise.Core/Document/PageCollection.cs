@@ -125,6 +125,26 @@ public class PageCollection : IReadOnlyList<PdfPage>
 
             // This is a Pages node
             var kids = node.GetArrayOrNull("Kids");
+
+            // A leaf carrying the WRONG /Type. pdfium's bad_page_type.pdf gives
+            // its second page /Type /Template, so the `type == "Page"` test
+            // above dropped it and the document reported 1 page where qpdf,
+            // pdfinfo and mutool all report 2 — losing an intact text page and
+            // six images.
+            //
+            // The test is deliberately NOT the simpler "no /Kids means leaf":
+            // an empty or malformed /Pages node has no /Kids either, and
+            // promoting those would manufacture phantom pages across a
+            // 3,915-document corpus. Requiring /Type to be present-and-not-
+            // /Pages keeps the recovery to nodes that actually claim to be
+            // something other than an internal node.
+            if (kids == null && type != null && type != "Pages")
+            {
+                _malformedPageTree = true;
+                _pages.Add(new PdfPage(_document, node, pageNumber + 1));
+                return 1;
+            }
+
             if (kids == null)
                 return 0;
 

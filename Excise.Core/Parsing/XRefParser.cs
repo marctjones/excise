@@ -16,8 +16,32 @@ public class XRefParser
     private const int XRefRepairTailSearchSize = 1024 * 1024;
     private const int XRefNearbyOffsetRepairWindow = 128;
     private const long XRefReconstructionSizeLimit = 64L * 1024 * 1024;
+    /// <summary>
+    /// Matches an indirect object header at the start of a line.
+    /// </summary>
+    /// <remarks>
+    /// The anchor is <c>(?&lt;![^\r\n])</c> — "at the start of input, or directly
+    /// after a CR or an LF" — and NOT <c>(?m)^</c>.
+    ///
+    /// .NET's multiline <c>^</c> matches only at the start of input and after
+    /// <b>\n</b>. It never matches after a lone <b>\r</b>. Classic Mac-style
+    /// CR-only line endings are still emitted by real producers, and on such a
+    /// file this regex found essentially nothing: on pdfium's
+    /// linearized_bug_1055.pdf (143 lone CRs, 51 CRLFs) it matched
+    /// <b>1 of 37</b> object headers.
+    ///
+    /// This regex is the sole engine behind BOTH xref reconstruction and
+    /// offset repair, so the failure was silent and total in exactly the case
+    /// those exist for. linearized_bug_1055's xref is 5 bytes early on nearly
+    /// every entry (claims 1804 for object 36, which really starts at 1809 —
+    /// the offsets land on the "d" of the preceding "endobj"), and
+    /// RepairInvalidUncompressedXRefOffsets DID detect that and call the
+    /// scanner. The scanner then patched nothing, because it could not see the
+    /// headers. Found by root-causing #884; the initial hypothesis — that the
+    /// repair path was never reached — was wrong.
+    /// </remarks>
     private static readonly Regex IndirectObjectHeaderRegex = new(
-        @"(?m)^[\t\n\f\r ]*(\d{1,10})[\t\n\f\r ]+(\d{1,5})[\t\n\f\r ]+obj\b",
+        @"(?<![^\r\n])[\t\n\f\r ]*(\d{1,10})[\t\n\f\r ]+(\d{1,5})[\t\n\f\r ]+obj\b",
         RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
     /// <summary>

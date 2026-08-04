@@ -11,6 +11,27 @@ internal sealed class LzwFilterDecoder : AliasedFilterDecoder
 
     public override byte[] Decode(byte[] data, PdfFilterDecodeContext context)
     {
+        // /EarlyChange (§7.4.4.3). The PDF DEFAULT IS 1: the code width grows
+        // one code EARLIER than the plain LZW rule. This decoder hard-coded the
+        // EarlyChange=0 behaviour and never read the parameter at all, so every
+        // conforming LZW stream desynchronised as soon as the table reached a
+        // width boundary.
+        //
+        // Measured on the isartor 6.1.10 fixtures' real 2700-byte stream: the
+        // 0 behaviour throws "Invalid LZW code: 704" after emitting 359 of 5805
+        // bytes; the 1 behaviour decodes all 5805 cleanly. Two corpus pages
+        // rendered blank because of it — the same 215x27 image delivered once
+        // as an Image XObject and once as an inline image, which is why they
+        // looked like two unrelated clusters (#887).
+        //
+        // Reach, measured rather than assumed: only 16 of ~3,900 corpus files
+        // use LZW at all (PDF/A forbids it), so this is not a corpus-wide win.
+        // It matters for older scanned real-world documents, which is exactly
+        // the material this tool is pointed at.
+        int earlyChange = context.DecodeParms?.GetInt("EarlyChange", 1) ?? 1;
+        if (earlyChange is not (0 or 1))
+            earlyChange = 1;
+
         var output = new List<byte>();
         var table = new Dictionary<int, byte[]>();
 
@@ -72,7 +93,7 @@ internal sealed class LzwFilterDecoder : AliasedFilterDecoder
                 table[nextCode] = newEntry;
                 nextCode++;
 
-                if (nextCode >= (1 << codeSize) && codeSize < 12)
+                if (nextCode + earlyChange >= (1 << codeSize) && codeSize < 12)
                     codeSize++;
             }
 
