@@ -117,6 +117,84 @@ internal sealed class CcittFaxFilterDecoder : AliasedFilterDecoder
     }
 
     /// <summary>
+    /// Decode <paramref name="planeCount"/> consecutive Group 4 (MMR) images
+    /// of <paramref name="columns"/>x<paramref name="rows"/> from a single
+    /// bit stream, each terminated by an EOFB code.
+    ///
+    /// This is the ISO 14492 Annex C.5 gray-scale layout used by JBIG2
+    /// halftone regions with GSMMR=1: the bitplanes are NOT one side-by-side
+    /// collective bitmap; they are decoded sequentially from one MMR stream
+    /// with EOFB separating the planes (#874).
+    ///
+    /// Unlike the /CCITTFaxDecode filter entry point, this THROWS on a decode
+    /// failure instead of returning empty or zero-padded output: a JBIG2 gray
+    /// plane that comes back blank silently renders a blank halftone region
+    /// with no diagnostic at all.
+    /// </summary>
+    /// <returns>
+    /// One packed bitmap per plane, in decode order, 1 = black, MSB-first,
+    /// rows padded to byte boundaries.
+    /// </returns>
+    internal byte[][] DecodeSequentialGroup4Planes(byte[] data, int columns, int rows, int planeCount)
+    {
+        if (columns <= 0 || rows <= 0 || planeCount <= 0)
+            throw new ArgumentException("Invalid JBIG2 MMR gray-plane dimensions");
+
+        var reader = new CcittBitReader(data);
+        var bytesPerRow = (columns + 7) / 8;
+        var planes = new byte[planeCount][];
+
+        for (int plane = 0; plane < planeCount; plane++)
+        {
+            var output = new List<byte>(bytesPerRow * rows);
+            // Each plane is an independent T.6 coding: the reference line
+            // resets to all-white at the start of every plane.
+            bool[] refRow = new bool[columns];
+            var twoDimensionalState = new CcittTwoDimensionalState();
+
+            for (int y = 0; y < rows; y++)
+            {
+                int bitsBefore = reader.Position;
+                var row = DecodeGroup4Row(reader, refRow, columns, twoDimensionalState);
+                if (row == null || reader.Position == bitsBefore)
+                    throw new InvalidOperationException(
+                        $"JBIG2 MMR gray-scale plane {plane} of {planeCount} truncated at row {y} of {rows}.");
+
+                AppendRowToOutput(output, row, bytesPerRow, blackIs1: true);
+                refRow = row;
+            }
+
+            planes[plane] = output.ToArray();
+
+            // EOFB separates the planes. Between planes its absence means the
+            // stream has desynced — decoding on would produce garbage with no
+            // signal, so fail loudly. After the final plane nothing further is
+            // read, so a producer that omits the trailing EOFB is harmless.
+            if (!TrySkipEofb(reader) && plane < planeCount - 1)
+                throw new InvalidOperationException(
+                    $"JBIG2 MMR gray-scale plane {plane} of {planeCount} is not terminated by EOFB.");
+
+            // Encoders pad after the EOFB so each plane starts byte-aligned.
+            // Those fill zeros are NOT distinguishable from code bits by the
+            // row decoder — four fill zeros followed by two V0 codes reads as
+            // one valid VR2 code, silently shifting every later row up by one
+            // (observed on pdf.js's bitmap-halftone-10bpp-mmr.pdf, #874).
+            // Consume the padding only when it is all zero, so a hypothetical
+            // encoder that packs planes bit-continuously still decodes.
+            SkipZeroFillToByteBoundary(reader);
+        }
+
+        return planes;
+    }
+
+    private static void SkipZeroFillToByteBoundary(CcittBitReader reader)
+    {
+        int fillBits = (8 - (reader.Position % 8)) % 8;
+        if (fillBits > 0 && reader.PeekBits(fillBits) == 0)
+            reader.ReadBits(fillBits);
+    }
+
+    /// <summary>
     /// Decode a single Group 4 row using 2D MMR encoding.
     /// </summary>
     private bool[]? DecodeGroup4Row(
