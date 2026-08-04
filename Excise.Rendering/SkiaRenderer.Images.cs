@@ -47,7 +47,29 @@ internal partial class RenderContext
         {
             var bitmap = GetOrDecodeImageBitmap(imageStream, width, height, bitsPerComponent, colorSpace);
             if (bitmap == null)
+            {
+                // The single common exit for EVERY image that fails to produce
+                // a bitmap, and it used to be silent.
+                //
+                // #878's guard made the RAW-SAMPLE path announce itself, but a
+                // codec path (DCTDecode / JPX) fails earlier and never reaches
+                // it — pdf.js issue18042.pdf declares a 7300x7600 DeviceRGB
+                // /DCTDecode image whose stream is FOUR BYTES, so the JPEG
+                // decode simply returns null and four pages rendered blank
+                // with nothing anywhere saying why.
+                //
+                // Drawing nothing is the RIGHT behaviour here and is not being
+                // changed: pdftocairo also renders it blank ("Could not find
+                // start of jpeg data"), while mutool fills the image area with
+                // a SOLID BLACK BOX. excise must not copy mutool — a black
+                // rectangle where an undecodable image was is indistinguishable
+                // from a successful redaction, which is the precise hazard #874
+                // and #878 exist to prevent. So: same pixels, but say so.
+                _options.Diagnostics?.Add(
+                    $"Image XObject produced no bitmap ({DescribeFilters(imageStream)}, " +
+                    $"{width}x{height}, {bitsPerComponent} bpc, {colorSpace}); nothing drawn.");
                 return;
+            }
 
             // Draw the image at unit square (0,0)-(1,1), the CTM handles positioning
             _canvas.Save();
