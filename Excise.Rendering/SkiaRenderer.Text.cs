@@ -435,7 +435,7 @@ internal partial class RenderContext
             _embeddedRawType1FontDicts.Add(fontDict);
         _embeddedTypefaceByteToGlyph[fontDict] = cffByteToGlyph
             ?? type1ByteToGlyph
-            ?? ResolveByteCodeCmap(typeface, fontDict, toUnicodeMap);
+            ?? ResolveByteCodeCmap(typeface, fontDict, toUnicodeMap, fontBytes, descriptor);
         _embeddedCffCidToGlyph[fontDict] = cffCidToGlyph;
         return typeface;
     }
@@ -773,22 +773,53 @@ internal partial class RenderContext
     /// Skia's shaper can't read their cmap, and pre-compute the
     /// byte→glyphId lookup once.
     ///
-    /// We probe Skia first: if <c>SKFont.GetGlyph((int)c)</c> resolves
-    /// common Unicode codepoints to real glyphs, the font has Unicode
-    /// coverage Skia can shape and we don't need the workaround. Otherwise
-    /// we read any format-0 subtable from the cmap. Returns null when no
-    /// override is needed (the common case for modern Type 0 / CID fonts
-    /// with Identity-H or Unicode-mapped cmaps).
+    /// Two independent sources, handled differently:
+    ///
+    /// <list type="bullet">
+    /// <item><b>format-0</b> (<see cref="CmapFormat0Table"/>): we probe Skia
+    /// first — if <c>SKFont.GetGlyph((int)c)</c> resolves common ASCII
+    /// codepoints to real glyphs, Skia's own shaper already reads this font's
+    /// cmap and the format-0 override would be redundant (or, for a genuine
+    /// Unicode cmap, wrong).</item>
+    /// <item><b>symbolic (3,0)/(1,0) format 4/6/12</b>
+    /// (<see cref="TryResolveSymbolicByteCmap"/>, #891): trusted
+    /// UNCONDITIONALLY once the symbolic-flag gate inside it passes — the
+    /// probe above is not just unnecessary here, it is actively wrong.
+    /// FreeType/Skia apply the SAME <c>0xF000|code</c> Microsoft-Symbol
+    /// convention internally when resolving an ASCII probe codepoint against
+    /// a (3,0) cmap, so <c>probe.GetGlyph('A')</c> can spuriously succeed
+    /// against the very table we just parsed — even though the PDF's actual
+    /// content-stream codes decode (via <c>/Differences</c> names outside the
+    /// AGL) to <c>'\0'</c>, which Skia cannot shape at all. Trusting the probe
+    /// here silently discards a correct symbolic byte map and reintroduces
+    /// the blank-page bug for exactly the fonts #891 exists to fix (measured
+    /// against pdf.js's bug1151216.pdf, whose /Differences range densely
+    /// covers codes 1-65 — including 0x41 'A' — so the probe's coincidence
+    /// rate is high, unlike bug1027533.pdf's sparse code list which happens
+    /// to miss every probe character).</item>
+    /// </list>
+    ///
+    /// Returns null when no override is needed (the common case for modern
+    /// Type 0 / CID fonts with Identity-H or Unicode-mapped cmaps).
     /// </summary>
     private static ushort[]? ResolveByteCodeCmap(
         SKTypeface typeface,
         Excise.Core.Primitives.PdfDictionary? fontDict,
-        IReadOnlyDictionary<int, string>? toUnicodeMap)
+        IReadOnlyDictionary<int, string>? toUnicodeMap,
+        byte[]? fontBytes,
+        Excise.Core.Primitives.PdfDictionary? descriptor)
     {
         // Type0 (CID) fonts go through a separate draw path that already
         // walks bytes 2 at a time and resolves through the descendant font;
         // the format-0 workaround would double-encode.
         if (fontDict?.GetNameOrNull("Subtype") == "Type0") return null;
+
+        // Symbolic route first, and returned unconditionally when present —
+        // see the "actively wrong" note above for why the Skia-shaping probe
+        // below must never see this map.
+        var symbolicMap = TryResolveSymbolicByteCmap(fontBytes, descriptor);
+        if (symbolicMap != null)
+            return symbolicMap;
 
         var byteMap = CmapFormat0Table.TryRead(typeface);
         if (byteMap == null)
@@ -811,6 +842,59 @@ internal partial class RenderContext
         // No Unicode coverage Skia can see — fall back to the format-0
         // subtable if present.
         return byteMap;
+    }
+
+    /// <summary>
+    /// Byte→glyphId via a symbolic TrueType's OWN built-in cmap, for the case
+    /// <see cref="CmapFormat0Table"/> can't handle: a subtable in format 4 or 6
+    /// rather than format 0 (#891).
+    ///
+    /// ISO 32000-2 §9.6.6.4's symbolic-TrueType lookup order is: Microsoft-Symbol
+    /// <c>(3,0)</c> at <c>0xF000|code</c>, then bare code, then Macintosh
+    /// <c>(1,0)</c> at the bare code. <see cref="TrueTypeFontFile.GidForSymbolByte"/>
+    /// already implements exactly that order — this only supplies the two
+    /// preconditions that make it safe to use as a rendering byte→GID route:
+    ///
+    /// <list type="bullet">
+    /// <item>The font's <c>/FontDescriptor</c> must declare the SYMBOLIC flag
+    /// (bit 3, value 4). A (1,0)/(3,0) subtable on a NON-symbolic font is a
+    /// genuine Unicode map (see <c>issue215.pdf</c>: <c>(1,0)</c> format 6 maps
+    /// <c>0x41 → gid 28</c>, the small-caps glyph for 'A' — NOT a byte→GID
+    /// table). Treating that as byte→GID would silently draw the wrong glyph
+    /// instead of leaving a blank; do not remove this gate to "generalize" the
+    /// route to non-symbolic fonts.</item>
+    /// <item><paramref name="fontBytes"/> must be the raw sfnt bytes actually
+    /// loaded into <paramref name="typeface"/>'s slot — i.e. only reached for
+    /// FontFile2 / SFNT-wrapped FontFile3, never for raw CFF or Type1, both of
+    /// which already resolve their own byte maps before this is called.</item>
+    /// </list>
+    /// </summary>
+    // internal (not private): SymbolicByteCmapFallbackTests (#891) exercises this
+    // directly so the symbolic-flag gate is unit-tested without a full render.
+    internal static ushort[]? TryResolveSymbolicByteCmap(
+        byte[]? fontBytes,
+        Excise.Core.Primitives.PdfDictionary? descriptor)
+    {
+        if (fontBytes == null || fontBytes.Length == 0) return null;
+        if (descriptor == null) return null;
+        // Bit 3 (value 4): Symbolic. Gate strictly on this — see the hazard
+        // note above.
+        if ((descriptor.GetInt("Flags", 0) & 0x4) == 0) return null;
+
+        Excise.Core.Fonts.TrueTypeFontFile ttf;
+        try { ttf = Excise.Core.Fonts.TrueTypeFontFile.Parse(fontBytes); }
+        catch { return null; }
+
+        var map = new ushort[256];
+        bool any = false;
+        for (int code = 0; code < 256; code++)
+        {
+            int gid = ttf.GidForSymbolByte(code);
+            if (gid == 0) continue;
+            map[code] = (ushort)gid;
+            any = true;
+        }
+        return any ? map : null;
     }
 
     private static bool ToUnicodeMapsToMissingEmbeddedGlyphs(
