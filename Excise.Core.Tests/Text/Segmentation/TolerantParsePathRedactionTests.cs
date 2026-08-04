@@ -115,7 +115,90 @@ public class TolerantParsePathRedactionTests
         saved.Should().Contain(Keep);
     }
 
+    /// <summary>
+    /// A document whose catalog is only reachable because compressed objects are
+    /// resolved by object number rather than by the xref's index-in-stream
+    /// (#869). Before that, the catalog slot came back as a link annotation.
+    ///
+    /// The risk this pins is specific to resolving objects by a different key:
+    /// the document now opens, but if the page tree it opened onto were the
+    /// WRONG one, redaction would run over a page whose text is not the text in
+    /// the file, and report success.
+    /// </summary>
+    [Fact]
+    public void TruncatedObjStmIndex_DocumentOpens_AndRedactionStillRemovesTheText()
+    {
+        var pdf = Excise.Core.Tests.Parsing.MalformedXRefFixtures
+            .BuildNarrowXRefWidthObjStmPdf(ContentFor(Secret, Keep));
+
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
+        doc.PageCount.Should().Be(1);
+
+        doc.RedactText(Secret).Should().BeGreaterThan(0,
+            "the page reached through the recovered catalog must be the real one, " +
+            "with the real text on it");
+
+        var saved = Utf16AndAsciiOf(SaveToBytes(doc));
+        saved.Should().NotContain(Secret);
+        saved.Should().Contain(Keep, "unrelated text must survive");
+    }
+
+    /// <summary>
+    /// A truncated document that only opens because the assembled xref was
+    /// rebuilt by scanning for indirect object headers (#884).
+    ///
+    /// The specific risk: a reconstructed table can resolve objects the original
+    /// xref never pointed at, so "the document opens" is no evidence that the
+    /// object graph redaction walks is complete.
+    /// </summary>
+    [Fact]
+    public void ReconstructedXRef_DocumentOpens_AndRedactionStillRemovesTheText()
+    {
+        var pdf = Excise.Core.Tests.Parsing.MalformedXRefFixtures
+            .BuildTruncatedTerminalXRefPdf(ContentFor(Secret, Keep));
+
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
+        doc.PageCount.Should().Be(1);
+
+        doc.RedactText(Secret).Should().BeGreaterThan(0);
+
+        var saved = Utf16AndAsciiOf(SaveToBytes(doc));
+        saved.Should().NotContain(Secret);
+        saved.Should().Contain(Keep);
+    }
+
+    /// <summary>
+    /// A document carrying an unterminated stream, recovered by scanning to EOF
+    /// and cutting at the next object boundary (#884).
+    ///
+    /// This is the tolerant path with the most direct route to a leak, and the
+    /// test asserts the leak is closed rather than merely that the file opens: an
+    /// unbounded scan would fold the objects that FOLLOW into the recovered
+    /// stream, so text redaction removed from its own object would ship again
+    /// inside a stream no glyph pass ever examined.
+    /// </summary>
+    [Fact]
+    public void UnterminatedStream_DocumentOpens_AndRedactionStillRemovesTheText()
+    {
+        var pdf = Excise.Core.Tests.Parsing.MalformedXRefFixtures
+            .BuildUnterminatedHugeLengthStreamPdf(ContentFor(Secret, Keep));
+
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
+        doc.PageCount.Should().Be(1);
+
+        doc.RedactText(Secret).Should().BeGreaterThan(0);
+
+        var saved = Utf16AndAsciiOf(SaveToBytes(doc));
+        saved.Should().NotContain(Secret,
+            "the recovered stream is referenced from the page's resources, so it is " +
+            "written on save — anything it swallowed ships with the document");
+        saved.Should().Contain(Keep);
+    }
+
     // ---------------------------------------------------------------- helpers --
+
+    private static string ContentFor(string secret, string keep)
+        => $"BT /F1 24 Tf 72 700 Td ({secret}) Tj 0 -30 Td ({keep}) Tj ET";
 
     /// <summary>
     /// A minimal one-page PDF containing both strings, built longhand so the
