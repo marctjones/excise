@@ -120,33 +120,24 @@ internal static class Jbig2HalftoneRegionDecoder
         if (bitsPerValue == 0)
             return Array.Empty<Jbig2Bitmap>();
 
-        var collectiveBitmap = new Jbig2Bitmap(
-            checked(gridWidth * bitsPerValue),
-            gridHeight,
-            Jbig2MmrDecoder.Decode(payload.ToArray(), checked(gridWidth * bitsPerValue), gridHeight));
+        // ISO 14492 Annex C.5: with GSMMR=1 the gray-scale bitplanes are NOT
+        // one side-by-side collective bitmap (that layout belongs to symbol
+        // and pattern dictionary collective bitmaps). They are GSBPP separate
+        // GSW x GSH images decoded sequentially from a single MMR bit stream,
+        // each terminated by an EOFB code, most significant plane first
+        // (#874, fixture: pdf.js bitmap-halftone-10bpp-mmr.pdf).
+        var rawPlanes = new Ccitt.CcittFaxFilterDecoder()
+            .DecodeSequentialGroup4Planes(payload.ToArray(), gridWidth, gridHeight, bitsPerValue);
         var planes = new Jbig2Bitmap[bitsPerValue];
 
         for (int j = bitsPerValue - 1; j >= 0; j--)
         {
-            int sourceX = (bitsPerValue - 1 - j) * gridWidth;
-            planes[j] = ExtractPlane(collectiveBitmap, sourceX, gridWidth);
+            planes[j] = new Jbig2Bitmap(gridWidth, gridHeight, rawPlanes[bitsPerValue - 1 - j]);
             if (j < bitsPerValue - 1)
                 XorInto(planes[j], planes[j + 1]);
         }
 
         return planes;
-    }
-
-    private static Jbig2Bitmap ExtractPlane(Jbig2Bitmap collectiveBitmap, int sourceX, int width)
-    {
-        var plane = new Jbig2Bitmap(width, collectiveBitmap.Height);
-        for (int y = 0; y < collectiveBitmap.Height; y++)
-        {
-            for (int x = 0; x < width; x++)
-                plane.SetPixel(x, y, collectiveBitmap.GetPixel(sourceX + x, y));
-        }
-
-        return plane;
     }
 
     private static void RenderPatterns(

@@ -162,10 +162,23 @@ internal sealed class Jbig2FilterDecoder : AliasedFilterDecoder
         }
     }
 
+    // The /JBIG2Globals entry is written as an indirect reference on every
+    // conforming file (§7.3.8 makes streams indirect objects); PdfDocument
+    // resolves it to the referenced PdfStream before the filter pipeline runs
+    // (#874). A still-unresolved reference means no document context was
+    // available, and the decode proceeds without globals as before.
     private static byte[]? TryGetGlobals(PdfDictionary? decodeParms)
-        => decodeParms?.GetOptional("JBIG2Globals") is PdfStream globals
+    {
+        if (decodeParms?.GetOptional("JBIG2Globals") is not PdfStream globals)
+            return null;
+
+        // A globals stream may itself be Flate-compressed; use the decoded
+        // bytes when they are available (PdfDocument decodes every filtered
+        // stream it materializes).
+        return globals.IsFiltered && !globals.IsDecoded
             ? globals.EncodedData
-            : null;
+            : globals.DecodedData;
+    }
 
     private static bool IsExpectedCodecFallback(Exception ex)
         => ex is NotSupportedException
