@@ -95,8 +95,31 @@ internal static class CcittCapabilityClassifier
         else features.Add("Group3-2D");
 
         if (decodeParms.GetBool("BlackIs1", false)) features.Add("BlackIs1");
-        if (decodeParms.GetBool("EncodedByteAlign", false)) features.Add("EncodedByteAlign");
         if (decodeParms.GetBool("EndOfLine", false)) features.Add("EndOfLine");
+
+        // /EncodedByteAlign is honoured for GROUP 4 ONLY.
+        //
+        // The first version of this classifier reported it as supported
+        // unconditionally, and the classifier caught its own overclaim:
+        // DecodeGroup4 passes the flag through to a per-row AlignToByte(), while
+        // DecodeGroup3_1D and DecodeGroup3_2D do not even TAKE the parameter —
+        // it is dropped at the call site. So for every K >= 0, including the
+        // DEFAULT K = 0, the flag does nothing.
+        //
+        // Reported truthfully rather than fixed. A two-line fix mirroring Group
+        // 4 was written and REVERTED: no file in any of the four corpora sets
+        // this flag, so there is no witness, and a synthetic fixture could not
+        // be made to discriminate — TrySkipEOL already consumes the pad bits on
+        // anything simple enough to hand-author, which a mutation test proved by
+        // passing with the fix disabled. Shipping a decoder change that no test
+        // can distinguish from doing nothing is how unverified behaviour
+        // accumulates. Tracked in #893; implement when a real file needs it.
+        if (decodeParms.GetBool("EncodedByteAlign", false))
+        {
+            features.Add("EncodedByteAlign");
+            if (k >= 0)
+                unsupported.Add("EncodedByteAlign");
+        }
 
         var columns = decodeParms.GetInt("Columns", 1728);
         if (columns != 1728) features.Add($"Columns={columns}");
