@@ -302,3 +302,5 @@ Excise.Rendering.Tests.Differential.CffAccentedExtractionTests.AccentedGlyphFrom
 Excise.Rendering.Tests.Differential.RefusedImageDiagnosticTests.ShortSampleBuffer_ReportsTheShortfallAndTheFilter   # #878 diagnostic; moved to the pdf.js fixture after #874 fixed the pdfium one [requires: corpus:pdfjs]
 Excise.Rendering.Tests.Differential.RefusedImageDiagnosticTests.CodecFailure_ReportsThatNoBitmapWasProduced   # codec-path diagnostic pinned on issue18042's 4-byte JPEG [requires: corpus:pdfjs]
 Excise.Rendering.Tests.Differential.RefusedImageDiagnosticTests.AHealthyImage_ReportsNothing   # control: a good page must stay quiet [requires: corpus:pdfjs]
+Excise.Rendering.Tests.Fonts.GlyphNameToGidRouteTests.OpenTypeCffUnderFontFile2_ResolvesNamesThroughTheCffCharset   # #892: OTTO-under-/FontFile2 fixture from the gitignored pdf.js corpus [requires: corpus:pdfjs tool:mutool]
+Excise.Rendering.Tests.Fonts.GlyphNameToGidRouteTests.NumericGlyphNames_DrawTheGlyphsTheFontNames   # #892: /gNNNN fixture from the gitignored pdf.js corpus [requires: corpus:pdfjs]

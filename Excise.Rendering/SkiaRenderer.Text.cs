@@ -430,12 +430,48 @@ internal partial class RenderContext
             }
         }
 
+        // OpenType/CFF ("OTTO") arriving under /FontFile2 (#892).
+        //
+        // isCff is set only for /FontFile3 with Subtype Type1C or CIDFontType0C,
+        // so a CFF shipped inside an OpenType wrapper under /FontFile2 never
+        // reached the charset route and every /Differences name resolved to
+        // nothing. pdf.js issue215.pdf is exactly that: an OTTO container whose
+        // tables are CFF/GPOS/GSUB/OS-2/cmap/head/hhea/hmtx/maxp/name/post, with
+        // /Differences naming small-cap glyphs like /e.sc.
+        //
+        // It is NOT enough to set isCff: that path calls TryWrapCffAsOpenType,
+        // and this font is ALREADY SFNT-wrapped — Skia loads it as-is. What was
+        // missing is only the name→GID map, which comes from the CFF table's
+        // charset. So the container is left untouched and just the map is built.
+        //
+        // Deliberately does not consult the font's own cmap. issue215's (1,0)
+        // format-6 subtable is a UNICODE map, and #891 records why following it
+        // here would draw regular capitals where the PDF asks for small caps.
+        if (!isCff && cffByteToGlyph == null && codeToGlyphName != null &&
+            fontBytes.Length >= 4 &&
+            fontBytes[0] == (byte)'O' && fontBytes[1] == (byte)'T' &&
+            fontBytes[2] == (byte)'T' && fontBytes[3] == (byte)'O')
+        {
+            try
+            {
+                var cffTable = TryExtractSfntTable(fontBytes, "CFF ");
+                if (cffTable != null && CoreCffParser.Parse(cffTable) is { } otfCff)
+                    cffByteToGlyph = BuildCffSimpleByteToGlyph(otfCff, codeToGlyphName);
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException)
+            {
+                // A malformed CFF table leaves the map null and the font falls
+                // back exactly as before.
+            }
+        }
+
         _embeddedTypefaces[fontDict] = typeface;
         if (isType1)
             _embeddedRawType1FontDicts.Add(fontDict);
         _embeddedTypefaceByteToGlyph[fontDict] = cffByteToGlyph
             ?? type1ByteToGlyph
-            ?? ResolveByteCodeCmap(typeface, fontDict, toUnicodeMap, fontBytes, descriptor);
+            ?? ResolveByteCodeCmap(typeface, fontDict, toUnicodeMap, fontBytes, descriptor)
+            ?? TryBuildNumericGlyphNameMap(codeToGlyphName, typeface);
         _embeddedCffCidToGlyph[fontDict] = cffCidToGlyph;
         return typeface;
     }
@@ -1035,6 +1071,94 @@ internal partial class RenderContext
         };
 
         return Fonts.CffToOpenType.Wrap(cff, cffInfo.NumGlyphs, info);
+    }
+
+    /// <summary>
+    /// LAST-RESORT route for <c>/Differences</c> names of the form
+    /// <c>/gNNNN</c>, which subsetting tools emit to mean "glyph index NNNN".
+    /// </summary>
+    /// <remarks>
+    /// pdf.js issue13316_reduced.pdf names every glyph this way (/g5167,
+    /// /g11927, …). Those names are in no standard list, so every other route
+    /// resolved them to nothing and the page rendered blank — while excise
+    /// EXTRACTED the text correctly (开票通知单) from /ToUnicode. Extraction
+    /// right, rendering blank.
+    ///
+    /// Ordered dead last, after the CFF charset, the Type 1 route and the
+    /// font's own cmap, because it is a producer convention rather than a spec
+    /// feature: a font could legitimately contain a glyph NAMED "g5167" that is
+    /// not index 5167, and any real name table must win. It only ever fires
+    /// when nothing else resolved a single code.
+    ///
+    /// Bounds-checked against the typeface's glyph count, so a name naming an
+    /// index the font does not have contributes nothing rather than drawing an
+    /// arbitrary glyph.
+    ///
+    /// Worth noting mutool is WRONG on this file — it renders Latin "A C E F"
+    /// while extracting the correct Chinese. "Match the oracle" would have been
+    /// the wrong goal here; drawing the glyph the font actually names is right,
+    /// and a reviewer seeing plausible wrong text is worse served than one
+    /// seeing a blank.
+    /// </remarks>
+    private static ushort[]? TryBuildNumericGlyphNameMap(string?[]? codeToGlyphName, SKTypeface typeface)
+    {
+        if (codeToGlyphName == null) return null;
+
+        int glyphCount;
+        try { glyphCount = typeface.GlyphCount; }
+        catch (Exception ex) when (ex is not OutOfMemoryException) { return null; }
+        if (glyphCount <= 0) return null;
+
+        var map = new ushort[256];
+        var mapped = 0;
+        for (int code = 0; code < map.Length; code++)
+        {
+            var name = codeToGlyphName[code];
+            if (string.IsNullOrEmpty(name) || name.Length < 2 || name[0] != 'g') continue;
+            if (!int.TryParse(name.AsSpan(1), System.Globalization.NumberStyles.None,
+                              System.Globalization.CultureInfo.InvariantCulture, out var gid))
+                continue;
+            if (gid <= 0 || gid >= glyphCount || gid > ushort.MaxValue) continue;
+
+            map[code] = (ushort)gid;
+            mapped++;
+        }
+
+        return mapped > 0 ? map : null;
+    }
+
+    /// <summary>
+    /// Pull one table out of an sfnt container (OTTO / TrueType), or null.
+    /// </summary>
+    private static byte[]? TryExtractSfntTable(byte[] data, string tag)
+    {
+        if (data.Length < 12 || tag.Length != 4) return null;
+
+        int numTables = (data[4] << 8) | data[5];
+        // 16 bytes per directory entry after the 12-byte header.
+        if (numTables <= 0 || 12 + numTables * 16 > data.Length) return null;
+
+        for (int i = 0; i < numTables; i++)
+        {
+            int rec = 12 + i * 16;
+            if (data[rec] != (byte)tag[0] || data[rec + 1] != (byte)tag[1] ||
+                data[rec + 2] != (byte)tag[2] || data[rec + 3] != (byte)tag[3])
+                continue;
+
+            long offset = ((long)data[rec + 8] << 24) | ((long)data[rec + 9] << 16)
+                        | ((long)data[rec + 10] << 8) | data[rec + 11];
+            long length = ((long)data[rec + 12] << 24) | ((long)data[rec + 13] << 16)
+                        | ((long)data[rec + 14] << 8) | data[rec + 15];
+
+            // Untrusted input: a hostile directory can point anywhere.
+            if (offset < 0 || length < 0 || offset + length > data.Length) return null;
+
+            var table = new byte[length];
+            Array.Copy(data, offset, table, 0, length);
+            return table;
+        }
+
+        return null;
     }
 
     private static ushort[]? BuildCffSimpleByteToGlyph(CoreCffParser.CffFontInfo cffInfo, string?[]? codeToGlyphName)
