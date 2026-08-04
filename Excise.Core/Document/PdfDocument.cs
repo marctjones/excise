@@ -596,6 +596,20 @@ public class PdfDocument : IDisposable
         }
     }
 
+    /// <summary>
+    /// Whether the trailer's /Root names an object the assembled xref can
+    /// actually produce. A direct (non-indirect) /Root dictionary needs no xref
+    /// entry and counts as reachable; a missing or free entry does not (#884).
+    /// </summary>
+    private static bool RootIsReachable(PdfDictionary trailer, Dictionary<int, XRefEntry> xref)
+    {
+        var rootRef = trailer.GetReferenceOrNull("Root");
+        if (rootRef == null)
+            return trailer.GetOptional("Root") is PdfDictionary;
+
+        return xref.TryGetValue(rootRef.ObjectNum, out var entry) && entry.InUse;
+    }
+
     private static PdfDocument OpenCore(Stream stream, bool ownsStream, bool allowEncrypted, string? userPassword)
     {
         // Read PDF version from header
@@ -646,6 +660,51 @@ public class PdfDocument : IDisposable
                 xrefParser, stream, previous.prevTrailer, fullXRef, parsedHybridXRefStreams);
 
             currentTrailer = previous.prevTrailer;
+        }
+
+        // The xref we just assembled is only usable if the catalog is reachable
+        // through it. When it is not, rebuild by scanning the file for indirect
+        // object headers (#884).
+        //
+        // pdfium/embedded_images.pdf is the case that needs this: 34 KB of a
+        // file whose tail was cut off, so `startxref` (124724), the trailer's
+        // /Prev (123786) and its /XRefStm (123449) all point past EOF. ParseXRef
+        // throws, the repair path finds the file's terminal "xref 0 0" section
+        // and SUCCEEDS with zero entries and a healthy-looking /Root 1 0 R, and
+        // RepairUncompressedXRefOffsets can only rewrite entries that already
+        // exist — it can never add one. Reconstruction was never reached, and it
+        // would have worked: the catalog is at offset 17 and objects 1-15 are
+        // intact. mutool and pdftocairo both render the page.
+        //
+        // This runs AFTER the /Prev walk, deliberately, and NOT inside
+        // XRefParser.ParseRootXRef. A single xref SECTION of a healthy
+        // incrementally-updated file legitimately omits the catalog — it lives
+        // in an earlier section reached through /Prev — so only the assembled
+        // table can answer "is the catalog reachable". Asking one section would
+        // condemn a large class of perfectly good files.
+        //
+        // Merge, don't replace: reconstructed entries fill gaps only. Anything
+        // the real xref defined (including entries it marks FREE) stays
+        // authoritative, so a document is never silently rewound to a superseded
+        // revision of an object the xref deliberately replaced.
+        if (!RootIsReachable(trailer, fullXRef)
+            && xrefParser.TryReconstructXRef(out var rebuiltTrailer, out var rebuiltXRef))
+        {
+            foreach (var kvp in rebuiltXRef)
+            {
+                if (!fullXRef.ContainsKey(kvp.Key))
+                    fullXRef[kvp.Key] = kvp.Value;
+            }
+
+            // Only if the catalog is STILL unreachable is the trailer's own
+            // /Root the thing that is wrong; then prefer the one recovered
+            // alongside the rebuilt table.
+            if (!RootIsReachable(trailer, fullXRef)
+                && rebuiltTrailer.GetOptional("Root") is { } rebuiltRoot
+                && RootIsReachable(rebuiltTrailer, fullXRef))
+            {
+                trailer["Root"] = rebuiltRoot;
+            }
         }
 
         // Encrypted PDFs: try to build a security handler that decrypts
@@ -1052,7 +1111,7 @@ public class PdfDocument : IDisposable
             // decrypted by this same code path when GetObjectFromStream
             // calls back into GetObject(streamNumber); the contained
             // objects are then plaintext and need no further decryption.
-            obj = GetObjectFromStream(entry.ObjectStreamNumber!.Value, entry.IndexInStream!.Value);
+            obj = GetObjectFromStream(entry.ObjectStreamNumber!.Value, objectNumber);
         }
         else
         {
@@ -1128,6 +1187,13 @@ public class PdfDocument : IDisposable
         public required int First { get; init; }
         public required (int ObjNum, int Offset)[] Offsets { get; init; }
         public required PdfObject?[] Objects { get; init; }
+
+        /// <summary>
+        /// Slot of each contained object number, built from the /ObjStm's own
+        /// N-pair index. This — not the xref's index-in-stream — is what
+        /// <see cref="GetObjectFromStream"/> resolves against (#869).
+        /// </summary>
+        public required Dictionary<int, int> SlotByObjectNumber { get; init; }
     }
 
     private readonly Dictionary<int, ObjectStreamCacheEntry> _objectStreamCache = new();
@@ -1135,7 +1201,7 @@ public class PdfDocument : IDisposable
     /// <summary>
     /// Get an object from an object stream.
     /// </summary>
-    private PdfObject GetObjectFromStream(int streamNumber, int index)
+    private PdfObject GetObjectFromStream(int streamNumber, int objectNumber)
     {
         // Get the object stream
         var streamObj = GetObject(streamNumber) as PdfStream
@@ -1158,20 +1224,48 @@ public class PdfDocument : IDisposable
             _objectStreamCache[streamNumber] = cached;
         }
 
-        if (index < 0 || index >= cached.Offsets.Length)
-            throw new PdfParseException($"Index {index} out of range in object stream {streamNumber}");
+        // Locate the slot BY OBJECT NUMBER, not by the xref's index-in-stream
+        // (#869).
+        //
+        // A type-2 xref entry's third field is the object's index within the
+        // /ObjStm, and in an xref STREAM the width of that field comes from /W.
+        // pdfjs/bug1978317.pdf declares /W [1 3 2] over 65,564 objects: field 3
+        // holds two bytes, so every index >= 65536 wraps. Its catalog really
+        // sits at slot 65541 of /ObjStm 65547, which the xref records as 5 —
+        // and slot 5 is a /Type /Annot /Subtype /Link. Positional lookup
+        // therefore returned a link annotation AS THE CATALOG, with no error,
+        // and the document died two steps later on "no Pages dictionary" while
+        // qpdf, mutool and pdftocairo all read it.
+        //
+        // The /ObjStm's own N-pair index names the object numbers it carries
+        // (ISO 32000-2 7.5.7) and is the authority here; the xref's index is a
+        // shortcut that a narrow /W, a bad producer, or a hostile file can make
+        // wrong. Resolving by number costs one dictionary lookup and cannot
+        // return a DIFFERENT object than the one asked for — which is the real
+        // defect: silently substituting one object for another is worse than
+        // any parse error, because nothing downstream can detect it.
+        if (!cached.SlotByObjectNumber.TryGetValue(objectNumber, out var slot))
+        {
+            // This stream does not contain the requested object, whatever the
+            // xref claims. Return null rather than whatever happens to occupy
+            // slot `index` — the same choice, for the same reason, as an xref
+            // entry that is missing altogether (see GetObject above): a page
+            // that renders without some content can be inspected, a confidently
+            // wrong object cannot.
+            return PdfNull.Instance;
+        }
 
         // The batch pass already parsed this slot; a null slot means that one
         // object failed to parse — retry it here so the caller sees the same
         // exception the old per-fetch path would have thrown.
-        var obj = cached.Objects[index];
+        var obj = cached.Objects[slot];
         if (obj != null)
             return obj;
 
         using var retryParser = new PdfParser(data);
-        retryParser.Seek(cached.First + cached.Offsets[index].Offset);
+        retryParser.Seek(cached.First + cached.Offsets[slot].Offset);
         obj = retryParser.ParseObject();
-        cached.Objects[index] = obj;
+        cached.Objects[slot] = obj;
         return obj;
     }
 
@@ -1219,6 +1313,13 @@ public class PdfDocument : IDisposable
             }
         }
 
+        // Object number -> slot, first occurrence wins. A well-formed /ObjStm
+        // never repeats an object number; if a damaged one does, the earlier
+        // definition is the one the index's own ordering names.
+        var slotByObjectNumber = new Dictionary<int, int>(n);
+        for (int i = 0; i < n; i++)
+            slotByObjectNumber.TryAdd(offsets[i].ObjNum, i);
+
         return new ObjectStreamCacheEntry
         {
             Source = streamObj,
@@ -1226,6 +1327,7 @@ public class PdfDocument : IDisposable
             First = first,
             Offsets = offsets,
             Objects = objects,
+            SlotByObjectNumber = slotByObjectNumber,
         };
     }
 
