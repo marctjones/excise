@@ -157,15 +157,46 @@ public class GuiFullResponsivenessCoverageTests
             var slots = items!.ItemsSource!.Cast<PdfPageSlot>().ToArray();
             slots.Should().HaveCount(24);
 
-            // SETUP wait, not a measurement: this is the cold first render
-            // (JIT + first Skia rasterization + xvfb on Linux CI), which on
-            // shared CI runners has blown a 10s budget on all three OSes in
-            // separate runs while the actual measured phases below stayed
-            // green. Generous on purpose — the responsiveness verdicts are
-            // the graded AddResult phases, not this warm-up.
-            await WaitForContinuousPageBitmapAsync(window, items, pageNumber: 1, TimeSpan.FromSeconds(60));
+            // FIRST PAINT — the cold render of page 1's visible band (JIT + first
+            // Skia rasterization + xvfb on Linux CI). This used to be an ungraded
+            // 60s setup wait, and it failed ~50% of Windows CI runs (#855) while
+            // *passing* at 50s on the same commit: the wait was not a warm-up, it
+            // was an unmeasured 20-full-page-render cost hiding under a wall clock.
+            // It is graded now, so the work cannot silently grow back — see
+            // PdfViewerControl.RenderContinuousCellsAsync. The hard timeout stays
+            // well ABOVE warnMs so a slow first paint is judged by the grading
+            // rather than by a TimeoutException that bypasses it.
+            var firstPaintMs = await MeasureAsync(() =>
+                WaitForContinuousPageBitmapAsync(window, items, pageNumber: 1, TimeSpan.FromSeconds(60), viewer));
+            AddResult(
+                results,
+                "acc-compensation-continuous-first-paint",
+                firstPaintMs,
+                // Measured after the batching fix: ~11s on this macOS dev box in
+                // the Debug test host (one whole-page render of a graphics-heavy
+                // cover; the same render is 1.9s from the Release CLI), and the
+                // Windows CI runner has historically been ~1.35x that. FAIL sits
+                // at 2.7x the local number so ordinary shared-runner variance
+                // cannot redden it — but the pre-fix cost (35-50s local, 50s+ on
+                // Windows CI) is a hard FAIL, which is what pins the fix.
+                passMs: 15_000,
+                warnMs: 30_000,
+                new Dictionary<string, long>(StringComparer.Ordinal)
+                {
+                    ["gui.render.acc-compensation-continuous-first-paint"] = firstPaintMs,
+                    // Where that time went, so a regression is attributable from
+                    // the report alone rather than needing a repro (#855).
+                    ["gui.render.continuous.render-passes"] = viewer.ContinuousRenderStartCount,
+                    ["gui.render.continuous.render-wall"] = viewer.ContinuousRenderWallMs,
+                    ["gui.render.continuous.cells-required"] = viewer.ContinuousRequiredCellCount,
+                });
             var initialStarts = viewer.ContinuousRenderStartCount;
             var initialCancellations = viewer.ContinuousRenderCancellationCount;
+            // One render pass, not one per grid cell: a page's missing cells are
+            // rendered as a single band and sliced (#855). Without that batching
+            // this is 20 on a 1280x900 window.
+            initialStarts.Should().BeLessThanOrEqualTo(4,
+                "first paint of one page must not cost one whole-page render per grid cell");
 
             var targetPages = new[] { 2, 4, 8, 12, 16, 20, 24 };
             var scrollElapsedMs = Measure(() =>
@@ -186,7 +217,7 @@ public class GuiFullResponsivenessCoverageTests
             // settle — previously this threw TimeoutException at 12s, below
             // the measurement's own warn line, bypassing the grading.
             var settleElapsedMs = await MeasureAsync(() =>
-                WaitForContinuousPageBitmapAsync(window, items, pageNumber: targetPages[^1], TimeSpan.FromSeconds(30)));
+                WaitForContinuousPageBitmapAsync(window, items, pageNumber: targetPages[^1], TimeSpan.FromSeconds(30), viewer));
             AddResult(
                 results,
                 "acc-compensation-continuous-scroll-render-settle",
@@ -400,11 +431,20 @@ public class GuiFullResponsivenessCoverageTests
         }
     }
 
+    /// <summary>
+    /// Waits for a continuous page's composite bitmap. On timeout it reports the
+    /// state of the render pipeline (#855): "did not render within Ns" alone
+    /// cannot distinguish a genuinely slow render from a wait on work that will
+    /// never arrive, and those have completely different fixes. The counters say
+    /// which — a large <c>renderWallMs</c> with cells still in flight is slow
+    /// work; zero starts with cells required is a stalled pipeline.
+    /// </summary>
     private static async Task WaitForContinuousPageBitmapAsync(
         Window window,
         ItemsControl items,
         int pageNumber,
-        TimeSpan timeout)
+        TimeSpan timeout,
+        PdfViewerControl? viewer = null)
     {
         var deadline = Stopwatch.StartNew();
         while (true)
@@ -417,7 +457,9 @@ public class GuiFullResponsivenessCoverageTests
                 return;
 
             if (deadline.Elapsed > timeout)
-                throw new TimeoutException($"Continuous page {pageNumber} did not render within {timeout.TotalSeconds:0.0}s.");
+                throw new TimeoutException(
+                    $"Continuous page {pageNumber} did not render within {timeout.TotalSeconds:0.0}s. " +
+                    (viewer == null ? "" : viewer.ContinuousDiagnostics()));
 
             await Task.Delay(25);
         }
