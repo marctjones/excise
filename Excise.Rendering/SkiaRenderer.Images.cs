@@ -1994,6 +1994,26 @@ internal partial class RenderContext
                ?? new SKBitmap(mask.Width, mask.Height, SKColorType.Rgba8888, SKAlphaType.Opaque);
     }
 
+    /// <summary>
+    /// Name a stream's /Filter chain for diagnostics. Which filter produced a
+    /// short buffer is the whole point of the message — "an image failed" is
+    /// not actionable, "JBIG2Decode returned 189 of 1036800 bytes" is.
+    /// </summary>
+    private string DescribeFilters(Excise.Core.Primitives.PdfStream stream)
+    {
+        var filter = stream.GetOptional("Filter");
+        var resolved = filter == null ? null : _page.Document.Resolve(filter);
+        return resolved switch
+        {
+            Excise.Core.Primitives.PdfName n => "/" + n.Value,
+            Excise.Core.Primitives.PdfArray a => a.Count == 0
+                ? "no filter"
+                : string.Join(" -> ", a.Select(x =>
+                    _page.Document.Resolve(x) is Excise.Core.Primitives.PdfName fn ? "/" + fn.Value : "?")),
+            _ => "no filter",
+        };
+    }
+
     private SKBitmap? CreateBitmapFromRawData(byte[] data, int width, int height, int bitsPerComponent, string colorSpace, Excise.Core.Primitives.PdfStream stream)
     {
         var isImageMask = stream.GetBool("ImageMask");
@@ -2053,6 +2073,22 @@ internal partial class RenderContext
             if (requiredBytes > 0 && data.LongLength * 2 < requiredBytes)
             {
                 // Draw nothing. A missing image is honest; an invented one is not.
+                //
+                // But SAY SO. Refusing silently trades a visibly-wrong page for
+                // an invisibly-incomplete one, and #874's body named that trap
+                // before this guard existed: check the fill-black path first
+                // "because the output is indistinguishable from an image that
+                // really is black — the failure is invisible". This guard fixed
+                // the fabrication and would otherwise inherit the invisibility.
+                //
+                // The shortfall is the actual diagnostic signal: a decoder that
+                // returns 189 of 1,036,800 bytes is a DECODER bug, and without
+                // this line nothing anywhere in excise reports it. bug_631912's
+                // JBIG2 decode is exactly that, and this is how it is seen.
+                _options.Diagnostics?.Add(
+                    $"Image decode returned {data.LongLength} of {requiredBytes} required bytes " +
+                    $"({DescribeFilters(stream)}, {width}x{height}, {bitsPerComponent} bpc); " +
+                    "refusing to paint a fabricated image — nothing drawn.");
                 return null;
             }
         }

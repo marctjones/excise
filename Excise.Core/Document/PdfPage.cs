@@ -245,13 +245,20 @@ public class PdfPage
     /// </summary>
     /// <remarks>
     /// A page with no /MediaBox anywhere in its inheritance chain is malformed:
-    /// the PDF spec makes it a required inheritable page attribute. Refusing is
-    /// correct — no reference renderer (mutool, pdftocairo, Ghostscript, PDFBox,
-    /// PDFium) renders any of the pdfium-corpus fixtures that hit this — but it
-    /// must refuse as a TYPED parse failure, not an unhandled
-    /// InvalidOperationException. Nine corpus files reached this line and were
-    /// counted as crashes by #648's DoS gate, which is exactly the
-    /// unhandled-exception-on-untrusted-input shape that gate exists to close.
+    /// the spec makes it a required inheritable page attribute. excise
+    /// substitutes <see cref="DefaultMediaBox"/> rather than refusing — see
+    /// that field for why, and for the correction to the claim that used to
+    /// live here.
+    ///
+    /// The history, because this block twice said the opposite of the code:
+    /// the original failure was an unhandled InvalidOperationException on nine
+    /// corpus files, counted as crashes by #648's DoS gate. #871 made it a
+    /// typed PdfParseException, which fixed the crash. This text then asserted
+    /// that refusing was also the right END state, "no reference renderer
+    /// renders any of the pdfium-corpus fixtures that hit this" — read off
+    /// oracle statuses that actually meant NEVER ASKED (#882). pdftocairo
+    /// renders all ten. #884 replaced the refusal with the default; this
+    /// remark was left behind still recommending the refusal.
     /// </remarks>
     public PdfRectangle MediaBox => GetInheritedRectangle("MediaBox") ?? DefaultMediaBox;
 
