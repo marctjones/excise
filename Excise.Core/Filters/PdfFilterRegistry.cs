@@ -163,9 +163,25 @@ internal sealed class Jbig2FilterDecoder : AliasedFilterDecoder
     }
 
     private static byte[]? TryGetGlobals(PdfDictionary? decodeParms)
-        => decodeParms?.GetOptional("JBIG2Globals") is PdfStream globals
-            ? globals.EncodedData
-            : null;
+    {
+        if (decodeParms?.GetOptional("JBIG2Globals") is not PdfStream globals)
+            return null;
+
+        // Prefer DECODED bytes. EncodedData is decrypted but still compressed,
+        // so a Flate'd globals stream would have fed the segment parser
+        // garbage. DecodedData returns EncodedData unchanged when the stream
+        // carries no filter (the common case — globals are usually raw), and
+        // throws only when a filtered stream has not been decoded yet, which
+        // is exactly when EncodedData is the better of two bad options.
+        try
+        {
+            return globals.DecodedData;
+        }
+        catch (InvalidOperationException)
+        {
+            return globals.EncodedData;
+        }
+    }
 
     private static bool IsExpectedCodecFallback(Exception ex)
         => ex is NotSupportedException
