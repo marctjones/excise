@@ -5,9 +5,20 @@
 # Must run on macOS (uses sips / iconutil / ditto). The .app is AD-HOC
 # SIGNED (#635, codesign --sign -) for a stable local app identity across
 # rebuilds — that is not the same as being signed for distribution.
-# Gatekeeper will still quarantine it; users open via right-click → Open or
-# `xattr -dr com.apple.quarantine excise.app`. Real signing/notarization needs
-# an Apple Developer cert (not configured, tracked separately as #629).
+#
+# Distribution signing and notarization are DECLINED, not pending (#629).
+# excise is built for an audience of one — the author, on their own machines —
+# so accepting the Gatekeeper prompt once at install (right-click → Open, or
+# `xattr -dr com.apple.quarantine excise.app`) is the intended workflow, not a
+# workaround for missing work. A Developer ID cert, notarytool submission and
+# CI secret handling are recurring cost for a distribution problem that does
+# not exist here.
+#
+# This flips the moment excise goes to anyone else: telling OTHER people to
+# bypass Gatekeeper to run redaction software is genuinely harmful hygiene,
+# which is what #629 was originally filed about. Reopen it before publishing.
+# Integrity is still checkable meanwhile — releases ship .sha256 alongside the
+# zips.
 #
 # Usage:
 #   scripts/build-macos-app.sh --version 2.4.1 [--rid osx-arm64] [--output dist] [--aot]

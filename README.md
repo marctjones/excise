@@ -533,8 +533,9 @@ and opens documents passed by Finder, the Dock, or `open -a` — so it can be us
 as a regular reader, not just launched empty.
 
 ```bash
-# First launch: the build is not notarized, so clear the Gatekeeper quarantine
-# (one time, see issue #421 for signing/notarization tracking):
+# First launch: builds are deliberately not notarized (#629 — excise targets an
+# audience of one, so a one-time manual accept beats maintaining an Apple
+# Developer cert). Either right-click → Open once, or clear the quarantine:
 xattr -dr com.apple.quarantine /Applications/excise.app
 
 # Open a PDF in excise:
