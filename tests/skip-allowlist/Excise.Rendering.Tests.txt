@@ -304,3 +304,28 @@ Excise.Rendering.Tests.Differential.RefusedImageDiagnosticTests.CodecFailure_Rep
 Excise.Rendering.Tests.Differential.RefusedImageDiagnosticTests.AHealthyImage_ReportsNothing   # control: a good page must stay quiet [requires: corpus:pdfjs]
 Excise.Rendering.Tests.Fonts.GlyphNameToGidRouteTests.OpenTypeCffUnderFontFile2_ResolvesNamesThroughTheCffCharset   # #892: OTTO-under-/FontFile2 fixture from the gitignored pdf.js corpus [requires: corpus:pdfjs tool:mutool]
 Excise.Rendering.Tests.Fonts.GlyphNameToGidRouteTests.NumericGlyphNames_DrawTheGlyphsTheFontNames   # #892: /gNNNN fixture from the gitignored pdf.js corpus [requires: corpus:pdfjs]
+
+# ── R2/R8 rendering-fidelity work (#885 #888 #891 #656 #657 #892 #893) ────────
+# All of these are differential tests: they exist precisely BECAUSE excise must
+# not be its own oracle, so every one is gated on a reference renderer and/or a
+# gitignored corpus. On the corpus-less CI runner they skip; on a dev machine
+# with the corpora they run, which is what the [requires:] conditioning (#854)
+# is for.
+Excise.Rendering.Tests.Differential.AnnotationAppearanceDrawnTests.IndirectBBox_MatchesIndependentRenderer   # #888: indirect /BBox verified against a renderer that is not excise [requires: tool:mutool]
+Excise.Rendering.Tests.Differential.AnnotationAppearanceDrawnTests.MissingBBox_IndependentRenderersRefuseTheFormItself   # #888: pins that Poppler/MuPDF also REFUSE a BBox-less form, which is why excise must not synthesise one [requires: tool:mutool]
+Excise.Rendering.Tests.Differential.AnnotationAppearanceDrawnTests.UnbalancedCtmInPageContent_MatchesIndependentRenderer   # #888: unbalanced-CTM bracketing verified independently [requires: tool:mutool]
+Excise.Rendering.Tests.Differential.Issue891SymbolicCmapCorpusTests.Bug1027533_ArialBoldSubset_RendersInk_NotBlank   # #891: symbolic TrueType cmap, pdf.js fixture [requires: corpus:pdfjs tool:mutool]
+Excise.Rendering.Tests.Differential.Issue891SymbolicCmapCorpusTests.Bug1151216_Ttf9t00Subset_RendersInk_NotBlank   # #891: symbolic TrueType cmap, pdf.js fixture [requires: corpus:pdfjs tool:mutool]
+Excise.Rendering.Tests.Differential.Jbig2RetainedContextTests.UnknownLengthFixture_RendersAndAgreesWithTheOracle   # #656: the page the JBIG2 classifier libelled; asserted against the oracle, not a fixed number [requires: corpus:pdfjs tool:mutool]
+Excise.Rendering.Tests.Differential.Jbig2RetainedContextTests.UnknownLengthSegment_DoesNotFabricateDownstreamSegments   # #656: the classifier must not invent segments out of image data [requires: corpus:pdfjs]
+Excise.Rendering.Tests.Differential.Jbig2RetainedContextTests.ContextImport_IsRefusedRatherThanGuessed   # #656: no oracle decodes this file, so excise must refuse rather than paint a guess [requires: corpus:pdfjs]
+Excise.Rendering.Tests.Differential.Jbig2RetainedContextTests.AHealthyStream_IsStillWalkedCompletely   # #656: scope guard so the walk-stop does not turn over-reporting into under-reporting [requires: corpus:pdfjs]
+Excise.Rendering.Tests.Differential.PdftocairoOutlierClassificationTests.ExciseAgreesWithMutool_WherePdftocairoIsTheOutlier   # needs both oracles to establish WHICH renderer is the outlier [requires: corpus:pdfjs tool:mutool tool:pdftocairo]
+Excise.Rendering.Tests.Differential.ShapeAnnotationSynthesisTests.ShapeWithColor_MatchesIndependentRenderer   # #885: synthesised shape appearance verified independently [requires: tool:mutool]
+Excise.Rendering.Tests.Differential.ShapeAnnotationSynthesisTests.ShapeWithoutColor_AgreesWithMutool   # #885: drawing NOTHING is also a claim and needs corroboration [requires: tool:mutool]
+Excise.Rendering.Tests.Differential.SynthesizedAnnotationAppearanceTests.CheckboxWithoutAppearance_MatchesIndependentRenderers   # #885: synthesised widget chrome [requires: tool:mutool]
+Excise.Rendering.Tests.Differential.SynthesizedAnnotationAppearanceTests.FreeTextWithColor_MatchesIndependentRenderers   # #885: synthesised FreeText fill [requires: tool:mutool]
+Excise.Rendering.Tests.Differential.SynthesizedAnnotationAppearanceTests.TextAnnotationIcon_MatchesIndependentRenderers   # #885: sticky-note icon at the §12.5.6.4 fixed size [requires: tool:mutool]
+Excise.Rendering.Tests.Differential.CcittEndOfBlockTests.TheOnlyCorpusFileSettingEndOfBlock_RendersAtOracleParity   # #893: the single corpus witness for /EndOfBlock, checked against an oracle [requires: corpus:pdfjs tool:mutool]
+Excise.Rendering.Tests.Fonts.Cff2RefusalTests.CorpusFilesCarryingCff2_RenderAtParityWithMutool   # #657: CFF2 costs no page; measured against an oracle [requires: corpus:pdfjs tool:mutool]
+Excise.Rendering.Tests.ExtGStateFontTests.FontFromExtGState_MatchesAnIndependentRenderer   # ExtGState /Font (Table 58) verified independently [requires: tool:mutool]
