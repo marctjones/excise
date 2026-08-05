@@ -41,6 +41,14 @@ internal sealed class Jbig2CapabilitySegment
 
 internal static class Jbig2CapabilityClassifier
 {
+    /// <summary>
+    /// T.88 §7.2.7 — a data length of 0xFFFFFFFF means "unknown", permitted only
+    /// on an immediate generic region. It is a conforming construct, not an
+    /// overflow, and it makes the next segment's offset undiscoverable without
+    /// decoding.
+    /// </summary>
+    private const uint UnknownDataLength = 0xFFFFFFFFu;
+
     public static Jbig2CapabilityReport Analyze(byte[] data, byte[]? globals = null)
     {
         if (data == null)
@@ -93,9 +101,28 @@ internal static class Jbig2CapabilityClassifier
 
             int dataLength = 0;
             string? diagnostic = null;
-            if (header.DataLength > int.MaxValue)
+
+            // A length we cannot skip past ends the walk. Both cases below leave
+            // the next segment's offset unknown, and guessing it means parsing
+            // IMAGE DATA as a segment header — which does not fail, it invents a
+            // segment with plausible-looking flags. That is how this classifier
+            // reported "symbol-dictionary.context-retained" for a file whose only
+            // real segments are a page header and one generic region (#656).
+            bool cannotSkip = false;
+            if (header.DataLength == UnknownDataLength)
+            {
+                // T.88 §7.2.7: 0xFFFFFFFF is LEGAL, and only on an immediate
+                // generic region — it means the length is unknown and the data
+                // runs to a terminating sequence. Calling it "exceeds supported
+                // limits" mislabelled a conforming construct as an overflow.
+                diagnostic = "Segment data length is the unknown-length marker (T.88 §7.2.7); " +
+                             "remaining segments cannot be located without decoding this one";
+                cannotSkip = true;
+            }
+            else if (header.DataLength > int.MaxValue)
             {
                 diagnostic = $"Segment data length {header.DataLength} exceeds supported limits";
+                cannotSkip = true;
             }
             else
             {
@@ -137,6 +164,11 @@ internal static class Jbig2CapabilityClassifier
                 UnsupportedFeatures = segmentUnsupported.ToArray(),
                 Diagnostic = diagnostic,
             });
+
+            // Report what was genuinely read, then stop. Anything past here would
+            // be fabricated.
+            if (cannotSkip)
+                break;
 
             if (header.DataLength > 0)
                 parser.SetPosition(header.DataOffset + dataLength);
