@@ -634,7 +634,12 @@ Issues, roughly in roadmap order:
   round-trip, self-signed signing (#623, #626, #631, #632)
 - Edited-output fidelity against reference renderers (#605, #610, #611)
 - In-place text editing with paragraph reflow, PDF → DOCX, PDF compare / diff
-- Signing/notarization and auto-update so security fixes reach installed users
-  (#629, #630)
+
+Deliberately out of scope (closed #629, #630): distribution signing /
+notarization, in-app auto-update, and crash reporting. excise is built and
+installed from source by its author, so the OS trust prompt is a one-time
+manual accept and rebuilding *is* the update channel. These become relevant
+again only if excise is distributed to other people — at which point both
+issues should be reopened as originally written.
 
 Smaller-scope improvements (additional operator coverage, performance, accessibility, CFF charstring rewriting) are good first issues.
