@@ -161,6 +161,24 @@ jobs:
       - name: Skip budget (Excise.Core.Tests)
         run: ./scripts/check-skip-budget.sh Excise.Core.Tests/Excise.Core.Tests.csproj --trx coverage/core.trx
 
+      # Test count (#894): the skip budget above catches a test that stops
+      # running LOUDLY (it reports as skipped). This catches one that stops
+      # running SILENTLY — discovered, then absent from the results entirely:
+      # not passed, not failed, not skipped, just gone.
+      #
+      # Measured on Excise.Core.Tests: 3932 discovered, ~half of all runs report
+      # 3931, a different test each time. Not xunit parallelism — forcing
+      # parallelizeTestCollections=false and maxParallelThreads=1 changes the
+      # wall clock by 4s and still loses one.
+      #
+      # This matters more than a normal flake because it defeats the repo's own
+      # method: mutation testing proves an assertion discriminates by reverting
+      # the fix and confirming red, and a case that never reports cannot go red.
+      # The gate re-runs whatever went missing — a transient loss is reported,
+      # a test that genuinely never executes is fatal. Reuses the trx above.
+      - name: Test count (Excise.Core.Tests)
+        run: ./scripts/check-test-count.sh Excise.Core.Tests/Excise.Core.Tests.csproj --trx coverage/core.trx
+
       - name: Install reportgenerator
         run: mkdir -p tools && dotnet tool install --tool-path ./tools dotnet-reportgenerator-globaltool
 
