@@ -96,16 +96,36 @@ The third is the general case, and the rule to remember:
 
 *(The #637 p47 anecdote no longer reproduces — excise now extracts 3233 chars
 there vs. mutool's 3192 — but the general failure mode is not fixed, it's now
-**measured**: #645's corpus-wide gate (332 pages / 12 fixtures, including the
-checked-in CJK Type0 fixture that names #645's second blind spot) shows no
-broad under-extraction (aggregate coverage 102.6% of mutool's Unicode
+**measured**: #645's corpus-wide gate (332 pages / 13 fixtures, including the
+checked-in CJK Type0 fixture that names #645's second blind spot).
+
+Re-run 2026-08-05: **aggregate coverage 98.7%** of mutool's Unicode
 letter/digit count — deliberately not ASCII-folded, so it can't silently
-cancel out CJK/accented-text loss on both sides), but per-page content
-similarity falls to 0.75 on 83 Type0/CID-font pages of
-`irs-1040-instructions.pdf` (coverage >1.0 there — over-extraction, not
-blindness: fonts decode fine, a marked-content `/Artifact` leak pollutes
-the extraction ahead of the correct real content; tracked as #649, not a
-font-resolution bug). See `tests/extraction-parity/baseline.json` and
+cancel out CJK/accented-text loss on both sides. It is NOT uniform, and the
+distribution is the part that matters:
+
+| fixture | pages | <0.99 | <0.90 | min |
+|---|---:|---:|---:|---:|
+| `irs-1040-instructions.pdf` | 126 | 47 | 10 | **0.774** |
+| `irs-pub509-2026.pdf` | 14 | 5 | 0 | 0.903 |
+| `state-ds82-passport-renewal.pdf` | 6 | 1 | 0 | 0.945 |
+| `state-ds11-passport.pdf` | 6 | 1 | 0 | 0.986 |
+| everything else (9 fixtures, incl. 139 pages of SCOTUS opinions, the CJK Type0 fixture, w4/w9/1040) | 180 | 0 | 0 | **1.000** |
+
+So the residual blindness is **concentrated in dense multi-column government
+instruction booklets**, not spread across the corpus. On the worst page excise
+reads 2278 of the 2945 letters/digits mutool sees — and per #637 that is
+exactly the case where `RedactText` cannot match a term, does not remove it,
+and reports success anyway.
+
+⚠️ **The gate passing means "no worse than the checked-in floors", NOT "good
+enough".** Floors were set at whatever the behaviour was. Do not read a green
+run as an absence of blindness.
+
+An earlier version of this note claimed 102.6% aggregate and *over*-extraction
+(>1.0) on the Type0/CID pages, attributed to a marked-content `/Artifact` leak
+(#649, since closed). That is no longer what the gate reports — the number is
+now below 1.0. See `tests/extraction-parity/baseline.json` and
 `scripts/check-extraction-parity.sh`. Anecdote → measurement is the point of
 #645: don't restate a specific number here without re-running the gate.)
 
@@ -737,25 +757,33 @@ and cost real planning time.
 1. **Text extraction coverage bounds redaction completeness** (#637, gated by
    #645) — ⚠️ the most important entry in this file. Where excise's extractor
    cannot read text, `RedactText` cannot match it, does not remove it, **and
-   reports success**. Corpus-wide measurement (332 pages / 12 fixtures —
-   10 real-world government PDFs plus checked-in CJK/Type0 and
-   scrambled-glyph-order edge cases, `scripts/check-extraction-parity.sh`):
-   aggregate coverage 102.6% of mutool's Unicode letter/digit count (counted
-   per-script, not ASCII-folded, specifically so CJK/accented-text loss can't
-   cancel out invisibly on both sides of the ratio). Both blind spots #645 was
-   written to measure — the p47-style under-extraction and the CJK/Type0
-   "extracts as empty" case (`RealWorldSearchTests.CjkFixture_*`) — are
-   currently clean on their fixtures. The live finding is per-page *content
-   similarity*, which drops to 0.75 on 83 Type0/CID-font pages (all
-   `/Encoding /Identity-H`) of `irs-1040-instructions.pdf` — but coverage on
-   those same pages is **>1.0**, i.e. over-extraction: glyphs decode
-   correctly, and a marked-content `/Artifact` running-header leak is
-   prepended ahead of the (correct) real content. That is a content-stream
-   marked-content filtering gap (`ContentStreamParser`/`TextExtractor` not
-   honoring `/Artifact`-tagged `BMC`/`BDC`/`EMC` spans), tracked as **#649**
-   — it is a font-resolution non-issue on these pages (fonts decode fine) and
-   is explicitly NOT part of #513's scope; don't let #513 work chase this
-   number, it won't move it. (Checked that "CJK is
+   reports success**. Corpus-wide measurement (332 pages / 13 fixtures —
+   real-world government and court PDFs plus checked-in CJK/Type0 and
+   scrambled-glyph-order edge cases, `scripts/check-extraction-parity.sh`,
+   re-run 2026-08-05): **aggregate coverage 98.7%** of mutool's Unicode
+   letter/digit count (counted per-script, not ASCII-folded, specifically so
+   CJK/accented-text loss can't cancel out invisibly on both sides of the
+   ratio).
+
+   The aggregate hides the shape, and the shape is the point. Residual
+   blindness is CONCENTRATED, not spread: `irs-1040-instructions.pdf` has
+   47 of 126 pages below 0.99 and **10 below 0.90, worst 0.774** (excise reads
+   2278 of mutool's 2945 letters/digits); `irs-pub509-2026.pdf` 5 of 14 below
+   0.99. The other nine fixtures — including 139 pages of SCOTUS opinions, the
+   CJK Type0 fixture, and w4/w9/1040 — are at **1.000**. Dense multi-column
+   government instruction booklets are the weak spot; prose and ordinary forms
+   are clean.
+
+   ⚠️ **A green gate means "no worse than the checked-in floors", NOT "no
+   blindness".** Floors were set at whatever the behaviour was.
+
+   Both blind spots #645 was written to measure — the p47-style
+   under-extraction and the CJK/Type0 "extracts as empty" case
+   (`RealWorldSearchTests.CjkFixture_*`) — are clean on their fixtures.
+   An earlier version of this entry reported 102.6% aggregate and
+   *over*-extraction (coverage >1.0) on 83 Type0/CID pages, attributed to a
+   marked-content `/Artifact` leak (#649, since closed). The gate no longer
+   reports that; coverage on those pages is now below 1.0. (Checked that "CJK is
    clean" isn't `page.Text` vouching for itself: `RedactText` locates words
    via the search/word path, not `page.Text`, and
    `RealWorldSearchTests.CjkFixture_Search_FindsLatinWord` — previously a
