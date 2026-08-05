@@ -949,8 +949,28 @@ internal partial class RenderContext
     {
         ResolveAcroFormResources();
 
-        var da = annot.RawDictionary.GetStringOrNull("DA") ?? _acroFormDa;
-        if (string.IsNullOrEmpty(da)) return;
+        // An ABSENT /DA is not a reason to drop the value (#889).
+        //
+        // §12.7.3.3 makes /DA required in the AcroForm dictionary, so a file
+        // with none is malformed — but the thing to be drawn is still fully
+        // defined by /V, and this method already knows how to cope: twenty
+        // lines below, a /DA that parses to no font falls back to Helvetica.
+        // Returning early here meant "no /DA at all" was handled WORSE than
+        // "/DA present but useless", which is backwards.
+        //
+        // Measured on pdfium calculate.pdf (two /FT /Tx widgets, /V (5) and
+        // /V (2), no /AP, no /MK, and no /DA anywhere in the file):
+        //
+        //     mutool 61, ghostscript 46, excise 0, pdftocairo 0
+        //
+        // Two of the three independent engines draw the value. That majority
+        // is what settles it — see #889, where a 1-1 split between mutool and
+        // pdftocairo was explicitly NOT treated as grounds to change anything.
+        //
+        // Empty string rather than null: ExecuteContentBytes on it is a no-op,
+        // so the auto-size and Helvetica fallback paths run exactly as they do
+        // for a /DA that sets no font.
+        var da = annot.RawDictionary.GetStringOrNull("DA") ?? _acroFormDa ?? "";
 
         // Auto-size 0 in /DA means "fit text to height" per spec; pick a
         // pragmatic default (75% of rect height, capped at 16pt) so the
