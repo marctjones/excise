@@ -94,6 +94,10 @@ coverage-results/
 artifacts/
 coverage/
 dist/
+# Build output from scripts/build-macos-app.sh --output <dir>. Only `dist/`
+# was listed, so an --output dir with any other name (dist-aot/) was tracked
+# and 180 MB of dSYM + native binary got committed before anyone noticed.
+dist-*/
 .claude/worktrees/
 .wiki/
 excise.sh

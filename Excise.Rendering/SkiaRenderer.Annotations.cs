@@ -244,8 +244,29 @@ internal partial class RenderContext
                 if (stateObj != null &&
                     _page.Document.Resolve(stateObj) is Excise.Core.Primitives.PdfStream s)
                     return s;
+
+                // /AS NAMES A STATE THAT /AP /N DOES NOT DEFINE — draw nothing.
+                //
+                // This is not a malformed file, it is the normal way an OFF
+                // checkbox is written. §12.5.5: /AS selects the appearance from
+                // the sub-dictionary, and producers routinely omit /Off from /N
+                // precisely because "off" means there is nothing to draw. IRS
+                // Form W-9 is written exactly this way:
+                //
+                //   /AP << /D << /1 12 0 R /Off 11 0 R >>
+                //          /N << /1 13 0 R >> >>     <- no /Off
+                //   /AS /Off   /V /Off
+                //
+                // Falling through to "first usable entry" here picked /1 — the
+                // CHECKED appearance — and drew a tick in every unchecked box on
+                // a blank federal form. mutool renders the same page with empty
+                // boxes. Found by looking at a screenshot, not by a test.
+                return null;
             }
-            // No /AS or unknown state — fall through to first usable entry.
+
+            // No /AS at all. A single-entry /N is unambiguous; anything else is
+            // a guess, and guessing which state a form field is in is how the
+            // bug above happened. Kept narrow deliberately.
             foreach (var kvp in stateDict)
             {
                 if (_page.Document.Resolve(kvp.Value) is Excise.Core.Primitives.PdfStream s)
