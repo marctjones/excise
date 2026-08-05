@@ -17,7 +17,7 @@
 #
 # Keys are corpus-relative PATHS, not basenames: this corpus may have
 # subdirectories and duplicate filenames.
-# Baseline: PASS=655, MISSING_CONTENT=12, PASS_ONE=11, MALFORMED_PDF=3, EXCISE_ONLY=2, RECOVERED_MALFORMED_CONTENT=1, EMPTY_DOC=1
+# Baseline: PASS=666, PASS_ONE=11, MALFORMED_PDF=2, MISSING_CONTENT=2, EXCISE_ONLY=2, RECOVERED_MALFORMED_CONTENT=1, EMPTY_DOC=1, TIMEOUT=1
 160F-2019.pdf	1	PASS
 22060_A1_01_Plans.pdf	1	PASS
 90ms_rksj_h_sample.pdf	1	PASS
@@ -97,7 +97,7 @@ bitmap-composite-or-xor-replace-text.pdf	1	PASS
 bitmap-composite-or-xor-replace.pdf	1	PASS
 bitmap-customat-tpgdon.pdf	1	PASS
 bitmap-customat.pdf	1	PASS
-bitmap-halftone-10bpp-mmr.pdf	1	MISSING_CONTENT
+bitmap-halftone-10bpp-mmr.pdf	1	PASS
 bitmap-halftone-10bpp.pdf	1	PASS
 bitmap-halftone-composite.pdf	1	PASS
 bitmap-halftone-grid.pdf	1	PASS
@@ -192,17 +192,17 @@ bug1019475_1.pdf	1	PASS
 bug1019475_2.pdf	1	PASS
 bug1020226.pdf	1	MALFORMED_PDF
 bug1020858.pdf	1	PASS
-bug1027533.pdf	1	MISSING_CONTENT
+bug1027533.pdf	1	PASS
 bug1028735.pdf	1	PASS
 bug1046314.pdf	1	PASS
 bug1050040.pdf	1	PASS
 bug1057544.pdf	1	PASS
-bug1065245.pdf	1	MISSING_CONTENT
+bug1065245.pdf	1	PASS
 bug1068432.pdf	1	PASS
 bug1108301.pdf	1	PASS
 bug1132849.pdf	1	PASS
 bug1146106.pdf	1	PASS
-bug1151216.pdf	1	MISSING_CONTENT
+bug1151216.pdf	1	PASS
 bug1157493.pdf	1	PASS
 bug1175962.pdf	1	PASS
 bug1186827.pdf	1	PASS
@@ -256,7 +256,7 @@ bug1844576.pdf	1	PASS
 bug1844583.pdf	1	PASS
 bug1851498.pdf	1	PASS
 bug1863910.pdf	1	PASS
-bug1865341.pdf	1	MISSING_CONTENT
+bug1865341.pdf	1	PASS
 bug1868759.pdf	1	PASS
 bug1871353.1.pdf	1	PASS
 bug1871353.pdf	1	PASS
@@ -279,7 +279,7 @@ bug1947248_text.pdf	1	PASS
 bug1953099.pdf	1	PASS
 bug1963407.pdf	1	PASS
 bug1974436.pdf	1	PASS
-bug1978317.pdf	1	MALFORMED_PDF
+bug1978317.pdf	1	PASS
 bug1980958.pdf	1	PASS
 bug1989304.pdf	1	PASS
 bug1992868.pdf	1	PASS
@@ -322,7 +322,7 @@ canvas.pdf	1	PASS
 ccitt_EndOfBlock_false.pdf	1	PASS
 cff_bluescale_small_zones.pdf	1	PASS
 checkbox-bad-appearance.pdf	1	PASS
-checkbox_no_appearance.pdf	1	MISSING_CONTENT
+checkbox_no_appearance.pdf	1	PASS
 chrome-text-selection-markedContent.pdf	1	PASS
 cid_cff.pdf	1	PASS
 cidfont_cmap_overflow.pdf	1	PASS
@@ -350,7 +350,7 @@ empty#hash.pdf	1	PASS
 empty.pdf	1	PASS
 empty_protected.pdf	1	PASS
 encrypted-attachment.pdf	1	PASS
-endchar.pdf	1	PASS_ONE
+endchar.pdf	1	PASS
 evaljs.pdf	1	PASS
 extgstate.pdf	1	PASS
 extractPages_null_in_array.pdf	1	PASS
@@ -369,7 +369,7 @@ fraction-highlight.pdf	1	PASS
 franz.pdf	1	PASS
 franz_2.pdf	1	PASS
 freeculture.pdf	1	PASS
-freetext_no_appearance.pdf	1	MISSING_CONTENT
+freetext_no_appearance.pdf	1	PASS
 freetexts.pdf	1	PASS
 french_diacritics.pdf	1	PASS
 function_based_shading.pdf	1	PASS
@@ -461,7 +461,7 @@ issue13226.pdf	1	PASS
 issue13242.pdf	1	PASS
 issue13269.pdf	1	PASS
 issue13271.pdf	1	PASS
-issue13316_reduced.pdf	1	MISSING_CONTENT
+issue13316_reduced.pdf	1	PASS
 issue13325_reduced.pdf	1	PASS
 issue13343.pdf	1	PASS
 issue13372.pdf	1	PASS
@@ -609,7 +609,8 @@ issue19474.pdf	1	PASS
 issue19484_1.pdf	1	EXCISE_ONLY
 issue19484_2.pdf	1	EXCISE_ONLY
 issue19505.pdf	1	PASS
-issue19517.pdf	1	PASS
+issue19517.pdf	1	*		load-dependent (TIMEOUT when measured); any terminal status accepted
+issue19517.pdf	1	PASS_ONE
 issue19532.pdf	1	PASS
 issue19550.pdf	1	PASS
 issue19633.pdf	1	PASS
@@ -642,7 +643,7 @@ issue21126.pdf	1	PASS
 issue2128r.pdf	1	PASS
 issue21346.pdf	1	PASS
 issue21436.pdf	1	PASS
-issue215.pdf	1	MISSING_CONTENT
+issue215.pdf	1	PASS
 issue2176.pdf	1	PASS
 issue2177.pdf	1	PASS_ONE
 issue2391-1.pdf	1	PASS
@@ -687,7 +688,7 @@ issue4402_reduced.pdf	1	PASS_ONE
 issue4436r.pdf	1	PASS
 issue4461.pdf	1	PASS
 issue4550.pdf	1	PASS
-issue4573.pdf	1	MISSING_CONTENT
+issue4573.pdf	1	PASS
 issue4575.pdf	1	PASS
 issue4630.pdf	1	PASS
 issue4650.pdf	1	PASS

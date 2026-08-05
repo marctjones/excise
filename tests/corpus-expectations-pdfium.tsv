@@ -17,7 +17,7 @@
 #
 # Keys are corpus-relative PATHS, not basenames: this corpus may have
 # subdirectories and duplicate filenames.
-# Baseline: PASS=261, MALFORMED_PDF=29, MISSING_CONTENT=14, DECODE_ERROR=10, PASS_ONE=8, EMPTY_DOC=5, DIFF=2, UNSUPPORTED_ENCRYPTED=1, PASSWORD_REQUIRED=1
+# Baseline: PASS=277, MALFORMED_PDF=26, PASS_ONE=9, MISSING_CONTENT=6, EMPTY_DOC=6, DECODE_ERROR=3, DIFF=2, UNSUPPORTED_ENCRYPTED=1, PASSWORD_REQUIRED=1
 344775293.pdf	1	PASS
 363015187.pdf	1	MISSING_CONTENT
 about_blank.pdf	1	PASS
@@ -52,7 +52,7 @@ bug_1229106.pdf	1	PASS
 bug_1265.pdf	1	PASS
 bug_1296920.pdf	1	PASS
 bug_1301.pdf	1	PASS
-bug_1302355.pdf	1	MISSING_CONTENT
+bug_1302355.pdf	1	PASS
 bug_1302455.pdf	1	PASS
 bug_1324189.pdf	1	MALFORMED_PDF
 bug_1324503.pdf	1	MALFORMED_PDF
@@ -69,11 +69,11 @@ bug_1558.pdf	1	PASS
 bug_1574.pdf	1	PASS
 bug_1591.pdf	1	PASS
 bug_1646.pdf	1	PASS
-bug_1658.pdf	1	MISSING_CONTENT
+bug_1658.pdf	1	PASS
 bug_1768.pdf	1	PASS
 bug_1769.pdf	1	PASS
 bug_182.pdf	1	PASS
-bug_1893.pdf	1	DECODE_ERROR
+bug_1893.pdf	1	PASS
 bug_1919.pdf	1	PASS
 bug_2034.pdf	1	PASS
 bug_213.pdf	1	PASS
@@ -103,15 +103,15 @@ bug_431824298.pdf	1	PASS
 bug_444176962.pdf	1	PASS
 bug_451265.pdf	1	PASS
 bug_451830.pdf	1	MALFORMED_PDF
-bug_452455.pdf	1	DECODE_ERROR
+bug_452455.pdf	1	PASS
 bug_454695.pdf	1	MALFORMED_PDF
 bug_455199.pdf	1	PASS
 bug_457855936.pdf	1	MALFORMED_PDF
 bug_459580.pdf	1	PASS
 bug_461845674.pdf	1	PASS
-bug_481363.pdf	1	MALFORMED_PDF
+bug_481363.pdf	1	DECODE_ERROR
 bug_487928.pdf	1	PASS
-bug_488948351.pdf	1	DECODE_ERROR
+bug_488948351.pdf	1	PASS
 bug_491161396.pdf	1	PASS
 bug_491516663.pdf	1	PASS
 bug_498010830_shared_annots.pdf	1	PASS
@@ -132,7 +132,7 @@ bug_583.pdf	1	PASS
 bug_601362.pdf	1	PASS
 bug_602650.pdf	1	MISSING_CONTENT
 bug_620428.pdf	1	PASS
-bug_631912.pdf	1	MISSING_CONTENT
+bug_631912.pdf	1	PASS
 bug_634394.pdf	1	PASS
 bug_634716.pdf	1	PASS
 bug_642.pdf	1	PASS
@@ -152,16 +152,16 @@ bug_765384.pdf	1	PASS
 bug_773229.pdf	1	PASS
 bug_779.pdf	1	PASS
 bug_781804.pdf	1	PASS
-bug_782596.pdf	1	MALFORMED_PDF
+bug_782596.pdf	1	EMPTY_DOC
 bug_821454.pdf	1	MISSING_CONTENT
 bug_828049.pdf	1	MALFORMED_PDF
-bug_861842.pdf	1	MISSING_CONTENT
+bug_861842.pdf	1	PASS
 bug_889099.pdf	1	PASS
 bug_890322.pdf	1	PASS
-bug_896366.pdf	1	MISSING_CONTENT
-bug_900552.pdf	1	DECODE_ERROR
-bug_901654.pdf	1	DECODE_ERROR
-bug_901654_2.pdf	1	DECODE_ERROR
+bug_896366.pdf	1	PASS
+bug_900552.pdf	1	PASS
+bug_901654.pdf	1	PASS
+bug_901654_2.pdf	1	PASS
 bug_905142.pdf	1	PASS
 bug_921.pdf	1	PASS
 bug_925981.pdf	1	PASS
@@ -182,7 +182,7 @@ embedded_attachments.pdf	1	PASS
 embedded_attachments_invalid_data.pdf	1	PASS
 embedded_attachments_invalid_types.pdf	1	PASS
 embedded_attachments_with_desc.pdf	1	PASS
-embedded_images.pdf	1	MALFORMED_PDF
+embedded_images.pdf	1	PASS
 empty_xref.pdf	1	PASS
 encrypted.pdf	1	PASS
 encrypted_hello_world_r2.pdf	1	PASS
@@ -199,7 +199,7 @@ form_object.pdf	1	PASS
 form_object_with_image.pdf	1	PASS
 form_object_with_path.pdf	1	PASS
 form_object_with_text.pdf	1	PASS
-freetext_annotation_without_da.pdf	1	MISSING_CONTENT
+freetext_annotation_without_da.pdf	1	PASS
 get_page_aaction.pdf	1	PASS
 goto_action.pdf	1	PASS
 gotoe_action.pdf	1	PASS
@@ -232,7 +232,7 @@ latin_extended.pdf	1	PASS
 launch_action.pdf	1	PASS
 line_annot.pdf	1	PASS
 linearized.pdf	1	PASS
-linearized_bug_1055.pdf	1	DECODE_ERROR
+linearized_bug_1055.pdf	1	PASS
 links_highlights_annots.pdf	1	PASS
 listbox_form.pdf	1	PASS
 many_rectangles.pdf	1	PASS
@@ -250,7 +250,7 @@ page_labels.pdf	1	PASS
 page_tree_empty_node.pdf	1	PASS_ONE
 parser_rebuildxref_correct.pdf	1	PASS
 parser_rebuildxref_error_notrailer.pdf	1	PASS
-pixel/bug_1087.pdf	1	MISSING_CONTENT
+pixel/bug_1087.pdf	1	PASS
 pixel/bug_1287409.pdf	1	PASS
 pixel/bug_1308.pdf	1	PASS
 pixel/bug_1484283.pdf	1	PASS
@@ -268,10 +268,10 @@ pixel/bug_512557.pdf	1	DIFF
 pixel/bug_603518.pdf	1	DIFF
 pixel/bug_828206.pdf	1	MALFORMED_PDF
 pixel/bug_830221.pdf	1	MALFORMED_PDF
-pixel/bug_867501.pdf	1	DECODE_ERROR
+pixel/bug_867501.pdf	1	PASS_ONE
 pixel/bug_925736.pdf	1	PASS
 pixel/direct_content_stream.pdf	1	PASS
-pixel/freetext_annotation_without_da.pdf	1	MISSING_CONTENT
+pixel/freetext_annotation_without_da.pdf	1	PASS
 pixel/generation_numbers1.pdf	1	PASS
 pixel/generation_numbers2.pdf	1	PASS
 pixel/xfa_specific/barcode_test.pdf	1	PASS
