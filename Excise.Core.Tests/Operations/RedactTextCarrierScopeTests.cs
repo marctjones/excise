@@ -45,28 +45,85 @@ public class RedactTextCarrierScopeTests
     private const string Secret = "SECRETNAME";
 
     /// <summary>
-    /// The scope statement. RedactText is page-content-only, and that is
-    /// deliberate — asserting it here means a future change that quietly widens
-    /// or narrows it has to update this test and say why.
+    /// THE CONTRACT, post-#896: a plain `RedactText` call clears page content
+    /// AND every document-level carrier, with no extra step from the caller.
+    ///
+    /// This test previously asserted the opposite — that seven carriers survived
+    /// — as a characterization of the leak. It inverting is the fix landing, not
+    /// a regression.
     /// </summary>
     [Fact]
-    public void RedactText_ClearsPageContent_AndLeavesEveryDocumentLevelCarrier()
+    public void RedactText_ByDefault_ClearsPageContentAndEveryDocumentLevelCarrier()
     {
         var path = WriteFixture();
         try
         {
             using var doc = PdfDocument.Open(path);
             doc.RedactText(Secret);
+            var bytes = SaveToBytes(doc);
+            var combined = Encoding.Latin1.GetString(bytes)
+                         + Encoding.BigEndianUnicode.GetString(bytes);
+
+            combined.Should().NotContain(Secret,
+                "a caller who asks to redact a term should not also have to know that /Info, " +
+                "XMP, outline titles and annotation /Contents exist. Requiring that is what " +
+                "left the CLI and batch paths leaking in seven of eight carriers while " +
+                "reporting success (#896)");
+        }
+        finally { File.Delete(path); }
+    }
+
+    /// <summary>
+    /// The opt-out still works, and is the ONLY way to get the old behaviour.
+    ///
+    /// Kept because a caller that scrubs its own carriers (the GUI's
+    /// redacted-copy flow does) should be able to skip the duplicate pass — and
+    /// because pinning it proves the default is doing real work rather than the
+    /// scrub being unconditional.
+    /// </summary>
+    [Fact]
+    public void RedactText_WithScrubDisabled_LeavesEveryDocumentLevelCarrier()
+    {
+        var path = WriteFixture();
+        try
+        {
+            using var doc = PdfDocument.Open(path);
+            doc.RedactText(Secret, scrubDocumentCarriers: false);
             var saved = SaveToString(doc);
 
             saved.Should().NotContain("SECRETNAME appears here",
-                "removing the term from page content IS RedactText's job");
+                "glyph removal is unaffected by the opt-out");
 
             foreach (var carrier in DocumentLevelCarriers)
                 saved.Should().Contain(carrier,
-                    $"RedactText is page-content-only, so {carrier} necessarily survives it. " +
-                    "If this now passes, the engine boundary moved and #896's fix should be " +
-                    "re-examined rather than this assertion deleted");
+                    $"with the scrub explicitly disabled, {carrier} must survive — otherwise " +
+                    "the default's behaviour is not actually attributable to the new parameter");
+        }
+        finally { File.Delete(path); }
+    }
+
+    /// <summary>
+    /// A term shorter than the sanitizer's 3-character floor: page content is
+    /// still redacted, carriers deliberately are not.
+    ///
+    /// Pinned so the limit is a known, stated boundary rather than a surprise
+    /// discovered on a real document. Excising 1-2 character fragments from
+    /// every metadata string would corrupt unrelated values for no benefit.
+    /// </summary>
+    [Fact]
+    public void AShortTerm_IsRedactedFromContentButNotFromCarriers()
+    {
+        var path = WriteFixture();
+        try
+        {
+            using var doc = PdfDocument.Open(path);
+            doc.RedactText("SE");
+            var saved = SaveToString(doc);
+
+            saved.Should().Contain("SECRETNAME in Info",
+                "terms under 3 characters are below PdfDocumentSanitizer's floor, so carriers " +
+                "are untouched — a documented limit, not an oversight. A caller redacting a " +
+                "1-2 character term must scrub carriers itself");
         }
         finally { File.Delete(path); }
     }

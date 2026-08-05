@@ -1859,7 +1859,7 @@ namespace Excise.Core.Text.Segmentation
     }
     public static class PdfDocumentRedactionExtensions
     {
-        public static int RedactText(this Excise.Core.Document.PdfDocument document, string text, bool caseSensitive = false, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool drawBlackRect = true, bool includeHiddenLayers = true) { }
+        public static int RedactText(this Excise.Core.Document.PdfDocument document, string text, bool caseSensitive = false, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool drawBlackRect = true, bool includeHiddenLayers = true, bool scrubDocumentCarriers = true) { }
     }
     public static class PdfPageRedactionExtensions
     {
