@@ -97,8 +97,41 @@ public class SkiaRenderer
         var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
         using var canvas = new SKCanvas(bitmap);
 
-        // Fill background
-        canvas.Clear(options.BackgroundColor);
+        // The page group composites against a TRANSPARENT initial backdrop and
+        // the paper colour is applied LAST (§11.4.7). Clearing to the background
+        // colour first — which is what this did — makes every blend mode
+        // composite against opaque white, and against Cb = 1 the separable
+        // blend functions collapse: B(1, Cs) = 1 for Screen, ColorDodge,
+        // Lighten, SoftLight, Overlay, ColorBurn, Hue, Saturation, Color and
+        // half of HardLight. NINE OF SIXTEEN blend modes drew nothing at all,
+        // with no error and no diagnostic, because the composite genuinely
+        // evaluated to white (#890).
+        //
+        // NO SaveLayer. That is the obvious implementation and it is wrong
+        // here: _rootBitmap is read directly by the overprint, blend-window and
+        // DeviceCMYK-backdrop paths (SkiaRenderer.Paths.cs, .Images.cs,
+        // .XObjects.cs, including a raw pixel span in RootPixels()), and inside
+        // a layer those would all sample stale white. Clearing to transparent
+        // and filling the paper underneath at the end leaves _rootBitmap as the
+        // real page bitmap throughout, so every one of those readers keeps
+        // seeing real content.
+        //
+        // EXCEPT for a page that STARTS in a DeviceCMYK transparency group.
+        // There, excise emulates group compositing itself, and
+        // SyncDeviceCmykBackdropFromRootBitmap reads _rootBitmap.GetPixel AS
+        // THE BACKDROP — so it needs the paper actually present in the bitmap.
+        // With a transparent clear it read (0,0,0,0) instead of white and
+        // half-alpha fills stopped resolving: DeviceCmykBlendPathRenderTests
+        // caught pixel (267,293) turning from opaque yellow #fffff200 into
+        // #fffff87f, i.e. half-alpha yellow left to be composited over the
+        // paper afterwards rather than resolved inside the group.
+        //
+        // Those pages already get a correct non-white backdrop from the CMYK
+        // emulation, so they are not what #890 is about, and they keep the old
+        // behaviour exactly.
+        bool startsInDeviceCmykGroup =
+            IsDeviceCmykTransparencyGroup(page.Dictionary.GetOptional("Group"), page.Document);
+        canvas.Clear(startsInDeviceCmykGroup ? options.BackgroundColor : SKColors.Transparent);
 
         if (options.ClipRect.HasValue)
         {
@@ -116,8 +149,29 @@ public class SkiaRenderer
             options,
             cancellationToken,
             bitmap,
-            IsDeviceCmykTransparencyGroup(page.Dictionary.GetOptional("Group"), page.Document));
+            startsInDeviceCmykGroup);
         context.Render();
+
+        // Paper last. Everything drawn above composited against a transparent
+        // backdrop; DstOver puts the page colour UNDER it, which is the
+        // "apply the paper at the end" half of §11.4.7.
+        //
+        // Done after annotations as well as content, so an annotation using a
+        // blend mode gets the same correct backdrop the page content did.
+        //
+        // Reset the matrix first: content rendering leaves the PDF-space
+        // transform on the canvas, and the paper must cover the whole DEVICE
+        // bitmap regardless of what the page's own coordinate system was.
+        canvas.ResetMatrix();
+        using (var paper = new SKPaint
+        {
+            Color = options.BackgroundColor,
+            BlendMode = SKBlendMode.DstOver,
+            Style = SKPaintStyle.Fill,
+        })
+        {
+            canvas.DrawRect(new SKRect(0, 0, width, height), paper);
+        }
 
         return bitmap;
     }
