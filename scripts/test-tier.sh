@@ -145,9 +145,29 @@ run_step() {
 
 run_t0() {
     run_step "build" dotnet build excise.sln -c Debug
-    run_step "core-tests" dotnet test Excise.Core.Tests --no-build -c Debug --logger "console;verbosity=normal"
-    run_step "cli-tests" dotnet test Excise.Cli.Tests --no-build -c Debug --logger "console;verbosity=normal"
-    run_step "avalonia-tests" dotnet test Excise.Avalonia.Tests --no-build -c Debug --logger "console;verbosity=normal"
+    # The trx loggers are here so the #894 count gates below can reuse THIS run
+    # instead of executing each suite a second time. Paths are absolute because
+    # `dotnet test` resolves a relative LogFileName against the project's
+    # TestResults directory, not the working directory.
+    run_step "core-tests" dotnet test Excise.Core.Tests --no-build -c Debug \
+        --logger "console;verbosity=normal" --logger "trx;LogFileName=$LOG_DIR/core-tests.trx"
+    run_step "cli-tests" dotnet test Excise.Cli.Tests --no-build -c Debug \
+        --logger "console;verbosity=normal" --logger "trx;LogFileName=$LOG_DIR/cli-tests.trx"
+    run_step "avalonia-tests" dotnet test Excise.Avalonia.Tests --no-build -c Debug \
+        --logger "console;verbosity=normal" --logger "trx;LogFileName=$LOG_DIR/avalonia-tests.trx"
+    # #894: every discovered test must produce a result. `dotnet test` loses one
+    # roughly half the time on Excise.Core.Tests — a different test each run, and
+    # not xunit parallelism (forcing serial changes the wall clock by 4s and
+    # still loses one). A vanished test reads exactly like a passing one, and it
+    # defeats mutation testing: reverting a fix cannot redden a case that never
+    # reports. The gate re-runs whatever went missing, so a transient loss is
+    # reported and a genuine coverage hole is fatal.
+    run_step "test-count-core" scripts/check-test-count.sh \
+        Excise.Core.Tests/Excise.Core.Tests.csproj --trx "$LOG_DIR/core-tests.trx"
+    run_step "test-count-cli" scripts/check-test-count.sh \
+        Excise.Cli.Tests/Excise.Cli.Tests.csproj --trx "$LOG_DIR/cli-tests.trx"
+    run_step "test-count-avalonia" scripts/check-test-count.sh \
+        Excise.Avalonia.Tests/Excise.Avalonia.Tests.csproj --trx "$LOG_DIR/avalonia-tests.trx"
     run_step "doc-claims" scripts/verify-doc-claims.sh
     # origin/develop, not origin/main: this repo's git-flow lands feature
     # work on develop (release.yml/PR merges to main happen separately), so
