@@ -34,9 +34,33 @@ public static class PdfDocumentRedactionExtensions
 {
     /// <summary>
     /// Redact every occurrence of <paramref name="text"/> in
-    /// <paramref name="document"/>. The document is mutated in place;
-    /// call <see cref="PdfDocument.Save(string)"/> to persist.
+    /// <paramref name="document"/> — from page content AND from the
+    /// document-level text carriers that restate it (<c>/Info</c>, the XMP
+    /// <c>/Metadata</c> packet, outline titles, annotation <c>/Contents</c>).
+    /// The document is mutated in place; call
+    /// <see cref="PdfDocument.Save(string)"/> to persist.
     /// </summary>
+    /// <remarks>
+    /// The carrier scrub is ON by default and that is deliberate (#896). It used
+    /// to live in the GUI's save workflow, which meant the GUI was complete and
+    /// every other consumer silently was not: <c>excise redact</c> and batch
+    /// <c>redaction.apply</c> left the term in seven of eight carriers while
+    /// reporting success. A redaction API whose safe form is opt-in produces
+    /// exactly that outcome the first time someone writes a new front end.
+    /// <para>
+    /// Two limits worth knowing rather than discovering:
+    /// <list type="bullet">
+    ///   <item>Terms shorter than 3 characters are redacted from page content
+    ///     but NOT from document-level carriers — excising 1-2 character
+    ///     fragments from every metadata string corrupts unrelated values for
+    ///     no security benefit.</item>
+    ///   <item><see cref="PdfPageRedactionExtensions.RedactArea(PdfPage, PdfRectangle, GlyphRemovalStrategy)"/>
+    ///     has no term to scrub and therefore does none of this. An area
+    ///     redaction still needs its removed text collected and scrubbed
+    ///     separately.</item>
+    /// </list>
+    /// </para>
+    /// </remarks>
     /// <param name="document">The PDF document to redact.</param>
     /// <param name="text">The text to redact.</param>
     /// <param name="caseSensitive">Whether matching is case-sensitive.</param>
@@ -46,6 +70,12 @@ public static class PdfDocumentRedactionExtensions
     /// (OCGs) that are OFF by default. When true, this closes a security gap where content
     /// on hidden layers is invisible in the default view but fully extractable via other tools.
     /// Defaults to true for security (redact even hidden content).</param>
+    /// <param name="scrubDocumentCarriers">Whether to also remove the term from
+    /// <c>/Info</c>, the XMP <c>/Metadata</c> packet, outline titles and annotation
+    /// <c>/Contents</c> (#896). Defaults to true — those carriers restate page text
+    /// and are invisible to a content-stream check, which is how three separate
+    /// leaks shipped past a green suite. Pass false only when the caller performs
+    /// the scrub itself.</param>
     /// <returns>
     /// Total number of matches removed across all pages.
     /// </returns>
@@ -55,7 +85,8 @@ public static class PdfDocumentRedactionExtensions
         bool caseSensitive = false,
         GlyphRemovalStrategy strategy = GlyphRemovalStrategy.AnyOverlap,
         bool drawBlackRect = true,
-        bool includeHiddenLayers = true)
+        bool includeHiddenLayers = true,
+        bool scrubDocumentCarriers = true)
     {
         if (document == null) throw new ArgumentNullException(nameof(document));
         if (string.IsNullOrEmpty(text)) return 0;
@@ -119,6 +150,32 @@ public static class PdfDocumentRedactionExtensions
                 totalMatches += RemoveTextShowingOperatorsContaining(page, text, caseSensitive);
             totalMatches += RemoveTextLinesStillContaining(page, text, caseSensitive, includeHiddenLayers);
         }
+
+        // #896: document-level carriers are part of redaction, not part of a
+        // caller's save workflow.
+        //
+        // Everything above this line rewrites PAGE CONTENT. A PDF restates the
+        // same string in /Info, the XMP packet, outline titles and annotation
+        // /Contents — the four carriers #608 was filed for after they shipped a
+        // leak past a fully green suite. Scrubbing them lived in Excise.App, so
+        // the GUI was complete and every other consumer was not: `excise redact`
+        // and batch `redaction.apply` left the term in SEVEN of eight carriers
+        // while reporting success.
+        //
+        // Doing it here rather than in each caller is the actual fix. A
+        // guarantee re-established by every front end is a guarantee that holds
+        // until someone writes a new front end.
+        //
+        // Runs even when totalMatches is 0: "redact this term" means remove it
+        // from the document, and a term present only in the title is exactly
+        // the case a page-content match count cannot see.
+        //
+        // NOTE: ScrubTerms ignores terms shorter than 3 characters — excising
+        // 1-2 character fragments from every metadata string would corrupt
+        // unrelated values for no security benefit. Page content is still
+        // redacted for such terms; their document-level carriers are not.
+        if (scrubDocumentCarriers)
+            Excise.Core.Operations.PdfDocumentSanitizer.ScrubTerms(document, new[] { text });
 
         return totalMatches;
     }
