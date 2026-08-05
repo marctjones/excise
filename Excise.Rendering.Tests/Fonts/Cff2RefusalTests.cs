@@ -59,7 +59,7 @@ public class Cff2RefusalTests
     /// --list-tests and then produces no result at all under --filter, neither
     /// pass nor fail nor skip. That is a harness defect, not a CFF2 finding, and
     /// pinning coverage on a case that silently does not run would be worse than
-    /// not claiming it. Tracked separately; S2.pdf itself renders PASS under
+    /// not claiming it. Tracked as #894; S2.pdf itself renders PASS under
     /// corpus-scan, so the gap is in reporting, not in the renderer.
     /// </summary>
     [Theory]
