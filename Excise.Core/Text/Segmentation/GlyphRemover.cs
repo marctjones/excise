@@ -38,10 +38,27 @@ namespace Excise.Core.Text.Segmentation;
 /// </list>
 /// </para>
 /// <para>
-/// Deferred (tracked under #313 / #281): nested BT in malformed streams,
-/// Form-XObject traversal, partial glyph rasterization (#278), and page
-/// rotation. Callers redacting rotated pages should pre-transform the
-/// redaction rectangle into content-stream coordinates.
+/// Still deferred: nested BT in malformed streams.
+/// </para>
+/// <para>
+/// Partial glyph rasterization (#278) is DECLINED, not pending. It asks that a
+/// glyph the redaction rectangle only partly covers be rasterized so the
+/// uncovered sliver survives. That is the exact property
+/// <see cref="GlyphRemovalStrategy.AnyOverlap"/> — the default — exists to
+/// prevent: its own summary says it "prevents partial glyph exposure". Callers
+/// who want the other trade-off already have
+/// <see cref="GlyphRemovalStrategy.FullyContained"/> and
+/// <see cref="GlyphRemovalStrategy.CenterPoint"/>, which reach it by removing
+/// less rather than by re-drawing pixels of redacted text. Separately,
+/// rasterizing needs a renderer, and Excise.Core has no project references by
+/// design (Excise.Rendering depends on Core, never the reverse).
+/// </para>
+/// <para>
+/// No longer deferred — do not re-add these: Form-XObject traversal
+/// (FormXObjectFlattener) and page rotation (/Rotate is honoured end-to-end via
+/// PdfPage.ToContentStreamCoordinates, covered by RotatedPageRedactionTests).
+/// The old wording also pointed at #313/#281 as the tracking issues; both are
+/// closed and were about CJK/CID font support, not this list.
 /// </para>
 /// </remarks>
 public class GlyphRemover
