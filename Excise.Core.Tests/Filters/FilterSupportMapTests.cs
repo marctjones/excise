@@ -145,9 +145,12 @@ public class CcittCapabilityClassifierTests
     /// <summary>
     /// The point of the classifier: naming what a stream needs that excise does
     /// not do, so a blank page can be attributed instead of merely observed.
+    ///
+    /// /DamagedRowsBeforeError qualifies for ANY value — excise has no
+    /// partial-failure mode at all, so the request cannot be honoured however it
+    /// is set. /EndOfBlock does not, and is covered by its own tests below.
     /// </summary>
     [Theory]
-    [InlineData("EndOfBlock")]
     [InlineData("DamagedRowsBeforeError")]
     public void ReportsParametersTheDecoderDoesNotRead(string key)
     {
@@ -158,6 +161,71 @@ public class CcittCapabilityClassifierTests
             $"/{key} is defined by §7.4.6 and CcittFaxDecoder never reads it — a stream " +
             "relying on it will not decode as its author intended, and that must be visible");
         report.FullySupported.Should().BeFalse();
+    }
+
+    /// <summary>
+    /// #893 — /EndOfBlock is classified by VALUE, not by presence.
+    ///
+    /// TRUE is the spec default and means "an EOFB pattern terminates the data".
+    /// excise stops at /Rows or end-of-data, which on a well-formed stream is the
+    /// same place, so nothing is unsupported. The previous version of this
+    /// classifier reported it unsupported whenever the key appeared — wrong for
+    /// the commonest case, and wrong in the direction that matters: it tells a
+    /// user their file cannot be handled when it demonstrably can, and these
+    /// reports are what R8 uses to decide what to build.
+    ///
+    /// The same over-reporting bug was found in the JBIG2 classifier (#656),
+    /// where a fabricated "unsupported" nearly bought an implementation of a
+    /// feature the file did not use.
+    /// </summary>
+    [Fact]
+    public void EndOfBlockTrue_IsTheDefaultAndIsNotUnsupported()
+    {
+        var report = Excise.Core.Filters.Ccitt.CcittCapabilityClassifier.Analyze(
+            Parms(("EndOfBlock", PdfBoolean.True)));
+
+        report.UnsupportedFeatures.Should().NotContain("EndOfBlock",
+            "true is the §7.4.6 default; excise's termination coincides with it on a " +
+            "well-formed stream, so there is nothing here a user needs warning about");
+        report.FullySupported.Should().BeTrue(
+            "a stream stating the default explicitly is fully supported");
+    }
+
+    /// <summary>
+    /// FALSE asks for non-default behaviour — /Rows becomes authoritative and any
+    /// EOFB is to be ignored. excise still agrees on a well-formed stream
+    /// (measured: pdfjs/ccitt_EndOfBlock_false.pdf, the only corpus file that
+    /// sets it, renders at parity with mutool, pdftocairo and Ghostscript) but
+    /// can over-read a truncated one. That residual risk is what is reported.
+    /// </summary>
+    [Fact]
+    public void EndOfBlockFalse_IsReportedWithTheReasonItMatters()
+    {
+        var report = Excise.Core.Filters.Ccitt.CcittCapabilityClassifier.Analyze(
+            Parms(("EndOfBlock", PdfBoolean.False)));
+
+        report.UnsupportedFeatures.Should().Contain("EndOfBlock",
+            "false is the case excise genuinely does not implement");
+        report.Diagnostics.Should().Contain(d => d.Contains("truncated"),
+            "'unsupported' alone is not actionable — the diagnostic must say that the " +
+            "divergence is confined to truncated data, or a reader cannot tell whether " +
+            "their well-formed file is affected");
+    }
+
+    /// <summary>
+    /// Absent must behave exactly as explicit-true. Without this, a classifier
+    /// that special-cased only the literal key would pass the true test while
+    /// still mis-reporting the overwhelmingly common case of no /EndOfBlock at
+    /// all.
+    /// </summary>
+    [Fact]
+    public void EndOfBlockAbsent_IsIndistinguishableFromExplicitTrue()
+    {
+        var absent = Excise.Core.Filters.Ccitt.CcittCapabilityClassifier.Analyze(
+            Parms(("K", new PdfInteger(-1))));
+
+        absent.UnsupportedFeatures.Should().NotContain("EndOfBlock");
+        absent.FullySupported.Should().BeTrue();
     }
 
     /// <summary>

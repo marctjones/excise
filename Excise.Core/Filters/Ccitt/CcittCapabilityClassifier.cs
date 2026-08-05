@@ -59,20 +59,65 @@ internal sealed class CcittCapabilityReport
 internal static class CcittCapabilityClassifier
 {
     /// <summary>
-    /// Parameters §7.4.6 defines that the decoder does not consume.
-    ///
-    /// /EndOfBlock (default true) means "an EOFB pattern ends the data"; excise
-    /// decodes to /Rows or to end-of-data instead, which reaches the same place
-    /// on a well-formed stream and differs on a truncated one.
+    /// Parameters §7.4.6 defines that the decoder does not consume, and that are
+    /// unsupported however they are set.
     ///
     /// /DamagedRowsBeforeError asks the decoder to tolerate N corrupt rows
-    /// before failing; excise has no partial-failure mode.
+    /// before failing; excise has no partial-failure mode at all, so the request
+    /// cannot be honoured for any value. No file in any of the four corpora sets
+    /// it.
+    ///
+    /// /EndOfBlock is deliberately NOT in this list — see ClassifyEndOfBlock.
     /// </summary>
     private static readonly (string Key, string Feature)[] UnreadParameters =
     {
-        ("EndOfBlock", "EndOfBlock"),
         ("DamagedRowsBeforeError", "DamagedRowsBeforeError"),
     };
+
+    /// <summary>
+    /// /EndOfBlock, classified by VALUE rather than by presence (#893).
+    ///
+    /// The first version reported it unsupported whenever the key appeared. That
+    /// was wrong for the commonest case and wrong in the direction that matters:
+    /// TRUE is the spec default, and it means "an EOFB pattern terminates the
+    /// data". excise stops at /Rows or at end-of-data, which on a well-formed
+    /// stream is the same place. Nothing is unsupported, and saying otherwise
+    /// tells a user their file cannot be handled when it demonstrably can.
+    ///
+    /// This is the same over-reporting bug found in the JBIG2 classifier (#656),
+    /// where a fabricated "unsupported" nearly bought an implementation of a
+    /// feature the file did not use. These reports drive what gets built, so a
+    /// false alarm is not a harmless conservatism.
+    ///
+    /// FALSE is the one that asks for non-default behaviour: /Rows becomes
+    /// authoritative and any EOFB is to be ignored rather than obeyed. excise
+    /// still reaches the same place on a well-formed stream — measured on
+    /// pdfjs/ccitt_EndOfBlock_false.pdf, the only corpus file that sets it, which
+    /// renders at parity with mutool, pdftocairo and Ghostscript (ink 0.648 /
+    /// 0.651 / 0.654) — and can diverge on a TRUNCATED one, where excise runs to
+    /// end-of-data instead of stopping at the row count. That residual risk is
+    /// what gets reported, with a diagnostic that says what it actually is.
+    /// </summary>
+    private static void ClassifyEndOfBlock(
+        PdfDictionary decodeParms,
+        ISet<string> features,
+        ISet<string> unsupported,
+        ICollection<string> diagnostics)
+    {
+        if (decodeParms.GetOptional("EndOfBlock") == null)
+            return; // absent: the default, and the default is what excise does
+
+        features.Add("EndOfBlock");
+
+        if (decodeParms.GetBool("EndOfBlock", true))
+            return; // true: also the default
+
+        unsupported.Add("EndOfBlock");
+        diagnostics.Add(
+            "/EndOfBlock false asks the decoder to ignore an EOFB pattern and trust /Rows; " +
+            "excise decodes to /Rows or to end-of-data, which agrees on a well-formed stream " +
+            "and may over-read a truncated one");
+    }
 
     public static CcittCapabilityReport Analyze(PdfDictionary? decodeParms)
     {
@@ -131,6 +176,8 @@ internal static class CcittCapabilityClassifier
 
         var rows = decodeParms.GetInt("Rows", 0);
         if (rows > 0) features.Add("Rows");
+
+        ClassifyEndOfBlock(decodeParms, features, unsupported, diagnostics);
 
         foreach (var (key, feature) in UnreadParameters)
         {
