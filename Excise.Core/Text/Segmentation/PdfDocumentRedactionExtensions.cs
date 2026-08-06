@@ -175,7 +175,8 @@ public static class PdfDocumentRedactionExtensions
         // unrelated values for no security benefit. Page content is still
         // redacted for such terms; their document-level carriers are not.
         if (scrubDocumentCarriers)
-            Excise.Core.Operations.PdfDocumentSanitizer.ScrubTerms(document, new[] { text });
+            Excise.Core.Operations.PdfDocumentSanitizer.ScrubTerms(
+                document, new[] { text }, caseSensitive);
 
         return totalMatches;
     }

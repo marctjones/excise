@@ -180,6 +180,40 @@ public class RedactTextCarrierScopeTests
         finally { File.Delete(path); }
     }
 
+
+    /// <summary>
+    /// #905 — the scrub must match the CASE SENSITIVITY the caller used on page
+    /// content, or the carriers survive a redaction that reported success.
+    ///
+    /// Introduced by #896 and caught the same day: RedactText defaults to
+    /// case-INsensitive glyph removal, ScrubTerms was hard-coded to Ordinal. So
+    /// redacting "smith" cleared the page and left "Smith v. Jones" in
+    /// /Info /Title — the exact failure #896 existed to fix, in a new form.
+    ///
+    /// This is the under-redaction direction, which is why the default is
+    /// case-insensitive: over-scrubbing metadata is recoverable, a surviving
+    /// name is not.
+    /// </summary>
+    [Fact]
+    public void ADifferentlyCasedTerm_StillClearsTheCarriers()
+    {
+        var path = WriteFixture();
+        try
+        {
+            using var doc = PdfDocument.Open(path);
+            doc.RedactText(Secret.ToLowerInvariant());   // fixture stores it upper-case
+            var bytes = SaveToBytes(doc);
+            var combined = Encoding.Latin1.GetString(bytes)
+                         + Encoding.BigEndianUnicode.GetString(bytes);
+
+            combined.ToUpperInvariant().Should().NotContain(Secret,
+                "RedactText matched page content case-insensitively, so the carrier scrub must " +
+                "too. A case-sensitive scrub leaves the name in /Info /Title while the tool " +
+                "reports the redaction succeeded");
+        }
+        finally { File.Delete(path); }
+    }
+
     // ── fixture ──────────────────────────────────────────────────────────────
 
     private static readonly string[] DocumentLevelCarriers =

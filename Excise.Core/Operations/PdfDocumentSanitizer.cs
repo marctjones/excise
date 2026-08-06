@@ -51,27 +51,37 @@ public static class PdfDocumentSanitizer
     /// non-page text carriers.
     /// </summary>
     /// <returns>True if any carrier was modified.</returns>
-    public static bool ScrubTerms(PdfDocument document, IEnumerable<string> terms)
+    /// <param name="caseSensitive">
+    /// Must match how the CALLER matched page content. #905: RedactText defaults
+    /// to case-INsensitive glyph removal while this scrub was hard-coded to
+    /// Ordinal, so redacting "smith" cleared the page and left "Smith" sitting in
+    /// /Info /Title — the tool reporting success over a document that still names
+    /// the person. An under-redaction is the failure that matters here, so the
+    /// default is case-INsensitive: over-scrubbing metadata is recoverable, a
+    /// surviving name is not.
+    /// </param>
+    public static bool ScrubTerms(
+        PdfDocument document, IEnumerable<string> terms, bool caseSensitive = false)
     {
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(terms);
 
         var actionable = terms
             .Where(t => !string.IsNullOrWhiteSpace(t) && t.Length >= MinTermLength)
-            .Distinct(StringComparer.Ordinal)
+            .Distinct(caseSensitive ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase)
             .ToList();
 
         if (actionable.Count == 0) return false;
 
         var changed = false;
-        changed |= ScrubInfo(document, actionable);
-        changed |= ScrubXmpMetadata(document, actionable);
-        changed |= ScrubOutlines(document, actionable);
-        changed |= ScrubAnnotationContents(document, actionable);
+        changed |= ScrubInfo(document, actionable, caseSensitive);
+        changed |= ScrubXmpMetadata(document, actionable, caseSensitive);
+        changed |= ScrubOutlines(document, actionable, caseSensitive);
+        changed |= ScrubAnnotationContents(document, actionable, caseSensitive);
         return changed;
     }
 
-    private static bool ScrubInfo(PdfDocument document, IReadOnlyList<string> terms)
+    private static bool ScrubInfo(PdfDocument document, IReadOnlyList<string> terms, bool caseSensitive)
     {
         var info = document.Info;
         if (info == null) return false;
@@ -82,7 +92,7 @@ public static class PdfDocumentSanitizer
             var value = info.GetStringOrNull(key);
             if (string.IsNullOrEmpty(value)) continue;
 
-            var scrubbed = Excise(value, terms);
+            var scrubbed = Excise(value, terms, caseSensitive);
             if (scrubbed == value) continue;
 
             if (scrubbed.Length == 0)
@@ -95,7 +105,7 @@ public static class PdfDocumentSanitizer
         return changed;
     }
 
-    private static bool ScrubXmpMetadata(PdfDocument document, IReadOnlyList<string> terms)
+    private static bool ScrubXmpMetadata(PdfDocument document, IReadOnlyList<string> terms, bool caseSensitive)
     {
         if (document.Resolve(document.Catalog.GetOptional("Metadata") ?? PdfNull.Instance) is not PdfStream stream)
             return false;
@@ -105,7 +115,7 @@ public static class PdfDocumentSanitizer
         // dc:description, pdf:Keywords, or a custom schema we have never heard
         // of, and a text-level excision catches all of them.
         var xmp = Encoding.UTF8.GetString(stream.DecodedData);
-        var scrubbed = Excise(xmp, terms);
+        var scrubbed = Excise(xmp, terms, caseSensitive);
         if (scrubbed == xmp) return false;
 
         // Write through the ENCODED bytes, not the decoded ones. The writer
@@ -125,7 +135,7 @@ public static class PdfDocumentSanitizer
         return true;
     }
 
-    private static bool ScrubOutlines(PdfDocument document, IReadOnlyList<string> terms)
+    private static bool ScrubOutlines(PdfDocument document, IReadOnlyList<string> terms, bool caseSensitive)
     {
         if (document.Resolve(document.Catalog.GetOptional("Outlines") ?? PdfNull.Instance) is not PdfDictionary outlines)
             return false;
@@ -143,7 +153,7 @@ public static class PdfDocumentSanitizer
                 var title = item.GetStringOrNull("Title");
                 if (!string.IsNullOrEmpty(title))
                 {
-                    var scrubbed = Excise(title, terms);
+                    var scrubbed = Excise(title, terms, caseSensitive);
                     if (scrubbed != title)
                     {
                         // An emptied bookmark keeps its destination but loses its
@@ -163,7 +173,7 @@ public static class PdfDocumentSanitizer
         return changed;
     }
 
-    private static bool ScrubAnnotationContents(PdfDocument document, IReadOnlyList<string> terms)
+    private static bool ScrubAnnotationContents(PdfDocument document, IReadOnlyList<string> terms, bool caseSensitive)
     {
         var changed = false;
 
@@ -183,7 +193,7 @@ public static class PdfDocumentSanitizer
                     var value = annot.GetStringOrNull(key);
                     if (string.IsNullOrEmpty(value)) continue;
 
-                    var scrubbed = Excise(value, terms);
+                    var scrubbed = Excise(value, terms, caseSensitive);
                     if (scrubbed == value) continue;
 
                     if (scrubbed.Length == 0)
@@ -199,11 +209,14 @@ public static class PdfDocumentSanitizer
         return changed;
     }
 
-    private static string Excise(string value, IReadOnlyList<string> terms)
+    private static string Excise(string value, IReadOnlyList<string> terms, bool caseSensitive)
     {
+        var comparison = caseSensitive
+            ? StringComparison.Ordinal
+            : StringComparison.OrdinalIgnoreCase;
         var result = value;
         foreach (var term in terms)
-            result = result.Replace(term, string.Empty, StringComparison.Ordinal);
+            result = result.Replace(term, string.Empty, comparison);
         return result.Trim();
     }
 }
