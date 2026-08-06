@@ -236,8 +236,24 @@ jobs:
         continue-on-error: true
         run: brew install librsvg
 
-      - name: Build macOS .app (arm64)
-        run: ./scripts/build-macos-app.sh --version "${{ steps.ver.outputs.version }}" --rid osx-arm64 --output dist
+      # --aot: Native AOT. Verified on this exact configuration 2026-08-05 —
+      # scripts/run-packaged-gui-smoke.sh against the produced bundle passed 8/8
+      # automated workflows with zero dyld / DllNotFound / TypeInitialization
+      # errors, and first_page_visible in 4ms, which is the SkiaSharp
+      # native-asset load #705 exists to check.
+      #
+      # 55 MB and a single native binary, versus 175 MB and 230 managed .dll
+      # sidecars without it. Feature-equivalent: the AOT publish sets
+      # EnableScripting=false and IncludeTessdataInApp=false, but both are
+      # ALREADY the defaults for any Release build (#341/#342), so the flags
+      # restate rather than reduce.
+      #
+      # Native AOT cannot cross-compile — it invokes the target platform's
+      # linker — which is why this is safe here (macos-latest builds the macOS
+      # artifact) and why the Windows job cannot simply copy it. AOT publish is
+      # slower than a plain one; that cost is paid on the release path only.
+      - name: Build macOS .app (arm64, Native AOT)
+        run: ./scripts/build-macos-app.sh --version "${{ steps.ver.outputs.version }}" --rid osx-arm64 --aot --output dist
 
       - uses: actions/upload-artifact@v7
         with:
