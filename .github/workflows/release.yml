@@ -82,8 +82,57 @@ jobs:
       - name: Generate license manifest
         run: ./scripts/generate-license-manifest.sh
 
-      - name: Build .deb
-        run: ./scripts/build-deb.sh --version "${{ steps.ver.outputs.version }}" --arch amd64 --output dist/
+      # Native AOT on Linux shells out to clang and needs zlib headers. Without
+      # these, `dotnet publish -p:PublishAot=true` fails inside the linker with a
+      # message that does not name the missing package.
+      - name: Install Native AOT prerequisites
+        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends clang zlib1g-dev
+
+      - name: Build .deb (Native AOT)
+        run: ./scripts/build-deb.sh --version "${{ steps.ver.outputs.version }}" --arch amd64 --aot --output dist/
+
+      # THE VERIFICATION THAT MAKES SHIPPING AOT HERE DEFENSIBLE.
+      #
+      # AOT's failure modes are runtime-only — trimmed reflection and native
+      # asset loading — so a successful publish proves very little. There is no
+      # packaged GUI smoke on Linux (run-packaged-gui-smoke.sh is macOS-only),
+      # and a headless runner is a poor place to add one.
+      #
+      # The CLI is the answer: it needs no display, and `render` exercises the
+      # single riskiest thing under AOT — SkiaSharp's native library loading and
+      # the font stack — which the GUI shares. If this passes, the component
+      # most likely to break under AOT demonstrably works in the shipped binary.
+      #
+      # This does NOT verify the GUI on Linux. That gap is real and stated.
+      - name: Smoke the AOT CLI binary
+        run: |
+          set -euo pipefail
+          cli="artifacts/publish/linux-x64/cli/excise"
+          test -x "$cli" || { echo "AOT CLI binary missing at $cli"; exit 1; }
+          file "$cli"
+          # No managed sidecars is the signature of a real AOT publish; a
+          # fallback to the ordinary self-contained build would silently ship
+          # a 175MB artifact while this step still passed on `--version`.
+          dllcount=$(find artifacts/publish/linux-x64/cli -maxdepth 1 -name '*.dll' | wc -l)
+          echo "managed dll sidecars: $dllcount (expect 0 for AOT)"
+          test "$dllcount" -eq 0 || { echo "not an AOT publish"; exit 1; }
+          "$cli" --version
+
+          # A COMMITTED fixture, deliberately: test-pdfs/ is gitignored except
+          # for a handful of checked-in probes, and pointing this at the corpus
+          # would silently degrade to "no PDF found" on the runner — leaving the
+          # only meaningful part of the smoke unrun while the step still passed.
+          pdf="Excise.App.Tests/Resources/sample-pdfs/birth-certificate-request-scrambled.pdf"
+          test -f "$pdf" || { echo "smoke fixture missing: $pdf"; exit 1; }
+
+          "$cli" info "$pdf"
+          "$cli" text "$pdf" --page 1 | head -3
+          # render exercises SkiaSharp native load + the font stack, which is
+          # the thing most likely to break under AOT and is shared with the GUI.
+          "$cli" render "$pdf" -o /tmp/aot-smoke.png --dpi 72 --ignore-permissions
+          bytes=$(stat -c%s /tmp/aot-smoke.png)
+          echo "rendered $pdf -> $bytes bytes"
+          test "$bytes" -gt 5000 || { echo "render produced a trivial file"; exit 1; }
 
       - name: Build portable tarball
         # An unpacked, self-contained binary archive for users who don't

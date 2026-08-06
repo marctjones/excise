@@ -34,6 +34,7 @@ ARCH="amd64"
 OUTPUT_DIR="dist"
 VERSION=""
 RUN_LINTIAN=0
+AOT=0
 
 # ── parse args ─────────────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
@@ -42,6 +43,7 @@ while [[ $# -gt 0 ]]; do
         --arch)     ARCH="$2";       shift 2 ;;
         --output)   OUTPUT_DIR="$2"; shift 2 ;;
         --lintian)  RUN_LINTIAN=1;   shift ;;
+        --aot)      AOT=1;           shift ;;
         --help|-h)
             sed -n '2,30p' "$0"
             exit 0
@@ -88,8 +90,36 @@ PUBLISH_BASE="$ROOT/artifacts/publish/$DOTNET_RID"
 rm -rf "$PUBLISH_BASE"
 mkdir -p "$PUBLISH_BASE"
 
+# Native AOT and PublishSingleFile are mutually exclusive: AOT already emits a
+# single native executable, so the self-extracting single-file host has nothing
+# to wrap and MSBuild rejects the combination.
+#
+# AOT CANNOT CROSS-COMPILE — it invokes the target platform's linker — so this
+# path only works when run ON linux-x64. That is why it is a flag rather than
+# the default: `--aot` is for the release runner (ubuntu-latest), and a
+# developer on macOS building a .deb for inspection still gets the portable
+# self-contained build.
+#
+# Prerequisites on the builder: clang and zlib1g-dev. The release workflow
+# installs them; a bare machine without them fails inside dotnet publish with a
+# linker error rather than anything self-explanatory.
 publish() {
     local proj="$1" name="$2" outdir="$3"
+    if [[ "$AOT" = "1" ]]; then
+        echo "▶ Publishing $name → $outdir (Native AOT)"
+        dotnet publish "$ROOT/$proj" \
+            -c Release \
+            -r "$DOTNET_RID" \
+            --self-contained true \
+            -p:PublishAot=true \
+            -p:PublishSingleFile=false \
+            -p:PublishReadyToRun=false \
+            -p:EnableScripting=false \
+            -p:IncludeTessdataInApp=false \
+            -p:DebugType=None -p:DebugSymbols=false \
+            -o "$outdir" >/dev/null
+        return
+    fi
     echo "▶ Publishing $name → $outdir"
     dotnet publish "$ROOT/$proj" \
         -c Release \
