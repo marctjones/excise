@@ -1172,7 +1172,7 @@ namespace Excise.Core.Operations
     }
     public static class PdfDocumentSanitizer
     {
-        public static bool ScrubTerms(Excise.Core.Document.PdfDocument document, System.Collections.Generic.IEnumerable<string> terms) { }
+        public static bool ScrubTerms(Excise.Core.Document.PdfDocument document, System.Collections.Generic.IEnumerable<string> terms, bool caseSensitive = false) { }
     }
     public static class PdfDocumentSplitter
     {
