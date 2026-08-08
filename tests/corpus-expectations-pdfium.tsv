@@ -17,7 +17,7 @@
 #
 # Keys are corpus-relative PATHS, not basenames: this corpus may have
 # subdirectories and duplicate filenames.
-# Baseline: PASS=277, MALFORMED_PDF=26, PASS_ONE=9, MISSING_CONTENT=6, EMPTY_DOC=6, DECODE_ERROR=3, DIFF=2, UNSUPPORTED_ENCRYPTED=1, PASSWORD_REQUIRED=1
+# Baseline: PASS=278, MALFORMED_PDF=26, PASS_ONE=9, EMPTY_DOC=6, MISSING_CONTENT=5, DECODE_ERROR=3, DIFF=2, UNSUPPORTED_ENCRYPTED=1, PASSWORD_REQUIRED=1
 344775293.pdf	1	PASS
 363015187.pdf	1	MISSING_CONTENT
 about_blank.pdf	1	PASS
@@ -167,7 +167,7 @@ bug_921.pdf	1	PASS
 bug_925981.pdf	1	PASS
 bug_972518.pdf	1	PASS
 bug_xrefv4_loop.pdf	1	PASS
-calculate.pdf	1	MISSING_CONTENT
+calculate.pdf	1	PASS
 circular_viewer_ref.pdf	1	MALFORMED_PDF
 click_form.pdf	1	PASS
 clip_path.pdf	1	PASS
