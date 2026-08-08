@@ -60,14 +60,21 @@ public class GuiClickSafetySweepTests
     /// </summary>
     private static readonly HashSet<string> SkipCommands = new(StringComparer.Ordinal)
     {
-        // Native file pickers.
-        "OpenFileCommand", "SaveFileCommand", "SaveAsCommand", "SaveFlattenedFormCopyCommand",
-        "AddPagesCommand", "InsertPagesBeforeCurrentCommand", "InsertPagesAfterCurrentCommand",
-        "ExtractCurrentPageCommand", "ExtractSelectedPagesCommand", "CombineDocumentsCommand",
-        "SplitDocumentCommand", "ExportCurrentPageCommand", "ExportPagesCommand",
-        // Modal / content dialogs (and the redaction-apply path that goes through a save picker + reload).
-        "SecurityCommand", "MakeSearchableCommand", "AboutCommand", "ShowShortcutsCommand",
-        "ShowPreferencesCommand", "ApplyAllRedactionsCommand", "PrintCommand", "VerifySignaturesCommand",
+        // Kept deliberately SHORT. This list was 24 entries covering every
+        // picker- and dialog-backed command, on the reasoning that they "have
+        // nothing to assert". That conflates two things: a command with no
+        // interesting POST-CONDITION is still a command that must not THROW, and
+        // a command nothing ever clicks is one nothing would notice exploding.
+        //
+        // Those seams are already inert headlessly — null StorageProvider, null
+        // MainWindowResolver, NullUserDialogService whose ShowConfirmAsync
+        // returns false — so they return having done nothing rather than
+        // hanging. Removing them took this sweep from 40 invoked to 61, and
+        // mutation-checking a newly-included one (PrintCommand made to throw)
+        // confirms the extra 21 are genuinely covered rather than merely counted.
+        //
+        // What remains is what the TEST HOST cannot survive, not what is
+        // uninteresting:
         // Shell out to the OS / external.
         "ShowDocumentationCommand", "OpenExternalLinkCommand", "ShowDangerousLinkRefusalCommand",
         // Lifecycle: quit, or deliberately clear/replace the document (blanks the page by design).
