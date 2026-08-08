@@ -17,7 +17,7 @@
 #
 # Keys are corpus-relative PATHS, not basenames: this corpus may have
 # subdirectories and duplicate filenames.
-# Baseline: PASS=666, PASS_ONE=11, MALFORMED_PDF=2, MISSING_CONTENT=2, EXCISE_ONLY=2, RECOVERED_MALFORMED_CONTENT=1, EMPTY_DOC=1, TIMEOUT=1
+# Baseline: PASS=666, PASS_ONE=11, MALFORMED_PDF=2, MISSING_CONTENT=2, EXCISE_ONLY=2, RECOVERED_MALFORMED_CONTENT=1, EMPTY_DOC=1
 160F-2019.pdf	1	PASS
 22060_A1_01_Plans.pdf	1	PASS
 90ms_rksj_h_sample.pdf	1	PASS
@@ -609,7 +609,6 @@ issue19474.pdf	1	PASS
 issue19484_1.pdf	1	EXCISE_ONLY
 issue19484_2.pdf	1	EXCISE_ONLY
 issue19505.pdf	1	PASS
-issue19517.pdf	1	*		load-dependent (TIMEOUT when measured); any terminal status accepted
 issue19517.pdf	1	PASS_ONE
 issue19532.pdf	1	PASS
 issue19550.pdf	1	PASS
