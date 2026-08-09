@@ -1,0 +1,50 @@
+# Per-assembly line-coverage floors, BY PROFILE.
+#
+# WHY TWO PROFILES AND NOT ONE
+#
+# CI and a developer machine run genuinely different test populations, so one
+# number cannot serve both. Measured 2026-08-09 on Excise.Rendering:
+#
+#     ci    (corpus-less runner)          78.4%
+#     full  (corpora + mutool/gs/cairo)   87.0%
+#
+# The 8.6-point gap is entirely Differential and Corpus tests, which cannot run
+# without the gitignored corpora and the reference renderers. A single floor is
+# wrong in both directions:
+#
+#   * set at 87% -> CI fails on every run, forever
+#   * set at 78% -> a regression that only shows in the differential tests
+#                   passes silently, and those are the tests that exist because
+#                   excise must not be its own oracle
+#
+# This mirrors the skip-allowlist's environment conditioning (#854), which
+# exists for the same reason: the allowlist is calibrated for a corpus-LESS
+# runner, and entries declare what they need in order to run.
+#
+# HOW FLOORS ARE CHOSEN
+#
+# ~2 points below the measured value. Tight enough to catch a real regression,
+# loose enough not to flap on ordinary variation (a test moved between filters,
+# a branch counted differently). Floors RATCHET UP as coverage improves; they do
+# not drift down. Raising one is a normal part of improving coverage. Lowering
+# one requires saying why in the commit message.
+#
+# THE FAILURE MODE TO WATCH
+#
+# The `ci` floor is the one enforced on every push, so it is the one that gets
+# attention. `full` is enforced by the release path (t2/release-smoke), which
+# runs far less often — so `full` is where rot hides. If `full` and `ci` ever
+# converge, that is not coverage improving; it is the differential tests having
+# stopped contributing, and it should be investigated rather than celebrated.
+#
+# Format:  profile <TAB> assembly <TAB> floor <TAB> measured <TAB> note
+# Regenerate measurements with scripts/measure-coverage.sh
+
+ci	Excise.Rendering	0.76	0.784	corpus-less: no Corpus/Differential/Benchmark/Visual
+ci	Excise.App	0.76	0.787	full App suite under xvfb
+ci	Excise.Avalonia	0.84	0.864	measured via Excise.App.Tests
+ci	Excise.Ocr	0.80	0.827	measured via Excise.App.Tests; tesseract absent on CI
+full	Excise.Rendering	0.85	0.870	corpora + mutool/gs/pdftocairo present
+full	Excise.App	0.76	0.787	same suite as ci; no corpus-dependent delta observed
+full	Excise.Avalonia	0.84	0.864	same as ci
+full	Excise.Ocr	0.80	0.827	same as ci

@@ -253,7 +253,26 @@ jobs:
           #   Skia/freetype build.
           dotnet test Excise.Rendering.Tests --no-build -c Debug \
             --filter "FullyQualifiedName!~Corpus&FullyQualifiedName!~Differential&FullyQualifiedName!~Benchmark&FullyQualifiedName!~Visual" \
+            --collect:"XPlat Code Coverage" \
+            --results-directory coverage-rendering/ \
             --logger "console;verbosity=normal"
+
+      # Coverage floor, `ci` PROFILE. Excise.Core has had a ratchet since #603;
+      # Rendering, App, Avalonia and Ocr had none, so 79-87% coverage was free
+      # to drift with nothing noticing. Core itself drifted to 89.78% once and
+      # it took someone looking to find it.
+      #
+      # The PROFILE is the point. This step's filter excludes Corpus and
+      # Differential — they need the gitignored corpora and mutool/gs/pdftocairo,
+      # absent here — so CI measures 78.4% where a corpus-equipped machine
+      # measures 87.0%. One floor would either fail CI forever or go blind to
+      # regressions in precisely the differential tests that exist because
+      # excise must not be its own oracle. See tests/coverage-floors.tsv.
+      - name: Coverage floor (Excise.Rendering, ci profile)
+        run: |
+          report=$(find coverage-rendering -name 'coverage.cobertura.xml' | head -1)
+          test -n "$report" || { echo "no cobertura report produced"; exit 1; }
+          scripts/check-coverage-floor.sh "$report" ci Excise.Rendering
 
       # Skip budget (#619, #655): Excise.Rendering.Tests has ~114
       # Assert.SkipWhen/SkipUnless call sites and had no gate watching them —
