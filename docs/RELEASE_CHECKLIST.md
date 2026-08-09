@@ -49,6 +49,33 @@ Use this checklist before tagging any `v*` release.
   The 3 federal docs (public-domain .gov, fetchable) are required; the 2
   redistribution-restricted local books (producingoss, foss-primer) are measured
   only when a maintainer box already has them.
+- **Read the `full` coverage profile — an OBSERVATION, not a gate.**
+  Collect and compare:
+  ```
+  dotnet test Excise.Rendering.Tests -c Debug --collect:"XPlat Code Coverage" \
+      --results-directory cov/
+  scripts/check-coverage-floor.sh $(find cov -name coverage.cobertura.xml | head -1) \
+      full Excise.Rendering
+  ```
+  Deliberately NOT a release blocker. Blocking a tag on a coverage number invites
+  lowering the number to ship — the same asymmetry `check-gate-asymmetry.sh`
+  exists to prevent for perf-vs-correctness. CI already enforces the `ci` floor
+  on every push, free, within ~9 minutes of a regression landing; that is where a
+  ratchet earns its keep.
+
+  **What to look at is the GAP between the two profiles.** Measured 2026-08-09 on
+  `Excise.Rendering`: `ci` 78.4%, `full` 87.0%. Those 8.6 points ARE the Corpus
+  and Differential tests — the ones that cannot run on a corpus-less runner, and
+  the ones that exist because excise must not be its own oracle.
+
+  So: **if `full` has converged toward `ci`, that is not coverage improving.** It
+  means the differential tests stopped contributing — skipped on a missing
+  corpus, filtered out, or quietly deleted — and the release is being cut with
+  the oracle-backed half of the suite switched off. Investigate before tagging
+  rather than welcoming the tidier number.
+
+  `full` runs only on this path, so it is where rot hides; `ci` gets attention on
+  every push. That asymmetry is the whole reason this line exists.
 - **Run the skip budget** for every suite you touched:
   `scripts/check-skip-budget.sh <project>.csproj`
   A test that silently stops running is coverage loss you cannot see — this is
