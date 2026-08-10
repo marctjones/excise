@@ -38,6 +38,8 @@ BASELINE_HEADER = """# Public API that nothing calls, or that only tests call.
 # into /Info and XMP for exactly as long as nothing called the safe path).
 """
 
+COMPILER_ATTR = re.compile(r"System\.Runtime\.CompilerServices\.[A-Za-z_][A-Za-z0-9_]*")
+
 DECL = re.compile(r"\b(?:class|interface|enum|struct|record)\s+([A-Za-z_][A-Za-z0-9_]*)")
 MEMBER = re.compile(r"\b([A-Za-z_][A-Za-z0-9_]*)\s*(?:\(|\{\s*get)")
 
@@ -131,11 +133,51 @@ def approved_files(root):
 
 
 def identifiers(path, min_len):
+    """Public identifiers worth cross-referencing, with three noise classes
+    excluded at the source (#913).
+
+    Each is something this check CANNOT say anything true about, so reporting it
+    only trains people to skim the list — which is how the flagged output stops
+    being read. They are filtered here rather than baselined so they do not
+    reappear when the baseline is regenerated.
+
+      1. COMPILER-GENERATED ATTRIBUTES. `TupleElementNames` is emitted by the
+         compiler for named tuples; nobody wrote it and nobody calls it.
+         Detected by the `System.Runtime.CompilerServices.` qualifier rather
+         than by name, so siblings are covered too.
+
+         The attribute is STRIPPED FROM the line, not used to skip the line.
+         Skipping the line lost three real members on the first attempt —
+         `AddPolygonAnnotation`, `AddPolyLineAnnotation` and `RedactLetters`
+         are declarations carrying an INLINE `[TupleElementNames(...)]`
+         parameter attribute, so a line-level skip silently dropped genuine
+         `tests-only` findings while looking like noise reduction.
+
+      2. EXTENSION CLASS NAMES. `PdfNumberExtensions` is invoked as
+         `someNumber.Foo()`, so the class name never appears at a call site and
+         a reference count of zero is guaranteed regardless of use. Deliberate
+         trade-off: a genuinely dead extension class is now invisible AS A
+         CLASS — its members are still checked individually, which is where the
+         real signal is anyway.
+
+      3. OVERRIDES. `OnCreateAutomationPeer` is invoked polymorphically by
+         Avalonia; no call site names it. The approved snapshot carries the
+         declaration text, so `override` is detectable directly.
+    """
     names = set()
     with open(path, encoding="utf-8", errors="ignore") as fh:
         for line in fh:
+            # 1. strip compiler-generated attribute names, keeping the rest of
+            #    the declaration they may be sitting inside
+            line = COMPILER_ATTR.sub(" ", line)
             for m in DECL.finditer(line):
+                # 2. extension class names can never appear at a call site
+                if m.group(1).endswith("Extensions"):
+                    continue
                 names.add(m.group(1))
+            # 3. overrides are called by the framework, never by name
+            if re.search(r"\boverride\b", line):
+                continue
             for m in MEMBER.finditer(line):
                 names.add(m.group(1))
     return sorted(n for n in names
