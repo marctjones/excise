@@ -41,18 +41,28 @@ public class RedactionOptions
 public class RedactionService
 {
     private readonly ILogger<RedactionService> _logger;
-    private readonly List<string> _redactedTerms = new();
 
     public RedactionService(ILogger<RedactionService> logger, ILoggerFactory _)
     {
         _logger = logger;
     }
 
-    /// <summary>Text strings that have been redacted in the current session.</summary>
-    public IReadOnlyList<string> RedactedTerms => _redactedTerms.AsReadOnly();
-
-    /// <summary>Reset the redacted-terms list.</summary>
-    public void ClearRedactedTerms() => _redactedTerms.Clear();
+    // #897 removed `_redactedTerms` / `RedactedTerms` / `ClearRedactedTerms`.
+    //
+    // They existed to feed PdfDocumentSanitizer.ScrubTerms with words harvested
+    // from whatever prose happened to fall inside a redaction box — a design
+    // that corrupts the document it is meant to protect. ScrubTerms performs
+    // plain substring replacement, so a box over one ordinary sentence yields
+    // terms like `you got time file` and turns `Younger` into `Ynger` and
+    // `profile` into `pro`.
+    //
+    // Area redaction now strips the positionless carriers WHOLESALE inside
+    // Excise.Core's page.RedactArea (on by default): you cannot name what was in
+    // the box, so remove the carriers rather than guess at their contents.
+    //
+    // Nothing in production read the list — it had test references only, which
+    // is how a corrupting path survived this long. The clipboard history the app
+    // shows is a separate mechanism (MainWindowViewModel.ClipboardHistory).
 
     /// <summary>
     /// Redact a rectangular area on <paramref name="page"/>.
@@ -76,14 +86,10 @@ public class RedactionService
             .Select(l => l.Value)
             .ToList();
 
+        // The engine also strips the document's positionless carriers (/Info,
+        // XMP) by default — see #897 and the note at the top of this class.
         page.RedactArea(coreRect, GlyphRemovalStrategy.AnyOverlap);
         AppendBlackRectangle(page, coreRect);
-
-        foreach (var w in string.Concat(removed)
-            .Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries))
-        {
-            _redactedTerms.Add(w);
-        }
 
         _logger.LogInformation("Redacted {Count} characters on page", removed.Count);
     }
@@ -169,9 +175,6 @@ public class RedactionService
             // stays encrypted with the same parameters.
             doc.Save(outputPath, doc.GetReEncryptionOptions(userPassword: null));
 
-            if (totalMatches > 0)
-                _redactedTerms.Add(textToRedact);
-
             var warnings = confidence.ShouldWarn
                 ? new[] { BuildConfidenceWarning(confidence) }
                 : null;
@@ -200,15 +203,15 @@ public class RedactionService
     public void RedactWithOptions(PdfDocument document, PdfPage page, IEnumerable<Rect> areas,
         RedactionOptions options, int renderDpi = 150)
     {
-        ClearRedactedTerms();
-
         foreach (var area in areas)
             RedactArea(page, area, renderDpi);
 
+        // #897: SanitizeMetadata is satisfied by the engine, which strips the
+        // positionless carriers during RedactArea. What used to be here — a
+        // term-derived scrub fed by words harvested from the box — corrupted
+        // unrelated metadata and is gone.
         if (options.RemoveAllMetadata)
             StripAllMetadata(document);
-        else if (options.SanitizeMetadata)
-            SanitizeMetadata(document, _redactedTerms);
     }
 
     /// <summary>
@@ -218,15 +221,12 @@ public class RedactionService
     public void RedactWithOptions(PdfDocument document, PdfPage page, IEnumerable<PdfPageRect> areas,
         RedactionOptions options)
     {
-        ClearRedactedTerms();
-
         foreach (var area in areas)
             RedactArea(page, area);
 
+        // #897 — see the sibling overload.
         if (options.RemoveAllMetadata)
             StripAllMetadata(document);
-        else if (options.SanitizeMetadata)
-            SanitizeMetadata(document, _redactedTerms);
     }
 
     /// <summary>

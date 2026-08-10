@@ -23,20 +23,65 @@ public static class PdfPageRedactionExtensions
     /// inside the redaction area. Defaults to the most conservative option
     /// (any-overlap) — appropriate for privacy work where a partial hit
     /// still leaks information.</param>
+    /// <param name="scrubDocumentCarriers">Strip the document-level text
+    /// carriers that have no position — <c>/Info</c> and the XMP
+    /// <c>/Metadata</c> packet — on by default (#897). See the remarks for why
+    /// this is a WHOLESALE strip and not the term-based scrub
+    /// <see cref="PdfDocumentRedactionExtensions.RedactText"/> uses.</param>
     /// <remarks>
     /// Side-effect: the page's <c>/Contents</c> stream is rewritten.
     /// Subsequent calls to <see cref="PdfPage.Letters"/> will re-extract
     /// against the new content. Call <see cref="PdfDocument.Save(string)"/>
     /// on the owning document to persist.
+    ///
+    /// <para>
+    /// Second side-effect, deliberate and on by default: the owning DOCUMENT's
+    /// <c>/Info</c> keys and XMP packet are removed. A page-scoped call with a
+    /// document-scoped effect deserves the explanation:
+    /// </para>
+    /// <para>
+    /// <b>Why the asymmetry with RedactText.</b> <c>RedactText</c> scrubs
+    /// carriers BY TERM because it has one — the caller typed it. An area
+    /// redaction has only a rectangle. Deriving terms from the glyphs inside it
+    /// and substring-deleting those from every metadata value actively damages
+    /// the document: a box over one ordinary sentence yields terms like
+    /// <c>you got time file</c>, which turn <c>Younger</c> into <c>Ynger</c> and
+    /// <c>profile</c> into <c>pro</c>. So: <b>RedactText scrubs by term because
+    /// it has one; RedactArea strips wholesale because it does not.</b> You
+    /// cannot name what was in the box, so remove the carriers rather than
+    /// guess at their contents (#897).
+    /// </para>
+    /// <para>
+    /// <b>Not covered here.</b> Outline (bookmark) titles are left alone —
+    /// wholesale-destroying a document's navigation because one box was drawn
+    /// on one page is disproportionate, and no positional rule is honest (a
+    /// bookmark naming the redacted text can point at any page). Stated as a
+    /// known gap in #897 rather than half-solved. Annotations ARE handled, but
+    /// positionally, by <c>InteractiveRedactionScrubber</c> — which reaches
+    /// only annotations on THIS page overlapping THIS box.
+    /// </para>
+    /// <para>
+    /// Embedded files are NOT dropped: <c>ScrubMetadata(scrubAttachments:
+    /// false)</c>. Attachment removal is a wider promise than this parameter
+    /// makes, and it already has its own home in the GUI's redacted-copy flow
+    /// (<c>RedactedCopySafetyService</c>) and under <c>RemoveAllMetadata</c>.
+    /// </para>
     /// </remarks>
     public static void RedactArea(
         this PdfPage page,
         PdfRectangle area,
-        GlyphRemovalStrategy strategy = GlyphRemovalStrategy.AnyOverlap)
+        GlyphRemovalStrategy strategy = GlyphRemovalStrategy.AnyOverlap,
+        bool scrubDocumentCarriers = true)
     {
         if (page == null) throw new System.ArgumentNullException(nameof(page));
 
         area = area.Normalize();
+
+        // Positionless document-level carriers (#897). Idempotent — RedactAreas
+        // applies it once per rectangle — because both underlying operations
+        // are removals of keys that may already be absent.
+        if (scrubDocumentCarriers)
+            page.Document.ScrubMetadata(scrubAttachments: false);
         InteractiveRedactionScrubber.ScrubArea(page, area);
 
         // Structure-tree carriers (#636). Must run BEFORE the content stream is
@@ -100,9 +145,10 @@ public static class PdfPageRedactionExtensions
     public static void RedactAreas(
         this PdfPage page,
         System.Collections.Generic.IEnumerable<PdfRectangle> areas,
-        GlyphRemovalStrategy strategy = GlyphRemovalStrategy.AnyOverlap)
+        GlyphRemovalStrategy strategy = GlyphRemovalStrategy.AnyOverlap,
+        bool scrubDocumentCarriers = true)
     {
         foreach (var area in areas)
-            page.RedactArea(area, strategy);
+            page.RedactArea(area, strategy, scrubDocumentCarriers);
     }
 }

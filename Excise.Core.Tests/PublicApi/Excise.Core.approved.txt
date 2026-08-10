@@ -1866,8 +1866,8 @@ namespace Excise.Core.Text.Segmentation
     }
     public static class PdfPageRedactionExtensions
     {
-        public static void RedactArea(this Excise.Core.Document.PdfPage page, Excise.Core.Document.PdfRectangle area, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0) { }
-        public static void RedactAreas(this Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfRectangle> areas, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0) { }
+        public static void RedactArea(this Excise.Core.Document.PdfPage page, Excise.Core.Document.PdfRectangle area, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool scrubDocumentCarriers = true) { }
+        public static void RedactAreas(this Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfRectangle> areas, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool scrubDocumentCarriers = true) { }
     }
     public class TextSegment
     {

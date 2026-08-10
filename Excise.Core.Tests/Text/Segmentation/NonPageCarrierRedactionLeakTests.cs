@@ -123,9 +123,24 @@ public class NonPageCarrierRedactionLeakTests
             "unrelated outline titles must survive, or we destroy the document's navigation");
     }
 
+    /// <summary>
+    /// Remove the page glyphs and NOTHING else.
+    ///
+    /// `scrubDocumentCarriers: false` is essential here, not incidental. Since
+    /// #897 an area redaction strips /Info and XMP wholesale by default. This
+    /// file exists to test <see cref="PdfDocumentSanitizer"/> — that its scrub is
+    /// SURGICAL — and with the default left on, RedactArea would remove those
+    /// carriers itself: `Sanitizer_LeavesUnrelatedMetadataIntact` would fail on
+    /// a deletion it did not make, and the leak tests above would pass whether
+    /// the sanitizer worked or not.
+    ///
+    /// So the opt-out is what keeps these tests attributable to the component
+    /// they name.
+    /// </summary>
     private static void RedactAllText(PdfPage page)
     {
-        page.RedactArea(new PdfRectangle(0, 0, 612, 792), GlyphRemovalStrategy.AnyOverlap);
+        page.RedactArea(new PdfRectangle(0, 0, 612, 792), GlyphRemovalStrategy.AnyOverlap,
+            scrubDocumentCarriers: false);
     }
 
     private static byte[] Save(PdfDocument pdf)
