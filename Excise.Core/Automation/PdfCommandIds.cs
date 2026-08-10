@@ -25,6 +25,9 @@ public static class PdfCommandIds
     public const string CopyText = "edit.copyText";
     public const string TypewriterMode = "edit.typewriterMode";
     public const string AddHighlight = "annotation.addHighlight";
+    public const string AddUnderline = "annotation.addUnderline";
+    public const string AddStrikeOut = "annotation.addStrikeOut";
+    public const string AddSquiggly = "annotation.addSquiggly";
     public const string AddStickyNote = "annotation.addStickyNote";
 
     public const string AddPages = "document.addPages";

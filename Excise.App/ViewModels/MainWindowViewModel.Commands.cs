@@ -49,6 +49,9 @@ public partial class MainWindowViewModel
     public ReactiveCommand<Unit, Unit> GoToNextPendingTypewriterEditCommand { get; private set; } = null!;
     public ReactiveCommand<string, Unit> SetTypewriterColorCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> AddHighlightAnnotationFromSelectionCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> AddUnderlineAnnotationFromSelectionCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> AddStrikeOutAnnotationFromSelectionCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> AddSquigglyAnnotationFromSelectionCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> AddStickyNoteAnnotationCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleOutlineCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleThumbnailsCommand { get; private set; } = null!;
@@ -147,6 +150,11 @@ public partial class MainWindowViewModel
         GoToNextPendingTypewriterEditCommand = ReactiveCommand.Create(GoToNextPendingTypewriterEdit);
         SetTypewriterColorCommand = ReactiveCommand.Create<string>(hex => SetTypewriterColor(hex));
         AddHighlightAnnotationFromSelectionCommand = ReactiveCommand.CreateFromTask(AddHighlightAnnotationFromSelectionAsync);
+        // #912: three of the thirteen subtypes Core could author and the app
+        // could not reach. Same selection gesture as Highlight above.
+        AddUnderlineAnnotationFromSelectionCommand = ReactiveCommand.CreateFromTask(AddUnderlineAnnotationFromSelectionAsync);
+        AddStrikeOutAnnotationFromSelectionCommand = ReactiveCommand.CreateFromTask(AddStrikeOutAnnotationFromSelectionAsync);
+        AddSquigglyAnnotationFromSelectionCommand = ReactiveCommand.CreateFromTask(AddSquigglyAnnotationFromSelectionAsync);
         AddStickyNoteAnnotationCommand = ReactiveCommand.CreateFromTask(() => AddStickyNoteAnnotationAsync());
         ToggleOutlineCommand = ReactiveCommand.Create(ToggleOutlineSidebar);
         ToggleThumbnailsCommand = ReactiveCommand.Create(ToggleThumbnailsSidebar);

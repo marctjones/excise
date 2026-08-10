@@ -3,6 +3,7 @@ using Excise.Core.Document;
 using ReactiveUI;
 using System;
 using System.Threading.Tasks;
+using PdfCoreDocument = Excise.Core.Document.PdfDocument;
 
 namespace Excise.App.ViewModels;
 
@@ -50,6 +51,82 @@ public partial class MainWindowViewModel
             _toastService.ShowError("Failed to add highlight", ex.Message);
         }
     }
+
+    /// <summary>
+    /// Underline, StrikeOut and Squiggly from the current text selection (#912).
+    ///
+    /// Core has been able to author all three since the annotation-authoring
+    /// work landed; nothing in the app could reach them, so 13 of 15 authorable
+    /// subtypes were unreachable. These three are the cheap ones: they reuse the
+    /// SAME gesture Highlight already uses — select text, invoke — so no new
+    /// input handling is involved.
+    ///
+    /// THE VIEWER MIRROR IS NOT OPTIONAL. A document is open TWICE — the
+    /// save document (<c>_documentService</c>) and the viewer document
+    /// (<c>_pdfCoreDocument</c>), loaded as two separate PdfDocument instances
+    /// by LoadDocumentInstancesAsync. Authoring onto the save document alone
+    /// puts the annotation in the saved FILE while leaving the screen
+    /// unchanged: the user clicks "Add Underline", sees nothing happen, and
+    /// only finds the underline after saving and reopening. So each of these
+    /// takes a second delegate that repeats the authoring on the viewer
+    /// document, exactly as the Highlight path has always done.
+    ///
+    /// A file-only test cannot see that gap — both halves save identically.
+    /// TextMarkupAnnotationCommandTests therefore asserts on
+    /// <see cref="PdfCoreDocument"/> BEFORE saving.
+    /// </summary>
+    private async Task AddTextMarkupFromSelectionAsync(
+        string kind,
+        Func<int, PdfRectangle, string, PdfAnnotation> add,
+        Func<PdfCoreDocument, int, PdfRectangle, string, PdfAnnotation> mirrorToViewer)
+    {
+        if (!_documentService.IsDocumentLoaded)
+            return;
+
+        // #642: /P bit 6 gates adding/modifying annotations — same gate as
+        // Highlight, and it must not be skipped just because this path is new.
+        if (!EnsureDocumentPermission(p => p.CanAnnotate,
+            $"Adding a {kind} annotation", "adding or modifying annotations (/P bit 6)"))
+        {
+            return;
+        }
+
+        if (!TryGetCurrentTextSelectionContentRect(out var pageNumber, out var contentRect))
+        {
+            await _dialogService.ShowMessageAsync(
+                $"Add {kind}",
+                $"Select text before adding a {kind.ToLowerInvariant()}.");
+            return;
+        }
+
+        var contents = string.IsNullOrWhiteSpace(SelectedText) ? kind : SelectedText.Trim();
+
+        try
+        {
+            var annotation = add(pageNumber, contentRect, contents);
+            AddTextMarkupToViewerDocument(pageNumber, contentRect, contents, mirrorToViewer);
+            await MarkAnnotationChangedAsync($"{kind} added");
+            RecordAnnotationAdd($"Add {kind.ToLowerInvariant()}", pageNumber, annotation,
+                () => add(pageNumber, contentRect, contents));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error adding {Kind} annotation", kind);
+            _toastService.ShowError($"Failed to add {kind.ToLowerInvariant()}", ex.Message);
+        }
+    }
+
+    public Task AddUnderlineAnnotationFromSelectionAsync() =>
+        AddTextMarkupFromSelectionAsync("Underline", _annotationWorkflow.AddUnderline,
+            static (d, p, r, c) => d.AddUnderlineAnnotation(p, r, c));
+
+    public Task AddStrikeOutAnnotationFromSelectionAsync() =>
+        AddTextMarkupFromSelectionAsync("StrikeOut", _annotationWorkflow.AddStrikeOut,
+            static (d, p, r, c) => d.AddStrikeOutAnnotation(p, r, c));
+
+    public Task AddSquigglyAnnotationFromSelectionAsync() =>
+        AddTextMarkupFromSelectionAsync("Squiggly", _annotationWorkflow.AddSquiggly,
+            static (d, p, r, c) => d.AddSquigglyAnnotation(p, r, c));
 
     public async Task AddStickyNoteAnnotationAsync(string? contentsOverride = null)
     {
@@ -158,6 +235,25 @@ public partial class MainWindowViewModel
             return;
 
         _pdfCoreDocument.AddHighlightAnnotation(pageNumber, contentRect, contents);
+    }
+
+    /// <summary>
+    /// The generalised form of <see cref="AddHighlightToViewerDocument"/> (#912):
+    /// same guards, the subtype supplied by the caller. See
+    /// AddTextMarkupFromSelectionAsync for why skipping this makes the feature
+    /// look broken on screen while the saved file is correct.
+    /// </summary>
+    private void AddTextMarkupToViewerDocument(
+        int pageNumber, PdfRectangle contentRect, string contents,
+        Func<PdfCoreDocument, int, PdfRectangle, string, PdfAnnotation> add)
+    {
+        var saveDocument = _documentService.GetCurrentDocument();
+        if (_pdfCoreDocument == null || ReferenceEquals(saveDocument, _pdfCoreDocument))
+            return;
+        if (pageNumber < 1 || pageNumber > _pdfCoreDocument.PageCount)
+            return;
+
+        add(_pdfCoreDocument, pageNumber, contentRect, contents);
     }
 
     private void AddTextNoteToViewerDocument(int pageNumber, PdfRectangle contentRect, string contents)

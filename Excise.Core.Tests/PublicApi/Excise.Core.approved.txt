@@ -132,7 +132,10 @@ namespace Excise.Core.Automation
         public const string AddFormField = "form.addField";
         public const string AddHighlight = "annotation.addHighlight";
         public const string AddPages = "document.addPages";
+        public const string AddSquiggly = "annotation.addSquiggly";
         public const string AddStickyNote = "annotation.addStickyNote";
+        public const string AddStrikeOut = "annotation.addStrikeOut";
+        public const string AddUnderline = "annotation.addUnderline";
         public const string ApplyAllRedactions = "redaction.applyAll";
         public const string ApplyRedaction = "redaction.apply";
         public const string AuditHiddenText = "audit.hiddenText";

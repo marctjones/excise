@@ -50,9 +50,6 @@ Excise.Core	tests-only	AddImageStampAnnotation
 Excise.Core	tests-only	AddLineAnnotation
 Excise.Core	tests-only	AddPolyLineAnnotation
 Excise.Core	tests-only	AddPolygonAnnotation
-Excise.Core	tests-only	AddSquigglyAnnotation
-Excise.Core	tests-only	AddStrikeOutAnnotation
-Excise.Core	tests-only	AddUnderlineAnnotation
 Excise.Core	tests-only	AllTextRemoved
 Excise.Core	tests-only	AreasRedacted
 Excise.Core	tests-only	AsItalic

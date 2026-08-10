@@ -28,6 +28,9 @@ public static class PdfCommandRegistry
         Edit(PdfCommandIds.CopyText, "Copy Selected Text", "Copy selected text to the clipboard.", "Ctrl+C"),
         Edit(PdfCommandIds.TypewriterMode, "Typewriter Mode", "Place editable text that saves as page content."),
         Annotate(PdfCommandIds.AddHighlight, "Add Highlight From Selection", "Create a PDF highlight annotation from the current text selection."),
+        Annotate(PdfCommandIds.AddUnderline, "Add Underline From Selection", "Create a PDF underline annotation from the current text selection."),
+        Annotate(PdfCommandIds.AddStrikeOut, "Add Strikeout From Selection", "Create a PDF strikeout annotation from the current text selection."),
+        Annotate(PdfCommandIds.AddSquiggly, "Add Squiggly From Selection", "Create a PDF squiggly-underline annotation from the current text selection."),
         Annotate(PdfCommandIds.AddStickyNote, "Add Sticky Note", "Create a sticky-note annotation."),
 
         Document(PdfCommandIds.AddPages, "Add Pages", "Append pages from another PDF."),
