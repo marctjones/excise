@@ -9,10 +9,14 @@
 # WHY A PROFILE
 #
 # CI and a developer machine run different test populations. Measured on
-# Excise.Rendering: 78.4% on the corpus-less runner versus 87.0% locally with
-# the corpora and reference renderers present. The 8.6-point gap is Differential
-# and Corpus tests. One floor cannot serve both — see tests/coverage-floors.tsv
-# for the full reasoning.
+# Excise.Rendering: 54.36% on the corpus-less CI runner versus 87.49% locally
+# with the corpora and reference renderers present. One floor cannot serve both.
+#
+# ⚠️ A `ci` NUMBER MUST BE READ OFF A CI RUN. Applying CI's test filter on a
+# dev machine measures 78.41% for the same ~467 tests, because 86 of them are
+# corpus-gated and SKIP on CI without announcing themselves as filtered out.
+# This file's first version carried that 78.41% as the ci floor and turned CI
+# red for four commits. See tests/coverage-floors.tsv for the full reasoning.
 #
 # Usage:
 #   scripts/check-coverage-floor.sh <cobertura.xml> <profile> <assembly>
