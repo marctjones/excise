@@ -1,0 +1,117 @@
+# Public API that nothing calls, or that only tests call.
+#
+# A RATCHET, not an inventory. Entries here are ACCEPTED — mostly library API
+# with external consumers, framework overrides, and extension-class names that
+# never appear at a call site. The gate fails on anything NEW.
+#
+# Regenerate: scripts/check-unwired-api.sh --update   (then review the diff)
+#
+# Format: assembly <TAB> state <TAB> identifier
+#   nowhere     no reference at all beyond the declaration
+#   tests-only  referenced by tests, never by production  <- the dangerous one
+#
+# "tests-only" is the shape that shipped bugs: #908 (CffSubsetter, implemented,
+# 25 test references, zero production callers, so CFF fonts ship unsubsetted)
+# and #896 (RedactWithOptions, same shape, and the CLI leaked redacted terms
+# into /Info and XMP for exactly as long as nothing called the safe path).
+Excise.Avalonia	nowhere	ClearAllOverlays
+Excise.Avalonia	nowhere	OnCreateAutomationPeer
+Excise.Avalonia	nowhere	ScreenBounds
+Excise.Core	nowhere	Failures
+Excise.Core	nowhere	PdfNumberExtensions
+Excise.Core	nowhere	SetCreator
+Excise.Core	nowhere	TupleElementNames
+Excise.Core	tests-only	AddArrowAnnotation
+Excise.Core	tests-only	AddLineAnnotation
+Excise.Core	tests-only	AddPolyLineAnnotation
+Excise.Core	tests-only	AddPolygonAnnotation
+Excise.Core	tests-only	AddSquigglyAnnotation
+Excise.Core	tests-only	AddStrikeOutAnnotation
+Excise.Core	tests-only	AsItalic
+Excise.Core	tests-only	BeginPath
+Excise.Core	tests-only	BlackMarkers
+Excise.Core	tests-only	BulletList
+Excise.Core	tests-only	CffSubsetter
+Excise.Core	tests-only	CloseAndStroke
+Excise.Core	tests-only	ContainsFoldable
+Excise.Core	tests-only	ContainsLigatures
+Excise.Core	tests-only	ContainsPresentationForms
+Excise.Core	tests-only	DateField
+Excise.Core	tests-only	DocumentJavaScriptActions
+Excise.Core	tests-only	Dropdown
+Excise.Core	tests-only	EndBaseLine
+Excise.Core	tests-only	ExtractWords
+Excise.Core	tests-only	FdfSerializer
+Excise.Core	tests-only	FillEvenOdd
+Excise.Core	tests-only	FindText
+Excise.Core	tests-only	FlyOpaqueRectangle
+Excise.Core	tests-only	FlyScale
+Excise.Core	tests-only	ForCliCommand
+Excise.Core	tests-only	FromMatrix
+Excise.Core	tests-only	FromText
+Excise.Core	tests-only	GetButtonFields
+Excise.Core	tests-only	GetChoiceFields
+Excise.Core	tests-only	GetDictionary
+Excise.Core	tests-only	GetFonts
+Excise.Core	tests-only	GetOperators
+Excise.Core	tests-only	GetOptionalContentGroups
+Excise.Core	tests-only	GetPageLabel
+Excise.Core	tests-only	GetSignatureFields
+Excise.Core	tests-only	GetTextFields
+Excise.Core	tests-only	HasEmbeddedFiles
+Excise.Core	tests-only	HasOverflow
+Excise.Core	tests-only	HorizontalRule
+Excise.Core	tests-only	InvokeXObject
+Excise.Core	tests-only	IsDecrypting
+Excise.Core	tests-only	IsIndirect
+Excise.Core	tests-only	IsNumber
+Excise.Core	tests-only	IsPartialOverlap
+Excise.Core	tests-only	IsPushButton
+Excise.Core	tests-only	IsRadioButton
+Excise.Core	tests-only	IsTaggedPdf
+Excise.Core	tests-only	MarkerColor
+Excise.Core	tests-only	NamedActionName
+Excise.Core	tests-only	NextActions
+Excise.Core	tests-only	NumberedList
+Excise.Core	tests-only	PageBreak
+Excise.Core	tests-only	PathOperators
+Excise.Core	tests-only	Portrait
+Excise.Core	tests-only	RedactLetters
+Excise.Core	tests-only	RedactWithBlackMarker
+Excise.Core	tests-only	RemoveContainedIn
+Excise.Core	tests-only	ScrubInfoKeys
+Excise.Core	tests-only	SetAnnotationColor
+Excise.Core	tests-only	SetAnnotationContents
+Excise.Core	tests-only	SetAnnotationOpacity
+Excise.Core	tests-only	SetFillBlack
+Excise.Core	tests-only	SetFillWhite
+Excise.Core	tests-only	SetLineWidth
+Excise.Core	tests-only	SetReplyTo
+Excise.Core	tests-only	SetStrokeGray
+Excise.Core	tests-only	SetStrokeRgb
+Excise.Core	tests-only	SetTabOrder
+Excise.Core	tests-only	SourceOperation
+Excise.Core	tests-only	TextPosition
+Excise.Core	tests-only	ThumbnailStream
+Excise.Core	tests-only	ToDoubleArray
+Excise.Core	tests-only	ToEncodedString
+Excise.Core	tests-only	ToIntArray
+Excise.Core	tests-only	Transition
+Excise.Core	tests-only	TryGetString
+Excise.Core	tests-only	WasHexString
+Excise.Core	tests-only	WasRedacted
+Excise.Core	tests-only	WhiteMarkers
+Excise.Core	tests-only	WithAlignment
+Excise.Core	tests-only	WithColor
+Excise.Core	tests-only	WithMarkers
+Excise.Core	tests-only	WithName
+Excise.Core	tests-only	XObjectOperators
+Excise.Rendering	nowhere	CurrentMemoryUsage
+Excise.Rendering	nowhere	GetPoolCountForSize
+Excise.Rendering	nowhere	GetTotalPoolCount
+Excise.Rendering	nowhere	ResolvedLibraryPath
+Excise.Rendering	nowhere	TupleElementNames
+Excise.Rendering	tests-only	EncryptR4
+Excise.Rendering	tests-only	PdftoppmReferenceRenderer
+Excise.Rendering	tests-only	ShowEncryption
+Excise.Rendering	tests-only	TryRenderPageWithOverprintSimulation

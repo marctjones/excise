@@ -20,6 +20,24 @@ NOISE = {
     "Deconstruct", "PrintMembers", "GetEnumerator", "op_Equality", "op_Inequality",
 }
 
+BASELINE_HEADER = """# Public API that nothing calls, or that only tests call.
+#
+# A RATCHET, not an inventory. Entries here are ACCEPTED — mostly library API
+# with external consumers, framework overrides, and extension-class names that
+# never appear at a call site. The gate fails on anything NEW.
+#
+# Regenerate: scripts/check-unwired-api.sh --update   (then review the diff)
+#
+# Format: assembly <TAB> state <TAB> identifier
+#   nowhere     no reference at all beyond the declaration
+#   tests-only  referenced by tests, never by production  <- the dangerous one
+#
+# "tests-only" is the shape that shipped bugs: #908 (CffSubsetter, implemented,
+# 25 test references, zero production callers, so CFF fonts ship unsubsetted)
+# and #896 (RedactWithOptions, same shape, and the CLI leaked redacted terms
+# into /Info and XMP for exactly as long as nothing called the safe path).
+"""
+
 DECL = re.compile(r"\b(?:class|interface|enum|struct|record)\s+([A-Za-z_][A-Za-z0-9_]*)")
 MEMBER = re.compile(r"\b([A-Za-z_][A-Za-z0-9_]*)\s*(?:\(|\{\s*get)")
 
@@ -90,6 +108,9 @@ def main():
     ap.add_argument("--min-length", type=int, default=8)
     ap.add_argument("--assembly", default=None)
     ap.add_argument("--quiet", action="store_true")
+    ap.add_argument("--baseline", default="tests/unwired-api-baseline.tsv")
+    ap.add_argument("--update", action="store_true",
+                    help="rewrite the baseline from the current measurement")
     ap.add_argument("-h", "--help", action="store_true")
     args = ap.parse_args()
     if args.help:
@@ -108,6 +129,7 @@ def main():
     print(f"    {nfiles} .cs/.axaml files indexed "
           f"({len(prod)} identifiers in production, {len(test)} in tests)")
 
+    found = []          # (assembly, state, name)
     total = flagged = tested_only = 0
     for path in approved:
         asm = os.path.basename(path)[: -len(".approved.txt")]
@@ -121,6 +143,8 @@ def main():
         total += len(names)
         flagged += len(dead)
         tested_only += len(only_tests)
+        found += [(asm, "nowhere", n) for n in dead]
+        found += [(asm, "tests-only", n) for n in only_tests]
         print(f"\n── {asm}: {len(names)} identifiers >= {args.min_length} chars")
         print(f"     {len(dead)} referenced nowhere;  {len(only_tests)} referenced ONLY by tests")
         if not args.quiet:
@@ -140,6 +164,75 @@ def main():
     print("    metadata scrub with redaction, has 12 test references and 0")
     print("    production callers — and #896 shipped a leak through the CLI")
     print("    because the safe path existed and nothing used it.")
+
+    return baseline_verdict(found, args)
+
+
+def load_baseline(path):
+    known = set()
+    if not os.path.exists(path):
+        return None
+    with open(path, encoding="utf-8") as fh:
+        for line in fh:
+            line = line.rstrip("\n")
+            if not line or line.startswith("#"):
+                continue
+            parts = line.split("\t")
+            if len(parts) >= 3:
+                known.add((parts[0], parts[1], parts[2]))
+    return known
+
+
+def write_baseline(path, found):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write(BASELINE_HEADER)
+        for row in sorted(found):
+            fh.write("\t".join(row) + "\n")
+
+
+def baseline_verdict(found, args):
+    """Ratchet, not a snapshot: NEW unwired API fails, accepted ones do not.
+
+    Without this the check reports 101 pre-existing entries on every run and is
+    ignored within a week — the fate of any gate that is red by default. What
+    matters is the DELTA: an API added today that nothing calls.
+    """
+    if args.update:
+        write_baseline(args.baseline, found)
+        print(f"\n==> baseline rewritten: {args.baseline} ({len(found)} entries)")
+        print("    REVIEW THE DIFF. An entry appearing here means something was")
+        print("    written and never wired up; accepting it should be a decision.")
+        return 0
+
+    known = load_baseline(args.baseline)
+    if known is None:
+        print(f"\nFAIL: no baseline at {args.baseline}. Create it with --update,")
+        print("      review the diff, and commit it.")
+        return 1
+
+    current = set(found)
+    new = sorted(current - known)
+    gone = sorted(known - current)
+
+    if gone:
+        print(f"\n==> {len(gone)} baselined entr(y/ies) no longer unwired — good.")
+        for a, st, n in gone[:10]:
+            print(f"      {a}.{n} ({st})")
+        print("    Run --update to drop them, so the baseline cannot hide a future one.")
+
+    if new:
+        print(f"\nFAIL: {len(new)} public member(s) newly referenced only by tests, or not at all:")
+        for a, st, n in new:
+            print(f"      [{st}] {a}.{n}")
+        print()
+        print("    Either wire it up, or accept it with --update and say why in the")
+        print("    commit. #908 (CffSubsetter: implemented, 25 test refs, zero")
+        print("    production callers) and #896 (RedactWithOptions, same shape,")
+        print("    shipped a redaction leak) are what this is guarding against.")
+        return 1
+
+    print(f"\n==> no NEW unwired API ({len(known)} baselined)")
     return 0
 
 

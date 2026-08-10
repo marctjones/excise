@@ -257,6 +257,17 @@ emit "gate-asymmetry"       script "scripts/check-gate-asymmetry.sh origin/devel
 emit "redaction-architecture" script "scripts/verify-true-redaction.sh" "-"
 emit "testdata-sync"        script "scripts/check-testdata-sync.sh" "-"
 emit "skip-budget-selftest" script "scripts/test-check-skip-budget.sh" "-"
+# Unwired public API (#908). The skip budget and test count catch a TEST that
+# stops running; this catches PRODUCTION CODE that never started. Both bugs it
+# guards against were written, tested, and then not called: #908 (CffSubsetter —
+# 25 test references, zero production callers, so CFF fonts ship unsubsetted)
+# and #896 (RedactWithOptions, same shape, and the CLI leaked redacted terms
+# into /Info and XMP for as long as nothing called the safe path).
+#
+# Ratchets against tests/unwired-api-baseline.tsv: 101 accepted entries, fails
+# on anything NEW. Cheap (~10s, a text index), so it sits with the static gates
+# rather than the suites.
+emit "unwired-api"          script "scripts/check-unwired-api.sh --quiet" "-"
 
 # --- Phase 3: the redaction gates (NEVER checkpointed — always re-run) ----
 emit "redaction-suites" test "excise.sln" "FullyQualifiedName~Redaction"
