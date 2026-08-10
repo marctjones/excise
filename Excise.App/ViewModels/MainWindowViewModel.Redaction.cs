@@ -150,7 +150,6 @@ public partial class MainWindowViewModel
             // #643: the redacted copy of an encrypted source stays encrypted
             // with the same parameters and password.
             document.Save(saveFilePath, _documentService.GetReEncryptionOptions());
-            _hasInMemoryModifications = false;
 
             RedactionWorkflow.MoveToApplied();
             FileState.PendingRedactionsCount = 0;
@@ -231,7 +230,6 @@ public partial class MainWindowViewModel
 
             var page = document.Pages[CurrentPageIndex];
             _redactionService.RedactArea(page, areaToRedact);
-            _hasInMemoryModifications = true;
             // Redaction bakes glyph removal into the content stream — it is
             // irreversible, and any pending undo entry now references a
             // structurally-rewritten document (#782).

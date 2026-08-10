@@ -100,7 +100,6 @@ public partial class MainWindowViewModel
     private void AdjustAnnotationBookkeeping(int delta)
     {
         FileState.AnnotationEditsCount = Math.Max(0, FileState.AnnotationEditsCount + delta);
-        _hasInMemoryModifications = true;
         this.RaisePropertyChanged(nameof(SaveButtonText));
         this.RaisePropertyChanged(nameof(StatusBarText));
         AnnotationsChanged?.Invoke(this, EventArgs.Empty);

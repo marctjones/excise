@@ -95,15 +95,10 @@ public partial class MainWindowViewModel : ViewModelBase
     private ObservableCollection<PdfPageRect> _currentPageSearchHighlights = new();
     private int _renderCacheMax = 20;
     private string _operationStatus = string.Empty;
-    private bool _hasInMemoryModifications; // Tracks if document has been modified in-memory (e.g., redactions applied)
     private Services.ThumbnailCacheService? _thumbnailCache;
     internal Services.DocumentTextIndex? TextIndex;
     private System.Threading.CancellationTokenSource? _indexBuildCts;
     private const int SearchIndexBackgroundStartDelayMs = 750;
-    private CancellationTokenSource? _currentPageRenderCts;
-    private CancellationTokenSource? _adjacentPagePrefetchCts;
-    private long _currentPageRenderSequence;
-    private long _adjacentPagePrefetchSequence;
     private readonly Dictionary<int, Task> _thumbnailLoadTasks = new();
     private readonly object _thumbnailLoadLock = new();
     private long _thumbnailLoadGeneration;
@@ -938,7 +933,6 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             _logger.LogInformation(">>> STEP 2: Clearing previous document state");
             // Clear ALL state from previous document before loading new one
-            CancelCurrentPageRender();
             LastDocumentOpenTiming = null;
             CurrentRedactionArea = new Rect();
             ClearCurrentTextSelection();
@@ -950,7 +944,6 @@ public partial class MainWindowViewModel : ViewModelBase
             PageThumbnails.Clear();
             _renderService.ClearCache();
             this.RaisePropertyChanged(nameof(RenderCacheStats));
-            _hasInMemoryModifications = false;
 
             // Exit redaction mode if active
             if (IsRedactionMode)
@@ -1300,7 +1293,6 @@ public partial class MainWindowViewModel : ViewModelBase
             var flattenedTypewriter = document != null && ApplyPendingTypewriterText(document);
 
             _documentService.SaveDocument();
-            _hasInMemoryModifications = false;
             if (flattenedTypewriter)
             {
                 ClearPendingTypewriterText();
@@ -1727,7 +1719,6 @@ public partial class MainWindowViewModel : ViewModelBase
         else
             FileState.PageEditsCount++;
 
-        _hasInMemoryModifications = true;
         this.RaisePropertyChanged(nameof(SaveButtonText));
         this.RaisePropertyChanged(nameof(StatusBarText));
     }
@@ -2198,298 +2189,6 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    private async Task RenderCurrentPageAsync()
-    {
-        _logger.LogInformation(">>> RenderCurrentPageAsync: START (hasInMemoryModifications={HasMods})", _hasInMemoryModifications);
-
-        if (string.IsNullOrEmpty(_currentFilePath) || !_documentService.IsDocumentLoaded)
-        {
-            _logger.LogWarning(">>> RenderCurrentPageAsync: Skipping (no file or document not loaded)");
-            return;
-        }
-
-        var cts = BeginCurrentPageRender(out var renderSequence);
-        var token = cts.Token;
-        var requestedFilePath = _currentFilePath;
-        var requestedPageIndex = CurrentPageIndex;
-        var requestedHasInMemoryModifications = _hasInMemoryModifications;
-
-        // Surface a stage label in the status bar so the user has feedback
-        // during the render. Keep the existing label if a thumbnail batch
-        // is still in flight (it'll overwrite this anyway as it ticks).
-        var existingStatus = IsRenderingStatus(OperationStatus)
-            ? string.Empty
-            : OperationStatus;
-        var renderingStatus = $"Rendering page {requestedPageIndex + 1} of {TotalPages}…";
-        OperationStatus = renderingStatus;
-
-        try
-        {
-            SkiaSharp.SKBitmap? skBitmap = null;
-
-            // If document has in-memory modifications (e.g., applied redactions not yet saved),
-            // we must render from the in-memory stream, not the file on disk.
-            // This fixes the bug where redacted text was still visible until file reopen.
-            if (requestedHasInMemoryModifications)
-            {
-                _logger.LogInformation(">>> RenderCurrentPageAsync: Using in-memory stream (document has unsaved modifications)");
-                using var docStream = _documentService.GetCurrentDocumentAsStream();
-                if (docStream != null)
-                {
-                    try
-                    {
-                        using var memoryStream = new System.IO.MemoryStream();
-                        await docStream.CopyToAsync(memoryStream, token);
-                        memoryStream.Position = 0;
-                        skBitmap = await _renderService.RenderPageFromStreamAsync(
-                            memoryStream,
-                            requestedPageIndex,
-                            cancellationToken: token);
-                    }
-                    catch (OperationCanceledException) when (token.IsCancellationRequested)
-                    {
-                        throw;
-                    }
-                    catch (Exception streamEx)
-                    {
-                        _logger.LogWarning(streamEx, "Failed to render from in-memory stream, falling back to file");
-                    }
-                }
-            }
-
-            // Fallback to file-based rendering if in-memory rendering failed or wasn't needed
-            if (skBitmap == null)
-            {
-                _logger.LogInformation(">>> RenderCurrentPageAsync: Calling _renderService.RenderPageAsync for page {PageIndex}", requestedPageIndex);
-                skBitmap = await _renderService.RenderPageAsync(
-                    requestedFilePath,
-                    requestedPageIndex,
-                    cancellationToken: token);
-            }
-
-            try
-            {
-                token.ThrowIfCancellationRequested();
-            }
-            catch
-            {
-                skBitmap?.Dispose();
-                throw;
-            }
-
-            if (!IsCurrentPageRender(renderSequence, cts, requestedFilePath, requestedPageIndex, requestedHasInMemoryModifications))
-            {
-                _logger.LogDebug("Dropping stale render for page {PageIndex}", requestedPageIndex);
-                skBitmap?.Dispose();
-                return;
-            }
-
-            if (skBitmap == null)
-            {
-                _logger.LogWarning(">>> RenderCurrentPageAsync: Render returned null for page {PageIndex}", requestedPageIndex);
-                return;
-            }
-
-            using (skBitmap)
-            {
-                _logger.LogInformation(">>> RenderCurrentPageAsync: Converting to Avalonia bitmap");
-                var avaloniaBitmap = ToAvaloniaBitmap(skBitmap);
-
-                try
-                {
-                    token.ThrowIfCancellationRequested();
-                }
-                catch
-                {
-                    avaloniaBitmap?.Dispose();
-                    throw;
-                }
-
-                if (!IsCurrentPageRender(renderSequence, cts, requestedFilePath, requestedPageIndex, requestedHasInMemoryModifications))
-                {
-                    _logger.LogDebug("Dropping stale converted bitmap for page {PageIndex}", requestedPageIndex);
-                    avaloniaBitmap?.Dispose();
-                    return;
-                }
-
-                _logger.LogInformation(">>> RenderCurrentPageAsync: Setting CurrentPageImage");
-                CurrentPageImage = avaloniaBitmap;
-                this.RaisePropertyChanged(nameof(RenderCacheStats));
-            }
-
-            QueueAdjacentPagePrefetch(requestedFilePath, requestedPageIndex, requestedHasInMemoryModifications);
-            _logger.LogInformation(">>> RenderCurrentPageAsync: COMPLETE");
-        }
-        catch (OperationCanceledException) when (token.IsCancellationRequested)
-        {
-            _logger.LogDebug(">>> RenderCurrentPageAsync: CANCELED page {PageIndex}", requestedPageIndex);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "!!! ERROR in RenderCurrentPageAsync");
-            _logger.LogError("!!! Exception Type: {ExceptionType}", ex.GetType().Name);
-            _logger.LogError("!!! Exception Message: {Message}", ex.Message);
-            throw;
-        }
-        finally
-        {
-            // Only clear if we set the rendering label AND nothing else
-            // overwrote it during the render (the thumbnail batch keeps
-            // updating as pages complete and should win).
-            var isCurrentRender = ReferenceEquals(System.Threading.Volatile.Read(ref _currentPageRenderCts), cts);
-            if (isCurrentRender && OperationStatus == renderingStatus)
-                OperationStatus = existingStatus;
-            CompleteCurrentPageRender(cts);
-        }
-    }
-
-    private CancellationTokenSource BeginCurrentPageRender(out long renderSequence)
-    {
-        CancelAdjacentPagePrefetch();
-        var cts = new CancellationTokenSource();
-        renderSequence = System.Threading.Interlocked.Increment(ref _currentPageRenderSequence);
-        var previous = System.Threading.Interlocked.Exchange(ref _currentPageRenderCts, cts);
-        previous?.Cancel();
-        return cts;
-    }
-
-    private void CompleteCurrentPageRender(CancellationTokenSource cts)
-    {
-        if (ReferenceEquals(System.Threading.Volatile.Read(ref _currentPageRenderCts), cts))
-            System.Threading.Interlocked.CompareExchange(ref _currentPageRenderCts, null, cts);
-        cts.Dispose();
-    }
-
-    private void CancelCurrentPageRender()
-    {
-        CancelAdjacentPagePrefetch();
-        System.Threading.Interlocked.Increment(ref _currentPageRenderSequence);
-        var cts = System.Threading.Interlocked.Exchange(ref _currentPageRenderCts, null);
-        cts?.Cancel();
-    }
-
-    private void QueueAdjacentPagePrefetch(string filePath, int centerPageIndex, bool hasInMemoryModifications)
-    {
-        if (!AdjacentPagePrefetchEnabled ||
-            hasInMemoryModifications ||
-            string.IsNullOrEmpty(filePath) ||
-            TotalPages <= 1)
-        {
-            return;
-        }
-
-        var candidates = GetAdjacentPrefetchCandidates(centerPageIndex, TotalPages);
-        if (candidates.Count == 0)
-            return;
-
-        var cts = BeginAdjacentPagePrefetch(out var prefetchSequence);
-        var token = cts.Token;
-
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                foreach (var pageIndex in candidates)
-                {
-                    token.ThrowIfCancellationRequested();
-                    if (!IsCurrentAdjacentPrefetch(prefetchSequence, cts, filePath, centerPageIndex))
-                        return;
-
-                    _logger.LogDebug("Prefetching adjacent page {PageIndex}", pageIndex);
-                    using var bitmap = await _renderService.RenderPageAsync(
-                        filePath,
-                        pageIndex,
-                        cancellationToken: token);
-                }
-
-                this.RaisePropertyChanged(nameof(RenderCacheStats));
-            }
-            catch (OperationCanceledException) when (token.IsCancellationRequested)
-            {
-                _logger.LogDebug("Canceled adjacent-page prefetch for page {PageIndex}", centerPageIndex);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogDebug(ex, "Adjacent-page prefetch failed for page {PageIndex}", centerPageIndex);
-            }
-            finally
-            {
-                CompleteAdjacentPagePrefetch(cts);
-            }
-        });
-    }
-
-    private static IReadOnlyList<int> GetAdjacentPrefetchCandidates(int centerPageIndex, int pageCount)
-    {
-        var candidates = new List<int>(capacity: 2);
-        var next = centerPageIndex + 1;
-        var previous = centerPageIndex - 1;
-
-        if (next < pageCount)
-            candidates.Add(next);
-        if (previous >= 0)
-            candidates.Add(previous);
-
-        return candidates;
-    }
-
-    private CancellationTokenSource BeginAdjacentPagePrefetch(out long prefetchSequence)
-    {
-        var cts = new CancellationTokenSource();
-        prefetchSequence = System.Threading.Interlocked.Increment(ref _adjacentPagePrefetchSequence);
-        var previous = System.Threading.Interlocked.Exchange(ref _adjacentPagePrefetchCts, cts);
-        previous?.Cancel();
-        return cts;
-    }
-
-    private void CompleteAdjacentPagePrefetch(CancellationTokenSource cts)
-    {
-        if (ReferenceEquals(System.Threading.Volatile.Read(ref _adjacentPagePrefetchCts), cts))
-            System.Threading.Interlocked.CompareExchange(ref _adjacentPagePrefetchCts, null, cts);
-        cts.Dispose();
-    }
-
-    private void CancelAdjacentPagePrefetch()
-    {
-        System.Threading.Interlocked.Increment(ref _adjacentPagePrefetchSequence);
-        var cts = System.Threading.Interlocked.Exchange(ref _adjacentPagePrefetchCts, null);
-        cts?.Cancel();
-    }
-
-    private bool IsCurrentAdjacentPrefetch(
-        long prefetchSequence,
-        CancellationTokenSource cts,
-        string filePath,
-        int centerPageIndex)
-    {
-        return !cts.IsCancellationRequested
-            && System.Threading.Volatile.Read(ref _adjacentPagePrefetchSequence) == prefetchSequence
-            && ReferenceEquals(System.Threading.Volatile.Read(ref _adjacentPagePrefetchCts), cts)
-            && string.Equals(_currentFilePath, filePath, StringComparison.Ordinal)
-            && CurrentPageIndex == centerPageIndex
-            && !_hasInMemoryModifications;
-    }
-
-    private bool IsCurrentPageRender(
-        long renderSequence,
-        CancellationTokenSource cts,
-        string filePath,
-        int pageIndex,
-        bool hasInMemoryModifications)
-    {
-        return !cts.IsCancellationRequested
-            && System.Threading.Volatile.Read(ref _currentPageRenderSequence) == renderSequence
-            && ReferenceEquals(System.Threading.Volatile.Read(ref _currentPageRenderCts), cts)
-            && string.Equals(_currentFilePath, filePath, StringComparison.Ordinal)
-            && CurrentPageIndex == pageIndex
-            && _hasInMemoryModifications == hasInMemoryModifications;
-    }
-
-    private static bool IsRenderingStatus(string status)
-    {
-        return status.StartsWith("Rendering page ", StringComparison.Ordinal);
-    }
-
     private void UpdateThumbnailSelection()
     {
         foreach (var thumbnail in PageThumbnails)
@@ -2726,7 +2425,6 @@ public partial class MainWindowViewModel : ViewModelBase
             var flattenedTypewriter = document != null && ApplyPendingTypewriterText(document);
 
             _documentService.SaveDocument(filePath);
-            _hasInMemoryModifications = false;
             _currentFilePath = filePath;
             FileState.UpdateCurrentPath(filePath);
             if (flattenedTypewriter)
@@ -2762,7 +2460,6 @@ public partial class MainWindowViewModel : ViewModelBase
             // Save document state before closing
             SaveDocumentState();
 
-            CancelCurrentPageRender();
 
             // Close the PDF document
             _documentService.CloseDocument();
@@ -2784,7 +2481,6 @@ public partial class MainWindowViewModel : ViewModelBase
             ClearPendingTypewriterText();
             ClearEditHistory();
             ClipboardHistory.Clear();
-            _hasInMemoryModifications = false;
 
             // Clear search state
             SearchText = string.Empty;
