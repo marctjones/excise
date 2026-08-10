@@ -56,9 +56,21 @@ def is_test_path(path):
 
 
 def source_index(root):
-    """Identifier occurrences across .cs and .axaml, split production vs test."""
-    prod = defaultdict(int)
-    test = defaultdict(int)
+    """Which FILES mention each identifier, split production vs test.
+
+    Counting FILES rather than occurrences, because occurrence counts have a
+    systematic false negative: a class that self-references inside its own file
+    looks used. SKBitmapPool — an entire bitmap pool, zero callers, zero tests —
+    slipped through on
+
+        throw new ObjectDisposedException(nameof(SKBitmapPool));
+
+    which is boilerplate in every IDisposable. So EVERY dead IDisposable was
+    invisible to this check. Distinct-file counting makes a self-reference
+    contribute exactly one file, which is the same as the declaration alone.
+    """
+    prod = defaultdict(set)
+    test = defaultdict(set)
     files = 0
     word = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
     for dirpath, dirnames, filenames in os.walk(root):
@@ -71,9 +83,11 @@ def source_index(root):
             files += 1
             try:
                 with open(full, encoding="utf-8", errors="ignore") as fh:
+                    seen = set()
                     for line in fh:
-                        for m in set(word.findall(line)):
-                            bucket[m] += 1
+                        seen.update(word.findall(line))
+                    for m in seen:
+                        bucket[m].add(full)
             except OSError:
                 continue
     return prod, test, files
@@ -128,6 +142,8 @@ def main():
     prod, test, nfiles = source_index(root)
     print(f"    {nfiles} .cs/.axaml files indexed "
           f"({len(prod)} identifiers in production, {len(test)} in tests)")
+    print("    counting DISTINCT FILES, not occurrences — a self-reference such as")
+    print("    nameof(X) inside X's own file must not make X look used.")
 
     found = []          # (assembly, state, name)
     total = flagged = tested_only = 0
@@ -136,10 +152,12 @@ def main():
         if args.assembly and asm != args.assembly:
             continue
         names = identifiers(path, args.min_length)
-        # The declaration itself lives in production, so <=1 production
-        # reference means nothing in the app calls it.
-        dead = [n for n in names if prod.get(n, 0) <= 1 and test.get(n, 0) == 0]
-        only_tests = [n for n in names if prod.get(n, 0) <= 1 and test.get(n, 0) > 0]
+        # The declaring file counts as one, so <=1 production FILE means nothing
+        # outside the declaration mentions it.
+        pf = lambda n: len(prod.get(n, ()))
+        tf = lambda n: len(test.get(n, ()))
+        dead = [n for n in names if pf(n) <= 1 and tf(n) == 0]
+        only_tests = [n for n in names if pf(n) <= 1 and tf(n) > 0]
         total += len(names)
         flagged += len(dead)
         tested_only += len(only_tests)
@@ -149,9 +167,9 @@ def main():
         print(f"     {len(dead)} referenced nowhere;  {len(only_tests)} referenced ONLY by tests")
         if not args.quiet:
             for n in dead:
-                print(f"    [nowhere]    {n:<44} prod={prod.get(n,0)} test={test.get(n,0)}")
+                print(f"    [nowhere]    {n:<44} prodFiles={pf(n)} testFiles={tf(n)}")
             for n in only_tests:
-                print(f"    [tests-only] {n:<44} prod={prod.get(n,0)} test={test.get(n,0)}")
+                print(f"    [tests-only] {n:<44} prodFiles={pf(n)} testFiles={tf(n)}")
 
     print(f"\n==> of {total} identifiers: {flagged} referenced NOWHERE, "
           f"{tested_only} referenced ONLY BY TESTS")
