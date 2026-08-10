@@ -122,7 +122,6 @@ public partial class MainWindowViewModel
             if (result.PagesProcessed == 0 && result.TotalWordsWritten == 0)
                 return;
 
-            _hasInMemoryModifications = true;
             // A baked text layer structurally rewrites the document; prior
             // undo entries no longer apply cleanly (#782).
             ClearEditHistory();

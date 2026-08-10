@@ -269,7 +269,6 @@ public partial class MainWindowViewModel
         // password the document was opened with (null = empty password).
         PdfCoreDocument = PdfDocument.Open(filePath, _documentService.CurrentUserPassword);
         CurrentPageIndex = pageIndex;
-        _hasInMemoryModifications = false;
         _renderService.ClearCache();
         ResetThumbnailLoadTracking();
 

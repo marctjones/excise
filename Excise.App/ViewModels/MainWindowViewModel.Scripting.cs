@@ -244,7 +244,6 @@ public partial class MainWindowViewModel
 
             RedactionWorkflow.MoveToApplied();
             FileState.PendingRedactionsCount = 0;
-            _hasInMemoryModifications = true;
             this.RaisePropertyChanged(nameof(SaveButtonText));
             this.RaisePropertyChanged(nameof(StatusBarText));
 
@@ -394,7 +393,6 @@ public partial class MainWindowViewModel
                         skippedRedactionCount);
                     RedactionWorkflow.MoveToApplied();
                     FileState.PendingRedactionsCount = 0;
-                    _hasInMemoryModifications = true;
 
                     _logger.LogInformation(
                         "[SCRIPT] Safe-share scrub and verification completed for coordinate redaction output; warnings: {HasWarnings}",

@@ -270,7 +270,6 @@ public partial class MainWindowViewModel
     private Task MarkAnnotationChangedAsync(string toastMessage)
     {
         FileState.AnnotationEditsCount++;
-        _hasInMemoryModifications = true;
         this.RaisePropertyChanged(nameof(SaveButtonText));
         this.RaisePropertyChanged(nameof(StatusBarText));
         AnnotationsChanged?.Invoke(this, EventArgs.Empty);
