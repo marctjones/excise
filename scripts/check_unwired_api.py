@@ -55,22 +55,42 @@ def is_test_path(path):
     return any(p.endswith(".Tests") or p == "tests" for p in parts)
 
 
-def source_index(root):
-    """Which FILES mention each identifier, split production vs test.
+NAMEOF = re.compile(r"\bnameof\s*\(\s*[A-Za-z_][A-Za-z0-9_.]*\s*\)")
 
-    Counting FILES rather than occurrences, because occurrence counts have a
-    systematic false negative: a class that self-references inside its own file
-    looks used. SKBitmapPool — an entire bitmap pool, zero callers, zero tests —
-    slipped through on
+
+def source_index(root):
+    """Which FILES mention each identifier, plus how many times WITHIN a file.
+
+    Two false signals have to be defeated at once, and each fix creates the
+    other if applied alone.
+
+    FALSE NEGATIVE — counting raw occurrences. A class that self-references
+    inside its own file looks used. SKBitmapPool (an entire bitmap pool, zero
+    callers, zero tests) slipped through on
 
         throw new ObjectDisposedException(nameof(SKBitmapPool));
 
-    which is boilerplate in every IDisposable. So EVERY dead IDisposable was
-    invisible to this check. Distinct-file counting makes a self-reference
-    contribute exactly one file, which is the same as the declaration alone.
+    which is boilerplate in every IDisposable, so EVERY dead IDisposable was
+    invisible.
+
+    FALSE POSITIVE — counting only distinct FILES, which was the first fix.
+    A member used legitimately inside its own declaring file contributes one
+    file, indistinguishable from a bare declaration. Measured on the real
+    baseline: **18 of 22** `nowhere` entries were of this kind — PdfLink's
+    ExternalLink/DangerousLink factories (called at PdfLink.cs:135 and :146),
+    MatchingNormalization's predicates, PdfDocumentBuilder's layout members.
+    Only 4 were genuinely unreferenced. A gate whose flagged list is mostly
+    wrong is a gate people stop reading, which is how the skip budget rotted
+    (#854).
+
+    So: strip `nameof(...)` first, THEN count occurrences. A self-reference
+    disappears, and a real same-file call still counts. `occ` below is the
+    highest per-file occurrence count in production, so 1 means "declaration
+    only" and >=2 means a genuine use somewhere.
     """
     prod = defaultdict(set)
     test = defaultdict(set)
+    occ = defaultdict(int)          # max per-production-file occurrences
     files = 0
     word = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
     for dirpath, dirnames, filenames in os.walk(root):
@@ -79,18 +99,23 @@ def source_index(root):
             if not fn.endswith((".cs", ".axaml")):
                 continue
             full = os.path.join(dirpath, fn)
-            bucket = test if is_test_path(full) else prod
+            is_test = is_test_path(full)
+            bucket = test if is_test else prod
             files += 1
             try:
                 with open(full, encoding="utf-8", errors="ignore") as fh:
-                    seen = set()
+                    counts = defaultdict(int)
                     for line in fh:
-                        seen.update(word.findall(line))
-                    for m in seen:
+                        # nameof(X) is a self-reference, not a use.
+                        for m in word.findall(NAMEOF.sub(" ", line)):
+                            counts[m] += 1
+                    for m, c in counts.items():
                         bucket[m].add(full)
+                        if not is_test and c > occ[m]:
+                            occ[m] = c
             except OSError:
                 continue
-    return prod, test, files
+    return prod, test, occ, files
 
 
 def approved_files(root):
@@ -139,11 +164,13 @@ def main():
         return 1
 
     print("==> indexing source")
-    prod, test, nfiles = source_index(root)
+    prod, test, occ, nfiles = source_index(root)
     print(f"    {nfiles} .cs/.axaml files indexed "
           f"({len(prod)} identifiers in production, {len(test)} in tests)")
-    print("    counting DISTINCT FILES, not occurrences — a self-reference such as")
-    print("    nameof(X) inside X's own file must not make X look used.")
+    print("    a production reference means: mentioned in a file OTHER than the")
+    print("    declaring one, OR used >=2 times within it after nameof(X) is")
+    print("    stripped. Files alone gave 18/22 false positives; occurrences")
+    print("    alone hid every dead IDisposable behind nameof(X).")
 
     found = []          # (assembly, state, name)
     total = flagged = tested_only = 0
@@ -152,12 +179,15 @@ def main():
         if args.assembly and asm != args.assembly:
             continue
         names = identifiers(path, args.min_length)
-        # The declaring file counts as one, so <=1 production FILE means nothing
-        # outside the declaration mentions it.
+        # Unreferenced in production means BOTH: no file other than the
+        # declaring one mentions it, AND the declaring file mentions it only
+        # once (i.e. the declaration itself, nameof already stripped).
         pf = lambda n: len(prod.get(n, ()))
         tf = lambda n: len(test.get(n, ()))
-        dead = [n for n in names if pf(n) <= 1 and tf(n) == 0]
-        only_tests = [n for n in names if pf(n) <= 1 and tf(n) > 0]
+        oc = lambda n: occ.get(n, 0)
+        unused_in_prod = lambda n: pf(n) <= 1 and oc(n) <= 1
+        dead = [n for n in names if unused_in_prod(n) and tf(n) == 0]
+        only_tests = [n for n in names if unused_in_prod(n) and tf(n) > 0]
         total += len(names)
         flagged += len(dead)
         tested_only += len(only_tests)
@@ -167,9 +197,9 @@ def main():
         print(f"     {len(dead)} referenced nowhere;  {len(only_tests)} referenced ONLY by tests")
         if not args.quiet:
             for n in dead:
-                print(f"    [nowhere]    {n:<44} prodFiles={pf(n)} testFiles={tf(n)}")
+                print(f"    [nowhere]    {n:<44} prodFiles={pf(n)} occ={oc(n)} testFiles={tf(n)}")
             for n in only_tests:
-                print(f"    [tests-only] {n:<44} prodFiles={pf(n)} testFiles={tf(n)}")
+                print(f"    [tests-only] {n:<44} prodFiles={pf(n)} occ={oc(n)} testFiles={tf(n)}")
 
     print(f"\n==> of {total} identifiers: {flagged} referenced NOWHERE, "
           f"{tested_only} referenced ONLY BY TESTS")
