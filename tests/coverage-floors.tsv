@@ -1,50 +1,88 @@
 # Per-assembly line-coverage floors, BY PROFILE.
 #
-# WHY TWO PROFILES AND NOT ONE
+# ⚠️ A `ci` NUMBER MUST COME FROM A CI RUN. NOT FROM A DEV MACHINE.
 #
-# CI and a developer machine run genuinely different test populations, so one
-# number cannot serve both. Measured 2026-08-09 on Excise.Rendering:
+# This file shipped with a `ci` floor of 0.76 for Excise.Rendering and turned
+# CI red for four consecutive commits, because that number was measured on a
+# developer machine. Applying CI's test FILTER locally does not reproduce CI's
+# ENVIRONMENT, and the environment is the entire reason this file has profiles
+# at all. Measured on Excise.Rendering, same filter, same 467-odd tests:
 #
-#     ci    (corpus-less runner)          78.4%
-#     full  (corpora + mutool/gs/cairo)   87.0%
+#     CI runner (corpus-less)        54.36%      86 of 468 tests SKIP
+#     dev machine, CI filter         78.41%       0 of 467 tests skip
 #
-# The 8.6-point gap is entirely Differential and Corpus tests, which cannot run
-# without the gitignored corpora and the reference renderers. A single floor is
-# wrong in both directions:
+# The 86 are corpus- and tool-gated tests living in classes the filter does not
+# exclude by name. They do not announce themselves as filtered out; they run,
+# hit a missing corpus, and skip. So the local run looks like the CI run, is
+# named like the CI run, and measures 24 points higher.
+#
+# To get a `ci` number: read it off a CI run's "Coverage Report for package X"
+# line. Not from `dotnet test` on your laptop, however carefully you copy the
+# filter out of ci.yml.
+#
+# WHY TWO PROFILES
+#
+# Excise.Rendering, three populations, three numbers:
+#
+#     ci    corpus-less runner, filtered           54.36%
+#     (dev machine w/ CI's filter — NOT A PROFILE) 78.41%
+#     full  corpora + mutool/gs/pdftocairo, all    87.49%
+#
+# The ci -> full gap is TWO mechanisms, and an earlier version of this file
+# attributed all of it to the second:
+#
+#   1. 54.36 -> 78.41   tests that SKIP on a corpus-less runner (invisible)
+#   2. 78.41 -> 87.49   Corpus/Differential/Benchmark/Visual, excluded by name
+#
+# A single floor is wrong in both directions:
 #
 #   * set at 87% -> CI fails on every run, forever
-#   * set at 78% -> a regression that only shows in the differential tests
-#                   passes silently, and those are the tests that exist because
-#                   excise must not be its own oracle
+#   * set at 54% for the release read -> a regression that only shows in the
+#                 differential tests passes silently, and those are the tests
+#                 that exist because excise must not be its own oracle
 #
 # This mirrors the skip-allowlist's environment conditioning (#854), which
 # exists for the same reason: the allowlist is calibrated for a corpus-LESS
-# runner, and entries declare what they need in order to run.
+# runner, and entries declare what they need in order to run. That this file
+# cited #854 and then made exactly the mistake #854 describes is the reason for
+# the warning at the top.
 #
 # HOW FLOORS ARE CHOSEN
 #
 # ~2 points below the measured value. Tight enough to catch a real regression,
-# loose enough not to flap on ordinary variation (a test moved between filters,
-# a branch counted differently). Floors RATCHET UP as coverage improves; they do
-# not drift down. Raising one is a normal part of improving coverage. Lowering
-# one requires saying why in the commit message.
+# loose enough not to flap. The `ci` value is safe to set tight because
+# check-skip-budget.sh pins the CI skip set in BOTH directions — which is why
+# 54.36% is stable to four significant figures across four separate runs. If
+# the skip set moves, that gate fails first and names the cause.
+#
+# Floors RATCHET UP as coverage improves; they do not drift down. Raising one is
+# a normal part of improving coverage. Lowering one requires saying why in the
+# commit message — and "the old number was never measured in the environment it
+# gates" is a correction, not a reduction.
 #
 # THE FAILURE MODE TO WATCH
 #
-# The `ci` floor is the one enforced on every push, so it is the one that gets
-# attention. `full` is enforced by the release path (t2/release-smoke), which
-# runs far less often — so `full` is where rot hides. If `full` and `ci` ever
+# `ci` is enforced on every push, so it gets attention. `full` is read by the
+# release path (docs/RELEASE_CHECKLIST.md) as an OBSERVATION, not a blocker, and
+# is read far less often — so `full` is where rot hides. If `full` and `ci` ever
 # converge, that is not coverage improving; it is the differential tests having
 # stopped contributing, and it should be investigated rather than celebrated.
 #
+# NO FLOOR IS BETTER THAN A WRONG ONE
+#
+# Excise.App, Excise.Avalonia and Excise.Ocr had `ci` rows here produced by the
+# same invalid local measurement. Nothing enforced them, so nothing caught it.
+# They are DELETED rather than corrected: check-coverage-floor.sh fails on an
+# undeclared pair, so wiring one of those gates now stops loudly and demands a
+# CI-measured number, instead of silently passing against a figure that was
+# never true. Re-add them by reading a CI run, one at a time, as each is wired.
+#
 # Format:  profile <TAB> assembly <TAB> floor <TAB> measured <TAB> note
-# Regenerate measurements with scripts/measure-coverage.sh
+# `measured` is the observation the floor was derived from — record where it
+# came from in the note.
 
-ci	Excise.Rendering	0.76	0.784	corpus-less: no Corpus/Differential/Benchmark/Visual
-ci	Excise.App	0.76	0.787	full App suite under xvfb
-ci	Excise.Avalonia	0.84	0.864	measured via Excise.App.Tests
-ci	Excise.Ocr	0.80	0.827	measured via Excise.App.Tests; tesseract absent on CI
-full	Excise.Rendering	0.85	0.870	corpora + mutool/gs/pdftocairo present
-full	Excise.App	0.76	0.787	same suite as ci; no corpus-dependent delta observed
-full	Excise.Avalonia	0.84	0.864	same as ci
-full	Excise.Ocr	0.80	0.827	same as ci
+ci	Excise.Rendering	0.52	0.5436	READ OFF CI (4 runs, identical). Corpus-less: 86 of 468 skip.
+full	Excise.Rendering	0.85	0.8749	dev machine, corpora + mutool/gs/pdftocairo, unfiltered (3807 tests)
+full	Excise.App	0.76	0.787	dev machine, measured via Excise.App.Tests
+full	Excise.Avalonia	0.84	0.864	dev machine, measured via Excise.App.Tests
+full	Excise.Ocr	0.80	0.827	dev machine, measured via Excise.App.Tests; tesseract present

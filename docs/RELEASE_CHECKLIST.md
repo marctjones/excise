@@ -63,10 +63,25 @@ Use this checklist before tagging any `v*` release.
   on every push, free, within ~9 minutes of a regression landing; that is where a
   ratchet earns its keep.
 
-  **What to look at is the GAP between the two profiles.** Measured 2026-08-09 on
-  `Excise.Rendering`: `ci` 78.4%, `full` 87.0%. Those 8.6 points ARE the Corpus
-  and Differential tests — the ones that cannot run on a corpus-less runner, and
-  the ones that exist because excise must not be its own oracle.
+  **What to look at is the GAP between the two profiles.** Measured on
+  `Excise.Rendering`: `ci` **54.36%** (read off a CI run), `full` **87.49%**.
+
+  That gap is **two** mechanisms, not one:
+
+  | | | |
+  |---|---|---|
+  | 54.36% | CI runner, filtered | 86 of 468 tests **skip** for want of a corpus or tool |
+  | 78.41% | dev machine, same filter | nothing skips — **not a profile, and not a substitute for the `ci` number** |
+  | 87.49% | dev machine, unfiltered | Corpus/Differential/Benchmark/Visual included |
+
+  The middle row is the trap. Copying CI's filter onto a dev machine looks like
+  measuring the `ci` profile and is wrong by 24 points; doing exactly that put a
+  0.76 floor in `tests/coverage-floors.tsv` and turned CI red for four commits.
+  **Read a `ci` number off a CI run.**
+
+  The 78.41 → 87.49 half is the Corpus and Differential tests — the ones that
+  cannot run on a corpus-less runner, and the ones that exist because excise
+  must not be its own oracle.
 
   So: **if `full` has converged toward `ci`, that is not coverage improving.** It
   means the differential tests stopped contributing — skipped on a missing

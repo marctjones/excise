@@ -262,12 +262,21 @@ jobs:
       # to drift with nothing noticing. Core itself drifted to 89.78% once and
       # it took someone looking to find it.
       #
-      # The PROFILE is the point. This step's filter excludes Corpus and
-      # Differential — they need the gitignored corpora and mutool/gs/pdftocairo,
-      # absent here — so CI measures 78.4% where a corpus-equipped machine
-      # measures 87.0%. One floor would either fail CI forever or go blind to
-      # regressions in precisely the differential tests that exist because
-      # excise must not be its own oracle. See tests/coverage-floors.tsv.
+      # The PROFILE is the point. This step measures 54.36% where a
+      # corpus-equipped machine measures 87.49% unfiltered. One floor would
+      # either fail CI forever or go blind to regressions in precisely the
+      # differential tests that exist because excise must not be its own
+      # oracle. See tests/coverage-floors.tsv.
+      #
+      # ⚠️ The gap is TWO mechanisms, and only the second is visible here:
+      #   1. 54.36 -> 78.41  tests that SKIP on this runner for want of a
+      #                      corpus or tool. They are NOT excluded by the
+      #                      filter above — they run and skip, silently.
+      #   2. 78.41 -> 87.49  the Corpus/Differential/Benchmark/Visual classes
+      #                      the filter excludes by name.
+      # Reproducing the filter on a dev machine therefore gives 78.41%, not
+      # 54.36%. A `ci` floor derived that way is wrong by 24 points, which is
+      # how this gate red-lit CI for four commits after it was added.
       - name: Coverage floor (Excise.Rendering, ci profile)
         run: |
           report=$(find coverage-rendering -name 'coverage.cobertura.xml' | head -1)
