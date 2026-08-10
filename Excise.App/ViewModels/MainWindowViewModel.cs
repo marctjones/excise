@@ -1754,13 +1754,16 @@ public partial class MainWindowViewModel : ViewModelBase
         if (documentStream == null)
             return Task.CompletedTask;
 
-        using (documentStream)
-        {
-            documentStream.Position = 0;
-            var reloaded = PdfCoreDocument.Open(documentStream.ToArray());
-            PdfCoreDocument?.Dispose();
-            PdfCoreDocument = reloaded;
-        }
+        // Hand the stream to the document rather than copying out of it.
+        // `documentStream` is already `new MemoryStream(doc.SaveToBytes())`, so
+        // the previous `.ToArray()` allocated a second full-size copy of a
+        // buffer that was built one line earlier and thrown away here (#922).
+        // ownsStream: true, so the document disposes it — which is why this is
+        // no longer inside a `using`.
+        documentStream.Position = 0;
+        var reloaded = PdfCoreDocument.Open(documentStream, ownsStream: true);
+        PdfCoreDocument?.Dispose();
+        PdfCoreDocument = reloaded;
 
         CurrentPageIndex = Math.Clamp(CurrentPageIndex, 0, Math.Max(0, _documentService.PageCount - 1));
         _renderService.ClearCache();
