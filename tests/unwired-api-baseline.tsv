@@ -15,12 +15,9 @@
 # and #896 (RedactWithOptions, same shape, and the CLI leaked redacted terms
 # into /Info and XMP for exactly as long as nothing called the safe path).
 Excise.Avalonia	nowhere	ClearAllOverlays
-Excise.Avalonia	nowhere	OnCreateAutomationPeer
 Excise.Avalonia	nowhere	ScreenBounds
 Excise.Core	nowhere	Failures
-Excise.Core	nowhere	PdfNumberExtensions
 Excise.Core	nowhere	SetCreator
-Excise.Core	nowhere	TupleElementNames
 Excise.Core	tests-only	AddArrowAnnotation
 Excise.Core	tests-only	AddLineAnnotation
 Excise.Core	tests-only	AddPolyLineAnnotation
@@ -109,7 +106,6 @@ Excise.Rendering	nowhere	GetPoolCountForSize
 Excise.Rendering	nowhere	GetTotalPoolCount
 Excise.Rendering	nowhere	ResolvedLibraryPath
 Excise.Rendering	nowhere	SKBitmapPool
-Excise.Rendering	nowhere	TupleElementNames
 Excise.Rendering	tests-only	EncryptR4
 Excise.Rendering	tests-only	PdftoppmReferenceRenderer
 Excise.Rendering	tests-only	ShowEncryption
