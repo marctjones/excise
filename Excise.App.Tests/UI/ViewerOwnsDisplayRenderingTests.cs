@@ -14,86 +14,24 @@ using Xunit;
 
 namespace Excise.App.Tests.UI;
 
+/// <summary>
+/// The bound <c>PdfViewerControl</c> owns display rendering; the ViewModel does
+/// not render.
+///
+/// This class used to be MainWindowRenderSchedulingTests and carried two more
+/// tests, which drove <c>MainWindowViewModel.RenderCurrentPageAsync</c> through
+/// reflection. That method had no production callers — the legacy VM render
+/// path was bypassed and left in place — so those two asserted scheduling
+/// guarantees for a renderer the user never invoked, and they were removed with
+/// it (#920).
+///
+/// What remains is the guard that made the deletion safe, and it is the reason
+/// this file still exists: if the ViewModel ever starts rendering again, this
+/// fails.
+/// </summary>
 [Collection("AvaloniaTests")]
-public class MainWindowRenderSchedulingTests
+public class ViewerOwnsDisplayRenderingTests
 {
-    [FixedAvaloniaFact]
-    public async Task RenderCurrentPageAsync_DropsStaleRenderCompletion()
-    {
-        var pdfPath = Path.Combine(Path.GetTempPath(), $"excise-render-race-{Guid.NewGuid():N}.pdf");
-        TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 2);
-
-        try
-        {
-            var documentService = new PdfDocumentService(NullLogger<PdfDocumentService>.Instance);
-            documentService.LoadDocument(pdfPath);
-            var renderService = new ControlledRenderService();
-            var vm = CreateViewModel(documentService, renderService);
-            vm.AdjacentPagePrefetchEnabled = false;
-            SetPrivateField(vm, "_currentFilePath", pdfPath);
-
-            vm.CurrentPageIndex = 0;
-            var firstRender = InvokeRenderCurrentPageAsync(vm);
-            await renderService.WaitForRequestAsync(0);
-
-            vm.CurrentPageIndex = 1;
-            var secondRender = InvokeRenderCurrentPageAsync(vm);
-            await renderService.WaitForRequestAsync(1);
-
-            renderService.Complete(0, CreateBitmap(width: 10, height: 10, SKColors.Red));
-            await firstRender;
-
-            vm.CurrentPageImage.Should().BeNull("a stale render must not update the visible page");
-            renderService.RequestToken(0).IsCancellationRequested.Should().BeTrue();
-
-            renderService.Complete(1, CreateBitmap(width: 20, height: 10, SKColors.Blue));
-            await secondRender;
-
-            vm.CurrentPageImage.Should().NotBeNull();
-            vm.CurrentPageImage!.PixelSize.Width.Should().Be(20);
-        }
-        finally
-        {
-            TestPdfGenerator.CleanupTestFile(pdfPath);
-        }
-    }
-
-    [FixedAvaloniaFact]
-    public async Task RenderCurrentPageAsync_PrefetchesAdjacentPagesAfterVisiblePageWins()
-    {
-        var pdfPath = Path.Combine(Path.GetTempPath(), $"excise-render-prefetch-{Guid.NewGuid():N}.pdf");
-        TestPdfGenerator.CreateMultiPagePdf(pdfPath, pageCount: 3);
-
-        try
-        {
-            var documentService = new PdfDocumentService(NullLogger<PdfDocumentService>.Instance);
-            documentService.LoadDocument(pdfPath);
-            var renderService = new ControlledRenderService();
-            var vm = CreateViewModel(documentService, renderService);
-            SetPrivateField(vm, "_currentFilePath", pdfPath);
-
-            vm.CurrentPageIndex = 1;
-            var render = InvokeRenderCurrentPageAsync(vm);
-            await renderService.WaitForRequestAsync(1);
-
-            renderService.Complete(1, CreateBitmap(width: 20, height: 10, SKColors.Blue));
-            await render;
-
-            vm.CurrentPageImage.Should().NotBeNull("the visible page should be committed before prefetch starts");
-            await renderService.WaitForRequestAsync(2);
-            renderService.RequestToken(2).IsCancellationRequested.Should().BeFalse();
-            renderService.Complete(2, CreateBitmap(width: 10, height: 10, SKColors.Green));
-
-            await renderService.WaitForRequestAsync(0);
-            renderService.RequestToken(0).IsCancellationRequested.Should().BeFalse();
-            renderService.Complete(0, CreateBitmap(width: 10, height: 10, SKColors.Red));
-        }
-        finally
-        {
-            TestPdfGenerator.CleanupTestFile(pdfPath);
-        }
-    }
-
     [FixedAvaloniaFact]
     public async Task LoadAndNavigate_DoNotInvokeLegacyViewModelRenderService()
     {
@@ -140,21 +78,7 @@ public class MainWindowRenderSchedulingTests
             new ToastService());
     }
 
-    private static void SetPrivateField(object target, string fieldName, object? value)
-    {
-        var field = target.GetType().GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance);
-        field.Should().NotBeNull($"field {fieldName} should exist");
-        field!.SetValue(target, value);
-    }
 
-    private static Task InvokeRenderCurrentPageAsync(MainWindowViewModel viewModel)
-    {
-        var method = typeof(MainWindowViewModel).GetMethod(
-            "RenderCurrentPageAsync",
-            BindingFlags.NonPublic | BindingFlags.Instance);
-        method.Should().NotBeNull("render scheduling should remain testable");
-        return (Task)method!.Invoke(viewModel, null)!;
-    }
 
     private static SKBitmap CreateBitmap(int width, int height, SKColor color)
     {
