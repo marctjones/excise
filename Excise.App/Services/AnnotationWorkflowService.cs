@@ -39,6 +39,36 @@ public sealed class AnnotationWorkflowService
     }
 
     /// <summary>
+    /// The other three text-markup subtypes (#912). Same shape as
+    /// <see cref="AddHighlight"/> and the same selection gesture — Core has been
+    /// able to author Underline, StrikeOut and Squiggly all along, and nothing
+    /// in the app could reach them.
+    /// </summary>
+    public PdfAnnotation AddUnderline(int pageNumber, PdfRectangle rect, string contents)
+    {
+        var document = GetLoadedDocument();
+        var annotation = document.AddUnderlineAnnotation(pageNumber, rect, contents);
+        _logger.LogInformation("Added underline annotation to page {PageNumber}", pageNumber);
+        return annotation;
+    }
+
+    public PdfAnnotation AddStrikeOut(int pageNumber, PdfRectangle rect, string contents)
+    {
+        var document = GetLoadedDocument();
+        var annotation = document.AddStrikeOutAnnotation(pageNumber, rect, contents);
+        _logger.LogInformation("Added strikeout annotation to page {PageNumber}", pageNumber);
+        return annotation;
+    }
+
+    public PdfAnnotation AddSquiggly(int pageNumber, PdfRectangle rect, string contents)
+    {
+        var document = GetLoadedDocument();
+        var annotation = document.AddSquigglyAnnotation(pageNumber, rect, contents);
+        _logger.LogInformation("Added squiggly annotation to page {PageNumber}", pageNumber);
+        return annotation;
+    }
+
+    /// <summary>
     /// Add a Square shape annotation with a baked appearance stream (#626).
     /// </summary>
     public PdfAnnotation AddSquare(int pageNumber, PdfRectangle rect, string? contents = null)

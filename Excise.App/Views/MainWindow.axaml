@@ -116,6 +116,15 @@
                 <MenuItem Header="Add _Highlight From Selection" Command="{Binding AddHighlightAnnotationFromSelectionCommand}"
                           IsEnabled="{Binding HasTextSelection}"
                           access:CommandAccessibility.CommandId="annotation.addHighlight"/>
+                <MenuItem Header="Add _Underline From Selection" Command="{Binding AddUnderlineAnnotationFromSelectionCommand}"
+                          IsEnabled="{Binding HasTextSelection}"
+                          access:CommandAccessibility.CommandId="annotation.addUnderline"/>
+                <MenuItem Header="Add Strike_out From Selection" Command="{Binding AddStrikeOutAnnotationFromSelectionCommand}"
+                          IsEnabled="{Binding HasTextSelection}"
+                          access:CommandAccessibility.CommandId="annotation.addStrikeOut"/>
+                <MenuItem Header="Add S_quiggly From Selection" Command="{Binding AddSquigglyAnnotationFromSelectionCommand}"
+                          IsEnabled="{Binding HasTextSelection}"
+                          access:CommandAccessibility.CommandId="annotation.addSquiggly"/>
                 <MenuItem Header="Add _Sticky Note..." Command="{Binding AddStickyNoteAnnotationCommand}"
                           IsEnabled="{Binding IsDocumentLoaded}"
                           access:CommandAccessibility.CommandId="annotation.addStickyNote"/>
