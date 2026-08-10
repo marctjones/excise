@@ -133,7 +133,16 @@ public static class PdfDocumentRedactionExtensions
                     }
                     else
                     {
-                        page.RedactArea(bbox, strategy);
+                        // scrubDocumentCarriers: false — RedactText owns its own
+                        // carrier policy and applies it once, at the end, BY TERM
+                        // (#896). RedactArea's default is the WHOLESALE strip,
+                        // which exists for callers who have only a rectangle
+                        // (#897); letting it fire here would silently override
+                        // this method's own opt-out and destroy /Info and XMP on
+                        // every RedactText call — including the documented case
+                        // where a term below the sanitizer's 3-character floor
+                        // deliberately leaves carriers alone.
+                        page.RedactArea(bbox, strategy, scrubDocumentCarriers: false);
                     }
 
                     if (drawBlackRect) AppendBlackRectangle(page, bbox);

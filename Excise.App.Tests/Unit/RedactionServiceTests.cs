@@ -41,42 +41,6 @@ public class RedactionServiceTests : IDisposable
         catch { }
     }
 
-    #region ClearRedactedTerms Tests
-
-    [Fact]
-    public void ClearRedactedTerms_WhenEmpty_DoesNothing()
-    {
-        // Act
-        _service.ClearRedactedTerms();
-
-        // Assert
-        _service.RedactedTerms.Should().BeEmpty();
-    }
-
-    [Fact]
-    public void ClearRedactedTerms_AfterRedaction_ClearsTerms()
-    {
-        // Arrange - Manually add a term to RedactedTerms by property exposure
-        var filePath = CreateTestFile("redact.pdf", path =>
-            TestPdfGenerator.CreateSimpleTextPdf(path, "Secret Word"));
-
-        using var doc = PdfDocument.Open(File.ReadAllBytes(filePath));
-        var page = doc.GetPage(1);
-
-        // Redact to populate RedactedTerms
-        var area = new Rect(50, 50, 100, 100);
-        _service.RedactArea(page, area);
-
-        _service.RedactedTerms.Should().NotBeEmpty();
-
-        // Act
-        _service.ClearRedactedTerms();
-
-        // Assert
-        _service.RedactedTerms.Should().BeEmpty();
-    }
-
-    #endregion
 
     #region RedactArea Tests
 
@@ -113,29 +77,42 @@ public class RedactionServiceTests : IDisposable
         // Act
         _service.RedactArea(page, area);
 
-        // Assert - Should have populated RedactedTerms
-        _service.RedactedTerms.Should().NotBeEmpty();
+        // Assert — the glyphs are gone from the page, which is the property this
+        // service exists to guarantee. This previously asserted that a list of
+        // harvested words was non-empty, which is true of a build that removes
+        // nothing (#897 deleted that list).
+        page.Text.Should().NotContain("Secret Content",
+            "a full-page redaction must remove the glyphs from the content stream");
     }
 
+    /// <summary>
+    /// #897 at the GUI layer: an area redaction through this service must also
+    /// clear the document-level carriers that have no position.
+    ///
+    /// The engine does the strip; this pins that the GUI path actually gets it,
+    /// because the GUI path is the one a person uses on a real document. It
+    /// replaces a test that asserted a now-deleted list of harvested words was
+    /// non-empty — which said nothing about whether anything was protected.
+    /// </summary>
     [Fact]
-    public void RedactArea_RecordsRedactedText()
+    public void RedactArea_StripsDocumentLevelCarriers()
     {
-        // Arrange
         var filePath = CreateTestFile("redact.pdf", path =>
             TestPdfGenerator.CreateSimpleTextPdf(path, "SecretWord"));
 
         using var doc = PdfDocument.Open(File.ReadAllBytes(filePath));
+        doc.SetTitle("SecretWord in the title");
         var page = doc.GetPage(1);
 
-        var area = new Rect(0, 0, page.Width, page.Height);
+        _service.RedactArea(page, new Rect(0, 0, page.Width, page.Height));
 
-        // Act
-        _service.RedactArea(page, area);
+        var outputPath = Path.Combine(_tempDir, "carriers.pdf");
+        doc.Save(outputPath);
+        var saved = System.Text.Encoding.Latin1.GetString(File.ReadAllBytes(outputPath));
 
-        // Assert
-        _service.RedactedTerms.Should().NotBeEmpty();
-        // The exact term depends on what text extraction finds
-        _service.RedactedTerms.Count.Should().BeGreaterThan(0);
+        saved.Should().NotContain("SecretWord in the title",
+            "drawing a box over a name and saving must not leave the name in the document " +
+            "title — the carrier a reader shows before the page is even opened (#897)");
     }
 
     [Fact]
@@ -174,7 +151,7 @@ public class RedactionServiceTests : IDisposable
     }
 
     [Fact]
-    public void RedactArea_MultipleTimes_AccumulatesRedactedTerms()
+    public void RedactArea_MultipleTimes_RemovesTextFromEachRegion()
     {
         // Arrange
         var filePath = CreateTestFile("redact.pdf", path =>
@@ -183,15 +160,15 @@ public class RedactionServiceTests : IDisposable
         using var doc = PdfDocument.Open(File.ReadAllBytes(filePath));
         var page = doc.GetPage(1);
 
-        // Act - Redact twice
+        // Act - Redact twice, covering both lines between them
         _service.RedactArea(page, new Rect(0, 0, 300, 100));
-        var firstCount = _service.RedactedTerms.Count;
-
         _service.RedactArea(page, new Rect(0, 100, 300, 100));
-        var secondCount = _service.RedactedTerms.Count;
 
-        // Assert - Second redaction should have added more terms
-        secondCount.Should().BeGreaterThanOrEqualTo(firstCount);
+        // Assert - both regions lost their glyphs. The previous version compared
+        // two counts of a harvested-word list with >=, which a build that
+        // redacted nothing also satisfies.
+        page.Text.Should().NotContain("Line One");
+        page.Text.Should().NotContain("Line Two");
     }
 
     #endregion
@@ -245,13 +222,18 @@ public class RedactionServiceTests : IDisposable
         using var doc = PdfDocument.Open(File.ReadAllBytes(filePath));
         var page = doc.GetPage(1);
 
-        var areas = new[] { new Rect(50, 50, 100, 100) };
+        // The rectangle must actually contain the text, or the test's name is a
+        // lie. It previously used Rect(50, 50, 100, 100) — which does not cover
+        // where CreateSimpleTextPdf puts the text — under an assertion of
+        // `Count >= 0` that no build can fail, so nothing noticed.
+        var areas = new[] { new Rect(0, 0, page.Width, page.Height) };
 
         // Act
         _service.RedactAreas(page, areas);
 
         // Assert
-        _service.RedactedTerms.Count.Should().BeGreaterThanOrEqualTo(0);
+        page.Text.Should().NotContain("Content",
+            "RedactAreas must remove the glyphs inside the rectangles it is given");
     }
 
     [Fact]
@@ -298,7 +280,7 @@ public class RedactionServiceTests : IDisposable
     }
 
     [Fact]
-    public void RedactText_WithMatchingTerm_RecordsInRedactedTerms()
+    public void RedactText_WithMatchingTerm_RemovesItFromTheOutput()
     {
         // Arrange
         var inputPath = CreateTestFile("input.pdf", path =>
@@ -307,15 +289,16 @@ public class RedactionServiceTests : IDisposable
         var outputPath = Path.Combine(_tempDir, "output.pdf");
 
         // Act
-        _service.ClearRedactedTerms();
         _service.RedactText(inputPath, outputPath, "SecretTerm");
 
-        // Assert
-        _service.RedactedTerms.Should().Contain("SecretTerm");
+        // Assert — on the saved bytes, not on a list of what the service says it
+        // did. A service can record a term it failed to remove.
+        System.Text.Encoding.Latin1.GetString(File.ReadAllBytes(outputPath))
+            .Should().NotContain("SecretTerm");
     }
 
     [Fact]
-    public void RedactText_WithNonMatchingTerm_DoesNotRecord()
+    public void RedactText_WithNonMatchingTerm_Succeeds()
     {
         // Arrange
         var inputPath = CreateTestFile("input.pdf", path =>
@@ -324,12 +307,10 @@ public class RedactionServiceTests : IDisposable
         var outputPath = Path.Combine(_tempDir, "output.pdf");
 
         // Act
-        _service.ClearRedactedTerms();
         var result = _service.RedactText(inputPath, outputPath, "NonExistentTerm");
 
         // Assert
         result.Success.Should().BeTrue();
-        _service.RedactedTerms.Should().NotContain("NonExistentTerm");
     }
 
     [Fact]
@@ -360,11 +341,9 @@ public class RedactionServiceTests : IDisposable
         var outputPath2 = Path.Combine(_tempDir, "output2.pdf");
 
         // Act - Case sensitive vs insensitive
-        _service.ClearRedactedTerms();
         var resultSensitive = _service.RedactText(inputPath, outputPath1, "TestContent", caseSensitive: true);
         resultSensitive.Success.Should().BeTrue();
 
-        _service.ClearRedactedTerms();
         var resultInsensitive = _service.RedactText(inputPath, outputPath2, "testcontent", caseSensitive: false);
 
         // Assert
@@ -494,7 +473,7 @@ public class RedactionServiceTests : IDisposable
     }
 
     [Fact]
-    public void RedactWithOptions_ClearsRedactedTermsFirst()
+    public void RedactWithOptions_CalledTwice_IsIdempotent()
     {
         // Arrange
         var filePath = CreateTestFile("redact.pdf", path =>
@@ -503,19 +482,17 @@ public class RedactionServiceTests : IDisposable
         using var doc = PdfDocument.Open(File.ReadAllBytes(filePath));
         var page = doc.GetPage(1);
 
-        // Pre-populate RedactedTerms
         var options = new RedactionOptions();
         var areas = new[] { new Rect(0, 0, 100, 100) };
 
         _service.RedactWithOptions(doc, page, areas, options);
-        var firstCount = _service.RedactedTerms.Count;
 
-        // Act - Call again
-        _service.RedactWithOptions(doc, page, areas, options);
-        var secondCount = _service.RedactedTerms.Count;
+        // Act - Call again. The document-carrier strip removes keys that are
+        // already gone the second time round, so this must stay a no-op.
+        var again = () => _service.RedactWithOptions(doc, page, areas, options);
 
-        // Assert - Should be reset, not accumulated
-        secondCount.Should().BeGreaterThanOrEqualTo(0);
+        // Assert
+        again.Should().NotThrow();
     }
 
     [Fact]
@@ -651,57 +628,7 @@ public class RedactionServiceTests : IDisposable
 
     #endregion
 
-    #region RedactedTerms Property Tests
 
-    [Fact]
-    public void RedactedTerms_StartsEmpty()
-    {
-        // Assert
-        _service.RedactedTerms.Should().BeEmpty();
-    }
-
-    [Fact]
-    public void RedactedTerms_IsReadOnly()
-    {
-        // Arrange
-        var filePath = CreateTestFile("redact.pdf", path =>
-            TestPdfGenerator.CreateSimpleTextPdf(path, "Content"));
-
-        using var doc = PdfDocument.Open(File.ReadAllBytes(filePath));
-        var page = doc.GetPage(1);
-
-        _service.RedactArea(page, new Rect(0, 0, 100, 100));
-
-        // Act & Assert - IReadOnlyList should not have Add method
-        _service.RedactedTerms.Should().BeAssignableTo<IReadOnlyList<string>>();
-        // Verify we can read but the interface doesn't expose modification
-        var terms = _service.RedactedTerms;
-        terms.Should().NotBeNull();
-    }
-
-    [Fact]
-    public void RedactedTerms_CountIncreasesWithRedactions()
-    {
-        // Arrange
-        var filePath = CreateTestFile("redact.pdf", path =>
-            TestPdfGenerator.CreateTextOnlyPdf(path, new[] { "Line One", "Line Two" }));
-
-        using var doc = PdfDocument.Open(File.ReadAllBytes(filePath));
-        var page = doc.GetPage(1);
-
-        _service.ClearRedactedTerms();
-        var initialCount = _service.RedactedTerms.Count;
-
-        // Act
-        _service.RedactArea(page, new Rect(0, 0, 300, 200));
-
-        var afterCount = _service.RedactedTerms.Count;
-
-        // Assert
-        afterCount.Should().BeGreaterThanOrEqualTo(initialCount);
-    }
-
-    #endregion
 
     #region Integration Tests
 
