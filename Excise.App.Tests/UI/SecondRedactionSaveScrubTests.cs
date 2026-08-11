@@ -1,6 +1,7 @@
 using System;
 using System.Reactive.Linq;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AwesomeAssertions;
@@ -115,6 +116,16 @@ public class SecondRedactionSaveScrubTests : IDisposable
             "#898 is a non-bug, and the only one this file can detect a regression in");
 
         // ── second pass: redact again, then the REAL Ctrl+S path ─────────────
+        //
+        // The second pass writes to a SECOND path, not back over `copy`.
+        // Overwriting the file the viewer currently holds open fails on Windows
+        // (the viewer document is `PdfDocument.Open(path)`, which keeps a
+        // FileStream); the app reports that correctly with an error dialog, but
+        // it made this test platform-dependent — green on macOS, red on Windows
+        // with the second redaction simply absent from the output. Filed
+        // separately; it is not what #898 asks about.
+        var copy2 = Path.Combine(_tempDir, "redacted-copy-2.pdf");
+        vm.SetRedactedSavePathProviderForTests(_ => Task.FromResult<string?>(copy2));
         vm.IsRedactionMode = true;
         vm.RedactionWorkflow.MarkArea(
             PdfPageRect.FromContentPoints(1, new PdfRectangle(40, 560, 560, 640)), Secret);
@@ -123,7 +134,19 @@ public class SecondRedactionSaveScrubTests : IDisposable
         await vm.SaveFileCommand!.Execute();
         window.Close();
 
-        var bytes = File.ReadAllBytes(copy);
+        File.Exists(copy2).Should().BeTrue("the second Apply All must write its own copy");
+
+        // Assert the second redaction actually took effect, so a byte-level
+        // failure below cannot be mistaken for a scrub problem when it is
+        // really a redaction that never applied.
+        using (var afterSecond = PdfDocument.Open(copy2))
+        {
+            string.Concat(afterSecond.GetPage(1).Letters.Select(l => l.Value))
+                .Should().NotContain(Secret,
+                    "both text runs have now been redacted, so no glyphs of the term remain");
+        }
+
+        var bytes = File.ReadAllBytes(copy2);
         var combined = Encoding.Latin1.GetString(bytes) + Encoding.BigEndianUnicode.GetString(bytes);
 
         // A REGRESSION CHECK, NOT THE DISCRIMINATING EVIDENCE — labelled so
