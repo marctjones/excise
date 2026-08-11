@@ -1,5 +1,25 @@
 # Fix order
 
+> ## ⛔ FEATURE FREEZE — in effect from 2026-08-10
+>
+> **Fix errors only. No new feature development until the freeze is lifted.**
+>
+> Frozen (do not start): **#900 / #901 / #902** in-place text editing,
+> **#903** document diff, **#921** wiring FDF/XFDF, **#912**'s remaining
+> annotation rows, **#784** UI internationalization.
+>
+> Not frozen: defect fixes, diagnosis of measured-but-unexplained symptoms,
+> dead-code removal, and **test/gate infrastructure whose purpose is finding
+> errors** (#904, #907, #695).
+>
+> The grey area is anything that lets excise do something it could not do
+> before, even when the engine code already exists and only the surface is
+> missing — #912 and #921 are exactly that shape. **Treat those as frozen.**
+>
+> Rationale: ~33 open issues resolve to five underlying defects (below).
+> Building new surface on known-bad foundations adds reach to defects that
+> already exist. If a fix naturally suggests a feature, file it and move on.
+
 Generated 2026-08-10 from an audit of every open issue, re-examined the same day
 for root cause and for whether the work is wanted at all. **Ordered by what each
 one blocks and by whether its root cause is actually known — not by priority
