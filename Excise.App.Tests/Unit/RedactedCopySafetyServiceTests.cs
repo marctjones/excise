@@ -26,6 +26,92 @@ public class RedactedCopySafetyServiceTests : IDisposable
         Directory.CreateDirectory(_tempDir);
     }
 
+    /// <summary>
+    /// #916/#905 — the audit must reach the DIALOG, not just the report object.
+    ///
+    /// The decided policy is "surface it, don't guess". A warning computed
+    /// correctly and never shown is the same outcome for the user as not
+    /// computing it, so this asserts the rendered dialog text.
+    /// </summary>
+    [Fact]
+    public void PrepareRedactedCopy_WithBookmarksAndOffBoxAnnotations_SaysTheyWereNotExamined()
+    {
+        var inputPath = Path.Combine(_tempDir, "carriers.pdf");
+        WriteBookmarkedFixture(inputPath);
+
+        using var document = PdfDocument.Open(File.ReadAllBytes(inputPath));
+        var page = document.GetPage(1);
+        _redactionService.RedactArea(
+            page, PdfPageRect.FromContentPoints(1, new PdfRectangle(40, 675, 560, 750)));
+
+        var report = _service.PrepareRedactedCopy(document, Array.Empty<PendingRedaction>());
+        var dialog = _service.FormatForDialog(Path.Combine(_tempDir, "out.pdf"), report);
+
+        report.HasWarnings.Should().BeTrue(
+            "an area redaction cannot examine bookmark titles or annotations away from the box");
+        dialog.Should().Contain("bookmark title",
+            "the user must be told which carriers were left unexamined — this is the whole " +
+            "point of choosing 'surface it' over silently stripping or silently skipping");
+        dialog.Should().Contain("not examined");
+        dialog.Should().NotContain("may contain",
+            "excise has no evidence a surviving bookmark relates to the redacted content, and " +
+            "overstating trains people to dismiss the warning");
+    }
+
+    /// <summary>
+    /// A document with nothing unexaminable must produce no carrier warning. A
+    /// warning that always fires is one people stop reading.
+    /// </summary>
+    [Fact]
+    public void PrepareRedactedCopy_WithNoBookmarksOrAnnotations_AddsNoCarrierWarning()
+    {
+        var inputPath = Path.Combine(_tempDir, "plain.pdf");
+        TestPdfGenerator.CreateSimpleTextPdf(inputPath, "PLAIN CONTENT");
+
+        using var document = PdfDocument.Open(File.ReadAllBytes(inputPath));
+        var page = document.GetPage(1);
+        _redactionService.RedactArea(
+            page, PdfPageRect.FromContentPoints(1, new PdfRectangle(0, 0, page.Width, page.Height)));
+
+        var dialog = _service.FormatForDialog(
+            Path.Combine(_tempDir, "out.pdf"),
+            _service.PrepareRedactedCopy(document, Array.Empty<PendingRedaction>()));
+
+        dialog.Should().NotContain("not examined",
+            "nothing was left unexamined, so nothing should be reported");
+    }
+
+    private static void WriteBookmarkedFixture(string path)
+    {
+        const string page1 = "BT /F1 24 Tf 60 700 Td (CARRIERSECRET on page one) Tj ET";
+        var objs = new[]
+        {
+            "1 0 obj\n<< /Type /Catalog /Pages 2 0 R /Outlines 6 0 R >>\nendobj\n",
+            "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 /MediaBox [0 0 612 792] >>\nendobj\n",
+            "3 0 obj\n<< /Type /Page /Parent 2 0 R /Contents 4 0 R /Annots [8 0 R] "
+                + "/Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n",
+            $"4 0 obj\n<< /Length {page1.Length} >>\nstream\n{page1}\nendstream\nendobj\n",
+            "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n",
+            "6 0 obj\n<< /Type /Outlines /First 7 0 R /Last 7 0 R /Count 1 >>\nendobj\n",
+            "7 0 obj\n<< /Title (Chapter One) /Parent 6 0 R >>\nendobj\n",
+            // Well away from the redaction box, so the positional scrubber never visits it.
+            "8 0 obj\n<< /Type /Annot /Subtype /Text /Rect [100 100 120 120] "
+                + "/Contents (a reviewer comment) >>\nendobj\n",
+        };
+
+        var sb = new StringBuilder();
+        var offsets = new System.Collections.Generic.List<int>();
+        sb.Append("%PDF-1.7\n");
+        foreach (var o in objs) { offsets.Add(sb.Length); sb.Append(o); }
+        int xref = sb.Length;
+        sb.Append("xref\n0 ").Append(objs.Length + 1).Append("\n0000000000 65535 f \n");
+        foreach (var o in offsets) sb.Append(o.ToString("D10")).Append(" 00000 n \n");
+        sb.Append("trailer\n<< /Size ").Append(objs.Length + 1)
+          .Append(" /Root 1 0 R >>\nstartxref\n").Append(xref).Append("\n%%EOF");
+
+        File.WriteAllBytes(path, Encoding.Latin1.GetBytes(sb.ToString()));
+    }
+
     [Fact]
     public void PrepareRedactedCopy_AfterGlyphRedaction_VerifiesContentWithoutEchoingPreviewText()
     {

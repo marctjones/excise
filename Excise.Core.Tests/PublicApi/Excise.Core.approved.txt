@@ -1869,6 +1869,17 @@ namespace Excise.Core.Text.Segmentation
         public static void RedactArea(this Excise.Core.Document.PdfPage page, Excise.Core.Document.PdfRectangle area, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool scrubDocumentCarriers = true) { }
         public static void RedactAreas(this Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfRectangle> areas, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool scrubDocumentCarriers = true) { }
     }
+    public sealed class RedactionCarrierAudit : System.IEquatable<Excise.Core.Text.Segmentation.RedactionCarrierAudit>
+    {
+        public const int ScrubFloor = 3;
+        public RedactionCarrierAudit(int OutlineTitleCount, int AnnotationsWithTextCount, System.Collections.Generic.IReadOnlyList<string> TermsBelowScrubFloor) { }
+        public int AnnotationsWithTextCount { get; init; }
+        public bool HasUnexaminedCarriers { get; }
+        public int OutlineTitleCount { get; init; }
+        public System.Collections.Generic.IReadOnlyList<string> TermsBelowScrubFloor { get; init; }
+        public System.Collections.Generic.IReadOnlyList<string> Describe() { }
+        public static Excise.Core.Text.Segmentation.RedactionCarrierAudit Inspect(Excise.Core.Document.PdfDocument document, System.Collections.Generic.IEnumerable<string>? requestedTerms = null) { }
+    }
     public class TextSegment
     {
         public TextSegment() { }
