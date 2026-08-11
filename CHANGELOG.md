@@ -6,6 +6,127 @@ semantic versioning.
 
 ## [Unreleased]
 
+## [3.7.0] - 2026-08-11
+
+Two themes. The first is the continuation of 3.6.0's corpus work — renderer and
+parser defects found by measuring against independent renderers, not by user
+reports. The second is **redaction honesty**: excise used to report unqualified
+success over document carriers it had never examined, and now says what it did
+not look at.
+
+**A caution carried forward from 3.6.0, because it still applies.** The corpus
+expectation manifests are a ratchet recording each page's current status, not a
+quality result. A green gate means "nothing regressed". The gate itself has a
+known defect this release did not fix — see *Known limitations* below.
+
+### Added
+- **Redaction now reports the carriers it could not examine** (#916, #905) —
+  bookmark titles carry no position, and annotations away from the redaction box
+  are never visited, so an area redaction cannot know whether either mentions
+  what it removed. Deriving terms from the box to find out corrupts the document
+  (a box over ordinary prose yields `you got time file`, turning `Younger` into
+  `Ynger`), and stripping them wholesale destroys a document's navigation and
+  every unrelated comment. So excise reports them instead, on all three
+  surfaces — the GUI redacted-copy dialog, the CLI, and batch step results:
+
+  ```
+  Redacted 37 occurrence(s) of 'Ng'
+    note: 'Ng' is shorter than 3 characters, so document metadata was not
+          scrubbed for it. Page content was still redacted.
+  ```
+
+  The wording is deliberate: it says *not examined*, never *may contain*. excise
+  has no evidence either way, and overstating trains people to dismiss the
+  warning. A document with nothing unexaminable produces no note.
+- **Underline, StrikeOut and Squiggly annotations from the GUI** (#912) — Core
+  could author fifteen annotation subtypes and the app exposed two. These three
+  reuse the text-selection gesture Highlight already used. Ten of fifteen remain
+  unreachable; the issue tracks the rest.
+- **Coverage floors ratchet up** (#909) — `check-coverage-floor.sh --update`
+  raises a floor when coverage improves materially and **never** lowers it; a
+  regression exits non-zero and leaves the file untouched. Enforced by a
+  selftest, because a ratchet that can be talked into lowering a floor looks
+  like a guarantee and provides none.
+
+### Fixed
+- **Area redaction left `/Info` and the XMP packet intact** (#897) — draw a box
+  over a name, save, and the name was still in the document title. `RedactText`
+  had scrubbed carriers since #896 because it has a term to scrub by; an area
+  redaction has only a rectangle, so it now strips the positionless carriers
+  wholesale. Fixing this introduced a regression the existing suite caught:
+  `RedactText` composes `RedactArea`, so the new default silently overrode
+  `RedactText`'s own opt-out until it was told not to.
+- **The carrier scrub ignored the caller's case sensitivity** (#905) —
+  `RedactText` matches page content case-insensitively by default while the
+  scrub was `Ordinal`, so redacting `smith` cleared the page and left `Smith`
+  in `/Info /Title`. An under-redaction, and the more dangerous half of that
+  issue.
+- **Default and regex search silently missed visible text** (#924) — both read
+  `PdfPage.Text`, which drops content on multi-column pages; only "whole words
+  only" read the complete word list. On page 117 of the IRS 1040 instructions
+  `page.Text` holds 2885 characters where the letter stream holds 3928, so
+  "insurance company", "Form 1095-A" and "net premium tax credit" were all
+  visible on the page and unfindable. The search text is now built from the
+  words, which also removes a second silent loss: the old span builder dropped
+  any word it could not locate in `page.Text`, with no error.
+- **OCR could hang the application indefinitely** — `PdfOcrService` read
+  tesseract's stdout to end and only then its stderr, which deadlocks once the
+  child fills the stderr buffer, and then waited with no timeout at all. Both
+  pipes are now drained concurrently and the wait is bounded, with a
+  `TimeoutException` naming the file. Three test harnesses had the same read
+  ordering; one of them crashed the Linux CI test host with a 500 MB core dump.
+- **The AOT publish warned about the artifact it produces** (#906) — four
+  IL3050 and two IL2026 warnings, now zero. macOS and Linux releases build
+  Native AOT, so those warnings described the shipping binary. The cause was two
+  explicit `{ReflectionBinding}` uses whose compiled-binding scope was re-pointed
+  with `x:DataType` rather than escaped.
+- **Renderer and parser defects found by the corpus scan** — annotation
+  appearances for button widgets and FreeText, and `/AP` appearances that were
+  present and ignored (#885, #888); `/Font` in an `ExtGState` (#886, 9 pages);
+  the CFF standard-strings table held 244 of 391 entries (#886); format 4 and 6
+  symbolic TrueType cmaps (#891); two name→GID routes that did not exist (#892);
+  the page group starting opaque instead of transparent (#890); inline images
+  whose `ID` is followed by CRLF (#887); JBIG2 `/JBIG2Globals` resolution and
+  sequential halftone MMR plane decoding (#874); CCITT `/EndOfBlock` classified
+  by value rather than presence (#893) and `/EncodedByteAlign` correctly
+  reported as Group-4-only; four parser recovery gaps, one of which returned the
+  wrong object (#869, #884).
+- **The viewer rendered the same page once per grid cell on first paint**
+  (#855).
+- **Two internal gates were reporting the wrong thing.** The `ci` coverage floor
+  was derived on a developer machine — applying CI's test filter locally does
+  not reproduce CI's environment, because 86 corpus-gated tests skip there
+  without announcing it, and the resulting 24-point error kept CI red for four
+  commits. The unwired-API check was **82% false positives** on its
+  referenced-nowhere list, flagging members that were used inside their own
+  declaring file; now 9 of 9 real.
+
+### Removed
+- **292 lines of unreachable page-render machinery** (#920) — the legacy
+  ViewModel render path, bypassed when the bound viewer control took over
+  display rendering and never deleted, along with an entire adjacent-page
+  prefetch feature reachable only from it. Two tests kept it alive by calling it
+  through reflection, so no static check could see it was dead.
+
+### Known limitations
+Unchanged or newly measured this release, and all tracked:
+
+- **Open-and-save inflates every PDF, up to 2.79x** (#923) — the writer emits no
+  object streams or cross-reference streams, so a document opened and saved with
+  **zero** edits grows. Measured on ten corpus documents; every one grew.
+- **The corpus gate is one-directional** (#904, #907) — over-draw is computed
+  and never gated, and under-draw is scored against whichever single oracle drew
+  the most ink. 21 of 35 defect-class pages are that scoring, not excise bugs.
+- **Redaction is slow on common terms** (#919) — 7-10 seconds to redact a
+  frequent word from a six-page form, because each match re-extracts every
+  letter on the page.
+- **A document is opened twice** (#917) — two `PdfDocument` instances kept in
+  sync by hand. Saving over a file the viewer holds open fails on Windows
+  (#926).
+- **Multi-column text assembly still drops content** (#899) — the letter stream
+  is complete; the loss is in serialising it to a string. Search no longer
+  inherits this (#924); copy and text export still do.
+
 ## [3.6.0] - 2026-08-03
 
 This release is dominated by one thing: excise's renderer and parser were
