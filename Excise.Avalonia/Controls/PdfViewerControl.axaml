@@ -123,14 +123,27 @@
                                     </ItemsControl.ItemsPanel>
                                     <ItemsControl.Styles>
                                         <!-- Position each item's container in
-                                             page-local DIPs. ReflectionBinding
-                                             (not compiled) so X/Y resolve against
-                                             the item (PdfSelectionHighlight), not
-                                             the outer PdfPageSlot compiled-binding
-                                             scope this Style sits in. -->
-                                        <Style Selector="ItemsControl > ContentPresenter">
-                                            <Setter Property="Canvas.Left" Value="{ReflectionBinding X}" />
-                                            <Setter Property="Canvas.Top" Value="{ReflectionBinding Y}" />
+                                             page-local DIPs.
+
+                                             This Style sits inside the
+                                             PdfPageSlot compiled-binding scope,
+                                             but X/Y belong to the ITEM
+                                             (PdfSelectionHighlight). That is why
+                                             it used ReflectionBinding — which
+                                             escapes the wrong scope, but at the
+                                             cost of IL2026/IL3050 under Native
+                                             AOT, now the shipping macOS and
+                                             Linux build (#906).
+
+                                             Naming the item type on the Style
+                                             re-points the compiled scope instead
+                                             of abandoning it: same resolution,
+                                             checked at build time, no dynamic
+                                             code. -->
+                                        <Style Selector="ItemsControl > ContentPresenter"
+                                               x:DataType="controls:PdfSelectionHighlight">
+                                            <Setter Property="Canvas.Left" Value="{Binding X}" />
+                                            <Setter Property="Canvas.Top" Value="{Binding Y}" />
                                         </Style>
                                     </ItemsControl.Styles>
                                     <ItemsControl.ItemTemplate>

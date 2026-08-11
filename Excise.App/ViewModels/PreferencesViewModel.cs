@@ -77,9 +77,12 @@ public class PreferencesViewModel : ViewModelBase
     }
 
     // Text-selection reading-order strategy (#774).
+    // Enum.GetValues<T>() rather than the Type overload: the latter carries
+    // [RequiresDynamicCode] and warns IL3050 under AOT, because it may have to
+    // build the array type at runtime. The generic form is resolved statically
+    // and is what ships now that macOS and Linux publish Native AOT (#906).
     public Excise.Avalonia.Services.ReadingOrderStrategy[] ReadingOrderStrategyOptions { get; } =
-        (Excise.Avalonia.Services.ReadingOrderStrategy[])
-            System.Enum.GetValues(typeof(Excise.Avalonia.Services.ReadingOrderStrategy));
+        System.Enum.GetValues<Excise.Avalonia.Services.ReadingOrderStrategy>();
 
     public Excise.Avalonia.Services.ReadingOrderStrategy SelectedReadingOrderStrategy
     {
@@ -88,9 +91,12 @@ public class PreferencesViewModel : ViewModelBase
     }
 
     // Copied-text whitespace mode (paragraph/list-aware Smart vs LineFaithful).
+    // Enum.GetValues<T>() rather than the Type overload: the latter carries
+    // [RequiresDynamicCode] and warns IL3050 under AOT, because it may have to
+    // build the array type at runtime. The generic form is resolved statically
+    // and is what ships now that macOS and Linux publish Native AOT (#906).
     public Excise.Avalonia.Services.WhitespaceMode[] WhitespaceModeOptions { get; } =
-        (Excise.Avalonia.Services.WhitespaceMode[])
-            System.Enum.GetValues(typeof(Excise.Avalonia.Services.WhitespaceMode));
+        System.Enum.GetValues<Excise.Avalonia.Services.WhitespaceMode>();
 
     public Excise.Avalonia.Services.WhitespaceMode SelectedWhitespaceMode
     {
