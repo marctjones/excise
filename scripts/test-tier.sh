@@ -181,6 +181,7 @@ run_t0() {
     # #663/#665/#668: the skip-budget --update self-test (justification,
     # inner-'#' reasons, and hand-written comment-block preservation).
     run_step "skip-budget-selftest" scripts/test-check-skip-budget.sh
+    run_step "coverage-floor-selftest" scripts/test-check-coverage-floor.sh
     # #908: public API that nothing calls. The skip budget and test-count gates
     # catch a TEST that stopped running; this catches PRODUCTION CODE that never
     # started. ~10s (a text index over .cs/.axaml), ratcheted against

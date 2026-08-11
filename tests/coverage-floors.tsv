@@ -60,6 +60,26 @@
 # commit message — and "the old number was never measured in the environment it
 # gates" is a correction, not a reduction.
 #
+# THE RATCHET IS MECHANICAL, NOT ASPIRATIONAL (#909)
+#
+#     scripts/check-coverage-floor.sh <report> <profile> <assembly> --update
+#
+# raises the floor when coverage improved materially, keeping ~2 points of
+# headroom, and rewrites the `measured` column either way so this file records
+# what was last observed. Three rules, each enforced by
+# scripts/test-check-coverage-floor.sh in t0:
+#
+#   * it NEVER lowers — a regression exits non-zero and leaves this file
+#     untouched. A ratchet that rewrites the floor to match a drop would launder
+#     exactly the regressions it exists to catch.
+#   * it ignores marginal gains, so run-to-run wobble cannot tighten a floor
+#     until it flaps.
+#   * it keeps headroom, matching how the hand-chosen floors were set.
+#
+# Before this, "ratchet" meant "floor": protected against decline, no credit for
+# improvement, and the gap widening silently until the gate guarded a number
+# nobody had met in months.
+#
 # THE FAILURE MODE TO WATCH
 #
 # `ci` is enforced on every push, so it gets attention. `full` is read by the
