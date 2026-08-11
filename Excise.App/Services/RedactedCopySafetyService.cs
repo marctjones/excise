@@ -122,6 +122,22 @@ public sealed class RedactedCopySafetyService
             }
         }
 
+        // #916/#905 — say what was NOT examined.
+        //
+        // Bookmark titles carry no position and annotations away from the box
+        // are never visited, so an area redaction cannot know whether either
+        // mentions what it removed. The decided policy is to SURFACE that
+        // rather than guess: silently stripping them destroys a document's
+        // navigation and every unrelated comment; silently skipping them lets
+        // excise report success while a bookmark titled after the redacted
+        // content sits in the sidebar.
+        //
+        // Runs AFTER the scrub above, so what it counts is genuinely what
+        // survived rather than what was there to begin with.
+        var carrierAudit = RedactionCarrierAudit.Inspect(document, previewTerms);
+        if (carrierAudit.HasUnexaminedCarriers)
+            warnings.AddRange(carrierAudit.Describe());
+
         var contentStatus = VerifyCapturedSelectionText(document, previewTerms, options, out var checkedPreviewCount, out var remainingPreviewCount, out var skippedShortPreviewCount, warnings);
         var hiddenTextStatus = RunHiddenTextAudit(document, options, out var hiddenTextFindingCount, warnings);
         var rasterAuditStatus = RunRasterRedactionAudit(document, requestedRedactions, options, out var remainingRasterOverlapCount, warnings);
