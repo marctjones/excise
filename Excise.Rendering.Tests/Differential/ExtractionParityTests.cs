@@ -369,9 +369,16 @@ public sealed class ExtractionParityTests
             };
             using var p = System.Diagnostics.Process.Start(psi);
             if (p == null) return "unknown";
-            var stdout = p.StandardOutput.ReadToEnd();
-            var stderr = p.StandardError.ReadToEnd();
-            p.WaitForExit(5000);
+            // Drain both pipes concurrently: reading stdout to end while
+            // nothing drains stderr deadlocks once the child fills that buffer.
+            var outTask = p.StandardOutput.ReadToEndAsync();
+            var errTask = p.StandardError.ReadToEndAsync();
+            if (!p.WaitForExit(5000))
+            {
+                try { p.Kill(entireProcessTree: true); } catch { /* already gone */ }
+            }
+            var stdout = outTask.GetAwaiter().GetResult();
+            var stderr = errTask.GetAwaiter().GetResult();
             var text = string.IsNullOrWhiteSpace(stdout) ? stderr : stdout;
             return text.Trim();
         }

@@ -33,18 +33,13 @@ namespace Excise.App.Tests.UI;
 /// Only (1) is mutation-sensitive; (2) is why the end-to-end byte check cannot
 /// discriminate. Both are stated at their assertions.
 ///
-/// WHAT THAT DOES AND DOES NOT COST, POST-#896/#897
-///
-/// Two engine-level changes landed after this issue was filed and cover most of
-/// it regardless of which save path runs:
-///
-///   #896  RedactText scrubs document carriers itself
-///   #897  RedactArea strips /Info and the XMP packet wholesale
-///
-/// What <c>PrepareRedactedCopy</c> still adds beyond those is
-/// <c>ScrubMetadata(scrubAttachments: true)</c> — embedded files — plus the
-/// verification and audit passes. So the residual question is specifically
-/// about ATTACHMENTS, and that is what the fixture carries the secret in.
+/// The fixture carries the term in page content, /Info, XMP AND an embedded
+/// file. The attachment was included because <c>PrepareRedactedCopy</c>'s
+/// <c>ScrubMetadata(scrubAttachments: true)</c> is the one thing a plain save
+/// does not replicate — #896 and #897 already cover /Info and XMP at the engine
+/// level regardless of save path. It turned out not to discriminate either,
+/// for the reason in (2) above, but it is kept so the fixture exercises every
+/// carrier rather than the convenient ones.
 ///
 /// The point of keeping this file after answering "no bug" is that it pins WHICH
 /// mechanisms protect the path, so the next reader does not re-derive the same

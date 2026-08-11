@@ -113,6 +113,19 @@ public sealed class PdfOcrService
     }
 
     /// <summary>
+    /// How long a single-page tesseract run may take before excise gives up.
+    /// Generous — a dense 300-dpi scan is seconds, not minutes — but finite, so
+    /// a wedged child process surfaces as an error instead of a hung program.
+    /// </summary>
+    private const int TesseractTimeoutMs = 120_000;
+
+    /// <summary>Best-effort termination; a process that already exited throws.</summary>
+    private static void TryKill(Process proc)
+    {
+        try { proc.Kill(entireProcessTree: true); } catch { /* already gone */ }
+    }
+
+    /// <summary>
     /// Invoke tesseract on <paramref name="pngPath"/> with TSV output so
     /// we get per-word bounding boxes. Parse and return.
     /// </summary>
@@ -147,9 +160,40 @@ public sealed class PdfOcrService
 
         using var proc = Process.Start(psi)
             ?? throw new InvalidOperationException("Failed to start tesseract.");
-        string tsv = proc.StandardOutput.ReadToEnd();
-        string err = proc.StandardError.ReadToEnd();
-        proc.WaitForExit();
+
+        // Drain BOTH pipes concurrently, and bound the wait.
+        //
+        // The previous version was `ReadToEnd()` on stdout, then `ReadToEnd()`
+        // on stderr, then an unbounded `WaitForExit()`. Two ways for that to
+        // hang the caller forever:
+        //
+        //   1. PIPE DEADLOCK. While blocked reading stdout, nothing drains
+        //      stderr. tesseract is chatty there ("Estimating resolution as…",
+        //      DPI and dictionary warnings); once the stderr buffer fills
+        //      (~64 KB) tesseract blocks writing, we block reading stdout, and
+        //      neither side moves again.
+        //   2. NO TIMEOUT. `WaitForExit()` with no argument waits forever, so a
+        //      wedged tesseract wedges excise — in the GUI that is a hang with
+        //      no error, which CLAUDE.md's Pitfall 3 (#93) calls out by name.
+        //
+        // ReadToEndAsync on both before waiting drains them in parallel, and
+        // the timeout turns "wedged" into a diagnosable exception.
+        var stdoutTask = proc.StandardOutput.ReadToEndAsync();
+        var stderrTask = proc.StandardError.ReadToEndAsync();
+
+        if (!proc.WaitForExit(TesseractTimeoutMs))
+        {
+            TryKill(proc);
+            throw new TimeoutException(
+                $"tesseract did not finish within {TesseractTimeoutMs / 1000}s for '{pngPath}'. " +
+                "The process was terminated.");
+        }
+
+        // Only safe once the process has exited: the pipes are closed, so these
+        // are already complete or about to be.
+        string tsv = stdoutTask.GetAwaiter().GetResult();
+        string err = stderrTask.GetAwaiter().GetResult();
+
         if (proc.ExitCode != 0)
             throw new InvalidOperationException(
                 $"tesseract exited {proc.ExitCode}. stderr:\n{err}");
