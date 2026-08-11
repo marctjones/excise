@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using System.Text;
 using Excise.Core.Document;
 using Excise.Core.Text;
 using System;
@@ -433,7 +434,11 @@ public class PdfSearchService
         // letters; fold both sides into the canonical matching space. All
         // index arithmetic below (word spans, contexts) is done consistently
         // in folded space.
-        pageText = MatchingNormalization.Fold(pageText);
+        // #924: the haystack comes from the WORDS, not from page.Text, which
+        // drops content on multi-column pages. BuildSearchableText folds as it
+        // goes, so no separate fold of pageText is needed — the parameter is
+        // now unused and kept only so the call sites read unchanged.
+        (pageText, var wordSpans) = BuildSearchableText(words);
         pattern = MatchingNormalization.Fold(pattern);
 
         try
@@ -441,7 +446,6 @@ public class PdfSearchService
             var options = caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase;
             var regex = new Regex(pattern, options);
             var regexMatches = regex.Matches(pageText);
-            var wordSpans = BuildWordSpans(words, pageText);
 
             foreach (Match match in regexMatches)
             {
@@ -528,10 +532,9 @@ public class PdfSearchService
         // letters; fold both sides into the canonical matching space. Word
         // spans and context are computed in the same folded space, so all
         // index arithmetic stays consistent.
-        pageText = MatchingNormalization.Fold(pageText);
+        // #924: haystack from the WORDS, not page.Text — see BuildSearchableText.
+        (pageText, var wordSpans) = BuildSearchableText(words);
         searchTerm = MatchingNormalization.Fold(searchTerm);
-
-        var wordSpans = BuildWordSpans(words, pageText);
 
         int index = 0;
         while ((index = pageText.IndexOf(searchTerm, index, comparison)) != -1)
@@ -572,32 +575,61 @@ public class PdfSearchService
     /// bounding box mapping even when duplicate words exist without rebuilding a
     /// character map for each match.
     /// </summary>
-    private static List<WordSpan> BuildWordSpans(IReadOnlyList<Word> words, string pageText)
+    /// <summary>
+    /// Build the searchable text FROM the words, together with an exact span
+    /// per word — replacing a correlation against <see cref="PdfPage.Text"/>
+    /// that both lost content and lost words silently (#924).
+    ///
+    /// WHY THIS REPLACED THE OLD APPROACH
+    ///
+    /// The previous version took `page.Text` as the haystack and located each
+    /// word in it with a forward `IndexOf`. Two failures came from that:
+    ///
+    ///   1. `page.Text` DROPS CONTENT on multi-column pages (#899). Measured on
+    ///      page 117 of irs-1040-instructions.pdf, it holds 2885 characters
+    ///      where the letter stream holds 3928 — so "insurance company",
+    ///      "Form 1095-A" and "net premium tax credit" are all visible on the
+    ///      page, present in the words, and absent from the haystack. Default
+    ///      and regex search could not find them; only whole-words mode, which
+    ///      reads the words directly, could.
+    ///   2. When that `IndexOf` failed, the word was simply not added to the
+    ///      span list — no error, no log. The same silent-loss shape as the bug
+    ///      it was a victim of.
+    ///
+    /// Building the haystack from the words makes both impossible by
+    /// construction: every word contributes text and gets a span, and the spans
+    /// are exact offsets rather than re-derived ones.
+    ///
+    /// SEPARATOR. Words are joined with a single space, which is what a user
+    /// types between words. `page.Text` concatenates letters with no separator
+    /// at all, which is why #899 also observed run-together output like
+    /// "fileif" and "withheldif" — so phrase search across a word boundary
+    /// ("net premium tax credit") now works where it previously could not.
+    /// A term that only matched BECAUSE of a missing space no longer matches;
+    /// that is the intended direction.
+    /// </summary>
+    private static (string Text, List<WordSpan> Spans) BuildSearchableText(IReadOnlyList<Word> words)
     {
+        var sb = new StringBuilder();
         var spans = new List<WordSpan>(words.Count);
-        int charIndex = 0;
 
         foreach (var word in words)
         {
-            // Word text is folded the same way callers fold pageText
-            // (#632, #722, #724) — identity for unaffected text — so spans
-            // line up either way.
+            // Fold here so the haystack and the caller's folded search term are
+            // in the same matching space (#632, #722, #724), and so span
+            // offsets refer to folded text like every other index below.
             var wordText = MatchingNormalization.Fold(word.Text);
+            if (wordText.Length == 0)
+                continue;
 
-            // Find next occurrence of this word's text starting from current position
-            // This handles duplicates correctly by advancing position after each match
-            int wordPos = pageText.IndexOf(wordText, charIndex, StringComparison.Ordinal);
+            if (sb.Length > 0)
+                sb.Append(' ');
 
-            if (wordPos != -1)
-            {
-                spans.Add(new WordSpan(wordPos, wordPos + wordText.Length, word));
-
-                // Advance past this word (+ any whitespace/separator)
-                charIndex = wordPos + wordText.Length;
-            }
+            spans.Add(new WordSpan(sb.Length, sb.Length + wordText.Length, word));
+            sb.Append(wordText);
         }
 
-        return spans;
+        return (sb.ToString(), spans);
     }
 
     private static bool TryFindWordBoundsAtPosition(

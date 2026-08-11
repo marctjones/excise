@@ -94,3 +94,6 @@ Excise.App.Tests.UI.PageOrganizationCommandTests.ExtractCurrentPageCommand_Writt
 Excise.App.Tests.UI.PageOrganizationCommandTests.ExtractSelectedPagesCommand_WrittenFile_IsVerifiedByIndependentTools   # qpdf + mutool re-read of the extract (#856) [requires: tool:qpdf tool:mutool]
 Excise.App.Tests.UI.PageOrganizationCommandTests.CombineDocumentsCommand_WrittenFile_IsVerifiedByIndependentTools   # qpdf + mutool re-read of the merged file (#856) [requires: tool:qpdf tool:mutool]
 Excise.App.Tests.UI.PageOrganizationCommandTests.SplitDocumentCommand_WrittenFiles_AreVerifiedByIndependentTools   # qpdf + mutool re-read of every split fragment (#856) [requires: tool:qpdf tool:mutool]
+Excise.App.Tests.Integration.MultiColumnSearchTests.DefaultSearch_FindsTextThatPageTextDropped   # #924: needs a real multi-column layout where text assembly actually loses content — a synthetic PDF passes before AND after the fix, so it cannot tell them apart [requires: corpus:smoke]
+Excise.App.Tests.Integration.MultiColumnSearchTests.WholeWordsSearch_StillFindsThem   # #924 control: whole-words mode always read GetWords() and worked; same corpus fixture [requires: corpus:smoke]
+Excise.App.Tests.Integration.MultiColumnSearchTests.AMatchCarriesAPositiveHighlightRectangle   # #924: span arithmetic on a phrase spanning several words; same corpus fixture [requires: corpus:smoke]
