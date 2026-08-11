@@ -428,7 +428,7 @@ partial class Program
         // parameters and the step's password; allowDecrypt: true is now the
         // explicit opt-OUT that writes an unprotected copy (it was the #638
         // opt-in to proceed at all, back when excise could not write /Encrypt).
-        int count = RunRedact(
+        var (count, carrierNotes) = RunRedactWithNotes(
             input, output, step.Text!, step.CaseSensitive ?? false, step.AllowDecrypt ?? false,
             password: step.Password);
         return new
@@ -437,6 +437,11 @@ partial class Program
             outputPath = output,
             redactedOccurrenceCount = count,
             caseSensitive = step.CaseSensitive ?? false,
+            // #916/#905 — carriers the redaction could not examine (bookmark
+            // titles, annotations away from the box, terms under the scrub
+            // floor). A batch run is unattended, so reporting this in the step
+            // result is the only way it reaches anyone.
+            carrierNotes,
         };
     }
 

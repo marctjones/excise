@@ -724,8 +724,10 @@ partial class Program
 
             try
             {
-                int count = RunRedact(input.FullName, output.FullName, text, caseSensitive, allowDecrypt, strict, allowLowConfidence, password);
+                var (count, carrierNotes) = RunRedactWithNotes(input.FullName, output.FullName, text, caseSensitive, allowDecrypt, strict, allowLowConfidence, password);
                 Console.WriteLine($"Redacted {count} occurrence(s) of '{text}'");
+                foreach (var note in carrierNotes)
+                    Console.WriteLine($"  note: {note}");
                 Console.WriteLine($"Output: {output.FullName}");
             }
             catch (Exception ex)
@@ -767,6 +769,24 @@ partial class Program
         string inputPath, string outputPath, string text, bool caseSensitive,
         bool allowDecrypt = false, bool strict = false, bool allowLowConfidence = false,
         string? password = null)
+        => RunRedactWithNotes(inputPath, outputPath, text, caseSensitive,
+               allowDecrypt, strict, allowLowConfidence, password).Count;
+
+    /// <summary>
+    /// Redact, and also report the carriers the redaction could not examine
+    /// (#916, #905) — bookmark titles, annotations away from the box, and terms
+    /// under the scrub floor.
+    /// </summary>
+    /// <remarks>
+    /// A separate method rather than an out-parameter on <see cref="RunRedact"/>:
+    /// an `out` must precede optional parameters, which would have reordered
+    /// every existing call site for no benefit. Callers that only need the count
+    /// keep using RunRedact unchanged.
+    /// </remarks>
+    internal static (int Count, IReadOnlyList<string> CarrierNotes) RunRedactWithNotes(
+        string inputPath, string outputPath, string text, bool caseSensitive,
+        bool allowDecrypt = false, bool strict = false, bool allowLowConfidence = false,
+        string? password = null)
     {
         var bytes = File.ReadAllBytes(inputPath);
         using var doc = PdfDocument.Open(bytes, password);
@@ -790,8 +810,16 @@ partial class Program
             Console.Error.WriteLine(line);
 
         var count = doc.RedactText(text, caseSensitive);
+
+        // #916/#905 — collect what the redaction could not examine BEFORE
+        // saving, so the CLI can report it the way the GUI dialog does.
+        // Without this the CLI prints an unqualified success line while
+        // bookmark titles and off-page annotations were never looked at.
+        // Collect BEFORE saving so it reflects the document that was written.
+        var carrierNotes = RedactionCarrierAudit.Inspect(doc, new[] { text }).Describe();
+
         doc.Save(outputPath, reEncryption);
-        return count;
+        return (count, carrierNotes);
     }
 
     /// <summary>

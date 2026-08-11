@@ -30,6 +30,43 @@ public class RedactCommandTests : IDisposable
         return path;
     }
 
+    /// <summary>
+    /// #905 — a term below the scrub floor is redacted from page content but
+    /// NOT from document metadata. That asymmetry was silent; the CLI must now
+    /// say so, because an unattended run has no other channel.
+    /// </summary>
+    [Fact]
+    public void RunRedactWithNotes_TermBelowTheScrubFloor_ReportsThatMetadataWasNotScrubbed()
+    {
+        var input = TempPath(".pdf");
+        var output = TempPath(".pdf");
+        File.WriteAllBytes(input, TestPdfBuilder.SinglePage("Ng and other content"));
+
+        var (_, notes) = Program.RunRedactWithNotes(input, output, "Ng", caseSensitive: false);
+
+        notes.Should().Contain(n => n.Contains("'Ng'") && n.Contains("metadata"),
+            "page content is redacted but the sanitizer's 3-character floor skips carriers — " +
+            "an under-redaction the user has no way to discover otherwise (#905)");
+    }
+
+    /// <summary>
+    /// The control: a normal term on a document with nothing unexaminable must
+    /// produce NO notes. A warning that always fires is one people stop reading.
+    /// </summary>
+    [Fact]
+    public void RunRedactWithNotes_OrdinaryTerm_PlainDocument_ReportsNothing()
+    {
+        var input = TempPath(".pdf");
+        var output = TempPath(".pdf");
+        File.WriteAllBytes(input, TestPdfBuilder.SinglePage("Confidential content here"));
+
+        var (_, notes) = Program.RunRedactWithNotes(input, output, "Confidential", caseSensitive: false);
+
+        notes.Should().BeEmpty(
+            "no bookmarks, no annotation text, and the term is above the floor — there is " +
+            "nothing excise failed to examine");
+    }
+
     [Fact]
     public void RunRedact_RemovesExactMatch_FromContentStream()
     {
