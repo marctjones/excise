@@ -152,9 +152,37 @@ public class ThirdPartyLicenseCompletenessTests
 
         using var proc = Process.Start(psi)
             ?? throw new InvalidOperationException("Failed to start 'dotnet list package'");
-        var stdout = proc.StandardOutput.ReadToEnd();
-        var stderr = proc.StandardError.ReadToEnd();
-        proc.WaitForExit(120_000).Should().BeTrue("dotnet list package should finish promptly");
+
+        // Drain both pipes concurrently and bound the wait WELL BELOW the
+        // harness's hang detector. Two separate defects were here:
+        //
+        //   1. `ReadToEnd()` on stdout then stderr deadlocks if the child fills
+        //      the stderr buffer while we are blocked on stdout. `dotnet list
+        //      package` restores and can emit a lot of NuGet warnings there.
+        //   2. The 120_000 wait was EXACTLY CI's `--blame-hang-timeout 120000`.
+        //      A child that took that long meant the blame collector fired at
+        //      the same moment and won — aborting the whole run with
+        //      "Test host process crashed" and a 500 MB core dump instead of
+        //      failing this one test with a readable message. That is what
+        //      turned a slow restore into a red Linux CI job on a docs-only
+        //      commit.
+        //
+        // 60s leaves the harness a full minute of headroom to report cleanly.
+        const int WaitMs = 60_000;
+        var stdoutTask = proc.StandardOutput.ReadToEndAsync();
+        var stderrTask = proc.StandardError.ReadToEndAsync();
+
+        var exited = proc.WaitForExit(WaitMs);
+        if (!exited)
+        {
+            try { proc.Kill(entireProcessTree: true); } catch { /* already gone */ }
+        }
+        exited.Should().BeTrue(
+            $"'dotnet list package' must finish within {WaitMs / 1000}s — longer than that " +
+            "and CI's blame collector aborts the entire test host rather than failing here");
+
+        var stdout = stdoutTask.GetAwaiter().GetResult();
+        var stderr = stderrTask.GetAwaiter().GetResult();
         proc.ExitCode.Should().Be(0, $"dotnet list package failed: {stderr}");
 
         var ids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

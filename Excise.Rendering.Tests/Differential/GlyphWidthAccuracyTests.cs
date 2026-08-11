@@ -118,9 +118,16 @@ public class GlyphWidthAccuracyTests
             UseShellExecute = false,
         };
         using var p = Process.Start(psi)!;
-        var outp = p.StandardOutput.ReadToEnd();
-        p.StandardError.ReadToEnd();
-        p.WaitForExit(30_000);
+        // Drain both pipes concurrently: reading stdout to end while nothing
+        // drains stderr deadlocks once the child fills that buffer (~64 KB).
+        var outTask = p.StandardOutput.ReadToEndAsync();
+        var errTask = p.StandardError.ReadToEndAsync();
+        if (!p.WaitForExit(30_000))
+        {
+            try { p.Kill(entireProcessTree: true); } catch { /* already gone */ }
+        }
+        var outp = outTask.GetAwaiter().GetResult();
+        _ = errTask.GetAwaiter().GetResult();
         return outp;
     }
 
