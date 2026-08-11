@@ -1,6 +1,7 @@
 # Fix order
 
-Generated 2026-08-10 from an audit of all 38 open issues. **Ordered by what each
+Generated 2026-08-10 from an audit of every open issue, re-examined the same day
+for root cause and for whether the work is wanted at all. **Ordered by what each
 one blocks and by whether its root cause is actually known — not by priority
 label.**
 
@@ -18,6 +19,138 @@ Two rules govern the sequence:
 Re-verify before starting anything here. Issues go stale: #876 recorded 80s for
 a render that measured 114s nine days later, and #909's premise changed the same
 day it was written.
+
+---
+
+# Root-cause clusters
+
+Re-examined 2026-08-10. **The tracker has ~34 open issues and roughly five
+underlying defects.** Several issues are the same problem wearing different
+labels, and reading them one at a time hides that. Fix the root and the
+consequences close with it; schedule a consequence on its own and you buy the
+same work twice.
+
+## A. Text assembly — `page.Text` is built in the wrong order and drops content
+
+**Root: #899.** `page.Letters` is COMPLETE (more characters than mutool finds).
+The loss happens between the letter list and the assembled string, so this is
+serialisation, not extraction — the opposite of what #637 assumed.
+
+| issue | relationship |
+|---|---|
+| **#899** | owns the defect |
+| #773 reading-order heuristics for untagged PDFs | the general form. #899 is the narrow, corpus-witnessed, gated case |
+| #825 copy-whitespace deferred cases | its "reading-order ceiling" is this |
+| #903 PDF diff | routes AROUND this by building on `page.Letters`, and says so. Not blocked by it — but the tokenisation mismatch it must handle (`market-`/`place`) is the same phenomenon |
+| ~~#924 search~~ | **closed 2026-08-10** — the search half was separable and is fixed |
+
+**What we really want:** correct reading order for multi-column untagged pages.
+#924 proved the cheap half is separable: consumers that can use `page.Letters`
+or `GetWords()` should, and only the ones that genuinely need a linear string
+have to wait for #899.
+
+## B. The document is open twice
+
+**Root: #917.** Two `PdfDocument` instances of the same file, kept in sync by
+hand.
+
+| issue | relationship |
+|---|---|
+| **#917** | owns it |
+| #922 mutation resync costs 150 ms / 234 MB | **exists only to paper over #917.** Its own body says so. Fixing it first is work #917 deletes |
+| ~~#920 dead render machinery~~ | **closed** — was debris from the same split |
+| #912 annotation types | every new row needs a hand-written viewer mirror UNTIL #917 lands |
+
+**What we really want:** one instance. The memory saving is minor (measured
++12–15%); the point is that a hand-written mirror per feature is a bug factory,
+and it already produced one near-miss.
+
+## C. The writer
+
+**Root: #923.** No `/ObjStm`, no `/XRef` streams, so every save inflates.
+
+| issue | relationship |
+|---|---|
+| **#923** | up to 2.79x on open-and-save with zero edits |
+| #908 CFF fonts embedded unsubsetted | independent cause, same symptom — output larger than it should be |
+| #922 | serialises ~2.8x more bytes than needed, so #923 shrinks its cost proportionally |
+
+## D. Oracles test the pipeline you point them at
+
+**Root: #904.** The suite is excellent at regression and poor at first
+discovery. **Verified this pass:** `extraInkTiles` is assigned once in
+`Excise.RenderTools/Program.cs:2268` and **never read** — the corpus gate is
+directionally asymmetric exactly as #904 claims, gating under-draw only. The
+checkbox bug drew ink the reference did not, in the direction nothing watches.
+
+| issue | relationship |
+|---|---|
+| **#904** | owns it |
+| #907 corpus residue | its own triage found **21 of 35** defect-class pages are the GATE scoring against the most-inked oracle, not excise bugs. That is a gate defect, not a page backlog |
+| #915 Altona render time | nothing gates render duration, so a ~42% slowdown in nine days was invisible until a test hit its timeout |
+| #695 click-everything harness | the GUI-side answer to the same gap |
+
+**What we really want:** gates that can fail in both directions, and invariants
+that need no oracle at all. #904 lists those and they are the cheapest part.
+
+## E. Redaction carrier coverage
+
+**Root: you cannot name what was in the box.** An area redaction has a
+rectangle, not a term, so it cannot ask "does this carrier mention what I
+removed?" without deriving terms — which corrupts (`Younger` → `Ynger`).
+
+| issue | relationship |
+|---|---|
+| **#916** | outline titles + annotations outside the box or on another page |
+| #905 `ScrubTerms` substring-replaces | the corruption mechanism #897 routed around. Still live for `RedactText`, which has a real term |
+| #898 does re-redacting skip the scrub? | a verification, not a defect — cheap, and a "yes" is a leak |
+
+---
+
+# Do we actually want these?
+
+## Recommend CLOSING — decided by constraints already stated, not by fresh judgement
+
+| # | why |
+|---|---|
+| **#705** AOT probe for `osx-x64` | Intel-Mac support for an audience of one on Apple Silicon. The release builds `osx-arm64`. Nobody will ever run this artifact |
+| **#703** AOT probe for `win-x64` | Windows is not a target platform here. I reopened this when Linux AOT landed and Windows did not — that was completeness-seeking, not a need |
+| **#895** Windows-only checkbox flake | not reproducible on the only dev machine, on a platform that is not a release gate |
+
+These follow the standing decisions: audience of one, macOS is the release gate,
+Windows/Linux are not development boxes. Recorded here so they are not
+re-derived a third time.
+
+## Recommend REFRAMING — the issue asks for the wrong thing
+
+| # | asks for | should ask for |
+|---|---|---|
+| **#907** | triage 11 unexplained corpus pages | **fix the manifest statuses and the gate's oracle scoring.** Its own body shows 2 of 11 are corroborated refusals mis-pinned as `DECODE_ERROR`, and 21 of 35 defect-class pages are scoring artefacts. Only ~3 are genuine excise gaps |
+| **#844** | research how to run parity gates on CI | **do the small change the issue already contains** — pin archival URLs (`irs-prior/p509--YYYY.pdf`), and self-host the .gov files, which 17 USC §105 permits. The analysis is done; nobody scheduled the work |
+| **#894** | `priority: critical` | downgrade, or state that the label means **"do not remove the gate"**. Impact is mitigated by `check-test-count.sh`; the cause is probably a vstest bug with no user-facing symptom |
+
+## The genuine product question — yours, not mine
+
+**#900/#901/#902 (in-place text editing) versus #903 (document diff).**
+
+You named in-place editing as the remaining gap versus commercial tools. #903
+argues, credibly, that document comparison is *more* valuable for the actual use
+case and *more* tractable here:
+
+- every commercial PDF tool ships diff; no open-source viewer does it well
+- it builds on `page.Letters`, which is complete — so it sidesteps cluster A
+  entirely, the way redaction does
+- #901 (same-line editing, no reflow) is genuinely achievable; #902 (reflow) is
+  bounded by cluster A and is honest about its low ceiling on untagged files
+
+They are not exclusive, but #901 and #903 are each multi-week. **Which one gets
+built first is a product call, not an engineering one.**
+
+## Everything else: keep, unchanged
+
+#861, #909, #910, #911, #913, #914, #918, #919, #921, #923, #916, #899, #917,
+#906, #908, #912, #695 — all have an established cause or an honest "cause
+unknown, diagnose first" marker, and all still describe something true.
 
 ---
 
