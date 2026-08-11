@@ -373,8 +373,8 @@ public class PdfViewerSelectionTests
             drawn.Count.Should().Be(target.SelectionRects.Count,
                 "every bound highlight becomes a rendered Rectangle");
 
-            // Each rendered highlight is actually POSITIONED (the ReflectionBinding
-            // Canvas.Left/Top ran) at its bound page-local X — translating the
+            // Each rendered highlight is actually POSITIONED (the Canvas.Left/Top
+            // setters ran) at its bound page-local X — translating the
             // Rectangle into the page Border (page-local space) lands near a bound
             // X, not collapsed to 0. (~2px slack for the Border thickness.)
             var pageBorder = container!.GetVisualDescendants().OfType<Border>().First();
@@ -387,6 +387,12 @@ public class PdfViewerSelectionTests
             xs.Should().OnlyContain(
                 v => target.SelectionRects.Any(r => Math.Abs(r.X - v) < 2.5),
                 "each rendered highlight's position matches a bound highlight X");
+
+            // #906 note: these setters were {ReflectionBinding X/Y} and are now
+            // compiled bindings scoped with x:DataType on the Style. A compiled
+            // binding resolved against the WRONG type fails silently at 0 — so
+            // the "not collapsed to x=0" assertion above is what proves the
+            // re-scoping worked, and a clean build proves nothing.
         });
 
         await Dispatcher.UIThread.InvokeAsync(() =>
