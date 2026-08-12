@@ -1803,6 +1803,7 @@ namespace Excise.Core.Text.Segmentation
         public GlyphRemover() { }
         public GlyphRemover(Excise.Core.Text.Segmentation.LetterFinder letterFinder, Excise.Core.Text.Segmentation.TextSegmenter textSegmenter, Excise.Core.Text.Segmentation.OperationReconstructor reconstructor) { }
         public System.Collections.Generic.List<Excise.Core.Content.ContentOperator> ProcessOperations(System.Collections.Generic.IReadOnlyList<Excise.Core.Content.ContentOperator> operations, System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> letters, Excise.Core.Document.PdfRectangle redactionArea, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0) { }
+        public System.Collections.Generic.List<Excise.Core.Content.ContentOperator> ProcessOperations(System.Collections.Generic.IReadOnlyList<Excise.Core.Content.ContentOperator> operations, System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> letters, System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfRectangle> redactionAreas, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0) { }
     }
     public static class HiddenTextDetector
     {
@@ -1896,6 +1897,7 @@ namespace Excise.Core.Text.Segmentation
     {
         public TextSegmenter() { }
         public System.Collections.Generic.List<Excise.Core.Text.Segmentation.TextSegment> BuildSegments(string text, Excise.Core.Document.PdfRectangle operationBounds, System.Collections.Generic.List<Excise.Core.Text.Segmentation.LetterMatch> letterMatches, Excise.Core.Document.PdfRectangle redactionArea, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0) { }
+        public System.Collections.Generic.List<Excise.Core.Text.Segmentation.TextSegment> BuildSegments(string text, Excise.Core.Document.PdfRectangle operationBounds, System.Collections.Generic.List<Excise.Core.Text.Segmentation.LetterMatch> letterMatches, System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfRectangle> redactionAreas, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0) { }
     }
 }
 namespace Excise.Core.Validation
