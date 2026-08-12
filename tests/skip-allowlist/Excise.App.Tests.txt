@@ -11,6 +11,12 @@
 # An entry with NO marker keeps the original unconditional behaviour.
 # A skip that is not listed here fails the gate regardless — never relaxed.
 #
+# [Theory] TESTS: use the BARE METHOD NAME, never one entry per row. This gate
+# strips theory arguments from the names it observes, so `Method(param: "x")`
+# is compared against a name that never has arguments and matches nothing —
+# it then reports as "allow-listed skip is no longer skipping" on every run
+# where the test does skip. One entry per method covers every row.
+#
 # #655 wired check-skip-budget.sh to this project for the first time (the
 # file already existed from earlier ad-hoc bookkeeping but nothing enforced
 # it). Verified against a CI-equivalent reference environment — no mutool/

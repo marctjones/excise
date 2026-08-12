@@ -11,6 +11,12 @@
 # An entry with NO marker keeps the original unconditional behaviour.
 # A skip that is not listed here fails the gate regardless — never relaxed.
 #
+# [Theory] TESTS: use the BARE METHOD NAME, never one entry per row. This gate
+# strips theory arguments from the names it observes, so `Method(param: "x")`
+# is compared against a name that never has arguments and matches nothing —
+# it then reports as "allow-listed skip is no longer skipping" on every run
+# where the test does skip. One entry per method covers every row.
+#
 # (The two veraPDF-gated conformance tests that used to sit here now RUN on
 # CI — coverage came back with the trx-based enumeration + CI's veraPDF
 # availability, so their entries were removed per the gate's instruction.

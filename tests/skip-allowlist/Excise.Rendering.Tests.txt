@@ -24,6 +24,12 @@
 # correct both on a corpus-less CI runner and on a corpus-equipped dev box.
 # An entry with NO marker keeps the original unconditional behaviour.
 # A skip that is not listed here fails the gate regardless — never relaxed.
+#
+# [Theory] TESTS: use the BARE METHOD NAME, never one entry per row. This gate
+# strips theory arguments from the names it observes, so `Method(param: "x")`
+# is compared against a name that never has arguments and matches nothing —
+# it then reports as "allow-listed skip is no longer skipping" on every run
+# where the test does skip. One entry per method covers every row.
 # Generated against a CI-equivalent reference environment, not this box:
 # given the same line-by-line manual "justify or fix" pass #619's original
 # gives the same guarantee the mechanism actually needs — a FUTURE skip that

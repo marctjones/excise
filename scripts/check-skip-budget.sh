@@ -338,6 +338,24 @@ if [[ -s "$GONE_REAL_FILE" ]]; then
   echo "      (If instead this is environment-dependent, declare what it needs:"
   echo "       Test.Name   # why [requires: corpus:NAME] — see the header.)"
   sed 's/^/        - /' "$GONE_REAL_FILE"
+
+  # A per-ROW theory entry can NEVER match, because the observed names above
+  # are stripped of their arguments (see the `.split("(")[0]` where actual.txt
+  # is built). Left to the generic advice, this failure tells you to delete an
+  # entry that is doing its job — and deleting it just moves the failure to the
+  # forward check. Name the real cause instead.
+  if grep -q '(' "$GONE_REAL_FILE"; then
+    echo
+    echo "      ^ Entries above contain theory arguments, e.g. Method(param: \"value\")."
+    echo "        Those can never match: this gate strips theory arguments from the"
+    echo "        names it observes, so a per-ROW entry is compared against a name"
+    echo "        that never has any. Use ONE entry per METHOD instead:"
+    echo
+    grep '(' "$GONE_REAL_FILE" | sed 's/(.*$//' | sort -u | sed 's/^/            /'
+    echo
+    echo "        Do NOT simply delete them — the test really is skipping, so the"
+    echo "        forward check would then fail on the bare name instead."
+  fi
   STATUS=1
 fi
 
