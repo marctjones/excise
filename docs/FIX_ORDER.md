@@ -52,27 +52,32 @@ same work twice.
 
 ## A. Text assembly — `page.Text` is built in the wrong order and drops content
 
-**Root: #899, which MEASUREMENT SPLIT INTO TWO defects (2026-08-11).** The
-original framing — "the loss is serialisation, not extraction" — is right about
-half of it:
+**Root: #899 — one MEASURED defect, and one SUSPECTED one that could not be
+confirmed (2026-08-11).**
 
-| | symptom | where it lives | detected? |
-|---|---|---|---|
-| 1 | 26.9% of glyphs positioned OUTSIDE a MediaBox covering the whole page; invisible, and silently filtered out of `page.Text` | letter-rectangle computation, upstream of the assembler | **yes** — `PageInvariantTests.Letters_LandOnThePage` |
-| 2 | retained text interleaves across columns mid-sentence | the assembler / reading order | **no detector exists** |
+| | symptom | status |
+|---|---|---|
+| 1 | 26.9% of non-whitespace glyphs positioned OUTSIDE a MediaBox covering the whole page; invisible, and filtered out of `page.Text` | **measured and gated** by `PageInvariantTests.Letters_LandOnThePage` |
+| 2 | output reads as interleaved across columns | **unconfirmed** — may simply be defect 1's holes |
 
-`page.Text` keeps exactly the letters inside the crop box (2389 = 2389 on page
-117), so the COUNT loss is entirely defect 1 and the ORDER damage is entirely
-defect 2. They are fixed in different places, and fixing reading order will not
-recover the off-page glyphs — they are not on the page to order.
+`page.Text` retains exactly the in-crop letters (2389 = 2389 on page 117), so the
+whole character-count loss is defect 1.
 
-Defect 2 having no detector is this cluster's real coverage gap: wrong order
-with the right characters is invisible to every count-based invariant.
+Whether the interleaving is an independent ordering defect is **open**. Two
+attempts to settle it failed: counting upward jumps in emission order gave 2 on
+page 117 (normal for 2-3 columns, i.e. evidence *against* an ordering bug), and
+comparing emission order to a geometric reading order scored the broken page
+93.7% against 54.0% for a clean single-column control — **the clean page scored
+worse**, so that metric measures the model's crudeness, not excise's
+correctness.
+
+The cheap discriminator is sequencing, not more metrics: **fix defect 1, then
+re-read page 117.** If it reads correctly, there was only ever one defect.
 
 | issue | relationship |
 |---|---|
 | **#899** | owns the defect |
-| #773 reading-order heuristics for untagged PDFs | the general form of **defect 2 only**. It cannot address defect 1 |
+| #773 reading-order heuristics for untagged PDFs | relevant only if defect 2 is confirmed; it cannot address defect 1 |
 | #825 copy-whitespace deferred cases | its "reading-order ceiling" is this |
 | #903 PDF diff | routes AROUND this by building on `page.Letters`, and says so. Not blocked by it — but the tokenisation mismatch it must handle (`market-`/`place`) is the same phenomenon |
 | ~~#924 search~~ | **closed 2026-08-10** — the search half was separable and is fixed |
