@@ -255,3 +255,78 @@ fi
 
 echo "PASS: per-entry [requires: ...] conditioning relaxes ONLY the reverse check and"
 echo "      only when the prerequisite is present; forward check and --update are safe (#854)"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# A [Theory] allow-listed PER ROW can never match, and the gate must say so.
+#
+# The script strips theory arguments from the names it observes, so an entry
+# written as `Method(param: "value")` is compared against a name that never has
+# arguments. It matches nothing, and BOTH halves of the gate fire at once: the
+# bare name looks un-allow-listed, and every per-row entry looks stale.
+#
+# This is a real mistake that reached CI (#933). What made it expensive was the
+# advice: the generic message says "these stopped skipping — good, delete them",
+# and deleting them just moves the failure to the forward check. So this asserts
+# the DIAGNOSIS, not merely the failure — a gate that fails with misleading
+# guidance is barely better than one that passes.
+#
+# It cannot be caught on a dev machine by running the real suite: the tools are
+# installed here, so the tests never skip and the broken path never executes.
+# A synthetic trx is the only way to exercise it locally.
+# ─────────────────────────────────────────────────────────────────────────────
+F3=0
+P3="$WORK/Demo3.Tests.csproj"
+touch "$P3"
+AL3="$WORK/tests/skip-allowlist/Demo3.Tests.txt"
+cat > "$AL3" <<'EOF'
+# Skips allow-listed for Demo3.Tests.
+Demo3.Tests.A.ThemeTest(colour: "red")   # per-ROW entry — cannot ever match
+Demo3.Tests.A.ThemeTest(colour: "blue")  # per-ROW entry — cannot ever match
+EOF
+
+# The trx reports theory rows individually, exactly as a real run does.
+THEORY_TRX="$WORK/theory.trx"
+cat > "$THEORY_TRX" <<'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Results>
+    <UnitTestResult testName="Demo3.Tests.A.ThemeTest(colour: &quot;red&quot;)" outcome="NotExecuted" />
+    <UnitTestResult testName="Demo3.Tests.A.ThemeTest(colour: &quot;blue&quot;)" outcome="NotExecuted" />
+  </Results>
+</TestRun>
+EOF
+
+OUT6="$WORK/theory.log"
+RC6=0
+"$WORK/scripts/check-skip-budget.sh" "$P3" --trx "$THEORY_TRX" >"$OUT6" 2>&1 || RC6=$?
+
+[[ "$RC6" -ne 0 ]] || { echo "FAIL(#933): a per-row theory allowlist entry was accepted"; F3=1; }
+
+grep -q 'contain theory arguments' "$OUT6" || {
+  echo "FAIL(#933): the gate did not identify per-row theory entries as the cause"; F3=1; }
+grep -q 'ONE entry per METHOD' "$OUT6" || {
+  echo "FAIL(#933): the gate did not say to use one entry per method"; F3=1; }
+grep -qF 'Demo3.Tests.A.ThemeTest' "$OUT6" || {
+  echo "FAIL(#933): the gate did not print the bare method name to use instead"; F3=1; }
+grep -q 'Do NOT simply delete' "$OUT6" || {
+  echo "FAIL(#933): the gate still advises deleting the entries, which moves the failure"; F3=1; }
+
+# And the bare form must be ACCEPTED, or the advice above would be wrong.
+cat > "$AL3" <<'EOF'
+# Skips allow-listed for Demo3.Tests.
+Demo3.Tests.A.ThemeTest   # one entry per method covers every row
+EOF
+RC7=0
+"$WORK/scripts/check-skip-budget.sh" "$P3" --trx "$THEORY_TRX" >"$WORK/theory-fixed.log" 2>&1 || RC7=$?
+[[ "$RC7" -eq 0 ]] || {
+  echo "FAIL(#933): the bare method name — the fix the gate recommends — was rejected"; F3=1; }
+
+if [[ $F3 -ne 0 ]]; then
+  echo
+  echo "--- per-row theory entries ---"; cat "$OUT6"
+  echo "--- bare method name ---"; cat "$WORK/theory-fixed.log"
+  exit 1
+fi
+
+echo "PASS: a per-row [Theory] allowlist entry fails AND is diagnosed by name;"
+echo "      the bare method name it recommends is accepted (#933)"
