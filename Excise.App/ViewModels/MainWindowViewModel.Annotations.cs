@@ -353,6 +353,36 @@ public partial class MainWindowViewModel
                     break;
                 }
 
+                case PathAnnotationKind.Polygon:
+                case PathAnnotationKind.PolyLine:
+                {
+                    var vertices = payload[0];
+                    var isClosed = kind == PathAnnotationKind.Polygon;
+
+                    // Core needs three vertices for a closed shape. The viewer
+                    // drops shorter paths, but the scripting surface reaches
+                    // here too, so refusing rather than throwing is the
+                    // behaviour that matches every other command.
+                    if (isClosed && vertices.Count < 3)
+                    {
+                        await _dialogService.ShowMessageAsync(
+                            "Add Polygon",
+                            "A polygon needs at least three points.");
+                        return;
+                    }
+
+                    var poly = isClosed
+                        ? _annotationWorkflow.AddPolygon(pageNumber, vertices)
+                        : _annotationWorkflow.AddPolyLine(pageNumber, vertices);
+                    AddVerticesToViewerDocument(pageNumber, vertices, isClosed);
+                    await MarkAnnotationChangedAsync(isClosed ? "Polygon added" : "PolyLine added");
+                    RecordAnnotationAdd(isClosed ? "Add polygon" : "Add polyline", pageNumber, poly,
+                        () => isClosed
+                            ? _annotationWorkflow.AddPolygon(pageNumber, vertices)
+                            : _annotationWorkflow.AddPolyLine(pageNumber, vertices));
+                    break;
+                }
+
                 default:
                 {
                     var annotation = _annotationWorkflow.AddInk(pageNumber, payload);
@@ -403,6 +433,22 @@ public partial class MainWindowViewModel
             _pdfCoreDocument.AddArrowAnnotation(pageNumber, start.X, start.Y, end.X, end.Y);
         else
             _pdfCoreDocument.AddLineAnnotation(pageNumber, start.X, start.Y, end.X, end.Y);
+    }
+
+    /// <summary>The #912 viewer mirror for Polygon and PolyLine (#934 F).</summary>
+    private void AddVerticesToViewerDocument(
+        int pageNumber, IReadOnlyList<(double X, double Y)> vertices, bool isClosed)
+    {
+        var saveDocument = _documentService.GetCurrentDocument();
+        if (_pdfCoreDocument == null || ReferenceEquals(saveDocument, _pdfCoreDocument))
+            return;
+        if (pageNumber < 1 || pageNumber > _pdfCoreDocument.PageCount)
+            return;
+
+        if (isClosed)
+            _pdfCoreDocument.AddPolygonAnnotation(pageNumber, vertices);
+        else
+            _pdfCoreDocument.AddPolyLineAnnotation(pageNumber, vertices);
     }
 
     /// <summary>The stamp names the menu offers — Core's standard set (#934).</summary>

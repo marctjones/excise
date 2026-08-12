@@ -39,6 +39,8 @@ public static class PdfCommandRegistry
         Annotate(PdfCommandIds.ToggleDrawMode, "Draw (Ink)", "Toggle free-form drawing; each stroke drawn on the page becomes an Ink annotation."),
         Annotate(PdfCommandIds.ToggleLineMode, "Draw Line", "Toggle line drawing; dragging on the page becomes a straight Line annotation."),
         Annotate(PdfCommandIds.ToggleArrowMode, "Draw Arrow", "Toggle arrow drawing; dragging on the page becomes a Line annotation with an arrowhead at the end."),
+        Annotate(PdfCommandIds.TogglePolygonMode, "Draw Polygon", "Toggle polygon drawing; each click plants a vertex and double-click or Enter closes the shape."),
+        Annotate(PdfCommandIds.TogglePolyLineMode, "Draw PolyLine", "Toggle polyline drawing; each click plants a vertex and double-click or Enter ends the open path."),
         Annotate(PdfCommandIds.AddStickyNote, "Add Sticky Note", "Create a sticky-note annotation."),
 
         Document(PdfCommandIds.AddPages, "Add Pages", "Append pages from another PDF."),

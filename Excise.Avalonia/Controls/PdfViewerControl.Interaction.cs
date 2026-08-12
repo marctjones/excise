@@ -64,6 +64,22 @@ public partial class PdfViewerControl
 
         if (InteractionMode == InteractionMode.PathAnnotation)
         {
+            if (PathCaptureKind == PathCaptureKind.Vertices)
+            {
+                // A vertex gesture spans clicks, so it is NOT a drag. Clearing
+                // the drag flag here is what stops pointer-moved from treating
+                // the walk between vertices as a stroke.
+                _isDragging = false;
+
+                // A double-click FINISHES the path; it must not also plant the
+                // duplicate vertex its first click already planted.
+                if (e.ClickCount >= 2) FinishVertexPath();
+                else AppendVertex(point);
+
+                e.Handled = true;
+                return;
+            }
+
             BeginFreehandStroke(point);
         }
         else if (InteractionMode == InteractionMode.TextSelection)
@@ -113,6 +129,17 @@ public partial class PdfViewerControl
             {
                 UpdateLinkHoverState(null);
             }
+        }
+
+        // The rubber band from the last planted vertex to the pointer. This is
+        // the only preview that runs OUTSIDE a drag, because the vertex gesture
+        // is the only one where the pointer is up between its own samples.
+        if (InteractionMode == InteractionMode.PathAnnotation &&
+            PathCaptureKind == PathCaptureKind.Vertices &&
+            _vertexDips.Count > 0)
+        {
+            DrawTemporaryVertexPath(GetPressPoint(e));
+            return;
         }
 
         if (!_isDragging || InteractionMode == InteractionMode.None)
@@ -652,6 +679,11 @@ public partial class PdfViewerControl
         {
             _tempFreehandPath.IsVisible = false;
         }
+
+        if (_tempVertexPath != null)
+        {
+            _tempVertexPath.IsVisible = false;
+        }
     }
 
 
@@ -770,6 +802,128 @@ public partial class PdfViewerControl
 
         _tempFreehandPath.Points = new Points(_freehandDips);
         _tempFreehandPath.IsVisible = true;
+    }
+
+
+    #endregion
+
+    #region Vertex path capture (#934 F)
+
+    /// <summary>
+    /// Vertices planted so far, in the same pre-zoom DIP space as
+    /// <see cref="_freehandDips"/>.
+    ///
+    /// THE DESIGN DECISION OF THIS ROW: this list is separate from the drag
+    /// state and is cleared ONLY on finish, cancel, or a mode/kind change —
+    /// never on pointer-press. Freehand and segment gestures begin and end
+    /// inside one press-release pair, so they can reset on press; a vertex path
+    /// spans many, and resetting on press would erase the path as the user
+    /// builds it.
+    /// </summary>
+    private readonly List<Point> _vertexDips = new();
+    private Polyline? _tempVertexPath;
+
+    private void AppendVertex(Point point)
+    {
+        _vertexDips.Add(point);
+        DrawTemporaryVertexPath(point);
+    }
+
+    /// <summary>Drop the most recent vertex (Backspace) — an undo for a misclick.</summary>
+    private void RemoveLastVertex()
+    {
+        if (_vertexDips.Count == 0) return;
+        _vertexDips.RemoveAt(_vertexDips.Count - 1);
+        if (_vertexDips.Count == 0) ClearTemporaryDrawings();
+        else DrawTemporaryVertexPath(_vertexDips[^1]);
+    }
+
+    /// <summary>Abandon the path in progress (Escape), planting nothing.</summary>
+    private void CancelVertexPath()
+    {
+        _vertexDips.Clear();
+        ClearTemporaryDrawings();
+    }
+
+    /// <summary>
+    /// End the path and emit it (double-click or Enter).
+    ///
+    /// A Polygon needs three vertices and a PolyLine two; below that there is
+    /// no shape, so the path is dropped rather than sent to Core to be rejected
+    /// as an exception the user sees.
+    /// </summary>
+    private void FinishVertexPath()
+    {
+        var dips = _vertexDips.ToList();
+        CancelVertexPath();
+
+        if (dips.Count < 2 || Document == null)
+            return;
+
+        var pageNumber = CurrentPage;
+        if (pageNumber < 1 || pageNumber > Document.PageCount)
+            return;
+
+        var page = Document.GetPage(pageNumber);
+        var vertices = dips.Select(d => ToContentPoint(page, d, pageNumber)).ToList();
+
+        AnnotationPathDrawn?.Invoke(this, new AnnotationPathDrawnEventArgs(
+            new List<IReadOnlyList<(double X, double Y)>> { vertices }, pageNumber));
+    }
+
+    /// <summary>
+    /// The planted vertices plus a rubber band to <paramref name="cursor"/>, so
+    /// the user can see the edge they are about to commit before clicking.
+    /// </summary>
+    private void DrawTemporaryVertexPath(Point cursor)
+    {
+        if (_interactionLayer == null) return;
+
+        if (_tempVertexPath == null)
+        {
+            _tempVertexPath = new Polyline
+            {
+                Stroke = Brushes.Red,
+                StrokeThickness = 2,
+                StrokeJoin = PenLineJoin.Round,
+                StrokeLineCap = PenLineCap.Round,
+                IsHitTestVisible = false,
+            };
+            _interactionLayer.Children.Add(_tempVertexPath);
+        }
+
+        var points = new List<Point>(_vertexDips) { cursor };
+        _tempVertexPath.Points = new Points(points);
+        _tempVertexPath.IsVisible = true;
+    }
+
+    /// <summary>
+    /// Keyboard terminators for the vertex gesture. Returns true when the key
+    /// was consumed.
+    /// </summary>
+    private bool HandleVertexPathKey(Key key)
+    {
+        if (InteractionMode != InteractionMode.PathAnnotation ||
+            PathCaptureKind != PathCaptureKind.Vertices ||
+            _vertexDips.Count == 0)
+        {
+            return false;
+        }
+
+        switch (key)
+        {
+            case Key.Enter:
+                FinishVertexPath();
+                return true;
+            case Key.Escape:
+                CancelVertexPath();
+                return true;
+            case Key.Back:
+                RemoveLastVertex();
+                return true;
+            default:
+                return false;
+        }
     }
 
     #endregion

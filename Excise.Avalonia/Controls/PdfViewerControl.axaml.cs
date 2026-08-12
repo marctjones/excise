@@ -616,6 +616,22 @@ public partial class PdfViewerControl : UserControl
         return PdfCoordinateMapper.ToViewerDips(Document.GetPage(rect.PageNumber), rect, _currentSinglePageRenderDpi);
     }
 
+    /// <summary>
+    /// A vertex path in progress belongs to the mode and gesture that started
+    /// it. Leaving draw mode — or switching Polygon to Ink — must not leave a
+    /// half-built path to be committed later by an unrelated click.
+    /// </summary>
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    {
+        base.OnPropertyChanged(change);
+
+        if (change.Property == InteractionModeProperty ||
+            change.Property == PathCaptureKindProperty)
+        {
+            CancelVertexPath();
+        }
+    }
+
     private PdfPageRect ViewerDipsRect(Rect rect, int pageNumber) =>
         PdfPageRect.ViewerDips(pageNumber, rect.X, rect.Y, rect.Width, rect.Height, _currentSinglePageRenderDpi);
 
@@ -1016,6 +1032,15 @@ public partial class PdfViewerControl : UserControl
     {
         if (IsKeyboardEditingSource(e.Source))
             return;
+
+        // Enter / Escape / Backspace terminate a vertex path (#934 F). Checked
+        // first and only while one is in progress, so these keys stay available
+        // to everything else the rest of the time.
+        if (HandleVertexPathKey(e.Key))
+        {
+            e.Handled = true;
+            return;
+        }
 
         bool handled = false;
         bool control = e.KeyModifiers.HasFlag(KeyModifiers.Control) ||

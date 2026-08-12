@@ -82,9 +82,12 @@ public partial class MainWindowViewModel
     /// The gesture the viewer should capture for the selected kind. Ink wants
     /// every sample; a Line wants only where the drag began and ended.
     /// </summary>
-    public PathCaptureKind PathCaptureKind => PathAnnotationKind == PathAnnotationKind.Ink
-        ? PathCaptureKind.Freehand
-        : PathCaptureKind.Segment;
+    public PathCaptureKind PathCaptureKind => PathAnnotationKind switch
+    {
+        PathAnnotationKind.Ink => PathCaptureKind.Freehand,
+        PathAnnotationKind.Polygon or PathAnnotationKind.PolyLine => PathCaptureKind.Vertices,
+        _ => PathCaptureKind.Segment,
+    };
 
     /// <summary>
     /// Enter path-annotation mode with <paramref name="kind"/> selected, or
