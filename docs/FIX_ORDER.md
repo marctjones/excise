@@ -5,8 +5,12 @@
 > **Fix errors only. No new feature development until the freeze is lifted.**
 >
 > Frozen (do not start): **#900 / #901 / #902** in-place text editing,
-> **#903** document diff, **#921** wiring FDF/XFDF, **#912**'s remaining
-> annotation rows, **#784** UI internationalization.
+> **#903** document diff, **#921** wiring FDF/XFDF, **#784** UI
+> internationalization.
+>
+> **UNFROZEN 2026-08-11 — annotations (#912).** Finishing the unreachable
+> annotation types and fixing annotation rendering bugs is explicitly back in
+> scope. The rest of the freeze stands.
 >
 > Not frozen: defect fixes, diagnosis of measured-but-unexplained symptoms,
 > dead-code removal, and **test/gate infrastructure whose purpose is finding
@@ -14,7 +18,8 @@
 >
 > The grey area is anything that lets excise do something it could not do
 > before, even when the engine code already exists and only the surface is
-> missing — #912 and #921 are exactly that shape. **Treat those as frozen.**
+> missing — #921 is that shape. **Treat it as frozen.** (#912 was too, until
+> it was explicitly unfrozen.)
 >
 > Rationale: ~33 open issues resolve to five underlying defects (below).
 > Building new surface on known-bad foundations adds reach to defects that

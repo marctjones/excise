@@ -28,6 +28,12 @@ public static class PdfCommandIds
     public const string AddUnderline = "annotation.addUnderline";
     public const string AddStrikeOut = "annotation.addStrikeOut";
     public const string AddSquiggly = "annotation.addSquiggly";
+
+    /// <summary>Square annotation from the drag rectangle (#912).</summary>
+    public const string AddSquare = "annotation.addSquare";
+
+    /// <summary>Circle annotation from the drag rectangle (#912).</summary>
+    public const string AddCircle = "annotation.addCircle";
     public const string AddStickyNote = "annotation.addStickyNote";
 
     public const string AddPages = "document.addPages";

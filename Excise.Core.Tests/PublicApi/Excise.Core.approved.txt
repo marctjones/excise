@@ -129,9 +129,11 @@ namespace Excise.Core.Automation
     public static class PdfCommandIds
     {
         public const string About = "app.about";
+        public const string AddCircle = "annotation.addCircle";
         public const string AddFormField = "form.addField";
         public const string AddHighlight = "annotation.addHighlight";
         public const string AddPages = "document.addPages";
+        public const string AddSquare = "annotation.addSquare";
         public const string AddSquiggly = "annotation.addSquiggly";
         public const string AddStickyNote = "annotation.addStickyNote";
         public const string AddStrikeOut = "annotation.addStrikeOut";

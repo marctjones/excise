@@ -128,6 +128,67 @@ public partial class MainWindowViewModel
         AddTextMarkupFromSelectionAsync("Squiggly", _annotationWorkflow.AddSquiggly,
             static (d, p, r, c) => d.AddSquigglyAnnotation(p, r, c));
 
+    /// <summary>
+    /// Square and Circle from the drag rectangle (#912's second row).
+    ///
+    /// Core has been able to author both since the annotation-authoring work
+    /// landed, and `AnnotationWorkflowService` already exposed them — only the
+    /// command wiring was missing, exactly as with the text-markup row.
+    ///
+    /// The gesture is the REDACTION BOX drag, reused. That is deliberate: it is
+    /// the one rectangle gesture the app already implements, so no new input
+    /// handling is involved. A user draws a box and chooses what it becomes.
+    ///
+    /// The viewer mirror is mandatory here for the same reason as the text
+    /// markup — see AddTextMarkupFromSelectionAsync. Without it the shape lands
+    /// in the saved file and never appears on screen.
+    /// </summary>
+    private async Task AddShapeFromDragAsync(
+        string kind,
+        Func<int, PdfRectangle, string, PdfAnnotation> add,
+        Func<PdfCoreDocument, int, PdfRectangle, string, PdfAnnotation> mirrorToViewer)
+    {
+        if (!_documentService.IsDocumentLoaded)
+            return;
+
+        // #642: /P bit 6 gates adding or modifying annotations.
+        if (!EnsureDocumentPermission(p => p.CanAnnotate,
+            $"Adding a {kind} annotation", "adding or modifying annotations (/P bit 6)"))
+        {
+            return;
+        }
+
+        if (!TryGetCurrentShapeContentRect(out var pageNumber, out var contentRect))
+        {
+            await _dialogService.ShowMessageAsync(
+                $"Add {kind}",
+                $"Drag a box on the page before adding a {kind.ToLowerInvariant()}.");
+            return;
+        }
+
+        try
+        {
+            var annotation = add(pageNumber, contentRect, kind);
+            AddTextMarkupToViewerDocument(pageNumber, contentRect, kind, mirrorToViewer);
+            await MarkAnnotationChangedAsync($"{kind} added");
+            RecordAnnotationAdd($"Add {kind.ToLowerInvariant()}", pageNumber, annotation,
+                () => add(pageNumber, contentRect, kind));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error adding {Kind} annotation", kind);
+            _toastService.ShowError($"Failed to add {kind.ToLowerInvariant()}", ex.Message);
+        }
+    }
+
+    public Task AddSquareAnnotationFromDragAsync() =>
+        AddShapeFromDragAsync("Square", _annotationWorkflow.AddSquare,
+            static (d, p, r, c) => d.AddSquareAnnotation(p, r, c));
+
+    public Task AddCircleAnnotationFromDragAsync() =>
+        AddShapeFromDragAsync("Circle", _annotationWorkflow.AddCircle,
+            static (d, p, r, c) => d.AddCircleAnnotation(p, r, c));
+
     public async Task AddStickyNoteAnnotationAsync(string? contentsOverride = null)
     {
         if (!_documentService.IsDocumentLoaded)
@@ -182,12 +243,23 @@ public partial class MainWindowViewModel
         }
     }
 
+    /// <summary>
+    /// Shape annotations (#912) come from a DRAG, not a text selection — the
+    /// same gesture the redaction box already uses. Same conversion as the
+    /// text-selection path, different source rectangle.
+    /// </summary>
+    private bool TryGetCurrentShapeContentRect(out int pageNumber, out PdfRectangle contentRect)
+        => TryGetContentRect(CurrentRedactionPageArea, out pageNumber, out contentRect);
+
     private bool TryGetCurrentTextSelectionContentRect(out int pageNumber, out PdfRectangle contentRect)
+        => TryGetContentRect(CurrentTextSelectionPageArea, out pageNumber, out contentRect);
+
+    private bool TryGetContentRect(PdfPageRect? source, out int pageNumber, out PdfRectangle contentRect)
     {
         pageNumber = 0;
         contentRect = default;
 
-        if (CurrentTextSelectionPageArea is not { Width: > 0, Height: > 0 } selectionArea)
+        if (source is not { Width: > 0, Height: > 0 } selectionArea)
             return false;
 
         var document = _documentService.GetCurrentDocument();

@@ -125,6 +125,14 @@
                 <MenuItem Header="Add S_quiggly From Selection" Command="{Binding AddSquigglyAnnotationFromSelectionCommand}"
                           IsEnabled="{Binding HasTextSelection}"
                           access:CommandAccessibility.CommandId="annotation.addSquiggly"/>
+                <Separator/>
+                <MenuItem Header="Add S_quare From Drag" Command="{Binding AddSquareAnnotationFromDragCommand}"
+                          IsEnabled="{Binding IsDocumentLoaded}"
+                          access:CommandAccessibility.CommandId="annotation.addSquare"/>
+                <MenuItem Header="Add C_ircle From Drag" Command="{Binding AddCircleAnnotationFromDragCommand}"
+                          IsEnabled="{Binding IsDocumentLoaded}"
+                          access:CommandAccessibility.CommandId="annotation.addCircle"/>
+                <Separator/>
                 <MenuItem Header="Add _Sticky Note..." Command="{Binding AddStickyNoteAnnotationCommand}"
                           IsEnabled="{Binding IsDocumentLoaded}"
                           access:CommandAccessibility.CommandId="annotation.addStickyNote"/>
