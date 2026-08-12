@@ -26,7 +26,11 @@
 > already exist. If a fix naturally suggests a feature, file it and move on.
 
 Generated 2026-08-10 from an audit of every open issue, re-examined the same day
-for root cause and for whether the work is wanted at all. **Ordered by what each
+for root cause and for whether the work is wanted at all. **Re-examined again
+2026-08-12**: clusters A and B rewritten from new evidence, a
+"Cross-cutting structure" section added (what has to change, not just what to
+fix), and three tier entries struck because the issues had been closed while
+still scheduled here — the staleness this file warns about, in this file. **Ordered by what each
 one blocks and by whether its root cause is actually known — not by priority
 label.**
 
@@ -55,58 +59,95 @@ labels, and reading them one at a time hides that. Fix the root and the
 consequences close with it; schedule a consequence on its own and you buy the
 same work twice.
 
-## A. Text assembly — `page.Text` is built in the wrong order and drops content
+## A. Text assembly — `page.Text` consults no geometry at all
 
-**Root: #899 — one MEASURED defect, and one SUSPECTED one that could not be
-confirmed (2026-08-11).**
+**Re-examined 2026-08-12 on page 117 of `irs-1040-instructions.pdf` (worst page,
+0.774). Both defects are now established, and they are INDEPENDENT — the earlier
+"fix defect 1, then re-read page 117" discriminator is superseded.**
 
-| | symptom | status |
+### Defect 1 — one block is mis-positioned (#899)
+
+`PdfPage.Text` drops every letter outside the CropBox: 1043 of 3928 on page 117.
+The page is `MediaBox`/`CropBox` 0–792 with a `BleedBox` to **1008**, and the
+dropped letters sit at Y 794–959.
+
+**That off-page block is two different things, and only one is a bug:**
+
+| off-page content | mutool also excludes it? | verdict |
 |---|---|---|
-| 1 | 26.9% of non-whitespace glyphs positioned OUTSIDE a MediaBox covering the whole page; invisible, and filtered out of `page.Text` | **measured and gated** by `PageInvariantTests.Letters_LandOnThePage` |
-| 2 | output reads as interleaved across columns | **unconfirmed** — may simply be defect 1's holes |
+| `Page 117 of 126 … MUST be removed before printing.` | **yes** | correctly off-page — a printer proof mark |
+| `…should have received Form 1095-A from the Marketplace…` | **no, mutool has it** | genuinely mis-positioned |
 
-`page.Text` retains exactly the in-crop letters (2389 = 2389 on page 117), so the
-whole character-count loss is defect 1.
+So the character-count gap is NOT all defect. Any fix that simply stops
+filtering by CropBox would raise the parity score while making the output worse
+— excise would emit proof marks no other tool reports.
 
-Whether the interleaving is an independent ordering defect is **open**. Two
-attempts to settle it failed: counting upward jumps in emission order gave 2 on
-page 117 (normal for 2-3 columns, i.e. evidence *against* an ordering bug), and
-comparing emission order to a geometric reading order scored the broken page
-93.7% against 54.0% for a clean single-column control — **the clean page scored
-worse**, so that metric measures the model's crudeness, not excise's
-correctness.
+excise's matrix arithmetic is **not** broken in general: hand-composing the
+content stream (`1 0 0 -1 0 1008 cm` → `1 0 0 1 42 33 cm` → `1 0 0 1 0 85 cm` →
+`1 0 0 -1 0 12.97168 Tm`) gives `(42, 877.0)`, exactly what excise reports.
 
-The cheap discriminator is sequencing, not more metrics: **fix defect 1, then
-re-read page 117.** If it reads correctly, there was only ever one defect.
+**Signature to chase:** the bad block is 216pt too high, and 1008 − 792 = 216.
+
+**Refuted 2026-08-12 — do not re-run:** unbalanced `q`/`Q` (token-accurate count
+is 7/7, depth never negative — a naive `' q '` substring count says 2/4 and will
+mislead you); `BDC` with an inline dictionary operand desyncing the parser
+(minimal two-case repro places both at the same Y); a Form XObject `/Matrix`
+(the page has none, single content stream).
+
+### Defect 2 — assembly ignores geometry entirely (#938)
+
+No longer "unconfirmed". It is structurally certain from four lines of code:
+
+```csharp
+foreach (var letter in letters)   // content-stream order
+    sb.Append(letter.Value);      // no spacing, no line breaks
+```
+
+`page.Text` cannot insert a space between runs (`fileif`), cannot break lines
+(`market-place`), and cannot order columns — regardless of whether defect 1 is
+fixed. A space appears only where the PDF happens to contain a space glyph.
+
+**Root cause is LAYER INVERSION, not a missing algorithm** — see S1 below. The
+correct implementation exists, is validated against poppler, and lives in an
+assembly Core cannot reference.
 
 | issue | relationship |
 |---|---|
-| **#899** | owns the defect |
-| #773 reading-order heuristics for untagged PDFs | relevant only if defect 2 is confirmed; it cannot address defect 1 |
-| #825 copy-whitespace deferred cases | its "reading-order ceiling" is this |
-| #903 PDF diff | routes AROUND this by building on `page.Letters`, and says so. Not blocked by it — but the tokenisation mismatch it must handle (`market-`/`place`) is the same phenomenon |
-| ~~#924 search~~ | **closed 2026-08-10** — the search half was separable and is fixed |
+| **#899** | owns defect 1 (positioning) |
+| **#938** | owns defect 2 (assembly) — split out 2026-08-12 |
+| #773 reading-order heuristics | largely subsumed: `ReadingOrderStrategy.ColumnAware` already exists |
+| #825 copy-whitespace deferred cases | its "reading-order ceiling" is defect 2 |
+| ~~#924 search~~ | **closed** — the search half was separable and is fixed |
 
-**What we really want:** correct reading order for multi-column untagged pages.
-#924 proved the cheap half is separable: consumers that can use `page.Letters`
-or `GetWords()` should, and only the ones that genuinely need a linear string
-have to wait for #899.
+## B. The document is open twice — FIXED on `fix/917-single-document` (2026-08-12)
 
-## B. The document is open twice
+**Root: #917.** One `PdfDocument` now serves both the save path and the viewer.
+Full `Excise.App.Tests` 1326/1326; pinned by a test asserting the two are the
+same instance BEFORE and AFTER a mutation.
 
-**Root: #917.** Two `PdfDocument` instances of the same file, kept in sync by
-hand.
+**The finding worth keeping.** The old per-mutation `SaveToBytes()` + reparse was
+doing **three jobs at once**, and only the first was visible:
+
+1. **Data sync** — gone by construction.
+2. **The structural-change SIGNAL.** The viewer rebuilds its continuous layout
+   from `DocumentProperty.Changed`, and an Avalonia styled property only raises
+   that when the VALUE changes. The reparse handed it a new instance every time,
+   so the rebuild came for free. Without it the view kept the pre-mutation page
+   order. Replaced with an explicit `DocumentStructureChanged` event.
+3. **Bitmap lifetime.** The first replacement for (2) bumped `RenderVersion` —
+   which means "page CONTENT was rewritten" and disposes the displayed bitmap.
+   A page MOVE changes order, not content, so layout touched a disposed bitmap.
+
+Each regression surfaced **only** in the full 1326-test run, never in targeted
+filters, and each was confirmed against `develop` before being blamed on the
+change. This is the clearest evidence for S2 below.
 
 | issue | relationship |
 |---|---|
-| **#917** | owns it |
-| #922 mutation resync costs 150 ms / 234 MB | **exists only to paper over #917.** Its own body says so. Fixing it first is work #917 deletes |
-| ~~#920 dead render machinery~~ | **closed** — was debris from the same split |
-| #912 annotation types | every new row needs a hand-written viewer mirror UNTIL #917 lands |
-
-**What we really want:** one instance. The memory saving is minor (measured
-+12–15%); the point is that a hand-written mirror per feature is a bug factory,
-and it already produced one near-miss.
+| **#917** | fixed, unmerged |
+| #922 mutation resync cost | ⚠️ **the reparse is gone, but its cost is now UNMEASURED.** An attempt to demonstrate the win failed twice: perf-budget times moved 9–16% while allocations stayed identical (this repo's documented signature of noise), and a direct page-move probe reported 0.3ms on both branches — because a validity check showed the move was not happening. #922's own 149.7ms figure stands; nothing here has confirmed or refuted it. Re-measure before claiming |
+| #926 save-over-open on Windows | should be fixed — the viewer no longer opens file-backed — but unverifiable on a macOS-only box |
+| #912 / #934 annotations | every row needed a hand-written viewer mirror; that requirement is now gone |
 
 ## C. The writer
 
@@ -147,6 +188,122 @@ removed?" without deriving terms — which corrupts (`Younger` → `Ynger`).
 | **#916** | outline titles + annotations outside the box or on another page |
 | #905 `ScrubTerms` substring-replaces | the corruption mechanism #897 routed around. Still live for `RedactText`, which has a real term |
 | #898 does re-redacting skip the scrub? | a verification, not a defect — cheap, and a "yes" is a leak |
+
+---
+
+# Cross-cutting structure — what has to CHANGE, not just what to fix
+
+Added 2026-08-12. The clusters above say which issues share a cause. This says
+which **properties of the codebase** keep producing those causes, and what
+restructuring removes them. Each has an enforcement gate where one is possible,
+because a refactor with no gate regresses.
+
+## S1. Layer inversion — engine capability living above the engine
+
+**Evidence.** `TextSelectionEngine` — reading order, geometric whitespace,
+dehyphenation, 1013 lines — lives in `Excise.Avalonia/Services/` and its usings
+are `Excise.Core.Document`, `Excise.Core.Text`, `System`, `System.Collections
+.Generic`, `System.Linq`. **Zero Avalonia dependencies.** It is pure engine logic
+sitting in the viewer, so `Excise.Core`'s own `page.Text` cannot reference it and
+concatenates raw letters instead. The good implementation is validated against
+poppler by `check-copy-whitespace-parity.sh`; the engine simply cannot reach it.
+
+#917 was the same shape one level up: document ownership split between the App's
+service and the App's ViewModel, so neither owned it.
+
+**Refactor R1.** Move `TextSelectionEngine.cs`, `WhitespaceMode.cs`,
+`ReadingOrderStrategy.cs` into `Excise.Core/Text/`; point `PdfPage.Text` at
+`SortReadingOrder(ColumnAware)` + `JoinText(Smart)`, keeping the CropBox filter.
+21 files, 235 references, and the public API baseline of two assemblies.
+
+**Gate.** A test that fails when a type under `Excise.Avalonia/Services/` imports
+no Avalonia namespace — i.e. pure logic that belongs one layer down. Crude, but
+it names the exact smell and would have caught this the day the file landed.
+
+**Do NOT** fix #938 by adding a second whitespace heuristic inside
+`PdfPage.Text`. That is the small-looking change, and two implementations
+drifting apart is what produced the bug.
+
+## S2. Full rebuild is the only invalidation primitive
+
+**Evidence.** #922 (mutation → serialise + reparse the whole document), #923
+(every save rewrites everything), #919 (`RedactText` re-extracts every letter per
+match), #918 (13 sites `Open(File.ReadAllBytes)`).
+
+**The sharpest evidence is #917's fix.** Removing one whole-document rebuild
+broke three unrelated things, because the rebuild was silently serving as the
+change-notification mechanism *and* the bitmap-refresh mechanism. Nobody designed
+that; it accreted because "rebuild everything" is the only invalidation the
+codebase has, so every consumer that needed to know something changed rode on it.
+
+**Refactor R2.** An explicit change model. #917's fix introduced the seed —
+`DocumentStructureChanged` for "page order changed, content did not" alongside
+the existing `RenderVersion` for "content was rewritten". Finish the taxonomy
+(structure / content / annotations / form values), give each its own
+invalidation, and stop using a full reparse as a proxy for any of them.
+
+This is the prerequisite for #922 and #919 being fixable *cleanly* rather than by
+caching harder.
+
+## S3. Built twice, wired once
+
+**Evidence.** **96 public API entries are implemented but unreachable from
+production** — 79 tests-only in `Excise.Core` alone. Named instances:
+
+| # | what | size |
+|---|---|---|
+| #928 | a **second redaction path** (`TextRedactor`/`PdfRedaction`), unused, tested, **and documented as glyph-level when it is operator-level** | 636 lines |
+| #921 | FDF/XFDF import/export, implemented and tested, wired to nothing | 1782 lines |
+| #938 | a second text assembly (the good one) | 1013 lines |
+| #917 | a second document | — |
+| #908 | `CffSubsetter` — 25 test references, 0 production callers | — |
+
+**#928 is the dangerous one** and should be treated as a redaction-trust defect
+rather than dead code: it carries a *false safety claim* about the single
+guarantee the tool exists for. Delete it or correct the claim; do not leave a
+tested, plausible-looking redactor that does something weaker than its own
+documentation says.
+
+**Refactor R4.** A delete-or-wire policy. "Implemented + tested + unreachable" is
+a defect class, not neutral inventory — #896 shipped a redaction leak through the
+CLI precisely because the safe path existed and nothing used it.
+
+**Gate.** `scripts/check-unwired-api.sh` already exists and works — it
+independently confirmed #934 wired up four previously-dead annotation APIs. The
+job is to **shrink** the 96-entry baseline (#931), not to keep accepting into it.
+
+## S4. Instruments that cannot run, or score wrongly
+
+**Evidence.** #932/#907 (the corpus gate scores against the single most-inked
+oracle, mis-pinning ~21 pages as excise defects for agreeing with the majority),
+#935 (two of six reference oracles are installed on no runner anywhere), #929
+(App and Core tool-gated oracle tests have no CI home), #904 (the suite finds
+regressions but not first-discovery bugs), #936 (claims about the suite go stale
+and are wrong in the direction that costs coverage), #937.
+
+**This is not a code refactor — it is capability.** The corpus gate is the only
+instrument that has historically produced first-discovery product bugs (v3.6.0:
+seven parser/renderer fixes found by measurement, plus a bug in an oracle
+itself), and it is currently degraded. Restoring it outranks adding more tests.
+
+---
+
+# Recommended sequence
+
+Given #917 is done, the order that minimises rework:
+
+| step | why now |
+|---|---|
+| 1. Tag v3.8.0 | all gates green at `f1f6c8e3`; everything below invalidates that evidence |
+| 2. Merge #917 | done, tested, unmerged; it unblocks the mirror-per-feature tax |
+| 3. **R1 / #938** | fixes spacing, line breaks AND column interleaving in one move, because they are all the same missing call. Highest value-per-risk left |
+| 4. #928 delete-or-correct | cheap, and removes a false safety claim about redaction |
+| 5. #932 gate scoring | restores the only instrument that finds product bugs |
+| 6. #899 positioning | needs the 216pt investigation; independent of 3 |
+| 7. #923 writer | large and bounded; run t1, and check the encryption interaction first |
+
+R2 (the change model) is not a scheduled step — it is the shape steps 3, 6 and 7
+should leave behind them.
 
 ---
 
@@ -205,13 +362,13 @@ The core purpose. Every entry has an established cause.
 |---|---|---|---|
 | 1 | **#916** area redaction leaves 3 carriers holding the string | Established. Outline titles have no position; `InteractiveRedactionScrubber` reaches only annotations on *this* page overlapping *this* box. Measured, pinned by `KnownGaps_AreStillGaps`. | A redaction that reports success and leaves the name in a bookmark is the failure this program exists to prevent. **Needs a decision first** (wholesale / positional / surface-to-user), not code. |
 | 2 | **#905** `ScrubTerms` substring-replaces | Established — `result.Replace(term, "", Ordinal)`, no word boundaries. | Corrupts documents it is meant to protect (`Theodore` → `odore`). It is the mechanism #897 deliberately routed around; it is still live for `RedactText`. Cheap. |
-| 3 | **#898** does re-redacting a redacted copy skip the metadata scrub? | **Not established — this is a verification task.** | Cheap to answer, and a "yes" is a leak. Do it here because the answer determines whether it belongs in Tier 1 at all. |
+| ~~3~~ | ~~**#898**~~ **CLOSED** — re-redaction scrub verified | **Not established — this is a verification task.** | Cheap to answer, and a "yes" is a leak. Do it here because the answer determines whether it belongs in Tier 1 at all. |
 
 ## Tier 2 — user-visible defects, cause known, fix scoped
 
 | # | issue | cause | notes |
 |---|---|---|---|
-| 4 | **#924** default+regex search miss visible text | Established. `PdfSearchService` reads `page.Text` for substring/regex, `GetWords()` only for whole-words. Measured: 3 phrases present in letters, absent from `page.Text`. | Highest impact-per-effort on the list. The data is already there. **Not a one-line swap** — phrase matching across word boundaries is the risk; the 180 corpus pages at 1.000 are the regression set. |
+| ~~4~~ | ~~**#924**~~ **CLOSED 2026-08-10** — search now uses the word path; the deep half is #899/#938 | Established. `PdfSearchService` reads `page.Text` for substring/regex, `GetWords()` only for whole-words. Measured: 3 phrases present in letters, absent from `page.Text`. | Highest impact-per-effort on the list. The data is already there. **Not a one-line swap** — phrase matching across word boundaries is the risk; the 180 corpus pages at 1.000 are the regression set. |
 | 5 | **#923** open-and-save inflates files up to 2.79x | Established. Writer emits **no** `/ObjStm` (785 → 0) and no `/XRef` streams. Confirmed through the shipping CLI with zero changes applied; qpdf validates the output. | ⚠️ **Run t1, not t0.** This changes the serialization that every redaction saved-bytes assertion reads. veraPDF/PDF-A conformance is part of acceptance — PDF/A-1 forbids object streams. Check the encryption interaction (#639–#643) before starting. |
 | 6 | **#919** `RedactText` re-parses per match — 10.6s on a six-page form | Established. `RedactArea` called once per match; each re-parses the content stream and invalidates the letter cache. | A ten-second freeze on the one operation where a user interrupting half-way is a security failure. Batch the rectangles per page. |
 
@@ -230,7 +387,7 @@ Fixing these removes whole categories of future defect. #917 is the keystone.
 | # | issue | cause | notes |
 |---|---|---|---|
 | 10 | **#899** text assembly drops content on multi-column pages | Established, and **it is assembly, not extraction** — `page.Letters` has *more* characters than mutool finds; the loss is between the letter list and the string. | The deep fix behind #924. Does **not** affect redaction (verified — `RedactText` uses the letter path). |
-| 11 | **#906** AOT warns `PdfViewerControl` uses reflection bindings | Established — the compiler names it (IL2026/IL3050). | AOT is now the shipping macOS/Linux build path. A reflection binding that trims away is a runtime failure in the artifact users install. |
+| ~~11~~ | ~~**#906**~~ **CLOSED** — AOT reflection-binding warning resolved | Established — the compiler names it (IL2026/IL3050). | AOT is now the shipping macOS/Linux build path. A reflection binding that trims away is a runtime failure in the artifact users install. |
 | 12 | **#908** `CffSubsetter` never called — CFF fonts embedded unsubsetted | Established. 25 test references, 0 production callers. | Interacts with #923: both inflate output. Sequence after #923 so the size effect is attributable. |
 | 13 | **#912** remaining annotation rows (Square/Circle/Line/Arrow, then Ink/Polygon/Stamp) | Established. | Each new row **must mirror to the viewer document** until #917 lands, or the feature is invisible. |
 
