@@ -69,6 +69,23 @@ public sealed class AnnotationWorkflowService
     }
 
     /// <summary>
+    /// Image stamp (#934 row C) — a Stamp whose appearance is a picture, which
+    /// is how a scanned signature or a letterhead gets onto a page. Core wants
+    /// raw RGB; decoding is the caller's job.
+    /// </summary>
+    public PdfAnnotation AddImageStamp(
+        int pageNumber, PdfRectangle rect, byte[] rgbPixels, int pixelWidth, int pixelHeight,
+        string? contents = null)
+    {
+        var document = GetLoadedDocument();
+        var annotation = document.AddImageStampAnnotation(
+            pageNumber, rect, rgbPixels, pixelWidth, pixelHeight, contents);
+        _logger.LogInformation(
+            "Added {W}x{H} image stamp to page {PageNumber}", pixelWidth, pixelHeight, pageNumber);
+        return annotation;
+    }
+
+    /// <summary>
     /// Standard rubber stamp (#934 row B). The 15 names in
     /// <see cref="PdfAnnotationAuthoring.StandardStampNames"/> are the ones
     /// ISO 32000-1 Table 181 defines; Core rejects anything else, which is why

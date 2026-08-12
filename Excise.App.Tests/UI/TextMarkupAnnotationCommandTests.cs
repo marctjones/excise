@@ -460,6 +460,148 @@ public class TextMarkupAnnotationCommandTests
         finally { Cleanup(dir); }
     }
 
+    /// <summary>
+    /// ImageStamp (#934 row C) — signature placement. The image is the payload,
+    /// so this asserts the stamp exists AND that the picture survived: Core
+    /// validates the RGB buffer is exactly width*height*3, so a stride or
+    /// channel mistake in the decode throws rather than producing a corrupt
+    /// stamp.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task ImageStampCommand_WithDragAndImage_ProducesAStampCarryingThePicture()
+    {
+        var (source, output, dir) = MakePaths();
+        TestPdfGenerator.CreateSimpleTextPdf(source, "Stamp target");
+        var png = Path.Combine(dir, "signature.png");
+        WriteTestPng(png, 24, 12);
+        try
+        {
+            var vm = new MainWindowViewModel();
+            var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+            window.Show();
+            await vm.LoadDocumentAsync(source);
+
+            DragABox(vm);
+            await vm.AddImageStampAnnotationFromDragAsync(png);
+
+            await vm.SaveFileAsAsync(output);
+            using var saved = PdfDocument.Open(output);
+            saved.GetPage(1).GetAnnotations()
+                .Should().Contain(a => a.Subtype == PdfAnnotationSubtype.Stamp,
+                    "an image stamp is a Stamp annotation whose appearance is the chosen picture");
+
+            // The image must actually be embedded, not merely referenced by a
+            // path that will not exist on anyone else's machine.
+            var bytes = File.ReadAllBytes(output);
+            bytes.LongLength.Should().BeGreaterThan(new FileInfo(source).Length,
+                "the stamp image must be embedded in the saved document");
+
+            // AND the picture must be RIGHT. "A Stamp exists" passed happily
+            // with the red and blue channels swapped — a decode bug that
+            // produces a correctly-sized buffer and a plausible-looking stamp,
+            // which is exactly the failure a subtype assertion cannot see.
+            // The fixture colour is deliberately lopsided (R=20, B=160) so a
+            // swap is unmistakable.
+            var rendered = new Excise.Rendering.SkiaRenderer().RenderPage(
+                saved.GetPage(1), new Excise.Rendering.RenderOptions { Dpi = 72 });
+            using (rendered)
+            {
+                var box = StampProbePoint(saved.GetPage(1));
+                var px = rendered.GetPixel(box.X, box.Y);
+                ((int)px.Blue).Should().BeGreaterThan(px.Red + 40,
+                    $"the stamp fixture is blue-dominant (R=20 B=160) but rendered as " +
+                    $"R={px.Red} G={px.Green} B={px.Blue} — the decode swapped channels, " +
+                    "which no 'a Stamp exists' assertion can detect");
+            }
+        }
+        finally { Cleanup(dir); }
+    }
+
+    /// <summary>A cancelled picker adds nothing — the provider returning null.</summary>
+    [FixedAvaloniaFact]
+    public async Task ImageStampWithCancelledPicker_AddsNothing()
+    {
+        var (source, output, dir) = MakePaths();
+        TestPdfGenerator.CreateSimpleTextPdf(source, "Stamp target");
+        try
+        {
+            var vm = new MainWindowViewModel();
+            var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+            window.Show();
+            await vm.LoadDocumentAsync(source);
+            vm.SetImageStampPathProviderForTests(() => Task.FromResult<string?>(null));
+
+            DragABox(vm);
+            await vm.AddImageStampAnnotationFromDragAsync();
+
+            await vm.SaveFileAsAsync(output);
+            using var saved = PdfDocument.Open(output);
+            saved.GetPage(1).GetAnnotations()
+                .Should().NotContain(a => a.Subtype == PdfAnnotationSubtype.Stamp,
+                    "a cancelled picker must leave the page untouched");
+        }
+        finally { Cleanup(dir); }
+    }
+
+    /// <summary>
+    /// A file that is not a decodable image must be reported, not crash and not
+    /// produce an empty stamp.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task ImageStampWithAnUndecodableFile_AddsNothingAndDoesNotThrow()
+    {
+        var (source, output, dir) = MakePaths();
+        TestPdfGenerator.CreateSimpleTextPdf(source, "Stamp target");
+        var notAnImage = Path.Combine(dir, "notes.txt");
+        File.WriteAllText(notAnImage, "this is not a picture");
+        try
+        {
+            var vm = new MainWindowViewModel();
+            var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+            window.Show();
+            await vm.LoadDocumentAsync(source);
+
+            DragABox(vm);
+            var act = async () => await vm.AddImageStampAnnotationFromDragAsync(notAnImage);
+            await act.Should().NotThrowAsync("an undecodable file must surface as a message, not a crash");
+
+            await vm.SaveFileAsAsync(output);
+            using var saved = PdfDocument.Open(output);
+            saved.GetPage(1).GetAnnotations()
+                .Should().NotContain(a => a.Subtype == PdfAnnotationSubtype.Stamp,
+                    "a file that could not be decoded must leave no stamp behind");
+        }
+        finally { Cleanup(dir); }
+    }
+
+    /// <summary>
+    /// A point inside the drawn stamp, in rendered pixels at 72 dpi. The drag
+    /// box is in viewer DIPs, so this converts through the same page geometry
+    /// the renderer uses rather than assuming they coincide.
+    /// </summary>
+    private static (int X, int Y) StampProbePoint(PdfPage page)
+    {
+        var annot = page.GetAnnotations().First(a => a.Subtype == PdfAnnotationSubtype.Stamp);
+        var r = annot.Rect.Normalize();
+        var mb = page.MediaBox.Normalize();
+        // PDF y grows upward; the raster's y grows downward.
+        var cx = (r.Left + r.Right) / 2 - mb.Left;
+        var cy = mb.Top - (r.Bottom + r.Top) / 2;
+        return ((int)Math.Round(cx), (int)Math.Round(cy));
+    }
+
+    /// <summary>A small solid PNG — enough to exercise decode and embedding.</summary>
+    private static void WriteTestPng(string path, int w, int h)
+    {
+        using var bitmap = new SkiaSharp.SKBitmap(w, h);
+        using (var canvas = new SkiaSharp.SKCanvas(bitmap))
+            canvas.Clear(new SkiaSharp.SKColor(20, 60, 160));
+        using var image = SkiaSharp.SKImage.FromBitmap(bitmap);
+        using var data = image.Encode(SkiaSharp.SKEncodedImageFormat.Png, 100);
+        using var fs = File.OpenWrite(path);
+        data.SaveTo(fs);
+    }
+
     /// <summary>The drag gesture shapes reuse — the redaction box rectangle.</summary>
     private static void DragABox(MainWindowViewModel vm)
     {

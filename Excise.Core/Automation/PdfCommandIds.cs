@@ -40,6 +40,9 @@ public static class PdfCommandIds
 
     /// <summary>Standard rubber stamp from the drag rectangle; parameter is the stamp name (#934).</summary>
     public const string AddStamp = "annotation.addStamp";
+
+    /// <summary>Image stamp — a Stamp whose appearance is a chosen picture (#934).</summary>
+    public const string AddImageStamp = "annotation.addImageStamp";
     public const string AddStickyNote = "annotation.addStickyNote";
 
     public const string AddPages = "document.addPages";
