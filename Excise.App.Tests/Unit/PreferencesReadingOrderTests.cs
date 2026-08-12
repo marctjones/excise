@@ -3,7 +3,7 @@ using System.Linq;
 using AwesomeAssertions;
 using Excise.App.Models;
 using Excise.App.ViewModels;
-using Excise.Avalonia.Services;
+using Excise.Core.Text;
 using Xunit;
 
 namespace Excise.App.Tests.Unit;

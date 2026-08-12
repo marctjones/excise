@@ -110,11 +110,11 @@ namespace Excise.Avalonia.Controls
         public static readonly Avalonia.StyledProperty<Excise.Avalonia.Controls.InteractionMode> InteractionModeProperty;
         public static readonly Avalonia.StyledProperty<bool> IsLoadingProperty;
         public static readonly Avalonia.StyledProperty<Excise.Avalonia.Controls.PathCaptureKind> PathCaptureKindProperty;
-        public static readonly Avalonia.StyledProperty<Excise.Avalonia.Services.ReadingOrderStrategy> ReadingOrderStrategyProperty;
+        public static readonly Avalonia.StyledProperty<Excise.Core.Text.ReadingOrderStrategy> ReadingOrderStrategyProperty;
         public static readonly Avalonia.StyledProperty<long> RenderVersionProperty;
         public static readonly Avalonia.StyledProperty<System.Collections.Generic.IEnumerable<Excise.Core.Editing.PdfTypewriterTextOperation>?> TypewriterTextOperationsProperty;
         public static readonly Avalonia.StyledProperty<Excise.Avalonia.Controls.PdfViewMode> ViewModeProperty;
-        public static readonly Avalonia.StyledProperty<Excise.Avalonia.Services.WhitespaceMode> WhitespaceModeProperty;
+        public static readonly Avalonia.StyledProperty<Excise.Core.Text.WhitespaceMode> WhitespaceModeProperty;
         public static readonly Avalonia.StyledProperty<double> ZoomLevelProperty;
         public PdfViewerControl() { }
         public System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfAnnotation>? Annotations { get; set; }
@@ -127,11 +127,11 @@ namespace Excise.Avalonia.Controls
         public Excise.Avalonia.Controls.InteractionMode InteractionMode { get; set; }
         public bool IsLoading { get; }
         public Excise.Avalonia.Controls.PathCaptureKind PathCaptureKind { get; set; }
-        public Excise.Avalonia.Services.ReadingOrderStrategy ReadingOrderStrategy { get; set; }
+        public Excise.Core.Text.ReadingOrderStrategy ReadingOrderStrategy { get; set; }
         public long RenderVersion { get; set; }
         public System.Collections.Generic.IEnumerable<Excise.Core.Editing.PdfTypewriterTextOperation>? TypewriterTextOperations { get; set; }
         public Excise.Avalonia.Controls.PdfViewMode ViewMode { get; set; }
-        public Excise.Avalonia.Services.WhitespaceMode WhitespaceMode { get; set; }
+        public Excise.Core.Text.WhitespaceMode WhitespaceMode { get; set; }
         public double ZoomLevel { get; set; }
         public event System.EventHandler<Excise.Avalonia.Controls.AnnotationPathDrawnEventArgs>? AnnotationPathDrawn;
         public event System.EventHandler<Excise.Avalonia.Controls.DangerousLinkClickedEventArgs>? DangerousLinkClicked;
@@ -222,28 +222,5 @@ namespace Excise.Avalonia.Imaging
     public static class SkiaInterop
     {
         public static Avalonia.Media.Imaging.WriteableBitmap? ToAvaloniaBitmap(SkiaSharp.SKBitmap? skBitmap, double bitmapDpi = 96) { }
-    }
-}
-namespace Excise.Avalonia.Services
-{
-    public enum ReadingOrderStrategy
-    {
-        ColumnAware = 0,
-        Simple = 1,
-        RawStream = 2,
-    }
-    public static class TextSelectionEngine
-    {
-        public static Excise.Core.Text.Letter? HitTest(System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> letters, double pdfX, double pdfY) { }
-        public static string JoinText(System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> letters) { }
-        public static string JoinText(System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> letters, Excise.Avalonia.Services.WhitespaceMode mode) { }
-        public static System.Collections.Generic.List<Excise.Core.Text.Letter> RangeBetween(System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> ordered, Excise.Core.Text.Letter anchor, Excise.Core.Text.Letter focus) { }
-        public static System.Collections.Generic.List<Excise.Core.Text.Letter> SortReadingOrder(System.Collections.Generic.IEnumerable<Excise.Core.Text.Letter> letters) { }
-        public static System.Collections.Generic.List<Excise.Core.Text.Letter> SortReadingOrder(System.Collections.Generic.IEnumerable<Excise.Core.Text.Letter> letters, Excise.Avalonia.Services.ReadingOrderStrategy strategy) { }
-    }
-    public enum WhitespaceMode
-    {
-        Smart = 0,
-        LineFaithful = 1,
     }
 }

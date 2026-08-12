@@ -7,7 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using AwesomeAssertions;
 using Excise.Avalonia.Controls;
-using Excise.Avalonia.Services;
 using Excise.Core.Document;
 using Excise.Core.Text;
 using Xunit;
