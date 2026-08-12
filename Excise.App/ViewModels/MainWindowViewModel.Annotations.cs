@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Excise.Core.Document;
 using ReactiveUI;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using PdfCoreDocument = Excise.Core.Document.PdfDocument;
 
@@ -243,6 +244,59 @@ public partial class MainWindowViewModel
             _toastService.ShowError("Failed to add text box", ex.Message);
         }
     }
+
+    /// <summary>
+    /// Standard rubber stamp from the drag rectangle (#934 row B).
+    ///
+    /// Takes the stamp NAME as a parameter rather than having fifteen commands:
+    /// the menu offers the fixed set, and one command id serves automation.
+    /// Core validates the name against ISO 32000-1 Table 181 and throws on
+    /// anything else, so an invalid name is reported rather than silently
+    /// producing a nameless stamp.
+    /// </summary>
+    public async Task AddStampAnnotationFromDragAsync(string stampName)
+    {
+        if (!_documentService.IsDocumentLoaded)
+            return;
+
+        // #642: /P bit 6 gates adding or modifying annotations.
+        if (!EnsureDocumentPermission(p => p.CanAnnotate,
+            "Adding a stamp annotation", "adding or modifying annotations (/P bit 6)"))
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(stampName))
+            return;
+
+        if (!TryGetCurrentShapeContentRect(out var pageNumber, out var contentRect))
+        {
+            await _dialogService.ShowMessageAsync(
+                "Add Stamp",
+                "Drag a box on the page before adding a stamp.");
+            return;
+        }
+
+        var name = stampName.Trim();
+        try
+        {
+            var annotation = _annotationWorkflow.AddStamp(pageNumber, contentRect, name);
+            AddTextMarkupToViewerDocument(pageNumber, contentRect, name,
+                static (d, p, r, c) => d.AddStampAnnotation(p, r, c));
+            await MarkAnnotationChangedAsync($"{name} stamp added");
+            RecordAnnotationAdd($"Add {name} stamp", pageNumber, annotation,
+                () => _annotationWorkflow.AddStamp(pageNumber, contentRect, name));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error adding {StampName} stamp annotation", name);
+            _toastService.ShowError("Failed to add stamp", ex.Message);
+        }
+    }
+
+    /// <summary>The stamp names the menu offers — Core's standard set (#934).</summary>
+    public static IReadOnlyList<string> StandardStampNames =>
+        PdfAnnotationAuthoring.StandardStampNames;
 
     public async Task AddStickyNoteAnnotationAsync(string? contentsOverride = null)
     {

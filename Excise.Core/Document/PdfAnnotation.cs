@@ -108,7 +108,14 @@ public sealed class PdfAnnotation
     /// <summary>Whether the pop-up window is initially open (/Open).</summary>
     public bool IsOpen { get; }
 
-    /// <summary>Icon name for Text (sticky-note) annotations (/Name), e.g. "Note", "Comment".</summary>
+    /// <summary>
+    /// The <c>/Name</c> entry. Its meaning depends on the subtype, and the old
+    /// summary here named only the first case:
+    ///   * <b>Text</b> (sticky note) — the icon, e.g. "Note", "Comment" (§12.5.6.4)
+    ///   * <b>Stamp</b> — the STAMP NAME, e.g. "Confidential", "Draft" (§12.5.6.12)
+    /// Not to be confused with <see cref="Name"/>, which is <c>/NM</c>, the
+    /// annotation's unique identifier.
+    /// </summary>
     public string? IconName { get; }
 
     // ── Line-specific (§12.5.6.7) ────────────────────────────────────────────

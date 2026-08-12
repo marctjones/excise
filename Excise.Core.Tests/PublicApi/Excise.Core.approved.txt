@@ -136,6 +136,7 @@ namespace Excise.Core.Automation
         public const string AddPages = "document.addPages";
         public const string AddSquare = "annotation.addSquare";
         public const string AddSquiggly = "annotation.addSquiggly";
+        public const string AddStamp = "annotation.addStamp";
         public const string AddStickyNote = "annotation.addStickyNote";
         public const string AddStrikeOut = "annotation.addStrikeOut";
         public const string AddUnderline = "annotation.addUnderline";

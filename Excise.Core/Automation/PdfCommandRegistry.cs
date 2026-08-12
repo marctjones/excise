@@ -34,6 +34,7 @@ public static class PdfCommandRegistry
         Annotate(PdfCommandIds.AddSquare, "Add Square", "Draw a PDF square annotation over the region dragged on the page."),
         Annotate(PdfCommandIds.AddCircle, "Add Circle", "Draw a PDF circle (ellipse) annotation over the region dragged on the page."),
         Annotate(PdfCommandIds.AddFreeText, "Add Text Box", "Add a PDF free-text annotation containing typed text, sized to the region dragged on the page."),
+        Annotate(PdfCommandIds.AddStamp, "Add Stamp", "Place a standard PDF rubber stamp (Confidential, Draft, Approved, ...) over the region dragged on the page."),
         Annotate(PdfCommandIds.AddStickyNote, "Add Sticky Note", "Create a sticky-note annotation."),
 
         Document(PdfCommandIds.AddPages, "Add Pages", "Append pages from another PDF."),
