@@ -140,6 +140,12 @@ public partial class MainWindow : Window
             viewModel.PreserveReadingPositionRequested += (_, _) =>
                 _pdfViewerControl?.PreserveContinuousReadingPositionOnNextRebuild();
 
+            // #917: one document means the viewer's Document reference no
+            // longer changes on a structural mutation, so nothing tells the
+            // continuous view to re-lay-out. This does.
+            viewModel.DocumentStructureChanged += (_, _) =>
+                _pdfViewerControl?.RefreshContinuousLayout();
+
             // Subscribe to page changes to update redaction overlays
             viewModel.PropertyChanged += (s, args) =>
             {
