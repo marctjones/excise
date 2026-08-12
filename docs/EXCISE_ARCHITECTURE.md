@@ -227,9 +227,15 @@ separate `Excise.Operations` assembly:
 
 ```
 Excise.Core/Operations
-├── PdfRedaction    - High-level redaction operation builder
-├── TextRedactor    - Text redaction helper
-└── RedactionResult - Detailed redaction results
+├── PdfDocumentMerger    - Combine documents, preserving links/bookmarks/fields
+├── PdfDocumentSanitizer - /Info, XMP, outlines, annotation carriers (#608)
+└── PdfDocumentSplitter  - Split by page count, boundaries, or bookmarks
+
+  NOTE: redaction does NOT live here. The audited glyph-level pipeline is
+  Excise.Core/Text/Segmentation (below). A second, operator-level path
+  (PdfRedaction/TextRedactor) used to sit in this folder, documented as
+  glyph-level while removing whole operators; it was unreachable from
+  production and was deleted (#928).
 
 Excise.Core/Text/Segmentation
 ├── GlyphRemover          - Glyph-level content removal orchestrator
@@ -324,7 +330,7 @@ No singletons, no static configuration. Everything is explicit:
 
 ```csharp
 var renderer = new PdfRenderer(new RenderOptions { Dpi = 300 });
-var redactor = new TextRedactor(new RedactionOptions { DrawMarker = true });
+document.RedactText("Jane Doe");   // glyph-level; see Text/Segmentation
 ```
 
 ---

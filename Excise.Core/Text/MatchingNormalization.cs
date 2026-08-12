@@ -7,8 +7,8 @@ namespace Excise.Core.Text;
 
 /// <summary>
 /// The single normalization pipeline used by every MATCHING path — redaction
-/// text search (<c>PdfDocument.RedactText</c>, <c>TextRedactor</c>,
-/// <c>PdfRedaction</c>, the operator-text backstop) and the GUI search
+/// text search (<c>PdfDocument.RedactText</c>, the operator-text
+/// backstop) and the GUI search
 /// service. It composes, in order:
 /// <list type="number">
 /// <item>Presentation-form folding (<see cref="PresentationFormFolding"/>) —

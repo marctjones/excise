@@ -19,7 +19,13 @@ echo "🔍 Verifying TRUE content-level redaction implementation..."
 
 # --- Files that make up the TRUE-redaction pipeline ---
 REDACTION_SERVICE="Excise.App/Services/RedactionService.cs"     # GUI orchestrator
-CORE_API="Excise.Core/Operations/PdfRedaction.cs"                # public redaction API/result
+# The DOCUMENT-level entry point (doc.RedactText). Until #928 this pointed at
+# Excise.Core/Operations/PdfRedaction.cs — an operator-level path that was
+# unreachable from production and whose docstring claimed glyph-level removal.
+# So two checks in the gate guarding the redaction guarantee were pinned to a
+# file redaction never went through, and would have passed with the real
+# document-level API deleted.
+CORE_API="Excise.Core/Text/Segmentation/PdfDocumentRedactionExtensions.cs"
 CORE_EXT="Excise.Core/Text/Segmentation/PdfPageRedactionExtensions.cs"  # page.RedactArea entry
 CORE_GLYPH="Excise.Core/Text/Segmentation/GlyphRemover.cs"       # glyph-level removal
 CORE_IMAGE="Excise.Core/Text/Segmentation/ImageRedactor.cs"      # image removal
@@ -58,8 +64,13 @@ require_grep() {
 
 # Check 1: the public redaction API/result still live in Excise.Core.
 require_file "Core redaction API exists" "$CORE_API"
-require_grep "Core RedactionResult model present" "class RedactionResult" "$CORE_API" \
-    "SECURITY: RedactionResult is missing from $CORE_API."
+# Was: "Core RedactionResult model present". That type existed ONLY in the
+# deleted operator-level path, so the check could not fail for any reason that
+# mattered. What matters is that the document-level entry delegates to the
+# glyph-level engine rather than removing whole operators or drawing a box.
+require_grep "doc.RedactText delegates to glyph-level RedactArea" \
+    "RedactArea" "$CORE_API" \
+    "SECURITY: $CORE_API no longer routes through the glyph-level RedactArea path."
 
 # Check 3: the GUI must delegate to the glyph-level engine (page.RedactArea),
 # NOT draw a black box only.

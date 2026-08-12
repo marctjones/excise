@@ -187,7 +187,7 @@ public class AutomationScriptTests
         // single source of truth for the corpus-presence gate. No need to
         // duplicate it as an attribute Skip.
         //
-        // Issue #190 FIX: Now uses file-based TextRedactor API (like CLI)
+        // Issue #190 FIX: now uses the file-based Excise.Core redaction API (like the CLI)
         // which bypasses coordinate conversion issues.
 
         // Arrange

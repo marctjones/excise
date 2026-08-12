@@ -466,8 +466,8 @@ public class TextShowingOperatorTests
         var pdf = TestPdfGenerator.CreatePdfWithText("Hello World", x: 100, y: 700);
 
         // Redact "World"
-        var redactor = new TextRedactor();
-        var result = redactor.RedactText(pdf, "World");
+        using var doc = PdfDocument.Open(pdf);
+        var result = doc.RedactText("World");   // glyph-level (#928 deleted the operator-level path)
 
         // Verify "World" is removed but "Hello" remains
         var text = PdfTestHelpers.ExtractAllText(result);

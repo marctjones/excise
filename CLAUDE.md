@@ -1012,6 +1012,13 @@ The separate `Excise.App.Redaction` library (the PdfPig/PDFsharp-based
 `TextRedactor` engine and its `pdfer` CLI) was removed once both the
 area-click and scripting paths were unified onto Excise.Core.
 
+⚠️ A **second, unrelated** class of the same name lived in
+`Excise.Core/Operations/TextRedactor.cs` until #928 deleted it (2026-08-12). It
+was unreachable from production, and its docstring promised glyph-level removal
+while `RemoveIntersecting` deleted whole operators. Two classes sharing a name,
+one of them mis-describing the project's core guarantee, is why the name is
+called out here rather than quietly dropped.
+
 ## Task Tracking and GitHub Issues
 
 **IMPORTANT**: This project uses GitHub Issues for ALL task tracking, feature requests, bugs, and enhancements.
