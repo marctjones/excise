@@ -77,6 +77,7 @@ namespace Excise.Avalonia.Controls
     {
         Freehand = 0,
         Segment = 1,
+        Vertices = 2,
     }
     public sealed class PdfPageSlot : System.ComponentModel.INotifyPropertyChanged
     {
@@ -165,6 +166,7 @@ namespace Excise.Avalonia.Controls
         public void InvalidatePageCache() { }
         public void NextPage() { }
         protected override Avalonia.Automation.Peers.AutomationPeer OnCreateAutomationPeer() { }
+        protected override void OnPropertyChanged(Avalonia.AvaloniaPropertyChangedEventArgs change) { }
         public void PreserveContinuousReadingPositionOnNextRebuild() { }
         public void PreviousPage() { }
         public void ZoomIn() { }

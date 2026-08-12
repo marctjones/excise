@@ -202,6 +202,8 @@ namespace Excise.Core.Automation
         public const string ToggleFormAuthoring = "form.toggleAuthoring";
         public const string ToggleLineMode = "annotation.toggleLineMode";
         public const string ToggleOutline = "view.toggleOutline";
+        public const string TogglePolyLineMode = "annotation.togglePolyLineMode";
+        public const string TogglePolygonMode = "annotation.togglePolygonMode";
         public const string ToggleRedactionMode = "redaction.toggleMode";
         public const string ToggleThumbnails = "view.toggleThumbnails";
         public const string TypewriterMode = "edit.typewriterMode";

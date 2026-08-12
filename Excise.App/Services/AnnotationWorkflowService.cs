@@ -192,6 +192,32 @@ public sealed class AnnotationWorkflowService
         return annotation;
     }
 
+    /// <summary>A closed multi-vertex shape (#934 F).</summary>
+    public PdfAnnotation AddPolygon(
+        int pageNumber,
+        IReadOnlyList<(double X, double Y)> vertices,
+        string? contents = null)
+    {
+        var document = GetLoadedDocument();
+        var annotation = document.AddPolygonAnnotation(pageNumber, vertices, contents);
+
+        _logger.LogInformation("Added polygon annotation to page {PageNumber}", pageNumber);
+        return annotation;
+    }
+
+    /// <summary>The same vertex path, left open (#934 F).</summary>
+    public PdfAnnotation AddPolyLine(
+        int pageNumber,
+        IReadOnlyList<(double X, double Y)> vertices,
+        string? contents = null)
+    {
+        var document = GetLoadedDocument();
+        var annotation = document.AddPolyLineAnnotation(pageNumber, vertices, contents);
+
+        _logger.LogInformation("Added polyline annotation to page {PageNumber}", pageNumber);
+        return annotation;
+    }
+
     private PdfDocument GetLoadedDocument() =>
         _documentService.GetCurrentDocument()
         ?? throw new InvalidOperationException("No document loaded");

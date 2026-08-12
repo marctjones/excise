@@ -42,6 +42,7 @@ public class AnnotationInvariantTests
     {
         "Highlight", "Underline", "StrikeOut", "Squiggly",
         "Square", "Circle", "FreeText", "Text", "Ink", "Line",
+        "Polygon", "PolyLine",
     };
 
     private static PdfAnnotation Author(PdfDocument doc, string subtype, PdfRectangle rect, string contents) =>
@@ -56,6 +57,8 @@ public class AnnotationInvariantTests
             "FreeText" => doc.AddFreeTextAnnotation(1, rect, contents),
             "Text" => doc.AddTextAnnotation(1, rect, contents),
             "Ink" => doc.AddInkAnnotation(1, InkStrokesIn(rect), contents),
+            "Polygon" => doc.AddPolygonAnnotation(1, VerticesIn(rect), contents),
+            "PolyLine" => doc.AddPolyLineAnnotation(1, VerticesIn(rect), contents),
             "Line" => doc.AddLineAnnotation(
                 1, rect.Normalize().Left, rect.Normalize().Bottom,
                 rect.Normalize().Right, rect.Normalize().Top, contents),
@@ -314,6 +317,61 @@ public class AnnotationInvariantTests
     }
 
     /// <summary>
+    /// VERTICES SURVIVE A SAVE, IN ORDER — the Polygon/PolyLine analogue of the
+    /// ink-geometry test, and for the same reason: subtype, a sane /Rect and a
+    /// non-empty /Vertices are all still true of a shape whose points have been
+    /// reordered or dropped, and that is a different shape.
+    ///
+    /// The fixture is deliberately NON-CONVEX. A convex outline survives some
+    /// reorderings looking plausible; a concave one does not, so a scrambled
+    /// vertex list is unmistakable.
+    /// </summary>
+    [Theory]
+    [InlineData("Polygon")]
+    [InlineData("PolyLine")]
+    public void VertexShapes_PreserveEveryVertexInOrderAcrossASave(string subtype)
+    {
+        var shape = new List<(double X, double Y)>
+        {
+            (100, 600), (200, 660), (240, 600), (180, 570), (150, 620),
+        };
+
+        var tmp = Path.Combine(Path.GetTempPath(), $"excise-poly-{Guid.NewGuid():N}.pdf");
+        try
+        {
+            using (var doc = NewDocument())
+            {
+                if (subtype == "Polygon") doc.AddPolygonAnnotation(1, shape, "vertex geometry");
+                else doc.AddPolyLineAnnotation(1, shape, "vertex geometry");
+                doc.Save(tmp);
+            }
+
+            using var reloaded = PdfDocument.Open(tmp);
+            var a = Only(reloaded, subtype);
+
+            a.Vertices.Should().NotBeNull($"{subtype} without /Vertices draws nothing");
+            a.Vertices!.Should().HaveCount(shape.Count,
+                "a dropped vertex is still a plausible-looking shape — just the wrong one");
+
+            for (var i = 0; i < shape.Count; i++)
+            {
+                a.Vertices[i].X.Should().BeApproximately(shape[i].X, Tolerance,
+                    $"vertex {i} X moved across a save (reordering or rounding)");
+                a.Vertices[i].Y.Should().BeApproximately(shape[i].Y, Tolerance,
+                    $"vertex {i} Y moved across a save");
+            }
+
+            var r = a.Rect.Normalize();
+            foreach (var (x, y) in a.Vertices)
+            {
+                x.Should().BeInRange(r.Left - Tolerance, r.Right + Tolerance, "vertex X outside /Rect");
+                y.Should().BeInRange(r.Bottom - Tolerance, r.Top + Tolerance, "vertex Y outside /Rect");
+            }
+        }
+        finally { try { File.Delete(tmp); } catch { /* best effort */ } }
+    }
+
+    /// <summary>
     /// Guards the theory data itself. A subtype added to the authoring API but
     /// not to <see cref="AuthorableSubtypes"/> is silently unverified — the
     /// vacuity failure mode that makes corpus-driven tests lie.
@@ -325,6 +383,7 @@ public class AnnotationInvariantTests
         {
             "Highlight", "Underline", "StrikeOut", "Squiggly",
             "Square", "Circle", "FreeText", "Text", "Ink", "Line",
+            "Polygon", "PolyLine",
             // Arrow is NOT a distinct /Subtype — it is a Line carrying
             // /LE [None ClosedArrow], so the generic helpers here (which find
             // an annotation by subtype name) cannot address it. Covered by
@@ -336,7 +395,7 @@ public class AnnotationInvariantTests
         // fixture does not supply (endpoints, vertices, strokes, image data).
         var deferred = new HashSet<string>(StringComparer.Ordinal)
         {
-            "Polygon", "PolyLine", "Stamp", "ImageStamp",
+            "Stamp", "ImageStamp",
         };
 
         var authorable = typeof(PdfAnnotationAuthoring)
@@ -357,6 +416,18 @@ public class AnnotationInvariantTests
 
     private const double Tolerance = 0.5;
     private static PdfRectangle Box => new(72, 600, 300, 660);
+
+    /// <summary>Three vertices inside <paramref name="rect"/> — enough for a closed shape.</summary>
+    private static IReadOnlyList<(double X, double Y)> VerticesIn(PdfRectangle rect)
+    {
+        var r = rect.Normalize();
+        return new[]
+        {
+            (r.Left + 2, r.Bottom + 2),
+            ((r.Left + r.Right) / 2, r.Top - 2),
+            (r.Right - 2, r.Bottom + 2),
+        };
+    }
 
     /// <summary>A two-point diagonal stroke inside <paramref name="rect"/>.</summary>
     private static IReadOnlyList<IReadOnlyList<(double X, double Y)>> InkStrokesIn(PdfRectangle rect)

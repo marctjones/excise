@@ -52,6 +52,12 @@ public static class PdfCommandIds
 
     /// <summary>Toggle arrow-drawing; a drag becomes a Line with an arrowhead (#934).</summary>
     public const string ToggleArrowMode = "annotation.toggleArrowMode";
+
+    /// <summary>Toggle polygon drawing; clicks plant vertices, double-click or Enter closes it (#934).</summary>
+    public const string TogglePolygonMode = "annotation.togglePolygonMode";
+
+    /// <summary>Toggle polyline drawing; the same vertex path, left open (#934).</summary>
+    public const string TogglePolyLineMode = "annotation.togglePolyLineMode";
     public const string AddStickyNote = "annotation.addStickyNote";
 
     public const string AddPages = "document.addPages";

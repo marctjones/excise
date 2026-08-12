@@ -437,6 +437,195 @@ public class PointerInteractionTests : IDisposable
         finally { TryDelete(path); }
     }
 
+    // ────────────────── Vertex path capture (#934 F) ──────────────────
+
+    /// <summary>
+    /// THE ROW-F TEST: a gesture that spans several clicks with the pointer UP
+    /// in between, ended by an explicit finish.
+    ///
+    /// Everything before this row began and ended inside one press-release
+    /// pair. The failure mode unique to this one is a vertex list that resets
+    /// on each press — which yields a perfectly valid annotation built from
+    /// only the last click or two, so subtype, /Rect and a non-empty /Vertices
+    /// are all still true. The point coordinates are the only thing that shows
+    /// it, which is why they are asserted individually.
+    ///
+    /// The shape is non-convex so a scrambled vertex order cannot pass as a
+    /// plausible outline.
+    /// </summary>
+    [FixedAvaloniaTheory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task VertexClicks_FinishedWithEnter_LandAtTheClickedPoints(bool polygon)
+    {
+        var path = WriteTempPdf(BuildBarePdf());
+        try
+        {
+            var vm = new MainWindowViewModel();
+            var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+            _windows.Show(window);
+            await Task.Delay(150);
+
+            await vm.LoadDocumentAsync(path);
+            vm.CurrentPageIndex = 0;
+            (polygon ? vm.TogglePolygonModeCommand : vm.TogglePolyLineModeCommand)
+                .Execute().Subscribe();
+            var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
+            viewer.PathCaptureKind.Should().Be(PathCaptureKind.Vertices,
+                "a polygon is planted click by click, not dragged");
+            await Settle(window);
+
+            var overlay = FindNamedDescendant<Canvas>(viewer, "OverlayCanvas")!;
+            var page = vm.PdfCoreDocument!.GetPage(1);
+            var drawn = new (double X, double Y)[] { (120, 600), (220, 660), (260, 600), (190, 570) };
+
+            AnnotationPathDrawnEventArgs? got = null;
+            viewer.AnnotationPathDrawn += (_, e) => got = e;
+
+            foreach (var pt in drawn)
+                await ClickAt(window, ToWindowPoint(pt.X, pt.Y, page, overlay, window));
+
+            got.Should().BeNull("clicks alone must not commit — the gesture ends on an EXPLICIT finish");
+
+            viewer.Focus();
+            await window.PressKeyAsync(Key.Enter);
+            for (int i = 0; i < 3; i++) { await Task.Delay(80); window.UpdateLayout(); }
+
+            got.Should().NotBeNull("Enter must finish the path");
+            got!.Strokes[0].Should().HaveCount(drawn.Length,
+                "every click plants a vertex — a list that resets on press would keep only the last");
+
+            var wanted = polygon ? PdfAnnotationSubtype.Polygon : PdfAnnotationSubtype.PolyLine;
+            var shape = vm.PdfCoreDocument!.GetPage(1).GetAnnotations()
+                .Where(x => x.Subtype == wanted).ToList();
+            shape.Should().HaveCount(1, "the shape must reach the VIEWER document, before any save");
+
+            var verts = shape[0].Vertices!;
+            verts.Should().HaveCount(drawn.Length);
+            for (var i = 0; i < drawn.Length; i++)
+            {
+                verts[i].X.Should().BeApproximately(drawn[i].X, 12, $"vertex {i} X");
+                verts[i].Y.Should().BeApproximately(drawn[i].Y, 12, $"vertex {i} Y");
+            }
+        }
+        finally { TryDelete(path); }
+    }
+
+    /// <summary>
+    /// Escape abandons the path, and Backspace drops the last vertex. Without
+    /// these a misclick is unrecoverable — you would have to commit the wrong
+    /// shape and delete it.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task VertexPath_EscapeAbandonsIt_AndBackspaceDropsTheLastVertex()
+    {
+        var path = WriteTempPdf(BuildBarePdf());
+        try
+        {
+            var vm = new MainWindowViewModel();
+            var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+            _windows.Show(window);
+            await Task.Delay(150);
+
+            await vm.LoadDocumentAsync(path);
+            vm.CurrentPageIndex = 0;
+            vm.TogglePolygonModeCommand.Execute().Subscribe();
+            var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
+            await Settle(window);
+
+            var overlay = FindNamedDescendant<Canvas>(viewer, "OverlayCanvas")!;
+            var page = vm.PdfCoreDocument!.GetPage(1);
+
+            AnnotationPathDrawnEventArgs? got = null;
+            viewer.AnnotationPathDrawn += (_, e) => got = e;
+
+            // Escape: three clicks, abandoned — nothing is committed, and the
+            // abandoned points must not resurface in the NEXT path.
+            foreach (var pt in new[] { (120.0, 600.0), (220.0, 660.0), (260.0, 600.0) })
+                await ClickAt(window, ToWindowPoint(pt.Item1, pt.Item2, page, overlay, window));
+
+            viewer.Focus();
+            await window.PressKeyAsync(Key.Escape);
+            await window.PressKeyAsync(Key.Enter);
+            for (int i = 0; i < 3; i++) { await Task.Delay(80); window.UpdateLayout(); }
+            got.Should().BeNull("Escape must abandon the path, and Enter after it must find nothing");
+
+            // Backspace: four clicks, one taken back, then finish -> three.
+            var pts = new[] { (120.0, 600.0), (220.0, 660.0), (260.0, 600.0), (400.0, 400.0) };
+            foreach (var pt in pts)
+                await ClickAt(window, ToWindowPoint(pt.Item1, pt.Item2, page, overlay, window));
+
+            viewer.Focus();
+            await window.PressKeyAsync(Key.Back);
+            await window.PressKeyAsync(Key.Enter);
+            for (int i = 0; i < 3; i++) { await Task.Delay(80); window.UpdateLayout(); }
+
+            got.Should().NotBeNull("Enter must finish the path that survived the Backspace");
+            got!.Strokes[0].Should().HaveCount(3,
+                "Backspace drops exactly one vertex — and the three Escaped ones must not have come back");
+
+            var verts = got.Strokes[0];
+            verts[^1].X.Should().BeApproximately(260, 12,
+                "the surviving last vertex is the third click, not the taken-back fourth");
+        }
+        finally { TryDelete(path); }
+    }
+
+    /// <summary>
+    /// Double-click is the discoverable way to finish — most users will never
+    /// find Enter. It must end the path WITHOUT planting the duplicate vertex
+    /// its own first click already planted.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task VertexPath_DoubleClickFinishes_WithoutDuplicatingTheLastVertex()
+    {
+        var path = WriteTempPdf(BuildBarePdf());
+        try
+        {
+            var vm = new MainWindowViewModel();
+            var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+            _windows.Show(window);
+            await Task.Delay(150);
+
+            await vm.LoadDocumentAsync(path);
+            vm.CurrentPageIndex = 0;
+            vm.TogglePolygonModeCommand.Execute().Subscribe();
+            var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
+            await Settle(window);
+
+            var overlay = FindNamedDescendant<Canvas>(viewer, "OverlayCanvas")!;
+            var page = vm.PdfCoreDocument!.GetPage(1);
+
+            AnnotationPathDrawnEventArgs? got = null;
+            viewer.AnnotationPathDrawn += (_, e) => got = e;
+
+            await ClickAt(window, ToWindowPoint(120, 600, page, overlay, window));
+            await ClickAt(window, ToWindowPoint(220, 660, page, overlay, window));
+
+            // Third point, clicked twice in place: the first plants it, the
+            // second finishes.
+            var last = ToWindowPoint(260, 600, page, overlay, window);
+            await ClickAt(window, last);
+            await ClickAt(window, last);
+            for (int i = 0; i < 3; i++) { await Task.Delay(80); window.UpdateLayout(); }
+
+            got.Should().NotBeNull("a double-click must finish the path");
+            got!.Strokes[0].Should().HaveCount(3,
+                "the finishing click must not plant a fourth vertex on top of the third");
+            got.Strokes[0][^1].X.Should().BeApproximately(260, 12);
+        }
+        finally { TryDelete(path); }
+    }
+
+    /// <summary>A press-and-release at one point, with no travel.</summary>
+    private static async Task ClickAt(Window window, Point p)
+    {
+        await Dispatcher.UIThread.InvokeAsync(() => window.MouseDown(p, MouseButton.Left));
+        await Task.Delay(20);
+        await Dispatcher.UIThread.InvokeAsync(() => window.MouseUp(p, MouseButton.Left));
+        await Task.Delay(20);
+    }
+
     /// <summary>
     /// Content point -> window point, the INVERSE of the conversion the control
     /// performs. Using the forward mapper here keeps the assertion a genuine

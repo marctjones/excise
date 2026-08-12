@@ -241,6 +241,16 @@ public enum PathCaptureKind
 
     /// <summary>Pointer-down and pointer-up are the only two points. Line and Arrow.</summary>
     Segment,
+
+    /// <summary>
+    /// Each click plants a vertex; the gesture ends on an EXPLICIT finish
+    /// (double-click or Enter), not on pointer-up. Polygon and PolyLine.
+    ///
+    /// This is the one capture kind that spans multiple clicks, which is why
+    /// its vertex list is separate from the drag state and is NOT cleared on
+    /// pointer-press — the second click must not erase the first.
+    /// </summary>
+    Vertices,
 }
 
 /// <summary>

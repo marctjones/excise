@@ -21,4 +21,10 @@ public enum PathAnnotationKind
     /// anything distinguishing the two must compare line endings.
     /// </summary>
     Arrow,
+
+    /// <summary>Click-planted vertices -> Polygon (a closed shape).</summary>
+    Polygon,
+
+    /// <summary>Click-planted vertices -> PolyLine (the same path, left open).</summary>
+    PolyLine,
 }

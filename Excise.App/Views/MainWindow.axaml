@@ -181,6 +181,12 @@
                 <MenuItem Header="Draw _Arrow" Command="{Binding ToggleArrowModeCommand}"
                           IsEnabled="{Binding IsDocumentLoaded}"
                           access:CommandAccessibility.CommandId="annotation.toggleArrowMode"/>
+                <MenuItem Header="Draw Pol_ygon" Command="{Binding TogglePolygonModeCommand}"
+                          IsEnabled="{Binding IsDocumentLoaded}"
+                          access:CommandAccessibility.CommandId="annotation.togglePolygonMode"/>
+                <MenuItem Header="Draw Poly_Line" Command="{Binding TogglePolyLineModeCommand}"
+                          IsEnabled="{Binding IsDocumentLoaded}"
+                          access:CommandAccessibility.CommandId="annotation.togglePolyLineMode"/>
 
                 <Separator/>
                 <MenuItem Header="Add _Sticky Note..." Command="{Binding AddStickyNoteAnnotationCommand}"

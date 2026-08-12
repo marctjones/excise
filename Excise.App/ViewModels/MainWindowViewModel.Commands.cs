@@ -20,6 +20,8 @@ public partial class MainWindowViewModel
                 {
                     PathAnnotationKind.Line => "╱ Line Mode",
                     PathAnnotationKind.Arrow => "➤ Arrow Mode",
+                    PathAnnotationKind.Polygon => "⬠ Polygon Mode — click to add points, double-click or Enter to finish",
+                    PathAnnotationKind.PolyLine => "⌇ PolyLine Mode — click to add points, double-click or Enter to finish",
                     _ => "✒ Draw Mode",
                 };
             }
@@ -33,6 +35,8 @@ public partial class MainWindowViewModel
     public ReactiveCommand<Unit, Unit> ToggleFreehandModeCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleLineModeCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleArrowModeCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> TogglePolygonModeCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> TogglePolyLineModeCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> OpenFileCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> SaveFileCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> RemoveCurrentPageCommand { get; private set; } = null!;
@@ -168,6 +172,8 @@ public partial class MainWindowViewModel
         ToggleFreehandModeCommand = ReactiveCommand.Create(() => TogglePathMode(PathAnnotationKind.Ink));
         ToggleLineModeCommand = ReactiveCommand.Create(() => TogglePathMode(PathAnnotationKind.Line));
         ToggleArrowModeCommand = ReactiveCommand.Create(() => TogglePathMode(PathAnnotationKind.Arrow));
+        TogglePolygonModeCommand = ReactiveCommand.Create(() => TogglePathMode(PathAnnotationKind.Polygon));
+        TogglePolyLineModeCommand = ReactiveCommand.Create(() => TogglePathMode(PathAnnotationKind.PolyLine));
         DiscardPendingTypewriterEditsCommand = ReactiveCommand.Create(DiscardPendingTypewriterEdits);
         GoToNextPendingTypewriterEditCommand = ReactiveCommand.Create(GoToNextPendingTypewriterEdit);
         SetTypewriterColorCommand = ReactiveCommand.Create<string>(hex => SetTypewriterColor(hex));
