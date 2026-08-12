@@ -159,7 +159,7 @@ public partial class MainWindowViewModel
     /// <summary>
     /// List of text redaction requests for the current document.
     /// These are applied as a batch when ApplyRedactionsCommand is called.
-    /// Issue #190: Uses file-based TextRedactor API to bypass coordinate conversion issues.
+    /// Issue #190: uses the file-based redaction API to bypass coordinate conversion issues.
     /// </summary>
     private readonly List<string> _pendingTextRedactions = new();
 
@@ -167,7 +167,7 @@ public partial class MainWindowViewModel
     /// Redact all occurrences of the specified text on all pages (for Roslyn scripts).
     /// Usage: <c>await RedactTextCommand("SECRET")</c>
     ///
-    /// Issue #190 FIX: This now uses the file-based TextRedactor API (like CLI) instead
+    /// Issue #190 FIX: this now uses the file-based redaction API (like the CLI) instead
     /// of the coordinate-based workflow. The coordinate conversion was causing failures
     /// on corpus PDFs that work fine with CLI redaction.
     /// </summary>
@@ -188,7 +188,7 @@ public partial class MainWindowViewModel
         }
 
         // Issue #190 FIX: Add to pending text redactions list
-        // These will be applied via TextRedactor.RedactText() API when ApplyRedactions is called
+        // Applied via PdfDocument.RedactText (Excise.Core) when ApplyRedactions is called.
         _pendingTextRedactions.Add(text);
 
         // Also add a placeholder to PendingRedactions for tracking/display purposes.
@@ -213,7 +213,7 @@ public partial class MainWindowViewModel
     /// This modifies the document but does not save it. Use SaveDocumentCommand to save.
     /// Usage: <c>await ApplyRedactionsCommand()</c>
     ///
-    /// Issue #190 FIX: Text redactions now use file-based TextRedactor API.
+    /// Issue #190 FIX: text redactions use the file-based Excise.Core redaction API.
     /// </summary>
     private async Task ApplyRedactionsViaScriptAsync()
     {
@@ -254,7 +254,7 @@ public partial class MainWindowViewModel
             return;
         }
 
-        // Issue #190 FIX: Text redactions use file-based TextRedactor API.
+        // Issue #190 FIX: text redactions use the file-based Excise.Core redaction API.
         // The actual text redaction happens in SaveDocumentViaScriptAsync.
         _logger.LogInformation("[SCRIPT] ApplyRedactionsCommand: {Count} text redactions queued, will be applied on save",
             _pendingTextRedactions.Count);
@@ -274,7 +274,7 @@ public partial class MainWindowViewModel
     /// If redactions are pending, apply them first, then save.
     /// Usage: <c>await SaveDocumentCommand("/path/to/output.pdf")</c>
     ///
-    /// Issue #190 FIX: Text redactions now use file-based TextRedactor API.
+    /// Issue #190 FIX: text redactions use the file-based Excise.Core redaction API.
     /// </summary>
     private async Task SaveDocumentViaScriptAsync(string filePath)
     {

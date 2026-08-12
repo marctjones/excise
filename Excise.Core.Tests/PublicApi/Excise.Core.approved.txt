@@ -1198,49 +1198,6 @@ namespace Excise.Core.Operations
         public static System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfDocument> SplitEveryNPages(Excise.Core.Document.PdfDocument source, int pagesPerChunk) { }
         public static System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfDocument> SplitToSinglePages(Excise.Core.Document.PdfDocument source) { }
     }
-    public class PdfRedaction
-    {
-        public Excise.Core.Operations.PdfRedaction AllText() { }
-        public Excise.Core.Operations.RedactionResult Apply() { }
-        public Excise.Core.Operations.PdfRedaction Area(Excise.Core.Document.PdfRectangle rect) { }
-        public Excise.Core.Operations.PdfRedaction Area(double left, double bottom, double right, double top) { }
-        public Excise.Core.Operations.PdfRedaction BlackMarkers() { }
-        public Excise.Core.Operations.PdfRedaction Category(Excise.Core.Content.OperatorCategory category) { }
-        public Excise.Core.Operations.PdfRedaction Letters(System.Func<Excise.Core.Text.Letter, bool> predicate) { }
-        public Excise.Core.Operations.PdfRedaction MarkerColor(double r, double g, double b) { }
-        public Excise.Core.Operations.PdfRedaction Text(string searchText) { }
-        public Excise.Core.Operations.PdfRedaction WhiteMarkers() { }
-        public Excise.Core.Operations.PdfRedaction WithMarkers(bool draw = true) { }
-        public static Excise.Core.Operations.PdfRedaction OnPage(Excise.Core.Document.PdfPage page) { }
-    }
-    public class RedactionResult
-    {
-        public RedactionResult() { }
-        public bool AllTextRemoved { get; set; }
-        public int AreasRedacted { get; set; }
-        public int CategoriesRemoved { get; set; }
-        public int LettersRedacted { get; set; }
-        public int OperatorsRemoved { get; set; }
-        public int TextOccurrencesRedacted { get; set; }
-        public bool WasRedacted { get; }
-        public override string ToString() { }
-    }
-    public class TextRedactor
-    {
-        public TextRedactor() { }
-        public void RedactArea(Excise.Core.Document.PdfPage page, Excise.Core.Document.PdfRectangle area, bool drawMarker = true, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
-                "R",
-                "G",
-                "B"})] System.ValueTuple<double, double, double>? markerColor = default) { }
-        public int RedactLetters(Excise.Core.Document.PdfPage page, System.Func<Excise.Core.Text.Letter, bool> letterPredicate, bool drawMarker = true, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
-                "R",
-                "G",
-                "B"})] System.ValueTuple<double, double, double>? markerColor = default) { }
-        public int RedactText(Excise.Core.Document.PdfPage page, string searchText, bool drawMarker = true, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
-                "R",
-                "G",
-                "B"})] System.ValueTuple<double, double, double>? markerColor = default) { }
-    }
 }
 namespace Excise.Core.Parsing
 {

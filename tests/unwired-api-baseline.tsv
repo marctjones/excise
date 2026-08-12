@@ -20,7 +20,6 @@ Excise.Core	nowhere	Failures
 Excise.Core	nowhere	SetCreator
 Excise.Core	tests-only	AsItalic
 Excise.Core	tests-only	BeginPath
-Excise.Core	tests-only	BlackMarkers
 Excise.Core	tests-only	BulletList
 Excise.Core	tests-only	CffSubsetter
 Excise.Core	tests-only	CloseAndStroke
@@ -60,15 +59,14 @@ Excise.Core	tests-only	IsPartialOverlap
 Excise.Core	tests-only	IsPushButton
 Excise.Core	tests-only	IsRadioButton
 Excise.Core	tests-only	IsTaggedPdf
-Excise.Core	tests-only	MarkerColor
 Excise.Core	tests-only	NamedActionName
 Excise.Core	tests-only	NextActions
 Excise.Core	tests-only	NumberedList
 Excise.Core	tests-only	PageBreak
 Excise.Core	tests-only	PathOperators
 Excise.Core	tests-only	Portrait
-Excise.Core	tests-only	RedactLetters
 Excise.Core	tests-only	RedactWithBlackMarker
+Excise.Core	tests-only	RemoveCategory
 Excise.Core	tests-only	RemoveContainedIn
 Excise.Core	tests-only	ScrubInfoKeys
 Excise.Core	tests-only	SetAnnotationColor
@@ -90,11 +88,8 @@ Excise.Core	tests-only	ToIntArray
 Excise.Core	tests-only	Transition
 Excise.Core	tests-only	TryGetString
 Excise.Core	tests-only	WasHexString
-Excise.Core	tests-only	WasRedacted
-Excise.Core	tests-only	WhiteMarkers
 Excise.Core	tests-only	WithAlignment
 Excise.Core	tests-only	WithColor
-Excise.Core	tests-only	WithMarkers
 Excise.Core	tests-only	WithName
 Excise.Core	tests-only	XObjectOperators
 Excise.Rendering	nowhere	CurrentMemoryUsage
