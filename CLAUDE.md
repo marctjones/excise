@@ -1130,10 +1130,22 @@ every session (1.4s per edit, 2.79x file growth on save, 7-10s redactions) insid
 Do not hard-code the list here — it has now gone stale twice. Query it live:
 `gh api repos/marctjones/excise/milestones --jq '.[] | "\(.number)\t\(.title)"'`.
 
-Two orderings worth knowing without looking: milestone 1 is daily-use friction
-and milestone 2 is redaction trust, and they are coupled — redaction completeness
-is bounded by extraction coverage, so #899 (letter positions wrong on 22% of
-multi-column pages) sits in 1 but is also the largest untracked dependency of 2.
+One ordering worth knowing without looking: milestone 1 is daily-use friction,
+milestone 2 is redaction trust.
+
+⚠️ An earlier version of this line said the two were coupled through #899 —
+"redaction completeness is bounded by extraction coverage, so #899 is also the
+largest untracked dependency of milestone 2". **That was wrong, and #899 itself
+says so.** The general rule (redaction cannot remove what extraction cannot
+read) is real and is documented under Limitations, but #899 is NOT an instance
+of it: its letter stream is COMPLETE (3107 alnum chars on the worst page vs
+mutool's 2945), the loss happens later when letters are assembled into a string,
+and `RedactText` matches through the letter/search path rather than `page.Text`.
+The issue verified this directly — redacting `1095-A` removed 9 of 9,
+mutool-confirmed, including the page whose text output cannot see the string.
+
+The lesson is the one #936 is about: a plausible coupling, asserted from the
+shape of two issues rather than read from the evidence already in them.
 
 View all: `gh issue list --label "priority: high,priority: critical"`
 
