@@ -6,6 +6,8 @@ semantic versioning.
 
 ## [Unreleased]
 
+## [3.8.0] - 2026-08-12
+
 One theme: **annotations, finished and independently verified.** The app could
 author 2 of the 15 annotation types its own engine supported; it now authors all
 15, and — more to the point — the suite can now tell when one of them is wrong.
