@@ -43,6 +43,9 @@ public static class PdfCommandIds
 
     /// <summary>Image stamp — a Stamp whose appearance is a chosen picture (#934).</summary>
     public const string AddImageStamp = "annotation.addImageStamp";
+
+    /// <summary>Toggle free-form drawing; a finished stroke becomes an Ink annotation (#934).</summary>
+    public const string ToggleDrawMode = "annotation.toggleDrawMode";
     public const string AddStickyNote = "annotation.addStickyNote";
 
     public const string AddPages = "document.addPages";

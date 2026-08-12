@@ -197,6 +197,7 @@ namespace Excise.Core.Automation
         public const string SplitDocument = "document.split";
         public const string ToggleClipboardHistory = "view.toggleClipboardHistory";
         public const string ToggleContinuousView = "view.toggleContinuous";
+        public const string ToggleDrawMode = "annotation.toggleDrawMode";
         public const string ToggleFormAuthoring = "form.toggleAuthoring";
         public const string ToggleOutline = "view.toggleOutline";
         public const string ToggleRedactionMode = "redaction.toggleMode";

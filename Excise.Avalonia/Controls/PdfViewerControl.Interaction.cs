@@ -62,7 +62,11 @@ public partial class PdfViewerControl
         _dragStart = point;
         _isDragging = true;
 
-        if (InteractionMode == InteractionMode.TextSelection)
+        if (InteractionMode == InteractionMode.PathAnnotation)
+        {
+            BeginFreehandStroke(point);
+        }
+        else if (InteractionMode == InteractionMode.TextSelection)
         {
             if (ViewMode == PdfViewMode.Continuous)
             {
@@ -124,6 +128,10 @@ public partial class PdfViewerControl
         else if (InteractionMode == InteractionMode.Typewriter)
         {
             DrawTemporaryTypewriterRectangle(_dragStart, currentPoint);
+        }
+        else if (InteractionMode == InteractionMode.PathAnnotation)
+        {
+            ExtendFreehandStroke(currentPoint);
         }
         else if (InteractionMode == InteractionMode.TextSelection && ViewMode == PdfViewMode.Continuous)
         {
@@ -187,6 +195,11 @@ public partial class PdfViewerControl
                 FormFieldRectDrawn?.Invoke(this,
                     new FormFieldRectDrawnEventArgs(pdfRect, CurrentPage));
             }
+        }
+        else if (InteractionMode == InteractionMode.PathAnnotation)
+        {
+            ExtendFreehandStroke(GetPressPoint(e));
+            EndFreehandStroke();
         }
         else if (InteractionMode == InteractionMode.Typewriter)
         {
@@ -634,7 +647,121 @@ public partial class PdfViewerControl
         {
             _tempTypewriterRect.IsVisible = false;
         }
+
+        if (_tempFreehandPath != null)
+        {
+            _tempFreehandPath.IsVisible = false;
+        }
     }
+
+
+    #region Freehand path capture (#934 D)
+
+    /// <summary>
+    /// The stroke being drawn, in the same pre-zoom DIP space
+    /// <see cref="GetPressPoint"/> returns. Converted to content points once,
+    /// on release — converting per sample would multiply any mapper cost by
+    /// the sample count for no benefit.
+    /// </summary>
+    private readonly List<Point> _freehandDips = new();
+    private Polyline? _tempFreehandPath;
+
+    /// <summary>
+    /// Minimum pointer travel, in DIPs, before a sample is kept. Without this
+    /// a slow drag emits a sample per compositor frame and an `/InkList` runs
+    /// to thousands of near-identical points — a real file-size and
+    /// render-cost problem, not a tidiness one.
+    /// </summary>
+    private const double FreehandMinSampleDistance = 2.0;
+
+    private void BeginFreehandStroke(Point start)
+    {
+        _freehandDips.Clear();
+        _freehandDips.Add(start);
+        DrawTemporaryFreehandPath();
+    }
+
+    private void ExtendFreehandStroke(Point point)
+    {
+        if (_freehandDips.Count == 0)
+        {
+            _freehandDips.Add(point);
+            return;
+        }
+
+        var last = _freehandDips[^1];
+        var dx = point.X - last.X;
+        var dy = point.Y - last.Y;
+        if ((dx * dx) + (dy * dy) < FreehandMinSampleDistance * FreehandMinSampleDistance)
+            return;
+
+        _freehandDips.Add(point);
+        DrawTemporaryFreehandPath();
+    }
+
+    private void EndFreehandStroke()
+    {
+        var dips = _freehandDips.ToList();
+        _freehandDips.Clear();
+        ClearTemporaryDrawings();
+
+        // A click is not a stroke. Core rejects a stroke of fewer than two
+        // points outright, so filtering here is what keeps a stray click from
+        // surfacing as an exception dialog.
+        if (dips.Count < 2 || Document == null)
+            return;
+
+        var pageNumber = CurrentPage;
+        if (pageNumber < 1 || pageNumber > Document.PageCount)
+            return;
+
+        var page = Document.GetPage(pageNumber);
+        var stroke = dips.Select(d => ToContentPoint(page, d, pageNumber)).ToList();
+
+        AnnotationPathDrawn?.Invoke(this, new AnnotationPathDrawnEventArgs(
+            new List<IReadOnlyList<(double X, double Y)>> { stroke }, pageNumber));
+    }
+
+    /// <summary>
+    /// One captured pointer sample, in PDF content coordinates.
+    ///
+    /// A point is a zero-size rectangle, so this runs through the SAME
+    /// <see cref="PdfCoordinateMapper"/> path the redaction and form-authoring
+    /// drags use rather than repeating the DIP→content arithmetic. That
+    /// matters most for `/Rotate 90` pages, where a second implementation is
+    /// exactly where the two would drift apart. `ToContentPoints` normalizes,
+    /// and a zero-size rect normalizes to itself, so Left/Bottom IS the point.
+    /// </summary>
+    private (double X, double Y) ToContentPoint(PdfPage page, Point dip, int pageNumber)
+    {
+        var r = PdfCoordinateMapper
+            .ToContentPoints(page, ViewerDipsRect(new Rect(dip.X, dip.Y, 0, 0), pageNumber))
+            .ToPdfRectangle();
+        return (r.Left, r.Bottom);
+    }
+
+    private void DrawTemporaryFreehandPath()
+    {
+        if (_interactionLayer == null) return;
+
+        if (_tempFreehandPath == null)
+        {
+            _tempFreehandPath = new Polyline
+            {
+                Stroke = Brushes.Red,
+                StrokeThickness = 2,
+                StrokeJoin = PenLineJoin.Round,
+                StrokeLineCap = PenLineCap.Round,
+                IsHitTestVisible = false,
+            };
+            _interactionLayer.Children.Add(_tempFreehandPath);
+        }
+
+        _tempFreehandPath.Points = new Points(_freehandDips);
+        _tempFreehandPath.IsVisible = true;
+    }
+
+    #endregion
 
     #endregion
 }

@@ -14,6 +14,7 @@ public partial class MainWindowViewModel
         {
             if (IsRedactionMode) return "Redaction Mode";
             if (IsTypewriterMode) return "✎ Typewriter Mode";
+            if (IsFreehandMode) return "✒ Draw Mode";
             // #831: text selection is the resting default, not a special mode, so
             // it is no longer announced here — the view mode is more informative.
             if (IsContinuousView) return "Continuous Scroll";
@@ -21,6 +22,7 @@ public partial class MainWindowViewModel
         }
     }
 
+    public ReactiveCommand<Unit, Unit> ToggleFreehandModeCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> OpenFileCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> SaveFileCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> RemoveCurrentPageCommand { get; private set; } = null!;
@@ -151,6 +153,18 @@ public partial class MainWindowViewModel
             IsFormAuthoringMode = !IsFormAuthoringMode;
         });
         ToggleTypewriterModeCommand = ReactiveCommand.Create(ToggleTypewriterMode);
+        // #934 D: drawing ink is annotating — /P bit 6, same gate the other
+        // annotation commands use. Blocked on entering; leaving is free.
+        ToggleFreehandModeCommand = ReactiveCommand.Create(() =>
+        {
+            if (!IsFreehandMode && !EnsureDocumentPermission(p => p.CanAnnotate,
+                "Draw mode", "adding or modifying annotations (/P bit 6)"))
+            {
+                return;
+            }
+
+            IsFreehandMode = !IsFreehandMode;
+        });
         DiscardPendingTypewriterEditsCommand = ReactiveCommand.Create(DiscardPendingTypewriterEdits);
         GoToNextPendingTypewriterEditCommand = ReactiveCommand.Create(GoToNextPendingTypewriterEdit);
         SetTypewriterColorCommand = ReactiveCommand.Create<string>(hex => SetTypewriterColor(hex));

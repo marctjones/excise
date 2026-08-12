@@ -818,6 +818,15 @@ public partial class MainWindow : Window
         viewModel.OnFormFieldRectDrawn(e.Rect, e.PageNumber);
     }
 
+    /// <summary>
+    /// User finished a free-form stroke in draw mode — it becomes Ink (#934 D).
+    /// </summary>
+    private async void OnAnnotationPathDrawn(object? sender, AnnotationPathDrawnEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel viewModel) return;
+        await viewModel.OnAnnotationPathDrawnAsync(e.Strokes, e.PageNumber);
+    }
+
     private void OnTypewriterTextCreated(object? sender, TypewriterTextCreatedEventArgs e)
     {
         if (DataContext is not MainWindowViewModel viewModel) return;

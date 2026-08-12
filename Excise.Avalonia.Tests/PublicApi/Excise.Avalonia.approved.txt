@@ -1,5 +1,16 @@
 namespace Excise.Avalonia.Controls
 {
+    public class AnnotationPathDrawnEventArgs : System.EventArgs
+    {
+        public AnnotationPathDrawnEventArgs([System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "X",
+                "Y"})] System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<System.ValueTuple<double, double>>> strokes, int pageNumber) { }
+        public int PageNumber { get; }
+        [System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "X",
+                "Y"})]
+        public System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<System.ValueTuple<double, double>>> Strokes { get; }
+    }
     public class DangerousLinkClickedEventArgs : System.EventArgs
     {
         public DangerousLinkClickedEventArgs(string actionType) { }
@@ -45,6 +56,7 @@ namespace Excise.Avalonia.Controls
         Pan = 3,
         FormAuthoring = 4,
         Typewriter = 5,
+        PathAnnotation = 6,
     }
     public class LinkClickedEventArgs : System.EventArgs
     {
@@ -113,6 +125,7 @@ namespace Excise.Avalonia.Controls
         public Excise.Avalonia.Controls.PdfViewMode ViewMode { get; set; }
         public Excise.Avalonia.Services.WhitespaceMode WhitespaceMode { get; set; }
         public double ZoomLevel { get; set; }
+        public event System.EventHandler<Excise.Avalonia.Controls.AnnotationPathDrawnEventArgs>? AnnotationPathDrawn;
         public event System.EventHandler<Excise.Avalonia.Controls.DangerousLinkClickedEventArgs>? DangerousLinkClicked;
         public event System.EventHandler<Excise.Avalonia.Controls.ExternalLinkClickedEventArgs>? ExternalLinkClicked;
         public event System.EventHandler<Excise.Avalonia.Controls.FormFieldEditedEventArgs>? FormFieldEdited;
