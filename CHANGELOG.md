@@ -65,6 +65,29 @@ dictionary, so shifting every written `/Rect` by 50pt passed cleanly. An
 external tool checking excise against excise's own expectation is not an
 independent check — what it is compared *to* has to be independent as well.
 
+### Known limitations
+Every limitation listed under 3.7.0 is still true and still tracked; none of
+them were the subject of this release. Two are worth restating because this
+release touched their surface:
+
+- **The corpus gate still judges annotations by a single most-inked oracle**
+  (#932, #907) — so ~21 pages remain pinned as excise defects for *agreeing with
+  the majority of renderers*. §12.5.5 makes appearance synthesis optional, and
+  the oracles genuinely disagree in both directions: mutool draws Redact, Sound
+  and FileAttachment and not Line, Ink or PolyLine; pdftocairo does the reverse.
+  The structural verification added above is the answer to the half of this
+  where no correct picture exists — it is **not** a fix for the scoring, and the
+  manifests still carry those known-wrong expectations.
+- **A document is still opened twice** (#917) — every annotation type added this
+  release has to write itself to both the save document and the viewer document
+  by hand, or the saved file is correct while the screen never changes. Each one
+  is covered by a test that asserts the viewer document *before* saving, because
+  that is the defect this arrangement produces and it is invisible to any test
+  that only checks the file.
+
+Not yet verified: that a synthesised `/AP` bounding box lies within its
+annotation's `/Rect` (#933).
+
 ## [3.7.0] - 2026-08-11
 
 Two themes. The first is the continuation of 3.6.0's corpus work — renderer and
