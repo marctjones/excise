@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using AwesomeAssertions;
-using Excise.Avalonia.Services;
 using Excise.Core.Document;
 using Excise.Core.Text;
 using Xunit;

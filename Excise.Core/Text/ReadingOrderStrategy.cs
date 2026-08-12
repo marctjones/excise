@@ -1,4 +1,4 @@
-namespace Excise.Avalonia.Services;
+namespace Excise.Core.Text;
 
 /// <summary>
 /// How <see cref="TextSelectionEngine.SortReadingOrder(System.Collections.Generic.IEnumerable{Excise.Core.Text.Letter}, ReadingOrderStrategy)"/>

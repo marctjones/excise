@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using AwesomeAssertions;
-using Excise.Avalonia.Services;
 using Excise.Core.Document;
 using Excise.Core.Text;
 using Xunit;

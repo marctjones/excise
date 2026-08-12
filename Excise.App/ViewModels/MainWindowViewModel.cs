@@ -74,10 +74,10 @@ public partial class MainWindowViewModel : ViewModelBase
     private int _currentPageIndex;
     private PdfViewMode _viewMode = PdfViewMode.Continuous;
     private bool _continuousScrollPreference = true;
-    private Excise.Avalonia.Services.ReadingOrderStrategy _readingOrderStrategy =
-        Excise.Avalonia.Services.ReadingOrderStrategy.ColumnAware;
-    private Excise.Avalonia.Services.WhitespaceMode _whitespaceMode =
-        Excise.Avalonia.Services.WhitespaceMode.Smart;
+    private Excise.Core.Text.ReadingOrderStrategy _readingOrderStrategy =
+        Excise.Core.Text.ReadingOrderStrategy.ColumnAware;
+    private Excise.Core.Text.WhitespaceMode _whitespaceMode =
+        Excise.Core.Text.WhitespaceMode.Smart;
     private double _zoomLevel = 1.0;
     private bool _skipZoomSave; // Flag to skip zoom save during auto-reset
     private bool _isRedactionMode;
@@ -316,16 +316,16 @@ public partial class MainWindowViewModel : ViewModelBase
     /// Reading-order strategy for text selection/copy (#774), bound two-way to
     /// the viewer control's <c>ReadingOrderStrategy</c>. Persisted with the
     /// window settings via <see cref="ApplyReadingOrderStrategyPreference"/>.
-    /// Default is <see cref="Excise.Avalonia.Services.ReadingOrderStrategy.ColumnAware"/>.
+    /// Default is <see cref="Excise.Core.Text.ReadingOrderStrategy.ColumnAware"/>.
     /// </summary>
-    public Excise.Avalonia.Services.ReadingOrderStrategy ReadingOrderStrategy
+    public Excise.Core.Text.ReadingOrderStrategy ReadingOrderStrategy
     {
         get => _readingOrderStrategy;
         set => this.RaiseAndSetIfChanged(ref _readingOrderStrategy, value);
     }
 
     /// <summary>Apply a persisted reading-order strategy on startup (#774).</summary>
-    public void ApplyReadingOrderStrategyPreference(Excise.Avalonia.Services.ReadingOrderStrategy strategy)
+    public void ApplyReadingOrderStrategyPreference(Excise.Core.Text.ReadingOrderStrategy strategy)
     {
         ReadingOrderStrategy = strategy;
     }
@@ -333,16 +333,16 @@ public partial class MainWindowViewModel : ViewModelBase
     /// <summary>
     /// Copied-text whitespace mode, bound two-way to the viewer control's
     /// <c>WhitespaceMode</c>. Persisted with the window settings. Default is
-    /// paragraph/list-aware <see cref="Excise.Avalonia.Services.WhitespaceMode.Smart"/>.
+    /// paragraph/list-aware <see cref="Excise.Core.Text.WhitespaceMode.Smart"/>.
     /// </summary>
-    public Excise.Avalonia.Services.WhitespaceMode WhitespaceMode
+    public Excise.Core.Text.WhitespaceMode WhitespaceMode
     {
         get => _whitespaceMode;
         set => this.RaiseAndSetIfChanged(ref _whitespaceMode, value);
     }
 
     /// <summary>Apply a persisted whitespace mode on startup.</summary>
-    public void ApplyWhitespaceModePreference(Excise.Avalonia.Services.WhitespaceMode mode)
+    public void ApplyWhitespaceModePreference(Excise.Core.Text.WhitespaceMode mode)
     {
         WhitespaceMode = mode;
     }

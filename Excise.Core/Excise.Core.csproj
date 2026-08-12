@@ -41,6 +41,19 @@
     <InternalsVisibleTo Include="Excise.RenderTools" />
     <InternalsVisibleTo Include="Excise.Rendering" />
     <InternalsVisibleTo Include="Excise.Rendering.Tests" />
+    <!--
+      #938: the text-assembly engine (reading order, geometric whitespace,
+      dehyphenation) moved down from Excise.Avalonia into Excise.Core so that
+      Core's own PdfPage.Text could use it. The viewer still needs the same
+      internals it always did — selection building, column-gap estimation —
+      so it joins the friend list rather than those internals becoming public
+      API purely to satisfy a project boundary. Same treatment Excise.Rendering
+      already gets.
+    -->
+    <InternalsVisibleTo Include="Excise.Avalonia" />
+    <InternalsVisibleTo Include="Excise.Avalonia.Tests" />
+    <InternalsVisibleTo Include="Excise.App" />
+    <InternalsVisibleTo Include="Excise.App.Tests" />
   </ItemGroup>
 
 </Project>

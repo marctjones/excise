@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Text;
 using AwesomeAssertions;
-using Excise.Avalonia.Services;
+using Excise.Core.Text;
 using Excise.Core.Document;
 using Xunit;
 

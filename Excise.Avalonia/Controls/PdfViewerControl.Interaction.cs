@@ -7,7 +7,6 @@ using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Media;
-using Excise.Avalonia.Services;
 using Excise.Core.Document;
 using Excise.Core.Text;
 
@@ -574,7 +573,7 @@ public partial class PdfViewerControl
         {
             // #833: widen degenerate ~0-width glyphs to their advance so the
             // highlight is visible on fonts that report no glyph width.
-            var glyph = Services.TextSelectionEngine.EffectiveHighlightRect(letters, i);
+            var glyph = TextSelectionEngine.EffectiveHighlightRect(letters, i);
             var r = PdfRectangleToDips(glyph);
             var rect = new Rectangle
             {

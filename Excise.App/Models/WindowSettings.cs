@@ -29,14 +29,14 @@ public class WindowSettings
     /// <summary>
     /// Text-selection reading-order strategy (#774). Persisted as a string so
     /// the source-generated JSON stays simple; parsed back to
-    /// <see cref="Excise.Avalonia.Services.ReadingOrderStrategy"/> on load.
+    /// <see cref="Excise.Core.Text.ReadingOrderStrategy"/> on load.
     /// Defaults to the highest-quality multi-column behaviour.
     /// </summary>
     public string ReadingOrderStrategy { get; set; } = "ColumnAware";
 
     /// <summary>
     /// Copied-text whitespace mode. Persisted as a string; parsed back to
-    /// <see cref="Excise.Avalonia.Services.WhitespaceMode"/> on load. Defaults to
+    /// <see cref="Excise.Core.Text.WhitespaceMode"/> on load. Defaults to
     /// paragraph/list-aware <c>Smart</c>.
     /// </summary>
     public string WhitespaceMode { get; set; } = "Smart";

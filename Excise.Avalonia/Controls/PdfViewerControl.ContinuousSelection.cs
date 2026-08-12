@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
 using Avalonia.Input;
-using Excise.Avalonia.Services;
 using Excise.Core.Document;
 using Excise.Core.Text;
 

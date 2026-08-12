@@ -1,10 +1,9 @@
 using Excise.Core.Document;
-using Excise.Core.Text;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Excise.Avalonia.Services;
+namespace Excise.Core.Text;
 
 /// <summary>
 /// Pure-logic letter hit-testing and reading-order range computation

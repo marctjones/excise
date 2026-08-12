@@ -115,10 +115,10 @@ public partial class MainWindow : Window
         if (DataContext is MainWindowViewModel viewModel)
         {
             viewModel.ApplyContinuousScrollPreference(_windowSettings.ContinuousScrollEnabled);
-            if (Enum.TryParse<Excise.Avalonia.Services.ReadingOrderStrategy>(
+            if (Enum.TryParse<Excise.Core.Text.ReadingOrderStrategy>(
                     _windowSettings.ReadingOrderStrategy, out var strategy))
                 viewModel.ApplyReadingOrderStrategyPreference(strategy);
-            if (Enum.TryParse<Excise.Avalonia.Services.WhitespaceMode>(
+            if (Enum.TryParse<Excise.Core.Text.WhitespaceMode>(
                     _windowSettings.WhitespaceMode, out var whitespaceMode))
                 viewModel.ApplyWhitespaceModePreference(whitespaceMode);
             SchedulePlatformMenuConfigure();

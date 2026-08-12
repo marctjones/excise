@@ -1,4 +1,4 @@
-namespace Excise.Avalonia.Services;
+namespace Excise.Core.Text;
 
 /// <summary>
 /// How <see cref="TextSelectionEngine.JoinText(System.Collections.Generic.IReadOnlyList{Excise.Core.Text.Letter}, WhitespaceMode)"/>

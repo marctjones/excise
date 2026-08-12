@@ -2,7 +2,6 @@ using System.Linq;
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text;
-using Excise.Avalonia.Services;
 using Xunit;
 
 namespace Excise.App.Tests.Unit;
