@@ -132,6 +132,9 @@
                 <MenuItem Header="Add C_ircle From Drag" Command="{Binding AddCircleAnnotationFromDragCommand}"
                           IsEnabled="{Binding IsDocumentLoaded}"
                           access:CommandAccessibility.CommandId="annotation.addCircle"/>
+                <MenuItem Header="Add _Text Box From Drag..." Command="{Binding AddFreeTextAnnotationFromDragCommand}"
+                          IsEnabled="{Binding IsDocumentLoaded}"
+                          access:CommandAccessibility.CommandId="annotation.addFreeText"/>
                 <Separator/>
                 <MenuItem Header="Add _Sticky Note..." Command="{Binding AddStickyNoteAnnotationCommand}"
                           IsEnabled="{Binding IsDocumentLoaded}"

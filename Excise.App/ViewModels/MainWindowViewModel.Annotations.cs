@@ -189,6 +189,61 @@ public partial class MainWindowViewModel
         AddShapeFromDragAsync("Circle", _annotationWorkflow.AddCircle,
             static (d, p, r, c) => d.AddCircleAnnotation(p, r, c));
 
+    /// <summary>
+    /// FreeText from the drag rectangle plus a text prompt (#934 row A).
+    ///
+    /// The cheapest of the remaining subtypes: the rect gesture already exists
+    /// (Square/Circle use it), <c>AddFreeText</c> already exists on the workflow
+    /// service, and the prompt pattern is the one AddStickyNoteAnnotationAsync
+    /// already uses. Unlike a sticky note — which is an ICON at a point and
+    /// falls back to a default rect — a FreeText box IS the dragged region, so
+    /// it requires the drag rather than defaulting.
+    /// </summary>
+    public async Task AddFreeTextAnnotationFromDragAsync(string? contentsOverride = null)
+    {
+        if (!_documentService.IsDocumentLoaded)
+            return;
+
+        // #642: /P bit 6 gates adding or modifying annotations.
+        if (!EnsureDocumentPermission(p => p.CanAnnotate,
+            "Adding a free-text annotation", "adding or modifying annotations (/P bit 6)"))
+        {
+            return;
+        }
+
+        if (!TryGetCurrentShapeContentRect(out var pageNumber, out var contentRect))
+        {
+            await _dialogService.ShowMessageAsync(
+                "Add Text Box",
+                "Drag a box on the page before adding a text box.");
+            return;
+        }
+
+        var contents = contentsOverride
+            ?? await _dialogService.PromptTextAsync("Add Text Box", "Enter text:", string.Empty);
+
+        // A FreeText box with no text is not a useful annotation, and an empty
+        // string is how a cancelled prompt arrives.
+        if (string.IsNullOrWhiteSpace(contents))
+            return;
+
+        var text = contents.Trim();
+        try
+        {
+            var annotation = _annotationWorkflow.AddFreeText(pageNumber, contentRect, text);
+            AddTextMarkupToViewerDocument(pageNumber, contentRect, text,
+                static (d, p, r, c) => d.AddFreeTextAnnotation(p, r, c));
+            await MarkAnnotationChangedAsync("Text box added");
+            RecordAnnotationAdd("Add text box", pageNumber, annotation,
+                () => _annotationWorkflow.AddFreeText(pageNumber, contentRect, text));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error adding free-text annotation");
+            _toastService.ShowError("Failed to add text box", ex.Message);
+        }
+    }
+
     public async Task AddStickyNoteAnnotationAsync(string? contentsOverride = null)
     {
         if (!_documentService.IsDocumentLoaded)

@@ -294,6 +294,66 @@ public class TextMarkupAnnotationCommandTests
         finally { Cleanup(dir); }
     }
 
+    /// <summary>
+    /// FreeText (#934 row A) — drag plus a text prompt. The overload taking
+    /// contents directly is the test seam; the command supplies null and the
+    /// dialog prompts, exactly as the sticky-note path does.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task FreeTextCommand_WithDragAndText_ProducesAFreeTextAnnotationCarryingTheText()
+    {
+        var (source, output, dir) = MakePaths();
+        TestPdfGenerator.CreateSimpleTextPdf(source, "Shape target");
+        try
+        {
+            var vm = new MainWindowViewModel();
+            var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+            window.Show();
+            await vm.LoadDocumentAsync(source);
+
+            DragABox(vm);
+            await vm.AddFreeTextAnnotationFromDragAsync("Reviewer comment");
+
+            await vm.SaveFileAsAsync(output);
+            using var saved = PdfDocument.Open(output);
+            var annots = saved.GetPage(1).GetAnnotations().ToList();
+
+            annots.Should().Contain(a => a.Subtype == PdfAnnotationSubtype.FreeText,
+                "the command must produce a FreeText annotation, not some other subtype");
+            annots.Should().Contain(a => (a.Contents ?? "").Contains("Reviewer comment"),
+                "a text box whose text is lost is not a text box — subtype alone is not enough (#933)");
+        }
+        finally { Cleanup(dir); }
+    }
+
+    /// <summary>
+    /// An empty prompt is how a cancelled dialog arrives. A FreeText box with no
+    /// text is not a useful annotation, so nothing should be added.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task FreeTextWithEmptyText_AddsNothing()
+    {
+        var (source, output, dir) = MakePaths();
+        TestPdfGenerator.CreateSimpleTextPdf(source, "Shape target");
+        try
+        {
+            var vm = new MainWindowViewModel();
+            var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+            window.Show();
+            await vm.LoadDocumentAsync(source);
+
+            DragABox(vm);
+            await vm.AddFreeTextAnnotationFromDragAsync("   ");
+
+            await vm.SaveFileAsAsync(output);
+            using var saved = PdfDocument.Open(output);
+            saved.GetPage(1).GetAnnotations()
+                .Should().NotContain(a => a.Subtype == PdfAnnotationSubtype.FreeText,
+                    "a cancelled or blank prompt must not leave an empty box on the page");
+        }
+        finally { Cleanup(dir); }
+    }
+
     /// <summary>The drag gesture shapes reuse — the redaction box rectangle.</summary>
     private static void DragABox(MainWindowViewModel vm)
     {
