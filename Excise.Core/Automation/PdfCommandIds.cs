@@ -46,6 +46,12 @@ public static class PdfCommandIds
 
     /// <summary>Toggle free-form drawing; a finished stroke becomes an Ink annotation (#934).</summary>
     public const string ToggleDrawMode = "annotation.toggleDrawMode";
+
+    /// <summary>Toggle line-drawing; a drag becomes a Line annotation (#934).</summary>
+    public const string ToggleLineMode = "annotation.toggleLineMode";
+
+    /// <summary>Toggle arrow-drawing; a drag becomes a Line with an arrowhead (#934).</summary>
+    public const string ToggleArrowMode = "annotation.toggleArrowMode";
     public const string AddStickyNote = "annotation.addStickyNote";
 
     public const string AddPages = "document.addPages";

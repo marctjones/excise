@@ -175,6 +175,12 @@
                 <MenuItem Header="_Draw (Ink)" Command="{Binding ToggleFreehandModeCommand}"
                           IsEnabled="{Binding IsDocumentLoaded}"
                           access:CommandAccessibility.CommandId="annotation.toggleDrawMode"/>
+                <MenuItem Header="Draw _Line" Command="{Binding ToggleLineModeCommand}"
+                          IsEnabled="{Binding IsDocumentLoaded}"
+                          access:CommandAccessibility.CommandId="annotation.toggleLineMode"/>
+                <MenuItem Header="Draw _Arrow" Command="{Binding ToggleArrowModeCommand}"
+                          IsEnabled="{Binding IsDocumentLoaded}"
+                          access:CommandAccessibility.CommandId="annotation.toggleArrowMode"/>
 
                 <Separator/>
                 <MenuItem Header="Add _Sticky Note..." Command="{Binding AddStickyNoteAnnotationCommand}"
@@ -1173,6 +1179,7 @@
                                                FormFieldEdited="OnFormFieldEdited"
                                                FormFieldRectDrawn="OnFormFieldRectDrawn"
                                                AnnotationPathDrawn="OnAnnotationPathDrawn"
+                                               PathCaptureKind="{Binding PathCaptureKind}"
                                                TypewriterTextCreated="OnTypewriterTextCreated"
                                                TypewriterTextEdited="OnTypewriterTextEdited"
                                                TypewriterTextBoundsChanged="OnTypewriterTextBoundsChanged"

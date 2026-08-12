@@ -123,6 +123,17 @@ public sealed class PdfAnnotation
     /// <summary>Endpoints (x1, y1, x2, y2) for Line annotations (/L).</summary>
     public (double X1, double Y1, double X2, double Y2)? LineEndpoints { get; }
 
+    /// <summary>
+    /// Line endings (/LE) — the ornament at each end of a Line, e.g.
+    /// <c>(None, ClosedArrow)</c> for an arrow (§12.5.6.7, Table 176).
+    ///
+    /// An ARROW IS NOT A DISTINCT SUBTYPE: it is a Line carrying these. Until
+    /// this was readable, excise could author an arrow and had no way to
+    /// observe that it had — so a command wired to draw arrows but calling the
+    /// plain-line path was indistinguishable from a working one (#934 E).
+    /// </summary>
+    public (string Start, string End)? LineEndings { get; }
+
     // ── Polygon / PolyLine specific (§12.5.6.9) ──────────────────────────────
 
     /// <summary>Vertex points for Polygon and PolyLine annotations (/Vertices).</summary>
@@ -193,6 +204,7 @@ public sealed class PdfAnnotation
         bool isOpen,
         string? iconName,
         (double X1, double Y1, double X2, double Y2)? lineEndpoints,
+        (string Start, string End)? lineEndings,
         IReadOnlyList<(double X, double Y)>? vertices,
         IReadOnlyList<IReadOnlyList<(double X, double Y)>>? inkStrokes,
         string? attachmentFileName,
@@ -219,6 +231,7 @@ public sealed class PdfAnnotation
         IsOpen              = isOpen;
         IconName            = iconName;
         LineEndpoints       = lineEndpoints;
+        LineEndings         = lineEndings;
         Vertices            = vertices;
         InkStrokes          = inkStrokes;
         AttachmentFileName  = attachmentFileName;

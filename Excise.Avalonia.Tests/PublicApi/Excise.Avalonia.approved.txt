@@ -73,6 +73,11 @@ namespace Excise.Avalonia.Controls
         public PageChangedEventArgs(int pageNumber) { }
         public int PageNumber { get; }
     }
+    public enum PathCaptureKind
+    {
+        Freehand = 0,
+        Segment = 1,
+    }
     public sealed class PdfPageSlot : System.ComponentModel.INotifyPropertyChanged
     {
         public Avalonia.Media.Imaging.WriteableBitmap? Bitmap { get; }
@@ -103,6 +108,7 @@ namespace Excise.Avalonia.Controls
         public static readonly Avalonia.StyledProperty<System.Collections.Generic.IEnumerable<Excise.Avalonia.Controls.HiddenTextHighlight>?> HiddenTextHighlightsProperty;
         public static readonly Avalonia.StyledProperty<Excise.Avalonia.Controls.InteractionMode> InteractionModeProperty;
         public static readonly Avalonia.StyledProperty<bool> IsLoadingProperty;
+        public static readonly Avalonia.StyledProperty<Excise.Avalonia.Controls.PathCaptureKind> PathCaptureKindProperty;
         public static readonly Avalonia.StyledProperty<Excise.Avalonia.Services.ReadingOrderStrategy> ReadingOrderStrategyProperty;
         public static readonly Avalonia.StyledProperty<long> RenderVersionProperty;
         public static readonly Avalonia.StyledProperty<System.Collections.Generic.IEnumerable<Excise.Core.Editing.PdfTypewriterTextOperation>?> TypewriterTextOperationsProperty;
@@ -119,6 +125,7 @@ namespace Excise.Avalonia.Controls
         public System.Collections.Generic.IEnumerable<Excise.Avalonia.Controls.HiddenTextHighlight>? HiddenTextHighlights { get; set; }
         public Excise.Avalonia.Controls.InteractionMode InteractionMode { get; set; }
         public bool IsLoading { get; }
+        public Excise.Avalonia.Controls.PathCaptureKind PathCaptureKind { get; set; }
         public Excise.Avalonia.Services.ReadingOrderStrategy ReadingOrderStrategy { get; set; }
         public long RenderVersion { get; set; }
         public System.Collections.Generic.IEnumerable<Excise.Core.Editing.PdfTypewriterTextOperation>? TypewriterTextOperations { get; set; }

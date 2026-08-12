@@ -21,25 +21,26 @@ public partial class MainWindowViewModel
             if (IsTextSelectionMode) return InteractionMode.TextSelection;
             if (IsFormAuthoringMode) return InteractionMode.FormAuthoring;
             if (IsTypewriterMode) return InteractionMode.Typewriter;
-            if (IsFreehandMode) return InteractionMode.PathAnnotation;
+            if (IsPathAnnotationMode) return InteractionMode.PathAnnotation;
             return InteractionMode.None;
         }
     }
 
-    private bool _isFreehandMode;
+    private bool _isPathAnnotationMode;
 
     /// <summary>
-    /// When true, dragging on the page draws a free-form ink stroke (#934 D).
+    /// When true, dragging on the page draws a path that becomes an annotation
+    /// — which annotation is <see cref="PathAnnotationKind"/> (#934 D, E).
     /// Mutually exclusive with the other editing modes, exactly as they are
     /// with each other — two drawing modes live at once would make the drag
     /// gesture ambiguous.
     /// </summary>
-    public bool IsFreehandMode
+    public bool IsPathAnnotationMode
     {
-        get => _isFreehandMode;
+        get => _isPathAnnotationMode;
         set
         {
-            this.RaiseAndSetIfChanged(ref _isFreehandMode, value);
+            this.RaiseAndSetIfChanged(ref _isPathAnnotationMode, value);
             if (value)
             {
                 ViewMode = PdfViewMode.SinglePage;
@@ -57,6 +58,61 @@ public partial class MainWindowViewModel
             this.RaisePropertyChanged(nameof(InteractionMode));
             this.RaisePropertyChanged(nameof(CurrentModeText));
         }
+    }
+
+    private PathAnnotationKind _pathAnnotationKind = PathAnnotationKind.Ink;
+
+    /// <summary>
+    /// Which annotation a drawn path becomes. Selecting the kind is what the
+    /// menu items do; the capture, the coordinate conversion and the event are
+    /// shared between them (#934).
+    /// </summary>
+    public PathAnnotationKind PathAnnotationKind
+    {
+        get => _pathAnnotationKind;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _pathAnnotationKind, value);
+            this.RaisePropertyChanged(nameof(PathCaptureKind));
+            this.RaisePropertyChanged(nameof(CurrentModeText));
+        }
+    }
+
+    /// <summary>
+    /// The gesture the viewer should capture for the selected kind. Ink wants
+    /// every sample; a Line wants only where the drag began and ended.
+    /// </summary>
+    public PathCaptureKind PathCaptureKind => PathAnnotationKind == PathAnnotationKind.Ink
+        ? PathCaptureKind.Freehand
+        : PathCaptureKind.Segment;
+
+    /// <summary>
+    /// Enter path-annotation mode with <paramref name="kind"/> selected, or
+    /// leave it if that kind is already active.
+    ///
+    /// Switching KIND while the mode is on selects the new kind rather than
+    /// switching the mode off — otherwise picking Arrow while Line is active
+    /// would silently drop the user out of drawing entirely.
+    /// </summary>
+    private void TogglePathMode(PathAnnotationKind kind)
+    {
+        // #642: drawing an annotation is annotating — /P bit 6. Gate on
+        // entering; leaving is free.
+        if ((!IsPathAnnotationMode || PathAnnotationKind != kind) &&
+            !EnsureDocumentPermission(p => p.CanAnnotate,
+                "Drawing annotations", "adding or modifying annotations (/P bit 6)"))
+        {
+            return;
+        }
+
+        if (IsPathAnnotationMode && PathAnnotationKind == kind)
+        {
+            IsPathAnnotationMode = false;
+            return;
+        }
+
+        PathAnnotationKind = kind;
+        IsPathAnnotationMode = true;
     }
 
     private bool _isFormAuthoringMode;

@@ -304,6 +304,140 @@ public class PointerInteractionTests : IDisposable
     }
 
     /// <summary>
+    /// A segment gesture is defined by where the drag STARTED and ENDED — the
+    /// wander in between is not part of it. The drag here deliberately detours
+    /// through a decoy point: a capture that kept every sample would emit three
+    /// points and place the line's far end in the wrong place.
+    ///
+    /// Also asserts the Line/Arrow distinction, which the usual distinct-subtype
+    /// guard CANNOT make: an Arrow is a Line carrying /LE [None ClosedArrow].
+    /// </summary>
+    [FixedAvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task SegmentDrag_RealPointer_ProducesALineAtTheDraggedEndpoints(bool arrow)
+    {
+        var path = WriteTempPdf(BuildBarePdf());
+        try
+        {
+            var vm = new MainWindowViewModel();
+            var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+            _windows.Show(window);
+            await Task.Delay(150);
+
+            await vm.LoadDocumentAsync(path);
+            vm.CurrentPageIndex = 0;
+            (arrow ? vm.ToggleArrowModeCommand : vm.ToggleLineModeCommand).Execute().Subscribe();
+            var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
+            viewer.InteractionMode.Should().Be(InteractionMode.PathAnnotation);
+            viewer.PathCaptureKind.Should().Be(PathCaptureKind.Segment,
+                "a line is a two-point gesture, not a freehand stroke");
+            await Settle(window);
+
+            var overlay = FindNamedDescendant<Canvas>(viewer, "OverlayCanvas")!;
+            var page = vm.PdfCoreDocument!.GetPage(1);
+
+            var startContent = (X: 120.0, Y: 600.0);
+            var endContent = (X: 320.0, Y: 650.0);
+            var start = ToWindowPoint(startContent.X, startContent.Y, page, overlay, window);
+            var decoy = ToWindowPoint(200, 520, page, overlay, window);
+            var end = ToWindowPoint(endContent.X, endContent.Y, page, overlay, window);
+
+            AnnotationPathDrawnEventArgs? got = null;
+            viewer.AnnotationPathDrawn += (_, e) => got = e;
+
+            await Dispatcher.UIThread.InvokeAsync(() => window.MouseDown(start, MouseButton.Left));
+            await Task.Delay(30);
+            await Dispatcher.UIThread.InvokeAsync(() => window.MouseMove(decoy));
+            await Task.Delay(30);
+            await Dispatcher.UIThread.InvokeAsync(() => window.MouseMove(end));
+            await Task.Delay(30);
+            await Dispatcher.UIThread.InvokeAsync(() => window.MouseUp(end, MouseButton.Left));
+            for (int i = 0; i < 3; i++) { await Task.Delay(80); window.UpdateLayout(); }
+
+            got.Should().NotBeNull("a segment drag must fire AnnotationPathDrawn");
+            got!.Strokes[0].Should().HaveCount(2,
+                "a segment is exactly two points — the decoy the pointer passed through is not one of them");
+
+            var lines = vm.PdfCoreDocument!.GetPage(1).GetAnnotations()
+                .Where(x => x.Subtype == PdfAnnotationSubtype.Line).ToList();
+            lines.Should().HaveCount(1, "the line must reach the VIEWER document, before any save");
+
+            var (x1, y1, x2, y2) = lines[0].LineEndpoints!.Value;
+            x1.Should().BeApproximately(startContent.X, 12, "start X");
+            y1.Should().BeApproximately(startContent.Y, 12, "start Y");
+            x2.Should().BeApproximately(endContent.X, 12, "end X — not the decoy the drag passed through");
+            y2.Should().BeApproximately(endContent.Y, 12, "end Y");
+
+            var ending = lines[0].LineEndings?.End ?? "None";
+            if (arrow)
+            {
+                ending.Should().Be("ClosedArrow",
+                    "the arrow command must produce an arrowhead — subtype alone cannot tell these apart");
+            }
+            else
+            {
+                ending.Should().NotBe("ClosedArrow",
+                    "the plain-line command must not; wiring both to one handler passes every subtype check");
+            }
+        }
+        finally { TryDelete(path); }
+    }
+
+    /// <summary>
+    /// Switching KIND while already drawing selects the new kind — it must not
+    /// drop the user out of drawing entirely, and the viewer must learn the new
+    /// gesture.
+    ///
+    /// Worth its own test because the mechanism is not obvious: setting
+    /// `IsPathAnnotationMode = true` when it is already true makes
+    /// `RaiseAndSetIfChanged` a no-op, so the new capture kind reaches the
+    /// control only via `PathAnnotationKind`'s own change notification. Every
+    /// other drawing test enters a mode fresh, so nothing else exercises this.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task SwitchingPathKindWhileDrawing_KeepsDrawingAndRetargetsTheGesture()
+    {
+        var path = WriteTempPdf(BuildBarePdf());
+        try
+        {
+            var vm = new MainWindowViewModel();
+            var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+            _windows.Show(window);
+            await Task.Delay(150);
+
+            await vm.LoadDocumentAsync(path);
+            var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
+
+            vm.ToggleFreehandModeCommand.Execute().Subscribe();
+            await Settle(window);
+            viewer.PathCaptureKind.Should().Be(PathCaptureKind.Freehand, "ink is a freehand gesture");
+
+            // Ink -> Line: the mode stays on, the gesture changes.
+            vm.ToggleLineModeCommand.Execute().Subscribe();
+            await Settle(window);
+            vm.IsPathAnnotationMode.Should().BeTrue(
+                "picking another kind selects it — it must not switch drawing off");
+            viewer.InteractionMode.Should().Be(InteractionMode.PathAnnotation);
+            viewer.PathCaptureKind.Should().Be(PathCaptureKind.Segment,
+                "the viewer must learn the new gesture, or a line would be captured as a scribble");
+
+            // Line -> Arrow: same kind of switch, both segment gestures.
+            vm.ToggleArrowModeCommand.Execute().Subscribe();
+            await Settle(window);
+            vm.IsPathAnnotationMode.Should().BeTrue();
+            vm.PathAnnotationKind.Should().Be(PathAnnotationKind.Arrow);
+
+            // Re-picking the ACTIVE kind is what leaves drawing.
+            vm.ToggleArrowModeCommand.Execute().Subscribe();
+            await Settle(window);
+            vm.IsPathAnnotationMode.Should().BeFalse("re-picking the active kind toggles the mode off");
+            viewer.InteractionMode.Should().NotBe(InteractionMode.PathAnnotation);
+        }
+        finally { TryDelete(path); }
+    }
+
+    /// <summary>
     /// Content point -> window point, the INVERSE of the conversion the control
     /// performs. Using the forward mapper here keeps the assertion a genuine
     /// round trip rather than a restatement of the production code.

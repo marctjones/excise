@@ -322,18 +322,52 @@ public partial class MainWindowViewModel
             return;
 
         var payload = (IReadOnlyList<IReadOnlyList<(double X, double Y)>>)usable;
+        var kind = PathAnnotationKind;
         try
         {
-            var annotation = _annotationWorkflow.AddInk(pageNumber, payload);
-            AddInkToViewerDocument(pageNumber, payload);
-            await MarkAnnotationChangedAsync("Ink annotation added");
-            RecordAnnotationAdd("Add ink", pageNumber, annotation,
-                () => _annotationWorkflow.AddInk(pageNumber, payload));
+            // One gesture, one event, three annotations. The dispatch is here
+            // rather than in the viewer so the control stays a capture device
+            // that knows nothing about PDF annotation types.
+            switch (kind)
+            {
+                case PathAnnotationKind.Line:
+                case PathAnnotationKind.Arrow:
+                {
+                    // A segment is its endpoints. Taking first and last (rather
+                    // than assuming exactly two) keeps this correct if the
+                    // capture ever samples the middle of the drag.
+                    var stroke = payload[0];
+                    var start = stroke[0];
+                    var end = stroke[^1];
+                    var isArrow = kind == PathAnnotationKind.Arrow;
+
+                    var annot = isArrow
+                        ? _annotationWorkflow.AddArrow(pageNumber, start, end)
+                        : _annotationWorkflow.AddLine(pageNumber, start, end);
+                    AddSegmentToViewerDocument(pageNumber, start, end, isArrow);
+                    await MarkAnnotationChangedAsync(isArrow ? "Arrow added" : "Line added");
+                    RecordAnnotationAdd(isArrow ? "Add arrow" : "Add line", pageNumber, annot,
+                        () => isArrow
+                            ? _annotationWorkflow.AddArrow(pageNumber, start, end)
+                            : _annotationWorkflow.AddLine(pageNumber, start, end));
+                    break;
+                }
+
+                default:
+                {
+                    var annotation = _annotationWorkflow.AddInk(pageNumber, payload);
+                    AddInkToViewerDocument(pageNumber, payload);
+                    await MarkAnnotationChangedAsync("Ink annotation added");
+                    RecordAnnotationAdd("Add ink", pageNumber, annotation,
+                        () => _annotationWorkflow.AddInk(pageNumber, payload));
+                    break;
+                }
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error adding ink annotation");
-            _toastService.ShowError("Failed to add ink", ex.Message);
+            _logger.LogError(ex, "Error adding {Kind} annotation", kind);
+            _toastService.ShowError($"Failed to add {kind.ToString().ToLowerInvariant()}", ex.Message);
         }
     }
 
@@ -353,6 +387,22 @@ public partial class MainWindowViewModel
             return;
 
         _pdfCoreDocument.AddInkAnnotation(pageNumber, strokes);
+    }
+
+    /// <summary>The #912 viewer mirror for Line and Arrow (#934 E).</summary>
+    private void AddSegmentToViewerDocument(
+        int pageNumber, (double X, double Y) start, (double X, double Y) end, bool isArrow)
+    {
+        var saveDocument = _documentService.GetCurrentDocument();
+        if (_pdfCoreDocument == null || ReferenceEquals(saveDocument, _pdfCoreDocument))
+            return;
+        if (pageNumber < 1 || pageNumber > _pdfCoreDocument.PageCount)
+            return;
+
+        if (isArrow)
+            _pdfCoreDocument.AddArrowAnnotation(pageNumber, start.X, start.Y, end.X, end.Y);
+        else
+            _pdfCoreDocument.AddLineAnnotation(pageNumber, start.X, start.Y, end.X, end.Y);
     }
 
     /// <summary>The stamp names the menu offers — Core's standard set (#934).</summary>

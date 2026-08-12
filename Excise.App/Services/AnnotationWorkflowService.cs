@@ -153,6 +153,45 @@ public sealed class AnnotationWorkflowService
         return annotation;
     }
 
+    /// <summary>
+    /// A straight line between two points (#934 E).
+    /// </summary>
+    public PdfAnnotation AddLine(
+        int pageNumber,
+        (double X, double Y) start,
+        (double X, double Y) end,
+        string? contents = null)
+    {
+        var document = GetLoadedDocument();
+        var annotation = document.AddLineAnnotation(
+            pageNumber, start.X, start.Y, end.X, end.Y, contents);
+
+        _logger.LogInformation("Added line annotation to page {PageNumber}", pageNumber);
+        return annotation;
+    }
+
+    /// <summary>
+    /// A line with an arrowhead at the end point (#934 E).
+    ///
+    /// NOTE: an Arrow is NOT a distinct /Subtype — it is a Line carrying
+    /// /LE [None ClosedArrow]. Anything checking these two apart must compare
+    /// the line endings; a subtype assertion sees one kind and cannot tell a
+    /// mis-wired Arrow command from a working one.
+    /// </summary>
+    public PdfAnnotation AddArrow(
+        int pageNumber,
+        (double X, double Y) start,
+        (double X, double Y) end,
+        string? contents = null)
+    {
+        var document = GetLoadedDocument();
+        var annotation = document.AddArrowAnnotation(
+            pageNumber, start.X, start.Y, end.X, end.Y, contents);
+
+        _logger.LogInformation("Added arrow annotation to page {PageNumber}", pageNumber);
+        return annotation;
+    }
+
     private PdfDocument GetLoadedDocument() =>
         _documentService.GetCurrentDocument()
         ?? throw new InvalidOperationException("No document loaded");

@@ -195,10 +195,12 @@ namespace Excise.Core.Automation
         public const string SelectTextMode = "edit.selectTextMode";
         public const string ShowLetters = "text.letters";
         public const string SplitDocument = "document.split";
+        public const string ToggleArrowMode = "annotation.toggleArrowMode";
         public const string ToggleClipboardHistory = "view.toggleClipboardHistory";
         public const string ToggleContinuousView = "view.toggleContinuous";
         public const string ToggleDrawMode = "annotation.toggleDrawMode";
         public const string ToggleFormAuthoring = "form.toggleAuthoring";
+        public const string ToggleLineMode = "annotation.toggleLineMode";
         public const string ToggleOutline = "view.toggleOutline";
         public const string ToggleRedactionMode = "redaction.toggleMode";
         public const string ToggleThumbnails = "view.toggleThumbnails";
@@ -479,6 +481,10 @@ namespace Excise.Core.Document
         public System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<System.ValueTuple<double, double>>>? InkStrokes { get; }
         public bool IsOpen { get; }
         public bool IsTextMarkup { get; }
+        [System.Runtime.CompilerServices.TupleElementNames(new string?[]?[] {
+                "Start",
+                "End"})]
+        public System.ValueTuple<string, string>? LineEndings { get; }
         [System.Runtime.CompilerServices.TupleElementNames(new string?[]?[] {
                 "X1",
                 "Y1",
