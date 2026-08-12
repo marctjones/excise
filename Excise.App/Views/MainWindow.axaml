@@ -169,6 +169,9 @@
                     <MenuItem Header="Information Only" Command="{Binding AddStampAnnotationFromDragCommand}"
                               CommandParameter="InformationOnly"/>
                 </MenuItem>
+                <MenuItem Header="Add I_mage Stamp From Drag..." Command="{Binding AddImageStampAnnotationFromDragCommand}"
+                          IsEnabled="{Binding IsDocumentLoaded}"
+                          access:CommandAccessibility.CommandId="annotation.addImageStamp"/>
 
                 <Separator/>
                 <MenuItem Header="Add _Sticky Note..." Command="{Binding AddStickyNoteAnnotationCommand}"

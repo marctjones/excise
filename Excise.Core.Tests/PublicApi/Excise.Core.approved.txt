@@ -133,6 +133,7 @@ namespace Excise.Core.Automation
         public const string AddFormField = "form.addField";
         public const string AddFreeText = "annotation.addFreeText";
         public const string AddHighlight = "annotation.addHighlight";
+        public const string AddImageStamp = "annotation.addImageStamp";
         public const string AddPages = "document.addPages";
         public const string AddSquare = "annotation.addSquare";
         public const string AddSquiggly = "annotation.addSquiggly";

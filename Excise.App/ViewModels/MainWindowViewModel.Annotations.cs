@@ -298,6 +298,138 @@ public partial class MainWindowViewModel
     public static IReadOnlyList<string> StandardStampNames =>
         PdfAnnotationAuthoring.StandardStampNames;
 
+    // Test seam mirroring SetRedactedSavePathProviderForTests: headless UI tests
+    // have no desktop lifetime and no interactive picker, so the real command
+    // would bail before the authoring path runs. Every step after path
+    // resolution — decode, author, mirror, record — runs unchanged.
+    private Func<Task<string?>>? _imageStampPathProviderForTests;
+
+    internal void SetImageStampPathProviderForTests(Func<Task<string?>>? provider)
+        => _imageStampPathProviderForTests = provider;
+
+    /// <summary>
+    /// Image stamp from the drag rectangle plus a file picker (#934 row C) —
+    /// signature placement, in practice.
+    ///
+    /// Core takes raw RGB, so the image is decoded here rather than in the
+    /// service: SkiaSharp already ships with the app for rendering, and keeping
+    /// the decode at the UI boundary means Core never grows an image-format
+    /// dependency for an annotation feature.
+    ///
+    /// One-shot picker by design. A persisted stamp library is the obvious next
+    /// want for a signature placed repeatedly, and is deliberately not built
+    /// here — it is storage surface, not wiring.
+    /// </summary>
+    public async Task AddImageStampAnnotationFromDragAsync(string? imagePathOverride = null)
+    {
+        if (!_documentService.IsDocumentLoaded)
+            return;
+
+        // #642: /P bit 6 gates adding or modifying annotations.
+        if (!EnsureDocumentPermission(p => p.CanAnnotate,
+            "Adding an image stamp", "adding or modifying annotations (/P bit 6)"))
+        {
+            return;
+        }
+
+        if (!TryGetCurrentShapeContentRect(out var pageNumber, out var contentRect))
+        {
+            await _dialogService.ShowMessageAsync(
+                "Add Image Stamp",
+                "Drag a box on the page before adding an image stamp.");
+            return;
+        }
+
+        var path = imagePathOverride ?? await ResolveImageStampPathAsync();
+        if (string.IsNullOrWhiteSpace(path))
+            return;                                  // cancelled picker
+
+        try
+        {
+            if (!TryDecodeRgb(path!, out var rgb, out var w, out var h))
+            {
+                await _dialogService.ShowMessageAsync(
+                    "Add Image Stamp",
+                    $"Could not read an image from '{System.IO.Path.GetFileName(path)}'. " +
+                    "Supported formats are the ones the viewer can decode (PNG, JPEG, and similar).");
+                return;
+            }
+
+            var annotation = _annotationWorkflow.AddImageStamp(pageNumber, contentRect, rgb, w, h);
+            AddTextMarkupToViewerDocument(pageNumber, contentRect, string.Empty,
+                (d, p, r, _) => d.AddImageStampAnnotation(p, r, rgb, w, h));
+            await MarkAnnotationChangedAsync("Image stamp added");
+            RecordAnnotationAdd("Add image stamp", pageNumber, annotation,
+                () => _annotationWorkflow.AddImageStamp(pageNumber, contentRect, rgb, w, h));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error adding image stamp annotation");
+            _toastService.ShowError("Failed to add image stamp", ex.Message);
+        }
+    }
+
+    private async Task<string?> ResolveImageStampPathAsync()
+    {
+        if (_imageStampPathProviderForTests != null)
+            return await _imageStampPathProviderForTests();
+
+        var storageProvider = GetStorageProvider();
+        if (storageProvider == null)
+        {
+            _logger.LogWarning("Storage provider unavailable, cannot show the image picker");
+            return null;
+        }
+
+        var files = await storageProvider.OpenFilePickerAsync(new global::Avalonia.Platform.Storage.FilePickerOpenOptions
+        {
+            Title = "Choose a stamp image",
+            AllowMultiple = false,
+            FileTypeFilter = new[]
+            {
+                new global::Avalonia.Platform.Storage.FilePickerFileType("Images")
+                {
+                    Patterns = new[] { "*.png", "*.jpg", "*.jpeg", "*.bmp", "*.gif", "*.webp" }
+                }
+            }
+        });
+
+        return files.Count == 0 ? null : files[0].Path.LocalPath;
+    }
+
+    /// <summary>
+    /// Decode to the tightly-packed 24-bit RGB Core requires. Core validates
+    /// that the buffer is exactly width*height*3 and throws otherwise, so any
+    /// stride or channel-count mistake here surfaces immediately rather than
+    /// producing a corrupt stamp.
+    /// </summary>
+    private static bool TryDecodeRgb(string path, out byte[] rgb, out int width, out int height)
+    {
+        rgb = Array.Empty<byte>();
+        width = height = 0;
+
+        using var bitmap = SkiaSharp.SKBitmap.Decode(path);
+        if (bitmap == null || bitmap.Width <= 0 || bitmap.Height <= 0)
+            return false;
+
+        width = bitmap.Width;
+        height = bitmap.Height;
+        rgb = new byte[(long)width * height * 3];
+
+        var i = 0;
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                var c = bitmap.GetPixel(x, y);
+                rgb[i++] = c.Red;
+                rgb[i++] = c.Green;
+                rgb[i++] = c.Blue;
+            }
+        }
+        return true;
+    }
+
     public async Task AddStickyNoteAnnotationAsync(string? contentsOverride = null)
     {
         if (!_documentService.IsDocumentLoaded)
