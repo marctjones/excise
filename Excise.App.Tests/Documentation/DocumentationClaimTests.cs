@@ -16,7 +16,15 @@ public class DocumentationClaimTests
     [InlineData("Excise.Core/README.md", "AddHighlightAnnotation", "Excise.Core/Document/PdfAnnotationAuthoring.cs", "AddHighlightAnnotation")]
     [InlineData("README.md", "highlight selected text", "Excise.App/ViewModels/MainWindowViewModel.Commands.cs", "AddHighlightAnnotationFromSelectionCommand")]
     [InlineData("README.md", "sticky notes", "Excise.App/ViewModels/MainWindowViewModel.Commands.cs", "AddStickyNoteAnnotationCommand")]
-    [InlineData("README.md", "Annotation review tools", "Excise.App/Views/MainWindow.axaml", "Add _Highlight From Selection")]
+    [InlineData("README.md", "Annotation authoring", "Excise.App/Views/MainWindow.axaml", "Add _Highlight From Selection")]
+    // The 15-type claim is pinned to the LAST type wired up, not the first.
+    // Anchoring it on Highlight would have kept passing through every version
+    // of the README that overstated what the Annotate menu could reach — which
+    // is exactly what happened between #912 and #934, when the README said
+    // "highlight and sticky notes" while the engine supported fifteen.
+    [InlineData("README.md", "15 annotation types", "Excise.App/Views/MainWindow.axaml", "Draw Pol_ygon")]
+    [InlineData("README.md", "image stamp", "Excise.App/ViewModels/MainWindowViewModel.Commands.cs", "AddImageStampAnnotationFromDragCommand")]
+    [InlineData("README.md", "freehand Ink", "Excise.App/ViewModels/MainWindowViewModel.Commands.cs", "ToggleFreehandModeCommand")]
     [InlineData("README.md", "Safe-to-share save path", "Excise.App/Services/RedactedCopySafetyService.cs", "ScrubMetadata(scrubAttachments: options.ScrubAttachments)")]
     [InlineData("README.md", "without repeating removed text", "Excise.App/Services/RedactedCopySafetyService.cs", "Removed text is not repeated")]
     [InlineData("README.md", "OS trust-chain validation limitations", "Excise.App/Services/SignatureVerificationSummaryFormatter.cs", "trust")]

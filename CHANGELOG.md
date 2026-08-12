@@ -6,6 +6,65 @@ semantic versioning.
 
 ## [Unreleased]
 
+One theme: **annotations, finished and independently verified.** The app could
+author 2 of the 15 annotation types its own engine supported; it now authors all
+15, and — more to the point — the suite can now tell when one of them is wrong.
+
+### Added
+- **All 15 annotation types are reachable from the Annotate menu** (#912, #934).
+  Previously Highlight and sticky notes; now text markup from a selection
+  (Highlight, Underline, StrikeOut, Squiggly), sticky notes, shapes from a drag
+  (Square, Circle, FreeText), rubber stamps (all 15 standard names from
+  §12.5.6.12 Table 181, plus an image stamp picked from a file — the usual way a
+  scanned signature or letterhead gets onto a page), and drawn paths (freehand
+  Ink, Line, Arrow, Polygon, PolyLine).
+
+  Drawn paths share **one capture mode**, because they differ only in when the
+  gesture ends: drag for ink, drag-endpoints for lines, and click-per-vertex for
+  polygons — double-click or <kbd>Enter</kbd> to finish, <kbd>Esc</kbd> to
+  abandon, <kbd>Backspace</kbd> to take back a point.
+
+- **`PdfAnnotation.LineEndings`** exposes `/LE`, so an arrow is now readable and
+  not merely writable. An Arrow is not a distinct subtype — it is a `/Line`
+  carrying `/LE [None ClosedArrow]` — and until this existed excise could author
+  one with no way to observe that it had.
+
+- **An independent structural oracle for annotations** (#933) —
+  `QpdfReferenceTool.ListAnnotations` reads the object graph with qpdf's own
+  parser. Every annotation the GUI can author is now confirmed by a parser that
+  is not excise, along with `/InkList` stroke counts, `/Vertices` counts and
+  `/LE`.
+
+  This is the structural half of the rule the redaction work already follows
+  visually (mutool, pdftocairo, Ghostscript). Annotations need it more than most
+  surfaces: ISO 32000-1 §12.5.5 lets a viewer synthesise any appearance it likes
+  for an annotation with no `/AP`, so for much of this surface there is no
+  correct picture to compare against — but there is always a correct object.
+
+### Changed
+- Annotation structural invariants grew from 37 cases to 58 (#933), covering
+  every subtype the authoring API can produce except Stamp and ImageStamp, which
+  are covered by GUI tests instead.
+
+### Notes for anyone reading the tests
+Each type shipped with a test that was **wrong first**, in the same way, and
+mutation testing is the only reason that is known rather than suspected. In
+every case the assertion that passed was not the assertion that checked:
+
+- the image stamp passed with red and blue swapped — *a Stamp exists and the
+  file grew* is true of a picture with the wrong colours;
+- *a non-empty `/InkList`* is true of a reversed stroke and a decimated one;
+- the distinct-subtype guard used by every earlier type is blind to Arrow by
+  construction, since an Arrow **is** a Line;
+- a vertex list that resets on each click still yields a valid shape, just one
+  built from the last click or two.
+
+The qpdf oracle was wrong first too, and in the most instructive way: it
+originally compared qpdf's answer against excise's own report of the same
+dictionary, so shifting every written `/Rect` by 50pt passed cleanly. An
+external tool checking excise against excise's own expectation is not an
+independent check — what it is compared *to* has to be independent as well.
+
 ## [3.7.0] - 2026-08-11
 
 Two themes. The first is the continuation of 3.6.0's corpus work — renderer and
