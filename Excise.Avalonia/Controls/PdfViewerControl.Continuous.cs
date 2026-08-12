@@ -495,6 +495,28 @@ public partial class PdfViewerControl
     /// from the mutation path BEFORE the document swaps, while the current slots
     /// and offset are still valid. No-op outside the continuous view.
     /// </summary>
+    /// <summary>
+    /// Rebuild the continuous page layout because the document's STRUCTURE
+    /// changed (pages added, removed, moved, rotated) while the document
+    /// INSTANCE stayed the same (#917).
+    ///
+    /// Deliberately narrower than a RenderVersion bump. That path also calls
+    /// <see cref="InvalidatePageCache"/>, which disposes the bitmap the
+    /// single-page Image is still displaying and re-renders asynchronously —
+    /// leaving a window where layout touches a disposed bitmap
+    /// (ObjectDisposedException in Image.MeasureOverride, caught by the
+    /// click-safety sweep). Page CONTENT has not changed here, only the page
+    /// order, so the rendered tiles stay valid.
+    /// </summary>
+    public void RefreshContinuousLayout()
+    {
+        if (ViewMode != PdfViewMode.Continuous || Document == null)
+            return;
+
+        RebuildContinuous();
+        RenderVisibleContinuousTiles();
+    }
+
     public void PreserveContinuousReadingPositionOnNextRebuild()
     {
         if (ViewMode != PdfViewMode.Continuous || _continuousScrollViewer == null || _continuousSlots == null)

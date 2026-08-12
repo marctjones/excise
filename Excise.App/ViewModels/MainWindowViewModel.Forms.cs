@@ -229,8 +229,16 @@ public partial class MainWindowViewModel
         {
             var name = NextUniqueFieldName(_pdfCoreDocument, FormAuthoringFieldType);
             AddFormFieldToDocument(_pdfCoreDocument, FormAuthoringFieldType, pageNumber, rect, name);
-            if (_documentService.GetCurrentDocument() is { } serviceDocument)
+            // #917: normally a no-op — the save document IS this document, and
+            // applying the field twice created it twice (caught by three form
+            // tests the moment the two were unified). The guard stays because
+            // the transition is not finished: some paths still hand the viewer
+            // a separate instance.
+            if (_documentService.GetCurrentDocument() is { } serviceDocument
+                && !ReferenceEquals(serviceDocument, _pdfCoreDocument))
+            {
                 AddFormFieldToDocument(serviceDocument, FormAuthoringFieldType, pageNumber, rect, name);
+            }
 
             FileState.FormFieldEditsCount++;
             this.RaisePropertyChanged(nameof(CurrentPageFormFields));
@@ -262,8 +270,13 @@ public partial class MainWindowViewModel
         if (suggestions.Count == 0) return 0;
 
         var count = PdfFormAutoDetector.Apply(_pdfCoreDocument, suggestions);
-        if (count > 0 && _documentService.GetCurrentDocument() is { } serviceDocument)
+        // #917: same guard, same reason — without it every auto-detected field
+        // is applied twice to the one document.
+        if (count > 0 && _documentService.GetCurrentDocument() is { } serviceDocument
+            && !ReferenceEquals(serviceDocument, _pdfCoreDocument))
+        {
             PdfFormAutoDetector.Apply(serviceDocument, suggestions);
+        }
         if (count > 0)
         {
             FileState.FormFieldEditsCount += count;

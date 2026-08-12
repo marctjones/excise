@@ -575,6 +575,53 @@ public class TextMarkupAnnotationCommandTests
     }
 
     /// <summary>
+    /// ONE DOCUMENT, NOT TWO (#917).
+    ///
+    /// The viewer and the save path must be the SAME object. While they were
+    /// two, every mutation had to be mirrored by hand, and forgetting produced
+    /// a correct saved file with an unchanged screen — invisible to any test
+    /// that saves and reopens, which is how it survived #912 and had to be
+    /// re-fixed on every row of #934.
+    ///
+    /// Asserted again AFTER a mutation, because the old re-sync path replaced
+    /// the viewer's document with a freshly reparsed one on every change: a
+    /// check that only ran at load time would pass while the two drifted apart
+    /// on first use. That reparse is also #922's 1401ms.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task ViewerAndSaveDocument_AreTheSameInstance_BeforeAndAfterAMutation()
+    {
+        var (source, _, dir) = MakePaths();
+        TestPdfGenerator.CreateSimpleTextPdf(source, "Clause under review");
+        try
+        {
+            var vm = new MainWindowViewModel();
+            var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+            window.Show();
+            await vm.LoadDocumentAsync(source);
+
+            vm.SaveDocumentForTests.Should().NotBeNull();
+            vm.PdfCoreDocument.Should().BeSameAs(vm.SaveDocumentForTests,
+                "opening the file twice is what made every mutation need a hand-written mirror (#917)");
+
+            var beforeMutation = vm.PdfCoreDocument;
+            DragABox(vm);
+            await vm.AddSquareAnnotationFromDragAsync();
+
+            vm.PdfCoreDocument.Should().BeSameAs(vm.SaveDocumentForTests,
+                "a mutation must not split them apart again");
+            vm.PdfCoreDocument.Should().BeSameAs(beforeMutation,
+                "the per-mutation re-sync used to hand the viewer a NEW reparsed document — " +
+                "that serialize-and-reparse round trip is #922's cost and must not come back");
+
+            vm.PdfCoreDocument!.GetPage(1).GetAnnotations()
+                .Should().Contain(a => a.Subtype == PdfAnnotationSubtype.Square,
+                    "and the change must be visible through the viewer without saving");
+        }
+        finally { Cleanup(dir); }
+    }
+
+    /// <summary>
     /// A point inside the drawn stamp, in rendered pixels at 72 dpi. The drag
     /// box is in viewer DIPs, so this converts through the same page geometry
     /// the renderer uses rather than assuming they coincide.

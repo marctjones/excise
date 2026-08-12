@@ -264,10 +264,15 @@ public partial class MainWindowViewModel
 
         var pageIndex = Math.Clamp(CurrentPageIndex, 0, Math.Max(0, _documentService.PageCount - 1));
 
-        PdfCoreDocument?.Dispose();
         // #643: a preserving save writes encrypted output; reopen it with the
         // password the document was opened with (null = empty password).
-        PdfCoreDocument = PdfDocument.Open(filePath, _documentService.CurrentUserPassword);
+        //
+        // #917/#926: reload through the SERVICE so the reopened document is
+        // byte-backed and the file is not held open — reopening file-backed
+        // here is what made "redact twice into the same path" fail on Windows.
+        // The service disposes its previous instance, so nothing is leaked.
+        _documentService.LoadDocument(filePath, _documentService.CurrentUserPassword);
+        PdfCoreDocument = _documentService.GetCurrentDocument();
         CurrentPageIndex = pageIndex;
         _renderService.ClearCache();
         ResetThumbnailLoadTracking();
