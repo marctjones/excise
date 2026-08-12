@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using System.Text.Json;
 
 namespace Excise.Rendering.Differential;
 
@@ -10,6 +12,21 @@ namespace Excise.Rendering.Differential;
 /// unused by qpdf for this flag). See
 /// <see cref="QpdfReferenceTool.RequiresPassword"/>.
 /// </summary>
+/// <summary>
+/// One annotation as qpdf's independent parser sees it (#933). Rect is
+/// normalized so a comparison never fails merely because the two tools ordered
+/// the corners differently.
+/// </summary>
+public sealed record QpdfAnnotation(
+    string Subtype,
+    double Left,
+    double Bottom,
+    double Right,
+    double Top,
+    int? VertexCount,
+    int? InkStrokeCount,
+    string? EndLineEnding);
+
 public enum QpdfPasswordStatus
 {
     /// <summary>Exit 0: a password, other than as supplied, is required — i.e. the supplied (or absent) password was REJECTED.</summary>
@@ -215,6 +232,101 @@ public static class QpdfReferenceTool
         };
         var result = Run(args, timeoutMs);
         return result?.ExitCode == 0 && System.IO.File.Exists(outputPath);
+    }
+
+    /// <summary>
+    /// Every annotation qpdf's OWN parser finds in the file, with the fields a
+    /// structural check needs (#933).
+    ///
+    /// THE POINT OF THIS METHOD: everything else that verifies an annotation in
+    /// this repo asks excise what excise wrote. That proves the writer and the
+    /// reader agree, which they would even if both were wrong in the same way —
+    /// they share a codebase. qpdf parses the bytes independently, so agreement
+    /// here is evidence about the FILE rather than about excise's internal
+    /// consistency. CLAUDE.md's rule, applied to structure instead of pixels:
+    /// a tool must not be its own oracle for the property it exists to
+    /// guarantee.
+    ///
+    /// Returns null when qpdf is unavailable, times out, or emits JSON this
+    /// cannot read — never an empty list for those cases, because "qpdf found
+    /// no annotations" and "qpdf could not be asked" must not look the same to
+    /// a caller. An empty list means qpdf genuinely found none.
+    /// </summary>
+    public static IReadOnlyList<QpdfAnnotation>? ListAnnotations(
+        string pdfPath, string? password = null, int timeoutMs = 30_000)
+    {
+        // --json=1 is required: the "objects" key qpdf exposes the raw object
+        // graph through is only valid for JSON version 1. Later versions
+        // report pages and acroform but not the annotation dictionaries.
+        var args = new List<string> { "--json=1", "--json-key=objects" };
+        if (!string.IsNullOrEmpty(password)) args.Add($"--password={password}");
+        args.Add(pdfPath);
+
+        var result = Run(args.ToArray(), timeoutMs);
+        if (result == null || result.ExitCode != 0) return null;
+
+        try
+        {
+            using var doc = JsonDocument.Parse(result.Output);
+            if (!doc.RootElement.TryGetProperty("objects", out var objects))
+                return null;
+
+            var found = new List<QpdfAnnotation>();
+            foreach (var entry in objects.EnumerateObject())
+            {
+                if (entry.Value.ValueKind != JsonValueKind.Object) continue;
+                if (!entry.Value.TryGetProperty("/Subtype", out var subtypeEl)) continue;
+
+                // /Type is absent on some conforming annotations, so key off
+                // the presence of /Rect + /Subtype rather than requiring it.
+                if (!entry.Value.TryGetProperty("/Rect", out var rectEl)) continue;
+                if (rectEl.ValueKind != JsonValueKind.Array || rectEl.GetArrayLength() < 4) continue;
+
+                var subtype = (subtypeEl.GetString() ?? "").TrimStart('/');
+                if (subtype.Length == 0) continue;
+
+                var r = new double[4];
+                var ok = true;
+                for (var i = 0; i < 4; i++)
+                {
+                    if (!rectEl[i].TryGetDouble(out r[i])) { ok = false; break; }
+                }
+                if (!ok) continue;
+
+                int? vertexCount = null;
+                if (entry.Value.TryGetProperty("/Vertices", out var vEl) &&
+                    vEl.ValueKind == JsonValueKind.Array)
+                {
+                    vertexCount = vEl.GetArrayLength() / 2;
+                }
+
+                int? inkStrokeCount = null;
+                if (entry.Value.TryGetProperty("/InkList", out var iEl) &&
+                    iEl.ValueKind == JsonValueKind.Array)
+                {
+                    inkStrokeCount = iEl.GetArrayLength();
+                }
+
+                string? lineEnding = null;
+                if (entry.Value.TryGetProperty("/LE", out var leEl) &&
+                    leEl.ValueKind == JsonValueKind.Array && leEl.GetArrayLength() >= 2)
+                {
+                    lineEnding = (leEl[1].GetString() ?? "").TrimStart('/');
+                }
+
+                found.Add(new QpdfAnnotation(
+                    subtype,
+                    Math.Min(r[0], r[2]), Math.Min(r[1], r[3]),
+                    Math.Max(r[0], r[2]), Math.Max(r[1], r[3]),
+                    vertexCount, inkStrokeCount, lineEnding));
+            }
+
+            return found;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
     private static string[] BuildArgs(string command, string pdfPath, string? password)
