@@ -34,6 +34,9 @@ public static class PdfCommandIds
 
     /// <summary>Circle annotation from the drag rectangle (#912).</summary>
     public const string AddCircle = "annotation.addCircle";
+
+    /// <summary>FreeText box from the drag rectangle plus a text prompt (#934).</summary>
+    public const string AddFreeText = "annotation.addFreeText";
     public const string AddStickyNote = "annotation.addStickyNote";
 
     public const string AddPages = "document.addPages";
