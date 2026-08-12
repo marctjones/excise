@@ -689,6 +689,17 @@ public partial class PdfViewerControl
             return;
         }
 
+        // A segment is defined by where the drag STARTED and where it ENDED;
+        // the wander in between is not part of it. Keeping only two points is
+        // the whole of the difference between this gesture and freehand.
+        if (PathCaptureKind == PathCaptureKind.Segment)
+        {
+            if (_freehandDips.Count == 1) _freehandDips.Add(point);
+            else _freehandDips[1] = point;
+            DrawTemporaryFreehandPath();
+            return;
+        }
+
         var last = _freehandDips[^1];
         var dx = point.X - last.X;
         var dy = point.Y - last.Y;

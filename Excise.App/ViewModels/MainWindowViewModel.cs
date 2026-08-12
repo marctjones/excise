@@ -367,7 +367,7 @@ public partial class MainWindowViewModel : ViewModelBase
     /// view, so it neither forces single-page nor blocks restoring continuous.
     /// </summary>
     private bool IsEditingModeActive =>
-        _isRedactionMode || _isFormAuthoringMode || _isTypewriterMode || _isFreehandMode;
+        _isRedactionMode || _isFormAuthoringMode || _isTypewriterMode || _isPathAnnotationMode;
 
     /// <summary>
     /// Re-applies the saved continuous-scroll preference once the last editing mode

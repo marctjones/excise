@@ -69,6 +69,7 @@ internal static class PdfAnnotationParser
 
         // Subtype-specific geometry
         var lineEndpoints = subtype == PdfAnnotationSubtype.Line ? ParseLineEndpoints(doc, annot) : null;
+        var lineEndings = subtype == PdfAnnotationSubtype.Line ? ParseLineEndings(doc, annot) : null;
         var vertices      = (subtype is PdfAnnotationSubtype.Polygon or PdfAnnotationSubtype.PolyLine)
                             ? ParseVertices(doc, annot) : null;
         var inkStrokes    = subtype == PdfAnnotationSubtype.Ink ? ParseInkList(doc, annot) : null;
@@ -99,7 +100,7 @@ internal static class PdfAnnotationParser
             subtype, rect, contents, author,
             modDate, creationDate, color, flags, name,
             quadPoints, destPage, uri, isOpen, iconName,
-            lineEndpoints, vertices, inkStrokes,
+            lineEndpoints, lineEndings, vertices, inkStrokes,
             attachmentFileName, attachmentBytes, attachmentMimeType,
             borderWidth, borderStyle, borderDash,
             hasAppearance,
@@ -130,6 +131,15 @@ internal static class PdfAnnotationParser
         if (annot.GetOptional("L") is not { } lObj) return null;
         if (doc.Resolve(lObj) is not PdfArray arr || arr.Count < 4) return null;
         return (arr.GetNumber(0), arr.GetNumber(1), arr.GetNumber(2), arr.GetNumber(3));
+    }
+
+    private static (string Start, string End)? ParseLineEndings(
+        PdfDocument doc, PdfDictionary annot)
+    {
+        if (annot.GetOptional("LE") is not { } leObj) return null;
+        if (doc.Resolve(leObj) is not PdfArray arr || arr.Count < 2) return null;
+        if (doc.Resolve(arr[0]) is not PdfName start || doc.Resolve(arr[1]) is not PdfName end) return null;
+        return (start.Value, end.Value);
     }
 
     private static IReadOnlyList<(double, double)>? ParseVertices(

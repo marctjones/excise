@@ -41,7 +41,7 @@ public class AnnotationInvariantTests
     public static TheoryData<string> AuthorableSubtypes() => new()
     {
         "Highlight", "Underline", "StrikeOut", "Squiggly",
-        "Square", "Circle", "FreeText", "Text", "Ink",
+        "Square", "Circle", "FreeText", "Text", "Ink", "Line",
     };
 
     private static PdfAnnotation Author(PdfDocument doc, string subtype, PdfRectangle rect, string contents) =>
@@ -56,6 +56,9 @@ public class AnnotationInvariantTests
             "FreeText" => doc.AddFreeTextAnnotation(1, rect, contents),
             "Text" => doc.AddTextAnnotation(1, rect, contents),
             "Ink" => doc.AddInkAnnotation(1, InkStrokesIn(rect), contents),
+            "Line" => doc.AddLineAnnotation(
+                1, rect.Normalize().Left, rect.Normalize().Bottom,
+                rect.Normalize().Right, rect.Normalize().Top, contents),
             _ => throw new ArgumentOutOfRangeException(nameof(subtype), subtype, "not wired into this test"),
         };
 
@@ -243,6 +246,74 @@ public class AnnotationInvariantTests
     }
 
     /// <summary>
+    /// AN ARROW MUST BE DISTINGUISHABLE FROM A LINE — and the usual guard
+    /// cannot do it.
+    ///
+    /// Every other subtype pair in this suite is separated by a distinct-subtype
+    /// assertion, which is how a command wired to the wrong handler gets caught.
+    /// That check is BLIND here by construction: an Arrow is a Line carrying
+    /// /LE [None ClosedArrow] (§12.5.6.7), so an Arrow command silently calling
+    /// the plain-line path produces an annotation of exactly the right subtype.
+    ///
+    /// It is also why /LE had to become readable: excise could author an arrow
+    /// and had no way to observe that it had.
+    /// </summary>
+    [Fact]
+    public void ArrowAndLine_AreDistinguishableByTheirLineEndings()
+    {
+        using var doc = NewDocument();
+        doc.AddLineAnnotation(1, 100, 600, 300, 640, "plain line");
+        doc.AddArrowAnnotation(1, 100, 500, 300, 540, "arrow");
+
+        var annots = doc.GetPage(1).GetAnnotations()
+            .Where(a => a.Subtype == PdfAnnotationSubtype.Line)
+            .ToList();
+        annots.Should().HaveCount(2, "both are /Subtype /Line — that is the point");
+
+        var arrow = annots.Single(a => (a.Contents ?? "").Contains("arrow"));
+        var line = annots.Single(a => (a.Contents ?? "").Contains("plain"));
+
+        arrow.LineEndings.Should().NotBeNull("an arrow must carry /LE");
+        arrow.LineEndings!.Value.End.Should().Be("ClosedArrow",
+            "the arrowhead is the whole difference between an Arrow and a Line");
+
+        (line.LineEndings?.End ?? "None").Should().NotBe("ClosedArrow",
+            "a plain line must NOT sprout an arrowhead — without this assertion, " +
+            "wiring both commands to the arrow path passes every other check here");
+    }
+
+    /// <summary>
+    /// A line's endpoints survive a save, in order. Swapping them flips an
+    /// arrow end-for-end while leaving subtype, /Rect and /LE all correct.
+    /// </summary>
+    [Fact]
+    public void Line_PreservesItsEndpointsInOrderAcrossASave()
+    {
+        var tmp = Path.Combine(Path.GetTempPath(), $"excise-line-{Guid.NewGuid():N}.pdf");
+        try
+        {
+            using (var doc = NewDocument())
+            {
+                doc.AddArrowAnnotation(1, 110, 610, 290, 660, "arrow");
+                doc.Save(tmp);
+            }
+
+            using var reloaded = PdfDocument.Open(tmp);
+            var a = Only(reloaded, "Line");
+
+            a.LineEndpoints.Should().NotBeNull("a Line without /L draws nothing");
+            var (x1, y1, x2, y2) = a.LineEndpoints!.Value;
+            x1.Should().BeApproximately(110, Tolerance, "start X (swapped endpoints reverse the arrow)");
+            y1.Should().BeApproximately(610, Tolerance, "start Y");
+            x2.Should().BeApproximately(290, Tolerance, "end X — the arrowhead end");
+            y2.Should().BeApproximately(660, Tolerance, "end Y");
+
+            a.LineEndings!.Value.End.Should().Be("ClosedArrow", "/LE must survive a save too");
+        }
+        finally { try { File.Delete(tmp); } catch { /* best effort */ } }
+    }
+
+    /// <summary>
     /// Guards the theory data itself. A subtype added to the authoring API but
     /// not to <see cref="AuthorableSubtypes"/> is silently unverified — the
     /// vacuity failure mode that makes corpus-driven tests lie.
@@ -253,14 +324,19 @@ public class AnnotationInvariantTests
         var covered = new HashSet<string>(StringComparer.Ordinal)
         {
             "Highlight", "Underline", "StrikeOut", "Squiggly",
-            "Square", "Circle", "FreeText", "Text", "Ink",
+            "Square", "Circle", "FreeText", "Text", "Ink", "Line",
+            // Arrow is NOT a distinct /Subtype — it is a Line carrying
+            // /LE [None ClosedArrow], so the generic helpers here (which find
+            // an annotation by subtype name) cannot address it. Covered by
+            // ArrowAndLine_AreDistinguishableByTheirLineEndings below.
+            "Arrow",
         };
 
         // Deliberately NOT covered, with reasons — each needs arguments this
         // fixture does not supply (endpoints, vertices, strokes, image data).
         var deferred = new HashSet<string>(StringComparer.Ordinal)
         {
-            "Line", "Arrow", "Polygon", "PolyLine", "Stamp", "ImageStamp",
+            "Polygon", "PolyLine", "Stamp", "ImageStamp",
         };
 
         var authorable = typeof(PdfAnnotationAuthoring)

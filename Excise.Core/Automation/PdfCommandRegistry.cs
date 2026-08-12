@@ -37,6 +37,8 @@ public static class PdfCommandRegistry
         Annotate(PdfCommandIds.AddStamp, "Add Stamp", "Place a standard PDF rubber stamp (Confidential, Draft, Approved, ...) over the region dragged on the page."),
         Annotate(PdfCommandIds.AddImageStamp, "Add Image Stamp", "Place a chosen image — a scanned signature or logo — as a PDF stamp over the region dragged on the page."),
         Annotate(PdfCommandIds.ToggleDrawMode, "Draw (Ink)", "Toggle free-form drawing; each stroke drawn on the page becomes an Ink annotation."),
+        Annotate(PdfCommandIds.ToggleLineMode, "Draw Line", "Toggle line drawing; dragging on the page becomes a straight Line annotation."),
+        Annotate(PdfCommandIds.ToggleArrowMode, "Draw Arrow", "Toggle arrow drawing; dragging on the page becomes a Line annotation with an arrowhead at the end."),
         Annotate(PdfCommandIds.AddStickyNote, "Add Sticky Note", "Create a sticky-note annotation."),
 
         Document(PdfCommandIds.AddPages, "Add Pages", "Append pages from another PDF."),

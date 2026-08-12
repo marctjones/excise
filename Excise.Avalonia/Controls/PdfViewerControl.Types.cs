@@ -228,6 +228,22 @@ public enum PdfViewMode
 }
 
 /// <summary>
+/// How <see cref="InteractionMode.PathAnnotation"/> collects its points.
+///
+/// The capture, the coordinate conversion and the event are shared; only the
+/// TERMINATION RULE differs between an ink stroke, a line and a polygon. This
+/// enum is that rule, which is why those are three annotations and one mode.
+/// </summary>
+public enum PathCaptureKind
+{
+    /// <summary>Pointer-down, sample while moving, pointer-up ends the stroke. Ink.</summary>
+    Freehand,
+
+    /// <summary>Pointer-down and pointer-up are the only two points. Line and Arrow.</summary>
+    Segment,
+}
+
+/// <summary>
 /// Interaction modes for the PDF viewer.
 /// </summary>
 public enum InteractionMode

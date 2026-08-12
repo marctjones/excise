@@ -81,6 +81,19 @@ public partial class PdfViewerControl : UserControl
     }
 
     /// <summary>
+    /// How <see cref="InteractionMode.PathAnnotation"/> collects points —
+    /// a freehand stroke or a two-point segment (#934 D, E).
+    /// </summary>
+    public static readonly StyledProperty<PathCaptureKind> PathCaptureKindProperty =
+        AvaloniaProperty.Register<PdfViewerControl, PathCaptureKind>(nameof(PathCaptureKind));
+
+    public PathCaptureKind PathCaptureKind
+    {
+        get => GetValue(PathCaptureKindProperty);
+        set => SetValue(PathCaptureKindProperty, value);
+    }
+
+    /// <summary>
     /// View mode: <see cref="PdfViewMode.SinglePage"/> (the default — one page at
     /// a time, with all editing/redaction/selection interactions) or
     /// <see cref="PdfViewMode.Continuous"/> (a scrollable reading view of all
