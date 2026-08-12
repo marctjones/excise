@@ -125,6 +125,18 @@ namespace Excise.Rendering.Differential
         public static Excise.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
         public static Excise.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword, string? ownerPassword = null) { }
     }
+    public sealed class QpdfAnnotation : System.IEquatable<Excise.Rendering.Differential.QpdfAnnotation>
+    {
+        public QpdfAnnotation(string Subtype, double Left, double Bottom, double Right, double Top, int? VertexCount, int? InkStrokeCount, string? EndLineEnding) { }
+        public double Bottom { get; init; }
+        public string? EndLineEnding { get; init; }
+        public int? InkStrokeCount { get; init; }
+        public double Left { get; init; }
+        public double Right { get; init; }
+        public string Subtype { get; init; }
+        public double Top { get; init; }
+        public int? VertexCount { get; init; }
+    }
     public enum QpdfPasswordStatus
     {
         PasswordRequired = 0,
@@ -141,6 +153,7 @@ namespace Excise.Rendering.Differential
         public static bool Decrypt(string pdfPath, string outputPath, string? password = null, int timeoutMs = 30000, bool uncompressStreams = false) { }
         public static bool EncryptR4(string inputPath, string outputPath, string userPassword, string ownerPassword, int timeoutMs = 30000) { }
         public static bool? IsEncrypted(string pdfPath, int timeoutMs = 10000) { }
+        public static System.Collections.Generic.IReadOnlyList<Excise.Rendering.Differential.QpdfAnnotation>? ListAnnotations(string pdfPath, string? password = null, int timeoutMs = 30000) { }
         public static int? PageCount(string pdfPath, string? password = null, int timeoutMs = 15000) { }
         public static Excise.Rendering.Differential.QpdfPasswordStatus? RequiresPassword(string pdfPath, string? password = null, int timeoutMs = 10000) { }
         public static string? ShowEncryption(string pdfPath, string? password = null, int timeoutMs = 15000) { }

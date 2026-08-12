@@ -18,10 +18,6 @@ Excise.Avalonia	nowhere	ClearAllOverlays
 Excise.Avalonia	nowhere	ScreenBounds
 Excise.Core	nowhere	Failures
 Excise.Core	nowhere	SetCreator
-Excise.Core	tests-only	AddArrowAnnotation
-Excise.Core	tests-only	AddLineAnnotation
-Excise.Core	tests-only	AddPolyLineAnnotation
-Excise.Core	tests-only	AddPolygonAnnotation
 Excise.Core	tests-only	AsItalic
 Excise.Core	tests-only	BeginPath
 Excise.Core	tests-only	BlackMarkers
@@ -107,6 +103,10 @@ Excise.Rendering	nowhere	GetTotalPoolCount
 Excise.Rendering	nowhere	ResolvedLibraryPath
 Excise.Rendering	nowhere	SKBitmapPool
 Excise.Rendering	tests-only	EncryptR4
+Excise.Rendering	tests-only	EndLineEnding
+Excise.Rendering	tests-only	InkStrokeCount
+Excise.Rendering	tests-only	ListAnnotations
 Excise.Rendering	tests-only	PdftoppmReferenceRenderer
 Excise.Rendering	tests-only	ShowEncryption
 Excise.Rendering	tests-only	TryRenderPageWithOverprintSimulation
+Excise.Rendering	tests-only	VertexCount
