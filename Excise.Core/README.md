@@ -2,7 +2,8 @@
 
 A **pure-managed PDF parser and document model** for .NET — no native dependencies. Open,
 inspect, edit, and save PDF documents; extract text, links, annotations, and form fields;
-create sticky-note/highlight annotations; true glyph-level redaction. Cross-platform,
+author annotations (text markup, shapes, stamps, ink and vertex paths — 15 types across 13
+subtypes); true glyph-level redaction. Cross-platform,
 trim/AOT-friendlier, MIT-licensed.
 
 This is the engine layer. For rendering to bitmaps see
