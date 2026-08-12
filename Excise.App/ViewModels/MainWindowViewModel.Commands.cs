@@ -55,6 +55,7 @@ public partial class MainWindowViewModel
     public ReactiveCommand<Unit, Unit> AddSquareAnnotationFromDragCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> AddCircleAnnotationFromDragCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> AddFreeTextAnnotationFromDragCommand { get; private set; } = null!;
+    public ReactiveCommand<string, Unit> AddStampAnnotationFromDragCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> AddStickyNoteAnnotationCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleOutlineCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleThumbnailsCommand { get; private set; } = null!;
@@ -161,6 +162,7 @@ public partial class MainWindowViewModel
         AddSquareAnnotationFromDragCommand = ReactiveCommand.CreateFromTask(AddSquareAnnotationFromDragAsync);
         AddCircleAnnotationFromDragCommand = ReactiveCommand.CreateFromTask(AddCircleAnnotationFromDragAsync);
         AddFreeTextAnnotationFromDragCommand = ReactiveCommand.CreateFromTask(() => AddFreeTextAnnotationFromDragAsync(null));
+        AddStampAnnotationFromDragCommand = ReactiveCommand.CreateFromTask<string>(AddStampAnnotationFromDragAsync);
         AddStickyNoteAnnotationCommand = ReactiveCommand.CreateFromTask(() => AddStickyNoteAnnotationAsync());
         ToggleOutlineCommand = ReactiveCommand.Create(ToggleOutlineSidebar);
         ToggleThumbnailsCommand = ReactiveCommand.Create(ToggleThumbnailsSidebar);

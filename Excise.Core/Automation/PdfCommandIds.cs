@@ -37,6 +37,9 @@ public static class PdfCommandIds
 
     /// <summary>FreeText box from the drag rectangle plus a text prompt (#934).</summary>
     public const string AddFreeText = "annotation.addFreeText";
+
+    /// <summary>Standard rubber stamp from the drag rectangle; parameter is the stamp name (#934).</summary>
+    public const string AddStamp = "annotation.addStamp";
     public const string AddStickyNote = "annotation.addStickyNote";
 
     public const string AddPages = "document.addPages";

@@ -135,6 +135,41 @@
                 <MenuItem Header="Add _Text Box From Drag..." Command="{Binding AddFreeTextAnnotationFromDragCommand}"
                           IsEnabled="{Binding IsDocumentLoaded}"
                           access:CommandAccessibility.CommandId="annotation.addFreeText"/>
+                <MenuItem Header="Add Stam_p From Drag"
+                          IsEnabled="{Binding IsDocumentLoaded}"
+                          access:CommandAccessibility.CommandId="annotation.addStamp">
+                    <MenuItem Header="Approved" Command="{Binding AddStampAnnotationFromDragCommand}"
+                              CommandParameter="Approved"/>
+                    <MenuItem Header="Experimental" Command="{Binding AddStampAnnotationFromDragCommand}"
+                              CommandParameter="Experimental"/>
+                    <MenuItem Header="Not Approved" Command="{Binding AddStampAnnotationFromDragCommand}"
+                              CommandParameter="NotApproved"/>
+                    <MenuItem Header="As Is" Command="{Binding AddStampAnnotationFromDragCommand}"
+                              CommandParameter="AsIs"/>
+                    <MenuItem Header="Expired" Command="{Binding AddStampAnnotationFromDragCommand}"
+                              CommandParameter="Expired"/>
+                    <MenuItem Header="Not For Public Release" Command="{Binding AddStampAnnotationFromDragCommand}"
+                              CommandParameter="NotForPublicRelease"/>
+                    <MenuItem Header="Confidential" Command="{Binding AddStampAnnotationFromDragCommand}"
+                              CommandParameter="Confidential"/>
+                    <MenuItem Header="Sold" Command="{Binding AddStampAnnotationFromDragCommand}"
+                              CommandParameter="Sold"/>
+                    <MenuItem Header="Departmental" Command="{Binding AddStampAnnotationFromDragCommand}"
+                              CommandParameter="Departmental"/>
+                    <MenuItem Header="Top Secret" Command="{Binding AddStampAnnotationFromDragCommand}"
+                              CommandParameter="TopSecret"/>
+                    <MenuItem Header="Draft" Command="{Binding AddStampAnnotationFromDragCommand}"
+                              CommandParameter="Draft"/>
+                    <MenuItem Header="For Comment" Command="{Binding AddStampAnnotationFromDragCommand}"
+                              CommandParameter="ForComment"/>
+                    <MenuItem Header="Final" Command="{Binding AddStampAnnotationFromDragCommand}"
+                              CommandParameter="Final"/>
+                    <MenuItem Header="For Public Release" Command="{Binding AddStampAnnotationFromDragCommand}"
+                              CommandParameter="ForPublicRelease"/>
+                    <MenuItem Header="Information Only" Command="{Binding AddStampAnnotationFromDragCommand}"
+                              CommandParameter="InformationOnly"/>
+                </MenuItem>
+
                 <Separator/>
                 <MenuItem Header="Add _Sticky Note..." Command="{Binding AddStickyNoteAnnotationCommand}"
                           IsEnabled="{Binding IsDocumentLoaded}"

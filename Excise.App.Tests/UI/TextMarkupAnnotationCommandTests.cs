@@ -354,6 +354,112 @@ public class TextMarkupAnnotationCommandTests
         finally { Cleanup(dir); }
     }
 
+    /// <summary>
+    /// Stamp (#934 row B). The NAME is the payload — a stamp that lands with the
+    /// wrong name, or none, is the wrong stamp, and no subtype assertion notices.
+    /// </summary>
+    [FixedAvaloniaTheory]
+    [InlineData("Confidential")]
+    [InlineData("Draft")]
+    [InlineData("Approved")]
+    public async Task StampCommand_WithDragAndName_ProducesAStampCarryingThatName(string stampName)
+    {
+        var (source, output, dir) = MakePaths();
+        TestPdfGenerator.CreateSimpleTextPdf(source, "Stamp target");
+        try
+        {
+            var vm = new MainWindowViewModel();
+            var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+            window.Show();
+            await vm.LoadDocumentAsync(source);
+
+            DragABox(vm);
+            await vm.AddStampAnnotationFromDragAsync(stampName);
+
+            await vm.SaveFileAsAsync(output);
+            using var saved = PdfDocument.Open(output);
+            var stamps = saved.GetPage(1).GetAnnotations()
+                .Where(a => a.Subtype == PdfAnnotationSubtype.Stamp).ToList();
+
+            stamps.Should().NotBeEmpty($"the command must produce a Stamp annotation for {stampName}");
+            // /Name is surfaced as IconName; PdfAnnotation.Name is /NM, the
+            // annotation's unique id. Asserting the wrong one is how this test
+            // first failed, and it exposed that IconName's own documentation
+            // mentioned only sticky-note icons.
+            stamps.Should().Contain(a => a.IconName == stampName,
+                $"the stamp's /Name must be {stampName} — a stamp with the wrong name is the " +
+                "wrong stamp, and a subtype-only assertion cannot tell (#933)");
+        }
+        finally { Cleanup(dir); }
+    }
+
+    /// <summary>
+    /// All 15 standard names are offered and all 15 work. The menu is generated
+    /// from Core's list, so a name the menu offers that Core rejects would throw
+    /// at click time — this is the guard against that drifting apart.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task EveryStandardStampName_IsAccepted()
+    {
+        var (source, output, dir) = MakePaths();
+        TestPdfGenerator.CreateSimpleTextPdf(source, "Stamp target");
+        try
+        {
+            var vm = new MainWindowViewModel();
+            var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+            window.Show();
+            await vm.LoadDocumentAsync(source);
+
+            var names = MainWindowViewModel.StandardStampNames;
+            names.Should().HaveCount(15, "ISO 32000-1 Table 181 defines fifteen standard stamps");
+
+            foreach (var name in names)
+            {
+                DragABox(vm);
+                await vm.AddStampAnnotationFromDragAsync(name);
+            }
+
+            await vm.SaveFileAsAsync(output);
+            using var saved = PdfDocument.Open(output);
+            var placed = saved.GetPage(1).GetAnnotations()
+                .Where(a => a.Subtype == PdfAnnotationSubtype.Stamp)
+                .Select(a => a.IconName).ToList();
+
+            foreach (var name in names)
+                placed.Should().Contain(name, $"the menu offers {name}, so it must place one");
+        }
+        finally { Cleanup(dir); }
+    }
+
+    /// <summary>
+    /// A name Core does not recognise must be reported, not silently turned into
+    /// a nameless stamp. Core throws; the command must catch and surface it.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task StampWithAnUnknownName_AddsNothingAndDoesNotThrow()
+    {
+        var (source, output, dir) = MakePaths();
+        TestPdfGenerator.CreateSimpleTextPdf(source, "Stamp target");
+        try
+        {
+            var vm = new MainWindowViewModel();
+            var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+            window.Show();
+            await vm.LoadDocumentAsync(source);
+
+            DragABox(vm);
+            var act = async () => await vm.AddStampAnnotationFromDragAsync("NotARealStampName");
+            await act.Should().NotThrowAsync("an invalid name must surface as an error, not a crash");
+
+            await vm.SaveFileAsAsync(output);
+            using var saved = PdfDocument.Open(output);
+            saved.GetPage(1).GetAnnotations()
+                .Should().NotContain(a => a.Subtype == PdfAnnotationSubtype.Stamp,
+                    "a rejected name must leave no stamp behind rather than a nameless one");
+        }
+        finally { Cleanup(dir); }
+    }
+
     /// <summary>The drag gesture shapes reuse — the redaction box rectangle.</summary>
     private static void DragABox(MainWindowViewModel vm)
     {

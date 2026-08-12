@@ -69,6 +69,20 @@ public sealed class AnnotationWorkflowService
     }
 
     /// <summary>
+    /// Standard rubber stamp (#934 row B). The 15 names in
+    /// <see cref="PdfAnnotationAuthoring.StandardStampNames"/> are the ones
+    /// ISO 32000-1 Table 181 defines; Core rejects anything else, which is why
+    /// the GUI offers a fixed menu rather than free text.
+    /// </summary>
+    public PdfAnnotation AddStamp(int pageNumber, PdfRectangle rect, string stampName, string? contents = null)
+    {
+        var document = GetLoadedDocument();
+        var annotation = document.AddStampAnnotation(pageNumber, rect, stampName, contents);
+        _logger.LogInformation("Added {StampName} stamp annotation to page {PageNumber}", stampName, pageNumber);
+        return annotation;
+    }
+
+    /// <summary>
     /// Add a Square shape annotation with a baked appearance stream (#626).
     /// </summary>
     public PdfAnnotation AddSquare(int pageNumber, PdfRectangle rect, string? contents = null)
