@@ -169,6 +169,7 @@ namespace Excise.Avalonia.Controls
         protected override void OnPropertyChanged(Avalonia.AvaloniaPropertyChangedEventArgs change) { }
         public void PreserveContinuousReadingPositionOnNextRebuild() { }
         public void PreviousPage() { }
+        public void RefreshContinuousLayout() { }
         public void ZoomIn() { }
         public void ZoomOut() { }
         public void ZoomToActualSize() { }

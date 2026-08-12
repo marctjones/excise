@@ -1177,14 +1177,56 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Open the file ONCE and use the single instance for both the save path
+    /// and the viewer (#917).
+    ///
+    /// This used to open the same file twice in parallel — a byte-backed
+    /// document for saving and a file-backed one for the viewer — which cost
+    /// far more than the second parse:
+    ///
+    ///   * every mutation had to be applied to both by hand, and forgetting
+    ///     was invisible: a correct saved file and an unchanged screen (this
+    ///     bit #912, and every row of #934 had to re-fix it);
+    ///   * keeping them in sync meant serialising the whole document and
+    ///     reparsing it after each mutation — that round trip IS #922's
+    ///     1401ms, and it disappears when there is only one document;
+    ///   * the viewer's copy was file-backed, so it held the file open and
+    ///     saving over it failed on Windows (#926).
+    ///
+    /// The service's instance is byte-backed and deliberately does not hold
+    /// the file open, so it is the one to keep. Ownership stays with the
+    /// service — this ViewModel must never dispose what it returns.
+    /// </summary>
     private async Task<PdfCoreDocument> LoadDocumentInstancesAsync(string filePath, string? userPassword)
     {
-        var docServiceLoad = Task.Run(() => _documentService.LoadDocument(filePath, userPassword));
-        var coreDocLoad = Task.Run(() => userPassword is null
-            ? Excise.Core.Document.PdfDocument.Open(filePath)
-            : Excise.Core.Document.PdfDocument.Open(filePath, userPassword));
-        await Task.WhenAll(docServiceLoad, coreDocLoad);
-        return await coreDocLoad;
+        await Task.Run(() => _documentService.LoadDocument(filePath, userPassword));
+        return _documentService.GetCurrentDocument()
+            ?? throw new InvalidOperationException(
+                $"Document service reported no document after loading {filePath}.");
+    }
+
+    /// <summary>
+    /// Dispose the viewer document only when it is NOT the service's instance.
+    ///
+    /// Since #917 they are normally the same object and the service owns it;
+    /// disposing here would hand the rest of the app a disposed document. The
+    /// check is not belt-and-braces — the typewriter save path still opens a
+    /// separate instance transiently, so both cases are live.
+    /// </summary>
+    /// <summary>
+    /// Test seam for #917's invariant: the viewer document and the save
+    /// document must be the SAME instance. Exposed because reference identity
+    /// is the only way to assert it, and it is the property that makes every
+    /// hand-written mirror unnecessary.
+    /// </summary>
+    internal PdfCoreDocument? SaveDocumentForTests => _documentService.GetCurrentDocument();
+
+    private void DisposeViewerDocumentIfNotShared()
+    {
+        var owned = _documentService.GetCurrentDocument();
+        if (_pdfCoreDocument != null && !ReferenceEquals(owned, _pdfCoreDocument))
+            _pdfCoreDocument.Dispose();
     }
 
     private static bool IsPasswordVerificationFailure(Exception ex)
@@ -1739,22 +1781,53 @@ public partial class MainWindowViewModel : ViewModelBase
         this.RaisePropertyChanged(nameof(StatusBarText));
     }
 
+    /// <summary>
+    /// Re-point the viewer at the current document and invalidate everything
+    /// derived from it (caches, thumbnails, the text index).
+    ///
+    /// This USED to serialise the whole document with `SaveToBytes()` and
+    /// reparse it, on every mutation including undo — that round trip is
+    /// #922's 1401ms, and it existed only because the viewer held a SECOND
+    /// document that went stale whenever the save document changed (#917).
+    ///
+    /// With one document there is nothing to re-sync: the object the viewer
+    /// renders from is the object the mutation was applied to. What still has
+    /// to happen is the invalidation below — rendered pages, thumbnails and
+    /// the search index are all derived state and are still stale.
+    /// </summary>
     private Task ReloadPdfCoreDocumentFromCurrentDocumentAsync()
     {
-        var documentStream = _documentService.GetCurrentDocumentAsStream();
-        if (documentStream == null)
+        var current = _documentService.GetCurrentDocument();
+        if (current == null)
             return Task.CompletedTask;
 
-        // Hand the stream to the document rather than copying out of it.
-        // `documentStream` is already `new MemoryStream(doc.SaveToBytes())`, so
-        // the previous `.ToArray()` allocated a second full-size copy of a
-        // buffer that was built one line earlier and thrown away here (#922).
-        // ownsStream: true, so the document disposes it — which is why this is
-        // no longer inside a `using`.
-        documentStream.Position = 0;
-        var reloaded = PdfCoreDocument.Open(documentStream, ownsStream: true);
-        PdfCoreDocument?.Dispose();
-        PdfCoreDocument = reloaded;
+        // Normally a no-op (they are the same instance). It is a real
+        // re-point only on the paths that still hand the viewer a separate
+        // document, and those dispose the old one here rather than leak it.
+        if (!ReferenceEquals(current, _pdfCoreDocument))
+        {
+            DisposeViewerDocumentIfNotShared();
+            PdfCoreDocument = current;
+        }
+
+        // THE SIGNAL, which used to be a side effect of the reparse.
+        //
+        // The viewer rebuilds its continuous page layout from
+        // `DocumentProperty.Changed`, and an Avalonia styled property only
+        // raises that when the VALUE changes. The old serialize-and-reparse
+        // handed it a NEW PdfDocument instance on every mutation, so the
+        // rebuild came for free — the 1401ms round trip was load-bearing, just
+        // not for the reason it looked like. With one document the reference
+        // never changes and the continuous view would keep the pre-mutation
+        // page order (caught by ContinuousRotateReadingAnchorTests, the single
+        // failure in a 1326-test run).
+        //
+        // A RenderVersion bump is the wrong instrument here: it also disposes
+        // the page bitmap the viewer is currently showing and re-renders
+        // asynchronously, which leaves layout touching a disposed bitmap. Page
+        // CONTENT did not change — only the page order — so ask for the layout
+        // rebuild alone.
+        DocumentStructureChanged?.Invoke(this, EventArgs.Empty);
 
         CurrentPageIndex = Math.Clamp(CurrentPageIndex, 0, Math.Max(0, _documentService.PageCount - 1));
         _renderService.ClearCache();
@@ -2098,6 +2171,15 @@ public partial class MainWindowViewModel : ViewModelBase
     /// CurrentPage (which the VM already remaps for the reader's content).
     /// </summary>
     public event EventHandler? PreserveReadingPositionRequested;
+
+    /// <summary>
+    /// Raised when the document's page structure changed but the document
+    /// INSTANCE did not (#917). The viewer rebuilds its continuous layout from
+    /// the Document property changing, and an Avalonia styled property does not
+    /// raise that for an unchanged reference — so with one document this event
+    /// is the only thing that tells it to re-lay-out.
+    /// </summary>
+    public event EventHandler? DocumentStructureChanged;
 
     private void RequestPreserveReadingPosition() =>
         PreserveReadingPositionRequested?.Invoke(this, EventArgs.Empty);
