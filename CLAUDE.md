@@ -1121,10 +1121,19 @@ gh issue list --label "track: redaction-trust" --state open   # correctness firs
 gh issue list --label "track: daily-driver"    --state open   # usability second
 ```
 
-The roadmap lives in the named-track milestones (`1. Redaction Trust (blocking)`
-… `8. Deferred / Future`), ordered by the sequence they should be done in. Do not
-hard-code the full milestone list here either — query it live:
+The roadmap lives in numbered milestones, ordered by the sequence they should be
+done in. **They group by WHO GETS HURT, not by kind of work** (2026-08-12) — the
+previous `R6/R9/R10` scheme grouped by kind, which buried the things a user feels
+every session (1.4s per edit, 2.79x file growth on save, 7-10s redactions) inside
+"Architecture & Resource Efficiency", where they read as cleanup.
+
+Do not hard-code the list here — it has now gone stale twice. Query it live:
 `gh api repos/marctjones/excise/milestones --jq '.[] | "\(.number)\t\(.title)"'`.
+
+Two orderings worth knowing without looking: milestone 1 is daily-use friction
+and milestone 2 is redaction trust, and they are coupled — redaction completeness
+is bounded by extraction coverage, so #899 (letter positions wrong on 22% of
+multi-column pages) sits in 1 but is also the largest untracked dependency of 2.
 
 View all: `gh issue list --label "priority: high,priority: critical"`
 
