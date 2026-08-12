@@ -52,14 +52,27 @@ same work twice.
 
 ## A. Text assembly — `page.Text` is built in the wrong order and drops content
 
-**Root: #899.** `page.Letters` is COMPLETE (more characters than mutool finds).
-The loss happens between the letter list and the assembled string, so this is
-serialisation, not extraction — the opposite of what #637 assumed.
+**Root: #899, which MEASUREMENT SPLIT INTO TWO defects (2026-08-11).** The
+original framing — "the loss is serialisation, not extraction" — is right about
+half of it:
+
+| | symptom | where it lives | detected? |
+|---|---|---|---|
+| 1 | 26.9% of glyphs positioned OUTSIDE a MediaBox covering the whole page; invisible, and silently filtered out of `page.Text` | letter-rectangle computation, upstream of the assembler | **yes** — `PageInvariantTests.Letters_LandOnThePage` |
+| 2 | retained text interleaves across columns mid-sentence | the assembler / reading order | **no detector exists** |
+
+`page.Text` keeps exactly the letters inside the crop box (2389 = 2389 on page
+117), so the COUNT loss is entirely defect 1 and the ORDER damage is entirely
+defect 2. They are fixed in different places, and fixing reading order will not
+recover the off-page glyphs — they are not on the page to order.
+
+Defect 2 having no detector is this cluster's real coverage gap: wrong order
+with the right characters is invisible to every count-based invariant.
 
 | issue | relationship |
 |---|---|
 | **#899** | owns the defect |
-| #773 reading-order heuristics for untagged PDFs | the general form. #899 is the narrow, corpus-witnessed, gated case |
+| #773 reading-order heuristics for untagged PDFs | the general form of **defect 2 only**. It cannot address defect 1 |
 | #825 copy-whitespace deferred cases | its "reading-order ceiling" is this |
 | #903 PDF diff | routes AROUND this by building on `page.Letters`, and says so. Not blocked by it — but the tokenisation mismatch it must handle (`market-`/`place`) is the same phenomenon |
 | ~~#924 search~~ | **closed 2026-08-10** — the search half was separable and is fixed |
