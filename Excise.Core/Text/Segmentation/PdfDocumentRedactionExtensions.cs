@@ -161,8 +161,7 @@ public static class PdfDocumentRedactionExtensions
 
                 // Markers go on after the removals; they are page-space
                 // rectangles and do not move when content is removed.
-                foreach (var rect in blackRects)
-                    AppendBlackRectangle(page, rect);
+                AppendBlackRectangles(page, blackRects);
 
                 totalMatches += matches.Count;
                 if (stalled)
@@ -381,6 +380,34 @@ public static class PdfDocumentRedactionExtensions
     /// <c>q 0 0 0 rg X Y W H re f Q</c> sequence. Used as a cosmetic
     /// overlay on top of structural glyph removal.
     /// </summary>
+    /// <summary>
+    /// Append every marker in ONE parse-and-rewrite (#919).
+    ///
+    /// The single-rectangle version below re-parses and rewrites the whole
+    /// content stream per call, and RedactText calls it once per match — 401
+    /// parse+rewrite cycles for a common word on a six-page form. That is the
+    /// same cost pattern #919 was filed about, in a function the issue does not
+    /// mention: batching the REDACTION rectangles alone left it untouched and
+    /// only moved the total by 8%.
+    /// </summary>
+    private static void AppendBlackRectangles(PdfPage page, IReadOnlyList<PdfRectangle> rects)
+    {
+        if (rects.Count == 0) return;
+
+        var content = page.GetContentStream();
+        var ops = content.Operators.ToList();
+        foreach (var rect in rects)
+        {
+            ops.Add(ContentOperator.SaveState());
+            ops.Add(ContentOperator.SetFillRgb(0, 0, 0));
+            ops.Add(ContentOperator.Rectangle(
+                rect.Left, rect.Bottom, rect.Right - rect.Left, rect.Top - rect.Bottom));
+            ops.Add(ContentOperator.Fill());
+            ops.Add(ContentOperator.RestoreState());
+        }
+        page.SetContentStream(new ContentStream(ops));
+    }
+
     private static void AppendBlackRectangle(PdfPage page, PdfRectangle rect)
     {
         var content = page.GetContentStream();
