@@ -21,7 +21,41 @@ public partial class MainWindowViewModel
             if (IsTextSelectionMode) return InteractionMode.TextSelection;
             if (IsFormAuthoringMode) return InteractionMode.FormAuthoring;
             if (IsTypewriterMode) return InteractionMode.Typewriter;
+            if (IsFreehandMode) return InteractionMode.PathAnnotation;
             return InteractionMode.None;
+        }
+    }
+
+    private bool _isFreehandMode;
+
+    /// <summary>
+    /// When true, dragging on the page draws a free-form ink stroke (#934 D).
+    /// Mutually exclusive with the other editing modes, exactly as they are
+    /// with each other — two drawing modes live at once would make the drag
+    /// gesture ambiguous.
+    /// </summary>
+    public bool IsFreehandMode
+    {
+        get => _isFreehandMode;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _isFreehandMode, value);
+            if (value)
+            {
+                ViewMode = PdfViewMode.SinglePage;
+                if (_isRedactionMode) IsRedactionMode = false;
+                if (_isTextSelectionMode) IsTextSelectionMode = false;
+                if (_isTypewriterMode) IsTypewriterMode = false;
+                if (_isFormAuthoringMode) IsFormAuthoringMode = false;
+            }
+            else
+            {
+                RestoreViewModeFromPreference();
+                if (!IsEditingModeActive) IsTextSelectionMode = true;
+            }
+
+            this.RaisePropertyChanged(nameof(InteractionMode));
+            this.RaisePropertyChanged(nameof(CurrentModeText));
         }
     }
 

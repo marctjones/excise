@@ -41,7 +41,7 @@ public class AnnotationInvariantTests
     public static TheoryData<string> AuthorableSubtypes() => new()
     {
         "Highlight", "Underline", "StrikeOut", "Squiggly",
-        "Square", "Circle", "FreeText", "Text",
+        "Square", "Circle", "FreeText", "Text", "Ink",
     };
 
     private static PdfAnnotation Author(PdfDocument doc, string subtype, PdfRectangle rect, string contents) =>
@@ -55,6 +55,7 @@ public class AnnotationInvariantTests
             "Circle" => doc.AddCircleAnnotation(1, rect, contents),
             "FreeText" => doc.AddFreeTextAnnotation(1, rect, contents),
             "Text" => doc.AddTextAnnotation(1, rect, contents),
+            "Ink" => doc.AddInkAnnotation(1, InkStrokesIn(rect), contents),
             _ => throw new ArgumentOutOfRangeException(nameof(subtype), subtype, "not wired into this test"),
         };
 
@@ -180,6 +181,68 @@ public class AnnotationInvariantTests
     }
 
     /// <summary>
+    /// INK GEOMETRY SURVIVES A SAVE — point for point, in order.
+    ///
+    /// This is the Ink-shaped version of the trap row C fell into: an
+    /// `/InkList` that is non-empty, bounded by a sane `/Rect` and of the right
+    /// subtype can still have its points reversed, decimated or rounded into
+    /// a different drawing. "An Ink annotation exists" cannot tell the
+    /// difference; comparing the actual coordinates can.
+    ///
+    /// Deliberately an ASYMMETRIC, non-monotonic polyline — a symmetric or
+    /// monotonic stroke reads the same reversed, so it would pass the very
+    /// mutation this test exists to catch.
+    /// </summary>
+    [Fact]
+    public void Ink_PreservesEveryPointInOrderAcrossASave()
+    {
+        var stroke = new List<(double X, double Y)>
+        {
+            (100, 600), (140, 655), (150, 610), (210, 648), (300, 604),
+        };
+
+        var tmp = Path.Combine(Path.GetTempPath(), $"excise-ink-{Guid.NewGuid():N}.pdf");
+        try
+        {
+            using (var doc = NewDocument())
+            {
+                doc.AddInkAnnotation(1, new[] { stroke }, "ink geometry");
+                doc.Save(tmp);
+            }
+
+            using var reloaded = PdfDocument.Open(tmp);
+            var ink = Only(reloaded, "Ink");
+
+            ink.InkStrokes.Should().NotBeNull("an Ink annotation without /InkList draws nothing");
+            ink.InkStrokes!.Should().HaveCount(1, "one stroke in, one stroke out");
+
+            var after = ink.InkStrokes[0];
+            after.Should().HaveCount(stroke.Count,
+                "every point must survive — a decimated stroke is still a plausible-looking drawing");
+
+            for (var i = 0; i < stroke.Count; i++)
+            {
+                after[i].X.Should().BeApproximately(stroke[i].X, Tolerance,
+                    $"point {i} X moved across a save (reordering or rounding)");
+                after[i].Y.Should().BeApproximately(stroke[i].Y, Tolerance,
+                    $"point {i} Y moved across a save (reordering or rounding)");
+            }
+
+            // /Rect must contain the ink it bounds. An /InkList outside its own
+            // /Rect is clipped away by conforming viewers — invisible to a
+            // subtype assertion, and invisible to a pixel test that only ever
+            // renders through the same wrong rect.
+            var r = ink.Rect.Normalize();
+            foreach (var (x, y) in after)
+            {
+                x.Should().BeInRange(r.Left - Tolerance, r.Right + Tolerance, "ink X outside /Rect");
+                y.Should().BeInRange(r.Bottom - Tolerance, r.Top + Tolerance, "ink Y outside /Rect");
+            }
+        }
+        finally { try { File.Delete(tmp); } catch { /* best effort */ } }
+    }
+
+    /// <summary>
     /// Guards the theory data itself. A subtype added to the authoring API but
     /// not to <see cref="AuthorableSubtypes"/> is silently unverified — the
     /// vacuity failure mode that makes corpus-driven tests lie.
@@ -190,14 +253,14 @@ public class AnnotationInvariantTests
         var covered = new HashSet<string>(StringComparer.Ordinal)
         {
             "Highlight", "Underline", "StrikeOut", "Squiggly",
-            "Square", "Circle", "FreeText", "Text",
+            "Square", "Circle", "FreeText", "Text", "Ink",
         };
 
         // Deliberately NOT covered, with reasons — each needs arguments this
         // fixture does not supply (endpoints, vertices, strokes, image data).
         var deferred = new HashSet<string>(StringComparer.Ordinal)
         {
-            "Line", "Arrow", "Polygon", "PolyLine", "Ink", "Stamp", "ImageStamp",
+            "Line", "Arrow", "Polygon", "PolyLine", "Stamp", "ImageStamp",
         };
 
         var authorable = typeof(PdfAnnotationAuthoring)
@@ -218,6 +281,16 @@ public class AnnotationInvariantTests
 
     private const double Tolerance = 0.5;
     private static PdfRectangle Box => new(72, 600, 300, 660);
+
+    /// <summary>A two-point diagonal stroke inside <paramref name="rect"/>.</summary>
+    private static IReadOnlyList<IReadOnlyList<(double X, double Y)>> InkStrokesIn(PdfRectangle rect)
+    {
+        var r = rect.Normalize();
+        return new[]
+        {
+            new[] { (r.Left + 2, r.Bottom + 2), (r.Right - 2, r.Top - 2) },
+        };
+    }
 
     private static PdfDocument NewDocument()
     {

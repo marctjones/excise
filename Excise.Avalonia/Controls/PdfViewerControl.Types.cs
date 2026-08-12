@@ -104,6 +104,33 @@ public class FormFieldRectDrawnEventArgs : EventArgs
 }
 
 /// <summary>
+/// Event arguments for a finished free-form drawing gesture in
+/// <see cref="InteractionMode.PathAnnotation"/> mode.
+///
+/// Carries STROKES — a list of point lists — rather than a single path,
+/// because that is the shape `/InkList` needs and it degenerates cleanly to
+/// the one-stroke case a Line, Polygon or PolyLine wants (#934 rows E and F).
+/// Getting this shape right now is why those rows are wiring rather than a
+/// second capture mode.
+///
+/// Points are in PDF content-stream coordinates, bottom-left origin, already
+/// through the same rotation- and zoom-aware mapper the redaction and
+/// form-authoring drags use.
+/// </summary>
+public class AnnotationPathDrawnEventArgs : EventArgs
+{
+    public IReadOnlyList<IReadOnlyList<(double X, double Y)>> Strokes { get; }
+    public int PageNumber { get; }
+
+    public AnnotationPathDrawnEventArgs(
+        IReadOnlyList<IReadOnlyList<(double X, double Y)>> strokes, int pageNumber)
+    {
+        Strokes = strokes;
+        PageNumber = pageNumber;
+    }
+}
+
+/// <summary>
 /// Event arguments for an AcroForm field edit. The control has already
 /// mutated <see cref="PdfField.SetValue"/>; carries the field's full name and
 /// the new value (null if cleared).
@@ -237,4 +264,15 @@ public enum InteractionMode
     /// content.
     /// </summary>
     Typewriter,
+
+    /// <summary>
+    /// Draw a free-form path that becomes an annotation. The host listens for
+    /// <see cref="PdfViewerControl.AnnotationPathDrawn"/>.
+    ///
+    /// Named for the PATH, not for Ink specifically: the same capture and the
+    /// same event serve the segment gesture Line/Arrow needs and the vertex
+    /// gesture Polygon/PolyLine needs (#934 E, F). Only the termination rule
+    /// differs, so those rows add a gesture kind here rather than a mode.
+    /// </summary>
+    PathAnnotation,
 }

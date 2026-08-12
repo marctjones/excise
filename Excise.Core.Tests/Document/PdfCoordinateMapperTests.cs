@@ -74,6 +74,45 @@ public class PdfCoordinateMapperTests
         roundTrip.Top.Should().BeApproximately(90, 0.001);
     }
 
+    /// <summary>
+    /// A ZERO-SIZE RECT IS A POINT — under every page rotation.
+    ///
+    /// Freehand ink capture (#934 D) converts each pointer sample by running a
+    /// zero-size rect through this mapper, rather than repeating the DIP -&gt;
+    /// content arithmetic in the viewer. That keeps one implementation instead
+    /// of two, which matters most on rotated pages — exactly where a second
+    /// copy would drift out of step. It rests on the property pinned here, so
+    /// the property is pinned rather than assumed.
+    ///
+    /// Asymmetric coordinates on a non-square page: on a square page, or at the
+    /// centre, several of the rotations agree by coincidence and the test would
+    /// pass with the rotation branch wired wrong.
+    /// </summary>
+    [Theory]
+    [InlineData(0)]
+    [InlineData(90)]
+    [InlineData(180)]
+    [InlineData(270)]
+    public void DegenerateRect_RoundTripsAsAPoint_ForEveryPageRotation(int rotation)
+    {
+        using var doc = PdfDocument.CreateNew();
+        var page = doc.Pages.AddBlank(100, 200);
+        page.Rotation = rotation;
+
+        const double x = 23, y = 147;
+        var point = PdfPageRect.FromContentPoints(page.PageNumber, new PdfRectangle(x, y, x, y));
+
+        var visual = PdfCoordinateMapper.ToVisualPoints(page, point);
+        visual.Width.Should().BeApproximately(0, 0.001, "a point has no extent, whatever the rotation");
+        visual.Height.Should().BeApproximately(0, 0.001, "a point has no extent, whatever the rotation");
+
+        var back = PdfCoordinateMapper.ToContentPoints(page, visual).ToPdfRectangle();
+        back.Left.Should().BeApproximately(x, 0.001, $"rotation {rotation}: the point moved in X");
+        back.Bottom.Should().BeApproximately(y, 0.001, $"rotation {rotation}: the point moved in Y");
+        back.Right.Should().BeApproximately(x, 0.001, "Left and Right of a point coincide");
+        back.Top.Should().BeApproximately(y, 0.001, "Bottom and Top of a point coincide");
+    }
+
     [Fact]
     public void ToContentPoints_RejectsRectFromDifferentPage()
     {

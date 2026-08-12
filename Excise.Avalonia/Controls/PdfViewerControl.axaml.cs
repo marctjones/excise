@@ -295,6 +295,13 @@ public partial class PdfViewerControl : UserControl
     /// </summary>
     public event EventHandler<FormFieldRectDrawnEventArgs>? FormFieldRectDrawn;
 
+    /// <summary>
+    /// Raised when the user finishes a free-form drawing gesture in
+    /// <see cref="InteractionMode.PathAnnotation"/> mode. Points are already in
+    /// PDF content coordinates (#934 D).
+    /// </summary>
+    public event EventHandler<AnnotationPathDrawnEventArgs>? AnnotationPathDrawn;
+
     public event EventHandler<TypewriterTextCreatedEventArgs>? TypewriterTextCreated;
     public event EventHandler<TypewriterTextEditedEventArgs>? TypewriterTextEdited;
     public event EventHandler<TypewriterTextBoundsChangedEventArgs>? TypewriterTextBoundsChanged;

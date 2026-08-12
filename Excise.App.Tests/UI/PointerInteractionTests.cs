@@ -181,6 +181,143 @@ public class PointerInteractionTests : IDisposable
         finally { TryDelete(path); }
     }
 
+    // ─────────────────────── Freehand ink drag (#934 D) ───────────────────
+
+    /// <summary>
+    /// THE COORDINATE TEST for row D. A freehand stroke is captured in viewer
+    /// DIPs and must land in `/InkList` at the PDF content coordinates the user
+    /// actually drew over — through page rotation, zoom and the Y flip.
+    ///
+    /// It drives real pointer events rather than calling the ViewModel, because
+    /// the capture and its conversion ARE the new code; a VM-level test would
+    /// hand the ViewModel the answer and prove nothing about either.
+    ///
+    /// The path is a deliberately asymmetric "L". A symmetric or monotonic
+    /// stroke reads the same reversed, so it would pass even if the capture
+    /// emitted the points backwards.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task FreehandDrag_RealPointer_LandsInInkListAtTheDrawnContentPoints()
+    {
+        var path = WriteTempPdf(BuildBarePdf());
+        try
+        {
+            var vm = new MainWindowViewModel();
+            var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+            _windows.Show(window);
+            await Task.Delay(150);
+
+            await vm.LoadDocumentAsync(path);
+            vm.CurrentPageIndex = 0;
+            vm.ToggleFreehandModeCommand.Execute().Subscribe();
+            var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
+            viewer.InteractionMode.Should().Be(InteractionMode.PathAnnotation);
+            await Settle(window);
+
+            var overlay = FindNamedDescendant<Canvas>(viewer, "OverlayCanvas")!;
+            var page = vm.PdfCoreDocument!.GetPage(1);
+
+            var drawn = new (double X, double Y)[] { (150, 600), (150, 500), (250, 500) };
+            var points = drawn
+                .Select(pt => ToWindowPoint(pt.X, pt.Y, page, overlay, window))
+                .ToArray();
+
+            AnnotationPathDrawnEventArgs? got = null;
+            viewer.AnnotationPathDrawn += (_, e) => got = e;
+
+            await Dispatcher.UIThread.InvokeAsync(() => window.MouseDown(points[0], MouseButton.Left));
+            await Task.Delay(30);
+            for (var i = 1; i < points.Length; i++)
+            {
+                await Dispatcher.UIThread.InvokeAsync(() => window.MouseMove(points[i]));
+                await Task.Delay(30);
+            }
+            await Dispatcher.UIThread.InvokeAsync(() => window.MouseUp(points[^1], MouseButton.Left));
+            for (int i = 0; i < 3; i++) { await Task.Delay(80); window.UpdateLayout(); }
+
+            got.Should().NotBeNull("a real freehand drag must fire AnnotationPathDrawn");
+            got!.PageNumber.Should().Be(1);
+            got.Strokes.Should().HaveCount(1, "one pen-down..pen-up gesture is one stroke");
+
+            var stroke = got.Strokes[0];
+            stroke.Should().HaveCount(drawn.Length,
+                "every distinct sample must survive the DIP -> content conversion");
+
+            for (var i = 0; i < drawn.Length; i++)
+            {
+                stroke[i].X.Should().BeApproximately(drawn[i].X, 12,
+                    $"sample {i} X must land where it was drawn, not in screen space");
+                stroke[i].Y.Should().BeApproximately(drawn[i].Y, 12,
+                    $"sample {i} Y must land where it was drawn (PDF is bottom-left origin)");
+            }
+
+            // And it must reach the document the user is looking at, not only
+            // the save document — the #912 defect every row of #934 re-fixes.
+            var ink = vm.PdfCoreDocument!.GetPage(1).GetAnnotations()
+                .Where(x => x.Subtype == PdfAnnotationSubtype.Ink).ToList();
+            ink.Should().HaveCount(1, "the stroke must appear in the VIEWER document, before any save");
+
+            _out.WriteLine($"ink points: {string.Join(" ", stroke.Select(q => $"({q.X:F0},{q.Y:F0})"))}");
+        }
+        finally { TryDelete(path); }
+    }
+
+    /// <summary>
+    /// A single click is not a stroke. Core rejects a one-point stroke, so if
+    /// this leaked through it would surface as an exception dialog on a stray
+    /// click in draw mode.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task FreehandClickWithoutDragging_AddsNothingAndDoesNotThrow()
+    {
+        var path = WriteTempPdf(BuildBarePdf());
+        try
+        {
+            var vm = new MainWindowViewModel();
+            var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+            _windows.Show(window);
+            await Task.Delay(150);
+
+            await vm.LoadDocumentAsync(path);
+            vm.CurrentPageIndex = 0;
+            vm.ToggleFreehandModeCommand.Execute().Subscribe();
+            var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
+            await Settle(window);
+
+            var overlay = FindNamedDescendant<Canvas>(viewer, "OverlayCanvas")!;
+            var page = vm.PdfCoreDocument!.GetPage(1);
+            var click = ToWindowPoint(200, 550, page, overlay, window);
+
+            AnnotationPathDrawnEventArgs? got = null;
+            viewer.AnnotationPathDrawn += (_, e) => got = e;
+
+            await Dispatcher.UIThread.InvokeAsync(() => window.MouseDown(click, MouseButton.Left));
+            await Task.Delay(30);
+            await Dispatcher.UIThread.InvokeAsync(() => window.MouseUp(click, MouseButton.Left));
+            for (int i = 0; i < 3; i++) { await Task.Delay(80); window.UpdateLayout(); }
+
+            got.Should().BeNull("a click with no travel is not a stroke");
+            vm.PdfCoreDocument!.GetPage(1).GetAnnotations()
+                .Should().NotContain(x => x.Subtype == PdfAnnotationSubtype.Ink);
+        }
+        finally { TryDelete(path); }
+    }
+
+    /// <summary>
+    /// Content point -> window point, the INVERSE of the conversion the control
+    /// performs. Using the forward mapper here keeps the assertion a genuine
+    /// round trip rather than a restatement of the production code.
+    /// </summary>
+    private static Point ToWindowPoint(
+        double contentX, double contentY, PdfPage page, Canvas overlay, Window window)
+    {
+        var dips = PdfCoordinateMapper.ToViewerDips(
+            page,
+            PdfPageRect.FromContentPoints(page.PageNumber, new PdfRectangle(contentX, contentY, contentX, contentY)),
+            RenderDpi);
+        return overlay.TranslatePoint(new Point(dips.X, dips.Y), window) ?? default;
+    }
+
     // ─────────────────── Form-field checkbox toggle (4) ───────────────────
 
     [FixedAvaloniaFact]

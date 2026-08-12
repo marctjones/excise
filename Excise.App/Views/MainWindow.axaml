@@ -172,6 +172,9 @@
                 <MenuItem Header="Add I_mage Stamp From Drag..." Command="{Binding AddImageStampAnnotationFromDragCommand}"
                           IsEnabled="{Binding IsDocumentLoaded}"
                           access:CommandAccessibility.CommandId="annotation.addImageStamp"/>
+                <MenuItem Header="_Draw (Ink)" Command="{Binding ToggleFreehandModeCommand}"
+                          IsEnabled="{Binding IsDocumentLoaded}"
+                          access:CommandAccessibility.CommandId="annotation.toggleDrawMode"/>
 
                 <Separator/>
                 <MenuItem Header="Add _Sticky Note..." Command="{Binding AddStickyNoteAnnotationCommand}"
@@ -1169,6 +1172,7 @@
                                                LinkHovered="OnLinkHovered"
                                                FormFieldEdited="OnFormFieldEdited"
                                                FormFieldRectDrawn="OnFormFieldRectDrawn"
+                                               AnnotationPathDrawn="OnAnnotationPathDrawn"
                                                TypewriterTextCreated="OnTypewriterTextCreated"
                                                TypewriterTextEdited="OnTypewriterTextEdited"
                                                TypewriterTextBoundsChanged="OnTypewriterTextBoundsChanged"

@@ -294,6 +294,67 @@ public partial class MainWindowViewModel
         }
     }
 
+    /// <summary>
+    /// Called by MainWindow when the viewer raises AnnotationPathDrawn — the
+    /// user has drawn a free-form stroke on the page (#934 D).
+    ///
+    /// The points arrive already in PDF content coordinates: the control
+    /// converts them through the same mapper the redaction drag uses, so there
+    /// is no second DIP→content transform here to drift out of step with it.
+    /// </summary>
+    public async Task OnAnnotationPathDrawnAsync(
+        IReadOnlyList<IReadOnlyList<(double X, double Y)>> strokes, int pageNumber)
+    {
+        if (!_documentService.IsDocumentLoaded || strokes == null || strokes.Count == 0)
+            return;
+
+        // #642: /P bit 6 gates adding or modifying annotations.
+        if (!EnsureDocumentPermission(p => p.CanAnnotate,
+            "Adding an ink annotation", "adding or modifying annotations (/P bit 6)"))
+        {
+            return;
+        }
+
+        // Core requires two points per stroke; a stray click that got this far
+        // must not surface as an exception dialog.
+        var usable = strokes.Where(st => st is { Count: >= 2 }).ToList();
+        if (usable.Count == 0)
+            return;
+
+        var payload = (IReadOnlyList<IReadOnlyList<(double X, double Y)>>)usable;
+        try
+        {
+            var annotation = _annotationWorkflow.AddInk(pageNumber, payload);
+            AddInkToViewerDocument(pageNumber, payload);
+            await MarkAnnotationChangedAsync("Ink annotation added");
+            RecordAnnotationAdd("Add ink", pageNumber, annotation,
+                () => _annotationWorkflow.AddInk(pageNumber, payload));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error adding ink annotation");
+            _toastService.ShowError("Failed to add ink", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// The #912 mirror, for the one subtype whose arguments are strokes rather
+    /// than a rect. Without this the saved file is correct and the screen never
+    /// changes — the defect every row of #934 has had to re-fix, because the
+    /// document is open twice until #917 lands.
+    /// </summary>
+    private void AddInkToViewerDocument(
+        int pageNumber, IReadOnlyList<IReadOnlyList<(double X, double Y)>> strokes)
+    {
+        var saveDocument = _documentService.GetCurrentDocument();
+        if (_pdfCoreDocument == null || ReferenceEquals(saveDocument, _pdfCoreDocument))
+            return;
+        if (pageNumber < 1 || pageNumber > _pdfCoreDocument.PageCount)
+            return;
+
+        _pdfCoreDocument.AddInkAnnotation(pageNumber, strokes);
+    }
+
     /// <summary>The stamp names the menu offers — Core's standard set (#934).</summary>
     public static IReadOnlyList<string> StandardStampNames =>
         PdfAnnotationAuthoring.StandardStampNames;
