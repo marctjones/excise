@@ -924,21 +924,34 @@ Documentation:
 └── LICENSES.md                     # Dependency licenses
 ```
 
-**The test suite uses FOUR of those renderers, not six (#857).** It is easy to read
-"six reference renderers" as "six independent oracles corroborate our rendering."
-Two of them corroborate nothing today:
+**Four of those renderers corroborate unconditionally; two only if you install
+them (#857, re-checked 2026-08-12).** It is easy to read "six reference
+renderers" as "six independent oracles corroborate our rendering". The honest
+version is:
 
-- **PdfBoxReferenceRenderer** — referenced by **zero** test files. Only
-  `tools/Excise.RenderTools` (benchmark/corpus reporting) uses it.
-- **PdfiumReferenceRenderer** — referenced only by `PdfiumReferenceRendererTests`,
-  whose two `[Fact]`s assert on `BuildPdfiumTestArguments`, i.e. pure
-  argument-string construction. **No pdfium binary is ever invoked by a test.**
+- **mutool, pdftocairo, Ghostscript, pdftoppm** — run wherever the binary is on
+  PATH, which is every developer box and the `Rendering (Linux, with tools)` CI
+  job. These are the four you can rely on.
+- **PDFium and PDFBox** — real oracle tests exist (`PdfiumOracleSmokeTests`,
+  `PdfBoxOracleDifferentialTests`: an ink-agreement comparison plus a
+  page-selection regression from #868), but each is `SkipUnless`-gated on its
+  tool and allow-listed to skip when absent. Neither tool is trivially
+  installable — `pdfium_test` has no Homebrew formula and PDFBox needs a
+  manually fetched jar — so in practice they are usually skipping.
 
-So setting `EXCISE_PDFIUM_TEST` / `EXCISE_PDFBOX_JAR` changes nothing for the test
-suite — it only affects `Excise.RenderTools`. Neither is trivially installable
-either: `pdfium_test` has no Homebrew formula (it needs a Chromium-side build or a
-prebuilt binary), and PDFBox needs a manually fetched jar. Plan work against the
-four that actually run, and don't assume rendering has six-way corroboration.
+⚠️ **This entry said the opposite until 2026-08-12, and the wrong half was the
+actionable half.** It claimed PDFBox was "referenced by zero test files", that
+"no pdfium binary is ever invoked by a test", and — the damaging part — that
+"setting `EXCISE_PDFIUM_TEST` / `EXCISE_PDFBOX_JAR` changes nothing for the test
+suite". That was true when written and is now false: setting them turns on two
+more independent oracles. Anyone who read this and skipped the setup got less
+corroboration than was available, which is the precise opposite of what the
+no-self-oracle rule is for.
+
+So: plan against the four that always run, and set the two env vars when you are
+doing renderer work that wants a wider quorum. Do not restate either the count or
+the "changes nothing" claim from memory — check
+`Excise.Rendering.Tests/Differential/` and `tests/skip-allowlist/`.
 
 
 ## Security Notes
