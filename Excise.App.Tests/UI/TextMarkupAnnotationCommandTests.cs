@@ -170,6 +170,138 @@ public class TextMarkupAnnotationCommandTests
         finally { Cleanup(dir); }
     }
 
+    /// <summary>
+    /// #912's second row — Square and Circle from the DRAG rectangle rather than
+    /// a text selection. Same assertions as the markup row, because the same
+    /// two ways of getting it wrong apply: wiring both to one handler, and
+    /// forgetting the viewer mirror.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task SquareCommand_WithDragArea_ProducesASquareAnnotation() =>
+        await AssertShape(vm => vm.AddSquareAnnotationFromDragCommand, PdfAnnotationSubtype.Square);
+
+    [FixedAvaloniaFact]
+    public async Task CircleCommand_WithDragArea_ProducesACircleAnnotation() =>
+        await AssertShape(vm => vm.AddCircleAnnotationFromDragCommand, PdfAnnotationSubtype.Circle);
+
+    /// <summary>
+    /// The copy-paste guard: two commands, two DISTINCT subtypes. Wiring Circle
+    /// to AddSquare passes both single-subtype tests above and fails this one.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task SquareAndCircle_ProduceDistinctSubtypes()
+    {
+        var (source, output, dir) = MakePaths();
+        TestPdfGenerator.CreateSimpleTextPdf(source, "Shape target");
+        try
+        {
+            var vm = new MainWindowViewModel();
+            var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+            window.Show();
+            await vm.LoadDocumentAsync(source);
+
+            DragABox(vm);
+            await vm.AddSquareAnnotationFromDragCommand.Execute();
+            DragABox(vm);
+            await vm.AddCircleAnnotationFromDragCommand.Execute();
+
+            await vm.SaveFileAsAsync(output);
+            using var saved = PdfDocument.Open(output);
+            var subtypes = saved.GetPage(1).GetAnnotations().Select(a => a.Subtype).Distinct().ToList();
+
+            subtypes.Should().Contain(PdfAnnotationSubtype.Square);
+            subtypes.Should().Contain(PdfAnnotationSubtype.Circle,
+                "two shape commands must produce two different subtypes — wiring both to the " +
+                "same handler is the obvious error when copying an existing path");
+        }
+        finally { Cleanup(dir); }
+    }
+
+    /// <summary>
+    /// Shapes must reach the VIEWER document too, before any save. Same reason
+    /// as the markup row: a file-only assertion cannot see an annotation that
+    /// is in the saved bytes and invisible on screen.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task ShapesAreVisibleWithoutSaving_BecauseTheViewerDocumentIsMirrored()
+    {
+        var (source, _, dir) = MakePaths();
+        TestPdfGenerator.CreateSimpleTextPdf(source, "Shape target");
+        try
+        {
+            var vm = new MainWindowViewModel();
+            var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+            window.Show();
+            await vm.LoadDocumentAsync(source);
+            vm.PdfCoreDocument.Should().NotBeNull();
+
+            DragABox(vm);
+            await vm.AddSquareAnnotationFromDragCommand.Execute();
+
+            vm.PdfCoreDocument!.GetPage(1).GetAnnotations().Select(a => a.Subtype)
+                .Should().Contain(PdfAnnotationSubtype.Square,
+                    "the viewer renders PdfCoreDocument, so a shape only on the save document " +
+                    "is invisible until the user saves and reopens");
+        }
+        finally { Cleanup(dir); }
+    }
+
+    /// <summary>No drag, no shape — and no crash. The click sweep relies on this.</summary>
+    [FixedAvaloniaFact]
+    public async Task ShapeWithNoDrag_AddsNothing()
+    {
+        var (source, output, dir) = MakePaths();
+        TestPdfGenerator.CreateSimpleTextPdf(source, "Shape target");
+        try
+        {
+            var vm = new MainWindowViewModel();
+            var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+            window.Show();
+            await vm.LoadDocumentAsync(source);
+
+            await vm.AddSquareAnnotationFromDragCommand.Execute();
+
+            await vm.SaveFileAsAsync(output);
+            using var saved = PdfDocument.Open(output);
+            saved.GetPage(1).GetAnnotations()
+                .Should().NotContain(a => a.Subtype == PdfAnnotationSubtype.Square,
+                    "with no drag there is no rectangle, so the command must annotate nothing");
+        }
+        finally { Cleanup(dir); }
+    }
+
+    private static async Task AssertShape(
+        Func<MainWindowViewModel, ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit>> pick,
+        PdfAnnotationSubtype expected)
+    {
+        var (source, output, dir) = MakePaths();
+        TestPdfGenerator.CreateSimpleTextPdf(source, "Shape target");
+        try
+        {
+            var vm = new MainWindowViewModel();
+            var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+            window.Show();
+            await vm.LoadDocumentAsync(source);
+
+            DragABox(vm);
+            await pick(vm).Execute();
+
+            await vm.SaveFileAsAsync(output);
+            using var saved = PdfDocument.Open(output);
+            saved.GetPage(1).GetAnnotations().Should().Contain(a => a.Subtype == expected,
+                $"executing the real command must put a {expected} annotation on the page");
+        }
+        finally { Cleanup(dir); }
+    }
+
+    /// <summary>The drag gesture shapes reuse — the redaction box rectangle.</summary>
+    private static void DragABox(MainWindowViewModel vm)
+    {
+        vm.CurrentRedactionPageArea = PdfPageRect.ViewerDips(
+            1, x: 100, y: 100, width: 200, height: 120,
+            renderDpi: MainWindowViewModel.DefaultViewerRenderDpi);
+    }
+
     // ── helpers ──────────────────────────────────────────────────────────────
 
     private static async Task AssertMarkup(

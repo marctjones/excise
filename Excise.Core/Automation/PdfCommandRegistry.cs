@@ -31,6 +31,8 @@ public static class PdfCommandRegistry
         Annotate(PdfCommandIds.AddUnderline, "Add Underline From Selection", "Create a PDF underline annotation from the current text selection."),
         Annotate(PdfCommandIds.AddStrikeOut, "Add Strikeout From Selection", "Create a PDF strikeout annotation from the current text selection."),
         Annotate(PdfCommandIds.AddSquiggly, "Add Squiggly From Selection", "Create a PDF squiggly-underline annotation from the current text selection."),
+        Annotate(PdfCommandIds.AddSquare, "Add Square", "Draw a PDF square annotation over the region dragged on the page."),
+        Annotate(PdfCommandIds.AddCircle, "Add Circle", "Draw a PDF circle (ellipse) annotation over the region dragged on the page."),
         Annotate(PdfCommandIds.AddStickyNote, "Add Sticky Note", "Create a sticky-note annotation."),
 
         Document(PdfCommandIds.AddPages, "Add Pages", "Append pages from another PDF."),
