@@ -14,10 +14,10 @@ public class PreferencesViewModel : ViewModelBase
     private bool _ocrBinarize = true;
     private double _ocrDenoiseRadius = 0.8;
     private int _renderCacheMax = 20;
-    private Excise.Avalonia.Services.ReadingOrderStrategy _readingOrderStrategy =
-        Excise.Avalonia.Services.ReadingOrderStrategy.ColumnAware;
-    private Excise.Avalonia.Services.WhitespaceMode _whitespaceMode =
-        Excise.Avalonia.Services.WhitespaceMode.Smart;
+    private Excise.Core.Text.ReadingOrderStrategy _readingOrderStrategy =
+        Excise.Core.Text.ReadingOrderStrategy.ColumnAware;
+    private Excise.Core.Text.WhitespaceMode _whitespaceMode =
+        Excise.Core.Text.WhitespaceMode.Smart;
 
     public PreferencesViewModel()
     {
@@ -81,10 +81,10 @@ public class PreferencesViewModel : ViewModelBase
     // [RequiresDynamicCode] and warns IL3050 under AOT, because it may have to
     // build the array type at runtime. The generic form is resolved statically
     // and is what ships now that macOS and Linux publish Native AOT (#906).
-    public Excise.Avalonia.Services.ReadingOrderStrategy[] ReadingOrderStrategyOptions { get; } =
-        System.Enum.GetValues<Excise.Avalonia.Services.ReadingOrderStrategy>();
+    public Excise.Core.Text.ReadingOrderStrategy[] ReadingOrderStrategyOptions { get; } =
+        System.Enum.GetValues<Excise.Core.Text.ReadingOrderStrategy>();
 
-    public Excise.Avalonia.Services.ReadingOrderStrategy SelectedReadingOrderStrategy
+    public Excise.Core.Text.ReadingOrderStrategy SelectedReadingOrderStrategy
     {
         get => _readingOrderStrategy;
         set => this.RaiseAndSetIfChanged(ref _readingOrderStrategy, value);
@@ -95,10 +95,10 @@ public class PreferencesViewModel : ViewModelBase
     // [RequiresDynamicCode] and warns IL3050 under AOT, because it may have to
     // build the array type at runtime. The generic form is resolved statically
     // and is what ships now that macOS and Linux publish Native AOT (#906).
-    public Excise.Avalonia.Services.WhitespaceMode[] WhitespaceModeOptions { get; } =
-        System.Enum.GetValues<Excise.Avalonia.Services.WhitespaceMode>();
+    public Excise.Core.Text.WhitespaceMode[] WhitespaceModeOptions { get; } =
+        System.Enum.GetValues<Excise.Core.Text.WhitespaceMode>();
 
-    public Excise.Avalonia.Services.WhitespaceMode SelectedWhitespaceMode
+    public Excise.Core.Text.WhitespaceMode SelectedWhitespaceMode
     {
         get => _whitespaceMode;
         set => this.RaiseAndSetIfChanged(ref _whitespaceMode, value);
@@ -133,8 +133,8 @@ public class PreferencesViewModel : ViewModelBase
         OcrBinarize = true;
         OcrDenoiseRadius = 0.8;
         RenderCacheMax = 20;
-        SelectedReadingOrderStrategy = Excise.Avalonia.Services.ReadingOrderStrategy.ColumnAware;
-        SelectedWhitespaceMode = Excise.Avalonia.Services.WhitespaceMode.Smart;
+        SelectedReadingOrderStrategy = Excise.Core.Text.ReadingOrderStrategy.ColumnAware;
+        SelectedWhitespaceMode = Excise.Core.Text.WhitespaceMode.Smart;
     }
 
     private void CloseWindow()

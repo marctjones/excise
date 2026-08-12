@@ -13,7 +13,6 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text;
 using Excise.Avalonia.Controls;
-using Excise.Avalonia.Services;
 using Excise.App.Services;
 using Excise.App.Tests.Utilities;
 using Excise.App.ViewModels;

@@ -20,7 +20,6 @@ using Excise.Core.Editing;
 using Excise.Core.Text;
 using Excise.Rendering;
 using Excise.Avalonia.Imaging;
-using Excise.Avalonia.Services;
 using SkiaSharp;
 
 namespace Excise.Avalonia.Controls;
@@ -113,15 +112,15 @@ public partial class PdfViewerControl : UserControl
 
     /// <summary>
     /// How selected/copied text is linearised into reading order (#774).
-    /// Defaults to <see cref="Services.ReadingOrderStrategy.ColumnAware"/> — the
+    /// Defaults to <see cref="ReadingOrderStrategy.ColumnAware"/> — the
     /// highest-quality multi-column copy. Changing it drops the cached
     /// per-page letter ordering so the next selection uses the new strategy.
     /// </summary>
-    public static readonly StyledProperty<Services.ReadingOrderStrategy> ReadingOrderStrategyProperty =
-        AvaloniaProperty.Register<PdfViewerControl, Services.ReadingOrderStrategy>(
-            nameof(ReadingOrderStrategy), defaultValue: Services.ReadingOrderStrategy.ColumnAware);
+    public static readonly StyledProperty<ReadingOrderStrategy> ReadingOrderStrategyProperty =
+        AvaloniaProperty.Register<PdfViewerControl, ReadingOrderStrategy>(
+            nameof(ReadingOrderStrategy), defaultValue: ReadingOrderStrategy.ColumnAware);
 
-    public Services.ReadingOrderStrategy ReadingOrderStrategy
+    public ReadingOrderStrategy ReadingOrderStrategy
     {
         get => GetValue(ReadingOrderStrategyProperty);
         set => SetValue(ReadingOrderStrategyProperty, value);
@@ -129,17 +128,17 @@ public partial class PdfViewerControl : UserControl
 
     /// <summary>
     /// How copied text is whitespaced between lines — paragraph/list-aware
-    /// <see cref="Services.WhitespaceMode.Smart"/> (default) or the older
+    /// <see cref="WhitespaceMode.Smart"/> (default) or the older
     /// line-faithful mode. Independent of reading order: this only affects the
-    /// separators <see cref="TextSelectionEngine.JoinText(System.Collections.Generic.IReadOnlyList{Excise.Core.Text.Letter}, Services.WhitespaceMode)"/>
+    /// separators <see cref="TextSelectionEngine.JoinText(System.Collections.Generic.IReadOnlyList{Excise.Core.Text.Letter}, WhitespaceMode)"/>
     /// inserts, so changing it needs no re-sort — only the accessible-text cache
     /// is dropped.
     /// </summary>
-    public static readonly StyledProperty<Services.WhitespaceMode> WhitespaceModeProperty =
-        AvaloniaProperty.Register<PdfViewerControl, Services.WhitespaceMode>(
-            nameof(WhitespaceMode), defaultValue: Services.WhitespaceMode.Smart);
+    public static readonly StyledProperty<WhitespaceMode> WhitespaceModeProperty =
+        AvaloniaProperty.Register<PdfViewerControl, WhitespaceMode>(
+            nameof(WhitespaceMode), defaultValue: WhitespaceMode.Smart);
 
-    public Services.WhitespaceMode WhitespaceMode
+    public WhitespaceMode WhitespaceMode
     {
         get => GetValue(WhitespaceModeProperty);
         set => SetValue(WhitespaceModeProperty, value);
