@@ -70,8 +70,16 @@ public class PdfUaConformanceTests
             psi.ArgumentList.Add(path);
 
             using var proc = Process.Start(psi)!;
-            string report = proc.StandardOutput.ReadToEnd();
-            proc.WaitForExit(120_000);
+            // #925: drain both pipes concurrently — see PdfATests for the
+            // failure this prevents.
+            var stdoutTask = proc.StandardOutput.ReadToEndAsync();
+            var stderrTask = proc.StandardError.ReadToEndAsync();
+            if (!proc.WaitForExit(120_000))
+            {
+                try { proc.Kill(entireProcessTree: true); } catch { /* gone */ }
+            }
+            string report = stdoutTask.GetAwaiter().GetResult();
+            _ = stderrTask.GetAwaiter().GetResult();
 
             report.Should().Contain("isCompliant=\"true\"",
                 "the builder's Tagged() output must be PDF/UA-1 conformant. Report:\n" +

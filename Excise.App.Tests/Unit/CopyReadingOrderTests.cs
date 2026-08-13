@@ -349,9 +349,16 @@ public class CopyReadingOrderTests
             };
             using var p = Process.Start(psi);
             if (p == null) return null;
-            var stdout = p.StandardOutput.ReadToEnd();
-            p.WaitForExit(15000);
-            return p.ExitCode == 0 ? stdout : null;
+            // #925: drain both redirected pipes concurrently.
+            var stdoutTask = p.StandardOutput.ReadToEndAsync();
+            var stderrTask = p.StandardError.ReadToEndAsync();
+            if (!p.WaitForExit(15000))
+            {
+                try { p.Kill(entireProcessTree: true); } catch { /* gone */ }
+                return null;
+            }
+            _ = stderrTask.GetAwaiter().GetResult();
+            return p.ExitCode == 0 ? stdoutTask.GetAwaiter().GetResult() : null;
         }
         catch { return null; } // tool absent → caller skips
     }

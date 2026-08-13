@@ -334,9 +334,15 @@ public class CopyWhitespaceParityHarness
             $"-f {page} -l {page} \"{pdfPath}\" -")
         { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false };
         using var p = Process.Start(psi)!;
-        var outp = p.StandardOutput.ReadToEnd();
-        p.WaitForExit(20000);
-        return outp;
+        // #925: drain both redirected pipes concurrently.
+        var stdoutTask = p.StandardOutput.ReadToEndAsync();
+        var stderrTask = p.StandardError.ReadToEndAsync();
+        if (!p.WaitForExit(20000))
+        {
+            try { p.Kill(entireProcessTree: true); } catch { /* gone */ }
+        }
+        _ = stderrTask.GetAwaiter().GetResult();
+        return stdoutTask.GetAwaiter().GetResult();
     }
 
     // ── locate corpus / repo ─────────────────────────────────────────────────
