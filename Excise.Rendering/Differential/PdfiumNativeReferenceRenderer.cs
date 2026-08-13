@@ -40,8 +40,6 @@ public static class PdfiumNativeReferenceRenderer
 
     public static bool IsAvailable => LibraryPath.Value != null;
 
-    /// <summary>Absolute path of the library in use, for diagnostics.</summary>
-    public static string? ResolvedLibraryPath => LibraryPath.Value;
 
     public static SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, string? userPassword = null)
         => TryRenderPage(pdfPath, pageNumber, dpi, userPassword).Bitmap;

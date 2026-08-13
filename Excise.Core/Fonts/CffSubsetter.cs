@@ -67,9 +67,7 @@ public static class CffSubsetter
 
         private byte U8() => _data[_pos++];
         private int U16BE() { int v = ((_data[_pos] << 8) | _data[_pos + 1]); _pos += 2; return v; }
-        private int U32BE() => ((U16BE() << 16) | U16BE());
         private void Seek(int p) => _pos = p;
-        private int Position => _pos;
 
         public byte[] PerformSubset(IReadOnlySet<int> usedGlyphIds)
         {

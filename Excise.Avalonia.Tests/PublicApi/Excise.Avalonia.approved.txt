@@ -39,7 +39,6 @@ namespace Excise.Avalonia.Controls
         public HiddenTextHighlight(string Text, Excise.Core.Document.PdfPageRect Bounds, string HiddenBy, Excise.Avalonia.Controls.HiddenTextSource Source = 0) { }
         public Excise.Core.Document.PdfPageRect Bounds { get; init; }
         public string HiddenBy { get; init; }
-        public Avalonia.Rect ScreenBounds { get; }
         public Excise.Avalonia.Controls.HiddenTextSource Source { get; init; }
         public string Text { get; init; }
     }
@@ -154,7 +153,6 @@ namespace Excise.Avalonia.Controls
         public void AddPendingRedaction(Excise.Core.Document.PdfPageRect area) { }
         public void AddSearchHighlight(Avalonia.Rect area) { }
         public void AddSearchHighlight(Excise.Core.Document.PdfPageRect area) { }
-        public void ClearAllOverlays() { }
         public void ClearAppliedRedactions() { }
         public void ClearContinuousSelectionHighlight() { }
         public void ClearPendingRedactions() { }

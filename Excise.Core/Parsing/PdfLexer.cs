@@ -784,8 +784,6 @@ public class PdfLexer : IDisposable
     private static bool IsHorizontalWhitespace(int c) =>
         c is 0 or 9 or 12 or 32;
 
-    private static bool IsRegularChar(int c) =>
-        c > 32 && c < 127 && !Delimiters.Contains((byte)c);
 
     private static bool IsHexDigit(int c) =>
         (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f');

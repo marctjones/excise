@@ -201,13 +201,6 @@ public class VisualDiffCommandTests
         return bitmap;
     }
 
-    private static void SavePng(SKBitmap bitmap, string path)
-    {
-        using var image = SKImage.FromBitmap(bitmap);
-        using var data = image.Encode(SKEncodedImageFormat.Png, 100);
-        using var stream = File.OpenWrite(path);
-        data.SaveTo(stream);
-    }
 
     private static void DrawSparseConnectedEdge(SKBitmap bitmap, int x, int y)
     {

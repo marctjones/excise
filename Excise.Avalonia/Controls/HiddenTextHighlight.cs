@@ -28,9 +28,4 @@ public sealed record HiddenTextHighlight(
     string HiddenBy,
     HiddenTextSource Source = HiddenTextSource.Structural)
 {
-    /// <summary>
-    /// Legacy convenience for callers that still provide viewer-space bounds.
-    /// Prefer <see cref="Bounds"/> and <see cref="PdfCoordinateMapper"/>.
-    /// </summary>
-    public Rect ScreenBounds => new(Bounds.X, Bounds.Y, Bounds.Width, Bounds.Height);
 }

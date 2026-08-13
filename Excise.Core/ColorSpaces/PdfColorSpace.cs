@@ -468,9 +468,6 @@ public sealed class PdfColorSpace
     private (double R, double G, double B) CmykToRgb(double c, double m, double y, double k)
         => PdfColorConverter.CmykToRgb(c, m, y, k, _cmykPolicy);
 
-    private static (double R, double G, double B) ConvertCmykReferenceFormulaToRgb(double c, double m, double y, double k)
-        => PdfColorConverter.CmykReferenceFormulaToRgb(c, m, y, k);
-
     private static (double R, double G, double B) XyzToRgb(double x, double y, double z)
     {
         double r =  3.2406 * x - 1.5372 * y - 0.4986 * z;

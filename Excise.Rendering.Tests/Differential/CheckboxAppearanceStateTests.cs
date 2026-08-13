@@ -202,7 +202,6 @@ public class CheckboxAppearanceStateTests
         return total;
     }
 
-    private static double InkFraction(SKBitmap b) => (double)Ink(b) / (b.Width * b.Height);
 
     private static string? FindCorpusFile(string corpus, string name)
     {

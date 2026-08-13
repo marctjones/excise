@@ -1596,6 +1596,120 @@ public class TextExtractor
         }
     }
 
+    /// <param name="charCode">The source character code from the content stream.</param>
+    /// <param name="cid">The CID <paramref name="charCode"/> maps to — differs
+    /// from the code only under a registered encoding CMap (#515); everywhere
+    /// else callers pass the code itself.</param>
+    private string DecodeCharacter(int charCode, int cid)
+    {
+        // First, check ToUnicode map (highest priority)
+        if (_toUnicodeMap != null && _toUnicodeMap.TryGetValue(charCode, out var unicode))
+        {
+            return unicode;
+        }
+
+        // Predefined /ToUnicode /Identity-H|/Identity-V (a CMap NAME, so no map
+        // was built above): the 2-byte code IS the UTF-16BE Unicode scalar.
+        // Decode it directly — the WinAnsi default below is only identity by
+        // coincidence and mis-maps codes 128–159 (#715 / #515).
+        if (_toUnicodeIdentity && charCode is >= 0 and <= 0xFFFF && !char.IsSurrogate((char)charCode))
+        {
+            return CharToString((char)charCode);
+        }
+
+        // Registered CID→Unicode (#515 slice 2): the Adobe-<Ordering>-UCS2 CMap
+        // for the font's /CIDSystemInfo ordering, keyed by CID (== code for
+        // Identity-H/V; mapped through the registered encoding CMap otherwise).
+        // Spec-defined (§9.10.2 method (b)), so it outranks the embedded
+        // reverse-cmap and Mac-glyph-order heuristics below; CIDs the ordering
+        // map doesn't cover fall through rather than inventing a mapping.
+        if (_registeredCidToUnicode != null && _registeredCidToUnicode.TryGetValue(cid, out var orderingUnicode))
+        {
+            return orderingUnicode;
+        }
+
+        // Embedded Type0 + Identity-H/V + no /ToUnicode (#515 slice 3): the
+        // 2-byte code is a CID whose GID lives in the EMBEDDED font program,
+        // so the program's own cmap/charset — read in reverse — is the
+        // authoritative GID→Unicode source (higher priority than any
+        // glyph-order guess; #532's Mac-order fallback stays scoped to
+        // non-embedded fonts). Codes the embedded map doesn't cover fall
+        // through to the existing behavior rather than inventing a mapping.
+        if (_embeddedCidToUnicode != null && _embeddedCidToUnicode.TryGetValue(charCode, out var embeddedUnicode))
+        {
+            return embeddedUnicode;
+        }
+
+        // /Encoding << /Differences [...] >> (#662): a Differences entry for
+        // this exact code overrides everything below it — the glyph name it
+        // assigns takes priority over both /BaseEncoding and the bare-name
+        // fallback, because it's the font's own explicit remapping.
+        if (_differencesGlyphNames != null && _differencesGlyphNames.TryGetValue(charCode, out var glyphName))
+        {
+            var mapped = GlyphNameToUnicode(glyphName);
+            if (mapped != null)
+                return mapped;
+            // Unrecognized glyph name for this one code — fall through to the
+            // same default decode used below rather than inventing new
+            // guessing logic (deliberately not "return" here).
+        }
+        else if (_differencesGlyphNames != null)
+        {
+            // Differences dictionary present, but this code has no override —
+            // fall back to its /BaseEncoding (if any) before the bare default.
+            if (_differencesBaseEncoding == "WinAnsiEncoding")
+                return DecodeWinAnsi(charCode);
+            if (_differencesBaseEncoding == "MacRomanEncoding")
+                return DecodeMacRoman(charCode);
+        }
+
+        // Check for encoding in font dictionary
+        if (_currentFont != null)
+        {
+            var encoding = _page.Document.Resolve(_currentFont.GetOptional("Encoding") ?? PdfNull.Instance);
+            if (encoding is PdfName encName)
+            {
+                var encNameStr = encName.Value;
+                if (encNameStr == "WinAnsiEncoding")
+                    return DecodeWinAnsi(charCode);
+                if (encNameStr == "MacRomanEncoding")
+                    return DecodeMacRoman(charCode);
+            }
+        }
+
+        // Non-embedded Type0/CIDFontType2, Identity-H/V, no /ToUnicode (#532):
+        // the 2-byte charCode is the CID = GID (Identity), and with no embedded
+        // font program there is no cmap to give GID→Unicode. Reading the GID as
+        // a Latin-1 code point (the default below) garbles the text — e.g.
+        // issue4722.pdf's "DESCRIPTION" came out "'(6&5,37,21" (a fixed −29
+        // shift). The producing app laid the text out against a TrueType font in
+        // the standard Macintosh order, so GID→name→Unicode recovers it, matching
+        // mutool/pdf.js. Scoped to non-embedded so it never overrides an embedded
+        // font's real (possibly subset-reordered) glyph mapping.
+        if (_useStandardMacGlyphOrder && StandardMacGlyphOrder.TryGetName(charCode, out var macName))
+        {
+            var macUnicode = GlyphNameToUnicode(macName);
+            if (macUnicode != null)
+                return macUnicode;
+        }
+
+        // Simple symbolic TrueType with a (3,0) symbol cmap and no ToUnicode/no
+        // Encoding (#791): the content byte selects a glyph through the embedded
+        // font's (3,0)/F000 cmap, and that glyph's Unicode is recovered from its
+        // post name / Unicode cmap. Consulted last so any explicit encoding above
+        // still wins; only fires when the embedded program actually resolves this
+        // code to a real (non-PUA) Unicode. Without it the byte is echoed through
+        // WinAnsi below — the silent mis-decode that bounds redaction.
+        if (_simpleSymbolCodeToUnicode != null
+            && _simpleSymbolCodeToUnicode.TryGetValue(charCode, out var symbolUnicode))
+        {
+            return symbolUnicode;
+        }
+
+        // Default: assume WinAnsiEncoding for Type1 fonts with standard base fonts
+        return DecodeWinAnsi(charCode);
+    }
+
     /// <summary>
     /// Emits one letter for a decoded source <paramref name="charCode"/> and
     /// advances the text matrix. <paramref name="cid"/> is the CID the code
@@ -2031,122 +2145,6 @@ public class TextExtractor
         }
     }
 
-    private string DecodeCharacter(int charCode)
-        => DecodeCharacter(charCode, charCode);
-
-    /// <param name="charCode">The source character code from the content stream.</param>
-    /// <param name="cid">The CID <paramref name="charCode"/> maps to — differs
-    /// from the code only under a registered encoding CMap (#515); everywhere
-    /// else callers pass the code itself.</param>
-    private string DecodeCharacter(int charCode, int cid)
-    {
-        // First, check ToUnicode map (highest priority)
-        if (_toUnicodeMap != null && _toUnicodeMap.TryGetValue(charCode, out var unicode))
-        {
-            return unicode;
-        }
-
-        // Predefined /ToUnicode /Identity-H|/Identity-V (a CMap NAME, so no map
-        // was built above): the 2-byte code IS the UTF-16BE Unicode scalar.
-        // Decode it directly — the WinAnsi default below is only identity by
-        // coincidence and mis-maps codes 128–159 (#715 / #515).
-        if (_toUnicodeIdentity && charCode is >= 0 and <= 0xFFFF && !char.IsSurrogate((char)charCode))
-        {
-            return CharToString((char)charCode);
-        }
-
-        // Registered CID→Unicode (#515 slice 2): the Adobe-<Ordering>-UCS2 CMap
-        // for the font's /CIDSystemInfo ordering, keyed by CID (== code for
-        // Identity-H/V; mapped through the registered encoding CMap otherwise).
-        // Spec-defined (§9.10.2 method (b)), so it outranks the embedded
-        // reverse-cmap and Mac-glyph-order heuristics below; CIDs the ordering
-        // map doesn't cover fall through rather than inventing a mapping.
-        if (_registeredCidToUnicode != null && _registeredCidToUnicode.TryGetValue(cid, out var orderingUnicode))
-        {
-            return orderingUnicode;
-        }
-
-        // Embedded Type0 + Identity-H/V + no /ToUnicode (#515 slice 3): the
-        // 2-byte code is a CID whose GID lives in the EMBEDDED font program,
-        // so the program's own cmap/charset — read in reverse — is the
-        // authoritative GID→Unicode source (higher priority than any
-        // glyph-order guess; #532's Mac-order fallback stays scoped to
-        // non-embedded fonts). Codes the embedded map doesn't cover fall
-        // through to the existing behavior rather than inventing a mapping.
-        if (_embeddedCidToUnicode != null && _embeddedCidToUnicode.TryGetValue(charCode, out var embeddedUnicode))
-        {
-            return embeddedUnicode;
-        }
-
-        // /Encoding << /Differences [...] >> (#662): a Differences entry for
-        // this exact code overrides everything below it — the glyph name it
-        // assigns takes priority over both /BaseEncoding and the bare-name
-        // fallback, because it's the font's own explicit remapping.
-        if (_differencesGlyphNames != null && _differencesGlyphNames.TryGetValue(charCode, out var glyphName))
-        {
-            var mapped = GlyphNameToUnicode(glyphName);
-            if (mapped != null)
-                return mapped;
-            // Unrecognized glyph name for this one code — fall through to the
-            // same default decode used below rather than inventing new
-            // guessing logic (deliberately not "return" here).
-        }
-        else if (_differencesGlyphNames != null)
-        {
-            // Differences dictionary present, but this code has no override —
-            // fall back to its /BaseEncoding (if any) before the bare default.
-            if (_differencesBaseEncoding == "WinAnsiEncoding")
-                return DecodeWinAnsi(charCode);
-            if (_differencesBaseEncoding == "MacRomanEncoding")
-                return DecodeMacRoman(charCode);
-        }
-
-        // Check for encoding in font dictionary
-        if (_currentFont != null)
-        {
-            var encoding = _page.Document.Resolve(_currentFont.GetOptional("Encoding") ?? PdfNull.Instance);
-            if (encoding is PdfName encName)
-            {
-                var encNameStr = encName.Value;
-                if (encNameStr == "WinAnsiEncoding")
-                    return DecodeWinAnsi(charCode);
-                if (encNameStr == "MacRomanEncoding")
-                    return DecodeMacRoman(charCode);
-            }
-        }
-
-        // Non-embedded Type0/CIDFontType2, Identity-H/V, no /ToUnicode (#532):
-        // the 2-byte charCode is the CID = GID (Identity), and with no embedded
-        // font program there is no cmap to give GID→Unicode. Reading the GID as
-        // a Latin-1 code point (the default below) garbles the text — e.g.
-        // issue4722.pdf's "DESCRIPTION" came out "'(6&5,37,21" (a fixed −29
-        // shift). The producing app laid the text out against a TrueType font in
-        // the standard Macintosh order, so GID→name→Unicode recovers it, matching
-        // mutool/pdf.js. Scoped to non-embedded so it never overrides an embedded
-        // font's real (possibly subset-reordered) glyph mapping.
-        if (_useStandardMacGlyphOrder && StandardMacGlyphOrder.TryGetName(charCode, out var macName))
-        {
-            var macUnicode = GlyphNameToUnicode(macName);
-            if (macUnicode != null)
-                return macUnicode;
-        }
-
-        // Simple symbolic TrueType with a (3,0) symbol cmap and no ToUnicode/no
-        // Encoding (#791): the content byte selects a glyph through the embedded
-        // font's (3,0)/F000 cmap, and that glyph's Unicode is recovered from its
-        // post name / Unicode cmap. Consulted last so any explicit encoding above
-        // still wins; only fires when the embedded program actually resolves this
-        // code to a real (non-PUA) Unicode. Without it the byte is echoed through
-        // WinAnsi below — the silent mis-decode that bounds redaction.
-        if (_simpleSymbolCodeToUnicode != null
-            && _simpleSymbolCodeToUnicode.TryGetValue(charCode, out var symbolUnicode))
-        {
-            return symbolUnicode;
-        }
-
-        // Default: assume WinAnsiEncoding for Type1 fonts with standard base fonts
-        return DecodeWinAnsi(charCode);
-    }
 
     /// <summary>
     /// True when <paramref name="font"/> is a non-embedded Type0 font with
