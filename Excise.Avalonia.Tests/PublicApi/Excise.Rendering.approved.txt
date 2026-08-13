@@ -22,16 +22,6 @@ namespace Excise.Rendering
     {
         public RenderResourceLimitException(string message) { }
     }
-    public class SKBitmapPool : System.IDisposable
-    {
-        public SKBitmapPool() { }
-        public long CurrentMemoryUsage { get; }
-        public void Dispose() { }
-        public int GetPoolCountForSize(int width, int height) { }
-        public int GetTotalPoolCount() { }
-        public SkiaSharp.SKBitmap Rent(int width, int height) { }
-        public void Return(SkiaSharp.SKBitmap bitmap) { }
-    }
     public class SkiaRenderer
     {
         public SkiaRenderer() { }
@@ -97,7 +87,6 @@ namespace Excise.Rendering.Differential
     public static class PdfiumNativeReferenceRenderer
     {
         public static bool IsAvailable { get; }
-        public static string? ResolvedLibraryPath { get; }
         public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, string? userPassword = null) { }
         public static Excise.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, string? userPassword = null) { }
     }

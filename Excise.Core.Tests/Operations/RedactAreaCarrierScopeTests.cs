@@ -45,7 +45,6 @@ namespace Excise.Core.Tests.Operations;
 /// </summary>
 public class RedactAreaCarrierScopeTests
 {
-    private const string Secret = "SECRETNAME";
 
     /// <summary>
     /// The box, in content-stream coordinates, covering the page-1 text run and

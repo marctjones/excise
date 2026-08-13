@@ -76,7 +76,6 @@ public class ContentStreamParser
     private double _wordSpacing;
     private double _horizontalScaling = 100;
     private double _textRise;
-    private int _textRenderMode;
 
     // Text matrix
     private double _tm_a = 1, _tm_b, _tm_c, _tm_d = 1, _tm_e, _tm_f;
@@ -92,7 +91,6 @@ public class ContentStreamParser
     // Current path for bounds calculation
     private double _pathMinX, _pathMinY, _pathMaxX, _pathMaxY;
     private bool _pathStarted;
-    private double _currentX, _currentY;
 
     /// <summary>
     /// Create a parser for the given content bytes.
@@ -391,8 +389,8 @@ public class ContentStreamParser
                 return true;
 
             case "Tr":
-                if (operands.Count >= 1)
-                    _textRenderMode = (int)GetNumber(operands[0]);
+                // Recognized (must not fall to the unknown-operator path);
+                // render mode itself was write-only state — IDE0051/#911.
                 return true;
 
             case "Ts":
@@ -1112,9 +1110,6 @@ public class ContentStreamParser
         if (gsDict.ContainsKey("LC")) _state.LineCap   = gsDict.GetInt("LC", _state.LineCap);
         if (gsDict.ContainsKey("LJ")) _state.LineJoin  = gsDict.GetInt("LJ", _state.LineJoin);
         if (gsDict.ContainsKey("ML")) _state.MiterLimit = gsDict.GetNumber("ML", _state.MiterLimit);
-        if (gsDict.ContainsKey("Tr") && gsDict.GetOptional("Tr") is { } trObj)
-            _textRenderMode = (int)GetNumber(trObj);
-
         // Transparency parameters (§11.6.4)
         if (gsDict.ContainsKey("ca")) _state.FillAlpha   = gsDict.GetNumber("ca", _state.FillAlpha);
         if (gsDict.ContainsKey("CA")) _state.StrokeAlpha = gsDict.GetNumber("CA", _state.StrokeAlpha);
@@ -1383,8 +1378,6 @@ public class ContentStreamParser
         _pathStarted = true;
         _pathMinX = _pathMaxX = x;
         _pathMinY = _pathMaxY = y;
-        _currentX = x;
-        _currentY = y;
     }
 
     private void ExtendPath(double x, double y)
@@ -1399,8 +1392,6 @@ public class ContentStreamParser
         _pathMinY = Math.Min(_pathMinY, y);
         _pathMaxX = Math.Max(_pathMaxX, x);
         _pathMaxY = Math.Max(_pathMaxY, y);
-        _currentX = x;
-        _currentY = y;
     }
 
     private void EndPath()
@@ -1782,29 +1773,7 @@ public class ContentStreamParser
         return sb.ToString();
     }
 
-    private void SkipDictionary()
-    {
-        int depth = 1;
-        while (_pos < _content.Length && depth > 0)
-        {
-            if (_pos + 1 < _content.Length)
-            {
-                if (_content[_pos] == '<' && _content[_pos + 1] == '<')
-                {
-                    depth++;
-                    _pos += 2;
-                    continue;
-                }
-                if (_content[_pos] == '>' && _content[_pos + 1] == '>')
-                {
-                    depth--;
-                    _pos += 2;
-                    continue;
-                }
-            }
-            _pos++;
-        }
-    }
+
 
     private static double GetNumber(PdfObject obj)
     {

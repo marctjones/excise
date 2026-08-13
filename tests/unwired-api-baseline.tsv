@@ -14,8 +14,6 @@
 # 25 test references, zero production callers, so CFF fonts ship unsubsetted)
 # and #896 (RedactWithOptions, same shape, and the CLI leaked redacted terms
 # into /Info and XMP for exactly as long as nothing called the safe path).
-Excise.Avalonia	nowhere	ClearAllOverlays
-Excise.Avalonia	nowhere	ScreenBounds
 Excise.Core	nowhere	Failures
 Excise.Core	nowhere	SetCreator
 Excise.Core	tests-only	AsItalic
@@ -92,11 +90,6 @@ Excise.Core	tests-only	WithAlignment
 Excise.Core	tests-only	WithColor
 Excise.Core	tests-only	WithName
 Excise.Core	tests-only	XObjectOperators
-Excise.Rendering	nowhere	CurrentMemoryUsage
-Excise.Rendering	nowhere	GetPoolCountForSize
-Excise.Rendering	nowhere	GetTotalPoolCount
-Excise.Rendering	nowhere	ResolvedLibraryPath
-Excise.Rendering	nowhere	SKBitmapPool
 Excise.Rendering	tests-only	EncryptR4
 Excise.Rendering	tests-only	EndLineEnding
 Excise.Rendering	tests-only	InkStrokeCount

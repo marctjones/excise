@@ -41,7 +41,6 @@ public class VerticalWritingRenderingTests
 
     // DejaVuSans.ttf glyph ids from its cmap table: 'A' → 36, 'B' → 37.
     private const int GidA = 36;
-    private const int GidB = 37;
 
     // DejaVuSans advances: 'A' 1401/2048 em ≈ 684, 'B' 1405/2048 em ≈ 686.
     private const int WidthA = 684;

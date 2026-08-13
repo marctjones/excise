@@ -1905,15 +1905,6 @@ public partial class PdfViewerControl : UserControl
         appliedLayer?.Children.Clear();
     }
 
-    /// <summary>
-    /// Clear all overlays (search, pending redactions, applied redactions).
-    /// </summary>
-    public void ClearAllOverlays()
-    {
-        ClearSearchHighlights();
-        ClearPendingRedactions();
-        ClearAppliedRedactions();
-    }
 
     #endregion
 }

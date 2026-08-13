@@ -117,12 +117,6 @@ internal static class Jbig2GenericRefinementRegionDecoder
         return decoder.Decode(ref context);
     }
 
-    private static void CopyLineAbove(Jbig2Bitmap bitmap, int line)
-    {
-        int destination = line * bitmap.Stride;
-        int source = destination - bitmap.Stride;
-        Array.Copy(bitmap.Data, source, bitmap.Data, destination, bitmap.Stride);
-    }
 
     private static void DecodeTypicalPredictionLineTemplate1(
         IJbig2ArithmeticDecoder decoder,

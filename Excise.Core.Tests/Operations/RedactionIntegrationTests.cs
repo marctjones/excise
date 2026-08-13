@@ -66,16 +66,6 @@ public class RedactionIntegrationTests
         return PdfDocument.Open(pdfBytes);
     }
 
-    /// <summary>
-    /// Create a PDF with text and a rectangle.
-    /// </summary>
-    private static PdfDocument CreatePdfWithTextAndRectangle()
-    {
-        var content = "BT /F1 12 Tf 100 700 Td (Text content) Tj ET " +
-                      "q 0.5 G 50 650 100 50 re S Q";
-        var pdfBytes = BuildPdfWithContent(content);
-        return PdfDocument.Open(pdfBytes);
-    }
 
     /// <summary>
     /// Create a PDF with multiple text blocks.
