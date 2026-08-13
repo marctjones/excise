@@ -94,18 +94,6 @@ public class GlyphRemover
         IReadOnlyList<Letter> letters,
         PdfRectangle redactionArea,
         GlyphRemovalStrategy strategy = GlyphRemovalStrategy.AnyOverlap)
-        => ProcessOperations(operations, letters, new[] { redactionArea }, strategy);
-
-    /// <summary>
-    /// Remove every glyph overlapping ANY of <paramref name="redactionAreas"/>
-    /// in ONE pass (#919). Equivalent to running the areas one at a time; the
-    /// per-glyph rule is unchanged.
-    /// </summary>
-    public List<ContentOperator> ProcessOperations(
-        IReadOnlyList<ContentOperator> operations,
-        IReadOnlyList<Letter> letters,
-        IReadOnlyList<PdfRectangle> redactionAreas,
-        GlyphRemovalStrategy strategy = GlyphRemovalStrategy.AnyOverlap)
     {
         var blocks = IdentifyTextBlocks(operations);
         var result = new List<ContentOperator>(operations.Count);
@@ -124,7 +112,7 @@ public class GlyphRemover
                 continue;
             }
 
-            ProcessBlock(operations, block, letters, redactionAreas, strategy, result);
+            ProcessBlock(operations, block, letters, redactionArea, strategy, result);
             i = block.EtIndex + 1;
         }
 
@@ -142,7 +130,7 @@ public class GlyphRemover
         IReadOnlyList<ContentOperator> operations,
         BlockInfo block,
         IReadOnlyList<Letter> letters,
-        IReadOnlyList<PdfRectangle> redactionAreas,
+        PdfRectangle redactionArea,
         GlyphRemovalStrategy strategy,
         List<ContentOperator> output)
     {
@@ -170,7 +158,7 @@ public class GlyphRemover
             if (matches.Count == 0) continue;
 
             bool anyIntersects = matches.Any(m =>
-                ShouldRemoveLetter(m.Letter, redactionAreas, strategy));
+                ShouldRemoveLetter(m.Letter, redactionArea, strategy));
             if (!anyIntersects) continue;
 
             intersectingTextOpIndices.Add(idx);
@@ -199,7 +187,7 @@ public class GlyphRemover
 
         // Build the reconstructed BT…ET block(s) that will go AFTER the
         // (possibly trimmed) original block.
-        var reconstructed = BuildReconstructedOps(reconstructionJobs, redactionAreas, strategy);
+        var reconstructed = BuildReconstructedOps(reconstructionJobs, redactionArea, strategy);
 
         // Which surviving text-ops are left in the original block? If none,
         // the whole original block vanishes — otherwise we preserve its
@@ -307,7 +295,7 @@ public class GlyphRemover
 
     private List<ContentOperator> BuildReconstructedOps(
         List<ReconstructionJob> jobs,
-        IReadOnlyList<PdfRectangle> redactionAreas,
+        PdfRectangle redactionArea,
         GlyphRemovalStrategy strategy)
     {
         var result = new List<ContentOperator>();
@@ -315,7 +303,7 @@ public class GlyphRemover
         {
             var bounds = ComputeBoundsFromMatches(job.Matches);
             var segments = _textSegmenter.BuildSegments(
-                job.Text, bounds, job.Matches, redactionAreas, strategy);
+                job.Text, bounds, job.Matches, redactionArea, strategy);
 
             if (segments.Count == 0) continue; // entire op fully redacted
 
@@ -349,14 +337,6 @@ public class GlyphRemover
             if (r.Top > top) top = r.Top;
         }
         return new PdfRectangle(left, bottom, right, top);
-    }
-
-    private static bool ShouldRemoveLetter(
-        Letter letter, IReadOnlyList<PdfRectangle> redactionAreas, GlyphRemovalStrategy strategy)
-    {
-        foreach (var a in redactionAreas)
-            if (ShouldRemoveLetter(letter, a, strategy)) return true;
-        return false;
     }
 
     private static bool ShouldRemoveLetter(
