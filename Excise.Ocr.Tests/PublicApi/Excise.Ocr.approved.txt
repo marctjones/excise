@@ -1,0 +1,100 @@
+namespace Excise.Ocr
+{
+    public sealed class DifferentialOcrAuditor
+    {
+        public DifferentialOcrAuditor(Excise.Ocr.PdfOcrService ocrService) { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Ocr.DifferentialOcrHit> Scan(byte[] pdfBytes) { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Ocr.DifferentialOcrHit> ScanFile(string pdfPath) { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Ocr.DifferentialOcrHit> ScanPage(byte[] pdfBytes, int pageNumber) { }
+    }
+    public sealed class DifferentialOcrHit : System.IEquatable<Excise.Ocr.DifferentialOcrHit>
+    {
+        public DifferentialOcrHit(int PageNumber, string Text, Excise.Core.Document.PdfRectangle BoundingBox, float Confidence) { }
+        public Excise.Core.Document.PdfRectangle BoundingBox { get; init; }
+        public float Confidence { get; init; }
+        public int PageNumber { get; init; }
+        public string Text { get; init; }
+    }
+    public sealed class OcrResult : System.IEquatable<Excise.Ocr.OcrResult>
+    {
+        public OcrResult(string Text, System.Collections.Generic.IReadOnlyList<Excise.Ocr.OcrWord> Words) { }
+        public string Text { get; init; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Ocr.OcrWord> Words { get; init; }
+        public static Excise.Ocr.OcrResult Empty { get; }
+    }
+    public sealed class OcrWord : System.IEquatable<Excise.Ocr.OcrWord>
+    {
+        public OcrWord(string Text, Excise.Core.Document.PdfRectangle BoundingBox, float Confidence) { }
+        public Excise.Core.Document.PdfRectangle BoundingBox { get; init; }
+        public float Confidence { get; init; }
+        public string Text { get; init; }
+    }
+    public sealed class PdfOcrService
+    {
+        public PdfOcrService(string language = "eng", int dpi = 300, string tesseractPath = "tesseract", string? tessdataPrefix = null) { }
+        public bool IsAvailable() { }
+        public Excise.Ocr.OcrResult RecognizeBitmap(SkiaSharp.SKBitmap bitmap, double pageHeightPoints) { }
+        public System.Collections.Generic.IEnumerable<Excise.Ocr.OcrResult> RecognizeDocument(Excise.Core.Document.PdfDocument document) { }
+        public Excise.Ocr.OcrResult RecognizePage(Excise.Core.Document.PdfPage page) { }
+    }
+    public sealed class PdfSearchableConverter
+    {
+        public PdfSearchableConverter(Excise.Ocr.PdfOcrService ocrService) { }
+        public Excise.Ocr.SearchablePageResult MakePageSearchable(Excise.Core.Document.PdfPage page, bool force = false) { }
+        public Excise.Ocr.SearchableDocumentResult MakeSearchable(Excise.Core.Document.PdfDocument document, bool force = false, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "Done",
+                "Total"})] System.IProgress<System.ValueTuple<int, int>>? progress = null, System.Threading.CancellationToken cancellationToken = default) { }
+    }
+    public sealed class RedactionConfidenceChecker
+    {
+        public const int MinOracleLength = 32;
+        public const double OkThreshold = 0.9D;
+        public const double SevereThreshold = 0.5D;
+        public RedactionConfidenceChecker(Excise.Ocr.PdfOcrService? ocr = null) { }
+        public Excise.Ocr.RedactionConfidenceReport CheckDocument(Excise.Core.Document.PdfDocument document, string? sourceFilePath = null) { }
+        public static Excise.Ocr.RedactionConfidencePageResult ClassifyPage(int pageNumber, string exciseText, string? oracleText) { }
+        public static Excise.Ocr.RedactionConfidenceTier WorstTier(System.Collections.Generic.IEnumerable<Excise.Ocr.RedactionConfidencePageResult> pages) { }
+    }
+    public sealed class RedactionConfidencePageResult : System.IEquatable<Excise.Ocr.RedactionConfidencePageResult>
+    {
+        public RedactionConfidencePageResult(int PageNumber, Excise.Ocr.RedactionConfidenceTier Tier, double? CoverageRatio, double? Similarity) { }
+        public double? CoverageRatio { get; init; }
+        public int PageNumber { get; init; }
+        public double? Similarity { get; init; }
+        public Excise.Ocr.RedactionConfidenceTier Tier { get; init; }
+    }
+    public sealed class RedactionConfidenceReport : System.IEquatable<Excise.Ocr.RedactionConfidenceReport>
+    {
+        public RedactionConfidenceReport(Excise.Ocr.RedactionConfidenceTier Tier, string? Oracle, System.Collections.Generic.IReadOnlyList<Excise.Ocr.RedactionConfidencePageResult> Pages) { }
+        public string? Oracle { get; init; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Ocr.RedactionConfidencePageResult> Pages { get; init; }
+        public bool ShouldRefuse { get; }
+        public bool ShouldWarn { get; }
+        public Excise.Ocr.RedactionConfidenceTier Tier { get; init; }
+    }
+    public enum RedactionConfidenceTier
+    {
+        Ok = 0,
+        Degraded = 1,
+        Severe = 2,
+        Unverified = 3,
+    }
+    public sealed class SearchableDocumentResult : System.IEquatable<Excise.Ocr.SearchableDocumentResult>
+    {
+        public SearchableDocumentResult(int PagesProcessed, int PagesSkipped, int TotalWordsWritten, int TotalWordsSkippedEncoding, System.Collections.Generic.IReadOnlyList<Excise.Ocr.SearchablePageResult> Pages) { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Ocr.SearchablePageResult> Pages { get; init; }
+        public int PagesProcessed { get; init; }
+        public int PagesSkipped { get; init; }
+        public int TotalWordsSkippedEncoding { get; init; }
+        public int TotalWordsWritten { get; init; }
+    }
+    public readonly struct SearchablePageResult : System.IEquatable<Excise.Ocr.SearchablePageResult>
+    {
+        public SearchablePageResult(int PageNumber, bool Skipped, bool AlreadyHadText, int WordsWritten, int WordsSkippedEncoding) { }
+        public bool AlreadyHadText { get; init; }
+        public int PageNumber { get; init; }
+        public bool Skipped { get; init; }
+        public int WordsSkippedEncoding { get; init; }
+        public int WordsWritten { get; init; }
+    }
+}

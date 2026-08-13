@@ -1,0 +1,1231 @@
+namespace Excise.App
+{
+    public class App : Avalonia.Application
+    {
+        public App() { }
+        public override void Initialize() { }
+        public override void OnFrameworkInitializationCompleted() { }
+    }
+    public class BooleanToBrushConverter : Avalonia.Data.Converters.IValueConverter
+    {
+        public BooleanToBrushConverter() { }
+        public object? Convert(object? value, System.Type targetType, object? parameter, System.Globalization.CultureInfo culture) { }
+        public object? ConvertBack(object? value, System.Type targetType, object? parameter, System.Globalization.CultureInfo culture) { }
+    }
+}
+namespace Excise.App.Automation
+{
+    public static class CommandAccessibility
+    {
+        public static readonly Avalonia.AttachedProperty<string?> CommandIdProperty;
+        public static readonly Avalonia.AttachedProperty<bool> ShowToolTipProperty;
+        public static string? GetCommandId(Avalonia.AvaloniaObject element) { }
+        public static bool GetShowToolTip(Avalonia.AvaloniaObject element) { }
+        public static void SetCommandId(Avalonia.AvaloniaObject element, string? value) { }
+        public static void SetShowToolTip(Avalonia.AvaloniaObject element, bool value) { }
+    }
+    public static class VisualTraceRunner
+    {
+        public static bool IsRequested { get; }
+        public static System.Threading.Tasks.Task RunAsync(Avalonia.Controls.Window window, Excise.App.ViewModels.MainWindowViewModel vm) { }
+    }
+}
+namespace Excise.App.Models
+{
+    public class ClipboardEntry : ReactiveUI.ReactiveObject
+    {
+        public ClipboardEntry() { }
+        public int CharacterCount { get; }
+        public bool IsRedacted { get; set; }
+        public int PageNumber { get; set; }
+        public string PreviewText { get; }
+        public string Text { get; set; }
+        public string TimeDisplay { get; }
+        public System.DateTime Timestamp { get; set; }
+        public string TypeIndicator { get; }
+    }
+    public sealed class OutlineNode
+    {
+        public OutlineNode(string title, int? pageNumber, System.Collections.ObjectModel.ObservableCollection<Excise.App.Models.OutlineNode> children) { }
+        public System.Collections.ObjectModel.ObservableCollection<Excise.App.Models.OutlineNode> Children { get; }
+        public string DisplayText { get; }
+        public int? PageNumber { get; }
+        public string Title { get; }
+        public static Excise.App.Models.OutlineNode From(Excise.Core.Document.PdfOutlineItem item) { }
+    }
+    public class PageThumbnail : ReactiveUI.ReactiveObject
+    {
+        public PageThumbnail() { }
+        public bool IsMarkedForPageOperation { get; set; }
+        public bool IsSelected { get; set; }
+        public int PageIndex { get; set; }
+        public int PageNumber { get; set; }
+        public Avalonia.Media.Imaging.Bitmap? ThumbnailImage { get; set; }
+    }
+    public class PendingRedaction
+    {
+        public PendingRedaction() { }
+        public Avalonia.Rect Area { get; set; }
+        public string DisplayText { get; }
+        public System.Guid Id { get; set; }
+        public System.DateTime MarkedTime { get; set; }
+        public Excise.Core.Document.PdfPageRect PageArea { get; set; }
+        public int PageNumber { get; set; }
+        public string PreviewText { get; set; }
+        public int RenderDpi { get; set; }
+    }
+    public sealed class TextRedactionResult : System.IEquatable<Excise.App.Models.TextRedactionResult>
+    {
+        public TextRedactionResult(bool Success, int RedactionCount, string? ErrorMessage = null) { }
+        public string? ErrorMessage { get; init; }
+        public int RedactionCount { get; init; }
+        public bool Success { get; init; }
+        public System.Collections.Generic.IReadOnlyList<string> Warnings { get; init; }
+        public static Excise.App.Models.TextRedactionResult Failed(string error) { }
+        public static Excise.App.Models.TextRedactionResult Succeeded(int count, System.Collections.Generic.IReadOnlyList<string>? warnings = null) { }
+    }
+    public class WindowSettings
+    {
+        public WindowSettings() { }
+        public bool ContinuousScrollEnabled { get; set; }
+        public System.Collections.Generic.List<Excise.App.Models.WindowSettings.DocumentState> DocumentStates { get; set; }
+        public double Height { get; set; }
+        public bool IsMaximized { get; set; }
+        public string ReadingOrderStrategy { get; set; }
+        public string WhitespaceMode { get; set; }
+        public double Width { get; set; }
+        public double X { get; set; }
+        public double Y { get; set; }
+        public void ApplyTo(Avalonia.Controls.Window window) { }
+        public void CaptureFrom(Avalonia.Controls.Window window) { }
+        public Excise.App.Models.WindowSettings.DocumentState GetOrCreateDocumentState(string filePath) { }
+        public void Save() { }
+        public void UpdateDocumentState(string filePath, double zoomLevel, int pageIndex) { }
+        public static Excise.App.Models.WindowSettings Load() { }
+        public class DocumentState
+        {
+            public DocumentState() { }
+            public string FilePath { get; set; }
+            public System.DateTime LastAccessed { get; set; }
+            public int LastPageIndex { get; set; }
+            public double ZoomLevel { get; set; }
+        }
+    }
+}
+namespace Excise.App.Services
+{
+    public sealed class AnnotationWorkflowService
+    {
+        public AnnotationWorkflowService(Excise.App.Services.PdfDocumentService documentService, Microsoft.Extensions.Logging.ILogger<Excise.App.Services.AnnotationWorkflowService> logger) { }
+        public Excise.Core.Document.PdfAnnotation AddArrow(int pageNumber, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "X",
+                "Y"})] System.ValueTuple<double, double> start, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "X",
+                "Y"})] System.ValueTuple<double, double> end, string? contents = null) { }
+        public Excise.Core.Document.PdfAnnotation AddCircle(int pageNumber, Excise.Core.Document.PdfRectangle rect, string? contents = null) { }
+        public Excise.Core.Document.PdfAnnotation AddFreeText(int pageNumber, Excise.Core.Document.PdfRectangle rect, string text, double fontSize = 12) { }
+        public Excise.Core.Document.PdfAnnotation AddHighlight(int pageNumber, Excise.Core.Document.PdfRectangle rect, string contents) { }
+        public Excise.Core.Document.PdfAnnotation AddImageStamp(int pageNumber, Excise.Core.Document.PdfRectangle rect, byte[] rgbPixels, int pixelWidth, int pixelHeight, string? contents = null) { }
+        public Excise.Core.Document.PdfAnnotation AddInk(int pageNumber, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "X",
+                "Y"})] System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<System.ValueTuple<double, double>>> strokes, string? contents = null) { }
+        public Excise.Core.Document.PdfAnnotation AddLine(int pageNumber, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "X",
+                "Y"})] System.ValueTuple<double, double> start, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "X",
+                "Y"})] System.ValueTuple<double, double> end, string? contents = null) { }
+        public Excise.Core.Document.PdfAnnotation AddPolyLine(int pageNumber, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "X",
+                "Y"})] System.Collections.Generic.IReadOnlyList<System.ValueTuple<double, double>> vertices, string? contents = null) { }
+        public Excise.Core.Document.PdfAnnotation AddPolygon(int pageNumber, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "X",
+                "Y"})] System.Collections.Generic.IReadOnlyList<System.ValueTuple<double, double>> vertices, string? contents = null) { }
+        public Excise.Core.Document.PdfAnnotation AddSquare(int pageNumber, Excise.Core.Document.PdfRectangle rect, string? contents = null) { }
+        public Excise.Core.Document.PdfAnnotation AddSquiggly(int pageNumber, Excise.Core.Document.PdfRectangle rect, string contents) { }
+        public Excise.Core.Document.PdfAnnotation AddStamp(int pageNumber, Excise.Core.Document.PdfRectangle rect, string stampName, string? contents = null) { }
+        public Excise.Core.Document.PdfAnnotation AddStrikeOut(int pageNumber, Excise.Core.Document.PdfRectangle rect, string contents) { }
+        public Excise.Core.Document.PdfAnnotation AddTextNote(int pageNumber, Excise.Core.Document.PdfRectangle rect, string contents) { }
+        public Excise.Core.Document.PdfAnnotation AddUnderline(int pageNumber, Excise.Core.Document.PdfRectangle rect, string contents) { }
+    }
+    public static class AppPaths
+    {
+        public static string CacheDir { get; }
+        public static string ConfigDir { get; }
+        public static string DataDir { get; }
+        public static string PreferencesPath { get; }
+        public static string RecentFilesPath { get; }
+        public static string ResponsivenessReportRequestPath { get; }
+        public static string WindowSettingsPath { get; }
+        public static string ZoomSettingsPath { get; }
+    }
+    public sealed class AvaloniaUserDialogService : Excise.App.Services.IUserDialogService
+    {
+        public AvaloniaUserDialogService(Microsoft.Extensions.Logging.ILogger<Excise.App.Services.AvaloniaUserDialogService> logger) { }
+        public System.Threading.Tasks.Task<string?> PromptPasswordAsync(string title, string message) { }
+        public System.Threading.Tasks.Task<string?> PromptTextAsync(string title, string message, string? defaultValue = null) { }
+        public System.Threading.Tasks.Task<bool> ShowConfirmAsync(string title, string message) { }
+        public System.Threading.Tasks.Task ShowMessageAsync(string title, string message) { }
+    }
+    public class BatesDocumentResult
+    {
+        public BatesDocumentResult() { }
+        public string? ErrorMessage { get; set; }
+        public string FileName { get; set; }
+        public string FilePath { get; set; }
+        public string FirstBatesNumber { get; set; }
+        public string LastBatesNumber { get; set; }
+        public string OutputPath { get; set; }
+        public int PageCount { get; set; }
+        public bool Success { get; set; }
+    }
+    public class BatesNumberingService
+    {
+        public BatesNumberingService(Microsoft.Extensions.Logging.ILogger<Excise.App.Services.BatesNumberingService> logger) { }
+        public void ApplyBatesNumbers(Excise.Core.Document.PdfDocument document, Excise.App.Services.BatesOptions options) { }
+        public Excise.App.Services.BatesResult ApplyBatesNumbersToSet(System.Collections.Generic.IEnumerable<string> filePaths, Excise.App.Services.BatesOptions options) { }
+        public int CalculateNextNumber(System.Collections.Generic.IEnumerable<string> filePaths, int startNumber) { }
+    }
+    public class BatesOptions
+    {
+        public BatesOptions() { }
+        public string FontName { get; set; }
+        public double FontSize { get; set; }
+        public double MarginX { get; set; }
+        public double MarginY { get; set; }
+        public int NumberOfDigits { get; set; }
+        public string? OutputDirectory { get; set; }
+        public string OutputSuffix { get; set; }
+        public Excise.App.Services.BatesPosition Position { get; set; }
+        public string Prefix { get; set; }
+        public int StartNumber { get; set; }
+        public string Suffix { get; set; }
+    }
+    public enum BatesPosition
+    {
+        TopLeft = 0,
+        TopCenter = 1,
+        TopRight = 2,
+        BottomLeft = 3,
+        BottomCenter = 4,
+        BottomRight = 5,
+    }
+    public class BatesResult
+    {
+        public BatesResult() { }
+        public System.Collections.Generic.List<Excise.App.Services.BatesDocumentResult> Documents { get; set; }
+        public string FirstBatesNumber { get; set; }
+        public string LastBatesNumber { get; set; }
+        public int NextBatesNumber { get; set; }
+        public int TotalPages { get; set; }
+    }
+    public static class CoordinateConverter
+    {
+        public const int DefaultRenderDpi = 150;
+        public const int PdfPointsPerInch = 72;
+        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "X",
+                "Y"})]
+        public static System.ValueTuple<double, double> AvaloniaPointToPdf(Avalonia.Point avaloniaPoint, double pageHeight) { }
+        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "Left",
+                "Bottom",
+                "Right",
+                "Top"})]
+        public static System.ValueTuple<double, double, double, double> AvaloniaRectToPdfRect(Avalonia.Rect avaloniaRect, double pageHeight) { }
+        public static double AvaloniaYToPdfY(double avaloniaY, double pageHeight) { }
+        public static string DescribeConversion(Avalonia.Rect input, string inputSystem, Avalonia.Rect output, string outputSystem) { }
+        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "X",
+                "Y",
+                "Width",
+                "Height"})]
+        public static System.ValueTuple<double, double, double, double> ForXGraphics(Avalonia.Rect avaloniaRect) { }
+        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "X",
+                "Y",
+                "Width",
+                "Height"})]
+        public static System.ValueTuple<double, double, double, double> ForXGraphics(Avalonia.Rect avaloniaRect, double pageHeight) { }
+        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "X",
+                "Y",
+                "Width",
+                "Height"})]
+        public static System.ValueTuple<double, double, double, double> ForXGraphicsWithVerification(Avalonia.Rect avaloniaRect, double pageHeight, bool xGraphicsUsesTopLeft = true) { }
+        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "Width",
+                "Height"})]
+        public static System.ValueTuple<double, double> GetRotatedPageDimensions(double pageWidth, double pageHeight, int rotation) { }
+        public static Avalonia.Rect ImagePixelsToPdfPoints(Avalonia.Rect imageRect, int renderDpi = 150) { }
+        public static double ImagePixelsToPdfPoints(double imagePixels, int renderDpi = 150) { }
+        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "Left",
+                "Bottom",
+                "Right",
+                "Top"})]
+        public static System.ValueTuple<double, double, double, double> ImageSelectionToPdfCoords(Avalonia.Rect imageSelection, double pageHeightPoints, int renderDpi = 150) { }
+        public static Avalonia.Rect ImageSelectionToPdfPointsTopLeft(Avalonia.Rect imageSelection, int renderDpi = 150) { }
+        public static bool IsValidForPage(Avalonia.Rect rect, double pageWidth, double pageHeight, double tolerance = 50) { }
+        public static Avalonia.Point PdfPointToAvalonia(double pdfX, double pdfY, double pageHeight) { }
+        public static Avalonia.Rect PdfPointsToImagePixels(Avalonia.Rect pdfRect, int renderDpi = 150) { }
+        public static double PdfPointsToImagePixels(double pdfPoints, int renderDpi = 150) { }
+        public static Avalonia.Rect PdfRectToAvaloniaRect(double pdfLeft, double pdfBottom, double pdfRight, double pdfTop, double pageHeight) { }
+        public static double PdfYToAvaloniaY(double pdfY, double pageHeight) { }
+        public static Avalonia.Rect TextBoundsToPdfPointsTopLeft(double textX, double textY, double textWidth, double textHeight, double pageHeight) { }
+        public static Avalonia.Rect TransformForRotation(Avalonia.Rect area, int rotation, double pageWidth, double pageHeight) { }
+    }
+    public sealed class DocumentTextIndex
+    {
+        public DocumentTextIndex(Excise.Core.Document.PdfDocument doc, Microsoft.Extensions.Logging.ILogger logger) { }
+        public bool IsReady { get; }
+        public int PageCount { get; }
+        public int PagesIndexed { get; }
+        public System.Threading.Tasks.Task BuildAsync([System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "Done",
+                "Total"})] System.IProgress<System.ValueTuple<int, int>>? progress = null, System.Threading.CancellationToken cancellationToken = default) { }
+        public string GetPageText(int pageIndex) { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Word> GetPageWords(int pageIndex) { }
+        public bool IsPageIndexed(int pageIndex) { }
+    }
+    public sealed class EditHistoryEntry
+    {
+        public EditHistoryEntry(string description, System.Func<System.Threading.Tasks.Task> undo, System.Func<System.Threading.Tasks.Task> redo) { }
+        public string Description { get; }
+    }
+    public sealed class EditHistoryService
+    {
+        public EditHistoryService() { }
+        public bool CanRedo { get; }
+        public bool CanUndo { get; }
+        public bool IsReplaying { get; }
+        public string? RedoDescription { get; }
+        public string? UndoDescription { get; }
+        public event System.EventHandler? Changed;
+        public void Clear() { }
+        public void Push(string description, System.Action undo, System.Action redo) { }
+        public void Push(string description, System.Func<System.Threading.Tasks.Task> undo, System.Func<System.Threading.Tasks.Task> redo) { }
+        public System.Threading.Tasks.Task RedoAsync() { }
+        public System.Threading.Tasks.Task UndoAsync() { }
+    }
+    public class FilenameSuggestionService
+    {
+        public FilenameSuggestionService() { }
+        public string SuggestPageSubsetFilename(string originalPath, string pageRange) { }
+        public string SuggestRedactedFilename(string originalPath) { }
+        public string SuggestSafeRedactedFilename(string originalPath) { }
+        public string SuggestWithAutoIncrement(string path) { }
+    }
+    public interface IUserDialogService
+    {
+        System.Threading.Tasks.Task<string?> PromptPasswordAsync(string title, string message);
+        System.Threading.Tasks.Task<string?> PromptTextAsync(string title, string message, string? defaultValue = null);
+        System.Threading.Tasks.Task<bool> ShowConfirmAsync(string title, string message);
+        System.Threading.Tasks.Task ShowMessageAsync(string title, string message);
+    }
+    public sealed class NullUserDialogService : Excise.App.Services.IUserDialogService
+    {
+        public NullUserDialogService() { }
+        public System.Threading.Tasks.Task<string?> PromptPasswordAsync(string title, string message) { }
+        public System.Threading.Tasks.Task<string?> PromptTextAsync(string title, string message, string? defaultValue = null) { }
+        public System.Threading.Tasks.Task<bool> ShowConfirmAsync(string title, string message) { }
+        public System.Threading.Tasks.Task ShowMessageAsync(string title, string message) { }
+    }
+    public sealed class PageOperationDiagnostics : System.IEquatable<Excise.App.Services.PageOperationDiagnostics>
+    {
+        public PageOperationDiagnostics(System.Collections.Generic.IReadOnlyList<string> Warnings) { }
+        public bool HasWarnings { get; }
+        public System.Collections.Generic.IReadOnlyList<string> Warnings { get; init; }
+    }
+    public sealed class PageOrganizationResult : System.IEquatable<Excise.App.Services.PageOrganizationResult>
+    {
+        public PageOrganizationResult(bool DidChange, int? CurrentPageIndex, System.Collections.Generic.IReadOnlyList<int> SelectedPageIndices) { }
+        public int? CurrentPageIndex { get; init; }
+        public bool DidChange { get; init; }
+        public System.Collections.Generic.IReadOnlyList<int> SelectedPageIndices { get; init; }
+        public static Excise.App.Services.PageOrganizationResult Changed(int? currentPageIndex = default, System.Collections.Generic.IReadOnlyList<int>? selectedPageIndices = null) { }
+        public static Excise.App.Services.PageOrganizationResult NoChange(int? currentPageIndex = default, System.Collections.Generic.IReadOnlyList<int>? selectedPageIndices = null) { }
+    }
+    public sealed class PageOrganizationWorkflowService
+    {
+        public PageOrganizationWorkflowService(Excise.App.Services.PdfDocumentService documentService, Excise.App.Services.IUserDialogService dialogService, Microsoft.Extensions.Logging.ILogger<Excise.App.Services.PageOrganizationWorkflowService> logger) { }
+        public System.Threading.Tasks.Task ExtractPagesToFileAsync(string outputPath, System.Collections.Generic.IEnumerable<int> pageIndices) { }
+        public System.Threading.Tasks.Task<Excise.App.Services.PageOrganizationResult> InsertPagesFromFileAsync(string sourcePdfPath, int insertAtIndex) { }
+        public System.Threading.Tasks.Task MergeDocumentsAsync(System.Collections.Generic.IReadOnlyList<string> sourcePaths, string outputPath) { }
+        public System.Threading.Tasks.Task<Excise.App.Services.PageOrganizationResult> MovePageAsync(int fromIndex, int toIndex) { }
+        public System.Threading.Tasks.Task<Excise.App.Services.PageOrganizationResult> MovePagesAsync(System.Collections.Generic.IEnumerable<int> pageIndices, int delta, int currentPageIndex) { }
+        public System.Threading.Tasks.Task<Excise.App.Services.PageOrganizationResult> RemovePageAsync(int pageIndex) { }
+        public System.Threading.Tasks.Task<Excise.App.Services.PageOrganizationResult> RemovePagesAsync(System.Collections.Generic.IEnumerable<int> pageIndices, int currentPageIndex) { }
+        public System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<string>> SplitDocumentAsync(string outputFolder, Excise.App.Services.SplitMode mode, int pagesPerChunk = 1, System.Collections.Generic.IReadOnlyList<int>? boundaries = null) { }
+    }
+    public class PdfDocumentService
+    {
+        public PdfDocumentService(Microsoft.Extensions.Logging.ILogger<Excise.App.Services.PdfDocumentService> logger) { }
+        public string? CurrentUserPassword { get; }
+        public bool IsDocumentLoaded { get; }
+        public bool IsEncrypted { get; }
+        public int PageCount { get; }
+        public string PdfVersion { get; }
+        public void AddPagesFromPdf(string sourcePdfPath, System.Collections.Generic.IEnumerable<int>? pageIndices = null) { }
+        public Excise.App.Services.PageOperationDiagnostics AnalyzePageOperationPreservation(System.Collections.Generic.IEnumerable<int>? pageIndices = null) { }
+        public void CloseDocument() { }
+        public void ExtractPagesToPdf(string outputPath, System.Collections.Generic.IEnumerable<int> pageIndices) { }
+        public Excise.Core.Document.PdfDocument? GetCurrentDocument() { }
+        public System.IO.MemoryStream? GetCurrentDocumentAsStream() { }
+        public double GetPageHeight(int pageIndex) { }
+        public double GetPageWidth(int pageIndex) { }
+        public Excise.Core.Security.PdfEncryptionOptions? GetReEncryptionOptions() { }
+        public void InsertPagesFromPdf(string sourcePdfPath, int insertAtIndex, System.Collections.Generic.IEnumerable<int>? pageIndices = null) { }
+        public void LoadDocument(string filePath, string? userPassword = null) { }
+        public void MergeDocumentsToPdf(System.Collections.Generic.IReadOnlyList<string> sourcePaths, string outputPath) { }
+        public void MovePage(int fromIndex, int toIndex) { }
+        public System.Collections.Generic.IReadOnlyList<int> MovePages(System.Collections.Generic.IEnumerable<int> pageIndices, int delta) { }
+        public void RemovePage(int pageIndex) { }
+        public void RemovePages(System.Collections.Generic.IEnumerable<int> pageIndices) { }
+        public void RotatePage(int pageIndex, int degrees) { }
+        public void RotatePage180(int pageIndex) { }
+        public void RotatePageLeft(int pageIndex) { }
+        public void RotatePageRight(int pageIndex) { }
+        public void SaveDocument(string? filePath = null) { }
+        public System.Collections.Generic.IReadOnlyList<string> SplitDocument(string outputFolder, Excise.App.Services.SplitMode mode, int pagesPerChunk = 1, System.Collections.Generic.IReadOnlyList<int>? boundaries = null) { }
+        public bool VerifyPassword(string? candidate) { }
+    }
+    public class PdfRenderService
+    {
+        public PdfRenderService(Microsoft.Extensions.Logging.ILogger<Excise.App.Services.PdfRenderService> logger) { }
+        public int MaxCacheEntries { get; set; }
+        public long MaxCacheMemoryBytes { get; set; }
+        public void ClearCache() { }
+        public Excise.App.Services.PdfRenderService.CacheStatistics GetCacheStats() { }
+        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "Width",
+                "Height"})]
+        public System.ValueTuple<double, double> GetPageDimensions(string pdfPath, int pageIndex) { }
+        public void LogCacheStats() { }
+        public virtual System.Threading.Tasks.Task<SkiaSharp.SKBitmap?> RenderPageAsync(string pdfPath, int pageIndex, int dpi = 150, System.Threading.CancellationToken cancellationToken = default) { }
+        public virtual System.Threading.Tasks.Task<SkiaSharp.SKBitmap?> RenderPageFromStreamAsync(System.IO.Stream pdfStream, int pageIndex, int dpi = 150, System.Threading.CancellationToken cancellationToken = default) { }
+        public virtual System.Threading.Tasks.Task<SkiaSharp.SKBitmap?> RenderThumbnailAsync(string pdfPath, int pageIndex, int width = 200, System.Threading.CancellationToken cancellationToken = default) { }
+        public void TrimCacheForMemoryPressure(long targetBytes) { }
+        public class CacheStatistics : System.IEquatable<Excise.App.Services.PdfRenderService.CacheStatistics>
+        {
+            public CacheStatistics(int Count, int MaxEntries, long Hits, long Misses, long CurrentBytes, long MaxBytes, double HitRate) { }
+            public int Count { get; init; }
+            public long CurrentBytes { get; init; }
+            public double HitRate { get; init; }
+            public long Hits { get; init; }
+            public long MaxBytes { get; init; }
+            public int MaxEntries { get; init; }
+            public long Misses { get; init; }
+        }
+    }
+    public class PdfSearchService
+    {
+        public PdfSearchService(Microsoft.Extensions.Logging.ILogger<Excise.App.Services.PdfSearchService> logger) { }
+        public System.Collections.Generic.List<Excise.App.Services.PdfSearchService.SearchMatch> Search(string pdfPath, string searchTerm, bool caseSensitive = false, bool wholeWordsOnly = false, bool useRegex = false, System.IProgress<Excise.App.Services.PdfSearchService.SearchProgress>? progress = null) { }
+        public System.Collections.Generic.List<Excise.App.Services.PdfSearchService.SearchMatch> Search(Excise.App.Services.DocumentTextIndex index, string searchTerm, bool caseSensitive = false, bool wholeWordsOnly = false, bool useRegex = false, System.Threading.CancellationToken cancellationToken = default, System.IProgress<Excise.App.Services.PdfSearchService.SearchProgress>? progress = null) { }
+        public System.Collections.Generic.List<Excise.App.Services.PdfSearchService.SearchMatch> Search(Excise.Core.Document.PdfDocument document, string searchTerm, bool caseSensitive = false, bool wholeWordsOnly = false, bool useRegex = false, System.Threading.CancellationToken cancellationToken = default, System.IProgress<Excise.App.Services.PdfSearchService.SearchProgress>? progress = null) { }
+        public System.Collections.Generic.List<Excise.App.Services.PdfSearchService.SearchMatch> SearchInPage(Excise.Core.Document.PdfPage page, string searchTerm, bool caseSensitive = false, bool wholeWordsOnly = false, bool useRegex = false, int pageIndex = 0) { }
+        public class SearchMatch
+        {
+            public SearchMatch() { }
+            public string Context { get; set; }
+            public double Height { get; set; }
+            public string MatchedText { get; set; }
+            public int PageIndex { get; set; }
+            public double Width { get; set; }
+            public double X { get; set; }
+            public double Y { get; set; }
+        }
+        public readonly struct SearchProgress : System.IEquatable<Excise.App.Services.PdfSearchService.SearchProgress>
+        {
+            public SearchProgress(int PagesScanned, int TotalPages, int MatchesFound) { }
+            public int MatchesFound { get; init; }
+            public int PagesScanned { get; init; }
+            public int TotalPages { get; init; }
+        }
+    }
+    public class PdfTextExtractionService
+    {
+        public PdfTextExtractionService(Microsoft.Extensions.Logging.ILogger<Excise.App.Services.PdfTextExtractionService> logger) { }
+        public string ExtractAllText(string pdfPath) { }
+        public string ExtractTextFromArea(string pdfPath, int pageIndex, Excise.Core.Document.PdfPageRect area) { }
+        public string ExtractTextFromArea(System.IO.Stream pdfStream, int pageIndex, Excise.Core.Document.PdfPageRect area, string sourceName = "PDF") { }
+        public string ExtractTextFromArea(string pdfPath, int pageIndex, Avalonia.Rect area, int renderDpi = 150) { }
+        public string ExtractTextFromArea(System.IO.Stream pdfStream, int pageIndex, Avalonia.Rect area, int renderDpi = 150, string sourceName = "PDF") { }
+        public string ExtractTextFromPage(string pdfPath, int pageIndex) { }
+        public string ExtractTextFromPage(System.IO.Stream pdfStream, int pageIndex, string sourceName = "PDF") { }
+    }
+    public class RecentFilesService
+    {
+        public RecentFilesService(Microsoft.Extensions.Logging.ILogger<Excise.App.Services.RecentFilesService> logger) { }
+        public void AddOrUpdate(string filePath, System.Collections.ObjectModel.ObservableCollection<Excise.App.Services.RecentFilesService.RecentFileEntry> entries) { }
+        public System.Collections.ObjectModel.ObservableCollection<Excise.App.Services.RecentFilesService.RecentFileEntry> Load() { }
+        public void Remove(string filePath, System.Collections.ObjectModel.ObservableCollection<Excise.App.Services.RecentFilesService.RecentFileEntry> entries) { }
+        public void Save(System.Collections.Generic.IEnumerable<Excise.App.Services.RecentFilesService.RecentFileEntry> entries) { }
+        public void TogglePin(string filePath, System.Collections.ObjectModel.ObservableCollection<Excise.App.Services.RecentFilesService.RecentFileEntry> entries) { }
+        public class RecentFileEntry
+        {
+            public RecentFileEntry() { }
+            [System.Text.Json.Serialization.JsonPropertyName("isPinned")]
+            public bool IsPinned { get; set; }
+            [System.Text.Json.Serialization.JsonPropertyName("lastAccessedUtc")]
+            public System.DateTime LastAccessedUtc { get; set; }
+            [System.Text.Json.Serialization.JsonPropertyName("path")]
+            public string Path { get; set; }
+        }
+    }
+    public enum RedactedContentVerificationStatus
+    {
+        NotChecked = 0,
+        Verified = 1,
+        Warning = 2,
+    }
+    public sealed class RedactedCopySafetyOptions : System.IEquatable<Excise.App.Services.RedactedCopySafetyOptions>
+    {
+        public RedactedCopySafetyOptions() { }
+        public bool RunHiddenTextAudit { get; init; }
+        public bool RunRasterRedactionAudit { get; init; }
+        public bool ScrubAttachments { get; init; }
+        public bool ScrubMetadata { get; init; }
+        public bool VerifyCapturedSelectionText { get; init; }
+        public static Excise.App.Services.RedactedCopySafetyOptions Default { get; }
+    }
+    public sealed class RedactedCopySafetyReport : System.IEquatable<Excise.App.Services.RedactedCopySafetyReport>
+    {
+        public RedactedCopySafetyReport(
+                    int RedactionAreaCount,
+                    int SkippedRedactionAreaCount,
+                    int CapturedSelectionPreviewCount,
+                    int CheckedSelectionPreviewCount,
+                    int RemainingSelectionPreviewCount,
+                    int SkippedShortPreviewCount,
+                    Excise.App.Services.RedactedContentVerificationStatus ContentVerificationStatus,
+                    bool MetadataScrubbed,
+                    int InfoFieldsScrubbed,
+                    bool HadXmpMetadata,
+                    bool AttachmentsScrubbed,
+                    int EmbeddedFileCountBefore,
+                    Excise.App.Services.RedactedContentVerificationStatus HiddenTextAuditStatus,
+                    int HiddenTextFindingCount,
+                    Excise.App.Services.RedactedContentVerificationStatus RasterRedactionAuditStatus,
+                    int RemainingRasterOverlapCount,
+                    System.Collections.Generic.IReadOnlyList<string> Warnings) { }
+        public bool AttachmentsScrubbed { get; init; }
+        public int CapturedSelectionPreviewCount { get; init; }
+        public int CheckedSelectionPreviewCount { get; init; }
+        public Excise.App.Services.RedactedContentVerificationStatus ContentVerificationStatus { get; init; }
+        public int EmbeddedFileCountBefore { get; init; }
+        public bool HadXmpMetadata { get; init; }
+        public bool HasWarnings { get; }
+        public Excise.App.Services.RedactedContentVerificationStatus HiddenTextAuditStatus { get; init; }
+        public int HiddenTextFindingCount { get; init; }
+        public int InfoFieldsScrubbed { get; init; }
+        public bool MetadataScrubbed { get; init; }
+        public Excise.App.Services.RedactedContentVerificationStatus RasterRedactionAuditStatus { get; init; }
+        public int RedactionAreaCount { get; init; }
+        public int RemainingRasterOverlapCount { get; init; }
+        public int RemainingSelectionPreviewCount { get; init; }
+        public int SkippedRedactionAreaCount { get; init; }
+        public int SkippedShortPreviewCount { get; init; }
+        public System.Collections.Generic.IReadOnlyList<string> Warnings { get; init; }
+    }
+    public sealed class RedactedCopySafetyService
+    {
+        public RedactedCopySafetyService(Microsoft.Extensions.Logging.ILogger<Excise.App.Services.RedactedCopySafetyService> logger) { }
+        public string FormatForDialog(string savedPath, Excise.App.Services.RedactedCopySafetyReport report) { }
+        public Excise.App.Services.RedactedCopySafetyReport PrepareRedactedCopy(Excise.Core.Document.PdfDocument document, System.Collections.Generic.IReadOnlyCollection<Excise.App.Models.PendingRedaction> requestedRedactions, int skippedRedactionAreaCount = 0, Excise.App.Services.RedactedCopySafetyOptions? options = null) { }
+    }
+    public class RedactionOptions
+    {
+        public RedactionOptions() { }
+        public bool RemoveAllMetadata { get; set; }
+        public bool SanitizeMetadata { get; set; }
+    }
+    public class RedactionService
+    {
+        public RedactionService(Microsoft.Extensions.Logging.ILogger<Excise.App.Services.RedactionService> logger, Microsoft.Extensions.Logging.ILoggerFactory _) { }
+        public void RedactArea(Excise.Core.Document.PdfPage page, Excise.Core.Document.PdfPageRect area) { }
+        public void RedactArea(Excise.Core.Document.PdfPage page, Avalonia.Rect area, int renderDpi = 72) { }
+        public void RedactAreas(Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfPageRect> areas) { }
+        public void RedactAreas(Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Avalonia.Rect> areas, int renderDpi = 150) { }
+        public Excise.App.Models.TextRedactionResult RedactText(string inputPath, string outputPath, string textToRedact, bool caseSensitive = false, bool allowLowConfidence = false) { }
+        public void RedactWithOptions(Excise.Core.Document.PdfDocument document, Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfPageRect> areas, Excise.App.Services.RedactionOptions options) { }
+        public void RedactWithOptions(Excise.Core.Document.PdfDocument document, Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Avalonia.Rect> areas, Excise.App.Services.RedactionOptions options, int renderDpi = 150) { }
+        public void SanitizeMetadata(Excise.Core.Document.PdfDocument document, System.Collections.Generic.IEnumerable<string> terms) { }
+        public void StripAllMetadata(Excise.Core.Document.PdfDocument document) { }
+    }
+    public class ScriptExecutionResult
+    {
+        public ScriptExecutionResult() { }
+        public string? ErrorMessage { get; init; }
+        public object? ReturnValue { get; init; }
+        public bool Success { get; init; }
+        public override string ToString() { }
+        public static Excise.App.Services.ScriptExecutionResult FromError(string errorMessage) { }
+        public static Excise.App.Services.ScriptExecutionResult FromSuccess(object? returnValue = null) { }
+    }
+    public class ScriptingService
+    {
+        public ScriptingService(Excise.App.ViewModels.MainWindowViewModel viewModel) { }
+        public System.Threading.Tasks.Task<Excise.App.Services.ScriptExecutionResult> ExecuteAsync(string scriptCode) { }
+        public System.Threading.Tasks.Task<Excise.App.Services.ScriptExecutionResult> ExecuteFileAsync(string scriptFilePath) { }
+        public System.Collections.Generic.List<string> ValidateScript(string scriptCode) { }
+    }
+    public sealed class SignatureApplicationOptions
+    {
+        public SignatureApplicationOptions() { }
+        public System.Collections.Generic.IReadOnlyList<System.Security.Cryptography.X509Certificates.X509Certificate2>? AdditionalCertificates { get; init; }
+        public string? ContactInfo { get; init; }
+        public string FieldName { get; init; }
+        public string? Location { get; init; }
+        public string? Reason { get; init; }
+        public int SignatureCapacityBytes { get; init; }
+        public string? SignerName { get; init; }
+        public System.DateTimeOffset? SigningTime { get; init; }
+    }
+    public class SignatureApplicationService
+    {
+        public SignatureApplicationService(Microsoft.Extensions.Logging.ILogger<Excise.App.Services.SignatureApplicationService> logger) { }
+        public byte[] SignDocument(Excise.Core.Document.PdfDocument document, System.Security.Cryptography.X509Certificates.X509Certificate2 certificate, Excise.App.Services.SignatureApplicationOptions? options = null) { }
+        public void SignFile(string inputPath, string outputPath, System.Security.Cryptography.X509Certificates.X509Certificate2 certificate, Excise.App.Services.SignatureApplicationOptions? options = null) { }
+    }
+    public class SignatureTrustEvaluator
+    {
+        public SignatureTrustEvaluator() { }
+        public SignatureTrustEvaluator(System.Collections.Generic.IReadOnlyList<System.Security.Cryptography.X509Certificates.X509Certificate2> customTrustAnchors) { }
+        public virtual Excise.App.Services.SignatureTrustResult Evaluate(byte[] signerCertificate, System.Collections.Generic.IReadOnlyList<byte[]> candidateChainCertificates) { }
+    }
+    public sealed class SignatureTrustResult
+    {
+        public SignatureTrustResult() { }
+        public string Details { get; init; }
+        public Excise.App.Services.SignatureTrustStatus Status { get; init; }
+    }
+    public enum SignatureTrustStatus
+    {
+        NotEvaluated = 0,
+        Trusted = 1,
+        Untrusted = 2,
+        Indeterminate = 3,
+    }
+    public class SignatureVerificationResult
+    {
+        public SignatureVerificationResult() { }
+        public bool ByteRangeIntegrityChecked { get; set; }
+        public bool ByteRangeIntegrityValid { get; set; }
+        public bool ByteRangeStructureChecked { get; set; }
+        public string ByteRangeStructureMessage { get; set; }
+        public bool ByteRangeStructureValid { get; set; }
+        public bool CoversWholeDocument { get; set; }
+        public bool IsValid { get; set; }
+        public string SignatureName { get; set; }
+        public string SignedBy { get; set; }
+        public System.DateTime SigningTime { get; set; }
+        public Excise.App.Services.SignatureVerificationState State { get; }
+        public string StatusMessage { get; set; }
+        public string TrustDetails { get; set; }
+        public Excise.App.Services.SignatureTrustStatus TrustStatus { get; set; }
+    }
+    public class SignatureVerificationService
+    {
+        public SignatureVerificationService(Microsoft.Extensions.Logging.ILogger<Excise.App.Services.SignatureVerificationService> logger) { }
+        public SignatureVerificationService(Microsoft.Extensions.Logging.ILogger<Excise.App.Services.SignatureVerificationService> logger, Excise.App.Services.SignatureTrustEvaluator? trustEvaluator) { }
+        public System.Collections.Generic.List<Excise.App.Services.SignatureVerificationResult> VerifySignatures(string pdfPath) { }
+    }
+    public enum SignatureVerificationState
+    {
+        Indeterminate = 0,
+        Invalid = 1,
+        ValidUntrusted = 2,
+        ValidTrustUnknown = 3,
+        ValidTrusted = 4,
+    }
+    public sealed class SignatureVerificationSummaryFormatter
+    {
+        public SignatureVerificationSummaryFormatter() { }
+        public string Format(System.Collections.Generic.IReadOnlyList<Excise.App.Services.SignatureVerificationResult> results) { }
+    }
+    public sealed class SignatureVerificationWorkflowService
+    {
+        public SignatureVerificationWorkflowService(Excise.App.Services.SignatureVerificationService signatureService, Excise.App.Services.SignatureVerificationSummaryFormatter summaryFormatter, Excise.App.Services.IUserDialogService dialogService, Microsoft.Extensions.Logging.ILogger<Excise.App.Services.SignatureVerificationWorkflowService> logger) { }
+        public System.Threading.Tasks.Task VerifyAsync(bool isDocumentLoaded, string? currentFilePath) { }
+    }
+    public static class SigningCertificateFactory
+    {
+        public static System.Security.Cryptography.X509Certificates.X509Certificate2 CreateSelfSigned(string subjectName, System.TimeSpan? lifetime = default) { }
+        public static System.Security.Cryptography.X509Certificates.X509Certificate2 LoadFromPkcs12(string path, string? password) { }
+    }
+    public enum SplitMode
+    {
+        EveryNPages = 0,
+        PageBoundaries = 1,
+        SinglePages = 2,
+        Bookmarks = 3,
+    }
+    public sealed class ThumbnailCacheService : System.IDisposable
+    {
+        public ThumbnailCacheService(string pdfPath, Excise.Core.Document.PdfDocument doc, Microsoft.Extensions.Logging.ILogger logger, int thumbnailDpi = 36, string? cacheSalt = null) { }
+        public string CacheDir { get; }
+        public void Dispose() { }
+        public System.Threading.Tasks.Task<SkiaSharp.SKBitmap?> GetThumbnailAsync(int pageIndex, System.Threading.CancellationToken cancellationToken = default) { }
+    }
+    public class ToastService
+    {
+        public ToastService() { }
+        public event System.EventHandler<Excise.App.Services.ToastService.ToastEventArgs>? ToastRequested;
+        public void ShowError(string message, string? details = null) { }
+        public void ShowInfo(string message, string? details = null) { }
+        public void ShowSuccess(string message, string? details = null) { }
+        public void ShowWarning(string message, string? details = null) { }
+        public class ToastEventArgs : System.EventArgs
+        {
+            public ToastEventArgs() { }
+            public string? Details { get; set; }
+            public string Message { get; set; }
+            public Excise.App.Services.ToastService.ToastSeverity Severity { get; set; }
+        }
+        public enum ToastSeverity
+        {
+            Informational = 0,
+            Warning = 1,
+            Error = 2,
+            Success = 3,
+        }
+    }
+}
+namespace Excise.App.Threading
+{
+    public sealed class AvaloniaDispatcherScheduler : System.Reactive.Concurrency.LocalScheduler
+    {
+        public static Excise.App.Threading.AvaloniaDispatcherScheduler Instance { get; }
+        public override System.IDisposable Schedule<TState>(TState state, System.TimeSpan dueTime, System.Func<System.Reactive.Concurrency.IScheduler, TState, System.IDisposable> action) { }
+    }
+}
+namespace Excise.App.ViewModels
+{
+    public sealed class AboutWindowViewModel
+    {
+        public AboutWindowViewModel() { }
+        public string AppName { get; }
+        public string AppVersion { get; }
+        public string Copyright { get; }
+        public Excise.App.ViewModels.LicenseManifest Manifest { get; }
+        public System.Collections.Generic.IReadOnlyList<Excise.App.ViewModels.ThirdPartyPackage> Packages { get; }
+        public string ProjectUrl { get; }
+        public string Tagline { get; }
+    }
+    public class CurrentDocumentInfo
+    {
+        public CurrentDocumentInfo(Excise.Core.Document.PdfDocument? document, string filePath, int pageCount) { }
+        public Excise.Core.Document.PdfDocument? Document { get; }
+        public string FilePath { get; }
+        public int PageCount { get; }
+    }
+    public sealed class DocumentOpenTiming : System.IEquatable<Excise.App.ViewModels.DocumentOpenTiming>
+    {
+        public DocumentOpenTiming(string FilePath, int PageCount, long DocumentInstancesLoadedElapsedMs, long FirstPageVisibleElapsedMs, long ThumbnailPlaceholdersReadyElapsedMs, long OutlineReadyElapsedMs, long SearchIndexStartedElapsedMs, long TotalLoadElapsedMs) { }
+        public long DocumentInstancesLoadedElapsedMs { get; init; }
+        public string FilePath { get; init; }
+        public long FirstPageVisibleElapsedMs { get; init; }
+        public long OutlineReadyElapsedMs { get; init; }
+        public int PageCount { get; init; }
+        public long SearchIndexStartedElapsedMs { get; init; }
+        public long ThumbnailPlaceholdersReadyElapsedMs { get; init; }
+        public long TotalLoadElapsedMs { get; init; }
+    }
+    public class DocumentStateManager : ReactiveUI.ReactiveObject
+    {
+        public DocumentStateManager() { }
+        public int AnnotationEditsCount { get; set; }
+        public string CurrentFilePath { get; }
+        public string FileType { get; }
+        public int FormFieldEditsCount { get; set; }
+        public bool HasUnsavedChanges { get; }
+        public bool IsOriginalFile { get; }
+        public bool IsRedactedVersion { get; }
+        public string OriginalFilePath { get; }
+        public int PageEditsCount { get; set; }
+        public int PendingRedactionsCount { get; set; }
+        public int RemovedPagesCount { get; set; }
+        public int TypewriterEditsCount { get; set; }
+        public string GetSaveButtonText() { }
+        public void MarkSaved() { }
+        public void Reset() { }
+        public void SetDocument(string filePath) { }
+        public void UpdateCurrentPath(string newPath) { }
+    }
+    public sealed class LicenseManifest
+    {
+        public LicenseManifest() { }
+        [System.Text.Json.Serialization.JsonPropertyName("generatedAt")]
+        public string? GeneratedAt { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("packages")]
+        public System.Collections.Generic.List<Excise.App.ViewModels.ThirdPartyPackage> Packages { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("project")]
+        public string? Project { get; set; }
+    }
+    public class MainWindowViewModel : Excise.App.ViewModels.ViewModelBase
+    {
+        public MainWindowViewModel() { }
+        public MainWindowViewModel(
+                    Microsoft.Extensions.Logging.ILogger<Excise.App.ViewModels.MainWindowViewModel> logger,
+                    Microsoft.Extensions.Logging.ILoggerFactory loggerFactory,
+                    Excise.App.Services.PdfDocumentService documentService,
+                    Excise.App.Services.PdfRenderService renderService,
+                    Excise.App.Services.RedactionService redactionService,
+                    Excise.App.Services.PdfTextExtractionService textExtractionService,
+                    Excise.App.Services.PdfSearchService searchService,
+                    Excise.App.Services.SignatureVerificationService signatureService,
+                    Excise.App.Services.FilenameSuggestionService filenameSuggestionService,
+                    Excise.App.Services.ToastService toastService,
+                    Excise.App.Services.SignatureVerificationSummaryFormatter? signatureSummaryFormatter = null,
+                    Excise.App.Services.IUserDialogService? dialogService = null,
+                    Excise.App.Services.SignatureVerificationWorkflowService? signatureWorkflowService = null,
+                    Excise.App.Services.PageOrganizationWorkflowService? pageOrganizationWorkflow = null,
+                    Excise.App.Services.AnnotationWorkflowService? annotationWorkflow = null,
+                    Excise.App.Services.RedactedCopySafetyService? redactedCopySafetyService = null) { }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> AboutCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> AddCircleAnnotationFromDragCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> AddFreeTextAnnotationFromDragCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> AddHighlightAnnotationFromSelectionCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> AddImageStampAnnotationFromDragCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> AddPagesCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> AddSquareAnnotationFromDragCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> AddSquigglyAnnotationFromSelectionCommand { get; }
+        public ReactiveUI.ReactiveCommand<string, System.Reactive.Unit> AddStampAnnotationFromDragCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> AddStickyNoteAnnotationCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> AddStrikeOutAnnotationFromSelectionCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> AddUnderlineAnnotationFromSelectionCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ApplyAllRedactionsCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ApplyRedactionCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, int> AutoDetectFieldsCommand { get; }
+        public bool CanMoveSelectedPagesEarlier { get; }
+        public bool CanMoveSelectedPagesLater { get; }
+        public bool CanRedo { get; }
+        public bool CanRemoveSelectedPages { get; }
+        public bool CanUndo { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ClearAllRedactionsCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ClearSelectedPagesCommand { get; }
+        public System.Collections.ObjectModel.ObservableCollection<Excise.App.Models.ClipboardEntry> ClipboardHistory { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> CloseDocumentCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit>? CloseSearchCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> CombineDocumentsCommand { get; }
+        public bool ContinuousScrollPreference { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> CopyTextCommand { get; }
+        public Excise.App.ViewModels.CurrentDocumentInfo? CurrentDocument { get; }
+        public string CurrentModeText { get; }
+        public int CurrentPage { get; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfField> CurrentPageFormFields { get; }
+        public Avalonia.Media.Imaging.Bitmap? CurrentPageImage { get; set; }
+        public int CurrentPageIndex { get; set; }
+        public System.Collections.ObjectModel.ObservableCollection<Excise.Core.Document.PdfPageRect> CurrentPageSearchHighlights { get; set; }
+        public string CurrentPageText { get; }
+        public Avalonia.Rect CurrentRedactionArea { get; set; }
+        public Excise.Core.Document.PdfPageRect? CurrentRedactionPageArea { get; set; }
+        public int CurrentRedactionRenderDpi { get; set; }
+        public int CurrentSearchMatchIndex { get; set; }
+        public Avalonia.Rect CurrentTextSelectionArea { get; set; }
+        public Excise.Core.Document.PdfPageRect? CurrentTextSelectionPageArea { get; set; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> DiscardPendingTypewriterEditsCommand { get; }
+        public int DisplayPageNumber { get; }
+        public string DocumentName { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ExitCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ExportCurrentPageCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ExportPagesCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ExtractCurrentPageCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ExtractSelectedPagesCommand { get; }
+        public string FilePath { get; }
+        public Excise.App.ViewModels.DocumentStateManager FileState { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit>? FindCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit>? FindNextCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit>? FindPreviousCommand { get; }
+        public Excise.Core.Document.PdfFieldType FormAuthoringFieldType { get; set; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> GoToNextPendingTypewriterEditCommand { get; }
+        public ReactiveUI.ReactiveCommand<int, System.Reactive.Unit> GoToPageCommand { get; }
+        public bool HasOutline { get; }
+        public bool HasPendingTypewriterEdits { get; }
+        public bool HasRecentFiles { get; }
+        public bool HasSelectedPages { get; }
+        public bool HasTextSelection { get; }
+        public System.Collections.ObjectModel.ObservableCollection<Excise.Avalonia.Controls.HiddenTextHighlight> HiddenTextHighlights { get; }
+        public bool IgnoreDocumentPermissions { get; set; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> InsertPagesAfterCurrentCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> InsertPagesBeforeCurrentCommand { get; }
+        public Excise.Avalonia.Controls.InteractionMode InteractionMode { get; }
+        public bool IsClipboardSidebarVisible { get; set; }
+        public bool IsContinuousView { get; }
+        public bool IsDocumentLoaded { get; }
+        public bool IsFormAuthoringMode { get; set; }
+        public bool IsHiddenTextScanInProgress { get; }
+        public bool IsLeftSidebarVisible { get; }
+        public bool IsOutlineSidebarVisible { get; set; }
+        public bool IsPathAnnotationMode { get; set; }
+        public bool IsRedactionMode { get; set; }
+        public bool IsSearchVisible { get; set; }
+        public bool IsSearching { get; }
+        public bool IsSidebarSplitterVisible { get; }
+        public bool IsTextSelectionMode { get; set; }
+        public bool IsThumbnailsSidebarVisible { get; set; }
+        public bool IsTypewriterMode { get; set; }
+        public bool IsTypewriterStyleInspectorVisible { get; }
+        public ReactiveUI.ReactiveCommand<Excise.App.Models.OutlineNode, System.Reactive.Unit> JumpToOutlineCommand { get; }
+        public ReactiveUI.ReactiveCommand<Excise.App.Services.PdfSearchService.SearchMatch, System.Reactive.Unit>? JumpToSearchMatchCommand { get; }
+        public Excise.App.ViewModels.DocumentOpenTiming? LastDocumentOpenTiming { get; }
+        public int LoadDocumentTimeoutSeconds { get; set; }
+        public ReactiveUI.ReactiveCommand<string, System.Reactive.Unit> LoadRecentFileCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> MakeSearchableCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> MoveCurrentPageEarlierCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> MoveCurrentPageLaterCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> MoveSelectedPagesEarlierCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> MoveSelectedPagesLaterCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> NextPageCommand { get; }
+        public ReactiveUI.ReactiveCommand<string, System.Reactive.Unit> OpenExternalLinkCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> OpenFileCommand { get; }
+        public string OperationStatus { get; set; }
+        public System.Collections.ObjectModel.ObservableCollection<Excise.App.Models.OutlineNode> OutlineNodes { get; }
+        public string PageSelectionSummary { get; }
+        public System.Collections.ObjectModel.ObservableCollection<Excise.App.Models.PageThumbnail> PageThumbnails { get; }
+        public Excise.App.ViewModels.PathAnnotationKind PathAnnotationKind { get; set; }
+        public Excise.Avalonia.Controls.PathCaptureKind PathCaptureKind { get; }
+        public Excise.Core.Document.PdfDocument? PdfCoreDocument { get; set; }
+        public System.Collections.ObjectModel.ObservableCollection<Excise.App.Models.PendingRedaction> PendingRedactions { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> PreviousPageCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> PrintCommand { get; }
+        public Excise.Core.Text.ReadingOrderStrategy ReadingOrderStrategy { get; set; }
+        public System.Collections.ObjectModel.ObservableCollection<Avalonia.Controls.MenuItem> RecentFileMenuItems { get; }
+        public System.Collections.ObjectModel.ObservableCollection<string> RecentFiles { get; set; }
+        public Excise.App.ViewModels.RedactionWorkflowManager RedactionWorkflow { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> RedoCommand { get; }
+        public string RedoMenuHeader { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> RemoveCurrentPageCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Guid, System.Reactive.Unit> RemovePendingRedactionCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> RemoveSelectedPagesCommand { get; }
+        public int RenderCacheMax { get; set; }
+        public Excise.App.Services.PdfRenderService.CacheStatistics RenderCacheStats { get; }
+        public long RenderVersion { get; }
+        public bool RevealHiddenText { get; set; }
+        public bool RevealRasterizedHidden { get; set; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> RotatePage180Command { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> RotatePageLeftCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> RotatePageRightCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SaveAsCommand { get; }
+        public string SaveButtonText { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SaveFileCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SaveFlattenedFormCopyCommand { get; }
+        public bool SearchCaseSensitive { get; set; }
+        public System.Collections.ObjectModel.ObservableCollection<Excise.App.Services.PdfSearchService.SearchMatch> SearchMatches { get; set; }
+        public string SearchProgressText { get; }
+        public string SearchResultText { get; }
+        public string SearchText { get; set; }
+        public bool SearchUseRegex { get; set; }
+        public bool SearchWholeWords { get; set; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SecurityCommand { get; }
+        public Excise.App.Models.OutlineNode? SelectedOutlineNode { get; set; }
+        public int SelectedPageCount { get; }
+        public string SelectedText { get; set; }
+        public ReactiveUI.ReactiveCommand<string, System.Reactive.Unit> SetTypewriterColorCommand { get; }
+        public bool ShowClipboardHistoryPanel { get; }
+        public ReactiveUI.ReactiveCommand<string, System.Reactive.Unit> ShowDangerousLinkRefusalCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ShowDocumentationCommand { get; }
+        public bool ShowPendingRedactionsPanel { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ShowPreferencesCommand { get; }
+        public bool ShowSearchResultsPanel { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ShowShortcutsCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SplitDocumentCommand { get; }
+        public string StatusBarText { get; }
+        public string StatusText { get; }
+        public Avalonia.Platform.Storage.IStorageProvider? StorageProviderOverride { get; set; }
+        public Excise.App.Services.ToastService ToastService { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleArrowModeCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleClipboardSidebarCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleContinuousViewCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleFormAuthoringModeCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleFreehandModeCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleLineModeCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleOutlineCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> TogglePolyLineModeCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> TogglePolygonModeCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleRedactionModeCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleRevealHiddenTextCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleRevealRasterizedHiddenCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit>? ToggleSearchCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleTextSelectionModeCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleThumbnailsCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleTypewriterModeCommand { get; }
+        public int TotalPages { get; }
+        public int TypewriterAlignmentIndex { get; set; }
+        public Avalonia.Media.Color TypewriterColor { get; set; }
+        public Avalonia.Media.IBrush TypewriterColorBrush { get; }
+        public double TypewriterFontSize { get; set; }
+        public System.Collections.ObjectModel.ObservableCollection<Excise.Core.Editing.PdfTypewriterTextOperation> TypewriterTextOperations { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> UndoCommand { get; }
+        public string UndoMenuHeader { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> VerifySignaturesCommand { get; }
+        public Excise.Avalonia.Controls.PdfViewMode ViewMode { get; set; }
+        public double ViewportHeight { get; set; }
+        public double ViewportWidth { get; set; }
+        public Excise.Core.Text.WhitespaceMode WhitespaceMode { get; set; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ZoomActualSizeCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ZoomFitPageCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ZoomFitWidthCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ZoomInCommand { get; }
+        public double ZoomLevel { get; set; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ZoomOutCommand { get; }
+        public static System.Collections.Generic.IReadOnlyList<string> StandardStampNames { get; }
+        public event System.EventHandler? AnnotationsChanged;
+        public event System.EventHandler? DocumentStructureChanged;
+        public event System.EventHandler? PreserveReadingPositionRequested;
+        public System.Threading.Tasks.Task AddCircleAnnotationFromDragAsync() { }
+        public System.Threading.Tasks.Task AddFreeTextAnnotationFromDragAsync(string? contentsOverride = null) { }
+        public System.Threading.Tasks.Task AddHighlightAnnotationFromSelectionAsync() { }
+        public System.Threading.Tasks.Task AddImageStampAnnotationFromDragAsync(string? imagePathOverride = null) { }
+        public System.Threading.Tasks.Task AddPagesFromFileAsync(string sourcePdfPath) { }
+        public System.Threading.Tasks.Task AddSquareAnnotationFromDragAsync() { }
+        public System.Threading.Tasks.Task AddSquigglyAnnotationFromSelectionAsync() { }
+        public System.Threading.Tasks.Task AddStampAnnotationFromDragAsync(string stampName) { }
+        public System.Threading.Tasks.Task AddStickyNoteAnnotationAsync(string? contentsOverride = null) { }
+        public System.Threading.Tasks.Task AddStrikeOutAnnotationFromSelectionAsync() { }
+        public System.Threading.Tasks.Task AddUnderlineAnnotationFromSelectionAsync() { }
+        public void ApplyContinuousScrollPreference(bool enabled) { }
+        public void ApplyReadingOrderStrategyPreference(Excise.Core.Text.ReadingOrderStrategy strategy) { }
+        public System.Threading.Tasks.Task ApplyRedactionsCommand() { }
+        public void ApplyWhitespaceModePreference(Excise.Core.Text.WhitespaceMode mode) { }
+        public int AutoDetectAndApplyFormFields() { }
+        public void DiscardPendingTypewriterEdits() { }
+        public System.Threading.Tasks.Task EnsureThumbnailLoadedAsync(int pageIndex, System.Threading.CancellationToken cancellationToken = default) { }
+        public System.Threading.Tasks.Task ExportCurrentPageToImageAsync(string outputPath, int dpi = 150) { }
+        public System.Threading.Tasks.Task ExportPagesToImagesAsync(string outputFolder, string format = "png", int dpi = 150) { }
+        public string ExtractAllText(bool forAccessibility = false) { }
+        public System.Threading.Tasks.Task ExtractPagesToFileAsync(string outputPath, System.Collections.Generic.IEnumerable<int> pageIndices) { }
+        public void FindNow() { }
+        public void GoToNextPendingTypewriterEdit() { }
+        public System.Threading.Tasks.Task InsertPagesFromFileAsync(string sourcePdfPath, int insertAtIndex) { }
+        public void JumpToOutline(Excise.App.Models.OutlineNode? node) { }
+        public void JumpToSearchMatch(Excise.App.Services.PdfSearchService.SearchMatch match) { }
+        public System.Threading.Tasks.Task LoadDocumentAsync(string filePath) { }
+        public System.Threading.Tasks.Task LoadDocumentCommand(string filePath) { }
+        public void MarkPageForOperation(int pageIndex, bool isSelected) { }
+        public System.Threading.Tasks.Task MoveCurrentPageAsync(int toIndex) { }
+        public System.Threading.Tasks.Task MovePageAsync(int fromIndex, int toIndex) { }
+        public System.Threading.Tasks.Task MoveSelectedPagesAsync(int delta) { }
+        public void NotifyThumbnailViewport(int pageIndex, bool isVisible) { }
+        public System.Threading.Tasks.Task OnAnnotationPathDrawnAsync([System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "X",
+                "Y"})] System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<System.ValueTuple<double, double>>> strokes, int pageNumber) { }
+        public void OnFormFieldEdited(string fieldName, string? newValue) { }
+        public void OnFormFieldRectDrawn(Excise.Core.Document.PdfRectangle rect, int pageNumber) { }
+        public void OnTypewriterTextBoundsChanged(System.Guid operationId, Excise.Core.Document.PdfRectangle rect, int pageNumber) { }
+        public void OnTypewriterTextCreated(Excise.Core.Document.PdfRectangle rect, int pageNumber) { }
+        public void OnTypewriterTextDeleted(System.Guid operationId) { }
+        public void OnTypewriterTextEdited(System.Guid operationId, string text, int pageNumber) { }
+        public System.Threading.Tasks.Task RedactTextCommand(string text) { }
+        public System.Threading.Tasks.Task SaveDocumentCommand(string filePath) { }
+        public System.Threading.Tasks.Task SaveFileAsAsync(string filePath) { }
+        public System.Threading.Tasks.Task SaveFlattenedFormCopyAsAsync(string filePath) { }
+        public void SetHoveredLinkTarget(string? target) { }
+        public System.Threading.Tasks.Task SetSelectedTextAndCopyAsync(string text) { }
+        public void SetTypewriterColor(string? hex) { }
+        public void ToggleClipboardSidebar() { }
+        public void ToggleOutlineSidebar() { }
+        public void ToggleThumbnailsSidebar() { }
+        public void UpdateSearchHighlights() { }
+    }
+    public sealed class MakeSearchableDialogViewModel : ReactiveUI.ReactiveObject
+    {
+        public const string TesseractMissingMessage = "tesseract CLI not found on PATH. Install with `apt install tesseract-ocr` (or you" +
+            "r platform\'s equivalent).";
+        public MakeSearchableDialogViewModel(bool tesseractAvailable, [System.Runtime.CompilerServices.TupleElementNames(new string[] {
+                "Done",
+                "Total"})] System.Func<string, bool, System.IProgress<System.ValueTuple<int, int>>, System.Threading.CancellationToken, System.Threading.Tasks.Task<Excise.Ocr.SearchableDocumentResult>> runOcr) { }
+        public bool CanEditOptions { get; }
+        public bool CanStart { get; }
+        public string CancelButtonText { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> CancelCommand { get; }
+        public string? ErrorMessage { get; }
+        public bool Force { get; set; }
+        public bool IsDone { get; }
+        public bool IsRunning { get; }
+        public string Language { get; set; }
+        public Excise.Ocr.SearchableDocumentResult? LastResult { get; }
+        public int ProgressDone { get; }
+        public double ProgressFraction { get; }
+        public string ProgressText { get; }
+        public int ProgressTotal { get; }
+        public string? ResultSummary { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> StartCommand { get; }
+        public bool TesseractAvailable { get; }
+        public static System.Collections.Generic.IReadOnlyList<string> LanguagePresets { get; }
+        public event System.EventHandler? CloseRequested;
+        public event System.EventHandler<Excise.Ocr.SearchableDocumentResult>? Completed;
+    }
+    public enum PathAnnotationKind
+    {
+        Ink = 0,
+        Line = 1,
+        Arrow = 2,
+        Polygon = 3,
+        PolyLine = 4,
+    }
+    public class PreferencesViewModel : Excise.App.ViewModels.ViewModelBase
+    {
+        public PreferencesViewModel() { }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> CancelCommand { get; }
+        public bool DialogResult { get; }
+        public int OcrBaseDpi { get; set; }
+        public bool OcrBinarize { get; set; }
+        public double OcrDenoiseRadius { get; set; }
+        public int OcrHighDpi { get; set; }
+        public string OcrLanguages { get; set; }
+        public double OcrLowConfidence { get; set; }
+        public bool OcrPreprocess { get; set; }
+        public Excise.Core.Text.ReadingOrderStrategy[] ReadingOrderStrategyOptions { get; }
+        public int RenderCacheMax { get; set; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ResetToDefaultsCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> SaveCommand { get; }
+        public Excise.Core.Text.ReadingOrderStrategy SelectedReadingOrderStrategy { get; set; }
+        public Excise.Core.Text.WhitespaceMode SelectedWhitespaceMode { get; set; }
+        public Excise.Core.Text.WhitespaceMode[] WhitespaceModeOptions { get; }
+        public void LoadFromMainViewModel(Excise.App.ViewModels.MainWindowViewModel mainViewModel) { }
+        public void SaveToMainViewModel(Excise.App.ViewModels.MainWindowViewModel mainViewModel) { }
+    }
+    public class RedactionWorkflowManager : ReactiveUI.ReactiveObject
+    {
+        public RedactionWorkflowManager() { }
+        public int AppliedCount { get; }
+        public System.Collections.ObjectModel.ObservableCollection<Excise.App.Models.PendingRedaction> AppliedRedactions { get; }
+        public bool HasPendingRedactions { get; }
+        public int PendingCount { get; }
+        public System.Collections.ObjectModel.ObservableCollection<Excise.App.Models.PendingRedaction> PendingRedactions { get; }
+        public void ClearPending() { }
+        public System.Collections.Generic.IEnumerable<Excise.App.Models.PendingRedaction> GetAppliedForPage(int pageNumber) { }
+        public System.Collections.Generic.IEnumerable<Excise.App.Models.PendingRedaction> GetPendingForPage(int pageNumber) { }
+        public void MarkArea(Excise.Core.Document.PdfPageRect area, string previewText) { }
+        public void MarkArea(int pageNumber, Avalonia.Rect area, string previewText, int renderDpi = 120) { }
+        public void MoveToApplied() { }
+        public bool RemovePending(System.Guid id) { }
+        public void Reset() { }
+    }
+    public class SaveRedactedVersionDialogViewModel : ReactiveUI.ReactiveObject
+    {
+        public SaveRedactedVersionDialogViewModel(string suggestedFilePath, int pendingCount) { }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, string?> BrowseCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, string?> CancelCommand { get; }
+        public int PendingCount { get; set; }
+        public string PendingCountText { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, string?> SaveCommand { get; }
+        public string SaveFilePath { get; set; }
+    }
+    public sealed class SecurityDialogViewModel : ReactiveUI.ReactiveObject
+    {
+        public SecurityDialogViewModel(bool isEncrypted, System.Func<string?, bool> verifyCurrentPassword, System.Func<string?, string?, Excise.Core.Security.PdfEncryptionAlgorithm, System.Threading.Tasks.Task<string?>> applyAsync, System.Func<System.Threading.Tasks.Task<string?>> removeProtectionAsync) { }
+        public Excise.Core.Security.PdfEncryptionAlgorithm Algorithm { get; set; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ApplyCommand { get; }
+        public bool CanApply { get; }
+        public bool CanEditOptions { get; }
+        public bool CanRemove { get; }
+        public string CloseButtonText { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> CloseCommand { get; }
+        public string CurrentPassword { get; set; }
+        public string? ErrorMessage { get; }
+        public bool IsBusy { get; }
+        public bool IsDone { get; }
+        public bool IsEncrypted { get; }
+        public string NewOwnerPassword { get; set; }
+        public string NewUserPassword { get; set; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> RemoveProtectionCommand { get; }
+        public string? ResultMessage { get; }
+        public static System.Collections.Generic.IReadOnlyList<Excise.Core.Security.PdfEncryptionAlgorithm> Algorithms { get; }
+        public event System.EventHandler? CloseRequested;
+        public event System.EventHandler<string>? Completed;
+    }
+    public sealed class ThirdPartyPackage
+    {
+        public ThirdPartyPackage() { }
+        [System.Text.Json.Serialization.JsonPropertyName("authors")]
+        public string? Authors { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("copyright")]
+        public string? Copyright { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("description")]
+        public string? Description { get; set; }
+        public string DisplayName { get; }
+        public string? EffectiveLicenseText { get; }
+        [System.Text.Json.Serialization.JsonPropertyName("nugetId")]
+        public string? Id { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("licenseFileName")]
+        public string? LicenseFileName { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("licenseKind")]
+        public string? LicenseKind { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("licenseName")]
+        public string? LicenseName { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("licenseSpdxUrl")]
+        public string? LicenseSpdxUrl { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("licenseText")]
+        public string? LicenseText { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("licenseUrl")]
+        public string? LicenseUrl { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("licenseValue")]
+        public string? LicenseValue { get; set; }
+        public string? PrimaryUrl { get; }
+        [System.Text.Json.Serialization.JsonPropertyName("projectUrl")]
+        public string? ProjectUrl { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("repositoryUrl")]
+        public string? RepositoryUrl { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("scancodeDetectedSpdx")]
+        public System.Collections.Generic.List<string>? ScancodeDetectedSpdx { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("scancodeMismatch")]
+        public bool ScancodeMismatch { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("spdx")]
+        public string? Spdx { get; set; }
+        [System.Text.Json.Serialization.JsonPropertyName("nugetVersion")]
+        public string? Version { get; set; }
+    }
+    public class ViewModelBase : ReactiveUI.ReactiveObject
+    {
+        public ViewModelBase() { }
+    }
+    public enum ZoomFitMode
+    {
+        Manual = 0,
+        FitWidth = 1,
+        FitPage = 2,
+    }
+}
+namespace Excise.App.Views
+{
+    public class AboutWindow : Avalonia.Controls.Window
+    {
+        public AboutWindow() { }
+        [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+        public void InitializeComponent(bool loadXaml = true) { }
+    }
+    public class MainWindow : Avalonia.Controls.Window
+    {
+        public MainWindow() { }
+        [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+        public void InitializeComponent(bool loadXaml = true) { }
+    }
+    public class MakeSearchableDialog : Avalonia.Controls.Window
+    {
+        public MakeSearchableDialog() { }
+        [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+        public void InitializeComponent(bool loadXaml = true) { }
+    }
+    public class PreferencesWindow : Avalonia.Controls.Window
+    {
+        public PreferencesWindow() { }
+        [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+        public void InitializeComponent(bool loadXaml = true) { }
+    }
+    public class SaveRedactedVersionDialog : Avalonia.Controls.Window
+    {
+        public SaveRedactedVersionDialog() { }
+        public string? ResultFilePath { get; }
+        [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+        public void InitializeComponent(bool loadXaml = true) { }
+    }
+    public class SecurityDialog : Avalonia.Controls.Window
+    {
+        public SecurityDialog() { }
+        [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+        public void InitializeComponent(bool loadXaml = true) { }
+    }
+}
