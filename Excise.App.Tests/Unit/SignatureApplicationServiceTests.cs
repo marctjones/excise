@@ -438,8 +438,13 @@ public class SignatureApplicationServiceTests : IDisposable
         };
         startInfo.ArgumentList.Add(signedPath);
         using var process = System.Diagnostics.Process.Start(startInfo)!;
-        var output = process.StandardOutput.ReadToEnd();
+        // #925: drain both redirected pipes concurrently, or a chatty stderr
+        // wedges the child and this read never returns.
+        var stdoutTask = process.StandardOutput.ReadToEndAsync();
+        var stderrTask = process.StandardError.ReadToEndAsync();
         process.WaitForExit(30_000).Should().BeTrue("pdfsig must terminate");
+        var output = stdoutTask.GetAwaiter().GetResult();
+        _ = stderrTask.GetAwaiter().GetResult();
 
         output.Should().Contain("Signature is Valid.",
             "an independent reader must accept the CMS signature and digest");

@@ -87,8 +87,18 @@ public class PdfATests
             psi.ArgumentList.Add(path);
 
             using var proc = Process.Start(psi)!;
-            string report = proc.StandardOutput.ReadToEnd();
-            proc.WaitForExit(120_000);
+            // #925: stderr is redirected, so it MUST be drained concurrently —
+            // veraPDF is chatty there, and a full 64KB pipe wedges the child,
+            // which wedges ReadToEnd, which trips CI's 2-minute blame timer as
+            // a "test host crash" on an innocent commit.
+            var stdoutTask = proc.StandardOutput.ReadToEndAsync();
+            var stderrTask = proc.StandardError.ReadToEndAsync();
+            if (!proc.WaitForExit(120_000))
+            {
+                try { proc.Kill(entireProcessTree: true); } catch { /* gone */ }
+            }
+            string report = stdoutTask.GetAwaiter().GetResult();
+            _ = stderrTask.GetAwaiter().GetResult();
 
             report.Should().Contain("isCompliant=\"true\"",
                 $"the builder's PdfA({conformance}) output must be PDF/A-{flavour} conformant. Report:\n" +
