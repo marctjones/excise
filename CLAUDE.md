@@ -99,24 +99,20 @@ there vs. mutool's 3192 — but the general failure mode is not fixed, it's now
 **measured**: #645's corpus-wide gate (332 pages / 13 fixtures, including the
 checked-in CJK Type0 fixture that names #645's second blind spot).
 
-Re-run 2026-08-05: **aggregate coverage 98.7%** of mutool's Unicode
-letter/digit count — deliberately not ASCII-folded, so it can't silently
-cancel out CJK/accented-text loss on both sides. It is NOT uniform, and the
-distribution is the part that matters:
+Re-run 2026-08-13: **aggregate coverage 100.0%**, worst page floor 0.923,
+nothing below 0.90 — deliberately not ASCII-folded, so it can't silently
+cancel out CJK/accented-text loss on both sides.
 
-| fixture | pages | <0.99 | <0.90 | min |
-|---|---:|---:|---:|---:|
-| `irs-1040-instructions.pdf` | 126 | 47 | 10 | **0.774** |
-| `irs-pub509-2026.pdf` | 14 | 5 | 0 | 0.903 |
-| `state-ds82-passport-renewal.pdf` | 6 | 1 | 0 | 0.945 |
-| `state-ds11-passport.pdf` | 6 | 1 | 0 | 0.986 |
-| everything else (9 fixtures, incl. 139 pages of SCOTUS opinions, the CJK Type0 fixture, w4/w9/1040) | 180 | 0 | 0 | **1.000** |
-
-So the residual blindness is **concentrated in dense multi-column government
-instruction booklets**, not spread across the corpus. On the worst page excise
-reads 2278 of the 2945 letters/digits mutool sees — and per #637 that is
-exactly the case where `RedactText` cannot match a term, does not remove it,
-and reports success anyway.
+Until 2026-08-13 this section documented aggregate 98.7% with blindness
+"concentrated in dense multi-column government instruction booklets"
+(irs-1040-instructions: 47 of 126 pages below 0.99, worst 0.774). That
+attribution to layout complexity was WRONG: the cause was Td/TD/T*/'/"
+applying line-step offsets without composing through the text matrix
+(§9.4.2), in both text-state machines. Under scaled/flipped matrices, letters
+stacked or marched off-page and the CropBox filter silently dropped them —
+the same defect that made redaction destroy 5-36% of a document per term
+(#942). See the Limitations entry below for the full account, and
+`TextMatrixLineSteppingTests` for the pins.
 
 ⚠️ **The gate passing means "no worse than the checked-in floors", NOT "good
 enough".** Floors were set at whatever the behaviour was. Do not read a green
@@ -760,19 +756,29 @@ and cost real planning time.
    reports success**. Corpus-wide measurement (332 pages / 13 fixtures —
    real-world government and court PDFs plus checked-in CJK/Type0 and
    scrambled-glyph-order edge cases, `scripts/check-extraction-parity.sh`,
-   re-run 2026-08-05): **aggregate coverage 98.7%** of mutool's Unicode
+   re-run 2026-08-13): **aggregate coverage 100.0%** of mutool's Unicode
    letter/digit count (counted per-script, not ASCII-folded, specifically so
    CJK/accented-text loss can't cancel out invisibly on both sides of the
-   ratio).
+   ratio). Worst page floor anywhere in the corpus: 0.923; nothing below 0.90.
 
-   The aggregate hides the shape, and the shape is the point. Residual
-   blindness is CONCENTRATED, not spread: `irs-1040-instructions.pdf` has
-   47 of 126 pages below 0.99 and **10 below 0.90, worst 0.774** (excise reads
-   2278 of mutool's 2945 letters/digits); `irs-pub509-2026.pdf` 5 of 14 below
-   0.99. The other nine fixtures — including 139 pages of SCOTUS opinions, the
-   CJK Type0 fixture, and w4/w9/1040 — are at **1.000**. Dense multi-column
-   government instruction booklets are the weak spot; prose and ordinary forms
-   are clean.
+   **The "concentrated blindness" this entry used to document is FIXED, and its
+   cause is a lesson.** Until 2026-08-13 the aggregate was 98.7% with
+   `irs-1040-instructions.pdf` at 47 of 126 pages below 0.99, ten below 0.90,
+   worst 0.774 — attributed here to "dense multi-column government instruction
+   booklets" as if layout complexity were the cause. The actual cause was seven
+   lines of §9.4.2 arithmetic: Td/TD/T*/'/" applied their line-step offsets RAW
+   instead of composing through the text matrix (`e += tx` instead of
+   `e += tx·a + ty·c`), in BOTH text-state machines (TextExtractor and
+   ContentStreamParser). Under the ubiquitous `/F1 1 Tf` + scaled-`Tm` producer
+   idiom, every line stacked onto the first in the letter model; under flipped
+   matrices letters marched off-page, where the CropBox filter silently dropped
+   them. Rendering stayed correct the whole time because ShowGlyph's §9.4.4
+   advance was already composed properly — half the state machine honoured the
+   matrix and half did not. The same defect was destroying 5-36% of a document
+   per redacted term (#942): the stacked letters genuinely overlapped the match
+   bbox, and GlyphRemover faithfully removed what the geometry told it.
+   Pinned by `TextMatrixLineSteppingTests` and the corpus-wide
+   `RedactionCollateralHarness` ratchet.
 
    ⚠️ **A green gate means "no worse than the checked-in floors", NOT "no
    blindness".** Floors were set at whatever the behaviour was.
