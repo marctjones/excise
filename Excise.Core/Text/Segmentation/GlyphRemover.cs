@@ -162,12 +162,20 @@ public class GlyphRemover
             if (!anyIntersects) continue;
 
             intersectingTextOpIndices.Add(idx);
+
+            // #942: the EFFECTIVE size, not the Tf operand. Producers routinely
+            // write `/F1 1 Tf` and carry the real scale in Tm (the W-9's fonts
+            // are all size 1 by Tf, 7-12 by matrix). state.FontSize is the Tf
+            // operand, so reconstructing with it drew kept text at 1pt — the
+            // matched letters' transformed glyph heights are the ground truth
+            // for what size this run actually renders at.
+            var effectiveSize = MedianGlyphHeight(matches);
             reconstructionJobs.Add(new ReconstructionJob
             {
                 Text = text,
                 Matches = matches,
                 FontName = state.FontName,
-                FontSize = state.FontSize,
+                FontSize = effectiveSize > 0.01 ? effectiveSize : state.FontSize,
                 CharacterSpacing = state.CharacterSpacing,
                 WordSpacing = state.WordSpacing,
                 HorizontalScaling = state.HorizontalScaling,
@@ -337,6 +345,20 @@ public class GlyphRemover
             if (r.Top > top) top = r.Top;
         }
         return new PdfRectangle(left, bottom, right, top);
+    }
+
+    /// <summary>
+    /// The run's effective rendered size, from the transformed glyph geometry.
+    /// Median, so one clipped or superscripted glyph cannot skew the run.
+    /// </summary>
+    private static double MedianGlyphHeight(List<LetterMatch> matches)
+    {
+        if (matches.Count == 0) return 0;
+        var heights = matches.Select(m => m.Letter.GlyphRectangle.Normalize().Height)
+                             .Where(h => h > 0)
+                             .OrderBy(h => h)
+                             .ToList();
+        return heights.Count == 0 ? 0 : heights[heights.Count / 2];
     }
 
     private static bool ShouldRemoveLetter(
