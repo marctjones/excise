@@ -196,20 +196,13 @@ public static class PdfPageRedactionExtensions
         // simply stop matching (LetterFinder matches on text), so later areas
         // see the shrinking text without needing a re-extract.
         var letters = page.Letters;
-        if (letters.Count > 0)
-        {
-            // ONE glyph pass for every rectangle (#919). Previously this ran
-            // once per area — O(operations x letters) each time, ~20ms x 401 on
-            // a common word — which is what kept the total near 8s after the
-            // parse and the markers were already batched.
-            var remover = new GlyphRemover();
-            working = remover.ProcessOperations(working, letters, list, strategy);
-        }
-
-        // Image redaction stays per-area: it prunes XObjects by rectangle and
-        // has no set-based equivalent, and it is not the hot path here.
+        var remover = new GlyphRemover();
         foreach (var area in list)
+        {
+            if (letters.Count > 0)
+                working = remover.ProcessOperations(working, letters, area, strategy);
             working = ImageRedactor.ProcessOperations(working, page, area, strategy, out _);
+        }
 
         ImageRedactor.PruneUnusedImageXObjects(page, working);
         page.SetContentStream(new ContentStream(working));
