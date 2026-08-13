@@ -120,14 +120,6 @@ public static class PdfDocumentRedactionExtensions
                 if (stalled && usedConservativeFallback)
                     break;
 
-                // #919: collect the glyph-removal rectangles and apply them in
-                // ONE pass. Calling RedactArea per match re-parsed the content
-                // stream and re-extracted every letter each time — 10.6s for
-                // 544 matches on a six-page form. The per-match DECISION below
-                // is unchanged; only the application is hoisted.
-                var batchedAreas = new List<PdfRectangle>();
-                var blackRects = new List<PdfRectangle>();
-
                 foreach (var matchLetters in matches)
                 {
                     var bbox = BoundingBoxOf(matchLetters);
@@ -150,19 +142,11 @@ public static class PdfDocumentRedactionExtensions
                         // every RedactText call — including the documented case
                         // where a term below the sanitizer's 3-character floor
                         // deliberately leaves carriers alone.
-                        batchedAreas.Add(bbox);
+                        page.RedactArea(bbox, strategy, scrubDocumentCarriers: false);
                     }
 
-                    if (drawBlackRect) blackRects.Add(bbox);
+                    if (drawBlackRect) AppendBlackRectangle(page, bbox);
                 }
-
-                if (batchedAreas.Count > 0)
-                    page.RedactAreas(batchedAreas, strategy, scrubDocumentCarriers: false);
-
-                // Markers go on after the removals; they are page-space
-                // rectangles and do not move when content is removed.
-                foreach (var rect in blackRects)
-                    AppendBlackRectangle(page, rect);
 
                 totalMatches += matches.Count;
                 if (stalled)

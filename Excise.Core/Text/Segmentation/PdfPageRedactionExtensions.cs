@@ -148,63 +148,7 @@ public static class PdfPageRedactionExtensions
         GlyphRemovalStrategy strategy = GlyphRemovalStrategy.AnyOverlap,
         bool scrubDocumentCarriers = true)
     {
-        if (page == null) throw new System.ArgumentNullException(nameof(page));
-
-        var list = new System.Collections.Generic.List<PdfRectangle>();
-        foreach (var a in areas) list.Add(a.Normalize());
-        if (list.Count == 0) return;
-        if (list.Count == 1) { page.RedactArea(list[0], strategy, scrubDocumentCarriers); return; }
-
-        // #919: this used to be `foreach (area) page.RedactArea(area)`, and each
-        // RedactArea re-parsed the whole content stream, re-extracted every
-        // letter (SetContentStream invalidates the cache) and rewrote the page.
-        // Redacting a common word from a six-page form cost 10.6s for 544
-        // matches — ~24ms of rework per match, and ~17ms per additional
-        // rectangle even when the rectangle covered no glyphs at all.
-        //
-        // The per-area DECISIONS are unchanged; only the parse, the letter
-        // extraction and the write are hoisted out of the loop.
-        if (scrubDocumentCarriers)
-            page.Document.ScrubMetadata(scrubAttachments: false);
-        foreach (var area in list)
-        {
-            InteractiveRedactionScrubber.ScrubArea(page, area);
-            StructureTreeRedactionScrubber.ScrubArea(page, area);
-        }
-
-        var content = page.GetContentStream();
-        if (content.Operators.Count == 0) return;
-
-        // Flattening rewrites the page, so it must happen before the letters
-        // are taken — and any area may trigger it.
-        foreach (var area in list)
-        {
-            if (FormXObjectFlattener.FlattenOverlapping(
-                    page, content.Operators, area, out var flattened, out var inlinedForms))
-            {
-                page.SetContentStream(new ContentStream(flattened));
-                content = page.GetContentStream();
-                FormXObjectFlattener.PruneInlinedForms(page, content.Operators, inlinedForms);
-                if (content.Operators.Count == 0) return;
-            }
-        }
-
-        IReadOnlyList<ContentOperator> working = content.Operators;
-
-        // ONE letter extraction for every area. `letters` describes the page as
-        // it was; as areas remove glyphs, entries for already-removed glyphs
-        // simply stop matching (LetterFinder matches on text), so later areas
-        // see the shrinking text without needing a re-extract.
-        var letters = page.Letters;
-        var remover = new GlyphRemover();
-        foreach (var area in list)
-        {
-            if (letters.Count > 0)
-                working = remover.ProcessOperations(working, letters, area, strategy);
-            working = ImageRedactor.ProcessOperations(working, page, area, strategy, out _);
-        }
-
-        ImageRedactor.PruneUnusedImageXObjects(page, working);
-        page.SetContentStream(new ContentStream(working));
+        foreach (var area in areas)
+            page.RedactArea(area, strategy, scrubDocumentCarriers);
     }
 }
