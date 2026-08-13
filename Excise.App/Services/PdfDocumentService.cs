@@ -295,7 +295,10 @@ public class PdfDocumentService
             var sources = new List<(PdfDocument Document, IReadOnlyList<int> PageIndices)>();
             foreach (var path in sourcePaths)
             {
-                var doc = PdfDocument.Open(File.ReadAllBytes(path));
+                // #918: merge sources are never written in place — #917's
+            // keep-the-file-writable constraint covers the CURRENT document,
+            // not these. Stream them; N resident copies scaled linearly.
+            var doc = PdfDocument.Open(path);
                 opened.Add(doc);
                 sources.Add((doc, Enumerable.Range(0, doc.PageCount).ToList()));
             }

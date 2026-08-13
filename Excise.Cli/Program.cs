@@ -956,7 +956,10 @@ partial class Program
             var sources = new List<(PdfDocument Document, IReadOnlyList<int> PageIndices)>();
             foreach (var path in inputPaths)
             {
-                var doc = PdfDocument.Open(File.ReadAllBytes(path));
+                // #918: merge never writes its sources — stream them instead
+                // of holding every input fully resident (measured ~24 MB per
+                // 4 MB source, linear in source count).
+                var doc = PdfDocument.Open(path);
                 opened.Add(doc);
                 // #677: assembling a source's pages into a new document requires
                 // that source's page-assembly permission (/P bit 11).
@@ -1696,7 +1699,8 @@ partial class Program
 
             try
             {
-                using var doc = PdfDocument.Open(File.ReadAllBytes(file.FullName));
+                // #918: read-only verb — stream, don't load resident.
+                using var doc = PdfDocument.Open(file.FullName);
                 RequireDocumentPermission(doc, DocumentAction.Extract, "OCR text extraction",
                     ignorePermissions, forAccessibility, accessibilityHint: "--for-accessibility");
                 int from = page.GetValueOrDefault(1);
@@ -1789,7 +1793,8 @@ partial class Program
 
             try
             {
-                using var doc = PdfDocument.Open(File.ReadAllBytes(input.FullName));
+                // #918: read-only verb — stream, don't load resident.
+                using var doc = PdfDocument.Open(input.FullName);
                 int from = page.GetValueOrDefault(1);
                 int to = page.HasValue ? page.Value : doc.PageCount;
 
@@ -1976,6 +1981,10 @@ partial class Program
         Excise.Core.Document.PdfDocument doc;
         try
         {
+            // #918: deliberately byte-backed, NOT streamed. `excise encrypt
+            // in.pdf in.pdf` is a plausible invocation; a held FileStream on the
+            // input would make the same-path save fail on Windows (#926's exact
+            // mechanism). The memory cost is one file, transiently.
             doc = Excise.Core.Document.PdfDocument.Open(File.ReadAllBytes(inputPath));
         }
         catch (Excise.Core.Parsing.PdfEncryptionNotSupportedException)
@@ -2074,6 +2083,7 @@ partial class Program
     /// </summary>
     internal static void RunDecrypt(string inputPath, string outputPath, string? password)
     {
+        // #918: byte-backed on purpose — same same-path-output rationale as encrypt.
         using var doc = Excise.Core.Document.PdfDocument.Open(File.ReadAllBytes(inputPath), password);
         if (!doc.IsEncrypted)
             throw new InvalidOperationException("Source PDF is not encrypted; nothing to decrypt.");
