@@ -589,15 +589,23 @@ public class ContentStreamParser
         if (setLeading)
             _textLeading = -ty;
 
-        _tlm_e += tx;
-        _tlm_f += ty;
+        // §9.4.2: Tlm' = [1 0 0 1 tx ty] × Tlm — text-space offset composed
+        // through the matrix's linear part. The raw add stacked every line of
+        // a `1 Tf` + scaled-`Tm` document onto the first, so this parser's
+        // operator bboxes overlapped lines they weren't on — and the fallback
+        // removal paths trust those bboxes (#942/#899). Twin of the same fix
+        // in TextExtractor.ExecuteOperator.
+        _tlm_e += tx * _tm_a + ty * _tm_c;
+        _tlm_f += tx * _tm_b + ty * _tm_d;
         _tm_e = _tlm_e;
         _tm_f = _tlm_f;
     }
 
     private void MoveToNextTextLine()
     {
-        _tlm_f -= _textLeading;
+        // §9.4.2: T* ≡ `0 -TL Td` — composed like MoveTextPosition above.
+        _tlm_e += -_textLeading * _tm_c;
+        _tlm_f += -_textLeading * _tm_d;
         _tm_e = _tlm_e;
         _tm_f = _tlm_f;
     }
