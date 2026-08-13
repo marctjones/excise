@@ -157,12 +157,17 @@ public class RedactionCollateralHarness
 
     private static IEnumerable<string> EnumerateFixtures()
     {
+        // smoke/ and federal/ overlap (both carry irs-w4.pdf etc.) — dedupe by
+        // basename or xunit skips the second theory row as a duplicate ID and
+        // the "covered" fixture silently isn't.
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var dir in new[] { "test-pdfs/smoke", "test-pdfs/federal" })
         {
             var full = Resolve(dir);
             if (full == null) continue;
             foreach (var f in Directory.EnumerateFiles(full, "*.pdf").OrderBy(x => x, StringComparer.Ordinal))
-                yield return f;
+                if (seen.Add(Path.GetFileName(f)))
+                    yield return f;
         }
     }
 

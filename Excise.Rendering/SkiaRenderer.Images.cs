@@ -2392,26 +2392,99 @@ internal partial class RenderContext
             return null;
         }
 
-        // One reused CMYK buffer instead of a fresh double[4] per pixel (#599):
-        // ToRgb reads the array by index and never retains it, so reuse is
-        // behaviour-identical while removing width*height allocations per image.
-        var cmyk = new double[4];
+        // #915: per-pixel ToRgb was the 44-of-44 seconds on an Altona page.
+        // For ICC CMYK, every call took a global lock (twice on a cache miss),
+        // allocated a cache key, and on miss ran the full managed ICC pipeline
+        // — and photographic imagery has millions of DISTINCT cmyk tuples, so
+        // the capped cache saturates and stops helping. A print-resolution
+        // image is ~35M pixels; five of them per page.
+        //
+        // Standard remedy: sample the colorspace's own ToRgb — whatever it
+        // dispatches to (ICC, output intent, fallback formula) — into a 17^4
+        // lattice ONCE (83,521 calls, about one image-row's worth of the old
+        // cost), then interpolate per pixel, lock-free and allocation-free.
+        // ICC transforms are themselves stored as lattices of comparable
+        // density, so quadrilinear interpolation over 17 nodes is within the
+        // representation's own precision class.
+        var lut = GetCmykLattice(colorSpace);
         var src = 0;
         var dst = 0;
         for (var i = 0; i < width * height; i++)
         {
-            cmyk[0] = data[src++] / 255.0;
-            cmyk[1] = data[src++] / 255.0;
-            cmyk[2] = data[src++] / 255.0;
-            cmyk[3] = data[src++] / 255.0;
-            var (r, g, b) = colorSpace.ToRgb(cmyk);
-            pixels[dst++] = (byte)Math.Clamp(r * 255, 0, 255);
-            pixels[dst++] = (byte)Math.Clamp(g * 255, 0, 255);
-            pixels[dst++] = (byte)Math.Clamp(b * 255, 0, 255);
+            var (r, g, b) = LatticeToRgb(lut,
+                data[src], data[src + 1], data[src + 2], data[src + 3]);
+            src += 4;
+            pixels[dst++] = r;
+            pixels[dst++] = g;
+            pixels[dst++] = b;
             pixels[dst++] = 255;
         }
 
         return bitmap;
+    }
+
+    private const int CmykLatticeN = 17;
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<PdfColorSpace, float[]>
+        CmykLattices = new();
+
+    /// <summary>
+    /// The colorspace's ToRgb sampled at 17^4 CMYK nodes. Built once per
+    /// colorspace instance; the weak table ties the cache to the document's
+    /// lifetime instead of the process's.
+    /// </summary>
+    private static float[] GetCmykLattice(PdfColorSpace colorSpace)
+        => CmykLattices.GetValue(colorSpace, static cs =>
+        {
+            const int n = CmykLatticeN;
+            var lut = new float[n * n * n * n * 3];
+            var cmyk = new double[4];
+            var idx = 0;
+            for (var c = 0; c < n; c++)
+            for (var m = 0; m < n; m++)
+            for (var y = 0; y < n; y++)
+            for (var k = 0; k < n; k++)
+            {
+                cmyk[0] = c / (double)(n - 1);
+                cmyk[1] = m / (double)(n - 1);
+                cmyk[2] = y / (double)(n - 1);
+                cmyk[3] = k / (double)(n - 1);
+                var (r, g, b) = cs.ToRgb(cmyk);
+                lut[idx++] = (float)r;
+                lut[idx++] = (float)g;
+                lut[idx++] = (float)b;
+            }
+            return lut;
+        });
+
+    /// <summary>Quadrilinear interpolation over the 17^4 lattice, byte in/out.</summary>
+    private static (byte R, byte G, byte B) LatticeToRgb(
+        float[] lut, byte c8, byte m8, byte y8, byte k8)
+    {
+        const int n = CmykLatticeN;
+        const double scale = (n - 1) / 255.0;
+
+        var fc = c8 * scale; var ic = (int)fc; var tc = fc - ic; if (ic >= n - 1) { ic = n - 2; tc = 1; }
+        var fm = m8 * scale; var im = (int)fm; var tm = fm - im; if (im >= n - 1) { im = n - 2; tm = 1; }
+        var fy = y8 * scale; var iy = (int)fy; var ty = fy - iy; if (iy >= n - 1) { iy = n - 2; ty = 1; }
+        var fk = k8 * scale; var ik = (int)fk; var tk = fk - ik; if (ik >= n - 1) { ik = n - 2; tk = 1; }
+
+        double r = 0, g = 0, b = 0;
+        for (var dc = 0; dc <= 1; dc++)
+        for (var dm = 0; dm <= 1; dm++)
+        for (var dy = 0; dy <= 1; dy++)
+        for (var dk = 0; dk <= 1; dk++)
+        {
+            var w = (dc == 0 ? 1 - tc : tc) * (dm == 0 ? 1 - tm : tm)
+                  * (dy == 0 ? 1 - ty : ty) * (dk == 0 ? 1 - tk : tk);
+            if (w == 0) continue;
+            var o = ((((ic + dc) * n + (im + dm)) * n + (iy + dy)) * n + (ik + dk)) * 3;
+            r += w * lut[o];
+            g += w * lut[o + 1];
+            b += w * lut[o + 2];
+        }
+        return ((byte)Math.Clamp(r * 255, 0, 255),
+                (byte)Math.Clamp(g * 255, 0, 255),
+                (byte)Math.Clamp(b * 255, 0, 255));
     }
 
     // Writable view over an SKBitmap's contiguous pixel store, so a decode can
