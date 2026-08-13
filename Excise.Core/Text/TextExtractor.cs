@@ -1091,8 +1091,18 @@ public class TextExtractor
                 {
                     var tx = ToDouble(operands[0]);
                     var ty = ToDouble(operands[1]);
-                    _tlm_e += tx;
-                    _tlm_f += ty;
+                    // §9.4.2: Tlm' = [1 0 0 1 tx ty] × Tlm — the offset is in
+                    // TEXT SPACE and must be composed through the matrix's
+                    // linear part, exactly as ShowGlyph already does for §9.4.4
+                    // glyph advances. The previous raw add (`e += tx`) was
+                    // correct only for an unscaled, unrotated matrix; under the
+                    // `/F1 1 Tf` + `10 0 0 10 Tm` idiom every line stepped
+                    // 1.2pt instead of 12pt and STACKED onto the first —
+                    // which is what made redaction destroy the lines below a
+                    // match (#942) and marched letters off-page under flipped
+                    // matrices (#899).
+                    _tlm_e += tx * _tm_a + ty * _tm_c;
+                    _tlm_f += tx * _tm_b + ty * _tm_d;
                     _tm_e = _tlm_e;
                     _tm_f = _tlm_f;
                 }
@@ -1104,8 +1114,9 @@ public class TextExtractor
                     var tx = ToDouble(operands[0]);
                     var ty = ToDouble(operands[1]);
                     _textLeading = -ty;
-                    _tlm_e += tx;
-                    _tlm_f += ty;
+                    // Same §9.4.2 composition as Td above.
+                    _tlm_e += tx * _tm_a + ty * _tm_c;
+                    _tlm_f += tx * _tm_b + ty * _tm_d;
                     _tm_e = _tlm_e;
                     _tm_f = _tlm_f;
                 }
@@ -1126,7 +1137,9 @@ public class TextExtractor
                 break;
 
             case "T*": // Move to start of next line
-                _tlm_f -= _textLeading;
+                // §9.4.2: T* ≡ `0 -TL Td` — compose (0, −TL) through the matrix.
+                _tlm_e += -_textLeading * _tm_c;
+                _tlm_f += -_textLeading * _tm_d;
                 _tm_e = _tlm_e;
                 _tm_f = _tlm_f;
                 break;
@@ -1192,7 +1205,9 @@ public class TextExtractor
                 break;
 
             case "'": // Move to next line and show text
-                _tlm_f -= _textLeading;
+                // §9.4.2: T* ≡ `0 -TL Td` — compose (0, −TL) through the matrix.
+                _tlm_e += -_textLeading * _tm_c;
+                _tlm_f += -_textLeading * _tm_d;
                 _tm_e = _tlm_e;
                 _tm_f = _tlm_f;
                 if (operands.Count >= 1)
@@ -1209,7 +1224,9 @@ public class TextExtractor
                 {
                     _wordSpacing = ToDouble(operands[0]);
                     _charSpacing = ToDouble(operands[1]);
-                    _tlm_f -= _textLeading;
+                    // §9.4.2: same composed line step as T*.
+                    _tlm_e += -_textLeading * _tm_c;
+                    _tlm_f += -_textLeading * _tm_d;
                     _tm_e = _tlm_e;
                     _tm_f = _tlm_f;
                     if (operands[2] is string str)

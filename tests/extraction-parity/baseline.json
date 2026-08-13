@@ -1,6 +1,6 @@
 {
-  "aggregateCoverage": 0.9874,
-  "generatedUtc": "2026-07-17T08:13:17.7816490Z",
+  "aggregateCoverage": 0.9999,
+  "generatedUtc": "2026-08-13T01:10:03.2715560Z",
   "mutoolVersion": "mutool version 1.27.2",
   "pageCount": 332,
   "pages": {
@@ -133,15 +133,15 @@
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#102": {
-      "coverageFloor": 0.8771,
-      "similarityFloor": 0.9868
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#103": {
-      "coverageFloor": 0.9984,
+      "coverageFloor": 1,
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#104": {
-      "coverageFloor": 0.9878,
+      "coverageFloor": 1,
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#105": {
@@ -153,52 +153,52 @@
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#107": {
-      "coverageFloor": 0.9104,
-      "similarityFloor": 0.9893
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#108": {
       "coverageFloor": 1,
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#109": {
-      "coverageFloor": 0.9847,
-      "similarityFloor": 0.9927
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#11": {
       "coverageFloor": 1,
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#110": {
-      "coverageFloor": 0.9278,
-      "similarityFloor": 0.992
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#111": {
       "coverageFloor": 1,
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#112": {
-      "coverageFloor": 0.9772,
-      "similarityFloor": 0.9933
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#113": {
       "coverageFloor": 1,
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#114": {
-      "coverageFloor": 0.9659,
-      "similarityFloor": 0.9912
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#115": {
       "coverageFloor": 1,
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#116": {
-      "coverageFloor": 0.9735,
-      "similarityFloor": 0.9957
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#117": {
-      "coverageFloor": 0.7735,
-      "similarityFloor": 0.9471
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#118": {
       "coverageFloor": 1,
@@ -213,12 +213,12 @@
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#120": {
-      "coverageFloor": 0.8213,
-      "similarityFloor": 0.9692
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#121": {
-      "coverageFloor": 0.964,
-      "similarityFloor": 0.9807
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#122": {
       "coverageFloor": 0.9985,
@@ -241,15 +241,15 @@
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#13": {
-      "coverageFloor": 0.9892,
-      "similarityFloor": 0.9949
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#14": {
-      "coverageFloor": 0.9388,
-      "similarityFloor": 0.9811
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#15": {
-      "coverageFloor": 0.9343,
+      "coverageFloor": 1,
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#16": {
@@ -277,36 +277,36 @@
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#21": {
-      "coverageFloor": 0.9938,
+      "coverageFloor": 1,
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#22": {
-      "coverageFloor": 0.8671,
-      "similarityFloor": 0.9507
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#23": {
       "coverageFloor": 1,
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#24": {
-      "coverageFloor": 0.9088,
-      "similarityFloor": 0.9833
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#25": {
-      "coverageFloor": 0.9659,
-      "similarityFloor": 0.9931
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#26": {
-      "coverageFloor": 0.9061,
-      "similarityFloor": 0.9634
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#27": {
-      "coverageFloor": 0.9877,
+      "coverageFloor": 1,
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#28": {
-      "coverageFloor": 0.8923,
-      "similarityFloor": 0.9903
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#29": {
       "coverageFloor": 0.9942,
@@ -317,24 +317,24 @@
       "similarityFloor": 0.9966
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#30": {
-      "coverageFloor": 0.959,
-      "similarityFloor": 0.9905
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#31": {
-      "coverageFloor": 0.9894,
-      "similarityFloor": 0.9892
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#32": {
       "coverageFloor": 1,
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#33": {
-      "coverageFloor": 0.9804,
+      "coverageFloor": 1,
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#34": {
-      "coverageFloor": 0.9802,
-      "similarityFloor": 0.9839
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#35": {
       "coverageFloor": 1,
@@ -353,8 +353,8 @@
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#39": {
-      "coverageFloor": 0.9526,
-      "similarityFloor": 0.9925
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#4": {
       "coverageFloor": 1,
@@ -377,12 +377,12 @@
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#44": {
-      "coverageFloor": 0.9777,
-      "similarityFloor": 0.99
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#45": {
-      "coverageFloor": 0.8002,
-      "similarityFloor": 0.9236
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#46": {
       "coverageFloor": 0.9881,
@@ -445,40 +445,40 @@
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#6": {
-      "coverageFloor": 0.9639,
-      "similarityFloor": 0.991
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#60": {
       "coverageFloor": 1,
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#61": {
-      "coverageFloor": 0.9818,
-      "similarityFloor": 0.9947
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#62": {
-      "coverageFloor": 0.898,
-      "similarityFloor": 0.9833
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#63": {
       "coverageFloor": 1,
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#64": {
-      "coverageFloor": 0.9968,
-      "similarityFloor": 0.9977
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#65": {
-      "coverageFloor": 0.9873,
-      "similarityFloor": 0.9978
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#66": {
-      "coverageFloor": 0.9592,
-      "similarityFloor": 0.9924
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#67": {
-      "coverageFloor": 0.8417,
-      "similarityFloor": 0.8996
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#68": {
       "coverageFloor": 0.9988,
@@ -489,8 +489,8 @@
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#7": {
-      "coverageFloor": 0.8426,
-      "similarityFloor": 0.9558
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#70": {
       "coverageFloor": 1,
@@ -541,28 +541,28 @@
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#81": {
-      "coverageFloor": 0.9783,
-      "similarityFloor": 0.9975
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#82": {
-      "coverageFloor": 0.9836,
-      "similarityFloor": 0.9978
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#83": {
-      "coverageFloor": 0.9786,
-      "similarityFloor": 0.9869
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#84": {
-      "coverageFloor": 0.9992,
+      "coverageFloor": 1,
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#85": {
-      "coverageFloor": 0.9786,
-      "similarityFloor": 0.9926
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#86": {
-      "coverageFloor": 0.9142,
-      "similarityFloor": 0.9647
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#87": {
       "coverageFloor": 1,
@@ -577,15 +577,15 @@
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#9": {
-      "coverageFloor": 0.9866,
-      "similarityFloor": 0.9949
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#90": {
       "coverageFloor": 1,
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#91": {
-      "coverageFloor": 0.9688,
+      "coverageFloor": 1,
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#92": {
@@ -593,20 +593,20 @@
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#93": {
-      "coverageFloor": 0.9645,
-      "similarityFloor": 0.972
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#94": {
       "coverageFloor": 1,
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#95": {
-      "coverageFloor": 0.9374,
-      "similarityFloor": 0.9795
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#96": {
-      "coverageFloor": 0.8993,
-      "similarityFloor": 0.9538
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-1040-instructions.pdf#97": {
       "coverageFloor": 1,
@@ -641,11 +641,11 @@
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-pub509-2026.pdf#12": {
-      "coverageFloor": 0.9965,
-      "similarityFloor": 0.9978
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-pub509-2026.pdf#13": {
-      "coverageFloor": 0.9981,
+      "coverageFloor": 1,
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-pub509-2026.pdf#14": {
@@ -653,32 +653,32 @@
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-pub509-2026.pdf#2": {
-      "coverageFloor": 0.9844,
+      "coverageFloor": 1,
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-pub509-2026.pdf#3": {
-      "coverageFloor": 0.9032,
-      "similarityFloor": 0.9936
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-pub509-2026.pdf#4": {
-      "coverageFloor": 0.9834,
-      "similarityFloor": 0.9957
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-pub509-2026.pdf#5": {
       "coverageFloor": 1,
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-pub509-2026.pdf#6": {
-      "coverageFloor": 0.9605,
-      "similarityFloor": 0.9977
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-pub509-2026.pdf#7": {
       "coverageFloor": 1,
       "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-pub509-2026.pdf#8": {
-      "coverageFloor": 0.9756,
-      "similarityFloor": 0.9838
+      "coverageFloor": 1,
+      "similarityFloor": 1
     },
     "test-pdfs/smoke/irs-pub509-2026.pdf#9": {
       "coverageFloor": 1,
