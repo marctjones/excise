@@ -56,6 +56,7 @@ REQUIRED_CORPUS=(
   test-pdfs/federal/scotus-trump-v-us.pdf
   test-pdfs/federal/irs-pub509-2026.pdf
   test-pdfs/federal/cdc-vis-covid-19.pdf
+  test-pdfs/federal/state-ds82-passport-renewal.pdf
 )
 for f in "${REQUIRED_CORPUS[@]}"; do
   [ -f "$f" ] || miss "parity corpus incomplete: missing $f (fetch: scripts/download-federal-corpus.sh)."
