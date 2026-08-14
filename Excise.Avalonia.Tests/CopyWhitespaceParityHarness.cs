@@ -45,6 +45,7 @@ public class CopyWhitespaceParityHarness
         ("federal/scotus-trump-v-us.pdf", 3, 10, "legal prose"),
         ("federal/irs-pub509-2026.pdf", 3, 8, "instructions + lists"),
         ("federal/cdc-vis-covid-19.pdf", 1, 2, "bulleted health notice"),
+        ("federal/state-ds82-passport-renewal.pdf", 1, 6, "passport application form"),
     };
 
     [Fact]
