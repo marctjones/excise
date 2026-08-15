@@ -464,6 +464,11 @@ Three properties worth not breaking:
    vacuous green in permanently. The runner greps for `No test matches the
    given testcase filter` and fails the step. (This is not hypothetical — the
    first draft of the runner had exactly this bug.)
+4. **A `--no-build` run must prove the binary is fresh.** Shared scripts call
+   `scripts/assert-fresh.sh` before `dotnet test --no-build` and refuse when a
+   source file is newer than the output DLL. For ad-hoc work, prefer
+   `scripts/t.sh <project> [test args...]`; use `EXCISE_ALLOW_STALE_NO_BUILD=1`
+   only when intentionally measuring an old binary.
 
 Memory posture, and **what was measured rather than assumed**: GC-flag tuning
 (`DOTNET_gcServer=0` + `GCConserveMemory` + a heap cap) was tried and made peak

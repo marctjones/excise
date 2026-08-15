@@ -49,6 +49,10 @@ run_tests() {
     echo ""
     echo "▶ $name"
 
+    if [[ "$NO_BUILD_ARG" == "--no-build" ]]; then
+        scripts/assert-fresh.sh --configuration Debug "$project" || return $?
+    fi
+
     if [[ -n "$VERBOSE" ]]; then
         # Verbose: show all test output
         dotnet test "$project" $NO_BUILD_ARG --logger "console;verbosity=normal" 2>&1 | \

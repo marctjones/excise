@@ -92,6 +92,107 @@ RUNNER_SKIPPED_COUNT=0
 runner_say() { echo -e "$1"; }
 
 # ---------------------------------------------------------------------------
+# --no-build freshness guard
+# ---------------------------------------------------------------------------
+
+runner_command_has_arg() {
+    local needle="$1"
+    shift
+    local arg
+    for arg in "$@"; do
+        [ "$arg" = "$needle" ] && return 0
+    done
+    return 1
+}
+
+runner_dotnet_configuration() {
+    local config="Debug"
+    while [ "$#" -gt 0 ]; do
+        case "$1" in
+            -c|--configuration)
+                config="${2:-Debug}"
+                shift 2
+                ;;
+            --configuration=*)
+                config="${1#--configuration=}"
+                shift
+                ;;
+            *)
+                shift
+                ;;
+        esac
+    done
+    printf '%s\n' "$config"
+}
+
+runner_dotnet_targets_for_no_build() {
+    local verb="$1"
+    shift
+    local skip_next=0
+    local targets=()
+
+    while [ "$#" -gt 0 ]; do
+        if [ "$skip_next" = "1" ]; then
+            skip_next=0
+            shift
+            continue
+        fi
+
+        case "$1" in
+            --project)
+                [ -n "${2:-}" ] && targets+=("$2")
+                skip_next=1
+                ;;
+            -c|--configuration|--filter|--logger|--results-directory|--settings|--collect|--blame-hang-timeout)
+                skip_next=1
+                ;;
+            --configuration=*|--filter=*|--logger=*|--results-directory=*|--settings=*|--collect=*|--blame-hang-timeout=*)
+                ;;
+            --*)
+                ;;
+            -*)
+                ;;
+            *)
+                if [ "$verb" = "test" ] && [ "${#targets[@]}" -eq 0 ]; then
+                    targets+=("$1")
+                fi
+                ;;
+        esac
+        shift
+    done
+
+    printf '%s\n' "${targets[@]}"
+}
+
+runner_assert_fresh_build() {
+    local config="$1"
+    shift
+    if [ "${EXCISE_ALLOW_STALE_NO_BUILD:-0}" = "1" ]; then
+        return 0
+    fi
+    "$PWD/scripts/assert-fresh.sh" --configuration "$config" "$@"
+}
+
+runner_guard_no_build_command() {
+    [ "${1:-}" = "dotnet" ] || return 0
+    [ "${2:-}" = "test" ] || [ "${2:-}" = "run" ] || return 0
+    runner_command_has_arg "--no-build" "$@" || return 0
+
+    local verb="$2"
+    shift 2
+    local config targets
+    config="$(runner_dotnet_configuration "$@")"
+    targets="$(runner_dotnet_targets_for_no_build "$verb" "$@")"
+
+    if [ -n "$targets" ]; then
+        # shellcheck disable=SC2086
+        runner_assert_fresh_build "$config" $targets
+    else
+        runner_assert_fresh_build "$config"
+    fi
+}
+
+# ---------------------------------------------------------------------------
 # State directory
 # ---------------------------------------------------------------------------
 
