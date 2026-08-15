@@ -1292,6 +1292,25 @@ public class PdfDocumentWriterTests
             if (string.IsNullOrWhiteSpace(dir)) continue;
             var path = Path.Combine(dir, executable);
             if (File.Exists(path)) return path;
+            if (!executable.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+            {
+                var windowsPath = Path.Combine(dir, executable + ".exe");
+                if (File.Exists(windowsPath)) return windowsPath;
+            }
+        }
+
+        var baseDir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (baseDir != null)
+        {
+            var vendorBin = Path.Combine(baseDir.FullName, "tools", "vendor", "bin");
+            var path = Path.Combine(vendorBin, executable);
+            if (File.Exists(path)) return path;
+            if (!executable.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+            {
+                var windowsPath = Path.Combine(vendorBin, executable + ".exe");
+                if (File.Exists(windowsPath)) return windowsPath;
+            }
+            baseDir = baseDir.Parent;
         }
         return null;
     }

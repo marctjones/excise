@@ -282,21 +282,10 @@ Excise.Rendering.Tests.Differential.PageOrganizationDifferentialTests.RemoveAt_D
 Excise.Rendering.Tests.Differential.PageOrganizationDifferentialTests.Insert_PlacesTheNewPageAtTheRequestedIndex_PerIndependentRenderer   # needs qpdf (page count) + mutool (page identity) [requires: tool:qpdf tool:mutool]
 Excise.Rendering.Tests.Differential.PageOrganizationDifferentialTests.AddBlank_AppendsAPageOfTheRequestedSize_PerIndependentRenderer   # needs qpdf (page count) + mutool (page identity) [requires: tool:qpdf tool:mutool]
 Excise.Rendering.Tests.Differential.PageOrganizationDifferentialTests.PageMutations_LeaveAStructurallyValidPdf_PerQpdf   # qpdf --check only; calls no renderer [requires: tool:qpdf]
-# PDFBox oracle (#857/#868). The only non-C-lineage reference renderer we have,
-# so it catches classes of bug mutool/pdftocairo/ghostscript can share. Needs
-# scripts/download-pdfbox.sh plus a JDK; neither is present on the test-linux
-# job, so these skip there and run wherever EXCISE_PDFBOX_JAR is set.
-Excise.Rendering.Tests.Differential.PdfBoxOracleDifferentialTests.ExciseAndPdfBox_PutTheSameInkOnPageOne   # needs the PDFBox jar + a JDK [requires: file:tools/vendor/pdfbox-app-*.jar corpus:smoke]
-Excise.Rendering.Tests.Differential.PdfBoxOracleDifferentialTests.PdfBoxRenderPage_ReturnsTheRequestedPage_NotTheLastOne   # #868 regression guard; needs the PDFBox jar + a JDK [requires: file:tools/vendor/pdfbox-app-*.jar corpus:smoke]
 # Encrypted-corpus password coverage. Needs qpdf to identify encrypted files
 # and the gitignored corpora to have anything to check; both absent on CI.
 Excise.Rendering.Tests.Differential.EncryptedCorpusPasswordCoverageTests.EveryEncryptedFixture_EitherOpensFreely_OrHasAKnownPassword   # needs qpdf + the pdfjs/poppler corpora [requires: tool:qpdf corpus:pdfjs corpus:poppler]
 Excise.Rendering.Tests.Differential.EncryptedCorpusPasswordCoverageTests.EveryManifestPassword_ActuallyDecryptsItsFixture   # needs the pdfjs/poppler corpora [requires: corpus:pdfjs corpus:poppler]
-# PDFium oracle (#857). Chrome/Foxit lineage — independent of MuPDF, Poppler,
-# Ghostscript and PDFBox. Driven through libpdfium directly because pdfium_test
-# is not distributed anywhere; scripts/download-pdfium.sh fetches the library.
-Excise.Rendering.Tests.Differential.PdfiumOracleSmokeTests.ExciseAndPdfium_PutTheSameInkOnPageOne   # needs the vendored libpdfium [requires: file:tools/vendor/pdfium/lib/libpdfium.* corpus:smoke]
-Excise.Rendering.Tests.Differential.PdfiumOracleSmokeTests.PdfiumRenderPage_ReturnsTheRequestedPage   # needs the vendored libpdfium [requires: file:tools/vendor/pdfium/lib/libpdfium.* corpus:smoke]
 Excise.Rendering.Tests.Differential.ColorKeyMaskDifferentialTests.ColorKeyMaskedIndexedImage_LeavesNoBlackWhereMutoolLeavesNone   # #873: needs the PDFium fixture bug_343075986.pdf and mutool as the oracle. [requires: corpus:pdfium tool:mutool]
 Excise.Rendering.Tests.Differential.UndecodableImageFabricationTests.ImageWithFarTooLittleSampleData_IsNotPaintedAsInk   # #878: needs the PDFium fixture bug_631912.pdf. [requires: corpus:pdfium]
 Excise.Rendering.Tests.Differential.UndecodableImageFabricationTests.MutoolAgrees_ThePageIsNotBlack   # #878: the oracle half of the assertion above. [requires: corpus:pdfium tool:mutool]
