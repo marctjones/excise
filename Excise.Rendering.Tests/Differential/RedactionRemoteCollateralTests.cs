@@ -44,28 +44,15 @@ public class RedactionRemoteCollateralTests
     /// <summary>
     /// Per-fixture remote ceiling. Zero is the target and the default; every
     /// entry here is a named residual, not tolerance. A rise is a new defect.
-    /// No fixture is remote-zero after the §9.4.2 fix — the exception list
-    /// *is* the defect inventory (#944). Attribution of the booklet-scale
-    /// rows stays on #942.
+    /// The exception list is the remaining defect inventory (#944). #942 made
+    /// ten of twelve fixtures remote-zero; only the two passport rows remain.
     /// </summary>
     private static readonly Dictionary<string, int> KnownRemoteCeilings = new(StringComparer.OrdinalIgnoreCase)
     {
-        // Measured 2026-08-14 with the net-count classifier (mutool stext).
-        // No fixture is remote-zero yet. These are named residuals after the
-        // §9.4.2 fix, not tolerance — a rise is a new defect. Attribution of
-        // the booklet-scale rows stays on #942; do not add headroom.
-        ["cdc-vis-covid-19.pdf|COVID"] = 286,
-        ["cms-40b-medicare-part-b.pdf|information"] = 527,
-        ["irs-1040-instructions.pdf|your"] = 21663,
-        ["irs-1040.pdf|line"] = 16,
-        ["irs-pub509-2026.pdf|Form"] = 6330,
-        ["irs-w4.pdf|your"] = 261,
-        ["irs-w9.pdf|Form"] = 171,
-        ["scotus-trump-v-anderson.pdf|that"] = 496,
-        ["scotus-trump-v-us.pdf|that"] = 2685,
-        ["state-ds11-passport.pdf|your"] = 114,
-        ["state-ds82-passport-renewal.pdf|your"] = 62,
-        ["uscis-i-9.pdf|Name"] = 792,
+        // Measured 2026-08-15 with the net-count classifier (mutool stext).
+        // These are named residuals, not tolerance; do not add headroom.
+        ["state-ds11-passport.pdf|your"] = 3,
+        ["state-ds82-passport-renewal.pdf|your"] = 3,
     };
 
     public static TheoryData<string> Cases()
@@ -113,7 +100,11 @@ public class RedactionRemoteCollateralTests
 
             var ceiling = KnownRemoteCeilings.TryGetValue($"{fixtureName}|{term}", out var v) ? v : 0;
             var sample = string.Join("", remote.Take(60).Select(c => c.C));
-            var pages = string.Join(",", remote.Select(c => c.Page).Distinct().OrderBy(p => p).Take(8));
+            var pages = string.Join(",", remote.GroupBy(c => c.Page)
+                .OrderByDescending(g => g.Count())
+                .ThenBy(g => g.Key)
+                .Take(12)
+                .Select(g => $"{g.Key}:{g.Count()}"));
             // xunit swallows Console.WriteLine under the VSTest logger.
             var reportPath = Environment.GetEnvironmentVariable("REDACTION_REMOTE_REPORT_PATH");
             if (!string.IsNullOrEmpty(reportPath))

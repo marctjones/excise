@@ -94,9 +94,17 @@ public class GlyphRemover
         IReadOnlyList<Letter> letters,
         PdfRectangle redactionArea,
         GlyphRemovalStrategy strategy = GlyphRemovalStrategy.AnyOverlap)
+        => ProcessOperations(operations, letters, new[] { redactionArea }, strategy);
+
+    internal List<ContentOperator> ProcessOperations(
+        IReadOnlyList<ContentOperator> operations,
+        IReadOnlyList<Letter> letters,
+        IReadOnlyList<PdfRectangle> redactionAreas,
+        GlyphRemovalStrategy strategy = GlyphRemovalStrategy.AnyOverlap)
     {
         var blocks = IdentifyTextBlocks(operations);
         var result = new List<ContentOperator>(operations.Count);
+        var state = new TextStateTracker();
 
         int i = 0;
         while (i < operations.Count)
@@ -107,12 +115,13 @@ public class GlyphRemover
                 // Not the start of a BT — copy through and advance. Operators
                 // inside a BT we've already processed are skipped via the
                 // jump at the end of the block branch.
+                state.Apply(operations[i]);
                 result.Add(operations[i]);
                 i++;
                 continue;
             }
 
-            ProcessBlock(operations, block, letters, redactionArea, strategy, result);
+            ProcessBlock(operations, block, letters, redactionAreas, strategy, state, result);
             i = block.EtIndex + 1;
         }
 
@@ -130,8 +139,9 @@ public class GlyphRemover
         IReadOnlyList<ContentOperator> operations,
         BlockInfo block,
         IReadOnlyList<Letter> letters,
-        PdfRectangle redactionArea,
+        IReadOnlyList<PdfRectangle> redactionAreas,
         GlyphRemovalStrategy strategy,
+        TextStateTracker state,
         List<ContentOperator> output)
     {
         // Classify each text-showing operator in the block: either its
@@ -139,7 +149,6 @@ public class GlyphRemover
         // don't (→ keep as-is). State operators (Tf/Tc/Tm/etc.) always
         // pass through; we use the running state to parameterize the
         // reconstructed block if one gets emitted.
-        var state = new TextStateTracker();
         var intersectingTextOpIndices = new HashSet<int>();
         var reconstructionJobs = new List<ReconstructionJob>();
 
@@ -154,11 +163,11 @@ public class GlyphRemover
             var text = op.TextContent ?? ExtractTextFromOperands(op);
             if (string.IsNullOrEmpty(text)) continue;
 
-            var matches = _letterFinder.FindOperationLetters(text, letters);
+            var matches = _letterFinder.FindOperationLetters(text, letters, op.BoundingBox);
             if (matches.Count == 0) continue;
 
             bool anyIntersects = matches.Any(m =>
-                ShouldRemoveLetter(m.Letter, redactionArea, strategy));
+                ShouldRemoveLetter(m.Letter, redactionAreas, strategy));
             if (!anyIntersects) continue;
 
             intersectingTextOpIndices.Add(idx);
@@ -175,13 +184,16 @@ public class GlyphRemover
                 Text = text,
                 Matches = matches,
                 FontName = state.FontName,
-                FontSize = effectiveSize > 0.01 ? effectiveSize : state.FontSize,
+                FontSize = state.FontSize,
+                EffectiveFontSize = effectiveSize > 0.01 ? effectiveSize : state.FontSize,
                 CharacterSpacing = state.CharacterSpacing,
                 WordSpacing = state.WordSpacing,
                 HorizontalScaling = state.HorizontalScaling,
                 TextRenderingMode = state.TextRenderingMode,
                 TextRise = state.TextRise,
                 TextLeading = state.TextLeading,
+                GraphicsTransform = op.GraphicsTransform,
+                TextTransform = op.TextTransform,
             });
         }
 
@@ -195,43 +207,28 @@ public class GlyphRemover
 
         // Build the reconstructed BT…ET block(s) that will go AFTER the
         // (possibly trimmed) original block.
-        var reconstructed = BuildReconstructedOps(reconstructionJobs, redactionArea, strategy);
+        var reconstructed = BuildReconstructedOps(reconstructionJobs, redactionAreas, strategy);
 
-        // Which surviving text-ops are left in the original block? If none,
-        // the whole original block vanishes — otherwise we preserve its
-        // state operators and the unaffected text-ops.
-        bool anySurvivors = false;
+        // Keep the original block minus intersecting text. Even when every text
+        // op was removed, its Tf/Tc/Tw/Tz state operators must survive: text
+        // state persists across BT/ET and later blocks may inherit it (#942).
+        // Empty BT/ET plus positioning operators draw nothing and retain no
+        // secret bytes, while preserving those downstream semantics.
         for (int idx = block.BtIndex; idx <= block.EtIndex; idx++)
         {
-            if (operations[idx].Category == OperatorCategory.TextShowing &&
-                !intersectingTextOpIndices.Contains(idx))
+            if (intersectingTextOpIndices.Contains(idx))
             {
-                anySurvivors = true;
-                break;
+                // #758: a removed text-op's pen advance (and, for '/",
+                // its line-move/spacing side effects) must still be
+                // consumed, or every later run in this block that relies
+                // on the accumulated §9.4.4 pen position collapses back
+                // to the last explicit positioning operator. Emits ONLY
+                // geometry/state operators — never text.
+                EmitRemovedOperatorCompensation(operations, block, idx, output);
+                continue;
             }
+            output.Add(operations[idx]);
         }
-
-        if (anySurvivors)
-        {
-            // Keep original block minus intersecting text-ops; state ops
-            // survive so the kept-as-is text-ops keep their positioning.
-            for (int idx = block.BtIndex; idx <= block.EtIndex; idx++)
-            {
-                if (intersectingTextOpIndices.Contains(idx))
-                {
-                    // #758: a removed text-op's pen advance (and, for '/",
-                    // its line-move/spacing side effects) must still be
-                    // consumed, or every later run in this block that relies
-                    // on the accumulated §9.4.4 pen position collapses back
-                    // to the last explicit positioning operator. Emits ONLY
-                    // geometry/state operators — never text.
-                    EmitRemovedOperatorCompensation(operations, block, idx, output);
-                    continue;
-                }
-                output.Add(operations[idx]);
-            }
-        }
-        // else: whole original block is dropped; reconstructed ops replace it.
 
         output.AddRange(reconstructed);
     }
@@ -303,7 +300,7 @@ public class GlyphRemover
 
     private List<ContentOperator> BuildReconstructedOps(
         List<ReconstructionJob> jobs,
-        PdfRectangle redactionArea,
+        IReadOnlyList<PdfRectangle> redactionAreas,
         GlyphRemovalStrategy strategy)
     {
         var result = new List<ContentOperator>();
@@ -311,7 +308,7 @@ public class GlyphRemover
         {
             var bounds = ComputeBoundsFromMatches(job.Matches);
             var segments = _textSegmenter.BuildSegments(
-                job.Text, bounds, job.Matches, redactionArea, strategy);
+                job.Text, bounds, job.Matches, redactionAreas, strategy);
 
             if (segments.Count == 0) continue; // entire op fully redacted
 
@@ -326,7 +323,10 @@ public class GlyphRemover
                 TextRise = job.TextRise,
                 TextLeading = job.TextLeading,
             };
-            result.AddRange(_reconstructor.ReconstructWithPositioning(segments, ctx));
+            var reconstructed = _reconstructor.ReconstructWithPositioning(
+                segments, ctx, job.GraphicsTransform, job.TextTransform, job.EffectiveFontSize);
+            if (reconstructed.Count == 0) continue;
+            result.AddRange(reconstructed);
         }
         return result;
     }
@@ -359,6 +359,16 @@ public class GlyphRemover
                              .OrderBy(h => h)
                              .ToList();
         return heights.Count == 0 ? 0 : heights[heights.Count / 2];
+    }
+
+    private static bool ShouldRemoveLetter(
+        Letter letter,
+        IReadOnlyList<PdfRectangle> redactionAreas,
+        GlyphRemovalStrategy strategy)
+    {
+        foreach (var area in redactionAreas)
+            if (ShouldRemoveLetter(letter, area, strategy)) return true;
+        return false;
     }
 
     private static bool ShouldRemoveLetter(
@@ -438,12 +448,15 @@ public class GlyphRemover
         public required List<LetterMatch> Matches { get; init; }
         public required string FontName { get; init; }
         public required double FontSize { get; init; }
+        public required double EffectiveFontSize { get; init; }
         public required double CharacterSpacing { get; init; }
         public required double WordSpacing { get; init; }
         public required double HorizontalScaling { get; init; }
         public required int TextRenderingMode { get; init; }
         public required double TextRise { get; init; }
         public required double TextLeading { get; init; }
+        public ContentTransform? GraphicsTransform { get; init; }
+        public ContentTransform? TextTransform { get; init; }
     }
 
     /// <summary>
@@ -462,11 +475,28 @@ public class GlyphRemover
         public int TextRenderingMode;
         public double TextRise;
         public double TextLeading;
+        private readonly Stack<Snapshot> _stack = new();
 
         public void Apply(ContentOperator op)
         {
             switch (op.Name)
             {
+                case "q":
+                    _stack.Push(new Snapshot(
+                        FontName, FontSize, CharacterSpacing, WordSpacing,
+                        HorizontalScaling, TextRenderingMode, TextRise, TextLeading));
+                    break;
+                case "Q" when _stack.Count > 0:
+                    var saved = _stack.Pop();
+                    FontName = saved.FontName;
+                    FontSize = saved.FontSize;
+                    CharacterSpacing = saved.CharacterSpacing;
+                    WordSpacing = saved.WordSpacing;
+                    HorizontalScaling = saved.HorizontalScaling;
+                    TextRenderingMode = saved.TextRenderingMode;
+                    TextRise = saved.TextRise;
+                    TextLeading = saved.TextLeading;
+                    break;
                 case "Tf":
                     if (op.Operands.Count >= 2)
                     {
@@ -482,5 +512,15 @@ public class GlyphRemover
                 case "TL": TextLeading = op.GetNumber(0); break;
             }
         }
+
+        private readonly record struct Snapshot(
+            string FontName,
+            double FontSize,
+            double CharacterSpacing,
+            double WordSpacing,
+            double HorizontalScaling,
+            int TextRenderingMode,
+            double TextRise,
+            double TextLeading);
     }
 }

@@ -167,7 +167,9 @@ public class ContentStreamParser
 
         // Execute operator to update state and calculate bounds
         if (ComputeOperatorMetadata)
+        {
             ExecuteOperator(name, operands, op);
+        }
 
         return op;
     }
@@ -450,6 +452,7 @@ public class ContentStreamParser
             case "TJ":
                 if (operands.Count >= 1 && operands[0] is PdfArray arr)
                 {
+                    CaptureTextOperatorTransforms(op);
                     BeginOpAdvanceTracking();
                     var (text, bounds) = ProcessTextArray(arr);
                     op.TextContent = text;
@@ -610,11 +613,21 @@ public class ContentStreamParser
 
     private void SetTextOperatorResult(PdfObject textObject, ContentOperator op)
     {
+        CaptureTextOperatorTransforms(op);
         BeginOpAdvanceTracking();
         var (text, bounds) = ProcessTextString(textObject);
         op.TextContent = text;
         op.BoundingBox = bounds;
         EndOpAdvanceTracking(op);
+    }
+
+    private void CaptureTextOperatorTransforms(ContentOperator op)
+    {
+        op.GraphicsTransform = new ContentTransform(
+            _state.Ctm_a, _state.Ctm_b, _state.Ctm_c,
+            _state.Ctm_d, _state.Ctm_e, _state.Ctm_f);
+        op.TextTransform = new ContentTransform(
+            _tm_a, _tm_b, _tm_c, _tm_d, _tm_e, _tm_f);
     }
 
     /// <summary>

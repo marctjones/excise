@@ -139,8 +139,7 @@ public static class PdfPageRedactionExtensions
     }
 
     /// <summary>
-    /// Redact multiple areas in a single pass. Each area is applied
-    /// sequentially, so overlapping areas behave correctly.
+    /// Redact multiple areas in one glyph-reconstruction pass.
     /// </summary>
     public static void RedactAreas(
         this PdfPage page,
@@ -148,7 +147,51 @@ public static class PdfPageRedactionExtensions
         GlyphRemovalStrategy strategy = GlyphRemovalStrategy.AnyOverlap,
         bool scrubDocumentCarriers = true)
     {
-        foreach (var area in areas)
-            page.RedactArea(area, strategy, scrubDocumentCarriers);
+        if (page == null) throw new System.ArgumentNullException(nameof(page));
+
+        var list = areas.Select(a => a.Normalize()).ToList();
+        if (list.Count == 0) return;
+        if (list.Count == 1)
+        {
+            page.RedactArea(list[0], strategy, scrubDocumentCarriers);
+            return;
+        }
+
+        if (scrubDocumentCarriers)
+            page.Document.ScrubMetadata(scrubAttachments: false);
+        foreach (var area in list)
+        {
+            InteractiveRedactionScrubber.ScrubArea(page, area);
+            StructureTreeRedactionScrubber.ScrubArea(page, area);
+        }
+
+        var content = page.GetContentStream();
+        if (content.Operators.Count == 0) return;
+
+        foreach (var area in list)
+        {
+            if (!FormXObjectFlattener.FlattenOverlapping(
+                    page, content.Operators, area, out var flattened, out var inlinedForms))
+                continue;
+
+            page.SetContentStream(new ContentStream(flattened));
+            content = page.GetContentStream();
+            FormXObjectFlattener.PruneInlinedForms(page, content.Operators, inlinedForms);
+            if (content.Operators.Count == 0) return;
+        }
+
+        IReadOnlyList<ContentOperator> working = content.Operators;
+        var letters = page.Letters;
+        if (letters.Count > 0)
+        {
+            var remover = new GlyphRemover();
+            working = remover.ProcessOperations(working, letters, list, strategy);
+        }
+
+        foreach (var area in list)
+            working = ImageRedactor.ProcessOperations(working, page, area, strategy, out _);
+
+        ImageRedactor.PruneUnusedImageXObjects(page, working);
+        page.SetContentStream(new ContentStream(working));
     }
 }
