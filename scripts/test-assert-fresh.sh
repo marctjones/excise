@@ -8,7 +8,7 @@ trap 'rm -rf "$WORK"' EXIT
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
 
-mkdir -p "$WORK/Lib" "$WORK/Lib.Tests/bin/Debug/net10.0"
+mkdir -p "$WORK/Lib/bin/Debug/net10.0" "$WORK/Lib.Tests/bin/Debug/net10.0"
 
 cat > "$WORK/Lib/Lib.csproj" <<'EOF'
 <Project Sdk="Microsoft.NET.Sdk">
@@ -44,12 +44,26 @@ touch -t 202601010101 \
     "$WORK/Lib/Lib.csproj" \
     "$WORK/Lib.Tests/ThingTests.cs" \
     "$WORK/Lib.Tests/Lib.Tests.csproj"
-touch -t 202601010102 "$WORK/Lib.Tests/bin/Debug/net10.0/Lib.Tests.dll"
+touch -t 202601010102 \
+    "$WORK/Lib/bin/Debug/net10.0/Lib.dll" \
+    "$WORK/Lib.Tests/bin/Debug/net10.0/Lib.dll" \
+    "$WORK/Lib.Tests/bin/Debug/net10.0/Lib.Tests.dll"
 
 python3 "$ROOT/scripts/assert_fresh_build.py" --repo-root "$WORK" \
     "$WORK/Lib.Tests/Lib.Tests.csproj" >/dev/null 2>&1 \
     || fail "fresh output should pass"
 
+touch -t 202601010103 "$WORK/Lib.Tests/ThingTests.cs"
+
+if python3 "$ROOT/scripts/assert_fresh_build.py" --repo-root "$WORK" \
+    "$WORK/Lib.Tests/Lib.Tests.csproj" >"$WORK/stale-test.out" 2>"$WORK/stale-test.err"; then
+    fail "newer test source should make test project --no-build stale"
+fi
+
+grep -qF "Lib.Tests/Lib.Tests.csproj output is older than Lib.Tests/ThingTests.cs" "$WORK/stale-test.err" \
+    || fail "stale test failure did not name the test source"
+
+touch -t 202601010104 "$WORK/Lib.Tests/bin/Debug/net10.0/Lib.Tests.dll"
 touch -t 202601010103 "$WORK/Lib/Thing.cs"
 
 if python3 "$ROOT/scripts/assert_fresh_build.py" --repo-root "$WORK" \
@@ -59,8 +73,26 @@ fi
 
 grep -qF "refusing stale --no-build execution" "$WORK/stale.err" \
     || fail "stale failure did not explain the refusal"
-grep -qF "Lib.Tests/Lib.Tests.csproj output is older than Lib/Thing.cs" "$WORK/stale.err" \
+grep -qF "Lib/Lib.csproj output is older than Lib/Thing.cs" "$WORK/stale.err" \
     || fail "stale failure did not name the referenced source"
+
+touch -t 202601010104 \
+    "$WORK/Lib/bin/Debug/net10.0/Lib.dll" \
+    "$WORK/Lib.Tests/bin/Debug/net10.0/Lib.dll"
+
+python3 "$ROOT/scripts/assert_fresh_build.py" --repo-root "$WORK" \
+    "$WORK/Lib.Tests/Lib.Tests.csproj" >/dev/null 2>&1 \
+    || fail "older unchanged test assembly should pass when referenced output and copied DLL are fresh"
+
+touch -t 202601010105 "$WORK/Lib/bin/Debug/net10.0/Lib.dll"
+
+if python3 "$ROOT/scripts/assert_fresh_build.py" --repo-root "$WORK" \
+    "$WORK/Lib.Tests/Lib.Tests.csproj" >"$WORK/stale-copy.out" 2>"$WORK/stale-copy.err"; then
+    fail "newer referenced output should make copied test output dependency stale"
+fi
+
+grep -qF "output copy Lib.Tests/bin/Debug/net10.0/Lib.dll is older than Lib/bin/Debug/net10.0/Lib.dll" "$WORK/stale-copy.err" \
+    || fail "stale copy failure did not name the referenced DLL copy"
 
 EXCISE_ALLOW_STALE_NO_BUILD=1 python3 "$ROOT/scripts/assert_fresh_build.py" --repo-root "$WORK" \
     "$WORK/Lib.Tests/Lib.Tests.csproj" >/dev/null 2>&1 \

@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Refuse stale --no-build test/run executions.
 
-The checker compares project source mtimes against build output DLL mtimes.
-For a test project, project references are included in the source closure, so a
-newer library source also makes the test project's --no-build output stale.
+The checker compares each project source tree against that project's build
+output DLL. For a root test/app target, referenced project outputs copied into
+the root output directory are checked as well. An unchanged test assembly can
+legitimately be older than a referenced source file after a solution build; the
+referenced DLL copy is the binary that must be fresh in that case.
 """
 
 from __future__ import annotations
@@ -120,7 +122,7 @@ def closure(project: Path, seen: set[Path] | None = None) -> list[Path]:
     return projects
 
 
-def source_files(projects: list[Path], repo_root: Path) -> list[Path]:
+def source_files(projects: list[Path], repo_root: Path, include_shared: bool = True) -> list[Path]:
     files: list[Path] = []
     roots = {p.parent for p in projects}
     for root in roots:
@@ -131,16 +133,17 @@ def source_files(projects: list[Path], repo_root: Path) -> list[Path]:
                 if path.suffix in SOURCE_SUFFIXES:
                     files.append(path)
 
-    for name in (
-        "Directory.Build.props",
-        "Directory.Build.targets",
-        "Directory.Packages.props",
-        "global.json",
-        "NuGet.config",
-    ):
-        path = repo_root / name
-        if path.exists():
-            files.append(path)
+    if include_shared:
+        for name in (
+            "Directory.Build.props",
+            "Directory.Build.targets",
+            "Directory.Packages.props",
+            "global.json",
+            "NuGet.config",
+        ):
+            path = repo_root / name
+            if path.exists():
+                files.append(path)
     return files
 
 
@@ -173,6 +176,18 @@ def newest_output(project: Path, configuration: str) -> tuple[Path | None, float
     return newest(output_candidates(project, configuration))
 
 
+def copied_reference_outputs(
+    root_project: Path,
+    reference_project: Path,
+    configuration: str,
+) -> list[Path]:
+    reference_name = assembly_name(reference_project)
+    copies: list[Path] = []
+    for root_output in output_candidates(root_project, configuration):
+        copies.append(root_output.parent / f"{reference_name}.dll")
+    return copies
+
+
 def main() -> int:
     args = parse_args()
     if os.environ.get("EXCISE_ALLOW_STALE_NO_BUILD") == "1":
@@ -195,19 +210,33 @@ def main() -> int:
     failures: list[str] = []
     for root_project in root_projects:
         project_closure = closure(root_project)
-        source, source_mtime = newest(source_files(project_closure, repo_root))
-        output, output_mtime = newest_output(root_project, args.configuration)
+        for project in project_closure:
+            source, source_mtime = newest(source_files([project], repo_root))
+            output, output_mtime = newest_output(project, args.configuration)
 
-        if output is None:
-            failures.append(
-                f"{root_project.relative_to(repo_root)} has no {args.configuration} output DLL. Build first."
-            )
-            continue
-        if source is not None and source_mtime > output_mtime:
-            failures.append(
-                f"{root_project.relative_to(repo_root)} output is older than "
-                f"{source.relative_to(repo_root)}. Build first."
-            )
+            if output is None:
+                failures.append(
+                    f"{project.relative_to(repo_root)} has no {args.configuration} output DLL. Build first."
+                )
+                continue
+            if source is not None and source_mtime > output_mtime:
+                failures.append(
+                    f"{project.relative_to(repo_root)} output is older than "
+                    f"{source.relative_to(repo_root)}. Build first."
+                )
+
+        for reference_project in project_closure[1:]:
+            reference_output, reference_output_mtime = newest_output(reference_project, args.configuration)
+            if reference_output is None:
+                continue
+            copy, copy_mtime = newest(copied_reference_outputs(root_project, reference_project, args.configuration))
+            if copy is None:
+                continue
+            if reference_output_mtime > copy_mtime:
+                failures.append(
+                    f"{root_project.relative_to(repo_root)} output copy {copy.relative_to(repo_root)} "
+                    f"is older than {reference_output.relative_to(repo_root)}. Build first."
+                )
 
     if failures:
         print("FAIL: refusing stale --no-build execution.", file=sys.stderr)
