@@ -1,6 +1,7 @@
 using System.Linq;
 using AwesomeAssertions;
 using Excise.Core.Document;
+using Excise.Core.Fonts;
 using Excise.Core.Graphics;
 using Excise.Core.Primitives;
 using Excise.Core.Tests.Fixtures;
@@ -11,8 +12,9 @@ namespace Excise.Core.Tests.Graphics;
 
 /// <summary>
 /// Tests for CFF-based OpenType ('OTTO') font embedding + Unicode text (#393).
-/// CFF fonts are embedded as a complete OTTO sfnt with a CIDFontType0 descendant
-/// and FontFile3 stream (unlike TrueType which uses FontFile2 + CIDFontType2).
+/// CFF fonts are embedded as a retain-GID bare CFF subset with a CIDFontType0
+/// descendant and FontFile3 stream (unlike TrueType which uses FontFile2 +
+/// CIDFontType2).
 /// Uses the Libertinus Serif fixture embedded in this assembly (#603) rather
 /// than a system font path.
 /// </summary>
@@ -64,7 +66,7 @@ public class CffOpenTypeEmbeddingTests
     }
 
     [Fact]
-    public void CffFont_FontFile3HasOpenTypeSubtype()
+    public void CffFont_FontFile3HasType1CSubtype()
     {
         var pdf = AuthorWith("OpenType Test", out _);
         using var doc = PdfDocument.Open(pdf);
@@ -79,8 +81,33 @@ public class CffOpenTypeEmbeddingTests
         var ff3Stream = doc.Resolve(fd!.GetOptional("FontFile3")!) as PdfStream;
 
         // PdfStream is a PdfDictionary, so we can call GetNameOrNull directly on it.
-        ff3Stream!.GetNameOrNull("Subtype").Should().Be("OpenType",
-            "FontFile3 with /Subtype /OpenType signals CFF/OpenType embedding");
+        ff3Stream!.GetNameOrNull("Subtype").Should().Be("Type1C",
+            "the OTTO wrapper is extracted and written as a bare CFF subset");
+    }
+
+    [Fact]
+    public void CffFont_FontFile3EmbedsSubsettedBareCff()
+    {
+        var source = TestFontFixtures.LoadLibertinusSerifCffBytes();
+        var sourceCff = SfntTableReader.ExtractTable(source, "CFF ");
+        sourceCff.Should().NotBeNull("the fixture is an OTTO font with a CFF table");
+
+        var pdf = AuthorWith("CFF subset", out _);
+        using var doc = PdfDocument.Open(pdf);
+        var page = doc.GetPage(1);
+
+        var (_, fontDict) = page.GetFonts().First();
+        var descendants = doc.Resolve(fontDict.GetOptional("DescendantFonts")!) as PdfArray;
+        var cid = doc.Resolve(descendants![0]) as PdfDictionary;
+        var fd = doc.Resolve(cid!.GetOptional("FontDescriptor")!) as PdfDictionary;
+        var ff3Stream = doc.Resolve(fd!.GetOptional("FontFile3")!) as PdfStream;
+
+        var embedded = ff3Stream!.DecodedData;
+        embedded[0].Should().Be(1, "the emitted payload is bare CFF, not an OTTO sfnt wrapper");
+        embedded.Length.Should().BeLessThan(sourceCff!.Length,
+            "a short authored string should not embed the full source CFF table");
+        CffParser.Parse(embedded)!.NumGlyphs.Should().Be(CffParser.Parse(sourceCff)!.NumGlyphs,
+            "the subset retains glyph IDs so Identity-H text keeps addressing the same glyph slots");
     }
 
     [Fact]

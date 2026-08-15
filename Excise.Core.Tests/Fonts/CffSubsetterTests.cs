@@ -1,5 +1,6 @@
 using AwesomeAssertions;
 using Excise.Core.Fonts;
+using Excise.Core.Tests.Fixtures;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -217,6 +218,34 @@ public class CffSubsetterTests
         var b = CffSubsetter.Subset(cff, used);
 
         a.Should().Equal(b, "subsetting is a pure function of (font, glyph set)");
+    }
+
+    [Fact]
+    public void SubsetRetainingGlyphIds_RealCff_KeepsOriginalGlyphSlots()
+    {
+        var cff = RealCff();
+        var originalInfo = CffParser.Parse(cff)!;
+        var used = new HashSet<int> { 0, 1, 42, originalInfo.NumGlyphs - 1 };
+
+        var subset = CffSubsetter.SubsetRetainingGlyphIds(cff, used);
+        var subsetInfo = CffParser.Parse(subset)!;
+
+        subset.Should().NotEqual(cff, "unused glyph programs should be replaced");
+        subset.Length.Should().BeLessThan(cff.Length);
+        subsetInfo.NumGlyphs.Should().Be(originalInfo.NumGlyphs,
+            "Identity-H embedded fonts address original glyph IDs and cannot compact the CharStrings INDEX");
+    }
+
+    [Fact]
+    public void SfntTableReader_ExtractsCffTable_FromOpenTypeWrapper()
+    {
+        var otto = TestFontFixtures.LoadLibertinusSerifCffBytes();
+
+        var cff = SfntTableReader.ExtractTable(otto, "CFF ");
+
+        cff.Should().NotBeNull();
+        cff![0].Should().Be(1, "the extracted table is a bare CFF v1 blob, not the OTTO wrapper");
+        cff.Length.Should().BeLessThan(otto.Length);
     }
 
     [Fact]
