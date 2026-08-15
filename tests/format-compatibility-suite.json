@@ -1,0 +1,536 @@
+{
+  "schemaVersion": 1,
+  "name": "PDF file format compatibility test suite tracker",
+  "description": "Tracks comprehensive read/write test coverage for PDF versions, storage formats, feature workflows, external oracles, and known coverage gaps.",
+  "statusValues": [
+    "implemented",
+    "partial",
+    "planned",
+    "not_applicable"
+  ],
+  "testTiers": [
+    {
+      "id": "fast-unit",
+      "status": "implemented",
+      "description": "Generated micro-fixtures and unit tests that require no external tools.",
+      "primaryCommand": "dotnet test Excise.Core.Tests",
+      "currentLocations": [
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs",
+        "Excise.Core.Tests/Parsing/XRefParserTests.cs",
+        "Excise.Core.Tests/Parsing/ObjectStreamResolutionTests.cs",
+        "Excise.Core.Tests/Parsing/XRefRecoveryRegressionTests.cs",
+        "Excise.Core.Tests/Parsing/HybridReferenceXRefTests.cs"
+      ]
+    },
+    {
+      "id": "integration-oracle",
+      "status": "implemented",
+      "description": "Tests that use independent tools such as qpdf, mutool, Ghostscript, Poppler, and veraPDF when available.",
+      "primaryCommand": "scripts/check-extraction-parity.sh",
+      "currentLocations": [
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs",
+        "Excise.Core.Tests/PdfATests.cs",
+        "Excise.Rendering.Tests/Differential",
+        "scripts/check-extraction-parity.sh"
+      ]
+    },
+    {
+      "id": "nightly-corpus",
+      "status": "planned",
+      "description": "Large corpus read/write, render, extraction, size, and performance reports with baseline comparison.",
+      "primaryCommand": null,
+      "currentLocations": [
+        "docs/corpus-reports",
+        "test-pdfs"
+      ]
+    }
+  ],
+  "versionFormatMatrix": [
+    {
+      "pdfVersion": "1.0",
+      "expectedWriterFormat": "classic-xref-table",
+      "objectStreamsAllowedBySpec": false,
+      "xrefStreamsAllowedBySpec": false,
+      "status": "implemented",
+      "locations": [
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:PrePdf15Saves_UseClassicXRefTable"
+      ]
+    },
+    {
+      "pdfVersion": "1.1",
+      "expectedWriterFormat": "classic-xref-table",
+      "objectStreamsAllowedBySpec": false,
+      "xrefStreamsAllowedBySpec": false,
+      "status": "implemented",
+      "locations": [
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:PrePdf15Saves_UseClassicXRefTable"
+      ]
+    },
+    {
+      "pdfVersion": "1.2",
+      "expectedWriterFormat": "classic-xref-table",
+      "objectStreamsAllowedBySpec": false,
+      "xrefStreamsAllowedBySpec": false,
+      "status": "implemented",
+      "locations": [
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:PrePdf15Saves_UseClassicXRefTable"
+      ]
+    },
+    {
+      "pdfVersion": "1.3",
+      "expectedWriterFormat": "classic-xref-table",
+      "objectStreamsAllowedBySpec": false,
+      "xrefStreamsAllowedBySpec": false,
+      "status": "implemented",
+      "locations": [
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:PrePdf15Saves_UseClassicXRefTable"
+      ]
+    },
+    {
+      "pdfVersion": "1.4",
+      "expectedWriterFormat": "classic-xref-table",
+      "objectStreamsAllowedBySpec": false,
+      "xrefStreamsAllowedBySpec": false,
+      "status": "implemented",
+      "locations": [
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf14Save_UsesClassicXRefTable",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:PrePdf15Saves_UseClassicXRefTable"
+      ]
+    },
+    {
+      "pdfVersion": "1.5",
+      "expectedWriterFormat": "xref-stream-with-object-streams",
+      "objectStreamsAllowedBySpec": true,
+      "xrefStreamsAllowedBySpec": true,
+      "status": "implemented",
+      "locations": [
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_PacksSmallObjectsIntoObjectStreamAndReopens",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15AndLaterSaves_UseCompressedObjectFormat"
+      ]
+    },
+    {
+      "pdfVersion": "1.6",
+      "expectedWriterFormat": "xref-stream-with-object-streams",
+      "objectStreamsAllowedBySpec": true,
+      "xrefStreamsAllowedBySpec": true,
+      "status": "implemented",
+      "locations": [
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15AndLaterSaves_UseCompressedObjectFormat"
+      ]
+    },
+    {
+      "pdfVersion": "1.7",
+      "expectedWriterFormat": "xref-stream-with-object-streams",
+      "objectStreamsAllowedBySpec": true,
+      "xrefStreamsAllowedBySpec": true,
+      "status": "implemented",
+      "locations": [
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15AndLaterSaves_UseCompressedObjectFormat"
+      ]
+    },
+    {
+      "pdfVersion": "2.0",
+      "expectedWriterFormat": "xref-stream-with-object-streams",
+      "objectStreamsAllowedBySpec": true,
+      "xrefStreamsAllowedBySpec": true,
+      "status": "implemented",
+      "locations": [
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15AndLaterSaves_UseCompressedObjectFormat"
+      ]
+    }
+  ],
+  "majorSuites": [
+    {
+      "id": "writer-version-format-matrix",
+      "status": "implemented",
+      "purpose": "Assert which physical file format the writer emits for each supported PDF version.",
+      "implementedCoverage": [
+        "PDF 1.0-1.4 save with classic xref table and trailer",
+        "PDF 1.5-2.0 save with object stream and xref stream",
+        "Compressed versions reopen and preserve text"
+      ],
+      "plannedCoverage": [],
+      "locations": [
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:PrePdf15Saves_UseClassicXRefTable",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15AndLaterSaves_UseCompressedObjectFormat"
+      ]
+    },
+    {
+      "id": "compressed-writer-round-trip",
+      "status": "implemented",
+      "purpose": "Verify newly written compressed PDFs can be reopened, repeatedly saved, parsed, and used by core workflows.",
+      "implementedCoverage": [
+        "Object stream and xref stream are emitted",
+        "Type-2 xref entries point to object stream slots",
+        "Repeated compressed save/reopen cycles",
+        "Page-tree mutation after reopening compressed output",
+        "Text redaction after reopening compressed output",
+        "Area redaction after reopening compressed output",
+        "Annotation add/edit/remove after reopening compressed output",
+        "Form fill/flatten after reopening compressed output",
+        "Metadata edit after reopening compressed output",
+        "Outline and named destination parsing after reopening compressed output",
+        "Split/merge after reopening compressed output",
+        "Search by extracted text after reopening compressed output",
+        "Embedded file read and scrub after reopening compressed output",
+        "Image XObject read after reopening compressed output",
+        "CID/CJK fixture text/resource access after reopening compressed output",
+        "Multiple object streams when packed object count grows beyond one stream",
+        "Type-2 xref object-stream references above one-byte boundary",
+        "Incremental-update input saved to compressed output",
+        "Linearized input saved to compressed output",
+        "qpdf --check when available"
+      ],
+      "plannedCoverage": [],
+      "locations": [
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_PacksSmallObjectsIntoObjectStreamAndReopens",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_XRefStreamContainsType2EntriesForPackedObjects",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_LargePackableSetUsesMultipleObjectStreams",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedObjectStreamNumberAboveByteBoundaryReopens",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSurvivesRepeatedSaveReopenCycles",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsPageTreeMutationAfterReopen",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsRedactionAfterReopen",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsAreaRedactionAfterReopen",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsAnnotationAddEditRemoveAfterReopen",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsFormFillAndFlattenAfterReopen",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsMetadataEditAfterReopen",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsOutlinesAndDestinationsAfterReopen",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsSplitAndMergeAfterReopen",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsSearchByExtractedTextAfterReopen",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsEmbeddedFilesAfterReopen",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsImageXObjectsAfterReopen",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsCidCjkFixtureAfterReopen",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_IncrementalUpdateInputSavesToCompressedOutput",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_LinearizedInputSavesToCompressedOutput",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_QpdfAcceptsCompressedOutput_WhenAvailable"
+      ]
+    },
+    {
+      "id": "reader-xref-and-object-streams",
+      "status": "implemented",
+      "purpose": "Verify the reader resolves classic xref tables, xref streams, hybrid references, compressed objects, and recovery cases.",
+      "implementedCoverage": [
+        "Traditional xref parsing",
+        "XRef stream parsing",
+        "Type-2 compressed object entries",
+        "Object stream resolution from real fixtures",
+        "Hybrid reference /XRefStm handling",
+        "Malformed xref/object stream recovery"
+      ],
+      "plannedCoverage": [
+        "Checked-in micro-fixtures per PDF version for every xref flavor",
+        "Reader assertions that avoid skipping when optional corpus files are absent"
+      ],
+      "locations": [
+        "Excise.Core.Tests/Parsing/XRefParserTests.cs",
+        "Excise.Core.Tests/Parsing/ObjectStreamResolutionTests.cs",
+        "Excise.Core.Tests/Parsing/HybridReferenceXRefTests.cs",
+        "Excise.Core.Tests/Parsing/XRefRecoveryRegressionTests.cs"
+      ]
+    },
+    {
+      "id": "format-gates-and-forbidden-combinations",
+      "status": "implemented",
+      "purpose": "Assert spec-forbidden or intentionally unsupported writer combinations stay on the safe classic path.",
+      "implementedCoverage": [
+        "No object stream or xref stream before PDF 1.5",
+        "Encrypted saves stay on classic xref path",
+        "PDF/A-1 saves stay on classic xref path",
+        "PDF/A-2-marked saves can use compressed path",
+        "PDF/A-2b compressed writer output is checked with veraPDF when available",
+        "AES-128 and AES-256 encrypted saves stay on classic xref path",
+        "Document carrier dictionaries stay top-level in compressed saves"
+      ],
+      "plannedCoverage": [],
+      "locations": [
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:PrePdf15Saves_UseClassicXRefTable",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:EncryptedSave_UsesClassicXRefTableEvenForPdf15",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:EncryptedSave_UsesClassicXRefTableForEverySupportedAlgorithm",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:PdfA1MarkedSave_UsesClassicXRefTable",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:PdfA2MarkedSave_CanUseCompressedXRefStreams",
+        "Excise.Core.Tests/PdfATests.cs:PdfA2B_RoundTripThroughCompressedWriter_IsConformant_PerVeraPdf",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:DocumentCarrierDictionariesStayTopLevelInCompressedSaves"
+      ]
+    },
+    {
+      "id": "feature-workflows-on-saved-output",
+      "status": "implemented",
+      "purpose": "Run user-facing workflows after saving and reopening each physical file format.",
+      "implementedCoverage": [
+        "Text extraction on reopened classic and compressed output",
+        "Page-tree mutation on reopened compressed output",
+        "Text redaction on reopened compressed output",
+        "Area redaction on reopened compressed output",
+        "Annotation add/edit/remove on reopened compressed output",
+        "Form fill/flatten on reopened compressed output",
+        "Metadata edit on reopened compressed output",
+        "Outline and named destination parsing on reopened compressed output",
+        "Split/merge on reopened compressed output",
+        "Search by extracted text on reopened compressed output",
+        "Embedded file read and scrub on reopened compressed output",
+        "Image XObject read on reopened compressed output",
+        "CID/CJK/font-heavy fixture read on reopened compressed output",
+        "Incremental-update input saved and reopened as compressed output",
+        "Linearized input saved and reopened as compressed output",
+        "Extraction parity over smoke/sample corpus"
+      ],
+      "plannedCoverage": [],
+      "locations": [
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsPageTreeMutationAfterReopen",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsRedactionAfterReopen",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsAreaRedactionAfterReopen",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsAnnotationAddEditRemoveAfterReopen",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsFormFillAndFlattenAfterReopen",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsMetadataEditAfterReopen",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsOutlinesAndDestinationsAfterReopen",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsSplitAndMergeAfterReopen",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsSearchByExtractedTextAfterReopen",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsEmbeddedFilesAfterReopen",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsImageXObjectsAfterReopen",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsCidCjkFixtureAfterReopen",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_IncrementalUpdateInputSavesToCompressedOutput",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_LinearizedInputSavesToCompressedOutput",
+        "scripts/check-extraction-parity.sh"
+      ]
+    },
+    {
+      "id": "external-parser-and-validator-oracles",
+      "status": "implemented",
+      "purpose": "Use independent tools to catch shared parser/writer misunderstandings.",
+      "implementedCoverage": [
+        "qpdf --check on generated compressed output when qpdf is available",
+        "qpdf --check matrix across generated PDF 1.0-2.0 outputs when qpdf is available",
+        "veraPDF checks for PDF/A builder output",
+        "mutool-backed extraction parity corpus gate",
+        "mutool text extraction smoke for generated compressed output",
+        "Poppler/pdfinfo structural smoke for generated compressed output",
+        "Ghostscript render smoke for generated compressed output",
+        "pdfcpu validation for generated compressed output when pdfcpu is available"
+      ],
+      "plannedCoverage": [],
+      "locations": [
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_QpdfAcceptsCompressedOutput_WhenAvailable",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:VersionMatrix_QpdfAcceptsSavedOutput_WhenAvailable",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_MutoolExtractsCompressedOutput_WhenAvailable",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_PdfinfoReadsCompressedOutput_WhenAvailable",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_GhostscriptRendersCompressedOutput_WhenAvailable",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_PdfcpuValidatesCompressedOutput_WhenAvailable",
+        "Excise.Core.Tests/PdfATests.cs:PdfA_Output_IsConformant_PerVeraPdf",
+        "Excise.Core.Tests/PdfATests.cs:PdfA2B_RoundTripThroughCompressedWriter_IsConformant_PerVeraPdf",
+        "scripts/check-extraction-parity.sh",
+        "Excise.Rendering.Tests/Differential"
+      ]
+    },
+    {
+      "id": "corpus-size-and-performance-regression",
+      "status": "implemented",
+      "purpose": "Track file size, open/save time, and output compatibility for real-world PDFs.",
+      "implementedCoverage": [
+        "Manual daily-driver probe for #923 sample size ratios",
+        "Budget gates for checked-in daily-driver smoke PDFs",
+        "Automated JSON report for save-size ratio by fixture",
+        "Open/save latency fields in the automated size report",
+        "Open/save latency smoke budgets by classic and compressed physical format",
+        "Existing workflow performance budgets"
+      ],
+      "plannedCoverage": [],
+      "locations": [
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_SmokeCorpusCompressedOutputStaysUnderSourceSizeBudget",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Save_OpenSaveLatencyForPhysicalFormatStaysWithinSmokeBudget",
+        "Excise.Cli/Program.cs:save-size-report",
+        "Excise.Cli.Tests/SaveSizeReportCommandTests.cs",
+        "scripts/report-save-size-ratios.sh",
+        "tests/perf-budgets/workflow-budgets.json",
+        "docs/performance-baselines",
+        "docs/corpus-reports"
+      ]
+    }
+  ],
+  "featureMatrix": [
+    {
+      "feature": "text extraction",
+      "classicXrefStatus": "implemented",
+      "compressedXrefStatus": "implemented",
+      "locations": [
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Save_PreservesTextContent",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15AndLaterSaves_UseCompressedObjectFormat",
+        "Excise.Core.Tests/Text/TextExtractionTests.cs",
+        "scripts/check-extraction-parity.sh"
+      ]
+    },
+    {
+      "feature": "redact text",
+      "classicXrefStatus": "implemented",
+      "compressedXrefStatus": "implemented",
+      "locations": [
+        "Excise.Core.Tests/Operations/RedactTextCarrierScopeTests.cs",
+        "Excise.Core.Tests/Text/Segmentation/PdfDocumentRedactionExtensionsTests.cs",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsRedactionAfterReopen"
+      ]
+    },
+    {
+      "feature": "redact area",
+      "classicXrefStatus": "implemented",
+      "compressedXrefStatus": "implemented",
+      "locations": [
+        "Excise.Core.Tests/Operations/RedactAreaCarrierScopeTests.cs",
+        "Excise.Core.Tests/Text/Segmentation/ImageRedactionTests.cs",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsAreaRedactionAfterReopen"
+      ]
+    },
+    {
+      "feature": "page add/remove/move",
+      "classicXrefStatus": "implemented",
+      "compressedXrefStatus": "implemented",
+      "locations": [
+        "Excise.Core.Tests/Document/PageCollectionTests.cs",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsPageTreeMutationAfterReopen"
+      ]
+    },
+    {
+      "feature": "annotations",
+      "classicXrefStatus": "implemented",
+      "compressedXrefStatus": "implemented",
+      "locations": [
+        "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
+        "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs",
+        "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsAnnotationAddEditRemoveAfterReopen"
+      ]
+    },
+    {
+      "feature": "forms",
+      "classicXrefStatus": "implemented",
+      "compressedXrefStatus": "implemented",
+      "locations": [
+        "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs",
+        "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs",
+        "Excise.Core.Tests/Authoring/FillableTableTests.cs",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsFormFillAndFlattenAfterReopen"
+      ]
+    },
+    {
+      "feature": "metadata and document carriers",
+      "classicXrefStatus": "implemented",
+      "compressedXrefStatus": "implemented",
+      "locations": [
+        "Excise.Core.Tests/Document/MetadataAndFieldOptionsTests.cs",
+        "Excise.Core.Tests/Document/MetadataScrubTests.cs",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:DocumentCarrierDictionariesStayTopLevelInCompressedSaves"
+      ]
+    },
+    {
+      "feature": "outlines and destinations",
+      "classicXrefStatus": "implemented",
+      "compressedXrefStatus": "implemented",
+      "locations": [
+        "Excise.Core.Tests/Document/PdfOutlineTests.cs",
+        "Excise.Core.Tests/Document/PdfOutlineParserTests.cs",
+        "Excise.Core.Tests/Document/NamedDestinationTests.cs",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsOutlinesAndDestinationsAfterReopen"
+      ]
+    },
+    {
+      "feature": "encryption",
+      "classicXrefStatus": "implemented",
+      "compressedXrefStatus": "not_applicable",
+      "locations": [
+        "Excise.Core.Tests/Writing/PdfDocumentWriterEncryptionTests.cs",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:EncryptedSave_UsesClassicXRefTableEvenForPdf15",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:EncryptedSave_UsesClassicXRefTableForEverySupportedAlgorithm",
+        "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs"
+      ],
+      "notes": "Compressed writer path is intentionally disabled for encrypted output."
+    },
+    {
+      "feature": "PDF/A",
+      "classicXrefStatus": "implemented",
+      "compressedXrefStatus": "implemented",
+      "locations": [
+        "Excise.Core.Tests/PdfATests.cs",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:PdfA1MarkedSave_UsesClassicXRefTable",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:PdfA2MarkedSave_CanUseCompressedXRefStreams",
+        "Excise.Core.Tests/PdfATests.cs:PdfA2B_RoundTripThroughCompressedWriter_IsConformant_PerVeraPdf"
+      ],
+      "notes": "PDF/A-1 must stay classic. PDF/A-2 compressed writer output is checked with veraPDF when available."
+    },
+    {
+      "feature": "fonts and CJK/CID",
+      "classicXrefStatus": "implemented",
+      "compressedXrefStatus": "implemented",
+      "locations": [
+        "Excise.Core.Tests/Fonts",
+        "Excise.Core.Tests/Text",
+        "Excise.Core.Tests/Parsing/ObjectStreamResolutionTests.cs:OpensCjkFileWithObjectStreams_PagesAndFontsResolve",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsCidCjkFixtureAfterReopen"
+      ]
+    },
+    {
+      "feature": "images and filters",
+      "classicXrefStatus": "implemented",
+      "compressedXrefStatus": "implemented",
+      "locations": [
+        "Excise.Core.Tests/Filters",
+        "Excise.Core.Tests/Text/Segmentation/ImageRedactionTests.cs",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsImageXObjectsAfterReopen",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsFilteredImageXObjectsAfterReopen",
+        "Excise.Rendering.Tests"
+      ],
+      "notes": "Compressed output covers unfiltered and FlateDecode image XObject read/reopen; broader filter behavior remains covered by existing filter and rendering suites."
+    },
+    {
+      "feature": "embedded files",
+      "classicXrefStatus": "implemented",
+      "compressedXrefStatus": "implemented",
+      "locations": [
+        "Excise.Core.Tests/Document/PdfEmbeddedFileTests.cs",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsEmbeddedFilesAfterReopen"
+      ]
+    },
+    {
+      "feature": "split and merge",
+      "classicXrefStatus": "implemented",
+      "compressedXrefStatus": "implemented",
+      "locations": [
+        "Excise.Core.Tests/Operations/PdfDocumentSplitterTests.cs",
+        "Excise.Core.Tests/Operations/PdfDocumentMergerTests.cs",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:Pdf15Save_CompressedOutputSupportsSplitAndMergeAfterReopen"
+      ]
+    }
+  ],
+  "recommendedNewFiles": [
+    {
+      "path": "Excise.Core.Tests/FormatCompatibility/PdfVersionFormatMatrixTests.cs",
+      "status": "planned",
+      "purpose": "Move the version matrix out of writer tests once coverage grows."
+    },
+    {
+      "path": "Excise.Core.Tests/FormatCompatibility/CompressedFormatRoundTripTests.cs",
+      "status": "planned",
+      "purpose": "Centralize compressed output read/write and workflow tests."
+    },
+    {
+      "path": "Excise.Core.Tests/FormatCompatibility/FormatWorkflowCompatibilityTests.cs",
+      "status": "planned",
+      "purpose": "Run feature workflows against classic and compressed saved outputs."
+    },
+    {
+      "path": "Excise.Core.Tests/FormatCompatibility/ExternalFormatOracleTests.cs",
+      "status": "planned",
+      "purpose": "Centralize qpdf, mutool, Poppler, Ghostscript, and veraPDF checks."
+    },
+    {
+      "path": "docs/FORMAT_COMPATIBILITY_TESTING.md",
+      "status": "planned",
+      "purpose": "Human-readable explanation of this JSON matrix and the compatibility contract."
+    }
+  ],
+  "openGaps": [
+    "No full cross-product workflow suite runs every major feature against every supported PDF version.",
+    "External oracle coverage is optional and depends on local tools.",
+    "Several real-world parser tests skip when optional corpus files are absent.",
+    "Nightly large-corpus size, latency, rendering, and extraction reporting still needs scheduled automation."
+  ],
+  "lastUpdatedBy": "Codex",
+  "lastUpdatedPurpose": "Finished remaining partial format compatibility suites with size reporting, latency budgets, external oracles, PDF/A-2, and image filter coverage."
+}

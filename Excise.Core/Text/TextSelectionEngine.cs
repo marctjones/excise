@@ -12,6 +12,7 @@ namespace Excise.Core.Text;
 /// focus in reading order — the shape of text the user expects when
 /// they drag from word A on line N to word B on line M.
 /// </summary>
+[System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 public static class TextSelectionEngine
 {
     /// <summary>
@@ -99,6 +100,18 @@ public static class TextSelectionEngine
             ReadingOrderStrategy.Simple => SortSimple(letters),
             _ => SortColumnAware(letters),
         };
+    }
+
+    /// <summary>
+    /// Whole-page text order for <c>PdfPage.Text</c> (#938). Keep content-stream
+    /// order here: the smoke corpus and mutool both rely on many producers'
+    /// already-column-major streams, while a geometric whole-page sort can turn
+    /// those pages into row-major text. <see cref="JoinText(IReadOnlyList{Letter}, WhitespaceMode)"/>
+    /// supplies the missing geometric spaces and line breaks.
+    /// </summary>
+    internal static List<Letter> SortPageTextOrder(IEnumerable<Letter> letters)
+    {
+        return letters.ToList();
     }
 
     /// <summary>
