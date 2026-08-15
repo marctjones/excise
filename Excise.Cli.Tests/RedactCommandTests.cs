@@ -89,6 +89,22 @@ public class RedactCommandTests : IDisposable
     }
 
     [Fact]
+    public void RunRedact_SameInputAndOutputPath_RemovesExactMatch()
+    {
+        var path = TempPath(".pdf");
+        File.WriteAllBytes(path, TestPdfBuilder.SinglePage("HELLO WORLD"));
+
+        int count = Program.RunRedact(path, path, "WORLD", caseSensitive: false);
+
+        count.Should().Be(1);
+        using var doc = PdfDocument.Open(File.ReadAllBytes(path));
+        var raw = Encoding.Latin1.GetString(doc.GetPage(1).GetContentStreamBytes());
+        raw.Should().NotContain("WORLD",
+            "same-path redaction relies on #918's byte-backed open path and must not regress to a held FileStream");
+        raw.Should().Contain("HELLO");
+    }
+
+    [Fact]
     public void RunRedact_NoMatch_ReturnsZero_AndOutputExists()
     {
         var inputPath = TempPath(".pdf");

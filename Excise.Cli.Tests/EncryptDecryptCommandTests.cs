@@ -57,6 +57,23 @@ public class EncryptDecryptCommandTests : IDisposable
     }
 
     [Fact]
+    public void RunEncrypt_SameInputAndOutputPath_ProducesEncryptedFile()
+    {
+        var path = TempPath(".pdf");
+        File.WriteAllBytes(path, TestPdfBuilder.SinglePage("INPLACE ENCRYPT MARKER"));
+
+        Program.RunEncrypt(path, path, "user-pw", "owner-pw",
+            permissions: -4, PdfEncryptionAlgorithm.Aes256, encryptMetadata: true);
+
+        var saved = File.ReadAllBytes(path);
+        Encoding.Latin1.GetString(saved).Should().Contain("/Encrypt");
+        Encoding.Latin1.GetString(saved).Should().NotContain("MARKER");
+
+        using var reopened = PdfDocument.Open(saved, "user-pw");
+        reopened.GetPage(1).Text.Should().Contain("INPLACE ENCRYPT MARKER");
+    }
+
+    [Fact]
     public void RunEncrypt_Aes128_ReportsR4InTheEncryptDictionary()
     {
         var inputPath = TempPath(".pdf");
@@ -107,6 +124,22 @@ public class EncryptDecryptCommandTests : IDisposable
         using var reopened = PdfDocument.Open(saved);
         reopened.IsEncrypted.Should().BeFalse();
         reopened.GetPage(1).Text.Should().Contain("ROUNDTRIP CONTENT");
+    }
+
+    [Fact]
+    public void RunDecrypt_SameInputAndOutputPath_RemovesEncryptionAndPreservesContent()
+    {
+        var path = TempPath(".pdf");
+        File.WriteAllBytes(path, TestPdfBuilder.SinglePage("INPLACE DECRYPT CONTENT"));
+        Program.RunEncrypt(path, path, "open-pw", null, -4, PdfEncryptionAlgorithm.Aes256, true);
+
+        Program.RunDecrypt(path, path, "open-pw");
+
+        var saved = File.ReadAllBytes(path);
+        Encoding.Latin1.GetString(saved).Should().NotContain("/Encrypt");
+        using var reopened = PdfDocument.Open(saved);
+        reopened.IsEncrypted.Should().BeFalse();
+        reopened.GetPage(1).Text.Should().Contain("INPLACE DECRYPT CONTENT");
     }
 
     [Fact]
