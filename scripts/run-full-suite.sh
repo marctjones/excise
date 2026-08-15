@@ -264,10 +264,15 @@ emit "skip-budget-selftest" script "scripts/test-check-skip-budget.sh" "-"
 # and #896 (RedactWithOptions, same shape, and the CLI leaked redacted terms
 # into /Info and XMP for as long as nothing called the safe path).
 #
-# Ratchets against tests/unwired-api-baseline.tsv: 101 accepted entries, fails
+# Ratchets against tests/unwired-api-baseline.tsv: accepted entries fail only
 # on anything NEW. Cheap (~10s, a text index), so it sits with the static gates
 # rather than the suites.
 emit "unwired-api"          script "scripts/check-unwired-api.sh --quiet" "-"
+# Whole-solution private/internal reachability (#940). This is intentionally
+# Roslyn-backed rather than grep: XAML bindings, command string IDs, overrides,
+# interface implementations, and the public package surface are seeded before
+# computing the unreachable closure.
+emit "reachability"         script "scripts/check-reachability.sh --quiet" "-"
 
 # --- Phase 3: the redaction gates (NEVER checkpointed — always re-run) ----
 emit "redaction-suites" test "excise.sln" "FullyQualifiedName~Redaction"
