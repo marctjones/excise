@@ -78,34 +78,18 @@ public class PdfPage
             if (_cachedText != null)
                 return _cachedText;
 
-            // #938: STILL a bare concatenation, and still wrong — but the
-            // obvious fix does not work and the attempt is recorded so nobody
-            // repeats it.
-            //
-            // Routing this through the copy path's
-            //   SortReadingOrder(ColumnAware) + JoinText(Smart)
-            // — exactly the two calls CopyWhitespaceParityHarness uses and
-            // measures against poppler — GARBLES whole pages. A SCOTUS opinion
-            // page previously at 1.000 extraction parity came out as
-            // "C ite a3s : 603 U. S. ____ (2024) S yllabus worry as-",
-            // characters interleaved across columns.
-            //
-            // The reason is that the copy path never hands those calls a whole
-            // page: it passes a contiguous SELECTED RANGE, and the viewer
-            // supplies a per-page column gap from EstimateColumnGap() plus its
-            // own line grouping. The ordering is only well-defined with that
-            // setup. Whatever page.Text ends up doing has to reproduce it, not
-            // just call the same two methods.
             var cropBox = CropBox.Normalize();
-            var sb = new StringBuilder();
+            var visible = new List<Letter>(Letters.Count);
             foreach (var letter in Letters)
             {
                 var glyphBox = letter.GlyphRectangle.Normalize();
                 if (glyphBox.Top <= cropBox.Bottom || glyphBox.Bottom >= cropBox.Top)
                     continue;
-                sb.Append(letter.Value);
+                visible.Add(letter);
             }
-            _cachedText = sb.ToString();
+
+            var reading = TextSelectionEngine.SortPageTextOrder(visible);
+            _cachedText = TextSelectionEngine.JoinText(reading, WhitespaceMode.LineFaithful);
             return _cachedText;
         }
     }

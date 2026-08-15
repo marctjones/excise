@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using System.Text;
 using Excise.Core.Document;
 using Excise.Core.Primitives;
@@ -10,9 +11,12 @@ namespace Excise.Core.Writing;
 /// </summary>
 public class PdfDocumentWriter
 {
+    private const int MaxObjectsPerObjectStream = 50;
+
     private readonly PdfDocument _document;
     private readonly PdfEncryptionOptions? _encryptionOptions;
     private readonly Dictionary<int, long> _objectOffsets = new();
+    private readonly Dictionary<int, (int ObjectStreamNumber, int Index)> _compressedObjectEntries = new();
 
     private PdfStandardSecurityEncryptor? _encryptor;
     private int _encryptObjNum;
@@ -38,14 +42,50 @@ public class PdfDocumentWriter
         // Write header
         WriteHeader(writer);
 
-        // Write all objects
+        var useCompressedObjects = ShouldUseCompressedObjects();
+
+        if (useCompressedObjects)
+        {
+            var wroteCompressed = WriteObjectsCompressed(writer);
+            if (wroteCompressed)
+            {
+                WriteXRefStream(writer);
+                return;
+            }
+        }
+
         WriteObjects(writer);
-
-        // Write xref table
         long xrefOffset = WriteXRef(writer);
-
-        // Write trailer
         WriteTrailer(writer, xrefOffset);
+    }
+
+    private bool ShouldUseCompressedObjects()
+        => _encryptionOptions == null
+           && VersionAtLeast(_document.Version, 1, 5)
+           && !IsPdfA1();
+
+    private bool IsPdfA1()
+    {
+        if (_document.Catalog.GetOptional("Metadata") is not { } metadataRef)
+            return false;
+        if (_document.Resolve(metadataRef) is not PdfStream metadata)
+            return false;
+
+        var xmp = Encoding.UTF8.GetString(metadata.DecodedData);
+        return xmp.Contains("<pdfaid:part>1</pdfaid:part>", StringComparison.Ordinal);
+    }
+
+    private static bool VersionAtLeast(string version, int major, int minor)
+    {
+        var parts = version.Split('.', 2);
+        if (parts.Length != 2
+            || !int.TryParse(parts[0], out var actualMajor)
+            || !int.TryParse(parts[1], out var actualMinor))
+        {
+            return false;
+        }
+
+        return actualMajor > major || (actualMajor == major && actualMinor >= minor);
     }
 
     /// <summary>
@@ -252,6 +292,8 @@ public class PdfDocumentWriter
 
     private void WriteObjects(BinaryWriter writer)
     {
+        _objectOffsets.Clear();
+        _compressedObjectEntries.Clear();
         var reachable = _document.ComputeSaveReachableObjects();
 
         // Get all objects sorted by object number for consistent output
@@ -286,6 +328,110 @@ public class PdfDocumentWriter
             _objectOffsets[_encryptObjNum] = writer.BaseStream.Position;
             WriteIndirectObject(writer, _encryptObjNum, 0, _encryptDict!, isEncryptDict: true);
         }
+    }
+
+    private bool WriteObjectsCompressed(BinaryWriter writer)
+    {
+        _objectOffsets.Clear();
+        _compressedObjectEntries.Clear();
+
+        var reachable = _document.ComputeSaveReachableObjects();
+        var allObjects = _document.GetAllObjects()
+            .Where(o => reachable.Contains(o.ObjectNumber))
+            .Where(o => !IsCrossReferencePlumbing(o.Object))
+            .OrderBy(o => o.ObjectNumber)
+            .ToList();
+
+        var rootRef = _document.GetCatalogReference();
+        var packable = allObjects
+            .Where(o => CanPackIntoObjectStream(o, rootRef))
+            .ToList();
+        if (packable.Count == 0)
+            return false;
+
+        var topLevel = allObjects
+            .Where(o => !CanPackIntoObjectStream(o, rootRef))
+            .ToList();
+
+        foreach (var (objNum, gen, obj) in topLevel)
+        {
+            _objectOffsets[objNum] = writer.BaseStream.Position;
+            WriteIndirectObject(writer, objNum, gen, obj, isEncryptDict: false);
+        }
+
+        var maxExisting = allObjects.Count == 0 ? 0 : allObjects.Max(o => o.ObjectNumber);
+        var objectStreamNumber = maxExisting + 1;
+        foreach (var chunk in packable.Chunk(MaxObjectsPerObjectStream))
+        {
+            var objectStream = BuildObjectStream(chunk, objectStreamNumber);
+            _objectOffsets[objectStreamNumber] = writer.BaseStream.Position;
+            WriteIndirectObject(writer, objectStreamNumber, 0, objectStream, isEncryptDict: false);
+            objectStreamNumber++;
+        }
+
+        // Reserve the xref stream number now; WriteXRefStream fills the real
+        // offset after the final byte position is known.
+        _objectOffsets[objectStreamNumber] = -1;
+        return true;
+    }
+
+    private static bool CanPackIntoObjectStream(
+        (int ObjectNumber, int Generation, PdfObject Object) item,
+        PdfReference rootRef)
+    {
+        if (item.Generation != 0) return false;
+        if (item.Object is PdfStream) return false;
+        if (item.ObjectNumber == rootRef.ObjectNum) return false;
+        if (item.Object is PdfDictionary dict
+            && (ContainsDocumentCarrierText(dict) || ContainsSignatureData(dict))) return false;
+        return true;
+    }
+
+    private static bool ContainsDocumentCarrierText(PdfDictionary dict)
+        => dict.GetStringOrNull("Title") != null
+           || dict.GetStringOrNull("Author") != null
+           || dict.GetStringOrNull("Subject") != null
+           || dict.GetStringOrNull("Keywords") != null
+           || dict.GetStringOrNull("Creator") != null
+           || dict.GetStringOrNull("Producer") != null
+           || dict.GetStringOrNull("Contents") != null;
+
+    private static bool ContainsSignatureData(PdfDictionary dict)
+        => dict.GetOptional("ByteRange") != null
+           || dict.GetOptional("Contents") != null
+           || dict.GetOptional("Type") is PdfName type && type.Value == "Sig"
+           || dict.GetOptional("FT") is PdfName fieldType && fieldType.Value == "Sig";
+
+    private PdfStream BuildObjectStream(
+        IReadOnlyList<(int ObjectNumber, int Generation, PdfObject Object)> objects,
+        int objectStreamNumber)
+    {
+        var index = new StringBuilder();
+        var body = new StringBuilder();
+        for (var i = 0; i < objects.Count; i++)
+        {
+            var (objNum, _, obj) = objects[i];
+            index.Append(objNum).Append(' ').Append(body.Length).Append(' ');
+            body.Append(PdfObjectWriter.Serialize(obj)).Append('\n');
+            _compressedObjectEntries[objNum] = (objectStreamNumber, i);
+        }
+
+        var indexBytes = Encoding.Latin1.GetBytes(index.ToString());
+        var bodyBytes = Encoding.Latin1.GetBytes(body.ToString());
+        var plain = new byte[indexBytes.Length + bodyBytes.Length];
+        Buffer.BlockCopy(indexBytes, 0, plain, 0, indexBytes.Length);
+        Buffer.BlockCopy(bodyBytes, 0, plain, indexBytes.Length, bodyBytes.Length);
+        var compressed = FlateCompress(plain);
+
+        var dict = new PdfDictionary
+        {
+            ["Type"] = new PdfName("ObjStm"),
+            ["N"] = new PdfInteger(objects.Count),
+            ["First"] = new PdfInteger(indexBytes.Length),
+            ["Filter"] = new PdfName("FlateDecode"),
+            ["Length"] = new PdfInteger(compressed.Length),
+        };
+        return new PdfStream(dict, compressed);
     }
 
     private static bool IsCrossReferencePlumbing(PdfObject obj)
@@ -392,43 +538,70 @@ public class PdfDocumentWriter
         return xrefOffset;
     }
 
+    private long WriteXRefStream(BinaryWriter writer)
+    {
+        var xrefObjNum = _objectOffsets.Single(kvp => kvp.Value < 0).Key;
+        long xrefOffset = writer.BaseStream.Position;
+        _objectOffsets[xrefObjNum] = xrefOffset;
+
+        int size = Math.Max(
+            _objectOffsets.Count > 0 ? _objectOffsets.Keys.Max() : 0,
+            _compressedObjectEntries.Count > 0 ? _compressedObjectEntries.Keys.Max() : 0) + 1;
+
+        const int w1 = 1;
+        const int w2 = 8;
+        const int w3 = 4;
+        using var raw = new MemoryStream(size * (w1 + w2 + w3));
+        WriteXRefRow(raw, 0, 0, 65535, w2, w3);
+        for (var objNum = 1; objNum < size; objNum++)
+        {
+            if (_compressedObjectEntries.TryGetValue(objNum, out var compressed))
+                WriteXRefRow(raw, 2, compressed.ObjectStreamNumber, compressed.Index, w2, w3);
+            else if (_objectOffsets.TryGetValue(objNum, out var offset))
+                WriteXRefRow(raw, 1, offset, 0, w2, w3);
+            else
+                WriteXRefRow(raw, 0, 0, 65535, w2, w3);
+        }
+
+        var xrefData = FlateCompress(raw.ToArray());
+        var trailer = BuildTrailerDictionary(size);
+        trailer["Type"] = new PdfName("XRef");
+        trailer["W"] = new PdfArray(new PdfInteger(w1), new PdfInteger(w2), new PdfInteger(w3));
+        trailer["Filter"] = new PdfName("FlateDecode");
+        trailer["Length"] = new PdfInteger(xrefData.Length);
+        var stream = new PdfStream(trailer, xrefData);
+
+        WriteIndirectObject(writer, xrefObjNum, 0, stream, isEncryptDict: false);
+        writer.Write(Encoding.ASCII.GetBytes($"startxref\n{xrefOffset}\n%%EOF\n"));
+        return xrefOffset;
+    }
+
+    private static void WriteXRefRow(Stream stream, int type, long field2, int field3, int w2, int w3)
+    {
+        stream.WriteByte((byte)type);
+        WriteBigEndian(stream, field2, w2);
+        WriteBigEndian(stream, field3, w3);
+    }
+
+    private static void WriteBigEndian(Stream stream, long value, int width)
+    {
+        for (var shift = (width - 1) * 8; shift >= 0; shift -= 8)
+            stream.WriteByte((byte)((value >> shift) & 0xFF));
+    }
+
+    private static byte[] FlateCompress(byte[] data)
+    {
+        using var output = new MemoryStream();
+        using (var z = new ZLibStream(output, CompressionLevel.Optimal, leaveOpen: true))
+            z.Write(data, 0, data.Length);
+        return output.ToArray();
+    }
+
     private void WriteTrailer(BinaryWriter writer, long xrefOffset)
     {
         int size = (_objectOffsets.Count > 0 ? _objectOffsets.Keys.Max() : 0) + 1;
 
-        // Build trailer dictionary
-        var trailer = new PdfDictionary
-        {
-            ["Size"] = new PdfInteger(size),
-            ["Root"] = _document.GetCatalogReference()
-        };
-
-        // Copy Info if present
-        var infoRef = _document.Trailer.GetReferenceOrNull("Info");
-        if (infoRef != null)
-        {
-            trailer["Info"] = infoRef;
-        }
-
-        // /ID — a file identifier array of two byte strings (ISO 32000-1 §14.4).
-        // Required by PDF/A and recommended for every file. Preserve an existing
-        // one; otherwise generate a fresh pair. Routed through GetOrCreateIdArray
-        // so this is the SAME array PrepareEncryption already used to derive an
-        // R=4 file key/O/U (if encrypting) — generating a second, different ID
-        // here would silently make the trailer's /ID disagree with the one baked
-        // into the encryption key, and a reader (including excise itself) would
-        // then derive the wrong key from the file it can actually see.
-        trailer["ID"] = GetOrCreateIdArray();
-
-        // /Encrypt — a reference to the plaintext /Encrypt dictionary
-        // written in WriteObjects. Never encrypted itself: a reader must be
-        // able to find /Filter /V /R /O /U /OE /UE /Perms before it has a
-        // key. The trailer as a whole (including /ID) is always written via
-        // the plain, non-encrypting Serialize(trailer) call below.
-        if (_encryptionOptions != null)
-        {
-            trailer["Encrypt"] = new PdfReference(_encryptObjNum, 0);
-        }
+        var trailer = BuildTrailerDictionary(size);
 
         // Write trailer
         writer.Write(Encoding.ASCII.GetBytes("trailer\n"));
@@ -437,5 +610,25 @@ public class PdfDocumentWriter
 
         // Write startxref
         writer.Write(Encoding.ASCII.GetBytes($"\nstartxref\n{xrefOffset}\n%%EOF\n"));
+    }
+
+    private PdfDictionary BuildTrailerDictionary(int size)
+    {
+        var trailer = new PdfDictionary
+        {
+            ["Size"] = new PdfInteger(size),
+            ["Root"] = _document.GetCatalogReference()
+        };
+
+        var infoRef = _document.Trailer.GetReferenceOrNull("Info");
+        if (infoRef != null)
+            trailer["Info"] = infoRef;
+
+        trailer["ID"] = GetOrCreateIdArray();
+
+        if (_encryptionOptions != null)
+            trailer["Encrypt"] = new PdfReference(_encryptObjNum, 0);
+
+        return trailer;
     }
 }
