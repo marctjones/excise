@@ -69,6 +69,7 @@ FRESH=0
 CHUNK_CLASSES="${CHUNK_CLASSES:-12}"
 SKIP_CHUNKING=0
 EVERYTHING=0
+ALLOW_MISSING_CORPORA=0
 
 usage() {
     cat <<'EOF'
@@ -84,7 +85,14 @@ Usage: scripts/run-full-suite.sh [options]
   --everything       Also run the release-only gates (accessibility, automation,
                      ux, benchmark, perf-budget, aot, pdf20) by delegating to
                      release-smoke.sh. Without this, run-full-suite covers every
-                     TEST PROJECT but not those script gates.
+                     TEST PROJECT but not those script gates. Also runs the
+                     four-corpus rendering scan (#862) — REQUIRES all four
+                     corpora to be downloaded, or see --allow-missing-corpora.
+  --allow-missing-corpora
+                     Downgrade a missing/empty corpus under --everything from a
+                     hard failure to a loud warning, and note the gap in the
+                     final summary instead of silently covering fewer pages
+                     than "the full corpus sweep" implies (#958).
   --no-chunking      One dotnet process per project instead of per class group.
   --chunk-size <n>   Test classes per chunk (default 12).
 
@@ -105,6 +113,7 @@ while [ $# -gt 0 ]; do
         --release) CONFIG="Release"; shift ;;
         --only) ONLY="${2:-}"; shift 2 ;;
         --everything) EVERYTHING=1; shift ;;
+        --allow-missing-corpora) ALLOW_MISSING_CORPORA=1; shift ;;
         --no-chunking) SKIP_CHUNKING=1; shift ;;
         --chunk-size) CHUNK_CLASSES="${2:-20}"; shift 2 ;;
         -h|--help) usage; exit 0 ;;
@@ -248,6 +257,12 @@ PY
 
 : > "$PLAN_FILE"
 
+# Per-corpus "pages present / pages expected" (#958). Populated by the
+# preflight check in Phase 5b, printed in the final Summary — declared here
+# (unconditionally, empty) so the Summary section can check its length
+# without caring whether --everything was passed.
+CORPUS_COVERAGE_ROWS=()
+
 # --- Phase 1: build once, then never again -------------------------------
 emit "build" script "dotnet build excise.sln -c $CONFIG -m:1" "-"
 
@@ -347,21 +362,88 @@ if [ "$EVERYTHING" = "1" ]; then
     #
     # Under --everything rather than the default run: these take tens of
     # minutes together.
-    for _corpus_spec in \
-        "corpus-scan-pdfjs:test-pdfs/pdfjs:tests/corpus-expectations.tsv" \
-        "corpus-scan-verapdf:test-pdfs/verapdf-corpus:tests/corpus-expectations-verapdf.tsv" \
-        "corpus-scan-isartor:test-pdfs/isartor:tests/corpus-expectations-isartor.tsv" \
+    # name : corpus-relative dir : expectation manifest. Single source of
+    # truth for both the preflight check below and the emit loop that
+    # follows it — a corpus added to one and not the other is exactly the
+    # kind of drift #958 exists to catch elsewhere.
+    _CORPUS_SPECS=(
+        "corpus-scan-pdfjs:test-pdfs/pdfjs:tests/corpus-expectations.tsv"
+        "corpus-scan-verapdf:test-pdfs/verapdf-corpus:tests/corpus-expectations-verapdf.tsv"
+        "corpus-scan-isartor:test-pdfs/isartor:tests/corpus-expectations-isartor.tsv"
         "corpus-scan-pdfium:test-pdfs/pdfium:tests/corpus-expectations-pdfium.tsv"
-    do
+    )
+
+    # --- Preflight: refuse a silently partial corpus sweep (#958) ---------
+    # Until now, a missing/empty corpus directory was skipped a few lines
+    # below with no failure and no mention in the summary — "--everything"
+    # could read as the full 3,915-page / four-corpus sweep while actually
+    # covering a fraction of it (e.g. 971 of 3,915 pages, 25%, observed
+    # 2026-08-10 with only pdf.js and PDFium present). "Pages expected" is
+    # read from each checked-in expectation manifest (non-comment line
+    # count) rather than hard-coded, so it can never drift from the manifest
+    # the scan actually grades against. "Pages present" counts *.pdf files in
+    # the corpus dir, which is the exact quantity --page-mode first (used
+    # below) turns into pages scanned: one page per file.
+    _CORPUS_PRESENT=()
+    _missing_corpora=""
+    for _corpus_spec in "${_CORPUS_SPECS[@]}"; do
+        _cs_name="${_corpus_spec%%:*}"; _cs_rest="${_corpus_spec#*:}"
+        _cs_dir="${_cs_rest%%:*}"; _cs_manifest="${_cs_rest#*:}"
+
+        _cs_present=0
+        if [ -d "$ROOT/$_cs_dir" ]; then
+            _cs_present="$(find "$ROOT/$_cs_dir" -name '*.pdf' 2>/dev/null | wc -l | tr -d ' ')"
+        fi
+        _cs_expected=0
+        if [ -f "$ROOT/$_cs_manifest" ]; then
+            _cs_expected="$(grep -vc '^#' "$ROOT/$_cs_manifest" 2>/dev/null | tr -d ' ')"
+        fi
+        _CORPUS_PRESENT+=("${_cs_present:-0}")
+        CORPUS_COVERAGE_ROWS+=("$_cs_dir	${_cs_present:-0}	${_cs_expected:-0}")
+
+        if [ "${_cs_present:-0}" = "0" ]; then
+            _dl_cmd="scripts/download-test-pdfs.sh"
+            case "$_cs_name" in
+                corpus-scan-pdfjs)  _dl_cmd="scripts/download-pdfjs-corpus.sh" ;;
+                corpus-scan-pdfium) _dl_cmd="scripts/download-pdfium-corpus.sh" ;;
+            esac
+            _missing_corpora="${_missing_corpora}  $(printf '%-24s' "$_cs_dir") (0/${_cs_expected:-0} pages)  ->  $_dl_cmd\n"
+        fi
+    done
+
+    CORPUS_RAN_WITH_ALLOW_MISSING=0
+    if [ -n "$_missing_corpora" ]; then
+        if [ "$ALLOW_MISSING_CORPORA" = "1" ]; then
+            CORPUS_RAN_WITH_ALLOW_MISSING=1
+            say "${Y}WARNING: --everything corpus sweep is PARTIAL (#958) — missing/empty corpora:${N}"
+            printf "%b" "$_missing_corpora"
+            say "${Y}Continuing because --allow-missing-corpora was passed; the gap is${N}"
+            say "${Y}reported again in the final summary so a partial run cannot read as full.${N}"
+            say ""
+        else
+            say "${R}ABORT: --everything corpus sweep would be silently partial (#958).${N}"
+            say "The following corpora are empty or missing:"
+            printf "%b" "$_missing_corpora"
+            say ""
+            say "  Download the missing corpora above, then re-run. Or pass"
+            say "  ${B}--allow-missing-corpora${N} to proceed with a known-partial sweep — the"
+            say "  gap is then called out again in the final summary."
+            exit 1
+        fi
+    fi
+
+    _cs_idx=0
+    for _corpus_spec in "${_CORPUS_SPECS[@]}"; do
         _cs_name="${_corpus_spec%%:*}"; _cs_rest="${_corpus_spec#*:}"
         _cs_dir="${_cs_rest%%:*}"; _cs_manifest="${_cs_rest#*:}"
         # Skip a corpus that has not been downloaded rather than failing the
-        # whole suite: they are gitignored mirrors, and scripts/download-*.sh
-        # fetches them. check-test-prereqs.sh is what reports them missing.
-        if [ -d "$ROOT/$_cs_dir" ]; then
+        # step: the preflight above already made this loud (FAIL, or WARN
+        # under --allow-missing-corpora) instead of letting it pass unnoticed.
+        if [ "${_CORPUS_PRESENT[$_cs_idx]:-0}" != "0" ]; then
             emit "$_cs_name" script \
                 "scripts/run-exploratory-corpus.sh --corpus $_cs_dir --page-mode first --extra-oracles all --expectation-manifest $_cs_manifest" "-"
         fi
+        _cs_idx=$(( _cs_idx + 1 ))
     done
 fi
 
@@ -613,6 +695,41 @@ if [ -s "$RUSAGE_TSV" ]; then
             [ -n "${cpu:-}" ] && say "    $(printf '%6s s   %s' "$cpu" "$n")"
         done
     say "  full per-step data: $RUSAGE_TSV"
+fi
+
+# --- corpus coverage (#958) -----------------------------------------------
+# Populated only under --everything. Printed unconditionally when present —
+# not just on the missing/partial branch — so a FULL run states that too,
+# and "pages covered" never has to be taken on faith.
+if [ "${#CORPUS_COVERAGE_ROWS[@]}" -gt 0 ]; then
+    say ""
+    say "${B}Corpus coverage${N} ${D}(pages present / pages in the expectation manifest)${N}"
+    _corpus_partial=0
+    # bash 3.2 (macOS default) treats expanding an EMPTY array under `set -u`
+    # as an unbound-variable error, not zero iterations — the same reason
+    # RESULTS is expanded as "${RESULTS[@]:-}" below. The length check above
+    # already guarantees this array is non-empty when we get here, but the
+    # `:-` + empty-guard keeps the same safe shape as the rest of the file.
+    for _row in "${CORPUS_COVERAGE_ROWS[@]:-}"; do
+        [ -n "$_row" ] || continue
+        IFS=$'\t' read -r _row_dir _row_present _row_expected <<< "$_row"
+        if [ "${_row_present:-0}" = "${_row_expected:-0}" ] && [ "${_row_expected:-0}" != "0" ]; then
+            say "  ${G}$(printf '%-24s %5s / %5s pages' "$_row_dir" "$_row_present" "$_row_expected")${N}"
+        else
+            _corpus_partial=1
+            say "  ${Y}$(printf '%-24s %5s / %5s pages' "$_row_dir" "$_row_present" "$_row_expected")${N}"
+        fi
+    done
+    if [ "$_corpus_partial" = "1" ]; then
+        if [ "${CORPUS_RAN_WITH_ALLOW_MISSING:-0}" = "1" ]; then
+            say "  ${Y}Partial corpus sweep — one or more corpora were missing and${N}"
+            say "  ${Y}--allow-missing-corpora let the run proceed anyway.${N}"
+        else
+            say "  ${Y}Partial corpus sweep — a corpus directory is under-downloaded (present${N}"
+            say "  ${Y}but short of its expectation-manifest count). Re-run the matching${N}"
+            say "  ${Y}scripts/download-*.sh to fill it in.${N}"
+        fi
+    fi
 fi
 
 say ""
