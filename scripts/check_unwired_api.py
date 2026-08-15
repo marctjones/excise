@@ -28,9 +28,12 @@ BASELINE_HEADER = """# Public API that nothing calls, or that only tests call.
 #
 # Regenerate: scripts/check-unwired-api.sh --update   (then review the diff)
 #
-# Format: assembly <TAB> state <TAB> identifier
+# Format: assembly <TAB> state <TAB> identifier <TAB> triage-note
 #   nowhere     no reference at all beyond the declaration
 #   tests-only  referenced by tests, never by production  <- the dangerous one
+#   triage-note why this accepted row is not being fixed in this change, or
+#               which issue owns fixing it. New rows written by --update are
+#               marked UNTRIAGED and fail the normal gate until reviewed.
 #
 # "tests-only" is the shape that shipped bugs: #908 (CffSubsetter, implemented,
 # 25 test references, zero production callers, so CFF fonts ship unsubsetted)
@@ -259,7 +262,7 @@ def main():
 
 
 def load_baseline(path):
-    known = set()
+    known = {}
     if not os.path.exists(path):
         return None
     with open(path, encoding="utf-8") as fh:
@@ -269,16 +272,18 @@ def load_baseline(path):
                 continue
             parts = line.split("\t")
             if len(parts) >= 3:
-                known.add((parts[0], parts[1], parts[2]))
+                known[(parts[0], parts[1], parts[2])] = parts[3].strip() if len(parts) >= 4 else ""
     return known
 
 
-def write_baseline(path, found):
+def write_baseline(path, found, previous=None):
     os.makedirs(os.path.dirname(path), exist_ok=True)
+    previous = previous or {}
     with open(path, "w", encoding="utf-8") as fh:
         fh.write(BASELINE_HEADER)
         for row in sorted(found):
-            fh.write("\t".join(row) + "\n")
+            note = previous.get(row) or "UNTRIAGED"
+            fh.write("\t".join(row + (note,)) + "\n")
 
 
 def baseline_verdict(found, args):
@@ -289,7 +294,7 @@ def baseline_verdict(found, args):
     matters is the DELTA: an API added today that nothing calls.
     """
     if args.update:
-        write_baseline(args.baseline, found)
+        write_baseline(args.baseline, found, load_baseline(args.baseline) or {})
         print(f"\n==> baseline rewritten: {args.baseline} ({len(found)} entries)")
         print("    REVIEW THE DIFF. An entry appearing here means something was")
         print("    written and never wired up; accepting it should be a decision.")
@@ -302,8 +307,11 @@ def baseline_verdict(found, args):
         return 1
 
     current = set(found)
-    new = sorted(current - known)
-    gone = sorted(known - current)
+    known_rows = set(known)
+    missing_triage = sorted(row for row, note in known.items()
+                            if not note or note == "UNTRIAGED")
+    new = sorted(current - known_rows)
+    gone = sorted(known_rows - current)
 
     if gone:
         print(f"\n==> {len(gone)} baselined entr(y/ies) no longer unwired — good.")
@@ -322,7 +330,17 @@ def baseline_verdict(found, args):
         print("    shipped a redaction leak) are what this is guarding against.")
         return 1
 
-    print(f"\n==> no NEW unwired API ({len(known)} baselined)")
+    if missing_triage:
+        print(f"\nFAIL: {len(missing_triage)} baselined unwired API entr(y/ies) lack triage notes:")
+        for a, st, n in missing_triage[:20]:
+            print(f"      [{st}] {a}.{n}")
+        print()
+        print("    Add a fourth TSV column explaining why the row is accepted,")
+        print("    or link the issue that owns wiring/deleting it. #931 exists")
+        print("    because accepted tests-only API without triage hid real bugs.")
+        return 1
+
+    print(f"\n==> no NEW unwired API ({len(known)} baselined, all triaged)")
     return 0
 
 

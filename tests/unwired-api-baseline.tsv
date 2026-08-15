@@ -6,150 +6,153 @@
 #
 # Regenerate: scripts/check-unwired-api.sh --update   (then review the diff)
 #
-# Format: assembly <TAB> state <TAB> identifier
+# Format: assembly <TAB> state <TAB> identifier <TAB> triage-note
 #   nowhere     no reference at all beyond the declaration
 #   tests-only  referenced by tests, never by production  <- the dangerous one
+#   triage-note why this accepted row is not being fixed in this change, or
+#               which issue owns fixing it. New rows written by --update are
+#               marked UNTRIAGED and fail the normal gate until reviewed.
 #
 # "tests-only" is the shape that shipped bugs: #908 (CffSubsetter, implemented,
 # 25 test references, zero production callers, so CFF fonts ship unsubsetted)
 # and #896 (RedactWithOptions, same shape, and the CLI leaked redacted terms
 # into /Info and XMP for exactly as long as nothing called the safe path).
-Excise.App	nowhere	ApplyBatesNumbers
-Excise.App	nowhere	ConvertBack
-Excise.App	nowhere	DisplayName
-Excise.App	nowhere	GeneratedAt
-Excise.App	nowhere	GetPageDimensions
-Excise.App	nowhere	IsReplaying
-Excise.App	nowhere	LicenseFileName
-Excise.App	nowhere	LicenseKind
-Excise.App	nowhere	LicenseValue
-Excise.App	nowhere	MarkPageForOperation
-Excise.App	nowhere	PagesIndexed
-Excise.App	nowhere	RenderCacheStats
-Excise.App	nowhere	RenderPageFromStreamAsync
-Excise.App	nowhere	RenderThumbnailAsync
-Excise.App	nowhere	SetCommandId
-Excise.App	nowhere	SetShowToolTip
-Excise.App	nowhere	TypeIndicator
-Excise.App	tests-only	AddOrUpdate
-Excise.App	tests-only	AddPagesFromPdf
-Excise.App	tests-only	AppliedCount
-Excise.App	tests-only	ApplyBatesNumbersToSet
-Excise.App	tests-only	AvaloniaPointToPdf
-Excise.App	tests-only	AvaloniaYToPdfY
-Excise.App	tests-only	CalculateNextNumber
-Excise.App	tests-only	CoordinateConverter
-Excise.App	tests-only	CurrentPageText
-Excise.App	tests-only	DescribeConversion
-Excise.App	tests-only	ExecuteFileAsync
-Excise.App	tests-only	ForXGraphicsWithVerification
-Excise.App	tests-only	GetCurrentDocumentAsStream
-Excise.App	tests-only	GetPageHeight
-Excise.App	tests-only	GetPageWidth
-Excise.App	tests-only	GetRotatedPageDimensions
-Excise.App	tests-only	HasRecentFiles
-Excise.App	tests-only	ImageSelectionToPdfCoords
-Excise.App	tests-only	ImageSelectionToPdfPointsTopLeft
-Excise.App	tests-only	IsValidForPage
-Excise.App	tests-only	LogCacheStats
-Excise.App	tests-only	MaxCacheMemoryBytes
-Excise.App	tests-only	PdfPointToAvalonia
-Excise.App	tests-only	PdfRectToAvaloniaRect
-Excise.App	tests-only	PdfYToAvaloniaY
-Excise.App	tests-only	PreferencesPath
-Excise.App	tests-only	ShowInfo
-Excise.App	tests-only	SignFile
-Excise.App	tests-only	SuggestPageSubsetFilename
-Excise.App	tests-only	SuggestSafeRedactedFilename
-Excise.App	tests-only	TextBoundsToPdfPointsTopLeft
-Excise.App	tests-only	TogglePin
-Excise.App	tests-only	TransformForRotation
-Excise.App	tests-only	TrimCacheForMemoryPressure
-Excise.App	tests-only	ValidateScript
-Excise.Core	nowhere	Failures
-Excise.Core	nowhere	SetCreator
-Excise.Core	tests-only	AsItalic
-Excise.Core	tests-only	BeginPath
-Excise.Core	tests-only	BulletList
-Excise.Core	tests-only	CffSubsetter
-Excise.Core	tests-only	CloseAndStroke
-Excise.Core	tests-only	ContainsFoldable
-Excise.Core	tests-only	ContainsLigatures
-Excise.Core	tests-only	ContainsPresentationForms
-Excise.Core	tests-only	DateField
-Excise.Core	tests-only	DocumentJavaScriptActions
-Excise.Core	tests-only	Dropdown
-Excise.Core	tests-only	EndBaseLine
-Excise.Core	tests-only	ExtractWords
-Excise.Core	tests-only	FdfSerializer
-Excise.Core	tests-only	FillEvenOdd
-Excise.Core	tests-only	FindText
-Excise.Core	tests-only	FlyOpaqueRectangle
-Excise.Core	tests-only	FlyScale
-Excise.Core	tests-only	ForCliCommand
-Excise.Core	tests-only	FromMatrix
-Excise.Core	tests-only	FromText
-Excise.Core	tests-only	GetButtonFields
-Excise.Core	tests-only	GetChoiceFields
-Excise.Core	tests-only	GetDictionary
-Excise.Core	tests-only	GetFonts
-Excise.Core	tests-only	GetOperators
-Excise.Core	tests-only	GetOptionalContentGroups
-Excise.Core	tests-only	GetPageLabel
-Excise.Core	tests-only	GetSignatureFields
-Excise.Core	tests-only	GetTextFields
-Excise.Core	tests-only	HasEmbeddedFiles
-Excise.Core	tests-only	HasOverflow
-Excise.Core	tests-only	HorizontalRule
-Excise.Core	tests-only	InvokeXObject
-Excise.Core	tests-only	IsDecrypting
-Excise.Core	tests-only	IsIndirect
-Excise.Core	tests-only	IsNumber
-Excise.Core	tests-only	IsPartialOverlap
-Excise.Core	tests-only	IsPushButton
-Excise.Core	tests-only	IsRadioButton
-Excise.Core	tests-only	IsTaggedPdf
-Excise.Core	tests-only	NamedActionName
-Excise.Core	tests-only	NextActions
-Excise.Core	tests-only	NumberedList
-Excise.Core	tests-only	PageBreak
-Excise.Core	tests-only	PathOperators
-Excise.Core	tests-only	Portrait
-Excise.Core	tests-only	RedactWithBlackMarker
-Excise.Core	tests-only	RemoveCategory
-Excise.Core	tests-only	RemoveContainedIn
-Excise.Core	tests-only	ScrubInfoKeys
-Excise.Core	tests-only	SetAnnotationColor
-Excise.Core	tests-only	SetAnnotationContents
-Excise.Core	tests-only	SetAnnotationOpacity
-Excise.Core	tests-only	SetFillBlack
-Excise.Core	tests-only	SetFillWhite
-Excise.Core	tests-only	SetLineWidth
-Excise.Core	tests-only	SetReplyTo
-Excise.Core	tests-only	SetStrokeGray
-Excise.Core	tests-only	SetStrokeRgb
-Excise.Core	tests-only	SetTabOrder
-Excise.Core	tests-only	SourceOperation
-Excise.Core	tests-only	TextPosition
-Excise.Core	tests-only	ThumbnailStream
-Excise.Core	tests-only	ToDoubleArray
-Excise.Core	tests-only	ToEncodedString
-Excise.Core	tests-only	ToIntArray
-Excise.Core	tests-only	Transition
-Excise.Core	tests-only	TryGetString
-Excise.Core	tests-only	WasHexString
-Excise.Core	tests-only	WithAlignment
-Excise.Core	tests-only	WithColor
-Excise.Core	tests-only	WithName
-Excise.Core	tests-only	XObjectOperators
-Excise.Ocr	tests-only	RecognizeDocument
-Excise.Ocr	tests-only	ScanFile
-Excise.Ocr	tests-only	Similarity
-Excise.Rendering	tests-only	EncryptR4
-Excise.Rendering	tests-only	EndLineEnding
-Excise.Rendering	tests-only	InkStrokeCount
-Excise.Rendering	tests-only	ListAnnotations
-Excise.Rendering	tests-only	PdftoppmReferenceRenderer
-Excise.Rendering	tests-only	ShowEncryption
-Excise.Rendering	tests-only	TryRenderPageWithOverprintSimulation
-Excise.Rendering	tests-only	VertexCount
+Excise.App	nowhere	ApplyBatesNumbers	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
+Excise.App	nowhere	ConvertBack	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
+Excise.App	nowhere	DisplayName	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
+Excise.App	nowhere	GeneratedAt	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
+Excise.App	nowhere	GetPageDimensions	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
+Excise.App	nowhere	IsReplaying	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
+Excise.App	nowhere	LicenseFileName	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
+Excise.App	nowhere	LicenseKind	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
+Excise.App	nowhere	LicenseValue	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
+Excise.App	nowhere	MarkPageForOperation	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
+Excise.App	nowhere	PagesIndexed	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
+Excise.App	nowhere	RenderCacheStats	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
+Excise.App	nowhere	RenderPageFromStreamAsync	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
+Excise.App	nowhere	RenderThumbnailAsync	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
+Excise.App	nowhere	SetCommandId	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
+Excise.App	nowhere	SetShowToolTip	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
+Excise.App	nowhere	TypeIndicator	triage:app surface likely XAML/framework binding or deeper dead-code candidate; #940 owns layered reachability
+Excise.App	tests-only	AddOrUpdate	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	AddPagesFromPdf	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	AppliedCount	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	ApplyBatesNumbersToSet	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	AvaloniaPointToPdf	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	AvaloniaYToPdfY	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	CalculateNextNumber	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	CoordinateConverter	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	CurrentPageText	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	DescribeConversion	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	ExecuteFileAsync	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	ForXGraphicsWithVerification	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	GetCurrentDocumentAsStream	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	GetPageHeight	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	GetPageWidth	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	GetRotatedPageDimensions	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	HasRecentFiles	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	ImageSelectionToPdfCoords	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	ImageSelectionToPdfPointsTopLeft	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	IsValidForPage	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	LogCacheStats	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	MaxCacheMemoryBytes	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	PdfPointToAvalonia	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	PdfRectToAvaloniaRect	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	PdfYToAvaloniaY	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	PreferencesPath	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	ShowInfo	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	SignFile	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	SuggestPageSubsetFilename	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	SuggestSafeRedactedFilename	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	TextBoundsToPdfPointsTopLeft	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	TogglePin	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	TransformForRotation	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	TrimCacheForMemoryPressure	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.App	tests-only	ValidateScript	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
+Excise.Core	nowhere	Failures	triage:public library surface with no in-repo caller; acceptable until deeper reachability proves dead
+Excise.Core	nowhere	SetCreator	triage:public library surface with no in-repo caller; acceptable until deeper reachability proves dead
+Excise.Core	tests-only	AsItalic	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	BeginPath	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	BulletList	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	CffSubsetter	issue:#908 production CFF subsetter adapter remains open
+Excise.Core	tests-only	CloseAndStroke	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	ContainsFoldable	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	ContainsLigatures	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	ContainsPresentationForms	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	DateField	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	DocumentJavaScriptActions	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	Dropdown	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	EndBaseLine	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	ExtractWords	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	FdfSerializer	issue:#921 FDF/XFDF shipping surface remains open
+Excise.Core	tests-only	FillEvenOdd	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	FindText	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	FlyOpaqueRectangle	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	FlyScale	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	ForCliCommand	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	FromMatrix	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	FromText	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	GetButtonFields	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	GetChoiceFields	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	GetDictionary	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	GetFonts	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	GetOperators	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	GetOptionalContentGroups	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	GetPageLabel	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	GetSignatureFields	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	GetTextFields	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	HasEmbeddedFiles	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	HasOverflow	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	HorizontalRule	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	InvokeXObject	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	IsDecrypting	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	IsIndirect	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	IsNumber	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	IsPartialOverlap	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	IsPushButton	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	IsRadioButton	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	IsTaggedPdf	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	NamedActionName	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	NextActions	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	NumberedList	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	PageBreak	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	PathOperators	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	Portrait	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	RedactWithBlackMarker	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	RemoveCategory	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	RemoveContainedIn	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	ScrubInfoKeys	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	SetAnnotationColor	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	SetAnnotationContents	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	SetAnnotationOpacity	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	SetFillBlack	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	SetFillWhite	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	SetLineWidth	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	SetReplyTo	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	SetStrokeGray	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	SetStrokeRgb	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	SetTabOrder	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	SourceOperation	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	TextPosition	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	ThumbnailStream	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	ToDoubleArray	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	ToEncodedString	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	ToIntArray	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	Transition	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	TryGetString	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	WasHexString	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	WithAlignment	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	WithColor	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	WithName	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	XObjectOperators	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Ocr	tests-only	RecognizeDocument	triage:public OCR API; tests exercise contract, external callers may use it
+Excise.Ocr	tests-only	ScanFile	triage:public OCR API; tests exercise contract, external callers may use it
+Excise.Ocr	tests-only	Similarity	triage:public OCR API; tests exercise contract, external callers may use it
+Excise.Rendering	tests-only	EncryptR4	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
+Excise.Rendering	tests-only	EndLineEnding	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
+Excise.Rendering	tests-only	InkStrokeCount	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
+Excise.Rendering	tests-only	ListAnnotations	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
+Excise.Rendering	tests-only	PdftoppmReferenceRenderer	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
+Excise.Rendering	tests-only	ShowEncryption	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
+Excise.Rendering	tests-only	TryRenderPageWithOverprintSimulation	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
+Excise.Rendering	tests-only	VertexCount	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
