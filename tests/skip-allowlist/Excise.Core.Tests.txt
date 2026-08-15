@@ -79,7 +79,6 @@ Excise.Core.Tests.Parsing.XRefRecoveryRegressionTests.Open_Bug452455_ResolvesThe
 Excise.Core.Tests.Writing.PdfDocumentWriterTests.Pdf15Save_GhostscriptRendersCompressedOutput_WhenAvailable   # needs Ghostscript, not installed on CI [requires: tool:gs]
 Excise.Core.Tests.Writing.PdfDocumentWriterTests.Pdf15Save_LinearizedInputSavesToCompressedOutput   # needs a checked-in smoke fixture [requires: file:test-pdfs/smoke/irs-w9.pdf]
 Excise.Core.Tests.Writing.PdfDocumentWriterTests.Pdf15Save_MutoolExtractsCompressedOutput_WhenAvailable   # needs MuPDF mutool, not installed on CI [requires: tool:mutool]
-Excise.Core.Tests.Writing.PdfDocumentWriterTests.Pdf15Save_PdfcpuValidatesCompressedOutput_WhenAvailable   # needs pdfcpu, not installed on CI [requires: tool:pdfcpu]
 Excise.Core.Tests.Writing.PdfDocumentWriterTests.Pdf15Save_PdfinfoReadsCompressedOutput_WhenAvailable   # needs Poppler pdfinfo, not installed on CI [requires: tool:pdfinfo]
 Excise.Core.Tests.Writing.PdfDocumentWriterTests.Pdf15Save_QpdfAcceptsCompressedOutput_WhenAvailable   # needs qpdf, not installed on CI [requires: tool:qpdf]
 Excise.Core.Tests.Writing.PdfDocumentWriterTests.Pdf15Save_SmokeCorpusCompressedOutputStaysUnderSourceSizeBudget   # needs checked-in smoke corpus fixtures [requires: corpus:smoke]

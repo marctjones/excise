@@ -4,7 +4,8 @@ name: Rendering (Linux, with reference tools)
 # Differential + Corpus tests that the fast tool-less PR gate deliberately
 # SKIPS (see the "deterministic only" step in ci.yml). This is the only place
 # in CI where excise's renderer/extractor is checked against an INDEPENDENT
-# oracle (mutool / ghostscript / pdftocairo) rather than against itself.
+# oracle (mutool / ghostscript / pdftocairo / PDFBox / PDFium) rather than
+# against itself.
 #
 # Why a separate, tool-installing job instead of turning tools on in the main
 # Linux gate: the fast gate is intentionally tool-independent so a MuPDF /
@@ -41,6 +42,12 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
+      - name: Set up Java (for PDFBox)
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       - name: Cache nuget
         uses: actions/cache@v5
         with:
@@ -53,11 +60,15 @@ jobs:
           sudo apt-get update
           # mupdf-tools → mutool, ghostscript → gs, poppler-utils →
           # pdftocairo/pdftotext, tesseract-ocr → tesseract, qpdf → qpdf (the
-          # EncryptionInteropGate independent-tool checks). These are exactly
-          # the binaries the *ReferenceRenderer.IsAvailable checks resolve on
-          # PATH via ProcessStartInfo.
+          # EncryptionInteropGate independent-tool checks). PDFBox and PDFium
+          # are fetched by the repo scripts below because apt does not provide
+          # the exact oracle surfaces these tests use.
           sudo apt-get install -y --no-install-recommends \
             mupdf-tools ghostscript poppler-utils tesseract-ocr qpdf
+
+          scripts/download-smoke-corpus.sh
+          scripts/download-pdfbox.sh
+          scripts/download-pdfium.sh
 
       - name: Assert tools are on PATH (no silent self-oracle)
         # If apt silently failed to provide a tool, every differential test
@@ -74,6 +85,19 @@ jobs:
               missing=1
             fi
           done
+          java -version
+          compgen -G "tools/vendor/pdfbox-app-*.jar" >/dev/null || {
+            echo "::error::PDFBox jar missing after scripts/download-pdfbox.sh"
+            missing=1
+          }
+          test -f tools/vendor/pdfium/lib/libpdfium.so || {
+            echo "::error::PDFium library missing after scripts/download-pdfium.sh"
+            missing=1
+          }
+          test -f test-pdfs/smoke/irs-w9.pdf || {
+            echo "::error::smoke corpus missing after scripts/download-smoke-corpus.sh"
+            missing=1
+          }
           test "$missing" -eq 0
 
       - name: Build (Debug)

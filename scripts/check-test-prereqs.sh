@@ -58,6 +58,17 @@ check_bin tesseract  "apt install tesseract-ocr"  "Excise.Ocr.Tests + RevealRast
 check_bin mutool     "apt install mupdf-tools"    "Excise.Rendering differential vs MuPDF oracle"
 check_bin pdftocairo "apt install poppler-utils"  "Excise.Rendering differential vs Poppler oracle"
 check_bin gs         "brew install ghostscript"    "Optional third rendering oracle for unsettled corpus DIFFs"
+if command -v pdfcpu >/dev/null 2>&1; then
+    printf "  %s✓%s %-12s %s(found: %s)%s\n" "$GREEN" "$RESET" "pdfcpu" "$DIM" "$(command -v pdfcpu)" "$RESET"
+    ok=$((ok+1))
+elif [[ -x "$PROJECT_ROOT/tools/vendor/bin/pdfcpu" ]]; then
+    printf "  %s✓%s %-12s %s(vendored: tools/vendor/bin/pdfcpu)%s\n" "$GREEN" "$RESET" "pdfcpu" "$DIM" "$RESET"
+    ok=$((ok+1))
+else
+    printf "  %s✗%s %-12s %sinstall: go install github.com/pdfcpu/pdfcpu/cmd/pdfcpu@latest%s\n" "$RED" "$RESET" "pdfcpu" "$YELLOW" "$RESET"
+    printf "                 unlocks: Excise.Core compressed-output pdfcpu validation\n"
+    missing=$((missing+1))
+fi
 VENDORED_PDFBOX="$(ls "$PROJECT_ROOT"/tools/vendor/pdfbox-app-*.jar 2>/dev/null | tail -1)"
 if [[ -n "$VENDORED_PDFBOX" ]]; then
     printf "  %s✓%s %-12s %s(vendored: %s)%s\n" "$GREEN" "$RESET" "pdfbox" "$DIM" "$(basename "$VENDORED_PDFBOX")" "$RESET"

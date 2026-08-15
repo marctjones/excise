@@ -70,13 +70,13 @@ install_linux_deps() {
     local packages=""
     case $PKG_MGR in
         apt-get)
-            packages="libgdiplus libfontconfig1 libicu-dev poppler-utils qpdf mupdf-tools"
+            packages="libgdiplus libfontconfig1 libicu-dev poppler-utils qpdf mupdf-tools golang-go"
             ;;
         dnf|yum)
-            packages="libgdiplus fontconfig libicu poppler-utils qpdf mupdf"
+            packages="libgdiplus fontconfig libicu poppler-utils qpdf mupdf golang"
             ;;
         pacman)
-            packages="libgdiplus fontconfig icu poppler qpdf mupdf"
+            packages="libgdiplus fontconfig icu poppler qpdf mupdf go"
             ;;
     esac
 
@@ -87,6 +87,30 @@ install_linux_deps() {
     }
 
     log_success "System dependencies installed"
+}
+
+install_pdfcpu() {
+    log_section "Installing pdfcpu Validator"
+
+    if check_command pdfcpu || [ -x "$SCRIPT_DIR/../tools/vendor/bin/pdfcpu" ]; then
+        log_success "pdfcpu already installed"
+        return 0
+    fi
+
+    if ! check_command go; then
+        log_warning "Go is not installed; skipping pdfcpu install"
+        log_warning "Install later with: go install github.com/pdfcpu/pdfcpu/cmd/pdfcpu@latest"
+        return 0
+    fi
+
+    mkdir -p "$SCRIPT_DIR/../tools/vendor/bin"
+    log_info "Installing pdfcpu into tools/vendor/bin"
+    GOBIN="$SCRIPT_DIR/../tools/vendor/bin" go install github.com/pdfcpu/pdfcpu/cmd/pdfcpu@latest >> "$LOG_FILE" 2>&1 || {
+        log_warning "pdfcpu install failed"
+        log_warning "Check log file for details"
+        return 0
+    }
+    log_success "pdfcpu installed"
 }
 
 # Install .NET SDK
@@ -230,6 +254,12 @@ verify_installation() {
         log_warning "mutool: NOT FOUND (optional, for validation)"
     fi
 
+    if check_command pdfcpu || [ -x "$SCRIPT_DIR/../tools/vendor/bin/pdfcpu" ]; then
+        log_success "pdfcpu: OK"
+    else
+        log_warning "pdfcpu: NOT FOUND (optional, for compressed writer validation)"
+    fi
+
     if [ "$all_ok" = true ]; then
         log_success "All required dependencies installed"
         return 0
@@ -266,6 +296,7 @@ main() {
     esac
 
     install_dotnet || exit 1
+    install_pdfcpu
     restore_packages || exit 1
     verify_installation
 

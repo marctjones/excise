@@ -50,6 +50,11 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
+      - uses: actions/setup-go@v6
+        with:
+          go-version: 'stable'
+          cache: false
+
       - name: Cache nuget
         uses: actions/cache@v5
         with:
@@ -118,6 +123,18 @@ jobs:
         # Excise.Avalonia.Tests step below also needs xvfb since the #631
         # HeadlessUnitTestSession accessibility tests joined it (#752).
         run: sudo apt-get install -y xvfb
+
+      - name: Install pdfcpu validator
+        run: |
+          GOBIN="$HOME/go/bin" go install github.com/pdfcpu/pdfcpu/cmd/pdfcpu@latest
+          echo "$HOME/go/bin" >> "$GITHUB_PATH"
+          "$HOME/go/bin/pdfcpu" version
+
+      - name: Install smoke rendering oracles for skip-budget coverage
+        run: |
+          scripts/download-smoke-corpus.sh
+          scripts/download-pdfbox.sh
+          scripts/download-pdfium.sh
 
       - name: Restore packages
         run: dotnet restore
@@ -291,12 +308,10 @@ jobs:
       # the skip population, so its trx would silently omit them from the
       # budget. Runs the project standalone instead. This is NOT the
       # double-the-CI-bill problem check-skip-budget.sh's own header warns
-      # about: this runner has neither the gitignored corpus (test-pdfs/
-      # smoke, /isartor, /local-real-world, ...) nor mutool/ghostscript/
-      # pdftocairo/tesseract installed, so every one of those ~114 sites
-      # gates on Assert.SkipUnless/SkipWhen and returns in seconds —
-      # confirmed locally by hiding those tools from PATH and the untracked
-      # corpus dirs, which is materially what this runner already is.
+      # about: this runner has only the smoke corpus plus PDFBox/PDFium
+      # provisioned for #935; it still lacks the larger gitignored corpora
+      # (/isartor, /local-real-world, ...) and mutool/ghostscript/pdftocairo/
+      # tesseract, so the remaining environment-gated sites return quickly.
       - name: Skip budget (Excise.Rendering.Tests)
         run: ./scripts/check-skip-budget.sh Excise.Rendering.Tests/Excise.Rendering.Tests.csproj
 
