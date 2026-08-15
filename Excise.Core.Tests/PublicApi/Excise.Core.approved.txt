@@ -1744,6 +1744,7 @@ namespace Excise.Core.Text
         public string ExtractText() { }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Word> ExtractWords() { }
     }
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public static class TextSelectionEngine
     {
         public static Excise.Core.Text.Letter? HitTest(System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> letters, double pdfX, double pdfY) { }
