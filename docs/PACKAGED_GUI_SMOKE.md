@@ -36,7 +36,9 @@ removes that state during cleanup. Before launch it also starts a bounded
 display is asleep; this can wake the screen, but it does not send keyboard or
 mouse input and does not require foreground focus. Missing app-internal timing
 is a smoke failure because it means the package did not prove first-page
-display.
+display. The default app startup/report timeout is 30s, deliberately above the
+25s app document-load warn budget, so a slow-but-reported open is classified
+from the app's JSON instead of timing out in the harness first.
 
 Use direct executable launch when investigating app stdout/stderr or when
 Launch Services environment inheritance is unavailable:
