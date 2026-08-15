@@ -19,7 +19,7 @@ internal static class XfaXmlCarrier
 {
     private const long MaxXmlCharacters = 128L * 1024 * 1024;
 
-    internal sealed record ScrubResult(bool Present, bool Changed, int UnexaminedPacketCount);
+    internal sealed record ScrubResult(bool Changed, int UnexaminedPacketCount);
 
     internal static ScrubResult ScrubTerms(
         PdfDocument document,
@@ -27,29 +27,29 @@ internal static class XfaXmlCarrier
         bool caseSensitive)
     {
         if (!TryGetXfa(document, out var acroForm, out var xfa))
-            return new ScrubResult(false, false, 0);
+            return new ScrubResult(false, 0);
 
         if (document.Resolve(xfa) is PdfStream singleStream)
         {
             if (!TryScrubXml(singleStream.DecodedData, terms, caseSensitive,
                     out var rewritten, out var changed, out var hasRemainingTerm))
             {
-                return new ScrubResult(true, false,
+                return new ScrubResult(false,
                     ContainsAnyTerm(singleStream.DecodedData, terms, caseSensitive) ? 1 : 0);
             }
 
             if (changed)
                 ReplaceStreamData(singleStream, rewritten);
 
-            return new ScrubResult(true, changed, hasRemainingTerm ? 1 : 0);
+            return new ScrubResult(changed, hasRemainingTerm ? 1 : 0);
         }
 
         if (document.Resolve(xfa) is not PdfArray packets)
-            return new ScrubResult(true, false, 1);
+            return new ScrubResult(false, 1);
 
         var streams = ResolvePacketStreams(document, packets);
         if (streams.Count == 0)
-            return new ScrubResult(true, false, 1);
+            return new ScrubResult(false, 1);
 
         // The standard packet-array shape is one XDP document split over the
         // streams (preamble opens xdp:xdp; postamble closes it). Parsing the
@@ -66,7 +66,7 @@ internal static class XfaXmlCarrier
                 acroForm["XFA"] = document.AddIndirectObject(new PdfStream(combinedRewrite));
             }
 
-            return new ScrubResult(true, combinedChanged, combinedHasRemainingTerm ? 1 : 0);
+            return new ScrubResult(combinedChanged, combinedHasRemainingTerm ? 1 : 0);
         }
 
         // Some producers emit independently well-formed packet streams without
@@ -93,19 +93,7 @@ internal static class XfaXmlCarrier
             }
         }
 
-        return new ScrubResult(true, anyChanged, unexamined);
-    }
-
-    internal static int CountStreams(PdfDocument document)
-    {
-        if (!TryGetXfa(document, out _, out var xfa)) return 0;
-
-        return document.Resolve(xfa) switch
-        {
-            PdfStream => 1,
-            PdfArray packets => ResolvePacketStreams(document, packets).Count,
-            _ => 1,
-        };
+        return new ScrubResult(anyChanged, unexamined);
     }
 
     internal static int CountUnexaminedPackets(

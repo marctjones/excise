@@ -5,6 +5,7 @@ using System.Text;
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Operations;
+using Excise.Core.Primitives;
 using Excise.Core.Text.Segmentation;
 using Xunit;
 
@@ -124,6 +125,87 @@ public class RedactionCarrierAuditTests
         finally { File.Delete(path); }
     }
 
+    [Fact]
+    public void ActionableTerm_ReportsOnlyCarrierValuesThatStillContainIt()
+    {
+        var path = WriteFixture();
+        try
+        {
+            using var doc = PdfDocument.Open(path);
+
+            var before = RedactionCarrierAudit.Inspect(doc, new[] { Secret });
+            before.OutlineTitleCount.Should().Be(1);
+            before.AnnotationsWithTextCount.Should().Be(1);
+
+            PdfDocumentSanitizer.ScrubTerms(doc, new[] { Secret });
+            var after = RedactionCarrierAudit.Inspect(doc, new[] { Secret });
+
+            after.OutlineTitleCount.Should().Be(0,
+                "an exact-term scrub examined both bookmark titles and removed only the match");
+            after.AnnotationsWithTextCount.Should().Be(0,
+                "unrelated surviving comments must not produce a false unexamined warning");
+            after.HasUnexaminedCarriers.Should().BeFalse();
+        }
+        finally { File.Delete(path); }
+    }
+
+    [Fact]
+    public void MalformedXfaContainingTheTerm_IsReportedAsUnexamined()
+    {
+        var path = WriteFixture(withOutlines: false, withAnnotations: false);
+        try
+        {
+            using var doc = PdfDocument.Open(path);
+            AddXfa(doc, $"<template><text>{Secret}</template>");
+
+            PdfDocumentSanitizer.ScrubTerms(doc, new[] { Secret });
+            var audit = RedactionCarrierAudit.Inspect(doc, new[] { Secret });
+
+            audit.UnexaminedXfaPacketCount.Should().Be(1);
+            audit.HasUnexaminedCarriers.Should().BeTrue();
+            audit.Describe().Should().ContainSingle(line =>
+                line.Contains("XFA") && line.Contains("not examined"));
+        }
+        finally { File.Delete(path); }
+    }
+
+    [Fact]
+    public void ParseableXfaScrub_DoesNotLeaveAStandingWarning()
+    {
+        var path = WriteFixture(withOutlines: false, withAnnotations: false);
+        try
+        {
+            using var doc = PdfDocument.Open(path);
+            AddXfa(doc, $"<template><text>{Secret}</text><text>public</text></template>");
+
+            PdfDocumentSanitizer.ScrubTerms(doc, new[] { Secret });
+            var audit = RedactionCarrierAudit.Inspect(doc, new[] { Secret });
+
+            audit.UnexaminedXfaPacketCount.Should().Be(0);
+            audit.HasUnexaminedCarriers.Should().BeFalse(
+                "a warning that persists after successful XML-aware scrubbing would be ignored");
+        }
+        finally { File.Delete(path); }
+    }
+
+    [Fact]
+    public void AreaRedactionWithoutCapturedText_ReportsEveryXfaStream()
+    {
+        var path = WriteFixture(withOutlines: false, withAnnotations: false);
+        try
+        {
+            using var doc = PdfDocument.Open(path);
+            AddXfa(doc, "<template><text>public form value</text></template>");
+
+            var audit = RedactionCarrierAudit.Inspect(doc);
+
+            audit.UnexaminedXfaPacketCount.Should().Be(1,
+                "geometry alone cannot decide which XFA value corresponds to a page rectangle");
+            audit.Describe().Should().Contain(line => line.Contains("XFA"));
+        }
+        finally { File.Delete(path); }
+    }
+
     /// <summary>
     /// The audit mirrors PdfDocumentSanitizer's floor as a public constant
     /// because the sanitizer's own copy is private. If they drift, the audit
@@ -162,6 +244,16 @@ public class RedactionCarrierAuditTests
             finally { if (File.Exists(tmp)) File.Delete(tmp); }
         }
         finally { File.Delete(path); }
+    }
+
+    private static void AddXfa(PdfDocument document, string xml)
+    {
+        var acroForm = new PdfDictionary
+        {
+            ["XFA"] = document.AddIndirectObject(
+                new PdfStream(new UTF8Encoding(false).GetBytes(xml))),
+        };
+        document.Catalog["AcroForm"] = document.AddIndirectObject(acroForm);
     }
 
     // ── fixture ──────────────────────────────────────────────────────────────

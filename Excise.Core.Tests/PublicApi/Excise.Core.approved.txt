@@ -1864,11 +1864,12 @@ namespace Excise.Core.Text.Segmentation
     public sealed class RedactionCarrierAudit : System.IEquatable<Excise.Core.Text.Segmentation.RedactionCarrierAudit>
     {
         public const int ScrubFloor = 3;
-        public RedactionCarrierAudit(int OutlineTitleCount, int AnnotationsWithTextCount, System.Collections.Generic.IReadOnlyList<string> TermsBelowScrubFloor) { }
+        public RedactionCarrierAudit(int OutlineTitleCount, int AnnotationsWithTextCount, int UnexaminedXfaPacketCount, System.Collections.Generic.IReadOnlyList<string> TermsBelowScrubFloor) { }
         public int AnnotationsWithTextCount { get; init; }
         public bool HasUnexaminedCarriers { get; }
         public int OutlineTitleCount { get; init; }
         public System.Collections.Generic.IReadOnlyList<string> TermsBelowScrubFloor { get; init; }
+        public int UnexaminedXfaPacketCount { get; init; }
         public System.Collections.Generic.IReadOnlyList<string> Describe() { }
         public static Excise.Core.Text.Segmentation.RedactionCarrierAudit Inspect(Excise.Core.Document.PdfDocument document, System.Collections.Generic.IEnumerable<string>? requestedTerms = null) { }
     }
