@@ -17,6 +17,37 @@ partial class Program
 {
     static Task<int> Main(string[] args) => RunAsync(args);
 
+    private static PdfDocument OpenInputForOutput(string inputPath, string outputPath, string? userPassword = null)
+    {
+        // #918: keep same-path input/output commands working on Windows by
+        // avoiding a held read FileStream only when the output resolves to the
+        // input. Distinct-output commands can stream the source instead of
+        // keeping the whole PDF resident.
+        if (PathsReferToSameFile(inputPath, outputPath))
+        {
+            var bytes = File.ReadAllBytes(inputPath);
+            return userPassword is null
+                ? PdfDocument.Open(bytes)
+                : PdfDocument.Open(bytes, userPassword);
+        }
+
+        return userPassword is null
+            ? PdfDocument.Open(inputPath)
+            : PdfDocument.Open(inputPath, userPassword);
+    }
+
+    private static bool PathsReferToSameFile(string left, string right)
+    {
+        var comparison = OperatingSystem.IsWindows()
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+
+        return string.Equals(
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(left)),
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(right)),
+            comparison);
+    }
+
     /// <summary>
     /// Build and invoke the root command. Exposed for tests so they can
     /// exercise the CLI parsing + handler pipeline without spawning a
@@ -790,8 +821,7 @@ partial class Program
         bool allowDecrypt = false, bool strict = false, bool allowLowConfidence = false,
         string? password = null)
     {
-        var bytes = File.ReadAllBytes(inputPath);
-        using var doc = PdfDocument.Open(bytes, password);
+        using var doc = OpenInputForOutput(inputPath, outputPath, password);
 
         var reEncryption = allowDecrypt ? null : doc.GetReEncryptionOptions(password);
         if (doc.IsEncrypted && allowDecrypt)
@@ -1115,8 +1145,7 @@ partial class Program
         Func<PdfDocument, IReadOnlyList<PdfDocument>> split,
         bool ignorePermissions = false)
     {
-        var bytes = File.ReadAllBytes(inputPath);
-        using var doc = PdfDocument.Open(bytes);
+        using var doc = PdfDocument.Open(inputPath);
 
         // #677: splitting a document into fragment PDFs is a page-assembly
         // operation, governed by the source's /P bit 11.
@@ -1223,8 +1252,7 @@ partial class Program
     internal static int RunFillForm(string inputPath, string outputPath, string[] fields, bool flatten,
         bool ignorePermissions = false)
     {
-        var bytes = File.ReadAllBytes(inputPath);
-        using var doc = PdfDocument.Open(bytes);
+        using var doc = OpenInputForOutput(inputPath, outputPath);
         RequireDocumentPermission(doc, DocumentAction.FillForms, "filling form fields", ignorePermissions);
 
         var form = doc.GetAcroForm()
@@ -1342,8 +1370,7 @@ partial class Program
         string? value, string[] options, bool ignorePermissions = false)
     {
         var rect = ParseRect(rectStr);
-        var bytes = File.ReadAllBytes(inputPath);
-        using var doc = PdfDocument.Open(bytes);
+        using var doc = OpenInputForOutput(inputPath, outputPath);
         RequireDocumentPermission(doc, DocumentAction.ModifyContents,
             "adding form fields", ignorePermissions);
 
@@ -1441,8 +1468,9 @@ partial class Program
 
             try
             {
-                var bytes = File.ReadAllBytes(input.FullName);
-                using var doc = PdfDocument.Open(bytes);
+                using var doc = apply
+                    ? OpenInputForOutput(input.FullName, output!.FullName)
+                    : PdfDocument.Open(input.FullName);
                 if (apply)
                 {
                     // Detection alone is read-only analysis; only --apply
@@ -1524,13 +1552,14 @@ partial class Program
 
             try
             {
-                var bytes = File.ReadAllBytes(file.FullName);
-                using var doc = PdfDocument.Open(bytes);
+                byte[]? bytes = null;
+                using var doc = PdfDocument.Open(file.FullName);
                 var structuralHits = HiddenTextDetector.Scan(doc);
 
                 IReadOnlyList<DifferentialOcrHit> ocrHits = Array.Empty<DifferentialOcrHit>();
                 if (deep)
                 {
+                    bytes = File.ReadAllBytes(file.FullName);
                     var ocr = new PdfOcrService();
                     if (!ocr.IsAvailable())
                     {
@@ -1983,11 +2012,7 @@ partial class Program
         Excise.Core.Document.PdfDocument doc;
         try
         {
-            // #918: deliberately byte-backed, NOT streamed. `excise encrypt
-            // in.pdf in.pdf` is a plausible invocation; a held FileStream on the
-            // input would make the same-path save fail on Windows (#926's exact
-            // mechanism). The memory cost is one file, transiently.
-            doc = Excise.Core.Document.PdfDocument.Open(File.ReadAllBytes(inputPath));
+            doc = OpenInputForOutput(inputPath, outputPath);
         }
         catch (Excise.Core.Parsing.PdfEncryptionNotSupportedException)
         {
@@ -2085,8 +2110,7 @@ partial class Program
     /// </summary>
     internal static void RunDecrypt(string inputPath, string outputPath, string? password)
     {
-        // #918: byte-backed on purpose — same same-path-output rationale as encrypt.
-        using var doc = Excise.Core.Document.PdfDocument.Open(File.ReadAllBytes(inputPath), password);
+        using var doc = OpenInputForOutput(inputPath, outputPath, password);
         if (!doc.IsEncrypted)
             throw new InvalidOperationException("Source PDF is not encrypted; nothing to decrypt.");
 
@@ -2186,7 +2210,7 @@ partial class Program
             }
 
             var openTimer = Stopwatch.StartNew();
-            using var doc = Excise.Core.Document.PdfDocument.Open(File.ReadAllBytes(file.FullName));
+            using var doc = Excise.Core.Document.PdfDocument.Open(file.FullName);
             openTimer.Stop();
 
             var saveTimer = Stopwatch.StartNew();

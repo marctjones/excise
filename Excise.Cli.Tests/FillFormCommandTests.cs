@@ -95,6 +95,19 @@ public class FillFormCommandTests : IDisposable
     }
 
     [Fact]
+    public void RunFillForm_SameInputAndOutputPath_UpdatesValue()
+    {
+        var path = TempPath(".pdf");
+        File.WriteAllBytes(path, PdfWithForm());
+
+        int set = Program.RunFillForm(path, path, new[] { "Name=Bob" }, flatten: false);
+
+        set.Should().Be(1);
+        using var doc = PdfDocument.Open(File.ReadAllBytes(path));
+        doc.GetAcroForm()!.FindField("Name")!.Value.Should().Be("Bob");
+    }
+
+    [Fact]
     public void RunFillForm_MultipleFields_UpdatesAll()
     {
         var input = TempPath(".pdf");

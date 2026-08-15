@@ -85,6 +85,21 @@ public class AddFieldCommandTests : IDisposable
     }
 
     [Fact]
+    public void RunAddField_SameInputAndOutputPath_AddsField()
+    {
+        var path = TempPath(".pdf");
+        File.WriteAllBytes(path, BarePdf());
+
+        Program.RunAddField(path, path, "Text", "Name", page: 1,
+            rectStr: "72,700,300,720", value: "default", options: Array.Empty<string>());
+
+        using var doc = PdfDocument.Open(File.ReadAllBytes(path));
+        var f = doc.GetAcroForm()!.FindField("Name");
+        f.Should().NotBeNull();
+        f!.Value.Should().Be("default");
+    }
+
+    [Fact]
     public void RunAddField_Checkbox_AddsButtonField()
     {
         var input = TempPath(".pdf");
