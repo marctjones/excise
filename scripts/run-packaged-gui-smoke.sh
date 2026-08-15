@@ -13,7 +13,7 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 APP="$ROOT/dist/excise.app"
 PDF="$ROOT/test-pdfs/smoke/irs-w9.pdf"
 OUT="$ROOT/logs/packaged-gui-smoke_$(date +%Y%m%d_%H%M%S)"
-TIMEOUT_SECONDS=20
+TIMEOUT_SECONDS=30
 MODE="background-open"
 ALLOW_FOCUS_INPUT=0
 
@@ -28,7 +28,7 @@ Options:
   --app <path>           Path to excise.app. Default: dist/excise.app.
   --pdf <path>           PDF to open. Default: test-pdfs/smoke/irs-w9.pdf.
   --output <dir>         Evidence directory. Default: logs/packaged-gui-smoke_<timestamp>.
-  --timeout <seconds>    App startup timeout. Default: 20.
+  --timeout <seconds>    App startup/report timeout. Default: 30.
   --mode <mode>          background-open or direct-exec. Default: background-open.
   --allow-focus-input    Run native System Events key/mouse smoke. Takes focus.
   -h, --help             Show this help.

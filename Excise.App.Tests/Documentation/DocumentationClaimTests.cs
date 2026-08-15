@@ -179,6 +179,7 @@ public class DocumentationClaimTests
         packagedSmokeDocs.Should().Contain("caffeinate -u");
         packagedSmokeDocs.Should().Contain("Timing Budgets");
         packagedSmokeDocs.Should().Contain("Accessibility permission");
+        packagedSmokeDocs.Should().Contain("default app startup/report timeout is 30s");
 
         releaseSmokeScript.Should().Contain("run_packaged_gui_gate");
         releaseSmokeScript.Should().Contain("--packaged-gui");
@@ -189,6 +190,7 @@ public class DocumentationClaimTests
         packagedSmokeScript.Should().Contain("packaged-gui-smoke.json");
         packagedSmokeScript.Should().Contain("APP_RESPONSIVENESS_REPORT");
         packagedSmokeScript.Should().Contain("EXCISE_RESPONSIVENESS_REPORT");
+        packagedSmokeScript.Should().Contain("TIMEOUT_SECONDS=30");
         packagedSmokeScript.Should().Contain("packaged app stayed alive");
         packagedSmokeScript.Should().Contain("display wake assertion");
         packagedSmokeScript.Should().Contain("native page navigation latency");
