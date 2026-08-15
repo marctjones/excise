@@ -137,6 +137,15 @@ publish "Excise.Cli/Excise.Cli.csproj"       "excise (CLI)"      "$PUBLISH_BASE/
 # Sanity-check the binaries we expect.
 [[ -x "$PUBLISH_BASE/gui/Excise.App" ]] || { echo "GUI binary missing"; exit 1; }
 [[ -x "$PUBLISH_BASE/cli/excise"      ]] || { echo "CLI binary missing"; exit 1; }
+if [[ "$AOT" = "1" ]]; then
+    dll_count="$(find "$PUBLISH_BASE/gui" "$PUBLISH_BASE/cli" -maxdepth 1 -name '*.dll' -print | wc -l | tr -d ' ')"
+    echo "▶ Managed dll sidecars in AOT publish outputs: $dll_count (expect 0)"
+    if [[ "$dll_count" != "0" ]]; then
+        find "$PUBLISH_BASE/gui" "$PUBLISH_BASE/cli" -maxdepth 1 -name '*.dll' -print >&2
+        echo "Native AOT package contains managed .dll sidecars" >&2
+        exit 1
+    fi
+fi
 
 # ── stage Debian tree ──────────────────────────────────────────────────
 STAGE="$ROOT/artifacts/deb-stage/$ARCH"

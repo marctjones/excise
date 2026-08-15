@@ -43,8 +43,8 @@ Launch Services environment inheritance is unavailable:
 
 ```bash
 scripts/run-packaged-gui-smoke.sh --mode direct-exec
-scripts/release-smoke.sh --quick --package --packaged-gui-direct-exec --version <version>
-scripts/release-smoke.sh --quick --package --packaged-gui-background-open --version <version>
+scripts/release-smoke.sh --quick --package --packaged-gui-direct-exec --aot --version <version>
+scripts/release-smoke.sh --quick --package --packaged-gui-background-open --aot --version <version>
 ```
 
 Native key/mouse delivery through `System Events` is available only with:
@@ -62,17 +62,18 @@ manual release-candidate pass.
 After building a local package:
 
 ```bash
-scripts/release-smoke.sh --quick --package --packaged-gui --version <version>
+scripts/release-smoke.sh --quick --package --packaged-gui --aot --version <version>
 ```
 
-That release wrapper command runs the packaged executable directly. Use
-`--packaged-gui-background-open` only when specifically investigating Launch
-Services/open-with behavior.
+That release wrapper command runs the packaged executable directly and `--package`
+implies the Native AOT package lane unless `--no-aot` is passed for a
+package-only investigation. Use `--packaged-gui-background-open` only when
+specifically investigating Launch Services/open-with behavior.
 
 For the focus-taking native input path:
 
 ```bash
-scripts/release-smoke.sh --quick --package --packaged-gui-focus-input --version <version>
+scripts/release-smoke.sh --quick --package --packaged-gui-focus-input --aot --version <version>
 ```
 
 Reports are written under the current `logs/release-smoke_*` directory when run

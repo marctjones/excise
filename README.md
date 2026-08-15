@@ -505,17 +505,18 @@ scripts/build-macos-app.sh --version <version> --rid osx-x64
 
 ### Native AOT release lane
 
-Native AOT is an explicit release lane, not the default package. It is
-**validated on `osx-arm64`**: the GUI AOT-compiles with a zero warning budget
+Native AOT is the macOS/Linux release package lane. The macOS GUI is
+**validated on `osx-arm64`**: it AOT-compiles with a zero warning budget
 (first-party `Excise.*` code is AOT-clean — source-generated JSON, no
 reflection-based ReactiveUI `WhenAnyValue`; the residual IL2104/IL3053 roll-ups
 are from third-party GUI frameworks, suppressed and tracked in #593), and it
 passes the packaged GUI smoke. A CI job (**Native AOT (macOS)**) keeps the
-AOT publish from regressing. Other RIDs await per-platform probes (#595), and
-ReadyToRun remains the default release artifact until AOT clears the same
-release gates on every target. The local gate publishes/packages the AOT app,
-captures IL/AOT warning output, separates debug symbols from the user-facing
-artifact, and writes JSON/markdown evidence:
+macOS AOT publish from regressing. The Linux release workflow builds the AOT
+`.deb` and smokes the CLI `version`/`info`/`text`/`render` paths to cover native
+asset loading on a headless runner. Other RIDs await per-platform probes (#595).
+The local gate publishes/packages the AOT app, captures IL/AOT warning output,
+asserts that the payload has `0` managed `.dll` sidecars, separates debug
+symbols from the user-facing artifact, and writes JSON/markdown evidence:
 
 ```bash
 scripts/release-smoke.sh --quick --only=aot
@@ -524,8 +525,7 @@ scripts/build-macos-app.sh --version <version> --rid osx-arm64 --aot
 ```
 
 Use `scripts/run-aot-smoke.sh --gui-smoke` on an interactive macOS runner when
-validating the AOT app against packaged GUI launch/open/render evidence. ReadyToRun
-remains the fallback artifact until AOT passes the same release gates.
+validating the AOT app against packaged GUI launch/open/render evidence.
 
 ### Using excise as a PDF reader on macOS
 
@@ -576,14 +576,15 @@ Before tagging, run the release checklist in
 the implemented commands and APIs. The repeatable local gate is:
 
 ```bash
-scripts/release-smoke.sh --visual --package --packaged-gui --version 2.27.1
+scripts/release-smoke.sh --visual --package --packaged-gui --aot --version 2.27.1
 ```
 
 The release-smoke script does not create tags or upload artifacts. It runs the
 documentation, build, redaction, signature-verification, UI workflow,
-benchmark, optional Native AOT, full-test, local visual-regression, packaging,
+benchmark, Native AOT, full-test, local visual-regression, packaging,
 packaged-GUI evidence, packaged first-page responsiveness timing, and diff-cleanliness gates
-and writes logs under `logs/release-smoke_*`.
+and writes logs under `logs/release-smoke_*`. Passing `--package` implies AOT
+unless `--no-aot` is used for a package-only investigation.
 
 ```bash
 # Cut a new release
