@@ -55,6 +55,16 @@ public class ContentOperator
     internal double? TextAdvanceThousandths { get; set; }
 
     /// <summary>
+    /// Graphics CTM active when a parsed text-showing operator executed.
+    /// Redaction reconstructs kept glyphs from page-space letter geometry, so
+    /// it must cancel this transform before emitting those page coordinates.
+    /// </summary>
+    internal ContentTransform? GraphicsTransform { get; set; }
+
+    /// <summary>Text matrix active when this text-showing operator began.</summary>
+    internal ContentTransform? TextTransform { get; set; }
+
+    /// <summary>
     /// For inline-image operators (<c>BI</c>), the raw binary image data
     /// that appeared between <c>ID</c> and <c>EI</c> in the source content
     /// stream. The single <see cref="Operands"/> entry holds the image
@@ -488,6 +498,32 @@ public class ContentOperator
             .Replace("\r", "\\r")
             .Replace("\t", "\\t");
     }
+}
+
+internal readonly record struct ContentTransform(
+    double A, double B, double C, double D, double E, double F)
+{
+    internal bool TryInvert(out ContentTransform inverse)
+    {
+        var determinant = A * D - B * C;
+        if (Math.Abs(determinant) < 1e-12)
+        {
+            inverse = default;
+            return false;
+        }
+
+        inverse = new ContentTransform(
+            D / determinant,
+            -B / determinant,
+            -C / determinant,
+            A / determinant,
+            (C * F - D * E) / determinant,
+            (B * E - A * F) / determinant);
+        return true;
+    }
+
+    internal (double X, double Y) TransformPoint(double x, double y) =>
+        (x * A + y * C + E, x * B + y * D + F);
 }
 
 /// <summary>

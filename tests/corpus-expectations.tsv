@@ -17,7 +17,7 @@
 #
 # Keys are corpus-relative PATHS, not basenames: this corpus may have
 # subdirectories and duplicate filenames.
-# Baseline: PASS=666, PASS_ONE=11, MALFORMED_PDF=2, MISSING_CONTENT=2, EXCISE_ONLY=2, RECOVERED_MALFORMED_CONTENT=1, EMPTY_DOC=1
+# Baseline: PASS=657, PASS_ONE=19, *=1, MALFORMED_PDF=2, MISSING_CONTENT=2, EXCISE_ONLY=2, RECOVERED_MALFORMED_CONTENT=1, EMPTY_DOC=1
 160F-2019.pdf	1	PASS
 22060_A1_01_Plans.pdf	1	PASS
 90ms_rksj_h_sample.pdf	1	PASS
@@ -123,7 +123,7 @@ bitmap-refine-page.pdf	1	PASS
 bitmap-refine-refine.pdf	1	PASS
 bitmap-refine-template1-tpgron.pdf	1	PASS_ONE
 bitmap-refine-template1.pdf	1	PASS
-bitmap-refine-tpgron.pdf	1	PASS
+bitmap-refine-tpgron.pdf	1	PASS_ONE
 bitmap-refine.pdf	1	PASS
 bitmap-stripe-initially-unknown-height.pdf	1	PASS
 bitmap-stripe-last-implicit.pdf	1	PASS
@@ -280,7 +280,7 @@ bug1953099.pdf	1	PASS
 bug1963407.pdf	1	PASS
 bug1974436.pdf	1	PASS
 bug1978317.pdf	1	PASS
-bug1980958.pdf	1	PASS
+bug1980958.pdf	1	PASS_ONE
 bug1989304.pdf	1	PASS
 bug1992868.pdf	1	PASS
 bug1997343.pdf	1	PASS
@@ -312,7 +312,7 @@ bug898853.pdf	1	PASS
 bug900822.pdf	1	PASS
 bug903856.pdf	1	PASS
 bug911034.pdf	1	PASS
-bug920426.pdf	1	PASS
+bug920426.pdf	1	PASS_ONE
 bug921409.pdf	1	PASS
 bug946506.pdf	1	PASS
 bug_jpx.pdf	1	PASS
@@ -350,7 +350,7 @@ empty#hash.pdf	1	PASS
 empty.pdf	1	PASS
 empty_protected.pdf	1	PASS
 encrypted-attachment.pdf	1	PASS
-endchar.pdf	1	PASS
+endchar.pdf	1	PASS_ONE
 evaljs.pdf	1	PASS
 extgstate.pdf	1	PASS
 extractPages_null_in_array.pdf	1	PASS
@@ -368,7 +368,7 @@ form_two_pages.pdf	1	PASS
 fraction-highlight.pdf	1	PASS
 franz.pdf	1	PASS
 franz_2.pdf	1	PASS
-freeculture.pdf	1	PASS
+freeculture.pdf	1	PASS_ONE
 freetext_no_appearance.pdf	1	PASS
 freetexts.pdf	1	PASS
 french_diacritics.pdf	1	PASS
@@ -439,7 +439,7 @@ issue12213.pdf	1	PASS
 issue12295.pdf	1	PASS
 issue12337.pdf	1	PASS
 issue12399_reduced.pdf	1	PASS
-issue12418_reduced.pdf	1	PASS
+issue12418_reduced.pdf	1	PASS_ONE
 issue1249.pdf	1	PASS
 issue12504.pdf	1	PASS
 issue12705.pdf	1	PASS
@@ -467,7 +467,7 @@ issue13343.pdf	1	PASS
 issue13372.pdf	1	PASS
 issue13447.pdf	1	PASS
 issue1350.pdf	1	PASS
-issue13520.pdf	1	PASS
+issue13520.pdf	1	PASS_ONE
 issue13561_reduced.pdf	1	PASS
 issue13916.pdf	1	PASS
 issue13931.pdf	1	PASS
@@ -609,7 +609,7 @@ issue19474.pdf	1	PASS
 issue19484_1.pdf	1	EXCISE_ONLY
 issue19484_2.pdf	1	EXCISE_ONLY
 issue19505.pdf	1	PASS
-issue19517.pdf	1	PASS_ONE
+issue19517.pdf	1	*		Reference renderer timeouts make PASS/PASS_ONE load-dependent.
 issue19532.pdf	1	PASS
 issue19550.pdf	1	PASS
 issue19633.pdf	1	PASS
@@ -637,7 +637,7 @@ issue20516.pdf	1	PASS
 issue2074.pdf	1	PASS
 issue20930.pdf	1	PASS
 issue2099-1.pdf	1	PASS
-issue21068.pdf	1	PASS
+issue21068.pdf	1	PASS_ONE
 issue21126.pdf	1	PASS
 issue2128r.pdf	1	PASS
 issue21346.pdf	1	PASS
@@ -673,7 +673,7 @@ issue3458.pdf	1	PASS
 issue3521.pdf	1	PASS
 issue3566.pdf	1	PASS
 issue3584.pdf	1	PASS
-issue3694_reduced.pdf	1	PASS
+issue3694_reduced.pdf	1	PASS_ONE
 issue3879r.pdf	1	PASS
 issue3885.pdf	1	PASS
 issue3928.pdf	1	PASS

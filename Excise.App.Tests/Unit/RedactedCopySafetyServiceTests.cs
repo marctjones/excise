@@ -1,6 +1,7 @@
 using AwesomeAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Excise.Core.Document;
+using Excise.Core.Primitives;
 using Excise.Core.Text.Segmentation;
 using Excise.App.Models;
 using Excise.App.Services;
@@ -81,6 +82,74 @@ public class RedactedCopySafetyServiceTests : IDisposable
             "nothing was left unexamined, so nothing should be reported");
     }
 
+    [Fact]
+    public void PrepareRedactedCopy_WithCapturedText_SurgicallyScrubsRemoteCarriers()
+    {
+        var inputPath = Path.Combine(_tempDir, "captured-carriers.pdf");
+        WriteBookmarkedFixture(inputPath);
+
+        using var document = PdfDocument.Open(File.ReadAllBytes(inputPath));
+        SetBookmarkAndAnnotationText(document, "CARRIERSECRET bookmark", "CARRIERSECRET comment");
+        AddXfa(document,
+            "<template><text>CARRIERSECRET form value</text><text>public XFA value</text></template>");
+
+        var area = new PdfRectangle(40, 675, 560, 750);
+        _redactionService.RedactArea(
+            document.GetPage(1), PdfPageRect.FromContentPoints(1, area));
+        var pending = new[]
+        {
+            new PendingRedaction
+            {
+                PageNumber = 1,
+                PageArea = PdfPageRect.FromContentPoints(1, area),
+                PreviewText = "CARRIERSECRET",
+            },
+        };
+
+        var report = _service.PrepareRedactedCopy(document, pending);
+        var output = Path.Combine(_tempDir, "captured-carriers-out.pdf");
+        document.Save(output);
+        var combined = Encoding.Latin1.GetString(File.ReadAllBytes(output)) +
+                       Encoding.BigEndianUnicode.GetString(File.ReadAllBytes(output));
+
+        combined.Should().NotContain("CARRIERSECRET",
+            "captured selection text is an exact term, so matching bookmarks, remote comments, " +
+            "and XFA values can be scrubbed without guessing from geometry");
+        combined.Should().Contain("bookmark").And.Contain("comment").And.Contain("public XFA value",
+            "carrier cleanup must remove only the captured term, not destroy unrelated content");
+        report.Warnings.Should().NotContain(line => line.Contains("not examined"),
+            "successfully checked carriers must not leave a standing false warning");
+    }
+
+    [Fact]
+    public void PrepareRedactedCopy_WithMalformedMatchingXfa_SurfacesTheUnexaminedPacket()
+    {
+        var inputPath = Path.Combine(_tempDir, "malformed-xfa.pdf");
+        TestPdfGenerator.CreateSimpleTextPdf(inputPath, "PUBLIC CARRIERSECRET");
+
+        using var document = PdfDocument.Open(File.ReadAllBytes(inputPath));
+        AddXfa(document, "<template><text>CARRIERSECRET</template>");
+        var page = document.GetPage(1);
+        var area = new PdfRectangle(0, 0, page.Width, page.Height);
+        _redactionService.RedactArea(page, PdfPageRect.FromContentPoints(1, area));
+
+        var report = _service.PrepareRedactedCopy(document, new[]
+        {
+            new PendingRedaction
+            {
+                PageNumber = 1,
+                PageArea = PdfPageRect.FromContentPoints(1, area),
+                PreviewText = "CARRIERSECRET",
+            },
+        });
+        var dialog = _service.FormatForDialog("out.pdf", report);
+
+        dialog.Should().Contain("XFA").And.Contain("not examined",
+            "unsafe XML must never disappear behind an unqualified success dialog");
+        dialog.Should().NotContain("CARRIERSECRET",
+            "the warning must identify the carrier without echoing removed sensitive text");
+    }
+
     private static void WriteBookmarkedFixture(string path)
     {
         const string page1 = "BT /F1 24 Tf 60 700 Td (CARRIERSECRET on page one) Tj ET";
@@ -110,6 +179,33 @@ public class RedactedCopySafetyServiceTests : IDisposable
           .Append(" /Root 1 0 R >>\nstartxref\n").Append(xref).Append("\n%%EOF");
 
         File.WriteAllBytes(path, Encoding.Latin1.GetBytes(sb.ToString()));
+    }
+
+    private static void SetBookmarkAndAnnotationText(
+        PdfDocument document,
+        string bookmark,
+        string annotation)
+    {
+        var outlines = document.Resolve(document.Catalog.GetOptional("Outlines")!)
+            .Should().BeOfType<PdfDictionary>().Subject;
+        var first = document.Resolve(outlines.GetOptional("First")!)
+            .Should().BeOfType<PdfDictionary>().Subject;
+        first["Title"] = new PdfString(bookmark);
+
+        var annotations = document.Resolve(document.GetPage(1).Dictionary.GetOptional("Annots")!)
+            .Should().BeOfType<PdfArray>().Subject;
+        var annot = document.Resolve(annotations[0]).Should().BeOfType<PdfDictionary>().Subject;
+        annot["Contents"] = new PdfString(annotation);
+    }
+
+    private static void AddXfa(PdfDocument document, string xml)
+    {
+        var acroForm = new PdfDictionary
+        {
+            ["XFA"] = document.AddIndirectObject(
+                new PdfStream(new UTF8Encoding(false).GetBytes(xml))),
+        };
+        document.Catalog["AcroForm"] = document.AddIndirectObject(acroForm);
     }
 
     [Fact]

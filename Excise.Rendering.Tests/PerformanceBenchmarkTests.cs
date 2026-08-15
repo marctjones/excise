@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using AwesomeAssertions;
 using Excise.Core.Document;
+using Excise.Core.Text.Segmentation;
 using Xunit;
 namespace Excise.Rendering.Tests;
 
@@ -120,5 +121,39 @@ public class PerformanceBenchmarkTests
         _out.WriteLine($"Letters(irs-w9.pdf p1): {letters.Count} letters in {sw.ElapsedMilliseconds}ms");
         sw.ElapsedMilliseconds.Should().BeLessThan(500,
             "small-page letter extraction should be sub-half-second");
+    }
+
+    [Fact]
+    public void RedactText_CommonTermOnW9_StaysUnderFiveSeconds()
+    {
+        var path = Path.Combine(CorpusDir, "irs-w9.pdf");
+        Assert.SkipUnless(File.Exists(path),
+            "irs-w9.pdf is required for the #919 common-term redaction budget");
+
+        // Warm parser, text extraction, and redaction JIT without mutating the
+        // measured document. The old per-match path took 7-10 seconds after
+        // warmup, so a five-second budget leaves machine-noise headroom while
+        // still catching that algorithmic regression.
+        using (var warm = PdfDocument.Open(path))
+            warm.RedactText("ZzzzNoSuchStringZzzz", drawBlackRect: false);
+
+        using var document = PdfDocument.Open(path);
+        var sw = Stopwatch.StartNew();
+        var matches = document.RedactText("the");
+        sw.Stop();
+
+        var survivingText = string.Join('\n', Enumerable.Range(1, document.PageCount)
+            .Select(pageNumber => document.GetPage(pageNumber).Text));
+
+        _out.WriteLine($"RedactText(irs-w9.pdf, 'the'): {matches} matches in {sw.ElapsedMilliseconds}ms");
+        matches.Should().BeGreaterThan(200,
+            "the common-term fixture must exercise batching rather than pass vacuously");
+        sw.ElapsedMilliseconds.Should().BeLessThan(5_000,
+            "#919: common-term redaction must not return to the 7-10 second per-match rewrite path");
+        survivingText.Contains("the", StringComparison.OrdinalIgnoreCase).Should().BeFalse(
+            "the timed operation must still complete the requested redaction");
+        survivingText.Should().Contain("1099-INT").And.Contain("1099-DIV")
+            .And.Contain("1099-S").And.Contain("1099-B",
+                "the latency fix must not restore the stale-letter collateral regression");
     }
 }

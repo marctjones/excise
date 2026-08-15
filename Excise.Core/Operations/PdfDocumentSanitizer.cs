@@ -14,6 +14,7 @@ namespace Excise.Core.Operations;
 ///
 ///   /Info          — Title, Author, Subject, Keywords
 ///   /Metadata      — the XMP packet, which is plain-text XML
+///   /AcroForm /XFA — form-template and form-data XML packets
 ///   /Outlines      — bookmark titles, shown in the reader's sidebar
 ///   annotation /Contents — comment and markup text
 ///
@@ -76,6 +77,7 @@ public static class PdfDocumentSanitizer
         var changed = false;
         changed |= ScrubInfo(document, actionable, caseSensitive);
         changed |= ScrubXmpMetadata(document, actionable, caseSensitive);
+        changed |= XfaXmlCarrier.ScrubTerms(document, actionable, caseSensitive).Changed;
         changed |= ScrubOutlines(document, actionable, caseSensitive);
         changed |= ScrubAnnotationContents(document, actionable, caseSensitive);
         return changed;

@@ -120,18 +120,35 @@ public static class PdfDocumentRedactionExtensions
                 if (stalled && usedConservativeFallback)
                     break;
 
-                foreach (var matchLetters in matches)
+                if (stalled)
                 {
-                    var bbox = BoundingBoxOf(matchLetters);
-                    if (stalled)
+                    var markerAreas = new List<PdfRectangle>();
+                    foreach (var matchLetters in matches)
                     {
+                        var bbox = BoundingBoxOf(matchLetters);
                         RemoveIntersectingOperators(page, bbox);
+                        markerAreas.Add(bbox);
                     }
-                    else if (IsInteractiveOnlyMatch(matchLetters))
+                    if (drawBlackRect)
+                        foreach (var bbox in markerAreas) AppendBlackRectangle(page, bbox);
+                }
+                else
+                {
+                    var contentAreas = new List<PdfRectangle>();
+                    var markerAreas = new List<PdfRectangle>();
+                    foreach (var matchLetters in matches)
                     {
-                        InteractiveRedactionScrubber.ScrubArea(page, bbox);
+                        var bbox = BoundingBoxOf(matchLetters);
+                        if (IsInteractiveOnlyMatch(matchLetters))
+                            InteractiveRedactionScrubber.ScrubArea(page, bbox);
+                        else
+                            contentAreas.Add(strategy == GlyphRemovalStrategy.FullyContained
+                                ? bbox
+                                : CenterlineBoxOf(matchLetters));
+                        markerAreas.Add(bbox);
                     }
-                    else
+
+                    if (contentAreas.Count > 0)
                     {
                         // scrubDocumentCarriers: false — RedactText owns its own
                         // carrier policy and applies it once, at the end, BY TERM
@@ -142,10 +159,11 @@ public static class PdfDocumentRedactionExtensions
                         // every RedactText call — including the documented case
                         // where a term below the sanitizer's 3-character floor
                         // deliberately leaves carriers alone.
-                        page.RedactArea(bbox, strategy, scrubDocumentCarriers: false);
+                        page.RedactAreas(contentAreas, strategy, scrubDocumentCarriers: false);
                     }
 
-                    if (drawBlackRect) AppendBlackRectangle(page, bbox);
+                    if (drawBlackRect)
+                        foreach (var bbox in markerAreas) AppendBlackRectangle(page, bbox);
                 }
 
                 totalMatches += matches.Count;
@@ -200,6 +218,29 @@ public static class PdfDocumentRedactionExtensions
             letters.Min(l => l.GlyphRectangle.Bottom),
             letters.Max(l => l.GlyphRectangle.Right),
             letters.Max(l => l.GlyphRectangle.Top));
+    }
+
+    /// <summary>
+    /// A narrow rectangle through every matched glyph's center. Search already
+    /// identified the exact glyphs, so using their full union with AnyOverlap
+    /// can wrongly catch the next line when producer glyph boxes overlap due to
+    /// tight leading. The small padding keeps single-glyph and axis-aligned
+    /// horizontal/vertical matches non-degenerate (#942).
+    /// </summary>
+    private static PdfRectangle CenterlineBoxOf(IReadOnlyList<Letter> letters)
+    {
+        const double padding = 0.01;
+        var centers = letters.Select(l =>
+        {
+            var r = l.GlyphRectangle.Normalize();
+            return (X: (r.Left + r.Right) * 0.5, Y: (r.Bottom + r.Top) * 0.5);
+        }).ToList();
+
+        return new PdfRectangle(
+            centers.Min(p => p.X) - padding,
+            centers.Min(p => p.Y) - padding,
+            centers.Max(p => p.X) + padding,
+            centers.Max(p => p.Y) + padding);
     }
 
     /// <summary>
@@ -390,7 +431,7 @@ public static class PdfDocumentRedactionExtensions
     /// typographic variation doesn't block a match. Matches are
     /// non-overlapping — greedy left-to-right.
     /// </remarks>
-    private static List<List<Letter>> FindTextMatches(
+    internal static List<List<Letter>> FindTextMatches(
         IReadOnlyList<Letter> letters, string searchText, bool caseSensitive)
     {
         var matches = new List<List<Letter>>();
@@ -400,10 +441,21 @@ public static class PdfDocumentRedactionExtensions
         var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
 
         var sb = new StringBuilder(letters.Count);
-        foreach (var l in letters) sb.Append(l.Value);
+        var characterToLetter = new List<int>(letters.Count);
+        for (var letterIndex = 0; letterIndex < letters.Count; letterIndex++)
+        {
+            var value = letters[letterIndex].Value;
+            sb.Append(value);
+            for (var charIndex = 0; charIndex < value.Length; charIndex++)
+                characterToLetter.Add(letterIndex);
+        }
         var fullText = sb.ToString();
 
-        var needle = NormalizeText(searchText);
+        // Trim only the caller's needle. Trimming each candidate source window
+        // lets matching start on an unrelated whitespace glyph, whose geometry
+        // may be on another line or column. The resulting bounding box can span
+        // most of a page and destroy remote text (#942).
+        var needle = NormalizeText(searchText).Trim();
         if (needle.Length == 0) return matches;
 
         // NOTE: not `i <= fullText.Length - needle.Length` — normalization can
@@ -445,15 +497,19 @@ public static class PdfDocumentRedactionExtensions
                     endIndex++;
                 }
 
-                var matchLen = endIndex - i + 1;
-                if (matchLen > 0 && i + matchLen <= letters.Count)
+                if (endIndex >= i && endIndex < characterToLetter.Count)
                 {
-                    var slice = new List<Letter>(matchLen);
-                    for (int k = 0; k < matchLen; k++)
-                        slice.Add(letters[i + k]);
-                    matches.Add(slice);
-                    i = endIndex + 1;
-                    continue;
+                    var firstLetter = characterToLetter[i];
+                    var lastLetter = characterToLetter[endIndex];
+                    var slice = new List<Letter>(lastLetter - firstLetter + 1);
+                    for (var letterIndex = firstLetter; letterIndex <= lastLetter; letterIndex++)
+                        slice.Add(letters[letterIndex]);
+                    if (IsSpatiallyCoherent(slice))
+                    {
+                        matches.Add(slice);
+                        i = endIndex + 1;
+                        continue;
+                    }
                 }
             }
 
@@ -461,6 +517,37 @@ public static class PdfDocumentRedactionExtensions
         }
 
         return matches;
+    }
+
+    /// <summary>
+    /// Reject text created only by concatenating distant reading-order runs.
+    /// Reconstruction can reorder runs in the extracted sequence, and an
+    /// iterative redaction pass must not combine "You" in one column with an
+    /// unrelated "r" on another line into a synthetic "your" (#942).
+    /// Whitespace boundaries are allowed to jump so wrapped phrase searches
+    /// retain their existing behavior.
+    /// </summary>
+    private static bool IsSpatiallyCoherent(IReadOnlyList<Letter> letters)
+    {
+        for (var i = 1; i < letters.Count; i++)
+        {
+            if (string.IsNullOrWhiteSpace(letters[i - 1].Value) ||
+                string.IsNullOrWhiteSpace(letters[i].Value))
+                continue;
+
+            var a = letters[i - 1].GlyphRectangle.Normalize();
+            var b = letters[i].GlyphRectangle.Normalize();
+            var dx = Math.Max(0, Math.Max(a.Left - b.Right, b.Left - a.Right));
+            var dy = Math.Max(0, Math.Max(a.Bottom - b.Top, b.Bottom - a.Top));
+            var scale = Math.Max(1, Math.Max(
+                Math.Max(a.Width, a.Height),
+                Math.Max(b.Width, b.Height)));
+
+            if (Math.Sqrt(dx * dx + dy * dy) > scale * 2)
+                return false;
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -490,8 +577,7 @@ public static class PdfDocumentRedactionExtensions
             .Replace('′', '\'')  // prime
             .Replace('–', '-')   // en dash
             .Replace('—', '-')   // em dash
-            .Replace('−', '-')   // minus sign
-            .Trim();
+            .Replace('−', '-');  // minus sign
 
         return Regex.Replace(normalized, @"\s+", " ");
     }
