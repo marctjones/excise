@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Excise.Core.Document;
+using Excise.Core.Operations;
 using Excise.Core.Primitives;
 using Excise.Core.Text.Segmentation;
 using Excise.App.Models;
@@ -119,6 +120,24 @@ public sealed class RedactedCopySafetyService
             {
                 _logger.LogWarning(ex, "Failed to scrub metadata from redacted copy.");
                 warnings.Add("Metadata scrub could not be completed.");
+            }
+        }
+
+        // Area redaction itself only has geometry, but the mark-then-apply
+        // workflow captured the selected text before deleting it. Use that
+        // exact preview as a surgical carrier term: matching bookmark titles,
+        // off-box annotations, and XFA values can be scrubbed without deriving
+        // dangerous word fragments from arbitrary page geometry (#916/#943).
+        if (previewTerms.Length > 0)
+        {
+            try
+            {
+                PdfDocumentSanitizer.ScrubTerms(document, previewTerms);
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException)
+            {
+                _logger.LogWarning(ex, "Failed to scrub captured text from document carriers.");
+                warnings.Add("Captured text could not be scrubbed from every document carrier.");
             }
         }
 
