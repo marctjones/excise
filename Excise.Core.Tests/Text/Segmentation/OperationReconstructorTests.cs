@@ -2,6 +2,7 @@ using AwesomeAssertions;
 using Excise.Core.Content;
 using Excise.Core.Document;
 using Excise.Core.Primitives;
+using Excise.Core.Text;
 using Excise.Core.Text.Segmentation;
 using Xunit;
 
@@ -44,11 +45,11 @@ public class OperationReconstructorTests
             segments,
             new OperationReconstructor.Context { FontName = "F1", FontSize = 12 });
 
-        ops.Select(o => o.Name).Should().Equal("BT", "Tf", "Tm", "Tj", "ET");
+        ops.Select(o => o.Name).Should().Equal("q", "BT", "Tf", "Tm", "Tj", "ET", "Q");
     }
 
     [Fact]
-    public void Reconstruct_TfOperator_UsesSize1WithFontInMatrix()
+    public void Reconstruct_TfOperator_UsesEffectiveSizeWithUnitTextMatrix()
     {
         var segments = new List<TextSegment> { MakeSegment("X", 0, 0) };
         var ops = _reconstructor.ReconstructWithPositioning(
@@ -57,11 +58,11 @@ public class OperationReconstructorTests
 
         var tf = ops.First(o => o.Name == "Tf");
         tf.GetName(0).Should().Be("F1");
-        tf.GetNumber(1).Should().Be(1.0, "actual size travels in Tm");
+        tf.GetNumber(1).Should().Be(18, "effective size belongs in Tf in normalized page space");
 
         var tm = ops.First(o => o.Name == "Tm");
-        tm.GetNumber(0).Should().Be(18, "Tm.a carries the font size");
-        tm.GetNumber(3).Should().Be(18, "Tm.d carries the font size");
+        tm.GetNumber(0).Should().Be(1, "Tm should not scale text advances twice");
+        tm.GetNumber(3).Should().Be(1, "Tm should not scale text advances twice");
     }
 
     [Fact]
@@ -141,8 +142,18 @@ public class OperationReconstructorTests
             IsCidFont = true,
             LetterMatches =
             {
-                new LetterMatch { CharacterIndex = 0, Letter = null!, RawBytes = new byte[]{ 0x00, 0x04 } },
-                new LetterMatch { CharacterIndex = 1, Letter = null!, RawBytes = new byte[]{ 0x00, 0x05 } },
+                new LetterMatch
+                {
+                    CharacterIndex = 0,
+                    Letter = new Letter("文", new PdfRectangle(50, 700, 60, 712), 10, "F1", 50, 700, 10, 4, 2),
+                    RawBytes = new byte[]{ 0x00, 0x04 },
+                },
+                new LetterMatch
+                {
+                    CharacterIndex = 1,
+                    Letter = new Letter("件", new PdfRectangle(62, 700, 72, 712), 10, "F1", 62, 700, 10, 5, 2),
+                    RawBytes = new byte[]{ 0x00, 0x05 },
+                },
             },
         };
 
@@ -150,10 +161,13 @@ public class OperationReconstructorTests
             new List<TextSegment> { segment },
             new OperationReconstructor.Context { FontName = "F1", FontSize = 10 });
 
-        var tj = ops.First(o => o.Name == "Tj");
-        var operand = tj.Operands[0] as PdfString;
-        operand.Should().NotBeNull();
-        operand!.Bytes.Should().Equal(new byte[] { 0x00, 0x04, 0x00, 0x05 });
+        var tjs = ops.Where(o => o.Name == "Tj").ToList();
+        tjs.Should().HaveCount(2, "mapped glyphs retain their individual TJ positioning");
+        ((PdfString)tjs[0].Operands[0]).Bytes.Should().Equal(0x00, 0x04);
+        ((PdfString)tjs[1].Operands[0]).Bytes.Should().Equal(0x00, 0x05);
+
+        var matrices = ops.Where(o => o.Name == "Tm").ToList();
+        matrices.Select(m => m.GetNumber(4)).Should().Equal(50, 62);
     }
 
     [Fact]
@@ -168,6 +182,7 @@ public class OperationReconstructorTests
         tf.GetName(0).Should().Be("F1", "empty font name should fall back to F1");
 
         var tm = ops.First(o => o.Name == "Tm");
-        tm.GetNumber(0).Should().Be(12, "invalid font size should fall back to 12pt");
+        tf.GetNumber(1).Should().Be(12, "invalid font size should fall back to 12pt");
+        tm.GetNumber(0).Should().Be(1);
     }
 }

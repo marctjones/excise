@@ -7,18 +7,13 @@ namespace Excise.Core.Text.Segmentation;
 
 /// <summary>
 /// Rebuilds a text block from the <see cref="TextSegment"/>s that a redaction
-/// operation has decided to keep. Emits a self-contained BT/ET sequence:
-/// <c>BT /Font 1 Tf [Tc Tw Tz Tr Ts TL] (Tm Tj)* ET</c>. Each kept segment
-/// gets its own explicit Tm so positioning doesn't drift across the removed
-/// runs; glyph sizes travel in the Tm matrix's a/d components (the common
-/// "1 Tf + sized Tm" idiom the renderer understands).
+/// operation has decided to keep. Emits a graphics-state-isolated text sequence:
+/// <c>q BT /Font 1 Tf [Tc Tw Tz Tr Ts TL] (Tm Tj)* ET Q</c>. Each kept segment
+/// gets explicit positioning so removed runs cannot shift their neighbours.
 /// </summary>
 /// <remarks>
-/// Ported from Excise.App.Redaction.GlyphLevel.OperationReconstructor. The
-/// rotation-correction branch (content-stream vs visual coordinates) is
-/// deferred — callers that redact rotated pages should pre-transform
-/// <see cref="TextSegment.StartX"/>/<see cref="TextSegment.StartY"/> into
-/// content-stream space before invoking.
+/// Source-aware callers provide the graphics and text matrices captured by the
+/// parser; public synthetic callers use normalized page-space placement.
 /// </remarks>
 public class OperationReconstructor
 {
@@ -48,22 +43,45 @@ public class OperationReconstructor
     public List<ContentOperator> ReconstructWithPositioning(
         List<TextSegment> segments,
         Context context)
+        => ReconstructWithPositioning(
+            segments, context, graphicsTransform: null, textTransform: null,
+            effectiveFontSize: context.FontSize);
+
+    internal List<ContentOperator> ReconstructWithPositioning(
+        List<TextSegment> segments,
+        Context context,
+        ContentTransform? graphicsTransform,
+        ContentTransform? textTransform,
+        double effectiveFontSize)
     {
         var ops = new List<ContentOperator>();
         if (segments.Count == 0) return ops;
 
         var fontName = string.IsNullOrEmpty(context.FontName) ? "F1" : context.FontName;
-        var fontSize = (context.FontSize > 0 && context.FontSize < 1000) ? context.FontSize : 12.0;
+        var sourceFontSize = (context.FontSize > 0 && context.FontSize < 1000) ? context.FontSize : 12.0;
+        var normalizedFontSize = (effectiveFontSize > 0 && effectiveFontSize < 1000)
+            ? effectiveFontSize
+            : sourceFontSize;
+        var textMatrix = textTransform.GetValueOrDefault();
+        var pageToLocal = default(ContentTransform);
+        var preserveSourceMatrix = graphicsTransform is { } graphics &&
+                                   textTransform.HasValue &&
+                                   graphics.TryInvert(out pageToLocal);
+        var fontSize = preserveSourceMatrix ? sourceFontSize : normalizedFontSize;
 
+        // Text-state parameters persist across BT/ET. Isolate reconstruction so
+        // its Tf/Tc/Tw/Tz settings cannot alter untouched source blocks that
+        // rely on inherited text state later in the stream (#942).
+        ops.Add(ContentOperator.SaveState());
         ops.Add(ContentOperator.BeginText());
 
-        // Use Tf with size 1 — the actual size goes in each segment's Tm. Matches
-        // the idiom many PDF producers use (`/F1 1 Tf` + `s 0 0 s x y Tm`) and
-        // keeps the renderer's Y-scale math consistent.
+        // Source-aware reconstruction retains the original Tf/Tm scale. The
+        // synthetic fallback puts effective size in Tf and uses a unit Tm so
+        // text advances are not composed through the size twice (#942).
         ops.Add(new ContentOperator("Tf", new PdfObject[]
         {
             new PdfName(fontName),
-            new PdfReal(1.0),
+            new PdfReal(fontSize),
         }));
 
         // Emit text-state operators only when they differ from PDF defaults,
@@ -81,15 +99,49 @@ public class OperationReconstructor
         if (Math.Abs(context.TextLeading) > 0.001)
             ops.Add(new ContentOperator("TL", new PdfObject[] { new PdfReal(context.TextLeading) }));
 
+        void AddPosition(double pageX, double pageY)
+        {
+            if (preserveSourceMatrix)
+            {
+                var local = pageToLocal.TransformPoint(pageX, pageY);
+                ops.Add(ContentOperator.TextMatrix(
+                    textMatrix.A, textMatrix.B, textMatrix.C, textMatrix.D,
+                    local.X, local.Y));
+            }
+            else
+            {
+                // No source matrices (synthetic callers): normalized page-space
+                // placement is the conservative fallback.
+                ops.Add(ContentOperator.TextMatrix(
+                    1, 0, 0, 1, pageX, pageY));
+            }
+        }
+
         foreach (var segment in segments)
         {
-            // Tm places the cursor and encodes the effective font size. Splitting
-            // per segment (instead of Td-stepping) isolates each kept run so
-            // removed runs can't drift their neighbors.
-            ops.Add(ContentOperator.TextMatrix(
-                fontSize, 0,
-                0, fontSize,
-                segment.StartX, segment.StartY));
+            // Producers commonly use custom encodings and TJ adjustments between
+            // glyphs. Re-encoding decoded Unicode can turn a simple-font code
+            // into UTF-16 bytes, while collapsing a CID run to one Tj discards
+            // its positioning. Fully matched simple-font runs retain their bytes;
+            // CID runs also replay each extracted baseline exactly (#942).
+            var glyphs = segment.LetterMatches;
+            var hasCompleteSourceBytes = glyphs.Count == segment.EndIndex - segment.StartIndex &&
+                                         glyphs.All(m => m.RawBytes is { Length: > 0 });
+            var canPositionGlyphs = segment.IsCidFont && hasCompleteSourceBytes;
+            if (canPositionGlyphs)
+            {
+                foreach (var match in glyphs)
+                {
+                    AddPosition(match.Letter.StartX, match.Letter.StartY);
+                    ops.Add(new ContentOperator("Tj", new PdfObject[]
+                    {
+                        new PdfString(match.RawBytes!),
+                    }));
+                }
+                continue;
+            }
+
+            AddPosition(segment.StartX, segment.StartY);
 
             // CID / ToUnicode fonts round-trip via raw bytes — Unicode text
             // can't be re-encoded without the original code mapping. When the
@@ -97,7 +149,7 @@ public class OperationReconstructor
             // the plain Tj string path handles simple fonts.
             var rawBytes = segment.GetRawBytes();
             bool useRawBytes = rawBytes.Length > 0 &&
-                               (segment.IsCidFont || segment.HasToUnicode);
+                               (hasCompleteSourceBytes || segment.IsCidFont || segment.HasToUnicode);
 
             PdfObject operand = useRawBytes
                 ? new PdfString(rawBytes)
@@ -107,6 +159,7 @@ public class OperationReconstructor
         }
 
         ops.Add(ContentOperator.EndText());
+        ops.Add(ContentOperator.RestoreState());
         return ops;
     }
 }

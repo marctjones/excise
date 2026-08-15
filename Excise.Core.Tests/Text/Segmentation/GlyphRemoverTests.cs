@@ -82,10 +82,11 @@ public class GlyphRemoverTests
 
         var result = _remover.ProcessOperations(ops, letters, redactionArea);
 
-        // Original block is gone; no Tj emitted because every segment was
-        // removed in TextSegmenter. Expected output = [] (the reconstructed
-        // emission path skips segments with 0 entries).
-        result.Select(o => o.Name).Should().BeEmpty();
+        // Secret-bearing Tj is gone. The empty text block's state and
+        // positioning operators remain because text state can be inherited by
+        // later BT blocks (#942).
+        result.Select(o => o.Name).Should().Equal("BT", "Tf", "Tm", "ET");
+        result.Should().NotContain(o => o.Category == OperatorCategory.TextShowing);
     }
 
     [Fact]
@@ -130,6 +131,71 @@ public class GlyphRemoverTests
         result[0].Name.Should().Be("BT");
         // Somewhere before the end, there's an ET for the original block.
         result.Select(o => o.Name).Should().Contain("ET");
+    }
+
+    [Fact]
+    public void Process_RepeatedSingleGlyphOperators_RedactsOnlyTheSpatiallyMatchingOperator()
+    {
+        var first = WithText(new ContentOperator("Tj", new PdfObject[] { new PdfString("O") }), "O");
+        first.BoundingBox = new PdfRectangle(100, 700, 107, 712);
+        var second = WithText(new ContentOperator("Tj", new PdfObject[] { new PdfString("O") }), "O");
+        second.BoundingBox = new PdfRectangle(300, 700, 307, 712);
+
+        var ops = new List<ContentOperator>
+        {
+            ContentOperator.BeginText(),
+            new("Tf", new PdfObject[] { new PdfName("F1"), new PdfReal(12) }),
+            ContentOperator.TextMatrix(12, 0, 0, 12, 100, 700),
+            first,
+            ContentOperator.TextMatrix(12, 0, 0, 12, 300, 700),
+            second,
+            ContentOperator.EndText(),
+        };
+        var letters = new[] { L("O", 100), L("O", 300) };
+
+        var result = _remover.ProcessOperations(
+            ops, letters, new PdfRectangle(99, 699, 108, 713));
+
+        result.Where(o => o.Name == "Tj")
+            .Should().ContainSingle("the identical glyph drawn remotely must survive (#942)");
+    }
+
+    [Fact]
+    public void Process_Reconstruction_PreservesSourceTextMatrixInLocalCoordinates()
+    {
+        var text = WithText(
+            new ContentOperator("Tj", new PdfObject[] { new PdfString("KEEP FORM") }),
+            "KEEP FORM");
+        text.BoundingBox = new PdfRectangle(100, 100, 163, 112);
+        text.GraphicsTransform = new ContentTransform(1, 0, 0, -1, 42, 750);
+        text.TextTransform = new ContentTransform(2, 0, 0, -2, 58, 638);
+        var ops = new List<ContentOperator>
+        {
+            ContentOperator.BeginText(),
+            new("Tf", new PdfObject[] { new PdfName("F1"), new PdfReal(12) }),
+            ContentOperator.TextMatrix(12, 0, 0, 12, 100, 100),
+            text,
+            ContentOperator.EndText(),
+        };
+        var letters = LettersFor("KEEP FORM", x0: 100, y: 100);
+        var form = letters.Skip(5).Take(4).ToList();
+
+        var result = _remover.ProcessOperations(
+            ops, letters, new PdfRectangle(
+                form.Min(l => l.GlyphRectangle.Left),
+                form.Min(l => l.GlyphRectangle.Bottom),
+                form.Max(l => l.GlyphRectangle.Right),
+                form.Max(l => l.GlyphRectangle.Top)));
+
+        var matrices = result.Where(o => o.Name == "Tm" && Math.Abs(o.GetNumber(0) - 2) < 1e-9).ToList();
+        matrices.Should().ContainSingle();
+        matrices.Should().AllSatisfy(matrix =>
+        {
+            matrix.GetNumber(0).Should().BeApproximately(2, 1e-9);
+            matrix.GetNumber(3).Should().BeApproximately(-2, 1e-9);
+            matrix.GetNumber(5).Should().BeApproximately(650, 1e-9);
+        });
+        matrices[0].GetNumber(4).Should().BeApproximately(58, 1e-9);
     }
 
     [Fact]
@@ -183,8 +249,39 @@ public class GlyphRemoverTests
         result.Select(o => o.Name).Should().Contain("Tc");
         result.Select(o => o.Name).Should().Contain("Tw");
         result.Select(o => o.Name).Should().Contain("Tj");
-        var reconTj = result.First(o => o.Name == "Tj");
-        ((PdfString)reconTj.Operands[0]).Value.Should().StartWith("HELLO");
+        var reconstructedText = string.Concat(result.Where(o => o.Name == "Tj")
+            .Select(o => ((PdfString)o.Operands[0]).Value));
+        reconstructedText.Should().StartWith("HELLO");
+    }
+
+    [Fact]
+    public void Process_Reconstruction_InheritsFontAcrossTextBlocks()
+    {
+        var target = WithText(
+            new ContentOperator("Tj", new PdfObject[] { new PdfString("KEEP SECRET") }),
+            "KEEP SECRET");
+        target.BoundingBox = new PdfRectangle(100, 680, 177, 692);
+        var ops = new List<ContentOperator>
+        {
+            ContentOperator.BeginText(),
+            new("Tf", new PdfObject[] { new PdfName("F2"), new PdfReal(12) }),
+            ContentOperator.TextMatrix(1, 0, 0, 1, 100, 700),
+            WithText(new ContentOperator("Tj", new PdfObject[] { new PdfString("ANCHOR") }), "ANCHOR"),
+            ContentOperator.EndText(),
+            ContentOperator.BeginText(),
+            ContentOperator.TextMatrix(1, 0, 0, 1, 100, 680),
+            target,
+            ContentOperator.EndText(),
+        };
+        var letters = LettersFor("ANCHOR", y: 700)
+            .Concat(LettersFor("KEEP SECRET", y: 680)).ToList();
+        var secret = letters.Skip(6 + 5).Take(6).ToList();
+
+        var result = _remover.ProcessOperations(ops, letters, new PdfRectangle(
+            secret.Min(l => l.GlyphRectangle.Left), secret.Min(l => l.GlyphRectangle.Bottom),
+            secret.Max(l => l.GlyphRectangle.Right), secret.Max(l => l.GlyphRectangle.Top)));
+
+        result.Last(o => o.Name == "Tf").GetName(0).Should().Be("F2");
     }
 
     [Fact]

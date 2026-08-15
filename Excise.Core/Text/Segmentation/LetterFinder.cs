@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Excise.Core.Document;
 
 namespace Excise.Core.Text.Segmentation;
 
@@ -44,6 +45,16 @@ public class LetterFinder
     public List<LetterMatch> FindOperationLetters(
         string operationText,
         IReadOnlyList<Letter> allLetters)
+        => FindOperationLetters(operationText, allLetters, preferredBounds: null);
+
+    /// <summary>
+    /// Locate an operation's letters, using the parser's bounds to distinguish
+    /// repeated text runs on the same page.
+    /// </summary>
+    internal List<LetterMatch> FindOperationLetters(
+        string operationText,
+        IReadOnlyList<Letter> allLetters,
+        PdfRectangle? preferredBounds)
     {
         var matches = new List<LetterMatch>();
         if (string.IsNullOrEmpty(operationText) || allLetters.Count == 0)
@@ -51,7 +62,16 @@ public class LetterFinder
 
         // Reading-order letters from the extractor preserve the rotation-correct
         // sequence, so concatenating their .Value gives us a searchable string.
-        var fullPageText = string.Concat(allLetters.Select(l => l.Value));
+        var characterToLetter = new List<int>(allLetters.Count);
+        var textBuilder = new System.Text.StringBuilder(allLetters.Count);
+        for (var letterIndex = 0; letterIndex < allLetters.Count; letterIndex++)
+        {
+            var value = allLetters[letterIndex].Value;
+            textBuilder.Append(value);
+            for (var charIndex = 0; charIndex < value.Length; charIndex++)
+                characterToLetter.Add(letterIndex);
+        }
+        var fullPageText = textBuilder.ToString();
 
         var foundIndices = FindAllTextOccurrences(fullPageText, operationText);
 
@@ -109,14 +129,21 @@ public class LetterFinder
         if (foundIndices.Count == 0)
             return matches;
 
-        // Disambiguate multiple occurrences by spatial coherence — the match
-        // whose letters form the tightest bounding cluster is the one that was
-        // actually drawn together.
+        // Repeated short runs are common in professionally generated PDFs.
+        // Text-only coherence picks the same occurrence for every identical
+        // operator (a one-character run is always an exact tie), so redacting
+        // one occurrence can remove matching operators across the page (#942).
+        // The content parser already knows this operator's bounds; use them to
+        // select the occurrence nearest the operator that actually drew it.
         int matchIndex = foundIndices.Count == 1
             ? foundIndices[0]
-            : FindBestMatchByCoherence(foundIndices, allLetters, operationText.Length);
+            : preferredBounds is { } bounds
+                ? FindBestMatchByBounds(
+                    foundIndices, allLetters, characterToLetter, operationText.Length, bounds)
+                : FindBestMatchByCoherence(
+                    foundIndices, allLetters, characterToLetter, operationText.Length);
 
-        int count = Math.Min(operationText.Length, allLetters.Count - matchIndex);
+        int count = Math.Min(operationText.Length, fullPageText.Length - matchIndex);
         for (int i = 0; i < count; i++)
         {
             // Under an RTL permutation, operation character i landed at page-
@@ -124,7 +151,10 @@ public class LetterFinder
             int offset = rtlPermutation != null && rtlPermutation[i] < count
                 ? rtlPermutation[i]
                 : i;
-            var letter = allLetters[matchIndex + offset];
+            var pageCharacterIndex = matchIndex + offset;
+            if (pageCharacterIndex < 0 || pageCharacterIndex >= characterToLetter.Count)
+                continue;
+            var letter = allLetters[characterToLetter[pageCharacterIndex]];
             matches.Add(new LetterMatch
             {
                 CharacterIndex = i,
@@ -138,11 +168,67 @@ public class LetterFinder
         return matches;
     }
 
+    private static int FindBestMatchByBounds(
+        List<int> candidates,
+        IReadOnlyList<Letter> letters,
+        IReadOnlyList<int> characterToLetter,
+        int textLength,
+        PdfRectangle preferredBounds)
+    {
+        int best = candidates[0];
+        double bestScore = double.MaxValue;
+        var target = preferredBounds.Normalize();
+
+        foreach (var idx in candidates)
+        {
+            if (idx + textLength > characterToLetter.Count) continue;
+
+            var firstLetter = characterToLetter[idx];
+            var lastLetter = characterToLetter[idx + textLength - 1];
+            var candidate = BoundsOf(letters, firstLetter, lastLetter - firstLetter + 1);
+            var dx = CenterX(candidate) - CenterX(target);
+            var dy = CenterY(candidate) - CenterY(target);
+            var dw = candidate.Width - target.Width;
+            var dh = candidate.Height - target.Height;
+            var score = dx * dx + dy * dy + 0.25 * (dw * dw + dh * dh);
+
+            if (score < bestScore)
+            {
+                bestScore = score;
+                best = idx;
+            }
+        }
+
+        return best;
+    }
+
+    private static PdfRectangle BoundsOf(
+        IReadOnlyList<Letter> letters,
+        int start,
+        int count)
+    {
+        double left = double.MaxValue, bottom = double.MaxValue;
+        double right = double.MinValue, top = double.MinValue;
+        for (int i = start; i < start + count; i++)
+        {
+            var r = letters[i].GlyphRectangle.Normalize();
+            left = Math.Min(left, r.Left);
+            bottom = Math.Min(bottom, r.Bottom);
+            right = Math.Max(right, r.Right);
+            top = Math.Max(top, r.Top);
+        }
+        return new PdfRectangle(left, bottom, right, top);
+    }
+
+    private static double CenterX(PdfRectangle r) => (r.Left + r.Right) * 0.5;
+    private static double CenterY(PdfRectangle r) => (r.Bottom + r.Top) * 0.5;
+
     /// <summary>
     /// Re-encode a letter's <see cref="Letter.CharacterCode"/> to its original
     /// source bytes (big-endian, <see cref="Letter.CodeByteLength"/> wide). For
     /// Identity-H/V CID fonts this is a 2-byte code; for simple fonts a single
-    /// byte. The reconstructor only uses these for CID/ToUnicode fonts.
+    /// byte. Reconstruction preserves these bytes instead of guessing how to
+    /// encode the decoded Unicode through a custom font.
     /// </summary>
     private static byte[] EncodeCharacterCode(Letter letter)
     {
@@ -180,18 +266,24 @@ public class LetterFinder
     /// weighted ~10x to prefer same-baseline runs.
     /// </summary>
     private static int FindBestMatchByCoherence(
-        List<int> candidates, IReadOnlyList<Letter> letters, int textLength)
+        List<int> candidates,
+        IReadOnlyList<Letter> letters,
+        IReadOnlyList<int> characterToLetter,
+        int textLength)
     {
         int best = candidates[0];
         double bestScore = double.MaxValue;
 
         foreach (var idx in candidates)
         {
-            if (idx + textLength > letters.Count) continue;
+            if (idx + textLength > characterToLetter.Count) continue;
+
+            var firstLetter = characterToLetter[idx];
+            var lastLetter = characterToLetter[idx + textLength - 1];
 
             double minX = double.MaxValue, maxX = double.MinValue;
             double minY = double.MaxValue, maxY = double.MinValue;
-            for (int i = idx; i < idx + textLength; i++)
+            for (int i = firstLetter; i <= lastLetter; i++)
             {
                 var r = letters[i].GlyphRectangle;
                 // Normalize: rotated text can arrive with swapped Left/Right or Bottom/Top.

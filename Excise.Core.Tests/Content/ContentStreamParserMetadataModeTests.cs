@@ -64,6 +64,22 @@ public class ContentStreamParserMetadataModeTests
             "the full parse computes bounds (redaction depends on them)");
         lean.Operators.Should().OnlyContain(op => op.BoundingBox == null,
             "the metadata-free parse must not emit bounds computed from untracked state");
+        lean.Operators.Should().OnlyContain(op =>
+                op.GraphicsTransform == null && op.TextTransform == null,
+            "transform snapshots are metadata too");
+    }
+
+    [Fact]
+    public void FullParse_CapturesTransformsAtTextShowingOperator()
+    {
+        var bytes = Encoding.Latin1.GetBytes(
+            "2 0 0 3 10 20 cm BT /F1 1 Tf 4 0 0 -5 6 7 Tm (X) Tj ET");
+
+        var text = new ContentStreamParser(bytes).Parse().Operators
+            .Single(op => op.Name == "Tj");
+
+        text.GraphicsTransform.Should().Be(new ContentTransform(2, 0, 0, 3, 10, 20));
+        text.TextTransform.Should().Be(new ContentTransform(4, 0, 0, -5, 6, 7));
     }
 
     [Fact]
