@@ -399,3 +399,47 @@ grep -qF "Demo4.Tests.A.Row   # no explicit count defaults to one skipped row [s
   echo "FAIL(#937): --update did not preserve the reason and add [skip-count: 2]"; cat "$AL4"; exit 1; }
 
 echo "PASS: theory skip counts are ratcheted while the allowlist stays keyed by bare method name (#937)"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# #937 × #854: the count pin only applies where the entry's prerequisites are
+# PRESENT. On a corpus-less runner a conditioned theory skips EVERY row, so
+# comparing that against the pinned partial count fired on all six conditioned
+# Core entries the first time Linux CI ever reached this gate (#956 had killed
+# the step ahead of it on every prior run). Unconditioned entries keep the
+# unconditional pin — that branch is asserted above (count-missing-marker).
+# ─────────────────────────────────────────────────────────────────────────────
+cat > "$AL4" <<'EOF'
+Demo4.Tests.A.Row   # one row skips when the tool is present [requires: tool:ls] [skip-count: 1]
+EOF
+
+cat > "$TRX4" <<'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Results>
+    <UnitTestResult testName="Demo4.Tests.A.Row(value: 1)" outcome="NotExecuted" />
+    <UnitTestResult testName="Demo4.Tests.A.Row(value: 2)" outcome="NotExecuted" />
+    <UnitTestResult testName="Demo4.Tests.A.Row(value: 3)" outcome="NotExecuted" />
+  </Results>
+</TestRun>
+EOF
+
+# Prerequisite ABSENT (forced): all three rows skipping is expected — the
+# count pin must NOT fire.
+RC10=0
+SKIP_BUDGET_FORCE_ABSENT="tool:ls" \
+  "$WORK/scripts/check-skip-budget.sh" "$P4" --trx "$TRX4" >"$WORK/count-cond-absent.log" 2>&1 || RC10=$?
+[[ "$RC10" -eq 0 ]] || {
+  echo "FAIL(#937/#854): with its prerequisite absent, a conditioned entry's full-theory"
+  echo "                 skip was failed against the prereq-present [skip-count: 1] pin"
+  cat "$WORK/count-cond-absent.log"; exit 1; }
+
+# Prerequisite PRESENT: the pin applies exactly as for unconditioned entries.
+RC11=0
+"$WORK/scripts/check-skip-budget.sh" "$P4" --trx "$TRX4" >"$WORK/count-cond-present.log" 2>&1 || RC11=$?
+[[ "$RC11" -ne 0 ]] || {
+  echo "FAIL(#937/#854): conditioning suppressed the count pin even though the"
+  echo "                 prerequisite is PRESENT — the pin silently stopped ratcheting"; exit 1; }
+grep -qF "expected 1 skipped row(s), saw 3" "$WORK/count-cond-present.log" || {
+  echo "FAIL(#937/#854): prereq-present count mismatch did not name expected and actual"; cat "$WORK/count-cond-present.log"; exit 1; }
+
+echo "PASS: the skip-count pin is environment-conditioned like the reverse check (#937 x #854)"

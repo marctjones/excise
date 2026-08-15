@@ -402,6 +402,21 @@ COUNT_MISMATCH_FILE="$TMP/count-mismatch.txt"
 while IFS=$'\t' read -r name actual_count; do
   [[ -n "$name" ]] || continue
   grep -qxF "$name" "$TMP/expected.txt" || continue
+  # The [skip-count: N] marker pins the count in the environment its entry's
+  # prerequisites describe. When a declared prerequisite is ABSENT (the
+  # corpus-less CI runner), EVERY row of the theory is expected to skip, so
+  # comparing against the pinned partial count is meaningless — it fired on
+  # all six conditioned Core entries the first time Linux CI ever reached
+  # this gate (the oracle-provisioning step ahead of it had failed on every
+  # prior run, #956). Same conditioning rule as the reverse check (#854):
+  # only entries whose prerequisites are all present get their count pinned.
+  # (Unconditioned entries declare nothing and keep today's behaviour —
+  # entry_prereqs_present returns false for those too, so test "conditioned
+  # AND absent" explicitly rather than the bare helper.)
+  count_specs="$(awk -F'\t' -v n="$name" '$1 == n { print $2; exit }' "$TMP/conditioned.txt")"
+  if [[ -n "$count_specs" ]] && ! entry_prereqs_present "$name"; then
+    continue
+  fi
   expected_count="$(awk -F'\t' -v n="$name" '$1 == n { print $2; exit }' "$TMP/expected-counts.tsv")"
   expected_count="${expected_count:-1}"
   if [[ "$actual_count" != "$expected_count" ]]; then
