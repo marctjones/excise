@@ -74,7 +74,7 @@ public class AnnotationSynthesisMajorityTests
         string corpus, string name, string subtype)
     {
         var path = FindCorpusFile(corpus, name);
-        Assert.SkipWhen(path == null, $"gitignored {corpus} corpus fixture not present."); // [requires: corpus:verapdf corpus:pdfium]
+        Assert.SkipWhen(path == null, $"gitignored {corpus} corpus fixture not present."); // [requires: corpus:verapdf-corpus corpus:pdfium]
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
 
         int drawing = CountOraclesThatDraw(path!);

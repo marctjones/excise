@@ -256,6 +256,22 @@ public class LetterFinderTests
     }
 
     [Fact]
+    public void Find_MapsOperationPastMultiCharacterGlyphs()
+    {
+        var letters = new List<Letter>
+        {
+            new("fi", new PdfRectangle(10, 700, 20, 712), 12, "F", 10, 700, 10, 1),
+        };
+        letters.AddRange(MakeLetters("COVID", startX: 100));
+
+        var matches = _finder.FindOperationLetters("COVID", letters);
+
+        matches.Should().HaveCount(5);
+        string.Concat(matches.Select(m => m.Letter.Value)).Should().Be("COVID");
+        matches[0].Letter.GlyphRectangle.Left.Should().Be(100);
+    }
+
+    [Fact]
     public void Find_SingleCharacterMatch_ReturnsOne()
     {
         var letters = MakeLetters("HELLO");

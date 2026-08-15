@@ -1,5 +1,6 @@
 using AwesomeAssertions;
 using Excise.Core.Document;
+using Excise.Core.Text;
 using Excise.Core.Text.Segmentation;
 using System.IO;
 using System.Text;
@@ -108,13 +109,12 @@ public class PdfDocumentRedactionExtensionsTests
     {
         var doc = OpenDoc("BT /F1 12 Tf 100 700 Td (Hello World) Tj ET");
 
-        var originalPageOps = doc.GetPage(1).GetContentStream().Count;
         var result = doc.RedactText("Hello", drawBlackRect: false);
 
-        var newPageOps = doc.GetPage(1).GetContentStream().Count;
         if (result > 0)
         {
-            newPageOps.Should().BeLessThanOrEqualTo(originalPageOps + 2);
+            doc.GetPage(1).GetContentStream().Operators
+                .Should().NotContain(o => o.Name == "re", "no visual marker was requested");
         }
     }
 
@@ -198,6 +198,74 @@ public class PdfDocumentRedactionExtensionsTests
         var result = doc.RedactText("Hello World");
 
         result.Should().BeGreaterThanOrEqualTo(0);
+    }
+
+    [Fact]
+    public void FindTextMatches_DoesNotIncludeLeadingWhitespaceFromAnotherPageBand()
+    {
+        var letters = new[]
+        {
+            new Letter(" ", new PdfRectangle(50, 50, 55, 60), 12, "F1", 50, 50, 5, 32),
+            new Letter("F", new PdfRectangle(300, 700, 307, 712), 12, "F1", 300, 700, 7, 'F'),
+            new Letter("o", new PdfRectangle(307, 700, 314, 712), 12, "F1", 307, 700, 7, 'o'),
+            new Letter("r", new PdfRectangle(314, 700, 321, 712), 12, "F1", 314, 700, 7, 'r'),
+            new Letter("m", new PdfRectangle(321, 700, 328, 712), 12, "F1", 321, 700, 7, 'm'),
+        };
+
+        var matches = PdfDocumentRedactionExtensions.FindTextMatches(letters, "Form", false);
+
+        matches.Should().ContainSingle();
+        matches[0].Should().Equal(letters.Skip(1));
+    }
+
+    [Fact]
+    public void FindTextMatches_RejectsAWordAssembledFromDistantRuns()
+    {
+        var letters = new[]
+        {
+            new Letter("Y", new PdfRectangle(160, 550, 168, 562), 12, "F1", 160, 550, 8, 'Y'),
+            new Letter("o", new PdfRectangle(168, 550, 175, 562), 12, "F1", 168, 550, 7, 'o'),
+            new Letter("u", new PdfRectangle(175, 550, 182, 562), 12, "F1", 175, 550, 7, 'u'),
+            new Letter("r", new PdfRectangle(42, 522, 46, 532), 10, "F1", 42, 522, 4, 'r'),
+        };
+
+        PdfDocumentRedactionExtensions.FindTextMatches(letters, "your", false)
+            .Should().BeEmpty();
+    }
+
+    [Fact]
+    public void FindTextMatches_MapsStringOffsetsPastMultiCharacterGlyphs()
+    {
+        var target = new[]
+        {
+            new Letter("C", new PdfRectangle(100, 700, 107, 712), 12, "F1", 100, 700, 7, 'C'),
+            new Letter("O", new PdfRectangle(107, 700, 114, 712), 12, "F1", 107, 700, 7, 'O'),
+            new Letter("V", new PdfRectangle(114, 700, 121, 712), 12, "F1", 114, 700, 7, 'V'),
+            new Letter("I", new PdfRectangle(121, 700, 128, 712), 12, "F1", 121, 700, 7, 'I'),
+            new Letter("D", new PdfRectangle(128, 700, 135, 712), 12, "F1", 128, 700, 7, 'D'),
+        };
+        var letters = new[]
+        {
+            new Letter("fi", new PdfRectangle(10, 700, 20, 712), 12, "F1", 10, 700, 10, 1),
+        }.Concat(target).ToList();
+
+        var matches = PdfDocumentRedactionExtensions.FindTextMatches(letters, "COVID", false);
+
+        matches.Should().ContainSingle();
+        matches[0].Should().Equal(target);
+    }
+
+    [Fact]
+    public void RedactText_TightlyLedLines_DoesNotRemoveTheAdjacentLine()
+    {
+        using var doc = OpenDoc(
+            "BT /F1 1 Tf 10 0 0 10 50 700 Tm " +
+            "(your target) Tj 0 -0.95 Td (remote line survives) Tj ET");
+
+        doc.RedactText("your", drawBlackRect: false).Should().Be(1);
+
+        doc.GetPage(1).Text.Should().NotContain("your");
+        doc.GetPage(1).Text.Should().Contain("remote line survives");
     }
 
     [Fact]

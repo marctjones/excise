@@ -36,6 +36,14 @@ public class TextSegmenter
         List<LetterMatch> letterMatches,
         PdfRectangle redactionArea,
         GlyphRemovalStrategy strategy = GlyphRemovalStrategy.AnyOverlap)
+        => BuildSegments(text, operationBounds, letterMatches, new[] { redactionArea }, strategy);
+
+    internal List<TextSegment> BuildSegments(
+        string text,
+        PdfRectangle operationBounds,
+        List<LetterMatch> letterMatches,
+        IReadOnlyList<PdfRectangle> redactionAreas,
+        GlyphRemovalStrategy strategy = GlyphRemovalStrategy.AnyOverlap)
     {
         var allSegments = new List<TextSegment>();
         TextSegment? currentSegment = null;
@@ -43,7 +51,7 @@ public class TextSegmenter
         // If no letter matches, fall back to checking whole operation bounding box
         if (letterMatches.Count == 0)
         {
-            bool wholeOperationInRedactionArea = operationBounds.IntersectsWith(redactionArea);
+            bool wholeOperationInRedactionArea = redactionAreas.Any(operationBounds.IntersectsWith);
 
             if (!wholeOperationInRedactionArea)
             {
@@ -83,7 +91,8 @@ public class TextSegmenter
             if (match != null)
             {
                 // We have letter position info - get detailed overlap info
-                var (shouldRemove, overlap) = GetLetterOverlapInfo(match.Letter.GlyphRectangle, redactionArea, strategy);
+                var (shouldRemove, overlap) = GetLetterOverlapInfo(
+                    match.Letter.GlyphRectangle, redactionAreas, strategy);
                 keep = !shouldRemove;
                 overlapType = overlap;
 
@@ -180,6 +189,20 @@ public class TextSegmenter
     /// <param name="redactionArea">The redaction area.</param>
     /// <param name="strategy">The removal strategy to apply.</param>
     /// <returns>Tuple of (shouldRemove, overlapType).</returns>
+    private (bool ShouldRemove, GlyphOverlapType OverlapType) GetLetterOverlapInfo(
+        PdfRectangle glyphRectangle,
+        IReadOnlyList<PdfRectangle> redactionAreas,
+        GlyphRemovalStrategy strategy)
+    {
+        var result = (ShouldRemove: false, OverlapType: GlyphOverlapType.None);
+        foreach (var area in redactionAreas)
+        {
+            result = GetLetterOverlapInfo(glyphRectangle, area, strategy);
+            if (result.ShouldRemove) return result;
+        }
+        return result;
+    }
+
     private (bool ShouldRemove, GlyphOverlapType OverlapType) GetLetterOverlapInfo(
         PdfRectangle glyphRect,
         PdfRectangle redactionArea,

@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using AwesomeAssertions;
 using Excise.Core.Document;
+using Excise.Core.Text;
 using Xunit;
 using Excise.Rendering.Differential;
 
@@ -56,6 +57,56 @@ public sealed class ExtractionParityTests
     /// so #513-#515 have a blast-radius-ordered starting point.
     /// </summary>
     private const double WorklistThreshold = 0.95;
+
+    [Fact]
+    public void PageTextOrderStrategy_KnownFormAndTablePages_RemainRawStream()
+    {
+        var root = LocateRepoRoot();
+        Assert.SkipWhen(root == null,
+            "could not locate repo root (excise.sln not found above AppContext.BaseDirectory)");
+
+        // These are the real pages that exposed #947 and the adjacent table
+        // false-positive risk. sample-pdfs is checked in; smoke PDFs are
+        // downloaded release fixtures and participate whenever present.
+        var cases = new (string RelativePath, int Page)[]
+        {
+            ("test-pdfs/sample-pdfs/acc-global-compensation-report.pdf", 12),
+            ("test-pdfs/sample-pdfs/acc-global-compensation-report.pdf", 16),
+            ("test-pdfs/sample-pdfs/acc-global-compensation-report.pdf", 21),
+            ("test-pdfs/smoke/state-ds82-passport-renewal.pdf", 2),
+            ("test-pdfs/smoke/state-ds82-passport-renewal.pdf", 3),
+            ("test-pdfs/smoke/state-ds82-passport-renewal.pdf", 4),
+            ("test-pdfs/smoke/state-ds82-passport-renewal.pdf", 5),
+            ("test-pdfs/smoke/state-ds82-passport-renewal.pdf", 6),
+            ("test-pdfs/smoke/irs-1040-instructions.pdf", 13),
+            ("test-pdfs/smoke/irs-1040-instructions.pdf", 117),
+            ("test-pdfs/smoke/scotus-trump-v-us.pdf", 3),
+        };
+
+        var examined = 0;
+        foreach (var (relativePath, pageNumber) in cases)
+        {
+            var path = Path.Combine(root!, relativePath);
+            if (!File.Exists(path)) continue;
+
+            using var document = PdfDocument.Open(path);
+            var page = document.GetPage(pageNumber);
+            var cropBox = page.CropBox.Normalize();
+            var visible = page.Letters.Where(letter =>
+            {
+                var glyphBox = letter.GlyphRectangle.Normalize();
+                return glyphBox.Top > cropBox.Bottom && glyphBox.Bottom < cropBox.Top;
+            }).ToList();
+
+            TextSelectionEngine.DeterminePageTextOrder(visible).Should().Be(
+                TextSelectionEngine.PageTextOrderStrategy.RawStream,
+                $"#947 pins the conservative whole-page verdict for {relativePath} page {pageNumber}");
+            examined++;
+        }
+
+        examined.Should().BeGreaterThanOrEqualTo(3,
+            "the three checked-in ACC table/report controls must always be available");
+    }
 
     [Fact]
     public void GenerateExtractionParityReport()

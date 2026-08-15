@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Excise.Core.Document;
+using Excise.Core.Operations;
+using Excise.Core.Primitives;
 
 namespace Excise.Core.Text.Segmentation;
 
@@ -35,11 +37,13 @@ namespace Excise.Core.Text.Segmentation;
 public sealed record RedactionCarrierAudit(
     int OutlineTitleCount,
     int AnnotationsWithTextCount,
+    int UnexaminedXfaPacketCount,
     IReadOnlyList<string> TermsBelowScrubFloor)
 {
     /// <summary>True when anything at all was left unexamined.</summary>
     public bool HasUnexaminedCarriers =>
-        OutlineTitleCount > 0 || AnnotationsWithTextCount > 0 || TermsBelowScrubFloor.Count > 0;
+        OutlineTitleCount > 0 || AnnotationsWithTextCount > 0 ||
+        UnexaminedXfaPacketCount > 0 || TermsBelowScrubFloor.Count > 0;
 
     /// <summary>
     /// Shortest term <c>PdfDocumentSanitizer</c> will act on. Mirrored here
@@ -63,15 +67,28 @@ public sealed record RedactionCarrierAudit(
     {
         ArgumentNullException.ThrowIfNull(document);
 
-        var shortTerms = (requestedTerms ?? Array.Empty<string>())
-            .Where(t => !string.IsNullOrWhiteSpace(t) && t.Trim().Length < ScrubFloor)
+        var normalizedTerms = (requestedTerms ?? Array.Empty<string>())
+            .Where(t => !string.IsNullOrWhiteSpace(t))
             .Select(t => t.Trim())
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
+        var shortTerms = normalizedTerms
+            .Where(t => !string.IsNullOrWhiteSpace(t) && t.Trim().Length < ScrubFloor)
+            .ToList();
+        var actionableTerms = normalizedTerms
+            .Where(t => t.Length >= ScrubFloor)
+            .ToList();
+
+        // With no usable term (manual rectangle or a 1-2 character preview),
+        // every positionless carrier remains unexamined. With an actionable
+        // term, the caller's surgical scrub has examined these carriers; only
+        // exact values that still contain the term are findings.
+        IReadOnlyList<string>? termsToFind = actionableTerms.Count > 0 ? actionableTerms : null;
 
         return new RedactionCarrierAudit(
-            CountOutlineTitles(document),
-            CountAnnotationsWithText(document),
+            CountOutlineTitles(document, termsToFind),
+            CountAnnotationsWithText(document, termsToFind),
+            CountUnexaminedXfaPackets(document, termsToFind),
             shortTerms);
     }
 
@@ -102,6 +119,13 @@ public sealed record RedactionCarrierAudit(
                 "annotations overlapping a redaction area on the same page are scrubbed.");
         }
 
+        if (UnexaminedXfaPacketCount > 0)
+        {
+            lines.Add(
+                $"{UnexaminedXfaPacketCount} XFA form XML packet(s) were not examined — the " +
+                "packet was malformed, unsafe to parse, or no captured redaction text was available.");
+        }
+
         foreach (var term in TermsBelowScrubFloor)
         {
             lines.Add(
@@ -112,50 +136,82 @@ public sealed record RedactionCarrierAudit(
         return lines;
     }
 
-    private static int CountOutlineTitles(PdfDocument document)
+    private static int CountOutlineTitles(PdfDocument document, IReadOnlyList<string>? terms)
     {
         try
         {
-            return CountTitles(PdfOutlineParser.Parse(document));
+            return CountTitles(PdfOutlineParser.Parse(document), terms);
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {
-            // A document whose outline tree cannot be parsed is exactly the kind
-            // this should not claim to have checked. Report nothing rather than
-            // a wrong zero — callers treat 0 as "nothing to warn about".
-            return 0;
+            // A parse failure is an unexamined carrier, never evidence that the
+            // document has no bookmark text. One synthetic count is enough to
+            // make the warning honest without guessing how many nodes exist.
+            return 1;
         }
     }
 
-    private static int CountTitles(IReadOnlyList<PdfOutlineItem> items)
+    private static int CountTitles(IReadOnlyList<PdfOutlineItem> items, IReadOnlyList<string>? terms)
     {
         var n = 0;
         foreach (var item in items)
         {
-            if (!string.IsNullOrWhiteSpace(item.Title)) n++;
-            n += CountTitles(item.Children);
+            if (!string.IsNullOrWhiteSpace(item.Title) && Matches(item.Title, terms)) n++;
+            n += CountTitles(item.Children, terms);
         }
         return n;
     }
 
-    private static int CountAnnotationsWithText(PdfDocument document)
+    private static int CountAnnotationsWithText(PdfDocument document, IReadOnlyList<string>? terms)
     {
         var n = 0;
         for (var p = 1; p <= document.PageCount; p++)
         {
             try
             {
-                foreach (var annot in document.GetPage(p).GetAnnotations())
+                var page = document.GetPage(p);
+                if (document.Resolve(page.Dictionary.GetOptional("Annots") ?? PdfNull.Instance)
+                    is not PdfArray annotations)
                 {
-                    if (!string.IsNullOrWhiteSpace(annot.Contents)) n++;
+                    continue;
+                }
+
+                foreach (var item in annotations)
+                {
+                    if (document.Resolve(item) is not PdfDictionary annotation) continue;
+                    var contents = annotation.GetStringOrNull("Contents");
+                    var title = annotation.GetStringOrNull("T");
+                    if ((!string.IsNullOrWhiteSpace(contents) && Matches(contents, terms)) ||
+                        (!string.IsNullOrWhiteSpace(title) && Matches(title, terms)))
+                    {
+                        n++;
+                    }
                 }
             }
             catch (Exception ex) when (ex is not OutOfMemoryException)
             {
-                // Same reasoning as outlines: skip a page we cannot read rather
-                // than abort the whole audit.
+                // One synthetic finding per unreadable page prevents a parser
+                // failure from being reported as a clean carrier audit.
+                n++;
             }
         }
         return n;
     }
+
+    private static int CountUnexaminedXfaPackets(
+        PdfDocument document,
+        IReadOnlyList<string>? terms)
+    {
+        try
+        {
+            return XfaXmlCarrier.CountUnexaminedPackets(document, terms);
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            return 1;
+        }
+    }
+
+    private static bool Matches(string value, IReadOnlyList<string>? terms) =>
+        terms == null || terms.Any(term => value.Contains(term, StringComparison.OrdinalIgnoreCase));
 }
