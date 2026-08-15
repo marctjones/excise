@@ -16,8 +16,8 @@ namespace Excise.Core.Graphics;
 /// <para><see cref="EncodeString"/> emits 2-byte glyph ids (Identity-H). For TrueType
 /// (glyf) fonts, <see cref="BuildFontDictionary"/> installs a CIDFontType2 / FontFile2.
 /// For CFF-based OpenType ('OTTO'), it installs a CIDFontType0 / FontFile3 with /Subtype
-/// /OpenType, embedding the full OTTO bytes. Both use Identity cmap and ToUnicode for
-/// extraction. The full font is embedded for CFF; TrueType is subsetted (see #378).</para>
+/// /Type1C, embedding a retain-GID CFF subset. Both use Identity cmap and ToUnicode for
+/// extraction.</para>
 /// </summary>
 internal sealed class PdfTrueTypeFont : PdfFont
 {
@@ -88,7 +88,9 @@ internal sealed class PdfTrueTypeFont : PdfFont
 
         if (_ttf.IsCff)
         {
-            // CFF/OpenType ('OTTO'): FontFile3 with /Subtype /OpenType, embed full OTTO.
+            // CFF/OpenType ('OTTO'): start with the full wrapper; pre-save
+            // replaces it with a retain-GID bare CFF subset once the used glyph
+            // set is complete (#908).
             var ff3Dict = new PdfDictionary();
             ff3Dict.SetName("Subtype", "OpenType");
             ff3Dict.SetName("Filter", "FlateDecode");
@@ -182,29 +184,30 @@ internal sealed class PdfTrueTypeFont : PdfFont
         type0["ToUnicode"] = tuRef;
 
         // Defer subsetting to save time (when _usedGids is complete).
-        // For CFF, TrueTypeSubsetter will return the original unchanged, which is fine
-        // (full OTTO embedded). For TrueType, it subsets to used glyphs.
         document.RegisterPreSaveAction(() => FinalizeSubset(fontFileStream, fd, cid, type0, tu, cidSetStream, toGlyphSpace));
         return type0;
     }
 
     /// <summary>
     /// At save time: for TrueType, replace FontFile2 with a glyph subset; for CFF,
-    /// keep the full font. Fill the ToUnicode CMap for the used glyphs (compressed),
+    /// replace the OTTO wrapper with a retain-GID Type1C CFF subset. Fill the ToUnicode CMap for the used glyphs (compressed),
     /// trim /W to used glyphs, and apply a 6-letter subset tag to the font names.
     /// Idempotent.
     /// </summary>
     private void FinalizeSubset(PdfStream fontFileStream, PdfDictionary fd, PdfDictionary cid,
         PdfDictionary type0, PdfStream toUnicode, PdfStream? cidSet, double toGlyphSpace)
     {
-        // For TrueType, subset to used glyphs. For CFF, TrueTypeSubsetter returns original.
-        byte[] subset = TrueTypeSubsetter.Subset(_ttf.Data, _usedGids);
+        byte[] subset = _ttf.IsCff
+            ? SubsetCffOpenTypeRetainingGlyphIds()
+            : TrueTypeSubsetter.Subset(_ttf.Data, _usedGids);
         byte[] comp = Deflate(subset);
         fontFileStream.SetEncodedData(comp);
 
         // Only set Length1 for FontFile2 (TrueType); FontFile3 doesn't use it.
         if (!_ttf.IsCff)
             fontFileStream.SetInt("Length1", subset.Length);
+        else if (SfntTableReader.ExtractTable(_ttf.Data, "CFF ") != null)
+            fontFileStream.SetName("Subtype", "Type1C");
         fontFileStream.SetInt("Length", comp.Length);
 
         // ToUnicode for just the used glyphs, FlateDecode-compressed.
@@ -249,6 +252,14 @@ internal sealed class PdfTrueTypeFont : PdfFont
             cidSet.SetName("Filter", "FlateDecode");
             cidSet.SetInt("Length", cidSetComp.Length);
         }
+    }
+
+    private byte[] SubsetCffOpenTypeRetainingGlyphIds()
+    {
+        var cff = SfntTableReader.ExtractTable(_ttf.Data, "CFF ");
+        return cff == null
+            ? _ttf.Data
+            : CffSubsetter.SubsetRetainingGlyphIds(cff, _usedGids);
     }
 
     /// <summary>Deterministic 6-uppercase-letter subset tag from the used glyphs.</summary>

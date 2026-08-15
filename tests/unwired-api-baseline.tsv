@@ -74,7 +74,6 @@ Excise.Core	nowhere	SetCreator	triage:public library surface with no in-repo cal
 Excise.Core	tests-only	AsItalic	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	BeginPath	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	BulletList	triage:public library/domain API; tests exercise contract; external callers may use it
-Excise.Core	tests-only	CffSubsetter	issue:#908 production CFF subsetter adapter remains open
 Excise.Core	tests-only	CloseAndStroke	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	ContainsFoldable	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	ContainsLigatures	triage:public library/domain API; tests exercise contract; external callers may use it

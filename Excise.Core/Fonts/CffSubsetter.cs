@@ -33,6 +33,21 @@ public static class CffSubsetter
     /// <param name="usedGlyphIds">Set of glyph indices to keep (0=.notdef always included)</param>
     /// <returns>New CFF blob, or the original bytes if subsetting cannot be performed safely</returns>
     public static byte[] Subset(byte[] originalCff, IReadOnlySet<int> usedGlyphIds)
+        => SubsetCore(originalCff, usedGlyphIds, retainGlyphIds: false);
+
+    /// <summary>
+    /// Subset a CFF font while preserving original glyph indices.
+    /// </summary>
+    /// <remarks>
+    /// The PDF authoring path emits Identity-H text as original glyph IDs. A
+    /// compact CFF subset shifts glyph indices, so embedded fonts need retained
+    /// CharStrings slots: used glyphs keep their original index, unused glyphs
+    /// become empty charstrings.
+    /// </remarks>
+    internal static byte[] SubsetRetainingGlyphIds(byte[] originalCff, IReadOnlySet<int> usedGlyphIds)
+        => SubsetCore(originalCff, usedGlyphIds, retainGlyphIds: true);
+
+    private static byte[] SubsetCore(byte[] originalCff, IReadOnlySet<int> usedGlyphIds, bool retainGlyphIds)
     {
         if (originalCff == null || originalCff.Length == 0)
             return originalCff ?? Array.Empty<byte>();
@@ -40,7 +55,7 @@ public static class CffSubsetter
         try
         {
             var parser = new CffSubsetParser(originalCff);
-            return parser.PerformSubset(usedGlyphIds);
+            return parser.PerformSubset(usedGlyphIds, retainGlyphIds);
         }
         catch (Exception ex)
         {
@@ -69,7 +84,7 @@ public static class CffSubsetter
         private int U16BE() { int v = ((_data[_pos] << 8) | _data[_pos + 1]); _pos += 2; return v; }
         private void Seek(int p) => _pos = p;
 
-        public byte[] PerformSubset(IReadOnlySet<int> usedGlyphIds)
+        public byte[] PerformSubset(IReadOnlySet<int> usedGlyphIds, bool retainGlyphIds)
         {
             // Parse header
             byte major = U8();
@@ -122,26 +137,34 @@ public static class CffSubsetter
             var sidByGlyph = new int[numGlyphs];
             ParseCharset(charsetOffset, numGlyphs, sidByGlyph);
 
-            // Build new charset containing only kept glyphs (format 0: full enumeration)
-            byte[] newCharsetBytes = BuildSubsetCharset(keptGlyphIds, sidByGlyph);
+            byte[] newCharsetBytes = retainGlyphIds
+                ? BuildRetainedCharset(numGlyphs, sidByGlyph)
+                : BuildSubsetCharset(keptGlyphIds, sidByGlyph);
 
-            // Build new CharStrings INDEX containing only kept glyphs
-            byte[] newCharStringsBytes = BuildSubsetCharStrings(charStringsIndex, keptGlyphIds);
+            byte[] newCharStringsBytes = retainGlyphIds
+                ? BuildRetainedCharStrings(charStringsIndex, keptGlyphIds)
+                : BuildSubsetCharStrings(charStringsIndex, keptGlyphIds);
 
-            // Rewrite Top DICT with new offsets (deferred until we know final layout)
-            // For now, we'll patch it at the end.
-
-            // Collect offsets for all sections we've written so far
-            int headerPos = 0;
-            int nameIndexPos = headerPos + 4;
-            int stringIndexPos = nameIndexPos + nameIndexBytes.Length;
-            int globalSubrsPos = stringIndexPos + stringIndexBytes.Length;
-            int charsetPos = globalSubrsPos + globalSubrsBytes.Length;
-            int charStringsPos = charsetPos + newCharsetBytes.Length;
-
-            // Rewrite Top DICT with updated charset and CharStrings offsets
-            byte[] patchedTopDict = PatchTopDict(topDict, charsetPos, charStringsPos);
+            byte[] patchedTopDict = topDict;
             byte[] topDictIndexBytes = EncodeIndex(new[] { patchedTopDict });
+            for (int pass = 0; pass < 8; pass++)
+            {
+                int stringIndexPos = 4 + nameIndexBytes.Length + topDictIndexBytes.Length;
+                int globalSubrsPos = stringIndexPos + stringIndexBytes.Length;
+                int charsetPos = globalSubrsPos + globalSubrsBytes.Length;
+                int charStringsPos = charsetPos + newCharsetBytes.Length;
+
+                byte[] nextTopDict = PatchTopDict(topDict, charsetPos, charStringsPos);
+                byte[] nextTopDictIndex = EncodeIndex(new[] { nextTopDict });
+                if (nextTopDict.SequenceEqual(patchedTopDict)
+                    && nextTopDictIndex.SequenceEqual(topDictIndexBytes))
+                {
+                    break;
+                }
+
+                patchedTopDict = nextTopDict;
+                topDictIndexBytes = nextTopDictIndex;
+            }
 
             // Now rebuild from scratch with correct offsets
             output = new MemoryStream();
@@ -240,82 +263,81 @@ public static class CffSubsetter
 
         private byte[] PatchTopDict(byte[] topDict, int charsetOffset, int charStringsOffset)
         {
-            var dict = ParseDict(topDict);
             var output = new MemoryStream();
-            var stack = new List<double>();
-            int i = 0;
+            int segmentStart = 0;
 
-            while (i < topDict.Length)
+            for (int i = 0; i < topDict.Length;)
             {
                 byte b = topDict[i];
-                if (b <= 21)
+                if (b <= 21 && b != 28)
                 {
+                    int opStart = i;
                     int op = b;
                     if (b == 12 && i + 1 < topDict.Length)
                     {
                         op = 1200 + topDict[i + 1];
                         i += 2;
                     }
-                    else i++;
+                    else
+                    {
+                        i++;
+                    }
 
-                    // Patch charset (15) and CharStrings (17) offsets
                     if (op == 15)
                     {
                         EncodeOperand(output, charsetOffset);
-                        output.WriteByte((byte)op);
+                        output.Write(topDict, opStart, i - opStart);
                     }
                     else if (op == 17)
                     {
                         EncodeOperand(output, charStringsOffset);
-                        output.WriteByte((byte)op);
+                        output.Write(topDict, opStart, i - opStart);
                     }
                     else
                     {
-                        // Copy operands from original
-                        foreach (var v in stack)
-                            EncodeOperand(output, (int)v);
-                        output.WriteByte((byte)op);
+                        output.Write(topDict, segmentStart, i - segmentStart);
                     }
-                    stack.Clear();
+
+                    segmentStart = i;
                 }
                 else if (b == 28)
                 {
-                    short v = (short)((topDict[i + 1] << 8) | topDict[i + 2]);
-                    stack.Add(v); i += 3;
+                    i += 3;
                 }
                 else if (b == 29)
                 {
-                    int v = (topDict[i + 1] << 24) | (topDict[i + 2] << 16) | (topDict[i + 3] << 8) | topDict[i + 4];
-                    stack.Add(v); i += 5;
+                    i += 5;
                 }
                 else if (b == 30)
                 {
                     i++;
                     while (i < topDict.Length)
                     {
-                        output.WriteByte(topDict[i]);
                         byte nb = topDict[i++];
                         if ((nb & 0x0F) == 0x0F || (nb >> 4) == 0x0F) break;
                     }
-                    stack.Add(0);
                 }
                 else if (b >= 32 && b <= 246)
                 {
-                    stack.Add(b - 139); i++;
+                    i++;
                 }
                 else if (b >= 247 && b <= 250)
                 {
-                    stack.Add((b - 247) * 256 + topDict[i + 1] + 108); i += 2;
+                    i += 2;
                 }
                 else if (b >= 251 && b <= 254)
                 {
-                    stack.Add(-(b - 251) * 256 - topDict[i + 1] - 108); i += 2;
+                    i += 2;
                 }
                 else
                 {
                     i++;
                 }
             }
+
+            if (segmentStart < topDict.Length)
+                output.Write(topDict, segmentStart, topDict.Length - segmentStart);
+
             return output.ToArray();
         }
 
@@ -510,6 +532,20 @@ public static class CffSubsetter
             return ms.ToArray();
         }
 
+        private byte[] BuildRetainedCharset(int numGlyphs, int[] sidByGlyph)
+        {
+            var ms = new MemoryStream();
+            ms.WriteByte(0); // format 0, one SID per glyph after .notdef
+
+            for (int gid = 1; gid < numGlyphs; gid++)
+            {
+                int sid = gid < sidByGlyph.Length ? sidByGlyph[gid] : gid;
+                WriteU16(ms, (ushort)sid);
+            }
+
+            return ms.ToArray();
+        }
+
         private byte[] BuildSubsetCharStrings(List<byte[]> originalCharStrings, HashSet<int> keptGlyphIds)
         {
             var keptCharstrings = new List<byte[]>();
@@ -519,6 +555,19 @@ public static class CffSubsetter
                     keptCharstrings.Add(originalCharStrings[gid]);
             }
             return EncodeIndex(keptCharstrings);
+        }
+
+        private byte[] BuildRetainedCharStrings(List<byte[]> originalCharStrings, HashSet<int> keptGlyphIds)
+        {
+            var entries = new List<byte[]>(originalCharStrings.Count);
+            for (int gid = 0; gid < originalCharStrings.Count; gid++)
+            {
+                entries.Add(keptGlyphIds.Contains(gid)
+                    ? originalCharStrings[gid]
+                    : new byte[] { 0x0E }); // Type 2 endchar: valid empty glyph
+            }
+
+            return EncodeIndex(entries);
         }
     }
 }

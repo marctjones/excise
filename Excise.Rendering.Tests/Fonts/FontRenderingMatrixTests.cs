@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using AwesomeAssertions;
 using Excise.Core.Document;
+using Excise.Core.Graphics;
 using Excise.Rendering;
 using SkiaSharp;
 using Xunit;
@@ -64,6 +65,23 @@ public class FontRenderingMatrixTests
         using var bmp = Render(pdf);
         InkFraction(bmp).Should().BeGreaterThan(0.002,
             "an embedded OpenType (/FontFile3 /Subtype /OpenType) glyph must rasterize visible ink");
+    }
+
+    [Fact]
+    public void AuthoredCffSubset_RendersGlyphInk()
+    {
+        var otf = LoadFixtureFont("LibertinusSerif-Regular.otf");
+        Assert.SkipWhen(otf == null, "LibertinusSerif-Regular.otf fixture missing.");
+
+        var doc = PdfDocument.CreateNew();
+        var page = doc.Pages.AddBlank(400, 160);
+        var font = PdfFont.FromTrueType(otf!, 48);
+        using (var g = page.GetGraphics())
+            g.DrawString("CFF subset", font, PdfBrush.Black, 20, 90);
+
+        using var bmp = Render(doc.SaveToBytes());
+        InkFraction(bmp).Should().BeGreaterThan(0.002,
+            "the authoring path must emit a subsetted Type1C font that Skia can still rasterize");
     }
 
     [Theory]
