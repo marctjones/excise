@@ -194,6 +194,9 @@ run_t0() {
     run_step "assert-fresh-selftest" scripts/test-assert-fresh.sh
     run_step "skip-budget-selftest" scripts/test-check-skip-budget.sh
     run_step "coverage-floor-selftest" scripts/test-check-coverage-floor.sh
+    # #940: prove the Roslyn reachability pass reports a dead root and its
+    # dead leaf in one closure, without paying the whole-solution cost in t0.
+    run_step "reachability-selftest" scripts/check-reachability.sh --self-test
     # #908: public API that nothing calls. The skip budget and test-count gates
     # catch a TEST that stopped running; this catches PRODUCTION CODE that never
     # started. ~10s (a text index over .cs/.axaml), ratcheted against
