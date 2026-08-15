@@ -311,15 +311,16 @@ grep -qF 'Demo3.Tests.A.ThemeTest' "$OUT6" || {
 grep -q 'Do NOT simply delete' "$OUT6" || {
   echo "FAIL(#933): the gate still advises deleting the entries, which moves the failure"; F3=1; }
 
-# And the bare form must be ACCEPTED, or the advice above would be wrong.
+# And the bare one-entry-per-method form must be ACCEPTED. For a multi-row
+# skip, #937's count marker is part of that accepted form.
 cat > "$AL3" <<'EOF'
 # Skips allow-listed for Demo3.Tests.
-Demo3.Tests.A.ThemeTest   # one entry per method covers every row
+Demo3.Tests.A.ThemeTest   # one entry per method covers every row [skip-count: 2]
 EOF
 RC7=0
 "$WORK/scripts/check-skip-budget.sh" "$P3" --trx "$THEORY_TRX" >"$WORK/theory-fixed.log" 2>&1 || RC7=$?
 [[ "$RC7" -eq 0 ]] || {
-  echo "FAIL(#933): the bare method name — the fix the gate recommends — was rejected"; F3=1; }
+  echo "FAIL(#933/#937): the bare method entry with a skip-count marker was rejected"; F3=1; }
 
 if [[ $F3 -ne 0 ]]; then
   echo
@@ -329,4 +330,72 @@ if [[ $F3 -ne 0 ]]; then
 fi
 
 echo "PASS: a per-row [Theory] allowlist entry fails AND is diagnosed by name;"
-echo "      the bare method name it recommends is accepted (#933)"
+echo "      one bare method entry with a skip-count marker is accepted (#933/#937)"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# #937: a bare [Theory] method name is still not enough by itself. One skipped
+# row and all skipped rows both collapse to the same name, so the count becomes
+# the ratchet while the allowlist remains one entry per method.
+# ─────────────────────────────────────────────────────────────────────────────
+P4="$WORK/Demo4.Tests.csproj"
+touch "$P4"
+AL4="$WORK/tests/skip-allowlist/Demo4.Tests.txt"
+TRX4="$WORK/theory-count.trx"
+
+cat > "$AL4" <<'EOF'
+Demo4.Tests.A.Row   # two rows are expected to skip [skip-count: 2]
+EOF
+
+cat > "$TRX4" <<'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Results>
+    <UnitTestResult testName="Demo4.Tests.A.Row(value: 1)" outcome="NotExecuted" />
+    <UnitTestResult testName="Demo4.Tests.A.Row(value: 2)" outcome="NotExecuted" />
+  </Results>
+</TestRun>
+EOF
+
+"$WORK/scripts/check-skip-budget.sh" "$P4" --trx "$TRX4" >"$WORK/count-ok.log" 2>&1 \
+  || { echo "FAIL(#937): matching [skip-count: 2] marker was rejected"; cat "$WORK/count-ok.log"; exit 1; }
+
+cat > "$TRX4" <<'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Results>
+    <UnitTestResult testName="Demo4.Tests.A.Row(value: 1)" outcome="NotExecuted" />
+  </Results>
+</TestRun>
+EOF
+
+RC8=0
+"$WORK/scripts/check-skip-budget.sh" "$P4" --trx "$TRX4" >"$WORK/count-bad.log" 2>&1 || RC8=$?
+[[ "$RC8" -ne 0 ]] || { echo "FAIL(#937): changed theory skip count was accepted"; exit 1; }
+grep -qF "expected 2 skipped row(s), saw 1" "$WORK/count-bad.log" || {
+  echo "FAIL(#937): count mismatch did not name expected and actual rows"; cat "$WORK/count-bad.log"; exit 1; }
+
+cat > "$AL4" <<'EOF'
+Demo4.Tests.A.Row   # no explicit count defaults to one skipped row
+EOF
+
+cat > "$TRX4" <<'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Results>
+    <UnitTestResult testName="Demo4.Tests.A.Row(value: 1)" outcome="NotExecuted" />
+    <UnitTestResult testName="Demo4.Tests.A.Row(value: 2)" outcome="NotExecuted" />
+  </Results>
+</TestRun>
+EOF
+
+RC9=0
+"$WORK/scripts/check-skip-budget.sh" "$P4" --trx "$TRX4" >"$WORK/count-missing-marker.log" 2>&1 || RC9=$?
+[[ "$RC9" -ne 0 ]] || { echo "FAIL(#937): multi-row skip without [skip-count: N] was accepted"; exit 1; }
+grep -qF "expected 1 skipped row(s), saw 2" "$WORK/count-missing-marker.log" || {
+  echo "FAIL(#937): missing count marker did not default to one row"; cat "$WORK/count-missing-marker.log"; exit 1; }
+
+"$WORK/scripts/check-skip-budget.sh" "$P4" --update --trx "$TRX4" >"$WORK/count-update.log" 2>&1
+grep -qF "Demo4.Tests.A.Row   # no explicit count defaults to one skipped row [skip-count: 2]" "$AL4" || {
+  echo "FAIL(#937): --update did not preserve the reason and add [skip-count: 2]"; cat "$AL4"; exit 1; }
+
+echo "PASS: theory skip counts are ratcheted while the allowlist stays keyed by bare method name (#937)"
