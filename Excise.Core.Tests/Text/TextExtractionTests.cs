@@ -544,26 +544,28 @@ public class TextExtractionTests
     [Fact]
     public void PageText_OrdersTwoColumnsColumnByColumn()
     {
-        var content =
-            "BT /F1 12 Tf 100 700 Td (LeftOne) Tj ET " +
-            "BT /F1 12 Tf 100 680 Td (LeftTwo) Tj ET " +
-            "BT /F1 12 Tf 100 660 Td (LeftThree) Tj ET " +
-            "BT /F1 12 Tf 330 695 Td (RightOne) Tj ET " +
-            "BT /F1 12 Tf 330 675 Td (RightTwo) Tj ET " +
-            "BT /F1 12 Tf 330 655 Td (RightThree) Tj ET";
+        // Deliberately ROW-MAJOR stream order: without #947's structure-gated
+        // column sort, RightColumnRow1 appears before LeftColumnRow2. Eight repeated rows and
+        // enough glyphs establish actual structure rather than a sparse form
+        // grid whose reading order is subjective.
+        var content = string.Join(' ', Enumerable.Range(1, 8).SelectMany(row => new[]
+        {
+            $"BT /F1 12 Tf 100 {720 - row * 20} Td (LeftColumnRow{row}) Tj ET",
+            $"BT /F1 12 Tf 350 {715 - row * 20} Td (RightColumnRow{row}) Tj ET",
+        }));
         var pdfData = CreatePdfWithContentStream(content);
 
         using var doc = PdfDocument.Open(pdfData);
         var text = doc.GetPage(1).Text;
 
-        text.IndexOf("LeftOne", StringComparison.Ordinal).Should().BeLessThan(
-            text.IndexOf("LeftTwo", StringComparison.Ordinal),
+        text.IndexOf("LeftColumnRow1", StringComparison.Ordinal).Should().BeLessThan(
+            text.IndexOf("LeftColumnRow2", StringComparison.Ordinal),
             "#938: same-column continuation should stay together");
-        text.IndexOf("LeftTwo", StringComparison.Ordinal).Should().BeLessThan(
-            text.IndexOf("RightOne", StringComparison.Ordinal),
-            "#938: page.Text should not interleave columns in raw draw order");
-        text.IndexOf("RightOne", StringComparison.Ordinal).Should().BeLessThan(
-            text.IndexOf("RightTwo", StringComparison.Ordinal),
+        text.IndexOf("LeftColumnRow8", StringComparison.Ordinal).Should().BeLessThan(
+            text.IndexOf("RightColumnRow1", StringComparison.Ordinal),
+            "#938: an interleaved content stream must assemble column-by-column");
+        text.IndexOf("RightColumnRow1", StringComparison.Ordinal).Should().BeLessThan(
+            text.IndexOf("RightColumnRow2", StringComparison.Ordinal),
             "#938: right column should still read top-to-bottom");
     }
 

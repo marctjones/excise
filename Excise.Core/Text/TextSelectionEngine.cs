@@ -15,6 +15,20 @@ namespace Excise.Core.Text;
 [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 public static class TextSelectionEngine
 {
+    internal enum PageTextOrderStrategy
+    {
+        RawStream,
+        ColumnAware,
+    }
+
+    // Whole-page ordering needs stronger evidence than a drag selection. Six
+    // scattered form-grid rows can manufacture apparent gutters while still
+    // having no objective reading order (#947). Eight clustered lines is the
+    // first bounded shape that requires repeated structure beyond that case.
+    private const int MinimumStructuredPageLines = 8;
+    private const int MinimumStructuredPageLetters = 64;
+    private const int MinimumPairedProseLines = 8;
+
     /// <summary>
     /// Find the letter at the given PDF-space point, or the closest letter
     /// on the same line if the point isn't directly over any glyph.
@@ -103,15 +117,249 @@ public static class TextSelectionEngine
     }
 
     /// <summary>
-    /// Whole-page text order for <c>PdfPage.Text</c> (#938). Keep content-stream
-    /// order here: the smoke corpus and mutool both rely on many producers'
-    /// already-column-major streams, while a geometric whole-page sort can turn
-    /// those pages into row-major text. <see cref="JoinText(IReadOnlyList{Letter}, WhitespaceMode)"/>
-    /// supplies the missing geometric spaces and line breaks.
+    /// Whole-page text order for <c>PdfPage.Text</c> (#938/#947). Reorder only
+    /// when the page has repeated line structure and a validated column gutter;
+    /// scattered form grids retain producer order. <see cref="JoinText(IReadOnlyList{Letter}, WhitespaceMode)"/>
+    /// supplies geometric spaces and line breaks in either case.
     /// </summary>
     internal static List<Letter> SortPageTextOrder(IEnumerable<Letter> letters)
     {
-        return letters.ToList();
+        var all = letters as IReadOnlyList<Letter> ?? letters.ToList();
+        return DeterminePageTextOrder(all) == PageTextOrderStrategy.ColumnAware
+            ? SortStructuredPageText(all)
+            : all.ToList();
+    }
+
+    /// <summary>
+    /// Classify whether whole-page geometry is strong enough to override the
+    /// PDF producer's content-stream order. Kept separate so corpus fixtures
+    /// can pin the verdict independently of the final joined string.
+    /// </summary>
+    internal static PageTextOrderStrategy DeterminePageTextOrder(IReadOnlyList<Letter> letters)
+    {
+        if (letters.Count < MinimumStructuredPageLetters)
+            return PageTextOrderStrategy.RawStream;
+
+        // Core has already restored logical order inside RTL runs. A visual
+        // left-to-right page sort would undo that work. Vertical writing has
+        // the same axis mismatch, so both stay in logical producer order.
+        if (letters.Any(letter => ContainsStrongRtl(letter.Value)) ||
+            HasPredominantlyVerticalRuns(letters))
+        {
+            return PageTextOrderStrategy.RawStream;
+        }
+
+        if (GroupIntoLines(letters).Count < MinimumStructuredPageLines)
+            return PageTextOrderStrategy.RawStream;
+
+        // Whole-page reordering is deliberately narrower than selection
+        // ordering. One stable gutter plus repeated prose on both sides
+        // excludes tables, form grids, and mixed/nested layouts. Repeated
+        // right-to-left crossings prove the producer actually interleaved the
+        // columns; an already column-major stream needs no intervention.
+        var boundaries = DetectColumnBoundaries(letters);
+        if (boundaries.Count != 1)
+            return PageTextOrderStrategy.RawStream;
+
+        var boundary = boundaries[0];
+        var runs = BuildPageTextRuns(letters);
+        var bodyLineCount = 0;
+        var pairedProseLineCount = 0;
+        foreach (var line in GroupPageRunsIntoLines(runs))
+        {
+            if (line.Any(run => run.Left < boundary && run.Right > boundary))
+                continue;
+
+            var contentRuns = line.Where(run => run.AlphanumericCount > 0).ToList();
+            if (contentRuns.Count == 0) continue;
+            bodyLineCount++;
+
+            var left = contentRuns.Where(run => run.CentreX < boundary).ToList();
+            var right = contentRuns.Where(run => run.CentreX >= boundary).ToList();
+            if (left.Count == 1 && right.Count == 1 &&
+                IsProseRun(left[0]) && IsProseRun(right[0]))
+            {
+                pairedProseLineCount++;
+            }
+        }
+
+        if (pairedProseLineCount < MinimumPairedProseLines ||
+            pairedProseLineCount * 2 <= bodyLineCount)
+        {
+            return PageTextOrderStrategy.RawStream;
+        }
+
+        var previousColumn = -1;
+        var backtrackCount = 0;
+        foreach (var run in runs.Where(run => run.AlphanumericCount > 0))
+        {
+            var column = run.CentreX < boundary ? 0 : 1;
+            if (previousColumn == 1 && column == 0) backtrackCount++;
+            previousColumn = column;
+        }
+
+        return backtrackCount >= Math.Max(3, pairedProseLineCount / 2)
+            ? PageTextOrderStrategy.ColumnAware
+            : PageTextOrderStrategy.RawStream;
+    }
+
+    private static bool IsProseRun(PageTextRun run) =>
+        run.AlphanumericCount >= 12 &&
+        run.LetterCount >= 10 &&
+        run.LetterCount >= 0.75 * run.AlphanumericCount;
+
+    private static bool HasPredominantlyVerticalRuns(IReadOnlyList<Letter> letters)
+    {
+        var horizontal = 0;
+        var vertical = 0;
+        for (var i = 1; i < letters.Count; i++)
+        {
+            var previous = letters[i - 1];
+            var current = letters[i];
+            if (IsSpaceGlyph(previous.Value) || IsSpaceGlyph(current.Value)) continue;
+
+            var dx = Math.Abs(current.StartX - previous.StartX);
+            var dy = Math.Abs(current.StartY - previous.StartY);
+            var scale = Math.Max(1, Math.Max(previous.FontSize, current.FontSize));
+
+            // Ignore jumps between independent runs; only neighbouring glyph
+            // advances tell us which writing axis the producer used.
+            if (Math.Max(dx, dy) > 2.5 * scale) continue;
+            if (dy > dx * 1.5) vertical++;
+            else if (dx > dy * 1.5) horizontal++;
+        }
+
+        return vertical >= 3 && vertical > horizontal;
+    }
+
+    /// <summary>
+    /// Column-order whole-page text without geometrically re-sorting individual
+    /// glyphs. The copy path needs visual glyph order for highlighting; page
+    /// extraction needs the extractor's logical order (ligatures, RTL repair,
+    /// overlapping runs) preserved. Reorder coherent runs as units instead.
+    /// </summary>
+    private static List<Letter> SortStructuredPageText(IReadOnlyList<Letter> letters)
+    {
+        var boundaries = DetectColumnBoundaries(letters);
+        if (boundaries.Count == 0) return letters.ToList();
+
+        var lines = GroupPageRunsIntoLines(BuildPageTextRuns(letters));
+        var visualLines = GroupIntoLines(letters);
+        var spanning = FindSpanningLineGlyphs(
+            visualLines,
+            letters.Min(letter => letter.GlyphRectangle.Left),
+            letters.Max(letter => letter.GlyphRectangle.Right),
+            EstimateColumnGap(letters));
+        var result = new List<Letter>(letters.Count);
+        var band = new List<PageTextRun>();
+
+        void FlushBand()
+        {
+            if (band.Count == 0) return;
+
+            var columns = new List<PageTextRun>[boundaries.Count + 1];
+            for (var i = 0; i < columns.Length; i++) columns[i] = new List<PageTextRun>();
+            foreach (var run in band)
+            {
+                var column = 0;
+                while (column < boundaries.Count && run.CentreX > boundaries[column]) column++;
+                columns[column].Add(run);
+            }
+
+            foreach (var column in columns)
+            {
+                foreach (var line in GroupPageRunsIntoLines(column))
+                    foreach (var run in line.OrderBy(run => run.Left))
+                        result.AddRange(run.Letters);
+            }
+            band.Clear();
+        }
+
+        foreach (var line in lines)
+        {
+            // A coherent run crossing a gutter is a full-width title/header,
+            // not column body. It separates column bands and stays in place.
+            if (line.Any(run => run.Letters.Any(spanning.Contains) ||
+                    boundaries.Any(boundary => run.Left < boundary && run.Right > boundary)))
+            {
+                FlushBand();
+                foreach (var run in line.OrderBy(run => run.Left))
+                    result.AddRange(run.Letters);
+            }
+            else
+            {
+                band.AddRange(line);
+            }
+        }
+        FlushBand();
+        return result;
+    }
+
+    private static List<PageTextRun> BuildPageTextRuns(IReadOnlyList<Letter> letters)
+    {
+        var runs = new List<PageTextRun>();
+        List<Letter>? current = null;
+        foreach (var letter in letters)
+        {
+            if (current == null || !ContinuesPageTextRun(current[^1], letter))
+            {
+                current = new List<Letter>();
+                runs.Add(new PageTextRun(current));
+            }
+            current.Add(letter);
+        }
+        return runs;
+    }
+
+    private static bool ContinuesPageTextRun(Letter previous, Letter current)
+    {
+        if (!SameLine(previous, current)) return false;
+
+        var fontSize = Math.Max(1, Math.Max(previous.FontSize, current.FontSize));
+        var dx = Math.Abs(current.StartX - previous.StartX);
+        return dx <= 3 * fontSize;
+    }
+
+    private static List<List<PageTextRun>> GroupPageRunsIntoLines(IEnumerable<PageTextRun> runs)
+    {
+        var lines = new List<List<PageTextRun>>();
+        foreach (var run in runs.OrderByDescending(run => run.CentreY))
+        {
+            List<PageTextRun>? host = null;
+            foreach (var line in lines)
+            {
+                var tolerance = 0.5 * Math.Min(run.Height, line[0].Height);
+                if (tolerance <= 0) tolerance = 4;
+                if (Math.Abs(run.CentreY - line[0].CentreY) <= tolerance)
+                {
+                    host = line;
+                    break;
+                }
+            }
+
+            if (host == null) lines.Add(new List<PageTextRun> { run });
+            else host.Add(run);
+        }
+
+        lines.Sort((left, right) => right[0].CentreY.CompareTo(left[0].CentreY));
+        return lines;
+    }
+
+    private sealed class PageTextRun
+    {
+        internal PageTextRun(List<Letter> letters) => Letters = letters;
+
+        internal List<Letter> Letters { get; }
+        internal double Left => Letters.Min(letter => letter.GlyphRectangle.Left);
+        internal double Right => Letters.Max(letter => letter.GlyphRectangle.Right);
+        internal double Bottom => Letters.Min(letter => letter.GlyphRectangle.Bottom);
+        internal double Top => Letters.Max(letter => letter.GlyphRectangle.Top);
+        internal double CentreX => (Left + Right) * 0.5;
+        internal double CentreY => (Bottom + Top) * 0.5;
+        internal double Height => Top - Bottom;
+        internal int LetterCount => Letters.Sum(letter => letter.Value.Count(char.IsLetter));
+        internal int AlphanumericCount => Letters.Sum(
+            letter => letter.Value.Count(char.IsLetterOrDigit));
     }
 
     /// <summary>
