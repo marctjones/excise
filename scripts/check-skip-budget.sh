@@ -68,6 +68,7 @@ if [[ -n "$EXISTING_TRX" ]]; then
   cp "$EXISTING_TRX" "$TMP/r.trx" 2>/dev/null || true
 else
   echo "==> running $NAME to enumerate skips"
+  "$ROOT/scripts/assert-fresh.sh" --configuration Debug "$PROJECT"
   dotnet test "$PROJECT" --nologo --logger "trx;LogFileName=$TMP/r.trx" >"$TMP/out.log" 2>&1 || true
 fi
 

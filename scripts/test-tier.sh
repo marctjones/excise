@@ -126,6 +126,17 @@ run_step() {
     say "${B}[$name]${N} $*"
     local start
     start="$(date +%s)"
+    runner_guard_no_build_command "$@" > "$log.freshness" 2>&1
+    local freshness_rc=$?
+    if [ "$freshness_rc" != "0" ]; then
+        local dur=$(( $(date +%s) - start ))
+        say "  ${R}FAIL${N} stale --no-build guard rc=$freshness_rc (${dur}s) -> $log.freshness"
+        cat "$log.freshness" | sed 's/^/    /'
+        RESULTS+=("$name|FAIL|stale --no-build rc=$freshness_rc ${dur}s")
+        OVERALL=1
+        say ""
+        return
+    fi
     "$@" > "$log" 2>&1
     local rc=$?
     local dur=$(( $(date +%s) - start ))
@@ -180,6 +191,7 @@ run_t0() {
     run_step "testdata-sync" scripts/check-testdata-sync.sh
     # #663/#665/#668: the skip-budget --update self-test (justification,
     # inner-'#' reasons, and hand-written comment-block preservation).
+    run_step "assert-fresh-selftest" scripts/test-assert-fresh.sh
     run_step "skip-budget-selftest" scripts/test-check-skip-budget.sh
     run_step "coverage-floor-selftest" scripts/test-check-coverage-floor.sh
     # #908: public API that nothing calls. The skip budget and test-count gates

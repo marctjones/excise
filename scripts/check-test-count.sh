@@ -90,7 +90,12 @@ TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 PROJ_NAME="$(basename "$CSPROJ" .csproj)"
 
+assert_fresh() {
+    "$ROOT/scripts/assert-fresh.sh" --configuration Debug "$CSPROJ" || exit $?
+}
+
 echo "==> enumerating discovered tests in $PROJ_NAME"
+assert_fresh
 dotnet test "$CSPROJ" -c Debug --no-build --list-tests 2>/dev/null \
     | sed -n 's/^    \(.*\)$/\1/p' \
     | sed 's/[[:space:]]*$//' \
@@ -110,6 +115,7 @@ echo "    $DISCOVERED discovered"
 if [[ -z "$TRX" ]]; then
     TRX="$TMP/run.trx"
     echo "==> running $PROJ_NAME"
+assert_fresh
     dotnet test "$CSPROJ" -c Debug --no-build --logger "trx;LogFileName=$TRX" >/dev/null 2>&1
 fi
 
@@ -161,6 +167,7 @@ while IFS= read -r name; do
     # Match on the method-name portion: a [Theory] case's display name carries
     # `(param: "value")`, which --filter cannot match literally.
     bare="${name%%(*}"
+    assert_fresh
     out="$(dotnet test "$CSPROJ" -c Debug --no-build \
              --filter "FullyQualifiedName~$bare" 2>&1)"
 
