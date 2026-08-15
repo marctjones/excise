@@ -515,6 +515,58 @@ public class TextExtractionTests
         page.Text.Should().Contain("Block2");
     }
 
+    [Fact]
+    public void PageText_InsertsSpaceAcrossPositionedRuns()
+    {
+        var content = "BT /F1 12 Tf 100 700 Td (file) Tj 30 0 Td (if) Tj ET";
+        var pdfData = CreatePdfWithContentStream(content);
+
+        using var doc = PdfDocument.Open(pdfData);
+        var page = doc.GetPage(1);
+
+        page.Text.Should().Contain("file if", "#938: page.Text must infer word spaces from geometry");
+        page.Text.Should().NotContain("fileif");
+    }
+
+    [Fact]
+    public void PageText_InsertsLineBreakAcrossBaselineMove()
+    {
+        var content = "BT /F1 12 Tf 100 700 Td (market-) Tj 0 -20 Td (place) Tj ET";
+        var pdfData = CreatePdfWithContentStream(content);
+
+        using var doc = PdfDocument.Open(pdfData);
+        var page = doc.GetPage(1);
+
+        page.Text.Should().Contain("market-\nplace",
+            "#938: wrapped lines must not silently collapse into one token");
+    }
+
+    [Fact]
+    public void PageText_OrdersTwoColumnsColumnByColumn()
+    {
+        var content =
+            "BT /F1 12 Tf 100 700 Td (LeftOne) Tj ET " +
+            "BT /F1 12 Tf 100 680 Td (LeftTwo) Tj ET " +
+            "BT /F1 12 Tf 100 660 Td (LeftThree) Tj ET " +
+            "BT /F1 12 Tf 330 695 Td (RightOne) Tj ET " +
+            "BT /F1 12 Tf 330 675 Td (RightTwo) Tj ET " +
+            "BT /F1 12 Tf 330 655 Td (RightThree) Tj ET";
+        var pdfData = CreatePdfWithContentStream(content);
+
+        using var doc = PdfDocument.Open(pdfData);
+        var text = doc.GetPage(1).Text;
+
+        text.IndexOf("LeftOne", StringComparison.Ordinal).Should().BeLessThan(
+            text.IndexOf("LeftTwo", StringComparison.Ordinal),
+            "#938: same-column continuation should stay together");
+        text.IndexOf("LeftTwo", StringComparison.Ordinal).Should().BeLessThan(
+            text.IndexOf("RightOne", StringComparison.Ordinal),
+            "#938: page.Text should not interleave columns in raw draw order");
+        text.IndexOf("RightOne", StringComparison.Ordinal).Should().BeLessThan(
+            text.IndexOf("RightTwo", StringComparison.Ordinal),
+            "#938: right column should still read top-to-bottom");
+    }
+
     #endregion
 
     #region Off-page content (#649)

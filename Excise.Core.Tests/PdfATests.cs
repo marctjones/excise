@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using AwesomeAssertions;
 using Excise.Core.Authoring;
+using Excise.Core.Document;
 using Excise.Core.Graphics;
 using Excise.Core.Tests.Fixtures;
 using Xunit;
@@ -108,6 +109,58 @@ public class PdfATests
         {
             File.Delete(path);
         }
+    }
+
+    [Fact]
+    public void PdfA2B_RoundTripThroughCompressedWriter_IsConformant_PerVeraPdf()
+    {
+        var verapdf = FindVeraPdf();
+        Assert.SkipWhen(verapdf is null, "veraPDF not installed (~/verapdf/verapdf or PATH)");
+
+        using var doc = PdfDocument.Open(BuildPdfA(PdfAConformance.PdfA2B));
+        var saved = doc.SaveToBytes();
+        Encoding.Latin1.GetString(saved).Should().Contain("/Type /ObjStm",
+            "PDF/A-2 permits object streams, so this validates the compressed writer path");
+
+        var path = Path.Combine(Path.GetTempPath(), $"pdfa_2b_compressed_{Guid.NewGuid():N}.pdf");
+        File.WriteAllBytes(path, saved);
+        try
+        {
+            var report = RunVeraPdf(verapdf!, path, "2b");
+            report.Should().Contain("isCompliant=\"true\"",
+                "compressed writer output must remain PDF/A-2b conformant. Report:\n" +
+                report.Substring(0, Math.Min(report.Length, 4000)));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    private static string RunVeraPdf(string verapdf, string path, string flavour)
+    {
+        var psi = new ProcessStartInfo(verapdf)
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+        };
+        psi.ArgumentList.Add("--format");
+        psi.ArgumentList.Add("xml");
+        psi.ArgumentList.Add("-f");
+        psi.ArgumentList.Add(flavour);
+        psi.ArgumentList.Add(path);
+
+        using var proc = Process.Start(psi)!;
+        var stdoutTask = proc.StandardOutput.ReadToEndAsync();
+        var stderrTask = proc.StandardError.ReadToEndAsync();
+        if (!proc.WaitForExit(120_000))
+        {
+            try { proc.Kill(entireProcessTree: true); } catch { /* gone */ }
+        }
+        var report = stdoutTask.GetAwaiter().GetResult();
+        _ = stderrTask.GetAwaiter().GetResult();
+        return report;
     }
 
     private static string? FindVeraPdf()

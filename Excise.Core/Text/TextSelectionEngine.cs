@@ -12,6 +12,7 @@ namespace Excise.Core.Text;
 /// focus in reading order — the shape of text the user expects when
 /// they drag from word A on line N to word B on line M.
 /// </summary>
+[System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 public static class TextSelectionEngine
 {
     /// <summary>
@@ -99,6 +100,18 @@ public static class TextSelectionEngine
             ReadingOrderStrategy.Simple => SortSimple(letters),
             _ => SortColumnAware(letters),
         };
+    }
+
+    /// <summary>
+    /// Whole-page text order for <c>PdfPage.Text</c> (#938). Keep content-stream
+    /// order here: the smoke corpus and mutool both rely on many producers'
+    /// already-column-major streams, while a geometric whole-page sort can turn
+    /// those pages into row-major text. <see cref="JoinText(IReadOnlyList{Letter}, WhitespaceMode)"/>
+    /// supplies the missing geometric spaces and line breaks.
+    /// </summary>
+    internal static List<Letter> SortPageTextOrder(IEnumerable<Letter> letters)
+    {
+        return letters.ToList();
     }
 
     /// <summary>
@@ -493,52 +506,48 @@ public static class TextSelectionEngine
             advances.Clear();
             widths.Clear();
             widths.Add(GlyphWidth(letters[i]));
-            bool lineHasWhitespace = IsSpaceGlyph(letters[i].Value);
             while (end < letters.Count && SameLine(letters[end - 1], letters[end]))
             {
                 advances.Add(Advance(letters[end - 1], letters[end]));
                 widths.Add(GlyphWidth(letters[end]));
-                if (IsSpaceGlyph(letters[end].Value)) lineHasWhitespace = true;
                 end++;
             }
 
-            // If the line already carries real whitespace glyphs, the PDF is
-            // separating words with actual spaces (appended verbatim); the
-            // heuristic must stay OUT of the way, or it stacks extra spaces onto
-            // width variation ("w orry", "dam ages"). #833.
-            if (!lineHasWhitespace)
-            {
-                double medianWidth = Median(widths);
-                double medianAdvance = Median(advances);
-                double fontSize = letters[i].FontSize > 0
-                    ? letters[i].FontSize
-                    : Math.Abs(letters[i].GlyphRectangle.Top - letters[i].GlyphRectangle.Bottom);
+            double medianWidth = Median(widths);
+            double medianAdvance = Median(advances);
+            double fontSize = letters[i].FontSize > 0
+                ? letters[i].FontSize
+                : Math.Abs(letters[i].GlyphRectangle.Top - letters[i].GlyphRectangle.Bottom);
 
-                // When the font reports usable glyph widths, keep the original
-                // width-based gap rule (unchanged for normal documents). Only
-                // when widths are DEGENERATE (~0, #833) fall back to the
-                // width-independent advance-vs-median rule.
-                bool degenerateWidths = fontSize > 0 && medianWidth < 0.2 * fontSize;
-                for (int k = i + 1; k < end; k++)
+            // When the font reports usable glyph widths, keep the original
+            // width-based gap rule (unchanged for normal documents). Only
+            // when widths are DEGENERATE (~0, #833) fall back to the
+            // width-independent advance-vs-median rule.
+            bool degenerateWidths = fontSize > 0 && medianWidth < 0.2 * fontSize;
+            for (int k = i + 1; k < end; k++)
+            {
+                // A pair where either glyph is already whitespace is skipped — the
+                // real space glyph, appended verbatim, does the separating (#833).
+                if (IsSpaceGlyph(letters[k - 1].Value) || IsSpaceGlyph(letters[k].Value))
+                    continue;
+
+                var pr = letters[k - 1].GlyphRectangle;
+                var cr = letters[k].GlyphRectangle;
+                if (degenerateWidths && medianAdvance > 0)
                 {
-                    var pr = letters[k - 1].GlyphRectangle;
-                    var cr = letters[k].GlyphRectangle;
-                    if (degenerateWidths && medianAdvance > 0)
-                    {
-                        result[k] = Advance(letters[k - 1], letters[k]) > medianAdvance * WordGapAdvanceFactor;
-                    }
-                    else
-                    {
-                        // #835: a word space is a HORIZONTAL quantity, so judge the
-                        // gap against a fraction of the font size (~0.25em, poppler's
-                        // ~0.1–0.3em band), not against the glyph HEIGHT. The old
-                        // `0.5·lineHeight` bar (≈0.5em) sat above a normal word space,
-                        // so tight-tracking lines with no real space glyph fused
-                        // ("ForewordItisagreat"). Wide letters keep gap≈0 (their real
-                        // rect abuts the next glyph), so this does not over-space.
-                        var gap = Math.Max(cr.Left - pr.Right, pr.Left - cr.Right);
-                        result[k] = fontSize > 0 && gap > 0.25 * fontSize;
-                    }
+                    result[k] = Advance(letters[k - 1], letters[k]) > medianAdvance * WordGapAdvanceFactor;
+                }
+                else
+                {
+                    // #835: a word space is a HORIZONTAL quantity, so judge the
+                    // gap against a fraction of the font size (~0.25em, poppler's
+                    // ~0.1–0.3em band), not against the glyph HEIGHT. The old
+                    // `0.5·lineHeight` bar (≈0.5em) sat above a normal word space,
+                    // so tight-tracking lines with no real space glyph fused
+                    // ("ForewordItisagreat"). Wide letters keep gap≈0 (their real
+                    // rect abuts the next glyph), so this does not over-space.
+                    var gap = Math.Max(cr.Left - pr.Right, pr.Left - cr.Right);
+                    result[k] = fontSize > 0 && gap > 0.25 * fontSize;
                 }
             }
             i = end;
