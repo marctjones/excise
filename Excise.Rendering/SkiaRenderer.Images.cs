@@ -1080,6 +1080,7 @@ internal partial class RenderContext
             var hasEmbeddedAlpha = !hasExternalSoftMask &&
                                    components.Length > colorSpace.Components &&
                                    colorSpace.Components >= 1;
+            var imageColorConverter = GetImageColorConverter(colorSpace);
             for (int y = 0; y < targetHeight; y++)
             {
                 var sourceY = MapTargetToSource(y, targetHeight, decodedHeight);
@@ -1108,9 +1109,18 @@ internal partial class RenderContext
                     }
                     else if (colorSpace.Type == PdfColorSpaceType.Indexed)
                     {
-                        var values = new double[1];
-                        values[0] = idx < components[0].Length ? components[0][idx] : 0;
-                        (rd, gd, bd) = colorSpace.ToRgb(values);
+                        var index = idx < components[0].Length ? components[0][idx] : 0;
+                        if (imageColorConverter != null)
+                        {
+                            var rgb = imageColorConverter.ToRgb(index);
+                            rd = rgb.R / 255.0;
+                            gd = rgb.G / 255.0;
+                            bd = rgb.B / 255.0;
+                        }
+                        else
+                        {
+                            (rd, gd, bd) = colorSpace.ToRgb([index]);
+                        }
                     }
                     else
                     {
@@ -1124,7 +1134,17 @@ internal partial class RenderContext
                             values[c] = colorSpace.DecodeSampleByte(c, NormalizeJpxSampleToByte(sample, image.BitsPerComponent));
                         }
 
-                        (rd, gd, bd) = colorSpace.ToRgb(values);
+                        if (imageColorConverter != null)
+                        {
+                            var rgb = imageColorConverter.ToRgb(values);
+                            rd = rgb.R / 255.0;
+                            gd = rgb.G / 255.0;
+                            bd = rgb.B / 255.0;
+                        }
+                        else
+                        {
+                            (rd, gd, bd) = colorSpace.ToRgb(values);
+                        }
                     }
 
                     var alpha = 255;
@@ -2172,6 +2192,9 @@ internal partial class RenderContext
             // invariants; the arithmetic is otherwise identical.
             var decodeArray = stream.GetOptional("Decode") as Excise.Core.Primitives.PdfArray;
             var maxSample = Math.Pow(2, bitsPerComponent) - 1;
+            var imageColorConverter = decodeArray == null && pdfColorSpace != null
+                ? GetImageColorConverter(pdfColorSpace)
+                : null;
             // Raw (pre-colour-space) samples for the colour-key test above.
             var rawSamples = colorKeyMask != null ? new int[componentsPerPixel] : null;
 
@@ -2201,10 +2224,20 @@ internal partial class RenderContext
                             if (rawSamples != null && IsColorKeyMasked(rawSamples, colorKeyMask!))
                                 a = 0;
 
-                            var (rd, gd, bd) = pdfColorSpace.ToRgb(pixelValues);
-                            r = (byte)Math.Clamp(rd * 255, 0, 255);
-                            g = (byte)Math.Clamp(gd * 255, 0, 255);
-                            b = (byte)Math.Clamp(bd * 255, 0, 255);
+                            if (imageColorConverter != null)
+                            {
+                                var rgb = imageColorConverter.ToRgb(pixelValues);
+                                r = rgb.R;
+                                g = rgb.G;
+                                b = rgb.B;
+                            }
+                            else
+                            {
+                                var (rd, gd, bd) = pdfColorSpace.ToRgb(pixelValues);
+                                r = (byte)Math.Clamp(rd * 255, 0, 255);
+                                g = (byte)Math.Clamp(gd * 255, 0, 255);
+                                b = (byte)Math.Clamp(bd * 255, 0, 255);
+                            }
                         }
                         else if (bitsPerComponent != 8)
                         {
@@ -2232,10 +2265,20 @@ internal partial class RenderContext
                                 if (rawSamples != null && IsColorKeyMasked(rawSamples, colorKeyMask!))
                                     a = 0;
 
-                                var (rd, gd, bd) = pdfColorSpace.ToRgb(pixelValues);
-                                r = (byte)Math.Clamp(rd * 255, 0, 255);
-                                g = (byte)Math.Clamp(gd * 255, 0, 255);
-                                b = (byte)Math.Clamp(bd * 255, 0, 255);
+                                if (imageColorConverter != null)
+                                {
+                                    var rgb = imageColorConverter.ToRgb(pixelValues);
+                                    r = rgb.R;
+                                    g = rgb.G;
+                                    b = rgb.B;
+                                }
+                                else
+                                {
+                                    var (rd, gd, bd) = pdfColorSpace.ToRgb(pixelValues);
+                                    r = (byte)Math.Clamp(rd * 255, 0, 255);
+                                    g = (byte)Math.Clamp(gd * 255, 0, 255);
+                                    b = (byte)Math.Clamp(bd * 255, 0, 255);
+                                }
                             }
                         }
                     }
@@ -2262,10 +2305,20 @@ internal partial class RenderContext
                         else if (pdfColorSpace != null)
                         {
                             var sample = DecodeOneBitImageSample(stream, bit);
-                            var (rd, gd, bd) = pdfColorSpace.ToRgb(new[] { sample });
-                            r = (byte)Math.Clamp(rd * 255, 0, 255);
-                            g = (byte)Math.Clamp(gd * 255, 0, 255);
-                            b = (byte)Math.Clamp(bd * 255, 0, 255);
+                            if (imageColorConverter != null)
+                            {
+                                var rgb = imageColorConverter.ToRgb([sample]);
+                                r = rgb.R;
+                                g = rgb.G;
+                                b = rgb.B;
+                            }
+                            else
+                            {
+                                var (rd, gd, bd) = pdfColorSpace.ToRgb([sample]);
+                                r = (byte)Math.Clamp(rd * 255, 0, 255);
+                                g = (byte)Math.Clamp(gd * 255, 0, 255);
+                                b = (byte)Math.Clamp(bd * 255, 0, 255);
+                            }
 
                             if (rawSamples != null)
                             {
@@ -2426,6 +2479,8 @@ internal partial class RenderContext
     private const int CmykLatticeN = 17;
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<PdfColorSpace, float[]>
         CmykLattices = new();
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<PdfColorSpace, ImageColorConverterBox>
+        ImageColorConverters = new();
 
     /// <summary>
     /// The colorspace's ToRgb sampled at 17^4 CMYK nodes. Built once per
@@ -2485,6 +2540,231 @@ internal partial class RenderContext
         return ((byte)Math.Clamp(r * 255, 0, 255),
                 (byte)Math.Clamp(g * 255, 0, 255),
                 (byte)Math.Clamp(b * 255, 0, 255));
+    }
+
+    internal static ImageColorConverter? GetImageColorConverterForTests(PdfColorSpace colorSpace)
+        => GetImageColorConverter(colorSpace);
+
+    private static ImageColorConverter? GetImageColorConverter(PdfColorSpace colorSpace)
+        => ImageColorConverters.GetValue(
+            colorSpace,
+            static cs => new ImageColorConverterBox(ImageColorConverter.Create(cs))).Converter;
+
+    internal sealed class ImageColorConverter
+    {
+        private const int LatticeN = 17;
+
+        private readonly PdfColorSpace _colorSpace;
+        private readonly byte[]? _byteTable;
+        private readonly float[]? _lattice;
+        private readonly int _components;
+
+        private ImageColorConverter(
+            PdfColorSpace colorSpace,
+            string strategy,
+            int components,
+            byte[]? byteTable,
+            float[]? lattice)
+        {
+            _colorSpace = colorSpace;
+            Strategy = strategy;
+            _components = components;
+            _byteTable = byteTable;
+            _lattice = lattice;
+        }
+
+        internal string Strategy { get; }
+
+        internal static ImageColorConverter? Create(PdfColorSpace colorSpace)
+        {
+            if (colorSpace.Type == PdfColorSpaceType.Lab)
+                return null;
+
+            if (colorSpace.Type == PdfColorSpaceType.Indexed)
+            {
+                return new ImageColorConverter(
+                    colorSpace,
+                    "IndexedExactByteTable",
+                    1,
+                    BuildIndexedByteTable(colorSpace),
+                    null);
+            }
+
+            return colorSpace.Components switch
+            {
+                1 => new ImageColorConverter(
+                    colorSpace,
+                    "OneComponentExactByteTable",
+                    1,
+                    BuildOneComponentByteTable(colorSpace),
+                    null),
+                3 => new ImageColorConverter(
+                    colorSpace,
+                    "Continuous3DLattice",
+                    3,
+                    null,
+                    BuildContinuousLattice(colorSpace, 3)),
+                4 => new ImageColorConverter(
+                    colorSpace,
+                    "Continuous4DLattice",
+                    4,
+                    null,
+                    BuildContinuousLattice(colorSpace, 4)),
+                _ => null
+            };
+        }
+
+        internal (byte R, byte G, byte B) ToRgb(double[] values)
+        {
+            if (_byteTable != null)
+            {
+                var sample = _colorSpace.Type == PdfColorSpaceType.Indexed
+                    ? (int)Math.Round(values.Length > 0 ? values[0] : 0)
+                    : UnitToByte(values.Length > 0 ? values[0] : 0);
+                return LookupByteTable(_byteTable, sample);
+            }
+
+            if (_lattice != null)
+                return LatticeToRgb(_lattice, _components, values);
+
+            var (r, g, b) = _colorSpace.ToRgb(values);
+            return ToByteRgb(r, g, b);
+        }
+
+        internal (byte R, byte G, byte B) ToRgb(int sample)
+        {
+            if (_byteTable != null)
+                return LookupByteTable(_byteTable, sample);
+
+            return ToRgb([sample / 255.0]);
+        }
+
+        private static byte[] BuildIndexedByteTable(PdfColorSpace colorSpace)
+        {
+            var table = new byte[256 * 3];
+            var dst = 0;
+            for (var i = 0; i < 256; i++)
+            {
+                var (r, g, b) = colorSpace.LookupIndexed(i);
+                var rgb = ToByteRgb(r, g, b);
+                table[dst++] = rgb.R;
+                table[dst++] = rgb.G;
+                table[dst++] = rgb.B;
+            }
+
+            return table;
+        }
+
+        private static byte[] BuildOneComponentByteTable(PdfColorSpace colorSpace)
+        {
+            var table = new byte[256 * 3];
+            var values = new double[1];
+            var dst = 0;
+            for (var i = 0; i < 256; i++)
+            {
+                values[0] = colorSpace.DecodeSampleByte(0, (byte)i);
+                var (r, g, b) = colorSpace.ToRgb(values);
+                var rgb = ToByteRgb(r, g, b);
+                table[dst++] = rgb.R;
+                table[dst++] = rgb.G;
+                table[dst++] = rgb.B;
+            }
+
+            return table;
+        }
+
+        private static float[] BuildContinuousLattice(PdfColorSpace colorSpace, int components)
+        {
+            var count = 1;
+            for (var i = 0; i < components; i++)
+                count *= LatticeN;
+
+            var lattice = new float[count * 3];
+            var values = new double[components];
+            var dst = 0;
+            for (var i = 0; i < count; i++)
+            {
+                var rem = i;
+                for (var c = components - 1; c >= 0; c--)
+                {
+                    values[c] = (rem % LatticeN) / (double)(LatticeN - 1);
+                    rem /= LatticeN;
+                }
+
+                var (r, g, b) = colorSpace.ToRgb(values);
+                lattice[dst++] = (float)r;
+                lattice[dst++] = (float)g;
+                lattice[dst++] = (float)b;
+            }
+
+            return lattice;
+        }
+
+        private static (byte R, byte G, byte B) LatticeToRgb(float[] lattice, int components, double[] values)
+        {
+            Span<int> index = stackalloc int[4];
+            Span<double> t = stackalloc double[4];
+            for (var c = 0; c < components; c++)
+            {
+                var value = c < values.Length ? Math.Clamp(values[c], 0, 1) : 0;
+                var f = value * (LatticeN - 1);
+                var i = (int)f;
+                var frac = f - i;
+                if (i >= LatticeN - 1)
+                {
+                    i = LatticeN - 2;
+                    frac = 1;
+                }
+
+                index[c] = i;
+                t[c] = frac;
+            }
+
+            double r = 0, g = 0, b = 0;
+            var corners = 1 << components;
+            for (var mask = 0; mask < corners; mask++)
+            {
+                var weight = 1.0;
+                var offset = 0;
+                for (var c = 0; c < components; c++)
+                {
+                    var high = (mask & (1 << c)) != 0;
+                    weight *= high ? t[c] : 1 - t[c];
+                    offset = (offset * LatticeN) + index[c] + (high ? 1 : 0);
+                }
+
+                if (weight == 0)
+                    continue;
+
+                offset *= 3;
+                r += weight * lattice[offset];
+                g += weight * lattice[offset + 1];
+                b += weight * lattice[offset + 2];
+            }
+
+            return ToByteRgb(r, g, b);
+        }
+
+        private static (byte R, byte G, byte B) LookupByteTable(byte[] table, int sample)
+        {
+            var offset = Math.Clamp(sample, 0, 255) * 3;
+            return (table[offset], table[offset + 1], table[offset + 2]);
+        }
+
+        private static byte UnitToByte(double value)
+            => (byte)Math.Clamp((int)Math.Round(value * 255), 0, 255);
+
+        private static (byte R, byte G, byte B) ToByteRgb(double r, double g, double b)
+            => ((byte)Math.Clamp(r * 255, 0, 255),
+                (byte)Math.Clamp(g * 255, 0, 255),
+                (byte)Math.Clamp(b * 255, 0, 255));
+    }
+
+    private sealed class ImageColorConverterBox
+    {
+        internal ImageColorConverterBox(ImageColorConverter? converter) => Converter = converter;
+
+        internal ImageColorConverter? Converter { get; }
     }
 
     // Writable view over an SKBitmap's contiguous pixel store, so a decode can
