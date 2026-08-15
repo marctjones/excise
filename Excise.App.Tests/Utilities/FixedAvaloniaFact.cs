@@ -228,6 +228,16 @@ internal sealed class FixedAvaloniaTestRunner
                 // dispatcher's live-window set bounded.
                 HeadlessWindowTracker.CloseAll();
                 Dispatcher.UIThread.RunJobs(null);
+                // #861: each GUI test may allocate hundreds of MB of native
+                // Skia/Avalonia bitmap memory. The windows are closed above,
+                // but without a collection boundary the App testhost retains
+                // enough dead native wrappers to peak at multiple GiB across a
+                // single serial class. Collect after the dispatcher has run
+                // close/unload jobs so finalizers can release those native
+                // buffers before the next UI test starts.
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
                 return summary;
             }, ctxt.CancellationTokenSource.Token);
         }
