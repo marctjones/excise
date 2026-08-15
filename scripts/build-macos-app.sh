@@ -90,6 +90,15 @@ echo "▶ Assembling $BUNDLE"
 mkdir -p "$BUNDLE/Contents/MacOS" "$BUNDLE/Contents/Resources"
 cp -R "$PUBLISH_DIR/." "$BUNDLE/Contents/MacOS/"
 chmod +x "$BUNDLE/Contents/MacOS/Excise.App" || true
+if [ "$AOT" = "1" ]; then
+    dll_count="$(find "$BUNDLE/Contents/MacOS" -maxdepth 1 -name '*.dll' -print | wc -l | tr -d ' ')"
+    echo "▶ Managed dll sidecars in AOT bundle: $dll_count (expect 0)"
+    if [ "$dll_count" != "0" ]; then
+        find "$BUNDLE/Contents/MacOS" -maxdepth 1 -name '*.dll' -print >&2
+        echo "Native AOT package contains managed .dll sidecars" >&2
+        exit 1
+    fi
+fi
 
 # ── Icon (best-effort): SVG/PNG -> 1024 PNG -> .iconset/.icns ───────────────
 # Render the master PNG with rsvg-convert (librsvg) if present — it's the most

@@ -244,11 +244,15 @@ public class DocumentationClaimTests
         readme.Should().Contain("Native AOT release lane");
         readme.Should().Contain("scripts/run-aot-smoke.sh");
         checklist.Should().Contain("--only=aot");
+        checklist.Should().Contain("--visual --package --packaged-gui --aot");
         checklist.Should().Contain("aot-smoke.json");
+        checklist.Should().Contain("managed `.dll` sidecars");
         releaseSmoke.Should().Contain("run-aot-smoke.sh");
         releaseSmoke.Should().Contain("--aot-gui-smoke");
+        releaseSmoke.Should().Contain("--no-aot");
         aotSmoke.Should().Contain("PublishAot=true");
         aotSmoke.Should().Contain("aot-warnings.txt");
+        aotSmoke.Should().Contain("managed dll sidecars");
         macosBundle.Should().Contain("--aot");
         macosBundle.Should().Contain("--symbols-output");
         aotInvestigation.Should().Contain("v2.26.0 - Native AOT Release Lane");

@@ -17,7 +17,7 @@ Use this checklist before tagging any `v*` release.
   (what CI blocks a PR on) are lighter and run far more often; see
   `CLAUDE.md`'s "Test Tiers" section for the full table and the blast-radius
   rule for picking one. Everything below this line is what T2/T3 actually run.
-- Run `scripts/release-smoke.sh --visual --package --packaged-gui --version <version>` before tagging a release candidate.
+- Run `scripts/release-smoke.sh --visual --package --packaged-gui --aot --version <version>` before tagging a release candidate.
 - **Run it on an otherwise idle machine.** `Excise.App.Tests` is serial by design
   (SkiaSharp's process-wide native font manager, #363) and its 144-page display
   sweep is therefore load-sensitive. Concurrent work — or a bloated `logs/` +
@@ -144,9 +144,10 @@ Use this checklist before tagging any `v*` release.
   `scripts/release-smoke.sh --quick --only=aot`. This uses
   `scripts/run-aot-smoke.sh` to publish/package the GUI with
   `-p:PublishAot=true`, capture IL/AOT warning output, split `.dSYM`/`.pdb`
-  symbols from the user-facing macOS app bundle, and write `aot-smoke.json` plus
-  `aot-smoke.md`. Use `scripts/run-aot-smoke.sh --gui-smoke` on an interactive
-  macOS runner for packaged AOT launch/open/render evidence.
+  symbols from the user-facing macOS app bundle, assert that the AOT payload has
+  `0` managed `.dll` sidecars, and write `aot-smoke.json` plus `aot-smoke.md`.
+  Use `scripts/run-aot-smoke.sh --gui-smoke` on an interactive macOS runner for
+  packaged AOT launch/open/render evidence.
 - **AOT support matrix (#595, decided 2026-07-20)** — release notes and docs
   must not claim AOT targets beyond this table; update the table (and file the
   probe evidence) before promoting any RID:
@@ -155,10 +156,10 @@ Use this checklist before tagging any `v*` release.
   |-----|--------|--------|
   | `osx-arm64` | **Shipped** | Validated by the per-PR Native AOT CI lane and `run-aot-smoke.sh` evidence. |
   | `win-x64` | Deferred (#703) | Not yet probed; needs a Windows-runner publish + native-asset load check. |
-  | `linux-x64` | Deferred (#704) | Not yet probed; needs a Linux-runner publish + native-asset load check. |
+  | `linux-x64` | **Shipped** | Validated by the release workflow's Native AOT `.deb` build plus CLI version/info/text/render smoke and `0` managed `.dll` sidecars check. |
   | `osx-x64` | Deferred (#705) | Not yet probed; needs an Intel-mac (or Rosetta-verified) publish + smoke. |
 - Run packaged-app GUI evidence when validating desktop packages:
-  `scripts/release-smoke.sh --quick --package --packaged-gui --version <version>`.
+  `scripts/release-smoke.sh --quick --package --packaged-gui --aot --version <version>`.
   This writes JSON/markdown evidence for #558/#571 and responsiveness timing
   evidence for #577/#581/#582 without taking keyboard or mouse focus. The
   release wrapper uses the packaged executable directly so app-internal timing
@@ -184,8 +185,9 @@ not tag, push, create a GitHub Release, or upload artifacts. Its build gate
 restores packages so it is reliable after configuration-changing package
 builds. Its build and test gates use the same Debug configuration as CI because
 Release excludes the developer scripting surface by default; `--package` is the
-Release artifact check. Use `--quick` for a short documentation/build/redaction
-check, and use `--visual --package --packaged-gui` for the full local
+Release artifact check and implies Native AOT unless `--no-aot` is passed for a
+package-only investigation. Use `--quick` for a short documentation/build/redaction
+check, and use `--visual --package --packaged-gui --aot` for the full local
 release-candidate pass. The packaged-GUI smoke differs from Avalonia.Headless
 tests: headless tests prove routed events and view-model behavior in process,
 while packaged-GUI smoke proves the built `.app` launches with a real PDF and

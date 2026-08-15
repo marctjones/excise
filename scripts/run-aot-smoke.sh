@@ -136,6 +136,8 @@ gui_rc=0
 package_path=""
 binary_path=""
 publish_kind="raw-publish"
+managed_dll_count=0
+managed_dll_list=""
 
 : > "$BUILD_LOG"
 : > "$WARNINGS_TXT"
@@ -174,6 +176,24 @@ warning_count="$(wc -l < "$WARNINGS_TXT" | tr -d ' ')"
 
 if [ "$build_rc" != "0" ] || [ ! -x "$binary_path" ]; then
     overall=1
+fi
+
+aot_payload_dir="$PUBLISH_DIR"
+if [ "$PACKAGE" = "1" ]; then
+    aot_payload_dir="$APP_PATH/Contents/MacOS"
+fi
+if [ "$build_rc" = "0" ] && [ -d "$aot_payload_dir" ]; then
+    managed_dll_list="$(find "$aot_payload_dir" -maxdepth 1 -name '*.dll' -print | sort)"
+    managed_dll_count="$(printf '%s\n' "$managed_dll_list" | sed '/^$/d' | wc -l | tr -d ' ')"
+    {
+        echo "[aot] managed dll sidecars: $managed_dll_count (expect 0 for Native AOT)"
+        if [ "$managed_dll_count" != "0" ]; then
+            printf '%s\n' "$managed_dll_list"
+        fi
+    } >> "$BUILD_LOG"
+    if [ "$managed_dll_count" != "0" ]; then
+        overall=1
+    fi
 fi
 
 if [ "$RUN_GUI_SMOKE" = "1" ]; then
@@ -217,6 +237,7 @@ symbols_kb="$(size_kb "$SYMBOLS_DIR")"
     printf '  "publishKind": "%s",\n' "$(json_escape "$publish_kind")"
     printf '  "buildExitCode": %s,\n' "$build_rc"
     printf '  "warningCount": %s,\n' "$warning_count"
+    printf '  "managedDllSidecars": %s,\n' "$managed_dll_count"
     printf '  "guiSmoke": {"requested": %s, "exitCode": %s, "output": "%s"},\n' \
         "$([ "$RUN_GUI_SMOKE" = "1" ] && printf true || printf false)" \
         "$gui_rc" \
@@ -246,6 +267,7 @@ symbols_kb="$(size_kb "$SYMBOLS_DIR")"
     printf -- '- Publish kind: `%s`\n' "$publish_kind"
     printf -- '- Build exit code: `%s`\n' "$build_rc"
     printf -- '- Warning count: `%s`\n' "$warning_count"
+    printf -- '- Managed dll sidecars: `%s` (expected `0` for Native AOT)\n' "$managed_dll_count"
     printf -- '- Runtime size: `%s KB`\n' "$runtime_kb"
     printf -- '- Symbol size: `%s KB`\n' "$symbols_kb"
     printf -- '- Binary bytes: `%s`\n' "$binary_bytes"

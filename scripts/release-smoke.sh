@@ -20,6 +20,7 @@ PACKAGED_GUI_FOCUS_INPUT=0
 PACKAGED_GUI_MODE="direct-exec"
 RUN_AOT=0
 RUN_AOT_GUI_SMOKE=0
+NO_AOT=0
 NO_BUILD=0
 VERSION=""
 ONLY=""
@@ -50,6 +51,8 @@ Options:
   --package           Build local package artifacts for the current platform.
   --packaged-gui      Run packaged-app GUI smoke evidence after package build.
   --aot               Publish/package the GUI Native AOT release lane.
+                      This is implied by --package unless --no-aot is passed.
+  --no-aot            Opt out of the Native AOT release lane for a package-only investigation.
   --aot-gui-smoke     Also run packaged GUI smoke against the AOT app bundle.
   --packaged-gui-direct-exec
                       Run packaged GUI smoke through the app executable so app-internal timing JSON is reliable.
@@ -81,7 +84,8 @@ while [ "$#" -gt 0 ]; do
         --visual) RUN_VISUAL=1; shift ;;
         --package) RUN_PACKAGE=1; shift ;;
         --packaged-gui) RUN_PACKAGED_GUI=1; shift ;;
-        --aot) RUN_AOT=1; shift ;;
+        --aot) RUN_AOT=1; NO_AOT=0; shift ;;
+        --no-aot) RUN_AOT=0; NO_AOT=1; shift ;;
         --aot-gui-smoke)
             RUN_AOT=1
             RUN_AOT_GUI_SMOKE=1
@@ -121,6 +125,13 @@ while [ "$#" -gt 0 ]; do
             ;;
     esac
 done
+
+if [ "$RUN_PACKAGE" = "1" ] && [ "$NO_AOT" != "1" ]; then
+    RUN_AOT=1
+fi
+if [ "$RUN_AOT" = "1" ] && [ "$RUN_PACKAGED_GUI" = "1" ] && [ "$NO_AOT" != "1" ]; then
+    RUN_AOT_GUI_SMOKE=1
+fi
 
 TS="$(date +%Y%m%d_%H%M%S)"
 LOG_DIR="$ROOT/logs/release-smoke_$TS"
@@ -228,12 +239,16 @@ run_package_gate() {
     fi
 
     local version="${VERSION:-$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || echo 0.0.0-local)}"
+    local -a package_args=("--version" "$version" "--output" "dist")
+    if [ "$RUN_AOT" = "1" ]; then
+        package_args+=("--aot")
+    fi
     case "$(uname -s)" in
         Darwin)
-            run_gate "package" scripts/build-macos-app.sh --version "$version" --output dist
+            run_gate "package" scripts/build-macos-app.sh "${package_args[@]}"
             ;;
         Linux)
-            run_gate "package" scripts/build-deb.sh --version "$version" --output dist
+            run_gate "package" scripts/build-deb.sh "${package_args[@]}"
             ;;
         *)
             say "${Y}[package] SKIP${N} - local package smoke is supported on macOS/Linux here; use release.yml for Windows."
