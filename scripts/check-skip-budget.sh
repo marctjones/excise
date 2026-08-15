@@ -79,15 +79,21 @@ if [[ ! -f "$TMP/r.trx" ]]; then
 fi
 
 # Skipped tests in a trx carry outcome="NotExecuted".
-python3 - "$TMP/r.trx" >"$TMP/actual.txt" <<'PY'
+python3 - "$TMP/r.trx" "$TMP/actual-counts.tsv" >"$TMP/actual.txt" <<'PY'
 import sys, xml.etree.ElementTree as ET
+from collections import Counter
 ns = {"t": "http://microsoft.com/schemas/VisualStudio/TeamTest/2010"}
 root = ET.parse(sys.argv[1]).getroot()
-names = set()
+counts = Counter()
 for r in root.iter():
     if r.tag.endswith("UnitTestResult") and r.get("outcome") == "NotExecuted":
-        names.add(r.get("testName", "").split("(")[0])   # strip Theory args
-for n in sorted(names):
+        name = r.get("testName", "").split("(")[0]   # strip Theory args
+        if name:
+            counts[name] += 1
+with open(sys.argv[2], "w", encoding="utf-8") as f:
+    for n in sorted(counts):
+        f.write(f"{n}\t{counts[n]}\n")
+for n in sorted(counts):
     print(n)
 PY
 
@@ -99,6 +105,24 @@ touch "$ALLOWLIST"
 grep -vE '^\s*(#|$)' "$ALLOWLIST" \
   | sed -e 's/[[:space:]]*#.*$//' -e 's/[[:space:]]*$//' \
   | LC_ALL=C sort -u > "$TMP/expected.txt" || true
+
+# Optional count ratchet (#937): the allowlist stays keyed by the bare method
+# name, but a [Theory] can skip 1 row or 13 rows under that same name. Entries
+# with no marker default to 1 skipped row; multi-row skips must say
+# [skip-count: N] in their justification.
+python3 - "$ALLOWLIST" > "$TMP/expected-counts.tsv" <<'PY'
+import re, sys
+for raw in open(sys.argv[1], encoding="utf-8", errors="replace"):
+    line = raw.strip()
+    if not line or line.startswith("#") or "#" not in line:
+        continue
+    name = line.split("#", 1)[0].rstrip()
+    if not name:
+        continue
+    m = re.search(r"\[skip-count:\s*(\d+)\]", line)
+    if m:
+        print(f"{name}\t{m.group(1)}")
+PY
 
 # comm needs BOTH sides in the same collation. Python sorts by codepoint;
 # `sort` uses locale collation. Mixing them makes comm report the same line
@@ -278,9 +302,22 @@ if [[ "$UPDATE" == "--update" ]]; then
       reason="$( { printf '%s\n' "$OLD" | grep -E "^${name}([[:space:]]|#|\$)" 2>/dev/null || true; } \
                 | head -1 | sed -n 's/[^#]*#[[:space:]]*//p')"
       if [[ -n "$reason" ]]; then
+        count="$(awk -F'\t' -v n="$name" '$1 == n { print $2; exit }' "$TMP/actual-counts.tsv")"
+        count="${count:-1}"
+        # Refresh the count marker while preserving the human-written reason.
+        reason="$(printf '%s\n' "$reason" | sed -E 's/[[:space:]]*\[skip-count:[[:space:]]*[0-9]+]//g')"
+        if [[ "$count" -gt 1 ]]; then
+          reason="$reason [skip-count: $count]"
+        fi
         printf '%s   # %s\n' "$name" "$reason"
       else
-        printf '%s   # TODO: justify or fix\n' "$name"
+        count="$(awk -F'\t' -v n="$name" '$1 == n { print $2; exit }' "$TMP/actual-counts.tsv")"
+        count="${count:-1}"
+        if [[ "$count" -gt 1 ]]; then
+          printf '%s   # TODO: justify or fix [skip-count: %s]\n' "$name" "$count"
+        else
+          printf '%s   # TODO: justify or fix\n' "$name"
+        fi
       fi
     done < "$TMP/actual.txt"
   } > "$ALLOWLIST"
@@ -357,6 +394,31 @@ if [[ -s "$GONE_REAL_FILE" ]]; then
     echo "        Do NOT simply delete them — the test really is skipping, so the"
     echo "        forward check would then fail on the bare name instead."
   fi
+  STATUS=1
+fi
+
+COUNT_MISMATCH_FILE="$TMP/count-mismatch.txt"
+: > "$COUNT_MISMATCH_FILE"
+while IFS=$'\t' read -r name actual_count; do
+  [[ -n "$name" ]] || continue
+  grep -qxF "$name" "$TMP/expected.txt" || continue
+  expected_count="$(awk -F'\t' -v n="$name" '$1 == n { print $2; exit }' "$TMP/expected-counts.tsv")"
+  expected_count="${expected_count:-1}"
+  if [[ "$actual_count" != "$expected_count" ]]; then
+    printf '%s\t%s\t%s\n' "$name" "$expected_count" "$actual_count" >> "$COUNT_MISMATCH_FILE"
+  fi
+done < "$TMP/actual-counts.tsv"
+
+if [[ -s "$COUNT_MISMATCH_FILE" ]]; then
+  echo
+  echo "FAIL: allow-listed skip counts changed."
+  echo "      The allowlist is keyed by bare method name, but [Theory] rows can"
+  echo "      skip independently. A name match alone cannot tell one skipped row"
+  echo "      from all rows skipped (#937)."
+  awk -F'\t' '{ printf "        - %s expected %s skipped row(s), saw %s\n", $1, $2, $3 }' "$COUNT_MISMATCH_FILE"
+  echo
+  echo "      To accept the new count, update the entry's [skip-count: N] marker"
+  echo "      with: scripts/check-skip-budget.sh $PROJECT --update"
   STATUS=1
 fi
 
