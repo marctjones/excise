@@ -58,6 +58,16 @@ public class MouseInputTests : IDisposable
     private static readonly string? PragmaticBook = FindPragmaticBook();
     private const double RenderDpi = 120.0;
 
+    private static MainWindowViewModel CreateViewModel()
+    {
+        // #861: this class repeatedly opens a 455-page local-real-world book.
+        // Thumbnail prewarm is production behavior, but it is not the mouse
+        // input surface under test here; leaving it on starts background
+        // full-book thumbnail work that survives long enough to inflate the
+        // serial class peak by GiB.
+        return new MainWindowViewModel { ThumbnailPrewarmEnabled = false };
+    }
+
     private static string? FindPragmaticBook()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
@@ -81,7 +91,7 @@ public class MouseInputTests : IDisposable
         // focus so keyboard shortcuts work.
         if (!File.Exists(PragmaticBook)) return;
 
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         _windows.Show(window);
         await Task.Delay(200);
@@ -115,7 +125,7 @@ public class MouseInputTests : IDisposable
         // navigate to that page. This is the GUI path for outline navigation.
         if (!File.Exists(PragmaticBook)) return;
 
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         _windows.Show(window);
         await Task.Delay(200);
@@ -176,7 +186,7 @@ public class MouseInputTests : IDisposable
         // single-page having been the default. Continuous mode has since
         // grown its own link hit-testing (#667; ContinuousLinkInteractionTests)
         // — this test's scope stays single-page, forced explicitly here.
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         _windows.Show(window);
         await Task.Delay(200);
@@ -270,7 +280,7 @@ public class MouseInputTests : IDisposable
         // fixtures elsewhere in this file, so the wait here polls the
         // ScrollViewer's own Extent becoming non-zero (with a generous
         // ceiling) rather than a fixed delay/iteration count.
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         _windows.Show(window);
         await Task.Delay(200);
@@ -325,7 +335,7 @@ public class MouseInputTests : IDisposable
         // increase. This is a common pattern in PDF viewers.
         if (!File.Exists(PragmaticBook)) return;
 
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         _windows.Show(window);
         await Task.Delay(200);
@@ -369,7 +379,7 @@ public class MouseInputTests : IDisposable
     private async Task<(MainWindowViewModel vm, MainWindow window, PdfViewerControl viewer)>
         OpenBookAsync()
     {
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         _windows.Show(window);
         await Task.Delay(200);
@@ -522,7 +532,7 @@ public class MouseInputTests : IDisposable
     public async Task FitOnResize_RecomputesZoom()
     {
         Assert.SkipWhen(!File.Exists(PragmaticBook), "Pragmatic book corpus fixture not available locally.");
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         await vm.LoadDocumentAsync(PragmaticBook!);
         await Task.Delay(200);
 
@@ -555,7 +565,7 @@ public class MouseInputTests : IDisposable
         // include a basic version here for the mouse-input matrix.
         if (!File.Exists(PragmaticBook)) return;
 
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         _windows.Show(window);
         await Task.Delay(200);
@@ -617,7 +627,7 @@ public class MouseInputTests : IDisposable
         Directory.CreateDirectory(Path.GetDirectoryName(pdfPath)!);
         TestPdfGenerator.CreatePdfWithTextAt(pdfPath, "MOUSESECRET", 100, 400, 18);
 
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         _windows.Show(window);
         await Task.Delay(200);
@@ -673,7 +683,7 @@ public class MouseInputTests : IDisposable
         // as it moves, redrawing the selection incrementally.
         if (!File.Exists(PragmaticBook)) return;
 
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         _windows.Show(window);
         await Task.Delay(200);
@@ -746,7 +756,7 @@ public class MouseInputTests : IDisposable
         // select only that letter's text (e.g., "H" not "Heartfelt").
         if (!File.Exists(PragmaticBook)) return;
 
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         _windows.Show(window);
         await Task.Delay(200);
@@ -798,7 +808,7 @@ public class MouseInputTests : IDisposable
         // single-letter selection. This test documents current behavior.
         if (!File.Exists(PragmaticBook)) return;
 
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         _windows.Show(window);
         await Task.Delay(200);
@@ -872,7 +882,7 @@ public class MouseInputTests : IDisposable
         // Bounds is not the right thing to poll on). Continuous-mode link
         // hover is covered by ContinuousLinkInteractionTests (#667); this
         // test's scope stays single-page, forced here.
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         _windows.Show(window);
         await Task.Delay(200);
@@ -958,7 +968,7 @@ public class MouseInputTests : IDisposable
         // drag to select text → verify clipboard history has the selected text.
         if (!File.Exists(PragmaticBook)) return;
 
-        var vm = new MainWindowViewModel();
+        var vm = CreateViewModel();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         _windows.Show(window);
         await Task.Delay(200);

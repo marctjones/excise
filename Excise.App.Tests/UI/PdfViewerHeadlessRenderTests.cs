@@ -192,7 +192,8 @@ public class PdfViewerHeadlessRenderTests
             pageOffset,
             pageLimit);
 
-        var pdfBytesCache = new Dictionary<string, byte[]>(StringComparer.Ordinal);
+        string? cachedPdfPath = null;
+        byte[]? cachedPdfBytes = null;
         var results = new List<GuiDisplayResult>();
         var failures = new List<string>();
         var suiteSw = Stopwatch.StartNew();
@@ -276,17 +277,21 @@ public class PdfViewerHeadlessRenderTests
                 if (!File.Exists(testCase.AbsolutePath))
                     throw new FileNotFoundException("Fixture PDF not found.", testCase.AbsolutePath);
 
-                if (!pdfBytesCache.TryGetValue(testCase.AbsolutePath, out var pdfBytes))
+                byte[] pdfBytes;
+                if (string.Equals(cachedPdfPath, testCase.AbsolutePath, StringComparison.Ordinal) &&
+                    cachedPdfBytes != null)
+                {
+                    pdfBytes = cachedPdfBytes;
+                    phaseElapsedMs["pdf-bytes-cache-hit"] = 0;
+                }
+                else
                 {
                     pdfBytes = await MeasurePhaseAsync(
                         phaseElapsedMs,
                         "pdf-bytes-read-and-cache",
                         () => File.ReadAllBytesAsync(testCase.AbsolutePath));
-                    pdfBytesCache[testCase.AbsolutePath] = pdfBytes;
-                }
-                else
-                {
-                    phaseElapsedMs["pdf-bytes-cache-hit"] = 0;
+                    cachedPdfPath = testCase.AbsolutePath;
+                    cachedPdfBytes = pdfBytes;
                 }
 
                 using var expectedRaw = MeasurePhase(
@@ -395,6 +400,7 @@ public class PdfViewerHeadlessRenderTests
                 suiteSw.ElapsedMilliseconds,
                 results,
                 current: null);
+            CollectGuiDisplaySweepGarbage();
             if ((i + 1) % 10 == 0 || i + 1 == cases.Count)
                 _output.WriteLine(
                     $"  {i + 1}/{cases.Count} checked, " +
@@ -627,6 +633,17 @@ public class PdfViewerHeadlessRenderTests
             Dpi = dpi,
             MaxPixelCount = 64L * 1024L * 1024L
         });
+    }
+
+    private static void CollectGuiDisplaySweepGarbage()
+    {
+        // #861: this sweep is one long xUnit method that creates several
+        // large native Skia/Avalonia buffers per page. The buffers are disposed
+        // in the loop, but their managed wrappers otherwise wait for the next
+        // process-wide collection and push the App testhost into multi-GiB RSS.
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
     }
 
     private static void AssertLightOpaquePage(SKBitmap bitmap, string description)
