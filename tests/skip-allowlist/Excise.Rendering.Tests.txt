@@ -339,7 +339,7 @@ Excise.Rendering.Tests.ExtGStateFontTests.FontFromExtGState_MatchesAnIndependent
 # with a MAJORITY of independent engines, so they need the oracles and the
 # gitignored corpora. BARE names for the [Theory] entries — the corpus-less CI
 # runner reports one skip per method, not one per [InlineData] case (see #894).
-Excise.Rendering.Tests.Differential.AnnotationSynthesisMajorityTests.WhereTheMajorityDrawsNothing_ExciseDrawsNothing   # #889: subtypes where a 2-of-3 oracle majority draws nothing; needs the corpora and mutool [requires: corpus:verapdf corpus:pdfium tool:mutool]
+Excise.Rendering.Tests.Differential.AnnotationSynthesisMajorityTests.WhereTheMajorityDrawsNothing_ExciseDrawsNothing   # #889: subtypes where a 2-of-3 oracle majority draws nothing; needs the corpora and mutool [requires: corpus:verapdf-corpus corpus:pdfium tool:mutool]
 Excise.Rendering.Tests.Differential.AnnotationSynthesisMajorityTests.WhereTheMajorityDraws_ExciseDraws   # #889: the other direction — majority draws, excise must not be the outlier [requires: corpus:pdfium corpus:isartor tool:mutool]
 Excise.Rendering.Tests.Differential.AnnotationSynthesisMajorityTests.AnEmptyTextField_StillDrawsNothing   # #889 control: an unfilled field must stay invisible; derives its fixture from the gitignored pdfium corpus [requires: corpus:pdfium]
 Excise.Rendering.Tests.Differential.CheckboxAppearanceStateTests.BlankW9_AddsNoDarkInkInsideItsCheckboxes   # the blank-W9 witness for /AS naming a state /AP /N does not define; oracle-anchored so it needs mutool and the smoke corpus [requires: corpus:smoke tool:mutool]
