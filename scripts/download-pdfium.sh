@@ -46,22 +46,14 @@ esac
 if [ -f "$VENDOR/lib/$LIB" ]; then
     say "✓ already present: $VENDOR/lib/$LIB ($(du -sh "$VENDOR/lib/$LIB" | cut -f1))"
 else
-    say "▶ resolving latest bblanchon/pdfium-binaries release"
-    URL="$(curl -fsSL https://api.github.com/repos/bblanchon/pdfium-binaries/releases/latest 2>/dev/null \
-        | python3 -c "
-import json,sys
-try: d=json.load(sys.stdin)
-except Exception: sys.exit(1)
-for a in d.get('assets',[]):
-    if a['name']=='$ASSET': print(a['browser_download_url']); break
-" 2>/dev/null)"
+    # Deliberately NOT the releases/latest API: unauthenticated api.github.com
+    # calls get rate-limited from shared CI runner IPs, the 403 body parses as
+    # valid JSON with no assets, and the old script misreported that as
+    # "could not find asset" (#956). The latest/download redirect is served by
+    # github.com directly — no API, no token, no rate limit.
+    URL="https://github.com/bblanchon/pdfium-binaries/releases/latest/download/$ASSET"
 
-    if [ -z "$URL" ]; then
-        say "✗ could not find asset $ASSET in the latest release"
-        exit 1
-    fi
-
-    say "▶ fetching $ASSET"
+    say "▶ fetching $ASSET (latest release redirect)"
     TMP="$(mktemp -d)"
     trap 'rm -rf "$TMP"' EXIT
     if ! curl -fsSL "$URL" -o "$TMP/pdfium.tgz"; then
