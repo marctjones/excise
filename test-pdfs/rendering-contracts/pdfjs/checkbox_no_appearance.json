@@ -3,26 +3,26 @@
   "Source": "pdf.js corpus",
   "Owner": "rendering:quality",
   "RootCause": "ANNOTATION_APPEARANCE_SYNTHESIS",
-  "ImprovementPriority": "P2",
+  "ImprovementPriority": "NONE",
   "Confidence": "HIGH",
   "Issue": 972,
   "ReviewStatus": "REVIEWED",
-  "Notes": "Re-classified from the auto-inferred baseline after #932 gave the corpus gate majority ink scoring. mutool and pdftocairo both draw the check mark for this /AP-less checkbox; excise draws two empty boxes. The old contract claimed PIXEL_EXACT / REFS_AGREE, which was never true here — the most-inked ink rule simply could not see it.",
+  "Notes": "FIXED by #972 — this contract had gone stale in the #977 sense: it still pinned MISSING_CONTENT and described behaviour ('excise draws two empty boxes') that the fix removed, while tests/corpus-expectations.tsv had already moved the page to PASS. The contract/manifest agreement check caught the divergence; the pdf.js corpus scan re-run under #993 (page 1, --extra-oracles all, 2026-08-16) confirms which side is right: status PASS, comparableOracles 3, agreeingOracles 3, missingInkTiles 1 of 12 referenceInkedTiles, diffFraction 0.005 against mutool, pdftocairo and pdfium alike. History kept below rather than deleted, since the old note is the record of why the row existed at all: 'mutool and pdftocairo both draw the check mark for this /AP-less checkbox; excise draws two empty boxes. The old contract claimed PIXEL_EXACT / REFS_AGREE, which was never true here — the most-inked ink rule simply could not see it.'",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "MISSING_CONTENT",
-      "ReleaseStatus": "FAIL",
-      "QualityStatus": "FAIL",
-      "PixelAgreement": "MATCHES_NONE",
+      "ExpectedRawStatus": "PASS",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "GOOD_ENOUGH",
+      "PixelAgreement": "MATCHES_SOME",
       "ReferenceSituation": "REFS_AGREE",
       "RootCause": "ANNOTATION_APPEARANCE_SYNTHESIS",
       "Target": {
         "Mode": "REFERENCE_CONSENSUS",
         "Reason": "mutool and pdftocairo agree on drawing the check; this is not the ISO 32000-1 12.5.5 carve-out where the oracles diverge."
       },
-      "ImprovementPriority": "P2",
+      "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "excise synthesizes an unchecked box for a checkbox whose value is on — tracked as #972."
+      "QualityReason": "excise draws the check mark the oracles draw (#972). Not PIXEL_EXACT and deliberately not aiming to be: excise strokes its own polyline rather than a ZapfDingbats glyph, and the two oracles' own check marks already differ from each other by 5 px vertically. One of twelve reference-inked tiles is still unmatched, which is below the majority threshold and is the shape difference, not a missing mark. The per-condition evidence is row widget.btn.checkbox.as-on in tests/annotation-synthesis-policy.json (#993)."
     }
   }
 }
