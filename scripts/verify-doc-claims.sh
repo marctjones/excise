@@ -86,4 +86,12 @@ require_code_text Excise.Rendering.Tests/Differential/EncryptionInteropGateTests
 require_file_text docs/RELEASE_CHECKLIST.md "EXCISE_REQUIRE_PARITY_TOOLS"
 require_code_text scripts/check-copy-whitespace-parity.sh "EXCISE_REQUIRE_PARITY_TOOLS"
 
+# #941: the release checklist now names the lazy-startup packaging gate, which
+# the audit found was referenced by no tier, no workflow and no document — it
+# existed and never ran. Pin both ends so it cannot drift back out of the
+# checklist, and so the script keeps asserting what the checklist says it does.
+require_file_text docs/RELEASE_CHECKLIST.md "scripts/verify-lazy-startup.sh"
+require_code_text scripts/verify-lazy-startup.sh "Microsoft.CodeAnalysis"
+require_code_text scripts/verify-lazy-startup.sh "traineddata"
+
 echo "doc-claim check passed"

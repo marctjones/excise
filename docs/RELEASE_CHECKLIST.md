@@ -49,6 +49,15 @@ Use this checklist before tagging any `v*` release.
   The 3 federal docs (public-domain .gov, fetchable) are required; the 2
   redistribution-restricted local books (producingoss, foss-primer) are measured
   only when a maintainer box already has them.
+- **Run the lazy-startup packaging gate**: `scripts/verify-lazy-startup.sh`
+  (publishes a default Release GUI, so give it a few minutes). Verifies #341:
+  Roslyn scripting assemblies and `tessdata`/`*.traineddata` stay OUT of the
+  default Release output, and the GUI hidden-text toggle does not load
+  `Excise.Ocr` before the user asks for raster OCR.
+  Listed here because of the #941 gate audit: this script was referenced by NO
+  tier, NO CI workflow, and NO document — it existed, looked authoritative, and
+  never ran. A gate nobody invokes is the purest form of a gate that guards
+  nothing. Release is the right tier for it (it publishes), so it lives here.
 - **Read the `full` coverage profile — an OBSERVATION, not a gate.**
   Collect and compare:
   ```
