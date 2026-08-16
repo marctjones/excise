@@ -566,9 +566,14 @@ public static class TextSelectionEngine
         // uncovered X-intervals wider than the gutter threshold. Columns are
         // horizontally disjoint, so their separating gutter shows up as a gap
         // where the running right edge never reaches the next glyph's left.
-        var sorted = letters.Where(l => !spanning.Contains(l))
-            .OrderBy(l => l.GlyphRectangle.Left).ToList();
+        // Filter and sort in place (#966); same reasoning as above for why an
+        // unstable sort is safe when the only use of order is a left-to-right
+        // running-maximum sweep.
+        var sorted = new List<Letter>(letters.Count);
+        foreach (var l in letters)
+            if (!spanning.Contains(l)) sorted.Add(l);
         if (sorted.Count == 0) return empty;
+        sorted.Sort(static (a, b) => a.GlyphRectangle.Left.CompareTo(b.GlyphRectangle.Left));
         double runningRight = double.NegativeInfinity;
         var boundaries = new List<double>();
         foreach (var l in sorted)
@@ -633,6 +638,7 @@ public static class TextSelectionEngine
         var result = new HashSet<Letter>();
         double pageW = maxX - minX;
         if (pageW <= 0 || double.IsInfinity(gutterThreshold)) return result;
+        var sortBuffer = new List<Letter>();
 
         foreach (var line in lines)
         {
@@ -644,8 +650,18 @@ public static class TextSelectionEngine
             }
             if (lMax - lMin < 0.6 * pageW) continue; // not full-width
 
+            // Sort a REUSED buffer instead of allocating an OrderBy pipeline per
+            // line (#966). List.Sort is unstable where OrderBy is stable, which
+            // is safe here: for two glyphs with equal Left, the second's gap is
+            // Left - runningRight where runningRight already covers the first,
+            // so it is non-positive and can never raise maxGap. Order among
+            // equal Lefts therefore cannot change the result.
+            sortBuffer.Clear();
+            sortBuffer.AddRange(line);
+            sortBuffer.Sort(static (a, b) => a.GlyphRectangle.Left.CompareTo(b.GlyphRectangle.Left));
+
             double maxGap = 0, rr = double.NegativeInfinity;
-            foreach (var l in line.OrderBy(l => l.GlyphRectangle.Left))
+            foreach (var l in sortBuffer)
             {
                 if (!double.IsNegativeInfinity(rr))
                     maxGap = Math.Max(maxGap, l.GlyphRectangle.Left - rr);
@@ -680,9 +696,30 @@ public static class TextSelectionEngine
     /// </summary>
     internal static List<List<Letter>> GroupIntoLines(IEnumerable<Letter> letters)
     {
-        var ordered = letters
-            .OrderByDescending(l => l.GlyphRectangle.Top)  // PDF Y-up: higher Top = earlier
-            .ToList();
+        // Stable descending sort by Top, done by hand (#966). OrderByDescending
+        // allocates a source buffer, a key array, an index map and then a List;
+        // this allocates the array and the index map and sorts once.
+        //
+        // STABILITY IS LOAD-BEARING, so it is preserved explicitly by breaking
+        // ties on the original index. Callers read line[0] as the line's
+        // representative sample (its centre-Y sets the matching tolerance), so
+        // which equal-Top glyph lands first can change how later glyphs group
+        // when two glyphs share a Top but differ in height. An unstable sort
+        // would be a silent, layout-dependent behaviour change; this is not.
+        // Materialise ONCE. The parameter is IEnumerable, and sizing an array
+        // from Count() would enumerate a second time — wrong for a lazy or
+        // single-pass sequence, and needless work for any other.
+        var source = letters as IReadOnlyList<Letter> ?? letters.ToList();
+        var count = source.Count;
+        var order = new int[count];
+        for (var i = 0; i < count; i++) order[i] = i;
+        Array.Sort(order, (a, b) =>
+        {
+            var byTop = source[b].GlyphRectangle.Top.CompareTo(source[a].GlyphRectangle.Top);
+            return byTop != 0 ? byTop : a.CompareTo(b);
+        });
+        var ordered = new List<Letter>(count);
+        for (var i = 0; i < count; i++) ordered.Add(source[order[i]]);
 
         var lines = new List<List<Letter>>();
 
@@ -1307,14 +1344,21 @@ public static class TextSelectionEngine
     internal static double EstimateColumnGap(IReadOnlyList<Letter> letters)
     {
         if (letters.Count == 0) return double.PositiveInfinity;
-        var widths = letters
-            .Select(l => l.GlyphRectangle.Width)
-            .Where(w => w > 0)
-            .OrderBy(w => w)
-            .ToList();
-        if (widths.Count == 0) return double.PositiveInfinity;
-        var median = widths[widths.Count / 2];
-        return median * ColumnGapFactor;
+
+        // One array and one sort, rather than a Select/Where/OrderBy/ToList
+        // chain (#966). Same median, same result — this runs once per page over
+        // every glyph, and on a 126-page booklet the LINQ form was a measurable
+        // share of the classification cost that ends in "do nothing".
+        var widths = new double[letters.Count];
+        var n = 0;
+        foreach (var l in letters)
+        {
+            var w = l.GlyphRectangle.Width;
+            if (w > 0) widths[n++] = w;
+        }
+        if (n == 0) return double.PositiveInfinity;
+        Array.Sort(widths, 0, n);
+        return widths[n / 2] * ColumnGapFactor;
     }
 
     /// <summary>Column-gutter width as a multiple of the median glyph width.</summary>
