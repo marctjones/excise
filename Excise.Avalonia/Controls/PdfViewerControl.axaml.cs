@@ -171,6 +171,26 @@ public partial class PdfViewerControl : UserControl
     }
 
     /// <summary>
+    /// Whether the page's annotations are drawn. Default is <c>true</c>.
+    ///
+    /// Off renders the page content stream alone. Annotations are genuinely
+    /// part of what a conforming viewer shows (§12.5), so this is not a
+    /// fidelity switch — it answers a different question: what is IN the page
+    /// versus what is overlaid on it. For a redaction tool that distinction
+    /// matters, because a FreeText annotation looks like page content and is
+    /// not, and a Widget's value is real text living outside the content
+    /// stream entirely.
+    /// </summary>
+    public static readonly StyledProperty<bool> ShowAnnotationsProperty =
+        AvaloniaProperty.Register<PdfViewerControl, bool>(nameof(ShowAnnotations), defaultValue: true);
+
+    public bool ShowAnnotations
+    {
+        get => GetValue(ShowAnnotationsProperty);
+        set => SetValue(ShowAnnotationsProperty, value);
+    }
+
+    /// <summary>
     /// Does the control have an error?
     /// </summary>
     public static readonly StyledProperty<bool> HasErrorProperty =
@@ -628,6 +648,17 @@ public partial class PdfViewerControl : UserControl
             change.Property == PathCaptureKindProperty)
         {
             CancelVertexPath();
+        }
+
+        // Toggling annotations changes the PIXELS, so cached page bands are
+        // stale. Without this the setting appears to do nothing until something
+        // else happens to invalidate the cache — which is how a toggle ends up
+        // reported as "doesn't work" when the renderer is fine.
+        if (change.Property == ShowAnnotationsProperty)
+        {
+            InvalidateContinuousCache();
+            InvalidateVisual();
+            _ = RenderCurrentPageAsync();
         }
     }
 
@@ -1547,13 +1578,16 @@ public partial class PdfViewerControl : UserControl
             HasError = false;
             ErrorMessage = null;
 
+            // Captured on the UI thread — see the continuous path's note.
+            var showAnnotations = ShowAnnotations;
             var skBitmap = await Task.Run(() =>
             {
                 token.ThrowIfCancellationRequested();
                 var options = new Excise.Rendering.RenderOptions
                 {
                     Dpi = renderDpi,
-                    MaxPixelCount = maxPixels
+                    MaxPixelCount = maxPixels,
+                    RenderAnnotations = showAnnotations
                 };
                 return _renderer.RenderPage(page, options);
             }, token);

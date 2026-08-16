@@ -707,7 +707,10 @@ internal partial class RenderContext
             // in the content stream. Without this pass, pages where the
             // visible text is entirely in annotations (a common veraPDF
             // PDF/UA fixture pattern) come out blank.
-            RenderAnnotations();
+            if (_options.RenderAnnotations)
+            {
+                RenderAnnotations();
+            }
         }
         finally
         {

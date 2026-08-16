@@ -360,6 +360,12 @@
                           Command="{Binding ToggleThumbnailsCommand}"
                           InputGesture="Ctrl+Shift+T"
                           access:CommandAccessibility.CommandId="view.toggleThumbnails"/>
+                <MenuItem x:Name="ViewAnnotationsMenuItem"
+                          Header="Show _Annotations"
+                          ToggleType="CheckBox"
+                          IsChecked="{Binding AreAnnotationsVisible, Mode=OneWay}"
+                          Command="{Binding ToggleAnnotationsCommand}"
+                          access:CommandAccessibility.CommandId="view.toggleAnnotations"/>
                 <MenuItem x:Name="ViewClipboardMenuItem"
                           Header="Show _Clipboard History"
                           ToggleType="CheckBox"
@@ -1166,6 +1172,7 @@
                     <controls:PdfViewerControl x:Name="PdfViewerControl"
                                                IsVisible="{Binding IsDocumentLoaded}"
                                                Document="{Binding PdfCoreDocument}"
+                                               ShowAnnotations="{Binding AreAnnotationsVisible}"
                                                CurrentPage="{Binding CurrentPage}"
                                                ViewMode="{Binding ViewMode, Mode=TwoWay}"
                                                ReadingOrderStrategy="{Binding ReadingOrderStrategy, Mode=TwoWay}"

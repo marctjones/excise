@@ -111,6 +111,7 @@ namespace Excise.Avalonia.Controls
         public static readonly Avalonia.StyledProperty<Excise.Avalonia.Controls.PathCaptureKind> PathCaptureKindProperty;
         public static readonly Avalonia.StyledProperty<Excise.Core.Text.ReadingOrderStrategy> ReadingOrderStrategyProperty;
         public static readonly Avalonia.StyledProperty<long> RenderVersionProperty;
+        public static readonly Avalonia.StyledProperty<bool> ShowAnnotationsProperty;
         public static readonly Avalonia.StyledProperty<System.Collections.Generic.IEnumerable<Excise.Core.Editing.PdfTypewriterTextOperation>?> TypewriterTextOperationsProperty;
         public static readonly Avalonia.StyledProperty<Excise.Avalonia.Controls.PdfViewMode> ViewModeProperty;
         public static readonly Avalonia.StyledProperty<Excise.Core.Text.WhitespaceMode> WhitespaceModeProperty;
@@ -128,6 +129,7 @@ namespace Excise.Avalonia.Controls
         public Excise.Avalonia.Controls.PathCaptureKind PathCaptureKind { get; set; }
         public Excise.Core.Text.ReadingOrderStrategy ReadingOrderStrategy { get; set; }
         public long RenderVersion { get; set; }
+        public bool ShowAnnotations { get; set; }
         public System.Collections.Generic.IEnumerable<Excise.Core.Editing.PdfTypewriterTextOperation>? TypewriterTextOperations { get; set; }
         public Excise.Avalonia.Controls.PdfViewMode ViewMode { get; set; }
         public Excise.Core.Text.WhitespaceMode WhitespaceMode { get; set; }
