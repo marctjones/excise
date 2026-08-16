@@ -902,14 +902,15 @@ Excise.Core/                          # the PDF engine — parser, writer, redac
 
 Excise.Rendering/                     # SkiaSharp renderer
 └── Differential/                   # ← REFERENCE ORACLES. Use these, don't build new ones.
-    ├── MutoolReferenceRenderer.cs        # 104 uses in Differential tests
-    ├── GhostscriptReferenceRenderer.cs   #  50
-    ├── PdftocairoReferenceRenderer.cs    #  26
+    ├── MutoolReferenceRenderer.cs        # 145 uses in Differential tests
+    ├── GhostscriptReferenceRenderer.cs   #  57
+    ├── PdftocairoReferenceRenderer.cs    #  30
     ├── PdftoppmReferenceRenderer.cs      #  14
     ├── MutoolTextExtractor.cs            # independent TEXT oracle
     ├── QpdfReferenceTool.cs              # structure: --check, --show-npages
-    ├── PdfiumReferenceRenderer.cs        # 0 real uses - see note below the map
-    └── PdfBoxReferenceRenderer.cs        # 0 uses      - see note below the map
+    ├── PdfiumReferenceRenderer.cs        # 2 uses — arg-builder unit test only, NOT the oracle below
+    ├── PdfiumNativeReferenceRenderer.cs  # 6 uses — the REAL pdfium oracle (#857), see note below the map
+    └── PdfBoxReferenceRenderer.cs        # 7 uses — see note below the map
 
 Excise.App/                          # the Avalonia GUI (orchestration only)
 ├── Services/
@@ -958,7 +959,13 @@ the optional tools/corpora are installed.
   CI job.
 - **PDFium and PDFBox** — real oracle tests exist (`PdfiumOracleSmokeTests`,
   `PdfBoxOracleDifferentialTests`: an ink-agreement comparison plus a
-  page-selection regression from #868). The rendering-tools CI job downloads
+  page-selection regression from #868). ⚠️ Two classes share "Pdfium...
+  Renderer" in their name and only one of them is the oracle:
+  `PdfiumOracleSmokeTests` calls `PdfiumNativeReferenceRenderer`, not
+  `PdfiumReferenceRenderer` (that one's only current caller is a unit test for
+  its argument-building helper — see the file map's per-class use counts,
+  which is exactly the kind of drift `check-doc-claim-freshness.sh` (#936) now
+  re-derives instead of trusting). The rendering-tools CI job downloads
   the smoke corpus, the PDFBox jar, and a prebuilt PDFium library before running
   those tests. Locally, use `scripts/download-smoke-corpus.sh`,
   `scripts/download-pdfbox.sh`, and `scripts/download-pdfium.sh`.
