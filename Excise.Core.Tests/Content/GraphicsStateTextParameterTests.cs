@@ -48,8 +48,9 @@ namespace Excise.Core.Tests.Content;
 /// <item>An ExtGState <c>/Font</c> (§8.4.5 Table 58) — it sets the same two
 /// parameters <c>Tf</c> does, and NEITHER parser implements it (only
 /// <c>SkiaRenderer</c> does), so a row for it could not satisfy the
-/// sensitivity control. That is a gap in <c>gs</c>, not in q/Q, and is out of
-/// #983's scope.</item>
+/// sensitivity control — the row was drafted and removed for that reason.
+/// That is a gap in <c>gs</c>, not in q/Q, and is out of #983's scope:
+/// tracked as #990, which is where the row comes back.</item>
 /// <item>Whether the SHARED answer is the RIGHT answer. Both machines agreeing
 /// with each other about q/Q is exactly the defect this file exists for, and
 /// both agreeing with this file's author is the same shape one level up. The
