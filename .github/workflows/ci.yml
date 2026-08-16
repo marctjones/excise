@@ -256,6 +256,21 @@ jobs:
         # strict raw exit code.
         run: |
           xvfb-run -a scripts/run-avalonia-tests-linux.sh
+        env:
+          AVALONIA_TEST_COLLECT_COVERAGE: '1'
+          AVALONIA_TEST_RESULTS_DIR: ${{ github.workspace }}/coverage-avalonia
+
+      # Coverage floor, `ci` PROFILE (#909). Same idiom as the Excise.Rendering
+      # step further down: read coverlet's raw per-package cobertura output
+      # directly, no reportgenerator merge needed. The floor is a BOOTSTRAP
+      # value, not a CI read yet — see tests/coverage-floors.tsv for why, and
+      # `scripts/check-coverage-floor.sh --update` to replace it with the
+      # first real one.
+      - name: Coverage floor (Excise.Avalonia, ci profile)
+        run: |
+          report=$(find coverage-avalonia -name 'coverage.cobertura.xml' | head -1)
+          test -n "$report" || { echo "no cobertura report produced for Excise.Avalonia.Tests"; exit 1; }
+          scripts/check-coverage-floor.sh "$report" ci Excise.Avalonia
 
       - name: Run Excise.Rendering.Tests (deterministic only)
         run: |
@@ -358,7 +373,25 @@ jobs:
       - name: Run Excise.Ocr.Tests
         run: |
           dotnet test Excise.Ocr.Tests --no-build -c Debug \
+            --collect:"XPlat Code Coverage" \
+            --results-directory coverage-ocr/ \
             --logger "console;verbosity=normal" || true
+
+      # Coverage floor, `ci` PROFILE (#909). This runner has no tesseract
+      # install step, so tesseract-gated tests (Assert.SkipUnless(TesseractAvailable))
+      # skip here the way corpus-gated Rendering tests do — the same
+      # environment split, a different tool. The floor is a BOOTSTRAP value,
+      # not a CI read yet — see tests/coverage-floors.tsv.
+      #
+      # No `|| true` here even though the test step above has one: that
+      # tolerates individual test failures, but a total collection failure
+      # (e.g. the test host crashing before any coverage is written) should
+      # still fail loudly.
+      - name: Coverage floor (Excise.Ocr, ci profile)
+        run: |
+          report=$(find coverage-ocr -name 'coverage.cobertura.xml' | head -1)
+          test -n "$report" || { echo "no cobertura report produced for Excise.Ocr.Tests"; exit 1; }
+          scripts/check-coverage-floor.sh "$report" ci Excise.Ocr
 
       - name: Run Excise.App.Tests (headless with xvfb)
         # Skipped for library-only changes (see "Detect changed areas"); always
@@ -378,10 +411,24 @@ jobs:
         if: steps.changes.outputs.gui == 'true' || github.ref == 'refs/heads/develop'
         run: |
           xvfb-run -a dotnet test Excise.App.Tests --no-build -c Debug \
+            --collect:"XPlat Code Coverage" \
             --logger "console;verbosity=normal" \
             --logger "trx;LogFileName=excise-app.trx" \
             --results-directory Excise.App.Tests/TestResults \
             --blame-hang-timeout 120000
+
+      # Coverage floor, `ci` PROFILE (#909). Carries the SAME condition as the
+      # run above by necessity, not preference: on a library-only PR that step
+      # never runs, so this one would find no report and fail on every such
+      # PR if it ran unconditionally — the App.Tests conditional problem this
+      # issue names, decided by matching rather than fighting it. The floor is
+      # a BOOTSTRAP value, not a CI read yet — see tests/coverage-floors.tsv.
+      - name: Coverage floor (Excise.App, ci profile)
+        if: steps.changes.outputs.gui == 'true' || github.ref == 'refs/heads/develop'
+        run: |
+          report=$(find Excise.App.Tests/TestResults -name 'coverage.cobertura.xml' | head -1)
+          test -n "$report" || { echo "no cobertura report produced for Excise.App.Tests"; exit 1; }
+          scripts/check-coverage-floor.sh "$report" ci Excise.App
 
       # Skip budget (#619, #655): tests/skip-allowlist/Excise.App.Tests.txt
       # already existed (from earlier ad-hoc bookkeeping) but nothing ever
