@@ -79,8 +79,14 @@ require_file() {
 require_grep() {
     local label="$1" pat="$2" file="$3"; shift 3
     echo -n "  ✓ $label... "
+    # NOT grep -q: under `set -o pipefail`, -q exits at the first match and
+    # closes the pipe while sed is still writing. GNU sed's smaller stdio
+    # buffer then takes SIGPIPE (exit 141) and pipefail turns a SUCCESSFUL
+    # match into a FAIL — which is exactly how this check went red on Linux
+    # CI while passing on macOS (BSD sed flushes the whole file in one
+    # write). Reading to EOF removes the race on both.
     if [ -f "$file" ] && sed -e 's://.*::' -e '/^[[:space:]]*\*/d' "$file" 2>/dev/null \
-         | grep -qE "$pat"; then pass; else
+         | grep -E "$pat" >/dev/null; then pass; else
         fail "$@"
     fi
 }

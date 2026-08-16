@@ -83,6 +83,39 @@ if [ "$INSTALL_HOOK" = "1" ]; then
     cat > "$HOOK" <<'HOOKEOF'
 #!/usr/bin/env bash
 # Installed by scripts/test-tier.sh --install-hook (#646).
+#
+# Two jobs:
+#   1. Release tags must carry evidence. GitHub CI cannot run the corpus/
+#      GUI/packaging tiers, so a release tag must come from
+#      scripts/tag-release.sh, which verifies the local --everything run at
+#      the tagged commit and writes Release-Evidence trailers into the
+#      annotation. A hand-made `git tag vX.Y.Z` has no trailer and is
+#      refused here — that is the point, not an inconvenience.
+#   2. t0 before every push.
+#
+# Read stdin FIRST: pre-push receives the ref list on stdin, and anything
+# t0 spawns could otherwise swallow it.
+refs="$(cat)"
+while read -r local_ref local_sha remote_ref remote_sha; do
+    [ -n "$local_ref" ] || continue
+    case "$remote_ref" in
+        refs/tags/v[0-9]*)
+            tag="${remote_ref#refs/tags/}"
+            if ! git cat-file tag "$local_sha" >/dev/null 2>&1; then
+                echo "pre-push: $tag is a lightweight tag — release tags must be annotated" >&2
+                echo "          and created by scripts/tag-release.sh (evidence-checked)." >&2
+                exit 1
+            fi
+            if ! git tag -l --format='%(contents)' "$tag" | grep -q '^Release-Evidence:'; then
+                echo "pre-push: $tag has no Release-Evidence trailer." >&2
+                echo "          Release tags must be created by scripts/tag-release.sh," >&2
+                echo "          which verifies the local full-suite run at the tagged" >&2
+                echo "          commit — CI cannot run those tiers (corpora, GUI, packaging)." >&2
+                exit 1
+            fi
+            ;;
+    esac
+done <<< "$refs"
 exec "$(git rev-parse --show-toplevel)/scripts/test-tier.sh" t0
 HOOKEOF
     chmod +x "$HOOK"
