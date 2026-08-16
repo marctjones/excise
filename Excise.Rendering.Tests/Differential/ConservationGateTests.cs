@@ -61,10 +61,8 @@ public class ConservationGateTests
     /// </summary>
     private static readonly Dictionary<string, string> KnownDefects = new()
     {
-        // #962 — flatten removes pushbutton widgets without stamping their
-        // appearance, so the visible "Clear Form" label is destroyed.
-        ["FormFlatten|state-ds11-passport.pdf"] = "#962",
-        ["FormFlatten|state-ds82-passport-renewal.pdf"] = "#962",
+        // (empty — #961 and #962, both found by these gates' first run, are
+        // fixed and their pins removed. The mechanism stays for the next find.)
     };
 
     /// <summary>

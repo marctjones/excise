@@ -30,7 +30,7 @@ namespace Excise.Core.Document;
 /// </summary>
 internal static class AcroFormFlattener
 {
-    private sealed record FieldDrawTarget(PdfField Field, PdfRectangle Rect, string? ExportValue);
+    private sealed record FieldDrawTarget(PdfField Field, PdfRectangle Rect, string? ExportValue, PdfDictionary? Widget);
 
     public static void Flatten(PdfDocument document, PdfAcroForm form)
     {
@@ -43,22 +43,24 @@ internal static class AcroFormFlattener
 
             if (field.FieldType == PdfFieldType.Button && field.Widgets.Count > 0)
             {
-                foreach (var widget in field.Widgets)
+                for (var i = 0; i < field.Widgets.Count; i++)
                 {
+                    var widget = field.Widgets[i];
                     if (widget.PageNumber is not int widgetPageNumber) continue;
-                    AddTarget(byPage, widgetPageNumber, new FieldDrawTarget(field, widget.Rect, widget.ExportValue));
+                    var widgetDict = i < field.WidgetDictionaries.Count ? field.WidgetDictionaries[i] : null;
+                    AddTarget(byPage, widgetPageNumber, new FieldDrawTarget(field, widget.Rect, widget.ExportValue, widgetDict));
                 }
                 continue;
             }
 
             if (field.PageNumber is int pageNumber && field.Rect is PdfRectangle rect)
-                AddTarget(byPage, pageNumber, new FieldDrawTarget(field, rect, ExportValue: null));
+                AddTarget(byPage, pageNumber, new FieldDrawTarget(field, rect, ExportValue: null, Widget: null));
         }
 
         foreach (var (pageNumber, targets) in byPage)
         {
             var page = document.GetPage(pageNumber);
-            AppendFieldDrawing(page, targets);
+            AppendFieldDrawing(document, page, targets);
             RemoveWidgetAnnotations(document, page, targets.Select(t => t.Field));
         }
 
@@ -76,7 +78,7 @@ internal static class AcroFormFlattener
         list.Add(target);
     }
 
-    private static void AppendFieldDrawing(PdfPage page, List<FieldDrawTarget> targets)
+    private static void AppendFieldDrawing(PdfDocument document, PdfPage page, List<FieldDrawTarget> targets)
     {
         // We need a Helvetica entry in the page's font resources to draw the
         // field text. Reuse if present; add a fresh /F-Flat entry otherwise.
@@ -94,10 +96,131 @@ internal static class AcroFormFlattener
         sb.Append("Q\n");
 
         foreach (var target in targets)
+        {
+            // A pushbutton has no /V to draw — its entire visible content is
+            // the widget's /AP /N appearance stream (e.g. the "Clear Form"
+            // label). Removing the widget without stamping that appearance
+            // erased visible ink (#962, found by the #945 conservation
+            // gates). Stamp it into the page before the widget goes.
+            if (target.Field.IsPushButton && target.Widget != null)
+            {
+                StampWidgetAppearance(document, page, sb, target.Widget, target.Rect);
+                continue;
+            }
+
             DrawField(sb, target, fontResourceName);
+        }
 
         var bytes = Encoding.Latin1.GetBytes(sb.ToString());
         page.SetContentStreamBytes(bytes);
+    }
+
+    /// <summary>
+    /// Stamp a widget's /AP /N form XObject into the page content, mapped
+    /// onto the widget rectangle by the §12.5.5 algorithm: transform the
+    /// appearance /BBox through its /Matrix, then scale/translate that
+    /// bounding box onto /Rect. The raw /N entry (normally an indirect
+    /// reference) goes into the page's XObject resources unchanged, so the
+    /// stream is shared, not copied.
+    /// </summary>
+    private static void StampWidgetAppearance(
+        PdfDocument document, PdfPage page, StringBuilder sb, PdfDictionary widget, PdfRectangle rect)
+    {
+        var rawAp = widget.GetOptional("AP");
+        if (rawAp == null || document.Resolve(rawAp) is not PdfDictionary ap)
+            return;
+
+        var rawAppearance = ap.GetOptional("N");
+        var resolved = rawAppearance == null ? null : document.Resolve(rawAppearance);
+
+        // /N may be a state subdictionary instead of a stream (checkbox-style
+        // appearances). Pushbuttons normally carry a single stream; when a
+        // state dict shows up anyway, follow /AS, else take the first entry.
+        if (resolved is PdfDictionary states && resolved is not PdfStream)
+        {
+            var stateName = widget.GetNameOrNull("AS");
+            rawAppearance = (stateName != null ? states.GetOptional(stateName) : null)
+                ?? states.Values.FirstOrDefault();
+            resolved = rawAppearance == null ? null : document.Resolve(rawAppearance);
+        }
+
+        if (resolved is not PdfStream appearance || rawAppearance == null)
+            return;
+
+        if (!TryGetNumbers(document, appearance.GetArrayOrNull("BBox"), 4, out var bbox))
+            return;
+
+        double[] matrix = { 1, 0, 0, 1, 0, 0 };
+        if (TryGetNumbers(document, appearance.GetArrayOrNull("Matrix"), 6, out var m))
+            matrix = m;
+
+        // Transform the four BBox corners through /Matrix and take bounds.
+        double minX = double.MaxValue, minY = double.MaxValue, maxX = double.MinValue, maxY = double.MinValue;
+        foreach (var (x, y) in new[] { (bbox[0], bbox[1]), (bbox[2], bbox[1]), (bbox[2], bbox[3]), (bbox[0], bbox[3]) })
+        {
+            var tx = matrix[0] * x + matrix[2] * y + matrix[4];
+            var ty = matrix[1] * x + matrix[3] * y + matrix[5];
+            minX = Math.Min(minX, tx); maxX = Math.Max(maxX, tx);
+            minY = Math.Min(minY, ty); maxY = Math.Max(maxY, ty);
+        }
+
+        var bw = maxX - minX;
+        var bh = maxY - minY;
+        if (bw < 1e-6 || bh < 1e-6 || rect.Width < 1e-6 || rect.Height < 1e-6)
+            return;
+
+        var sx = rect.Width / bw;
+        var sy = rect.Height / bh;
+        var ox = rect.Left - minX * sx;
+        var oy = rect.Bottom - minY * sy;
+
+        var name = AddXObjectResource(document, page, rawAppearance);
+
+        sb.Append("q\n");
+        sb.Append(sx.ToString("0.####", CultureInfo.InvariantCulture)).Append(" 0 0 ")
+          .Append(sy.ToString("0.####", CultureInfo.InvariantCulture)).Append(' ')
+          .Append(ox.ToString("0.###", CultureInfo.InvariantCulture)).Append(' ')
+          .Append(oy.ToString("0.###", CultureInfo.InvariantCulture)).Append(" cm\n");
+        sb.Append('/').Append(name).Append(" Do\n");
+        sb.Append("Q\n");
+    }
+
+    private static bool TryGetNumbers(PdfDocument document, PdfArray? array, int count, out double[] values)
+    {
+        values = new double[count];
+        if (array == null || array.Count < count)
+            return false;
+        for (var i = 0; i < count; i++)
+        {
+            if (document.Resolve(array[i]) is not PdfObject obj || !obj.TryGetNumber(out var n))
+                return false;
+            values[i] = n;
+        }
+        return true;
+    }
+
+    private static string AddXObjectResource(PdfDocument document, PdfPage page, PdfObject appearance)
+    {
+        var resources = page.Resources;
+        if (resources == null)
+        {
+            resources = new PdfDictionary();
+            page.Dictionary["Resources"] = resources;
+        }
+
+        var rawXObjects = resources.GetOptional("XObject");
+        if (rawXObjects == null || document.Resolve(rawXObjects) is not PdfDictionary xobjects)
+        {
+            xobjects = new PdfDictionary();
+            resources["XObject"] = xobjects;
+        }
+
+        var counter = 0;
+        string name;
+        do { name = $"FlatAP{counter++}"; } while (xobjects.ContainsKey(name));
+
+        xobjects[name] = appearance;
+        return name;
     }
 
     private static string EnsureHelveticaResource(PdfPage page)
