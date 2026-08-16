@@ -190,7 +190,13 @@ public partial class App : Application
         Dispatcher.UIThread.Post(() => _ = OpenPathAsync(vm, path, logger));
     }
 
-    private static async Task OpenPathAsync(MainWindowViewModel vm, string path, ILogger logger)
+    // internal (not private): #979 — this is the "resolved path actually gets
+    // loaded" half of both the command-line/file-association launch path and
+    // the macOS file-activation path. Exercised directly by
+    // StartupActivationWorkflowTests so that half of "open via command-line
+    // launch" has a real xunit method behind it rather than only a shell
+    // script and a source-text doc-claim check.
+    internal static async Task OpenPathAsync(MainWindowViewModel vm, string path, ILogger logger)
     {
         try
         {
@@ -204,7 +210,10 @@ public partial class App : Application
         }
     }
 
-    private static string? ResolveActivatedPdfPath(IReadOnlyList<IStorageItem> files)
+    // internal (not private): see OpenPathAsync's note — this is the
+    // file-selection half of the macOS file-association activation path
+    // (IActivatableLifetime.Activated -> FileActivatedEventArgs.Files).
+    internal static string? ResolveActivatedPdfPath(IReadOnlyList<IStorageItem> files)
     {
         foreach (var file in files)
         {
