@@ -85,6 +85,7 @@ RUNNER_SENTINEL="--CKPT-OK--"
 
 RUNNER_STATE_DIR=""
 RUNNER_SHA=""
+RUNNER_TREE_DIRTY="unknown"
 RUNNER_LABEL=""
 RUNNER_CONFIG=""
 RUNNER_SKIPPED_COUNT=0
@@ -211,6 +212,10 @@ runner_state_init() {
         dirty="-dirty"
     fi
 
+    # Exported so the ledger can state it: a sha alone reads as "this commit"
+    # when the run may have measured uncommitted changes on top of it (#994).
+    RUNNER_TREE_DIRTY="$([ -n "$dirty" ] && echo yes || echo no)"
+
     local key="${RUNNER_LABEL}_${RUNNER_CONFIG}_${RUNNER_SHA:0:12}${dirty}"
     RUNNER_STATE_DIR="${RUNNER_STATE_ROOT:-$PWD/logs/runner-state}/$key"
     mkdir -p "$RUNNER_STATE_DIR"
@@ -304,6 +309,64 @@ runner_step_should_run() {
 }
 
 runner_skipped_count() { echo "$RUNNER_SKIPPED_COUNT"; }
+
+# ---------------------------------------------------------------------------
+# Run ledger (#994)
+# ---------------------------------------------------------------------------
+# The markers above are the ENFORCEMENT channel: sha-keyed, torn-write-safe,
+# durable across invocations, and deliberately minimal. They answer "may this
+# step be skipped on resume?" and nothing else.
+#
+# They cannot answer the question #994 is about — "did everything that claims
+# to gate this build actually run, and against real inputs?" — because a marker
+# is written only for a pass and records nothing about what the step consumed.
+# That answer existed in scattered places (console output, RESULTS, summary.tsv,
+# resources.tsv, per-gate stdout) and nothing collected it.
+#
+# The ledger is the human-and-tool-readable record of one invocation: one JSON
+# object per step, including steps that were SKIPPED as already-checkpointed,
+# with the provenance of the marker that skipped them. It is WRITE-ONLY here —
+# deliberately no consumer yet. Markers stay the enforcement channel; making
+# release evidence depend on a per-run artifact under a timestamped log
+# directory would need a durable cross-invocation store, which is what the
+# markers already are.
+#
+# runner_ledger_init <path>
+runner_ledger_init() {
+    RUNNER_LEDGER="${1:-}"
+    [ -n "$RUNNER_LEDGER" ] || return 0
+    : > "$RUNNER_LEDGER"
+}
+
+# runner_ledger_record <name> <status> <rc> <duration> [key=value ...]
+# Values are recorded as JSON strings; no key or value may contain a newline.
+runner_ledger_record() {
+    [ -n "${RUNNER_LEDGER:-}" ] || return 0
+    local name="$1" status="$2" rc="$3" dur="$4"
+    shift 4
+
+    # Escape for JSON: backslash first, then quote, then strip control chars.
+    _ledger_esc() {
+        printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' -e 's/[[:cntrl:]]//g'
+    }
+
+    {
+        printf '{"name":"%s","status":"%s","rc":%s,"durationSeconds":%s' \
+            "$(_ledger_esc "$name")" "$(_ledger_esc "$status")" \
+            "${rc:-0}" "${dur:-0}"
+        printf ',"sha":"%s","treeDirty":"%s","config":"%s","recorded":"%s"' \
+            "$(_ledger_esc "${RUNNER_SHA:-}")" "$(_ledger_esc "${RUNNER_TREE_DIRTY:-unknown}")" \
+            "$(_ledger_esc "${RUNNER_CONFIG:-}")" \
+            "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        local kv k v
+        for kv in "$@"; do
+            k="${kv%%=*}"; v="${kv#*=}"
+            [ -n "$k" ] || continue
+            printf ',"%s":"%s"' "$(_ledger_esc "$k")" "$(_ledger_esc "$v")"
+        done
+        printf '}\n'
+    } >> "$RUNNER_LEDGER"
+}
 
 # Drop all markers — used by --fresh.
 runner_state_reset() {

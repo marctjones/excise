@@ -135,6 +135,24 @@ if [[ ! -d "$CORPUS" ]]; then
     exit 1
 fi
 
+# An EMPTY corpus directory used to be the worst possible outcome: the -d check
+# above passed, 14 chunks each reported "0 page results", the expectation gate
+# below saw zero rows and therefore zero failures, and the run printed
+# "expectations: all pages matched" and "✓ done" with rc=0. A vacuous green over
+# a corpus nobody scanned. A partial or interrupted download leaves exactly this
+# state, because the download scripts create the directory before filling it.
+#
+# --tiny builds its own subset directory later, so it is exempt here.
+if [[ "$TINY" != "1" ]]; then
+    _corpus_pdfs="$(find "$CORPUS" -name '*.pdf' 2>/dev/null | wc -l | tr -d ' ')"
+    if [[ "${_corpus_pdfs:-0}" == "0" ]]; then
+        echo "✗ corpus at $CORPUS contains no PDFs" >&2
+        echo "  Scanning it would report 'all pages matched' over zero pages." >&2
+        echo "  Re-run the matching scripts/download-*.sh." >&2
+        exit 1
+    fi
+fi
+
 # "auto" was declared but never read, so a plain run supplied NO passwords and
 # classified encrypted fixtures as unsupported — measuring nothing, since we
 # know their passwords (#864). Auto now resolves the checked-in manifest when it
@@ -1232,9 +1250,20 @@ fi
 # against the manifest and records expectationResult=FAIL, but nothing acted on
 # it: a page could regress PASS -> DIFF and the run still exited 0. Verified by
 # flipping an expectation and watching a --tiny run pass regardless.
+#
+# It judged only the pages that WERE scanned, never the manifest rows that were
+# not. Those are different questions, and the second one is the one a partial
+# corpus breaks: scan zero pages and there are zero FAIL rows, so the gate
+# printed "all pages matched" over an empty result set. The precondition above
+# now blocks the zero-PDF case, but an under-downloaded corpus (present, short)
+# lands in the same blind spot, and nothing else in the suite would notice.
+#
+# So the gate asks both: did every scanned page match, AND was every manifest
+# row actually scanned. --tiny scans a deliberate 10-PDF subset, so coverage is
+# not required there.
 if [[ -n "$EXPECTATION_MANIFEST" && -f "$BIN_DIR/$REPORT_NAME" ]]; then
-    EXP_FAILS=$(python3 - "$BIN_DIR/$REPORT_NAME" <<'PYEXP'
-import json, sys
+    EXP_FAILS=$(TINY="$TINY" python3 - "$BIN_DIR/$REPORT_NAME" "$EXPECTATION_MANIFEST" <<'PYEXP'
+import json, os, sys
 try:
     d = json.load(open(sys.argv[1]))
 except Exception:
@@ -1245,9 +1274,38 @@ for r in bad[:20]:
     f = (r.get("file") or r.get("pdf") or r.get("path") or "?").split("/")[-1]
     print(f"    {f}#p{r.get('page', r.get('pageNumber', 1))}  {r.get('expectationFailure','')}",
           file=sys.stderr)
-print(len(bad))
+
+# Coverage: every manifest row must correspond to a scanned page.
+missing = []
+if os.environ.get("TINY") != "1":
+    scanned = set()
+    for r in rows:
+        p = r.get("path") or r.get("file") or r.get("pdf") or ""
+        scanned.add((p, int(r.get("pageNumber", r.get("page", 1)) or 1)))
+    try:
+        with open(sys.argv[2]) as mf:
+            for line in mf:
+                line = line.rstrip("\n")
+                if not line.strip() or line.lstrip().startswith("#"):
+                    continue
+                parts = line.split("\t")
+                if len(parts) < 2:
+                    continue
+                try:
+                    key = (parts[0], int(parts[1]))
+                except ValueError:
+                    continue
+                if key not in scanned:
+                    missing.append(key)
+    except OSError:
+        pass
+    for p, n in missing[:20]:
+        print(f"    NOT SCANNED  {p}#p{n}", file=sys.stderr)
+
+print(f"{len(bad)} {len(missing)}")
 PYEXP
 )
+    EXP_MISSING="${EXP_FAILS#* }"; EXP_FAILS="${EXP_FAILS%% *}"
     if [[ "$EXP_FAILS" == "-1" ]]; then
         echo "⚠ could not read $BIN_DIR/$REPORT_NAME to check expectations" >&2
     elif (( EXP_FAILS > 0 )); then
@@ -1255,6 +1313,13 @@ PYEXP
         echo "✗ $EXP_FAILS page(s) did not match $EXPECTATION_MANIFEST"
         echo "  A status change is not automatically bad — a page moving DIFF -> PASS is"
         echo "  an improvement. Review, then regenerate the manifest to accept it."
+        exit 1
+    elif (( ${EXP_MISSING:-0} > 0 )); then
+        echo
+        echo "✗ $EXP_MISSING page(s) in $EXPECTATION_MANIFEST were never scanned"
+        echo "  The pages that DID run all matched, which is why this used to read as"
+        echo "  a clean sweep. It is a partial corpus, not a passing one — re-run the"
+        echo "  matching scripts/download-*.sh."
         exit 1
     fi
     echo "  expectations: all pages matched"

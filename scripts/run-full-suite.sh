@@ -98,10 +98,11 @@ Usage: scripts/run-full-suite.sh [options]
                      four-corpus rendering scan (#862) — REQUIRES all four
                      corpora to be downloaded, or see --allow-missing-corpora.
   --allow-missing-corpora
-                     Downgrade a missing/empty corpus under --everything from a
-                     hard failure to a loud warning, and note the gap in the
-                     final summary instead of silently covering fewer pages
-                     than "the full corpus sweep" implies (#958).
+                     Don't ABORT the run at preflight when a corpus is missing
+                     or empty — run the rest of the suite and let those scans
+                     fail as steps. It does NOT drop them from the plan: a run
+                     with a missing corpus can never report green, and can
+                     never satisfy --assert-green (#958, #994).
   --no-chunking      One dotnet process per project instead of per class group.
   --chunk-size <n>   Test classes per chunk (default 12).
 
@@ -141,6 +142,11 @@ RUSAGE_TSV="$LOG_DIR/resources.tsv"
 : > "$RUSAGE_TSV"
 
 runner_state_init "full-suite" "$CONFIG"
+# One JSON object per step, including steps skipped as already-checkpointed
+# (#994). Write-only: no gate reads it yet, and summary.tsv / resources.tsv /
+# tag-release.sh are untouched. It is the reviewable record of what this
+# invocation actually ran; the sha-keyed markers remain the enforcement channel.
+runner_ledger_init "$LOG_DIR/ledger.jsonl"
 [ "$FRESH" = "1" ] && runner_state_reset
 runner_export_lean_env
 
@@ -416,7 +422,6 @@ if [ "$EVERYTHING" = "1" ]; then
     # the scan actually grades against. "Pages present" counts *.pdf files in
     # the corpus dir, which is the exact quantity --page-mode first (used
     # below) turns into pages scanned: one page per file.
-    _CORPUS_PRESENT=()
     _missing_corpora=""
     for _corpus_spec in "${_CORPUS_SPECS[@]}"; do
         _cs_name="${_corpus_spec%%:*}"; _cs_rest="${_corpus_spec#*:}"
@@ -430,7 +435,6 @@ if [ "$EVERYTHING" = "1" ]; then
         if [ -f "$ROOT/$_cs_manifest" ]; then
             _cs_expected="$(grep -vc '^#' "$ROOT/$_cs_manifest" 2>/dev/null | tr -d ' ')"
         fi
-        _CORPUS_PRESENT+=("${_cs_present:-0}")
         CORPUS_COVERAGE_ROWS+=("$_cs_dir	${_cs_present:-0}	${_cs_expected:-0}")
 
         if [ "${_cs_present:-0}" = "0" ]; then
@@ -449,8 +453,9 @@ if [ "$EVERYTHING" = "1" ]; then
             CORPUS_RAN_WITH_ALLOW_MISSING=1
             say "${Y}WARNING: --everything corpus sweep is PARTIAL (#958) — missing/empty corpora:${N}"
             printf "%b" "$_missing_corpora"
-            say "${Y}Continuing because --allow-missing-corpora was passed; the gap is${N}"
-            say "${Y}reported again in the final summary so a partial run cannot read as full.${N}"
+            say "${Y}Continuing because --allow-missing-corpora was passed. The scans are${N}"
+            say "${Y}still in the plan and will FAIL — the flag lets the rest of the suite${N}"
+            say "${Y}run, it does not remove them from the evidence.${N}"
             say ""
         else
             say "${R}ABORT: --everything corpus sweep would be silently partial (#958).${N}"
@@ -458,24 +463,36 @@ if [ "$EVERYTHING" = "1" ]; then
             printf "%b" "$_missing_corpora"
             say ""
             say "  Download the missing corpora above, then re-run. Or pass"
-            say "  ${B}--allow-missing-corpora${N} to proceed with a known-partial sweep — the"
-            say "  gap is then called out again in the final summary."
+            say "  ${B}--allow-missing-corpora${N} to run the rest of the suite anyway; the"
+            say "  missing scans then fail as steps, so the run cannot report green."
             exit 1
         fi
     fi
 
-    _cs_idx=0
+    # EVERY corpus is emitted, present or not. A missing one must be a RED step,
+    # never an absent one.
+    #
+    # It used to be skipped here, on the reasoning that the preflight above had
+    # already been loud about it. But the preflight is console output, and the
+    # plan is the evidence: --assert-green re-derives this same plan in a later
+    # invocation and asks only "does every step in it have a marker?". With the
+    # step skipped, the plan shrank on both sides and the answer was yes.
+    # Measured 2026-08-16 by hiding test-pdfs/pdfjs: total went 66 -> 65 steps
+    # and 4 -> 3 corpus scans, so a release could be tagged "65/65 green" on a
+    # build where the pdf.js corpus was never scanned at all.
+    #
+    # Emitting unconditionally means a missing corpus fails its step (the scan
+    # script exits 1 on an absent OR empty directory), the run ends non-zero,
+    # no marker is written, and --assert-green reports it missing — with no
+    # changes to --assert-green, because the plan can no longer shrink.
+    # --allow-missing-corpora now means "don't abort the whole run at preflight,
+    # let the rest of the suite run and report these red", not "pretend the plan
+    # is smaller".
     for _corpus_spec in "${_CORPUS_SPECS[@]}"; do
         _cs_name="${_corpus_spec%%:*}"; _cs_rest="${_corpus_spec#*:}"
         _cs_dir="${_cs_rest%%:*}"; _cs_manifest="${_cs_rest#*:}"
-        # Skip a corpus that has not been downloaded rather than failing the
-        # step: the preflight above already made this loud (FAIL, or WARN
-        # under --allow-missing-corpora) instead of letting it pass unnoticed.
-        if [ "${_CORPUS_PRESENT[$_cs_idx]:-0}" != "0" ]; then
-            emit "$_cs_name" script \
-                "scripts/run-exploratory-corpus.sh --corpus $_cs_dir --page-mode first --extra-oracles all --expectation-manifest $_cs_manifest" "-"
-        fi
-        _cs_idx=$(( _cs_idx + 1 ))
+        emit "$_cs_name" script \
+            "scripts/run-exploratory-corpus.sh --corpus $_cs_dir --page-mode first --extra-oracles all --expectation-manifest $_cs_manifest" "-"
     done
 fi
 
@@ -661,6 +678,13 @@ run_one() {
     if ! runner_step_should_run "$name"; then
         say "${D}[$IDX/$TOTAL] $name — SKIP (checkpointed)${N}"
         RESULTS+=("$name|SKIP|checkpointed")
+        # Record WHERE the evidence came from. "PASS" in a resumed run's summary
+        # can mean "passed twenty minutes ago on this same commit", and until now
+        # nothing wrote down which. The marker is the provenance, so quote it.
+        runner_ledger_record "$name" "SKIP_CHECKPOINTED" 0 0 \
+            "kind=$kind" "target=$target" "filter=$filter" \
+            "evidenceFrom=$(runner_marker_path "$name")" \
+            "evidenceFinished=$(grep -h '^finished=' "$(runner_marker_path "$name")" 2>/dev/null | head -1 | cut -d= -f2-)"
         return 0
     fi
 
@@ -719,19 +743,31 @@ run_one() {
             say "  ${R}FAIL${N} (${dur}s) — ZERO tests executed; refusing to checkpoint a vacuous pass"
             say "       filter: $filter"
             RESULTS+=("$name|FAIL|zero-tests-matched")
+            runner_ledger_record "$name" "FAIL_ZERO_TESTS" "$rc" "$dur" \
+                "kind=$kind" "target=$target" "filter=$filter" \
+                "log=$log" "testsExecuted=0"
             OVERALL=1
             return 0
         fi
     fi
 
+    local ledger_trx=""
+    [ -f "$LOG_DIR/$name.trx" ] && ledger_trx="$LOG_DIR/$name.trx"
+
     if [ "$rc" = "0" ]; then
         runner_step_mark "$name" "$rc" "$dur"
         say "  ${G}PASS${N} (${dur}s)"
         RESULTS+=("$name|PASS|${dur}s")
+        runner_ledger_record "$name" "PASS" "$rc" "$dur" \
+            "kind=$kind" "target=$target" "filter=$filter" \
+            "log=$log" "trx=$ledger_trx" "testsExecuted=${executed:-}"
     else
         say "  ${R}FAIL${N} rc=$rc (${dur}s) -> $log"
         tail -30 "$log" | sed 's/^/    /'
         RESULTS+=("$name|FAIL|rc=$rc ${dur}s")
+        runner_ledger_record "$name" "FAIL" "$rc" "$dur" \
+            "kind=$kind" "target=$target" "filter=$filter" \
+            "log=$log" "trx=$ledger_trx" "testsExecuted=${executed:-}"
         OVERALL=1
     fi
 
@@ -828,6 +864,7 @@ say "pass=$npass fail=$nfail skipped-as-checkpointed=$nskip total=$TOTAL"
 say "Resources: $(runner_resource_report)"
 say "Logs    : $LOG_DIR"
 say "Summary : $SUMMARY"
+say "Ledger  : $LOG_DIR/ledger.jsonl"
 if [ "$OVERALL" != "0" ]; then
     say ""
     say "${Y}Re-run the same command to retry only the failed/pending steps.${N}"
