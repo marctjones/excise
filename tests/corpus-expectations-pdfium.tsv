@@ -40,7 +40,7 @@ annotation_markup_multiline_no_ap.pdf	1	PASS
 annotation_stamp_with_ap.pdf	1	PASS
 annotiter.pdf	1	PASS
 annots.pdf	1	PASS
-annots_action_handling.pdf	1	MISSING_CONTENT		#987: a /Link with no /Border or /BS gets the §12.5.6.5 default 1pt border in Poppler and Ghostscript; excise and mutool draw none. This row PASSed only until #972 — excise's invented widget box happened to cover the same tiles.
+annots_action_handling.pdf	1	PASS		#987 fixed by #993: the /Link with no /Border and no /BS now gets the §12.5.6.5 default 1 pt border, which is what poppler and Ghostscript draw. Was MISSING_CONTENT.
 bad_annots_entry.pdf	1	PASS
 bad_dict_keys.pdf	1	PASS
 bad_page_type.pdf	1	PASS
