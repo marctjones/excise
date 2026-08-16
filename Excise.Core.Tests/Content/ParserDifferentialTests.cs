@@ -465,6 +465,54 @@ public class ParserDifferentialTests
     }
 
     /// <summary>
+    /// Both machines must honour a caller's cancellation. This could not be a
+    /// parity case until #982: <c>ContentStreamParser.Parse</c> took a token
+    /// (#346) and <c>TextExtractor</c> had none at all, so <c>page.Letters</c>
+    /// ran to completion whatever the input cost — on the GUI's background
+    /// indexing thread, with no timeout to hit.
+    ///
+    /// <para>Neither machine checks the token on ENTRY, so a pre-cancelled
+    /// token proves a check inside the operator loop was reached. What this
+    /// does NOT gate: the two deeper check points (the array-element loop, and
+    /// TextExtractor's <c>SkipDictionary</c> / ContentStreamParser's
+    /// <c>ParseDictionary</c> walk). The outer loop's check necessarily fires
+    /// first when the token is already cancelled, and cancellation arriving
+    /// mid-token — the case those points exist for — cannot be produced
+    /// deterministically from a test. They are verified by mutation, not by
+    /// this assertion.</para>
+    /// </summary>
+    [Fact]
+    public void CancellationRequested_IsHonouredByBothMachines()
+    {
+        // Long enough that abandoning it means something, shallow enough that
+        // no nesting bound fires first.
+        var content = string.Concat(Enumerable.Repeat(
+            "BT /F1 12 Tf 1 0 0 1 72 700 Tm [(ab) -120 (cd)] TJ ET\n", 500));
+
+        using var doc = PdfDocument.Open(ParityFixture.Build(content));
+        var page = doc.GetPage(1);
+
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        // The control: the same bytes complete when nothing is cancelled, so a
+        // machine that threw for an unrelated reason cannot pass this.
+        ParityFixture.Outcome(() => ParityFixture.ParseOperators(page)).Should().Be("ok");
+        ParityFixture.Outcome(() => ParityFixture.ExtractLetters(page)).Should().Be("ok");
+
+        new Action(() => new ContentStreamParser(page.GetContentStreamBytes(), page).Parse(cts.Token))
+            .Should().Throw<OperationCanceledException>(
+                "ContentStreamParser has taken a token since #346");
+        new Action(() => new TextExtractor(page) { IncludeFormFieldValues = false }
+                .ExtractLetters(cts.Token))
+            .Should().Throw<OperationCanceledException>(
+                "TextExtractor must honour one too — #982");
+        new Action(() => page.GetLetters(cts.Token))
+            .Should().Throw<OperationCanceledException>(
+                "and the page-level entry point callers actually use");
+    }
+
+    /// <summary>
     /// A DELIBERATE failure-mode difference, pinned so it is not "fixed" into
     /// agreement by accident — and so a future change to either side is a
     /// visible decision. ContentStreamParser parses dictionaries recursively

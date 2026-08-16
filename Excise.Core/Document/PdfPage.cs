@@ -98,17 +98,24 @@ public class PdfPage
     /// Get all letters extracted from the page with position information.
     /// Cached on first access; subsequent calls return the cached result.
     /// </summary>
-    public IReadOnlyList<Letter> Letters
-    {
-        get
-        {
-            if (_cachedLetters != null)
-                return _cachedLetters;
+    public IReadOnlyList<Letter> Letters => GetLetters();
 
-            var extractor = new TextExtractor(this);
-            _cachedLetters = extractor.ExtractLetters();
+    /// <summary>
+    /// <see cref="Letters"/> with a cancellation token, so a caller with a
+    /// timeout can abandon extraction of a hostile or very large page instead
+    /// of blocking until it finishes (#982; CLAUDE.md Pitfall 3). A cancelled
+    /// call throws <see cref="OperationCanceledException"/> and caches nothing,
+    /// so a later call re-runs the extraction rather than returning a partial
+    /// letter list.
+    /// </summary>
+    public IReadOnlyList<Letter> GetLetters(CancellationToken cancellationToken = default)
+    {
+        if (_cachedLetters != null)
             return _cachedLetters;
-        }
+
+        var extractor = new TextExtractor(this);
+        _cachedLetters = extractor.ExtractLetters(cancellationToken);
+        return _cachedLetters;
     }
 
     /// <summary>
