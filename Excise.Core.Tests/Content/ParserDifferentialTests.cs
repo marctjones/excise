@@ -254,18 +254,18 @@ public class ParserDifferentialTests
     // #662: a /Differences dictionary's /BaseEncoding covers the codes it does
     // NOT override. Code 0x88 is à in MacRoman and ˆ in WinAnsi, so the two
     // encodings cannot agree by accident. Old parser: "ˆ".
-    [InlineData("() Tj", "à",
+    [InlineData("(\u0088) Tj", "\u00E0",
         "/Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding 6 0 R",
         "6 0 obj\n<< /Type /Encoding /BaseEncoding /MacRomanEncoding "
         + "/Differences [65 /bullet] >>\nendobj\n")]
     // /Encoding as the bare NAME /MacRomanEncoding. Old parser: "ˆ".
-    [InlineData("() Tj", "à",
+    [InlineData("(\u0088) Tj", "\u00E0",
         "/Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /MacRomanEncoding",
         "")]
     // #715: /ToUnicode as the predefined CMap NAME /Identity-H — the 2-byte code
     // IS the UTF-16BE scalar. Code 0x0091 discriminates: WinAnsi remaps
     // 128-159, identity does not. Old parser: "‘".
-    [InlineData("<0091> Tj", "",
+    [InlineData("<0091> Tj", "\u0091",
         "/Type /Font /Subtype /Type0 /BaseFont /Parity /Encoding /Identity-H "
         + "/ToUnicode /Identity-H /DescendantFonts [6 0 R]",
         "6 0 obj\n<< /Type /Font /Subtype /CIDFontType2 /BaseFont /Parity "
