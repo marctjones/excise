@@ -15,6 +15,13 @@
   <ItemGroup>
     <ProjectReference Include="..\Excise.Rendering\Excise.Rendering.csproj" />
     <ProjectReference Include="..\Excise.Core\Excise.Core.csproj" />
+
+    <!-- Build-order only (no assembly reference). JpxSoftMaskRenderTests runs
+         its render out of process through the CLI (#985); without this, a fresh
+         checkout has no CLI binary, the test skips, and the skip-allowlist
+         entry makes that look intentional — which is #985 all over again. -->
+    <ProjectReference Include="..\Excise.Cli\Excise.Cli.csproj"
+                      ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>
