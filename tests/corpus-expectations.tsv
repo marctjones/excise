@@ -25,7 +25,7 @@
 #
 # Keys are corpus-relative PATHS, not basenames: this corpus may have
 # subdirectories and duplicate filenames.
-# Baseline: PASS=668, PASS_ONE=10, MALFORMED_PDF=2, EXCISE_ONLY=2, RECOVERED_MALFORMED_CONTENT=1, MISSING_CONTENT=1, EMPTY_DOC=1
+# Baseline: PASS=669, PASS_ONE=10, MALFORMED_PDF=2, EXCISE_ONLY=2, RECOVERED_MALFORMED_CONTENT=1, EMPTY_DOC=1
 160F-2019.pdf	1	PASS
 22060_A1_01_Plans.pdf	1	PASS
 90ms_rksj_h_sample.pdf	1	PASS
@@ -330,7 +330,7 @@ canvas.pdf	1	PASS
 ccitt_EndOfBlock_false.pdf	1	PASS
 cff_bluescale_small_zones.pdf	1	PASS
 checkbox-bad-appearance.pdf	1	PASS
-checkbox_no_appearance.pdf	1	MISSING_CONTENT		#972: checkbox with no /AP renders unchecked; mutool and pdftocairo both draw the check
+checkbox_no_appearance.pdf	1	PASS
 chrome-text-selection-markedContent.pdf	1	PASS
 cid_cff.pdf	1	PASS
 cidfont_cmap_overflow.pdf	1	PASS

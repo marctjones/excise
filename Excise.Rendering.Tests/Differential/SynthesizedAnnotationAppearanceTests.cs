@@ -22,7 +22,7 @@ namespace Excise.Rendering.Tests.Differential;
 ///   subtype / fixture                    mutool    cairo       gs   verdict
 ///   Text     vera 6-3-3-t01-pass-a           495      917     1388   ALL 3
 ///   Widget   annots_action_handling         3737     1138     1608   ALL 3
-///   Widget   checkbox_no_appearance          233      229        -   both
+///   Widget   checkbox_no_appearance          233      229        -   both *
 ///   FreeText freetext_..._without_da        1250     1250        -   both
 ///   Link     isartor-6-6-1-t01-fail-a          0     5973     5950   2 of 3
 ///   Stamp    vera 6-3-3-t01-fail-m         81119   808346        0   2 of 3
@@ -49,6 +49,17 @@ namespace Excise.Rendering.Tests.Differential;
 /// so they agree it is drawn and disagree by an order of magnitude on WHAT.
 /// There is no artwork to copy, only an invitation to invent some.
 ///
+/// (*) ⚠️ THE CHECKBOX ROW'S NUMBERS WERE READ WRONG, and the correction is
+/// the lesson (#972). 233 and 229 are real, but they are a CHECK MARK — not,
+/// as this table and the renderer both concluded, a box. Neither oracle draws
+/// any box for a /FT /Btn with no /AP. So excise spent three months inking a
+/// rectangle nobody else drew while still missing the only thing they did, and
+/// the majority-scored corpus gate (#932) read the page as 12 tiles missing and
+/// 50 tiles invented. An ink COUNT cannot tell a tick from a box; look at the
+/// image, or at the bbox. See MalformedObjectPageRecoveryTests' sibling
+/// CheckboxSynthesisTests for the re-measurement, which is per-case and
+/// includes the bboxes for exactly this reason.
+///
 /// </summary>
 public class SynthesizedAnnotationAppearanceTests : IDisposable
 {
@@ -67,6 +78,14 @@ public class SynthesizedAnnotationAppearanceTests : IDisposable
     /// That is true of an empty TEXT field and false of a BUTTON, and pdf.js's
     /// checkbox_no_appearance.pdf (two /FT /Btn widgets, no /MK anywhere) is
     /// the counterexample: mutool 233 inked px, pdftocairo 229, excise 0.
+    ///
+    /// WHAT those pixels are is corrected in #972 and in the class comment
+    /// above — a check mark, not a box. The property asserted here survives
+    /// the correction unchanged ("the ON checkbox is not blank"), which is why
+    /// it is still here; only the sample window moved. It used to be
+    /// (40,40)-(110,110), which clips the widget's real device rect at
+    /// y=110 and therefore measured almost none of it — it passed on the old
+    /// box because the box's TOP EDGE happened to fall in the overlap.
     /// </summary>
     [Fact]
     public void CheckboxWithoutAppearanceOrMk_IsStillDrawn()
@@ -74,13 +93,9 @@ public class SynthesizedAnnotationAppearanceTests : IDisposable
         var path = WriteTemp(ButtonWidgetPdf());
         using var bmp = RenderWithExcise(path);
 
-        // A 1pt border round a 50x50 box is ~0.8-1.4% of the 70x70 sample
-        // window, so the bar is set just clear of zero rather than at some
-        // round-looking number: the discrimination that matters is
-        // "drew an outline" vs "drew nothing at all" (excise was exactly 0).
-        InkFraction(bmp, new SKRectI(40, 40, 110, 110)).Should().BeGreaterThan(0.004,
-            "a checkbox is a control whose state the reader is meant to see, so it " +
-            "gets a box even with no /MK to style it from");
+        InkFraction(bmp, WidgetDeviceRect).Should().BeGreaterThan(0.004,
+            "a checkbox is a control whose state the reader is meant to see, so an " +
+            "ON one is not blank even with no /MK to style it from");
     }
 
     [Fact]
@@ -92,12 +107,19 @@ public class SynthesizedAnnotationAppearanceTests : IDisposable
         using var reference = MutoolReferenceRenderer.RenderPage(path, 1, Dpi);
         reference.Should().NotBeNull();
 
-        var box = new SKRectI(40, 40, 110, 110);
+        var box = WidgetDeviceRect;
         InkFraction(reference!, box).Should().BeGreaterThan(0.004,
             "mutool draws the checkbox — this is what makes excise's blank a defect " +
             "rather than a defensible choice");
         InkFraction(RenderWithExcise(path), box).Should().BeGreaterThan(0.004);
     }
+
+    /// <summary>
+    /// Device-space window covering the widget every fixture here places at
+    /// /Rect [50 50 100 100] on a 200pt page: at 72 dpi that is x 50..100 and,
+    /// because PDF Y is up, y 100..150.
+    /// </summary>
+    private static SKRectI WidgetDeviceRect => new(50, 100, 100, 150);
 
     /// <summary>
     /// The half of the old rule that measurement upheld, kept so restoring the
@@ -109,7 +131,7 @@ public class SynthesizedAnnotationAppearanceTests : IDisposable
         var path = WriteTemp(EmptyTextWidgetPdf());
         using var bmp = RenderWithExcise(path);
 
-        InkFraction(bmp, new SKRectI(40, 40, 110, 110)).Should().BeLessThan(0.001,
+        InkFraction(bmp, WidgetDeviceRect).Should().BeLessThan(0.001,
             "an unfilled text field is invisible until filled — unchanged behaviour");
     }
 

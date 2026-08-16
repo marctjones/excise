@@ -505,6 +505,10 @@ internal partial class RenderContext
     ///   etc.) are intentionally invisible at print time and adding
     ///   our own borders here makes excise's output diverge from mutool
     ///   by ~10% on real-world form PDFs.</item>
+    /// <item><b>Checkboxes whose <c>/AS</c> is on:</b> a check mark, and no
+    ///   box (#972). See the measurement table at the call site — the
+    ///   chrome half of this rule and the check-mark half were confused
+    ///   for each other once and the comment there says how.</item>
     /// </list>
     /// </summary>
     private void RenderWidgetDefault(Excise.Core.Document.PdfAnnotation annot, SKRect rect)
@@ -537,50 +541,164 @@ internal partial class RenderContext
             }
         }
 
-        // Signature fields get a "sign here" placeholder border, and so do
-        // BUTTON fields (checkbox / radio / pushbutton).
+        // WHAT A /FT /Btn WITH NO /AP GETS (#972), and what the previous
+        // answer got wrong.
         //
-        // This used to be signature-only, justified as "mutool, Poppler and
-        // Foxit all leave them blank unless the author opted into /MK
-        // styling". That is true of an EMPTY TEXT field and false of a button.
-        // Measured on pdf.js checkbox_no_appearance.pdf — two /FT /Btn widgets,
-        // no /MK anywhere in the file:
+        // This block used to draw an unconditional blue BOX for every button,
+        // justified by "measured on pdf.js checkbox_no_appearance.pdf — mutool
+        // 233 inked px, pdftocairo 229, excise 0". The measurement was real and
+        // the conclusion drawn from it was not: those 233/229 pixels are a
+        // CHECK MARK, not a box. Neither renderer draws any box at all. So
+        // excise ended up inking a rectangle nobody else draws while still
+        // missing the only thing they do draw — the majority-scored corpus gate
+        // (#932) reads that as 12 tiles missing and 50 tiles invented.
         //
-        //     mutool 233 inked px, pdftocairo 229, excise 0
+        // Re-measured at 72 dpi over one synthesized /FT /Btn widget per case,
+        // /Rect [50 50 100 100], no /AP anywhere (inked px; Ghostscript draws
+        // nothing in any of these and is omitted):
         //
-        // A checkbox is a control the reader is meant to see the state of, so
-        // both reference renderers draw its box even with nothing to style it
-        // from. An empty text field genuinely is invisible until filled, and
-        // that half of the old rule is kept.
-        bool isButton = fieldType == "Btn";
-        if (!isSignature && !isButton && !hasExplicitStyle) return;
+        //   case                      mutool  pdftocairo  pdftoppm
+        //   /AS on   (V=Yes AS=Yes)      322         320       320   <- a check
+        //   /AS off  (V=Off AS=Off)        0           0         0
+        //   /V on but NO /AS               0           0         0
+        //   pushbutton (Ff bit 17)         0           0         0
+        //   radio on   (Ff bit 16)       468           0         0
+        //
+        // Three rules follow, and each is what a MAJORITY does:
+        //   * an ON checkbox draws a check mark — corroborated 3/3;
+        //   * an OFF checkbox draws NOTHING, no box — corroborated 3/3;
+        //   * the state comes from /AS ALONE. A /V of /Yes with no /AS draws
+        //     nothing anywhere, which matches how ResolveAppearanceN above
+        //     already refuses to guess a state.
+        // Radio is deliberately NOT implemented: one renderer of three draws a
+        // dot and the other two draw nothing, so implementing it means electing
+        // an outlier — the #875 trap that #889 exists to avoid. Filed
+        // separately. Pushbutton draws nothing anywhere, so it stays blank.
+        //
+        // The /MK chrome below is unchanged and still applies to a button that
+        // carries one (mutool honours /MK here; Poppler ignores it and draws
+        // only the check). Signature fields keep their "sign here" placeholder.
+        bool isCheckbox = fieldType == "Btn" && !IsPushButtonWidget(annot) && !IsRadioWidget(annot);
 
-        float borderWidth = (float)(annot.BorderWidth ?? 1.0);
-        _canvas.Save();
-        try
+        if (isSignature || hasExplicitStyle)
         {
-            using var paint = new SKPaint { IsAntialias = _options.AntiAlias };
-
-            if (bgColor.HasValue)
+            float borderWidth = (float)(annot.BorderWidth ?? 1.0);
+            _canvas.Save();
+            try
             {
-                paint.Style = SKPaintStyle.Fill;
-                paint.Color = bgColor.Value;
+                using var paint = new SKPaint { IsAntialias = _options.AntiAlias };
+
+                if (bgColor.HasValue)
+                {
+                    paint.Style = SKPaintStyle.Fill;
+                    paint.Color = bgColor.Value;
+                    _canvas.DrawRect(rect, paint);
+                }
+
+                // Border: use /MK /BC when supplied. For signature fields
+                // without /MK, fall back to a neutral medium-blue tone —
+                // the goal is "user can see the field exists," not pixel
+                // parity with any specific viewer.
+                paint.Style = SKPaintStyle.Stroke;
+                paint.StrokeWidth = borderWidth;
+                paint.Color = bcColor ?? new SKColor(0x66, 0x99, 0xFF, 0xFF);
                 _canvas.DrawRect(rect, paint);
             }
+            finally
+            {
+                _canvas.Restore();
+            }
+        }
 
-            // Border: use /MK /BC when supplied. For signature fields
-            // without /MK, fall back to a neutral medium-blue tone —
-            // the goal is "user can see the field exists," not pixel
-            // parity with any specific viewer.
-            paint.Style = SKPaintStyle.Stroke;
-            paint.StrokeWidth = borderWidth;
-            paint.Color = bcColor ?? new SKColor(0x66, 0x99, 0xFF, 0xFF);
-            _canvas.DrawRect(rect, paint);
-        }
-        finally
+        if (isCheckbox && IsWidgetAppearanceStateOn(annot))
+            DrawSynthesizedCheckMark(rect);
+    }
+
+    /// <summary>
+    /// True when the widget's <c>/AS</c> names an ON state — present and not
+    /// <c>Off</c>. Absent <c>/AS</c> is NOT treated as on: a checkbox whose
+    /// only evidence is <c>/V /Yes</c> draws nothing in mutool, pdftocairo or
+    /// pdftoppm, and guessing a state is what put a tick in every empty box of
+    /// a blank IRS W-9 once already (see <see cref="ResolveAppearanceN"/>).
+    /// </summary>
+    private static bool IsWidgetAppearanceStateOn(Excise.Core.Document.PdfAnnotation annot)
+    {
+        var state = annot.RawDictionary.GetNameOrNull("AS");
+        return state != null && state != "Off";
+    }
+
+    /// <summary>Field flag bit 16 (value 0x8000) — a radio group, §12.7.4.2.</summary>
+    private bool IsRadioWidget(Excise.Core.Document.PdfAnnotation annot)
+        => (GetInheritedFieldFlags(annot) & 0x8000) != 0;
+
+    /// <summary>Field flag bit 17 (value 0x10000) — a push button, §12.7.4.2.</summary>
+    private bool IsPushButtonWidget(Excise.Core.Document.PdfAnnotation annot)
+        => (GetInheritedFieldFlags(annot) & 0x10000) != 0;
+
+    /// <summary>
+    /// <c>/Ff</c> from the widget, or from the nearest ancestor field that
+    /// states one (§12.7.4.2 makes /Ff inheritable, and a widget merged into
+    /// its field commonly carries it on the parent). The walk is depth-capped
+    /// so a /Parent cycle cannot hang the renderer.
+    /// </summary>
+    private int GetInheritedFieldFlags(Excise.Core.Document.PdfAnnotation annot)
+    {
+        var dict = annot.RawDictionary;
+        for (int depth = 0; depth < 32 && dict != null; depth++)
         {
-            _canvas.Restore();
+            if (dict.GetOptional("Ff") is { } ffObj
+                && _page.Document.Resolve(ffObj) is Excise.Core.Primitives.PdfInteger ff)
+                return (int)ff.Value;
+
+            var parent = dict.GetOptional("Parent");
+            dict = parent == null
+                ? null
+                : _page.Document.Resolve(parent) as Excise.Core.Primitives.PdfDictionary;
         }
+        return 0;
+    }
+
+    /// <summary>
+    /// The check mark an ON checkbox with no <c>/AP</c> gets. Drawn as a
+    /// stroked polyline rather than a ZapfDingbats glyph so it does not depend
+    /// on a font being installed — the shape is what the oracles agree on, and
+    /// their own two check marks differ from each other by 5 px vertically
+    /// (mutool's bbox on the reference fixture is (58,105)-(91,140),
+    /// pdftocairo's (58,110)-(91,145) over the same (50,100)-(100,150) rect).
+    /// This aims at the middle of that, not at either one: excise is not
+    /// chasing pixel parity, only drawing the mark the majority draws where
+    /// they draw it.
+    /// </summary>
+    private void DrawSynthesizedCheckMark(SKRect rect)
+    {
+        float side = Math.Min(rect.Width, rect.Height);
+        if (side <= 0) return;
+
+        // Both oracles inset the glyph to about two thirds of the box.
+        float inset = side * 0.19f;
+        var box = new SKRect(
+            rect.Left + inset, rect.Top + inset,
+            rect.Right - inset, rect.Bottom - inset);
+
+        // `box` is in PDF space (Y UP, see RenderDefaultAppearance), so
+        // box.Top is the visually LOWER edge. Building the polyline in screen
+        // sense here draws a caret instead of a tick, which is exactly what
+        // the first version of this did.
+        using var path = new SKPath();
+        path.MoveTo(box.Left, box.Bottom - box.Height * 0.55f);
+        path.LineTo(box.Left + box.Width * 0.35f, box.Top);
+        path.LineTo(box.Right, box.Bottom);
+
+        using var paint = new SKPaint
+        {
+            IsAntialias = _options.AntiAlias,
+            Style = SKPaintStyle.Stroke,
+            StrokeWidth = Math.Max(1f, side * 0.11f),
+            StrokeCap = SKStrokeCap.Round,
+            StrokeJoin = SKStrokeJoin.Round,
+            Color = SKColors.Black,
+        };
+        _canvas.DrawPath(path, paint);
     }
 
     /// <summary>
