@@ -385,7 +385,8 @@ public class AnnotationSynthesisPolicyGateTests
 
             case "clipped-remnant-inside-rect":
                 if (Contains(rect, b) is { } r4) return r4;
-                var reference = InkedPixels(RenderRowById(policy, row.GetProperty("comparedWith").GetString()!));
+                using var unclipped = RenderRowById(policy, row.GetProperty("comparedWith").GetString()!);
+                var reference = InkedPixels(unclipped);
                 return ink >= reference * 0.25
                     ? $"{ink} inked px against the unclipped row's {reference} — the run was " +
                       "supposed to land mostly outside the field and be clipped away"
