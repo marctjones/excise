@@ -74,6 +74,7 @@ public class TextExtractor
     private double _charSpacing = 0;
     private double _wordSpacing = 0;
     private double _horizontalScaling = 100;
+    private double _textRise;
     // Type 0 / CID font state (§9.7)
     private bool _is2ByteFont;
     private bool _isCidFont;
@@ -612,9 +613,35 @@ public class TextExtractor
 
             if (token is string op && IsOperator(op))
             {
+                if (op == "BI")
+                {
+                    // §8.9.7: the bytes between ID and EI are raw pixel data,
+                    // NOT tokens. Without this they were tokenised: a stray '('
+                    // in the samples opened a string literal that swallowed the
+                    // rest of the stream, so every glyph AFTER an inline image
+                    // vanished from page.Letters while ContentStreamParser (which
+                    // has always parsed BI/ID/EI as one unit) saw them. Silent
+                    // extraction blindness bounds redaction — #637's class, from
+                    // #980's divergence.
+                    SkipInlineImage(content, ref pos);
+                    operands.Clear();
+                    _lastDictMcid = null;
+                    continue;
+                }
+
                 ExecuteOperator(op, operands);
                 operands.Clear();
                 _lastDictMcid = null; // consumed by the operator just executed (#776)
+            }
+            else if (IsUnknownOperatorKeyword(token))
+            {
+                // §7.8.2: an operator we do not implement still TERMINATES its
+                // operands. Leaving them queued let a bare keyword's operands
+                // be read by the next real operator — see the `sh` case in the
+                // Operators set above. ContentStreamParser drops the keyword
+                // and does the same clear (#980).
+                operands.Clear();
+                _lastDictMcid = null;
             }
             else
             {
@@ -622,6 +649,202 @@ public class TextExtractor
             }
         }
     }
+
+    /// <summary>
+    /// Upper bound on an inline image's data scan when no <c>/L</c> length is
+    /// declared, matching
+    /// <see cref="Excise.Core.Content.ContentStreamParser"/>'s bound of the
+    /// same name (#347): the two parse the same bytes and must bound them the
+    /// same way (#980).
+    /// </summary>
+    private const int MaxInlineImageScanBytes = 64 * 1024 * 1024;
+
+    /// <summary>
+    /// Advance <paramref name="pos"/> past an inline image (§8.9.7) whose
+    /// <c>BI</c> token has just been consumed, so its raw sample bytes are
+    /// never tokenised. Mirrors
+    /// <c>ContentStreamParser.ParseInlineImage</c> byte-for-byte in where it
+    /// leaves <paramref name="pos"/>; extraction has no use for the pixels, so
+    /// only the position matters here (#980).
+    /// </summary>
+    private static void SkipInlineImage(string content, ref int pos)
+    {
+        // --- 1. Image parameters, up to the ID token ---
+        long declaredLength = -1;
+        string? pendingKey = null;
+
+        while (pos < content.Length)
+        {
+            SkipInlineImageWhitespace(content, ref pos);
+            if (pos >= content.Length) break;
+
+            if (content[pos] == 'I' && pos + 1 < content.Length && content[pos + 1] == 'D' &&
+                (pos + 2 >= content.Length || IsPdfWhitespace(content[pos + 2])))
+            {
+                pos += 2; // consume 'ID'
+                // §8.9.7: exactly ONE whitespace byte separates ID from the
+                // data. Producers write CRLF anyway, so treat the pair as one
+                // separator — deliberately only the exact \r\n pair, never a
+                // general whitespace skip, because unfiltered sample data may
+                // legitimately begin with 0x0A or 0x20.
+                if (pos < content.Length && IsPdfWhitespace(content[pos]))
+                {
+                    bool cr = content[pos] == '\r';
+                    pos++;
+                    if (cr && pos < content.Length && content[pos] == '\n')
+                        pos++;
+                }
+                break;
+            }
+
+            var token = ParseInlineImageToken(content, ref pos);
+            if (token is string name && name.Length > 1 && name[0] == '/')
+            {
+                pendingKey = name;
+            }
+            else
+            {
+                if (pendingKey is "/L" or "/Length" && token is int len)
+                    declaredLength = len;
+                pendingKey = null;
+            }
+        }
+
+        int dataStart = pos;
+
+        // --- 2a. Trust an explicit /L, confirming EI lines up after it ---
+        if (declaredLength > 0 && dataStart + declaredLength <= content.Length)
+        {
+            int probe = dataStart + (int)declaredLength;
+            while (probe < content.Length && IsPdfWhitespace(content[probe])) probe++;
+            if (probe + 1 < content.Length && content[probe] == 'E' && content[probe + 1] == 'I' &&
+                (probe + 2 >= content.Length || IsInlineImageWordBoundary(content[probe + 2])))
+            {
+                pos = probe + 2;
+                return;
+            }
+            // length present but EI didn't line up → fall through to scanning
+        }
+
+        // --- 2b. Scan for EI at a word boundary ---
+        while (pos < content.Length)
+        {
+            if (pos - dataStart > MaxInlineImageScanBytes)
+                throw new PdfParseException(
+                    $"Inline image (no /L) exceeded {MaxInlineImageScanBytes} bytes without an EI marker");
+
+            if (IsPdfWhitespace(content[pos]) || pos == dataStart)
+            {
+                int wsPos = pos;
+                if (pos != dataStart) pos++;
+
+                if (pos + 1 < content.Length && content[pos] == 'E' && content[pos + 1] == 'I' &&
+                    (pos + 2 >= content.Length || IsInlineImageWordBoundary(content[pos + 2])))
+                {
+                    pos += 2; // consume 'EI'
+                    return;
+                }
+
+                pos = wsPos + 1;
+            }
+            else
+            {
+                pos++;
+            }
+        }
+    }
+
+    /// <summary>
+    /// One image-parameter token. Names and numbers are all this needs to read
+    /// (only <c>/L</c> is acted on); everything else is consumed for position.
+    /// </summary>
+    private static object? ParseInlineImageToken(string content, ref int pos)
+    {
+        if (pos >= content.Length) return null;
+        var c = content[pos];
+
+        if (c == '/')
+        {
+            int start = pos;
+            pos++;
+            while (pos < content.Length)
+            {
+                var n = content[pos];
+                if (char.IsWhiteSpace(n) || n == '/' || n == '[' || n == ']' ||
+                    n == '<' || n == '>' || n == '(' || n == ')' || n == '{' || n == '}')
+                    break;
+                pos++;
+            }
+            return content.Substring(start, pos - start);
+        }
+
+        if (char.IsDigit(c) || c == '-' || c == '+' || c == '.')
+        {
+            int start = pos;
+            bool hasDot = false;
+            while (pos < content.Length)
+            {
+                var n = content[pos];
+                if (char.IsDigit(n) || n == '-' || n == '+' || n == '.')
+                {
+                    if (n == '.') hasDot = true;
+                    pos++;
+                }
+                else break;
+            }
+            var span = content.AsSpan(start, pos - start);
+            if (hasDot)
+                return double.TryParse(span, System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out var d) ? d : 0.0;
+            return int.TryParse(span, out var i) ? i : 0;
+        }
+
+        if (c == '[')
+        {
+            int depth = 0;
+            while (pos < content.Length)
+            {
+                if (content[pos] == '[') depth++;
+                else if (content[pos] == ']') { depth--; pos++; if (depth <= 0) break; continue; }
+                pos++;
+            }
+            return null;
+        }
+
+        if (char.IsLetter(c))
+        {
+            while (pos < content.Length && char.IsLetterOrDigit(content[pos])) pos++;
+            return null;
+        }
+
+        pos++;
+        return null;
+    }
+
+    private static void SkipInlineImageWhitespace(string content, ref int pos)
+    {
+        while (pos < content.Length && IsPdfWhitespace(content[pos]))
+            pos++;
+    }
+
+    private static bool IsPdfWhitespace(char c) =>
+        c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == '\0';
+
+    private static bool IsInlineImageWordBoundary(char c) =>
+        IsPdfWhitespace(c) || c == '/' || c == '(' || c == ')' || c == '[' || c == ']';
+
+    /// <summary>
+    /// True for a bare keyword token that is neither a recognised operator nor
+    /// one of the three literal operand keywords. Names (which
+    /// <see cref="ParseName"/> returns with their leading <c>/</c>) and every
+    /// non-string token are operands and never match. #980
+    /// </summary>
+    private static bool IsUnknownOperatorKeyword(object token) =>
+        token is string s
+        && s.Length > 0
+        && s[0] != '/'
+        && s is not ("true" or "false" or "null")
+        && !IsOperator(s);
 
     private void SkipWhitespaceAndComments(string content, ref int pos)
     {
@@ -1081,6 +1304,13 @@ public class TextExtractor
         "Do", "BI", "ID", "EI",
         "gs", "CS", "cs", "SC", "SCN", "sc", "scn", "G", "g", "RG", "rg", "K", "k",
         "d", "i", "j", "J", "M", "ri", "w",
+        // Shading and Type 3 glyph metrics. Absent until #980: `sh` and
+        // `d0`/`d1` were not recognised here, so `/Sh0 sh` left BOTH tokens on
+        // the operand list and the NEXT operator read them as its own operands
+        // — `/Sh0 sh 1 0 0 1 72 700 Tm` set the text matrix from
+        // (0, 0, 1, 0, 0, 1) and moved every following letter to (0, 1).
+        // ContentStreamParser has always recognised all three (#980).
+        "sh", "d0", "d1",
         "BDC", "BMC", "EMC", "BX", "EX", "DP", "MP"
     };
 
@@ -1197,6 +1427,16 @@ public class TextExtractor
             case "Tz": // Set horizontal scaling
                 if (operands.Count >= 1)
                     _horizontalScaling = ToDouble(operands[0]);
+                break;
+
+            case "Ts": // Set text rise (§9.3.7)
+                // Recognised as an operator here since forever, but never
+                // TRACKED: superscripts and subscripts were extracted on the
+                // unrisen baseline while ContentStreamParser's operator bounds
+                // carried the rise, so the two disagreed about where the same
+                // glyph is. #980
+                if (operands.Count >= 1)
+                    _textRise = ToDouble(operands[0]);
                 break;
 
             case "Tj": // Show text string
@@ -1481,6 +1721,7 @@ public class TextExtractor
             _charSpacing,
             _wordSpacing,
             _horizontalScaling,
+            _textRise,
             _is2ByteFont,
             _isVerticalWriting,
             _cidMetrics,
@@ -1523,6 +1764,7 @@ public class TextExtractor
                 _charSpacing,
                 _wordSpacing,
                 _horizontalScaling,
+                _textRise,
                 _is2ByteFont,
                 _isVerticalWriting,
                 _cidMetrics,
@@ -1758,8 +2000,13 @@ public class TextExtractor
         var unicode = DecodeCharacter(charCode, cid);
         var charWidth = GetCharWidth(cid);
 
-        // Calculate position in user space
-        var (x, y) = TransformPoint(_tm_e, _tm_f);
+        // Calculate position in user space. §9.4.4 puts the text rise in the
+        // text rendering matrix as the translation (0, Ts) INSIDE Tm, so it is
+        // a text-space offset composed through the matrix's linear part — never
+        // added raw to the user-space corner. #980
+        var (x, y) = TransformPoint(
+            _tm_e + _textRise * _tm_c,
+            _tm_f + _textRise * _tm_d);
 
         // Glyph advance & ascent in TEXT space. Th (horizontal scaling) applies
         // only in horizontal writing (§9.2.4/§9.4.4).
@@ -2819,8 +3066,12 @@ public class TextExtractor
 
     /// <summary>
     /// Get character width for standard Type1 fonts (Helvetica, Times, Courier, etc.)
+    /// Shared with <see cref="Excise.Core.Content.ContentStreamParser"/> rather
+    /// than duplicated: a second copy is exactly how the two state machines
+    /// drift apart, and a width disagreement moves the glyph cells redaction
+    /// matches against (#980).
     /// </summary>
-    private static double GetStandardFontWidth(string baseFont, int charCode)
+    internal static double GetStandardFontWidth(string baseFont, int charCode)
     {
         // Standard 14 fonts have fixed-width or variable-width glyphs
         // For Courier (monospace), all glyphs are 600 units wide
