@@ -131,7 +131,7 @@ public class PdfParser : IDisposable
                 return ParsePossibleReference(token);
 
             case PdfTokenType.Real:
-                return new PdfReal(double.Parse(token.Value, CultureInfo.InvariantCulture));
+                return new PdfReal(ParseDoubleToken(token, "real number"));
 
             case PdfTokenType.LiteralString:
                 return new PdfString(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes(token.Value), isHex: false);
@@ -178,6 +178,20 @@ public class PdfParser : IDisposable
                 // It's a reference
                 int objNum = ParseInt32Token(intToken, "object number");
                 int genNum = ParseInt32Token(token2, "generation number");
+
+                // A negative object or generation number cannot name any
+                // object, and PdfReference's constructor rejects it with a raw
+                // ArgumentOutOfRangeException — which escaped PdfDocument.Open
+                // on a hostile file (#974, found by the #960 token fuzzer).
+                //
+                // Resolved to null rather than thrown, following §7.3.10's
+                // rule for a reference to an undefined object and the #884
+                // precedent in PdfDocument.GetObject: an object number that
+                // can never exist IS undefined, and a document that opens with
+                // one dead reference beats a document that will not open.
+                if (objNum < 0 || genNum < 0)
+                    return PdfNull.Instance;
+
                 return new PdfReference(objNum, genNum);
             }
         }
@@ -608,6 +622,26 @@ public class PdfParser : IDisposable
         try
         {
             return long.Parse(token.Value, CultureInfo.InvariantCulture);
+        }
+        catch (Exception ex) when (ex is FormatException or OverflowException)
+        {
+            throw new PdfParseException($"Invalid {label} '{token.Value}' at position {token.Position}", ex);
+        }
+    }
+
+    /// <summary>
+    /// Same contract as <see cref="ParseInt32Token"/> for real numbers. The
+    /// lexer classifies a token by its leading characters, so a truncated or
+    /// corrupted number ("1e", "8e", "-", ".") arrives here typed as Real and
+    /// fails <c>double.Parse</c>. Without this wrapper that escaped
+    /// <c>PdfDocument.Open</c> as a raw FormatException — a missing guard by
+    /// the #352 contract, found by the #960 token fuzzer (#974).
+    /// </summary>
+    private static double ParseDoubleToken(PdfToken token, string label)
+    {
+        try
+        {
+            return double.Parse(token.Value, CultureInfo.InvariantCulture);
         }
         catch (Exception ex) when (ex is FormatException or OverflowException)
         {
