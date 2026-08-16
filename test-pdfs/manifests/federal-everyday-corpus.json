@@ -6,7 +6,7 @@
   "documents": [
     {
       "filename": "irs-w4.pdf",
-      "url": "https://www.irs.gov/pub/irs-pdf/fw4.pdf",
+      "url": "https://www.irs.gov/pub/irs-prior/fw4--2026.pdf",
       "category": "tax-form",
       "agency": "Internal Revenue Service",
       "licenseBasis": "Official U.S. federal government work; public domain under 17 USC 105.",
@@ -15,7 +15,7 @@
     },
     {
       "filename": "irs-w9.pdf",
-      "url": "https://www.irs.gov/pub/irs-pdf/fw9.pdf",
+      "url": "https://www.irs.gov/pub/irs-prior/fw9--2024.pdf",
       "category": "tax-form",
       "agency": "Internal Revenue Service",
       "licenseBasis": "Official U.S. federal government work; public domain under 17 USC 105.",
@@ -24,7 +24,7 @@
     },
     {
       "filename": "irs-1040.pdf",
-      "url": "https://www.irs.gov/pub/irs-pdf/f1040.pdf",
+      "url": "https://www.irs.gov/pub/irs-prior/f1040--2025.pdf",
       "category": "tax-form",
       "agency": "Internal Revenue Service",
       "licenseBasis": "Official U.S. federal government work; public domain under 17 USC 105.",
@@ -33,7 +33,7 @@
     },
     {
       "filename": "irs-1040-instructions.pdf",
-      "url": "https://www.irs.gov/pub/irs-pdf/i1040gi.pdf",
+      "url": "https://www.irs.gov/pub/irs-prior/i1040gi--2025.pdf",
       "category": "tax-instructions",
       "agency": "Internal Revenue Service",
       "licenseBasis": "Official U.S. federal government work; public domain under 17 USC 105.",
@@ -42,7 +42,7 @@
     },
     {
       "filename": "irs-pub509-2026.pdf",
-      "url": "https://www.irs.gov/pub/irs-pdf/p509.pdf",
+      "url": "https://www.irs.gov/pub/irs-prior/p509--2026.pdf",
       "category": "tax-publication",
       "agency": "Internal Revenue Service",
       "licenseBasis": "Official U.S. federal government work; public domain under 17 USC 105.",

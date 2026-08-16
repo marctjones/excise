@@ -12,15 +12,23 @@
 # WHY THIS IS A SEPARATE SCRIPT AND NOT JUST `dotnet test`:
 # ExtractionParityTests (Excise.Rendering.Tests/Differential/) requires mutool
 # and the smoke corpus (test-pdfs/smoke/, gitignored, downloaded on demand).
-# Both are ABSENT on GitHub-hosted PR runners, so `dotnet test` filters the
-# Differential category OUT of PR CI (see .github/workflows/ci.yml) — the
-# test would otherwise silently report "0 tests found" and the PR would go
-# green having measured nothing. That is exactly the invisible-coverage-loss
-# failure #619's skip budget exists to catch elsewhere in this repo.
+# Both are ABSENT on the main `Test (Linux)` PR runner, so `dotnet test`
+# filters the Differential category OUT there (see .github/workflows/ci.yml)
+# — the test would otherwise silently report "0 tests found" and the PR would
+# go green having measured nothing. That is exactly the invisible-coverage-
+# loss failure #619's skip budget exists to catch elsewhere in this repo.
 #
-# So: this is a RELEASE gate (docs/RELEASE_CHECKLIST.md), not a PR gate, and
-# unlike the underlying test it REFUSES TO SILENTLY SKIP. Missing mutool or
-# missing corpus is a hard FAIL here, not a quiet pass.
+# So: unlike the underlying test, this script REFUSES TO SILENTLY SKIP.
+# Missing mutool or missing corpus is a hard FAIL here, not a quiet pass. It
+# started life as a RELEASE-only gate (docs/RELEASE_CHECKLIST.md) — the
+# tools+corpus it needs were nowhere in CI. As of #929/#844 that stopped being
+# true: rendering-linux.yml (mutool + the pinned smoke corpus, called from
+# ci.yml on every push/PR, not just releases) runs this script directly, so it
+# is now effectively PR-blocking too. That escalation is intentional — the
+# whole point of #844 was to stop measuring this only at release time — but it
+# does mean a mutool apt-version bump on that runner can now redden every PR,
+# not just a release candidate. It still also runs at t2/t3 via
+# scripts/release-smoke.sh and scripts/run-full-suite.sh.
 #
 # Usage:
 #   scripts/check-extraction-parity.sh              # gate: fail on regression
