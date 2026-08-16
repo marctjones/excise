@@ -36,6 +36,11 @@ namespace Excise.Rendering.Tests.Differential;
 ///   2. <see cref="EveryRow_MatchesWhatExciseDraws"/> — renders each row's
 ///      fixture and asserts the row's SHAPE, not just its ink. This is the
 ///      direction that fails when the renderer changes and the table does not.
+///      A row may additionally opt into <c>exciseInkMatchesDrawers</c>, which
+///      pins excise's ink bbox inside the spread of the DRAWING voters' —
+///      the only check here that can see a magnitude, and the one #1003 and
+///      #1004 needed: both were rows where every other check was green while
+///      excise drew the right picture at visibly the wrong size.
 ///   3. <see cref="EveryRowsEvidence_StillHoldsAgainstTheOracles"/> — re-runs
 ///      the oracles and fails when a recorded vote or bbox class no longer
 ///      holds. This is the direction that fails when the world changes under
@@ -153,6 +158,24 @@ public class AnnotationSynthesisPolicyGateTests
                         failures.Add($"{id}: divergence is missing '{key}'");
             }
 
+            // The geometry pin (#1003/#1004). It is only meaningful where
+            // there is a drawer to compare with, and only on an axis this
+            // gate can read.
+            if (row.TryGetProperty("exciseInkMatchesDrawers", out var pin))
+            {
+                var axis = pin.TryGetProperty("axis", out var a) ? a.GetString() : null;
+                if (axis is not ("x" or "y" or "both"))
+                    failures.Add($"{id}: exciseInkMatchesDrawers axis must be 'x', 'y' or 'both', got '{axis}'");
+                if (!pin.TryGetProperty("tolerancePx", out var t) || t.ValueKind != JsonValueKind.Number)
+                    failures.Add($"{id}: exciseInkMatchesDrawers needs a numeric 'tolerancePx'");
+                if (!pin.TryGetProperty("note", out var n) || string.IsNullOrWhiteSpace(n.GetString()))
+                    failures.Add($"{id}: exciseInkMatchesDrawers needs a 'note' saying what it pins and why");
+                if (decision != "draw")
+                    failures.Add($"{id}: exciseInkMatchesDrawers only makes sense on a drawing row");
+                if (DrawerEdges(row, 0).Count == 0)
+                    failures.Add($"{id}: exciseInkMatchesDrawers has no drawing voter with a bbox to compare against");
+            }
+
             if (row.TryGetProperty("comparedWith", out var compared) &&
                 !Rows(policy).Any(r => r.GetProperty("id").GetString() == compared.GetString()))
             {
@@ -192,6 +215,9 @@ public class AnnotationSynthesisPolicyGateTests
             using var bitmap = RenderRow(row);
             var problem = DescribeShapeMismatch(policy, row, bitmap);
             if (problem != null) failures.Add($"{id}: {problem}");
+
+            var spread = DescribeDrawerSpreadMismatch(row, bitmap);
+            if (spread != null) failures.Add($"{id}: {spread}");
         }
 
         failures.Should().BeEmpty(
@@ -441,6 +467,73 @@ public class AnnotationSynthesisPolicyGateTests
             default:
                 return $"no predicate implements shape '{shape}'";
         }
+    }
+
+    /// <summary>
+    /// The opt-in geometry pin: excise's ink must land inside the spread of
+    /// the bboxes the DRAWING voters recorded, edge by edge, within a stated
+    /// tolerance.
+    ///
+    /// <para>It exists because a shape predicate cannot see a magnitude. Both
+    /// #1003 and #1004 were rows that passed every other check in this gate
+    /// while excise drew visibly the wrong size: `filled-band-over-quad` can't
+    /// tell a band that overshoots the quad by 10 px from one that overshoots
+    /// by 4, and `text-value-inside-rect` can't tell a value fitted to 92 px
+    /// of a 100 pt field from one drawn at 64. A row that opts in cannot
+    /// regress that way silently again.</para>
+    ///
+    /// <para>Per-axis, because the axes fail independently: a row may pin the
+    /// horizontal fit while a vertical placement divergence is tracked
+    /// elsewhere. Recorded bboxes are used rather than live oracle runs, so
+    /// this check needs no tools installed.</para>
+    /// </summary>
+    private static string? DescribeDrawerSpreadMismatch(JsonElement row, SKBitmap bitmap)
+    {
+        if (!row.TryGetProperty("exciseInkMatchesDrawers", out var spec)) return null;
+
+        if (InkBounds(bitmap) is not { } b)
+            return "expected ink to compare against the drawers, found a blank page";
+
+        var axis = spec.GetProperty("axis").GetString();
+        int tol = spec.GetProperty("tolerancePx").GetInt32();
+        var problems = new List<string>();
+
+        foreach (var (name, index, isX, value) in new (string, int, bool, int)[]
+                 {
+                     ("left", 0, true, b.Left), ("top", 1, false, b.Top),
+                     ("right", 2, true, b.Right), ("bottom", 3, false, b.Bottom),
+                 })
+        {
+            if (axis == "x" && !isX) continue;
+            if (axis == "y" && isX) continue;
+
+            var edges = DrawerEdges(row, index);
+            if (edges.Count == 0) continue;
+            int lo = edges.Min(), hi = edges.Max();
+            if (value < lo - tol || value > hi + tol)
+            {
+                problems.Add($"excise's {name} edge is {value}, outside the drawing voters' " +
+                             $"[{lo},{hi}] +/-{tol}");
+            }
+        }
+
+        return problems.Count == 0 ? null
+            : string.Join("; ", problems) + ". excise draws what the corroborated majority " +
+              "draws, at the size they draw it — see the row's exciseInkMatchesDrawers note";
+    }
+
+    /// <summary>One edge of every VOTING oracle that recorded a bbox.</summary>
+    private static List<int> DrawerEdges(JsonElement row, int index)
+    {
+        var edges = new List<int>();
+        foreach (var e in row.GetProperty("evidence").EnumerateArray())
+        {
+            if (!e.GetProperty("counts").GetBoolean()) continue;
+            if (e.GetProperty("vote").GetString() != "draws") continue;
+            if (e.GetProperty("bbox").ValueKind != JsonValueKind.Array) continue;
+            edges.Add(e.GetProperty("bbox")[index].GetInt32());
+        }
+        return edges;
     }
 
     private static string? TextValueProblem(SKRectI b, SKRectI rect, string what)
