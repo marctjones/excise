@@ -77,10 +77,20 @@ fi
 shift
 
 TRX=""
+TRX_FILES=()
 MAX_RECHECK=10
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --trx) TRX="${2:-}"; shift 2 ;;
+        --trx)
+            # Repeatable (#894). Chunked projects (Core/Rendering/App in
+            # run-full-suite.sh) never produce a single unfiltered trx, but
+            # their chunks PARTITION the project by test class, so the union of
+            # the chunk trx files is exactly the unfiltered set — and the
+            # runner already verifies that partition covers every class
+            # ("chunk coverage verified: … 0 uncovered"). Passing them all is
+            # therefore sound where passing any ONE would report every other
+            # chunk's tests as holes.
+            TRX_FILES+=("${2:-}"); shift 2 ;;
         --max-recheck) MAX_RECHECK="${2:-10}"; shift 2 ;;
         *) echo "unknown argument: $1" >&2; exit 2 ;;
     esac
@@ -112,26 +122,31 @@ if [[ "$DISCOVERED" -eq 0 ]]; then
 fi
 echo "    $DISCOVERED discovered"
 
-if [[ -z "$TRX" ]]; then
+if [[ "${#TRX_FILES[@]}" -eq 0 ]]; then
     TRX="$TMP/run.trx"
     echo "==> running $PROJ_NAME"
 assert_fresh
     dotnet test "$CSPROJ" -c Debug --no-build --logger "trx;LogFileName=$TRX" >/dev/null 2>&1
+    TRX_FILES=("$TRX")
 fi
 
-if [[ ! -f "$TRX" ]]; then
-    echo "FAIL: no trx at $TRX — cannot tell which tests reported."
-    exit 1
-fi
+for _trx in "${TRX_FILES[@]}"; do
+    if [[ ! -f "$_trx" ]]; then
+        echo "FAIL: no trx at $_trx — cannot tell which tests reported."
+        exit 1
+    fi
+done
+echo "    reading $(printf '%s' "${#TRX_FILES[@]}") trx file(s)"
 
-python3 - "$TRX" > "$TMP/executed.txt" <<'PY'
+python3 - "${TRX_FILES[@]}" > "$TMP/executed.txt" <<'PY'
 import sys, xml.etree.ElementTree as ET
 N = '{http://microsoft.com/schemas/VisualStudio/TeamTest/2010}'
 seen = set()
-for r in ET.parse(sys.argv[1]).iter(N + 'UnitTestResult'):
-    n = r.get('testName')
-    if n:
-        seen.add(n)
+for path in sys.argv[1:]:
+    for r in ET.parse(path).iter(N + 'UnitTestResult'):
+        n = r.get('testName')
+        if n:
+            seen.add(n)
 for n in sorted(seen):
     print(n)
 PY

@@ -307,6 +307,10 @@ for proj in $PROJECTS_SMALL; do
     emit "$proj" test "$proj/$proj.csproj" "-"
 done
 
+# NOT an associative array: macOS ships bash 3.2, where `declare -A` is an
+# invalid option and the lookup silently reads empty — which is exactly how
+# the first draft of the gate below emitted nothing while looking correct.
+RENDERING_CHUNK_TRX=""
 for proj in $PROJECTS_BIG; do
     if [ "$SKIP_CHUNKING" = "1" ]; then
         emit "$proj" test "$proj/$proj.csproj" "-"
@@ -319,6 +323,13 @@ for proj in $PROJECTS_BIG; do
     if [ -n "$chunks" ] && [ -s "$chunks" ]; then
         while IFS=$'\t' read -r cname cfilter; do
             emit "$proj.$cname" test "$proj/$proj.csproj" "$cfilter"
+            # Remember every chunk's trx so the #894 discovered-vs-reported
+            # gate can consume their UNION below: chunks partition the project
+            # by test class, so the union is exactly an unfiltered run, and the
+            # gate refuses any single filtered trx by construction.
+            if [ "$proj" = "Excise.Rendering.Tests" ]; then
+                RENDERING_CHUNK_TRX="$RENDERING_CHUNK_TRX --trx $LOG_DIR/$proj.$cname.trx"
+            fi
         done < "$chunks"
     else
         emit "$proj" test "$proj/$proj.csproj" "-"
@@ -464,7 +475,22 @@ fi
 # reproduced in a full-suite run). Chunks above give fast, resumable feedback;
 # this single serial pass is what actually counts as evidence. CLAUDE.md:
 # Excise.App.Tests is serial by design and must run alone.
+# #894 for Excise.Rendering.Tests — the project where a DETERMINISTIC
+# discovered-but-never-executed case is known to live, and the one project no
+# unfiltered run covers: CI filters its step by design and this plan chunks it.
+# Rather than duplicating a ~10-minute suite just to count, feed the gate the
+# union of the chunk trx files it already produced.
+if [ -n "$RENDERING_CHUNK_TRX" ]; then
+    emit "test-count-rendering" script \
+        "scripts/check-test-count.sh Excise.Rendering.Tests/Excise.Rendering.Tests.csproj$RENDERING_CHUNK_TRX" "-"
+fi
 emit "app-tests-unchunked-evidence" test "Excise.App.Tests/Excise.App.Tests.csproj" "-"
+# #894: the App suite is the largest unfiltered run in the plan, and until now
+# nothing checked that every test it DISCOVERED actually reported a result.
+# t0 covers Core/Cli/Avalonia; this closes App. The gate re-runs whatever went
+# missing, so a transient vstest reporting loss is reported and a genuine
+# coverage hole is fatal.
+emit "test-count-app" script "scripts/check-test-count.sh Excise.App.Tests/Excise.App.Tests.csproj --trx $LOG_DIR/app-tests-unchunked-evidence.trx" "-"
 
 # ---------------------------------------------------------------------------
 # Filter to --only
@@ -643,9 +669,14 @@ run_one() {
     if [ "$kind" = "script" ]; then
         cmdline="$target"
     elif [ "$filter" = "-" ]; then
-        cmdline="dotnet test \"$target\" --no-build -c \"$CONFIG\" --logger \"console;verbosity=minimal\""
+        # Unfiltered runs also emit a trx: it is what scripts/check-test-count.sh
+        # needs to catch a test that was DISCOVERED and then produced no result
+        # (#894), and that gate only accepts an unfiltered trx by construction.
+        # Filtered/chunked steps deliberately do not get one — feeding the gate
+        # a filtered trx would report everything the filter excluded as a hole.
+        cmdline="dotnet test \"$target\" --no-build -c \"$CONFIG\" --logger \"console;verbosity=minimal\" --logger \"trx;LogFileName=$LOG_DIR/$name.trx\""
     else
-        cmdline="dotnet test \"$target\" --no-build -c \"$CONFIG\" --filter \"$filter\" --logger \"console;verbosity=minimal\""
+        cmdline="dotnet test \"$target\" --no-build -c \"$CONFIG\" --filter \"$filter\" --logger \"console;verbosity=minimal\" --logger \"trx;LogFileName=$LOG_DIR/$name.trx\""
     fi
     measure_step "$name" "$log" "$cmdline"
     rc=$?
