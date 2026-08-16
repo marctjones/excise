@@ -1512,9 +1512,30 @@ public class TextExtractor
                 break;
 
             case "q": // Save graphics state
+                // §8.4.1 Table 52 puts the TEXT state parameters — font + size,
+                // Tc, Tw, Tz, TL, Ts, Tr — in the GRAPHICS state, so `q` saves
+                // them too. This struct was SIX DOUBLES until #983: a run
+                // bracketed in q/Q leaked its font size, spacing and leading
+                // into everything after the `Q`, which then mis-sized every
+                // following letter's cell and (via LetterFinder) the geometry
+                // redaction removes on. mutool restores them; so does
+                // GlyphRemover.TextStateTracker.
                 _stateStack.Push(new GraphicsState
                 {
-                    ctm_a = _ctm_a, ctm_b = _ctm_b, ctm_c = _ctm_c, ctm_d = _ctm_d, ctm_e = _ctm_e, ctm_f = _ctm_f
+                    ctm_a = _ctm_a, ctm_b = _ctm_b, ctm_c = _ctm_c, ctm_d = _ctm_d, ctm_e = _ctm_e, ctm_f = _ctm_f,
+                    fontName = _fontName,
+                    fontSize = _fontSize,
+                    currentFont = _currentFont,
+                    // The font-DERIVED maps travel with the font: restoring the
+                    // name and size alone would leave the extractor decoding
+                    // through the bracketed font's ToUnicode/CID maps while
+                    // reporting the outer font's name.
+                    fontState = CaptureFontState(),
+                    textLeading = _textLeading,
+                    charSpacing = _charSpacing,
+                    wordSpacing = _wordSpacing,
+                    horizontalScaling = _horizontalScaling,
+                    textRise = _textRise
                 });
                 break;
 
@@ -1524,6 +1545,15 @@ public class TextExtractor
                     var state = _stateStack.Pop();
                     _ctm_a = state.ctm_a; _ctm_b = state.ctm_b; _ctm_c = state.ctm_c;
                     _ctm_d = state.ctm_d; _ctm_e = state.ctm_e; _ctm_f = state.ctm_f;
+                    _fontName = state.fontName;
+                    _fontSize = state.fontSize;
+                    _currentFont = state.currentFont;
+                    ApplyFontState(state.fontState);
+                    _textLeading = state.textLeading;
+                    _charSpacing = state.charSpacing;
+                    _wordSpacing = state.wordSpacing;
+                    _horizontalScaling = state.horizontalScaling;
+                    _textRise = state.textRise;
                 }
                 break;
 
@@ -3157,8 +3187,28 @@ public class TextExtractor
         };
     }
 
+    /// <summary>
+    /// What <c>q</c> saves and <c>Q</c> restores. The CTM plus the §8.4.1
+    /// Table 52 TEXT state parameters and the per-font state <c>Tf</c> derives
+    /// from the font dictionary (#983).
+    ///
+    /// The text matrix is deliberately absent: Table 52 does not list it, it is
+    /// reset by <c>BT</c>, and q/Q may not appear inside a text object (§8.2).
+    /// Text rendering mode (<c>Tr</c>) is absent because this extractor does not
+    /// track it at all — see the gate's stated blind spot in
+    /// <c>GraphicsStateTextParameterTests</c>.
+    /// </summary>
     private struct GraphicsState
     {
         public double ctm_a, ctm_b, ctm_c, ctm_d, ctm_e, ctm_f;
+        public string fontName;
+        public double fontSize;
+        public PdfDictionary? currentFont;
+        public FontState fontState;
+        public double textLeading;
+        public double charSpacing;
+        public double wordSpacing;
+        public double horizontalScaling;
+        public double textRise;
     }
 }

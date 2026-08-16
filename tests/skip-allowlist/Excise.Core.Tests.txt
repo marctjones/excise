@@ -32,6 +32,7 @@
 # prerequisite is present (verified locally with the corpus downloaded).
 Excise.Core.Tests.ColorSpaces.PdfColorSpaceTests.Indexed_AltonaWideGamutPalette_DoesNotMapDarkBrushEntriesToWhite   # needs Altona corpus fixture (scripts/download-test-pdfs.sh) [requires: corpus:altona]
 Excise.Core.Tests.ColorSpaces.PdfColorSpaceTests.Parse_ReferenceToNamedColorSpace_ResolvesName   # needs corpus fixture (scripts/download-test-pdfs.sh) [requires: corpus:altona corpus:pdfjs]
+Excise.Core.Tests.Content.GraphicsStateTextParameterOracleTests.AfterQ_FontSizeAndAdvances_AgreeWithMutool   # #983's independent oracle: mutool is the only non-excise witness that q/Q restores the text state, and a shared defect is invisible to the differential gate. The spec-property half (GraphicsStateTextParameterTests) is always-on, so CI keeps coverage of the fix — just not of a second opinion. [requires: tool:mutool]
 Excise.Core.Tests.Filters.Jbig2.Jbig2GlobalsResolutionTests.Bug1087_JbigImageWithGlobals_DecodesFullImage   # needs test-pdfs/pdfium/pixel/bug_1087.pdf (scripts/download-pdfium-corpus.sh) [requires: corpus:pdfium]
 Excise.Core.Tests.Filters.Jbig2.Jbig2GlobalsResolutionTests.Bug1087_MaskStreamWithShortIndirectLength_IsReadable   # needs test-pdfs/pdfium/pixel/bug_1087.pdf (scripts/download-pdfium-corpus.sh) [requires: corpus:pdfium]
 Excise.Core.Tests.Filters.Jbig2.Jbig2GlobalsResolutionTests.Bug631912_JbigImageWithGlobals_DecodesFullImage   # needs test-pdfs/pdfium/bug_631912.pdf (scripts/download-pdfium-corpus.sh) [requires: corpus:pdfium]
