@@ -187,51 +187,52 @@
       "gate": "hard",
       "hotPath": "Excise.Core TextExtractor: content parse + letter accumulators + font/XObject resource materialization (#600; #597 report s3.3)",
       "baseline": {
-        "totalMs": 198.2,
-        "totalAllocatedMB": 160.7
+        "totalMs": 532.4,
+        "totalAllocatedMB": 219.4
       },
       "perPdf": {
         "cdc-vis-covid-19.pdf": {
-          "ms": 10.09,
-          "mb": 2.117
+          "ms": 44.62,
+          "mb": 4.094
         },
         "irs-1040-instructions.pdf": {
-          "ms": 18.1,
-          "mb": 8.625
+          "ms": 70.54,
+          "mb": 14.032
         },
         "irs-1040.pdf": {
-          "ms": 5.58,
-          "mb": 2.511
+          "ms": 18.93,
+          "mb": 4.01
         },
         "irs-pub509-2026.pdf": {
-          "ms": 32.01,
-          "mb": 12.488
+          "ms": 71.24,
+          "mb": 20.453
         },
         "irs-w4.pdf": {
-          "ms": 6.76,
-          "mb": 4.471
+          "ms": 33.64,
+          "mb": 10.434
         },
         "irs-w9.pdf": {
-          "ms": 6.58,
-          "mb": 5.438
+          "ms": 65.46,
+          "mb": 17.57
         },
         "scotus-trump-v-anderson.pdf": {
-          "ms": 7.17,
-          "mb": 3.72
+          "ms": 28.43,
+          "mb": 9.468
         },
         "scotus-trump-v-us.pdf": {
-          "ms": 8.76,
-          "mb": 4.865
+          "ms": 29.93,
+          "mb": 10.98
         },
         "state-ds11-passport.pdf": {
-          "ms": 65.13,
-          "mb": 58.857
+          "ms": 65.07,
+          "mb": 64.992
         },
         "state-ds82-passport-renewal.pdf": {
-          "ms": 37.99,
-          "mb": 57.636
+          "ms": 104.53,
+          "mb": 63.335
         }
-      }
+      },
+      "rebaselineNote": "RE-BASELINED 2026-08-16 for #966 at the feature's MEASURED COST -- not beaten down to the old number. 160.7MB predates #938, which added whole-page reading-order classification to page.Text to fix #899's garbled output; comparing post-feature code against a pre-feature baseline compares two different products. The WASTE was removed first (696MB -> 219MB: per-read recomputation of run geometry, an O(letters x lines) grouping scan, duplicated boundary/line analysis, four LINQ hot spots). What remains is classification the feature cannot skip: it must examine a page to conclude the page needs no reordering. Known future win, deliberately not taken: BuildPageTextRuns allocates a List per run and GroupPageRunsIntoLines a List per line, both rebuilt per page to answer a boolean -- span-based runs would ratchet this back down. Re-baselined PER WORKFLOW on purpose: a blanket --update would also have raised redaction-save (measured 1393 vs its 1213 baseline) and every other unrelated number. NOTE for future editors: the gate sums perPdf.mb; baseline.totalAllocatedMB is display only, so editing the total alone changes nothing."
     },
     "first-page-render": {
       "gate": "advisory",
