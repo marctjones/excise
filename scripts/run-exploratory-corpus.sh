@@ -933,10 +933,73 @@ slices = sorted(f for f in glob.glob(os.path.join(slice_dir, "exploratory-chunk-
                 if not f.endswith(".progress.json"))
 print(f"  found {len(slices)} slice file(s) (expected {expected})")
 
+# ---- CorpusScanSummary merge (#988) ---------------------------------------
+# tools/Excise.RenderTools/Program.cs writes a `summary` object into every
+# chunk's JSON (BuildCorpusScanSummary): a handful of int counters and
+# count-by-key dicts, all computed over that CHUNK's own entries, plus a
+# `topNonPass` list of that chunk's worst 50 pages. Before this fix the merge
+# below never looked at "summary" at all, so anything added to
+# CorpusScanSummary (like #976's localityQuorumShortCount) was dead on
+# arrival for every multi-chunk run — only a single-process `corpus-scan`
+# invocation ever showed it. Every field here is chunk-scoped and additive
+# (each entry belongs to exactly one chunk), so the correct merge is SUM for
+# every int/dict field. topNonPass is the one field that is not a count —
+# see merge_top_non_pass() below.
+SUMMARY_SCALAR_KEYS = (
+    "nonPassCount", "resultNonPassCount", "expectedPassCount",
+    "expectedFailCount", "trueDiffCount", "passOneCount",
+    "localityQuorumShortCount",
+)
+SUMMARY_DICT_KEYS = (
+    "statusCounts", "resultStatusCounts", "resultCategoryCounts",
+    "nonPassVisualHumanImpactCounts", "nonPassVisualCategoryCounts",
+    "oracleDisagreementBuckets",
+)
+
+def priority_rank(entry):
+    # Mirrors GetCorpusScanPriorityRank / StatusFallbackPriorityRank in
+    # tools/Excise.RenderTools/Program.cs. Keep these two in sync if that
+    # ranking changes — this is the one place in CorpusScanSummary that
+    # cannot be merged by summing, so re-deriving the same small (impact,
+    # status) -> rank table is the least-duplication way to reproduce the
+    # tool's own ordering over pooled candidates from multiple chunks.
+    impact_ranks = {"high": 0, "medium": 1, "low": 2, "none": 3}
+    status_fallback_ranks = {
+        "EXCISE_SIDE_GAP": 0, "TIMEOUT": 0, "RESOURCE_LIMIT": 0,
+        "INVALID_PAGE_GEOMETRY": 0, "MALFORMED_PDF": 1, "DECODE_ERROR": 1,
+        "RENDER_ERROR": 1, "PASS_ONE": 3,
+    }
+    status_ranks = {
+        "DIFF": 0, "EXCISE_SIDE_GAP": 0, "TIMEOUT": 1, "RESOURCE_LIMIT": 1,
+        "INVALID_PAGE_GEOMETRY": 1, "MALFORMED_PDF": 2, "DECODE_ERROR": 2,
+        "RENDER_ERROR": 2, "PASS_ONE": 3,
+    }
+    status = entry.get("status")
+    impact_rank = impact_ranks.get(entry.get("visualHumanImpact"))
+    if impact_rank is None:
+        impact_rank = status_fallback_ranks.get(status, 2)
+    status_rank = status_ranks.get(status, 4)
+    return impact_rank * 10 + status_rank
+
+def merge_top_non_pass(pool):
+    # Each chunk's topNonPass is already that chunk's own worst 50, in this
+    # same priority order. A page in the corpus-wide worst 50 cannot rank
+    # below 50th within its own chunk (only its chunk-mates can out-rank it
+    # there), so re-sorting the pooled per-chunk lists and truncating to 50
+    # reproduces the true corpus-wide worst 50 without needing every entry.
+    return sorted(
+        pool,
+        key=lambda e: (priority_rank(e), e.get("path", ""), e.get("pageNumber", 0)),
+    )[:50]
+
 merged_entries = []
 counts = {}
 result_counts = {}
 result_category_counts = {}
+summary_scalar_totals = {k: 0 for k in SUMMARY_SCALAR_KEYS}
+summary_dict_totals = {k: {} for k in SUMMARY_DICT_KEYS}
+summary_top_non_pass_pool = []
+summary_seen = False
 peak = 0
 chunk_pdf_visits = 0
 generated_utcs = []
@@ -960,6 +1023,23 @@ for path in slices:
         result_counts[k] = result_counts.get(k, 0) + v
     for k, v in d.get("resultCategoryCounts", {}).items():
         result_category_counts[k] = result_category_counts.get(k, 0) + v
+    summary = d.get("summary")
+    if isinstance(summary, dict):
+        summary_seen = True
+        for k in SUMMARY_SCALAR_KEYS:
+            v = summary.get(k)
+            if isinstance(v, (int, float)):
+                summary_scalar_totals[k] += v
+        for k in SUMMARY_DICT_KEYS:
+            sub = summary.get(k)
+            if isinstance(sub, dict):
+                dest = summary_dict_totals[k]
+                for kk, vv in sub.items():
+                    if isinstance(vv, (int, float)):
+                        dest[kk] = dest.get(kk, 0) + vv
+        top_non_pass = summary.get("topNonPass")
+        if isinstance(top_non_pass, list):
+            summary_top_non_pass_pool.extend(top_non_pass)
     peak = max(peak, d.get("peakRssBytes", 0))
     chunk_pdf_visits += d.get("pdfs", 0)
     if d.get("generatedUtc"):
@@ -969,6 +1049,25 @@ for path in slices:
     manifest = d.get("expectationManifest")
     if isinstance(manifest, dict):
         expectation_manifest_entries = max(expectation_manifest_entries, manifest.get("entries", 0) or 0)
+
+merged_summary = None
+if summary_seen:
+    merged_summary = {
+        "statusCounts": summary_dict_totals["statusCounts"],
+        "resultStatusCounts": summary_dict_totals["resultStatusCounts"],
+        "resultCategoryCounts": summary_dict_totals["resultCategoryCounts"],
+        "nonPassCount": summary_scalar_totals["nonPassCount"],
+        "resultNonPassCount": summary_scalar_totals["resultNonPassCount"],
+        "expectedPassCount": summary_scalar_totals["expectedPassCount"],
+        "expectedFailCount": summary_scalar_totals["expectedFailCount"],
+        "trueDiffCount": summary_scalar_totals["trueDiffCount"],
+        "passOneCount": summary_scalar_totals["passOneCount"],
+        "localityQuorumShortCount": summary_scalar_totals["localityQuorumShortCount"],
+        "nonPassVisualHumanImpactCounts": summary_dict_totals["nonPassVisualHumanImpactCounts"],
+        "nonPassVisualCategoryCounts": summary_dict_totals["nonPassVisualCategoryCounts"],
+        "oracleDisagreementBuckets": summary_dict_totals["oracleDisagreementBuckets"],
+        "topNonPass": merge_top_non_pass(summary_top_non_pass_pool),
+    }
 
 def get(e, key, default=None):
     return e.get(key, e.get(key[:1].upper() + key[1:], default))
@@ -1004,6 +1103,7 @@ out = {
     "counts": counts,
     "resultCounts": result_counts or None,
     "resultCategoryCounts": result_category_counts or None,
+    "summary": merged_summary,
     "total": len(merged_entries),
     "pdfs": len(unique_pdfs),
     "chunkPdfVisits": chunk_pdf_visits,
@@ -1049,6 +1149,17 @@ if locality_short or locality_none:
     print(f"  blank-page (MISSING_CONTENT) check reached no verdict on "
           f"{locality_short} page(s) with fewer than {MIN_LOCALITY_QUORUM} comparable oracles"
           f"; {locality_none} page(s) had no ink comparison at all")
+# Self-check (#988): the tool's own summary.localityQuorumShortCount (now
+# merged by summing the per-chunk values, see SUMMARY_SCALAR_KEYS above)
+# should agree with the count derived independently from merged_entries
+# above. They are two implementations of the same number — a mismatch means
+# one of them is wrong, and a silent wrong merge is worse than no merge.
+if merged_summary is not None:
+    summary_locality_short = merged_summary.get("localityQuorumShortCount")
+    if summary_locality_short != locality_short:
+        print(f"  ⚠ summary.localityQuorumShortCount ({summary_locality_short}) does not match "
+              f"the independently counted {locality_short} — the chunk merge or the entry-level "
+              f"count has drifted from the other")
 
 # ---- agreement classification (#877) -------------------------------------
 # `status` answers "what happened to this page". It does NOT answer "was excise
