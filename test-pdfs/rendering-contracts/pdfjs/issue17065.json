@@ -11,10 +11,10 @@
   "Notes": "Migrated from the legacy TSV rendering manifests.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "PASS_ONE",
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
       "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
-      "PixelAgreement": "MATCHES_TARGET",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
       "ReferenceSituation": "REFS_DISAGREE",
       "RootCause": "COLOR_MANAGEMENT_DISAGREEMENT",
       "Target": {
@@ -24,7 +24,7 @@
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Focused 150 DPI review shows pdfe closely matches the accepted Poppler output; residual difference is low-impact antialiasing noise.",
+      "QualityReason": "Focused 150 DPI review shows pdfe closely matches the accepted Poppler output; residual difference is low-impact antialiasing noise. Re-measured 2026-08-16 (#977): raw status is PASS - excise agrees with 3 of the 5 oracles that rendered (closest pdftocairo, diffFraction 0.0008). The PASS_ONE pin predates the majority-agreement PASS rule (#865); the corpus expectation manifest has recorded PASS since.",
       "Notes": "Reviewed against pdfe, Poppler, MuPDF, and Ghostscript renders on 2026-07-03."
     }
   }

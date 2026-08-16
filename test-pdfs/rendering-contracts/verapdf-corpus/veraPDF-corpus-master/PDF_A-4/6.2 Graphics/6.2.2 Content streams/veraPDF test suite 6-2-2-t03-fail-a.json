@@ -8,10 +8,10 @@
   "Notes": "Verified at 300 DPI on 2026-07-03: the invalid form XObject references missing /CS0. pdfe preserves the default black color while Poppler/Ghostscript recover as gray; this is malformed-input recovery, not proof that pdfe is better than references.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "PASS_ONE",
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
       "QualityStatus": "ACCEPTED_LIMITATION",
-      "PixelAgreement": "MATCHES_ONE_REFERENCE",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
       "ReferenceSituation": "REFS_INCOMPLETE",
       "RootCause": "INVALID_MISSING_COLORSPACE_RESOURCE_RECOVERY",
       "Target": {
@@ -21,7 +21,7 @@
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Accepted malformed-input recovery difference on an invalid PDF/A fixture; do not classify as pdfe better than references.",
+      "QualityReason": "Accepted malformed-input recovery difference on an invalid PDF/A fixture; do not classify as pdfe better than references. Re-measured 2026-08-16 (#977): raw status is PASS - excise agrees with 4 of the 4 oracles that rendered (closest pdftocairo, diffFraction 0.0096). The PASS_ONE pin predates the majority-agreement PASS rule (#865); the corpus expectation manifest has recorded PASS since.",
       "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders."
     }
   }

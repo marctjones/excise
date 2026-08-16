@@ -8,10 +8,10 @@
   "Notes": "Fresh 2026-07-03 verification shows this is not an active excise text rendering defect. The PDF declares a non-embedded CenturyGothic,Bold Type0 Identity-H font with no ToUnicode map; excise renders the intended DESCRIPTION text cleanly, while Poppler decodes punctuation/digits, MuPDF substitutes a serif face, and Ghostscript introduces visible extra gaps.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "PASS_ONE",
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
       "QualityStatus": "EXCISE_BETTER_THAN_REFS",
-      "PixelAgreement": "MATCHES_TARGET",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
       "ReferenceSituation": "REFS_DISAGREE",
       "RootCause": "NON_EMBEDDED_IDENTITY_H_FONT_REFERENCE_DISAGREEMENT",
       "Target": {
@@ -21,7 +21,7 @@
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "excise renders the intended word DESCRIPTION more faithfully than the available references for this malformed non-embedded Identity-H font case.",
+      "QualityReason": "excise renders the intended word DESCRIPTION more faithfully than the available references for this malformed non-embedded Identity-H font case. Re-measured 2026-08-16 (#977): raw status is PASS - excise agrees with 3 of the 3 oracles that rendered (closest mutool, diffFraction 0.0634). The PASS_ONE pin predates the majority-agreement PASS rule (#865); the corpus expectation manifest has recorded PASS since.",
       "Notes": "Reverified with fresh excise, MuPDF, Poppler, and Ghostscript contact sheet on 2026-07-03; this is a reference-disagreement fixture, not active high-severity renderer work."
     }
   }

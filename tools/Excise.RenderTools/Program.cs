@@ -34,6 +34,7 @@ partial class Program
             CreateCorpusScanCommand(),
             CreateRenderQualityScanCommand(),
             CreateRenderQualityClassifyCommand(),
+            CreateContractManifestAgreementCommand(),
             CreateGuiDisplayHotspotsCommand(),
             CreateCorpusHotspotsCommand(),
             CreateBenchmarkSuiteCommand(),
@@ -2067,8 +2068,25 @@ partial class Program
             // library is absent) yields false here and therefore still
             // escalates, which is the safe direction: fewer oracles available
             // means MORE corroboration is wanted, not less.
+            //
+            // ALSO escalate when the LOCALITY pool is starved (#976), even
+            // though the page-wide metrics are content. Two filters shrink the
+            // pool the MISSING_CONTENT majority is computed over: escalation
+            // (three primaries, normally) and page geometry (an oracle that
+            // rasterized a different page box gets no vote, because its tiles
+            // address a different part of the page). When both bite the pool
+            // falls to two, a 1-1 split is not a majority, and the check
+            // returns no verdict at all — silently, on a page that may be
+            // genuinely blank. Adding oracles is the only thing that lets a
+            // majority form, so add them exactly where it cannot.
+            var comparablePrimaries = CountComparableLocalityOracles(
+                exciseBmp,
+                new[] { mutoolBmp, cairoBmp, pdfiumBmp });
             var shouldEscalate = extraOracles != CorpusExtraOracles.None &&
-                (AlwaysRunAllOracles || !(passMutool && passCairo && passPdfiumPrimary));
+                ShouldEscalateOracles(
+                    primariesAgree: passMutool && passCairo && passPdfiumPrimary,
+                    comparableLocalityOracles: comparablePrimaries,
+                    alwaysRunAllOracles: AlwaysRunAllOracles);
 
             if (shouldEscalate && extraOracles.HasFlag(CorpusExtraOracles.Ghostscript))
             {
@@ -2204,7 +2222,7 @@ partial class Program
             // the distinction PASS_ONE exists to carry.
             var agreeingCount = entry.agreeingOracles.GetValueOrDefault();
             var comparedCount = entry.comparedOracles.GetValueOrDefault();
-            var majorityAgrees = comparedCount >= 2 && agreeingCount * 2 > comparedCount;
+            var majorityAgrees = OracleMajorityAgrees(agreeingCount, comparedCount);
 
             if (!majorityAgrees)
             {
@@ -2256,7 +2274,11 @@ partial class Program
             if (exciseBmp != null && localityReferences.Length > 0)
             {
                 var locality = CompareInkLocalityByMajority(exciseBmp, localityReferences);
-                ApplyInkLocalityVerdict(entry, locality, localityReferences.Length);
+                ApplyInkLocalityVerdict(
+                    entry,
+                    locality,
+                    localityReferences.Length,
+                    CountComparableLocalityOracles(exciseBmp, localityReferences));
             }
             pageStopwatch.Stop();
             entry.elapsedMs = pageStopwatch.ElapsedMilliseconds;
@@ -2940,6 +2962,11 @@ partial class Program
         public int expectedFailCount { get; set; }
         public int trueDiffCount { get; set; }
         public int passOneCount { get; set; }
+        // Pages where the ink-locality check ran but had too few comparable
+        // oracles to form a majority, so it returned no blank-page verdict
+        // (#976). "How many pages did the MISSING_CONTENT check silently skip"
+        // was unknowable before this counter.
+        public int localityQuorumShortCount { get; set; }
         public Dictionary<string, int> nonPassVisualHumanImpactCounts { get; set; } = new(StringComparer.Ordinal);
         public Dictionary<string, int> nonPassVisualCategoryCounts { get; set; } = new(StringComparer.Ordinal);
         public Dictionary<string, int> oracleDisagreementBuckets { get; set; } = new(StringComparer.Ordinal);
@@ -3595,6 +3622,77 @@ partial class Program
     }
 
     /// <summary>
+    /// How many comparable oracles the ink-locality majority needs before it
+    /// can produce a verdict at all (#976).
+    ///
+    /// Two is not enough: a 1-1 split is not a majority, so every tile scores
+    /// zero votes and the page reports no missing content and no inked
+    /// reference tiles — indistinguishable, from the outside, from a page that
+    /// is fine. Three is the smallest pool in which a majority always exists.
+    /// </summary>
+    internal const int MinComparableOraclesForLocalityMajority = 3;
+
+    /// <summary>
+    /// Oracles whose raster covers the same page region as excise's, i.e. the
+    /// pool <see cref="CompareInkLocalityByMajority"/> actually votes over.
+    /// Nulls (oracles that refused) are skipped.
+    /// </summary>
+    internal static int CountComparableLocalityOracles(
+        SkiaSharp.SKBitmap? exciseBmp,
+        IReadOnlyList<SkiaSharp.SKBitmap?> references)
+    {
+        if (exciseBmp == null)
+            return 0;
+
+        var comparable = 0;
+        foreach (var reference in references)
+        {
+            if (reference != null && HasComparableGeometry(exciseBmp, reference))
+                comparable++;
+        }
+
+        return comparable;
+    }
+
+    /// <summary>
+    /// Whether to spend the expensive oracles (Ghostscript ~59ms subprocess,
+    /// PDFBox ~80ms JVM launch) on this page.
+    ///
+    /// Two independent reasons, and the second is #976's: the primaries
+    /// disagree page-wide, OR the locality majority has too small a comparable
+    /// pool to reach a verdict. The second can only fire when the primaries all
+    /// AGREE — a primary that did not render, or that disagreed, already
+    /// escalates — so it adds oracles precisely on the pages that look settled
+    /// and are not.
+    ///
+    /// Escalating cannot turn a PASS into a failure: PASS needs excise to agree
+    /// with a majority of the oracles that rendered, and three agreeing
+    /// primaries stay a majority of four or five. It can only make the locality
+    /// pool big enough to produce the verdict that was missing.
+    ///
+    /// It does NOT guarantee one: four comparable oracles can still split 2-2.
+    /// The pool that could not decide is recorded on the entry
+    /// (<c>comparableOracles</c>) rather than assumed away.
+    /// </summary>
+    /// <summary>
+    /// PASS means excise agrees with a MAJORITY of the oracles that rendered
+    /// (#865), and pulling in more oracles must never be able to manufacture
+    /// that agreement — nor to destroy it. Three agreeing primaries are a
+    /// majority of three, four and five alike, which is why #976's extra
+    /// escalation cannot turn a PASS into a PASS_ONE or a DIFF.
+    /// </summary>
+    internal static bool OracleMajorityAgrees(int agreeingOracles, int comparedOracles)
+        => comparedOracles >= 2 && agreeingOracles * 2 > comparedOracles;
+
+    internal static bool ShouldEscalateOracles(
+        bool primariesAgree,
+        int comparableLocalityOracles,
+        bool alwaysRunAllOracles)
+        => alwaysRunAllOracles
+           || !primariesAgree
+           || comparableLocalityOracles < MinComparableOraclesForLocalityMajority;
+
+    /// <summary>
     /// Tiles per axis for a page of this size — <see cref="InkTileGrid"/> unless
     /// that would make tiles smaller than <see cref="MinInkTilePixels"/>.
     /// </summary>
@@ -3769,11 +3867,18 @@ partial class Program
     internal static void ApplyInkLocalityVerdict(
         CorpusScanEntry entry,
         (int missingTiles, int extraTiles, int inkedTiles) locality,
-        int oracleCount)
+        int oracleCount,
+        int comparableOracleCount)
     {
         entry.missingInkTiles = locality.missingTiles;
         entry.extraInkTiles = locality.extraTiles;
         entry.referenceInkedTiles = locality.inkedTiles;
+        // Recorded even — especially — when it is too small to decide anything
+        // (#976). A pool of two that split 1-1 reports zero missing tiles and
+        // zero inked reference tiles, which reads exactly like a clean page;
+        // without this field a scan cannot say how many of its PASSes were
+        // never actually checked for blankness.
+        entry.comparableOracles = comparableOracleCount;
 
         const int MinInkedTilesForBlankVerdict = 3;
         if (!string.Equals(entry.status, "PASS", StringComparison.Ordinal) ||
@@ -4673,19 +4778,26 @@ partial class Program
         IReadOnlyDictionary<CorpusPageKey, CorpusExpectedOutcome> expectations,
         CorpusScanEntry entry,
         out CorpusExpectedOutcome expectation)
+        => TryGetCorpusExpectation(expectations, entry.path, entry.pageNumber, out expectation);
+
+    internal static bool TryGetCorpusExpectation(
+        IReadOnlyDictionary<CorpusPageKey, CorpusExpectedOutcome> expectations,
+        string path,
+        int pageNumber,
+        out CorpusExpectedOutcome expectation)
     {
-        if (expectations.TryGetValue(new CorpusPageKey(entry.path, entry.pageNumber), out expectation))
+        if (expectations.TryGetValue(new CorpusPageKey(path, pageNumber), out expectation))
             return true;
 
-        if (!entry.path.Contains('/', StringComparison.Ordinal) &&
-            expectations.TryGetValue(new CorpusPageKey("pdfjs/" + entry.path, entry.pageNumber), out expectation))
+        if (!path.Contains('/', StringComparison.Ordinal) &&
+            expectations.TryGetValue(new CorpusPageKey("pdfjs/" + path, pageNumber), out expectation))
         {
             return true;
         }
 
         const string pdfjsPrefix = "pdfjs/";
-        if (entry.path.StartsWith(pdfjsPrefix, StringComparison.Ordinal) &&
-            expectations.TryGetValue(new CorpusPageKey(entry.path[pdfjsPrefix.Length..], entry.pageNumber), out expectation))
+        if (path.StartsWith(pdfjsPrefix, StringComparison.Ordinal) &&
+            expectations.TryGetValue(new CorpusPageKey(path[pdfjsPrefix.Length..], pageNumber), out expectation))
         {
             return true;
         }
@@ -4760,6 +4872,9 @@ partial class Program
             expectedFailCount = entries.Count(entry => string.Equals(entry.expectationResult, "FAIL", StringComparison.Ordinal)),
             trueDiffCount = nonPass.Count(entry => string.Equals(entry.status, "DIFF", StringComparison.Ordinal)),
             passOneCount = nonPass.Count(entry => string.Equals(entry.status, "PASS_ONE", StringComparison.Ordinal)),
+            localityQuorumShortCount = entries.Count(entry =>
+                entry.comparableOracles is { } comparable &&
+                comparable < MinComparableOraclesForLocalityMajority),
             nonPassVisualHumanImpactCounts = CountBy(nonPass.Select(entry => NormalizeSummaryValue(entry.visualHumanImpact))),
             nonPassVisualCategoryCounts = CountBy(nonPass.Select(entry => NormalizeSummaryValue(entry.visualCategory))),
             oracleDisagreementBuckets = CountBy(entries.Select(GetOracleDisagreementBucket)),
@@ -5025,6 +5140,11 @@ partial class Program
         public int? missingInkTiles { get; set; }
         public int? extraInkTiles { get; set; }
         public int? referenceInkedTiles { get; set; }
+        // How many of the oracles that rendered covered the SAME page region as
+        // excise, i.e. the pool the locality majority voted over (#976). Below
+        // MinComparableOraclesForLocalityMajority the check can return no
+        // verdict at all, and this is the only field that says so.
+        public int? comparableOracles { get; set; }
         public int? oracleComparisonPairs { get; set; }
         public int? oracleDisagreeingPairs { get; set; }
         public double? oracleMaxDiffFraction { get; set; }

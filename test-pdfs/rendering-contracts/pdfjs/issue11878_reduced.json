@@ -8,10 +8,10 @@
   "Notes": "Cold no-cache all-page verification on 2026-07-03 rendered pages 1-10; this fixture is not non-renderable.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "PASS_ONE",
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
       "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
-      "PixelAgreement": "MATCHES_TARGET",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
       "ReferenceSituation": "REFS_DISAGREE",
       "RootCause": "TINY_REDUCED_FIXTURE_REFERENCE_MATCH",
       "Target": {
@@ -21,7 +21,7 @@
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Pages 1-10 render and match Poppler exactly in the 2026-07-03 cold verification; the previous non-renderable label was stale.",
+      "QualityReason": "Pages 1-10 render and match Poppler exactly in the 2026-07-03 cold verification; the previous non-renderable label was stale. Re-measured 2026-08-16 (#977): page 1's raw status is PASS - excise agrees with 4 of the 5 oracles that rendered (closest pdftocairo, diffFraction 0.0000). The PASS_ONE pin predates the majority-agreement PASS rule (#865); the corpus expectation manifest has recorded PASS since. Only page 1 was re-measured - the other pages of this contract have no expectation-manifest row and are left alone.",
       "Notes": "3x3 point reduced fixture is below ordinary readable-document scale."
     },
     "2": {

@@ -8,10 +8,10 @@
   "Notes": "Migrated from the legacy TSV rendering manifests. Legacy synthetic page-0 refusal rows were removed on 2026-07-03 after cold verification confirmed current real-page outcomes.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "PASS_ONE",
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
       "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
-      "PixelAgreement": "MATCHES_SOME",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
       "ReferenceSituation": "REFS_DISAGREE",
       "RootCause": "RECOVERED_INPUT_RENDERING",
       "Target": {
@@ -20,7 +20,7 @@
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Recovered malformed fixture now opens and renders page 1; compare as accepted reference disagreement.",
+      "QualityReason": "Recovered malformed fixture now opens and renders page 1; compare as accepted reference disagreement. Re-measured 2026-08-16 (#977): raw status is PASS - excise agrees with 2 of the 2 oracles that rendered (closest mutool, diffFraction 0.0000). The PASS_ONE pin predates the majority-agreement PASS rule (#865); the corpus expectation manifest has recorded PASS since.",
       "Notes": "Explicit page-1 contract added after contract-driven scan confirmed this page renders."
     }
   }
