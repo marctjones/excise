@@ -175,6 +175,44 @@ internal sealed class ContentStreamWalker
     private double _tm_a = 1, _tm_b, _tm_c, _tm_d = 1, _tm_e, _tm_f;
     private double _tlm_e, _tlm_f;
 
+    // Scratch byte buffer reused by ParseStringLiteral/ParseHexString across
+    // calls (#600's trick, ported here because this tokenizer is now the one on
+    // the extraction hot path): each call resets the length, appends its decoded
+    // bytes and copies them into an exact-size result array before returning, so
+    // nothing aliases the scratch. String/hex token parses never nest inside one
+    // another, and a walker instance is single-threaded by construction.
+    private byte[] _stringScratch = new byte[128];
+    private int _stringScratchLen;
+
+    private void ScratchAdd(byte b)
+    {
+        if (_stringScratchLen == _stringScratch.Length)
+            Array.Resize(ref _stringScratch, _stringScratch.Length * 2);
+        _stringScratch[_stringScratchLen++] = b;
+    }
+
+    // Cached PdfInteger instances for the small values content streams are made
+    // of — TJ kern adjustments, Td/Tm/cm coordinates (#600 measured the boxing
+    // of exactly these as a large share of extraction allocation). PdfInteger is
+    // immutable and only ever read back through Value, so sharing instances is
+    // observably identical to allocating one each time.
+    private const int SmallIntMin = -1024;
+    private const int SmallIntMax = 1024;
+    private static readonly PdfInteger[] SmallIntegers = CreateSmallIntegers();
+
+    private static PdfInteger[] CreateSmallIntegers()
+    {
+        var values = new PdfInteger[SmallIntMax - SmallIntMin + 1];
+        for (int i = 0; i < values.Length; i++)
+            values[i] = new PdfInteger(SmallIntMin + i);
+        return values;
+    }
+
+    private static PdfInteger IntegerFor(int value) =>
+        value >= SmallIntMin && value <= SmallIntMax
+            ? SmallIntegers[value - SmallIntMin]
+            : new PdfInteger(value);
+
     /// <summary>
     /// Create a walker over the given content bytes.
     /// </summary>
@@ -1207,11 +1245,64 @@ internal sealed class ContentStreamWalker
         if (gsDict.ContainsKey("SA"))  _state.StrokeAdjustment = gsDict.GetBool("SA", _state.StrokeAdjustment);
     }
 
+    /// <summary>
+    /// Everything <c>Tf</c> derives from the resolved font dictionary. All of it
+    /// is a pure function of that dictionary, but <c>Tf</c> recurs constantly —
+    /// every text block re-issues it — so recomputing it per call (re-parsing
+    /// the /ToUnicode and CMap streams and the /W width table) was a large share
+    /// of extraction cost (#600). Cached by font-dict reference:
+    /// <c>PdfDocument.Resolve</c> returns a stable instance per object number,
+    /// so the same font hits.
+    /// </summary>
+    private readonly record struct FontState(
+        Text.GlyphUnicodeDecoder Decoder,
+        bool Is2ByteFont,
+        PdfDictionary? CidFontDict,
+        Fonts.CidFontWidths? CidMetrics,
+        bool IsVerticalWriting,
+        Text.CidCMap? RegisteredEncodingCMap,
+        IReadOnlyDictionary<int, string>? RegisteredCidToUnicode);
+
+    private readonly Dictionary<PdfDictionary, FontState> _fontStateCache =
+        new(ReferenceEqualityComparer.Instance);
+
+    private FontState CaptureFontState() => new(
+        _decoder, _is2ByteFont, _cidFontDict, _cidMetrics,
+        _isVerticalWriting, _registeredEncodingCMap, _registeredCidToUnicode);
+
+    private void ApplyFontState(in FontState s)
+    {
+        _decoder = s.Decoder;
+        _is2ByteFont = s.Is2ByteFont;
+        _cidFontDict = s.CidFontDict;
+        _cidMetrics = s.CidMetrics;
+        _isVerticalWriting = s.IsVerticalWriting;
+        _registeredEncodingCMap = s.RegisteredEncodingCMap;
+        _registeredCidToUnicode = s.RegisteredCidToUnicode;
+    }
+
     private void LoadFont()
     {
         if (_page == null) return;
 
         _currentFont = _page.GetFont(_fontName);
+
+        if (_currentFont != null && _fontStateCache.TryGetValue(_currentFont, out var cached))
+        {
+            ApplyFontState(cached);
+            return;
+        }
+
+        LoadFontDerivedState();
+
+        if (_currentFont != null)
+            _fontStateCache[_currentFont] = CaptureFontState();
+    }
+
+    private void LoadFontDerivedState()
+    {
+        if (_page == null) return;
+
         _decoder = Text.GlyphUnicodeDecoder.None;
         _is2ByteFont = false;
         _cidFontDict = null;
@@ -1500,7 +1591,7 @@ internal sealed class ContentStreamWalker
         // the moment any one char exceeded U+00FF — which a `\777` escape did,
         // because the octal value was not truncated to a byte. §7.3.4.2:
         // "high-order overflow shall be ignored". #980
-        var bytes = new List<byte>();
+        _stringScratchLen = 0; // reuse the scratch buffer across calls (#600)
         _pos++; // Skip '('
         int depth = 1;
 
@@ -1514,14 +1605,14 @@ internal sealed class ContentStreamWalker
                 var escaped = _content[_pos];
                 switch (escaped)
                 {
-                    case (byte)'n': bytes.Add((byte)'\n'); break;
-                    case (byte)'r': bytes.Add((byte)'\r'); break;
-                    case (byte)'t': bytes.Add((byte)'\t'); break;
-                    case (byte)'b': bytes.Add((byte)'\b'); break;
-                    case (byte)'f': bytes.Add((byte)'\f'); break;
-                    case (byte)'(': bytes.Add((byte)'('); break;
-                    case (byte)')': bytes.Add((byte)')'); break;
-                    case (byte)'\\': bytes.Add((byte)'\\'); break;
+                    case (byte)'n': ScratchAdd((byte)'\n'); break;
+                    case (byte)'r': ScratchAdd((byte)'\r'); break;
+                    case (byte)'t': ScratchAdd((byte)'\t'); break;
+                    case (byte)'b': ScratchAdd((byte)'\b'); break;
+                    case (byte)'f': ScratchAdd((byte)'\f'); break;
+                    case (byte)'(': ScratchAdd((byte)'('); break;
+                    case (byte)')': ScratchAdd((byte)')'); break;
+                    case (byte)'\\': ScratchAdd((byte)'\\'); break;
                     // REVERSE SOLIDUS followed by an end-of-line marker is a
                     // line-continuation: it produces NO character (PDF32000-1
                     // §7.3.4.2 Table 3). CRLF is one marker, not two — consume
@@ -1545,11 +1636,11 @@ internal sealed class ContentStreamWalker
                                 digits++;
                             }
                             // Truncated to a byte (§7.3.4.2).
-                            bytes.Add(unchecked((byte)value));
+                            ScratchAdd(unchecked((byte)value));
                         }
                         else
                         {
-                            bytes.Add(escaped);
+                            ScratchAdd(escaped);
                         }
                         break;
                 }
@@ -1557,54 +1648,71 @@ internal sealed class ContentStreamWalker
             else if (c == '(')
             {
                 depth++;
-                bytes.Add(c);
+                ScratchAdd(c);
             }
             else if (c == ')')
             {
                 depth--;
-                if (depth > 0) bytes.Add(c);
+                if (depth > 0) ScratchAdd(c);
             }
             else
             {
-                bytes.Add(c);
+                ScratchAdd(c);
             }
             _pos++;
         }
 
-        return new PdfString(bytes.ToArray());
+        return new PdfString(_stringScratch.AsSpan(0, _stringScratchLen).ToArray());
     }
 
     private PdfString ParseHexString()
     {
         _pos++; // Skip '<'
-        var hex = new StringBuilder();
+        _stringScratchLen = 0;
+        int pendingNibble = -1;
 
         while (_pos < _content.Length && _content[_pos] != '>')
         {
             var c = (char)_content[_pos];
             // Per §7.3.4.3 a hex string holds only hex digits (whitespace is
-            // ignored). Collect ONLY hex digits — letters G–Z would otherwise
-            // reach Convert.ToInt32(.,16) and throw FormatException on hostile
+            // ignored). Consume ONLY hex digits — letters G–Z would otherwise
+            // reach a numeric conversion and throw FormatException on hostile
             // input. (#352)
             if (Uri.IsHexDigit(c))
-                hex.Append(c);
+            {
+                int nibble = HexDigitValue(c);
+                if (pendingNibble < 0)
+                {
+                    pendingNibble = nibble;
+                }
+                else
+                {
+                    ScratchAdd((byte)((pendingNibble << 4) | nibble));
+                    pendingNibble = -1;
+                }
+            }
             _pos++;
         }
         _pos++; // Skip '>'
 
-        var hexStr = hex.ToString();
-        if (hexStr.Length % 2 == 1)
-            hexStr += "0";
+        // An odd digit count is padded with a trailing 0 (§7.3.4.3), which is
+        // exactly a lone high nibble.
+        if (pendingNibble >= 0)
+            ScratchAdd((byte)(pendingNibble << 4));
 
-        var sb = new StringBuilder();
-        for (int i = 0; i < hexStr.Length; i += 2)
-        {
-            var code = Convert.ToInt32(hexStr.Substring(i, 2), 16);
-            sb.Append((char)code);
-        }
-
-        return new PdfString(sb.ToString());
+        // Byte-identical to the previous build-a-string-then-PdfString(string)
+        // form: every code is ≤ 0xFF, and that constructor Latin-1-encodes any
+        // string with no char above U+00FF.
+        return new PdfString(_stringScratch.AsSpan(0, _stringScratchLen).ToArray());
     }
+
+    private static int HexDigitValue(char c) => c switch
+    {
+        >= '0' and <= '9' => c - '0',
+        >= 'a' and <= 'f' => c - 'a' + 10,
+        >= 'A' and <= 'F' => c - 'A' + 10,
+        _ => -1
+    };
 
     private PdfArray ParseArray()
     {
@@ -1699,7 +1807,8 @@ internal sealed class ContentStreamWalker
     private PdfName ParseName()
     {
         _pos++; // Skip '/'
-        var sb = new StringBuilder();
+        int segStart = _pos;
+        StringBuilder? sb = null; // only needed when a #XX escape occurs (rare)
 
         while (_pos < _content.Length)
         {
@@ -1719,29 +1828,43 @@ internal sealed class ContentStreamWalker
                 var hex = Encoding.ASCII.GetString(_content, _pos + 1, 2);
                 if (int.TryParse(hex, System.Globalization.NumberStyles.HexNumber, null, out var code))
                 {
+                    sb ??= new StringBuilder();
+                    sb.Append(Latin1(segStart, _pos - segStart));
                     sb.Append((char)code);
                     _pos += 3;
+                    segStart = _pos;
                     continue;
                 }
             }
 
-            sb.Append((char)c);
             _pos++;
         }
 
+        // The overwhelmingly common name has no #XX escape and needs no builder
+        // at all — one Latin-1 decode of the byte run, which is exactly what
+        // appending `(char)b` per byte produced.
+        if (sb == null)
+            return new PdfName(Latin1(segStart, _pos - segStart));
+
+        sb.Append(Latin1(segStart, _pos - segStart));
         return new PdfName(sb.ToString());
     }
 
+    /// <summary>Latin-1 decode of a content byte run — the `(char)b` cast, in bulk.</summary>
+    private string Latin1(int start, int length) =>
+        length <= 0 ? string.Empty : Encoding.Latin1.GetString(_content, start, length);
+
     private PdfObject ParseNumber()
     {
-        var sb = new StringBuilder();
+        int start = _pos;
+        bool hasDot = false;
 
         while (_pos < _content.Length)
         {
             var c = _content[_pos];
             if (char.IsDigit((char)c) || c == '-' || c == '+' || c == '.')
             {
-                sb.Append((char)c);
+                if (c == '.') hasDot = true;
                 _pos++;
             }
             else
@@ -1750,42 +1873,75 @@ internal sealed class ContentStreamWalker
             }
         }
 
-        var str = sb.ToString();
-        if (str.Contains('.'))
+        int length = _pos - start;
+
+        // Numeric operands are the bulk of a content stream (TJ kerns, Td/Tm/cm
+        // coordinates). A StringBuilder plus its char[] plus the finished string
+        // PER NUMBER is what #600 measured and removed on the extraction side;
+        // this tokenizer is now that hot path, so it parses off a stack span
+        // instead. Bit-identical: the same TryParse overloads see the same
+        // characters, and a parse failure still yields integer 0.
+        if (length <= MaxStackNumberChars)
         {
-            if (double.TryParse(str, System.Globalization.NumberStyles.Float,
+            Span<char> buffer = stackalloc char[MaxStackNumberChars];
+            for (int i = 0; i < length; i++)
+                buffer[i] = (char)_content[start + i];
+            return ParseNumber(buffer[..length], hasDot);
+        }
+
+        return ParseNumber(Latin1(start, length).AsSpan(), hasDot);
+    }
+
+    private const int MaxStackNumberChars = 64;
+
+    private static PdfObject ParseNumber(ReadOnlySpan<char> text, bool hasDot)
+    {
+        if (hasDot)
+        {
+            if (double.TryParse(text, System.Globalization.NumberStyles.Float,
                 System.Globalization.CultureInfo.InvariantCulture, out var d))
                 return new PdfReal(d);
         }
         else
         {
-            if (int.TryParse(str, out var i))
-                return new PdfInteger(i);
+            if (int.TryParse(text, out var i))
+                return IntegerFor(i);
         }
 
-        return new PdfInteger(0);
+        return IntegerFor(0);
     }
 
     private string ParseKeyword()
     {
-        var sb = new StringBuilder();
+        int start = _pos;
 
         while (_pos < _content.Length)
         {
             var c = _content[_pos];
             if (char.IsLetterOrDigit((char)c) || c == '\'' || c == '"' || c == '*')
-            {
-                sb.Append((char)c);
                 _pos++;
-            }
             else
-            {
                 break;
-            }
         }
 
-        return sb.ToString();
+        int length = _pos - start;
+
+        // Return the cached instance for a known token (every operator, plus the
+        // three literal keywords) — value-identical to the substring, and
+        // allocation-free for the case that is essentially all of them (#600).
+        if (length is > 0 and <= MaxKnownKeywordChars)
+        {
+            Span<char> buffer = stackalloc char[MaxKnownKeywordChars];
+            for (int i = 0; i < length; i++)
+                buffer[i] = (char)_content[start + i];
+            if (KnownKeywordLookup.TryGetValue(buffer[..length], out var known))
+                return known;
+        }
+
+        return Latin1(start, length);
     }
+
+    private const int MaxKnownKeywordChars = 8;
 
     private static double GetNumber(PdfObject obj)
     {
@@ -1823,6 +1979,16 @@ internal sealed class ContentStreamWalker
     };
 
     private static bool IsOperator(string token) => Operators.Contains(token);
+
+    // Span-keyed lookup returning the cached string instance for a known
+    // content-stream token, so ParseKeyword does not allocate a fresh string per
+    // operator (#600). Covers every operator plus the non-operator keywords that
+    // legally appear as operands.
+    private static readonly HashSet<string> KnownKeywords =
+        new(Operators.Concat(new[] { "true", "false", "null" }), StringComparer.Ordinal);
+
+    private static readonly HashSet<string>.AlternateLookup<ReadOnlySpan<char>> KnownKeywordLookup =
+        KnownKeywords.GetAlternateLookup<ReadOnlySpan<char>>();
 
     #endregion
 
