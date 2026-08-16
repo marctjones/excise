@@ -8,9 +8,9 @@
   "Notes": "Migrated from the legacy TSV rendering manifests. Legacy synthetic page-0 refusal rows were removed on 2026-07-03 after cold verification confirmed current real-page outcomes.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "ALL_ORACLES_REFUSED",
+      "ExpectedRawStatus": "EXCISE_ONLY",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "REFERENCE_REFUSAL_ACCEPTED",
+      "QualityStatus": "EXCISE_BETTER_THAN_REFS",
       "PixelAgreement": "NOT_COMPARABLE",
       "ReferenceSituation": "REFS_REFUSE",
       "RootCause": "REFERENCE_REFUSAL",
@@ -21,7 +21,7 @@
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Short-key R4/V4 padding is covered by focused parser/security and rendering tests; all-oracle refusal is tracked separately from pdfe-better-than-refs.",
+      "QualityReason": "Short-key R4/V4 padding is covered by focused parser/security and rendering tests. Re-measured 2026-08-16 (#977): raw status is EXCISE_ONLY - excise rendered this page and all five oracles refused it (mutool/pdftocairo zlib errors, ghostscript and PDFBox no output, pdfium 0 pages). #867 split that from ALL_ORACLES_REFUSED, which now means nobody rendered it including excise; the pin predates the split.",
       "Notes": "Encrypted short-key fixture renders in pdfe but all sample references refuse it."
     }
   }

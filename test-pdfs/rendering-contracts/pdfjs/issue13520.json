@@ -8,10 +8,10 @@
   "Notes": "Evidence: logs/render-quality/issue13520-fix-20260703/backdrop-seed-softmask/sheet.png and pdfe-mutool-diff.json. Regression: CmykTransparencyRegressionTests.RenderPage_Issue13520_DoesNotPaintDarkSoftMaskLobe.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "PASS_ONE",
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
       "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
-      "PixelAgreement": "MATCHES_TARGET",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
       "ReferenceSituation": "REFS_DISAGREE",
       "RootCause": "CMYK_SOFT_MASK_SCREEN_BLEND_FIXED",
       "Target": {
@@ -21,7 +21,7 @@
       },
       "ImprovementPriority": "DONE",
       "Confidence": "HIGH",
-      "QualityReason": "Fixed: dark CMYK soft-mask Screen blend lobe removed; remaining difference is low-impact color-tone residual.",
+      "QualityReason": "Fixed: dark CMYK soft-mask Screen blend lobe removed; remaining difference is low-impact color-tone residual. Re-measured 2026-08-16 (#977): raw status is PASS - excise agrees with 3 of the 5 oracles that rendered (closest mutool, diffFraction 0.0025). The PASS_ONE pin predates the majority-agreement PASS rule (#865); the corpus expectation manifest has recorded PASS since.",
       "Notes": "Focused current-code diff versus MuPDF: diffFraction 0.25%, MAE 4.90. Evidence under logs/render-quality/issue13520-fix-20260703/backdrop-seed-softmask/."
     }
   },

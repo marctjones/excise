@@ -8,10 +8,10 @@
   "Notes": "Focused review: pdfe renders the intended Checkliste Service text; references differ only in font rasterization/fallback policy.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "PASS_ONE",
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
       "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
-      "PixelAgreement": "MATCHES_TARGET",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
       "ReferenceSituation": "REFS_DISAGREE",
       "RootCause": "REFERENCE_FONT_RASTERIZATION_DISAGREEMENT",
       "Target": {
@@ -21,7 +21,7 @@
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "pdfe matches the accepted text rendering target closely enough for this font-policy disagreement.",
+      "QualityReason": "pdfe matches the accepted text rendering target closely enough for this font-policy disagreement. Re-measured 2026-08-16 (#977): raw status is PASS - excise agrees with 3 of the 5 oracles that rendered (closest mutool, diffFraction 0.0223). The PASS_ONE pin predates the majority-agreement PASS rule (#865); the corpus expectation manifest has recorded PASS since.",
       "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders."
     }
   }
