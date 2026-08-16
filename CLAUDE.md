@@ -108,7 +108,8 @@ Until 2026-08-13 this section documented aggregate 98.7% with blindness
 (irs-1040-instructions: 47 of 126 pages below 0.99, worst 0.774). That
 attribution to layout complexity was WRONG: the cause was Td/TD/T*/'/"
 applying line-step offsets without composing through the text matrix
-(§9.4.2), in both text-state machines. Under scaled/flipped matrices, letters
+(§9.4.2), in both text-state machines — there is one since #992, see "One walk,
+many sinks". Under scaled/flipped matrices, letters
 stacked or marched off-page and the CropBox filter silently dropped them —
 the same defect that made redaction destroy 5-36% of a document per term
 (#942). See the Limitations entry below for the full account, and
@@ -263,6 +264,58 @@ PDF Libraries (Excise.Core for parsing/redaction/save, Excise.Rendering for Skia
 ```
 
 When modifying the UI, update the XAML and bind to ViewModel properties. Never put business logic in code-behind.
+
+## ⚠️ One walk, many sinks (#992)
+
+**There is ONE content-stream state machine: `Excise.Core/Content/ContentStreamWalker.cs`.
+A new consumer adds a SINK. It never adds a parser.**
+
+The walker owns the tokenizer, the graphics state stack including the §8.4.1
+Table 52 text parameters that `q`/`Q` save and restore, §9.4.2 line stepping
+composed through the text matrix, the §9.4.4 glyph advance, the glyph cell
+transform, font resolution and the shared `GlyphUnicodeDecoder` cascade. It
+walks the bytes once and hands each glyph to a sink through a struct callback.
+
+There are two sinks:
+
+| sink | what it makes of a glyph |
+|---|---|
+| `Content/ContentStreamParser.cs` | aggregates glyph cells into `ContentOperator.BoundingBox` + `TextContent` — the geometry redaction removes on |
+| `Text/TextExtractor.cs` | emits a `Letter`, tagged with marked-content id and optional-content visibility |
+
+**Why this is load-bearing and not tidiness.** The walk used to exist TWICE —
+`ContentStreamParser` (2,062 lines) and `TextExtractor` (2,471) each tokenized
+the same bytes, each tracked state, each computed advances — and four comments
+asked people to keep the copies in sync by hand. Every RC1 defect lived in the
+drift: §9.4.2 line stepping (#942/#899, which destroyed 5–36% of a document per
+redacted term for months), the advance terms inside horizontal scaling (#734),
+the glyph cell 12× too small in one machine (#833/#980), the array nesting bound
+(#971), the hex-digit skip (#974), `sh`/`d0`/`d1` and inline images (#980), the
+decode cascade at 3 steps vs 9 (#981), cancellation (#982), and the Table 52
+text state in NEITHER (#983).
+
+⚠️ **Do not re-add a second one, and do not "fix" a renderer or a new consumer
+by teaching it its own text state.** That is how the fourth divergence starts.
+`SkiaRenderer` is still a separate machine and still carries #983's defect
+(#986) — it is the remaining exception, tracked, not a precedent.
+
+**The differential gate is gone, deliberately.** `ParserDifferentialTests` (58
+tests, #980) existed to detect divergence between the two machines; with one
+machine it has no subject. Measured rather than assumed: reverting §9.4.2
+composition to the raw `e += tx` reddened 2 of its tests before the
+consolidation and **zero** after, while `TextMatrixLineSteppingTests` — a
+property gate, not a twin gate — caught it either way. What replaces it:
+
+- `TextMatrixLineSteppingTests` — §9.4.2 against the spec.
+- `GraphicsStateTextParameterTests` — Table 52 as a spec property (#983).
+- `GraphicsStateTextParameterOracleTests` — the same, against mutool (#983).
+- `ExtGStateFontTests` — Table 58 `/Font`, both sinks (#990).
+- `scripts/check-extraction-parity.sh` and the redaction-collateral ratchets —
+  what a user actually gets.
+
+The rule those encode: **a gate that compares excise to excise cannot see a
+defect excise holds consistently.** Compare against the spec, or against a tool
+that is not excise.
 
 ## Redaction Engine Architecture
 
@@ -786,7 +839,8 @@ and cost real planning time.
    lines of §9.4.2 arithmetic: Td/TD/T*/'/" applied their line-step offsets RAW
    instead of composing through the text matrix (`e += tx` instead of
    `e += tx·a + ty·c`), in BOTH text-state machines (TextExtractor and
-   ContentStreamParser). Under the ubiquitous `/F1 1 Tf` + scaled-`Tm` producer
+   ContentStreamParser — since #992 there is only one, see "One walk, many
+   sinks"). Under the ubiquitous `/F1 1 Tf` + scaled-`Tm` producer
    idiom, every line stacked onto the first in the letter model; under flipped
    matrices letters marched off-page, where the CropBox filter silently dropped
    them. Rendering stayed correct the whole time because ShowGlyph's §9.4.4
@@ -892,7 +946,8 @@ Excise.Core/                          # the PDF engine — parser, writer, redac
 │   ├── FormXObjectFlattener.cs     # inlines forms so their text is reachable
 │   └── HiddenTextDetector.cs       # audit: visible-but-unextractable text
 ├── Content/
-│   ├── ContentStreamParser.cs      # parse operators (+ bounds, clip, marked content)
+│   ├── ContentStreamWalker.cs      # ← THE content-stream state machine (see below)
+│   ├── ContentStreamParser.cs      # a SINK: operator bounds + decoded text
 │   └── ContentStreamWriter.cs      # serialize operators back to bytes
 ├── Operations/
 │   └── PdfDocumentSanitizer.cs     # /Info, XMP, outlines, annots (#608)

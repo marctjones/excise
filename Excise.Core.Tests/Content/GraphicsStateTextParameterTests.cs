@@ -212,7 +212,7 @@ public class GraphicsStateTextParameterTests
     /// </summary>
     private static Observation Observe(string content)
     {
-        using var doc = PdfDocument.Open(ParityFixture.Build(
+        using var doc = PdfDocument.Open(ContentStreamFixture.Build(
             content,
             extraObjects:
                 "6 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>\nendobj\n",
