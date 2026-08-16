@@ -15,14 +15,28 @@ name: Rendering (Linux, with reference tools)
 #   • release.yml  — as a hard prerequisite of `publish`, so a tag cannot ship
 #                    installers with red (or silently un-run) rendering tests.
 #
-# Coverage boundary (honest): the high-value real-world corpus
-# (test-pdfs/local-real-world, /federal, /smoke, ...) is gitignored for
-# licensing and is NOT present in CI, so tests keyed to those fixtures still
-# SkipUnless(File.Exists). What runs here is every Differential/Corpus test
-# that self-generates its PDF or uses one of the ~32 checked-in fixtures
-# (test-pdfs/pdf20, /generated-regressions, /sample-pdfs). Full-corpus
-# coverage remains a local `scripts/release-smoke.sh --release-tests` step on
-# a developer machine that has the licensed corpus (tier t2).
+# Coverage boundary (honest, re-checked 2026-08-16 for #929/#844 — the
+# "/smoke... NOT present in CI" claim this comment used to make here was
+# STALE: #956/#967 added the smoke-corpus download step below well before
+# this note was corrected, so re-verify before restating either half of it
+# again): test-pdfs/smoke IS present here (`download-smoke-corpus.sh
+# --require-all` below) and test-pdfs/federal is now populated too, from the
+# same pinned smoke fixtures (see the step below — #844). test-pdfs/
+# local-real-world remains gitignored and genuinely absent from CI; tests
+# keyed to it still SkipUnless(File.Exists). Full local-real-world coverage
+# remains a `scripts/release-smoke.sh --release-tests` step on a developer
+# machine that has the licensed corpus (tier t2).
+#
+# Scope grew with #929/#844 (2026-08-16): this job was Rendering-only —
+# Excise.Rendering.Tests' Differential/Corpus filter — but it already
+# installed every tool (mutool, gs, pdftocairo/pdftotext/pdfsig, tesseract,
+# qpdf) that Excise.App.Tests' and Excise.Core.Tests' own independent-oracle
+# tests need and that no OTHER CI runner provisions. Rather than duplicate
+# tool installation on the main tool-less Linux gate (which would defeat that
+# gate's whole reason for being tool-independent, see above), this job now
+# also runs those two projects' tool-gated subsets, plus the extraction-parity
+# (#645) and copy-whitespace-parity (#837) gates that need the same tools plus
+# the corpus. See the steps below for the exact filters.
 
 on:
   workflow_call:
@@ -59,12 +73,19 @@ jobs:
         run: |
           sudo apt-get update
           # mupdf-tools → mutool, ghostscript → gs, poppler-utils →
-          # pdftocairo/pdftotext, tesseract-ocr → tesseract, qpdf → qpdf (the
-          # EncryptionInteropGate independent-tool checks). PDFBox and PDFium
-          # are fetched by the repo scripts below because apt does not provide
-          # the exact oracle surfaces these tests use.
+          # pdftocairo/pdftotext/pdfsig, tesseract-ocr → tesseract, qpdf →
+          # qpdf (the EncryptionInteropGate independent-tool checks). Also the
+          # ONLY provisioning this repo has for the Excise.App.Tests /
+          # Excise.Core.Tests independent-oracle subsets run further below
+          # (#929) — poppler-utils' pdfsig covers the signature-verification
+          # oracle test, pdftotext covers the copy-reading-order oracle test.
+          # xvfb: Excise.App.Tests' headless Avalonia GUI tests need an X
+          # display on Linux even off-screen (#752, same requirement as
+          # ci.yml's Excise.App.Tests step). PDFBox and PDFium are fetched by
+          # the repo scripts below because apt does not provide the exact
+          # oracle surfaces these tests use.
           sudo apt-get install -y --no-install-recommends \
-            mupdf-tools ghostscript poppler-utils tesseract-ocr qpdf
+            mupdf-tools ghostscript poppler-utils tesseract-ocr qpdf xvfb
 
           scripts/download-smoke-corpus.sh --require-all   # #967
           scripts/download-pdfbox.sh
@@ -77,7 +98,7 @@ jobs:
         # oracle" trap this whole job exists to avoid. Fail loudly instead.
         run: |
           missing=0
-          for t in mutool gs pdftocairo pdftotext tesseract qpdf; do
+          for t in mutool gs pdftocairo pdftotext pdfsig tesseract qpdf xvfb-run; do
             if command -v "$t" >/dev/null; then
               echo "  ✓ $t → $(command -v "$t")"
             else
@@ -100,8 +121,39 @@ jobs:
           }
           test "$missing" -eq 0
 
+      # #844: check-copy-whitespace-parity.sh's REQUIRED_CORPUS reads from
+      # test-pdfs/federal/, not test-pdfs/smoke/ — a separate manifest
+      # (test-pdfs/manifests/federal-everyday-corpus.json, fetched by
+      # scripts/download-federal-corpus.sh) that was NOT part of #844's
+      # original archival-URL pinning (fc3474ff only touched download-smoke-
+      # corpus.sh). While wiring this job up, that manifest's 5 IRS entries
+      # were found still pointing at "latest" URLs (irs-pdf/fw4.pdf etc, not
+      # irs-prior/fw4--2026.pdf) — the exact drift-fragility #844 was filed to
+      # avoid putting on CI — and have now been repinned to the SAME archival
+      # URLs download-smoke-corpus.sh already uses, verified byte-identical
+      # (same sha256, unchanged) by a real download before committing. CDC has
+      # no archival URL (same situation as the smoke corpus); its sha256 pin
+      # is what catches drift there.
+      #
+      # This job still does not call download-federal-corpus.sh, even though
+      # the manifest is fixed now: these 4 filenames are already sitting in
+      # the pinned smoke corpus downloaded above (identical sha256 in both
+      # manifests), so copying them is one less network round-trip and one
+      # less thing that can flake on a shared runner.
+      - name: Populate federal corpus from the pinned smoke corpus (#844)
+        run: |
+          mkdir -p test-pdfs/federal
+          for f in scotus-trump-v-us.pdf irs-pub509-2026.pdf cdc-vis-covid-19.pdf state-ds82-passport-renewal.pdf; do
+            test -f "test-pdfs/smoke/$f" || { echo "::error::expected $f in the smoke corpus, not found"; exit 1; }
+            cp "test-pdfs/smoke/$f" "test-pdfs/federal/$f"
+          done
+          ls -la test-pdfs/federal/
+
       - name: Build (Debug)
-        run: dotnet build Excise.Rendering.Tests -c Debug
+        run: |
+          dotnet build Excise.Rendering.Tests -c Debug
+          dotnet build Excise.App.Tests -c Debug
+          dotnet build Excise.Core.Tests -c Debug
 
       - name: Run rendering Differential + Corpus (against independent oracles)
         run: |
@@ -126,3 +178,85 @@ jobs:
             echo "::error::only $passed rendering oracle tests passed — the reference tools or fixtures likely did not resolve, so this green is a self-oracle, not real coverage"
             exit 1
           fi
+
+      # ── #929: the GUI/writer independent-oracle subsets ──────────────────
+      # These tests exist specifically so excise's redaction/save output is
+      # checked against a tool that is not excise (CLAUDE.md's no-self-oracle
+      # rule). Before this job, mutool/gs/qpdf/tesseract/pdfsig/pdftotext were
+      # on NO CI runner — the main Test (Linux) job has the smoke corpus
+      # (#956) but installs none of these tools, and this job installed the
+      # tools but ran only Excise.Rendering.Tests. So these Assert.SkipUnless
+      # sites executed on exactly one developer machine and nowhere in CI.
+      #
+      # Named by exact method/suffix rather than a shared [Trait]: none of
+      # these tests share one, and enumerating what's actually gated keeps
+      # this filter honest about what runs versus a broad name-guess that
+      # could silently swallow unrelated tests. The floor below is what makes
+      # a future rename fail LOUD (fewer tests match) instead of narrowing
+      # silently (see the same reasoning in the "Assert...executed" step
+      # above and check-extraction-parity.sh's "No test matches" guard).
+      - name: Run Excise.App.Tests independent-oracle subset (#929)
+        run: |
+          mkdir -p trx
+          xvfb-run -a dotnet test Excise.App.Tests --no-build -c Debug \
+            --filter "FullyQualifiedName~IndependentExtractor|FullyQualifiedName~IndependentRenderer|FullyQualifiedName~IndependentTools|FullyQualifiedName~IndependentPdftotextOracle|FullyQualifiedName~PdfsigReportsValidUntrustedSignature|FullyQualifiedName~RevealRasterizedHidden_FindsTextHiddenByOverlayInsideImage|FullyQualifiedName~RunMakeSearchable_ThenOnCompleted_MakesScanSearchable|FullyQualifiedName~RealWorldForm_RemoveThenSaveAs_DropsThePageAndKeepsTheAcroFormIntact" \
+            --logger "trx;LogFileName=app-oracle.trx" \
+            --logger "console;verbosity=normal" \
+            --results-directory ./trx \
+            --blame-hang-timeout 120000
+
+      - name: Assert the App.Tests oracle subset actually executed
+        # 13 tests pass locally with every tool + the smoke corpus present
+        # (verified while wiring this up). A floor, not an exact match, so a
+        # legitimate new oracle test added later doesn't need this bumped in
+        # lockstep — but a silent drop to a handful (tools/corpus not
+        # resolving) or to zero (filter no longer matches anything) fails loud.
+        run: |
+          passed=$(grep -o 'outcome="Passed"' trx/app-oracle.trx | wc -l | tr -d ' ')
+          echo "App.Tests independent-oracle tests passed: $passed"
+          if [ "$passed" -lt 13 ]; then
+            echo "::error::only $passed App.Tests oracle tests passed — tools, the smoke corpus, or the filter itself likely did not resolve"
+            exit 1
+          fi
+
+      # Core.Tests' own oracle family: PdfDocumentWriterTests' "_WhenAvailable"
+      # tests re-read the compressed writer's output with qpdf/mutool/pdfinfo/
+      # gs/pdfcpu — a tool that is not excise. pdfcpu is not installed on this
+      # runner (only the main Linux job go-installs it), so that one row still
+      # skips here; the other four are new coverage.
+      - name: Run Excise.Core.Tests tool-gated subset (#929)
+        run: |
+          mkdir -p trx
+          dotnet test Excise.Core.Tests --no-build -c Debug \
+            --filter "FullyQualifiedName~_WhenAvailable" \
+            --logger "trx;LogFileName=core-oracle.trx" \
+            --logger "console;verbosity=normal" \
+            --results-directory ./trx
+
+      - name: Assert the Core.Tests oracle subset actually executed
+        # 13 non-pdfcpu tests pass locally (14 total with pdfcpu, which this
+        # runner does not install). Same floor-not-exact-match reasoning as
+        # the App.Tests step above.
+        run: |
+          passed=$(grep -o 'outcome="Passed"' trx/core-oracle.trx | wc -l | tr -d ' ')
+          echo "Core.Tests tool-gated tests passed: $passed"
+          if [ "$passed" -lt 13 ]; then
+            echo "::error::only $passed Core.Tests tool-gated tests passed — tools likely did not resolve"
+            exit 1
+          fi
+
+      # ── #844: the parity ratchets, actually running on CI ─────────────────
+      # Both refuse to silently skip a missing prerequisite (they FAIL loud
+      # instead) — see each script's own header. Nothing upstream of this
+      # point should be able to leave either of them measuring nothing: mutool
+      # and the smoke corpus were required above (#967's --require-all), and
+      # pdftotext plus test-pdfs/federal are provisioned by this job.
+      - name: Extraction-parity gate (#645, on CI via #844/#929)
+        run: scripts/check-extraction-parity.sh
+
+      - name: Copy-whitespace parity gate (#837, on CI via #844/#929)
+        # EXCISE_REQUIRE_PARITY_TOOLS=1: turn every SKIP reason in the script
+        # into a hard FAIL (see its own header) — on a runner that is SUPPOSED
+        # to be fully provisioned, a skip means something upstream broke, and
+        # that must be loud, not a silent vacuous green on the ratchet.
+        run: EXCISE_REQUIRE_PARITY_TOOLS=1 scripts/check-copy-whitespace-parity.sh
