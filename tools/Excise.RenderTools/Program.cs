@@ -3563,6 +3563,36 @@ partial class Program
     private const int InkTileGrid = 32;
 
     /// <summary>
+    /// Shortest side a tile may have, in pixels, and the floor on the grid when
+    /// honouring it.
+    ///
+    /// A fixed 32-square grid is fine on a letter page (19x24 px tiles at 72
+    /// dpi) and degenerate on a small one: bug1844576.pdf renders 181x54, which
+    /// gives tiles 1.7 px tall. At that granularity a sub-pixel vertical offset
+    /// between two renderers moves a whole text row into a different tile, so
+    /// the oracles stop agreeing tile-by-tile even when they agree completely
+    /// about the page — and a majority rule reads that as "almost nothing is
+    /// majority-inked", which makes the all-tiles-missing verdict trivial to
+    /// satisfy by accident. bug1844576 is the worked case: excise renders it
+    /// near-identically to mutool and it still scored 3 missing of 3 inked.
+    /// </summary>
+    private const int MinInkTilePixels = 8;
+    private const int MinInkTileGrid = 4;
+
+    /// <summary>
+    /// Tiles per axis for a page of this size — <see cref="InkTileGrid"/> unless
+    /// that would make tiles smaller than <see cref="MinInkTilePixels"/>.
+    /// </summary>
+    private static int ResolveInkTileGrid(int width, int height)
+    {
+        var shortest = Math.Min(width, height);
+        if (shortest <= 0)
+            return MinInkTileGrid;
+
+        return Math.Clamp(shortest / MinInkTilePixels, MinInkTileGrid, InkTileGrid);
+    }
+
+    /// <summary>
     /// A tile counts as inked when this fraction of its pixels are dark. Above
     /// antialiasing fringe, below a single glyph stroke.
     /// </summary>
@@ -3626,14 +3656,25 @@ partial class Program
         if (references.Count == 0)
             return (0, 0, 0);
 
-        var mine = ComputeInkTileFractions(exciseBmp);
+        // Sized from the SMALLEST page any renderer produced, so no bitmap in
+        // the comparison ends up with sub-pixel-noise-sized tiles.
+        var shortestWidth = exciseBmp.Width;
+        var shortestHeight = exciseBmp.Height;
+        foreach (var reference in references)
+        {
+            shortestWidth = Math.Min(shortestWidth, reference.Width);
+            shortestHeight = Math.Min(shortestHeight, reference.Height);
+        }
+        var tiles = ResolveInkTileGrid(shortestWidth, shortestHeight);
+
+        var mine = ComputeInkTileFractions(exciseBmp, tiles);
         if (mine == null)
             return (0, 0, 0);
 
         var oracleGrids = new List<double[]>(references.Count);
         foreach (var reference in references)
         {
-            var grid = ComputeInkTileFractions(reference);
+            var grid = ComputeInkTileFractions(reference, tiles);
             if (grid != null)
                 oracleGrids.Add(grid);
         }
@@ -3642,7 +3683,7 @@ partial class Program
             return (0, 0, 0);
 
         int missing = 0, extra = 0, inked = 0;
-        for (int tile = 0; tile < InkTileGrid * InkTileGrid; tile++)
+        for (int tile = 0; tile < tiles * tiles; tile++)
         {
             var mineFrac = mine[tile];
             bool mineInked = mineFrac >= InkTileThreshold;
@@ -3716,25 +3757,25 @@ partial class Program
     }
 
     /// <summary>
-    /// Dark-pixel fraction per tile on a fixed <see cref="InkTileGrid"/>-square
-    /// grid, so bitmaps of different pixel dimensions index the same tiles.
+    /// Dark-pixel fraction per tile on a <paramref name="tiles"/>-square grid,
+    /// so bitmaps of different pixel dimensions index the same tiles.
     /// </summary>
-    private static double[]? ComputeInkTileFractions(SkiaSharp.SKBitmap bmp)
+    private static double[]? ComputeInkTileFractions(SkiaSharp.SKBitmap bmp, int tiles)
     {
         int w = bmp.Width, h = bmp.Height;
         if (w <= 0 || h <= 0)
             return null;
 
-        var fractions = new double[InkTileGrid * InkTileGrid];
-        for (int ty = 0; ty < InkTileGrid; ty++)
+        var fractions = new double[tiles * tiles];
+        for (int ty = 0; ty < tiles; ty++)
         {
-            int y0 = (int)((long)ty * h / InkTileGrid);
-            int y1 = (int)((long)(ty + 1) * h / InkTileGrid);
+            int y0 = (int)((long)ty * h / tiles);
+            int y1 = (int)((long)(ty + 1) * h / tiles);
             if (y1 <= y0) y1 = Math.Min(h, y0 + 1);
-            for (int tx = 0; tx < InkTileGrid; tx++)
+            for (int tx = 0; tx < tiles; tx++)
             {
-                int x0 = (int)((long)tx * w / InkTileGrid);
-                int x1 = (int)((long)(tx + 1) * w / InkTileGrid);
+                int x0 = (int)((long)tx * w / tiles);
+                int x1 = (int)((long)(tx + 1) * w / tiles);
                 if (x1 <= x0) x1 = Math.Min(w, x0 + 1);
 
                 long total = 0, dark = 0;
@@ -3746,7 +3787,7 @@ partial class Program
                         if (IsInkPixel(bmp.GetPixel(x, y))) dark++;
                     }
                 }
-                fractions[ty * InkTileGrid + tx] = total == 0 ? 0 : dark / (double)total;
+                fractions[ty * tiles + tx] = total == 0 ? 0 : dark / (double)total;
             }
         }
 

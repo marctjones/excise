@@ -1384,6 +1384,27 @@ public class CorpusScanClassificationTests
     }
 
     [Fact]
+    public void CompareInkLocalityByMajority_SmallPageSubPixelOffset_ReportsNothingMissing()
+    {
+        // bug1844576.pdf renders 181x54. On a fixed 32-square grid that is 1.7px
+        // per tile row, so a one-pixel vertical difference between renderers
+        // moves a whole text row into another tile and the oracles stop agreeing
+        // tile-by-tile about a page they agree about completely. Under a
+        // majority rule that reads as "almost nothing is majority-inked", which
+        // makes the all-tiles-missing verdict trivial to satisfy by accident.
+        using var mine = MakeBandBitmap(width: 181, height: 54, bandTop: 20);
+        using var a = MakeBandBitmap(width: 181, height: 54, bandTop: 22);
+        using var b = MakeBandBitmap(width: 181, height: 54, bandTop: 22);
+        using var c = MakeBandBitmap(width: 181, height: 54, bandTop: 23);
+
+        var (missing, _, inked) = RenderProgram.CompareInkLocalityByMajority(
+            mine, new[] { a, b, c });
+
+        inked.Should().BeGreaterThan(0, "the oracles all drew the band");
+        missing.Should().Be(0, "excise drew the same band one pixel higher");
+    }
+
+    [Fact]
     public void ApplyInkLocalityVerdict_AllMajorityInkedTilesBlank_FlipsPassToMissingContent()
     {
         var entry = new RenderProgram.CorpusScanEntry { status = "PASS" };
@@ -1436,6 +1457,23 @@ public class CorpusScanClassificationTests
                 var y = i / grid;
                 canvas.DrawRect(x * tile, y * tile, tile, tile, paint);
             }
+        }
+
+        return bitmap;
+    }
+
+    /// <summary>
+    /// A small page carrying one horizontal band of ink, positioned to the
+    /// pixel — the shape of a one-line form fixture.
+    /// </summary>
+    private static SkiaSharp.SKBitmap MakeBandBitmap(int width, int height, int bandTop)
+    {
+        var bitmap = new SkiaSharp.SKBitmap(width, height);
+        using (var canvas = new SkiaSharp.SKCanvas(bitmap))
+        {
+            canvas.Clear(SkiaSharp.SKColors.White);
+            using var paint = new SkiaSharp.SKPaint { Color = SkiaSharp.SKColors.Black };
+            canvas.DrawRect(0, bandTop, width, 1, paint);
         }
 
         return bitmap;
