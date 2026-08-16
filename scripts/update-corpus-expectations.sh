@@ -54,10 +54,32 @@ for spec in "${CORPORA[@]}"; do
     # exited 0 — a manifest with no rows gates nothing and reads as green. Same
     # vacuous-pass shape already fixed once in run-full-suite.sh.
     tmp="$ROOT/tests/$manifest.tmp"
-    if ! python3 - "$src" "$key" > "$tmp" <<'PY'
-import json, sys, collections
-src, key = sys.argv[1], sys.argv[2]
+    if ! python3 - "$src" "$key" "$ROOT/tests/$manifest" > "$tmp" <<'PY'
+import json, os, sys, collections
+src, key, previous_path = sys.argv[1], sys.argv[2], sys.argv[3]
 d = json.load(open(src))
+
+# Hand-written expectations this generator CANNOT reproduce (#907).
+#
+# The generator writes each page's measured status verbatim, which silently
+# destroys any row a human annotated: issue19517.pdf was pinned "*" with the
+# note "Reference renderer timeouts make PASS/PASS_ONE load-dependent", and one
+# regeneration turned it into a literal PASS — re-arming exactly the false-red
+# the wildcard existed to prevent. Nothing warned; it was caught by reading the
+# diff, which is not a control.
+annotated = {}
+if os.path.exists(previous_path):
+    with open(previous_path) as fh:
+        for line in fh:
+            if line.startswith("#") or not line.strip():
+                continue
+            parts = line.rstrip("\n").split("\t")
+            if len(parts) < 3:
+                continue
+            path, page, status = parts[0], parts[1], parts[2]
+            note = parts[4] if len(parts) > 4 else ""
+            if status == "*" or note:
+                annotated[(path, page)] = (status, note)
 
 # Refuse to pin a baseline from a run that did not cover everything (#879).
 # A partial report contains real results, so it looks perfectly usable — but
@@ -119,12 +141,16 @@ def path_of(r):
 LOAD_DEPENDENT = {"TIMEOUT"}
 
 gaps = []
+lost = []
 for r in sorted(rows, key=path_of):
     p = path_of(r)
     page = r.get("page") or r.get("pageNumber") or 1
     st = r.get("status")
     if not (p and st):
         continue
+    was = annotated.get((p, str(page)))
+    if was and not (st in LOAD_DEPENDENT or st == "EXCISE_SIDE_GAP"):
+        lost.append((p, page, was[0], was[1], st))
     if st in LOAD_DEPENDENT:
         print(f"{p}\t{page}\t*\t\tload-dependent ({st} when measured); any terminal status accepted")
     elif st == "EXCISE_SIDE_GAP":
@@ -143,6 +169,16 @@ if gaps:
         "    expectation. An oracle rendered a page excise refused:\n")
     for g in gaps:
         sys.stderr.write(f"      {g}\n")
+
+if lost:
+    sys.stderr.write(
+        f"  ⚠ {len(lost)} hand-annotated row(s) OVERWRITTEN with a measured status.\n"
+        "    The generator cannot reproduce a human's judgement — re-apply any that\n"
+        "    still hold (a '*' usually guards against a load-dependent false red):\n")
+    for p, page, status, note, new_status in lost:
+        sys.stderr.write(f"      {p}#p{page}: was '{status}' -> now '{new_status}'\n")
+        if note:
+            sys.stderr.write(f"          note was: {note}\n")
 PY
     then
         echo "  ✗ $key — generator failed, tests/$manifest left unchanged" >&2
