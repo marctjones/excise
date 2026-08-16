@@ -134,6 +134,54 @@ public class MalformedDictionaryRecoveryTests
     }
 
     /// <summary>
+    /// #973 — the OTHER malformation in pdfium's bug_481363.pdf: its /ColorSpace
+    /// object is <c>[ /Lab 4&lt; /WhitePoint … &gt;&gt; ]</c>. The stray <c>4</c>
+    /// makes the lexer read <c>&lt;</c> as the start of a HEX STRING, and the
+    /// first <c>/</c> inside it is not a hex digit.
+    ///
+    /// That object is reachable only from the page's <c>/Resources
+    /// /ColorSpace</c>, so the throw came out of a resource lookup and refused
+    /// the entire page — while mutool produces a page (blank) and pdftocairo /
+    /// pdftoppm produce one with the content stream's rectangle on it. A bad
+    /// fragment must cost the fragment.
+    /// </summary>
+    [Fact]
+    public void MalformedHexStringInAnObject_CostsThatObjectOnly()
+    {
+        const string content = "100 100 100 100 re f";
+        var pdf = Assemble(new[]
+        {
+            "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n",
+            "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 /MediaBox [0 0 400 400] >>\nendobj\n",
+            "3 0 obj\n<< /Type /Page /Parent 2 0 R /Contents 5 0 R "
+                + "/Resources << /ColorSpace << /CS1 4 0 R >> >> >>\nendobj\n",
+            // The malformation, byte for byte from the fixture.
+            "4 0 obj [\n  /Lab 4<\n    /WhitePoint [0.9505 1.00 1.0890 ]\n"
+                + "    /Range [-100 100 -100 100 ]\n  >>\n]\nendobj\n",
+            $"5 0 obj\n<< /Length {content.Length} >>\nstream\n{content}\nendstream\nendobj\n",
+        });
+
+        using var doc = PdfDocument.Open(pdf);
+
+        // The document opens and the page resolves — this is the whole point.
+        var page = doc.GetPage(1);
+        page.Width.Should().Be(400);
+
+        // The unparseable object degrades to null, exactly as §7.3.10 already
+        // requires of a reference with no xref entry. It does NOT come back as
+        // a half-parsed array that later code would have to second-guess.
+        doc.GetObject(4).Should().BeOfType<PdfNull>(
+            "an object the lexer cannot read is the null object, not a reason to " +
+            "condemn every other object in the file");
+
+        // Everything the malformed object is NOT is untouched.
+        var colorSpaces = doc.Resolve(page.Resources!.GetOptional("ColorSpace")!) as PdfDictionary;
+        colorSpaces.Should().NotBeNull();
+        Encoding.ASCII.GetString(page.GetContentStreamBytes()).Should().Contain("re f",
+            "the page's own content stream is unaffected by a broken resource");
+    }
+
+    /// <summary>
     /// The redaction-safety half, required by CLAUDE.md: a document reached
     /// through a TOLERANT parse path must still redact completely. Recovering
     /// more files is only a gain if what comes back out is still clean —

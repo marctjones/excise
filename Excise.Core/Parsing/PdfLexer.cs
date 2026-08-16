@@ -813,6 +813,28 @@ public class PdfParseException : Exception
 {
     public PdfParseException(string message) : base(message) { }
     public PdfParseException(string message, Exception inner) : base(message, inner) { }
+
+    /// <summary>
+    /// True when this exception reports one of excise's own RESOURCE GUARDS
+    /// tripping (recursion depth, allocation bounds) rather than a producer
+    /// malformation in the file.
+    /// </summary>
+    /// <remarks>
+    /// The distinction exists because the two want opposite handling (#973).
+    /// A malformed object is recovered from — <c>PdfDocument.GetObject</c>
+    /// degrades it to the null object so one bad fragment costs only that
+    /// fragment. A guard trip must NOT be recovered from that way: the guard
+    /// fires on hostile input, and turning it into "this object is null"
+    /// would let a crafted file make objects disappear silently and at scale,
+    /// which for a redaction tool is the wrong direction to fail in. It also
+    /// destroys the diagnostic — the caller learns "could not load catalog"
+    /// instead of "maximum nesting depth exceeded".
+    ///
+    /// Deliberately a PROPERTY and not a subclass: the adversarial-input
+    /// contract (#969/#971) asserts <c>BeOfType&lt;PdfParseException&gt;()</c>,
+    /// which is an exact-type check that a derived class would break.
+    /// </remarks>
+    public bool IsResourceGuard { get; init; }
 }
 
 /// <summary>
