@@ -237,6 +237,26 @@ run_t0() {
     # #940: prove the Roslyn reachability pass reports a dead root and its
     # dead leaf in one closure, without paying the whole-solution cost in t0.
     run_step "reachability-selftest" scripts/check-reachability.sh --self-test
+    # #1012: every gate must be falsifiable — breaking the property it guards
+    # must make it fail. Each of these feeds its gate known-bad input and
+    # requires a non-zero exit; each was watched going red against a gate whose
+    # failure branch had been neutralized. They are hermetic (temp roots, fake
+    # tools, synthetic reports) and run in milliseconds, except the
+    # contract-manifest one which pays ~6s for four `dotnet run` invocations.
+    #
+    # An UNWIRED selftest is the very defect RC2 is about, so these live here
+    # and not in a document that recommends running them.
+    run_step "test-count-selftest" scripts/test-check-test-count.sh
+    run_step "coverage-selftest" scripts/test-check-coverage.sh
+    run_step "testdata-sync-selftest" scripts/test-check-testdata-sync.sh
+    run_step "doc-claims-selftest" scripts/test-verify-doc-claims.sh
+    run_step "true-redaction-selftest" scripts/test-verify-true-redaction.sh
+    run_step "gate-asymmetry-selftest" scripts/test-check-gate-asymmetry.sh
+    run_step "unwired-api-selftest" scripts/test-check-unwired-api.sh
+    run_step "copy-whitespace-parity-selftest" scripts/test-check-copy-whitespace-parity.sh
+    run_step "extraction-parity-selftest" scripts/test-check-extraction-parity.sh
+    run_step "perf-budgets-selftest" scripts/test-check-perf-budgets.sh
+    run_step "contract-manifest-selftest" scripts/test-check-contract-manifest-agreement.sh
     # #908: public API that nothing calls. The skip budget and test-count gates
     # catch a TEST that stopped running; this catches PRODUCTION CODE that never
     # started. ~10s (a text index over .cs/.axaml), ratcheted against

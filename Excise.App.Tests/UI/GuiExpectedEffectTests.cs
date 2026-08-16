@@ -50,9 +50,17 @@ namespace Excise.App.Tests.UI;
 /// quit the process or deliberately blank the document, one command that shells
 /// out to the OS, one whose effect depends on registry ORDER, and page-count-
 /// mutating commands whose own guards make them no-ops on this registry's
-/// one-page fixture (tracked in #1001 for a multi-page fixture). They remain
-/// covered by Phase 1's universal safety net (<see cref="GuiClickSafetySweepTests"/>)
-/// and by their own dedicated workflow tests.
+/// one-page fixture. They remain covered by Phase 1's universal safety net
+/// (<see cref="GuiClickSafetySweepTests"/>) and by their own dedicated workflow
+/// tests.
+///
+/// #1001 took the last of those out of "silently absent": the three page-count/
+/// order-mutating commands now have a real, non-vacuous Phase 2 battery of their
+/// own —
+/// <see cref="PageCountAndOrderCommands_MutateTheDocument_AndChangeOnlyTheirRegion"/>
+/// — on a 3-page fixture, asserting the mutation HAPPENED as well as the region
+/// contract. It could not live in <see cref="Registry"/>, which shares one
+/// single-page Document across every entry in sequence.
 /// </summary>
 [Collection("AvaloniaTests")]
 public class GuiExpectedEffectTests
@@ -92,19 +100,20 @@ public class GuiExpectedEffectTests
         new("RotatePageRightCommand", null),
         new("RotatePage180Command", null),
         // RemoveCurrentPage / MoveCurrentPageEarlier / MoveCurrentPageLater are
-        // NOT added here even though #846 is resolved: this registry loads a
-        // ONE-page fixture (BuildDensePdf) and shares that single Document
-        // instance across every entry executed in sequence, so a command that
-        // actually changed page COUNT would leave a corrupted/empty document
-        // for every later entry in the same run. Their own guards
-        // (RemoveCurrentPageAsync / MoveCurrentPage{Earlier,Later}Async) make
-        // them no-ops on a 1-page document, which would make an entry here
-        // pass vacuously without ever exercising the mutation — see #1001 for
-        // giving this registry (or a sibling one) a multi-page fixture so
-        // these get a real, non-vacuous entry instead of staying silently
-        // absent. Their click-safety is covered by GuiClickSafetySweepTests
-        // (Phase 1, 3-page fixture); their document-state correctness by
-        // PageOrganizationCommandTests / PageOrganizationSavePersistenceTests.
+        // NOT in THIS registry: it loads a ONE-page fixture (BuildDensePdf) and
+        // shares that single Document instance across every entry executed in
+        // sequence, so a command that actually changed page COUNT would leave a
+        // corrupted/empty document for every later entry in the same run. Their
+        // own guards (RemoveCurrentPageAsync / MoveCurrentPage{Earlier,Later}Async)
+        // make them no-ops on a 1-page document, so an entry here would pass
+        // VACUOUSLY — CanExecute true, command runs, guard turns it into a
+        // no-op before anything a broken repaint could be measured against.
+        // #1001 closed that hole in a sibling battery below rather than here:
+        // PageCountAndOrderCommands_MutateTheDocument_AndChangeOnlyTheirRegion
+        // runs all three against a 3-page fixture, in an order where each
+        // guard's precondition holds, and asserts the mutation HAPPENED
+        // (page order / page count) alongside the region contract — so it
+        // cannot go green on a guard-blocked no-op.
         new("ToggleRedactionModeCommand", null),
         new("ToggleTextSelectionModeCommand", null),
         new("ToggleTypewriterModeCommand", null),
@@ -303,6 +312,151 @@ public class GuiExpectedEffectTests
         }
     }
 
+    /// <summary>
+    /// #1001 — the three page-count/order-mutating commands, against a fixture
+    /// where their own guards do NOT block them.
+    ///
+    /// The registry above cannot host these: it shares one Document across every
+    /// entry, and its fixture has a single page, on which
+    /// <c>RemoveCurrentPageAsync</c> (needs <c>TotalPages &gt; 1</c>) and
+    /// <c>MoveCurrentPage{Earlier,Later}Async</c> (need the current index off the
+    /// boundary) return before doing anything. An entry there would have reported
+    /// "checked" while measuring a no-op.
+    ///
+    /// So this runs them in an order where each precondition holds — page 1 of 3
+    /// moves later, comes back earlier, then is removed — and asserts BOTH halves:
+    ///
+    ///   • the mutation ACTUALLY HAPPENED (page order changed / page count
+    ///     dropped). This is the anti-vacuity teeth: on a 1-page fixture these
+    ///     assertions fail, which is what makes the region contract below mean
+    ///     something.
+    ///   • the region contract Phase 2 exists for: the page surface keeps
+    ///     comparable ink, and no panel's visibility changed.
+    /// </summary>
+    [FixedAvaloniaTheory]
+    [InlineData(1.0)]
+    [InlineData(2.0)]
+    public async Task PageCountAndOrderCommands_MutateTheDocument_AndChangeOnlyTheirRegion(double dpr)
+    {
+        const int PageCount = 3;
+        var path = Path.Combine(Path.GetTempPath(), $"excise-effect-multi-{Guid.NewGuid():N}.pdf");
+        File.WriteAllBytes(path, BuildDenseMultiPagePdf(PageCount));
+
+        var vm = new MainWindowViewModel { ThumbnailPrewarmEnabled = false };
+        var window = new MainWindow { DataContext = vm, Width = 1200, Height = 900 };
+        window.Show();
+        try
+        {
+            await vm.LoadDocumentAsync(path);
+            var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
+            viewer.RenderScalingOverride = dpr;
+
+            var panels = new Dictionary<Panel, Control>
+            {
+                [Panel.Outline] = window.FindControl<Control>("OutlinePanel")!,
+                [Panel.Thumbnails] = window.FindControl<Control>("ThumbnailsPanel")!,
+                [Panel.Clipboard] = window.FindControl<Control>("ClipboardSidebarHost")!,
+                [Panel.Search] = window.FindControl<Control>("SearchTextBox")!,
+            };
+
+            var nameToCommand = BuildCommandMap(vm);
+            await CaptureWhenInkedAsync(window, viewer);
+
+            vm.TotalPages.Should().Be(PageCount, "fixture sanity — the guards under test need more than one page");
+            vm.CurrentPageIndex.Should().Be(0, "a freshly loaded document starts on page 1");
+            PageOrderSignature(vm).Should().Be("1,2,3",
+                "fixture sanity — page order must be READABLE, or the mutation assertions below "
+                + "could not tell a real reorder from a page whose marker text we failed to extract");
+
+            var failures = new List<string>();
+
+            // Each step names the command and what MUST be observably different
+            // afterwards. Ordered so no guard short-circuits: page 1 of 3 is not
+            // at the last boundary (Later runs), is then at index 1 so not at the
+            // first boundary (Earlier runs), and 3 > 1 (Remove runs).
+            var steps = new (string Command, string Mutation)[]
+            {
+                ("MoveCurrentPageLaterCommand", "order"),
+                ("MoveCurrentPageEarlierCommand", "order"),
+                ("RemoveCurrentPageCommand", "count"),
+            };
+
+            foreach (var (commandName, mutation) in steps)
+            {
+                var cmd = nameToCommand[commandName];
+                if (!cmd.CanExecute(null))
+                {
+                    failures.Add($"{commandName}: CanExecute=false — this battery exists to execute it, not to skip it");
+                    continue;
+                }
+
+                var orderBefore = PageOrderSignature(vm);
+                var countBefore = vm.TotalPages;
+                double inkBefore = 0;
+                var visBefore = new Dictionary<Panel, bool>();
+                await Dispatcher_InvokeCapture(window, viewer, panels, ink => inkBefore = ink, visBefore);
+
+                await Dispatcher_Execute(window, cmd);
+
+                var orderAfter = PageOrderSignature(vm);
+                var countAfter = vm.TotalPages;
+                double inkAfter = 0;
+                var visAfter = new Dictionary<Panel, bool>();
+                await Dispatcher_InvokeCapture(window, viewer, panels, ink => inkAfter = ink, visAfter);
+
+                // 0. ANTI-VACUITY: the guard did not turn this into a no-op.
+                if (mutation == "order" && orderAfter == orderBefore)
+                    failures.Add($"{commandName}: page order is unchanged ({orderBefore}) — the command's own guard no-opped it, so nothing below was exercised");
+                if (mutation == "count" && countAfter >= countBefore)
+                    failures.Add($"{commandName}: page count stayed at {countBefore} — the command's own guard no-opped it, so nothing below was exercised");
+
+                // 1. Page surface preserved.
+                if (inkAfter < inkBefore * 0.4)
+                    failures.Add($"{commandName}: page ink collapsed {inkBefore:P2}→{inkAfter:P2} (dpr={dpr}) — a page mutation must not blank the page");
+
+                // 2. No panel may move: none of these three declares a panel effect.
+                foreach (var p in Enum.GetValues<Panel>())
+                {
+                    if (visBefore[p] != visAfter[p])
+                        failures.Add($"{commandName}: changed {p} visibility {visBefore[p]}→{visAfter[p]} (dpr={dpr}) — it must only affect the page surface");
+                }
+
+                _out.WriteLine($"{commandName}: order {orderBefore}→{orderAfter}, pages {countBefore}→{countAfter}, ink {inkBefore:P2}→{inkAfter:P2}");
+            }
+
+            // The per-step list first: it carries the "the guard no-opped it"
+            // diagnosis, and a whole-document assert that fired ahead of it
+            // would report the symptom while hiding which step was vacuous.
+            if (failures.Count > 0) _out.WriteLine("FAILURES:\n  " + string.Join("\n  ", failures));
+            failures.Should().BeEmpty("each page mutation must really happen, and must change only the page surface");
+            vm.TotalPages.Should().Be(PageCount - 1, "the remove step must have taken a page off the document");
+        }
+        finally
+        {
+            window.Close();
+            TestPdfGenerator.CleanupTestFile(path);
+        }
+    }
+
+    /// <summary>The document's page ORDER, read from the pages' own text ("PAGE n").
+    /// A move command that its guard blocked leaves this identical, which is how the
+    /// battery above refuses to pass vacuously.</summary>
+    private static string PageOrderSignature(MainWindowViewModel vm)
+    {
+        var doc = vm.PdfCoreDocument;
+        if (doc == null) return "<no document>";
+        var marks = new List<string>();
+        for (int i = 0; i < doc.PageCount; i++)
+        {
+            string text;
+            try { text = doc.Pages[i].Text ?? string.Empty; }
+            catch { text = string.Empty; }
+            var m = System.Text.RegularExpressions.Regex.Match(text, @"PAGE\s+(\d+)");
+            marks.Add(m.Success ? m.Groups[1].Value : "?");
+        }
+        return string.Join(",", marks);
+    }
+
     // ── per-step helpers ────────────────────────────────────────────────────────
 
     private static async Task Dispatcher_Execute(Window window, ICommand cmd)
@@ -391,6 +545,60 @@ public class GuiExpectedEffectTests
             if (c.Alpha > 128 && c.Red + c.Green + c.Blue < 384) count++;
         }
         return (double)count / (bmp.Width * bmp.Height);
+    }
+
+    /// <summary>Multi-page fixture for the #1001 battery. Same dense body text as
+    /// <see cref="BuildDensePdf"/> so the ink assertions behave identically, plus a
+    /// per-page "PAGE n" marker that makes page ORDER observable — which is what
+    /// distinguishes a real move from a guard-blocked no-op. Mirrors
+    /// GuiClickSafetySweepTests' fixture of the same shape.</summary>
+    private static byte[] BuildDenseMultiPagePdf(int pageCount)
+    {
+        var sb = new System.Text.StringBuilder();
+        var offsets = new List<int>();
+        void Obj(string s) { offsets.Add(sb.Length); sb.Append(s); }
+
+        sb.Append("%PDF-1.7\n");
+
+        // catalog(1) + pages(2) + two objects per page, THEN the font.
+        //
+        // ⚠️ `1 + 1 + pageCount * 2` — the arithmetic the sibling fixture in
+        // GuiClickSafetySweepTests uses — is off by one: the last page's content
+        // stream and the font claim the SAME object number (for pageCount=3 both
+        // are object 8), so the final page loses its content and extracts as
+        // empty. Measured here: the page-order signature read "1,2,?" until this
+        // line was corrected, which would have quietly narrowed what the order
+        // assertions below can observe.
+        int fontObj = 3 + pageCount * 2;
+        Obj("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
+
+        var kids = string.Join(" ", Enumerable.Range(0, pageCount).Select(i => $"{3 + i * 2} 0 R"));
+        Obj($"2 0 obj\n<< /Type /Pages /Kids [{kids}] /Count {pageCount} >>\nendobj\n");
+
+        for (int i = 0; i < pageCount; i++)
+        {
+            int pageId = 3 + i * 2;
+            int contentId = pageId + 1;
+            var content =
+                $"BT /F1 20 Tf 60 740 Td (EXCISE EXPECTED EFFECT PAGE {i + 1} LINE ONE) Tj " +
+                "0 -26 Td (THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG) Tj " +
+                "0 -26 Td (0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ) Tj " +
+                "0 -26 Td (FOURTH LINE OF BODY TEXT FOR INK MASS) Tj " +
+                "0 -26 Td (FIFTH LINE KEEPS THE PAGE WELL INKED) Tj ET";
+            Obj($"{pageId} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] " +
+                $"/Resources << /Font << /F1 {fontObj} 0 R >> >> /Contents {contentId} 0 R >>\nendobj\n");
+            Obj($"{contentId} 0 obj\n<< /Length {content.Length} >>\nstream\n{content}\nendstream\nendobj\n");
+        }
+
+        Obj($"{fontObj} 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n");
+
+        int total = fontObj + 1;
+        int xref = sb.Length;
+        sb.Append($"xref\n0 {total}\n0000000000 65535 f \n");
+        foreach (var o in offsets) sb.Append(o.ToString("D10")).Append(" 00000 n \n");
+        sb.Append($"trailer\n<< /Size {total} /Root 1 0 R >>\nstartxref\n").Append(xref).Append("\n%%EOF");
+
+        return System.Text.Encoding.ASCII.GetBytes(sb.ToString());
     }
 
     private static byte[] BuildDensePdf()
