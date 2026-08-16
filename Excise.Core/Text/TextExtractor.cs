@@ -2,6 +2,7 @@ using System.Linq;
 using System.Text;
 using Excise.Core.Document;
 using Excise.Core.Fonts;
+using Excise.Core.Parsing;
 using Excise.Core.Primitives;
 
 namespace Excise.Core.Text;
@@ -790,12 +791,19 @@ public class TextExtractor
             var c = content[pos];
             if (char.IsLetterOrDigit(c))
             {
-                // Same accept-set as before (letter-or-digit collected, all
-                // else skipped); a collected non-hex character still throws
-                // FormatException, as Convert.ToByte(..., 16) previously did.
+                // Per §7.3.4.3 a hex string holds only hex digits (whitespace
+                // is ignored), so a letter G-Z is skipped rather than fatal —
+                // the same rule ContentStreamParser.ParseHexString already
+                // under #352. This copy kept throwing FormatException, which
+                // escaped page.Letters raw on hostile input: the #352 fix was
+                // made to one of the two content-stream parsers and not the
+                // other, the same divergence as #971 (#974).
                 var nibble = HexDigitValue(c);
                 if (nibble < 0)
-                    throw new FormatException($"Invalid hex digit '{c}' in hex string.");
+                {
+                    pos++;
+                    continue;
+                }
                 if (pendingNibble < 0)
                 {
                     pendingNibble = nibble;
@@ -824,6 +832,16 @@ public class TextExtractor
         _ => -1
     };
 
+    /// <summary>
+    /// Max array nesting depth before extraction aborts, matching
+    /// <see cref="Excise.Core.Content.ContentStreamParser.MaxNestingDepth"/> —
+    /// the two parse the same bytes and must bound them the same way (#971).
+    /// Real content streams nest show-arrays two or three deep.
+    /// </summary>
+    private const int MaxArrayNestingDepth = 256;
+
+    private int _arrayNestingDepth;
+
     private List<object> ParseArray(string content, ref int pos)
     {
         // Presized for the typical TJ show-array shape (alternating strings
@@ -831,19 +849,36 @@ public class TextExtractor
         var result = new List<object>(16);
         pos++; // Skip '['
 
-        while (pos < content.Length)
+        // ParseArray -> ParseToken -> ParseArray recurses once per '['. With no
+        // bound, a content stream of nothing but open brackets overflowed the
+        // STACK — which .NET cannot catch, so it killed the process rather than
+        // failing the extraction (#971). ~5,000 brackets (a 10 KB file) was
+        // enough on a thread-pool thread, which is where the GUI's background
+        // indexing and every xunit test run.
+        if (++_arrayNestingDepth > MaxArrayNestingDepth)
         {
-            SkipWhitespaceAndComments(content, ref pos);
-            if (pos >= content.Length || content[pos] == ']')
-            {
-                pos++;
-                break;
-            }
-
-            var item = ParseToken(content, ref pos);
-            if (item != null)
-                result.Add(item);
+            _arrayNestingDepth--;
+            throw new PdfParseException(
+                $"Maximum nesting depth ({MaxArrayNestingDepth}) exceeded while extracting text from a content-stream array");
         }
+
+        try
+        {
+            while (pos < content.Length)
+            {
+                SkipWhitespaceAndComments(content, ref pos);
+                if (pos >= content.Length || content[pos] == ']')
+                {
+                    pos++;
+                    break;
+                }
+
+                var item = ParseToken(content, ref pos);
+                if (item != null)
+                    result.Add(item);
+            }
+        }
+        finally { _arrayNestingDepth--; }
 
         return result;
     }
