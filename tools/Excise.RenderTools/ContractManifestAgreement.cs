@@ -63,7 +63,12 @@ partial class Program
     internal sealed record ContractManifestComparison(
         int ComparedPages,
         int PagesWithoutManifestRow,
-        IReadOnlyList<ContractManifestDisagreement> Disagreements);
+        IReadOnlyList<ContractManifestDisagreement> Disagreements,
+        // Per corpus, because a total of zero is not the only way this check can
+        // stop checking: one key drifting out of the corpus->manifest map takes
+        // several hundred comparisons with it and leaves the total looking
+        // healthy.
+        IReadOnlyDictionary<string, int> ComparedPagesByCorpus);
 
     /// <summary>
     /// Compare every contract page that has a corresponding manifest row.
@@ -82,6 +87,7 @@ partial class Program
 
         var compared = 0;
         var withoutRow = 0;
+        var comparedByCorpus = new Dictionary<string, int>(StringComparer.Ordinal);
         var disagreements = new List<ContractManifestDisagreement>();
 
         foreach (var (key, match) in contracts.EnumeratePages())
@@ -106,6 +112,7 @@ partial class Program
             }
 
             compared++;
+            comparedByCorpus[corpus] = comparedByCorpus.GetValueOrDefault(corpus) + 1;
             var contractStatus = string.IsNullOrWhiteSpace(match.Page.ExpectedRawStatus)
                 ? "*"
                 : match.Page.ExpectedRawStatus!;
@@ -131,7 +138,8 @@ partial class Program
             disagreements
                 .OrderBy(d => d.Path, StringComparer.Ordinal)
                 .ThenBy(d => d.PageNumber)
-                .ToArray());
+                .ToArray(),
+            comparedByCorpus);
     }
 
     static Command CreateContractManifestAgreementCommand()
@@ -177,7 +185,8 @@ partial class Program
                     Console.Out.WriteLine(disagreement.ToString());
 
                 Console.Out.WriteLine(
-                    $"contract pages comparable to a manifest row: {comparison.ComparedPages}");
+                    $"contract pages comparable to a manifest row: {comparison.ComparedPages}"
+                    + $" ({string.Join(", ", comparison.ComparedPagesByCorpus.OrderBy(kvp => kvp.Key, StringComparer.Ordinal).Select(kvp => $"{kvp.Key} {kvp.Value}"))})");
                 Console.Out.WriteLine(
                     $"  disagree with the manifest:                {comparison.Disagreements.Count}");
                 Console.Out.WriteLine(
