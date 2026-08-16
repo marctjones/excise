@@ -8,10 +8,10 @@
   "Notes": "Focused review: pdfe renders the intended diagnostic text; residual differences are tiny antialiasing noise.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "PASS_ONE",
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
       "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
-      "PixelAgreement": "MATCHES_TARGET",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
       "ReferenceSituation": "REFS_DISAGREE",
       "RootCause": "REFERENCE_TEXT_ANTIALIASING_DISAGREEMENT",
       "Target": {
@@ -21,7 +21,7 @@
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "pdfe matches the accepted text target closely enough; no renderer improvement is pending for this page.",
+      "QualityReason": "pdfe matches the accepted text target closely enough; no renderer improvement is pending for this page. Re-measured 2026-08-16 (#977): raw status is PASS - excise agrees with 4 of the 4 oracles that rendered (closest ghostscript, diffFraction 0.0003). The PASS_ONE pin predates the majority-agreement PASS rule (#865); the corpus expectation manifest has recorded PASS since.",
       "Notes": "Reviewed against current pdfe, MuPDF, Cairo, and Ghostscript renders."
     }
   }

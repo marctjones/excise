@@ -8,10 +8,10 @@
   "Notes": "Evidence sheet: logs/render-quality/pass-one-triage-20260703/bug1552113-fixed/sheet.png. Regression covered by AnnotationDefaultAppearanceTests.RenderPage_LinkAnnotationWithoutAppearance_DoesNotPaintSyntheticBorder.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "PASS_ONE",
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
       "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
-      "PixelAgreement": "MATCHES_ONE_REFERENCE",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
       "ReferenceSituation": "REFS_DISAGREE",
       "RootCause": "LINK_ANNOTATION_SYNTHETIC_BORDER_OBSCURES_TEXT",
       "Target": {
@@ -21,7 +21,7 @@
       },
       "ImprovementPriority": "DONE",
       "Confidence": "HIGH",
-      "QualityReason": "Fixed: no-/AP Link annotations remain interactive overlays and are not painted as synthetic page content.",
+      "QualityReason": "Fixed: no-/AP Link annotations remain interactive overlays and are not painted as synthetic page content. Re-measured 2026-08-16 (#977): raw status is PASS - excise agrees with 3 of the 5 oracles that rendered (closest mutool, diffFraction 0.0253). The PASS_ONE pin predates the majority-agreement PASS rule (#865); the corpus expectation manifest has recorded PASS since.",
       "Notes": "Focused sheet: logs/render-quality/pass-one-triage-20260703/bug1552113-fixed/sheet.png."
     }
   },

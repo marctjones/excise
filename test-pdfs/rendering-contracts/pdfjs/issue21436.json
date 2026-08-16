@@ -8,10 +8,10 @@
   "Notes": "Focused scan: pdfe has zero differing pixels against the accepted Cairo/Ghostscript subset with only negligible channel averaging noise.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "PASS_ONE",
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
       "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
-      "PixelAgreement": "MATCHES_TARGET",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
       "ReferenceSituation": "REFS_DISAGREE",
       "RootCause": "REFERENCE_SUBSET_SUBPIXEL_MATCH",
       "Target": {
@@ -21,7 +21,7 @@
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "pdfe matches the accepted reference subset closely enough to treat the page as resolved.",
+      "QualityReason": "pdfe matches the accepted reference subset closely enough to treat the page as resolved. Re-measured 2026-08-16 (#977): raw status is PASS - excise agrees with 4 of the 4 oracles that rendered (closest pdftocairo, diffFraction 0.0000). The PASS_ONE pin predates the majority-agreement PASS rule (#865); the corpus expectation manifest has recorded PASS since.",
       "Notes": "Reviewed through current P2 focused raw scan."
     }
   }

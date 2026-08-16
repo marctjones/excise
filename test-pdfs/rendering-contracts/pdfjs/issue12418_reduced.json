@@ -8,10 +8,10 @@
   "Notes": "Cold 2026-07-03 verification shows this is not an active pdfe semantic rendering issue. pdfe preserves the Czech text and accents; references disagree on fallback face/weight and Ghostscript is visibly worse.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "PASS_ONE",
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
       "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
-      "PixelAgreement": "MATCHES_TARGET",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
       "ReferenceSituation": "REFS_DISAGREE",
       "RootCause": "REFERENCE_FONT_RENDERING_DISAGREEMENT",
       "Target": {
@@ -21,7 +21,7 @@
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "pdfe preserves the intended Czech text and accents. Residual differences are reference font fallback disagreement rather than an active pdfe semantic rendering bug.",
+      "QualityReason": "pdfe preserves the intended Czech text and accents. Residual differences are reference font fallback disagreement rather than an active pdfe semantic rendering bug. Re-measured 2026-08-16 (#977): raw status is PASS - excise agrees with 3 of the 5 oracles that rendered (closest pdfium, diffFraction 0.0479). The PASS_ONE pin predates the majority-agreement PASS rule (#865); the corpus expectation manifest has recorded PASS since.",
       "Notes": "Verified by cold no-cache scan and fresh contact sheet against pdfe, MuPDF, Poppler, and Ghostscript on 2026-07-03. Do not classify this as pdfe better than all references without stronger font-object proof."
     }
   }

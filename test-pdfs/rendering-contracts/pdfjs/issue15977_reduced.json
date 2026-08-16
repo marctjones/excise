@@ -8,10 +8,10 @@
   "Notes": "Migrated from the legacy TSV rendering manifests.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "PASS_ONE",
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
       "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
-      "PixelAgreement": "MATCHES_SOME",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
       "ReferenceSituation": "REFS_DISAGREE",
       "RootCause": "REDUCED_FIXTURE_ORACLE_DISAGREEMENT",
       "Target": {
@@ -20,7 +20,7 @@
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Reduced single-page fixture renders meaningful content with bounded oracle disagreement.",
+      "QualityReason": "Reduced single-page fixture renders meaningful content with bounded oracle disagreement. Re-measured 2026-08-16 (#977): raw status is PASS - excise agrees with 3 of the 3 oracles that rendered (closest pdfium, diffFraction 0.0261). The PASS_ONE pin predates the majority-agreement PASS rule (#865); the corpus expectation manifest has recorded PASS since.",
       "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
     }
   }

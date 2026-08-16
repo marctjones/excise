@@ -8,10 +8,10 @@
   "Notes": "Cold no-cache verification on 2026-07-03 rendered the contracted page; pdfe pixel-matches an accepted available reference. This is a reference coverage gap, not a pdfe-better-than-refs claim.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "PASS_ONE",
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
       "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
-      "PixelAgreement": "MATCHES_TARGET",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
       "ReferenceSituation": "REFS_INCOMPLETE",
       "RootCause": "REFERENCE_COVERAGE_GAP",
       "Target": {
@@ -21,7 +21,7 @@
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Implementation-limit conformance fixture is accepted because pdfe pixel-matches the selected available reference; no visual superiority claim is made.",
+      "QualityReason": "Implementation-limit conformance fixture is accepted because pdfe pixel-matches the selected available reference; no visual superiority claim is made. Re-measured 2026-08-16 (#977): raw status is PASS - excise agrees with 3 of the 3 oracles that rendered (closest mutool, diffFraction 0.0000). The PASS_ONE pin predates the majority-agreement PASS rule (#865); the corpus expectation manifest has recorded PASS since.",
       "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
     }
   }
