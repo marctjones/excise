@@ -1429,6 +1429,32 @@ the same direction:
 Majority scoring is not a loosening. It caught two defects the most-inked rule
 passed (#970, #972).
 
+**A majority needs three, so the scan escalates to get them** (#976). Both
+filters above shrink the pool `MISSING_CONTENT` votes over — normally only the
+three primaries run, and an oracle that rasterized a different page box gets no
+vote — and at two oracles a 1-1 split is not a majority, so the check returns
+**no verdict at all**, reporting (0 missing, 0 inked), which is byte-identical
+to a clean page. `bug1844576.pdf` measured both ways: primaries only,
+`comparableOracles=2` and `referenceInkedTiles=0` (no opinion); with escalation,
+`comparableOracles=3` and `referenceInkedTiles=65`, missing 0 (a real verdict).
+So Ghostscript/PDFBox now also run when the comparable pool is under three, not
+only when the page metrics disagree. Escalation decides who is right; it cannot
+manufacture agreement, because three agreeing primaries stay a majority of four
+and of five. It does not GUARANTEE a verdict either (four oracles can split
+2-2), so the pool is recorded per page (`comparableOracles`) and per scan
+(`summary.localityQuorumShortCount`) instead of being assumed away.
+
+**The contracts and the manifests are two descriptions of the same page, and
+they are now compared** (#977). `test-pdfs/rendering-contracts/**` pins
+`ExpectedRawStatus` per page; `tests/corpus-expectations*.tsv` pins it for page
+1. Nothing crossed them until #977, and 65 pages had drifted — all 65 stale
+contracts, mostly PASS_ONE pins predating the majority-PASS rule (#865). The
+check runs in t0 (`Contracts_AgreeWithTheCorpusExpectationManifests`, or
+`scripts/check-contract-manifest-agreement.sh` to see the whole list); it needs
+no corpus and no renderer. A `*` on either side is compatible with anything —
+those wildcard rows are hand-written for load-dependent pages and must not be
+"fixed".
+
 `--extra-oracles all` is close to free: PDFBox and PDFium only run on pages
 where mutool and pdftocairo have already disagreed. Use it — a second opinion
 costs nothing on the 97% of pages that pass, and the escalation lands exactly
