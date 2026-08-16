@@ -1139,6 +1139,308 @@ public class CorpusScanClassificationTests
         entries[0].resultCategory.Should().Be("PASS_ONE_SEMANTIC_OK");
     }
 
+    // ---- #907: a refusal is judged by the oracles, not by excise ------------
+    //
+    // Every case below is a MUTATION of the evidence, not of the code: the same
+    // excise failure is scored against oracles that refused, oracles that
+    // rendered, and no oracles at all. A rule that cannot separate those three
+    // is the rule that pinned bug_216 (nobody renders it) and bug_481363
+    // (mutool renders it) as the same DECODE_ERROR.
+
+    [Fact]
+    public void ApplyRefusalCorroboration_NoOracleRendered_BecomesAgreedRefusal()
+    {
+        var entry = new RenderProgram.CorpusScanEntry
+        {
+            path = "pdfium/bug_216.pdf",
+            pageNumber = 1,
+            status = "DECODE_ERROR",
+            mutoolStatus = "EXIT_CODE",
+            cairoStatus = "EXIT_CODE",
+        };
+
+        RenderProgram.ApplyRefusalCorroboration(entry);
+
+        entry.status.Should().Be("AGREED_REFUSAL");
+        entry.refusedAs.Should().Be("DECODE_ERROR");
+        entry.refusalCorroboration.Should().Be("corroborated");
+        entry.diagnostic.Should().Contain("DECODE_ERROR");
+    }
+
+    [Fact]
+    public void ApplyRefusalCorroboration_OracleRendered_BecomesExciseSideGap()
+    {
+        var entry = new RenderProgram.CorpusScanEntry
+        {
+            path = "pdfium/bug_481363.pdf",
+            pageNumber = 1,
+            status = "DECODE_ERROR",
+            mutoolStatus = "OK",
+            cairoStatus = "EXIT_CODE",
+        };
+
+        RenderProgram.ApplyRefusalCorroboration(entry);
+
+        entry.status.Should().Be("EXCISE_SIDE_GAP");
+        entry.refusedAs.Should().Be("DECODE_ERROR");
+        entry.refusalCorroboration.Should().Be("contradicted");
+    }
+
+    [Fact]
+    public void ApplyRefusalCorroboration_OracleRendersMalformedPdf_BecomesExciseSideGap()
+    {
+        // "This file is malformed" is excise certifying its own refusal. A
+        // renderer that renders it disproves the certificate, so the
+        // input-naming statuses are contradictable too.
+        var entry = new RenderProgram.CorpusScanEntry
+        {
+            path = "pdfium/bug_113.pdf",
+            pageNumber = 0,
+            status = "MALFORMED_PDF",
+            mutoolStatus = "EXIT_CODE",
+            cairoStatus = "OK",
+        };
+
+        RenderProgram.ApplyRefusalCorroboration(entry);
+
+        entry.status.Should().Be("EXCISE_SIDE_GAP");
+        entry.refusedAs.Should().Be("MALFORMED_PDF");
+    }
+
+    [Fact]
+    public void ApplyRefusalCorroboration_CorroboratedMalformedPdf_KeepsItsStatus()
+    {
+        // MALFORMED_PDF already names the FIXTURE as the problem, which is what
+        // the manifest header documents it as meaning. Rewriting the ~28 pages
+        // that carry it would erase a distinction the ratchet is holding.
+        var entry = new RenderProgram.CorpusScanEntry
+        {
+            path = "pdfium/bug_113.pdf",
+            pageNumber = 0,
+            status = "MALFORMED_PDF",
+            mutoolStatus = "EXIT_CODE",
+            cairoStatus = "EXIT_CODE",
+        };
+
+        RenderProgram.ApplyRefusalCorroboration(entry);
+
+        entry.status.Should().Be("MALFORMED_PDF");
+        entry.refusedAs.Should().BeNull();
+        entry.refusalCorroboration.Should().Be("corroborated");
+    }
+
+    [Fact]
+    public void ApplyRefusalCorroboration_CredentialBlocked_IsNotCorroboration()
+    {
+        var entry = new RenderProgram.CorpusScanEntry
+        {
+            path = "pdfium/encrypted_hello_world_r6.pdf",
+            pageNumber = 0,
+            status = "PASSWORD_REQUIRED",
+            mutoolStatus = "EXIT_CODE",
+            cairoStatus = "EXIT_CODE",
+        };
+
+        RenderProgram.ApplyRefusalCorroboration(entry);
+
+        entry.status.Should().Be("PASSWORD_REQUIRED",
+            "every renderer was locked out by the same missing password, which says nothing about the page");
+        entry.refusalCorroboration.Should().Be("credential-blocked");
+    }
+
+    [Fact]
+    public void ApplyRefusalCorroboration_Timeout_StaysLoadDependent()
+    {
+        var entry = new RenderProgram.CorpusScanEntry
+        {
+            path = "pdfjs/slow.pdf",
+            pageNumber = 1,
+            status = "TIMEOUT",
+            mutoolStatus = "EXIT_CODE",
+            cairoStatus = "EXIT_CODE",
+        };
+
+        RenderProgram.ApplyRefusalCorroboration(entry);
+
+        entry.status.Should().Be("TIMEOUT",
+            "TIMEOUT flips with CPU load, and a verdict that flips with CPU load false-reds the gate");
+        entry.refusalCorroboration.Should().Be("load-dependent");
+    }
+
+    [Fact]
+    public void ApplyRefusalCorroboration_NoOracleInvoked_FormsNoOpinion()
+    {
+        var entry = new RenderProgram.CorpusScanEntry
+        {
+            path = "pdfjs/unprobed.pdf",
+            pageNumber = 1,
+            status = "DECODE_ERROR",
+        };
+
+        RenderProgram.ApplyRefusalCorroboration(entry);
+
+        entry.status.Should().Be("DECODE_ERROR");
+        entry.refusalCorroboration.Should().Be("unprobed");
+    }
+
+    [Fact]
+    public void ApplyRefusalCorroboration_ExciseRendered_IsNotARefusal()
+    {
+        var entry = new RenderProgram.CorpusScanEntry
+        {
+            path = "pdfjs/rendered.pdf",
+            pageNumber = 1,
+            status = "PASS_ONE",
+            renderMs = 12,
+            mutoolStatus = "OK",
+            cairoStatus = "EXIT_CODE",
+        };
+
+        RenderProgram.ApplyRefusalCorroboration(entry);
+
+        entry.status.Should().Be("PASS_ONE");
+        entry.refusalCorroboration.Should().BeNull();
+    }
+
+    // ---- #932: ink locality is scored by majority, not by one oracle --------
+
+    [Fact]
+    public void CompareInkLocalityByMajority_MajorityInked_ReportsMissingTiles()
+    {
+        using var blank = MakeBitmap(inkedTiles: 0);
+        using var a = MakeBitmap(inkedTiles: 8);
+        using var b = MakeBitmap(inkedTiles: 8);
+        using var c = MakeBitmap(inkedTiles: 8);
+
+        var (missing, _, inked) = RenderProgram.CompareInkLocalityByMajority(
+            blank, new[] { a, b, c });
+
+        inked.Should().Be(8);
+        missing.Should().Be(8, "all three oracles drew content excise left blank");
+    }
+
+    [Fact]
+    public void CompareInkLocalityByMajority_LoneOutlierInked_ReportsNothingMissing()
+    {
+        // The annotation case (#932): pdftocairo synthesizes an appearance for a
+        // /AP-less Line annotation, mutool and Ghostscript draw nothing, and
+        // §12.5.5 permits both. Scoring against the MOST-INKED oracle elects the
+        // outlier by construction and convicts excise for agreeing with the
+        // majority.
+        using var blank = MakeBitmap(inkedTiles: 0);
+        using var outlier = MakeBitmap(inkedTiles: 8);
+        using var agreeingA = MakeBitmap(inkedTiles: 0);
+        using var agreeingB = MakeBitmap(inkedTiles: 0);
+
+        var (missing, _, inked) = RenderProgram.CompareInkLocalityByMajority(
+            blank, new[] { outlier, agreeingA, agreeingB });
+
+        inked.Should().Be(0);
+        missing.Should().Be(0);
+    }
+
+    [Fact]
+    public void CompareInkLocalityByMajority_LoneBlankOracle_CannotAcquit()
+    {
+        // The other direction, and the reason "closest to excise" was rejected
+        // in #883: adding a blank oracle must not weaken a verdict.
+        using var blank = MakeBitmap(inkedTiles: 0);
+        using var a = MakeBitmap(inkedTiles: 8);
+        using var b = MakeBitmap(inkedTiles: 8);
+        using var blankOracle = MakeBitmap(inkedTiles: 0);
+
+        var (missing, _, inked) = RenderProgram.CompareInkLocalityByMajority(
+            blank, new[] { a, b, blankOracle });
+
+        inked.Should().Be(8);
+        missing.Should().Be(8);
+    }
+
+    [Fact]
+    public void CompareInkLocalityByMajority_SingleOracle_KeepsPreMajorityStrictness()
+    {
+        using var blank = MakeBitmap(inkedTiles: 0);
+        using var only = MakeBitmap(inkedTiles: 8);
+
+        var (missing, _, inked) = RenderProgram.CompareInkLocalityByMajority(
+            blank, new[] { only });
+
+        inked.Should().Be(8);
+        missing.Should().Be(8);
+    }
+
+    [Fact]
+    public void CompareInkLocalityByMajority_DifferentOracleResolutions_StillComparable()
+    {
+        using var blank = MakeBitmap(inkedTiles: 0, size: 320);
+        using var a = MakeBitmap(inkedTiles: 8, size: 320);
+        using var b = MakeBitmap(inkedTiles: 8, size: 640);
+
+        var (missing, _, inked) = RenderProgram.CompareInkLocalityByMajority(
+            blank, new[] { a, b });
+
+        inked.Should().Be(8);
+        missing.Should().Be(8);
+    }
+
+    [Fact]
+    public void ApplyInkLocalityVerdict_AllMajorityInkedTilesBlank_FlipsPassToMissingContent()
+    {
+        var entry = new RenderProgram.CorpusScanEntry { status = "PASS" };
+
+        RenderProgram.ApplyInkLocalityVerdict(entry, (8, 0, 8), oracleCount: 3);
+
+        entry.status.Should().Be("MISSING_CONTENT");
+        entry.missingInkTiles.Should().Be(8);
+        entry.referenceInkedTiles.Should().Be(8);
+        entry.diagnostic.Should().Contain("majority");
+    }
+
+    [Fact]
+    public void ApplyInkLocalityVerdict_PartialLoss_StaysPassAndRecordsCounts()
+    {
+        var entry = new RenderProgram.CorpusScanEntry { status = "PASS" };
+
+        RenderProgram.ApplyInkLocalityVerdict(entry, (5, 0, 8), oracleCount: 3);
+
+        entry.status.Should().Be("PASS");
+        entry.missingInkTiles.Should().Be(5);
+    }
+
+    [Fact]
+    public void ApplyInkLocalityVerdict_TooFewInkedTiles_StaysPass()
+    {
+        var entry = new RenderProgram.CorpusScanEntry { status = "PASS" };
+
+        RenderProgram.ApplyInkLocalityVerdict(entry, (2, 0, 2), oracleCount: 3);
+
+        entry.status.Should().Be("PASS");
+    }
+
+    /// <summary>
+    /// A square bitmap whose first <paramref name="inkedTiles"/> tiles of the
+    /// scanner's 32x32 grid are solid black and the rest white.
+    /// </summary>
+    private static SkiaSharp.SKBitmap MakeBitmap(int inkedTiles, int size = 320)
+    {
+        const int grid = 32;
+        var bitmap = new SkiaSharp.SKBitmap(size, size);
+        using (var canvas = new SkiaSharp.SKCanvas(bitmap))
+        {
+            canvas.Clear(SkiaSharp.SKColors.White);
+            using var paint = new SkiaSharp.SKPaint { Color = SkiaSharp.SKColors.Black };
+            var tile = size / (float)grid;
+            for (var i = 0; i < inkedTiles; i++)
+            {
+                var x = i % grid;
+                var y = i / grid;
+                canvas.DrawRect(x * tile, y * tile, tile, tile, paint);
+            }
+        }
+
+        return bitmap;
+    }
+
     private static string FindRepoRoot()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
