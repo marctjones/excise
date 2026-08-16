@@ -87,8 +87,8 @@ namespace Excise.Rendering.Differential
     public static class PdfiumNativeReferenceRenderer
     {
         public static bool IsAvailable { get; }
-        public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, string? userPassword = null) { }
-        public static Excise.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, string? userPassword = null) { }
+        public static SkiaSharp.SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, string? userPassword = null, bool renderAnnotations = false) { }
+        public static Excise.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, string? userPassword = null, bool renderAnnotations = false) { }
     }
     public static class PdfiumReferenceRenderer
     {
