@@ -116,6 +116,7 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     private ZoomFitMode _zoomFitMode = ZoomFitMode.FitWidth;
     private bool _isThumbnailsSidebarVisible = true;
+    private bool _areAnnotationsVisible = true;
     private bool _isClipboardSidebarVisible = true;
     private DocumentOpenTiming? _lastDocumentOpenTiming;
     private long _renderVersion;
@@ -522,6 +523,26 @@ public partial class MainWindowViewModel : ViewModelBase
         get => _isClipboardSidebarVisible;
         set => this.RaiseAndSetIfChanged(ref _isClipboardSidebarVisible, value);
     }
+
+    /// <summary>
+    /// Whether the page's annotations are drawn. Default true, which is what
+    /// every conforming viewer does (§12.5) and what five of the six reference
+    /// renderers do by default.
+    ///
+    /// Off is not a fidelity setting — it answers a different question: what is
+    /// IN the page content stream, versus what is overlaid on top of it. That
+    /// distinction is the whole point for a redaction tool, because a FreeText
+    /// annotation looks like page content and is not, and a Widget's value is
+    /// real text living outside the content stream entirely.
+    /// </summary>
+    public bool AreAnnotationsVisible
+    {
+        get => _areAnnotationsVisible;
+        set => this.RaiseAndSetIfChanged(ref _areAnnotationsVisible, value);
+    }
+
+    public void ToggleAnnotationsVisible() =>
+        AreAnnotationsVisible = !AreAnnotationsVisible;
 
     public void ToggleThumbnailsSidebar() =>
         IsThumbnailsSidebarVisible = !IsThumbnailsSidebarVisible;

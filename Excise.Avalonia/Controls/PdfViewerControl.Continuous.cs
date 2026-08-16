@@ -985,6 +985,10 @@ public partial class PdfViewerControl
 
                 ContinuousRenderStartCount++;
                 var renderWatch = System.Diagnostics.Stopwatch.StartNew();
+                // Read the styled property HERE, on the UI thread. Avalonia
+                // properties are not thread-affine-safe to read from the render
+                // task, and capturing it also pins the value for this pass.
+                var showAnnotations = ShowAnnotations;
                 var skBitmap = await Task.Run(() =>
                 {
                     token.ThrowIfCancellationRequested();
@@ -995,7 +999,8 @@ public partial class PdfViewerControl
                     return renderer.RenderPage(page, new RenderOptions
                     {
                         Dpi = dpi,
-                        ClipRect = clip
+                        ClipRect = clip,
+                        RenderAnnotations = showAnnotations
                     });
                 }, token);
                 renderWatch.Stop();

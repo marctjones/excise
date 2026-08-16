@@ -76,6 +76,9 @@ public partial class MainWindowViewModel
     public ReactiveCommand<Unit, Unit> AddStickyNoteAnnotationCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleOutlineCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleThumbnailsCommand { get; private set; } = null!;
+
+    /// <summary>Show or hide the page's annotations (#1022).</summary>
+    public ReactiveCommand<Unit, Unit> ToggleAnnotationsCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleClipboardSidebarCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleContinuousViewCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleRevealHiddenTextCommand { get; private set; } = null!;
@@ -191,6 +194,7 @@ public partial class MainWindowViewModel
         AddStickyNoteAnnotationCommand = ReactiveCommand.CreateFromTask(() => AddStickyNoteAnnotationAsync());
         ToggleOutlineCommand = ReactiveCommand.Create(ToggleOutlineSidebar);
         ToggleThumbnailsCommand = ReactiveCommand.Create(ToggleThumbnailsSidebar);
+        ToggleAnnotationsCommand = ReactiveCommand.Create(ToggleAnnotationsVisible);
         ToggleClipboardSidebarCommand = ReactiveCommand.Create(ToggleClipboardSidebar);
         ToggleContinuousViewCommand = ReactiveCommand.Create(ToggleContinuousView);
         ToggleRevealHiddenTextCommand = ReactiveCommand.Create(() => { RevealHiddenText = !RevealHiddenText; });

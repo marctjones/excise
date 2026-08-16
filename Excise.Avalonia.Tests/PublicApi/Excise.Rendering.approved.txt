@@ -17,6 +17,7 @@ namespace Excise.Rendering
         public SkiaSharp.SKRect? ClipRect { get; init; }
         public int Dpi { get; init; }
         public long MaxPixelCount { get; init; }
+        public bool RenderAnnotations { get; init; }
     }
     public sealed class RenderResourceLimitException : System.InvalidOperationException
     {
