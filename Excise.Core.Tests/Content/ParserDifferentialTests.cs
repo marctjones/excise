@@ -472,22 +472,26 @@ public class ParserDifferentialTests
     /// indexing thread, with no timeout to hit.
     ///
     /// <para>Neither machine checks the token on ENTRY, so a pre-cancelled
-    /// token proves a check inside the operator loop was reached. What this
-    /// does NOT gate: the two deeper check points (the array-element loop, and
-    /// TextExtractor's <c>SkipDictionary</c> / ContentStreamParser's
-    /// <c>ParseDictionary</c> walk). The outer loop's check necessarily fires
-    /// first when the token is already cancelled, and cancellation arriving
-    /// mid-token — the case those points exist for — cannot be produced
-    /// deterministically from a test. They are verified by mutation, not by
-    /// this assertion.</para>
+    /// token proves a check inside the OPERATOR LOOP was reached — but only
+    /// because the fixture below contains no array and no dictionary. The
+    /// first draft used a <c>TJ</c> array and passed with the operator-loop
+    /// check deleted, satisfied instead by the one in <c>ParseArray</c>: a
+    /// check-point test is only as specific as its fixture is plain.</para>
+    ///
+    /// <para>What this does NOT gate: the two deeper check points (the
+    /// array-element loop, and TextExtractor's <c>SkipDictionary</c> /
+    /// ContentStreamParser's <c>ParseDictionary</c> walk). The outer loop's
+    /// check necessarily fires first when the token is already cancelled, and
+    /// cancellation arriving mid-token — the case those points exist for —
+    /// cannot be produced deterministically from a test.</para>
     /// </summary>
     [Fact]
     public void CancellationRequested_IsHonouredByBothMachines()
     {
-        // Long enough that abandoning it means something, shallow enough that
-        // no nesting bound fires first.
+        // Long enough that abandoning it means something; NO array and NO
+        // dictionary, so the operator loop is the only place a check can fire.
         var content = string.Concat(Enumerable.Repeat(
-            "BT /F1 12 Tf 1 0 0 1 72 700 Tm [(ab) -120 (cd)] TJ ET\n", 500));
+            "BT /F1 12 Tf 1 0 0 1 72 700 Tm (abcd) Tj ET\n", 500));
 
         using var doc = PdfDocument.Open(ParityFixture.Build(content));
         var page = doc.GetPage(1);
