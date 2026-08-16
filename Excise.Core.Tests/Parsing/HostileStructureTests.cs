@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -372,6 +373,77 @@ public class HostileStructureTests
 
         act.Should().NotThrow<ArgumentException>("134.6 MPx is a legitimate scan size")
             ;
+    }
+
+    /// <summary>
+    /// Three xref-stream guards found by the #960 deep sweep at 6000 and
+    /// 20000 iterations per seed — depths the checked-in 250 never reaches.
+    /// Each was a raw CLR exception escaping PdfDocument.Open past the #352
+    /// typed-failure contract; each is pinned here so the shallow gate still
+    /// catches a regression.
+    ///
+    /// They are pinned as UNIT cases rather than by raising Iterations,
+    /// because a 20000-iteration row takes ~76s and t0's whole budget is
+    /// ~30s. The seeds remain the way to hunt for new ones; these are the way
+    /// to keep the found ones fixed.
+    /// </summary>
+    [Theory]
+    [InlineData("odd-length /Index", "/W [1 2 1] /Index [0] /Size 5")]
+    [InlineData("missing /W", "/Index [0 5] /Size 5")]
+    public void MalformedXRefStreamDictionary_FailsTypedNotRaw(string label, string xrefEntries)
+    {
+        // startxref MUST point at the xref stream object or the parser never
+        // reaches the guarded code and falls back to scanning — an earlier
+        // version of this test hard-coded the offset, missed, and PASSED WITH
+        // THE GUARDS REVERTED. The offset is computed here for that reason.
+        var head =
+            "%PDF-1.7\n" +
+            "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n" +
+            "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n" +
+            "3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>\nendobj\n";
+        var xrefOffset = Encoding.Latin1.GetByteCount(head);
+        var pdf = Encoding.Latin1.GetBytes(
+            head +
+            "4 0 obj\n<< /Type /XRef " + xrefEntries + " /Root 1 0 R /Length 0 >>\n" +
+            "stream\n\nendstream\nendobj\n" +
+            "startxref\n" + xrefOffset.ToString(CultureInfo.InvariantCulture) + "\n%%EOF");
+
+        var act = () => { using var doc = PdfDocument.Open(pdf); _ = doc.PageCount; };
+
+        // The contract is "no RAW CLR exception", not "throws": these
+        // documents are recoverable and recovery is a fine outcome. What must
+        // never reach the caller is a missing-guard signal.
+        act.Should().NotThrow<ArgumentOutOfRangeException>($"{label}: must not index off the end");
+        act.Should().NotThrow<KeyNotFoundException>($"{label}: a missing required key must be typed");
+    }
+
+    /// <summary>
+    /// /Prev must be a direct integer byte offset (§7.5.5). An indirect
+    /// reference there made GetLong throw a raw InvalidCastException out of
+    /// Open (#960 deep sweep, seed 9603). A damaged trailer chain must cost
+    /// the older revisions, not the document.
+    /// </summary>
+    [Fact]
+    public void TrailerPrevHoldingAReference_DoesNotThrowRaw()
+    {
+        var pdf = Assemble(new List<string>
+        {
+            "<< /Type /Catalog /Pages 2 0 R >>",
+            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R >>",
+            ContentObject("BT ET"),
+        });
+        var withRefPrev = Encoding.Latin1.GetString(pdf)
+            .Replace("/Root 1 0 R", "/Root 1 0 R /Prev 3 0 R");
+
+        var act = () =>
+        {
+            using var doc = PdfDocument.Open(Encoding.Latin1.GetBytes(withRefPrev));
+            _ = doc.PageCount;
+        };
+
+        act.Should().NotThrow<InvalidCastException>(
+            "a non-numeric /Prev must stop the revision walk, not escape as a cast failure");
     }
 
     private static byte[] Assemble(IList<string> bodies)

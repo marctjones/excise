@@ -634,7 +634,16 @@ public class PdfDocument : IDisposable
             var prevObj = currentTrailer.GetOptional("Prev");
             if (prevObj == null) break;
 
-            long prevXRef = prevObj.GetLong();
+            // /Prev must be a direct integer byte offset (§7.5.5). An indirect
+            // reference there made GetLong throw a raw InvalidCastException
+            // out of Open (#960 deep sweep, seed 9603). Treat a non-number as
+            // "no usable previous section" and stop walking, exactly as an
+            // out-of-range offset already does below: a damaged trailer chain
+            // costs the older revisions, not the document.
+            if (!prevObj.TryGetNumber(out var prevNumber))
+                break;
+
+            long prevXRef = (long)prevNumber;
             if (prevXRef < 0 || prevXRef >= stream.Length || !parsedPreviousXRefs.Add(prevXRef))
                 break;
 
