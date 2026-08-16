@@ -6,12 +6,13 @@
   "whyThisExists": "The policy used to live in scattered ifs justified by free-text comments nothing re-measured, and three separate errors came out of the same mechanism - a decision made from a scalar that cannot represent the thing being decided. #885 drew a blue box on every widget, justified by 'mutool 233 px, pdftocairo 229, excise 0': those pixels were the CHECK MARK, and neither oracle drew any box. #987's /Link border default was decided on a fixture that did state /BS /W 2, so the no-/Border-at-all case - the common one - was never measured. #972's own first fix drew a CARET instead of a tick with identical pixel count and identical bbox. An ink count cannot tell a tick from a box, and a bbox cannot tell a tick from a caret.",
   "rules": [
     "MAJORITY, NEVER A SINGLE ORACLE. A row draws only when more than half the voting engines draw. #972's radio case is 1-of-3 and stays unimplemented for exactly that reason (the #875 trap).",
-    "WHERE NO MAJORITY DRAWS, EXCISE DRAWS NOTHING. A row whose decision contradicts its own majority verdict must carry a 'deviation' block naming a kind, an issue and a reason. There are THREE such rows and they are the interesting ones - there were four until the pool grew from 3 engines to 5 (#1007/#1009) and line.without-color's majority reversed under it.",
+    "WHERE NO MAJORITY DRAWS, EXCISE DRAWS NOTHING. A row whose decision contradicts its own majority verdict must carry a 'deviation' block naming a kind, an issue and a reason. There are TWO such rows and they are the interesting ones - there were four until the pool grew from 3 engines to 5 (#1007/#1009) and line.without-color's majority reversed under it, and three until #1005 stopped widget.sig.unsigned inventing a signature placeholder no majority draws.",
     "EVIDENCE IS BBOX + SHAPE, NEVER A BARE COUNT. Each evidence entry records the inked-pixel count for scale, the bbox, and the bbox's relationship to the annotation rect. The gate asserts the vote and the bbox class; it holds the count only to a factor of two, because tool versions drift.",
     "SHAPE ASSERTIONS WHERE COUNT AND BBOX CANNOT DISCRIMINATE. widget.tx.value-negative-size-centered is the proof: mutool's mirrored value has the same pixel count and the same bbox as the upright one, and only the ink profiles tell them apart.",
     "A DIFFERENCE THAT ORIGINATES IN SKIA'S RASTERISATION IS AN ACCEPTED LIMITATION, not a defect and not something to compensate for. Do not tune a shape predicate or special-case a fixture to force agreement.",
     "VOTES ARE COUNTED PER ENGINE, NOT PER BINARY. pdftocairo and pdftoppm are two rasterisers over ONE annotation-synthesis implementation (poppler); counting both would give poppler two votes out of four. pdftoppm is measured anyway, as a cross-check on the poppler vote, with counts:false.",
-    "AN ENGINE VOTES ON A ROW ONLY WHERE IT COULD HAVE DRAWN ONE - so `counts` is per EVIDENCE ENTRY, not per oracle. Ghostscript's zero on a non-printable fixture is the original example (hence everyFixtureIsPrintable); pdfbox and pdfium on the Widget rows are two more, and both were measured rather than assumed: pdfium renders no widget at all through FPDF_RenderPageBitmap, even one that ships an /AP, and pdfbox generates field appearances only in PDAcroForm.refreshAppearances(), which rendering never calls. Counting either zero would have flipped Widget rows toward 'blank' on the strength of two engines that were never asked the question. Every abstaining entry is still MEASURED and recorded, with an 'abstention' key naming which kind it is, so the arithmetic can be redone by anyone who disagrees with the call."
+    "AN ENGINE VOTES ON A ROW ONLY WHERE IT COULD HAVE DRAWN ONE - so `counts` is per EVIDENCE ENTRY, not per oracle. Ghostscript's zero on a non-printable fixture is the original example (hence everyFixtureIsPrintable); pdfbox and pdfium on the Widget rows are two more, and both were measured rather than assumed: pdfium renders no widget at all through FPDF_RenderPageBitmap, even one that ships an /AP, and pdfbox generates field appearances only in PDAcroForm.refreshAppearances(), which rendering never calls. Counting either zero would have flipped Widget rows toward 'blank' on the strength of two engines that were never asked the question. Every abstaining entry is still MEASURED and recorded, with an 'abstention' key naming which kind it is, so the arithmetic can be redone by anyone who disagrees with the call.",
+    "A SHAPE PREDICATE CANNOT SEE A MAGNITUDE, so a row may additionally pin its GEOMETRY with 'exciseInkMatchesDrawers': excise's ink bbox must land inside the spread of the bboxes the DRAWING voters recorded, edge by edge, within a stated tolerance. #1003 and #1004 are why it exists - both were rows where every other check in this gate was green while excise drew the right picture at visibly the wrong size (a highlight 6 px too wide at each end; a fitted field value 64 px wide where every engine draws 90-94). It is opt-in per row and per AXIS, because the axes diverge independently: widget.tx.value-auto-size pins x while its vertical placement is tracked separately as #1016."
   ],
   "everyFixtureIsPrintable": "Every fixture carries /F 4 (Print), and that is load-bearing rather than tidy. Ghostscript renders ONLY printable annotations, so on a fixture without /F it reports zero inked pixels for reasons that have nothing to do with the annotation - a structural ABSTENTION that reads exactly like a 'draws nothing' vote. That misreading is already in the record this table replaces: #987's link border looked 1-of-3 on pdfium bug_821454.pdf (whose links carry no /F) and was 2-of-3 once the fixture was printable (3-of-5 now that pdfbox and pdfium vote); #972's checkbox table recorded Ghostscript as drawing nothing 'in any of these' cases; #885's Stamp row read 2-of-3 and became 3-of-3 on a printable fixture (3-of-5 now). The parenthesised numbers are the CURRENT pool - see oraclePool; the ones before them are what the same rows read under the three-engine pool, kept because the point of the entry is the misreading, not the count.",
   "oracles": {
@@ -67,7 +68,7 @@
     "horizontal-band": "a line spanning the quad's width, a small fraction of its height"
   },
   "howToUpdate": "By hand, from the gate's failure message, which prints what it measured. There is deliberately no --update flag: this file records decisions and the evidence they rest on, and a regenerator would let a behaviour change rewrite its own justification. That is the failure mode scripts/update-corpus-expectations.sh has already caused twice.",
-  "rowCount": 44,
+  "rowCount": 45,
   "rows": [
     {
       "id": "link.explicit-width-positive",
@@ -1336,6 +1337,119 @@
       "note": "3 of 3. The #972 note that 'mutool honours /MK here; Poppler ignores it' does not survive re-measurement on a printable widget: poppler inks the same 2500 px over the same rect. (Widget rows have a THREE-engine pool: pdfbox and pdfium abstain structurally, see rules.)"
     },
     {
+      "id": "widget.mk.bg-only",
+      "subtype": "Widget",
+      "state": "btn",
+      "condition": "/MK states a background and NO border colour",
+      "decision": "draw",
+      "shape": "filled-rect-on-annot-rect",
+      "rendererSite": "RenderWidgetDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Widget /FT /Btn /T (b) /F 4 /V /Off /AS /Off /MK << /BG [1 1 0] >> /Rect [50 50 100 100] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          100,
+          100,
+          150
+        ],
+        "extraObjects": [],
+        "catalogExtra": "/AcroForm << /Fields [4 0 R] >> "
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 2500,
+          "bbox": [
+            50,
+            100,
+            100,
+            150
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 2500,
+          "bbox": [
+            50,
+            100,
+            100,
+            150
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "abstention": "duplicate-engine",
+          "vote": "draws",
+          "inkedPixels": 2500,
+          "bbox": [
+            50,
+            100,
+            100,
+            150
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 2500,
+          "bbox": [
+            50,
+            100,
+            100,
+            150
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": false,
+          "abstention": "structural",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": false,
+          "abstention": "structural",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 3,
+        "blank": 0,
+        "verdict": "draw"
+      },
+      "note": "Added by #1005, which removed the OTHER user of the same invented colour. A /MK that sets /BG and no /BC used to get the identical neutral-blue 1 pt stroke the signature placeholder got. Measured here: mutool, pdftocairo, pdftoppm and Ghostscript each ink exactly the 50x50 fill and no border at all, so the border is now drawn only where /MK /BC states one. The three voting engines agree to the pixel, which is why this row also carries the geometry pin.",
+      "exciseInkMatchesDrawers": {
+        "axis": "both",
+        "tolerancePx": 0,
+        "note": "The fill IS the picture here, so both axes are pinned and the tolerance is ZERO: excise inks exactly the drawers' 50x50 bbox, pixel for pixel, and the geometry is integral with antialiasing off in this gate, so nothing legitimate moves it. Zero is also what makes the pin sensitive to the defect it records - the invented 1 pt border straddles the /Rect edge and grows the ink bbox by exactly 1 px on the right and bottom, which any looser tolerance would wave through."
+      }
+    },
+    {
       "id": "widget.tx.empty-no-mk",
       "subtype": "Widget",
       "state": "tx",
@@ -2205,10 +2319,10 @@
         "blank": 0,
         "verdict": "draw"
       },
-      "divergence": {
-        "kind": "magnitude",
-        "issue": "#1003",
-        "note": "All three engines draw, and all three fit the value to about 92 px of the 100 pt field (669-753 inked px); excise's autoSize heuristic (75% of the rect height, capped at 16 pt) draws 64 px wide / 392 px. Same shape and place, visibly smaller text."
+      "exciseInkMatchesDrawers": {
+        "axis": "x",
+        "tolerancePx": 2,
+        "note": "#1003. /DA states Tf size 0, so the value is fitted to the field (12.7.4.3). RenderTextFieldValue used min(rect.Height * 0.75, 16) - height-only, capped, blind to the value and to the field width alike - and drew the value 64 px wide where all three voters draw it 90-94. AutoFitFontSize now takes the smaller of two limits read off the resolved typeface: the string's own advance must fit the width, and the font's own line box (ascent + descent) must fit the height. Ink bbox of /V (Mountain) at 72 dpi in a 100x30 field - mutool 94x18, pdftocairo 92x18, ghostscript 90x18, old excise 64x12, now 92x17. The rule is settled by a 100x100 field, where mutool (94x18) and poppler (92x18) draw the value at exactly the size they use in the 30 pt-tall one: the fit is bounded by WIDTH, and no absolute cap is involved. Ghostscript is the outlier there (136x57), the same disagreement it shows on widget.tx.value-wider-than-the-rect. Pinned on x ONLY: excise's baseline sits 2-5 px above every engine's here and on the explicit-size rows too, which is a separate divergence in the vertical placement formula, tracked as #1016."
       }
     },
     {
@@ -2318,8 +2432,8 @@
       "subtype": "Widget",
       "state": "sig",
       "condition": "/FT /Sig with no /AP and no /MK",
-      "decision": "draw",
-      "shape": "hollow-rect-on-annot-rect",
+      "decision": "nothing",
+      "shape": "none",
       "rendererSite": "RenderWidgetDefault",
       "fixture": {
         "annotation": "<< /Type /Annot /Subtype /Widget /FT /Sig /T (s) /F 4 /Rect [50 60 150 90] >>",
@@ -2406,11 +2520,7 @@
         "blank": 2,
         "verdict": "blank"
       },
-      "deviation": {
-        "kind": "invented-ink",
-        "issue": "#1005",
-        "note": "1 of 3, and excise does not even draw what the one draws: mutool inks 109 px in a 23x5 mark at the field's top-left, poppler and Ghostscript ink nothing, and excise strokes a full blue placeholder rectangle (520 px on the whole rect). #885 introduced it so an unsigned signature field is visible ('sign here'), which is a product decision rather than a reading of the evidence. Recorded here rather than quietly kept, because by this table's own rule a no-majority row draws nothing. (Widget rows have a THREE-engine pool: pdfbox and pdfium abstain structurally, see rules.)"
-      }
+      "history": "Until #1005 this row read decision 'draw', shape 'hollow-rect-on-annot-rect', and carried a deviation of kind 'invented-ink': RenderWidgetDefault treated /FT /Sig as explicitly styled and stroked a neutral blue 1 pt rectangle over the whole /Rect - 520 inked px, bbox (49,109)-(151,141). #885 added it so an unsigned signature field would read as 'sign here'. The evidence never supported it: of the three engines that vote on a Widget row, poppler and Ghostscript draw nothing and mutool draws a 23x5 mark in the field's top-left corner, which is not a border - so excise both elected an outlier (the #875 trap) and drew something the outlier does not draw. Now removed, and this row agrees with its own majority verdict. A /FT /Sig that carries /MK still gets that styling by the /MK rule; making an unsigned field visible in the editor is an overlay the GUI can draw, not ink in the rendered page."
     },
     {
       "id": "widget.ch.with-value",
@@ -3868,10 +3978,10 @@
         "blank": 0,
         "verdict": "draw"
       },
-      "divergence": {
-        "kind": "magnitude",
-        "issue": "#1004",
-        "note": "excise rounds the ends of the highlight and inflates the quad by half its height (bbox 6 px wider each side than every oracle's). Same band, same colour, same place."
+      "exciseInkMatchesDrawers": {
+        "axis": "x",
+        "tolerancePx": 2,
+        "note": "#1004. The ends of a highlight overshoot the /QuadPoints in every engine that draws one, and by how much is measured rather than chosen: the overshoot scales with the quad's HEIGHT and ignores its width. Px past each end at 72 dpi on a 100 pt quad, at quad heights 8/10/20/40 - mutool 2/2/4/8, pdftocairo 2/2/4/8, pdftoppm 2/2/4/8, ghostscript 1/2/3/5, pdfbox 2/2/5/8, pdfium 0/0/0/0, height/5 = 1.6/2/4/8. RenderTextMarkupDefault used min(height,width)/2, which drew 10 px past each end of this row's 20 px quad - 6 px wider than every oracle on both sides - and on a narrow quad shrank with the WIDTH, which no engine does (a 10x40 quad still overshoots 8 in mutool, poppler and pdfbox). It is now height/5, which is what mutool, poppler and pdfbox draw and which sits inside the spread of everything that draws anything: excise's bbox went from (40,80)-(160,100) to (46,80)-(154,100), against mutool and pdftocairo's (46,80)-(154,100). Pinned on x because that is the axis the inflation moves; the band's top and bottom are the quad's own."
       }
     },
     {
