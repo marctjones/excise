@@ -428,6 +428,16 @@ internal partial class RenderContext
         var savedStateStack = SnapshotGraphicsStateStack();
         var savedState = _state.Clone();
         var savedTextState = _textState.Clone();
+        // §8.10.1: a form XObject's execution is bracketed by an implicit
+        // q/Q, so the font it selects must not survive the `Do` — and the
+        // RESOLVED font is the font, not the name (#986). This site saved the
+        // name and size and not the resolved font, which is the incoherent
+        // middle: after a form set `/F2 24 Tf`, the page's next unstyled run
+        // reported F1@24 while drawing out of F2's typeface, widths and
+        // encoding. MEASURED at 72 dpi on a Helvetica page whose form selects
+        // Courier: excise drew the post-`Do` `(MMMM)` run 58 px wide where
+        // mutool, pdftocairo and Ghostscript all draw it 78 px wide.
+        var savedFont = _currentFont;
         var savedInTextBlock = _inTextBlock;
         var savedCurrentPath = _currentPath;
         var savedPendingClipEvenOdd = _pendingClipEvenOdd;
@@ -489,6 +499,7 @@ internal partial class RenderContext
             RestoreGraphicsStateStack(savedStateStack);
             _state = savedState;
             _textState = savedTextState;
+            _currentFont = savedFont;
             _inTextBlock = savedInTextBlock;
             _currentPath = savedCurrentPath;
             _pendingClipEvenOdd = savedPendingClipEvenOdd;

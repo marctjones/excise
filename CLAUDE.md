@@ -296,8 +296,24 @@ text state in NEITHER (#983).
 
 ⚠️ **Do not re-add a second one, and do not "fix" a renderer or a new consumer
 by teaching it its own text state.** That is how the fourth divergence starts.
-`SkiaRenderer` is still a separate machine and still carries #983's defect
-(#986) — it is the remaining exception, tracked, not a precedent.
+`SkiaRenderer` is still a separate machine — it consumes the walker's operators
+through `ContentStreamParser` in tokenizer-only mode (`TrackState = false`,
+#598) and re-executes them under its own graphics/text state. It is the
+remaining exception, tracked, not a precedent.
+
+#986 closed the Table 52 half of that exception WITHOUT porting the renderer to
+a sink: `q` now snapshots the text parameters (font+size, Tc, Tw, Tz, TL, Ts,
+Tr) and `Q` restores them, copying the walker's own `TextStateSnapshot` split —
+the resolved font travels with the name, the §9.4.1 text MATRIX deliberately
+does not. A full port was evaluated and rejected for this change: `WalkedGlyph`
+carries no typeface/GID/render-mode, the renderer's CTM lives in `SKCanvas`
+while the walker's lives in its own state, and Type3 CharProcs, tiling
+patterns, clipping text modes and soft masks would all need sink hooks that do
+not exist. **That rejection is scoped to #986, not a licence to add renderer
+state machinery.** The gate is
+`Excise.Rendering.Tests/Differential/GraphicsStateTextParameterRenderingTests`
+— mutool and pdftocairo, because a differential between excise's parsers and
+excise's renderer could not see a defect they shared, and did not.
 
 **The differential gate is gone, deliberately.** `ParserDifferentialTests` (58
 tests, #980) existed to detect divergence between the two machines; with one
@@ -957,10 +973,10 @@ Excise.Core/                          # the PDF engine — parser, writer, redac
 
 Excise.Rendering/                     # SkiaSharp renderer
 └── Differential/                   # ← REFERENCE ORACLES. Use these, don't build new ones.
-    ├── MutoolReferenceRenderer.cs        # 155 uses in Differential tests
-    ├── GhostscriptReferenceRenderer.cs   #  59
-    ├── PdftocairoReferenceRenderer.cs    #  40
-    ├── PdftoppmReferenceRenderer.cs      #  16
+    ├── MutoolReferenceRenderer.cs        # 164 uses in Differential tests
+    ├── GhostscriptReferenceRenderer.cs   #  61
+    ├── PdftocairoReferenceRenderer.cs    #  49
+    ├── PdftoppmReferenceRenderer.cs      #  18
     ├── MutoolTextExtractor.cs            # independent TEXT oracle
     ├── QpdfReferenceTool.cs              # structure: --check, --show-npages
     ├── PdfiumReferenceRenderer.cs        # 2 uses — arg-builder unit test only, NOT the oracle below
@@ -1038,6 +1054,29 @@ So: use the rendering-tools CI job or a fully provisioned local checkout when
 renderer work needs the wider quorum. Do not restate either the count or the
 "changes nothing" claim from memory — check
 `Excise.Rendering.Tests/Differential/` and `tests/skip-allowlist/`.
+
+### Skia-origin differences are registered, not re-triaged (#1011)
+
+excise rasterises through SkiaSharp **by choice**. A difference that originates
+in Skia's own scan conversion is an ACCEPTED LIMITATION: not fixed, not
+compensated for (no threshold tuning, no per-fixture special cases), not
+re-triaged — excise is judged against Skia's actual behaviour. The one
+exception is a Skia-triggered process death or hang (#363, #985), which must be
+contained, never emulated.
+
+Which differences those are is **data**: `tests/skia-rasterisation-register.json`,
+gated by `SkiaRasterisationRegisterTests`. Every row carries the evidence that
+**Skia received correct geometry** — the load-bearing field, and what separates
+an accepted limitation from an open bug ("we could not explain it" is a bug, not
+a row). The gate re-measures excise AND the oracles, so a row that stops
+reproducing FAILS and must be deleted rather than left standing to excuse a
+future defect.
+
+⚠️ Read it before re-deriving one. The register's `notASkiaDifference` list
+already holds one: #1011's own "excise's 1 pt link border inks 800 px where
+poppler inks 400" does **not** reproduce — re-measured 2026-08-16, both ink 400
+at an identical bbox; the 800 and the 400 are the poppler counts of two
+different policy rows (2 pt and 1 pt).
 
 
 ## Security Notes
