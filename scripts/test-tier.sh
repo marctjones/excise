@@ -213,6 +213,13 @@ run_t0() {
     run_step "test-count-avalonia" scripts/check-test-count.sh \
         Excise.Avalonia.Tests/Excise.Avalonia.Tests.csproj --trx "$LOG_DIR/avalonia-tests.trx"
     run_step "doc-claims" scripts/verify-doc-claims.sh
+    # #936: verify-doc-claims.sh pins that a string EXISTS; this derives
+    # whether a NUMBER is still TRUE — reference-oracle usage counts and
+    # milestone references are re-measured against the live source, and
+    # numbers that can't be cheaply re-measured must carry a dated marker.
+    # Self-test first so a broken checker can't report a false "passed".
+    run_step "doc-claim-freshness-selftest" scripts/check-doc-claim-freshness.sh --self-test
+    run_step "doc-claim-freshness" scripts/check-doc-claim-freshness.sh
     # origin/develop, not origin/main: this repo's git-flow lands feature
     # work on develop (release.yml/PR merges to main happen separately), so
     # that's the correct local diff base — matches ci.yml's own
