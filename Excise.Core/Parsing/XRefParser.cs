@@ -841,8 +841,15 @@ public class XRefParser
 
         var data = stream.DecodedData;
 
-        // Get W array (field widths)
-        var wArray = stream.GetArray("W");
+        // Get W array (field widths). §7.5.8.2 REQUIRES /W; GetArray throws a
+        // raw KeyNotFoundException without it, escaping Open past the #352
+        // typed-failure contract (#960 deep sweep, seeds 9601/9604). The
+        // element-count check below already had the typed form — the key's
+        // ABSENCE was simply not covered.
+        var wArray = stream.GetArrayOrNull("W");
+        if (wArray == null)
+            throw new PdfParseException(
+                "XRef stream has no /W array; §7.5.8.2 requires it to describe field widths");
         if (wArray.Count != 3)
             throw new PdfParseException("XRef stream /W array must have 3 elements");
 
@@ -871,6 +878,15 @@ public class XRefParser
 
         if (indexArray != null)
         {
+            // §7.5.8.2: /Index is an array of PAIRS (first object number,
+            // count). An odd length made the last iteration read i + 1 off the
+            // end — a raw ArgumentOutOfRangeException escaping
+            // PdfDocument.Open (#960 deep sweep, seed 9601 iteration 5632).
+            if (indexArray.Count % 2 != 0)
+                throw new PdfParseException(
+                    $"XRef stream /Index has {indexArray.Count} entries; §7.5.8.2 requires " +
+                    "pairs of (first object number, count)");
+
             for (int i = 0; i < indexArray.Count; i += 2)
             {
                 subsections.Add((indexArray.GetInt(i), indexArray.GetInt(i + 1)));
