@@ -34,6 +34,13 @@ public static class PdfiumNativeReferenceRenderer
 {
     private const string LibAlias = "pdfium";
 
+    /// <summary>
+    /// <c>FPDF_ANNOT</c> from public/fpdfview.h — "Set if annotations are to be
+    /// rendered". Without it pdfium draws page content only, so it inks NOTHING
+    /// for a page whose only content is an annotation (#1007).
+    /// </summary>
+    private const int FPDF_ANNOT = 0x01;
+
     private static readonly object InitLock = new();
     private static bool _initialised;
     private static readonly Lazy<string?> LibraryPath = new(ResolveLibraryPath);
@@ -41,11 +48,31 @@ public static class PdfiumNativeReferenceRenderer
     public static bool IsAvailable => LibraryPath.Value != null;
 
 
-    public static SKBitmap? RenderPage(string pdfPath, int pageNumber, int dpi, string? userPassword = null)
-        => TryRenderPage(pdfPath, pageNumber, dpi, userPassword).Bitmap;
+    public static SKBitmap? RenderPage(
+        string pdfPath, int pageNumber, int dpi, string? userPassword = null,
+        bool renderAnnotations = false)
+        => TryRenderPage(pdfPath, pageNumber, dpi, userPassword, renderAnnotations).Bitmap;
 
+    /// <param name="renderAnnotations">
+    /// Pass FPDF_ANNOT, so annotations are drawn (and missing appearances
+    /// synthesized, for the subtypes pdfium generates an /AP for).
+    ///
+    /// WHY THIS DEFAULTS TO FALSE, WHICH IS THE *WRONG* DEFAULT ON THE MERITS
+    /// ---------------------------------------------------------------------
+    /// The other four oracles draw annotations unconditionally, and so does
+    /// excise, so an annotation-blind pdfium is an outlier in any comparison
+    /// that includes an annotated page. But every checked-in pdfium baseline —
+    /// tests/corpus-expectations*.tsv, test-pdfs/rendering-contracts/**, the
+    /// MISSING_CONTENT majority votes in the corpus scan, PdfiumOracleSmokeTests
+    /// — was measured with flags=0. Flipping the default silently re-decides all
+    /// of them, and re-deriving them means a corpus scan. So the flag is opt-in:
+    /// callers that are ASKING about annotations pass true (the #993 annotation
+    /// synthesis policy gate does), and nothing else moves. Making it the
+    /// default is a separate change that must re-run the corpus scans (#1007).
+    /// </param>
     public static ReferenceRenderResult TryRenderPage(
-        string pdfPath, int pageNumber, int dpi, string? userPassword = null)
+        string pdfPath, int pageNumber, int dpi, string? userPassword = null,
+        bool renderAnnotations = false)
     {
         var sw = Stopwatch.StartNew();
         var lib = LibraryPath.Value;
@@ -98,7 +125,8 @@ public static class PdfiumNativeReferenceRenderer
             // unfilled pdfium bitmap is transparent black, which would show up
             // as a total mismatch rather than a rendering difference.
             FPDFBitmap_FillRect(bitmap, 0, 0, width, height, 0xFFFFFFFF);
-            FPDF_RenderPageBitmap(bitmap, page, 0, 0, width, height, 0, 0);
+            FPDF_RenderPageBitmap(bitmap, page, 0, 0, width, height, 0,
+                                  renderAnnotations ? FPDF_ANNOT : 0);
 
             var managed = CopyToSkBitmap(bitmap, width, height);
             return new ReferenceRenderResult(managed, "OK", null, sw.ElapsedMilliseconds);
