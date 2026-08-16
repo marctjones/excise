@@ -1032,6 +1032,24 @@ if chunk_pdf_visits != out["pdfs"]:
 for k in sorted(counts, key=counts.get, reverse=True):
     print(f"    {counts[k]:4d}  {k}")
 
+# ---- how many pages the blank-page check could not judge (#976) -----------
+# MISSING_CONTENT is decided by a MAJORITY of the oracles that rasterized the
+# same page region as excise. Below three of them no majority exists, so the
+# check returns no verdict — reporting zero missing tiles and zero inked
+# reference tiles, which is indistinguishable from a clean page. The scan
+# escalates to Ghostscript/PDFBox to try to reach three, but four oracles can
+# still split 2-2, so the pages it could not judge are counted here rather than
+# assumed away.
+MIN_LOCALITY_QUORUM = 3
+locality_short = sum(1 for e in merged_entries
+                     if get(e, "comparableOracles") is not None
+                     and get(e, "comparableOracles") < MIN_LOCALITY_QUORUM)
+locality_none = sum(1 for e in merged_entries if get(e, "comparableOracles") is None)
+if locality_short or locality_none:
+    print(f"  blank-page (MISSING_CONTENT) check reached no verdict on "
+          f"{locality_short} page(s) with fewer than {MIN_LOCALITY_QUORUM} comparable oracles"
+          f"; {locality_none} page(s) had no ink comparison at all")
+
 # ---- agreement classification (#877) -------------------------------------
 # `status` answers "what happened to this page". It does NOT answer "was excise
 # right", and reading it as though it did understates the result badly: a file

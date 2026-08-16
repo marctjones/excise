@@ -1406,6 +1406,10 @@ partial class Program
         public double mae { get; set; }
         public int? comparedOracles { get; set; }
         public int? agreeingOracles { get; set; }
+        // The pool the MISSING_CONTENT majority voted over (#976). Below three
+        // it cannot reach a verdict, and this report is where someone would look
+        // to find out that it did not.
+        public int? comparableOracles { get; set; }
         public int? oracleComparisonPairs { get; set; }
         public int? oracleDisagreeingPairs { get; set; }
         public bool? referenceCenterAgreement { get; set; }
@@ -1440,6 +1444,7 @@ partial class Program
                 mae = entry.mae,
                 comparedOracles = entry.comparedOracles,
                 agreeingOracles = entry.agreeingOracles,
+                comparableOracles = entry.comparableOracles,
                 oracleComparisonPairs = entry.oracleComparisonPairs,
                 oracleDisagreeingPairs = entry.oracleDisagreeingPairs,
                 referenceCenterAgreement = entry.referenceCenterAgreement,
