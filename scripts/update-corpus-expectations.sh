@@ -54,10 +54,32 @@ for spec in "${CORPORA[@]}"; do
     # exited 0 — a manifest with no rows gates nothing and reads as green. Same
     # vacuous-pass shape already fixed once in run-full-suite.sh.
     tmp="$ROOT/tests/$manifest.tmp"
-    if ! python3 - "$src" "$key" > "$tmp" <<'PY'
-import json, sys, collections
-src, key = sys.argv[1], sys.argv[2]
+    if ! python3 - "$src" "$key" "$ROOT/tests/$manifest" > "$tmp" <<'PY'
+import json, os, sys, collections
+src, key, previous_path = sys.argv[1], sys.argv[2], sys.argv[3]
 d = json.load(open(src))
+
+# Hand-written expectations this generator CANNOT reproduce (#907).
+#
+# The generator writes each page's measured status verbatim, which silently
+# destroys any row a human annotated: issue19517.pdf was pinned "*" with the
+# note "Reference renderer timeouts make PASS/PASS_ONE load-dependent", and one
+# regeneration turned it into a literal PASS — re-arming exactly the false-red
+# the wildcard existed to prevent. Nothing warned; it was caught by reading the
+# diff, which is not a control.
+annotated = {}
+if os.path.exists(previous_path):
+    with open(previous_path) as fh:
+        for line in fh:
+            if line.startswith("#") or not line.strip():
+                continue
+            parts = line.rstrip("\n").split("\t")
+            if len(parts) < 3:
+                continue
+            path, page, status = parts[0], parts[1], parts[2]
+            note = parts[4] if len(parts) > 4 else ""
+            if status == "*" or note:
+                annotated[(path, page)] = (status, note)
 
 # Refuse to pin a baseline from a run that did not cover everything (#879).
 # A partial report contains real results, so it looks perfectly usable — but
@@ -90,6 +112,14 @@ print("#   EXCISE_ONLY  excise rendered and no oracle could — coverage without
 print("#                corroboration, not a defect")
 print("#   MALFORMED_PDF / EMPTY_DOC  the fixture is broken or hostile on")
 print("#                purpose; refusing it is correct")
+print("#   AGREED_REFUSAL  excise refused AND no oracle rendered it either —")
+print("#                corroborated refusal, correct behaviour (#907)")
+print("#")
+print("# One status is NOT a correct outcome and must never be pinned bare:")
+print("#   EXCISE_SIDE_GAP  excise refused but an oracle rendered the page. An")
+print("#                oracle proves it is renderable, so this records an excise")
+print("#                bug. File it, then pin the row with the issue number in")
+print("#                the note column — or fix it.")
 print("#   *            load-dependent when measured (see the note on the row) —")
 print("#                asserts only that the page was scanned")
 print("#")
@@ -110,16 +140,57 @@ def path_of(r):
 # which still asserts the page was scanned and did not take down the run.
 LOAD_DEPENDENT = {"TIMEOUT"}
 
+gaps = []
+lost = []
 for r in sorted(rows, key=path_of):
     p = path_of(r)
     page = r.get("page") or r.get("pageNumber") or 1
     st = r.get("status")
     if not (p and st):
         continue
+    was = annotated.get((p, str(page)))
+    # A note on a row whose status did not move is still true — keep it. Only
+    # a status CHANGE invalidates a human's annotation, and only that warns.
+    if was and was[0] == st and st not in LOAD_DEPENDENT and st != "EXCISE_SIDE_GAP":
+        print(f"{p}\t{page}\t{st}\t\t{was[1]}")
+        continue
+    if was and was[0] != st and not (st in LOAD_DEPENDENT or st == "EXCISE_SIDE_GAP"):
+        lost.append((p, page, was[0], was[1], st))
     if st in LOAD_DEPENDENT:
         print(f"{p}\t{page}\t*\t\tload-dependent ({st} when measured); any terminal status accepted")
+    elif st == "EXCISE_SIDE_GAP":
+        # Pinned, because an ungated page is worse than a gated bug — but never
+        # silently: the row carries its own indictment and the run warns (#907).
+        #
+        # An existing note is CARRIED FORWARD rather than overwritten. The
+        # boilerplate says "file an issue and replace this note with its
+        # number"; re-emitting it every run would revert the number someone
+        # did write, silently undoing the exact thing it asked for.
+        gaps.append(f"{p}#p{page}")
+        note = was[1] if was and was[1] else (
+            "UNTRIAGED excise-side gap: an oracle rendered this page and excise did not "
+            f"(was {r.get('refusedAs') or 'a refusal'}) — file an issue and replace this "
+            "note with its number")
+        print(f"{p}\t{page}\t{st}\t\t{note}")
     else:
         print(f"{p}\t{page}\t{st}")
+
+if gaps:
+    sys.stderr.write(
+        f"  ⚠ {len(gaps)} EXCISE_SIDE_GAP page(s) pinned — each is a DEFECT, not an\n"
+        "    expectation. An oracle rendered a page excise refused:\n")
+    for g in gaps:
+        sys.stderr.write(f"      {g}\n")
+
+if lost:
+    sys.stderr.write(
+        f"  ⚠ {len(lost)} hand-annotated row(s) OVERWRITTEN with a measured status.\n"
+        "    The generator cannot reproduce a human's judgement — re-apply any that\n"
+        "    still hold (a '*' usually guards against a load-dependent false red):\n")
+    for p, page, status, note, new_status in lost:
+        sys.stderr.write(f"      {p}#p{page}: was '{status}' -> now '{new_status}'\n")
+        if note:
+            sys.stderr.write(f"          note was: {note}\n")
 PY
     then
         echo "  ✗ $key — generator failed, tests/$manifest left unchanged" >&2
