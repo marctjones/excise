@@ -252,10 +252,6 @@ namespace Excise.App.Services
                 "Width",
                 "Height"})]
         public static System.ValueTuple<double, double, double, double> ForXGraphicsWithVerification(Avalonia.Rect avaloniaRect, double pageHeight, bool xGraphicsUsesTopLeft = true) { }
-        [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
-                "Width",
-                "Height"})]
-        public static System.ValueTuple<double, double> GetRotatedPageDimensions(double pageWidth, double pageHeight, int rotation) { }
         public static Avalonia.Rect ImagePixelsToPdfPoints(Avalonia.Rect imageRect, int renderDpi = 150) { }
         public static double ImagePixelsToPdfPoints(double imagePixels, int renderDpi = 150) { }
         [return: System.Runtime.CompilerServices.TupleElementNames(new string[] {
@@ -272,7 +268,6 @@ namespace Excise.App.Services
         public static Avalonia.Rect PdfRectToAvaloniaRect(double pdfLeft, double pdfBottom, double pdfRight, double pdfTop, double pageHeight) { }
         public static double PdfYToAvaloniaY(double pdfY, double pageHeight) { }
         public static Avalonia.Rect TextBoundsToPdfPointsTopLeft(double textX, double textY, double textWidth, double textHeight, double pageHeight) { }
-        public static Avalonia.Rect TransformForRotation(Avalonia.Rect area, int rotation, double pageWidth, double pageHeight) { }
     }
     public sealed class DocumentTextIndex
     {
