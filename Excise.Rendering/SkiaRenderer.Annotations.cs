@@ -492,12 +492,17 @@ internal partial class RenderContext
     /// <c>/AP</c>. Two distinct cases:
     ///
     /// <list type="number">
-    /// <item><b>Signature widgets (<c>/FT /Sig</c>):</b> draw a visible
-    ///   placeholder border so the user can see "sign here." This
-    ///   matches mutool's behaviour and what every commercial viewer
-    ///   does for unsigned signature fields. Color comes from
-    ///   <c>/MK /BC</c> when set, falling back to a neutral border
-    ///   tone that's visible against white but not jarring.</item>
+    /// <item><b>Signature widgets (<c>/FT /Sig</c>) with no <c>/MK</c>:</b>
+    ///   nothing. #885 drew a blue "sign here" placeholder border on the
+    ///   whole /Rect; #1005 measured it and removed it. Of the three engines
+    ///   that vote on a Widget row (pdfbox and pdfium abstain structurally),
+    ///   poppler and Ghostscript draw NOTHING for an unsigned /FT /Sig, and
+    ///   the one that draws — mutool — draws a 23x5 mark in the field's
+    ///   top-left corner, not a border. So the placeholder both elected an
+    ///   outlier and drew something the outlier does not draw. A signature
+    ///   field with /MK styling still gets that styling, by the rule below.
+    ///   If the GUI wants unsigned fields flagged, that is an editor overlay,
+    ///   not ink in the rendered page.</item>
     /// <item><b>Other widgets (<c>/Tx</c>, <c>/Btn</c>, <c>/Ch</c>) with
     ///   <c>/MK</c> styling:</b> render background and/or border using
     ///   the explicitly-supplied colors. Skip when no /MK is set —
@@ -520,7 +525,6 @@ internal partial class RenderContext
 
         var bgColor = mk != null ? ParseColorArray(mk.GetOptional("BG")) : null;
         var bcColor = mk != null ? ParseColorArray(mk.GetOptional("BC")) : null;
-        bool isSignature = fieldType == "Sig";
         bool hasExplicitStyle = bgColor.HasValue || bcColor.HasValue;
 
         // Text fields with a value /V should render the value even
@@ -577,10 +581,17 @@ internal partial class RenderContext
         //
         // The /MK chrome below is unchanged and still applies to a button that
         // carries one (mutool honours /MK here; Poppler ignores it and draws
-        // only the check). Signature fields keep their "sign here" placeholder.
+        // only the check).
+        //
+        // A /FT /Sig with no /MK gets NOTHING (#1005). It used to reach the
+        // block below through an `isSignature ||`, which stroked a blue
+        // placeholder rectangle over the whole /Rect on the strength of one
+        // engine of three — and that engine draws a 23x5 corner mark, not a
+        // border. Row widget.sig.unsigned in the policy table carries the
+        // measurement; #885's "sign here" rationale is reversed there.
         bool isCheckbox = fieldType == "Btn" && !IsPushButtonWidget(annot) && !IsRadioWidget(annot);
 
-        if (isSignature || hasExplicitStyle)
+        if (hasExplicitStyle)
         {
             float borderWidth = (float)(annot.BorderWidth ?? 1.0);
             _canvas.Save();
@@ -595,14 +606,20 @@ internal partial class RenderContext
                     _canvas.DrawRect(rect, paint);
                 }
 
-                // Border: use /MK /BC when supplied. For signature fields
-                // without /MK, fall back to a neutral medium-blue tone —
-                // the goal is "user can see the field exists," not pixel
-                // parity with any specific viewer.
-                paint.Style = SKPaintStyle.Stroke;
-                paint.StrokeWidth = borderWidth;
-                paint.Color = bcColor ?? new SKColor(0x66, 0x99, 0xFF, 0xFF);
-                _canvas.DrawRect(rect, paint);
+                // Border: ONLY when /MK /BC states one. A /MK that sets a
+                // background and no border colour used to get the same
+                // invented medium-blue stroke the signature placeholder got,
+                // and it is invented for the same reason: measured at 72 dpi
+                // on /MK << /BG [1 1 0] >> alone (row widget.mk.bg-only),
+                // mutool, pdftocairo, pdftoppm and Ghostscript each ink
+                // exactly the 50x50 fill and no border at all.
+                if (bcColor.HasValue)
+                {
+                    paint.Style = SKPaintStyle.Stroke;
+                    paint.StrokeWidth = borderWidth;
+                    paint.Color = bcColor.Value;
+                    _canvas.DrawRect(rect, paint);
+                }
             }
             finally
             {
@@ -987,10 +1004,33 @@ internal partial class RenderContext
                         paint.Style = SKPaintStyle.Fill;
                         paint.BlendMode = SKBlendMode.Multiply;
                         paint.Color = WithAlpha(baseColor, AnnotationOpacityAlpha(annot));
-                        var radius = Math.Min(box.Height * 0.5f, box.Width * 0.5f);
+                        // The ends overshoot the quad, and by HOW MUCH is
+                        // measured, not chosen (#1004). Every engine that draws
+                        // a highlight rounds its ends past the /QuadPoints; the
+                        // overshoot scales with the quad's HEIGHT and ignores
+                        // its width. Measured at 72 dpi on a 100 pt quad, ink
+                        // bbox px past each end:
+                        //
+                        //   quad height     8    10    20    40
+                        //   mutool          2     2     4     8
+                        //   pdftocairo      2     2     4     8
+                        //   pdftoppm        2     2     4     8
+                        //   ghostscript     1     2     3     5
+                        //   pdfbox          2     2     5     8
+                        //   pdfium          0     0     0     0
+                        //   height/5      1.6     2     4     8
+                        //
+                        // So height/5 is what mutool, poppler and pdfbox draw
+                        // and it sits inside the spread of every engine that
+                        // draws anything. This used to be min(height,width)/2 —
+                        // 10 px on the 20 px quad above, wider than any oracle
+                        // on both sides, and on a narrow quad it shrank with
+                        // the WIDTH, which no engine does (measured on a
+                        // 10x40 quad: mutool/poppler/pdfbox still overshoot 8).
+                        var overshoot = box.Height * 0.2f;
                         var highlightBox = box;
-                        highlightBox.Inflate(radius, 0);
-                        _canvas.DrawRoundRect(highlightBox, radius, radius, paint);
+                        highlightBox.Inflate(overshoot, 0);
+                        _canvas.DrawRoundRect(highlightBox, overshoot, overshoot, paint);
                         paint.BlendMode = SKBlendMode.SrcOver;
                         break;
 
@@ -1160,13 +1200,6 @@ internal partial class RenderContext
         // for a /DA that sets no font.
         var da = annot.RawDictionary.GetStringOrNull("DA") ?? _acroFormDa ?? "";
 
-        // Auto-size 0 in /DA means "fit text to height" per spec; pick a
-        // pragmatic default (75% of rect height, capped at 16pt) so the
-        // value is at least visible. Real Acrobat does iterative fitting
-        // — we approximate.
-        float autoSize = Math.Min(rect.Height * 0.75f, 16f);
-        if (autoSize < 4f) autoSize = 4f;
-
         _resourcesStack.Push(_acroFormDr);
         _canvas.Save();
         try
@@ -1212,15 +1245,29 @@ internal partial class RenderContext
                 // with the column profile reversed and the row profile
                 // flipped, Ghostscript mirrors it 8 px lower. Nobody draws
                 // what excise drew.
-                float fontSize = Math.Abs(_textState.FontSize) > 0.001f
-                    ? _textState.FontSize : autoSize;
+                //
+                // The font has to be resolved BEFORE the size is decided,
+                // because auto-size is a fit against this typeface's own
+                // metrics and this string's own advance.
+                //
                 // A malformed/empty /DA (no Tf) leaves _currentFont exactly
                 // as it was before this method ran — possibly null (first
                 // text ever on the page). Resolve a plain Helvetica fallback
                 // the same way any other font resolves, rather than patching
-                // a single field on an immutable ResolvedRenderFont.
+                // a single field on an immutable ResolvedRenderFont. Note that
+                // no Tf at all leaves _textState.FontSize at its default 12,
+                // NOT at 0, so a field with no /DA anywhere takes the branch
+                // below rather than the auto-size one — which is what the
+                // oracles do with it (row widget.tx.value-no-da-anywhere:
+                // mutool and Ghostscript draw it at exactly the size they draw
+                // an explicit /Helv 12 Tf).
                 if (_currentFont?.Typeface == null)
                     _currentFont = ResolveRenderFont("Helvetica", null);
+
+                const float padX = 2f;
+                float fontSize = Math.Abs(_textState.FontSize) > 0.001f
+                    ? _textState.FontSize
+                    : AutoFitFontSize(value, rect, _currentFont?.Typeface, padX);
 
                 // Measure text to compute alignment. Use the active
                 // typeface so the width matches what we're about to draw.
@@ -1242,7 +1289,6 @@ internal partial class RenderContext
                                   * (fontSize < 0 ? -1f : 1f);
 
                 int q = annot.RawDictionary.GetInt("Q", 0);
-                const float padX = 2f;
                 float textX;
                 if (q == 1)      textX = rect.Left + (rect.Width - textWidth) * 0.5f;
                 else if (q == 2) textX = rect.Right - textWidth - padX;
@@ -1290,6 +1336,58 @@ internal partial class RenderContext
             _canvas.Restore();
             _resourcesStack.Pop();
         }
+    }
+
+    /// <summary>
+    /// The size for a <c>/DA</c> that states <c>0 Tf</c> — §12.7.4.3's
+    /// auto-size: fit the value to the field (#1003).
+    ///
+    /// <para>Two limits, and the SMALLER wins: the string's own advance must
+    /// fit the field's width, and the font's own line box (ascent + descent)
+    /// must fit its height. Both are read off the resolved typeface rather
+    /// than assumed, so a wide font shrinks where a narrow one does not.</para>
+    ///
+    /// <para>This replaced <c>min(rect.Height × 0.75, 16)</c> — a height-only
+    /// heuristic, capped, that ignored the value and the field width alike.
+    /// Measured at 72 dpi, ink bbox of <c>/V (Mountain)</c> with
+    /// <c>/DA (/Helv 0 Tf)</c>:</para>
+    ///
+    /// <code>
+    ///   field      mutool    pdftocairo  ghostscript   old excise   this
+    ///   100x30     94x18     92x18       90x18         64x12        93x17
+    ///   100x100    94x18     92x18       (136x57)      64x12        93x17
+    ///   30x60      24x15     24x14       (57x34)       21x12        23x13
+    /// </code>
+    ///
+    /// <para>The 100x100 row is the one that settles the rule: mutool and
+    /// poppler draw the value at exactly the size they use in the 30 pt-tall
+    /// field, so the fit is bounded by the WIDTH, not by the height, and no
+    /// absolute cap is involved. Ghostscript is the outlier — it overflows
+    /// the field rather than fitting to it (parenthesised above), which is
+    /// the same disagreement it shows on row
+    /// widget.tx.value-wider-than-the-rect.</para>
+    /// </summary>
+    private static float AutoFitFontSize(string value, SKRect rect, SKTypeface? typeface, float padX)
+    {
+        // No typeface to measure against: keep a size that is at least
+        // visible rather than guessing at a fit that cannot be computed.
+        if (typeface == null) return Math.Max(rect.Height * 0.85f, 4f);
+
+        using var probe = new SKFont(typeface, 1f);
+        using var paint = new SKPaint();
+
+        var metrics = probe.Metrics;            // per em, Ascent is negative
+        float lineBox = metrics.Descent - metrics.Ascent;
+        float byHeight = lineBox > 0.001f ? rect.Height / lineBox : rect.Height * 0.85f;
+
+        float unitWidth = probe.MeasureText(value, paint);
+        float available = Math.Max(rect.Width - 2f * padX, 1f);
+        float byWidth = unitWidth > 0.001f ? available / unitWidth : byHeight;
+
+        // The floor is the old one: a value long enough to want sub-4 pt text
+        // is drawn at 4 pt and clipped to the field, which is what the
+        // clip above is for.
+        return Math.Max(Math.Min(byHeight, byWidth), 4f);
     }
 
     /// <summary>
