@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "issue": "#1011",
+  "name": "Skia-origin rasterisation differences",
+  "description": "Rendering differences that originate in SkiaSharp's own rasterisation rather than in excise's logic, recorded as DATA so they are not re-triaged on every encounter. One row per difference, each carrying what differs and by how much with a date, the evidence that the input to Skia was already correct, the per-oracle values it was compared against, and an explicit no-compensation flag. Re-measured by Excise.Rendering.Tests/Differential/SkiaRasterisationRegisterTests.cs.",
+  "whyThisExists": "excise renders through SkiaSharp by choice. Where a difference comes from Skia's scan conversion, the standing policy is: do not fix it, do not compensate for it (no threshold tuning, no per-fixture special cases), do not re-triage it, and judge excise against Skia's actual behaviour. Nothing recorded WHICH differences had already been traced to Skia, so each one got re-investigated from scratch. The single exception to 'leave it alone' is a Skia-triggered process death or hang (#363, #985): that silently deletes coverage and must be contained - isolated or guarded, never emulated.",
+  "rules": [
+    "AN ENTRY REQUIRES EVIDENCE THAT SKIA RECEIVED CORRECT GEOMETRY. That is the load-bearing field and it is what separates an accepted limitation from an excise bug. 'We could not explain it' is an open bug, not a row here. The register must never become a place to park defects.",
+    "THE EVIDENCE MUST BE A MEASUREMENT SOMEONE ELSE CAN RE-RUN, not an argument. Both rows below prove input correctness by CHANGING ONE THING that cannot alter excise's geometry - the antialias flag, or a half-pixel translation of the same path - and showing the oracles are then matched exactly.",
+    "NO COMPENSATION. Every row states noCompensation:true and it is meant literally: no fudge factor, no widened tolerance, no fixture allowlist to force an ink comparison to agree.",
+    "PER-ORACLE VALUES, NOT A VERDICT. A row records what each engine measured. Two of the entries below are cases where the ORACLES THEMSELVES disagree; recording only 'excise differs from the oracle' would have hidden that.",
+    "A ROW THAT NO LONGER REPRODUCES IS DELETED, NOT KEPT. The gate re-measures excise and every oracle for every row; a row that stops reproducing fails it. An accepted limitation that quietly went away must not keep excusing a future defect."
+  ],
+  "howToUpdate": "By hand, from the gate's failure message, which prints what it measured. There is deliberately no --update flag, for the reason tests/annotation-synthesis-policy.json gives: this file records decisions and the evidence they rest on, and a regenerator would let a behaviour change rewrite its own justification.",
+  "rowCount": 2,
+  "rows": [
+    {
+      "id": "fill.subpixel-height-vanishes-under-aliased-scan-conversion",
+      "measured": "2026-08-16",
+      "what": "A filled rectangle thinner than one device pixel disappears entirely when antialiasing is off. Skia's aliased scan converter samples pixel CENTRES, so a 0.4 pt band that covers no centre paints nothing; mupdf, poppler and Ghostscript all keep a minimum one-pixel coverage.",
+      "byHowMuch": "excise 0 inked px against 100 for all four oracles - the whole shape, not a fraction of it.",
+      "fixture": {
+        "content": "0 0 0 rg 20 20 100 0.4 re f",
+        "pageSize": 200,
+        "dpi": 72
+      },
+      "excise": [
+        { "antiAlias": false, "inkedPixels": 0, "bbox": null },
+        { "antiAlias": true, "inkedPixels": 100, "bbox": [20, 179, 120, 180] }
+      ],
+      "oracles": [
+        { "oracle": "mutool", "engine": "mupdf", "inkedPixels": 100, "bbox": [20, 179, 120, 180] },
+        { "oracle": "pdftocairo", "engine": "poppler", "inkedPixels": 100, "bbox": [20, 179, 120, 180] },
+        { "oracle": "pdftoppm", "engine": "poppler", "inkedPixels": 100, "bbox": [20, 180, 120, 181] },
+        { "oracle": "ghostscript", "engine": "ghostscript", "inkedPixels": 100, "bbox": [20, 179, 120, 180] }
+      ],
+      "evidenceInputToSkiaCorrect": "The SAME renderer, the SAME page, the SAME path, with antialiasing turned ON, inks 100 px at [20,179,120,180] - the oracles' count and the oracles' bbox, exactly. Nothing about excise's geometry differs between the two runs; only Skia's scan conversion does. A wrong rectangle would be wrong in both modes.",
+      "noCompensation": true,
+      "notes": "Only reachable with AntiAlias=false, which is a test-harness setting (differential gates use it so glyph AA does not smear an ink count); RenderOptions defaults to antialiasing on. Recorded because an aliased ink comparison over thin rules, table borders or underlines will hit it and it looks exactly like dropped content."
+    },
+    {
+      "id": "stroke.one-unit-wide-centred-on-the-pixel-grid",
+      "measured": "2026-08-16",
+      "what": "A 1-unit-wide stroke whose path lies ON integer device coordinates straddles two pixel rows by half each. What a rasteriser does with that is its own choice, and the reference engines do not agree: mupdf and Ghostscript ink both rows (800), poppler inks one (400). Skia inks one row aliased and both rows antialiased, so excise's number follows the AA mode.",
+      "byHowMuch": "excise 400 px aliased / 796 px antialiased, against mupdf 800, Ghostscript 800, poppler 400 - a factor of two either way depending on which engine and which mode.",
+      "fixture": {
+        "content": "0 0 0 RG 1 w 20 20 100 100 re S",
+        "pageSize": 200,
+        "dpi": 72
+      },
+      "excise": [
+        { "antiAlias": false, "inkedPixels": 400, "bbox": [20, 80, 121, 181] },
+        { "antiAlias": true, "inkedPixels": 796, "bbox": [19, 79, 121, 181] }
+      ],
+      "oracles": [
+        { "oracle": "mutool", "engine": "mupdf", "inkedPixels": 800, "bbox": [19, 79, 121, 181] },
+        { "oracle": "pdftocairo", "engine": "poppler", "inkedPixels": 400, "bbox": [20, 80, 121, 181] },
+        { "oracle": "pdftoppm", "engine": "poppler", "inkedPixels": 400, "bbox": [20, 80, 121, 181] },
+        { "oracle": "ghostscript", "engine": "ghostscript", "inkedPixels": 800, "bbox": [19, 79, 121, 181] }
+      ],
+      "evidenceInputToSkiaCorrect": "Move the identical path half a pixel off the grid - '1 w 20.5 20.5 100 100 re S' - and excise inks 400 px at [20,79,121,180] in BOTH antialias modes, which is mutool's 400 at [20,79,121,180], pdftocairo's and pdftoppm's, to the pixel. excise's stroke is therefore the right width in the right place; only its resolution against the pixel grid differs, and only where the path sits exactly on that grid. (Ghostscript inks 800 in the off-grid case too, so its doubling is a Ghostscript trait rather than evidence about the grid.)",
+      "controlFixture": {
+        "content": "0 0 0 RG 1 w 20.5 20.5 100 100 re S",
+        "pageSize": 200,
+        "dpi": 72,
+        "excise": [
+          { "antiAlias": false, "inkedPixels": 400, "bbox": [20, 79, 121, 180] },
+          { "antiAlias": true, "inkedPixels": 400, "bbox": [20, 79, 121, 180] }
+        ],
+        "oracles": [
+          { "oracle": "mutool", "engine": "mupdf", "inkedPixels": 400, "bbox": [20, 79, 121, 180] },
+          { "oracle": "pdftocairo", "engine": "poppler", "inkedPixels": 400, "bbox": [20, 79, 121, 180] },
+          { "oracle": "pdftoppm", "engine": "poppler", "inkedPixels": 400, "bbox": [20, 79, 121, 180] },
+          { "oracle": "ghostscript", "engine": "ghostscript", "inkedPixels": 800, "bbox": [20, 79, 122, 181] }
+        ]
+      },
+      "noCompensation": true,
+      "notes": "There is NO oracle majority here (2 engines each way), so this is not a case of excise standing alone. Recorded because a 1 pt border on integer coordinates is the commonest annotation and table-rule geometry there is, and an ink comparison against a single oracle will read a factor of two and call it a defect."
+    }
+  ],
+  "notASkiaDifference": [
+    {
+      "claim": "#1011: \"excise's 1 pt link border inks 800 px where poppler inks 400 at an identical bbox and identical shape\", measured during #993.",
+      "remeasured": "2026-08-16",
+      "finding": "Does not reproduce. On the #993 fixture for a Link with neither /Border nor /BS (the §12.5.6.5 default /Border [0 0 1]), rendered exactly as AnnotationSynthesisPolicyGateTests renders it - 200 pt page, 72 dpi, AntiAlias=false - excise inks 400 px at bbox [50,50,151,151] and pdftocairo inks 400 px at bbox [50,50,151,151]. Identical. On the /BS /W 2 fixture excise inks 800 and pdftocairo inks 800: also identical.",
+      "likelyExplanation": "The 800 and the 400 are the recorded pdftocairo counts of TWO DIFFERENT policy rows - link.explicit-width-positive (2 pt, 800 px) and link.no-border-no-bs (1 pt, 400 px). The pair was read as excise-vs-poppler on one fixture.",
+      "whyRecordedHere": "So the next person who reads #1011 and goes looking for the missing 400 px stops here instead of re-deriving it. This is the NOT list; it is not an accepted limitation and it is not an open bug."
+    }
+  ]
+}

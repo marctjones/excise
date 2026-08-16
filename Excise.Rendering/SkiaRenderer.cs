@@ -1406,7 +1406,18 @@ internal partial class RenderContext
 
     private void SaveState()
     {
-        _stateStack.Push(_state.Clone());
+        // §8.4.1 Table 52 puts the TEXT parameters (font + size, Tc, Tw, Tz,
+        // TL, Ts, Tr) in the GRAPHICS state, so `q` saves them and `Q` restores
+        // them. The renderer did not until #986 — the third state machine
+        // carrying #983's defect, after ContentStreamParser and TextExtractor
+        // (one machine since #992). MEASURED on the #983 fixture at 72 dpi,
+        // `q BT /F1 36 Tf 2 Tc … ET Q` followed by an unstyled run: excise drew
+        // the post-Q line 76 px wide and 28 px tall where mutool, pdftocairo
+        // and Ghostscript all draw it 26 px wide and 10 px tall — the leaked
+        // 36 pt and 2 Tc, still applied.
+        var saved = _state.Clone();
+        saved.SavedTextParameters = CaptureTextParameters();
+        _stateStack.Push(saved);
         _canvas.Save();
     }
 
@@ -1415,8 +1426,39 @@ internal partial class RenderContext
         if (_stateStack.Count > 0)
         {
             _state = _stateStack.Pop();
+            if (_state.SavedTextParameters is { } restored)
+                RestoreTextParameters(restored);
             _canvas.Restore();
         }
+    }
+
+    /// <summary>
+    /// The Table 52 text parameters in force right now, for the <c>q</c> that
+    /// is about to push. The text matrix is deliberately not part of this — see
+    /// <see cref="TextParameterSnapshot"/>.
+    /// </summary>
+    private TextParameterSnapshot CaptureTextParameters() => new(
+        _textState.FontName,
+        _textState.FontSize,
+        _textState.CharSpacing,
+        _textState.WordSpacing,
+        _textState.HorizontalScale,
+        _textState.TextLeading,
+        _textState.TextRise,
+        _textState.RenderMode,
+        _currentFont);
+
+    private void RestoreTextParameters(in TextParameterSnapshot s)
+    {
+        _textState.FontName = s.FontName;
+        _textState.FontSize = s.FontSize;
+        _textState.CharSpacing = s.CharSpacing;
+        _textState.WordSpacing = s.WordSpacing;
+        _textState.HorizontalScale = s.HorizontalScale;
+        _textState.TextLeading = s.TextLeading;
+        _textState.TextRise = s.TextRise;
+        _textState.RenderMode = s.RenderMode;
+        _currentFont = s.Font;
     }
 
     private void ApplyTransform(ContentOperator op)
