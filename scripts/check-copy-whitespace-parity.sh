@@ -8,6 +8,12 @@
 # Turns copy-spacing quality (#833/#836) from anecdote into a non-regressing
 # measurement, the same posture as scripts/check-extraction-parity.sh.
 #
+# As of #929/#844, rendering-linux.yml (poppler pdftotext + the federal
+# corpus, called from ci.yml on every push/PR) runs this script directly with
+# EXCISE_REQUIRE_PARITY_TOOLS=1 — same escalation from release-only to
+# effectively PR-blocking as check-extraction-parity.sh, see that script's
+# header for the full reasoning.
+#
 # Usage:
 #   scripts/check-copy-whitespace-parity.sh            # gate: fail on regression
 #   scripts/check-copy-whitespace-parity.sh --update    # ratchet floors from now
