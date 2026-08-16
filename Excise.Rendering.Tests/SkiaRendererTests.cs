@@ -464,30 +464,6 @@ public class SkiaRendererTests
     }
 
     [Fact(Timeout = 20000)]
-    public void RenderPage_PdfjsS2_JpxSoftMasksClearImageBackgrounds()
-    {
-        var path = FindRepoFile("test-pdfs", "pdfjs", "S2.pdf");
-        Assert.SkipWhen(path == null,
-            "No pdf.js S2 fixture found at test-pdfs/pdfjs/S2.pdf.");
-
-        using var doc = PdfDocument.Open(path);
-
-        using var bitmap = new SkiaRenderer().RenderPage(
-            doc.GetPage(1),
-            new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White });
-
-        var (whiteFraction, darkFraction) = MeasureWhiteAndDarkPixels(bitmap);
-        whiteFraction.Should().BeGreaterThan(0.30,
-            "JPX soft masks should preserve the white page background around transparent image regions");
-        darkFraction.Should().BeLessThan(0.18,
-            "transparent JPX image regions should not render as black rectangles");
-
-        var (redDominant, blueDominant) = CountRedAndBlueDominantPixels(bitmap, new SKRectI(70, 70, 190, 210));
-        redDominant.Should().BeGreaterThan(blueDominant + 500,
-            "RGB JPX image components should be mapped from CSJ2K's BGR bitmap order into PDF RGB order");
-    }
-
-    [Fact(Timeout = 20000)]
     public void RenderPage_PdfjsIssue19517_Jp2ComponentDefinitionKeepsRgbOrder()
     {
         var path = FindRepoFile("test-pdfs", "pdfjs", "issue19517.pdf");
@@ -6522,7 +6498,7 @@ public class SkiaRendererTests
         return ms.ToArray();
     }
 
-    private static string? FindRepoFile(params string[] segments)
+    internal static string? FindRepoFile(params string[] segments)
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
         while (dir != null)
@@ -6536,7 +6512,7 @@ public class SkiaRendererTests
         return null;
     }
 
-    private static (double WhiteFraction, double DarkFraction) MeasureWhiteAndDarkPixels(SKBitmap bitmap)
+    internal static (double WhiteFraction, double DarkFraction) MeasureWhiteAndDarkPixels(SKBitmap bitmap)
     {
         long white = 0;
         long dark = 0;
@@ -7142,7 +7118,7 @@ public class SkiaRendererTests
         return rows;
     }
 
-    private static (int RedDominant, int BlueDominant) CountRedAndBlueDominantPixels(SKBitmap bitmap, SKRectI region)
+    internal static (int RedDominant, int BlueDominant) CountRedAndBlueDominantPixels(SKBitmap bitmap, SKRectI region)
     {
         var left = Math.Clamp(region.Left, 0, bitmap.Width);
         var top = Math.Clamp(region.Top, 0, bitmap.Height);
