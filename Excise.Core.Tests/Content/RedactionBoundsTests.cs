@@ -74,18 +74,26 @@ public class RedactionBoundsTests
     [Fact]
     public void TextBounds_TextWithHorizontalScaling_AffectsWidth()
     {
-        // Create PDF with horizontal scaling (Tz operator) - 200%
-        var content = "BT /F1 12 Tf 200 Tz 100 700 Td (Hello) Tj ET";
-        var pdf = CreatePdfWithContent(content);
-        var page = pdf.GetPage(1);
-        var parsedContent = page.GetContentStream();
+        // Compare 200% scaling against the SAME string unscaled. The previous
+        // absolute threshold (> 60) was calibrated on the flat 600 default
+        // width the parser used for every standard-14 glyph; with real
+        // Helvetica metrics (#980) "Hello" is 2278/1000 em, so the correct
+        // doubled width is 54.672 and the magic number pinned the old defect.
+        var scaled = "BT /F1 12 Tf 200 Tz 100 700 Td (Hello) Tj ET";
+        var unscaled = "BT /F1 12 Tf 100 Tz 100 700 Td (Hello) Tj ET";
 
-        var textOp = parsedContent.TextOperators.FirstOrDefault();
-        textOp.Should().NotBeNull();
+        var scaledOp = CreatePdfWithContent(scaled).GetPage(1)
+            .GetContentStream().TextOperators.FirstOrDefault();
+        var unscaledOp = CreatePdfWithContent(unscaled).GetPage(1)
+            .GetContentStream().TextOperators.FirstOrDefault();
 
-        // 200% scaling should roughly double the width
-        var bounds = textOp!.BoundingBox!.Value;
-        bounds.Width.Should().BeGreaterThan(60, "200% horizontal scaling should increase width");
+        scaledOp.Should().NotBeNull();
+        unscaledOp.Should().NotBeNull();
+
+        // 200% scaling doubles the width.
+        scaledOp!.BoundingBox!.Value.Width.Should()
+            .BeApproximately(unscaledOp!.BoundingBox!.Value.Width * 2, 1e-9,
+                "200% horizontal scaling should double the advance width");
     }
 
     [Fact]

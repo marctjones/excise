@@ -153,6 +153,19 @@ public class ContentStreamParser
             {
                 operands.Add(pdfObj);
             }
+            else if (token is string keyword)
+            {
+                // §7.8.2: `true`/`false`/`null` are operand literals; anything
+                // else here is an operator this parser does not implement, and
+                // an unimplemented operator still TERMINATES its operands —
+                // leaving them queued would let the next real operator read
+                // them as its own. Twin of the same rule in
+                // TextExtractor.ParseContentBytes (#980).
+                if (keyword == "true") operands.Add(PdfBoolean.True);
+                else if (keyword == "false") operands.Add(PdfBoolean.False);
+                else if (keyword == "null") operands.Add(PdfNull.Instance);
+                else operands.Clear();
+            }
         }
 
         return new ContentStream(operators);
@@ -743,15 +756,36 @@ public class ContentStreamParser
             var unicode = DecodeCharacter(charCode, cid);
             var charWidth = GetCharWidth(cid);
 
-            // Transform position — text rise shifts the baseline vertically (§9.3.7)
-            var (x, y) = TransformTextPoint(_tm_e, _tm_f + _textRise);
+            // Transform position. §9.4.4 puts the rise in the text rendering
+            // matrix as the translation (0, Ts) INSIDE Tm, so it is a text-space
+            // offset and must be composed through the matrix's linear part —
+            // the same §9.4.2 arithmetic MoveTextPosition does. Adding it raw to
+            // _tm_f put a `6 Ts` under a `12 0 0 12 Tm` matrix 6 units up
+            // instead of 72 (#980). Twin of TextExtractor.ShowGlyph.
+            var (x, y) = TransformTextPoint(
+                _tm_e + _textRise * _tm_c,
+                _tm_f + _textRise * _tm_d);
 
-            // Calculate glyph dimensions. Th (horizontal scaling) applies
-            // only in horizontal writing (§9.2.4/§9.4.4).
-            var glyphWidth = _isVerticalWriting
+            // Glyph advance and ascent are TEXT-space DISPLACEMENTS. Th
+            // (horizontal scaling) applies only in horizontal writing
+            // (§9.2.4/§9.4.4).
+            var advanceTextSpace = _isVerticalWriting
                 ? charWidth * _fontSize / 1000.0
                 : charWidth * _fontSize * (_horizontalScaling / 100.0) / 1000.0;
-            var glyphHeight = _fontSize;
+            var ascentTextSpace = _fontSize;
+
+            // Map both displacements through the text-matrix × CTM linear parts
+            // before they touch the user-space pen position — adding the raw
+            // text-space scalars onto (x, y) drops the matrix scale, which under
+            // the ubiquitous `1 Tf` + `s 0 0 s Tm` producer idiom yielded a box
+            // s times too small in BOTH axes while the pen advance (which DOES
+            // apply the matrix) kept positions correct. Redaction's fallback
+            // removal paths trust these boxes. This is #833's fix, which landed
+            // in TextExtractor.ShowGlyph only; the two must agree on where the
+            // same glyph's cell is (#980).
+            var (wx, wy) = TransformTextVector(advanceTextSpace, 0);
+            var (hx, hy) = TransformTextVector(0, ascentTextSpace);
+            var glyphWidth = Math.Sqrt(wx * wx + wy * wy);
 
             // Update bounds. Vertical writing (§9.7.4.3): the pen is the
             // VERTICAL origin — the cell is centered on it via the /W2
@@ -761,20 +795,22 @@ public class ContentStreamParser
             if (_isVerticalWriting)
             {
                 var vm = GetVerticalMetrics(cid);
-                var vxScaled = vm.Vx * _fontSize / 1000.0;
-                var cellHeight = Math.Abs(vm.W1Y) * _fontSize / 1000.0;
-                if (cellHeight <= 0) cellHeight = _fontSize;
-                minX = Math.Min(minX, x - vxScaled);
+                var (vxx, _) = TransformTextVector(vm.Vx * _fontSize / 1000.0, 0);
+                var (chx, chy) = TransformTextVector(0, Math.Abs(vm.W1Y) * _fontSize / 1000.0);
+                var cellHeight = Math.Sqrt(chx * chx + chy * chy);
+                if (cellHeight <= 0) cellHeight = Math.Abs(hy) > 0 ? Math.Abs(hy) : glyphWidth;
+                minX = Math.Min(minX, x - vxx);
                 minY = Math.Min(minY, y - cellHeight);
-                maxX = Math.Max(maxX, x - vxScaled + glyphWidth);
+                maxX = Math.Max(maxX, x - vxx + glyphWidth);
                 maxY = Math.Max(maxY, y);
             }
             else
             {
-                minX = Math.Min(minX, x);
-                minY = Math.Min(minY, y);
-                maxX = Math.Max(maxX, x + glyphWidth);
-                maxY = Math.Max(maxY, y + glyphHeight);
+                var cell = AxisAlignedBox(x, y, wx, wy, hx, hy);
+                minX = Math.Min(minX, cell.Left);
+                minY = Math.Min(minY, cell.Bottom);
+                maxX = Math.Max(maxX, cell.Right);
+                maxY = Math.Max(maxY, cell.Top);
             }
 
             sb.Append(unicode);
@@ -871,6 +907,38 @@ public class ContentStreamParser
         var x = tx * _state.Ctm_a + ty * _state.Ctm_c + _state.Ctm_e;
         var y = tx * _state.Ctm_b + ty * _state.Ctm_d + _state.Ctm_f;
         return (x, y);
+    }
+
+    /// <summary>
+    /// Map a text-space DISPLACEMENT vector through the LINEAR parts of the
+    /// text matrix and then the CTM (no translation). Glyph width/height are
+    /// displacements, not points. Twin of TextExtractor.TransformVector (#833,
+    /// #980).
+    /// </summary>
+    private (double dx, double dy) TransformTextVector(double vx, double vy)
+    {
+        var tx = vx * _tm_a + vy * _tm_c;
+        var ty = vx * _tm_b + vy * _tm_d;
+        return (tx * _state.Ctm_a + ty * _state.Ctm_c,
+                tx * _state.Ctm_b + ty * _state.Ctm_d);
+    }
+
+    /// <summary>
+    /// Axis-aligned bounding box of the parallelogram spanned from origin
+    /// (<paramref name="ox"/>, <paramref name="oy"/>) by the width vector
+    /// (wx, wy) and height vector (hx, hy). Twin of
+    /// TextExtractor.AxisAlignedBox (#833, #980).
+    /// </summary>
+    private static PdfRectangle AxisAlignedBox(
+        double ox, double oy, double wx, double wy, double hx, double hy)
+    {
+        double x2 = ox + wx, x3 = ox + hx, x4 = ox + wx + hx;
+        double y2 = oy + wy, y3 = oy + hy, y4 = oy + wy + hy;
+        double left = Math.Min(Math.Min(ox, x2), Math.Min(x3, x4));
+        double right = Math.Max(Math.Max(ox, x2), Math.Max(x3, x4));
+        double bottom = Math.Min(Math.Min(oy, y2), Math.Min(y3, y4));
+        double top = Math.Max(Math.Max(oy, y2), Math.Max(y3, y4));
+        return new PdfRectangle(left, bottom, right, top);
     }
 
     /// <summary>
@@ -1351,11 +1419,19 @@ public class ContentStreamParser
         };
     }
 
+    /// <summary>
+    /// Glyph width in 1000ths of an em. Mirrors TextExtractor.GetCharWidth
+    /// step for step — a width disagreement between the two moves the glyph
+    /// cells redaction matches against, cumulatively along a string. Until
+    /// #980 this copy stopped after /Widths, so a Type0 font with no metrics,
+    /// a /MissingWidth, and every non-embedded standard-14 font fell to the
+    /// flat 600 default here while TextExtractor used real metrics.
+    /// </summary>
     private double GetCharWidth(int charCode)
     {
-        // CID width table (/W with /DW fallback) for Type0 fonts first
-        if (_cidMetrics != null && _cidFontDict != null)
-            return _cidMetrics.GetWidth(charCode);
+        // Type 0 / CIDFont: /W with the /DW fallback (§9.7.4.3).
+        if (_is2ByteFont)
+            return _cidMetrics?.GetWidth(charCode) ?? Fonts.CidFontWidths.SpecDefaultWidth;
 
         if (_currentFont != null)
         {
@@ -1377,6 +1453,18 @@ public class ContentStreamParser
                         return widths.GetNumber(index);
                 }
             }
+
+            var fontDescriptor = _currentFont.GetDictionaryOrNull("FontDescriptor");
+            if (fontDescriptor != null)
+            {
+                var missingWidth = fontDescriptor.GetNumber("MissingWidth", 0);
+                if (missingWidth > 0)
+                    return missingWidth;
+            }
+
+            var baseFont = _currentFont.GetNameOrNull("BaseFont");
+            if (baseFont != null)
+                return Text.TextExtractor.GetStandardFontWidth(baseFont, charCode);
         }
 
         return 600; // Default width
@@ -1504,7 +1592,14 @@ public class ContentStreamParser
 
     private PdfString ParseStringLiteral()
     {
-        var sb = new StringBuilder();
+        // Accumulate BYTES, not chars. Building a .NET string and handing it to
+        // PdfString(string) re-encoded the WHOLE operand as UTF-16BE-with-BOM
+        // the moment any one char exceeded U+00FF — which a `\777` escape did,
+        // because the octal value was not truncated to a byte. `(\777) Tj`
+        // parsed to the four bytes FE FF 01 FF (four glyphs) here while
+        // TextExtractor produced the single byte FF. §7.3.4.2: "high-order
+        // overflow shall be ignored". #980
+        var bytes = new List<byte>();
         _pos++; // Skip '('
         int depth = 1;
 
@@ -1518,14 +1613,14 @@ public class ContentStreamParser
                 var escaped = _content[_pos];
                 switch (escaped)
                 {
-                    case (byte)'n': sb.Append('\n'); break;
-                    case (byte)'r': sb.Append('\r'); break;
-                    case (byte)'t': sb.Append('\t'); break;
-                    case (byte)'b': sb.Append('\b'); break;
-                    case (byte)'f': sb.Append('\f'); break;
-                    case (byte)'(': sb.Append('('); break;
-                    case (byte)')': sb.Append(')'); break;
-                    case (byte)'\\': sb.Append('\\'); break;
+                    case (byte)'n': bytes.Add((byte)'\n'); break;
+                    case (byte)'r': bytes.Add((byte)'\r'); break;
+                    case (byte)'t': bytes.Add((byte)'\t'); break;
+                    case (byte)'b': bytes.Add((byte)'\b'); break;
+                    case (byte)'f': bytes.Add((byte)'\f'); break;
+                    case (byte)'(': bytes.Add((byte)'('); break;
+                    case (byte)')': bytes.Add((byte)')'); break;
+                    case (byte)'\\': bytes.Add((byte)'\\'); break;
                     // REVERSE SOLIDUS followed by an end-of-line marker is a
                     // line-continuation: it produces NO character (PDF32000-1
                     // §7.3.4.2 Table 3). CRLF is one marker, not two — consume
@@ -1541,20 +1636,21 @@ public class ContentStreamParser
                     default:
                         if (escaped >= '0' && escaped <= '7')
                         {
-                            var octal = new StringBuilder();
-                            octal.Append((char)escaped);
-                            while (octal.Length < 3 && _pos + 1 < _content.Length &&
+                            int value = escaped - '0';
+                            int digits = 1;
+                            while (digits < 3 && _pos + 1 < _content.Length &&
                                    _content[_pos + 1] >= '0' && _content[_pos + 1] <= '7')
                             {
                                 _pos++;
-                                octal.Append((char)_content[_pos]);
+                                value = value * 8 + (_content[_pos] - '0');
+                                digits++;
                             }
-                            var code = Convert.ToInt32(octal.ToString(), 8);
-                            sb.Append((char)code);
+                            // Truncated to a byte, exactly as TextExtractor does.
+                            bytes.Add(unchecked((byte)value));
                         }
                         else
                         {
-                            sb.Append((char)escaped);
+                            bytes.Add(escaped);
                         }
                         break;
                 }
@@ -1562,21 +1658,21 @@ public class ContentStreamParser
             else if (c == '(')
             {
                 depth++;
-                sb.Append((char)c);
+                bytes.Add(c);
             }
             else if (c == ')')
             {
                 depth--;
-                if (depth > 0) sb.Append((char)c);
+                if (depth > 0) bytes.Add(c);
             }
             else
             {
-                sb.Append((char)c);
+                bytes.Add(c);
             }
             _pos++;
         }
 
-        return new PdfString(sb.ToString());
+        return new PdfString(bytes.ToArray());
     }
 
     private PdfString ParseHexString()
