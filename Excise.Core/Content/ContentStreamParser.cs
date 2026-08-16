@@ -1397,8 +1397,18 @@ public class ContentStreamParser
             return unicode;
 
         // Registered CID→Unicode (#515): the Adobe-<Ordering>-UCS2 CMap for
-        // the font's /CIDSystemInfo ordering, keyed by CID. Mirrors
-        // TextExtractor.DecodeCharacter so operator text matches page letters.
+        // the font's /CIDSystemInfo ordering, keyed by CID.
+        //
+        // ⚠️ This cascade does NOT mirror TextExtractor.DecodeCharacter, and
+        // this comment claimed it did until #980's sweep checked. TextExtractor
+        // has eight steps; the six missing here are /ToUnicode /Identity-H|V as
+        // a NAME (#715), the embedded reverse cmap (#515), /Differences and its
+        // /BaseEncoding (#662), /Encoding /MacRomanEncoding, the standard Mac
+        // glyph order (#532), and the symbolic-TrueType (3,0) cmap (#791). Where
+        // they decode the same bytes differently, LetterFinder cannot match and
+        // glyph-level redaction degrades to whole-operator removal. Tracked as
+        // #981 — do not restate the "mirrors exactly" claim without re-reading
+        // both cascades.
         if (_registeredCidToUnicode != null && _registeredCidToUnicode.TryGetValue(cid, out var orderingUnicode))
             return orderingUnicode;
 
@@ -1805,8 +1815,14 @@ public class ContentStreamParser
         while (_pos < _content.Length)
         {
             var c = _content[_pos];
-            if (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '/' ||
-                c == '[' || c == ']' || c == '<' || c == '>' || c == '(' || c == ')')
+            // §7.2.3 Table 2: the delimiters are ()<>[]{}/% and every
+            // whitespace byte. FORM FEED and the two BRACES were missing here
+            // and present in TextExtractor.ParseName, so `/Name{` parsed as
+            // the name "Name{" in one machine and "Name" in the other — a
+            // resource lookup that resolves in one and not the other (#980).
+            if (IsWhitespaceByte(c) || c == '/' ||
+                c == '[' || c == ']' || c == '<' || c == '>' ||
+                c == '(' || c == ')' || c == '{' || c == '}')
                 break;
 
             if (c == '#' && _pos + 2 < _content.Length)

@@ -256,6 +256,33 @@ public class ParserDifferentialTests
     }
 
     /// <summary>
+    /// §7.2.3 Table 2's delimiters must end a name identically in both, or the
+    /// same <c>/F1</c> resolves to a font in one machine and to a missing
+    /// resource in the other. Form feed and the braces were missing from
+    /// ContentStreamParser (#980).
+    /// </summary>
+    [Theory]
+    [InlineData("BT /F1{} 12 Tf 1 0 0 1 72 700 Tm (Hi) Tj ET")]
+    [InlineData("BT /F1\f12 Tf 1 0 0 1 72 700 Tm (Hi) Tj ET")]
+    [InlineData("BT /F#31 12 Tf 1 0 0 1 72 700 Tm (Hi) Tj ET")]
+    public void NameDelimiters_EndANameIdenticallyInBothMachines(string content)
+    {
+        using var doc = PdfDocument.Open(ParityFixture.Build(content));
+        var page = doc.GetPage(1);
+
+        var tf = ParityFixture.ParseOperators(page).Operators.Single(op => op.Name == "Tf");
+        (tf.Operands[0] as PdfName)!.Value.Should().Be("F1");
+
+        // The extractor's name parse is what resolved the font: a name that
+        // ended differently there would not find /F1 and the letters would
+        // carry a different font name.
+        var letters = ParityFixture.ExtractLetters(page);
+        letters.Should().HaveCount(2);
+        letters[0].FontName.Should().Be("F1");
+        letters[0].FontSize.Should().Be(12);
+    }
+
+    /// <summary>
     /// An operator NEITHER machine implements must still terminate its
     /// operands in both (§7.8.2), or the next real operator reads them as its
     /// own. This is the class the missing `sh` belonged to; it stays broken
