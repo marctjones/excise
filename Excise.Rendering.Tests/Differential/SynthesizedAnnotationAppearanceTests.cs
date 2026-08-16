@@ -49,6 +49,15 @@ namespace Excise.Rendering.Tests.Differential;
 /// so they agree it is drawn and disagree by an order of magnitude on WHAT.
 /// There is no artwork to copy, only an invitation to invent some.
 ///
+/// ⚠️ THIS TABLE IS SUPERSEDED, and by more than its checkbox row. It is kept
+/// because the tests below still pin what it says about FreeText, Text and
+/// Widget, but every number in it was taken on a fixture WITHOUT /F, and
+/// Ghostscript renders only PRINTABLE annotations — so each "gs 0" above may be
+/// a structural abstention rather than a vote. Re-measured on printable
+/// fixtures, Link goes from 1-of-3 to 2-of-3 (#987) and Stamp from 2-of-3 to
+/// 3-of-3. The per-condition replacement, with a gate that re-measures it, is
+/// tests/annotation-synthesis-policy.json (#993).
+///
 /// (*) ⚠️ THE CHECKBOX ROW'S NUMBERS WERE READ WRONG, and the correction is
 /// the lesson (#972). 233 and 229 are real, but they are a CHECK MARK — not,
 /// as this table and the renderer both concluded, a box. Neither oracle draws
@@ -210,30 +219,78 @@ public class SynthesizedAnnotationAppearanceTests : IDisposable
     }
 
     /// <summary>
-    /// The other half, and the reason the rule keys on the width being STATED
-    /// rather than on its value. Most links omit /Border entirely or set
-    /// [0 0 0]; only pdftocairo draws those (1 of 3), so excise must not.
-    /// Without this the fix would put a box round every link in every document.
+    /// The other half, REVERSED by re-measurement (#987, #993).
+    ///
+    /// This used to assert the opposite — "with no /Border and no /BS the file
+    /// has not asked for a visible border, and only 1 of 3 reference renderers
+    /// draws one — measured on pdfium bug_821454.pdf: mutool 0, Ghostscript 0,
+    /// pdftocairo 2830". That 1-of-3 was an artefact of the FIXTURE, not a fact
+    /// about borders: every link in bug_821454.pdf carries no /F, and
+    /// Ghostscript renders only PRINTABLE annotations, so its zero was a
+    /// structural ABSTENTION rather than a vote.
+    ///
+    /// Re-measured at 72 dpi on a printable /Link stating neither key
+    /// (/F 4, /Rect [50 50 150 150]):
+    ///
+    ///     pdftocairo  400 px, bbox (50,50)-(151,151)  — the rect, 1 pt, hollow
+    ///     pdftoppm    400 px, same
+    ///     ghostscript 792 px, same bbox
+    ///     mutool        0
+    ///
+    /// 2 of 3 engines stroke the §12.5.6.5 default /Border [0 0 1]. The full
+    /// per-rung table is tests/annotation-synthesis-policy.json (rows link.*),
+    /// re-measured by AnnotationSynthesisPolicyGateTests.
     /// </summary>
     [Fact]
-    public void LinkWithNoStatedBorderWidth_IsNotDrawn()
+    public void LinkWithNoBorderAndNoBs_GetsTheSpecDefaultBorder()
     {
         var path = WriteTemp(LinkPdf(borderWidth: null));
         using var bmp = RenderWithExcise(path);
 
-        InkFraction(bmp, new SKRectI(45, 45, 155, 155)).Should().BeLessThan(0.001,
-            "with no /Border and no /BS the file has not asked for a visible border, " +
-            "and only 1 of 3 reference renderers draws one — measured on " +
-            "pdfium bug_821454.pdf: mutool 0, Ghostscript 0, pdftocairo 2830");
+        InkFraction(bmp, new SKRectI(45, 45, 155, 155)).Should().BeGreaterThan(0.004,
+            "§12.5.6.5 makes the default /Border [0 0 1], and poppler and Ghostscript " +
+            "both stroke it on a printable link that states neither key");
+        InkFraction(bmp, new SKRectI(60, 60, 140, 140)).Should().BeLessThan(0.001,
+            "…as a hollow 1 pt outline on the /Rect, not a fill over the page content");
     }
 
     /// <summary>
-    /// The width must FIT the rect. pdf.js bug1552113.pdf writes
-    /// /Border [0 0 112] on a 150x20 annotation, and that is where the oracles
-    /// part company: pdftocairo paints a 45,659-pixel blue slab over the page
-    /// while mutool and Ghostscript both draw nothing. Ghostscript draws a sane
-    /// border (see above) and refuses an absurd one, which is the whole
-    /// difference between the two cases.
+    /// The rung that still draws nothing, and the reason the ladder asks
+    /// whether the key is PRESENT rather than only what it says: a /Border with
+    /// fewer than its three required entries leaves the width unstated exactly
+    /// as an absent /Border does, and poppler and Ghostscript both draw nothing
+    /// for it. A file that wrote a broken /Border has not asked for the default.
+    /// </summary>
+    [Fact]
+    public void LinkWithAMalformedBorderArray_IsNotDrawn()
+    {
+        var path = WriteTemp(AnnotPdf(
+            "<< /Type /Annot /Subtype /Link /F 4 /Rect [50 50 150 150] /Border [0 0] >>"));
+        using var bmp = RenderWithExcise(path);
+
+        InkFraction(bmp, new SKRectI(45, 45, 155, 155)).Should().BeLessThan(0.001,
+            "0 of 3 reference renderers draw a border for /Border [0 0]");
+    }
+
+    /// <summary>
+    /// The width must FIT the rect — but NOT, as this comment used to say,
+    /// because "Ghostscript draws a sane border and refuses an absurd one".
+    /// That reading came from pdf.js bug1552113.pdf, whose link carries no /F,
+    /// so Ghostscript skipped the annotation rather than judging its border.
+    ///
+    /// Re-measured on a printable /Border [0 0 112] over a 100x100 /Rect:
+    ///
+    ///     pdftocairo  40000 px, bbox (0,0)-(200,200)   — the WHOLE PAGE
+    ///     ghostscript 11926 px, bbox (38,38)-(163,163) — a bounded frame
+    ///     mutool          0
+    ///
+    /// So 2 of 3 draw something, and this is the one link rung where excise
+    /// draws less than the majority. It is a stated deviation rather than a
+    /// reading of the evidence: the two disagree by 3.4x on ink and do not
+    /// agree on the geometry at all, so there is no picture to copy — only a
+    /// choice of renderer to imitate, with the page content buried either way.
+    /// Recorded as row link.width-exceeds-half-the-rect with kind
+    /// "majority-draws-but-no-agreed-geometry".
     /// </summary>
     [Fact]
     public void LinkWithABorderWiderThanTheAnnotation_IsNotDrawn()

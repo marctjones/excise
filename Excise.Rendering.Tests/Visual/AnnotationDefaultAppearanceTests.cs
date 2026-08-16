@@ -28,8 +28,20 @@ public class AnnotationDefaultAppearanceTests
             "highlight opacity should honor /CA rather than always using a pale fallback alpha");
     }
 
+    /// <summary>
+    /// /Border [0 0 112] on a 150x20 annotation: the width is more than half
+    /// the rect's smaller side, so it is refused (row
+    /// link.width-exceeds-half-the-rect in tests/annotation-synthesis-policy.json).
+    ///
+    /// The test name and its old reason — "a no-/AP link annotation is an
+    /// interactive hit region, not page content to paint into the bitmap" — no
+    /// longer describe why it passes: since #987 a link with NO /Border and no
+    /// /BS does get the §12.5.6.5 default 1 pt border, because poppler and
+    /// Ghostscript both stroke one. What this fixture pins is the absurd-width
+    /// rung, which is unchanged.
+    /// </summary>
     [Fact]
-    public void RenderPage_LinkAnnotationWithoutAppearance_DoesNotPaintSyntheticBorder()
+    public void RenderPage_LinkAnnotationWithABorderWiderThanItsRect_DrawsNothing()
     {
         var pdf = CreatePdfWithAnnotation(
             "<< /Type /Annot /Subtype /Link /Rect [5 25 155 45] " +
@@ -43,7 +55,8 @@ public class AnnotationDefaultAppearanceTests
             new RenderOptions { Dpi = 72, AntiAlias = false, BackgroundColor = SKColors.White });
 
         CountStrongBluePixels(bitmap).Should().Be(0,
-            "a no-/AP link annotation is an interactive hit region, not page content to paint into the bitmap");
+            "a 112 pt border on a 20 pt-tall annotation is not an outline, it is a slab over " +
+            "the page; the two engines that draw it do not agree on its geometry");
     }
 
     private static int CountYellowishPixels(SKBitmap bitmap)
