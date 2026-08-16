@@ -380,35 +380,28 @@ public class ParserDifferentialTests
     // ---------------------------------------------------------------
 
     /// <summary>
-    /// The two operator tables must be the SAME SET. An operator missing from
-    /// one is not inert there: an unrecognised token is not an operator
-    /// boundary, so its operands survive into the next real operator — which
-    /// is how `/Sh0 sh` moved every subsequent letter to (0, 1) (#980).
+    /// There must be exactly ONE operator table, and it must live in the walker.
     ///
-    /// Read from the fields themselves rather than probed through behaviour:
-    /// several operators legitimately CHANGE the state a behavioural probe
-    /// would measure (Ts moves the baseline, Tz the width, BI consumes the
-    /// stream), so probing has false negatives exactly where coverage matters.
-    /// Compared in both directions — "one knows an operator the other does
-    /// not" is the defect regardless of which one.
+    /// <para>This test used to compare two tables for set equality, because an
+    /// operator missing from one machine is not inert there: an unrecognised
+    /// token is not an operator boundary, so its operands survive into the next
+    /// real operator — which is how `/Sh0 sh` moved every subsequent letter to
+    /// (0, 1) (#980). Since #995/#996 both machines are sinks over
+    /// <see cref="ContentStreamWalker"/> and there is nothing left to compare,
+    /// so the assertion inverts: the DEFECT is now a second table existing at
+    /// all. That is the state this file's whole subject matter came from, and
+    /// it is worth failing loudly on.</para>
     /// </summary>
     [Fact]
-    public void OperatorSets_AreIdenticalInBothMachines()
+    public void OperatorTable_ExistsOnlyInTheWalker()
     {
-        // The parser's table moved to ContentStreamWalker with the tokenizer it
-        // belongs to (#995); ContentStreamParser is now a sink over that walker
-        // and owns no operator table of its own.
-        var fromParser = ParityFixture.OperatorSet(typeof(ContentStreamWalker));
-        var fromExtractor = ParityFixture.OperatorSet(typeof(TextExtractor));
+        ParityFixture.OperatorSet(typeof(ContentStreamWalker)).Should().NotBeEmpty();
 
-        fromParser.Should().NotBeEmpty();
-        fromExtractor.Should().NotBeEmpty();
-
-        fromParser.Except(fromExtractor).Should().BeEmpty(
-            "ContentStreamParser recognises operators TextExtractor does not — " +
-            "TextExtractor will read their operands as the next operator's");
-        fromExtractor.Except(fromParser).Should().BeEmpty(
-            "TextExtractor recognises operators ContentStreamParser does not");
+        ParityFixture.HasOperatorTable(typeof(ContentStreamParser)).Should().BeFalse(
+            "ContentStreamParser is a sink over the walker — its own operator " +
+            "table would be a second state machine, which is the defect #992 removed");
+        ParityFixture.HasOperatorTable(typeof(TextExtractor)).Should().BeFalse(
+            "and TextExtractor is the other sink");
     }
 
     /// <summary>
@@ -432,7 +425,6 @@ public class ParserDifferentialTests
         };
 
         ParityFixture.OperatorSet(typeof(ContentStreamWalker)).Should().Contain(spec);
-        ParityFixture.OperatorSet(typeof(TextExtractor)).Should().Contain(spec);
     }
 
     /// <summary>
@@ -667,20 +659,29 @@ public class ParserDifferentialTests
     }
 
     /// <summary>
-    /// A DELIBERATE failure-mode difference, pinned so it is not "fixed" into
-    /// agreement by accident — and so a future change to either side is a
-    /// visible decision. ContentStreamParser parses dictionaries recursively
-    /// and therefore must bound them (256, shared with arrays);
-    /// TextExtractor's SkipDictionary is an iterative bracket walk with no
-    /// stack to overflow, so it needs no bound and reads the document.
+    /// Deep dictionary nesting is now ONE failure mode, and this records the
+    /// change of behaviour rather than hiding it.
     ///
-    /// The asymmetry is safe in the direction that matters: the parser
-    /// redaction runs on is the one that REFUSES. If that ever inverts —
-    /// extraction refusing what redaction accepts — the refusal becomes
-    /// silent and this test is where to notice.
+    /// <para>Until #996 this was a pinned ASYMMETRY: ContentStreamParser
+    /// recursed into dictionaries and bounded them at 256, while
+    /// TextExtractor's <c>SkipDictionary</c> was an iterative bracket walk with
+    /// no stack to overflow and therefore no bound — so it read the document
+    /// where the parser refused it. The pin carried its own alarm: <i>"the
+    /// asymmetry is safe in the direction that matters — the parser redaction
+    /// runs on is the one that REFUSES. If that ever inverts, the refusal
+    /// becomes silent."</i></para>
+    ///
+    /// <para>Consolidating onto one walk (#992) does not invert it, it removes
+    /// it: both now go through <c>ContentStreamWalker.ParseDictionary</c>, which
+    /// recurses and so must stay bounded (#346/#971 — an unbounded recursive
+    /// dictionary walk kills the PROCESS, which no test can catch). Extraction
+    /// therefore refuses a 300-deep dictionary it used to read. That is a
+    /// deliberate trade, in the safe direction: a refusal both machines make is
+    /// loud, where a document one of them silently under-reads is exactly the
+    /// #637 class of leak.</para>
     /// </summary>
     [Fact]
-    public void DeepDictionaryNesting_IsADeliberateFailureModeDifference()
+    public void DeepDictionaryNesting_IsBoundedIdenticallyInBothSinks()
     {
         var content = "BT /F1 12 Tf 1 0 0 1 72 700 Tm "
             + string.Concat(Enumerable.Repeat("<<", 300))
@@ -692,10 +693,11 @@ public class ParserDifferentialTests
 
         ParityFixture.Outcome(() => ParityFixture.ParseOperators(page))
             .Should().Be(nameof(PdfParseException),
-                "ContentStreamParser recurses into dictionaries and must bound them");
+                "the walker recurses into dictionaries and must bound them");
         ParityFixture.Outcome(() => ParityFixture.ExtractLetters(page))
-            .Should().Be("ok",
-                "TextExtractor skips dictionaries iteratively — no stack, no bound");
+            .Should().Be(nameof(PdfParseException),
+                "and extraction now walks the same bytes through the same bound — "
+                + "a rejection both make is loud, where a silent under-read is not");
     }
 }
 
@@ -736,6 +738,14 @@ internal static class ParityFixture
     /// probe has false negatives (see the caller). A rename fails this
     /// loudly rather than silently comparing nothing.
     /// </summary>
+    /// <summary>
+    /// Whether a type carries a private static <c>Operators</c> table of its
+    /// own — i.e. whether it is a second content-stream state machine.
+    /// </summary>
+    public static bool HasOperatorTable(Type type) =>
+        type.GetField("Operators",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static) != null;
+
     public static ISet<string> OperatorSet(Type stateMachine)
     {
         var field = stateMachine.GetField("Operators",
