@@ -49,14 +49,54 @@ RANGE="$BASE...HEAD"
 
 # (a) Performance-sensitive paths: the render/scroll/tile hot paths and anything
 #     under a benchmarks/hotspot tree.
+#
+# ⚠️ THESE ARE GIT PATHSPECS, AND A PATHSPEC THAT MATCHES NOTHING IS SILENT.
+# Two of these entries were dead until the #941 audit: `…/PdfViewerControl` and
+# `…/ContentStreamParser` were written without an extension or a wildcard, and
+# git only takes a prefix as a match at a DIRECTORY boundary — every real file
+# is `PdfViewerControl.*` / `ContentStreamParser.cs`, so both matched zero files
+# and this gate quietly skipped them. Measured 2026-08-15: a commit touching
+# Excise.Avalonia/Controls/PdfViewerControl.Continuous.cs while rewriting a
+# numeric test expectation reported "OK (no performance-sensitive paths
+# touched)" — the exact file family and the exact combination of 8a8e661, the
+# commit this gate was written for.
+#
+# The preflight below turns that from a silent skip into a hard failure.
 PERF_PATHS='
 Excise.Rendering/
-Excise.Avalonia/Controls/PdfViewerControl
-Excise.Core/Content/ContentStreamParser
+Excise.Avalonia/Controls/PdfViewerControl*
+Excise.Core/Content/ContentStreamParser*
 Excise.Core/Fonts/
 tools/Excise.RenderTools/
 Excise.Benchmarks/
 '
+
+# Preflight: every declared perf path must resolve to at least one TRACKED file.
+# Without this, a rename (the pdfe->Excise one already did this once) silently
+# narrows what the gate watches, and nothing anywhere reports the loss. A gate
+# that quietly stops watching is worse than no gate: it still reads as green.
+dead_specs=""
+while IFS= read -r p; do
+  [[ -z "$p" ]] && continue
+  if [[ -z "$(git ls-files -- "$p" 2>/dev/null)" ]]; then
+    dead_specs+="  $p"$'\n'
+  fi
+done <<< "$PERF_PATHS"
+
+if [[ -n "$dead_specs" ]]; then
+  cat <<DEAD
+
+FAIL: check-gate-asymmetry declares performance-sensitive paths that match NO
+tracked file. The gate is not watching them, and would report green for any
+change under them:
+
+$dead_specs
+Fix the pathspec (a bare prefix like 'dir/Foo' does NOT match 'dir/Foo.cs' —
+git matches a prefix only at a directory boundary; add '*' or the extension),
+or drop the entry if the code genuinely moved away.
+DEAD
+  exit 1
+fi
 
 perf_hits=""
 while IFS= read -r p; do
