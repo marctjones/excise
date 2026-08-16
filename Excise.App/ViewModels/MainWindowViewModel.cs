@@ -80,6 +80,10 @@ public partial class MainWindowViewModel : ViewModelBase
         Excise.Core.Text.WhitespaceMode.Smart;
     private double _zoomLevel = 1.0;
     private bool _skipZoomSave; // Flag to skip zoom save during auto-reset
+    // #1014: set while the VM itself computes a zoom (fit width / fit page /
+    // the open-document reset). Those writes must NOT end fit mode — a fit
+    // routine assigning ZoomLevel would otherwise clear the latch it just set.
+    private bool _applyingAutomaticZoom;
     private bool _isRedactionMode;
     private PdfPageRect? _currentRedactionPageArea;
     // Text selection is the resting affordance of the reading view (#831):
@@ -461,6 +465,27 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             var oldValue = _zoomLevel;
             this.RaiseAndSetIfChanged(ref _zoomLevel, value);
+
+            // #1014: an explicit assignment ENDS fit mode. Without this the
+            // setter left _zoomFitMode at its FitWidth default, so the next
+            // viewport change called ReapplyFitModeIfNeeded() and silently
+            // overwrote the value that was just assigned — a public settable
+            // property whose writes were transient.
+            //
+            // The convention used to be opt-IN: every caller that meant "this
+            // is an explicit zoom" had to remember to set the mode itself
+            // (ZoomIn/Out/Reset/SetZoom and the document-state restore all do,
+            // one line apart from their assignment). A convention enforced by
+            // memory is one the next caller forgets, which is what happened.
+            //
+            // It is opt-OUT now, and that direction is the safe one: a writer
+            // that forgets the guard makes a zoom STICK — visible and harmless
+            // — where forgetting the old convention made it silently revert.
+            if (!_applyingAutomaticZoom)
+            {
+                _zoomFitMode = ZoomFitMode.Manual;
+            }
+
             // Issue #32: Save zoom preference on user change (skip during auto-reset)
             if (!_skipZoomSave && Math.Abs(oldValue - value) > 0.001)
             {
@@ -2049,6 +2074,9 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _logger.LogInformation("Setting zoom to fit width");
         if (latch) _zoomFitMode = ZoomFitMode.FitWidth;
+        _applyingAutomaticZoom = true;
+        try
+        {
         if (TryGetMaxPageDimensionsInViewerDips(out var pageW, out _) &&
             ViewportWidth > 0)
         {
@@ -2066,6 +2094,8 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             ZoomLevel = 1.0;
         }
+        }
+        finally { _applyingAutomaticZoom = false; }
         this.RaisePropertyChanged(nameof(StatusText));
     }
 
@@ -2073,6 +2103,9 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _logger.LogInformation("Setting zoom to fit page");
         if (latch) _zoomFitMode = ZoomFitMode.FitPage;
+        _applyingAutomaticZoom = true;
+        try
+        {
         if (TryGetMaxPageDimensionsInViewerDips(out var pageW, out var pageH) &&
             ViewportWidth > 0 && ViewportHeight > 0)
         {
@@ -2090,6 +2123,8 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             ZoomLevel = 1.0;
         }
+        }
+        finally { _applyingAutomaticZoom = false; }
         this.RaisePropertyChanged(nameof(StatusText));
     }
 
@@ -2585,7 +2620,9 @@ public partial class MainWindowViewModel : ViewModelBase
 
             // Reset zoom to default (skip saving - user's preference should persist)
             _skipZoomSave = true;
-            ZoomLevel = 1.0;
+            _applyingAutomaticZoom = true;   // #1014: keep fit mode so a newly
+            ZoomLevel = 1.0;                 // opened document still fits
+            _applyingAutomaticZoom = false;
             _skipZoomSave = false;
 
             // Notify UI of all state changes
