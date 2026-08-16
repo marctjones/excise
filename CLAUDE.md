@@ -1160,24 +1160,23 @@ gh issue list --label "track: daily-driver"    --state open   # usability second
 ```
 
 The roadmap lives in numbered milestones, ordered by the sequence they should be
-done in. **They group by WHO GETS HURT, not by kind of work** (2026-08-12) — the
-previous `R6/R9/R10` scheme grouped by kind, which buried the things a user feels
-every session (1.4s per edit, 2.79x file growth on save, 7-10s redactions) inside
-"Architecture & Resource Efficiency", where they read as cleanup.
+done in. As of 2026-08-16 they group by **ROOT CAUSE** — the defect mechanism the
+issues share — and are ordered by who gets hurt if it is left alone. The `RC`
+prefix marks that generation. Grouping by cause rather than by symptom is what
+surfaced the ones worth doing first: five separate crash and escape bugs turned
+out to be one missing contract, and three shipped defects turned out to be the
+same two parsers drifting apart.
 
-Do not hard-code the list here — it has now gone stale twice. Query it live:
+Do not hard-code the list here — it has gone stale THREE times, and the third
+time was the paragraph you are reading warning about the first two. Query it:
 `gh api repos/marctjones/excise/milestones --jq '.[] | "\(.number)\t\(.title)"'`.
 
-⚠️ And that is not rhetorical: the line that used to sit here — "milestone 1 is
-daily-use friction, milestone 2 is redaction trust" — was **stale a third time**
-by 2026-08-16, and stale against TWO superseded schemes at once. The live set
-starts at 4 (`4. Wanted Features`, `5. Test Suite`, `6. Text Extraction`,
-`7. Redaction Trust Paused`); the current scheme's 1–3 are closed
-(`1. Quick Wins / Tooling Cleanup`, `2. Performance, Daily Use & Release`,
-`3. Engineering Hygiene`), and the "redaction trust = milestone 2" the shortcut
-described was an even older scheme, closed before that. A reader trusting the
-shortcut would have planned against two generations of dead numbering. Run the
-query.
+⚠️ Numbering generations do not get reused, deliberately. `RC*` supersedes a
+plain-numbered `N.` scheme, which superseded another `N.` scheme, which
+superseded `R6/R9/R10`. Old milestones are CLOSED, never renamed or deleted, so
+a reference in an old issue or commit still resolves to the thing it meant. If
+you find a bare number like "milestone 2" in prose anywhere, distrust it: it has
+meant three different things.
 
 ⚠️ An earlier version of this line said the two were coupled through #899 —
 "redaction completeness is bounded by extraction coverage, so #899 is also the
