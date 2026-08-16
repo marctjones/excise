@@ -67,7 +67,7 @@ public class GraphicsStateTextParameterOracleTests
         var mutool = FindOnPath("mutool");
         Assert.SkipWhen(mutool is null, "mutool not on PATH");
 
-        var pdf = ParityFixture.Build(Content);
+        var pdf = ContentStreamFixture.Build(Content);
         var oracle = MutoolLine(mutool!, pdf, "After");
 
         // The oracle's own verdict first, asserted independently of excise: if

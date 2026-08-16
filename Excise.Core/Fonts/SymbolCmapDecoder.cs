@@ -87,8 +87,10 @@ internal static class SymbolCmapDecoder
     }
 
     // "uniXXXX" (one or more 4-hex groups) or "uXXXX".."uXXXXXX" per the AGL
-    // naming convention. Mirrors TextExtractor.TryDecodeUniName so this audit
-    // recovers the same names extraction would.
+    // naming convention. Mirrors GlyphUnicodeDecoder.TryDecodeUniName so this
+    // audit recovers the same names extraction would. (The name in this comment
+    // was TextExtractor's until #981 moved the cascade; the reference was stale,
+    // which is how "mirrors X" comments decay — see #992.)
     private static string? TryDecodeUniName(string glyphName)
     {
         if (glyphName.StartsWith("uni", System.StringComparison.Ordinal))
