@@ -1405,6 +1405,45 @@ public class CorpusScanClassificationTests
     }
 
     [Fact]
+    public void CompareInkLocalityByMajority_OracleRenderedADifferentPageBox_DoesNotVote()
+    {
+        // bug1844576.pdf has a 181x54 pt /CropBox inside a 612x792 /MediaBox.
+        // excise, mutool and pdfium render the CropBox; pdftocairo renders the
+        // MediaBox, so its raster holds the whole drawing in one corner and
+        // every relative tile means something different. Given a vote, that
+        // oracle disagrees with the others everywhere and collapses the
+        // majority-inked set to almost nothing — which makes the
+        // all-tiles-missing verdict trivially true on a page excise renders
+        // correctly.
+        using var mine = MakeBitmap(inkedTiles: 8, size: 320);
+        using var sameBox = MakeBitmap(inkedTiles: 8, size: 320);
+        using var alsoSameBox = MakeBitmap(inkedTiles: 8, size: 320);
+        using var differentBox = MakeWideBitmap(width: 320, height: 80);
+
+        var (missing, _, inked) = RenderProgram.CompareInkLocalityByMajority(
+            mine, new[] { sameBox, alsoSameBox, differentBox });
+
+        inked.Should().Be(8, "the two comparable oracles agree with excise");
+        missing.Should().Be(0);
+    }
+
+    [Fact]
+    public void CompareInkLocalityByMajority_MostOraclesRenderedADifferentPageBox_HasNoOpinion()
+    {
+        using var mine = MakeBitmap(inkedTiles: 0, size: 320);
+        using var differentBoxA = MakeWideBitmap(width: 320, height: 80);
+        using var differentBoxB = MakeWideBitmap(width: 320, height: 80);
+        using var sameBox = MakeBitmap(inkedTiles: 8, size: 320);
+
+        var (missing, extra, inked) = RenderProgram.CompareInkLocalityByMajority(
+            mine, new[] { differentBoxA, differentBoxB, sameBox });
+
+        (missing, extra, inked).Should().Be((0, 0, 0),
+            "when excise is the geometric odd one out the disagreement is about the page box, "
+            + "not about content, and this check must not pretend otherwise");
+    }
+
+    [Fact]
     public void ApplyInkLocalityVerdict_AllMajorityInkedTilesBlank_FlipsPassToMissingContent()
     {
         var entry = new RenderProgram.CorpusScanEntry { status = "PASS" };
@@ -1457,6 +1496,24 @@ public class CorpusScanClassificationTests
                 var y = i / grid;
                 canvas.DrawRect(x * tile, y * tile, tile, tile, paint);
             }
+        }
+
+        return bitmap;
+    }
+
+    /// <summary>
+    /// A page of a different shape entirely, ink in one corner — what a
+    /// renderer produces when it rasterizes the /MediaBox where the others
+    /// rasterized the /CropBox.
+    /// </summary>
+    private static SkiaSharp.SKBitmap MakeWideBitmap(int width, int height)
+    {
+        var bitmap = new SkiaSharp.SKBitmap(width, height);
+        using (var canvas = new SkiaSharp.SKCanvas(bitmap))
+        {
+            canvas.Clear(SkiaSharp.SKColors.White);
+            using var paint = new SkiaSharp.SKPaint { Color = SkiaSharp.SKColors.Black };
+            canvas.DrawRect(0, 0, width / 4f, height / 4f, paint);
         }
 
         return bitmap;
