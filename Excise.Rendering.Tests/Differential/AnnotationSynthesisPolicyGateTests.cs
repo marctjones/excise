@@ -81,9 +81,14 @@ public class AnnotationSynthesisPolicyGateTests
                              "'nothing' means 'none' and nothing else does");
 
             // The majority is recomputed from the evidence rather than trusted.
-            // Only engines marked counts:true vote — pdftocairo and pdftoppm are
-            // one engine, and an oracle that structurally cannot draw
-            // annotations (pdfium, flags=0) is an abstention, not a blank vote.
+            // Only entries marked counts:true vote, and `counts` is per ENTRY,
+            // not per oracle: pdftocairo and pdftoppm are one engine anywhere,
+            // and pdfbox and pdfium abstain on the Widget rows specifically —
+            // neither synthesizes a widget appearance in its rendering path
+            // (measured: pdfium draws nothing for a widget even when the /AP is
+            // present; pdfbox draws the text-field value only after an explicit
+            // PDAcroForm.refreshAppearances(), which rendering never calls), so
+            // their zero there is a structural abstention, not a "no" (#1009).
             int draws = 0, blank = 0, voters = 0;
             foreach (var e in row.GetProperty("evidence").EnumerateArray())
             {
@@ -504,7 +509,22 @@ public class AnnotationSynthesisPolicyGateTests
             ? PdftoppmReferenceRenderer.RenderPage(path, 1, dpi) : null,
         "ghostscript" => GhostscriptReferenceRenderer.IsAvailable
             ? GhostscriptReferenceRenderer.RenderPage(path, 1, dpi) : null,
-        _ => null,
+        "pdfbox" => PdfBoxReferenceRenderer.IsAvailable
+            ? PdfBoxReferenceRenderer.RenderPage(path, 1, dpi) : null,
+        // renderAnnotations: true is the whole point of asking pdfium anything
+        // here — without FPDF_ANNOT it inks nothing on a page whose only
+        // content is an annotation, and that zero is not a vote (#1007).
+        "pdfium" => PdfiumNativeReferenceRenderer.IsAvailable
+            ? PdfiumNativeReferenceRenderer.RenderPage(path, 1, dpi, userPassword: null,
+                                                       renderAnnotations: true) : null,
+        // NOT `_ => null`. An unrecognised name would then read as "tool not
+        // installed", check 3 would skip every entry recording it, and the
+        // voters-match guard would skip the majority recheck too — an oracle
+        // could be recorded in the table and never re-measured by the gate
+        // that exists to re-measure it.
+        _ => throw new InvalidOperationException(
+            $"{PolicyRelativePath} records evidence from an oracle '{oracle}' this gate cannot " +
+            "render with. Add a case here, or the recorded votes are never checked against it."),
     };
 
     /// <summary>

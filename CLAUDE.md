@@ -964,8 +964,8 @@ Excise.Rendering/                     # SkiaSharp renderer
     ├── MutoolTextExtractor.cs            # independent TEXT oracle
     ├── QpdfReferenceTool.cs              # structure: --check, --show-npages
     ├── PdfiumReferenceRenderer.cs        # 2 uses — arg-builder unit test only, NOT the oracle below
-    ├── PdfiumNativeReferenceRenderer.cs  # 6 uses — the REAL pdfium oracle (#857), see note below the map
-    └── PdfBoxReferenceRenderer.cs        # 7 uses — see note below the map
+    ├── PdfiumNativeReferenceRenderer.cs  # 8 uses — the REAL pdfium oracle (#857), see note below the map
+    └── PdfBoxReferenceRenderer.cs        # 9 uses — see note below the map
 
 Excise.App/                          # the Avalonia GUI (orchestration only)
 ├── Services/
