@@ -2967,6 +2967,13 @@ partial class Program
         // (#976). "How many pages did the MISSING_CONTENT check silently skip"
         // was unknowable before this counter.
         public int localityQuorumShortCount { get; set; }
+        // WHY those localityQuorumShortCount pages came up short (#989):
+        // geometry-mismatch / oracle-timeout / oracle-refusal /
+        // too-few-oracles-attempted, keyed by DetermineLocalityShortReason.
+        // "No verdict" used to be one silent bucket; this is the breakdown
+        // that says which pages are worth a longer timeout and which are not
+        // answerable by this check no matter the budget.
+        public Dictionary<string, int> localityShortReasonCounts { get; set; } = new(StringComparer.Ordinal);
         public Dictionary<string, int> nonPassVisualHumanImpactCounts { get; set; } = new(StringComparer.Ordinal);
         public Dictionary<string, int> nonPassVisualCategoryCounts { get; set; } = new(StringComparer.Ordinal);
         public Dictionary<string, int> oracleDisagreementBuckets { get; set; } = new(StringComparer.Ordinal);
@@ -3879,6 +3886,17 @@ partial class Program
         // without this field a scan cannot say how many of its PASSes were
         // never actually checked for blankness.
         entry.comparableOracles = comparableOracleCount;
+        // WHY the pool came up short (#989). #976 could say a page had no
+        // verdict; it could not say why, so "no verdict" was a single silent
+        // bucket that mixed causes with completely different remedies (a
+        // timeout is a budget knob a future run could raise; a geometry
+        // split — an oracle rasterizing /MediaBox where excise, mutool and
+        // pdfium rasterize /CropBox, see CLAUDE.md — is not answerable by
+        // this check at all, no matter the budget). Null when the pool
+        // wasn't short, same as the other conditional fields on this entry.
+        entry.localityShortReason = comparableOracleCount < MinComparableOraclesForLocalityMajority
+            ? DetermineLocalityShortReason(entry, comparableOracleCount)
+            : null;
 
         const int MinInkedTilesForBlankVerdict = 3;
         if (!string.Equals(entry.status, "PASS", StringComparison.Ordinal) ||
@@ -4875,6 +4893,10 @@ partial class Program
             localityQuorumShortCount = entries.Count(entry =>
                 entry.comparableOracles is { } comparable &&
                 comparable < MinComparableOraclesForLocalityMajority),
+            localityShortReasonCounts = CountBy(entries
+                .Where(entry => entry.comparableOracles is { } comparable &&
+                    comparable < MinComparableOraclesForLocalityMajority)
+                .Select(entry => NormalizeSummaryValue(entry.localityShortReason))),
             nonPassVisualHumanImpactCounts = CountBy(nonPass.Select(entry => NormalizeSummaryValue(entry.visualHumanImpact))),
             nonPassVisualCategoryCounts = CountBy(nonPass.Select(entry => NormalizeSummaryValue(entry.visualCategory))),
             oracleDisagreementBuckets = CountBy(entries.Select(GetOracleDisagreementBucket)),
@@ -4917,6 +4939,50 @@ partial class Program
             return "none";
 
         return disagreeing >= pairs ? "all" : "some";
+    }
+
+    /// <summary>
+    /// Attributes a comparableOracles shortfall (#989, follow-up to #976) to
+    /// one of a handful of causes, purely from the per-oracle status fields
+    /// already on the entry — no new rendering, no new comparison.
+    ///
+    /// "geometry-mismatch" is the CLAUDE.md-documented case: enough oracles
+    /// rendered (mutoolStatus/cairoStatus/ghostscriptStatus/pdfboxStatus/
+    /// pdfiumStatus all "OK") that comparableOracles could have reached
+    /// quorum on render success alone, so the shortfall must be geometry — an
+    /// oracle rasterized a different page box (commonly /MediaBox vs
+    /// /CropBox) and got no vote. This is NOT a bug to chase: it is not
+    /// answerable by tile locality regardless of budget, and measured
+    /// instances (5 of 5 checked on the pdf.js corpus, 2026-08-16) confirm
+    /// excise sides with the CropBox-honoring majority (mutool, pdfium),
+    /// which is the spec-correct rendering, not the odd one out.
+    ///
+    /// "oracle-timeout" is the one that IS fixable by budget: at least one
+    /// oracle hit the wall-clock limit and too few others rendered OK to
+    /// reach quorum without it. issue19517.pdf is the measured case — mutool,
+    /// pdftocairo and Ghostscript all report TIMEOUT at the same ~15000ms
+    /// --pdf-timeout-ms ceiling, and mutool alone finishes in ~32s when run
+    /// without that ceiling, so a real verdict exists and the scan just
+    /// didn't wait for it.
+    /// </summary>
+    internal static string DetermineLocalityShortReason(CorpusScanEntry entry, int comparableOracleCount)
+    {
+        var statuses = new[]
+        {
+            entry.mutoolStatus, entry.cairoStatus, entry.ghostscriptStatus,
+            entry.pdfboxStatus, entry.pdfiumStatus,
+        };
+        var okCount = statuses.Count(s => string.Equals(s, "OK", StringComparison.Ordinal));
+        var timedOut = statuses.Any(s => string.Equals(s, "TIMEOUT", StringComparison.Ordinal));
+        var attemptedCount = statuses.Count(s => s != null);
+
+        if (timedOut && okCount < MinComparableOraclesForLocalityMajority)
+            return "oracle-timeout";
+        if (okCount >= MinComparableOraclesForLocalityMajority)
+            return "geometry-mismatch";
+        if (attemptedCount < MinComparableOraclesForLocalityMajority)
+            return "too-few-oracles-attempted";
+        return "oracle-refusal";
     }
 
     private static int GetCorpusScanPriorityRank(CorpusScanEntry entry)
@@ -5145,6 +5211,11 @@ partial class Program
         // MinComparableOraclesForLocalityMajority the check can return no
         // verdict at all, and this is the only field that says so.
         public int? comparableOracles { get; set; }
+        // WHY comparableOracles came up short (#989): "geometry-mismatch",
+        // "oracle-timeout", "oracle-refusal", or "too-few-oracles-attempted".
+        // Null when the pool wasn't short (including when comparableOracles
+        // itself is null, i.e. the locality check never ran at all).
+        public string? localityShortReason { get; set; }
         public int? oracleComparisonPairs { get; set; }
         public int? oracleDisagreeingPairs { get; set; }
         public double? oracleMaxDiffFraction { get; set; }
