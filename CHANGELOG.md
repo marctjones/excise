@@ -6,6 +6,50 @@ semantic versioning.
 
 ## [Unreleased]
 
+### Fixed
+- **A link with no `/Border` and no `/BS` gets the §12.5.6.5 default 1 pt
+  border** (#987). Poppler and Ghostscript both stroke it; excise drew nothing.
+  The old rule required the file to state a width explicitly, and was decided on
+  a fixture that did state one — so the common case, a link with neither key,
+  was never measured. `EffectiveLinkBorderWidth` now resolves the whole ladder:
+  a stated width, `/BS` with no `/W` → 1 (Table 168), a `/Border` present but
+  malformed → nothing (which is also what the oracles draw for it), neither key
+  → 1.
+
+- **A negative `Tf` size in a widget's `/DA` is a real size, not "auto-size"**
+  (#991). Zero means auto-size; negative mirrors the glyphs through the
+  text-space origin, exactly as in a page content stream (#970). excise rendered
+  the value upright at an unrelated size — an output no engine produces. The
+  alignment width now carries the size's sign, which reproduces mutool's and
+  pdftocairo's placement to the pixel in all three `/Q` cases.
+
+- **A synthesized field value is clipped to its widget's `/Rect`** (#991).
+  mutool and pdftocairo stop at the rect; excise ran off the page.
+
+### Added
+- **`tests/annotation-synthesis-policy.json` — appearance synthesis as data,
+  with its evidence attached** (#993). 44 rows, one per (subtype, state,
+  condition), each carrying the decision, the shape drawn, the fixture in full,
+  per-oracle evidence as **bbox + shape rather than a bare count**, and the
+  majority verdict with the size of the pool it was taken over.
+  `AnnotationSynthesisPolicyGateTests` re-measures all of it and fails when the
+  table and the renderer disagree, when a row's evidence stops supporting its
+  decision, or when a synthesis site has no row.
+
+  Three shipped defects came from decisions made from a scalar that cannot
+  represent the thing being decided: #885's blue box (those 233 px were a check
+  mark), #987's link border (measured on the wrong fixture), and #972's first
+  fix (a caret with a tick's pixel count and bbox). The table's rules encode
+  what each cost: majority never a single oracle; votes counted per ENGINE, so
+  poppler does not get two of four for shipping two binaries; **an abstention is
+  not a "no"** — every fixture is printable because Ghostscript renders only
+  printable annotations, and pdfium abstains structurally (#1007); and shape
+  assertions wherever count and bbox cannot discriminate.
+
+  Four rows contradict their own majority and each names an issue rather than
+  being quietly kept (#1005, #1006, #889, #885); two more carry magnitude
+  divergences (#1003, #1004).
+
 ## [3.8.0] - 2026-08-12
 
 One theme: **annotations, finished and independently verified.** The app could
