@@ -58,9 +58,41 @@ if [[ ! -d test-pdfs/smoke ]] || [[ -z "$(ls -A test-pdfs/smoke/*.pdf 2>/dev/nul
 fi
 
 echo "==> generating extraction parity report (mutool + excise over test-pdfs/smoke + test-pdfs/sample-pdfs)"
-dotnet test Excise.Rendering.Tests -c Debug \
+
+# Delete any previous report FIRST. $REPORT is a fixed repo-relative path that
+# survives between runs, so without this the "was it produced?" check below is
+# satisfied by a leftover from an earlier run and the gate grades a stale
+# measurement. Measured 2026-08-15 (#941): with a planted report and a filter
+# matching zero tests, this gate printed
+#   "==> extraction parity OK: 332 pages at or above their baseline floor"
+# having run nothing at all. That is the redaction-security number this repo
+# leans on, reported green over an empty run.
+rm -f "$REPORT"
+
+# `dotnet test --filter` EXITS 0 WHEN IT MATCHES NOTHING. A renamed or moved
+# test would therefore sail through — same vacuous-green trap scripts/
+# lib-runner.sh guards for, and the same reason this file refuses to skip on a
+# missing corpus. Capture the output and refuse it explicitly.
+set +e
+run_output="$(dotnet test Excise.Rendering.Tests -c Debug \
   --filter "FullyQualifiedName~ExtractionParityTests.GenerateExtractionParityReport" \
-  --logger "console;verbosity=normal"
+  --logger "console;verbosity=normal" 2>&1)"
+run_status=$?
+set -e
+echo "$run_output"
+
+if grep -q "No test matches the given testcase filter" <<<"$run_output"; then
+  echo
+  echo "FAIL: the filter matched NO tests — ExtractionParityTests.GenerateExtractionParityReport"
+  echo "      was renamed, moved, or removed. dotnet test exits 0 in that case, so this"
+  echo "      would otherwise be a green gate that measured nothing."
+  exit 1
+fi
+
+if [[ $run_status -ne 0 ]]; then
+  echo "FAIL: the parity report generator did not complete (exit $run_status)."
+  exit 1
+fi
 
 if [[ ! -f "$REPORT" ]]; then
   echo "FAIL: $REPORT was not produced. The generator test did not run — check the output above."
