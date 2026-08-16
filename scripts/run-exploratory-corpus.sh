@@ -971,7 +971,7 @@ SUMMARY_SCALAR_KEYS = (
 SUMMARY_DICT_KEYS = (
     "statusCounts", "resultStatusCounts", "resultCategoryCounts",
     "nonPassVisualHumanImpactCounts", "nonPassVisualCategoryCounts",
-    "oracleDisagreementBuckets",
+    "oracleDisagreementBuckets", "localityShortReasonCounts",
 )
 
 def priority_rank(entry):
@@ -1084,6 +1084,7 @@ if summary_seen:
         "nonPassVisualHumanImpactCounts": summary_dict_totals["nonPassVisualHumanImpactCounts"],
         "nonPassVisualCategoryCounts": summary_dict_totals["nonPassVisualCategoryCounts"],
         "oracleDisagreementBuckets": summary_dict_totals["oracleDisagreementBuckets"],
+        "localityShortReasonCounts": summary_dict_totals["localityShortReasonCounts"],
         "topNonPass": merge_top_non_pass(summary_top_non_pass_pool),
     }
 
@@ -1167,6 +1168,17 @@ if locality_short or locality_none:
     print(f"  blank-page (MISSING_CONTENT) check reached no verdict on "
           f"{locality_short} page(s) with fewer than {MIN_LOCALITY_QUORUM} comparable oracles"
           f"; {locality_none} page(s) had no ink comparison at all")
+    # WHY (#989): "no verdict" used to be one silent bucket. geometry-mismatch
+    # is not fixable by budget — an oracle rasterized a different page box
+    # (commonly /MediaBox vs /CropBox) and is not answerable by this check no
+    # matter how long it runs. oracle-timeout is: raising --pdf-timeout-ms can
+    # turn it into a real verdict (issue19517.pdf's mutool finishes in ~32s
+    # against the default 15000ms ceiling). oracle-refusal and
+    # too-few-oracles-attempted are the remaining unattributed causes.
+    reasons = (merged_summary or {}).get("localityShortReasonCounts") or {}
+    if reasons:
+        for reason in sorted(reasons, key=reasons.get, reverse=True):
+            print(f"      {reasons[reason]:4d}  {reason}")
 # Self-check (#988): the tool's own summary.localityQuorumShortCount (now
 # merged by summing the per-chunk values, see SUMMARY_SCALAR_KEYS above)
 # should agree with the count derived independently from merged_entries
