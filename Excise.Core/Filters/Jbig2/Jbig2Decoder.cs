@@ -47,12 +47,53 @@ internal static class Jbig2Decoder
     /// <exception cref="InvalidOperationException">
     /// Thrown if the data is malformed or truncated.
     /// </exception>
+    /// <summary>
+    /// Largest decoded JBIG2 image accepted, in pixels (#975). Mirrors
+    /// <c>RenderOptions.DefaultMaxPixelCount</c>; see the rationale in
+    /// <see cref="Decode"/>.
+    /// </summary>
+    internal const long MaxDecodedPixelCount = 256L * 1024L * 1024L;
+
     public static byte[] Decode(byte[] data, byte[]? globals, int width, int height)
     {
         if (data == null)
             throw new ArgumentNullException(nameof(data));
         if (width <= 0 || height <= 0)
             throw new ArgumentException("Width and height must be positive");
+
+        // Refuse absurd dimensions BEFORE allocating anything (#975).
+        //
+        // /Width and /Height come from the image dictionary and are
+        // attacker-controlled. Nothing bounded them from above, so a few edited
+        // digits in a sub-kilobyte file requested an arbitrary allocation: an
+        // ~800-byte mutated PDF produced a raw OutOfMemoryException out of
+        // PdfDocument.Open, and a size just under the array limit would have
+        // produced a genuine multi-gigabyte allocation instead — worse on a
+        // machine where swap pressure, not a failed parse, is the real risk.
+        //
+        // The ceiling is NOT a new invented number: it mirrors
+        // RenderOptions.DefaultMaxPixelCount, this project's existing answer to
+        // "how many pixels are we willing to allocate for one image". Excise.Core
+        // cannot reference Excise.Rendering (the dependency runs the other way),
+        // so the value is restated here with that correspondence recorded.
+        //
+        // It does not refuse real documents. JBIG2 is a BILEVEL scan codec and
+        // this buffer is packed 1 bit per pixel, so the ceiling is ~32 MB of
+        // memory; a 1200-DPI letter-size scan is 10200 x 13200 = 134.6 MPx,
+        // comfortably inside it. Exceeding it takes a scan resolution no
+        // document workflow produces.
+        //
+        // ArgumentException is deliberate: PdfFilterRegistry's JBIG2 decoder
+        // already treats that as an expected codec fallback and returns the raw
+        // stream, so an over-large image costs the IMAGE, not the document.
+        // OutOfMemoryException was never in that set and never should be.
+        var pixelCount = (long)width * height;
+        if (pixelCount > MaxDecodedPixelCount)
+        {
+            throw new ArgumentException(
+                $"JBIG2 image dimensions {width} x {height} request {pixelCount:N0} pixels, " +
+                $"exceeding the decode ceiling of {MaxDecodedPixelCount:N0}.");
+        }
 
         // Combine globals and page-specific data for segment parsing. PDF
         // JBIG2 streams normally use embedded organization without the JBIG2

@@ -7,6 +7,7 @@ using AwesomeAssertions;
 using Excise.Core.Content;
 using Excise.Core.Document;
 using Excise.Core.Parsing;
+using Excise.Core.Primitives;
 using Excise.Core.Text.Segmentation;
 using Xunit;
 
@@ -322,6 +323,56 @@ public class HostileStructureTests
     // whose construction needs decoding is one nobody will re-derive when it
     // fails.
     // ---------------------------------------------------------------
+
+    /// <summary>
+    /// #975: /Width and /Height on a JBIG2 image are attacker-controlled and
+    /// were unbounded from above, so an ~800-byte file could request an
+    /// arbitrary allocation — a raw OutOfMemoryException out of
+    /// PdfDocument.Open, or worse, a SUCCESSFUL multi-gigabyte allocation at a
+    /// size just under the array limit.
+    ///
+    /// This pins the guard directly rather than through a document, on
+    /// purpose. A first version of this test built a PDF with absurd /Width
+    /// and /Height and asserted the document still opened — and it PASSED WITH
+    /// THE GUARD DISABLED, because that hand-built payload failed JBIG2 segment
+    /// parsing long before anything was allocated. It proved nothing. The
+    /// authentic document-level repro needs the fuzzer's seed 9603 at iteration
+    /// 5432 (Iterations = 6000), which is too slow for this tier, so the
+    /// contract is pinned where it is enforced.
+    ///
+    /// ArgumentException is the required type, not an incidental one:
+    /// PdfFilterRegistry treats it as an expected codec fallback and returns
+    /// the raw stream, so an over-large image costs the IMAGE and not the
+    /// document. OutOfMemoryException was never in that set and never should be.
+    /// </summary>
+    [Fact]
+    public void JBig2DecodeRefusesAbsurdDimensions_BeforeAllocating()
+    {
+        var payload = new byte[16];
+
+        var act = () => Excise.Core.Filters.Jbig2.Jbig2Decoder.Decode(
+            payload, globals: null, width: 2_000_000_000, height: 2_000_000_000);
+
+        act.Should().Throw<ArgumentException>(
+                "an over-large JBIG2 image must be refused as a codec fallback, not allocated")
+            .WithMessage("*exceeding the decode ceiling*");
+    }
+
+    /// <summary>
+    /// The ceiling must not be so tight that it refuses real scans. A 1200-DPI
+    /// letter-size bilevel page — finer than any document workflow produces —
+    /// must still be accepted by the dimension check. (It fails later on the
+    /// nonsense payload; what matters is that it is not refused for its SIZE.)
+    /// </summary>
+    [Fact]
+    public void JBig2DecodeAcceptsA1200DpiLetterScan()
+    {
+        var act = () => Excise.Core.Filters.Jbig2.Jbig2Decoder.Decode(
+            new byte[16], globals: null, width: 10_200, height: 13_200);
+
+        act.Should().NotThrow<ArgumentException>("134.6 MPx is a legitimate scan size")
+            ;
+    }
 
     private static byte[] Assemble(IList<string> bodies)
     {
