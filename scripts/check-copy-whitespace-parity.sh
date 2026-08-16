@@ -73,13 +73,17 @@ fi
 # nothing — precisely the vacuous pass the strict-mode guard above exists to
 # prevent, arriving through a different door (#941). check-extraction-parity.sh
 # had the same hole and it was reachable.
+# `tee`, not capture-and-echo: the harness runs the whole GUI copy path over the
+# corpus. A gate that prints nothing while it works looks hung.
+RUN_LOG="$(mktemp)"
+trap 'rm -f "$RUN_LOG"' EXIT
 set +e
-run_output="$(dotnet test Excise.Avalonia.Tests/Excise.Avalonia.Tests.csproj \
+dotnet test Excise.Avalonia.Tests/Excise.Avalonia.Tests.csproj \
   -c Debug --filter "FullyQualifiedName~CopyWhitespaceParityHarness" \
-  --logger "console;verbosity=minimal" 2>&1)"
-run_status=$?
+  --logger "console;verbosity=minimal" 2>&1 | tee "$RUN_LOG"
+run_status=${PIPESTATUS[0]}
 set -e
-echo "$run_output"
+run_output="$(cat "$RUN_LOG")"
 
 if grep -q "No test matches the given testcase filter" <<<"$run_output"; then
   echo
