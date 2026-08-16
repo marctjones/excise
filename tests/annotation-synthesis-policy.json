@@ -750,9 +750,9 @@
         "verdict": "draw"
       },
       "deviation": {
-        "kind": "majority-draws-but-no-agreed-geometry",
-        "issue": "#885",
-        "note": "THREE engines draw now and they agree on nothing: pdftocairo covers the whole page (40000 px, bbox (0,0)-(200,200)), Ghostscript clamps to a frame of its own choosing (11926 px, bbox (38,38)-(163,163)), PDFBox fills the annotation rect exactly (10000 px on a 100x100 rect). mutool and pdfium draw nothing. Copying any of them is electing a renderer, and all three bury the page content the border is supposed to outline. excise refuses and says so in a diagnostic. The enlarged pool (#1007/#1009) took this from 2-of-3 to 3-of-5 and made the disagreement about GEOMETRY worse, not better, which is the deviation's whole argument."
+        "kind": "accepted-no-agreed-target",
+        "issue": "#1015",
+        "note": "THREE engines draw now and they agree on nothing: pdftocairo covers the whole page (40000 px, bbox (0,0)-(200,200)), Ghostscript clamps to a frame of its own choosing (11926 px, bbox (38,38)-(163,163)), PDFBox fills the annotation rect exactly (10000 px on a 100x100 rect). mutool and pdfium draw nothing. Copying any of them is electing a renderer, and all three bury the page content the border is supposed to outline. excise refuses and says so in a diagnostic. The enlarged pool (#1007/#1009) took this from 2-of-3 to 3-of-5 and made the disagreement about GEOMETRY worse, not better, which is the deviation's whole argument. ACCEPTED, not pending: see #1015 (decision record). Previously cited #885, a closed work item that does not record this reasoning. There is no work to do here — nothing anyone implements makes three disagreeing engines agree. The falsifying condition is the drawers CONVERGING, which the gate re-measures every run."
       }
     },
     {
@@ -4324,9 +4324,9 @@
         "verdict": "draw"
       },
       "deviation": {
-        "kind": "majority-draws-but-no-agreed-artwork",
-        "issue": "#889",
-        "note": "3 of 5 draw and the three disagree by 4.7x on how much and by a factor of 3.6 on the bbox height (mutool 1055 px in a band, pdftocairo 4946 px over the whole rect, Ghostscript 1564 px in a band); PDFBox and pdfium draw nothing at all - neither has a /Stamp appearance handler. A stamp's picture is viewer-specific art; there is nothing to copy, only an invitation to invent some. The enlarged pool (#1007/#1009) took this from a unanimous 3-of-3 to a bare 3-of-5, so the majority that this row already declines to follow is now the thinnest one in the table. The older 2-of-3 reading was measured on a non-printable fixture, so Ghostscript's zero was an abstention."
+        "kind": "accepted-no-agreed-target",
+        "issue": "#1015",
+        "note": "3 of 5 draw and the three disagree by 4.7x on how much and by a factor of 3.6 on the bbox height (mutool 1055 px in a band, pdftocairo 4946 px over the whole rect, Ghostscript 1564 px in a band); PDFBox and pdfium draw nothing at all - neither has a /Stamp appearance handler. A stamp's picture is viewer-specific art; there is nothing to copy, only an invitation to invent some. The enlarged pool (#1007/#1009) took this from a unanimous 3-of-3 to a bare 3-of-5, so the majority that this row already declines to follow is now the thinnest one in the table. The older 2-of-3 reading was measured on a non-printable fixture, so Ghostscript's zero was an abstention. ACCEPTED, not pending: see #1015 (decision record). Previously cited #889, a closed work item that does not record this reasoning. There is no work to do here — nothing anyone implements makes three disagreeing engines agree. The falsifying condition is the drawers CONVERGING, which the gate re-measures every run."
       }
     },
     {
