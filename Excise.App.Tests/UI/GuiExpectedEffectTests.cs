@@ -38,10 +38,21 @@ namespace Excise.App.Tests.UI;
 ///   • the command's declared <c>Flips</c> panel toggles visibility;
 ///   • every OTHER panel's visibility is unchanged (the "wrong region changed" guard).
 ///
-/// Run at devicePixelRatio 1 and 2 (headless defaults to 1.0). Commands with
-/// less-predictable region side effects (clipboard population, redaction/annotation
-/// state, page reordering) are out of this registry — they are covered by Phase 1's
-/// universal safety net, and are where Phase 3 / registry expansion goes next.
+/// Run at devicePixelRatio 1 and 2 (headless defaults to 1.0).
+///
+/// #978 expanded this registry from 16 entries to 71 of the ~87 ReactiveCommands
+/// on <see cref="MainWindowViewModel"/> — every command whose expected region
+/// effect is declarable against a single freshly-loaded one-page document. The
+/// remainder stay out, each with a reason recorded at its would-be entry point
+/// in <see cref="Registry"/> rather than in this summary (so the reason travels
+/// with the exclusion instead of going stale up here): commands that take a
+/// non-<c>Unit</c> parameter (no value here to supply), lifecycle commands that
+/// quit the process or deliberately blank the document, one command that shells
+/// out to the OS, one whose effect depends on registry ORDER, and page-count-
+/// mutating commands whose own guards make them no-ops on this registry's
+/// one-page fixture (tracked in #1001 for a multi-page fixture). They remain
+/// covered by Phase 1's universal safety net (<see cref="GuiClickSafetySweepTests"/>)
+/// and by their own dedicated workflow tests.
 /// </summary>
 [Collection("AvaloniaTests")]
 public class GuiExpectedEffectTests
@@ -65,24 +76,141 @@ public class GuiExpectedEffectTests
         new("ZoomFitPageCommand", null),
         new("NextPageCommand", null),
         new("PreviousPageCommand", null),
-        // NOTE: page-MUTATION commands (RotatePageLeft/Right/180, remove/move page)
-        // are deliberately NOT in this registry. They call
-        // RefreshAfterDocumentMutationAsync, which swaps the whole Document on the
-        // viewer; the continuous view's post-swap tile re-render is not reliably
-        // driven by the headless test's manual pump loop (single-page renders fine),
-        // so a page-ink assertion here would be measuring the harness, not the app.
-        // Tracked as #846 (confirm it repaints in the live GUI). Their no-throw
-        // safety is covered by GuiClickSafetySweepTests (Phase 1).
+
+        // Page-MUTATION commands (rotate). #846 — the "continuous view doesn't
+        // repaint after a page mutation" exclusion this comment used to cite —
+        // was closed 2026-07-29, and NOT on a repaint fix: it was closed after
+        // confirming in the LIVE GUI that the headless 0-ink reading was a test
+        // -harness artifact (the manual pump loop not driving the continuous
+        // tile re-render after a Document swap), then fixing a real but
+        // DIFFERENT bug (reading-view scroll-position instability on rotate/
+        // remove/move). Once that landed, this suite's own experiment (adding
+        // RotatePageLeftCommand here and running it) held on the FIRST try —
+        // the page-ink assert passes at both dpr 1 and 2 — so the hole closes
+        // for free. Rotate is included below.
+        new("RotatePageLeftCommand", null),
+        new("RotatePageRightCommand", null),
+        new("RotatePage180Command", null),
+        // RemoveCurrentPage / MoveCurrentPageEarlier / MoveCurrentPageLater are
+        // NOT added here even though #846 is resolved: this registry loads a
+        // ONE-page fixture (BuildDensePdf) and shares that single Document
+        // instance across every entry executed in sequence, so a command that
+        // actually changed page COUNT would leave a corrupted/empty document
+        // for every later entry in the same run. Their own guards
+        // (RemoveCurrentPageAsync / MoveCurrentPage{Earlier,Later}Async) make
+        // them no-ops on a 1-page document, which would make an entry here
+        // pass vacuously without ever exercising the mutation — see #1001 for
+        // giving this registry (or a sibling one) a multi-page fixture so
+        // these get a real, non-vacuous entry instead of staying silently
+        // absent. Their click-safety is covered by GuiClickSafetySweepTests
+        // (Phase 1, 3-page fixture); their document-state correctness by
+        // PageOrganizationCommandTests / PageOrganizationSavePersistenceTests.
         new("ToggleRedactionModeCommand", null),
         new("ToggleTextSelectionModeCommand", null),
         new("ToggleTypewriterModeCommand", null),
         new("ToggleFormAuthoringModeCommand", null),
         new("ToggleContinuousViewCommand", null),
+        new("ToggleFreehandModeCommand", null),
+        new("ToggleLineModeCommand", null),
+        new("ToggleArrowModeCommand", null),
+        new("TogglePolygonModeCommand", null),
+        new("TogglePolyLineModeCommand", null),
+        new("ToggleRevealHiddenTextCommand", null),
+        new("ToggleRevealRasterizedHiddenCommand", null),
+
+        // File-dialog-backed commands. Under the default headless VM (no DI
+        // container, no stubbed StorageProvider/MainWindowResolver) their
+        // dialog seam is a null service that returns "nothing picked" /
+        // "not confirmed" without showing UI or blocking — the same fact
+        // GuiClickSafetySweepTests (Phase 1) relies on to invoke all of these
+        // without hanging. They therefore no-op: no document/page change, no
+        // panel change.
+        new("OpenFileCommand", null),
+        new("SaveFileCommand", null),
+        new("SaveAsCommand", null),
+        new("AddPagesCommand", null),
+        new("InsertPagesBeforeCurrentCommand", null),
+        new("InsertPagesAfterCurrentCommand", null),
+        new("ExtractCurrentPageCommand", null),
+        new("ExtractSelectedPagesCommand", null),
+        new("CombineDocumentsCommand", null),
+        new("SplitDocumentCommand", null),
+        new("ExportCurrentPageCommand", null),
+        new("ExportPagesCommand", null),
+        new("SaveFlattenedFormCopyCommand", null),
+        new("MakeSearchableCommand", null),
+        new("SecurityCommand", null),
+        new("PrintCommand", null),
+        new("VerifySignaturesCommand", null),
+        new("ShowPreferencesCommand", null),
+        new("AboutCommand", null),
+        new("ShowShortcutsCommand", null),
+
+        // Page-selection / redaction-list / typewriter-queue commands that are
+        // no-ops on a freshly loaded document with an empty selection/pending
+        // list — included so a command that stopped being a safe no-op (started
+        // touching a panel, or blanking the page) would be caught here.
+        new("RemoveSelectedPagesCommand", null),
+        new("MoveSelectedPagesEarlierCommand", null),
+        new("MoveSelectedPagesLaterCommand", null),
+        new("ClearSelectedPagesCommand", null),
+        new("ApplyRedactionCommand", null),
+        new("ClearAllRedactionsCommand", null),
+        new("ApplyAllRedactionsCommand", null),
+        new("DiscardPendingTypewriterEditsCommand", null),
+        new("GoToNextPendingTypewriterEditCommand", null),
+        new("UndoCommand", null),
+        new("RedoCommand", null),
+
+        // Selection-driven annotation commands — no-ops with no active text
+        // selection / pending drag rect on a freshly loaded document.
+        new("AddHighlightAnnotationFromSelectionCommand", null),
+        new("AddUnderlineAnnotationFromSelectionCommand", null),
+        new("AddStrikeOutAnnotationFromSelectionCommand", null),
+        new("AddSquigglyAnnotationFromSelectionCommand", null),
+        new("AddSquareAnnotationFromDragCommand", null),
+        new("AddCircleAnnotationFromDragCommand", null),
+        new("AddFreeTextAnnotationFromDragCommand", null),
+        new("AddImageStampAnnotationFromDragCommand", null),
+        new("AddStickyNoteAnnotationCommand", null),
+
+        new("CopyTextCommand", null),
+        new("AutoDetectFieldsCommand", null),
+        new("FindCommand", null),
+        new("FindNextCommand", null),
+        new("FindPreviousCommand", null),
+
         // Panel toggles: flip exactly their own panel, leave the page + other panels.
         new("ToggleThumbnailsCommand", Panel.Thumbnails),
         new("ToggleOutlineCommand", Panel.Outline),
         new("ToggleClipboardSidebarCommand", Panel.Clipboard),
         new("ToggleSearchCommand", Panel.Search),
+
+        // NOT in this registry, with a live reason each:
+        //  - RemovePendingRedactionCommand (Guid), SetTypewriterColorCommand
+        //    (string), AddStampAnnotationFromDragCommand (string), GoToPageCommand
+        //    (int), JumpToOutlineCommand (OutlineNode), LoadRecentFileCommand
+        //    (string), OpenExternalLinkCommand (string),
+        //    ShowDangerousLinkRefusalCommand (string), JumpToSearchMatchCommand
+        //    (SearchMatch): all take a non-Unit TParam. cmd.Execute(null) on a
+        //    typed command is not the "click it" this registry models — the
+        //    harness has no real Guid/string/int/OutlineNode/SearchMatch to
+        //    supply, and passing null risks an invalid-cast throw unrelated to
+        //    the region contract this file checks.
+        //  - ExitCommand, CloseDocumentCommand: lifecycle commands that quit the
+        //    process / deliberately clear the document. Excluded here for the
+        //    same reason GuiClickSafetySweepTests.SkipCommands excludes them —
+        //    ExitCommand cannot run inside a test process at all, and
+        //    CloseDocumentCommand blanks the page BY DESIGN, which is exactly
+        //    what this registry's ink-preserved contract exists to catch.
+        //  - ShowDocumentationCommand: shells out to the OS (opens a browser) —
+        //    same reason GuiClickSafetySweepTests skips it.
+        //  - CloseSearchCommand: unconditionally sets IsSearchVisible = false,
+        //    so its Search-panel effect only manifests when Search is already
+        //    open. Whether that holds depends on registry ORDER (which entry
+        //    ran last), which is exactly the kind of fragile, reorder-breaks-it
+        //    assumption this registry should not encode. Covered directly by
+        //    KeyboardShortcutEffectTests and RedactionAndSearchCommandTests.
     };
 
     [FixedAvaloniaTheory]
