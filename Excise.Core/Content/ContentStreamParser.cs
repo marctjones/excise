@@ -1294,8 +1294,15 @@ public class ContentStreamParser
 
             if (_is2ByteFont)
             {
-                // Type0 font: load descendant CID font
-                var descendantFontsObj = _currentFont.GetOptional("DescendantFonts");
+                // Type0 font: load descendant CID font. /DescendantFonts is an
+                // INDIRECT REFERENCE in real producers' output, so it must be
+                // resolved — the bare `is PdfArray` cast failed there, leaving
+                // _cidMetrics null and every CID glyph on a default width while
+                // TextExtractor (which resolves it) used the real /W table. The
+                // #843 mistake, one array over, and the divergence that made
+                // these two disagree about CID glyph geometry (#980).
+                var descendantFontsObj = _page.Document.Resolve(
+                    _currentFont.GetOptional("DescendantFonts") ?? PdfNull.Instance);
                 if (descendantFontsObj is PdfArray descendantFonts && descendantFonts.Count > 0)
                 {
                     var descendantRef = descendantFonts[0];
