@@ -329,6 +329,8 @@ public class PageCollection : IReadOnlyList<PdfPage>
         if (index < 0 || index > _pages.Count)
             throw new ArgumentOutOfRangeException(nameof(index), $"Insert index must be between 0 and {_pages.Count}");
 
+        EnsureFlatKids();
+
         // Clone the page dictionary and any indirect objects the page owns
         // (content streams, resources, annotations) via the shared cloner
         // (#628 — also used by document-merge for outline/AcroForm subtrees).
@@ -394,6 +396,8 @@ public class PageCollection : IReadOnlyList<PdfPage>
         if (_pages.Count <= 1)
             throw new InvalidOperationException("Cannot remove the last page from a document");
 
+        EnsureFlatKids();
+
         // Remove from Kids array
         _kidsArray.RemoveAt(index);
         _pagesDict["Kids"] = _kidsArray;
@@ -420,6 +424,8 @@ public class PageCollection : IReadOnlyList<PdfPage>
         if (fromIndex == toIndex)
             return;
 
+        EnsureFlatKids();
+
         // Get the page reference from Kids array
         var pageRef = _kidsArray[fromIndex];
 
@@ -433,6 +439,151 @@ public class PageCollection : IReadOnlyList<PdfPage>
 
         // Reload pages
         LoadPages();
+    }
+
+    /// <summary>
+    /// Every index-based structural operation in this class addresses the
+    /// ROOT /Kids array by global page number — which is only correct when
+    /// the page tree is FLAT (one leaf per root kid). Real documents nest:
+    /// on a nested tree, the old RemoveAt(0) removed an intermediate
+    /// /Pages node — silently deleting every page under it — and Move threw
+    /// or relocated a whole subtree (#961, found by the #945 conservation
+    /// gates on scotus-trump-v-anderson and irs-pub509).
+    ///
+    /// So before any index-based structural mutation, flatten: materialize
+    /// the four inheritable attributes (§7.7.3.4: /Resources, /MediaBox,
+    /// /CropBox, /Rotate) onto each leaf that inherits them, then rebuild
+    /// the root /Kids as one entry per leaf in reading order and reparent
+    /// the leaves to the root. Orphaned intermediate nodes simply stop
+    /// being referenced. Append-only paths (Add/AddBlank/
+    /// AppendPreRegisteredPage) are correct on nested trees without this —
+    /// appending a leaf to the root Kids puts it last in reading order —
+    /// and keep working on the flattened tree identically.
+    /// </summary>
+    private void EnsureFlatKids()
+    {
+        if (KidsAreFlat())
+            return;
+
+        // Collect each leaf's ORIGINAL kid entry (indirect reference or
+        // inline dict) in the same DFS order LoadPagesRecursive produces, so
+        // entry i corresponds to _pages[i].
+        var entries = new List<PdfObject>(_pages.Count);
+        CollectLeafEntries(_pagesDict, entries,
+            new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance), depth: 0);
+
+        if (entries.Count != _pages.Count)
+            throw new PdfParseException(
+                $"Page tree cannot be flattened for structural editing: walked {entries.Count} leaves, expected {_pages.Count}");
+
+        var pagesRef = _document.Catalog.GetReference("Pages");
+        var flat = new PdfArray();
+        for (var i = 0; i < _pages.Count; i++)
+        {
+            var leaf = _pages[i].Dictionary;
+            MaterializeInheritedKey(leaf, "Resources");
+            MaterializeInheritedKey(leaf, "MediaBox");
+            MaterializeInheritedKey(leaf, "CropBox");
+            MaterializeInheritedKey(leaf, "Rotate");
+            leaf["Parent"] = pagesRef;
+            flat.Add(entries[i]);
+        }
+
+        _kidsArray = flat;
+        _pagesDict["Kids"] = flat;
+        _pagesDict.SetInt("Count", _pages.Count);
+        LoadPages();
+    }
+
+    /// <summary>
+    /// A tree is flat only when every root kid is itself a leaf. The count
+    /// comparison alone is not enough: two intermediates holding 2+0 pages
+    /// also give kids.Count == pages.Count while kids[1] is not page 1.
+    /// </summary>
+    private bool KidsAreFlat()
+    {
+        if (_kidsArray.Count != _pages.Count)
+            return false;
+        foreach (var kidObj in _kidsArray)
+        {
+            var kid = ResolvePageTreeKid(kidObj);
+            // Mirror LoadPagesRecursive's leaf test, including the
+            // wrong-/Type recovery: anything that is not an internal
+            // /Pages node counts as a leaf.
+            if (kid == null || kid.GetNameOrNull("Type") == "Pages")
+                return false;
+        }
+        return true;
+    }
+
+    private void CollectLeafEntries(
+        PdfDictionary node, List<PdfObject> entries,
+        HashSet<PdfDictionary> visited, int depth)
+    {
+        if (depth > MaxPageTreeDepth || !visited.Add(node))
+            return;
+
+        try
+        {
+            var kids = node.GetArrayOrNull("Kids");
+            if (kids == null)
+                return;
+
+            foreach (var kidObj in kids)
+            {
+                var kid = ResolvePageTreeKid(kidObj);
+                if (kid == null) continue;
+
+                var type = kid.GetNameOrNull("Type");
+                // Same leaf test as LoadPagesRecursive: /Type /Page, or the
+                // wrong-/Type recovery (a kid-less node claiming to be
+                // something other than /Pages).
+                if (type == "Page" ||
+                    (kid.GetArrayOrNull("Kids") == null && type != null && type != "Pages"))
+                {
+                    entries.Add(kidObj);
+                }
+                else
+                {
+                    CollectLeafEntries(kid, entries, visited, depth + 1);
+                }
+            }
+        }
+        finally
+        {
+            visited.Remove(node);
+        }
+    }
+
+    /// <summary>
+    /// Copy an inheritable attribute down onto a leaf that lacks it, taking
+    /// the RAW object (reference or inline) from the nearest ancestor that
+    /// carries it — so an indirect /Resources stays shared between leaves
+    /// rather than being duplicated.
+    /// </summary>
+    private void MaterializeInheritedKey(PdfDictionary leaf, string key)
+    {
+        if (leaf.GetOptional(key) != null)
+            return;
+
+        var visited = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance) { leaf };
+        var current = leaf;
+        for (var depth = 0; depth <= MaxPageTreeDepth; depth++)
+        {
+            var parentRef = current.GetReferenceOrNull("Parent");
+            if (parentRef == null)
+                return;
+            if (_document.GetObject(parentRef) is not PdfDictionary parent || !visited.Add(parent))
+                return;
+
+            var value = parent.GetOptional(key);
+            if (value != null)
+            {
+                leaf[key] = value;
+                return;
+            }
+            current = parent;
+        }
     }
 
     /// <summary>
