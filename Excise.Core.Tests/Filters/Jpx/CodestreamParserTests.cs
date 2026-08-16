@@ -217,10 +217,30 @@ public class CodestreamParserTests
         image.ComponentData[0].Should().Contain(sample => sample > 180);
     }
 
-    [Theory]
-    [InlineData(338, 16)]
-    [InlineData(341, 8)]
-    public void TryDecodeJpx_AltonaGrayJpxDecodesSingleColorPlane(int objectNumber, int bitsPerComponent)
+    // Two [Fact]s rather than a [Theory] with two [InlineData] rows.
+    //
+    // As a Theory, the (objectNumber: 338, bitsPerComponent: 16) row was
+    // DISCOVERED by --list-tests and then never executed: no pass, no fail, not
+    // even a skip. It was unreachable by every filter form including its exact
+    // display name, while the 8-bit row in the same Theory ran normally. #894's
+    // check-test-count gate caught it and correctly called it FATAL — a case
+    // that never reports cannot be reddened by reverting the fix it covers, so
+    // it silently defeats mutation testing.
+    //
+    // It is NOT a decoder crash. Driven directly out of process, object 338
+    // decodes in 0.19s with 62MB peak RSS and cleanly returns null from the
+    // managed path — so the coverage loss was in the test harness, not in the
+    // code under test. Splitting the rows into separate methods restores both
+    // assertions. Same family as #985.
+    [Fact]
+    public void TryDecodeJpx_AltonaGray16BitJpxDecodesSingleColorPlane()
+        => AssertAltonaGrayJpxDecodesSingleColorPlane(objectNumber: 338, bitsPerComponent: 16);
+
+    [Fact]
+    public void TryDecodeJpx_AltonaGray8BitJpxDecodesSingleColorPlane()
+        => AssertAltonaGrayJpxDecodesSingleColorPlane(objectNumber: 341, bitsPerComponent: 8);
+
+    private static void AssertAltonaGrayJpxDecodesSingleColorPlane(int objectNumber, int bitsPerComponent)
     {
         var path = FindRepoFile(
             "test-pdfs",

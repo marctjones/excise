@@ -7,13 +7,13 @@
   "Confidence": "HIGH",
   "Issue": 972,
   "ReviewStatus": "REVIEWED",
-  "Notes": "Re-classified from the auto-inferred baseline after #932 gave the corpus gate majority ink scoring. mutool and pdftocairo both draw the check mark for this /AP-less checkbox; excise draws two empty boxes. The old contract claimed PIXEL_EXACT / REFS_AGREE, which was never true here — the most-inked ink rule simply could not see it.",
+  "Notes": "FIXED by #972: an ON checkbox with no /AP now draws a check, matching mutool and pdftocairo. This contract was left at MISSING_CONTENT when #972 re-pinned the manifest row to PASS, so the two disagreed about the same page and Contracts_AgreeWithTheCorpusExpectationManifests failed. Re-confirmed 2026-08-16 by an independent corpus scan: the page renders PASS. History, kept because it is the reason this file exists: before #972 excise drew two empty boxes, and the contract before THAT claimed PIXEL_EXACT / REFS_AGREE, which was never true — the most-inked ink rule could not see the difference until #932 gave the gate majority scoring.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "MISSING_CONTENT",
-      "ReleaseStatus": "FAIL",
-      "QualityStatus": "FAIL",
-      "PixelAgreement": "MATCHES_NONE",
+      "ExpectedRawStatus": "PASS",
+      "ReleaseStatus": "PASS",
+      "QualityStatus": "TARGET_MATCH",
+      "PixelAgreement": "MATCHES_TARGET",
       "ReferenceSituation": "REFS_AGREE",
       "RootCause": "ANNOTATION_APPEARANCE_SYNTHESIS",
       "Target": {
@@ -22,7 +22,7 @@
       },
       "ImprovementPriority": "P2",
       "Confidence": "HIGH",
-      "QualityReason": "excise synthesizes an unchecked box for a checkbox whose value is on — tracked as #972."
+      "QualityReason": "Resolved by #972 — the synthesized appearance for an ON checkbox with no /AP now draws the check."
     }
   }
 }
