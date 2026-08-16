@@ -1124,9 +1124,41 @@ public class PdfDocument : IDisposable
         }
         else
         {
-            // Regular object
+            // Regular object.
+            //
+            // A malformed object costs THAT OBJECT, not the document (#973).
+            // pdfium's bug_481363.pdf writes `6 0 obj [ /Lab 4< /WhitePoint ...`
+            // — the stray `4` turns the `<<` into a hex string, and the lexer
+            // hits '/' where a hex digit must be. That object is the page's
+            // /ColorSpace /CS1, so the throw propagated out of a resource
+            // lookup and refused the whole page, while mutool and pdftocairo
+            // both render one.
+            //
+            // Degrading to null is the same posture — and the same reasoning —
+            // as the missing-xref-entry branch above: §7.3.10 already makes an
+            // unresolvable reference the null object, and a page that renders
+            // without one resource is inspectable where a refused document is
+            // not. Only PdfParseException is caught: an OutOfMemoryException or
+            // a bug in our own parser must still surface.
+            //
+            // IsResourceGuard is excluded on purpose. A recursion-depth trip
+            // (#969/#971) is excise defending itself against hostile input, not
+            // evidence that the rest of the file is readable; silently nulling
+            // those objects would let a crafted file delete content at scale
+            // and would replace "maximum nesting depth exceeded" with a
+            // downstream "could not load document catalog".
             _parser.Seek(entry.Offset);
-            var indirectObj = _parser.ParseIndirectObject();
+            PdfIndirectObject indirectObj;
+            try
+            {
+                indirectObj = _parser.ParseIndirectObject();
+            }
+            catch (PdfParseException ex) when (!ex.IsResourceGuard)
+            {
+                _objectCache[objectNumber] = PdfNull.Instance;
+                return PdfNull.Instance;
+            }
+
             obj = indirectObj.Value;
 
             // Apply the security handler before any /Filter pipeline.
