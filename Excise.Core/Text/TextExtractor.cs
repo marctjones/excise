@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Excise.Core.Document;
 using Excise.Core.Fonts;
 using Excise.Core.Parsing;
@@ -14,6 +15,16 @@ public class TextExtractor
 {
     private readonly PdfPage _page;
     private readonly byte[] _contentStream;
+
+    // Hostile-input guard (#982), the twin of ContentStreamParser's (#346).
+    // The array nesting bound (#971) stops unbounded RECURSION but not
+    // unbounded WORK: a large-but-shallow stream — millions of operators, a
+    // huge TJ array, repeated Do chains inside the 64-deep form bound — ran
+    // page.Letters to completion whatever it cost, on the GUI's background
+    // indexing thread, with no timeout to hit (CLAUDE.md Pitfall 3). An
+    // instance field rather than a parameter so the Do re-entry of
+    // ParseContentBytes inherits it.
+    private CancellationToken _cancellationToken;
 
     // Text state
     private double _fontSize = 12;
@@ -199,8 +210,13 @@ public class TextExtractor
     /// <summary>
     /// Extract all letters from the page.
     /// </summary>
-    public IReadOnlyList<Letter> ExtractLetters()
+    /// <param name="cancellationToken">Cooperatively abandons a runaway
+    /// extraction of hostile/huge input (#982), the twin of
+    /// <see cref="Content.ContentStreamParser.Parse"/>'s (#346). Defaults to
+    /// <c>default</c>, so existing callers are unchanged.</param>
+    public IReadOnlyList<Letter> ExtractLetters(CancellationToken cancellationToken = default)
     {
+        _cancellationToken = cancellationToken;
         _letters.Clear();
         ParseContentStream();
         // Restore logical character order for RTL (Arabic/Hebrew) runs (#632).
@@ -497,9 +513,10 @@ public class TextExtractor
     /// <summary>
     /// Extract plain text from the page.
     /// </summary>
-    public string ExtractText()
+    /// <param name="cancellationToken">See <see cref="ExtractLetters"/> (#982).</param>
+    public string ExtractText(CancellationToken cancellationToken = default)
     {
-        var letters = ExtractLetters();
+        var letters = ExtractLetters(cancellationToken);
         var sb = new StringBuilder(letters.Count + 16); // most letters are 1 char (#600)
         foreach (var letter in letters)
         {
@@ -512,9 +529,10 @@ public class TextExtractor
     /// Extract words from the page. Words are sequences of letters
     /// separated by whitespace or large gaps.
     /// </summary>
-    public IReadOnlyList<Word> ExtractWords()
+    /// <param name="cancellationToken">See <see cref="ExtractLetters"/> (#982).</param>
+    public IReadOnlyList<Word> ExtractWords(CancellationToken cancellationToken = default)
     {
-        var letters = ExtractLetters();
+        var letters = ExtractLetters(cancellationToken);
         return BuildWords(letters);
     }
 
@@ -604,6 +622,7 @@ public class TextExtractor
 
         while (pos < content.Length)
         {
+            _cancellationToken.ThrowIfCancellationRequested();
             SkipWhitespaceAndComments(content, ref pos);
             if (pos >= content.Length) break;
 
@@ -1089,6 +1108,7 @@ public class TextExtractor
         {
             while (pos < content.Length)
             {
+                _cancellationToken.ThrowIfCancellationRequested();
                 SkipWhitespaceAndComments(content, ref pos);
                 if (pos >= content.Length || content[pos] == ']')
                 {
@@ -1247,6 +1267,12 @@ public class TextExtractor
         int depth = 1;
         while (pos < content.Length && depth > 0)
         {
+            // The third check point (#982). ContentStreamParser's twin is
+            // ParseDictionary, which checks once per KEY; this walk has no
+            // entries to count, so the check is per character — a multi-MB
+            // dictionary token is one iteration of the operator loop above and
+            // would otherwise be unabandonable.
+            _cancellationToken.ThrowIfCancellationRequested();
             if (pos + 1 < content.Length)
             {
                 if (content[pos] == '<' && content[pos + 1] == '<')
