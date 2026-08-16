@@ -80,6 +80,15 @@ Usage: scripts/run-full-suite.sh [options]
   --fresh            Discard checkpoints for this commit and run everything.
   --list             Print the plan and exit (runs nothing).
   --status           Print per-step done/pending state and exit.
+  --assert-green     Exit 0 only when EVERY checkpointable step of the
+                     --everything plan has a valid checkpoint at exactly this
+                     commit from a CLEAN tree; exit 1 otherwise, listing what
+                     is missing. Never-checkpointed steps (the redaction
+                     gates) are reported but not required — the caller must
+                     re-run those live (scripts/tag-release.sh does). This is
+                     the release-tagging evidence check: CI cannot run the
+                     corpus/GUI/packaging tiers, so the tag demands proof the
+                     local box did.
   --release          Build and test in Release (default: Debug).
   --only <pattern>   Only steps whose name matches this grep -E pattern.
   --everything       Also run the release-only gates (accessibility, automation,
@@ -110,6 +119,7 @@ while [ $# -gt 0 ]; do
         --fresh) FRESH=1; shift ;;
         --list) MODE="list"; shift ;;
         --status) MODE="status"; shift ;;
+        --assert-green) MODE="assert-green"; EVERYTHING=1; shift ;;
         --release) CONFIG="Release"; shift ;;
         --only) ONLY="${2:-}"; shift 2 ;;
         --everything) EVERYTHING=1; shift ;;
@@ -469,6 +479,45 @@ TOTAL="$(wc -l < "$PLAN_FILE" | tr -d ' ')"
 # ---------------------------------------------------------------------------
 # list / status modes
 # ---------------------------------------------------------------------------
+if [ "$MODE" = "assert-green" ]; then
+    # Evidence must come from a clean tree: runner_state_init keys a dirty
+    # tree as "<sha>-dirty", so its markers can never satisfy this check —
+    # but fail explicitly rather than reporting every step "missing".
+    if ! git -C "$ROOT" diff --quiet 2>/dev/null || ! git -C "$ROOT" diff --cached --quiet 2>/dev/null; then
+        say "${R}ASSERT-GREEN FAIL: working tree is dirty.${N}"
+        say "Release evidence must be a full-suite run at a clean, committed HEAD."
+        exit 1
+    fi
+
+    missing=0; ok=0; always=0
+    MISSING_LIST=""
+    while IFS=$'\t' read -r name kind target filter; do
+        [ -n "$name" ] || continue
+        if runner_is_never_checkpointed "$name"; then
+            always=$(( always + 1 ))
+        elif runner_step_should_run "$name"; then
+            missing=$(( missing + 1 ))
+            MISSING_LIST="$MISSING_LIST  $name\n"
+        else
+            ok=$(( ok + 1 ))
+        fi
+    done < "$PLAN_FILE"
+
+    if [ "$missing" -gt 0 ]; then
+        say "${R}ASSERT-GREEN FAIL: $missing of $TOTAL steps have no valid checkpoint at $(git -C "$ROOT" rev-parse --short HEAD).${N}"
+        printf "%b" "$MISSING_LIST"
+        say ""
+        say "Run the full local suite first (restartable — safe to interrupt):"
+        say "  caffeinate -i scripts/run-full-suite.sh --everything --resume 2>&1 | tee -a logs/full-suite.log"
+        exit 1
+    fi
+
+    say "${G}ASSERT-GREEN OK${N}: $ok/$TOTAL steps checkpointed at $(git -C "$ROOT" rev-parse --short HEAD)."
+    say "  $always never-checkpointed step(s) (redaction gates) are NOT covered by"
+    say "  checkpoints and must be re-run live by the caller."
+    exit 0
+fi
+
 if [ "$MODE" = "list" ] || [ "$MODE" = "status" ]; then
     say "${B}Plan${N} ($TOTAL steps, config=$CONFIG)"
     say "State: $(runner_state_dir)"

@@ -2,6 +2,35 @@
 
 Use this checklist before tagging any `v*` release.
 
+## Tagging is evidence-checked — use `scripts/tag-release.sh`
+
+GitHub CI cannot run most of these tiers (the gitignored corpora, the macOS
+packaging/GUI gates, the benchmark and perf-budget gates), so the release tag
+itself demands proof the local box ran them:
+
+```bash
+# 1. The full local run, at the exact commit you will tag (restartable):
+caffeinate -i scripts/run-full-suite.sh --everything --resume 2>&1 | tee -a logs/full-suite.log
+
+# 2. Tag. This verifies every step above is checkpointed at HEAD
+#    (run-full-suite.sh --assert-green), re-runs the never-checkpointed
+#    redaction gates live, checks the cross-platform CI leg for this SHA,
+#    runs verify-doc-claims.sh, and writes Release-Evidence trailers into
+#    the annotated tag:
+scripts/tag-release.sh v3.9.0
+# CI red for a known flake? Record the waiver in the tag instead of skipping:
+scripts/tag-release.sh v3.9.0 --waive-ci "Test (Linux) hang is #939"
+```
+
+A hand-made `git tag vX.Y.Z` carries no `Release-Evidence:` trailer and the
+pre-push hook (`scripts/test-tier.sh --install-hook`) refuses to push it.
+Evidence is commit-keyed: any new commit — even docs — invalidates it, and the
+full run must be repeated at the new HEAD. That is the point: the binary the
+tag describes is the binary that was tested.
+
+The sections below are the manual parts the script cannot judge (release-note
+accuracy, doc claims that need human reading). They still apply.
+
 ## Documentation Accuracy
 
 - Run `scripts/verify-doc-claims.sh`.
