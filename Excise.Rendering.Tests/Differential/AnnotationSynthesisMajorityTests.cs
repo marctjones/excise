@@ -16,9 +16,16 @@ namespace Excise.Rendering.Tests.Differential;
 /// directions — mutool draws Redact/Widget/Sound/FileAttachment and not
 /// Line/Ink/PolyLine/Link; pdftocairo does the reverse. So "match the oracle"
 /// has no meaning here, and the corpus gate's most-inked rule (#883) silently
-/// makes the more permissive renderer the standard. §12.5.5 says a reader
+/// made the more permissive renderer the standard. §12.5.5 says a reader
 /// SHOULD generate an appearance, not that it must, and says nothing about what
 /// a Sound or FileAttachment icon looks like. There is no answer to copy.
+///
+/// The gate has since been fixed to score ink locality by MAJORITY (#932), so
+/// the 21 pages this file is about no longer report as excise defects. The
+/// knowledge below is what that fix was built from; keep it, because the gate
+/// now DEPENDS on excise continuing to sit with the majority — if excise
+/// started synthesizing appearances the majority does not draw, the gate would
+/// not catch it and this file is what would.
 ///
 /// WHAT SETTLED IT
 ///
@@ -60,9 +67,9 @@ public class AnnotationSynthesisMajorityTests
 
     /// <summary>
     /// The subtypes where the majority draws NOTHING. excise must not start
-    /// inventing appearances for them — which is the live risk, because the
-    /// corpus gate scores these pages against the most-inked oracle and so
-    /// permanently reports them as excise defects.
+    /// inventing appearances for them — and since #932 the corpus gate scores
+    /// these pages by majority too, so it would no longer flag it if excise
+    /// did. This is the check that would.
     /// </summary>
     [Theory]
     [InlineData("verapdf-corpus", "veraPDF test suite 6-3-3-t01-fail-d.pdf", "Line")]
@@ -90,7 +97,8 @@ public class AnnotationSynthesisMajorityTests
         Ink(excise).Should().Be(0,
             $"a /{subtype} annotation with no /AP has no appearance the spec defines. Inventing " +
             "one means siding with a single renderer against two others — #889 exists because " +
-            "the corpus gate's most-inked rule makes that look like a fix");
+            "the corpus gate's most-inked rule made that look like a fix, and since #932 the " +
+            "gate scores by majority and would not object at all");
     }
 
     /// <summary>
