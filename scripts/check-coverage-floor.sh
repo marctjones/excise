@@ -18,6 +18,46 @@
 # This file's first version carried that 78.41% as the ci floor and turned CI
 # red for four commits. See tests/coverage-floors.tsv for the full reasoning.
 #
+# WHY THIS IS MEASURED PER-ASSEMBLY-FROM-ITS-OWN-TEST-PROJECT, NOT MERGED
+# ACROSS PROJECTS (#909)
+#
+# Excise.Core's floor tripped on CI run 31918053845 (92.83% vs a 93% floor)
+# for code the #961/#962 fixes added that WAS fully covered — by conservation
+# gates living in Excise.Rendering.Tests, invisible to a coverage run scoped
+# to Excise.Core.Tests. The obvious-looking fix is to merge Rendering.Tests'
+# coverage of Core into the Core number. That was considered and rejected:
+#
+#   * Those cross-project oracle tests are themselves corpus- and
+#     tool-gated — the same environment split this whole file exists to
+#     handle. On the `ci` profile they SKIP, same as Rendering's own
+#     Differential/Corpus classes do. Merging would either merge in coverage
+#     that does not execute where the gate runs (buying nothing on `ci`), or
+#     require running Rendering's full differential suite just to gate Core
+#     (reintroducing the ci/full split inside a single number, which is the
+#     thing profiles exist to avoid doing implicitly).
+#   * It would make the Core floor's meaning depend on which OTHER test
+#     projects happen to exist and what they happen to exercise — coverage
+#     of Excise.Core would silently change definition every time a new
+#     cross-project oracle test project appears, with no line in this file
+#     recording that it happened.
+#
+# The convention instead: every Excise.Core change that is genuinely only
+# covered by an oracle-backed cross-project test ALSO ships a corpus-free,
+# Core-visible unit pin exercising the same code path directly in
+# Core.Tests. This is cheaper than merging collection across projects, and
+# it doubles as the corpus-less fallback that keeps the pin meaningful on a
+# CI runner with no corpora at all. 66bba9ee is the worked example: it added
+# synthetic-PDF unit tests for the #961/#962 fixes directly to Core.Tests
+# (mutation-verified — neutering the fixes fails 8/10 of the new tests) and
+# that alone restored the floor, no collection change required.
+#
+# Read the other direction, this makes the floor tripping in the first place
+# NOT a bug in the ratchet: 92.83% vs 93% is the convention WORKING — it
+# caught Core-invisible coverage and forced the pin that made it Core-visible.
+# A ratchet that had silently merged in the Rendering-side coverage instead
+# would have stayed green and taught nobody that Core.Tests alone no longer
+# proved anything about those lines.
+#
 # Usage:
 #   scripts/check-coverage-floor.sh <cobertura.xml> <profile> <assembly>
 #   scripts/check-coverage-floor.sh coverage/x.xml ci Excise.Rendering
