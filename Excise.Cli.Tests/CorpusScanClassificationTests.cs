@@ -1713,6 +1713,142 @@ public class CorpusScanClassificationTests
         return bitmap;
     }
 
+    // ---- #977: the two descriptions of a page must not drift apart ---------
+
+    /// <summary>
+    /// THE gate. Every contract page that also has a corpus-expectation
+    /// manifest row must pin the same raw status.
+    ///
+    /// These are two independent, checked-in descriptions of what a page does —
+    /// <c>render-quality-scan</c> grades against the contract, the corpus scan
+    /// grades against the TSV — and before this nothing compared them, so a
+    /// page could be green in one and years stale in the other. Three of the
+    /// annotation pages #932 re-pinned had contracts stuck at PASS_ONE while
+    /// the manifest said MISSING_CONTENT, and had been that way since the
+    /// contracts were generated.
+    ///
+    /// It needs no corpus and no renderer: both inputs are versioned test
+    /// metadata, so this runs everywhere, including a corpus-less CI runner.
+    /// </summary>
+    [Fact]
+    public void Contracts_AgreeWithTheCorpusExpectationManifests()
+    {
+        var root = FindRepoRoot();
+        var contractsDir = Path.Combine(root, "test-pdfs", "rendering-contracts");
+        Directory.Exists(contractsDir).Should().BeTrue("rendering quality contracts are versioned test metadata");
+
+        var comparison = RenderProgram.CompareContractsWithExpectationManifests(contractsDir, root);
+
+        comparison.ComparedPages.Should().BeGreaterThan(0,
+            "a comparison that compares nothing would pass forever — the corpus->manifest map in "
+            + "CorpusExpectationManifests must keep matching the corpus directory names contracts use");
+
+        var report = string.Join(Environment.NewLine, comparison.Disagreements.Select(d => d.ToString()));
+        comparison.Disagreements.Should().BeEmpty(
+            "a contract and a manifest row for the same page are two claims about the same thing; "
+            + "fix whichever is stale rather than letting them describe different behaviour:"
+            + Environment.NewLine + report);
+    }
+
+    [Fact]
+    public void CompareContractsWithExpectationManifests_ReportsAStaleStatus()
+    {
+        var (contractsDir, repoRoot) = MakeContractAndManifest(
+            contractStatus: "PASS_ONE",
+            manifestStatus: "PASS");
+        try
+        {
+            var comparison = RenderProgram.CompareContractsWithExpectationManifests(contractsDir, repoRoot);
+
+            comparison.ComparedPages.Should().Be(1);
+            comparison.Disagreements.Should().ContainSingle();
+            comparison.Disagreements[0].ContractStatus.Should().Be("PASS_ONE");
+            comparison.Disagreements[0].ManifestStatus.Should().Be("PASS");
+        }
+        finally
+        {
+            Directory.Delete(repoRoot, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void CompareContractsWithExpectationManifests_ManifestWildcardIsCompatibleWithAnything()
+    {
+        // issue19517.pdf's manifest row is a hand-written '*' because
+        // reference-renderer timeouts make its status load-dependent. A
+        // consistency check that read '*' as a literal status would report it
+        // as a disagreement forever, and the standing pressure would be to
+        // "fix" it by overwriting the wildcard — which regenerating the
+        // manifest has already destroyed twice.
+        var (contractsDir, repoRoot) = MakeContractAndManifest(
+            contractStatus: "PASS_ONE",
+            manifestStatus: "*");
+        try
+        {
+            RenderProgram.CompareContractsWithExpectationManifests(contractsDir, repoRoot)
+                .Disagreements.Should().BeEmpty();
+        }
+        finally
+        {
+            Directory.Delete(repoRoot, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void CompareContractsWithExpectationManifests_ContractsWithNoManifestRowAreCountedNotFailed()
+    {
+        // Most contracts (all-pages contracts, and whole corpora like federal
+        // and ghent that no corpus scan grades) have nothing to compare
+        // against. That is a coverage number, not a failure.
+        var (contractsDir, repoRoot) = MakeContractAndManifest(
+            contractStatus: "PASS",
+            manifestStatus: "PASS",
+            contractPage: 7);
+        try
+        {
+            var comparison = RenderProgram.CompareContractsWithExpectationManifests(contractsDir, repoRoot);
+
+            comparison.ComparedPages.Should().Be(0);
+            comparison.PagesWithoutManifestRow.Should().Be(1);
+            comparison.Disagreements.Should().BeEmpty();
+        }
+        finally
+        {
+            Directory.Delete(repoRoot, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// A throwaway repo root holding one pdfjs contract and one pdfjs
+    /// expectation manifest row for page 1.
+    /// </summary>
+    private static (string ContractsDir, string RepoRoot) MakeContractAndManifest(
+        string contractStatus,
+        string manifestStatus,
+        int contractPage = 1)
+    {
+        var repoRoot = Path.Combine(Path.GetTempPath(), "excise-contract-agreement-" + Guid.NewGuid().ToString("N"));
+        var contractsDir = Path.Combine(repoRoot, "test-pdfs", "rendering-contracts", "pdfjs");
+        Directory.CreateDirectory(contractsDir);
+        Directory.CreateDirectory(Path.Combine(repoRoot, "tests"));
+
+        File.WriteAllText(
+            Path.Combine(contractsDir, "sample.json"),
+            $$"""
+            {
+              "Path": "pdfjs/sample.pdf",
+              "Pages": {
+                "{{contractPage}}": { "ExpectedRawStatus": "{{contractStatus}}" }
+              }
+            }
+            """);
+        File.WriteAllText(
+            Path.Combine(repoRoot, "tests", "corpus-expectations.tsv"),
+            "# comment line\nsample.pdf\t1\t" + manifestStatus + "\n");
+
+        return (Path.Combine(repoRoot, "test-pdfs", "rendering-contracts"), repoRoot);
+    }
+
     private static string FindRepoRoot()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);

@@ -889,6 +889,14 @@ partial class Program
             };
         }
 
+        /// <summary>
+        /// Every contracted page, keyed. Used by the contract/manifest
+        /// agreement check (#977), which needs the pages one by one rather
+        /// than as a manifest.
+        /// </summary>
+        public IEnumerable<KeyValuePair<CorpusPageKey, RenderingQualityPageMatch>> EnumeratePages()
+            => PageContracts;
+
         public IReadOnlyDictionary<string, IReadOnlySet<int>> CreatePageManifest()
         {
             return PageContracts
