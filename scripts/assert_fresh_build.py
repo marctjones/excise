@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import os
 import re
+import hashlib
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -172,6 +173,30 @@ def output_candidates(project: Path, configuration: str) -> list[Path]:
     return candidates
 
 
+def same_bytes(a, b):
+    """Content check used only when mtimes SAY stale.
+
+    A newer timestamp does not imply different code. run-full-suite.sh's
+    corpus-scan steps build tools/Excise.RenderTools, which rebuilds
+    Excise.Core and Excise.Rendering from unchanged sources; every later
+    --no-build step then saw a reference output newer than its copy and
+    refused, even though the bytes were identical. That is a false stale --
+    it failed test-count-rendering and test-count-app on a run where nothing
+    had been edited at all.
+
+    Comparing content only on the mtime-says-stale path keeps the guard's
+    real job intact (an actually-rebuilt dependency still differs and still
+    fails) while removing the false positive, and costs one hash of a file
+    we were about to reject anyway.
+    """
+    try:
+        if a.stat().st_size != b.stat().st_size:
+            return False
+        return hashlib.sha256(a.read_bytes()).digest() == hashlib.sha256(b.read_bytes()).digest()
+    except OSError:
+        return False
+
+
 def newest_output(project: Path, configuration: str) -> tuple[Path | None, float]:
     return newest(output_candidates(project, configuration))
 
@@ -232,7 +257,7 @@ def main() -> int:
             copy, copy_mtime = newest(copied_reference_outputs(root_project, reference_project, args.configuration))
             if copy is None:
                 continue
-            if reference_output_mtime > copy_mtime:
+            if reference_output_mtime > copy_mtime and not same_bytes(reference_output, copy):
                 failures.append(
                     f"{root_project.relative_to(repo_root)} output copy {copy.relative_to(repo_root)} "
                     f"is older than {reference_output.relative_to(repo_root)}. Build first."
