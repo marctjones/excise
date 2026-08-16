@@ -34,6 +34,7 @@ namespace Excise.Core.Content;
 /// </param>
 /// <param name="Spacing">The Tc (+Tw where §9.3.3 allows) contribution, in text space.</param>
 /// <param name="IsVerticalWriting">True when the active font is in vertical writing mode (§9.7.4.3).</param>
+/// <param name="IsCidFont">True when the active font is a composite (Type0/CID) font (§9.7).</param>
 internal readonly record struct WalkedGlyph(
     int CharCode,
     int Cid,
@@ -47,7 +48,8 @@ internal readonly record struct WalkedGlyph(
     string FontName,
     double DisplacementThousandths,
     double Spacing,
-    bool IsVerticalWriting);
+    bool IsVerticalWriting,
+    bool IsCidFont);
 
 /// <summary>
 /// What a <see cref="ContentStreamWalker"/> consumer implements. Implemented by
@@ -111,7 +113,9 @@ internal interface IContentStreamSink
 /// </summary>
 internal sealed class ContentStreamWalker
 {
-    private readonly byte[] _content;
+    // Not readonly: RunNested swaps in a form XObject's bytes and swaps them
+    // back, so one walker (one state machine) covers the whole nested walk.
+    private byte[] _content;
     private readonly PdfPage? _page;
     private int _pos;
 
@@ -157,6 +161,10 @@ internal sealed class ContentStreamWalker
     private readonly Dictionary<PdfDictionary, Text.GlyphUnicodeDecoder> _decoderCache =
         new(ReferenceEqualityComparer.Instance);
     private bool _is2ByteFont;
+    // Composite (Type0/CID) font, per §9.7. Distinct from _is2ByteFont, which
+    // #659's explicitly-uniform-1-byte codespace can turn off on a font that is
+    // still CID-keyed.
+    private bool _isCidFont;
     private PdfDictionary? _cidFontDict;
     private Fonts.CidFontWidths? _cidMetrics;
     private bool _isVerticalWriting;
@@ -213,6 +221,12 @@ internal sealed class ContentStreamWalker
             ? SmallIntegers[value - SmallIntMin]
             : new PdfInteger(value);
 
+    // Resource dictionaries in scope, innermost first (§8.10.1: a form XObject's
+    // /Resources shadow the page's for the duration of its content). EMPTY by
+    // default, which is exactly the page-only lookup ContentStreamParser has
+    // always done; only a sink that walks INTO a form pushes onto it.
+    private readonly Stack<PdfDictionary> _resourcesStack = new();
+
     /// <summary>
     /// Create a walker over the given content bytes.
     /// </summary>
@@ -222,6 +236,52 @@ internal sealed class ContentStreamWalker
     {
         _content = content ?? throw new ArgumentNullException(nameof(content));
         _page = page;
+    }
+
+    /// <summary>
+    /// Bring a resource dictionary into scope for name lookups (fonts,
+    /// XObjects, /Properties). The page's own resources are NOT pushed
+    /// automatically — a sink that wants them says so.
+    /// </summary>
+    public void PushResources(PdfDictionary resources) => _resourcesStack.Push(resources);
+
+    /// <summary>The resource dictionaries in scope, innermost first.</summary>
+    public IEnumerable<PdfDictionary> ActiveResources => _resourcesStack;
+
+    /// <summary>
+    /// Resolve a named XObject through the resources in scope, falling back to
+    /// the page's own — the §8.10.1 lookup a <c>Do</c> operand needs.
+    /// </summary>
+    public PdfObject? ResolveXObject(string name)
+    {
+        foreach (var resources in _resourcesStack)
+        {
+            var xObjectsObj = resources.GetOptional("XObject");
+            if (xObjectsObj == null) continue;
+            if (_page?.Document.Resolve(xObjectsObj) is not PdfDictionary xObjects)
+                continue;
+            var xObject = xObjects.GetOptional(name);
+            if (xObject == null) continue;
+            return _page.Document.Resolve(xObject);
+        }
+
+        return _page?.GetXObject(name);
+    }
+
+    private PdfDictionary? ResolveFont(string fontName)
+    {
+        foreach (var resources in _resourcesStack)
+        {
+            var fontsObj = resources.GetOptional("Font");
+            if (fontsObj == null) continue;
+            if (_page?.Document.Resolve(fontsObj) is not PdfDictionary fonts)
+                continue;
+            var fontObj = fonts.GetOptional(fontName);
+            if (fontObj == null) continue;
+            return _page.Document.Resolve(fontObj) as PdfDictionary;
+        }
+
+        return _page?.GetFont(fontName);
     }
 
     #region State accessors
@@ -296,6 +356,91 @@ internal sealed class ContentStreamWalker
         _cancellationToken = cancellationToken;
         _nestingDepth = 0;
         _pos = 0;
+        WalkOperators(ref sink);
+    }
+
+    /// <summary>
+    /// Walk a NESTED content stream — a form XObject invoked by <c>Do</c>, or an
+    /// annotation's <c>/AP</c> appearance — under §8.10.1 semantics: the form's
+    /// <c>/Matrix</c> is concatenated onto the CTM, its <c>/Resources</c> come
+    /// into scope, and every graphics and text parameter is restored afterwards
+    /// as if the whole invocation were bracketed in <c>q … Q</c>.
+    ///
+    /// <para>This lives in the walker rather than in a sink because it is state
+    /// machinery, and a second copy of state machinery is what #992 exists to
+    /// remove. Nesting DEPTH and cycle detection stay with the caller: whether
+    /// to descend at all is a policy decision, not a parsing one.</para>
+    /// </summary>
+    /// <param name="content">The nested stream's decoded bytes.</param>
+    /// <param name="resources">The nested stream's <c>/Resources</c>, if any.</param>
+    /// <param name="matrix">The nested stream's <c>/Matrix</c>, or null for identity.</param>
+    /// <param name="fromIdentityCtm">
+    /// Start the nested walk from an IDENTITY CTM rather than the current one.
+    /// For an appearance stream reached outside the page's content stream, the
+    /// leftover page CTM is unrelated to it and would only corrupt the positions.
+    /// </param>
+    /// <param name="sink">The consumer, by reference.</param>
+    public void RunNested<TSink>(
+        byte[] content,
+        PdfDictionary? resources,
+        double[]? matrix,
+        bool fromIdentityCtm,
+        ref TSink sink)
+        where TSink : struct, IContentStreamSink
+    {
+        var savedContent = _content;
+        var savedPos = _pos;
+        var savedNesting = _nestingDepth;
+        var savedState = _state;
+        var savedStackDepth = _stateStack.Count;
+        var savedTextState = CaptureTextState();
+        var savedTm = (_tm_a, _tm_b, _tm_c, _tm_d, _tm_e, _tm_f, _tlm_e, _tlm_f);
+        var pushedResources = false;
+
+        try
+        {
+            _state = _state.Clone();
+            if (fromIdentityCtm)
+            {
+                _state.Ctm_a = 1; _state.Ctm_b = 0; _state.Ctm_c = 0;
+                _state.Ctm_d = 1; _state.Ctm_e = 0; _state.Ctm_f = 0;
+            }
+            if (matrix is { Length: >= 6 })
+                _state.MultiplyCtm(matrix[0], matrix[1], matrix[2], matrix[3], matrix[4], matrix[5]);
+
+            if (resources != null)
+            {
+                _resourcesStack.Push(resources);
+                pushedResources = true;
+            }
+
+            _content = content;
+            _pos = 0;
+            _nestingDepth = 0;
+            WalkOperators(ref sink);
+        }
+        finally
+        {
+            if (pushedResources)
+                _resourcesStack.Pop();
+
+            // An unbalanced `q` inside the form must not leak saved states out
+            // of it (§8.10.1 brackets the invocation).
+            while (_stateStack.Count > savedStackDepth)
+                _stateStack.Pop();
+
+            _content = savedContent;
+            _pos = savedPos;
+            _nestingDepth = savedNesting;
+            _state = savedState;
+            RestoreTextState(savedTextState);
+            (_tm_a, _tm_b, _tm_c, _tm_d, _tm_e, _tm_f, _tlm_e, _tlm_f) = savedTm;
+        }
+    }
+
+    private void WalkOperators<TSink>(ref TSink sink)
+        where TSink : struct, IContentStreamSink
+    {
         var operands = new List<PdfObject>();
 
         while (_pos < _content.Length)
@@ -325,7 +470,7 @@ internal sealed class ContentStreamWalker
                 {
                     sink.OnOperator(op, operands);
                     if (TrackState)
-                        ExecuteOperator(op, operands, ref sink);
+                        ExecuteOperator(op, Arguments(op, operands), ref sink);
                     operands.Clear();
                 }
             }
@@ -350,7 +495,68 @@ internal sealed class ContentStreamWalker
 
     #region Operator execution
 
-    private void ExecuteOperator<TSink>(string name, List<PdfObject> operands, ref TSink sink)
+    /// <summary>
+    /// A window onto the tail of the accumulated operand list — the operands an
+    /// operator actually takes.
+    ///
+    /// <para>§7.8.2: an operator's operands are the objects that IMMEDIATELY
+    /// precede it. When a stream leaves extra objects on the list (malformed,
+    /// but it happens), the operator's own operands are the LAST n, not the
+    /// first n. Reading from the front instead silently mis-executes:
+    /// <c>&lt;&lt;/K /V&gt;&gt; (Text) Tj</c> showed the DICTIONARY and dropped
+    /// the string. That was a real divergence — ContentStreamParser lost the
+    /// text and TextExtractor did not, because the extractor's tokenizer
+    /// discarded dictionaries outright — and #980's gate documented it as
+    /// untested rather than pinning it. Consolidating the walk forced the
+    /// question; this answers it in the direction that keeps the text.</para>
+    ///
+    /// <para>The view is EXECUTION-only. The sink still receives the complete
+    /// operand list, so <see cref="ContentStreamWriter"/> round-trips every
+    /// token that was there — trimming what gets recorded would turn a
+    /// mis-execution into data loss on rewrite, which for redaction output is
+    /// the worse failure.</para>
+    /// </summary>
+    private readonly struct OperandView(List<PdfObject> items, int offset)
+    {
+        public int Count => items.Count - offset;
+        public PdfObject this[int index] => items[offset + index];
+    }
+
+    /// <summary>
+    /// Operand counts for the operators whose arity ISO 32000-2 fixes. Absent =
+    /// variable (<c>SC</c>/<c>SCN</c>/<c>sc</c>/<c>scn</c> take as many colour
+    /// components as the space has) and left untrimmed.
+    /// </summary>
+    private static readonly Dictionary<string, int> OperatorArity = new()
+    {
+        ["q"] = 0, ["Q"] = 0, ["BT"] = 0, ["ET"] = 0, ["T*"] = 0,
+        ["n"] = 0, ["h"] = 0, ["W"] = 0, ["W*"] = 0,
+        ["S"] = 0, ["s"] = 0, ["f"] = 0, ["F"] = 0, ["f*"] = 0,
+        ["B"] = 0, ["B*"] = 0, ["b"] = 0, ["b*"] = 0,
+        ["EMC"] = 0, ["BX"] = 0, ["EX"] = 0,
+
+        ["Tj"] = 1, ["TJ"] = 1, ["'"] = 1,
+        ["Tc"] = 1, ["Tw"] = 1, ["Tz"] = 1, ["TL"] = 1, ["Ts"] = 1, ["Tr"] = 1,
+        ["w"] = 1, ["J"] = 1, ["j"] = 1, ["M"] = 1, ["i"] = 1, ["ri"] = 1,
+        ["gs"] = 1, ["Do"] = 1, ["sh"] = 1, ["CS"] = 1, ["cs"] = 1,
+        ["G"] = 1, ["g"] = 1, ["BMC"] = 1, ["MP"] = 1,
+
+        ["Td"] = 2, ["TD"] = 2, ["m"] = 2, ["l"] = 2, ["Tf"] = 2,
+        ["d"] = 2, ["d0"] = 2, ["BDC"] = 2, ["DP"] = 2,
+
+        ["\""] = 3, ["rg"] = 3, ["RG"] = 3,
+
+        ["re"] = 4, ["v"] = 4, ["y"] = 4, ["k"] = 4, ["K"] = 4,
+
+        ["c"] = 6, ["cm"] = 6, ["Tm"] = 6, ["d1"] = 6,
+    };
+
+    private static OperandView Arguments(string name, List<PdfObject> operands) =>
+        OperatorArity.TryGetValue(name, out var arity) && operands.Count > arity
+            ? new OperandView(operands, operands.Count - arity)
+            : new OperandView(operands, 0);
+
+    private void ExecuteOperator<TSink>(string name, OperandView operands, ref TSink sink)
         where TSink : struct, IContentStreamSink
     {
         if (ExecuteGraphicsStateOperator(name, operands)) return;
@@ -362,7 +568,7 @@ internal sealed class ContentStreamWalker
         ExecuteColorOperator(name, operands);
     }
 
-    private bool ExecuteGraphicsStateOperator(string name, List<PdfObject> operands)
+    private bool ExecuteGraphicsStateOperator(string name, OperandView operands)
     {
         switch (name)
         {
@@ -524,7 +730,7 @@ internal sealed class ContentStreamWalker
         }
     }
 
-    private bool ExecuteTextStateOperator(string name, List<PdfObject> operands)
+    private bool ExecuteTextStateOperator(string name, OperandView operands)
     {
         switch (name)
         {
@@ -572,7 +778,7 @@ internal sealed class ContentStreamWalker
         }
     }
 
-    private bool ExecuteTextPositioningOperator(string name, List<PdfObject> operands)
+    private bool ExecuteTextPositioningOperator(string name, OperandView operands)
     {
         switch (name)
         {
@@ -607,7 +813,7 @@ internal sealed class ContentStreamWalker
         }
     }
 
-    private bool ExecuteTextShowingOperator<TSink>(string name, List<PdfObject> operands, ref TSink sink)
+    private bool ExecuteTextShowingOperator<TSink>(string name, OperandView operands, ref TSink sink)
         where TSink : struct, IContentStreamSink
     {
         switch (name)
@@ -674,7 +880,7 @@ internal sealed class ContentStreamWalker
         }
     }
 
-    private bool ExecuteColorOperator(string name, List<PdfObject> operands)
+    private bool ExecuteColorOperator(string name, OperandView operands)
     {
         switch (name)
         {
@@ -717,7 +923,7 @@ internal sealed class ContentStreamWalker
         }
     }
 
-    private void MoveTextPosition(List<PdfObject> operands, bool setLeading)
+    private void MoveTextPosition(OperandView operands, bool setLeading)
     {
         if (operands.Count < 2)
             return;
@@ -885,7 +1091,7 @@ internal sealed class ContentStreamWalker
             charCode, cid, byteLength, unicode,
             x, y, cell, glyphWidth,
             _fontSize, _fontName,
-            displacementThousandths, spacing, _isVerticalWriting);
+            displacementThousandths, spacing, _isVerticalWriting, _isCidFont);
         sink.OnGlyph(in glyph);
 
         // Advance the text position (§9.4.4).
@@ -1257,6 +1463,7 @@ internal sealed class ContentStreamWalker
     private readonly record struct FontState(
         Text.GlyphUnicodeDecoder Decoder,
         bool Is2ByteFont,
+        bool IsCidFont,
         PdfDictionary? CidFontDict,
         Fonts.CidFontWidths? CidMetrics,
         bool IsVerticalWriting,
@@ -1267,13 +1474,14 @@ internal sealed class ContentStreamWalker
         new(ReferenceEqualityComparer.Instance);
 
     private FontState CaptureFontState() => new(
-        _decoder, _is2ByteFont, _cidFontDict, _cidMetrics,
+        _decoder, _is2ByteFont, _isCidFont, _cidFontDict, _cidMetrics,
         _isVerticalWriting, _registeredEncodingCMap, _registeredCidToUnicode);
 
     private void ApplyFontState(in FontState s)
     {
         _decoder = s.Decoder;
         _is2ByteFont = s.Is2ByteFont;
+        _isCidFont = s.IsCidFont;
         _cidFontDict = s.CidFontDict;
         _cidMetrics = s.CidMetrics;
         _isVerticalWriting = s.IsVerticalWriting;
@@ -1285,7 +1493,7 @@ internal sealed class ContentStreamWalker
     {
         if (_page == null) return;
 
-        _currentFont = _page.GetFont(_fontName);
+        _currentFont = ResolveFont(_fontName);
 
         if (_currentFont != null && _fontStateCache.TryGetValue(_currentFont, out var cached))
         {
@@ -1305,6 +1513,7 @@ internal sealed class ContentStreamWalker
 
         _decoder = Text.GlyphUnicodeDecoder.None;
         _is2ByteFont = false;
+        _isCidFont = false;
         _cidFontDict = null;
         _cidMetrics = null;
         _isVerticalWriting = false;
@@ -1316,6 +1525,7 @@ internal sealed class ContentStreamWalker
             // Detect Type0 (composite) fonts
             var subtype = _currentFont.GetNameOrNull("Subtype");
             _is2ByteFont = subtype == "Type0";
+            _isCidFont = _is2ByteFont;
 
             // Embedded /Encoding CMap streams and registered CMap names both
             // drive byte segmentation through the parsed CMap's codespace
