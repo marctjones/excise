@@ -494,6 +494,64 @@ public class AnnotationStructuralOracleTests
     }
 
     /// <summary>
+    /// IMAGE STAMPS, WHICH THE SHARED THEORY CANNOT REACH.
+    ///
+    /// An ImageStamp is a /Stamp, so a document holding one alongside a plain
+    /// Stamp breaks the exactly-one-per-subtype lookup every theory above is
+    /// built on. That is a reason to give it its OWN document — not a reason to
+    /// leave it structurally unverified, which is how a subtype ends up
+    /// checked by nothing but a picture.
+    /// </summary>
+    [Fact]
+    public void ImageStamp_IsSeenByQpdf_WithItsAppearanceSizedToTheRect()
+    {
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not installed");
+
+        // 2x2 RGB, one byte per component — the smallest buffer the authoring
+        // API accepts. What is under test is the annotation structure, not the
+        // image.
+        var pixels = new byte[]
+        {
+            255, 0, 0,   0, 255, 0,
+            0, 0, 255,   255, 255, 255,
+        };
+
+        var expected = Box.Normalize();
+        var tmp = NewPath();
+        try
+        {
+            using (var doc = NewDocument())
+            {
+                doc.AddImageStampAnnotation(1, Box, pixels, 2, 2, "image stamp - keep me");
+                doc.Save(tmp);
+            }
+
+            var all = QpdfReferenceTool.ListAnnotations(tmp);
+            all.Should().NotBeNull("qpdf is available, so it must have produced a readable answer");
+            all!.Where(a => a.Subtype == "Stamp").Should().HaveCount(1,
+                "an INDEPENDENT parser must find exactly one /Stamp — the embedded image XObject " +
+                "must not be mistaken for a second annotation");
+
+            var q = all.Single(a => a.Subtype == "Stamp");
+            q.Left.Should().BeApproximately(expected.Left, Tolerance, "ImageStamp: /Rect left is not where the caller asked");
+            q.Bottom.Should().BeApproximately(expected.Bottom, Tolerance, "ImageStamp: /Rect bottom is not where the caller asked");
+            q.Right.Should().BeApproximately(expected.Right, Tolerance, "ImageStamp: /Rect right is not where the caller asked");
+            q.Top.Should().BeApproximately(expected.Top, Tolerance, "ImageStamp: /Rect top is not where the caller asked");
+
+            (q.Contents ?? "").Should().Contain("keep me", "ImageStamp: /Contents must carry the caller's text");
+
+            q.NormalAppearance.Should().NotBeNull(
+                "an ImageStamp is nothing BUT its appearance — excise has no icon artwork to fall " +
+                "back on, so a lost /AP /N leaves an annotation that draws the caller's image nowhere");
+            q.NormalAppearance!.BBoxWidth.Should().BeApproximately(expected.Width, Tolerance,
+                "ImageStamp: a /BBox of the wrong width means §12.5.5 scales the image into the /Rect distorted");
+            q.NormalAppearance.BBoxHeight.Should().BeApproximately(expected.Height, Tolerance,
+                "ImageStamp: a /BBox of the wrong height means the image lands stretched");
+        }
+        finally { TryDelete(tmp); }
+    }
+
+    /// <summary>
     /// GUARDS THE THEORY DATA. A subtype added to the authoring API but not to
     /// <see cref="Subtypes"/> ships with no independent structural verification
     /// at all — and nothing would say so. Needs no qpdf: it is a question about
@@ -509,10 +567,10 @@ public class AnnotationStructuralOracleTests
             // cannot address it separately. Covered by the /LE assertion in
             // GeometryBearingAnnotations_HaveTheirGeometrySeenByQpdf.
             "Arrow",
-            // Also /Stamp, and a document holding both would break the
-            // exactly-one-per-subtype lookup these tests are built on. Its
-            // appearance is verified by an independent RENDERER in
-            // RemainingAnnotationSubtypesDifferentialTests.
+            // Also /Stamp, so it cannot share a document with the plain Stamp
+            // row without breaking the exactly-one-per-subtype lookup these
+            // theories are built on. It gets its own file instead — see
+            // ImageStamp_IsSeenByQpdf_WithItsAppearanceSizedToTheRect.
             "ImageStamp",
         };
 
