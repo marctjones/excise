@@ -48,9 +48,13 @@ public class JpxSoftMaskRenderTests
         Assert.SkipWhen(fixture == null,
             "No pdf.js S2 fixture at test-pdfs/pdfjs/S2.pdf.");
 
+        // NOT a skip. The csproj carries a build-order ProjectReference to
+        // Excise.Cli precisely so this cannot go missing; if it is missing
+        // anyway, that is a broken build, and skipping would re-create the
+        // silent coverage hole this test exists to close.
         var cli = FindCliAssembly();
-        Assert.SkipWhen(cli == null,
-            "Excise.Cli was not built; this assertion runs out of process by necessity (#985).");
+        cli.Should().NotBeNull(
+            "Excise.Cli must be built — Excise.Rendering.Tests.csproj references it for build order (#985)");
 
         var output = Path.Combine(Path.GetTempPath(), $"excise-jpx-{Guid.NewGuid():N}.png");
         try
