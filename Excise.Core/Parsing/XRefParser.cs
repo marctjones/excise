@@ -663,7 +663,15 @@ public class XRefParser
 
         foreach (Match match in IndirectObjectHeaderRegex.Matches(content))
         {
-            var objectNumber = int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+            // The regex captures a digit RUN, which can be longer than an
+            // Int32 ("99999999999 0 obj"). int.Parse threw a raw
+            // OverflowException out of PdfDocument.Open here; an object header
+            // that cannot name an object is simply not a candidate, so skip it
+            // and keep reconstructing (#974, found by the #960 token fuzzer).
+            if (!int.TryParse(match.Groups[1].Value, NumberStyles.Integer,
+                              CultureInfo.InvariantCulture, out var objectNumber))
+                continue;
+
             var objectStart = match.Index + match.Length;
             var objectEnd = content.IndexOf("endobj", objectStart, StringComparison.Ordinal);
             if (objectEnd < 0)
@@ -676,7 +684,10 @@ public class XRefParser
             if (catalogRef != null)
                 return null;
 
-            var generation = int.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture);
+            if (!int.TryParse(match.Groups[2].Value, NumberStyles.Integer,
+                              CultureInfo.InvariantCulture, out var generation))
+                continue;
+
             catalogRef = new PdfReference(objectNumber, generation);
         }
 
@@ -838,7 +849,21 @@ public class XRefParser
         int w1 = wArray.GetInt(0); // Type field width
         int w2 = wArray.GetInt(1); // Field 2 width
         int w3 = wArray.GetInt(2); // Field 3 width
+
+        // §7.5.8.2: /W entries are non-negative integers, and each names a
+        // field that must fit a long. Unvalidated, a NEGATIVE width walked
+        // dataPos backwards past the start of the buffer and ReadBigEndianLong
+        // threw a raw IndexOutOfRangeException out of PdfDocument.Open — the
+        // per-entry bounds check below could not catch it because it tests the
+        // SUM, which a negative width makes smaller rather than larger
+        // (#974, found by the #960 token fuzzer).
+        if (w1 < 0 || w2 < 0 || w3 < 0 || w1 > 8 || w2 > 8 || w3 > 8)
+            throw new PdfParseException(
+                $"XRef stream /W widths must be non-negative and at most 8 bytes; got [{w1} {w2} {w3}]");
+
         int entrySize = w1 + w2 + w3;
+        if (entrySize <= 0)
+            throw new PdfParseException("XRef stream /W array describes a zero-width entry");
 
         // Get Index array (subsections)
         var indexArray = stream.GetArrayOrNull("Index");
@@ -853,7 +878,13 @@ public class XRefParser
         }
         else
         {
-            // Default: single section from 0 to Size
+            // Default: single section from 0 to Size. /Size is required by
+            // §7.5.8.2 when /Index is absent, and GetInt throws a raw
+            // KeyNotFoundException without it (#974, #960 token fuzzer).
+            if (!stream.ContainsKey("Size"))
+                throw new PdfParseException(
+                    "XRef stream has neither /Index nor the required /Size entry");
+
             int size = stream.GetInt("Size");
             subsections.Add((0, size));
         }

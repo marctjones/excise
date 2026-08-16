@@ -1285,8 +1285,29 @@ public class PdfDocument : IDisposable
     /// </summary>
     private static ObjectStreamCacheEntry MaterializeObjectStream(PdfStream streamObj, byte[] data)
     {
+        // /N and /First are REQUIRED by §7.5.7, and GetInt throws a raw
+        // KeyNotFoundException when they are absent — which escaped
+        // PdfDocument.Open on a mutated object stream (#974, found by the
+        // #960 token fuzzer). An object stream missing its index is
+        // unparseable, so this is a genuine refusal; it just has to be typed.
+        if (!streamObj.ContainsKey("N") || !streamObj.ContainsKey("First"))
+            throw new PdfParseException(
+                "Object stream is missing the required /N or /First entry");
+
         int n = streamObj.GetInt("N"); // Number of objects
         int first = streamObj.GetInt("First"); // Offset to first object
+
+        // /N is attacker-controlled and sizes an allocation. An index entry is
+        // two integer tokens, so it cannot occupy fewer than 2 bytes of the
+        // decoded stream even at its most compact ("0 0"); anything claiming
+        // more entries than that is lying and would otherwise reach
+        // `new[n]` with n up to int.MaxValue — a raw OverflowException
+        // ("Array dimensions exceeded supported range") out of
+        // PdfDocument.Open, or an OOM on a slightly smaller lie
+        // (#974, found by the #960 token fuzzer).
+        if (n < 0 || (long)n * 2 > data.Length)
+            throw new PdfParseException(
+                $"Object stream declares /N {n}, which does not fit its {data.Length}-byte index");
 
         // Parse the index (pairs of object number and byte offset)
         using var parser = new PdfParser(data);
@@ -1381,15 +1402,42 @@ public class PdfDocument : IDisposable
         }
     }
 
+    // Guard against a hostile indirect /Length cycle — the same shape as the
+    // /JBIG2Globals guard above, on a far more reachable path (#969). A stream
+    // whose /Length points at its own object (or at an object whose own
+    // /Length points back) re-enters the parse of the object being parsed;
+    // _objectCache cannot break it because an object is only cached AFTER its
+    // parse completes. Keys are the TARGET object numbers of resolutions
+    // currently in flight.
+    private readonly HashSet<int> _lengthResolutionsInFlight = new();
+
     /// <summary>
     /// Parser callback for resolving indirect /Length refs on stream
     /// dicts. The parser saves and restores the lexer position around
     /// this call so we can safely re-enter <see cref="GetObject(int)"/>.
     /// </summary>
+    /// <remarks>
+    /// Re-entrant resolution of an object number already in flight returns
+    /// null, which drops <c>PdfParser.ParseStream</c> onto its existing
+    /// scan-to-<c>endstream</c> fallback — exactly the path an unresolvable
+    /// /Length already takes. Before this guard the recursion was unbounded
+    /// and killed the PROCESS with a StackOverflowException, which .NET
+    /// cannot catch: no typed exception, no timeout, no corpus
+    /// classification, on a 422-byte document (#969).
+    /// </remarks>
     private PdfObject? ResolveLengthReference(int objectNumber)
     {
-        try { return GetObject(objectNumber); }
-        catch (Exception __ex) when (__ex is not OutOfMemoryException) { return null; }
+        // Locked explicitly rather than relying on the caller: unlike the
+        // JBIG2 guard this runs from inside PdfParser.ParseStream, which is
+        // also reachable from the constructor's trailer/xref-stream parse.
+        // Monitor is reentrant, so nesting inside GetObject's lock is free.
+        lock (_parseLock)
+        {
+            if (!_lengthResolutionsInFlight.Add(objectNumber)) return null;
+            try { return GetObject(objectNumber); }
+            catch (Exception __ex) when (__ex is not OutOfMemoryException) { return null; }
+            finally { _lengthResolutionsInFlight.Remove(objectNumber); }
+        }
     }
 
     /// <summary>
