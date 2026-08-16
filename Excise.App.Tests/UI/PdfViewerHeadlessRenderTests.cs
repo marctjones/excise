@@ -135,16 +135,49 @@ public class PdfViewerHeadlessRenderTests
         AssertLightOpaquePage(visualSurface, "ACC cover offscreen GUI surface");
     }
 
-    [FixedAvaloniaFact(Timeout = 2_400_000)]   // see SoftDeadline below — ours must fire first
+    /// <summary>
+    /// Sharded into four ROWS, not because the work needs splitting but because
+    /// vstest's --blame-hang-timeout measures INACTIVITY — time with no test
+    /// completing — and CI sets it to 120s. As one [Fact] this method swept 144
+    /// cases and reported nothing for the whole run: measured at 1m56s on an
+    /// idle M-series box, i.e. FOUR SECONDS under the threshold at its fastest.
+    /// Any CI runner that is slower or contended crosses it, vstest kills the
+    /// host, and the result is reported as a hang — which is #939's entire
+    /// symptom: five occurrences, both platforms, always green on re-run, and a
+    /// multi-GB dump of a perfectly healthy process.
+    ///
+    /// Four rows keep each report under ~30s, so the inactivity timer restarts
+    /// long before it can fire, and a genuine hang still trips it.
+    ///
+    /// The env-var sharding (EXCISE_GUI_DISPLAY_SHARD_COUNT/INDEX, driven by
+    /// scripts/run-gui-display-sweep.sh) is unchanged and takes precedence: when
+    /// it is set, the script is already partitioning across processes, so only
+    /// row 0 runs and the rest skip rather than re-running the same subset four
+    /// times.
+    /// </summary>
+    [FixedAvaloniaTheory(Timeout = 2_400_000)]   // see SoftDeadline below — ours must fire first
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
     [Trait("Category", "GuiDisplay")]
-    public async Task PdfViewer_RenderingQualitySuite_DisplayBitmapsMatchRenderer()
+    public async Task PdfViewer_RenderingQualitySuite_DisplayBitmapsMatchRenderer(int rowShardIndex)
     {
+        const int RowShardCount = 4;
+        var envShardConfigured = !string.IsNullOrEmpty(
+            Environment.GetEnvironmentVariable("EXCISE_GUI_DISPLAY_SHARD_COUNT"));
+        Assert.SkipWhen(envShardConfigured && rowShardIndex != 0,
+            "EXCISE_GUI_DISPLAY_SHARD_COUNT is set — scripts/run-gui-display-sweep.sh is " +
+            "partitioning across processes, so the row-level shards would duplicate it.");
+
         var repoRoot = FindRepoRoot();
         var includeAllContractPages = Environment.GetEnvironmentVariable("EXCISE_GUI_DISPLAY_FULL_CONTRACTS") == "1";
         var includeAllContractGroups = Environment.GetEnvironmentVariable("EXCISE_GUI_DISPLAY_ALL_CONTRACTS") == "1";
         var requestedContractGroups = ParseContractGroups(Environment.GetEnvironmentVariable("EXCISE_GUI_DISPLAY_CONTRACT_GROUPS"));
-        var shardCount = ParsePositiveEnvironmentInt("EXCISE_GUI_DISPLAY_SHARD_COUNT", defaultValue: 1);
-        var shardIndex = ParseNonNegativeEnvironmentInt("EXCISE_GUI_DISPLAY_SHARD_INDEX", defaultValue: 0);
+        var shardCount = ParsePositiveEnvironmentInt("EXCISE_GUI_DISPLAY_SHARD_COUNT", defaultValue: RowShardCount);
+        var shardIndex = envShardConfigured
+            ? ParseNonNegativeEnvironmentInt("EXCISE_GUI_DISPLAY_SHARD_INDEX", defaultValue: 0)
+            : rowShardIndex;
         if (shardIndex >= shardCount)
             throw new InvalidOperationException("EXCISE_GUI_DISPLAY_SHARD_INDEX must be less than EXCISE_GUI_DISPLAY_SHARD_COUNT.");
         var pageOffset = ParseNonNegativeEnvironmentInt("EXCISE_GUI_DISPLAY_PAGE_OFFSET", defaultValue: 0);
