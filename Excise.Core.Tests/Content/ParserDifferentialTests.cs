@@ -395,7 +395,10 @@ public class ParserDifferentialTests
     [Fact]
     public void OperatorSets_AreIdenticalInBothMachines()
     {
-        var fromParser = ParityFixture.OperatorSet(typeof(ContentStreamParser));
+        // The parser's table moved to ContentStreamWalker with the tokenizer it
+        // belongs to (#995); ContentStreamParser is now a sink over that walker
+        // and owns no operator table of its own.
+        var fromParser = ParityFixture.OperatorSet(typeof(ContentStreamWalker));
         var fromExtractor = ParityFixture.OperatorSet(typeof(TextExtractor));
 
         fromParser.Should().NotBeEmpty();
@@ -428,7 +431,7 @@ public class ParserDifferentialTests
             "MP", "DP", "BMC", "BDC", "EMC", "BX", "EX",
         };
 
-        ParityFixture.OperatorSet(typeof(ContentStreamParser)).Should().Contain(spec);
+        ParityFixture.OperatorSet(typeof(ContentStreamWalker)).Should().Contain(spec);
         ParityFixture.OperatorSet(typeof(TextExtractor)).Should().Contain(spec);
     }
 
