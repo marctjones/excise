@@ -1341,6 +1341,22 @@ internal partial class RenderContext
 
     // Effective font size applied to glyph drawing: raw Tf size scaled by the
     // text matrix's Y-scale (handles the common `1 Tf` + `s 0 0 s ... Tm` idiom).
+    //
+    // KEEPS THE SIGN OF Tf. §9.3.1 permits a negative Tf size and §9.4.4 puts
+    // it straight into the text rendering matrix's scale, so a negative size
+    // mirrors the glyph through the text-space origin — the text comes out
+    // rotated 180°, and the pen marches leftward. Callers must be explicit
+    // about which frame they are in (#970):
+    //
+    //   * TEXT-MATRIX frame (pen advances, TJ adjustments) — use this value
+    //     SIGNED. The leftward march is the effect the spec describes.
+    //   * GLYPH frame (SKFont size, cursor offsets inside the concat'd text
+    //     rendering matrix) — use Math.Abs, because
+    //     CreateTextRenderingMatrix already carries the sign as a basis flip.
+    //     An SKFont built at a negative size draws nothing at all, which is
+    //     what made pdfium's text_form_negative_fontsize.pdf come out with no
+    //     page text while mutool, pdftocairo, pdftoppm and Ghostscript all
+    //     drew it mirrored.
     private float GetEffectiveFontSize()
     {
         var c = _textState.TextMatrixC;
@@ -1349,6 +1365,14 @@ internal partial class RenderContext
         if (yScale < 1e-6f) yScale = 1f;
         return _textState.FontSize * yScale;
     }
+
+    /// <summary>
+    /// −1 when <c>Tf</c> was given a negative size, +1 otherwise. The
+    /// mirroring half of a negative font size lives in
+    /// <see cref="CreateTextRenderingMatrix"/>; this is what the glyph-frame
+    /// call sites multiply back in when they hand a value to the text matrix.
+    /// </summary>
+    private float GetFontSizeSign() => _textState.FontSize < 0f ? -1f : 1f;
 
     // Horizontal-to-vertical aspect ratio of the text matrix. Most PDFs use a
     // uniform Tm (X-scale == Y-scale) so this is 1. When they don't — e.g. a
@@ -1387,12 +1411,22 @@ internal partial class RenderContext
         var basisC = c / (yScale * verticalSign);
         var basisD = d / (yScale * verticalSign);
 
+        // A NEGATIVE Tf SIZE MIRRORS THE GLYPH THROUGH THE TEXT-SPACE ORIGIN
+        // (§9.3.1, §9.4.4: the size scales the text rendering matrix, sign
+        // included). Flipping BOTH basis vectors is that point reflection —
+        // the text reads rotated 180°, which is what every reference renderer
+        // draws for pdfium's text_form_negative_fontsize.pdf. Carrying it here
+        // rather than at each draw call means the simple, byte-cmap and CID
+        // paths all inherit it, and it keeps the SKFont size positive (a
+        // negative SKFont size draws nothing). #970
+        var sizeSign = GetFontSizeSign();
+
         return new SKMatrix(
-            basisA * horizontalScale,
-            basisC * ySign,
+            basisA * horizontalScale * sizeSign,
+            basisC * ySign * sizeSign,
             x,
-            basisB * horizontalScale,
-            basisD * ySign,
+            basisB * horizontalScale * sizeSign,
+            basisD * ySign * sizeSign,
             y,
             0,
             0,
@@ -1657,7 +1691,13 @@ internal partial class RenderContext
             return;
         var currentFont = _currentFont!;
 
-        var effectiveSize = GetEffectiveFontSize();
+        // GLYPH FRAME from here down: everything below draws inside the matrix
+        // CreateTextRenderingMatrix builds, and that matrix already carries the
+        // sign of a negative Tf size as a basis flip (#970). So the magnitude
+        // is what the SKFont and the local cursor want; sizeSign is multiplied
+        // back in only where a value leaves for the TEXT-MATRIX frame.
+        var sizeSign = GetFontSizeSign();
+        var effectiveSize = Math.Abs(GetEffectiveFontSize());
         var xyRatio = GetTextMatrixXYRatio();
         var mode = _textState.RenderMode;
         var fillText = TextRenderModeFills(mode);
@@ -1799,8 +1839,12 @@ internal partial class RenderContext
                         }
                     }
 
+                    // sizeSign on the SPACING term only: the glyph-width term
+                    // is already in the mirrored frame, while Tc/Tw are added
+                    // after the Tfs multiply in §9.4.4 and so keep pushing in
+                    // the text's nominal direction. No-op when Tf is positive.
                     float spacing = tc + (sourceBytes[i] == 0x20 ? tw : 0f);
-                    cursor += (w / 1000f + spacing) * effectiveSize;
+                    cursor += (w / 1000f + spacing * sizeSign) * effectiveSize;
                 }
                 AddPendingTextClipPath(localClipPath, x, y, th, ySign);
                 localClipPath?.Dispose();
@@ -1866,7 +1910,7 @@ internal partial class RenderContext
                             ? currentFont.Widths[idx]
                             : currentFont.MissingWidth;
                         float spacing = (tcSpacing + (sourceBytes[i] == 0x20 ? twSpacing : 0f)) * yScale;
-                        cursor += (w / 1000f) * effectiveSize + spacing;
+                        cursor += (w / 1000f) * effectiveSize + spacing * sizeSign;
                     }
                 }
 
@@ -1995,7 +2039,13 @@ internal partial class RenderContext
             widthInFontUnits = font.MeasureText(text, measurePaint);
         }
 
-        var width = widthInFontUnits * xyRatio;
+        // BACK TO THE TEXT-MATRIX FRAME. §9.4.4:
+        //     tx = ((w0 − Tj/1000)·Tfs + Tc + Tw)·Th
+        // Only the glyph-width term is multiplied by Tfs, so only it carries
+        // the sign of a negative font size; Tc and Tw are added afterwards and
+        // keep pushing the nominal way. sizeSign is +1 for every ordinary
+        // document, so this line is a no-op there. #970
+        var width = widthInFontUnits * xyRatio * sizeSign;
         var charCount = sourceBytes?.Length ?? text.Length;
         var spaceCount = sourceBytes != null
             ? sourceBytes.Count(b => b == 0x20)
@@ -2775,12 +2825,18 @@ internal partial class RenderContext
             return;
 
         var count = cids.Length;
-        var effectiveSize = GetEffectiveFontSize();
+        // Glyph frame, same rule as RenderText: the mirroring half of a
+        // negative Tf size is already in CreateTextRenderingMatrix (#970), so
+        // the magnitude is what the font and the cursor want here.
+        var sizeSign = GetFontSizeSign();
+        var effectiveSize = Math.Abs(GetEffectiveFontSize());
 
         var isVertical = currentFont.CidIsVertical;
         // Tc/Tw are unscaled text-space units; local blob units carry the
-        // text matrix's Y scale (effectiveSize = Tfs·yScale), so convert.
-        var spacingScale = _textState.FontSize != 0f ? effectiveSize / _textState.FontSize : 1f;
+        // text matrix's Y scale (effectiveSize = |Tfs|·yScale), so convert.
+        // Both sides are magnitudes so the ratio stays +yScale.
+        var absFontSize = Math.Abs(_textState.FontSize);
+        var spacingScale = absFontSize != 0f ? effectiveSize / absFontSize : 1f;
         using var font = CreateTextFont(currentFont.Typeface!, effectiveSize);
         // Two parallel arrays: CIDs (used for /W width lookup, which is
         // keyed by CID per spec) and GIDs (what Skia actually draws). The
@@ -2848,7 +2904,7 @@ internal partial class RenderContext
                 var spacing = _textState.CharSpacing;
                 if (decoded![i].ByteLength == 1 && decoded[i].Code == 32)
                     spacing += _textState.WordSpacing;
-                cursor += -(ty + spacing * spacingScale);
+                cursor += -(ty + spacing * spacingScale * sizeSign);
             }
             else
             {
@@ -2877,7 +2933,7 @@ internal partial class RenderContext
                 var spacing = _textState.CharSpacing;
                 if (decoded != null && decoded[i].ByteLength == 1 && decoded[i].Code == 32)
                     spacing += _textState.WordSpacing;
-                cursor += pdfGlyphWidth + spacing * spacingScale;
+                cursor += pdfGlyphWidth + spacing * spacingScale * sizeSign;
             }
         }
 
@@ -2992,7 +3048,7 @@ internal partial class RenderContext
             // Vertical: `cursor` accumulated the full downward displacement
             // (−Σ(w1y + Tc + Tw)) in device-scaled units — move the text
             // matrix down its Y basis by it. No Th in vertical mode (§9.4.4).
-            AdvanceTextMatrixY(-cursor);
+            AdvanceTextMatrixY(-cursor * sizeSign);
         }
         else
         {
@@ -3003,7 +3059,9 @@ internal partial class RenderContext
             // tx = ((w0/1000)·Tfs + Tc + Tw)·Th). Reusing cursor instead of
             // re-summing /W widths keeps drawn glyph positions and the pen
             // advance provably in sync. #734
-            var width = cursor * xyRatio;
+            // sizeSign returns the accumulated glyph-frame cursor to the text
+            // matrix's frame (#970); +1 for every ordinary document.
+            var width = cursor * xyRatio * sizeSign;
             width *= _textState.HorizontalScale / 100.0f;
             AdvanceTextMatrixX(width);
         }

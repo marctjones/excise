@@ -1222,6 +1222,7 @@ namespace Excise.Core.Parsing
     {
         public PdfParseException(string message) { }
         public PdfParseException(string message, System.Exception inner) { }
+        public bool IsResourceGuard { get; init; }
     }
     public class PdfParser : System.IDisposable
     {
