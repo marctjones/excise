@@ -122,11 +122,21 @@ public static class TextSelectionEngine
     /// scattered form grids retain producer order. <see cref="JoinText(IReadOnlyList{Letter}, WhitespaceMode)"/>
     /// supplies geometric spaces and line breaks in either case.
     /// </summary>
+    /// <summary>Shared empty result for the boundaries out-parameter: callers
+    /// only read it, and allocating a list per page just to say "none" is the
+    /// kind of churn #966 was about.</summary>
+    private static readonly List<double> EmptyBoundaries = new();
+
     internal static List<Letter> SortPageTextOrder(IEnumerable<Letter> letters)
     {
         var all = letters as IReadOnlyList<Letter> ?? letters.ToList();
-        return DeterminePageTextOrder(all) == PageTextOrderStrategy.ColumnAware
-            ? SortStructuredPageText(all)
+        // Reuse the boundaries the classifier already computed instead of
+        // deriving them a second time (#966). DetectColumnBoundaries is not
+        // cheap — it groups every letter into lines and sweeps them — and
+        // running it twice per page was pure duplicate work, invisible because
+        // both calls return the same answer.
+        return DeterminePageTextOrder(all, out var boundaries) == PageTextOrderStrategy.ColumnAware
+            ? SortStructuredPageText(all, boundaries)
             : all.ToList();
     }
 
@@ -136,7 +146,12 @@ public static class TextSelectionEngine
     /// can pin the verdict independently of the final joined string.
     /// </summary>
     internal static PageTextOrderStrategy DeterminePageTextOrder(IReadOnlyList<Letter> letters)
+        => DeterminePageTextOrder(letters, out _);
+
+    internal static PageTextOrderStrategy DeterminePageTextOrder(
+        IReadOnlyList<Letter> letters, out List<double> boundaries)
     {
+        boundaries = EmptyBoundaries;
         if (letters.Count < MinimumStructuredPageLetters)
             return PageTextOrderStrategy.RawStream;
 
@@ -149,7 +164,8 @@ public static class TextSelectionEngine
             return PageTextOrderStrategy.RawStream;
         }
 
-        if (GroupIntoLines(letters).Count < MinimumStructuredPageLines)
+        var visualLines = GroupIntoLines(letters);
+        if (visualLines.Count < MinimumStructuredPageLines)
             return PageTextOrderStrategy.RawStream;
 
         // Whole-page reordering is deliberately narrower than selection
@@ -157,7 +173,7 @@ public static class TextSelectionEngine
         // excludes tables, form grids, and mixed/nested layouts. Repeated
         // right-to-left crossings prove the producer actually interleaved the
         // columns; an already column-major stream needs no intervention.
-        var boundaries = DetectColumnBoundaries(letters);
+        boundaries = DetectColumnBoundaries(letters, visualLines);
         if (boundaries.Count != 1)
             return PageTextOrderStrategy.RawStream;
 
@@ -238,9 +254,10 @@ public static class TextSelectionEngine
     /// extraction needs the extractor's logical order (ligatures, RTL repair,
     /// overlapping runs) preserved. Reorder coherent runs as units instead.
     /// </summary>
-    private static List<Letter> SortStructuredPageText(IReadOnlyList<Letter> letters)
+    private static List<Letter> SortStructuredPageText(
+        IReadOnlyList<Letter> letters, List<double>? knownBoundaries = null)
     {
-        var boundaries = DetectColumnBoundaries(letters);
+        var boundaries = knownBoundaries ?? DetectColumnBoundaries(letters);
         if (boundaries.Count == 0) return letters.ToList();
 
         var lines = GroupPageRunsIntoLines(BuildPageTextRuns(letters));
@@ -308,6 +325,7 @@ public static class TextSelectionEngine
             }
             current.Add(letter);
         }
+        foreach (var run in runs) run.Seal();
         return runs;
     }
 
@@ -345,21 +363,58 @@ public static class TextSelectionEngine
         return lines;
     }
 
+    /// <summary>
+    /// A run's geometry is FIXED at construction, so it is computed once here
+    /// rather than on every property read (#966).
+    ///
+    /// Each of these was a LINQ pass over the run's letters, evaluated per
+    /// access — and the callers read them inside an O(runs x lines) grouping
+    /// loop and an O(n log n) sort comparator. On a dense 6-page form that was
+    /// 33 MB of enumerator and closure garbage for ONE page, and it is why
+    /// page.Text allocated 18x what page.Letters did. The values are
+    /// identical; only the number of times they are computed changes.
+    ///
+    /// The list is captured, not copied: BuildPageTextRuns appends to it AFTER
+    /// constructing the run, so the fields are filled by Seal() once the run is
+    /// complete. A run is never read before that.
+    /// </summary>
     private sealed class PageTextRun
     {
         internal PageTextRun(List<Letter> letters) => Letters = letters;
 
         internal List<Letter> Letters { get; }
-        internal double Left => Letters.Min(letter => letter.GlyphRectangle.Left);
-        internal double Right => Letters.Max(letter => letter.GlyphRectangle.Right);
-        internal double Bottom => Letters.Min(letter => letter.GlyphRectangle.Bottom);
-        internal double Top => Letters.Max(letter => letter.GlyphRectangle.Top);
+
+        internal void Seal()
+        {
+            double left = double.PositiveInfinity, right = double.NegativeInfinity;
+            double bottom = double.PositiveInfinity, top = double.NegativeInfinity;
+            int letterCount = 0, alnum = 0;
+            foreach (var letter in Letters)
+            {
+                var r = letter.GlyphRectangle;
+                if (r.Left < left) left = r.Left;
+                if (r.Right > right) right = r.Right;
+                if (r.Bottom < bottom) bottom = r.Bottom;
+                if (r.Top > top) top = r.Top;
+                foreach (var ch in letter.Value)
+                {
+                    if (char.IsLetter(ch)) letterCount++;
+                    if (char.IsLetterOrDigit(ch)) alnum++;
+                }
+            }
+            Left = left; Right = right; Bottom = bottom; Top = top;
+            LetterCount = letterCount; AlphanumericCount = alnum;
+        }
+
+        internal double Left { get; private set; }
+        internal double Right { get; private set; }
+        internal double Bottom { get; private set; }
+        internal double Top { get; private set; }
         internal double CentreX => (Left + Right) * 0.5;
         internal double CentreY => (Bottom + Top) * 0.5;
         internal double Height => Top - Bottom;
-        internal int LetterCount => Letters.Sum(letter => letter.Value.Count(char.IsLetter));
-        internal int AlphanumericCount => Letters.Sum(
-            letter => letter.Value.Count(char.IsLetterOrDigit));
+        internal int LetterCount { get; private set; }
+        internal int AlphanumericCount { get; private set; }
     }
 
     /// <summary>
@@ -463,11 +518,22 @@ public static class TextSelectionEngine
     /// candidate gutter at all).
     /// </summary>
     internal static List<double> DetectColumnBoundaries(IReadOnlyList<Letter> letters)
+        => DetectColumnBoundaries(letters, null);
+
+    /// <summary>
+    /// <paramref name="knownLines"/> lets a caller that has ALREADY grouped
+    /// these same letters into lines hand that work over instead of paying for
+    /// it twice (#966). GroupIntoLines sorts every letter and builds a list per
+    /// line; on a 126-page instruction booklet doing it twice per page was
+    /// pure duplicate cost, invisible because both calls agree.
+    /// </summary>
+    internal static List<double> DetectColumnBoundaries(
+        IReadOnlyList<Letter> letters, List<List<Letter>>? knownLines)
     {
         var empty = new List<double>();
         if (letters.Count < 8) return empty;
 
-        var lines = GroupIntoLines(letters);
+        var lines = knownLines ?? GroupIntoLines(letters);
         if (lines.Count < 4) return empty;
 
         var gutterThreshold = EstimateColumnGap(letters);
@@ -619,20 +685,61 @@ public static class TextSelectionEngine
             .ToList();
 
         var lines = new List<List<Letter>>();
+
+        // Bucket line indices by quantised centre-Y so a letter examines only
+        // the lines that could possibly be within tolerance, instead of every
+        // line found so far (#966).
+        //
+        // THIS PRESERVES THE ORIGINAL SEMANTICS EXACTLY, which matters because
+        // this grouping feeds reading order and therefore redaction. The rule
+        // was "first line in insertion order whose centre-Y is within
+        // 0.5 * min(fontSize) of this letter". Tolerance can never exceed
+        // maxTol = 0.5 * (largest font size on the page), and the 4.0 fallback
+        // for a zero font size, so a bucket of that width plus its two
+        // neighbours is guaranteed to contain every line the linear scan could
+        // have matched. Candidates are then examined in ASCENDING LINE INDEX,
+        // which is insertion order — so "first match wins" picks the same line
+        // the scan did. Anything outside those buckets was unreachable, not
+        // merely unlikely.
+        double maxTol = 4.0;
+        foreach (var l in ordered)
+            if (l.FontSize > 0) maxTol = Math.Max(maxTol, 0.5 * l.FontSize);
+        var bucketOf = new Dictionary<long, List<int>>();
+        var candidates = new List<int>();
+
         foreach (var l in ordered)
         {
             var cy = (l.GlyphRectangle.Bottom + l.GlyphRectangle.Top) * 0.5;
-            List<Letter>? hostLine = null;
-            foreach (var line in lines)
+            var key = (long)Math.Floor(cy / maxTol);
+
+            candidates.Clear();
+            for (var k = key - 1; k <= key + 1; k++)
+                if (bucketOf.TryGetValue(k, out var bucket))
+                    candidates.AddRange(bucket);
+            candidates.Sort();
+
+            int hostIndex = -1;
+            foreach (var idx in candidates)
             {
-                var sample = line[0];
+                var sample = lines[idx][0];
                 var sampleCy = (sample.GlyphRectangle.Bottom + sample.GlyphRectangle.Top) * 0.5;
                 var tol = 0.5 * Math.Min(l.FontSize, sample.FontSize);
                 if (tol <= 0) tol = 4.0;
-                if (Math.Abs(sampleCy - cy) <= tol) { hostLine = line; break; }
+                if (Math.Abs(sampleCy - cy) <= tol) { hostIndex = idx; break; }
             }
-            if (hostLine != null) hostLine.Add(l);
-            else lines.Add(new List<Letter> { l });
+
+            if (hostIndex >= 0)
+            {
+                lines[hostIndex].Add(l);
+            }
+            else
+            {
+                lines.Add(new List<Letter> { l });
+                var newIndex = lines.Count - 1;
+                if (!bucketOf.TryGetValue(key, out var bucket))
+                    bucketOf[key] = bucket = new List<int>();
+                bucket.Add(newIndex);
+            }
         }
 
         return lines;
