@@ -202,6 +202,17 @@ run_t0() {
     # started. ~10s (a text index over .cs/.axaml), ratcheted against
     # tests/unwired-api-baseline.tsv so only NEW entries fail.
     run_step "unwired-api" scripts/check-unwired-api.sh --quiet
+    # #957: tests/format-compatibility-suite.json is a schema'd design tracker
+    # (PDF versions, storage formats, feature workflows, oracles, known gaps).
+    # Nothing referenced it before this gate, so a row could be hand-edited to
+    # "implemented" without any real test existing. Static/textual (no tools,
+    # seconds): every implemented/partial row's "evidence" entries must exist
+    # and contain a runnable [Fact]/[Theory]-family test. Already runs as part
+    # of "core-tests" above; this step gives it its own named, always-run
+    # signal in t0 output, matching how the other self-contained gates here
+    # are surfaced individually.
+    run_step "format-compat-drift-gate" dotnet test Excise.Core.Tests --no-build -c Debug \
+        --filter "FullyQualifiedName~FormatCompatibilitySuiteEvidenceGateTests" --logger "console;verbosity=normal"
 }
 
 run_t1() {
