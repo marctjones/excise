@@ -1449,6 +1449,27 @@ internal sealed class ContentStreamWalker
         }
         if (gsDict.ContainsKey("AIS")) _state.AlphaIsShape = gsDict.GetBool("AIS", _state.AlphaIsShape);
         if (gsDict.ContainsKey("SA"))  _state.StrokeAdjustment = gsDict.GetBool("SA", _state.StrokeAdjustment);
+
+        // §8.4.5 Table 58: /Font [ <font-ref> <size> ] sets exactly the two text
+        // state parameters `Tf` sets. SkiaRenderer implemented it and NEITHER
+        // content parser did (#990), so for a producer that selects fonts
+        // through `gs` the renderer drew one font while the text model measured
+        // glyph widths and decoded codes through the previous one — wrong glyph
+        // cells (the geometry redaction removes on) and the wrong /ToUnicode,
+        // with no differential able to see it because both parsers were wrong
+        // the same way. Implemented once, here, because there is now one place
+        // for it to live.
+        if (gsDict.ContainsKey("Font") && _page != null &&
+            _page.Document.Resolve(gsDict.GetOptional("Font") ?? PdfNull.Instance)
+                is PdfArray fontEntry && fontEntry.Count >= 2 &&
+            _page.Document.Resolve(fontEntry[0]) is PdfDictionary gsFont)
+        {
+            // The resource NAME is deliberately left alone: this font was
+            // reached through the ExtGState, not through the /Font resource
+            // dictionary, so it has no name to report.
+            _fontSize = GetNumber(_page.Document.Resolve(fontEntry[1]));
+            SelectFont(gsFont);
+        }
     }
 
     /// <summary>
@@ -1492,8 +1513,18 @@ internal sealed class ContentStreamWalker
     private void LoadFont()
     {
         if (_page == null) return;
+        SelectFont(ResolveFont(_fontName));
+    }
 
-        _currentFont = ResolveFont(_fontName);
+    /// <summary>
+    /// Make <paramref name="font"/> the active font and derive everything that
+    /// depends on it. Reached from <c>Tf</c> (by resource name) and from an
+    /// ExtGState <c>/Font</c> entry (by direct reference, §8.4.5 Table 58) —
+    /// two spellings of the same operation, sharing one implementation.
+    /// </summary>
+    private void SelectFont(PdfDictionary? font)
+    {
+        _currentFont = font;
 
         if (_currentFont != null && _fontStateCache.TryGetValue(_currentFont, out var cached))
         {
