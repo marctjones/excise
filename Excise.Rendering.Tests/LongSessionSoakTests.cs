@@ -44,8 +44,30 @@ namespace Excise.Rendering.Tests;
 /// tier; nightly-corpus is still status: planned with primaryCommand: null,
 /// so t1 is where this actually runs.</para>
 /// </summary>
+/// <summary>
+/// Runs ALONE. xunit.runner.json sets parallelizeTestCollections with
+/// maxParallelThreads 4, and this test measures GC.GetTotalMemory, which is
+/// PROCESS-WIDE — so up to three other collections were allocating into its
+/// "growth" number. Measured in isolation it reports 80-155 KB; measured
+/// inside a full-suite chunk alongside neighbours it reported 5,515 KB and
+/// failed a threshold set at 1 MB.
+///
+/// This is the same defect #953 fixed in the Core corpus memory tripwire,
+/// arriving independently in a test written before that fix existed. The
+/// lesson generalises: ANY process-wide measurement in a parallelised test
+/// project is measuring its neighbours too. Isolate it or make it reproduce;
+/// do not raise the threshold, which just moves the noise floor.
+/// </summary>
+[CollectionDefinition(LongSessionSoakTests.NonParallelCollection, DisableParallelization = true)]
+public sealed class LongSessionSoakCollection
+{
+}
+
+[Collection(LongSessionSoakTests.NonParallelCollection)]
 public class LongSessionSoakTests
 {
+    internal const string NonParallelCollection = "long-session-soak (non-parallel, #953-class)";
+
     private readonly ITestOutputHelper _out;
 
     public LongSessionSoakTests(ITestOutputHelper output) => _out = output;

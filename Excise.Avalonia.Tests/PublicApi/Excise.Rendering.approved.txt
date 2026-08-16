@@ -116,15 +116,32 @@ namespace Excise.Rendering.Differential
     }
     public sealed class QpdfAnnotation : System.IEquatable<Excise.Rendering.Differential.QpdfAnnotation>
     {
-        public QpdfAnnotation(string Subtype, double Left, double Bottom, double Right, double Top, int? VertexCount, int? InkStrokeCount, string? EndLineEnding) { }
+        public QpdfAnnotation(string Subtype, double Left, double Bottom, double Right, double Top, int? VertexCount, int? InkStrokeCount, string? EndLineEnding, System.Collections.Generic.IReadOnlyList<double>? QuadPoints, string? Contents, System.Collections.Generic.IReadOnlyList<double>? Vertices, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<double>>? InkStrokes, System.Collections.Generic.IReadOnlyList<double>? LineEndpoints, Excise.Rendering.Differential.QpdfAppearance? NormalAppearance) { }
         public double Bottom { get; init; }
+        public string? Contents { get; init; }
         public string? EndLineEnding { get; init; }
         public int? InkStrokeCount { get; init; }
+        public System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<double>>? InkStrokes { get; init; }
         public double Left { get; init; }
+        public System.Collections.Generic.IReadOnlyList<double>? LineEndpoints { get; init; }
+        public Excise.Rendering.Differential.QpdfAppearance? NormalAppearance { get; init; }
+        public System.Collections.Generic.IReadOnlyList<double>? QuadPoints { get; init; }
         public double Right { get; init; }
         public string Subtype { get; init; }
         public double Top { get; init; }
         public int? VertexCount { get; init; }
+        public System.Collections.Generic.IReadOnlyList<double>? Vertices { get; init; }
+    }
+    public sealed class QpdfAppearance : System.IEquatable<Excise.Rendering.Differential.QpdfAppearance>
+    {
+        public QpdfAppearance(double BBoxLeft, double BBoxBottom, double BBoxRight, double BBoxTop, System.Collections.Generic.IReadOnlyList<double>? Matrix) { }
+        public double BBoxBottom { get; init; }
+        public double BBoxHeight { get; }
+        public double BBoxLeft { get; init; }
+        public double BBoxRight { get; init; }
+        public double BBoxTop { get; init; }
+        public double BBoxWidth { get; }
+        public System.Collections.Generic.IReadOnlyList<double>? Matrix { get; init; }
     }
     public enum QpdfPasswordStatus
     {
