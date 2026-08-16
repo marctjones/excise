@@ -66,7 +66,7 @@ public class PdfATests
     [Theory]
     [InlineData(PdfAConformance.PdfA1B, "1b")]
     [InlineData(PdfAConformance.PdfA2B, "2b")]
-    public void PdfA_Output_IsConformant_PerVeraPdf(PdfAConformance conformance, string flavour)
+    public async Task PdfA_Output_IsConformant_PerVeraPdf(PdfAConformance conformance, string flavour)
     {
         var verapdf = FindVeraPdf();
         Assert.SkipWhen(verapdf is null, "veraPDF not installed (~/verapdf/verapdf or PATH)");
@@ -98,8 +98,8 @@ public class PdfATests
             {
                 try { proc.Kill(entireProcessTree: true); } catch { /* gone */ }
             }
-            string report = stdoutTask.GetAwaiter().GetResult();
-            _ = stderrTask.GetAwaiter().GetResult();
+            string report = await stdoutTask;
+            _ = await stderrTask;
 
             report.Should().Contain("isCompliant=\"true\"",
                 $"the builder's PdfA({conformance}) output must be PDF/A-{flavour} conformant. Report:\n" +

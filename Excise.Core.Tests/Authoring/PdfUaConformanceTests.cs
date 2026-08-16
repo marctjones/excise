@@ -32,7 +32,7 @@ public class PdfUaConformanceTests
     }
 
     [Fact]
-    public void TaggedBuilderOutput_IsPdfUa1Compliant()
+    public async Task TaggedBuilderOutput_IsPdfUa1Compliant()
     {
         var verapdf = FindVeraPdf();
         Assert.SkipWhen(verapdf is null, "veraPDF not installed (~/verapdf/verapdf or PATH)");
@@ -78,8 +78,8 @@ public class PdfUaConformanceTests
             {
                 try { proc.Kill(entireProcessTree: true); } catch { /* gone */ }
             }
-            string report = stdoutTask.GetAwaiter().GetResult();
-            _ = stderrTask.GetAwaiter().GetResult();
+            string report = await stdoutTask;
+            _ = await stderrTask;
 
             report.Should().Contain("isCompliant=\"true\"",
                 "the builder's Tagged() output must be PDF/UA-1 conformant. Report:\n" +
