@@ -8,10 +8,10 @@
   "Notes": "Fresh 2026-07-03 verification shows this malformed non-embedded Identity-H fixture is a reference-disagreement case, not an active pdfe rendering defect. All available references degrade text differently; pdfe preserves the date fields and remains within the accepted MuPDF comparison band.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "PASS_ONE",
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
       "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
-      "PixelAgreement": "MATCHES_TARGET",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
       "ReferenceSituation": "REFS_DISAGREE",
       "RootCause": "MALFORMED_IDENTITY_H_FONT_REFERENCE_DISAGREEMENT",
       "Target": {
@@ -21,7 +21,7 @@
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "pdfe is acceptable for this malformed Identity-H fallback fixture: all references disagree, and pdfe preserves the clearly meaningful date fields while matching the accepted reference band.",
+      "QualityReason": "pdfe is acceptable for this malformed Identity-H fallback fixture: all references disagree, and pdfe preserves the clearly meaningful date fields while matching the accepted reference band. Re-measured 2026-08-16 (#977): raw status is PASS - excise agrees with 3 of the 3 oracles that rendered (closest mutool, diffFraction 0.0407). The PASS_ONE pin predates the majority-agreement PASS rule (#865); the corpus expectation manifest has recorded PASS since.",
       "Notes": "Reverified with fresh pdfe, MuPDF, Poppler, and Ghostscript contact sheet on 2026-07-03; no active medium-severity pdfe renderer fix remains for this fixture."
     }
   }

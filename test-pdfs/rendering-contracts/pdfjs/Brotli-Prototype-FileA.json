@@ -8,10 +8,10 @@
   "Notes": "Cold no-cache all-page verification on 2026-07-03 rendered pages 1-25; pdfe matches accepted available references with low residual differences. This is a reference coverage gap, not a pdfe-better-than-refs claim.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "PASS_ONE",
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
       "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
-      "PixelAgreement": "MATCHES_SOME",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
       "ReferenceSituation": "REFS_INCOMPLETE",
       "RootCause": "REFERENCE_COVERAGE_GAP",
       "Target": {
@@ -21,7 +21,7 @@
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Cold no-cache all-page verification rendered pages 1-25; pdfe matches the accepted MuPDF target with low residual differences and one additional available reference.",
+      "QualityReason": "Cold no-cache all-page verification rendered pages 1-25; pdfe matches the accepted MuPDF target with low residual differences and one additional available reference. Re-measured 2026-08-16 (#977): page 1's raw status is PASS - excise agrees with 2 of the 2 oracles that rendered (closest mutool, diffFraction 0.0061). The PASS_ONE pin predates the majority-agreement PASS rule (#865); the corpus expectation manifest has recorded PASS since. Only page 1 was re-measured - the other pages of this contract have no expectation-manifest row and are left alone.",
       "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
     },
     "2": {

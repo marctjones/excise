@@ -1517,11 +1517,12 @@ public class CorpusScanClassificationTests
     {
         var entry = new RenderProgram.CorpusScanEntry { status = "PASS" };
 
-        RenderProgram.ApplyInkLocalityVerdict(entry, (8, 0, 8), oracleCount: 3);
+        RenderProgram.ApplyInkLocalityVerdict(entry, (8, 0, 8), oracleCount: 3, comparableOracleCount: 3);
 
         entry.status.Should().Be("MISSING_CONTENT");
         entry.missingInkTiles.Should().Be(8);
         entry.referenceInkedTiles.Should().Be(8);
+        entry.comparableOracles.Should().Be(3);
         entry.diagnostic.Should().Contain("majority");
     }
 
@@ -1530,7 +1531,7 @@ public class CorpusScanClassificationTests
     {
         var entry = new RenderProgram.CorpusScanEntry { status = "PASS" };
 
-        RenderProgram.ApplyInkLocalityVerdict(entry, (5, 0, 8), oracleCount: 3);
+        RenderProgram.ApplyInkLocalityVerdict(entry, (5, 0, 8), oracleCount: 3, comparableOracleCount: 3);
 
         entry.status.Should().Be("PASS");
         entry.missingInkTiles.Should().Be(5);
@@ -1541,9 +1542,116 @@ public class CorpusScanClassificationTests
     {
         var entry = new RenderProgram.CorpusScanEntry { status = "PASS" };
 
-        RenderProgram.ApplyInkLocalityVerdict(entry, (2, 0, 2), oracleCount: 3);
+        RenderProgram.ApplyInkLocalityVerdict(entry, (2, 0, 2), oracleCount: 3, comparableOracleCount: 3);
 
         entry.status.Should().Be("PASS");
+    }
+
+    // ---- #976: a starved comparable pool escalates instead of going quiet ---
+
+    [Fact]
+    public void ShouldEscalateOracles_PrimariesAgreeButPoolTooSmall_Escalates()
+    {
+        // bug1844576.pdf: a 181x54 pt /CropBox inside a 612x792 /MediaBox.
+        // pdftocairo renders the MediaBox and is excluded from the locality
+        // vote, leaving mutool and pdfium. A 1-1 split between two oracles is
+        // not a majority, so the MISSING_CONTENT check returns no verdict at
+        // all — on a page that could be genuinely blank.
+        RenderProgram.ShouldEscalateOracles(
+            primariesAgree: true,
+            comparableLocalityOracles: 2,
+            alwaysRunAllOracles: false)
+            .Should().BeTrue(
+                "two comparable oracles cannot form a majority, so the blank-page check has no "
+                + "verdict to give — more oracles is the only thing that changes that");
+    }
+
+    [Fact]
+    public void ShouldEscalateOracles_PrimariesAgreeAndPoolIsWhole_DoesNotEscalate()
+    {
+        RenderProgram.ShouldEscalateOracles(
+            primariesAgree: true,
+            comparableLocalityOracles: 3,
+            alwaysRunAllOracles: false)
+            .Should().BeFalse(
+                "three agreeing primaries that all rendered the same page box need neither a "
+                + "59ms subprocess nor an 80ms JVM launch to settle anything");
+    }
+
+    [Fact]
+    public void ShouldEscalateOracles_PrimariesDisagree_EscalatesRegardlessOfPool()
+    {
+        RenderProgram.ShouldEscalateOracles(
+            primariesAgree: false,
+            comparableLocalityOracles: 3,
+            alwaysRunAllOracles: false)
+            .Should().BeTrue("the page-wide disagreement rule predates #976 and still holds");
+    }
+
+    [Fact]
+    public void CountComparableLocalityOracles_CountsOnlyTheOraclesThatShareThePageBox()
+    {
+        using var mine = MakeBitmap(inkedTiles: 8, size: 320);
+        using var sameBox = MakeBitmap(inkedTiles: 8, size: 320);
+        using var alsoSameBox = MakeBitmap(inkedTiles: 8, size: 320);
+        using var differentBox = MakeWideBitmap(width: 320, height: 80);
+
+        RenderProgram.CountComparableLocalityOracles(
+            mine,
+            new SkiaSharp.SKBitmap?[] { sameBox, alsoSameBox, differentBox, null })
+            .Should().Be(2,
+                "an oracle that rasterized a different page box addresses different tiles, and an "
+                + "oracle that refused has no tiles at all — neither is in the pool that votes");
+    }
+
+    [Theory]
+    [InlineData(3, 3)]
+    [InlineData(3, 4)]
+    [InlineData(3, 5)]
+    public void OracleMajorityAgrees_ThreeAgreeingPrimariesSurviveEscalation(int agreeing, int compared)
+    {
+        // #976 escalates on pages where all three primaries AGREE. If adding
+        // Ghostscript and PDFBox could cost those pages their PASS, the fix
+        // would be manufacturing failures instead of verdicts.
+        RenderProgram.OracleMajorityAgrees(agreeing, compared).Should().BeTrue(
+            "escalation exists to decide who is right, not to change who wins");
+    }
+
+    [Fact]
+    public void ApplyInkLocalityVerdict_StarvedPool_RecordsHowSmallItWas()
+    {
+        // The 1-1 split reports (0, 0, 0) — no missing tiles, no inked
+        // reference tiles — which is byte-identical to a clean page. The
+        // comparable count is the only thing that distinguishes "checked and
+        // fine" from "could not check" (#976).
+        var entry = new RenderProgram.CorpusScanEntry { status = "PASS" };
+
+        RenderProgram.ApplyInkLocalityVerdict(entry, (0, 0, 0), oracleCount: 3, comparableOracleCount: 2);
+
+        entry.status.Should().Be("PASS");
+        entry.comparableOracles.Should().Be(2);
+        entry.comparableOracles.Should().BeLessThan(
+            RenderProgram.MinComparableOraclesForLocalityMajority,
+            "a scan reading this report must be able to count the pages whose blank-page check "
+            + "never reached a verdict");
+    }
+
+    [Fact]
+    public void BuildCorpusScanSummary_CountsPagesWhoseLocalityCheckCouldNotDecide()
+    {
+        var entries = new[]
+        {
+            new RenderProgram.CorpusScanEntry { path = "a.pdf", status = "PASS", comparableOracles = 3 },
+            new RenderProgram.CorpusScanEntry { path = "b.pdf", status = "PASS", comparableOracles = 2 },
+            new RenderProgram.CorpusScanEntry { path = "c.pdf", status = "PASS", comparableOracles = 0 },
+            new RenderProgram.CorpusScanEntry { path = "d.pdf", status = "ALL_ORACLES_REFUSED" },
+        };
+
+        var summary = RenderProgram.BuildCorpusScanSummary(entries);
+
+        summary.localityQuorumShortCount.Should().Be(2,
+            "the two pages with a sub-majority pool are counted; the page where no locality "
+            + "comparison ran at all is not, because it has no pool to be short of");
     }
 
     /// <summary>
@@ -1603,6 +1711,163 @@ public class CorpusScanClassificationTests
         }
 
         return bitmap;
+    }
+
+    // ---- #977: the two descriptions of a page must not drift apart ---------
+
+    /// <summary>
+    /// THE gate. Every contract page that also has a corpus-expectation
+    /// manifest row must pin the same raw status.
+    ///
+    /// These are two independent, checked-in descriptions of what a page does —
+    /// <c>render-quality-scan</c> grades against the contract, the corpus scan
+    /// grades against the TSV — and before this nothing compared them, so a
+    /// page could be green in one and years stale in the other. Three of the
+    /// annotation pages #932 re-pinned had contracts stuck at PASS_ONE while
+    /// the manifest said MISSING_CONTENT, and had been that way since the
+    /// contracts were generated.
+    ///
+    /// It needs no corpus and no renderer: both inputs are versioned test
+    /// metadata, so this runs everywhere, including a corpus-less CI runner.
+    /// </summary>
+    [Fact]
+    public void Contracts_AgreeWithTheCorpusExpectationManifests()
+    {
+        var root = FindRepoRoot();
+        var contractsDir = Path.Combine(root, "test-pdfs", "rendering-contracts");
+        Directory.Exists(contractsDir).Should().BeTrue("rendering quality contracts are versioned test metadata");
+
+        var comparison = RenderProgram.CompareContractsWithExpectationManifests(contractsDir, root);
+
+        // Not "> 0": that only catches a TOTAL collapse of the corpus->manifest
+        // map. If ONE key drifts — a corpus directory renamed, a manifest moved
+        // — several hundred to a few thousand comparisons vanish silently and
+        // the gate stays green while covering a fraction of what it claims,
+        // which is #958's failure mode. Both a floor and a per-corpus presence
+        // check, because the floor alone would survive losing isartor's 205.
+        comparison.ComparedPages.Should().BeGreaterThanOrEqualTo(3500,
+            "3577 contract pages had a manifest row when this gate was written (2026-08-16); a "
+            + "sharp drop means the corpus->manifest map stopped matching the corpus directory "
+            + "names contracts use, not that the drift was fixed");
+
+        foreach (var corpus in RenderProgram.CorpusExpectationManifests.Keys)
+        {
+            var manifest = Path.Combine(root, RenderProgram.CorpusExpectationManifests[corpus]);
+            if (!File.Exists(manifest) ||
+                !Directory.Exists(Path.Combine(contractsDir, corpus)))
+            {
+                continue;
+            }
+
+            comparison.ComparedPagesByCorpus.GetValueOrDefault(corpus).Should().BeGreaterThan(0,
+                $"contracts and a manifest both exist for {corpus}, so the comparison must be "
+                + "reaching it — zero means the two are no longer being keyed the same way");
+        }
+
+        var report = string.Join(Environment.NewLine, comparison.Disagreements.Select(d => d.ToString()));
+        comparison.Disagreements.Should().BeEmpty(
+            "a contract and a manifest row for the same page are two claims about the same thing; "
+            + "fix whichever is stale rather than letting them describe different behaviour:"
+            + Environment.NewLine + report);
+    }
+
+    [Fact]
+    public void CompareContractsWithExpectationManifests_ReportsAStaleStatus()
+    {
+        var (contractsDir, repoRoot) = MakeContractAndManifest(
+            contractStatus: "PASS_ONE",
+            manifestStatus: "PASS");
+        try
+        {
+            var comparison = RenderProgram.CompareContractsWithExpectationManifests(contractsDir, repoRoot);
+
+            comparison.ComparedPages.Should().Be(1);
+            comparison.Disagreements.Should().ContainSingle();
+            comparison.Disagreements[0].ContractStatus.Should().Be("PASS_ONE");
+            comparison.Disagreements[0].ManifestStatus.Should().Be("PASS");
+        }
+        finally
+        {
+            Directory.Delete(repoRoot, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void CompareContractsWithExpectationManifests_ManifestWildcardIsCompatibleWithAnything()
+    {
+        // issue19517.pdf's manifest row is a hand-written '*' because
+        // reference-renderer timeouts make its status load-dependent. A
+        // consistency check that read '*' as a literal status would report it
+        // as a disagreement forever, and the standing pressure would be to
+        // "fix" it by overwriting the wildcard — which regenerating the
+        // manifest has already destroyed twice.
+        var (contractsDir, repoRoot) = MakeContractAndManifest(
+            contractStatus: "PASS_ONE",
+            manifestStatus: "*");
+        try
+        {
+            RenderProgram.CompareContractsWithExpectationManifests(contractsDir, repoRoot)
+                .Disagreements.Should().BeEmpty();
+        }
+        finally
+        {
+            Directory.Delete(repoRoot, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void CompareContractsWithExpectationManifests_ContractsWithNoManifestRowAreCountedNotFailed()
+    {
+        // Most contracts (all-pages contracts, and whole corpora like federal
+        // and ghent that no corpus scan grades) have nothing to compare
+        // against. That is a coverage number, not a failure.
+        var (contractsDir, repoRoot) = MakeContractAndManifest(
+            contractStatus: "PASS",
+            manifestStatus: "PASS",
+            contractPage: 7);
+        try
+        {
+            var comparison = RenderProgram.CompareContractsWithExpectationManifests(contractsDir, repoRoot);
+
+            comparison.ComparedPages.Should().Be(0);
+            comparison.PagesWithoutManifestRow.Should().Be(1);
+            comparison.Disagreements.Should().BeEmpty();
+        }
+        finally
+        {
+            Directory.Delete(repoRoot, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// A throwaway repo root holding one pdfjs contract and one pdfjs
+    /// expectation manifest row for page 1.
+    /// </summary>
+    private static (string ContractsDir, string RepoRoot) MakeContractAndManifest(
+        string contractStatus,
+        string manifestStatus,
+        int contractPage = 1)
+    {
+        var repoRoot = Path.Combine(Path.GetTempPath(), "excise-contract-agreement-" + Guid.NewGuid().ToString("N"));
+        var contractsDir = Path.Combine(repoRoot, "test-pdfs", "rendering-contracts", "pdfjs");
+        Directory.CreateDirectory(contractsDir);
+        Directory.CreateDirectory(Path.Combine(repoRoot, "tests"));
+
+        File.WriteAllText(
+            Path.Combine(contractsDir, "sample.json"),
+            $$"""
+            {
+              "Path": "pdfjs/sample.pdf",
+              "Pages": {
+                "{{contractPage}}": { "ExpectedRawStatus": "{{contractStatus}}" }
+              }
+            }
+            """);
+        File.WriteAllText(
+            Path.Combine(repoRoot, "tests", "corpus-expectations.tsv"),
+            "# comment line\nsample.pdf\t1\t" + manifestStatus + "\n");
+
+        return (Path.Combine(repoRoot, "test-pdfs", "rendering-contracts"), repoRoot);
     }
 
     private static string FindRepoRoot()

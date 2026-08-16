@@ -8,10 +8,10 @@
   "Notes": "Evidence sheet: logs/render-quality/pass-one-triage-20260703/remaining/pdfjs_issue3694_reduced.pdf-p1-sheet.png. pdfinfo confirms CropBox 0 735.88 272.59 792.00 inside letter MediaBox.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "PASS_ONE",
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
       "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
-      "PixelAgreement": "MATCHES_SOME",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
       "ReferenceSituation": "REFS_DISAGREE",
       "RootCause": "REDUCED_FIXTURE_ORACLE_DISAGREEMENT",
       "Target": {
@@ -20,7 +20,7 @@
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Reduced single-page fixture renders meaningful content with bounded oracle disagreement.",
+      "QualityReason": "Reduced single-page fixture renders meaningful content with bounded oracle disagreement. Re-measured 2026-08-16 (#977): raw status is PASS - excise agrees with 3 of the 5 oracles that rendered (closest mutool, diffFraction 0.0000). The PASS_ONE pin predates the majority-agreement PASS rule (#865); the corpus expectation manifest has recorded PASS since.",
       "Notes": "Original PASS_ONE triage group encoded from focused rendering subset; pdfe matches at least one oracle after current fixes."
     }
   },

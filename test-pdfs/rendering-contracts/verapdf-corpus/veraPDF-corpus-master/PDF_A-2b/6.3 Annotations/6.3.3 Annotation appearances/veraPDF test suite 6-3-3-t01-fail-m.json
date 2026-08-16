@@ -8,10 +8,10 @@
   "Notes": "Focused scan: pdfe is pixel-identical to the accepted Ghostscript reference for this annotation appearance conformance fixture.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "PASS_ONE",
+      "ExpectedRawStatus": "PASS",
       "ReleaseStatus": "PASS",
       "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
-      "PixelAgreement": "MATCHES_TARGET",
+      "PixelAgreement": "MATCHES_ALL_REQUIRED",
       "ReferenceSituation": "REFS_DISAGREE",
       "RootCause": "REFERENCE_SUBSET_EXACT_MATCH",
       "Target": {
@@ -21,7 +21,7 @@
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "pdfe exactly matches the accepted reference renderer; no renderer improvement is pending for this page.",
+      "QualityReason": "pdfe exactly matches the accepted reference renderer; no renderer improvement is pending for this page. Re-measured 2026-08-16 (#977): raw status is PASS - excise agrees with 4 of the 5 oracles that rendered (closest pdfium, diffFraction 0.0000). The PASS_ONE pin predates the majority-agreement PASS rule (#865); the corpus expectation manifest has recorded PASS since.",
       "Notes": "Reviewed through current P2 focused raw scan."
     }
   }

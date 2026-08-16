@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+#
+# Do the rendering-quality contracts and the corpus expectation manifests say
+# the same thing about the same page? (#977)
+#
+# test-pdfs/rendering-contracts/** pins ExpectedRawStatus per page and
+# render-quality-scan grades against it; tests/corpus-expectations*.tsv pins the
+# same status for page 1 and the corpus scan grades against that. Nothing
+# compared the two until this, so a page could be green in one and years stale
+# in the other — three of the annotation pages #932 re-pinned had contracts
+# stuck at PASS_ONE while the manifest said MISSING_CONTENT.
+#
+# This is a file comparison. No corpus, no renderer, no network: both inputs are
+# checked in, and it reuses the two production loaders rather than re-parsing
+# either format.
+#
+# The same comparison runs in t0 as
+# CorpusScanClassificationTests.Contracts_AgreeWithTheCorpusExpectationManifests
+# (Excise.Cli.Tests). This script is the human-facing entry point: it prints
+# EVERY disagreement, so a list can be worked through rather than fixed one row
+# per run.
+#
+# Usage:
+#   scripts/check-contract-manifest-agreement.sh
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+exec dotnet run --project tools/Excise.RenderTools -- contract-manifest-agreement \
+    --contracts "$ROOT/test-pdfs/rendering-contracts" \
+    --repo-root "$ROOT"
