@@ -25,7 +25,7 @@
 #
 # Keys are corpus-relative PATHS, not basenames: this corpus may have
 # subdirectories and duplicate filenames.
-# Baseline: PASS=280, MALFORMED_PDF=26, PASS_ONE=9, EMPTY_DOC=6, MISSING_CONTENT=3, AGREED_REFUSAL=2, DIFF=2, EXCISE_SIDE_GAP=1, UNSUPPORTED_ENCRYPTED=1, PASSWORD_REQUIRED=1
+# Baseline: PASS=281, MALFORMED_PDF=26, PASS_ONE=9, EMPTY_DOC=6, MISSING_CONTENT=3, AGREED_REFUSAL=2, DIFF=2, UNSUPPORTED_ENCRYPTED=1, PASSWORD_REQUIRED=1
 344775293.pdf	1	PASS
 363015187.pdf	1	MISSING_CONTENT
 about_blank.pdf	1	PASS
@@ -40,7 +40,7 @@ annotation_markup_multiline_no_ap.pdf	1	PASS
 annotation_stamp_with_ap.pdf	1	PASS
 annotiter.pdf	1	PASS
 annots.pdf	1	PASS
-annots_action_handling.pdf	1	PASS
+annots_action_handling.pdf	1	MISSING_CONTENT		#987: a /Link with no /Border or /BS gets the §12.5.6.5 default 1pt border in Poppler and Ghostscript; excise and mutool draw none. This row PASSed only until #972 — excise's invented widget box happened to cover the same tiles.
 bad_annots_entry.pdf	1	PASS
 bad_dict_keys.pdf	1	PASS
 bad_page_type.pdf	1	PASS
@@ -117,7 +117,7 @@ bug_455199.pdf	1	PASS
 bug_457855936.pdf	1	MALFORMED_PDF
 bug_459580.pdf	1	PASS
 bug_461845674.pdf	1	PASS
-bug_481363.pdf	1	EXCISE_SIDE_GAP		#973: malformed hex string aborts the page; mutool and pdftocairo both recover
+bug_481363.pdf	1	PASS
 bug_487928.pdf	1	PASS
 bug_488948351.pdf	1	PASS
 bug_491161396.pdf	1	PASS
@@ -327,7 +327,7 @@ text_form.pdf	1	PASS
 text_form_color.pdf	1	PASS
 text_form_multiline.pdf	1	PASS
 text_form_multiple.pdf	1	PASS
-text_form_negative_fontsize.pdf	1	MISSING_CONTENT		#970: negative font size text not rendered; excise draws unrelated content
+text_form_negative_fontsize.pdf	1	PASS
 text_in_page_marked.pdf	1	PASS
 text_in_page_marked_indirect.pdf	1	PASS
 text_large_ascent_descent.pdf	1	PASS

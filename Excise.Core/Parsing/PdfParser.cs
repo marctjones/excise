@@ -209,7 +209,10 @@ public class PdfParser : IDisposable
         if (++_depth > MaxNestingDepth)
         {
             _depth--;
-            throw new PdfParseException($"Maximum nesting depth ({MaxNestingDepth}) exceeded while parsing array");
+            throw new PdfParseException($"Maximum nesting depth ({MaxNestingDepth}) exceeded while parsing array")
+            {
+                IsResourceGuard = true,
+            };
         }
         try
         {
@@ -263,7 +266,10 @@ public class PdfParser : IDisposable
         if (++_depth > MaxNestingDepth)
         {
             _depth--;
-            throw new PdfParseException($"Maximum nesting depth ({MaxNestingDepth}) exceeded while parsing dictionary");
+            throw new PdfParseException($"Maximum nesting depth ({MaxNestingDepth}) exceeded while parsing dictionary")
+            {
+                IsResourceGuard = true,
+            };
         }
         try
         {
