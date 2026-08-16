@@ -183,8 +183,17 @@ while IFS= read -r name; do
     # `(param: "value")`, which --filter cannot match literally.
     bare="${name%%(*}"
     assert_fresh
+    # verbosity=detailed so the re-run lists PER-CASE results. The summary line
+    # alone is not enough for a [Theory]: re-running the bare method name runs
+    # EVERY row, so "Passed!" can mean "some other row ran" while the row that
+    # went missing is still missing. Measured on
+    # Cff2RefusalTests.CorpusFilesCarryingCff2_RenderAtParityWithMutool, where a
+    # narrow run reports 1 of 2 rows every time — the old check called that a
+    # transient loss and moved on, which is this gate's own failure mode one
+    # level down (#894).
     out="$(dotnet test "$CSPROJ" -c Debug --no-build \
-             --filter "FullyQualifiedName~$bare" 2>&1)"
+             --filter "FullyQualifiedName~$bare" \
+             --logger "console;verbosity=detailed" 2>&1)"
 
     if grep -q "No test matches the given testcase filter" <<<"$out"; then
         echo "    FATAL  $name"
@@ -194,9 +203,19 @@ while IFS= read -r name; do
         echo "    FATAL  $name"
         echo "           re-ran and FAILED — the summary hid a red test."
         FATAL=$((FATAL + 1))
-    elif grep -qE "^(Passed!|Skipped!)" <<<"$out"; then
+    elif grep -qF "$name" <<<"$out"; then
         echo "    ok     $name (transient reporting loss)"
         TRANSIENT=$((TRANSIENT + 1))
+    elif grep -qE "^ +(Passed|Failed|Skipped) " <<<"$out"; then
+        # The method re-ran and OTHER cases reported, but this one did not.
+        # Detected from the per-case lines, not a summary line: under
+        # `verbosity=detailed` dotnet test prints per-case results and no
+        # `Passed!` summary at all, so keying on the summary made this branch
+        # unreachable and every row-level loss fell to the vaguer message below.
+        echo "    FATAL  $name"
+        echo "           its method re-ran and other cases reported, but THIS case"
+        echo "           produced no result — a row-level loss no summary can see."
+        FATAL=$((FATAL + 1))
     else
         echo "    FATAL  $name"
         echo "           re-run produced no recognisable result."
