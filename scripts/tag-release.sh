@@ -47,6 +47,10 @@ VERSION="${1:-}"; shift || true
 WAIVE_CI=""
 DRY_RUN=0
 NO_PUSH=0
+# Must match the configuration run-full-suite.sh --assert-green uses below, or
+# the evidence trailer would describe a different run's markers than the one
+# that was just checked. --assert-green is invoked with no --release, so Debug.
+CONFIG="Debug"
 while [ $# -gt 0 ]; do
     case "$1" in
         --waive-ci) WAIVE_CI="${2:-}"; [ -n "$WAIVE_CI" ] || die "--waive-ci needs a reason"; shift 2 ;;
@@ -115,8 +119,20 @@ scripts/verify-doc-claims.sh || die "doc claims out of sync — see docs/RELEASE
 say "${Y}Reminder:${N} docs/RELEASE_CHECKLIST.md has the manual steps (release notes, CHANGELOG)."
 
 # --- 6. compose + tag ----------------------------------------------------
-STATE_KEY="full-suite_Debug_${SHA:0:12}"
-STEPS="$(ls "$ROOT/logs/runner-state/$STATE_KEY/"*.ckpt 2>/dev/null | wc -l | tr -d ' ')"
+# Ask lib-runner for the key rather than re-deriving it. This line used to
+# hard-code "full-suite_Debug_<sha>", which is right only for a Debug run: a
+# --release run keys as full-suite_Release_<sha>, the glob below then matched
+# nothing, `ls` failed into /dev/null, and wc printed 0 — so the tag would have
+# recorded "0 checkpointed step(s)" as its evidence while --assert-green had
+# just passed. An evidence trailer that can silently say zero is worse than no
+# trailer, because it looks like a measurement.
+source "$ROOT/scripts/lib-runner.sh"
+runner_state_init "full-suite" "$CONFIG" >/dev/null
+STATE_DIR="$(runner_state_dir)"
+STATE_KEY="$(basename "$STATE_DIR")"
+STEPS="$(ls "$STATE_DIR/"*.ckpt 2>/dev/null | wc -l | tr -d ' ')"
+[ "${STEPS:-0}" -gt 0 ] \
+    || die "no checkpoint markers under $STATE_DIR, yet --assert-green passed — refusing to write an evidence trailer that says 0"
 MSG="$(cat <<EOF
 excise $VERSION
 
