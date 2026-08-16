@@ -8,6 +8,30 @@
 # provenance. If a URL rots, the script logs it and continues — the
 # smoke test runs against whatever made it in.
 
+# --require-all: exit non-zero if ANY entry failed to download (#967).
+#
+# Two of the URLs below are upstream-refreshed "latest" pointers, not archival
+# ones (irs p509, cdc covid-19 VIS). Fail-soft is right for a developer filling
+# a gitignored corpus — you get nine of ten files and carry on. It is WRONG on
+# CI, where this script now runs on every Linux job: a rotted URL would leave a
+# silently smaller corpus, which shifts [Theory] row counts and makes the
+# skip-budget gate (#854/#937) fire or stop firing for reasons unrelated to the
+# change under test — surfacing as an unrelated-looking failure on someone
+# else's PR. So CI passes --require-all and gets an honest red naming the URL.
+# The durable fix is archival URLs (#844); this makes the drift loud meanwhile.
+REQUIRE_ALL=0
+for arg in "$@"; do
+    case "$arg" in
+        --require-all) REQUIRE_ALL=1 ;;
+        -h|--help)
+            echo "Usage: $0 [--require-all]"
+            echo "  --require-all  exit 1 if any corpus entry failed to download (#967)"
+            exit 0
+            ;;
+        *) echo "Unknown option: $arg" >&2; exit 2 ;;
+    esac
+done
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 SMOKE_DIR="$PROJECT_ROOT/test-pdfs/smoke"
@@ -45,6 +69,7 @@ CORPUS=(
 
 ok=0
 fail=0
+failed_names=""
 skip=0
 
 for entry in "${CORPUS[@]}"; do
@@ -70,6 +95,7 @@ for entry in "${CORPUS[@]}"; do
             echo "  ✗ downloaded file is suspiciously small ($size bytes) — removing"
             rm -f "$dest"
             fail=$((fail + 1))
+            failed_names="$failed_names  $name ($url) — suspiciously small\n"
         else
             echo "  ✓ $size bytes"
             ok=$((ok + 1))
@@ -79,6 +105,7 @@ for entry in "${CORPUS[@]}"; do
         echo "  ✗ curl exit $rc — URL may have rotted"
         rm -f "$dest"
         fail=$((fail + 1))
+        failed_names="$failed_names  $name ($url) — curl exit $rc\n"
     fi
 done
 
@@ -89,5 +116,15 @@ echo "================================================="
 
 if [ "$ok" -eq 0 ] && [ "$skip" -eq 0 ]; then
     echo "No PDFs in corpus. SmokeCorpusTests will skip."
+    exit 1
+fi
+
+if [ "$fail" -gt 0 ] && [ "$REQUIRE_ALL" = "1" ]; then
+    echo ""
+    echo "FAIL: --require-all and $fail entr(ies) did not download (#967):"
+    printf "%b" "$failed_names"
+    echo "A partial corpus is not a smaller test run — it silently changes"
+    echo "[Theory] row counts and makes the skip-budget gate fire for reasons"
+    echo "unrelated to the change under test. Fix or re-point the URL above."
     exit 1
 fi

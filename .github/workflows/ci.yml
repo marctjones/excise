@@ -132,7 +132,10 @@ jobs:
 
       - name: Install smoke rendering oracles for skip-budget coverage
         run: |
-          scripts/download-smoke-corpus.sh
+          # --require-all (#967): on CI a rotted "latest" URL must be a loud
+          # red naming the URL, not a silently smaller corpus that shifts
+          # [Theory] row counts under the skip-budget gate.
+          scripts/download-smoke-corpus.sh --require-all
           scripts/download-pdfbox.sh
           scripts/download-pdfium.sh
 

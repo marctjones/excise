@@ -66,7 +66,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             mupdf-tools ghostscript poppler-utils tesseract-ocr qpdf
 
-          scripts/download-smoke-corpus.sh
+          scripts/download-smoke-corpus.sh --require-all   # #967
           scripts/download-pdfbox.sh
           scripts/download-pdfium.sh
 
