@@ -59,7 +59,12 @@ public class ContentStreamParser
     private double _fontSize = 12;
     private string _fontName = "";
     private PdfDictionary? _currentFont;
-    private Dictionary<int, string>? _toUnicodeMap;
+    // The shared code→Unicode cascade (#981) — /ToUnicode, /Differences, the
+    // embedded reverse cmap, the Mac glyph order and the symbol cmap all live
+    // in this object, which TextExtractor decodes through as well.
+    private Text.GlyphUnicodeDecoder _decoder = Text.GlyphUnicodeDecoder.None;
+    private readonly Dictionary<PdfDictionary, Text.GlyphUnicodeDecoder> _decoderCache =
+        new(ReferenceEqualityComparer.Instance);
     private bool _is2ByteFont = false;
     private PdfDictionary? _cidFontDict;
     private Fonts.CidFontWidths? _cidMetrics;
@@ -210,12 +215,30 @@ public class ContentStreamParser
         switch (name)
         {
             case "q":
-                _stateStack.Push(_state.Clone());
+                {
+                    // §8.4.1 Table 52 puts the TEXT state parameters (font +
+                    // size, Tc, Tw, Tz, TL, Ts, Tr) in the GRAPHICS state, so
+                    // `q` saves them and `Q` restores them. Neither content
+                    // parser did until #983: a producer that brackets a
+                    // differently-styled run in q/Q left the font size, spacing
+                    // and leading of that run applied to everything after the
+                    // `Q`. GlyphRemover.TextStateTracker has always done it, so
+                    // the redaction pipeline disagreed with itself. mutool
+                    // corroborates the spec reading (its stext reports the
+                    // pre-`q` size after `Q`).
+                    var saved = _state.Clone();
+                    saved.SavedTextState = CaptureTextState();
+                    _stateStack.Push(saved);
+                }
                 return true;
 
             case "Q":
                 if (_stateStack.Count > 0)
+                {
                     _state = _stateStack.Pop();
+                    if (_state.SavedTextState is { } restored)
+                        RestoreTextState(restored);
+                }
                 return true;
 
             case "cm":
@@ -259,6 +282,61 @@ public class ContentStreamParser
             default:
                 return false;
         }
+    }
+
+    /// <summary>
+    /// The §8.4.1 Table 52 text-state parameters, plus the per-font state
+    /// <c>Tf</c> derives from the font dictionary. Restoring the NAME and SIZE
+    /// alone would leave a parser that reports "F1 @ 12" while decoding through
+    /// the bracketed font's ToUnicode/CID maps, which is a worse failure than
+    /// not restoring at all. The derived members are all
+    /// immutable-per-font references, so this is a handful of pointer copies —
+    /// no <see cref="LoadFont"/> re-parse on restore.
+    ///
+    /// The text matrix is deliberately ABSENT: Table 52 does not list it, it is
+    /// reset by <c>BT</c>, and q/Q may not appear inside a text object (§8.2).
+    /// #983.
+    /// </summary>
+    private readonly record struct TextStateSnapshot(
+        double FontSize,
+        string FontName,
+        PdfDictionary? CurrentFont,
+        Text.GlyphUnicodeDecoder Decoder,
+        bool Is2ByteFont,
+        PdfDictionary? CidFontDict,
+        Fonts.CidFontWidths? CidMetrics,
+        bool IsVerticalWriting,
+        Text.CidCMap? RegisteredEncodingCMap,
+        IReadOnlyDictionary<int, string>? RegisteredCidToUnicode,
+        double TextLeading,
+        double CharSpacing,
+        double WordSpacing,
+        double HorizontalScaling,
+        double TextRise);
+
+    private TextStateSnapshot CaptureTextState() => new(
+        _fontSize, _fontName, _currentFont, _decoder, _is2ByteFont,
+        _cidFontDict, _cidMetrics, _isVerticalWriting, _registeredEncodingCMap,
+        _registeredCidToUnicode, _textLeading, _charSpacing, _wordSpacing,
+        _horizontalScaling, _textRise);
+
+    private void RestoreTextState(in TextStateSnapshot s)
+    {
+        _fontSize = s.FontSize;
+        _fontName = s.FontName;
+        _currentFont = s.CurrentFont;
+        _decoder = s.Decoder;
+        _is2ByteFont = s.Is2ByteFont;
+        _cidFontDict = s.CidFontDict;
+        _cidMetrics = s.CidMetrics;
+        _isVerticalWriting = s.IsVerticalWriting;
+        _registeredEncodingCMap = s.RegisteredEncodingCMap;
+        _registeredCidToUnicode = s.RegisteredCidToUnicode;
+        _textLeading = s.TextLeading;
+        _charSpacing = s.CharSpacing;
+        _wordSpacing = s.WordSpacing;
+        _horizontalScaling = s.HorizontalScaling;
+        _textRise = s.TextRise;
     }
 
     private bool ExecutePathConstructionOperator(string name, List<PdfObject> operands)
@@ -1216,7 +1294,7 @@ public class ContentStreamParser
         if (_page == null) return;
 
         _currentFont = _page.GetFont(_fontName);
-        _toUnicodeMap = null;
+        _decoder = Text.GlyphUnicodeDecoder.None;
         _is2ByteFont = false;
         _cidFontDict = null;
         _cidMetrics = null;
@@ -1315,26 +1393,11 @@ public class ContentStreamParser
                 }
             }
 
-            var toUnicodeObj = _currentFont.GetOptional("ToUnicode");
-            if (toUnicodeObj != null)
-            {
-                var resolved = _page.Document.Resolve(toUnicodeObj);
-                if (resolved is PdfStream stream)
-                {
-                    try
-                    {
-                        _toUnicodeMap = Text.ToUnicodeCMapParser.Parse(stream.DecodedData);
-                    }
-                    catch (Exception ex) when (ex is not OutOfMemoryException)
-                    {
-                        // ToUnicode CMaps are optional best-effort metadata used
-                        // for text extraction; tolerate malformed ones rather
-                        // than failing the whole content-stream parse. We still
-                        // let fatal resource exhaustion (OOM) propagate instead
-                        // of silently swallowing it. See issue #345.
-                    }
-                }
-            }
+            // The whole code→Unicode cascade, shared with TextExtractor (#981)
+            // and cached per font dictionary. It swallows a malformed
+            // /ToUnicode rather than failing the content-stream parse (#345),
+            // as this parser always did.
+            _decoder = GetDecoder(_currentFont);
 
             // Registered CID→Unicode via the descendant's /CIDSystemInfo
             // ordering (#515), mirroring TextExtractor.LoadFontGeometry: a
@@ -1342,7 +1405,7 @@ public class ContentStreamParser
             // code == Unicode (which the WinAnsi fallback reproduces for the
             // codes CJK text uses); a registered-CMap-name /ToUnicode (#715)
             // contributes its ordering. First signal with a shipped map wins.
-            if (_is2ByteFont && _toUnicodeMap == null && !ToUnicodeIsIdentityName())
+            if (_is2ByteFont && !_decoder.HasToUnicodeStreamMap && !_decoder.ToUnicodeIsIdentityName)
             {
                 _registeredCidToUnicode =
                     TryLoadOrderingMap(GetCidSystemInfoOrdering())
@@ -1352,11 +1415,20 @@ public class ContentStreamParser
         }
     }
 
-    private bool ToUnicodeIsIdentityName()
+    /// <summary>
+    /// The shared decode cascade for one font dictionary (#981), cached so a
+    /// stream that re-selects the same /Font on every text block does not
+    /// re-parse its CMaps and embedded program each time.
+    /// </summary>
+    private Text.GlyphUnicodeDecoder GetDecoder(PdfDictionary? font)
     {
-        if (_currentFont == null || _page == null) return false;
-        var toUnicode = _page.Document.Resolve(_currentFont.GetOptional("ToUnicode") ?? PdfNull.Instance);
-        return toUnicode is PdfName name && (name.Value == "Identity-H" || name.Value == "Identity-V");
+        if (font == null || _page == null)
+            return Text.GlyphUnicodeDecoder.None;
+        if (_decoderCache.TryGetValue(font, out var cached))
+            return cached;
+        var decoder = Text.GlyphUnicodeDecoder.Build(_page.Document, font);
+        _decoderCache[font] = decoder;
+        return decoder;
     }
 
     private string? GetCidSystemInfoOrdering()
@@ -1398,43 +1470,25 @@ public class ContentStreamParser
             _page != null ? _page.Document.Resolve : null);
     }
 
-    private string DecodeCharacter(int charCode, int cid)
-    {
-        if (_toUnicodeMap != null && _toUnicodeMap.TryGetValue(charCode, out var unicode))
-            return unicode;
-
-        // Registered CID→Unicode (#515): the Adobe-<Ordering>-UCS2 CMap for
-        // the font's /CIDSystemInfo ordering, keyed by CID.
-        //
-        // ⚠️ This cascade does NOT mirror TextExtractor.DecodeCharacter, and
-        // this comment claimed it did until #980's sweep checked. TextExtractor
-        // has eight steps; the six missing here are /ToUnicode /Identity-H|V as
-        // a NAME (#715), the embedded reverse cmap (#515), /Differences and its
-        // /BaseEncoding (#662), /Encoding /MacRomanEncoding, the standard Mac
-        // glyph order (#532), and the symbolic-TrueType (3,0) cmap (#791). Where
-        // they decode the same bytes differently, LetterFinder cannot match and
-        // glyph-level redaction degrades to whole-operator removal. Tracked as
-        // #981 — do not restate the "mirrors exactly" claim without re-reading
-        // both cascades.
-        if (_registeredCidToUnicode != null && _registeredCidToUnicode.TryGetValue(cid, out var orderingUnicode))
-            return orderingUnicode;
-
-        // Fall back to WinAnsi encoding
-        if (charCode < 128 || charCode >= 160)
-            return ((char)charCode).ToString();
-
-        return charCode switch
-        {
-            128 => "\u20AC", 130 => "\u201A", 131 => "\u0192", 132 => "\u201E",
-            133 => "\u2026", 134 => "\u2020", 135 => "\u2021", 136 => "\u02C6",
-            137 => "\u2030", 138 => "\u0160", 139 => "\u2039", 140 => "\u0152",
-            142 => "\u017D", 145 => "\u2018", 146 => "\u2019", 147 => "\u201C",
-            148 => "\u201D", 149 => "\u2022", 150 => "\u2013", 151 => "\u2014",
-            152 => "\u02DC", 153 => "\u2122", 154 => "\u0161", 155 => "\u203A",
-            156 => "\u0153", 158 => "\u017E", 159 => "\u0178",
-            _ => ((char)charCode).ToString()
-        };
-    }
+    /// <summary>
+    /// Code → Unicode through the SHARED nine-step cascade (#981).
+    ///
+    /// <para>This used to be a private three-step copy — /ToUnicode stream,
+    /// registered CID→Unicode, WinAnsi — carrying a comment that said it
+    /// "mirrors TextExtractor.DecodeCharacter so operator text matches page
+    /// letters". It did not: TextExtractor had nine steps, and the six missing
+    /// here were exactly the fonts where redaction most needs the two to agree.
+    /// LetterFinder matches page letters against this operator text; where they
+    /// decoded the same bytes differently the match failed and glyph-level
+    /// removal degraded to whole-operator removal, or missed. The cascade now
+    /// lives in one place so the claim cannot go stale again.</para>
+    ///
+    /// <para>The registered CID→Unicode map is passed in rather than owned by
+    /// the decoder: it comes from this parser's own CID machinery (the same
+    /// /CIDSystemInfo walk that drives codespace segmentation and /W widths).</para>
+    /// </summary>
+    private string DecodeCharacter(int charCode, int cid) =>
+        _decoder.Decode(charCode, cid, _registeredCidToUnicode);
 
     /// <summary>
     /// Glyph width in 1000ths of an em. Mirrors TextExtractor.GetCharWidth
@@ -1973,6 +2027,10 @@ public class ContentStreamParser
 
         // Pending clipping operator queued by W / W*; consumed at the next path-painting op.
         public string? PendingClip;
+
+        // The §8.4.1 Table 52 text-state parameters as of the `q` that pushed
+        // this state; null on the live state, which never needs one. #983.
+        public TextStateSnapshot? SavedTextState;
 
         public void MultiplyCtm(double a, double b, double c, double d, double e, double f)
         {

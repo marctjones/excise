@@ -45,10 +45,15 @@ namespace Excise.Core.Tests.Content;
 /// operand LISTS are never compared — only the state the operators produce.
 /// This also makes dictionary nesting a deliberate failure-mode difference;
 /// see <see cref="DeepDictionaryNesting_IsADeliberateFailureModeDifference"/>.</item>
-/// <item>Unicode decoding beyond the WinAnsi core. TextExtractor has an
-/// eight-step cascade (/Differences, MacRoman, embedded reverse cmap, Mac
-/// glyph order, symbol cmap); ContentStreamParser has three. Tracked as
-/// #981 — the fixtures here stay inside the codes both decode alike.</item>
+/// <item><b>No longer excluded:</b> Unicode decoding beyond the WinAnsi core.
+/// TextExtractor had a nine-step cascade and ContentStreamParser three, so the
+/// fixtures here used to stay inside the codes both decode alike. #981 moved
+/// the cascade into one shared <c>GlyphUnicodeDecoder</c>; the fixtures are in
+/// <see cref="DecodeCascade_BothMachinesResolveTheSameUnicode"/>, one per
+/// newly-shared step, each asserting the RIGHT answer and not merely
+/// agreement. Still un-fixtured, and named here rather than left silent: the
+/// simple symbolic-TrueType (3,0) cmap (#791), which needs a symbolic font
+/// program this repo does not check in.</item>
 /// <item>Operand LISTS, and therefore the <c>true</c>/<c>false</c>/<c>null</c>
 /// literals: ContentStreamParser pushes them as PdfBoolean/PdfNull operands
 /// where TextExtractor keeps the raw token string. Untested rather than
@@ -57,6 +62,31 @@ namespace Excise.Core.Tests.Content;
 /// <item>Bidi. ExtractLetters reorders visual-order RTL runs (#632) and
 /// ContentStreamParser does not, so every fixture here is LTR.</item>
 /// </list>
+///
+/// <para><b>What a differential structurally CANNOT catch, and where that is
+/// covered instead.</b> Two machines that are wrong the SAME way agree, and
+/// agreement is all this file measures. #983 was exactly that: neither
+/// restored the §8.4.1 Table 52 text state at <c>Q</c>, every fixture here
+/// passed, and the third state machine
+/// (<c>GlyphRemover.TextStateTracker</c>) was the odd one out precisely
+/// because it was correct. Shared defects therefore need a gate that compares
+/// against something other than the twin — a spec property
+/// (<see cref="GraphicsStateTextParameterTests"/>) or an independent
+/// implementation
+/// (<see cref="GraphicsStateTextParameterOracleTests"/>, mutool). Do not
+/// answer a "both parsers are wrong" report by adding a fixture here.</para>
+///
+/// <para><b>Why the renderer is not in this gate.</b> There are FOUR content
+/// state machines, not two: <c>SkiaRenderer</c> keeps its own text state and
+/// re-executes operators under it (#598), and
+/// <c>GlyphRemover.TextStateTracker</c> tracks the text-state operators it
+/// re-emits. The renderer is left out because its divergences are not silent —
+/// the reference-renderer differentials see them in pixels — and because
+/// changing it moves the corpus expectation manifests. It is NOT left out
+/// because it is correct: it shares #983's defect verbatim (its
+/// <c>GraphicsState.Clone()</c> omits <c>TextState</c> and
+/// <c>SaveState</c>/<c>RestoreState</c> never touch <c>_textState</c>),
+/// tracked as #986.</para>
 /// </summary>
 public class ParserDifferentialTests
 {
@@ -201,6 +231,148 @@ public class ParserDifferentialTests
         }
 
         cursor.Should().Be(letters.Count);
+    }
+
+    // ---------------------------------------------------------------
+    // The code→Unicode cascade (#981). Until it was shared, these fixtures
+    // could not live here: ContentStreamParser had three steps to
+    // TextExtractor's nine, and every row below decoded differently in the two
+    // machines — which is precisely when LetterFinder cannot match page letters
+    // to operator text and glyph-level redaction degrades to whole-operator
+    // removal, or misses.
+    //
+    // Each row asserts BOTH that the two agree AND what the right answer is.
+    // Agreement alone would be satisfied by sharing a wrong cascade — the
+    // failure mode this whole file is about, one level down.
+    // ---------------------------------------------------------------
+
+    [Theory]
+    // #662: /Encoding << /Differences >> glyph names. Old parser: "AB".
+    [InlineData("(AB) Tj", "•€",
+        "/Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding 6 0 R",
+        "6 0 obj\n<< /Type /Encoding /Differences [65 /bullet 66 /Euro] >>\nendobj\n")]
+    // #662: a /Differences dictionary's /BaseEncoding covers the codes it does
+    // NOT override. Code 0x88 is à in MacRoman and ˆ in WinAnsi, so the two
+    // encodings cannot agree by accident. Old parser: "ˆ".
+    [InlineData("(\u0088) Tj", "\u00E0",
+        "/Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding 6 0 R",
+        "6 0 obj\n<< /Type /Encoding /BaseEncoding /MacRomanEncoding "
+        + "/Differences [65 /bullet] >>\nendobj\n")]
+    // /Encoding as the bare NAME /MacRomanEncoding. Old parser: "ˆ".
+    [InlineData("(\u0088) Tj", "\u00E0",
+        "/Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /MacRomanEncoding",
+        "")]
+    // #715: /ToUnicode as the predefined CMap NAME /Identity-H — the 2-byte code
+    // IS the UTF-16BE scalar. Code 0x0091 discriminates: WinAnsi remaps
+    // 128-159, identity does not. Old parser: "‘".
+    [InlineData("<0091> Tj", "\u0091",
+        "/Type /Font /Subtype /Type0 /BaseFont /Parity /Encoding /Identity-H "
+        + "/ToUnicode /Identity-H /DescendantFonts [6 0 R]",
+        "6 0 obj\n<< /Type /Font /Subtype /CIDFontType2 /BaseFont /Parity "
+        + "/CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> "
+        + "/DW 1000 >>\nendobj\n")]
+    // #532: NON-embedded Identity CIDFontType2 with no /ToUnicode — the CID is
+    // a GID in the standard Macintosh glyph order (36 = A). Old parser echoed
+    // the GID through WinAnsi: "$%&".
+    [InlineData("<002400250026> Tj", "ABC",
+        "/Type /Font /Subtype /Type0 /BaseFont /Parity /Encoding /Identity-H "
+        + "/DescendantFonts [6 0 R]",
+        "6 0 obj\n<< /Type /Font /Subtype /CIDFontType2 /BaseFont /Parity "
+        + "/CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> "
+        + "/DW 1000 >>\nendobj\n")]
+    public void DecodeCascade_BothMachinesResolveTheSameUnicode(
+        string show, string expected, string fontDict, string extraObjects)
+    {
+        var content = "BT /F1 12 Tf 1 0 0 1 72 700 Tm " + show + " ET";
+        using var doc = PdfDocument.Open(ParityFixture.Build(
+            content,
+            fontObject: "5 0 obj\n<< " + fontDict + " >>\nendobj\n",
+            extraObjects: extraObjects));
+        var page = doc.GetPage(1);
+
+        var op = ParityFixture.ParseOperators(page).Operators
+            .Single(o => o.Name is "Tj" or "TJ");
+        var letters = string.Concat(ParityFixture.ExtractLetters(page).Select(l => l.Value));
+
+        op.TextContent.Should().Be(expected,
+            "ContentStreamParser must decode through the shared cascade (#981)");
+        letters.Should().Be(expected,
+            "and TextExtractor must reach the same answer");
+    }
+
+    /// <summary>
+    /// #515 slice 3 — an EMBEDDED Identity-H CIDFontType2 with no /ToUnicode,
+    /// decoded by reading the embedded program's own cmap in REVERSE. The most
+    /// common of the six steps in real documents, and the one that cannot be
+    /// hand-built: it needs a real font program, so this fixture is generated
+    /// around the checked-in DejaVu Sans with the codes taken from the font's
+    /// own tables. Before #981, ContentStreamParser echoed the raw GID through
+    /// WinAnsi — Latin-1 garbage — while TextExtractor read the word.
+    /// </summary>
+    [Fact]
+    public void DecodeCascade_EmbeddedIdentityHNoToUnicode_AgreesInBothMachines()
+    {
+        const string word = "Redact";
+        var fontBytes = Fixtures.TestFontFixtures.LoadDejaVuSansBytes();
+        var ttf = Excise.Core.Fonts.TrueTypeFontFile.Parse(fontBytes);
+        var gids = word.Select(c => ttf.Cmap[c]).ToArray();
+
+        using var doc = PdfDocument.Open(EmbeddedIdentityHFixture(fontBytes, gids));
+        var page = doc.GetPage(1);
+
+        var op = ParityFixture.ParseOperators(page).Operators.Single(o => o.Name == "Tj");
+        op.TextContent.Should().Be(word,
+            "the operator text redaction matches on must come from the embedded "
+            + "font's reverse cmap, not from WinAnsi over raw GIDs");
+        string.Concat(ParityFixture.ExtractLetters(page).Select(l => l.Value))
+            .Should().Be(word);
+    }
+
+    /// <summary>
+    /// A one-page PDF whose /F1 is an embedded Identity-H CIDFontType2 over
+    /// <paramref name="fontFile"/>, showing <paramref name="gids"/> as 2-byte
+    /// codes. Deliberately no /ToUnicode: that is the shape #515 slice 3 exists
+    /// for.
+    /// </summary>
+    private static byte[] EmbeddedIdentityHFixture(byte[] fontFile, int[] gids)
+    {
+        var content = "BT /F1 24 Tf 1 0 0 1 72 700 Tm <"
+            + string.Concat(gids.Select(g => g.ToString("X4"))) + "> Tj ET";
+
+        using var ms = new MemoryStream();
+        var offsets = new long[9];
+        void W(string s) => ms.Write(Encoding.Latin1.GetBytes(s));
+
+        W("%PDF-1.7\n");
+        offsets[1] = ms.Position; W("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
+        offsets[2] = ms.Position; W("2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n");
+        offsets[3] = ms.Position;
+        W("3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R "
+          + "/Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n");
+        offsets[4] = ms.Position;
+        W($"4 0 obj\n<< /Length {content.Length} >>\nstream\n{content}\nendstream\nendobj\n");
+        offsets[5] = ms.Position;
+        W("5 0 obj\n<< /Type /Font /Subtype /Type0 /BaseFont /DejaVuSans "
+          + "/Encoding /Identity-H /DescendantFonts [6 0 R] >>\nendobj\n");
+        offsets[6] = ms.Position;
+        W("6 0 obj\n<< /Type /Font /Subtype /CIDFontType2 /BaseFont /DejaVuSans "
+          + "/CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> "
+          + "/FontDescriptor 7 0 R /DW 1000 >>\nendobj\n");
+        offsets[7] = ms.Position;
+        W("7 0 obj\n<< /Type /FontDescriptor /FontName /DejaVuSans /Flags 4 "
+          + "/FontBBox [0 0 1000 1000] /ItalicAngle 0 /Ascent 800 /Descent -200 "
+          + "/CapHeight 700 /StemV 80 /FontFile2 8 0 R >>\nendobj\n");
+        offsets[8] = ms.Position;
+        W($"8 0 obj\n<< /Length {fontFile.Length} /Length1 {fontFile.Length} >>\nstream\n");
+        ms.Write(fontFile);
+        W("\nendstream\nendobj\n");
+
+        var xref = ms.Position;
+        W("xref\n0 9\n0000000000 65535 f \n");
+        for (int i = 1; i <= 8; i++)
+            W($"{offsets[i]:D10} 00000 n \n");
+        W($"trailer\n<< /Size 9 /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n");
+        return ms.ToArray();
     }
 
     // ---------------------------------------------------------------
@@ -440,6 +612,58 @@ public class ParserDifferentialTests
     }
 
     /// <summary>
+    /// Both machines must honour a caller's cancellation. This could not be a
+    /// parity case until #982: <c>ContentStreamParser.Parse</c> took a token
+    /// (#346) and <c>TextExtractor</c> had none at all, so <c>page.Letters</c>
+    /// ran to completion whatever the input cost — on the GUI's background
+    /// indexing thread, with no timeout to hit.
+    ///
+    /// <para>Neither machine checks the token on ENTRY, so a pre-cancelled
+    /// token proves a check inside the OPERATOR LOOP was reached — but only
+    /// because the fixture below contains no array and no dictionary. The
+    /// first draft used a <c>TJ</c> array and passed with the operator-loop
+    /// check deleted, satisfied instead by the one in <c>ParseArray</c>: a
+    /// check-point test is only as specific as its fixture is plain.</para>
+    ///
+    /// <para>What this does NOT gate: the two deeper check points (the
+    /// array-element loop, and TextExtractor's <c>SkipDictionary</c> /
+    /// ContentStreamParser's <c>ParseDictionary</c> walk). The outer loop's
+    /// check necessarily fires first when the token is already cancelled, and
+    /// cancellation arriving mid-token — the case those points exist for —
+    /// cannot be produced deterministically from a test.</para>
+    /// </summary>
+    [Fact]
+    public void CancellationRequested_IsHonouredByBothMachines()
+    {
+        // Long enough that abandoning it means something; NO array and NO
+        // dictionary, so the operator loop is the only place a check can fire.
+        var content = string.Concat(Enumerable.Repeat(
+            "BT /F1 12 Tf 1 0 0 1 72 700 Tm (abcd) Tj ET\n", 500));
+
+        using var doc = PdfDocument.Open(ParityFixture.Build(content));
+        var page = doc.GetPage(1);
+
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        // The control: the same bytes complete when nothing is cancelled, so a
+        // machine that threw for an unrelated reason cannot pass this.
+        ParityFixture.Outcome(() => ParityFixture.ParseOperators(page)).Should().Be("ok");
+        ParityFixture.Outcome(() => ParityFixture.ExtractLetters(page)).Should().Be("ok");
+
+        new Action(() => new ContentStreamParser(page.GetContentStreamBytes(), page).Parse(cts.Token))
+            .Should().Throw<OperationCanceledException>(
+                "ContentStreamParser has taken a token since #346");
+        new Action(() => new TextExtractor(page) { IncludeFormFieldValues = false }
+                .ExtractLetters(cts.Token))
+            .Should().Throw<OperationCanceledException>(
+                "TextExtractor must honour one too — #982");
+        new Action(() => page.GetLetters(cts.Token))
+            .Should().Throw<OperationCanceledException>(
+                "and the page-level entry point callers actually use");
+    }
+
+    /// <summary>
     /// A DELIBERATE failure-mode difference, pinned so it is not "fixed" into
     /// agreement by accident — and so a future change to either side is a
     /// visible decision. ContentStreamParser parses dictionaries recursively
@@ -546,10 +770,16 @@ internal static class ParityFixture
     /// <paramref name="content"/>, Latin-1 encoded so binary sample bytes
     /// survive verbatim.
     /// </summary>
+    /// <param name="extraFontResources">Additional entries for the page's
+    /// <c>/Resources /Font</c> dictionary, e.g. <c>"/F2 6 0 R"</c>, whose
+    /// objects come in via <paramref name="extraObjects"/>. Used by the #983
+    /// gate, which needs a SECOND font to make a bracketed <c>Tf</c> observable
+    /// through something other than the size.</param>
     public static byte[] Build(
         string content,
         string fontObject = "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n",
-        string extraObjects = "")
+        string extraObjects = "",
+        string extraFontResources = "")
     {
         var body = Encoding.Latin1.GetBytes(content);
         using var ms = new MemoryStream();
@@ -568,7 +798,7 @@ internal static class ParityFixture
         W("2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n");
         offsets[3] = ms.Position;
         W("3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R "
-          + "/Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n");
+          + "/Resources << /Font << /F1 5 0 R " + extraFontResources + " >> >> >>\nendobj\n");
         offsets[4] = ms.Position;
         W($"4 0 obj\n<< /Length {body.Length} >>\nstream\n");
         ms.Write(body);
