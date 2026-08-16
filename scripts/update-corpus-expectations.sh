@@ -90,6 +90,14 @@ print("#   EXCISE_ONLY  excise rendered and no oracle could — coverage without
 print("#                corroboration, not a defect")
 print("#   MALFORMED_PDF / EMPTY_DOC  the fixture is broken or hostile on")
 print("#                purpose; refusing it is correct")
+print("#   AGREED_REFUSAL  excise refused AND no oracle rendered it either —")
+print("#                corroborated refusal, correct behaviour (#907)")
+print("#")
+print("# One status is NOT a correct outcome and must never be pinned bare:")
+print("#   EXCISE_SIDE_GAP  excise refused but an oracle rendered the page. An")
+print("#                oracle proves it is renderable, so this records an excise")
+print("#                bug. File it, then pin the row with the issue number in")
+print("#                the note column — or fix it.")
 print("#   *            load-dependent when measured (see the note on the row) —")
 print("#                asserts only that the page was scanned")
 print("#")
@@ -110,6 +118,7 @@ def path_of(r):
 # which still asserts the page was scanned and did not take down the run.
 LOAD_DEPENDENT = {"TIMEOUT"}
 
+gaps = []
 for r in sorted(rows, key=path_of):
     p = path_of(r)
     page = r.get("page") or r.get("pageNumber") or 1
@@ -118,8 +127,22 @@ for r in sorted(rows, key=path_of):
         continue
     if st in LOAD_DEPENDENT:
         print(f"{p}\t{page}\t*\t\tload-dependent ({st} when measured); any terminal status accepted")
+    elif st == "EXCISE_SIDE_GAP":
+        # Pinned, because an ungated page is worse than a gated bug — but never
+        # silently: the row carries its own indictment and the run warns (#907).
+        gaps.append(f"{p}#p{page}")
+        print(f"{p}\t{page}\t{st}\t\tUNTRIAGED excise-side gap: an oracle rendered "
+              f"this page and excise did not (was {r.get('refusedAs') or 'a refusal'}) "
+              f"— file an issue and replace this note with its number")
     else:
         print(f"{p}\t{page}\t{st}")
+
+if gaps:
+    sys.stderr.write(
+        f"  ⚠ {len(gaps)} EXCISE_SIDE_GAP page(s) pinned — each is a DEFECT, not an\n"
+        "    expectation. An oracle rendered a page excise refused:\n")
+    for g in gaps:
+        sys.stderr.write(f"      {g}\n")
 PY
     then
         echo "  ✗ $key — generator failed, tests/$manifest left unchanged" >&2
