@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Xml.Linq;
 using AwesomeAssertions;
+using Excise.Core.Content;
 using Excise.Core.Document;
 using Excise.Core.Text;
 using Xunit;
@@ -96,11 +97,25 @@ public class GraphicsStateTextParameterOracleTests
                 $"advance {i} carries Tc/Tw/Tz — the bracketed 2 Tc must not "
                 + "survive the Q");
         }
+
+        // ContentStreamParser is the OTHER machine #983 fixed, and redaction
+        // reads ITS boxes. Compared against the same oracle line's horizontal
+        // extent: a leaked 36pt/2 Tc makes the operator box far too wide.
+        var showOp = new ContentStreamParser(page.GetContentStreamBytes(), page)
+            .Parse().Operators
+            .Single(op => op.Name == "Tj" && op.TextContent == "After");
+        showOp.BoundingBox.Should().NotBeNull();
+        showOp.BoundingBox!.Value.Left.Should().BeApproximately(oracle.Left, 0.05,
+            "the post-Q run starts where mutool says it does");
+        showOp.BoundingBox!.Value.Right.Should().BeApproximately(oracle.Right, 0.05,
+            "and ends there — its width is the sum of the advances the restored "
+            + "text state produces");
     }
 
     // ---------------------------------------------------------------
 
-    private readonly record struct OracleLine(double FontSize, IReadOnlyList<double> Advances);
+    private readonly record struct OracleLine(
+        double FontSize, IReadOnlyList<double> Advances, double Left, double Right);
 
     /// <summary>
     /// mutool's structured-text view of the line whose text is
@@ -128,7 +143,16 @@ public class GraphicsStateTextParameterOracleTests
                 .Select(c => double.Parse((string)c.Attribute("x")!, CultureInfo.InvariantCulture))
                 .ToList();
             var advances = xs.Zip(xs.Skip(1), (a, b) => b - a).ToList();
-            return new OracleLine(size, advances);
+
+            // The line's HORIZONTAL extent only. mutool's vertical extent comes
+            // from its own ascent/descent modelling and is not comparable with
+            // excise's glyph cells; the left and right edges are pen positions
+            // and are.
+            var bbox = ((string)line.Attribute("bbox")!)
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                .Select(v => double.Parse(v, CultureInfo.InvariantCulture))
+                .ToArray();
+            return new OracleLine(size, advances, bbox[0], bbox[2]);
         }
         finally
         {
