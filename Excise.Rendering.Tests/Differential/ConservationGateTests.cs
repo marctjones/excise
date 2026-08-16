@@ -61,13 +61,6 @@ public class ConservationGateTests
     /// </summary>
     private static readonly Dictionary<string, string> KnownDefects = new()
     {
-        // #961 — PageCollection.Move/RemoveAt index the ROOT /Kids by global
-        // page number; on nested page trees RemoveAt silently deletes a whole
-        // subtree (then mutool refuses the file) and Move throws.
-        ["PageMove|scotus-trump-v-anderson.pdf"] = "#961",
-        ["PageMove|irs-pub509-2026.pdf"] = "#961",
-        ["PageRemove|scotus-trump-v-anderson.pdf"] = "#961",
-        ["PageRemove|irs-pub509-2026.pdf"] = "#961",
         // #962 — flatten removes pushbutton widgets without stamping their
         // appearance, so the visible "Clear Form" label is destroyed.
         ["FormFlatten|state-ds11-passport.pdf"] = "#962",
