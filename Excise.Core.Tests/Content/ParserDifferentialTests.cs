@@ -256,6 +256,48 @@ public class ParserDifferentialTests
     }
 
     /// <summary>
+    /// A Type0 font whose <c>/DescendantFonts</c> is an INDIRECT REFERENCE —
+    /// which is what real producers emit. ContentStreamParser tested the raw
+    /// value with a bare <c>is PdfArray</c> cast, so the reference never
+    /// resolved, the CID /W table never loaded, and every CID glyph got a
+    /// default width while TextExtractor (which resolves it) used the real
+    /// table. The two then disagreed about where every CID glyph's cell is,
+    /// and redaction destroyed text remote from any match on real government
+    /// forms. The #843 mistake, one array over (#980).
+    /// </summary>
+    [Theory]
+    [InlineData("BT /F1 12 Tf 1 0 0 1 72 700 Tm <00480065006C> Tj ET")]
+    [InlineData("BT /F1 1 Tf 24 0 0 24 72 700 Tm <00480065006C> Tj ET")]
+    [InlineData("BT /F1 12 Tf 1 0 0 1 72 700 Tm [<0048> -200 <0065006C>] TJ ET")]
+    public void Type0IndirectDescendantWidths_AgreeInBothMachines(string content)
+    {
+        using var doc = PdfDocument.Open(ParityFixture.BuildType0(content));
+        var page = doc.GetPage(1);
+
+        var letters = ParityFixture.ExtractLetters(page);
+        letters.Should().HaveCount(3);
+
+        // The fixture's /W gives the three CIDs deliberately different widths
+        // (1500, 250, 500), so a parser that missed the table — falling back to
+        // /DW, /MissingWidth or a flat default — produces a visibly different
+        // box rather than an accidentally-equal one.
+        var op = ParityFixture.ParseOperators(page).Operators
+            .Single(o => o.Name is "Tj" or "TJ");
+        op.BoundingBox.Should().NotBeNull();
+        var box = op.BoundingBox!.Value;
+
+        box.Left.Should().BeApproximately(letters.Min(l => l.GlyphRectangle.Left), 1e-6);
+        box.Right.Should().BeApproximately(letters.Max(l => l.GlyphRectangle.Right), 1e-6);
+        box.Bottom.Should().BeApproximately(letters.Min(l => l.GlyphRectangle.Bottom), 1e-6);
+        box.Top.Should().BeApproximately(letters.Max(l => l.GlyphRectangle.Top), 1e-6);
+
+        // And the widths really are the table's, not a default.
+        letters[0].Width.Should().BeGreaterThan(letters[1].Width * 3,
+            "CID 0x48's /W width (1500) dwarfs 0x65's (250) — equal widths mean " +
+            "the /W table was not read");
+    }
+
+    /// <summary>
     /// §7.2.3 Table 2's delimiters must end a name identically in both, or the
     /// same <c>/F1</c> resolves to a font in one machine and to a missing
     /// resource in the other. Form feed and the braces were missing from
@@ -476,16 +518,42 @@ internal static class ParityFixture
     }
 
     /// <summary>
+    /// A one-page PDF whose /F1 is a Type0 / Identity-H font whose
+    /// <c>/DescendantFonts</c> is an INDIRECT REFERENCE (object 6), the shape
+    /// real producers emit and the one a bare `is PdfArray` cast misses. The
+    /// descendant's /W gives CIDs 0x48/0x65/0x6C the widths 1500/250/500, all
+    /// far from /DW and from any flat default, so a parser that fails to reach
+    /// the table cannot land on the right answer by accident.
+    /// </summary>
+    public static byte[] BuildType0(string content) => Build(
+        content,
+        fontObject:
+            "5 0 obj\n<< /Type /Font /Subtype /Type0 /BaseFont /AAAAAA+Parity "
+          + "/Encoding /Identity-H /DescendantFonts 6 0 R >>\nendobj\n",
+        extraObjects:
+            "6 0 obj\n[ 7 0 R ]\nendobj\n"
+          + "7 0 obj\n<< /Type /Font /Subtype /CIDFontType2 /BaseFont /AAAAAA+Parity "
+          + "/CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> "
+          + "/DW 1000 /W [ 72 [1500] 101 [250] 108 [500] ] >>\nendobj\n");
+
+    /// <summary>
     /// A minimal one-page PDF whose content stream is exactly
     /// <paramref name="content"/>, Latin-1 encoded so binary sample bytes
     /// survive verbatim.
     /// </summary>
-    public static byte[] Build(string content)
+    public static byte[] Build(
+        string content,
+        string fontObject = "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n",
+        string extraObjects = "")
     {
         var body = Encoding.Latin1.GetBytes(content);
         using var ms = new MemoryStream();
         void W(string s) => ms.Write(Encoding.Latin1.GetBytes(s));
 
+        // Objects after the font are written as one block; the xref below is a
+        // single free entry plus a run, and any object it does not name is
+        // still reachable because PdfDocument reconstructs on a bad offset.
+        // Keeping the table honest for 1-5 is enough for every fixture here.
         W("%PDF-1.7\n");
         var offsets = new long[6];
 
@@ -501,13 +569,36 @@ internal static class ParityFixture
         ms.Write(body);
         W("\nendstream\nendobj\n");
         offsets[5] = ms.Position;
-        W("5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n");
+        W(fontObject);
 
+        var extraOffsets = new List<long>();
+        foreach (var obj in SplitObjects(extraObjects))
+        {
+            extraOffsets.Add(ms.Position);
+            W(obj);
+        }
+
+        var size = 6 + extraOffsets.Count;
         var xref = ms.Position;
-        W("xref\n0 6\n0000000000 65535 f \n");
+        W($"xref\n0 {size}\n0000000000 65535 f \n");
         for (int i = 1; i <= 5; i++)
             W($"{offsets[i]:D10} 00000 n \n");
-        W($"trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n");
+        foreach (var offset in extraOffsets)
+            W($"{offset:D10} 00000 n \n");
+        W($"trailer\n<< /Size {size} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n");
         return ms.ToArray();
+    }
+
+    /// <summary>Split a concatenation of "N 0 obj … endobj\n" bodies.</summary>
+    private static IEnumerable<string> SplitObjects(string objects)
+    {
+        int pos = 0;
+        while (pos < objects.Length)
+        {
+            var end = objects.IndexOf("endobj\n", pos, StringComparison.Ordinal);
+            if (end < 0) yield break;
+            yield return objects[pos..(end + "endobj\n".Length)];
+            pos = end + "endobj\n".Length;
+        }
     }
 }
