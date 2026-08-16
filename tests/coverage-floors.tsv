@@ -88,14 +88,40 @@
 # converge, that is not coverage improving; it is the differential tests having
 # stopped contributing, and it should be investigated rather than celebrated.
 #
-# NO FLOOR IS BETTER THAN A WRONG ONE
+# NO FLOOR IS BETTER THAN A WRONG ONE — AND A BOOTSTRAP FLOOR IS NEITHER
 #
-# Excise.App, Excise.Avalonia and Excise.Ocr had `ci` rows here produced by the
-# same invalid local measurement. Nothing enforced them, so nothing caught it.
-# They are DELETED rather than corrected: check-coverage-floor.sh fails on an
-# undeclared pair, so wiring one of those gates now stops loudly and demands a
-# CI-measured number, instead of silently passing against a figure that was
-# never true. Re-add them by reading a CI run, one at a time, as each is wired.
+# Excise.App, Excise.Avalonia and Excise.Ocr originally had `ci` rows here
+# produced by the same invalid local measurement described above (CI's filter,
+# run on a corpus- and tool-equipped dev machine). Nothing enforced them, so
+# nothing caught it. They were DELETED rather than corrected, on the theory
+# that check-coverage-floor.sh fails loudly on an undeclared pair, so wiring
+# one of those gates would demand a CI-measured number instead of silently
+# passing against a figure that was never true.
+#
+# That theory turned out to trade one failure mode for a worse one: "re-add by
+# reading a CI run" requires collection to exist in ci.yml FIRST, and none of
+# these three assemblies had any (#909's second half). With no floor and no
+# collection, coverage for all three was free to drift for as long as nobody
+# went looking — which is the exact "declared, plausible, inert" shape this
+# file exists to prevent, just relocated from "wrong number" to "no gate".
+#
+# The three `ci` rows below are BOOTSTRAP floors, not CI reads — deliberately
+# far below any real measurement (this file's own dev-machine check found
+# tesseract/mutool/gs/pdftocairo all present locally, i.e. exactly the
+# environment mismatch that produced the 0.76 outage, so no locally-measured
+# number is trustworthy here either). A bootstrap floor can only UNDER-gate:
+# it verifies collection runs and the package name appears in the report, and
+# nothing more. That is the opposite failure direction from the 0.76 incident
+# (a floor read from the wrong environment that was too HIGH and blocked
+# everything) — a floor of 0.01 cannot false-positive a real regression, it
+# can only fail to catch a small one until the ratchet raises it. Once each
+# assembly's first CI run produces an artifact, run:
+#
+#     scripts/check-coverage-floor.sh <ci-artifact> ci <assembly> --update
+#
+# which replaces the bootstrap value with a real CI-measured one and starts
+# the ratchet properly. Until then, do not read these three numbers as
+# evidence of actual coverage — read the `note` column.
 #
 # Format:  profile <TAB> assembly <TAB> floor <TAB> measured <TAB> note
 # `measured` is the observation the floor was derived from — record where it
@@ -103,6 +129,9 @@
 
 ci	Excise.Rendering	0.52	0.5436	READ OFF CI (4 runs, identical). Corpus-less: 86 of 468 skip.
 full	Excise.Rendering	0.85	0.8749	dev machine, corpora + mutool/gs/pdftocairo, unfiltered (3807 tests)
+ci	Excise.App	0.01	-	BOOTSTRAP (#909): collection wired, not yet read off CI. Gate carries the App.Tests gui-conditional.
+ci	Excise.Avalonia	0.01	-	BOOTSTRAP (#909): collection wired, not yet read off CI.
+ci	Excise.Ocr	0.01	-	BOOTSTRAP (#909): collection wired, not yet read off CI. No tesseract on this runner.
 full	Excise.App	0.76	0.787	dev machine, measured via Excise.App.Tests
 full	Excise.Avalonia	0.84	0.864	dev machine, measured via Excise.App.Tests
 full	Excise.Ocr	0.80	0.827	dev machine, measured via Excise.App.Tests; tesseract present

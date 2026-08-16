@@ -172,12 +172,25 @@ fi
 # Always prove the verdict logic before relying on it for a real run.
 self_test
 
+# Coverage collection (#909): opt-in and written OUTSIDE $TMP, which the trap
+# above deletes on exit. Default stays $TMP/results so nothing changes for a
+# caller that doesn't ask for coverage. AVALONIA_TEST_COLLECT_COVERAGE=1 adds
+# the coverlet collector flag; the caller is responsible for reading the
+# cobertura report back out of AVALONIA_TEST_RESULTS_DIR afterward.
+RESULTS_DIR="${AVALONIA_TEST_RESULTS_DIR:-$TMP/results}"
+mkdir -p "$RESULTS_DIR"
+COLLECT_ARGS=()
+if [[ "${AVALONIA_TEST_COLLECT_COVERAGE:-0}" == "1" ]]; then
+  COLLECT_ARGS+=(--collect:"XPlat Code Coverage")
+fi
+
 echo "==> running Excise.Avalonia.Tests (TRX-verified, native-teardown tolerant)"
 rc=0
 dotnet test "$ROOT/Excise.Avalonia.Tests" --no-build -c Debug \
   --logger "console;verbosity=normal" \
   --logger "trx;LogFileName=avalonia.trx" \
-  --results-directory "$TMP/results" || rc=$?
+  --results-directory "$RESULTS_DIR" \
+  "${COLLECT_ARGS[@]}" || rc=$?
 
 if [[ $rc -eq 0 ]]; then
   echo "==> Excise.Avalonia.Tests passed with clean exit"
@@ -185,7 +198,7 @@ if [[ $rc -eq 0 ]]; then
 fi
 
 echo "==> test host exited $rc — checking whether the TRX shows a green run"
-if trx_verdict "$TMP/results/avalonia.trx"; then
+if trx_verdict "$RESULTS_DIR/avalonia.trx"; then
   echo "==> all recorded tests passed; ignoring native-teardown exit $rc (#752)"
   exit 0
 fi
