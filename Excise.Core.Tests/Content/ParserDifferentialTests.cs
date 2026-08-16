@@ -57,6 +57,31 @@ namespace Excise.Core.Tests.Content;
 /// <item>Bidi. ExtractLetters reorders visual-order RTL runs (#632) and
 /// ContentStreamParser does not, so every fixture here is LTR.</item>
 /// </list>
+///
+/// <para><b>What a differential structurally CANNOT catch, and where that is
+/// covered instead.</b> Two machines that are wrong the SAME way agree, and
+/// agreement is all this file measures. #983 was exactly that: neither
+/// restored the §8.4.1 Table 52 text state at <c>Q</c>, every fixture here
+/// passed, and the third state machine
+/// (<c>GlyphRemover.TextStateTracker</c>) was the odd one out precisely
+/// because it was correct. Shared defects therefore need a gate that compares
+/// against something other than the twin — a spec property
+/// (<see cref="GraphicsStateTextParameterTests"/>) or an independent
+/// implementation
+/// (<see cref="GraphicsStateTextParameterOracleTests"/>, mutool). Do not
+/// answer a "both parsers are wrong" report by adding a fixture here.</para>
+///
+/// <para><b>Why the renderer is not in this gate.</b> There are FOUR content
+/// state machines, not two: <c>SkiaRenderer</c> keeps its own text state and
+/// re-executes operators under it (#598), and
+/// <c>GlyphRemover.TextStateTracker</c> tracks the text-state operators it
+/// re-emits. The renderer is left out because its divergences are not silent —
+/// the reference-renderer differentials see them in pixels — and because
+/// changing it moves the corpus expectation manifests. It is NOT left out
+/// because it is correct: it shares #983's defect verbatim (its
+/// <c>GraphicsState.Clone()</c> omits <c>TextState</c> and
+/// <c>SaveState</c>/<c>RestoreState</c> never touch <c>_textState</c>),
+/// tracked as #986.</para>
 /// </summary>
 public class ParserDifferentialTests
 {
@@ -546,10 +571,16 @@ internal static class ParityFixture
     /// <paramref name="content"/>, Latin-1 encoded so binary sample bytes
     /// survive verbatim.
     /// </summary>
+    /// <param name="extraFontResources">Additional entries for the page's
+    /// <c>/Resources /Font</c> dictionary, e.g. <c>"/F2 6 0 R"</c>, whose
+    /// objects come in via <paramref name="extraObjects"/>. Used by the #983
+    /// gate, which needs a SECOND font to make a bracketed <c>Tf</c> observable
+    /// through something other than the size.</param>
     public static byte[] Build(
         string content,
         string fontObject = "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n",
-        string extraObjects = "")
+        string extraObjects = "",
+        string extraFontResources = "")
     {
         var body = Encoding.Latin1.GetBytes(content);
         using var ms = new MemoryStream();
@@ -568,7 +599,7 @@ internal static class ParityFixture
         W("2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n");
         offsets[3] = ms.Position;
         W("3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R "
-          + "/Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n");
+          + "/Resources << /Font << /F1 5 0 R " + extraFontResources + " >> >> >>\nendobj\n");
         offsets[4] = ms.Position;
         W($"4 0 obj\n<< /Length {body.Length} >>\nstream\n");
         ms.Write(body);

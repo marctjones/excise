@@ -210,12 +210,30 @@ public class ContentStreamParser
         switch (name)
         {
             case "q":
-                _stateStack.Push(_state.Clone());
+                {
+                    // §8.4.1 Table 52 puts the TEXT state parameters (font +
+                    // size, Tc, Tw, Tz, TL, Ts, Tr) in the GRAPHICS state, so
+                    // `q` saves them and `Q` restores them. Neither content
+                    // parser did until #983: a producer that brackets a
+                    // differently-styled run in q/Q left the font size, spacing
+                    // and leading of that run applied to everything after the
+                    // `Q`. GlyphRemover.TextStateTracker has always done it, so
+                    // the redaction pipeline disagreed with itself. mutool
+                    // corroborates the spec reading (its stext reports the
+                    // pre-`q` size after `Q`).
+                    var saved = _state.Clone();
+                    saved.SavedTextState = CaptureTextState();
+                    _stateStack.Push(saved);
+                }
                 return true;
 
             case "Q":
                 if (_stateStack.Count > 0)
+                {
                     _state = _stateStack.Pop();
+                    if (_state.SavedTextState is { } restored)
+                        RestoreTextState(restored);
+                }
                 return true;
 
             case "cm":
@@ -259,6 +277,61 @@ public class ContentStreamParser
             default:
                 return false;
         }
+    }
+
+    /// <summary>
+    /// The §8.4.1 Table 52 text-state parameters, plus the per-font state
+    /// <c>Tf</c> derives from the font dictionary. Restoring the NAME and SIZE
+    /// alone would leave a parser that reports "F1 @ 12" while decoding through
+    /// the bracketed font's ToUnicode/CID maps, which is a worse failure than
+    /// not restoring at all. The derived members are all
+    /// immutable-per-font references, so this is a handful of pointer copies —
+    /// no <see cref="LoadFont"/> re-parse on restore.
+    ///
+    /// The text matrix is deliberately ABSENT: Table 52 does not list it, it is
+    /// reset by <c>BT</c>, and q/Q may not appear inside a text object (§8.2).
+    /// #983.
+    /// </summary>
+    private readonly record struct TextStateSnapshot(
+        double FontSize,
+        string FontName,
+        PdfDictionary? CurrentFont,
+        Dictionary<int, string>? ToUnicodeMap,
+        bool Is2ByteFont,
+        PdfDictionary? CidFontDict,
+        Fonts.CidFontWidths? CidMetrics,
+        bool IsVerticalWriting,
+        Text.CidCMap? RegisteredEncodingCMap,
+        IReadOnlyDictionary<int, string>? RegisteredCidToUnicode,
+        double TextLeading,
+        double CharSpacing,
+        double WordSpacing,
+        double HorizontalScaling,
+        double TextRise);
+
+    private TextStateSnapshot CaptureTextState() => new(
+        _fontSize, _fontName, _currentFont, _toUnicodeMap, _is2ByteFont,
+        _cidFontDict, _cidMetrics, _isVerticalWriting, _registeredEncodingCMap,
+        _registeredCidToUnicode, _textLeading, _charSpacing, _wordSpacing,
+        _horizontalScaling, _textRise);
+
+    private void RestoreTextState(in TextStateSnapshot s)
+    {
+        _fontSize = s.FontSize;
+        _fontName = s.FontName;
+        _currentFont = s.CurrentFont;
+        _toUnicodeMap = s.ToUnicodeMap;
+        _is2ByteFont = s.Is2ByteFont;
+        _cidFontDict = s.CidFontDict;
+        _cidMetrics = s.CidMetrics;
+        _isVerticalWriting = s.IsVerticalWriting;
+        _registeredEncodingCMap = s.RegisteredEncodingCMap;
+        _registeredCidToUnicode = s.RegisteredCidToUnicode;
+        _textLeading = s.TextLeading;
+        _charSpacing = s.CharSpacing;
+        _wordSpacing = s.WordSpacing;
+        _horizontalScaling = s.HorizontalScaling;
+        _textRise = s.TextRise;
     }
 
     private bool ExecutePathConstructionOperator(string name, List<PdfObject> operands)
@@ -1973,6 +2046,10 @@ public class ContentStreamParser
 
         // Pending clipping operator queued by W / W*; consumed at the next path-painting op.
         public string? PendingClip;
+
+        // The §8.4.1 Table 52 text-state parameters as of the `q` that pushed
+        // this state; null on the live state, which never needs one. #983.
+        public TextStateSnapshot? SavedTextState;
 
         public void MultiplyCtm(double a, double b, double c, double d, double e, double f)
         {
