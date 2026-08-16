@@ -1406,6 +1406,30 @@ rendered it and excise did not — a defect that must be filed, not pinned).
 It also flags credential-blocked pages, where "no oracle rendered either" only
 means nobody had the password (see `tests/corpus-passwords.tsv`).
 
+**Two verdicts in the scan are decided by the ORACLE MAJORITY, not by one
+oracle** (#907, #932) — both were single-oracle rules and both mis-reported in
+the same direction:
+
+- **A refusal is classified from the oracle evidence.** `AGREED_REFUSAL` means
+  excise refused and nothing else rendered it either (correct, pinnable);
+  `EXCISE_SIDE_GAP` means an oracle rendered a page excise refused (a defect —
+  pin it only with an issue number in the note column). Before this, both were
+  `DECODE_ERROR`, so the gate could not tell them apart and defended the
+  defect. Credential-blocked and load-dependent (`TIMEOUT`) refusals are
+  deliberately left alone.
+- **`MISSING_CONTENT` needs a majority.** A tile counts as missing only when
+  most of the oracles that rendered inked it and excise did not. Scoring
+  against the most-inked oracle elected the outlier by construction: on a page
+  whose only content is an annotation with no `/AP` (§12.5.5 makes the
+  appearance optional, and the oracles disagree in both directions) excise read
+  as defective for agreeing with everyone else. Oracles that rasterized a
+  different page box — pdftocairo renders the `/MediaBox` where excise, mutool
+  and pdfium render the `/CropBox` — get no vote, because their tiles address a
+  different part of the page.
+
+Majority scoring is not a loosening. It caught two defects the most-inked rule
+passed (#970, #972).
+
 `--extra-oracles all` is close to free: PDFBox and PDFium only run on pages
 where mutool and pdftocairo have already disagreed. Use it — a second opinion
 costs nothing on the 97% of pages that pass, and the escalation lands exactly

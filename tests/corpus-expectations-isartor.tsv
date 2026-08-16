@@ -12,12 +12,20 @@
 #                corroboration, not a defect
 #   MALFORMED_PDF / EMPTY_DOC  the fixture is broken or hostile on
 #                purpose; refusing it is correct
+#   AGREED_REFUSAL  excise refused AND no oracle rendered it either —
+#                corroborated refusal, correct behaviour (#907)
+#
+# One status is NOT a correct outcome and must never be pinned bare:
+#   EXCISE_SIDE_GAP  excise refused but an oracle rendered the page. An
+#                oracle proves it is renderable, so this records an excise
+#                bug. File it, then pin the row with the issue number in
+#                the note column — or fix it.
 #   *            load-dependent when measured (see the note on the row) —
 #                asserts only that the page was scanned
 #
 # Keys are corpus-relative PATHS, not basenames: this corpus may have
 # subdirectories and duplicate filenames.
-# Baseline: PASS=198, MISSING_CONTENT=7
+# Baseline: PASS=205
 Isartor testsuite/PDFA-1b/6.1 File structure/6.1.10 Filters/isartor-6-1-10-t01-fail-a.pdf	1	PASS
 Isartor testsuite/PDFA-1b/6.1 File structure/6.1.10 Filters/isartor-6-1-10-t01-fail-b.pdf	1	PASS
 Isartor testsuite/PDFA-1b/6.1 File structure/6.1.10 Filters/isartor-6-1-10-t01-fail-c.pdf	1	PASS
@@ -157,13 +165,13 @@ Isartor testsuite/PDFA-1b/6.5 Annotations/6.5.3 Annotation dictionaries/isartor-
 Isartor testsuite/PDFA-1b/6.5 Annotations/6.5.3 Annotation dictionaries/isartor-6-5-3-t04-fail-d.pdf	1	PASS
 Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-a.pdf	1	PASS
 Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-b.pdf	1	PASS
-Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-c.pdf	1	MISSING_CONTENT
-Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-d.pdf	1	MISSING_CONTENT
-Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-e.pdf	1	MISSING_CONTENT
-Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-f.pdf	1	MISSING_CONTENT
-Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-g.pdf	1	MISSING_CONTENT
-Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-h.pdf	1	MISSING_CONTENT
-Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-i.pdf	1	MISSING_CONTENT
+Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-c.pdf	1	PASS
+Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-d.pdf	1	PASS
+Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-e.pdf	1	PASS
+Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-f.pdf	1	PASS
+Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-g.pdf	1	PASS
+Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-h.pdf	1	PASS
+Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t01-fail-i.pdf	1	PASS
 Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t02-fail-a.pdf	1	PASS
 Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t02-fail-b.pdf	1	PASS
 Isartor testsuite/PDFA-1b/6.6 Actions/6.6.1 General/isartor-6-6-1-t02-fail-c.pdf	1	PASS

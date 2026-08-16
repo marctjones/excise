@@ -2,26 +2,27 @@
   "Path": "pdfjs/checkbox_no_appearance.pdf",
   "Source": "pdf.js corpus",
   "Owner": "rendering:quality",
-  "RootCause": "FULL_CORPUS_BASELINE",
-  "ImprovementPriority": "NONE",
-  "Confidence": "MEDIUM",
-  "Notes": "Baseline contract inferred from full all-pages raw corpus report exploratory-report-test-pdfs-all-20260622-passone-sharded-coverage.json.",
+  "RootCause": "ANNOTATION_APPEARANCE_SYNTHESIS",
+  "ImprovementPriority": "P2",
+  "Confidence": "HIGH",
+  "Issue": 972,
+  "ReviewStatus": "REVIEWED",
+  "Notes": "Re-classified from the auto-inferred baseline after #932 gave the corpus gate majority ink scoring. mutool and pdftocairo both draw the check mark for this /AP-less checkbox; excise draws two empty boxes. The old contract claimed PIXEL_EXACT / REFS_AGREE, which was never true here — the most-inked ink rule simply could not see it.",
   "Pages": {
     "1": {
-      "ExpectedRawStatus": "PASS",
-      "ReleaseStatus": "PASS",
-      "QualityStatus": "PIXEL_EXACT",
-      "PixelAgreement": "MATCHES_ALL_REQUIRED",
+      "ExpectedRawStatus": "MISSING_CONTENT",
+      "ReleaseStatus": "FAIL",
+      "QualityStatus": "FAIL",
+      "PixelAgreement": "MATCHES_NONE",
       "ReferenceSituation": "REFS_AGREE",
-      "RootCause": "RAW_PIXEL_MATCH",
+      "RootCause": "ANNOTATION_APPEARANCE_SYNTHESIS",
       "Target": {
         "Mode": "REFERENCE_CONSENSUS",
-        "Reason": "Baseline full-corpus contract inferred from raw all-pages scan."
+        "Reason": "mutool and pdftocairo agree on drawing the check; this is not the ISO 32000-1 12.5.5 carve-out where the oracles diverge."
       },
-      "ImprovementPriority": "NONE",
+      "ImprovementPriority": "P2",
       "Confidence": "HIGH",
-      "QualityReason": "Baseline classification inferred from full all-pages raw corpus scan; promote to a reviewed contract when triaged.",
-      "Notes": "Auto-classified from exploratory-report-test-pdfs-all-20260622-passone-sharded-coverage.json."
+      "QualityReason": "excise synthesizes an unchecked box for a checkbox whose value is on — tracked as #972."
     }
   }
 }

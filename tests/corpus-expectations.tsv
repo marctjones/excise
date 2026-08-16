@@ -12,12 +12,20 @@
 #                corroboration, not a defect
 #   MALFORMED_PDF / EMPTY_DOC  the fixture is broken or hostile on
 #                purpose; refusing it is correct
+#   AGREED_REFUSAL  excise refused AND no oracle rendered it either —
+#                corroborated refusal, correct behaviour (#907)
+#
+# One status is NOT a correct outcome and must never be pinned bare:
+#   EXCISE_SIDE_GAP  excise refused but an oracle rendered the page. An
+#                oracle proves it is renderable, so this records an excise
+#                bug. File it, then pin the row with the issue number in
+#                the note column — or fix it.
 #   *            load-dependent when measured (see the note on the row) —
 #                asserts only that the page was scanned
 #
 # Keys are corpus-relative PATHS, not basenames: this corpus may have
 # subdirectories and duplicate filenames.
-# Baseline: PASS=666, PASS_ONE=10, *=1, MALFORMED_PDF=2, MISSING_CONTENT=2, EXCISE_ONLY=2, RECOVERED_MALFORMED_CONTENT=1, EMPTY_DOC=1
+# Baseline: PASS=668, PASS_ONE=10, MALFORMED_PDF=2, EXCISE_ONLY=2, RECOVERED_MALFORMED_CONTENT=1, MISSING_CONTENT=1, EMPTY_DOC=1
 160F-2019.pdf	1	PASS
 22060_A1_01_Plans.pdf	1	PASS
 90ms_rksj_h_sample.pdf	1	PASS
@@ -131,7 +139,7 @@ bitmap-stripe-single-no-end-of-stripe.pdf	1	PASS
 bitmap-stripe-single.pdf	1	PASS
 bitmap-stripe.pdf	1	PASS
 bitmap-symbol-big-segmentid.pdf	1	PASS
-bitmap-symbol-context-reuse.pdf	1	MISSING_CONTENT
+bitmap-symbol-context-reuse.pdf	1	PASS
 bitmap-symbol-empty.pdf	1	PASS
 bitmap-symbol-negative-sbdsoffset.pdf	1	PASS
 bitmap-symbol-refine.pdf	1	PASS
@@ -322,7 +330,7 @@ canvas.pdf	1	PASS
 ccitt_EndOfBlock_false.pdf	1	PASS
 cff_bluescale_small_zones.pdf	1	PASS
 checkbox-bad-appearance.pdf	1	PASS
-checkbox_no_appearance.pdf	1	PASS
+checkbox_no_appearance.pdf	1	MISSING_CONTENT		#972: checkbox with no /AP renders unchecked; mutool and pdftocairo both draw the check
 chrome-text-selection-markedContent.pdf	1	PASS
 cid_cff.pdf	1	PASS
 cidfont_cmap_overflow.pdf	1	PASS
@@ -573,7 +581,7 @@ issue17998.pdf	1	PASS
 issue18030.pdf	1	PASS
 issue18032.pdf	1	PASS
 issue18036.pdf	1	PASS
-issue18042.pdf	1	MISSING_CONTENT
+issue18042.pdf	1	PASS
 issue18059.pdf	1	PASS
 issue18072.pdf	1	PASS
 issue18099_reduced.pdf	1	PASS

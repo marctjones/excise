@@ -1057,6 +1057,12 @@ def agreement_class(e):
     if st == "MISSING_CONTENT":
         # excise drew nothing where the reference drew content (#883).
         return "MISSING_CONTENT"
+    if st in ("AGREED_REFUSAL", "EXCISE_SIDE_GAP"):
+        # The scanner now decides these from the same oracle evidence the
+        # derivation below uses, and writes them into `status` so the
+        # expectation manifests can pin them (#907). Reports generated before
+        # that still fall through and are classified identically.
+        return st
     if st == "RECOVERED_MALFORMED_CONTENT":
         # excise met damaged content and RECOVERED instead of crashing, hanging
         # or exhausting memory. For a decompression bomb (bomb_giant.pdf: 123 KB
@@ -1159,7 +1165,7 @@ failures = [
         "UNSUPPORTED_COMPRESSION", "DECODE_ERROR", "RESOURCE_LIMIT",
         "INVALID_PAGE_GEOMETRY", "INVALID_PAGE_NUMBER", "PARSE_ERROR", "RENDER_ERROR",
         "COMPARE_ERROR", "ALL_ORACLES_REFUSED", "EMPTY_DOC", "RENDER_NULL",
-        "SCANNER_CRASH"
+        "SCANNER_CRASH", "EXCISE_SIDE_GAP"
     }
 ]
 if failures:
