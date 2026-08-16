@@ -13,9 +13,39 @@ namespace Excise.Rendering.Differential;
 /// <see cref="QpdfReferenceTool.RequiresPassword"/>.
 /// </summary>
 /// <summary>
+/// The normal appearance stream (<c>/AP /N</c>) an annotation points at, as
+/// qpdf's own parser resolved it (#933) — the indirect reference followed, the
+/// Form XObject's <c>/BBox</c> and <c>/Matrix</c> read from the target object.
+///
+/// <see cref="Matrix"/> is null when the form carries no <c>/Matrix</c>, which
+/// §8.10.2 defines as the identity — the two are NOT distinguished here because
+/// nothing downstream needs to.
+/// </summary>
+public sealed record QpdfAppearance(
+    double BBoxLeft,
+    double BBoxBottom,
+    double BBoxRight,
+    double BBoxTop,
+    IReadOnlyList<double>? Matrix)
+{
+    /// <summary>Width of the form's bounding box, corner order made irrelevant.</summary>
+    public double BBoxWidth => Math.Abs(BBoxRight - BBoxLeft);
+
+    /// <summary>Height of the form's bounding box, corner order made irrelevant.</summary>
+    public double BBoxHeight => Math.Abs(BBoxTop - BBoxBottom);
+}
+
+/// <summary>
 /// One annotation as qpdf's independent parser sees it (#933). Rect is
 /// normalized so a comparison never fails merely because the two tools ordered
 /// the corners differently.
+///
+/// The coordinate-bearing members (<see cref="QuadPoints"/>,
+/// <see cref="Vertices"/>, <see cref="InkStrokes"/>, <see cref="LineEndpoints"/>)
+/// are kept FLAT, in file order, exactly as the array appeared in the
+/// dictionary. Reshaping them here would mean this class deciding what the
+/// numbers mean, and a mis-grouping in that decision would then be invisible to
+/// every caller — the oracle must report what it read, not an interpretation.
 /// </summary>
 public sealed record QpdfAnnotation(
     string Subtype,
@@ -25,7 +55,13 @@ public sealed record QpdfAnnotation(
     double Top,
     int? VertexCount,
     int? InkStrokeCount,
-    string? EndLineEnding);
+    string? EndLineEnding,
+    IReadOnlyList<double>? QuadPoints,
+    string? Contents,
+    IReadOnlyList<double>? Vertices,
+    IReadOnlyList<IReadOnlyList<double>>? InkStrokes,
+    IReadOnlyList<double>? LineEndpoints,
+    QpdfAppearance? NormalAppearance);
 
 public enum QpdfPasswordStatus
 {
@@ -271,6 +307,13 @@ public static class QpdfReferenceTool
             if (!doc.RootElement.TryGetProperty("objects", out var objects))
                 return null;
 
+            // Indirect references appear as "5 0 R" strings whose target is
+            // keyed by that same string, so one pass gives both the objects to
+            // scan and the table needed to follow /AP into its Form XObject.
+            var byReference = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
+            foreach (var entry in objects.EnumerateObject())
+                byReference[entry.Name] = entry.Value;
+
             var found = new List<QpdfAnnotation>();
             foreach (var entry in objects.EnumerateObject())
             {
@@ -314,11 +357,27 @@ public static class QpdfReferenceTool
                     lineEnding = (leEl[1].GetString() ?? "").TrimStart('/');
                 }
 
+                // qpdf decodes PDF text strings (including the UTF-16BE-with-BOM
+                // form excise writes for non-ASCII) into JSON strings, so what
+                // lands here is the reader's decoded view — not raw bytes.
+                string? contents = null;
+                if (entry.Value.TryGetProperty("/Contents", out var contentsEl) &&
+                    contentsEl.ValueKind == JsonValueKind.String)
+                {
+                    contents = contentsEl.GetString();
+                }
+
                 found.Add(new QpdfAnnotation(
                     subtype,
                     Math.Min(r[0], r[2]), Math.Min(r[1], r[3]),
                     Math.Max(r[0], r[2]), Math.Max(r[1], r[3]),
-                    vertexCount, inkStrokeCount, lineEnding));
+                    vertexCount, inkStrokeCount, lineEnding,
+                    ReadNumberArray(entry.Value, "/QuadPoints"),
+                    contents,
+                    ReadNumberArray(entry.Value, "/Vertices"),
+                    ReadNestedNumberArrays(entry.Value, "/InkList"),
+                    ReadNumberArray(entry.Value, "/L"),
+                    ReadNormalAppearance(entry.Value, byReference)));
             }
 
             return found;
@@ -327,6 +386,97 @@ public static class QpdfReferenceTool
         {
             return null;
         }
+    }
+
+    /// <summary>
+    /// A flat array of numbers under <paramref name="key"/>, or null when the
+    /// key is absent, is not an array, or holds anything that is not a number.
+    ///
+    /// A NON-NUMBER MEMBER YIELDS NULL rather than a shorter list: a caller
+    /// counting quadpoints or vertices would read a silently-truncated array as
+    /// "excise wrote fewer points", which is a different (and wrong) finding.
+    /// </summary>
+    private static IReadOnlyList<double>? ReadNumberArray(JsonElement dict, string key)
+    {
+        if (!dict.TryGetProperty(key, out var el) || el.ValueKind != JsonValueKind.Array)
+            return null;
+
+        var values = new List<double>(el.GetArrayLength());
+        foreach (var item in el.EnumerateArray())
+        {
+            if (!item.TryGetDouble(out var v)) return null;
+            values.Add(v);
+        }
+        return values;
+    }
+
+    /// <summary>
+    /// An array of number arrays under <paramref name="key"/> — the shape
+    /// <c>/InkList</c> uses, one inner array per pen-down..pen-up stroke.
+    /// </summary>
+    private static IReadOnlyList<IReadOnlyList<double>>? ReadNestedNumberArrays(JsonElement dict, string key)
+    {
+        if (!dict.TryGetProperty(key, out var el) || el.ValueKind != JsonValueKind.Array)
+            return null;
+
+        var strokes = new List<IReadOnlyList<double>>(el.GetArrayLength());
+        foreach (var inner in el.EnumerateArray())
+        {
+            if (inner.ValueKind != JsonValueKind.Array) return null;
+
+            var points = new List<double>(inner.GetArrayLength());
+            foreach (var item in inner.EnumerateArray())
+            {
+                if (!item.TryGetDouble(out var v)) return null;
+                points.Add(v);
+            }
+            strokes.Add(points);
+        }
+        return strokes;
+    }
+
+    /// <summary>
+    /// Follows <c>/AP</c> → <c>/N</c> to the Form XObject and reports its
+    /// <c>/BBox</c> and <c>/Matrix</c>, resolving indirect references through
+    /// <paramref name="byReference"/>.
+    ///
+    /// Returns null when there is no normal appearance, when <c>/N</c> is a
+    /// sub-dictionary of named appearance states (§12.5.5 — widgets use that
+    /// form and no single BBox describes it), or when the target carries no
+    /// readable <c>/BBox</c>. A caller therefore cannot tell "no /AP" from
+    /// "an /AP this could not read"; the tests that need the distinction assert
+    /// on subtypes whose authoring path is known to write the simple form.
+    /// </summary>
+    private static QpdfAppearance? ReadNormalAppearance(
+        JsonElement annot, IReadOnlyDictionary<string, JsonElement> byReference)
+    {
+        if (!annot.TryGetProperty("/AP", out var apEl)) return null;
+        if (Resolve(apEl, byReference) is not { } ap) return null;
+        if (!ap.TryGetProperty("/N", out var nEl)) return null;
+        if (Resolve(nEl, byReference) is not { } form) return null;
+
+        var bbox = ReadNumberArray(form, "/BBox");
+        if (bbox is not { Count: >= 4 }) return null;
+
+        return new QpdfAppearance(
+            Math.Min(bbox[0], bbox[2]), Math.Min(bbox[1], bbox[3]),
+            Math.Max(bbox[0], bbox[2]), Math.Max(bbox[1], bbox[3]),
+            ReadNumberArray(form, "/Matrix"));
+    }
+
+    /// <summary>
+    /// A dictionary value that may be an indirect reference. qpdf's JSON v1
+    /// renders those as the bare <c>"5 0 R"</c> string that also keys the
+    /// target object, so following one is a lookup.
+    /// </summary>
+    private static JsonElement? Resolve(JsonElement value, IReadOnlyDictionary<string, JsonElement> byReference)
+    {
+        if (value.ValueKind == JsonValueKind.Object) return value;
+        if (value.ValueKind != JsonValueKind.String) return null;
+
+        var reference = value.GetString();
+        if (reference == null || !byReference.TryGetValue(reference, out var target)) return null;
+        return target.ValueKind == JsonValueKind.Object ? target : null;
     }
 
     private static string[] BuildArgs(string command, string pdfPath, string? password)
