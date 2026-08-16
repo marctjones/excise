@@ -49,7 +49,10 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Download smoke corpus
-        run: ./scripts/download-smoke-corpus.sh
+        # --require-all (#967): a missing fixture silently changes the
+        # measured workload, so a perf number would move for a reason that
+        # has nothing to do with the code.
+        run: ./scripts/download-smoke-corpus.sh --require-all
 
       # A missing corpus makes check-perf-budgets.sh exit 0 with "SKIPPED",
       # which is correct for a dev machine and useless for a gate. Fail here

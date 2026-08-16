@@ -33,17 +33,42 @@
 # and still fails an illegal one, so it never needs rewriting in the first place.
 #
 # Usage:
-#   scripts/check-gate-asymmetry.sh [base-ref]      # default: origin/main
+#   scripts/check-gate-asymmetry.sh [base-ref]      # default: origin/develop
+#
+# WHY THE DEFAULT IS origin/develop, NOT origin/main (#965)
+# ---------------------------------------------------------
+# This gate asks "did one commit-range both touch a perf path AND rewrite a
+# correctness expectation?" — a question about ONE change under review. Over an
+# entire release cycle (origin/main...HEAD) the answer is legitimately yes:
+# separate, individually-reviewed commits touch perf paths and other commits
+# legitimately update expectations (the §9.4.2 fix, #928's test deletions).
+# The old `origin/main` default therefore always fired, and every real caller —
+# t0 and all three CI jobs — already passed `origin/develop` explicitly. The
+# documented no-arg invocation was the ONLY one that failed, which reads as a
+# broken gate and trains people to ignore it.
 set -euo pipefail
 
-BASE="${1:-origin/main}"
+BASE="${1:-origin/develop}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-git rev-parse --verify --quiet "$BASE" >/dev/null || {
-  echo "check-gate-asymmetry: base ref '$BASE' not found; skipping."
-  exit 0
-}
+# A missing base ref used to `exit 0` with "skipping" — i.e. on a shallow clone
+# with no origin refs this gate was silently INERT while reporting success.
+# That is the vacuous-green shape #941 purged from five other gates, so it is
+# a hard failure here too. GATE_ASYMMETRY_ALLOW_NO_BASE=1 is the explicit
+# escape hatch for a context that genuinely cannot fetch the base ref; it says
+# so out loud and still exits non-zero unless the caller opted in.
+if ! git rev-parse --verify --quiet "$BASE" >/dev/null; then
+  echo "check-gate-asymmetry: base ref '$BASE' not found."
+  echo "  This gate compares HEAD against a base; without one it can only"
+  echo "  pretend to pass. Fetch the ref (git fetch origin develop) or pass an"
+  echo "  existing base: scripts/check-gate-asymmetry.sh <base-ref>"
+  if [ "${GATE_ASYMMETRY_ALLOW_NO_BASE:-0}" = "1" ]; then
+    echo "  GATE_ASYMMETRY_ALLOW_NO_BASE=1 — continuing WITHOUT this gate."
+    exit 0
+  fi
+  exit 1
+fi
 
 RANGE="$BASE...HEAD"
 
