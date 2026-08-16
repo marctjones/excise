@@ -49,7 +49,6 @@ Excise.App	tests-only	ForXGraphicsWithVerification	triage:test-covered app servi
 Excise.App	tests-only	GetCurrentDocumentAsStream	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	GetPageHeight	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	GetPageWidth	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
-Excise.App	tests-only	GetRotatedPageDimensions	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	HasRecentFiles	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	ImageSelectionToPdfCoords	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	ImageSelectionToPdfPointsTopLeft	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
@@ -66,7 +65,6 @@ Excise.App	tests-only	SuggestPageSubsetFilename	triage:test-covered app service/
 Excise.App	tests-only	SuggestSafeRedactedFilename	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	TextBoundsToPdfPointsTopLeft	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	TogglePin	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
-Excise.App	tests-only	TransformForRotation	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	TrimCacheForMemoryPressure	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.App	tests-only	ValidateScript	triage:test-covered app service/helper surface; no shipping gap proven; #940 owns deeper reachability
 Excise.Core	nowhere	Failures	triage:public library surface with no in-repo caller; acceptable until deeper reachability proves dead
