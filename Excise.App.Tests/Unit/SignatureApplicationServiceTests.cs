@@ -421,7 +421,7 @@ public class SignatureApplicationServiceTests : IDisposable
     /// signed, issuer unknown (self-signed ⇒ valid-but-untrusted, not corrupt).
     /// </summary>
     [Fact]
-    public void SignDocument_ExternalOracle_PdfsigReportsValidUntrustedSignature()
+    public async Task SignDocument_ExternalOracle_PdfsigReportsValidUntrustedSignature()
     {
         var pdfsig = FindPdfsig();
         Assert.SkipWhen(pdfsig == null, "poppler pdfsig not installed on this machine");
@@ -443,8 +443,8 @@ public class SignatureApplicationServiceTests : IDisposable
         var stdoutTask = process.StandardOutput.ReadToEndAsync();
         var stderrTask = process.StandardError.ReadToEndAsync();
         process.WaitForExit(30_000).Should().BeTrue("pdfsig must terminate");
-        var output = stdoutTask.GetAwaiter().GetResult();
-        _ = stderrTask.GetAwaiter().GetResult();
+        var output = await stdoutTask;
+        _ = await stderrTask;
 
         output.Should().Contain("Signature is Valid.",
             "an independent reader must accept the CMS signature and digest");
