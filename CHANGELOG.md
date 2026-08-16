@@ -50,6 +50,44 @@ semantic versioning.
   being quietly kept (#1005, #1006, #889, #885); two more carry magnitude
   divergences (#1003, #1004).
 
+### Changed
+- **There is now exactly ONE content-stream state machine** (#992, #995, #996,
+  #997). `ContentStreamParser` (2,062 lines) and `TextExtractor` (2,471) each
+  tokenized the same bytes, tracked their own graphics and text state, and
+  computed their own glyph advances, with four comments asking people to keep
+  the copies in sync by hand. Both are now sinks over
+  `Excise.Core/Content/ContentStreamWalker.cs`: 400 and 845 lines respectively,
+  a net 4,568 deletions against 3,096 insertions.
+
+  This is redaction security, not tidiness. Every RC1 defect lived in the drift
+  between the two copies — §9.4.2 line stepping (#942/#899, which destroyed
+  5–36% of a document per redacted term for months), the advance terms inside
+  horizontal scaling (#734), a glyph cell 12× too small in one machine
+  (#833/#980), the array nesting bound (#971), the hex-digit skip (#974),
+  `sh`/`d0`/`d1` and inline images (#980), a decode cascade at 3 steps versus 9
+  (#981), cancellation (#982), and the §8.4.1 Table 52 text state in *neither*
+  (#983). A new consumer adds a sink; it never adds a parser.
+
+  Consolidating forced three decisions where the two machines had differed, and
+  one of them mattered: `<</K /V>> (Text) Tj` showed the dictionary and dropped
+  the string in one machine while the other read the text. Resolved in the
+  keeping direction with §7.8.2 tail-operand selection — execution-only, so
+  `ContentStreamWriter` still round-trips every token, because trimming what is
+  *recorded* would turn a mis-execution into data loss on rewrite.
+
+- **The ExtGState `/Font` entry (Table 58) is implemented** (#990). A `gs`
+  operator can set the font, and both parsers were blind to it. Written once, in
+  the walker, which is the point of the consolidation above.
+
+### Removed
+- **`ParserDifferentialTests` (58 tests)** (#997). It existed to detect
+  divergence between the two content-stream machines and has no subject now that
+  there is one. Deleted on evidence rather than assumption: reverting the §9.4.2
+  fix reddened 2 of its tests while two machines existed and **zero** afterwards,
+  while `TextMatrixLineSteppingTests` — a spec-property gate rather than a
+  twin gate — caught it either way. The rule it leaves behind: a gate that
+  compares excise to excise cannot see a defect excise holds consistently.
+
 ## [3.8.0] - 2026-08-12
 
 One theme: **annotations, finished and independently verified.** The app could
