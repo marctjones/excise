@@ -149,17 +149,29 @@ for r in sorted(rows, key=path_of):
     if not (p and st):
         continue
     was = annotated.get((p, str(page)))
-    if was and not (st in LOAD_DEPENDENT or st == "EXCISE_SIDE_GAP"):
+    # A note on a row whose status did not move is still true — keep it. Only
+    # a status CHANGE invalidates a human's annotation, and only that warns.
+    if was and was[0] == st and st not in LOAD_DEPENDENT and st != "EXCISE_SIDE_GAP":
+        print(f"{p}\t{page}\t{st}\t\t{was[1]}")
+        continue
+    if was and was[0] != st and not (st in LOAD_DEPENDENT or st == "EXCISE_SIDE_GAP"):
         lost.append((p, page, was[0], was[1], st))
     if st in LOAD_DEPENDENT:
         print(f"{p}\t{page}\t*\t\tload-dependent ({st} when measured); any terminal status accepted")
     elif st == "EXCISE_SIDE_GAP":
         # Pinned, because an ungated page is worse than a gated bug — but never
         # silently: the row carries its own indictment and the run warns (#907).
+        #
+        # An existing note is CARRIED FORWARD rather than overwritten. The
+        # boilerplate says "file an issue and replace this note with its
+        # number"; re-emitting it every run would revert the number someone
+        # did write, silently undoing the exact thing it asked for.
         gaps.append(f"{p}#p{page}")
-        print(f"{p}\t{page}\t{st}\t\tUNTRIAGED excise-side gap: an oracle rendered "
-              f"this page and excise did not (was {r.get('refusedAs') or 'a refusal'}) "
-              f"— file an issue and replace this note with its number")
+        note = was[1] if was and was[1] else (
+            "UNTRIAGED excise-side gap: an oracle rendered this page and excise did not "
+            f"(was {r.get('refusedAs') or 'a refusal'}) — file an issue and replace this "
+            "note with its number")
+        print(f"{p}\t{page}\t{st}\t\t{note}")
     else:
         print(f"{p}\t{page}\t{st}")
 

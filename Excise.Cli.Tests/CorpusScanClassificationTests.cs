@@ -1302,6 +1302,75 @@ public class CorpusScanClassificationTests
         entry.refusalCorroboration.Should().BeNull();
     }
 
+    [Fact]
+    public void ApplyRenderingQualityContracts_AgreedRefusal_IsAcceptedLikeAnyCorroboratedRefusal()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "excise-contracts-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            var set = RenderProgram.RenderingQualityContractSet.Load(dir);
+            var entries = new[]
+            {
+                new RenderProgram.CorpusScanEntry
+                {
+                    path = "pdfium/bug_216.pdf",
+                    pageNumber = 1,
+                    status = "AGREED_REFUSAL",
+                    comparedOracles = 0,
+                    agreeingOracles = 0,
+                },
+            };
+
+            RenderProgram.ApplyRenderingQualityContracts(entries, set, strictContracts: false);
+
+            entries[0].qualityStatus.Should().Be("REFERENCE_REFUSAL_ACCEPTED");
+            entries[0].referenceSituation.Should().Be("REFS_REFUSE");
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void ApplyRenderingQualityContracts_ExciseSideGap_IsNeverInferredAsAccepted()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "excise-contracts-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            var set = RenderProgram.RenderingQualityContractSet.Load(dir);
+            var entries = new[]
+            {
+                new RenderProgram.CorpusScanEntry
+                {
+                    path = "pdfium/bug_481363.pdf",
+                    pageNumber = 1,
+                    status = "EXCISE_SIDE_GAP",
+                    // What ApplyCorpusExpectations writes for a page PINNED in
+                    // an expectation manifest — and bug_481363 is pinned, so
+                    // this is the live combination, not a contrived one.
+                    resultStatus = "PASS",
+                    comparedOracles = 0,
+                    agreeingOracles = 0,
+                },
+            };
+
+            RenderProgram.ApplyRenderingQualityContracts(entries, set, strictContracts: false);
+
+            entries[0].qualityStatus.Should().Be("FAIL",
+                "an oracle rendered a page excise refused — the one class that is unambiguously an "
+                + "excise defect. Pinning it makes resultStatus PASS, and the fallback would read "
+                + "that as GOOD_ENOUGH");
+            entries[0].improvementPriority.Should().Be("P1");
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
     // ---- #932: ink locality is scored by majority, not by one oracle --------
 
     [Fact]

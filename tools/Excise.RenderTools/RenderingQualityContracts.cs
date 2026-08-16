@@ -478,7 +478,13 @@ partial class Program
         {
             "PASS" => "PIXEL_EXACT",
             "PASS_ONE" => "MATCHES_ACCEPTED_REFERENCE",
-            "ALL_ORACLES_REFUSED" => "REFERENCE_REFUSAL_ACCEPTED",
+            // Same semantics as ALL_ORACLES_REFUSED, reached the other way:
+            // excise refused and no oracle rendered it either (#907).
+            "ALL_ORACLES_REFUSED" or "AGREED_REFUSAL" => "REFERENCE_REFUSAL_ACCEPTED",
+            // An oracle rendered a page excise refused. The one class that is
+            // unambiguously an excise defect, so it must never infer as
+            // accepted.
+            "EXCISE_SIDE_GAP" => "FAIL",
             "RECOVERED_MALFORMED_CONTENT" => "NON_RENDERABLE_ACCEPTED",
             "MALFORMED_PDF" or "EMPTY_DOC" or "PASSWORD_REQUIRED" or "RESOURCE_LIMIT" or "INVALID_PAGE_GEOMETRY" =>
                 "NON_RENDERABLE_ACCEPTED",
@@ -531,7 +537,7 @@ partial class Program
 
     private static string InferReferenceSituation(CorpusScanEntry entry)
     {
-        if (entry.status == "ALL_ORACLES_REFUSED")
+        if (entry.status is "ALL_ORACLES_REFUSED" or "AGREED_REFUSAL")
             return "REFS_REFUSE";
 
         if (entry.comparedOracles is null or 0)
@@ -548,7 +554,7 @@ partial class Program
         {
             "MALFORMED_PDF" or "EMPTY_DOC" or "PASSWORD_REQUIRED" or "INVALID_PAGE_GEOMETRY" => "MALFORMED_INPUT_POLICY",
             "RESOURCE_LIMIT" or "TIMEOUT" => "RESOURCE_POLICY",
-            "ALL_ORACLES_REFUSED" => "QUALITY_STANDARD",
+            "ALL_ORACLES_REFUSED" or "AGREED_REFUSAL" => "QUALITY_STANDARD",
             "PASS_ONE" => "REFERENCE_DISAGREEMENT",
             _ => "REFERENCE_CONSENSUS",
         };
@@ -556,8 +562,8 @@ partial class Program
     private static string InferImprovementPriority(CorpusScanEntry entry)
         => entry.status switch
         {
-            "DIFF" => "P1",
-            "PASS_ONE" => "P2",
+            "DIFF" or "EXCISE_SIDE_GAP" => "P1",
+            "PASS_ONE" or "MISSING_CONTENT" => "P2",
             _ => "NONE",
         };
 
@@ -1009,6 +1015,19 @@ partial class Program
             "INVALID_PAGE_GEOMETRY",
             "TIMEOUT",
             "UNSUPPORTED_COMPRESSION",
+            "UNSUPPORTED_ENCRYPTED",
+            // Statuses the corpus scan emits and the expectation manifests
+            // already pin, which this vocabulary had never been taught. A
+            // contract could therefore not be written for any page carrying
+            // one — MISSING_CONTENT has been unspellable here since #883
+            // introduced it, and Load() rejects the whole contract directory
+            // on the first attempt.
+            "MISSING_CONTENT",
+            "EXCISE_ONLY",
+            // #907: a refusal classified from the oracle evidence rather than
+            // from excise's opinion of itself.
+            "AGREED_REFUSAL",
+            "EXCISE_SIDE_GAP",
         };
 
         private static readonly HashSet<string> KnownReleaseStatuses = new(StringComparer.Ordinal)
