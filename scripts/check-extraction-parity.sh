@@ -73,13 +73,18 @@ rm -f "$REPORT"
 # test would therefore sail through — same vacuous-green trap scripts/
 # lib-runner.sh guards for, and the same reason this file refuses to skip on a
 # missing corpus. Capture the output and refuse it explicitly.
+# `tee` rather than capture-and-echo: this generator runs over 332 pages and a
+# gate that prints nothing for minutes looks hung, which is how a gate gets
+# Ctrl-C'd instead of read.
+RUN_LOG="$(mktemp)"
+trap 'rm -f "$RUN_LOG"' EXIT
 set +e
-run_output="$(dotnet test Excise.Rendering.Tests -c Debug \
+dotnet test Excise.Rendering.Tests -c Debug \
   --filter "FullyQualifiedName~ExtractionParityTests.GenerateExtractionParityReport" \
-  --logger "console;verbosity=normal" 2>&1)"
-run_status=$?
+  --logger "console;verbosity=normal" 2>&1 | tee "$RUN_LOG"
+run_status=${PIPESTATUS[0]}
 set -e
-echo "$run_output"
+run_output="$(cat "$RUN_LOG")"
 
 if grep -q "No test matches the given testcase filter" <<<"$run_output"; then
   echo

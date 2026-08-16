@@ -54,13 +54,17 @@ echo "==> Checking normal hidden-text toggles do not load Excise.Ocr"
 # `dotnet test --filter` EXITS 0 WHEN IT MATCHES NOTHING. Renaming this one test
 # would print "OK: lazy-startup verification passed" having asserted nothing
 # about OCR assembly loading (#941).
+# `tee`, not capture-and-echo: Excise.App.Tests is serial and slow to start, so
+# a silent gate reads as a hung one.
+RUN_LOG="$(mktemp)"
+trap 'rm -f "$RUN_LOG"' EXIT
 set +e
-run_output="$(dotnet test Excise.App.Tests/Excise.App.Tests.csproj \
+dotnet test Excise.App.Tests/Excise.App.Tests.csproj \
     --filter "FullyQualifiedName~HiddenTextToggles_DoNotLoadOcrAssemblyBeforeRasterizedScan" \
-    --logger "console;verbosity=minimal" 2>&1)"
-run_status=$?
+    --logger "console;verbosity=minimal" 2>&1 | tee "$RUN_LOG"
+run_status=${PIPESTATUS[0]}
 set -e
-echo "$run_output"
+run_output="$(cat "$RUN_LOG")"
 
 if grep -q "No test matches the given testcase filter" <<<"$run_output"; then
     echo
