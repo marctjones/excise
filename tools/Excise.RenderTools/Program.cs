@@ -3580,6 +3580,21 @@ partial class Program
     private const int MinInkTileGrid = 4;
 
     /// <summary>
+    /// Two rasters cover the same page region when their aspect ratios agree.
+    /// 2% absorbs the pixel rounding two renderers do differently at the same
+    /// DPI; a /CropBox-vs-/MediaBox disagreement is orders of magnitude larger.
+    /// </summary>
+    private static bool HasComparableGeometry(SkiaSharp.SKBitmap mine, SkiaSharp.SKBitmap reference)
+    {
+        if (mine.Width <= 0 || mine.Height <= 0 || reference.Width <= 0 || reference.Height <= 0)
+            return false;
+
+        var mineAspect = mine.Width / (double)mine.Height;
+        var referenceAspect = reference.Width / (double)reference.Height;
+        return Math.Abs(mineAspect - referenceAspect) <= 0.02 * mineAspect;
+    }
+
+    /// <summary>
     /// Tiles per axis for a page of this size — <see cref="InkTileGrid"/> unless
     /// that would make tiles smaller than <see cref="MinInkTilePixels"/>.
     /// </summary>
@@ -3656,11 +3671,30 @@ partial class Program
         if (references.Count == 0)
             return (0, 0, 0);
 
+        // Only oracles that rasterized the SAME PAGE REGION can be compared
+        // tile by tile. bug1844576.pdf is the worked case: its /CropBox is
+        // 181x54 pt inside a 612x792 /MediaBox, and pdftocairo renders the
+        // MediaBox while excise, mutool and pdfium render the CropBox. Its
+        // raster therefore holds the whole drawing in one corner, so every
+        // relative tile means something different — and a majority rule handed
+        // that oracle a full vote let it veto agreement everywhere, collapsing
+        // the majority-inked set to 3 tiles and making all-tiles-missing
+        // trivially true on a page excise renders correctly.
+        var comparable = references
+            .Where(reference => HasComparableGeometry(exciseBmp, reference))
+            .ToArray();
+
+        // If excise is the one whose geometry is odd, this check has no
+        // opinion to offer: the disagreement is about the page box, not about
+        // content, and the page-wide metrics already answer it.
+        if (comparable.Length * 2 <= references.Count)
+            return (0, 0, 0);
+
         // Sized from the SMALLEST page any renderer produced, so no bitmap in
         // the comparison ends up with sub-pixel-noise-sized tiles.
         var shortestWidth = exciseBmp.Width;
         var shortestHeight = exciseBmp.Height;
-        foreach (var reference in references)
+        foreach (var reference in comparable)
         {
             shortestWidth = Math.Min(shortestWidth, reference.Width);
             shortestHeight = Math.Min(shortestHeight, reference.Height);
@@ -3671,8 +3705,8 @@ partial class Program
         if (mine == null)
             return (0, 0, 0);
 
-        var oracleGrids = new List<double[]>(references.Count);
-        foreach (var reference in references)
+        var oracleGrids = new List<double[]>(comparable.Length);
+        foreach (var reference in comparable)
         {
             var grid = ComputeInkTileFractions(reference, tiles);
             if (grid != null)
