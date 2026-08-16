@@ -1739,9 +1739,30 @@ public class CorpusScanClassificationTests
 
         var comparison = RenderProgram.CompareContractsWithExpectationManifests(contractsDir, root);
 
-        comparison.ComparedPages.Should().BeGreaterThan(0,
-            "a comparison that compares nothing would pass forever — the corpus->manifest map in "
-            + "CorpusExpectationManifests must keep matching the corpus directory names contracts use");
+        // Not "> 0": that only catches a TOTAL collapse of the corpus->manifest
+        // map. If ONE key drifts — a corpus directory renamed, a manifest moved
+        // — several hundred to a few thousand comparisons vanish silently and
+        // the gate stays green while covering a fraction of what it claims,
+        // which is #958's failure mode. Both a floor and a per-corpus presence
+        // check, because the floor alone would survive losing isartor's 205.
+        comparison.ComparedPages.Should().BeGreaterThanOrEqualTo(3500,
+            "3577 contract pages had a manifest row when this gate was written (2026-08-16); a "
+            + "sharp drop means the corpus->manifest map stopped matching the corpus directory "
+            + "names contracts use, not that the drift was fixed");
+
+        foreach (var corpus in RenderProgram.CorpusExpectationManifests.Keys)
+        {
+            var manifest = Path.Combine(root, RenderProgram.CorpusExpectationManifests[corpus]);
+            if (!File.Exists(manifest) ||
+                !Directory.Exists(Path.Combine(contractsDir, corpus)))
+            {
+                continue;
+            }
+
+            comparison.ComparedPagesByCorpus.GetValueOrDefault(corpus).Should().BeGreaterThan(0,
+                $"contracts and a manifest both exist for {corpus}, so the comparison must be "
+                + "reaching it — zero means the two are no longer being keyed the same way");
+        }
 
         var report = string.Join(Environment.NewLine, comparison.Disagreements.Select(d => d.ToString()));
         comparison.Disagreements.Should().BeEmpty(
