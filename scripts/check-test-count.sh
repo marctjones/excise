@@ -36,10 +36,13 @@
 #
 #   1. Enumerate discovered tests   (`--list-tests`, discovery only, seconds)
 #   2. Enumerate reported results   (trx)
-#   3. For anything discovered but not reported, RE-RUN IT BY NAME:
+#   3. For anything discovered but not reported, RE-RUN ITS CLASS:
 #        - produces a result now  -> transient reporting loss. Reported, not fatal.
 #        - still produces nothing -> a genuine hole. FATAL.
 #        - produces a FAILING result -> FATAL, and the summary hid a red test.
+#        - the FILTER matched nothing -> no verdict at all. `~` is not a substring
+#          match (see #1008 and the note at the re-run), so a non-match is a fact
+#          about the filter. Escalate to an unfiltered run and decide from that.
 #
 # A plain equality check was written first and thrown away: it fails ~50% of
 # runs here, and a gate that flakes is a gate people stop reading — the exact
@@ -177,29 +180,71 @@ echo "    tell a transient reporting loss from a genuine coverage hole."
 
 TRANSIENT=0
 FATAL=0
+# At most ONE unfiltered escalation run per invocation, shared by every test that
+# needs it (MAX_RECHECK caps the list at 10, so this is bounded by one full run).
+UNFILTERED_OUT_FILE=""
 while IFS= read -r name; do
     [[ -z "$name" ]] && continue
     # Match on the method-name portion: a [Theory] case's display name carries
     # `(param: "value")`, which --filter cannot match literally.
     bare="${name%%(*}"
+    # Re-run on the CLASS simple name, not the method FQN (#1008).
+    #
+    # `FullyQualifiedName~X` is NOT a substring match under xunit v3 on
+    # Microsoft.Testing.Platform — it matches only where X aligns to a token
+    # boundary. Measured on
+    # Excise.Core.Tests.Filters.Jpx.CodestreamParserTests.TryDecodeManaged_AltonaIndexedJpxDecodesSingleIndexPlane:
+    # `~Altona` matched 3 tests and `~Indexed` 10, while `~AltonaIndexed`,
+    # `~IndexedJpx` and even `~<the full FQN>` matched NOTHING, deterministically,
+    # on plain-ASCII names and after a --no-incremental rebuild. A dotted segment
+    # is always a whole token, so the class name is a filter whose alignment is
+    # guaranteed where the method FQN's is not.
+    cls="${bare%.*}"; cls="${cls##*.}"
+    [[ -z "$cls" ]] && cls="$bare"
     assert_fresh
     # verbosity=detailed so the re-run lists PER-CASE results. The summary line
-    # alone is not enough for a [Theory]: re-running the bare method name runs
-    # EVERY row, so "Passed!" can mean "some other row ran" while the row that
-    # went missing is still missing. Measured on
+    # alone is not enough for a [Theory]: re-running the class runs EVERY row of
+    # every method in it, so "Passed!" can mean "some other row ran" while the
+    # row that went missing is still missing. Measured on
     # Cff2RefusalTests.CorpusFilesCarryingCff2_RenderAtParityWithMutool, where a
     # narrow run reports 1 of 2 rows every time — the old check called that a
     # transient loss and moved on, which is this gate's own failure mode one
     # level down (#894).
     out="$(dotnet test "$CSPROJ" -c Debug --no-build \
-             --filter "FullyQualifiedName~$bare" \
+             --filter "FullyQualifiedName~$cls" \
              --logger "console;verbosity=detailed" 2>&1)"
 
     if grep -q "No test matches the given testcase filter" <<<"$out"; then
-        echo "    FATAL  $name"
-        echo "           discovered, but unreachable by filter — never executes."
-        FATAL=$((FATAL + 1))
-    elif grep -qE "^Failed!" <<<"$out"; then
+        # A NON-MATCH IS NOT A VERDICT (#1008). It says the filter could not
+        # select the test, which — see the token-boundary note above — can happen
+        # for reasons that have nothing to do with whether the test executes.
+        # This branch used to print "discovered, but unreachable by filter —
+        # never executes" and exit FATAL, so a transient reporting loss was
+        # reported as a genuine coverage hole and the message sent the next
+        # person hunting a crash that did not exist. Escalate instead: run the
+        # assembly UNFILTERED and decide from the per-case output, which is the
+        # only evidence that can distinguish the two.
+        echo "    note   $name"
+        echo "           filter ~$cls selected nothing — that is a statement about the"
+        echo "           filter, not about the test. Escalating to an unfiltered run."
+        if [[ -z "$UNFILTERED_OUT_FILE" ]]; then
+            UNFILTERED_OUT_FILE="$TMP/unfiltered.txt"
+            assert_fresh
+            dotnet test "$CSPROJ" -c Debug --no-build \
+                --logger "console;verbosity=detailed" > "$UNFILTERED_OUT_FILE" 2>&1
+        fi
+        out="$(cat "$UNFILTERED_OUT_FILE")"
+        if grep -q "No test matches the given testcase filter" <<<"$out"; then
+            echo "    FATAL  $name"
+            echo "           an UNFILTERED run of the assembly also selected nothing."
+            echo "           The assembly itself is unrunnable — this is not a filter"
+            echo "           problem and not a per-test one."
+            FATAL=$((FATAL + 1))
+            continue
+        fi
+    fi
+
+    if grep -qE "^Failed!" <<<"$out"; then
         echo "    FATAL  $name"
         echo "           re-ran and FAILED — the summary hid a red test."
         FATAL=$((FATAL + 1))
@@ -213,7 +258,7 @@ while IFS= read -r name; do
         # `Passed!` summary at all, so keying on the summary made this branch
         # unreachable and every row-level loss fell to the vaguer message below.
         echo "    FATAL  $name"
-        echo "           its method re-ran and other cases reported, but THIS case"
+        echo "           its class re-ran and other cases reported, but THIS case"
         echo "           produced no result — a row-level loss no summary can see."
         FATAL=$((FATAL + 1))
     else
