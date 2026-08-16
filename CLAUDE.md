@@ -483,16 +483,28 @@ Peak RSS per testhost varies enormously by project, and an early note here
 claimed it did not — that claim was made from a partial sample (Core and one
 Rendering chunk) and was **wrong**. Measured over a full run:
 
-| step | peak RSS |
-|---|---:|
-| `Excise.App.Tests` unchunked (one process) | **8536 MB** |
-| `Excise.App.Tests.chunk05` (render-heavy GUI classes) | 6576 MB |
-| `Excise.Rendering.Tests.chunk02` | 2389 MB |
-| `Excise.Core.Tests.*` (all 17 chunks) | ≤ 450 MB |
+| step | peak RSS (2026-07) | re-measured 2026-08-16 |
+|---|---:|---:|
+| `Excise.App.Tests` unchunked (one process) | **8536 MB** | **3862 MB** |
+| `Excise.App.Tests` heaviest chunk | 6576 MB (chunk05) | 3323 MB (chunk06) |
+| `Excise.Rendering.Tests` heaviest chunk | 2389 MB (chunk02) | 2006 MB (chunk04) |
+| `Excise.Core.Tests.*` (all 17 chunks) | ≤ 450 MB | not re-run (checkpointed) |
+| `corpus-scan-verapdf` (2694 pages) | — | 3446 MB |
+| `corpus-scan-pdfjs` (685 pages) | — | 3780 MB |
 
-So a single `dotnet test` **can** take a third of a 24 GB machine — App.Tests
-does. Do not run it alongside other heavy work (which is also why it is serial
-by design and why CPU contention produces false reds here). Tracked as #861.
+The 2026-08-16 column is the first full `--everything` run
+(`logs/full-suite_Debug_20260815_203507/resources.tsv`; App.Tests unchunked =
+1329 tests, no filter, 8m38s — the same step, not a subset). App.Tests has more
+than halved since #861's chunking and bitmap work, so the old numbers are kept
+side by side rather than overwritten: the LESSON (a single `dotnet test` can
+take a large fraction of a 24 GB machine, so do not run it alongside other heavy
+work — this is also why it is serial by design and why CPU contention produces
+false reds here) survives the improvement, and the biggest single consumer is
+now a corpus scan, not App.Tests. Tracked as #861.
+
+⚠️ Both columns are measurements with a date, not properties. Re-run the suite
+and read `resources.tsv` before quoting either — the 2026-07 numbers were 2.2×
+high within one month.
 
 What bounds memory during a suite run is therefore structural:
 exactly one dotnet process at a time (this runner is strictly serial),
@@ -1149,8 +1161,16 @@ every session (1.4s per edit, 2.79x file growth on save, 7-10s redactions) insid
 Do not hard-code the list here — it has now gone stale twice. Query it live:
 `gh api repos/marctjones/excise/milestones --jq '.[] | "\(.number)\t\(.title)"'`.
 
-One ordering worth knowing without looking: milestone 1 is daily-use friction,
-milestone 2 is redaction trust.
+⚠️ And that is not rhetorical: the line that used to sit here — "milestone 1 is
+daily-use friction, milestone 2 is redaction trust" — was **stale a third time**
+by 2026-08-16, and stale against TWO superseded schemes at once. The live set
+starts at 4 (`4. Wanted Features`, `5. Test Suite`, `6. Text Extraction`,
+`7. Redaction Trust Paused`); the current scheme's 1–3 are closed
+(`1. Quick Wins / Tooling Cleanup`, `2. Performance, Daily Use & Release`,
+`3. Engineering Hygiene`), and the "redaction trust = milestone 2" the shortcut
+described was an even older scheme, closed before that. A reader trusting the
+shortcut would have planned against two generations of dead numbering. Run the
+query.
 
 ⚠️ An earlier version of this line said the two were coupled through #899 —
 "redaction completeness is bounded by extraction coverage, so #899 is also the
