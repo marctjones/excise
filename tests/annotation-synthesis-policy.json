@@ -1,0 +1,3672 @@
+{
+  "schemaVersion": 1,
+  "issue": "#993",
+  "name": "Annotation appearance-synthesis policy",
+  "description": "What excise draws for an annotation that ships no /AP /N, as DATA: one row per (subtype, state, condition), each carrying the decision, the measured oracle evidence as bbox + shape rather than a bare count, the majority verdict with the size of the pool it was taken over, and the fixture the measurement came from. Re-measured by Excise.Rendering.Tests/Differential/AnnotationSynthesisPolicyGateTests.cs; the renderer it pins is Excise.Rendering/SkiaRenderer.Annotations.cs.",
+  "whyThisExists": "The policy used to live in scattered ifs justified by free-text comments nothing re-measured, and three separate errors came out of the same mechanism - a decision made from a scalar that cannot represent the thing being decided. #885 drew a blue box on every widget, justified by 'mutool 233 px, pdftocairo 229, excise 0': those pixels were the CHECK MARK, and neither oracle drew any box. #987's /Link border default was decided on a fixture that did state /BS /W 2, so the no-/Border-at-all case - the common one - was never measured. #972's own first fix drew a CARET instead of a tick with identical pixel count and identical bbox. An ink count cannot tell a tick from a box, and a bbox cannot tell a tick from a caret.",
+  "rules": [
+    "MAJORITY, NEVER A SINGLE ORACLE. A row draws only when more than half the voting engines draw. #972's radio case is 1-of-3 and stays unimplemented for exactly that reason (the #875 trap).",
+    "WHERE NO MAJORITY DRAWS, EXCISE DRAWS NOTHING. A row whose decision contradicts its own majority verdict must carry a 'deviation' block naming a kind, an issue and a reason. There are four such rows and they are the interesting ones.",
+    "EVIDENCE IS BBOX + SHAPE, NEVER A BARE COUNT. Each evidence entry records the inked-pixel count for scale, the bbox, and the bbox's relationship to the annotation rect. The gate asserts the vote and the bbox class; it holds the count only to a factor of two, because tool versions drift.",
+    "SHAPE ASSERTIONS WHERE COUNT AND BBOX CANNOT DISCRIMINATE. widget.tx.value-negative-size-centered is the proof: mutool's mirrored value has the same pixel count and the same bbox as the upright one, and only the ink profiles tell them apart.",
+    "A DIFFERENCE THAT ORIGINATES IN SKIA'S RASTERISATION IS AN ACCEPTED LIMITATION, not a defect and not something to compensate for. Do not tune a shape predicate or special-case a fixture to force agreement.",
+    "VOTES ARE COUNTED PER ENGINE, NOT PER BINARY. pdftocairo and pdftoppm are two rasterisers over ONE annotation-synthesis implementation (poppler); counting both would give poppler two votes out of four. pdftoppm is measured anyway, as a cross-check on the poppler vote, with counts:false."
+  ],
+  "everyFixtureIsPrintable": "Every fixture carries /F 4 (Print), and that is load-bearing rather than tidy. Ghostscript renders ONLY printable annotations, so on a fixture without /F it reports zero inked pixels for reasons that have nothing to do with the annotation - a structural ABSTENTION that reads exactly like a 'draws nothing' vote. That misreading is already in the record this table replaces: #987's link border looked 1-of-3 on pdfium bug_821454.pdf (whose links carry no /F) and is 2-of-3 here; #972's checkbox table recorded Ghostscript as drawing nothing 'in any of these' cases; #885's Stamp row read 2-of-3 and is 3-of-3 here.",
+  "oracles": {
+    "mutool": {
+      "engine": "mupdf",
+      "counts": true
+    },
+    "pdftocairo": {
+      "engine": "poppler",
+      "counts": true
+    },
+    "pdftoppm": {
+      "engine": "poppler",
+      "counts": false,
+      "reason": "same poppler annotation-synthesis code as pdftocairo; a second rasteriser is not a second opinion. Measured as a cross-check."
+    },
+    "ghostscript": {
+      "engine": "ghostscript",
+      "counts": true
+    },
+    "pdfbox": {
+      "engine": "pdfbox",
+      "counts": false,
+      "reason": "abstains: needs a JRE, which the measurement host does not have. Add one and its votes become available - it is not structurally excluded."
+    },
+    "pdfium": {
+      "engine": "pdfium",
+      "counts": false,
+      "reason": "abstains STRUCTURALLY: PdfiumNativeReferenceRenderer calls FPDF_RenderPageBitmap with flags=0, i.e. without FPDF_ANNOT, so it draws no annotations at all. Its zero is not a vote (#1007)."
+    }
+  },
+  "shapeVocabulary": {
+    "none": "no ink anywhere on the page",
+    "hollow-rect-on-annot-rect": "ink bbox matches the annotation rect; the interior is empty",
+    "filled-rect-on-annot-rect": "ink bbox matches the annotation rect; the interior is inked",
+    "hollow-oval-on-annot-rect": "as hollow-rect, and the corners of the rect are empty",
+    "inset-tick": "a mark strictly inside the rect on all four sides whose lowest row centroid is left of centre - a tick, not a caret and not a border",
+    "marker-at-anchor": "a filled marker of roughly fixed size anchored at the rect's top-left corner (§12.5.6.4 /Text)",
+    "text-value-inside-rect": "a wide, short run of ink entirely inside the rect",
+    "mirrored-text-value": "text-value-inside-rect whose column profile is the REVERSE of the row named by comparedWith, and correlates better reversed than unreversed",
+    "clipped-remnant-inside-rect": "some ink, all of it inside the rect, and far less than the row named by comparedWith draws - what survives clipping when the run lands outside",
+    "stroked-path-inside-rect": "ink inside the rect that fills little of its own bbox - a stroke, not a fill",
+    "filled-band-over-quad": "the quad is inked solid",
+    "horizontal-band": "a line spanning the quad's width, a small fraction of its height"
+  },
+  "howToUpdate": "By hand, from the gate's failure message, which prints what it measured. There is deliberately no --update flag: this file records decisions and the evidence they rest on, and a regenerator would let a behaviour change rewrite its own justification. That is the failure mode scripts/update-corpus-expectations.sh has already caused twice.",
+  "rowCount": 44,
+  "rows": [
+    {
+      "id": "link.explicit-width-positive",
+      "subtype": "Link",
+      "state": null,
+      "condition": "/BS or /Border states a width greater than zero",
+      "decision": "draw",
+      "shape": "hollow-rect-on-annot-rect",
+      "rendererSite": "RenderLinkDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Link /F 4 /Rect [50 50 150 150] /Border [0 0 2] /BS << /S /S /W 2 >> >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          50,
+          150,
+          150
+        ],
+        "extraObjects": [],
+        "catalogExtra": ""
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 800,
+          "bbox": [
+            49,
+            49,
+            151,
+            151
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "draws",
+          "inkedPixels": 800,
+          "bbox": [
+            49,
+            49,
+            151,
+            151
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 1176,
+          "bbox": [
+            50,
+            50,
+            151,
+            151
+          ],
+          "bboxClass": "matches-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 2,
+        "blank": 1,
+        "verdict": "draw"
+      }
+    },
+    {
+      "id": "link.no-border-no-bs",
+      "subtype": "Link",
+      "state": null,
+      "condition": "neither /Border nor /BS is present - the §12.5.6.5 default /Border [0 0 1] applies",
+      "decision": "draw",
+      "shape": "hollow-rect-on-annot-rect",
+      "rendererSite": "RenderLinkDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Link /F 4 /Rect [50 50 150 150] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          50,
+          150,
+          150
+        ],
+        "extraObjects": [],
+        "catalogExtra": ""
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 400,
+          "bbox": [
+            50,
+            50,
+            151,
+            151
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "draws",
+          "inkedPixels": 400,
+          "bbox": [
+            50,
+            50,
+            151,
+            151
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 792,
+          "bbox": [
+            50,
+            50,
+            151,
+            151
+          ],
+          "bboxClass": "matches-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 2,
+        "blank": 1,
+        "verdict": "draw"
+      },
+      "issues": [
+        "#987"
+      ]
+    },
+    {
+      "id": "link.bs-without-w",
+      "subtype": "Link",
+      "state": null,
+      "condition": "/BS present with no /W - Table 168 makes the default width 1",
+      "decision": "draw",
+      "shape": "hollow-rect-on-annot-rect",
+      "rendererSite": "RenderLinkDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Link /F 4 /Rect [50 50 150 150] /BS << /S /S >> >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          50,
+          150,
+          150
+        ],
+        "extraObjects": [],
+        "catalogExtra": ""
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 400,
+          "bbox": [
+            50,
+            50,
+            151,
+            151
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "draws",
+          "inkedPixels": 400,
+          "bbox": [
+            50,
+            50,
+            151,
+            151
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 792,
+          "bbox": [
+            50,
+            50,
+            151,
+            151
+          ],
+          "bboxClass": "matches-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 2,
+        "blank": 1,
+        "verdict": "draw"
+      },
+      "issues": [
+        "#987"
+      ]
+    },
+    {
+      "id": "link.border-array-width-zero",
+      "subtype": "Link",
+      "state": null,
+      "condition": "/Border [0 0 0] - the standard way to say 'no visible border'",
+      "decision": "nothing",
+      "shape": "none",
+      "rendererSite": "RenderLinkDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Link /F 4 /Rect [50 50 150 150] /Border [0 0 0] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          50,
+          150,
+          150
+        ],
+        "extraObjects": [],
+        "catalogExtra": ""
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 0,
+        "blank": 3,
+        "verdict": "blank"
+      }
+    },
+    {
+      "id": "link.bs-width-zero",
+      "subtype": "Link",
+      "state": null,
+      "condition": "/BS << /W 0 >>",
+      "decision": "nothing",
+      "shape": "none",
+      "rendererSite": "RenderLinkDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Link /F 4 /Rect [50 50 150 150] /BS << /W 0 >> >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          50,
+          150,
+          150
+        ],
+        "extraObjects": [],
+        "catalogExtra": ""
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 0,
+        "blank": 3,
+        "verdict": "blank"
+      }
+    },
+    {
+      "id": "link.border-array-short",
+      "subtype": "Link",
+      "state": null,
+      "condition": "/Border present but with fewer than the three required entries",
+      "decision": "nothing",
+      "shape": "none",
+      "rendererSite": "RenderLinkDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Link /F 4 /Rect [50 50 150 150] /Border [0 0] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          50,
+          150,
+          150
+        ],
+        "extraObjects": [],
+        "catalogExtra": ""
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 0,
+        "blank": 3,
+        "verdict": "blank"
+      }
+    },
+    {
+      "id": "link.width-exceeds-half-the-rect",
+      "subtype": "Link",
+      "state": null,
+      "condition": "a stated width wider than half the annotation's smaller side",
+      "decision": "nothing",
+      "shape": "none",
+      "rendererSite": "RenderLinkDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Link /F 4 /Rect [50 50 150 150] /Border [0 0 112] /BS << /S /S /W 112 >> >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          50,
+          150,
+          150
+        ],
+        "extraObjects": [],
+        "catalogExtra": ""
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 40000,
+          "bbox": [
+            0,
+            0,
+            200,
+            200
+          ],
+          "bboxClass": "exceeds-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "draws",
+          "inkedPixels": 40000,
+          "bbox": [
+            0,
+            0,
+            200,
+            200
+          ],
+          "bboxClass": "exceeds-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 11926,
+          "bbox": [
+            38,
+            38,
+            163,
+            163
+          ],
+          "bboxClass": "exceeds-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 2,
+        "blank": 1,
+        "verdict": "draw"
+      },
+      "deviation": {
+        "kind": "majority-draws-but-no-agreed-geometry",
+        "issue": "#885",
+        "note": "Two engines draw and they do not agree on WHAT: pdftocairo covers the whole page (40000 px, bbox (0,0)-(200,200)), Ghostscript clamps to a frame of its own choosing (11926 px, bbox (38,38)-(163,163)). Copying either is electing a renderer, and both bury the page content the border is supposed to outline. excise refuses and says so in a diagnostic."
+      }
+    },
+    {
+      "id": "widget.btn.checkbox.as-on",
+      "subtype": "Widget",
+      "state": "btn.checkbox",
+      "condition": "/FT /Btn, not a pushbutton or radio, /AS names a state other than /Off",
+      "decision": "draw",
+      "shape": "inset-tick",
+      "rendererSite": "DrawSynthesizedCheckMark",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Widget /FT /Btn /T (b) /F 4 /V /Yes /AS /Yes /Rect [50 50 100 100] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          100,
+          100,
+          150
+        ],
+        "extraObjects": [],
+        "catalogExtra": "/AcroForm << /Fields [4 0 R] /DA (/Helv 0 Tf 0 g) /DR << /Font << /Helv 5 0 R >> >> >> "
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 348,
+          "bbox": [
+            57,
+            104,
+            92,
+            141
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 344,
+          "bbox": [
+            58,
+            109,
+            92,
+            146
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "draws",
+          "inkedPixels": 344,
+          "bbox": [
+            57,
+            109,
+            92,
+            146
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 2,
+        "blank": 1,
+        "verdict": "draw"
+      },
+      "issues": [
+        "#972"
+      ]
+    },
+    {
+      "id": "widget.btn.checkbox.as-off",
+      "subtype": "Widget",
+      "state": "btn.checkbox",
+      "condition": "/FT /Btn with /AS /Off",
+      "decision": "nothing",
+      "shape": "none",
+      "rendererSite": "RenderWidgetDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Widget /FT /Btn /T (b) /F 4 /V /Off /AS /Off /Rect [50 50 100 100] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          100,
+          100,
+          150
+        ],
+        "extraObjects": [],
+        "catalogExtra": "/AcroForm << /Fields [4 0 R] /DA (/Helv 0 Tf 0 g) /DR << /Font << /Helv 5 0 R >> >> >> "
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 0,
+        "blank": 3,
+        "verdict": "blank"
+      },
+      "issues": [
+        "#972"
+      ]
+    },
+    {
+      "id": "widget.btn.checkbox.value-on-no-as",
+      "subtype": "Widget",
+      "state": "btn.checkbox",
+      "condition": "/FT /Btn with /V on but no /AS at all - the state is unknown, not on",
+      "decision": "nothing",
+      "shape": "none",
+      "rendererSite": "RenderWidgetDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Widget /FT /Btn /T (b) /F 4 /V /Yes /Rect [50 50 100 100] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          100,
+          100,
+          150
+        ],
+        "extraObjects": [],
+        "catalogExtra": "/AcroForm << /Fields [4 0 R] /DA (/Helv 0 Tf 0 g) /DR << /Font << /Helv 5 0 R >> >> >> "
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 0,
+        "blank": 3,
+        "verdict": "blank"
+      },
+      "issues": [
+        "#972"
+      ]
+    },
+    {
+      "id": "widget.btn.pushbutton",
+      "subtype": "Widget",
+      "state": "btn",
+      "condition": "/FT /Btn with field flag bit 17 (pushbutton)",
+      "decision": "nothing",
+      "shape": "none",
+      "rendererSite": "RenderWidgetDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Widget /FT /Btn /T (b) /F 4 /Ff 65536 /Rect [50 50 100 100] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          100,
+          100,
+          150
+        ],
+        "extraObjects": [],
+        "catalogExtra": "/AcroForm << /Fields [4 0 R] /DA (/Helv 0 Tf 0 g) /DR << /Font << /Helv 5 0 R >> >> >> "
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 0,
+        "blank": 3,
+        "verdict": "blank"
+      },
+      "issues": [
+        "#972"
+      ]
+    },
+    {
+      "id": "widget.btn.radio.as-on",
+      "subtype": "Widget",
+      "state": "btn.radio",
+      "condition": "/FT /Btn with field flag bit 16 (radio) and /AS on",
+      "decision": "nothing",
+      "shape": "none",
+      "rendererSite": "RenderWidgetDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Widget /FT /Btn /T (b) /F 4 /Ff 32768 /V /A /AS /A /Rect [50 50 100 100] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          100,
+          100,
+          150
+        ],
+        "extraObjects": [],
+        "catalogExtra": "/AcroForm << /Fields [4 0 R] /DA (/Helv 0 Tf 0 g) /DR << /Font << /Helv 5 0 R >> >> >> "
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 484,
+          "bbox": [
+            63,
+            113,
+            87,
+            137
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 1,
+        "blank": 2,
+        "verdict": "blank"
+      },
+      "note": "1 of 3. mutool draws a dot; poppler and Ghostscript draw nothing. Ghostscript's zero is a real vote here, not the /F abstention that made the #972 table read '-' for it: this fixture is printable.",
+      "issues": [
+        "#875",
+        "#972"
+      ]
+    },
+    {
+      "id": "widget.btn.checkbox.with-mk",
+      "subtype": "Widget",
+      "state": "btn.checkbox",
+      "condition": "any widget carrying /MK /BG or /MK /BC",
+      "decision": "draw",
+      "shape": "filled-rect-on-annot-rect",
+      "rendererSite": "RenderWidgetDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Widget /FT /Btn /T (b) /F 4 /V /Off /AS /Off /MK << /BC [0 0 1] /BG [1 1 0] >> /Rect [50 50 100 100] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          100,
+          100,
+          150
+        ],
+        "extraObjects": [],
+        "catalogExtra": "/AcroForm << /Fields [4 0 R] /DA (/Helv 0 Tf 0 g) /DR << /Font << /Helv 5 0 R >> >> >> "
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 2500,
+          "bbox": [
+            50,
+            100,
+            100,
+            150
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 2500,
+          "bbox": [
+            50,
+            100,
+            100,
+            150
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "draws",
+          "inkedPixels": 2500,
+          "bbox": [
+            50,
+            100,
+            100,
+            150
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 2704,
+          "bbox": [
+            49,
+            99,
+            101,
+            151
+          ],
+          "bboxClass": "matches-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 3,
+        "blank": 0,
+        "verdict": "draw"
+      },
+      "note": "3 of 3. The #972 note that 'mutool honours /MK here; Poppler ignores it' does not survive re-measurement on a printable widget: poppler inks the same 2500 px over the same rect."
+    },
+    {
+      "id": "widget.tx.empty-no-mk",
+      "subtype": "Widget",
+      "state": "tx",
+      "condition": "/FT /Tx with no /V and no /MK",
+      "decision": "nothing",
+      "shape": "none",
+      "rendererSite": "RenderWidgetDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Widget /FT /Tx /T (t) /F 4 /Rect [50 60 150 90] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          110,
+          150,
+          140
+        ],
+        "extraObjects": [
+          "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Name /Helv /Encoding /WinAnsiEncoding >>\nendobj\n"
+        ],
+        "catalogExtra": "/AcroForm << /Fields [4 0 R] /DA (/Helv 0 Tf 0 g) /DR << /Font << /Helv 5 0 R >> >> >> "
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 0,
+        "blank": 3,
+        "verdict": "blank"
+      }
+    },
+    {
+      "id": "widget.tx.value-explicit-size",
+      "subtype": "Widget",
+      "state": "tx",
+      "condition": "/FT /Tx with /V and a /DA stating a positive Tf size",
+      "decision": "draw",
+      "shape": "text-value-inside-rect",
+      "rendererSite": "RenderTextFieldValue",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Widget /FT /Tx /T (t) /F 4 /V (Mountain) /DA (0 0 0 rg /Helv 12 Tf) /Rect [50 60 150 90] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          110,
+          150,
+          140
+        ],
+        "extraObjects": [
+          "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Name /Helv /Encoding /WinAnsiEncoding >>\nendobj\n"
+        ],
+        "catalogExtra": "/AcroForm << /Fields [4 0 R] /DA (/Helv 0 Tf 0 g) /DR << /Font << /Helv 5 0 R >> >> >> "
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 255,
+          "bbox": [
+            52,
+            120,
+            101,
+            130
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 253,
+          "bbox": [
+            52,
+            121,
+            101,
+            130
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "draws",
+          "inkedPixels": 259,
+          "bbox": [
+            52,
+            120,
+            101,
+            130
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 251,
+          "bbox": [
+            53,
+            120,
+            101,
+            130
+          ],
+          "bboxClass": "inside-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 3,
+        "blank": 0,
+        "verdict": "draw"
+      },
+      "issues": [
+        "#889"
+      ]
+    },
+    {
+      "id": "widget.tx.value-explicit-size-centered",
+      "subtype": "Widget",
+      "state": "tx",
+      "condition": "the same value with /Q 1 (centred) - the reference the mirrored row below is compared against",
+      "decision": "draw",
+      "shape": "text-value-inside-rect",
+      "rendererSite": "RenderTextFieldValue",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Widget /FT /Tx /T (t) /F 4 /V (Mountain) /Q 1 /DA (0 0 0 rg /Helv 12 Tf) /Rect [50 60 150 90] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          110,
+          150,
+          140
+        ],
+        "extraObjects": [
+          "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Name /Helv /Encoding /WinAnsiEncoding >>\nendobj\n"
+        ],
+        "catalogExtra": "/AcroForm << /Fields [4 0 R] /DA (/Helv 0 Tf 0 g) /DR << /Font << /Helv 5 0 R >> >> >> "
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 255,
+          "bbox": [
+            76,
+            120,
+            124,
+            130
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 260,
+          "bbox": [
+            76,
+            121,
+            124,
+            130
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "draws",
+          "inkedPixels": 261,
+          "bbox": [
+            76,
+            120,
+            124,
+            130
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 250,
+          "bbox": [
+            76,
+            120,
+            124,
+            130
+          ],
+          "bboxClass": "inside-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 3,
+        "blank": 0,
+        "verdict": "draw"
+      },
+      "issues": [
+        "#889"
+      ]
+    },
+    {
+      "id": "widget.tx.value-negative-size-centered",
+      "subtype": "Widget",
+      "state": "tx",
+      "condition": "/DA states a NEGATIVE Tf size (a real size that mirrors, not auto-size), /Q 1",
+      "decision": "draw",
+      "shape": "mirrored-text-value",
+      "rendererSite": "RenderTextFieldValue",
+      "comparedWith": "widget.tx.value-explicit-size-centered",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Widget /FT /Tx /T (t) /F 4 /V (Mountain) /Q 1 /DA (0 0 0 rg /Helv -12 Tf) /Rect [50 60 150 90] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          110,
+          150,
+          140
+        ],
+        "extraObjects": [
+          "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Name /Helv /Encoding /WinAnsiEncoding >>\nendobj\n"
+        ],
+        "catalogExtra": "/AcroForm << /Fields [4 0 R] /DA (/Helv 0 Tf 0 g) /DR << /Font << /Helv 5 0 R >> >> >> "
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 255,
+          "bbox": [
+            76,
+            120,
+            124,
+            130
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 261,
+          "bbox": [
+            76,
+            120,
+            124,
+            129
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "draws",
+          "inkedPixels": 263,
+          "bbox": [
+            75,
+            119,
+            124,
+            129
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 256,
+          "bbox": [
+            76,
+            128,
+            124,
+            138
+          ],
+          "bboxClass": "inside-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 3,
+        "blank": 0,
+        "verdict": "draw"
+      },
+      "note": "The row that a count and a bbox cannot decide: mutool's and pdftocairo's mirrored value occupies EXACTLY the upright value's bbox with the same pixel count. Only the profiles tell them apart - the column profile is the reverse of the upright one and the row profile is its flip.",
+      "issues": [
+        "#991",
+        "#970"
+      ]
+    },
+    {
+      "id": "widget.tx.value-negative-size",
+      "subtype": "Widget",
+      "state": "tx",
+      "condition": "negative Tf size, /Q 0 (left) - the mirrored run advances LEFT out of the field",
+      "decision": "draw",
+      "shape": "clipped-remnant-inside-rect",
+      "rendererSite": "RenderTextFieldValue",
+      "comparedWith": "widget.tx.value-explicit-size",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Widget /FT /Tx /T (t) /F 4 /V (Mountain) /DA (0 0 0 rg /Helv -12 Tf) /Rect [50 60 150 90] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          110,
+          150,
+          140
+        ],
+        "extraObjects": [
+          "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Name /Helv /Encoding /WinAnsiEncoding >>\nendobj\n"
+        ],
+        "catalogExtra": "/AcroForm << /Fields [4 0 R] /DA (/Helv 0 Tf 0 g) /DR << /Font << /Helv 5 0 R >> >> >> "
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 9,
+          "bbox": [
+            51,
+            121,
+            52,
+            130
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 18,
+          "bbox": [
+            50,
+            120,
+            52,
+            129
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "draws",
+          "inkedPixels": 18,
+          "bbox": [
+            50,
+            120,
+            52,
+            129
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 257,
+          "bbox": [
+            3,
+            128,
+            51,
+            138
+          ],
+          "bboxClass": "exceeds-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 3,
+        "blank": 0,
+        "verdict": "draw"
+      },
+      "issues": [
+        "#991"
+      ]
+    },
+    {
+      "id": "widget.tx.value-negative-size-right-aligned",
+      "subtype": "Widget",
+      "state": "tx",
+      "condition": "negative Tf size, /Q 2 (right) - the signed width pushes the run past the field",
+      "decision": "draw",
+      "shape": "clipped-remnant-inside-rect",
+      "rendererSite": "RenderTextFieldValue",
+      "comparedWith": "widget.tx.value-explicit-size",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Widget /FT /Tx /T (t) /F 4 /V (Mountain) /Q 2 /DA (0 0 0 rg /Helv -12 Tf) /Rect [50 60 150 90] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          110,
+          150,
+          140
+        ],
+        "extraObjects": [
+          "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Name /Helv /Encoding /WinAnsiEncoding >>\nendobj\n"
+        ],
+        "catalogExtra": "/AcroForm << /Fields [4 0 R] /DA (/Helv 0 Tf 0 g) /DR << /Font << /Helv 5 0 R >> >> >> "
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 5,
+          "bbox": [
+            148,
+            121,
+            149,
+            126
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 7,
+          "bbox": [
+            149,
+            120,
+            150,
+            127
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "draws",
+          "inkedPixels": 13,
+          "bbox": [
+            148,
+            120,
+            150,
+            127
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 2,
+        "blank": 1,
+        "verdict": "draw"
+      },
+      "issues": [
+        "#991"
+      ]
+    },
+    {
+      "id": "widget.tx.value-wider-than-the-rect",
+      "subtype": "Widget",
+      "state": "tx",
+      "condition": "a /V wider than its field",
+      "decision": "draw",
+      "shape": "text-value-inside-rect",
+      "rendererSite": "RenderTextFieldValue",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Widget /FT /Tx /T (t) /F 4 /V (MountainMountainMountainMountain) /DA (0 0 0 rg /Helv 12 Tf) /Rect [50 60 150 90] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          110,
+          150,
+          140
+        ],
+        "extraObjects": [
+          "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Name /Helv /Encoding /WinAnsiEncoding >>\nendobj\n"
+        ],
+        "catalogExtra": "/AcroForm << /Fields [4 0 R] /DA (/Helv 0 Tf 0 g) /DR << /Font << /Helv 5 0 R >> >> >> "
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 513,
+          "bbox": [
+            52,
+            120,
+            149,
+            130
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 515,
+          "bbox": [
+            52,
+            121,
+            150,
+            130
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "draws",
+          "inkedPixels": 520,
+          "bbox": [
+            52,
+            120,
+            150,
+            130
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 751,
+          "bbox": [
+            53,
+            120,
+            199,
+            130
+          ],
+          "bboxClass": "exceeds-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 3,
+        "blank": 0,
+        "verdict": "draw"
+      },
+      "note": "The clip is the load-bearing part: mutool and pdftocairo stop at the /Rect, Ghostscript does not, and excise used to run off the PAGE.",
+      "issues": [
+        "#991"
+      ]
+    },
+    {
+      "id": "widget.tx.value-auto-size",
+      "subtype": "Widget",
+      "state": "tx",
+      "condition": "/DA states Tf size 0 - auto-size, fit the text to the field",
+      "decision": "draw",
+      "shape": "text-value-inside-rect",
+      "rendererSite": "RenderTextFieldValue",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Widget /FT /Tx /T (t) /F 4 /V (Mountain) /DA (0 0 0 rg /Helv 0 Tf) /Rect [50 60 150 90] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          110,
+          150,
+          140
+        ],
+        "extraObjects": [
+          "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Name /Helv /Encoding /WinAnsiEncoding >>\nendobj\n"
+        ],
+        "catalogExtra": "/AcroForm << /Fields [4 0 R] /DA (/Helv 0 Tf 0 g) /DR << /Font << /Helv 5 0 R >> >> >> "
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 753,
+          "bbox": [
+            53,
+            115,
+            147,
+            133
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 738,
+          "bbox": [
+            53,
+            117,
+            145,
+            135
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "draws",
+          "inkedPixels": 705,
+          "bbox": [
+            53,
+            117,
+            145,
+            135
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 669,
+          "bbox": [
+            53,
+            116,
+            143,
+            134
+          ],
+          "bboxClass": "inside-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 3,
+        "blank": 0,
+        "verdict": "draw"
+      },
+      "divergence": {
+        "kind": "magnitude",
+        "issue": "#1003",
+        "note": "All three engines draw, and all three fit the value to about 92 px of the 100 pt field (669-753 inked px); excise's autoSize heuristic (75% of the rect height, capped at 16 pt) draws 64 px wide / 392 px. Same shape and place, visibly smaller text."
+      }
+    },
+    {
+      "id": "widget.tx.value-no-da-anywhere",
+      "subtype": "Widget",
+      "state": "tx",
+      "condition": "/V present and no /DA on the widget or the AcroForm",
+      "decision": "draw",
+      "shape": "text-value-inside-rect",
+      "rendererSite": "RenderTextFieldValue",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Widget /FT /Tx /T (t) /F 4 /V (Mountain) /Rect [50 60 150 90] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          110,
+          150,
+          140
+        ],
+        "extraObjects": [
+          "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Name /Helv /Encoding /WinAnsiEncoding >>\nendobj\n"
+        ],
+        "catalogExtra": "/AcroForm << /Fields [4 0 R] /DR << /Font << /Helv 5 0 R >> >> >> "
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 255,
+          "bbox": [
+            52,
+            120,
+            101,
+            130
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 251,
+          "bbox": [
+            53,
+            120,
+            101,
+            130
+          ],
+          "bboxClass": "inside-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 2,
+        "blank": 1,
+        "verdict": "draw"
+      },
+      "issues": [
+        "#889"
+      ]
+    },
+    {
+      "id": "widget.sig.unsigned",
+      "subtype": "Widget",
+      "state": "sig",
+      "condition": "/FT /Sig with no /AP and no /MK",
+      "decision": "draw",
+      "shape": "hollow-rect-on-annot-rect",
+      "rendererSite": "RenderWidgetDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Widget /FT /Sig /T (s) /F 4 /Rect [50 60 150 90] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          110,
+          150,
+          140
+        ],
+        "extraObjects": [
+          "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Name /Helv /Encoding /WinAnsiEncoding >>\nendobj\n"
+        ],
+        "catalogExtra": "/AcroForm << /Fields [4 0 R] /DA (/Helv 0 Tf 0 g) /DR << /Font << /Helv 5 0 R >> >> >> "
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 109,
+          "bbox": [
+            50,
+            110,
+            73,
+            115
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 1,
+        "blank": 2,
+        "verdict": "blank"
+      },
+      "deviation": {
+        "kind": "invented-ink",
+        "issue": "#1005",
+        "note": "1 of 3, and excise does not even draw what the one draws: mutool inks 109 px in a 23x5 mark at the field's top-left, poppler and Ghostscript ink nothing, and excise strokes a full blue placeholder rectangle (520 px on the whole rect). #885 introduced it so an unsigned signature field is visible ('sign here'), which is a product decision rather than a reading of the evidence. Recorded here rather than quietly kept, because by this table's own rule a no-majority row draws nothing."
+      }
+    },
+    {
+      "id": "widget.ch.with-value",
+      "subtype": "Widget",
+      "state": "ch",
+      "condition": "/FT /Ch (choice) with a /V and no /AP",
+      "decision": "nothing",
+      "shape": "none",
+      "rendererSite": "RenderWidgetDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Widget /FT /Ch /T (c) /F 4 /V (Mountain) /DA (0 0 0 rg /Helv 12 Tf) /Rect [50 60 150 90] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          110,
+          150,
+          140
+        ],
+        "extraObjects": [
+          "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Name /Helv /Encoding /WinAnsiEncoding >>\nendobj\n"
+        ],
+        "catalogExtra": "/AcroForm << /Fields [4 0 R] /DA (/Helv 0 Tf 0 g) /DR << /Font << /Helv 5 0 R >> >> >> "
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 251,
+          "bbox": [
+            53,
+            120,
+            101,
+            130
+          ],
+          "bboxClass": "inside-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 1,
+        "blank": 2,
+        "verdict": "blank"
+      },
+      "note": "1 of 3 - only Ghostscript draws the value. The /Tx path deliberately does not extend to /Ch."
+    },
+    {
+      "id": "text.degenerate-rect",
+      "subtype": "Text",
+      "state": null,
+      "condition": "/Text with no /AP, including the degenerate /Rect §12.5.6.4 makes normal",
+      "decision": "draw",
+      "shape": "marker-at-anchor",
+      "rendererSite": "RenderStickyNoteDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Text /F 4 /Rect [50 150 50 150] /Contents (note) >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          50,
+          50,
+          50
+        ],
+        "extraObjects": [],
+        "catalogExtra": ""
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 92,
+          "bbox": [
+            50,
+            50,
+            66,
+            66
+          ],
+          "bboxClass": "exceeds-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 232,
+          "bbox": [
+            53,
+            50,
+            71,
+            72
+          ],
+          "bboxClass": "exceeds-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "draws",
+          "inkedPixels": 263,
+          "bbox": [
+            53,
+            50,
+            71,
+            73
+          ],
+          "bboxClass": "exceeds-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 332,
+          "bbox": [
+            50,
+            50,
+            67,
+            71
+          ],
+          "bboxClass": "exceeds-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 3,
+        "blank": 0,
+        "verdict": "draw"
+      },
+      "note": "3 of 3 draw a ~16-20 pt marker at the anchor and disagree completely on the artwork (mutool black strokes 92 px, poppler a grey-green fill 232 px, Ghostscript 332 px). excise draws a note-shaped marker of that size at that anchor and copies none of them.",
+      "issues": [
+        "#885"
+      ]
+    },
+    {
+      "id": "freetext.with-color",
+      "subtype": "FreeText",
+      "state": null,
+      "condition": "/FreeText carrying /C",
+      "decision": "draw",
+      "shape": "filled-rect-on-annot-rect",
+      "rendererSite": "RenderFreeTextDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /FreeText /F 4 /Contents (note) /Rect [50 100 150 150] /C [0 0 1] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          50,
+          150,
+          100
+        ],
+        "extraObjects": [],
+        "catalogExtra": ""
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 5000,
+          "bbox": [
+            50,
+            50,
+            150,
+            100
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 5000,
+          "bbox": [
+            50,
+            50,
+            150,
+            100
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "draws",
+          "inkedPixels": 5000,
+          "bbox": [
+            50,
+            50,
+            150,
+            100
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 5151,
+          "bbox": [
+            50,
+            50,
+            151,
+            101
+          ],
+          "bboxClass": "matches-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 3,
+        "blank": 0,
+        "verdict": "draw"
+      },
+      "issues": [
+        "#885"
+      ]
+    },
+    {
+      "id": "freetext.without-color",
+      "subtype": "FreeText",
+      "state": null,
+      "condition": "/FreeText with no /C",
+      "decision": "draw",
+      "shape": "hollow-rect-on-annot-rect",
+      "rendererSite": "RenderFreeTextDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /FreeText /F 4 /Contents (note) /Rect [50 100 150 150] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          50,
+          150,
+          100
+        ],
+        "extraObjects": [],
+        "catalogExtra": ""
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 419,
+          "bbox": [
+            50,
+            50,
+            150,
+            100
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 384,
+          "bbox": [
+            50,
+            50,
+            150,
+            100
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "draws",
+          "inkedPixels": 386,
+          "bbox": [
+            50,
+            50,
+            150,
+            100
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 710,
+          "bbox": [
+            50,
+            50,
+            151,
+            101
+          ],
+          "bboxClass": "matches-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 3,
+        "blank": 0,
+        "verdict": "draw"
+      },
+      "issues": [
+        "#885"
+      ]
+    },
+    {
+      "id": "square.with-color",
+      "subtype": "Square",
+      "state": null,
+      "condition": "/Square carrying /C",
+      "decision": "draw",
+      "shape": "hollow-rect-on-annot-rect",
+      "rendererSite": "RenderShapeDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Square /F 4 /Rect [50 50 150 150] /C [1 0 0] /BS << /W 2 >> >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          50,
+          150,
+          150
+        ],
+        "extraObjects": [],
+        "catalogExtra": ""
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 784,
+          "bbox": [
+            50,
+            50,
+            150,
+            150
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 784,
+          "bbox": [
+            50,
+            50,
+            150,
+            150
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "draws",
+          "inkedPixels": 784,
+          "bbox": [
+            50,
+            50,
+            150,
+            150
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 1200,
+          "bbox": [
+            49,
+            49,
+            152,
+            152
+          ],
+          "bboxClass": "matches-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 3,
+        "blank": 0,
+        "verdict": "draw"
+      }
+    },
+    {
+      "id": "circle.with-color",
+      "subtype": "Circle",
+      "state": null,
+      "condition": "/Circle carrying /C",
+      "decision": "draw",
+      "shape": "hollow-oval-on-annot-rect",
+      "rendererSite": "RenderShapeDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Circle /F 4 /Rect [50 50 150 150] /C [1 0 0] /BS << /W 2 >> >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          50,
+          150,
+          150
+        ],
+        "extraObjects": [],
+        "catalogExtra": ""
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 902,
+          "bbox": [
+            50,
+            50,
+            150,
+            150
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 904,
+          "bbox": [
+            50,
+            50,
+            150,
+            150
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "draws",
+          "inkedPixels": 928,
+          "bbox": [
+            50,
+            50,
+            150,
+            150
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 1020,
+          "bbox": [
+            49,
+            49,
+            152,
+            152
+          ],
+          "bboxClass": "matches-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 3,
+        "blank": 0,
+        "verdict": "draw"
+      }
+    },
+    {
+      "id": "square.without-color",
+      "subtype": "Square",
+      "state": null,
+      "condition": "/Square or /Circle with no /C - no colour is stated, so there is nothing to draw with",
+      "decision": "nothing",
+      "shape": "none",
+      "rendererSite": "RenderShapeDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Square /F 4 /Rect [50 50 150 150] /BS << /W 2 >> >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          50,
+          150,
+          150
+        ],
+        "extraObjects": [],
+        "catalogExtra": ""
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 784,
+          "bbox": [
+            50,
+            50,
+            150,
+            150
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "draws",
+          "inkedPixels": 784,
+          "bbox": [
+            50,
+            50,
+            150,
+            150
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 1,
+        "blank": 2,
+        "verdict": "blank"
+      },
+      "note": "1 of 3 (poppler strokes it black)."
+    },
+    {
+      "id": "line.with-color",
+      "subtype": "Line",
+      "state": null,
+      "condition": "/Line carrying /C and /L",
+      "decision": "draw",
+      "shape": "stroked-path-inside-rect",
+      "rendererSite": "RenderLineDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Line /F 4 /Rect [50 50 150 150] /C [1 0 0] /L [60 60 140 140] /BS << /W 2 >> >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          50,
+          150,
+          150
+        ],
+        "extraObjects": [],
+        "catalogExtra": ""
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 402,
+          "bbox": [
+            59,
+            59,
+            141,
+            141
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 402,
+          "bbox": [
+            59,
+            59,
+            141,
+            141
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "draws",
+          "inkedPixels": 402,
+          "bbox": [
+            59,
+            59,
+            141,
+            141
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 402,
+          "bbox": [
+            59,
+            59,
+            141,
+            141
+          ],
+          "bboxClass": "inside-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 3,
+        "blank": 0,
+        "verdict": "draw"
+      },
+      "issues": [
+        "#885"
+      ]
+    },
+    {
+      "id": "line.without-color",
+      "subtype": "Line",
+      "state": null,
+      "condition": "/Line (or /Polygon, /PolyLine, /Ink) with declared geometry and no /C",
+      "decision": "nothing",
+      "shape": "none",
+      "rendererSite": "RenderLineDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Line /F 4 /Rect [50 50 150 150] /L [60 60 140 140] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          50,
+          150,
+          150
+        ],
+        "extraObjects": [],
+        "catalogExtra": ""
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 242,
+          "bbox": [
+            59,
+            59,
+            141,
+            141
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "draws",
+          "inkedPixels": 242,
+          "bbox": [
+            59,
+            59,
+            141,
+            141
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 242,
+          "bbox": [
+            59,
+            59,
+            141,
+            141
+          ],
+          "bboxClass": "inside-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 2,
+        "blank": 1,
+        "verdict": "draw"
+      },
+      "deviation": {
+        "kind": "known-defect-not-yet-fixed",
+        "issue": "#1006",
+        "note": "2 of 3 draw it black (pdftocairo 242 px, Ghostscript 242 px, mutool 0) on exactly the geometry the file declares, so excise's blank is a defect by this table's own rule. CreateAnnotationStrokePaint returns null when /C is absent, documented as 'viewers differ here and none of the corpus fixtures omit /C'; the first half is now measured false. Filed rather than fixed in the same pass as #987/#991 so each behaviour change is verified against the corpus manifests on its own."
+      }
+    },
+    {
+      "id": "polygon.with-color",
+      "subtype": "Polygon",
+      "state": null,
+      "condition": "/Polygon carrying /C and /Vertices",
+      "decision": "draw",
+      "shape": "stroked-path-inside-rect",
+      "rendererSite": "RenderVertexShapeDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Polygon /F 4 /Rect [50 50 150 150] /C [1 0 0] /Vertices [60 60 140 60 100 140] /BS << /W 2 >> >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          50,
+          150,
+          150
+        ],
+        "extraObjects": [],
+        "catalogExtra": ""
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 640,
+          "bbox": [
+            58,
+            58,
+            142,
+            141
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 640,
+          "bbox": [
+            58,
+            58,
+            142,
+            141
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "draws",
+          "inkedPixels": 724,
+          "bbox": [
+            58,
+            58,
+            142,
+            142
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 884,
+          "bbox": [
+            58,
+            57,
+            142,
+            142
+          ],
+          "bboxClass": "inside-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 3,
+        "blank": 0,
+        "verdict": "draw"
+      },
+      "issues": [
+        "#885"
+      ]
+    },
+    {
+      "id": "polyline.with-color",
+      "subtype": "PolyLine",
+      "state": null,
+      "condition": "/PolyLine carrying /C and /Vertices",
+      "decision": "draw",
+      "shape": "stroked-path-inside-rect",
+      "rendererSite": "RenderVertexShapeDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /PolyLine /F 4 /Rect [50 50 150 150] /C [1 0 0] /Vertices [60 60 140 60 100 140] /BS << /W 2 >> >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          50,
+          150,
+          150
+        ],
+        "extraObjects": [],
+        "catalogExtra": ""
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 401,
+          "bbox": [
+            60,
+            59,
+            142,
+            141
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 401,
+          "bbox": [
+            60,
+            59,
+            142,
+            141
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "draws",
+          "inkedPixels": 483,
+          "bbox": [
+            60,
+            59,
+            142,
+            142
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 564,
+          "bbox": [
+            60,
+            59,
+            142,
+            142
+          ],
+          "bboxClass": "inside-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 3,
+        "blank": 0,
+        "verdict": "draw"
+      },
+      "issues": [
+        "#885"
+      ]
+    },
+    {
+      "id": "ink.with-color",
+      "subtype": "Ink",
+      "state": null,
+      "condition": "/Ink carrying /C and /InkList",
+      "decision": "draw",
+      "shape": "stroked-path-inside-rect",
+      "rendererSite": "RenderInkDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Ink /F 4 /Rect [50 50 150 150] /C [1 0 0] /InkList [[60 60 100 120 140 60]] /BS << /W 2 >> >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          50,
+          150,
+          150
+        ],
+        "extraObjects": [],
+        "catalogExtra": ""
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 402,
+          "bbox": [
+            59,
+            79,
+            141,
+            141
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 402,
+          "bbox": [
+            59,
+            78,
+            141,
+            141
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "draws",
+          "inkedPixels": 402,
+          "bbox": [
+            59,
+            78,
+            141,
+            141
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 324,
+          "bbox": [
+            59,
+            79,
+            141,
+            141
+          ],
+          "bboxClass": "inside-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 3,
+        "blank": 0,
+        "verdict": "draw"
+      },
+      "issues": [
+        "#885"
+      ]
+    },
+    {
+      "id": "highlight.with-color",
+      "subtype": "Highlight",
+      "state": null,
+      "condition": "/Highlight with /QuadPoints",
+      "decision": "draw",
+      "shape": "filled-band-over-quad",
+      "rendererSite": "RenderTextMarkupDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Highlight /F 4 /Rect [50 100 150 120] /C [1 1 0] /QuadPoints [50 120 150 120 50 100 150 100] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          80,
+          150,
+          100
+        ],
+        "extraObjects": [],
+        "catalogExtra": ""
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 2120,
+          "bbox": [
+            46,
+            80,
+            154,
+            100
+          ],
+          "bboxClass": "exceeds-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 2124,
+          "bbox": [
+            46,
+            80,
+            154,
+            100
+          ],
+          "bboxClass": "exceeds-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "draws",
+          "inkedPixels": 2224,
+          "bbox": [
+            46,
+            80,
+            154,
+            101
+          ],
+          "bboxClass": "exceeds-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 2092,
+          "bbox": [
+            47,
+            80,
+            153,
+            100
+          ],
+          "bboxClass": "exceeds-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 3,
+        "blank": 0,
+        "verdict": "draw"
+      },
+      "divergence": {
+        "kind": "magnitude",
+        "issue": "#1004",
+        "note": "excise rounds the ends of the highlight and inflates the quad by half its height (bbox 6 px wider each side than every oracle's). Same band, same colour, same place."
+      }
+    },
+    {
+      "id": "underline.with-color",
+      "subtype": "Underline",
+      "state": null,
+      "condition": "/Underline with /QuadPoints",
+      "decision": "draw",
+      "shape": "horizontal-band",
+      "rendererSite": "RenderTextMarkupDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Underline /F 4 /Rect [50 100 150 120] /C [0 1 0] /QuadPoints [50 120 150 120 50 100 150 100] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          80,
+          150,
+          100
+        ],
+        "extraObjects": [],
+        "catalogExtra": ""
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 200,
+          "bbox": [
+            50,
+            96,
+            150,
+            98
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 101,
+          "bbox": [
+            50,
+            100,
+            151,
+            101
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "draws",
+          "inkedPixels": 201,
+          "bbox": [
+            50,
+            99,
+            151,
+            101
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 200,
+          "bbox": [
+            50,
+            96,
+            150,
+            98
+          ],
+          "bboxClass": "inside-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 3,
+        "blank": 0,
+        "verdict": "draw"
+      }
+    },
+    {
+      "id": "strikeout.with-color",
+      "subtype": "StrikeOut",
+      "state": null,
+      "condition": "/StrikeOut with /QuadPoints",
+      "decision": "draw",
+      "shape": "horizontal-band",
+      "rendererSite": "RenderTextMarkupDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /StrikeOut /F 4 /Rect [50 100 150 120] /C [1 0 0] /QuadPoints [50 120 150 120 50 100 150 100] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          80,
+          150,
+          100
+        ],
+        "extraObjects": [],
+        "catalogExtra": ""
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 200,
+          "bbox": [
+            50,
+            90,
+            150,
+            92
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 100,
+          "bbox": [
+            50,
+            90,
+            150,
+            91
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "draws",
+          "inkedPixels": 100,
+          "bbox": [
+            50,
+            90,
+            150,
+            91
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 300,
+          "bbox": [
+            50,
+            90,
+            150,
+            93
+          ],
+          "bboxClass": "inside-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 3,
+        "blank": 0,
+        "verdict": "draw"
+      }
+    },
+    {
+      "id": "squiggly.with-color",
+      "subtype": "Squiggly",
+      "state": null,
+      "condition": "/Squiggly with /QuadPoints",
+      "decision": "draw",
+      "shape": "horizontal-band",
+      "rendererSite": "RenderTextMarkupDefault",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Squiggly /F 4 /Rect [50 100 150 120] /C [0 0 1] /QuadPoints [50 120 150 120 50 100 150 100] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          80,
+          150,
+          100
+        ],
+        "extraObjects": [],
+        "catalogExtra": ""
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 307,
+          "bbox": [
+            49,
+            96,
+            152,
+            101
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 300,
+          "bbox": [
+            50,
+            96,
+            150,
+            100
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "draws",
+          "inkedPixels": 300,
+          "bbox": [
+            50,
+            96,
+            150,
+            100
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 280,
+          "bbox": [
+            50,
+            96,
+            150,
+            100
+          ],
+          "bboxClass": "inside-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 3,
+        "blank": 0,
+        "verdict": "draw"
+      }
+    },
+    {
+      "id": "stamp.no-ap",
+      "subtype": "Stamp",
+      "state": null,
+      "condition": "/Stamp with no /AP",
+      "decision": "nothing",
+      "shape": "none",
+      "rendererSite": "(no case in RenderDefaultAppearance)",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Stamp /F 4 /Rect [50 50 150 150] /Name /Approved >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          50,
+          150,
+          150
+        ],
+        "extraObjects": [],
+        "catalogExtra": ""
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 1055,
+          "bbox": [
+            50,
+            87,
+            150,
+            113
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 4946,
+          "bbox": [
+            50,
+            53,
+            150,
+            147
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "draws",
+          "inkedPixels": 4997,
+          "bbox": [
+            50,
+            53,
+            150,
+            147
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 1564,
+          "bbox": [
+            49,
+            87,
+            151,
+            114
+          ],
+          "bboxClass": "inside-annot-rect"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 3,
+        "blank": 0,
+        "verdict": "draw"
+      },
+      "deviation": {
+        "kind": "majority-draws-but-no-agreed-artwork",
+        "issue": "#889",
+        "note": "3 of 3 draw and they disagree by 4.7x on how much and by a factor of 3.6 on the bbox height (mutool 1055 px in a band, pdftocairo 4946 px over the whole rect, Ghostscript 1564 px in a band). A stamp's picture is viewer-specific art; there is nothing to copy, only an invitation to invent some. The old 2-of-3 reading of this row was measured on a non-printable fixture, so Ghostscript's zero was an abstention."
+      }
+    },
+    {
+      "id": "fileattachment.no-ap",
+      "subtype": "FileAttachment",
+      "state": null,
+      "condition": "/FileAttachment with no /AP",
+      "decision": "nothing",
+      "shape": "none",
+      "rendererSite": "(no case in RenderDefaultAppearance)",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /FileAttachment /F 4 /Rect [50 100 70 120] /Name /PushPin >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          80,
+          70,
+          100
+        ],
+        "extraObjects": [],
+        "catalogExtra": ""
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 187,
+          "bbox": [
+            50,
+            80,
+            70,
+            100
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 1,
+        "blank": 2,
+        "verdict": "blank"
+      },
+      "note": "1 of 3 (mutool only)."
+    },
+    {
+      "id": "sound.no-ap",
+      "subtype": "Sound",
+      "state": null,
+      "condition": "/Sound with no /AP",
+      "decision": "nothing",
+      "shape": "none",
+      "rendererSite": "(no case in RenderDefaultAppearance)",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Sound /F 4 /Rect [50 100 70 120] /Name /Speaker >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          80,
+          70,
+          100
+        ],
+        "extraObjects": [],
+        "catalogExtra": ""
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 210,
+          "bbox": [
+            50,
+            80,
+            70,
+            100
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 1,
+        "blank": 2,
+        "verdict": "blank"
+      },
+      "note": "1 of 3 (mutool only)."
+    },
+    {
+      "id": "redact.no-ap",
+      "subtype": "Redact",
+      "state": null,
+      "condition": "/Redact with no /AP",
+      "decision": "nothing",
+      "shape": "none",
+      "rendererSite": "(no case in RenderDefaultAppearance)",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /Redact /F 4 /Rect [50 100 150 120] /IC [0 0 0] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          80,
+          150,
+          100
+        ],
+        "extraObjects": [],
+        "catalogExtra": ""
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 464,
+          "bbox": [
+            50,
+            80,
+            150,
+            100
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 1,
+        "blank": 2,
+        "verdict": "blank"
+      },
+      "note": "1 of 3 (mutool only)."
+    },
+    {
+      "id": "unknown-subtype.no-ap",
+      "subtype": "(unrecognised)",
+      "state": null,
+      "condition": "a /Subtype excise does not recognise, with no /AP",
+      "decision": "nothing",
+      "shape": "none",
+      "rendererSite": "(no case in RenderDefaultAppearance)",
+      "fixture": {
+        "annotation": "<< /Type /Annot /Subtype /NotAPdfSubtype /F 4 /Rect [50 50 150 150] /C [1 0 0] >>",
+        "pageSize": 200,
+        "dpi": 72,
+        "annotDeviceRect": [
+          50,
+          50,
+          150,
+          150
+        ],
+        "extraObjects": [],
+        "catalogExtra": ""
+      },
+      "evidence": [
+        {
+          "oracle": "mutool",
+          "engine": "mupdf",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftocairo",
+          "engine": "poppler",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdftoppm",
+          "engine": "poppler",
+          "counts": false,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "ghostscript",
+          "engine": "ghostscript",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        }
+      ],
+      "majority": {
+        "voters": 3,
+        "draws": 0,
+        "blank": 3,
+        "verdict": "blank"
+      }
+    }
+  ]
+}
