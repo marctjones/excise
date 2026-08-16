@@ -37,6 +37,14 @@ internal class GraphicsState
     public float[]? DashArray { get; set; }
     public float DashPhase { get; set; }
 
+    /// <summary>
+    /// The §8.4.1 Table 52 text parameters captured by the <c>q</c> that pushed
+    /// this state, restored by the matching <c>Q</c> (#986). Null on a state
+    /// that was never pushed by <c>q</c> (the initial state, and the states the
+    /// nested-stream sites clone by hand).
+    /// </summary>
+    public TextParameterSnapshot? SavedTextParameters { get; set; }
+
     public GraphicsState Clone()
     {
         return new GraphicsState
@@ -62,9 +70,44 @@ internal class GraphicsState
             DashArray = DashArray,            // replaced wholesale by `d`, never mutated in place -> safe to share
             DashPhase = DashPhase,
             SoftMask = SoftMask,
+            SavedTextParameters = SavedTextParameters,
         };
     }
 }
+
+/// <summary>
+/// The §8.4.1 Table 52 text parameters — <c>Tf</c> (font and size), <c>Tc</c>,
+/// <c>Tw</c>, <c>Tz</c>, <c>TL</c>, <c>Ts</c>, <c>Tr</c> — plus the resolved
+/// font <c>Tf</c> derived from the font dictionary. Table 52 puts these in the
+/// GRAPHICS state, so <c>q</c> saves them and <c>Q</c> restores them (#986).
+///
+/// <para>The resolved font travels with the name and size for the reason
+/// <see cref="Excise.Core.Content.ContentStreamWalker"/>'s own snapshot gives
+/// (#983): restoring the NAME alone would leave the renderer reporting "F1 @
+/// 12" while drawing glyphs out of the bracketed font's typeface, widths and
+/// encoding — a worse failure than not restoring at all. It is an
+/// immutable-per-<c>Tf</c> reference, so this is a pointer copy and no font
+/// re-resolution happens on restore.</para>
+///
+/// <para>The text MATRIX and line matrix are deliberately ABSENT. They are
+/// §9.4.1 text-OBJECT state, not Table 52 graphics state: <c>BT</c> resets
+/// them, and a <c>q</c>/<c>Q</c> pair that appears inside a text object (which
+/// §8.2 does not permit, but real producers emit) leaves the pen where it is in
+/// mupdf and poppler. Ghostscript rewinds it, so this is a measured 2-1 split
+/// between reference implementations on a construct the spec disallows, not a
+/// unanimous reading — see
+/// <c>GraphicsStateTextParameterRenderingTests.QQ_InsideATextObject_DoesNotRewindThePen</c>.</para>
+/// </summary>
+internal readonly record struct TextParameterSnapshot(
+    string FontName,
+    float FontSize,
+    float CharSpacing,
+    float WordSpacing,
+    float HorizontalScale,
+    float TextLeading,
+    float TextRise,
+    int RenderMode,
+    Fonts.ResolvedRenderFont? Font);
 
 /// <summary>
 /// Text state for rendering text operators.
