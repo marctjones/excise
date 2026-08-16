@@ -26,13 +26,20 @@ namespace Excise.Core.Tests.Parsing;
 /// found live (#969, #971): both are reference/recursion shapes, invisible
 /// to a byte flipper.</para>
 ///
-/// <para><b>Tier: t0.</b> Each row is a few hundred in-memory parses of
-/// sub-kilobyte-to-17 KB fixtures and the whole class runs in seconds.
-/// Issue #960 asked for a nightly tier, but <c>nightly-corpus</c> in
-/// <c>tests/format-compatibility-suite.json</c> is still
-/// <c>status: planned</c> with <c>primaryCommand: null</c> — there is no
-/// runner to schedule against. <see cref="Iterations"/> is the knob to raise
-/// if one ever exists; raising it here would put the cost on every push.</para>
+/// <para><b>Tier: t0, plus a deep sweep at release tier (#984).</b> At the
+/// checked-in default (250) each row is a few hundred in-memory parses of
+/// sub-kilobyte-to-17 KB fixtures and the whole class runs in seconds — cheap
+/// enough for every push. Issue #960 asked for a nightly tier, but
+/// <c>nightly-corpus</c> in <c>tests/format-compatibility-suite.json</c> is
+/// still <c>status: planned</c> with <c>primaryCommand: null</c> — there is
+/// no runner to schedule against. Rather than wait on that,
+/// <c>scripts/run-deep-fuzz-sweep.sh</c> runs this same class at 20,000
+/// iterations/seed (configurable via <c>EXCISE_FUZZ_ITERATIONS</c>, see
+/// <see cref="Iterations"/>) from <c>run-full-suite.sh --everything</c> — the
+/// existing hour-long release tier, where a couple of minutes is affordable.
+/// Every escape this suite has actually found needed thousands of iterations
+/// (see the table on #984), so 250 is a regression guard, not a discovery
+/// mechanism; the deep sweep is where discovery happens.</para>
 ///
 /// <para><b>Determinism.</b> Seeds are fixed and every failure message names
 /// the seed and iteration, which together reproduce the exact byte sequence:
@@ -46,29 +53,66 @@ public class StructureAwareFuzzTests
     /// Mutated documents per seed. Sized so a row stays in the low seconds:
     /// the point is many cheap shapes, not a long soak.
     ///
-    /// <para><b>How to hunt with this.</b> Raise it (6000 was used during
-    /// development), run, then put it back. Because the seeds are fixed,
-    /// iteration N is the same document at any setting, so a deep-sweep
-    /// finding reproduces exactly by restoring the number and the seed —
-    /// which is how #975 is filed. Do NOT raise it permanently: at 6000 a row
-    /// takes tens of seconds, and t0's whole budget is ~30s.</para>
+    /// <para><b>How to hunt with this (#984).</b> Set the
+    /// <c>EXCISE_FUZZ_ITERATIONS</c> environment variable — e.g.
+    /// <c>EXCISE_FUZZ_ITERATIONS=20000 dotnet test Excise.Core.Tests --filter
+    /// FullyQualifiedName~StructureAwareFuzzTests</c>, or just run
+    /// <c>scripts/run-deep-fuzz-sweep.sh</c>, which sets it for you. Because
+    /// the seeds are fixed and mutation N depends only on how many prior
+    /// mutations were drawn from the same <c>Random(seed)</c> — never on the
+    /// configured depth — iteration N is the identical document at ANY
+    /// setting, so a deep-sweep finding reproduces exactly by restoring the
+    /// iteration count and the seed named in the failure message. That is how
+    /// #975 was filed, back when this was a manual "raise it, run it, put it
+    /// back" step. Do NOT raise the 250 default permanently: t0's whole
+    /// budget is ~30s and every push pays this row.</para>
     ///
     /// <para><b>A green run at 250 is not "no defects left".</b> The deep
     /// sweep that shook out #974's seven escapes kept finding more as the
     /// depth grew, ending at a JBIG2 allocation defect (#975) around
-    /// iteration 5400 that is deliberately still open. This gate says "no
-    /// worse than what we fixed", the same honesty the extraction-parity
-    /// floors carry in CLAUDE.md.</para>
+    /// iteration 5400. #975 is now FIXED (7368b8c7) — re-run at
+    /// EXCISE_FUZZ_ITERATIONS=20000 on 2026-08-16, all six rows pass in
+    /// ~28s — so do not restate "deliberately still open" here; that was
+    /// true when this paragraph was written and stopped being true once the
+    /// fix landed. Re-verify against a fresh sweep before trusting this
+    /// note, the same rule CLAUDE.md applies to its own stale-claim history.
+    /// This gate says "no worse than what we fixed", the same honesty the
+    /// extraction-parity floors carry in CLAUDE.md — a green run at any
+    /// depth is a regression guard for what has already been found, not
+    /// proof nothing remains. <c>scripts/run-deep-fuzz-sweep.sh</c> runs this
+    /// row at depth from <c>run-full-suite.sh --everything</c> so that depth
+    /// is reached at least once per release rather than only when someone
+    /// remembers to raise it by hand.</para>
     /// </summary>
-    private const int Iterations = 250;
+    private static readonly int Iterations = ResolveIterations();
+
+    private static int ResolveIterations()
+    {
+        var raw = Environment.GetEnvironmentVariable("EXCISE_FUZZ_ITERATIONS");
+        if (!string.IsNullOrWhiteSpace(raw) && int.TryParse(raw, out var configured) && configured > 0)
+            return configured;
+        return 250;
+    }
 
     /// <summary>
     /// Budget for one theory row. Generous versus the ~1-3s a row actually
-    /// takes, because this is a hang DETECTOR, not a performance budget — a
-    /// row that trips it has found an unbounded loop, and a tight bound here
-    /// would just make the suite flaky on a loaded machine.
+    /// takes at the default 250, because this is a hang DETECTOR, not a
+    /// performance budget — a row that trips it has found an unbounded loop,
+    /// and a tight bound here would just make the suite flaky on a loaded
+    /// machine. Scales with <see cref="Iterations"/> (20ms/iteration, well
+    /// above the ~1ms/iteration a healthy row actually costs) so a deep
+    /// sweep (#984) is not misreported as a hang purely for doing more work;
+    /// never below the original 2-minute floor, so the default 250-iteration
+    /// row keeps its existing behaviour exactly.
     /// </summary>
-    private static readonly TimeSpan RowBudget = TimeSpan.FromMinutes(2);
+    private static readonly TimeSpan RowBudget = ComputeRowBudget();
+
+    private static TimeSpan ComputeRowBudget()
+    {
+        var scaled = TimeSpan.FromMilliseconds(20.0 * Iterations);
+        var floor = TimeSpan.FromMinutes(2);
+        return scaled > floor ? scaled : floor;
+    }
 
     /// <summary>
     /// Git-tracked fixtures only — no gitignored corpus, so this suite needs

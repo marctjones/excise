@@ -357,6 +357,17 @@ emit "copy-whitespace-parity" script "scripts/check-copy-whitespace-parity.sh" "
 # them.
 if [ "$EVERYTHING" = "1" ]; then
     emit "release-gates" script "scripts/release-smoke.sh --no-build --quick --resume --only=accessibility,automation,ux,benchmark,perf-budget,aot,pdf20" "-"
+    # Deep fuzz sweep (#984): StructureAwareFuzzTests is checked in at 250
+    # iterations/seed for t0's ~30s push budget, and every escape it has
+    # actually found needed thousands (#975 at 5432, others at 5632/7132/
+    # ~10955). There is no nightly runner to schedule a deeper pass against
+    # (nightly-corpus is status: planned, primaryCommand: null), so this is
+    # the cheapest place depth is reached at least once per release: git-
+    # tracked fixtures only (no corpus dependency), ~20000 iterations/seed
+    # across six rows in well under a minute of test-body time. A failure
+    # names its seed/iteration/fixture in the assertion message, which
+    # reproduces exactly by restoring EXCISE_FUZZ_ITERATIONS and the seed.
+    emit "deep-fuzz-sweep" script "scripts/run-deep-fuzz-sweep.sh" "-"
     # Corpus rendering scans (#862). Each page is classified PASS / PASS_ONE /
     # DIFF / MALFORMED_PDF / ... and the run fails when a status departs from
     # that corpus's expectation manifest. The checked-in password manifest
