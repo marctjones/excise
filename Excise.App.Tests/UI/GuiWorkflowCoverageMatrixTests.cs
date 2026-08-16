@@ -159,14 +159,44 @@ public class GuiWorkflowCoverageMatrixTests
                 Capability.Covered("open via file dialog", typeof(FileOpsCommandTests), nameof(FileOpsCommandTests.OpenFileCommand_Execute_StubbedDialog_LoadsDocument)),
                 Capability.Covered("open via keyboard shortcut (Ctrl+O)", typeof(KeyboardShortcutTests), nameof(KeyboardShortcutTests.CtrlO_OpensFileDialog)),
                 Capability.Covered("open via recent files list", typeof(FileOpsCommandTests), nameof(FileOpsCommandTests.LoadRecentFileCommand_Execute_LoadsTheGivenRecentPath)),
-                Capability.Gap("open via command-line/file-association launch",
-                    "No Excise.App.Tests method drives command-line/file-association launch end to end. " +
-                    "scripts/run-packaged-gui-smoke.sh --mode direct-exec exercises it as a script, and " +
-                    "DocumentationClaimTests.FileAssociationDocs_MapToPackagingAndStartupHandlers checks the " +
-                    "source text mentions the handler — neither is a named xunit test method. See #959."),
+                Capability.Covered("open via command-line args resolves and loads (#979)", typeof(StartupActivationWorkflowTests), nameof(StartupActivationWorkflowTests.CommandLineArgs_ResolvedPath_ActuallyLoadsIntoTheViewModel)),
+                Capability.Covered("open via macOS file-association activation resolves and loads (#979)", typeof(StartupActivationWorkflowTests), nameof(StartupActivationWorkflowTests.FileAssociationActivation_ResolvedPath_ActuallyLoadsIntoTheViewModel)),
+                // #979 closed the "resolved path never proven to reach LoadDocumentAsync"
+                // half of this gap: App.OpenPathAsync and App.ResolveActivatedPdfPath
+                // (the "path -> loaded document" glue for both the command-line and
+                // macOS file-activation launch paths in
+                // App.OnFrameworkInitializationCompleted) went from private to internal
+                // and are now called directly by StartupActivationWorkflowTests, composed
+                // with the already-tested StartupDocumentResolver arg-parsing
+                // (StartupDocumentResolverTests). What remains a genuine, narrower gap —
+                // deliberately still declared rather than claimed covered — is the OS/
+                // process-launch mechanics those tests cannot reach headlessly: spawning
+                // the actual excise process with argv, and macOS Launch Services actually
+                // delivering an IActivatableLifetime.Activated event. That slice is a
+                // packaging-smoke concern, not a unit-test one, and stays covered by
+                // scripts/run-packaged-gui-smoke.sh --mode direct-exec plus
+                // DocumentationClaimTests.FileAssociationDocs_MapToPackagingAndStartupHandlers
+                // (source-text check that the docs and handlers agree).
+                Capability.Gap("open via command-line/file-association launch: the OS/process-launch step itself",
+                    "The resolve+load glue this launch path depends on (StartupDocumentResolver.Resolve, " +
+                    "App.OpenPathAsync, App.ResolveActivatedPdfPath) is now driven directly by " +
+                    "StartupActivationWorkflowTests and StartupDocumentResolverTests (#979). What is NOT, and " +
+                    "cannot be cheaply be made to be, driven by Excise.App.Tests: spawning the real OS process " +
+                    "with command-line argv, and macOS Launch Services actually delivering an " +
+                    "IActivatableLifetime.Activated event — both require a running desktop lifetime outside " +
+                    "Avalonia.Headless's SetupWithoutStarting harness this suite uses. Covered instead by " +
+                    "scripts/run-packaged-gui-smoke.sh --mode direct-exec (spawns the real published binary) " +
+                    "and DocumentationClaimTests.FileAssociationDocs_MapToPackagingAndStartupHandlers (keeps the " +
+                    "platform manifests/handlers in sync with the docs). See #959, #979."),
                 Capability.Gap("open via drag-drop",
-                    "No drag-drop test exists anywhere in Excise.App.Tests (searched for DragEventArgs / " +
-                    "OnDrop / DragDrop. usage, zero hits). See #959."),
+                    "Not just untested — the FEATURE does not exist. Zero references to DragEventArgs / OnDrop " +
+                    "/ DragDrop. / AllowDrop anywhere in Excise.App or Excise.Avalonia (#959, re-checked by " +
+                    "#979). There is no Drop handler to drive, so this is a feature gap prior to being a test " +
+                    "gap — implementing drag-drop-to-open is out of scope for a coverage-depth pass. Filed as " +
+                    "#1002 to track the feature; once a Drop handler exists, Avalonia routed events "  +
+                    "(DragDrop.DropEvent) can very likely be raised directly against a control in the existing " +
+                    "headless harness the same way pointer/keyboard events already are in this suite — headless " +
+                    "drag-drop synthesis is expected to be possible, just currently moot."),
             ]),
         new("Navigate long PDFs, thumbnails, zoom, fit width/page",
             Modality.Mouse | Modality.Keyboard | Modality.Toolbar,
