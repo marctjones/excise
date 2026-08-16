@@ -145,10 +145,13 @@ Excise.Core	tests-only	XObjectOperators	triage:public library/domain API; tests 
 Excise.Ocr	tests-only	RecognizeDocument	triage:public OCR API; tests exercise contract, external callers may use it
 Excise.Ocr	tests-only	ScanFile	triage:public OCR API; tests exercise contract, external callers may use it
 Excise.Ocr	tests-only	Similarity	triage:public OCR API; tests exercise contract, external callers may use it
+Excise.Rendering	tests-only	BBoxHeight	triage:#933 qpdf reference-oracle surface — Excise.Rendering/Differential exists to be called by tests; production callers would be the anomaly
+Excise.Rendering	tests-only	BBoxWidth	triage:#933 qpdf reference-oracle surface — Excise.Rendering/Differential exists to be called by tests; production callers would be the anomaly
 Excise.Rendering	tests-only	EncryptR4	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	EndLineEnding	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	InkStrokeCount	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	ListAnnotations	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
+Excise.Rendering	tests-only	NormalAppearance	triage:#933 qpdf reference-oracle surface — Excise.Rendering/Differential exists to be called by tests; production callers would be the anomaly
 Excise.Rendering	tests-only	PdftoppmReferenceRenderer	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	ShowEncryption	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	TryRenderPageWithOverprintSimulation	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
