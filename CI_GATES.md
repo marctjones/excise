@@ -289,6 +289,29 @@ construction rather than by hand.
 - Required status checks are configured in branch protection rules
 - Failure blocks merge until all gates pass
 
+## Contract / Manifest Agreement Gate (#977)
+
+**Trigger**: t0, as part of `Excise.Cli.Tests`
+(`CorpusScanClassificationTests.Contracts_AgreeWithTheCorpusExpectationManifests`)
+
+**Command** (human-facing, prints every disagreement):
+```bash
+scripts/check-contract-manifest-agreement.sh
+```
+
+Two checked-in files describe what each corpus page should do:
+`test-pdfs/rendering-contracts/**` (`ExpectedRawStatus`, graded by
+`render-quality-scan`) and `tests/corpus-expectations*.tsv` (graded by the
+corpus scan). Nothing compared them to each other, so a page could be green in
+one and stale in the other indefinitely — 65 pages were, when the gate was
+written. A wildcard (`*`) on either side is compatible with anything; the
+manifest's wildcard rows exist for load-dependent pages and must not be
+"fixed".
+
+No corpus, renderer or network required: both inputs are versioned test
+metadata, and the check reuses the two production loaders rather than
+re-parsing either format.
+
 ## Corpus Testing Outside PR Gates
 
 Full corpus runs (veraPDF, poppler, pdf.js, malformed/adversarial files —

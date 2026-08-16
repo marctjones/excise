@@ -34,6 +34,7 @@ partial class Program
             CreateCorpusScanCommand(),
             CreateRenderQualityScanCommand(),
             CreateRenderQualityClassifyCommand(),
+            CreateContractManifestAgreementCommand(),
             CreateGuiDisplayHotspotsCommand(),
             CreateCorpusHotspotsCommand(),
             CreateBenchmarkSuiteCommand(),
@@ -4777,19 +4778,26 @@ partial class Program
         IReadOnlyDictionary<CorpusPageKey, CorpusExpectedOutcome> expectations,
         CorpusScanEntry entry,
         out CorpusExpectedOutcome expectation)
+        => TryGetCorpusExpectation(expectations, entry.path, entry.pageNumber, out expectation);
+
+    internal static bool TryGetCorpusExpectation(
+        IReadOnlyDictionary<CorpusPageKey, CorpusExpectedOutcome> expectations,
+        string path,
+        int pageNumber,
+        out CorpusExpectedOutcome expectation)
     {
-        if (expectations.TryGetValue(new CorpusPageKey(entry.path, entry.pageNumber), out expectation))
+        if (expectations.TryGetValue(new CorpusPageKey(path, pageNumber), out expectation))
             return true;
 
-        if (!entry.path.Contains('/', StringComparison.Ordinal) &&
-            expectations.TryGetValue(new CorpusPageKey("pdfjs/" + entry.path, entry.pageNumber), out expectation))
+        if (!path.Contains('/', StringComparison.Ordinal) &&
+            expectations.TryGetValue(new CorpusPageKey("pdfjs/" + path, pageNumber), out expectation))
         {
             return true;
         }
 
         const string pdfjsPrefix = "pdfjs/";
-        if (entry.path.StartsWith(pdfjsPrefix, StringComparison.Ordinal) &&
-            expectations.TryGetValue(new CorpusPageKey(entry.path[pdfjsPrefix.Length..], entry.pageNumber), out expectation))
+        if (path.StartsWith(pdfjsPrefix, StringComparison.Ordinal) &&
+            expectations.TryGetValue(new CorpusPageKey(path[pdfjsPrefix.Length..], pageNumber), out expectation))
         {
             return true;
         }
