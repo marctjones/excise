@@ -68,6 +68,29 @@ if [ "${1:-}" = "--update" ]; then
   echo "Ratcheting copy-whitespace parity floors from the current measurement…"
 fi
 
+# `dotnet test --filter` EXITS 0 WHEN IT MATCHES NOTHING, so renaming or moving
+# CopyWhitespaceParityHarness would leave this gate green having measured
+# nothing — precisely the vacuous pass the strict-mode guard above exists to
+# prevent, arriving through a different door (#941). check-extraction-parity.sh
+# had the same hole and it was reachable.
+# `tee`, not capture-and-echo: the harness runs the whole GUI copy path over the
+# corpus. A gate that prints nothing while it works looks hung.
+RUN_LOG="$(mktemp)"
+trap 'rm -f "$RUN_LOG"' EXIT
+set +e
 dotnet test Excise.Avalonia.Tests/Excise.Avalonia.Tests.csproj \
   -c Debug --filter "FullyQualifiedName~CopyWhitespaceParityHarness" \
-  --logger "console;verbosity=minimal"
+  --logger "console;verbosity=minimal" 2>&1 | tee "$RUN_LOG"
+run_status=${PIPESTATUS[0]}
+set -e
+run_output="$(cat "$RUN_LOG")"
+
+if grep -q "No test matches the given testcase filter" <<<"$run_output"; then
+  echo
+  echo "FAIL: the filter matched NO tests — CopyWhitespaceParityHarness was renamed,"
+  echo "      moved, or removed. dotnet test exits 0 in that case, so this would"
+  echo "      otherwise be a green gate that measured nothing."
+  exit 1
+fi
+
+exit $run_status

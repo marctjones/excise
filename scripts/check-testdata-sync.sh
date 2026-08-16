@@ -57,8 +57,15 @@ def walk(obj, manifest):
 
 manifests = sorted(glob.glob(manifest_glob))
 if not manifests:
-    print("no manifests under test-pdfs/manifests/ — nothing to check")
-    sys.exit(0)
+    # Zero manifests is a FAILURE, not a pass. They are TRACKED files (5 of
+    # them, and test-pdfs/manifests/ is NOT gitignored even though test-pdfs/
+    # mostly is), so "none found" means the checkout is wrong or the directory
+    # moved — and this gate would otherwise report green having checked nothing.
+    # Same rule scripts/lib-runner.sh applies to a --filter matching no tests.
+    print("FAIL: no manifests under test-pdfs/manifests/. They are tracked files,")
+    print("      so finding none means this gate measured nothing — that is a")
+    print("      vacuous pass, not a clean run.")
+    sys.exit(1)
 
 for m in manifests:
     try:

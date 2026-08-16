@@ -54,10 +54,33 @@ require_file() {
 }
 
 # require_grep <label> <pattern> <file> <error...>
+#
+# ⚠️ Matches CODE ONLY — comment lines are stripped before the match.
+#
+# This is not fastidiousness, it is the #941 audit finding. A prose mention of
+# the very construct the gate is hunting for SATISFIES a naive grep, so the
+# gate greens over a falsified property. Measured on this script, 2026-08-15:
+#
+#   * replacing the real `page.RedactAreas(contentAreas, ...)` delegation in
+#     PdfDocumentRedactionExtensions.cs with a visual-only black box left
+#     "doc.RedactText delegates to glyph-level RedactArea" at PASS — five
+#     `///` doc comments in that file mention RedactArea.
+#   * replacing `page.RedactArea(coreRect, ...)` in RedactionService.cs with a
+#     bare AppendBlackRectangle left "GUI delegates to glyph-level
+#     page.RedactArea" at PASS — carried entirely by ONE `//` note on line 60.
+#
+# Both mutations are precisely the downgrade this gate exists to block, and
+# both shipped a green gate. That is #941's class recurring inside #941's own
+# fix: the assertion named the right file and still guarded nothing.
+#
+# Stripping is deliberately crude (drop everything after `//`, drop block-comment
+# continuation lines). It can only ever REMOVE text, so it cannot manufacture a
+# false pass — the failure direction is a false alarm, which is the safe one.
 require_grep() {
     local label="$1" pat="$2" file="$3"; shift 3
     echo -n "  ✓ $label... "
-    if [ -f "$file" ] && grep -qE "$pat" "$file" 2>/dev/null; then pass; else
+    if [ -f "$file" ] && sed -e 's://.*::' -e '/^[[:space:]]*\*/d' "$file" 2>/dev/null \
+         | grep -qE "$pat"; then pass; else
         fail "$@"
     fi
 }
@@ -68,14 +91,18 @@ require_file "Core redaction API exists" "$CORE_API"
 # deleted operator-level path, so the check could not fail for any reason that
 # mattered. What matters is that the document-level entry delegates to the
 # glyph-level engine rather than removing whole operators or drawing a box.
+# The pattern pins the CALL form (`page.RedactArea(` / `page.RedactAreas(`), not
+# the bare name: a bare "RedactArea" is satisfied by any `<see cref=...>` in the
+# file's own documentation, which is how this check passed over a visual-only
+# downgrade (see the note on require_grep).
 require_grep "doc.RedactText delegates to glyph-level RedactArea" \
-    "RedactArea" "$CORE_API" \
+    "page\.RedactAreas?\(" "$CORE_API" \
     "SECURITY: $CORE_API no longer routes through the glyph-level RedactArea path."
 
 # Check 3: the GUI must delegate to the glyph-level engine (page.RedactArea),
 # NOT draw a black box only.
 require_grep "GUI delegates to glyph-level page.RedactArea" \
-    "page\.RedactArea|\.RedactAreas?\(" "$REDACTION_SERVICE" \
+    "page\.RedactAreas?\(" "$REDACTION_SERVICE" \
     "SECURITY: RedactionService no longer calls page.RedactArea — redaction" \
     "may have been downgraded to visual-only (black box without glyph removal)."
 
@@ -98,8 +125,11 @@ require_grep "RedactArea wires ImageRedactor" "ImageRedactor" "$CORE_EXT" \
 
 # Check 7: a regression test must assert redacted text is ABSENT from the
 # saved content-stream bytes (the actual security guarantee).
+# The assertion FORM, not the bare word: "NotContain" alone matches a comment,
+# an identifier, or a disabled line. `.Should().NotContain(` is an executed
+# assertion or nothing.
 require_grep "End-to-end security test asserts removal" \
-    "NotContain" "$SECURITY_TEST" \
+    "\.Should\(\)\.NotContain\(" "$SECURITY_TEST" \
     "SECURITY: $SECURITY_TEST does not assert redacted text is removed from" \
     "the content stream. The core security guarantee is untested."
 

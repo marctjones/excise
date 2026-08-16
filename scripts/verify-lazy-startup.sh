@@ -20,6 +20,16 @@ dotnet publish Excise.App/Excise.App.csproj \
     -p:DebugType=None \
     -p:DebugSymbols=false
 
+# Both checks below assert an ABSENCE, and an absence is trivially true of an
+# empty directory. If the publish ever lands somewhere other than $PUBLISH_DIR,
+# every "is X absent?" check passes having inspected nothing (#941). Prove the
+# output is really here before concluding anything from what is not.
+if [[ ! -f "$PUBLISH_DIR/Excise.App.dll" ]]; then
+    echo "ERROR: no Excise.App.dll in $PUBLISH_DIR — the publish produced nothing here," >&2
+    echo "       so the absence checks below would pass over an empty directory." >&2
+    exit 1
+fi
+
 echo "==> Checking Roslyn scripting is absent from default Release output"
 if find "$PUBLISH_DIR" -name 'Microsoft.CodeAnalysis*.dll' -print -quit | grep -q .; then
     echo "ERROR: Microsoft.CodeAnalysis assemblies were published unexpectedly" >&2
@@ -41,8 +51,28 @@ if find "$PUBLISH_DIR" \( -path '*/tessdata/*' -o -name '*.traineddata' \) -prin
 fi
 
 echo "==> Checking normal hidden-text toggles do not load Excise.Ocr"
+# `dotnet test --filter` EXITS 0 WHEN IT MATCHES NOTHING. Renaming this one test
+# would print "OK: lazy-startup verification passed" having asserted nothing
+# about OCR assembly loading (#941).
+# `tee`, not capture-and-echo: Excise.App.Tests is serial and slow to start, so
+# a silent gate reads as a hung one.
+RUN_LOG="$(mktemp)"
+trap 'rm -f "$RUN_LOG"' EXIT
+set +e
 dotnet test Excise.App.Tests/Excise.App.Tests.csproj \
     --filter "FullyQualifiedName~HiddenTextToggles_DoNotLoadOcrAssemblyBeforeRasterizedScan" \
-    --logger "console;verbosity=minimal"
+    --logger "console;verbosity=minimal" 2>&1 | tee "$RUN_LOG"
+run_status=${PIPESTATUS[0]}
+set -e
+run_output="$(cat "$RUN_LOG")"
+
+if grep -q "No test matches the given testcase filter" <<<"$run_output"; then
+    echo
+    echo "ERROR: the filter matched NO tests — HiddenTextToggles_DoNotLoadOcrAssembly" >&2
+    echo "       BeforeRasterizedScan was renamed, moved, or removed. This gate would" >&2
+    echo "       otherwise report green having verified nothing." >&2
+    exit 1
+fi
+[[ $run_status -eq 0 ]] || exit $run_status
 
 echo "OK: lazy-startup verification passed"
