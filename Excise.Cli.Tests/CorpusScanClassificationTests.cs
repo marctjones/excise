@@ -1654,6 +1654,137 @@ public class CorpusScanClassificationTests
             + "comparison ran at all is not, because it has no pool to be short of");
     }
 
+    [Fact]
+    public void DetermineLocalityShortReason_ThreeOraclesOk_IsGeometryMismatch()
+    {
+        // #989: three (or more) of the five oracles rendered OK, yet
+        // comparableOracles is still under quorum — the only way that
+        // happens is that some of those OK renders addressed a different
+        // page box than excise's (commonly /MediaBox vs /CropBox), so the
+        // shortfall is geometry, not a rendering failure of any kind.
+        var entry = new RenderProgram.CorpusScanEntry
+        {
+            mutoolStatus = "OK", cairoStatus = "OK", ghostscriptStatus = "OK",
+            pdfboxStatus = "OK", pdfiumStatus = "OK",
+        };
+
+        RenderProgram.DetermineLocalityShortReason(entry, comparableOracleCount: 2)
+            .Should().Be("geometry-mismatch");
+    }
+
+    [Fact]
+    public void DetermineLocalityShortReason_TimeoutWithTooFewOks_IsOracleTimeout()
+    {
+        // issue19517.pdf's measured shape: three primaries TIMEOUT at the
+        // default --pdf-timeout-ms ceiling, leaving only two OK — a real
+        // verdict may exist (mutool alone finishes in ~32s unconstrained),
+        // the scan just didn't wait for it.
+        var entry = new RenderProgram.CorpusScanEntry
+        {
+            mutoolStatus = "TIMEOUT", cairoStatus = "TIMEOUT", ghostscriptStatus = "TIMEOUT",
+            pdfboxStatus = "OK", pdfiumStatus = "OK",
+        };
+
+        RenderProgram.DetermineLocalityShortReason(entry, comparableOracleCount: 2)
+            .Should().Be("oracle-timeout");
+    }
+
+    [Fact]
+    public void DetermineLocalityShortReason_FewerThanThreeAttempted_IsTooFewAttempted()
+    {
+        var entry = new RenderProgram.CorpusScanEntry
+        {
+            mutoolStatus = "OK", cairoStatus = null, ghostscriptStatus = null,
+            pdfboxStatus = null, pdfiumStatus = null,
+        };
+
+        RenderProgram.DetermineLocalityShortReason(entry, comparableOracleCount: 1)
+            .Should().Be("too-few-oracles-attempted");
+    }
+
+    [Fact]
+    public void DetermineLocalityShortReason_ThreeAttemptedNoTimeoutNotEnoughOk_IsOracleRefusal()
+    {
+        // Brotli-Prototype-FileA.pdf's measured shape: mutool and
+        // ghostscript OK, but cairo/pdfbox/pdfium each fail a different,
+        // non-timeout way (EXIT_CODE / MISSING_OUTPUT / PAGE_OUT_OF_RANGE) —
+        // three oracles were attempted, none timed out, but only two
+        // succeeded, so the shortfall is oracle-side refusal, not geometry.
+        var entry = new RenderProgram.CorpusScanEntry
+        {
+            mutoolStatus = "OK", cairoStatus = "EXIT_CODE", ghostscriptStatus = "OK",
+            pdfboxStatus = "MISSING_OUTPUT", pdfiumStatus = "PAGE_OUT_OF_RANGE",
+        };
+
+        RenderProgram.DetermineLocalityShortReason(entry, comparableOracleCount: 2)
+            .Should().Be("oracle-refusal");
+    }
+
+    [Fact]
+    public void ApplyInkLocalityVerdict_QuorumMet_LeavesLocalityShortReasonNull()
+    {
+        // The reason field only means something when the pool was actually
+        // short; recording a reason for a page whose locality check reached
+        // a real verdict would misrepresent a fine page as attributable.
+        var entry = new RenderProgram.CorpusScanEntry
+        {
+            status = "PASS",
+            mutoolStatus = "OK", cairoStatus = "OK", ghostscriptStatus = "OK",
+        };
+
+        RenderProgram.ApplyInkLocalityVerdict(entry, (0, 0, 0), oracleCount: 3, comparableOracleCount: 3);
+
+        entry.localityShortReason.Should().BeNull(
+            "quorum was met, so there is no shortfall to attribute a reason to");
+    }
+
+    [Fact]
+    public void ApplyInkLocalityVerdict_QuorumShort_SetsLocalityShortReason()
+    {
+        var entry = new RenderProgram.CorpusScanEntry
+        {
+            status = "PASS",
+            mutoolStatus = "OK", cairoStatus = "OK", ghostscriptStatus = "OK",
+            pdfboxStatus = "OK", pdfiumStatus = "OK",
+        };
+
+        RenderProgram.ApplyInkLocalityVerdict(entry, (0, 0, 0), oracleCount: 5, comparableOracleCount: 2);
+
+        entry.localityShortReason.Should().Be("geometry-mismatch",
+            "five OK renders but a comparable pool of two can only be explained by page-box geometry");
+    }
+
+    [Fact]
+    public void BuildCorpusScanSummary_BreaksDownLocalityShortfallByReason()
+    {
+        var entries = new[]
+        {
+            new RenderProgram.CorpusScanEntry
+            {
+                path = "geometry.pdf", status = "PASS", comparableOracles = 2,
+                localityShortReason = "geometry-mismatch",
+            },
+            new RenderProgram.CorpusScanEntry
+            {
+                path = "timeout.pdf", status = "PASS_ONE", comparableOracles = 2,
+                localityShortReason = "oracle-timeout",
+            },
+            new RenderProgram.CorpusScanEntry
+            {
+                // Quorum met: not part of the short population, and its
+                // (null) reason must not pollute the breakdown.
+                path = "fine.pdf", status = "PASS", comparableOracles = 3,
+            },
+        };
+
+        var summary = RenderProgram.BuildCorpusScanSummary(entries);
+
+        summary.localityShortReasonCounts.Should().BeEquivalentTo(
+            new Dictionary<string, int> { ["geometry-mismatch"] = 1, ["oracle-timeout"] = 1 },
+            "only the two sub-majority pages are attributed, one to each measured cause, and the "
+            + "quorum-met page contributes nothing even though it never sets localityShortReason");
+    }
+
     /// <summary>
     /// A square bitmap whose first <paramref name="inkedTiles"/> tiles of the
     /// scanner's 32x32 grid are solid black and the rest white.
