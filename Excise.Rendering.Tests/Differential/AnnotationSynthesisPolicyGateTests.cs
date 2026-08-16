@@ -164,6 +164,11 @@ public class AnnotationSynthesisPolicyGateTests
             }
         }
 
+        // The header's own count, pinned so a hand-added row cannot leave the
+        // file describing a table it no longer is.
+        policy.RootElement.GetProperty("rowCount").GetInt32().Should().Be(ids.Count,
+            $"{PolicyRelativePath}'s rowCount must match the rows it actually carries");
+
         failures.Should().BeEmpty(
             $"{PolicyRelativePath} must be internally consistent — see the 'rules' array in the file");
     }
