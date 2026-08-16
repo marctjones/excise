@@ -12,12 +12,20 @@
 #                corroboration, not a defect
 #   MALFORMED_PDF / EMPTY_DOC  the fixture is broken or hostile on
 #                purpose; refusing it is correct
+#   AGREED_REFUSAL  excise refused AND no oracle rendered it either —
+#                corroborated refusal, correct behaviour (#907)
+#
+# One status is NOT a correct outcome and must never be pinned bare:
+#   EXCISE_SIDE_GAP  excise refused but an oracle rendered the page. An
+#                oracle proves it is renderable, so this records an excise
+#                bug. File it, then pin the row with the issue number in
+#                the note column — or fix it.
 #   *            load-dependent when measured (see the note on the row) —
 #                asserts only that the page was scanned
 #
 # Keys are corpus-relative PATHS, not basenames: this corpus may have
 # subdirectories and duplicate filenames.
-# Baseline: PASS=278, MALFORMED_PDF=26, PASS_ONE=9, EMPTY_DOC=6, MISSING_CONTENT=5, DECODE_ERROR=3, DIFF=2, UNSUPPORTED_ENCRYPTED=1, PASSWORD_REQUIRED=1
+# Baseline: PASS=280, MALFORMED_PDF=26, PASS_ONE=9, EMPTY_DOC=6, MISSING_CONTENT=3, AGREED_REFUSAL=2, DIFF=2, EXCISE_SIDE_GAP=1, UNSUPPORTED_ENCRYPTED=1, PASSWORD_REQUIRED=1
 344775293.pdf	1	PASS
 363015187.pdf	1	MISSING_CONTENT
 about_blank.pdf	1	PASS
@@ -32,7 +40,7 @@ annotation_markup_multiline_no_ap.pdf	1	PASS
 annotation_stamp_with_ap.pdf	1	PASS
 annotiter.pdf	1	PASS
 annots.pdf	1	PASS
-annots_action_handling.pdf	1	MISSING_CONTENT
+annots_action_handling.pdf	1	PASS
 bad_annots_entry.pdf	1	PASS
 bad_dict_keys.pdf	1	PASS
 bad_page_type.pdf	1	PASS
@@ -78,7 +86,7 @@ bug_1919.pdf	1	PASS
 bug_2034.pdf	1	PASS
 bug_213.pdf	1	PASS
 bug_2132.pdf	1	PASS
-bug_216.pdf	1	DECODE_ERROR
+bug_216.pdf	1	AGREED_REFUSAL
 bug_298.pdf	1	MALFORMED_PDF
 bug_306123.pdf	1	PASS
 bug_325_a.pdf	1	MALFORMED_PDF
@@ -109,7 +117,7 @@ bug_455199.pdf	1	PASS
 bug_457855936.pdf	1	MALFORMED_PDF
 bug_459580.pdf	1	PASS
 bug_461845674.pdf	1	PASS
-bug_481363.pdf	1	DECODE_ERROR
+bug_481363.pdf	1	EXCISE_SIDE_GAP		#973: malformed hex string aborts the page; mutool and pdftocairo both recover
 bug_487928.pdf	1	PASS
 bug_488948351.pdf	1	PASS
 bug_491161396.pdf	1	PASS
@@ -120,7 +128,7 @@ bug_504416752.pdf	1	PASS
 bug_507316.pdf	1	PASS
 bug_509964646.pdf	1	PASS
 bug_517126568.pdf	1	PASS
-bug_544880.pdf	1	DECODE_ERROR
+bug_544880.pdf	1	AGREED_REFUSAL
 bug_547706.pdf	1	EMPTY_DOC
 bug_551248.pdf	1	PASS
 bug_551460.pdf	1	EMPTY_DOC
@@ -153,7 +161,7 @@ bug_773229.pdf	1	PASS
 bug_779.pdf	1	PASS
 bug_781804.pdf	1	PASS
 bug_782596.pdf	1	EMPTY_DOC
-bug_821454.pdf	1	MISSING_CONTENT
+bug_821454.pdf	1	PASS
 bug_828049.pdf	1	MALFORMED_PDF
 bug_861842.pdf	1	PASS
 bug_889099.pdf	1	PASS
@@ -291,7 +299,7 @@ rectangles_multi_page_xfa.pdf	1	PASS
 rectangles_multi_pages.pdf	1	PASS
 rectangles_object_zero.pdf	1	PASS
 rectangles_with_leaky_ctm.pdf	1	PASS
-redact_annot.pdf	1	MISSING_CONTENT
+redact_annot.pdf	1	PASS
 redirect.pdf	1	PASS
 repeat_viewer_ref.pdf	1	MALFORMED_PDF
 rotated_image.pdf	1	PASS
@@ -319,7 +327,7 @@ text_form.pdf	1	PASS
 text_form_color.pdf	1	PASS
 text_form_multiline.pdf	1	PASS
 text_form_multiple.pdf	1	PASS
-text_form_negative_fontsize.pdf	1	PASS
+text_form_negative_fontsize.pdf	1	MISSING_CONTENT		#970: negative font size text not rendered; excise draws unrelated content
 text_in_page_marked.pdf	1	PASS
 text_in_page_marked_indirect.pdf	1	PASS
 text_large_ascent_descent.pdf	1	PASS
