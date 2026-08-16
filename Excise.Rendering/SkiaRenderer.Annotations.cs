@@ -69,12 +69,12 @@ internal partial class RenderContext
             if (appearance == null)
             {
                 // No baked /AP /N stream — synthesize a minimal default
-                // appearance for the subtypes commercial viewers
-                // routinely show (interactive widgets and shape
-                // annotations). Link annotations remain an interactive
-                // overlay unless the PDF supplies a real /AP stream;
-                // synthesizing borders can obscure page content when a
-                // producer writes a large /Border width.
+                // appearance for the subtypes a majority of independent
+                // renderers draw. WHICH subtypes, under WHICH conditions, and
+                // on what measured evidence is not decided here or in prose:
+                // it is one row per (subtype, state, condition) in
+                // tests/annotation-synthesis-policy.json, re-measured by
+                // AnnotationSynthesisPolicyGateTests (#993).
                 // Without this, signature widgets
                 // and unfilled form fields are invisible and PDFs look
                 // visibly less complete than in Acrobat / Preview /
@@ -288,9 +288,9 @@ internal partial class RenderContext
     ///   from <c>/MK /BG</c> if present, border from <c>/MK /BC</c>
     ///   plus the <c>/BS</c> width, falling back to a neutral
     ///   light-blue field highlight similar to Acrobat's default).</item>
-    /// <item><c>/Link</c>: thin border using the annotation's <c>/C</c>
-    ///   color when present (links without /C are intentionally
-    ///   invisible in print, matching every commercial viewer).</item>
+    /// <item><c>/Link</c>: border at the §12.5.6.5 / Table 168 width
+    ///   (see <see cref="EffectiveLinkBorderWidth"/>), in the annotation's
+    ///   <c>/C</c> colour when present and black otherwise.</item>
     /// <item><c>/Square</c> / <c>/Circle</c>: stroked rectangle / ellipse
     ///   using <c>/C</c> + <c>/BS</c>.</item>
     /// </list>
@@ -750,8 +750,9 @@ internal partial class RenderContext
     }
 
     /// <summary>
-    /// Border for a /Link that ships no /AP (§12.5.6.5), drawn ONLY when the
-    /// file states a border width explicitly and it is greater than zero.
+    /// Border for a /Link that ships no /AP (§12.5.6.5). The width comes from
+    /// <see cref="EffectiveLinkBorderWidth"/>, which resolves the §12.5.6.5 /
+    /// Table 168 defaults rather than requiring the file to state one.
     /// </summary>
     /// <remarks>
     /// Link previously had an empty case, justified as "links without /C are
@@ -773,36 +774,44 @@ internal partial class RenderContext
     /// two-oracle reading that called Link a mere renderer split was taken at
     /// 72 dpi WITHOUT Ghostscript, and adding the third opinion flipped it.
     ///
-    /// The second half of the old concern is respected, and is why this keys on
-    /// PdfAnnotation.BorderWidth being NON-NULL rather than on its value: the
-    /// property is null when neither /Border nor /BS states a width. The
-    /// overwhelming majority of links either omit /Border or set [0 0 0], and
-    /// none of those draw anything here. Only a file that explicitly asks for a
-    /// visible border gets one — which is also the only case the oracles were
-    /// observed drawing.
+    /// The measured per-condition table is
+    /// <c>tests/annotation-synthesis-policy.json</c> (rows <c>link.*</c>), and
+    /// it is re-measured by AnnotationSynthesisPolicyGateTests — not restated
+    /// here, because a free-text comment nothing re-measures is exactly what
+    /// #993 removes.
     /// </remarks>
     private void RenderLinkDefault(Excise.Core.Document.PdfAnnotation annot, SKRect rect)
     {
-        if (annot.BorderWidth is not { } width || width <= 0)
+        var width = EffectiveLinkBorderWidth(annot);
+        if (width <= 0)
             return;
 
-        // The border must FIT the rectangle it borders. This is not a tidiness
-        // rule — it is where the oracles part company, measured at 150 dpi:
+        // The border must FIT the rectangle it borders — a stroke wider than
+        // half the smaller side has already swallowed the annotation it is
+        // supposed to outline.
         //
-        //   isartor-6-6-1-t01-fail-a   /Border [0 0 2]   on a 260x30 rect
-        //       mutool 0, pdftocairo 5973, ghostscript 5950   -> 2 of 3 DRAW
-        //   pdf.js bug1552113          /Border [0 0 112] on a 150x20 rect
-        //       mutool 0, pdftocairo 45659, ghostscript 0     -> 1 of 3
+        // This is the one link rung where excise draws LESS than the majority,
+        // and it is a deliberate deviation rather than a reading of the
+        // evidence. Re-measured on a printable /Border [0 0 112] over a 100x100
+        // /Rect (row link.width-exceeds-half-the-rect):
         //
-        // Ghostscript draws a sane border and refuses an absurd one, and that
-        // is the whole difference between the two cases. A 112pt border on a
-        // 20pt-tall annotation is not a border, it is a 45,000-pixel blue slab
-        // over the page — exactly the "producer writes a large /Border width"
-        // hazard that kept Link unimplemented in the first place. That concern
-        // was right; it just was not a reason to skip EVERY link.
+        //     pdftocairo  40000 px, bbox (0,0)-(200,200)   the WHOLE PAGE
+        //     ghostscript 11926 px, bbox (38,38)-(163,163) a bounded frame
+        //     mutool          0
         //
-        // Half the smaller side is the limit: a stroke wider than that has
-        // already swallowed the annotation it is supposed to outline.
+        // Two of three draw something, so a bare majority rule would have
+        // excise draw too — but they disagree by 3.4x on how much ink and do
+        // not agree on the geometry at all: one covers the page, the other
+        // clamps to a frame of its own choosing. There is no agreed picture to
+        // copy, only a choice of which renderer to imitate, and the page
+        // content underneath loses either way. Recorded as a deviation in
+        // tests/annotation-synthesis-policy.json (with #885's original hazard
+        // note) rather than silently obeyed or silently ignored.
+        //
+        // An earlier version of this comment cited pdf.js bug1552113 with
+        // "ghostscript 0" as proof that Ghostscript refuses absurd borders.
+        // That file's link carries no /F, so Ghostscript skipped the
+        // annotation entirely — an abstention, not a refusal.
         float limit = Math.Min(rect.Width, rect.Height) / 2f;
         if (limit <= 0 || width > limit)
         {
@@ -831,6 +840,46 @@ internal partial class RenderContext
         }
 
         _canvas.DrawRect(rect, paint);
+    }
+
+    /// <summary>
+    /// The border width a /Link with no /AP is stroked with, resolving the
+    /// spec's defaults instead of requiring the file to state one (#987).
+    ///
+    /// The ladder, and the measured verdict for each rung (72 dpi, one
+    /// synthesized /Link per condition, /F 4 so Ghostscript does not abstain —
+    /// see tests/annotation-synthesis-policy.json rows <c>link.*</c>):
+    ///
+    ///   /BS or /Border states a width  -> that width          poppler+gs draw
+    ///   /BS present, no /W             -> 1 (Table 168)       poppler+gs draw
+    ///   /Border present but unusable   -> 0, nothing drawn     nobody draws
+    ///   neither key present            -> 1 (§12.5.6.5)       poppler+gs draw
+    ///
+    /// The last rung is the one #885 got wrong, and the correction matters
+    /// because it is the COMMON case: it keyed on PdfAnnotation.BorderWidth
+    /// being non-null ("only a file that explicitly asks for a visible border
+    /// gets one"), decided on isartor-6-6-1-t01-fail-a.pdf, which does state
+    /// /BS &lt;&lt; /W 2 &gt;&gt;. The no-key-at-all case was never measured.
+    ///
+    /// The apparent counter-evidence — pdfium bug_821454.pdf, where Ghostscript
+    /// draws nothing on links with no /Border and no /BS — is not about borders
+    /// at all: those annotations carry no /F, and Ghostscript renders only
+    /// PRINTABLE annotations. Reading that zero as a "draws nothing" vote is
+    /// the same class of error as reading a check mark's pixel count as a box.
+    ///
+    /// The third rung is not pedantry: /Border [0 0] (fewer than the three
+    /// required entries) leaves BorderWidth null exactly as an absent /Border
+    /// does, and poppler and Ghostscript BOTH draw nothing for it. A file that
+    /// wrote a broken /Border has not asked for the default.
+    /// </summary>
+    private double EffectiveLinkBorderWidth(Excise.Core.Document.PdfAnnotation annot)
+    {
+        if (annot.BorderWidth is { } stated) return stated;
+
+        var raw = annot.RawDictionary;
+        if (raw.GetOptional("BS") != null) return 1.0;
+        if (raw.GetOptional("Border") != null) return 0.0;
+        return 1.0;
     }
 
     /// <summary>
@@ -1122,6 +1171,20 @@ internal partial class RenderContext
         _canvas.Save();
         try
         {
+            // A synthesized value is CLIPPED to the widget's /Rect (#991).
+            //
+            // Measured at 72 dpi on a /V that overflows its field
+            // (row widget.tx.value-wider-than-the-rect):
+            //
+            //     mutool      513 px, bbox right edge 149  \ clip to /Rect
+            //     pdftocairo  515 px, bbox right edge 150  /
+            //     ghostscript 751 px, bbox right edge 199  -> runs off the field
+            //     excise      775 px, bbox right edge 200  -> ran off the PAGE
+            //
+            // Two engines of three clip. Without this the negative-size fix
+            // below would paint a mirrored string clean across the page, which
+            // is the one output nobody produces.
+            _canvas.ClipRect(rect, SKClipOperation.Intersect, _options.AntiAlias);
             // Save and reset the text state so /DA's Tf / g / rg etc.
             // don't leak back into the page-level text state we've been
             // accumulating.
@@ -1136,7 +1199,20 @@ internal partial class RenderContext
                 // Run /DA — sets _textState.FontName/FontSize, fill colour, etc.
                 ExecuteContentBytes(Encoding.Latin1.GetBytes(da!));
 
-                float fontSize = _textState.FontSize > 0.001f
+                // ZERO means auto-size (§12.7.4.3). NEGATIVE does not — it is a
+                // real size that mirrors the glyphs through the text-space
+                // origin, exactly as in a page content stream (#970), and
+                // treating it as "no size given" silently rendered the value
+                // upright at an unrelated size (#991).
+                //
+                // Measured at 72 dpi on /DA (0 0 0 rg /Helv -12 Tf) over
+                // /Rect [50 60 150 90], /Q 1 (rows widget.tx.value-*-size*):
+                // every engine draws the value MIRRORED — mutool, pdftocairo
+                // and pdftoppm land it in the same band as the upright value
+                // with the column profile reversed and the row profile
+                // flipped, Ghostscript mirrors it 8 px lower. Nobody draws
+                // what excise drew.
+                float fontSize = Math.Abs(_textState.FontSize) > 0.001f
                     ? _textState.FontSize : autoSize;
                 // A malformed/empty /DA (no Tf) leaves _currentFont exactly
                 // as it was before this method ran — possibly null (first
@@ -1148,9 +1224,22 @@ internal partial class RenderContext
 
                 // Measure text to compute alignment. Use the active
                 // typeface so the width matches what we're about to draw.
-                using var measureFont = new SKFont(_currentFont!.Typeface!, fontSize);
+                //
+                // SIGNED width, measured at |size|: a negative size advances
+                // LEFTWARDS, so the run occupies [x - w, x] rather than
+                // [x, x + w], and the alignment arithmetic below only lands
+                // where the oracles land if the width carries that sign. All
+                // three /Q cases were checked against mutool and pdftocairo at
+                // 72 dpi and reproduce their placement to the pixel: /Q 0 puts
+                // the mirrored run left of the field (clipped to a sliver),
+                // /Q 1 centres it over the same box as the upright value,
+                // /Q 2 pushes it right of the field (a sliver at the far edge).
+                // SKFont itself is given the absolute size — a negative one is
+                // not a valid Skia text size.
+                using var measureFont = new SKFont(_currentFont!.Typeface!, Math.Abs(fontSize));
                 using var measurePaint = new SKPaint();
-                float textWidth = measureFont.MeasureText(value, measurePaint);
+                float textWidth = measureFont.MeasureText(value, measurePaint)
+                                  * (fontSize < 0 ? -1f : 1f);
 
                 int q = annot.RawDictionary.GetInt("Q", 0);
                 const float padX = 2f;
