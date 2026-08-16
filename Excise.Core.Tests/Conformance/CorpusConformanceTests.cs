@@ -54,6 +54,47 @@ public class CorpusConformanceTests
     /// uses for the synthetic fuzz corpus; kept identical on purpose so a
     /// file that fails the corpus gate here would also have failed there.
     /// </summary>
+    /// <summary>
+    /// Re-measure ONE file's retained memory in isolation (#953): settle the
+    /// heap, parse exactly what the sweep parses, settle again. Returns the
+    /// delta in bytes, or 0 if the parse fails — a file that cannot be parsed
+    /// on the second pass cannot be the thing retaining memory, and the sweep
+    /// has already classified its parse outcome.
+    ///
+    /// This does NOT make the measurement airtight: another collection can
+    /// still allocate concurrently during this window. It makes a false
+    /// positive require the SAME neighbour to allocate the SAME half-gigabyte
+    /// twice, which is the difference between a gate that reds once a day and
+    /// one that means something.
+    /// </summary>
+    private static long MeasureRetention(string path)
+    {
+        try
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            long before = GC.GetTotalMemory(forceFullCollection: true);
+            using (var doc = PdfDocument.Open(path))
+            {
+                for (int p = 1; p <= Math.Min(doc.PageCount, 5); p++)
+                {
+                    var page = doc.GetPage(p);
+                    _ = page.Width;
+                    _ = page.Height;
+                    _ = page.Rotation;
+                    _ = page.Resources;
+                }
+            }
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            return GC.GetTotalMemory(forceFullCollection: true) - before;
+        }
+        catch
+        {
+            return 0;
+        }
+    }
+
     private static bool IsGraceful(Exception ex) =>
         ex is PdfParseException
         or PdfEncryptionNotSupportedException
@@ -76,7 +117,7 @@ public class CorpusConformanceTests
             return;
         }
 
-        int total = 0, ok = 0, gracefulFailure = 0, crash = 0, hang = 0, memoryExceeded = 0;
+        int total = 0, ok = 0, gracefulFailure = 0, crash = 0, hang = 0, memoryExceeded = 0, memoryUnattributed = 0;
         var crashes = new List<string>();
         var hangs = new List<string>();
         var memoryFindings = new List<string>();
@@ -132,14 +173,39 @@ public class CorpusConformanceTests
             long delta = memAfter - memBefore;
             if (delta > PerFileMemoryBudgetBytes)
             {
-                memoryExceeded++;
-                memoryFindings.Add($"MEMORY {Path.GetFileName(f)}: retained {delta / (1024 * 1024)}MB after parsing 5 page(s)");
+                // DO NOT fail on the first reading (#953). GC.GetTotalMemory is
+                // PROCESS-WIDE and xunit.runner.json sets
+                // parallelizeTestCollections: true here, so a concurrent test's
+                // allocation lands in whatever file this loop happens to be
+                // measuring. That produced a t0 false red blaming a 380-byte
+                // fixture (test-pdfs/pdfium/version_in_catalog.pdf) for 694MB,
+                // with Hang: 0 and a clean rerun seconds later.
+                //
+                // So re-measure THIS file alone and require the retention to
+                // reproduce — the same transient-vs-genuine discipline
+                // check-test-count.sh uses for a lost test result. A real leak
+                // reproduces; a neighbour's allocation does not.
+                long confirmDelta = MeasureRetention(f);
+                if (confirmDelta > PerFileMemoryBudgetBytes)
+                {
+                    memoryExceeded++;
+                    memoryFindings.Add(
+                        $"MEMORY {Path.GetFileName(f)}: retained {delta / (1024 * 1024)}MB after parsing 5 page(s), " +
+                        $"reproduced at {confirmDelta / (1024 * 1024)}MB on an isolated re-measure");
+                }
+                else
+                {
+                    memoryUnattributed++;
+                    memoryFindings.Add(
+                        $"note   {Path.GetFileName(f)}: first reading {delta / (1024 * 1024)}MB did NOT reproduce " +
+                        $"({confirmDelta / (1024 * 1024)}MB isolated) — concurrent/prior process state, not this file (#953)");
+                }
             }
 
             if (task.IsCompletedSuccessfully) ok++;
         }
 
-        _out.WriteLine($"Total: {total}  OK: {ok}  GracefulFailure: {gracefulFailure}  Crash: {crash}  Hang: {hang}  MemoryExceeded: {memoryExceeded}");
+        _out.WriteLine($"Total: {total}  OK: {ok}  GracefulFailure: {gracefulFailure}  Crash: {crash}  Hang: {hang}  MemoryExceeded: {memoryExceeded}  MemoryUnattributed: {memoryUnattributed}");
         foreach (var c in crashes.Take(50)) _out.WriteLine(c);
         foreach (var h in hangs.Take(50)) _out.WriteLine(h);
         foreach (var m in memoryFindings.Take(50)) _out.WriteLine(m);
