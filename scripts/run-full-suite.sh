@@ -288,6 +288,21 @@ emit "gate-asymmetry"       script "scripts/check-gate-asymmetry.sh origin/devel
 emit "redaction-architecture" script "scripts/verify-true-redaction.sh" "-"
 emit "testdata-sync"        script "scripts/check-testdata-sync.sh" "-"
 emit "skip-budget-selftest" script "scripts/test-check-skip-budget.sh" "-"
+# #1012: a gate you never saw fail is not a gate. Each selftest feeds its gate
+# known-bad input and requires a non-zero exit, so the gates above cannot go
+# green having stopped checking. Milliseconds each (hermetic temp roots, fake
+# tools, synthetic reports), except contract-manifest (~6s of `dotnet run`).
+emit "test-count-selftest"       script "scripts/test-check-test-count.sh" "-"
+emit "coverage-selftest"         script "scripts/test-check-coverage.sh" "-"
+emit "testdata-sync-selftest"    script "scripts/test-check-testdata-sync.sh" "-"
+emit "doc-claims-selftest"       script "scripts/test-verify-doc-claims.sh" "-"
+emit "true-redaction-selftest"   script "scripts/test-verify-true-redaction.sh" "-"
+emit "gate-asymmetry-selftest"   script "scripts/test-check-gate-asymmetry.sh" "-"
+emit "unwired-api-selftest"      script "scripts/test-check-unwired-api.sh" "-"
+emit "copy-whitespace-parity-selftest" script "scripts/test-check-copy-whitespace-parity.sh" "-"
+emit "extraction-parity-selftest" script "scripts/test-check-extraction-parity.sh" "-"
+emit "perf-budgets-selftest"     script "scripts/test-check-perf-budgets.sh" "-"
+emit "contract-manifest-selftest" script "scripts/test-check-contract-manifest-agreement.sh" "-"
 # Unwired public API (#908). The skip budget and test count catch a TEST that
 # stops running; this catches PRODUCTION CODE that never started. Both bugs it
 # guards against were written, tested, and then not called: #908 (CffSubsetter —

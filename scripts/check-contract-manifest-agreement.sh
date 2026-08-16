@@ -21,10 +21,27 @@
 # per run.
 #
 # Usage:
-#   scripts/check-contract-manifest-agreement.sh
+#   scripts/check-contract-manifest-agreement.sh [--contracts DIR] [--repo-root DIR]
+#
+# The two options exist so the comparison can be pointed at synthetic inputs —
+# scripts/test-check-contract-manifest-agreement.sh drives a two-page fixture
+# through it, one page agreeing and one disagreeing, which is the only way to
+# see this gate fail without editing checked-in expectations. They default to
+# the real trees, so every existing caller is unaffected.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
+
+CONTRACTS="$ROOT/test-pdfs/rendering-contracts"
+REPO_ROOT="$ROOT"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --contracts) CONTRACTS="$2"; shift 2 ;;
+        --repo-root) REPO_ROOT="$2"; shift 2 ;;
+        *) echo "usage: scripts/check-contract-manifest-agreement.sh [--contracts DIR] [--repo-root DIR]" >&2; exit 2 ;;
+    esac
+done
+
 exec dotnet run --project tools/Excise.RenderTools -- contract-manifest-agreement \
-    --contracts "$ROOT/test-pdfs/rendering-contracts" \
-    --repo-root "$ROOT"
+    --contracts "$CONTRACTS" \
+    --repo-root "$REPO_ROOT"
