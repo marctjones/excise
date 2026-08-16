@@ -6,13 +6,14 @@
   "whyThisExists": "The policy used to live in scattered ifs justified by free-text comments nothing re-measured, and three separate errors came out of the same mechanism - a decision made from a scalar that cannot represent the thing being decided. #885 drew a blue box on every widget, justified by 'mutool 233 px, pdftocairo 229, excise 0': those pixels were the CHECK MARK, and neither oracle drew any box. #987's /Link border default was decided on a fixture that did state /BS /W 2, so the no-/Border-at-all case - the common one - was never measured. #972's own first fix drew a CARET instead of a tick with identical pixel count and identical bbox. An ink count cannot tell a tick from a box, and a bbox cannot tell a tick from a caret.",
   "rules": [
     "MAJORITY, NEVER A SINGLE ORACLE. A row draws only when more than half the voting engines draw. #972's radio case is 1-of-3 and stays unimplemented for exactly that reason (the #875 trap).",
-    "WHERE NO MAJORITY DRAWS, EXCISE DRAWS NOTHING. A row whose decision contradicts its own majority verdict must carry a 'deviation' block naming a kind, an issue and a reason. There are four such rows and they are the interesting ones.",
+    "WHERE NO MAJORITY DRAWS, EXCISE DRAWS NOTHING. A row whose decision contradicts its own majority verdict must carry a 'deviation' block naming a kind, an issue and a reason. There are THREE such rows and they are the interesting ones - there were four until the pool grew from 3 engines to 5 (#1007/#1009) and line.without-color's majority reversed under it.",
     "EVIDENCE IS BBOX + SHAPE, NEVER A BARE COUNT. Each evidence entry records the inked-pixel count for scale, the bbox, and the bbox's relationship to the annotation rect. The gate asserts the vote and the bbox class; it holds the count only to a factor of two, because tool versions drift.",
     "SHAPE ASSERTIONS WHERE COUNT AND BBOX CANNOT DISCRIMINATE. widget.tx.value-negative-size-centered is the proof: mutool's mirrored value has the same pixel count and the same bbox as the upright one, and only the ink profiles tell them apart.",
     "A DIFFERENCE THAT ORIGINATES IN SKIA'S RASTERISATION IS AN ACCEPTED LIMITATION, not a defect and not something to compensate for. Do not tune a shape predicate or special-case a fixture to force agreement.",
-    "VOTES ARE COUNTED PER ENGINE, NOT PER BINARY. pdftocairo and pdftoppm are two rasterisers over ONE annotation-synthesis implementation (poppler); counting both would give poppler two votes out of four. pdftoppm is measured anyway, as a cross-check on the poppler vote, with counts:false."
+    "VOTES ARE COUNTED PER ENGINE, NOT PER BINARY. pdftocairo and pdftoppm are two rasterisers over ONE annotation-synthesis implementation (poppler); counting both would give poppler two votes out of four. pdftoppm is measured anyway, as a cross-check on the poppler vote, with counts:false.",
+    "AN ENGINE VOTES ON A ROW ONLY WHERE IT COULD HAVE DRAWN ONE - so `counts` is per EVIDENCE ENTRY, not per oracle. Ghostscript's zero on a non-printable fixture is the original example (hence everyFixtureIsPrintable); pdfbox and pdfium on the Widget rows are two more, and both were measured rather than assumed: pdfium renders no widget at all through FPDF_RenderPageBitmap, even one that ships an /AP, and pdfbox generates field appearances only in PDAcroForm.refreshAppearances(), which rendering never calls. Counting either zero would have flipped Widget rows toward 'blank' on the strength of two engines that were never asked the question. Every abstaining entry is still MEASURED and recorded, with an 'abstention' key naming which kind it is, so the arithmetic can be redone by anyone who disagrees with the call."
   ],
-  "everyFixtureIsPrintable": "Every fixture carries /F 4 (Print), and that is load-bearing rather than tidy. Ghostscript renders ONLY printable annotations, so on a fixture without /F it reports zero inked pixels for reasons that have nothing to do with the annotation - a structural ABSTENTION that reads exactly like a 'draws nothing' vote. That misreading is already in the record this table replaces: #987's link border looked 1-of-3 on pdfium bug_821454.pdf (whose links carry no /F) and is 2-of-3 here; #972's checkbox table recorded Ghostscript as drawing nothing 'in any of these' cases; #885's Stamp row read 2-of-3 and is 3-of-3 here.",
+  "everyFixtureIsPrintable": "Every fixture carries /F 4 (Print), and that is load-bearing rather than tidy. Ghostscript renders ONLY printable annotations, so on a fixture without /F it reports zero inked pixels for reasons that have nothing to do with the annotation - a structural ABSTENTION that reads exactly like a 'draws nothing' vote. That misreading is already in the record this table replaces: #987's link border looked 1-of-3 on pdfium bug_821454.pdf (whose links carry no /F) and was 2-of-3 once the fixture was printable (3-of-5 now that pdfbox and pdfium vote); #972's checkbox table recorded Ghostscript as drawing nothing 'in any of these' cases; #885's Stamp row read 2-of-3 and became 3-of-3 on a printable fixture (3-of-5 now). The parenthesised numbers are the CURRENT pool - see oraclePool; the ones before them are what the same rows read under the three-engine pool, kept because the point of the entry is the misreading, not the count.",
   "oracles": {
     "mutool": {
       "engine": "mupdf",
@@ -33,14 +34,23 @@
     },
     "pdfbox": {
       "engine": "pdfbox",
-      "counts": false,
-      "reason": "abstains: needs a JRE, which the measurement host does not have. Add one and its votes become available - it is not structurally excluded."
+      "counts": "on every row except Widget",
+      "reason": "PDFBox 3.0.3 (tools/vendor/pdfbox-app-3.0.3.jar) under Homebrew openjdk 26.0.1 at /opt/homebrew/opt/openjdk/bin/java. It synthesizes markup appearances IN the rendering path (its handlers package: Square, Circle, Line, Polygon, PolyLine, Ink, Highlight, Underline, StrikeOut, Squiggly, FreeText, Link, Text, FileAttachment), so on those rows it is a full voter. It abstains on the Widget rows: measured, PDFBox renders a widget that ships an /AP /N (6400 px on a probe fixture), so its rendering path is engaged and only the SYNTHESIS is absent - field appearances come from PDAcroForm.refreshAppearances(), which rendering never calls. Calling it explicitly on this table's own Widget fixtures produces the text-field values (264-770 px, the same order as the three voting engines' 250-753) and still nothing for /Btn, /Ch and /Sig. So a render-time zero on a Widget row says when PDFBox generates field appearances, not what it thinks one looks like.",
+      "previousReasonWasFalse": "Until #1009 this said 'abstains: needs a JRE, which the measurement host does not have'. The host has had one throughout: /usr/bin/java is a macOS stub that reports 'Unable to locate a Java Runtime' even with a JDK installed, and that stub is what the earlier measurement asked. PdfBoxReferenceRenderer.ResolveJavaCommand() probes the Homebrew path first, so nothing had to be installed and no env var had to be set - a whole engine was excluded from 44 rows by a misread error message."
     },
     "pdfium": {
       "engine": "pdfium",
-      "counts": false,
-      "reason": "abstains STRUCTURALLY: PdfiumNativeReferenceRenderer calls FPDF_RenderPageBitmap with flags=0, i.e. without FPDF_ANNOT, so it draws no annotations at all. Its zero is not a vote (#1007)."
+      "counts": "on every row except Widget",
+      "reason": "Rendered through PdfiumNativeReferenceRenderer with renderAnnotations: true, i.e. FPDF_RenderPageBitmap with FPDF_ANNOT (#1007). pdfium synthesizes an /AP for the fixed subtype list its core AP generator covers - measured here as Text, FreeText, Square, Circle, Ink, Highlight, Underline, StrikeOut, Squiggly - and nothing for Link, Line, Polygon, PolyLine, Stamp, FileAttachment, Sound and Redact, which is a real blank vote from an engaged generator. It abstains on the Widget rows: measured, pdfium draws nothing for a widget even when the /AP /N IS present, so FPDF_RenderPageBitmap does not render widgets at all - they belong to the form-fill layer (FPDFDOC_InitFormFillEnvironment / FPDF_FFLDraw), which this harness does not drive.",
+      "flagsZeroWasTheOldBlocker": "Until #1007 this oracle called FPDF_RenderPageBitmap with flags=0 and therefore inked ZERO on all 44 rows. The fix is opt-in and defaults to the old behaviour, so no corpus baseline moves; only callers asking about annotations pass true. Mutation-checked: with renderAnnotations:false the same sweep measures 0 inked px on all 44 fixtures, with true it inks on 13."
     }
+  },
+  "oraclePool": {
+    "measured": "2026-08-16, macOS, mutool 1.26 / poppler / Ghostscript on PATH, PDFBox 3.0.3 on openjdk 26.0.1, pdfium via tools/vendor/pdfium with FPDF_ANNOT",
+    "size": "5 voting engines on the 27 non-Widget rows (mupdf, poppler, ghostscript, pdfbox, pdfium); 3 on the 17 Widget rows (pdfbox and pdfium abstain there, see rules)",
+    "beforeThisPass": "3 voting engines on all 44 rows. pdfium inked zero everywhere because the oracle passed flags=0 (#1007); pdfbox was excluded by a reason that was false when written (#1009).",
+    "agreement": "A MEASUREMENT WITH A DATE, not a property - recompute it, do not quote it. Unanimity across the voting engines fell from 29/44 (65.9%) to 25/44 (56.8%) purely by adding voters; on the 27 non-Widget rows it is 14/27. Pairwise: ghostscript-poppler 39/44 (88.6%), ghostscript-pdfbox 24/27 (88.9%), pdfbox-poppler 23/27 (85.2%), mupdf-pdfbox 20/27 (74.1%), mupdf-poppler 32/44 (72.7%), ghostscript-mupdf 31/44 (70.5%), mupdf-pdfium 19/27 (70.4%), pdfbox-pdfium and pdfium-poppler 18/27 (66.7%), ghostscript-pdfium 17/27 (63.0%). The lone-dissenter count changed shape: over 3 engines mupdf dissented alone on 10 of 15 split rows; over the larger pool there are 19 split rows and the lone dissenter is mupdf 4, ghostscript 3, pdfium 3, poppler 1 - mupdf's apparent eccentricity was partly an artefact of a three-engine pool in which poppler and Ghostscript agree 88.6% of the time.",
+    "onlyOneVerdictMoved": "line.without-color, from 2-of-3 draw to 2-of-5 blank. No row acquired a new deviation. Widget verdicts are untouched by construction."
   },
   "shapeVocabulary": {
     "none": "no ink anywhere on the page",
@@ -108,6 +118,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "draws",
           "inkedPixels": 800,
           "bbox": [
@@ -131,12 +142,35 @@
             151
           ],
           "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 975,
+          "bbox": [
+            50,
+            50,
+            150,
+            150
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
         }
       ],
       "majority": {
-        "voters": 3,
-        "draws": 2,
-        "blank": 1,
+        "voters": 5,
+        "draws": 3,
+        "blank": 2,
         "verdict": "draw"
       }
     },
@@ -189,6 +223,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "draws",
           "inkedPixels": 400,
           "bbox": [
@@ -212,12 +247,35 @@
             151
           ],
           "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 396,
+          "bbox": [
+            50,
+            50,
+            150,
+            150
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
         }
       ],
       "majority": {
-        "voters": 3,
-        "draws": 2,
-        "blank": 1,
+        "voters": 5,
+        "draws": 3,
+        "blank": 2,
         "verdict": "draw"
       },
       "issues": [
@@ -273,6 +331,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "draws",
           "inkedPixels": 400,
           "bbox": [
@@ -296,12 +355,35 @@
             151
           ],
           "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 396,
+          "bbox": [
+            50,
+            50,
+            150,
+            150
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
         }
       ],
       "majority": {
-        "voters": 3,
-        "draws": 2,
-        "blank": 1,
+        "voters": 5,
+        "draws": 3,
+        "blank": 2,
         "verdict": "draw"
       },
       "issues": [
@@ -352,6 +434,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "blank",
           "inkedPixels": 0,
           "bbox": null,
@@ -365,12 +448,30 @@
           "inkedPixels": 0,
           "bbox": null,
           "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
         }
       ],
       "majority": {
-        "voters": 3,
+        "voters": 5,
         "draws": 0,
-        "blank": 3,
+        "blank": 5,
         "verdict": "blank"
       }
     },
@@ -418,6 +519,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "blank",
           "inkedPixels": 0,
           "bbox": null,
@@ -431,12 +533,30 @@
           "inkedPixels": 0,
           "bbox": null,
           "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
         }
       ],
       "majority": {
-        "voters": 3,
+        "voters": 5,
         "draws": 0,
-        "blank": 3,
+        "blank": 5,
         "verdict": "blank"
       }
     },
@@ -484,6 +604,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "blank",
           "inkedPixels": 0,
           "bbox": null,
@@ -497,12 +618,30 @@
           "inkedPixels": 0,
           "bbox": null,
           "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
         }
       ],
       "majority": {
-        "voters": 3,
+        "voters": 5,
         "draws": 0,
-        "blank": 3,
+        "blank": 5,
         "verdict": "blank"
       }
     },
@@ -555,6 +694,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "draws",
           "inkedPixels": 40000,
           "bbox": [
@@ -578,18 +718,41 @@
             163
           ],
           "bboxClass": "exceeds-annot-rect"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 10000,
+          "bbox": [
+            50,
+            50,
+            150,
+            150
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
         }
       ],
       "majority": {
-        "voters": 3,
-        "draws": 2,
-        "blank": 1,
+        "voters": 5,
+        "draws": 3,
+        "blank": 2,
         "verdict": "draw"
       },
       "deviation": {
         "kind": "majority-draws-but-no-agreed-geometry",
         "issue": "#885",
-        "note": "Two engines draw and they do not agree on WHAT: pdftocairo covers the whole page (40000 px, bbox (0,0)-(200,200)), Ghostscript clamps to a frame of its own choosing (11926 px, bbox (38,38)-(163,163)). Copying either is electing a renderer, and both bury the page content the border is supposed to outline. excise refuses and says so in a diagnostic."
+        "note": "THREE engines draw now and they agree on nothing: pdftocairo covers the whole page (40000 px, bbox (0,0)-(200,200)), Ghostscript clamps to a frame of its own choosing (11926 px, bbox (38,38)-(163,163)), PDFBox fills the annotation rect exactly (10000 px on a 100x100 rect). mutool and pdfium draw nothing. Copying any of them is electing a renderer, and all three bury the page content the border is supposed to outline. excise refuses and says so in a diagnostic. The enlarged pool (#1007/#1009) took this from 2-of-3 to 3-of-5 and made the disagreement about GEOMETRY worse, not better, which is the deviation's whole argument."
       }
     },
     {
@@ -646,6 +809,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "draws",
           "inkedPixels": 344,
           "bbox": [
@@ -660,6 +824,26 @@
           "oracle": "ghostscript",
           "engine": "ghostscript",
           "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": false,
+          "abstention": "structural",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": false,
+          "abstention": "structural",
           "vote": "blank",
           "inkedPixels": 0,
           "bbox": null,
@@ -720,6 +904,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "blank",
           "inkedPixels": 0,
           "bbox": null,
@@ -729,6 +914,26 @@
           "oracle": "ghostscript",
           "engine": "ghostscript",
           "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": false,
+          "abstention": "structural",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": false,
+          "abstention": "structural",
           "vote": "blank",
           "inkedPixels": 0,
           "bbox": null,
@@ -789,6 +994,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "blank",
           "inkedPixels": 0,
           "bbox": null,
@@ -798,6 +1004,26 @@
           "oracle": "ghostscript",
           "engine": "ghostscript",
           "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": false,
+          "abstention": "structural",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": false,
+          "abstention": "structural",
           "vote": "blank",
           "inkedPixels": 0,
           "bbox": null,
@@ -858,6 +1084,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "blank",
           "inkedPixels": 0,
           "bbox": null,
@@ -867,6 +1094,26 @@
           "oracle": "ghostscript",
           "engine": "ghostscript",
           "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": false,
+          "abstention": "structural",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": false,
+          "abstention": "structural",
           "vote": "blank",
           "inkedPixels": 0,
           "bbox": null,
@@ -932,6 +1179,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "blank",
           "inkedPixels": 0,
           "bbox": null,
@@ -945,6 +1193,26 @@
           "inkedPixels": 0,
           "bbox": null,
           "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": false,
+          "abstention": "structural",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": false,
+          "abstention": "structural",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
         }
       ],
       "majority": {
@@ -953,7 +1221,7 @@
         "blank": 2,
         "verdict": "blank"
       },
-      "note": "1 of 3. mutool draws a dot; poppler and Ghostscript draw nothing. Ghostscript's zero is a real vote here, not the /F abstention that made the #972 table read '-' for it: this fixture is printable.",
+      "note": "1 of 3. mutool draws a dot; poppler and Ghostscript draw nothing. Ghostscript's zero is a real vote here, not the /F abstention that made the #972 table read '-' for it: this fixture is printable. (Widget rows have a THREE-engine pool: pdfbox and pdfium abstain structurally, see rules.)",
       "issues": [
         "#875",
         "#972"
@@ -1013,6 +1281,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "draws",
           "inkedPixels": 2500,
           "bbox": [
@@ -1036,6 +1305,26 @@
             151
           ],
           "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": false,
+          "abstention": "structural",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": false,
+          "abstention": "structural",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
         }
       ],
       "majority": {
@@ -1044,7 +1333,7 @@
         "blank": 0,
         "verdict": "draw"
       },
-      "note": "3 of 3. The #972 note that 'mutool honours /MK here; Poppler ignores it' does not survive re-measurement on a printable widget: poppler inks the same 2500 px over the same rect."
+      "note": "3 of 3. The #972 note that 'mutool honours /MK here; Poppler ignores it' does not survive re-measurement on a printable widget: poppler inks the same 2500 px over the same rect. (Widget rows have a THREE-engine pool: pdfbox and pdfium abstain structurally, see rules.)"
     },
     {
       "id": "widget.tx.empty-no-mk",
@@ -1092,6 +1381,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "blank",
           "inkedPixels": 0,
           "bbox": null,
@@ -1101,6 +1391,26 @@
           "oracle": "ghostscript",
           "engine": "ghostscript",
           "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": false,
+          "abstention": "structural",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": false,
+          "abstention": "structural",
           "vote": "blank",
           "inkedPixels": 0,
           "bbox": null,
@@ -1170,6 +1480,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "draws",
           "inkedPixels": 259,
           "bbox": [
@@ -1193,6 +1504,26 @@
             130
           ],
           "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": false,
+          "abstention": "structural",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": false,
+          "abstention": "structural",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
         }
       ],
       "majority": {
@@ -1261,6 +1592,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "draws",
           "inkedPixels": 261,
           "bbox": [
@@ -1284,6 +1616,26 @@
             130
           ],
           "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": false,
+          "abstention": "structural",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": false,
+          "abstention": "structural",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
         }
       ],
       "majority": {
@@ -1353,6 +1705,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "draws",
           "inkedPixels": 263,
           "bbox": [
@@ -1376,6 +1729,26 @@
             138
           ],
           "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": false,
+          "abstention": "structural",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": false,
+          "abstention": "structural",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
         }
       ],
       "majority": {
@@ -1447,6 +1820,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "draws",
           "inkedPixels": 18,
           "bbox": [
@@ -1470,6 +1844,26 @@
             138
           ],
           "bboxClass": "exceeds-annot-rect"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": false,
+          "abstention": "structural",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": false,
+          "abstention": "structural",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
         }
       ],
       "majority": {
@@ -1539,6 +1933,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "draws",
           "inkedPixels": 13,
           "bbox": [
@@ -1553,6 +1948,26 @@
           "oracle": "ghostscript",
           "engine": "ghostscript",
           "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": false,
+          "abstention": "structural",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": false,
+          "abstention": "structural",
           "vote": "blank",
           "inkedPixels": 0,
           "bbox": null,
@@ -1625,6 +2040,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "draws",
           "inkedPixels": 520,
           "bbox": [
@@ -1648,6 +2064,26 @@
             130
           ],
           "bboxClass": "exceeds-annot-rect"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": false,
+          "abstention": "structural",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": false,
+          "abstention": "structural",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
         }
       ],
       "majority": {
@@ -1717,6 +2153,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "draws",
           "inkedPixels": 705,
           "bbox": [
@@ -1740,6 +2177,26 @@
             134
           ],
           "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": false,
+          "abstention": "structural",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": false,
+          "abstention": "structural",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
         }
       ],
       "majority": {
@@ -1805,6 +2262,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "blank",
           "inkedPixels": 0,
           "bbox": null,
@@ -1823,6 +2281,26 @@
             130
           ],
           "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": false,
+          "abstention": "structural",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": false,
+          "abstention": "structural",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
         }
       ],
       "majority": {
@@ -1886,6 +2364,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "blank",
           "inkedPixels": 0,
           "bbox": null,
@@ -1895,6 +2374,26 @@
           "oracle": "ghostscript",
           "engine": "ghostscript",
           "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": false,
+          "abstention": "structural",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": false,
+          "abstention": "structural",
           "vote": "blank",
           "inkedPixels": 0,
           "bbox": null,
@@ -1910,7 +2409,7 @@
       "deviation": {
         "kind": "invented-ink",
         "issue": "#1005",
-        "note": "1 of 3, and excise does not even draw what the one draws: mutool inks 109 px in a 23x5 mark at the field's top-left, poppler and Ghostscript ink nothing, and excise strokes a full blue placeholder rectangle (520 px on the whole rect). #885 introduced it so an unsigned signature field is visible ('sign here'), which is a product decision rather than a reading of the evidence. Recorded here rather than quietly kept, because by this table's own rule a no-majority row draws nothing."
+        "note": "1 of 3, and excise does not even draw what the one draws: mutool inks 109 px in a 23x5 mark at the field's top-left, poppler and Ghostscript ink nothing, and excise strokes a full blue placeholder rectangle (520 px on the whole rect). #885 introduced it so an unsigned signature field is visible ('sign here'), which is a product decision rather than a reading of the evidence. Recorded here rather than quietly kept, because by this table's own rule a no-majority row draws nothing. (Widget rows have a THREE-engine pool: pdfbox and pdfium abstain structurally, see rules.)"
       }
     },
     {
@@ -1959,6 +2458,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "blank",
           "inkedPixels": 0,
           "bbox": null,
@@ -1977,6 +2477,26 @@
             130
           ],
           "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": false,
+          "abstention": "structural",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": false,
+          "abstention": "structural",
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
         }
       ],
       "majority": {
@@ -1985,7 +2505,7 @@
         "blank": 2,
         "verdict": "blank"
       },
-      "note": "1 of 3 - only Ghostscript draws the value. The /Tx path deliberately does not extend to /Ch."
+      "note": "1 of 3 - only Ghostscript draws the value. The /Tx path deliberately does not extend to /Ch. (Widget rows have a THREE-engine pool: pdfbox and pdfium abstain structurally, see rules.)"
     },
     {
       "id": "text.degenerate-rect",
@@ -2041,6 +2561,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "draws",
           "inkedPixels": 263,
           "bbox": [
@@ -2064,15 +2585,43 @@
             71
           ],
           "bboxClass": "exceeds-annot-rect"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 104,
+          "bbox": [
+            51,
+            51,
+            68,
+            70
+          ],
+          "bboxClass": "exceeds-annot-rect"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 336,
+          "bbox": [
+            50,
+            30,
+            70,
+            50
+          ],
+          "bboxClass": "exceeds-annot-rect"
         }
       ],
       "majority": {
-        "voters": 3,
-        "draws": 3,
+        "voters": 5,
+        "draws": 5,
         "blank": 0,
         "verdict": "draw"
       },
-      "note": "3 of 3 draw a ~16-20 pt marker at the anchor and disagree completely on the artwork (mutool black strokes 92 px, poppler a grey-green fill 232 px, Ghostscript 332 px). excise draws a note-shaped marker of that size at that anchor and copies none of them.",
+      "note": "5 of 5 draw a ~16-20 pt marker at the anchor and disagree completely on the artwork (mutool black strokes 92 px, poppler a grey-green fill 232 px, Ghostscript 332 px, PDFBox 104 px, pdfium 336 px). excise draws a note-shaped marker of that size at that anchor and copies none of them.",
       "issues": [
         "#885"
       ]
@@ -2131,6 +2680,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "draws",
           "inkedPixels": 5000,
           "bbox": [
@@ -2154,11 +2704,39 @@
             101
           ],
           "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 5000,
+          "bbox": [
+            50,
+            50,
+            150,
+            100
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 5000,
+          "bbox": [
+            50,
+            50,
+            150,
+            100
+          ],
+          "bboxClass": "matches-annot-rect"
         }
       ],
       "majority": {
-        "voters": 3,
-        "draws": 3,
+        "voters": 5,
+        "draws": 5,
         "blank": 0,
         "verdict": "draw"
       },
@@ -2220,6 +2798,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "draws",
           "inkedPixels": 386,
           "bbox": [
@@ -2243,11 +2822,39 @@
             101
           ],
           "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 380,
+          "bbox": [
+            50,
+            50,
+            150,
+            100
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 422,
+          "bbox": [
+            50,
+            50,
+            150,
+            100
+          ],
+          "bboxClass": "matches-annot-rect"
         }
       ],
       "majority": {
-        "voters": 3,
-        "draws": 3,
+        "voters": 5,
+        "draws": 5,
         "blank": 0,
         "verdict": "draw"
       },
@@ -2309,6 +2916,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "draws",
           "inkedPixels": 784,
           "bbox": [
@@ -2332,11 +2940,39 @@
             152
           ],
           "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 1176,
+          "bbox": [
+            50,
+            50,
+            151,
+            151
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 784,
+          "bbox": [
+            50,
+            50,
+            150,
+            150
+          ],
+          "bboxClass": "matches-annot-rect"
         }
       ],
       "majority": {
-        "voters": 3,
-        "draws": 3,
+        "voters": 5,
+        "draws": 5,
         "blank": 0,
         "verdict": "draw"
       }
@@ -2395,6 +3031,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "draws",
           "inkedPixels": 928,
           "bbox": [
@@ -2418,11 +3055,39 @@
             152
           ],
           "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 876,
+          "bbox": [
+            50,
+            50,
+            151,
+            151
+          ],
+          "bboxClass": "matches-annot-rect"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 886,
+          "bbox": [
+            50,
+            50,
+            150,
+            150
+          ],
+          "bboxClass": "matches-annot-rect"
         }
       ],
       "majority": {
-        "voters": 3,
-        "draws": 3,
+        "voters": 5,
+        "draws": 5,
         "blank": 0,
         "verdict": "draw"
       }
@@ -2476,6 +3141,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "draws",
           "inkedPixels": 784,
           "bbox": [
@@ -2494,15 +3160,38 @@
           "inkedPixels": 0,
           "bbox": null,
           "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 784,
+          "bbox": [
+            50,
+            50,
+            150,
+            150
+          ],
+          "bboxClass": "matches-annot-rect"
         }
       ],
       "majority": {
-        "voters": 3,
-        "draws": 1,
-        "blank": 2,
+        "voters": 5,
+        "draws": 2,
+        "blank": 3,
         "verdict": "blank"
       },
-      "note": "1 of 3 (poppler strokes it black)."
+      "note": "2 of 5 (poppler and pdfium stroke it black; mutool, Ghostscript and PDFBox draw nothing). The enlarged pool moved this from 1-of-3 to 2-of-5 without moving the verdict - still no majority, so excise still draws nothing."
     },
     {
       "id": "line.with-color",
@@ -2558,6 +3247,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "draws",
           "inkedPixels": 402,
           "bbox": [
@@ -2581,12 +3271,35 @@
             141
           ],
           "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 326,
+          "bbox": [
+            60,
+            60,
+            140,
+            141
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
         }
       ],
       "majority": {
-        "voters": 3,
-        "draws": 3,
-        "blank": 0,
+        "voters": 5,
+        "draws": 4,
+        "blank": 1,
         "verdict": "draw"
       },
       "issues": [
@@ -2642,6 +3355,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "draws",
           "inkedPixels": 242,
           "bbox": [
@@ -2665,19 +3379,36 @@
             141
           ],
           "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
         }
       ],
       "majority": {
-        "voters": 3,
+        "voters": 5,
         "draws": 2,
-        "blank": 1,
-        "verdict": "draw"
+        "blank": 3,
+        "verdict": "blank"
       },
-      "deviation": {
-        "kind": "known-defect-not-yet-fixed",
-        "issue": "#1006",
-        "note": "2 of 3 draw it black (pdftocairo 242 px, Ghostscript 242 px, mutool 0) on exactly the geometry the file declares, so excise's blank is a defect by this table's own rule. CreateAnnotationStrokePaint returns null when /C is absent, documented as 'viewers differ here and none of the corpus fixtures omit /C'; the first half is now measured false. Filed rather than fixed in the same pass as #987/#991 so each behaviour change is verified against the corpus manifests on its own."
-      }
+      "note": "THE ONE ROW THE ENLARGED POOL REVERSES (#1007/#1009). It read 2-of-3 draw - pdftocairo 242 px, Ghostscript 242 px, mutool 0 - and therefore carried a deviation of kind 'known-defect-not-yet-fixed' filed as #1006, on the reading that excise's blank contradicted the majority. With PDFBox and pdfium voting it is 2-of-5: PDFBox draws a /Line that HAS /C (326 px on line.with-color) and draws nothing here, and pdfium draws neither (no /Line in its AP generator's subtype list), so three of five engines leave a /Line with no /C blank and excise is now WITH the majority, not against it. The deviation block is removed because the gate forbids one on a row that agrees with its verdict; #1006 is kept here because the change is in the EVIDENCE, not in the renderer - nothing about excise moved, and whoever closes or re-scopes #1006 should read this row first. The old deviation's supporting argument is preserved: CreateAnnotationStrokePaint returns null when /C is absent, documented as 'viewers differ here and none of the corpus fixtures omit /C', and viewers do indeed differ - 2 to 3.",
+      "issues": [
+        "#1006"
+      ]
     },
     {
       "id": "polygon.with-color",
@@ -2733,6 +3464,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "draws",
           "inkedPixels": 724,
           "bbox": [
@@ -2756,12 +3488,35 @@
             142
           ],
           "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 797,
+          "bbox": [
+            59,
+            58,
+            142,
+            142
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
         }
       ],
       "majority": {
-        "voters": 3,
-        "draws": 3,
-        "blank": 0,
+        "voters": 5,
+        "draws": 4,
+        "blank": 1,
         "verdict": "draw"
       },
       "issues": [
@@ -2822,6 +3577,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "draws",
           "inkedPixels": 483,
           "bbox": [
@@ -2845,12 +3601,35 @@
             142
           ],
           "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 522,
+          "bbox": [
+            60,
+            60,
+            142,
+            142
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
         }
       ],
       "majority": {
-        "voters": 3,
-        "draws": 3,
-        "blank": 0,
+        "voters": 5,
+        "draws": 4,
+        "blank": 1,
         "verdict": "draw"
       },
       "issues": [
@@ -2911,6 +3690,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "draws",
           "inkedPixels": 402,
           "bbox": [
@@ -2934,11 +3714,39 @@
             141
           ],
           "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 440,
+          "bbox": [
+            59,
+            79,
+            142,
+            141
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 402,
+          "bbox": [
+            59,
+            78,
+            141,
+            141
+          ],
+          "bboxClass": "inside-annot-rect"
         }
       ],
       "majority": {
-        "voters": 3,
-        "draws": 3,
+        "voters": 5,
+        "draws": 5,
         "blank": 0,
         "verdict": "draw"
       },
@@ -3000,6 +3808,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "draws",
           "inkedPixels": 2224,
           "bbox": [
@@ -3023,11 +3832,39 @@
             100
           ],
           "bboxClass": "exceeds-annot-rect"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 2234,
+          "bbox": [
+            45,
+            81,
+            155,
+            102
+          ],
+          "bboxClass": "exceeds-annot-rect"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 2000,
+          "bbox": [
+            50,
+            80,
+            150,
+            100
+          ],
+          "bboxClass": "matches-annot-rect"
         }
       ],
       "majority": {
-        "voters": 3,
-        "draws": 3,
+        "voters": 5,
+        "draws": 5,
         "blank": 0,
         "verdict": "draw"
       },
@@ -3091,6 +3928,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "draws",
           "inkedPixels": 201,
           "bbox": [
@@ -3114,11 +3952,39 @@
             98
           ],
           "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 100,
+          "bbox": [
+            50,
+            97,
+            150,
+            98
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 200,
+          "bbox": [
+            50,
+            98,
+            150,
+            100
+          ],
+          "bboxClass": "inside-annot-rect"
         }
       ],
       "majority": {
-        "voters": 3,
-        "draws": 3,
+        "voters": 5,
+        "draws": 5,
         "blank": 0,
         "verdict": "draw"
       }
@@ -3177,6 +4043,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "draws",
           "inkedPixels": 100,
           "bbox": [
@@ -3200,11 +4067,39 @@
             93
           ],
           "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 100,
+          "bbox": [
+            50,
+            91,
+            150,
+            92
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 200,
+          "bbox": [
+            50,
+            89,
+            150,
+            91
+          ],
+          "bboxClass": "inside-annot-rect"
         }
       ],
       "majority": {
-        "voters": 3,
-        "draws": 3,
+        "voters": 5,
+        "draws": 5,
         "blank": 0,
         "verdict": "draw"
       }
@@ -3263,6 +4158,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "draws",
           "inkedPixels": 300,
           "bbox": [
@@ -3286,11 +4182,39 @@
             100
           ],
           "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 340,
+          "bbox": [
+            50,
+            96,
+            150,
+            100
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 250,
+          "bbox": [
+            50,
+            97,
+            150,
+            100
+          ],
+          "bboxClass": "inside-annot-rect"
         }
       ],
       "majority": {
-        "voters": 3,
-        "draws": 3,
+        "voters": 5,
+        "draws": 5,
         "blank": 0,
         "verdict": "draw"
       }
@@ -3349,6 +4273,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "draws",
           "inkedPixels": 4997,
           "bbox": [
@@ -3372,18 +4297,36 @@
             114
           ],
           "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
         }
       ],
       "majority": {
-        "voters": 3,
+        "voters": 5,
         "draws": 3,
-        "blank": 0,
+        "blank": 2,
         "verdict": "draw"
       },
       "deviation": {
         "kind": "majority-draws-but-no-agreed-artwork",
         "issue": "#889",
-        "note": "3 of 3 draw and they disagree by 4.7x on how much and by a factor of 3.6 on the bbox height (mutool 1055 px in a band, pdftocairo 4946 px over the whole rect, Ghostscript 1564 px in a band). A stamp's picture is viewer-specific art; there is nothing to copy, only an invitation to invent some. The old 2-of-3 reading of this row was measured on a non-printable fixture, so Ghostscript's zero was an abstention."
+        "note": "3 of 5 draw and the three disagree by 4.7x on how much and by a factor of 3.6 on the bbox height (mutool 1055 px in a band, pdftocairo 4946 px over the whole rect, Ghostscript 1564 px in a band); PDFBox and pdfium draw nothing at all - neither has a /Stamp appearance handler. A stamp's picture is viewer-specific art; there is nothing to copy, only an invitation to invent some. The enlarged pool (#1007/#1009) took this from a unanimous 3-of-3 to a bare 3-of-5, so the majority that this row already declines to follow is now the thinnest one in the table. The older 2-of-3 reading was measured on a non-printable fixture, so Ghostscript's zero was an abstention."
       }
     },
     {
@@ -3435,6 +4378,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "blank",
           "inkedPixels": 0,
           "bbox": null,
@@ -3448,15 +4392,38 @@
           "inkedPixels": 0,
           "bbox": null,
           "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": true,
+          "vote": "draws",
+          "inkedPixels": 123,
+          "bbox": [
+            52,
+            81,
+            65,
+            97
+          ],
+          "bboxClass": "inside-annot-rect"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
         }
       ],
       "majority": {
-        "voters": 3,
-        "draws": 1,
-        "blank": 2,
+        "voters": 5,
+        "draws": 2,
+        "blank": 3,
         "verdict": "blank"
       },
-      "note": "1 of 3 (mutool only)."
+      "note": "2 of 5 (mutool 187 px on the rect, PDFBox 123 px inside it; poppler, Ghostscript and pdfium draw nothing). The enlarged pool moved this from 1-of-3 to 2-of-5 and still leaves it short of a majority."
     },
     {
       "id": "sound.no-ap",
@@ -3507,6 +4474,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "blank",
           "inkedPixels": 0,
           "bbox": null,
@@ -3520,15 +4488,33 @@
           "inkedPixels": 0,
           "bbox": null,
           "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
         }
       ],
       "majority": {
-        "voters": 3,
+        "voters": 5,
         "draws": 1,
-        "blank": 2,
+        "blank": 4,
         "verdict": "blank"
       },
-      "note": "1 of 3 (mutool only)."
+      "note": "1 of 5 (mutool only; poppler, Ghostscript, PDFBox and pdfium all draw nothing). The enlarged pool leaves mutool alone here."
     },
     {
       "id": "redact.no-ap",
@@ -3579,6 +4565,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "blank",
           "inkedPixels": 0,
           "bbox": null,
@@ -3592,15 +4579,33 @@
           "inkedPixels": 0,
           "bbox": null,
           "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
         }
       ],
       "majority": {
-        "voters": 3,
+        "voters": 5,
         "draws": 1,
-        "blank": 2,
+        "blank": 4,
         "verdict": "blank"
       },
-      "note": "1 of 3 (mutool only)."
+      "note": "1 of 5 (mutool only; poppler, Ghostscript, PDFBox and pdfium all draw nothing). The enlarged pool leaves mutool alone here."
     },
     {
       "id": "unknown-subtype.no-ap",
@@ -3646,6 +4651,7 @@
           "oracle": "pdftoppm",
           "engine": "poppler",
           "counts": false,
+          "abstention": "duplicate-engine",
           "vote": "blank",
           "inkedPixels": 0,
           "bbox": null,
@@ -3659,12 +4665,30 @@
           "inkedPixels": 0,
           "bbox": null,
           "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfbox",
+          "engine": "pdfbox",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
+        },
+        {
+          "oracle": "pdfium",
+          "engine": "pdfium",
+          "counts": true,
+          "vote": "blank",
+          "inkedPixels": 0,
+          "bbox": null,
+          "bboxClass": "none"
         }
       ],
       "majority": {
-        "voters": 3,
+        "voters": 5,
         "draws": 0,
-        "blank": 3,
+        "blank": 5,
         "verdict": "blank"
       }
     }
