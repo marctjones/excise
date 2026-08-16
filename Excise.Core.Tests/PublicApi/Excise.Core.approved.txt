@@ -808,6 +808,7 @@ namespace Excise.Core.Document
         public System.Collections.Generic.IEnumerable<System.ValueTuple<string, Excise.Core.Primitives.PdfDictionary>> GetFonts() { }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfField> GetFormFields() { }
         public Excise.Core.Graphics.PdfGraphics GetGraphics() { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> GetLetters(System.Threading.CancellationToken cancellationToken = default) { }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfLink> GetLinks() { }
         public Excise.Core.Primitives.PdfDictionary? GetShading(string name) { }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Word> GetWords() { }
@@ -1740,9 +1741,9 @@ namespace Excise.Core.Text
     {
         public TextExtractor(Excise.Core.Document.PdfPage page) { }
         public bool IncludeFormFieldValues { get; set; }
-        public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> ExtractLetters() { }
-        public string ExtractText() { }
-        public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Word> ExtractWords() { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> ExtractLetters(System.Threading.CancellationToken cancellationToken = default) { }
+        public string ExtractText(System.Threading.CancellationToken cancellationToken = default) { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Word> ExtractWords(System.Threading.CancellationToken cancellationToken = default) { }
     }
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public static class TextSelectionEngine
