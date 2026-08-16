@@ -47,8 +47,13 @@ namespace Excise.Core.Tests.Content;
 /// see <see cref="DeepDictionaryNesting_IsADeliberateFailureModeDifference"/>.</item>
 /// <item>Unicode decoding beyond the WinAnsi core. TextExtractor has an
 /// eight-step cascade (/Differences, MacRoman, embedded reverse cmap, Mac
-/// glyph order, symbol cmap); ContentStreamParser has three. Tracked
-/// separately — the fixtures here stay inside the codes both decode alike.</item>
+/// glyph order, symbol cmap); ContentStreamParser has three. Tracked as
+/// #981 — the fixtures here stay inside the codes both decode alike.</item>
+/// <item>Operand LISTS, and therefore the <c>true</c>/<c>false</c>/<c>null</c>
+/// literals: ContentStreamParser pushes them as PdfBoolean/PdfNull operands
+/// where TextExtractor keeps the raw token string. Untested rather than
+/// deliberate — on malformed input the two can still resolve a different
+/// operand for the same operator.</item>
 /// <item>Bidi. ExtractLetters reorders visual-order RTL runs (#632) and
 /// ContentStreamParser does not, so every fixture here is LTR.</item>
 /// </list>
