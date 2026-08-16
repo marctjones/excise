@@ -7,6 +7,43 @@ semantic versioning.
 ## [Unreleased]
 
 ### Fixed
+- **An unsigned `/FT /Sig` widget no longer gets a placeholder border**
+  (#1005). #885 stroked a neutral blue rectangle over the whole `/Rect` so the
+  field would read as "sign here". Of the three engines that vote on a Widget
+  row, poppler and Ghostscript draw nothing at all and mutool draws a 23x5 mark
+  in the field's top-left corner — not a border. So excise elected an outlier
+  (the #875 trap) and then drew something the outlier does not draw: 520 inked
+  px where the majority draws 0. A `/FT /Sig` that carries `/MK` still gets
+  that styling; flagging an unsigned field for the user is an editor overlay,
+  not ink in the rendered page.
+
+- **A `/MK` with a background and no border colour no longer gets an invented
+  border** (#1005, same code path). mutool, pdftocairo, pdftoppm and
+  Ghostscript each ink exactly the fill and nothing else; excise added the same
+  blue stroke the signature placeholder used. The border is now drawn only
+  where `/MK /BC` states one, and excise's ink is pixel-identical to all four
+  (new row `widget.mk.bg-only`).
+
+- **`/DA` auto-size (`0 Tf`) fits the value to the field** (#1003).
+  `RenderTextFieldValue` used `min(rect.Height × 0.75, 16)` — height-only,
+  capped, blind to both the value and the field width — and drew `/V (Mountain)`
+  64 px wide in a 100 pt field where mutool draws it 94, pdftocairo 92 and
+  Ghostscript 90. `AutoFitFontSize` now takes the smaller of two limits read off
+  the resolved typeface: the string's own advance must fit the width, and the
+  font's own line box (ascent + descent) must fit the height. What settles the
+  rule is a 100x100 field, where mutool and poppler draw the value at exactly
+  the size they use in a 30 pt-tall one — the fit is bounded by WIDTH, with no
+  absolute cap.
+
+- **A synthesized `/Highlight` overshoots its quad by the quad's height ÷ 5,
+  not by half its height** (#1004). Every engine that draws a highlight rounds
+  its ends past the `/QuadPoints`, and the overshoot scales with the quad's
+  height: at heights 8/10/20/40 px, mutool and poppler overshoot 2/2/4/8,
+  pdfbox 2/2/5/8, Ghostscript 1/2/3/5, pdfium 0. excise used
+  `min(height,width)/2` — 10 px on a 20 px quad, 6 px wider than every oracle
+  at both ends — and on a narrow quad shrank it with the WIDTH, which no engine
+  does. Its bbox now matches mutool's and pdftocairo's exactly.
+
 - **A link with no `/Border` and no `/BS` gets the §12.5.6.5 default 1 pt
   border** (#987). Poppler and Ghostscript both stroke it; excise drew nothing.
   The old rule required the file to state a width explicitly, and was decided on
@@ -28,7 +65,7 @@ semantic versioning.
 
 ### Added
 - **`tests/annotation-synthesis-policy.json` — appearance synthesis as data,
-  with its evidence attached** (#993). 44 rows, one per (subtype, state,
+  with its evidence attached** (#993). 45 rows, one per (subtype, state,
   condition), each carrying the decision, the shape drawn, the fixture in full,
   per-oracle evidence as **bbox + shape rather than a bare count**, and the
   majority verdict with the size of the pool it was taken over.
@@ -46,9 +83,18 @@ semantic versioning.
   printable annotations, and pdfium abstains structurally (#1007); and shape
   assertions wherever count and bbox cannot discriminate.
 
-  Four rows contradict their own majority and each names an issue rather than
-  being quietly kept (#1005, #1006, #889, #885); two more carry magnitude
-  divergences (#1003, #1004).
+  Two rows contradict their own majority and each names an issue rather than
+  being quietly kept (both #1015). The table shipped with four such rows and
+  two more carrying magnitude divergences; #1007/#1009 grew the pool from three
+  engines to five and reversed one, #1015 resolved two, and #1003/#1004/#1005
+  closed the rest by changing the renderer rather than the row.
+
+  A row may also pin its GEOMETRY with `exciseInkMatchesDrawers` — excise's ink
+  bbox must land inside the spread of the drawing voters' bboxes, per axis,
+  within a stated tolerance. #1003 and #1004 are why it exists: both were rows
+  where every other check in the gate was green while excise drew the right
+  picture at visibly the wrong size, because a shape predicate cannot see a
+  magnitude any more than an ink count can see a shape.
 
 ### Changed
 - **There is now exactly ONE content-stream state machine** (#992, #995, #996,
