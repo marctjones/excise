@@ -14,9 +14,13 @@
 #
 #   1. Clean tree, HEAD pushed, version tag not already taken.
 #   2. run-full-suite.sh --assert-green: every checkpointable step of the
-#      --everything plan has a valid checkpoint at EXACTLY this commit
-#      (markers carry sha + a torn-write sentinel; a dirty tree or any other
-#      commit cannot satisfy this — see scripts/lib-runner.sh).
+#      --everything plan has a valid checkpoint. Markers carry the commit they
+#      ran at plus a torn-write sentinel, and a dirty tree still cannot satisfy
+#      this — but markers from DIFFERENT commits are accepted and the span is
+#      reported in the tag (#1027). Requiring one commit made the suite unable
+#      to finish at all: fixing a failing step meant committing, and committing
+#      discarded every passing marker. A span you can read beats a rule that
+#      guarantees there is nothing to read.
 #   3. The never-checkpointed redaction gates re-run LIVE, now, via
 #      run-full-suite.sh --resume: with everything else checkpointed, resume
 #      executes exactly the ALWAYS steps. "You are your own third party" —
@@ -133,11 +137,22 @@ STATE_KEY="$(basename "$STATE_DIR")"
 STEPS="$(ls "$STATE_DIR/"*.ckpt 2>/dev/null | wc -l | tr -d ' ')"
 [ "${STEPS:-0}" -gt 0 ] \
     || die "no checkpoint markers under $STATE_DIR, yet --assert-green passed — refusing to write an evidence trailer that says 0"
+# #1027: the evidence is a SPAN of commits, not necessarily one. Requiring one
+# made the suite unable to finish (fix a failing step, commit, lose every
+# passing marker), so the tag records what actually happened instead.
+SPAN="$(runner_marker_span | wc -l | tr -d ' ')"
+SPAN_LINE="all steps at $SHA"
+if [ "${SPAN:-0}" -gt 1 ]; then
+    SPAN_LINE="$SPAN commits: $(runner_marker_span | while read -r c; do \
+        git -C "$ROOT" rev-parse --short "$c" 2>/dev/null || echo "${c:0:8}"; done | tr '\n' ' ')"
+fi
+
 MSG="$(cat <<EOF
 excise $VERSION
 
-Release-Evidence: run-full-suite --everything green at $SHA
+Release-Evidence: run-full-suite --everything at $SHA
 Release-Evidence-Steps: $STEPS checkpointed step(s), state $STATE_KEY
+Release-Evidence-Span: $SPAN_LINE
 Release-Evidence-Redaction: gates re-run live at tag time $(date -u +%Y-%m-%dT%H:%M:%SZ)
 Release-Evidence-CI: $CI_LINE
 EOF

@@ -581,9 +581,32 @@ if [ "$MODE" = "assert-green" ]; then
         exit 1
     fi
 
-    say "${G}ASSERT-GREEN OK${N}: $ok/$TOTAL steps checkpointed at $(git -C "$ROOT" rev-parse --short HEAD)."
+    say "${G}ASSERT-GREEN OK${N}: $ok/$TOTAL steps checkpointed."
     say "  $always never-checkpointed step(s) (redaction gates) are NOT covered by"
     say "  checkpoints and must be re-run live by the caller."
+
+    # #1027: report the commit span instead of requiring one. The old rule
+    # demanded every marker be at HEAD, which meant a run could only ever
+    # complete if it passed first try with no commits during it — so it never
+    # completed, and there was no evidence to judge at all. State the span; let
+    # the reader decide whether it matters for what they are tagging.
+    _span="$(runner_marker_span)"
+    _spanN="$(printf '%s\n' "$_span" | grep -c . || true)"
+    if [ "${_spanN:-0}" -gt 1 ]; then
+        say ""
+        say "${Y}Evidence spans ${_spanN} commits${N} — not a single tree. Steps were"
+        say "checkpointed at:"
+        printf '%s\n' "$_span" | while read -r _c; do
+            [ -n "$_c" ] || continue
+            say "    $(git -C "$ROOT" log -1 --format='%h %s' "$_c" 2>/dev/null || echo "$_c (unknown)")"
+        done
+        say ""
+        say "That is expected for a long run with fixes in it, and is reported"
+        say "rather than refused. Judge it: a step checkpointed before a commit"
+        say "that changed what it tests has NOT tested that change."
+    else
+        say "  All steps checkpointed at one commit: $(git -C "$ROOT" rev-parse --short HEAD)."
+    fi
     exit 0
 fi
 
