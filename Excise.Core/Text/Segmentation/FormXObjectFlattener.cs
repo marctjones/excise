@@ -253,7 +253,15 @@ internal static class FormXObjectFlattener
 
         // Record the underlying object so the caller can free it once the page
         // no longer references it (otherwise the orphan leaks on save).
-        if (sourceResources.GetDictionaryOrNull("XObject")?.GetOptional(name!) is PdfReference formRef)
+        //
+        // #1040: this is the SECOND unresolved /XObject lookup in this file and
+        // it fails on exactly the same documents as ResolveXObject's. Even once
+        // flattening reached the form, nothing was recorded here, so
+        // PruneInlinedForms had an empty set and returned immediately — the
+        // page content was correctly redacted while the original form object
+        // survived intact in the file, still holding the text.
+        if (ctx.Doc.Resolve(sourceResources.GetOptional("XObject")) is PdfDictionary xobjDict &&
+            xobjDict.GetOptional(name!) is PdfReference formRef)
             ctx.InlinedFormObjects.Add(formRef.ObjectNum);
 
         byte[] formBytes;
@@ -393,7 +401,18 @@ internal static class FormXObjectFlattener
 
     private static PdfObject? ResolveXObject(PdfDocument doc, PdfDictionary resources, string name)
     {
-        var xobjects = resources.GetDictionaryOrNull("XObject");
+        // #1040: /Resources /XObject is very often an INDIRECT REFERENCE, not a
+        // direct dictionary — it is what Nitro Pro and other real producers
+        // emit. GetDictionaryOrNull is a bare `is PdfDictionary` type check
+        // with no resolution, so it returned null for those files and every
+        // caller concluded the page referenced no Form XObjects at all.
+        //
+        // The consequence was not a missing feature, it was a silent redaction
+        // leak: FlattenOverlapping bailed on its fast path, no form was ever
+        // inlined, the glyphs inside forms were never reachable by the remover
+        // — and the black rectangle was still drawn over them, so the redaction
+        // looked correct and reported success.
+        var xobjects = doc.Resolve(resources.GetOptional("XObject")) as PdfDictionary;
         var obj = xobjects?.GetOptional(name);
         return obj != null ? doc.Resolve(obj) : null;
     }
