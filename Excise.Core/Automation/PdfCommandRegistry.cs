@@ -82,6 +82,8 @@ public static class PdfCommandRegistry
         View(PdfCommandIds.ToggleContinuousView, "Continuous Scroll View", "Toggle continuous scrolling.", "Ctrl+Shift+C"),
         View(PdfCommandIds.ToggleOutline, "Toggle Outline Sidebar", "Show or hide the outline sidebar.", "Ctrl+Shift+O"),
         View(PdfCommandIds.ToggleThumbnails, "Toggle Thumbnails Sidebar", "Show or hide page thumbnails.", "Ctrl+Shift+T"),
+        View(PdfCommandIds.ToggleAnnotations, "Show Annotations",
+            "Show or hide the page's annotations. Off renders the page content stream alone.", null),
         View(PdfCommandIds.ToggleClipboardHistory, "Show Clipboard History", "Show or hide clipboard and redaction history."),
 
         Redaction(PdfCommandIds.ToggleRedactionMode, "Redaction Mode", "Toggle redaction mode.", "R"),
