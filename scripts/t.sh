@@ -55,5 +55,10 @@ for target in "${TARGETS[@]}"; do
     echo "==> building $target ($CONFIG)"
     dotnet build "$target" -c "$CONFIG"
     echo "==> testing $target ($CONFIG, --no-build)"
-    dotnet test "$target" --no-build -c "$CONFIG" "${TEST_ARGS[@]}"
+    # ${a[@]+"${a[@]}"} — an EMPTY array is "unbound" under set -u in bash 3.2
+    # (macOS /bin/bash), so a plain "${TEST_ARGS[@]}" aborts the run whenever
+    # t.sh is called with no test arguments at all, i.e. exactly when you want
+    # the whole project. Nothing caught it because every existing caller passes
+    # a --filter.
+    dotnet test "$target" --no-build -c "$CONFIG" ${TEST_ARGS[@]+"${TEST_ARGS[@]}"}
 done
