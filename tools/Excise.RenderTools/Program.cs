@@ -2035,8 +2035,20 @@ partial class Program
             // libpdfium, which scripts/download-pdfium.sh can actually fetch.
             var pdfiumOutcome = RenderOracleWithCache(
                 oracleCache, "pdfium", pdfPath, pageNumber, comparisonDpi, userPassword,
+                // #1020: renderAnnotations TRUE. excise draws annotations
+                // unconditionally and so do mutool, pdftocairo, pdftoppm,
+                // Ghostscript and PDFBox by default — pdfium was the only
+                // oracle rendering with FPDF_ANNOT unset, so on a page whose
+                // content is annotation-borne its zero was a STRUCTURAL
+                // ABSTENTION being counted as a "blank" vote. Same error as
+                // #1009 (pdfbox excluded by a blocker that did not exist) and
+                // #987 (Ghostscript's zero on a non-printable fixture). The
+                // bias had a knowable direction: it made excise look like it
+                // was ADDING ink nobody else drew, on exactly the pages where
+                // excise was right.
                 () => PdfiumNativeReferenceRenderer.TryRenderPage(
-                    pdfPath, pageNumber, comparisonDpi, userPassword));
+                    pdfPath, pageNumber, comparisonDpi, userPassword,
+                    renderAnnotations: true));
             var pdfiumResult = pdfiumOutcome.Result;
             pdfiumBmp = pdfiumResult.Bitmap;
             entry.pdfiumMs = pdfiumResult.ElapsedMs;
