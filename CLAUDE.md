@@ -221,7 +221,7 @@ Published executables are in `bin/Release/net10.0/{runtime}/publish/`
 
 ### Release Documentation Gate
 
-Before tagging or describing a release, run `scripts/verify-doc-claims.sh` and
+Before tagging or describing a release, run `scripts/check-doc-claim-freshness.sh` and
 follow `docs/RELEASE_CHECKLIST.md`. Feature, security, and workflow changes
 must keep implementation, tests, UI text, release notes, GitHub issues, and
 user-facing docs in sync in the same pass.
@@ -480,7 +480,7 @@ most of the time.
 
 | Tier | Cost | What | When |
 |------|------|------|------|
-| `t0` | ~30s | Build + Excise.Core/Cli/Avalonia tests + `verify-doc-claims.sh` + `check-gate-asymmetry.sh` + `verify-true-redaction.sh` | Before every push. No excuse not to run it — `scripts/test-tier.sh --install-hook` installs it as `.git/hooks/pre-push`. |
+| `t0` | ~30s | Build + Excise.Core/Cli/Avalonia tests + `check-doc-claim-freshness.sh` + `check-gate-asymmetry.sh` + `verify-true-redaction.sh` | Before every push. No excuse not to run it — `scripts/test-tier.sh --install-hook` installs it as `.git/hooks/pre-push`. |
 | `t1` | ~10m | `t0` + the full redaction test suites + `Excise.Rendering.Tests` (deterministic) + `check-skip-budget.sh` | What CI blocks a PR on. `scripts/ci-test.sh` is now a thin wrapper around this. |
 | `t2` | ~30m | `scripts/release-smoke.sh --release-tests` | Release candidate. |
 | `t3` | — | `t2` plus the same on macOS and Windows (#647) | Before tagging a release. |

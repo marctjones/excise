@@ -58,7 +58,7 @@ usage() {
     cat <<'EOF'
 Usage: scripts/test-tier.sh {t0|t1|t2|t3} [--install-hook]
 
-  t0  ~30s   build + Core/Cli/Avalonia tests + doc-claims + gate-asymmetry
+  t0  ~30s   build + Core/Cli/Avalonia tests + doc-claim-freshness + gate-asymmetry
              + redaction-architecture guard. Pre-push, no excuse not to run it.
   t1  ~10m   t0 + full redaction test suites + Rendering (deterministic) +
              skip-budget for Core/Rendering/Excise.App (#655). What CI blocks
@@ -203,11 +203,11 @@ run_t0() {
         Excise.Cli.Tests/Excise.Cli.Tests.csproj --trx "$LOG_DIR/cli-tests.trx"
     run_step "test-count-avalonia" scripts/check-test-count.sh \
         Excise.Avalonia.Tests/Excise.Avalonia.Tests.csproj --trx "$LOG_DIR/avalonia-tests.trx"
-    run_step "doc-claims" scripts/verify-doc-claims.sh
-    # #936: verify-doc-claims.sh pins that a string EXISTS; this derives
-    # whether a NUMBER is still TRUE — reference-oracle usage counts and
-    # milestone references are re-measured against the live source, and
-    # numbers that can't be cheaply re-measured must carry a dated marker.
+    # #936: this derives whether a NUMBER is still TRUE — reference-oracle
+    # usage counts and milestone references are re-measured against the live
+    # source, and numbers that can't be cheaply re-measured must carry a dated
+    # marker. (verify-doc-claims.sh, which pinned that a STRING exists, was
+    # deleted 2026-08-16.)
     # Self-test first so a broken checker can't report a false "passed".
     run_step "doc-claim-freshness-selftest" scripts/check-doc-claim-freshness.sh --self-test
     run_step "doc-claim-freshness" scripts/check-doc-claim-freshness.sh
@@ -240,7 +240,6 @@ run_t0() {
     run_step "test-count-selftest" scripts/test-check-test-count.sh
     run_step "coverage-selftest" scripts/test-check-coverage.sh
     run_step "testdata-sync-selftest" scripts/test-check-testdata-sync.sh
-    run_step "doc-claims-selftest" scripts/test-verify-doc-claims.sh
     run_step "true-redaction-selftest" scripts/test-verify-true-redaction.sh
     run_step "gate-asymmetry-selftest" scripts/test-check-gate-asymmetry.sh
     run_step "unwired-api-selftest" scripts/test-check-unwired-api.sh

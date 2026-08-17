@@ -16,7 +16,7 @@ namespace Excise.App.Tests.UI;
 /// Before this file, a row proved only that its named test class contained
 /// >=1 runnable [Fact] SOMEWHERE — a class could lose every meaningful
 /// assertion but one and the row stayed green. This deepens the contract
-/// the way verify-doc-claims.sh pins documented features to
+/// the way check-doc-claim-freshness.sh re-derives documented numbers from
 /// code, and the way
 /// Excise.Core.Tests.FormatCompatibility.FormatCompatibilitySuiteEvidenceGateTests
 /// pins a design tracker's rows to tests: each row names its REQUIRED

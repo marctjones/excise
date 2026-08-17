@@ -69,9 +69,11 @@ WHAT THIS DELIBERATELY DOES NOT CHECK, AND WHY
   "Acceptance" section) — only claims of fact a script can mechanically
   evaluate.
 - It only reads CLAUDE.md, not README.md or other tracked docs. README-shaped
-  claims already have a mechanism for the failure mode THEY are prone to —
-  pinned string existence via scripts/verify-doc-claims.sh and
-  Excise.App.Tests/Documentation/DocumentationClaimTests.cs. CI_GATES.md and
+  claims are left to review rather than to a gate: the two mechanisms that
+  used to pin them by string existence (scripts/verify-doc-claims.sh and
+  Excise.App.Tests/Documentation/DocumentationClaimTests.cs) were both deleted
+  on 2026-08-16 — pinning prose against prose never caught a real drift here,
+  while THIS gate, which re-derives numbers, has. CI_GATES.md and
   CHANGELOG.md DO use the same "don't hard-code this, it goes stale" idiom
   (checked at the time this gate was written) but were left out rather than
   widened blind: CI_GATES.md's instances all correctly state NO live number

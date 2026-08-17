@@ -431,7 +431,6 @@ say "Logs    : $LOG_DIR"
 [ -n "$ONLY" ] && say "Only    : $ONLY"
 say ""
 
-run_gate "docs" scripts/verify-doc-claims.sh
 
 if [ "$NO_BUILD" != "1" ]; then
     run_gate "build" dotnet build excise.sln -c "$CONFIG"
