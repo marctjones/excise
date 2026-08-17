@@ -292,6 +292,10 @@ emit "skip-budget-selftest" script "scripts/test-check-skip-budget.sh" "-"
 # on anything NEW. Cheap (~10s, a text index), so it sits with the static gates
 # rather than the suites.
 emit "unwired-api"          script "scripts/check-unwired-api.sh --quiet" "-"
+# #341: the shipped Release package must not drag Roslyn scripting, bundled
+# tessdata or Excise.Ocr into the normal startup path. Wired 2026-08-17 after
+# being found running nowhere for the second time (d5687a1b was the first).
+emit "lazy-startup"        script "scripts/verify-lazy-startup.sh" "-"
 # Whole-solution private/internal reachability (#940). This is intentionally
 # Roslyn-backed rather than grep: XAML bindings, command string IDs, overrides,
 # interface implementations, and the public package surface are seeded before

@@ -257,6 +257,19 @@ run_t0() {
 
 run_t1() {
     run_t0
+    # #341: the shipped Release package must not drag heavy optional
+    # subsystems into startup — no Roslyn scripting assemblies, no bundled
+    # tessdata, and toggling hidden text must not load Excise.Ocr.
+    #
+    # Wired here 2026-08-17 after being found running NOWHERE. It had already
+    # been fixed once for the same reason (d5687a1b, "verify-lazy-startup.sh
+    # was wired into nothing") and had come unwired again. t1 rather than t0
+    # because it publishes a Release build; 16s, so it is cheap enough to run
+    # on anything CI blocks a PR on.
+    #
+    # It is one of the few gates here that checks something a USER would
+    # notice, and it was the only one that could not fire.
+    run_step "lazy-startup" scripts/verify-lazy-startup.sh
     run_step "redaction-suites" dotnet test --no-build -c Debug --filter "FullyQualifiedName~Redaction" --logger "console;verbosity=normal"
     # #644: the encryption interop gate. Neither of t1's other rendering
     # steps reaches it — the redaction filter doesn't match it and
