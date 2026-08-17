@@ -51,6 +51,13 @@ public class RedactionCollateralHarness
 {
     private const string BaselinePath = "tests/redaction-collateral/baseline.json";
 
+    /// <summary>
+    /// Baseline value meaning "redaction threw on this document/term". Negative
+    /// so it can never be confused with a collateral count, which is clamped at
+    /// zero (#1046).
+    /// </summary>
+    private const int ThrewSentinel = -1;
+
     public static TheoryData<string> Fixtures()
     {
         var data = new TheoryData<string>();
@@ -69,7 +76,23 @@ public class RedactionCollateralHarness
         var path = EnumerateFixtures().FirstOrDefault(f => Path.GetFileName(f) == fixtureName);
         Assert.SkipWhen(path == null, "fixture not found");
 
-        var before = ExtractAll(path!);
+        // #1046: the sampled corpora are renderer REGRESSION suites — a good
+        // fraction of them are malformed on purpose. A document excise cannot
+        // open has no redaction behaviour to measure, so it is skipped rather
+        // than failed; "excise cannot open this at all" is a parser question,
+        // not a collateral one, and conflating them would make this gate red
+        // for reasons it has no opinion about.
+        string before;
+        try
+        {
+            before = ExtractAll(path!);
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            Assert.Skip($"excise cannot open {fixtureName}: {ex.GetType().Name}");
+            return;
+        }
+
         Assert.SkipWhen(before.Length < 200, "fixture has too little text to sample terms from");
 
         var baseline = LoadBaseline();
@@ -81,11 +104,33 @@ public class RedactionCollateralHarness
             var output = Path.Combine(Path.GetTempPath(), $"excise-collateral-{Guid.NewGuid():N}.pdf");
             try
             {
-                using (var doc = PdfDocument.Open(File.ReadAllBytes(path!)))
+                try
                 {
+                    using var doc = PdfDocument.Open(File.ReadAllBytes(path!));
                     doc.RedactText(term);
                     doc.Save(output);
                 }
+                catch (Exception ex) when (ex is not OutOfMemoryException)
+                {
+                    // #1046: the sampled corpora are renderer regression suites
+                    // — deliberately full of malformed files — so a throw here
+                    // is expected on some of them and must not redden the gate
+                    // for every other document.
+                    //
+                    // It is still RECORDED, and ratcheted like a collateral
+                    // number: a document that throws today may keep throwing,
+                    // but a NEW throw is a regression and fails. Skipping
+                    // silently is what let a defect hide in this corpus in the
+                    // first place.
+                    measured[term] = ThrewSentinel;
+                    var throwKey = $"{fixtureName}|{term}";
+                    if (!baseline.TryGetValue(throwKey, out var wasThrowing) || wasThrowing != ThrewSentinel)
+                        failures.Add(
+                            $"'{term}': redaction threw {ex.GetType().Name} — " +
+                            $"{ex.Message}. This document did not throw before.");
+                    continue;
+                }
+
                 var after = ExtractAll(output);
 
                 // Half one: the term must actually be gone. Already covered
@@ -155,12 +200,62 @@ public class RedactionCollateralHarness
         return picks.Distinct(StringComparer.Ordinal).ToList();
     }
 
+    /// <summary>
+    /// Documents that have ALREADY leaked or over-removed. Pinned in by name
+    /// and never sampled away (#1046).
+    ///
+    /// <para>Every redaction defect this project has found lived outside the
+    /// smoke/federal set this harness used to cover: #1040's name survived on
+    /// a Nitro Pro file in <c>pdfjs</c>, #1039's stall reproduced on a
+    /// <c>pdfium</c> file. The gate that would have caught them was pointed
+    /// somewhere else, so a one-off sweep found them instead — which is the
+    /// job a gate exists to make unnecessary.</para>
+    /// </summary>
+    private static readonly string[] RegressionFixtures =
+    {
+        "test-pdfs/pdfjs/issue15629.pdf",              // #1040 — indirect /XObject leak
+        "test-pdfs/pdfium/hello_world_split_streams.pdf", // #1039 — unterminated BT
+    };
+
+    /// <summary>Corpora sampled from, beyond the always-covered sets.</summary>
+    private static readonly string[] SampledCorpora =
+    {
+        "test-pdfs/pdfjs", "test-pdfs/pdfium", "test-pdfs/pdf20", "test-pdfs/poppler",
+    };
+
+    /// <summary>
+    /// Documents to draw from each sampled corpus; <b>0 means all of them, and
+    /// that is the default</b>. Set <c>REDACTION_COLLATERAL_SAMPLE=N</c> for a
+    /// fast slice while iterating locally.
+    ///
+    /// <para>Sampling was the plan until it was measured. The full sweep is
+    /// <b>1,007 documents in 6m31s</b> — cheap, because ~90% of the corpus
+    /// skips in about a millisecond for having too little text, and only the
+    /// ~99 measurable documents cost real time. Raising a per-corpus sample
+    /// from 12 to 45 added <b>four</b> measurable documents and no wall-clock
+    /// at all, which makes a sample nearly all cost and no benefit.</para>
+    ///
+    /// <para>⚠️ A sample BOUNDS COVERAGE, and every redaction defect found so
+    /// far was one document in several hundred: #1040 one file in pdfjs, #1039
+    /// one in pdfium, and the first full run of this gate turned up #1047 (six
+    /// occurrences of a term surviving) and #1048 (a crash) — neither of which
+    /// any 12-per-corpus slice contained.</para>
+    ///
+    /// <para>Costs nothing on a machine without the gitignored corpora: the
+    /// directories do not resolve and the rows are never generated.</para>
+    /// </summary>
+    private static int SampleSize =>
+        int.TryParse(Environment.GetEnvironmentVariable("REDACTION_COLLATERAL_SAMPLE"), out var n)
+            ? n
+            : 0;
+
     private static IEnumerable<string> EnumerateFixtures()
     {
         // smoke/ and federal/ overlap (both carry irs-w4.pdf etc.) — dedupe by
         // basename or xunit skips the second theory row as a duplicate ID and
         // the "covered" fixture silently isn't.
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         foreach (var dir in new[] { "test-pdfs/smoke", "test-pdfs/federal" })
         {
             var full = Resolve(dir);
@@ -168,6 +263,33 @@ public class RedactionCollateralHarness
             foreach (var f in Directory.EnumerateFiles(full, "*.pdf").OrderBy(x => x, StringComparer.Ordinal))
                 if (seen.Add(Path.GetFileName(f)))
                     yield return f;
+        }
+
+        foreach (var rel in RegressionFixtures)
+        {
+            var full = Resolve(rel);
+            if (full != null && seen.Add(Path.GetFileName(full)))
+                yield return full;
+        }
+
+        var take = SampleSize;
+        foreach (var dir in SampledCorpora)
+        {
+            var full = Resolve(dir);
+            if (full == null) continue;
+
+            // Deterministic and spread across the corpus rather than the first
+            // N alphabetically — a prefix of a sorted listing is a biased
+            // sample (pdfjs names cluster by bug number, i.e. by era).
+            var all = Directory.EnumerateFiles(full, "*.pdf")
+                               .OrderBy(x => x, StringComparer.Ordinal)
+                               .ToList();
+            if (all.Count == 0) continue;
+
+            var step = take <= 0 ? 1 : Math.Max(1, all.Count / take);
+            for (var i = 0; i < all.Count; i += step)
+                if (seen.Add(Path.GetFileName(all[i])))
+                    yield return all[i];
         }
     }
 
