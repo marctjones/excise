@@ -3746,7 +3746,7 @@ partial class Program
     /// sound. For annotations it is not: ISO 32000-1 §12.5.5 says a reader
     /// SHOULD — not shall — synthesize an appearance for an annotation with no
     /// /AP, and the oracles duly disagree in both directions. Measured at 72 dpi
-    /// by AnnotationSynthesisMajorityTests, mutool inks Redact/Sound/
+    /// by tests/annotation-synthesis-policy.json, mutool inks Redact/Sound/
     /// FileAttachment where pdftocairo and Ghostscript draw nothing, and
     /// pdftocairo inks Line/Ink/PolyLine/Link where mutool and Ghostscript draw
     /// nothing. "Most-inked" selects whichever oracle is the OUTLIER on that
