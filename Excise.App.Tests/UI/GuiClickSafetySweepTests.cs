@@ -245,7 +245,11 @@ public class GuiClickSafetySweepTests
 
         sb.Append("%PDF-1.7\n");
 
-        int fontObj = 1 + 1 + pageCount * 2; // catalog(1) pages(2) then per page: page+content
+        // #1019: was 1 + 1 + pageCount * 2, which collides with the LAST page's
+        // content stream. Per-page objects run 3..(2 + pageCount*2), so the last
+        // content stream IS 2 + pageCount*2 — the same number. At pageCount 3 the
+        // font and page 3's content were both object 8, and page 3 extracted empty.
+        int fontObj = 3 + pageCount * 2; // catalog(1) pages(2) then per page: page+content
         Obj("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
 
         var kids = string.Join(" ", Enumerable.Range(0, pageCount).Select(i => $"{3 + i * 2} 0 R"));
