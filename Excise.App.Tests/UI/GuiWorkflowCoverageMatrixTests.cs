@@ -16,7 +16,7 @@ namespace Excise.App.Tests.UI;
 /// Before this file, a row proved only that its named test class contained
 /// >=1 runnable [Fact] SOMEWHERE — a class could lose every meaningful
 /// assertion but one and the row stayed green. This deepens the contract
-/// the way <see cref="Documentation.DocumentationClaimTests"/> pins docs to
+/// the way verify-doc-claims.sh pins documented features to
 /// code, and the way
 /// Excise.Core.Tests.FormatCompatibility.FormatCompatibilitySuiteEvidenceGateTests
 /// pins a design tracker's rows to tests: each row names its REQUIRED
@@ -174,9 +174,7 @@ public class GuiWorkflowCoverageMatrixTests
                 // the actual excise process with argv, and macOS Launch Services actually
                 // delivering an IActivatableLifetime.Activated event. That slice is a
                 // packaging-smoke concern, not a unit-test one, and stays covered by
-                // scripts/run-packaged-gui-smoke.sh --mode direct-exec plus
-                // DocumentationClaimTests.FileAssociationDocs_MapToPackagingAndStartupHandlers
-                // (source-text check that the docs and handlers agree).
+                // scripts/run-packaged-gui-smoke.sh --mode direct-exec.
                 Capability.Gap("open via command-line/file-association launch: the OS/process-launch step itself",
                     "The resolve+load glue this launch path depends on (StartupDocumentResolver.Resolve, " +
                     "App.OpenPathAsync, App.ResolveActivatedPdfPath) is now driven directly by " +
@@ -185,9 +183,8 @@ public class GuiWorkflowCoverageMatrixTests
                     "with command-line argv, and macOS Launch Services actually delivering an " +
                     "IActivatableLifetime.Activated event — both require a running desktop lifetime outside " +
                     "Avalonia.Headless's SetupWithoutStarting harness this suite uses. Covered instead by " +
-                    "scripts/run-packaged-gui-smoke.sh --mode direct-exec (spawns the real published binary) " +
-                    "and DocumentationClaimTests.FileAssociationDocs_MapToPackagingAndStartupHandlers (keeps the " +
-                    "platform manifests/handlers in sync with the docs). See #959, #979."),
+                    "scripts/run-packaged-gui-smoke.sh --mode direct-exec, which spawns the real " +
+                    "published binary. See #959, #979."),
                 Capability.Gap("open via drag-drop",
                     "Not just untested — the FEATURE does not exist. Zero references to DragEventArgs / OnDrop " +
                     "/ DragDrop. / AllowDrop anywhere in Excise.App or Excise.Avalonia (#959, re-checked by " +

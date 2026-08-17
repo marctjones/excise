@@ -16,7 +16,6 @@ namespace Excise.App.Tests.UI;
 /// #979 — command-line/file-association launch had no xunit method driving it
 /// end to end: the only coverage was <c>scripts/run-packaged-gui-smoke.sh
 /// --mode direct-exec</c> (a shell script) and
-/// <c>DocumentationClaimTests.FileAssociationDocs_MapToPackagingAndStartupHandlers</c>
 /// (a source-text check that the docs mention the handler, not that it works).
 ///
 /// <see cref="Excise.App.StartupDocumentResolver"/> is already unit-tested
