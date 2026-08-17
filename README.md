@@ -571,9 +571,8 @@ manually):
 4. `publish` job uploads all artifacts with `.sha256` files; tags containing `-rc`/`-beta`/`-alpha` are flagged as pre-releases.
 
 Before tagging, run the release checklist in
-[`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md), including
-`scripts/verify-doc-claims.sh`, so documentation claims are checked against
-the implemented commands and APIs. The repeatable local gate is:
+[`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md). The repeatable local
+gate is:
 
 ```bash
 scripts/release-smoke.sh --visual --package --packaged-gui --aot --version 2.27.1

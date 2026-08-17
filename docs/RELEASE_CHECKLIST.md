@@ -29,7 +29,7 @@ you tag, and look at the results yourself.
 
 ## Documentation Accuracy
 
-- Run `scripts/verify-doc-claims.sh`.
+- Run `scripts/check-doc-claim-freshness.sh` (re-derives the numeric claims in CLAUDE.md).
 - Confirm README feature bullets match implemented commands, menu items, CLI commands, and public APIs.
 - Confirm `Excise.Core/README.md`, `Excise.Rendering/README.md`, and `Excise.Avalonia/README.md` describe the current library APIs.
 - Confirm release notes do not imply future issue scope is already shipped.

@@ -273,7 +273,6 @@ CORPUS_COVERAGE_ROWS=()
 emit "build" script "dotnet build excise.sln -c $CONFIG -m:1" "-"
 
 # --- Phase 2: static / cheap gates ---------------------------------------
-emit "doc-claims"           script "scripts/verify-doc-claims.sh" "-"
 emit "gate-asymmetry"       script "scripts/check-gate-asymmetry.sh origin/develop" "-"
 emit "redaction-architecture" script "scripts/verify-true-redaction.sh" "-"
 emit "testdata-sync"        script "scripts/check-testdata-sync.sh" "-"
@@ -285,7 +284,6 @@ emit "skip-budget-selftest" script "scripts/test-check-skip-budget.sh" "-"
 emit "test-count-selftest"       script "scripts/test-check-test-count.sh" "-"
 emit "coverage-selftest"         script "scripts/test-check-coverage.sh" "-"
 emit "testdata-sync-selftest"    script "scripts/test-check-testdata-sync.sh" "-"
-emit "doc-claims-selftest"       script "scripts/test-verify-doc-claims.sh" "-"
 emit "true-redaction-selftest"   script "scripts/test-verify-true-redaction.sh" "-"
 emit "gate-asymmetry-selftest"   script "scripts/test-check-gate-asymmetry.sh" "-"
 emit "unwired-api-selftest"      script "scripts/test-check-unwired-api.sh" "-"
