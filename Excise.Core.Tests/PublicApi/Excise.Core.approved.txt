@@ -195,6 +195,7 @@ namespace Excise.Core.Automation
         public const string SelectTextMode = "edit.selectTextMode";
         public const string ShowLetters = "text.letters";
         public const string SplitDocument = "document.split";
+        public const string ToggleAnnotations = "view.toggleAnnotations";
         public const string ToggleArrowMode = "annotation.toggleArrowMode";
         public const string ToggleClipboardHistory = "view.toggleClipboardHistory";
         public const string ToggleContinuousView = "view.toggleContinuous";
