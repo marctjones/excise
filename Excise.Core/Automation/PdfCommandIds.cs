@@ -93,6 +93,7 @@ public static class PdfCommandIds
     public const string ToggleContinuousView = "view.toggleContinuous";
     public const string ToggleOutline = "view.toggleOutline";
     public const string ToggleThumbnails = "view.toggleThumbnails";
+    public const string ToggleAnnotations = "view.toggleAnnotations";
     public const string ToggleClipboardHistory = "view.toggleClipboardHistory";
 
     public const string ToggleRedactionMode = "redaction.toggleMode";
