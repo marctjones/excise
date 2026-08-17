@@ -89,6 +89,7 @@ RUNNER_TREE_DIRTY="unknown"
 RUNNER_LABEL=""
 RUNNER_CONFIG=""
 RUNNER_SKIPPED_COUNT=0
+RUNNER_STALE_SHA_COUNT=0
 
 runner_say() { echo -e "$1"; }
 
@@ -216,7 +217,21 @@ runner_state_init() {
     # when the run may have measured uncommitted changes on top of it (#994).
     RUNNER_TREE_DIRTY="$([ -n "$dirty" ] && echo yes || echo no)"
 
-    local key="${RUNNER_LABEL}_${RUNNER_CONFIG}_${RUNNER_SHA:0:12}${dirty}"
+    # #1027: the key is label + config + BRANCH + dirtiness — deliberately NOT
+    # the commit. It used to include ${RUNNER_SHA:0:12}, which meant a commit
+    # did not merely invalidate markers, it moved the whole run into a fresh
+    # empty state directory. Combined with the per-marker sha check that is now
+    # gone, a 90-minute suite could only ever finish by passing on the first
+    # attempt with no commits during it — fix step 60, commit the fix, and the
+    # 59 passing steps were not stale, they were unreachable. It never finished.
+    #
+    # Branch stays in the key so a resume cannot silently adopt another
+    # branch's results, and dirtiness stays so uncommitted work cannot be
+    # mistaken for a clean tree. The commit each step actually ran at is
+    # recorded in the marker and reported by runner_marker_span.
+    local branch
+    branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null | tr -c 'A-Za-z0-9._-' '_' || echo nobranch)"
+    local key="${RUNNER_LABEL}_${RUNNER_CONFIG}_${branch}${dirty}"
     RUNNER_STATE_DIR="${RUNNER_STATE_ROOT:-$PWD/logs/runner-state}/$key"
     mkdir -p "$RUNNER_STATE_DIR"
 
@@ -302,13 +317,47 @@ runner_step_should_run() {
     # Every one of these checks failing means RE-RUN.
     [ -s "$f" ] || return 0                                    # missing or zero-length
     [ "$(tail -n 1 "$f" 2>/dev/null)" = "$RUNNER_SENTINEL" ] || return 0   # torn write
-    grep -q "^sha=$RUNNER_SHA$" "$f" 2>/dev/null || return 0    # different commit
+
+    # A marker from a DIFFERENT commit is still accepted, and this is a
+    # deliberate reversal (#1027).
+    #
+    # The old rule required sha == HEAD. That made the suite unable to finish
+    # by construction: a 90-minute run whose step 60 fails must be fixed, the
+    # fix must be committed, and committing invalidated all 59 passing markers.
+    # The only way to complete was to pass on the first attempt with zero
+    # commits throughout. It never did.
+    #
+    # The rule was never load-bearing either — it has never caught a defect. It
+    # was protecting against "this step passed on different code", which is a
+    # real hazard, so the marker's own commit is RECORDED and the span is
+    # REPORTED (runner_marker_span) rather than pretended away. A reader can see
+    # exactly which steps ran at which commit and judge; a rule that forces a
+    # restart instead gives them nothing to judge, because there is no run.
+    #
+    # What still re-runs unconditionally, and must: the redaction gates
+    # (RUNNER_NEVER_CHECKPOINT), which is the guarantee that actually matters.
+    local marker_sha
+    marker_sha="$(sed -n 's/^sha=//p' "$f" 2>/dev/null | head -1)"
+    if [ -n "$marker_sha" ] && [ "$marker_sha" != "$RUNNER_SHA" ]; then
+        RUNNER_STALE_SHA_COUNT=$(( RUNNER_STALE_SHA_COUNT + 1 ))
+    fi
 
     RUNNER_SKIPPED_COUNT=$(( RUNNER_SKIPPED_COUNT + 1 ))
     return 1
 }
 
 runner_skipped_count() { echo "$RUNNER_SKIPPED_COUNT"; }
+
+# How many skipped steps were checkpointed at a DIFFERENT commit than HEAD.
+# Zero means the whole run is at one commit; anything else must be reported,
+# never silently accepted (#1027).
+runner_stale_sha_count() { echo "$RUNNER_STALE_SHA_COUNT"; }
+
+# The distinct commits the current checkpoint set spans, oldest recorded first.
+runner_marker_span() {
+    [ -n "$RUNNER_STATE_DIR" ] || return 0
+    sed -n 's/^sha=//p' "$RUNNER_STATE_DIR"/*.ckpt 2>/dev/null | sort -u
+}
 
 # ---------------------------------------------------------------------------
 # Run ledger (#994)
