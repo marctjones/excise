@@ -314,15 +314,11 @@ Excise.Rendering.Tests.Differential.Jbig2RetainedContextTests.UnknownLengthFixtu
 Excise.Rendering.Tests.Differential.Jbig2RetainedContextTests.UnknownLengthSegment_DoesNotFabricateDownstreamSegments   # #656: the classifier must not invent segments out of image data [requires: corpus:pdfjs]
 Excise.Rendering.Tests.Differential.Jbig2RetainedContextTests.ContextImport_IsRefusedRatherThanGuessed   # #656: no oracle decodes this file, so excise must refuse rather than paint a guess [requires: corpus:pdfjs]
 Excise.Rendering.Tests.Differential.Jbig2RetainedContextTests.AHealthyStream_IsStillWalkedCompletely   # #656: scope guard so the walk-stop does not turn over-reporting into under-reporting [requires: corpus:pdfjs]
-Excise.Rendering.Tests.Differential.CheckboxSynthesisTests.OnAndOffCheckboxes_AgreeWithTwoIndependentEngines   # #972: the synthesised check mark, and the blank OFF box, corroborated by two engines [requires: tool:mutool tool:pdftocairo]
 Excise.Rendering.Tests.Differential.AnnotationSynthesisPolicyGateTests.EveryRowsEvidence_StillHoldsAgainstTheOracles   # #993: re-measures every policy row's recorded oracle evidence; the other three gate tests need no tool and always run [requires: tool:mutool tool:pdftocairo]
 Excise.Rendering.Tests.Differential.MalformedObjectPageRecoveryTests.MalformedColorSpaceObject_MatchesIndependentRenderers   # #973: a malformed object must cost only that object; corroborated rather than self-asserted [requires: tool:mutool tool:pdftocairo]
 Excise.Rendering.Tests.Differential.NegativeFontSizeTests.NegativeFontSize_LandsWhereIndependentRenderersPutIt   # #970: the mirrored run's position, corroborated rather than self-asserted [requires: tool:mutool tool:pdftocairo]
 Excise.Rendering.Tests.Differential.ShapeAnnotationSynthesisTests.ShapeWithColor_MatchesIndependentRenderer   # #885: synthesised shape appearance verified independently [requires: tool:mutool]
 Excise.Rendering.Tests.Differential.ShapeAnnotationSynthesisTests.ShapeWithoutColor_AgreesWithMutool   # #885: drawing NOTHING is also a claim and needs corroboration [requires: tool:mutool]
-Excise.Rendering.Tests.Differential.SynthesizedAnnotationAppearanceTests.CheckboxWithoutAppearance_MatchesIndependentRenderers   # #885: synthesised widget chrome [requires: tool:mutool]
-Excise.Rendering.Tests.Differential.SynthesizedAnnotationAppearanceTests.FreeTextWithColor_MatchesIndependentRenderers   # #885: synthesised FreeText fill [requires: tool:mutool]
-Excise.Rendering.Tests.Differential.SynthesizedAnnotationAppearanceTests.TextAnnotationIcon_MatchesIndependentRenderers   # #885: sticky-note icon at the §12.5.6.4 fixed size [requires: tool:mutool]
 Excise.Rendering.Tests.Differential.CcittEndOfBlockTests.TheOnlyCorpusFileSettingEndOfBlock_RendersAtOracleParity   # #893: the single corpus witness for /EndOfBlock, checked against an oracle [requires: corpus:pdfjs tool:mutool]
 Excise.Rendering.Tests.Fonts.Cff2RefusalTests.CorpusFilesCarryingCff2_RenderAtParityWithMutool   # #657: CFF2 costs no page; measured against an oracle [requires: corpus:pdfjs tool:mutool]
 Excise.Rendering.Tests.ExtGStateFontTests.FontFromExtGState_MatchesAnIndependentRenderer   # ExtGState /Font (Table 58) verified independently [requires: tool:mutool]
@@ -332,9 +328,6 @@ Excise.Rendering.Tests.ExtGStateFontTests.FontFromExtGState_MatchesAnIndependent
 # with a MAJORITY of independent engines, so they need the oracles and the
 # gitignored corpora. BARE names for the [Theory] entries — the corpus-less CI
 # runner reports one skip per method, not one per [InlineData] case (see #894).
-Excise.Rendering.Tests.Differential.AnnotationSynthesisMajorityTests.WhereTheMajorityDrawsNothing_ExciseDrawsNothing   # #889: subtypes where a 2-of-3 oracle majority draws nothing; needs the corpora and mutool [requires: corpus:verapdf-corpus corpus:pdfium tool:mutool]
-Excise.Rendering.Tests.Differential.AnnotationSynthesisMajorityTests.WhereTheMajorityDraws_ExciseDraws   # #889: the other direction — majority draws, excise must not be the outlier [requires: corpus:pdfium corpus:isartor tool:mutool]
-Excise.Rendering.Tests.Differential.AnnotationSynthesisMajorityTests.AnEmptyTextField_StillDrawsNothing   # #889 control: an unfilled field must stay invisible; derives its fixture from the gitignored pdfium corpus [requires: corpus:pdfium]
 Excise.Rendering.Tests.Differential.CheckboxAppearanceStateTests.BlankW9_AddsNoDarkInkInsideItsCheckboxes   # the blank-W9 witness for /AS naming a state /AP /N does not define; oracle-anchored so it needs mutool and the smoke corpus [requires: corpus:smoke tool:mutool]
 Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.AuthoredAnnotation_IsSeenByQpdfsOwnParser   # external qpdf absent in the reference environment; SkipUnless-gated (#933 independent structural oracle, no-self-oracle) [requires: tool:qpdf]
 Excise.Rendering.Tests.Differential.AnnotationStructuralOracleTests.GeometryBearingAnnotations_HaveTheirGeometrySeenByQpdf   # external qpdf absent in the reference environment; SkipUnless-gated (#933 independent structural oracle, no-self-oracle) [requires: tool:qpdf]
