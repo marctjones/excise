@@ -2,34 +2,30 @@
 
 Use this checklist before tagging any `v*` release.
 
-## Tagging is evidence-checked — use `scripts/tag-release.sh`
-
-GitHub CI cannot run most of these tiers (the gitignored corpora, the macOS
-packaging/GUI gates, the benchmark and perf-budget gates), so the release tag
-itself demands proof the local box ran them:
+## Tagging
 
 ```bash
-# 1. The full local run, at the exact commit you will tag (restartable):
-caffeinate -i scripts/run-full-suite.sh --everything --resume 2>&1 | tee -a logs/full-suite.log
-
-# 2. Tag. This verifies every step above is checkpointed at HEAD
-#    (run-full-suite.sh --assert-green), re-runs the never-checkpointed
-#    redaction gates live, checks the cross-platform CI leg for this SHA,
-#    runs verify-doc-claims.sh, and writes Release-Evidence trailers into
-#    the annotated tag:
-scripts/tag-release.sh v3.9.0
-# CI red for a known flake? Record the waiver in the tag instead of skipping:
-scripts/tag-release.sh v3.9.0 --waive-ci "Test (Linux) hang is #939"
+git tag -a v3.9.0 -m "excise v3.9.0"
+git push origin v3.9.0
 ```
 
-A hand-made `git tag vX.Y.Z` carries no `Release-Evidence:` trailer and the
-pre-push hook (`scripts/test-tier.sh --install-hook`) refuses to push it.
-Evidence is commit-keyed: any new commit — even docs — invalidates it, and the
-full run must be repeated at the new HEAD. That is the point: the binary the
-tag describes is the binary that was tested.
+That is all. There is no evidence-checking wrapper and no enforced trailer.
 
-The sections below are the manual parts the script cannot judge (release-note
-accuracy, doc claims that need human reading). They still apply.
+There used to be: `scripts/tag-release.sh` wrote `Release-Evidence:` trailers
+into the annotated tag, and the pre-push hook refused any `v*` tag that lacked
+them. Both are deleted. The reasons, so this does not get rebuilt:
+
+- **No tag ever had one.** v3.6.0, v3.7.0 and v3.8.0 all carry zero
+  `Release-Evidence` trailers — every real release was tagged the way the hook
+  forbade, so the guard only ever blocked the correct path.
+- **The script's happy path never ran.** Two bugs were found in it by reading
+  rather than running, including one where it could record
+  `Release-Evidence-Steps: 0` as its own evidence.
+- **Nobody knew what a trailer was.** Including the person the receipts were
+  for. A record no one reads is not a record.
+
+What was actually worth keeping is the checklist below: run the gates before
+you tag, and look at the results yourself.
 
 ## Documentation Accuracy
 
