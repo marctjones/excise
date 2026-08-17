@@ -260,7 +260,7 @@ internal static class FormXObjectFlattener
         // PruneInlinedForms had an empty set and returned immediately — the
         // page content was correctly redacted while the original form object
         // survived intact in the file, still holding the text.
-        if (ctx.Doc.Resolve(sourceResources.GetOptional("XObject")) is PdfDictionary xobjDict &&
+        if (ResolveXObjectDictionary(ctx.Doc, sourceResources) is PdfDictionary xobjDict &&
             xobjDict.GetOptional(name!) is PdfReference formRef)
             ctx.InlinedFormObjects.Add(formRef.ObjectNum);
 
@@ -412,9 +412,19 @@ internal static class FormXObjectFlattener
         // inlined, the glyphs inside forms were never reachable by the remover
         // — and the black rectangle was still drawn over them, so the redaction
         // looked correct and reported success.
-        var xobjects = doc.Resolve(resources.GetOptional("XObject")) as PdfDictionary;
-        var obj = xobjects?.GetOptional(name);
+        var obj = ResolveXObjectDictionary(doc, resources)?.GetOptional(name);
         return obj != null ? doc.Resolve(obj) : null;
+    }
+
+    /// <summary>
+    /// The <c>/XObject</c> sub-dictionary of <paramref name="resources"/>,
+    /// following an indirect reference. Both #1040 leaks came from doing this
+    /// with a bare type check, so it exists once rather than at each call site.
+    /// </summary>
+    private static PdfDictionary? ResolveXObjectDictionary(PdfDocument doc, PdfDictionary resources)
+    {
+        var entry = resources.GetOptional("XObject");
+        return entry == null ? null : doc.Resolve(entry) as PdfDictionary;
     }
 
     private static double NumberAt(PdfArray arr, int i) => arr[i] switch
