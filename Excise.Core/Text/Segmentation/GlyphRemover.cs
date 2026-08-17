@@ -230,6 +230,13 @@ public class GlyphRemover
             output.Add(operations[idx]);
         }
 
+        // #1039: the source block ran to end-of-content with no ET. Close it
+        // before appending the reconstruction — text objects cannot nest
+        // (§9.4), so emitting BT with one still open would make the output
+        // less valid than the input we were handed.
+        if (block.ImplicitEnd)
+            output.Add(ContentOperator.EndText());
+
         output.AddRange(reconstructed);
     }
 
@@ -430,6 +437,21 @@ public class GlyphRemover
                 openBt = null;
             }
         }
+
+        // #1039: a BT that is never closed used to record NO block at all, so
+        // every glyph it drew was invisible to reconstruction — the match was
+        // found, removal did nothing, and the resulting stall handed the page
+        // to the whole-operator fallback, which destroyed the line (#1038).
+        // Every real viewer treats end-of-content as an implicit ET (§9.4), so
+        // the last operator closes the block here too.
+        if (openBt.HasValue && openBt.Value < ops.Count - 1)
+            blocks.Add(new BlockInfo
+            {
+                BtIndex = openBt.Value,
+                EtIndex = ops.Count - 1,
+                ImplicitEnd = true,
+            });
+
         return blocks;
     }
 
@@ -438,6 +460,16 @@ public class GlyphRemover
     {
         public required int BtIndex { get; init; }
         public required int EtIndex { get; init; }
+
+        /// <summary>
+        /// True when the block was closed by end-of-content rather than by an
+        /// <c>ET</c> operator (#1039). The block's operators are copied
+        /// unchanged either way, but a reconstructed block appended after this
+        /// one must be preceded by an explicit <c>ET</c> — text objects cannot
+        /// nest (§9.4), and emitting <c>BT</c> while one is still open would
+        /// leave the output less valid than the input.
+        /// </summary>
+        public bool ImplicitEnd { get; init; }
     }
 
     /// <summary>A text-op classified as needing reconstruction, with its
