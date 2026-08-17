@@ -1294,12 +1294,14 @@ internal partial class RenderContext
                 else if (q == 2) textX = rect.Right - textWidth - padX;
                 else             textX = rect.Left + padX;
 
-                // Vertical baseline: center the cap-height inside the
-                // rect. fontSize × 0.3 puts the baseline below center
-                // by roughly the descender's worth, which looks about
-                // right for typical fonts at typical sizes.
-                float textY = rect.Top + (rect.Height + fontSize * 0.7f) * 0.5f
-                              - fontSize * 0.5f;
+                // Vertical baseline: centre the font's OWN line box inside the
+                // rect, read from the resolved typeface — the same metrics
+                // AutoFitFontSize uses to pick the size. The previous rule
+                // approximated the cap height at a flat fontSize * 0.7, which
+                // is not any real font's, and drew the value 2-5 px above
+                // every engine with the error scaling by size (#1016).
+                float textY = BaselineForCentredLineBox(
+                    rect, _currentFont?.Typeface, fontSize);
 
                 // Drive RenderText through the standard text-block path.
                 _inTextBlock = true;
@@ -1367,6 +1369,34 @@ internal partial class RenderContext
     /// the same disagreement it shows on row
     /// widget.tx.value-wider-than-the-rect.</para>
     /// </summary>
+    /// <summary>
+    /// Baseline that centres the font's line box (ascent + descent) inside
+    /// <paramref name="rect"/>, in the same upward-positive space the caller's
+    /// text matrix uses.
+    ///
+    /// Falls back to the historic cap-height approximation when there is no
+    /// typeface to measure — a guess is still better than dropping the value,
+    /// and there is nothing to compute a fit from.
+    /// </summary>
+    private static float BaselineForCentredLineBox(SKRect rect, SKTypeface? typeface, float fontSize)
+    {
+        if (typeface == null)
+            return rect.Top + (rect.Height + fontSize * 0.7f) * 0.5f - fontSize * 0.5f;
+
+        using var probe = new SKFont(typeface, 1f);
+        var metrics = probe.Metrics;           // per em; Ascent is negative
+        float ascent = -metrics.Ascent;
+        float descent = metrics.Descent;
+        float lineBox = ascent + descent;
+        if (lineBox <= 0.001f)
+            return rect.Top + (rect.Height + fontSize * 0.7f) * 0.5f - fontSize * 0.5f;
+
+        // rect.Top is the LOW edge in this space (the caller's matrix grows
+        // upward), so the baseline sits a descender plus half the slack above
+        // it.
+        return rect.Top + descent * fontSize + (rect.Height - lineBox * fontSize) * 0.5f;
+    }
+
     private static float AutoFitFontSize(string value, SKRect rect, SKTypeface? typeface, float padX)
     {
         // No typeface to measure against: keep a size that is at least
