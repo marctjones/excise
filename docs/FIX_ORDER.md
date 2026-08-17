@@ -290,20 +290,33 @@ itself), and it is currently degraded. Restoring it outranks adding more tests.
 
 # Recommended sequence
 
-Given #917 is done, the order that minimises rework:
+⚠️ **The seven-step sequence that stood here until 2026-08-17 was entirely
+stale** — #917, #938, #928, #932, #899 and #923 are all CLOSED, and v3.8.0 is
+tagged. It was the exact failure this file warns about in its own header, in
+this file, for the second time.
 
-| step | why now |
-|---|---|
-| 1. Tag v3.8.0 | all gates green at `f1f6c8e3`; everything below invalidates that evidence |
-| 2. Merge #917 | done, tested, unmerged; it unblocks the mirror-per-feature tax |
-| 3. **R1 / #938** | fixes spacing, line breaks AND column interleaving in one move, because they are all the same missing call. Highest value-per-risk left |
-| 4. #928 delete-or-correct | cheap, and removes a false safety claim about redaction |
-| 5. #932 gate scoring | restores the only instrument that finds product bugs |
-| 6. #899 positioning | needs the 216pt investigation; independent of 3 |
-| 7. #923 writer | large and bounded; run t1, and check the encryption interaction first |
+**The sequence is therefore not written down here any more.** A hand-copied
+order goes stale the moment an issue closes, and a stale order is worse than
+none because it is read as current. It lives on the milestone instead, where it
+cannot drift from the issues it orders:
 
-R2 (the change model) is not a scheduled step — it is the shape steps 3, 6 and 7
-should leave behind them.
+```bash
+gh api repos/marctjones/excise/milestones --jq '.[] | select(.state=="open") | "\(.title)\n\(.description)\n"'
+```
+
+What survives here is the *method*, which does not go stale — the two rules at
+the top of this file, plus:
+
+- **Instruments before fixes.** A fix landed before the gate that measures it
+  is a fix nobody can show worked. RC3 orders #1046 and #1041 ahead of every
+  repair for this reason.
+- **An unknown cause is not schedulable, whatever its priority label.** RC3's
+  #1040 is `priority: critical` and still cannot be assigned a fix, because
+  nobody knows yet what to fix. It is scheduled as a *diagnosis*, after the
+  instrument that gives it a population instead of one document.
+- **Bounding damage outranks removing causes when the causes are plural.**
+  Replacing a blunt fallback (#1044) caps the harm from every trigger at once,
+  including the ones not yet found.
 
 ---
 
