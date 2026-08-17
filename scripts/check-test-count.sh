@@ -257,10 +257,34 @@ while IFS= read -r name; do
         # `verbosity=detailed` dotnet test prints per-case results and no
         # `Passed!` summary at all, so keying on the summary made this branch
         # unreachable and every row-level loss fell to the vaguer message below.
-        echo "    FATAL  $name"
-        echo "           its class re-ran and other cases reported, but THIS case"
-        echo "           produced no result — a row-level loss no summary can see."
-        FATAL=$((FATAL + 1))
+        #
+        # #1035: RE-CHECK ONCE before convicting. The #894 loss is per-run and
+        # independent — a different test each time — so it can strike the same
+        # test in the run AND in the re-check, and then this branch blocked a
+        # push over a test that runs perfectly well. That happened twice on
+        # 2026-08-17, both cleared by typing the same command again. A gate
+        # cleared by retrying teaches people to retry instead of read, which is
+        # how a gate stops being read at all (#854).
+        #
+        # Two consecutive losses of the SAME test are far rarer than one, so a
+        # second look costs one class-filtered run and removes almost all the
+        # false blocks. A test that is genuinely never executed fails all three
+        # looks, so the capability that found #985 and the Altona hole is intact.
+        echo "    ...    $name absent on re-run; looking once more (#1035)"
+        assert_fresh
+        out2="$(dotnet test "$CSPROJ" -c Debug --no-build \
+                  --filter "FullyQualifiedName~$cls" \
+                  --logger "console;verbosity=detailed" 2>&1)"
+        if grep -qF "$name" <<<"$out2"; then
+            echo "    ok     $name (transient reporting loss, seen twice then reported)"
+            TRANSIENT=$((TRANSIENT + 1))
+        else
+            echo "    FATAL  $name"
+            echo "           its class re-ran TWICE and other cases reported both"
+            echo "           times, but THIS case produced no result either time —"
+            echo "           a row-level loss no summary can see."
+            FATAL=$((FATAL + 1))
+        fi
     else
         echo "    FATAL  $name"
         echo "           re-run produced no recognisable result."
