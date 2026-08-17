@@ -50,11 +50,15 @@ public class UnterminatedTextObjectRedactionTests
     {
         var saved = RedactAndSave(BuildPdfWithUnterminatedBlock(), "world", out _);
 
-        // CARRIER-AGNOSTIC. Not excise's extractor refereeing excise's
-        // removal — if the term is anywhere in the file, in any carrier, this
-        // fails.
-        var haystack = Encoding.ASCII.GetString(saved) + Encoding.BigEndianUnicode.GetString(saved);
-        haystack.Should().NotContain("world",
+        // CARRIER-AGNOSTIC, and decompressing. Not excise's extractor refereeing
+        // excise's removal — if the term is anywhere in the file, in any
+        // carrier, this fails.
+        //
+        // The raw-byte form of this scan (#1040) would pass here only by luck:
+        // it sees nothing inside a /FlateDecode stream, and excise compresses on
+        // save. Which streams happen to stay uncompressed is a writer detail,
+        // not a property this gate may depend on.
+        SavedPdfLeakScanner.FindTerm(saved, "world").Should().BeEmpty(
             "the second occurrence lives in a BT block with no ET; before #1039 it " +
             "survived redaction entirely while RedactText reported success");
     }
