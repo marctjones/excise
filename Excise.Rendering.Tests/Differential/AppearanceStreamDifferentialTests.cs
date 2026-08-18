@@ -38,6 +38,23 @@ namespace Excise.Rendering.Tests.Differential;
 /// missing scale or a dropped appearance must. A 10pt tile is far coarser than
 /// any AA fringe and far finer than any of those errors.</para>
 ///
+/// <para><b>Discrimination, measured by mutating the renderer:</b> dropping the
+/// scale is caught by <c>bbox-smaller-than-rect</c> and <c>non-square-rect</c>;
+/// dropping the translation by <c>bbox-offset-from-origin</c> and
+/// <c>matrix-translate</c>; ignoring <c>/Matrix</c> by <c>matrix-scale</c> and
+/// <c>matrix-translate</c>; resolving <c>/AS</c> to the wrong state by both
+/// <c>as-*</c> cases. <c>bbox-equals-rect</c> never fires — it is the
+/// control.</para>
+///
+/// <para>⚠️ A mutation that made the renderer IGNORE <c>/AS</c> entirely is
+/// <b>not</b> caught, and that is a finding rather than a gap here: with no
+/// <c>/AS</c>, excise falls through to the first resolvable entry of
+/// <c>/AP /N</c>, and <c>PdfDictionary</c> iteration order is unspecified — so
+/// which state it lands on does not follow the file. Filed as #1054. The
+/// <c>as-*</c> fixtures deliberately write the NON-selected state first so a
+/// first-entry fallback would land on the wrong one; it still passed, which is
+/// how the instability was found.</para>
+///
 /// <para>Distinct from <c>AnnotationAppearanceDrawnTests</c> (#888), which pins
 /// three specific past defects — indirect <c>/BBox</c>, absent <c>/BBox</c>, an
 /// unbalanced CTM in page content. That file answers "did we re-break these
@@ -56,7 +73,15 @@ public class AppearanceStreamDifferentialTests
     /// or flips an axis moves the ink somewhere a symmetric shape would hide.
     /// </summary>
     private sealed record ApCase(
-        string Id, string Why, string BBox, string? Matrix, string Rect, string ApContent);
+        string Id, string Why, string BBox, string? Matrix, string Rect, string ApContent,
+        /// <summary>
+        /// When set, <c>/AP /N</c> becomes a SUB-DICTIONARY of appearance
+        /// states and <c>/AS</c> selects one of them (§12.5.5). The selected
+        /// state paints <see cref="ApContent"/>; the other paints
+        /// <see cref="OtherStateContent"/>, deliberately somewhere else, so
+        /// choosing the wrong one is visible rather than merely different.
+        /// </summary>
+        string? SelectedState = null, string? OtherStateContent = null);
 
     public static TheoryData<string> Cases()
     {
@@ -96,6 +121,20 @@ public class AppearanceStreamDifferentialTests
             "that applies /Matrix without re-fitting draws it twice as large.",
             "[0 0 50 50]", "[2 0 0 2 0 0]", "[50 50 150 150]",
             "1 0 0 rg 0 0 25 50 re f"),
+
+        new("as-selects-the-named-state",
+            "/AP /N is a sub-dictionary of states and /AS names one. Picking the wrong " +
+            "state — or the first entry regardless — draws the other half of the box.",
+            "[0 0 100 100]", null, "[50 50 150 150]",
+            "1 0 0 rg 0 0 50 100 re f",
+            SelectedState: "On", OtherStateContent: "0 0 1 rg 50 0 50 100 re f"),
+
+        new("as-selects-the-off-state",
+            "the same, selecting the OTHER state — so a renderer that always takes the " +
+            "first sub-dictionary entry passes the case above and fails this one.",
+            "[0 0 100 100]", null, "[50 50 150 150]",
+            "1 0 0 rg 50 0 50 100 re f",
+            SelectedState: "Off", OtherStateContent: "0 0 1 rg 0 0 50 100 re f"),
 
         new("matrix-translate",
             "/Matrix translates the appearance space. Same reasoning: the transformed " +
@@ -240,15 +279,40 @@ public class AppearanceStreamDifferentialTests
         var apLen = Encoding.Latin1.GetByteCount(ap);
         var matrix = c.Matrix == null ? "" : $" /Matrix {c.Matrix}";
 
+        string apEntry, stateObjects;
+        if (c.SelectedState == null)
+        {
+            apEntry = "/AP << /N 5 0 R >>";
+            stateObjects =
+                $"5 0 obj\n<< /Type /XObject /Subtype /Form /BBox {c.BBox}{matrix} /Length {apLen} >>\n" +
+                $"stream\n{ap}\nendstream\nendobj\n";
+        }
+        else
+        {
+            var other = c.OtherStateContent!;
+            var otherLen = Encoding.Latin1.GetByteCount(other);
+            var otherName = c.SelectedState == "On" ? "Off" : "On";
+            // ⚠️ The NON-selected state is written FIRST, deliberately. With
+            // the selected one first, a renderer that ignores /AS and simply
+            // takes the first entry of /AP /N lands on the right answer by
+            // accident — which is exactly what the first version of these two
+            // cases did, and a mutation that blanked /AS passed all eight.
+            apEntry = $"/AP << /N << /{otherName} 6 0 R /{c.SelectedState} 5 0 R >> >> /AS /{c.SelectedState}";
+            stateObjects =
+                $"5 0 obj\n<< /Type /XObject /Subtype /Form /BBox {c.BBox}{matrix} /Length {apLen} >>\n" +
+                $"stream\n{ap}\nendstream\nendobj\n" +
+                $"6 0 obj\n<< /Type /XObject /Subtype /Form /BBox {c.BBox}{matrix} /Length {otherLen} >>\n" +
+                $"stream\n{other}\nendstream\nendobj\n";
+        }
+
         var objects = new List<string>
         {
             "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n",
             $"2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 /MediaBox [0 0 {PageSize} {PageSize}] >>\nendobj\n",
             "3 0 obj\n<< /Type /Page /Parent 2 0 R /Annots [4 0 R] >>\nendobj\n",
             // /F 4 (Print) so Ghostscript, which honours the flag, participates.
-            $"4 0 obj\n<< /Type /Annot /Subtype /Square /F 4 /Rect {c.Rect} /AP << /N 5 0 R >> >>\nendobj\n",
-            $"5 0 obj\n<< /Type /XObject /Subtype /Form /BBox {c.BBox}{matrix} /Length {apLen} >>\n" +
-            $"stream\n{ap}\nendstream\nendobj\n",
+            $"4 0 obj\n<< /Type /Annot /Subtype /Square /F 4 /Rect {c.Rect} {apEntry} >>\nendobj\n",
+            stateObjects,
         };
 
         var sb = new StringBuilder();
