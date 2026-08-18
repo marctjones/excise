@@ -22,11 +22,8 @@
 #   (b) changes the EXPECTED VALUES of assertions in a test.
 #
 # It does not forbid the combination — sometimes a contract genuinely changes.
-# It forces you to say so out loud, with:
-#
-#   Correctness-Expectations-Changed: <why>
-#
-# in the commit message. That is a design review, not a rubber stamp.
+# It forces you to SEPARATE them: land the perf change and the expectation
+# change in different pushes, so neither can hide inside the other.
 #
 # The durable fix for a flagged test is usually to state it as an INVARIANT
 # instead of pinned numbers (#617): an invariant survives a legal optimization
@@ -159,19 +156,19 @@ if [[ -z "${rewritten// /}" ]]; then
   exit 0
 fi
 
-# Escape hatch: an explicit, reviewed acknowledgement in the commit message.
-# Capture first instead of `grep -q` in the condition: under `set -o
-# pipefail`, `grep -q` exits on the FIRST match and closes its stdin, so on
-# a large range `git log` dies with SIGPIPE (exit 141) and the pipeline
-# "fails" even though the trailer WAS found — silently skipping this hatch
-# exactly when the range is big enough to matter (observed on the 56-commit
-# v2.30.0 push range, whose head commit carried a valid trailer).
-trailers="$(git log "$BASE..HEAD" --format=%B | { grep -i '^Correctness-Expectations-Changed:' || true; })"
-if [[ -n "$trailers" ]]; then
-  echo "==> gate asymmetry: expectations changed, but ACKNOWLEDGED in the commit message."
-  echo "$trailers" | sed 's/^/    /'
-  exit 0
-fi
+# NO ESCAPE HATCH, deliberately (#1036). This gate used to be waived by a
+# `Correctness-Expectations-Changed:` commit trailer. Commit trailers are
+# banned in this repo, and replacing it with an env var or a magic phrase
+# would be the same mechanism wearing a different hat.
+#
+# The consequence, stated so nobody has to rediscover it: a change that
+# legitimately rewrites a correctness expectation cannot be pushed in the same
+# range as a perf-path change. Push them separately. Splitting into two
+# COMMITS does not help — this evaluates $BASE..HEAD as a range — so it has to
+# be two pushes. That friction is the whole point: the gate exists because
+# 8a8e661 changed tile quantization constants and rewrote the expected values
+# of ContinuousDpiTests in the same commit, letting a perf optimisation
+# silently redefine what a correctness test considered correct.
 
 cat <<MSG
 
@@ -195,11 +192,11 @@ Do ONE of these:
      illegal one, so it never needs rewriting. See
      Excise.Avalonia.Tests/ContinuousDpiTests.ContinuousTileRequest_SatisfiesItsContract.
 
-  2. If the contract genuinely changed, say so out loud. Add to the commit body:
-
-       Correctness-Expectations-Changed: <what changed and why it is still correct>
-
-     That is a design review, not a rubber stamp.
+  2. If the contract genuinely changed, land it SEPARATELY from the perf
+     change — two pushes, not two commits (this evaluates a range, so
+     splitting commits does not separate them). Reviewing them apart is the
+     point; a perf change and a redefinition of "correct" should never arrive
+     together.
 
 MSG
 exit 1
