@@ -63,6 +63,11 @@ namespace Excise.Rendering.Differential
         public static Excise.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword) { }
         public static Excise.Rendering.Differential.ReferenceRenderResult TryRenderPageWithOverprintSimulation(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
     }
+    public static class MutoolReferenceRedactor
+    {
+        public static bool IsAvailable { get; }
+        public static Excise.Rendering.Differential.ReferenceRedactionResult Redact(string inputPath, string term, string outputPath, int timeoutMs = 120000) { }
+    }
     public static class MutoolReferenceRenderer
     {
         public static bool IsAvailable { get; }
@@ -164,6 +169,13 @@ namespace Excise.Rendering.Differential
         public static int? PageCount(string pdfPath, string? password = null, int timeoutMs = 15000) { }
         public static Excise.Rendering.Differential.QpdfPasswordStatus? RequiresPassword(string pdfPath, string? password = null, int timeoutMs = 10000) { }
         public static string? ShowEncryption(string pdfPath, string? password = null, int timeoutMs = 15000) { }
+    }
+    public sealed class ReferenceRedactionResult : System.IEquatable<Excise.Rendering.Differential.ReferenceRedactionResult>
+    {
+        public ReferenceRedactionResult(int HitsFound, string? Failure) { }
+        public string? Failure { get; init; }
+        public int HitsFound { get; init; }
+        public bool Succeeded { get; }
     }
     public sealed class ReferenceRenderResult : System.IEquatable<Excise.Rendering.Differential.ReferenceRenderResult>
     {
