@@ -973,15 +973,15 @@ Excise.Core/                          # the PDF engine — parser, writer, redac
 
 Excise.Rendering/                     # SkiaSharp renderer
 └── Differential/                   # ← REFERENCE ORACLES. Use these, don't build new ones.
-    ├── MutoolReferenceRenderer.cs        # 153 uses in Differential tests
-    ├── GhostscriptReferenceRenderer.cs   #  61
-    ├── PdftocairoReferenceRenderer.cs    #  46
+    ├── MutoolReferenceRenderer.cs        # 155 uses in Differential tests
+    ├── GhostscriptReferenceRenderer.cs   #  63
+    ├── PdftocairoReferenceRenderer.cs    #  48
     ├── PdftoppmReferenceRenderer.cs      #  18
     ├── MutoolTextExtractor.cs            # independent TEXT oracle
     ├── QpdfReferenceTool.cs              # structure: --check, --show-npages
     ├── PdfiumReferenceRenderer.cs        # 2 uses — arg-builder unit test only, NOT the oracle below
-    ├── PdfiumNativeReferenceRenderer.cs  # 10 uses — the REAL pdfium oracle (#857), see note below the map
-    └── PdfBoxReferenceRenderer.cs        # 11 uses — see note below the map
+    ├── PdfiumNativeReferenceRenderer.cs  # 12 uses — the REAL pdfium oracle (#857), see note below the map
+    └── PdfBoxReferenceRenderer.cs        # 13 uses — see note below the map
 
 Excise.App/                          # the Avalonia GUI (orchestration only)
 ├── Services/
