@@ -36,6 +36,32 @@ partial class Program
         string File, int Page, int Index, string Subtype, bool HasAp,
         int Voters, int MajorityTiles, int OurTiles, int Missing, int Extra, string Verdict);
 
+    /// <summary>
+    /// Bytes in the annotation's resolved <c>/AP /N</c> stream, or -1 when there
+    /// is none. Zero means the file explicitly says <b>draw nothing</b>, which
+    /// is a different situation from excise failing to draw something.
+    /// </summary>
+    private static int AppearanceLength(PdfDocument doc, PdfAnnotation a)
+    {
+        try
+        {
+            if (doc.Resolve(a.RawDictionary.GetOptional("AP")!) is not PdfDictionary ap) return -1;
+            var n = ap.GetOptional("N");
+            if (n == null) return -1;
+            var resolved = doc.Resolve(n);
+            if (resolved is PdfStream st) return st.DecodedData.Length;
+            // A state sub-dictionary: take the selected state if /AS names one.
+            if (resolved is PdfDictionary states)
+            {
+                var asName = a.RawDictionary.GetNameOrNull("AS");
+                if (asName != null && states.GetOptional(asName) is { } sel &&
+                    doc.Resolve(sel) is PdfStream ss) return ss.DecodedData.Length;
+            }
+            return -1;
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException) { return -1; }
+    }
+
     static Command CreateAnnotationBenchCommand()
     {
         var corpusOption = new Option<string[]>("--corpus")
@@ -219,11 +245,13 @@ partial class Program
 
         SKBitmap? ours = null;
         double pageHeight;
+        List<int> apLengths = new();
         try
         {
             using var doc = PdfDocument.Open(File.ReadAllBytes(path));
             var page = doc.GetPage(pageNo);
             pageHeight = page.CropBox.Height;
+            apLengths = annots.Select(a => AppearanceLength(doc, a)).ToList();
             ours = new SkiaRenderer().RenderPage(page, new RenderOptions { Dpi = dpi, RenderAnnotations = true });
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
@@ -250,8 +278,18 @@ partial class Program
                 var missing = majority.Except(mine).Count();
                 var extra = mine.Except(majority).Count();
 
+                // AP_SAYS_BLANK: the file's own appearance stream is EMPTY, so
+                // §12.5.5 says draw nothing and excise drawing nothing is
+                // obedience, not a miss. The reference renderers add
+                // form-field chrome here that no appearance stream asked for —
+                // measured on all six of the corpus's MISSING_ALL widgets, five
+                // with a zero-byte /AP and one filling white. Classifying that
+                // as a defect would be asking excise to invent ink.
+                var apLen = i < apLengths.Count ? apLengths[i] : -1;
+
                 var verdict =
-                    majority.Count == 0 && mine.Count == 0 ? "AGREE_BLANK"
+                    mine.Count == 0 && apLen == 0 ? "AP_SAYS_BLANK"
+                    : majority.Count == 0 && mine.Count == 0 ? "AGREE_BLANK"
                     : majority.Count == 0 ? "EXTRA_ONLY"
                     : mine.Count == 0 ? "MISSING_ALL"
                     : missing == 0 && extra == 0 ? "AGREE_EXACT"
@@ -351,18 +389,20 @@ partial class Program
             {
                 var n = bySub.Count();
                 int C(string v) => bySub.Count(r => r.Verdict == v);
-                var agree = C("AGREE_EXACT") + C("AGREE_BLANK");
+                var agree = C("AGREE_EXACT") + C("AGREE_BLANK") + C("AP_SAYS_BLANK");
                 var close = C("AGREE_CLOSE");
                 var ok = agree + close;
                 var docs = bySub.Select(r => r.File).Distinct().Count();
                 var badDocs = bySub.Where(r => !r.Verdict.StartsWith("AGREE", StringComparison.Ordinal))
+                                   .Where(r => r.Verdict != "AP_SAYS_BLANK")
                                    .Select(r => r.File).Distinct().Count();
                 var bar = new string('#', (int)Math.Round(10.0 * ok / n));
                 Console.WriteLine($"  {bySub.Key,-16}{n,5}{docs,6}{agree,8}{close,7}{C("DIVERGENT"),9}{C("MISSING_ALL"),9}{C("EXTRA_ONLY"),7}{badDocs,9}   {bar,-10} {100.0 * ok / n,5:F1}%");
             }
 
             var total = g.Count;
-            var totalOk = g.Count(r => r.Verdict.StartsWith("AGREE", StringComparison.Ordinal));
+            var totalOk = g.Count(r => r.Verdict.StartsWith("AGREE", StringComparison.Ordinal)
+                                    || r.Verdict == "AP_SAYS_BLANK");
             var micro = 100.0 * totalOk / total;
 
             // MACRO too, because the micro average is whatever the corpus is
@@ -371,7 +411,8 @@ partial class Program
             // subtypes sit at zero. One number per subtype, averaged, is the
             // one that notices a subtype nobody renders.
             var macro = g.GroupBy(r => r.Subtype)
-                         .Average(x => 100.0 * x.Count(r => r.Verdict.StartsWith("AGREE", StringComparison.Ordinal)) / x.Count());
+                         .Average(x => 100.0 * x.Count(r => r.Verdict.StartsWith("AGREE", StringComparison.Ordinal)
+                                                         || r.Verdict == "AP_SAYS_BLANK") / x.Count());
 
             Console.WriteLine($"  {"TOTAL",-16}{total,5}{g.Select(r => r.File).Distinct().Count(),6}" +
                               $"{"",8}{"",7}{"",9}{"",9}{"",7}{"",9}   {micro,5:F1}%  per annotation");
