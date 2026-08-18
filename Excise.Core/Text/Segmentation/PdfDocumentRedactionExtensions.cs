@@ -440,11 +440,19 @@ public static class PdfDocumentRedactionExtensions
 
         var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
 
-        var sb = new StringBuilder(letters.Count);
-        var characterToLetter = new List<int>(letters.Count);
-        for (var letterIndex = 0; letterIndex < letters.Count; letterIndex++)
+        // #1047: match against a view with OVERPRINTED duplicates collapsed.
+        // Faux-bold is drawn by stamping the same run several times at
+        // sub-point offsets; excise's letter model faithfully records every
+        // copy, so a 4x-stamped "Test test" reads as "TTTTeeeesssstttt" and a
+        // search for "test" matches NOTHING. The term then survives and
+        // RedactText reports success — Limitations #1, exactly.
+        var (view, spanStart, spanEnd) = CollapseOverprintedGlyphs(letters);
+
+        var sb = new StringBuilder(view.Count);
+        var characterToLetter = new List<int>(view.Count);
+        for (var letterIndex = 0; letterIndex < view.Count; letterIndex++)
         {
-            var value = letters[letterIndex].Value;
+            var value = view[letterIndex].Value;
             sb.Append(value);
             for (var charIndex = 0; charIndex < value.Length; charIndex++)
                 characterToLetter.Add(letterIndex);
@@ -501,8 +509,15 @@ public static class PdfDocumentRedactionExtensions
                 {
                     var firstLetter = characterToLetter[i];
                     var lastLetter = characterToLetter[endIndex];
-                    var slice = new List<Letter>(lastLetter - firstLetter + 1);
-                    for (var letterIndex = firstLetter; letterIndex <= lastLetter; letterIndex++)
+
+                    // Expand back to EVERY original letter the matched view
+                    // covers, so all overprinted copies are removed. Removing
+                    // only the representative would leave the other stamps
+                    // drawn and extractable — a redaction that looks done.
+                    var from = spanStart[firstLetter];
+                    var to = spanEnd[lastLetter];
+                    var slice = new List<Letter>(to - from + 1);
+                    for (var letterIndex = from; letterIndex <= to; letterIndex++)
                         slice.Add(letters[letterIndex]);
                     if (IsSpatiallyCoherent(slice))
                     {
@@ -517,6 +532,77 @@ public static class PdfDocumentRedactionExtensions
         }
 
         return matches;
+    }
+
+    /// <summary>
+    /// Collapse OVERPRINTED glyphs — runs of adjacent letters with the same
+    /// value stamped on top of one another — into a single representative,
+    /// returning the view plus, for each view index, the first and last
+    /// original letter indices it stands for (#1047).
+    /// </summary>
+    /// <remarks>
+    /// <para>Faux-bold and drop-shadow effects are produced by drawing the same
+    /// text several times at sub-point offsets. The letter model records every
+    /// stamp, correctly — but the matcher reads the letters in order, so a
+    /// 4x-stamped line reads <c>TTTTeeeesssstttt</c> and no search for
+    /// <c>test</c> can match it. The term survives and RedactText reports
+    /// success, which is the failure mode CLAUDE.md's Limitations #1 describes:
+    /// excise cannot redact what excise cannot read.</para>
+    ///
+    /// <para>The discriminator is geometric, not textual, because a genuine
+    /// double letter must NOT collapse. In <c>letter</c> the two <c>t</c>s sit a
+    /// full glyph-width apart; overprinted copies sit on top of each other. So
+    /// two same-valued neighbours merge only when their glyph rectangles are
+    /// nearly coincident — measured against glyph SIZE, so it holds at any
+    /// scale.</para>
+    ///
+    /// <para>Collapsing is only ever a MATCHING view. Every original letter is
+    /// restored before removal, so all stamps are deleted; keeping one would
+    /// leave the text drawn and extractable.</para>
+    /// </remarks>
+    internal static (List<Letter> View, List<int> SpanStart, List<int> SpanEnd)
+        CollapseOverprintedGlyphs(IReadOnlyList<Letter> letters)
+    {
+        var view = new List<Letter>(letters.Count);
+        var spanStart = new List<int>(letters.Count);
+        var spanEnd = new List<int>(letters.Count);
+
+        for (var i = 0; i < letters.Count; i++)
+        {
+            view.Add(letters[i]);
+            spanStart.Add(i);
+
+            var last = i;
+            while (last + 1 < letters.Count && IsOverprintOf(letters[last], letters[last + 1]))
+                last++;
+
+            spanEnd.Add(last);
+            i = last;
+        }
+
+        return (view, spanStart, spanEnd);
+    }
+
+    /// <summary>
+    /// Whether <paramref name="b"/> is the same glyph as <paramref name="a"/>
+    /// stamped essentially on top of it.
+    /// </summary>
+    private static bool IsOverprintOf(Letter a, Letter b)
+    {
+        if (!string.Equals(a.Value, b.Value, StringComparison.Ordinal)) return false;
+        if (a.Value.Length == 0 || char.IsWhiteSpace(a.Value[0])) return false;
+
+        // Tolerance from glyph size, so it scales with the type. A quarter of a
+        // glyph is far below the ~1 advance width separating real neighbours
+        // and far above the sub-point offsets faux-bold uses (observed: 0.2pt
+        // horizontal and 0.4pt vertical on a 10pt glyph).
+        var w = Math.Max(Math.Abs(a.Width), 0.01);
+        var h = Math.Max(Math.Abs(a.GlyphRectangle.Height), 0.01);
+        var tolX = w * 0.25;
+        var tolY = h * 0.25;
+
+        return Math.Abs(a.StartX - b.StartX) <= tolX
+            && Math.Abs(a.StartY - b.StartY) <= tolY;
     }
 
     /// <summary>
