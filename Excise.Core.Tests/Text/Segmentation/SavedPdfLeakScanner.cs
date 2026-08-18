@@ -81,6 +81,38 @@ internal static class SavedPdfLeakScanner
     }
 
     /// <summary>
+    /// Every stream body in <paramref name="saved"/>, inflated where possible,
+    /// as Latin-1 text. For assertions about content-stream STRUCTURE — how
+    /// many text-showing operators survive — which is the only instrument left
+    /// when a term is never contiguous in the bytes (one glyph per <c>Tj</c>,
+    /// as #1047's document and fixture emit).
+    /// </summary>
+    public static IReadOnlyList<string> StreamBodies(byte[] saved)
+    {
+        var bodies = new List<string>();
+        var i = 0;
+        while (true)
+        {
+            var start = IndexOf(saved, "stream", i);
+            if (start < 0) break;
+
+            var body = start + "stream".Length;
+            if (body < saved.Length && saved[body] == (byte)'\r') body++;
+            if (body < saved.Length && saved[body] == (byte)'\n') body++;
+
+            var end = IndexOf(saved, "endstream", body);
+            if (end < 0) break;
+
+            var raw = new byte[end - body];
+            Array.Copy(saved, body, raw, 0, raw.Length);
+            bodies.Add(Encoding.Latin1.GetString(TryInflate(raw) ?? raw));
+
+            i = end + "endstream".Length;
+        }
+        return bodies;
+    }
+
+    /// <summary>
     /// Inflate a zlib/deflate stream body, or null when it is not compressed
     /// (already scanned as part of the raw file) or cannot be inflated.
     /// </summary>
