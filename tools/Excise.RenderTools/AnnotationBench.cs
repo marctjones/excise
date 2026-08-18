@@ -50,7 +50,24 @@ partial class Program
         };
         var dpiOption = new Option<int>("--dpi")
         {
-            Description = "Render DPI", DefaultValueFactory = _ => 72,
+            // 150, NOT 72, and this is load-bearing rather than a preference.
+            //
+            // At 72 dpi a 10px tile is 10pt of page, body text is a few pixels
+            // tall and heavily antialiased, and the 5%-of-tile ink threshold
+            // sits right on the edge — so tiles flip between engines for
+            // rasterisation reasons alone. Measured on 160F-2019.pdf, whose 60
+            // widgets all carry an /AP:
+            //
+            //     72 dpi  -> 28.3% agreement, 43 divergent
+            //    150 dpi  -> 100%,             0 divergent
+            //    300 dpi  -> 100%,             0 divergent
+            //
+            // The 72 dpi run read as a large Widget defect. There was none. The
+            // renders are visually identical and all four engines fill those
+            // fields with the same colour, (219,229,239) against (220,230,240).
+            Description = "Render DPI. Below ~150 the measurement is dominated by text antialiasing, "
+                        + "not by annotation ink — see the note in the source.",
+            DefaultValueFactory = _ => 150,
         };
         var maxFilesOption = new Option<int>("--max-files")
         {
