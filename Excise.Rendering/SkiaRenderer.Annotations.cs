@@ -27,6 +27,23 @@ internal partial class RenderContext
 
         foreach (var annot in annots)
         {
+            // §12.5.2 /CA — the annotation's constant opacity, applied to
+            // stroke AND fill, and to a baked /AP appearance stream just as
+            // much as to a synthesized one. It is therefore applied HERE,
+            // wrapping the whole per-annotation draw, rather than inside the
+            // synthesis switch: a fix in the switch would have left every
+            // /AP-bearing annotation opaque, which is most real-world ones.
+            //
+            // A layer rather than per-paint alpha, deliberately. Multiplying
+            // alpha into each paint composites stroke over fill INSIDE the
+            // group, so where a border overlaps its own interior the overlap
+            // reads darker than either — measured on the committed
+            // annotation-property-probe, that is not what mutool or pdftocairo
+            // draw. Compositing the finished annotation once is (§11.6.6, the
+            // same rule an /ExtGState transparency group follows).
+            var opacityLayer = BeginAnnotationOpacityLayer(annot);
+            try
+            {
             // Skip annotations the spec says shouldn't be displayed.
             // Print=4 is fine — that's an opt-in for *also* including
             // the annotation in printed output, not a "screen only" flag.
@@ -229,6 +246,15 @@ internal partial class RenderContext
             finally
             {
                 _canvas.Restore();
+            }
+            }
+            finally
+            {
+                if (opacityLayer != null)
+                {
+                    _canvas.Restore();
+                    opacityLayer.Dispose();
+                }
             }
         }
     }
@@ -1330,7 +1356,11 @@ internal partial class RenderContext
                     case Excise.Core.Document.PdfAnnotationSubtype.Highlight:
                         paint.Style = SKPaintStyle.Fill;
                         paint.BlendMode = SKBlendMode.Multiply;
-                        paint.Color = WithAlpha(baseColor, AnnotationOpacityAlpha(annot));
+                        // NOT WithAlpha(..., AnnotationOpacityAlpha) any more:
+                        // /CA is applied once, by the layer the dispatch loop
+                        // opens (#1072). Applying it here too multiplied it in
+                        // twice, so a Highlight at /CA 0.5 drew at 0.25.
+                        paint.Color = baseColor;
                         // The ends overshoot the quad, and by HOW MUCH is
                         // measured, not chosen (#1004). Every engine that draws
                         // a highlight rounds its ends past the /QuadPoints; the
@@ -1466,6 +1496,24 @@ internal partial class RenderContext
 
     private static SKColor WithAlpha(SKColor color, byte alpha) =>
         new(color.Red, color.Green, color.Blue, alpha);
+
+    /// <summary>
+    /// Start a transparency layer for §12.5.2 <c>/CA</c>, or return null when
+    /// the annotation is fully opaque and no layer is needed. The caller must
+    /// Restore and dispose what it returns.
+    /// </summary>
+    private SKPaint? BeginAnnotationOpacityLayer(Excise.Core.Document.PdfAnnotation annot)
+    {
+        var alpha = AnnotationOpacityAlpha(annot);
+        if (alpha >= 255) return null;
+
+        // The paint must outlive the SaveLayer: Skia composites the layer with
+        // it at RESTORE time, not at save time, so disposing it early would
+        // composite with a dead object.
+        var paint = new SKPaint { Color = new SKColor(0, 0, 0, alpha) };
+        _canvas.SaveLayer(paint);
+        return paint;
+    }
 
     private static byte AnnotationOpacityAlpha(Excise.Core.Document.PdfAnnotation annot)
     {
