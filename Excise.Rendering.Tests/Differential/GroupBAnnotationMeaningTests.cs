@@ -207,10 +207,19 @@ public class GroupBAnnotationMeaningTests
         using var bmp = Render(doc.GetPage(1), annotations: true);
 
         var scale = Dpi / 72.0;
-        // /Rect [40 40 160 160] on a 200pt page; sample the middle for the
-        // fill and the middle of the top edge for the stroke.
+        // /Rect [40 40 160 160] on a 200pt page, /BS /W 3. Sample the middle
+        // for the fill and the CENTRE OF THE STROKE for the border.
+        //
+        // The stroke centre is 1.5pt inside /Rect, not on it: §12.5.6.8 insets
+        // a Square by half its border width so the stroke's OUTER edge lands on
+        // /Rect (#1073). This probe used to sit exactly on /Rect's top edge,
+        // which was the stroke centre only while excise stroked CENTRED — the
+        // very defect #1073 fixed. Sampling the boundary picked up partial
+        // coverage and read 0x54 red against a < 0x50 bound.
+        const double borderWidth = 3.0;
         var centre = bmp.GetPixel((int)(100 * scale), (int)((200 - 100) * scale));
-        var edge = bmp.GetPixel((int)(100 * scale), (int)((200 - 160) * scale));
+        var edge = bmp.GetPixel(
+            (int)(100 * scale), (int)((200 - 160 + borderWidth / 2) * scale));
 
         centre.Red.Should().BeGreaterThan(180, "/IC [1 0 0] must fill the interior red");
         centre.Blue.Should().BeLessThan(80, "the interior must not be the BORDER colour");
