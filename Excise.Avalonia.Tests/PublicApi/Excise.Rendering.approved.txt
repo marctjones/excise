@@ -16,8 +16,12 @@ namespace Excise.Rendering
         public SkiaSharp.SKColor BackgroundColor { get; init; }
         public SkiaSharp.SKRect? ClipRect { get; init; }
         public int Dpi { get; init; }
+        public bool HighlightFormFields { get; init; }
         public long MaxPixelCount { get; init; }
         public bool RenderAnnotations { get; init; }
+        public bool RevealHiddenAnnotations { get; init; }
+        public bool ShowCommentAnnotations { get; init; }
+        public bool ShowFieldAndLinkAnnotations { get; init; }
     }
     public sealed class RenderResourceLimitException : System.InvalidOperationException
     {

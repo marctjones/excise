@@ -30,10 +30,31 @@ internal partial class RenderContext
             // Skip annotations the spec says shouldn't be displayed.
             // Print=4 is fine — that's an opt-in for *also* including
             // the annotation in printed output, not a "screen only" flag.
+            // #1021: two visibility groups. Field VALUES are page content a
+            // reviewer must see; review markup is clutter they may want gone.
+            // The split is by subtype and nothing else — a Widget or Link is
+            // "fields and links", everything else is a comment.
+            var isFieldOrLink =
+                annot.Subtype == Excise.Core.Document.PdfAnnotationSubtype.Widget ||
+                annot.Subtype == Excise.Core.Document.PdfAnnotationSubtype.Link;
+            if (isFieldOrLink && !_options.ShowFieldAndLinkAnnotations) continue;
+            if (!isFieldOrLink && !_options.ShowCommentAnnotations) continue;
+
             var f = annot.Flags;
             if ((f & (Excise.Core.Document.PdfAnnotationFlags.Hidden
-                    | Excise.Core.Document.PdfAnnotationFlags.NoView)) != 0)
+                    | Excise.Core.Document.PdfAnnotationFlags.NoView)) != 0
+                && !_options.RevealHiddenAnnotations)
                 continue;
+
+            // #1021: the fillable-field tint, Acrobat's "Highlight Existing
+            // Fields". Drawn UNDER the field's own appearance so it never
+            // obscures a value, and only when asked — see the warning on
+            // RenderOptions.HighlightFormFields about export paths.
+            if (isFieldOrLink && _options.HighlightFormFields &&
+                annot.Subtype == Excise.Core.Document.PdfAnnotationSubtype.Widget)
+            {
+                DrawFieldHighlight(annot);
+            }
 
             // Invisible (bit 1) is NARROWER than its name, and reading it as
             // "never draw" is wrong. §12.5.3 Table 165:
@@ -223,6 +244,37 @@ internal partial class RenderContext
     /// </list>
     /// Returns null when no usable appearance is present.
     /// </summary>
+    /// <summary>
+    /// VIEWER CHROME, never page content (#1021). A translucent tint over a
+    /// form field's <c>/Rect</c> so a user can see what is fillable.
+    /// </summary>
+    /// <remarks>
+    /// Translucent and drawn UNDER the field's own appearance, so a filled
+    /// value stays legible — the point is to show where the fields ARE, not to
+    /// repaint them. Nothing in the file asks for this, which is exactly why it
+    /// is off by default and must never be enabled on an export path.
+    /// </remarks>
+    private void DrawFieldHighlight(Excise.Core.Document.PdfAnnotation annot)
+    {
+        float x1 = (float)Math.Min(annot.Rect.Left, annot.Rect.Right);
+        float y1 = (float)Math.Min(annot.Rect.Bottom, annot.Rect.Top);
+        float x2 = (float)Math.Max(annot.Rect.Left, annot.Rect.Right);
+        float y2 = (float)Math.Max(annot.Rect.Bottom, annot.Rect.Top);
+        if (x2 <= x1 || y2 <= y1) return;
+
+        // PDF-space coordinates: the canvas already carries the page transform,
+        // which is why RenderDefaultAppearance draws with raw /Rect values too.
+        var rect = new SKRect(x1, y1, x2, y2);
+        using var paint = new SKPaint
+        {
+            IsAntialias = _options.AntiAlias,
+            Style = SKPaintStyle.Fill,
+            // Acrobat's field highlight is a pale blue at low opacity.
+            Color = new SKColor(0x33, 0x66, 0xCC, 0x30),
+        };
+        _canvas.DrawRect(rect, paint);
+    }
+
     private Excise.Core.Primitives.PdfStream? ResolveAppearanceN(Excise.Core.Document.PdfAnnotation annot)
     {
         var apObj = annot.RawDictionary.GetOptional("AP");
