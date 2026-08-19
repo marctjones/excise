@@ -155,9 +155,33 @@ public class FreeTextContentSynthesisTests : IDisposable
             "which is the half of #1070 that is fixable without shaping");
     }
 
+    /// <summary>
+    /// A STATED border width of 0 means no border (§12.5.4 — /Border is
+    /// [h v w]). Only an ABSENT width defaults to 1.
+    ///
+    /// <para>Caught by the annotation bench rather than by reasoning: on pdf.js
+    /// <c>bug1871353.pdf</c>, whose FreeText carries <c>/Border [0 0 0]</c> and
+    /// no <c>/C</c>, the oracle majority inks 6 tiles — its two glyphs and
+    /// nothing else — where excise inked 34, of which 31 were extra. Drawing a
+    /// box the file explicitly declined is the same class of error as not
+    /// drawing text it asked for, just in the other direction.</para>
+    /// </summary>
+    [Fact]
+    public void AStatedZeroBorderWidth_DrawsNoBorder()
+    {
+        var zero = InkPixels(RenderWithExcise(WriteTemp(
+            FreeTextPdf(withDa: true, withColor: false, border: "/Border [0 0 0]"))));
+        var absent = InkPixels(RenderWithExcise(WriteTemp(
+            FreeTextPdf(withDa: true, withColor: false))));
+
+        zero.Should().BeLessThan(absent,
+            "/Border [0 0 0] states a width of zero; only an omitted width defaults to 1");
+    }
+
     // ── fixtures ─────────────────────────────────────────────────────────────
 
-    private static byte[] FreeTextPdf(bool withDa, bool withColor, string? contents = null)
+    private static byte[] FreeTextPdf(
+        bool withDa, bool withColor, string? contents = null, string border = "")
     {
         var text = contents == null
             ? $"({Note})"
@@ -167,7 +191,8 @@ public class FreeTextContentSynthesisTests : IDisposable
         var annot = "<< /Type /Annot /Subtype /FreeText /F 4 /Rect [20 120 180 175] " +
                     $"/Contents {text}" +
                     (withColor ? " /C [0.95 0.95 0.8]" : "") +
-                    (withDa ? " /DA (0 0 1 rg /Helv 14 Tf)" : "") + " >>";
+                    (withDa ? " /DA (0 0 1 rg /Helv 14 Tf)" : "") +
+                    (border.Length > 0 ? " " + border : "") + " >>";
         return Assemble(new[]
         {
             "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n",
@@ -202,6 +227,18 @@ public class FreeTextContentSynthesisTests : IDisposable
     }
 
     private static bool IsBlue(SKColor c) => c.Blue > 140 && c.Red < 120 && c.Green < 120;
+
+    private static int InkPixels(SKBitmap bmp)
+    {
+        int n = 0;
+        for (int y = 0; y < bmp.Height; y++)
+            for (int x = 0; x < bmp.Width; x++)
+            {
+                var c = bmp.GetPixel(x, y);
+                if (c.Red < 240 || c.Green < 240 || c.Blue < 240) n++;
+            }
+        return n;
+    }
 
     private static int BluePixels(SKBitmap bmp)
     {

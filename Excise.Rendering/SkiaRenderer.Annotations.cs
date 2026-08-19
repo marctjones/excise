@@ -950,7 +950,15 @@ internal partial class RenderContext
     /// </summary>
     private void RenderFreeTextDefault(Excise.Core.Document.PdfAnnotation annot, SKRect rect)
     {
-        float borderWidth = (float)(annot.BorderWidth ?? 1.0);
+        // A STATED width of 0 means no border (§12.5.4: /Border is [h v w], and
+        // w is the width). Forcing it to 1 drew a box the file explicitly
+        // declined — measured on pdf.js bug1871353.pdf, whose FreeText carries
+        // /Border [0 0 0] and no /C: the oracle majority inks 6 tiles (its two
+        // glyphs and nothing else) where excise inked 34, 31 of them extra.
+        // Only an ABSENT width defaults to 1.
+        var statedWidth = annot.BorderWidth;
+        var drawBorder = statedWidth is null || statedWidth.Value > 0;
+        float borderWidth = drawBorder ? (float)(statedWidth ?? 1.0) : 0f;
         if (borderWidth <= 0) borderWidth = 1.0f;
 
         // For a FreeText, /C is the BACKGROUND (§12.5.6.6) — unlike most
@@ -971,7 +979,7 @@ internal partial class RenderContext
             // oracles draw neither border nor text — so a /C-only annotation
             // stays a plain filled rectangle, and one with no /C at all still
             // gets an outline so it is not invisible.
-            if (annot.Color is null)
+            if (annot.Color is null && drawBorder)
             {
                 paint.Style = SKPaintStyle.Stroke;
                 paint.StrokeWidth = borderWidth;
@@ -982,10 +990,13 @@ internal partial class RenderContext
         }
 
         // Border, in the /DA colour — measured, see the table above.
-        paint.Style = SKPaintStyle.Stroke;
-        paint.StrokeWidth = borderWidth;
-        paint.Color = DefaultAppearanceColor(da!) ?? SKColors.Black;
-        _canvas.DrawRect(rect, paint);
+        if (drawBorder)
+        {
+            paint.Style = SKPaintStyle.Stroke;
+            paint.StrokeWidth = borderWidth;
+            paint.Color = DefaultAppearanceColor(da!) ?? SKColors.Black;
+            _canvas.DrawRect(rect, paint);
+        }
 
         var contents = annot.RawDictionary.GetStringOrNull("Contents");
         if (string.IsNullOrEmpty(contents)) return;
