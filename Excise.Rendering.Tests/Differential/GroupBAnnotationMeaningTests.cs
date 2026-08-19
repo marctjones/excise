@@ -239,6 +239,41 @@ public class GroupBAnnotationMeaningTests
         centre.Blue.Should().BeLessThan(80, "the interior must be GREEN, not merely bright");
     }
 
+    // ------------------------------------------- UNSTATED COLOUR: FOLLOW MUTOOL
+
+    /// <summary>
+    /// Project decision, 2026-08-18: where the file states no colour and the
+    /// engines differ, excise takes <b>mutool's</b>. §12.5.6.10 gives no default
+    /// for a markup annotation with no <c>/C</c>, so whatever excise drew there
+    /// was its own invention — and "the usual highlighter yellow" was an
+    /// invention no other engine shares.
+    ///
+    /// <para>Measured on a <c>/Highlight</c> with no <c>/C</c> at 150 dpi:
+    /// excise drew <c>(255,255,0)</c> ×16848 where mutool drew <c>(0,0,0)</c>
+    /// ×16397 and pdftocairo <c>(0,0,0)</c> ×16438 — identical geometry, and the
+    /// colour was the whole difference.</para>
+    ///
+    /// <para>⚠️ Nothing asserted the yellow. Changing it broke no test, which is
+    /// why this exists: an invented default that no gate pins can drift back in
+    /// as easily as it drifted in.</para>
+    /// </summary>
+    [Fact]
+    public void AMarkupAnnotationWithNoColour_UsesMutoolsChoiceNotAnInventedOne()
+    {
+        var pdf = BuildSquare("/Subtype /Highlight /F 4 /Rect [40 90 160 120] " +
+                              "/QuadPoints [40 120 160 120 40 90 160 90]")
+                  .ToArray();
+
+        using var doc = PdfDocument.Open(pdf);
+        using var bmp = Render(doc.GetPage(1), annotations: true);
+
+        var scale = Dpi / 72.0;
+        var inside = bmp.GetPixel((int)(100 * scale), (int)((200 - 105) * scale));
+
+        inside.Red.Should().BeLessThan(80, "an uncoloured markup annotation follows mutool: black");
+        inside.Green.Should().BeLessThan(80, "not the highlighter yellow excise used to invent");
+    }
+
     // ------------------------------------------------------ NO INVENTED INK
 
     [Theory]
@@ -446,7 +481,7 @@ public class GroupBAnnotationMeaningTests
             "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n",
             "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 /MediaBox [0 0 200 200] >>\nendobj\n",
             "3 0 obj\n<< /Type /Page /Parent 2 0 R /Annots [4 0 R] >>\nendobj\n",
-            $"4 0 obj\n<< /Type /Annot /Subtype /Square {annotBody} >>\nendobj\n",
+            $"4 0 obj\n<< /Type /Annot {(annotBody.Contains("/Subtype") ? "" : "/Subtype /Square ")}{annotBody} >>\nendobj\n",
         };
         var sb = new StringBuilder("%PDF-1.7\n");
         var offs = new List<int>();
