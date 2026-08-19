@@ -1080,24 +1080,33 @@ internal partial class RenderContext
     }
 
     /// <summary>
-    /// Sticky-note icon for a /Text annotation with no /AP (§12.5.6.4).
+    /// Sticky-note icon for a /Text annotation with no /AP (§12.5.6.4),
+    /// selected by <c>/Name</c>.
     /// </summary>
     /// <remarks>
-    /// All three reference renderers draw one, which is what makes this a
-    /// defect rather than a matter of taste — measured at 150 dpi on veraPDF
-    /// 6-3-3-t01-pass-a.pdf: mutool 495 inked px, pdftocairo 917, Ghostscript
-    /// 1388, excise 0.
+    /// All three reference renderers draw a marker, which is what made the
+    /// absence a defect rather than a matter of taste — measured at 150 dpi on
+    /// veraPDF 6-3-3-t01-pass-a.pdf: mutool 495 inked px, pdftocairo 917,
+    /// Ghostscript 1388, excise 0.
     ///
-    /// They emphatically do NOT agree on the ARTWORK: mutool draws black
-    /// strokes, pdftocairo a grey-green (186,189,182) fill, Ghostscript grey
-    /// plus black. So no attempt is made to reproduce any one of them. What
-    /// they agree on — and all this draws — is that a ~16pt marker appears at
-    /// the annotation's anchor point.
+    /// <para>They emphatically do NOT agree on the ARTWORK: mutool draws black
+    /// strokes, pdftocairo a grey-green fill, Ghostscript grey plus black. The
+    /// spec names the icon (§12.5.6.4 Table 172) and says nothing about how it
+    /// is drawn. So these are excise's own glyphs, deliberately, and the gate
+    /// asserts they are DISTINCT from one another rather than that they match
+    /// anybody — a pixel comparison against mutool would be asserting a house
+    /// style we did not choose and do not want.</para>
     ///
-    /// That is the property that matters here: excise is a redaction tool, and
-    /// a note the reviewer never sees is a note they cannot decide about, while
-    /// its /Contents still ships to the recipient. Showing THAT one is present
-    /// is the job; reproducing Acrobat's icon is not.
+    /// <para>#1071: every <c>/Name</c> previously drew the same two-bar glyph,
+    /// so a Help marker and an Insert marker were indistinguishable on the
+    /// page. The icon is the ONLY thing a /Text annotation draws, so that was
+    /// the whole of its visible meaning.</para>
+    ///
+    /// <para>Geometry is expressed in a 0..1 box via <c>P(u, v)</c> with v
+    /// measured from the icon's VISUAL TOP, so every glyph scales with the
+    /// 17pt marker and stays crisp at any DPI. Note the canvas here is Y-UP —
+    /// <c>rect.Top</c> is the visually LOW edge — which is why v is subtracted
+    /// from <c>rect.Bottom</c>.</para>
     /// </remarks>
     private void RenderStickyNoteDefault(Excise.Core.Document.PdfAnnotation annot, SKRect rect)
     {
@@ -1111,24 +1120,138 @@ internal partial class RenderContext
             Style = SKPaintStyle.Fill,
             Color = fill,
         };
-        using var border = new SKPaint
+        using var ink = new SKPaint
         {
             IsAntialias = _options.AntiAlias,
             Style = SKPaintStyle.Stroke,
-            StrokeWidth = 1f,
+            StrokeWidth = Math.Max(1f, rect.Width * 0.07f),
+            StrokeCap = SKStrokeCap.Round,
+            StrokeJoin = SKStrokeJoin.Round,
+            Color = SKColors.Black,
+        };
+        using var inkFill = new SKPaint
+        {
+            IsAntialias = _options.AntiAlias,
+            Style = SKPaintStyle.Fill,
             Color = SKColors.Black,
         };
 
         var round = new SKRoundRect(rect, rect.Width * 0.15f, rect.Height * 0.15f);
         _canvas.DrawRoundRect(round, body);
-        _canvas.DrawRoundRect(round, border);
+        using (var outline = new SKPaint
+               {
+                   IsAntialias = _options.AntiAlias,
+                   Style = SKPaintStyle.Stroke,
+                   StrokeWidth = 1f,
+                   Color = SKColors.Black,
+               })
+        {
+            _canvas.DrawRoundRect(round, outline);
+        }
 
-        // Two rules, so the marker reads as a note rather than a plain swatch.
-        float inset = rect.Width * 0.22f;
-        float y1 = rect.Top + rect.Height * 0.38f;
-        float y2 = rect.Top + rect.Height * 0.60f;
-        _canvas.DrawLine(rect.Left + inset, y1, rect.Right - inset, y1, border);
-        _canvas.DrawLine(rect.Left + inset, y2, rect.Right - inset, y2, border);
+        SKPoint P(float u, float v) =>
+            new(rect.Left + u * rect.Width, rect.Bottom - v * rect.Height);
+
+        void Line(float u1, float v1, float u2, float v2) =>
+            _canvas.DrawLine(P(u1, v1), P(u2, v2), ink);
+
+        // §12.5.6.4 Table 172. An absent or unrecognised /Name is /Note, which
+        // the spec names as the default — so the switch falls through to it
+        // rather than drawing nothing.
+        //
+        // IconName is /Name. PdfAnnotation.Name is /NM, the annotation's
+        // IDENTIFIER — a different key that happens to read like this one, and
+        // which its own docstring warns against confusing. Switching on it drew
+        // the default glyph for all seven names and looked exactly like the bug
+        // being fixed.
+        switch (annot.IconName)
+        {
+            case "Comment":
+                // Speech bubble: rounded body plus a tail at the lower left.
+                using (var bubble = new SKPath())
+                {
+                    var b = new SKRect(P(0.18f, 0.60f).X, P(0.18f, 0.60f).Y,
+                                       P(0.82f, 0.26f).X, P(0.82f, 0.26f).Y);
+                    b = SKRect.Create(Math.Min(b.Left, b.Right), Math.Min(b.Top, b.Bottom),
+                                      Math.Abs(b.Width), Math.Abs(b.Height));
+                    bubble.AddRoundRect(new SKRoundRect(b, rect.Width * 0.10f));
+                    _canvas.DrawPath(bubble, ink);
+                }
+                using (var tail = new SKPath())
+                {
+                    tail.MoveTo(P(0.34f, 0.58f));
+                    tail.LineTo(P(0.30f, 0.80f));
+                    tail.LineTo(P(0.52f, 0.58f));
+                    tail.Close();
+                    _canvas.DrawPath(tail, inkFill);
+                }
+                break;
+
+            case "Help":
+                // Question mark: a hook over a separate dot.
+                using (var hook = new SKPath())
+                {
+                    hook.MoveTo(P(0.34f, 0.38f));
+                    hook.CubicTo(P(0.36f, 0.20f), P(0.68f, 0.20f), P(0.64f, 0.40f));
+                    hook.CubicTo(P(0.62f, 0.50f), P(0.50f, 0.50f), P(0.50f, 0.62f));
+                    _canvas.DrawPath(hook, ink);
+                }
+                _canvas.DrawCircle(P(0.50f, 0.76f), rect.Width * 0.055f, inkFill);
+                break;
+
+            case "Key":
+                // Key: ring bow on the left, shaft right, two teeth down.
+                _canvas.DrawCircle(P(0.32f, 0.46f), rect.Width * 0.13f, ink);
+                Line(0.45f, 0.46f, 0.80f, 0.46f);
+                Line(0.64f, 0.46f, 0.64f, 0.62f);
+                Line(0.76f, 0.46f, 0.76f, 0.60f);
+                break;
+
+            case "Insert":
+                // Proofreader's insertion caret, with the stem that
+                // distinguishes it from a plain chevron.
+                Line(0.26f, 0.70f, 0.50f, 0.36f);
+                Line(0.50f, 0.36f, 0.74f, 0.70f);
+                Line(0.50f, 0.36f, 0.50f, 0.22f);
+                break;
+
+            case "Paragraph":
+                // Pilcrow: filled bowl, two descending stems.
+                using (var bowl = new SKPath())
+                {
+                    var b = new SKRect(P(0.30f, 0.50f).X, P(0.30f, 0.50f).Y,
+                                       P(0.62f, 0.22f).X, P(0.62f, 0.22f).Y);
+                    b = SKRect.Create(Math.Min(b.Left, b.Right), Math.Min(b.Top, b.Bottom),
+                                      Math.Abs(b.Width), Math.Abs(b.Height));
+                    bowl.AddOval(b);
+                    _canvas.DrawPath(bowl, inkFill);
+                }
+                Line(0.56f, 0.22f, 0.56f, 0.80f);
+                Line(0.72f, 0.22f, 0.72f, 0.80f);
+                break;
+
+            case "NewParagraph":
+                // The pilcrow again, under a break rule — "start a new one".
+                Line(0.18f, 0.20f, 0.82f, 0.20f);
+                using (var bowl = new SKPath())
+                {
+                    var b = new SKRect(P(0.32f, 0.62f).X, P(0.32f, 0.62f).Y,
+                                       P(0.60f, 0.36f).X, P(0.60f, 0.36f).Y);
+                    b = SKRect.Create(Math.Min(b.Left, b.Right), Math.Min(b.Top, b.Bottom),
+                                      Math.Abs(b.Width), Math.Abs(b.Height));
+                    bowl.AddOval(b);
+                    _canvas.DrawPath(bowl, inkFill);
+                }
+                Line(0.55f, 0.36f, 0.55f, 0.84f);
+                Line(0.70f, 0.36f, 0.70f, 0.84f);
+                break;
+
+            default: // "Note", absent, or an unrecognised name (§12.5.6.4 default)
+                Line(0.24f, 0.34f, 0.76f, 0.34f);
+                Line(0.24f, 0.50f, 0.76f, 0.50f);
+                Line(0.24f, 0.66f, 0.58f, 0.66f);
+                break;
+        }
     }
 
     private void RenderShapeDefault(
