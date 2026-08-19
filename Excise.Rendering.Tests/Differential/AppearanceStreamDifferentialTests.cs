@@ -222,6 +222,91 @@ public class AppearanceStreamDifferentialTests
         }
     }
 
+    /// <summary>
+    /// #1054 — no <c>/AS</c> and an <c>/AP /N</c> defining SEVERAL appearance
+    /// states. §12.5.5 makes <c>/AS</c> the selector, so without it the
+    /// appearance is simply not determined and nothing is drawn.
+    ///
+    /// <para>Before this, excise returned the first resolvable entry of the
+    /// state dictionary — and <c>PdfDictionary</c> iteration order is not a
+    /// specified property. Measured on one checkbox written two ways, identical
+    /// apart from the order of <c>/On</c> and <c>/Off</c>: excise drew the ON
+    /// state for one and the OFF state for the other. The same bytes could
+    /// render a checkbox ticked or unticked.</para>
+    ///
+    /// <para>Nothing-drawn is also the majority: mutool and Ghostscript draw
+    /// nothing, pdftocairo picks <c>/Off</c>.</para>
+    /// </summary>
+    [Fact]
+    public void NoAppearanceStateSelector_DrawsNothingAndDoesNotDependOnDictionaryOrder()
+    {
+        var onFirst = StateFixture("/On 5 0 R /Off 6 0 R", selector: null);
+        var offFirst = StateFixture("/Off 6 0 R /On 5 0 R", selector: null);
+
+        var a = InkedTiles(RenderBytes(onFirst));
+        var b = InkedTiles(RenderBytes(offFirst));
+
+        a.Should().BeEquivalentTo(b,
+            "the two files differ only in the ORDER of /On and /Off inside /AP /N, " +
+            "which carries no meaning — excise used to render them differently");
+        a.Should().BeEmpty(
+            "§12.5.5 makes /AS the selector; with several states and no /AS the " +
+            "appearance is undetermined, and mutool and Ghostscript draw nothing");
+    }
+
+    [Fact]
+    public void AnAppearanceStateSelector_IsStillHonoured()
+    {
+        // The control. Without it, a renderer that drew NO state-dictionary
+        // appearance at all would pass the test above perfectly.
+        var pdf = StateFixture("/On 5 0 R /Off 6 0 R", selector: "Off");
+        InkedTiles(RenderBytes(pdf)).Should().NotBeEmpty(
+            "/AS names a state that /AP /N defines, so that state must be drawn");
+    }
+
+    /// <summary>A Widget whose /AP /N is a state dictionary; /On paints red, /Off blue.</summary>
+    private static byte[] StateFixture(string states, string? selector)
+    {
+        const string on = "1 0 0 rg 0 0 100 100 re f";
+        const string off = "0 0 1 rg 0 0 100 100 re f";
+        var asEntry = selector == null ? "" : $" /AS /{selector}";
+        var objs = new[]
+        {
+            "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n",
+            $"2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 /MediaBox [0 0 {PageSize} {PageSize}] >>\nendobj\n",
+            "3 0 obj\n<< /Type /Page /Parent 2 0 R /Annots [4 0 R] >>\nendobj\n",
+            $"4 0 obj\n<< /Type /Annot /Subtype /Widget /FT /Btn /T (cb) /F 4 " +
+            $"/Rect [50 50 150 150]{asEntry} /AP << /N << {states} >> >> >>\nendobj\n",
+            $"5 0 obj\n<< /Type /XObject /Subtype /Form /BBox [0 0 100 100] /Length {on.Length} >>\n" +
+            $"stream\n{on}\nendstream\nendobj\n",
+            $"6 0 obj\n<< /Type /XObject /Subtype /Form /BBox [0 0 100 100] /Length {off.Length} >>\n" +
+            $"stream\n{off}\nendstream\nendobj\n",
+        };
+
+        var sb = new StringBuilder("%PDF-1.7\n");
+        var offsets = new List<int>();
+        foreach (var o in objs) { offsets.Add(sb.Length); sb.Append(o); }
+        var xref = sb.Length;
+        sb.Append("xref\n0 ").Append(objs.Length + 1).Append("\n0000000000 65535 f \n");
+        foreach (var o in offsets)
+            sb.Append(o.ToString("D10", CultureInfo.InvariantCulture)).Append(" 00000 n \n");
+        sb.Append("trailer\n<< /Size ").Append(objs.Length + 1)
+          .Append(" /Root 1 0 R >>\nstartxref\n").Append(xref).Append("\n%%EOF");
+        return Encoding.Latin1.GetBytes(sb.ToString());
+    }
+
+    private static SKBitmap RenderBytes(byte[] pdf)
+    {
+        using var doc = PdfDocument.Open(pdf);
+        var b = new SkiaRenderer().RenderPage(doc.GetPage(1), new RenderOptions
+        {
+            Dpi = Dpi,
+            RenderAnnotations = true,
+        });
+        b.Should().NotBeNull();
+        return b!;
+    }
+
     private static string Describe(HashSet<(int X, int Y)> tiles)
     {
         if (tiles.Count == 0) return "(none)";
