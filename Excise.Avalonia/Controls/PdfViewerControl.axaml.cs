@@ -1029,6 +1029,22 @@ public partial class PdfViewerControl : UserControl
         AddHandler(PointerPressedEvent, OnInteractionLayerPointerPressed,
             global::Avalonia.Interactivity.RoutingStrategies.Bubble,
             handledEventsToo: true);
+        // Leaving the control must clear hover feedback. The move handler
+        // cannot do it — it only runs while the pointer is INSIDE — so without
+        // this the status bar keeps describing something the pointer is nowhere
+        // near. Affected link hover (#625) from the start; annotation hover
+        // (#1074) inherited it.
+        //
+        // ⚠️ DIRECT, not Tunnel|Bubble. PointerExited and PointerEntered are
+        // registered RoutingStrategies.Direct in Avalonia (verified against
+        // InputElement.PointerExitedEvent.RoutingStrategies, which reports
+        // Direct where PointerMoved reports Tunnel, Bubble). A Tunnel|Bubble
+        // registration here never fires at all — which it did not, and the
+        // silence was misread as "headless does not raise the event" and cost
+        // this fix a round trip (#1075).
+        AddHandler(PointerExitedEvent, OnViewerPointerExited,
+            global::Avalonia.Interactivity.RoutingStrategies.Direct,
+            handledEventsToo: true);
         AddHandler(PointerMovedEvent, OnInteractionLayerPointerMoved,
             global::Avalonia.Interactivity.RoutingStrategies.Bubble,
             handledEventsToo: true);

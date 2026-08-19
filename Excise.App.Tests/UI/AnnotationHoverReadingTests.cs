@@ -221,6 +221,39 @@ public class AnnotationHoverReadingTests : IDisposable
             .FirstOrDefault()
         ?? viewer;
 
+    /// <summary>
+    /// Leaving the CONTROL clears it too (#1075). The move handler cannot
+    /// notice — it only runs while the pointer is inside.
+    ///
+    /// <para>This shipped a round trip late. The handler was written, saw ZERO
+    /// calls, and I concluded headless Avalonia does not raise PointerExited.
+    /// It does; the handler was registered Tunnel|Bubble, and PointerExited is
+    /// registered <c>RoutingStrategies.Direct</c> — so it could never have
+    /// fired, on any platform, headless or not. Verified by reading
+    /// <c>InputElement.PointerExitedEvent.RoutingStrategies</c>, which reports
+    /// Direct where PointerMoved reports Tunnel, Bubble.</para>
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task LeavingTheViewerEntirely_ClearsTheHoverText()
+    {
+        var (window, vm, viewer) = await OpenWithNote();
+        try
+        {
+            await MoveOverTheNote(window, vm, viewer);
+            vm.HoveredAnnotationInfo.Should().NotBeNull("precondition: the hover must register first");
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+                viewer.RaiseEvent(new PointerEventArgs(
+                    InputElement.PointerExitedEvent, viewer, null!, viewer,
+                    new Point(-5, -5), 0, PointerPointProperties.None, KeyModifiers.None)));
+            window.UpdateLayout();
+
+            vm.HoveredAnnotationInfo.Should().BeNull(
+                "the pointer has left the page; stale hover text outlives what it describes");
+        }
+        finally { window.Close(); }
+    }
+
     private static async Task Move(Window window, Point p)
     {
         await Dispatcher.UIThread.InvokeAsync(() => window.MouseMove(p));

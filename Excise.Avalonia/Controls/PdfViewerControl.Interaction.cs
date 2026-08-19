@@ -106,6 +106,16 @@ public partial class PdfViewerControl
         e.Handled = true;
     }
 
+    /// <summary>
+    /// Clear hover feedback when the pointer leaves the viewer. See the
+    /// registration site for why this must be registered Direct.
+    /// </summary>
+    private void OnViewerPointerExited(object? sender, PointerEventArgs e)
+    {
+        UpdateLinkHoverState(null);
+        UpdateAnnotationHoverState(null);
+    }
+
     private void OnInteractionLayerPointerMoved(object? sender, PointerEventArgs e)
     {
         if (IsTypewriterOverlayEvent(e))
