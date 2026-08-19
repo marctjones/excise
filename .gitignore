@@ -7,7 +7,7 @@
 # NuGet packages
 *.nupkg
 .nuget/
-packages/
+/packages/
 
 # Visual Studio
 .vs/
@@ -66,38 +66,45 @@ test-pdfs/*
 !test-pdfs/generated-regressions/**
 
 # Publish output
-publish/
+/publish/
 
 # Logs from test runs
-logs/
+/logs/
 
 # Downloaded PDF specifications (large files)
 ISO-32000-*.pdf
 ISO-32000-*.md
 
 # Test output
-test-output/
+/test-output/
 run_output.txt
-output/
+/output/
 
 # Screenshots (temporary debug files)
-screenshots/
+/screenshots/
 
 # Claude Code runtime state
 .claude/scheduled_tasks.lock
 
+# ⚠️ Output-directory patterns below are ANCHORED with a leading slash, on
+# purpose. Unanchored, `coverage/` matches a directory of that name at ANY
+# depth — and it did: Excise.App.Tests/UI/Coverage/ (three new source files)
+# was silently untracked, building fine locally and failing to compile in CI.
+# Anchor anything that names a build/output directory; only patterns that must
+# match per-project (bin/, obj/, TestResults/) stay unanchored.
+# Guarded by scripts/check-no-ignored-sources.sh.
 # Coverage reports and results (generated artifacts, not source)
-coverage-report/
-coverage-results/
+/coverage-report/
+/coverage-results/
 
 # Build artifacts and worktrees
-artifacts/
-coverage/
-dist/
+/artifacts/
+/coverage/
+/dist/
 # Build output from scripts/build-macos-app.sh --output <dir>. Only `dist/`
 # was listed, so an --output dir with any other name (dist-aot/) was tracked
 # and 180 MB of dSYM + native binary got committed before anyone noticed.
-dist-*/
+/dist-*/
 .claude/worktrees/
 .wiki/
 excise.sh
