@@ -184,6 +184,61 @@ public class GroupBAnnotationMeaningTests
             "Hidden/NoView assertions above prove nothing");
     }
 
+    // -------------------------------------------------- STATED COLOUR VALUES
+
+    /// <summary>
+    /// #1055. Group B gives excise latitude over what a synthesized appearance
+    /// LOOKS like. It gives none over values the file states outright: <c>/C</c>
+    /// is the border colour and <c>/IC</c> the interior (§12.5.6.8 Table 178),
+    /// and ignoring one is dropping data, not choosing an aesthetic.
+    ///
+    /// <para>This needs no oracle and deliberately does not use one — the
+    /// question is whether excise used the number in the file, which has one
+    /// right answer. It exists because reverting the <c>/IC</c> fix left the
+    /// entire Group B suite green: every other property here is either
+    /// one-directional (excise must not draw where nobody does) or structural,
+    /// and none of them notices excise drawing LESS than the file asked for.</para>
+    /// </summary>
+    [Fact]
+    public void StatedBorderAndInteriorColours_AreBothUsed()
+    {
+        var pdf = SquareWithColours(interior: "[1 0 0]", border: "[0 0 1]");
+        using var doc = PdfDocument.Open(pdf);
+        using var bmp = Render(doc.GetPage(1), annotations: true);
+
+        var scale = Dpi / 72.0;
+        // /Rect [40 40 160 160] on a 200pt page; sample the middle for the
+        // fill and the middle of the top edge for the stroke.
+        var centre = bmp.GetPixel((int)(100 * scale), (int)((200 - 100) * scale));
+        var edge = bmp.GetPixel((int)(100 * scale), (int)((200 - 160) * scale));
+
+        centre.Red.Should().BeGreaterThan(180, "/IC [1 0 0] must fill the interior red");
+        centre.Blue.Should().BeLessThan(80, "the interior must not be the BORDER colour");
+
+        edge.Blue.Should().BeGreaterThan(180, "/C [0 0 1] must stroke the border blue");
+        edge.Red.Should().BeLessThan(80, "the border must not be the INTERIOR colour");
+    }
+
+    [Fact]
+    public void AnInteriorColourAlone_StillFills()
+    {
+        // A shape may carry /IC and no /C. The border needs /C, so the fill is
+        // the whole appearance — an early-return on a missing /C would drop it.
+        var pdf = SquareWithColours(interior: "[0 1 0]", border: null);
+        using var doc = PdfDocument.Open(pdf);
+        using var bmp = Render(doc.GetPage(1), annotations: true);
+
+        var scale = Dpi / 72.0;
+        var centre = bmp.GetPixel((int)(100 * scale), (int)((200 - 100) * scale));
+
+        // ⚠️ Green > 180 ALONE is satisfied by a white page, so this assertion
+        // passed with the /IC fill reverted. The other two channels are what
+        // make it mean "green" rather than "not black".
+        centre.Green.Should().BeGreaterThan(180, "/IC alone must still paint the interior");
+        centre.Red.Should().BeLessThan(80, "the interior must be GREEN, not merely bright");
+        centre.Blue.Should().BeLessThan(80, "the interior must be GREEN, not merely bright");
+    }
+
     // ------------------------------------------------------ NO INVENTED INK
 
     [Theory]
@@ -373,15 +428,25 @@ public class GroupBAnnotationMeaningTests
         return -1;
     }
 
+    private static byte[] SquareWithColours(string interior, string? border)
+    {
+        var c = border == null ? "" : $" /C {border}";
+        return BuildSquare($"/F 4 /Rect [40 40 160 160]{c} /IC {interior} /BS << /W 3 >>");
+    }
+
     private static byte[] SquareWithFlags(int flags)
+    {
+        return BuildSquare($"/F {flags} /Rect [40 40 160 160] /C [1 0 0] /IC [0 0 1] /BS << /W 3 >>");
+    }
+
+    private static byte[] BuildSquare(string annotBody)
     {
         var objs = new[]
         {
             "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n",
             "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 /MediaBox [0 0 200 200] >>\nendobj\n",
             "3 0 obj\n<< /Type /Page /Parent 2 0 R /Annots [4 0 R] >>\nendobj\n",
-            $"4 0 obj\n<< /Type /Annot /Subtype /Square /F {flags} /Rect [40 40 160 160] " +
-            "/C [1 0 0] /IC [0 0 1] /BS << /W 3 >> >>\nendobj\n",
+            $"4 0 obj\n<< /Type /Annot /Subtype /Square {annotBody} >>\nendobj\n",
         };
         var sb = new StringBuilder("%PDF-1.7\n");
         var offs = new List<int>();

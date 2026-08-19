@@ -81,6 +81,15 @@ public sealed class PdfAnnotation
     /// <summary>Annotation colour (/C — first three components as R,G,B 0-1).</summary>
     public (double R, double G, double B)? Color { get; }
 
+    /// <summary>
+    /// <c>/IC</c> — the INTERIOR colour, §12.5.6.8 Table 178: the fill for a
+    /// Square, Circle, Line ending, Polygon or PolyLine. Distinct from
+    /// <see cref="Color"/>, which is the border. Null when absent, and also
+    /// null for an empty array, which the spec uses to mean "no interior
+    /// colour" rather than black (#1055).
+    /// </summary>
+    public (double R, double G, double B)? InteriorColor { get; }
+
     /// <summary>Annotation flags (/F).</summary>
     public PdfAnnotationFlags Flags { get; }
 
@@ -211,6 +220,7 @@ public sealed class PdfAnnotation
         byte[]? attachmentBytes,
         string? attachmentMimeType,
         double? borderWidth,
+        (double R, double G, double B)? interiorColor,
         string? borderStyle,
         IReadOnlyList<double>? borderDashPattern,
         bool hasAppearance,
@@ -238,6 +248,7 @@ public sealed class PdfAnnotation
         AttachmentBytes     = attachmentBytes;
         AttachmentMimeType  = attachmentMimeType;
         BorderWidth         = borderWidth;
+        InteriorColor       = interiorColor;
         BorderStyle         = borderStyle;
         BorderDashPattern   = borderDashPattern;
         HasAppearance       = hasAppearance;

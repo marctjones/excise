@@ -59,6 +59,7 @@ internal static class PdfAnnotationParser
         var modDate      = ParseDate(annot.GetStringOrNull("M"));
         var creationDate = ParseDate(annot.GetStringOrNull("CreationDate"));
         var color        = ParseColor(doc, annot);
+        var interior     = ParseColorKey(doc, annot, "IC");
         var quadPoints   = ParseQuadPoints(doc, annot);
 
         // Link-specific: destination page + URI
@@ -102,7 +103,7 @@ internal static class PdfAnnotationParser
             quadPoints, destPage, uri, isOpen, iconName,
             lineEndpoints, lineEndings, vertices, inkStrokes,
             attachmentFileName, attachmentBytes, attachmentMimeType,
-            borderWidth, borderStyle, borderDash,
+            borderWidth, interior, borderStyle, borderDash,
             hasAppearance,
             annot);
     }
@@ -239,8 +240,18 @@ internal static class PdfAnnotationParser
     };
 
     private static (double R, double G, double B)? ParseColor(PdfDocument doc, PdfDictionary annot)
+        => ParseColorKey(doc, annot, "C");
+
+    /// <summary>
+    /// A colour-array entry, decoded by component count exactly as §12.5.6.8
+    /// specifies: 1 = gray, 3 = RGB, 4 = CMYK. Zero components means "no
+    /// colour" — for <c>/IC</c> that is an explicit request for a transparent
+    /// interior, which is why an empty array returns null rather than black.
+    /// </summary>
+    private static (double R, double G, double B)? ParseColorKey(
+        PdfDocument doc, PdfDictionary annot, string key)
     {
-        var cObj = annot.GetOptional("C");
+        var cObj = annot.GetOptional(key);
         if (cObj == null) return null;
         if (doc.Resolve(cObj) is not PdfArray arr) return null;
 
