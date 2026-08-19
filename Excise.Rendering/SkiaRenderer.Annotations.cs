@@ -1129,28 +1129,34 @@ internal partial class RenderContext
             return RgbToColor(r, g, b);
         }
 
-        // BLACK for every markup subtype, Highlight included.
+        // YELLOW for Highlight, black for the rest — and this is a DELIBERATE
+        // divergence from mutool and pdftocairo, both of which paint an
+        // uncoloured Highlight black.
         //
-        // THE RULE, and it is not "copy mutool": when the file prescribes no
-        // colour, paint with the INITIAL GRAPHICS STATE colour. §8.6.8 makes
-        // that DeviceGray 0 — black. A renderer synthesizing an appearance
-        // simply does not set a colour, so it gets the default one.
+        // §12.5.6.10 defines Highlight as markup that "shall appear as
+        // highlights" over text. §12.5.5 leaves the appearance unspecified when
+        // there is no /AP, so nothing here is prescribed — but a BLACK
+        // highlight is not an under-specified highlight, it is the opposite of
+        // one: it hides the very text it exists to draw attention to.
         //
-        // That is why mutool, pdftocairo and excise's own FreeText and Link
-        // paths all land on black without agreeing to: none of them chose it.
-        // excise's markup path did choose — "the usual highlighter yellow" —
-        // and a chosen default is an invented one.
+        // Rendered over three lines of body text, mutool's uncoloured Highlight
+        // is indistinguishable from a redaction bar. For a tool whose entire
+        // purpose is redaction, showing a reviewer a black bar over text that
+        // has NOT been redacted is the most dangerous thing this renderer could
+        // do — it invites exactly the wrong conclusion about what the document
+        // still contains.
         //
-        // Measured on a /Highlight with no /C, same fixture, 150 dpi:
-        //     excise      (255,255,0) x16848
-        //     mutool      (0,0,0)     x16397
-        //     pdftocairo  (0,0,0)     x16438
-        //
-        // Identical geometry, ~450px apart on a 17,000px shape — the ONLY
-        // difference was the colour excise invented. Project decision
-        // 2026-08-18: where the file states no colour and the engines differ,
-        // take mutool's.
-        return SKColors.Black;
+        // An earlier version of this took mutool's black on the reasoning that
+        // an unstated colour means the initial graphics state (§8.6.8,
+        // DeviceGray 0). That was a description of what mutool does dressed up
+        // as a rule; the spec does not say a Highlight defaults to black. Where
+        // the spec is silent, excise picks the reading that serves the reader,
+        // and #1015's "do not elect a renderer" cuts the same way: copying an
+        // engine here would import a behaviour that is actively harmful in this
+        // context.
+        return annot.Subtype == Excise.Core.Document.PdfAnnotationSubtype.Highlight
+            ? new SKColor(255, 255, 0)
+            : SKColors.Black;
     }
 
     private static SKColor WithAlpha(SKColor color, byte alpha) =>
