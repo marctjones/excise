@@ -322,7 +322,21 @@ run_t1() {
     # worth more than keeping the estimate accurate everywhere, and #646's
     # original ~10m figure was already a rough one.
     run_step "skip-budget-rendering" scripts/check-skip-budget.sh Excise.Rendering.Tests/Excise.Rendering.Tests.csproj
+    # Clear the GUI-coverage artifacts BEFORE the run that produces them. They
+    # are append-only (so a killed run still leaves the partial truth), which
+    # means a stale file would keep reporting an element as covered by a test
+    # that has since been deleted — a green built out of last week's evidence.
+    # Same direction as the runner's checkpoint rule: fail toward re-measuring.
+    rm -f artifacts/gui-coverage/gui-interaction-observed.tsv \
+          artifacts/gui-coverage/gui-interaction-inventory.tsv \
+          artifacts/gui-coverage/gui-command-executed.tsv
     run_step "skip-budget-app" scripts/check-skip-budget.sh Excise.App.Tests/Excise.App.Tests.csproj
+    # GUI interaction coverage. Reads the artifacts the FULL Excise.App.Tests run
+    # immediately above already produced, so it adds no test time — it only
+    # judges what that run recorded. It must stay AFTER skip-budget-app for that
+    # reason: on its own it has nothing to read and fails loudly rather than
+    # skipping.
+    run_step "gui-interaction-coverage" scripts/check-gui-interaction-coverage.sh
 }
 
 case "$TIER" in

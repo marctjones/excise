@@ -27,7 +27,17 @@ public class TestAppBuilder
         // throws a cross-thread InvalidOperation exception during/after the
         // test. (Issue #358)
         .AfterSetup(_ =>
-            RxSchedulers.MainThreadScheduler = Excise.App.Threading.AvaloniaDispatcherScheduler.Instance)
+        {
+            RxSchedulers.MainThreadScheduler = Excise.App.Threading.AvaloniaDispatcherScheduler.Instance;
+
+            // Record every synthetic pointer/key event raised anywhere in the
+            // assembly, so GUI interaction coverage is MEASURED rather than
+            // declared. Installed here because every [FixedAvaloniaFact] passes
+            // through this builder: an opt-in hook would under-report by exactly
+            // the tests whose authors never heard of the gate.
+            // See Excise.App.Tests/UI/Coverage/GuiInteractionRecorder.cs.
+            Excise.App.Tests.UI.InteractionCoverage.GuiInteractionRecorder.Install();
+        })
         .UseHeadless(new AvaloniaHeadlessPlatformOptions
         {
             // Route drawing through the real Skia backend so that Bitmap(stream)
