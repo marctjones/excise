@@ -806,31 +806,51 @@ internal partial class RenderContext
     /// fall back here.
     /// </summary>
     /// <summary>
-    /// Minimum-viable appearance for a /FreeText note that ships no /AP
-    /// (§12.5.6.6). FreeText had no case at all, so these pages came out
-    /// blank while both reference renderers drew them.
+    /// Appearance for a /FreeText note that ships no /AP (§12.5.6.6).
     ///
-    /// Measured, rather than assumed, on the corpus fixtures:
+    /// <para>⚠️ This method used to draw the BOX ONLY and deliberately skip the
+    /// note's text, on the reasoning that "the oracles disagree sharply about
+    /// it ... so there is no agreed answer to copy". That measurement was real
+    /// but OVER-GENERALISED from two fixtures. Re-measured across three cases,
+    /// the oracles agree in two of them and only diverge in the third:</para>
     ///
-    ///   pdfium freetext_annotation_without_da.pdf  (/C present, /Rect 50x25)
-    ///       mutool 1250 px, pdftocairo 1250 px — exactly the whole rectangle,
-    ///       i.e. both FILL it with /C.
-    ///   pdf.js bug1865341.pdf                      (no /C, /DA present)
-    ///       mutool 212, pdftocairo 161 — an outline, not a fill.
+    /// <list type="number">
+    ///   <item><b>No /DA</b> — pdfium <c>freetext_annotation_without_da.pdf</c>
+    ///     (/C present, /Rect 50x25): mutool 1250 px, pdftocairo 1250 px, i.e.
+    ///     exactly the whole rectangle. Both FILL with /C and draw neither
+    ///     border nor text. Unchanged here.</item>
+    ///   <item><b>Simple /DA + single-line /Contents</b> — the checked-in
+    ///     <c>annotation-property-probe</c> / <c>visible-annotation-demo</c>
+    ///     fixtures: both oracles fill with /C, STROKE A BORDER IN THE /DA
+    ///     COLOUR, and draw the text. Sampled at 200 dpi, the border is exactly
+    ///     (0,0,255) for <c>/DA (0 0 1 rg ...)</c> and the interior exactly
+    ///     (242,242,204) for <c>/C [0.95 0.95 0.8]</c> in BOTH. That is an
+    ///     agreement, and this method now follows it.</item>
+    ///   <item><b>Multi-line / complex script</b> — pdf.js
+    ///     <c>freetext_no_appearance.pdf</c> (multi-line RTL Arabic in a
+    ///     UTF-16BE /Contents): mutool 6067 px, pdftocairo 24. THIS is where
+    ///     there is no answer to copy, and it is deliberately not chased —
+    ///     a best-effort single line is drawn and clipped.</item>
+    /// </list>
     ///
-    /// So: fill with /C when the annotation supplies one, otherwise outline.
-    /// The note's TEXT is deliberately not laid out here — that needs full /DA
-    /// + /RC variable-text handling, and the oracles disagree sharply about it
-    /// (on freetext_no_appearance.pdf mutool inks 6067 px and pdftocairo 24),
-    /// so there is no agreed answer to copy. Showing the reviewer that an
-    /// annotation is THERE is the property that matters for redaction; what it
-    /// says is already reachable through /Contents.
+    /// <para>Why it matters that the text appears at all: a FreeText is the one
+    /// markup subtype whose content is meant to be legible on the page without
+    /// opening a popup. Drawing the box and not the text renders it as an empty
+    /// coloured rectangle — the reader can see something is there and cannot
+    /// read it, which is worse than not drawing it (#1070).</para>
+    ///
+    /// <para>The text goes through <see cref="RenderTextFieldValue"/> — the same
+    /// /DA execution, font resolution, §12.7.4.3 auto-size, /Q alignment and
+    /// /Rect clipping the widget path already uses — with the AcroForm /DA
+    /// fallback turned OFF, because a FreeText's /DA is its own (§12.5.6.6).</para>
     /// </summary>
     private void RenderFreeTextDefault(Excise.Core.Document.PdfAnnotation annot, SKRect rect)
     {
         float borderWidth = (float)(annot.BorderWidth ?? 1.0);
         if (borderWidth <= 0) borderWidth = 1.0f;
 
+        // For a FreeText, /C is the BACKGROUND (§12.5.6.6) — unlike most
+        // subtypes, where it is the border colour.
         using var paint = new SKPaint { IsAntialias = _options.AntiAlias };
         if (annot.Color is { } color)
         {
@@ -838,13 +858,92 @@ internal partial class RenderContext
             paint.Style = SKPaintStyle.Fill;
             paint.Color = RgbToColor(r, g, b);
             _canvas.DrawRect(rect, paint);
+        }
+
+        var da = annot.RawDictionary.GetStringOrNull("DA");
+        if (string.IsNullOrWhiteSpace(da))
+        {
+            // Case 1. With no /DA there is nothing to style text with and both
+            // oracles draw neither border nor text — so a /C-only annotation
+            // stays a plain filled rectangle, and one with no /C at all still
+            // gets an outline so it is not invisible.
+            if (annot.Color is null)
+            {
+                paint.Style = SKPaintStyle.Stroke;
+                paint.StrokeWidth = borderWidth;
+                paint.Color = SKColors.Black;
+                _canvas.DrawRect(rect, paint);
+            }
             return;
         }
 
+        // Border, in the /DA colour — measured, see the table above.
         paint.Style = SKPaintStyle.Stroke;
         paint.StrokeWidth = borderWidth;
-        paint.Color = SKColors.Black;
+        paint.Color = DefaultAppearanceColor(da!) ?? SKColors.Black;
         _canvas.DrawRect(rect, paint);
+
+        var contents = annot.RawDictionary.GetStringOrNull("Contents");
+        if (string.IsNullOrEmpty(contents)) return;
+
+        // Case 3: only the first line is drawn. Multi-line layout is where the
+        // oracles diverge by 250x, so this takes the conservative half rather
+        // than picking a winner.
+        var firstLine = contents!.Split('\r', '\n')[0];
+        if (firstLine.Length == 0) return;
+
+        // ⚠️ And only when the glyphs can actually be REPRESENTED. The text is
+        // handed to RenderText as Latin-1 bytes, exactly as a Tj operand would
+        // be, so anything outside Latin-1 becomes '?' and draws as a row of
+        // .notdef boxes.
+        //
+        // Measured on pdf.js freetext_no_appearance.pdf (multi-line RTL Arabic
+        // in a UTF-16BE /Contents) at 100 dpi: mutool shapes and draws the
+        // Arabic; the first cut of this fix drew a line of tofu. That is WORSE
+        // than the empty box it replaced — an empty box reads as "an annotation
+        // is here", tofu reads as "this document is corrupt".
+        //
+        // Complex-script shaping is explicitly out of scope (case 3 above), so
+        // the box and border still draw and the text is left to the /Contents
+        // the reader can already reach. Revisit only with real shaping, not by
+        // widening this check.
+        foreach (var ch in firstLine)
+        {
+            if (ch > 0xFF) return;
+        }
+
+        RenderTextFieldValue(annot, rect, firstLine,
+            useAcroFormDaFallback: false, topAlign: true);
+    }
+
+    /// <summary>
+    /// The fill colour a <c>/DA</c> string sets, by RUNNING it through the
+    /// real content-stream executor rather than pattern-matching it. A /DA is
+    /// a content-stream fragment, so <c>g</c>, <c>rg</c>, <c>k</c> and an
+    /// <c>/CS cs</c> + <c>sc</c> pair are all legal ways to say "blue", and a
+    /// regex would understand exactly one of them.
+    /// </summary>
+    private SKColor? DefaultAppearanceColor(string da)
+    {
+        var savedFill = _state.FillColor;
+        var savedStroke = _state.StrokeColor;
+        var savedTextState = CloneTextState();
+        try
+        {
+            _textState = new TextState();
+            ExecuteContentBytes(Encoding.Latin1.GetBytes(da));
+            return _state.FillColor;
+        }
+        catch
+        {
+            return null;   // Malformed /DA: fall back to black, never throw.
+        }
+        finally
+        {
+            _state.FillColor = savedFill;
+            _state.StrokeColor = savedStroke;
+            _textState = savedTextState;
+        }
     }
 
     /// <summary>
@@ -1300,8 +1399,15 @@ internal partial class RenderContext
     ///   substitution / cmap / CID handling all share the same code.</item>
     /// </list>
     /// </summary>
+    /// <param name="useAcroFormDaFallback">
+    /// Widgets inherit the AcroForm-level <c>/DA</c> when they state none
+    /// (§12.7.3.3). A FreeText does NOT — §12.5.6.6 puts <c>/DA</c> on the
+    /// annotation, and borrowing the form's would invent styling from an
+    /// unrelated dictionary. So the fallback is a parameter, not a constant.
+    /// </param>
     private void RenderTextFieldValue(
-        Excise.Core.Document.PdfAnnotation annot, SKRect rect, string value)
+        Excise.Core.Document.PdfAnnotation annot, SKRect rect, string value,
+        bool useAcroFormDaFallback = true, bool topAlign = false)
     {
         ResolveAcroFormResources();
 
@@ -1326,7 +1432,9 @@ internal partial class RenderContext
         // Empty string rather than null: ExecuteContentBytes on it is a no-op,
         // so the auto-size and Helvetica fallback paths run exactly as they do
         // for a /DA that sets no font.
-        var da = annot.RawDictionary.GetStringOrNull("DA") ?? _acroFormDa ?? "";
+        var da = annot.RawDictionary.GetStringOrNull("DA")
+                 ?? (useAcroFormDaFallback ? _acroFormDa : null)
+                 ?? "";
 
         _resourcesStack.Push(_acroFormDr);
         _canvas.Save();
@@ -1428,8 +1536,9 @@ internal partial class RenderContext
                 // approximated the cap height at a flat fontSize * 0.7, which
                 // is not any real font's, and drew the value 2-5 px above
                 // every engine with the error scaling by size (#1016).
-                float textY = BaselineForCentredLineBox(
-                    rect, _currentFont?.Typeface, fontSize);
+                float textY = topAlign
+                    ? BaselineForTopAlignedLineBox(rect, _currentFont?.Typeface, fontSize, padX)
+                    : BaselineForCentredLineBox(rect, _currentFont?.Typeface, fontSize);
 
                 // Drive RenderText through the standard text-block path.
                 _inTextBlock = true;
@@ -1523,6 +1632,32 @@ internal partial class RenderContext
         // upward), so the baseline sits a descender plus half the slack above
         // it.
         return rect.Top + descent * fontSize + (rect.Height - lineBox * fontSize) * 0.5f;
+    }
+
+    /// <summary>
+    /// Baseline for text that starts at the TOP of the box rather than being
+    /// centred in it — a FreeText note flows from its first line down
+    /// (§12.5.6.6), where a form field's single value sits centred.
+    ///
+    /// <para>Measured: both mutool and pdftocairo place the probe fixture's
+    /// FreeText string against the top edge; centring it put excise's text
+    /// roughly half the box lower than either.</para>
+    /// </summary>
+    private static float BaselineForTopAlignedLineBox(
+        SKRect rect, SKTypeface? typeface, float fontSize, float padY)
+    {
+        // rect.Top is the LOW edge in this space (the caller's matrix grows
+        // upward), so "the top of the box" is rect.Bottom, and the first
+        // baseline hangs one ascent below it.
+        if (typeface == null)
+            return rect.Bottom - padY - fontSize * 0.75f;
+
+        using var probe = new SKFont(typeface, 1f);
+        float ascent = -probe.Metrics.Ascent;      // per em; Ascent is negative
+        if (ascent <= 0.001f)
+            return rect.Bottom - padY - fontSize * 0.75f;
+
+        return rect.Bottom - padY - ascent * fontSize;
     }
 
     private static float AutoFitFontSize(string value, SKRect rect, SKTypeface? typeface, float padX)

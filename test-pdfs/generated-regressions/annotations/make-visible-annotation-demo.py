@@ -22,6 +22,13 @@ for y, label in [
 ]:
     line(y, label)
 
+# Text UNDER the Link rect. A Link annotation never draws its own URI — it is an
+# invisible hotspot over content that is already on the page (§12.5.6.5) — so a
+# link rect over blank space looks like an empty box in EVERY viewer. The first
+# version of this fixture had exactly that, and it read as "excise is not showing
+# the URL".
+line(108, "https://example.org/ - this text is the clickable link target", 12)
+
 stream = "\n".join(content).encode("latin-1")
 comp = zlib.compress(stream)
 
@@ -67,7 +74,7 @@ A("/Type /Annot /Subtype /Text /Rect [500 250 524 274] /Name /Comment "
 A("/Type /Annot /Subtype /FreeText /Rect [55 150 330 205] "
   "/DA (0 0 1 rg /Helv 12 Tf) /Contents (FreeText annotation) "
   "/C [0.95 0.95 0.8] /F 4 /T (demo)")
-A("/Type /Annot /Subtype /Link /Rect [55 100 250 125] /Border [0 0 1] "
+A("/Type /Annot /Subtype /Link /Rect [55 100 500 125] /Border [0 0 1] "
   "/C [0 0 1] /A << /S /URI /URI (https://example.org/) >>")
 
 first = 6
