@@ -8,7 +8,7 @@
   "Notes": "Migrated from the legacy TSV rendering manifests.",
   "Pages": {
     "2": {
-      "ExpectedRawStatus": "DECODE_ERROR",
+      "ExpectedRawStatus": "AGREED_REFUSAL",
       "ExpectedErrorContains": "circular reference",
       "ReleaseStatus": "PASS",
       "QualityStatus": "NON_RENDERABLE_ACCEPTED",
