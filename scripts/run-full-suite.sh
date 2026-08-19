@@ -488,8 +488,16 @@ if [ "$EVERYTHING" = "1" ]; then
     for _corpus_spec in "${_CORPUS_SPECS[@]}"; do
         _cs_name="${_corpus_spec%%:*}"; _cs_rest="${_corpus_spec#*:}"
         _cs_dir="${_cs_rest%%:*}"; _cs_manifest="${_cs_rest#*:}"
+        # pdf.js is the ONLY corpus where all-pages is real extra coverage
+        # rather than repetition, so it is the only one that gets it (#1037).
+        # Measured page counts: veraPDF 2694 files / 2719 pages (avg 1.0),
+        # PDFium 331/357 (1.1), pdf.js 685/1269 (1.9), Isartor 205/10223 —
+        # and Isartor's 10k pages are TWO enormous documents that would
+        # dominate an all-pages run while testing almost nothing new.
+        _cs_mode="first"
+        [[ "$_cs_dir" == *"/pdfjs" ]] && _cs_mode="all"
         emit "$_cs_name" script \
-            "scripts/run-exploratory-corpus.sh --corpus $_cs_dir --page-mode first --extra-oracles all --expectation-manifest $_cs_manifest" "-"
+            "scripts/run-exploratory-corpus.sh --corpus $_cs_dir --page-mode $_cs_mode --extra-oracles all --expectation-manifest $_cs_manifest" "-"
     done
 fi
 

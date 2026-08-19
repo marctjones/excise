@@ -285,7 +285,7 @@ if [[ -z "$CHUNK_LOG_DIR" ]]; then
 fi
 mkdir -p "$CHUNK_LOG_DIR"
 rm -f "$BIN_DIR/$REPORT_NAME"
-if [[ "$PAGE_MODE" == "first" && "$CORPUS_LABEL" == "test-pdfs/pdfjs" ]]; then
+if [[ "$PAGE_MODE" == "all" && "$CORPUS_LABEL" == "test-pdfs/pdfjs" ]]; then
     rm -f "$BIN_DIR/exploratory-report.json"
 fi
 
@@ -1356,7 +1356,11 @@ if failures:
             f"{etype}: {msg}"
         )
 
-if page_mode == "first" and corpus_label == "test-pdfs/pdfjs":
+# pdf.js is scanned at --page-mode all since #1037, so the
+# compatibility copy update-corpus-expectations.sh reads must come
+# from that run — keyed on "first" it would have silently kept
+# regenerating a 685-row manifest for a 1,279-page corpus.
+if page_mode == "all" and corpus_label == "test-pdfs/pdfjs":
     compat_path = os.path.join(bin_dir, "exploratory-report.json")
     with open(compat_path, "w") as f:
         json.dump(out, f, indent=2)
