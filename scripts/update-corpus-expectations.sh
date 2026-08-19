@@ -28,7 +28,7 @@ BIN="$ROOT/Excise.Rendering.Tests/bin/Debug/net10.0"
 # corpus-key : report filename : manifest filename
 CORPORA=(
     "pdfjs:exploratory-report.json:corpus-expectations.tsv"
-    "pdfium:exploratory-report-test-pdfs-pdfium-first.json:corpus-expectations-pdfium.tsv"
+    "pdfium:exploratory-report-test-pdfs-pdfium-all.json:corpus-expectations-pdfium.tsv"
     "isartor:exploratory-report-test-pdfs-isartor-first.json:corpus-expectations-isartor.tsv"
     "verapdf:exploratory-report-test-pdfs-verapdf-corpus-first.json:corpus-expectations-verapdf.tsv"
 )

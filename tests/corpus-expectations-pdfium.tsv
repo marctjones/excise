@@ -25,7 +25,7 @@
 #
 # Keys are corpus-relative PATHS, not basenames: this corpus may have
 # subdirectories and duplicate filenames.
-# Baseline: PASS=281, MALFORMED_PDF=26, PASS_ONE=9, EMPTY_DOC=6, MISSING_CONTENT=3, AGREED_REFUSAL=2, DIFF=2, UNSUPPORTED_ENCRYPTED=1, PASSWORD_REQUIRED=1
+# Baseline: PASS=345, MALFORMED_PDF=26, PASS_ONE=15, AGREED_REFUSAL=7, EMPTY_DOC=6, MISSING_CONTENT=2, DIFF=2, UNSUPPORTED_ENCRYPTED=1, PASSWORD_REQUIRED=1
 344775293.pdf	1	PASS
 363015187.pdf	1	MISSING_CONTENT
 about_blank.pdf	1	PASS
@@ -39,16 +39,24 @@ annotation_ink_multiple.pdf	1	PASS
 annotation_markup_multiline_no_ap.pdf	1	PASS
 annotation_stamp_with_ap.pdf	1	PASS
 annotiter.pdf	1	PASS
+annotiter.pdf	2	PASS
+annotiter.pdf	3	PASS
 annots.pdf	1	PASS
+annots.pdf	2	PASS
 annots_action_handling.pdf	1	PASS		#987 fixed by #993: the /Link with no /Border and no /BS now gets the §12.5.6.5 default 1 pt border, which is what poppler and Ghostscript draw. Was MISSING_CONTENT.
+annots_action_handling.pdf	2	PASS
 bad_annots_entry.pdf	1	PASS
 bad_dict_keys.pdf	1	PASS
 bad_page_type.pdf	1	PASS
+bad_page_type.pdf	2	PASS
 bigtable_mini.pdf	1	PASS
 black.pdf	1	PASS
 bookmarks.pdf	1	PASS
+bookmarks.pdf	2	PASS
 bookmarks_circular.pdf	1	PASS
+bookmarks_circular.pdf	2	PASS
 bookmarks_color.pdf	1	PASS
+bookmarks_color.pdf	2	PASS
 bug_1029.pdf	1	PASS
 bug_1055869.pdf	1	PASS
 bug_1058653.pdf	1	PASS
@@ -57,6 +65,9 @@ bug_113.pdf	1	MALFORMED_PDF
 bug_1139.pdf	1	PASS
 bug_1206.pdf	1	PASS
 bug_1229106.pdf	1	PASS
+bug_1229106.pdf	2	PASS
+bug_1229106.pdf	3	PASS
+bug_1229106.pdf	4	PASS
 bug_1265.pdf	1	PASS
 bug_1296920.pdf	1	PASS
 bug_1301.pdf	1	PASS
@@ -72,6 +83,9 @@ bug_1396264.pdf	1	PASS_ONE
 bug_1399.pdf	1	PASS
 bug_1477093.pdf	1	PASS
 bug_1506.pdf	1	PASS
+bug_1506.pdf	2	PASS
+bug_1506.pdf	3	PASS
+bug_1506.pdf	4	PASS
 bug_1549.pdf	1	PASS
 bug_1558.pdf	1	PASS
 bug_1574.pdf	1	PASS
@@ -123,9 +137,13 @@ bug_488948351.pdf	1	PASS
 bug_491161396.pdf	1	PASS
 bug_491516663.pdf	1	PASS
 bug_498010830_shared_annots.pdf	1	PASS
+bug_498010830_shared_annots.pdf	2	PASS
 bug_498010830_shared_widget.pdf	1	PASS
+bug_498010830_shared_widget.pdf	2	PASS
 bug_504416752.pdf	1	PASS
 bug_507316.pdf	1	PASS
+bug_507316.pdf	2	PASS
+bug_507316.pdf	3	PASS
 bug_509964646.pdf	1	PASS
 bug_517126568.pdf	1	PASS
 bug_544880.pdf	1	AGREED_REFUSAL
@@ -136,6 +154,8 @@ bug_552046.pdf	1	EMPTY_DOC
 bug_555784.pdf	1	EMPTY_DOC
 bug_57.pdf	1	PASS
 bug_572871.pdf	1	PASS
+bug_572871.pdf	2	PASS
+bug_572871.pdf	3	PASS
 bug_583.pdf	1	PASS
 bug_601362.pdf	1	PASS
 bug_602650.pdf	1	MISSING_CONTENT
@@ -150,11 +170,17 @@ bug_664284.pdf	1	PASS
 bug_674771.pdf	1	PASS
 bug_679649.pdf	1	PASS
 bug_680376.pdf	1	PASS
+bug_680376.pdf	2	PASS
+bug_680376.pdf	3	PASS
+bug_680376.pdf	4	PASS
 bug_707673.pdf	1	PASS
 bug_709793.pdf	1	EMPTY_DOC
 bug_713197.pdf	1	PASS
 bug_717.pdf	1	PASS
 bug_750568.pdf	1	PASS
+bug_750568.pdf	2	PASS
+bug_750568.pdf	3	PASS
+bug_750568.pdf	4	PASS
 bug_757705.pdf	1	PASS
 bug_765384.pdf	1	PASS
 bug_773229.pdf	1	PASS
@@ -173,6 +199,7 @@ bug_901654_2.pdf	1	PASS
 bug_905142.pdf	1	PASS
 bug_921.pdf	1	PASS
 bug_925981.pdf	1	PASS
+bug_925981.pdf	2	PASS
 bug_972518.pdf	1	PASS
 bug_xrefv4_loop.pdf	1	PASS
 calculate.pdf	1	PASS
@@ -183,9 +210,14 @@ combobox_form.pdf	1	PASS
 control_characters.pdf	1	PASS
 cropped_no_overlap.pdf	1	PASS_ONE
 cropped_text.pdf	1	PASS
+cropped_text.pdf	2	PASS
+cropped_text.pdf	3	PASS
+cropped_text.pdf	4	PASS
 dashed_lines.pdf	1	PASS
 docmdp.pdf	1	PASS
 document_aactions.pdf	1	PASS
+document_aactions.pdf	2	AGREED_REFUSAL
+document_aactions.pdf	3	AGREED_REFUSAL
 embedded_attachments.pdf	1	PASS
 embedded_attachments_invalid_data.pdf	1	PASS
 embedded_attachments_invalid_types.pdf	1	PASS
@@ -200,6 +232,7 @@ encrypted_hello_world_r3_bad_okey.pdf	1	MALFORMED_PDF
 encrypted_hello_world_r5.pdf	1	UNSUPPORTED_ENCRYPTED
 encrypted_hello_world_r6.pdf	1	PASSWORD_REQUIRED
 feature_linearized_loading.pdf	1	PASS
+feature_linearized_loading.pdf	2	PASS
 find_text_consecutive.pdf	1	PASS
 font_matrix.pdf	1	PASS
 font_weight.pdf	1	PASS
@@ -209,14 +242,19 @@ form_object_with_path.pdf	1	PASS
 form_object_with_text.pdf	1	PASS
 freetext_annotation_without_da.pdf	1	PASS
 get_page_aaction.pdf	1	PASS
+get_page_aaction.pdf	2	PASS
 goto_action.pdf	1	PASS
 gotoe_action.pdf	1	PASS
 hebrew_mirrored.pdf	1	PASS
 hello_world.pdf	1	PASS
 hello_world_2_pages.pdf	1	PASS
+hello_world_2_pages.pdf	2	PASS
 hello_world_2_pages_custom_object.pdf	1	PASS
+hello_world_2_pages_custom_object.pdf	2	PASS
 hello_world_2_pages_shared_resources_dict.pdf	1	PASS
+hello_world_2_pages_shared_resources_dict.pdf	2	PASS
 hello_world_2_pages_split_streams.pdf	1	PASS
+hello_world_2_pages_split_streams.pdf	2	PASS
 hello_world_brotli.pdf	1	PASS
 hello_world_brotli_with_length1.pdf	1	PASS
 hello_world_compressed_stream.pdf	1	PASS
@@ -240,7 +278,11 @@ latin_extended.pdf	1	PASS
 launch_action.pdf	1	PASS
 line_annot.pdf	1	PASS
 linearized.pdf	1	PASS
+linearized.pdf	2	PASS
+linearized.pdf	3	PASS
 linearized_bug_1055.pdf	1	PASS
+linearized_bug_1055.pdf	2	PASS
+linearized_bug_1055.pdf	3	PASS
 links_highlights_annots.pdf	1	PASS
 listbox_form.pdf	1	PASS
 many_rectangles.pdf	1	PASS
@@ -250,12 +292,26 @@ matte.pdf	1	PASS
 multiple_form_types.pdf	1	PASS
 multiple_graphics_states.pdf	1	PASS
 named_dests.pdf	1	PASS
+named_dests.pdf	2	PASS
 named_dests_old_style.pdf	1	PASS
+named_dests_old_style.pdf	2	AGREED_REFUSAL
 no_page_count.pdf	1	PASS_ONE
+no_page_count.pdf	2	PASS_ONE
+no_page_count.pdf	3	PASS_ONE
+no_page_count.pdf	4	PASS_ONE
+no_page_count.pdf	5	PASS_ONE
+no_page_count.pdf	6	PASS_ONE
 non_hex_file_id.pdf	1	PASS
 nonesuch_action.pdf	1	PASS
 page_labels.pdf	1	PASS
+page_labels.pdf	2	PASS
+page_labels.pdf	3	PASS
+page_labels.pdf	4	PASS
+page_labels.pdf	5	PASS
+page_labels.pdf	6	PASS
+page_labels.pdf	7	PASS
 page_tree_empty_node.pdf	1	PASS_ONE
+page_tree_empty_node.pdf	2	PASS_ONE
 parser_rebuildxref_correct.pdf	1	PASS
 parser_rebuildxref_error_notrailer.pdf	1	PASS
 pixel/bug_1087.pdf	1	PASS
@@ -288,15 +344,25 @@ pixel/xfa_specific/dynamic_password_field_background_fill.pdf	1	PASS
 pixel/xfa_specific/dynamic_table_color_and_width.pdf	1	PASS
 pixel/xfa_specific/resolve_nodes_0.pdf	1	PASS
 pixel/xfa_specific/standard_symbols.pdf	1	PASS
+pixel/xfa_specific/standard_symbols.pdf	2	PASS
 pixel/xfa_specific/static_list_box_caption.pdf	1	PASS
 pixel/xfa_specific/static_password_field_rotate.pdf	1	PASS
+pixel/xfa_specific/static_password_field_rotate.pdf	2	PASS
 pixel/xfa_specific/xfa_node_caption.pdf	1	PASS
 polygon_annot.pdf	1	PASS
 rectangles.pdf	1	PASS
 rectangles_brotli.pdf	1	PASS_ONE
 rectangles_double_flipped.pdf	1	PASS
 rectangles_multi_page_xfa.pdf	1	PASS
+rectangles_multi_page_xfa.pdf	2	PASS
+rectangles_multi_page_xfa.pdf	3	PASS
+rectangles_multi_page_xfa.pdf	4	PASS
+rectangles_multi_page_xfa.pdf	5	PASS
 rectangles_multi_pages.pdf	1	PASS
+rectangles_multi_pages.pdf	2	PASS
+rectangles_multi_pages.pdf	3	PASS
+rectangles_multi_pages.pdf	4	PASS
+rectangles_multi_pages.pdf	5	PASS
 rectangles_object_zero.pdf	1	PASS
 rectangles_with_leaky_ctm.pdf	1	PASS
 redact_annot.pdf	1	PASS
@@ -309,6 +375,7 @@ shared_form_xobject_matrix.pdf	1	PASS
 signature_no_sub_filter.pdf	1	PASS
 signature_reason.pdf	1	PASS
 simple_thumbnail.pdf	1	PASS
+simple_thumbnail.pdf	2	PASS
 simple_xfa.pdf	1	PASS
 split_streams.pdf	1	PASS
 tagged_actual_text.pdf	1	PASS
@@ -316,6 +383,7 @@ tagged_alt_text.pdf	1	PASS
 tagged_expansion.pdf	1	PASS
 tagged_marked_content.pdf	1	PASS
 tagged_mcr_multipage.pdf	1	PASS
+tagged_mcr_multipage.pdf	2	PASS
 tagged_mcr_objr.pdf	1	PASS
 tagged_nested.pdf	1	PASS
 tagged_table.pdf	1	PASS
@@ -339,6 +407,8 @@ trailer_end_trailing_space.pdf	1	PASS
 trailer_unterminated.pdf	1	PASS
 two_signatures.pdf	1	PASS
 unsupported_feature.pdf	1	PASS
+unsupported_feature.pdf	2	AGREED_REFUSAL
+unsupported_feature.pdf	3	AGREED_REFUSAL
 uri_action.pdf	1	PASS
 uri_action_nonascii.pdf	1	PASS
 use_outlines.pdf	1	PASS
@@ -347,6 +417,10 @@ version_in_catalog.pdf	1	PASS
 vertical_text.pdf	1	PASS
 viewer_pref_types.pdf	1	PASS
 viewer_ref.pdf	1	PASS
+viewer_ref.pdf	2	PASS
+viewer_ref.pdf	3	PASS
+viewer_ref.pdf	4	PASS
+viewer_ref.pdf	5	PASS
 weblinks.pdf	1	PASS
 weblinks_across_lines.pdf	1	PASS
 whitespace.pdf	1	PASS
