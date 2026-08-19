@@ -190,6 +190,59 @@ public partial class PdfViewerControl : UserControl
         set => SetValue(ShowAnnotationsProperty, value);
     }
 
+
+    /// <summary>
+    /// Show COMMENT annotations — notes, FreeText, text markup, shapes, Ink,
+    /// Stamp, FileAttachment, Caret (#1021).
+    /// </summary>
+    public static readonly StyledProperty<bool> ShowCommentAnnotationsProperty =
+        AvaloniaProperty.Register<PdfViewerControl, bool>(nameof(ShowCommentAnnotations), defaultValue: true);
+
+    public bool ShowCommentAnnotations
+    {
+        get => GetValue(ShowCommentAnnotationsProperty);
+        set => SetValue(ShowCommentAnnotationsProperty, value);
+    }
+
+    /// <summary>
+    /// Show FORM FIELDS and LINKS. Separate from comments because a field's
+    /// value is page content a reviewer must see even with markup hidden.
+    /// </summary>
+    public static readonly StyledProperty<bool> ShowFieldAndLinkAnnotationsProperty =
+        AvaloniaProperty.Register<PdfViewerControl, bool>(nameof(ShowFieldAndLinkAnnotations), defaultValue: true);
+
+    public bool ShowFieldAndLinkAnnotations
+    {
+        get => GetValue(ShowFieldAndLinkAnnotationsProperty);
+        set => SetValue(ShowFieldAndLinkAnnotationsProperty, value);
+    }
+
+    /// <summary>
+    /// AUDIT MODE — reveal annotations that <c>/F</c> Hidden or NoView
+    /// suppresses. Off by default; it draws what no conforming viewer shows.
+    /// </summary>
+    public static readonly StyledProperty<bool> RevealHiddenAnnotationsProperty =
+        AvaloniaProperty.Register<PdfViewerControl, bool>(nameof(RevealHiddenAnnotations));
+
+    public bool RevealHiddenAnnotations
+    {
+        get => GetValue(RevealHiddenAnnotationsProperty);
+        set => SetValue(RevealHiddenAnnotationsProperty, value);
+    }
+
+    /// <summary>
+    /// Tint fillable form fields. Off by default — viewer chrome, never
+    /// exported.
+    /// </summary>
+    public static readonly StyledProperty<bool> HighlightFormFieldsProperty =
+        AvaloniaProperty.Register<PdfViewerControl, bool>(nameof(HighlightFormFields));
+
+    public bool HighlightFormFields
+    {
+        get => GetValue(HighlightFormFieldsProperty);
+        set => SetValue(HighlightFormFieldsProperty, value);
+    }
+
     /// <summary>
     /// Does the control have an error?
     /// </summary>
@@ -654,7 +707,11 @@ public partial class PdfViewerControl : UserControl
         // stale. Without this the setting appears to do nothing until something
         // else happens to invalidate the cache — which is how a toggle ends up
         // reported as "doesn't work" when the renderer is fine.
-        if (change.Property == ShowAnnotationsProperty)
+        if (change.Property == ShowAnnotationsProperty
+            || change.Property == ShowCommentAnnotationsProperty
+            || change.Property == ShowFieldAndLinkAnnotationsProperty
+            || change.Property == RevealHiddenAnnotationsProperty
+            || change.Property == HighlightFormFieldsProperty)
         {
             InvalidateContinuousCache();
             InvalidateVisual();
@@ -1580,6 +1637,10 @@ public partial class PdfViewerControl : UserControl
 
             // Captured on the UI thread — see the continuous path's note.
             var showAnnotations = ShowAnnotations;
+            var showComments = ShowCommentAnnotations;
+            var showFields = ShowFieldAndLinkAnnotations;
+            var revealHidden = RevealHiddenAnnotations;
+            var highlightFields = HighlightFormFields;
             var skBitmap = await Task.Run(() =>
             {
                 token.ThrowIfCancellationRequested();
@@ -1587,7 +1648,11 @@ public partial class PdfViewerControl : UserControl
                 {
                     Dpi = renderDpi,
                     MaxPixelCount = maxPixels,
-                    RenderAnnotations = showAnnotations
+                    RenderAnnotations = showAnnotations,
+                    ShowCommentAnnotations = showComments,
+                    ShowFieldAndLinkAnnotations = showFields,
+                    RevealHiddenAnnotations = revealHidden,
+                    HighlightFormFields = highlightFields
                 };
                 return _renderer.RenderPage(page, options);
             }, token);

@@ -195,12 +195,16 @@ namespace Excise.Core.Automation
         public const string SelectTextMode = "edit.selectTextMode";
         public const string ShowLetters = "text.letters";
         public const string SplitDocument = "document.split";
+        public const string ToggleAnnotationAuditMode = "view.toggleAnnotationAuditMode";
         public const string ToggleAnnotations = "view.toggleAnnotations";
         public const string ToggleArrowMode = "annotation.toggleArrowMode";
         public const string ToggleClipboardHistory = "view.toggleClipboardHistory";
+        public const string ToggleCommentAnnotations = "view.toggleCommentAnnotations";
         public const string ToggleContinuousView = "view.toggleContinuous";
         public const string ToggleDrawMode = "annotation.toggleDrawMode";
+        public const string ToggleFieldAndLinkAnnotations = "view.toggleFieldAndLinkAnnotations";
         public const string ToggleFormAuthoring = "form.toggleAuthoring";
+        public const string ToggleFormFieldHighlighting = "view.toggleFormFieldHighlighting";
         public const string ToggleLineMode = "annotation.toggleLineMode";
         public const string ToggleOutline = "view.toggleOutline";
         public const string TogglePolyLineMode = "annotation.togglePolyLineMode";

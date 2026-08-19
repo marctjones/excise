@@ -79,6 +79,10 @@ public partial class MainWindowViewModel
 
     /// <summary>Show or hide the page's annotations (#1022).</summary>
     public ReactiveCommand<Unit, Unit> ToggleAnnotationsCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ToggleCommentAnnotationsCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ToggleFieldAndLinkAnnotationsCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ToggleAnnotationAuditModeCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ToggleFormFieldHighlightingCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleClipboardSidebarCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleContinuousViewCommand { get; private set; } = null!;
     public ReactiveCommand<Unit, Unit> ToggleRevealHiddenTextCommand { get; private set; } = null!;
@@ -195,6 +199,10 @@ public partial class MainWindowViewModel
         ToggleOutlineCommand = ReactiveCommand.Create(ToggleOutlineSidebar);
         ToggleThumbnailsCommand = ReactiveCommand.Create(ToggleThumbnailsSidebar);
         ToggleAnnotationsCommand = ReactiveCommand.Create(ToggleAnnotationsVisible);
+        ToggleCommentAnnotationsCommand = ReactiveCommand.Create(ToggleCommentAnnotationsVisible);
+        ToggleFieldAndLinkAnnotationsCommand = ReactiveCommand.Create(ToggleFieldAndLinkAnnotationsVisible);
+        ToggleAnnotationAuditModeCommand = ReactiveCommand.Create(ToggleAnnotationAuditMode);
+        ToggleFormFieldHighlightingCommand = ReactiveCommand.Create(ToggleFormFieldHighlighting);
         ToggleClipboardSidebarCommand = ReactiveCommand.Create(ToggleClipboardSidebar);
         ToggleContinuousViewCommand = ReactiveCommand.Create(ToggleContinuousView);
         ToggleRevealHiddenTextCommand = ReactiveCommand.Create(() => { RevealHiddenText = !RevealHiddenText; });

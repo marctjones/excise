@@ -989,6 +989,10 @@ public partial class PdfViewerControl
                 // properties are not thread-affine-safe to read from the render
                 // task, and capturing it also pins the value for this pass.
                 var showAnnotations = ShowAnnotations;
+                var showComments = ShowCommentAnnotations;
+                var showFields = ShowFieldAndLinkAnnotations;
+                var revealHidden = RevealHiddenAnnotations;
+                var highlightFields = HighlightFormFields;
                 var skBitmap = await Task.Run(() =>
                 {
                     token.ThrowIfCancellationRequested();
@@ -1000,7 +1004,11 @@ public partial class PdfViewerControl
                     {
                         Dpi = dpi,
                         ClipRect = clip,
-                        RenderAnnotations = showAnnotations
+                        RenderAnnotations = showAnnotations,
+                        ShowCommentAnnotations = showComments,
+                        ShowFieldAndLinkAnnotations = showFields,
+                        RevealHiddenAnnotations = revealHidden,
+                        HighlightFormFields = highlightFields
                     });
                 }, token);
                 renderWatch.Stop();

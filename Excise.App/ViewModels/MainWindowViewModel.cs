@@ -117,6 +117,10 @@ public partial class MainWindowViewModel : ViewModelBase
     private ZoomFitMode _zoomFitMode = ZoomFitMode.FitWidth;
     private bool _isThumbnailsSidebarVisible = true;
     private bool _areAnnotationsVisible = true;
+    private bool _areCommentAnnotationsVisible = true;
+    private bool _areFieldAndLinkAnnotationsVisible = true;
+    private bool _isAnnotationAuditModeEnabled;
+    private bool _areFormFieldsHighlighted;
     private bool _isClipboardSidebarVisible = true;
     private DocumentOpenTiming? _lastDocumentOpenTiming;
     private long _renderVersion;
@@ -543,6 +547,71 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public void ToggleAnnotationsVisible() =>
         AreAnnotationsVisible = !AreAnnotationsVisible;
+
+    /// <summary>
+    /// Show COMMENT annotations — notes, FreeText, text markup, shapes, Ink,
+    /// Stamp, FileAttachment, Caret (#1021).
+    /// </summary>
+    /// <remarks>
+    /// Two groups rather than one switch or twenty-three: for a redaction tool
+    /// the split that matters is "content I must decide about" against "review
+    /// markup I may want out of the way". A field's VALUE is content; a
+    /// reviewer's sticky note is not.
+    /// </remarks>
+    public bool AreCommentAnnotationsVisible
+    {
+        get => _areCommentAnnotationsVisible;
+        set => this.RaiseAndSetIfChanged(ref _areCommentAnnotationsVisible, value);
+    }
+
+    public void ToggleCommentAnnotationsVisible() =>
+        AreCommentAnnotationsVisible = !AreCommentAnnotationsVisible;
+
+    /// <summary>Show form fields and links (#1021).</summary>
+    public bool AreFieldAndLinkAnnotationsVisible
+    {
+        get => _areFieldAndLinkAnnotationsVisible;
+        set => this.RaiseAndSetIfChanged(ref _areFieldAndLinkAnnotationsVisible, value);
+    }
+
+    public void ToggleFieldAndLinkAnnotationsVisible() =>
+        AreFieldAndLinkAnnotationsVisible = !AreFieldAndLinkAnnotationsVisible;
+
+    /// <summary>
+    /// AUDIT MODE: reveal annotations that <c>/F</c> Hidden or NoView
+    /// suppresses (§12.5.3).
+    /// </summary>
+    /// <remarks>
+    /// ⚠️ OFF by default and deliberately NOT one of the visibility toggles: it
+    /// renders what no conforming viewer shows. It exists because "there is
+    /// something here the viewer is not showing you" is what a person redacting
+    /// a document needs to know. It must never affect an export.
+    /// </remarks>
+    public bool IsAnnotationAuditModeEnabled
+    {
+        get => _isAnnotationAuditModeEnabled;
+        set => this.RaiseAndSetIfChanged(ref _isAnnotationAuditModeEnabled, value);
+    }
+
+    public void ToggleAnnotationAuditMode() =>
+        IsAnnotationAuditModeEnabled = !IsAnnotationAuditModeEnabled;
+
+    /// <summary>
+    /// Tint fillable form fields — Acrobat's "Highlight Existing Fields".
+    /// </summary>
+    /// <remarks>
+    /// ⚠️ OFF by default. Viewer chrome, not page content: a redaction tool must
+    /// be able to show the page as it really is, and this must never reach an
+    /// exported raster (#1005).
+    /// </remarks>
+    public bool AreFormFieldsHighlighted
+    {
+        get => _areFormFieldsHighlighted;
+        set => this.RaiseAndSetIfChanged(ref _areFormFieldsHighlighted, value);
+    }
+
+    public void ToggleFormFieldHighlighting() =>
+        AreFormFieldsHighlighted = !AreFormFieldsHighlighted;
 
     public void ToggleThumbnailsSidebar() =>
         IsThumbnailsSidebarVisible = !IsThumbnailsSidebarVisible;
