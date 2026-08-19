@@ -424,6 +424,66 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public int TotalPages => _documentService.PageCount;
 
+    private int _redactAnnotationCount;
+
+    /// <summary>
+    /// How many <c>/Redact</c> annotations the open document carries — regions
+    /// somebody has MARKED for redaction but not applied (§12.5.6.23).
+    /// </summary>
+    /// <remarks>
+    /// ⚠️ Reported, never acted on (#1021). A <c>/Redact</c> annotation is an
+    /// instruction to a processor, and applying somebody else's marks is
+    /// destructive and irreversible — excise will not do it silently or
+    /// otherwise. Surfacing the count is the "surface, don't guess" carrier
+    /// policy: the reviewer learns the marks exist and decides.
+    /// </remarks>
+    public int RedactAnnotationCount
+    {
+        get => _redactAnnotationCount;
+        private set => this.RaiseAndSetIfChanged(ref _redactAnnotationCount, value);
+    }
+
+    /// <summary>
+    /// A sentence for the UI when the document carries redaction marks, or null
+    /// when it does not. Null rather than an empty string so a binding can hide
+    /// the whole notice.
+    /// </summary>
+    public string? RedactAnnotationNotice => RedactAnnotationCount <= 0
+        ? null
+        : $"This document contains {RedactAnnotationCount} redaction mark" +
+          (RedactAnnotationCount == 1 ? "" : "s") +
+          " that have not been applied. excise does not apply them for you.";
+
+    /// <summary>
+    /// Recount <c>/Redact</c> annotations. Cheap (a dictionary read per
+    /// annotation, no rendering) but not free on a large document, so it runs
+    /// when the document changes rather than on every property read.
+    /// </summary>
+    private void RefreshRedactAnnotationCount()
+    {
+        var count = 0;
+        try
+        {
+            var doc = _documentService.GetCurrentDocument();
+            if (doc != null)
+            {
+                for (var p = 1; p <= doc.PageCount; p++)
+                    foreach (var a in doc.GetPage(p).GetAnnotations())
+                        if (a.Subtype == Excise.Core.Document.PdfAnnotationSubtype.Redact) count++;
+            }
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            // A document excise cannot fully parse must not break opening it;
+            // the notice is information, not a gate.
+            count = 0;
+        }
+
+        RedactAnnotationCount = count;
+        this.RaisePropertyChanged(nameof(RedactAnnotationNotice));
+    }
+
+
     public int DisplayPageNumber => CurrentPageIndex + 1;
 
     /// <summary>
@@ -1216,6 +1276,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
             _logger.LogInformation(">>> STEP 9: RaisePropertyChanged(TotalPages)");
             this.RaisePropertyChanged(nameof(TotalPages));
+        RefreshRedactAnnotationCount();
+            RefreshRedactAnnotationCount();
 
             _logger.LogInformation(">>> STEP 10: RaisePropertyChanged(StatusText)");
             this.RaisePropertyChanged(nameof(StatusText));
@@ -1509,6 +1571,8 @@ public partial class MainWindowViewModel : ViewModelBase
             await RefreshAfterDocumentMutationAsync();
 
             this.RaisePropertyChanged(nameof(TotalPages));
+        RefreshRedactAnnotationCount();
+            RefreshRedactAnnotationCount();
             this.RaisePropertyChanged(nameof(StatusText));
 
             _logger.LogInformation("Page removed successfully. Remaining pages: {PageCount}", TotalPages);
@@ -1892,6 +1956,7 @@ public partial class MainWindowViewModel : ViewModelBase
         ReapplyFitModeIfNeeded();
         await LoadPageThumbnailsAsync();
         this.RaisePropertyChanged(nameof(TotalPages));
+        RefreshRedactAnnotationCount();
         this.RaisePropertyChanged(nameof(StatusText));
         this.RaisePropertyChanged(nameof(StatusBarText));
     }
@@ -2718,6 +2783,8 @@ public partial class MainWindowViewModel : ViewModelBase
             // Notify UI of all state changes
             this.RaisePropertyChanged(nameof(DocumentName));
             this.RaisePropertyChanged(nameof(TotalPages));
+        RefreshRedactAnnotationCount();
+            RefreshRedactAnnotationCount();
             this.RaisePropertyChanged(nameof(StatusText));
             this.RaisePropertyChanged(nameof(StatusBarText));
             this.RaisePropertyChanged(nameof(IsDocumentLoaded));
