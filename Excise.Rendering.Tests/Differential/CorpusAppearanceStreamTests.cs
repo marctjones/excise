@@ -84,10 +84,19 @@ public class CorpusAppearanceStreamTests
                      "annotation-line.pdf", "annotation-link-text-popup.pdf",
                      "annotation-polyline-polygon.pdf", "annotation-square-circle.pdf",
                      "annotation-stamp.pdf", "annotation-text-widget.pdf",
-                     "annotation-text-without-popup.pdf", "annotation-tx2.pdf",
+                     "annotation-tx2.pdf",
                      "annotation-tx3.pdf", "annotation-underline.pdf",
 
-                     // DELIBERATELY ABSENT — annotation-highlight, -squiggly,
+                     // DELIBERATELY ABSENT — annotation-text-without-popup, whose
+                     // page box the engines disagree about: excise and mutool
+                     // render one size and place the note icon identically,
+                     // pdftocairo renders a much taller page and puts it 1,200px
+                     // lower. Once the differing-box oracles are excluded (#932's
+                     // rule) too few comparable voters remain for a verdict. That
+                     // is a page-box question, not an annotation one, and this
+                     // gate has no opinion on it.
+                     //
+                     // ALSO DELIBERATELY ABSENT — annotation-highlight, -squiggly,
                      // -strikeout and -button-widget. A control run that drew
                      // NO annotations at all left these four green, so they
                      // cannot fail and would only look like coverage.
@@ -131,6 +140,25 @@ public class CorpusAppearanceStreamTests
         };
 
         var voters = oracles.Where(o => o.Bmp != null).ToList();
+            // #932's rule, which these gates were missing: AN ORACLE THAT
+            // RASTERISED A DIFFERENT PAGE BOX GETS NO VOTE. Its tiles address a
+            // different part of the page, so comparing them is meaningless.
+            //
+            // Found on annotation-text-without-popup.pdf: excise and mutool
+            // render the same page and place the note icon identically, while
+            // pdftocairo renders a taller page (MediaBox where the others use
+            // CropBox) and puts the icon 1,200px lower. Scored naively that read
+            // as "no majority inked the /Rect" and the row SKIPPED — hiding a
+            // case where excise is right.
+            using var mineForSize = RenderWithExcise(path!);
+            // A few pixels of tolerance: 200pt at 150 dpi is 416.67, and engines
+            // round it differently. Exact equality excluded almost everyone and
+            // pushed the voter count below three, turning passing rows into skips.
+            // What must be caught is a DIFFERENT PAGE BOX — hundreds of pixels —
+            // not a rounding disagreement.
+            voters = voters.Where(o => Math.Abs(o.Bmp!.Width - mineForSize.Width) <= 2
+                                    && Math.Abs(o.Bmp!.Height - mineForSize.Height) <= 2).ToList();
+
         Assert.SkipWhen(voters.Count < 3,
             $"only {voters.Count} reference renderer(s) available; a majority needs three (#976)");
 
