@@ -155,4 +155,5 @@ Excise.Rendering	tests-only	NormalAppearance	triage:#933 qpdf reference-oracle s
 Excise.Rendering	tests-only	PdftoppmReferenceRenderer	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	ShowEncryption	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	TryRenderPageWithOverprintSimulation	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
+Excise.Rendering	tests-only	VeraPdfReferenceValidator	triage:external validator oracle (#1056) — tests-only BY DESIGN, like the other Differential reference tools; production must never depend on veraPDF being installed
 Excise.Rendering	tests-only	VertexCount	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
