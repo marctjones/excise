@@ -191,4 +191,17 @@ namespace Excise.Rendering.Differential
         public static double CoverageRatio(string exciseText, string oracleText) { }
         public static string Normalize(string s) { }
     }
+    public static class VeraPdfReferenceValidator
+    {
+        public static bool IsAvailable { get; }
+        public static Excise.Rendering.Differential.VeraPdfResult? Validate(string pdfPath, int timeoutMs = 120000) { }
+    }
+    public sealed class VeraPdfResult : System.IEquatable<Excise.Rendering.Differential.VeraPdfResult>
+    {
+        public VeraPdfResult(bool Passed, string Flavour, string? Failure) { }
+        public string? Failure { get; init; }
+        public string Flavour { get; init; }
+        public bool Passed { get; init; }
+        public bool Ran { get; }
+    }
 }
