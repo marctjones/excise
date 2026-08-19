@@ -69,8 +69,13 @@ A("/Type /Annot /Subtype /Polygon /Rect [420 330 560 420] "
 A("/Type /Annot /Subtype /PolyLine /Rect [55 230 400 290] "
   "/Vertices [70 240 150 285 230 240 310 285 385 240] "
   "/C [0.5 0.25 0.05] /F 4 /T (demo) /Contents (PolyLine)")
-A("/Type /Annot /Subtype /Text /Rect [500 250 524 274] /Name /Comment "
-  "/C [1 0.85 0.2] /F 4 /T (demo) /Contents (Sticky note: this is a Text annotation.)")
+for _i, (_n, _lbl) in enumerate([
+        ("Comment", "Comment icon - hover me to read this note."),
+        ("Help",    "Help icon - each /Name draws a different glyph."),
+        ("Key",     "Key icon - the note text appears in the status bar."),
+]):
+    A(f"/Type /Annot /Subtype /Text /Rect [{470 + _i*34} 250 {494 + _i*34} 274] /Name /{_n} "
+      f"/C [1 0.85 0.2] /F 4 /T (demo) /Contents ({_lbl})")
 A("/Type /Annot /Subtype /FreeText /Rect [55 150 330 205] "
   "/DA (0 0 1 rg /Helv 12 Tf) /Contents (FreeText annotation) "
   "/C [0.95 0.95 0.8] /F 4 /T (demo)")
