@@ -366,6 +366,20 @@ public partial class PdfViewerControl : UserControl
     public event EventHandler<LinkHoveredEventArgs>? LinkHovered;
 
     /// <summary>
+    /// Raised when the pointer enters or leaves an annotation carrying
+    /// <c>/Contents</c> or <c>/T</c> (#1074), with a one-line description or
+    /// null on exit.
+    ///
+    /// <para>Links are excluded — they have their own hover affordance via
+    /// <see cref="LinkHovered"/>, and two strings competing for one status line
+    /// helps nobody.</para>
+    ///
+    /// <para>This is READ AND DISPLAY only. It surfaces text already in the
+    /// file; nothing here creates, edits or deletes an annotation.</para>
+    /// </summary>
+    public event EventHandler<AnnotationHoveredEventArgs>? AnnotationHovered;
+
+    /// <summary>
     /// Fired when the user edits an AcroForm field via the FormFieldsLayer
     /// inputs. The control has already mutated the underlying PdfField; the
     /// host typically reacts by re-rendering the page so any baked-in

@@ -82,6 +82,23 @@ public class DangerousLinkClickedEventArgs : EventArgs
 /// Event arguments for pointer hover over a link (#625). <see cref="DisplayText"/>
 /// is null when the pointer has moved off the link.
 /// </summary>
+/// <summary>
+/// Payload for <c>AnnotationHovered</c> (#1074): a one-line description of the
+/// annotation under the pointer, or null when the pointer leaves it.
+///
+/// <para>A string rather than the annotation itself, on purpose. The viewer
+/// control is reusable and the host decides how to present it; handing out a
+/// live <c>PdfAnnotation</c> would invite hosts to reach back into the document
+/// model from a hover handler.</para>
+/// </summary>
+public class AnnotationHoveredEventArgs : EventArgs
+{
+    /// <summary>Description to display, or null when no annotation is hovered.</summary>
+    public string? DisplayText { get; }
+
+    public AnnotationHoveredEventArgs(string? displayText) { DisplayText = displayText; }
+}
+
 public class LinkHoveredEventArgs : EventArgs
 {
     public string? DisplayText { get; }

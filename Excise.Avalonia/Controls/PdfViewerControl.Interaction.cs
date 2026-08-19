@@ -122,11 +122,18 @@ public partial class PdfViewerControl
         {
             try
             {
-                UpdateLinkHoverState(HitTestLinkForEvent(e));
+                var hoveredLink = HitTestLinkForEvent(e);
+                UpdateLinkHoverState(hoveredLink);
+                // Link wins: it already owns the cursor and the status line
+                // (#625), so an annotation hover is only reported when the
+                // pointer is not over a link.
+                UpdateAnnotationHoverState(
+                    hoveredLink != null ? null : HitTestAnnotationForEvent(e));
             }
             catch
             {
                 UpdateLinkHoverState(null);
+                UpdateAnnotationHoverState(null);
             }
         }
 
@@ -363,55 +370,191 @@ public partial class PdfViewerControl
     /// </summary>
     private PdfLink? HitTestLinkForEvent(PointerEventArgs e)
     {
-        return ViewMode == PdfViewMode.Continuous
-            ? HitTestContinuousLinkAt(e)
-            : HitTestLinkAt(GetPressPoint(e));
-    }
+        if (!TryMapPointerToContent(e, out var pageNumber, out var pdfX, out var pdfY))
+            return null;
 
-    private PdfLink? HitTestLinkAt(Point dipPoint)
-    {
-        EnsurePageLinksLoaded();
-        if (_currentPageLinks == null || _currentPageLinks.Count == 0) return null;
-        if (Document == null) return null;
-        var page = Document.GetPage(CurrentPage);
-        var contentPoint = PdfCoordinateMapper.ToContentPoints(
-            page,
-            PdfPageRect.ViewerDips(CurrentPage, dipPoint.X, dipPoint.Y, 0, 0, _currentSinglePageRenderDpi));
-        return FindLinkAt(_currentPageLinks, contentPoint.X, contentPoint.Y);
+        var links = ViewMode == PdfViewMode.Continuous
+            ? GetContinuousPageLinks(pageNumber)
+            : LoadedCurrentPageLinks();
+        return links.Count == 0 ? null : FindLinkAt(links, pdfX, pdfY);
     }
 
     /// <summary>
-    /// Continuous-mode link hit-test (#667). The pointer position relative to
-    /// the ContinuousItems ItemsControl is mapped to (page, in-page dips) via
-    /// the same <see cref="PdfPageSlot"/> TopDip/DisplayWidth/DisplayHeight
-    /// layout math tile rendering uses, then to PDF content points through
-    /// <see cref="PdfCoordinateMapper"/>'s ContinuousDips space — which
-    /// handles the dip→point scale, the Y flip, and page /Rotate exactly the
-    /// way every other overlay conversion does. No new coordinate math.
+    /// Pointer position -> (page, PDF content point), for BOTH view modes.
+    ///
+    /// <para>This is the one place the coordinate math lives. Link hover
+    /// (#625/#667) and annotation hover (#1074) both call it, so adding a
+    /// second interactive overlay cannot introduce a second, subtly different
+    /// mapping — which is the drift shape #992 spent a rewrite eliminating in
+    /// the content-stream parsers. Everything below is the arithmetic that was
+    /// already here, moved, not changed.</para>
     /// </summary>
-    private PdfLink? HitTestContinuousLinkAt(PointerEventArgs e)
+    private bool TryMapPointerToContent(
+        PointerEventArgs e, out int pageNumber, out double pdfX, out double pdfY)
     {
+        pageNumber = 0; pdfX = 0; pdfY = 0;
         var doc = Document;
-        if (doc == null || _continuousItems == null || _continuousSlots == null) return null;
-        var zoom = ZoomLevel;
-        if (zoom <= 0) return null;
+        if (doc == null) return false;
 
-        var itemsPoint = e.GetPosition(_continuousItems);
-        if (!TryMapContinuousPointToPage(
-                _continuousSlots, _continuousItems.Bounds.Width, itemsPoint,
-                out var pageNumber, out var pagePointDip))
+        if (ViewMode == PdfViewMode.Continuous)
+        {
+            if (_continuousItems == null || _continuousSlots == null) return false;
+            var zoom = ZoomLevel;
+            if (zoom <= 0) return false;
+
+            var itemsPoint = e.GetPosition(_continuousItems);
+            if (!TryMapContinuousPointToPage(
+                    _continuousSlots, _continuousItems.Bounds.Width, itemsPoint,
+                    out pageNumber, out var pagePointDip))
+                return false;
+            if (pageNumber < 1 || pageNumber > doc.PageCount) return false;
+
+            var cPoint = PdfCoordinateMapper.ToContentPoints(
+                doc.GetPage(pageNumber),
+                new PdfPageRect(pageNumber, pagePointDip.X, pagePointDip.Y, 0, 0,
+                    PdfCoordinateSpace.ContinuousDips, PointsToDip * zoom));
+            pdfX = cPoint.X; pdfY = cPoint.Y;
+            return true;
+        }
+
+        pageNumber = CurrentPage;
+        if (pageNumber < 1 || pageNumber > doc.PageCount) return false;
+
+        var dipPoint = GetPressPoint(e);
+        var point = PdfCoordinateMapper.ToContentPoints(
+            doc.GetPage(pageNumber),
+            PdfPageRect.ViewerDips(pageNumber, dipPoint.X, dipPoint.Y, 0, 0,
+                _currentSinglePageRenderDpi));
+        pdfX = point.X; pdfY = point.Y;
+        return true;
+    }
+
+    private IReadOnlyList<PdfLink> LoadedCurrentPageLinks()
+    {
+        EnsurePageLinksLoaded();
+        return _currentPageLinks ?? (IReadOnlyList<PdfLink>)Array.Empty<PdfLink>();
+    }
+
+    /// <summary>
+    /// The annotation under the pointer whose <c>/Contents</c> is worth showing
+    /// (#1074), or null.
+    ///
+    /// <para><b>Links deliberately do not participate.</b> A Link IS an
+    /// annotation, but it already has its own hover affordance — Hand cursor
+    /// plus the target in the status bar (#625) — and showing both would put
+    /// two competing strings in one status line. Link wins; see
+    /// <see cref="UpdateAnnotationHoverState"/>'s caller.</para>
+    /// </summary>
+    private PdfAnnotation? HitTestAnnotationForEvent(PointerEventArgs e)
+    {
+        if (!TryMapPointerToContent(e, out var pageNumber, out var pdfX, out var pdfY))
             return null;
-        if (pageNumber < 1 || pageNumber > doc.PageCount) return null;
 
-        var links = GetContinuousPageLinks(pageNumber);
-        if (links.Count == 0) return null;
+        var annots = GetPageAnnotations(pageNumber);
+        if (annots.Count == 0) return null;
 
-        var page = doc.GetPage(pageNumber);
-        var contentPoint = PdfCoordinateMapper.ToContentPoints(
-            page,
-            new PdfPageRect(pageNumber, pagePointDip.X, pagePointDip.Y, 0, 0,
-                PdfCoordinateSpace.ContinuousDips, PointsToDip * zoom));
-        return FindLinkAt(links, contentPoint.X, contentPoint.Y);
+        // Topmost first: /Annots is painted in array order, so the LAST entry
+        // is the one on top and therefore the one a click would reach.
+        for (var i = annots.Count - 1; i >= 0; i--)
+        {
+            var a = annots[i];
+            if (a.Subtype == PdfAnnotationSubtype.Link) continue;
+            if (a.Flags.HasFlag(PdfAnnotationFlags.Hidden)) continue;
+            if (a.Flags.HasFlag(PdfAnnotationFlags.NoView)) continue;
+            if (string.IsNullOrWhiteSpace(a.Contents) && string.IsNullOrWhiteSpace(a.Author))
+                continue;
+
+            if (ContainsPoint(a, pdfX, pdfY)) return a;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Rect containment, with the §12.5.6.4 normalisation a /Text annotation
+    /// needs.
+    ///
+    /// <para>A sticky note's icon is a fixed size regardless of its /Rect, and
+    /// producers write degenerate rects and mean it. Hit-testing the RAW rect
+    /// there would give a note that draws an icon you can see and can never
+    /// hover. The renderer normalises with the same constant — see
+    /// <see cref="PdfAnnotation.TextIconSize"/>.</para>
+    /// </summary>
+    private static bool ContainsPoint(PdfAnnotation a, double x, double y)
+    {
+        var r = a.Rect;
+        double left = Math.Min(r.Left, r.Right), right = Math.Max(r.Left, r.Right);
+        double bottom = Math.Min(r.Bottom, r.Top), top = Math.Max(r.Bottom, r.Top);
+
+        if (a.Subtype == PdfAnnotationSubtype.Text)
+        {
+            right = left + PdfAnnotation.TextIconSize;
+            bottom = top - PdfAnnotation.TextIconSize;
+        }
+
+        return x >= left && x <= right && y >= bottom && y <= top;
+    }
+
+    /// <summary>
+    /// Per-page annotation cache, for the same reason the link cache exists:
+    /// hover hit-testing runs on every pointer move, and re-parsing /Annots per
+    /// move is off the table. Cleared with the rest of the per-document state.
+    /// </summary>
+    private IReadOnlyList<PdfAnnotation> GetPageAnnotations(int pageNumber)
+    {
+        if (_pageAnnotations.TryGetValue(pageNumber, out var cached))
+            return cached;
+
+        IReadOnlyList<PdfAnnotation> annots;
+        try
+        {
+            annots = Document?.GetPage(pageNumber).GetAnnotations()
+                     ?? (IReadOnlyList<PdfAnnotation>)Array.Empty<PdfAnnotation>();
+        }
+        catch
+        {
+            annots = Array.Empty<PdfAnnotation>();
+        }
+        _pageAnnotations[pageNumber] = annots;
+        return annots;
+    }
+
+    private readonly Dictionary<int, IReadOnlyList<PdfAnnotation>> _pageAnnotations = new();
+    private PdfAnnotation? _lastHoveredAnnotation;
+
+    /// <summary>
+    /// Raise <see cref="AnnotationHovered"/> on genuine enter/exit, mirroring
+    /// <see cref="UpdateLinkHoverState"/>'s reference-compare so it is a no-op
+    /// while the pointer sits inside the same annotation.
+    /// </summary>
+    private void UpdateAnnotationHoverState(PdfAnnotation? annot)
+    {
+        if (ReferenceEquals(annot, _lastHoveredAnnotation)) return;
+        _lastHoveredAnnotation = annot;
+
+        AnnotationHovered?.Invoke(this,
+            new AnnotationHoveredEventArgs(annot == null ? null : DescribeAnnotation(annot)));
+    }
+
+    /// <summary>
+    /// One line: author, then the note. Truncated, because /Contents has no
+    /// length limit and a status bar does.
+    /// </summary>
+    internal static string DescribeAnnotation(PdfAnnotation annot)
+    {
+        const int maxContents = 200;
+
+        // Collapse newlines: a multi-line note must not break the status line.
+        var contents = (annot.Contents ?? "").Replace('\r', ' ').Replace('\n', ' ').Trim();
+        if (contents.Length > maxContents)
+            contents = contents[..maxContents] + "…";
+
+        var author = (annot.Author ?? "").Trim();
+        var subtype = annot.Subtype.ToString();
+
+        if (author.Length > 0 && contents.Length > 0) return $"{subtype} — {author}: {contents}";
+        if (contents.Length > 0) return $"{subtype} — {contents}";
+        if (author.Length > 0) return $"{subtype} — {author}";
+        return subtype;
     }
 
     /// <summary>Rect containment over a page's link annotations, in PDF content points.</summary>

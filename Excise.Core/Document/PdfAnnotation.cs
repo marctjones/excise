@@ -90,6 +90,22 @@ public sealed class PdfAnnotation
     /// </summary>
     public (double R, double G, double B)? InteriorColor { get; }
 
+    /// <summary>
+    /// Edge length, in PDF points, of the marker a /Text annotation draws.
+    ///
+    /// <para>§12.5.6.4: a Text annotation's icon is a FIXED size regardless of
+    /// its /Rect, so producers legitimately write a degenerate one and mean it
+    /// — veraPDF 6-3-3-t01-pass-a.pdf has <c>/Rect [50 110 50 110]</c>, zero by
+    /// zero, and mutool, pdftocairo and Ghostscript all place a ~16-18pt icon
+    /// at that point.</para>
+    ///
+    /// <para>It lives here rather than in the renderer because the RENDERER and
+    /// the VIEWER'S HIT-TEST must agree on it. If they drift, a sticky note
+    /// draws an icon the user can see and can never hover — invisible
+    /// interactivity, on the one subtype where the icon is all there is.</para>
+    /// </summary>
+    public const double TextIconSize = 17.0;
+
     /// <summary>Annotation flags (/F).</summary>
     public PdfAnnotationFlags Flags { get; }
 

@@ -846,6 +846,7 @@ namespace Excise.App.ViewModels
         public bool HasSelectedPages { get; }
         public bool HasTextSelection { get; }
         public System.Collections.ObjectModel.ObservableCollection<Excise.Avalonia.Controls.HiddenTextHighlight> HiddenTextHighlights { get; }
+        public string? HoveredAnnotationInfo { get; }
         public bool IgnoreDocumentPermissions { get; set; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> InsertPagesAfterCurrentCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> InsertPagesBeforeCurrentCommand { get; }
@@ -1028,6 +1029,7 @@ namespace Excise.App.ViewModels
         public System.Threading.Tasks.Task SaveDocumentCommand(string filePath) { }
         public System.Threading.Tasks.Task SaveFileAsAsync(string filePath) { }
         public System.Threading.Tasks.Task SaveFlattenedFormCopyAsAsync(string filePath) { }
+        public void SetHoveredAnnotationInfo(string? info) { }
         public void SetHoveredLinkTarget(string? target) { }
         public System.Threading.Tasks.Task SetSelectedTextAndCopyAsync(string text) { }
         public void SetTypewriterColor(string? hex) { }
