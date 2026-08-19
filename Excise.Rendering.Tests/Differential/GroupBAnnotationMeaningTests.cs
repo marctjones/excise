@@ -296,6 +296,12 @@ public class GroupBAnnotationMeaningTests
             GhostscriptReferenceRenderer.IsAvailable ? GhostscriptReferenceRenderer.RenderPage(path!, 1, Dpi) : null,
             PdfiumNativeReferenceRenderer.IsAvailable
                 ? PdfiumNativeReferenceRenderer.RenderPage(path!, 1, Dpi, null, renderAnnotations: true) : null,
+            // PDFBox completes the pool. This check acquits excise if ANY
+            // engine inks the tile, so leaving one out makes it STRICTER than
+            // intended — the omission would have made excise look like it was
+            // inventing ink that PDFBox also draws.
+            PdfBoxReferenceRenderer.IsAvailable
+                ? PdfBoxReferenceRenderer.RenderPage(path!, 1, Dpi) : null,
         }.Where(b => b != null).Select(b => b!).ToList();
 
         Assert.SkipWhen(oracles.Count < 3, "a verdict needs three renderers (#976)");

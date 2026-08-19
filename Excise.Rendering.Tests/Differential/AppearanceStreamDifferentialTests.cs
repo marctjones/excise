@@ -169,6 +169,25 @@ public class AppearanceStreamDifferentialTests
             };
 
             var voters = oracles.Where(o => o.Bmp != null).ToList();
+            // #932's rule, which these gates were missing: AN ORACLE THAT
+            // RASTERISED A DIFFERENT PAGE BOX GETS NO VOTE. Its tiles address a
+            // different part of the page, so comparing them is meaningless.
+            //
+            // Found on annotation-text-without-popup.pdf: excise and mutool
+            // render the same page and place the note icon identically, while
+            // pdftocairo renders a taller page (MediaBox where the others use
+            // CropBox) and puts the icon 1,200px lower. Scored naively that read
+            // as "no majority inked the /Rect" and the row SKIPPED — hiding a
+            // case where excise is right.
+            using var mineForSize = RenderWithExcise(path!);
+            // A few pixels of tolerance: 200pt at 150 dpi is 416.67, and engines
+            // round it differently. Exact equality excluded almost everyone and
+            // pushed the voter count below three, turning passing rows into skips.
+            // What must be caught is a DIFFERENT PAGE BOX — hundreds of pixels —
+            // not a rounding disagreement.
+            voters = voters.Where(o => Math.Abs(o.Bmp!.Width - mineForSize.Width) <= 2
+                                    && Math.Abs(o.Bmp!.Height - mineForSize.Height) <= 2).ToList();
+
 
             // THREE, not two — the lesson of #976. At two voters a majority is
             // unanimity, so one dissenting renderer empties the reference set
