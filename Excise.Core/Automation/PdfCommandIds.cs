@@ -94,6 +94,18 @@ public static class PdfCommandIds
     public const string ToggleOutline = "view.toggleOutline";
     public const string ToggleThumbnails = "view.toggleThumbnails";
     public const string ToggleAnnotations = "view.toggleAnnotations";
+
+    /// <summary>Show or hide COMMENT annotations (#1021).</summary>
+    public const string ToggleCommentAnnotations = "view.toggleCommentAnnotations";
+
+    /// <summary>Show or hide form fields and links (#1021).</summary>
+    public const string ToggleFieldAndLinkAnnotations = "view.toggleFieldAndLinkAnnotations";
+
+    /// <summary>Reveal annotations /F Hidden or NoView suppresses (#1021).</summary>
+    public const string ToggleAnnotationAuditMode = "view.toggleAnnotationAuditMode";
+
+    /// <summary>Tint fillable form fields (#1021).</summary>
+    public const string ToggleFormFieldHighlighting = "view.toggleFormFieldHighlighting";
     public const string ToggleClipboardHistory = "view.toggleClipboardHistory";
 
     public const string ToggleRedactionMode = "redaction.toggleMode";

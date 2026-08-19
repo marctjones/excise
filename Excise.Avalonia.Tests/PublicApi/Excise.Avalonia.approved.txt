@@ -106,12 +106,16 @@ namespace Excise.Avalonia.Controls
         public static readonly Avalonia.StyledProperty<System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfField>?> FormFieldsProperty;
         public static readonly Avalonia.StyledProperty<bool> HasErrorProperty;
         public static readonly Avalonia.StyledProperty<System.Collections.Generic.IEnumerable<Excise.Avalonia.Controls.HiddenTextHighlight>?> HiddenTextHighlightsProperty;
+        public static readonly Avalonia.StyledProperty<bool> HighlightFormFieldsProperty;
         public static readonly Avalonia.StyledProperty<Excise.Avalonia.Controls.InteractionMode> InteractionModeProperty;
         public static readonly Avalonia.StyledProperty<bool> IsLoadingProperty;
         public static readonly Avalonia.StyledProperty<Excise.Avalonia.Controls.PathCaptureKind> PathCaptureKindProperty;
         public static readonly Avalonia.StyledProperty<Excise.Core.Text.ReadingOrderStrategy> ReadingOrderStrategyProperty;
         public static readonly Avalonia.StyledProperty<long> RenderVersionProperty;
+        public static readonly Avalonia.StyledProperty<bool> RevealHiddenAnnotationsProperty;
         public static readonly Avalonia.StyledProperty<bool> ShowAnnotationsProperty;
+        public static readonly Avalonia.StyledProperty<bool> ShowCommentAnnotationsProperty;
+        public static readonly Avalonia.StyledProperty<bool> ShowFieldAndLinkAnnotationsProperty;
         public static readonly Avalonia.StyledProperty<System.Collections.Generic.IEnumerable<Excise.Core.Editing.PdfTypewriterTextOperation>?> TypewriterTextOperationsProperty;
         public static readonly Avalonia.StyledProperty<Excise.Avalonia.Controls.PdfViewMode> ViewModeProperty;
         public static readonly Avalonia.StyledProperty<Excise.Core.Text.WhitespaceMode> WhitespaceModeProperty;
@@ -124,12 +128,16 @@ namespace Excise.Avalonia.Controls
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfField>? FormFields { get; set; }
         public bool HasError { get; }
         public System.Collections.Generic.IEnumerable<Excise.Avalonia.Controls.HiddenTextHighlight>? HiddenTextHighlights { get; set; }
+        public bool HighlightFormFields { get; set; }
         public Excise.Avalonia.Controls.InteractionMode InteractionMode { get; set; }
         public bool IsLoading { get; }
         public Excise.Avalonia.Controls.PathCaptureKind PathCaptureKind { get; set; }
         public Excise.Core.Text.ReadingOrderStrategy ReadingOrderStrategy { get; set; }
         public long RenderVersion { get; set; }
+        public bool RevealHiddenAnnotations { get; set; }
         public bool ShowAnnotations { get; set; }
+        public bool ShowCommentAnnotations { get; set; }
+        public bool ShowFieldAndLinkAnnotations { get; set; }
         public System.Collections.Generic.IEnumerable<Excise.Core.Editing.PdfTypewriterTextOperation>? TypewriterTextOperations { get; set; }
         public Excise.Avalonia.Controls.PdfViewMode ViewMode { get; set; }
         public Excise.Core.Text.WhitespaceMode WhitespaceMode { get; set; }
