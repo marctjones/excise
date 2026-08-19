@@ -494,8 +494,12 @@ if [ "$EVERYTHING" = "1" ]; then
         # PDFium 331/357 (1.1), pdf.js 685/1269 (1.9), Isartor 205/10223 —
         # and Isartor's 10k pages are TWO enormous documents that would
         # dominate an all-pages run while testing almost nothing new.
+        # pdf.js and PDFium both scan every page; the others stay on page 1.
+        # PDFium costs only ~48 extra pages (331 files / 405 page rows) and it
+        # is where the last 3 documents carrying annotations beyond page 1 live
+        # (linearized.pdf, linearized_bug_1055.pdf, annots.pdf) — #1037.
         _cs_mode="first"
-        [[ "$_cs_dir" == *"/pdfjs" ]] && _cs_mode="all"
+        case "$_cs_dir" in *"/pdfjs"|*"/pdfium") _cs_mode="all" ;; esac
         emit "$_cs_name" script \
             "scripts/run-exploratory-corpus.sh --corpus $_cs_dir --page-mode $_cs_mode --extra-oracles all --expectation-manifest $_cs_manifest" "-"
     done
