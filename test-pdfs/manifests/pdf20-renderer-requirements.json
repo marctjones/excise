@@ -447,22 +447,62 @@
       "notes": "ContentStreamCycleType3insideType3 and related corpus evidence should remain classified."
     },
     {
-      "id": "pdf20.interactive.annotations",
-      "clause": "12.5",
+      "id": "pdf20.interactive.annotations.appearance-stream",
+      "clause": "12.5.5",
       "area": "interactive",
-      "profile": "Interactive",
-      "obligation": "Track annotation appearance and interaction coverage separately from renderer hard gate unless appearance rendering is claimed.",
+      "profile": "RendererCore",
+      "obligation": "When an annotation supplies a normal appearance stream, render that stream; its /BBox shall be mapped to /Rect through /Matrix per the appearance algorithm.",
       "detectFeatures": [
         "/Annots",
-        "/Widget",
-        "/AP"
+        "/AP",
+        "/AS",
+        "/BBox",
+        "/Matrix"
       ],
       "requiredEvidence": [
-        "tracked"
+        "unit",
+        "atomic-pdf"
       ],
-      "oracle": "tracked-only",
-      "status": "TRACKED_NON_BLOCKING",
-      "notes": "Appearance rendering can graduate individual rows to RendererCore later."
+      "oracle": "reference-renderer-majority",
+      "status": "COVERED",
+      "notes": "Graduated from pdf20.interactive.annotations once appearance rendering was claimed, which that row named as its own condition. Gated by AppearanceStreamDifferentialTests (synthetic: scale, translation, /Matrix re-fit, /AS state selection) and CorpusAppearanceStreamTests (real pdf.js documents). Both mutation-proven; the synthetic fixtures exist because real files have /BBox equal to /Rect and so never exercise the mapping. Corpus coverage EXISTS (CorpusAppearanceStreamTests, 13 real pdf.js documents) but is deliberately not claimed as 'corpus' evidence here: this matrix means a rendering-contract JSON naming the requirement id, which is a different mechanism. Claiming it would be claiming evidence of the wrong kind."
+    },
+    {
+      "id": "pdf20.interactive.annotations.preservation",
+      "clause": "12.5.2",
+      "area": "interactive",
+      "profile": "ParserSupport",
+      "obligation": "Annotation dictionaries shall survive an open-save round trip unchanged in count, including subtypes the processor does not interpret.",
+      "detectFeatures": [
+        "/Annots",
+        "/Subtype"
+      ],
+      "requiredEvidence": [
+        "unit"
+      ],
+      "oracle": "qpdf-object-inventory",
+      "status": "COVERED",
+      "notes": "Gated by UnauthoredAnnotationPreservationTests over the 12 subtypes excise cannot author (Sound, Movie, Screen, RichMedia, 3D, Projection, TrapNet, PrinterMark, Watermark, Caret, FileAttachment, Redact), with a negative control. Inventory is qpdf's raw object graph, never excise's parser. 22 of 28 subtypes are redaction carriers, so a dropped annotation is data loss and a kept-but-unseen one is a leak. Runs over real veraPDF/pdf.js/PDFium fixtures, but see the note above: that is not a rendering contract, so only 'unit' is claimed."
+    },
+    {
+      "id": "pdf20.interactive.annotations.synthesis",
+      "clause": "12.5.5",
+      "area": "interactive",
+      "profile": "Interactive",
+      "obligation": "Where no appearance stream is present a processor MAY synthesize one; judge the annotation's meaning (text, presence, containment, stated colours) rather than pixel agreement.",
+      "detectFeatures": [
+        "/Annots",
+        "/C",
+        "/IC",
+        "/QuadPoints",
+        "/F"
+      ],
+      "requiredEvidence": [
+        "unit"
+      ],
+      "oracle": "meaning-properties-not-pixel-agreement",
+      "status": "COVERED",
+      "notes": "Deliberately NOT a hard gate, and not because it is unverified. The spec declines to specify the appearance, and measured unanimity across five independent engines is 57.8% and FELL when the pool grew from three - pixel agreement is the wrong instrument for a question nobody specified. Gated by GroupBAnnotationMeaningTests on properties that do have one right answer. Includes deliberate divergences: an uncoloured /Highlight is yellow where mutool and pdftocairo paint black, because a black highlight over body text is indistinguishable from a redaction bar."
     },
     {
       "id": "pdf20.tagged-pdf.structure",

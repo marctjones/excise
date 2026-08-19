@@ -270,6 +270,20 @@ run_t1() {
     # It is one of the few gates here that checks something a USER would
     # notice, and it was the only one that could not fire.
     run_step "lazy-startup" scripts/verify-lazy-startup.sh
+    # The PDF 2.0 renderer conformance gate (ISO 32000-2:2020 + EC3): 95
+    # requirements traced to the spec, audited against actual evidence.
+    #
+    # t1 rather than t2-only, added 2026-08-18. It ran ONLY in release-smoke, so
+    # a PR could not fail it — and it takes 35 SECONDS. The 7 schema tests
+    # inside Core.Tests already run at t0; what was missing here is the audit
+    # that decides whether a requirement's claimed evidence actually exists.
+    #
+    # It earns the slot: asked to graduate the annotation rows to hard-gate
+    # status, it refused two of them (MISSING_CORPUS) because they claimed
+    # corpus evidence that was not registered. A gate that rejects an
+    # unsupported claim from the person editing it is the kind worth running
+    # early.
+    run_step "pdf20-conformance" scripts/run-pdf20-renderer-conformance.sh
     run_step "redaction-suites" dotnet test --no-build -c Debug --filter "FullyQualifiedName~Redaction" --logger "console;verbosity=normal"
     # #644: the encryption interop gate. Neither of t1's other rendering
     # steps reaches it — the redaction filter doesn't match it and
