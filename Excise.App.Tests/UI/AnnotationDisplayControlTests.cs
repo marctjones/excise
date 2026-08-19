@@ -129,4 +129,48 @@ public class AnnotationDisplayControlTests
         viewer.RevealHiddenAnnotations.Should().BeTrue("RevealHiddenAnnotations must be bound");
         viewer.HighlightFormFields.Should().BeTrue("HighlightFormFields must be bound");
     }
+
+    [FixedAvaloniaFact]
+    public async System.Threading.Tasks.Task RedactAnnotations_AreReportedAndNeverApplied()
+    {
+        // #1021 decision 5. A /Redact annotation marks a region somebody
+        // INTENDED to redact (§12.5.6.23). It is an instruction to a processor,
+        // and applying someone else's marks is destructive and irreversible —
+        // so excise reports the count and does nothing else. That is the
+        // project's "surface, don't guess" carrier policy: the reviewer learns
+        // the marks exist and decides.
+        var (_, vm) = Open();
+
+        vm.RedactAnnotationCount.Should().Be(0, "no document is open");
+        vm.RedactAnnotationNotice.Should().BeNull(
+            "null rather than an empty string, so a binding can hide the whole notice");
+
+        var path = ResolveFixture("test-pdfs/pdfium/redact_annot.pdf");
+        Assert.SkipWhen(path == null, "PDFium corpus not present");
+
+        // AWAIT it. Blocking with GetAwaiter().GetResult() here deadlocks: the
+        // headless test occupies the UI thread while LoadDocumentAsync tries to
+        // marshal its continuation back to it. The symptom is a testhost sitting
+        // at ~0% CPU forever, which looks exactly like the #894 vstest hang and
+        // is not.
+        await vm.LoadDocumentAsync(path!);
+
+        vm.RedactAnnotationCount.Should().BeGreaterThan(0,
+            "the fixture carries a /Redact annotation and the reviewer must be told");
+        vm.RedactAnnotationNotice.Should().NotBeNull()
+            .And.Subject.As<string>().Should().Contain("does not apply them",
+                "the notice must say excise will NOT act on the marks — that is the decision");
+    }
+
+    private static string? ResolveFixture(string rel)
+    {
+        var dir = System.AppContext.BaseDirectory;
+        for (var i = 0; i < 8 && dir != null; i++)
+        {
+            var c = System.IO.Path.Combine(dir, rel);
+            if (System.IO.File.Exists(c)) return c;
+            dir = System.IO.Path.GetDirectoryName(dir);
+        }
+        return null;
+    }
 }
