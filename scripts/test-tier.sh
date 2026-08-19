@@ -210,6 +210,10 @@ run_t0() {
     # deleted 2026-08-16.)
     # Self-test first so a broken checker can't report a false "passed".
     run_step "doc-claim-freshness-selftest" scripts/check-doc-claim-freshness.sh --self-test
+    # A source file that .gitignore swallows is work that never reaches the
+    # remote — silently, and in the direction of losing it. Pure git metadata,
+    # no build, milliseconds.
+    run_step "no-ignored-sources" scripts/check-no-ignored-sources.sh
     run_step "doc-claim-freshness" scripts/check-doc-claim-freshness.sh
     # origin/develop, not origin/main: this repo's git-flow lands feature
     # work on develop (release.yml/PR merges to main happen separately), so
