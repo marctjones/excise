@@ -528,17 +528,56 @@ internal partial class RenderContext
     /// it, and stroking alone matches what viewers show for these without an
     /// /AP stream.
     /// </summary>
+    /// <summary>
+    /// Polygon (<paramref name="close"/> true) and PolyLine (false), §12.5.6.9.
+    ///
+    /// <para>#1069: only a Polygon has an INTERIOR, and only a Polygon fills it
+    /// with <c>/IC</c>. excise stroked and never filled, so a Polygon over page
+    /// content showed the content through — a shape that obscures in every
+    /// other viewer was transparent here. Same defect shape as #1055 for
+    /// Square/Circle, and the same fix order: interior first, stroke over it
+    /// (§12.5.6.8 Table 178).</para>
+    ///
+    /// <para><b>An /IC with no /C still draws.</b> Measured at 150 dpi on a
+    /// Polygon carrying /IC and no /C: mutool 42,777 inked px, pdftocairo
+    /// 44,102, excise 0. Both fill it. This does NOT contradict #889 and
+    /// <c>ShapeAnnotationSynthesisTests.ShapeWithoutColor_DrawsNothing</c>,
+    /// which pins the case where there is NO colour of any kind — with neither
+    /// /C nor /IC there is genuinely nothing to draw with, and mutool agrees.
+    /// Here the file states an interior colour and excise was ignoring it.</para>
+    ///
+    /// <para>⚠️ The issue also claimed the path was not closed. It was:
+    /// <c>path.Close()</c> was already here and the stroked outline matches both
+    /// oracles edge for edge. That half of #1069 was my misreading of a
+    /// low-resolution render, re-measured before implementing rather than
+    /// "fixed".</para>
+    /// </summary>
     private void RenderVertexShapeDefault(Excise.Core.Document.PdfAnnotation annot, bool close)
     {
         if (annot.Vertices is not { Count: >= 2 } verts) return;
-        using var paint = CreateAnnotationStrokePaint(annot);
-        if (paint == null) return;
 
         using var path = new SKPath();
         path.MoveTo((float)verts[0].X, (float)verts[0].Y);
         for (int i = 1; i < verts.Count; i++)
             path.LineTo((float)verts[i].X, (float)verts[i].Y);
         if (close) path.Close();
+
+        // A PolyLine is an open path and has no interior to fill; /IC is a
+        // Polygon entry (§12.5.6.9 Table 179).
+        if (close && annot.InteriorColor is { } interior)
+        {
+            var (ir, ig, ib) = interior;
+            using var fill = new SKPaint
+            {
+                IsAntialias = _options.AntiAlias,
+                Style = SKPaintStyle.Fill,
+                Color = RgbToColor(ir, ig, ib),
+            };
+            _canvas.DrawPath(path, fill);
+        }
+
+        using var paint = CreateAnnotationStrokePaint(annot);
+        if (paint == null) return;
         _canvas.DrawPath(path, paint);
     }
 
