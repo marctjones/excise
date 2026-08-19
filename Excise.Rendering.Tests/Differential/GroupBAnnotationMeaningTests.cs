@@ -239,26 +239,28 @@ public class GroupBAnnotationMeaningTests
         centre.Blue.Should().BeLessThan(80, "the interior must be GREEN, not merely bright");
     }
 
-    // ------------------------------------------- UNSTATED COLOUR: FOLLOW MUTOOL
+    // ---------------------------------------- UNSTATED COLOUR: SERVE THE READER
 
     /// <summary>
-    /// Project decision, 2026-08-18: where the file states no colour and the
-    /// engines differ, excise takes <b>mutool's</b>. §12.5.6.10 gives no default
-    /// for a markup annotation with no <c>/C</c>, so whatever excise drew there
-    /// was its own invention — and "the usual highlighter yellow" was an
-    /// invention no other engine shares.
+    /// A <c>/Highlight</c> with no <c>/C</c> is drawn YELLOW, deliberately
+    /// diverging from mutool and pdftocairo, which both paint it black.
     ///
-    /// <para>Measured on a <c>/Highlight</c> with no <c>/C</c> at 150 dpi:
-    /// excise drew <c>(255,255,0)</c> ×16848 where mutool drew <c>(0,0,0)</c>
-    /// ×16397 and pdftocairo <c>(0,0,0)</c> ×16438 — identical geometry, and the
-    /// colour was the whole difference.</para>
+    /// <para>§12.5.6.10 defines Highlight as markup that "shall appear as
+    /// highlights"; §12.5.5 leaves the appearance unspecified without an
+    /// <c>/AP</c>. So neither colour is prescribed — but rendered over body
+    /// text, an uncoloured Highlight in mutool is <b>indistinguishable from a
+    /// redaction bar</b>. For a redaction tool, showing a reviewer a black bar
+    /// over text that has NOT been redacted invites precisely the wrong
+    /// conclusion about what the document still contains.</para>
     ///
-    /// <para>⚠️ Nothing asserted the yellow. Changing it broke no test, which is
-    /// why this exists: an invented default that no gate pins can drift back in
-    /// as easily as it drifted in.</para>
+    /// <para>This pins the divergence so it is a decision rather than an
+    /// accident. It was briefly changed to black on the reasoning that an
+    /// unstated colour means the initial graphics state (§8.6.8) — that was a
+    /// description of mutool's behaviour dressed up as a rule, and the rendered
+    /// comparison is what disproved it.</para>
     /// </summary>
     [Fact]
-    public void AMarkupAnnotationWithNoColour_UsesMutoolsChoiceNotAnInventedOne()
+    public void AnUncolouredHighlight_IsYellowNotABlackBarOverTheText()
     {
         var pdf = BuildSquare("/Subtype /Highlight /F 4 /Rect [40 90 160 120] " +
                               "/QuadPoints [40 120 160 120 40 90 160 90]")
@@ -270,8 +272,11 @@ public class GroupBAnnotationMeaningTests
         var scale = Dpi / 72.0;
         var inside = bmp.GetPixel((int)(100 * scale), (int)((200 - 105) * scale));
 
-        inside.Red.Should().BeLessThan(80, "an uncoloured markup annotation follows mutool: black");
-        inside.Green.Should().BeLessThan(80, "not the highlighter yellow excise used to invent");
+        inside.Red.Should().BeGreaterThan(180, "an uncoloured highlight must be YELLOW");
+        inside.Green.Should().BeGreaterThan(180, "an uncoloured highlight must be YELLOW");
+        inside.Blue.Should().BeLessThan(80,
+            "yellow, not white — and emphatically not the black mutool draws, which " +
+            "would read as a redaction bar over text that is still present");
     }
 
     // ------------------------------------------------------ NO INVENTED INK
