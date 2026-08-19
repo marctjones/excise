@@ -502,16 +502,59 @@ internal partial class RenderContext
         // Line/Polygon/Ink it is routinely absent and 1.0 is the spec default.
         var width = (float)(annot.BorderWidth ?? 1.0);
         if (width <= 0) width = 1.0f;
+
+        var dash = CreateBorderDashEffect(annot);
         return new SKPaint
         {
             IsAntialias = _options.AntiAlias,
             Style = SKPaintStyle.Stroke,
             StrokeWidth = width,
-            StrokeCap = SKStrokeCap.Round,
+            // A dashed border wants BUTT ends: round caps bleed each dash into
+            // the gap either side, which at a 3pt width closes a [6 3] pattern
+            // into a solid line and undoes the thing being drawn.
+            StrokeCap = dash != null ? SKStrokeCap.Butt : SKStrokeCap.Round,
             StrokeJoin = SKStrokeJoin.Round,
             Color = RgbToColor(r, g, b),
+            PathEffect = dash,
         };
     }
+
+    /// <summary>
+    /// The <c>/BS</c> dash pattern (§12.5.4 Table 166), or null for a solid
+    /// border. #1073: <c>/S /D</c> rendered solid — excise honoured <c>/W</c>
+    /// and ignored <c>/S</c> and <c>/D</c> entirely, so a dashed callout box
+    /// came out as a solid one.
+    ///
+    /// <para>The array is in POINTS, which is also this canvas's unit, so it
+    /// needs no scaling — the canvas carries the dpi transform.</para>
+    /// </summary>
+    private static SKPathEffect? CreateBorderDashEffect(Excise.Core.Document.PdfAnnotation annot)
+    {
+        if (!string.Equals(annot.BorderStyle, "D", StringComparison.Ordinal)) return null;
+
+        var pattern = annot.BorderDashPattern;
+        // §12.5.4: an omitted /D defaults to [3]. A single value means equal
+        // dash and gap, which Skia needs spelled out as two.
+        var dashes = pattern is { Count: > 0 }
+            ? pattern.Select(d => (float)d).Where(d => d >= 0).ToArray()
+            : new[] { 3f };
+        if (dashes.Length == 0) return null;
+        if (dashes.Length == 1) dashes = new[] { dashes[0], dashes[0] };
+        // Skia requires an even count; drop a trailing odd entry rather than
+        // throwing on a file that states one.
+        if (dashes.Length % 2 != 0) dashes = dashes[..^1];
+        if (dashes.Length == 0 || dashes.All(d => d <= 0)) return null;
+
+        // CACHED, not created per call. Callers dispose the SKPaint, and
+        // SKPaint.Dispose does NOT dispose its PathEffect — creating one per
+        // annotation would leak a native object on every page render. Dash
+        // patterns repeat heavily within a document, so the cache stays tiny.
+        var key = string.Join(',', dashes);
+        return DashEffects.GetOrAdd(key, _ => SKPathEffect.CreateDash(dashes, 0f));
+    }
+
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, SKPathEffect>
+        DashEffects = new();
 
     /// <summary>Line annotation (§12.5.6.7): draw /L as a segment.</summary>
     private void RenderLineDefault(Excise.Core.Document.PdfAnnotation annot)
@@ -522,12 +565,6 @@ internal partial class RenderContext
         _canvas.DrawLine((float)l.X1, (float)l.Y1, (float)l.X2, (float)l.Y2, paint);
     }
 
-    /// <summary>
-    /// Polygon and PolyLine (§12.5.6.9): the same /Vertices list, closed or
-    /// open. Interior colour (/IC) is not filled — the parser does not surface
-    /// it, and stroking alone matches what viewers show for these without an
-    /// /AP stream.
-    /// </summary>
     /// <summary>
     /// Polygon (<paramref name="close"/> true) and PolyLine (false), §12.5.6.9.
     ///
@@ -1350,15 +1387,45 @@ internal partial class RenderContext
         var (r, g, b) = color;
         float borderWidth = (float)(annot.BorderWidth ?? 1.0);
 
+        // §12.5.6.8: "the rectangle or ellipse shall be inset from the
+        // annotation's Rect by the border width" — so the OUTER edge of the
+        // stroke lands on /Rect. Skia strokes CENTRED on the path, so the path
+        // has to move in by half the width for the ink to land there (#1073).
+        //
+        // excise stroked centred on /Rect, putting half the border outside it.
+        // Measured, and it scaled exactly with the width:
+        //
+        //     border   /Rect px    mutool     pdftocairo   excise (before)
+        //     1 pt     194 x 138   194 x 138  194 x 138    197 x 142
+        //     3 pt     312 x 125   313 x 124  313 x 125    319 x 131
+        //
+        // Not cosmetic: /Rect is the geometry the redaction scrubber uses to
+        // decide which annotations a redaction covers, so ink outside it was
+        // ink the removal path did not know about. With the inset the drawn
+        // ink lands inside /Rect and /Rect-based intersection is sufficient.
+        //
+        // Square and Circle ONLY. §12.5.6.8's inset language is specific to
+        // these two; Polygon, PolyLine, Line and Ink draw on their own declared
+        // geometry, not on /Rect, and insetting those would move ink the file
+        // positions explicitly.
+        var half = borderWidth / 2f;
+        var stroked = new SKRect(
+            rect.Left + half, rect.Top + half, rect.Right - half, rect.Bottom - half);
+        // A border thicker than the annotation collapses the inset rect; fall
+        // back to /Rect rather than drawing an inverted one.
+        if (stroked.Width <= 0 || stroked.Height <= 0) stroked = rect;
+
         using var paint = new SKPaint
         {
             IsAntialias = _options.AntiAlias,
             Style = SKPaintStyle.Stroke,
             StrokeWidth = borderWidth,
+            StrokeCap = SKStrokeCap.Butt,
             Color = RgbToColor(r, g, b),
+            PathEffect = CreateBorderDashEffect(annot),
         };
-        if (isEllipse) _canvas.DrawOval(rect, paint);
-        else _canvas.DrawRect(rect, paint);
+        if (isEllipse) _canvas.DrawOval(stroked, paint);
+        else _canvas.DrawRect(stroked, paint);
     }
 
     /// <summary>
