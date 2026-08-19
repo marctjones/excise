@@ -330,12 +330,12 @@
                           access:CommandAccessibility.CommandId="view.zoomIn"/>
                 <MenuItem Header="Zoom _Out" Command="{Binding ZoomOutCommand}" InputGesture="Ctrl+-"
                           access:CommandAccessibility.CommandId="view.zoomOut"/>
-                <MenuItem Header="_Actual Size" Command="{Binding ZoomActualSizeCommand}" InputGesture="Ctrl+0"
+                <MenuItem Header="_Actual Size" Command="{Binding ZoomActualSizeCommand}" InputGesture="Ctrl+D0"
                           access:CommandAccessibility.CommandId="view.zoomActualSize"/>
                 <Separator/>
-                <MenuItem Header="Fit _Width" Command="{Binding ZoomFitWidthCommand}" InputGesture="Ctrl+1"
+                <MenuItem Header="Fit _Width" Command="{Binding ZoomFitWidthCommand}" InputGesture="Ctrl+D1"
                           access:CommandAccessibility.CommandId="view.zoomFitWidth"/>
-                <MenuItem Header="Fit _Page" Command="{Binding ZoomFitPageCommand}" InputGesture="Ctrl+2"
+                <MenuItem Header="Fit _Page" Command="{Binding ZoomFitPageCommand}" InputGesture="Ctrl+D2"
                           access:CommandAccessibility.CommandId="view.zoomFitPage"/>
                 <Separator/>
                 <MenuItem x:Name="ViewContinuousMenuItem"

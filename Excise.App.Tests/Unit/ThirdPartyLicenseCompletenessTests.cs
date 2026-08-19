@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading.Tasks;
 using AwesomeAssertions;
 using Excise.App.ViewModels;
 using Xunit;
@@ -132,79 +133,49 @@ public class ThirdPartyLicenseCompletenessTests
         return !p.LicenseName!.Trim().Equals("(see licenseUrl)", StringComparison.OrdinalIgnoreCase);
     }
 
+    /// <summary>
+    /// The restored package closure, read from NuGet's own <c>project.assets.json</c>.
+    ///
+    /// <para><b>This used to shell out to <c>dotnet list package
+    /// --include-transitive</c> and it wedged the entire suite.</b> Running a
+    /// nested <c>dotnet</c> from inside <c>dotnet test</c> leaves MSBuild
+    /// node-reuse workers alive holding the inherited stdout handle, so the pipe
+    /// never reached EOF; <c>WaitForExit(ms)</c> returned true because the child
+    /// HAD exited, and the read that followed blocked forever. Three consecutive
+    /// full-suite runs aborted with "host process exited unexpectedly", taking
+    /// all 1,310 tests with them — a compliance check that can hide every
+    /// correctness test behind it costs far more than it protects.</para>
+    ///
+    /// <para>The assets file keeps the property that mattered: it is written by
+    /// NuGet during restore, so the manifest is still not permitted to vouch for
+    /// its own completeness. It is also instant, needs no network, and cannot
+    /// hang.</para>
+    /// </summary>
     private static List<string> ResolvePackageClosure()
     {
-        var csproj = Path.Combine(FindRepoRoot(), "Excise.App", "Excise.App.csproj");
-        File.Exists(csproj).Should().BeTrue($"expected the GUI project at {csproj}");
-
-        var psi = new ProcessStartInfo("dotnet")
-        {
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-        };
-        psi.ArgumentList.Add("list");
-        psi.ArgumentList.Add(csproj);
-        psi.ArgumentList.Add("package");
-        psi.ArgumentList.Add("--include-transitive");
-        psi.ArgumentList.Add("--format");
-        psi.ArgumentList.Add("json");
-
-        using var proc = Process.Start(psi)
-            ?? throw new InvalidOperationException("Failed to start 'dotnet list package'");
-
-        // Drain both pipes concurrently and bound the wait WELL BELOW the
-        // harness's hang detector. Two separate defects were here:
-        //
-        //   1. `ReadToEnd()` on stdout then stderr deadlocks if the child fills
-        //      the stderr buffer while we are blocked on stdout. `dotnet list
-        //      package` restores and can emit a lot of NuGet warnings there.
-        //   2. The 120_000 wait was EXACTLY CI's `--blame-hang-timeout 120000`.
-        //      A child that took that long meant the blame collector fired at
-        //      the same moment and won — aborting the whole run with
-        //      "Test host process crashed" and a 500 MB core dump instead of
-        //      failing this one test with a readable message. That is what
-        //      turned a slow restore into a red Linux CI job on a docs-only
-        //      commit.
-        //
-        // 60s leaves the harness a full minute of headroom to report cleanly.
-        const int WaitMs = 60_000;
-        var stdoutTask = proc.StandardOutput.ReadToEndAsync();
-        var stderrTask = proc.StandardError.ReadToEndAsync();
-
-        var exited = proc.WaitForExit(WaitMs);
-        if (!exited)
-        {
-            try { proc.Kill(entireProcessTree: true); } catch { /* already gone */ }
-        }
-        exited.Should().BeTrue(
-            $"'dotnet list package' must finish within {WaitMs / 1000}s — longer than that " +
-            "and CI's blame collector aborts the entire test host rather than failing here");
-
-        var stdout = stdoutTask.GetAwaiter().GetResult();
-        var stderr = stderrTask.GetAwaiter().GetResult();
-        proc.ExitCode.Should().Be(0, $"dotnet list package failed: {stderr}");
+        var assets = Path.Combine(FindRepoRoot(), "Excise.App", "obj", "project.assets.json");
+        File.Exists(assets).Should().BeTrue(
+            $"expected NuGet's restore output at {assets} — run 'dotnet restore Excise.App'");
 
         var ids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        using var json = JsonDocument.Parse(stdout);
-        foreach (var project in json.RootElement.GetProperty("projects").EnumerateArray())
+        using var json = JsonDocument.Parse(File.ReadAllText(assets));
+
+        // "targets" is keyed by target framework; each entry is "<id>/<version>"
+        // and carries a "type" of "package" or "project".
+        foreach (var framework in json.RootElement.GetProperty("targets").EnumerateObject())
         {
-            if (!project.TryGetProperty("frameworks", out var fws) || fws.ValueKind != JsonValueKind.Array)
-                continue;
-            foreach (var fw in fws.EnumerateArray())
+            foreach (var entry in framework.Value.EnumerateObject())
             {
-                foreach (var kind in new[] { "topLevelPackages", "transitivePackages" })
-                {
-                    if (!fw.TryGetProperty(kind, out var arr) || arr.ValueKind != JsonValueKind.Array)
-                        continue;
-                    foreach (var pkg in arr.EnumerateArray())
-                    {
-                        if (pkg.TryGetProperty("id", out var idEl) && idEl.GetString() is { } id)
-                            ids.Add(id);
-                    }
-                }
+                if (!entry.Value.TryGetProperty("type", out var type)) continue;
+                if (type.GetString() != "package") continue;
+
+                var slash = entry.Name.IndexOf('/');
+                ids.Add(slash > 0 ? entry.Name[..slash] : entry.Name);
             }
         }
+
+        ids.Should().NotBeEmpty("the restored closure cannot be empty; an empty one would " +
+            "make this gate pass by finding nothing to check");
         return ids.ToList();
     }
 

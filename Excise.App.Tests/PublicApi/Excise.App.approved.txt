@@ -792,6 +792,10 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> AddUnderlineAnnotationFromSelectionCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ApplyAllRedactionsCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ApplyRedactionCommand { get; }
+        public bool AreAnnotationsVisible { get; set; }
+        public bool AreCommentAnnotationsVisible { get; set; }
+        public bool AreFieldAndLinkAnnotationsVisible { get; set; }
+        public bool AreFormFieldsHighlighted { get; set; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, int> AutoDetectFieldsCommand { get; }
         public bool CanMoveSelectedPagesEarlier { get; }
         public bool CanMoveSelectedPagesLater { get; }
@@ -846,6 +850,7 @@ namespace Excise.App.ViewModels
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> InsertPagesAfterCurrentCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> InsertPagesBeforeCurrentCommand { get; }
         public Excise.Avalonia.Controls.InteractionMode InteractionMode { get; }
+        public bool IsAnnotationAuditModeEnabled { get; set; }
         public bool IsClipboardSidebarVisible { get; set; }
         public bool IsContinuousView { get; }
         public bool IsDocumentLoaded { get; }
@@ -888,6 +893,8 @@ namespace Excise.App.ViewModels
         public Excise.Core.Text.ReadingOrderStrategy ReadingOrderStrategy { get; set; }
         public System.Collections.ObjectModel.ObservableCollection<Avalonia.Controls.MenuItem> RecentFileMenuItems { get; }
         public System.Collections.ObjectModel.ObservableCollection<string> RecentFiles { get; set; }
+        public int RedactAnnotationCount { get; }
+        public string? RedactAnnotationNotice { get; }
         public Excise.App.ViewModels.RedactionWorkflowManager RedactionWorkflow { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> RedoCommand { get; }
         public string RedoMenuHeader { get; }
@@ -930,10 +937,15 @@ namespace Excise.App.ViewModels
         public string StatusText { get; }
         public Avalonia.Platform.Storage.IStorageProvider? StorageProviderOverride { get; set; }
         public Excise.App.Services.ToastService ToastService { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleAnnotationAuditModeCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleAnnotationsCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleArrowModeCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleClipboardSidebarCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleCommentAnnotationsCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleContinuousViewCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleFieldAndLinkAnnotationsCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleFormAuthoringModeCommand { get; }
+        public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleFormFieldHighlightingCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleFreehandModeCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleLineModeCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> ToggleOutlineCommand { get; }
@@ -1019,7 +1031,12 @@ namespace Excise.App.ViewModels
         public void SetHoveredLinkTarget(string? target) { }
         public System.Threading.Tasks.Task SetSelectedTextAndCopyAsync(string text) { }
         public void SetTypewriterColor(string? hex) { }
+        public void ToggleAnnotationAuditMode() { }
+        public void ToggleAnnotationsVisible() { }
         public void ToggleClipboardSidebar() { }
+        public void ToggleCommentAnnotationsVisible() { }
+        public void ToggleFieldAndLinkAnnotationsVisible() { }
+        public void ToggleFormFieldHighlighting() { }
         public void ToggleOutlineSidebar() { }
         public void ToggleThumbnailsSidebar() { }
         public void UpdateSearchHighlights() { }

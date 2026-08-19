@@ -148,6 +148,16 @@ public class GuiClickSafetySweepTests
                 }
             }
 
+            // Publish what command EXECUTION reached, so the interaction-coverage
+            // report can separate "covered only by executing its command" (B) from
+            // "no automation at all" (C). Without this split the gap list reads far
+            // worse than the truth: most menu items are B, not C.
+            // See Excise.App.Tests/UI/InteractionCoverage/GuiInteractionRecorder.cs.
+            var executedPath = System.IO.Path.Combine(
+                InteractionCoverage.GuiInteractionRecorder.RepoArtifactsDirectory(), "gui-command-executed.tsv");
+            System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(executedPath)!);
+            System.IO.File.WriteAllLines(executedPath, invoked.OrderBy(x => x, StringComparer.Ordinal));
+
             _out.WriteLine($"Invoked {invoked.Count}: {string.Join(", ", invoked)}");
             _out.WriteLine($"Skipped {skipped.Count}: {string.Join(", ", skipped)}");
             if (threw.Count > 0) _out.WriteLine("THREW:\n  " + string.Join("\n  ", threw));
