@@ -1129,9 +1129,28 @@ internal partial class RenderContext
             return RgbToColor(r, g, b);
         }
 
-        return annot.Subtype == Excise.Core.Document.PdfAnnotationSubtype.Highlight
-            ? new SKColor(255, 255, 0)
-            : SKColors.Black;
+        // BLACK for every markup subtype, Highlight included.
+        //
+        // THE RULE, and it is not "copy mutool": when the file prescribes no
+        // colour, paint with the INITIAL GRAPHICS STATE colour. §8.6.8 makes
+        // that DeviceGray 0 — black. A renderer synthesizing an appearance
+        // simply does not set a colour, so it gets the default one.
+        //
+        // That is why mutool, pdftocairo and excise's own FreeText and Link
+        // paths all land on black without agreeing to: none of them chose it.
+        // excise's markup path did choose — "the usual highlighter yellow" —
+        // and a chosen default is an invented one.
+        //
+        // Measured on a /Highlight with no /C, same fixture, 150 dpi:
+        //     excise      (255,255,0) x16848
+        //     mutool      (0,0,0)     x16397
+        //     pdftocairo  (0,0,0)     x16438
+        //
+        // Identical geometry, ~450px apart on a 17,000px shape — the ONLY
+        // difference was the colour excise invented. Project decision
+        // 2026-08-18: where the file states no colour and the engines differ,
+        // take mutool's.
+        return SKColors.Black;
     }
 
     private static SKColor WithAlpha(SKColor color, byte alpha) =>
