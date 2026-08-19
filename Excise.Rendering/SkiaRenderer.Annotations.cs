@@ -954,6 +954,28 @@ internal partial class RenderContext
     private void RenderShapeDefault(
         Excise.Core.Document.PdfAnnotation annot, SKRect rect, bool isEllipse)
     {
+        // /IC FIRST — the interior is painted, then the border stroked over it
+        // (§12.5.6.8 Table 178). excise ignored /IC entirely until #1055: on
+        // Okular's annotation-square-circle-without-appearance.pdf both mutool
+        // and pdftocairo fill the interior grey and excise left it white, so a
+        // shape that OBSCURES page content in every other viewer showed the
+        // text underneath here. That matters for a redaction reviewer, who is
+        // deciding from the rendered page.
+        if (annot.InteriorColor is { } interior)
+        {
+            var (ir, ig, ib) = interior;
+            using var fill = new SKPaint
+            {
+                IsAntialias = _options.AntiAlias,
+                Style = SKPaintStyle.Fill,
+                Color = RgbToColor(ir, ig, ib),
+            };
+            if (isEllipse) _canvas.DrawOval(rect, fill);
+            else _canvas.DrawRect(rect, fill);
+        }
+
+        // The border needs /C; an annotation may legitimately carry /IC alone,
+        // in which case the fill above is the whole appearance.
         if (annot.Color is not { } color) return;
         var (r, g, b) = color;
         float borderWidth = (float)(annot.BorderWidth ?? 1.0);

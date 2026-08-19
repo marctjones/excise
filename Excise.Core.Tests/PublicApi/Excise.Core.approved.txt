@@ -482,6 +482,11 @@ namespace Excise.Core.Document
                 "X",
                 "Y"})]
         public System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<System.ValueTuple<double, double>>>? InkStrokes { get; }
+        [System.Runtime.CompilerServices.TupleElementNames(new string?[]?[] {
+                "R",
+                "G",
+                "B"})]
+        public System.ValueTuple<double, double, double>? InteriorColor { get; }
         public bool IsOpen { get; }
         public bool IsTextMarkup { get; }
         [System.Runtime.CompilerServices.TupleElementNames(new string?[]?[] {
