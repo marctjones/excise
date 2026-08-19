@@ -109,6 +109,86 @@ public class ShapeAnnotationSynthesisTests : IDisposable
             "excise's blank correct rather than a missing feature");
     }
 
+    /// <summary>
+    /// #1069 — a Polygon has an INTERIOR and fills it with <c>/IC</c>
+    /// (§12.5.6.9 Table 179). excise stroked and never filled, so a Polygon
+    /// over page content showed the content through: a shape that obscures in
+    /// every other viewer was transparent here. Same defect shape as #1055 for
+    /// Square/Circle.
+    /// </summary>
+    [Fact]
+    public void PolygonWithInteriorColor_IsFilled()
+    {
+        var open = InkPixels(RenderWithExcise(WriteTemp(
+            VertexPdf("Polygon", withColor: true, withInterior: false))));
+        var filled = InkPixels(RenderWithExcise(WriteTemp(
+            VertexPdf("Polygon", withColor: true, withInterior: true))));
+
+        filled.Should().BeGreaterThan(open * 3,
+            "/IC paints the whole interior, so a filled polygon inks several times " +
+            "what its outline alone does — before #1069 these two were equal");
+    }
+
+    /// <summary>
+    /// The case with no pin either way, settled by measurement rather than
+    /// preference: at 150 dpi on a Polygon carrying /IC and NO /C, mutool inks
+    /// 42,777 px and pdftocairo 44,102 — both fill it. excise inked 0.
+    ///
+    /// <para>This does not contradict <see cref="ShapeWithoutColor_DrawsNothing"/>
+    /// and #889: that pins the case with NO colour of any kind, where there is
+    /// genuinely nothing to draw with. Here the file states an interior
+    /// colour.</para>
+    /// </summary>
+    [Fact]
+    public void PolygonWithInteriorColorButNoStrokeColor_IsStillFilled()
+    {
+        var path = WriteTemp(VertexPdf("Polygon", withColor: false, withInterior: true));
+
+        InkPixels(RenderWithExcise(path)).Should().BeGreaterThan(1000,
+            "both reference renderers fill it; drawing nothing ignores a colour the " +
+            "file explicitly states");
+
+        if (MutoolReferenceRenderer.IsAvailable)
+        {
+            using var reference = MutoolReferenceRenderer.RenderPage(path, 1, Dpi);
+            reference.Should().NotBeNull();
+            InkPixels(reference!).Should().BeGreaterThan(1000,
+                "fixture sanity — mutool must fill it, or this proves nothing");
+        }
+    }
+
+    /// <summary>
+    /// The negative control. A PolyLine is an OPEN path with no interior, so
+    /// /IC does not apply to it — filling one would invent a shape the file
+    /// does not describe.
+    /// </summary>
+    [Fact]
+    public void PolyLineWithInteriorColor_IsNotFilled()
+    {
+        var withIc = InkPixels(RenderWithExcise(WriteTemp(
+            VertexPdf("PolyLine", withColor: true, withInterior: true))));
+        var withoutIc = InkPixels(RenderWithExcise(WriteTemp(
+            VertexPdf("PolyLine", withColor: true, withInterior: false))));
+
+        withIc.Should().Be(withoutIc,
+            "/IC is a Polygon entry; a PolyLine has no interior and must ignore it");
+    }
+
+    private static byte[] VertexPdf(string subtype, bool withColor, bool withInterior)
+    {
+        var annot = $"<< /Type /Annot /Subtype /{subtype} /F 4 /Rect [20 20 180 180] " +
+                    "/Vertices [30 30 170 30 100 170]" +
+                    (withColor ? " /C [1 0 0]" : "") +
+                    (withInterior ? " /IC [0.2 0.8 0.8]" : "") + " /BS << /W 3 >> >>";
+        return Assemble(new[]
+        {
+            "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n",
+            $"2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 /MediaBox [0 0 {PageSize} {PageSize}] >>\nendobj\n",
+            "3 0 obj\n<< /Type /Page /Parent 2 0 R /Annots [4 0 R] >>\nendobj\n",
+            $"4 0 obj\n{annot}\nendobj\n",
+        });
+    }
+
     // ── fixtures ─────────────────────────────────────────────────────────────
 
     private static byte[] ShapePdf(string subtype, string geometry, bool withColor)
