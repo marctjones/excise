@@ -394,7 +394,9 @@ internal partial class RenderContext
         // so it is normalised before the guard rather than exempted from it.
         if (annot.Subtype == Excise.Core.Document.PdfAnnotationSubtype.Text)
         {
-            const float noteSize = 17f; // oracles measure 16.3-18pt
+            // Shared with the viewer's hit-test — see PdfAnnotation.TextIconSize
+            // for why these must not drift. Oracles measure 16.3-18pt.
+            const float noteSize = (float)Excise.Core.Document.PdfAnnotation.TextIconSize;
             rx2 = rx1 + noteSize;
             ry1 = ry2 - noteSize;
         }

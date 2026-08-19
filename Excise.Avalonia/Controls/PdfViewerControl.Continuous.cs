@@ -425,6 +425,10 @@ public partial class PdfViewerControl
         foreach (var entry in _continuousCache) entry.Bitmap.Dispose();
         _continuousCache.Clear();
         _continuousPageLinks.Clear();
+        // Same lifetime as the link cache: an annotation cache that outlived
+        // the document would hover notes from the previous file (#1074).
+        _pageAnnotations.Clear();
+        _lastHoveredAnnotation = null;
         // Selection state is per-document/page; drop the letter cache and any
         // in-flight selection so a document or render change can't reuse stale
         // glyphs (#815). Highlight rects live on the slots and are discarded when

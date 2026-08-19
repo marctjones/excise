@@ -762,6 +762,18 @@ public partial class MainWindow : Window
         viewModel.SetHoveredLinkTarget(e.DisplayText);
     }
 
+
+    /// <summary>
+    /// #1074 — show the hovered annotation's author and /Contents. Mirrors
+    /// <see cref="OnLinkHovered"/> exactly; the viewer has already decided that
+    /// a Link takes precedence, so these two never both carry text.
+    /// </summary>
+    private void OnAnnotationHovered(object? sender, AnnotationHoveredEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel viewModel) return;
+        viewModel.SetHoveredAnnotationInfo(e.DisplayText);
+    }
+
     private void OnTextSelected(object? sender, TextSelectedEventArgs e)
     {
         if (DataContext is not MainWindowViewModel viewModel)

@@ -497,6 +497,18 @@ public partial class MainWindowViewModel : ViewModelBase
     private string? _hoveredLinkTarget;
 
     /// <summary>
+    /// Annotation text shown while the pointer hovers a note, set via
+    /// <see cref="SetHoveredAnnotationInfo"/> (#1074). Before this, no
+    /// annotation's /Contents was reachable anywhere in the GUI — and for a
+    /// /Text annotation, whose icon is all it draws, that meant the note was
+    /// unreadable while the redaction scrubber could see it perfectly well.
+    /// </summary>
+    private string? _hoveredAnnotationInfo;
+
+    /// <summary>Exposed for tests: what the hover pipeline last reported.</summary>
+    public string? HoveredAnnotationInfo => _hoveredAnnotationInfo;
+
+    /// <summary>
     /// Status bar text showing pending redaction count and file type.
     /// Updates dynamically as user marks/applies redactions. Link-hover
     /// target (#625) takes priority when present — it's transient,
@@ -509,6 +521,12 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             if (!string.IsNullOrEmpty(_hoveredLinkTarget))
                 return _hoveredLinkTarget;
+            // Below the link, above the counts: hovering is a deliberate act
+            // and should win over ambient state, but a Link already owns the
+            // pointer when both are under it (the viewer suppresses the
+            // annotation hover in that case, so this is belt and braces).
+            if (!string.IsNullOrEmpty(_hoveredAnnotationInfo))
+                return _hoveredAnnotationInfo;
             if (RedactionWorkflow.PendingRedactions.Count > 0)
                 return $"{RedactionWorkflow.PendingRedactions.Count} areas marked";
             if (FileState.TypewriterEditsCount > 0)
@@ -3128,6 +3146,18 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         if (_hoveredLinkTarget == target) return;
         _hoveredLinkTarget = target;
+        this.RaisePropertyChanged(nameof(StatusBarText));
+    }
+
+    /// <summary>
+    /// Status-bar hover feedback for the annotation under the pointer, or null
+    /// when not hovering one (#1074).
+    /// </summary>
+    public void SetHoveredAnnotationInfo(string? info)
+    {
+        if (_hoveredAnnotationInfo == info) return;
+        _hoveredAnnotationInfo = info;
+        this.RaisePropertyChanged(nameof(HoveredAnnotationInfo));
         this.RaisePropertyChanged(nameof(StatusBarText));
     }
 

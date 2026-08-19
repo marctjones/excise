@@ -1,5 +1,10 @@
 namespace Excise.Avalonia.Controls
 {
+    public class AnnotationHoveredEventArgs : System.EventArgs
+    {
+        public AnnotationHoveredEventArgs(string? displayText) { }
+        public string? DisplayText { get; }
+    }
     public class AnnotationPathDrawnEventArgs : System.EventArgs
     {
         public AnnotationPathDrawnEventArgs([System.Runtime.CompilerServices.TupleElementNames(new string[] {
@@ -142,6 +147,7 @@ namespace Excise.Avalonia.Controls
         public Excise.Avalonia.Controls.PdfViewMode ViewMode { get; set; }
         public Excise.Core.Text.WhitespaceMode WhitespaceMode { get; set; }
         public double ZoomLevel { get; set; }
+        public event System.EventHandler<Excise.Avalonia.Controls.AnnotationHoveredEventArgs>? AnnotationHovered;
         public event System.EventHandler<Excise.Avalonia.Controls.AnnotationPathDrawnEventArgs>? AnnotationPathDrawn;
         public event System.EventHandler<Excise.Avalonia.Controls.DangerousLinkClickedEventArgs>? DangerousLinkClicked;
         public event System.EventHandler<Excise.Avalonia.Controls.ExternalLinkClickedEventArgs>? ExternalLinkClicked;

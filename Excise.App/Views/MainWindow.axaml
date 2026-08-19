@@ -1217,6 +1217,7 @@
                                                ExternalLinkClicked="OnExternalLinkClicked"
                                                DangerousLinkClicked="OnDangerousLinkClicked"
                                                LinkHovered="OnLinkHovered"
+                                               AnnotationHovered="OnAnnotationHovered"
                                                FormFieldEdited="OnFormFieldEdited"
                                                FormFieldRectDrawn="OnFormFieldRectDrawn"
                                                AnnotationPathDrawn="OnAnnotationPathDrawn"
