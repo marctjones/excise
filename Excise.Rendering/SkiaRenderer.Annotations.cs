@@ -266,12 +266,41 @@ internal partial class RenderContext
 
             // No /AS at all. A single-entry /N is unambiguous; anything else is
             // a guess, and guessing which state a form field is in is how the
-            // bug above happened. Kept narrow deliberately.
+            // bug above happened.
+            //
+            // #1054: this loop USED to return the first resolvable entry
+            // whatever the count — and PdfDictionary iteration order is not a
+            // specified property, so which appearance got drawn did not follow
+            // the file. Measured on one checkbox written two ways, identical
+            // apart from the order of /On and /Off inside /AP /N:
+            //
+            //     /On first   -> excise drew the ON state
+            //     /Off first  -> excise drew the OFF state
+            //
+            // The same bytes could render a checkbox ticked or unticked. For a
+            // reviewer deciding what to redact from the rendered page, that is
+            // not a cosmetic defect.
+            //
+            // Drawing NOTHING is both the majority behaviour and the spec's:
+            // mutool and Ghostscript draw nothing, pdftocairo picks /Off, and
+            // §12.5.5 makes /AS the selector — without it the appearance is
+            // simply not determined. It is also the posture excise already
+            // takes one branch up, where /AS names a state /N does not define.
+            Excise.Core.Primitives.PdfStream? only = null;
             foreach (var kvp in stateDict)
             {
-                if (_page.Document.Resolve(kvp.Value) is Excise.Core.Primitives.PdfStream s)
-                    return s;
+                if (_page.Document.Resolve(kvp.Value) is not Excise.Core.Primitives.PdfStream s)
+                    continue;
+                if (only != null)
+                {
+                    _options.Diagnostics?.Add(
+                        $"Annotation /{annot.Subtype} has no /AS and /AP /N defines several " +
+                        "appearance states; nothing drawn (§12.5.5 makes /AS the selector).");
+                    return null;
+                }
+                only = s;
             }
+            return only;
         }
         return null;
     }
