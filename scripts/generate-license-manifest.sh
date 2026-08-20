@@ -199,9 +199,27 @@ LICENSE_OVERRIDES = {
         "licenseSpdxUrl": "https://spdx.org/licenses/BSD-3-Clause.html",
     },
     # CSJ2K ships no LICENSE file; embed the BSD notice + JJ2000 copyright.
+    #
+    # SPDX classified BSD-2-Clause by Marc (#1063). ⚠️ The evidence is WEAKER
+    # than every other entry here and that is recorded on purpose: no licence
+    # text ships in the package and none exists upstream. The .nuspec has no
+    # <license> element, only licenseUrl -> the opensource.org 2-clause page,
+    # and the upstream README says only "Licensed and distributable under the
+    # terms of the BSD license" linking that same page. The determination rests
+    # on two statements and no text.
     "CSJ2K": {
         "licenseName": "BSD License (CSJ2K / JJ2000)",
+        "spdx": "BSD-2-Clause",
+        "licenseSpdxUrl": "https://spdx.org/licenses/BSD-2-Clause.html",
         "licenseText": CSJ2K_LICENSE_TEXT,
+    },
+    # ANGLE ships its licence text in the package and it is the ANGLE Project
+    # BSD with the third no-endorsement clause present, so this is a strong
+    # determination -- read from the shipped file, not inferred (#1063).
+    "Avalonia.Angle.Windows.Natives": {
+        "licenseName": "BSD 3-Clause License (ANGLE Project)",
+        "spdx": "BSD-3-Clause",
+        "licenseSpdxUrl": "https://spdx.org/licenses/BSD-3-Clause.html",
     },
 }
 
