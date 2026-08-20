@@ -156,7 +156,11 @@ public static class PdfDocumentRedactionExtensions
                     {
                         var bbox = BoundingBoxOf(matchLetters);
                         if (IsInteractiveOnlyMatch(matchLetters))
-                            InteractiveRedactionScrubber.ScrubArea(page, bbox);
+                            // TERM-aware (#1038). The area-only form deletes the
+                            // whole field value; on issue18036.pdf that was 545
+                            // of 568 characters to remove one word.
+                            InteractiveRedactionScrubber.ScrubTerm(
+                                page, bbox, text, caseSensitive);
                         else
                             contentAreas.Add(strategy == GlyphRemovalStrategy.FullyContained
                                 ? bbox
