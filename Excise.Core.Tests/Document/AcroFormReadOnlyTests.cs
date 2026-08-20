@@ -170,8 +170,19 @@ public class AcroFormReadOnlyTests
         matches.Should().Be(1);
         using var reopened = PdfDocument.Open(bytes);
         reopened.GetPage(1).Text.Should().NotContain("SECRET");
-        reopened.GetAcroForm()!.FindField("field1")!.Value.Should().BeNull(
-            "security redaction removes the whole form value instead of leaving recoverable fragments in /V");
+        // POLICY REVERSED, #1038. This assertion used to require /V to be
+        // absent, reasoning that a partial value leaves "recoverable
+        // fragments". Measured against a real document, that reasoning cost
+        // 545 of 568 characters on issue18036.pdf — a certificate of insurance
+        // whose entire body is one read-only /Tx field — because a redaction
+        // box around one word overlaps the whole widget.
+        //
+        // The remainder is not a fragment of the secret; it is the rest of the
+        // document. Redaction removes the term, not the carrier that happened
+        // to hold it. Same rule the page-content path has always followed:
+        // matched glyphs go, neighbouring glyphs stay.
+        reopened.GetAcroForm()!.FindField("field1")!.Value.Should().Be("-12345",
+            "the term must be cut out of the value, leaving the rest of the field intact");
     }
 
     [Fact]
@@ -186,8 +197,9 @@ public class AcroFormReadOnlyTests
         matches.Should().Be(1);
         using var reopened = PdfDocument.Open(bytes);
         reopened.GetPage(1).Text.Should().NotContain("SECRET");
-        reopened.GetAcroForm()!.FindField("field1")!.DefaultValue.Should().BeNull(
-            "security redaction removes the whole default value instead of leaving recoverable fragments in /DV");
+        // Same reversal as /V above — see that test for what the old policy cost.
+        reopened.GetAcroForm()!.FindField("field1")!.DefaultValue.Should().Be("Fallback ",
+            "the term must be cut out of /DV, leaving the rest of the default value intact");
     }
 
     // ─── Choice field (combo/list box) tests — #661 ────────────────────────

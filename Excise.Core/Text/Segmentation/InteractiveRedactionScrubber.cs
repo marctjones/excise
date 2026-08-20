@@ -27,10 +27,158 @@ internal static class InteractiveRedactionScrubber
         return changed;
     }
 
+    /// <summary>
+    /// #1038 — the TERM-AWARE scrub. Removes the matched term from a form
+    /// field's value carriers instead of deleting the carriers wholesale.
+    ///
+    /// <para><b>Why this exists.</b> <see cref="ScrubArea"/> knows only a
+    /// rectangle, so its only safe move is to drop <c>/V</c>, <c>/DV</c>,
+    /// <c>/Opt</c> and <c>/AP</c> entirely. On a field whose widget is large,
+    /// that deletes everything the field holds in order to remove one word. On
+    /// <c>issue18036.pdf</c> — a certificate of insurance whose body is a
+    /// read-only multiline <c>/Tx</c> field — redacting <c>certificate</c>
+    /// destroyed <b>545 of 568 characters</b>, measured, and reported success.
+    /// The whole-operator fallback everyone assumed was responsible for that
+    /// class of damage never ran (0 firings in 235 redactions).</para>
+    ///
+    /// <para><c>RedactText</c> knows the term, so it can do the surgery the
+    /// rectangle cannot: cut the matched substring out of each value string and
+    /// leave the rest of the field intact.</para>
+    ///
+    /// <para><b>/AP is still dropped, deliberately.</b> The appearance stream
+    /// holds the term as drawn GLYPHS, and rewriting it is a separate piece of
+    /// work; deleting it plus <c>/NeedAppearances</c> is the leak-safe move
+    /// available today, and it is what already happened. So this change is
+    /// strictly an improvement on every axis — same carriers dropped, minus the
+    /// data destruction.</para>
+    /// </summary>
+    public static bool ScrubTerm(PdfPage page, PdfRectangle area, string term, bool caseSensitive)
+    {
+        if (string.IsNullOrEmpty(term)) return ScrubArea(page, area);
+
+        area = area.Normalize();
+        var changed = false;
+        var pruneCandidates = new HashSet<int>();
+
+        changed |= ScrubFormFields(page, area, pruneCandidates, term, caseSensitive);
+        changed |= RemoveIntersectingAnnotations(page, area, pruneCandidates);
+
+        if (pruneCandidates.Count > 0)
+            PruneUnreachableCandidates(page.Document, pruneCandidates);
+
+        if (changed)
+            page.InvalidateTextExtractionCache();
+
+        return changed;
+    }
+
+    /// <summary>
+    /// <paramref name="value"/> with every occurrence of <paramref name="term"/>
+    /// cut out, or null when it contains none.
+    /// </summary>
+    private static string? WithoutTerm(string value, string term, bool caseSensitive)
+    {
+        var comparison = caseSensitive
+            ? StringComparison.Ordinal
+            : StringComparison.OrdinalIgnoreCase;
+
+        var at = value.IndexOf(term, comparison);
+        if (at < 0) return null;
+
+        var sb = new System.Text.StringBuilder(value.Length);
+        var from = 0;
+        while (at >= 0)
+        {
+            sb.Append(value, from, at - from);
+            from = at + term.Length;
+            at = value.IndexOf(term, from, comparison);
+        }
+        sb.Append(value, from, value.Length - from);
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Cut the term out of a value carrier in place. Returns false when the
+    /// carrier does not hold the term — in which case it is LEFT ALONE, since
+    /// deleting a value that never contained the match is pure destruction.
+    /// </summary>
+    private static bool RedactStringEntry(
+        PdfDocument document,
+        PdfDictionary dictionary,
+        string key,
+        string term,
+        bool caseSensitive,
+        HashSet<int> pruneCandidates)
+    {
+        var raw = dictionary.GetOptional(key);
+        if (raw == null) return false;
+        if (document.Resolve(raw) is not PdfString str) return false;
+
+        var redacted = WithoutTerm(str.Value, term, caseSensitive);
+        if (redacted == null) return false;
+
+        // The old value may be its own indirect object still holding the term.
+        // Capturing it here lets the unreachability prune drop it once the
+        // field points at the direct replacement instead.
+        CaptureObjectGraph(document, raw, pruneCandidates);
+        dictionary.SetString(key, redacted);
+        return true;
+    }
+
+    /// <summary>
+    /// Cut the term out of each <c>/Opt</c> entry rather than dropping the
+    /// option list. Entries are either a string or a two-element
+    /// [export, display] array (§12.7.4.4); both forms are handled.
+    /// </summary>
+    private static bool RedactOptionList(
+        PdfDocument document,
+        PdfDictionary field,
+        string term,
+        bool caseSensitive,
+        HashSet<int> pruneCandidates)
+    {
+        var raw = field.GetOptional("Opt");
+        if (raw == null) return false;
+        if (document.Resolve(raw) is not PdfArray options) return false;
+
+        var changed = false;
+        for (var i = 0; i < options.Count; i++)
+        {
+            switch (document.Resolve(options[i]))
+            {
+                case PdfString entry:
+                    if (WithoutTerm(entry.Value, term, caseSensitive) is { } cut)
+                    {
+                        options[i] = new PdfString(cut);
+                        changed = true;
+                    }
+                    break;
+
+                case PdfArray pair:
+                    for (var j = 0; j < pair.Count; j++)
+                    {
+                        if (document.Resolve(pair[j]) is PdfString s2 &&
+                            WithoutTerm(s2.Value, term, caseSensitive) is { } cut2)
+                        {
+                            pair[j] = new PdfString(cut2);
+                            changed = true;
+                        }
+                    }
+                    break;
+            }
+        }
+
+        if (changed)
+            CaptureObjectGraph(document, raw, pruneCandidates);
+        return changed;
+    }
+
     private static bool ScrubFormFields(
         PdfPage page,
         PdfRectangle area,
-        HashSet<int> pruneCandidates)
+        HashSet<int> pruneCandidates,
+        string? term = null,
+        bool caseSensitive = false)
     {
         IReadOnlyList<PdfField> fields;
         try { fields = page.GetFormFields(); }
@@ -67,8 +215,25 @@ internal static class InteractiveRedactionScrubber
                 continue;
 
             CaptureObjectGraph(page.Document, field.RawDictionary.GetOptional("AP"), pruneCandidates);
-            changed |= field.RawDictionary.Remove("V");
-            changed |= field.RawDictionary.Remove("DV");
+
+            if (term != null)
+            {
+                // #1038: cut the term out, keep the rest of the value. See
+                // ScrubTerm for what deleting it instead cost on a real file.
+                changed |= RedactStringEntry(
+                    page.Document, field.RawDictionary, "V", term, caseSensitive, pruneCandidates);
+                changed |= RedactStringEntry(
+                    page.Document, field.RawDictionary, "DV", term, caseSensitive, pruneCandidates);
+            }
+            else
+            {
+                changed |= field.RawDictionary.Remove("V");
+                changed |= field.RawDictionary.Remove("DV");
+            }
+
+            // Dropped in both modes. The appearance draws the term as glyphs
+            // and nothing here rewrites those; /NeedAppearances below is what
+            // gets the redacted value back on screen.
             changed |= field.RawDictionary.Remove("AP");
 
             // Choice fields (combo/list boxes) restate every option string in
@@ -82,7 +247,10 @@ internal static class InteractiveRedactionScrubber
             // /Opt carries the same risk even though it isn't rendered as
             // extractable text today.
             if (field.FieldType == PdfFieldType.Choice)
-                changed |= field.RawDictionary.Remove("Opt");
+                changed |= term != null
+                    ? RedactOptionList(
+                        page.Document, field.RawDictionary, term, caseSensitive, pruneCandidates)
+                    : field.RawDictionary.Remove("Opt");
 
             foreach (var widget in field.WidgetDictionaries)
             {
