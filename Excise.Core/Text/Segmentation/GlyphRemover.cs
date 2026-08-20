@@ -63,6 +63,17 @@ namespace Excise.Core.Text.Segmentation;
 /// </remarks>
 public class GlyphRemover
 {
+    /// <summary>
+    /// #1044 SPIKE FLAG. Off by default: this changes how redaction removes
+    /// text, and it is being MEASURED before it is trusted. Tests turn it on to
+    /// compare collateral against the restructuring path.
+    ///
+    /// <para>Not an env var deliberately — a redaction tool whose removal
+    /// mechanism depends on ambient configuration is a tool whose output you
+    /// cannot reason about from the file alone.</para>
+    /// </summary>
+    internal static bool BlankInPlace { get; set; }
+
     private readonly LetterFinder _letterFinder;
     private readonly TextSegmenter _textSegmenter;
     private readonly OperationReconstructor _reconstructor;
@@ -150,6 +161,7 @@ public class GlyphRemover
         // pass through; we use the running state to parameterize the
         // reconstructed block if one gets emitted.
         var intersectingTextOpIndices = new HashSet<int>();
+        var blankedOperators = new Dictionary<int, ContentOperator>();
         var reconstructionJobs = new List<ReconstructionJob>();
 
         for (int idx = block.BtIndex; idx <= block.EtIndex; idx++)
@@ -166,9 +178,27 @@ public class GlyphRemover
             var matches = _letterFinder.FindOperationLetters(text, letters, op.BoundingBox);
             if (matches.Count == 0) continue;
 
-            bool anyIntersects = matches.Any(m =>
-                ShouldRemoveLetter(m.Letter, redactionAreas, strategy));
-            if (!anyIntersects) continue;
+            var matchesToRemove = matches
+                .Where(m => ShouldRemoveLetter(m.Letter, redactionAreas, strategy))
+                .ToList();
+            if (matchesToRemove.Count == 0) continue;
+
+            // #1044 SPIKE: try blanking the matched codes IN PLACE before
+            // falling back to restructuring. Restructuring is where every known
+            // collateral defect lives -- #1038's 5-36% loss, #1039's
+            // unterminated blocks, Pitfall 2's missing Tf. Byte replacement
+            // touches nothing but the matched glyphs, so the damage is
+            // structurally bounded. Refused (null) for anything where a decoded
+            // index is not a byte offset; see GlyphBlanker.
+            if (BlankInPlace)
+            {
+                var blankedOp = GlyphBlanker.TryBlank(op, matchesToRemove);
+                if (blankedOp != null)
+                {
+                    blankedOperators[idx] = blankedOp;
+                    continue;
+                }
+            }
 
             intersectingTextOpIndices.Add(idx);
 
@@ -199,9 +229,10 @@ public class GlyphRemover
 
         if (reconstructionJobs.Count == 0)
         {
-            // No glyphs affected — copy the block verbatim.
+            // No RESTRUCTURING needed. Copy the block through, substituting any
+            // operator whose codes were blanked in place (#1044).
             for (int idx = block.BtIndex; idx <= block.EtIndex; idx++)
-                output.Add(operations[idx]);
+                output.Add(blankedOperators.TryGetValue(idx, out var b) ? b : operations[idx]);
             return;
         }
 
@@ -227,7 +258,9 @@ public class GlyphRemover
                 EmitRemovedOperatorCompensation(operations, block, idx, output);
                 continue;
             }
-            output.Add(operations[idx]);
+            output.Add(blankedOperators.TryGetValue(idx, out var blanked)
+                ? blanked
+                : operations[idx]);
         }
 
         // #1039: the source block ran to end-of-content with no ET. Close it
