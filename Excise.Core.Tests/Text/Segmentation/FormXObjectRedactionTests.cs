@@ -285,7 +285,7 @@ public class FormXObjectRedactionTests
         var page = re.GetPage(1);
         Encoding.Latin1.GetString(page.GetContentStreamBytes())
             .Should().NotContain("GSCOLLIDE", "the matrix-positioned form text is redacted");
-        page.Resources!.GetDictionaryOrNull("ExtGState")!.Count
+        page.Resources!.GetDirectDictionaryOrNull("ExtGState")!.Count
             .Should().BeGreaterThanOrEqualTo(2,
                 "the form's colliding /GS0 must be merged under a fresh name, keeping both");
     }
@@ -339,7 +339,7 @@ public class FormXObjectRedactionTests
         // Each colliding category gained a renamed entry, so the form's content
         // resolves against the page after flattening.
         foreach (var cat in new[] { "ExtGState", "ColorSpace", "Shading", "Pattern", "Properties" })
-            page.Resources!.GetDictionaryOrNull(cat)!.Count
+            page.Resources!.GetDirectDictionaryOrNull(cat)!.Count
                 .Should().BeGreaterThanOrEqualTo(2, $"{cat} should hold both the page's and the renamed form's entry");
 
         // The form's `gs` operand was rewritten away from the original name.

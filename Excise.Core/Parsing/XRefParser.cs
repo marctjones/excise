@@ -846,7 +846,10 @@ public class XRefParser
         // typed-failure contract (#960 deep sweep, seeds 9601/9604). The
         // element-count check below already had the typed form — the key's
         // ABSENCE was simply not covered.
-        var wArray = stream.GetArrayOrNull("W");
+        // GetDirect deliberately (#1050): /W and /Index are read while BUILDING the
+        // cross-reference table, so there is no resolver yet -- resolving would need
+        // the very table being constructed. §7.5.8.2 also requires them direct.
+        var wArray = stream.GetDirectArrayOrNull("W");
         if (wArray == null)
             throw new PdfParseException(
                 "XRef stream has no /W array; §7.5.8.2 requires it to describe field widths");
@@ -873,7 +876,7 @@ public class XRefParser
             throw new PdfParseException("XRef stream /W array describes a zero-width entry");
 
         // Get Index array (subsections)
-        var indexArray = stream.GetArrayOrNull("Index");
+        var indexArray = stream.GetDirectArrayOrNull("Index");
         var subsections = new List<(int Start, int Count)>();
 
         if (indexArray != null)

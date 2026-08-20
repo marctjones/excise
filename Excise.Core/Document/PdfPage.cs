@@ -670,7 +670,7 @@ public class PdfPage
     /// </summary>
     public IEnumerable<(string Name, PdfDictionary Font)> GetFonts()
     {
-        var fonts = Resources?.GetDictionaryOrNull("Font");
+        var fonts = Resources?.ResolveDictionary(_document, "Font");
         if (fonts == null)
             yield break;
 
@@ -752,7 +752,7 @@ public class PdfPage
     /// </summary>
     public PdfObject? GetXObject(string name)
     {
-        var xobjects = Resources?.GetDictionaryOrNull("XObject");
+        var xobjects = Resources?.ResolveDictionary(_document, "XObject");
         if (xobjects == null)
             return null;
 
@@ -765,7 +765,7 @@ public class PdfPage
     /// </summary>
     public PdfDictionary? GetExtGState(string name)
     {
-        var extGState = Resources?.GetDictionaryOrNull("ExtGState");
+        var extGState = Resources?.ResolveDictionary(_document, "ExtGState");
         if (extGState == null)
             return null;
 
@@ -778,7 +778,7 @@ public class PdfPage
     /// </summary>
     public PdfDictionary? GetShading(string name)
     {
-        var shadings = Resources?.GetDictionaryOrNull("Shading");
+        var shadings = Resources?.ResolveDictionary(_document, "Shading");
         if (shadings == null)
             return null;
 
@@ -792,7 +792,7 @@ public class PdfPage
     /// </summary>
     public PdfObject? GetColorSpaceObject(string name)
     {
-        var colorSpaces = Resources?.GetDictionaryOrNull("ColorSpace");
+        var colorSpaces = Resources?.ResolveDictionary(_document, "ColorSpace");
         if (colorSpaces == null)
             return null;
 

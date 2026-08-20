@@ -1745,7 +1745,16 @@ internal sealed class ContentStreamWalker
                 }
             }
 
-            var fontDescriptor = _currentFont.GetDictionaryOrNull("FontDescriptor");
+            // #1050: RESOLVE. /FontDescriptor is almost ALWAYS an indirect
+            // reference in real files -- it is a shared object by design -- so
+            // the non-resolving read returned null essentially always, and
+            // /MissingWidth was never applied. Every undefined glyph advanced
+            // by 0 instead of the font's stated default width, which shifts
+            // every subsequent glyph on the line and therefore shifts the
+            // geometry redaction matches against.
+            var fontDescriptor = _page != null
+                ? _currentFont.ResolveDictionary(_page.Document, "FontDescriptor")
+                : _currentFont.GetDirectDictionaryOrNull("FontDescriptor");
             if (fontDescriptor != null)
             {
                 var missingWidth = fontDescriptor.GetNumber("MissingWidth", 0);

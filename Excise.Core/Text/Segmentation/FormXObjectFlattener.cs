@@ -238,11 +238,14 @@ internal static class FormXObjectFlattener
         }
 
         var form = (PdfStream)target!;
-        var formMatrix = Matrix.FromArray(form.GetArrayOrNull("Matrix"));
+        // #1050: RESOLVE. An unresolved /Matrix read as absent, so the form
+        // was flattened at identity — mispositioned, and its glyphs then
+        // compared against the redaction area at the wrong coordinates.
+        var formMatrix = Matrix.FromArray(form.ResolveArray(ctx.Doc, "Matrix"));
 
         // Overlap gate (top level only): skip inlining a form whose page-space
         // BBox provably misses the redaction area. Indeterminate → inline.
-        if (applyOverlapGate && !FormMayOverlap(form, formMatrix.Multiply(ctm), redactionArea))
+        if (applyOverlapGate && !FormMayOverlap(form, ctx.Doc, formMatrix.Multiply(ctm), redactionArea))
         {
             output.Add(Rewrite(op, rename));
             return;
@@ -281,15 +284,18 @@ internal static class FormXObjectFlattener
         if (!formMatrix.IsIdentity)
             output.Add(ContentOperator.Transform(
                 formMatrix.A, formMatrix.B, formMatrix.C, formMatrix.D, formMatrix.E, formMatrix.F));
-        EmitBBoxClip(form, output);
+        EmitBBoxClip(form, ctx.Doc, output);
         output.AddRange(inlined);
         output.Add(ContentOperator.RestoreState());
     }
 
     /// <summary>Emit <c>x y w h re W n</c> clipping to the form's /BBox, if present.</summary>
-    private static void EmitBBoxClip(PdfStream form, List<ContentOperator> output)
+    private static void EmitBBoxClip(PdfStream form, PdfDocument doc, List<ContentOperator> output)
     {
-        var bbox = form.GetArrayOrNull("BBox");
+        // #1050: an unresolved /BBox read as absent and no clip was emitted.
+        // That direction is SAFE (more content drawn, never less) but it is
+        // still wrong, and "safe by luck" is not a property to keep.
+        var bbox = form.ResolveArray(doc, "BBox");
         if (bbox == null || bbox.Count < 4) return;
 
         double x0 = NumberAt(bbox, 0), y0 = NumberAt(bbox, 1);
@@ -305,9 +311,12 @@ internal static class FormXObjectFlattener
     /// the given matrix vs. the redaction area. Missing/degenerate BBox →
     /// <c>true</c> (inline rather than risk a leak).
     /// </summary>
-    private static bool FormMayOverlap(PdfStream form, Matrix m, PdfRectangle area)
+    private static bool FormMayOverlap(PdfStream form, PdfDocument doc, Matrix m, PdfRectangle area)
     {
-        var bbox = form.GetArrayOrNull("BBox");
+        // #1050: unresolved /BBox meant "indeterminate", so the form was
+        // inlined rather than skipped -- the fail-safe branch. Correct outcome,
+        // reached for the wrong reason.
+        var bbox = form.ResolveArray(doc, "BBox");
         if (bbox == null || bbox.Count < 4) return true;
 
         double x0 = NumberAt(bbox, 0), y0 = NumberAt(bbox, 1);

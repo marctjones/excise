@@ -481,7 +481,7 @@ public class PdfDictionaryTests
         var array = new PdfArray();
         dict["Values"] = array;
 
-        var result = dict.GetArrayOrNull("Values");
+        var result = dict.GetDirectArrayOrNull("Values");
 
         result.Should().BeSameAs(array);
     }
@@ -491,7 +491,7 @@ public class PdfDictionaryTests
     {
         var dict = new PdfDictionary();
 
-        var result = dict.GetArrayOrNull("Missing");
+        var result = dict.GetDirectArrayOrNull("Missing");
 
         result.Should().BeNull();
     }
@@ -561,7 +561,7 @@ public class PdfDictionaryTests
         var innerDict = new PdfDictionary();
         dict["Info"] = innerDict;
 
-        var result = dict.GetDictionaryOrNull("Info");
+        var result = dict.GetDirectDictionaryOrNull("Info");
 
         result.Should().BeSameAs(innerDict);
     }
@@ -571,7 +571,7 @@ public class PdfDictionaryTests
     {
         var dict = new PdfDictionary();
 
-        var result = dict.GetDictionaryOrNull("Missing");
+        var result = dict.GetDirectDictionaryOrNull("Missing");
 
         result.Should().BeNull();
     }

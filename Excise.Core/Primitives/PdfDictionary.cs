@@ -212,9 +212,17 @@ public class PdfDictionary : PdfObject, IDictionary<PdfName, PdfObject>
             : throw new KeyNotFoundException($"Key /{key} not found or not an array");
 
     /// <summary>
-    /// Get an optional array value.
+    /// The DIRECT array at <paramref name="key"/> — does NOT follow an indirect
+    /// reference.
+    ///
+    /// <para>⚠️ Renamed from <c>GetArrayOrNull</c> in #1050. A value of
+    /// <c>15 0 R</c> returns null here, indistinguishable from the key being
+    /// absent, and that silence caused a redaction leak (#1040). If the
+    /// dictionary came from a parsed document, you almost certainly want
+    /// <c>ResolveArray(doc, key)</c> instead. This overload is correct only for
+    /// dictionaries this process built itself.</para>
     /// </summary>
-    public PdfArray? GetArrayOrNull(string key) =>
+    public PdfArray? GetDirectArrayOrNull(string key) =>
         _items.TryGetValue(key, out var value) && value is PdfArray a ? a : null;
 
     /// <summary>
@@ -241,9 +249,16 @@ public class PdfDictionary : PdfObject, IDictionary<PdfName, PdfObject>
             : throw new KeyNotFoundException($"Key /{key} not found or not a dictionary");
 
     /// <summary>
-    /// Get an optional dictionary value.
+    /// The DIRECT dictionary at <paramref name="key"/> — does NOT follow an
+    /// indirect reference.
+    ///
+    /// <para>⚠️ Renamed from <c>GetDictionaryOrNull</c> in #1050, for the same
+    /// reason as <see cref="GetDirectArrayOrNull"/>: <c>15 0 R</c> reads as
+    /// absent. #1040 leaked a real name because two call sites used the old
+    /// name on <c>/Resources /XObject</c>. Prefer
+    /// <c>ResolveDictionary(doc, key)</c> on anything parsed from a file.</para>
     /// </summary>
-    public PdfDictionary? GetDictionaryOrNull(string key) =>
+    public PdfDictionary? GetDirectDictionaryOrNull(string key) =>
         _items.TryGetValue(key, out var value) && value is PdfDictionary d ? d : null;
 
     /// <summary>

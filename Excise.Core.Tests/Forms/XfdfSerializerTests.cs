@@ -82,7 +82,7 @@ public class XfdfSerializerTests
         link.SetName("Subtype", "Link");
         link["Rect"] = Excise.Core.Primitives.PdfArray.FromRectangle(0, 0, 100, 20);
         var pageDict = doc.GetPage(1).Dictionary;
-        pageDict.GetArrayOrNull("Annots")!.Add(link);
+        pageDict.GetDirectArrayOrNull("Annots")!.Add(link);
 
         var parsed = XDocument.Parse(XfdfSerializer.ExportAnnotations(doc));
         var annots = parsed.Root!.Elements().Single(e => e.Name.LocalName == "annots");
@@ -197,7 +197,7 @@ public class XfdfSerializerTests
 
         var square = annotations.Single(a => a.Subtype == PdfAnnotationSubtype.Square);
         square.BorderWidth.Should().Be(3);
-        square.RawDictionary.GetArrayOrNull("IC").Should().NotBeNull("interior color must survive");
+        square.RawDictionary.GetDirectArrayOrNull("IC").Should().NotBeNull("interior color must survive");
     }
 
     [Fact]
@@ -569,7 +569,7 @@ public class XfdfSerializerTests
 
         var polygon = importedAnnotations.Single(a => a.Subtype == PdfAnnotationSubtype.Polygon);
         polygon.Vertices.Should().HaveCount(3);
-        polygon.RawDictionary.GetArrayOrNull("IC").Should().NotBeNull("polygon interior fill must survive");
+        polygon.RawDictionary.GetDirectArrayOrNull("IC").Should().NotBeNull("polygon interior fill must survive");
 
         var polyLine = importedAnnotations.Single(a => a.Subtype == PdfAnnotationSubtype.PolyLine);
         polyLine.Vertices.Should().HaveCount(3);
