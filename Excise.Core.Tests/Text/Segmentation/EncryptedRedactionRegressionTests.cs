@@ -57,10 +57,15 @@ public sealed class EncryptedRedactionRegressionTests
         // nothing about the secret. Scan the DECRYPTED serialization instead
         // (carrier-agnostic; the independent qpdf/mutool equivalent lives in
         // Excise.Rendering.Tests/Differential/EncryptionPreservationInteropTests.cs).
+        //
+        // #1049: through the decompressing scanner. The decrypted re-save is
+        // still a normal excise save, so it is FLATE-COMPRESSED — the raw
+        // Latin-1 + UTF-16BE concatenation used here could not see inside it,
+        // and that is precisely the blindness that declared #1040's leaking
+        // output clean.
         var decrypted = reopened.SaveToBytes();
-        (Encoding.Latin1.GetString(decrypted) + Encoding.BigEndianUnicode.GetString(decrypted))
-            .Should().NotContain(secret,
-                "the secret must not survive in ANY carrier of the decrypted output");
+        SavedPdfLeakScanner.FindTerm(decrypted, secret).Should().BeEmpty(
+            "the secret must not survive in ANY carrier of the decrypted output");
     }
 
     [Theory]
