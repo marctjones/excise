@@ -219,6 +219,9 @@ run_t0() {
     # correctness tests with no verdict. A compliance check must never be able
     # to stop correctness tests from reporting.
     run_step "license-compliance" scripts/check-license-compliance.sh
+    # No redaction leak test may rest solely on excise reading its own output
+    # (#1029). Pure grep over ~48 files; milliseconds.
+    run_step "redaction-oracles" scripts/check-redaction-oracles.sh
     run_step "doc-claim-freshness" scripts/check-doc-claim-freshness.sh
     # origin/develop, not origin/main: this repo's git-flow lands feature
     # work on develop (release.yml/PR merges to main happen separately), so
