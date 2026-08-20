@@ -64,8 +64,6 @@ public sealed class AboutWindowViewModel
 
 public sealed class LicenseManifest
 {
-    [JsonPropertyName("generatedAt")]
-    public string? GeneratedAt { get; set; }
 
     [JsonPropertyName("project")]
     public string? Project { get; set; }
