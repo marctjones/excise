@@ -869,8 +869,18 @@ partial class Program
                 "least one page. The term is gone and so is an unknown amount of surrounding " +
                 "text -- compare the output against the original before relying on it.");
         foreach (var carrier in redaction.Carriers)
-            if (carrier.RefusedReason != null)
-                carrierNotes.Add($"NOT SCRUBBED: {carrier.Carrier} -- {carrier.RefusedReason}");
+            if (!carrier.Scrubbed)
+                carrierNotes.Add(
+                    $"NOT SCRUBBED: {carrier.Carrier} -- {carrier.RefusedReason ?? "no reason recorded"}");
+
+        // #1089: one line that answers "is this file safe to hand over?".
+        // Everything above reports a PART of the outcome; a user reading a
+        // list of notes has to work out for themselves whether any of them
+        // was disqualifying. IsCleanSuccess is that judgement, made once.
+        if (!redaction.IsCleanSuccess)
+            carrierNotes.Add(
+                "This redaction was NOT clean -- see the notes above. Review the output " +
+                "before treating the term as removed.");
 
         return (count, carrierNotes);
     }

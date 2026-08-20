@@ -237,7 +237,7 @@ public class PdfSearchableConverterTests
                 // not a hand-picked rectangle) and verify BOTH carriers are
                 // gone: the invisible glyphs AND the raster pixels.
                 var secretBoxBefore = BoundsOf(page, secret);
-                doc.RedactText(secret, drawBlackRect: false).Should().BeGreaterThan(0);
+                doc.RedactText(secret, drawBlackRect: false).VerifiedRemovals.Should().BeGreaterThan(0);
 
                 page.Text.Should().NotContain(secret);
                 page.Text.Should().Contain(keep, "only the targeted word should be removed");

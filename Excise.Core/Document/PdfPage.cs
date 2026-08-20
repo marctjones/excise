@@ -415,8 +415,7 @@ public class PdfPage
     /// preserves this stream on save but does not decode/render it — a thumbnail
     /// strip should fall back to the renderer when this is null (issue #331).
     /// </summary>
-    public PdfStream? ThumbnailStream => _document.Resolve(
-        _pageDict.GetOptional("Thumb") ?? (PdfObject)PdfNull.Instance) as PdfStream;
+    public PdfStream? ThumbnailStream => _pageDict.ResolveStream(_document, "Thumb");
 
     /// <summary>
     /// Get the page resources dictionary.
