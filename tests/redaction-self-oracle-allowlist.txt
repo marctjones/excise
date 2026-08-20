@@ -7,7 +7,6 @@ Excise.App.Tests/UI/SecondRedactionSaveScrubTests.cs  # no independent oracle ye
 Excise.App.Tests/Unit/RedactionServiceTests.cs  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/CidRedactionEndToEndTests.cs  # no independent oracle yet
-Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/IncrementalRedactionRegressionTests.cs  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/PdfDocumentRedactionExtensionsTests.cs  # no independent oracle yet
