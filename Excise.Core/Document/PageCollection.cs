@@ -124,7 +124,7 @@ public class PageCollection : IReadOnlyList<PdfPage>
             }
 
             // This is a Pages node
-            var kids = node.GetArrayOrNull("Kids");
+            var kids = node.ResolveArray(_document, "Kids");
 
             // A leaf carrying the WRONG /Type. pdfium's bad_page_type.pdf gives
             // its second page /Type /Template, so the `type == "Page"` test
@@ -247,7 +247,7 @@ public class PageCollection : IReadOnlyList<PdfPage>
                 return null;
             }
 
-            var kids = node.GetArrayOrNull("Kids");
+            var kids = node.ResolveArray(_document, "Kids");
             if (kids == null)
                 return null;
 
@@ -525,7 +525,7 @@ public class PageCollection : IReadOnlyList<PdfPage>
 
         try
         {
-            var kids = node.GetArrayOrNull("Kids");
+            var kids = node.ResolveArray(_document, "Kids");
             if (kids == null)
                 return;
 
@@ -539,7 +539,7 @@ public class PageCollection : IReadOnlyList<PdfPage>
                 // wrong-/Type recovery (a kid-less node claiming to be
                 // something other than /Pages).
                 if (type == "Page" ||
-                    (kid.GetArrayOrNull("Kids") == null && type != null && type != "Pages"))
+                    (kid.ResolveArray(_document, "Kids") == null && type != null && type != "Pages"))
                 {
                     entries.Add(kidObj);
                 }

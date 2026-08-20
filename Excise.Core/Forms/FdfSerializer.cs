@@ -478,7 +478,7 @@ public static class FdfSerializer
         var contents = annot.GetStringOrNull("Contents");
         var author = annot.GetStringOrNull("T");
         double? width =
-            annot.GetDictionaryOrNull("BS") is { } bsDict &&
+            annot.GetDirectDictionaryOrNull("BS") is { } bsDict &&
             bsDict.GetOptional("W") is { } widthObj && widthObj.TryGetNumber(out var w)
                 ? w : null;
 
@@ -696,12 +696,12 @@ public static class FdfSerializer
         if (!string.IsNullOrWhiteSpace(author) && !dict.ContainsKey("T"))
             dict.SetString("T", author!);
 
-        var sourceBs = source.GetDictionaryOrNull("BS");
+        var sourceBs = source.GetDirectDictionaryOrNull("BS");
         var style = sourceBs?.GetNameOrNull("S");
-        var dashes = sourceBs?.GetArrayOrNull("D");
+        var dashes = sourceBs?.GetDirectArrayOrNull("D");
         if (width != null || style != null || dashes != null)
         {
-            var bs = dict.GetDictionaryOrNull("BS");
+            var bs = dict.GetDirectDictionaryOrNull("BS");
             if (bs == null)
             {
                 bs = new PdfDictionary();
@@ -763,7 +763,7 @@ public static class FdfSerializer
 
     private static List<double>? ReadNumbers(PdfDictionary annot, string key)
     {
-        if (annot.GetArrayOrNull(key) is not { } array)
+        if (annot.GetDirectArrayOrNull(key) is not { } array)
             return null;
         var result = new List<double>(array.Count);
         foreach (var item in array)
@@ -815,7 +815,7 @@ public static class FdfSerializer
     private static List<IReadOnlyList<(double X, double Y)>> ReadInkList(PdfDictionary annot)
     {
         var strokes = new List<IReadOnlyList<(double X, double Y)>>();
-        if (annot.GetArrayOrNull("InkList") is not { } inkList)
+        if (annot.GetDirectArrayOrNull("InkList") is not { } inkList)
             return strokes;
 
         foreach (var entry in inkList)

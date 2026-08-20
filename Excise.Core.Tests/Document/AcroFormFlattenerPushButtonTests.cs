@@ -60,7 +60,7 @@ public class AcroFormFlattenerPushButtonTests
         content.Should().Contain("5 0 0 5 100 100 cm");
 
         page.GetAnnotations().Should().BeEmpty("the widget itself is removed after stamping");
-        page.Resources!.GetDictionaryOrNull("XObject")!.GetOptional("FlatAP0")
+        page.Resources!.GetDirectDictionaryOrNull("XObject")!.GetOptional("FlatAP0")
             .Should().NotBeNull("the appearance stream is shared into the page resources");
     }
 

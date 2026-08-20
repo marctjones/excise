@@ -577,7 +577,10 @@ public static class XfdfSerializer
         var dashes = ParseNumberListAttribute(el, "dashes");
         if (width != null || style != null || dashes != null)
         {
-            var bs = dict.GetDictionaryOrNull("BS");
+            // GetDirect deliberately: this dictionary is being CONSTRUCTED from the
+            // XFDF import, so /BS is whatever this code just put there. Nothing on
+            // this path came from a parsed file.
+            var bs = dict.GetDirectDictionaryOrNull("BS");
             if (bs == null)
             {
                 bs = new PdfDictionary();

@@ -184,7 +184,7 @@ public class CidKeyedCffParserTests
         {
             using var doc = PdfDocument.Open(pdfPath);
             var page = doc.GetPage(1);
-            var fonts = page.Resources?.GetDictionaryOrNull("Font");
+            var fonts = page.Resources?.GetDirectDictionaryOrNull("Font");
             if (fonts == null) return null;
 
             foreach (var kvp in fonts)
@@ -227,7 +227,7 @@ public class CidKeyedCffParserTests
         {
             using var doc = PdfDocument.Open(pdfPath);
             var page = doc.GetPage(1);
-            var fonts = page.Resources?.GetDictionaryOrNull("Font");
+            var fonts = page.Resources?.GetDirectDictionaryOrNull("Font");
             if (fonts == null) return null;
 
             foreach (var kvp in fonts)

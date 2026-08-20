@@ -117,7 +117,15 @@ internal static class ImageRedactor
     public static void PruneUnusedImageXObjects(PdfPage page, IReadOnlyList<ContentOperator> survivingPageOperations)
     {
         var resources = page.Resources;
-        var xobjects = resources?.GetDictionaryOrNull("XObject");
+        // #1050: RESOLVE. /Resources /XObject is routinely an indirect
+        // reference, and the non-resolving read returned null — so this method
+        // returned early and pruned NOTHING. The redacted image XObject then
+        // survived in the saved file, recoverable with `mutool extract`. Same
+        // shape as #1040's second leak, on the raster path instead of the text
+        // one.
+        var xobjects = resources != null
+            ? resources.ResolveDictionary(page.Document, "XObject")
+            : null;
         if (xobjects == null)
             return;
 
@@ -160,7 +168,11 @@ internal static class ImageRedactor
                 continue;
 
             var page = redactedPage.Document.GetPage(pageNumber);
-            if (!ReferenceEquals(page.Resources?.GetDictionaryOrNull("XObject"), xobjects))
+            // Resolved on both sides, or two pages sharing one /XObject dict
+            // through a reference would compare unequal and the shared-use
+            // check would wrongly conclude the object is unused.
+            var otherXObjects = page.Resources?.ResolveDictionary(page.Document, "XObject");
+            if (!ReferenceEquals(otherXObjects, xobjects))
                 continue;
 
             if (ContentUsesXObjectName(page.GetContentStream().Operators, name))

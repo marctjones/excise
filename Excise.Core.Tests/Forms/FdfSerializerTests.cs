@@ -79,7 +79,7 @@ public class FdfSerializerTests
         link.SetName("Subtype", "Link");
         link["Rect"] = Excise.Core.Primitives.PdfArray.FromRectangle(0, 0, 100, 20);
         var pageDict = doc.GetPage(1).Dictionary;
-        pageDict.GetArrayOrNull("Annots")!.Add(link);
+        pageDict.GetDirectArrayOrNull("Annots")!.Add(link);
 
         var fdf = FdfSerializer.ExportAnnotations(doc);
 
@@ -194,7 +194,7 @@ public class FdfSerializerTests
 
         var square = annotations.Single(a => a.Subtype == PdfAnnotationSubtype.Square);
         square.BorderWidth.Should().Be(3);
-        square.RawDictionary.GetArrayOrNull("IC").Should().NotBeNull("interior color must survive");
+        square.RawDictionary.GetDirectArrayOrNull("IC").Should().NotBeNull("interior color must survive");
     }
 
     [Fact]
@@ -728,7 +728,7 @@ public class FdfSerializerTests
         stamp.HasAppearance.Should().BeTrue("the stamp must be re-authored (baked /AP), not a bare dictionary");
 
         var polygon = importedAnnotations.Single(a => a.Subtype == PdfAnnotationSubtype.Polygon);
-        polygon.RawDictionary.GetArrayOrNull("IC").Should().NotBeNull("polygon interior fill must survive");
+        polygon.RawDictionary.GetDirectArrayOrNull("IC").Should().NotBeNull("polygon interior fill must survive");
 
         importedAnnotations.Count(a => a.Subtype == PdfAnnotationSubtype.Line).Should().Be(2);
     }

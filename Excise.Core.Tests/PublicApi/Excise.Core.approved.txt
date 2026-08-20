@@ -603,6 +603,12 @@ namespace Excise.Core.Document
         ViewerDips = 2,
         ContinuousDips = 3,
     }
+    public static class PdfDictionaryResolveExtensions
+    {
+        public static Excise.Core.Primitives.PdfArray? ResolveArray(this Excise.Core.Primitives.PdfDictionary dict, Excise.Core.Document.PdfDocument doc, string key) { }
+        public static Excise.Core.Primitives.PdfDictionary? ResolveDictionary(this Excise.Core.Primitives.PdfDictionary dict, Excise.Core.Document.PdfDocument doc, string key) { }
+        public static Excise.Core.Primitives.PdfStream? ResolveStream(this Excise.Core.Primitives.PdfDictionary dict, Excise.Core.Document.PdfDocument doc, string key) { }
+    }
     public class PdfDocument : System.IDisposable
     {
         public System.Collections.Generic.IReadOnlyDictionary<string, Excise.Core.Document.PdfAction> AdditionalActions { get; }
@@ -1372,10 +1378,10 @@ namespace Excise.Core.Primitives
         public T Get<T>(string key)
             where T : Excise.Core.Primitives.PdfObject { }
         public Excise.Core.Primitives.PdfArray GetArray(string key) { }
-        public Excise.Core.Primitives.PdfArray? GetArrayOrNull(string key) { }
         public bool GetBool(string key, bool defaultValue = false) { }
         public Excise.Core.Primitives.PdfDictionary GetDictionary(string key) { }
-        public Excise.Core.Primitives.PdfDictionary? GetDictionaryOrNull(string key) { }
+        public Excise.Core.Primitives.PdfArray? GetDirectArrayOrNull(string key) { }
+        public Excise.Core.Primitives.PdfDictionary? GetDirectDictionaryOrNull(string key) { }
         public System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<Excise.Core.Primitives.PdfName, Excise.Core.Primitives.PdfObject>> GetEnumerator() { }
         public int GetInt(string key) { }
         public int GetInt(string key, int defaultValue) { }

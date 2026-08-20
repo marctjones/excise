@@ -147,11 +147,11 @@ internal static class AcroFormFlattener
         if (resolved is not PdfStream appearance || rawAppearance == null)
             return;
 
-        if (!TryGetNumbers(document, appearance.GetArrayOrNull("BBox"), 4, out var bbox))
+        if (!TryGetNumbers(document, appearance.ResolveArray(document, "BBox"), 4, out var bbox))
             return;
 
         double[] matrix = { 1, 0, 0, 1, 0, 0 };
-        if (TryGetNumbers(document, appearance.GetArrayOrNull("Matrix"), 6, out var m))
+        if (TryGetNumbers(document, appearance.ResolveArray(document, "Matrix"), 6, out var m))
             matrix = m;
 
         // Transform the four BBox corners through /Matrix and take bounds.

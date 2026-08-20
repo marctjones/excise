@@ -104,11 +104,14 @@ public sealed class PdfStandardSecurityHandler
         bool usesAes = false;
         if (v == 4 || v == 5)
         {
-            var cf = encryptDict.GetDictionaryOrNull("CF");
+            // GetDirect deliberately (#1050): the /Encrypt dictionary is read to DERIVE
+            // the decryption key, so resolving an indirect entry here could require the
+            // key that does not exist yet. §7.6.1 keeps /Encrypt direct for this reason.
+            var cf = encryptDict.GetDirectDictionaryOrNull("CF");
             var stmF = encryptDict.GetNameOrNull("StmF") ?? "Identity";
             if (cf != null && stmF != "Identity")
             {
-                var cfm = cf.GetDictionaryOrNull(stmF)?.GetNameOrNull("CFM");
+                var cfm = cf.GetDirectDictionaryOrNull(stmF)?.GetNameOrNull("CFM");
                 if (cfm == "AESV2" || cfm == "AESV3")
                     usesAes = true;
             }

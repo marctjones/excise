@@ -177,8 +177,8 @@ public class InlineImageTests
         dict.GetInt("BPC").Should().Be(8);
         dict.GetNameOrNull("CS").Should().Be("DeviceGray");
         dict.GetNameOrNull("F").Should().Be("ASCII85Decode");
-        dict.GetArrayOrNull("D").Should().NotBeNull();
-        var decodeParms = dict.GetDictionaryOrNull("DP");
+        dict.GetDirectArrayOrNull("D").Should().NotBeNull();
+        var decodeParms = dict.GetDirectDictionaryOrNull("DP");
         decodeParms.Should().NotBeNull();
         decodeParms!.GetInt("K").Should().Be(-1);
         decodeParms.GetInt("Columns").Should().Be(1);
@@ -202,7 +202,7 @@ public class InlineImageTests
 
         var bi = result.Operators.Single(op => op.Name == "BI");
         var dict = (Excise.Core.Primitives.PdfDictionary)bi.Operands[0];
-        var decodeParms = dict.GetDictionaryOrNull("DP");
+        var decodeParms = dict.GetDirectDictionaryOrNull("DP");
         decodeParms.Should().NotBeNull("Type3 CCITT image masks store K and Columns in inline /DP dictionaries");
         decodeParms!.GetInt("K").Should().Be(-1);
         decodeParms.GetInt("Columns").Should().Be(106);

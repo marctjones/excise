@@ -769,7 +769,11 @@ public class PdfDocument : IDisposable
                         // KeyNotFoundException from the dictionary accessor. The
                         // "missing or empty" check under it was already written
                         // for this case but could never be reached (bug_644.pdf).
-                        var idArr = trailer.GetArrayOrNull("ID");
+                        // GetDirect deliberately: this runs during trailer parsing, in a static
+                        // context, before a document exists to resolve through. An indirect
+                        // /ID would also be a chicken-and-egg problem -- /ID is needed to
+                        // derive the encryption key that would decrypt the object holding it.
+                        var idArr = trailer.GetDirectArrayOrNull("ID");
                         if (idArr is null || idArr.Count == 0 || idArr[0] is not PdfString idStr)
                             throw new Excise.Core.Parsing.PdfParseException("/ID array missing or empty");
                         var firstId = idStr.Bytes;
