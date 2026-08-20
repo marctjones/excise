@@ -62,7 +62,7 @@ public class ArabicPresentationFormRedactionTests
         SearchableTextOf(doc.SaveToBytes()).Should().Contain("(CBA)",
             "sanity: the glyph-code carrier must be present before redaction");
 
-        var removed = doc.RedactText(BaseWord);
+        var removed = doc.RedactText(BaseWord).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0,
             "a base-letter needle must match a presentation-form glyph run via " +
@@ -90,7 +90,7 @@ public class ArabicPresentationFormRedactionTests
         var pdf = RtlPdfFixtures.SingleTj(ShapedScalars, visualOrder: true);
         using var doc = PdfDocument.Open(pdf);
 
-        var removed = doc.RedactText(ShapedWord);
+        var removed = doc.RedactText(ShapedWord).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0);
 
@@ -109,7 +109,7 @@ public class ArabicPresentationFormRedactionTests
         var pdf = RtlPdfFixtures.PerGlyphDecreasingX(ShapedScalars);
         using var doc = PdfDocument.Open(pdf);
 
-        var removed = doc.RedactText(BaseWord);
+        var removed = doc.RedactText(BaseWord).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0);
 
@@ -127,7 +127,7 @@ public class ArabicPresentationFormRedactionTests
         var pdf = RtlPdfFixtures.SingleTjWithLatinPrefix("abc", ShapedScalars);
         using var doc = PdfDocument.Open(pdf);
 
-        var removed = doc.RedactText(BaseWord);
+        var removed = doc.RedactText(BaseWord).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0);
 

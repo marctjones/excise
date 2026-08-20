@@ -147,7 +147,7 @@ end
             File.WriteAllBytes(input, pdf);
             using (var doc = PdfDocument.Open(input))
             {
-                doc.RedactText("SECRET").Should().Be(1,
+                doc.RedactText("SECRET").VerifiedRemovals.Should().Be(1,
                     "byte-wise codespace matching must make the mixed-width-encoded secret findable");
                 doc.Save(output);
             }

@@ -139,7 +139,7 @@ public class PerformanceBenchmarkTests
 
         using var document = PdfDocument.Open(path);
         var sw = Stopwatch.StartNew();
-        var matches = document.RedactText("the");
+        var matches = document.RedactText("the").VerifiedRemovals;
         sw.Stop();
 
         var survivingText = string.Join('\n', Enumerable.Range(1, document.PageCount)

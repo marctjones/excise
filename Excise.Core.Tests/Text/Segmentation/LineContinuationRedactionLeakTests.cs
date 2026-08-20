@@ -37,7 +37,7 @@ public class LineContinuationRedactionLeakTests
         var pdf = CreatePdfWithLineContinuationSplitWord();
         using var doc = PdfDocument.Open(pdf);
 
-        var matches = doc.RedactText(Target);
+        var matches = doc.RedactText(Target).VerifiedRemovals;
         matches.Should().Be(1, "the word must be recognized as one token, not split across a spurious newline");
 
         var saved = Save(doc);

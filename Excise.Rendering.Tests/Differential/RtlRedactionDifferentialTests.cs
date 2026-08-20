@@ -59,7 +59,7 @@ public class RtlRedactionDifferentialTests : IDisposable
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
 
         using var doc = PdfDocument.Open(VisualOrderArabicPdf());
-        var removed = doc.RedactText(ArabicWord);
+        var removed = doc.RedactText(ArabicWord).VerifiedRemovals;
         removed.Should().BeGreaterThan(0,
             "a logical-order needle must match the visual-order glyph run");
 
@@ -106,7 +106,7 @@ public class RtlRedactionDifferentialTests : IDisposable
         var shapedWord = new string(new[] { (char)0xFEB3, (char)0xFEFC, (char)0xFEE1 });
 
         using var doc = PdfDocument.Open(VisualOrderPresentationFormPdf());
-        var removed = doc.RedactText(ArabicWord);
+        var removed = doc.RedactText(ArabicWord).VerifiedRemovals;
         removed.Should().BeGreaterThan(0,
             "a base-letter needle must match the shaped glyph run via " +
             "compatibility-decomposition folding");

@@ -119,7 +119,7 @@ public sealed class SymbolicTrueTypeSymbolCmapExtractionTests
         byte[] redacted;
         using (var doc = PdfDocument.Open(pdf))
         {
-            var removed = doc.RedactText(Intended);
+            var removed = doc.RedactText(Intended).VerifiedRemovals;
             _out.WriteLine($"redaction removed {removed} occurrence(s)");
             removed.Should().BeGreaterThan(0, "excise must locate and redact the symbol-cmap text");
             using var ms = new MemoryStream();

@@ -75,7 +75,7 @@ public class HarakatNiqqudRedactionTests
         SearchableTextOf(doc.SaveToBytes()).Should().Contain("(FEDCBA)",
             "sanity: the glyph-code carrier must be present before redaction");
 
-        var removed = doc.RedactText(BareArabic);
+        var removed = doc.RedactText(BareArabic).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0,
             "a bare needle must match vocalized text — harakat are optional " +
@@ -100,7 +100,7 @@ public class HarakatNiqqudRedactionTests
         var pdf = RtlPdfFixtures.SingleTj(VocalizedArabicScalars, visualOrder: true);
         using var doc = PdfDocument.Open(pdf);
 
-        var removed = doc.RedactText(VocalizedArabic);
+        var removed = doc.RedactText(VocalizedArabic).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0);
 
@@ -123,7 +123,7 @@ public class HarakatNiqqudRedactionTests
         SearchableTextOf(doc.SaveToBytes()).Should().Contain("(GFEDCBA)",
             "sanity: the glyph-code carrier must be present before redaction");
 
-        var removed = doc.RedactText(BareHebrew);
+        var removed = doc.RedactText(BareHebrew).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0,
             "a bare needle must match pointed (niqqud) text (#725)");
@@ -143,7 +143,7 @@ public class HarakatNiqqudRedactionTests
         var pdf = RtlPdfFixtures.SingleTjWithLatinPrefix("xyz ", VocalizedArabicScalars);
         using var doc = PdfDocument.Open(pdf);
 
-        var removed = doc.RedactText(BareArabic);
+        var removed = doc.RedactText(BareArabic).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0);
 
@@ -163,7 +163,7 @@ public class HarakatNiqqudRedactionTests
             new[] { 'c', 'a', 'f', 0x00E9 }, visualOrder: false);
         using var doc = PdfDocument.Open(pdf);
 
-        var removed = doc.RedactText("cafe");
+        var removed = doc.RedactText("cafe").VerifiedRemovals;
 
         removed.Should().Be(0,
             "stripping must not extend to Latin combining accents (accent-insensitivity is out of scope)");
@@ -179,7 +179,7 @@ public class HarakatNiqqudRedactionTests
         var pdf = RtlPdfFixtures.SingleTj(withMaqaf, visualOrder: true);
         using var doc = PdfDocument.Open(pdf);
 
-        var removed = doc.RedactText("\u05D0\u05D1\u05D2\u05D3"); // alef-bet-gimel-dalet, no maqaf
+        var removed = doc.RedactText("\u05D0\u05D1\u05D2\u05D3").VerifiedRemovals; // alef-bet-gimel-dalet, no maqaf
 
         removed.Should().Be(0,
             "maqaf is punctuation carrying real content structure, not optional pointing");

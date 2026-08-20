@@ -71,7 +71,7 @@ public class RtlType0RedactionDifferentialTests : IDisposable
         RtlOracleText.Recovered(before, Keep).Should().BeTrue("the keep word is present too");
 
         using var doc = PdfDocument.Open(Type0RtlFixture.VisualOrderWithKeep(scalars));
-        var removed = doc.RedactText(word, drawBlackRect: false);
+        var removed = doc.RedactText(word, drawBlackRect: false).VerifiedRemovals;
         removed.Should().BeGreaterThan(0,
             "a logical-order needle must match the visual-order CID run");
 
@@ -110,7 +110,7 @@ public class RtlType0RedactionDifferentialTests : IDisposable
 
         // drawBlackRect:false ⇒ structural removal only. The region must come
         // back BLANK, proving the glyphs are GONE, not covered by a box.
-        var removed = doc.RedactText(word, drawBlackRect: false);
+        var removed = doc.RedactText(word, drawBlackRect: false).VerifiedRemovals;
         removed.Should().BeGreaterThan(0);
 
         var afterPath = SaveTemp(doc);

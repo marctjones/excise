@@ -164,7 +164,7 @@ public class AcroFormReadOnlyTests
         var pdf = BuildFormPdf(textValue: "SECRET-12345");
         using var doc = PdfDocument.Open(pdf);
 
-        var matches = doc.RedactText("SECRET", caseSensitive: false);
+        var matches = doc.RedactText("SECRET", caseSensitive: false).VerifiedRemovals;
         var bytes = doc.SaveToBytes();
 
         matches.Should().Be(1);
@@ -180,7 +180,7 @@ public class AcroFormReadOnlyTests
         var pdf = BuildFormPdf(textValue: null, defaultValue: "Fallback SECRET");
         using var doc = PdfDocument.Open(pdf);
 
-        var matches = doc.RedactText("SECRET", caseSensitive: false);
+        var matches = doc.RedactText("SECRET", caseSensitive: false).VerifiedRemovals;
         var bytes = doc.SaveToBytes();
 
         matches.Should().Be(1);
@@ -274,7 +274,7 @@ public class AcroFormReadOnlyTests
             isCombo: false);
         using var doc = PdfDocument.Open(pdf);
 
-        var matches = doc.RedactText("SECRET-Consectetur", caseSensitive: false);
+        var matches = doc.RedactText("SECRET-Consectetur", caseSensitive: false).VerifiedRemovals;
         matches.Should().BeGreaterThan(0);
 
         var saved = doc.SaveToBytes();
@@ -349,7 +349,7 @@ public class AcroFormReadOnlyTests
         var pdf = BuildSignatureFieldPdf(appearanceText: "SIGSECRET signed the document");
         using var doc = PdfDocument.Open(pdf);
 
-        var matches = doc.RedactText("SIGSECRET", caseSensitive: false);
+        var matches = doc.RedactText("SIGSECRET", caseSensitive: false).VerifiedRemovals;
         matches.Should().BeGreaterThan(0, "RedactText must actually find the signature appearance text");
 
         var saved = doc.SaveToBytes();
@@ -408,7 +408,7 @@ public class AcroFormReadOnlyTests
         doc.GetPage(1).Text.Should().Contain("TAILSECRET",
             "the tail must be extractable before it can be redacted");
 
-        var matches = doc.RedactText("TAILSECRET", caseSensitive: false);
+        var matches = doc.RedactText("TAILSECRET", caseSensitive: false).VerifiedRemovals;
         matches.Should().BeGreaterThan(0);
 
         var saved = doc.SaveToBytes();

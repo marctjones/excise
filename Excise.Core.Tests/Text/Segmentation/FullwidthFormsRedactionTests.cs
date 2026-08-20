@@ -57,7 +57,7 @@ public class FullwidthFormsRedactionTests
         SearchableTextOf(doc.SaveToBytes()).Should().Contain("(ABC)",
             "sanity: the glyph-code carrier must be present before redaction");
 
-        var removed = doc.RedactText(plainNeedle);
+        var removed = doc.RedactText(plainNeedle).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0,
             $"an ASCII needle '{plainNeedle}' must match fullwidth '{storedText}'; " +
@@ -87,7 +87,7 @@ public class FullwidthFormsRedactionTests
             "sanity: the fixture must extract halfwidth");
         doc.GetPage(1).Text.Should().NotContain(typedNeedle);
 
-        var removed = doc.RedactText(typedNeedle);
+        var removed = doc.RedactText(typedNeedle).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0,
             "a regular-katakana needle must match halfwidth katakana (#727)");
@@ -110,7 +110,7 @@ public class FullwidthFormsRedactionTests
         var pdf = RtlPdfFixtures.SingleTj(scalars, visualOrder: false);
         using var doc = PdfDocument.Open(pdf);
 
-        var removed = doc.RedactText("\u30AC");  // ga (voiced ka)
+        var removed = doc.RedactText("\u30AC").VerifiedRemovals;  // ga (voiced ka)
 
         removed.Should().BeGreaterThan(0,
             "the halfwidth base+voiced-mark pair must fold and compose to ガ (#727)");
@@ -130,7 +130,7 @@ public class FullwidthFormsRedactionTests
         var pdf = RtlPdfFixtures.SingleTj(scalars, visualOrder: false);
         using var doc = PdfDocument.Open(pdf);
 
-        var removed = doc.RedactText("\uFF21\uFF22\uFF23");  // fullwidth ABC
+        var removed = doc.RedactText("\uFF21\uFF22\uFF23").VerifiedRemovals;  // fullwidth ABC
 
         removed.Should().BeGreaterThan(0,
             "a fullwidth needle must match ASCII text (#727)");
@@ -149,7 +149,7 @@ public class FullwidthFormsRedactionTests
         var pdf = RtlPdfFixtures.SingleTj(scalars, visualOrder: false);
         using var doc = PdfDocument.Open(pdf);
 
-        var removed = doc.RedactText("ABC");
+        var removed = doc.RedactText("ABC").VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0);
 
@@ -172,7 +172,7 @@ public class FullwidthFormsRedactionTests
         var pdf = RtlPdfFixtures.SingleTj(storedScalars, visualOrder: false);
         using var doc = PdfDocument.Open(pdf);
 
-        var removed = doc.RedactText(needle);
+        var removed = doc.RedactText(needle).VerifiedRemovals;
 
         removed.Should().Be(0,
             "compatibility characters outside the Halfwidth and Fullwidth Forms " +

@@ -169,7 +169,10 @@ public class RedactionService
                     "explicit confirmation.");
             }
 
-            int totalMatches = doc.RedactText(textToRedact, caseSensitive);
+            // #1089: VerifiedRemovals, not the located count. The old int was
+            // an attempt counter and reported a term that survived as success.
+            var redaction = doc.RedactText(textToRedact, caseSensitive);
+            int totalMatches = redaction.VerifiedRemovals;
             // #643: this path opens without a password, so only empty-user-
             // password encrypted sources reach here — their redacted output
             // stays encrypted with the same parameters.

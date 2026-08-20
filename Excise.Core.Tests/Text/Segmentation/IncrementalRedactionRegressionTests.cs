@@ -35,7 +35,7 @@ public sealed class IncrementalRedactionRegressionTests
         beforeText.Should().Contain("CURRENTREVISIONSECRET");
         beforeText.Should().NotContain("OLDREVISIONSECRET");
 
-        doc.RedactText("CURRENTREVISIONSECRET", drawBlackRect: false).Should().Be(1);
+        doc.RedactText("CURRENTREVISIONSECRET", drawBlackRect: false).VerifiedRemovals.Should().Be(1);
 
         var saved = Encoding.Latin1.GetString(doc.SaveToBytes());
         saved.Should().NotContain("CURRENTREVISIONSECRET");

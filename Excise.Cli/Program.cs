@@ -841,16 +841,37 @@ partial class Program
         foreach (var line in EnforceConfidencePolicy(confidence, strict, allowLowConfidence))
             Console.Error.WriteLine(line);
 
-        var count = doc.RedactText(text, caseSensitive);
+        // #1089: the CLI prints VERIFIED removals. The old count was matches
+        // located per pass -- how one occurrence printed as "Redacted 3" (#1043)
+        // and how a term that was never removed still reported success.
+        var redaction = doc.RedactText(text, caseSensitive);
+        var count = redaction.VerifiedRemovals;
 
         // #916/#905 — collect what the redaction could not examine BEFORE
         // saving, so the CLI can report it the way the GUI dialog does.
         // Without this the CLI prints an unqualified success line while
         // bookmark titles and off-page annotations were never looked at.
         // Collect BEFORE saving so it reflects the document that was written.
-        var carrierNotes = RedactionCarrierAudit.Inspect(doc, new[] { text }).Describe();
+        var carrierNotes = RedactionCarrierAudit.Inspect(doc, new[] { text }).Describe().ToList();
 
         doc.Save(outputPath, reEncryption);
+        // #1089: a gap between located and verified is the single most
+        // important thing this command can tell a user, and the old int return
+        // made it unsayable.
+        if (redaction.Survived > 0)
+            carrierNotes.Add(
+                $"WARNING: {redaction.Survived} occurrence(s) of '{text}' are STILL PRESENT " +
+                "after redaction. excise located them and the removal did not land. " +
+                "Do not treat this file as redacted.");
+        if (redaction.UsedDestructiveRemoval)
+            carrierNotes.Add(
+                "WARNING: redaction fell back to deleting whole text-showing operators on at " +
+                "least one page. The term is gone and so is an unknown amount of surrounding " +
+                "text -- compare the output against the original before relying on it.");
+        foreach (var carrier in redaction.Carriers)
+            if (carrier.RefusedReason != null)
+                carrierNotes.Add($"NOT SCRUBBED: {carrier.Carrier} -- {carrier.RefusedReason}");
+
         return (count, carrierNotes);
     }
 
