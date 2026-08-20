@@ -372,10 +372,22 @@ for line in pkg_lines:
 
     results.append(info)
 
+# DETERMINISTIC OUTPUT (#1081). No wall-clock timestamp: this file used to
+# carry "generatedAt", so every regeneration diffed even when no dependency had
+# changed, and the signal was buried in noise every single time. A manifest
+# nobody can review by diff is a manifest nobody reviews.
+#
+# It is also what makes the release able to VERIFY this file instead of
+# overwriting it (#1082) -- with a timestamp in it, every release drifts by
+# construction and the check could only ever fail.
+#
+# Packages are sorted by id so the ORDER cannot vary with dictionary or
+# filesystem iteration either. sort_keys sorts each package's own fields.
+results.sort(key=lambda p: (p.get("id") or "").lower())
 with open(out_path, "w") as f:
-    json.dump({"generatedAt": __import__("datetime").datetime.utcnow().isoformat() + "Z",
-               "project": "$PROJECT",
-               "packages": results}, f, indent=2)
+    json.dump({"project": "$PROJECT",
+               "packages": results}, f, indent=2, sort_keys=True)
+    f.write("\n")
 
 print(f"  wrote {out_path}  ({len(results)} packages)")
 mismatches = [p for p in results if p.get("scancodeMismatch")]

@@ -133,6 +133,25 @@ if textless:
           "redistribution. Embed the file (LICENSE_OVERRIDES) or add its SPDX "
           "id to SpdxLicenseTexts.")
 
+# -- DETERMINISM: no volatile field in the manifest (#1081) -------------------
+#
+# The manifest carried "generatedAt", a wall-clock timestamp, so every
+# regeneration diffed even when no dependency had changed. A file nobody can
+# review by diff is a file nobody reviews -- and it is also what made it
+# impossible for the release to VERIFY this manifest rather than overwrite it
+# (#1082): with a timestamp inside, every release drifts by construction.
+#
+# Cheap to check here (a key lookup) and it catches the regression at the point
+# someone reintroduces it, rather than at the next release.
+manifest_root = json.load(open(manifest_path))
+volatile = [k for k in ("generatedAt", "generated", "timestamp", "builtAt")
+            if k in manifest_root]
+if volatile:
+    failures.append(
+        "the manifest carries volatile field(s) " + ", ".join(sorted(volatile))
+        + ":\n     regeneration then diffs even when nothing changed, so the file "
+          "cannot be reviewed by diff and the release cannot verify it (#1081).")
+
 # -- POLICY: permitted / banned / review (#1061) ------------------------------
 #
 # Three states, and the third is the point: an SPDX id on NEITHER list FAILS.
