@@ -79,8 +79,13 @@ jobs:
           echo "version=$v" >> "$GITHUB_OUTPUT"
           echo "▶ version: $v"
 
-      - name: Generate license manifest
-        run: ./scripts/generate-license-manifest.sh
+      # VERIFY, do not regenerate (#1082). This step used to run the generator
+      # and ship whatever came out, so the attribution users saw was not the
+      # attribution that was reviewed and gated -- it was whatever the NuGet
+      # cache produced on the runner that day. Every t0 gate protected a file
+      # this step then replaced.
+      - name: Verify license manifest matches dependencies
+        run: ./scripts/verify-license-manifest.sh
 
       # Native AOT on Linux shells out to clang and needs zlib headers. Without
       # these, `dotnet publish -p:PublishAot=true` fails inside the linker with a
@@ -212,8 +217,9 @@ jobs:
         shell: pwsh
         run: |
           # Re-use the bash script via Git Bash on the runner (always
-          # present on windows-latest).
-          & "C:\Program Files\Git\bin\bash.exe" ./scripts/generate-license-manifest.sh
+          # present on windows-latest). VERIFY, not regenerate (#1082) -- see
+          # the Linux step for why.
+          & "C:\Program Files\Git\bin\bash.exe" ./scripts/verify-license-manifest.sh
 
       - name: Build Windows installer
         shell: pwsh
