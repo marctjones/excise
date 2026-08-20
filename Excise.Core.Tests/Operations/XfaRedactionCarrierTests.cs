@@ -281,5 +281,9 @@ public class XfaRedactionCarrierTests
     }
 
     private static string CombinedEncodings(byte[] bytes) =>
-        Encoding.Latin1.GetString(bytes) + Encoding.BigEndianUnicode.GetString(bytes);
+        // #1049: the shared scanner also searches INSIDE /FlateDecode streams.
+        // The hand-rolled encoding concatenation this replaced could not, and
+        // excise compresses on save — that blindness declared #1040's leaking
+        // output clean. SavedPdfLeakScannerTests proves it.
+        Excise.Core.Tests.Text.Segmentation.SavedPdfLeakScanner.AllCarriersText(bytes);
 }

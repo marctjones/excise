@@ -92,4 +92,12 @@
     <Content Include="Resources\sample-pdfs\birth-certificate-request-scrambled.pdf" Link="UI\test-pdfs\birth-certificate-request-scrambled.pdf" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- ONE leak scanner, compiled into every test assembly that needs it.
+         Duplicating it is the drift shape this project keeps paying for; a
+         whole TestSupport project for one class is not worth its weight.
+         Precedent: the Inconsolata.cff link in Excise.Rendering.Tests. -->
+    <Compile Include="../Excise.Core.Tests/Text/Segmentation/SavedPdfLeakScanner.cs" Link="TestSupport/SavedPdfLeakScanner.cs" />
+  </ItemGroup>
+
 </Project>

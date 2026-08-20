@@ -46,7 +46,7 @@ public class StructureTreeRedactionLeakTests
 
         // The assertion that actually matters. /ActualText is a text carrier;
         // if it still holds the secret, the redaction did not happen.
-        Utf16AndAsciiOf(saved).Should().NotContain(Secret,
+        SavedPdfLeakScanner.FindTerm(saved, Secret).Should().BeEmpty(
             "/ActualText on the redacted span still spells out the secret. Text extraction " +
             "reads the content stream and reports the document clean, while Acrobat and every " +
             "screen reader read the name straight out of the structure tree.");
@@ -60,7 +60,7 @@ public class StructureTreeRedactionLeakTests
 
         RedactWord(page, Secret);
 
-        Utf16AndAsciiOf(Save(pdf)).Should().NotContain("Photo of " + Secret,
+        SavedPdfLeakScanner.FindTerm(Save(pdf), "Photo of " + Secret).Should().BeEmpty(
             "/Alt on a Figure element is an alternate *description* — it routinely restates " +
             "the very content being redacted, and it survives glyph removal untouched.");
     }
@@ -77,7 +77,7 @@ public class StructureTreeRedactionLeakTests
 
         RedactWord(page, Secret);
 
-        var saved = Utf16AndAsciiOf(Save(pdf));
+        var saved = SavedPdfLeakScanner.AllCarriersText(Save(pdf));
         saved.Should().Contain(Keep,
             "text outside the redaction region must survive in the structure tree");
         saved.Should().Contain("/StructTreeRoot",
@@ -113,17 +113,6 @@ public class StructureTreeRedactionLeakTests
         return ms.ToArray();
     }
 
-    /// <summary>
-    /// Renders the saved bytes as text for carrier-agnostic leak checking.
-    /// PDF strings may be literal ASCII or UTF-16BE, so we search both — a leak
-    /// that hides behind an encoding is still a leak.
-    /// </summary>
-    private static string Utf16AndAsciiOf(byte[] saved)
-    {
-        var ascii = Encoding.ASCII.GetString(saved);
-        var utf16 = Encoding.BigEndianUnicode.GetString(saved);
-        return ascii + "\n" + utf16;
-    }
 
     /// <summary>
     /// A tagged PDF whose sensitive string appears in three carriers at once:

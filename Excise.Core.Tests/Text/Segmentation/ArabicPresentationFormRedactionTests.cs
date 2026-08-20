@@ -143,9 +143,11 @@ public class ArabicPresentationFormRedactionTests
     /// + UTF-8 (XMP metadata).
     /// </summary>
     private static string SearchableTextOf(byte[] saved) =>
-        Encoding.ASCII.GetString(saved) +
-        Encoding.BigEndianUnicode.GetString(saved) +
-        Encoding.UTF8.GetString(saved);
+        // #1049: the shared scanner also searches INSIDE /FlateDecode streams.
+        // The hand-rolled encoding concatenation this replaced could not, and
+        // excise compresses on save — that blindness declared #1040's leaking
+        // output clean. SavedPdfLeakScannerTests proves it.
+        Excise.Core.Tests.Text.Segmentation.SavedPdfLeakScanner.AllCarriersText(saved);
 
     private static string Reverse(string s)
     {
