@@ -464,6 +464,7 @@ namespace Excise.Core.Document
     }
     public sealed class PdfAnnotation
     {
+        public const double TextIconSize = 17D;
         public byte[]? AttachmentBytes { get; }
         public string? AttachmentFileName { get; }
         public string? AttachmentMimeType { get; }

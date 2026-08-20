@@ -52,15 +52,12 @@ public class AnnotationHoverReadingTests : IDisposable
         {
             await MoveOverTheNote(window, vm, viewer);
 
-            vm.HoveredAnnotationInfo.Should().NotBeNull(
-                "hovering a /Text annotation must surface its note — before #1074 the " +
-                "GUI read no annotation's /Contents anywhere at all");
-            vm.HoveredAnnotationInfo.Should().Contain(NoteText);
-            vm.HoveredAnnotationInfo.Should().Contain(Author,
-                "the reviewer needs to know WHO left the note, not only what it says");
             vm.StatusBarText.Should().Contain(NoteText,
-                "the status bar is where it becomes readable; a property nothing displays " +
-                "would leave the note exactly as unreachable as before");
+                "hovering a /Text annotation must surface its note IN THE STATUS BAR — " +
+                "before #1074 the GUI read no annotation's /Contents anywhere at all, and " +
+                "a ViewModel property nothing displays would leave it just as unreachable");
+            vm.StatusBarText.Should().Contain(Author,
+                "the reviewer needs to know WHO left the note, not only what it says");
         }
         finally { window.Close(); }
     }
@@ -76,7 +73,7 @@ public class AnnotationHoverReadingTests : IDisposable
         try
         {
             await MoveOverTheNote(window, vm, viewer);
-            vm.HoveredAnnotationInfo.Should().NotBeNull("precondition: the hover must register first");
+            vm.StatusBarText.Should().Contain(NoteText, "precondition: the hover must register first");
 
             // Somewhere on the page that is not the note. The note sits at PDF
             // (300,500); the page origin corner is nowhere near it at any zoom.
@@ -84,7 +81,7 @@ public class AnnotationHoverReadingTests : IDisposable
             var away = surface.TranslatePoint(new Point(2, 2), window);
             if (away is { } pt) await Move(window, pt);
 
-            vm.HoveredAnnotationInfo.Should().BeNull(
+            vm.StatusBarText.Should().NotContain(NoteText,
                 "moving off the annotation must clear the status text, or the note would " +
                 "follow the pointer around the document forever");
         }
@@ -104,10 +101,9 @@ public class AnnotationHoverReadingTests : IDisposable
         {
             await MoveOverTheNote(window, vm, viewer);
 
-            vm.HoveredAnnotationInfo.Should().NotBeNull(
+            vm.StatusBarText.Should().Contain(NoteText,
                 "continuous mode must read annotations too — a hover wired only for the " +
                 "paged path is the exact drift the shared mapping exists to stop");
-            vm.HoveredAnnotationInfo.Should().Contain(NoteText);
         }
         finally { window.Close(); }
     }
@@ -127,7 +123,7 @@ public class AnnotationHoverReadingTests : IDisposable
         {
             await MoveOverTheNote(window, vm, viewer);
 
-            vm.HoveredAnnotationInfo.Should().NotBeNull(
+            vm.StatusBarText.Should().Contain(NoteText,
                 "the icon is drawn at a normalised 17pt box, so the hit-test must use the " +
                 "same box — otherwise the marker is visible but unreachable");
         }
@@ -149,13 +145,13 @@ public class AnnotationHoverReadingTests : IDisposable
         {
             await MoveOverTheNote(window, vm, viewer);
 
-            var shown = vm.HoveredAnnotationInfo;
-            shown.Should().NotBeNull("precondition: the long note must register as hovered");
-            shown!.Should().NotContain("\n", "a newline would break the status line");
+            var shown = vm.StatusBarText;
+            shown.Should().Contain("First line", "precondition: the long note must register");
+            shown.Should().NotContain("\n", "a newline would break the status line");
             shown.Should().NotContain("\r");
             shown.Length.Should().BeLessThan(300,
                 "/Contents can be kilobytes; the status bar shows a summary, not the file");
-            shown.Should().Contain("First line",
+            shown.Should().NotContain(new string('x', 300),
                 "truncation must keep the BEGINNING — the end of a long note is the " +
                 "part a reviewer can afford to lose");
         }
@@ -202,14 +198,27 @@ public class AnnotationHoverReadingTests : IDisposable
         var surface = PageSurface(viewer);
         var b = surface.Bounds;
         const int steps = 40;
-        for (int i = 0; i <= steps && vm.HoveredAnnotationInfo == null; i++)
-            for (int j = 0; j <= steps && vm.HoveredAnnotationInfo == null; j++)
+        for (int i = 0; i <= steps && !Hovered(vm); i++)
+            for (int j = 0; j <= steps && !Hovered(vm); j++)
             {
                 var p = surface.TranslatePoint(
                     new Point(b.Width * i / steps, b.Height * j / steps), window);
                 if (p is { } pt) await Move(window, pt);
             }
     }
+
+    /// <summary>
+    /// Has the hover landed? Read off the STATUS BAR, the surface a user sees.
+    /// There is deliberately no ViewModel property exposing the hovered
+    /// annotation: one existed briefly, nothing displayed it, and the
+    /// unwired-api gate correctly flagged it as a test-only seam — the same
+    /// shape as #896, where a safe path existed and nothing used it.
+    /// </summary>
+    private static bool Hovered(MainWindowViewModel vm) =>
+        // The subtype prefix from DescribeAnnotation's "Subtype — Author: text".
+        // Stable across every fixture here, where the contents deliberately are
+        // not (the long-note case has different text).
+        vm.StatusBarText.Contains("Text \u2014", StringComparison.Ordinal);
 
     /// <summary>The laid-out page surface: OverlayCanvas paged, ContinuousItems continuous.</summary>
     private static Control PageSurface(PdfViewerControl viewer) =>
@@ -240,7 +249,7 @@ public class AnnotationHoverReadingTests : IDisposable
         try
         {
             await MoveOverTheNote(window, vm, viewer);
-            vm.HoveredAnnotationInfo.Should().NotBeNull("precondition: the hover must register first");
+            vm.StatusBarText.Should().Contain(NoteText, "precondition: the hover must register first");
 
             await Dispatcher.UIThread.InvokeAsync(() =>
                 viewer.RaiseEvent(new PointerEventArgs(
@@ -248,7 +257,7 @@ public class AnnotationHoverReadingTests : IDisposable
                     new Point(-5, -5), 0, PointerPointProperties.None, KeyModifiers.None)));
             window.UpdateLayout();
 
-            vm.HoveredAnnotationInfo.Should().BeNull(
+            vm.StatusBarText.Should().NotContain(NoteText,
                 "the pointer has left the page; stale hover text outlives what it describes");
         }
         finally { window.Close(); }

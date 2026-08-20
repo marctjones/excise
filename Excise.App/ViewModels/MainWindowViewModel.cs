@@ -505,9 +505,6 @@ public partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     private string? _hoveredAnnotationInfo;
 
-    /// <summary>Exposed for tests: what the hover pipeline last reported.</summary>
-    public string? HoveredAnnotationInfo => _hoveredAnnotationInfo;
-
     /// <summary>
     /// Status bar text showing pending redaction count and file type.
     /// Updates dynamically as user marks/applies redactions. Link-hover
@@ -3157,7 +3154,6 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         if (_hoveredAnnotationInfo == info) return;
         _hoveredAnnotationInfo = info;
-        this.RaisePropertyChanged(nameof(HoveredAnnotationInfo));
         this.RaisePropertyChanged(nameof(StatusBarText));
     }
 
