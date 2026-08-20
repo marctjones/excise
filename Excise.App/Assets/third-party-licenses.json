@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-27T21:31:13.406266Z",
+  "generatedAt": "2026-08-20T01:43:55.697493Z",
   "project": "Excise.App/Excise.App.csproj",
   "packages": [
     {
@@ -35,7 +35,9 @@
       "licenseFileName": "LICENSE",
       "licenseFileSha1": "02a69298c501ed85c0faaf97b4723e075d183ab3",
       "licenseText": "// Copyright 2018 The ANGLE Project Authors.\n// All rights reserved.\n//\n// Redistribution and use in source and binary forms, with or without\n// modification, are permitted provided that the following conditions\n// are met:\n//\n//     Redistributions of source code must retain the above copyright\n//     notice, this list of conditions and the following disclaimer.\n//\n//     Redistributions in binary form must reproduce the above\n//     copyright notice, this list of conditions and the following\n//     disclaimer in the documentation and/or other materials provided\n//     with the distribution.\n//\n//     Neither the name of TransGaming Inc., Google Inc., 3DLabs Inc.\n//     Ltd., nor the names of their contributors may be used to endorse\n//     or promote products derived from this software without specific\n//     prior written permission.\n//\n// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS\n// \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT\n// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS\n// FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE\n// COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,\n// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,\n// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;\n// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\n// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT\n// LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN\n// ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE\n// POSSIBILITY OF SUCH DAMAGE.\n",
-      "licenseName": "LICENSE"
+      "licenseName": "BSD 3-Clause License (ANGLE Project)",
+      "spdx": "BSD-3-Clause",
+      "licenseSpdxUrl": "https://spdx.org/licenses/BSD-3-Clause.html"
     },
     {
       "id": "Avalonia.Controls.ColorPicker",
@@ -312,6 +314,8 @@
       "nugetId": "CSJ2K",
       "nugetVersion": "3.0.0",
       "licenseName": "BSD License (CSJ2K / JJ2000)",
+      "spdx": "BSD-2-Clause",
+      "licenseSpdxUrl": "https://spdx.org/licenses/BSD-2-Clause.html",
       "licenseText": "CSJ2K is licensed under the BSD License.\n\nCopyright (c) 1999-2000 JJ2000 Partners; original C# port (c) 2007-2012\nJason S. Clary; C# encoding and adaptation to Portable Class Library with\nplatform specific support (c) 2013-2018 Anders Gustafsson, Cureos AB.\n\nLicensed and distributable under the terms of the BSD license:\nhttp://www.opensource.org/licenses/bsd-license.php\n\n----------------------------------------------------------------------\nThe JPEG 2000 core (JJ2000) carries the following copyright notice, which\nmust be included in all copies or derivative works of this software module:\n\nCOPYRIGHT:\n\nThis software module was originally developed by Rapha\u00ebl Grosbois and\nDiego Santa Cruz (Swiss Federal Institute of Technology-EPFL); Joel\nAskel\u00f6f (Ericsson Radio Systems AB); and Bertrand Berthelot, David\nBouchard, F\u00e9lix Henry, Gerard Mozelle and Patrice Onno (Canon Research\nCentre France S.A) in the course of development of the JPEG2000 standard\nas specified by ISO/IEC 15444 (JPEG 2000 Standard). This software module\nis an implementation of a part of the JPEG 2000 Standard. Swiss Federal\nInstitute of Technology-EPFL, Ericsson Radio Systems AB and Canon Research\nCentre France S.A (collectively JJ2000 Partners) agree not to assert\nagainst ISO/IEC and users of the JPEG 2000 Standard (Users) any of their\nrights under the copyright, not including other intellectual property\nrights, for this software module with respect to the usage by ISO/IEC and\nUsers of this software module or modifications thereof for use in hardware\nor software products claiming conformance to the JPEG 2000 Standard. Those\nintending to use this software module in hardware or software products are\nadvised that their use may infringe existing patents. The original\ndevelopers of this software module, JJ2000 Partners and ISO/IEC assume no\nliability for use of this software module or modifications thereof. No\nlicense or right to this software module is granted for non JPEG 2000\nStandard conforming products. JJ2000 Partners have full right to use this\nsoftware module for his/her own purpose, assign or donate this software\nmodule to any third party and to inhibit third parties from using this\nsoftware module for non JPEG 2000 Standard conforming products. This\ncopyright notice must be included in all copies or derivative works of\nthis software module.\n\nCopyright (c) 1999/2000 JJ2000 Partners."
     },
     {

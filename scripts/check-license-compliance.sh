@@ -37,11 +37,12 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO"
 
 MANIFEST="Excise.App/Assets/third-party-licenses.json"
+POLICY="tests/license-policy.tsv"
 ASSETS="Excise.App/obj/project.assets.json"
 GENERATOR="scripts/generate-license-manifest.sh"
 SPDX_TEXTS="Excise.App/ViewModels/SpdxLicenseTexts.cs"
 
-for f in "$MANIFEST" "$GENERATOR" "$SPDX_TEXTS"; do
+for f in "$MANIFEST" "$GENERATOR" "$SPDX_TEXTS" "$POLICY"; do
   [[ -f "$f" ]] || { echo "❌ missing $f" >&2; exit 1; }
 done
 [[ -f "$ASSETS" ]] || {
@@ -49,10 +50,10 @@ done
   exit 1
 }
 
-python3 - "$MANIFEST" "$ASSETS" "$GENERATOR" "$SPDX_TEXTS" <<'PY'
+python3 - "$MANIFEST" "$ASSETS" "$GENERATOR" "$SPDX_TEXTS" "$POLICY" <<'PY'
 import json, re, sys
 
-manifest_path, assets_path, generator_path, spdx_path = sys.argv[1:5]
+manifest_path, assets_path, generator_path, spdx_path, policy_path = sys.argv[1:6]
 
 # ── The shipped closure, from NuGet's own restore output ─────────────────────
 # An independent source: NuGet writes it, so the manifest is not permitted to
@@ -132,6 +133,56 @@ if textless:
           "redistribution. Embed the file (LICENSE_OVERRIDES) or add its SPDX "
           "id to SpdxLicenseTexts.")
 
+# -- POLICY: permitted / banned / review (#1061) ------------------------------
+#
+# Three states, and the third is the point: an SPDX id on NEITHER list FAILS.
+# Silence is not permission. A GPL dependency arriving transitively would
+# otherwise pass every check here, because the manifest would name it perfectly
+# well -- which is exactly what this gate did before #1061.
+permitted, banned, notes = set(), set(), {}
+for raw in open(policy_path):
+    if not raw.strip() or raw.lstrip().startswith("#"):
+        continue
+    parts = raw.rstrip("\n").split("\t")
+    if len(parts) < 2:
+        continue
+    state, spdx = parts[0].strip(), parts[1].strip()
+    notes[spdx] = parts[2].strip() if len(parts) > 2 else ""
+    if state == "permitted":
+        permitted.add(spdx)
+    elif state == "banned":
+        banned.add(spdx)
+
+if not permitted or not banned:
+    print("\u274c the policy file lists no permitted or no banned licence -- refusing to run, "
+          "because an empty list would silently approve everything", file=sys.stderr)
+    sys.exit(1)
+
+bad, unclassified = [], []
+for pkg_id in shipped:
+    p = by_id.get(pkg_id.lower())
+    if p is None:
+        continue                      # already reported as missing above
+    spdx = (p.get("spdx") or "").strip()
+    if spdx in banned:
+        bad.append(f"{pkg_id}: {spdx} -- {notes.get(spdx, 'banned')}")
+    elif spdx not in permitted:
+        unclassified.append(f"{pkg_id}: {spdx or '(no SPDX id)'}")
+
+if bad:
+    failures.append(
+        "shipped packages under a BANNED licence:\n     " + "\n     ".join(sorted(bad))
+        + "\n   There is no exception mechanism for these. Removing the dependency, or "
+          "removing the licence from the banned list in the open, are the only two moves.")
+
+if unclassified:
+    failures.append(
+        "shipped packages whose licence is in NEITHER the permitted nor the banned list:"
+        "\n     " + "\n     ".join(sorted(unclassified))
+        + "\n   Classify it in " + policy_path + ". Not-listed is NOT permitted -- that "
+          "default is what stops a new licence arriving unnoticed.")
+
+print(f"licence policy: {len(permitted)} permitted, {len(banned)} banned")
 print(f"licence compliance: {len(shipped)} shipped packages, "
       f"{len(excluded)} excluded, {len(packages)} manifest entries, "
       f"{len(spdx_with_text)} SPDX bodies available")

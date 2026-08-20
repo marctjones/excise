@@ -1,0 +1,43 @@
+# excise licence policy (#1061). Three states, keyed on SPDX id.
+#
+# Enforced by scripts/check-license-compliance.sh over the shipped package
+# closure. Anything NOT listed here is REVIEW: the build fails and asks Marc to
+# classify it. Silence is not permission.
+#
+# state	spdx-id	note
+#
+# ── PERMITTED ───────────────────────────────────────────────────────────────
+# Ship freely. Permissive, no copyleft, no field-of-use restriction. All of
+# these still require the notice to travel with the redistribution, which is
+# what the verbatim-text half of the compliance check enforces.
+permitted	MIT	the bulk of the closure
+permitted	Apache-2.0	patent grant, notice requirement
+permitted	BSD-2-Clause	approved 2026-08-19
+permitted	BSD-3-Clause	approved 2026-08-19
+permitted	0BSD	public-domain equivalent
+permitted	ISC	functionally MIT
+permitted	Zlib	permissive, no notice required in binaries
+permitted	OFL-1.1	fonts; reserved-name clause does not bind us
+permitted	Unlicense	public-domain dedication
+#
+# ── BANNED ──────────────────────────────────────────────────────────────────
+# Fail the build. No exception mechanism, deliberately: a copyleft or
+# field-of-use dependency is a decision about what excise IS, not a build
+# detail to be waived by whoever hits it. If one of these is ever genuinely
+# needed, the conversation is about removing it from this list, in the open.
+banned	GPL-2.0-only	copyleft
+banned	GPL-2.0-or-later	copyleft
+banned	GPL-3.0-only	copyleft
+banned	GPL-3.0-or-later	copyleft
+banned	LGPL-2.1-only	weak copyleft; linking obligations excise cannot honour as a single-file publish
+banned	LGPL-2.1-or-later	as above
+banned	LGPL-3.0-only	as above
+banned	LGPL-3.0-or-later	as above
+banned	AGPL-3.0-only	network copyleft
+banned	AGPL-3.0-or-later	network copyleft
+banned	SSPL-1.0	not OSI-approved; service-source obligation
+banned	BUSL-1.1	source-available, not open source; time-delayed
+banned	CC-BY-NC-4.0	non-commercial field-of-use restriction
+banned	CC-BY-NC-SA-4.0	non-commercial, and share-alike
+banned	Elastic-2.0	source-available, use restrictions
+banned	CC-BY-SA-4.0	share-alike on a licence not designed for software
