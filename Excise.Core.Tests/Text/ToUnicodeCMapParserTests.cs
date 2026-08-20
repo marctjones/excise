@@ -321,7 +321,7 @@ public class ToUnicodeCMapParserTests
         ";
         var result = ToUnicodeCMapParser.Parse(cmap);
         result.Should().HaveCount(256);
-        result[0x0000].Should().Be(" ");
+        result[0x0000].Should().Be("\u0000");
         result[0x00FF].Should().Be("ÿ");
     }
 

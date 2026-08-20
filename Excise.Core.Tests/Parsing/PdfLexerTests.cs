@@ -334,7 +334,7 @@ public class PdfLexerTests
         var token = lexer.NextToken();
 
         token.Type.Should().Be(PdfTokenType.LiteralString);
-        token.Value.Should().Contain("");
+        token.Value.Should().Contain("\u0001");
     }
 
     [Fact]

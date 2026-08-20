@@ -175,7 +175,7 @@ public class SignatureAppearanceAuthoringTests
         // '(' ')' '\' each need escaping; a control char and a non-ASCII
         // letter both render as '?' in the printable-ASCII MVP.
         SignatureAppearanceAuthoring.ApplyVisibleAppearance(
-            doc, widget, new[] { "a(b)c\\deéf" });
+            doc, widget, new[] { "a(b)c\\d\u0001eéf" });
 
         var content = ContentOf(ResolveAppearance(doc, widget));
         content.Should().Contain(@"a\(b\)c\\d?e?f");
