@@ -16,8 +16,16 @@ is available three ways:
 All runtime dependencies use **permissive** licenses (MIT, Apache-2.0,
 BSD-3-Clause, OFL-1.1). No copyleft (GPL/LGPL/AGPL).
 
-Completeness is enforced by `scripts/check-license-compliance.sh`, which runs
-in **t0** — on every push. It reads the actual restored package closure from
+The release **verifies** this manifest rather than regenerating it
+(`scripts/verify-license-manifest.sh`, #1082): it regenerates into a temp path,
+diffs against the checked-in file, and fails on drift. Before that, the release
+ran the generator and shipped whatever came out — so the attribution users saw
+was not the attribution that had been reviewed and gated. That is only possible
+because regeneration is byte-identical (#1081); with the old `generatedAt`
+timestamp inside, every release drifted by construction.
+
+Completeness and **policy** are enforced by `scripts/check-license-compliance.sh`,
+which runs in **t0** — on every push. It reads the actual restored package closure from
 NuGet's own `project.assets.json` (an independent source, so the manifest cannot
 vouch for its own completeness) and fails if any shipped package is missing an
 attribution, carries an unresolved license, or shows only a link instead of
