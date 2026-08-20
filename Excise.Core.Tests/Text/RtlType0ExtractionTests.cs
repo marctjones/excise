@@ -76,7 +76,7 @@ public class RtlType0ExtractionTests
         var pdf = Type0RtlFixtures.SingleLineVisualOrder(ArabicScalars);
         using var doc = PdfDocument.Open(pdf);
 
-        var removed = doc.RedactText(ArabicWord);
+        var removed = doc.RedactText(ArabicWord).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0,
             "a logical-order needle must match the visual-order CID run; 0 matches is the " +
@@ -102,10 +102,10 @@ public class RtlType0ExtractionTests
             doc.GetPage(1).Text.Should().Be("Name " + Str(khalid));
 
         using (var doc = PdfDocument.Open(Type0RtlFixtures.SingleLine(visual)))
-            doc.RedactText(Str(khalid)).Should().BeGreaterThan(0, "per-word redaction");
+            doc.RedactText(Str(khalid)).VerifiedRemovals.Should().BeGreaterThan(0, "per-word redaction");
 
         using (var doc = PdfDocument.Open(Type0RtlFixtures.SingleLine(visual)))
-            doc.RedactText("Name " + Str(khalid)).Should().BeGreaterThan(0,
+            doc.RedactText("Name " + Str(khalid)).VerifiedRemovals.Should().BeGreaterThan(0,
                 "a phrase spanning the LTR->RTL boundary matches on an LTR-base line");
     }
 
@@ -137,12 +137,12 @@ public class RtlType0ExtractionTests
 
         // The redaction-critical unit — the individual RTL word — still works.
         using (var doc = PdfDocument.Open(Type0RtlFixtures.SingleLine(visual)))
-            doc.RedactText(word).Should().BeGreaterThan(0,
+            doc.RedactText(word).VerifiedRemovals.Should().BeGreaterThan(0,
                 "per-word RTL redaction is unaffected by the whole-line gap");
 
         // Only the direction-spanning phrase is missed (bounded, tracked #785).
         using (var doc = PdfDocument.Open(Type0RtlFixtures.SingleLine(visual)))
-            doc.RedactText(word + " hello").Should().Be(0,
+            doc.RedactText(word + " hello").VerifiedRemovals.Should().Be(0,
                 "a phrase spanning the RTL->LTR direction change is not matched on an RTL-base " +
                 "line — the whole-line UAX #9 gap tracked as #785; per-word redaction above still works");
     }

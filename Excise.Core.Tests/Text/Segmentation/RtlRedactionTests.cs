@@ -60,7 +60,7 @@ public class RtlRedactionTests
         SearchableTextOf(doc.SaveToBytes()).Should().Contain("DCBA",
             "sanity: the carrier must be present before redaction for its absence after to mean anything");
 
-        var removed = doc.RedactText(ArabicWord);
+        var removed = doc.RedactText(ArabicWord).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0,
             "a logical-order needle must match a visual-order glyph run; " +
@@ -84,7 +84,7 @@ public class RtlRedactionTests
         using var doc = PdfDocument.Open(pdf);
         RtlRedactionTests.PinDeterministicId(doc);
 
-        var removed = doc.RedactText(HebrewWord);
+        var removed = doc.RedactText(HebrewWord).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0);
 
@@ -105,7 +105,7 @@ public class RtlRedactionTests
         using var doc = PdfDocument.Open(pdf);
         RtlRedactionTests.PinDeterministicId(doc);
 
-        var removed = doc.RedactText(ArabicWord);
+        var removed = doc.RedactText(ArabicWord).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0);
 
@@ -174,7 +174,7 @@ public class RtlDigitIslandRedactionTests
         doc.GetPage(1).Text.Should().Contain(LogicalPhrase);
         SearchableTextOf(doc.SaveToBytes()).Should().Contain("ABCDEFGHIJ");
 
-        var removed = doc.RedactText(LogicalPhrase);
+        var removed = doc.RedactText(LogicalPhrase).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0,
             "a logical-order phrase spanning a number must match the visual-order line; " +
@@ -201,7 +201,7 @@ public class RtlDigitIslandRedactionTests
         // The number's stream codes are 'E' ('3') and 'F' ('0').
         SearchableTextOf(doc.SaveToBytes()).Should().Contain("DEF");
 
-        var removed = doc.RedactText("30");
+        var removed = doc.RedactText("30").VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0);
 
@@ -226,7 +226,7 @@ public class RtlDigitIslandRedactionTests
 
         doc.GetPage(1).Text.Should().Contain(logicalPhrase);
 
-        var removed = doc.RedactText(logicalPhrase);
+        var removed = doc.RedactText(logicalPhrase).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0);
 

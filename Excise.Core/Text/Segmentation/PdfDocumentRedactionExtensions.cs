@@ -79,7 +79,7 @@ public static class PdfDocumentRedactionExtensions
     /// <returns>
     /// Total number of matches removed across all pages.
     /// </returns>
-    public static int RedactText(
+    public static RedactionReport RedactText(
         this PdfDocument document,
         string text,
         bool caseSensitive = false,
@@ -89,13 +89,25 @@ public static class PdfDocumentRedactionExtensions
         bool scrubDocumentCarriers = true)
     {
         if (document == null) throw new ArgumentNullException(nameof(document));
-        if (string.IsNullOrEmpty(text)) return 0;
+
+        var pageResults = new List<PageRedactionResult>();
+        var carrierResults = new List<CarrierResult>();
+
+        if (string.IsNullOrEmpty(text))
+            return new RedactionReport
+            {
+                Term = text ?? "",
+                Pages = pageResults,
+                Carriers = carrierResults,
+            };
 
         int totalMatches = 0;
 
         for (int pageNum = 1; pageNum <= document.PageCount; pageNum++)
         {
             var page = document.GetPage(pageNum);
+            var pageLocated = 0;
+            var pageWentDestructive = false;
             string? previousSearchText = null;
             var usedConservativeFallback = false;
 
@@ -122,6 +134,10 @@ public static class PdfDocumentRedactionExtensions
 
                 if (stalled)
                 {
+                    // #1090: the destructive path. Recorded so the caller is
+                    // told, rather than counted as an ordinary success like
+                    // every other branch.
+                    pageWentDestructive = true;
                     var markerAreas = new List<PdfRectangle>();
                     foreach (var matchLetters in matches)
                     {
@@ -167,6 +183,7 @@ public static class PdfDocumentRedactionExtensions
                 }
 
                 totalMatches += matches.Count;
+                pageLocated += matches.Count;
                 if (stalled)
                 {
                     usedConservativeFallback = true;
@@ -174,8 +191,30 @@ public static class PdfDocumentRedactionExtensions
             }
 
             if (includeHiddenLayers)
-                totalMatches += RemoveTextShowingOperatorsContaining(page, text, caseSensitive);
-            totalMatches += RemoveTextLinesStillContaining(page, text, caseSensitive, includeHiddenLayers);
+            {
+                var swept = RemoveTextShowingOperatorsContaining(page, text, caseSensitive);
+                if (swept > 0) pageWentDestructive = true;   // #1090
+                totalMatches += swept;
+                pageLocated += swept;
+            }
+            var lineSwept = RemoveTextLinesStillContaining(page, text, caseSensitive, includeHiddenLayers);
+            if (lineSwept > 0) pageWentDestructive = true;    // #1090
+            totalMatches += lineSwept;
+            pageLocated += lineSwept;
+
+            // #1089 VERIFICATION. Re-read the page and count what is STILL
+            // findable. This is the difference between "excise tried" and
+            // "excise checked", and the whole reason the old int return was a
+            // lie: it reported attempts.
+            var remaining = CountOccurrences(page, text, caseSensitive, includeHiddenLayers);
+            pageResults.Add(new PageRedactionResult(
+                pageNum,
+                pageLocated,
+                remaining,
+                remaining > 0 ? RedactionOutcome.RemovalUnverified
+                : pageWentDestructive ? RedactionOutcome.DestructiveRemoval
+                : pageLocated > 0 ? RedactionOutcome.RemovedVerified
+                : RedactionOutcome.NothingToRemove));
         }
 
         // #896: document-level carriers are part of redaction, not part of a
@@ -202,10 +241,75 @@ public static class PdfDocumentRedactionExtensions
         // unrelated values for no security benefit. Page content is still
         // redacted for such terms; their document-level carriers are not.
         if (scrubDocumentCarriers)
-            Excise.Core.Operations.PdfDocumentSanitizer.ScrubTerms(
-                document, new[] { text }, caseSensitive);
+        {
+            // #999: the scrubber ignores terms shorter than 3 characters. That
+            // is deliberate -- excising 1-2 character fragments from every
+            // metadata string would corrupt unrelated values -- but the old int
+            // return could not SAY it, so a caller redacting "Ro" got a success
+            // count while /Info, XMP, outlines and annotation /Contents kept the
+            // term. Reported now, per the decided policy: surface, don't guess.
+            const int minTermLength = 3;
+            if (text.Length < minTermLength)
+            {
+                foreach (var carrier in DocumentCarriers)
+                    carrierResults.Add(new CarrierResult(carrier, false,
+                        $"term is {text.Length} characters; the carrier scrub floor is {minTermLength}"));
+            }
+            else
+            {
+                Excise.Core.Operations.PdfDocumentSanitizer.ScrubTerms(
+                    document, new[] { text }, caseSensitive);
+                foreach (var carrier in DocumentCarriers)
+                    carrierResults.Add(new CarrierResult(carrier, true, null));
+            }
+        }
+        else
+        {
+            foreach (var carrier in DocumentCarriers)
+                carrierResults.Add(new CarrierResult(carrier, false,
+                    "scrubDocumentCarriers: false was requested by the caller"));
+        }
 
-        return totalMatches;
+        return new RedactionReport
+        {
+            Term = text,
+            Pages = pageResults,
+            Carriers = carrierResults,
+        };
+    }
+
+    /// <summary>The document-level carriers #608 was filed for.</summary>
+    private static readonly string[] DocumentCarriers =
+        { "/Info", "XMP /Metadata", "/Outlines titles", "annotation /Contents" };
+
+    /// <summary>
+    /// Occurrences of <paramref name="text"/> still findable on the page AFTER
+    /// redaction -- the verification half of #1089.
+    ///
+    /// <para>⚠️ This is excise reading its own output, which the no-self-oracle
+    /// rule says cannot PROVE removal. It does not claim to: it catches removal
+    /// that DID NOT LAND, a different and very common failure. Text excise
+    /// could never see is bounded by extraction coverage (Limitations #1) and
+    /// needs an independent extractor -- #1094.</para>
+    /// </summary>
+    private static int CountOccurrences(
+        PdfPage page, string text, bool caseSensitive, bool includeHiddenLayers)
+    {
+        try
+        {
+            var letters = page.Letters;
+            var searchLetters = includeHiddenLayers
+                ? letters
+                : letters.Where(l => !l.IsInHiddenOptionalContent).ToList();
+            return FindTextMatches(searchLetters, text, caseSensitive).Count;
+        }
+        catch
+        {
+            // A page that will not re-extract cannot be verified. Report it as
+            // survived rather than as success: assuming the term is still there
+            // is the safe direction.
+            return 1;
+        }
     }
 
     /// <summary>

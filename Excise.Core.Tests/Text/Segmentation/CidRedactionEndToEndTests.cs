@@ -76,7 +76,7 @@ public class CidRedactionEndToEndTests
 
         page.Text.Should().Be("ZY", "the 1-byte codespace must decode 2 letters from 2 bytes");
 
-        doc.RedactText("Y", drawBlackRect: false).Should().Be(1);
+        doc.RedactText("Y", drawBlackRect: false).VerifiedRemovals.Should().Be(1);
 
         var saved = doc.SaveToBytes();
         var reopened = PdfDocument.Open(saved);
@@ -123,7 +123,7 @@ public class CidRedactionEndToEndTests
         sBefore.StartX.Should().BeApproximately(92.0, 1e-9,
             "the §9.4.4 advance places 'S' after four (w0·Tfs + Tc)·Th steps");
 
-        doc.RedactText("SECRET", drawBlackRect: false).Should().Be(1);
+        doc.RedactText("SECRET", drawBlackRect: false).VerifiedRemovals.Should().Be(1);
 
         // CARRIER-AGNOSTIC: the secret must be nowhere in the SAVED BYTES,
         // in any text carrier, ASCII or UTF-16BE.
@@ -166,7 +166,7 @@ public class CidRedactionEndToEndTests
         page.Letters.First(l => l.Value == "D").StartX.Should().BeApproximately(122.0, 1e-9,
             "hand-computed §9.4.4: 72 + 10 glyphs × (w0·Tfs + Tc)·Th");
 
-        doc.RedactText("SECRET", drawBlackRect: false).Should().Be(1);
+        doc.RedactText("SECRET", drawBlackRect: false).VerifiedRemovals.Should().Be(1);
 
         // CARRIER-AGNOSTIC: the secret must be nowhere in the SAVED BYTES,
         // in any carrier — ASCII, UTF-16BE, or UTF-8.

@@ -1806,6 +1806,13 @@ namespace Excise.Core.Text
 }
 namespace Excise.Core.Text.Segmentation
 {
+    public sealed class CarrierResult : System.IEquatable<Excise.Core.Text.Segmentation.CarrierResult>
+    {
+        public CarrierResult(string Carrier, bool Scrubbed, string? RefusedReason) { }
+        public string Carrier { get; init; }
+        public string? RefusedReason { get; init; }
+        public bool Scrubbed { get; init; }
+    }
     public enum GlyphOverlapType
     {
         None = 0,
@@ -1871,9 +1878,17 @@ namespace Excise.Core.Text.Segmentation
             public double WordSpacing { get; init; }
         }
     }
+    public sealed class PageRedactionResult : System.IEquatable<Excise.Core.Text.Segmentation.PageRedactionResult>
+    {
+        public PageRedactionResult(int PageNumber, int MatchesLocated, int OccurrencesRemainingAfter, Excise.Core.Text.Segmentation.RedactionOutcome Outcome) { }
+        public int MatchesLocated { get; init; }
+        public int OccurrencesRemainingAfter { get; init; }
+        public Excise.Core.Text.Segmentation.RedactionOutcome Outcome { get; init; }
+        public int PageNumber { get; init; }
+    }
     public static class PdfDocumentRedactionExtensions
     {
-        public static int RedactText(this Excise.Core.Document.PdfDocument document, string text, bool caseSensitive = false, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool drawBlackRect = true, bool includeHiddenLayers = true, bool scrubDocumentCarriers = true) { }
+        public static Excise.Core.Text.Segmentation.RedactionReport RedactText(this Excise.Core.Document.PdfDocument document, string text, bool caseSensitive = false, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool drawBlackRect = true, bool includeHiddenLayers = true, bool scrubDocumentCarriers = true) { }
     }
     public static class PdfPageRedactionExtensions
     {
@@ -1891,6 +1906,26 @@ namespace Excise.Core.Text.Segmentation
         public int UnexaminedXfaPacketCount { get; init; }
         public System.Collections.Generic.IReadOnlyList<string> Describe() { }
         public static Excise.Core.Text.Segmentation.RedactionCarrierAudit Inspect(Excise.Core.Document.PdfDocument document, System.Collections.Generic.IEnumerable<string>? requestedTerms = null) { }
+    }
+    public enum RedactionOutcome
+    {
+        RemovedVerified = 0,
+        RemovalUnverified = 1,
+        DestructiveRemoval = 2,
+        NothingToRemove = 3,
+    }
+    public sealed class RedactionReport
+    {
+        public RedactionReport() { }
+        public required System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.CarrierResult> Carriers { get; init; }
+        public bool IsCleanSuccess { get; }
+        public int MatchesLocated { get; }
+        public required System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.PageRedactionResult> Pages { get; init; }
+        public int Survived { get; }
+        public required string Term { get; init; }
+        public bool UsedDestructiveRemoval { get; }
+        public int VerifiedRemovals { get; }
+        public override string ToString() { }
     }
     public class TextSegment
     {

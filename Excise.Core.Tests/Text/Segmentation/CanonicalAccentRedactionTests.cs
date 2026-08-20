@@ -67,7 +67,7 @@ public class CanonicalAccentRedactionTests
         SearchableTextOf(doc.SaveToBytes()).Should().Contain("(ABCDE)",
             "sanity: the glyph-code carrier must be present before redaction");
 
-        var removed = doc.RedactText(PrecomposedWord);
+        var removed = doc.RedactText(PrecomposedWord).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0,
             "a precomposed needle (U+00E9) must match canonically equivalent " +
@@ -98,7 +98,7 @@ public class CanonicalAccentRedactionTests
         SearchableTextOf(doc.SaveToBytes()).Should().Contain("(ABCD)",
             "sanity: the glyph-code carrier must be present before redaction");
 
-        var removed = doc.RedactText(DecomposedWord);
+        var removed = doc.RedactText(DecomposedWord).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0,
             "a decomposed needle must match canonically equivalent precomposed text (#724)");
@@ -122,7 +122,7 @@ public class CanonicalAccentRedactionTests
         var storedWord = string.Concat(decomposedScalars.Select(char.ConvertFromUtf32));
         doc.GetPage(1).Text.Should().Contain(storedWord, "sanity: raw decomposed text must extract");
 
-        var removed = doc.RedactText(precomposedNeedle);
+        var removed = doc.RedactText(precomposedNeedle).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0,
             $"needle '{precomposedNeedle}' must match its canonical decomposition");
@@ -141,7 +141,7 @@ public class CanonicalAccentRedactionTests
         var pdf = RtlPdfFixtures.SingleTj(scalars, visualOrder: false);
         using var doc = PdfDocument.Open(pdf);
 
-        var removed = doc.RedactText(PrecomposedWord);
+        var removed = doc.RedactText(PrecomposedWord).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0);
 
@@ -164,7 +164,7 @@ public class CanonicalAccentRedactionTests
         var pdf = RtlPdfFixtures.SingleTj(PrecomposedScalars, visualOrder: false);
         using var doc = PdfDocument.Open(pdf);
 
-        var removed = doc.RedactText("cafe");
+        var removed = doc.RedactText("cafe").VerifiedRemovals;
 
         removed.Should().Be(0,
             "the accent is canonically meaningful; accent-INSENSITIVE matching is out of scope");

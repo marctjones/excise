@@ -217,7 +217,7 @@ public class RegisteredCMapTests
             File.WriteAllBytes(input, pdf);
             using (var doc = PdfDocument.Open(input))
             {
-                doc.RedactText("日本語").Should().Be(1,
+                doc.RedactText("日本語").VerifiedRemovals.Should().Be(1,
                     "glyph-level removal must match and remove exactly the one occurrence — " +
                     "a higher count means the whole-operator fail-safe fired instead");
                 doc.Save(output);
@@ -265,7 +265,7 @@ public class RegisteredCMapTests
             File.WriteAllBytes(input, pdf);
             using (var doc = PdfDocument.Open(input))
             {
-                doc.RedactText("あい").Should().Be(1,
+                doc.RedactText("あい").VerifiedRemovals.Should().Be(1,
                     "pre-#715 the name /ToUnicode was ignored, extraction was garbage, and " +
                     "RedactText silently matched nothing — extraction coverage bounds redaction");
                 doc.Save(output);

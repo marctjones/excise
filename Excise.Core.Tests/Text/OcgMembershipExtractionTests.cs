@@ -156,7 +156,7 @@ public sealed class OcgMembershipExtractionTests
         // OCMD-hidden layer and the secret is gone from every carrier.
         using (var included = PdfDocument.Open(Fixture()))
         {
-            included.RedactText("SECRETA").Should().Be(1);
+            included.RedactText("SECRETA").VerifiedRemovals.Should().Be(1);
             var saved = included.SaveToBytes();
             (Encoding.ASCII.GetString(saved) + Encoding.BigEndianUnicode.GetString(saved))
                 .Should().NotContain("SECRETA",
@@ -167,7 +167,7 @@ public sealed class OcgMembershipExtractionTests
         // Opt-out: caller excludes hidden layers -> no match, text retained.
         using (var excluded = PdfDocument.Open(Fixture()))
         {
-            excluded.RedactText("SECRETA", includeHiddenLayers: false).Should().Be(0);
+            excluded.RedactText("SECRETA", includeHiddenLayers: false).VerifiedRemovals.Should().Be(0);
             Encoding.ASCII.GetString(excluded.SaveToBytes()).Should().Contain("SECRETA");
         }
     }

@@ -57,7 +57,7 @@ public class PredefinedToUnicodeCMapTests
             File.WriteAllBytes(input, pdf);
             using (var doc = PdfDocument.Open(input))
             {
-                doc.RedactText("SECRET").Should().Be(1,
+                doc.RedactText("SECRET").VerifiedRemovals.Should().Be(1,
                     "extraction through the /Identity-H name /ToUnicode must let " +
                     "RedactText find the word — extraction coverage bounds redaction");
                 doc.Save(output);

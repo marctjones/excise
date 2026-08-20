@@ -108,7 +108,7 @@ public sealed class AdversarialRedactionRegressionTests
         string.Concat(page.Letters.Select(l => l.Value)).Should().Contain("ANNOTSECRET",
             "FreeText content must be findable by search/RedactText, not just page.GetAnnotations()");
 
-        var removed = doc.RedactText("ANNOTSECRET", drawBlackRect: false);
+        var removed = doc.RedactText("ANNOTSECRET", drawBlackRect: false).VerifiedRemovals;
         removed.Should().BeGreaterThan(0, "RedactText must actually find the annotation content");
 
         var saved = doc.SaveToBytes();
@@ -168,7 +168,7 @@ public sealed class AdversarialRedactionRegressionTests
             "a Signature widget's /AP/N appearance text must be findable by search/RedactText, " +
             "not just page.GetFormFields() (#669)");
 
-        var removed = doc.RedactText("SIGSECRET", drawBlackRect: false);
+        var removed = doc.RedactText("SIGSECRET", drawBlackRect: false).VerifiedRemovals;
         removed.Should().BeGreaterThan(0, "RedactText must actually find the signature appearance text");
 
         var saved = doc.SaveToBytes();
@@ -219,7 +219,7 @@ public sealed class AdversarialRedactionRegressionTests
                 "orphaned widget letters must carry the AcroForm: FontName prefix so RedactText " +
                 "routes them through InteractiveRedactionScrubber instead of the glyph-removal path");
 
-        var removed = doc.RedactText("WIDGETSECRET", drawBlackRect: false);
+        var removed = doc.RedactText("WIDGETSECRET", drawBlackRect: false).VerifiedRemovals;
         removed.Should().BeGreaterThan(0, "RedactText must actually find the orphaned widget's value");
 
         var saved = doc.SaveToBytes();
@@ -255,7 +255,7 @@ public sealed class AdversarialRedactionRegressionTests
         string.Concat(page.Letters.Select(l => l.Value)).Should().Contain("NOPAGESECRET",
             "a linked field's value must be findable even when its widget has no /P");
 
-        var removed = doc.RedactText("NOPAGESECRET", drawBlackRect: false);
+        var removed = doc.RedactText("NOPAGESECRET", drawBlackRect: false).VerifiedRemovals;
         removed.Should().BeGreaterThan(0, "RedactText must find the value of a field whose widget lacks /P");
 
         var saved = doc.SaveToBytes();
@@ -345,14 +345,14 @@ public sealed class AdversarialRedactionRegressionTests
 
         using (var excluded = PdfDocument.Open(pdf))
         {
-            excluded.RedactText("HIDDENSECRET", includeHiddenLayers: false).Should().Be(0);
+            excluded.RedactText("HIDDENSECRET", includeHiddenLayers: false).VerifiedRemovals.Should().Be(0);
             Encoding.Latin1.GetString(excluded.SaveToBytes()).Should().Contain("HIDDENSECRET",
                 "callers can explicitly exclude hidden layers when they are not doing security redaction");
         }
 
         using (var included = PdfDocument.Open(pdf))
         {
-            included.RedactText("HIDDENSECRET").Should().Be(1);
+            included.RedactText("HIDDENSECRET").VerifiedRemovals.Should().Be(1);
             var saved = Encoding.Latin1.GetString(included.SaveToBytes());
             saved.Should().NotContain("HIDDENSECRET",
                 "security redaction must include text hidden in default-off optional-content layers");

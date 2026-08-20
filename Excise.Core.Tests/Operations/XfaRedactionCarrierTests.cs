@@ -151,7 +151,7 @@ public class XfaRedactionCarrierTests
         if (!File.Exists(fixture)) return;
 
         using var doc = PdfDocument.Open(fixture);
-        doc.RedactText("Form", drawBlackRect: false).Should().BeGreaterThan(0,
+        doc.RedactText("Form", drawBlackRect: false).VerifiedRemovals.Should().BeGreaterThan(0,
             "fixture sanity: the W-9 page content must contain the reported term");
 
         var saved = Save(doc);

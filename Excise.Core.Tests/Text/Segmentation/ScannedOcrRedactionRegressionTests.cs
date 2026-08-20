@@ -31,7 +31,7 @@ public sealed class ScannedOcrRedactionRegressionTests
         HiddenTextDetector.ScanPage(doc.GetPage(1)).Should().ContainSingle(r =>
             r.Text == ocrSecret && r.HiddenBy == "image /Im0");
 
-        doc.RedactText(ocrSecret, drawBlackRect: false).Should().Be(1);
+        doc.RedactText(ocrSecret, drawBlackRect: false).VerifiedRemovals.Should().Be(1);
 
         var saved = doc.SaveToBytes();
         Encoding.Latin1.GetString(saved).Should()

@@ -386,7 +386,7 @@ public class PdfDocumentWriterTests
         var compressed = source.SaveToBytes();
 
         using var doc = PdfDocument.Open(compressed);
-        doc.RedactText("SECRET", drawBlackRect: false).Should().Be(1);
+        doc.RedactText("SECRET", drawBlackRect: false).VerifiedRemovals.Should().Be(1);
         var redacted = doc.SaveToBytes();
 
         Encoding.Latin1.GetString(redacted).Should().Contain("/Type /ObjStm",

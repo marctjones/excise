@@ -60,7 +60,7 @@ public class InvisibleSeparatorRedactionTests
         SearchableTextOf(doc.SaveToBytes()).Should().Contain("(ABCDEFG)",
             "sanity: the glyph-code carrier must be present before redaction");
 
-        var removed = doc.RedactText("secret");
+        var removed = doc.RedactText("secret").VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0,
             $"a plain needle must match a word split by a {name} " +
@@ -91,7 +91,7 @@ public class InvisibleSeparatorRedactionTests
         doc.GetPage(1).Text.Should().Contain(storedText,
             "sanity: the fixture must extract with the raw NBSP");
 
-        var removed = doc.RedactText("top secret");
+        var removed = doc.RedactText("top secret").VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0,
             "a needle typed with a plain space must match text stored with U+00A0 (#726)");
@@ -111,7 +111,7 @@ public class InvisibleSeparatorRedactionTests
         var pdf = RtlPdfFixtures.SingleTj(scalars, visualOrder: false);
         using var doc = PdfDocument.Open(pdf);
 
-        var removed = doc.RedactText("se\u00ADcret");
+        var removed = doc.RedactText("se\u00ADcret").VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0);
 
@@ -131,7 +131,7 @@ public class InvisibleSeparatorRedactionTests
         var pdf = RtlPdfFixtures.SingleTj(scalars, visualOrder: false);
         using var doc = PdfDocument.Open(pdf);
 
-        var removed = doc.RedactText("secret");
+        var removed = doc.RedactText("secret").VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0);
 
@@ -150,7 +150,7 @@ public class InvisibleSeparatorRedactionTests
         var pdf = RtlPdfFixtures.SingleTj(scalars, visualOrder: false);
         using var doc = PdfDocument.Open(pdf);
 
-        var removed = doc.RedactText("secret");
+        var removed = doc.RedactText("secret").VerifiedRemovals;
 
         removed.Should().Be(0,
             "a real hyphen is visible content; only the soft hyphen is an optional separator");

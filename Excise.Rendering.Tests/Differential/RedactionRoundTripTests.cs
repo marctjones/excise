@@ -16,7 +16,7 @@ namespace Excise.Rendering.Tests.Differential;
 ///   2. Pick a "good enough" word from the extracted text — long enough
 ///      to be unique-ish, short enough to actually match content-stream
 ///      glyph runs, ASCII so encoding mismatches don't get conflated.
-///   3. Call <c>doc.RedactText(word)</c>.
+///   3. Call <c>doc.RedactText(word).VerifiedRemovals</c>.
 ///   4. Save → reopen.
 ///   5. Re-extract text.
 ///   6. Assert the word is no longer present in the extracted text.
@@ -132,7 +132,7 @@ public sealed class RedactionRoundTripTests
         try
         {
             using var doc = PdfDocument.Open(pdfBytes);
-            matchCount = doc.RedactText(target!, caseSensitive: false);
+            matchCount = doc.RedactText(target!, caseSensitive: false).VerifiedRemovals;
             redactedBytes = doc.SaveToBytes();
         }
         catch (Exception ex)
@@ -232,7 +232,7 @@ public sealed class RedactionRoundTripTests
         int matchCount;
         using (var doc = PdfDocument.Open(pdfBytes))
         {
-            matchCount = doc.RedactText(target!, caseSensitive: false);
+            matchCount = doc.RedactText(target!, caseSensitive: false).VerifiedRemovals;
             redactedBytes = doc.SaveToBytes();
         }
 

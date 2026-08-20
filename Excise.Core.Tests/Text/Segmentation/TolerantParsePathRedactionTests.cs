@@ -55,7 +55,7 @@ public class TolerantParsePathRedactionTests
         using var doc = PdfDocument.Open(pdf);
         doc.PageCount.Should().Be(1, "the undefined reference must not prevent the document opening");
 
-        var removed = doc.RedactText(Secret);
+        var removed = doc.RedactText(Secret).VerifiedRemovals;
         removed.Should().BeGreaterThan(0,
             "the text is reachable in the content stream — a null sibling object must not " +
             "make redaction skip it");
@@ -79,7 +79,7 @@ public class TolerantParsePathRedactionTests
         using var doc = PdfDocument.Open(pdf);
         doc.PageCount.Should().Be(1);
 
-        doc.RedactText(Secret).Should().BeGreaterThan(0);
+        doc.RedactText(Secret).VerifiedRemovals.Should().BeGreaterThan(0);
 
         var saved = Utf16AndAsciiOf(SaveToBytes(doc));
         saved.Should().NotContain(Secret);
@@ -106,7 +106,7 @@ public class TolerantParsePathRedactionTests
         page.Width.Should().Be(612, "the default page box stands in for the missing /MediaBox");
         page.Height.Should().Be(792);
 
-        doc.RedactText(Secret).Should().BeGreaterThan(0,
+        doc.RedactText(Secret).VerifiedRemovals.Should().BeGreaterThan(0,
             "text redaction locates glyphs from the content stream, so a defaulted page box " +
             "must not stop it finding them");
 
@@ -134,7 +134,7 @@ public class TolerantParsePathRedactionTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf));
         doc.PageCount.Should().Be(1);
 
-        doc.RedactText(Secret).Should().BeGreaterThan(0,
+        doc.RedactText(Secret).VerifiedRemovals.Should().BeGreaterThan(0,
             "the page reached through the recovered catalog must be the real one, " +
             "with the real text on it");
 
@@ -160,7 +160,7 @@ public class TolerantParsePathRedactionTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf));
         doc.PageCount.Should().Be(1);
 
-        doc.RedactText(Secret).Should().BeGreaterThan(0);
+        doc.RedactText(Secret).VerifiedRemovals.Should().BeGreaterThan(0);
 
         var saved = Utf16AndAsciiOf(SaveToBytes(doc));
         saved.Should().NotContain(Secret);
@@ -186,7 +186,7 @@ public class TolerantParsePathRedactionTests
         using var doc = PdfDocument.Open(new MemoryStream(pdf));
         doc.PageCount.Should().Be(1);
 
-        doc.RedactText(Secret).Should().BeGreaterThan(0);
+        doc.RedactText(Secret).VerifiedRemovals.Should().BeGreaterThan(0);
 
         var saved = Utf16AndAsciiOf(SaveToBytes(doc));
         saved.Should().NotContain(Secret,

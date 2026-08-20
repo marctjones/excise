@@ -61,7 +61,7 @@ public class OverprintedTextRedactionTests
     private static byte[] RedactAndSave(byte[] pdf, string term, out int reported)
     {
         using var doc = PdfDocument.Open(pdf);
-        reported = doc.RedactText(term);
+        reported = doc.RedactText(term).VerifiedRemovals;
         using var ms = new MemoryStream();
         doc.Save(ms);
         return ms.ToArray();

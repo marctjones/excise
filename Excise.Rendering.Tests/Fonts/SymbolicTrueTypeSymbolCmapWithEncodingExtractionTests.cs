@@ -134,7 +134,7 @@ public sealed class SymbolicTrueTypeSymbolCmapWithEncodingExtractionTests
         using (var doc = PdfDocument.Open(pdf))
         {
             extracted = new TextExtractor(doc.GetPage(1)).ExtractText().Trim();
-            var removed = doc.RedactText(extracted);
+            var removed = doc.RedactText(extracted).VerifiedRemovals;
             _out.WriteLine($"redaction of '{extracted}' removed {removed} occurrence(s)");
             removed.Should().BeGreaterThan(0, "excise must redact the text it actually extracts");
             using var ms = new MemoryStream();

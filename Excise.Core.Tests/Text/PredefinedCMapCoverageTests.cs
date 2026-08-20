@@ -248,7 +248,7 @@ public class PredefinedCMapCoverageTests
             File.WriteAllBytes(input, pdf);
             using (var doc = PdfDocument.Open(input))
             {
-                doc.RedactText("汉字").Should().Be(1,
+                doc.RedactText("汉字").VerifiedRemovals.Should().Be(1,
                     "glyph-level removal must match and remove exactly the one occurrence — " +
                     "a higher count means the whole-operator fail-safe fired instead");
                 doc.Save(output);
