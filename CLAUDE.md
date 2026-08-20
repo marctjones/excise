@@ -132,11 +132,24 @@ now below 1.0. See `tests/extraction-parity/baseline.json` and
 So a redaction test MUST also assert at least one of:
 
 ```csharp
-// 1. CARRIER-AGNOSTIC — search the SAVED BYTES (ASCII *and* UTF-16BE).
-//    If the secret is anywhere in the file, in any carrier, this fails.
+// 1. CARRIER-AGNOSTIC — search the SAVED BYTES, INCLUDING INSIDE COMPRESSED
+//    STREAMS. If the secret is anywhere in the file, in any carrier, this fails.
 var saved = SaveToBytes(redactedPdf);
-(Encoding.ASCII.GetString(saved) + Encoding.BigEndianUnicode.GetString(saved))
-    .Should().NotContain("REDACTED_TEXT");
+SavedPdfLeakScanner.FindTerm(saved, "REDACTED_TEXT").Should().BeEmpty();
+
+// ⚠️ This block used to prescribe the RAW form:
+//        (Encoding.ASCII.GetString(saved) + Encoding.BigEndianUnicode.GetString(saved))
+//            .Should().NotContain("REDACTED_TEXT");
+//    That is BLIND to anything inside a /FlateDecode stream, and excise
+//    compresses on save. It declared #1040's leaking output clean — 0 ASCII
+//    hits, 0 UTF-16BE hits, while mutool read the name straight out of the
+//    file. Measured (SavedPdfLeakScannerTests): a structure element's
+//    /ActualText — the carrier #636 was filed for — is packed into a
+//    Flate-compressed /ObjStm and is invisible to the raw scan.
+//    Note the writer deliberately keeps /Title, /Author, /Subject, /Keywords,
+//    /Creator, /Producer and /Contents OUT of object streams so they stay
+//    greppable (ContainsDocumentCarrierText) — but that list is not the same
+//    list the scrubber handles, so do not rely on it. Use the scanner (#1049).
 
 // 2. INDEPENDENT EXTRACTOR — a tool that is not excise.
 MutoolTextExtractor.ExtractPage(path, page).Should().NotContain("REDACTED_TEXT");

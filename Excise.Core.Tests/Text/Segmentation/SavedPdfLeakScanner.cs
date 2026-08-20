@@ -48,6 +48,13 @@ internal static class SavedPdfLeakScanner
             var utf16 = Encoding.BigEndianUnicode.GetString(haystack);
             if (utf16.Contains(term, StringComparison.Ordinal))
                 hits.Add($"{where}: UTF-16BE");
+
+            // UTF-8 is what an XMP /Metadata stream carries (§14.3.2), and it
+            // differs from Latin-1 for exactly the non-ASCII terms these tests
+            // exist for — Arabic, CJK, accented Latin.
+            var utf8 = Encoding.UTF8.GetString(haystack);
+            if (utf8.Contains(term, StringComparison.Ordinal))
+                hits.Add($"{where}: UTF-8");
         }
 
         Scan(saved, "raw file");
@@ -78,6 +85,26 @@ internal static class SavedPdfLeakScanner
         }
 
         return hits;
+    }
+
+    /// <summary>
+    /// The saved file rendered as searchable text across every carrier — raw
+    /// bytes and inflated stream bodies, in Latin-1 and UTF-16BE.
+    ///
+    /// <para>For POSITIVE assertions ("this must still be present"). Absence
+    /// assertions should use <see cref="FindTerm"/> instead: when one fails it
+    /// names the carrier the term survived in, and a leak you cannot locate is
+    /// a leak you cannot triage.</para>
+    /// </summary>
+    public static string AllCarriersText(byte[] saved)
+    {
+        var sb = new StringBuilder();
+        sb.Append(Encoding.Latin1.GetString(saved)).Append('\n');
+        sb.Append(Encoding.BigEndianUnicode.GetString(saved)).Append('\n');
+        sb.Append(Encoding.UTF8.GetString(saved)).Append('\n');
+        foreach (var body in StreamBodies(saved))
+            sb.Append(body).Append('\n');
+        return sb.ToString();
     }
 
     /// <summary>

@@ -58,4 +58,12 @@
     <EmbeddedResource Include="../Excise.Core.Tests/Fixtures/Fonts/Inconsolata.cff" LogicalName="Inconsolata.cff" Link="Fonts/Fixtures/Inconsolata.cff" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- ONE leak scanner, compiled into every test assembly that needs it.
+         Duplicating it is the drift shape this project keeps paying for; a
+         whole TestSupport project for one class is not worth its weight.
+         Precedent: the Inconsolata.cff link in Excise.Rendering.Tests. -->
+    <Compile Include="../Excise.Core.Tests/Text/Segmentation/SavedPdfLeakScanner.cs" Link="TestSupport/SavedPdfLeakScanner.cs" />
+  </ItemGroup>
+
 </Project>

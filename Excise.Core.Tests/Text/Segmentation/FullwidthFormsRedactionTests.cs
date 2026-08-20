@@ -203,12 +203,11 @@ public class FullwidthFormsRedactionTests
     /// </summary>
     private static string SearchableTextOf(byte[] saved)
     {
-        var raw = Encoding.Latin1.GetString(saved);
-        var scrubbed = System.Text.RegularExpressions.Regex.Replace(
-            raw, @"/ID\s*\[[^\]]*\]", "/ID []");
-        var bytes = Encoding.Latin1.GetBytes(scrubbed);
-        return Encoding.ASCII.GetString(bytes) +
-            Encoding.BigEndianUnicode.GetString(bytes) +
-            Encoding.UTF8.GetString(bytes);
+        // #1049: routed through the shared scanner, which ALSO searches inside
+        // /FlateDecode streams. The hand-rolled ASCII + UTF-16BE concatenation
+        // this replaced could not see into a compressed stream, and excise
+        // compresses on save — it declared #1040's leaking output clean.
+        // See SavedPdfLeakScannerTests for the proof of that blindness.
+        return Excise.Core.Tests.Text.Segmentation.SavedPdfLeakScanner.AllCarriersText(saved);
     }
 }
