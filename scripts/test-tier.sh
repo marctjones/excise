@@ -214,6 +214,11 @@ run_t0() {
     # remote — silently, and in the direction of losing it. Pure git metadata,
     # no build, milliseconds.
     run_step "no-ignored-sources" scripts/check-no-ignored-sources.sh
+    # Licence compliance (#1068). A STATIC file check, so it lives here rather
+    # than in Excise.App.Tests — where it once wedged the host and left 1,310
+    # correctness tests with no verdict. A compliance check must never be able
+    # to stop correctness tests from reporting.
+    run_step "license-compliance" scripts/check-license-compliance.sh
     run_step "doc-claim-freshness" scripts/check-doc-claim-freshness.sh
     # origin/develop, not origin/main: this repo's git-flow lands feature
     # work on develop (release.yml/PR merges to main happen separately), so

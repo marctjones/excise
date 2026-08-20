@@ -16,16 +16,30 @@ is available three ways:
 All runtime dependencies use **permissive** licenses (MIT, Apache-2.0,
 BSD-3-Clause, OFL-1.1). No copyleft (GPL/LGPL/AGPL).
 
-Completeness is enforced in CI:
-`Excise.App.Tests/Unit/ThirdPartyLicenseCompletenessTests.cs` re-enumerates the
-actual restored package closure (`dotnet list package --include-transitive`)
-and fails the build if any shipped package is missing an attribution or carries
-an unresolved license — so a new dependency cannot ship without appearing in the
-About dialog. Build-time tooling and reference-only packages that carry no
-runtime DLL (`Microsoft.NETCore.Platforms`, `NETStandard.Library`,
-`Avalonia.Diagnostics`, `Microsoft.CodeAnalysis.Analyzers`,
-`Avalonia.BuildServices`, `Fody`) are excluded as non-redistributed, in both
-the generator and the completeness gate.
+Completeness is enforced by `scripts/check-license-compliance.sh`, which runs
+in **t0** — on every push. It reads the actual restored package closure from
+NuGet's own `project.assets.json` (an independent source, so the manifest cannot
+vouch for its own completeness) and fails if any shipped package is missing an
+attribution, carries an unresolved license, or shows only a link instead of
+verbatim license text. A new dependency therefore cannot ship without appearing
+in the About dialog.
+
+Build-time tooling and reference-only packages that carry no runtime DLL
+(`Microsoft.NETCore.Platforms`, `NETStandard.Library`, `Avalonia.Diagnostics`,
+`Microsoft.CodeAnalysis.Analyzers`, `Avalonia.BuildServices`, `Fody`) are
+excluded as non-redistributed. The check RE-DERIVES that list from
+`scripts/generate-license-manifest.sh` rather than restating it, so the two
+cannot drift.
+
+> ⚠️ This was three xunit tests in `Excise.App.Tests` until 2026-08-19. It
+> shelled out to `dotnet list package`, MSBuild node-reuse workers inherited the
+> redirected pipe, the read never returned, and three consecutive full-suite runs
+> aborted — leaving 1,310 correctness tests with no verdict because a compliance
+> check was blocked on a pipe. It never gated them logically; xunit runs an
+> assembly in one process, so any test that can hang takes every other test's
+> RESULT with it. **A compliance check must not be able to stop correctness
+> tests from reporting**, which is why a static file check now lives in
+> `scripts/` beside the other t0 gates (#1068).
 
 The script `scripts/generate-license-manifest.sh --scancode` cross-checks
 each package against [scancode-toolkit](https://scancode-toolkit.readthedocs.io/)

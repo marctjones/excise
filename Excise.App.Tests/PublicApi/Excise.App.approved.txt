@@ -846,7 +846,6 @@ namespace Excise.App.ViewModels
         public bool HasSelectedPages { get; }
         public bool HasTextSelection { get; }
         public System.Collections.ObjectModel.ObservableCollection<Excise.Avalonia.Controls.HiddenTextHighlight> HiddenTextHighlights { get; }
-        public string? HoveredAnnotationInfo { get; }
         public bool IgnoreDocumentPermissions { get; set; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> InsertPagesAfterCurrentCommand { get; }
         public ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit> InsertPagesBeforeCurrentCommand { get; }

@@ -1547,6 +1547,20 @@
                                AutomationProperties.Name="Document Status"
                                AutomationProperties.ItemStatus="{Binding StatusBarText}"
                                IsVisible="{Binding OperationStatus, Converter={x:Static StringConverters.IsNullOrEmpty}}"/>
+                    <!-- #1021: a document carrying unapplied /Redact marks must
+                         SAY SO. excise does not apply them for you, and the
+                         reviewer has to learn they exist to decide. The property
+                         is null when there are none, so the notice hides itself. -->
+                    <TextBlock x:Name="RedactAnnotationNoticeTextBlock"
+                               Text="{Binding RedactAnnotationNotice}"
+                               VerticalAlignment="Center"
+                               Margin="16,0,0,0"
+                               FontSize="12"
+                               FontWeight="SemiBold"
+                               TextWrapping="NoWrap"
+                               Foreground="{DynamicResource TextSecondaryBrush}"
+                               AutomationProperties.Name="Unapplied redaction marks"
+                               IsVisible="{Binding RedactAnnotationNotice, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                 </StackPanel>
 
                 <!-- Page Navigation. No command tooltips on the arrow buttons:
