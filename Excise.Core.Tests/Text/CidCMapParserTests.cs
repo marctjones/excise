@@ -380,7 +380,7 @@ public class CidCMapParserTests
         // parsing is all that is required.
         var junk = new[]
         {
-            " <<<<>>>>[[[]]]",
+            "\u0000\u0001\u0002<<<<>>>>[[[]]]",
             "1 begincodespacerange <112233445566778899AABB> <FFFFFFFFFFFFFFFFFFFFFF> endcodespacerange",
             "1 begincidrange <41> <40> 7 endcidrange",   // hi < lo
             "begincmap endcmap (unterminated literal",

@@ -30,46 +30,91 @@ set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO"
 
+# Both checks run in ONE python pass. The first cut looped in bash over every
+# ignored path — 216,229 of them on this repo — with a regex per iteration, and
+# cost 30-60s of t0. The git plumbing itself takes under two seconds; the shell
+# loop was the whole bill.
+python3 - "$REPO" <<'PYEOF'
+import os, re, subprocess, sys
+
+repo = sys.argv[1]
+
 # Extensions we author. Deliberately includes .json/.tsv/.txt: the checked-in
 # baselines, manifests and expectation files this project gates on are data we
 # wrote, and losing one silently is as bad as losing a .cs.
-SOURCE_EXT='\.(cs|axaml|xaml|csproj|sln|props|targets|sh|ps1|bat|py|tsv|json|md|yml|yaml|resx)$'
+SOURCE_EXT = re.compile(r"\.(cs|axaml|xaml|csproj|sln|props|targets|sh|ps1|bat|py|tsv|json|md|yml|yaml|resx)$")
 
-# Directories that legitimately hold generated or vendored content.
-OUTPUT_PREFIX='^(artifacts|logs|dist|dist-[^/]*|coverage|coverage-report|coverage-results|publish|output|test-output|screenshots|test-pdfs|packages|\.claude|\.vs|\.idea|\.wiki|tools/vendor|tools/\.store|node_modules)/'
+# Directories that legitimately hold generated or vendored content. Matched from
+# the FRONT of the path, so `artifacts/` is exempt and `Excise.Core/artifacts-doc/`
+# is not.
+OUTPUT_PREFIX = re.compile(
+    r"^(artifacts|logs|dist|dist-[^/]*|coverage|coverage-report|coverage-results|publish|"
+    r"output|test-output|screenshots|test-pdfs|packages|\.claude|\.vs|\.idea|\.wiki|"
+    r"tools/vendor|tools/\.store|node_modules)/")
 
 # Per-project build output, at any depth.
-BUILD_DIR='(^|/)(bin|obj|TestResults|__pycache__)/'
+BUILD_DIR = re.compile(r"(^|/)(bin|obj|TestResults|__pycache__)/")
 
-# Allowlist: ignored paths that are genuinely not ours to track. One per line,
-# as an anchored regex, followed by # and the reason.
-ALLOW=(
-  '\.cs\.json$'      # per-test tool sidecars written next to the test file, not authored
-)
+# Ignored paths that are genuinely not ours to track, with the reason.
+ALLOW = [
+    (re.compile(r"\.cs\.json$"), "per-test tool sidecars written beside the test file, not authored"),
+]
 
-violations=()
-while IFS= read -r path; do
-  [[ -n "$path" ]] || continue
-  [[ "$path" =~ $SOURCE_EXT ]] || continue
-  [[ "$path" =~ $OUTPUT_PREFIX ]] && continue
-  [[ "$path" =~ $BUILD_DIR ]] && continue
+def git(*args):
+    return subprocess.run(["git", "-C", repo, *args], capture_output=True, text=True).stdout.split("\n")
 
-  allowed=0
-  for rule in "${ALLOW[@]}"; do
-    pattern="${rule%%#*}"
-    pattern="${pattern%"${pattern##*[![:space:]]}"}"
-    [[ "$path" =~ $pattern ]] && { allowed=1; break; }
-  done
-  (( allowed )) || violations+=("$path")
-done < <(git ls-files --others --ignored --exclude-standard)
+# ── 1. Source files that are GITIGNORED ─────────────────────────────────────
+violations = []
+for path in git("ls-files", "--others", "--ignored", "--exclude-standard"):
+    if not path or not SOURCE_EXT.search(path):
+        continue
+    if OUTPUT_PREFIX.match(path) or BUILD_DIR.search(path):
+        continue
+    if any(rx.search(path) for rx, _ in ALLOW):
+        continue
+    violations.append(path)
 
-if (( ${#violations[@]} > 0 )); then
-  echo "❌ ${#violations[@]} source file(s) are gitignored and would never be committed:" >&2
-  printf '     %s\n' "${violations[@]}" >&2
-  echo "   Find the rule with: git check-ignore -v <path>" >&2
-  echo "   Usually the fix is to ANCHOR an output pattern (/coverage/ not coverage/)," >&2
-  echo "   not to add an exception." >&2
-  exit 1
-fi
+if violations:
+    print(f"\u274c {len(violations)} source file(s) are gitignored and would never be committed:",
+          file=sys.stderr)
+    for v in violations:
+        print(f"     {v}", file=sys.stderr)
+    print("   Find the rule with: git check-ignore -v <path>", file=sys.stderr)
+    print("   Usually the fix is to ANCHOR an output pattern (/coverage/ not coverage/),", file=sys.stderr)
+    print("   not to add an exception.", file=sys.stderr)
+    sys.exit(1)
 
-echo "✅ no source file is gitignored."
+# ── 2. Source files that are BINARY to text tools ───────────────────────────
+#
+# A literal control byte (NUL, 0x01...) inside a string literal is valid C# and
+# compiles fine, but it makes `file` report the source as "data" — and grep
+# SKIPS binary files silently. Every grep-based gate then reads that file as
+# EMPTY: check-doc-claim-freshness.sh, check-gate-asymmetry.sh, the unwired-api
+# scan, verify-true-redaction.sh.
+#
+# Found by the #1029 audit: five files were in that state, one of them
+# ScannedRasterRedactionLeakTests.cs — a REDACTION leak test invisible to the
+# redaction-architecture guard. The fix is a C# escape (\u0001): identical
+# character, readable file.
+binary = []
+for path in git("ls-files", "*.cs", "*.sh", "*.md", "*.axaml", "*.csproj", "*.props", "*.targets"):
+    if not path:
+        continue
+    try:
+        data = open(os.path.join(repo, path), "rb").read()
+    except OSError:
+        continue
+    if any(b < 9 or b in (11, 12) or 13 < b < 32 for b in data):
+        binary.append(path)
+
+if binary:
+    print(f"\u274c {len(binary)} source file(s) contain literal control bytes, so grep skips them:",
+          file=sys.stderr)
+    for b in binary:
+        print(f"     {b}", file=sys.stderr)
+    print("   Every grep-based gate reads these as EMPTY. Replace the literal byte", file=sys.stderr)
+    print("   with a C# escape (\\u0001, \\0) — same character, readable file.", file=sys.stderr)
+    sys.exit(1)
+
+print("\u2705 no source file is gitignored, and none is binary to grep.")
+PYEOF
