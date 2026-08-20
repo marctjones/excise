@@ -42,7 +42,7 @@ public class LineContinuationRedactionLeakTests
 
         var saved = Save(doc);
 
-        Utf16AndAsciiOf(saved).Should().NotContain(Target,
+        SavedPdfLeakScanner.FindTerm(saved, Target).Should().BeEmpty(
             "the line-continuation escape must not defeat RedactText's substring matching — " +
             "an independent extractor that correctly collapses the escape (e.g. mutool) must not " +
             "still recover the word from the saved file");
@@ -53,13 +53,6 @@ public class LineContinuationRedactionLeakTests
         using var ms = new MemoryStream();
         pdf.Save(ms);
         return ms.ToArray();
-    }
-
-    private static string Utf16AndAsciiOf(byte[] saved)
-    {
-        var ascii = Encoding.ASCII.GetString(saved);
-        var utf16 = Encoding.BigEndianUnicode.GetString(saved);
-        return ascii + "\n" + utf16;
     }
 
     /// <summary>
