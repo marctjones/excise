@@ -38,11 +38,20 @@ namespace Excise.Rendering.Tests.Differential;
 /// the bug is. Results ratchet against a checked-in baseline, exactly like
 /// extraction-parity and copy-whitespace-parity.
 ///
-/// ⚠️ The baseline records CURRENT behaviour, not good behaviour. Redacting
-/// "Form" from the W-9 legitimately removes far more than the term today,
-/// because RedactText also drops whole text-showing operators and whole lines
-/// that still contain it. A green run means "no worse than measured", never
-/// "the collateral is acceptable".
+/// ⚠️ The baseline records CURRENT behaviour, not good behaviour. A green run
+/// means "no worse than measured", never "the collateral is acceptable".
+///
+/// This warning used to explain the large numbers by saying "RedactText also
+/// drops whole text-showing operators and whole lines that still contain it".
+/// #1090 DELETED those paths after measuring them at 0 firings in 235 rows, so
+/// that is no longer the explanation for anything — and the five worst rows in
+/// the baseline went to exactly 0 once #1038 fixed the real cause (a
+/// geometry-only form-field scrub deleting whole field values).
+///
+/// <para>#1094: this harness also refereeing the reported COUNT against
+/// mutool's before/after delta. Every other count assertion in the suite is a
+/// .Should().Be(1) on a fixture where matching succeeds — which is exactly
+/// where #1043 (reporting attempts as removals) is invisible.</para>
 ///
 /// The oracle is mutool, never excise: page.Text is what a broken redaction
 /// would also corrupt, so it cannot referee its own output.
@@ -102,12 +111,13 @@ public class RedactionCollateralHarness
         foreach (var term in SampleTerms(before))
         {
             var output = Path.Combine(Path.GetTempPath(), $"excise-collateral-{Guid.NewGuid():N}.pdf");
+            var reported = 0;
             try
             {
                 try
                 {
                     using var doc = PdfDocument.Open(File.ReadAllBytes(path!));
-                    doc.RedactText(term);
+                    reported = doc.RedactText(term).VerifiedRemovals;
                     doc.Save(output);
                 }
                 catch (Exception ex) when (ex is not OutOfMemoryException)
@@ -138,6 +148,25 @@ public class RedactionCollateralHarness
                 // achieved by doing nothing at all.
                 if (after.Contains(term, StringComparison.OrdinalIgnoreCase))
                     failures.Add($"'{term}': still present after redaction");
+
+                // #1094: the COUNT, refereed by mutool. This is the one number
+                // a user reads and acts on, and until now nothing checked it
+                // corpus-wide -- every other count assertion in the suite is a
+                // .Should().Be(1) on a fixture where matching SUCCEEDS, which
+                // is precisely where #1043 (reporting attempts as removals) is
+                // invisible.
+                var oracleRemoved = CountOccurrences(before, term) - CountOccurrences(after, term);
+                //
+                // Non-vacuous by construction: terms are SAMPLED FROM the
+                // document's own text, so CountOccurrences(before, term) is
+                // always > 0 and there is always a real number to disagree
+                // with. Measured at introduction: 0 mismatches in 235 rows.
+                if (reported != oracleRemoved)
+                    failures.Add(
+                        $"'{term}': excise reported {reported} removed, mutool says " +
+                        $"{oracleRemoved} ({CountOccurrences(before, term)} before, " +
+                        $"{CountOccurrences(after, term)} after). The count is the one " +
+                        "number a user reads and acts on (#1043, #1094).");
 
                 var removed = Alnum(before) - Alnum(after);
                 var termCost = term.Length * CountOccurrences(before, term);
