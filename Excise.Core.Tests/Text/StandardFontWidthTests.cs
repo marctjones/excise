@@ -144,11 +144,19 @@ public class StandardFontWidthTests
     [Fact]
     public void ExtractLetters_TimesRomanFont_UsesDefaultFallback()
     {
-        // Arrange
-        const int defaultWidthUnits = 600;
+        // #1100 — this test used to PIN THE DEFECT. It asserted 600 units for
+        // Times-Roman 'X' because Times fell through GetStandardFontWidth's
+        // Courier/Helvetica arms to a flat 600, and the test was written to
+        // cover that arm rather than to state what the width should be.
+        //
+        // The real AFM width of Times-Roman 'X' is 722. The 122-unit error is
+        // 20% on one glyph and accumulates along the line: 74pt over a
+        // 22-character line at 20pt, which is the geometry redaction matches
+        // and draws its black rectangle against.
+        const int widthUnits = 722;   // Times-Roman 'X', per the AFM
         const double fontSize = 12;
-        const double expectedDisplayWidth = (defaultWidthUnits / 1000.0) * fontSize;
-        const double tolerance = 1.0; // Slightly wider tolerance for fallback
+        const double expectedDisplayWidth = (widthUnits / 1000.0) * fontSize;
+        const double tolerance = 0.1;
 
         var contentStream = "BT /F1 12 Tf 100 700 Td (X) Tj ET";
         var pdfData = CreatePdfWithContentStream(contentStream, "Times-Roman");
@@ -162,9 +170,8 @@ public class StandardFontWidthTests
         // Assert
         letters.Should().NotBeEmpty("Character should be extracted");
         var letter = letters[0];
-        // Times-Roman is not in the switch, should use default 600
         letter.Width.Should().BeApproximately(expectedDisplayWidth, tolerance,
-            "Times-Roman should use default width fallback");
+            "Times-Roman must use its own metrics, not a flat 600 for every glyph");
     }
 
     /// <summary>
@@ -174,14 +181,18 @@ public class StandardFontWidthTests
     [Fact]
     public void ExtractLetters_HelveticaUnmatchedCharCode_UsesAverageDefault()
     {
-        // Arrange
-        const int defaultWidthUnits = 556;  // Default case in Helvetica switch
+        // #1100 — also a pinned defect. The old Helvetica switch listed only
+        // A-Z, a-z and space, so every punctuation mark took the "_ => 556"
+        // average arm. Helvetica '!' is 278: the average was exactly twice the
+        // truth.
+        //
+        // (The letters in that switch were all correct — checked against the
+        // AFM, zero disagreements — which is why this went unnoticed. The
+        // table was right about what it covered and silent about the rest.)
+        const int widthUnits = 278;   // Helvetica '!', per the AFM
         const double fontSize = 12;
-        const double expectedDisplayWidth = (defaultWidthUnits / 1000.0) * fontSize;
-        const double tolerance = 0.5;
-
-        // Use a character code that doesn't have an explicit switch arm (e.g., '!' = 33)
-        // This will hit the default case
+        const double expectedDisplayWidth = (widthUnits / 1000.0) * fontSize;
+        const double tolerance = 0.1;
         var contentStream = "BT /F1 12 Tf 100 700 Td (!) Tj ET";
         var pdfData = CreatePdfWithContentStream(contentStream, "Helvetica");
         using var doc = PdfDocument.Open(pdfData);

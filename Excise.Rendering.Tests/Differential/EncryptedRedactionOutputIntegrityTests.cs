@@ -106,16 +106,13 @@ public class EncryptedRedactionOutputIntegrityTests
     /// </summary>
     private static readonly Dictionary<string, string> KnownDefects = new(StringComparer.Ordinal)
     {
+        // #1100's two entries were DELETED here once the standard-14 metrics
+        // landed — the reverse check demanded it, which is the whole reason it
+        // exists: a fixed defect must not keep its document out of the gate.
         ["encrypted.pdf"] =
             "#1048 — CryptographicException 'input data is not a complete block' from " +
             "AesCbcDecrypt while redacting. This gate is what first reproduced it outside " +
             "a hand-written fixture.",
-        ["issue15893_reduced.pdf"] =
-            "#1100 — Times-Roman glyph widths fall through to a flat 600/1000, so the " +
-            "rebuilt run is placed at x=142 where the real metrics put it at 111, and the " +
-            "tail of the line crosses the 200pt page edge.",
-        ["PasswordEncryptedReconstructed.pdf"] =
-            "#1100 — same document, same flat-600 Times metrics.",
     };
 
     [Theory]
