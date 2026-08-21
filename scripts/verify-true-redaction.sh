@@ -150,6 +150,33 @@ else
     pass
 fi
 
+# Check 9 (#1090): the whole-operator removal paths must not come back.
+# They deleted an entire text-showing operator to remove one word. Measured
+# across the whole collateral corpus before deletion: 0 firings in 235
+# document/term pairs -- they were dead code carrying an unbounded blast
+# radius, so #1038 closed by subtraction.
+#
+# Static and name-based, which is weak on its own. The behavioural guard is
+# the collateral ratchet (tests/redaction-collateral/baseline.json): a
+# reintroduced sweep blows those numbers up, and five of its rows now sit at
+# exactly 0. This check exists to make the intent legible at the point someone
+# would reach for the shortcut.
+echo -n "  ✓ Checking the whole-operator removal paths stay deleted... "
+WHOLE_OPERATOR='RemoveTextShowingOperatorsContaining|RemoveTextLinesStillContaining|RemoveIntersectingOperators'
+if grep -REn "$WHOLE_OPERATOR" \
+        "$CORE_EXT" "$CORE_GLYPH" \
+        "Excise.Core/Text/Segmentation/PdfDocumentRedactionExtensions.cs" 2>/dev/null; then
+    echo -e "${RED}FAILED${NC}"
+    echo "    A whole-operator removal path is back. It removes the term and an"
+    echo "    unbounded amount of its neighbours -- see #1090 and #1038, where"
+    echo "    the same shape destroyed 545 of 568 characters on a real file."
+    echo "    A page that cannot be redacted must REPORT that (RemovalUnverified),"
+    echo "    not delete until the term is gone."
+    ERRORS=$((ERRORS + 1))
+else
+    pass
+fi
+
 echo ""
 if [ "$ERRORS" -eq 0 ]; then
     echo -e "${GREEN}✅ TRUE redaction verification PASSED${NC}"

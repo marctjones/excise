@@ -863,11 +863,6 @@ partial class Program
                 $"WARNING: {redaction.Survived} occurrence(s) of '{text}' are STILL PRESENT " +
                 "after redaction. excise located them and the removal did not land. " +
                 "Do not treat this file as redacted.");
-        if (redaction.UsedDestructiveRemoval)
-            carrierNotes.Add(
-                "WARNING: redaction fell back to deleting whole text-showing operators on at " +
-                "least one page. The term is gone and so is an unknown amount of surrounding " +
-                "text -- compare the output against the original before relying on it.");
         foreach (var carrier in redaction.Carriers)
             if (!carrier.Scrubbed)
                 carrierNotes.Add(

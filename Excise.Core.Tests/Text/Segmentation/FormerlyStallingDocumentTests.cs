@@ -97,10 +97,10 @@ public class FormerlyStallingDocumentTests
         }
         else
         {
-            // Removal succeeded. It may still have been destructive, and if so
-            // the report must say so rather than printing a bare count.
-            report.Pages.Any(p => p.Outcome == RedactionOutcome.RemovedVerified
-                                  || p.Outcome == RedactionOutcome.DestructiveRemoval)
+            // Removal succeeded. Since #1090 deleted the whole-operator
+            // fallback there is no destructive outcome left to allow for: a
+            // page either verifies its removal or reports RemovalUnverified.
+            report.Pages.Any(p => p.Outcome == RedactionOutcome.RemovedVerified)
                 .Should().BeTrue("every page that did work must classify what kind");
         }
     }

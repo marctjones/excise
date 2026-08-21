@@ -19,12 +19,6 @@ public enum RedactionOutcome
     /// </summary>
     RemovalUnverified,
 
-    /// <summary>
-    /// Removal fell back to deleting whole text-showing operators. The term is
-    /// gone; so is an unknown amount of surrounding text. Never silent (#1090).
-    /// </summary>
-    DestructiveRemoval,
-
     /// <summary>excise located nothing to remove on this page.</summary>
     NothingToRemove,
 }
@@ -94,13 +88,6 @@ public sealed class RedactionReport
     public int Survived => Pages.Sum(p => p.OccurrencesRemainingAfter);
 
     /// <summary>
-    /// True when any page fell back to deleting whole text-showing operators.
-    /// The term is gone and so is surrounding text; the caller is told (#1090).
-    /// </summary>
-    public bool UsedDestructiveRemoval =>
-        Pages.Any(p => p.Outcome == RedactionOutcome.DestructiveRemoval);
-
-    /// <summary>
     /// True when everything located was verified gone and no carrier was
     /// refused. Anything else needs a human to read the detail.
     /// </summary>
@@ -112,7 +99,6 @@ public sealed class RedactionReport
     {
         var parts = new List<string> { $"{VerifiedRemovals} removed" };
         if (Survived > 0) parts.Add($"{Survived} STILL PRESENT");
-        if (UsedDestructiveRemoval) parts.Add("destructive fallback used");
         foreach (var c in Carriers.Where(c => c.RefusedReason != null))
             parts.Add($"{c.Carrier} NOT scrubbed ({c.RefusedReason})");
         return string.Join("; ", parts);
