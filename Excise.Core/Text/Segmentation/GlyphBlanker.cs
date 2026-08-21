@@ -15,7 +15,7 @@ namespace Excise.Core.Text.Segmentation;
 /// </code>
 ///
 /// <para><b>Why this might beat the current fallback.</b> When glyph removal
-/// stalls, <c>RedactText</c> falls back to <c>RemoveIntersectingOperators</c>,
+/// stalls, <c>RedactText</c> used to fall back to whole-operator removal (deleted in #1090),
 /// which deletes the whole text-showing operator — to remove one word it
 /// removes the line. That is the mechanism behind #1038's 5–36% collateral.
 /// Byte replacement is structurally bounded: the damage cannot exceed the

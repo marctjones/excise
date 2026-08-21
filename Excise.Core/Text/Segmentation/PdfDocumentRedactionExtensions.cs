@@ -107,9 +107,7 @@ public static class PdfDocumentRedactionExtensions
         {
             var page = document.GetPage(pageNum);
             var pageLocated = 0;
-            var pageWentDestructive = false;
             string? previousSearchText = null;
-            var usedConservativeFallback = false;
 
             for (var pass = 0; pass < 10; pass++)
             {
@@ -127,28 +125,17 @@ public static class PdfDocumentRedactionExtensions
                 var matches = FindTextMatches(searchLetters, text, caseSensitive);
                 if (matches.Count == 0) break;
 
+                // #1090: a stalled page STOPS. It used to fall back to
+                // deleting every operator overlapping the match box, which
+                // removed the term and an unbounded amount of its neighbours.
+                // Stopping leaves the match in place and #1089's verification
+                // reports it as RemovalUnverified — the caller is told the
+                // truth instead of handed a quietly mutilated document.
                 var stalled = searchTextSnapshot == previousSearchText;
                 previousSearchText = searchTextSnapshot;
-                if (stalled && usedConservativeFallback)
+                if (stalled)
                     break;
 
-                if (stalled)
-                {
-                    // #1090: the destructive path. Recorded so the caller is
-                    // told, rather than counted as an ordinary success like
-                    // every other branch.
-                    pageWentDestructive = true;
-                    var markerAreas = new List<PdfRectangle>();
-                    foreach (var matchLetters in matches)
-                    {
-                        var bbox = BoundingBoxOf(matchLetters);
-                        RemoveIntersectingOperators(page, bbox);
-                        markerAreas.Add(bbox);
-                    }
-                    if (drawBlackRect)
-                        foreach (var bbox in markerAreas) AppendBlackRectangle(page, bbox);
-                }
-                else
                 {
                     var contentAreas = new List<PdfRectangle>();
                     var markerAreas = new List<PdfRectangle>();
@@ -188,23 +175,7 @@ public static class PdfDocumentRedactionExtensions
 
                 totalMatches += matches.Count;
                 pageLocated += matches.Count;
-                if (stalled)
-                {
-                    usedConservativeFallback = true;
-                }
             }
-
-            if (includeHiddenLayers)
-            {
-                var swept = RemoveTextShowingOperatorsContaining(page, text, caseSensitive);
-                if (swept > 0) pageWentDestructive = true;   // #1090
-                totalMatches += swept;
-                pageLocated += swept;
-            }
-            var lineSwept = RemoveTextLinesStillContaining(page, text, caseSensitive, includeHiddenLayers);
-            if (lineSwept > 0) pageWentDestructive = true;    // #1090
-            totalMatches += lineSwept;
-            pageLocated += lineSwept;
 
             // #1089 VERIFICATION. Re-read the page and count what is STILL
             // findable. This is the difference between "excise tried" and
@@ -216,7 +187,6 @@ public static class PdfDocumentRedactionExtensions
                 pageLocated,
                 remaining,
                 remaining > 0 ? RedactionOutcome.RemovalUnverified
-                : pageWentDestructive ? RedactionOutcome.DestructiveRemoval
                 : pageLocated > 0 ? RedactionOutcome.RemovedVerified
                 : RedactionOutcome.NothingToRemove));
         }
@@ -364,149 +334,6 @@ public static class PdfDocumentRedactionExtensions
         letters.Count > 0 &&
         letters.All(l => l.FontName.StartsWith("AcroForm:", StringComparison.Ordinal) ||
                           l.FontName.StartsWith("Annotation:", StringComparison.Ordinal));
-
-    private static void RemoveIntersectingOperators(PdfPage page, PdfRectangle bounds)
-    {
-        var content = page.GetContentStream();
-        page.SetContentStream(content.RemoveIntersecting(bounds));
-    }
-
-    private static int RemoveTextShowingOperatorsContaining(
-        PdfPage page,
-        string searchText,
-        bool caseSensitive)
-    {
-        var content = page.GetContentStream();
-        var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-        var removed = 0;
-        var kept = new List<ContentOperator>(content.Operators.Count);
-
-        // Operator text is raw content-stream order; RTL documents usually
-        // store Arabic/Hebrew in VISUAL (reversed) order, so a logical-order
-        // needle must also be checked in its visual form (#632). Both visual
-        // forms are tried: with digit islands travelling with the RTL
-        // segments (RTL-directed line) and with digits left in place
-        // (strong-LTR elsewhere on the line) — the operator's own text
-        // cannot know which layout the page used.
-        string? visualNeedle = null;
-        string? visualNeedleDigitsApart = null;
-        if (BidiReorderer.ContainsStrongRtl(searchText))
-        {
-            visualNeedle = BidiReorderer.ReverseRtlRunsInString(searchText);
-            var alt = BidiReorderer.ReverseRtlRunsInStringWithoutDigitJoining(searchText);
-            if (alt != visualNeedle)
-                visualNeedleDigitsApart = alt;
-        }
-
-        // The stream may also carry Arabic as shaped presentation forms
-        // (#632), Latin ligature code points like ﬃ (#722), or decomposed
-        // accents (e + U+0301 for é, #724) while the needle is typed in
-        // plain/precomposed letters. Fold the needle once; each operator's
-        // text is checked folded — both as stored and with its RTL runs
-        // reversed to logical order FIRST (reversing must happen on the raw
-        // shaped chars: a lam-alef ligature is one char before folding but
-        // two after, and reversing the folded string would scramble it).
-        var foldedNeedle = MatchingNormalization.Fold(searchText);
-
-        foreach (var op in content.Operators)
-        {
-            if (op.Category == OperatorCategory.TextShowing)
-            {
-                var opText = op.TextContent ?? string.Empty;
-                if (opText.IndexOf(searchText, comparison) >= 0 ||
-                    (visualNeedle != null && opText.IndexOf(visualNeedle, comparison) >= 0) ||
-                    (visualNeedleDigitsApart != null &&
-                     opText.IndexOf(visualNeedleDigitsApart, comparison) >= 0) ||
-                    ContainsFolded(opText, foldedNeedle, comparison))
-                {
-                    removed++;
-                    continue;
-                }
-            }
-
-            kept.Add(op);
-        }
-
-        if (removed > 0)
-            page.SetContentStream(new ContentStream(kept));
-
-        return removed;
-    }
-
-    /// <summary>
-    /// True when <paramref name="opText"/>, folded into the canonical
-    /// matching space (presentation forms / ligatures to plain letters,
-    /// canonical NFC composition), contains <paramref name="foldedNeedle"/>
-    /// — checked in stored order and, for strong-RTL content, with its RTL
-    /// runs reversed to logical order before folding (visual-order streams).
-    /// </summary>
-    private static bool ContainsFolded(
-        string opText, string foldedNeedle, StringComparison comparison)
-    {
-        if (foldedNeedle.Length == 0)
-            return false;
-
-        // Fold is identity (same instance) for unaffected text, so this is
-        // cheap; no pre-gate on "contains foldable chars" — the needle side
-        // alone can differ from its raw form (a decomposed needle against
-        // precomposed operator text), which a haystack-only gate would miss.
-        if (MatchingNormalization.Fold(opText).IndexOf(foldedNeedle, comparison) >= 0)
-            return true;
-
-        if (!BidiReorderer.ContainsStrongRtl(opText))
-            return false;
-
-        var logical = BidiReorderer.ReverseRtlRunsInString(opText);
-        if (MatchingNormalization.Fold(logical).IndexOf(foldedNeedle, comparison) >= 0)
-            return true;
-
-        // Second reading with digits left in place (see the visual-needle
-        // comment in RemoveTextShowingOperatorsContaining).
-        var logicalDigitsApart =
-            BidiReorderer.ReverseRtlRunsInStringWithoutDigitJoining(opText);
-        return logicalDigitsApart != logical &&
-               MatchingNormalization.Fold(logicalDigitsApart)
-                   .IndexOf(foldedNeedle, comparison) >= 0;
-    }
-
-    private static int RemoveTextLinesStillContaining(
-        PdfPage page,
-        string searchText,
-        bool caseSensitive,
-        bool includeHiddenLayers)
-    {
-        var letters = page.Letters;
-        var searchLetters = includeHiddenLayers
-            ? letters
-            : letters.Where(l => !l.IsInHiddenOptionalContent).ToList();
-        var matches = FindTextMatches(searchLetters, searchText, caseSensitive);
-        if (matches.Count == 0)
-            return 0;
-
-        var lineBands = matches.Select(match =>
-        {
-            var bottom = match.Min(l => l.GlyphRectangle.Bottom) - 1.0;
-            var top = match.Max(l => l.GlyphRectangle.Top) + 1.0;
-            return (Bottom: bottom, Top: top);
-        }).ToList();
-
-        var content = page.GetContentStream();
-        var kept = new List<ContentOperator>(content.Operators.Count);
-        foreach (var op in content.Operators)
-        {
-            if (op.Category == OperatorCategory.TextShowing &&
-                op.BoundingBox is { } bounds &&
-                lineBands.Any(b => bounds.Top > b.Bottom && bounds.Bottom < b.Top))
-            {
-                continue;
-            }
-
-            kept.Add(op);
-        }
-
-        page.SetContentStream(new ContentStream(kept));
-        return matches.Count;
-    }
 
     /// <summary>
     /// Append a filled black rectangle at <paramref name="rect"/> to the
