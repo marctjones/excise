@@ -1911,8 +1911,7 @@ namespace Excise.Core.Text.Segmentation
     {
         RemovedVerified = 0,
         RemovalUnverified = 1,
-        DestructiveRemoval = 2,
-        NothingToRemove = 3,
+        NothingToRemove = 2,
     }
     public sealed class RedactionReport
     {
@@ -1923,7 +1922,6 @@ namespace Excise.Core.Text.Segmentation
         public required System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.PageRedactionResult> Pages { get; init; }
         public int Survived { get; }
         public required string Term { get; init; }
-        public bool UsedDestructiveRemoval { get; }
         public int VerifiedRemovals { get; }
         public override string ToString() { }
     }
