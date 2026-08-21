@@ -771,75 +771,23 @@ public class TextExtractor
     /// </summary>
     internal static double GetStandardFontWidth(string baseFont, int charCode)
     {
-        // Standard 14 fonts have fixed-width or variable-width glyphs
-        // For Courier (monospace), all glyphs are 600 units wide
-        if (baseFont.StartsWith("Courier"))
+        // #1100: the real AFM metrics, for every one of the 14 -- not just
+        // Courier and Helvetica. This method used to fall through to a flat
+        // 600 for everything else, so all four Times faces advanced 0.6em per
+        // glyph regardless of the glyph, and Helvetica punctuation took the
+        // 556 "average" arm. See StandardFontMetrics for what that cost: the
+        // letter model drifted 74pt over a 22-character Times line, which is
+        // the geometry redaction matches and draws its black box against.
+        if (Fonts.StandardFontMetrics.TryGetWidth(baseFont, charCode, out var width))
+            return width;
+
+        // Outside 32-126, or a font that is not one of the 14. Unchanged: the
+        // codes above 126 need the font's /Encoding to resolve a glyph name,
+        // and inventing a WinAnsi assumption here would trade an obvious wrong
+        // answer for a confident one.
+        if (baseFont.StartsWith("Courier", StringComparison.Ordinal))
             return 600;
 
-        // For Helvetica and Times, widths vary
-        // These are approximate averages
-        if (baseFont.StartsWith("Helvetica"))
-        {
-            return charCode switch
-            {
-                32 => 278,  // space
-                65 => 667,  // A
-                66 => 667,  // B
-                67 => 722,  // C
-                68 => 722,  // D
-                69 => 667,  // E
-                70 => 611,  // F
-                71 => 778,  // G
-                72 => 722,  // H
-                73 => 278,  // I
-                74 => 500,  // J
-                75 => 667,  // K
-                76 => 556,  // L
-                77 => 833,  // M
-                78 => 722,  // N
-                79 => 778,  // O
-                80 => 667,  // P
-                81 => 778,  // Q
-                82 => 722,  // R
-                83 => 667,  // S
-                84 => 611,  // T
-                85 => 722,  // U
-                86 => 667,  // V
-                87 => 944,  // W
-                88 => 667,  // X
-                89 => 667,  // Y
-                90 => 611,  // Z
-                97 => 556,  // a
-                98 => 556,  // b
-                99 => 500,  // c
-                100 => 556, // d
-                101 => 556, // e
-                102 => 278, // f
-                103 => 556, // g
-                104 => 556, // h
-                105 => 222, // i
-                106 => 222, // j
-                107 => 500, // k
-                108 => 222, // l
-                109 => 833, // m
-                110 => 556, // n
-                111 => 556, // o
-                112 => 556, // p
-                113 => 556, // q
-                114 => 333, // r
-                115 => 500, // s
-                116 => 278, // t
-                117 => 556, // u
-                118 => 500, // v
-                119 => 722, // w
-                120 => 500, // x
-                121 => 500, // y
-                122 => 500, // z
-                _ => 556    // average
-            };
-        }
-
-        // Default: average width
-        return 600;
+        return baseFont.StartsWith("Helvetica", StringComparison.Ordinal) ? 556 : 600;
     }
 }
