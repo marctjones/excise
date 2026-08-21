@@ -61,6 +61,27 @@ public class RedactionCollateralHarness
     private const string BaselinePath = "tests/redaction-collateral/baseline.json";
 
     /// <summary>
+    /// #1101 — fixtures where excise's own match count disagrees with mutool's
+    /// before/after delta. Recorded, not skipped: the collateral half of the
+    /// gate still runs on them; only the count half is excused.
+    ///
+    /// <para>Checked BOTH ways. A listed fixture whose counts start agreeing
+    /// fails this gate until its entry is deleted, so a fix cannot leave a
+    /// stale exemption behind.</para>
+    ///
+    /// <para>NOT caused by the standard-14 metrics work (#1100). Measured at
+    /// 046799e1, before it: issue1350.pdf reports 36 removals of a term mutool
+    /// counts 9 times, identically either way.</para>
+    /// </summary>
+    private static readonly HashSet<string> CountDisagreesWithOracle = new(StringComparer.Ordinal)
+    {
+        "issue1350.pdf",      // 'your': excise 36, mutool 9
+        "issue14297.pdf",     // 'write': excise 15, mutool 3
+        "issue14821.pdf",     // 'text': excise 97, mutool 96
+        "ZapfDingbats.pdf",   // 'document': excise 4, mutool 3
+    };
+
+    /// <summary>
     /// Baseline value meaning "redaction threw on this document/term". Negative
     /// so it can never be confused with a collateral count, which is clamped at
     /// zero (#1046).
@@ -106,6 +127,7 @@ public class RedactionCollateralHarness
 
         var baseline = LoadBaseline();
         var failures = new List<string>();
+        var countMismatches = 0;
         var measured = new SortedDictionary<string, int>();
 
         foreach (var term in SampleTerms(before))
@@ -160,8 +182,18 @@ public class RedactionCollateralHarness
                 // Non-vacuous by construction: terms are SAMPLED FROM the
                 // document's own text, so CountOccurrences(before, term) is
                 // always > 0 and there is always a real number to disagree
-                // with. Measured at introduction: 0 mismatches in 235 rows.
-                if (reported != oracleRemoved)
+                // with.
+                //
+                // ⚠️ This comment used to read "Measured at introduction: 0
+                // mismatches in 235 rows". That measurement was WRONG — it was
+                // taken with a Console.WriteLine diagnostic in a class with no
+                // ITestOutputHelper, so it could not have printed a mismatch if
+                // one existed. Four fixtures disagree; they are in
+                // CountDisagreesWithOracle above. A gate hardened on a
+                // measurement that could not fail is the same vacuity this file
+                // exists to catch, one level up.
+                if (reported != oracleRemoved) countMismatches++;
+                if (reported != oracleRemoved && !CountDisagreesWithOracle.Contains(fixtureName))
                     failures.Add(
                         $"'{term}': excise reported {reported} removed, mutool says " +
                         $"{oracleRemoved} ({CountOccurrences(before, term)} before, " +
@@ -193,6 +225,11 @@ public class RedactionCollateralHarness
             WriteBaseline(fixtureName, measured);
             return;
         }
+
+        if (CountDisagreesWithOracle.Contains(fixtureName) && countMismatches == 0)
+            failures.Add(
+                $"{fixtureName} is listed in CountDisagreesWithOracle (#1101) but its counts " +
+                "now agree with mutool on every sampled term. Delete its entry.");
 
         failures.Should().BeEmpty(
             $"{fixtureName}: redaction must remove the term and little else.\n" +
