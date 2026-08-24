@@ -144,6 +144,20 @@ public class UnredactCommandTests
         finally { File.Delete(dict); }
     }
 
+
+    [Fact]
+    public void CertainMode_BoxOverJustTheWord_IsRecovered()
+    {
+        // #1149: the common real fake redaction covers only the sensitive word
+        // inside a longer line. This used to read as clean (box < 50% of the
+        // operator); now the covered glyph RUN is reported.
+        var pdf = CorpusCase("B0-", "under-box-black-on-white");
+        Assert.SkipWhen(pdf == null, "synthetic corpus absent");
+        var (exit, output) = Run(pdf!, "--mode", "certain");
+        exit.Should().Be(3, "a box over just the word still hides recoverable text");
+        output.Should().Contain("CERTAIN");
+    }
+
     private static void RunRedact(string src, string dst, string term)
     {
         var psi = new ProcessStartInfo("dotnet")
