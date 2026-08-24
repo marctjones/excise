@@ -85,7 +85,11 @@ public sealed class ResidueRecoveryRecallTests
         // Residue recovery only applies to methods that leave a gap. under-box
         // is the certain channel (#1132); width-closing/defended are controls
         // measured below. Score residue on the gap-leaving methods.
-        var scored = new List<(Case C, int Rank)>();   // Rank = 1-based position of answer, 0 = not found
+        // Rank = 1-based position of answer (0 = not found); Bits = residual
+        // entropy of the width bound (#1135's second number); Metric = which
+        // width rung produced it, so an "exact" band cannot be inflated by
+        // fallback cases sneaking in.
+        var scored = new List<(Case C, int Rank, double Bits, string Metric)>();
 
         foreach (var c in cases)
         {
@@ -97,30 +101,56 @@ public sealed class ResidueRecoveryRecallTests
             var recs = ResidueRecoveryEngine.Recover(pdf, dict,
                 new ResidueRecoveryEngine.Options(RequireMutoolCorroboration: false));
 
-            // Best rank of the true answer across all gaps the engine found.
+            // Best rank of the true answer across all gaps the engine found, and
+            // the bits/metric of the gap that carried it (or, if not found, the
+            // tightest gap — the width bound stands whether or not the dictionary
+            // happens to contain the answer).
             var rank = 0;
+            double bits = double.NaN;
+            string metric = "none";
+            ResidueRecoveryEngine.Recovery? tightest = null;
             foreach (var r in recs)
             {
+                if (tightest == null || r.ResidualEntropyBits < tightest.ResidualEntropyBits)
+                    tightest = r;
                 var idx = r.CandidatesFit
                     .Select((w, i) => (w, i))
                     .Where(t => string.Equals(t.w, c.Answer, StringComparison.Ordinal))
                     .Select(t => t.i + 1).DefaultIfEmpty(0).First();
-                if (idx > 0 && (rank == 0 || idx < rank)) rank = idx;
+                if (idx > 0 && (rank == 0 || idx < rank))
+                {
+                    rank = idx;
+                    bits = r.ResidualEntropyBits;
+                    metric = r.Gap.MetricSource.ToString();
+                }
             }
-            scored.Add((c, rank));
+            if (rank == 0 && tightest != null)
+            {
+                bits = tightest.ResidualEntropyBits;
+                metric = tightest.Gap.MetricSource.ToString();
+            }
+            scored.Add((c, rank, bits, metric));
         }
 
         scored.Should().NotBeEmpty("the corpus must produce cases to score");
 
-        // ── report recall@N per band ──────────────────────────────────────
-        _out.WriteLine($"{"band",-6} {"cases",6} {"recall@1",9} {"recall@5",9} {"recall@20",10}  note");
+        // ── report recall@N AND median residual bits per band (#1135's two
+        //    numbers: recall = "caught in a shortlist", bits = "how much the
+        //    width bound narrowed the space") ──────────────────────────────
+        _out.WriteLine($"{"band",-6} {"cases",6} {"recall@1",9} {"recall@5",9} {"recall@20",10} {"med.bits",9}  note");
         var byBand = scored.GroupBy(s => s.C.Band).OrderBy(g => g.Key, StringComparer.Ordinal);
         double NegControlWorst = 0;
         double BpRecallAt20 = 0;
+        static double Median(System.Collections.Generic.IEnumerable<double> xs)
+        {
+            var v = xs.Where(x => !double.IsNaN(x)).OrderBy(x => x).ToList();
+            return v.Count == 0 ? double.NaN : v[v.Count / 2];
+        }
         foreach (var g in byBand)
         {
             var n = g.Count();
             double At(int k) => (double)g.Count(s => s.Rank >= 1 && s.Rank <= k) / n;
+            var medBits = Median(g.Select(s => s.Bits));
             var note = g.Key switch
             {
                 "B6" => "NEG CONTROL (secret absent from dict) -> ~0",
@@ -131,13 +161,28 @@ public sealed class ResidueRecoveryRecallTests
                 "Bp" => "single-anchor (line edge) -> box channel (#1140)",
                 _ => "",
             };
-            _out.WriteLine($"{g.Key,-6} {n,6} {At(1),9:P0} {At(5),9:P0} {At(20),10:P0}  {note}");
+            var bitsStr = double.IsNaN(medBits) ? "-" : medBits.ToString("F1");
+            _out.WriteLine($"{g.Key,-6} {n,6} {At(1),9:P0} {At(5),9:P0} {At(20),10:P0} {bitsStr,9}  {note}");
             if (g.Key is "B6" or "B8") NegControlWorst = Math.Max(NegControlWorst, At(20));
             if (g.Key == "Bp") BpRecallAt20 = At(20);
         }
 
         _out.WriteLine("");
         _out.WriteLine($"overall recall@5: {(double)scored.Count(s => s.Rank is >= 1 and <= 5) / scored.Count:P0}");
+
+        // ── recall stratified by width-metric rung (#1135): an "exact" band's
+        //    recall must not be inflated by fallback cases sneaking in. If a
+        //    Standard14Exact-labelled band is actually recovering on the
+        //    MutoolPositionTolerance rung, that shows here. ─────────────────
+        _out.WriteLine("");
+        _out.WriteLine("recall@5 by width-metric rung (exact must not borrow the fallback's number):");
+        foreach (var mg in scored.Where(s => s.Rank > 0)
+                                 .GroupBy(s => s.Metric).OrderBy(g => g.Key, StringComparer.Ordinal))
+        {
+            var found = mg.Count(s => s.Rank <= 5);
+            _out.WriteLine($"  {mg.Key,-26} {found}/{mg.Count()} recovered@5, median bits " +
+                           $"{Median(mg.Select(s => s.Bits)):F1}");
+        }
 
         // ── the only assertions: anti-vacuity + negative controls ─────────
         // The scorer must not credit recovery on width-closed or random-string
