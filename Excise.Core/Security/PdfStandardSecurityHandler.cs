@@ -90,6 +90,17 @@ public sealed class PdfStandardSecurityHandler
             throw new PdfEncryptionNotSupportedException(
                 $"Only the Standard security handler is supported (file uses /Filter /{filter}).");
 
+        // /V and /R are required for the Standard handler. Their ABSENCE means
+        // this is not really a Standard-handler dict -- certificate/public-key
+        // encryption (/Filter /Adobe.PubSec, /SubFilter adbe.pkcs7.*) can slip
+        // past the filter check on appended/hybrid files and reach here with no
+        // /R. A raw KeyNotFoundException from the accessor is an unhandled crash
+        // on untrusted input (the DoS #648 guards); refuse gracefully instead
+        // (#1109 corpus surfaced 16 of these).
+        if (!encryptDict.ContainsKey("V") || !encryptDict.ContainsKey("R"))
+            throw new PdfEncryptionNotSupportedException(
+                "The /Encrypt dictionary has no /V or /R -- likely certificate/public-key " +
+                "encryption (/Adobe.PubSec), which is not supported.");
         int v = encryptDict.GetInt("V");
         int r = encryptDict.GetInt("R");
         int lengthBits = encryptDict.ContainsKey("Length") ? encryptDict.GetInt("Length") : 40;
@@ -173,6 +184,14 @@ public sealed class PdfStandardSecurityHandler
         PdfDictionary encryptDict, byte[] firstId, string? userPassword)
     {
         var password = userPassword ?? string.Empty;
+        // #1109: guard /R before reading it here too -- this string overload is
+        // the one the open path calls (line 808), and certificate/public-key
+        // encryption reaches it with no /R. A raw KeyNotFoundException is an
+        // unhandled crash on untrusted input; refuse gracefully.
+        if (!encryptDict.ContainsKey("R") || !encryptDict.ContainsKey("V"))
+            throw new PdfEncryptionNotSupportedException(
+                "The /Encrypt dictionary has no /V or /R -- likely certificate/public-key " +
+                "encryption (/Adobe.PubSec), which is not supported.");
         var revision = encryptDict.GetInt("R");
         PdfEncryptionNotSupportedException? lastPasswordFailure = null;
 
