@@ -5,8 +5,10 @@ using System.Linq;
 using System.Text.Json;
 using AwesomeAssertions;
 using Excise.Core.Document;
+using Excise.Core.Primitives;
 using Excise.Core.Text.Segmentation;
 using Excise.Rendering.Differential;
+using SkiaSharp;
 using Xunit;
 
 namespace Excise.Rendering.Tests.Differential;
@@ -132,6 +134,16 @@ public sealed class RedactionBenchmarkRunner
         /// input is not a redaction fidelity defect (measured: TAMReview.pdf and
         /// Brotli-Prototype-FileA.pdf fail qpdf BEFORE redaction).</summary>
         public bool InputQpdfOk { get; init; }
+
+        // VISUAL (#1141) — ink an INDEPENDENT renderer draws in the redaction
+        // region after box-SUPPRESSED removal, so the covering rectangle does
+        // not read as 100% ink. A clean removal blanks the region; residual ink
+        // is a leak no text carrier covers — a vector path, a raster pixel, or
+        // the #1131 white-on-black case. -1 = not measured (a competitor whose
+        // box we cannot suppress, a term not on page 1, or no renderer). The
+        // text axes cannot see ink; this is the visual axis made first-class.
+        public double InkFractionBeforeRegion { get; init; } = -1;
+        public double InkFractionInRegion { get; init; } = -1;
 
         public string? Error { get; init; }
     }
@@ -391,6 +403,9 @@ public sealed class RedactionBenchmarkRunner
             // charged against the tool.
             var inputQpdf = QpdfReferenceTool.Check(path);
 
+            // ── VISUAL (#1141): is the region blank once the box is off? ──
+            var (inkBefore, inkAfter) = MeasureInkAxis(path, term, tool);
+
             // ── RESIDUE: did the layout keep the hole? ────────────────────
             // Page 1 only. This is a sampled signal, not a per-occurrence one:
             // a document whose page 1 reflows and whose page 4 does not will
@@ -429,6 +444,8 @@ public sealed class RedactionBenchmarkRunner
                 CollateralFraction = alnumBefore == 0 ? 0 : (double)collateral / alnumBefore,
                 QpdfOk = qpdf?.Success ?? false,
                 InputQpdfOk = inputQpdf?.Success ?? false,
+                InkFractionBeforeRegion = inkBefore,
+                InkFractionInRegion = inkAfter,
             };
         }
         finally { try { File.Delete(output); } catch { /* best effort */ } }
@@ -525,6 +542,102 @@ public sealed class RedactionBenchmarkRunner
         return n;
     }
 
+    /// <summary>
+    /// #1141 — ink an independent renderer draws in the redaction region, before
+    /// and after a BOX-SUPPRESSED removal. Box-suppressed so the covering
+    /// rectangle does not read as 100% ink and hide what leaks around it. Only
+    /// excise (we cannot turn off a competitor's box), only page 1, only when a
+    /// renderer is installed; otherwise (-1, -1), the axis's "not measured".
+    /// </summary>
+    internal static (double before, double after) MeasureInkAxis(
+        string path, string term, string tool)
+    {
+        if (tool != "excise") return (-1, -1);
+        if (!GhostscriptReferenceRenderer.IsAvailable) return (-1, -1);
+        try
+        {
+            PdfRectangle region;
+            double pageHeight;
+            using (var doc = PdfDocument.Open(path))
+            {
+                if (doc.PageCount < 1) return (-1, -1);
+                var page = doc.GetPage(1);
+                pageHeight = page.Height;
+                var box = FirstMatchBoxOnPage1(page, term);
+                if (box == null) return (-1, -1);   // term is not on page 1
+                region = box.Value;
+            }
+
+            using var before = GhostscriptReferenceRenderer.RenderPage(path, 1, dpi: 150);
+            if (before == null) return (-1, -1);
+            var inkBefore = InkFractionIn(before, region, pageHeight);
+
+            var tmp = Path.Combine(Path.GetTempPath(), $"excise-ink-{Guid.NewGuid():N}.pdf");
+            try
+            {
+                using (var doc = PdfDocument.Open(path))
+                {
+                    doc.RedactText(term, drawBlackRect: false);
+                    doc.Save(tmp);
+                }
+                using var after = GhostscriptReferenceRenderer.RenderPage(tmp, 1, dpi: 150);
+                if (after == null) return (inkBefore, -1);
+                return (inkBefore, InkFractionIn(after, region, pageHeight));
+            }
+            finally { try { File.Delete(tmp); } catch { /* best effort */ } }
+        }
+        catch { return (-1, -1); }
+    }
+
+    /// <summary>
+    /// The union rectangle of the first occurrence of <paramref name="term"/> on
+    /// page 1, or null if it is not there. Lines by baseline, ordered by x — the
+    /// same grouping the residue engine uses — so a term split across a TJ array
+    /// still unions to one box.
+    /// </summary>
+    private static PdfRectangle? FirstMatchBoxOnPage1(PdfPage page, string term)
+    {
+        foreach (var line in page.Letters
+                     .GroupBy(l => Math.Round(l.GlyphRectangle.Bottom, 0))
+                     .OrderByDescending(g => g.Key))
+        {
+            var ordered = line.OrderBy(l => l.GlyphRectangle.Left).ToList();
+            var text = string.Concat(ordered.Select(l => l.Value));
+            var idx = text.IndexOf(term, StringComparison.OrdinalIgnoreCase);
+            if (idx < 0) continue;
+
+            var run = ordered.Skip(idx).Take(term.Length).ToList();
+            if (run.Count == 0) continue;
+            var left = run.Min(l => l.GlyphRectangle.Left);
+            var right = run.Max(l => l.GlyphRectangle.Right);
+            var bottom = run.Min(l => l.GlyphRectangle.Bottom);
+            var top = run.Max(l => l.GlyphRectangle.Top);
+            return new PdfRectangle(left, bottom, right, top);
+        }
+        return null;
+    }
+
+    private static double InkFractionIn(SKBitmap bmp, PdfRectangle box, double pageHeight)
+    {
+        const double scale = 150.0 / 72.0;
+        int x0 = Math.Max(0, (int)(box.Left * scale));
+        int x1 = Math.Min(bmp.Width - 1, (int)(box.Right * scale));
+        // PDF y is bottom-up; raster y is top-down.
+        int y0 = Math.Max(0, (int)((pageHeight - box.Top) * scale));
+        int y1 = Math.Min(bmp.Height - 1, (int)((pageHeight - box.Bottom) * scale));
+        if (x1 <= x0 || y1 <= y0) return 0;
+
+        int ink = 0, total = 0;
+        for (int y = y0; y <= y1; y++)
+        for (int x = x0; x <= x1; x++)
+        {
+            var p = bmp.GetPixel(x, y);
+            total++;
+            if (p.Red < 200 || p.Green < 200 || p.Blue < 200) ink++;
+        }
+        return total == 0 ? 0 : (double)ink / total;
+    }
+
     private void WriteReport(string root, List<Row> rows)
     {
         var dir = Path.Combine(root, "logs", "redaction-benchmark");
@@ -579,6 +692,25 @@ public sealed class RedactionBenchmarkRunner
             _out.WriteLine($"  {g.Key}: extractor={g.Count(r => r.LeakOracleText)} " +
                            $"under-a-box={g.Count(r => r.LeakBadRedactions > 0)} " +
                            $"saved-bytes={g.Count(r => r.LeakSavedBytes)}");
+        }
+
+        // VISUAL AXIS (#1141): residual ink an independent renderer draws in the
+        // region after box-suppressed removal. Blank = clean; ink = a leak no
+        // text axis can see (vector/raster/white-on-black). Only measured rows
+        // (excise, page-1 term, renderer present) count.
+        var inkMeasured = ok.Where(r => r.InkFractionInRegion >= 0).ToList();
+        if (inkMeasured.Count > 0)
+        {
+            _out.WriteLine("");
+            var visualLeaks = inkMeasured.Count(r => r.InkFractionInRegion > 0.02);
+            _out.WriteLine($"VISUAL — region ink after box-suppressed removal " +
+                           $"(measured {inkMeasured.Count} rows): {visualLeaks} with residual ink >2%");
+            foreach (var r in inkMeasured.Where(r => r.InkFractionInRegion > 0.02)
+                                         .OrderByDescending(r => r.InkFractionInRegion).Take(15))
+                _out.WriteLine(
+                    $"  INK {r.Corpus}/{r.Document}|{r.Term,-16} " +
+                    $"{r.InkFractionBeforeRegion:P1} → {r.InkFractionInRegion:P1} " +
+                    $"(text axis says leak={r.LeakOracleText})");
         }
 
         // WHERE THEY DISAGREE is the actionable part: a case both tools handle
