@@ -129,19 +129,19 @@ def build_case(answer, font, size, method, context, colour="black-on-white", pos
         content = (line(prefix + suffix) + ctx.encode())
 
     elif method == "defended":
-        # Width-preserving, but the gap is broken into random sub-widths by
-        # decoy fills so no single width encodes the answer. The frontier.
-        import struct
+        # The frontier / negative control: break the width channel so the
+        # VISIBLE gap between surviving glyphs no longer equals the removed
+        # string's width. Achieved by shifting the suffix to a position that
+        # does NOT preserve the original layout -- a per-answer deterministic
+        # offset the attacker cannot know. (This is what a width-defending
+        # redactor does: quantize/randomize glyph shifts, Edact-Ray "repair".)
         seed = int(hashlib.sha256(answer.encode()).hexdigest()[:8], 16)
-        pieces, x = [], ax0
-        step = aw / 4
-        for k in range(4):
-            jitter = ((seed >> (k * 3)) % 7 - 3)          # deterministic ±3pt
-            pieces.append(f"0 0 0 rg\n{x} 696 {max(1,step+jitter)} {size} re f\n")
-            x += step
+        offset = (seed % 40) - 20                          # deterministic ±20pt
+        sx = max(ax0 + 4, ax1 + offset)                    # never overlap prefix
         content = (line(prefix)
-                   + f"BT /F1 {size} Tf {ax1} 700 Td ({suffix}) Tj ET\n".encode()
-                   + "".join(pieces).encode() + ctx.encode())
+                   + f"BT 0 0 0 rg /F1 {size} Tf {sx} 700 Td ({suffix}) Tj ET\n".encode()
+                   + f"0 0 0 rg\n{ax0} 696 {max(2,sx-ax0)} {size} re f\n".encode()
+                   + ctx.encode())
     else:
         raise ValueError(method)
 
@@ -155,7 +155,7 @@ def build_case(answer, font, size, method, context, colour="black-on-white", pos
     meta = dict(answer=answer, font=font, sizePt=size, method=method, context=context,
                 colour=colour, position=pos,
                 gapX0=round(ax0, 3), gapX1=round(ax1, 3), gapWidthPt=round(aw, 3),
-                dictionary="names-%d" % len(NAMES))
+                dictionary=None)  # filled by the caller from the case's kind
     return _pdf(objs), meta
 
 
@@ -230,7 +230,7 @@ def main():
             cid = f"{band}-{font.lower()}{size}-{method}-{colour}-{pos}-{safe}"
             pdf, meta = build_case(answer, font, size, method, context, colour, pos)
             open(os.path.join(out, cid + ".pdf"), "wb").write(pdf)
-            meta.update(id=cid, band=band)
+            meta.update(id=cid, band=band, dictionary=kind)  # names/dict-long/date/digits/random
             manifest.append(meta)
 
     with open(os.path.join(out, "manifest.jsonl"), "w") as f:
