@@ -42,7 +42,15 @@ INDEPENDENT='Mutool|Qpdf|Ghostscript|Pdftocairo|Pdftoppm|PdfBox|PdfiumNative|Sav
 SELF='\.Text\.Should|ExtractAllText|\.Letters|GetLetters'
 
 offenders=""
-for f in $(find Excise.*.Tests -name "*Redaction*Tests.cs" -not -path '*/obj/*' -not -path '*/bin/*' | sort); do
+# #1122: the pattern used to be "*Redaction*Tests.cs" ONLY, which meant
+# HiddenTextDetectorTests.cs -- the tests for the detector whose entire job is
+# finding bad redactions -- was invisible to this gate. Not allow-listed,
+# not failing: unseen. The rule this script enforces is that a tool must not
+# be its own oracle for the property it exists to guarantee, and the detector
+# for that property was exempt by filename.
+for f in $(find Excise.*.Tests \
+                \( -name "*Redaction*Tests.cs" -o -name "*HiddenText*Tests.cs" -o -name "*Audit*Tests.cs" \) \
+                -not -path '*/obj/*' -not -path '*/bin/*' | sort); do
   # Only files that actually assert about leaks are in scope; a pure geometry
   # or workflow test has nothing for an oracle to corroborate.
   grep -qE "$SELF" "$f" || continue
