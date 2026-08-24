@@ -1829,6 +1829,7 @@ namespace Excise.Core.Text.Segmentation
     {
         public GlyphRemover() { }
         public GlyphRemover(Excise.Core.Text.Segmentation.LetterFinder letterFinder, Excise.Core.Text.Segmentation.TextSegmenter textSegmenter, Excise.Core.Text.Segmentation.OperationReconstructor reconstructor) { }
+        public bool CloseWidth { get; set; }
         public System.Collections.Generic.List<Excise.Core.Content.ContentOperator> ProcessOperations(System.Collections.Generic.IReadOnlyList<Excise.Core.Content.ContentOperator> operations, System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Letter> letters, Excise.Core.Document.PdfRectangle redactionArea, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0) { }
     }
     public static class HiddenTextDetector
@@ -1869,6 +1870,7 @@ namespace Excise.Core.Text.Segmentation
         {
             public Context() { }
             public double CharacterSpacing { get; init; }
+            public bool CloseWidth { get; init; }
             public required string FontName { get; init; }
             public required double FontSize { get; init; }
             public double HorizontalScaling { get; init; }
@@ -1888,12 +1890,12 @@ namespace Excise.Core.Text.Segmentation
     }
     public static class PdfDocumentRedactionExtensions
     {
-        public static Excise.Core.Text.Segmentation.RedactionReport RedactText(this Excise.Core.Document.PdfDocument document, string text, bool caseSensitive = false, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool drawBlackRect = true, bool includeHiddenLayers = true, bool scrubDocumentCarriers = true) { }
+        public static Excise.Core.Text.Segmentation.RedactionReport RedactText(this Excise.Core.Document.PdfDocument document, string text, bool caseSensitive = false, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool drawBlackRect = true, bool includeHiddenLayers = true, bool scrubDocumentCarriers = true, bool closeWidth = false) { }
     }
     public static class PdfPageRedactionExtensions
     {
-        public static void RedactArea(this Excise.Core.Document.PdfPage page, Excise.Core.Document.PdfRectangle area, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool scrubDocumentCarriers = true) { }
-        public static void RedactAreas(this Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfRectangle> areas, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool scrubDocumentCarriers = true) { }
+        public static void RedactArea(this Excise.Core.Document.PdfPage page, Excise.Core.Document.PdfRectangle area, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool scrubDocumentCarriers = true, bool closeWidth = false) { }
+        public static void RedactAreas(this Excise.Core.Document.PdfPage page, System.Collections.Generic.IEnumerable<Excise.Core.Document.PdfRectangle> areas, Excise.Core.Text.Segmentation.GlyphRemovalStrategy strategy = 0, bool scrubDocumentCarriers = true, bool closeWidth = false) { }
     }
     public sealed class RedactionCarrierAudit : System.IEquatable<Excise.Core.Text.Segmentation.RedactionCarrierAudit>
     {
