@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using AwesomeAssertions;
 using Xunit;
@@ -88,5 +89,72 @@ public class UnredactCommandTests
             output.Should().Contain("dictionary");
         }
         finally { File.Delete(pdf); }
+    }
+
+    private static string RepoRootPath() => RepoRoot();
+
+    /// <summary>A synthetic corpus case path, or null if the corpus is absent.</summary>
+    private static string? CorpusCase(string idContains, string method)
+    {
+        var dir = Path.Combine(RepoRoot(), "test-pdfs", "redaction-synthetic");
+        if (!Directory.Exists(dir)) return null;
+        return Directory.GetFiles(dir, "*.pdf")
+            .FirstOrDefault(f => Path.GetFileName(f).Contains(idContains)
+                                 && Path.GetFileName(f).Contains(method));
+    }
+
+    // ── difficulty-graded recovery through the actual CLI ──────────────────
+    // The engine's recall@N per band is proven in ResidueRecoveryRecallTests;
+    // these confirm the CLI faithfully EXPOSES that recovery -- easy cases
+    // recover, negative controls do not -- end to end through the process.
+
+    [Fact]
+    public void WidthPreserving_ResidueMode_ListsTheAnswerAmongCandidates()
+    {
+        var pdf = CorpusCase("B1-helvetica12-original", "original");
+        Assert.SkipWhen(pdf == null, "synthetic corpus absent");
+        // Redact the known answer, then residue-recover with a name dictionary.
+        var answer = Path.GetFileNameWithoutExtension(pdf!).Split('-').Last();
+        var redacted = Path.Combine(Path.GetTempPath(), $"ur-{Guid.NewGuid():N}.pdf");
+        var dict = Path.Combine(Path.GetTempPath(), $"dict-{Guid.NewGuid():N}.txt");
+        File.WriteAllLines(dict, new[] { answer, "Zzzzzz", "Qqqqqqqqqq" });
+        try
+        {
+            RunRedact(pdf!, redacted, answer);
+            var (exit, output) = Run(redacted, "--mode", "residue", "--dictionary", dict);
+            exit.Should().Be(4, "a width-preserving redaction leaves residue");
+            output.Should().Contain(answer, "the true answer must be among the width-fit candidates");
+            output.Should().Contain("bits", "residue reports entropy, never asserts");
+        }
+        finally { File.Delete(redacted); File.Delete(dict); }
+    }
+
+    [Fact]
+    public void WidthClosed_ResidueMode_FindsNothing()
+    {
+        var pdf = CorpusCase("B8-", "width-closing");
+        Assert.SkipWhen(pdf == null, "synthetic corpus absent");
+        var dict = Path.Combine(Path.GetTempPath(), $"dict-{Guid.NewGuid():N}.txt");
+        File.WriteAllLines(dict, new[] { "James", "John", "David" });
+        try
+        {
+            var (exit, _) = Run(pdf!, "--mode", "residue", "--dictionary", dict);
+            exit.Should().Be(0, "a width-closed redaction leaves no gap -- the negative control");
+        }
+        finally { File.Delete(dict); }
+    }
+
+    private static void RunRedact(string src, string dst, string term)
+    {
+        var psi = new ProcessStartInfo("dotnet")
+        {
+            RedirectStandardOutput = true, RedirectStandardError = true,
+            UseShellExecute = false, WorkingDirectory = RepoRoot(),
+        };
+        foreach (var a in new[] { "run", "--project", "Excise.Cli", "--no-build", "--", "redact", src, dst, term })
+            psi.ArgumentList.Add(a);
+        using var p = Process.Start(psi)!;
+        p.StandardOutput.ReadToEndAsync(); p.StandardError.ReadToEndAsync();
+        p.WaitForExit(120_000);
     }
 }
