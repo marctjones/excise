@@ -145,6 +145,12 @@ public sealed class RedactionBenchmarkRunner
         public double InkFractionBeforeRegion { get; init; } = -1;
         public double InkFractionInRegion { get; init; } = -1;
 
+        // STRUCTURAL (#1117) — structures a text diff cannot see (pages, links,
+        // bookmarks, form fields, attachments, PDF/A). "" = conserved; otherwise
+        // the specific drops, e.g. "bookmarks 3->0, pdf/a lost". Redaction should
+        // remove the term from carriers, not the carriers themselves.
+        public string StructuralDropped { get; init; } = "";
+
         public string? Error { get; init; }
     }
 
@@ -406,6 +412,18 @@ public sealed class RedactionBenchmarkRunner
             // ── VISUAL (#1141): is the region blank once the box is off? ──
             var (inkBefore, inkAfter) = MeasureInkAxis(path, term, tool);
 
+            // ── STRUCTURAL (#1117): did the redaction drop a structure the
+            //    text diff cannot see? Best-effort — a parse failure on either
+            //    side is not a structural finding.
+            var structuralDropped = "";
+            try
+            {
+                using var sIn = PdfDocument.Open(path);
+                using var sOut = PdfDocument.Open(output);
+                structuralDropped = StructuralInventory.Of(sIn).DroppedVersus(StructuralInventory.Of(sOut));
+            }
+            catch { /* leave "" — inventory needs both sides to parse */ }
+
             // ── RESIDUE: did the layout keep the hole? ────────────────────
             // Page 1 only. This is a sampled signal, not a per-occurrence one:
             // a document whose page 1 reflows and whose page 4 does not will
@@ -446,6 +464,7 @@ public sealed class RedactionBenchmarkRunner
                 InputQpdfOk = inputQpdf?.Success ?? false,
                 InkFractionBeforeRegion = inkBefore,
                 InkFractionInRegion = inkAfter,
+                StructuralDropped = structuralDropped,
             };
         }
         finally { try { File.Delete(output); } catch { /* best effort */ } }
@@ -712,6 +731,15 @@ public sealed class RedactionBenchmarkRunner
                     $"{r.InkFractionBeforeRegion:P1} → {r.InkFractionInRegion:P1} " +
                     $"(text axis says leak={r.LeakOracleText})");
         }
+
+        // STRUCTURAL (#1117): redactions that dropped a structure the text diff
+        // cannot see — a bookmark tree, a link, a form field, an attachment, a
+        // PDF/A claim.
+        var structuralDrops = ok.Where(r => !string.IsNullOrEmpty(r.StructuralDropped)).ToList();
+        _out.WriteLine("");
+        _out.WriteLine($"STRUCTURAL — redactions that dropped an unseen structure: {structuralDrops.Count}");
+        foreach (var r in structuralDrops.Take(20))
+            _out.WriteLine($"  STRUCT {r.Tool} {r.Corpus}/{r.Document}|{r.Term}: {r.StructuralDropped}");
 
         // WHERE THEY DISAGREE is the actionable part: a case both tools handle
         // identically teaches nothing, and a case only one of them fails is a
