@@ -76,10 +76,15 @@ by another page is left intact (its content legitimately remains there).
 > pattern, a soft mask), make sure the redaction passes reach into it too, or
 > it becomes a cover-don't-remove leak.
 
-Known limitation: a Form XObject stored inside a compressed object stream
-(`/ObjStm`) is not pruned from the object stream's bytes (tracked separately);
-forms as ordinary indirect objects — the overwhelmingly common case — are
-fully handled.
+Not a limitation (corrected #1097): a Form XObject **cannot** live inside a
+compressed object stream. ISO 32000-1 §7.5.7 forbids stream objects in an
+`/ObjStm` — and a Form XObject is a stream object (it has `/Length` and a
+`stream`…`endstream` body). So a form is *always* an ordinary indirect object,
+and the flatten/prune passes reach it. The earlier note here claimed the
+opposite ObjStm case was an unpruned leak; that case cannot occur, so the note
+described a mental model of a reachability gap that does not exist. Only a
+form's *dictionary-adjacent* metadata (never its stream) could sit in an ObjStm,
+and that carries no page content to leak.
 
 ---
 

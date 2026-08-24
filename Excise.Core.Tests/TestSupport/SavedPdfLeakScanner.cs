@@ -5,7 +5,7 @@ using System.IO.Compression;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Excise.Core.Tests.Text.Segmentation;
+namespace Excise.TestSupport;
 
 /// <summary>
 /// Search a SAVED PDF for a term in every carrier, <b>including inside

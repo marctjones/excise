@@ -116,9 +116,15 @@ public static class XRayBadRedactionDetector
         {
             using var p = Start(python, $"-c \"{script}\" \"{pdfPath}\"");
             if (p == null) return null;
-            stdout = p.StandardOutput.ReadToEnd();
-            p.StandardError.ReadToEnd();
+            // #1083: drain BOTH pipes concurrently and bound the wait. Reading
+            // stdout to end BEFORE WaitForExit (the previous shape) hangs if the
+            // child never closes stdout, and blocks stderr from draining so a
+            // chatty child can pipe-deadlock. Same fix as PdfOcrService.
+            var outTask = p.StandardOutput.ReadToEndAsync();
+            var errTask = p.StandardError.ReadToEndAsync();
             if (!p.WaitForExit(timeoutMs)) { TryKill(p); return null; }
+            stdout = outTask.GetAwaiter().GetResult();
+            errTask.GetAwaiter().GetResult();
             if (p.ExitCode != 0) return null;
         }
         catch { return null; }

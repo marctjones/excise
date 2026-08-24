@@ -86,8 +86,10 @@ public sealed class ToolResistanceComparisonTests
                 UseShellExecute = false, CreateNoWindow = true };
             foreach (var a in new[] { script, src, dst, term }) psi.ArgumentList.Add(a);
             using var p = Process.Start(psi)!;
-            p.StandardOutput.ReadToEnd(); p.StandardError.ReadToEnd();
+            var outT = p.StandardOutput.ReadToEndAsync();  // #1083: drain before wait
+            var errT = p.StandardError.ReadToEndAsync();
             if (!p.WaitForExit(60_000)) { try { p.Kill(true); } catch { } return false; }
+            outT.GetAwaiter().GetResult(); errT.GetAwaiter().GetResult();
             return p.ExitCode == 0 && File.Exists(dst);
         }
         catch { return false; }

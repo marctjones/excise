@@ -171,9 +171,13 @@ public sealed class RedactionBenchmarkRunner
             foreach (var a in new[] { script, src, dst, term }) psi.ArgumentList.Add(a);
             using var proc = System.Diagnostics.Process.Start(psi);
             if (proc == null) return null;
-            var stdout = proc.StandardOutput.ReadToEnd();
-            proc.StandardError.ReadToEnd();
+            // #1083: drain concurrently, bound the wait -- ReadToEnd before
+            // WaitForExit hangs on a child that never closes stdout.
+            var outT = proc.StandardOutput.ReadToEndAsync();
+            var errT = proc.StandardError.ReadToEndAsync();
             if (!proc.WaitForExit(120_000)) { try { proc.Kill(true); } catch { } return null; }
+            var stdout = outT.GetAwaiter().GetResult();
+            errT.GetAwaiter().GetResult();
             if (proc.ExitCode != 0) return null;
             return int.TryParse(stdout.Trim(), out var n) ? n : 0;
         }
@@ -449,7 +453,7 @@ public sealed class RedactionBenchmarkRunner
     /// </summary>
     private static (bool Leaked, string Context) ClassifyByteHit(byte[] saved, string term)
     {
-        if (Excise.Core.Tests.Text.Segmentation.SavedPdfLeakScanner.FindTerm(saved, term).Count == 0)
+        if (SavedPdfLeakScanner.FindTerm(saved, term).Count == 0)
             return (false, "");
 
         var contexts = new List<string>();
@@ -478,7 +482,7 @@ public sealed class RedactionBenchmarkRunner
         }
 
         ScanSurface(System.Text.Encoding.Latin1.GetString(saved), "file");
-        foreach (var body in Excise.Core.Tests.Text.Segmentation.SavedPdfLeakScanner.StreamBodies(saved))
+        foreach (var body in SavedPdfLeakScanner.StreamBodies(saved))
             ScanSurface(body, "stream");
 
         // FindTerm saw it and no surface here could place it -- UTF-16BE or
@@ -499,7 +503,7 @@ public sealed class RedactionBenchmarkRunner
     private static int CountByteOccurrences(byte[] saved, string term)
     {
         var n = CountOccurrences(System.Text.Encoding.Latin1.GetString(saved), term);
-        foreach (var body in Excise.Core.Tests.Text.Segmentation.SavedPdfLeakScanner.StreamBodies(saved))
+        foreach (var body in SavedPdfLeakScanner.StreamBodies(saved))
             n += CountOccurrences(body, term);
         return n;
     }
