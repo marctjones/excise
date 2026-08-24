@@ -136,6 +136,30 @@ public class PdfDocument : IDisposable
         => ComputeReachableObjectsFrom(Trailer.Values);
 
     /// <summary>
+    /// Every XMP <c>/Metadata</c> stream reachable in the document, not just
+    /// the catalog's. §14.3.2 permits a <c>/Metadata</c> stream on ANY object
+    /// (pages, Form XObjects, images), and a redacted term can survive in a
+    /// page-level packet while the catalog packet is clean (#1129). Distinct
+    /// by object number so a shared packet is scrubbed once.
+    /// </summary>
+    internal IEnumerable<PdfStream> EnumerateMetadataStreams()
+    {
+        var seen = new HashSet<int>();
+        foreach (var objNum in ComputeReachableObjects())
+        {
+            PdfObject obj;
+            try { obj = GetObject(objNum); }
+            catch (Exception ex) when (ex is not OutOfMemoryException) { continue; }
+            if (obj is not PdfDictionary dict) continue;
+
+            var mdRef = dict.GetOptional("Metadata");
+            if (mdRef == null) continue;
+            if (mdRef is PdfReference r && !seen.Add(r.ObjectNum)) continue;
+            if (Resolve(mdRef) is PdfStream md) yield return md;
+        }
+    }
+
+    /// <summary>
     /// Object numbers reachable from the trailer shape emitted by
     /// <see cref="Excise.Core.Writing.PdfDocumentWriter"/>. This intentionally
     /// excludes original-trailer entries that are not preserved on save, such
