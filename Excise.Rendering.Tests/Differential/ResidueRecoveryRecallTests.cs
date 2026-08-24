@@ -116,6 +116,7 @@ public sealed class ResidueRecoveryRecallTests
         _out.WriteLine($"{"band",-6} {"cases",6} {"recall@1",9} {"recall@5",9} {"recall@20",10}  note");
         var byBand = scored.GroupBy(s => s.C.Band).OrderBy(g => g.Key, StringComparer.Ordinal);
         double NegControlWorst = 0;
+        double BpRecallAt20 = 0;
         foreach (var g in byBand)
         {
             var n = g.Count();
@@ -127,10 +128,12 @@ public sealed class ResidueRecoveryRecallTests
                 "B9" => "frontier (defended) -> ~0 today",
                 "Bc" => "monospace -> should be low unique (all same width)",
                 "Bn" => "digit-runs -> hard (few width classes)",
+                "Bp" => "single-anchor (line edge) -> box channel (#1140)",
                 _ => "",
             };
             _out.WriteLine($"{g.Key,-6} {n,6} {At(1),9:P0} {At(5),9:P0} {At(20),10:P0}  {note}");
             if (g.Key is "B6" or "B8") NegControlWorst = Math.Max(NegControlWorst, At(20));
+            if (g.Key == "Bp") BpRecallAt20 = At(20);
         }
 
         _out.WriteLine("");
@@ -147,5 +150,15 @@ public sealed class ResidueRecoveryRecallTests
         NegControlWorst.Should().BeLessThan(0.10,
             "width-closed (B8) and random-string (B6) bands must stay near zero recall; " +
             "a high number means the engine is fabricating candidates, not recovering them");
+
+        // #1140: single-anchor gaps (line-start/line-end) recovered at 0% before
+        // the redaction-box channel — the two-glyph-gulf detector cannot see a
+        // gap with no glyph on one side. The box width leaks it. This floor is
+        // the anti-regression pin: it drops back to 0 the moment box detection
+        // is disabled (verified), while the neg-control assertion above proves
+        // the box channel did not fabricate its way to that number.
+        BpRecallAt20.Should().BeGreaterThan(0.10,
+            "single-anchor (Bp) recall must stay above 0 — the #1140 box channel; " +
+            "if this is 0 the box gap detector stopped finding line-edge redactions");
     }
 }
