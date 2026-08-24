@@ -1729,15 +1729,38 @@ partial class Program
             }
             catch (Exception ex) { Console.Error.WriteLine($"Error: {ex.Message}"); Environment.ExitCode = 1; return; }
 
+            // #1126: quantify — how much leaks, by channel, in bits. Channel 1/2
+            // (text actually present under a box, in low contrast, or in a
+            // carrier) is FULLY recoverable, no bits to guess; channel 3
+            // (advance-width residue) leaves residualEntropyBits per gap. The
+            // boundary the issue draws: report THAT it is recoverable and HOW
+            // MANY bits, never assert the recovered text here.
+            double residueBitsTotal = 0;
+            foreach (dynamic r in residue) residueBitsTotal += (double)r.residualEntropyBits;
+            var quantification = new
+            {
+                findings = certain.Count + residue.Count,
+                fullyRecoverable = certain.Count,
+                widthResidueGaps = residue.Count,
+                widthResidueBitsTotal = Math.Round(residueBitsTotal, 2),
+            };
+
             if (json)
             {
-                Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new { certain, residue },
+                Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new { quantification, certain, residue },
                     new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
             }
             else
             {
                 if (certain.Count == 0 && residue.Count == 0)
                     Console.WriteLine("✓ No recoverable text or measurable residue found.");
+                else
+                    // #1126: the severity-ranked headline — how much, by channel.
+                    Console.WriteLine(
+                        $"QUANTIFICATION — {quantification.findings} finding(s): " +
+                        $"{quantification.fullyRecoverable} FULLY RECOVERABLE (text present), " +
+                        $"{quantification.widthResidueGaps} width-residue gap(s) leaking " +
+                        $"{quantification.widthResidueBitsTotal} bits total.");
                 if (certain.Count > 0)
                 {
                     Console.WriteLine($"✗ CERTAIN — text is actually present ({certain.Count}):");
