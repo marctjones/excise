@@ -166,7 +166,7 @@ public static class HiddenTextDetector
                     if (IsOpaqueObstructive(fillRgb))
                     {
                         foreach (var rect in currentPath)
-                            obstructions.Add(new Obstruction(i, $"{DescribeColor(fillRgb)} filled rectangle", rect));
+                            obstructions.Add(new Obstruction(i, $"{DescribeColor(fillRgb)} filled rectangle", rect, fillRgb));
                     }
                     currentPath.Clear();
                     break;
@@ -195,7 +195,7 @@ public static class HiddenTextDetector
                     if (string.IsNullOrEmpty(text)) break;
                     var matches = finder.FindOperationLetters(text, letters);
                     if (matches.Count == 0) break;
-                    textEntries.Add(new TextEntry(i, text, BoundingBoxOf(matches)));
+                    textEntries.Add(new TextEntry(i, text, BoundingBoxOf(matches), fillRgb));
 
                     // #796: does the active (3,0) symbol cmap spell text that
                     // extraction (honouring /Encoding) does NOT recover? Compare
@@ -222,7 +222,7 @@ public static class HiddenTextDetector
                         var xobj = page.GetXObject(name);
                         if (xobj is PdfStream s && s.GetNameOrNull("Subtype") == "Image")
                         {
-                            obstructions.Add(new Obstruction(i, $"image /{name}", TransformedUnitSquare(ctm)));
+                            obstructions.Add(new Obstruction(i, $"image /{name}", TransformedUnitSquare(ctm), new Rgb(0.5,0.5,0.5)));
                         }
                     }
                     break;
@@ -231,21 +231,39 @@ public static class HiddenTextDetector
                     // Inline image (#354): fills the CTM-mapped unit square,
                     // same as a named image XObject — count it as an obstruction
                     // so text drawn underneath it is flagged as hidden.
-                    obstructions.Add(new Obstruction(i, "inline image", TransformedUnitSquare(ctm)));
+                    obstructions.Add(new Obstruction(i, "inline image", TransformedUnitSquare(ctm), new Rgb(0.5,0.5,0.5)));
                     break;
             }
         }
 
-        // Pairing: for each text entry, does any later obstruction cover
-        // it by majority area? One hit is enough; don't report duplicates.
+        // Pairing A: text UNDER a later obstruction (the classic black-box case).
+        // Pairing B (#1131): text ON TOP of an EARLIER fill whose colour barely
+        // contrasts with the text's own -- white-on-black, black-on-black,
+        // low-contrast. Invisible to a human, fully extractable, and missed by
+        // pairing A because the covering shape is drawn BEFORE the text.
         foreach (var t in textEntries)
         {
+            var reported = false;
             foreach (var o in obstructions)
             {
-                if (o.Index <= t.Index) continue;
+                if (o.Index <= t.Index) continue;                 // later: covers the text
                 if (CoversMajority(o.Bbox, t.Bbox))
                 {
                     records.Add(new HiddenTextRecord(pageNumber, t.Text, t.Bbox, o.Description));
+                    reported = true;
+                    break;
+                }
+            }
+            if (reported) continue;
+
+            foreach (var o in obstructions)
+            {
+                if (o.Index >= t.Index) continue;                 // earlier: behind the text
+                if (Contrast(t.Fill, o.Fill) < LowContrastThreshold &&
+                    CoversMajority(o.Bbox, t.Bbox))
+                {
+                    records.Add(new HiddenTextRecord(pageNumber, t.Text, t.Bbox,
+                        $"low-contrast text ({DescribeColor(t.Fill)}) on {DescribeColor(o.Fill)} background"));
                     break;
                 }
             }
@@ -283,6 +301,24 @@ public static class HiddenTextDetector
     /// </summary>
     private static bool IsOpaqueObstructive(Rgb c)
         => !(c.R >= 0.95 && c.G >= 0.95 && c.B >= 0.95);
+
+    /// <summary>
+    /// #1131: a fill whose colour is close to the text drawn over it hides that
+    /// text as surely as a box does. Uses full RGB distance, NOT luminance:
+    /// pure red on black has low luminance contrast (0.21) but is chromatically
+    /// distinct and readable, so a luminance-only test false-positives on it.
+    /// Euclidean distance separates black-on-black (0, hidden) from red-on-black
+    /// (1.0, visible) and white-on-black (1.73, visible). 0.20 flags only
+    /// near-matching colours.
+    /// </summary>
+    private const double LowContrastThreshold = 0.20;
+
+    /// <summary>Euclidean RGB distance of two fills; 0 identical, ~1.73 max.</summary>
+    private static double Contrast(Rgb a, Rgb b)
+    {
+        var dr = a.R - b.R; var dg = a.G - b.G; var db = a.B - b.B;
+        return Math.Sqrt(dr * dr + dg * dg + db * db);
+    }
 
     private static string DescribeColor(Rgb c)
     {
@@ -420,8 +456,8 @@ public static class HiddenTextDetector
     private static PdfRectangle TransformedUnitSquare(Matrix23 m)
         => TransformRect(m, 0, 0, 1, 1);
 
-    private readonly record struct TextEntry(int Index, string Text, PdfRectangle Bbox);
-    private readonly record struct Obstruction(int Index, string Description, PdfRectangle Bbox);
+    private readonly record struct TextEntry(int Index, string Text, PdfRectangle Bbox, Rgb Fill);
+    private readonly record struct Obstruction(int Index, string Description, PdfRectangle Bbox, Rgb Fill);
     private readonly record struct Rgb(double R, double G, double B);
 
     /// <summary>Minimal 2×3 affine (PDF spec 8.3.3).</summary>

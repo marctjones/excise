@@ -48,18 +48,21 @@ public class HiddenTextDetectorTests
     }
 
     [Fact]
-    public void Scan_OverlayDrawnBeforeText_IsNotFlagged()
+    public void Scan_OverlayDrawnBeforeText_SameColour_IsFlagged()
     {
-        // The overlay is drawn first, then the text on top. The text
-        // is visible, not hidden. Stream order matters.
+        // #1131: the overlay is drawn first, then text on top -- but the text
+        // sets no colour, so it inherits the overlay's BLACK fill. Black text
+        // on a black box is invisible to a human and fully extractable. The
+        // old test asserted this was "visible, not hidden" and passed clean;
+        // that was the bug -- x-ray and excise audit both missed it.
         var pdf = BuildPdfWithTextAndOverlay(
             "ON_TOP", textX: 100, textY: 700,
             overlayKind: OverlayKind.BlackFilledRectangle,
             overlayBeforeText: true);
 
         using var doc = PdfDocument.Open(pdf);
-        HiddenTextDetector.Scan(doc).Should().BeEmpty(
-            "an overlay drawn before the text is behind it — not an audit concern");
+        HiddenTextDetector.Scan(doc).Should().NotBeEmpty(
+            "black text on a black overlay is hidden by matching colour, not by covering");
     }
 
     [Fact]
