@@ -698,6 +698,14 @@ partial class Program
             Description = "Match case exactly (default: case-insensitive)",
             DefaultValueFactory = _ => false,
         };
+        var closeWidthOption = new Option<bool>("--close-width")
+        {
+            // #1145 — destroys the advance-width residue channel (#1116) by
+            // collapsing the gap a removed run leaves, at the cost of moving
+            // surviving text. Opt-in, never the default (#1045).
+            Description = "Close the width gap so the removed text's width can't be recovered (moves surviving text)",
+            DefaultValueFactory = _ => false,
+        };
         var passwordOption = new Option<string?>("--password")
         {
             Description = "User password for encrypted PDFs. The output is re-encrypted with this " +
@@ -730,7 +738,7 @@ partial class Program
             "redact",
             "Remove text from a PDF (glyph-level removal; text extraction will not find it)")
         {
-            inputArg, outputArg, textArg, caseSensitiveOption, passwordOption, allowDecryptOption, strictOption, allowLowConfidenceOption
+            inputArg, outputArg, textArg, caseSensitiveOption, closeWidthOption, passwordOption, allowDecryptOption, strictOption, allowLowConfidenceOption
         };
 
         command.SetAction(parseResult =>
@@ -739,6 +747,7 @@ partial class Program
             var output = parseResult.GetValue(outputArg)!;
             var text = parseResult.GetValue(textArg)!;
             var caseSensitive = parseResult.GetValue(caseSensitiveOption);
+            var closeWidth = parseResult.GetValue(closeWidthOption);
             var password = parseResult.GetValue(passwordOption);
             var allowDecrypt = parseResult.GetValue(allowDecryptOption);
             var strict = parseResult.GetValue(strictOption);
@@ -758,7 +767,7 @@ partial class Program
 
             try
             {
-                var (count, carrierNotes) = RunRedactWithNotes(input.FullName, output.FullName, text, caseSensitive, allowDecrypt, strict, allowLowConfidence, password);
+                var (count, carrierNotes) = RunRedactWithNotes(input.FullName, output.FullName, text, caseSensitive, allowDecrypt, strict, allowLowConfidence, password, closeWidth);
                 Console.WriteLine($"Redacted {count} occurrence(s) of '{text}'");
                 foreach (var note in carrierNotes)
                     Console.WriteLine($"  note: {note}");
@@ -802,9 +811,9 @@ partial class Program
     internal static int RunRedact(
         string inputPath, string outputPath, string text, bool caseSensitive,
         bool allowDecrypt = false, bool strict = false, bool allowLowConfidence = false,
-        string? password = null)
+        string? password = null, bool closeWidth = false)
         => RunRedactWithNotes(inputPath, outputPath, text, caseSensitive,
-               allowDecrypt, strict, allowLowConfidence, password).Count;
+               allowDecrypt, strict, allowLowConfidence, password, closeWidth).Count;
 
     /// <summary>
     /// Redact, and also report the carriers the redaction could not examine
@@ -820,7 +829,7 @@ partial class Program
     internal static (int Count, IReadOnlyList<string> CarrierNotes) RunRedactWithNotes(
         string inputPath, string outputPath, string text, bool caseSensitive,
         bool allowDecrypt = false, bool strict = false, bool allowLowConfidence = false,
-        string? password = null)
+        string? password = null, bool closeWidth = false)
     {
         using var doc = OpenInputForOutput(inputPath, outputPath, password);
 
@@ -845,7 +854,7 @@ partial class Program
         // #1089: the CLI prints VERIFIED removals. The old count was matches
         // located per pass -- how one occurrence printed as "Redacted 3" (#1043)
         // and how a term that was never removed still reported success.
-        var redaction = doc.RedactText(text, caseSensitive);
+        var redaction = doc.RedactText(text, caseSensitive, closeWidth: closeWidth);
         var count = redaction.VerifiedRemovals;
 
         // #916/#905 — collect what the redaction could not examine BEFORE

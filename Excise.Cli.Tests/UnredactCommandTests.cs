@@ -209,7 +209,43 @@ public class UnredactCommandTests
         finally { File.Delete(src); File.Delete(dst); File.Delete(dict); }
     }
 
-    private static void RunRedact(string src, string dst, string term)
+    [Fact]
+    public void WidthClosingRedaction_DefeatsResidueRecovery_WhereDefaultDoesNot()
+    {
+        // #1145 — the defence for the leak #1116 measured and #1127 exploits.
+        var src = Path.Combine(Path.GetTempPath(), $"wc-src-{Guid.NewGuid():N}.pdf");
+        var def = Path.Combine(Path.GetTempPath(), $"wc-def-{Guid.NewGuid():N}.pdf");
+        var wc = Path.Combine(Path.GetTempPath(), $"wc-wc-{Guid.NewGuid():N}.pdf");
+        var dict = Path.Combine(Path.GetTempPath(), $"wc-dict-{Guid.NewGuid():N}.txt");
+        try
+        {
+            File.WriteAllBytes(src, Encoding.Latin1.GetBytes(
+                "%PDF-1.7\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n" +
+                "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n" +
+                "3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] " +
+                "/Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>\nendobj\n" +
+                "4 0 obj\n<< /Length 46 >>\nstream\nBT /F1 18 Tf 72 700 Td (AAASECRETWORDZZZ) Tj ET\nendstream\nendobj\n" +
+                "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>\nendobj\n" +
+                "trailer\n<< /Size 6 /Root 1 0 R >>\n%%EOF"));
+            File.WriteAllText(dict, "SECRETWORD\nHELLOWORLD\nBANANARAMA\n");
+
+            RunRedact(src, def, "SECRETWORD");                     // default: width-preserving
+            RunRedact(src, wc, "SECRETWORD", "--close-width");     // #1145: width-closing
+
+            // Default output leaks the width -> recoverable (exit 4).
+            var (defExit, defOut) = Run(def, "--mode", "residue", "--dictionary", dict);
+            defExit.Should().Be(4, "the default redaction leaves the width; residue recovers it");
+            defOut.Should().Contain("RECOVERED \"SECRETWORD\"");
+
+            // Width-closed output leaks nothing -> clean (exit 0).
+            var (wcExit, wcOut) = Run(wc, "--mode", "residue", "--dictionary", dict);
+            wcExit.Should().Be(0, "width-closing destroys the residue channel; nothing to recover");
+            wcOut.Should().Contain("No recoverable text");
+        }
+        finally { File.Delete(src); File.Delete(def); File.Delete(wc); File.Delete(dict); }
+    }
+
+    private static void RunRedact(string src, string dst, string term, params string[] extra)
     {
         var psi = new ProcessStartInfo("dotnet")
         {
@@ -218,6 +254,7 @@ public class UnredactCommandTests
         };
         foreach (var a in new[] { "run", "--project", "Excise.Cli", "--no-build", "--", "redact", src, dst, term })
             psi.ArgumentList.Add(a);
+        foreach (var a in extra) psi.ArgumentList.Add(a);
         using var p = Process.Start(psi)!;
         p.StandardOutput.ReadToEndAsync(); p.StandardError.ReadToEndAsync();
         p.WaitForExit(120_000);

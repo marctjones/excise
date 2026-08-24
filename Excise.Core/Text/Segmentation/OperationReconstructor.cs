@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Excise.Core.Content;
 using Excise.Core.Primitives;
 
@@ -34,6 +35,18 @@ public class OperationReconstructor
         public int TextRenderingMode { get; init; } = 0;
         public double TextRise { get; init; } = 0;
         public double TextLeading { get; init; } = 0;
+
+        /// <summary>
+        /// #1145 — WIDTH-CLOSING mode (opt-in, NOT the default). When true, the
+        /// surviving runs on each baseline are shifted left so an oversized gap
+        /// left by a removed run is capped to a single space, instead of being
+        /// preserved at the removed string's exact width. This DESTROYS the
+        /// advance-width residue channel #1116 measures (the gap no longer
+        /// equals the removed width), at the cost of moving surviving text —
+        /// #1045's decision seen from the attacker side. Default false keeps the
+        /// width-preserving behaviour byte-for-byte.
+        /// </summary>
+        public bool CloseWidth { get; init; } = false;
     }
 
     /// <summary>
@@ -117,8 +130,19 @@ public class OperationReconstructor
             }
         }
 
+        // #1145: when width-closing, compute a per-segment leftward shift that
+        // caps the gap after each removed run to one space. Only when the option
+        // is set — otherwise the map is empty and every segment keeps its exact
+        // source X (the width-preserving default, unchanged).
+        var closeShift = context.CloseWidth
+            ? ComputeCloseWidthShifts(segments, fontSize)
+            : null;
+        double ShiftOf(TextSegment s) =>
+            closeShift != null && closeShift.TryGetValue(s, out var d) ? d : 0.0;
+
         foreach (var segment in segments)
         {
+            var dx = ShiftOf(segment);
             // Producers commonly use custom encodings and TJ adjustments between
             // glyphs. Re-encoding decoded Unicode can turn a simple-font code
             // into UTF-16 bytes, while collapsing a CID run to one Tj discards
@@ -132,7 +156,7 @@ public class OperationReconstructor
             {
                 foreach (var match in glyphs)
                 {
-                    AddPosition(match.Letter.StartX, match.Letter.StartY);
+                    AddPosition(match.Letter.StartX + dx, match.Letter.StartY);
                     ops.Add(new ContentOperator("Tj", new PdfObject[]
                     {
                         new PdfString(match.RawBytes!),
@@ -141,7 +165,7 @@ public class OperationReconstructor
                 continue;
             }
 
-            AddPosition(segment.StartX, segment.StartY);
+            AddPosition(segment.StartX + dx, segment.StartY);
 
             // CID / ToUnicode fonts round-trip via raw bytes — Unicode text
             // can't be re-encoded without the original code mapping. When the
@@ -161,5 +185,55 @@ public class OperationReconstructor
         ops.Add(ContentOperator.EndText());
         ops.Add(ContentOperator.RestoreState());
         return ops;
+    }
+
+    /// <summary>
+    /// #1145 — the width-closing shift per segment. On each baseline, walk the
+    /// surviving segments left-to-right and cap the gap before each one to a
+    /// single space: an oversized gap (a removed run) collapses; an
+    /// already-normal gap is untouched. Returns the leftward delta to apply to
+    /// each segment's X. Nothing here runs unless width-closing is opted into.
+    /// </summary>
+    private static Dictionary<TextSegment, double> ComputeCloseWidthShifts(
+        List<TextSegment> segments, double fontSize)
+    {
+        var shift = new Dictionary<TextSegment, double>();
+        // A single space is ~0.25em; cap kept gaps there so the residue channel
+        // sees a space, never the removed string's width.
+        var spaceCap = 0.25 * (fontSize > 0 ? fontSize : 12.0);
+
+        foreach (var line in segments.GroupBy(s => Math.Round(s.StartY, 0)))
+        {
+            var ordered = line.OrderBy(s => s.StartX).ToList();
+            double prevEndOrig = double.NaN, prevEndClosed = double.NaN;
+            foreach (var seg in ordered)
+            {
+                var w = SegmentWidth(seg);
+                double closedStart;
+                if (double.IsNaN(prevEndOrig))
+                {
+                    closedStart = seg.StartX;                 // first run stays put
+                }
+                else
+                {
+                    var origGap = seg.StartX - prevEndOrig;
+                    var keptGap = Math.Min(Math.Max(0, origGap), spaceCap);
+                    closedStart = prevEndClosed + keptGap;
+                }
+                shift[seg] = closedStart - seg.StartX;
+                prevEndOrig = seg.StartX + w;
+                prevEndClosed = closedStart + w;
+            }
+        }
+        return shift;
+    }
+
+    /// <summary>Rendered width of a surviving segment, from its glyph extents.</summary>
+    private static double SegmentWidth(TextSegment seg)
+    {
+        if (seg.LetterMatches.Count == 0) return 0;
+        var left = seg.LetterMatches.Min(m => m.Letter.StartX);
+        var right = seg.LetterMatches.Max(m => m.Letter.StartX + m.Letter.Width);
+        return Math.Max(0, right - left);
     }
 }

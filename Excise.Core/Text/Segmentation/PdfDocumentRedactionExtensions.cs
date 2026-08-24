@@ -86,7 +86,8 @@ public static class PdfDocumentRedactionExtensions
         GlyphRemovalStrategy strategy = GlyphRemovalStrategy.AnyOverlap,
         bool drawBlackRect = true,
         bool includeHiddenLayers = true,
-        bool scrubDocumentCarriers = true)
+        bool scrubDocumentCarriers = true,
+        bool closeWidth = false)   // #1145 — opt-in width-closing (destroys the residue channel)
     {
         if (document == null) throw new ArgumentNullException(nameof(document));
 
@@ -192,7 +193,7 @@ public static class PdfDocumentRedactionExtensions
                         // every RedactText call — including the documented case
                         // where a term below the sanitizer's 3-character floor
                         // deliberately leaves carriers alone.
-                        page.RedactAreas(contentAreas, strategy, scrubDocumentCarriers: false);
+                        page.RedactAreas(contentAreas, strategy, scrubDocumentCarriers: false, closeWidth: closeWidth);
                     }
 
                     if (drawBlackRect)
