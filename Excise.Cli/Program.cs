@@ -72,6 +72,7 @@ partial class Program
             CreateAddFieldCommand(),
             CreateAutodetectFieldsCommand(),
             CreateAuditCommand(),
+            CreateUnredactCommand(),
             CreateOcrCommand(),
             CreateMakeSearchableCommand(),
             CreateEncryptCommand(),
@@ -1616,6 +1617,118 @@ partial class Program
                 Console.Error.WriteLine($"Error: {ex.Message}");
                 Environment.ExitCode = 1;
             }
+        });
+
+        return command;
+    }
+
+    /// <summary>
+    /// excise unredact &lt;file&gt; -- point at a suspect PDF and recover / estimate
+    /// what a redaction leaked. Two structurally separate modes (#1132/#1146):
+    /// CERTAIN reports text that is actually present (under a box, low-contrast,
+    /// or in an unscrubbed carrier); RESIDUE reports width-fit candidates plus
+    /// residual entropy in bits, and NEVER asserts an answer.
+    /// </summary>
+    static Command CreateUnredactCommand()
+    {
+        var fileArg = new Argument<FileInfo>("file") { Description = "PDF suspected of a weak redaction" };
+        var modeOption = new Option<string>("--mode")
+        {
+            Description = "certain (text actually present) | residue (width-leak candidates) | both",
+            DefaultValueFactory = _ => "certain",
+        };
+        var dictOption = new Option<FileInfo?>("--dictionary")
+        {
+            Description = "Wordlist (one candidate per line) for residue mode",
+        };
+        var toleranceOption = new Option<double>("--tolerance")
+        {
+            Description = "Width-fit tolerance in points (residue mode)",
+            DefaultValueFactory = _ => 0.5,
+        };
+        var maxOption = new Option<int>("--max-candidates")
+        {
+            Description = "Cap candidates per gap (residue mode)",
+            DefaultValueFactory = _ => 200,
+        };
+        var jsonOption = new Option<bool>("--json") { Description = "Machine-readable JSON output" };
+
+        var command = new Command("unredact",
+            "Recover or estimate text a redaction leaked (audit; reports constraints, not asserted secrets)")
+        {
+            fileArg, modeOption, dictOption, toleranceOption, maxOption, jsonOption,
+        };
+
+        command.SetAction(parseResult =>
+        {
+            var file = parseResult.GetValue(fileArg)!;
+            var mode = (parseResult.GetValue(modeOption) ?? "certain").ToLowerInvariant();
+            var dict = parseResult.GetValue(dictOption);
+            var tol = parseResult.GetValue(toleranceOption);
+            var maxC = parseResult.GetValue(maxOption);
+            var json = parseResult.GetValue(jsonOption);
+
+            if (!file.Exists) { Console.Error.WriteLine($"File not found: {file.FullName}"); Environment.ExitCode = 1; return; }
+            if (mode is not ("certain" or "residue" or "both"))
+            { Console.Error.WriteLine("--mode must be certain, residue, or both"); Environment.ExitCode = 2; return; }
+
+            var certain = new List<object>();
+            var residue = new List<object>();
+            try
+            {
+                if (mode is "certain" or "both")
+                {
+                    using var doc = PdfDocument.Open(file.FullName);
+                    foreach (var h in Excise.Core.Text.Segmentation.HiddenTextDetector.Scan(doc))
+                        certain.Add(new { page = h.PageNumber, text = h.Text, hiddenBy = h.HiddenBy,
+                            x = Math.Round(h.BoundingBox.Left, 1), y = Math.Round(h.BoundingBox.Bottom, 1) });
+                }
+
+                if (mode is "residue" or "both")
+                {
+                    if (dict == null || !dict.Exists)
+                    { Console.Error.WriteLine("residue mode needs --dictionary <wordlist>"); Environment.ExitCode = 2; return; }
+                    var words = File.ReadAllLines(dict.FullName)
+                        .Select(w => w.Trim()).Where(w => w.Length > 0).Distinct().ToList();
+                    var recs = Excise.Rendering.Differential.ResidueRecoveryEngine.Recover(
+                        file.FullName, words,
+                        new Excise.Rendering.Differential.ResidueRecoveryEngine.Options(
+                            ExactTolerancePt: tol, MaxCandidates: maxC, RequireMutoolCorroboration: false));
+                    foreach (var r in recs)
+                        residue.Add(new { page = r.Gap.Page, gapWidthPt = Math.Round(r.Gap.GapWidthPt, 2),
+                            font = r.Gap.Font, sizePt = r.Gap.SizePt, metricSource = r.Gap.MetricSource.ToString(),
+                            candidatesFit = r.CandidatesFit.Count, residualEntropyBits = Math.Round(r.ResidualEntropyBits, 2),
+                            candidates = r.CandidatesFit.Take(20).ToArray(), status = r.Status });
+                }
+            }
+            catch (Exception ex) { Console.Error.WriteLine($"Error: {ex.Message}"); Environment.ExitCode = 1; return; }
+
+            if (json)
+            {
+                Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new { certain, residue },
+                    new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+            }
+            else
+            {
+                if (certain.Count == 0 && residue.Count == 0)
+                    Console.WriteLine("✓ No recoverable text or measurable residue found.");
+                if (certain.Count > 0)
+                {
+                    Console.WriteLine($"✗ CERTAIN — text is actually present ({certain.Count}):");
+                    foreach (dynamic c in certain)
+                        Console.WriteLine($"  page {c.page} ({c.x},{c.y}) [{c.hiddenBy}]: \"{c.text}\"");
+                }
+                if (residue.Count > 0)
+                {
+                    Console.WriteLine($"~ RESIDUE — candidates from width leak, NOT the answer ({residue.Count} gap(s)):");
+                    foreach (dynamic r in residue)
+                        Console.WriteLine($"  page {r.page} gap {r.gapWidthPt}pt {r.font}: " +
+                            $"{r.candidatesFit} fit, {r.residualEntropyBits} bits -> [{string.Join(", ", (string[])r.candidates)}]");
+                }
+            }
+
+            // Headline via exit code: 0 clean, 3 recoverable text, 4 residue only.
+            Environment.ExitCode = certain.Count > 0 ? 3 : residue.Count > 0 ? 4 : 0;
         });
 
         return command;
