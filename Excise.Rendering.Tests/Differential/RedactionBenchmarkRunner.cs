@@ -159,10 +159,30 @@ public sealed class RedactionBenchmarkRunner
     /// benchmark that can only measure the tool that wrote it is a
     /// self-assessment.
     /// </summary>
+    // #1121 fairness rules, decided up front (written into the harness before it
+    // is run, not after seeing results):
+    //   1. Every tool gets the SAME target term, translated only as its API needs.
+    //   2. Every tool runs in its DOCUMENTED BEST mode — pymupdf removes touched
+    //      images, itext uses pdfSweep autoSweep, raster blacks the region in
+    //      pixel space (each adapter's header records which). A tool run in a
+    //      weaker mode than its docs recommend measures the harness author, not
+    //      the tool.
+    //   3. A crash is a RECORDED result (RunAdapter returns null -> a row with an
+    //      Error), never an exclusion — dropping the documents a tool fails on is
+    //      how a benchmark flatters the tool it measures.
+    //   4. Only OPEN-SOURCE tools are wired: PyMuPDF, iText pdfSweep, the raster
+    //      baseline (#1121). Proprietary Acrobat is deliberately out.
+    // The assertion side stays one-directional (excise <= references on
+    // collateral); "excise must match tool X" would elect a redactor (#1015/#932).
     private static IEnumerable<string> Tools()
     {
         yield return "excise";
-        if (PyMuPdfPython() != null) yield return "pymupdf";
+        if (PyMuPdfPython() != null)
+        {
+            yield return "pymupdf";
+            yield return "raster";   // #1121 — the trade-off anchor (rasterises everything)
+        }
+        if (ItextRunnable()) yield return "itext";   // #1121 — the dedicated redactor
     }
 
     /// <summary>The x-ray venv python, which also carries PyMuPDF.</summary>
@@ -176,8 +196,41 @@ public sealed class RedactionBenchmarkRunner
     /// Run a competitor as a subprocess. Returns the occurrence count it
     /// reports, or null when it failed — which is RECORDED, never skipped.
     /// </summary>
+    /// <summary>iText 7 + pdfSweep jars (scripts/download-itext.sh) and a java.</summary>
+    private static bool ItextRunnable() =>
+        ItextClasspath() != null
+        && File.Exists(Path.Combine(RepoRoot(), "scripts", "ItextRedactor.java"))
+        && PdfBoxReferenceRedactor.IsAvailable;   // reuses the #1042 java resolution
+
+    private static string? ItextClasspath()
+    {
+        var dir = Path.Combine(RepoRoot(), "tools", "vendor", "itext");
+        if (!Directory.Exists(dir)) return null;
+        var jars = Directory.GetFiles(dir, "*.jar");
+        return jars.Length > 0 ? string.Join(Path.PathSeparator, jars) : null;
+    }
+
     private static int? RunAdapter(string tool, string src, string dst, string term)
     {
+        System.Diagnostics.ProcessStartInfo psi;
+        if (tool == "itext")
+        {
+            // iText is a Java tool (#1121) — dispatch java + the pdfSweep driver,
+            // not the python interpreter the others use.
+            var java = System.Environment.GetEnvironmentVariable("EXCISE_JAVA_COMMAND")
+                       ?? (File.Exists("/opt/homebrew/opt/openjdk/bin/java") ? "/opt/homebrew/opt/openjdk/bin/java" : "java");
+            var cp = ItextClasspath();
+            var driver = Path.Combine(RepoRoot(), "scripts", "ItextRedactor.java");
+            if (cp == null || !File.Exists(driver)) return null;
+            psi = new System.Diagnostics.ProcessStartInfo(java)
+            {
+                RedirectStandardOutput = true, RedirectStandardError = true,
+                UseShellExecute = false, CreateNoWindow = true,
+            };
+            foreach (var a in new[] { "--class-path", cp, driver, src, dst, term }) psi.ArgumentList.Add(a);
+            return RunAndParse(psi);
+        }
+
         var python = PyMuPdfPython();
         if (python == null) return null;
         var script = Path.Combine(RepoRoot(), "scripts", "benchmark-adapters", $"redact-{tool}.py");
@@ -185,12 +238,26 @@ public sealed class RedactionBenchmarkRunner
 
         try
         {
-            var psi = new System.Diagnostics.ProcessStartInfo(python)
+            psi = new System.Diagnostics.ProcessStartInfo(python)
             {
                 RedirectStandardOutput = true, RedirectStandardError = true,
                 UseShellExecute = false, CreateNoWindow = true,
             };
             foreach (var a in new[] { script, src, dst, term }) psi.ArgumentList.Add(a);
+            return RunAndParse(psi);
+        }
+        catch { return null; }
+    }
+
+    /// <summary>
+    /// Run an adapter subprocess and return the occurrence count it reports as
+    /// the LAST integer on stdout (Java tools prefix logging noise), or null on
+    /// any failure — which the caller RECORDS, never silently skips.
+    /// </summary>
+    private static int? RunAndParse(System.Diagnostics.ProcessStartInfo psi)
+    {
+        try
+        {
             using var proc = System.Diagnostics.Process.Start(psi);
             if (proc == null) return null;
             // #1083: drain concurrently, bound the wait -- ReadToEnd before
@@ -201,7 +268,8 @@ public sealed class RedactionBenchmarkRunner
             var stdout = outT.GetAwaiter().GetResult();
             errT.GetAwaiter().GetResult();
             if (proc.ExitCode != 0) return null;
-            return int.TryParse(stdout.Trim(), out var n) ? n : 0;
+            var m = System.Text.RegularExpressions.Regex.Matches(stdout, @"\b(\d+)\b");
+            return m.Count > 0 ? int.Parse(m[m.Count - 1].Groups[1].Value) : 0;
         }
         catch { return null; }
     }
