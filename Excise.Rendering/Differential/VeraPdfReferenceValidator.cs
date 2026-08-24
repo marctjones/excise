@@ -56,9 +56,11 @@ public static class VeraPdfReferenceValidator
             psi.ArgumentList.Add("--version");
             using var p = Process.Start(psi);
             if (p == null) return false;
-            p.StandardOutput.ReadToEnd();
-            p.StandardError.ReadToEnd();
-            return p.WaitForExit(20_000) && p.ExitCode == 0;
+            var outT = p.StandardOutput.ReadToEndAsync();  // #1083
+            var errT = p.StandardError.ReadToEndAsync();
+            var ok = p.WaitForExit(20_000);
+            outT.GetAwaiter().GetResult(); errT.GetAwaiter().GetResult();
+            return ok && p.ExitCode == 0;
         }
         catch { return false; }
     });

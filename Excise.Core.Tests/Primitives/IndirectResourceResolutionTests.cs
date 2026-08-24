@@ -100,7 +100,7 @@ public class IndirectResourceResolutionTests
         using var ms = new MemoryStream();
         doc.Save(ms);
 
-        Text.Segmentation.SavedPdfLeakScanner.FindTerm(ms.ToArray(), Secret).Should().BeEmpty(
+        SavedPdfLeakScanner.FindTerm(ms.ToArray(), Secret).Should().BeEmpty(
             "the form is only reachable by resolving /XObject; before #1050 excise saw " +
             "no forms at all and left the name in the file behind a black box");
     }

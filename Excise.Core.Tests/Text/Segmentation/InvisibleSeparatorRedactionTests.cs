@@ -170,5 +170,5 @@ public class InvisibleSeparatorRedactionTests
         // The hand-rolled encoding concatenation this replaced could not, and
         // excise compresses on save — that blindness declared #1040's leaking
         // output clean. SavedPdfLeakScannerTests proves it.
-        Excise.Core.Tests.Text.Segmentation.SavedPdfLeakScanner.AllCarriersText(saved);
+        SavedPdfLeakScanner.AllCarriersText(saved);
 }

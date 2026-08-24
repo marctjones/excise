@@ -63,7 +63,7 @@
          Duplicating it is the drift shape this project keeps paying for; a
          whole TestSupport project for one class is not worth its weight.
          Precedent: the Inconsolata.cff link in Excise.Rendering.Tests. -->
-    <Compile Include="../Excise.Core.Tests/Text/Segmentation/SavedPdfLeakScanner.cs" Link="TestSupport/SavedPdfLeakScanner.cs" />
+    <Compile Include="../Excise.Core.Tests/TestSupport/SavedPdfLeakScanner.cs" Link="TestSupport/SavedPdfLeakScanner.cs" />
   </ItemGroup>
 
 </Project>

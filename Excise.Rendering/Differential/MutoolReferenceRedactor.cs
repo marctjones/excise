@@ -104,14 +104,18 @@ public static class MutoolReferenceRedactor
             using var proc = Process.Start(psi);
             if (proc == null) return new ReferenceRedactionResult(0, "could not start mutool");
 
-            var stdout = proc.StandardOutput.ReadToEnd();
-            var stderr = proc.StandardError.ReadToEnd();
+            // #1083: drain concurrently, bound the wait.
+            var outT = proc.StandardOutput.ReadToEndAsync();
+            var errT = proc.StandardError.ReadToEndAsync();
 
             if (!proc.WaitForExit(timeoutMs))
             {
                 try { proc.Kill(entireProcessTree: true); } catch { /* best effort */ }
                 return new ReferenceRedactionResult(0, $"mutool timed out after {timeoutMs}ms");
             }
+
+            var stdout = outT.GetAwaiter().GetResult();
+            var stderr = errT.GetAwaiter().GetResult();
 
             if (proc.ExitCode != 0)
                 return new ReferenceRedactionResult(0, $"mutool exited {proc.ExitCode}: {stderr.Trim()}");

@@ -208,6 +208,6 @@ public class FullwidthFormsRedactionTests
         // this replaced could not see into a compressed stream, and excise
         // compresses on save — it declared #1040's leaking output clean.
         // See SavedPdfLeakScannerTests for the proof of that blindness.
-        return Excise.Core.Tests.Text.Segmentation.SavedPdfLeakScanner.AllCarriersText(saved);
+        return SavedPdfLeakScanner.AllCarriersText(saved);
     }
 }
