@@ -47,9 +47,53 @@ public sealed class RedactionBenchmarkRunner
     private readonly ITestOutputHelper _out;
     public RedactionBenchmarkRunner(ITestOutputHelper o) { _out = o; }
 
+    /// <summary>
+    /// What actually happened to the term, in the only three grades that
+    /// differ in what an attacker can do with the result.
+    ///
+    /// <para>Collapsing these into "leaked / did not leak" loses the
+    /// distinction that matters most: RECOVERABLE means someone reads the
+    /// secret, RESIDUE means someone narrows it down. They call for different
+    /// fixes and carry different risk, and a single boolean says neither.</para>
+    /// </summary>
+    private enum Verdict
+    {
+        /// <summary>Could not be measured — the tool threw, or an oracle refused.</summary>
+        Unmeasured,
+
+        /// <summary>
+        /// The exact term can be read back out of the output — by an
+        /// extractor, by x-ray under a covering box, or from the saved bytes.
+        /// No inference required. The worst grade, and the only one where the
+        /// secret is definitely disclosed.
+        /// </summary>
+        Recoverable,
+
+        /// <summary>
+        /// The term is gone from every carrier we can search, but the output
+        /// still carries measurable information ABOUT it: the layout kept the
+        /// gap, so the width of the removed string survives and constrains
+        /// what it could have been. Recovery needs guessing and a dictionary
+        /// — see #1116, which quantifies it in bits.
+        /// </summary>
+        RemovedWithResidue,
+
+        /// <summary>
+        /// Gone, and the layout closed up behind it, so no width channel
+        /// remains. Note this is not free: closing up moves the surviving
+        /// text, which the collateral columns will show.
+        /// </summary>
+        Removed,
+    }
+
     /// <summary>One case. Serialised verbatim; add fields, never repurpose them.</summary>
     private sealed record Row
     {
+        public string Tool { get; init; } = "excise";
+        /// <summary>Recoverable / RemovedWithResidue / Removed. See <see cref="Verdict"/>.</summary>
+        public string Verdict { get; init; } = "Unmeasured";
+        /// <summary>Null when the gap could not be judged (nothing removed on page 1, or no oracle).</summary>
+        public bool? GapPreserved { get; init; }
         public string Document { get; init; } = "";
         public string Corpus { get; init; } = "";
         public string Term { get; init; } = "";
@@ -86,6 +130,54 @@ public sealed class RedactionBenchmarkRunner
         public bool QpdfOk { get; init; }
 
         public string? Error { get; init; }
+    }
+
+    /// <summary>
+    /// The tools under comparison. excise is one entry, not the centre — a
+    /// benchmark that can only measure the tool that wrote it is a
+    /// self-assessment.
+    /// </summary>
+    private static IEnumerable<string> Tools()
+    {
+        yield return "excise";
+        if (PyMuPdfPython() != null) yield return "pymupdf";
+    }
+
+    /// <summary>The x-ray venv python, which also carries PyMuPDF.</summary>
+    private static string? PyMuPdfPython()
+    {
+        var p = Path.Combine(RepoRoot(), "tools", "vendor", "xray-venv", "bin", "python");
+        return File.Exists(p) ? p : null;
+    }
+
+    /// <summary>
+    /// Run a competitor as a subprocess. Returns the occurrence count it
+    /// reports, or null when it failed — which is RECORDED, never skipped.
+    /// </summary>
+    private static int? RunAdapter(string tool, string src, string dst, string term)
+    {
+        var python = PyMuPdfPython();
+        if (python == null) return null;
+        var script = Path.Combine(RepoRoot(), "scripts", "benchmark-adapters", $"redact-{tool}.py");
+        if (!File.Exists(script)) return null;
+
+        try
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo(python)
+            {
+                RedirectStandardOutput = true, RedirectStandardError = true,
+                UseShellExecute = false, CreateNoWindow = true,
+            };
+            foreach (var a in new[] { script, src, dst, term }) psi.ArgumentList.Add(a);
+            using var proc = System.Diagnostics.Process.Start(psi);
+            if (proc == null) return null;
+            var stdout = proc.StandardOutput.ReadToEnd();
+            proc.StandardError.ReadToEnd();
+            if (!proc.WaitForExit(120_000)) { try { proc.Kill(true); } catch { } return null; }
+            if (proc.ExitCode != 0) return null;
+            return int.TryParse(stdout.Trim(), out var n) ? n : 0;
+        }
+        catch { return null; }
     }
 
     private static string RepoRoot()
@@ -135,8 +227,9 @@ public sealed class RedactionBenchmarkRunner
             foreach (var file in files)
             {
                 docsSeen++;
-                foreach (var row in MeasureDocument(file, corpus))
-                    rows.Add(row);
+                foreach (var tool in Tools())
+                    foreach (var row in MeasureDocument(file, corpus, tool))
+                        rows.Add(row);
             }
         }
 
@@ -151,7 +244,7 @@ public sealed class RedactionBenchmarkRunner
             "almost nothing tells you nothing, and looks identical to a good result");
     }
 
-    private IEnumerable<Row> MeasureDocument(string path, string corpus)
+    private IEnumerable<Row> MeasureDocument(string path, string corpus, string tool)
     {
         var name = Path.GetFileName(path);
 
@@ -174,7 +267,7 @@ public sealed class RedactionBenchmarkRunner
 
         if (openError != null)
         {
-            yield return new Row { Document = name, Corpus = corpus, Error = openError };
+            yield return new Row { Tool = tool, Document = name, Corpus = corpus, Error = openError };
             yield break;
         }
 
@@ -184,22 +277,44 @@ public sealed class RedactionBenchmarkRunner
         if (before.Length < 200) yield break;
 
         foreach (var term in RedactionCollateralHarness.SampleTerms(before))
-            yield return MeasureCase(path, corpus, name, term, before, pageCount);
+            yield return MeasureCase(path, corpus, name, term, before, pageCount, tool);
     }
 
     private Row MeasureCase(string path, string corpus, string name, string term,
-                            string before, int pageCount)
+                            string before, int pageCount, string tool)
     {
         var output = Path.Combine(Path.GetTempPath(), $"excise-bench-{Guid.NewGuid():N}.pdf");
         try
         {
-            RedactionReport report;
+            var reported = 0;
+            var cleanSuccess = false;
             byte[] savedBytes;
             try
             {
-                using var doc = PdfDocument.Open(path);
-                report = doc.RedactText(term);
-                doc.Save(output);
+                if (tool == "excise")
+                {
+                    using var doc = PdfDocument.Open(path);
+                    var report = doc.RedactText(term);
+                    reported = report.VerifiedRemovals;
+                    cleanSuccess = report.IsCleanSuccess;
+                    doc.Save(output);
+                }
+                else
+                {
+                    var n = RunAdapter(tool, path, output, term);
+                    if (n == null)
+                        return new Row
+                        {
+                            Tool = tool, Document = name, Corpus = corpus, Term = term,
+                            Pages = pageCount, Error = $"{tool}: adapter failed",
+                        };
+                    reported = n.Value;
+                    // Competitors report a count, not a verification. Recorded
+                    // as false rather than guessed at -- excise's
+                    // IsCleanSuccess has no equivalent elsewhere, and inventing
+                    // one would flatter or penalise arbitrarily.
+                    cleanSuccess = false;
+                }
                 savedBytes = File.ReadAllBytes(output);
             }
             catch (Exception ex) when (ex is not OutOfMemoryException)
@@ -208,8 +323,9 @@ public sealed class RedactionBenchmarkRunner
                 // is how a benchmark flatters the tool it measures.
                 return new Row
                 {
-                    Document = name, Corpus = corpus, Term = term, Pages = pageCount,
-                    Error = $"{ex.GetType().Name}: {ex.Message}",
+                    Tool = tool, Verdict = nameof(Verdict.Unmeasured),
+                    Document = name, Corpus = corpus, Term = term,
+                    Pages = pageCount, Error = $"{ex.GetType().Name}: {ex.Message}",
                 };
             }
 
@@ -258,16 +374,33 @@ public sealed class RedactionBenchmarkRunner
 
             var alnumBefore = before.Count(char.IsLetterOrDigit);
             var alnumAfter = after.Count(char.IsLetterOrDigit);
-            var termCost = report.VerifiedRemovals * term.Count(char.IsLetterOrDigit);
+            var termCost = reported * term.Count(char.IsLetterOrDigit);
             var collateral = Math.Max(0, alnumBefore - alnumAfter - termCost);
 
             var qpdf = QpdfReferenceTool.Check(output);
 
+            // ── RESIDUE: did the layout keep the hole? ────────────────────
+            // Page 1 only. This is a sampled signal, not a per-occurrence one:
+            // a document whose page 1 reflows and whose page 4 does not will
+            // read as "closed up", and the honest fix for that is #1116's
+            // per-removal measurement rather than pretending this is exact.
+            var glyphsBefore = MutoolGlyphPositions.ExtractPage(path, 1);
+            var glyphsAfter = MutoolGlyphPositions.ExtractPage(output, 1);
+            var gapPreserved = MutoolGlyphPositions.LayoutGapPreserved(glyphsBefore, glyphsAfter);
+
+            var recoverable = leakText || badRedactions > 0 || leakBytes;
+            var verdict =
+                recoverable ? Differential.RedactionBenchmarkRunner.Verdict.Recoverable
+                : gapPreserved == true ? Differential.RedactionBenchmarkRunner.Verdict.RemovedWithResidue
+                : Differential.RedactionBenchmarkRunner.Verdict.Removed;
+
             return new Row
             {
-                Document = name, Corpus = corpus, Term = term, Pages = pageCount,
-                Reported = report.VerifiedRemovals,
-                CleanSuccess = report.IsCleanSuccess,
+                Verdict = verdict.ToString(),
+                GapPreserved = gapPreserved,
+                Tool = tool, Document = name, Corpus = corpus, Term = term, Pages = pageCount,
+                Reported = reported,
+                CleanSuccess = cleanSuccess,
                 OracleBefore = CountOccurrences(before, term),
                 OracleAfter = CountOccurrences(after, term),
                 LeakSavedBytes = leakBytes,
@@ -401,28 +534,67 @@ public sealed class RedactionBenchmarkRunner
         _out.WriteLine($"cases measured    : {ok.Count}");
         _out.WriteLine($"cases errored     : {rows.Count - ok.Count}");
         _out.WriteLine("");
-        _out.WriteLine($"{"corpus",-18} {"cases",6} {"probes",7} {"leaks",6} {"badRedact",10} {"countMismatch",14} {"collateral>1%",14} {"qpdfBad",8}");
 
-        foreach (var g in ok.GroupBy(r => r.Corpus).OrderBy(g => g.Key, StringComparer.Ordinal))
+        // HEAD TO HEAD. Never one number per tool: the three scores trade
+        // against each other, and collapsing them lets a tool that destroys
+        // the document win on leak.
+        _out.WriteLine("VERDICTS — what actually happened to the term");
+        _out.WriteLine($"{"tool",-10} {"cases",6} {"RECOVERABLE",12} {"+residue",9} {"REMOVED",8} " +
+                       $"{"unmeasured",11} {"collat>1%",10} {"qpdfBad",8}");
+        foreach (var g in rows.GroupBy(r => r.Tool).OrderBy(g => g.Key, StringComparer.Ordinal))
         {
+            var good = g.Where(r => r.Error == null).ToList();
+            if (good.Count == 0) { _out.WriteLine($"{g.Key,-10} {0,6} {g.Count(),7}"); continue; }
+            var fractions = good.Select(r => r.CollateralFraction).OrderBy(x => x).ToList();
+            var median = fractions[fractions.Count / 2];
             _out.WriteLine(
-                $"{g.Key,-18} {g.Count(),6} {g.Count(r => r.ProbeUsable),7} " +
-                $"{g.Count(r => r.LeakChannels.Length > 0),6} " +
-                $"{g.Count(r => r.LeakBadRedactions > 0),10} " +
-                $"{g.Count(r => r.Reported != r.OracleBefore - r.OracleAfter),14} " +
-                $"{g.Count(r => r.CollateralFraction > 0.01),14} " +
-                $"{g.Count(r => !r.QpdfOk),8}");
+                $"{g.Key,-10} {good.Count,6} " +
+                $"{good.Count(r => r.Verdict == nameof(Verdict.Recoverable)),12} " +
+                $"{good.Count(r => r.Verdict == nameof(Verdict.RemovedWithResidue)),9} " +
+                $"{good.Count(r => r.Verdict == nameof(Verdict.Removed)),8} " +
+                $"{g.Count(r => r.Error != null),11} " +
+                $"{good.Count(r => r.CollateralFraction > 0.01),10} " +
+                $"{good.Count(r => !r.QpdfOk),8}");
+            _out.WriteLine($"{"",-10} {"",6} {"median collateral " + median.ToString("P2"),-40}");
         }
 
         _out.WriteLine("");
-        foreach (var r in ok.Where(r => r.LeakChannels.Length > 0).Take(15))
-            _out.WriteLine($"  LEAK {r.Corpus}/{r.Document} '{r.Term}' via {string.Join("+", r.LeakChannels)}");
-        foreach (var r in ok.Where(r => r.CollateralFraction > 0.05)
-                            .OrderByDescending(r => r.CollateralFraction).Take(15))
-            _out.WriteLine($"  COLLATERAL {r.Corpus}/{r.Document} '{r.Term}' " +
-                           $"{r.Collateral} chars = {r.CollateralFraction:P1}");
-        foreach (var e in rows.Where(r => r.Error != null).GroupBy(r => r.Error!.Split(':')[0])
-                              .OrderByDescending(g => g.Count()).Take(10))
-            _out.WriteLine($"  ERROR {e.Key} × {e.Count()}");
+        _out.WriteLine("RECOVERABLE, by how the text was read back:");
+        foreach (var g in ok.Where(r => r.Verdict == nameof(Verdict.Recoverable))
+                            .GroupBy(r => r.Tool).OrderBy(g => g.Key, StringComparer.Ordinal))
+        {
+            _out.WriteLine($"  {g.Key}: extractor={g.Count(r => r.LeakOracleText)} " +
+                           $"under-a-box={g.Count(r => r.LeakBadRedactions > 0)} " +
+                           $"saved-bytes={g.Count(r => r.LeakSavedBytes)}");
+        }
+
+        // WHERE THEY DISAGREE is the actionable part: a case both tools handle
+        // identically teaches nothing, and a case only one of them fails is a
+        // defect with a reproduction attached.
+        _out.WriteLine("");
+        var byCase = ok.GroupBy(r => $"{r.Corpus}/{r.Document}|{r.Term}")
+                       .Where(g => g.Select(r => r.Tool).Distinct().Count() > 1);
+        var disagreements = 0;
+        foreach (var g in byCase)
+        {
+            var e = g.FirstOrDefault(r => r.Tool == "excise");
+            var o = g.FirstOrDefault(r => r.Tool != "excise");
+            if (e == null || o == null) continue;
+            if (e.LeakOracleText == o.LeakOracleText &&
+                Math.Abs(e.CollateralFraction - o.CollateralFraction) < 0.01 &&
+                e.QpdfOk == o.QpdfOk) continue;
+            disagreements++;
+            if (disagreements <= 20)
+                _out.WriteLine(
+                    $"  DIFF {g.Key,-58} excise[leak={e.LeakOracleText} collat={e.CollateralFraction:P1} qpdf={e.QpdfOk}] " +
+                    $"{o.Tool}[leak={o.LeakOracleText} collat={o.CollateralFraction:P1} qpdf={o.QpdfOk}]");
+        }
+        _out.WriteLine($"  cases where the tools differ: {disagreements}");
+
+        _out.WriteLine("");
+        foreach (var e in rows.Where(r => r.Error != null)
+                              .GroupBy(r => $"{r.Tool}:{r.Error!.Split(':')[0]}")
+                              .OrderByDescending(g => g.Count()).Take(12))
+            _out.WriteLine($"  ERROR {e.Key} x {e.Count()}");
     }
 }
