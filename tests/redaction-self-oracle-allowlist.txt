@@ -16,3 +16,4 @@ Excise.Core.Tests/Text/Segmentation/PdfPageRedactionEndToEndTests.cs  # no indep
 Excise.Core.Tests/Text/Segmentation/RotatedPageRedactionTests.cs  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/ScannedOcrRedactionRegressionTests.cs  # no independent oracle yet
 Excise.Core.Tests/Text/Segmentation/TolerantParsePathRedactionTests.cs  # no independent oracle yet
+Excise.Core.Tests/Text/Segmentation/LowContrastHiddenTextTests.cs  # DETECTOR unit tests for #1131 low-contrast hiding. Excise.Core.Tests cannot reference Excise.Rendering (x-ray oracle), so the independent check for the audit property lives in Excise.Rendering.Tests/Differential/XRayBadRedactionTests.cs. Unit-level by design, same as HiddenTextDetectorTests.
