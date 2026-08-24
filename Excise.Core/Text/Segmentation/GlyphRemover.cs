@@ -74,6 +74,14 @@ public class GlyphRemover
     /// </summary>
     internal static bool BlankInPlace { get; set; }
 
+    /// <summary>
+    /// #1145 — WIDTH-CLOSING mode, per-instance and off by default. When set,
+    /// reconstructed runs collapse the oversized gap a removed run leaves, so
+    /// the advance-width residue channel (#1116) is destroyed. Opt-in: the
+    /// width-preserving default is unchanged unless a caller sets this.
+    /// </summary>
+    public bool CloseWidth { get; set; }
+
     private readonly LetterFinder _letterFinder;
     private readonly TextSegmenter _textSegmenter;
     private readonly OperationReconstructor _reconstructor;
@@ -362,6 +370,7 @@ public class GlyphRemover
                 TextRenderingMode = job.TextRenderingMode,
                 TextRise = job.TextRise,
                 TextLeading = job.TextLeading,
+                CloseWidth = CloseWidth,   // #1145, opt-in on the remover instance
             };
             var reconstructed = _reconstructor.ReconstructWithPositioning(
                 segments, ctx, job.GraphicsTransform, job.TextTransform, job.EffectiveFontSize);

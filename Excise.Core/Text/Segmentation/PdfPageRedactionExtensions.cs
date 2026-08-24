@@ -71,7 +71,8 @@ public static class PdfPageRedactionExtensions
         this PdfPage page,
         PdfRectangle area,
         GlyphRemovalStrategy strategy = GlyphRemovalStrategy.AnyOverlap,
-        bool scrubDocumentCarriers = true)
+        bool scrubDocumentCarriers = true,
+        bool closeWidth = false)   // #1145 — opt-in width-closing
     {
         if (page == null) throw new System.ArgumentNullException(nameof(page));
 
@@ -125,7 +126,7 @@ public static class PdfPageRedactionExtensions
         var letters = page.Letters;
         if (letters.Count > 0)
         {
-            var remover = new GlyphRemover();
+            var remover = new GlyphRemover { CloseWidth = closeWidth };
             working = remover.ProcessOperations(working, letters, area, strategy);
         }
 
@@ -145,7 +146,8 @@ public static class PdfPageRedactionExtensions
         this PdfPage page,
         System.Collections.Generic.IEnumerable<PdfRectangle> areas,
         GlyphRemovalStrategy strategy = GlyphRemovalStrategy.AnyOverlap,
-        bool scrubDocumentCarriers = true)
+        bool scrubDocumentCarriers = true,
+        bool closeWidth = false)   // #1145 — opt-in width-closing
     {
         if (page == null) throw new System.ArgumentNullException(nameof(page));
 
@@ -153,7 +155,7 @@ public static class PdfPageRedactionExtensions
         if (list.Count == 0) return;
         if (list.Count == 1)
         {
-            page.RedactArea(list[0], strategy, scrubDocumentCarriers);
+            page.RedactArea(list[0], strategy, scrubDocumentCarriers, closeWidth);
             return;
         }
 
@@ -184,7 +186,7 @@ public static class PdfPageRedactionExtensions
         var letters = page.Letters;
         if (letters.Count > 0)
         {
-            var remover = new GlyphRemover();
+            var remover = new GlyphRemover { CloseWidth = closeWidth };
             working = remover.ProcessOperations(working, letters, list, strategy);
         }
 

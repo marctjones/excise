@@ -129,4 +129,54 @@ public class WidthGapLeakMeasurementTests
             File.Delete(afterPath);
         }
     }
+
+    [Fact]
+    public void WidthClosingMode_DestroysTheResidueChannel()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        var beforePath = Path.Combine(Path.GetTempPath(), $"wc-before-{System.Guid.NewGuid():N}.pdf");
+        var afterPath = Path.Combine(Path.GetTempPath(), $"wc-after-{System.Guid.NewGuid():N}.pdf");
+        try
+        {
+            var pdf = BuildFixture();
+            File.WriteAllBytes(beforePath, pdf);
+
+            // The #1145 option: close the width channel. Box suppressed so the
+            // measurement sees the glyph gap, not the box (#1140).
+            using (var doc = PdfDocument.Open(pdf))
+            {
+                doc.RedactText(Term, drawBlackRect: false, closeWidth: true);
+                using var fs = File.Create(afterPath);
+                doc.Save(fs);
+            }
+
+            var b = MutoolGlyphPositions.ExtractPage(beforePath, 1)!.OrderBy(g => g.X).ToList();
+            var a = MutoolGlyphPositions.ExtractPage(afterPath, 1)!.OrderBy(g => g.X).ToList();
+
+            var advanceAnchor = b[1].X - b[0].X;
+            var removedWidth = b[Before.Length + Term.Length].X - b[Before.Length].X;
+
+            // After width-closing the surviving "ZZZ" is pulled left, so the gap
+            // between the last "A" and the first "Z" is ~one space, NOT the
+            // removed word's width.
+            var gapOriginToOrigin = a[Before.Length].X - a[Before.Length - 1].X;
+            var leakedWidth = gapOriginToOrigin - advanceAnchor;
+
+            _out.WriteLine($"removed_width = {removedWidth:F2} pt");
+            _out.WriteLine($"gap after width-closing = {leakedWidth:F2} pt");
+
+            leakedWidth.Should().BeLessThan(removedWidth * 0.5,
+                "width-closing must collapse the gap so it no longer reveals the removed " +
+                $"width ({removedWidth:F1}pt) — the residue channel #1116 measures is destroyed");
+            // Surviving text must remain, just repositioned — not a collateral loss.
+            (MutoolTextExtractor.ExtractPage(afterPath, 1) ?? "").Should().Contain("ZZZ",
+                "width-closing repositions surviving text; it must not destroy it");
+        }
+        finally
+        {
+            File.Delete(beforePath);
+            File.Delete(afterPath);
+        }
+    }
 }
