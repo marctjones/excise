@@ -164,6 +164,13 @@ internal sealed class ContentStreamWalker
     // unparseable one, so a bad font is not re-parsed on every glyph.
     private readonly Dictionary<PdfDictionary, Fonts.TrueTypeFontFile?> _embeddedTtfCache =
         new(ReferenceEqualityComparer.Instance);
+    // #1103: the horizontal scale (FontMatrix[0], the `a` term) that maps a
+    // Type3 font's glyph-space /Widths to text space (§9.6.5). NaN cached for a
+    // non-Type3 font so GetCharWidth's hot path skips the /FontMatrix read
+    // entirely. Every other font type has the implicit [0.001 …] matrix, which
+    // is why the rest of GetCharWidth treats /Widths as 1000ths of an em.
+    private readonly Dictionary<PdfDictionary, double> _type3WidthScaleCache =
+        new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<PdfDictionary, Text.GlyphUnicodeDecoder> _decoderCache =
         new(ReferenceEqualityComparer.Instance);
     private bool _is2ByteFont;
@@ -1760,6 +1767,50 @@ internal sealed class ContentStreamWalker
         return ttf.AdvanceWidth(gid) * 1000.0 / ttf.UnitsPerEm;
     }
 
+    /// <summary>
+    /// #1103 — the factor that turns a Type3 glyph-space /Widths value into the
+    /// 1000ths-of-an-em convention the rest of <see cref="GetCharWidth"/> uses,
+    /// i.e. <c>FontMatrix[0] * 1000</c>. Returns 1.0 (a no-op) for any non-Type3
+    /// font, and for the ubiquitous <c>/FontMatrix [0.001 0 0 0.001 0 0]</c>
+    /// where the factor is exactly 1. Any other matrix — Type3 fonts exist so a
+    /// producer can pick its own glyph space — scaled the advance wrong before
+    /// this, by the matrix's scale factor, in the letter model redaction trusts.
+    /// The renderer already honoured it (SkiaRenderer.Text.cs
+    /// MapType3GlyphSpaceAdvance); this closes the half that did not.
+    /// </summary>
+    private double Type3WidthScale(PdfDictionary font)
+    {
+        if (_type3WidthScaleCache.TryGetValue(font, out var cached))
+            return cached;
+
+        double scale = 1.0;
+        if (font.GetNameOrNull("Subtype") == "Type3")
+        {
+            // /FontMatrix is a direct array on the font dictionary; default per
+            // §9.6.5 is [0.001 0 0 0.001 0 0]. The x-advance of the glyph-space
+            // vector (w, 0) mapped through the matrix is a*w, so the horizontal
+            // scale is a = FontMatrix[0]. A degenerate all-zero matrix keeps the
+            // 0.001 default rather than collapsing every advance to 0, matching
+            // the renderer.
+            var fmObj = _page != null
+                ? _page.Document.Resolve(font.GetOptional("FontMatrix") ?? PdfNull.Instance)
+                : font.GetOptional("FontMatrix");
+            double a = 0.001;
+            if (fmObj is PdfArray fm && fm.Count >= 6)
+            {
+                var a0 = fm.GetNumber(0);
+                bool allZero = true;
+                for (int i = 0; i < 6 && allZero; i++)
+                    if (fm.GetNumber(i) != 0) allZero = false;
+                if (!allZero) a = a0;
+            }
+            scale = a * 1000.0;
+        }
+
+        _type3WidthScaleCache[font] = scale;
+        return scale;
+    }
+
     private double GetCharWidth(int charCode)
     {
         // Type 0 / CIDFont: /W with the /DW fallback (§9.7.4.3).
@@ -1783,7 +1834,10 @@ internal sealed class ContentStreamWalker
                 {
                     var index = charCode - firstChar;
                     if (index < widths.Count)
-                        return widths.GetNumber(index);
+                        // #1103: Type3 /Widths are glyph-space; scale through
+                        // /FontMatrix. No-op (×1) for every other font type and
+                        // for the default 0.001 matrix.
+                        return widths.GetNumber(index) * Type3WidthScale(_currentFont);
                 }
             }
 
