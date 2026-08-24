@@ -195,7 +195,7 @@ public static class HiddenTextDetector
                     if (string.IsNullOrEmpty(text)) break;
                     var matches = finder.FindOperationLetters(text, letters);
                     if (matches.Count == 0) break;
-                    textEntries.Add(new TextEntry(i, text, BoundingBoxOf(matches), fillRgb));
+                    textEntries.Add(new TextEntry(i, text, BoundingBoxOf(matches), fillRgb, matches));
 
                     // #796: does the active (3,0) symbol cmap spell text that
                     // extraction (honouring /Encoding) does NOT recover? Compare
@@ -237,19 +237,23 @@ public static class HiddenTextDetector
         }
 
         // Pairing A: text UNDER a later obstruction (the classic black-box case).
-        // Pairing B (#1131): text ON TOP of an EARLIER fill whose colour barely
-        // contrasts with the text's own -- white-on-black, black-on-black,
-        // low-contrast. Invisible to a human, fully extractable, and missed by
-        // pairing A because the covering shape is drawn BEFORE the text.
+        // Pairing B (#1131): text ON TOP of an EARLIER low-contrast fill.
+        //
+        // #1149: GLYPH-LEVEL. A box need not cover the majority of a whole text
+        // operator -- the common real fake redaction covers just the sensitive
+        // WORD inside a longer line ("James" in "Name: James (on file)"). Report
+        // the contiguous RUN of glyphs a box covers, not the whole operator only
+        // when it happens to reach 50%.
         foreach (var t in textEntries)
         {
             var reported = false;
             foreach (var o in obstructions)
             {
                 if (o.Index <= t.Index) continue;                 // later: covers the text
-                if (CoversMajority(o.Bbox, t.Bbox))
+                var run = CoveredRun(t, o.Bbox);
+                if (run != null)
                 {
-                    records.Add(new HiddenTextRecord(pageNumber, t.Text, t.Bbox, o.Description));
+                    records.Add(new HiddenTextRecord(pageNumber, run.Value.Text, run.Value.Box, o.Description));
                     reported = true;
                     break;
                 }
@@ -259,10 +263,11 @@ public static class HiddenTextDetector
             foreach (var o in obstructions)
             {
                 if (o.Index >= t.Index) continue;                 // earlier: behind the text
-                if (Contrast(t.Fill, o.Fill) < LowContrastThreshold &&
-                    CoversMajority(o.Bbox, t.Bbox))
+                if (Contrast(t.Fill, o.Fill) >= LowContrastThreshold) continue;
+                var run = CoveredRun(t, o.Bbox);
+                if (run != null)
                 {
-                    records.Add(new HiddenTextRecord(pageNumber, t.Text, t.Bbox,
+                    records.Add(new HiddenTextRecord(pageNumber, run.Value.Text, run.Value.Box,
                         $"low-contrast text ({DescribeColor(t.Fill)}) on {DescribeColor(o.Fill)} background"));
                     break;
                 }
@@ -341,6 +346,33 @@ public static class HiddenTextDetector
             if (r.Top > top) top = r.Top;
         }
         return new PdfRectangle(left, bottom, right, top);
+    }
+
+    /// <summary>
+    /// #1149 — the longest contiguous run of glyphs in <paramref name="t"/>
+    /// whose cells are majority-covered by <paramref name="box"/>, with its
+    /// text and bounding box, or null if the box covers no glyph. This makes a
+    /// word-sized box over a longer line register (full coverage of the SECRET,
+    /// partial coverage of the operator) as surely as a whole-line box.
+    /// </summary>
+    private static (string Text, PdfRectangle Box)? CoveredRun(TextEntry t, PdfRectangle box)
+    {
+        int bestStart = -1, bestLen = 0, curStart = -1, curLen = 0;
+        for (var k = 0; k < t.Matches.Count; k++)
+        {
+            if (CoversMajority(box, t.Matches[k].Letter.GlyphRectangle))
+            {
+                if (curStart < 0) { curStart = k; curLen = 0; }
+                curLen++;
+                if (curLen > bestLen) { bestLen = curLen; bestStart = curStart; }
+            }
+            else { curStart = -1; curLen = 0; }
+        }
+        if (bestLen == 0) return null;
+
+        var run = t.Matches.Skip(bestStart).Take(bestLen).ToList();
+        var text = string.Concat(run.Select(m => m.Letter.Value));
+        return (text, BoundingBoxOf(run));
     }
 
     private static string ExtractText(ContentOperator op)
@@ -456,7 +488,7 @@ public static class HiddenTextDetector
     private static PdfRectangle TransformedUnitSquare(Matrix23 m)
         => TransformRect(m, 0, 0, 1, 1);
 
-    private readonly record struct TextEntry(int Index, string Text, PdfRectangle Bbox, Rgb Fill);
+    private readonly record struct TextEntry(int Index, string Text, PdfRectangle Bbox, Rgb Fill, IReadOnlyList<LetterMatch> Matches);
     private readonly record struct Obstruction(int Index, string Description, PdfRectangle Bbox, Rgb Fill);
     private readonly record struct Rgb(double R, double G, double B);
 
