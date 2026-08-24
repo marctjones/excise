@@ -128,6 +128,10 @@ public sealed class RedactionBenchmarkRunner
 
         // FIDELITY.
         public bool QpdfOk { get; init; }
+        /// <summary>Did the ORIGINAL parse? A reject inherited from a malformed
+        /// input is not a redaction fidelity defect (measured: TAMReview.pdf and
+        /// Brotli-Prototype-FileA.pdf fail qpdf BEFORE redaction).</summary>
+        public bool InputQpdfOk { get; init; }
 
         public string? Error { get; init; }
     }
@@ -382,6 +386,10 @@ public sealed class RedactionBenchmarkRunner
             var collateral = Math.Max(0, alnumBefore - alnumAfter - termCost);
 
             var qpdf = QpdfReferenceTool.Check(output);
+            // #fidelity: only excise-CAUSED invalidity counts. Check the input
+            // too, so a reject inherited from an already-malformed source is not
+            // charged against the tool.
+            var inputQpdf = QpdfReferenceTool.Check(path);
 
             // ── RESIDUE: did the layout keep the hole? ────────────────────
             // Page 1 only. This is a sampled signal, not a per-occurrence one:
@@ -420,6 +428,7 @@ public sealed class RedactionBenchmarkRunner
                 Collateral = collateral,
                 CollateralFraction = alnumBefore == 0 ? 0 : (double)collateral / alnumBefore,
                 QpdfOk = qpdf?.Success ?? false,
+                InputQpdfOk = inputQpdf?.Success ?? false,
             };
         }
         finally { try { File.Delete(output); } catch { /* best effort */ } }
@@ -558,7 +567,7 @@ public sealed class RedactionBenchmarkRunner
                 $"{good.Count(r => r.Verdict == nameof(Verdict.Removed)),8} " +
                 $"{g.Count(r => r.Error != null),11} " +
                 $"{good.Count(r => r.CollateralFraction > 0.01),10} " +
-                $"{good.Count(r => !r.QpdfOk),8}");
+                $"{good.Count(r => r.InputQpdfOk && !r.QpdfOk),8}");
             _out.WriteLine($"{"",-10} {"",6} {"median collateral " + median.ToString("P2"),-40}");
         }
 
