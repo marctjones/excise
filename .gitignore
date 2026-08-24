@@ -112,8 +112,11 @@ excise.sh
 # Auto-generated test JSON
 **/*.cs.json
 
-# OCR training data — downloaded on demand (scripts/download-tessdata.sh), not committed
-tessdata/*.traineddata
+# OCR training data — downloaded on demand (scripts/download-tessdata.sh), not committed.
+# The whole directory, not just *.traineddata: scripts/corpus.sh verify requires
+# every corpus destination to be fully gitignored, and a rule that covers only
+# one extension leaves the rest of the directory committable.
+tessdata/
 
 # Bundled PDF spec dump (large; reference it from the Wiki, don't commit it)
 PDF32000_2008.md

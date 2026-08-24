@@ -1,0 +1,38 @@
+# corpora.tsv — the registry of every external corpus and oracle payload
+# excise can download. TRACKED IN GIT; the data it points at is NOT.
+#
+# Columns (tab-separated):
+#   name      stable id, used as `scripts/corpus.sh fetch <name>`
+#   tier      core     — fetch these to run the local suite as CI would
+#             extended — larger or narrower; fetch when you need them
+#             tool     — oracle binaries/payloads, not PDFs
+#             planned  — recommended, no download script yet; see the issue
+#   dir       destination, relative to the repo root (must be gitignored)
+#   script    scripts/<script> that fetches it, or an issue ref when planned
+#   size      approximate on-disk size once fetched
+#   licence   of the corpus itself, for the licence policy
+#   purpose   what it is FOR — why a redaction/rendering defect would show up
+#
+# Adding a row is how a corpus becomes visible to `corpus.sh` and to
+# check-corpus-registry.sh, which fails if a row's dir is not gitignored.
+#
+#name	tier	dir	script	size	licence	purpose
+verapdf	core	test-pdfs/verapdf-corpus	download-test-pdfs.sh	156M	PDF-Association	PDF/A + PDF/UA conformance; the broadest structural corpus we have
+isartor	core	test-pdfs/isartor	download-test-pdfs.sh	8M	PDF-Association	deliberate PDF/A-1b violations; parser must survive malformed input
+pdfjs	core	test-pdfs/pdfjs	download-pdfjs-corpus.sh	78M	Apache-2.0	Mozilla renderer regression history; fonts, encodings, encryption, forms
+pdfium	core	test-pdfs/pdfium	download-pdfium-corpus.sh	4M	BSD-3-Clause	Chrome renderer regression history
+smoke	core	test-pdfs/smoke	download-smoke-corpus.sh	11M	US-Gov-PublicDomain	real-world government forms; the documents a user actually redacts
+poppler	extended	test-pdfs/poppler	download-poppler-corpus.sh	14M	mixed-fixtures	poppler regression fixtures; a fourth renderer's idea of hard
+federal	extended	test-pdfs/federal	download-federal-corpus.sh	11M	US-Gov-PublicDomain	everyday federal forms, AcroForm-heavy
+local-real-world	extended	test-pdfs/local-real-world	setup-local-real-world-corpus.sh	9M	mixed	long real documents; books and reports
+altona	extended	test-pdfs/altona	download-standards-image-corpora.sh	268M	ECI-Altona	print/colour fidelity; ISO 15930
+ghent	extended	test-pdfs/ghent	download-standards-image-corpora.sh	308M	GWG	PDF/X output suite
+pdfbox	tool	tools/vendor	download-pdfbox.sh	12M	Apache-2.0	PDFBox oracle jar (EXCISE_PDFBOX_JAR)
+pdfium-lib	tool	tools/vendor	download-pdfium.sh	8M	BSD-3-Clause	prebuilt PDFium oracle (EXCISE_PDFIUM_TEST)
+tessdata	tool	tessdata	download-tessdata.sh	15M	Apache-2.0	tesseract language data for the OCR path
+dlib-slovenia	planned	test-pdfs/dlib-slovenia	#1109	?	public	invisible text (render mode 3) over scans — a REDACTION LEAK CARRIER
+itext-regression	planned	test-pdfs/itext	#1110	?	mixed	~4000 classified PDFs incl. a good encrypted set (#1048, #1095)
+pdfua-matterhorn	planned	test-pdfs/pdfua	#1111	?	PDF-Association	tagged PDFs; /ActualText and /Alt, the #636 carriers
+gwg-processing-steps	planned	test-pdfs/gwg-steps	#1112	?	GWG	ISO 19593-1 optional content layers; the includeHiddenLayers path
+safedocs	planned	test-pdfs/safedocs	#1113	?	mixed	SafeDocs issue-tracker corpus; 32K unusual/malformed files
+govdocs1	planned	test-pdfs/govdocs1	#1114	?	US-Gov-PublicDomain	231K real .gov PDFs; producer diversity and the x-ray sweep target
