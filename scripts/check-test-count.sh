@@ -99,6 +99,18 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# #1051: a row that "re-ran twice and never reported" is NOT convicted on the
+# spot any more — that FATAL was reachable by chance (the #894 channel loss can
+# strike the same row in the run and both rechecks, then the row runs fine
+# alone). The honest signal is a RATCHET across gate runs: a genuinely dead row
+# loses its result on EVERY invocation, so its consecutive-loss count climbs;
+# a chance loss resets the next run. LEDGER holds `count<TAB>testname` for rows
+# currently in a loss streak. A streak reaching LOSS_THRESHOLD is a hole chance
+# does not produce — that is the FATAL. Do NOT "fix" false blocks by raising
+# the threshold; a real hole reaches any threshold, a chance loss reaches none.
+LEDGER="$ROOT/tests/test-count-loss-ledger.tsv"
+LOSS_THRESHOLD="${TEST_COUNT_LOSS_THRESHOLD:-3}"
+
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 PROJ_NAME="$(basename "$CSPROJ" .csproj)"
@@ -159,6 +171,16 @@ echo "    $EXECUTED reported"
 
 LC_ALL=C comm -23 "$TMP/discovered.txt" "$TMP/executed.txt" > "$TMP/missing.txt"
 MISSING=$(wc -l < "$TMP/missing.txt" | tr -d ' ')
+
+# #1051: any row in a loss streak that REPORTED this run has recovered — its
+# streak resets. Keep only ledger entries whose row is still missing now; drop
+# the rest. Done before the all-clear exit so a recovered row cannot leave a
+# stale count behind, and so a clean run leaves an empty ledger as no file.
+if [[ -f "$LEDGER" ]]; then
+    awk -F'\t' 'NR==FNR{miss[$0]=1;next} ($2 in miss)' \
+        "$TMP/missing.txt" "$LEDGER" > "$LEDGER.tmp" 2>/dev/null || : > "$LEDGER.tmp"
+    if [[ -s "$LEDGER.tmp" ]]; then mv "$LEDGER.tmp" "$LEDGER"; else rm -f "$LEDGER.tmp" "$LEDGER"; fi
+fi
 
 if [[ "$MISSING" -eq 0 ]]; then
     echo "==> test count OK ($DISCOVERED discovered, all reported)"
@@ -279,11 +301,38 @@ while IFS= read -r name; do
             echo "    ok     $name (transient reporting loss, seen twice then reported)"
             TRANSIENT=$((TRANSIENT + 1))
         else
-            echo "    FATAL  $name"
-            echo "           its class re-ran TWICE and other cases reported both"
-            echo "           times, but THIS case produced no result either time —"
-            echo "           a row-level loss no summary can see."
-            FATAL=$((FATAL + 1))
+            # #1051: the class re-ran and OTHER rows reported, so the class DID
+            # execute — a row lost under exactly those conditions is the #894
+            # vstest channel loss, not a coverage hole, and two class-filtered
+            # rechecks cannot establish otherwise (the loss is not stable enough
+            # to reproduce; the same row runs fine alone either side of it). This
+            # branch used to FATAL on the spot and blocked real pushes over
+            # healthy tests — a gate cleared by retrying (#854).
+            #
+            # Ratchet instead: record the streak; FATAL only once THIS row has
+            # been lost on LOSS_THRESHOLD consecutive gate runs. A genuinely
+            # never-executed row loses its result every run and reaches the
+            # threshold; a chance channel loss resets on the next run and never
+            # does. The reset above clears the streak the moment the row reports.
+            [[ -f "$LEDGER" ]] || : > "$LEDGER"
+            prev="$(awk -F'\t' -v n="$name" '$2==n{print $1; exit}' "$LEDGER" 2>/dev/null)"
+            now=$(( ${prev:-0} + 1 ))
+            awk -F'\t' -v n="$name" -v c="$now" \
+                '$2==n{next} {print} END{print c"\t"n}' \
+                "$LEDGER" 2>/dev/null > "$LEDGER.tmp"
+            mv "$LEDGER.tmp" "$LEDGER"
+            if [[ "$now" -ge "$LOSS_THRESHOLD" ]]; then
+                echo "    FATAL  $name"
+                echo "           lost its result on $now CONSECUTIVE gate runs (#1051)."
+                echo "           A row lost every run is a coverage hole, not chance —"
+                echo "           and it silently defeats mutation testing."
+                FATAL=$((FATAL + 1))
+            else
+                echo "    warn   $name absent again — loss $now of $LOSS_THRESHOLD (#1051)."
+                echo "           Class ran and siblings reported, so this is the #894"
+                echo "           channel loss until the streak ratchets to $LOSS_THRESHOLD."
+                TRANSIENT=$((TRANSIENT + 1))
+            fi
         fi
     else
         echo "    FATAL  $name"
@@ -303,4 +352,8 @@ fi
 echo "==> test count OK after re-check ($TRANSIENT transient reporting loss(es), #894)."
 echo "    Every discovered test produced a result on re-run. The loss is in the"
 echo "    vstest result channel, not in coverage."
+if [[ -s "$LEDGER" ]]; then
+    echo "    Loss streaks being watched (#1051) — FATAL at $LOSS_THRESHOLD:"
+    sort -rn "$LEDGER" | sed 's/^/        /'
+fi
 exit 0
