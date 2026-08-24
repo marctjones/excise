@@ -52,14 +52,17 @@ have.
 Chosen from the [PDF Association's index of 46 corpora](https://github.com/pdf-association/pdf-corpora)
 by what each would catch **for a redaction tool**, not by size or fame.
 
-| corpus | why it matters here |
-|---|---|
-| **Digital Library of Slovenia** | invisible text (render mode 3) over scans — a redaction *leak carrier*, and the natural corpus for `HiddenTextDetector` |
-| **iText regression suite** | ~4,000 classified PDFs including a good encrypted set — feeds #1048 and #1095 |
-| **PDF/UA + Matterhorn** | tagged PDFs; `/ActualText` and `/Alt`, the #636 carriers |
-| **GWG Processing Steps** | ISO 19593-1 optional content layers — the `includeHiddenLayers` path |
-| **SafeDocs issue-tracker corpus** | 32K unusual/malformed files; parser robustness |
-| **GovDocs1** | 231K real `.gov` PDFs; producer diversity, and the sweep target for finding real bad redactions |
+Each has a download-script issue in **RC14**; `tests/corpora.tsv` carries the
+number, and `scripts/corpus.sh verify` fails a `planned` row that cites none.
+
+| corpus | issue | why it matters here |
+|---|---|---|
+| **Digital Library of Slovenia** | #1108 | invisible text (render mode 3) over scans — a redaction *leak carrier*, and the natural corpus for `HiddenTextDetector` |
+| **iText regression suite** | #1109 | ~4,000 classified PDFs including a good encrypted set — feeds #1048 and #1095 |
+| **PDF/UA + Matterhorn** | #1110 | tagged PDFs; `/ActualText` and `/Alt`, the #636 carriers |
+| **GWG Processing Steps** | #1111 | ISO 19593-1 optional content layers — the `includeHiddenLayers` path |
+| **SafeDocs issue-tracker corpus** | #1112 | 32K unusual/malformed files; parser robustness |
+| **GovDocs1** | #1113 | 231K real `.gov` PDFs; producer diversity, and the sweep target for finding real bad redactions |
 
 Deliberately skipped: PDF/VT, 3D, HisDoc1B, the table-recognition sets. They
 test things excise does not claim to do.
@@ -74,4 +77,7 @@ ships one sample PDF and withholds its corpus deliberately; the
 detector with no shipped dataset; TAB is NLP text-anonymisation annotation,
 a different layer entirely.
 
-This is why we build our own — see the redaction benchmark milestone.
+This is why we build our own — **RC13**, which scores redaction on Leak /
+Collateral / Fidelity and compares excise against PyMuPDF, iText pdfSweep and a
+raster baseline. **RC15** covers the other direction: what excise can read back
+out of a redaction, its own or someone else's.
