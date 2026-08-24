@@ -252,9 +252,13 @@ public class HiddenTextDetectorTests
     }
 
     [Fact]
-    public void ScanPage_PartialOverlapBelowThreshold_NotDetected()
+    public void ScanPage_BoxOverLeadingGlyphs_DetectsTheCoveredRun()
     {
-        // Rectangle covers <50% of text
+        // #1149: a box covering the left 30% of "TEXT" majority-covers the
+        // leading glyph(s). That hides them, so it is now detected and reports
+        // just the covered run -- NOT the whole operator. Before #1149 this was
+        // asserted CLEAN (the "<50% of the operator" rule), which was the gap:
+        // a real redaction covers the sensitive part of a line, not all of it.
         var pdf = BuildPdfWithTextAndOverlay(
             "TEXT", textX: 100, textY: 700,
             overlayKind: OverlayKind.BlackFilledRectangle,
@@ -263,7 +267,24 @@ public class HiddenTextDetectorTests
         using var doc = PdfDocument.Open(pdf);
         var hits = HiddenTextDetector.ScanPage(doc.GetPage(1), 1);
 
-        hits.Should().BeEmpty();
+        hits.Should().NotBeEmpty("a box that majority-covers leading glyphs hides them (#1149)");
+        hits[0].Text.Length.Should().BeLessThan(4,
+            "it must report the covered RUN (a prefix of TEXT), not the whole operator");
+    }
+
+    [Fact]
+    public void ScanPage_BoxCoveringNoGlyphMajority_NotDetected()
+    {
+        // The genuine below-threshold case #1149 must still leave clean: a box
+        // so thin it majority-covers no single glyph (clips edges only).
+        var pdf = BuildPdfWithTextAndOverlay(
+            "TEXT", textX: 100, textY: 700,
+            overlayKind: OverlayKind.BlackFilledRectangle,
+            coveragePercent: 0.05);
+
+        using var doc = PdfDocument.Open(pdf);
+        HiddenTextDetector.ScanPage(doc.GetPage(1), 1).Should().BeEmpty(
+            "a box covering no glyph's majority is not a redaction");
     }
 
     #endregion
