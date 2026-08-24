@@ -64,6 +64,14 @@ public sealed class RedactionBenchmarkRunner
         public int OracleAfter { get; init; }
         public bool LeakSavedBytes { get; init; }
         public string LeakContext { get; init; } = "";
+        /// <summary>Byte occurrences in the ORIGINAL, across raw + inflated streams.</summary>
+        public int BytesBefore { get; init; }
+        public int BytesAfter { get; init; }
+        /// <summary>
+        /// False when the term already lived somewhere redaction is not
+        /// responsible for. See the comment on the leak assertion.
+        /// </summary>
+        public bool ProbeUsable { get; init; }
         public bool LeakOracleText { get; init; }
         public int LeakBadRedactions { get; init; }   // -1 = x-ray unavailable
         public string[] LeakChannels { get; init; } = Array.Empty<string>();
@@ -216,7 +224,26 @@ public sealed class RedactionBenchmarkRunner
             //
             // So classify the context. A hit that only ever appears in font
             // machinery is not the secret surviving; it is the alphabet.
-            var (leakBytes, leakContext) = ClassifyByteHit(savedBytes, term);
+            var (rawLeak, leakContext) = ClassifyByteHit(savedBytes, term);
+
+            // ── IS THIS TERM A USABLE LEAK PROBE AT ALL? ──────────────────
+            // Sampling by frequency is right for collateral and WRONG here.
+            // Measured: leak rate tracked term frequency almost perfectly --
+            // 12% on rare terms, 20% mid, 57% frequent -- which is the
+            // signature of a common word living elsewhere in the file, not of
+            // a redaction defect. irs-w4.pdf 'your' "leaked" inside embedded
+            // Acrobat JavaScript: "...see your system administrator."
+            //
+            // A term is only a usable probe when its byte occurrences in the
+            // ORIGINAL are accounted for by the text the oracle can see. If it
+            // also lives in JavaScript, field names or viewer boilerplate,
+            // redaction was never asked to remove those and its survival there
+            // says nothing.
+            var bytesBefore = CountByteOccurrences(File.ReadAllBytes(path), term);
+            var bytesAfter = CountByteOccurrences(savedBytes, term);
+            var textBefore = CountOccurrences(before, term);
+            var probeUsable = bytesBefore > 0 && bytesBefore <= textBefore;
+            var leakBytes = rawLeak && probeUsable;
             var leakText = after.Contains(term, StringComparison.OrdinalIgnoreCase);
 
             var xray = XRayBadRedactionDetector.Inspect(output);
@@ -245,6 +272,9 @@ public sealed class RedactionBenchmarkRunner
                 OracleAfter = CountOccurrences(after, term),
                 LeakSavedBytes = leakBytes,
                 LeakContext = leakContext,
+                BytesBefore = bytesBefore,
+                BytesAfter = bytesAfter,
+                ProbeUsable = probeUsable,
                 LeakOracleText = leakText,
                 LeakBadRedactions = badRedactions,
                 LeakChannels = channels.ToArray(),
@@ -275,39 +305,70 @@ public sealed class RedactionBenchmarkRunner
     /// that MATTERS, plus a short label saying where. Returns false only when
     /// EVERY occurrence sits in font machinery — one real hit is a leak even
     /// if a hundred benign ones surround it.
+    ///
+    /// <para>⚠️ Scans the raw bytes AND every inflated stream, because
+    /// <c>SavedPdfLeakScanner</c> does. The first version of this classifier
+    /// scanned only the raw Latin-1 text, so any hit inside a /FlateDecode
+    /// stream found no context, scored as benign, and silently downgraded the
+    /// case to "not a leak" — 19 of them. That is the exact blindness
+    /// SavedPdfLeakScanner was written to fix (#1049), reintroduced one layer
+    /// up in the thing consuming it.</para>
     /// </summary>
     private static (bool Leaked, string Context) ClassifyByteHit(byte[] saved, string term)
     {
-        var hits = Excise.Core.Tests.Text.Segmentation.SavedPdfLeakScanner.FindTerm(saved, term);
-        if (hits.Count == 0) return (false, "");
+        if (Excise.Core.Tests.Text.Segmentation.SavedPdfLeakScanner.FindTerm(saved, term).Count == 0)
+            return (false, "");
 
-        var text = System.Text.Encoding.Latin1.GetString(saved);
         var contexts = new List<string>();
         var realHit = false;
 
-        var i = 0;
-        while ((i = text.IndexOf(term, i, StringComparison.Ordinal)) >= 0)
+        void ScanSurface(string text, string surface)
         {
-            var before = text[Math.Max(0, i - 300)..i];
-            var benign = BenignContexts.FirstOrDefault(b => before.Contains(b, StringComparison.Ordinal));
-            if (benign == null)
+            var i = 0;
+            while ((i = text.IndexOf(term, i, StringComparison.Ordinal)) >= 0)
             {
-                realHit = true;
-                contexts.Add(
-                    before.Contains("<?xpacket", StringComparison.Ordinal) || before.Contains("rdf:", StringComparison.Ordinal) ? "xmp"
-                    : before.Contains("/ActualText", StringComparison.Ordinal) || before.Contains("/Alt", StringComparison.Ordinal) ? "structure-tree"
-                    : before.Contains("/Title", StringComparison.Ordinal) || before.Contains("/Author", StringComparison.Ordinal)
-                      || before.Contains("/Subject", StringComparison.Ordinal) || before.Contains("/Keywords", StringComparison.Ordinal) ? "info"
-                    : "raw");
+                var before = text[Math.Max(0, i - 300)..i];
+                var benign = BenignContexts.FirstOrDefault(b => before.Contains(b, StringComparison.Ordinal));
+                if (benign != null) { contexts.Add("font:" + benign.Trim('/', ' ', '[')); }
+                else
+                {
+                    realHit = true;
+                    contexts.Add(
+                        before.Contains("<?xpacket", StringComparison.Ordinal) || before.Contains("rdf:", StringComparison.Ordinal) ? "xmp"
+                        : before.Contains("/ActualText", StringComparison.Ordinal) || before.Contains("/Alt", StringComparison.Ordinal) ? "structure-tree"
+                        : before.Contains("/Title", StringComparison.Ordinal) || before.Contains("/Author", StringComparison.Ordinal)
+                          || before.Contains("/Subject", StringComparison.Ordinal) || before.Contains("/Keywords", StringComparison.Ordinal) ? "info"
+                        : surface + ":raw");
+                }
+                i += term.Length;
             }
-            else contexts.Add("font:" + benign.Trim('/', ' ', '['));
-            i += term.Length;
         }
 
-        // Recorded either way. "leaked=false because every hit was a glyph
-        // name" is a finding worth being able to read back, not something to
-        // silently drop.
+        ScanSurface(System.Text.Encoding.Latin1.GetString(saved), "file");
+        foreach (var body in Excise.Core.Tests.Text.Segmentation.SavedPdfLeakScanner.StreamBodies(saved))
+            ScanSurface(body, "stream");
+
+        // FindTerm saw it and no surface here could place it -- UTF-16BE or
+        // UTF-8 only, which the Latin-1 walk above cannot see. Report it as a
+        // leak with an honest label rather than losing it: an unplaceable hit
+        // is still a hit, and calling it clean is the bug this comment block
+        // exists because of.
+        if (contexts.Count == 0) return (true, "unplaced");
+
         return (realHit, string.Join(",", contexts.Distinct().OrderBy(c => c, StringComparer.Ordinal)));
+    }
+
+    /// <summary>
+    /// Occurrences of <paramref name="term"/> across the raw bytes and every
+    /// inflated stream — the same surfaces the leak scan looks at, so the two
+    /// numbers are comparable.
+    /// </summary>
+    private static int CountByteOccurrences(byte[] saved, string term)
+    {
+        var n = CountOccurrences(System.Text.Encoding.Latin1.GetString(saved), term);
+        foreach (var body in Excise.Core.Tests.Text.Segmentation.SavedPdfLeakScanner.StreamBodies(saved))
+            n += CountOccurrences(body, term);
+        return n;
     }
 
     private static int CountOccurrences(string haystack, string needle)
@@ -340,12 +401,13 @@ public sealed class RedactionBenchmarkRunner
         _out.WriteLine($"cases measured    : {ok.Count}");
         _out.WriteLine($"cases errored     : {rows.Count - ok.Count}");
         _out.WriteLine("");
-        _out.WriteLine($"{"corpus",-18} {"cases",6} {"leaks",6} {"badRedact",10} {"countMismatch",14} {"collateral>1%",14} {"qpdfBad",8}");
+        _out.WriteLine($"{"corpus",-18} {"cases",6} {"probes",7} {"leaks",6} {"badRedact",10} {"countMismatch",14} {"collateral>1%",14} {"qpdfBad",8}");
 
         foreach (var g in ok.GroupBy(r => r.Corpus).OrderBy(g => g.Key, StringComparer.Ordinal))
         {
             _out.WriteLine(
-                $"{g.Key,-18} {g.Count(),6} {g.Count(r => r.LeakChannels.Length > 0),6} " +
+                $"{g.Key,-18} {g.Count(),6} {g.Count(r => r.ProbeUsable),7} " +
+                $"{g.Count(r => r.LeakChannels.Length > 0),6} " +
                 $"{g.Count(r => r.LeakBadRedactions > 0),10} " +
                 $"{g.Count(r => r.Reported != r.OracleBefore - r.OracleAfter),14} " +
                 $"{g.Count(r => r.CollateralFraction > 0.01),14} " +
