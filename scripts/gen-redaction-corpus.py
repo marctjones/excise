@@ -103,7 +103,13 @@ def build_case(answer, font, size, method, context, colour="black-on-white", pos
     if context == "rich":
         ctx = (f"BT /F1 {size} Tf {x0} 660 Td (Claimant name and account holder:) Tj ET\n")
 
-    if method == "under-box":
+    if method == "original":
+        # Answer present, unredacted. A real tool redacts this; we then try to
+        # recover from ITS output. The manifest records the answer + gap span
+        # so the scorer knows what was there and where.
+        content = (line(prefix + answer + suffix) + ctx.encode())
+
+    elif method == "under-box":
         # Text intact; masked by colour. All variants leave the glyphs
         # extractable -- what differs is whether a HUMAN can read it, which is
         # exactly what separates a caught bad redaction from a missed one.
@@ -223,7 +229,12 @@ def main():
     os.makedirs(out, exist_ok=True)
     manifest = []
 
-    for band, font, size, method, context, kind, colour, pos in PLAN:
+    # Originals for tool-vs-tool comparison: same strings/fonts/sizes as the
+    # residue bands, but unredacted so excise and PyMuPDF redact them for real.
+    ORIGINALS = [(b, f, sz, "original", cx, k, "black-on-white", p)
+                 for (b, f, sz, m, cx, k, cl, p) in PLAN
+                 if m == "width-preserving"]
+    for band, font, size, method, context, kind, colour, pos in PLAN + ORIGINALS:
         pool = strings_for(kind)
         for answer in pool[:args.per_band]:
             safe = "".join(c if c.isalnum() else "_" for c in answer)
