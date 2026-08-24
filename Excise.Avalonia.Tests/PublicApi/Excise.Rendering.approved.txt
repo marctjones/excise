@@ -67,6 +67,18 @@ namespace Excise.Rendering.Differential
         public static Excise.Rendering.Differential.ReferenceRenderResult TryRenderPage(string pdfPath, int pageNumber, int dpi, int timeoutMs, string? userPassword) { }
         public static Excise.Rendering.Differential.ReferenceRenderResult TryRenderPageWithOverprintSimulation(string pdfPath, int pageNumber, int dpi, int timeoutMs = 30000) { }
     }
+    public static class MutoolGlyphPositions
+    {
+        public static System.Collections.Generic.IReadOnlyList<Excise.Rendering.Differential.MutoolGlyphPositions.Glyph>? ExtractPage(string pdfPath, int pageNumber, string? password = null, int timeoutMs = 60000) { }
+        public static bool? LayoutGapPreserved(System.Collections.Generic.IReadOnlyList<Excise.Rendering.Differential.MutoolGlyphPositions.Glyph>? before, System.Collections.Generic.IReadOnlyList<Excise.Rendering.Differential.MutoolGlyphPositions.Glyph>? after, double tolerancePt = 1) { }
+        public readonly struct Glyph : System.IEquatable<Excise.Rendering.Differential.MutoolGlyphPositions.Glyph>
+        {
+            public Glyph(string Char, double X, double Y) { }
+            public string Char { get; init; }
+            public double X { get; init; }
+            public double Y { get; init; }
+        }
+    }
     public static class MutoolReferenceRedactor
     {
         public static bool IsAvailable { get; }
@@ -189,6 +201,45 @@ namespace Excise.Rendering.Differential
         public string? ErrorMessage { get; init; }
         public string Status { get; init; }
     }
+    public static class ResidueRecoveryEngine
+    {
+        public static System.Collections.Generic.IReadOnlyList<Excise.Rendering.Differential.ResidueRecoveryEngine.Recovery> Recover(string pdfPath, System.Collections.Generic.IReadOnlyList<string> dictionary, Excise.Rendering.Differential.ResidueRecoveryEngine.Options? options = null) { }
+        public readonly struct Gap : System.IEquatable<Excise.Rendering.Differential.ResidueRecoveryEngine.Gap>
+        {
+            public Gap(int Page, double X0, double X1, double GapWidthPt, string Font, double SizePt, Excise.Rendering.Differential.ResidueRecoveryEngine.WidthMetricSource MetricSource, double TolerancePt) { }
+            public string Font { get; init; }
+            public double GapWidthPt { get; init; }
+            public Excise.Rendering.Differential.ResidueRecoveryEngine.WidthMetricSource MetricSource { get; init; }
+            public int Page { get; init; }
+            public double SizePt { get; init; }
+            public double TolerancePt { get; init; }
+            public double X0 { get; init; }
+            public double X1 { get; init; }
+        }
+        public sealed class Options : System.IEquatable<Excise.Rendering.Differential.ResidueRecoveryEngine.Options>
+        {
+            public Options(double ExactTolerancePt = 0.5, double FallbackTolerancePt = 2, int MaxCandidates = 500, bool RequireMutoolCorroboration = true) { }
+            public double ExactTolerancePt { get; init; }
+            public double FallbackTolerancePt { get; init; }
+            public int MaxCandidates { get; init; }
+            public bool RequireMutoolCorroboration { get; init; }
+        }
+        public sealed class Recovery : System.IEquatable<Excise.Rendering.Differential.ResidueRecoveryEngine.Recovery>
+        {
+            public Recovery(Excise.Rendering.Differential.ResidueRecoveryEngine.Gap Gap, System.Collections.Generic.IReadOnlyList<string> CandidatesFit, int CandidatesConsidered, double ResidualEntropyBits, string Status) { }
+            public int CandidatesConsidered { get; init; }
+            public System.Collections.Generic.IReadOnlyList<string> CandidatesFit { get; init; }
+            public Excise.Rendering.Differential.ResidueRecoveryEngine.Gap Gap { get; init; }
+            public double ResidualEntropyBits { get; init; }
+            public string Status { get; init; }
+        }
+        public enum WidthMetricSource
+        {
+            Standard14Exact = 0,
+            MutoolPositionTolerance = 1,
+            Unknown = 2,
+        }
+    }
     public static class TextSimilarity
     {
         public static double BigramJaccard(string exciseText, string oracleText) { }
@@ -207,5 +258,20 @@ namespace Excise.Rendering.Differential
         public string Flavour { get; init; }
         public bool Passed { get; init; }
         public bool Ran { get; }
+    }
+    public static class XRayBadRedactionDetector
+    {
+        public static bool IsAvailable { get; }
+        public static System.Collections.Generic.IReadOnlyList<Excise.Rendering.Differential.XRayBadRedactionDetector.BadRedaction>? Inspect(string pdfPath, int timeoutMs = 60000) { }
+        public sealed class BadRedaction : System.IEquatable<Excise.Rendering.Differential.XRayBadRedactionDetector.BadRedaction>
+        {
+            public BadRedaction(int Page, double X0, double Y0, double X1, double Y1, string Text) { }
+            public int Page { get; init; }
+            public string Text { get; init; }
+            public double X0 { get; init; }
+            public double X1 { get; init; }
+            public double Y0 { get; init; }
+            public double Y1 { get; init; }
+        }
     }
 }
