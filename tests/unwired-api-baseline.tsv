@@ -144,21 +144,17 @@ Excise.Ocr	tests-only	RecognizeDocument	triage:public OCR API; tests exercise co
 Excise.Ocr	tests-only	ScanFile	triage:public OCR API; tests exercise contract, external callers may use it
 Excise.Ocr	tests-only	Similarity	triage:public OCR API; tests exercise contract, external callers may use it
 Excise.Rendering	nowhere	CandidatesConsidered	#1146 residue CLI wires these
-Excise.Rendering	nowhere	ExactTolerancePt	#1146 residue CLI wires these
-Excise.Rendering	nowhere	FallbackTolerancePt	#1146 residue CLI wires these
-Excise.Rendering	nowhere	ResidualEntropyBits	#1146 residue CLI wires these
 Excise.Rendering	tests-only	BBoxHeight	triage:#933 qpdf reference-oracle surface — Excise.Rendering/Differential exists to be called by tests; production callers would be the anomaly
 Excise.Rendering	tests-only	BBoxWidth	triage:#933 qpdf reference-oracle surface — Excise.Rendering/Differential exists to be called by tests; production callers would be the anomaly
-Excise.Rendering	tests-only	CandidatesFit	#1146 residue CLI wires these
 Excise.Rendering	tests-only	EncryptR4	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	EndLineEnding	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
+Excise.Rendering	tests-only	FallbackTolerancePt	#1146 residue CLI wires these
 Excise.Rendering	tests-only	InkStrokeCount	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	LayoutGapPreserved	#1146 residue CLI wires these
 Excise.Rendering	tests-only	ListAnnotations	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	MutoolReferenceRedactor	triage:reference oracle (#1041) — tests-only BY DESIGN, like the other Differential reference tools; production must never redact via mutool
 Excise.Rendering	tests-only	NormalAppearance	triage:#933 qpdf reference-oracle surface — Excise.Rendering/Differential exists to be called by tests; production callers would be the anomaly
 Excise.Rendering	tests-only	PdftoppmReferenceRenderer	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
-Excise.Rendering	tests-only	ResidueRecoveryEngine	#1146 residue CLI wires these
 Excise.Rendering	tests-only	ShowEncryption	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	TryRenderPageWithOverprintSimulation	triage:public rendering/tooling API or reference-helper surface; tests exercise contract
 Excise.Rendering	tests-only	VeraPdfReferenceValidator	triage:external validator oracle (#1056) — tests-only BY DESIGN, like the other Differential reference tools; production must never depend on veraPDF being installed
