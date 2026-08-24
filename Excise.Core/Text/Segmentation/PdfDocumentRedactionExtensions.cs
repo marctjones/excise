@@ -107,6 +107,17 @@ public static class PdfDocumentRedactionExtensions
         {
             var page = document.GetPage(pageNum);
             var pageLocated = 0;
+            // #1101: the window this page actually shows. Letters stays
+            // unclipped so REMOVAL keeps full reach into off-page content (a
+            // string in the content stream is extractable and therefore a leak,
+            // even where this page's window does not show it) — but the COUNT a
+            // user acts on must be what a reader sees, not the full shared
+            // canvas. On a tiled document (issue1350.pdf: three pages are
+            // byte-identical copies of one canvas cropped to three different
+            // MediaBox windows) the unclipped tally counted the same canvas once
+            // per page and reported 36 for a term mutool — and a human paging
+            // through — sees 9 times.
+            var cropWindow = page.CropBox.Normalize();
             string? previousSearchText = null;
 
             for (var pass = 0; pass < 10; pass++)
@@ -139,9 +150,24 @@ public static class PdfDocumentRedactionExtensions
                 {
                     var contentAreas = new List<PdfRectangle>();
                     var markerAreas = new List<PdfRectangle>();
+                    var pageVisibleMatches = 0;
                     foreach (var matchLetters in matches)
                     {
                         var bbox = BoundingBoxOf(matchLetters);
+
+                        // #1101: tally only matches VISIBLE in this page's
+                        // window; removal below is unconditional. Center-in-box,
+                        // not full containment — robust to the horizontal
+                        // advance-width drift (#90) that an edge test would trip
+                        // on, and enough to separate the well-gapped tiled
+                        // windows here. A match off this window is still shown
+                        // (and counted) on whichever page's window does show it.
+                        var cx = (bbox.Left + bbox.Right) / 2.0;
+                        var cy = (bbox.Bottom + bbox.Top) / 2.0;
+                        if (cx >= cropWindow.Left && cx <= cropWindow.Right &&
+                            cy >= cropWindow.Bottom && cy <= cropWindow.Top)
+                            pageVisibleMatches++;
+
                         if (IsInteractiveOnlyMatch(matchLetters))
                             // TERM-aware (#1038). The area-only form deletes the
                             // whole field value; on issue18036.pdf that was 545
@@ -171,10 +197,12 @@ public static class PdfDocumentRedactionExtensions
 
                     if (drawBlackRect)
                         foreach (var bbox in markerAreas) AppendBlackRectangle(page, bbox);
-                }
 
-                totalMatches += matches.Count;
-                pageLocated += matches.Count;
+                    // #1101: count what this page's window shows, not the full
+                    // shared canvas. Removal above already took every match.
+                    totalMatches += pageVisibleMatches;
+                    pageLocated += pageVisibleMatches;
+                }
             }
 
             // #1089 VERIFICATION. Re-read the page and count what is STILL
