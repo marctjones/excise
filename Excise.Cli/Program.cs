@@ -1634,7 +1634,7 @@ partial class Program
         var fileArg = new Argument<FileInfo>("file") { Description = "PDF suspected of a weak redaction" };
         var modeOption = new Option<string>("--mode")
         {
-            Description = "certain (text actually present) | residue (width-leak candidates) | both",
+            Description = "certain (recover text actually present) | residue (recover from the width leak) | both",
             DefaultValueFactory = _ => "certain",
         };
         var dictOption = new Option<FileInfo?>("--dictionary")
@@ -1736,13 +1736,23 @@ partial class Program
             // boundary the issue draws: report THAT it is recoverable and HOW
             // MANY bits, never assert the recovered text here.
             double residueBitsTotal = 0;
-            foreach (dynamic r in residue) residueBitsTotal += (double)r.residualEntropyBits;
+            var uniqueRecoveries = 0;
+            foreach (dynamic r in residue)
+            {
+                residueBitsTotal += (double)r.residualEntropyBits;
+                // #1127 (Marc: recover text): a gap whose width admits exactly one
+                // dictionary word IS recovered — the width channel singularized it.
+                if ((int)r.candidatesFit == 1) uniqueRecoveries++;
+            }
             var quantification = new
             {
                 findings = certain.Count + residue.Count,
                 fullyRecoverable = certain.Count,
                 widthResidueGaps = residue.Count,
                 widthResidueBitsTotal = Math.Round(residueBitsTotal, 2),
+                // certain findings are recovered verbatim; a width gap with one
+                // admissible word is recovered too.
+                recovered = certain.Count + uniqueRecoveries,
             };
 
             if (json)
@@ -1757,8 +1767,9 @@ partial class Program
                 else
                     // #1126: the severity-ranked headline — how much, by channel.
                     Console.WriteLine(
-                        $"QUANTIFICATION — {quantification.findings} finding(s): " +
-                        $"{quantification.fullyRecoverable} FULLY RECOVERABLE (text present), " +
+                        $"QUANTIFICATION — {quantification.findings} finding(s), " +
+                        $"{quantification.recovered} RECOVERED: " +
+                        $"{quantification.fullyRecoverable} text present, " +
                         $"{quantification.widthResidueGaps} width-residue gap(s) leaking " +
                         $"{quantification.widthResidueBitsTotal} bits total.");
                 if (certain.Count > 0)
@@ -1769,10 +1780,20 @@ partial class Program
                 }
                 if (residue.Count > 0)
                 {
-                    Console.WriteLine($"~ RESIDUE — candidates from width leak, NOT the answer ({residue.Count} gap(s)):");
+                    Console.WriteLine($"~ RECOVERED from width leak ({residue.Count} gap(s)):");
                     foreach (dynamic r in residue)
-                        Console.WriteLine($"  page {r.page} gap {r.gapWidthPt}pt {r.font}: " +
-                            $"{r.candidatesFit} fit, {r.residualEntropyBits} bits -> [{string.Join(", ", (string[])r.candidates)}]");
+                    {
+                        var cands = (string[])r.candidates;
+                        // #1127: when the width admits a single dictionary word, the
+                        // gap is recovered outright; otherwise report the shortlist
+                        // and the bits still separating the candidates.
+                        if ((int)r.candidatesFit == 1 && cands.Length == 1)
+                            Console.WriteLine($"  page {r.page} gap {r.gapWidthPt}pt {r.font}: " +
+                                $"RECOVERED \"{cands[0]}\" (unique width fit, {r.residualEntropyBits} bits)");
+                        else
+                            Console.WriteLine($"  page {r.page} gap {r.gapWidthPt}pt {r.font}: " +
+                                $"{r.candidatesFit} candidates, {r.residualEntropyBits} bits -> [{string.Join(", ", cands)}]");
+                    }
                 }
             }
 
