@@ -68,6 +68,9 @@ if [[ -n "$EXISTING_TRX" ]]; then
   cp "$EXISTING_TRX" "$TMP/r.trx" 2>/dev/null || true
 else
   echo "==> running $NAME to enumerate skips"
+  # #1144: this re-runs the WHOLE suite (slow -- minutes). If a trx already
+  # exists from a prior run (the coverage run, or a --logger trx you kept),
+  # skip it:  scripts/check-skip-budget.sh <proj> --update --trx <that.trx>
   "$ROOT/scripts/assert-fresh.sh" --configuration Debug "$PROJECT"
   dotnet test "$PROJECT" --nologo --logger "trx;LogFileName=$TMP/r.trx" >"$TMP/out.log" 2>&1 || true
 fi

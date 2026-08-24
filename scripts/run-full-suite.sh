@@ -679,9 +679,10 @@ run_one() {
         # (#894), and that gate only accepts an unfiltered trx by construction.
         # Filtered/chunked steps deliberately do not get one — feeding the gate
         # a filtered trx would report everything the filter excluded as a hole.
-        cmdline="dotnet test \"$target\" --no-build -c \"$CONFIG\" --logger \"console;verbosity=minimal\" --logger \"trx;LogFileName=$LOG_DIR/$name.trx\""
+        BLAME_HANG_TIMEOUT="${BLAME_HANG_TIMEOUT:-900000}"
+        cmdline="dotnet test \"$target\" --no-build -c \"$CONFIG\" --blame-hang-timeout $BLAME_HANG_TIMEOUT --logger \"console;verbosity=minimal\" --logger \"trx;LogFileName=$LOG_DIR/$name.trx\""
     else
-        cmdline="dotnet test \"$target\" --no-build -c \"$CONFIG\" --filter \"$filter\" --logger \"console;verbosity=minimal\" --logger \"trx;LogFileName=$LOG_DIR/$name.trx\""
+        cmdline="dotnet test \"$target\" --no-build -c \"$CONFIG\" --filter \"$filter\" --blame-hang-timeout $BLAME_HANG_TIMEOUT --logger \"console;verbosity=minimal\" --logger \"trx;LogFileName=$LOG_DIR/$name.trx\""
     fi
     measure_step "$name" "$log" "$cmdline"
     rc=$?
