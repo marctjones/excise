@@ -36,7 +36,9 @@ NAMES = ("James John Robert Michael William David Richard Joseph Thomas Charles 
          "Nancy Lisa Betty Margaret Sandra Ashley Kimberly Emily Donna Michelle "
          "Louise Farrar Anne Dorothy Carol Amanda Melissa Deborah Stephanie").split()
 
-FONT_PS = {"Helvetica": "Helvetica", "Times-Roman": "Times-Roman", "Courier": "Courier"}
+FONT_PS = {"Helvetica": "Helvetica", "Helvetica-Bold": "Helvetica-Bold",
+           "Times-Roman": "Times-Roman", "Times-Italic": "Times-Italic",
+           "Courier": "Courier"}  # Courier = monospace, the easy band
 
 
 def text_width_pt(s, font, size):
@@ -61,39 +63,64 @@ def _pdf(objs):
     return bytes(out)
 
 
-def build_case(answer, font, size, method, context):
+def build_case(answer, font, size, method, context, colour="black-on-white", pos="mid"):
     """Return (pdf_bytes, meta). The answer sits in a line at a known x-span.
 
     Layout (points): left margin 72, baseline 700. The prefix is 'Name: ',
     the answer follows, then a suffix so there is surviving text on both sides
     (a redaction with nothing after it leaks nothing about width).
     """
-    prefix, suffix = "Name: ", " (on file)"
+    # Position controls what sur1viving text anchors the gap:
+    #   mid       -> "Name: <answer> (on file)"  (both anchors)
+    #   line-start-> "<answer> is on file"        (no left anchor)
+    #   line-end  -> "On file: <answer>"          (no right anchor)
+    if pos == "line-start":
+        prefix, suffix = "", " is on file"
+    elif pos == "line-end":
+        prefix, suffix = "On file: ", ""
+    else:
+        prefix, suffix = "Name: ", " (on file)"
     x0 = 72.0
     ax0 = x0 + text_width_pt(prefix, font, size)          # answer left edge
     aw = text_width_pt(answer, font, size)                # answer width
     ax1 = ax0 + aw                                         # answer right edge
     ps = FONT_PS[font]
 
-    def line(s):
-        return f"BT /F1 {size} Tf {x0} 700 Td ({s}) Tj ET\n".encode()
+    # colour -> (box fill rgb, text ink rgb). white-on-black and low-contrast
+    # exercise the #1131 detector gap; a coloured highlight over READABLE text
+    # must NOT be flagged as a bad redaction.
+    box_rgb, ink_rgb, cover = {
+        "black-on-white":   ("0 0 0", "0 0 0", True),    # black box over black text
+        "white-on-black":   ("0 0 0", "1 1 1", False),   # white text on black fill, no cover needed
+        "low-contrast":     ("0.15 0.15 0.15", "0.2 0.2 0.2", False),
+        "highlight-readable": ("1 1 0", "0 0 0", False), # yellow highlight, readable -> NOT a leak
+    }[colour]
+
+    def line(s, ink="0 0 0"):
+        return f"BT {ink} rg /F1 {size} Tf {x0} 700 Td ({s}) Tj ET\n".encode()
 
     ctx = ""
     if context == "rich":
         ctx = (f"BT /F1 {size} Tf {x0} 660 Td (Claimant name and account holder:) Tj ET\n")
 
     if method == "under-box":
-        # Text intact, opaque box painted over the answer. Certain-recoverable.
-        content = (line(prefix + answer + suffix)
-                   + f"0 0 0 rg\n{ax0} 696 {aw} {size} re f\n".encode()
-                   + ctx.encode())
+        # Text intact; masked by colour. All variants leave the glyphs
+        # extractable -- what differs is whether a HUMAN can read it, which is
+        # exactly what separates a caught bad redaction from a missed one.
+        if cover:  # box painted OVER the text
+            content = (line(prefix + answer + suffix, ink_rgb)
+                       + f"{box_rgb} rg\n{ax0} 696 {aw} {size} re f\n".encode())
+        else:      # fill first, text on top in a near/exact-matching ink
+            content = (f"{box_rgb} rg\n{ax0} 696 {aw} {size} re f\n".encode()
+                       + line(prefix + answer + suffix, ink_rgb))
+        content += ctx.encode()
 
     elif method == "width-preserving":
         # Answer glyphs removed, gap LEFT (what excise's real redaction does),
         # box drawn. Prefix and suffix keep their positions.
         content = (line(prefix)                                      # prefix at x0
                    + f"BT /F1 {size} Tf {ax1} 700 Td ({suffix}) Tj ET\n".encode()  # suffix at its ORIGINAL x
-                   + f"0 0 0 rg\n{ax0} 696 {aw} {size} re f\n".encode()
+                   + f"{box_rgb} rg\n{ax0} 696 {aw} {size} re f\n".encode()
                    + ctx.encode())
 
     elif method == "width-closing":
@@ -126,32 +153,62 @@ def build_case(answer, font, size, method, context):
             f"<< /Type /Font /Subtype /Type1 /BaseFont /{ps} /Encoding /WinAnsiEncoding >>".encode()]
 
     meta = dict(answer=answer, font=font, sizePt=size, method=method, context=context,
+                colour=colour, position=pos,
                 gapX0=round(ax0, 3), gapX1=round(ax1, 3), gapWidthPt=round(aw, 3),
                 dictionary="names-%d" % len(NAMES))
     return _pdf(objs), meta
 
 
-# (band, font, size, method, context, string-kind)
+# (band, font, size, method, context, string-kind, colour, position)
+# Bands are difficulty; the extra columns are the diversity dimensions logged
+# on #1135. Pairwise-ish, not full-factorial (that explodes) -- each row adds
+# ONE hard axis to a known-good baseline so a recall delta attaches to a cause.
+D_MID, D_BW = "mid", "black-on-white"
 PLAN = [
-    ("B0", "Helvetica",   12, "under-box",        "none", "dict"),
-    ("B1", "Helvetica",   12, "width-preserving", "none", "dict"),
-    ("B1", "Times-Roman", 12, "width-preserving", "none", "dict"),
-    ("B2", "Helvetica",   12, "width-preserving", "none", "dict-long"),
-    ("B6", "Helvetica",   12, "width-preserving", "none", "random"),
-    ("B7", "Helvetica",   12, "width-preserving", "rich", "dict"),
-    ("B8", "Helvetica",   12, "width-closing",    "none", "dict"),
-    ("B9", "Helvetica",   12, "defended",         "none", "dict"),
+    # --- certain channel: colour/contrast variants (the #1131 gap) ---
+    ("B0", "Helvetica",   12, "under-box", "none", "dict", "black-on-white",    D_MID),
+    ("B0", "Helvetica",   12, "under-box", "none", "dict", "white-on-black",    D_MID),
+    ("B0", "Helvetica",   12, "under-box", "none", "dict", "low-contrast",      D_MID),
+    ("B0", "Helvetica",   12, "under-box", "none", "dict", "highlight-readable", D_MID),
+    # --- residue: font families ---
+    ("B1", "Helvetica",     12, "width-preserving", "none", "dict", D_BW, D_MID),
+    ("B1", "Times-Roman",   12, "width-preserving", "none", "dict", D_BW, D_MID),
+    ("B1", "Times-Italic",  12, "width-preserving", "none", "dict", D_BW, D_MID),
+    ("B1", "Helvetica-Bold",12, "width-preserving", "none", "dict", D_BW, D_MID),
+    ("Bc", "Courier",       12, "width-preserving", "none", "dict", D_BW, D_MID),  # monospace: easy
+    # --- residue: sizes ---
+    ("B1", "Helvetica",    8, "width-preserving", "none", "dict", D_BW, D_MID),
+    ("B1", "Helvetica",   18, "width-preserving", "none", "dict", D_BW, D_MID),
+    # --- residue: string types ---
+    ("B2", "Helvetica",   12, "width-preserving", "none", "dict-long", D_BW, D_MID),
+    ("Bd", "Helvetica",   12, "width-preserving", "none", "date",      D_BW, D_MID),
+    ("Bn", "Helvetica",   12, "width-preserving", "none", "digits",    D_BW, D_MID),
+    # --- residue: gap position (anchor availability) ---
+    ("Bp", "Helvetica",   12, "width-preserving", "none", "dict", D_BW, "line-start"),
+    ("Bp", "Helvetica",   12, "width-preserving", "none", "dict", D_BW, "line-end"),
+    # --- context for ranking ---
+    ("B7", "Helvetica",   12, "width-preserving", "rich", "dict", D_BW, D_MID),
+    # --- negative controls: must stay ~0 recall ---
+    ("B6", "Helvetica",   12, "width-preserving", "none", "random", D_BW, D_MID),
+    ("B8", "Helvetica",   12, "width-closing",    "none", "dict",   D_BW, D_MID),
+    ("B9", "Helvetica",   12, "defended",         "none", "dict",   D_BW, D_MID),
 ]
 
 
+# Closed sets, recorded per case. Digit-runs and dates collapse to few width
+# classes (digits are near-equal width in most fonts) -> a HARD band for
+# width discrimination, and a realistic secret (SSNs, account numbers).
+DATES = ["01/15/1987", "12/03/1992", "07/22/1975", "09/30/2001",
+         "03/11/1968", "11/08/1954", "06/19/1983", "02/27/1990"]
+DIGITS = ["4012884012", "5555341220", "6011000990", "3782822463",
+          "8842019375", "1029384756", "9998887776", "4444333322"]
+
 def strings_for(kind):
-    if kind == "dict":
-        return NAMES
-    if kind == "dict-long":
-        return [n for n in NAMES if len(n) >= 8]
-    if kind == "random":
-        # Not in the dictionary; width bound with no dict anchor. Deterministic.
-        return ["XqmzdR", "KwbfjL", "Pvgnyt", "Zdxkqw"]
+    if kind == "dict":       return NAMES
+    if kind == "dict-long":  return [n for n in NAMES if len(n) >= 8]
+    if kind == "date":       return DATES
+    if kind == "digits":     return DIGITS
+    if kind == "random":     return ["XqmzdR", "KwbfjL", "Pvgnyt", "Zdxkqw"]
     raise ValueError(kind)
 
 
@@ -166,11 +223,12 @@ def main():
     os.makedirs(out, exist_ok=True)
     manifest = []
 
-    for band, font, size, method, context, kind in PLAN:
+    for band, font, size, method, context, kind, colour, pos in PLAN:
         pool = strings_for(kind)
         for answer in pool[:args.per_band]:
-            cid = f"{band}-{font.split('-')[0].lower()}{size}-{method}-{answer}"
-            pdf, meta = build_case(answer, font, size, method, context)
+            safe = "".join(c if c.isalnum() else "_" for c in answer)
+            cid = f"{band}-{font.lower()}{size}-{method}-{colour}-{pos}-{safe}"
+            pdf, meta = build_case(answer, font, size, method, context, colour, pos)
             open(os.path.join(out, cid + ".pdf"), "wb").write(pdf)
             meta.update(id=cid, band=band)
             manifest.append(meta)
@@ -183,7 +241,7 @@ def main():
     # runs whose manifest hash differs, so a recall gain from an EASIER corpus
     # cannot masquerade as a better tool.
     h = hashlib.sha256("\n".join(sorted(
-        f"{m['id']}|{m['band']}|{m['font']}|{m['method']}|{m['gapWidthPt']}" for m in manifest
+        f"{m['id']}|{m['band']}|{m['font']}|{m['sizePt']}|{m['method']}|{m['colour']}|{m['position']}|{m['gapWidthPt']}" for m in manifest
     )).encode()).hexdigest()[:16]
     open(os.path.join(out, ".manifest-hash"), "w").write(h + "\n")
 
