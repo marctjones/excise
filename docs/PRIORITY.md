@@ -8,6 +8,15 @@ This supersedes the sequencing in `FIX_ORDER.md` (2026-08-10) where they
 conflict; that file's root-cause *cluster analysis* still holds, this file's
 *order* is current.
 
+> **The ruler comes before the improvement it measures.** Do not change
+> redaction behaviour you cannot judge — this session proved why (#1038 was
+> mis-attributed for months without a measurement). Most of the bench already
+> exists and FOUND these issues (#1129/#1130/#1131/#1101/#1100). The one gap:
+> the font cluster changes glyph geometry, and its ruler (#1104 advance
+> parity) is not built. So #1104 comes BEFORE #1102. Do not, however, try to
+> "finish the bench" first — the corpus grows forever; build the specific
+> ruler for the specific change.
+
 > Feature freeze (2026-08-10) still stands: fix errors only. The measurement
 > and CLI work (RC13/17/18) is sanctioned as error-finding infrastructure by
 > direct request. In-place editing (RC6) and unvalidated features (RC7) stay
@@ -45,17 +54,25 @@ the redaction misses. Small, high value.
 
 ## Tier 2 — The font-metrics root cause (foundational cluster)
 
-**#1102 is the keystone of the whole session's findings.** The width cascade
-never consults the embedded font program, then silently guesses 600. Fixing it
-unblocks the accuracy of everything geometry-dependent: extraction, redaction
-match, the residue engine, the advance-parity gate. Do #1102 first, then the
-cluster it enables.
+**Build the ruler first, then the keystone.** The width cascade never consults
+the embedded font program and silently guesses 600 (#1102) — the root cause of
+the geometry-dependent defects. But changing glyph geometry demands a
+fine-grained ruler, and the extraction-parity gate only catches gross
+regressions. So:
 
-1. **#1102** — read embedded font-program widths (hmtx/CFF) instead of guessing.
-2. **#1104** (RC13) — per-glyph advance parity vs mutool. The general instrument that proves #1102 and guards the rest.
-3. **#1101** — `PdfPage.Letters` duplicate glyphs (count 36 vs 9). Likely same geometry family.
+1. **#1104** (RC13) — per-glyph advance parity vs mutool. **FIRST** — this is
+   the ruler. It is ~20 lines (prototyped this session), font-agnostic, and it
+   is what proves #1102 is right rather than merely not-catastrophic.
+2. **#1102** — read embedded font-program widths (hmtx/CFF) instead of guessing.
+   The keystone; unblocks extraction, redaction match, and the residue engine.
+3. **#1101** — `PdfPage.Letters` duplicate glyphs (count 36 vs 9). Same family.
 4. **#1103** — Type3 `/FontMatrix` applied by renderer, not the walker.
 5. **#1106** — standard-14 widths above code 126 (encoding-aware glyph names).
+
+The carrier leaks in Tier 1 (#1129/#1130/#1131) already have their ruler — the
+benchmark's leak scan found them and confirms their fixes — so they need no
+new measurement first. #1115 (canary injection) makes that leak measurement
+rigorous and pairs naturally with them, but is not a blocker.
 
 > "Font work is redaction security" — these are silent leaks, not display
 > polish. #1100 (fixed this session) was the first of the cluster.
