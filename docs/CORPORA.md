@@ -52,20 +52,26 @@ have.
 Chosen from the [PDF Association's index of 46 corpora](https://github.com/pdf-association/pdf-corpora)
 by what each would catch **for a redaction tool**, not by size or fame.
 
-Each has a download-script issue in **RC14**; `tests/corpora.tsv` carries the
-number, and `scripts/corpus.sh verify` fails a `planned` row that cites none.
+**Two are earned now** — each maps to an open defect with no corpus behind it:
 
 | corpus | issue | why it matters here |
 |---|---|---|
-| **Digital Library of Slovenia** | #1108 | invisible text (render mode 3) over scans — a redaction *leak carrier*, and the natural corpus for `HiddenTextDetector` |
-| **iText regression suite** | #1109 | ~4,000 classified PDFs including a good encrypted set — feeds #1048 and #1095 |
-| **PDF/UA + Matterhorn** | #1110 | tagged PDFs; `/ActualText` and `/Alt`, the #636 carriers |
-| **GWG Processing Steps** | #1111 | ISO 19593-1 optional content layers — the `includeHiddenLayers` path |
-| **SafeDocs issue-tracker corpus** | #1112 | 32K unusual/malformed files; parser robustness |
-| **GovDocs1** | #1113 | 231K real `.gov` PDFs; producer diversity, and the sweep target for finding real bad redactions |
+| **Digital Library of Slovenia** | #1108 | invisible text (render mode 3) over scans — a redaction *leak carrier*, and `HiddenTextDetector` / `audit` currently have no corpus at all |
+| **iText regression suite** | #1109 | ~4,000 classified PDFs including a good encrypted set — #1048 and #1095 run against nine fixtures today |
 
-Deliberately skipped: PDF/VT, 3D, HisDoc1B, the table-recognition sets. They
-test things excise does not claim to do.
+**Four are deferred to RC16**, each with a trigger rather than a date. Fetching
+corpora before an instrument can read them buys coverage we cannot use, and
+this machine has a disk budget:
+
+| corpus | issue | trigger |
+|---|---|---|
+| PDF/UA + Matterhorn | #1110 | a structure-tree leak we cannot reproduce on the #636 fixtures |
+| GWG Processing Steps | #1111 | a measured optional-content leak or collateral case |
+| SafeDocs | #1112 | a robustness defect our current malformed corpora miss |
+| GovDocs1 | #1113 | x-ray wired (#1122) and wanting real bad redactions to test `audit` against |
+
+Deliberately skipped entirely: PDF/VT, 3D, HisDoc1B, the table-recognition
+sets. They test things excise does not claim to do.
 
 ## What does not exist
 
