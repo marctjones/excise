@@ -80,6 +80,7 @@ public static class PdfDocumentSanitizer
         changed |= XfaXmlCarrier.ScrubTerms(document, actionable, caseSensitive).Changed;
         changed |= ScrubOutlines(document, actionable, caseSensitive);
         changed |= ScrubAnnotationContents(document, actionable, caseSensitive);
+        changed |= ScrubFormFieldNames(document, actionable, caseSensitive);
         return changed;
     }
 
@@ -109,32 +110,85 @@ public static class PdfDocumentSanitizer
 
     private static bool ScrubXmpMetadata(PdfDocument document, IReadOnlyList<string> terms, bool caseSensitive)
     {
-        if (document.Resolve(document.Catalog.GetOptional("Metadata") ?? PdfNull.Instance) is not PdfStream stream)
-            return false;
+        // #1129: EVERY reachable /Metadata packet, not just the catalog's.
+        // §14.3.2 permits XMP on any object; a real CDC PDF kept the redacted
+        // term in a page-level packet while the catalog packet scrubbed clean.
+        var changed = false;
+        foreach (var stream in document.EnumerateMetadataStreams())
+        {
+            // The XMP packet is plain-text XML. We treat it as text rather than
+            // parsing it: a redacted name can appear in dc:title, dc:description,
+            // pdf:Keywords, or a custom schema we have never heard of, and a
+            // text-level excision catches all of them.
+            var xmp = Encoding.UTF8.GetString(stream.DecodedData);
+            var scrubbed = Excise(xmp, terms, caseSensitive);
+            if (scrubbed == xmp) continue;
 
-        // The XMP packet is a plain-text XML document. We treat it as text
-        // rather than parsing it: a redacted name can appear in dc:title,
-        // dc:description, pdf:Keywords, or a custom schema we have never heard
-        // of, and a text-level excision catches all of them.
-        var xmp = Encoding.UTF8.GetString(stream.DecodedData);
-        var scrubbed = Excise(xmp, terms, caseSensitive);
-        if (scrubbed == xmp) return false;
+            // Write through the ENCODED bytes, not the decoded ones. The writer
+            // serializes EncodedData; SetDecodedData only populates the decode
+            // cache, so scrubbing that way would leave the secret in the saved
+            // file while every in-memory read reported it gone.
+            //
+            // Storing the packet raw (dropping /Filter) is the conformant shape:
+            // XMP must be readable without decompression anyway (§14.3.2).
+            var bytes = Encoding.UTF8.GetBytes(scrubbed);
+            stream.Remove("Filter");
+            stream.Remove("DecodeParms");
+            stream.SetEncodedData(bytes);
+            stream["Length"] = new PdfInteger(bytes.Length);
+            changed = true;
+        }
+        return changed;
+    }
 
-        // Write through the ENCODED bytes, not the decoded ones. The writer
-        // serializes EncodedData; SetDecodedData only populates the decode cache,
-        // so scrubbing that way would leave the secret in the saved file while
-        // every in-memory read reported it gone — a leak that looks fixed.
-        //
-        // Storing the scrubbed packet raw (and dropping /Filter) keeps this
-        // honest: XMP is required to be readable without decompression anyway
-        // (ISO 32000-2 §14.3.2), so an uncompressed packet is the conformant
-        // shape, not a shortcut.
-        var bytes = Encoding.UTF8.GetBytes(scrubbed);
-        stream.Remove("Filter");
-        stream.Remove("DecodeParms");
-        stream.SetEncodedData(bytes);
-        stream["Length"] = new PdfInteger(bytes.Length);
-        return true;
+    /// <summary>
+    /// #1130 — AcroForm field NAMES (<c>/T</c>) and tooltips (<c>/TU</c>) carry
+    /// human-readable text. A passport form named a field "Your name as printed
+    /// on your most recent U..." and leaked the redacted term there, in a
+    /// carrier no per-area scrub reaches (the field's widget need not overlap a
+    /// redaction).
+    ///
+    /// <para>Cut the term out, keeping the rest, like #1038 does for <c>/V</c>.
+    /// <c>/T</c> is referenced by name from <c>/Kids</c> parent chains and JS
+    /// <c>getField()</c>, so excising it can break form logic — but a surviving
+    /// secret is the failure that matters (the carrier policy: under-redaction
+    /// over form fidelity). This is document-level and runs once, so it covers
+    /// every field, not only those over a redaction box.</para>
+    /// </summary>
+    private static bool ScrubFormFieldNames(PdfDocument document, IReadOnlyList<string> terms, bool caseSensitive)
+    {
+        // Walk the raw /AcroForm/Fields tree, recursing through /Kids. The
+        // leaking /T is often on a NON-TERMINAL parent field (< /Kids [...]
+        // /T (Your name ...) >), which GetAcroForm().Fields does not enumerate.
+        var acro = document.Resolve(document.Catalog?.GetOptional("AcroForm") ?? PdfNull.Instance) as PdfDictionary;
+        var rootFields = acro == null ? null
+            : document.Resolve(acro.GetOptional("Fields") ?? PdfNull.Instance) as PdfArray;
+        if (rootFields == null) return false;
+
+        var changed = false;
+        var visited = new HashSet<PdfDictionary>();
+        var stack = new Stack<PdfObject>();
+        foreach (var f in rootFields) stack.Push(f);
+
+        while (stack.Count > 0)
+        {
+            if (document.Resolve(stack.Pop()) is not PdfDictionary node || !visited.Add(node))
+                continue;
+
+            foreach (var key in new[] { "T", "TU" })
+            {
+                if (document.Resolve(node.GetOptional(key) ?? PdfNull.Instance) is not PdfString str)
+                    continue;
+                var scrubbed = Excise(str.Value, terms, caseSensitive);
+                if (scrubbed == str.Value) continue;
+                node.SetString(key, scrubbed);
+                changed = true;
+            }
+
+            if (document.Resolve(node.GetOptional("Kids") ?? PdfNull.Instance) is PdfArray kids)
+                foreach (var k in kids) stack.Push(k);
+        }
+        return changed;
     }
 
     private static bool ScrubOutlines(PdfDocument document, IReadOnlyList<string> terms, bool caseSensitive)
