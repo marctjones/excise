@@ -206,15 +206,21 @@ namespace Excise.Rendering.Differential
         public static System.Collections.Generic.IReadOnlyList<Excise.Rendering.Differential.ResidueRecoveryEngine.Recovery> Recover(string pdfPath, System.Collections.Generic.IReadOnlyList<string> dictionary, Excise.Rendering.Differential.ResidueRecoveryEngine.Options? options = null) { }
         public readonly struct Gap : System.IEquatable<Excise.Rendering.Differential.ResidueRecoveryEngine.Gap>
         {
-            public Gap(int Page, double X0, double X1, double GapWidthPt, string Font, double SizePt, Excise.Rendering.Differential.ResidueRecoveryEngine.WidthMetricSource MetricSource, double TolerancePt) { }
+            public Gap(int Page, double X0, double X1, double GapWidthPt, string Font, double SizePt, Excise.Rendering.Differential.ResidueRecoveryEngine.WidthMetricSource MetricSource, double TolerancePt, Excise.Rendering.Differential.ResidueRecoveryEngine.GapKind Kind = 0) { }
             public string Font { get; init; }
             public double GapWidthPt { get; init; }
+            public Excise.Rendering.Differential.ResidueRecoveryEngine.GapKind Kind { get; init; }
             public Excise.Rendering.Differential.ResidueRecoveryEngine.WidthMetricSource MetricSource { get; init; }
             public int Page { get; init; }
             public double SizePt { get; init; }
             public double TolerancePt { get; init; }
             public double X0 { get; init; }
             public double X1 { get; init; }
+        }
+        public enum GapKind
+        {
+            TwoAnchor = 0,
+            RedactionBox = 1,
         }
         public sealed class Options : System.IEquatable<Excise.Rendering.Differential.ResidueRecoveryEngine.Options>
         {
