@@ -87,6 +87,13 @@ now that #1090 removed the destructive paths.
 
 ## Tier 4 — Measurement + CLI (mostly built; extend)
 
+**Proving "is excise better" is now ACTIVE in RC13** (promoted from RC16 2026-08-24):
+#1121 (iText pdfSweep + raster anchor + Adobe adapters) and #1123 (scorecard /
+failure taxonomy) are the remaining work to CLAIM better against the field.
+excise vs PyMuPDF is already measured (wins collateral, ties fidelity once
+inherited input-malformation is discounted, ties residue resistance).
+
+
 RC13 (benchmark), RC17 (measure de-redaction), RC18 (the unredact CLI). The
 engine and benchmark are built. Remaining high-value: **#1141** (wire the
 ink-differential as a first-class leak axis), then the CLI surface
