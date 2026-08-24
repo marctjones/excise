@@ -158,6 +158,12 @@ internal sealed class ContentStreamWalker
     // embedded reverse cmap, the Mac glyph order and the symbol cmap all live
     // in this object.
     private Text.GlyphUnicodeDecoder _decoder = Text.GlyphUnicodeDecoder.None;
+    // #1102: parsed embedded TrueType programs, keyed by FontDescriptor, so a
+    // font with no /Widths gets its real advances from the program instead of
+    // the flat-600 guess. null cached for descriptors with no /FontFile2 or an
+    // unparseable one, so a bad font is not re-parsed on every glyph.
+    private readonly Dictionary<PdfDictionary, Fonts.TrueTypeFontFile?> _embeddedTtfCache =
+        new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<PdfDictionary, Text.GlyphUnicodeDecoder> _decoderCache =
         new(ReferenceEqualityComparer.Instance);
     private bool _is2ByteFont;
@@ -1718,6 +1724,42 @@ internal sealed class ContentStreamWalker
     /// /MissingWidth, and every non-embedded standard-14 font fell to a flat
     /// 600 default while the extractor used real metrics.
     /// </summary>
+    /// <summary>
+    /// #1102 — advance width (1000ths of em) for <paramref name="charCode"/>
+    /// from the embedded TrueType program in <paramref name="fontDescriptor"/>,
+    /// or 0 when there is no /FontFile2, it will not parse, or the glyph is not
+    /// found. Parsed program cached per descriptor.
+    /// </summary>
+    private double EmbeddedTrueTypeAdvance(PdfDictionary fontDescriptor, int charCode)
+    {
+        if (!_embeddedTtfCache.TryGetValue(fontDescriptor, out var ttf))
+        {
+            ttf = null;
+            try
+            {
+                var ffObj = _page != null
+                    ? _page.Document.Resolve(fontDescriptor.GetOptional("FontFile2") ?? PdfNull.Instance)
+                    : fontDescriptor.GetOptional("FontFile2");
+                if (ffObj is PdfStream ff)
+                    ttf = Fonts.TrueTypeFontFile.Parse(ff.DecodedData);
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException) { ttf = null; }
+            _embeddedTtfCache[fontDescriptor] = ttf;
+        }
+        if (ttf == null || ttf.UnitsPerEm == 0) return 0;
+
+        // Map the code to a glyph. Prefer the decoded Unicode (honours
+        // /Encoding and /ToUnicode); fall back to the raw code, which is right
+        // for symbolic (1,0)/(3,0) cmaps and for ASCII under WinAnsi.
+        var gid = 0;
+        var uni = _decoder.Decode(charCode, charCode, _registeredCidToUnicode);
+        if (!string.IsNullOrEmpty(uni)) gid = ttf.GidForCodepoint(char.ConvertToUtf32(uni, 0));
+        if (gid == 0) gid = ttf.GidForCodepoint(charCode);
+        if (gid == 0) return 0;
+
+        return ttf.AdvanceWidth(gid) * 1000.0 / ttf.UnitsPerEm;
+    }
+
     private double GetCharWidth(int charCode)
     {
         // Type 0 / CIDFont: /W with the /DW fallback (§9.7.4.3).
@@ -1755,6 +1797,17 @@ internal sealed class ContentStreamWalker
             var fontDescriptor = _page != null
                 ? _currentFont.ResolveDictionary(_page.Document, "FontDescriptor")
                 : _currentFont.GetDirectDictionaryOrNull("FontDescriptor");
+
+            // #1102: the embedded font program is the authoritative width for a
+            // font with no /Widths -- consulted BEFORE /MissingWidth (a blanket
+            // default) and the standard-14 guess. Only for simple TrueType
+            // (/FontFile2); CFF (/FontFile3) has no width accessor yet.
+            if (fontDescriptor != null)
+            {
+                var embedded = EmbeddedTrueTypeAdvance(fontDescriptor, charCode);
+                if (embedded > 0) return embedded;
+            }
+
             if (fontDescriptor != null)
             {
                 var missingWidth = fontDescriptor.GetNumber("MissingWidth", 0);
